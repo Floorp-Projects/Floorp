@@ -1,6 +1,78 @@
 {
   "data": [
     {
+      "schema": 1709780043992,
+      "derHash": "6CGxESkRBWfxYH8LDzaOx42BFBjwxIzEJUUPY+uICV0=",
+      "subject": "CN=Entrust 4K EV TLS Root CA - 2022,O=Entrust\\, Inc.,C=US",
+      "subjectDN": "MFAxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1FbnRydXN0LCBJbmMuMSkwJwYDVQQDEyBFbnRydXN0IDRLIEVWIFRMUyBSb290IENBIC0gMjAyMg==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "d5d1224d52aeeff3fa819a835cf5693d219ded634ea68df06af892a481a09373",
+        "size": 2064,
+        "filename": "qtbKnoRh2GMf_QeXEIiJfMm-n4sx1kgOUifxXyU-tyg=.pem",
+        "location": "security-state-staging/intermediates/fc1a0f62-1577-4d38-b489-39b75b9303a4.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "qtbKnoRh2GMf/QeXEIiJfMm+n4sx1kgOUifxXyU+tyg=",
+      "crlite_enrolled": false,
+      "id": "e2798fee-994b-49ad-bcb5-9fad36b266bf",
+      "last_modified": 1709780223348
+    },
+    {
+      "schema": 1709780043461,
+      "derHash": "sKF44Gt6cnTwsqZA9qA78AOrHt6Gk3cNXSdBstLwGYA=",
+      "subject": "CN=AffirmTrust 4K TLS Root CA - 2022,O=AffirmTrust,C=CA",
+      "subjectDN": "ME8xCzAJBgNVBAYTAkNBMRQwEgYDVQQKEwtBZmZpcm1UcnVzdDEqMCgGA1UEAxMhQWZmaXJtVHJ1c3QgNEsgVExTIFJvb3QgQ0EgLSAyMDIy",
+      "whitelist": false,
+      "attachment": {
+        "hash": "d68d5318a7ba2e9a85397e85f05d1f9fc36013ccdee30a7fff3c05e997f7ce91",
+        "size": 2288,
+        "filename": "PO-4Mc0JEYVGctI3huFt_Mbvj0EA2N9qQo9dg4I1_cw=.pem",
+        "location": "security-state-staging/intermediates/c6ba6944-757d-422a-85a3-113db515beed.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "PO+4Mc0JEYVGctI3huFt/Mbvj0EA2N9qQo9dg4I1/cw=",
+      "crlite_enrolled": false,
+      "id": "83abb7ec-d98c-4b07-8ef3-c24056303b1a",
+      "last_modified": 1709780223345
+    },
+    {
+      "schema": 1709758443441,
+      "derHash": "ZfA1j8k5NM1arEMSLzeUjXvQQtFI5v2IsuZaqaw5nd0=",
+      "subject": "CN=Entrust Root Certification Authority - G2,OU=See www.entrust.net/legal-terms+OU=(c) 2009 Entrust\\, Inc. - for authorized use only,O=Entrust\\, Inc.,C=US",
+      "subjectDN": "MIG+MQswCQYDVQQGEwJVUzEWMBQGA1UEChMNRW50cnVzdCwgSW5jLjEoMCYGA1UECxMfU2VlIHd3dy5lbnRydXN0Lm5ldC9sZWdhbC10ZXJtczE5MDcGA1UECxMwKGMpIDIwMDkgRW50cnVzdCwgSW5jLiAtIGZvciBhdXRob3JpemVkIHVzZSBvbmx5MTIwMAYDVQQDEylFbnRydXN0IFJvb3QgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkgLSBHMg==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "8097be6a2869b37e933e0d7cd1c8b2fe3fe53e3fd1942f557271eee692a28f5a",
+        "size": 1853,
+        "filename": "du6FkDdMcVQ3u8prumAo6t3i3G27uMP2EOhR8R0at_U=.pem",
+        "location": "security-state-staging/intermediates/470cc99c-a735-40d5-be7d-d35d395a9917.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "du6FkDdMcVQ3u8prumAo6t3i3G27uMP2EOhR8R0at/U=",
+      "crlite_enrolled": false,
+      "id": "89c6906b-2f50-4f51-ae6c-29b661081f05",
+      "last_modified": 1709758623247
+    },
+    {
+      "schema": 1709758442871,
+      "derHash": "4lXaLVTs/Rb7ZCajioM5nn459qAeluZJzYUPsP3/VOs=",
+      "subject": "CN=Entrust 4K TLS Root CA - 2022,O=Entrust\\, Inc.,C=US",
+      "subjectDN": "ME0xCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1FbnRydXN0LCBJbmMuMSYwJAYDVQQDEx1FbnRydXN0IDRLIFRMUyBSb290IENBIC0gMjAyMg==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "38fbd31004e9e27ad9be5bc74d44558035bd507afeca61071f303289eb1039f2",
+        "size": 2060,
+        "filename": "w8sbVZHe29cRAbw0WtuFV3BsGDBZKehyOv_50FpLf7A=.pem",
+        "location": "security-state-staging/intermediates/b6658a24-c5c8-4cb7-bd99-029c9467e3ac.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "w8sbVZHe29cRAbw0WtuFV3BsGDBZKehyOv/50FpLf7A=",
+      "crlite_enrolled": false,
+      "id": "bb644eb4-afd2-4150-8fbb-4d0c76c48f3a",
+      "last_modified": 1709758623243
+    },
+    {
       "schema": 1709322861611,
       "derHash": "79BmhAYTDkM4LOre67F+YlzXf1KOKI6L7a6xQuGbzgI=",
       "subject": "CN=CloudSecure RSA Domain Validation Secure Server CA 2,O=CloudSecure Corporation,C=JP",
@@ -30079,5 +30151,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1709323057665
+  "timestamp": 1709780223348
 }
