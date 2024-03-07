@@ -765,7 +765,7 @@ export class FxviewTabRow extends MozLitElement {
             this.indicators?.includes("soundplaying")),
         () => html`
           <button
-            class="fxview-tab-row-pinned-media-button"
+            class="fxview-tab-row-pinned-media-button ghost-button icon-button"
             id="fxview-tab-row-media-button"
             tabindex="-1"
             data-l10n-id=${this.indicators?.includes("muted")
