@@ -1159,6 +1159,17 @@ FontVisibility gfxDWriteFontList::GetVisibilityForFamily(
   return FontVisibility::User;
 }
 
+nsTArray<std::pair<const char**, uint32_t>>
+gfxDWriteFontList::GetFilteredPlatformFontLists() {
+  nsTArray<std::pair<const char**, uint32_t>> fontLists;
+
+  fontLists.AppendElement(std::make_pair(kBaseFonts, ArrayLength(kBaseFonts)));
+  fontLists.AppendElement(
+      std::make_pair(kLangPackFonts, ArrayLength(kLangPackFonts)));
+
+  return fontLists;
+}
+
 void gfxDWriteFontList::AppendFamiliesFromCollection(
     IDWriteFontCollection* aCollection,
     nsTArray<fontlist::Family::InitData>& aFamilies,

@@ -1321,6 +1321,55 @@ FontVisibility gfxFT2FontList::GetVisibilityForFamily(
   return FontVisibility::User;
 }
 
+nsTArray<std::pair<const char**, uint32_t>>
+gfxFT2FontList::GetFilteredPlatformFontLists() {
+  static Device fontVisibilityDevice = Device::Unassigned;
+  if (fontVisibilityDevice == Device::Unassigned) {
+    nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
+    Unused << gfxInfo->GetFontVisibilityDetermination(&fontVisibilityDevice);
+  }
+
+  nsTArray<std::pair<const char**, uint32_t>> fontLists;
+
+  if (fontVisibilityDevice == Device::Android_Unknown_Release_Version ||
+      fontVisibilityDevice == Device::Android_Unknown_Peloton ||
+      fontVisibilityDevice == Device::Android_Unknown_vbox ||
+      fontVisibilityDevice == Device::Android_Unknown_mitv ||
+      fontVisibilityDevice == Device::Android_Chromebook ||
+      fontVisibilityDevice == Device::Android_Amazon) {
+    return fontLists;
+  }
+
+  // Sanity Check
+  if (fontVisibilityDevice != Device::Android_sub_9 &&
+      fontVisibilityDevice != Device::Android_9_11 &&
+      fontVisibilityDevice != Device::Android_12_plus) {
+    return fontLists;
+  }
+
+  fontLists.AppendElement(
+      std::make_pair(kBaseFonts_Android, ArrayLength(kBaseFonts_Android)));
+
+  if (fontVisibilityDevice == Device::Android_sub_9) {
+    fontLists.AppendElement(std::make_pair(kBaseFonts_Android5_8,
+                                           ArrayLength(kBaseFonts_Android5_8)));
+  } else {
+    fontLists.AppendElement(std::make_pair(
+        kBaseFonts_Android9_Higher, ArrayLength(kBaseFonts_Android9_Higher)));
+
+    if (fontVisibilityDevice == Device::Android_9_11) {
+      fontLists.AppendElement(std::make_pair(
+          kBaseFonts_Android9_11, ArrayLength(kBaseFonts_Android9_11)));
+    } else {
+      fontLists.AppendElement(
+          std::make_pair(kBaseFonts_Android12_Higher,
+                         ArrayLength(kBaseFonts_Android12_Higher)));
+    }
+  }
+
+  return fontLists;
+}
+
 static void GetName(hb_face_t* aFace, hb_ot_name_id_t aNameID,
                     nsACString& aName) {
   unsigned int n = 0;

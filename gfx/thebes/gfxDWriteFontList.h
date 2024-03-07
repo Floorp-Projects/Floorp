@@ -436,6 +436,9 @@ class gfxDWriteFontList final : public gfxPlatformFontList {
                                            FontFamily& aMatchedFamily)
       MOZ_REQUIRES(mLock) override;
 
+  nsTArray<std::pair<const char**, uint32_t>> GetFilteredPlatformFontLists()
+      override;
+
  private:
   friend class gfxDWriteFontFamily;
 
