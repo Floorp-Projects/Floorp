@@ -1820,12 +1820,10 @@ class SERPCategorizer {
    *   Domains from organic results extracted from the page.
    * @param {Set} adDomains
    *   Domains from ad results extracted from the page.
-   * @param {string} provider
-   *   The provider associated with the page.
    * @returns {CategorizationResult | null}
    *   The final categorization result. Returns null if the map was empty.
    */
-  async maybeCategorizeSERP(nonAdDomains, adDomains, provider) {
+  async maybeCategorizeSERP(nonAdDomains, adDomains) {
     // Per DS, if the map was empty (e.g. because of a technical issue
     // downloading the data), we shouldn't report telemetry.
     // Thus, there is no point attempting to categorize the SERP.
@@ -1834,15 +1832,13 @@ class SERPCategorizer {
     }
     let resultsToReport = {};
 
-    let processedDomains = this.processDomains(nonAdDomains, provider);
-    let results = await this.applyCategorizationLogic(processedDomains);
+    let results = await this.applyCategorizationLogic(nonAdDomains);
     resultsToReport.organic_category = results.category;
     resultsToReport.organic_num_domains = results.num_domains;
     resultsToReport.organic_num_unknown = results.num_unknown;
     resultsToReport.organic_num_inconclusive = results.num_inconclusive;
 
-    processedDomains = this.processDomains(adDomains, provider);
-    results = await this.applyCategorizationLogic(processedDomains);
+    results = await this.applyCategorizationLogic(adDomains);
     resultsToReport.sponsored_category = results.category;
     resultsToReport.sponsored_num_domains = results.num_domains;
     resultsToReport.sponsored_num_unknown = results.num_unknown;
@@ -1868,12 +1864,6 @@ class SERPCategorizer {
     let domainsCount = 0;
     let unknownsCount = 0;
     let inconclusivesCount = 0;
-
-    // Per a request from Data Science, we need to limit the number of domains
-    // categorized to 10 non-ad domains and 10 ad domains.
-    domains = new Set(
-      [...domains].slice(0, CATEGORIZATION_SETTINGS.MAX_DOMAINS_TO_CATEGORIZE)
-    );
 
     for (let domain of domains) {
       domainsCount++;
@@ -1931,65 +1921,6 @@ class SERPCategorizer {
       num_unknown: unknownsCount,
       num_inconclusive: inconclusivesCount,
     };
-  }
-
-  /**
-   * Processes raw domains extracted from the SERP into their final form before
-   * categorization.
-   *
-   * @param {Set} domains
-   *   The domains extracted from the page.
-   * @param {string} provider
-   *   The provider associated with the page.
-   * @returns {Set} processedDomains
-   *   The final set of processed domains for a page.
-   */
-  processDomains(domains, provider) {
-    let processedDomains = new Set();
-
-    for (let domain of domains) {
-      // Don't include domains associated with the search provider.
-      if (
-        domain.startsWith(`${provider}.`) ||
-        domain.includes(`.${provider}.`)
-      ) {
-        continue;
-      }
-      let domainWithoutSubdomains = this.#stripDomainOfSubdomains(domain);
-      // We may have come across the same domain twice, once with www. prefixed
-      // and another time without.
-      if (
-        domainWithoutSubdomains &&
-        !processedDomains.has(domainWithoutSubdomains)
-      ) {
-        processedDomains.add(domainWithoutSubdomains);
-      }
-    }
-
-    return processedDomains;
-  }
-
-  /**
-   * Helper to strip domains of any subdomains.
-   *
-   * @param {string} domain
-   *   The domain to strip of any subdomains.
-   * @returns {object} browser
-   *   The given domain with any subdomains removed.
-   */
-  #stripDomainOfSubdomains(domain) {
-    let tld;
-    // Can throw an exception if the input has too few domain levels.
-    try {
-      tld = Services.eTLD.getKnownPublicSuffixFromHost(domain);
-    } catch (ex) {
-      return "";
-    }
-
-    let domainWithoutTLD = domain.substring(0, domain.length - tld.length);
-    let secondLevelDomain = domainWithoutTLD.split(".").at(-2);
-
-    return secondLevelDomain ? `${secondLevelDomain}.${tld}` : "";
   }
 
   #chooseRandomlyFrom(categories) {

@@ -8,8 +8,6 @@ firefox-appdir = "browser"
 
 ["test_search_telemetry_categorization_logic.js"]
 
-["test_search_telemetry_categorization_process_domains.js"]
-
 ["test_search_telemetry_categorization_sync.js"]
 prefs = ["browser.search.serpEventTelemetryCategorization.enabled=true"]
 

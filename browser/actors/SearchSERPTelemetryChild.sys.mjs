@@ -25,6 +25,10 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
+export const CATEGORIZATION_SETTINGS = {
+  MAX_DOMAINS_TO_CATEGORIZE: 10,
+};
+
 // Duplicated from SearchSERPTelemetry to avoid loading the module on content
 // startup.
 const SEARCH_TELEMETRY_SHARED = {
@@ -1021,10 +1025,12 @@ class DomainExtractor {
    *  The document for the SERP we are extracting domains from.
    * @param {Array<ExtractorInfo>} extractorInfos
    *  Information used to target the domains we need to extract.
+   * @param {string} providerName
+   *  Name of the search provider.
    * @return {Set<string>}
    *  A set of the domains extracted from the page.
    */
-  extractDomainsFromDocument(document, extractorInfos) {
+  extractDomainsFromDocument(document, extractorInfos, providerName) {
     let extractedDomains = new Set();
     if (!extractorInfos?.length) {
       return extractedDomains;
@@ -1047,6 +1053,7 @@ class DomainExtractor {
           this.#fromElementsConvertHrefsIntoDomains(
             elements,
             origin,
+            providerName,
             extractedDomains,
             extractorInfo.options?.queryParamKey,
             extractorInfo.options?.queryParamValueIsHref
@@ -1056,6 +1063,7 @@ class DomainExtractor {
         case "data-attribute": {
           this.#fromElementsRetrieveDataAttributeValues(
             elements,
+            providerName,
             extractorInfo.options?.dataAttributeKey,
             extractedDomains
           );
@@ -1078,6 +1086,8 @@ class DomainExtractor {
    *  inspect.
    * @param {string} origin
    *  Origin of the current page.
+   * @param {string} providerName
+   *  The name of the search provider.
    * @param {Set<string>} extractedDomains
    *  The result set of domains extracted from the page.
    * @param {string | null} queryParam
@@ -1088,11 +1098,16 @@ class DomainExtractor {
   #fromElementsConvertHrefsIntoDomains(
     elements,
     origin,
+    providerName,
     extractedDomains,
     queryParam,
     queryParamValueIsHref
   ) {
     for (let element of elements) {
+      if (this.#exceedsThreshold(extractedDomains.size)) {
+        return;
+      }
+
       let href = element.getAttribute("href");
 
       let url;
@@ -1115,12 +1130,16 @@ class DomainExtractor {
           } catch (e) {
             continue;
           }
+          paramValue = this.#processDomain(paramValue, providerName);
         }
         if (paramValue && !extractedDomains.has(paramValue)) {
           extractedDomains.add(paramValue);
         }
-      } else if (url.hostname && !extractedDomains.has(url.hostname)) {
-        extractedDomains.add(url.hostname);
+      } else if (url.hostname) {
+        let processedHostname = this.#processDomain(url.hostname, providerName);
+        if (processedHostname && !extractedDomains.has(processedHostname)) {
+          extractedDomains.add(processedHostname);
+        }
       }
     }
   }
@@ -1133,6 +1152,8 @@ class DomainExtractor {
    * @param {NodeList<Element>} elements
    *  A list of elements from the page whose data attributes we want to
    *  inspect.
+   * @param {string} providerName
+   *  The name of the search provider.
    * @param {string} attribute
    *  The name of a data attribute to search for within an element.
    * @param {Set<string>} extractedDomains
@@ -1140,15 +1161,75 @@ class DomainExtractor {
    */
   #fromElementsRetrieveDataAttributeValues(
     elements,
+    providerName,
     attribute,
     extractedDomains
   ) {
     for (let element of elements) {
+      if (this.#exceedsThreshold(extractedDomains.size)) {
+        return;
+      }
       let value = element.dataset[attribute];
+      value = this.#processDomain(value, providerName);
       if (value && !extractedDomains.has(value)) {
         extractedDomains.add(value);
       }
     }
+  }
+
+  /**
+   * Processes a raw domain extracted from the SERP into its final form before
+   * categorization.
+   *
+   * @param {string} domain
+   *   The domain extracted from the page.
+   * @param {string} providerName
+   *   The provider associated with the page.
+   * @returns {string}
+   *   The domain without any subdomains.
+   */
+  #processDomain(domain, providerName) {
+    if (
+      domain.startsWith(`${providerName}.`) ||
+      domain.includes(`.${providerName}.`)
+    ) {
+      return "";
+    }
+    return this.#stripDomainOfSubdomains(domain);
+  }
+
+  /**
+   * Helper to strip domains of any subdomains.
+   *
+   * @param {string} domain
+   *   The domain to strip of any subdomains.
+   * @returns {object} browser
+   *   The given domain with any subdomains removed.
+   */
+  #stripDomainOfSubdomains(domain) {
+    let tld;
+    // Can throw an exception if the input has too few domain levels.
+    try {
+      tld = Services.eTLD.getKnownPublicSuffixFromHost(domain);
+    } catch (ex) {
+      return "";
+    }
+
+    let domainWithoutTLD = domain.substring(0, domain.length - tld.length);
+    let secondLevelDomain = domainWithoutTLD.split(".").at(-2);
+
+    return secondLevelDomain ? `${secondLevelDomain}.${tld}` : "";
+  }
+
+  /**
+   * Per a request from Data Science, we need to limit the number of domains
+   * categorized to 10 non-ad domains and 10 ad domains.
+   *
+   * @param {number} nDomains The number of domains processed.
+   * @returns {boolean} Whether or not the threshold was exceeded.
+   */
+  #exceedsThreshold(nDomains) {
+    return nDomains >= CATEGORIZATION_SETTINGS.MAX_DOMAINS_TO_CATEGORIZE;
   }
 }
 
@@ -1293,11 +1374,13 @@ export class SearchSERPTelemetryChild extends JSWindowActorChild {
       let start = Cu.now();
       let nonAdDomains = domainExtractor.extractDomainsFromDocument(
         doc,
-        providerInfo.domainExtraction.nonAds
+        providerInfo.domainExtraction.nonAds,
+        providerInfo.telemetryId
       );
       let adDomains = domainExtractor.extractDomainsFromDocument(
         doc,
-        providerInfo.domainExtraction.ads
+        providerInfo.domainExtraction.ads,
+        providerInfo.telemetryId
       );
 
       this.sendAsyncMessage("SearchTelemetry:Domains", {
