@@ -1,0 +1,37 @@
+# Version of this schema
+schema: 1
+
+# Manual Update can be done with:
+# cd third_pary/WinToast
+# wget https://raw.githubusercontent.com/mohabouje/WinToast/master/src/wintoastlib.cpp
+# wget https://raw.githubusercontent.com/mohabouje/WinToast/master/src/wintoastlib.h
+# patch -p2 < moz-check-system-shortcut.patch
+# patch -p2 < moz-disable-create-shortcut.patch
+# patch -p2 < upstream-add-toast-scenario.patch
+
+bugzilla:
+  # Bugzilla product and component for this directory and subdirectories
+  product: Toolkit
+  component: "General"
+
+# Document the source of externally hosted code
+origin:
+
+  # Short name of the package/library
+  name: WinToast
+
+  description: WinToast is a lightly library written in C++ which brings a complete integration of the modern toast notifications of Windows 8 & Windows 10.
+
+  # Full URL for the package's homepage/etc
+  # Usually different from repository url
+  url: https://github.com/mohabouje/WinToast
+
+  # Human-readable identifier for this version/release
+  # Generally "version NNN", "tag SSS", "bookmark SSS"
+  release: commit 09227c72f16ccefc36e9d430dea3b435346dbcbc
+
+  # The package's license, where possible using the mnemonic from
+  # https://spdx.org/licenses/
+  # Multiple licenses can be specified (as a YAML list)
+  # A "LICENSE" file must exist containing the full license text
+  license: MIT
