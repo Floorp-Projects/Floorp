@@ -1,0 +1,8 @@
+[package]
+name = "gtkbind"
+version = "0.1.0"
+edition = "2021"
+
+[build-dependencies]
+bindgen = { version = "0.69.0", default-features = false, features = ["runtime"] }
+mozbuild = "0.1.0"
