@@ -52,7 +52,6 @@ browser.jar:
         content/browser/browser-pageActions.js              (content/browser-pageActions.js)
         content/browser/browser-pagestyle.js                (content/browser-pagestyle.js)
         content/browser/browser-places.js                   (content/browser-places.js)
-        content/browser/browser-profiles.js                 (content/browser-profiles.js)
         content/browser/browser-safebrowsing.js             (content/browser-safebrowsing.js)
         content/browser/browser-sidebar.js                  (content/browser-sidebar.js)
         content/browser/browser-siteIdentity.js             (content/browser-siteIdentity.js)

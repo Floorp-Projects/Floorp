@@ -38,13 +38,6 @@
           </vbox>
         </toolbarbutton>
       </toolbaritem>
-      <toolbarbutton id="appMenu-profiles-button"
-                     class="subviewbutton subviewbutton-nav"
-                     data-l10n-id="appmenuitem-profiles"
-                     data-l10n-args='{ "profilename": "" }'
-                     closemenu="none"
-                     oncommand="gProfiles.updateView(this)"
-                     hidden="true"/>
       <toolbarseparator id="appMenu-fxa-separator" class="proton-zap"/>
       <toolbarbutton id="appMenu-new-tab-button2"
                      class="subviewbutton"
@@ -217,39 +210,6 @@
                    class="subviewbutton panel-subview-footer-button"
                    data-l10n-id="appmenu-manage-history"
                    oncommand="PlacesCommandHook.showPlacesOrganizer('History'); CustomizableUI.hidePanelForNode(this);"/>
-  </panelview>
-
-  <panelview id="PanelUI-profiles" flex="1">
-    <vbox class="panel-subview-body">
-      <vbox id="current-profile">
-        <image id="profile-icon-image"></image>
-        <h2 id="profile-name"></h2>
-        <hbox id="this-profile-buttons">
-          <toolbarbutton id="profiles-edit-this-delete-button"
-                         class="subviewbutton toolbarbutton-1"
-                         oncommand="switchToTabHavingURI('about:profilemanager', true)"/>
-          <toolbarbutton id="profiles-delete-this-profile-button"
-                         class="subviewbutton toolbarbutton-1"
-                         oncommand="switchToTabHavingURI('about:profilemanager', true)"/>
-        </hbox>
-      </vbox>
-      <toolbarseparator/>
-      <vbox id="profiles-list"></vbox>
-      <toolbarseparator/>
-      <toolbarbutton id="profiles-close-profile-button"
-                     class="subviewbutton"
-                     data-l10n-id="appmenu-close-profile"
-                     data-l10n-args='{ "profilename": "" }'
-                     oncommand=""/>
-      <toolbarbutton id="profiles-create-profile-button"
-                     class="subviewbutton"
-                     data-l10n-id="appmenu-create-profile"
-                     oncommand="switchToTabHavingURI('about:profilemanager', true)"/>
-      <toolbarbutton id="profiles-manage-profiles-button"
-                     class="subviewbutton"
-                     data-l10n-id="appmenu-manage-profiles"
-                     oncommand="switchToTabHavingURI('about:profilemanager', true)"/>
-    </vbox>
   </panelview>
 
   <panelview id="appMenu-library-recentlyClosedTabs"/>
