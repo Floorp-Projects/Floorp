@@ -2112,7 +2112,6 @@ jsParallelParsing:
 jitThresholds:
   description: Prefs that control jit tier thresholds.
   owner: dpalmeiro@mozilla.com, jdemooij@mozilla.com
-  isEarlyStartup: true
   hasExposure: false
   variables:
     blinterp_threshold:
