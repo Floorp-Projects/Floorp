@@ -4192,7 +4192,7 @@ const AppearanceChooser = {
     if (e.type == "click") {
       switch (e.target.id) {
         // Forward the click to the "colors" button.
-        case "web-appearance-manage-colors-link":
+        case "web-appearance-manage-colors-button":
           document.getElementById("colors").click();
           e.preventDefault();
           break;
