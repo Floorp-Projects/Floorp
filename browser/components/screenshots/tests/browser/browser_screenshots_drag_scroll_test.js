@@ -283,6 +283,23 @@ add_task(async function test_scrollingScreenshotsOpen() {
       let { scrollWidth, scrollHeight } =
         await helper.getScreenshotsOverlayDimensions();
 
+      info(
+        JSON.stringify(
+          {
+            left,
+            top,
+            right,
+            bottom,
+            width,
+            height,
+            scrollWidth,
+            scrollHeight,
+          },
+          null,
+          2
+        )
+      );
+
       is(left, startX, "The box left is 10");
       is(top, startY, "The box top is 10");
       is(
