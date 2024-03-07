@@ -65,6 +65,9 @@ class SvgIconDecoder(val context: Context) : ImageDecoder {
             svg.renderToCanvas(Canvas(bitmap))
 
             bitmap
+        } catch (e: IllegalArgumentException) {
+            logger.error("Failed to decode SVG: " + e.message.toString())
+            null
         } catch (e: SVGParseException) {
             logger.error("Failed to parse the byte data to SVG")
             null
