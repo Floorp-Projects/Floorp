@@ -186,10 +186,9 @@ class PresentationData {
   Maybe<PendingSwapChainDrop> mPendingSwapChainDrop;
 
   const uint32_t mSourcePitch;
-  std::vector<RawId> mUnassignedBufferIds MOZ_GUARDED_BY(mBuffersLock);
-  std::vector<RawId> mAvailableBufferIds MOZ_GUARDED_BY(mBuffersLock);
-  std::vector<RawId> mQueuedBufferIds MOZ_GUARDED_BY(mBuffersLock);
-  Mutex mBuffersLock;
+  std::vector<RawId> mUnassignedBufferIds;
+  std::vector<RawId> mAvailableBufferIds;
+  std::vector<RawId> mQueuedBufferIds;
 
   PresentationData(WebGPUParent* aParent, bool aUseExternalTextureInSwapChain,
                    RawId aDeviceId, RawId aQueueId,
@@ -200,8 +199,7 @@ class PresentationData {
         mDeviceId(aDeviceId),
         mQueueId(aQueueId),
         mDesc(aDesc),
-        mSourcePitch(aSourcePitch),
-        mBuffersLock("WebGPU presentation buffers") {
+        mSourcePitch(aSourcePitch) {
     MOZ_COUNT_CTOR(PresentationData);
 
     for (const RawId id : aBufferIds) {
@@ -987,16 +985,12 @@ static void ReadbackPresentCallback(ffi::WGPUBufferMapAsyncStatus status,
   // get the buffer ID
   RawId bufferId;
   {
-    MutexAutoLock lock(data->mBuffersLock);
     bufferId = data->mQueuedBufferIds.back();
     data->mQueuedBufferIds.pop_back();
   }
 
   // Ensure we'll make the bufferId available for reuse
-  auto releaseBuffer = MakeScopeExit([data = RefPtr{data}, bufferId] {
-    MutexAutoLock lock(data->mBuffersLock);
-    data->mAvailableBufferIds.push_back(bufferId);
-  });
+  data->mAvailableBufferIds.push_back(bufferId);
 
   MOZ_LOG(sLogger, LogLevel::Info,
           ("ReadbackPresentCallback for buffer %" PRIu64 " status=%d\n",
@@ -1158,7 +1152,6 @@ ipc::IPCResult WebGPUParent::RecvSwapChainPresent(
 
   // step 1: find an available staging buffer, or create one
   {
-    MutexAutoLock lock(data->mBuffersLock);
     if (!data->mAvailableBufferIds.empty()) {
       bufferId = data->mAvailableBufferIds.back();
       data->mAvailableBufferIds.pop_back();
@@ -1303,7 +1296,6 @@ ipc::IPCResult WebGPUParent::RecvSwapChainDrop(
 
   mPresentationDataMap.erase(lookup);
 
-  MutexAutoLock lock(data->mBuffersLock);
   ipc::ByteBuf dropByteBuf;
   for (const auto bid : data->mUnassignedBufferIds) {
     wgpu_server_buffer_free(bid, ToFFI(&dropByteBuf));
