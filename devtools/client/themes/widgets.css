@@ -107,6 +107,10 @@
 .variables-view-container {
   /* Hack: force hardware acceleration */
   transform: translateZ(1px);
+
+  & > scrollbox {
+    overflow: auto;
+  }
 }
 
 .variables-view-empty-notice {
