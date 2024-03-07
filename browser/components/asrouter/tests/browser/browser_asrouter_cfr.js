@@ -184,6 +184,7 @@ add_setup(async function () {
   const { _fetchLatestAddonVersion } = CFRPageActions;
   // Prevent fetching the real addon url and making a network request
   CFRPageActions._fetchLatestAddonVersion = () => "http://example.com";
+  Services.fog.testResetFOG();
 
   registerCleanupFunction(() => {
     CFRPageActions._fetchLatestAddonVersion = _fetchLatestAddonVersion;
@@ -193,20 +194,10 @@ add_setup(async function () {
 });
 
 add_task(async function test_cfr_notification_show() {
-  registerCleanupFunction(() => {
-    Services.prefs.clearUserPref(
-      "browser.newtabpage.activity-stream.telemetry"
-    );
-    // Reset fog to clear pings here for private window test later.
-    Services.fog.testResetFOG();
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.newtabpage.activity-stream.telemetry", true]],
   });
 
-  Services.prefs.setBoolPref(
-    "browser.newtabpage.activity-stream.telemetry",
-    true
-  );
-
-  Services.fog.testResetFOG();
   let pingSubmitted = false;
   GleanPings.messagingSystem.testBeforeNextSubmit(() => {
     pingSubmitted = true;
@@ -266,6 +257,7 @@ add_task(async function test_cfr_notification_show() {
   );
 
   Assert.ok(pingSubmitted, "Recorded an event");
+  Services.fog.testResetFOG();
 });
 
 add_task(async function test_cfr_notification_show() {
@@ -332,6 +324,7 @@ add_task(async function test_cfr_notification_show() {
     0,
     "Should have removed the notification"
   );
+  Services.fog.testResetFOG();
 });
 
 add_task(async function test_cfr_notification_minimize() {
@@ -379,6 +372,7 @@ add_task(async function test_cfr_notification_minimize() {
     .getElementById("contextual-feature-recommendation-notification")
     .button.click();
   await hidePanel;
+  Services.fog.testResetFOG();
 });
 
 add_task(async function test_cfr_notification_minimize_2() {
@@ -441,6 +435,7 @@ add_task(async function test_cfr_notification_minimize_2() {
 
   clearNotifications();
   CFRPageActions.clearRecommendations();
+  Services.fog.testResetFOG();
 });
 
 add_task(async function test_cfr_addon_install() {
@@ -500,6 +495,7 @@ add_task(async function test_cfr_addon_install() {
   );
 
   clearNotifications();
+  Services.fog.testResetFOG();
 });
 
 add_task(
@@ -551,6 +547,7 @@ add_task(
     await hidePanel;
     await SpecialPowers.popPrefEnv();
     clearNotifications();
+    Services.fog.testResetFOG();
   }
 );
 
@@ -642,6 +639,7 @@ add_task(async function test_cfr_addon_and_features_show() {
     0,
     "Should have removed the notification"
   );
+  Services.fog.testResetFOG();
 });
 
 add_task(async function test_onLocationChange_cb() {
@@ -678,9 +676,8 @@ add_task(async function test_onLocationChange_cb() {
 
   Assert.equal(count, 2, "We moved to a new document");
 
-  registerCleanupFunction(() => {
-    ASRouterTriggerListeners.get("openURL").uninit();
-  });
+  ASRouterTriggerListeners.get("openURL").uninit();
+  Services.fog.testResetFOG();
 });
 
 add_task(async function test_matchPattern() {
@@ -730,9 +727,8 @@ add_task(async function test_matchPattern() {
     "www.example.com is a different host that also matches the pattern."
   );
 
-  registerCleanupFunction(() => {
-    ASRouterTriggerListeners.get("frequentVisits").uninit();
-  });
+  ASRouterTriggerListeners.get("frequentVisits").uninit();
+  Services.fog.testResetFOG();
 });
 
 add_task(async function test_providerNames() {
@@ -741,11 +737,11 @@ add_task(async function test_providerNames() {
   const cfrProviderPrefs = Services.prefs.getChildList(providersBranch);
   for (const prefName of cfrProviderPrefs) {
     const prefValue = JSON.parse(Services.prefs.getStringPref(prefName));
-    if (prefValue && prefValue.id) {
+    if (prefValue?.id) {
       Assert.equal(
         prefValue.id,
         prefName.slice(providersBranch.length),
-        "Provider id and pref name do not match"
+        "Provider id and pref name should match"
       );
     }
   }
@@ -804,6 +800,7 @@ add_task(async function test_cfr_notification_keyboard() {
     .getElementById("contextual-feature-recommendation-notification")
     .button.click();
   await hidePanel;
+  Services.fog.testResetFOG();
 });
 
 add_task(function test_updateCycleForProviders() {
@@ -811,19 +808,18 @@ add_task(function test_updateCycleForProviders() {
     .getChildList("browser.newtabpage.activity-stream.asrouter.providers.")
     .forEach(provider => {
       const prefValue = JSON.parse(Services.prefs.getStringPref(provider, ""));
-      if (prefValue && prefValue.type === "remote-settings") {
-        Assert.ok(prefValue.updateCycleInMs);
+      if (prefValue?.type === "remote-settings") {
+        is(
+          typeof prefValue.updateCycleInMs,
+          "number",
+          "updateCycleInMs is set"
+        );
       }
     });
 });
 
 add_task(async function test_heartbeat_tactic_2() {
   clearNotifications();
-  registerCleanupFunction(() => {
-    // Remove the tab opened by clicking the heartbeat message
-    gBrowser.removeCurrentTab();
-    clearNotifications();
-  });
 
   const msg = (await CFRMessageProvider.getMessages()).find(
     m => m.id === "HEARTBEAT_TACTIC_2"
@@ -858,18 +854,15 @@ add_task(async function test_heartbeat_tactic_2() {
   document.getElementById("contextual-feature-recommendation").click();
 
   await newTabPromise;
+  gBrowser.removeCurrentTab();
+  clearNotifications();
+  Services.fog.testResetFOG();
 });
 
 add_task(async function test_cfr_doorhanger_in_private_window() {
-  registerCleanupFunction(() => {
-    Services.prefs.clearUserPref(
-      "browser.newtabpage.activity-stream.telemetry"
-    );
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.newtabpage.activity-stream.telemetry", true]],
   });
-  Services.prefs.setBoolPref(
-    "browser.newtabpage.activity-stream.telemetry",
-    true
-  );
 
   let pingSubmitted = false;
   GleanPings.messagingSystem.testBeforeNextSubmit(() => {
@@ -929,4 +922,5 @@ add_task(async function test_cfr_doorhanger_in_private_window() {
 
   Assert.ok(pingSubmitted, "Submitted a CFR messaging system ping");
   await BrowserTestUtils.closeWindow(win);
+  Services.fog.testResetFOG();
 });
