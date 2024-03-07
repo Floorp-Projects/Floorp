@@ -64,6 +64,9 @@ export var PlacesTestUtils = Object.freeze({
       let info = { url: place.uri || place.url };
       let spec =
         info.url instanceof Ci.nsIURI ? info.url.spec : new URL(info.url).href;
+      info.exposableURI = Services.io.createExposableURI(
+        Services.io.newURI(spec)
+      );
       info.title = "title" in place ? place.title : "test visit for " + spec;
       let visitDate = place.visitDate;
       if (visitDate) {
@@ -107,7 +110,7 @@ export var PlacesTestUtils = Object.freeze({
     }
     if (lastStoredVisit) {
       await lazy.TestUtils.waitForCondition(
-        () => lazy.PlacesUtils.history.fetch(lastStoredVisit.url),
+        () => lazy.PlacesUtils.history.fetch(lastStoredVisit.exposableURI),
         "Ensure history has been updated and is visible to read-only connections"
       );
     }
