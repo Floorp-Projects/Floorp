@@ -655,9 +655,10 @@ class AudioCallbackDriver : public GraphDriver, public MixerCallbackReceiver {
   void Init(const nsCString& aStreamName);
   void SetCubebStreamName(const nsCString& aStreamName);
   void Stop();
-  /* Calls FallbackToSystemClockDriver() and returns true if no fallback is
-   * running, otherwise returns false. */
-  bool EnsureFallbackDriver();
+  /* Calls FallbackToSystemClockDriver() if in FallbackDriverState::None.
+   * Returns Ok(true) if the fallback driver was started, or the old
+   * FallbackDriverState in an Err otherwise. */
+  Result<bool, FallbackDriverState> TryStartingFallbackDriver();
   /* Fall back to a SystemClockDriver using a normal thread. If needed, the
    * graph will try to re-open an audio stream later. */
   void FallbackToSystemClockDriver();
