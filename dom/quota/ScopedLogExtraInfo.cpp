@@ -9,19 +9,21 @@
 namespace mozilla::dom::quota {
 
 #ifdef QM_SCOPED_LOG_EXTRA_INFO_ENABLED
-MOZ_THREAD_LOCAL(const nsACString*) ScopedLogExtraInfo::sQueryValue;
-MOZ_THREAD_LOCAL(const nsACString*) ScopedLogExtraInfo::sContextValue;
+MOZ_THREAD_LOCAL(const Tainted<nsCString>*)
+ScopedLogExtraInfo::sQueryValueTainted;
+MOZ_THREAD_LOCAL(const Tainted<nsCString>*)
+ScopedLogExtraInfo::sContextValueTainted;
 
 /* static */
 auto ScopedLogExtraInfo::FindSlot(const char* aTag) {
   // XXX For now, don't use a real map but just allow the known tag values.
 
-  if (aTag == kTagQuery) {
-    return &sQueryValue;
+  if (aTag == kTagQueryTainted) {
+    return &sQueryValueTainted;
   }
 
-  if (aTag == kTagContext) {
-    return &sContextValue;
+  if (aTag == kTagContextTainted) {
+    return &sContextValueTainted;
   }
 
   MOZ_CRASH("Unknown tag!");
@@ -51,20 +53,20 @@ ScopedLogExtraInfo::GetExtraInfoMap() {
   // the caller(s).
 
   ScopedLogExtraInfoMap map;
-  if (sQueryValue.get()) {
-    map.emplace(kTagQuery, sQueryValue.get());
+  if (sQueryValueTainted.get()) {
+    map.emplace(kTagQueryTainted, sQueryValueTainted.get());
   }
 
-  if (sContextValue.get()) {
-    map.emplace(kTagContext, sContextValue.get());
+  if (sContextValueTainted.get()) {
+    map.emplace(kTagContextTainted, sContextValueTainted.get());
   }
 
   return map;
 }
 
 /* static */ void ScopedLogExtraInfo::Initialize() {
-  MOZ_ALWAYS_TRUE(sQueryValue.init());
-  MOZ_ALWAYS_TRUE(sContextValue.init());
+  MOZ_ALWAYS_TRUE(sQueryValueTainted.init());
+  MOZ_ALWAYS_TRUE(sContextValueTainted.init());
 }
 
 void ScopedLogExtraInfo::AddInfo() {

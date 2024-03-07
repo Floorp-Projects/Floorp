@@ -378,7 +378,7 @@ nsresult LSSnapshot::SetItem(const nsAString& aKey, const nsAString& aValue,
 
     {
       quota::ScopedLogExtraInfo scope{
-          quota::ScopedLogExtraInfo::kTagContext,
+          quota::ScopedLogExtraInfo::kTagContextTainted,
           "dom::localstorage::LSSnapshot::SetItem::UpdateUsage"_ns};
       QM_TRY(MOZ_TO_RESULT(UpdateUsage(delta)), QM_PROPAGATE, QM_NO_CLEANUP,
              ([]() {

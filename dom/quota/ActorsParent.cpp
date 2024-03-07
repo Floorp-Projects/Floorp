@@ -2376,7 +2376,7 @@ void QuotaManager::Shutdown() {
 
   // Body of the function
 
-  ScopedLogExtraInfo scope{ScopedLogExtraInfo::kTagContext,
+  ScopedLogExtraInfo scope{ScopedLogExtraInfo::kTagContextTainted,
                            "dom::quota::QuotaManager::Shutdown"_ns};
 
   // This must be called before `flagShutdownStarted`, it would fail otherwise.

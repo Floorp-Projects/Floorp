@@ -374,14 +374,15 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aMaybeRv,
     return;
   }
 
-  nsAutoCString context;
+  const Tainted<nsCString>* contextTaintedPtr = nullptr;
 
 #  ifdef QM_SCOPED_LOG_EXTRA_INFO_ENABLED
   const auto& extraInfoMap = ScopedLogExtraInfo::GetExtraInfoMap();
 
-  if (const auto contextIt = extraInfoMap.find(ScopedLogExtraInfo::kTagContext);
+  if (const auto contextIt =
+          extraInfoMap.find(ScopedLogExtraInfo::kTagContextTainted);
       contextIt != extraInfoMap.cend()) {
-    context = *contextIt->second;
+    contextTaintedPtr = contextIt->second;
   }
 #  endif
 
@@ -444,36 +445,45 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aMaybeRv,
   }
 #  endif
 
-  nsAutoCString extraInfosString;
+  auto extraInfosStringTainted = Tainted<nsAutoCString>([&] {
+    nsAutoCString extraInfosString;
 
-  if (!rvCode.IsEmpty()) {
-    extraInfosString.Append(" failed with resultCode "_ns + rvCode);
-  }
+    if (!rvCode.IsEmpty()) {
+      extraInfosString.Append(" failed with resultCode "_ns + rvCode);
+    }
 
-  if (!rvName.IsEmpty()) {
-    extraInfosString.Append(", resultName "_ns + rvName);
-  }
+    if (!rvName.IsEmpty()) {
+      extraInfosString.Append(", resultName "_ns + rvName);
+    }
 
 #  ifdef QM_ERROR_STACKS_ENABLED
-  if (!frameIdString.IsEmpty()) {
-    extraInfosString.Append(", frameId "_ns + frameIdString);
-  }
+    if (!frameIdString.IsEmpty()) {
+      extraInfosString.Append(", frameId "_ns + frameIdString);
+    }
 
-  if (!stackIdString.IsEmpty()) {
-    extraInfosString.Append(", stackId "_ns + stackIdString);
-  }
+    if (!stackIdString.IsEmpty()) {
+      extraInfosString.Append(", stackId "_ns + stackIdString);
+    }
 
-  if (!processIdString.IsEmpty()) {
-    extraInfosString.Append(", processId "_ns + processIdString);
-  }
+    if (!processIdString.IsEmpty()) {
+      extraInfosString.Append(", processId "_ns + processIdString);
+    }
 #  endif
 
 #  ifdef QM_SCOPED_LOG_EXTRA_INFO_ENABLED
-  for (const auto& item : extraInfoMap) {
-    extraInfosString.Append(", "_ns + nsDependentCString(item.first) + " "_ns +
-                            *item.second);
-  }
+    for (const auto& item : extraInfoMap) {
+      const auto& valueTainted = *item.second;
+
+      extraInfosString.Append(
+          ", "_ns + nsDependentCString(item.first) + " "_ns +
+          MOZ_NO_VALIDATE(valueTainted,
+                          "It's okay to append any `extraInfoMap` value to "
+                          "`extraInfosString`."));
+    }
 #  endif
+
+    return extraInfosString;
+  }());
 
   const auto sourceFileRelativePath =
       detail::MakeSourceFileRelativePath(aSourceFilePath);
@@ -482,9 +492,14 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aMaybeRv,
   NS_DebugBreak(
       NS_DEBUG_WARNING,
       nsAutoCString("QM_TRY failure ("_ns + severityString + ")"_ns).get(),
-      (extraInfosString.IsEmpty() ? nsPromiseFlatCString(aExpr)
-                                  : static_cast<const nsCString&>(nsAutoCString(
-                                        aExpr + extraInfosString)))
+      (MOZ_NO_VALIDATE(extraInfosStringTainted,
+                       "It's okay to check if `extraInfosString` is empty.")
+               .IsEmpty()
+           ? nsPromiseFlatCString(aExpr)
+           : static_cast<const nsCString&>(nsAutoCString(
+                 aExpr + MOZ_NO_VALIDATE(extraInfosStringTainted,
+                                         "It's okay to log `extraInfosString` "
+                                         "to stdout/console."))))
           .get(),
       nsPromiseFlatCString(sourceFileRelativePath).get(), aSourceFileLine);
 #  endif
@@ -496,13 +511,16 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aMaybeRv,
   // reporting (instead of the browsing console).
   // Another option is to keep the current check and rely on MOZ_LOG reporting
   // in future once that's available.
-  if (!context.IsEmpty()) {
+  if (contextTaintedPtr) {
     nsCOMPtr<nsIConsoleService> console =
         do_GetService(NS_CONSOLESERVICE_CONTRACTID);
     if (console) {
       NS_ConvertUTF8toUTF16 message(
           "QM_TRY failure ("_ns + severityString + ")"_ns + ": '"_ns + aExpr +
-          extraInfosString + "', file "_ns + sourceFileRelativePath + ":"_ns +
+          MOZ_NO_VALIDATE(
+              extraInfosStringTainted,
+              "It's okay to log `extraInfosString` to the browser console.") +
+          "', file "_ns + sourceFileRelativePath + ":"_ns +
           IntToCString(aSourceFileLine));
 
       // The concatenation above results in a message like:
@@ -521,7 +539,9 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aMaybeRv,
   // telemetry (besides carrying information). Other tags (like query) don't
   // enable logging to telemetry.
 
-  if (!context.IsEmpty()) {
+  if (contextTaintedPtr) {
+    const auto& contextTainted = *contextTaintedPtr;
+
     // Do NOT CHANGE this if you don't know what you're doing.
 
     // `extraInfoString` is not included in the telemetry event on purpose
@@ -538,7 +558,11 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aMaybeRv,
       auto res = CopyableTArray<EventExtraEntry>{};
       res.SetCapacity(9);
 
-      res.AppendElement(EventExtraEntry{"context"_ns, nsCString{context}});
+      res.AppendElement(EventExtraEntry{
+          "context"_ns,
+          MOZ_NO_VALIDATE(
+              contextTainted,
+              "Context has been data-reviewed for telemetry transmission.")});
 
 #    ifdef QM_ERROR_STACKS_ENABLED
       if (!frameIdString.IsEmpty()) {
