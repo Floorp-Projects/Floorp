@@ -32,7 +32,6 @@ ALLOWED_ISEARLYSTARTUP_FEATURE_IDS = {
     "majorRelease2022",
     "newtab",
     "pocketNewtab",
-    "powerSaver",
     "reportBrokenSite",
     "saveToPocket",
     "searchConfiguration",
