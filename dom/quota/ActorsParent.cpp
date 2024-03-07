@@ -2711,6 +2711,10 @@ nsresult QuotaManager::LoadQuota() {
 
           fullOriginMetadata.mStorageOrigin = fullOriginMetadata.mOrigin;
 
+          const auto extraInfo =
+              ScopedLogExtraInfo{ScopedLogExtraInfo::kTagStorageOriginTainted,
+                                 fullOriginMetadata.mStorageOrigin};
+
           fullOriginMetadata.mIsPrivate = false;
 
           QM_TRY_INSPECT(const auto& clientUsagesText,
@@ -3592,6 +3596,10 @@ nsresult QuotaManager::InitializeRepository(PersistenceType aPersistenceType,
                         MOZ_ASSERT(metadata.mPersistenceType ==
                                    aPersistenceType);
 
+                        const auto extraInfo = ScopedLogExtraInfo{
+                            ScopedLogExtraInfo::kTagStorageOriginTainted,
+                            metadata.mStorageOrigin};
+
                         // FIXME(tt): The check for origin name consistency can
                         // be removed once we have an upgrade to traverse origin
                         // directories and check through the directory metadata
@@ -3683,6 +3691,10 @@ nsresult QuotaManager::InitializeRepository(PersistenceType aPersistenceType,
     QM_TRY(([&]() -> Result<Ok, nsresult> {
       QM_TRY(([&directory, &info, this, aPersistenceType,
                &aOriginFunc]() -> Result<Ok, nsresult> {
+               const auto extraInfo = ScopedLogExtraInfo{
+                   ScopedLogExtraInfo::kTagStorageOriginTainted,
+                   info.mFullOriginMetadata.mStorageOrigin};
+
                const auto originDirName =
                    MakeSanitizedOriginString(info.mFullOriginMetadata.mOrigin);
 
@@ -3731,6 +3743,10 @@ nsresult QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
                                         int64_t aAccessTime, bool aPersisted,
                                         nsIFile* aDirectory) {
   AssertIsOnIOThread();
+
+  // The ScopedLogExtraInfo is not set here on purpose, so the callers can
+  // decide if they want to set it. The extra info can be set sooner this way
+  // as well.
 
   const bool trackQuota = aPersistenceType != PERSISTENCE_TYPE_PERSISTENT;
 
@@ -5215,6 +5231,10 @@ QuotaManager::EnsurePersistentOriginIsInitialized(
   const auto innerFunc = [&aOriginMetadata,
                           this](const auto& firstInitializationAttempt)
       -> mozilla::Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult> {
+    const auto extraInfo =
+        ScopedLogExtraInfo{ScopedLogExtraInfo::kTagStorageOriginTainted,
+                           aOriginMetadata.mStorageOrigin};
+
     QM_TRY_UNWRAP(auto directory, GetOriginDirectory(aOriginMetadata));
 
     if (mInitializedOrigins.Contains(aOriginMetadata.mOrigin)) {

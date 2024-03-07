@@ -13,6 +13,8 @@ MOZ_THREAD_LOCAL(const Tainted<nsCString>*)
 ScopedLogExtraInfo::sQueryValueTainted;
 MOZ_THREAD_LOCAL(const Tainted<nsCString>*)
 ScopedLogExtraInfo::sContextValueTainted;
+MOZ_THREAD_LOCAL(const Tainted<nsCString>*)
+ScopedLogExtraInfo::sStorageOriginValueTainted;
 
 /* static */
 auto ScopedLogExtraInfo::FindSlot(const char* aTag) {
@@ -24,6 +26,10 @@ auto ScopedLogExtraInfo::FindSlot(const char* aTag) {
 
   if (aTag == kTagContextTainted) {
     return &sContextValueTainted;
+  }
+
+  if (aTag == kTagStorageOriginTainted) {
+    return &sStorageOriginValueTainted;
   }
 
   MOZ_CRASH("Unknown tag!");
@@ -61,12 +67,17 @@ ScopedLogExtraInfo::GetExtraInfoMap() {
     map.emplace(kTagContextTainted, sContextValueTainted.get());
   }
 
+  if (sStorageOriginValueTainted.get()) {
+    map.emplace(kTagStorageOriginTainted, sStorageOriginValueTainted.get());
+  }
+
   return map;
 }
 
 /* static */ void ScopedLogExtraInfo::Initialize() {
   MOZ_ALWAYS_TRUE(sQueryValueTainted.init());
   MOZ_ALWAYS_TRUE(sContextValueTainted.init());
+  MOZ_ALWAYS_TRUE(sStorageOriginValueTainted.init());
 }
 
 void ScopedLogExtraInfo::AddInfo() {
