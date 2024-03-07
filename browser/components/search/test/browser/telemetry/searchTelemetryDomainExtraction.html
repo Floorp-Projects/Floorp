@@ -25,6 +25,8 @@
     <div id="test3">
       <div data-layout="organic">
         <a href="/dummy-page" data-testid="result-title-a">Extract domain from href (relative URL).</a>
+        <a href="https://example.org/dummy-page" data-testid="result-title-a">Extract domain from href.</a>
+        <a href="https://www.example.org/dummy-page" data-testid="result-title-a">Extract domain from href.</a>
       </div>
     </div>
 
@@ -40,7 +42,9 @@
     </div>
 
     <div id="test6">
-      <a href="example.com/testing?ad_domain=def.com" class="js-carousel-item-title">Extract domain from an href's query param value.</a>
+      <a href="https://www.example.org/testing?ad_domain=def.com" class="js-carousel-item-title">Extract domain from an href's query param value.</a>
+      <a href="https://example.org/testing?ad_domain=bar.com" class="js-carousel-item-title">Extract domain from an href's query param value.</a>
+      <a href="/testing?ad_domain=baz.com" class="js-carousel-item-title">Extract domain from a relative href containing a relevant query param value.</a>
     </div>
 
     <div id="test7">
@@ -78,6 +82,56 @@
 
     <div id="test14">
       <a href="git://testing.com/testrepo">Non-standard URL scheme.</a>
+    </div>
+
+    <div id="test15">
+      <h5>Second-level domains to a top-level domain.</h5>
+      <a href="https://www.foobar.gc.ca/">Link</a>
+      <a href="https://www.foobar.gov.uk/">Link</a>
+      <a href="https://foobar.co.uk">Link</a>
+      <a href="https://www.foobar.co.il">Link</a>
+    </div>
+
+    <div id="test16">
+      <a href="https://ab.cd.ef.gh.foobar.com/">URL with a long subdomain</a>
+    </div>
+
+    <div id="test17">
+      <h5>URL with the same top level domain.</h5>
+      <a href="https://foobar.com/">Link</a>
+      <a href="https://www.foobar.com/">Link</a>
+      <a href="https://abc.def.foobar.com/">Link</a>
+    </div>
+
+    <div id="test18">
+      <h5>More than the threshold of links.</h5>
+      <a href="https://foobar1.com/">Link</a>
+      <a href="https://foobar1.com/">Duplicate Link</a>
+      <a href="https://foobar2.com/">Link</a>
+      <a href="https://foobar3.com/">Link</a>
+      <a href="https://foobar4.com/">Link</a>
+      <a href="https://foobar5.com/">Link</a>
+      <a href="https://foobar6.com/">Link</a>
+      <a href="https://foobar7.com/">Link</a>
+      <a href="https://foobar8.com/">Link</a>
+      <a href="https://foobar9.com/">Link</a>
+      <a href="https://foobar10.com/">Link</a>
+      <a href="https://foobar11.com/">Link Outside Threshold</a>
+    </div>
+
+    <div id="test19">
+      <h5>More than the threshold of links using multiple matching selectors.</h5>
+      <a class="foo" href="https://foobar1.com/">Link</a>
+      <a class="foo" href="https://foobar2.com/">Link</a>
+      <a class="foo" href="https://foobar3.com/">Link</a>
+      <a class="foo" href="https://foobar4.com/">Link</a>
+      <a class="foo" href="https://foobar5.com/">Link</a>
+      <a class="foo" href="https://foobar6.com/">Link</a>
+      <a class="foo" href="https://foobar7.com/">Link</a>
+      <a class="foo" href="https://foobar8.com/">Link</a>
+      <a class="foo" href="https://foobar9.com/">Link</a>
+      <a class="baz" href="https://foobaz1.com/">Link</a>
+      <a class="baz" href="https://foobaz2.com/">Link Outside Threshold</a>
     </div>
   </div>
 </body>

@@ -11,6 +11,10 @@ ChromeUtils.defineESModuleGetters(this, {
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
 });
 
+// The search provider's name is provided to ensure we can extract domains
+// from relative links, e.g. /url?=https://www.foobar.com
+const SEARCH_PROVIDER_NAME = "example";
+
 const TESTS = [
   {
     title: "Extract domain from href (absolute URL) - one link.",
@@ -35,7 +39,7 @@ const TESTS = [
     expectedDomains: ["foo.com", "bar.com", "baz.com", "qux.com"],
   },
   {
-    title: "Extract domain from href (relative URL).",
+    title: "Extract domain from href (relative URL / URL matching provider)",
     extractorInfos: [
       {
         selectors:
@@ -43,7 +47,7 @@ const TESTS = [
         method: "href",
       },
     ],
-    expectedDomains: ["example.org"],
+    expectedDomains: [],
   },
   {
     title: "Extract domain from data attribute - one link.",
@@ -56,7 +60,7 @@ const TESTS = [
         },
       },
     ],
-    expectedDomains: ["www.abc.com"],
+    expectedDomains: ["abc.com"],
   },
   {
     title: "Extract domain from data attribute - multiple links.",
@@ -69,12 +73,7 @@ const TESTS = [
         },
       },
     ],
-    expectedDomains: [
-      "www.foo.com",
-      "www.bar.com",
-      "www.baz.com",
-      "www.qux.com",
-    ],
+    expectedDomains: ["foo.com", "bar.com", "baz.com", "qux.com"],
   },
   {
     title: "Extract domain from an href's query param value.",
@@ -88,7 +87,7 @@ const TESTS = [
         },
       },
     ],
-    expectedDomains: ["def.com"],
+    expectedDomains: ["def.com", "bar.com", "baz.com"],
   },
   {
     title:
@@ -158,7 +157,7 @@ const TESTS = [
         },
       },
     ],
-    expectedDomains: ["foobar.com", "www.abc.com", "def.com"],
+    expectedDomains: ["foobar.com", "abc.com", "def.com"],
   },
   {
     title: "No elements match the selectors.",
@@ -208,6 +207,90 @@ const TESTS = [
     ],
     expectedDomains: [],
   },
+  {
+    title: "Second-level domains to a top-level domain.",
+    extractorInfos: [
+      {
+        selectors: "#test15 a",
+        method: "href",
+      },
+    ],
+    expectedDomains: [
+      "foobar.gc.ca",
+      "foobar.gov.uk",
+      "foobar.co.uk",
+      "foobar.co.il",
+    ],
+  },
+  {
+    title: "URL with a long subdomain.",
+    extractorInfos: [
+      {
+        selectors: "#test16 a",
+        method: "href",
+      },
+    ],
+    expectedDomains: ["foobar.com"],
+  },
+  {
+    title: "URLs with the same top level domain.",
+    extractorInfos: [
+      {
+        selectors: "#test17 a",
+        method: "href",
+      },
+    ],
+    expectedDomains: ["foobar.com"],
+  },
+  {
+    title: "Maximum domains extracted from a single selector.",
+    extractorInfos: [
+      {
+        selectors: "#test18 a",
+        method: "href",
+      },
+    ],
+    expectedDomains: [
+      "foobar1.com",
+      "foobar2.com",
+      "foobar3.com",
+      "foobar4.com",
+      "foobar5.com",
+      "foobar6.com",
+      "foobar7.com",
+      "foobar8.com",
+      "foobar9.com",
+      "foobar10.com",
+    ],
+  },
+  {
+    // This is just in case we use multiple selectors meant for separate SERPs
+    // and the provider switches to re-using their markup.
+    title: "Maximum domains extracted from multiple matching selectors.",
+    extractorInfos: [
+      {
+        selectors: "#test19 a.foo",
+        method: "href",
+      },
+      {
+        selectors: "#test19 a.baz",
+        method: "href",
+      },
+    ],
+    expectedDomains: [
+      "foobar1.com",
+      "foobar2.com",
+      "foobar3.com",
+      "foobar4.com",
+      "foobar5.com",
+      "foobar6.com",
+      "foobar7.com",
+      "foobar8.com",
+      "foobar9.com",
+      // This is from the second selector.
+      "foobaz1.com",
+    ],
+  },
 ];
 
 add_setup(async function () {
@@ -240,14 +323,15 @@ add_task(async function test_domain_extraction_heuristics() {
     let expectedDomains = new Set(currentTest.expectedDomains);
     let actualDomains = await SpecialPowers.spawn(
       gBrowser.selectedBrowser,
-      [currentTest.extractorInfos],
-      extractorInfos => {
+      [currentTest.extractorInfos, SEARCH_PROVIDER_NAME],
+      (extractorInfos, searchProviderName) => {
         const { domainExtractor } = ChromeUtils.importESModule(
           "resource:///actors/SearchSERPTelemetryChild.sys.mjs"
         );
         return domainExtractor.extractDomainsFromDocument(
           content.document,
-          extractorInfos
+          extractorInfos,
+          searchProviderName
         );
       }
     );
