@@ -76,6 +76,9 @@ var gExceptionPaths = [
   // Localization file added programatically in FeatureCallout.sys.mjs
   "resource://app/localization/en-US/browser/featureCallout.ftl",
 
+  // Localization file added programatically in ContentAnalysis.sys.mjs
+  "resource://gre/localization/en-US/toolkit/contentanalysis/",
+
   // CSS files are referenced inside JS in an html template
   "chrome://browser/content/aboutlogins/components/",
 ];
