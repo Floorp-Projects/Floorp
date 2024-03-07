@@ -36,26 +36,14 @@ async function testMono(type) {
 
   var panner = ac.createPanner();
   panner.distanceModel = "linear";
-  panner.refDistance = 1;
-  panner.positionX.value = 0;
-  panner.positionY.value = 0;
-  panner.positionZ.value = 0;
   monoSource.connect(panner);
 
   var panner2 = ac.createPanner();
   panner2.distanceModel = "inverse";
-  panner2.refDistance = 1;
-  panner2.positionX.value = 0;
-  panner2.positionY.value = 0;
-  panner2.positionZ.value = 0;
   panner.connect(panner2);
 
   var panner3 = ac.createPanner();
   panner3.distanceModel = "exponential";
-  panner3.refDistance = 1;
-  panner3.positionX.value = 0;
-  panner3.positionY.value = 0;
-  panner3.positionZ.value = 0;
   panner2.connect(panner3);
 
   panner3.connect(ac.destination);
@@ -92,26 +80,14 @@ async function testStereo(type) {
 
   var panner = ac.createPanner();
   panner.distanceModel = "linear";
-  panner.refDistance = 1;
-  panner.positionX.value = 0;
-  panner.positionY.value = 0;
-  panner.positionZ.value = 0;
   stereoSource.connect(panner);
 
   var panner2 = ac.createPanner();
   panner2.distanceModel = "inverse";
-  panner2.refDistance = 1;
-  panner2.positionX.value = 0;
-  panner2.positionY.value = 0;
-  panner2.positionZ.value = 0;
   panner.connect(panner2);
 
   var panner3 = ac.createPanner();
   panner3.distanceModel = "exponential";
-  panner3.refDistance = 1;
-  panner3.positionX.value = 0;
-  panner3.positionY.value = 0;
-  panner3.positionZ.value = 0;
   panner2.connect(panner3);
 
   panner3.connect(ac.destination);
