@@ -6,7 +6,6 @@ loader: gecko_taskgraph.loader.transform:loader
 
 transforms:
     - android_taskgraph.transforms.ui_tests:transforms
-    - android_taskgraph.transforms.gradle_optimization:transforms
     - gecko_taskgraph.transforms.job:transforms
     - gecko_taskgraph.transforms.task:transforms
 
@@ -58,9 +57,7 @@ job-defaults:
             GOOGLE_PROJECT: moz-android-components-230120
         max-run-time: 2400
     optimization:
-        skip-unless-changed:
-            - mobile/android/android-components/automation/taskcluster/androidTest/ui-test.sh
-            # More paths are dynamically added by transforms
+        skip-unless-backstop: null
 
 
 jobs:
