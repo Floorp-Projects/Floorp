@@ -48,23 +48,14 @@ var gotEnded = false;
 var ccDelayBufferCount = 20;
 const ccDelayLength = ccDelayBufferCount * bufferSize;
 
-var ctx;
+var ctx = new AudioContext();
 var testPanners = [];
-var referencePanner;
+var referencePanner = new PannerNode(ctx, {panningModel: "HRTF"});
 var referenceProcessCount = 0;
 var referenceOutput = [new Float32Array(bufferSize),
                        new Float32Array(bufferSize)];
 var testProcessor;
 var testProcessCount = 0;
-
-function isChannelSilent(channel) {
-  for (var i = 0; i < channel.length; ++i) {
-    if (channel[i] != 0.0) {
-      return false;
-    }
-  }
-  return true;
-}
 
 function onReferenceOutput(e) {
   switch(referenceProcessCount) {
@@ -142,6 +133,10 @@ function startTest() {
   // and 512 is fftSize() at 48 kHz.
   const expectedPannerTailTime = 0.002 * ctx.sampleRate + 512;
 
+  // Place the listener to the side of the origin, where the panners are
+  // positioned, to maximize delay in one ear.
+  ctx.listener.setPosition(1,0,0);
+
   // Create some PannerNodes downstream from DelayNodes with delays long
   // enough for their source to finish, dispatch its "ended" event
   // and release its playing reference.  The DelayNodes should expire their
@@ -198,34 +193,7 @@ function startTest() {
   testProcessor.connect(ctx.destination);
 }
 
-function prepareTest() {
-  ctx = new AudioContext();
-  // Place the listener to the side of the origin, where the panners are
-  // positioned, to maximize delay in one ear.
-  ctx.listener.setPosition(1,0,0);
-
-  // A PannerNode will produce no output until it has loaded its HRIR
-  // database.  Wait for this to load before starting the test.
-  var processor = ctx.createScriptProcessor(bufferSize, 2, 0);
-  referencePanner = ctx.createPanner();
-  referencePanner.panningModel = "HRTF";
-  referencePanner.connect(processor);
-  var oscillator = ctx.createOscillator();
-  oscillator.connect(referencePanner);
-  oscillator.start(0);
-
-  processor.onaudioprocess = function(e) {
-    if (isChannelSilent(e.inputBuffer.getChannelData(0)))
-      return;
-
-    oscillator.stop(0);
-    oscillator.disconnect();
-    referencePanner.disconnect();
-    e.target.onaudioprocess = null;
-    SimpleTest.executeSoon(startTest);
-  };
-}
-prepareTest();
+promiseHRTFReady(ctx.sampleRate).then(startTest);
 </script>
 </pre>
 </body>
