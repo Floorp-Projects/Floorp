@@ -251,7 +251,7 @@ const CONFIG_SIMPLE_EVERYWHERE_V2 = [
   },
 ];
 
-let engine;
+let lastEngineId;
 let extension;
 let configStub;
 let notificationBoxStub;
@@ -535,8 +535,13 @@ async function assertCorrectlySwitchedWhenExtended(
   );
   notificationBoxStub.resetHistory();
 
-  info("Install WebExtension based engine and set as default");
+  info(
+    `Install ${
+      testOpenSearch ? "OpenSearch" : "WebExtension"
+    } based engine and set as default`
+  );
 
+  let engine;
   if (testOpenSearch) {
     engine = await SearchTestUtils.promiseNewSearchEngine({
       url: `${gDataUrl}engineMaker.sjs?${JSON.stringify({
@@ -611,6 +616,9 @@ async function assertCorrectlySwitchedWhenExtended(
     expectedAlias: "star",
     appEngineOverriden: true,
   });
+
+  // Save lastEngineId for use in assertCorrectlySwitchedWhenRemoved.
+  lastEngineId = engine.id;
 }
 
 /**
@@ -635,7 +643,7 @@ async function assertCorrectlySwitchedWhenRemoved(
   await changeFn();
 
   await assertEngineCorrectlySet({
-    expectedId: engine.id,
+    expectedId: lastEngineId,
     expectedAlias: "star",
     appEngineOverriden: false,
   });
@@ -656,14 +664,14 @@ async function assertCorrectlySwitchedWhenRemoved(
   await Services.search.init();
 
   await assertEngineCorrectlySet({
-    expectedId: engine.id,
+    expectedId: lastEngineId,
     expectedAlias: "star",
     appEngineOverriden: false,
   });
 
   if (testOpenSearch) {
     await Services.search.removeEngine(
-      Services.search.getEngineById(engine.id)
+      Services.search.getEngineById(lastEngineId)
     );
   } else {
     await extension.unload();
@@ -689,7 +697,7 @@ async function assertEngineCorrectlySet({
     "Should have kept the third party engine as default"
   );
   Assert.equal(
-    decodeURI(engine.getSubmission("{searchTerms}").uri.spec),
+    decodeURI(defaultEngine.getSubmission("{searchTerms}").uri.spec),
     SEARCH_URL_BASE + SEARCH_URL_PARAMS,
     "Should have used the third party engine's URLs"
   );
