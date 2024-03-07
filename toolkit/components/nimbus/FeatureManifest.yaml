@@ -2470,7 +2470,6 @@ backgroundThreads:
   description: Prefs to control MacOS thread priorities for power savings.
   owner: kwright@mozilla.com
   hasExposure: false
-  isEarlyStartup: true
   variables:
     use_low_power:
       description: >-
