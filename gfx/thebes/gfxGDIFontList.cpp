@@ -853,6 +853,13 @@ bool gfxGDIFontList::FindAndAddFamiliesLocked(
       aDevToCssSize);
 }
 
+nsTArray<std::pair<const char**, uint32_t>>
+gfxGDIFontList::GetFilteredPlatformFontLists() {
+  nsTArray<std::pair<const char**, uint32_t>> fontLists;
+
+  return fontLists;
+}
+
 FontFamily gfxGDIFontList::GetDefaultFontForPlatform(
     nsPresContext* aPresContext, const gfxFontStyle* aStyle,
     nsAtom* aLanguage) {

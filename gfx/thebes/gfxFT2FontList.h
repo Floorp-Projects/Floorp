@@ -210,6 +210,9 @@ class gfxFT2FontList final : public gfxPlatformFontList {
   void CollectInitData(const FontListEntry& aFLE, const nsCString& aPSName,
                        const nsCString& aFullName, StandardFile aStdFile);
 
+  nsTArray<std::pair<const char**, uint32_t>> GetFilteredPlatformFontLists()
+      override;
+
   /**
    * Callback passed to AppendFacesFromCachedFaceList to collect family/face
    * information in either the unshared or shared list we're building.

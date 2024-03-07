@@ -332,6 +332,9 @@ class gfxGDIFontList final : public gfxPlatformFontList {
                                        nsAtom* aLanguage = nullptr)
       MOZ_REQUIRES(mLock) override;
 
+  nsTArray<std::pair<const char**, uint32_t>> GetFilteredPlatformFontLists()
+      override;
+
  private:
   friend class gfxWindowsPlatform;
 

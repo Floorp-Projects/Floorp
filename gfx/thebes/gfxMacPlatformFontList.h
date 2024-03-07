@@ -17,6 +17,9 @@ class gfxMacPlatformFontList final : public CoreTextFontList {
         gfxPlatformFontList::PlatformFontList());
   }
 
+  nsTArray<std::pair<const char**, uint32_t>> GetFilteredPlatformFontLists()
+      override;
+
   static void LookupSystemFont(mozilla::LookAndFeel::FontID aSystemFontID,
                                nsACString& aSystemFontName,
                                gfxFontStyle& aFontStyle);

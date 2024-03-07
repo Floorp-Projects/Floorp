@@ -252,6 +252,15 @@ FontVisibility gfxMacPlatformFontList::GetVisibilityForFamily(
   return FontVisibility::User;
 }
 
+nsTArray<std::pair<const char**, uint32_t>>
+gfxMacPlatformFontList::GetFilteredPlatformFontLists() {
+  nsTArray<std::pair<const char**, uint32_t>> fontLists;
+
+  fontLists.AppendElement(std::make_pair(kBaseFonts, ArrayLength(kBaseFonts)));
+
+  return fontLists;
+}
+
 bool gfxMacPlatformFontList::DeprecatedFamilyIsAvailable(
     const nsACString& aName) {
   NSString* family = GetNSStringForString(NS_ConvertUTF8toUTF16(aName));
