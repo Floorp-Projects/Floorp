@@ -29,7 +29,6 @@ ALLOWED_ISEARLYSTARTUP_FEATURE_IDS = {
     "dapTelemetry",
     "deviceMigration",
     "gleanInternalSdk",
-    "jsParallelParsing",
     "majorRelease2022",
     "migrationWizard",
     "newtab",

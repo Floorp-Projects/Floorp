@@ -2099,7 +2099,6 @@ gc:
 jsParallelParsing:
   description: Pref to toggle JS parallel parsing.
   owner: dpalmeiro@mozilla.com, nbp@mozilla.com
-  isEarlyStartup: true
   hasExposure: false
   variables:
     enabled:
