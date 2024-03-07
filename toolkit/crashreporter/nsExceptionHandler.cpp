@@ -7,6 +7,7 @@
 #include "nsExceptionHandler.h"
 #include "nsExceptionHandlerUtils.h"
 
+#include "json/json.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsComponentManagerUtils.h"
 #include "nsDirectoryServiceDefs.h"
@@ -94,6 +95,9 @@
 #  include "InjectCrashReporter.h"
 using mozilla::InjectCrashRunnable;
 #endif
+
+#include <fstream>
+#include <optional>
 
 #include <stdlib.h>
 #include <time.h>
@@ -195,7 +199,7 @@ static const XP_CHAR dumpFileExtension[] = XP_TEXT(".dmp");
 
 static const XP_CHAR extraFileExtension[] = XP_TEXT(".extra");
 static const XP_CHAR memoryReportExtension[] = XP_TEXT(".memory.json.gz");
-static xpstring* defaultMemoryReportPath = nullptr;
+static std::optional<xpstring> defaultMemoryReportPath = {};
 
 static const char kCrashMainID[] = "crash.main.3\n";
 
@@ -433,26 +437,26 @@ static void CreateFileFromPath(const xpstring& path, nsIFile** file) {
   NS_NewLocalFile(nsDependentString(path.c_str()), false, file);
 }
 
-static xpstring* CreatePathFromFile(nsIFile* file) {
+static std::optional<xpstring> CreatePathFromFile(nsIFile* file) {
   nsAutoString path;
   nsresult rv = file->GetPath(path);
   if (NS_FAILED(rv)) {
-    return nullptr;
+    return {};
   }
-  return new xpstring(static_cast<wchar_t*>(path.get()), path.Length());
+  return xpstring(static_cast<wchar_t*>(path.get()), path.Length());
 }
 #else
 static void CreateFileFromPath(const xpstring& path, nsIFile** file) {
   NS_NewNativeLocalFile(nsDependentCString(path.c_str()), false, file);
 }
 
-MAYBE_UNUSED static xpstring* CreatePathFromFile(nsIFile* file) {
+MAYBE_UNUSED static std::optional<xpstring> CreatePathFromFile(nsIFile* file) {
   nsAutoCString path;
   nsresult rv = file->GetNativePath(path);
   if (NS_FAILED(rv)) {
-    return nullptr;
+    return {};
   }
-  return new xpstring(path.get(), path.Length());
+  return xpstring(path.get(), path.Length());
 }
 #endif
 
@@ -2252,7 +2256,7 @@ static nsresult SetupCrashReporterDirectory(nsIFile* aAppDataDirectory,
   NS_ENSURE_SUCCESS(rv, rv);
 
   EnsureDirectoryExists(directory);
-  xpstring* directoryPath = CreatePathFromFile(directory);
+  std::optional<xpstring> directoryPath = CreatePathFromFile(directory);
 
   if (!directoryPath) {
     return NS_ERROR_FAILURE;
@@ -2263,8 +2267,6 @@ static nsresult SetupCrashReporterDirectory(nsIFile* aAppDataDirectory,
 #else
   setenv(aEnvVarName, directoryPath->c_str(), /* overwrite */ 1);
 #endif
-
-  delete directoryPath;
 
   if (aDirectory) {
     directory.forget(aDirectory);
@@ -2760,177 +2762,54 @@ nsresult AppendObjCExceptionInfoToAppNotes(void* inException) {
  */
 static nsresult PrefSubmitReports(bool* aSubmitReports, bool writePref) {
   nsresult rv;
-#if defined(XP_WIN)
+#if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_UNIX)
   /*
-   * NOTE! This needs to stay in sync with the preference checking code
-   *       in toolkit/crashreporter/client/crashreporter_win.cpp
+   * NOTE! This needs to stay in sync with the code in
+   * toolkit/crashreporter/client/app/src/{logic,settings}.rs
    */
-  nsCOMPtr<nsIXULAppInfo> appinfo =
-      do_GetService("@mozilla.org/xre/app-info;1", &rv);
+  nsCOMPtr<nsIFile> reporterSettings;
+  rv = NS_GetSpecialDirectory("UAppData", getter_AddRefs(reporterSettings));
   NS_ENSURE_SUCCESS(rv, rv);
+  reporterSettings->AppendNative("Crash Reports"_ns);
+  reporterSettings->AppendNative("crashreporter_settings.json"_ns);
 
-  nsAutoCString appVendor, appName;
-  rv = appinfo->GetVendor(appVendor);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = appinfo->GetName(appName);
-  NS_ENSURE_SUCCESS(rv, rv);
+  std::optional<xpstring> file_path = CreatePathFromFile(reporterSettings);
 
-  nsCOMPtr<nsIWindowsRegKey> regKey(
-      do_CreateInstance("@mozilla.org/windows-registry-key;1", &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoCString regPath;
-
-  regPath.AppendLiteral("Software\\");
-
-  // We need to ensure the registry keys are created so we can properly
-  // write values to it
-
-  // Create appVendor key
-  if (!appVendor.IsEmpty()) {
-    regPath.Append(appVendor);
-    regKey->Create(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
-                   NS_ConvertUTF8toUTF16(regPath),
-                   nsIWindowsRegKey::ACCESS_SET_VALUE);
-    regPath.Append('\\');
+  if (!file_path) {
+    return NS_ERROR_FAILURE;
   }
 
-  // Create appName key
-  regPath.Append(appName);
-  regKey->Create(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
-                 NS_ConvertUTF8toUTF16(regPath),
-                 nsIWindowsRegKey::ACCESS_SET_VALUE);
-  regPath.Append('\\');
-
-  // Create Crash Reporter key
-  regPath.AppendLiteral("Crash Reporter");
-  regKey->Create(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
-                 NS_ConvertUTF8toUTF16(regPath),
-                 nsIWindowsRegKey::ACCESS_SET_VALUE);
-
-  // If we're saving the pref value, just write it to ROOT_KEY_CURRENT_USER
-  // and we're done.
-  if (writePref) {
-    rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
-                      NS_ConvertUTF8toUTF16(regPath),
-                      nsIWindowsRegKey::ACCESS_SET_VALUE);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    uint32_t value = *aSubmitReports ? 1 : 0;
-    rv = regKey->WriteIntValue(u"SubmitCrashReport"_ns, value);
-    regKey->Close();
-    return rv;
-  }
-
-  // We're reading the pref value, so we need to first look under
-  // ROOT_KEY_LOCAL_MACHINE to see if it's set there, and then fall back to
-  // ROOT_KEY_CURRENT_USER. If it's not set in either place, the pref defaults
-  // to "true".
-  uint32_t value;
-  rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE,
-                    NS_ConvertUTF8toUTF16(regPath),
-                    nsIWindowsRegKey::ACCESS_QUERY_VALUE);
-  if (NS_SUCCEEDED(rv)) {
-    rv = regKey->ReadIntValue(u"SubmitCrashReport"_ns, &value);
-    regKey->Close();
-    if (NS_SUCCEEDED(rv)) {
-      *aSubmitReports = !!value;
-      return NS_OK;
-    }
-  }
-
-  rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
-                    NS_ConvertUTF8toUTF16(regPath),
-                    nsIWindowsRegKey::ACCESS_QUERY_VALUE);
-  if (NS_FAILED(rv)) {
-    *aSubmitReports = true;
-    return NS_OK;
-  }
-
-  rv = regKey->ReadIntValue(u"SubmitCrashReport"_ns, &value);
-  // default to true on failure
-  if (NS_FAILED(rv)) {
-    value = 1;
-    rv = NS_OK;
-  }
-  regKey->Close();
-
-  *aSubmitReports = !!value;
-  return NS_OK;
-#elif defined(XP_MACOSX)
-  rv = NS_OK;
-  if (writePref) {
-    CFPropertyListRef cfValue =
-        (CFPropertyListRef)(*aSubmitReports ? kCFBooleanTrue : kCFBooleanFalse);
-    ::CFPreferencesSetAppValue(CFSTR("submitReport"), cfValue,
-                               reporterClientAppID);
-    if (!::CFPreferencesAppSynchronize(reporterClientAppID))
-      rv = NS_ERROR_FAILURE;
-  } else {
-    *aSubmitReports = true;
-    Boolean keyExistsAndHasValidFormat = false;
-    Boolean prefValue = ::CFPreferencesGetAppBooleanValue(
-        CFSTR("submitReport"), reporterClientAppID,
-        &keyExistsAndHasValidFormat);
-    if (keyExistsAndHasValidFormat) *aSubmitReports = !!prefValue;
-  }
-  return rv;
-#elif defined(XP_UNIX)
-  /*
-   * NOTE! This needs to stay in sync with the preference checking code
-   *       in toolkit/crashreporter/client/crashreporter_linux.cpp
-   */
-  nsCOMPtr<nsIFile> reporterINI;
-  rv = NS_GetSpecialDirectory("UAppData", getter_AddRefs(reporterINI));
-  NS_ENSURE_SUCCESS(rv, rv);
-  reporterINI->AppendNative("Crash Reports"_ns);
-  reporterINI->AppendNative("crashreporter.ini"_ns);
+  Json::Value root;
 
   bool exists;
-  rv = reporterINI->Exists(&exists);
+  rv = reporterSettings->Exists(&exists);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!exists) {
     if (!writePref) {
-      // If reading the pref, default to true if .ini doesn't exist.
+      // If reading the pref, default to true if the settings file doesn't
+      // exist.
       *aSubmitReports = true;
       return NS_OK;
     }
-    // Create the file so the INI processor can write to it.
-    rv = reporterINI->Create(nsIFile::NORMAL_FILE_TYPE, 0600);
+    // Create the file so the JSON processor can write to it.
+    rv = reporterSettings->Create(nsIFile::NORMAL_FILE_TYPE, 0600);
     NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    // Read the root value
+    std::ifstream file(*file_path);
+    file >> root;
   }
 
-  nsCOMPtr<nsIINIParserFactory> iniFactory =
-      do_GetService("@mozilla.org/xpcom/ini-parser-factory;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIINIParser> iniParser;
-  rv = iniFactory->CreateINIParser(reporterINI, getter_AddRefs(iniParser));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // If we're writing the pref, just set and we're done.
   if (writePref) {
-    nsCOMPtr<nsIINIParserWriter> iniWriter = do_QueryInterface(iniParser);
-    NS_ENSURE_TRUE(iniWriter, NS_ERROR_FAILURE);
-
-    rv = iniWriter->SetString("Crash Reporter"_ns, "SubmitReport"_ns,
-                              *aSubmitReports ? "1"_ns : "0"_ns);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = iniWriter->WriteFile(reporterINI);
-    return rv;
+    root["submit_report"] = *aSubmitReports;
+    std::ofstream file(*file_path);
+    file << root;
+  } else if (root["submit_report"].isBool()) {
+    *aSubmitReports = root["submit_report"].asBool();
+  } else {
+    // Default to "true" if the pref can't be found.
+    *aSubmitReports = true;
   }
-
-  nsAutoCString submitReportValue;
-  rv = iniParser->GetString("Crash Reporter"_ns, "SubmitReport"_ns,
-                            submitReportValue);
-
-  // Default to "true" if the pref can't be found.
-  if (NS_FAILED(rv))
-    *aSubmitReports = true;
-  else if (submitReportValue.EqualsASCII("0"))
-    *aSubmitReports = false;
-  else
-    *aSubmitReports = true;
 
   return NS_OK;
 #else
@@ -2973,19 +2852,17 @@ static void SetCrashEventsDir(nsIFile* aDir) {
     EnsureDirectoryExists(eventsDir);
   }
 
-  xpstring* path = CreatePathFromFile(eventsDir);
+  std::optional<xpstring> path = CreatePathFromFile(eventsDir);
   if (!path) {
     return;  // There's no clean failure from this
   }
 
-  eventsDirectory = xpstring(*path);
+  eventsDirectory = *path;
 #ifdef XP_WIN
   SetEnvironmentVariableW(eventsDirectoryEnv, path->c_str());
 #else
   setenv(eventsDirectoryEnv, path->c_str(), /* overwrite */ 1);
 #endif
-
-  delete path;
 }
 
 void SetProfileDirectory(nsIFile* aDir) {
