@@ -156,6 +156,11 @@ class MapByTopBrowsingContext {
    * @returns {MapByTopBrowsingContext} this
    */
   setEntry(aBrowsingContext, aValue) {
+    if (!aValue.request) {
+      console.error(
+        "MapByTopBrowsingContext.setEntry() called with a value without a request!"
+      );
+    }
     let topEntry = this.#map.get(aBrowsingContext.top);
     if (!topEntry) {
       topEntry = new Map();
@@ -163,6 +168,16 @@ class MapByTopBrowsingContext {
     }
     topEntry.set(aBrowsingContext, aValue);
     return this;
+  }
+
+  getAllRequests() {
+    let requests = [];
+    this.#map.forEach(topEntry => {
+      for (let entry of topEntry.values()) {
+        requests.push(entry.request);
+      }
+    });
+    return requests;
   }
 }
 
@@ -196,7 +211,7 @@ export const ContentAnalysis = {
 
       ChromeUtils.defineLazyGetter(this, "l10n", function () {
         return new Localization(
-          ["toolkit/contentanalysis/contentanalysis.ftl"],
+          ["branding/brand.ftl", "toolkit/contentanalysis/contentanalysis.ftl"],
           true
         );
       });
@@ -217,11 +232,54 @@ export const ContentAnalysis = {
     Services.obs.addObserver(this, "dlp-request-made");
     Services.obs.addObserver(this, "dlp-response");
     Services.obs.addObserver(this, "quit-application");
+    Services.obs.addObserver(this, "quit-application-requested");
   },
 
   // nsIObserver
   async observe(aSubj, aTopic, aData) {
     switch (aTopic) {
+      case "quit-application-requested": {
+        let pendingRequests =
+          this.dlpBusyViewsByTopBrowsingContext.getAllRequests();
+        if (pendingRequests.length) {
+          let messageBody = this.l10n.formatValueSync(
+            "contentanalysis-inprogress-quit-message"
+          );
+          messageBody = messageBody + "\n\n";
+          for (const pendingRequest of pendingRequests) {
+            let name = this._getResourceNameFromNameOrOperationType(
+              this._getResourceNameOrOperationTypeFromRequest(
+                pendingRequest,
+                true
+              )
+            );
+            messageBody = messageBody + name + "\n";
+          }
+          let buttonSelected = Services.prompt.confirmEx(
+            null,
+            this.l10n.formatValueSync("contentanalysis-inprogress-quit-title"),
+            messageBody,
+            Ci.nsIPromptService.BUTTON_POS_0 *
+              Ci.nsIPromptService.BUTTON_TITLE_IS_STRING +
+              Ci.nsIPromptService.BUTTON_POS_1 *
+                Ci.nsIPromptService.BUTTON_TITLE_CANCEL +
+              Ci.nsIPromptService.BUTTON_POS_0_DEFAULT,
+            this.l10n.formatValueSync(
+              "contentanalysis-inprogress-quit-yesbutton"
+            ),
+            null,
+            null,
+            null,
+            { value: 0 }
+          );
+          if (buttonSelected === 0) {
+            lazy.gContentAnalysis.cancelAllRequests();
+          } else {
+            aSubj.data = true;
+          }
+        }
+        break;
+      }
       case "quit-application": {
         this.uninitialize();
         break;
@@ -259,7 +317,7 @@ export const ContentAnalysis = {
             );
           }
           let resourceNameOrOperationType =
-            this._getResourceNameOrOperationTypeFromRequest(request);
+            this._getResourceNameOrOperationTypeFromRequest(request, false);
           this.requestTokenToRequestInfo.set(request.requestToken, {
             browsingContext,
             resourceNameOrOperationType,
@@ -273,8 +331,10 @@ export const ContentAnalysis = {
                   resourceNameOrOperationType,
                   browsingContext
                 ),
+                request,
               });
             }, slowTimeoutMs),
+            request,
           });
         }
         break;
@@ -335,6 +395,7 @@ export const ContentAnalysis = {
           args.requestToken,
           args.resourceNameOrOperationType
         ),
+        request: args.request,
       });
     }
   },
@@ -431,11 +492,32 @@ export const ContentAnalysis = {
     return nameOrOperationType.name;
   },
 
-  _getResourceNameOrOperationTypeFromRequest(aRequest) {
+  /**
+   * Gets a name or operation type from a request
+   *
+   * @param {object} aRequest The nsIContentAnalysisRequest
+   * @param {boolean} aStandalone Whether the message is going to be used on its own
+   *                              line. This is used to add more context to the message
+   *                              if a file is being uploaded rather than just the name
+   *                              of the file.
+   * @returns {object} An object with either a name property that can be used as-is, or
+   *                   an operationType property.
+   */
+  _getResourceNameOrOperationTypeFromRequest(aRequest, aStandalone) {
     if (
       aRequest.operationTypeForDisplay ==
       Ci.nsIContentAnalysisRequest.eCustomDisplayString
     ) {
+      if (aStandalone) {
+        return {
+          name: this.l10n.formatValueSync(
+            "contentanalysis-customdisplaystring-description",
+            {
+              filename: aRequest.operationDisplayString,
+            }
+          ),
+        };
+      }
       return { name: aRequest.operationDisplayString };
     }
     return { operationType: aRequest.operationTypeForDisplay };
