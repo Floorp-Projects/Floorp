@@ -47,8 +47,10 @@ using BidiClass = intl::BidiClass;
 using BidiDirection = intl::BidiDirection;
 using BidiEmbeddingLevel = intl::BidiEmbeddingLevel;
 
+static const char16_t kNextLine = 0x0085;
 static const char16_t kZWSP = 0x200B;
 static const char16_t kLineSeparator = 0x2028;
+static const char16_t kParagraphSeparator = 0x2029;
 static const char16_t kObjectSubstitute = 0xFFFC;
 static const char16_t kLRE = 0x202A;
 static const char16_t kRLE = 0x202B;
@@ -62,9 +64,9 @@ static const char16_t kPDI = 0x2069;
 // All characters with Bidi type Segment Separator or Block Separator.
 // This should be kept in sync with the table in ReplaceSeparators.
 static const char16_t kSeparators[] = {
-    char16_t('\t'), char16_t('\r'),   char16_t('\n'), char16_t(0xb),
-    char16_t(0x1c), char16_t(0x1d),   char16_t(0x1e), char16_t(0x1f),
-    char16_t(0x85), char16_t(0x2029), char16_t(0)};
+    char16_t('\t'), char16_t('\r'),      char16_t('\n'), char16_t(0xb),
+    char16_t(0x1c), char16_t(0x1d),      char16_t(0x1e), char16_t(0x1f),
+    kNextLine,      kParagraphSeparator, char16_t(0)};
 
 #define NS_BIDI_CONTROL_FRAME ((nsIFrame*)0xfffb1d1)
 
@@ -868,7 +870,7 @@ static inline void ReplaceSeparators(nsString& aText, size_t aStartIndex = 0) {
           0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, ' ',  ' ',  ' ',  ' ',
       };
       *cp = SeparatorToSpace[*cp];
-    } else if (MOZ_UNLIKELY(*cp == 0x0085 || *cp == 0x2026)) {
+    } else if (MOZ_UNLIKELY(*cp == kNextLine || *cp == kParagraphSeparator)) {
       *cp = ' ';
     }
   }
