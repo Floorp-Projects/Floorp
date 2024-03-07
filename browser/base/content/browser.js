@@ -276,11 +276,6 @@ XPCOMUtils.defineLazyScriptGetter(
   "gPageStyleMenu",
   "chrome://browser/content/browser-pagestyle.js"
 );
-XPCOMUtils.defineLazyScriptGetter(
-  this,
-  "gProfiles",
-  "chrome://browser/content/browser-profiles.js"
-);
 
 // lazy service getters
 
@@ -2415,10 +2410,6 @@ var gBrowserInit = {
         window,
         "browser-idle-startup-tasks-finished"
       );
-    });
-
-    scheduleIdleTask(() => {
-      gProfiles.init();
     });
   },
 
