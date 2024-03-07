@@ -6480,7 +6480,8 @@ bool HTMLInputElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
   }
 
   // Current radio button is not selected.
-  // But make it tabbable if nothing in group is selected.
+  // Make it tabbable if nothing in group is selected and it is the first radio
+  // button.
   auto* container = GetCurrentRadioGroupContainer();
   if (!container) {
     *aIsFocusable = defaultFocusable;
@@ -6490,7 +6491,8 @@ bool HTMLInputElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
   nsAutoString name;
   GetAttr(nsGkAtoms::name, name);
 
-  if (container->GetCurrentRadioButton(name)) {
+  if (container->GetCurrentRadioButton(name) ||
+      container->GetFirstRadioButton(name) != this) {
     *aTabIndex = -1;
   }
   *aIsFocusable = defaultFocusable;
