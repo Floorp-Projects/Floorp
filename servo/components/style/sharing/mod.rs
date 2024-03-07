@@ -908,12 +908,7 @@ impl<E: TElement> StyleSharingCache<E> {
             // RELEVANT_LINK_VISITED flag, so we can't share by rule node between visited and
             // unvisited styles. We don't check for visitedness and just refuse to share for links
             // entirely, so that visitedness doesn't affect timing.
-            debug_assert_eq!(
-                target.is_link(),
-                candidate.element.is_link(),
-                "Linkness mismatch"
-            );
-            if target.is_link() {
+            if target.is_link() || candidate.element.is_link() {
                 return None;
             }
 
