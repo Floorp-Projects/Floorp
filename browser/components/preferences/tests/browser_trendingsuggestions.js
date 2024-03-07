@@ -78,3 +78,20 @@ add_task(async function testNonTrendingEngine() {
   );
   gBrowser.removeCurrentTab();
 });
+
+add_task(async function testEnabledTrendingEngine() {
+  const engine1 = Services.search.getEngineByName("Google");
+  Services.search.setDefault(
+    engine1,
+    Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+  );
+  await openPreferencesViaOpenPreferencesAPI("search", { leaveOpen: true });
+  let doc = gBrowser.selectedBrowser.contentDocument;
+  let trendingCheckbox = doc.getElementById(TRENDING_CHECKBOX_ID);
+
+  Assert.ok(
+    !trendingCheckbox.disabled,
+    "Checkbox should not be disabled when an engine that supports trending suggestions is default"
+  );
+  gBrowser.removeCurrentTab();
+});

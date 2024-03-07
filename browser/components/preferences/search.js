@@ -9,6 +9,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   SearchUIUtils: "resource:///modules/SearchUIUtils.sys.mjs",
+  SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
 });
 
 const PREF_URLBAR_QUICKSUGGEST_BLOCKLIST =
@@ -33,9 +34,6 @@ Preferences.addAll([
 const ENGINE_FLAVOR = "text/x-moz-search-engine";
 const SEARCH_TYPE = "default_search";
 const SEARCH_KEY = "defaultSearch";
-
-// The name of in built engines that support trending results.
-const TRENDING_ENGINES = ["Google", "Bing"];
 
 var gEngineView = null;
 
@@ -285,9 +283,9 @@ var gSearchPane = {
   async _updateTrendingCheckbox(suggestDisabled) {
     let trendingBox = document.getElementById("showTrendingSuggestionsBox");
     let trendingCheckBox = document.getElementById("showTrendingSuggestions");
-    let trendingSupported = TRENDING_ENGINES.includes(
-      (await Services.search.getDefault()).name
-    );
+    let trendingSupported = (
+      await Services.search.getDefault()
+    ).supportsResponseType(lazy.SearchUtils.URL_TYPE.TRENDING_JSON);
     trendingBox.hidden = !Preferences.get("browser.urlbar.trending.featureGate")
       .value;
     trendingCheckBox.disabled = suggestDisabled || !trendingSupported;
