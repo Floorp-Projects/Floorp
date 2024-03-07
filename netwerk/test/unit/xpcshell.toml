@@ -901,8 +901,6 @@ run-sequentially = "node server exceptions dont replay well"
 
 ["test_ohttp.js"]
 
-["test_on_dispatching_transaction_notification.js"]
-
 ["test_orb_empty_header.js"]
 
 ["test_origin.js"]

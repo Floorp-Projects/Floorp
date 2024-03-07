@@ -335,10 +335,7 @@ class nsHttpChannel final : public HttpBaseChannel,
   void OnHTTPSRRAvailable(nsIDNSHTTPSSVCRecord* aRecord);
   [[nodiscard]] nsresult Connect();
   void SpeculativeConnect();
-  [[nodiscard]] nsresult SetupChannelForTransaction();
-  [[nodiscard]] nsresult InitTransaction();
-  [[nodiscard]] nsresult DispatchTransaction(
-      HttpTransactionShell* aTransWithStickyConn);
+  [[nodiscard]] nsresult SetupTransaction();
   [[nodiscard]] nsresult CallOnStartRequest();
   [[nodiscard]] nsresult ProcessResponse();
   void AsyncContinueProcessResponse();
