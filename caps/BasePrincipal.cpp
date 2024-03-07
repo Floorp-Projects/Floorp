@@ -1190,13 +1190,6 @@ BasePrincipal::GetPrivateBrowsingId(uint32_t* aPrivateBrowsingId) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-BasePrincipal::GetIsInIsolatedMozBrowserElement(
-    bool* aIsInIsolatedMozBrowserElement) {
-  *aIsInIsolatedMozBrowserElement = IsInIsolatedMozBrowserElement();
-  return NS_OK;
-}
-
 nsresult BasePrincipal::GetAddonPolicy(
     extensions::WebExtensionPolicy** aResult) {
   AssertIsOnMainThread();
