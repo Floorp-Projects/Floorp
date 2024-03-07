@@ -24,10 +24,6 @@ function checkCrossOrigin(a, b) {
 
 function checkOriginAttributes(prin, attrs, suffix) {
   attrs = attrs || {};
-  Assert.equal(
-    prin.originAttributes.inIsolatedMozBrowser,
-    attrs.inIsolatedMozBrowser || false
-  );
   Assert.equal(prin.originSuffix, suffix || "");
   Assert.equal(ChromeUtils.originAttributesToSuffix(attrs), suffix || "");
   Assert.ok(
@@ -59,9 +55,6 @@ function printAttrs(name, attrs) {
       "\tuserContextId: " +
       attrs.userContextId +
       ",\n" +
-      "\tinIsolatedMozBrowser: " +
-      attrs.inIsolatedMozBrowser +
-      ",\n" +
       "\tprivateBrowsingId: '" +
       attrs.privateBrowsingId +
       "',\n" +
@@ -76,10 +69,6 @@ function checkValues(attrs, values) {
   // printAttrs("attrs", attrs);
   // printAttrs("values", values);
   Assert.equal(attrs.userContextId, values.userContextId || 0);
-  Assert.equal(
-    attrs.inIsolatedMozBrowser,
-    values.inIsolatedMozBrowser || false
-  );
   Assert.equal(attrs.privateBrowsingId, values.privateBrowsingId || "");
   Assert.equal(attrs.firstPartyDomain, values.firstPartyDomain || "");
 }
@@ -141,26 +130,6 @@ function run_test() {
   // Test origin attributes.
   //
 
-  // Just browser.
-  var exampleOrg_browser = ssm.createContentPrincipal(
-    makeURI("http://example.org"),
-    { inIsolatedMozBrowser: true }
-  );
-  var nullPrin_browser = ssm.createNullPrincipal({
-    inIsolatedMozBrowser: true,
-  });
-  checkOriginAttributes(
-    exampleOrg_browser,
-    { inIsolatedMozBrowser: true },
-    "^inBrowser=1"
-  );
-  checkOriginAttributes(
-    nullPrin_browser,
-    { inIsolatedMozBrowser: true },
-    "^inBrowser=1"
-  );
-  Assert.equal(exampleOrg_browser.origin, "http://example.org^inBrowser=1");
-
   // First party Uri
   var exampleOrg_firstPartyDomain = ssm.createContentPrincipal(
     makeURI("http://example.org"),
@@ -206,7 +175,6 @@ function run_test() {
   );
 
   // Check that all of the above are cross-origin.
-  checkCrossOrigin(exampleOrg_browser, nullPrin_browser);
   checkCrossOrigin(exampleOrg_firstPartyDomain, exampleOrg);
   checkCrossOrigin(exampleOrg_userContext, exampleOrg);
 
@@ -245,7 +213,6 @@ function run_test() {
   var tests = [
     ["", {}],
     ["^userContextId=3", { userContextId: 3 }],
-    ["^inBrowser=1", { inIsolatedMozBrowser: true }],
     ["^firstPartyDomain=example.org", { firstPartyDomain: "example.org" }],
   ];
 
