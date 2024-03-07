@@ -2390,7 +2390,6 @@ bookmarks:
   description: Prefs to control aspects of the bookmarks system.
   owner: omc@mozilla.com
   hasExposure: false
-  isEarlyStartup: true
   variables:
     enableBookmarksToolbar:
       type: string
