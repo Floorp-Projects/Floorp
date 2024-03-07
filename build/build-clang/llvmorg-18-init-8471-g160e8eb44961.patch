@@ -1,0 +1,31 @@
+From 160e8eb4496104a1d0ed77649af7e8bb679252f9 Mon Sep 17 00:00:00 2001
+From: nicole mazzuca <nicole@strega-nil.co>
+Date: Fri, 13 Oct 2023 08:47:23 -0700
+Subject: [PATCH] [ASan] Recognize lea r10, [rip + XX] (#68910)
+
+This instruction is present in memcpy in the latest vcruntime
+
+This PR has been opened for @AndrewDeanMS (a teammate inside Microsoft)
+who made the PR to our internal branch.
+
+Co-authored-by: Andrew Dean <Andrew.Dean@microsoft.com>
+---
+ compiler-rt/lib/interception/interception_win.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/compiler-rt/lib/interception/interception_win.cpp b/compiler-rt/lib/interception/interception_win.cpp
+index d57afa3fda7b..1b681ada37b1 100644
+--- a/compiler-rt/lib/interception/interception_win.cpp
++++ b/compiler-rt/lib/interception/interception_win.cpp
+@@ -624,7 +624,7 @@ static size_t GetInstructionSize(uptr address, size_t* rel_offset = nullptr) {
+                       //   mov rax, QWORD PTR [rip + XXXXXXXX]
+     case 0x25ff48:    // 48 ff 25 XX XX XX XX :
+                       //   rex.W jmp QWORD PTR [rip + XXXXXXXX]
+-
++    case 0x158D4C:    // 4c 8d 15 XX XX XX XX : lea r10, [rip + XX]
+       // Instructions having offset relative to 'rip' need offset adjustment.
+       if (rel_offset)
+         *rel_offset = 3;
+-- 
+2.44.0.1.g9765aa7075
+
