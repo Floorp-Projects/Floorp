@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <tuple>
+
 #include "CubebUtils.h"
 #include "GraphDriver.h"
 
@@ -56,10 +58,10 @@ class MockGraphInterface : public GraphInterface {
       return IterationResult::CreateStop(
           NS_NewRunnableFunction(__func__, [] {}));
     }
-    GraphDriver* next = mNextDriver.exchange(nullptr);
-    if (next) {
-      return IterationResult::CreateSwitchDriver(
-          next, NS_NewRunnableFunction(__func__, [] {}));
+    if (auto guard = mNextDriver.Lock(); guard->isSome()) {
+      auto tup = guard->extract();
+      const auto& [driver, switchedRunnable] = tup;
+      return IterationResult::CreateSwitchDriver(driver, switchedRunnable);
     }
     if (mEnsureNextIteration) {
       driver->EnsureNextIteration();
@@ -75,7 +77,14 @@ class MockGraphInterface : public GraphInterface {
 
   void StopIterating() { mKeepProcessing = false; }
 
-  void SwitchTo(GraphDriver* aDriver) { mNextDriver = aDriver; }
+  void SwitchTo(RefPtr<GraphDriver> aDriver,
+                RefPtr<Runnable> aSwitchedRunnable = NS_NewRunnableFunction(
+                    "DefaultNoopSwitchedRunnable", [] {})) {
+    auto guard = mNextDriver.Lock();
+    MOZ_ASSERT(guard->isNothing());
+    *guard =
+        Some(std::make_tuple(std::move(aDriver), std::move(aSwitchedRunnable)));
+  }
   const TrackRate mSampleRate;
 
   MediaEventSource<uint32_t>& FramesIteratedEvent() {
@@ -88,7 +97,9 @@ class MockGraphInterface : public GraphInterface {
   Atomic<GraphDriver*> mCurrentDriver{nullptr};
   Atomic<bool> mEnsureNextIteration{false};
   Atomic<bool> mKeepProcessing{true};
-  Atomic<GraphDriver*> mNextDriver{nullptr};
+  DataMutex<Maybe<std::tuple<RefPtr<GraphDriver>, RefPtr<Runnable>>>>
+      mNextDriver{"MockGraphInterface::mNextDriver"};
+  RefPtr<Runnable> mNextDriverSwitchedRunnable;
   MediaEventProducer<uint32_t> mFramesIteratedEvent;
   AudioMixer mMixer;
   virtual ~MockGraphInterface() = default;
