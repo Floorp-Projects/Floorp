@@ -31,7 +31,6 @@ ALLOWED_ISEARLYSTARTUP_FEATURE_IDS = {
     "gleanInternalSdk",
     "majorRelease2022",
     "newtab",
-    "opaqueResponseBlocking",
     "phc",
     "pocketNewtab",
     "powerSaver",

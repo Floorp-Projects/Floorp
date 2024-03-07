@@ -2257,7 +2257,6 @@ shoppingOHTTP:
 opaqueResponseBlocking:
   description: Prefs to enable Opaque Response Blocking
   owner: farre@mozilla.com
-  isEarlyStartup: true
   hasExposure: true
   exposureDescription: Exposure is sent when a response is blocked
   variables:
