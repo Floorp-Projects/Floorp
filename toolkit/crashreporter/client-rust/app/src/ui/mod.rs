@@ -31,6 +31,9 @@ cfg_if::cfg_if! {
     if #[cfg(test)] {
         #[path = "test.rs"]
         pub mod ui_impl;
+    } else if #[cfg(target_os = "linux")] {
+        #[path = "gtk.rs"]
+        mod ui_impl;
     } else {
         mod ui_impl {
             #[derive(Default)]
