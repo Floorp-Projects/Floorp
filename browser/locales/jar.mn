@@ -17,6 +17,7 @@
   preview/select-translations.ftl                  (../locales-preview/select-translations.ftl)
   preview/translations.ftl                         (../locales-preview/translations.ftl)
   browser                                          (%browser/**/*.ftl)
+  preview/profiles.ftl                             (../components/profiles/content/profiles.ftl)
 
 @AB_CD@.jar:
 % locale browser @AB_CD@ %locale/browser/
