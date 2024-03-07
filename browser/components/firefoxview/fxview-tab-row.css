@@ -97,7 +97,7 @@
     stroke: var(--fxview-background-color-secondary);
   }
 
-  &:is(.pinnedOnNewTab, .bookmark) .fxview-tab-row-favicon::after {
+  &:is(.pinnedOnNewTab, .bookmark):not(.attention) .fxview-tab-row-favicon::after {
     inset-block-start: 9px;
     inset-inline-end: -6px;
   }
