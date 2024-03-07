@@ -2,6 +2,8 @@
 <html class='reftest-wait'>
 <head>
 <script>
+let num = 0;
+let numMs = 50;
 var changesLeft = 10;
 function go() {
 	window.setTimeout(changeit, 0);
@@ -11,16 +13,26 @@ function changeit() {
 	var a = document.getElementById("a");
 	a.style.transform = 'scale(' + (256.1 + Math.random()*0.01) + ')';
 
+	num++;
+
 	if (changesLeft > 0) {
 		--changesLeft;
-		window.setTimeout(changeit, 50);
+		window.setTimeout(changeit, numMs);
 	}
 	if (changesLeft == 0) {
 		// 75-100ms is the timeout for expirty from the active layer tracker.
 		// Increase the time between transform tweaks to 74ms to give the reftest the best
 		// chance of running the mozafterpaint handler and checking that there are no more
 		// paints pending so it can finish.
-		window.setTimeout(changeit, 74);
+		numMs = 74;
+		if (num >= 100 && navigator.appVersion.includes("Android")) {
+			// That's not enough time on Android, so give it a bit more time. This still
+			// reproduces the original bug with the original patch backed out, even though
+			// one would think anything over 100ms would not reproduce, I'm not sure why.
+			// It's better to run the this with this timeout then have the test disabled.
+			numMs = 200;
+		}
+		window.setTimeout(changeit, numMs);
 		document.documentElement.classList.remove("reftest-wait");
 	}
 }
