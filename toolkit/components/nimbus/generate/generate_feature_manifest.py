@@ -28,7 +28,6 @@ ALLOWED_ISEARLYSTARTUP_FEATURE_IDS = {
     "aboutwelcome",
     "dapTelemetry",
     "deviceMigration",
-    "frecency",
     "fullPageTranslation",
     "fullPageTranslationAutomaticPopup",
     "fxaButtonVisibility",
