@@ -6,9 +6,57 @@
 
 #include "StorageOriginAttributes.h"
 
+#include "nsString.h"
 #include "nsURLHelper.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/dom/quota/QuotaManager.h"
 
 namespace mozilla {
+
+void StorageOriginAttributes::CreateSuffix(nsACString& aStr) const {
+  nsCString str1;
+
+  URLParams params;
+  nsAutoString value;
+
+  if (mInIsolatedMozBrowser) {
+    params.Set(u"inBrowser"_ns, u"1"_ns);
+  }
+
+  str1.Truncate();
+
+  params.Serialize(value, true);
+  if (!value.IsEmpty()) {
+    str1.AppendLiteral("^");
+    str1.Append(NS_ConvertUTF16toUTF8(value));
+  }
+
+  // Make sure that the string don't contain characters that would get replaced
+  // with the plus character by quota manager, potentially causing ambiguity.
+  MOZ_ASSERT(str1.FindCharInSet(dom::quota::QuotaManager::kReplaceChars) ==
+             kNotFound);
+
+  // Let OriginAttributes::CreateSuffix serialize other origin attributes.
+  nsCString str2;
+  mOriginAttributes.CreateSuffix(str2);
+
+  aStr.Truncate();
+
+  if (str1.IsEmpty()) {
+    aStr.Append(str2);
+    return;
+  }
+
+  if (str2.IsEmpty()) {
+    aStr.Append(str1);
+    return;
+  }
+
+  // If both strings are not empty, we need to combine them.
+  aStr.Append(str1);
+  aStr.Append('&');
+  aStr.Append(Substring(str2, 1, str2.Length() - 1));
+}
 
 bool StorageOriginAttributes::PopulateFromSuffix(const nsACString& aStr) {
   if (aStr.IsEmpty()) {
@@ -55,21 +103,6 @@ bool StorageOriginAttributes::PopulateFromOrigin(const nsACString& aOrigin,
 
   aOriginNoSuffix = Substring(origin, 0, pos);
   return PopulateFromSuffix(Substring(origin, pos));
-}
-
-void StorageOriginAttributes::CreateSuffix(nsACString& aStr) const {
-  URLParams params;
-  nsAutoString value;
-
-  if (mInIsolatedMozBrowser) {
-    params.Set(u"inBrowser"_ns, u"1"_ns);
-  }
-
-  params.Serialize(value, true);
-  if (!value.IsEmpty()) {
-    aStr.AppendLiteral("^");
-    aStr.Append(NS_ConvertUTF16toUTF8(value));
-  }
 }
 
 }  // namespace mozilla
