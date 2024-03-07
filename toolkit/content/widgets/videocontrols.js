@@ -64,8 +64,11 @@ this.VideoControlsWidget = class {
     // the underlying element state hasn't changed in ways that we
     // care about. This can happen if the property is set again
     // without a value change.
-    if (this.impl && this.impl.constructor == newImpl) {
-      this.impl.onchange();
+    if (
+      this.impl &&
+      this.impl.constructor == newImpl &&
+      this.impl.elementStateMatches(this.element)
+    ) {
       return;
     }
     if (this.impl) {
@@ -455,9 +458,9 @@ this.VideoControlsImplWidget = class {
           this.statusIcon.setAttribute("type", "error");
           this.updateErrorText();
           this.setupStatusFader(true);
+        } else if (VideoControlsWidget.isPictureInPictureVideo(this.video)) {
+          this.setShowPictureInPictureMessage(true);
         }
-
-        this.updatePictureInPictureMessage();
 
         if (this.video.readyState >= this.video.HAVE_METADATA) {
           // According to the spec[1], at the HAVE_METADATA (or later) state, we know
@@ -931,8 +934,6 @@ this.VideoControlsImplWidget = class {
             // Since this event come from the layout, this is the only place
             // we are sure of that probing into layout won't trigger or force
             // reflow.
-            // FIXME(emilio): We should rewrite this to just use
-            // ResizeObserver, probably.
             this.reflowTriggeringCallValidator.isReflowTriggeringPropsAllowed = true;
             this.updateReflowedDimensions();
             this.reflowTriggeringCallValidator.isReflowTriggeringPropsAllowed = false;
@@ -1094,10 +1095,7 @@ this.VideoControlsImplWidget = class {
         );
       },
 
-      updatePictureInPictureMessage() {
-        let showMessage =
-          !this.hasError() &&
-          VideoControlsWidget.isPictureInPictureVideo(this.video);
+      setShowPictureInPictureMessage(showMessage) {
         this.pictureInPictureOverlay.hidden = !showMessage;
         this.isShowingPictureInPictureMessage = showMessage;
       },
@@ -2901,8 +2899,9 @@ this.VideoControlsImplWidget = class {
     this.l10n.translateRoots();
   }
 
-  onchange() {
-    this.Utils.updatePictureInPictureMessage();
+  elementStateMatches(element) {
+    let elementInPiP = VideoControlsWidget.isPictureInPictureVideo(element);
+    return this.isShowingPictureInPictureMessage == elementInPiP;
   }
 
   teardown() {
@@ -3062,7 +3061,9 @@ this.NoControlsMobileImplWidget = class {
     this.Utils.init(this.shadowRoot);
   }
 
-  onchange() {}
+  elementStateMatches() {
+    return true;
+  }
 
   teardown() {
     this.Utils.terminate();
@@ -3110,7 +3111,9 @@ this.NoControlsPictureInPictureImplWidget = class {
     this.shadowRoot.firstElementChild.setAttribute("localedir", direction);
   }
 
-  onchange() {}
+  elementStateMatches() {
+    return true;
+  }
 
   teardown() {}
 
@@ -3285,7 +3288,9 @@ this.NoControlsDesktopImplWidget = class {
     this.Utils.init(this.shadowRoot, this.prefs);
   }
 
-  onchange() {}
+  elementStateMatches() {
+    return true;
+  }
 
   teardown() {
     this.Utils.terminate();
