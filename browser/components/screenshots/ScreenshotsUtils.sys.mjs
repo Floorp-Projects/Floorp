@@ -923,10 +923,10 @@ export var ScreenshotsUtils = {
 
         context.drawImage(
           snapshot,
-          (startLeft - region.left) * devicePixelRatio,
-          (startTop - region.top) * devicePixelRatio,
-          width * devicePixelRatio,
-          height * devicePixelRatio
+          Math.floor((startLeft - region.left) * devicePixelRatio),
+          Math.floor((startTop - region.top) * devicePixelRatio),
+          Math.floor(width * devicePixelRatio),
+          Math.floor(height * devicePixelRatio)
         );
 
         snapshot.close();
