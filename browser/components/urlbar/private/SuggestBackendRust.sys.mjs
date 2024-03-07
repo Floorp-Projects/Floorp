@@ -216,7 +216,21 @@ export class SuggestBackendRust extends BaseFeature {
   }
 
   async #init() {
-    // Create the store.
+    // Important note on schema updates:
+    //
+    // The first time the Suggest store is accessed after a schema version
+    // update, its backing database will be deleted and a new empty database
+    // will be created. The database will remain empty until we tell the store
+    // to ingest. If we wait to ingest as usual until our ingest timer fires,
+    // the store will remain empty for up to 24 hours, which means we won't
+    // serve any suggestions at all during that time.
+    //
+    // Therefore we simply always ingest here in `#init()`. We'll sometimes
+    // ingest unnecessarily but that's better than the alternative. (As a
+    // reminder, for users who have Suggest enabled `#init()` is called whenever
+    // the Rust backend is enabled, including on startup.)
+
+    // Initialize the store.
     let path = this.#storePath;
     this.logger.info("Initializing SuggestStore: " + path);
     try {
@@ -235,17 +249,20 @@ export class SuggestBackendRust extends BaseFeature {
       return;
     }
 
-    // Before registering the ingest timer, check the last-update pref, which is
-    // created by the timer manager the first time we register it. If the pref
-    // doesn't exist, this is the first time the Rust backend has been enabled
-    // in this profile. In that case, perform ingestion immediately to make
-    // automated and manual testing easier. Otherwise we'd need to wait at least
-    // 30s (`app.update.timerFirstInterval`) for the timer manager to call us
-    // back (and we'd also need to pass false for `skipFirst` below).
+    // Log the last ingest time for debugging.
     let lastIngestSecs = Services.prefs.getIntPref(
       INGEST_TIMER_LAST_UPDATE_PREF,
       0
     );
+    if (lastIngestSecs) {
+      this.logger.debug(
+        `Last ingest time: ${lastIngestSecs}s (${
+          Math.round(Date.now() / 1000) - lastIngestSecs
+        }s ago)`
+      );
+    } else {
+      this.logger.debug("Last ingest time: none");
+    }
 
     // Register the ingest timer.
     lazy.timerManager.registerTimer(
@@ -255,14 +272,8 @@ export class SuggestBackendRust extends BaseFeature {
       true // skipFirst
     );
 
-    if (lastIngestSecs) {
-      this.logger.info(
-        `Last ingest: ${lastIngestSecs}s since epoch. Not ingesting now`
-      );
-    } else {
-      this.logger.info("Last ingest time not found. Ingesting now");
-      await this.#ingest();
-    }
+    // Ingest.
+    await this.#ingest();
   }
 
   #uninit() {
