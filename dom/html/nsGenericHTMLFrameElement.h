@@ -8,7 +8,6 @@
 #define nsGenericHTMLFrameElement_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/nsBrowserElement.h"
 
 #include "nsFrameLoader.h"
 #include "nsFrameLoaderOwner.h"
@@ -39,7 +38,6 @@ class XULFrameElement;
  */
 class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
                                   public nsFrameLoaderOwner,
-                                  public mozilla::nsBrowserElement,
                                   public nsIMozBrowserFrame {
  public:
   nsGenericHTMLFrameElement(
@@ -92,11 +90,6 @@ class nsGenericHTMLFrameElement : public nsGenericHTMLElement,
 
   nsIPrincipal* GetSrcTriggeringPrincipal() const {
     return mSrcTriggeringPrincipal;
-  }
-
-  // Needed for nsBrowserElement
-  already_AddRefed<nsFrameLoader> GetFrameLoader() override {
-    return nsFrameLoaderOwner::GetFrameLoader();
   }
 
  protected:

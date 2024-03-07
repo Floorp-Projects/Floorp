@@ -257,8 +257,6 @@ DEFINES["MOZ_APP_NAME"] = '"%s"' % CONFIG["MOZ_APP_NAME"]
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
     DEFINES["MOZ_ENABLE_FREETYPE"] = True
 
-JAR_MANIFESTS += ["jar.mn"]
-
 BROWSER_CHROME_MANIFESTS += [
     "tests/browser.toml",
     "tests/JSProcessActor/browser.toml",

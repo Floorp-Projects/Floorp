@@ -35,7 +35,6 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsGenericHTMLFrameElement)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsGenericHTMLFrameElement,
                                                   nsGenericHTMLElement)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFrameLoader)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBrowserElementAPI)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsGenericHTMLFrameElement,
@@ -45,7 +44,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsGenericHTMLFrameElement,
   }
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFrameLoader)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mBrowserElementAPI)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(
@@ -351,13 +349,11 @@ nsresult nsGenericHTMLFrameElement::GetReallyIsBrowser(bool* aOut) {
 NS_IMETHODIMP
 nsGenericHTMLFrameElement::InitializeBrowserAPI() {
   MOZ_ASSERT(mFrameLoader);
-  InitBrowserElementAPI();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsGenericHTMLFrameElement::DestroyBrowserFrameScripts() {
   MOZ_ASSERT(mFrameLoader);
-  DestroyBrowserElementFrameScripts();
   return NS_OK;
 }
