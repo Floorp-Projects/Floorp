@@ -886,6 +886,7 @@ describe("<TopSite>", () => {
         type: "SPOC",
         pos: 1,
         label: "test advertiser",
+        shim: { click: "shim_click_id" },
       };
       const wrapper = shallow(
         <TopSite
@@ -913,8 +914,18 @@ describe("<TopSite>", () => {
       assert.propertyVal(action.data, "click", 0);
       assert.propertyVal(action.data, "source", "TOP_SITES");
 
-      // Topsite SPOC click event.
       [action] = dispatch.getCall(3).args;
+      assert.equal(action.type, at.DISCOVERY_STREAM_USER_EVENT);
+
+      assert.propertyVal(action.data, "event", "CLICK");
+      assert.propertyVal(action.data, "action_position", 1);
+      assert.propertyVal(action.data, "source", "TOP_SITES");
+      assert.propertyVal(action.data.value, "card_type", "spoc");
+      assert.propertyVal(action.data.value, "tile_id", 1);
+      assert.propertyVal(action.data.value, "shim", "shim_click_id");
+
+      // Topsite SPOC click event.
+      [action] = dispatch.getCall(4).args;
       assert.equal(action.type, at.TOP_SITES_SPONSORED_IMPRESSION_STATS);
 
       assert.propertyVal(action.data, "type", "click");
