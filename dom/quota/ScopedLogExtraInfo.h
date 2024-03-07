@@ -22,6 +22,10 @@ namespace mozilla::dom::quota {
 struct MOZ_STACK_CLASS ScopedLogExtraInfo {
   static constexpr const char kTagQueryTainted[] = "query";
   static constexpr const char kTagContextTainted[] = "context";
+  // Using the storage origin (instead of normal origin) on purpose to store
+  // the masked origin (uuid based) on the stack for origins partitioned for
+  // private browsing.
+  static constexpr const char kTagStorageOriginTainted[] = "storage-origin";
 
 #ifdef QM_SCOPED_LOG_EXTRA_INFO_ENABLED
  private:
@@ -55,6 +59,7 @@ struct MOZ_STACK_CLASS ScopedLogExtraInfo {
 
   static MOZ_THREAD_LOCAL(const Tainted<nsCString>*) sQueryValueTainted;
   static MOZ_THREAD_LOCAL(const Tainted<nsCString>*) sContextValueTainted;
+  static MOZ_THREAD_LOCAL(const Tainted<nsCString>*) sStorageOriginValueTainted;
 
   void AddInfo();
 #else
