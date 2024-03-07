@@ -90,7 +90,7 @@ class nsAutoRetainUIKitObject {
  @public
   nsWindow* mGeckoChild;  // weak ref
   BOOL mWaitingForPaint;
-  CFMutableDictionaryRef mTouches;
+  NSMapTable<UITouch*, NSNumber*>* mTouches;
   int mNextTouchID;
 }
 // sets up our view, attaching it to its owning gecko view
@@ -110,10 +110,10 @@ class nsAutoRetainUIKitObject {
                touches:(NSSet*)aTouches
                 widget:(nsWindow*)aWindow;
 // Event handling (UIResponder)
-- (void)touchesBegan:(NSSet*)touches withEvent:(UIEvent*)event;
-- (void)touchesCancelled:(NSSet*)touches withEvent:(UIEvent*)event;
-- (void)touchesEnded:(NSSet*)touches withEvent:(UIEvent*)event;
-- (void)touchesMoved:(NSSet*)touches withEvent:(UIEvent*)event;
+- (void)touchesBegan:(NSSet<UITouch*>*)touches withEvent:(UIEvent*)event;
+- (void)touchesCancelled:(NSSet<UITouch*>*)touches withEvent:(UIEvent*)event;
+- (void)touchesEnded:(NSSet<UITouch*>*)touches withEvent:(UIEvent*)event;
+- (void)touchesMoved:(NSSet<UITouch*>*)touches withEvent:(UIEvent*)event;
 
 - (void)activateWindow:(NSNotification*)notification;
 - (void)deactivateWindow:(NSNotification*)notification;
@@ -159,8 +159,7 @@ class nsAutoRetainUIKitObject {
   tapRecognizer.numberOfTapsRequired = 1;
   [self addGestureRecognizer:tapRecognizer];
 
-  mTouches =
-      CFDictionaryCreateMutable(kCFAllocatorDefault, 0, nullptr, nullptr);
+  mTouches = [[NSMapTable alloc] init];
   mNextTouchID = 0;
 
   // This is managed with weak references by the notification center so that we
@@ -182,7 +181,7 @@ class nsAutoRetainUIKitObject {
 
 - (void)widgetDestroyed {
   mGeckoChild = nullptr;
-  CFRelease(mTouches);
+  [mTouches release];
 }
 
 - (void)delayedTearDown {
@@ -253,8 +252,8 @@ class nsAutoRetainUIKitObject {
     LayoutDeviceIntPoint radius = UIKitPointsToDevPixels(
         CGPointMake([touch majorRadius], [touch majorRadius]),
         [self contentScaleFactor]);
-    void* value;
-    if (!CFDictionaryGetValueIfPresent(mTouches, touch, (const void**)&value)) {
+    NSNumber* value = [mTouches objectForKey:touch];
+    if (value == nil) {
       // This shouldn't happen.
       NS_ASSERTION(false, "Got a touch that we didn't know about");
       continue;
@@ -267,12 +266,12 @@ class nsAutoRetainUIKitObject {
   aWindow->DispatchInputEvent(&event);
 }
 
-- (void)touchesBegan:(NSSet*)touches withEvent:(UIEvent*)event {
+- (void)touchesBegan:(NSSet<UITouch*>*)touches withEvent:(UIEvent*)event {
   ALOG("[ChildView[%p] touchesBegan", self);
   if (!mGeckoChild) return;
 
   for (UITouch* touch : touches) {
-    CFDictionaryAddValue(mTouches, touch, (void*)mNextTouchID);
+    [mTouches setObject:[NSNumber numberWithInt:mNextTouchID] forKey:touch];
     mNextTouchID++;
   }
   [self sendTouchEvent:eTouchStart
@@ -280,31 +279,31 @@ class nsAutoRetainUIKitObject {
                 widget:mGeckoChild];
 }
 
-- (void)touchesCancelled:(NSSet*)touches withEvent:(UIEvent*)event {
+- (void)touchesCancelled:(NSSet<UITouch*>*)touches withEvent:(UIEvent*)event {
   ALOG("[ChildView[%p] touchesCancelled", self);
   [self sendTouchEvent:eTouchCancel touches:touches widget:mGeckoChild];
   for (UITouch* touch : touches) {
-    CFDictionaryRemoveValue(mTouches, touch);
+    [mTouches removeObjectForKey:touch];
   }
-  if (CFDictionaryGetCount(mTouches) == 0) {
+  if (mTouches.count == 0) {
     mNextTouchID = 0;
   }
 }
 
-- (void)touchesEnded:(NSSet*)touches withEvent:(UIEvent*)event {
+- (void)touchesEnded:(NSSet<UITouch*>*)touches withEvent:(UIEvent*)event {
   ALOG("[ChildView[%p] touchesEnded", self);
   if (!mGeckoChild) return;
 
   [self sendTouchEvent:eTouchEnd touches:touches widget:mGeckoChild];
   for (UITouch* touch : touches) {
-    CFDictionaryRemoveValue(mTouches, touch);
+    [mTouches removeObjectForKey:touch];
   }
-  if (CFDictionaryGetCount(mTouches) == 0) {
+  if (mTouches.count == 0) {
     mNextTouchID = 0;
   }
 }
 
-- (void)touchesMoved:(NSSet*)touches withEvent:(UIEvent*)event {
+- (void)touchesMoved:(NSSet<UITouch*>*)touches withEvent:(UIEvent*)event {
   ALOG("[ChildView[%p] touchesMoved", self);
   if (!mGeckoChild) return;
 
