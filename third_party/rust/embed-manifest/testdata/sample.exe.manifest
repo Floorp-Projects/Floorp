@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1" xmlns:asmv3="urn:schemas-microsoft-com:asm.v3" manifestVersion="1.0">
+    <assemblyIdentity name="Sample.Test" type="win32" version="1.0.0.0"/>
+    <asmv3:trustInfo>
+        <asmv3:security>
+            <asmv3:requestedPrivileges>
+                <asmv3:requestedExecutionLevel level="asInvoker" uiAccess="false"/>
+            </asmv3:requestedPrivileges>
+        </asmv3:security>
+    </asmv3:trustInfo>
+</assembly>
