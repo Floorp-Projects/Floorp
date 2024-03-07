@@ -71,7 +71,7 @@ public class VideoCaptureAndroid implements CameraVideoCapturer.CameraEventsHand
       eglBase = EglBase.create();
       surfaceTextureHelper = SurfaceTextureHelper.create("VideoCaptureAndroidSurfaceTextureHelper", eglBase.getEglBaseContext());
       cameraVideoCapturer.initialize(surfaceTextureHelper, context, this);
-    } catch (java.lang.IllegalArgumentException e) {
+    } catch (java.lang.RuntimeException e) {
       Log.e(TAG, "VideoCaptureAndroid: Exception while creating capturer: " + e);
     }
   }
