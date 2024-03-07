@@ -94,9 +94,11 @@ support-files = [
 https_first_disabled = true
 support-files = [
   "begin.html",
+  "favicon.html",
   "final.html",
   "redirect_once.sjs",
   "redirect_twice.sjs",
+  "userpass.html",
 ]
 
 ["browser_visituri_nohistory.js"]
