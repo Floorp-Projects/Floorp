@@ -2155,7 +2155,6 @@ jitThresholds:
 jitHintsCache:
   description: Pref to toggle the JIT hints cache.
   owner: dpalmeiro@mozilla.com
-  isEarlyStartup: true
   hasExposure: false
   variables:
     enabled:
