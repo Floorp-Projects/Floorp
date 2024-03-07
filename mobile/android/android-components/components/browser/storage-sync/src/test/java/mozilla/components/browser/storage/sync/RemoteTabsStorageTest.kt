@@ -57,6 +57,7 @@ class RemoteTabsStorageTest {
                     ),
                     0,
                     1574458165555,
+                    false,
                 ),
                 Tab(
                     listOf(
@@ -66,6 +67,7 @@ class RemoteTabsStorageTest {
                     ),
                     2,
                     0,
+                    false,
                 ),
                 Tab(
                     listOf(
@@ -75,6 +77,7 @@ class RemoteTabsStorageTest {
                     ),
                     1,
                     1574457405635,
+                    false,
                 ),
             ),
         )
@@ -125,6 +128,7 @@ class RemoteTabsStorageTest {
                         ),
                         2,
                         1574457405635,
+                        false,
                     ),
                 ),
                 SyncClient("client2") to listOf(
@@ -134,6 +138,7 @@ class RemoteTabsStorageTest {
                         ),
                         0,
                         1574458165555,
+                        false,
                     ),
                     Tab(
                         listOf(
@@ -141,6 +146,7 @@ class RemoteTabsStorageTest {
                         ),
                         0,
                         0,
+                        false,
                     ),
                 ),
             ),

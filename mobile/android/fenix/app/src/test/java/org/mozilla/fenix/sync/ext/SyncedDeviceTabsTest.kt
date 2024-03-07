@@ -43,6 +43,7 @@ class SyncedDeviceTabsTest {
                 ),
                 active = 0,
                 lastUsed = 0L,
+                inactive = false,
             ),
         ),
     )
@@ -64,6 +65,7 @@ class SyncedDeviceTabsTest {
                 ),
                 active = 0,
                 lastUsed = 0L,
+                inactive = false,
             ),
             Tab(
                 history = listOf(
@@ -75,6 +77,7 @@ class SyncedDeviceTabsTest {
                 ),
                 active = 0,
                 lastUsed = 0L,
+                inactive = false,
             ),
         ),
     )

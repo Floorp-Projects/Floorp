@@ -48,7 +48,7 @@ open class RemoteTabsStorage(
                     tabs.map {
                         val activeTab = it.active()
                         val urlHistory = listOf(activeTab.url) + it.previous().reversed().map { it.url }
-                        RemoteTab(activeTab.title, urlHistory, activeTab.iconUrl, it.lastUsed)
+                        RemoteTab(activeTab.title, urlHistory, activeTab.iconUrl, it.lastUsed, it.inactive)
                     },
                 )
             } catch (e: RemoteTabProviderException) {
@@ -71,7 +71,7 @@ open class RemoteTabsStorage(
                         val icon = tab.icon
                         val lastUsed = tab.lastUsed
                         val history = tab.urlHistory.reversed().map { url -> TabEntry(title, url, icon) }
-                        Tab(history, tab.urlHistory.lastIndex, lastUsed)
+                        Tab(history, tab.urlHistory.lastIndex, lastUsed, tab.inactive)
                     }
                     // Map device to tabs
                     SyncClient(device.clientId) to tabs
@@ -109,6 +109,7 @@ data class Tab(
     val history: List<TabEntry>,
     val active: Int,
     val lastUsed: Long,
+    val inactive: Boolean,
 ) {
     /**
      * The current active tab entry. In other words, this is the page that's currently shown for a

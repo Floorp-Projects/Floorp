@@ -5,13 +5,8 @@
 package org.mozilla.fenix.tabstray.ext
 
 import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.state.state.isActive
 import mozilla.components.support.ktx.kotlin.trimmed
-
-fun TabSessionState.isActive(maxActiveTime: Long): Boolean {
-    val lastActiveTime = maxOf(lastAccess, createdAt)
-    val now = System.currentTimeMillis()
-    return (now - lastActiveTime <= maxActiveTime)
-}
 
 /**
  * Returns true if the [TabSessionState] has a search term.

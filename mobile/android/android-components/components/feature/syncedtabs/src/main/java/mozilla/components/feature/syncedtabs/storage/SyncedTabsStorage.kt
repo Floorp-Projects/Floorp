@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.map
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.state.state.isActive
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.RemoteTabsStorage
 import mozilla.components.browser.storage.sync.SyncedDeviceTabs
@@ -38,6 +39,7 @@ class SyncedTabsStorage(
     private val accountManager: FxaAccountManager,
     private val store: BrowserStore,
     private val tabsStorage: RemoteTabsStorage,
+    private val maxActiveTime: Long,
     private val debounceMillis: Long = 1000L,
 ) : SyncedTabsProvider {
     private var scope: CoroutineScope? = null
@@ -53,9 +55,8 @@ class SyncedTabsStorage(
                     // TO-DO: https://github.com/mozilla-mobile/android-components/issues/5179
                     val iconUrl = null
                     state.tabs.filter { !it.content.private && !it.content.loading }.map { tab ->
-                        // TO-DO: https://github.com/mozilla-mobile/android-components/issues/1340
                         val history = listOf(TabEntry(tab.content.title, tab.content.url, iconUrl))
-                        Tab(history, 0, tab.lastAccess)
+                        Tab(history, 0, tab.lastAccess, !tab.isActive(maxActiveTime))
                     }
                 }
                 .debounce(debounceMillis)

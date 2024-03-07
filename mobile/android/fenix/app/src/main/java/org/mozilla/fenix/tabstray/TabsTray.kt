@@ -615,5 +615,6 @@ private fun generateFakeSyncedTab(tabName: String, tabUrl: String): SyncedTabsLi
             history = listOf(TabEntry(tabName, tabUrl, null)),
             active = 0,
             lastUsed = 0L,
+            inactive = false,
         ),
     )

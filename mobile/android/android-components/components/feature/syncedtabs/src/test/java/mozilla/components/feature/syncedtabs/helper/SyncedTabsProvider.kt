@@ -34,6 +34,7 @@ internal fun getDevice1Tabs() = SyncedDeviceTabs(
             ),
             0,
             1,
+            false,
         ),
         Tab(
             listOf(
@@ -41,6 +42,7 @@ internal fun getDevice1Tabs() = SyncedDeviceTabs(
             ),
             0,
             5,
+            false,
         ),
         Tab(
             listOf(
@@ -48,6 +50,7 @@ internal fun getDevice1Tabs() = SyncedDeviceTabs(
             ),
             0,
             2,
+            false,
         ),
     ),
 )
@@ -74,6 +77,7 @@ internal fun getDevice2Tabs() = SyncedDeviceTabs(
             ),
             1,
             1,
+            false,
         ),
     ),
 )

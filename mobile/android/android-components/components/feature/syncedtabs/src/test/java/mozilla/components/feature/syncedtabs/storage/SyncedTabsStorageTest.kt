@@ -72,6 +72,7 @@ class SyncedTabsStorageTest {
             accountManager,
             store,
             tabsStorage,
+            0,
             debounceMillis = 0,
         )
         feature.start()
@@ -81,8 +82,8 @@ class SyncedTabsStorageTest {
 
         verify(tabsStorage, times(2)).store(
             listOf(
-                Tab(history = listOf(TabEntry(title = "", url = "https://www.mozilla.org", iconUrl = null)), active = 0, lastUsed = 123L),
-                Tab(history = listOf(TabEntry(title = "", url = "https://www.foo.bar", iconUrl = null)), active = 0, lastUsed = 124L),
+                Tab(history = listOf(TabEntry(title = "", url = "https://www.mozilla.org", iconUrl = null)), active = 0, lastUsed = 123L, true),
+                Tab(history = listOf(TabEntry(title = "", url = "https://www.foo.bar", iconUrl = null)), active = 0, lastUsed = 124L, true),
                 // Private tab is absent.
             ),
         )
@@ -99,6 +100,7 @@ class SyncedTabsStorageTest {
             accountManager,
             store,
             tabsStorage,
+            0,
             debounceMillis = 0,
         )
         feature.start()
@@ -107,8 +109,8 @@ class SyncedTabsStorageTest {
 
         verify(tabsStorage, times(2)).store(
             listOf(
-                Tab(history = listOf(TabEntry(title = "", url = "https://www.mozilla.org", iconUrl = null)), active = 0, lastUsed = 123L),
-                Tab(history = listOf(TabEntry(title = "", url = "https://www.foo.bar", iconUrl = null)), active = 0, lastUsed = 124L),
+                Tab(history = listOf(TabEntry(title = "", url = "https://www.mozilla.org", iconUrl = null)), active = 0, lastUsed = 123L, true),
+                Tab(history = listOf(TabEntry(title = "", url = "https://www.foo.bar", iconUrl = null)), active = 0, lastUsed = 124L, true),
             ),
         )
 
@@ -126,6 +128,7 @@ class SyncedTabsStorageTest {
                 accountManager,
                 store,
                 tabsStorage,
+                0,
             ),
         )
         val device1 = Device(
@@ -149,13 +152,13 @@ class SyncedTabsStorageTest {
             subscription = null,
         )
         doReturn(listOf(device1, device2)).`when`(feature).syncClients()
-        val tabsClient1 = listOf(Tab(listOf(TabEntry("Foo", "https://foo.bar", null)), 0, 0))
-        val tabsClient2 = listOf(Tab(listOf(TabEntry("Foo", "https://foo.bar", null)), 0, 0))
+        val tabsClient1 = listOf(Tab(listOf(TabEntry("Foo", "https://foo.bar", null)), 0, 0, true))
+        val tabsClient2 = listOf(Tab(listOf(TabEntry("Foo", "https://foo.bar", null)), 0, 0, true))
         whenever(tabsStorage.getAll()).thenReturn(
             mapOf(
                 SyncClient("client1") to tabsClient1,
                 SyncClient("client2") to tabsClient2,
-                SyncClient("client-unknown") to listOf(Tab(listOf(TabEntry("Foo", "https://foo.bar", null)), 0, 0)),
+                SyncClient("client-unknown") to listOf(Tab(listOf(TabEntry("Foo", "https://foo.bar", null)), 0, 0, true)),
             ),
         )
 
@@ -173,6 +176,7 @@ class SyncedTabsStorageTest {
                 accountManager,
                 store,
                 tabsStorage,
+                0,
             ),
         )
         doReturn(null).`when`(feature).syncClients()
@@ -186,6 +190,7 @@ class SyncedTabsStorageTest {
                 accountManager,
                 store,
                 tabsStorage,
+                0,
             ),
         )
         val account: OAuthAccount = mock()
@@ -217,6 +222,7 @@ class SyncedTabsStorageTest {
                 accountManager,
                 store,
                 tabsStorage,
+                0,
             ),
         )
         val account: OAuthAccount = mock()
@@ -234,6 +240,7 @@ class SyncedTabsStorageTest {
                 accountManager,
                 store,
                 tabsStorage,
+                0,
             ),
         )
         whenever(accountManager.authenticatedAccount()).thenReturn(null)
@@ -256,6 +263,7 @@ class SyncedTabsStorageTest {
                 accountManager,
                 store,
                 tabsStorage,
+                0,
                 debounceMillis = 0,
             ),
         )
@@ -264,8 +272,8 @@ class SyncedTabsStorageTest {
         // Tabs are only stored when initial state is collected, since they are already loaded
         verify(tabsStorage, times(1)).store(
             listOf(
-                Tab(history = listOf(TabEntry(title = "", url = "https://www.mozilla.org", iconUrl = null)), active = 0, lastUsed = 123L),
-                Tab(history = listOf(TabEntry(title = "", url = "https://www.foo.bar", iconUrl = null)), active = 0, lastUsed = 124L),
+                Tab(history = listOf(TabEntry(title = "", url = "https://www.mozilla.org", iconUrl = null)), active = 0, lastUsed = 123L, true),
+                Tab(history = listOf(TabEntry(title = "", url = "https://www.foo.bar", iconUrl = null)), active = 0, lastUsed = 124L, true),
             ),
         )
 
@@ -293,6 +301,7 @@ class SyncedTabsStorageTest {
                 accountManager,
                 store,
                 tabsStorage,
+                0,
                 debounceMillis = 0,
             ),
         )
@@ -302,7 +311,7 @@ class SyncedTabsStorageTest {
 
         verify(tabsStorage).store(
             listOf(
-                Tab(history = listOf(TabEntry(title = "", url = "https://www.mozilla.org", iconUrl = null)), active = 0, lastUsed = 123L),
+                Tab(history = listOf(TabEntry(title = "", url = "https://www.mozilla.org", iconUrl = null)), active = 0, lastUsed = 123L, true),
             ),
         )
     }
@@ -323,6 +332,7 @@ class SyncedTabsStorageTest {
                 accountManager,
                 store,
                 tabsStorage,
+                System.currentTimeMillis() * 2,
                 debounceMillis = 0,
             ),
         )
@@ -332,8 +342,8 @@ class SyncedTabsStorageTest {
 
         verify(tabsStorage, times(2)).store(
             listOf(
-                Tab(history = listOf(TabEntry(title = "", url = "https://www.mozilla.org", iconUrl = null)), active = 0, lastUsed = 123L),
-                Tab(history = listOf(TabEntry(title = "", url = "https://www.foo.bar", iconUrl = null)), active = 0, lastUsed = 124L),
+                Tab(history = listOf(TabEntry(title = "", url = "https://www.mozilla.org", iconUrl = null)), active = 0, lastUsed = 123L, false),
+                Tab(history = listOf(TabEntry(title = "", url = "https://www.foo.bar", iconUrl = null)), active = 0, lastUsed = 124L, false),
             ),
         )
     }
@@ -354,6 +364,7 @@ class SyncedTabsStorageTest {
                 accountManager,
                 store,
                 tabsStorage,
+                0,
                 debounceMillis = 0,
             ),
         )
@@ -363,14 +374,14 @@ class SyncedTabsStorageTest {
 
         verify(tabsStorage, times(1)).store(
             listOf(
-                Tab(history = listOf(TabEntry(title = "", url = "https://www.mozilla.org", iconUrl = null)), active = 0, lastUsed = 123L),
-                Tab(history = listOf(TabEntry(title = "", url = "https://www.foo.bar", iconUrl = null)), active = 0, lastUsed = 124L),
+                Tab(history = listOf(TabEntry(title = "", url = "https://www.mozilla.org", iconUrl = null)), active = 0, lastUsed = 123L, true),
+                Tab(history = listOf(TabEntry(title = "", url = "https://www.foo.bar", iconUrl = null)), active = 0, lastUsed = 124L, true),
             ),
         )
         verify(tabsStorage, times(1)).store(
             listOf(
-                Tab(history = listOf(TabEntry(title = "", url = "https://www.mozilla.org", iconUrl = null)), active = 0, lastUsed = 300L),
-                Tab(history = listOf(TabEntry(title = "", url = "https://www.foo.bar", iconUrl = null)), active = 0, lastUsed = 124L),
+                Tab(history = listOf(TabEntry(title = "", url = "https://www.mozilla.org", iconUrl = null)), active = 0, lastUsed = 300L, true),
+                Tab(history = listOf(TabEntry(title = "", url = "https://www.foo.bar", iconUrl = null)), active = 0, lastUsed = 124L, true),
             ),
         )
     }
