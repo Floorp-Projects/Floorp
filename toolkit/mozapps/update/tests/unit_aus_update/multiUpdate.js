@@ -73,14 +73,14 @@ async function downloadUpdate(appUpdateAuto, onDownloadStartCallback) {
   }
   let waitToStartPromise = new Promise(resolve => {
     let listener = {
-      onStartRequest: aRequest => {
+      onStartRequest: _aRequest => {
         gAUS.removeDownloadListener(listener);
         onDownloadStartCallback();
         resolve();
       },
-      onProgress: (aRequest, aContext, aProgress, aMaxProgress) => {},
-      onStatus: (aRequest, aStatus, aStatusText) => {},
-      onStopRequest(request, status) {},
+      onProgress: (_aRequest, _aContext, _aProgress, _aMaxProgress) => {},
+      onStatus: (_aRequest, _aStatus, _aStatusText) => {},
+      onStopRequest(_request, _status) {},
       QueryInterface: ChromeUtils.generateQI([
         "nsIRequestObserver",
         "nsIProgressEventSink",
@@ -149,7 +149,7 @@ async function testUpdateDoesNotDownload() {
   );
 
   let updateAvailableObserved = false;
-  let observer = (subject, topic, status) => {
+  let observer = (_subject, _topic, _status) => {
     updateAvailableObserved = true;
   };
   Services.obs.addObserver(observer, "update-available");

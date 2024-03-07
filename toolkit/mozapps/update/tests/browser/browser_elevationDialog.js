@@ -13,7 +13,7 @@ add_task(async function elevation_dialog() {
   let { startup } = Services;
   let appStartup = {
     QueryInterface: ChromeUtils.generateQI(["nsIAppStartup"]),
-    quit(mode) {
+    quit(_mode) {
       if (elevationDialog) {
         elevationDialog.close();
         elevationDialog = null;
@@ -120,7 +120,7 @@ function waitForElevationDialog() {
         var domwindow = aXULWindow.docShell.domWindow;
         domwindow.addEventListener("load", elevationDialogOnLoad, true);
       },
-      onCloseWindow: aXULWindow => {},
+      onCloseWindow: _aXULWindow => {},
     };
 
     Services.wm.addListener(listener);

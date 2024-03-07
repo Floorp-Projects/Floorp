@@ -79,7 +79,7 @@ function handleRequest(aRequest, aResponse) {
     let retries = 0;
     gSlowDownloadTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     gSlowDownloadTimer.initWithCallback(
-      function (aTimer) {
+      function (_aTimer) {
         let continueFile = getTestDataFile(CONTINUE_DOWNLOAD);
         retries++;
         if (continueFile.exists() || retries == MAX_SLOW_RESPONSE_RETRIES) {
@@ -197,7 +197,7 @@ function respond(aResponse, aParams, aResponseString) {
     aResponse.processAsync();
     gSlowCheckTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     gSlowCheckTimer.initWithCallback(
-      function (aTimer) {
+      function (_aTimer) {
         retries++;
         let continueFile = getTestDataFile(CONTINUE_CHECK);
         if (continueFile.exists() || retries == MAX_SLOW_RESPONSE_RETRIES) {
