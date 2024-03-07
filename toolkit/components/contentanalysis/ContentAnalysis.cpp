@@ -15,7 +15,6 @@
 #include "mozilla/Logging.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
-#include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "nsAppRunner.h"
 #include "nsComponentManagerUtils.h"
@@ -284,15 +283,6 @@ nsresult ContentAnalysisRequest::GetFileDigest(const nsAString& aFilePath,
   return NS_OK;
 }
 
-// Generate an ID that will be shared by all DLP requests.
-// Used to cancel all requests on Firefox shutdown.
-void ContentAnalysis::GenerateUserActionId() {
-  nsID id = nsID::GenerateUUID();
-  mUserActionId = nsPrintfCString("Firefox %s", id.ToString().get());
-}
-
-nsCString ContentAnalysis::GetUserActionId() { return mUserActionId; }
-
 static nsresult ConvertToProtobuf(
     nsIClientDownloadResource* aIn,
     content_analysis::sdk::ClientDownloadRequest_Resource* aOut) {
@@ -312,8 +302,7 @@ static nsresult ConvertToProtobuf(
 }
 
 static nsresult ConvertToProtobuf(
-    nsIContentAnalysisRequest* aIn, nsCString&& aUserActionId,
-    int64_t aRequestCount,
+    nsIContentAnalysisRequest* aIn,
     content_analysis::sdk::ContentAnalysisRequest* aOut) {
   uint32_t timeout = StaticPrefs::browser_contentanalysis_agent_timeout();
   aOut->set_expires_at(time(nullptr) + timeout);
@@ -329,9 +318,6 @@ static nsresult ConvertToProtobuf(
   rv = aIn->GetRequestToken(requestToken);
   NS_ENSURE_SUCCESS(rv, rv);
   aOut->set_request_token(requestToken.get(), requestToken.Length());
-
-  aOut->set_user_action_id(aUserActionId.get());
-  aOut->set_user_action_requests_count(aRequestCount);
 
   const std::string tag = "dlp";  // TODO:
   *aOut->add_tags() = tag;
@@ -713,9 +699,7 @@ ContentAnalysis::ContentAnalysis()
           new ClientPromise::Private("ContentAnalysis::ContentAnalysis")),
       mClientCreationAttempted(false),
       mCallbackMap("ContentAnalysis::mCallbackMap"),
-      mWarnResponseDataMap("ContentAnalysis::mWarnResponseDataMap") {
-  GenerateUserActionId();
-}
+      mWarnResponseDataMap("ContentAnalysis::mWarnResponseDataMap") {}
 
 ContentAnalysis::~ContentAnalysis() {
   // Accessing mClientCreationAttempted so need to be on the main thread
@@ -784,7 +768,7 @@ ContentAnalysis::GetMightBeActive(bool* aMightBeActive) {
 nsresult ContentAnalysis::CancelWithError(nsCString aRequestToken,
                                           nsresult aResult) {
   return NS_DispatchToMainThread(NS_NewCancelableRunnableFunction(
-      "ContentAnalysis::CancelWithError",
+      "ContentAnalysis::RunAnalyzeRequestTask::HandleResponse",
       [aResult, aRequestToken = std::move(aRequestToken)] {
         RefPtr<ContentAnalysis> owner = GetContentAnalysisFromService();
         if (!owner) {
@@ -832,7 +816,6 @@ RefPtr<ContentAnalysis> ContentAnalysis::GetContentAnalysisFromService() {
 
 nsresult ContentAnalysis::RunAnalyzeRequestTask(
     const RefPtr<nsIContentAnalysisRequest>& aRequest, bool aAutoAcknowledge,
-    int64_t aRequestCount,
     const RefPtr<nsIContentAnalysisCallback>& aCallback) {
   nsresult rv = NS_ERROR_FAILURE;
   auto callbackCopy = aCallback;
@@ -844,8 +827,7 @@ nsresult ContentAnalysis::RunAnalyzeRequestTask(
   });
 
   content_analysis::sdk::ContentAnalysisRequest pbRequest;
-  rv =
-      ConvertToProtobuf(aRequest, GetUserActionId(), aRequestCount, &pbRequest);
+  rv = ConvertToProtobuf(aRequest, &pbRequest);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCString requestToken;
@@ -1065,11 +1047,7 @@ ContentAnalysis::AnalyzeContentRequestCallback(
       mozilla::services::GetObserverService();
   obsServ->NotifyObservers(aRequest, "dlp-request-made", nullptr);
 
-  MOZ_ASSERT(NS_IsMainThread());
-  // since we're on the main thread, don't need to synchronize this
-  int64_t requestCount = ++mRequestCount;
-  return RunAnalyzeRequestTask(aRequest, aAutoAcknowledge, requestCount,
-                               aCallback);
+  return RunAnalyzeRequestTask(aRequest, aAutoAcknowledge, aCallback);
 }
 
 NS_IMETHODIMP
@@ -1094,33 +1072,6 @@ ContentAnalysis::CancelContentAnalysisRequest(const nsACString& aRequestToken) {
     LOGD("Content analysis request not found when trying to cancel %s",
          requestToken.get());
   }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ContentAnalysis::CancelAllRequests() {
-  mCaClientPromise->Then(
-      GetCurrentSerialEventTarget(), __func__,
-      [&](std::shared_ptr<content_analysis::sdk::Client> client) {
-        auto owner = GetContentAnalysisFromService();
-        if (!owner) {
-          // May be shutting down
-          return;
-        }
-        if (!client) {
-          LOGE("CancelAllRequests got a null client");
-          return;
-        }
-        content_analysis::sdk::ContentAnalysisCancelRequests requests;
-        requests.set_user_action_id(owner->GetUserActionId().get());
-        int err = client->CancelRequests(requests);
-        if (err != 0) {
-          LOGE("CancelAllRequests got error %d", err);
-        } else {
-          LOGD("CancelAllRequests did cancelling of requests");
-        }
-      },
-      [&](nsresult rv) { LOGE("CancelAllRequests failed to get the client"); });
   return NS_OK;
 }
 

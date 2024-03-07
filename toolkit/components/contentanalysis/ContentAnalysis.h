@@ -92,7 +92,6 @@ class ContentAnalysis final : public nsIContentAnalysis {
   NS_DECL_NSICONTENTANALYSIS
 
   ContentAnalysis();
-  nsCString GetUserActionId();
 
  private:
   ~ContentAnalysis();
@@ -104,13 +103,11 @@ class ContentAnalysis final : public nsIContentAnalysis {
                                        bool aIsPerUser);
   nsresult RunAnalyzeRequestTask(
       const RefPtr<nsIContentAnalysisRequest>& aRequest, bool aAutoAcknowledge,
-      int64_t aRequestCount,
       const RefPtr<nsIContentAnalysisCallback>& aCallback);
   nsresult RunAcknowledgeTask(
       nsIContentAnalysisAcknowledgement* aAcknowledgement,
       const nsACString& aRequestToken);
   nsresult CancelWithError(nsCString aRequestToken, nsresult aResult);
-  void GenerateUserActionId();
   static RefPtr<ContentAnalysis> GetContentAnalysisFromService();
   static void DoAnalyzeRequest(
       nsCString aRequestToken,
@@ -120,8 +117,6 @@ class ContentAnalysis final : public nsIContentAnalysis {
   using ClientPromise =
       MozPromise<std::shared_ptr<content_analysis::sdk::Client>, nsresult,
                  false>;
-  nsCString mUserActionId;
-  int64_t mRequestCount = 0;
   RefPtr<ClientPromise::Private> mCaClientPromise;
   // Only accessed from the main thread
   bool mClientCreationAttempted;
