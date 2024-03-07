@@ -275,7 +275,7 @@ void nsBlockReflowContext::ReflowBlock(const LogicalRect& aSpace,
     tI = space.LineLeft(mWritingMode, mContainerSize);
     tB = mBCoord;
 
-    if (!mFrame->HasAnyStateBits(NS_BLOCK_BFC_STATE_BITS)) {
+    if (!mFrame->HasAnyStateBits(NS_BLOCK_BFC)) {
       aFrameRI.mBlockDelta =
           mOuterReflowInput.mBlockDelta + mBCoord - aLine->BStart();
     }

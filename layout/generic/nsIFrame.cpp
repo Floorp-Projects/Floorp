@@ -2484,7 +2484,7 @@ bool nsIFrame::CanBeDynamicReflowRoot() const {
 
   // If we participate in a container's block reflow context, or margins
   // can collapse through us, we can't be a dynamic reflow root.
-  if (IsBlockFrameOrSubclass() && !HasAnyStateBits(NS_BLOCK_BFC_STATE_BITS)) {
+  if (IsBlockFrameOrSubclass() && !HasAnyStateBits(NS_BLOCK_BFC)) {
     return false;
   }
 
@@ -11563,11 +11563,24 @@ nsIFrame::PhysicalAxes nsIFrame::ShouldApplyOverflowClipping(
     return PhysicalAxes::None;
   }
 
-  // If we're paginated and a block, and have NS_BLOCK_CLIP_PAGINATED_OVERFLOW
-  // set, then we want to clip our overflow.
-  bool clip = HasAnyStateBits(NS_BLOCK_CLIP_PAGINATED_OVERFLOW) &&
-              PresContext()->IsPaginated() && IsBlockFrame();
-  return clip ? PhysicalAxes::Both : PhysicalAxes::None;
+  return IsSuppressedScrollableBlockForPrint() ? PhysicalAxes::Both
+                                               : PhysicalAxes::None;
+}
+
+bool nsIFrame::IsSuppressedScrollableBlockForPrint() const {
+  // This condition needs to match the suppressScrollFrame logic in the frame
+  // constructor.
+  if (!PresContext()->IsPaginated() || !IsBlockFrame() ||
+      !StyleDisplay()->IsScrollableOverflow() ||
+      !StyleDisplay()->IsBlockOutsideStyle() ||
+      mContent->IsInNativeAnonymousSubtree()) {
+    return false;
+  }
+  if (auto* element = Element::FromNode(mContent);
+      element && PresContext()->ElementWouldPropagateScrollStyles(*element)) {
+    return false;
+  }
+  return true;
 }
 
 bool nsIFrame::HasUnreflowedContainerQueryAncestor() const {

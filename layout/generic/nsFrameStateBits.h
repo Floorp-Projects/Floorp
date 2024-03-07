@@ -541,41 +541,30 @@ FRAME_STATE_BIT(Block, 21, NS_BLOCK_HAS_PUSHED_FLOATS)
 // 2. This indicates that a block frame should create its own float manager.
 // This is required by each block frame that can contain floats. The float
 // manager is used to reserve space for the floated frames.
-FRAME_STATE_BIT(Block, 22, NS_BLOCK_STATIC_BFC)
+FRAME_STATE_BIT(Block, 22, NS_BLOCK_BFC)
 
-// This is the same as NS_BLOCK_STATIC_BFC but can be updated dynamically after
-// the frame construction (e.g. paint/layout containment).
-// FIXME(bug 1874823): Try and merge this and NS_BLOCK_STATIC_BFC.
-FRAME_STATE_BIT(Block, 23, NS_BLOCK_DYNAMIC_BFC)
+FRAME_STATE_BIT(Block, 23, NS_BLOCK_HAS_LINE_CURSOR)
 
-// For testing the relevant bits on a block formatting context:
-#define NS_BLOCK_BFC_STATE_BITS (NS_BLOCK_STATIC_BFC | NS_BLOCK_DYNAMIC_BFC)
+FRAME_STATE_BIT(Block, 24, NS_BLOCK_HAS_OVERFLOW_LINES)
 
-FRAME_STATE_BIT(Block, 24, NS_BLOCK_HAS_LINE_CURSOR)
-
-FRAME_STATE_BIT(Block, 25, NS_BLOCK_HAS_OVERFLOW_LINES)
-
-FRAME_STATE_BIT(Block, 26, NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS)
+FRAME_STATE_BIT(Block, 25, NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS)
 
 // Set on any block that has descendant frames in the normal
 // flow with 'clear' set to something other than 'none'
 // (including <BR CLEAR="..."> frames)
-FRAME_STATE_BIT(Block, 27, NS_BLOCK_HAS_CLEAR_CHILDREN)
-
-// NS_BLOCK_CLIP_PAGINATED_OVERFLOW is only set in paginated prescontexts, on
-// blocks which were forced to not have scrollframes but still need to clip
-// the display of their kids.
-FRAME_STATE_BIT(Block, 28, NS_BLOCK_CLIP_PAGINATED_OVERFLOW)
+FRAME_STATE_BIT(Block, 26, NS_BLOCK_HAS_CLEAR_CHILDREN)
 
 // NS_BLOCK_HAS_FIRST_LETTER_STYLE means that the block has first-letter style,
 // even if it has no actual first-letter frame among its descendants.
-FRAME_STATE_BIT(Block, 29, NS_BLOCK_HAS_FIRST_LETTER_STYLE)
+FRAME_STATE_BIT(Block, 27, NS_BLOCK_HAS_FIRST_LETTER_STYLE)
 
 // NS_BLOCK_FRAME_HAS_OUTSIDE_MARKER and NS_BLOCK_FRAME_HAS_INSIDE_MARKER
 // means the block has an associated ::marker frame, they are mutually
 // exclusive.
-FRAME_STATE_BIT(Block, 30, NS_BLOCK_FRAME_HAS_OUTSIDE_MARKER)
-FRAME_STATE_BIT(Block, 31, NS_BLOCK_FRAME_HAS_INSIDE_MARKER)
+FRAME_STATE_BIT(Block, 28, NS_BLOCK_FRAME_HAS_OUTSIDE_MARKER)
+FRAME_STATE_BIT(Block, 29, NS_BLOCK_FRAME_HAS_INSIDE_MARKER)
+
+// bits 30 and 31 free.
 
 // NS_BLOCK_HAS_LINE_CLAMP_ELLIPSIS indicates that exactly one line in this
 // block has the LineClampEllipsis flag set, and that such a line must be found

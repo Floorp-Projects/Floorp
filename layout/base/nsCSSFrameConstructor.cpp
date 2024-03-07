@@ -321,7 +321,7 @@ static bool ShouldSuppressColumnSpanDescendants(nsIFrame* aFrame) {
   }
 
   if (!aFrame->IsBlockFrameOrSubclass() ||
-      aFrame->HasAnyStateBits(NS_BLOCK_BFC_STATE_BITS | NS_FRAME_OUT_OF_FLOW) ||
+      aFrame->HasAnyStateBits(NS_BLOCK_BFC | NS_FRAME_OUT_OF_FLOW) ||
       aFrame->IsFixedPosContainingBlock()) {
     // Need to suppress column-span if we:
     // - Are a different block formatting context,
@@ -2287,7 +2287,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructTableCell(
           aState, content, innerPseudoStyle, cellFrame,
           PseudoStyleType::scrolledContent, false, scrollFrame);
     }
-    cellInnerFrame = NS_NewBlockFormattingContext(mPresShell, innerPseudoStyle);
+    cellInnerFrame = NS_NewBlockFrame(mPresShell, innerPseudoStyle);
   }
   auto* parent = scrollFrame ? scrollFrame : cellFrame;
   InitAndRestoreFrame(aState, content, parent, cellInnerFrame);
@@ -2567,7 +2567,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
     MOZ_ASSERT(display->mDisplay == StyleDisplay::Block ||
                    display->mDisplay == StyleDisplay::FlowRoot,
                "Unhandled display type for root element");
-    contentFrame = NS_NewBlockFormattingContext(mPresShell, computedStyle);
+    contentFrame = NS_NewBlockFrame(mPresShell, computedStyle);
     ConstructBlock(
         state, aDocElement,
         state.GetGeometricParent(*display, mDocElementContainingBlock),
@@ -3147,8 +3147,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructFieldSetFrame(
       MOZ_ASSERT(fieldsetContentDisplay->mDisplay == StyleDisplay::Block,
                  "bug in StyleAdjuster::adjust_for_fieldset_content?");
 
-      contentFrame =
-          NS_NewBlockFormattingContext(mPresShell, fieldsetContentStyle);
+      contentFrame = NS_NewBlockFrame(mPresShell, fieldsetContentStyle);
       if (fieldsetContentStyle->StyleColumn()->IsColumnContainerStyle()) {
         contentFrameTop = BeginBuildingColumns(
             aState, content, parent, contentFrame, fieldsetContentStyle);
@@ -3691,11 +3690,6 @@ void nsCSSFrameConstructor::ConstructFrameFromItemInternal(
   CHECK_ONLY_ONE_BIT(FCDATA_WRAP_KIDS_IN_BLOCKS,
                      FCDATA_CREATE_BLOCK_WRAPPER_FOR_ALL_KIDS);
 #undef CHECK_ONLY_ONE_BIT
-  NS_ASSERTION(!(bits & FCDATA_FORCED_NON_SCROLLABLE_BLOCK) ||
-                   ((bits & FCDATA_FUNC_IS_FULL_CTOR) &&
-                    data->mFunc.mFullConstructor ==
-                        &nsCSSFrameConstructor::ConstructNonScrollableBlock),
-               "Unexpected FCDATA_FORCED_NON_SCROLLABLE_BLOCK flag");
   MOZ_ASSERT(
       !(bits & FCDATA_IS_WRAPPER_ANON_BOX) || (bits & FCDATA_USE_CHILD_ITEMS),
       "Wrapper anon boxes should always have FCDATA_USE_CHILD_ITEMS");
@@ -3773,7 +3767,7 @@ void nsCSSFrameConstructor::ConstructFrameFromItemInternal(
             innerFrame = outerFrame;
             break;
           default: {
-            innerFrame = NS_NewBlockFormattingContext(mPresShell, outerStyle);
+            innerFrame = NS_NewBlockFrame(mPresShell, outerStyle);
             if (outerStyle->StyleColumn()->IsColumnContainerStyle()) {
               outerFrame = BeginBuildingColumns(aState, content, container,
                                                 innerFrame, outerStyle);
@@ -3786,7 +3780,7 @@ void nsCSSFrameConstructor::ConstructFrameFromItemInternal(
           }
         }
       } else {
-        innerFrame = NS_NewBlockFormattingContext(mPresShell, outerStyle);
+        innerFrame = NS_NewBlockFrame(mPresShell, outerStyle);
         InitAndRestoreFrame(aState, content, container, innerFrame);
         outerFrame = innerFrame;
       }
@@ -4336,14 +4330,14 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
       // XXX Ignore tables for the time being (except caption)
       const uint32_t kCaptionCtorFlags =
           FCDATA_IS_TABLE_PART | FCDATA_DESIRED_PARENT_TYPE_TO_BITS(eTypeTable);
-      bool caption = aDisplay.mDisplay == StyleDisplay::TableCaption;
-      bool suppressScrollFrame = false;
-      bool needScrollFrame =
+      const bool caption = aDisplay.mDisplay == StyleDisplay::TableCaption;
+      const bool needScrollFrame =
           aDisplay.IsScrollableOverflow() && !propagatedScrollToViewport;
       if (needScrollFrame) {
-        suppressScrollFrame = mPresShell->GetPresContext()->IsPaginated() &&
-                              aDisplay.IsBlockOutsideStyle() &&
-                              !aElement.IsInNativeAnonymousSubtree();
+        const bool suppressScrollFrame =
+            mPresShell->GetPresContext()->IsPaginated() &&
+            aDisplay.IsBlockOutsideStyle() &&
+            !aElement.IsInNativeAnonymousSubtree();
         if (!suppressScrollFrame) {
           static constexpr FrameConstructionData sScrollableBlockData[2] = {
               {&nsCSSFrameConstructor::ConstructScrollableBlock},
@@ -4351,27 +4345,14 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
                kCaptionCtorFlags}};
           return &sScrollableBlockData[caption];
         }
-
-        // If the scrollable frame would have propagated its scrolling to the
-        // viewport, we still want to construct a regular block rather than a
-        // scrollframe so that it paginates correctly, but we don't want to set
-        // the bit on the block that tells it to clip at paint time.
-        if (mPresShell->GetPresContext()->ElementWouldPropagateScrollStyles(
-                aElement)) {
-          suppressScrollFrame = false;
-        }
       }
 
       // Handle various non-scrollable blocks.
-      static constexpr FrameConstructionData sNonScrollableBlockData[2][2] = {
-          {{&nsCSSFrameConstructor::ConstructNonScrollableBlock},
-           {&nsCSSFrameConstructor::ConstructNonScrollableBlock,
-            kCaptionCtorFlags}},
-          {{&nsCSSFrameConstructor::ConstructNonScrollableBlock,
-            FCDATA_FORCED_NON_SCROLLABLE_BLOCK},
-           {&nsCSSFrameConstructor::ConstructNonScrollableBlock,
-            FCDATA_FORCED_NON_SCROLLABLE_BLOCK | kCaptionCtorFlags}}};
-      return &sNonScrollableBlockData[suppressScrollFrame][caption];
+      static constexpr FrameConstructionData sNonScrollableBlockData[2] = {
+          {&nsCSSFrameConstructor::ConstructNonScrollableBlock},
+          {&nsCSSFrameConstructor::ConstructNonScrollableBlock,
+           kCaptionCtorFlags}};
+      return &sNonScrollableBlockData[caption];
     }
     case StyleDisplayInside::Table: {
       static constexpr FrameConstructionData data(
@@ -4505,8 +4486,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructScrollableBlock(
 
   // Create our block frame
   // pass a temporary stylecontext, the correct one will be set later
-  nsContainerFrame* scrolledFrame =
-      NS_NewBlockFormattingContext(mPresShell, computedStyle);
+  nsContainerFrame* scrolledFrame = NS_NewBlockFrame(mPresShell, computedStyle);
 
   // Make sure to AddChild before we call ConstructBlock so that we
   // end up before our descendants in fixed-pos lists as needed.
@@ -4529,26 +4509,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructNonScrollableBlock(
     nsContainerFrame* aParentFrame, const nsStyleDisplay* aDisplay,
     nsFrameList& aFrameList) {
   ComputedStyle* const computedStyle = aItem.mComputedStyle;
-
-  // We want a block formatting context root in paginated contexts for
-  // every block that would be scrollable in a non-paginated context.
-  // We mark our blocks with a bit here if this condition is true, so
-  // we can check it later in nsIFrame::ApplyPaginatedOverflowClipping.
-  bool clipPaginatedOverflow =
-      (aItem.mFCData->mBits & FCDATA_FORCED_NON_SCROLLABLE_BLOCK) != 0;
-  nsFrameState flags = nsFrameState(0);
-  if ((aDisplay->IsAbsolutelyPositionedStyle() || aDisplay->IsFloatingStyle() ||
-       aDisplay->DisplayInside() == StyleDisplayInside::FlowRoot ||
-       clipPaginatedOverflow) &&
-      !aParentFrame->IsInSVGTextSubtree()) {
-    flags = NS_BLOCK_STATIC_BFC;
-    if (clipPaginatedOverflow) {
-      flags |= NS_BLOCK_CLIP_PAGINATED_OVERFLOW;
-    }
-  }
-
   nsContainerFrame* newFrame = NS_NewBlockFrame(mPresShell, computedStyle);
-  newFrame->AddStateBits(flags);
   ConstructBlock(aState, aItem.mContent,
                  aState.GetGeometricParent(*aDisplay, aParentFrame),
                  aParentFrame, computedStyle, &newFrame, aFrameList,
@@ -8707,15 +8668,14 @@ void nsCSSFrameConstructor::CreateNeededAnonFlexOrGridItems(
         mPresShell->StyleSet()->ResolveInheritingAnonymousBoxStyle(
             PseudoStyleType::anonymousItem, aParentFrame->Style());
 
-    static constexpr FrameConstructionData sBlockFormattingContextFCData(
-        ToCreationFunc(NS_NewBlockFormattingContext),
-        FCDATA_SKIP_FRAMESET | FCDATA_USE_CHILD_ITEMS |
-            FCDATA_IS_WRAPPER_ANON_BOX);
+    static constexpr FrameConstructionData sBlockFCData(
+        ToCreationFunc(NS_NewBlockFrame), FCDATA_SKIP_FRAMESET |
+                                              FCDATA_USE_CHILD_ITEMS |
+                                              FCDATA_IS_WRAPPER_ANON_BOX);
 
-    FrameConstructionItem* newItem = new (this)
-        FrameConstructionItem(&sBlockFormattingContextFCData,
-                              // Use the content of our parent frame
-                              parentContent, wrapperStyle.forget(), true);
+    // Use the content of our parent frame
+    auto* newItem = new (this) FrameConstructionItem(
+        &sBlockFCData, parentContent, wrapperStyle.forget(), true);
 
     newItem->mIsAllInline =
         newItem->mComputedStyle->StyleDisplay()->IsInlineOutsideStyle();
