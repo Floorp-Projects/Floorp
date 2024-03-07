@@ -3,6 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 //! Standard library wrapper (for mocking in tests).
+//!
+//! In general this should always be used rather than `std` directly, and _especially_ when using
+//! `std` functions and types which interact with the runtime host environment.
+//!
+//! Note that, in some cases, this wrapper extends the `std` library. Notably, the [`mock`] module
+//! adds mocking functions.
 
 pub use std::*;
 
