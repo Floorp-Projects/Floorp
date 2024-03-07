@@ -236,9 +236,4 @@ interface nsIContentAnalysis : nsISupports
    * whether the user wants to allow the request to go through.
    */
   void respondToWarnDialog(in ACString aRequestToken, in bool aAllowContent);
-
-  /**
-   * Cancels all outstanding DLP requests. Used on shutdown.
-   */
-  void cancelAllRequests();
 };
