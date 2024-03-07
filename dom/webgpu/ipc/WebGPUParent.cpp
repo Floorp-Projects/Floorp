@@ -983,7 +983,7 @@ static void ReadbackPresentCallback(ffi::WGPUBufferMapAsyncStatus status,
     return;
   }
 
-  PresentationData* data = req->mData.get();
+  RefPtr<PresentationData> data = req->mData;
   // get the buffer ID
   RawId bufferId;
   {
