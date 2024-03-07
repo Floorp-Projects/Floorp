@@ -3878,7 +3878,12 @@ class Document : public nsINode,
   void SetAllowDeclarativeShadowRoots(bool aAllowDeclarativeShadowRoots);
   bool AllowsDeclarativeShadowRoots() const;
 
-  void SuspendDOMNotifications() { mSuspendDOMNotifications = true; }
+  void SuspendDOMNotifications() {
+    MOZ_ASSERT(IsHTMLDocument(),
+               "Currently suspending DOM notifications is supported only on "
+               "HTML documents.");
+    mSuspendDOMNotifications = true;
+  }
 
   void ResumeDOMNotifications() { mSuspendDOMNotifications = false; }
 
