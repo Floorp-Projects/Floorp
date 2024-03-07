@@ -392,7 +392,7 @@ var PlacesCommandHook = {
    */
   async bookmarkPage() {
     let browser = gBrowser.selectedBrowser;
-    let url = URL.fromURI(browser.currentURI);
+    let url = URL.fromURI(Services.io.createExposableURI(browser.currentURI));
     let info = await PlacesUtils.bookmarks.fetch({ url });
     let isNewBookmark = !info;
     let showEditUI = !isNewBookmark || StarUI.showForNewBookmarks;
@@ -490,6 +490,21 @@ var PlacesCommandHook = {
   },
 
   /**
+   * Bookmarks the given tabs loaded in the current browser.
+   * @param {Array} tabs
+   *        If no given tabs, bookmark all current tabs.
+   */
+  async bookmarkTabs(tabs) {
+    tabs = tabs ?? gBrowser.visibleTabs.filter(tab => !tab.pinned);
+    let pages = PlacesCommandHook.getUniquePages(tabs).map(
+      // Bookmark exposable url.
+      page =>
+        Object.assign(page, { uri: Services.io.createExposableURI(page.uri) })
+    );
+    await PlacesUIUtils.showBookmarkPagesDialog(pages);
+  },
+
+  /**
    * List of nsIURI objects characterizing tabs given in param.
    * Duplicates are discarded.
    */
@@ -508,24 +523,6 @@ var PlacesCommandHook = {
       }
     });
     return URIs;
-  },
-
-  /**
-   * List of nsIURI objects characterizing the tabs currently open in the
-   * browser, modulo pinned tabs. The URIs will be in the order in which their
-   * corresponding tabs appeared and duplicates are discarded.
-   */
-  get uniqueCurrentPages() {
-    let visibleUnpinnedTabs = gBrowser.visibleTabs.filter(tab => !tab.pinned);
-    return this.getUniquePages(visibleUnpinnedTabs);
-  },
-
-  /**
-   * List of nsIURI objects characterizing the tabs currently
-   * selected in the window. Duplicates are discarded.
-   */
-  get uniqueSelectedPages() {
-    return this.getUniquePages(gBrowser.selectedTabs);
   },
 
   /**
