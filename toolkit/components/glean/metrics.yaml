@@ -168,3 +168,27 @@ fog.ipc:
       - chutten@mozilla.com
       - glean-team@mozilla.com
     expires: never
+
+fog.validation:
+  some_object:
+    type: object
+    send_in_pings:
+      - metrics
+    description: |
+      Static data recorded to verify the new object metric type end-to-end.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1883879
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1883879#2
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - jrediger@mozilla.com
+    expires: 126
+    structure:
+      type: object
+      properties:
+        name:
+          type: string
+        set:
+          type: boolean
