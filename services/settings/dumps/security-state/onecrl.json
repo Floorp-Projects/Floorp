@@ -1,6 +1,21 @@
 {
   "data": [
     {
+      "schema": 1709632813150,
+      "details": {
+        "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1879046",
+        "who": "dkeeler@mozilla.com",
+        "why": "Kazakhstan MITM (#10)",
+        "name": "Information Security Certification Authority",
+        "created": ""
+      },
+      "enabled": true,
+      "issuerName": "MFMxNTAzBgNVBAMTLEluZm9ybWF0aW9uIFNlY3VyaXR5IENlcnRpZmljYXRpb24gQXV0aG9yaXR5MQ0wCwYDVQQKEwRJU0NBMQswCQYDVQQGEwJLWg==",
+      "serialNumber": "MgQS30wvsQLzmAyqdrphCuYshJI=",
+      "id": "2e32f465-fab4-4365-94d8-9a83041e660a",
+      "last_modified": 1709673810455
+    },
+    {
       "schema": 1701882093709,
       "details": {
         "bug": "https://bugzilla.mozilla.org/show_bug.cgi?id=1868611",
@@ -24031,5 +24046,5 @@
       "last_modified": 1480349158647
     }
   ],
-  "timestamp": 1701989913617
+  "timestamp": 1709673810455
 }
