@@ -954,7 +954,6 @@ dictionary IOActivityDataDictionary {
 [GenerateInitFromJSON]
 dictionary OriginAttributesDictionary {
   unsigned long userContextId = 0;
-  boolean inIsolatedMozBrowser = false;
   unsigned long privateBrowsingId = 0;
   DOMString firstPartyDomain = "";
   DOMString geckoViewSessionContextId = "";
@@ -964,7 +963,6 @@ dictionary OriginAttributesDictionary {
 [GenerateInitFromJSON, GenerateToJSON]
 dictionary OriginAttributesPatternDictionary {
   unsigned long userContextId;
-  boolean inIsolatedMozBrowser;
   unsigned long privateBrowsingId;
   DOMString firstPartyDomain;
   DOMString geckoViewSessionContextId;

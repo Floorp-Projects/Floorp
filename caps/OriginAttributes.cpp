@@ -229,10 +229,6 @@ void OriginAttributes::CreateSuffix(nsACString& aStr) const {
   // naming.
   //
 
-  if (mInIsolatedMozBrowser) {
-    params.Set(u"inBrowser"_ns, u"1"_ns);
-  }
-
   if (mUserContextId != nsIScriptSecurityManager::DEFAULT_USER_CONTEXT_ID) {
     value.Truncate();
     value.AppendInt(mUserContextId);
@@ -335,7 +331,6 @@ bool OriginAttributes::PopulateFromSuffix(const nsACString& aStr) {
             return false;
           }
 
-          mInIsolatedMozBrowser = true;
           return true;
         }
 

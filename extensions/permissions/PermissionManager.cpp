@@ -1208,7 +1208,6 @@ nsresult PermissionManager::TryInitDB(bool aRemoveFile,
             entry.mExpireType = stmt->AsInt32(3);
             entry.mExpireTime = stmt->AsInt64(4);
             entry.mModificationTime = stmt->AsInt64(5);
-            entry.mIsInBrowserElement = static_cast<bool>(stmt->AsInt32(6));
 
             mMigrationEntries.AppendElement(entry);
           }
@@ -1363,7 +1362,6 @@ nsresult PermissionManager::TryInitDB(bool aRemoveFile,
             entry.mExpireType = stmt->AsInt32(3);
             entry.mExpireTime = stmt->AsInt64(4);
             entry.mModificationTime = stmt->AsInt64(5);
-            entry.mIsInBrowserElement = static_cast<bool>(stmt->AsInt32(6));
 
             mMigrationEntries.AppendElement(entry);
           }

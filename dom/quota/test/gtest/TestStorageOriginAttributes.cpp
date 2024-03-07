@@ -162,4 +162,24 @@ TEST(DOM_Quota_StorageOriginAttributes, PopulateFromOrigin_Mixed_Invalid)
   }
 }
 
+TEST(DOM_Quota_StorageOriginAttributes, CreateSuffix_Mozbrowser)
+{
+  {
+    StorageOriginAttributes originAttributes(true);
+    nsCString suffix;
+    originAttributes.CreateSuffix(suffix);
+    ASSERT_EQ(suffix, "^inBrowser=1");
+  }
+}
+
+TEST(DOM_Quota_StorageOriginAttributes, CreateSuffix_NoMozbrowser)
+{
+  {
+    StorageOriginAttributes originAttributes(false);
+    nsCString suffix;
+    originAttributes.CreateSuffix(suffix);
+    ASSERT_EQ(suffix, "");
+  }
+}
+
 }  // namespace mozilla::dom::quota::test
