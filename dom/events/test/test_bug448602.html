@@ -174,6 +174,29 @@ function runTests() {
   is(SpecialPowers.unwrap(infos[0].listenerObject), l,
      "Should have the right listener object (4)");
 
+  // Event target chain tests
+  l3 = document.getElementById("testlevel3");
+  var textnode = l3.firstChild;
+  var chain = els.getEventTargetChainFor(textnode, true);
+  ok(chain.length > 3, "Too short event target chain.");
+  ok(SpecialPowers.compare(chain[0], textnode), "Wrong chain item (1)");
+  ok(SpecialPowers.compare(chain[1], l3), "Wrong chain item (2)");
+  ok(SpecialPowers.compare(chain[2], l2), "Wrong chain item (3)");
+  ok(SpecialPowers.compare(chain[3], root), "Wrong chain item (4)");
+
+  var hasDocumentInChain = false;
+  var hasWindowInChain = false;
+  for (var i = 0; i < chain.length; ++i) {
+    if (SpecialPowers.compare(chain[i], document)) {
+      hasDocumentInChain = true;
+    } else if (SpecialPowers.compare(chain[i], window)) {
+      hasWindowInChain = true;
+    }
+  }
+
+  ok(hasDocumentInChain, "Should have document in event target chain!");
+  ok(hasWindowInChain, "Should have window in event target chain!");
+
   try {
     els.getListenerInfoFor(null);
     ok(false, "Should have thrown an exception.");
