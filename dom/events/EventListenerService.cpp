@@ -220,6 +220,21 @@ EventListenerService::GetListenerInfoFor(
 }
 
 NS_IMETHODIMP
+EventListenerService::GetEventTargetChainFor(
+    EventTarget* aEventTarget, bool aComposed,
+    nsTArray<RefPtr<EventTarget>>& aOutArray) {
+  NS_ENSURE_ARG(aEventTarget);
+  WidgetEvent event(true, eVoidEvent);
+  event.SetComposed(aComposed);
+  nsTArray<EventTarget*> targets;
+  nsresult rv = EventDispatcher::Dispatch(aEventTarget, nullptr, &event,
+                                          nullptr, nullptr, nullptr, &targets);
+  NS_ENSURE_SUCCESS(rv, rv);
+  aOutArray.AppendElements(targets);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 EventListenerService::HasListenersFor(EventTarget* aEventTarget,
                                       const nsAString& aType, bool* aRetVal) {
   NS_ENSURE_TRUE(aEventTarget, NS_ERROR_UNEXPECTED);

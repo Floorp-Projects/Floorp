@@ -64,6 +64,8 @@ support-files = [
 
 ["test_event_retarget.html"]
 
+["test_event_stopping.html"]
+
 ["test_link_prefetch.html"]
 
 ["test_shadowdom_active_pseudo_class.html"]
