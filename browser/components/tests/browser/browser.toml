@@ -33,5 +33,8 @@ skip-if = ["os == 'mac'"]
 
 ["browser_startup_homepage.js"]
 
+["browser_system_notification_telemetry.js"]
+run-if = ["os == 'win'"]
+
 ["browser_to_handle_telemetry.js"]
 run-if = ["os == 'win'"]

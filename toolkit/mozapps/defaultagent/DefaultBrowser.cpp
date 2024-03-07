@@ -184,6 +184,17 @@ BrowserResult TryGetReplacePreviousDefaultBrowser(Browser currentDefault) {
   return GetBrowserFromString(previousDefault);
 }
 
+DefaultBrowserResult GetDefaultBrowserInfo() {
+  DefaultBrowserInfo browserInfo;
+
+  MOZ_TRY_VAR(browserInfo.currentDefaultBrowser, TryGetDefaultBrowser());
+  MOZ_TRY_VAR(
+      browserInfo.previousDefaultBrowser,
+      TryGetReplacePreviousDefaultBrowser(browserInfo.currentDefaultBrowser));
+
+  return browserInfo;
+}
+
 // We used to prefix this key with the installation directory, but that causes
 // problems with our new "only one ping per day across installs" restriction.
 // To make sure all installations use consistent data, the value's name is
