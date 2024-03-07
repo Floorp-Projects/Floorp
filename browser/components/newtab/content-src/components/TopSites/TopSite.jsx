@@ -494,6 +494,22 @@ export class TopSite extends React.PureComponent {
         );
 
         // Record a click for a Pocket sponsored tile.
+        // This first event is for the shim property
+        // and is used by our ad service provider.
+        this.props.dispatch(
+          ac.DiscoveryStreamUserEvent({
+            event: "CLICK",
+            source: TOP_SITES_SOURCE,
+            action_position: this.props.link.pos,
+            value: {
+              card_type: "spoc",
+              tile_id: this.props.link.id,
+              shim: this.props.link.shim && this.props.link.shim.click,
+            },
+          })
+        );
+
+        // A second event is recoded for internal usage.
         const title = this.props.link.label || this.props.link.hostname;
         this.props.dispatch(
           ac.OnlyToMain({
