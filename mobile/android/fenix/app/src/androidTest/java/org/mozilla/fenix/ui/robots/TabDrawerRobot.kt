@@ -65,28 +65,26 @@ import org.mozilla.fenix.helpers.matchers.BottomSheetBehaviorStateMatcher
  */
 class TabDrawerRobot {
 
-    fun verifyBrowserTabsTrayURL(url: String) {
-        mDevice.waitNotNull(
-            Until.findObject(By.res("$packageName:id/mozac_browser_tabstray_url")),
-            waitingTime,
-        )
-        onView(withId(R.id.mozac_browser_tabstray_url))
-            .check(matches(withText(containsString(url))))
-    }
+    fun verifyNormalBrowsingButtonIsSelected(isSelected: Boolean) = normalBrowsingButton().check(matches(isSelected(isSelected)))
 
-    fun verifyNormalBrowsingButtonIsDisplayed() = assertNormalBrowsingButton()
-    fun verifyNormalBrowsingButtonIsSelected(isSelected: Boolean) =
-        assertNormalBrowsingButtonIsSelected(isSelected)
-
-    fun verifyPrivateBrowsingButtonIsSelected(isSelected: Boolean) =
-        assertPrivateBrowsingButtonIsSelected(isSelected)
+    fun verifyPrivateBrowsingButtonIsSelected(isSelected: Boolean) = privateBrowsingButton().check(matches(isSelected(isSelected)))
 
     fun verifySyncedTabsButtonIsSelected(isSelected: Boolean) =
         syncedTabsButton().check(matches(isSelected(isSelected)))
 
     fun clickSyncedTabsButton() = syncedTabsButton().click()
 
-    fun verifyExistingOpenTabs(vararg titles: String) = assertExistingOpenTabs(*titles)
+    fun verifyExistingOpenTabs(vararg tabTitles: String) {
+        var retries = 0
+
+        for (title in tabTitles) {
+            while (!tabItem(title).waitForExists(waitingTime) && retries++ < 3) {
+                tabsList()
+                    .getChildByText(UiSelector().text(title), title, true)
+                assertUIObjectExists(tabItem(title), waitingTime = waitingTimeLong)
+            }
+        }
+    }
 
     fun verifyOpenTabsOrder(position: Int, title: String) {
         mDevice.findObject(
@@ -101,26 +99,76 @@ class TabDrawerRobot {
                 .index(position - 1),
         )
     }
-    fun verifyNoExistingOpenTabs(vararg titles: String) = assertNoExistingOpenTabs(*titles)
-    fun verifyCloseTabsButton(title: String) = assertCloseTabsButton(title)
+    fun verifyNoExistingOpenTabs(vararg tabTitles: String) {
+        for (title in tabTitles) {
+            assertUIObjectExists(tabItem(title), exists = false)
+        }
+    }
+    fun verifyCloseTabsButton(title: String) =
+        assertUIObjectExists(itemWithDescription("Close tab").getFromParent(UiSelector().textContains(title)))
 
-    fun verifyExistingTabList() = assertExistingTabList()
+    fun verifyExistingTabList() {
+        mDevice.findObject(
+            UiSelector().resourceId("$packageName:id/tabsTray"),
+        ).waitForExists(waitingTime)
+        assertUIObjectExists(itemWithResId("$packageName:id/tray_list_item"))
+    }
 
-    fun verifyNoOpenTabsInNormalBrowsing() = assertNoOpenTabsInNormalBrowsing()
-    fun verifyNoOpenTabsInPrivateBrowsing() = assertNoOpenTabsInPrivateBrowsing()
-    fun verifyPrivateModeSelected() = assertPrivateModeSelected()
-    fun verifyNormalModeSelected() = assertNormalModeSelected()
-    fun verifyNormalBrowsingNewTabButton() = assertNormalBrowsingNewTabButton()
-    fun verifyPrivateBrowsingNewTabButton() = assertPrivateBrowsingNewTabButton()
-    fun verifyEmptyTabsTrayMenuButtons() = assertEmptyTabsTrayMenuButtons()
-    fun verifySelectTabsButton() = assertSelectTabsButton()
-    fun verifyTabTrayOverflowMenu(visibility: Boolean) = assertTabTrayOverflowButton(visibility)
-    fun verifyTabsTrayCounter() = assertTabsTrayCounter()
+    fun verifyNoOpenTabsInNormalBrowsing() =
+        onView(
+            allOf(
+                withId(R.id.tab_tray_empty_view),
+                withText(R.string.no_open_tabs_description),
+            ),
+        ).check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
-    fun verifyTabTrayIsOpened() = assertTabTrayDoesExist()
-    fun verifyTabTrayIsClosed() = assertTabTrayDoesNotExist()
-    fun verifyHalfExpandedRatio() = assertMinisculeHalfExpandedRatio()
-    fun verifyBehaviorState(expectedState: Int) = assertBehaviorState(expectedState)
+    fun verifyNoOpenTabsInPrivateBrowsing() =
+        onView(
+            allOf(
+                withId(R.id.tab_tray_empty_view),
+                withText(R.string.no_private_tabs_description),
+            ),
+        ).check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+
+    fun verifyPrivateModeSelected() = privateBrowsingButton().check(matches(ViewMatchers.isSelected()))
+
+    fun verifyNormalModeSelected() = normalBrowsingButton().check(matches(ViewMatchers.isSelected()))
+
+    fun verifyNormalBrowsingNewTabButton() =
+        onView(
+            allOf(
+                withId(R.id.new_tab_button),
+                withContentDescription(R.string.add_tab),
+            ),
+        ).check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    fun verifyPrivateBrowsingNewTabButton() =
+        onView(
+            allOf(
+                withId(R.id.new_tab_button),
+                withContentDescription(R.string.add_private_tab),
+            ),
+        ).check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+
+    fun verifyEmptyTabsTrayMenuButtons() {
+        threeDotMenu().click()
+        tabsSettingsButton()
+            .inRoot(RootMatchers.isPlatformPopup())
+            .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+        recentlyClosedTabsButton()
+            .inRoot(RootMatchers.isPlatformPopup())
+            .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    }
+
+    fun verifyTabTrayOverflowMenu(visibility: Boolean) =
+        onView(withId(R.id.tab_tray_overflow)).check(matches(withEffectiveVisibility(visibleOrGone(visibility))))
+    fun verifyTabsTrayCounter() = tabsTrayCounterBox().check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+
+    fun verifyTabTrayIsOpened() = onView(withId(R.id.tab_wrapper)).check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    fun verifyTabTrayIsClosed() = onView(withId(R.id.tab_wrapper)).check(doesNotExist())
+    fun verifyHalfExpandedRatio() =
+        onView(withId(R.id.tab_wrapper)).check(matches(BottomSheetBehaviorHalfExpandedMaxRatioMatcher(0.001f)))
+    fun verifyBehaviorState(expectedState: Int) =
+        onView(withId(R.id.tab_wrapper)).check(matches(BottomSheetBehaviorStateMatcher(expectedState)))
     fun verifyOpenedTabThumbnail() =
         assertUIObjectExists(itemWithResId("$packageName:id/mozac_browser_tabstray_thumbnail"))
 
@@ -439,21 +487,6 @@ class TabDrawerRobot {
             return Transition()
         }
 
-        fun openRecentlyClosedTabs(interact: RecentlyClosedTabsRobot.() -> Unit): RecentlyClosedTabsRobot.Transition {
-            threeDotMenu().click()
-
-            mDevice.waitNotNull(
-                Until.findObject(text("Recently closed tabs")),
-                waitingTime,
-            )
-
-            val menuRecentlyClosedTabs = mDevice.findObject(text("Recently closed tabs"))
-            menuRecentlyClosedTabs.click()
-
-            RecentlyClosedTabsRobot().interact()
-            return RecentlyClosedTabsRobot.Transition()
-        }
-
         fun clickSaveCollection(interact: CollectionRobot.() -> Unit): CollectionRobot.Transition {
             saveTabsToCollectionButton().click()
 
@@ -474,11 +507,6 @@ private fun tabMediaControlButton(action: String) =
 private fun closeTabButton() =
     mDevice.findObject(UiSelector().descriptionContains("Close tab"))
 
-private fun assertCloseTabsButton(title: String) =
-    assertUIObjectExists(
-        itemWithDescription("Close tab").getFromParent(UiSelector().textContains(title)),
-    )
-
 private fun normalBrowsingButton() = onView(
     anyOf(
         withContentDescription(containsString("open tabs. Tap to switch tabs.")),
@@ -493,125 +521,7 @@ private fun newTabButton() =
 
 private fun threeDotMenu() = onView(withId(R.id.tab_tray_overflow))
 
-private fun assertExistingOpenTabs(vararg tabTitles: String) {
-    var retries = 0
-
-    for (title in tabTitles) {
-        while (!tabItem(title).waitForExists(waitingTime) && retries++ < 3) {
-            tabsList
-                .getChildByText(UiSelector().text(title), title, true)
-            assertUIObjectExists(tabItem(title), waitingTime = waitingTimeLong)
-        }
-    }
-}
-
-private fun assertNoExistingOpenTabs(vararg tabTitles: String) {
-    for (title in tabTitles) {
-        assertUIObjectExists(tabItem(title), exists = false)
-    }
-}
-
-private fun assertExistingTabList() {
-    mDevice.findObject(
-        UiSelector().resourceId("$packageName:id/tabsTray"),
-    ).waitForExists(waitingTime)
-    assertUIObjectExists(itemWithResId("$packageName:id/tray_list_item"))
-}
-
-private fun assertNoOpenTabsInNormalBrowsing() =
-    onView(
-        allOf(
-            withId(R.id.tab_tray_empty_view),
-            withText(R.string.no_open_tabs_description),
-        ),
-    ).check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-
-private fun assertNoOpenTabsInPrivateBrowsing() =
-    onView(
-        allOf(
-            withId(R.id.tab_tray_empty_view),
-            withText(R.string.no_private_tabs_description),
-        ),
-    ).check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-
-private fun assertNormalBrowsingNewTabButton() =
-    onView(
-        allOf(
-            withId(R.id.new_tab_button),
-            withContentDescription(R.string.add_tab),
-        ),
-    ).check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-
-private fun assertPrivateBrowsingNewTabButton() =
-    onView(
-        allOf(
-            withId(R.id.new_tab_button),
-            withContentDescription(R.string.add_private_tab),
-        ),
-    ).check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-
-private fun assertSelectTabsButton() =
-    onView(withText("Select tabs"))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-
-private fun assertNormalModeSelected() =
-    normalBrowsingButton()
-        .check(matches(ViewMatchers.isSelected()))
-
-private fun assertPrivateModeSelected() =
-    privateBrowsingButton()
-        .check(matches(ViewMatchers.isSelected()))
-
-private fun assertTabTrayOverflowButton(visible: Boolean) =
-    onView(withId(R.id.tab_tray_overflow))
-        .check(matches(withEffectiveVisibility(visibleOrGone(visible))))
-
-private fun assertTabsTrayCounter() =
-    tabsTrayCounterBox().check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-
-private fun assertEmptyTabsTrayMenuButtons() {
-    threeDotMenu().click()
-    tabsSettingsButton()
-        .inRoot(RootMatchers.isPlatformPopup())
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-    recentlyClosedTabsButton()
-        .inRoot(RootMatchers.isPlatformPopup())
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-}
-
-private fun assertTabTrayDoesExist() {
-    onView(withId(R.id.tab_wrapper))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-}
-
-private fun assertTabTrayDoesNotExist() {
-    onView(withId(R.id.tab_wrapper))
-        .check(doesNotExist())
-}
-
-private fun assertMinisculeHalfExpandedRatio() {
-    onView(withId(R.id.tab_wrapper))
-        .check(matches(BottomSheetBehaviorHalfExpandedMaxRatioMatcher(0.001f)))
-}
-
-private fun assertBehaviorState(expectedState: Int) {
-    onView(withId(R.id.tab_wrapper))
-        .check(matches(BottomSheetBehaviorStateMatcher(expectedState)))
-}
-
-private fun assertNormalBrowsingButton() {
-    normalBrowsingButton().check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-}
-
-private fun assertNormalBrowsingButtonIsSelected(isSelected: Boolean) {
-    normalBrowsingButton().check(matches(isSelected(isSelected)))
-}
-
-private fun assertPrivateBrowsingButtonIsSelected(isSelected: Boolean) {
-    privateBrowsingButton().check(matches(isSelected(isSelected)))
-}
-
-private val tabsList =
+private fun tabsList() =
     UiScrollable(UiSelector().className("androidx.recyclerview.widget.RecyclerView"))
 
 // This tab selector is used for actions that involve waiting and asserting the existence of the view
