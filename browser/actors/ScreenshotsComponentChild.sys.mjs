@@ -44,6 +44,10 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
         return this.getDocumentTitle();
       case "Screenshots:GetMethodsUsed":
         return this.getMethodsUsed();
+      case "Screenshots:RemoveEventListeners":
+        return this.removeEventListeners();
+      case "Screenshots:AddEventListeners":
+        return this.addEventListeners();
     }
     return null;
   }
@@ -83,14 +87,6 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
           }, 16);
         }
         this.#scrollTask.arm();
-        break;
-      case "visibilitychange":
-        if (
-          event.target.visibilityState === "hidden" &&
-          this.overlay?.state === "crosshairs"
-        ) {
-          this.requestCancelScreenshot("navigation");
-        }
         break;
       case "Screenshots:Close":
         this.requestCancelScreenshot(event.detail.reason);
@@ -210,6 +206,13 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
     });
   }
 
+  addEventListeners() {
+    this.contentWindow.addEventListener("beforeunload", this);
+    this.contentWindow.addEventListener("resize", this);
+    this.contentWindow.addEventListener("scroll", this);
+    this.addOverlayEventListeners();
+  }
+
   addOverlayEventListeners() {
     let chromeEventHandler = this.docShell.chromeEventHandler;
     for (let event of ScreenshotsComponentChild.OVERLAY_EVENTS) {
@@ -234,14 +237,17 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
     let overlay =
       this.overlay ||
       (this.#overlay = new lazy.ScreenshotsOverlay(this.document));
-    this.document.ownerGlobal.addEventListener("beforeunload", this);
-    this.contentWindow.addEventListener("resize", this);
-    this.contentWindow.addEventListener("scroll", this);
-    this.contentWindow.addEventListener("visibilitychange", this);
-    this.addOverlayEventListeners();
+    this.addEventListeners();
 
     overlay.initialize();
     return true;
+  }
+
+  removeEventListeners() {
+    this.contentWindow.removeEventListener("beforeunload", this);
+    this.contentWindow.removeEventListener("resize", this);
+    this.contentWindow.removeEventListener("scroll", this);
+    this.removeOverlayEventListeners();
   }
 
   removeOverlayEventListeners() {
@@ -255,11 +261,7 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
    * Removes event listeners and the screenshots overlay.
    */
   endScreenshotsOverlay(options = {}) {
-    this.document.ownerGlobal.removeEventListener("beforeunload", this);
-    this.contentWindow.removeEventListener("resize", this);
-    this.contentWindow.removeEventListener("scroll", this);
-    this.contentWindow.removeEventListener("visibilitychange", this);
-    this.removeOverlayEventListeners();
+    this.removeEventListeners();
 
     this.overlay?.tearDown(options);
     this.#resizeTask?.disarm();
