@@ -2048,6 +2048,49 @@ FontVisibility gfxFcPlatformFontList::GetVisibilityForFamily(
   }
 }
 
+nsTArray<std::pair<const char**, uint32_t>>
+gfxFcPlatformFontList::GetFilteredPlatformFontLists() {
+  AssignFontVisibilityDevice();
+
+  nsTArray<std::pair<const char**, uint32_t>> fontLists;
+
+  switch (sFontVisibilityDevice) {
+    case Device::Linux_Ubuntu_any:
+    case Device::Linux_Ubuntu_22:
+      fontLists.AppendElement(std::make_pair(
+          kBaseFonts_Ubuntu_22_04, ArrayLength(kBaseFonts_Ubuntu_22_04)));
+      fontLists.AppendElement(std::make_pair(
+          kLangFonts_Ubuntu_22_04, ArrayLength(kLangFonts_Ubuntu_22_04)));
+      // For Ubuntu_any, we fall through to also check the 20_04 lists.
+      [[fallthrough]];
+
+    case Device::Linux_Ubuntu_20:
+      fontLists.AppendElement(std::make_pair(
+          kBaseFonts_Ubuntu_20_04, ArrayLength(kBaseFonts_Ubuntu_20_04)));
+      fontLists.AppendElement(std::make_pair(
+          kLangFonts_Ubuntu_20_04, ArrayLength(kLangFonts_Ubuntu_20_04)));
+      break;
+
+    case Device::Linux_Fedora_any:
+    case Device::Linux_Fedora_39:
+      fontLists.AppendElement(std::make_pair(
+          kBaseFonts_Fedora_39, ArrayLength(kBaseFonts_Fedora_39)));
+      // For Fedora_any, fall through to also check Fedora 38 list.
+      [[fallthrough]];
+
+    case Device::Linux_Fedora_38:
+      fontLists.AppendElement(std::make_pair(
+          kBaseFonts_Fedora_38, ArrayLength(kBaseFonts_Fedora_38)));
+      break;
+
+    default:
+      // We don't know how to categorize fonts on this system
+      break;
+  }
+
+  return fontLists;
+}
+
 gfxFontEntry* gfxFcPlatformFontList::CreateFontEntry(
     fontlist::Face* aFace, const fontlist::Family* aFamily) {
   nsAutoCString desc(aFace->mDescriptor.AsString(SharedFontList()));

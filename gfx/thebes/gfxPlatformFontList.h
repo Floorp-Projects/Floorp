@@ -245,6 +245,8 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
     return sPlatformFontList;
   }
 
+  void GetMissingFonts(nsCString& aMissingFonts);
+
   static bool Initialize(gfxPlatformFontList* aList);
 
   static void Shutdown() {
@@ -658,6 +660,9 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   mutable mozilla::RecursiveMutex mLock;
 
  protected:
+  virtual nsTArray<std::pair<const char**, uint32_t>>
+  GetFilteredPlatformFontLists() = 0;
+
   friend class mozilla::fontlist::FontList;
   friend class InitOtherFamilyNamesForStylo;
 
@@ -867,7 +872,10 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   // load the bad underline blocklist from pref.
   void LoadBadUnderlineList();
 
+  // This version of the function will not modify aKeyName
   void GenerateFontListKey(const nsACString& aKeyName, nsACString& aResult);
+  // This version of the function WILL modify aKeyName
+  void GenerateFontListKey(nsACString& aKeyName);
 
   virtual void GetFontFamilyNames(nsTArray<nsCString>& aFontFamilyNames)
       MOZ_REQUIRES(mLock);

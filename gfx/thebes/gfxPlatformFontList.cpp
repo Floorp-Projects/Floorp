@@ -378,6 +378,40 @@ gfxPlatformFontList::~gfxPlatformFontList() {
   NS_RELEASE(gFontListPrefObserver);
 }
 
+void gfxPlatformFontList::GetMissingFonts(nsCString& aMissingFonts) {
+  AutoLock lock(mLock);
+
+  auto fontLists = GetFilteredPlatformFontLists();
+
+  if (!fontLists.Length()) {
+    aMissingFonts.Append("No font list available for this device.");
+  }
+
+  for (unsigned int i = 0; i < fontLists.Length(); i++) {
+    for (unsigned int j = 0; j < fontLists[i].second; j++) {
+      nsCString key(fontLists[i].first[j]);
+      GenerateFontListKey(key);
+
+      if (SharedFontList()) {
+        fontlist::Family* family = SharedFontList()->FindFamily(key);
+        if (!family) {
+          aMissingFonts.Append(fontLists[i].first[j]);
+          aMissingFonts.Append("|");
+        }
+      } else {
+        gfxFontFamily* familyEntry = mFontFamilies.GetWeak(key);
+        if (!familyEntry) {
+          familyEntry = mOtherFamilyNames.GetWeak(key);
+        }
+        if (!familyEntry) {
+          aMissingFonts.Append(fontLists[i].first[j]);
+          aMissingFonts.Append("|");
+        }
+      }
+    }
+  }
+}
+
 /* static */
 void gfxPlatformFontList::FontWhitelistPrefChanged(const char* aPref,
                                                    void* aClosure) {
@@ -698,6 +732,10 @@ void gfxPlatformFontList::GenerateFontListKey(const nsACString& aKeyName,
                                               nsACString& aResult) {
   aResult = aKeyName;
   ToLowerCase(aResult);
+}
+
+void gfxPlatformFontList::GenerateFontListKey(nsACString& aKeyName) {
+  ToLowerCase(aKeyName);
 }
 
 // Used if a stylo thread wants to trigger InitOtherFamilyNames in the main

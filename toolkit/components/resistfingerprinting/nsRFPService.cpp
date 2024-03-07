@@ -108,6 +108,7 @@ static mozilla::LazyLogModule gFingerprinterDetection("FingerprinterDetection");
 #define RFP_TIMER_UNCONDITIONAL_VALUE 20
 #define LAST_PB_SESSION_EXITED_TOPIC "last-pb-context-exited"
 #define IDLE_TOPIC "browser-idle-startup-tasks-finished"
+#define GFX_FEATURES "gfx-features-ready"
 
 static constexpr uint32_t kVideoFramesPerSec = 30;
 static constexpr uint32_t kVideoDroppedRatio = 5;
@@ -185,6 +186,9 @@ nsresult nsRFPService::Init() {
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = obs->AddObserver(this, IDLE_TOPIC, false);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = obs->AddObserver(this, GFX_FEATURES, false);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -284,6 +288,7 @@ void nsRFPService::StartShutdown() {
       obs->RemoveObserver(this, LAST_PB_SESSION_EXITED_TOPIC);
       obs->RemoveObserver(this, OBSERVER_TOPIC_IDLE_DAILY);
       obs->RemoveObserver(this, IDLE_TOPIC);
+      obs->RemoveObserver(this, GFX_FEATURES);
     }
   }
 
@@ -322,6 +327,9 @@ void nsRFPService::PrefChanged(const char* aPref) {
 NS_IMETHODIMP
 nsRFPService::Observe(nsISupports* aObject, const char* aTopic,
                       const char16_t* aMessage) {
+  const int kNumTopicsForUserCharacteristics = 2;
+  static int seenTopicsForUserCharacteristics = 0;
+
   if (strcmp(NS_XPCOM_SHUTDOWN_OBSERVER_ID, aTopic) == 0) {
     StartShutdown();
   }
@@ -334,8 +342,12 @@ nsRFPService::Observe(nsISupports* aObject, const char* aTopic,
     ClearBrowsingSessionKey(pattern);
   }
 
-  if (!strcmp(IDLE_TOPIC, aTopic)) {
-    nsUserCharacteristics::MaybeSubmitPing();
+  if (!strcmp(IDLE_TOPIC, aTopic) || !strcmp(GFX_FEATURES, aTopic)) {
+    seenTopicsForUserCharacteristics++;
+
+    if (seenTopicsForUserCharacteristics == kNumTopicsForUserCharacteristics) {
+      nsUserCharacteristics::MaybeSubmitPing();
+    }
   }
 
   if (!strcmp(OBSERVER_TOPIC_IDLE_DAILY, aTopic)) {

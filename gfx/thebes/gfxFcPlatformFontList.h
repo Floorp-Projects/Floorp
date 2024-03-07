@@ -317,6 +317,9 @@ class gfxFcPlatformFontList final : public gfxPlatformFontList {
  protected:
   virtual ~gfxFcPlatformFontList();
 
+  nsTArray<std::pair<const char**, uint32_t>> GetFilteredPlatformFontLists()
+      override;
+
 #if defined(MOZ_SANDBOX) && defined(XP_LINUX)
   typedef mozilla::SandboxBroker::Policy SandboxPolicy;
 #else
