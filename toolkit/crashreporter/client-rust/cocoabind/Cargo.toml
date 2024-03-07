@@ -1,0 +1,12 @@
+[package]
+name = "cocoabind"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+block = "0.1"
+objc = "0.2"
+
+[build-dependencies]
+bindgen = { version = "0.69", default-features = false, features = ["runtime"] }
+mozbuild = "0.1.0"
