@@ -2311,7 +2311,6 @@ powerSaver:
   description: Prefs to control power saving behaviors
   owner: florian@mozilla.com
   hasExposure: false
-  isEarlyStartup: true
   variables:
     reduceFrameRates:
       type: int
