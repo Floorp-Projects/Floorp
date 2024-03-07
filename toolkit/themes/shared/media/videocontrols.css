@@ -24,7 +24,7 @@
   white-space: normal !important;
 }
 
-.videocontrols[flipped="true"] {
+.videocontrols[flipped] {
   transform: scaleX(-1);
 }
 
