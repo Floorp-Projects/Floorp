@@ -1,6 +1,24 @@
 {
   "data": [
     {
+      "name": "Safari",
+      "schema": 1709769903331,
+      "status": "current",
+      "version": "17.4",
+      "browserid": "safari",
+      "id": "380463f2-6aa8-499e-b186-5f80cf4cc573",
+      "last_modified": 1709801393999
+    },
+    {
+      "name": "Safari on iOS",
+      "schema": 1709769903472,
+      "status": "current",
+      "version": "17.4",
+      "browserid": "safari_ios",
+      "id": "b99772c5-e366-42c6-b2db-330aca62dba5",
+      "last_modified": 1709801393995
+    },
+    {
       "name": "Edge",
       "schema": 1709424307170,
       "status": "current",
@@ -199,15 +217,6 @@
       "last_modified": 1706695152746
     },
     {
-      "name": "Safari on iOS",
-      "schema": 1706659508024,
-      "status": "beta",
-      "version": "17.4",
-      "browserid": "safari_ios",
-      "id": "b99772c5-e366-42c6-b2db-330aca62dba5",
-      "last_modified": 1706695152744
-    },
-    {
       "name": "Opera Android",
       "schema": 1706313908456,
       "status": "current",
@@ -215,33 +224,6 @@
       "browserid": "opera_android",
       "id": "534dc626-14f0-479e-9912-043e3da31e91",
       "last_modified": 1706515991120
-    },
-    {
-      "name": "Safari",
-      "schema": 1706313908648,
-      "status": "beta",
-      "version": "17.4",
-      "browserid": "safari",
-      "id": "380463f2-6aa8-499e-b186-5f80cf4cc573",
-      "last_modified": 1706515991117
-    },
-    {
-      "name": "Safari on iOS",
-      "schema": 1706313908779,
-      "status": "current",
-      "version": "17.3",
-      "browserid": "safari_ios",
-      "id": "f8eb9101-134d-481e-b713-42a1543008e5",
-      "last_modified": 1706515991084
-    },
-    {
-      "name": "Safari",
-      "schema": 1706313908588,
-      "status": "current",
-      "version": "17.3",
-      "browserid": "safari",
-      "id": "7eb602be-e2c9-47d6-9491-29f8a42c3ddd",
-      "last_modified": 1706515991082
     },
     {
       "name": "Node.js",
@@ -307,5 +289,5 @@
       "last_modified": 1665656484764
     }
   ],
-  "timestamp": 1709536180469
+  "timestamp": 1709801394006
 }
