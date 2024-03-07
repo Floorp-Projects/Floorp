@@ -200,6 +200,14 @@ class CookieStorage : public nsIObserver, public nsSupportsWeakReference {
                                                   uint16_t aMaxNumberOfCookies,
                                                   int64_t aCookiePurgeAge) = 0;
 
+  // This method returns true if aBaseDomain contains any colons since only
+  // IPv6 baseDomains may contain colons.
+  static bool isIPv6BaseDomain(const nsACString& aBaseDomain);
+
+  // Serialize aBaseDomain e.g. apply "zero abbreveation" (::), use single
+  // zeros and remove brackets to match principal base domain representation.
+  static bool SerializeIPv6BaseDomain(nsACString& aBaseDomain);
+
   virtual void CollectCookieJarSizeData() = 0;
 
   int64_t mCookieOldestTime{INT64_MAX};

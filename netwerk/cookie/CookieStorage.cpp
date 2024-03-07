@@ -7,6 +7,7 @@
 #include "CookieCommons.h"
 #include "CookieLogging.h"
 #include "CookieNotification.h"
+#include "mozilla/net/MozURL_ffi.h"
 #include "nsCOMPtr.h"
 #include "nsICookieNotification.h"
 #include "CookieStorage.h"
@@ -334,14 +335,83 @@ void CookieStorage::RemoveCookiesWithOriginAttributes(
   }
 }
 
+/* static */ bool CookieStorage::isIPv6BaseDomain(
+    const nsACString& aBaseDomain) {
+  return aBaseDomain.Contains(':');
+}
+
+/* static */ bool CookieStorage::SerializeIPv6BaseDomain(
+    nsACString& aBaseDomain) {
+  bool hasStartBracket = aBaseDomain.First() == '[';
+  bool hasEndBracket = aBaseDomain.Last() == ']';
+
+  // If only start or end bracket exists host is malformed.
+  if (hasStartBracket != hasEndBracket) {
+    return false;
+  }
+
+  // If the base domain is not in URL format (e.g. [::1]) add brackets so we
+  // can use rusturl_parse_ipv6addr().
+  if (!hasStartBracket) {
+    aBaseDomain.Insert('[', 0);
+    aBaseDomain.Append(']');
+  }
+
+  // Serialize base domain to "zero abbreviation" and lower-case hex
+  // representation.
+  nsAutoCString baseDomain;
+  nsresult rv = (nsresult)rusturl_parse_ipv6addr(&aBaseDomain, &baseDomain);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  // Strip brackets to match principal representation.
+  aBaseDomain = Substring(baseDomain, 1, baseDomain.Length() - 2);
+
+  return true;
+}
+
 void CookieStorage::RemoveCookiesFromExactHost(
     const nsACString& aHost, const nsACString& aBaseDomain,
     const OriginAttributesPattern& aPattern) {
+  // Intermediate fix until Bug 1882259 is resolved.
+  // Bug 1860033 - Cookies do not serialize IPv6 host / base domain in contrast
+  // to principals. To allow deletion by principal serialize before comparison.
+  // We check the base domain since it is used as the CookieList key and equals
+  // the normalized (ASCII) host for IP addresses
+  // (it is equal to the CookieService::NormalizeHost() output).
+  nsAutoCString removeBaseDomain;
+  bool isIPv6 = isIPv6BaseDomain(aBaseDomain);
+  if (isIPv6) {
+    MOZ_ASSERT(!aBaseDomain.IsEmpty());
+    // Copy base domain since argument is immutable.
+    removeBaseDomain = aBaseDomain;
+    if (NS_WARN_IF(!SerializeIPv6BaseDomain(removeBaseDomain))) {
+      // Return on malformed base domains.
+      return;
+    }
+  }
+
   // Iterate the hash table of CookieEntry.
   for (auto iter = mHostTable.Iter(); !iter.Done(); iter.Next()) {
     CookieEntry* entry = iter.Get();
 
-    if (!aBaseDomain.Equals(entry->mBaseDomain)) {
+    // IPv6 host / base domain cookies
+    if (isIPv6) {
+      // If we look for a IPv6 cookie skip non-IPv6 cookie entries.
+      if (!isIPv6BaseDomain(entry->mBaseDomain)) {
+        continue;
+      }
+      // Serialize IPv6 base domains before comparison.
+      // Copy base domain since argument is immutable.
+      nsAutoCString entryBaseDomain;
+      entryBaseDomain = entry->mBaseDomain;
+      if (NS_WARN_IF(!SerializeIPv6BaseDomain(entryBaseDomain))) {
+        continue;
+      }
+      if (!removeBaseDomain.Equals(entryBaseDomain)) {
+        continue;
+      }
+      // Non-IPv6 cookies
+    } else if (!aBaseDomain.Equals(entry->mBaseDomain)) {
       continue;
     }
 
@@ -354,7 +424,9 @@ void CookieStorage::RemoveCookiesFromExactHost(
       CookieListIter iter(entry, i - 1);
       RefPtr<Cookie> cookie = iter.Cookie();
 
-      if (!aHost.Equals(cookie->RawHost())) {
+      // For IP addresses (ASCII normalized) host == baseDomain, we checked
+      // equality already.
+      if (!isIPv6 && !aHost.Equals(cookie->RawHost())) {
         continue;
       }
 
