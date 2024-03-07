@@ -442,7 +442,7 @@ class HistoryInView extends ViewPage {
             </h3>
             <fxview-tab-list
               slot="main"
-              class="with-context-menu"
+              secondaryActionClass="options-button"
               dateTimeFormat="dateTime"
               hasPopup="menu"
               maxTabsLength=${this.maxTabsLength}
@@ -520,7 +520,7 @@ class HistoryInView extends ViewPage {
       )}
       <fxview-tab-list
         slot="main"
-        class="with-context-menu"
+        secondaryActionClass="options-button"
         dateTimeFormat="dateTime"
         hasPopup="menu"
         maxTabsLength="-1"

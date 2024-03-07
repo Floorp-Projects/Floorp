@@ -929,6 +929,27 @@ export class FxviewTabRow extends MozLitElement {
             ? "0"
             : "-1"}"
         ></button>`
+      )}
+      ${when(
+        this.tertiaryL10nId && this.tertiaryActionHandler,
+        () => html`<button
+          class=${classMap({
+            "fxview-tab-row-button": true,
+            "ghost-button": true,
+            "icon-button": true,
+            "semi-transparent": true,
+            [this.tertiaryActionClass]: this.tertiaryActionClass,
+          })}
+          id="fxview-tab-row-tertiary-button"
+          data-l10n-id=${this.tertiaryL10nId}
+          data-l10n-args=${ifDefined(this.tertiaryL10nArgs)}
+          aria-haspopup=${ifDefined(this.hasPopup)}
+          @click=${this.tertiaryActionHandler}
+          tabindex="${this.active &&
+          this.currentActiveElementId === "fxview-tab-row-tertiary-button"
+            ? "0"
+            : "-1"}"
+        ></button>`
       )}`;
   }
 
@@ -955,27 +976,6 @@ export class FxviewTabRow extends MozLitElement {
         this.pinnedTabsGridView && this.indicators?.includes("pinned"),
         this.#pinnedTabItemTemplate.bind(this),
         this.#unpinnedTabItemTemplate.bind(this)
-      )}
-      ${when(
-        this.tertiaryL10nId && this.tertiaryActionHandler,
-        () => html`<button
-          class=${classMap({
-            "fxview-tab-row-button": true,
-            "ghost-button": true,
-            "icon-button": true,
-            "semi-transparent": true,
-            [this.tertiaryActionClass]: this.tertiaryActionClass,
-          })}
-          id="fxview-tab-row-tertiary-button"
-          data-l10n-id=${this.tertiaryL10nId}
-          data-l10n-args=${ifDefined(this.tertiaryL10nArgs)}
-          aria-haspopup=${ifDefined(this.hasPopup)}
-          @click=${this.tertiaryActionHandler}
-          tabindex="${this.active &&
-          this.currentActiveElementId === "fxview-tab-row-tertiary-button"
-            ? "0"
-            : "-1"}"
-        ></button>`
       )}
     `;
   }
