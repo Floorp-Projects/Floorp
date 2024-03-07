@@ -30,7 +30,6 @@ ALLOWED_ISEARLYSTARTUP_FEATURE_IDS = {
     "deviceMigration",
     "gleanInternalSdk",
     "majorRelease2022",
-    "migrationWizard",
     "newtab",
     "opaqueResponseBlocking",
     "phc",

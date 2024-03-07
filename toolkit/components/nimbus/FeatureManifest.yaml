@@ -1823,7 +1823,6 @@ migrationWizard:
   description: Prefs to control the Migration Wizard UI.
   owner: mconley@mozilla.com
   hasExposure: false
-  isEarlyStartup: true
   variables:
     showImportAll:
       description: True if the "Variant 2" of the Migration Wizard browser / profile selection UI should be used. This is only meaningful in the new Migration Wizard.
