@@ -13,5 +13,8 @@ support-files = [
   "version2_2_profile.zip",
 ]
 
+["test_dom_quota_try.js"]
+skip-if = ["os == 'android'"]
+
 ["test_qm_first_initialization_attempt.js"]
 skip-if = ["appname == 'thunderbird'"]
