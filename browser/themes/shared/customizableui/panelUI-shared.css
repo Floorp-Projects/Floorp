@@ -2150,3 +2150,33 @@ panelview {
 #report-broken-site-panel-container {
   padding: 8px 16px 16px;
 }
+
+/* ----- Profiles panels ----- */
+
+#profiles-edit-this-delete-button {
+  list-style-image: url("chrome://global/skin/icons/edit.svg");
+}
+
+#profiles-delete-this-profile-button {
+  list-style-image: url("chrome://global/skin/icons/delete.svg");
+}
+
+#profile-icon-image {
+  width: 75px;
+  height: 75px;
+}
+
+#profile-name {
+  font-size: 1.667rem;
+  padding-block-start: var(--space-medium);
+}
+
+#this-profile-buttons {
+  justify-content: center;
+}
+
+#current-profile {
+  align-items: center;
+  padding: var(--space-xxlarge) 0 var(--space-medium);
+  gap: var(--space-small);
+}
