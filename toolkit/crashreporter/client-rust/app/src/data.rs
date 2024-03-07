@@ -60,11 +60,6 @@ impl<T> Event<T> {
 ///
 /// Consumers can subscribe to change events on the value. Change events are fired when
 /// `borrow_mut()` references are dropped.
-///
-/// # TODO
-/// If `borrow_mut()` fired change events with the new value _before_ invalidating the old value,
-/// that could simplify platform bindings (e.g. they could reference rather than copy values). In
-/// this case the event would be better named `on_changing`.
 #[derive(Default)]
 pub struct Synchronized<T> {
     inner: Rc<SynchronizedInner<T>>,
@@ -186,7 +181,12 @@ impl<T> OnDemand<T> {
     /// Reads the current value.
     pub fn read(&self, value: &mut T) {
         match &*self.get.borrow() {
-            None => panic!("OnDemand not registered by renderer"),
+            None => {
+                // The test UI doesn't always register OnDemand getters (only on a per-test basis),
+                // so don't panic otherwise the tests will fail unnecessarily.
+                #[cfg(not(test))]
+                panic!("OnDemand not registered by renderer")
+            }
             Some(f) => f(value),
         }
     }
