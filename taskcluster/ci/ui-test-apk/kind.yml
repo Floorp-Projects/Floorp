@@ -6,7 +6,6 @@ loader: gecko_taskgraph.loader.transform:loader
 
 transforms:
     - gecko_taskgraph.transforms.test_apk:transforms
-    - android_taskgraph.transforms.gradle_optimization:transforms
     - gecko_taskgraph.transforms.job:transforms
     - gecko_taskgraph.transforms.task:transforms
 
@@ -23,7 +22,7 @@ job-defaults:
         toolchain:
             - android-sdk-linux
     optimization:
-        skip-unless-changed: []  # Paths are dynamically added by transforms
+        skip-unless-backstop: null
     worker-type: b-linux-gcp
     worker:
         docker-image: {in-tree: android-ui-tests}

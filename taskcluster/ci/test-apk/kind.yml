@@ -6,7 +6,6 @@ loader: gecko_taskgraph.loader.transform:loader
 
 transforms:
     - gecko_taskgraph.transforms.test_apk:transforms
-    - android_taskgraph.transforms.gradle_optimization:transforms
     - gecko_taskgraph.transforms.job:transforms
     - gecko_taskgraph.transforms.task:transforms
 
@@ -27,8 +26,6 @@ job-defaults:
             - linux64-jdk
         build-fat-aar:
             - target.maven.tar.xz
-    optimization:
-        skip-unless-changed: []  # Paths are dynamically added by transforms
     run:
         using: gradlew
         use-caches: false
