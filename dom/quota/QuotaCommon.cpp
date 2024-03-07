@@ -517,9 +517,23 @@ void LogError(const nsACString& aExpr, const Maybe<nsresult> aMaybeRv,
 #  endif
 
 #  ifdef QM_LOG_ERROR_TO_TELEMETRY_ENABLED
+  // The context tag is special because it's used to enable logging to
+  // telemetry (besides carrying information). Other tags (like query) don't
+  // enable logging to telemetry.
+
   if (!context.IsEmpty()) {
+    // Do NOT CHANGE this if you don't know what you're doing.
+
+    // `extraInfoString` is not included in the telemetry event on purpose
+    // since it can contain sensitive information.
+
     // For now, we don't include aExpr in the telemetry event. It might help to
     // match locations across versions, but they might be large.
+
+    // New extra entries (with potentially sensitive content) can't be easily
+    // (accidentally) added because they would have to be added to Events.yaml
+    // under "dom.quota.try" which would require a data review.
+
     auto extra = Some([&] {
       auto res = CopyableTArray<EventExtraEntry>{};
       res.SetCapacity(9);
