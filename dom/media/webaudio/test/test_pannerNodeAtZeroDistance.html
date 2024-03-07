@@ -10,15 +10,15 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-var BUF_SIZE = 128;
-
+const BUF_SIZE = 1024;
+const sampleRate = 44100;
 var types = [
   "equalpower",
   "HRTF"
 ]
 
-async function testMono(type) {
-  var ac = new OfflineAudioContext(1, BUF_SIZE, 44100);
+async function testMono(panningModel) {
+  var ac = new OfflineAudioContext(2, BUF_SIZE, sampleRate);
 
   // A sine to be used to fill the buffers
   function sine(t) {
@@ -34,34 +34,47 @@ async function testMono(type) {
   monoSource.buffer = monoBuffer;
   monoSource.start(0);
 
-  var panner = ac.createPanner();
-  panner.distanceModel = "linear";
+  var panner = new PannerNode(ac, {
+    panningModel,
+    distanceModel: "linear",
+  });
   monoSource.connect(panner);
 
-  var panner2 = ac.createPanner();
-  panner2.distanceModel = "inverse";
+  var panner2 = new PannerNode(ac, {
+    panningModel,
+    distanceModel: "inverse",
+  });
   panner.connect(panner2);
 
-  var panner3 = ac.createPanner();
-  panner3.distanceModel = "exponential";
+  var panner3 = new PannerNode(ac, {
+    panningModel,
+    distanceModel: "exponential"
+  });
   panner2.connect(panner3);
 
   panner3.connect(ac.destination);
 
-  // Use the input buffer to compare the output. According to the spec,
-  // mono input at zero distance will apply gain = cos(0.5 * Math.PI / 2)
-  // https://webaudio.github.io/web-audio-api/#Spatialzation-equal-power-panning
-  const gain = Math.cos(0.5 * Math.PI / 2);
-  for (var i = 0; i < BUF_SIZE; ++i) {
-    monoBuffer.getChannelData(0)[i] = gain * monoBuffer.getChannelData(0)[i];
-  }
-
   const buffer = await ac.startRendering();
-  compareBuffers(buffer, monoBuffer);
+
+  if (panningModel == "equalpower") {
+    // Use the input buffer to compare the output. According to the spec,
+    // mono input at zero distance will apply gain = cos(0.5 * Math.PI / 2)
+    // https://webaudio.github.io/web-audio-api/#Spatialzation-equal-power-panning
+    const gain = Math.cos(0.5 * Math.PI / 2);
+    for (var i = 0; i < BUF_SIZE; ++i) {
+      monoBuffer.getChannelData(0)[i] = gain * monoBuffer.getChannelData(0)[i];
+    }
+    compareChannels(buffer.getChannelData(0), monoBuffer.getChannelData(0));
+  } else {
+    ok(!isChannelSilent(buffer.getChannelData(0)),
+       "mono panning: expect non-zero left channel");
+  }
+  // Check symmetry
+  compareChannels(buffer.getChannelData(0), buffer.getChannelData(1));
 }
 
-async function testStereo(type) {
-  var ac = new OfflineAudioContext(2, BUF_SIZE, 44100);
+async function testStereo(panningModel) {
+  var ac = new OfflineAudioContext(2, BUF_SIZE, sampleRate);
 
   // A sine to be used to fill the buffers
   function sine(t) {
@@ -78,25 +91,39 @@ async function testStereo(type) {
   stereoSource.buffer = stereoBuffer;
   stereoSource.start(0);
 
-  var panner = ac.createPanner();
-  panner.distanceModel = "linear";
+  var panner = new PannerNode(ac, {
+    panningModel,
+    distanceModel: "linear",
+  });
   stereoSource.connect(panner);
 
-  var panner2 = ac.createPanner();
-  panner2.distanceModel = "inverse";
+  var panner2 = new PannerNode(ac, {
+    panningModel,
+    distanceModel: "inverse",
+  });
   panner.connect(panner2);
 
-  var panner3 = ac.createPanner();
-  panner3.distanceModel = "exponential";
+  var panner3 = new PannerNode(ac, {
+    panningModel,
+    distanceModel: "exponential",
+  });
   panner2.connect(panner3);
 
   panner3.connect(ac.destination);
 
   const buffer = await ac.startRendering();
-  compareBuffers(buffer, stereoBuffer);
+  if (panningModel == "equalpower") {
+    compareBuffers(buffer, stereoBuffer);
+  } else {
+    ok(!isChannelSilent(buffer.getChannelData(0)),
+       "stereo panning: expect non-zero left channel");
+    // Check symmetry
+    compareChannels(buffer.getChannelData(0), buffer.getChannelData(1));
+  }
 }
 
 async function test(type) {
+  await promiseHRTFReady(sampleRate);
   await testMono(type)
   await testStereo(type);
 }
