@@ -2479,7 +2479,6 @@ reportBrokenSite:
   description: The Report Broken Site feature
   owner: twisniewski@mozilla.com
   hasExposure: false
-  isEarlyStartup: true
   variables:
     enabled:
       type: boolean
