@@ -297,6 +297,10 @@ struct BaseCompiler final {
   // Flag indicating that the compiler is currently in a dead code region.
   bool deadCode_;
 
+  // Store previously finished note to know if we need to insert a nop in
+  // finishTryNote.
+  size_t mostRecentFinishedTryNoteIndex_;
+
   ///////////////////////////////////////////////////////////////////////////
   //
   // State for bounds check elimination.

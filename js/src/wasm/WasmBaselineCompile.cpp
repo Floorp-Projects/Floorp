@@ -1788,15 +1788,25 @@ void BaseCompiler::finishTryNote(size_t tryNoteIndex) {
     masm.nop();
   }
 
-  // Check the previous try note to ensure that we don't share an edge with
-  // it that could lead to ambiguity. Insert a nop, if required.
-  if (tryNotes.length() > 0) {
-    const TryNote& previous = tryNotes.back();
+  // Check the most recent finished try note to ensure that we don't share an
+  // edge with it that could lead to ambiguity. Insert a nop, if required.
+  //
+  // Notice that finishTryNote is called in LIFO order -- using depth-first
+  // search numbering to see if we are traversing back from a nested try to a
+  // parent try, where we may need to ensure that the end offsets do not
+  // coincide.
+  //
+  // In the case the tryNodeIndex >= mostRecentFinishedTryNoteIndex_, we have
+  // finished a try that began after the most recent finished try, and so
+  // startTryNote will take care of any nops.
+  if (tryNoteIndex < mostRecentFinishedTryNoteIndex_) {
+    const TryNote& previous = tryNotes[mostRecentFinishedTryNoteIndex_];
     uint32_t currentOffset = masm.currentOffset();
     if (previous.tryBodyEnd() == currentOffset) {
       masm.nop();
     }
   }
+  mostRecentFinishedTryNoteIndex_ = tryNoteIndex;
 
   // Don't set the end of the try note if we've OOM'ed, as the above nop's may
   // not have been placed. This is okay as this compilation will be thrown
@@ -11832,6 +11842,8 @@ BaseCompiler::BaseCompiler(const ModuleEnvironment& moduleEnv,
       stackMapGenerator_(stackMaps, trapExitLayout, trapExitLayoutNumWords,
                          *masm),
       deadCode_(false),
+      // Init value is selected to ensure proper logic in finishTryNote.
+      mostRecentFinishedTryNoteIndex_(0),
       bceSafe_(0),
       latentOp_(LatentOp::None),
       latentType_(ValType::I32),
