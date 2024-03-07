@@ -129,6 +129,10 @@ html|input {
   min-width: 0;
 }
 
+html|input {
+  margin: 2px 4px;
+}
+
 html|button,
 html|input,
 html|select,
@@ -139,17 +143,15 @@ html|textarea {
 html|input:where(:not([type=radio i], [type=checkbox i], [type=range i])),
 html|textarea {
   appearance: none;
-  padding: 0.25em;
-  border: 1px solid var(--text-color-deemphasized);
+  padding: var(--space-small);
+  border: 1px solid var(--input-border-color, ThreeDShadow);
   border-radius: var(--border-radius-small);
-
-  color: inherit;
-  background-color: transparent;
+  margin: 0;
+  background-color: var(--input-bgcolor, Field);
+  color: var(--input-color, FieldText);
 
   &:where(:user-invalid) {
-    outline: var(--focus-outline);
-    outline-offset: var(--focus-outline-inset);
-    outline-color: var(--color-error-outline);
+    border-color: var(--color-error-outline);
   }
 
   &:where(:focus-visible) {

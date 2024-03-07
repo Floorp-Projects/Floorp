@@ -62,9 +62,3 @@ xul|separator.groove[orient="vertical"] {
   width: 0;
   margin-inline: 0.4em;
 }
-
-/* Input margins */
-
-html|input {
-  margin: 4px;
-}
