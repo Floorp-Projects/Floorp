@@ -97,17 +97,7 @@ add_task(async function do_test() {
     {}
   );
 
-  let attrs = { inIsolatedMozBrowser: true };
-  let principal4 = Services.scriptSecurityManager.createContentPrincipal(
-    TEST_ORIGIN,
-    attrs
-  );
-  let principal5 = Services.scriptSecurityManager.createContentPrincipal(
-    TEST_ORIGIN_3,
-    attrs
-  );
-
-  attrs = { userContextId: 1 };
+  let attrs = { userContextId: 1 };
   let principal1UserContext =
     Services.scriptSecurityManager.createContentPrincipal(TEST_ORIGIN, attrs);
   attrs = { privateBrowsingId: 1 };
@@ -140,10 +130,6 @@ add_task(async function do_test() {
     Ci.nsIPermissionManager.ALLOW_ACTION,
     pm.testPermissionFromPrincipal(principal3, TEST_PERMISSION)
   );
-  Assert.equal(
-    Ci.nsIPermissionManager.ALLOW_ACTION,
-    pm.testPermissionFromPrincipal(principal4, TEST_PERMISSION)
-  );
   // Depending on the prefs there are two scenarios here:
   // 1. We isolate by private browsing: The permission mgr should
   //    add default permissions for these principals too.
@@ -153,12 +139,6 @@ add_task(async function do_test() {
   Assert.equal(
     Ci.nsIPermissionManager.ALLOW_ACTION,
     pm.testPermissionFromPrincipal(principal1PrivateBrowsing, TEST_PERMISSION)
-  );
-
-  // Didn't add
-  Assert.equal(
-    Ci.nsIPermissionManager.UNKNOWN_ACTION,
-    pm.testPermissionFromPrincipal(principal5, TEST_PERMISSION)
   );
 
   // the permission should exist in the enumerator.
@@ -189,10 +169,6 @@ add_task(async function do_test() {
     Ci.nsIPermissionManager.ALLOW_ACTION,
     pm.testPermissionFromPrincipal(principal3, TEST_PERMISSION)
   );
-  Assert.equal(
-    Ci.nsIPermissionManager.ALLOW_ACTION,
-    pm.testPermissionFromPrincipal(principal4, TEST_PERMISSION)
-  );
 
   // remove all should not throw and the default should remain
   pm.removeAll();
@@ -208,10 +184,6 @@ add_task(async function do_test() {
   Assert.equal(
     Ci.nsIPermissionManager.ALLOW_ACTION,
     pm.testPermissionFromPrincipal(principal3, TEST_PERMISSION)
-  );
-  Assert.equal(
-    Ci.nsIPermissionManager.ALLOW_ACTION,
-    pm.testPermissionFromPrincipal(principal4, TEST_PERMISSION)
   );
   // Default permission should have also been added for private browsing.
   Assert.equal(
