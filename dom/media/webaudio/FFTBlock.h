@@ -164,6 +164,9 @@ class FFTBlock final {
  private:
   bool EnsureFFT() {
     if (!mTxCtx) {
+      if (!sFFTFuncs.init) {
+        return false;
+      }
       // Forward transform is always unscaled for our purpose.
       float scale = 1.0f;
       int rv = sFFTFuncs.init(&mTxCtx, &mFn, AV_TX_FLOAT_RDFT, 0 /* forward */,
@@ -175,6 +178,9 @@ class FFTBlock final {
   }
   bool EnsureIFFT() {
     if (!mITxCtx) {
+      if (!sFFTFuncs.init) {
+        return false;
+      }
       int rv =
           sFFTFuncs.init(&mITxCtx, &mIFn, AV_TX_FLOAT_RDFT, 1 /* inverse */,
                          AssertedCast<int>(mFFTSize), &mInverseScaling, 0);
