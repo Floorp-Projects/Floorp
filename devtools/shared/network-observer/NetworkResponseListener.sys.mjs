@@ -4,15 +4,19 @@
 
 const lazy = {};
 
-ChromeUtils.defineESModuleGetters(lazy, {
-  NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
-  NetworkHelper:
-    "resource://devtools/shared/network-observer/NetworkHelper.sys.mjs",
-  NetworkUtils:
-    "resource://devtools/shared/network-observer/NetworkUtils.sys.mjs",
-  getResponseCacheObject:
-    "resource://devtools/shared/platform/CacheEntry.sys.mjs",
-});
+ChromeUtils.defineESModuleGetters(
+  lazy,
+  {
+    NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
+    NetworkHelper:
+      "resource://devtools/shared/network-observer/NetworkHelper.sys.mjs",
+    NetworkUtils:
+      "resource://devtools/shared/network-observer/NetworkUtils.sys.mjs",
+    getResponseCacheObject:
+      "resource://devtools/shared/platform/CacheEntry.sys.mjs",
+  },
+  { global: "contextual" }
+);
 
 // Network logging
 
