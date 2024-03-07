@@ -562,6 +562,8 @@ enum class LayoutFrameClassFlags : uint16_t {
   SupportsContainLayoutAndPaint = 1 << 13,
   // Whether this frame class supports the `aspect-ratio` property.
   SupportsAspectRatio = 1 << 14,
+  // Whether this frame class is always a BFC.
+  BlockFormattingContext = 1 << 15,
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(LayoutFrameClassFlags)
@@ -3035,6 +3037,9 @@ class nsIFrame : public nsQueryFrame {
   nsSize OverflowClipMargin(PhysicalAxes aClipAxes) const;
   // Returns the axes on which this frame should apply overflow clipping.
   PhysicalAxes ShouldApplyOverflowClipping(const nsStyleDisplay* aDisp) const;
+  // Returns whether this frame is a block that was supposed to be a
+  // scrollframe, but that was suppressed for print.
+  bool IsSuppressedScrollableBlockForPrint() const;
 
   /**
    * Helper method used by block reflow to identify runs of text so

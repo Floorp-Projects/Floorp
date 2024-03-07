@@ -57,10 +57,6 @@ nsresult NS_NewAttributeContent(nsNodeInfoManager* aNodeInfoManager,
 nsContainerFrame* NS_NewSelectsAreaFrame(mozilla::PresShell* aPresShell,
                                          mozilla::ComputedStyle* aStyle);
 
-// Create a block formatting context blockframe
-nsBlockFrame* NS_NewBlockFormattingContext(mozilla::PresShell* aPresShell,
-                                           mozilla::ComputedStyle* aStyle);
-
 nsIFrame* NS_NewBRFrame(mozilla::PresShell* aPresShell,
                         mozilla::ComputedStyle* aStyle);
 

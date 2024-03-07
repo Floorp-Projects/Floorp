@@ -14,6 +14,7 @@ COMMON = {
 LEAF = {"Leaf"}
 MATHML = {"MathML"}
 SVG = {"SVG"}
+BFC = {"BlockFormattingContext"}
 
 BLOCK = COMMON | {"CanContainOverflowContainers"}
 
@@ -54,13 +55,13 @@ FRAME_CLASSES = [
     Frame("nsCheckboxRadioFrame", "CheckboxRadio", REPLACED_WITH_BLOCK | LEAF),
     Frame("nsColorControlFrame", "ColorControl", REPLACED_WITH_BLOCK | LEAF),
     Frame("nsColumnSetFrame", "ColumnSet", COMMON),
-    Frame("ColumnSetWrapperFrame", "ColumnSetWrapper", BLOCK),
+    Frame("ColumnSetWrapperFrame", "ColumnSetWrapper", BLOCK | BFC),
     Frame("nsComboboxControlFrame", "ComboboxControl", REPLACED_WITH_BLOCK | LEAF),
     Frame("ComboboxLabelFrame", "Block", BLOCK),
     Frame("nsContinuingTextFrame", "Text", TEXT),
     Frame("nsDateTimeControlFrame", "DateTimeControl", REPLACED_WITH_BLOCK),
     Frame("nsFieldSetFrame", "FieldSet", BLOCK),
-    Frame("nsFileControlFrame", "Block", REPLACED_WITH_BLOCK | LEAF),
+    Frame("nsFileControlFrame", "Block", REPLACED_WITH_BLOCK | LEAF | BFC),
     Frame("FileControlLabelFrame", "Block", BLOCK | LEAF),
     Frame("nsFirstLetterFrame", "Letter", INLINE),
     Frame("nsFloatingFirstLetterFrame", "Letter", INLINE - {"LineParticipant"}),
@@ -79,7 +80,7 @@ FRAME_CLASSES = [
     Frame("nsImageFrame", "Image", REPLACED_SIZING | {"LeafDynamic"}),
     Frame("nsInlineFrame", "Inline", INLINE),
     Frame("nsListControlFrame", "ListControl", REPLACED_WITH_BLOCK),
-    Frame("nsMathMLmathBlockFrame", "Block", BLOCK | MATHML),
+    Frame("nsMathMLmathBlockFrame", "Block", BLOCK | MATHML | BFC),
     Frame("nsMathMLmathInlineFrame", "Inline", INLINE | MATHML),
     Frame("nsMathMLmencloseFrame", "None", MATHML_CONTAINER),
     Frame("nsMathMLmfracFrame", "None", MATHML_CONTAINER),
@@ -115,7 +116,7 @@ FRAME_CLASSES = [
     Frame("nsScrollbarButtonFrame", "SimpleXULLeaf", COMMON | LEAF),
     Frame("nsScrollbarFrame", "Scrollbar", COMMON),
     Frame("nsSearchControlFrame", "SearchControl", LEAF),
-    Frame("nsSelectsAreaFrame", "Block", BLOCK),
+    Frame("nsSelectsAreaFrame", "Block", BLOCK | BFC),
     Frame("nsPageSequenceFrame", "PageSequence", COMMON),
     Frame("nsSliderFrame", "Slider", COMMON),
     Frame("nsSplitterFrame", "SimpleXULLeaf", COMMON | LEAF),

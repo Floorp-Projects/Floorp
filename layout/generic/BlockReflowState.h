@@ -41,16 +41,16 @@ class BlockReflowState {
           mCanHaveOverflowMarkers(false) {}
 
     // Set in the BlockReflowState constructor when reflowing a "block margin
-    // root" frame (i.e. a frame with any of the NS_BLOCK_BFC_STATE_BITS flag
-    // set, for which margins apply by default).
+    // root" frame (i.e. a frame with any of the NS_BLOCK_BFC flag set, for
+    // which margins apply by default).
     //
     // The flag is also set when reflowing a frame whose computed BStart border
     // padding is non-zero.
     bool mIsBStartMarginRoot : 1;
 
     // Set in the BlockReflowState constructor when reflowing a "block margin
-    // root" frame (i.e. a frame with any of the NS_BLOCK_BFC_STATE_BITS flag
-    // set, for which margins apply by default).
+    // root" frame (i.e. a frame with any of the NS_BLOCK_BFC flag set, for
+    // which margins apply by default).
     //
     // The flag is also set when reflowing a frame whose computed BEnd border
     // padding is non-zero.

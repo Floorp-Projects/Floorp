@@ -785,11 +785,6 @@ void nsFieldSetFrame::Reflow(nsPresContext* aPresContext,
 void nsFieldSetFrame::SetInitialChildList(ChildListID aListID,
                                           nsFrameList&& aChildList) {
   nsContainerFrame::SetInitialChildList(aListID, std::move(aChildList));
-  if (nsBlockFrame* legend = do_QueryFrame(GetLegend())) {
-    // A rendered legend always establish a new formatting context.
-    // https://html.spec.whatwg.org/multipage/rendering.html#rendered-legend
-    legend->AddStateBits(NS_BLOCK_STATIC_BFC);
-  }
   MOZ_ASSERT(
       aListID != FrameChildListID::Principal || GetInner() || GetLegend(),
       "Setting principal child list should populate our inner frame "
@@ -816,11 +811,6 @@ void nsFieldSetFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
   nsContainerFrame::InsertFrames(aListID, aPrevFrame, aPrevFrameLine,
                                  std::move(aFrameList));
   MOZ_ASSERT(GetLegend());
-  if (nsBlockFrame* legend = do_QueryFrame(GetLegend())) {
-    // A rendered legend always establish a new formatting context.
-    // https://html.spec.whatwg.org/multipage/rendering.html#rendered-legend
-    legend->AddStateBits(NS_BLOCK_STATIC_BFC);
-  }
 }
 
 #ifdef DEBUG
