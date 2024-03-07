@@ -1225,11 +1225,11 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
     let shadowRoot = video.openOrClosedShadowRoot;
 
     if (shadowRoot.firstChild && video != oldOverVideo) {
-      if (video.getTransformToViewport().a == -1) {
-        shadowRoot.firstChild.setAttribute("flipped", true);
-      } else {
-        shadowRoot.firstChild.removeAttribute("flipped");
-      }
+      // TODO: Maybe this should move to videocontrols.js somehow.
+      shadowRoot.firstChild.toggleAttribute(
+        "flipped",
+        video.getTransformToViewport().a == -1
+      );
     }
 
     // It seems from automated testing that if it's still very early on in the

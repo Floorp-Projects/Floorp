@@ -53,8 +53,11 @@ add_task(async () => {
         }
       );
 
-      // The "flipped" attribute should be set on the toggle button (when applicable).
-      Assert.equal(toggleFlippedAttribute, "true");
+      Assert.equal(
+        toggleFlippedAttribute,
+        "",
+        `The "flipped" attribute should be set on the toggle button (when applicable).`
+      );
     }
   );
 });
@@ -110,12 +113,20 @@ add_task(async () => {
       let videoID = "reversed";
 
       let videoFlippedAttribute = await getFlippedAttribute(browser, videoID);
-      Assert.equal(videoFlippedAttribute, null); // The "flipped" attribute should not be set initially.
+      Assert.equal(
+        videoFlippedAttribute,
+        null,
+        `The "flipped" attribute should not be set initially.`
+      );
 
       let pipWin = await triggerPictureInPicture(browser, videoID);
 
       videoFlippedAttribute = await getFlippedAttribute(browser, "reversed");
-      Assert.equal(videoFlippedAttribute, "true"); // The "flipped" value should be set once the PiP window is opened (when applicable).
+      Assert.equal(
+        videoFlippedAttribute,
+        "true",
+        `The "flipped" value should be set once the PiP window is opened (when applicable).`
+      );
 
       let playerBrowser = pipWin.document.getElementById("browser");
       let pipVideoTransform = await getPiPVideoTransform(playerBrowser);
@@ -124,7 +135,11 @@ add_task(async () => {
       await ensureMessageAndClosePiP(browser, videoID, pipWin, false);
 
       videoFlippedAttribute = await getFlippedAttribute(browser, "reversed");
-      Assert.equal(videoFlippedAttribute, null); // The "flipped" attribute should be removed after closing PiP.
+      Assert.equal(
+        videoFlippedAttribute,
+        null,
+        `The "flipped" attribute should be removed after closing PiP.`
+      );
 
       // Now we want to test that regular (not-reversed) videos are unaffected
       videoID = "not-reversed";
