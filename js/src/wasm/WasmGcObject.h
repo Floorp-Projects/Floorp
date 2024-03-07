@@ -206,13 +206,15 @@ class WasmArrayObject : public WasmGcObject,
   // check for overflow. This includes the data header, data, and any extra
   // space for alignment with GC sizes. Note this logic assumes that
   // MaxArrayPayloadBytes is within uint32_t range.
+  //
+  // This logic is mirrored in WasmArrayObject::maxInlineElementsForElemSize and
+  // MacroAssembler::wasmNewArrayObject.
   static CheckedUint32 calcStorageBytesChecked(uint32_t elemSize,
                                                uint32_t numElements) {
     static_assert(sizeof(WasmArrayObject) % gc::CellAlignBytes == 0);
     CheckedUint32 storageBytes = elemSize;
     storageBytes *= numElements;
-    // Add size of data header
-    storageBytes += sizeof(uintptr_t);
+    storageBytes += sizeof(WasmArrayObject::DataHeader);
     // Round total allocation up to gc::CellAlignBytes
     storageBytes -= 1;
     storageBytes += gc::CellAlignBytes - (storageBytes % gc::CellAlignBytes);
@@ -223,6 +225,9 @@ class WasmArrayObject : public WasmGcObject,
     MOZ_ASSERT(storageBytes.isValid());
     return storageBytes.value();
   }
+  // Compute the maximum number of elements that can be stored inline for the
+  // given element size.
+  static inline uint32_t maxInlineElementsForElemSize(uint32_t elemSize);
 
   using DataHeader = uintptr_t;
   static const DataHeader DataIsIL = 0;
@@ -433,6 +438,21 @@ const size_t WasmArrayObject_MaxInlineBytes =
 
 static_assert((WasmStructObject_MaxInlineBytes % 16) == 0);
 static_assert((WasmArrayObject_MaxInlineBytes % 16) == 0);
+
+/* static */
+inline uint32_t WasmArrayObject::maxInlineElementsForElemSize(
+    uint32_t elemSize) {
+  // This implementation inverts the logic of WasmArrayObject::calcStorageBytes
+  // to compute numElements.
+  MOZ_RELEASE_ASSERT(elemSize > 0);
+  uint32_t result = WasmArrayObject_MaxInlineBytes;
+  static_assert(WasmArrayObject_MaxInlineBytes % gc::CellAlignBytes == 0);
+  result -= sizeof(WasmArrayObject::DataHeader);
+  result /= elemSize;
+
+  MOZ_RELEASE_ASSERT(calcStorageBytesChecked(elemSize, result).isValid());
+  return result;
+}
 
 /*static*/
 inline void WasmStructObject::getDataByteSizes(uint32_t totalBytes,
