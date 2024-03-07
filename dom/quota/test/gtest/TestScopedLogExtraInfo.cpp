@@ -16,19 +16,23 @@ TEST(DOM_Quota_ScopedLogExtraInfo, AddAndRemove)
 
   {
     const auto extraInfo =
-        ScopedLogExtraInfo{ScopedLogExtraInfo::kTagQuery, text};
+        ScopedLogExtraInfo{ScopedLogExtraInfo::kTagQueryTainted, text};
 
 #ifdef QM_SCOPED_LOG_EXTRA_INFO_ENABLED
     const auto& extraInfoMap = ScopedLogExtraInfo::GetExtraInfoMap();
 
-    EXPECT_EQ(text, *extraInfoMap.at(ScopedLogExtraInfo::kTagQuery));
+    const auto& queryValueTainted =
+        *extraInfoMap.at(ScopedLogExtraInfo::kTagQueryTainted);
+
+    EXPECT_EQ(text, MOZ_NO_VALIDATE(queryValueTainted,
+                                    "It's ok to use query value in tests."));
 #endif
   }
 
 #ifdef QM_SCOPED_LOG_EXTRA_INFO_ENABLED
   const auto& extraInfoMap = ScopedLogExtraInfo::GetExtraInfoMap();
 
-  EXPECT_EQ(0u, extraInfoMap.count(ScopedLogExtraInfo::kTagQuery));
+  EXPECT_EQ(0u, extraInfoMap.count(ScopedLogExtraInfo::kTagQueryTainted));
 #endif
 }
 
@@ -39,27 +43,38 @@ TEST(DOM_Quota_ScopedLogExtraInfo, Nested)
 
   {
     const auto extraInfo =
-        ScopedLogExtraInfo{ScopedLogExtraInfo::kTagQuery, text};
+        ScopedLogExtraInfo{ScopedLogExtraInfo::kTagQueryTainted, text};
 
     {
       const auto extraInfo =
-          ScopedLogExtraInfo{ScopedLogExtraInfo::kTagQuery, nestedText};
+          ScopedLogExtraInfo{ScopedLogExtraInfo::kTagQueryTainted, nestedText};
 
 #ifdef QM_SCOPED_LOG_EXTRA_INFO_ENABLED
       const auto& extraInfoMap = ScopedLogExtraInfo::GetExtraInfoMap();
-      EXPECT_EQ(nestedText, *extraInfoMap.at(ScopedLogExtraInfo::kTagQuery));
+
+      const auto& queryValueTainted =
+          *extraInfoMap.at(ScopedLogExtraInfo::kTagQueryTainted);
+
+      EXPECT_EQ(nestedText,
+                MOZ_NO_VALIDATE(queryValueTainted,
+                                "It's ok to use query value in tests."));
 #endif
     }
 
 #ifdef QM_SCOPED_LOG_EXTRA_INFO_ENABLED
     const auto& extraInfoMap = ScopedLogExtraInfo::GetExtraInfoMap();
-    EXPECT_EQ(text, *extraInfoMap.at(ScopedLogExtraInfo::kTagQuery));
+
+    const auto& queryValueTainted =
+        *extraInfoMap.at(ScopedLogExtraInfo::kTagQueryTainted);
+
+    EXPECT_EQ(text, MOZ_NO_VALIDATE(queryValueTainted,
+                                    "It's ok to use query value in tests."));
 #endif
   }
 
 #ifdef QM_SCOPED_LOG_EXTRA_INFO_ENABLED
   const auto& extraInfoMap = ScopedLogExtraInfo::GetExtraInfoMap();
 
-  EXPECT_EQ(0u, extraInfoMap.count(ScopedLogExtraInfo::kTagQuery));
+  EXPECT_EQ(0u, extraInfoMap.count(ScopedLogExtraInfo::kTagQueryTainted));
 #endif
 }

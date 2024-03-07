@@ -40,8 +40,8 @@ CachingDatabaseConnection::GetCachedStatement(const nsACString& aQuery) {
       auto stmt,
       mCachedStatements.TryLookupOrInsertWith(
           aQuery, [&]() -> Result<nsCOMPtr<mozIStorageStatement>, nsresult> {
-            const auto extraInfo =
-                ScopedLogExtraInfo{ScopedLogExtraInfo::kTagQuery, aQuery};
+            const auto extraInfo = ScopedLogExtraInfo{
+                ScopedLogExtraInfo::kTagQueryTainted, aQuery};
 
             QM_TRY_RETURN(
                 MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(

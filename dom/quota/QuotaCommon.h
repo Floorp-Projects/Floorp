@@ -1712,8 +1712,8 @@ auto ExecuteInitialization(
         const auto maybeScopedLogExtraInfo =
             firstInitializationAttempt.Recorded()
                 ? Nothing{}
-                : Some(ScopedLogExtraInfo{ScopedLogExtraInfo::kTagContext,
-                                          aContext});
+                : Some(ScopedLogExtraInfo{
+                      ScopedLogExtraInfo::kTagContextTainted, aContext});
 #endif
 
         return std::forward<Func>(aFunc)(firstInitializationAttempt);

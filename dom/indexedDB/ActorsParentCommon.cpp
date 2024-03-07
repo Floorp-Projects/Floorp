@@ -728,7 +728,7 @@ nsresult ExecuteSimpleSQLSequence(mozIStorageConnection& aConnection,
                                   Span<const nsLiteralCString> aSQLCommands) {
   for (const auto& aSQLCommand : aSQLCommands) {
     const auto extraInfo = quota::ScopedLogExtraInfo{
-        quota::ScopedLogExtraInfo::kTagQuery, aSQLCommand};
+        quota::ScopedLogExtraInfo::kTagQueryTainted, aSQLCommand};
 
     QM_TRY(MOZ_TO_RESULT(aConnection.ExecuteSimpleSQL(aSQLCommand)));
   }

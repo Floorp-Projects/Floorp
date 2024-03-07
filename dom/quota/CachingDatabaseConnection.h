@@ -55,7 +55,7 @@ class CachingDatabaseConnection {
     BorrowedStatement(NotNull<mozIStorageStatement*> aStatement,
                       const nsACString& aQuery)
         : mozStorageStatementScoper(aStatement),
-          mExtraInfo{ScopedLogExtraInfo::kTagQuery, aQuery} {}
+          mExtraInfo{ScopedLogExtraInfo::kTagQueryTainted, aQuery} {}
 
     ScopedLogExtraInfo mExtraInfo;
 #else
