@@ -3129,7 +3129,16 @@ struct LoadNativeMenusListener {
   nsCOMPtr<nsIWidget> mParentWindow;
 };
 
-static bool sHiddenWindowLoadedNativeMenus = false;
+// On macOS the hidden window is created eagerly, and we want to wait for it to
+// load the native menus.
+static bool sWaitingForHiddenWindowToLoadNativeMenus =
+#  ifdef XP_MACOSX
+    true
+#  else
+    false
+#  endif
+    ;
+
 static nsTArray<LoadNativeMenusListener> sLoadNativeMenusListeners;
 
 static void BeginLoadNativeMenus(Document* aDoc, nsIWidget* aParentWindow);
@@ -3150,8 +3159,8 @@ static void LoadNativeMenus(Document* aDoc, nsIWidget* aParentWindow) {
 
   widget::NativeMenuSupport::CreateNativeMenuBar(aParentWindow, menubar);
 
-  if (!sHiddenWindowLoadedNativeMenus) {
-    sHiddenWindowLoadedNativeMenus = true;
+  if (sWaitingForHiddenWindowToLoadNativeMenus) {
+    sWaitingForHiddenWindowToLoadNativeMenus = false;
     for (auto& listener : sLoadNativeMenusListeners) {
       BeginLoadNativeMenus(listener.mDocument, listener.mParentWindow);
     }
@@ -3305,16 +3314,11 @@ AppWindow::OnStateChange(nsIWebProgress* aProgress, nsIRequest* aRequest,
   // commands
   ///////////////////////////////
   if (!gfxPlatform::IsHeadless()) {
-    nsCOMPtr<nsIDocumentViewer> viewer;
-    mDocShell->GetDocViewer(getter_AddRefs(viewer));
-    if (viewer) {
-      RefPtr<Document> menubarDoc = viewer->GetDocument();
-      if (menubarDoc) {
-        if (mIsHiddenWindow || sHiddenWindowLoadedNativeMenus) {
-          BeginLoadNativeMenus(menubarDoc, mWindow);
-        } else {
-          sLoadNativeMenusListeners.EmplaceBack(menubarDoc, mWindow);
-        }
+    if (RefPtr<Document> menubarDoc = mDocShell->GetExtantDocument()) {
+      if (mIsHiddenWindow || !sWaitingForHiddenWindowToLoadNativeMenus) {
+        BeginLoadNativeMenus(menubarDoc, mWindow);
+      } else {
+        sLoadNativeMenusListeners.EmplaceBack(menubarDoc, mWindow);
       }
     }
   }
