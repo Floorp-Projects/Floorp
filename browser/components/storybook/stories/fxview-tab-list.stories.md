@@ -28,7 +28,7 @@ And used as follows:
 With context menu:
 ```html
 <fxview-tab-list
-    class="with-context-menu"
+    secondaryActionClass="options-button"
     .dateTimeFormat=${"relative"}
     .hasPopup=${"menu"}
     .maxTabsLength=${this.maxTabsLength}
@@ -97,10 +97,12 @@ You'll need to pass along some of the following properties:
 
 ### Notes
 
-* In order to keep this as generic as possible, the icon for the secondary action button will NOT have a default. You can supply a `class` attribute to an instance of `fxview-tab-list` in order to apply styles to things like the icon for the secondary action button. In the above example, I added a class `"with-context-menu"` to `fxview-tab-list`, so I can update the button's icon by using:
+* In order to keep this as generic as possible, the icon for the secondary action button will NOT have a default. You can supply a `class` attribute to an instance of `fxview-tab-list` in order to apply styles to things like the icon for the secondary action button. In the above example, I added a `secondaryActionClass` `"options-button"` to `fxview-tab-list`, so I can update the button's icon by using:
 ```css
-    fxview-tab-list.with-context-menu::part(secondary-button) {
-      background-image: url("chrome://global/skin/icons/more.svg");
+    .fxview-tab-row-button {
+        &.options-button {
+            background-image: url("chrome://global/skin/icons/more.svg");
+        }
     }
 ```
 * You'll also need to define functions for the `fxview-tab-list-primary-action` and `fxview-tab-list-secondary-action` listeners in order to add functionality to the primary element and the secondary button.

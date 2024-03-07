@@ -419,7 +419,7 @@ class SyncedTabsInView extends ViewPage {
       </h3>
       <fxview-tab-list
         slot="main"
-        class="with-context-menu"
+        secondaryActionClass="options-button"
         hasPopup="menu"
         .tabItems=${ifDefined(tabItems)}
         .searchQuery=${this.searchQuery}
