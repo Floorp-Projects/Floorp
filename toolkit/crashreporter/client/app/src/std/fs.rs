@@ -10,6 +10,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::time::SystemTime;
 
+/// Mock filesystem file content.
 #[derive(Debug, Default, Clone)]
 pub struct MockFileContent(Arc<Mutex<Vec<u8>>>);
 
@@ -57,10 +58,14 @@ impl From<&[u8]> for MockFileContent {
     }
 }
 
+/// Mocked filesystem directory entries.
 pub type MockDirEntries = HashMap<OsString, MockFSItem>;
 
+/// The content of a mock filesystem item.
 pub enum MockFSContent {
+    /// File content.
     File(Result<MockFileContent>),
+    /// A directory with the given entries.
     Dir(MockDirEntries),
 }
 
@@ -73,9 +78,12 @@ impl std::fmt::Debug for MockFSContent {
     }
 }
 
+/// A mock filesystem item.
 #[derive(Debug)]
 pub struct MockFSItem {
+    /// The content of the item (file/dir).
     pub content: MockFSContent,
+    /// The modification time of the item.
     pub modified: SystemTime,
 }
 
@@ -88,6 +96,7 @@ impl From<MockFSContent> for MockFSItem {
     }
 }
 
+/// A mock filesystem.
 #[derive(Debug, Clone)]
 pub struct MockFiles {
     root: Arc<Mutex<MockFSItem>>,
@@ -102,19 +111,27 @@ impl Default for MockFiles {
 }
 
 impl MockFiles {
+    /// Create a new, empty filesystem.
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Add a mocked file with the given content. The modification time will be the unix epoch.
+    ///
+    /// Pancis if the parent directory is not already mocked.
     pub fn add_file<P: AsRef<Path>, C: Into<MockFileContent>>(&self, path: P, content: C) -> &Self {
         self.add_file_result(path, Ok(content.into()), SystemTime::UNIX_EPOCH)
     }
 
+    /// Add a mocked directory.
     pub fn add_dir<P: AsRef<Path>>(&self, path: P) -> &Self {
         self.path(path, true, |_| ()).unwrap();
         self
     }
 
+    /// Add a mocked file that returns the given result and has the given modification time.
+    ///
+    /// Pancis if the parent directory is not already mocked.
     pub fn add_file_result<P: AsRef<Path>>(
         &self,
         path: P,
@@ -173,6 +190,8 @@ impl MockFiles {
         Ok(f(cur_entry))
     }
 
+    /// Get the mocked parent directory of the given path and call a callback on the mocked
+    /// directory's entries.
     pub fn parent_dir<P: AsRef<Path>, F, R>(&self, path: P, f: F) -> Result<R>
     where
         F: FnOnce(&mut MockDirEntries) -> R,
@@ -188,6 +207,7 @@ impl MockFiles {
         .and_then(|r| r)
     }
 
+    /// Return a file assertion helper for the mocked filesystem.
     pub fn assert_files(&self) -> AssertFiles {
         let mut files = HashMap::new();
         let root = self.root.lock().unwrap();
@@ -210,6 +230,10 @@ impl MockFiles {
     }
 }
 
+/// A utility for asserting the state of the mocked filesystem.
+///
+/// All files must be accounted for; when dropped, a panic will occur if some files remain which
+/// weren't checked.
 #[derive(Debug)]
 pub struct AssertFiles {
     files: HashMap<PathBuf, MockFileContent>,
@@ -228,6 +252,7 @@ fn remove_prefix(p: &Path) -> &Path {
 }
 
 impl AssertFiles {
+    /// Assert that the given path contains the given content (as a utf8 string).
     pub fn check<P: AsRef<Path>, S: AsRef<str>>(&mut self, path: P, content: S) -> &mut Self {
         let p = remove_prefix(path.as_ref());
         let Some(mfc) = self.files.remove(p) else {
@@ -243,6 +268,7 @@ impl AssertFiles {
         self
     }
 
+    /// Assert that the given path contains the given byte content.
     pub fn check_bytes<P: AsRef<Path>, B: AsRef<[u8]>>(
         &mut self,
         path: P,
@@ -262,11 +288,13 @@ impl AssertFiles {
         self
     }
 
+    /// Ignore the given file (whether it exists or not).
     pub fn ignore<P: AsRef<Path>>(&mut self, path: P) -> &mut Self {
         self.files.remove(remove_prefix(path.as_ref()));
         self
     }
 
+    /// Assert that the given path exists without checking its content.
     pub fn check_exists<P: AsRef<Path>>(&mut self, path: P) -> &mut Self {
         let p = remove_prefix(path.as_ref());
         if self.files.remove(p).is_none() {
@@ -275,6 +303,11 @@ impl AssertFiles {
         self
     }
 
+    /// Finish checking files.
+    ///
+    /// This panics if all files were not checked.
+    ///
+    /// This is also called when the value is dropped.
     pub fn finish(&mut self) {
         let files = std::mem::take(&mut self.files);
         if !files.is_empty() {
