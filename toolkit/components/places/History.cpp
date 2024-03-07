@@ -1434,6 +1434,17 @@ void NotifyEmbedVisit(VisitData& aPlace,
   (void)NS_DispatchToMainThread(event);
 }
 
+void NotifyVisitIfHavingUserPass(nsIURI* aURI) {
+  MOZ_ASSERT(NS_IsMainThread(), "Must be called on the main thread!");
+
+  bool hasUserPass;
+  if (NS_SUCCEEDED(aURI->GetHasUserPass(&hasUserPass)) && hasUserPass) {
+    nsCOMPtr<nsIRunnable> event =
+        new NotifyManyVisitsObservers(VisitData(aURI));
+    (void)NS_DispatchToMainThread(event);
+  }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //// History
 
@@ -1925,13 +1936,6 @@ History::VisitURI(nsIWidget* aWidget, nsIURI* aURI, nsIURI* aLastVisitedURI,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsTArray<VisitData> placeArray(1);
-  placeArray.AppendElement(VisitData(aURI, aLastVisitedURI));
-  VisitData& place = placeArray.ElementAt(0);
-  NS_ENSURE_FALSE(place.spec.IsEmpty(), NS_ERROR_INVALID_ARG);
-
-  place.visitTime = PR_Now();
-
   // Assigns a type to the edge in the visit linked list. Each type will be
   // considered differently when weighting the frecency of a location.
   uint32_t recentFlags = navHistory->GetRecentFlags(aURI);
@@ -1966,18 +1970,8 @@ History::VisitURI(nsIWidget* aWidget, nsIURI* aURI, nsIURI* aLastVisitedURI,
     transitionType = nsINavHistoryService::TRANSITION_FRAMED_LINK;
   }
 
-  place.SetTransitionType(transitionType);
   bool isRedirect = aFlags & IHistory::REDIRECT_SOURCE;
-  if (isRedirect) {
-    place.useFrecencyRedirectBonus =
-        (aFlags & (IHistory::REDIRECT_SOURCE_PERMANENT |
-                   IHistory::REDIRECT_SOURCE_UPGRADED)) ||
-        transitionType != nsINavHistoryService::TRANSITION_TYPED;
-  }
-  place.hidden = GetHiddenState(isRedirect, place.transitionType);
-
-  // Error pages should never be autocompleted.
-  place.isUnrecoverableError = aFlags & IHistory::UNRECOVERABLE_ERROR;
+  bool isHidden = GetHiddenState(isRedirect, transitionType);
 
   // Do not save a reloaded uri if we have visited the same URI recently.
   if (reload) {
@@ -1988,16 +1982,42 @@ History::VisitURI(nsIWidget* aWidget, nsIURI* aURI, nsIURI* aLastVisitedURI,
       bool wasHidden = entry->mHidden;
       // Regardless of whether we store the visit or not, we must update the
       // stored visit time.
-      AppendToRecentlyVisitedURIs(aURI, place.hidden);
+      AppendToRecentlyVisitedURIs(aURI, isHidden);
       // We always want to store an unhidden visit, if the previous visits were
       // hidden, because otherwise the page may not appear in the history UI.
       // This can happen for example at a page redirecting to itself.
-      if (!wasHidden || place.hidden) {
+      if (!wasHidden || isHidden) {
         // We can skip this visit.
         return NS_OK;
       }
     }
   }
+
+  // Never store the URL having userpass to database.
+  nsCOMPtr<nsIURI> visitedURI = GetExposableURI(aURI);
+  nsCOMPtr<nsIURI> lastVisitedURI;
+  if (aLastVisitedURI) {
+    lastVisitedURI = GetExposableURI(aLastVisitedURI);
+  }
+
+  nsTArray<VisitData> placeArray(1);
+  placeArray.AppendElement(VisitData(visitedURI, lastVisitedURI));
+  VisitData& place = placeArray.ElementAt(0);
+  NS_ENSURE_FALSE(place.spec.IsEmpty(), NS_ERROR_INVALID_ARG);
+
+  place.visitTime = PR_Now();
+  place.SetTransitionType(transitionType);
+  place.hidden = isHidden;
+
+  if (isRedirect) {
+    place.useFrecencyRedirectBonus =
+        (aFlags & (IHistory::REDIRECT_SOURCE_PERMANENT |
+                   IHistory::REDIRECT_SOURCE_UPGRADED)) ||
+        transitionType != nsINavHistoryService::TRANSITION_TYPED;
+  }
+
+  // Error pages should never be autocompleted.
+  place.isUnrecoverableError = aFlags & IHistory::UNRECOVERABLE_ERROR;
 
   nsCOMPtr<nsIBrowserWindowTracker> bwt =
       do_ImportESModule("resource:///modules/BrowserWindowTracker.sys.mjs",
@@ -2067,6 +2087,15 @@ History::VisitURI(nsIWidget* aWidget, nsIURI* aURI, nsIURI* aLastVisitedURI,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  // URIs with a userpass component are not stored in the database for security
+  // reasons, we store the exposable URI version of them instead.
+  // The original link pointing at the URI with userpass must still be marked as
+  // visited, to properly react to the user interaction, so we notify a visit.
+  // The visited status is not going to survive a reload of course, though the
+  // alternative of marking any userpass URI as visited if the exposable URI is
+  // visited also feels wrong from the user point of view.
+  NotifyVisitIfHavingUserPass(aURI);
+
   return NS_OK;
 }
 
@@ -2099,8 +2128,9 @@ History::SetURITitle(nsIURI* aURI, const nsAString& aTitle) {
   //
   NS_ENSURE_TRUE(navHistory, NS_ERROR_FAILURE);
 
+  nsCOMPtr<nsIURI> uri = GetExposableURI(aURI);
   bool canAdd;
-  nsresult rv = navHistory->CanAddURI(aURI, &canAdd);
+  nsresult rv = navHistory->CanAddURI(uri, &canAdd);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!canAdd) {
     return NS_OK;
@@ -2109,7 +2139,7 @@ History::SetURITitle(nsIURI* aURI, const nsAString& aTitle) {
   mozIStorageConnection* dbConn = GetDBConn();
   NS_ENSURE_STATE(dbConn);
 
-  return SetPageTitle::Start(dbConn, aURI, aTitle);
+  return SetPageTitle::Start(dbConn, uri, aTitle);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2135,6 +2165,10 @@ History::UpdatePlaces(JS::Handle<JS::Value> aPlaceInfos,
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIURI> uri = GetURIFromJSObject(aCtx, info, "uri");
+    if (uri) {
+      uri = GetExposableURI(uri);
+    }
+
     nsCString guid;
     {
       nsString fatGUID;

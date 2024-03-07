@@ -246,3 +246,22 @@ add_task(async function test_guid() {
     "Record C is fetchable after insertMany"
   );
 });
+
+add_task(async function test_withUserPass() {
+  await PlacesUtils.history.insertMany([
+    {
+      url: "http://user:pass@example.com/userpass",
+      visits: [{ date: new Date() }],
+    },
+  ]);
+
+  Assert.ok(
+    !(await PlacesUtils.history.fetch("http://user:pass@example.com/userpass")),
+    "The url with user and pass is not stored"
+  );
+
+  Assert.ok(
+    await PlacesUtils.history.fetch("http://example.com/userpass"),
+    "The url without user and pass is stored"
+  );
+});

@@ -170,6 +170,14 @@ PRTime RoundedPRNow();
 nsresult HashURL(const nsACString& aSpec, const nsACString& aMode,
                  uint64_t* _hash);
 
+/**
+ * Return exposable URL from given URI.
+ *
+ * @param  aURI The URI to be converted.
+ * @return already_AddRefed<nsIURI> The converted, exposable URI.
+ */
+already_AddRefed<nsIURI> GetExposableURI(nsIURI* aURI);
+
 class QueryKeyValuePair final {
  public:
   QueryKeyValuePair(const nsACString& aKey, const nsACString& aValue) {

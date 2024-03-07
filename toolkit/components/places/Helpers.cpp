@@ -10,6 +10,7 @@
 #include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nsNavHistory.h"
+#include "nsNetUtil.h"
 #include "mozilla/Base64.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/RandomNum.h"
@@ -376,6 +377,27 @@ nsresult BackupDatabaseFile(nsIFile* aDBFile, const nsAString& aBackupFileName,
 
   backupDB.forget(backup);
   return aDBFile->CopyTo(parentDir, fileName);
+}
+
+already_AddRefed<nsIURI> GetExposableURI(nsIURI* aURI) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aURI);
+
+  nsresult rv;
+  nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to get nsIIOService");
+    return nsCOMPtr<nsIURI>(aURI).forget();
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  rv = ioService->CreateExposableURI(aURI, getter_AddRefs(uri));
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to create exposable URI");
+    return nsCOMPtr<nsIURI>(aURI).forget();
+  }
+
+  return uri.forget();
 }
 
 }  // namespace places
