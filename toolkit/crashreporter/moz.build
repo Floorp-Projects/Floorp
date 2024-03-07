@@ -120,8 +120,11 @@ if CONFIG["MOZ_CRASHREPORTER"]:
         DEFINES["MOZ_PHC"] = True
 
     LOCAL_INCLUDES += [
+        "/toolkit/components/jsoncpp/include",
         "google-breakpad/src",
     ]
+
+    USE_LIBS += ["jsoncpp"]
 
     PYTHON_UNITTEST_MANIFESTS += [
         "tools/python.toml",
