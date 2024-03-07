@@ -26,7 +26,6 @@ NIMBUS_FALLBACK_PREFS = (
 ALLOWED_ISEARLYSTARTUP_FEATURE_IDS = {
     "abouthomecache",
     "aboutwelcome",
-    "bookmarks",
     "dapTelemetry",
     "deviceMigration",
     "frecency",
