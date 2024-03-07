@@ -65,7 +65,6 @@ TEST_HARNESS_FILES.testing.mochitest.tests.toolkit.components.places.tests.brows
     "browser/redirect_twice_perma.sjs",
     "browser/title1.html",
     "browser/title2.html",
-    "browser/userpass.html",
 ]
 
 TEST_HARNESS_FILES.testing.mochitest.tests.toolkit.components.places.tests.chrome += [

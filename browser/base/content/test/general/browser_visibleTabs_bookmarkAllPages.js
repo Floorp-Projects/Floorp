@@ -15,9 +15,7 @@ function test() {
 
     is(gBrowser.visibleTabs.length, 1, "Only one tab is visible");
 
-    let uris = PlacesCommandHook.getUniquePages(
-      gBrowser.visibleTabs.filter(tab => !tab.pinned)
-    );
+    let uris = PlacesCommandHook.uniqueCurrentPages;
     is(uris.length, 1, "Only one uri is returned");
 
     is(

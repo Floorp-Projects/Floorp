@@ -48,6 +48,13 @@ skip-if = ["os != 'mac'"] # Mac-only functionality
 ["browser_bookmark_add_tags.js"]
 https_first_disabled = true
 
+["browser_bookmark_all_tabs.js"]
+https_first_disabled = true
+support-files = [
+  "bookmark_dummy_1.html",
+  "bookmark_dummy_2.html",
+]
+
 ["browser_bookmark_backup_export_import.js"]
 
 ["browser_bookmark_change_location.js"]
@@ -55,8 +62,6 @@ https_first_disabled = true
 ["browser_bookmark_context_menu_contents.js"]
 
 ["browser_bookmark_copy_folder_tree.js"]
-
-["browser_bookmark_current_tabs.js"]
 
 ["browser_bookmark_folder_moveability.js"]
 
