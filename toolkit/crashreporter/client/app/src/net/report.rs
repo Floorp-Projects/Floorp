@@ -2,6 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+//! Support for crash report creation and upload.
+//!
+//! Upload currently uses the system libcurl or curl binary rather than a rust network stack (as
+//! curl is more mature, albeit the code to interact with it must be a bit more careful).
+
 use crate::std::{ffi::OsStr, path::Path, process::Child};
 use anyhow::Context;
 
