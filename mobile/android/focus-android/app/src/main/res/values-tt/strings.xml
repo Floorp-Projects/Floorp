@@ -85,7 +85,11 @@
     <string name="share_dialog_title">Аша уртаклашу</string>
 
     <string name="notification_erase_title_android_14">Гизү тарихы бетерелсенме?</string>
-    <string name="notification_erase_text_android_14">Гизү тарихыгызны хәвефсез рәвештә бетерү өчен бу искәртүгә басыгыз яки аны чистартыгыз.</string>
+    <string name="notification_erase_text_android_14" moz:RemovedIn="124" tools:ignore="UnusedResources">Гизү тарихыгызны хәвефсез рәвештә бетерү өчен бу искәртүгә басыгыз яки аны чистартыгыз.</string>
+
+    <!-- Text shown in the notification description that pops up to remind the user that a browsing session is active
+    for Android 14+. -->
+    <string name="notification_erase_text_android_14_1">Гизү тарихыгызны хәвефсез рәвештә бетерү өчен бу искәртүгә басыгыз яки аны кырыйга сөйрәгез.</string>
 
     <string name="notification_erase_text">Гизү тарихын бетерү</string>
 

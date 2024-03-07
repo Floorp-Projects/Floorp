@@ -17,7 +17,9 @@
     <!-- Text for password field in an authentication dialog. -->
     <string name="mozac_feature_prompt_password_hint">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ</string>
     <!-- Negative confirmation that we should not save the new or updated login -->
-    <string name="mozac_feature_prompt_dont_save">ᱟᱞᱚᱢ ᱥᱟᱺᱪᱟᱣᱜ-ᱟ</string>
+    <string name="mozac_feature_prompt_dont_save" moz:removedIn="125" tools:ignore="UnusedResources">ᱟᱞᱚᱢ ᱥᱟᱺᱪᱟᱣᱜ-ᱟ</string>
+    <!-- Negative confirmation that we should not save the new or updated login -->
+    <string name="mozac_feature_prompt_dont_save_2">ᱱᱤᱛᱚᱜ ᱫᱚ ᱵᱟᱝᱟ</string>
     <!-- Negative confirmation that we should never save a login for this site -->
     <string name="mozac_feature_prompt_never_save">ᱛᱤᱥ ᱦᱚᱸ ᱵᱟᱝ ᱥᱟᱺᱪᱟᱣᱜ-ᱟ</string>
     <!-- Negative confirmation that we should not save a credit card for this site -->
@@ -25,17 +27,21 @@
     <!-- Positive confirmation that we should save the new or updated login -->
     <string name="mozac_feature_prompt_save_confirmation">ᱥᱟᱺᱪᱟᱣ ᱢᱮ</string>
     <!-- Negative confirmation that we should not save the updated login -->
-    <string name="mozac_feature_prompt_dont_update">ᱟᱞᱚᱢ ᱦᱟᱹᱞᱤᱭᱟᱜ-ᱟ</string>
+    <string name="mozac_feature_prompt_dont_update" moz:removedIn="125" tools:ignore="UnusedResources">ᱟᱞᱚᱢ ᱦᱟᱹᱞᱤᱭᱟᱜ-ᱟ</string>
+    <!-- Negative confirmation that we should not save the updated login -->
+    <string name="mozac_feature_prompt_dont_update_2">ᱱᱤᱛᱚᱜ ᱫᱚ ᱵᱟᱝᱟ</string>
     <!-- Positive confirmation that we should save the updated login -->
     <string name="mozac_feature_prompt_update_confirmation">ᱦᱟᱹᱞᱤᱭᱟᱹᱜ ᱢᱮ</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_empty_password">ᱥᱟᱵᱟᱫᱽ ᱜᱟᱫᱮᱞ ᱠᱷᱟᱹᱞᱤ ᱟᱞᱚ ᱛᱟᱦᱮᱸᱱ ᱢᱟ</string>
+    <string name="mozac_feature_prompt_error_empty_password" moz:removedIn="125" tools:ignore="UnusedResources">ᱥᱟᱵᱟᱫᱽ ᱜᱟᱫᱮᱞ ᱠᱷᱟᱹᱞᱤ ᱟᱞᱚ ᱛᱟᱦᱮᱸᱱ ᱢᱟ</string>
     <!-- Error text displayed underneath the password field when it is in an error case -->
-    <string name="mozac_feature_prompt_error_unknown_cause">ᱞᱚᱜᱤᱱ ᱵᱟᱭ ᱥᱟᱺᱪᱟᱣ ᱫᱟᱲᱮᱭᱟᱜ ᱠᱟᱱᱟ</string>
+    <string name="mozac_feature_prompt_error_empty_password_2">ᱢᱤᱫᱴᱟᱹᱝ ᱥᱟᱵᱟᱫ ᱟᱫᱮᱨ ᱢᱮ</string>
+    <!-- Error text displayed underneath the login field when it is in an error case -->
+    <string name="mozac_feature_prompt_error_unknown_cause" moz:removedIn="125" tools:ignore="UnusedResources">ᱞᱚᱜᱤᱱ ᱵᱟᱭ ᱥᱟᱺᱪᱟᱣ ᱫᱟᱲᱮᱭᱟᱜ ᱠᱟᱱᱟ</string>
     <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new login. -->
-    <string name="mozac_feature_prompt_login_save_headline">ᱱᱚᱶᱟ ᱞᱚᱜᱤᱱ ᱥᱟᱺᱪᱟᱣ ᱢᱮ?</string>
+    <string name="mozac_feature_prompt_login_save_headline" moz:removedIn="125" tools:ignore="UnusedResources">ᱱᱚᱶᱟ ᱞᱚᱜᱤᱱ ᱥᱟᱺᱪᱟᱣ ᱢᱮ?</string>
     <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the login. -->
-    <string name="mozac_feature_prompt_login_update_headline">ᱱᱚᱶᱟ ᱞᱚᱜᱤᱱ ᱦᱟᱹᱞᱤᱭᱟᱜ ᱢᱮ?</string>
+    <string name="mozac_feature_prompt_login_update_headline" moz:removedIn="125" tools:ignore="UnusedResources">ᱱᱚᱶᱟ ᱞᱚᱜᱤᱱ ᱦᱟᱹᱞᱤᱭᱟᱜ ᱢᱮ?</string>
     <!-- Prompt message displayed when app detects a user has entered a username for an existing login without a username and user decides if app should update the login. -->
     <string name="mozac_feature_prompt_login_add_username_headline">ᱥᱟᱺᱪᱟᱣᱠᱟᱱ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱨᱮ ᱵᱮᱵᱷᱟᱨᱤᱡ ᱧᱩᱛᱩᱢ ᱥᱮᱞᱮᱫᱽ ᱟᱢ?</string>
     <!-- Text for a label for the field when prompt requesting a text is shown. -->
@@ -84,13 +90,13 @@
     <!-- Title of the time picker dialog. -->
     <string name="mozac_feature_prompts_set_time">ᱚᱠᱛᱚ ᱥᱮᱴ ᱢᱮ</string>
     <!-- Option in expanded select login prompt that links to login settings -->
-    <string name="mozac_feature_prompts_manage_logins">ᱞᱚᱜᱤᱱ ᱵᱮᱵᱚᱥᱛᱷᱟ ᱠᱚ</string>
+    <string name="mozac_feature_prompts_manage_logins" moz:removedIn="125" tools:ignore="UnusedResources">ᱞᱚᱜᱤᱱ ᱵᱮᱵᱚᱥᱛᱷᱟ ᱠᱚ</string>
     <!-- Content description for expanding the saved logins options in the select login prompt -->
-    <string name="mozac_feature_prompts_expand_logins_content_description">ᱵᱟᱛᱟᱣᱟᱠᱟᱱ ᱞᱚᱜᱤᱱ ᱠᱚ ᱴᱟᱨᱟᱝ ᱪᱷᱚᱭ ᱢᱮ</string>
+    <string name="mozac_feature_prompts_expand_logins_content_description" moz:removedIn="125" tools:ignore="UnusedResources">ᱵᱟᱛᱟᱣᱟᱠᱟᱱ ᱞᱚᱜᱤᱱ ᱠᱚ ᱴᱟᱨᱟᱝ ᱪᱷᱚᱭ ᱢᱮ</string>
     <!-- Content description for collapsing the saved logins options in the select login prompt -->
-    <string name="mozac_feature_prompts_collapse_logins_content_description">ᱵᱟᱛᱟᱣᱟᱠᱟᱱ ᱞᱚᱜᱤᱱ ᱠᱚ ᱠᱟᱹᱴᱤᱡ ᱪᱷᱚᱭ ᱢᱮ</string>
+    <string name="mozac_feature_prompts_collapse_logins_content_description" moz:removedIn="125" tools:ignore="UnusedResources">ᱵᱟᱛᱟᱣᱟᱠᱟᱱ ᱞᱚᱜᱤᱱ ᱠᱚ ᱠᱟᱹᱴᱤᱡ ᱪᱷᱚᱭ ᱢᱮ</string>
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
-    <string name="mozac_feature_prompts_saved_logins">ᱵᱟᱛᱟᱣᱟᱠᱟᱱ ᱞᱚᱜᱤᱱ ᱠᱚ</string>
+    <string name="mozac_feature_prompts_saved_logins" moz:removedIn="125" tools:ignore="UnusedResources">ᱵᱟᱛᱟᱣᱟᱠᱟᱱ ᱞᱚᱜᱤᱱ ᱠᱚ</string>
 
     <!-- Content description for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
     <string name="mozac_feature_prompts_suggest_strong_password_content_description">ᱟᱸᱴ ᱫᱟᱫᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱵᱟᱛᱟᱣ ᱢᱮ …</string>
@@ -109,27 +115,27 @@
 
     <!-- Credit Card Autofill -->
     <!-- Header for the select credit card prompt to allow users to fill a form with a saved credit card. -->
-    <string name="mozac_feature_prompts_select_credit_card">ᱠᱨᱮᱰᱤᱴ ᱠᱟᱰ ᱵᱟᱪᱷᱟᱣ ᱢᱮ</string>
+    <string name="mozac_feature_prompts_select_credit_card" moz:removedIn="125" tools:ignore="UnusedResources">ᱠᱨᱮᱰᱤᱴ ᱠᱟᱰ ᱵᱟᱪᱷᱟᱣ ᱢᱮ</string>
     <!-- Content description for expanding the select credit card options in the select credit card prompt. -->
-    <string name="mozac_feature_prompts_expand_credit_cards_content_description">ᱵᱟᱛᱟᱣ ᱟᱠᱟᱱ ᱠᱨᱮᱰᱤᱴ ᱠᱟᱰ ᱡᱷᱟᱹᱞ ᱪᱷᱚᱭ ᱢᱮ</string>
+    <string name="mozac_feature_prompts_expand_credit_cards_content_description" moz:removedIn="125" tools:ignore="UnusedResources">ᱵᱟᱛᱟᱣ ᱟᱠᱟᱱ ᱠᱨᱮᱰᱤᱴ ᱠᱟᱰ ᱡᱷᱟᱹᱞ ᱪᱷᱚᱭ ᱢᱮ</string>
     <!-- Content description for collapsing the select credit card options in the select credit prompt. -->
-    <string name="mozac_feature_prompts_collapse_credit_cards_content_description">ᱵᱟᱛᱟᱣ ᱟᱠᱟᱱ ᱠᱨᱮᱰᱤᱴ ᱠᱟᱰ ᱦᱚᱯᱚᱱ ᱪᱷᱚᱭ ᱢᱮ</string>
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description" moz:removedIn="125" tools:ignore="UnusedResources">ᱵᱟᱛᱟᱣ ᱟᱠᱟᱱ ᱠᱨᱮᱰᱤᱴ ᱠᱟᱰ ᱦᱚᱯᱚᱱ ᱪᱷᱚᱭ ᱢᱮ</string>
     <!-- Option in the expanded select credit card prompt that links to credit cards settings. -->
-    <string name="mozac_feature_prompts_manage_credit_cards">ᱠᱨᱮᱰᱤᱴ ᱠᱟᱰ ᱠᱚ ᱢᱮᱱᱮᱡᱽ ᱢᱮ</string>
+    <string name="mozac_feature_prompts_manage_credit_cards" moz:removedIn="125" tools:ignore="UnusedResources">ᱠᱨᱮᱰᱤᱴ ᱠᱟᱰ ᱠᱚ ᱢᱮᱱᱮᱡᱽ ᱢᱮ</string>
     <!-- Text for the title of a save credit card dialog. -->
     <string name="mozac_feature_prompts_save_credit_card_prompt_title">ᱱᱚᱶᱟ ᱠᱟᱰ ᱫᱚ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱥᱟᱹᱦᱤᱡ ᱫᱚᱦᱚᱭ ᱟᱢ ᱥᱮ ?</string>
     <!-- Text for the title of an update credit card dialog. -->
     <string name="mozac_feature_prompts_update_credit_card_prompt_title">ᱠᱟᱰ ᱪᱟᱵᱟ ᱢᱟᱦᱟᱸ ᱦᱟᱹᱞᱤᱭᱟᱹᱭᱟᱹᱠ ᱟᱢ ᱥᱮ ?</string>
     <!-- Subtitle text displayed under the title of the save credit card dialog. -->
-    <string name="mozac_feature_prompts_save_credit_card_prompt_body">ᱠᱟᱰ ᱱᱚᱢᱵᱚᱨ ᱫᱚ ᱨᱩᱠᱷᱤᱭᱟᱹᱜᱼᱟ ᱾ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱠᱳᱰ ᱫᱚ ᱵᱟᱝ ᱥᱟᱧᱪᱟᱣᱜᱼᱟ ᱾</string>
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body" moz:removedIn="125" tools:ignore="UnusedResources">ᱠᱟᱰ ᱱᱚᱢᱵᱚᱨ ᱫᱚ ᱨᱩᱠᱷᱤᱭᱟᱹᱜᱼᱟ ᱾ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱠᱳᱰ ᱫᱚ ᱵᱟᱝ ᱥᱟᱧᱪᱟᱣᱜᱼᱟ ᱾</string>
 
     <!-- Address Autofill -->
     <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
     <string name="mozac_feature_prompts_select_address_2">ᱴᱷᱤᱠᱬᱟᱹ ᱢᱮᱴᱟᱣ ᱢᱮ</string>
     <!-- Content description for expanding the select addresses options in the select address prompt. -->
-    <string name="mozac_feature_prompts_expand_address_content_description">ᱵᱟᱛᱟᱣᱟᱠᱟᱱ ᱞᱚᱜᱤᱱ ᱠᱚ ᱯᱟᱥᱱᱟᱣ ᱪᱷᱚᱭ ᱢᱮ</string>
+    <string name="mozac_feature_prompts_expand_address_content_description" moz:removedIn="125" tools:ignore="UnusedResources">ᱵᱟᱛᱟᱣᱟᱠᱟᱱ ᱞᱚᱜᱤᱱ ᱠᱚ ᱯᱟᱥᱱᱟᱣ ᱪᱷᱚᱭ ᱢᱮ</string>
     <!-- Content description for collapsing the select address options in the select address prompt. -->
-    <string name="mozac_feature_prompts_collapse_address_content_description">ᱵᱟᱛᱟᱣᱟᱠᱟᱱ ᱞᱚᱜᱤᱱ ᱠᱚ ᱦᱚᱯᱚᱱ ᱪᱷᱚᱭ ᱢᱮ</string>
+    <string name="mozac_feature_prompts_collapse_address_content_description" moz:removedIn="125" tools:ignore="UnusedResources">ᱵᱟᱛᱟᱣᱟᱠᱟᱱ ᱞᱚᱜᱤᱱ ᱠᱚ ᱦᱚᱯᱚᱱ ᱪᱷᱚᱭ ᱢᱮ</string>
     <!-- Text for the manage addresses button. -->
     <string name="mozac_feature_prompts_manage_address">ᱴᱷᱤᱠᱬᱟᱹᱤᱭᱟᱹ ᱡᱚᱛᱚᱱ ᱮᱢ</string>
 

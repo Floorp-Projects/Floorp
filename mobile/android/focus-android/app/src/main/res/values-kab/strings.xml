@@ -86,7 +86,11 @@
 
     <string name="notification_erase_title_android_14">Sfeḍ amazray n tunigin?</string>
 
-    <string name="notification_erase_text_android_14">Sit ɣef telɣut-a neɣ kkes-itt i wakken ad tekkseḍ azray-ik n tunigin s wudem aɣelsan.</string>
+    <string name="notification_erase_text_android_14" moz:RemovedIn="124" tools:ignore="UnusedResources">Sit ɣef telɣut-a neɣ kkes-itt i wakken ad tekkseḍ azray-ik n tunigin s wudem aɣelsan.</string>
+
+    <!-- Text shown in the notification description that pops up to remind the user that a browsing session is active
+    for Android 14+. -->
+    <string name="notification_erase_text_android_14_1">Sit ɣef telɣut-a neɣ zuɣer-itt i wakken ad tekkseḍ azray-ik n tunigin s wudem aɣelsan.</string>
 
     <string name="notification_erase_text">Sfeḍ amazray n tunigin</string>
 

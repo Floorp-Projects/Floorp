@@ -98,6 +98,8 @@
     <string name="mozac_feature_addons_settings_allow_in_private_browsing">プライベートブラウジングモードでの動作を許可する</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
     <string name="mozac_feature_addons_settings_run_in_private_browsing">プライベートブラウジングモードで実行する</string>
+    <!-- This is displayed when the add-on is not allowed to run in private browsing. -->
+    <string name="mozac_feature_addons_not_allowed_in_private_browsing">プライベートウィンドウでは許可されていません</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">有効</string>
     <!-- Indicates the add-on is disabled. -->
@@ -137,13 +139,17 @@
     <!-- This is a button to cancel the add-on installation . -->
     <string name="mozac_feature_addons_permissions_dialog_cancel">キャンセル</string>
     <!-- Accessibility content description to install add-on button. -->
-    <string name="mozac_feature_addons_install_addon_content_description">アドオンをインストール</string>
+    <string name="mozac_feature_addons_install_addon_content_description" tools:ignore="UnusedResources" moz:removedIn="124">アドオンをインストール</string>
+    <!-- Accessibility content description to install add-on button. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_install_addon_content_description_2">%1$s をインストール</string>
     <!-- This is the label of a button to cancel an ongoing add-on installation. -->
     <string name="mozac_feature_addons_install_addon_dialog_cancel">キャンセル</string>
     <!-- Indicates how many users have rated an add-on. %1$s will be replaced with number of reviews -->
     <string name="mozac_feature_addons_user_rating_count_2">レビュー数: %1$s</string>
     <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
-    <string name="mozac_feature_addons_rating_content_description">%1$.02f/5</string>
+    <string name="mozac_feature_addons_rating_content_description" moz:removedIn="124" tools:ignore="UnusedResources">%1$.02f/5</string>
+    <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars. -->
+    <string name="mozac_feature_addons_rating_content_description_2">評価: 5 点中 %1$.02f</string>
     <!-- This is the title of page where all the add-ons are listed-->
     <string name="mozac_feature_addons_addons">アドオン</string>
     <!-- Label for add-ons sub menu item for add-ons manager-->
@@ -244,10 +250,14 @@
     <string name="mozac_feature_addons_updater_dialog_status">状態:</string>
     <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
     <string name="mozac_feature_addons_installed_dialog_title">%1$s が %2$s に追加されました</string>
-    <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_installed_dialog_description">メニューから開いてください</string>
+    <!-- Text shown in the dialog when add-on installation is completed. -->
+    <string name="mozac_feature_addons_installed_dialog_description" moz:removedIn="124" tools:ignore="UnusedResources">メニューから開いてください</string>
+    <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
+    <string name="mozac_feature_addons_installed_dialog_description_2">%2$s メニューから %1$s にアクセスしてください。</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
-    <string name="mozac_feature_addons_installed_dialog_okay_button">OK</string>
+    <string name="mozac_feature_addons_installed_dialog_okay_button" moz:removedIn="124" tools:ignore="UnusedResources">OK</string>
+    <!-- Confirmation button text for the dialog when add-on installation is completed. -->
+    <string name="mozac_feature_addons_installed_dialog_okay_button_2">OK</string>
     <!-- "Learn more" link displayed below an add-on status message. -->
     <string name="mozac_feature_addons_status_learn_more">詳細情報</string>
     <!-- Status message below an add-on in the add-ons manager when this add-on has been blocklisted. %1$s is the add-on name. -->

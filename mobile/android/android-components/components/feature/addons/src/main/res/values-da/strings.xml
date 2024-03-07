@@ -98,6 +98,8 @@
     <string name="mozac_feature_addons_settings_allow_in_private_browsing">Tillad i privat browsing</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
     <string name="mozac_feature_addons_settings_run_in_private_browsing">Kør i privat browsing</string>
+    <!-- This is displayed when the add-on is not allowed to run in private browsing. -->
+    <string name="mozac_feature_addons_not_allowed_in_private_browsing">Ikke tilladt i private vinduer</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">Aktiveret</string>
     <!-- Indicates the add-on is disabled. -->

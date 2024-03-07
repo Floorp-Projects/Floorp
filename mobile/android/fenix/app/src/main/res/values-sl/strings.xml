@@ -734,7 +734,7 @@
     <!-- Preference for syncing credit cards -->
     <string name="preferences_sync_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Kreditne kartice</string>
     <!-- Preference for syncing payment methods -->
-    <string name="preferences_sync_credit_cards_2">Načini plačila</string>
+    <string name="preferences_sync_credit_cards_2">Plačilna sredstva</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">Naslove</string>
 
@@ -1808,14 +1808,16 @@
     <string name="preferences_addresses">Naslovi</string>
     <!-- Preference and title for managing the settings for credit cards -->
     <string name="preferences_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Kreditne kartice</string>
+    <!-- Preference and title for managing the settings for payment methods -->
+    <string name="preferences_credit_cards_2">Plačilna sredstva</string>
     <!-- Preference for saving and autofilling credit cards -->
     <string name="preferences_credit_cards_save_and_autofill_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Shrani in samodejno izpolni kartice</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_2">Shranjuj in izpolnjuj načine plačila</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_2">Shranjuj in izpolnjuj plačilna sredstva</string>
     <!-- Preference summary for saving and autofilling credit card data -->
     <string name="preferences_credit_cards_save_and_autofill_cards_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Podatki so šifrirani</string>
     <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">%s šifrira vse načine plačila, ki jih shranite</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">%s šifrira vsa plačilna sredstva, ki jih shranite</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Sinhroniziraj kartice med napravami</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
