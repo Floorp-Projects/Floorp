@@ -7,6 +7,10 @@
 
 "use strict";
 
+// See the comment in the setup task for the expected index of the main test
+// result.
+const RESULT_INDEX = 2;
+
 // The command that dismisses a single result.
 const DISMISS_ONE_COMMAND = "dismiss-one";
 
@@ -20,18 +24,40 @@ const FEEDBACK_COMMAND = "show_less_frequently";
 let gTestProvider;
 
 add_setup(async function () {
+  // This test expects the following results in the following order:
+  //
+  // 1. The heuristic
+  // 2. A history result
+  // 3. A result from our test provider. This will be the main result we'll use
+  //    during this test.
+  // 4. Another history result
+  //
+  // This ensures a couple things:
+  //
+  // * The main test result has rows above and below it. Feedback and dismissal
+  //   acknowledgments in the main result row should not affect adjacent rows,
+  //   except that when the dismissal acknowledgment itself is dismissed, it
+  //   should be replaced by the row below it.
+  // * The main result does not have a row label (a.k.a. group label). There's a
+  //   separate task that specifically checks the row label, and that way this
+  //   test covers both cases, where the row does and does not have a row label.
   gTestProvider = new TestProvider({
     results: [
-      new UrlbarResult(
-        UrlbarUtils.RESULT_TYPE.URL,
-        UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-        {
-          url: "https://example.com/",
-          isBlockable: true,
-          blockL10n: {
-            id: "urlbar-result-menu-dismiss-firefox-suggest",
-          },
-        }
+      Object.assign(
+        new UrlbarResult(
+          UrlbarUtils.RESULT_TYPE.URL,
+          UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+          {
+            url: "https://example.com/",
+            isBlockable: true,
+            blockL10n: {
+              id: "urlbar-result-menu-dismiss-firefox-suggest",
+            },
+          }
+        ),
+        // This ensures the result is sandwiched between the two history results
+        // in the Firefox Suggest group.
+        { suggestedIndex: 1, isSuggestedIndexRelativeToGroup: true }
       ),
     ],
   });
@@ -39,13 +65,15 @@ add_setup(async function () {
   gTestProvider.commandCount = {};
   UrlbarProvidersManager.registerProvider(gTestProvider);
 
-  // Add a visit so that there's one result above the test result (the
-  // heuristic) and one below (the visit) just to make sure removing the test
-  // result doesn't mess up adjacent results.
   await PlacesUtils.history.clear();
   await PlacesUtils.bookmarks.eraseEverything();
   await UrlbarTestUtils.formHistory.clear();
-  await PlacesTestUtils.addVisits("https://example.com/aaa");
+
+  // Add visits for the two history results.
+  await PlacesTestUtils.addVisits([
+    "https://example.com/aaa",
+    "https://example.com/bbb",
+  ]);
 
   registerCleanupFunction(() => {
     UrlbarProvidersManager.unregisterProvider(gTestProvider);
@@ -72,13 +100,9 @@ add_task(async function acknowledgeDismissal_rowSelected() {
   });
 
   // Select the row.
-  let resultIndex = await getTestResultIndex();
-  while (gURLBar.view.selectedRowIndex != resultIndex) {
-    this.EventUtils.synthesizeKey("KEY_ArrowDown");
-  }
+  gURLBar.view.selectedRowIndex = RESULT_INDEX;
 
   await doDismissTest({
-    resultIndex,
     command: DISMISS_ONE_COMMAND,
     shouldBeSelected: true,
   });
@@ -95,12 +119,14 @@ add_task(async function acknowledgeFeedbackAndDismissal() {
     value: "test",
   });
 
-  let resultIndex = await getTestResultIndex();
-  let details = await UrlbarTestUtils.getDetailsOfResultAt(window, resultIndex);
+  let details = await UrlbarTestUtils.getDetailsOfResultAt(
+    window,
+    RESULT_INDEX
+  );
 
   // Click the feedback command.
   await UrlbarTestUtils.openResultMenuAndClickItem(window, FEEDBACK_COMMAND, {
-    resultIndex,
+    resultIndex: RESULT_INDEX,
   });
 
   Assert.equal(
@@ -121,7 +147,6 @@ add_task(async function acknowledgeFeedbackAndDismissal() {
 
   info("Doing dismissal");
   await doDismissTest({
-    resultIndex,
     command: DISMISS_ONE_COMMAND,
     shouldBeSelected: true,
   });
@@ -137,6 +162,29 @@ add_task(async function acknowledgeDismissal_all() {
     command: DISMISS_ALL_COMMAND,
     shouldBeSelected: false,
   });
+});
+
+// When a row with a row label (a.k.a. group label) is dismissed, the dismissal
+// acknowledgment tip should retain the label. When the tip is then dismissed,
+// the row that replaces it should also retain the label.
+add_task(async function acknowledgeDismissal_rowLabel() {
+  // Show the result as the first row in the Firefox Suggest section so that it
+  // has the "Firefox Suggest" group label.
+  let { suggestedIndex } = gTestProvider.results[0];
+  gTestProvider.results[0].suggestedIndex = 0;
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "test",
+  });
+  await doDismissTest({
+    resultIndex: 1,
+    command: DISMISS_ALL_COMMAND,
+    shouldBeSelected: false,
+    expectedLabel: "Firefox Suggest",
+  });
+
+  gTestProvider.results[0].suggestedIndex = suggestedIndex;
 });
 
 /**
@@ -158,10 +206,25 @@ add_task(async function acknowledgeDismissal_all() {
  * @param {number} options.resultIndex
  *   The index of the test result, if known beforehand. Leave -1 to find it
  *   automatically.
+ * @param {string} options.expectedLabel
+ *   The row label (a.k.a. group label) the row is expected to have. This should
+ *   be the expected translated en-US string, not an l10n object. If null, the
+ *   row is expected not to have a row label at all.
  */
-async function doDismissTest({ command, shouldBeSelected, resultIndex = -1 }) {
-  if (resultIndex < 0) {
-    resultIndex = await getTestResultIndex();
+async function doDismissTest({
+  command,
+  shouldBeSelected,
+  resultIndex = 2,
+  expectedLabel = null,
+}) {
+  let details = await UrlbarTestUtils.getDetailsOfResultAt(window, resultIndex);
+  Assert.equal(
+    details.result.providerName,
+    gTestProvider.name,
+    "The test result should be at the expected index"
+  );
+  if (details.result.providerName != gTestProvider.name) {
+    return;
   }
 
   let selectedElement = gURLBar.view.selectedElement;
@@ -180,6 +243,9 @@ async function doDismissTest({ command, shouldBeSelected, resultIndex = -1 }) {
       "The test result should not be selected"
     );
   }
+
+  info("Checking the row label on the original row");
+  await checkRowLabel(resultIndex, expectedLabel);
 
   let resultCount = UrlbarTestUtils.getResultCount(window);
 
@@ -204,7 +270,7 @@ async function doDismissTest({ command, shouldBeSelected, resultIndex = -1 }) {
     "The result count should not haved changed after dismissal"
   );
 
-  let details = await UrlbarTestUtils.getDetailsOfResultAt(window, resultIndex);
+  details = await UrlbarTestUtils.getDetailsOfResultAt(window, resultIndex);
   Assert.equal(
     details.type,
     UrlbarUtils.RESULT_TYPE.TIP,
@@ -234,6 +300,9 @@ async function doDismissTest({ command, shouldBeSelected, resultIndex = -1 }) {
     !details.element.row.hasAttribute("feedback-acknowledgment"),
     "Row should not have feedback acknowledgment after dismissal"
   );
+
+  info("Checking the row label on the dismissal acknowledgment tip");
+  await checkRowLabel(resultIndex, expectedLabel);
 
   // Get the dismissal acknowledgment's "Got it" button.
   let gotItButton = UrlbarTestUtils.getButtonForResultIndex(
@@ -283,6 +352,11 @@ async function doDismissTest({ command, shouldBeSelected, resultIndex = -1 }) {
       "Tip result and test result should not be present"
     );
   }
+
+  info(
+    "Checking the row label on the row that replaced the dismissal acknowledgment tip"
+  );
+  await checkRowLabel(resultIndex, expectedLabel);
 
   await UrlbarTestUtils.promisePopupClose(window);
 }
@@ -347,15 +421,27 @@ class TestProvider extends UrlbarTestUtils.TestProvider {
   }
 }
 
-async function getTestResultIndex() {
-  let index = 0;
-  let resultCount = UrlbarTestUtils.getResultCount(window);
-  for (; index < resultCount; index++) {
-    let details = await UrlbarTestUtils.getDetailsOfResultAt(window, index);
-    if (details.result.providerName == gTestProvider.name) {
-      break;
-    }
+async function checkRowLabel(resultIndex, expectedLabel) {
+  let details = await UrlbarTestUtils.getDetailsOfResultAt(window, resultIndex);
+  let { row } = details.element;
+  let before = getComputedStyle(row, "::before");
+
+  if (expectedLabel) {
+    Assert.equal(
+      before.content,
+      "attr(label)",
+      "::before content should use the row label"
+    );
+    Assert.equal(
+      row.getAttribute("label"),
+      expectedLabel,
+      "Row should have the expected label attribute"
+    );
+  } else {
+    Assert.equal(before.content, "none", "::before content should be 'none'");
+    Assert.ok(
+      !row.hasAttribute("label"),
+      "Row should not have a label attribute"
+    );
   }
-  Assert.less(index, resultCount, "The test result should be present");
-  return index;
 }

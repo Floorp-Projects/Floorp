@@ -48,6 +48,10 @@
   --urlbarView-result-button-hover-color: var(--toolbar-field-focus-background-color);
   --urlbarView-result-button-hover-background-color: color-mix(in srgb, var(--toolbar-field-focus-color) var(--urlbarView-result-button-background-opacity), transparent);
 
+  --urlbarView-labeled-row-margin-top: calc(1.46em + 4px);
+  --urlbarView-labeled-row-label-top: calc(-1.27em - 2px);
+  --urlbarView-labeled-tip-margin-top-extra: 8px;
+
   &:-moz-locale-dir(rtl) {
     --urlbarView-action-slide-in-distance: -200px;
   }
@@ -450,6 +454,14 @@
     margin-top: 4px;
   }
 
+  /* For tips with row labels, move the entire row down by an additional
+     var(--urlbarView-labeled-tip-margin-top-extra) so there's more space
+     between the tip's top border and the label. They're too close otherwise.
+     The row label must also be adjusted; see the row label rules. */
+  &[label] {
+    margin-top: calc(var(--urlbarView-labeled-row-margin-top) + var(--urlbarView-labeled-tip-margin-top-extra));
+  }
+
   > .urlbarView-row-inner {
     min-height: 32px;
     align-items: center;
@@ -503,7 +515,7 @@
   position: relative;
   /* `margin-block-start` controls how far the main part of the row is from the
      main part of the previous row. */
-  margin-block-start: calc(1.46em + 4px);
+  margin-block-start: var(--urlbarView-labeled-row-margin-top);
 
   &::before {
     content: attr(label);
@@ -512,7 +524,7 @@
        selection and hover states. */
     position: absolute;
     /* `top` controls how far the label is from the main part of the row. */
-    top: calc(-1.27em - 2px);
+    top: var(--urlbarView-labeled-row-label-top);
     margin-inline-start: var(--urlbarView-item-inline-padding);
     font-size: 0.8em;
     /* The color and opacity of labels is the same as the "This time, search with"
@@ -521,6 +533,16 @@
     color: var(--toolbar-field-focus-color);
     opacity: 0.6;
     pointer-events: none;
+  }
+
+  /* For tips with row labels, the entire row is moved down by an additional
+     var(--urlbarView-labeled-tip-margin-top-extra) so there's more space
+     between the tip's top border and the label; see the tip rules. Here we
+     compensate so that the label remains the same distance from the previous
+     row as it would have had we not moved the tip row down. +1px compensates
+     for the tip's top 1px border. */
+  &[type=tip]::before {
+    top: calc(var(--urlbarView-labeled-row-label-top) - var(--urlbarView-labeled-tip-margin-top-extra) + 1px);
   }
 
   :root[lwt-toolbar-field-focus="dark"] &::before {
