@@ -20,6 +20,7 @@ testFeature:
     - firefox-desktop
     - firefox-desktop-background-task
   hasExposure: false
+  isEarlyStartup: true
   variables:
     enabled:
       type: boolean
