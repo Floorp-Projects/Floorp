@@ -48,6 +48,11 @@ class AudioData final : public nsISupports, public nsWrapperCache {
   AudioData(nsIGlobalObject* aParent,
             already_AddRefed<AudioDataResource> aResource,
             const AudioDataInit& aInit);
+  AudioData(nsIGlobalObject* aParent,
+            already_AddRefed<mozilla::dom::AudioDataResource> aResource,
+            int64_t aTimestamp, uint32_t aNumberOfChannels,
+            uint32_t aNumberOfFrames, float aSampleRate,
+            AudioSampleFormat aAudioSampleFormat);
   AudioData(const AudioData& aOther);
 
  protected:

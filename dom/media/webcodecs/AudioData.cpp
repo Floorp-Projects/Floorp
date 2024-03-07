@@ -123,6 +123,21 @@ AudioData::AudioData(
   MOZ_ASSERT(mParent);
 }
 
+AudioData::AudioData(
+    nsIGlobalObject* aParent,
+    already_AddRefed<mozilla::dom::AudioDataResource> aResource,
+    int64_t aTimestamp, uint32_t aNumberOfChannels, uint32_t aNumberOfFrames,
+    float aSampleRate, AudioSampleFormat aAudioSampleFormat)
+    : mParent(aParent),
+      mTimestamp(aTimestamp),
+      mNumberOfChannels(aNumberOfChannels),
+      mNumberOfFrames(aNumberOfFrames),
+      mSampleRate(aSampleRate),
+      mAudioSampleFormat(Some(aAudioSampleFormat)),
+      mResource(aResource) {
+  MOZ_ASSERT(mParent);
+}
+
 nsIGlobalObject* AudioData::GetParentObject() const {
   AssertIsOnOwningThread();
 

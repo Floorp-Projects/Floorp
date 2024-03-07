@@ -222,17 +222,16 @@ static RefPtr<AudioData> CreateAudioData(nsIGlobalObject* aGlobalObject,
   MOZ_ASSERT(aGlobalObject);
   MOZ_ASSERT(aData);
 
-  mozilla::dom::AudioDataInit init;
-  init.mFormat = mozilla::dom::AudioSampleFormat::F32;
-  init.mNumberOfChannels = aData->mChannels;
-  init.mSampleRate = AssertedCast<float>(aData->mRate);
-  init.mTimestamp = aData->mTime.ToMicroseconds();
   auto buf = aData->MoveableData();
-  init.mNumberOfFrames = buf.Length() / init.mNumberOfChannels;
-
+  // TODO: Ensure buf.Length() is a multiple of aData->mChannels and put it into
+  // AssertedCast<uint32_t> (sinze return type of buf.Length() is size_t).
+  uint32_t frames = buf.Length() / aData->mChannels;
   RefPtr<AudioDataResource> resource = AudioDataResource::Create(Span{
       reinterpret_cast<uint8_t*>(buf.Data()), buf.Length() * sizeof(float)});
-  return MakeRefPtr<AudioData>(aGlobalObject, resource.forget(), init);
+  return MakeRefPtr<AudioData>(aGlobalObject, resource.forget(),
+                               aData->mTime.ToMicroseconds(), aData->mChannels,
+                               frames, AssertedCast<float>(aData->mRate),
+                               mozilla::dom::AudioSampleFormat::F32);
 }
 
 /* static */
