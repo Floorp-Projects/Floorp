@@ -37,7 +37,6 @@ ALLOWED_ISEARLYSTARTUP_FEATURE_IDS = {
     "shellService",
     "updatePrompt",
     "upgradeDialog",
-    "windowsJumpList",
 }
 
 

@@ -607,7 +607,6 @@ windowsJumpList:
   description: "Controls for the Windows Jump List integration."
   owner: mconley@mozilla.com
   hasExposure: false
-  isEarlyStartup: true
   variables:
     legacyBackend:
       type: boolean
