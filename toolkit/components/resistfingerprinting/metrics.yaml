@@ -239,3 +239,25 @@ characteristics:
     expires: never
     data_sensitivity:
       - technical
+
+  missing_fonts:
+    type: text
+    description: >
+      If a Font List is available for the user's platform, this
+      string_list contains the fonts that are missing from the user's
+      computer.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879151
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1880561
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1880561#c6
+    expires: never
+    data_sensitivity:
+      # Text metrics are _required_ to be web_activity or highly_sensitive, so even though this
+      # is more like 'technical' (per the Data Review), I'm marking highly sensitive.
+      - highly_sensitive

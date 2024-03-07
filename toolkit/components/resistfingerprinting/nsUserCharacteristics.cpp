@@ -20,6 +20,7 @@
 #include "mozilla/dom/ScreenBinding.h"
 #include "mozilla/widget/ScreenManager.h"
 
+#include "gfxPlatformFontList.h"
 #include "prsystem.h"
 #if defined(XP_WIN)
 #  include "WinUtils.h"
@@ -98,6 +99,13 @@ void PopulateCSSProperties() {
 
   mozilla::glean::characteristics::color_gamut.Set((int)colorGamut);
   mozilla::glean::characteristics::color_depth.Set(colorDepth);
+}
+
+void PopulateMissingFonts() {
+  nsCString aMissingFonts;
+  gfxPlatformFontList::PlatformFontList()->GetMissingFonts(aMissingFonts);
+
+  mozilla::glean::characteristics::missing_fonts.Set(aMissingFonts);
 }
 
 // ==================================================================
@@ -218,6 +226,7 @@ nsresult nsUserCharacteristics::PopulateData(bool aTesting /* = false */) {
     return NS_OK;
   }
 
+  PopulateMissingFonts();
   PopulateCSSProperties();
 
   return NS_OK;
