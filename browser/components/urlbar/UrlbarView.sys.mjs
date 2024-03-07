@@ -463,15 +463,18 @@ export class UrlbarView {
     this.#setRowSelectable(row, false);
 
     // Replace the row with a dismissal acknowledgment tip.
-    let tip = new lazy.UrlbarResult(
-      lazy.UrlbarUtils.RESULT_TYPE.TIP,
-      lazy.UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-      {
-        type: "dismissalAcknowledgment",
-        titleL10n,
-        buttons: [{ l10n: { id: "urlbar-search-tips-confirm-short" } }],
-        icon: "chrome://branding/content/icon32.png",
-      }
+    let tip = Object.assign(
+      new lazy.UrlbarResult(
+        lazy.UrlbarUtils.RESULT_TYPE.TIP,
+        lazy.UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+        {
+          type: "dismissalAcknowledgment",
+          titleL10n,
+          buttons: [{ l10n: { id: "urlbar-search-tips-confirm-short" } }],
+          icon: "chrome://branding/content/icon32.png",
+        }
+      ),
+      { rowLabel: this.#rowLabel(row) }
     );
     this.#updateRow(row, tip);
     this.#updateIndices();
@@ -2198,6 +2201,10 @@ export class UrlbarView {
   #rowLabel(row, currentLabel) {
     if (!lazy.UrlbarPrefs.get("groupLabels.enabled")) {
       return null;
+    }
+
+    if (row.result.rowLabel) {
+      return row.result.rowLabel;
     }
 
     let engineName =
