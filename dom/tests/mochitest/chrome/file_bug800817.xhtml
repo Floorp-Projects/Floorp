@@ -30,16 +30,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=800817
     var b1 = document.getElementById("b1");
     var b2 = document.getElementById("b2");
 
-    var testMozBrowser = window.arguments[0].testMozBrowser;
-    if (testMozBrowser) {
-      b1.setAttribute("mozbrowser", "true");
-      b2.setAttribute("mozbrowser", "true");
-    }
-
-    if (testMozBrowser)
-      window.arguments[0].info("Testing with mozbrowser=true");
-    else
-      window.arguments[0].info("Testing without mozbrowser");
+    window.arguments[0].info("Testing...");
 
     b1.contentWindow.focus();
     window.arguments[0].is(document.activeElement, b1,

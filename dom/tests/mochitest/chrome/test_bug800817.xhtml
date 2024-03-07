@@ -20,20 +20,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=800817
   <![CDATA[
   /** Test for Bug 800817 **/
 
-  var testMozBrowser = false;
   function runTests() {
-    // Run a first round of tests for non-mozbrowser iframes.
     window.openDialog("file_bug800817.xhtml", "_blank", "chrome,width=600,height=550,noopener", window);
   }
 
   function finishedTests() {
-    if (!testMozBrowser) {
-      testMozBrowser = true;
-      // Run a second round of tests for mozbrowser iframes.
-      window.openDialog("file_bug800817.xhtml", "_blank", "chrome,width=600,height=550,noopener", window);
-    } else {
-      SimpleTest.finish();
-    }
+    SimpleTest.finish();
   }
 
   SimpleTest.waitForExplicitFinish();
