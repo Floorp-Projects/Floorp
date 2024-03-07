@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import subprocess
 import sys
 
 from mozboot.base import MERCURIAL_INSTALL_PROMPT, BaseBootstrapper
@@ -60,7 +61,20 @@ class DebianBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         assert res == 1
         self.run_as_root(["pip3", "install", "--upgrade", "Mercurial"])
 
+    def _check_packages_installed(self, *packages):
+        command = ["dpkg-query", "-W"]
+        command.extend(packages)
+        return (
+            subprocess.run(
+                command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+            ).returncode
+            == 0
+        )
+
     def apt_install(self, *packages):
+        if self._check_packages_installed(*packages):
+            # Packages already installed
+            return
         command = ["apt-get", "install"]
         if self.no_interactive:
             command.append("-y")
