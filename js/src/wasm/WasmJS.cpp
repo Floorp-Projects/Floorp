@@ -768,8 +768,14 @@ static JSObject* GetWasmConstructorPrototype(JSContext* cx,
 }
 
 #ifdef ENABLE_WASM_TYPE_REFLECTIONS
-static JSString* UTF8CharsToString(JSContext* cx, const char* chars) {
-  return NewStringCopyUTF8Z(cx, JS::ConstUTF8CharsZ(chars, strlen(chars)));
+template <typename T>
+static JSString* TypeToString(JSContext* cx, T type) {
+  UniqueChars chars = ToString(type, nullptr);
+  if (!chars) {
+    return nullptr;
+  }
+  return NewStringCopyUTF8Z(
+      cx, JS::ConstUTF8CharsZ(chars.get(), strlen(chars.get())));
 }
 
 [[nodiscard]] static JSObject* ValTypesToArray(JSContext* cx,
@@ -779,8 +785,7 @@ static JSString* UTF8CharsToString(JSContext* cx, const char* chars) {
     return nullptr;
   }
   for (ValType valType : valTypes) {
-    RootedString type(cx,
-                      UTF8CharsToString(cx, ToString(valType, nullptr).get()));
+    RootedString type(cx, TypeToString(cx, valType));
     if (!type) {
       return nullptr;
     }
@@ -816,8 +821,7 @@ static JSObject* TableTypeToObject(JSContext* cx, RefType type,
                                    uint32_t initial, Maybe<uint32_t> maximum) {
   Rooted<IdValueVector> props(cx, IdValueVector(cx));
 
-  RootedString elementType(
-      cx, UTF8CharsToString(cx, ToString(type, nullptr).get()));
+  RootedString elementType(cx, TypeToString(cx, type));
   if (!elementType || !props.append(IdValuePair(NameToId(cx->names().element),
                                                 StringValue(elementType)))) {
     ReportOutOfMemory(cx);
@@ -905,8 +909,7 @@ static JSObject* GlobalTypeToObject(JSContext* cx, ValType type,
     return nullptr;
   }
 
-  RootedString valueType(cx,
-                         UTF8CharsToString(cx, ToString(type, nullptr).get()));
+  RootedString valueType(cx, TypeToString(cx, type));
   if (!valueType || !props.append(IdValuePair(NameToId(cx->names().value),
                                               StringValue(valueType)))) {
     ReportOutOfMemory(cx);
