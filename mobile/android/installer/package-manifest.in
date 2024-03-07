@@ -192,14 +192,6 @@
 @BINPATH@/@DLL_PREFIX@mozsandbox@DLL_SUFFIX@
 #endif
 
-; [Crash Reporter]
-; CrashService is not used on Android but the ini files are required for L10N
-; strings, see bug 1191351.
-#ifdef MOZ_CRASHREPORTER
-@BINPATH@/crashreporter.ini
-@BINPATH@/crashreporter-override.ini
-#endif
-
 [mobile]
 @BINPATH@/chrome/geckoview@JAREXT@
 @BINPATH@/chrome/geckoview.manifest
