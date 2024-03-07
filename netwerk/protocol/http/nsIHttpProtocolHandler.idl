@@ -177,6 +177,14 @@ interface nsIHttpProtocolHandler : nsIProxiedProtocolHandler
 #define NS_HTTP_ON_BEFORE_CONNECT_TOPIC "http-on-before-connect"
 
 /**
+ * This notification is emitted by the HTTP channel before dispatching the
+ * transaction to the socket thread. At this point all of the request headers
+ * are set. The request head should not be modified after this notification
+ * has returned.
+ */
+#define NS_HTTP_ON_DISPATCHING_TRANSACTION "http-on-dispatching-transaction"
+
+/**
  * After an HTTP server response is received, this observer topic is notified.
  * The observer of this topic can interrogate the response.  The "subject" of
  * the notification is the nsIHttpChannel instance.
