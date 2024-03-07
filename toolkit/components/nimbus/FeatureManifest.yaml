@@ -1079,7 +1079,6 @@ fullPageTranslationAutomaticPopup:
   description: Controls whether the popup automatically shows for translations.
   owner: gtatum@mozilla.com
   hasExposure: false
-  isEarlyStartup: true
   variables:
     boolean:
       description: Set to true to automatically popup, and false to only show the button.
