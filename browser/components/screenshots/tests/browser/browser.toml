@@ -29,6 +29,9 @@ skip-if = [
 ["browser_screenshots_drag_test.js"]
 
 ["browser_screenshots_focus_test.js"]
+skip-if = [
+  "os == 'linux' && os_version == '18.04'", # Bug 1803618
+]
 
 ["browser_screenshots_overlay_panel_sync.js"]
 
