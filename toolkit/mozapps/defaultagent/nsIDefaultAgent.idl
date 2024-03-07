@@ -52,20 +52,6 @@ interface nsIDefaultAgent : nsISupports
   void uninstall(in AString aUniqueToken);
 
   /**
-  * Actually performs the default agent task, which currently means generating
-  * and sending our telemetry ping and possibly showing a notification to the
-  * user if their browser has switched from Firefox to Edge with Blink.
-  *
-  * @param {AString} aUniqueToken
-  *        A unique identifier for this installation; the same one provided when
-  *        the task was registered.
-  * @param {boolean} aForce
-  *        For debugging, forces the task to run even if it has run in the last
-  *        24 hours, and forces the notification to show.
-  */
-  void doTask(in AString aUniqueToken, in boolean aForce);
-
-  /**
   * Checks that the main app ran recently.
   *
   * @return {boolean} true if the app ran recently.

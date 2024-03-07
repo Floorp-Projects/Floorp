@@ -7,11 +7,8 @@
 #include <windows.h>
 #include <shlwapi.h>
 #include <objbase.h>
-#include <string.h>
-#include <vector>
 
 #include "nsAutoRef.h"
-#include "nsDebug.h"
 #include "nsProxyRelease.h"
 #include "nsWindowsHelpers.h"
 #include "nsString.h"
@@ -301,62 +298,6 @@ DefaultAgent::Uninstall(const nsAString& aUniqueToken) {
 
   RemoveAllRegistryEntries();
   return NS_OK;
-}
-
-NS_IMETHODIMP
-DefaultAgent::DoTask(const nsAString& aUniqueToken, const bool aForce) {
-  // Acquire() has a short timeout. Since this runs in the background, we
-  // could use a longer timeout in this situation. However, if another
-  // installation's agent is already running, it will update CurrentDefault,
-  // possibly send a ping, and possibly show a notification.
-  // Once all that has happened, there is no real reason to do it again. We
-  // only send one ping per day, so we aren't going to do that again. And
-  // the only time we ever show a second notification is 7 days after the
-  // first one, so we aren't going to do that again either.
-  // If the other process didn't take those actions, there is no reason that
-  // this process would take them.
-  // If the other process fails, this one will most likely fail for the same
-  // reason.
-  // So we'll just bail if we can't get the mutex quickly.
-  RegistryMutex regMutex;
-  if (!regMutex.Acquire()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  // Check that Firefox ran recently, if not then stop here.
-  // Also stop if no timestamp was found, which most likely indicates
-  // that Firefox was not yet run.
-  bool ranRecently = false;
-  if (!aForce && (!CheckIfAppRanRecently(&ranRecently) || !ranRecently)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  DefaultBrowserResult defaultBrowserResult = GetDefaultBrowserInfo();
-  DefaultBrowserInfo browserInfo{};
-  if (defaultBrowserResult.isOk()) {
-    browserInfo = defaultBrowserResult.unwrap();
-  } else {
-    browserInfo.currentDefaultBrowser = Browser::Error;
-    browserInfo.previousDefaultBrowser = Browser::Error;
-  }
-
-  DefaultPdfResult defaultPdfResult = GetDefaultPdfInfo();
-  DefaultPdfInfo pdfInfo{};
-  if (defaultPdfResult.isOk()) {
-    pdfInfo = defaultPdfResult.unwrap();
-  } else {
-    pdfInfo.currentDefaultPdf = PDFHandler::Error;
-  }
-
-  NotificationActivities activitiesPerformed;
-  // We block while waiting for the notification which prevents STA thread
-  // callbacks from running as the event loop won't run. Moving notification
-  // handling to an MTA thread prevents this conflict.
-  activitiesPerformed = MaybeShowNotification(
-      browserInfo, PromiseFlatString(aUniqueToken).get(), aForce);
-
-  HRESULT hr = SendDefaultAgentPing(browserInfo, pdfInfo, activitiesPerformed);
-  return SUCCEEDED(hr) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
