@@ -13,7 +13,6 @@ import org.mozilla.fenix.helpers.Constants.PackageName.GOOGLE_DOCS
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.MatcherHelper
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
-import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
 import org.mozilla.fenix.helpers.TestSetup
@@ -42,20 +41,6 @@ class PDFViewerTest : TestSetup() {
             clickPageObject(itemContainingText("PDF form file"))
             verifyPageContent("Washington Crossing the Delaware")
             verifyTabCounter("1")
-        }
-    }
-
-    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2159718
-    @Test
-    fun verifyPDFViewerOpenInAppButtonTest() {
-        val genericURL = getGenericAsset(mockWebServer, 3)
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(genericURL.url) {
-            clickPageObject(itemWithText("PDF form file"))
-            verifyPDFReaderToolbarItems()
-            clickPageObject(itemWithResIdAndText("openInApp", "Open in app"))
-            assertExternalAppOpens(GOOGLE_DOCS)
         }
     }
 

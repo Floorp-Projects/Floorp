@@ -278,8 +278,8 @@ class BrowserRobot {
     fun verifyPDFReaderToolbarItems() =
         assertUIObjectExists(
             itemWithResIdContainingText("download", "Download"),
-            itemWithResIdContainingText("openInApp", "Open in app"),
         )
+
     fun clickSubmitLoginButton() {
         clickPageObject(itemWithResId("submit"))
         assertUIObjectIsGone(itemWithResId("submit"))

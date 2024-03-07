@@ -150,7 +150,6 @@ class CustomTabRobot {
     fun verifyPDFReaderToolbarItems() =
         assertUIObjectExists(
             itemWithResIdAndText("download", "Download"),
-            itemWithResIdAndText("openInApp", "Open in app"),
         )
 
     class Transition {
