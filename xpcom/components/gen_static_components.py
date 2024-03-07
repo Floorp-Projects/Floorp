@@ -1024,7 +1024,9 @@ def gen_substs(manifests):
         key_length="aKey.Length()",
     )
 
-    substs["js_services_json"] = json.dumps(js_services_json, sort_keys=True, indent=4)
+    substs["js_services_json"] = (
+        json.dumps(js_services_json, sort_keys=True, indent=2) + "\n"
+    )
 
     # Do this only after everything else has been emitted so we're sure the
     # string table is complete.
