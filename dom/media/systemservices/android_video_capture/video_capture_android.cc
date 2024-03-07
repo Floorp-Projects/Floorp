@@ -177,12 +177,14 @@ int32_t VideoCaptureAndroid::Init(const char* deviceUniqueIdUTF8) {
 
   AttachThreadScoped ats(g_jvm_capture);
   JNIEnv* env = ats.env();
-  jmethodID ctor = env->GetMethodID(g_java_capturer_class, "<init>",
-                                    "(Ljava/lang/String;)V");
-  assert(ctor);
+  jmethodID factory =
+      env->GetStaticMethodID(g_java_capturer_class, "create",
+                             "(Ljava/lang/String;)"
+                             "Lorg/webrtc/videoengine/VideoCaptureAndroid;");
+  assert(factory);
   jstring j_deviceName = env->NewStringUTF(_deviceUniqueId);
-  _jCapturer = env->NewGlobalRef(
-      env->NewObject(g_java_capturer_class, ctor, j_deviceName));
+  _jCapturer = env->NewGlobalRef(env->CallStaticObjectMethod(
+      g_java_capturer_class, factory, j_deviceName));
   assert(_jCapturer);
   return 0;
 }
