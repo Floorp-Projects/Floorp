@@ -96,8 +96,6 @@ class UtilityAudioDecoderChild final : public PUtilityAudioDecoderChild
 #ifdef MOZ_WMF_MEDIA_ENGINE
   mozilla::ipc::IPCResult RecvCompleteCreatedVideoBridge();
 
-  bool HasCreatedVideoBridge() const;
-
   void OnVarChanged(const gfx::GfxVarUpdate& aVar) override;
 
   void OnCompositorUnexpectedShutdown() override;
@@ -120,7 +118,8 @@ class UtilityAudioDecoderChild final : public PUtilityAudioDecoderChild
 #ifdef MOZ_WMF_MEDIA_ENGINE
   // True if the utility process has created a video bridge with the GPU prcess.
   // Currently only used for media egine cdm. Main thread only.
-  bool mHasCreatedVideoBridge = false;
+  enum class State { None, Creating, Created };
+  State mHasCreatedVideoBridge = State::None;
 #endif
 
   TimeStamp mAudioDecoderChildStart;
