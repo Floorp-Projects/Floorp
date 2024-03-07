@@ -2361,7 +2361,6 @@ backgroundUpdate:
     feature is enabled and the service registry key (Mozilla Maintenance
     Service) is *not* available for this installation. That is the first time
     the feature can impact Firefox behaviour and the user experience.
-  isEarlyStartup: true
   variables:
     enableUpdatesForUnelevatedInstallations:
       description: >-
@@ -2370,7 +2369,7 @@ backgroundUpdate:
         directory can be written.
       type: boolean
       setPref:
-        branch: default
+        branch: user
         pref: app.update.background.allowUpdatesForUnelevatedInstallations
 
 defaultAgent:
