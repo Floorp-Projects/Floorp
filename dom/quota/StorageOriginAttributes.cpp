@@ -57,4 +57,19 @@ bool StorageOriginAttributes::PopulateFromOrigin(const nsACString& aOrigin,
   return PopulateFromSuffix(Substring(origin, pos));
 }
 
+void StorageOriginAttributes::CreateSuffix(nsACString& aStr) const {
+  URLParams params;
+  nsAutoString value;
+
+  if (mInIsolatedMozBrowser) {
+    params.Set(u"inBrowser"_ns, u"1"_ns);
+  }
+
+  params.Serialize(value, true);
+  if (!value.IsEmpty()) {
+    aStr.AppendLiteral("^");
+    aStr.Append(NS_ConvertUTF16toUTF8(value));
+  }
+}
+
 }  // namespace mozilla

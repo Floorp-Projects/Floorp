@@ -15,6 +15,7 @@
 #include "mozilla/Tokenizer.h"
 #include "mozIStorageConnection.h"
 #include "mozStorageHelper.h"
+#include "mozilla/StorageOriginAttributes.h"
 
 // Current version of the database schema
 #define CURRENT_SCHEMA_VERSION 2
@@ -131,8 +132,8 @@ class ExtractOriginData : protected mozilla::Tokenizer {
         }
       }
     } else {
-      OriginAttributes attrs(inIsolatedMozBrowser);
-      attrs.CreateSuffix(suffix);
+      StorageOriginAttributes originAttributes(inIsolatedMozBrowser);
+      originAttributes.CreateSuffix(suffix);
     }
 
     // Consume the rest of the input as "origin".
