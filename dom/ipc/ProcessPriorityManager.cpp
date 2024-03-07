@@ -1042,26 +1042,4 @@ void ProcessPriorityManager::BrowserPriorityChanged(
   singleton->BrowserPriorityChanged(aBrowserParent, aPriority);
 }
 
-/* static */
-void ProcessPriorityManager::RemoteBrowserFrameShown(
-    nsFrameLoader* aFrameLoader) {
-  ProcessPriorityManagerImpl* singleton =
-      ProcessPriorityManagerImpl::GetSingleton();
-  if (!singleton) {
-    return;
-  }
-
-  BrowserParent* bp = BrowserParent::GetFrom(aFrameLoader);
-  NS_ENSURE_TRUE_VOID(bp);
-
-  MOZ_ASSERT(XRE_IsParentProcess());
-
-  // Ignore calls that aren't from a Browser.
-  if (!aFrameLoader->OwnerIsMozBrowserFrame()) {
-    return;
-  }
-
-  singleton->ResetPriority(bp->Manager());
-}
-
 }  // namespace mozilla

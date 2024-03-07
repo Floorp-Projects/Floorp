@@ -264,12 +264,6 @@ class nsFrameLoader final : public nsStubMutationObserver,
 
   bool IsNetworkCreated() const { return mNetworkCreated; }
 
-  /**
-   * Is this a frame loader for a bona fide <iframe mozbrowser>?
-   * <xul:browser> is not a mozbrowser, so this is false for that case.
-   */
-  bool OwnerIsMozBrowserFrame();
-
   nsIContent* GetParentObject() const;
 
   /**
@@ -480,9 +474,6 @@ class nsFrameLoader final : public nsStubMutationObserver,
 
   void AddTreeItemToTreeOwner(nsIDocShellTreeItem* aItem,
                               nsIDocShellTreeOwner* aOwner);
-
-  void InitializeBrowserAPI();
-  void DestroyBrowserFrameScripts();
 
   nsresult GetNewTabContext(mozilla::dom::MutableTabContext* aTabContext,
                             nsIURI* aURI = nullptr);
