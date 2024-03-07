@@ -167,6 +167,7 @@ uint32_t BytesPerSamples(const mozilla::dom::AudioSampleFormat& aFormat) {
     default:
       MOZ_ASSERT_UNREACHABLE("wrong enum value");
   }
+  return 0;
 }
 
 Result<Ok, nsCString> IsValidAudioDataInit(const AudioDataInit& aInit) {
@@ -225,6 +226,7 @@ const char* FormatToString(AudioSampleFormat aFormat) {
     default:
       MOZ_ASSERT_UNREACHABLE("wrong enum value");
   }
+  return "unsupported";
 }
 
 /* static */
