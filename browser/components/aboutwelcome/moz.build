@@ -23,3 +23,7 @@ EXTRA_JS_MODULES.aboutwelcome += [
     "modules/AboutWelcomeTelemetry.sys.mjs",
     "modules/AWScreenUtils.sys.mjs",
 ]
+
+XPCSHELL_TESTS_MANIFESTS += [
+    "tests/xpcshell/xpcshell.toml",
+]

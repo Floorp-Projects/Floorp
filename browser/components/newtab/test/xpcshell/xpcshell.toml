@@ -14,12 +14,6 @@ skip-if = ["socketprocess_networking"] # Bug 1759035
 
 ["test_AboutNewTab.js"]
 
-["test_AboutWelcomeAttribution.js"]
-
-["test_AboutWelcomeTelemetry.js"]
-
-["test_AboutWelcomeTelemetry_glean.js"]
-
 ["test_HighlightsFeed.js"]
 
 ["test_PlacesFeed.js"]
