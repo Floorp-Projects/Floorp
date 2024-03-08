@@ -1212,7 +1212,7 @@ static void PopAndAllocate(BaseCompiler* bc, ValType type,
                            Scalar::Type viewType, AtomicOp op, RegI32* rd,
                            RegI32* rv, Temps* temps) {
   bc->needI32(bc->specific_.eax);
-  if (op == AtomicFetchAddOp || op == AtomicFetchSubOp) {
+  if (op == AtomicOp::Add || op == AtomicOp::Sub) {
     // We use xadd, so source and destination are the same.  Using
     // eax here is overconstraining, but for byte operations on x86
     // we do need something with a byte register.
@@ -1246,7 +1246,7 @@ static void Perform(BaseCompiler* bc, const MemoryAccessDesc& access, T srcAddr,
 #  else
   RegI32 temp;
   ScratchI32 scratch(*bc);
-  if (op != AtomicFetchAddOp && op != AtomicFetchSubOp) {
+  if (op != AtomicOp::Add && op != AtomicOp::Sub) {
     temp = scratch;
   }
 #  endif
@@ -1401,7 +1401,7 @@ namespace atomic_rmw64 {
 
 static void PopAndAllocate(BaseCompiler* bc, AtomicOp op, RegI64* rd,
                            RegI64* rv, RegI64* temp) {
-  if (op == AtomicFetchAddOp || op == AtomicFetchSubOp) {
+  if (op == AtomicOp::Add || op == AtomicOp::Sub) {
     // We use xaddq, so input and output must be the same register.
     *rv = bc->popI64();
     *rd = *rv;
@@ -1422,7 +1422,7 @@ static void Perform(BaseCompiler* bc, const MemoryAccessDesc& access,
 
 static void Deallocate(BaseCompiler* bc, AtomicOp op, RegI64 rv, RegI64 temp) {
   bc->maybeFree(temp);
-  if (op != AtomicFetchAddOp && op != AtomicFetchSubOp) {
+  if (op != AtomicOp::Add && op != AtomicOp::Sub) {
     bc->freeI64(rv);
   }
 }

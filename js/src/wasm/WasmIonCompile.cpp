@@ -9022,114 +9022,91 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
             CHECK(EmitAtomicStore(f, ValType::I64, Scalar::Uint32));
 
           case uint32_t(ThreadOp::I32AtomicAdd):
-            CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Int32,
-                                AtomicFetchAddOp));
+            CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Int32, AtomicOp::Add));
           case uint32_t(ThreadOp::I64AtomicAdd):
-            CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Int64,
-                                AtomicFetchAddOp));
+            CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Int64, AtomicOp::Add));
           case uint32_t(ThreadOp::I32AtomicAdd8U):
-            CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Uint8,
-                                AtomicFetchAddOp));
+            CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Uint8, AtomicOp::Add));
           case uint32_t(ThreadOp::I32AtomicAdd16U):
-            CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Uint16,
-                                AtomicFetchAddOp));
+            CHECK(
+                EmitAtomicRMW(f, ValType::I32, Scalar::Uint16, AtomicOp::Add));
           case uint32_t(ThreadOp::I64AtomicAdd8U):
-            CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint8,
-                                AtomicFetchAddOp));
+            CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint8, AtomicOp::Add));
           case uint32_t(ThreadOp::I64AtomicAdd16U):
-            CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint16,
-                                AtomicFetchAddOp));
+            CHECK(
+                EmitAtomicRMW(f, ValType::I64, Scalar::Uint16, AtomicOp::Add));
           case uint32_t(ThreadOp::I64AtomicAdd32U):
-            CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint32,
-                                AtomicFetchAddOp));
+            CHECK(
+                EmitAtomicRMW(f, ValType::I64, Scalar::Uint32, AtomicOp::Add));
 
           case uint32_t(ThreadOp::I32AtomicSub):
-            CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Int32,
-                                AtomicFetchSubOp));
+            CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Int32, AtomicOp::Sub));
           case uint32_t(ThreadOp::I64AtomicSub):
-            CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Int64,
-                                AtomicFetchSubOp));
+            CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Int64, AtomicOp::Sub));
           case uint32_t(ThreadOp::I32AtomicSub8U):
-            CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Uint8,
-                                AtomicFetchSubOp));
+            CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Uint8, AtomicOp::Sub));
           case uint32_t(ThreadOp::I32AtomicSub16U):
-            CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Uint16,
-                                AtomicFetchSubOp));
+            CHECK(
+                EmitAtomicRMW(f, ValType::I32, Scalar::Uint16, AtomicOp::Sub));
           case uint32_t(ThreadOp::I64AtomicSub8U):
-            CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint8,
-                                AtomicFetchSubOp));
+            CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint8, AtomicOp::Sub));
           case uint32_t(ThreadOp::I64AtomicSub16U):
-            CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint16,
-                                AtomicFetchSubOp));
+            CHECK(
+                EmitAtomicRMW(f, ValType::I64, Scalar::Uint16, AtomicOp::Sub));
           case uint32_t(ThreadOp::I64AtomicSub32U):
-            CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint32,
-                                AtomicFetchSubOp));
+            CHECK(
+                EmitAtomicRMW(f, ValType::I64, Scalar::Uint32, AtomicOp::Sub));
 
           case uint32_t(ThreadOp::I32AtomicAnd):
-            CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Int32,
-                                AtomicFetchAndOp));
+            CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Int32, AtomicOp::And));
           case uint32_t(ThreadOp::I64AtomicAnd):
-            CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Int64,
-                                AtomicFetchAndOp));
+            CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Int64, AtomicOp::And));
           case uint32_t(ThreadOp::I32AtomicAnd8U):
-            CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Uint8,
-                                AtomicFetchAndOp));
+            CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Uint8, AtomicOp::And));
           case uint32_t(ThreadOp::I32AtomicAnd16U):
-            CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Uint16,
-                                AtomicFetchAndOp));
+            CHECK(
+                EmitAtomicRMW(f, ValType::I32, Scalar::Uint16, AtomicOp::And));
           case uint32_t(ThreadOp::I64AtomicAnd8U):
-            CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint8,
-                                AtomicFetchAndOp));
+            CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint8, AtomicOp::And));
           case uint32_t(ThreadOp::I64AtomicAnd16U):
-            CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint16,
-                                AtomicFetchAndOp));
+            CHECK(
+                EmitAtomicRMW(f, ValType::I64, Scalar::Uint16, AtomicOp::And));
           case uint32_t(ThreadOp::I64AtomicAnd32U):
-            CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint32,
-                                AtomicFetchAndOp));
+            CHECK(
+                EmitAtomicRMW(f, ValType::I64, Scalar::Uint32, AtomicOp::And));
 
           case uint32_t(ThreadOp::I32AtomicOr):
-            CHECK(
-                EmitAtomicRMW(f, ValType::I32, Scalar::Int32, AtomicFetchOrOp));
+            CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Int32, AtomicOp::Or));
           case uint32_t(ThreadOp::I64AtomicOr):
-            CHECK(
-                EmitAtomicRMW(f, ValType::I64, Scalar::Int64, AtomicFetchOrOp));
+            CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Int64, AtomicOp::Or));
           case uint32_t(ThreadOp::I32AtomicOr8U):
-            CHECK(
-                EmitAtomicRMW(f, ValType::I32, Scalar::Uint8, AtomicFetchOrOp));
+            CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Uint8, AtomicOp::Or));
           case uint32_t(ThreadOp::I32AtomicOr16U):
-            CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Uint16,
-                                AtomicFetchOrOp));
+            CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Uint16, AtomicOp::Or));
           case uint32_t(ThreadOp::I64AtomicOr8U):
-            CHECK(
-                EmitAtomicRMW(f, ValType::I64, Scalar::Uint8, AtomicFetchOrOp));
+            CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint8, AtomicOp::Or));
           case uint32_t(ThreadOp::I64AtomicOr16U):
-            CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint16,
-                                AtomicFetchOrOp));
+            CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint16, AtomicOp::Or));
           case uint32_t(ThreadOp::I64AtomicOr32U):
-            CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint32,
-                                AtomicFetchOrOp));
+            CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint32, AtomicOp::Or));
 
           case uint32_t(ThreadOp::I32AtomicXor):
-            CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Int32,
-                                AtomicFetchXorOp));
+            CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Int32, AtomicOp::Xor));
           case uint32_t(ThreadOp::I64AtomicXor):
-            CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Int64,
-                                AtomicFetchXorOp));
+            CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Int64, AtomicOp::Xor));
           case uint32_t(ThreadOp::I32AtomicXor8U):
-            CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Uint8,
-                                AtomicFetchXorOp));
+            CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Uint8, AtomicOp::Xor));
           case uint32_t(ThreadOp::I32AtomicXor16U):
-            CHECK(EmitAtomicRMW(f, ValType::I32, Scalar::Uint16,
-                                AtomicFetchXorOp));
+            CHECK(
+                EmitAtomicRMW(f, ValType::I32, Scalar::Uint16, AtomicOp::Xor));
           case uint32_t(ThreadOp::I64AtomicXor8U):
-            CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint8,
-                                AtomicFetchXorOp));
+            CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint8, AtomicOp::Xor));
           case uint32_t(ThreadOp::I64AtomicXor16U):
-            CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint16,
-                                AtomicFetchXorOp));
+            CHECK(
+                EmitAtomicRMW(f, ValType::I64, Scalar::Uint16, AtomicOp::Xor));
           case uint32_t(ThreadOp::I64AtomicXor32U):
-            CHECK(EmitAtomicRMW(f, ValType::I64, Scalar::Uint32,
-                                AtomicFetchXorOp));
+            CHECK(
+                EmitAtomicRMW(f, ValType::I64, Scalar::Uint32, AtomicOp::Xor));
 
           case uint32_t(ThreadOp::I32AtomicXchg):
             CHECK(EmitAtomicXchg(f, ValType::I32, Scalar::Int32));

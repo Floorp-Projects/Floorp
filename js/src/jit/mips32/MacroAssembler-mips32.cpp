@@ -2745,27 +2745,27 @@ static void AtomicFetchOp64(MacroAssembler& masm,
   masm.load64(Address(SecondScratchReg, 0), output);
 
   switch (op) {
-    case AtomicFetchAddOp:
+    case AtomicOp::Add:
       masm.as_addu(temp.low, output.low, value.low);
       masm.as_sltu(temp.high, temp.low, output.low);
       masm.as_addu(temp.high, temp.high, output.high);
       masm.as_addu(temp.high, temp.high, value.high);
       break;
-    case AtomicFetchSubOp:
+    case AtomicOp::Sub:
       masm.as_sltu(temp.high, output.low, value.low);
       masm.as_subu(temp.high, output.high, temp.high);
       masm.as_subu(temp.low, output.low, value.low);
       masm.as_subu(temp.high, temp.high, value.high);
       break;
-    case AtomicFetchAndOp:
+    case AtomicOp::And:
       masm.as_and(temp.low, output.low, value.low);
       masm.as_and(temp.high, output.high, value.high);
       break;
-    case AtomicFetchOrOp:
+    case AtomicOp::Or:
       masm.as_or(temp.low, output.low, value.low);
       masm.as_or(temp.high, output.high, value.high);
       break;
-    case AtomicFetchXorOp:
+    case AtomicOp::Xor:
       masm.as_xor(temp.low, output.low, value.low);
       masm.as_xor(temp.high, output.high, value.high);
       break;

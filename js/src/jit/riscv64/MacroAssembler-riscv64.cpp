@@ -2404,19 +2404,19 @@ static void AtomicFetchOp64(MacroAssembler& masm,
   masm.lr_d(true, true, output.reg, SecondScratchReg);
 
   switch (op) {
-    case AtomicFetchAddOp:
+    case AtomicOp::Add:
       masm.add(temp.reg, output.reg, value.reg);
       break;
-    case AtomicFetchSubOp:
+    case AtomicOp::Sub:
       masm.sub(temp.reg, output.reg, value.reg);
       break;
-    case AtomicFetchAndOp:
+    case AtomicOp::And:
       masm.and_(temp.reg, output.reg, value.reg);
       break;
-    case AtomicFetchOrOp:
+    case AtomicOp::Or:
       masm.or_(temp.reg, output.reg, value.reg);
       break;
-    case AtomicFetchXorOp:
+    case AtomicOp::Xor:
       masm.xor_(temp.reg, output.reg, value.reg);
       break;
     default:
@@ -2469,19 +2469,19 @@ static void AtomicEffectOp(MacroAssembler& masm,
     masm.lr_w(true, true, scratch2, scratch);
 
     switch (op) {
-      case AtomicFetchAddOp:
+      case AtomicOp::Add:
         masm.addw(scratch2, scratch2, value);
         break;
-      case AtomicFetchSubOp:
+      case AtomicOp::Sub:
         masm.subw(scratch2, scratch2, value);
         break;
-      case AtomicFetchAndOp:
+      case AtomicOp::And:
         masm.and_(scratch2, scratch2, value);
         break;
-      case AtomicFetchOrOp:
+      case AtomicOp::Or:
         masm.or_(scratch2, scratch2, value);
         break;
-      case AtomicFetchXorOp:
+      case AtomicOp::Xor:
         masm.xor_(scratch2, scratch2, value);
         break;
       default:
@@ -2517,19 +2517,19 @@ static void AtomicEffectOp(MacroAssembler& masm,
   masm.srlw(valueTemp, scratch2, offsetTemp);
 
   switch (op) {
-    case AtomicFetchAddOp:
+    case AtomicOp::Add:
       masm.addw(valueTemp, valueTemp, value);
       break;
-    case AtomicFetchSubOp:
+    case AtomicOp::Sub:
       masm.subw(valueTemp, valueTemp, value);
       break;
-    case AtomicFetchAndOp:
+    case AtomicOp::And:
       masm.and_(valueTemp, valueTemp, value);
       break;
-    case AtomicFetchOrOp:
+    case AtomicOp::Or:
       masm.or_(valueTemp, valueTemp, value);
       break;
-    case AtomicFetchXorOp:
+    case AtomicOp::Xor:
       masm.xor_(valueTemp, valueTemp, value);
       break;
     default:
@@ -2600,19 +2600,19 @@ static void AtomicFetchOp(MacroAssembler& masm,
     masm.lr_w(true, true, output, scratch);
 
     switch (op) {
-      case AtomicFetchAddOp:
+      case AtomicOp::Add:
         masm.addw(scratch2, output, value);
         break;
-      case AtomicFetchSubOp:
+      case AtomicOp::Sub:
         masm.subw(scratch2, output, value);
         break;
-      case AtomicFetchAndOp:
+      case AtomicOp::And:
         masm.and_(scratch2, output, value);
         break;
-      case AtomicFetchOrOp:
+      case AtomicOp::Or:
         masm.or_(scratch2, output, value);
         break;
-      case AtomicFetchXorOp:
+      case AtomicOp::Xor:
         masm.xor_(scratch2, output, value);
         break;
       default:
@@ -2648,19 +2648,19 @@ static void AtomicFetchOp(MacroAssembler& masm,
   masm.srlw(output, scratch2, offsetTemp);
 
   switch (op) {
-    case AtomicFetchAddOp:
+    case AtomicOp::Add:
       masm.addw(valueTemp, output, value);
       break;
-    case AtomicFetchSubOp:
+    case AtomicOp::Sub:
       masm.subw(valueTemp, output, value);
       break;
-    case AtomicFetchAndOp:
+    case AtomicOp::And:
       masm.and_(valueTemp, output, value);
       break;
-    case AtomicFetchOrOp:
+    case AtomicOp::Or:
       masm.or_(valueTemp, output, value);
       break;
-    case AtomicFetchXorOp:
+    case AtomicOp::Xor:
       masm.xor_(valueTemp, output, value);
       break;
     default:

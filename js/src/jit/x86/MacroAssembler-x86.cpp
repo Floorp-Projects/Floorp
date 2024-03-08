@@ -1423,19 +1423,19 @@ static void AtomicFetchOp64(MacroAssembler& masm,
   } while (0)
 
   switch (op) {
-    case AtomicFetchAddOp:
+    case AtomicOp::Add:
       ATOMIC_OP_BODY(add64FromMemory);
       break;
-    case AtomicFetchSubOp:
+    case AtomicOp::Sub:
       ATOMIC_OP_BODY(sub64FromMemory);
       break;
-    case AtomicFetchAndOp:
+    case AtomicOp::And:
       ATOMIC_OP_BODY(and64FromMemory);
       break;
-    case AtomicFetchOrOp:
+    case AtomicOp::Or:
       ATOMIC_OP_BODY(or64FromMemory);
       break;
-    case AtomicFetchXorOp:
+    case AtomicOp::Xor:
       ATOMIC_OP_BODY(xor64FromMemory);
       break;
     default:

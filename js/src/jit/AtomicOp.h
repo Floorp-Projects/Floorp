@@ -14,12 +14,12 @@ namespace jit {
 
 // Types of atomic operation, shared by MIR and LIR.
 
-enum AtomicOp {
-  AtomicFetchAddOp,
-  AtomicFetchSubOp,
-  AtomicFetchAndOp,
-  AtomicFetchOrOp,
-  AtomicFetchXorOp
+enum class AtomicOp {
+  Add,
+  Sub,
+  And,
+  Or,
+  Xor,
 };
 
 // Memory barrier types, shared by MIR and LIR.

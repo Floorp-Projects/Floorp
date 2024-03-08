@@ -1227,7 +1227,7 @@ void MacroAssembler::wasmAtomicExchange(const wasm::MemoryAccessDesc& access,
 
 static void SetupValue(MacroAssembler& masm, AtomicOp op, Imm32 src,
                        Register output) {
-  if (op == AtomicFetchSubOp) {
+  if (op == AtomicOp::Sub) {
     masm.movl(Imm32(-src.value), output);
   } else {
     masm.movl(src, output);
@@ -1239,7 +1239,7 @@ static void SetupValue(MacroAssembler& masm, AtomicOp op, Register src,
   if (src != output) {
     masm.movl(src, output);
   }
-  if (op == AtomicFetchSubOp) {
+  if (op == AtomicOp::Sub) {
     masm.negl(output);
   }
 }
@@ -1269,15 +1269,14 @@ static void AtomicFetchOp(MacroAssembler& masm,
     masm.j(MacroAssembler::NonZero, &again);                  \
   } while (0)
 
-  MOZ_ASSERT_IF(op == AtomicFetchAddOp || op == AtomicFetchSubOp,
-                temp == InvalidReg);
+  MOZ_ASSERT_IF(op == AtomicOp::Add || op == AtomicOp::Sub, temp == InvalidReg);
 
   switch (Scalar::byteSize(arrayType)) {
     case 1:
       CheckBytereg(output);
       switch (op) {
-        case AtomicFetchAddOp:
-        case AtomicFetchSubOp:
+        case AtomicOp::Add:
+        case AtomicOp::Sub:
           CheckBytereg(value);  // But not for the bitwise ops
           SetupValue(masm, op, value, output);
           if (access) {
@@ -1286,17 +1285,17 @@ static void AtomicFetchOp(MacroAssembler& masm,
           }
           masm.lock_xaddb(output, Operand(mem));
           break;
-        case AtomicFetchAndOp:
+        case AtomicOp::And:
           CheckBytereg(temp);
           ATOMIC_BITOP_BODY(movb, wasm::TrapMachineInsn::Load8, andl,
                             lock_cmpxchgb);
           break;
-        case AtomicFetchOrOp:
+        case AtomicOp::Or:
           CheckBytereg(temp);
           ATOMIC_BITOP_BODY(movb, wasm::TrapMachineInsn::Load8, orl,
                             lock_cmpxchgb);
           break;
-        case AtomicFetchXorOp:
+        case AtomicOp::Xor:
           CheckBytereg(temp);
           ATOMIC_BITOP_BODY(movb, wasm::TrapMachineInsn::Load8, xorl,
                             lock_cmpxchgb);
@@ -1307,8 +1306,8 @@ static void AtomicFetchOp(MacroAssembler& masm,
       break;
     case 2:
       switch (op) {
-        case AtomicFetchAddOp:
-        case AtomicFetchSubOp:
+        case AtomicOp::Add:
+        case AtomicOp::Sub:
           SetupValue(masm, op, value, output);
           if (access) {
             masm.append(*access, wasm::TrapMachineInsn::Atomic,
@@ -1316,15 +1315,15 @@ static void AtomicFetchOp(MacroAssembler& masm,
           }
           masm.lock_xaddw(output, Operand(mem));
           break;
-        case AtomicFetchAndOp:
+        case AtomicOp::And:
           ATOMIC_BITOP_BODY(movw, wasm::TrapMachineInsn::Load16, andl,
                             lock_cmpxchgw);
           break;
-        case AtomicFetchOrOp:
+        case AtomicOp::Or:
           ATOMIC_BITOP_BODY(movw, wasm::TrapMachineInsn::Load16, orl,
                             lock_cmpxchgw);
           break;
-        case AtomicFetchXorOp:
+        case AtomicOp::Xor:
           ATOMIC_BITOP_BODY(movw, wasm::TrapMachineInsn::Load16, xorl,
                             lock_cmpxchgw);
           break;
@@ -1334,8 +1333,8 @@ static void AtomicFetchOp(MacroAssembler& masm,
       break;
     case 4:
       switch (op) {
-        case AtomicFetchAddOp:
-        case AtomicFetchSubOp:
+        case AtomicOp::Add:
+        case AtomicOp::Sub:
           SetupValue(masm, op, value, output);
           if (access) {
             masm.append(*access, wasm::TrapMachineInsn::Atomic,
@@ -1343,15 +1342,15 @@ static void AtomicFetchOp(MacroAssembler& masm,
           }
           masm.lock_xaddl(output, Operand(mem));
           break;
-        case AtomicFetchAndOp:
+        case AtomicOp::And:
           ATOMIC_BITOP_BODY(movl, wasm::TrapMachineInsn::Load32, andl,
                             lock_cmpxchgl);
           break;
-        case AtomicFetchOrOp:
+        case AtomicOp::Or:
           ATOMIC_BITOP_BODY(movl, wasm::TrapMachineInsn::Load32, orl,
                             lock_cmpxchgl);
           break;
-        case AtomicFetchXorOp:
+        case AtomicOp::Xor:
           ATOMIC_BITOP_BODY(movl, wasm::TrapMachineInsn::Load32, xorl,
                             lock_cmpxchgl);
           break;
@@ -1435,19 +1434,19 @@ static void AtomicEffectOp(MacroAssembler& masm,
   switch (Scalar::byteSize(arrayType)) {
     case 1:
       switch (op) {
-        case AtomicFetchAddOp:
+        case AtomicOp::Add:
           masm.lock_addb(value, Operand(mem));
           break;
-        case AtomicFetchSubOp:
+        case AtomicOp::Sub:
           masm.lock_subb(value, Operand(mem));
           break;
-        case AtomicFetchAndOp:
+        case AtomicOp::And:
           masm.lock_andb(value, Operand(mem));
           break;
-        case AtomicFetchOrOp:
+        case AtomicOp::Or:
           masm.lock_orb(value, Operand(mem));
           break;
-        case AtomicFetchXorOp:
+        case AtomicOp::Xor:
           masm.lock_xorb(value, Operand(mem));
           break;
         default:
@@ -1456,19 +1455,19 @@ static void AtomicEffectOp(MacroAssembler& masm,
       break;
     case 2:
       switch (op) {
-        case AtomicFetchAddOp:
+        case AtomicOp::Add:
           masm.lock_addw(value, Operand(mem));
           break;
-        case AtomicFetchSubOp:
+        case AtomicOp::Sub:
           masm.lock_subw(value, Operand(mem));
           break;
-        case AtomicFetchAndOp:
+        case AtomicOp::And:
           masm.lock_andw(value, Operand(mem));
           break;
-        case AtomicFetchOrOp:
+        case AtomicOp::Or:
           masm.lock_orw(value, Operand(mem));
           break;
-        case AtomicFetchXorOp:
+        case AtomicOp::Xor:
           masm.lock_xorw(value, Operand(mem));
           break;
         default:
@@ -1477,19 +1476,19 @@ static void AtomicEffectOp(MacroAssembler& masm,
       break;
     case 4:
       switch (op) {
-        case AtomicFetchAddOp:
+        case AtomicOp::Add:
           masm.lock_addl(value, Operand(mem));
           break;
-        case AtomicFetchSubOp:
+        case AtomicOp::Sub:
           masm.lock_subl(value, Operand(mem));
           break;
-        case AtomicFetchAndOp:
+        case AtomicOp::And:
           masm.lock_andl(value, Operand(mem));
           break;
-        case AtomicFetchOrOp:
+        case AtomicOp::Or:
           masm.lock_orl(value, Operand(mem));
           break;
-        case AtomicFetchXorOp:
+        case AtomicOp::Xor:
           masm.lock_xorl(value, Operand(mem));
           break;
         default:

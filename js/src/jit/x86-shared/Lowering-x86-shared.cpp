@@ -732,8 +732,8 @@ void LIRGeneratorX86Shared::lowerAtomicTypedArrayElementBinop(
   // There are optimization opportunities:
   //  - better register allocation in the x86 8-bit case, Bug #1077036.
 
-  bool bitOp = !(ins->operation() == AtomicFetchAddOp ||
-                 ins->operation() == AtomicFetchSubOp);
+  bool bitOp =
+      !(ins->operation() == AtomicOp::Add || ins->operation() == AtomicOp::Sub);
   bool fixedOutput = true;
   bool reuseInput = false;
   LDefinition tempDef1 = LDefinition::BogusTemp();
