@@ -135,7 +135,7 @@ var gConnectionsDialog = {
       var systemWpadAllowed = Preferences.get(
         "network.proxy.system_wpad.allowed"
       );
-      if (systemWpadAllowed) {
+      if (systemWpadAllowed && Services.appinfo.OS == "WINNT") {
         document.getElementById("systemWpad").removeAttribute("hidden");
       }
     }
