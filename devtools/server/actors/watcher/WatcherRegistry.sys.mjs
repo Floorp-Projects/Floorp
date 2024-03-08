@@ -178,15 +178,13 @@ export const WatcherRegistry = {
       updateType
     );
 
-    // Flush sharedData before registering the JS Actors as it is used
-    // during their instantiation.
-    persistMapToSharedData();
-
     // Register the JS Window Actor the first time we start watching for something (e.g. resource, target, …).
     registerJSWindowActor();
     if (sessionData?.targets?.includes("process")) {
       registerJSProcessActor();
     }
+
+    persistMapToSharedData();
   },
 
   /**

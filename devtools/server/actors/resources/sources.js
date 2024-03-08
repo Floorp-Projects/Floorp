@@ -44,8 +44,6 @@ class SourceWatcher {
     this.sourcesManager = targetActor.sourcesManager;
     this.onAvailable = onAvailable;
 
-    threadActor.attach({});
-
     // Disable `ThreadActor.newSource` RDP event in order to avoid unnecessary traffic
     threadActor.disableNewSourceEvents();
 

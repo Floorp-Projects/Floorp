@@ -16,8 +16,11 @@ module.exports = {
     updateType
   ) {
     const { threadActor } = targetActor;
-    // The thread actor has to be initialized in order to have functional breakpoints
-    if (threadActor.state == THREAD_STATES.DETACHED) {
+    // Same as comments for XHR breakpoints. See lines 117-118
+    if (
+      threadActor.state == THREAD_STATES.DETACHED &&
+      !targetActor.targetType.endsWith("worker")
+    ) {
       threadActor.attach();
     }
     if (updateType == "set") {

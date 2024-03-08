@@ -146,7 +146,9 @@ add_task(async function () {
   await resume(dbg);
 
   info("Blackboxing the source prevents debugger pause");
-  const source = await waitForSource(dbg, "dom-mutation.original.js");
+  await waitForSource(dbg, "dom-mutation.original.js");
+
+  const source = findSource(dbg, "dom-mutation.original.js");
 
   await selectSource(dbg, source);
   await clickElement(dbg, "blackbox");

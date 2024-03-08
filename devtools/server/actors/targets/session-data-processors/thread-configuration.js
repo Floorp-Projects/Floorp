@@ -28,9 +28,12 @@ module.exports = {
       threadOptions[key] = value;
     }
 
-    if (targetActor.threadActor.state == THREAD_STATES.DETACHED) {
+    if (
+      !targetActor.targetType.endsWith("worker") &&
+      targetActor.threadActor.state == THREAD_STATES.DETACHED
+    ) {
       await targetActor.threadActor.attach(threadOptions);
-    } else if (!targetActor.threadActor.isDestroyed()) {
+    } else {
       // Regarding `updateType`, `entries` is always a partial set of configurations.
       // We will acknowledge the passed attribute, but if we had set some other attributes
       // before this call, they will stay as-is.

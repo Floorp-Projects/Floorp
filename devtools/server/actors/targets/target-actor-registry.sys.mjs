@@ -9,8 +9,7 @@
 // are still using message manager in order to avoid being destroyed on navigation.
 // And because of this, these actors aren't using JS Window Actor.
 const windowGlobalTargetActors = new Set();
-
-const xpcShellTargetActors = new Set();
+let xpcShellTargetActor = null;
 
 export var TargetActorRegistry = {
   registerTargetActor(targetActor) {
@@ -22,15 +21,15 @@ export var TargetActorRegistry = {
   },
 
   registerXpcShellTargetActor(targetActor) {
-    xpcShellTargetActors.add(targetActor);
+    xpcShellTargetActor = targetActor;
   },
 
-  unregisterXpcShellTargetActor(targetActor) {
-    xpcShellTargetActors.remove(targetActor);
+  unregisterXpcShellTargetActor() {
+    xpcShellTargetActor = null;
   },
 
-  get xpcShellTargetActors() {
-    return xpcShellTargetActors;
+  get xpcShellTargetActor() {
+    return xpcShellTargetActor;
   },
 
   /**

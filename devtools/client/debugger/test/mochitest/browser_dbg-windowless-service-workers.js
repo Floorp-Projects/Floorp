@@ -22,7 +22,8 @@ add_task(async function () {
   );
 
   invokeInTab("registerWorker");
-  const workerSource = await waitForSource(dbg, "service-worker.sjs");
+  await waitForSource(dbg, "service-worker.sjs");
+  const workerSource = findSource(dbg, "service-worker.sjs");
 
   await addBreakpoint(dbg, "service-worker.sjs", 13);
 
@@ -51,7 +52,8 @@ add_task(async function () {
   // The test page will immediately fetch from the service worker if registered.
   const onReloaded = reload(dbg);
 
-  const workerSource = await waitForSource(dbg, "service-worker.sjs");
+  await waitForSource(dbg, "service-worker.sjs");
+  const workerSource = findSource(dbg, "service-worker.sjs");
 
   await waitForPaused(dbg);
   assertPausedAtSourceAndLine(dbg, workerSource.id, 13);
@@ -138,7 +140,8 @@ add_task(async function () {
   invokeInTab("registerWorker");
   await checkAdditionalThreadCount(dbg, 1);
 
-  const workerSource = await waitForSource(dbg, "service-worker.sjs");
+  await waitForSource(dbg, "service-worker.sjs");
+  const workerSource = findSource(dbg, "service-worker.sjs");
 
   await waitForBreakpointCount(dbg, 1);
   await waitForPaused(dbg);

@@ -418,6 +418,12 @@ class ThreadActor extends Actor {
     this.alreadyAttached = true;
     this.dbg.enable();
 
+    // Notify the target actor that we've finished attaching. If this is a worker
+    // thread which was paused until attaching, this will allow content to
+    // begin executing.
+    if (this.targetActor.onThreadAttached) {
+      this.targetActor.onThreadAttached();
+    }
     if (Services.obs) {
       // Set a wrappedJSObject property so |this| can be sent via the observer service
       // for the xpcshell harness.
@@ -529,13 +535,6 @@ class ThreadActor extends Actor {
   }
 
   async setBreakpoint(location, options) {
-    // Automatically initialize the thread actor if it wasn't yet done.
-    // Note that ideally, it should rather be done via reconfigure/thread configuration.
-    if (this._state === STATES.DETACHED) {
-      this.attach({});
-      this.addAllSources();
-    }
-
     let actor = this.breakpointActorMap.get(location);
     // Avoid resetting the exact same breakpoint twice
     if (actor && JSON.stringify(actor.options) == JSON.stringify(options)) {
