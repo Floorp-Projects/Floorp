@@ -769,7 +769,10 @@ support-files = [
 ["test_bug465498.html"]
 
 ["test_bug495145.html"]
-skip-if = ["os == 'win'"] #Bug 1404373
+skip-if = [
+  "win10_2009", #Bug 1404373
+  "win11_2009", #Bug 1404373
+] 
 
 ["test_bug495300.html"]
 
@@ -786,15 +789,15 @@ skip-if = ["os == 'android'"] # bug 1285441, android(bug 1232305)
 tags = "capturestream"
 
 ["test_bug895305.html"]
-skip-if = ["android_version == '25' && debug"] # android(bug 1232305)
 
 ["test_bug919265.html"]
-skip-if = ["android_version == '25' && debug"] # android(bug 1232305)
 
 ["test_bug1113600.html"]
 skip-if = [
-  "os == 'win' && os_version == '10.0' && debug", # Bug 1713410
-  "os == 'mac'", # Bug 1198168
+  "win10_2009 && debug", # Bug 1713410
+  "win11_2009 && debug", # Bug 1713410
+  "apple_catalina", # Bug 1198168
+  "apple_silicon", # Bug 1198168
 ]
 
 ["test_bug1120222.html"]

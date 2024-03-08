@@ -807,15 +807,12 @@ skip-if = ["true"] # bug 475110 - disabled since we don't play Wave files standa
 ["test_bug1431810_opus_downmix_to_mono.html"]
 
 ["test_can_play_type.html"]
-skip-if = ["(android_version == '25' && debug)"] # android(bug 1232305)
 
 ["test_can_play_type_mpeg.html"]
 
 ["test_can_play_type_no_ogg.html"]
-skip-if = ["(android_version == '25' && debug)"] # android(bug 1232305)
 
 ["test_can_play_type_ogg.html"]
-skip-if = ["(android_version == '25' && debug)"] # android(bug 1232305)
 
 ["test_can_play_type_wave.html"]
 
@@ -1000,10 +997,12 @@ skip-if = ["true"] # see bug 1319725
 ["test_readyState.html"]
 
 ["test_referer.html"]
-skip-if = ["android_version == '25' && debug"] # android(bug 1232305)
 
 ["test_reset_src.html"]
-skip-if = ["verify && debug && os == 'win'"]
+skip-if = [
+  "win10_2009 && debug && verify",
+  "win11_2009 && debug && verify",
+]
 
 ["test_source.html"]
 
