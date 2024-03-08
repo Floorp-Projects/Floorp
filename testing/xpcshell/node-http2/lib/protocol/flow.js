@@ -172,7 +172,9 @@ Flow.prototype._read = function _read() {
 
   // * otherwise, come back when the flow control window is positive
   else {
-    this.once('window_update', this._read);
+    if (!this.listenerCount('window_update')) {
+      this.once('window_update', this._read);
+    }
   }
 };
 
