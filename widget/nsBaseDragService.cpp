@@ -632,6 +632,7 @@ nsBaseDragService::EndDragSession(bool aDoneDrag, uint32_t aKeyModifiers) {
   mSourceDocument = nullptr;
   mSourceNode = nullptr;
   mSourceWindowContext = nullptr;
+  mSourceTopWindowContext = nullptr;
   mTriggeringPrincipal = nullptr;
   mCsp = nullptr;
   mSelection = nullptr;
