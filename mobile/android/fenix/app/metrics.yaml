@@ -854,6 +854,29 @@ events:
     notification_emails:
       - android-probes@mozilla.com
     expires: never
+  translations_action:
+    type: event
+    description: |
+      An area inside the translations feature was tapped.
+      The name of the translations area that the user tapped is stored in extras with the
+      key `item`.
+    extra_keys:
+      item:
+        description: |
+          A string containing the name of the item the user tapped. These items
+          include:
+          main_flow_toolbar, main_flow_browser, page_settings, global_settings, 
+          global_lang_settings, global_site_settings, downloads
+        type: string
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1883968
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1883968#c6
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
 
 splash_screen:
   first_launch_extended:

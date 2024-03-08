@@ -824,7 +824,7 @@ class DefaultBrowserToolbarMenuControllerTest {
     }
 
     @Test
-    fun `WHEN the Translations menu item is pressed THEN navigate to translations flow`() =
+    fun `WHEN the Translations menu item is pressed THEN navigate to translations flow AND post telemetry`() =
         runTest {
             val item = ToolbarMenu.Item.Translate
 
@@ -841,6 +841,9 @@ class DefaultBrowserToolbarMenuControllerTest {
                     ),
                 )
             }
+
+            val telemetry = Events.translationsAction.testGetValue()?.firstOrNull()
+            assertEquals("main_flow_browser", telemetry?.extra?.get("item"))
         }
 
     private fun createController(

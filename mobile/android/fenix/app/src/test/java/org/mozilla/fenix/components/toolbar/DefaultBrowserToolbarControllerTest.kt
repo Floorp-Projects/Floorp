@@ -446,6 +446,7 @@ class DefaultBrowserToolbarControllerTest {
         verify(exactly = 0) { mockSettings.reviewQualityCheckCfrDisplayTimeInMillis = any() }
     }
 
+    @Test
     fun handleTranslationsButtonClick() {
         val controller = createController()
         controller.handleTranslationsButtonClick()
@@ -457,6 +458,9 @@ class DefaultBrowserToolbarControllerTest {
                 ),
             )
         }
+
+        val telemetry = Events.translationsAction.testGetValue()?.firstOrNull()
+        assertEquals("main_flow_toolbar", telemetry?.extra?.get("item"))
     }
 
     private fun createController(

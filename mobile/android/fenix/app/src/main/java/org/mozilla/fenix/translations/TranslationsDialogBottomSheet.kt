@@ -57,7 +57,6 @@ import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.compose.button.PrimaryButton
 import org.mozilla.fenix.compose.button.TertiaryButton
 import org.mozilla.fenix.compose.button.TextButton
-import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.shopping.ui.ReviewQualityCheckInfoCard
 import org.mozilla.fenix.shopping.ui.ReviewQualityCheckInfoType
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -70,6 +69,7 @@ private val ICON_SIZE = 24.dp
  *
  * @param translationsDialogState The current state of the Translations bottom sheet dialog.
  * @param learnMoreUrl The learn more link for translations website.
+ * @param showPageSettings Whether the entry point to page settings should be shown or not.
  * @param showFirstTimeFlow Whether translations first flow should be shown.
  * @param onSettingClicked Invoked when the user clicks on the settings button.
  * @param onLearnMoreClicked Invoked when the user clicks on the "Learn More" button.
@@ -83,6 +83,7 @@ private val ICON_SIZE = 24.dp
 fun TranslationsDialogBottomSheet(
     translationsDialogState: TranslationsDialogState,
     learnMoreUrl: String,
+    showPageSettings: Boolean,
     showFirstTimeFlow: Boolean = false,
     onSettingClicked: () -> Unit,
     onLearnMoreClicked: () -> Unit,
@@ -110,6 +111,7 @@ fun TranslationsDialogBottomSheet(
                     showFirstTime = showFirstTimeFlow,
                 )
             },
+            showPageSettings = showPageSettings,
             onSettingClicked = onSettingClicked,
         )
 
@@ -434,6 +436,7 @@ private fun TranslationsDialogContentInLandscapeMode(
 @Composable
 private fun TranslationsDialogHeader(
     title: String,
+    showPageSettings: Boolean,
     onSettingClicked: () -> Unit,
 ) {
     Row(
@@ -450,7 +453,7 @@ private fun TranslationsDialogHeader(
 
         Spacer(modifier = Modifier.width(4.dp))
 
-        if (FxNimbus.features.translations.value().pageSettingsEnabled) {
+        if (showPageSettings) {
             IconButton(
                 onClick = { onSettingClicked() },
                 modifier = Modifier.size(24.dp),
@@ -744,6 +747,7 @@ private fun TranslationsDialogBottomSheetPreview() {
                 fromLanguages = getTranslateFromLanguageList(),
             ),
             learnMoreUrl = "",
+            showPageSettings = true,
             showFirstTimeFlow = true,
             onSettingClicked = {},
             onLearnMoreClicked = {},

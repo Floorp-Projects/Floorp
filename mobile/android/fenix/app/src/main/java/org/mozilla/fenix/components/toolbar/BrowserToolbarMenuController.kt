@@ -408,6 +408,7 @@ class DefaultBrowserToolbarMenuController(
             }
 
             ToolbarMenu.Item.Translate -> {
+                Events.translationsAction.record(Events.TranslationsActionExtra("main_flow_browser"))
                 val directions =
                     BrowserFragmentDirections.actionBrowserFragmentToTranslationsDialogFragment(
                         sessionId = currentSession?.id,

@@ -29,7 +29,6 @@ import org.mozilla.fenix.compose.Divider
 import org.mozilla.fenix.compose.SwitchWithLabel
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.compose.list.TextListItem
-import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.theme.FirefoxTheme
 import java.util.Locale
 
@@ -37,6 +36,7 @@ import java.util.Locale
  * Firefox Translation options bottom sheet dialog.
  *
  * @param translationOptionsList A list of [TranslationSwitchItem]s to display.
+ * @param showGlobalSettings Whether to show to global settings entry point or not.
  * @param onBackClicked Invoked when the user clicks on the back button.
  * @param onTranslationSettingsClicked Invoked when the user clicks on the "Translation Settings" button.
  * @param aboutTranslationClicked Invoked when the user clicks on the "About Translation" button.
@@ -44,6 +44,7 @@ import java.util.Locale
 @Composable
 fun TranslationOptionsDialog(
     translationOptionsList: List<TranslationSwitchItem>,
+    showGlobalSettings: Boolean,
     onBackClicked: () -> Unit,
     onTranslationSettingsClicked: () -> Unit,
     aboutTranslationClicked: () -> Unit,
@@ -66,7 +67,7 @@ fun TranslationOptionsDialog(
             )
         }
 
-        if (FxNimbus.features.translations.value().globalSettingsEnabled) {
+        if (showGlobalSettings) {
             item {
                 TextListItem(
                     label = stringResource(id = R.string.translation_option_bottom_sheet_translation_settings),
@@ -215,6 +216,7 @@ private fun TranslationSettingsPreview() {
     FirefoxTheme {
         TranslationOptionsDialog(
             translationOptionsList = getTranslationOptionsList(),
+            showGlobalSettings = true,
             onBackClicked = {},
             onTranslationSettingsClicked = {},
             aboutTranslationClicked = {},

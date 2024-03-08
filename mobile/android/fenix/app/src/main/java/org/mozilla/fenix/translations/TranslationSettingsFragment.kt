@@ -24,10 +24,12 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.translate.TranslationPageSettingOperation
 import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.support.base.feature.UserInteractionHandler
+import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
+import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
@@ -51,19 +53,25 @@ class TranslationSettingsFragment : Fragment(), UserInteractionHandler {
             FirefoxTheme {
                 TranslationSettings(
                     translationSwitchList = getTranslationSwitchItemList(),
+                    showAutomaticTranslations = FxNimbus.features.translations.value().globalLangSettingsEnabled,
+                    showNeverTranslate = FxNimbus.features.translations.value().globalSiteSettingsEnabled,
+                    showDownloads = FxNimbus.features.translations.value().downloadsEnabled,
                     onAutomaticTranslationClicked = {
+                        Events.translationsAction.record(Events.TranslationsActionExtra("global_lang_settings"))
                         findNavController().navigate(
                             TranslationSettingsFragmentDirections
                                 .actionTranslationSettingsFragmentToAutomaticTranslationPreferenceFragment(),
                         )
                     },
                     onNeverTranslationClicked = {
+                        Events.translationsAction.record(Events.TranslationsActionExtra("global_site_settings"))
                         findNavController().navigate(
                             TranslationSettingsFragmentDirections
                                 .actionTranslationSettingsFragmentToNeverTranslateSitePreferenceFragment(),
                         )
                     },
                     onDownloadLanguageClicked = {
+                        Events.translationsAction.record(Events.TranslationsActionExtra("downloads"))
                         findNavController().navigate(
                             TranslationSettingsFragmentDirections
                                 .actionTranslationSettingsFragmentToDownloadLanguagesPreferenceFragment(),

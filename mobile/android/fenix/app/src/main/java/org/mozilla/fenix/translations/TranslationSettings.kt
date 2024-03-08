@@ -22,13 +22,15 @@ import org.mozilla.fenix.compose.Divider
 import org.mozilla.fenix.compose.SwitchWithLabel
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.compose.list.TextListItem
-import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
  * Translation Settings Fragment.
  *
  * @param translationSwitchList list of [TranslationSwitchItem]s to display.
+ * @param showAutomaticTranslations Show the entry point for the user to change automatic language settings.
+ * @param showNeverTranslate Show the entry point for the user to change never translate settings.
+ * @param showDownloads Show the entry point for the user to manage language models.
  * @param onAutomaticTranslationClicked Invoked when the user clicks on the "Automatic Translation" button.
  * @param onNeverTranslationClicked Invoked when the user clicks on the "Never Translation" button.
  * @param onDownloadLanguageClicked Invoked when the user clicks on the "Download Language" button.
@@ -37,6 +39,9 @@ import org.mozilla.fenix.theme.FirefoxTheme
 @Composable
 fun TranslationSettings(
     translationSwitchList: List<TranslationSwitchItem>,
+    showAutomaticTranslations: Boolean,
+    showNeverTranslate: Boolean,
+    showDownloads: Boolean,
     onAutomaticTranslationClicked: () -> Unit,
     onNeverTranslationClicked: () -> Unit,
     onDownloadLanguageClicked: () -> Unit,
@@ -81,7 +86,7 @@ fun TranslationSettings(
                 )
             }
 
-            if (FxNimbus.features.translations.value().globalLangSettingsEnabled) {
+            if (showAutomaticTranslations) {
                 item {
                     TextListItem(
                         label = stringResource(id = R.string.translation_settings_automatic_translation),
@@ -93,7 +98,7 @@ fun TranslationSettings(
                 }
             }
 
-            if (FxNimbus.features.translations.value().globalSiteSettingsEnabled) {
+            if (showNeverTranslate) {
                 item {
                     TextListItem(
                         label = stringResource(
@@ -107,7 +112,7 @@ fun TranslationSettings(
                 }
             }
 
-            if (FxNimbus.features.translations.value().downloadsEnabled) {
+            if (showDownloads) {
                 item {
                     TextListItem(
                         label = stringResource(
@@ -161,6 +166,9 @@ private fun TranslationSettingsPreview() {
     FirefoxTheme {
         TranslationSettings(
             translationSwitchList = getTranslationSettingsSwitchList(),
+            showAutomaticTranslations = true,
+            showNeverTranslate = true,
+            showDownloads = true,
             onAutomaticTranslationClicked = {},
             onDownloadLanguageClicked = {},
             onNeverTranslationClicked = {},
