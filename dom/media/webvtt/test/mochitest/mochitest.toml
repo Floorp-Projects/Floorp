@@ -18,15 +18,14 @@ support-files = [
 
 ["test_bug883173.html"]
 skip-if = [
-  "android_version == '25' && debug", # android(bug 1232305)
-  "os == 'linux' && (asan || tsan || debug)", # Bug 1829511
+  "os == 'linux' && os_version == '18.04' && asan", # Bug 1829511
+  "os == 'linux' && os_version == '18.04' && tsan", # Bug 1829511
+  "os == 'linux' && os_version == '18.04' && debug", # Bug 1829511
 ]
 
 ["test_bug895091.html"]
-skip-if = ["android_version == '25' && debug"] # android(bug 1232305)
 
 ["test_bug957847.html"]
-skip-if = ["android_version == '25' && debug"] # android(bug 1232305)
 
 ["test_bug1018933.html"]
 
@@ -39,10 +38,7 @@ skip-if = ["android_version == '25' && debug"] # android(bug 1232305)
 ["test_texttrack_cors_preload_none.html"]
 
 ["test_texttrack_mode_change_during_loading.html"]
-skip-if = [
-  "true",
-  "os == 'android'", # Bug 1636572, android(bug 1562021)
-]
+skip-if = ["true"]
 
 ["test_texttrack_moz.html"]
 

@@ -23,8 +23,6 @@
 #   * Windows 10: 10.0
 
 [DEFAULT]
-# Cross-process WebGL doesn't seem to work under an emulator
-skip-if = ["os == 'android' && isEmulator"]
 # Bug 1799213
 prefs = "media.seamless-looping-video=false"
 
@@ -144,14 +142,12 @@ skip-if = ["os == 'linux' && debug"]
 ["generated/test_conformance__glsl__bugs__vector-matrix-constructor-scalarization.html"]
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1725075
 fail-if = [
-  "os == 'android' && android_version == '26'",
   "os == 'mac' && !apple_silicon",
 ]
 
 ["generated/test_2_conformance__glsl__bugs__vector-matrix-constructor-scalarization.html"]
 # Ditto
 fail-if = [
-  "os == 'android' && android_version == '26'",
   "os == 'android' && !debug",
   "os == 'mac' && !apple_silicon",
 ]
@@ -1105,7 +1101,6 @@ fail-if = ["os == 'win' && debug"]
 skip-if = ["os == 'android'"]
 
 ["generated/test_2_conformance2__renderbuffers__multisampled-renderbuffer-initialization.html"]
-fail-if = ["os == 'android' && android_version == '26'"]
 
 ["generated/test_conformance__extensions__ext-sRGB.html"]
 fail-if = ["os == 'android'"]

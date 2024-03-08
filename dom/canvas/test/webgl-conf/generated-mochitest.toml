@@ -3,7 +3,6 @@
 # Mark failing (fail-if) and crashing (skip-if) tests in mochitest-errata.ini.
 
 [DEFAULT]
-skip-if = ["os == 'android' && isEmulator"]
 prefs = "media.seamless-looping-video=false"
 
 support-files = [
@@ -5669,7 +5668,6 @@ subsuite = "webgl2-core"
 
 ["generated/test_2_conformance2__renderbuffers__multisampled-renderbuffer-initialization.html"]
 subsuite = "webgl2-core"
-fail-if = ["os == 'android' && android_version == '26'"]
 
 ["generated/test_2_conformance2__renderbuffers__multisampled-stencil-renderbuffer-initialization.html"]
 subsuite = "webgl2-core"
@@ -9275,7 +9273,6 @@ subsuite = "webgl2-ext"
 ["generated/test_2_conformance__glsl__bugs__vector-matrix-constructor-scalarization.html"]
 subsuite = "webgl2-ext"
 fail-if = [
-  "os == 'android' && android_version == '26'",
   "os == 'android' && !debug",
   "os == 'mac' && !apple_silicon",
 ]
@@ -14501,7 +14498,6 @@ subsuite = "webgl1-ext"
 ["generated/test_conformance__glsl__bugs__vector-matrix-constructor-scalarization.html"]
 subsuite = "webgl1-ext"
 fail-if = [
-  "os == 'android' && android_version == '26'",
   "os == 'mac' && !apple_silicon",
 ]
 
