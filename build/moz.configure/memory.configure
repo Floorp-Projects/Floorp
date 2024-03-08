@@ -71,16 +71,23 @@ set_config("MOZ_REPLACE_MALLOC_STATIC", replace_malloc_static)
 # crash reporter.
 @depends(
     build_project,
+    milestone,
     target,
     when="--enable-jemalloc",
 )
-def phc_default(build_project, target):
+def phc_default(build_project, milestone, target):
     if build_project == "js":
         return False
 
+    # PHC has a performance bottleneck on aarch64 (Bug 1874022) it's okay
+    # for nightly but not for release yet.
+    cpu_support = ("x86_64",)
+    if milestone.is_early_beta_or_earlier:
+        cpu_support = ("x86_64", "aarch64")
+
     # Both Linux32 and Win32 have frequent crashes when stack tracing (for
     # unclear reasons), so PHC is enabled only on 64-bit only in both cases.
-    return (target.cpu in ("x86_64", "aarch64")) and (
+    return (target.cpu in cpu_support) and (
         (target.os == "GNU" and target.kernel == "Linux")
         or (target.kernel == "WINNT")
         or (target.os == "OSX")
