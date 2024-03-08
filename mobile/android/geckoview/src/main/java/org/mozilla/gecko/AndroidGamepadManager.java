@@ -159,9 +159,9 @@ public class AndroidGamepadManager {
   /* package */ static void doStart(final Context context) {
     ThreadUtils.assertOnUiThread();
     if (!sStarted) {
+      sStarted = true;
       scanForGamepads();
       addDeviceListener(context);
-      sStarted = true;
     }
   }
 
