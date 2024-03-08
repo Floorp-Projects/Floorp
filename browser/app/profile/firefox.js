@@ -295,9 +295,6 @@ pref("browser.shell.checkDefaultPDF", true);
 // Will be set to `true` if the user indicates that they don't want to be asked
 // again about Firefox being their default PDF handler any more.
 pref("browser.shell.checkDefaultPDF.silencedByUser", false);
-// URL to navigate to when launching Firefox after accepting the Windows Default
-// Browser Agent "Set Firefox as default" call to action.
-pref("browser.shell.defaultBrowserAgent.thanksURL", "https://www.mozilla.org/%LOCALE%/firefox/set-as-default/thanks/");
 #endif
 
 
