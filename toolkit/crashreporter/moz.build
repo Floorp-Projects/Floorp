@@ -67,12 +67,10 @@ if CONFIG["MOZ_CRASHREPORTER"]:
             DIRS += ["rust_minidump_writer_linux"]
 
     if CONFIG["OS_TARGET"] != "Android":
-        DIRS += [
-            "client/app",
-            "minidump-analyzer",
-        ]
+        DIRS += ["minidump-analyzer"]
 
     DIRS += [
+        "client",
         "mozannotation_client",
         "mozannotation_server",
     ]
@@ -120,11 +118,8 @@ if CONFIG["MOZ_CRASHREPORTER"]:
         DEFINES["MOZ_PHC"] = True
 
     LOCAL_INCLUDES += [
-        "/toolkit/components/jsoncpp/include",
         "google-breakpad/src",
     ]
-
-    USE_LIBS += ["jsoncpp"]
 
     PYTHON_UNITTEST_MANIFESTS += [
         "tools/python.toml",
