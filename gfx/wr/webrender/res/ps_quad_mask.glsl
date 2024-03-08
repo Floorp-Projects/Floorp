@@ -62,7 +62,8 @@ Clip fetch_clip(int index) {
     return clip;
 }
 
-void pattern_vertex(PrimitiveInfo prim_info) {
+void main(void) {
+    PrimitiveInfo prim_info = ps_quad_main();
 
     Clip clip = fetch_clip(aClipData.y);
     Transform clip_transform = fetch_transform(aClipData.x);
@@ -147,7 +148,7 @@ float sd_rounded_box(in vec2 pos, in vec2 box_size, in float radius) {
 }
 #endif
 
-vec4 pattern_fragment(vec4 _base_color) {
+void main(void) {
     vec2 clip_local_pos = vClipLocalPos.xy / vClipLocalPos.w;
     float aa_range = compute_aa_range(clip_local_pos);
 
@@ -174,6 +175,6 @@ vec4 pattern_fragment(vec4 _base_color) {
     // Select alpha or inverse alpha depending on clip in/out.
     float final_alpha = mix(alpha, 1.0 - alpha, vClipMode.x);
 
-    return vec4(final_alpha);
+    oFragColor = vec4(final_alpha);
 }
 #endif
