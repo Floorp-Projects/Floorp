@@ -1038,8 +1038,8 @@ nsresult ContentAnalysis::RunAnalyzeRequestTask(
   LOGD("Issuing ContentAnalysisRequest for token %s", requestToken.get());
 
   content_analysis::sdk::ContentAnalysisRequest pbRequest;
-  rv = ConvertToProtobuf(aRequest, GetUserActionId(), aRequestCount,
-                         &pbRequest);
+  rv =
+      ConvertToProtobuf(aRequest, GetUserActionId(), aRequestCount, &pbRequest);
   NS_ENSURE_SUCCESS(rv, rv);
   LogRequest(&pbRequest);
 
