@@ -320,9 +320,13 @@ class nsProtocolProxyService final : public nsIProtocolProxyService2,
   nsresult ResetPACThread();
   nsresult ReloadNetworkPAC();
 
-  nsresult AsyncConfigureFromPAC(bool aForceReload, bool aResetPACThread);
-  nsresult OnAsyncGetPACURI(bool aForceReload, bool aResetPACThread,
-                            nsresult aResult, const nsACString& aUri);
+  nsresult AsyncConfigureWPADOrFromPAC(bool aForceReload, bool aResetPACThread,
+                                       bool aSystemWPADAllowed);
+  nsresult OnAsyncGetPACURIOrSystemWPADSetting(bool aForceReload,
+                                               bool aResetPACThread,
+                                               nsresult aResult,
+                                               const nsACString& aUri,
+                                               bool aSystemWPADSetting);
 
  public:
   // The Sun Forte compiler and others implement older versions of the

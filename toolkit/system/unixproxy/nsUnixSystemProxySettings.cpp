@@ -398,6 +398,12 @@ nsresult nsUnixSystemProxySettings::GetProxyForURI(const nsACString& aSpec,
   return GetProxyFromEnvironment(aScheme, aHost, aPort, aResult);
 }
 
+NS_IMETHODIMP
+nsUnixSystemProxySettings::GetSystemWPADSetting(bool* aSystemWPADSetting) {
+  *aSystemWPADSetting = false;
+  return NS_OK;
+}
+
 NS_IMPL_COMPONENT_FACTORY(nsUnixSystemProxySettings) {
   auto result = MakeRefPtr<nsUnixSystemProxySettings>();
   result->Init();

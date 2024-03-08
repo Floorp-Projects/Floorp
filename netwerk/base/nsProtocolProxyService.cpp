@@ -621,28 +621,29 @@ nsAsyncResolveRequest::AsyncApplyFilters::Cancel(nsresult reason) {
   return NS_OK;
 }
 
-// Bug 1366133: make GetPACURI off-main-thread since it may hang on Windows
-// platform
-class AsyncGetPACURIRequest final : public nsIRunnable {
+// Bug 1366133: make GetPACURI and GetSystemWPADSetting off-main-thread since it
+// may hang on Windows platform
+class AsyncGetPACURIRequestOrSystemWPADSetting final : public nsIRunnable {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
   using CallbackFunc = nsresult (nsProtocolProxyService::*)(bool, bool,
                                                             nsresult,
-                                                            const nsACString&);
+                                                            const nsACString&,
+                                                            bool);
 
-  AsyncGetPACURIRequest(nsProtocolProxyService* aService,
-                        CallbackFunc aCallback,
-                        nsISystemProxySettings* aSystemProxySettings,
-                        bool aMainThreadOnly, bool aForceReload,
-                        bool aResetPACThread)
+  AsyncGetPACURIRequestOrSystemWPADSetting(
+      nsProtocolProxyService* aService, CallbackFunc aCallback,
+      nsISystemProxySettings* aSystemProxySettings, bool aMainThreadOnly,
+      bool aForceReload, bool aResetPACThread, bool aSystemWPADAllowed)
       : mIsMainThreadOnly(aMainThreadOnly),
         mService(aService),
         mServiceHolder(do_QueryObject(aService)),
         mCallback(aCallback),
         mSystemProxySettings(aSystemProxySettings),
         mForceReload(aForceReload),
-        mResetPACThread(aResetPACThread) {
+        mResetPACThread(aResetPACThread),
+        mSystemWPADAllowed(aSystemWPADAllowed) {
     MOZ_ASSERT(NS_IsMainThread());
     Unused << mIsMainThreadOnly;
   }
@@ -650,21 +651,30 @@ class AsyncGetPACURIRequest final : public nsIRunnable {
   NS_IMETHOD Run() override {
     MOZ_ASSERT(NS_IsMainThread() == mIsMainThreadOnly);
 
+    nsresult rv;
     nsCString pacUri;
-    nsresult rv = mSystemProxySettings->GetPACURI(pacUri);
+    bool systemWPADSetting = false;
+    if (mSystemWPADAllowed) {
+      mSystemProxySettings->GetSystemWPADSetting(&systemWPADSetting);
+    }
+
+    rv = mSystemProxySettings->GetPACURI(pacUri);
 
     nsCOMPtr<nsIRunnable> event =
-        NewNonOwningCancelableRunnableMethod<bool, bool, nsresult, nsCString>(
-            "AsyncGetPACURIRequestCallback", mService, mCallback, mForceReload,
-            mResetPACThread, rv, pacUri);
+        NewNonOwningCancelableRunnableMethod<bool, bool, nsresult, nsCString,
+                                             bool>(
+            "AsyncGetPACURIRequestOrSystemWPADSettingCallback", mService,
+            mCallback, mForceReload, mResetPACThread, rv, pacUri,
+            systemWPADSetting);
 
     return NS_DispatchToMainThread(event);
   }
 
  private:
-  ~AsyncGetPACURIRequest() {
-    NS_ReleaseOnMainThread("AsyncGetPACURIRequest::mServiceHolder",
-                           mServiceHolder.forget());
+  ~AsyncGetPACURIRequestOrSystemWPADSetting() {
+    NS_ReleaseOnMainThread(
+        "AsyncGetPACURIRequestOrSystemWPADSetting::mServiceHolder",
+        mServiceHolder.forget());
   }
 
   bool mIsMainThreadOnly;
@@ -676,9 +686,10 @@ class AsyncGetPACURIRequest final : public nsIRunnable {
 
   bool mForceReload;
   bool mResetPACThread;
+  bool mSystemWPADAllowed;
 };
 
-NS_IMPL_ISUPPORTS(AsyncGetPACURIRequest, nsIRunnable)
+NS_IMPL_ISUPPORTS(AsyncGetPACURIRequestOrSystemWPADSetting, nsIRunnable)
 
 //----------------------------------------------------------------------------
 
@@ -847,8 +858,8 @@ nsresult nsProtocolProxyService::ReloadNetworkPAC() {
   return NS_OK;
 }
 
-nsresult nsProtocolProxyService::AsyncConfigureFromPAC(bool aForceReload,
-                                                       bool aResetPACThread) {
+nsresult nsProtocolProxyService::AsyncConfigureWPADOrFromPAC(
+    bool aForceReload, bool aResetPACThread, bool aSystemWPADAllowed) {
   MOZ_ASSERT(NS_IsMainThread());
 
   bool mainThreadOnly;
@@ -857,9 +868,10 @@ nsresult nsProtocolProxyService::AsyncConfigureFromPAC(bool aForceReload,
     return rv;
   }
 
-  nsCOMPtr<nsIRunnable> req = new AsyncGetPACURIRequest(
-      this, &nsProtocolProxyService::OnAsyncGetPACURI, mSystemProxySettings,
-      mainThreadOnly, aForceReload, aResetPACThread);
+  nsCOMPtr<nsIRunnable> req = new AsyncGetPACURIRequestOrSystemWPADSetting(
+      this, &nsProtocolProxyService::OnAsyncGetPACURIOrSystemWPADSetting,
+      mSystemProxySettings, mainThreadOnly, aForceReload, aResetPACThread,
+      aSystemWPADAllowed);
 
   if (mainThreadOnly) {
     return req->Run();
@@ -869,17 +881,24 @@ nsresult nsProtocolProxyService::AsyncConfigureFromPAC(bool aForceReload,
                                    nsIEventTarget::DISPATCH_NORMAL);
 }
 
-nsresult nsProtocolProxyService::OnAsyncGetPACURI(bool aForceReload,
-                                                  bool aResetPACThread,
-                                                  nsresult aResult,
-                                                  const nsACString& aUri) {
+nsresult nsProtocolProxyService::OnAsyncGetPACURIOrSystemWPADSetting(
+    bool aForceReload, bool aResetPACThread, nsresult aResult,
+    const nsACString& aUri, bool aSystemWPADSetting) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (aResetPACThread) {
     ResetPACThread();
   }
 
-  if (NS_SUCCEEDED(aResult) && !aUri.IsEmpty()) {
+  if (aSystemWPADSetting) {
+    if (mSystemProxySettings || !mPACMan) {
+      mSystemProxySettings = nullptr;
+      ResetPACThread();
+    }
+
+    nsAutoCString tempString;
+    ConfigureFromPAC(EmptyCString(), false);
+  } else if (NS_SUCCEEDED(aResult) && !aUri.IsEmpty()) {
     ConfigureFromPAC(PromiseFlatCString(aUri), aForceReload);
   }
 
@@ -960,7 +979,8 @@ void nsProtocolProxyService::PrefsChanged(nsIPrefBranch* prefBranch,
   auto invokeCallback =
       MakeScopeExit([&] { NotifyProxyConfigChangedInternal(); });
 
-  if (!pref || !strcmp(pref, PROXY_PREF("type"))) {
+  if (!pref || !strcmp(pref, PROXY_PREF("type")) ||
+      !strcmp(pref, PROXY_PREF("system_wpad"))) {
     int32_t type = -1;
     rv = prefBranch->GetIntPref(PROXY_PREF("type"), &type);
     if (NS_SUCCEEDED(rv)) {
@@ -1076,9 +1096,12 @@ void nsProtocolProxyService::PrefsChanged(nsIPrefBranch* prefBranch,
     } else if (mProxyConfig == PROXYCONFIG_WPAD) {
       LOG(("Auto-detecting proxy - Reset Pac Thread"));
       ResetPACThread();
+    } else if (mSystemProxySettings && mProxyConfig == PROXYCONFIG_SYSTEM &&
+               StaticPrefs::network_proxy_system_wpad()) {
+      AsyncConfigureWPADOrFromPAC(false, false, true);
     } else if (mSystemProxySettings) {
       // Get System Proxy settings if available
-      AsyncConfigureFromPAC(false, false);
+      AsyncConfigureWPADOrFromPAC(false, false, false);
     }
     if (!tempString.IsEmpty() || mProxyConfig == PROXYCONFIG_WPAD) {
       ConfigureFromPAC(tempString, false);
@@ -1478,7 +1501,8 @@ nsProtocolProxyService::ReloadPAC() {
     prefs->GetCharPref(PROXY_PREF("autoconfig_url"), pacSpec);
   } else if (type == PROXYCONFIG_SYSTEM) {
     if (mSystemProxySettings) {
-      AsyncConfigureFromPAC(true, true);
+      AsyncConfigureWPADOrFromPAC(true, true,
+                                  StaticPrefs::network_proxy_system_wpad());
     } else {
       ResetPACThread();
     }
@@ -1555,7 +1579,8 @@ nsresult nsProtocolProxyService::AsyncResolveInternal(
   bool usePACThread;
 
   // adapt to realtime changes in the system proxy service
-  if (mProxyConfig == PROXYCONFIG_SYSTEM) {
+  if (mProxyConfig == PROXYCONFIG_SYSTEM &&
+      !StaticPrefs::network_proxy_system_wpad()) {
     nsCOMPtr<nsISystemProxySettings> sp2 =
         do_GetService(NS_SYSTEMPROXYSETTINGS_CONTRACTID);
     if (sp2 != mSystemProxySettings) {
@@ -2190,7 +2215,8 @@ nsresult nsProtocolProxyService::Resolve_Internal(nsIChannel* channel,
   }
 
   // Proxy auto config magic...
-  if (mProxyConfig == PROXYCONFIG_PAC || mProxyConfig == PROXYCONFIG_WPAD) {
+  if (mProxyConfig == PROXYCONFIG_PAC || mProxyConfig == PROXYCONFIG_WPAD ||
+      StaticPrefs::network_proxy_system_wpad()) {
     // Do not query PAC now.
     *usePACThread = true;
     return NS_OK;
