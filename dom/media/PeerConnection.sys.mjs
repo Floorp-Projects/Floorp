@@ -1940,8 +1940,7 @@ export class PeerConnectionObserver {
 
     switch (state) {
       case "IceConnectionState":
-        let connState = this._dompc._pc.iceConnectionState;
-        this.handleIceConnectionStateChange(connState);
+        this.handleIceConnectionStateChange(this._dompc._pc.iceConnectionState);
         break;
 
       case "IceGatheringState":
