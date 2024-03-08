@@ -424,6 +424,7 @@ function setupEnvironment() {
       ["media.peerconnection.nat_simulator.block_udp", false],
       ["media.peerconnection.nat_simulator.redirect_address", ""],
       ["media.peerconnection.nat_simulator.redirect_targets", ""],
+      ["media.peerconnection.treat_warnings_as_errors", true],
     ],
   };
 
