@@ -12,7 +12,6 @@
 #include "GMPUtils.h"  // ToHexString
 #include "mozilla/Components.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/Logging.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
@@ -29,7 +28,6 @@
 
 #include <algorithm>
 #include <sstream>
-#include <string>
 
 #ifdef XP_WIN
 #  include <windows.h>
@@ -58,8 +56,6 @@ const char* kIsPerUserPref = "browser.contentanalysis.is_per_user";
 const char* kPipePathNamePref = "browser.contentanalysis.pipe_path_name";
 const char* kDefaultAllowPref = "browser.contentanalysis.default_allow";
 const char* kClientSignature = "browser.contentanalysis.client_signature";
-const char* kAllowUrlPref = "browser.contentanalysis.allow_url_regex_list";
-const char* kDenyUrlPref = "browser.contentanalysis.deny_url_regex_list";
 
 nsresult MakePromise(JSContext* aCx, RefPtr<mozilla::dom::Promise>* aPromise) {
   nsIGlobalObject* go = xpc::CurrentNativeGlobal(aCx);
@@ -484,7 +480,8 @@ static void LogRequest(
 }
 
 ContentAnalysisResponse::ContentAnalysisResponse(
-    content_analysis::sdk::ContentAnalysisResponse&& aResponse) {
+    content_analysis::sdk::ContentAnalysisResponse&& aResponse)
+    : mHasAcknowledged(false) {
   mAction = Action::eUnspecified;
   for (const auto& result : aResponse.results()) {
     if (!result.has_status() ||
@@ -512,7 +509,7 @@ ContentAnalysisResponse::ContentAnalysisResponse(
 
 ContentAnalysisResponse::ContentAnalysisResponse(
     Action aAction, const nsACString& aRequestToken)
-    : mAction(aAction), mRequestToken(aRequestToken) {}
+    : mAction(aAction), mRequestToken(aRequestToken), mHasAcknowledged(false) {}
 
 /* static */
 already_AddRefed<ContentAnalysisResponse> ContentAnalysisResponse::FromProtobuf(
@@ -701,122 +698,6 @@ NS_IMETHODIMP ContentAnalysisResult::GetShouldAllowContent(
   return NS_OK;
 }
 
-void ContentAnalysis::EnsureParsedUrlFilters() {
-  MOZ_ASSERT(NS_IsMainThread());
-  if (mParsedUrlLists) {
-    return;
-  }
-
-  mParsedUrlLists = true;
-  nsAutoCString allowList;
-  MOZ_ALWAYS_SUCCEEDS(Preferences::GetCString(kAllowUrlPref, allowList));
-  for (const nsACString& regexSubstr : allowList.Split(u' ')) {
-    if (!regexSubstr.IsEmpty()) {
-      auto flatStr = PromiseFlatCString(regexSubstr);
-      const char* regex = flatStr.get();
-      LOGD("CA will allow URLs that match %s", regex);
-      mAllowUrlList.push_back(std::regex(regex));
-    }
-  }
-
-  nsAutoCString denyList;
-  MOZ_ALWAYS_SUCCEEDS(Preferences::GetCString(kDenyUrlPref, denyList));
-  for (const nsACString& regexSubstr : denyList.Split(u' ')) {
-    if (!regexSubstr.IsEmpty()) {
-      auto flatStr = PromiseFlatCString(regexSubstr);
-      const char* regex = flatStr.get();
-      LOGD("CA will block URLs that match %s", regex);
-      mDenyUrlList.push_back(std::regex(regex));
-    }
-  }
-}
-
-ContentAnalysis::UrlFilterResult ContentAnalysis::FilterByUrlLists(
-    nsIContentAnalysisRequest* aRequest) {
-  EnsureParsedUrlFilters();
-
-  nsIURI* nsiUrl = nullptr;
-  MOZ_ALWAYS_SUCCEEDS(aRequest->GetUrl(&nsiUrl));
-  nsCString urlString;
-  nsresult rv = nsiUrl->GetSpec(urlString);
-  NS_ENSURE_SUCCESS(rv, UrlFilterResult::eDeny);
-  MOZ_ASSERT(!urlString.IsEmpty());
-  std::string url = urlString.BeginReading();
-  size_t count = 0;
-  for (const auto& denyFilter : mDenyUrlList) {
-    if (std::regex_search(url, denyFilter)) {
-      LOGD("Denying CA request : Deny filter %zu matched url %s", count,
-           url.c_str());
-      return UrlFilterResult::eDeny;
-    }
-    ++count;
-  }
-
-  count = 0;
-  UrlFilterResult result = UrlFilterResult::eCheck;
-  for (const auto& allowFilter : mAllowUrlList) {
-    if (std::regex_match(url, allowFilter)) {
-      LOGD("CA request : Allow filter %zu matched %s", count, url.c_str());
-      result = UrlFilterResult::eAllow;
-      break;
-    }
-    ++count;
-  }
-
-  // The rest only applies to download resources.
-  nsIContentAnalysisRequest::AnalysisType analysisType;
-  MOZ_ALWAYS_SUCCEEDS(aRequest->GetAnalysisType(&analysisType));
-  if (analysisType != ContentAnalysisRequest::AnalysisType::eFileDownloaded) {
-    MOZ_ASSERT(result == UrlFilterResult::eCheck ||
-               result == UrlFilterResult::eAllow);
-    LOGD("CA request filter result: %s",
-         result == UrlFilterResult::eCheck ? "check" : "allow");
-    return result;
-  }
-
-  nsTArray<RefPtr<nsIClientDownloadResource>> resources;
-  MOZ_ALWAYS_SUCCEEDS(aRequest->GetResources(resources));
-  for (size_t resourceIdx = 0; resourceIdx < resources.Length();
-       /* noop */) {
-    auto& resource = resources[resourceIdx];
-    nsAutoString nsUrl;
-    MOZ_ALWAYS_SUCCEEDS(resource->GetUrl(nsUrl));
-    std::string url = NS_ConvertUTF16toUTF8(nsUrl).get();
-    count = 0;
-    for (auto& denyFilter : mDenyUrlList) {
-      if (std::regex_search(url, denyFilter)) {
-        LOGD(
-            "Denying CA request : Deny filter %zu matched download resource "
-            "at url %s",
-            count, url.c_str());
-        return UrlFilterResult::eDeny;
-      }
-      ++count;
-    }
-
-    count = 0;
-    bool removed = false;
-    for (auto& allowFilter : mAllowUrlList) {
-      if (std::regex_search(url, allowFilter)) {
-        LOGD(
-            "CA request : Allow filter %zu matched download resource "
-            "at url %s",
-            count, url.c_str());
-        resources.RemoveElementAt(resourceIdx);
-        removed = true;
-        break;
-      }
-      ++count;
-    }
-    if (!removed) {
-      ++resourceIdx;
-    }
-  }
-
-  // Check unless all were allowed.
-  return resources.Length() ? UrlFilterResult::eCheck : UrlFilterResult::eAllow;
-}
-
 NS_IMPL_CLASSINFO(ContentAnalysisRequest, nullptr, 0, {0});
 NS_IMPL_ISUPPORTS_CI(ContentAnalysisRequest, nsIContentAnalysisRequest);
 NS_IMPL_CLASSINFO(ContentAnalysisResponse, nullptr, 0, {0});
@@ -985,8 +866,6 @@ nsresult ContentAnalysis::RunAnalyzeRequestTask(
     const RefPtr<nsIContentAnalysisRequest>& aRequest, bool aAutoAcknowledge,
     int64_t aRequestCount,
     const RefPtr<nsIContentAnalysisCallback>& aCallback) {
-  MOZ_ASSERT(NS_IsMainThread());
-
   nsresult rv = NS_ERROR_FAILURE;
   auto callbackCopy = aCallback;
   auto se = MakeScopeExit([&] {
@@ -996,51 +875,24 @@ nsresult ContentAnalysis::RunAnalyzeRequestTask(
     }
   });
 
-  nsCString requestToken;
-  rv = aRequest->GetRequestToken(requestToken);
+  content_analysis::sdk::ContentAnalysisRequest pbRequest;
+  rv =
+      ConvertToProtobuf(aRequest, GetUserActionId(), aRequestCount, &pbRequest);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCString requestToken;
   nsMainThreadPtrHandle<nsIContentAnalysisCallback> callbackHolderCopy(
       new nsMainThreadPtrHolder<nsIContentAnalysisCallback>(
           "content analysis callback", aCallback));
   CallbackData callbackData(std::move(callbackHolderCopy), aAutoAcknowledge);
+  rv = aRequest->GetRequestToken(requestToken);
+  NS_ENSURE_SUCCESS(rv, rv);
   {
     auto lock = mCallbackMap.Lock();
     lock->InsertOrUpdate(requestToken, std::move(callbackData));
   }
 
-  // Check URLs of requested info against
-  // browser.contentanalysis.allow_url_regex_list/deny_url_regex_list.
-  // Build the list once since creating regexs is slow.
-  // URLs that match the allow list are removed from the check.  There is
-  // only one URL in all cases except downloads.  If all contents are removed
-  // or the page URL is allowed (for downloads) then the operation is allowed.
-  // URLs that match the deny list block the entire operation.
-  // If the request is completely covered by this filter then flag it as
-  // not needing to send an Acknowledge.
-  auto filterResult = FilterByUrlLists(aRequest);
-  if (filterResult == ContentAnalysis::UrlFilterResult::eDeny) {
-    LOGD("Blocking request due to deny URL filter.");
-    auto response = ContentAnalysisResponse::FromAction(
-        nsIContentAnalysisResponse::Action::eBlock, requestToken);
-    response->DoNotAcknowledge();
-    IssueResponse(response);
-    return NS_OK;
-  } else if (filterResult == ContentAnalysis::UrlFilterResult::eAllow) {
-    LOGD("Allowing request -- all operations match allow URL filter.");
-    auto response = ContentAnalysisResponse::FromAction(
-        nsIContentAnalysisResponse::Action::eAllow, requestToken);
-    response->DoNotAcknowledge();
-    IssueResponse(response);
-    return NS_OK;
-  }
-
   LOGD("Issuing ContentAnalysisRequest for token %s", requestToken.get());
-
-  content_analysis::sdk::ContentAnalysisRequest pbRequest;
-  rv =
-      ConvertToProtobuf(aRequest, GetUserActionId(), aRequestCount, &pbRequest);
-  NS_ENSURE_SUCCESS(rv, rv);
   LogRequest(&pbRequest);
 
   mCaClientPromise->Then(
@@ -1142,75 +994,75 @@ void ContentAnalysis::DoAnalyzeRequest(
           LOGE("Content analysis got invalid response!");
           return;
         }
+        nsCString responseRequestToken;
+        nsresult requestRv = response->GetRequestToken(responseRequestToken);
+        if (NS_FAILED(requestRv)) {
+          LOGE(
+              "Content analysis couldn't get request token "
+              "from response!");
+          return;
+        }
 
-        owner->IssueResponse(response);
+        Maybe<CallbackData> maybeCallbackData;
+        {
+          auto callbackMap = owner->mCallbackMap.Lock();
+          maybeCallbackData = callbackMap->Extract(responseRequestToken);
+        }
+        if (maybeCallbackData.isNothing()) {
+          LOGD(
+              "Content analysis did not find callback for "
+              "token %s",
+              responseRequestToken.get());
+          return;
+        }
+        response->SetOwner(owner);
+        if (maybeCallbackData->Canceled()) {
+          // request has already been cancelled, so there's
+          // nothing to do
+          LOGD(
+              "Content analysis got response but ignoring "
+              "because it was already cancelled for token %s",
+              responseRequestToken.get());
+          // Note that we always acknowledge here, even if
+          // autoAcknowledge isn't set, since we raise an exception
+          // at the caller on cancellation.
+          auto acknowledgement = MakeRefPtr<ContentAnalysisAcknowledgement>(
+              nsIContentAnalysisAcknowledgement::Result::eTooLate,
+              nsIContentAnalysisAcknowledgement::FinalAction::eBlock);
+          response->Acknowledge(acknowledgement);
+          return;
+        }
+
+        LOGD(
+            "Content analysis resolving response promise for "
+            "token %s",
+            responseRequestToken.get());
+        nsIContentAnalysisResponse::Action action = response->GetAction();
+        nsCOMPtr<nsIObserverService> obsServ =
+            mozilla::services::GetObserverService();
+        if (action == nsIContentAnalysisResponse::Action::eWarn) {
+          {
+            auto warnResponseDataMap = owner->mWarnResponseDataMap.Lock();
+            warnResponseDataMap->InsertOrUpdate(
+                responseRequestToken,
+                WarnResponseData(std::move(*maybeCallbackData), response));
+          }
+          obsServ->NotifyObservers(response, "dlp-response", nullptr);
+          return;
+        }
+
+        obsServ->NotifyObservers(response, "dlp-response", nullptr);
+        if (maybeCallbackData->AutoAcknowledge()) {
+          auto acknowledgement = MakeRefPtr<ContentAnalysisAcknowledgement>(
+              nsIContentAnalysisAcknowledgement::Result::eSuccess,
+              ConvertResult(action));
+          response->Acknowledge(acknowledgement);
+        }
+
+        nsMainThreadPtrHandle<nsIContentAnalysisCallback> callbackHolder =
+            maybeCallbackData->TakeCallbackHolder();
+        callbackHolder->ContentResult(response);
       }));
-}
-
-void ContentAnalysis::IssueResponse(RefPtr<ContentAnalysisResponse>& response) {
-  MOZ_ASSERT(NS_IsMainThread());
-  nsCString responseRequestToken;
-  nsresult requestRv = response->GetRequestToken(responseRequestToken);
-  if (NS_FAILED(requestRv)) {
-    LOGE("Content analysis couldn't get request token from response!");
-    return;
-  }
-
-  Maybe<CallbackData> maybeCallbackData;
-  {
-    auto callbackMap = mCallbackMap.Lock();
-    maybeCallbackData = callbackMap->Extract(responseRequestToken);
-  }
-  if (maybeCallbackData.isNothing()) {
-    LOGD("Content analysis did not find callback for token %s",
-         responseRequestToken.get());
-    return;
-  }
-  response->SetOwner(this);
-  if (maybeCallbackData->Canceled()) {
-    // request has already been cancelled, so there's
-    // nothing to do
-    LOGD(
-        "Content analysis got response but ignoring "
-        "because it was already cancelled for token %s",
-        responseRequestToken.get());
-    // Note that we always acknowledge here, even if
-    // autoAcknowledge isn't set, since we raise an exception
-    // at the caller on cancellation.
-    auto acknowledgement = MakeRefPtr<ContentAnalysisAcknowledgement>(
-        nsIContentAnalysisAcknowledgement::Result::eTooLate,
-        nsIContentAnalysisAcknowledgement::FinalAction::eBlock);
-    response->Acknowledge(acknowledgement);
-    return;
-  }
-
-  LOGD("Content analysis resolving response promise for token %s",
-       responseRequestToken.get());
-  nsIContentAnalysisResponse::Action action = response->GetAction();
-  nsCOMPtr<nsIObserverService> obsServ =
-      mozilla::services::GetObserverService();
-  if (action == nsIContentAnalysisResponse::Action::eWarn) {
-    {
-      auto warnResponseDataMap = mWarnResponseDataMap.Lock();
-      warnResponseDataMap->InsertOrUpdate(
-          responseRequestToken,
-          WarnResponseData(std::move(*maybeCallbackData), response));
-    }
-    obsServ->NotifyObservers(response, "dlp-response", nullptr);
-    return;
-  }
-
-  obsServ->NotifyObservers(response, "dlp-response", nullptr);
-  if (maybeCallbackData->AutoAcknowledge()) {
-    auto acknowledgement = MakeRefPtr<ContentAnalysisAcknowledgement>(
-        nsIContentAnalysisAcknowledgement::Result::eSuccess,
-        ConvertResult(action));
-    response->Acknowledge(acknowledgement);
-  }
-
-  nsMainThreadPtrHandle<nsIContentAnalysisCallback> callbackHolder =
-      maybeCallbackData->TakeCallbackHolder();
-  callbackHolder->ContentResult(response);
 }
 
 NS_IMETHODIMP
@@ -1366,10 +1218,6 @@ ContentAnalysisResponse::Acknowledge(
     return NS_ERROR_FAILURE;
   }
   mHasAcknowledged = true;
-
-  if (mDoNotAcknowledge) {
-    return NS_OK;
-  }
   return mOwner->RunAcknowledgeTask(aAcknowledgement, mRequestToken);
 };
 

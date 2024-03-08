@@ -8,7 +8,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/CmdLineAndEnvUtils.h"
 #include "content_analysis/sdk/analysis_client.h"
-#include "TestContentAnalysisAgent.h"
+#include "TestContentAnalysis.h"
 #include <processenv.h>
 #include <synchapi.h>
 #include <windows.h>
