@@ -831,11 +831,14 @@ void ParticularProcessPriorityManager::SetPriorityNow(
     // thread on low-power cores. Alternately, if we are changing from the
     // background to a higher priority, we change the main thread back to its
     // normal state.
+    // During shutdown, we will manually set the priority to the highest
+    // possible and disallow any additional priority changes.
     //
     // The messages for this will be relayed using the ProcessHangMonitor such
     // that the priority can be raised even if the main thread is unresponsive.
-    if (PriorityUsesLowPowerMainThread(mPriority) !=
-        (PriorityUsesLowPowerMainThread(oldPriority))) {
+    if (!mContentParent->IsShuttingDown() &&
+        PriorityUsesLowPowerMainThread(mPriority) !=
+            PriorityUsesLowPowerMainThread(oldPriority)) {
       if (PriorityUsesLowPowerMainThread(mPriority) &&
           PrefsUseLowPriorityThreads()) {
         mContentParent->SetMainThreadQoSPriority(nsIThread::QOS_PRIORITY_LOW);
