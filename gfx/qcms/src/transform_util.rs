@@ -471,7 +471,7 @@ pub fn compute_precache_linear(output: &mut [u8; PRECACHE_OUTPUT_SIZE]) {
         output[v] = (v / (PRECACHE_OUTPUT_SIZE / 256)) as u8;
     }
 }
-pub(crate) fn compute_precache(trc: &curveType, output: &mut [u8; PRECACHE_OUTPUT_SIZE]) -> bool {
+pub(crate) fn compute_precache(trc: &curveType, output: &mut [u8; PRECACHE_OUTPUT_SIZE]) {
     match trc {
         curveType::Parametric(params) => {
             let mut gamma_table_uint: [u16; 256] = [0; 256];
@@ -512,7 +512,6 @@ pub(crate) fn compute_precache(trc: &curveType, output: &mut [u8; PRECACHE_OUTPU
             }
         }
     }
-    true
 }
 fn build_linear_table(length: usize) -> Vec<u16> {
     let mut output = Vec::with_capacity(length);

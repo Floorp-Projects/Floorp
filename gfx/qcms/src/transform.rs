@@ -1174,30 +1174,27 @@ pub extern "C" fn qcms_profile_precache_output_transform(profile: &mut Profile) 
     }
     if profile.output_table_r.is_none() {
         let mut output_table_r = precache_create();
-        if compute_precache(
+        compute_precache(
             profile.redTRC.as_deref().unwrap(),
             &mut Arc::get_mut(&mut output_table_r).unwrap().data,
-        ) {
-            profile.output_table_r = Some(output_table_r);
-        }
+        );
+        profile.output_table_r = Some(output_table_r);
     }
     if profile.output_table_g.is_none() {
         let mut output_table_g = precache_create();
-        if compute_precache(
+        compute_precache(
             profile.greenTRC.as_deref().unwrap(),
             &mut Arc::get_mut(&mut output_table_g).unwrap().data,
-        ) {
-            profile.output_table_g = Some(output_table_g);
-        }
+        );
+        profile.output_table_g = Some(output_table_g);
     }
     if profile.output_table_b.is_none() {
         let mut output_table_b = precache_create();
-        if compute_precache(
+        compute_precache(
             profile.blueTRC.as_deref().unwrap(),
             &mut Arc::get_mut(&mut output_table_b).unwrap().data,
-        ) {
-            profile.output_table_b = Some(output_table_b);
-        }
+        );
+        profile.output_table_b = Some(output_table_b);
     };
 }
 /* Replace the current transformation with a LUT transformation using a given number of sample points */
