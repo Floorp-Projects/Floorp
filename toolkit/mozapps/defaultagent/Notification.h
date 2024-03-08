@@ -7,7 +7,9 @@
 #ifndef __DEFAULT_BROWSER_NOTIFICATION_H__
 #define __DEFAULT_BROWSER_NOTIFICATION_H__
 
-#include "DefaultBrowser.h"
+#include <string>
+
+#include "nsStringFwd.h"
 
 namespace mozilla::default_agent {
 
@@ -38,9 +40,6 @@ struct NotificationActivities {
   NotificationShown shown;
   NotificationAction action;
 };
-
-NotificationActivities MaybeShowNotification(
-    const DefaultBrowserInfo& browserInfo, const wchar_t* aumi, bool force);
 
 // These take enum values and get strings suitable for telemetry
 std::string GetStringForNotificationType(NotificationType type);

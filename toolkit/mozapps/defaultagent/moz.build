@@ -15,6 +15,7 @@ UNIFIED_SOURCES += [
     "DefaultBrowser.cpp",
     "DefaultPDF.cpp",
     "EventLog.cpp",
+    "Notification.cpp",
     "Policy.cpp",
     "Registry.cpp",
     "ScheduledTask.cpp",
@@ -23,21 +24,6 @@ UNIFIED_SOURCES += [
     "Telemetry.cpp",
     "UtfConvert.cpp",
     "WindowsMutex.cpp",
-]
-
-SOURCES += [
-    "/third_party/WinToast/wintoastlib.cpp",
-    "/toolkit/mozapps/update/common/readstrings.cpp",
-    "Notification.cpp",
-]
-
-# Suppress warnings from third-party code.
-SOURCES["/third_party/WinToast/wintoastlib.cpp"].flags += [
-    "-Wno-implicit-fallthrough",
-    "-Wno-nonportable-include-path",  # Needed for wintoastlib.h including "Windows.h"
-]
-SOURCES["Notification.cpp"].flags += [
-    "-Wno-nonportable-include-path",  # Needed for wintoastlib.h including "Windows.h"
 ]
 
 EXPORTS.mozilla += [
@@ -52,9 +38,7 @@ USE_LIBS += [
 LOCAL_INCLUDES += [
     "/browser/components/shell/",
     "/other-licenses/nsis/Contrib/CityHash/cityhash",
-    "/third_party/WinToast",
     "/toolkit/components/jsoncpp/include",
-    "/toolkit/mozapps/update/common",
 ]
 
 OS_LIBS += [
@@ -97,8 +81,6 @@ for var in ("MOZ_APP_BASENAME", "MOZ_APP_DISPLAYNAME", "MOZ_APP_VENDOR"):
 
 DEFINES["UNICODE"] = True
 DEFINES["_UNICODE"] = True
-
-FINAL_TARGET_FILES += ["defaultagent.ini"]
 
 FINAL_LIBRARY = "xul"
 

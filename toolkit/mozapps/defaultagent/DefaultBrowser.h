@@ -10,7 +10,6 @@
 #include <string>
 
 #include "mozilla/DefineEnum.h"
-#include "mozilla/WinHeaderOnlyUtils.h"
 
 namespace mozilla::default_agent {
 
@@ -24,9 +23,6 @@ struct DefaultBrowserInfo {
   Browser previousDefaultBrowser;
 };
 
-using DefaultBrowserResult = mozilla::WindowsErrorResult<DefaultBrowserInfo>;
-
-DefaultBrowserResult GetDefaultBrowserInfo();
 Browser GetDefaultBrowser();
 Browser GetReplacePreviousDefaultBrowser(Browser currentBrowser);
 

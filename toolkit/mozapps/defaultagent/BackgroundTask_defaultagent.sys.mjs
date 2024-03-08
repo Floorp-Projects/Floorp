@@ -17,8 +17,6 @@ const EXIT_CODE = {
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
-  BackgroundTasksUtils: "resource://gre/modules/BackgroundTasksUtils.sys.mjs",
-  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   // eslint-disable-next-line mozilla/no-browser-refs-in-toolkit
   ShellService: "resource:///modules/ShellService.sys.mjs",
 });
@@ -157,25 +155,11 @@ export async function runBackgroundTask(commandLine) {
 
       lazy.log.info(`Running do-task with AUMID "${aumid}"`);
 
-      let cppFallback = false;
       try {
-        await lazy.BackgroundTasksUtils.enableNimbus(commandLine);
-        cppFallback =
-          lazy.NimbusFeatures.defaultAgent.getVariable("cppFallback");
-      } catch (e) {
-        lazy.log.error(`Error enabling nimbus: ${e}`);
-      }
-
-      try {
-        if (!cppFallback) {
-          lazy.log.info("Running JS do-task.");
-          await runWithRegistryLocked(async () => {
-            await doTask(defaultAgent, force);
-          });
-        } else {
-          lazy.log.info("Running C++ do-task.");
-          defaultAgent.doTask(aumid, force);
-        }
+        lazy.log.info("Running JS do-task.");
+        await runWithRegistryLocked(async () => {
+          await doTask(defaultAgent, force);
+        });
       } catch (e) {
         if (e.message) {
           lazy.log.error(e.message);
