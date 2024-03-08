@@ -21,6 +21,8 @@ from typing import Any, List
 import appdirs
 import yaml
 
+from gecko_taskgraph.util.hg import get_json_automationrelevance
+
 Command = namedtuple("Command", ["func", "args", "kwargs", "defaults"])
 commands = {}
 
@@ -454,6 +456,11 @@ def show_taskgraph(options):
 
         if options["diff"] == "default":
             base_ref = repo.base_ref
+        elif options["diff"] == "FIND_BASE":
+            data = get_json_automationrelevance(
+                parameters["head_repository"], parameters["head_rev"]
+            )
+            base_ref = data["changesets"][0]["parents"][0]
         else:
             base_ref = options["diff"]
 
