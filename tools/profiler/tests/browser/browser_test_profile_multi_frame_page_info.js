@@ -23,7 +23,7 @@ add_task(async function test_profile_multi_frame_page_info() {
 
   info("Open a tab with multi_frame.html in it.");
   // multi_frame.html embeds single_frame.html inside an iframe.
-  const url = BASE_URL + "multi_frame.html";
+  const url = BASE_URL_HTTPS + "multi_frame.html";
   await BrowserTestUtils.withNewTab(url, async function (contentBrowser) {
     const contentPid = await SpecialPowers.spawn(contentBrowser, [], () => {
       return Services.appinfo.processID;
@@ -63,8 +63,8 @@ add_task(async function test_profile_multi_frame_page_info() {
 
     for (const page of contentProcess.pages) {
       // Child page (iframe)
-      if (page.url == BASE_URL + "single_frame.html") {
-        Assert.equal(page.url, BASE_URL + "single_frame.html");
+      if (page.url == BASE_URL_HTTPS + "single_frame.html") {
+        Assert.equal(page.url, BASE_URL_HTTPS + "single_frame.html");
         Assert.equal(typeof page.tabID, "number");
         Assert.equal(page.tabID, activeTabID);
         Assert.equal(typeof page.innerWindowID, "number");

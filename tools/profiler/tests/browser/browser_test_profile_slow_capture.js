@@ -13,7 +13,7 @@ add_task(async function browser_test_profile_slow_capture() {
   await startProfiler({ threads: ["GeckoMain", "test-debug-child-slow-json"] });
 
   info("Open a tab with single_frame.html in it.");
-  const url = BASE_URL + "single_frame.html";
+  const url = BASE_URL_HTTPS + "single_frame.html";
   await BrowserTestUtils.withNewTab(url, async function (contentBrowser) {
     const contentPid = await SpecialPowers.spawn(contentBrowser, [], () => {
       return Services.appinfo.processID;
@@ -78,7 +78,7 @@ add_task(async function browser_test_profile_very_slow_capture() {
   });
 
   info("Open a tab with single_frame.html in it.");
-  const url = BASE_URL + "single_frame.html";
+  const url = BASE_URL_HTTPS + "single_frame.html";
   await BrowserTestUtils.withNewTab(url, async function (contentBrowser) {
     const contentPid = await SpecialPowers.spawn(contentBrowser, [], () => {
       return Services.appinfo.processID;

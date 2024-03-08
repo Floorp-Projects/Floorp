@@ -28,10 +28,10 @@ add_task(async function test_network_markers_redirect_simple() {
 
   const targetFileNameWithCacheBust = "simple.html";
   const url =
-    BASE_URL +
+    BASE_URL_HTTPS +
     "redirect.sjs?" +
     encodeURIComponent(targetFileNameWithCacheBust);
-  const targetUrl = BASE_URL + targetFileNameWithCacheBust;
+  const targetUrl = BASE_URL_HTTPS + targetFileNameWithCacheBust;
 
   await BrowserTestUtils.withNewTab(url, async contentBrowser => {
     const contentPid = await SpecialPowers.spawn(
@@ -149,7 +149,8 @@ add_task(async function test_network_markers_redirect_resources() {
 
   startProfilerForMarkerTests();
 
-  const url = BASE_URL + "page_with_resources.html?cacheBust=" + Math.random();
+  const url =
+    BASE_URL_HTTPS + "page_with_resources.html?cacheBust=" + Math.random();
   await BrowserTestUtils.withNewTab(url, async contentBrowser => {
     const contentPid = await SpecialPowers.spawn(
       contentBrowser,
