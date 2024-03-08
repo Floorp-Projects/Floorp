@@ -1298,6 +1298,8 @@ skip-if = [
   "http2",
 ]
 
+["test_focus_radio.html"]
+
 ["test_focus_scroll_padding_tab.html"]
 
 ["test_focus_scrollable_fieldset.html"]

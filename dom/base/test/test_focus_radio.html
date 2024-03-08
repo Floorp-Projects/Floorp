@@ -1,0 +1,90 @@
+<!doctype html>
+<title>Test for input radio focus</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+
+<button id="before">before</button>
+<fieldset>
+  <legend>a</legend>
+  <label><input id="a1" type="radio" name="a" checked>a1</label>
+  <label><input id="a2" type="radio" name="a">a2</label>
+</fieldset>
+<fieldset>
+  <legend>b</legend>
+  <label><input id="b1" type="radio" name="b">b1</label>
+  <label><input id="b2" type="radio" name="b" checked>b2</label>
+</fieldset>
+<fieldset>
+  <legend>c</legend>
+  <label><input id="c1" type="radio" name="c">c1</label>
+  <label><input id="c2" type="radio" name="c">c2</label>
+</fieldset>
+<fieldset>
+  <legend>d</legend>
+  <label><input id="d1" type="radio" name="d" disabled>d1</label>
+  <label><input id="d2" type="radio" name="d">d2</label>
+  <label><input id="d3" type="radio" name="d" disabled>d3</label>
+  <label><input id="d4" type="radio" name="d">d4</label>
+</fieldset>
+<button id="after">after</button>
+
+<script>
+  SimpleTest.waitForExplicitFinish();
+
+  function expectFocusAfterKey(key, id) {
+    const res = key.match(/(Shift\+)?(.*)/);
+    const shiftKey = Boolean(res[1]);
+    const rawKey = res[2];
+    synthesizeKey(`KEY_${rawKey}`, { shiftKey });
+    is(document.activeElement.id, id, `${id} is focused after ${key}`);
+  }
+
+  SimpleTest.waitForFocus(async function() {
+    await SpecialPowers.pushPrefEnv({"set": [["accessibility.tabfocus", 7]]});
+
+    expectFocusAfterKey("Tab", "before");
+    // a1 is checked.
+    expectFocusAfterKey("Tab", "a1");
+    // b2 is checked.
+    expectFocusAfterKey("Tab", "b2");
+    // Nothing is checked in group c, so c1 should get focus.
+    expectFocusAfterKey("Tab", "c1");
+    // d1 is disabled, so d2 should get focus.
+    expectFocusAfterKey("Tab", "d2");
+    expectFocusAfterKey("Tab", "after");
+
+    expectFocusAfterKey("Shift+Tab", "d2");
+    expectFocusAfterKey("Shift+Tab", "c1");
+    expectFocusAfterKey("Shift+Tab", "b2");
+    expectFocusAfterKey("Shift+Tab", "a1");
+    expectFocusAfterKey("Shift+Tab", "before");
+
+    expectFocusAfterKey("Tab", "a1");
+    expectFocusAfterKey("ArrowDown", "a2");
+    expectFocusAfterKey("Tab", "b2");
+    // a2 is now checked, so shift+tab should focus it.
+    expectFocusAfterKey("Shift+Tab", "a2");
+
+    expectFocusAfterKey("Tab", "b2");
+    expectFocusAfterKey("ArrowUp", "b1");
+    expectFocusAfterKey("Shift+Tab", "a2");
+    expectFocusAfterKey("Tab", "b1");
+
+    expectFocusAfterKey("Tab", "c1");
+    expectFocusAfterKey("ArrowDown", "c2");
+    expectFocusAfterKey("Tab", "d2");
+    expectFocusAfterKey("Shift+Tab", "c2");
+
+    expectFocusAfterKey("Tab", "d2");
+    // d3 is disabled, so down arrow should focus d4.
+    expectFocusAfterKey("ArrowDown", "d4");
+    expectFocusAfterKey("ArrowUp", "d2");
+    expectFocusAfterKey("ArrowDown", "d4");
+    // Down arrow should wrap at the bottom, skipping disabled.
+    expectFocusAfterKey("ArrowDown", "d2");
+    // Up arrow should wrap at the top.
+    expectFocusAfterKey("ArrowUp", "d4");
+
+    SimpleTest.finish();
+  });
+</script>
