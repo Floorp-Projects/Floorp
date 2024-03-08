@@ -70,4 +70,9 @@ add_task(async function test_About_Welcome_Location_Change() {
     aboutWelcomeActor.AboutWelcomeObserver.AWTerminate.ADDRESS_BAR_NAVIGATED,
     "Terminated due to location uri changed"
   );
+
+  // Wait for the end of the any transition happening due to
+  // location change before closing the window, See bug 1882067
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+  await new Promise(r => setTimeout(r, 100));
 });
