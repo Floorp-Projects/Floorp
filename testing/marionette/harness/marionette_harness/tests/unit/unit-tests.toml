@@ -112,8 +112,7 @@ skip-if = ["!manage_instance"]
 
 ["test_profile_management.py"]
 skip-if = [
-  "!manage_instance",
-  "debug && (os == 'mac' || os == 'linux')", # Bug 1450355
+  "!manage_instance"
 ]
 
 ["test_proxy.py"]
