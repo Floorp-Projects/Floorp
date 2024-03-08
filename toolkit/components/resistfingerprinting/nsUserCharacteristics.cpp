@@ -118,6 +118,13 @@ void PopulateMissingFonts() {
   mozilla::glean::characteristics::missing_fonts.Set(aMissingFonts);
 }
 
+void PopulatePrefs() {
+  nsAutoCString acceptLang;
+  mozilla::Preferences::GetLocalizedCString("intl.accept_languages",
+                                            acceptLang);
+  mozilla::glean::characteristics::prefs_intl_accept_languages.Set(acceptLang);
+}
+
 // ==================================================================
 // The current schema of the data. Anytime you add a metric, or change how a
 // metric is set, this variable should be incremented. It'll be a lot. It's
@@ -241,6 +248,7 @@ nsresult nsUserCharacteristics::PopulateData(bool aTesting /* = false */) {
   PopulateMissingFonts();
   PopulateCSSProperties();
   PopulateScreenProperties();
+  PopulatePrefs();
 
   mozilla::glean::characteristics::target_frame_rate.Set(
       gfxPlatform::TargetFrameRate());
