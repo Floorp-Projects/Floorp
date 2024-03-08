@@ -46,6 +46,7 @@ static mut PENDING_BUF: Vec<u8> = Vec::new();
 // IPC serialization/deserialization methods
 // Crucially important that the first two not be called on multiple threads.
 
+/// # Safety
 /// Only safe if only called on a single thread (the same single thread you call
 /// fog_give_ipc_buf on).
 #[no_mangle]
@@ -59,6 +60,7 @@ pub unsafe extern "C" fn fog_serialize_ipc_buf() -> usize {
     }
 }
 
+/// # Safety
 /// Only safe if called on a single thread (the same single thread you call
 /// fog_serialize_ipc_buf on), and if buf points to an allocated buffer of at
 /// least buf_len bytes.
@@ -73,6 +75,7 @@ pub unsafe extern "C" fn fog_give_ipc_buf(buf: *mut u8, buf_len: usize) -> usize
     pending_len
 }
 
+/// # Safety
 /// Only safe if buf points to an allocated buffer of at least buf_len bytes.
 /// No ownership is transfered to Rust by this method: caller owns the memory at
 /// buf before and after this call.
@@ -92,9 +95,9 @@ pub unsafe extern "C" fn fog_use_ipc_buf(buf: *const u8, buf_len: usize) {
 pub extern "C" fn fog_set_debug_view_tag(value: &nsACString) -> nsresult {
     let result = glean::set_debug_view_tag(&value.to_string());
     if result {
-        return NS_OK;
+        NS_OK
     } else {
-        return NS_ERROR_FAILURE;
+        NS_ERROR_FAILURE
     }
 }
 
@@ -137,7 +140,7 @@ pub extern "C" fn fog_set_experiment_active(
         extra_values.len(),
         "Experiment extra keys and values differ in length."
     );
-    let extra = if extra_keys.len() == 0 {
+    let extra = if extra_keys.is_empty() {
         None
     } else {
         Some(
