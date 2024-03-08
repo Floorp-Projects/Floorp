@@ -9,6 +9,9 @@ support-files = [
   "../../../../dom/media/test/small-shot.m4a",
   "../../../../dom/media/test/small-shot.flac",
 ]
-prefs = ["media.utility-process.enabled=true"]
+prefs = [
+  "media.utility-process.enabled=true",
+  "media.wmf.media-engine.channel-decoder.enabled=false"
+]
 
 ["test_utility_audio_on.html"]

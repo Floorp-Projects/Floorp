@@ -1,5 +1,6 @@
 [DEFAULT]
 subsuite = "media-bc"
 tags = "media-engine-compatible"
+prefs = ["media.wmf.media-engine.channel-decoder.enabled=false"]
 
 ["browser_utility_audio_locked.js"]
