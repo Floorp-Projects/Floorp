@@ -2185,17 +2185,6 @@ httpSpeculativeParallelLimit:
         branch: default
         pref: "network.http.speculative-parallel-limit"
 
-deviceMigration:
-  description: Prefs to control aspects of the new device migration experiment
-  owner: hjones@mozilla.com
-  hasExposure: false
-  isEarlyStartup: true
-  variables:
-    helpMenuHidden:
-      description: True if new help menu item should be hidden
-      type: boolean
-      fallbackPref: browser.device-migration.help-menu.hidden
-
 shopping2023:
   description: Prefs to control the 2023 shopping experiment.
   owner: jhirsch@mozilla.com
