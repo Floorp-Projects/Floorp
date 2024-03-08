@@ -10,10 +10,7 @@
 add_task(async function () {
   await pushPref("devtools.debugger.threads-visible", true);
 
-  const dbg = await initDebugger(
-    "doc-windowless-workers.html",
-    "simple-worker.js"
-  );
+  const dbg = await initDebugger("doc-windowless-workers.html");
   const mainThread = dbg.toolbox.threadFront.actor;
 
   await waitForThreadCount(dbg, 2);
@@ -23,6 +20,8 @@ add_task(async function () {
   const thread2 = workers[1].actor;
 
   const mainThreadSource = findSource(dbg, "doc-windowless-workers.html");
+
+  await waitForSource(dbg, "simple-worker.js");
 
   info("Pause in the main thread");
   assertNotPaused(dbg);

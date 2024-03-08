@@ -17,7 +17,8 @@ add_task(async function () {
   const dbg = await initDebugger("doc-service-workers.html");
 
   invokeInTab("registerWorker");
-  const workerSource = await waitForSource(dbg, "service-worker.sjs");
+  await waitForSource(dbg, "service-worker.sjs");
+  const workerSource = findSource(dbg, "service-worker.sjs");
 
   await reload(dbg, "service-worker.sjs");
 

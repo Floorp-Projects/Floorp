@@ -22,7 +22,8 @@ add_task(async function () {
 
   const prettyEvaluatedSourceFilename =
     evaluatedSourceId.split("/").at(-1) + ":formatted";
-  const prettySource = await waitForSource(dbg, prettyEvaluatedSourceFilename);
+  await waitForSource(dbg, prettyEvaluatedSourceFilename);
+  const prettySource = findSource(dbg, prettyEvaluatedSourceFilename);
 
   info("Check that the script was pretty-printed as expected");
   const { value: prettySourceValue } = findSourceContent(dbg, prettySource);
@@ -66,7 +67,8 @@ document.addEventListener('click', e => {
 
   const prettyEvalSourceFilename =
     evalSourceId.split("/").at(-1) + ":formatted";
-  const prettyEvalSource = await waitForSource(dbg, prettyEvalSourceFilename);
+  await waitForSource(dbg, prettyEvalSourceFilename);
+  const prettyEvalSource = findSource(dbg, prettyEvalSourceFilename);
 
   info("Check that the script was pretty-printed as expected");
   const { value: prettyEvalSourceValue } = findSourceContent(
@@ -111,7 +113,8 @@ setTimeout(
 
   const prettyNewFunctionSourceFilename =
     newFunctionSourceId.split("/").at(-1) + ":formatted";
-  const prettyNewFunctionSource = await waitForSource(
+  await waitForSource(dbg, prettyNewFunctionSourceFilename);
+  const prettyNewFunctionSource = findSource(
     dbg,
     prettyNewFunctionSourceFilename
   );

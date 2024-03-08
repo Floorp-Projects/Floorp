@@ -22,7 +22,10 @@ module.exports = {
 
     // The thread actor has to be initialized in order to correctly
     // retrieve the stack trace when hitting an XHR
-    if (threadActor.state == THREAD_STATES.DETACHED) {
+    if (
+      threadActor.state == THREAD_STATES.DETACHED &&
+      !targetActor.targetType.endsWith("worker")
+    ) {
       await threadActor.attach();
     }
 

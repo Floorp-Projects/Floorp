@@ -444,18 +444,18 @@ exports.WatcherActor = class WatcherActor extends Actor {
   }
 
   /**
-   * Try to retrieve Target Actors instantiated in the parent process which aren't
-   * instantiated via the Watcher actor (and its dependencies):
-   * - top level target for the browser toolboxes
-   * - xpcshell targets for xpcshell debugging
+   * Try to retrieve a parent process TargetActor which is ignored by the
+   * TARGET_HELPERS. Examples:
+   * - top level target for the browser toolbox
+   * - xpcshell target for xpcshell debugging
    *
    * See comment in `watchResources`.
    *
-   * @return {Set<TargetActor>} Matching target actors.
+   * @return {TargetActor|null} Matching target actor if any, null otherwise.
    */
-  getTargetActorsInParentProcess() {
-    if (TargetActorRegistry.xpcShellTargetActors.size) {
-      return TargetActorRegistry.xpcShellTargetActors;
+  getTargetActorInParentProcess() {
+    if (TargetActorRegistry.xpcShellTargetActor) {
+      return TargetActorRegistry.xpcShellTargetActor;
     }
 
     // Note: For browser-element debugging, the WindowGlobalTargetActor returned here is created
@@ -467,18 +467,12 @@ exports.WatcherActor = class WatcherActor extends Actor {
 
     switch (this.sessionContext.type) {
       case "all":
-        const parentProcessTargetActor = actors.find(
-          actor => actor.typeName === "parentProcessTarget"
-        );
-        if (parentProcessTargetActor) {
-          return new Set([parentProcessTargetActor]);
-        }
-        return new Set();
+        return actors.find(actor => actor.typeName === "parentProcessTarget");
       case "browser-element":
       case "webextension":
         // All target actors for browser-element and webextension sessions
         // should be created using the JS Window actors.
-        return new Set();
+        return null;
       default:
         throw new Error(
           "Unsupported session context type: " + this.sessionContext.type
@@ -557,8 +551,8 @@ exports.WatcherActor = class WatcherActor extends Actor {
      * We will eventually get rid of this code once all targets are properly supported by
      * the Watcher Actor and we have target helpers for all of them.
      */
-    const targetActors = this.getTargetActorsInParentProcess();
-    for (const targetActor of targetActors) {
+    const targetActor = this.getTargetActorInParentProcess();
+    if (targetActor) {
       const targetActorResourceTypes = Resources.getResourceTypesForTargetType(
         resourceTypes,
         targetActor.targetType
@@ -630,8 +624,8 @@ exports.WatcherActor = class WatcherActor extends Actor {
     }
 
     // See comment in watchResources.
-    const targetActors = this.getTargetActorsInParentProcess();
-    for (const targetActor of targetActors) {
+    const targetActor = this.getTargetActorInParentProcess();
+    if (targetActor) {
       const targetActorResourceTypes = Resources.getResourceTypesForTargetType(
         resourceTypes,
         targetActor.targetType
@@ -761,8 +755,8 @@ exports.WatcherActor = class WatcherActor extends Actor {
     );
 
     // See comment in watchResources
-    const targetActors = this.getTargetActorsInParentProcess();
-    for (const targetActor of targetActors) {
+    const targetActor = this.getTargetActorInParentProcess();
+    if (targetActor) {
       await targetActor.addOrSetSessionDataEntry(
         type,
         entries,
@@ -802,8 +796,8 @@ exports.WatcherActor = class WatcherActor extends Actor {
       });
 
     // See comment in addOrSetDataEntry
-    const targetActors = this.getTargetActorsInParentProcess();
-    for (const targetActor of targetActors) {
+    const targetActor = this.getTargetActorInParentProcess();
+    if (targetActor) {
       targetActor.removeSessionDataEntry(type, entries);
     }
   }

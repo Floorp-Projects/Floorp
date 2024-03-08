@@ -126,6 +126,12 @@ class WorkerTargetActor extends BaseTargetActor {
     return this._sourcesManager;
   }
 
+  // This is called from the ThreadActor#onAttach method
+  onThreadAttached() {
+    // This isn't an RDP event and is only listened to from startup/worker.js.
+    this.emit("worker-thread-attached");
+  }
+
   destroy() {
     super.destroy();
 
