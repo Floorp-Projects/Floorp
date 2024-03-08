@@ -6826,8 +6826,8 @@
   value: false
   mirror: once
 
-# Enable NVIDIA RTX Video TrueHDR for video playback on Windows
-- name: gfx.webrender.video-true-hdr.nvidia
+# Enable VideoProcessor-HDR on SDR content for video overlay
+- name: gfx.webrender.overlay-vp-auto-hdr
   type: bool
   value: false
   mirror: once

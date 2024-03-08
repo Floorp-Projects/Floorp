@@ -279,6 +279,9 @@ static const char* GetPrefNameForFeature(int32_t aFeature) {
     case nsIGfxInfo::FEATURE_WEBGL_USE_HARDWARE:
       name = BLOCKLIST_PREF_BRANCH "webgl-use-hardware";
       break;
+    case nsIGfxInfo::FEATURE_OVERLAY_VP_AUTO_HDR:
+      name = BLOCKLIST_PREF_BRANCH "overlay-vp-auto-hdr";
+      break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unexpected nsIGfxInfo feature?!");
       break;
@@ -554,6 +557,9 @@ static int32_t BlocklistFeatureToGfxFeature(const nsAString& aFeature) {
   }
   if (aFeature.EqualsLiteral("ACCELERATED_CANVAS2D")) {
     return nsIGfxInfo::FEATURE_ACCELERATED_CANVAS2D;
+  }
+  if (aFeature.EqualsLiteral("FEATURE_OVERLAY_VP_AUTO_HDR")) {
+    return nsIGfxInfo::FEATURE_OVERLAY_VP_AUTO_HDR;
   }
   if (aFeature.EqualsLiteral("ALL")) {
     return GfxDriverInfo::allFeatures;
@@ -1924,7 +1930,7 @@ using Device = nsIGfxInfo::FontVisibilityDeviceDetermination;
 static StaticAutoPtr<std::pair<Device, nsString>> ret;
 
 std::pair<Device, nsString>* GfxInfoBase::GetFontVisibilityDeterminationPair() {
-  if(!ret) {
+  if (!ret) {
     ret = new std::pair<Device, nsString>();
     ret->first = Device::Unassigned;
     ret->second = u""_ns;

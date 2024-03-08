@@ -1321,10 +1321,9 @@ bool DCSurfaceVideo::CalculateSwapChainSize(gfx::Matrix& aTransform) {
   const bool monitorIsHDR = gfx::DeviceManagerDx::Get()->SystemHDREnabled();
   const bool powerIsCharging = RenderThread::Get()->GetPowerIsCharging();
 
-  bool useVpAutoHDR =
-      StaticPrefs::gfx_webrender_video_true_hdr_nvidia_AtStartup() &&
-      !contentIsHDR && monitorIsHDR && driverSupportsTrueHDR &&
-      powerIsCharging && !mVpAutoHDRFailed;
+  bool useVpAutoHDR = gfx::gfxVars::WebRenderOverlayVpAutoHDR() &&
+                      !contentIsHDR && monitorIsHDR && driverSupportsTrueHDR &&
+                      powerIsCharging && !mVpAutoHDRFailed;
 
   if (!mVideoSwapChain || mSwapChainSize != swapChainSize || mIsDRM != isDRM ||
       mUseVpAutoHDR != useVpAutoHDR) {
