@@ -88,9 +88,6 @@ with Files('rlbox_wasm2c_sandbox/**'):
 with Files('wasm2c/**'):
     BUG_COMPONENT = ('Core', 'Security: RLBox')
 
-with Files('WinToast/**'):
-    BUG_COMPONENT = ('Toolkit', 'General')
-
 with Files('libsrtp/**'):
     BUG_COMPONENT = ('Core', 'WebRTC: Networking')
 
