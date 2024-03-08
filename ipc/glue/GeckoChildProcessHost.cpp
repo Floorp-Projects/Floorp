@@ -267,7 +267,9 @@ class WindowsProcessLauncher final : public BaseProcessLauncher {
   void AddApplicationPrefetchArgument();
 
   mozilla::Maybe<CommandLine> mCmdLine;
+#  ifdef MOZ_SANDBOX
   bool mUseSandbox = false;
+#  endif
 
   const Buffer<IMAGE_THUNK_DATA>* mCachedNtdllThunk;
 };
