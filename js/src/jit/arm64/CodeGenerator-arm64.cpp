@@ -2563,10 +2563,6 @@ void CodeGenerator::visitWasmStoreI64(LWasmStoreI64* lir) {
                     ToRegister(lir->memoryBase()), ToRegister(lir->ptr()));
 }
 
-void CodeGenerator::visitMemoryBarrier(LMemoryBarrier* ins) {
-  masm.memoryBarrier(ins->type());
-}
-
 void CodeGenerator::visitWasmAddOffset(LWasmAddOffset* lir) {
   MWasmAddOffset* mir = lir->mir();
   Register base = ToRegister(lir->base());

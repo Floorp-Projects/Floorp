@@ -17748,6 +17748,10 @@ void CodeGenerator::visitStoreTypedArrayElementHoleBigInt(
   masm.bind(&skip);
 }
 
+void CodeGenerator::visitMemoryBarrier(LMemoryBarrier* ins) {
+  masm.memoryBarrier(ins->type());
+}
+
 void CodeGenerator::visitAtomicIsLockFree(LAtomicIsLockFree* lir) {
   Register value = ToRegister(lir->value());
   Register output = ToRegister(lir->output());

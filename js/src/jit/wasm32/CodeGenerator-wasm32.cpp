@@ -175,7 +175,6 @@ void CodeGenerator::visitWasmAtomicBinopHeapForEffect(
 }
 void CodeGenerator::visitWasmStackArg(LWasmStackArg* ins) { MOZ_CRASH(); }
 void CodeGenerator::visitWasmStackArgI64(LWasmStackArgI64* ins) { MOZ_CRASH(); }
-void CodeGenerator::visitMemoryBarrier(LMemoryBarrier* ins) { MOZ_CRASH(); }
 void CodeGenerator::visitSimd128(LSimd128* ins) { MOZ_CRASH(); }
 void CodeGenerator::visitWasmTernarySimd128(LWasmTernarySimd128* ins) {
   MOZ_CRASH();
