@@ -728,7 +728,7 @@ export class RTCPeerConnection {
       }
     };
 
-    var stunServers = 0;
+    let stunServers = 0;
 
     iceServers.forEach(({ urls, username, credential, credentialType }) => {
       if (!urls) {
@@ -793,11 +793,7 @@ export class RTCPeerConnection {
           }
           if (stunServers >= 5) {
             this.logError(
-              "Using five or more STUN/TURN servers causes problems"
-            );
-          } else if (stunServers > 2) {
-            this.logWarning(
-              "Using more than two STUN/TURN servers slows down discovery"
+              "Using five or more STUN/TURN servers slows down discovery"
             );
           }
         });
