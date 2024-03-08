@@ -12,6 +12,10 @@ LOCAL_INCLUDES += [
 if CONFIG["OS_TARGET"] == "WINNT":
     UNIFIED_SOURCES += [
         "TestContentAnalysis.cpp",
+    ]
+    SOURCES += [
+        # Agent SDK usings conflicts with Gecko usings
+        "TestContentAnalysisAgent.cpp",
         "TestContentAnalysisMisbehaving.cpp",
         "TestContentAnalysisUtils.cpp",
     ]
