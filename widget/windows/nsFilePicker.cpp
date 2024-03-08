@@ -19,7 +19,6 @@
 #include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/Components.h"
 #include "mozilla/dom/BrowsingContext.h"
-#include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/Directory.h"
 #include "mozilla/Logging.h"
 #include "mozilla/ipc/UtilityProcessManager.h"

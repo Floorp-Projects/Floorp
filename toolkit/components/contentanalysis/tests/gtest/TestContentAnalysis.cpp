@@ -6,110 +6,127 @@
 #include "gtest/gtest.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/Preferences.h"
-#include "nsNetUtil.h"
-#include "ContentAnalysis.h"
+#include "mozilla/CmdLineAndEnvUtils.h"
+#include "content_analysis/sdk/analysis_client.h"
+#include "TestContentAnalysis.h"
 #include <processenv.h>
 #include <synchapi.h>
 
-const char* kAllowUrlPref = "browser.contentanalysis.allow_url_regex_list";
-const char* kDenyUrlPref = "browser.contentanalysis.deny_url_regex_list";
+using namespace content_analysis::sdk;
 
-using namespace mozilla;
-using namespace mozilla::contentanalysis;
-
-class ContentAnalysisTest : public testing::Test {
- protected:
-  ContentAnalysisTest() {
-    nsCOMPtr<nsIContentAnalysis> caSvc =
-        do_GetService("@mozilla.org/contentanalysis;1");
-    MOZ_ASSERT(caSvc);
-    mContentAnalysis = static_cast<ContentAnalysis*>(caSvc.get());
+MozAgentInfo LaunchAgentNormal(const wchar_t* aToBlock) {
+  nsString cmdLineArguments;
+  if (aToBlock && aToBlock[0] != 0) {
+    cmdLineArguments.Append(L" --toblock=.*");
+    cmdLineArguments.Append(aToBlock);
+    cmdLineArguments.Append(L".*");
   }
-
-  void TearDown() override {
-    mContentAnalysis->mParsedUrlLists = false;
-    mContentAnalysis->mAllowUrlList = {};
-    mContentAnalysis->mDenyUrlList = {};
-
-    MOZ_ALWAYS_SUCCEEDS(Preferences::SetCString(kAllowUrlPref, ""));
-    MOZ_ALWAYS_SUCCEEDS(Preferences::SetCString(kDenyUrlPref, ""));
-  }
-
-  already_AddRefed<nsIContentAnalysisRequest> CreateRequest(const char* aUrl) {
-    nsCOMPtr<nsIURI> uri;
-    MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(uri), aUrl));
-    // We will only use the URL and, implicitly, the analysisType
-    // (behavior differs for download vs other types).
-    return RefPtr(new ContentAnalysisRequest(
-                      nsIContentAnalysisRequest::AnalysisType::eFileTransfer,
-                      EmptyString(), false, EmptyCString(), uri,
-                      nsIContentAnalysisRequest::OperationType::eDroppedText,
-                      nullptr))
-        .forget();
-  }
-
-  RefPtr<ContentAnalysis> mContentAnalysis;
-
-  // Proxies for private members of ContentAnalysis.  TEST_F
-  // creates new subclasses -- they do not inherit `friend`s.
-  // (FRIEND_TEST is another more verbose solution.)
-  using UrlFilterResult = ContentAnalysis::UrlFilterResult;
-  UrlFilterResult FilterByUrlLists(nsIContentAnalysisRequest* aReq) {
-    return mContentAnalysis->FilterByUrlLists(aReq);
-  }
-};
-
-TEST_F(ContentAnalysisTest, AllowUrlList) {
-  //  using UrlFilterResult = ContentAnalysis::UrlFilterResult;
-  MOZ_ALWAYS_SUCCEEDS(
-      Preferences::SetCString(kAllowUrlPref, ".*\\.org/match.*"));
-  RefPtr<nsIContentAnalysisRequest> car =
-      CreateRequest("https://example.org/matchme/");
-  ASSERT_EQ(FilterByUrlLists(car), UrlFilterResult::eAllow);
-  car = CreateRequest("https://example.com/matchme/");
-  ASSERT_EQ(FilterByUrlLists(car), UrlFilterResult::eCheck);
+  cmdLineArguments.Append(L" --user");
+  cmdLineArguments.Append(L" --path=");
+  nsString pipeName;
+  GeneratePipeName(L"contentanalysissdk-gtest-", pipeName);
+  cmdLineArguments.Append(pipeName);
+  MozAgentInfo agentInfo;
+  LaunchAgentWithCommandLineArguments(cmdLineArguments, pipeName, agentInfo);
+  return agentInfo;
 }
 
-TEST_F(ContentAnalysisTest, MultipleAllowUrlList) {
-  MOZ_ALWAYS_SUCCEEDS(Preferences::SetCString(
-      kAllowUrlPref, ".*\\.org/match.* .*\\.net/match.*"));
-  RefPtr<nsIContentAnalysisRequest> car =
-      CreateRequest("https://example.org/matchme/");
-  ASSERT_EQ(FilterByUrlLists(car), UrlFilterResult::eAllow);
-  car = CreateRequest("https://example.net/matchme/");
-  ASSERT_EQ(FilterByUrlLists(car), UrlFilterResult::eAllow);
-  car = CreateRequest("https://example.com/matchme/");
-  ASSERT_EQ(FilterByUrlLists(car), UrlFilterResult::eCheck);
+TEST(ContentAnalysis, TextShouldNotBeBlocked)
+{
+  auto MozAgentInfo = LaunchAgentNormal(L"block");
+  // Exit the test early if the process failed to launch
+  ASSERT_NE(MozAgentInfo.processInfo.dwProcessId, 0UL);
+  ASSERT_NE(nullptr, MozAgentInfo.client.get());
+
+  ContentAnalysisRequest request;
+  request.set_request_token("request token");
+  request.set_text_content("should succeed");
+  ContentAnalysisResponse response;
+  ASSERT_EQ(0, MozAgentInfo.client->Send(request, &response));
+  ASSERT_STREQ("request token", response.request_token().c_str());
+  ASSERT_EQ(1, response.results().size());
+  ASSERT_EQ(ContentAnalysisResponse_Result_Status_SUCCESS,
+            response.results().Get(0).status());
+  ASSERT_EQ(0, response.results().Get(0).triggered_rules_size());
+
+  BOOL terminateResult =
+      ::TerminateProcess(MozAgentInfo.processInfo.hProcess, 0);
+  ASSERT_NE(FALSE, terminateResult)
+      << "Failed to terminate content_analysis_sdk_agent process";
 }
 
-TEST_F(ContentAnalysisTest, DenyUrlList) {
-  MOZ_ALWAYS_SUCCEEDS(
-      Preferences::SetCString(kDenyUrlPref, ".*\\.com/match.*"));
-  RefPtr<nsIContentAnalysisRequest> car =
-      CreateRequest("https://example.org/matchme/");
-  ASSERT_EQ(FilterByUrlLists(car), UrlFilterResult::eCheck);
-  car = CreateRequest("https://example.com/matchme/");
-  ASSERT_EQ(FilterByUrlLists(car), UrlFilterResult::eDeny);
+TEST(ContentAnalysis, TextShouldBeBlocked)
+{
+  auto MozAgentInfo = LaunchAgentNormal(L"block");
+  // Exit the test early if the process failed to launch
+  ASSERT_NE(MozAgentInfo.processInfo.dwProcessId, 0UL);
+  ASSERT_NE(nullptr, MozAgentInfo.client.get());
+
+  ContentAnalysisRequest request;
+  request.set_request_token("request token");
+  request.set_text_content("should be blocked");
+  ContentAnalysisResponse response;
+  ASSERT_EQ(0, MozAgentInfo.client->Send(request, &response));
+  ASSERT_STREQ("request token", response.request_token().c_str());
+  ASSERT_EQ(1, response.results().size());
+  ASSERT_EQ(ContentAnalysisResponse_Result_Status_SUCCESS,
+            response.results().Get(0).status());
+  ASSERT_EQ(1, response.results().Get(0).triggered_rules_size());
+  ASSERT_EQ(ContentAnalysisResponse_Result_TriggeredRule_Action_BLOCK,
+            response.results().Get(0).triggered_rules(0).action());
+
+  BOOL terminateResult =
+      ::TerminateProcess(MozAgentInfo.processInfo.hProcess, 0);
+  ASSERT_NE(FALSE, terminateResult)
+      << "Failed to terminate content_analysis_sdk_agent process";
 }
 
-TEST_F(ContentAnalysisTest, MultipleDenyUrlList) {
-  MOZ_ALWAYS_SUCCEEDS(Preferences::SetCString(
-      kDenyUrlPref, ".*\\.com/match.* .*\\.biz/match.*"));
-  RefPtr<nsIContentAnalysisRequest> car =
-      CreateRequest("https://example.org/matchme/");
-  ASSERT_EQ(FilterByUrlLists(car), UrlFilterResult::eCheck);
-  car = CreateRequest("https://example.com/matchme/");
-  ASSERT_EQ(FilterByUrlLists(car), UrlFilterResult::eDeny);
-  car = CreateRequest("https://example.biz/matchme/");
-  ASSERT_EQ(FilterByUrlLists(car), UrlFilterResult::eDeny);
+TEST(ContentAnalysis, FileShouldNotBeBlocked)
+{
+  auto MozAgentInfo = LaunchAgentNormal(L"block");
+  // Exit the test early if the process failed to launch
+  ASSERT_NE(MozAgentInfo.processInfo.dwProcessId, 0UL);
+  ASSERT_NE(nullptr, MozAgentInfo.client.get());
+
+  ContentAnalysisRequest request;
+  request.set_request_token("request token");
+  request.set_file_path("..\\..\\_tests\\gtest\\allowedFile.txt");
+  ContentAnalysisResponse response;
+  ASSERT_EQ(0, MozAgentInfo.client->Send(request, &response));
+  ASSERT_STREQ("request token", response.request_token().c_str());
+  ASSERT_EQ(1, response.results().size());
+  ASSERT_EQ(ContentAnalysisResponse_Result_Status_SUCCESS,
+            response.results().Get(0).status());
+  ASSERT_EQ(0, response.results().Get(0).triggered_rules_size());
+
+  BOOL terminateResult =
+      ::TerminateProcess(MozAgentInfo.processInfo.hProcess, 0);
+  ASSERT_NE(FALSE, terminateResult)
+      << "Failed to terminate content_analysis_sdk_agent process";
 }
 
-TEST_F(ContentAnalysisTest, DenyOverridesAllowUrlList) {
-  MOZ_ALWAYS_SUCCEEDS(
-      Preferences::SetCString(kAllowUrlPref, ".*\\.org/match.*"));
-  MOZ_ALWAYS_SUCCEEDS(Preferences::SetCString(kDenyUrlPref, ".*.org/match.*"));
-  RefPtr<nsIContentAnalysisRequest> car =
-      CreateRequest("https://example.org/matchme/");
-  ASSERT_EQ(FilterByUrlLists(car), UrlFilterResult::eDeny);
+TEST(ContentAnalysis, FileShouldBeBlocked)
+{
+  auto MozAgentInfo = LaunchAgentNormal(L"block");
+  // Exit the test early if the process failed to launch
+  ASSERT_NE(MozAgentInfo.processInfo.dwProcessId, 0UL);
+  ASSERT_NE(nullptr, MozAgentInfo.client.get());
+
+  ContentAnalysisRequest request;
+  request.set_request_token("request token");
+  request.set_file_path("..\\..\\_tests\\gtest\\blockedFile.txt");
+  ContentAnalysisResponse response;
+  ASSERT_EQ(0, MozAgentInfo.client->Send(request, &response));
+  ASSERT_STREQ("request token", response.request_token().c_str());
+  ASSERT_EQ(1, response.results().size());
+  ASSERT_EQ(ContentAnalysisResponse_Result_Status_SUCCESS,
+            response.results().Get(0).status());
+  ASSERT_EQ(1, response.results().Get(0).triggered_rules_size());
+  ASSERT_EQ(ContentAnalysisResponse_Result_TriggeredRule_Action_BLOCK,
+            response.results().Get(0).triggered_rules(0).action());
+
+  BOOL terminateResult =
+      ::TerminateProcess(MozAgentInfo.processInfo.hProcess, 0);
+  ASSERT_NE(FALSE, terminateResult)
+      << "Failed to terminate content_analysis_sdk_agent process";
 }
