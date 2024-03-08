@@ -161,15 +161,6 @@ class MacroAssemblerX86Shared : public Assembler {
   void atomic_inc32(const Operand& addr) { lock_incl(addr); }
   void atomic_dec32(const Operand& addr) { lock_decl(addr); }
 
-  void storeLoadFence() {
-    // This implementation follows Linux.
-    if (HasSSE2()) {
-      masm.mfence();
-    } else {
-      lock_addl(Imm32(0), Operand(Address(esp, 0)));
-    }
-  }
-
   void branch16(Condition cond, Register lhs, Register rhs, Label* label) {
     cmpw(rhs, lhs);
     j(cond, label);

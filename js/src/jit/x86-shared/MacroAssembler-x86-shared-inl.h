@@ -1246,7 +1246,8 @@ template FaultingCodeOffset MacroAssembler::storeFloat32(FloatRegister src,
 
 void MacroAssembler::memoryBarrier(MemoryBarrierBits barrier) {
   if (barrier & MembarStoreLoad) {
-    storeLoadFence();
+    // This implementation follows Linux.
+    masm.mfence();
   }
 }
 
