@@ -502,6 +502,13 @@ nsresult nsPACMan::PostQuery(PendingPACQuery* query) {
   return NS_OK;
 }
 
+// check if proxy settings are configured for WPAD
+bool IsProxyConfigValidForWPAD(int proxyConfigType, bool wpadSystemSettings) {
+  return proxyConfigType == nsIProtocolProxyService::PROXYCONFIG_WPAD ||
+         (proxyConfigType == nsIProtocolProxyService::PROXYCONFIG_SYSTEM &&
+          wpadSystemSettings);
+}
+
 nsresult nsPACMan::LoadPACFromURI(const nsACString& aSpec) {
   return LoadPACFromURI(aSpec, true);
 }
@@ -541,7 +548,7 @@ nsresult nsPACMan::LoadPACFromURI(const nsACString& aSpec,
     if (NS_FAILED(rv)) {
       return rv;
     }
-    if (mProxyConfigType != nsIProtocolProxyService::PROXYCONFIG_WPAD) {
+    if (!IsProxyConfigValidForWPAD(mProxyConfigType, mAutoDetect)) {
       LOG(
           ("LoadPACFromURI - Aborting WPAD autodetection because the pref "
            "doesn't match anymore"));
@@ -595,7 +602,7 @@ nsresult nsPACMan::GetPACFromDHCP(nsACString& aSpec) {
 nsresult nsPACMan::ConfigureWPAD(nsACString& aSpec) {
   MOZ_ASSERT(!NS_IsMainThread(), "wrong thread");
 
-  if (mProxyConfigType != nsIProtocolProxyService::PROXYCONFIG_WPAD) {
+  if (!IsProxyConfigValidForWPAD(mProxyConfigType, mAutoDetect)) {
     LOG(
         ("ConfigureWPAD - Aborting WPAD autodetection because the pref "
          "doesn't match anymore"));

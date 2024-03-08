@@ -39,4 +39,9 @@ interface nsISystemProxySettings : nsISupports
                                in AUTF8String testScheme,
                                in AUTF8String testHost,
                                in int32_t     testPort);
+
+    /**
+     * Check if system settings are configured to use WPAD
+     */
+    readonly attribute bool systemWPADSetting;
 };

@@ -43,6 +43,12 @@ nsresult nsAndroidSystemProxySettings::GetProxyForURI(const nsACString& aSpec,
                                                           aPort, aResult);
 }
 
+NS_IMETHODIMP
+nsAndroidSystemProxySettings::GetSystemWPADSetting(bool* aSystemWPADSetting) {
+  *aSystemWPADSetting = false;
+  return NS_OK;
+}
+
 void test(){};
 
 NS_IMPL_COMPONENT_FACTORY(nsAndroidSystemProxySettings) {

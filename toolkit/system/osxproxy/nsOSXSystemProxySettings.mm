@@ -68,6 +68,12 @@ nsOSXSystemProxySettings::GetMainThreadOnly(bool* aMainThreadOnly) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsOSXSystemProxySettings::GetSystemWPADSetting(bool* aSystemWPADSetting) {
+  *aSystemWPADSetting = false;
+  return NS_OK;
+}
+
 // Mapping of URI schemes to SystemConfiguration keys
 const nsOSXSystemProxySettings::SchemeMapping
     nsOSXSystemProxySettings::gSchemeMappingList[] = {
@@ -397,6 +403,11 @@ NS_IMETHODIMP
 OSXSystemProxySettingsAsync::GetPACURI(nsACString& aResult) {
   aResult.Assign(mConfig.PACUrl());
   return NS_OK;
+}
+
+NS_IMETHODIMP
+OSXSystemProxySettingsAsync::GetSystemWPADSetting(bool* aSystemWPADSetting) {
+  return nsOSXSystemProxySettings::GetSystemWPADSetting(aSystemWPADSetting);
 }
 
 NS_IMETHODIMP

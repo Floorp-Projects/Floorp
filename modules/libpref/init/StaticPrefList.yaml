@@ -12273,6 +12273,18 @@
   value: 5
   mirror: always
 
+# Whether to use WPAD while configuring proxy with system settings
+- name: network.proxy.system_wpad
+  type: bool
+  value: false
+  mirror: always
+
+# Whether to allow the use of WPAD while configuring proxy with system settings
+- name: network.proxy.system_wpad.allowed
+  type: bool
+  value: false
+  mirror: always
+
 # Whether the SOCKS proxy should be in charge of DNS resolution.
 - name: network.proxy.socks_remote_dns
   type: RelaxedAtomicBool
