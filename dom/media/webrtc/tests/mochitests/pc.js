@@ -1395,10 +1395,6 @@ PeerConnectionWrapper.prototype = {
     });
   },
 
-  isTrackOnPC(track) {
-    return !!this.getStreamForRecvTrack(track);
-  },
-
   allExpectedTracksAreObserved(expected, observed) {
     return Object.keys(expected).every(trackId => observed[trackId]);
   },
@@ -1455,7 +1451,10 @@ PeerConnectionWrapper.prototype = {
   setupTrackEventHandler() {
     this._pc.addEventListener("track", ({ track, streams }) => {
       info(`${this}: 'ontrack' event fired for ${track.id}`);
-      ok(this.isTrackOnPC(track), `Found track ${track.id}`);
+      ok(
+        this._pc.getReceivers().some(r => r.track == track),
+        `Found track ${track.id}`
+      );
 
       let gratuitousEvent = true;
       let streamsContainingTrack = this.remoteStreamsByTrackId.get(track.id);
