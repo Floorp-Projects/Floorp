@@ -85,6 +85,8 @@ class ContentAnalysisRequest final : public nsIContentAnalysisRequest {
   nsString mOperationDisplayString;
 
   RefPtr<dom::WindowGlobalParent> mWindowGlobalParent;
+
+  friend class ::ContentAnalysisTest;
 };
 
 #define CONTENTANALYSIS_IID                          \
@@ -181,6 +183,7 @@ class ContentAnalysis final : public nsIContentAnalysis {
   bool mParsedUrlLists;
 
   friend class ContentAnalysisResponse;
+  friend class ::ContentAnalysisTest;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(ContentAnalysis, CONTENTANALYSIS_IID)
