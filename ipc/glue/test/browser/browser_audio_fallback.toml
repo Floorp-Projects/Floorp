@@ -1,5 +1,6 @@
 [DEFAULT]
 subsuite = "media-bc"
+tags = "media-engine-compatible"
 support-files = [
   "head.js",
   "head-multiple.js",
