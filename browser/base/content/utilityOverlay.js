@@ -549,11 +549,6 @@ function buildHelpMenu() {
   if (typeof gSafeBrowsing != "undefined") {
     gSafeBrowsing.setReportPhishingMenu();
   }
-
-  if (NimbusFeatures.deviceMigration.getVariable("helpMenuHidden")) {
-    let helpMenuItem = document.getElementById("helpSwitchDevice");
-    helpMenuItem.hidden = true;
-  }
 }
 
 function isElementVisible(aElement) {
