@@ -2094,6 +2094,7 @@ static bool wasmMetadataAnalysis(JSContext* cx, unsigned argc, Value* vp) {
                       .metadataAnalysis(cx);
     if (hashmap.empty()) {
       JS_ReportErrorASCII(cx, "Metadata analysis has failed");
+      return false;
     }
 
     // metadataAnalysis returned a map of {key, value} with various statistics
@@ -2105,16 +2106,22 @@ static bool wasmMetadataAnalysis(JSContext* cx, unsigned argc, Value* vp) {
       auto value = iter.get().value();
 
       JSString* string = JS_NewStringCopyZ(cx, key);
+      if (!string) {
+        return false;
+      }
+
       if (!props.append(
               IdValuePair(NameToId(string->asLinear().toPropertyName(cx)),
                           NumberValue(value)))) {
-        ReportOutOfMemory(cx);
         return false;
       }
     }
 
     JSObject* results =
         NewPlainObjectWithUniqueNames(cx, props.begin(), props.length());
+    if (!results) {
+      return false;
+    }
     args.rval().setObject(*results);
 
     return true;
