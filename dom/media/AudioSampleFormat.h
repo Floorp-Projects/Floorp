@@ -10,6 +10,7 @@
 #include "mozilla/PodOperations.h"
 #include <algorithm>
 #include <type_traits>
+#include <limits>
 
 namespace mozilla {
 
