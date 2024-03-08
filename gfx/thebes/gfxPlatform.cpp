@@ -1068,6 +1068,15 @@ void gfxPlatform::ReportTelemetry() {
 
   nsString adapterDesc;
   gfxInfo->GetAdapterDescription(adapterDesc);
+
+// Android description is constructed in a way that makes it possible to exceed
+// the metric's length limit.
+#if defined(ANDROID)
+  if (!adapterDesc.IsEmpty()) {
+    adapterDesc.Truncate(99);
+  }
+#endif
+
   mozilla::glean::gfx_adapter_primary::description.Set(
       NS_ConvertUTF16toUTF8(adapterDesc));
 
