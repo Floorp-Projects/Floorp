@@ -12,7 +12,14 @@ import java.util.Locale
 object LocaleUtils {
 
     /**
-     * Returns a name for the locale that is appropriate for display to the user.
+     * Returns a name for the locale that is appropriate for display to the user. The display name
+     * will be in the language of the specified locale.
+     *
+     * For example, in an any language locale, the German language locale or "de" would be
+     * presented as "Deutsch".
+     *
+     * @param locale The locale to determine a language name.
+     * @return A default title case display name in the locale's language.
      */
     fun getDisplayName(locale: Locale): String {
         val displayName = locale.getDisplayName(locale)
@@ -21,6 +28,27 @@ object LocaleUtils {
             return LOCALE_TO_DISPLAY_NATIVE_NAME_MAP[locale.toString()] ?: displayName
         }
         return displayName
+    }
+
+    /**
+     * Returns a name for the locale that is appropriate for display to the user based on the user's
+     * specified language.
+     *
+     * For example, in an an English language locale, the German language locale or "de" would be
+     * presented as "German".
+     *
+     * @param userLocale The locale the user is using.
+     * @param languageLocale The locale to localize the language name into the user's language.
+     *
+     * @return A default language name in the specified user's locale language.
+     */
+    fun getLocalizedDisplayName(userLocale: Locale, languageLocale: Locale): String {
+        val displayName = Locale.forLanguageTag(languageLocale.toLanguageTag()).getDisplayName(userLocale)
+        return if (userLocale == Locale.ENGLISH) {
+            LOCALE_TO_DISPLAY_ENGLISH_NAME_MAP[languageLocale.toString()] ?: displayName
+        } else {
+            displayName
+        }
     }
 
     private val LOCALE_TO_DISPLAY_NATIVE_NAME_MAP: Map<String, String> = mapOf(

@@ -15,6 +15,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.translate.initialFromLanguage
 import mozilla.components.concept.engine.translate.initialToLanguage
 import mozilla.components.lib.state.helpers.AbstractBinding
+import mozilla.components.support.locale.LocaleManager
 import org.mozilla.fenix.utils.LocaleUtils
 import java.util.Locale
 
@@ -29,7 +30,7 @@ class TranslationsDialogBinding(
     private val getTranslatedPageTitle: (localizedFrom: String?, localizedTo: String?) -> String,
 ) : AbstractBinding<BrowserState>(browserStore) {
 
-    @Suppress("LongMethod")
+    @Suppress("LongMethod", "CyclomaticComplexMethod")
     override suspend fun onState(flow: Flow<BrowserState>) {
         // Browser level flows
         val browserFlow = flow.mapNotNull { state -> state }
@@ -132,11 +133,15 @@ class TranslationsDialogBinding(
 
                 // A session error may override a browser error
                 if (sessionTranslationsState.translationError != null) {
-                    var documentLangDisplayName: String? = null
-                    sessionTranslationsState.translationEngineState?.detectedLanguages?.documentLangTag?.let {
-                        val documentLanguage = Locale.forLanguageTag(it)
-                        documentLangDisplayName = LocaleUtils.getDisplayName(documentLanguage)
-                    }
+                    val documentLangDisplayName = sessionTranslationsState.translationEngineState
+                        ?.detectedLanguages?.documentLangTag?.let { docLangTag ->
+                            val documentLocale = Locale.forLanguageTag(docLangTag)
+                            val userLocale = state.browserState.locale ?: LocaleManager.getSystemDefault()
+                            LocaleUtils.getLocalizedDisplayName(
+                                userLocale = userLocale,
+                                languageLocale = documentLocale,
+                            )
+                        }
 
                     translationsDialogStore.dispatch(
                         TranslationsDialogAction.UpdateTranslationError(
