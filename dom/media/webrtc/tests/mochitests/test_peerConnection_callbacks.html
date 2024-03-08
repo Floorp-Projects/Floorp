@@ -1,4 +1,4 @@
-﻿<!DOCTYPE HTML>
+<!DOCTYPE HTML>
 <html>
 <head>
   <script type="application/javascript" src="pc.js"></script>
@@ -50,22 +50,27 @@ pc2.onicecandidate = e => {
     .catch(generateErrorCallback());
 };
 
-var v1, v2;
-var delivered = new Promise(resolve => {
-  pc2.onaddstream = e => {
-    v2.srcObject = e.stream;
-    resolve(e.stream);
-  };
-});
+runNetworkTest(async function() {
+  // Tests trigger warnings
+  await SpecialPowers.pushPrefEnv({
+    set: [['media.peerconnection.treat_warnings_as_errors', false]]
+  });
 
-runNetworkTest(function() {
-  v1 = createMediaElement('video', 'v1');
-  v2 = createMediaElement('video', 'v2');
+  const v1 = createMediaElement('video', 'v1');
+  const v2 = createMediaElement('video', 'v2');
+
+  const delivered = new Promise(resolve => {
+    pc2.onaddstream = e => {
+      v2.srcObject = e.stream;
+      resolve(e.stream);
+    };
+  });
+
   var canPlayThrough = new Promise(resolve => v2.canplaythrough = resolve);
   is(v2.currentTime, 0, "v2.currentTime is zero at outset");
 
   // not testing legacy gUM here
-  return navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+  await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
     .then(stream => pc1.addStream(v1.srcObject = stream))
     .then(() => pcall(pc1, pc1.createOffer))
     .then(offer => pcall(pc1, pc1.setLocalDescription, offer))

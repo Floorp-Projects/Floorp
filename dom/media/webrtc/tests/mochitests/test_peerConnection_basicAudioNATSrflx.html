@@ -24,6 +24,8 @@ if (!("mediaDevices" in navigator)) {
         ['media.peerconnection.nat_simulator.filtering_type', 'ENDPOINT_INDEPENDENT'],
         ['media.peerconnection.nat_simulator.mapping_type', 'ENDPOINT_INDEPENDENT'],
         ['media.peerconnection.nat_simulator.block_tcp', true],
+        // The above triggers warning about 5 ICE servers
+        ['media.peerconnection.treat_warnings_as_errors', false],
         ['media.getusermedia.insecure.enabled', true]);
     options.expectedLocalCandidateType = "srflx";
     options.expectedRemoteCandidateType = "srflx";

@@ -11,7 +11,12 @@
     title: "Throw in PeerConnection callbacks"
   });
 
-runNetworkTest(function () {
+runNetworkTest(async function () {
+  // Tests trigger warnings
+  await SpecialPowers.pushPrefEnv({
+    set: [['media.peerconnection.treat_warnings_as_errors', false]]
+  });
+
   let finish;
   const onfinished = new Promise(r => finish = async () => {
     window.onerror = oldOnError;
