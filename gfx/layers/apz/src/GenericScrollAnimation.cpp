@@ -15,6 +15,9 @@
 #include "ScrollAnimationMSDPhysics.h"
 #include "mozilla/StaticPrefs_general.h"
 
+static mozilla::LazyLogModule sApzScrollAnimLog("apz.scrollanimation");
+#define GSA_LOG(...) MOZ_LOG(sApzScrollAnimLog, LogLevel::Debug, (__VA_ARGS__))
+
 namespace mozilla {
 namespace layers {
 
@@ -101,6 +104,12 @@ bool GenericScrollAnimation::DoSample(FrameMetrics& aFrameMetrics,
   // then end the animation early. Note that the initial displacement could be 0
   // if the compositor ran very quickly (<1ms) after the animation was created.
   // When that happens we want to make sure the animation continues.
+  GSA_LOG(
+      "Sampling GenericScrollAnimation: time %f finished %d sampledDest %s "
+      "adjustedOffset %s overscroll %s\n",
+      (now - TimeStamp::ProcessCreation()).ToMilliseconds(), finished,
+      ToString(CSSPoint::FromAppUnits(sampledDest)).c_str(),
+      ToString(adjustedOffset).c_str(), ToString(overscroll).c_str());
   if (!IsZero(displacement / zoom) && IsZero(adjustedOffset / zoom)) {
     // Nothing more to do - end the animation.
     return false;

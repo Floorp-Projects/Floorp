@@ -5,7 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ScrollAnimationMSDPhysics.h"
+#include "mozilla/Logging.h"
 #include "mozilla/StaticPrefs_general.h"
+#include "mozilla/ToString.h"
+
+static mozilla::LazyLogModule sApzMsdLog("apz.msd");
+#define MSD_LOG(...) MOZ_LOG(sApzMsdLog, LogLevel::Debug, (__VA_ARGS__))
 
 using namespace mozilla;
 
@@ -108,13 +113,17 @@ double ScrollAnimationMSDPhysics::ComputeSpringConstant(
 }
 
 void ScrollAnimationMSDPhysics::SimulateUntil(const TimeStamp& aTime) {
-  if (!mLastSimulatedTime || aTime < mLastSimulatedTime) {
+  if (!mLastSimulatedTime || aTime <= mLastSimulatedTime) {
     return;
   }
   TimeDuration delta = aTime - mLastSimulatedTime;
   mModelX.Simulate(delta);
   mModelY.Simulate(delta);
   mLastSimulatedTime = aTime;
+  MSD_LOG("Simulated for duration %f, finished %d position %s velocity %s\n",
+          delta.ToMilliseconds(), IsFinished(aTime),
+          ToString(CSSPoint::FromAppUnits(PositionAt(aTime))).c_str(),
+          ToString(CSSPoint::FromAppUnits(VelocityAt(aTime))).c_str());
 }
 
 nsPoint ScrollAnimationMSDPhysics::PositionAt(const TimeStamp& aTime) {
@@ -152,6 +161,9 @@ ScrollAnimationMSDPhysics::NonOscillatingAxisPhysicsMSDModel::
           ClampVelocityToMaximum(aInitialVelocity, aInitialPosition,
                                  aInitialDestination, aSpringConstant),
           aSpringConstant, aDampingRatio) {
+  MSD_LOG("Constructing axis physics model with parameters %f %f %f %f %f\n",
+          aInitialPosition, aInitialDestination, aInitialVelocity,
+          aSpringConstant, aDampingRatio);
   MOZ_ASSERT(aDampingRatio >= 1.0,
              "Damping ratio must be >= 1.0 to avoid oscillation");
 }
