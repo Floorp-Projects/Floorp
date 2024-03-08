@@ -10,6 +10,7 @@ treeherder configuration and attributes for that platform.
 import copy
 import os
 
+import taskgraph
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.attributes import keymatch
 from taskgraph.util.schema import Schema, optionally_keyed_by, resolve_keyed_by
@@ -17,6 +18,7 @@ from taskgraph.util.treeherder import join_symbol, split_symbol
 from voluptuous import Any, Extra, Optional, Required
 
 from gecko_taskgraph.transforms.job import job_description_schema
+from gecko_taskgraph.util.hg import get_json_automationrelevance
 
 source_test_description_schema = Schema(
     {
@@ -233,6 +235,33 @@ def set_code_review_env(config, jobs):
             env = job["worker"].setdefault("env", {})
             env["CODE_REVIEW"] = "1"
 
+        yield job
+
+
+@transforms.add
+def set_base_revision_in_tgdiff(config, jobs):
+    # Don't attempt to download 'json-automation' locally as the revision may
+    # not exist in the repository.
+    if not os.environ.get("MOZ_AUTOMATION") or taskgraph.fast:
+        yield from jobs
+        return
+
+    data = get_json_automationrelevance(
+        config.params["head_repository"], config.params["head_rev"]
+    )
+    for job in jobs:
+        if job["name"] != "taskgraph-diff":
+            yield job
+            continue
+
+        job["task-context"] = {
+            "from-object": {
+                "base_rev": data["changesets"][0]["parents"][0],
+            },
+            "substitution-fields": [
+                "run.command",
+            ],
+        }
         yield job
 
 

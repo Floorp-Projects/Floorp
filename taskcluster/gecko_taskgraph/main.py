@@ -21,8 +21,6 @@ from typing import Any, List
 import appdirs
 import yaml
 
-from gecko_taskgraph.util.hg import get_json_automationrelevance
-
 Command = namedtuple("Command", ["func", "args", "kwargs", "defaults"])
 commands = {}
 
@@ -456,20 +454,6 @@ def show_taskgraph(options):
 
         if options["diff"] == "default":
             base_ref = repo.base_ref
-        elif options["diff"] == "FIND_BASE":
-            # TODO: stop assuming we only have one set of parameters
-            # this is fine for CI, not fine for local development
-            from taskgraph.parameters import load_parameters_file
-
-            loaded_params = load_parameters_file(
-                parameters[0],
-                strict=False,
-                overrides={"target-kinds": options.get("target_kinds")},
-            )
-            data = get_json_automationrelevance(
-                loaded_params["head_repository"], loaded_params["head_rev"]
-            )
-            base_ref = data["changesets"][0]["parents"][0]
         else:
             base_ref = options["diff"]
 
