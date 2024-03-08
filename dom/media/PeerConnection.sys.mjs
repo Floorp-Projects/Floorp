@@ -242,6 +242,9 @@ export class RTCSessionDescription {
   init(win) {
     this._win = win;
     this._winID = this._win.windowGlobalChild.innerWindowId;
+    this._legacyPref = Services.prefs.getBoolPref(
+      "media.peerconnection.description.legacy.enabled"
+    );
   }
 
   __init({ type, sdp }) {
@@ -252,6 +255,10 @@ export class RTCSessionDescription {
     return this._type;
   }
   set type(type) {
+    if (!this._legacyPref) {
+      // TODO: this throws even in sloppy mode. Remove in bug 1883992
+      throw new this._win.TypeError("setting getter-only property type");
+    }
     this.warn();
     this._type = type;
   }
@@ -260,6 +267,10 @@ export class RTCSessionDescription {
     return this._sdp;
   }
   set sdp(sdp) {
+    if (!this._legacyPref) {
+      // TODO: this throws even in sloppy mode. Remove in bug 1883992
+      throw new this._win.TypeError("setting getter-only property sdp");
+    }
     this.warn();
     this._sdp = sdp;
   }
@@ -267,23 +278,26 @@ export class RTCSessionDescription {
   warn() {
     if (!this._warned) {
       // Warn once per RTCSessionDescription about deprecated writable usage.
-      this.logWarning(
-        "RTCSessionDescription's members are readonly! " +
-          "Writing to them is deprecated and will break soon!"
-      );
+      if (this._legacyPref) {
+        this.logMsg(
+          "RTCSessionDescription's members are readonly! " +
+            "Writing to them is deprecated and will break soon!",
+          Ci.nsIScriptError.warningFlag
+        );
+      } else {
+        this.logMsg(
+          "RTCSessionDescription's members are readonly! " +
+            "Writing to them no longer works!",
+          Ci.nsIScriptError.errorFlag
+        );
+      }
       this._warned = true;
     }
   }
 
-  logWarning(msg) {
+  logMsg(msg, flag) {
     let err = this._win.Error();
-    logWebRTCMsg(
-      msg,
-      err.fileName,
-      err.lineNumber,
-      Ci.nsIScriptError.warningFlag,
-      this._win
-    );
+    logWebRTCMsg(msg, err.fileName, err.lineNumber, flag, this._win);
   }
 }
 
