@@ -13,6 +13,8 @@
 #include "mozilla/glean/GleanPings.h"
 #include "mozilla/glean/GleanMetrics.h"
 
+#include "mozilla/StaticPrefs_media.h"
+
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/PreferenceSheet.h"
 #include "mozilla/RelativeLuminanceUtils.h"
@@ -123,6 +125,9 @@ void PopulatePrefs() {
   mozilla::Preferences::GetLocalizedCString("intl.accept_languages",
                                             acceptLang);
   mozilla::glean::characteristics::prefs_intl_accept_languages.Set(acceptLang);
+
+  mozilla::glean::characteristics::prefs_media_eme_enabled.Set(
+      mozilla::StaticPrefs::media_eme_enabled());
 }
 
 // ==================================================================
