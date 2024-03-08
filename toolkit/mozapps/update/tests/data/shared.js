@@ -177,7 +177,7 @@ function waitForEvent(topic, status = null) {
 
 /* Triggers post-update processing */
 function testPostUpdateProcessing() {
-  gAUS.observe(null, "post-update-processing", "");
+  gAUS.observe(null, "test-post-update-processing", "");
 }
 
 /* Initializes the update service stub */
