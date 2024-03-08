@@ -951,7 +951,11 @@ this.AccessibilityUtils = (function () {
     if (gEnv.labelRule && !name) {
       // The URL and Search Bar comboboxes are purposefully unlabeled,
       // since they include labeled inputs that are receiving focus.
-      if (isUnlabeledUrlBarCombobox(DOMNode)) {
+      // Or the Accessible died because the DOM node was removed or hidden.
+      if (
+        isUnlabeledUrlBarCombobox(DOMNode) ||
+        isUnlabeledUrlBarOption(DOMNode)
+      ) {
         return;
       }
       a11yFail("Interactive elements must be labeled", accessible);
