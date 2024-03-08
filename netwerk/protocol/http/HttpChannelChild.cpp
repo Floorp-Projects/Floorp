@@ -232,7 +232,7 @@ NS_IMETHODIMP_(MozExternalRefCountType) HttpChannelChild::Release() {
     RefPtr<HttpChannelChild> channel = dont_AddRef(this);
     NS_DispatchToMainThread(NS_NewRunnableFunction(
         "~HttpChannelChild>DoNotifyListener",
-        [chan = std::move(channel)] { chan->DoNotifyListener(); }));
+        [chan = std::move(channel)] { chan->DoNotifyListener(false); }));
     // If NS_DispatchToMainThread failed then we're going to leak the runnable,
     // and thus the channel, so there's no need to do anything else.
     return mRefCnt;
@@ -1433,7 +1433,7 @@ void HttpChannelChild::NotifyOrReleaseListeners(nsresult rv) {
   DoNotifyListener();
 }
 
-void HttpChannelChild::DoNotifyListener() {
+void HttpChannelChild::DoNotifyListener(bool aUseEventQueue) {
   LOG(("HttpChannelChild::DoNotifyListener this=%p", this));
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1452,10 +1452,14 @@ void HttpChannelChild::DoNotifyListener() {
   }
   StoreOnStartRequestCalled(true);
 
-  mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
-      this, [self = UnsafePtr<HttpChannelChild>(this)] {
-        self->ContinueDoNotifyListener();
-      }));
+  if (aUseEventQueue) {
+    mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
+        this, [self = UnsafePtr<HttpChannelChild>(this)] {
+          self->ContinueDoNotifyListener();
+        }));
+  } else {
+    ContinueDoNotifyListener();
+  }
 }
 
 void HttpChannelChild::ContinueDoNotifyListener() {
