@@ -355,3 +355,21 @@ characteristics:
     expires: never
     data_sensitivity:
       - technical
+
+  prefs_intl_accept_languages:
+    type: string
+    description: >
+      Value of the intl.accept_languages pref.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879151
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1882482
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1882482#c6
+    expires: never
+    data_sensitivity:
+      - interaction
