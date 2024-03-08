@@ -60,6 +60,11 @@ def main():
                 f"| {matrix_result['matrixId']} | {matrix_result['outcome']}"
                 f"| [Firebase Test Lab]({matrix_result['webLink']}) | {axis['details']}\n"
             )
+            if matrix_result["outcome"] != "success":
+                # write failures to test log in format known to treeherder logviewer
+                sys.stdout.write(
+                    f"TEST-UNEXPECTED-FAIL | {matrix_result['outcome']} | {matrix_result['webLink']} | {axis['details']}\n"
+                )
     print("---\n")
     print("# References & Documentation\n")
     print(
