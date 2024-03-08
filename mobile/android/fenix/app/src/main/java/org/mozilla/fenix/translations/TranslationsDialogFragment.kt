@@ -74,6 +74,7 @@ class TranslationsDialogFragment : BottomSheetDialogFragment() {
                 val bottomSheet = findViewById<View?>(R.id.design_bottom_sheet)
                 bottomSheet?.setBackgroundResource(android.R.color.transparent)
                 behavior = BottomSheetBehavior.from(bottomSheet)
+                behavior?.peekHeight = resources.displayMetrics.heightPixels
                 behavior?.state = BottomSheetBehavior.STATE_EXPANDED
             }
         }
