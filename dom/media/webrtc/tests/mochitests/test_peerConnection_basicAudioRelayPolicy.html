@@ -14,7 +14,10 @@ createHTML({
 runNetworkTest(async () => {
   await pushPrefs(
       // Enable mDNS, since there are some checks we want to run with that
-      ['media.peerconnection.ice.obfuscate_host_addresses', true]);
+      ['media.peerconnection.ice.obfuscate_host_addresses', true],
+      // The above triggers warning about 5 ICE servers
+      ['media.peerconnection.treat_warnings_as_errors', false],
+  );
 
   const offerer = new RTCPeerConnection({iceServers: iceServersArray, iceTransportPolicy: 'relay'});
   const answerer = new RTCPeerConnection({iceServers: iceServersArray});

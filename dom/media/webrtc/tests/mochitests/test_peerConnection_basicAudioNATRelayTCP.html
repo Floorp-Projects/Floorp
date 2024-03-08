@@ -26,6 +26,8 @@ if (!("mediaDevices" in navigator)) {
         ['media.peerconnection.nat_simulator.block_tcp', false],
         ['media.peerconnection.nat_simulator.block_tls', true],
         ['media.peerconnection.ice.loopback', true],
+        // The above sets up 5+ ICE servers which triggers a warning
+        ['media.peerconnection.treat_warnings_as_errors', false],
         ['media.getusermedia.insecure.enabled', true]);
     options.expectedLocalCandidateType = "relay-tcp";
     options.expectedRemoteCandidateType = "relay-tcp";

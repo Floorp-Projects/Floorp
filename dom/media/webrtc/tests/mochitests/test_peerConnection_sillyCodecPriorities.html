@@ -15,12 +15,12 @@
     visible: true
   });
 
-  function makeCodecTopPriority(sdp, codec) {
+  function makeCodecTopPriority({type, sdp}, codec) {
     const ptToMove = sdputils.findCodecId(sdp, codec);
-    return sdp.replace(
+    return {type, sdp: sdp.replace(
         //           m=video port  type  pts ptToMove      more-pts?
         new RegExp(`(m=video [^ ]+ [^ ]+)(.*)( ${ptToMove})( [^ ]+)?`, "g"),
-        '$1$3$2$4');
+        '$1$3$2$4')};
   }
 
   function isCodecFirst(sdp, codec) {
@@ -34,8 +34,7 @@
     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
     const sender = pc1.addTrack(stream.getTracks()[0]);
     await pc1.setLocalDescription();
-    let mungedOffer = pc1.localDescription;
-    mungedOffer.sdp = makeCodecTopPriority(mungedOffer.sdp, codec);
+    const mungedOffer = makeCodecTopPriority(pc1.localDescription, codec);
     await pc2.setRemoteDescription(mungedOffer);
     await pc2.setLocalDescription();
     await pc1.setRemoteDescription(pc2.localDescription);
@@ -51,8 +50,7 @@
     await pc1.setLocalDescription();
     await pc2.setRemoteDescription(pc1.localDescription);
     await pc2.setLocalDescription();
-    let mungedAnswer = pc2.localDescription;
-    mungedAnswer.sdp = makeCodecTopPriority(mungedAnswer.sdp, codec);
+    const mungedAnswer = makeCodecTopPriority(pc2.localDescription, codec);
     await pc1.setRemoteDescription(mungedAnswer);
     is(isCodecFirst((await pc1.createOffer()).sdp, codec), !isPseudoCodec,
       "Top-priority codecs should come first in reoffers, unless they are pseudo codecs (eg; ulpfec)");
