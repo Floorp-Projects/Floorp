@@ -20,6 +20,11 @@ SOURCES += [
     "nsUserCharacteristics.cpp",
 ]
 
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+    LOCAL_INCLUDES += [
+        "/xpcom/base",
+    ]
+
 SPHINX_TREES["resistfingerprinting"] = "docs"
 
 FINAL_LIBRARY = "xul"

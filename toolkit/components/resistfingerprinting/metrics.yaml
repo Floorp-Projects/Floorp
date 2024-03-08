@@ -299,3 +299,22 @@ characteristics:
     expires: never
     data_sensitivity:
       - technical
+
+  processor_count:
+    type: quantity
+    unit: int
+    description: >
+      Number of processors.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879151
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1881759
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1881759#c4
+    expires: never
+    data_sensitivity:
+      - technical
