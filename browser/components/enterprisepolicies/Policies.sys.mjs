@@ -510,6 +510,49 @@ export var Policies = {
 
   ContentAnalysis: {
     onBeforeAddons(manager, param) {
+      if ("PipePathName" in param) {
+        setAndLockPref(
+          "browser.contentanalysis.pipe_path_name",
+          param.PipePathName
+        );
+      }
+      if ("AgentTimeout" in param) {
+        if (!Number.isInteger(param.AgentTimeout)) {
+          lazy.log.error(
+            `Non-integer value for AgentTimeout: ${param.AgentTimeout}`
+          );
+        } else {
+          setAndLockPref(
+            "browser.contentanalysis.agent_timeout",
+            param.AgentTimeout
+          );
+        }
+      }
+      if ("AllowUrlRegexList" in param) {
+        setAndLockPref(
+          "browser.contentanalysis.allow_url_regex_list",
+          param.AllowUrlRegexList
+        );
+      }
+      if ("DenyUrlRegexList" in param) {
+        setAndLockPref(
+          "browser.contentanalysis.deny_url_regex_list",
+          param.DenyUrlRegexList
+        );
+      }
+      let boolPrefs = [
+        ["IsPerUser", "is_per_user"],
+        ["ShowBlockedResult", "show_blocked_result"],
+        ["DefaultAllow", "default_allow"],
+      ];
+      for (let pref of boolPrefs) {
+        if (pref[0] in param) {
+          setAndLockPref(
+            `browser.contentanalysis.${pref[1]}`,
+            !!param[pref[0]]
+          );
+        }
+      }
       if ("Enabled" in param) {
         let enabled = !!param.Enabled;
         setAndLockPref("browser.contentanalysis.enabled", enabled);

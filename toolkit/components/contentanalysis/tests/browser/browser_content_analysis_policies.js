@@ -15,6 +15,15 @@ const { EnterprisePolicyTesting } = ChromeUtils.importESModule(
   "resource://testing-common/EnterprisePolicyTesting.sys.mjs"
 );
 
+const kEnabledPref = "enabled";
+const kPipeNamePref = "pipe_path_name";
+const kTimeoutPref = "agent_timeout";
+const kAllowUrlPref = "allow_url_regex_list";
+const kDenyUrlPref = "deny_url_regex_list";
+const kPerUserPref = "is_per_user";
+const kShowBlockedPref = "show_blocked_result";
+const kDefaultAllowPref = "default_allow";
+
 const ca = Cc["@mozilla.org/contentanalysis;1"].getService(
   Ci.nsIContentAnalysis
 );
@@ -23,7 +32,7 @@ add_task(async function test_ca_active() {
   ok(!ca.isActive, "CA is inactive when pref and cmd line arg are missing");
 
   // Set the pref without enterprise policy.  CA should not be active.
-  Services.prefs.setBoolPref("browser.contentanalysis.enabled", true);
+  Services.prefs.setBoolPref("browser.contentanalysis." + kEnabledPref, true);
   ok(
     !ca.isActive,
     "CA is inactive when pref is set but cmd line arg is missing"
@@ -53,6 +62,61 @@ add_task(async function test_ca_active() {
     },
   });
   ok(ca.isActive, "CA is active when enabled by enterprise policy pref");
+});
+
+add_task(async function test_ca_enterprise_config() {
+  const string1 = "this is a string";
+  const string2 = "this is another string";
+
+  await EnterprisePolicyTesting.setupPolicyEngineWithJson({
+    policies: {
+      ContentAnalysis: {
+        PipePathName: "abc",
+        AgentTimeout: 99,
+        AllowUrlRegexList: string1,
+        DenyUrlRegexList: string2,
+        IsPerUser: true,
+        ShowBlockedResult: false,
+        DefaultAllow: true,
+      },
+    },
+  });
+
+  is(
+    Services.prefs.getStringPref("browser.contentanalysis." + kPipeNamePref),
+    "abc",
+    "pipe name match"
+  );
+  is(
+    Services.prefs.getIntPref("browser.contentanalysis." + kTimeoutPref),
+    99,
+    "timeout match"
+  );
+  is(
+    Services.prefs.getStringPref("browser.contentanalysis." + kAllowUrlPref),
+    string1,
+    "allow urls match"
+  );
+  is(
+    Services.prefs.getStringPref("browser.contentanalysis." + kDenyUrlPref),
+    string2,
+    "deny urls match"
+  );
+  is(
+    Services.prefs.getBoolPref("browser.contentanalysis." + kPerUserPref),
+    true,
+    "per user match"
+  );
+  is(
+    Services.prefs.getBoolPref("browser.contentanalysis." + kShowBlockedPref),
+    false,
+    "show blocked match"
+  );
+  is(
+    Services.prefs.getBoolPref("browser.contentanalysis." + kDefaultAllowPref),
+    true,
+    "default allow match"
+  );
 });
 
 add_task(async function test_cleanup() {
