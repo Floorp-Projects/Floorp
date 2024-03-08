@@ -1,4 +1,5 @@
 [DEFAULT]
+subsuite = "media"
 run-if = ["os == 'android' && !isolated_process"] # Bug 1771452
 support-files = [
   "head.js",

@@ -1,4 +1,5 @@
 [DEFAULT]
+subsuite = "media-bc"
 support-files = ["head.js"]
 
 ["browser_utility_audio_shutdown.js"]
