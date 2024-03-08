@@ -4042,7 +4042,7 @@ class DSPrivacyModal extends (external_React_default()).PureComponent {
       className: "modal-link modal-link-privacy",
       "data-l10n-id": "newtab-privacy-modal-link",
       onClick: this.onLearnLinkClick,
-      href: "https://help.getpocket.com/article/1142-firefox-new-tab-recommendations-faq"
+      href: "https://support.mozilla.org/kb/pocket-recommendations-firefox-new-tab"
     }), /*#__PURE__*/external_React_default().createElement("button", {
       className: "modal-link modal-link-manage",
       "data-l10n-id": "newtab-privacy-modal-button-manage",
