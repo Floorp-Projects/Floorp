@@ -507,6 +507,12 @@ class SearchAdImpression {
     if (!href) {
       return "";
     }
+
+    // Avoid extracting or fixing up Javascript URLs.
+    if (href.startsWith("javascript")) {
+      return "";
+    }
+
     // Hrefs can be relative.
     if (!href.startsWith("https://") && !href.startsWith("http://")) {
       href = origin + href;
