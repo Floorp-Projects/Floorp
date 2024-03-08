@@ -78,6 +78,15 @@ const TEST_PROVIDER_INFO = [
         type: SearchSERPTelemetryUtils.COMPONENTS.AD_LINK,
         default: true,
       },
+      {
+        type: SearchSERPTelemetryUtils.COMPONENTS.COOKIE_BANNER,
+        included: {
+          parent: {
+            selector: "#banner",
+          },
+        },
+        topDown: true,
+      },
     ],
   },
 ];
@@ -490,6 +499,38 @@ add_task(async function test_impressions_without_ads() {
       adImpressions: [
         {
           component: SearchSERPTelemetryUtils.COMPONENTS.REFINED_SEARCH_BUTTONS,
+          ads_loaded: "1",
+          ads_visible: "1",
+          ads_hidden: "0",
+        },
+      ],
+    },
+  ]);
+
+  BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function test_ad_impressions_with_cookie_banner() {
+  resetTelemetry();
+  let url = getSERPUrl("searchTelemetryAd_components_cookie_banner.html");
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+
+  await waitForPageWithAdImpressions();
+
+  assertSERPTelemetry([
+    {
+      impression: {
+        provider: "example",
+        tagged: "true",
+        partner_code: "ff",
+        source: "unknown",
+        is_shopping_page: "false",
+        is_private: "false",
+        shopping_tab_displayed: "false",
+      },
+      adImpressions: [
+        {
+          component: SearchSERPTelemetryUtils.COMPONENTS.COOKIE_BANNER,
           ads_loaded: "1",
           ads_visible: "1",
           ads_hidden: "0",
