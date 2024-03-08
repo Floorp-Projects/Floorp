@@ -30,5 +30,3 @@ skip-if = ["os == 'android'"] # Server Knobs on mobile will be handled by the sp
 
 ["test_MillionQ.js"]
 skip-if = ["os == 'android'"] # Android inits its own FOG, so the test won't work.
-
-["test_OHTTP.js"]

@@ -352,14 +352,6 @@
         "tomorrow",
         "upgrade"
       ]
-    ],
-    [
-      "not-ohttp",
-      false,
-      true,
-      true,
-      false,
-      []
     ]
   ]
 }
