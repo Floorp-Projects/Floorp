@@ -11,17 +11,25 @@
 //!
 //! <http://www.unicode.org/reports/tr9/#Explicit_Levels_and_Directions>
 
+#[cfg(feature = "smallvec")]
+use smallvec::{smallvec, SmallVec};
+
 use super::char_data::{
     is_rtl,
     BidiClass::{self, *},
 };
 use super::level::Level;
+use super::prepare::removed_by_x9;
+use super::LevelRunVec;
 use super::TextSource;
 
-/// Compute explicit embedding levels for one paragraph of text (X1-X8).
+/// Compute explicit embedding levels for one paragraph of text (X1-X8), and identify
+/// level runs (BD7) for use when determining Isolating Run Sequences (X10).
 ///
 /// `processing_classes[i]` must contain the `BidiClass` of the char at byte index `i`,
 /// for each char in `text`.
+///
+/// `runs` returns the list of level runs (BD7) of the text.
 #[cfg_attr(feature = "flame_it", flamer::flame)]
 pub fn compute<'a, T: TextSource<'a> + ?Sized>(
     text: &'a T,
@@ -29,10 +37,17 @@ pub fn compute<'a, T: TextSource<'a> + ?Sized>(
     original_classes: &[BidiClass],
     levels: &mut [Level],
     processing_classes: &mut [BidiClass],
+    runs: &mut LevelRunVec,
 ) {
     assert_eq!(text.len(), original_classes.len());
 
     // <http://www.unicode.org/reports/tr9/#X1>
+    #[cfg(feature = "smallvec")]
+    let mut stack: SmallVec<[Status; 8]> = smallvec![Status {
+        level: para_level,
+        status: OverrideStatus::Neutral,
+    }];
+    #[cfg(not(feature = "smallvec"))]
     let mut stack = vec![Status {
         level: para_level,
         status: OverrideStatus::Neutral,
@@ -41,6 +56,9 @@ pub fn compute<'a, T: TextSource<'a> + ?Sized>(
     let mut overflow_isolate_count = 0u32;
     let mut overflow_embedding_count = 0u32;
     let mut valid_isolate_count = 0u32;
+
+    let mut current_run_level = Level::ltr();
+    let mut current_run_start = 0;
 
     for (i, len) in text.indices_lengths() {
         let last = stack.last().unwrap();
@@ -173,6 +191,26 @@ pub fn compute<'a, T: TextSource<'a> + ?Sized>(
             levels[i + j] = levels[i];
             processing_classes[i + j] = processing_classes[i];
         }
+
+        // Identify level runs to be passed to prepare::isolating_run_sequences().
+        if i == 0 {
+            // Initialize for the first (or only) run.
+            current_run_level = levels[i];
+        } else {
+            // Check if we need to start a new level run.
+            // <https://www.unicode.org/reports/tr9/#BD7>
+            if !removed_by_x9(original_classes[i]) && levels[i] != current_run_level {
+                // End the last run and start a new one.
+                runs.push(current_run_start..i);
+                current_run_level = levels[i];
+                current_run_start = i;
+            }
+        }
+    }
+
+    // Append the trailing level run, if non-empty.
+    if levels.len() > current_run_start {
+        runs.push(current_run_start..levels.len());
     }
 }
 

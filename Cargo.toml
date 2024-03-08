@@ -188,7 +188,7 @@ rure = { path = "third_party/rust/rure" }
 # To-be-published changes.
 cssparser = { git = "https://github.com/servo/rust-cssparser", rev = "aaa966d9d6ae70c4b8a62bb5e3a14c068bb7dff0" }
 cssparser-macros = { git = "https://github.com/servo/rust-cssparser", rev = "aaa966d9d6ae70c4b8a62bb5e3a14c068bb7dff0" }
-unicode-bidi = { git = "https://github.com/servo/unicode-bidi", rev = "d43c644c388659d093cc5d1648a970daeef692d5" }
+unicode-bidi = { git = "https://github.com/servo/unicode-bidi", rev = "ca612daf1c08c53abe07327cb3e6ef6e0a760f0c" }
 
 # Other overrides
 chardetng = { git = "https://github.com/hsivonen/chardetng", rev = "3484d3e3ebdc8931493aa5df4d7ee9360a90e76b" }
