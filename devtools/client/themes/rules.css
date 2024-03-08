@@ -486,12 +486,12 @@
 }
 
 .ruleview-warning {
-  background-image: url(chrome://devtools/skin/images/alert-small.svg);
+  background-image: url(resource://devtools-shared-images/alert-small.svg);
   fill: var(--yellow-60);
 }
 
 .ruleview-unused-warning {
-  background-image: url(chrome://devtools/skin/images/info-small.svg);
+  background-image: url(resource://devtools-shared-images/info-small.svg);
   background-color: var(--theme-sidebar-background);
   fill: var(--theme-icon-dimmed-color);
 }
@@ -872,7 +872,7 @@
   -moz-context-properties: fill;
 
   /* Default warning icon */
-  background-image: url(chrome://devtools/skin/images/alert-small.svg);
+  background-image: url(resource://devtools-shared-images/alert-small.svg);
   background-size: 10px;
 
   &.slow {

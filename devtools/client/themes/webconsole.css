@@ -284,14 +284,9 @@
   background-image: url(chrome://devtools/skin/images/webconsole/return.svg);
 }
 
-.message.info > .icon {
+.message:is(.info, .disabled) > .icon {
   color: var(--theme-icon-color);
-  background-image: url(chrome://devtools/skin/images/info-small.svg);
-}
-
-.message.disabled > .icon {
-  color: var(--theme-icon-color);
-  background-image: url(chrome://devtools/skin/images/info-small.svg);
+  background-image: url(resource://devtools-shared-images/info-small.svg);
 }
 
 .message.error > .icon {
@@ -301,7 +296,7 @@
 
 .message.warn > .icon {
   color: var(--theme-icon-warning-color);
-  background-image: url(chrome://devtools/skin/images/alert-small.svg);
+  background-image: url(resource://devtools-shared-images/alert-small.svg);
 }
 
 .message.navigationMarker > .icon {

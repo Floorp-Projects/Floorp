@@ -5,9 +5,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
+    "alert-small.svg",
     "command-pick-remote-touch.svg",
     "command-pick.svg",
     "error-small.svg",
+    "info-small.svg",
     "resume.svg",
     "stepOver.svg",
 )
