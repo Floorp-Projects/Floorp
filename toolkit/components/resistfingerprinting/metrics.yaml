@@ -318,3 +318,21 @@ characteristics:
     expires: never
     data_sensitivity:
       - technical
+
+  timezone:
+    type: string
+    description: >
+      The the current timezone of the system
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879151
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1881773
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1881773#c4
+    expires: never
+    data_sensitivity:
+      - interaction
