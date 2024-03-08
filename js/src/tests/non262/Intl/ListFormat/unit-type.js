@@ -1,4 +1,4 @@
-// |reftest| skip -- "unit" type currently not supported
+// |reftest| skip-if(!this.hasOwnProperty('Intl'))
 
 const {Element, Literal} = ListFormatParts;
 const styles = ["long", "short", "narrow"];
@@ -38,7 +38,6 @@ const styles = ["long", "short", "narrow"];
     const testData = {
         "ar": {
             long: [Element("A"), Literal(" و"), Element("B")],
-            narrow: [Element("A"), Literal("، "), Element("B")],
         },
         "de": {
             long: [Element("A"), Literal(", "), Element("B")],
@@ -90,7 +89,7 @@ const styles = ["long", "short", "narrow"];
         // non-ASCII case
         "ar": {
             long: [Element("A"), Literal("، و"), Element("B"), Literal("، و"), Element("C"), Literal("، و"), Element("D")],
-            narrow: [Element("A"), Literal("، "), Element("B"), Literal("، "), Element("C"), Literal("، "), Element("D")],
+            narrow: [Element("A"), Literal(" و"), Element("B"), Literal(" و"), Element("C"), Literal(" و"), Element("D")],
         },
 
         // all values are equal
