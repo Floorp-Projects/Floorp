@@ -15,11 +15,13 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/ServoBindingTypes.h"
 #include "mozilla/ServoTypes.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StyleSheetInfo.h"
 #include "nsICSSLoaderObserver.h"
 #include "nsIPrincipal.h"
 #include "nsWrapperCache.h"
 #include "nsStringFwd.h"
+#include "nsProxyRelease.h"
 
 class nsIGlobalObject;
 class nsINode;
@@ -44,6 +46,7 @@ class Loader;
 class LoaderReusableStyleSheets;
 class Rule;
 class SheetLoadData;
+using SheetLoadDataHolder = nsMainThreadPtrHolder<SheetLoadData>;
 }  // namespace css
 
 namespace dom {
@@ -79,6 +82,12 @@ enum class StyleSheetState : uint8_t {
   // This flag is set during the async Replace() function to ensure
   // that the sheet is not modified until the promise is resolved.
   ModificationDisallowed = 1 << 5,
+  // Flag to indicate if resolution of parse promise is blocked.
+  // Parse promise resolution should be blocked if we are parsing sheet data
+  // before main thread OnStopRequest is dispatched.
+  ParsePromiseResolutionBlocked = 1 << 6,
+  // Flag to indicate if Parse has been completed
+  AsyncParseOngoing = 1 << 7
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(StyleSheetState)
@@ -112,9 +121,9 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
   // SheetLoadData for this stylesheet.
   // NOTE: ParseSheet can run synchronously or asynchronously
   //       based on the result of `AllowParallelParse`
-  RefPtr<StyleSheetParsePromise> ParseSheet(css::Loader&,
-                                            const nsACString& aBytes,
-                                            css::SheetLoadData&);
+  RefPtr<StyleSheetParsePromise> ParseSheet(
+      css::Loader&, const nsACString& aBytes,
+      const RefPtr<css::SheetLoadDataHolder>& aLoadData);
 
   // Common code that needs to be called after servo finishes parsing. This is
   // shared between the parallel and sequential paths.
@@ -220,6 +229,14 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
     return bool(mState & State::ModifiedRulesForDevtools);
   }
 
+  bool IsAsyncParseOngoing() const {
+    return bool(mState & State::AsyncParseOngoing);
+  }
+
+  bool HasParsePromiseResolutionBlocked() const {
+    return bool(mState & State::ParsePromiseResolutionBlocked);
+  }
+
   bool HasUniqueInner() const { return Inner().mSheets.Length() == 1; }
 
   void AssertHasUniqueInner() const { MOZ_ASSERT(HasUniqueInner()); }
@@ -301,7 +318,7 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
    */
   void SetPrincipal(nsIPrincipal* aPrincipal) {
     StyleSheetInfo& info = Inner();
-    MOZ_ASSERT(!info.mPrincipalSet, "Should only set principal once");
+    MOZ_ASSERT_IF(info.mPrincipalSet, info.mPrincipal == aPrincipal);
     if (aPrincipal) {
       info.mPrincipal = aPrincipal;
 #ifdef DEBUG
@@ -465,8 +482,28 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
   // Rejects mReplacePromise with a NetworkError.
   void MaybeRejectReplacePromise();
 
+  // Resolves mParsePromise with this sheet
+  void MayBeResolveParsePromise() {
+    if (!IsAsyncParseOngoing() && !HasParsePromiseResolutionBlocked() &&
+        !mParsePromise.IsEmpty()) {
+      mParsePromise.Resolve(true, __func__);
+    }
+  };
+
   // Gets the relevant global if exists.
   nsISupports* GetRelevantGlobal() const;
+
+  // Blocks/Unblocks resolution of parse promise
+  void BlockOrUnblockParsePromise(bool aBlock) {
+    MOZ_ASSERT_IF(aBlock, !HasParsePromiseResolutionBlocked());
+    MOZ_ASSERT(NS_IsMainThread());
+    if (aBlock) {
+      mState |= State::ParsePromiseResolutionBlocked;
+    } else {
+      mState &= ~State::ParsePromiseResolutionBlocked;
+      MayBeResolveParsePromise();
+    }
+  }
 
  private:
   void SetModifiedRules() {
