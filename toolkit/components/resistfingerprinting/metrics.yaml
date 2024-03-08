@@ -336,3 +336,22 @@ characteristics:
     expires: never
     data_sensitivity:
       - interaction
+
+  target_frame_rate:
+    type: quantity
+    unit: int
+    description: >
+      The target frame rate in frames-per-second.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879151
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1882054
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1882054#c3
+    expires: never
+    data_sensitivity:
+      - technical
