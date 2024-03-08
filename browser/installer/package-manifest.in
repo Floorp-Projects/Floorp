@@ -61,10 +61,7 @@
 @RESPATH@/update.locale
 @RESPATH@/updater.ini
 #endif
-#ifdef MOZ_DEFAULT_BROWSER_AGENT
-@RESPATH@/defaultagent.ini
-#endif
-#if defined(MOZ_UPDATE_AGENT) || defined(MOZ_DEFAULT_BROWSER_AGENT)
+#if defined(MOZ_UPDATE_AGENT)
 @RESPATH@/locale.ini
 #endif
 
