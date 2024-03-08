@@ -55,3 +55,5 @@ skip-if = [
   "win11_2009 && debug",
   "os == 'linux' && debug", # Bug 1804804 - disabled on win && linux for extremely high failure rate
 ]
+
+["browser_aboutwelcome_multistage_urlbar_focus.js"]
