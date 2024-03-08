@@ -1204,6 +1204,13 @@
   value: 30
   mirror: always
 
+# Should Firefox show a notification or dialog when content analysis blocks
+# access?
+- name: browser.contentanalysis.show_blocked_result
+  type: bool
+  value: true
+  mirror: always
+
 # Content blocking for Enhanced Tracking Protection
 - name: browser.contentblocking.database.enabled
   type: bool
