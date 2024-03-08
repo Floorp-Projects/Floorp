@@ -245,11 +245,6 @@ export class RTCSessionDescription {
   }
 
   __init({ type, sdp }) {
-    if (!type) {
-      throw new this._win.TypeError(
-        "Missing required 'type' member of RTCSessionDescriptionInit"
-      );
-    }
     Object.assign(this, { _type: type, _sdp: sdp });
   }
 
@@ -1193,11 +1188,6 @@ export class RTCPeerConnection {
   }
 
   _setRemoteDescription({ type, sdp }) {
-    if (!type) {
-      throw new this._win.TypeError(
-        "Missing required 'type' member of RTCSessionDescriptionInit"
-      );
-    }
     if (type == "pranswer") {
       throw new this._win.DOMException(
         "pranswer not yet implemented",

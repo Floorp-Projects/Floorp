@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * http://dev.w3.org/2011/webrtc/editor/webrtc.html#idl-def-RTCSessionDescription
+ * https://www.w3.org/TR/webrtc/#rtcsessiondescription-class
  */
 
 enum RTCSdpType {
@@ -15,6 +15,11 @@ enum RTCSdpType {
 };
 
 dictionary RTCSessionDescriptionInit {
+  required RTCSdpType type;
+  DOMString sdp = "";
+};
+
+dictionary RTCLocalSessionDescriptionInit {
   RTCSdpType type;
   DOMString sdp = "";
 };
@@ -24,7 +29,7 @@ dictionary RTCSessionDescriptionInit {
  Exposed=Window]
 interface RTCSessionDescription {
   [Throws]
-  constructor(optional RTCSessionDescriptionInit descriptionInitDict = {});
+  constructor(RTCSessionDescriptionInit descriptionInitDict);
 
   // These should be readonly, but writing causes deprecation warnings for a bit
   attribute RTCSdpType type;
