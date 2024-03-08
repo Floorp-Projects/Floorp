@@ -13,7 +13,7 @@ add_task(async function test_network_markers() {
 
   startProfilerForMarkerTests();
 
-  const url = BASE_URL + "simple.html?cacheBust=" + Math.random();
+  const url = BASE_URL_HTTPS + "simple.html?cacheBust=" + Math.random();
   await BrowserTestUtils.withNewTab(url, async contentBrowser => {
     const contentPid = await SpecialPowers.spawn(
       contentBrowser,

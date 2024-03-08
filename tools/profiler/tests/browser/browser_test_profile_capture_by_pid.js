@@ -26,7 +26,7 @@ async function test_with_filter(fnFilterWithContentId) {
   await Services.profiler.ClearAllPages();
 
   info("Open a tab with single_frame.html in it.");
-  const url = BASE_URL + "single_frame.html";
+  const url = BASE_URL_HTTPS + "single_frame.html";
   return BrowserTestUtils.withNewTab(url, async function (contentBrowser) {
     const contentPid = await SpecialPowers.spawn(contentBrowser, [], () => {
       return Services.appinfo.processID;
