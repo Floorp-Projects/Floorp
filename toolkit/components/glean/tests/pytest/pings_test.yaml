@@ -7,7 +7,7 @@
 # `glean_parser` PyPI package.
 
 ---
-$schema: moz://mozilla.org/schemas/glean/pings/1-0-0
+$schema: moz://mozilla.org/schemas/glean/pings/2-0-0
 
 not-baseline:
   description: >
@@ -113,4 +113,20 @@ not-deletion-request:
   data_reviews:
     - https://bugzilla.mozilla.org/show_bug.cgi?id=1587095#c6
   notification_emails:
+    - glean-team@mozilla.com
+
+not-ohttp:
+  description: >
+    A fake OHTTP-using ping
+  include_client_id: false
+  metadata:
+    include_info_sections: false
+    use_ohttp: true
+  send_if_empty: true
+  bugs:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1862002
+  data_reviews:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1862002
+  notification_emails:
+    - chutten@mozilla.com
     - glean-team@mozilla.com

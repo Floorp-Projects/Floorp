@@ -1852,15 +1852,19 @@ dependencies = [
 name = "fog_control"
 version = "0.1.0"
 dependencies = [
+ "bhttp",
  "cstr",
  "firefox-on-glean",
  "glean",
  "log",
+ "mozbuild",
  "nserror",
  "nsstring",
+ "ohttp",
  "once_cell",
  "static_prefs",
  "thin-vec",
+ "thiserror",
  "url",
  "viaduct",
  "xpcom",
