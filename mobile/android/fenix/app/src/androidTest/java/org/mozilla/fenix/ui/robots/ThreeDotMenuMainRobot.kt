@@ -52,14 +52,31 @@ import org.mozilla.fenix.nimbus.FxNimbus
  */
 @Suppress("ForbiddenComment")
 class ThreeDotMenuMainRobot {
-    fun verifyShareAllTabsButton() = assertShareAllTabsButton()
+    fun verifyShareAllTabsButton() = shareAllTabsButton().check(matches(isDisplayed()))
     fun verifySettingsButton() = assertUIObjectExists(settingsButton())
     fun verifyHistoryButton() = assertUIObjectExists(historyButton())
-    fun verifyThreeDotMenuExists() = threeDotMenuRecyclerViewExists()
+    fun verifyThreeDotMenuExists() = threeDotMenuRecyclerView().check(matches(isDisplayed()))
     fun verifyAddBookmarkButton() = assertUIObjectExists(addBookmarkButton())
-    fun verifyEditBookmarkButton() = assertEditBookmarkButton()
-    fun verifyCloseAllTabsButton() = assertCloseAllTabsButton()
-    fun verifyReaderViewAppearance(visible: Boolean) = assertReaderViewAppearanceButton(visible)
+    fun verifyEditBookmarkButton() =
+        editBookmarkButton().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    fun verifyCloseAllTabsButton() =
+        closeAllTabsButton().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    fun verifyReaderViewAppearance(visible: Boolean) {
+        var maxSwipes = 3
+        if (visible) {
+            while (!readerViewAppearanceToggle().exists() && maxSwipes != 0) {
+                threeDotMenuRecyclerView().perform(swipeUp())
+                maxSwipes--
+            }
+            assertUIObjectExists(readerViewAppearanceToggle())
+        } else {
+            while (!readerViewAppearanceToggle().exists() && maxSwipes != 0) {
+                threeDotMenuRecyclerView().perform(swipeUp())
+                maxSwipes--
+            }
+            assertUIObjectExists(readerViewAppearanceToggle(), exists = false)
+        }
+    }
 
     fun verifyQuitButtonExists() {
         // Need to double swipe the menu, to make this button visible.
@@ -73,14 +90,25 @@ class ThreeDotMenuMainRobot {
         onView(withId(R.id.mozac_browser_menu_menuView)).perform(swipeUp())
     }
 
-    fun verifyShareTabButton() = assertShareTabButton()
-    fun verifySelectTabs() = assertSelectTabsButton()
+    fun verifyShareTabButton() = shareTabButton().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    fun verifySelectTabs() = selectTabsButton().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
     fun verifyFindInPageButton() = assertUIObjectExists(findInPageButton())
     fun verifyAddToShortcutsButton(shouldExist: Boolean) =
         assertUIObjectExists(addToShortcutsButton(), exists = shouldExist)
-    fun verifyRemoveFromShortcutsButton() = assertRemoveFromShortcutsButton()
-    fun verifyShareTabsOverlay() = assertShareTabsOverlay()
+    fun verifyRemoveFromShortcutsButton() =
+        onView(withId(R.id.mozac_browser_menu_recyclerView))
+            .perform(
+                RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
+                    hasDescendant(withText(R.string.browser_menu_settings)),
+                ),
+            ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+    fun verifyShareTabsOverlay() {
+        onView(withId(R.id.shared_site_list)).check(matches(isDisplayed()))
+        onView(withId(R.id.share_tab_title)).check(matches(isDisplayed()))
+        onView(withId(R.id.share_tab_favicon)).check(matches(isDisplayed()))
+        onView(withId(R.id.share_tab_url)).check(matches(isDisplayed()))
+    }
 
     fun verifyDesktopSiteModeEnabled(isRequestDesktopSiteEnabled: Boolean) {
         expandMenu()
@@ -137,13 +165,6 @@ class ThreeDotMenuMainRobot {
             settingsButton(),
             desktopSiteToggle(isRequestDesktopSiteEnabled),
         )
-    }
-
-    private fun assertShareTabsOverlay() {
-        onView(withId(R.id.shared_site_list)).check(matches(isDisplayed()))
-        onView(withId(R.id.share_tab_title)).check(matches(isDisplayed()))
-        onView(withId(R.id.share_tab_favicon)).check(matches(isDisplayed()))
-        onView(withId(R.id.share_tab_url)).check(matches(isDisplayed()))
     }
 
     fun openAddonsSubList() {
@@ -493,59 +514,21 @@ class ThreeDotMenuMainRobot {
 private fun threeDotMenuRecyclerView() =
     onView(withId(R.id.mozac_browser_menu_recyclerView))
 
-private fun threeDotMenuRecyclerViewExists() {
-    threeDotMenuRecyclerView().check(matches(isDisplayed()))
-}
-
 private fun editBookmarkButton() = onView(withText("Edit"))
-private fun assertEditBookmarkButton() = editBookmarkButton()
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun stopLoadingButton() = onView(ViewMatchers.withContentDescription("Stop"))
 
 private fun closeAllTabsButton() = onView(allOf(withText("Close all tabs"))).inRoot(RootMatchers.isPlatformPopup())
-private fun assertCloseAllTabsButton() = closeAllTabsButton()
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun shareTabButton() = onView(allOf(withText("Share all tabs"))).inRoot(RootMatchers.isPlatformPopup())
-private fun assertShareTabButton() = shareTabButton()
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun selectTabsButton() = onView(allOf(withText("Select tabs"))).inRoot(RootMatchers.isPlatformPopup())
-private fun assertSelectTabsButton() = selectTabsButton()
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun readerViewAppearanceToggle() =
     mDevice.findObject(UiSelector().text("Customize reader view"))
 
-private fun assertReaderViewAppearanceButton(visible: Boolean) {
-    var maxSwipes = 3
-    if (visible) {
-        while (!readerViewAppearanceToggle().exists() && maxSwipes != 0) {
-            threeDotMenuRecyclerView().perform(swipeUp())
-            maxSwipes--
-        }
-        assertUIObjectExists(readerViewAppearanceToggle())
-    } else {
-        while (!readerViewAppearanceToggle().exists() && maxSwipes != 0) {
-            threeDotMenuRecyclerView().perform(swipeUp())
-            maxSwipes--
-        }
-        assertUIObjectExists(readerViewAppearanceToggle(), exists = false)
-    }
-}
-
 private fun removeFromShortcutsButton() =
     onView(allOf(withText(R.string.browser_menu_remove_from_shortcuts)))
-
-private fun assertRemoveFromShortcutsButton() {
-    onView(withId(R.id.mozac_browser_menu_recyclerView))
-        .perform(
-            RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-                hasDescendant(withText(R.string.browser_menu_settings)),
-            ),
-        ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-}
 
 private fun installPWAButton() = mDevice.findObject(UiSelector().text("Install"))
 
@@ -564,13 +547,6 @@ private fun clickAddonsManagerButton() {
 
 private fun shareAllTabsButton() =
     onView(allOf(withText("Share all tabs"))).inRoot(RootMatchers.isPlatformPopup())
-
-private fun assertShareAllTabsButton() {
-    shareAllTabsButton()
-        .check(
-            matches(isDisplayed()),
-        )
-}
 
 private fun bookmarksButton() =
     itemContainingText(getStringResource(R.string.library_bookmarks))
