@@ -35,7 +35,7 @@ body {
 .cm-s-mozilla .cm-link,
 .cm-editor .tok-link,
 .CodeMirror-Tern-type {
-  color: var(--grey-50);
+  color: var(--grey-45);
 }
 
 /*
