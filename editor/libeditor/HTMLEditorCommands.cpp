@@ -52,7 +52,7 @@ bool StateUpdatingCommandBase::IsCommandEnabled(Command aCommand,
   if (!htmlEditor) {
     return false;
   }
-  if (!htmlEditor->IsSelectionEditable()) {
+  if (!htmlEditor->IsModifiable() || !htmlEditor->IsSelectionEditable()) {
     return false;
   }
   if (aCommand == Command::FormatAbsolutePosition) {
@@ -355,8 +355,7 @@ bool RemoveListCommand::IsCommandEnabled(Command aCommand,
   if (!htmlEditor) {
     return false;
   }
-
-  if (!htmlEditor->IsSelectionEditable()) {
+  if (!htmlEditor->IsModifiable() || !htmlEditor->IsSelectionEditable()) {
     return false;
   }
 
@@ -401,7 +400,7 @@ bool IndentCommand::IsCommandEnabled(Command aCommand,
   if (!htmlEditor) {
     return false;
   }
-  return htmlEditor->IsSelectionEditable();
+  return htmlEditor->IsModifiable() && htmlEditor->IsSelectionEditable();
 }
 
 nsresult IndentCommand::DoCommand(Command aCommand, EditorBase& aEditorBase,
@@ -434,7 +433,7 @@ bool OutdentCommand::IsCommandEnabled(Command aCommand,
   if (!htmlEditor) {
     return false;
   }
-  return htmlEditor->IsSelectionEditable();
+  return htmlEditor->IsModifiable() && htmlEditor->IsSelectionEditable();
 }
 
 nsresult OutdentCommand::DoCommand(Command aCommand, EditorBase& aEditorBase,
@@ -467,7 +466,7 @@ bool MultiStateCommandBase::IsCommandEnabled(Command aCommand,
     return false;
   }
   // should be disabled sometimes, like if the current selection is an image
-  return htmlEditor->IsSelectionEditable();
+  return htmlEditor->IsModifiable() && htmlEditor->IsSelectionEditable();
 }
 
 nsresult MultiStateCommandBase::DoCommand(Command aCommand,
@@ -1047,7 +1046,7 @@ bool RemoveStylesCommand::IsCommandEnabled(Command aCommand,
     return false;
   }
   // test if we have any styles?
-  return htmlEditor->IsSelectionEditable();
+  return htmlEditor->IsModifiable() && htmlEditor->IsSelectionEditable();
 }
 
 nsresult RemoveStylesCommand::DoCommand(Command aCommand,
@@ -1085,7 +1084,7 @@ bool IncreaseFontSizeCommand::IsCommandEnabled(Command aCommand,
     return false;
   }
   // test if we are at max size?
-  return htmlEditor->IsSelectionEditable();
+  return htmlEditor->IsModifiable() && htmlEditor->IsSelectionEditable();
 }
 
 nsresult IncreaseFontSizeCommand::DoCommand(Command aCommand,
@@ -1121,7 +1120,7 @@ bool DecreaseFontSizeCommand::IsCommandEnabled(Command aCommand,
     return false;
   }
   // test if we are at min size?
-  return htmlEditor->IsSelectionEditable();
+  return htmlEditor->IsModifiable() && htmlEditor->IsSelectionEditable();
 }
 
 nsresult DecreaseFontSizeCommand::DoCommand(Command aCommand,
@@ -1156,7 +1155,7 @@ bool InsertHTMLCommand::IsCommandEnabled(Command aCommand,
   if (!htmlEditor) {
     return false;
   }
-  return htmlEditor->IsSelectionEditable();
+  return htmlEditor->IsModifiable() && htmlEditor->IsSelectionEditable();
 }
 
 nsresult InsertHTMLCommand::DoCommand(Command aCommand, EditorBase& aEditorBase,
@@ -1213,7 +1212,7 @@ bool InsertTagCommand::IsCommandEnabled(Command aCommand,
   if (!htmlEditor) {
     return false;
   }
-  return htmlEditor->IsSelectionEditable();
+  return htmlEditor->IsModifiable() && htmlEditor->IsSelectionEditable();
 }
 
 // corresponding STATE_ATTRIBUTE is: src (img) and href (a)

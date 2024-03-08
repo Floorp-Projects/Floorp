@@ -269,7 +269,8 @@ bool UndoCommand::IsCommandEnabled(Command aCommand,
   if (!aEditorBase) {
     return false;
   }
-  return aEditorBase->IsSelectionEditable() && aEditorBase->CanUndo();
+  return aEditorBase->IsModifiable() && aEditorBase->IsSelectionEditable() &&
+         aEditorBase->CanUndo();
 }
 
 nsresult UndoCommand::DoCommand(Command aCommand, EditorBase& aEditorBase,
@@ -297,7 +298,8 @@ bool RedoCommand::IsCommandEnabled(Command aCommand,
   if (!aEditorBase) {
     return false;
   }
-  return aEditorBase->IsSelectionEditable() && aEditorBase->CanRedo();
+  return aEditorBase->IsModifiable() && aEditorBase->IsSelectionEditable() &&
+         aEditorBase->CanRedo();
 }
 
 nsresult RedoCommand::DoCommand(Command aCommand, EditorBase& aEditorBase,
@@ -548,7 +550,7 @@ bool SwitchTextDirectionCommand::IsCommandEnabled(
   if (!aEditorBase) {
     return false;
   }
-  return aEditorBase->IsSelectionEditable();
+  return aEditorBase->IsModifiable() && aEditorBase->IsSelectionEditable();
 }
 
 nsresult SwitchTextDirectionCommand::DoCommand(Command aCommand,
@@ -581,7 +583,8 @@ bool DeleteCommand::IsCommandEnabled(Command aCommand,
   // We can generally delete whenever the selection is editable.  However,
   // cmd_delete doesn't make sense if the selection is collapsed because it's
   // directionless.
-  bool isEnabled = aEditorBase->IsSelectionEditable();
+  bool isEnabled =
+      aEditorBase->IsModifiable() && aEditorBase->IsSelectionEditable();
 
   if (aCommand == Command::Delete && isEnabled) {
     return aEditorBase->CanDeleteSelection();
@@ -820,7 +823,7 @@ bool InsertPlaintextCommand::IsCommandEnabled(Command aCommand,
   if (!aEditorBase) {
     return false;
   }
-  return aEditorBase->IsSelectionEditable();
+  return aEditorBase->IsModifiable() && aEditorBase->IsSelectionEditable();
 }
 
 nsresult InsertPlaintextCommand::DoCommand(Command aCommand,
@@ -877,7 +880,7 @@ bool InsertParagraphCommand::IsCommandEnabled(Command aCommand,
   if (!aEditorBase || aEditorBase->IsSingleLineEditor()) {
     return false;
   }
-  return aEditorBase->IsSelectionEditable();
+  return aEditorBase->IsModifiable() && aEditorBase->IsSelectionEditable();
 }
 
 nsresult InsertParagraphCommand::DoCommand(Command aCommand,
@@ -918,7 +921,7 @@ bool InsertLineBreakCommand::IsCommandEnabled(Command aCommand,
   if (!aEditorBase || aEditorBase->IsSingleLineEditor()) {
     return false;
   }
-  return aEditorBase->IsSelectionEditable();
+  return aEditorBase->IsModifiable() && aEditorBase->IsSelectionEditable();
 }
 
 nsresult InsertLineBreakCommand::DoCommand(Command aCommand,
