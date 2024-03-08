@@ -221,3 +221,71 @@ add_task(async function test_open_tab_row_with_sound_navigation() {
 
   cleanupTabs();
 });
+
+add_task(async function test_open_tab_row_with_sound_mute_and_unmute() {
+  const tabWithSound = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "http://mochi.test:8888/browser/dom/base/test/file_audioLoop.html",
+    true
+  );
+  const tabsUpdated = await BrowserTestUtils.waitForEvent(
+    NonPrivateTabs,
+    "TabChange"
+  );
+  await withFirefoxView({}, async browser => {
+    const { document } = browser.contentWindow;
+    let win = browser.ownerGlobal;
+
+    await navigateToViewAndWait(document, "opentabs");
+    const openTabs = document.querySelector("view-opentabs[name=opentabs]");
+    await TestUtils.waitForCondition(
+      () => tabWithSound.hasAttribute("soundplaying"),
+      "Tab is playing sound"
+    );
+    await tabsUpdated;
+    await openTabs.updateComplete;
+
+    await TestUtils.waitForCondition(
+      () => openTabs.viewCards[0].tabList?.rowEls.length === 2,
+      "The tab list has rendered."
+    );
+
+    // Focus tab row with sound playing
+    let tabRow;
+    for (const rowEl of openTabs.viewCards[0].tabList.rowEls) {
+      if (rowEl.indicators.includes("soundplaying")) {
+        tabRow = rowEl;
+        break;
+      }
+    }
+    ok(tabRow, "Found a tab row with sound playing.");
+    let tabRowFocused = BrowserTestUtils.waitForEvent(tabRow, "focus", win);
+    tabRow.focus();
+    await tabRowFocused;
+    info("The tab row main element has focus.");
+
+    // Navigate right to media button
+    let mediaButtonFocused = BrowserTestUtils.waitForEvent(
+      tabRow.mediaButtonEl,
+      "focus",
+      win
+    );
+    EventUtils.synthesizeKey("KEY_ArrowRight", {}, win);
+    await mediaButtonFocused;
+    info("The media button has focus.");
+
+    EventUtils.synthesizeKey("KEY_Enter", {}, win);
+    await TestUtils.waitForCondition(
+      () => tabRow.indicators.includes("muted"),
+      "Tab has been muted"
+    );
+
+    EventUtils.synthesizeKey("KEY_Enter", {}, win);
+    await TestUtils.waitForCondition(
+      () => tabRow.indicators.includes("soundplaying"),
+      "Tab has been unmuted"
+    );
+  });
+
+  cleanupTabs();
+});
