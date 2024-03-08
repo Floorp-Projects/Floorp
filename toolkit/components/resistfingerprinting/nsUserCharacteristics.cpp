@@ -86,19 +86,26 @@ void PopulateCSSProperties() {
     return mozilla::StylePrefersContrast::Custom;
   }();
   mozilla::glean::characteristics::prefers_contrast.Set((int)prefersContrast);
+}
 
-  int32_t colorDepth;
-  mozilla::dom::ScreenColorGamut colorGamut;
-
+void PopulateScreenProperties() {
   auto& screenManager = mozilla::widget::ScreenManager::GetSingleton();
   RefPtr<mozilla::widget::Screen> screen = screenManager.GetPrimaryScreen();
   MOZ_ASSERT(screen);
 
+  mozilla::dom::ScreenColorGamut colorGamut;
   screen->GetColorGamut(&colorGamut);
+  mozilla::glean::characteristics::color_gamut.Set((int)colorGamut);
+
+  int32_t colorDepth;
   screen->GetColorDepth(&colorDepth);
+  mozilla::glean::characteristics::color_depth.Set(colorDepth);
 
   mozilla::glean::characteristics::color_gamut.Set((int)colorGamut);
   mozilla::glean::characteristics::color_depth.Set(colorDepth);
+  const mozilla::LayoutDeviceIntRect rect = screen->GetRect();
+  mozilla::glean::characteristics::screen_height.Set(rect.Height());
+  mozilla::glean::characteristics::screen_width.Set(rect.Width());
 }
 
 void PopulateMissingFonts() {
@@ -228,6 +235,7 @@ nsresult nsUserCharacteristics::PopulateData(bool aTesting /* = false */) {
 
   PopulateMissingFonts();
   PopulateCSSProperties();
+  PopulateScreenProperties();
 
   return NS_OK;
 }
