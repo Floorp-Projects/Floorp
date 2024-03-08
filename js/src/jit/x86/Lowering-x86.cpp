@@ -635,8 +635,8 @@ void LIRGenerator::visitWasmAtomicBinopHeap(MWasmAtomicBinopHeap* ins) {
   //  - better 8-bit register allocation and instruction selection, Bug
   //  #1077036.
 
-  bool bitOp = !(ins->operation() == AtomicFetchAddOp ||
-                 ins->operation() == AtomicFetchSubOp);
+  bool bitOp =
+      !(ins->operation() == AtomicOp::Add || ins->operation() == AtomicOp::Sub);
   LDefinition tempDef = LDefinition::BogusTemp();
   LAllocation value;
 

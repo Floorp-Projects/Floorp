@@ -2513,25 +2513,25 @@ static void AtomicFetchOp(MacroAssembler& masm,
   }
 
     switch (op) {
-      case AtomicFetchAddOp:
+      case AtomicOp::Add:
         FETCH_OP_CASE(add, value);
         break;
-      case AtomicFetchSubOp: {
+      case AtomicOp::Sub: {
         Register scratch = temps.AcquireX().asUnsized();
         masm.Neg(X(scratch), X(value));
         FETCH_OP_CASE(add, scratch);
         break;
       }
-      case AtomicFetchAndOp: {
+      case AtomicOp::And: {
         Register scratch = temps.AcquireX().asUnsized();
         masm.Eor(X(scratch), X(value), Operand(~0));
         FETCH_OP_CASE(clr, scratch);
         break;
       }
-      case AtomicFetchOrOp:
+      case AtomicOp::Or:
         FETCH_OP_CASE(set, value);
         break;
-      case AtomicFetchXorOp:
+      case AtomicOp::Xor:
         FETCH_OP_CASE(eor, value);
         break;
     }
@@ -2557,19 +2557,19 @@ static void AtomicFetchOp(MacroAssembler& masm,
   masm.bind(&again);
   LoadExclusive(masm, access, type, targetWidth, ptr, output);
   switch (op) {
-    case AtomicFetchAddOp:
+    case AtomicOp::Add:
       masm.Add(X(temp), X(output), X(value));
       break;
-    case AtomicFetchSubOp:
+    case AtomicOp::Sub:
       masm.Sub(X(temp), X(output), X(value));
       break;
-    case AtomicFetchAndOp:
+    case AtomicOp::And:
       masm.And(X(temp), X(output), X(value));
       break;
-    case AtomicFetchOrOp:
+    case AtomicOp::Or:
       masm.Orr(X(temp), X(output), X(value));
       break;
-    case AtomicFetchXorOp:
+    case AtomicOp::Xor:
       masm.Eor(X(temp), X(output), X(value));
       break;
   }

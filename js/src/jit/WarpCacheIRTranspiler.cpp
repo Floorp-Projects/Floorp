@@ -4713,35 +4713,35 @@ bool WarpCacheIRTranspiler::emitAtomicsAddResult(
     ObjOperandId objId, IntPtrOperandId indexId, uint32_t valueId,
     Scalar::Type elementType, bool forEffect, ArrayBufferViewKind viewKind) {
   return emitAtomicsBinaryOp(objId, indexId, valueId, elementType, forEffect,
-                             viewKind, AtomicFetchAddOp);
+                             viewKind, AtomicOp::Add);
 }
 
 bool WarpCacheIRTranspiler::emitAtomicsSubResult(
     ObjOperandId objId, IntPtrOperandId indexId, uint32_t valueId,
     Scalar::Type elementType, bool forEffect, ArrayBufferViewKind viewKind) {
   return emitAtomicsBinaryOp(objId, indexId, valueId, elementType, forEffect,
-                             viewKind, AtomicFetchSubOp);
+                             viewKind, AtomicOp::Sub);
 }
 
 bool WarpCacheIRTranspiler::emitAtomicsAndResult(
     ObjOperandId objId, IntPtrOperandId indexId, uint32_t valueId,
     Scalar::Type elementType, bool forEffect, ArrayBufferViewKind viewKind) {
   return emitAtomicsBinaryOp(objId, indexId, valueId, elementType, forEffect,
-                             viewKind, AtomicFetchAndOp);
+                             viewKind, AtomicOp::And);
 }
 
 bool WarpCacheIRTranspiler::emitAtomicsOrResult(
     ObjOperandId objId, IntPtrOperandId indexId, uint32_t valueId,
     Scalar::Type elementType, bool forEffect, ArrayBufferViewKind viewKind) {
   return emitAtomicsBinaryOp(objId, indexId, valueId, elementType, forEffect,
-                             viewKind, AtomicFetchOrOp);
+                             viewKind, AtomicOp::Or);
 }
 
 bool WarpCacheIRTranspiler::emitAtomicsXorResult(
     ObjOperandId objId, IntPtrOperandId indexId, uint32_t valueId,
     Scalar::Type elementType, bool forEffect, ArrayBufferViewKind viewKind) {
   return emitAtomicsBinaryOp(objId, indexId, valueId, elementType, forEffect,
-                             viewKind, AtomicFetchXorOp);
+                             viewKind, AtomicOp::Xor);
 }
 
 bool WarpCacheIRTranspiler::emitAtomicsLoadResult(

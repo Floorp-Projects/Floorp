@@ -1459,7 +1459,7 @@ static void AtomicFetchOp64(MacroAssembler& masm,
                             Register output) {
   // NOTE: the generated code must match the assembly code in gen_fetchop in
   // GenerateAtomicOperations.py
-  if (op == AtomicFetchAddOp) {
+  if (op == AtomicOp::Add) {
     if (value != output) {
       masm.movq(value, output);
     }
@@ -1468,7 +1468,7 @@ static void AtomicFetchOp64(MacroAssembler& masm,
                   FaultingCodeOffset(masm.currentOffset()));
     }
     masm.lock_xaddq(output, Operand(mem));
-  } else if (op == AtomicFetchSubOp) {
+  } else if (op == AtomicOp::Sub) {
     if (value != output) {
       masm.movq(value, output);
     }
@@ -1492,13 +1492,13 @@ static void AtomicFetchOp64(MacroAssembler& masm,
     masm.bind(&again);
     masm.movq(rax, temp);
     switch (op) {
-      case AtomicFetchAndOp:
+      case AtomicOp::And:
         masm.andq(value, temp);
         break;
-      case AtomicFetchOrOp:
+      case AtomicOp::Or:
         masm.orq(value, temp);
         break;
-      case AtomicFetchXorOp:
+      case AtomicOp::Xor:
         masm.xorq(value, temp);
         break;
       default:
@@ -1532,19 +1532,19 @@ static void AtomicEffectOp64(MacroAssembler& masm,
                 FaultingCodeOffset(masm.currentOffset()));
   }
   switch (op) {
-    case AtomicFetchAddOp:
+    case AtomicOp::Add:
       masm.lock_addq(value, Operand(mem));
       break;
-    case AtomicFetchSubOp:
+    case AtomicOp::Sub:
       masm.lock_subq(value, Operand(mem));
       break;
-    case AtomicFetchAndOp:
+    case AtomicOp::And:
       masm.lock_andq(value, Operand(mem));
       break;
-    case AtomicFetchOrOp:
+    case AtomicOp::Or:
       masm.lock_orq(value, Operand(mem));
       break;
-    case AtomicFetchXorOp:
+    case AtomicOp::Xor:
       masm.lock_xorq(value, Operand(mem));
       break;
     default:

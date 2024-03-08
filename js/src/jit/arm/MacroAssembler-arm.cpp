@@ -5270,19 +5270,19 @@ static void AtomicFetchOp(MacroAssembler& masm,
   }
 
   switch (op) {
-    case AtomicFetchAddOp:
+    case AtomicOp::Add:
       masm.as_add(scratch, output, O2Reg(value));
       break;
-    case AtomicFetchSubOp:
+    case AtomicOp::Sub:
       masm.as_sub(scratch, output, O2Reg(value));
       break;
-    case AtomicFetchAndOp:
+    case AtomicOp::And:
       masm.as_and(scratch, output, O2Reg(value));
       break;
-    case AtomicFetchOrOp:
+    case AtomicOp::Or:
       masm.as_orr(scratch, output, O2Reg(value));
       break;
-    case AtomicFetchXorOp:
+    case AtomicOp::Xor:
       masm.as_eor(scratch, output, O2Reg(value));
       break;
     default:
@@ -5392,19 +5392,19 @@ static void AtomicEffectOp(MacroAssembler& masm,
   }
 
   switch (op) {
-    case AtomicFetchAddOp:
+    case AtomicOp::Add:
       masm.as_add(scratch, scratch, O2Reg(value));
       break;
-    case AtomicFetchSubOp:
+    case AtomicOp::Sub:
       masm.as_sub(scratch, scratch, O2Reg(value));
       break;
-    case AtomicFetchAndOp:
+    case AtomicOp::And:
       masm.as_and(scratch, scratch, O2Reg(value));
       break;
-    case AtomicFetchOrOp:
+    case AtomicOp::Or:
       masm.as_orr(scratch, scratch, O2Reg(value));
       break;
-    case AtomicFetchXorOp:
+    case AtomicOp::Xor:
       masm.as_eor(scratch, scratch, O2Reg(value));
       break;
     default:
@@ -5665,23 +5665,23 @@ static void AtomicFetchOp64(MacroAssembler& masm,
                 FaultingCodeOffset(load.getOffset()));
   }
   switch (op) {
-    case AtomicFetchAddOp:
+    case AtomicOp::Add:
       masm.as_add(temp.low, output.low, O2Reg(value.low), SetCC);
       masm.as_adc(temp.high, output.high, O2Reg(value.high));
       break;
-    case AtomicFetchSubOp:
+    case AtomicOp::Sub:
       masm.as_sub(temp.low, output.low, O2Reg(value.low), SetCC);
       masm.as_sbc(temp.high, output.high, O2Reg(value.high));
       break;
-    case AtomicFetchAndOp:
+    case AtomicOp::And:
       masm.as_and(temp.low, output.low, O2Reg(value.low));
       masm.as_and(temp.high, output.high, O2Reg(value.high));
       break;
-    case AtomicFetchOrOp:
+    case AtomicOp::Or:
       masm.as_orr(temp.low, output.low, O2Reg(value.low));
       masm.as_orr(temp.high, output.high, O2Reg(value.high));
       break;
-    case AtomicFetchXorOp:
+    case AtomicOp::Xor:
       masm.as_eor(temp.low, output.low, O2Reg(value.low));
       masm.as_eor(temp.high, output.high, O2Reg(value.high));
       break;

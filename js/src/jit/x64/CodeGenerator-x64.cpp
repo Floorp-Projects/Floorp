@@ -432,7 +432,7 @@ void CodeGenerator::visitAtomicTypedArrayElementBinop64(
 
   // Add and Sub don't need |fetchTemp| and can save a `mov` when the value and
   // output register are equal to each other.
-  if (atomicOp == AtomicFetchAddOp || atomicOp == AtomicFetchSubOp) {
+  if (atomicOp == AtomicOp::Add || atomicOp == AtomicOp::Sub) {
     fetchTemp = Register64::Invalid();
     fetchOut = temp1;
     createTemp = temp2.reg;

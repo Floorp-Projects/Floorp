@@ -208,8 +208,8 @@ void LIRGenerator::visitAtomicTypedArrayElementBinop(
     //
     // For AND/OR/XOR we need to use a CMPXCHG loop with rax as a temp register.
 
-    bool bitOp = !(ins->operation() == AtomicFetchAddOp ||
-                   ins->operation() == AtomicFetchSubOp);
+    bool bitOp = !(ins->operation() == AtomicOp::Add ||
+                   ins->operation() == AtomicOp::Sub);
 
     LInt64Definition temp1 = tempInt64();
     LInt64Definition temp2;
@@ -427,8 +427,8 @@ void LIRGenerator::visitWasmAtomicBinopHeap(MWasmAtomicBinopHeap* ins) {
   // *mem does not have the expected value, so reloading it at the
   // top of the loop would be redundant.
 
-  bool bitOp = !(ins->operation() == AtomicFetchAddOp ||
-                 ins->operation() == AtomicFetchSubOp);
+  bool bitOp =
+      !(ins->operation() == AtomicOp::Add || ins->operation() == AtomicOp::Sub);
   bool reuseInput = false;
   LAllocation value;
 
