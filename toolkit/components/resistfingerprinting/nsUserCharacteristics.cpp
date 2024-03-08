@@ -26,6 +26,8 @@
 #  include "WinUtils.h"
 #elif defined(MOZ_WIDGET_ANDROID)
 #  include "mozilla/java/GeckoAppShellWrappers.h"
+#elif defined(XP_MACOSX)
+#  include "nsMacUtilsImpl.h"
 #endif
 
 static mozilla::LazyLogModule gUserCharacteristicsLog("UserCharacteristics");
@@ -236,6 +238,19 @@ nsresult nsUserCharacteristics::PopulateData(bool aTesting /* = false */) {
   PopulateMissingFonts();
   PopulateCSSProperties();
   PopulateScreenProperties();
+
+  int32_t processorCount = 0;
+#if defined(XP_MACOSX)
+  if (nsMacUtilsImpl::IsTCSMAvailable()) {
+    // On failure, zero is returned from GetPhysicalCPUCount()
+    // and we fallback to PR_GetNumberOfProcessors below.
+    processorCount = nsMacUtilsImpl::GetPhysicalCPUCount();
+  }
+#endif
+  if (processorCount == 0) {
+    processorCount = PR_GetNumberOfProcessors();
+  }
+  mozilla::glean::characteristics::processor_count.Set(processorCount);
 
   return NS_OK;
 }
