@@ -8,49 +8,70 @@
 <script type="application/javascript">
   createHTML({
     bug: "1264479",
-    title: "PeerConnection verify current and pending descriptions"
+    title: "PeerConnection verify current and pending descriptions in legacy mode"
   });
 
-  const pc1 = new RTCPeerConnection();
-  const pc2 = new RTCPeerConnection();
+  // Mostly covered by WPT tests these days, except for in our legacy mode
 
-  var add = (pc, can, failed) => can && pc.addIceCandidate(can).catch(failed);
-  pc1.onicecandidate = e => add(pc2, e.candidate, generateErrorCallback());
-  pc2.onicecandidate = e => add(pc1, e.candidate, generateErrorCallback());
+  const isSimilarDescription = (d1, d2, msg) => {
+    isnot(d1, d2, msg + " — not the same object");
+    is(d1.type, d2.type, msg + " — but same type");
+    is(d1.sdp, d2.sdp, msg + " — and same sdp");
+  }
 
+  runNetworkTest(async () => {
+    await SpecialPowers.pushPrefEnv({
+      set: [['media.peerconnection.description.legacy.enabled', true]]
+    });
 
-  runNetworkTest(function() {
+    const pc1 = new RTCPeerConnection();
+    const pc2 = new RTCPeerConnection();
+
+    const add = (pc, can, failed) => can && pc.addIceCandidate(can).catch(failed);
+    pc1.onicecandidate = e => add(pc2, e.candidate, generateErrorCallback());
+    pc2.onicecandidate = e => add(pc1, e.candidate, generateErrorCallback());
+
     const v1 = createMediaElement('video', 'v1');
     const v2 = createMediaElement('video', 'v2');
 
-    return navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-    .then(stream => (v1.srcObject = stream).getTracks().forEach(t => pc1.addTrack(t, stream)))
-    .then(() => pc1.createOffer({})) // check that createOffer accepts arg.
-    .then(offer => pc1.setLocalDescription(offer))
-    .then(() => {
-      ok(!pc1.currentLocalDescription, "pc1 currentLocalDescription is empty");
-      ok(pc1.pendingLocalDescription, "pc1 pendingLocalDescription is set");
-      ok(pc1.localDescription, "pc1 localDescription is set");
-    })
-    .then(() => pc2.setRemoteDescription(pc1.localDescription))
-    .then(() => {
-      ok(!pc2.currentRemoteDescription, "pc2 currentRemoteDescription is empty");
-      ok(pc2.pendingRemoteDescription, "pc2 pendingRemoteDescription is set");
-      ok(pc2.remoteDescription, "pc2 remoteDescription is set");
-    })
-    .then(() => pc2.createAnswer({}))  // check that createAnswer accepts arg.
-    .then(answer => pc2.setLocalDescription(answer))
-    .then(() => {
-      ok(pc2.currentLocalDescription, "pc2 currentLocalDescription is set");
-      ok(!pc2.pendingLocalDescription, "pc2 pendingLocalDescription is empty");
-      ok(pc2.localDescription, "pc2 localDescription is set");
-    })
-    .then(() => pc1.setRemoteDescription(pc2.localDescription))
-    .then(() => {
-      ok(pc1.currentRemoteDescription, "pc1 currentRemoteDescription is set");
-      ok(!pc1.pendingRemoteDescription, "pc1 pendingRemoteDescription is empty");
-      ok(pc1.remoteDescription, "pc1 remoteDescription is set");
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: true, audio: true
     });
+    v1.srcObject = stream;
+    for (const track of stream.getTracks()) {
+      pc1.addTrack(track, stream);
+    }
+    await pc1.setLocalDescription();
+    is(pc1.currentLocalDescription, null, "pc1 currentLocalDescription is null");
+    ok(pc1.pendingLocalDescription, "pc1 pendingLocalDescription is set");
+    ok(pc1.localDescription, "pc1 localDescription is set");
+    isSimilarDescription(pc1.pendingLocalDescription, pc1.pendingLocalDescription, "pendingLocalDescription");
+    isSimilarDescription(pc1.localDescription, pc1.localDescription, "localDescription");
+    isSimilarDescription(pc1.localDescription, pc1.pendingLocalDescription, "local and pending");
+
+    await pc2.setRemoteDescription(pc1.localDescription);
+    is(pc2.currentRemoteDescription, null, "pc2 currentRemoteDescription is null");
+    ok(pc2.pendingRemoteDescription, "pc2 pendingRemoteDescription is set");
+    ok(pc2.remoteDescription, "pc2 remoteDescription is set");
+    isSimilarDescription(pc2.pendingRemoteDescription, pc2.pendingRemoteDescription, "pendingRemoteDescription");
+    isSimilarDescription(pc2.remoteDescription, pc2.remoteDescription, "remoteDescription");
+    isSimilarDescription(pc2.remoteDescription, pc2.pendingRemoteDescription, "remote and pending");
+
+    await pc2.setLocalDescription();
+    ok(pc2.currentLocalDescription, "pc2 currentLocalDescription is set");
+    is(pc2.pendingLocalDescription, null, "pc2 pendingLocalDescription is null");
+    ok(pc2.localDescription, "pc2 localDescription is set");
+    isSimilarDescription(pc2.currentLocalDescription, pc2.currentLocalDescription, "currentLocalDescription");
+    isSimilarDescription(pc2.localDescription, pc2.localDescription, "localDescription");
+    isSimilarDescription(pc2.localDescription, pc2.currentLocalDescription, "local and current");
+
+    await pc1.setRemoteDescription(pc2.localDescription);
+    ok(pc1.currentRemoteDescription, "pc1 currentRemoteDescription is set");
+    is(pc1.pendingRemoteDescription, null, "pc1 pendingRemoteDescription is null");
+    ok(pc1.remoteDescription, "pc1 remoteDescription is set");
+    isSimilarDescription(pc1.currentRemoteDescription, pc1.currentRemoteDescription, "currentRemoteDescription");
+    isSimilarDescription(pc1.remoteDescription, pc1.remoteDescription, "remoteDescription");
+    isSimilarDescription(pc1.remoteDescription, pc1.currentRemoteDescription, "remote and current");
   });
 </script>
 </pre>
