@@ -1,0 +1,149 @@
+<!doctype html>
+<title>Test for nsIEditor.isCommandEnabled for normal and read-only editors</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<div contenteditable></div>
+<script>
+  let node = document.querySelector("div");
+  node.focus();
+  let htmlEditor =
+    SpecialPowers.wrap(window).docShell.editingSession.getEditorForWindow(window);
+
+  // Supported environments for each command. Supported values for each
+  // environment property:
+  //   content: "empty", "non-empty", "cleared"
+  //   selected: true, false
+  //   readonly: true, false
+  //
+  // If an environment definition does not state a certain property, the command
+  // supports all possible values for that property. The following definition:
+  //    "cmd_copy": [{content: "non-empty", selected: true}],
+  // is equivalent to:
+  //    "cmd_copy": [
+  //      {content: "non-empty", selected: true, readonly: true},
+  //      {content: "non-empty", selected: true, readonly: false},
+  //    ],
+  const TEST_COMMANDS = {
+    "cmd_selectAll": [{content: "non-empty"}],
+
+    "cmd_copy": [{content: "non-empty", selected: true}],
+
+    "cmd_cut": [{content: "non-empty", selected: true, readonly: false}],
+    "cmd_delete": [{content: "non-empty", selected: true, readonly: false}],
+    "cmd_removeList":[{content: "non-empty", selected: true, readonly: false}],
+
+    "cmd_undo": [{content: "cleared", readonly: false}],
+    "cmd_redo": [{content: "cleared", readonly: false}],
+
+    "cmd_switchTextDirection": [{readonly: false}],
+    "cmd_bold": [{readonly: false}],
+    "cmd_italic": [{readonly: false}],
+    "cmd_underline": [{readonly: false}],
+    "cmd_em": [{readonly: false}],
+    "cmd_strong": [{readonly: false}],
+    "cmd_strikethrough": [{readonly: false}],
+    "cmd_superscript": [{readonly: false}],
+    "cmd_subscript": [{readonly: false}],
+    "cmd_indent": [{readonly: false}],
+    "cmd_outdent": [{readonly: false}],
+    "cmd_formatBlock": [{readonly: false}],
+    "cmd_paragraphState": [{readonly: false}],
+    "cmd_fontFace": [{readonly: false}],
+    "cmd_fontSize": [{readonly: false}],
+    "cmd_fontColor": [{readonly: false}],
+    "cmd_backgroundColor": [{readonly: false}],
+    "cmd_highlight": [{readonly: false}],
+    "cmd_align": [{readonly: false}],
+    "cmd_removeStyles": [{readonly: false}],
+    "cmd_increaseFont": [{readonly: false}],
+    "cmd_decreaseFont": [{readonly: false}],
+    "cmd_insertHR": [{readonly: false}],
+    "cmd_insertHTML": [{readonly: false}],
+    "cmd_insertText": [{readonly: false}],
+    "cmd_insertParagraph": [{readonly: false}],
+    "cmd_insertLineBreak": [{readonly: false}],
+    "cmd_tt":[{readonly: false}],
+    "cmd_nobreak":[{readonly: false}],
+    "cmd_cite":[{readonly: false}],
+    "cmd_abbr":[{readonly: false}],
+    "cmd_acronym":[{readonly: false}],
+    "cmd_code":[{readonly: false}],
+    "cmd_samp":[{readonly: false}],
+    "cmd_var":[{readonly: false}],
+    "cmd_removeLinks":[{readonly: false}],
+    "cmd_ol":[{readonly: false}],
+    "cmd_ul":[{readonly: false}],
+    "cmd_dt":[{readonly: false}],
+    "cmd_dd":[{readonly: false}],
+
+    // InsertTagCommand
+    "cmd_insertImageNoUI": [{readonly: false}],
+    "cmd_insertLinkNoUI": [{readonly: false}],
+  };
+
+  function testCommands(content) {
+    for (let readonly of [true, false]){
+      if (readonly) {
+        htmlEditor.flags |= SpecialPowers.Ci.nsIEditor.eEditorReadonlyMask;
+      } else {
+        htmlEditor.flags &= ~SpecialPowers.Ci.nsIEditor.eEditorReadonlyMask;
+      }
+
+      for (let selected of [true, false]) {
+        let selection = window.getSelection();
+        selection.collapse(node);
+
+        if (selected) {
+          if (content == "non-empty") {
+            // The command cmd_removeList needs selected text inside a list. It
+            // does not matter for all other commands, so lets just select that.
+            let range = document.createRange();
+            let li = document.querySelector("li");
+            range.selectNodeContents(li);
+            selection.removeAllRanges();
+            selection.addRange(range);
+          } else {
+            document.execCommand("selectAll");
+          }
+        }
+
+        for (let [cmd, supports] of Object.entries(TEST_COMMANDS)) {
+          // Check if the command should support this environment.
+          let expected = supports.some(supported =>
+            content == (supported?.content ?? content) &&
+            readonly == (supported?.readonly ?? readonly) &&
+            selected == (supported?.selected ?? selected)
+          )
+          is(
+            SpecialPowers.isCommandEnabled(window, cmd),
+            expected,
+            `Enabled state of command ${cmd} should be ${
+              expected ? "TRUE" : "FALSE"
+            } for ${JSON.stringify({content, selected, readonly})}`
+          );
+        }
+      }
+    }
+  }
+
+  testCommands("empty");
+
+  // The cmd_removeList command needs a list.
+  node.innerHTML = "<ul><li><span>abcd</span></li></ul>";
+  testCommands("non-empty");
+
+  // Make some content modifications to enable undo and redo.
+  node.innerText = "ABC";
+  is(node.innerText.trim(), "ABC", "phase 1");
+  document.execCommand("selectAll");
+  synthesizeKey("KEY_Backspace");
+  is(node.innerText.trim(), "", "phase 2");
+  synthesizeKey("3");
+  is(node.innerText.trim(), "3", "phase 3");
+  SpecialPowers.doCommand(window, "cmd_undo");
+  is(node.innerText.trim(), "", "phase 4");
+
+  node.innerHTML = "";
+  testCommands("cleared");
+</script>
