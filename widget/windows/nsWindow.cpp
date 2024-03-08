@@ -1345,7 +1345,7 @@ DWORD nsWindow::WindowExStyle() {
     }
     case WindowType::Dialog: {
       if (mIsAlert) {
-        return WS_EX_TOOLWINDOW;
+        return WS_EX_TOOLWINDOW | WS_EX_TOPMOST;
       }
       return WS_EX_WINDOWEDGE | WS_EX_DLGMODALFRAME;
     }
