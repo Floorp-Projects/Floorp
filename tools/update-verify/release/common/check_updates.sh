@@ -110,6 +110,21 @@ check_updates () {
     ignore_coderesources=
   fi
 
+  # On Mac, there are two Frameworks that are not included with updates, and
+  # which change with every build. Because of this, we ignore differences in
+  # them in `compare-directories.py`. The best verification we can do for them
+  # is that they still exist.
+  if [[ $update_platform == Darwin_* ]]; then
+    if ! compgen -G "source/${platform_dirname}/Contents/MacOS/updater.app/Contents/Frameworks/UpdateSettings.framework" >/dev/null; then
+      echo "TEST-UNEXPECTED-FAIL: UpdateSettings.framework doesn't exist after update"
+      return 4
+    fi
+    if ! compgen -G "source/${platform_dirname}/Contents/Frameworks/ChannelPrefs.framework" >/dev/null; then
+      echo "TEST-UNEXPECTED-FAIL: ChannelPrefs.framework doesn't exist after update"
+      return 5
+    fi
+  fi
+
   ../compare-directories.py source/${platform_dirname} target/${platform_dirname} ${channel} ${ignore_coderesources} > "${diff_file}"
   diffErr=$?
   cat "${diff_file}"
