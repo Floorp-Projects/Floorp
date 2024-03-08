@@ -66,3 +66,5 @@ any specification:
    [whitespace trimming in token elements](https://www.w3.org/TR/MathML3/chapter2.html#fund.collapse)
    which is not described in the initial version of MathML Core.
    See [issue 149](https://github.com/w3c/mathml-core/issues/149).
+
+- `zoom`: Tests to check MathML rendering at different zoom levels.

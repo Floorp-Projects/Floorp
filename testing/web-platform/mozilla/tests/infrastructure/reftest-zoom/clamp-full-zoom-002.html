@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html reftest-zoom="10">
+  <link rel="help" href="https://firefox-source-docs.mozilla.org/layout/Reftest.html#zoom-tests-reftest-zoom-float"/>
+  <link rel="match" href="clamp-full-zoom-002-ref.html"/>
+  <!-- zoom.maxPercent is set to 200 in the corresponding ini file. -->
+  <meta name="assert" content="Zoom is at most by zoom.maxPercent."/>
+  <script src="/_mozilla/common/reftest-zoom.js"></script>
+  <div style="width: 250px; height: 250px; background: green"></div>
+</html>

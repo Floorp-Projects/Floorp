@@ -252,9 +252,6 @@ include line-breaking/reftest.list
 # list-item/
 include list-item/reftest.list
 
-# mathml/
-include mathml/reftest.list
-
 # margin-collapsing
 include margin-collapsing/reftest.list
 

@@ -1,13 +1,16 @@
 <!DOCTYPE html>
-  <html reftest-zoom=".4">
+<html reftest-zoom="0.4">
   <head>
+    <link rel="mismatch" href="about:blank"/>
+    <link rel="help" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1011020"/>
+    <script src="/_mozilla/common/reftest-zoom.js"></script>
     <!-- Default to invisible text -->
     <style type="text/css" media="screen, print">
       .hidden {
-        color: white;
+          color: white;
       }
       .visible {
-        color: black;
+          color: black;
       }
     </style>
   </head>
@@ -26,9 +29,9 @@
                 <mspace width="1em" height="1em" />
                 <msqrt class="hidden">
                   <mspace width="1em" height="1em" />
-                  <msqrt class="hidden">
+                  <msqrt class="visible">
                     <mspace width="1em" height="1em" />
-                    <msqrt class="visible">
+                    <msqrt class="hidden">
                       <mspace width="20em" height="1em" />
                     </msqrt>
                   </msqrt>
@@ -43,6 +46,5 @@
     <!-- Block out all but the horizontal bar of the visible radical -->
     <div style="position: absolute; top: 5px; left: 0px;
                 width: 20em; height: 10em; background: white;"></div>
-
   </body>
 </html>
