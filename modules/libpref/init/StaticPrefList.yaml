@@ -11567,6 +11567,15 @@
   value: true
   mirror: always
 
+# When true, HttpChannelParent::SendRedirectFailed might race against
+# HttpChannelParent::Delete when completing a redirect.
+# This exists only to prevent unexpected regressions.
+# It should be removed in a few releases.
+- name: network.http.redirect.raceDeletion
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Prefs allowing granular control of referers.
 # 0=don't send any, 1=send only on clicks, 2=send on image requests as well
 - name: network.http.sendRefererHeader

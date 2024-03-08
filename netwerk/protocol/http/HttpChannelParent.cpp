@@ -2121,7 +2121,8 @@ HttpChannelParent::OnRedirectResult(nsresult status) {
       mParentListener->SetListenerAfterRedirect(redirectChannel);
       redirectChannel->SetParentListener(mParentListener);
     }
-  } else if (redirectChannel) {
+  } else if (redirectChannel &&
+             StaticPrefs::network_http_redirect_raceDeletion()) {
     // Delete the redirect target channel: continue using old channel
     redirectChannel->Delete();
   }
