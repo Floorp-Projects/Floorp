@@ -373,7 +373,6 @@ const VARIATION_TEST_DATA = [
         "onboardingNext",
         "onboardingAccept",
         "onboardingLearnMore",
-        "onboardingReject",
         "onboardingSkipLink",
         "onboardingDialog",
         "onboardingAccept",
@@ -706,7 +705,6 @@ const VARIATION_TEST_DATA = [
         "onboardingNext",
         "onboardingLearnMore",
         "onboardingAccept",
-        "onboardingReject",
         "onboardingSkipLink",
         "onboardingDialog",
         "onboardingLearnMore",
@@ -762,7 +760,6 @@ const VARIATION_TEST_DATA = [
       defaultFocusOrder: [
         "onboardingLearnMore",
         "onboardingAccept",
-        "onboardingReject",
         "onboardingSkipLink",
         "onboardingDialog",
         "onboardingLearnMore",
