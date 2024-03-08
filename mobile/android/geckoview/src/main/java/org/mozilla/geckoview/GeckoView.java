@@ -767,12 +767,18 @@ public class GeckoView extends FrameLayout implements GeckoDisplay.NewSurfacePro
     if (super.onKeyUp(keyCode, event)) {
       return true;
     }
+    if (AndroidGamepadManager.handleKeyEvent(event)) {
+      return true;
+    }
     return mSession != null && mSession.getTextInput().onKeyUp(keyCode, event);
   }
 
   @Override
   public boolean onKeyDown(final int keyCode, final KeyEvent event) {
     if (super.onKeyDown(keyCode, event)) {
+      return true;
+    }
+    if (AndroidGamepadManager.handleKeyEvent(event)) {
       return true;
     }
     return mSession != null && mSession.getTextInput().onKeyDown(keyCode, event);
