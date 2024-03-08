@@ -6,9 +6,8 @@
 # automatically converted to platform-specific code at build time using the
 # `glean_parser` PyPI package.
 
-# This file is for Internal FOG Use Only.
-# You probably don't want to add pings here. For more information consult:
-# https://firefox-source-docs.mozilla.org/toolkit/components/glean/user/new_definitions_file.html
+# This file is presently for Internal FOG Use Only.
+# You should not add pings here until probably about January of 2021.
 
 ---
 $schema: moz://mozilla.org/schemas/glean/pings/2-0-0
