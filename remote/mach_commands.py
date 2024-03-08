@@ -140,6 +140,14 @@ def vendor_puppeteer(command_context, repository, commitish, install):
         }
 
         run_npm(
+            "run",
+            "clean",
+            cwd=puppeteer_dir,
+            env=env,
+            exit_on_fail=False,
+        )
+
+        run_npm(
             "install",
             cwd=os.path.join(command_context.topsrcdir, puppeteer_dir),
             env=env,
@@ -398,7 +406,7 @@ class PuppeteerRunner(MozbuildObject):
         """
         setup()
 
-        binary = params.get("binary") or self.get_binary_path()
+        binary = params.get("binary")
         headless = params.get("headless", False)
         product = params.get("product", "firefox")
         with_cdp = params.get("cdp", False)
@@ -432,10 +440,12 @@ class PuppeteerRunner(MozbuildObject):
         }
 
         if product == "firefox":
-            env["BINARY"] = binary
+            env["BINARY"] = binary or self.get_binary_path()
             env["PUPPETEER_PRODUCT"] = "firefox"
             env["MOZ_WEBRENDER"] = "%d" % params.get("enable_webrender", False)
         else:
+            if binary:
+                env["BINARY"] = binary
             env["PUPPETEER_CACHE_DIR"] = os.path.join(
                 self.topobjdir,
                 "_tests",
@@ -727,6 +737,7 @@ def install_puppeteer(command_context, product, ci):
     puppeteer_test_dir = os.path.join(puppeteer_dir, "test")
 
     if product == "chrome":
+        env["PUPPETEER_PRODUCT"] = "chrome"
         env["PUPPETEER_CACHE_DIR"] = os.path.join(
             command_context.topobjdir, "_tests", puppeteer_dir, ".cache"
         )
@@ -744,12 +755,17 @@ def install_puppeteer(command_context, product, ci):
 
     # Always use the `ci` command to not get updated sub-dependencies installed.
     run_npm("ci", cwd=puppeteer_dir_full_path, env=env)
+
+    # Build Puppeteer and the code to download browsers.
     run_npm(
         "run",
         "build",
         cwd=os.path.join(command_context.topsrcdir, puppeteer_test_dir),
         env=env,
     )
+
+    # Run post install steps, including downloading the Chrome browser if requested
+    run_npm("run", "postinstall", cwd=puppeteer_dir_full_path, env=env)
 
 
 def exit(code, error=None):
