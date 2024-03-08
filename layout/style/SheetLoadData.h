@@ -90,7 +90,9 @@ class SheetLoadData final
   // so aBytes1 and aBytes2 refer to those pieces.
   nsresult VerifySheetReadyToParse(nsresult aStatus, const nsACString& aBytes1,
                                    const nsACString& aBytes2,
-                                   nsIChannel* aChannel);
+                                   nsIChannel* aChannel,
+                                   nsIURI* aFinalChannelURI,
+                                   nsIPrincipal* aPrincipal);
 
   NS_DECL_ISUPPORTS
 
@@ -236,6 +238,8 @@ class SheetLoadData final
   // Whether we intentionally are not calling SheetComplete because nobody is
   // listening for the load.
   bool mIntentionallyDropped = false;
+
+  const bool mRecordErrors;
 
   bool ShouldDefer() const { return mWasAlternate || !mMediaMatched; }
 

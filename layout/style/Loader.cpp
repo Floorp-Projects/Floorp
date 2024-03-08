@@ -8,7 +8,9 @@
 
 #include "mozilla/css/Loader.h"
 
+#include "MainThreadUtils.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/css/ErrorReporter.h"
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/FetchPriority.h"
 #include "mozilla/dom/SRILogHelper.h"
@@ -22,6 +24,7 @@
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/URLPreloader.h"
 #include "nsIChildChannel.h"
+#include "nsIPrincipal.h"
 #include "nsISupportsPriority.h"
 #include "nsITimedChannel.h"
 #include "nsICachingChannel.h"
@@ -34,7 +37,6 @@
 #include "nsICookieJarSettings.h"
 #include "mozilla/dom/Document.h"
 #include "nsIURI.h"
-#include "nsNetUtil.h"
 #include "nsContentUtils.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsContentPolicyUtils.h"
@@ -64,6 +66,7 @@
 #include "mozilla/css/StreamLoader.h"
 #include "mozilla/SharedStyleSheetCache.h"
 #include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/Try.h"
@@ -308,7 +311,10 @@ SheetLoadData::SheetLoadData(
       mNonce(aNonce),
       mFetchPriority{aFetchPriority},
       mGuessedEncoding(GetFallbackEncoding(*aLoader, aOwningNode, nullptr)),
-      mCompatMode(aLoader->CompatMode(aPreloadKind)) {
+      mCompatMode(aLoader->CompatMode(aPreloadKind)),
+      mRecordErrors(
+          aLoader && aLoader->GetDocument() &&
+          css::ErrorReporter::ShouldReportErrors(*aLoader->GetDocument())) {
   MOZ_ASSERT(!aOwningNode || dom::LinkStyle::FromNode(*aOwningNode),
              "Must implement LinkStyle");
   MOZ_ASSERT(mTriggeringPrincipal);
@@ -349,7 +355,10 @@ SheetLoadData::SheetLoadData(css::Loader* aLoader, nsIURI* aURI,
       mFetchPriority(FetchPriority::Auto),
       mGuessedEncoding(GetFallbackEncoding(
           *aLoader, nullptr, aParentData ? aParentData->mEncoding : nullptr)),
-      mCompatMode(aLoader->CompatMode(mPreloadKind)) {
+      mCompatMode(aLoader->CompatMode(mPreloadKind)),
+      mRecordErrors(
+          aLoader && aLoader->GetDocument() &&
+          css::ErrorReporter::ShouldReportErrors(*aLoader->GetDocument())) {
   MOZ_ASSERT(mLoader, "Must have a loader!");
   MOZ_ASSERT(mTriggeringPrincipal);
   MOZ_ASSERT(!mUseSystemPrincipal || mSyncLoad,
@@ -391,7 +400,10 @@ SheetLoadData::SheetLoadData(
       mFetchPriority(aFetchPriority),
       mGuessedEncoding(
           GetFallbackEncoding(*aLoader, nullptr, aPreloadEncoding)),
-      mCompatMode(aLoader->CompatMode(aPreloadKind)) {
+      mCompatMode(aLoader->CompatMode(aPreloadKind)),
+      mRecordErrors(
+          aLoader && aLoader->GetDocument() &&
+          css::ErrorReporter::ShouldReportErrors(*aLoader->GetDocument())) {
   MOZ_ASSERT(mTriggeringPrincipal);
   MOZ_ASSERT(mLoader, "Must have a loader!");
   MOZ_ASSERT(!mUseSystemPrincipal || mSyncLoad,
@@ -639,43 +651,54 @@ static bool AllLoadsCanceled(const SheetLoadData& aData) {
  * page and check the mimetype on the channel to make sure we're not
  * loading non-text/css data in standards mode.
  */
-nsresult SheetLoadData::VerifySheetReadyToParse(nsresult aStatus,
-                                                const nsACString& aBytes1,
-                                                const nsACString& aBytes2,
-                                                nsIChannel* aChannel) {
+nsresult SheetLoadData::VerifySheetReadyToParse(
+    nsresult aStatus, const nsACString& aBytes1, const nsACString& aBytes2,
+    nsIChannel* aChannel, nsIURI* aFinalChannelURI,
+    nsIPrincipal* aChannelResultPrincipal) {
   LOG(("SheetLoadData::VerifySheetReadyToParse"));
-  NS_ASSERTION(!mLoader->mSyncCallback, "Synchronous callback from necko");
+  NS_ASSERTION((!NS_IsMainThread() || !mLoader->mSyncCallback),
+               "Synchronous callback from necko");
 
   if (AllLoadsCanceled(*this)) {
-    LOG_WARN(("  All loads are canceled, dropping"));
-    mLoader->SheetComplete(*this, NS_BINDING_ABORTED);
+    if (NS_IsMainThread()) {
+      LOG_WARN(("  All loads are canceled, dropping"));
+      mLoader->SheetComplete(*this, NS_BINDING_ABORTED);
+    }
+    return NS_OK;
+  }
+
+  if (!NS_IsMainThread() && mRecordErrors) {
+    // we cannot parse sheet OMT if we need to record errors
     return NS_OK;
   }
 
   if (NS_FAILED(aStatus)) {
-    LOG_WARN(
-        ("  Load failed: status 0x%" PRIx32, static_cast<uint32_t>(aStatus)));
-    // Handle sheet not loading error because source was a tracking URL (or
-    // fingerprinting, cryptomining, etc).
-    // We make a note of this sheet node by including it in a dedicated
-    // array of blocked tracking nodes under its parent document.
-    //
-    // Multiple sheet load instances might be tied to this request,
-    // we annotate each one linked to a valid owning element (node).
-    if (net::UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(
-            aStatus)) {
-      if (Document* doc = mLoader->GetDocument()) {
-        for (SheetLoadData* data = this; data; data = data->mNext) {
-          // owner node may be null but AddBlockTrackingNode can cope
-          doc->AddBlockedNodeByClassifier(data->mSheet->GetOwnerNode());
+    if (NS_IsMainThread()) {
+      LOG_WARN(
+          ("  Load failed: status 0x%" PRIx32, static_cast<uint32_t>(aStatus)));
+      // Handle sheet not loading error because source was a tracking URL (or
+      // fingerprinting, cryptomining, etc).
+      // We make a note of this sheet node by including it in a dedicated
+      // array of blocked tracking nodes under its parent document.
+      //
+      // Multiple sheet load instances might be tied to this request,
+      // we annotate each one linked to a valid owning element (node).
+      if (net::UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(
+              aStatus)) {
+        if (Document* doc = mLoader->GetDocument()) {
+          for (SheetLoadData* data = this; data; data = data->mNext) {
+            // owner node may be null but AddBlockTrackingNode can cope
+            doc->AddBlockedNodeByClassifier(data->mSheet->GetOwnerNode());
+          }
         }
       }
+      mLoader->SheetComplete(*this, aStatus);
     }
-    mLoader->SheetComplete(*this, aStatus);
     return NS_OK;
   }
 
   if (!aChannel) {
+    MOZ_ASSERT(NS_IsMainThread());
     mLoader->SheetComplete(*this, NS_OK);
     return NS_OK;
   }
@@ -688,10 +711,8 @@ nsresult SheetLoadData::VerifySheetReadyToParse(nsresult aStatus,
   // having a chrome URI.  (Whether or not chrome stylesheets come through
   // this codepath seems nondeterministic.)
   // Otherwise we want the potentially-HTTP-redirected URI.
-  nsCOMPtr<nsIURI> channelURI;
-  NS_GetFinalChannelURI(aChannel, getter_AddRefs(channelURI));
-
-  if (!channelURI || !originalURI) {
+  if (!aFinalChannelURI || !originalURI) {
+    MOZ_ASSERT(NS_IsMainThread());
     NS_ERROR("Someone just violated the nsIRequest contract");
     LOG_WARN(("  Channel without a URI.  Bad!"));
     mLoader->SheetComplete(*this, NS_ERROR_UNEXPECTED);
@@ -705,23 +726,22 @@ nsresult SheetLoadData::VerifySheetReadyToParse(nsresult aStatus,
     if (mUseSystemPrincipal) {
       result = secMan->GetSystemPrincipal(getter_AddRefs(principal));
     } else {
-      result = secMan->GetChannelResultPrincipal(aChannel,
-                                                 getter_AddRefs(principal));
+      if (aChannelResultPrincipal) {
+        principal = aChannelResultPrincipal;
+        result = NS_OK;
+      }
     }
   }
 
   if (NS_FAILED(result)) {
-    LOG_WARN(("  Couldn't get principal"));
-    mLoader->SheetComplete(*this, result);
+    if (NS_IsMainThread()) {
+      LOG_WARN(("  Couldn't get principal"));
+      mLoader->SheetComplete(*this, result);
+    }
     return NS_OK;
   }
 
   mSheet->SetPrincipal(principal);
-
-  if (mSheet->GetCORSMode() == CORS_NONE &&
-      !mTriggeringPrincipal->Subsumes(principal)) {
-    mIsCrossOriginNoCORS = true;
-  }
 
   // If it's an HTTP channel, we want to make sure this is not an
   // error document we got.
@@ -729,8 +749,10 @@ nsresult SheetLoadData::VerifySheetReadyToParse(nsresult aStatus,
     bool requestSucceeded;
     result = httpChannel->GetRequestSucceeded(&requestSucceeded);
     if (NS_SUCCEEDED(result) && !requestSucceeded) {
-      LOG(("  Load returned an error page"));
-      mLoader->SheetComplete(*this, NS_ERROR_NOT_AVAILABLE);
+      if (NS_IsMainThread()) {
+        LOG(("  Load returned an error page"));
+        mLoader->SheetComplete(*this, NS_ERROR_NOT_AVAILABLE);
+      }
       return NS_OK;
     }
 
@@ -753,6 +775,9 @@ nsresult SheetLoadData::VerifySheetReadyToParse(nsresult aStatus,
                    contentType.IsEmpty();
 
   if (!validType) {
+    if (!NS_IsMainThread()) {
+      return NS_OK;
+    }
     const char* errorMessage;
     uint32_t errorFlag;
     bool sameOrigin = true;
@@ -772,7 +797,8 @@ nsresult SheetLoadData::VerifySheetReadyToParse(nsresult aStatus,
     }
 
     AutoTArray<nsString, 2> strings;
-    CopyUTF8toUTF16(channelURI->GetSpecOrDefault(), *strings.AppendElement());
+    CopyUTF8toUTF16(aFinalChannelURI->GetSpecOrDefault(),
+                    *strings.AppendElement());
     CopyASCIItoUTF16(contentType, *strings.AppendElement());
 
     nsCOMPtr<nsIURI> referrer = ReferrerInfo()->GetOriginalReferrer();
@@ -791,6 +817,13 @@ nsresult SheetLoadData::VerifySheetReadyToParse(nsresult aStatus,
   SRIMetadata sriMetadata;
   mSheet->GetIntegrity(sriMetadata);
   if (!sriMetadata.IsEmpty()) {
+    if (!NS_IsMainThread()) {
+      // We dont process any further in OMT.
+      // This is because we have some main-thread only accesses below.
+      // We need to find a way to optimize this handling.
+      // See Bug 1882046.
+      return NS_OK;
+    }
     nsAutoCString sourceUri;
     if (mLoader->mDocument && mLoader->mDocument->GetDocumentURI()) {
       mLoader->mDocument->GetDocumentURI()->GetAsciiSpec(sourceUri);
@@ -815,9 +848,13 @@ nsresult SheetLoadData::VerifySheetReadyToParse(nsresult aStatus,
     }
   }
 
+  if (mSheet->GetCORSMode() == CORS_NONE &&
+      !mTriggeringPrincipal->Subsumes(principal)) {
+    mIsCrossOriginNoCORS = true;
+  }
   // Enough to set the URIs on mSheet, since any sibling datas we have share
   // the same mInner as mSheet and will thus get the same URI.
-  mSheet->SetURIs(channelURI, originalURI, channelURI);
+  mSheet->SetURIs(aFinalChannelURI, originalURI, aFinalChannelURI);
 
   ReferrerPolicy policy =
       nsContentUtils::GetReferrerPolicyFromChannel(aChannel);
@@ -1577,32 +1614,35 @@ nsresult Loader::LoadSheetAsyncInternal(SheetLoadData& aLoadData,
 /**
  * ParseSheet handles parsing the data stream.
  */
-Loader::Completed Loader::ParseSheet(const nsACString& aBytes,
-                                     SheetLoadData& aLoadData,
-                                     AllowAsyncParse aAllowAsync) {
+Loader::Completed Loader::ParseSheet(
+    const nsACString& aBytes, const RefPtr<SheetLoadDataHolder>& aLoadData,
+    AllowAsyncParse aAllowAsync) {
   LOG(("css::Loader::ParseSheet"));
-  if (aLoadData.mURI) {
-    LOG_URI("  Load succeeded for URI: '%s', parsing", aLoadData.mURI);
+  SheetLoadData* loadData = aLoadData->get();
+  MOZ_ASSERT(loadData);
+
+  if (loadData->mURI) {
+    LOG_URI("  Load succeeded for URI: '%s', parsing", loadData->mURI);
   }
   AUTO_PROFILER_LABEL_CATEGORY_PAIR_RELEVANT_FOR_JS(LAYOUT_CSSParsing);
 
   ++mParsedSheetCount;
 
-  aLoadData.mIsBeingParsed = true;
+  loadData->mIsBeingParsed = true;
 
-  StyleSheet* sheet = aLoadData.mSheet;
+  StyleSheet* sheet = loadData->mSheet;
   MOZ_ASSERT(sheet);
 
   // Some cases, like inline style and UA stylesheets, need to be parsed
   // synchronously. The former may trigger child loads, the latter must not.
-  if (aLoadData.mSyncLoad || aAllowAsync == AllowAsyncParse::No) {
-    sheet->ParseSheetSync(this, aBytes, &aLoadData);
-    aLoadData.mIsBeingParsed = false;
+  if (loadData->mSyncLoad || aAllowAsync == AllowAsyncParse::No) {
+    sheet->ParseSheetSync(this, aBytes, loadData);
+    loadData->mIsBeingParsed = false;
 
-    bool noPendingChildren = aLoadData.mPendingChildren == 0;
-    MOZ_ASSERT_IF(aLoadData.mSyncLoad, noPendingChildren);
+    bool noPendingChildren = loadData->mPendingChildren == 0;
+    MOZ_ASSERT_IF(loadData->mSyncLoad, noPendingChildren);
     if (noPendingChildren) {
-      SheetComplete(aLoadData, NS_OK);
+      SheetComplete(*loadData, NS_OK);
       return Completed::Yes;
     }
     return Completed::No;
@@ -1616,9 +1656,9 @@ Loader::Completed Loader::ParseSheet(const nsACString& aBytes,
   sheet->ParseSheet(*this, aBytes, aLoadData)
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
-          [loadData = RefPtr<SheetLoadData>(&aLoadData)](bool aDummy) {
+          [loadData = aLoadData](bool aDummy) {
             MOZ_ASSERT(NS_IsMainThread());
-            loadData->SheetFinishedParsingAsync();
+            loadData->get()->SheetFinishedParsingAsync();
           },
           [] { MOZ_CRASH("rejected parse promise"); });
   return Completed::No;
@@ -1842,7 +1882,10 @@ Result<Loader::LoadSheetResult, nsresult> Loader::LoadInlineStyle(
     // effects of inline stylesheets are visible immediately (aside from
     // @imports).
     NS_ConvertUTF16toUTF8 utf8(aBuffer);
-    completed = ParseSheet(utf8, *data, AllowAsyncParse::No);
+    RefPtr<SheetLoadDataHolder> holder(
+        new nsMainThreadPtrHolder<css::SheetLoadData>(__func__, data.get(),
+                                                      true));
+    completed = ParseSheet(utf8, holder, AllowAsyncParse::No);
     if (completed == Completed::Yes) {
       if (isWorthCaching) {
         mInlineSheets.InsertOrUpdate(aBuffer, std::move(sheet));
