@@ -5865,7 +5865,7 @@ dependencies = [
 [[package]]
 name = "unicode-bidi"
 version = "0.3.15"
-source = "git+https://github.com/servo/unicode-bidi?rev=d43c644c388659d093cc5d1648a970daeef692d5#d43c644c388659d093cc5d1648a970daeef692d5"
+source = "git+https://github.com/servo/unicode-bidi?rev=ca612daf1c08c53abe07327cb3e6ef6e0a760f0c#ca612daf1c08c53abe07327cb3e6ef6e0a760f0c"
 dependencies = [
  "smallvec",
 ]

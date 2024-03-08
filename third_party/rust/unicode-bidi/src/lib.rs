@@ -88,7 +88,7 @@ mod prepare;
 pub use crate::char_data::{BidiClass, UNICODE_VERSION};
 pub use crate::data_source::BidiDataSource;
 pub use crate::level::{Level, LTR_LEVEL, RTL_LEVEL};
-pub use crate::prepare::LevelRun;
+pub use crate::prepare::{LevelRun, LevelRunVec};
 
 #[cfg(feature = "hardcoded-data")]
 pub use crate::char_data::{bidi_class, HardcodedBidiData};
@@ -248,8 +248,14 @@ struct InitialInfoExt<'text> {
 
     /// Parallel to base.paragraphs, records whether each paragraph is "pure LTR" that
     /// requires no further bidi processing (i.e. there are no RTL characters or bidi
-    /// control codes present).
-    pure_ltr: Vec<bool>,
+    /// control codes present), and whether any bidi isolation controls are present.
+    flags: Vec<ParagraphInfoFlags>,
+}
+
+#[derive(PartialEq, Debug)]
+struct ParagraphInfoFlags {
+    is_pure_ltr: bool,
+    has_isolate_controls: bool,
 }
 
 impl<'text> InitialInfoExt<'text> {
@@ -269,12 +275,12 @@ impl<'text> InitialInfoExt<'text> {
         default_para_level: Option<Level>,
     ) -> InitialInfoExt<'a> {
         let mut paragraphs = Vec::<ParagraphInfo>::new();
-        let mut pure_ltr = Vec::<bool>::new();
-        let (original_classes, _, _) = compute_initial_info(
+        let mut flags = Vec::<ParagraphInfoFlags>::new();
+        let (original_classes, _, _, _) = compute_initial_info(
             data_source,
             text,
             default_para_level,
-            Some((&mut paragraphs, &mut pure_ltr)),
+            Some((&mut paragraphs, &mut flags)),
         );
 
         InitialInfoExt {
@@ -283,7 +289,7 @@ impl<'text> InitialInfoExt<'text> {
                 original_classes,
                 paragraphs,
             },
-            pure_ltr,
+            flags,
         }
     }
 }
@@ -299,8 +305,8 @@ fn compute_initial_info<'a, D: BidiDataSource, T: TextSource<'a> + ?Sized>(
     data_source: &D,
     text: &'a T,
     default_para_level: Option<Level>,
-    mut split_paragraphs: Option<(&mut Vec<ParagraphInfo>, &mut Vec<bool>)>,
-) -> (Vec<BidiClass>, Level, bool) {
+    mut split_paragraphs: Option<(&mut Vec<ParagraphInfo>, &mut Vec<ParagraphInfoFlags>)>,
+) -> (Vec<BidiClass>, Level, bool, bool) {
     let mut original_classes = Vec::with_capacity(text.len());
 
     // The stack contains the starting code unit index for each nested isolate we're inside.
@@ -310,8 +316,8 @@ fn compute_initial_info<'a, D: BidiDataSource, T: TextSource<'a> + ?Sized>(
     let mut isolate_stack = Vec::new();
 
     debug_assert!(
-        if let Some((ref paragraphs, ref pure_ltr)) = split_paragraphs {
-            paragraphs.is_empty() && pure_ltr.is_empty()
+        if let Some((ref paragraphs, ref flags)) = split_paragraphs {
+            paragraphs.is_empty() && flags.is_empty()
         } else {
             true
         }
@@ -323,6 +329,8 @@ fn compute_initial_info<'a, D: BidiDataSource, T: TextSource<'a> + ?Sized>(
     // Per-paragraph flag: can subsequent processing be skipped? Set to false if any
     // RTL characters or bidi control characters are encountered in the paragraph.
     let mut is_pure_ltr = true;
+    // Set to true if any bidi isolation controls are present in the paragraph.
+    let mut has_isolate_controls = false;
 
     #[cfg(feature = "flame_it")]
     flame::start("compute_initial_info(): iter text.char_indices()");
@@ -341,7 +349,7 @@ fn compute_initial_info<'a, D: BidiDataSource, T: TextSource<'a> + ?Sized>(
 
         match class {
             B => {
-                if let Some((ref mut paragraphs, ref mut pure_ltr)) = split_paragraphs {
+                if let Some((ref mut paragraphs, ref mut flags)) = split_paragraphs {
                     // P1. Split the text into separate paragraphs. The paragraph separator is kept
                     // with the previous paragraph.
                     let para_end = i + len;
@@ -350,7 +358,10 @@ fn compute_initial_info<'a, D: BidiDataSource, T: TextSource<'a> + ?Sized>(
                         // P3. If no character is found in p2, set the paragraph level to zero.
                         level: para_level.unwrap_or(LTR_LEVEL),
                     });
-                    pure_ltr.push(is_pure_ltr);
+                    flags.push(ParagraphInfoFlags {
+                        is_pure_ltr,
+                        has_isolate_controls,
+                    });
                     // Reset state for the start of the next paragraph.
                     para_start = para_end;
                     // TODO: Support defaulting to direction of previous paragraph
@@ -358,6 +369,7 @@ fn compute_initial_info<'a, D: BidiDataSource, T: TextSource<'a> + ?Sized>(
                     // <http://www.unicode.org/reports/tr9/#HL1>
                     para_level = default_para_level;
                     is_pure_ltr = true;
+                    has_isolate_controls = false;
                     isolate_stack.clear();
                 }
             }
@@ -394,6 +406,7 @@ fn compute_initial_info<'a, D: BidiDataSource, T: TextSource<'a> + ?Sized>(
 
             RLI | LRI | FSI => {
                 is_pure_ltr = false;
+                has_isolate_controls = true;
                 isolate_stack.push(i);
             }
 
@@ -405,15 +418,18 @@ fn compute_initial_info<'a, D: BidiDataSource, T: TextSource<'a> + ?Sized>(
         }
     }
 
-    if let Some((paragraphs, pure_ltr)) = split_paragraphs {
+    if let Some((paragraphs, flags)) = split_paragraphs {
         if para_start < text.len() {
             paragraphs.push(ParagraphInfo {
                 range: para_start..text.len(),
                 level: para_level.unwrap_or(LTR_LEVEL),
             });
-            pure_ltr.push(is_pure_ltr);
+            flags.push(ParagraphInfoFlags {
+                is_pure_ltr,
+                has_isolate_controls,
+            });
         }
-        debug_assert_eq!(paragraphs.len(), pure_ltr.len());
+        debug_assert_eq!(paragraphs.len(), flags.len());
     }
     debug_assert_eq!(original_classes.len(), text.len());
 
@@ -424,6 +440,7 @@ fn compute_initial_info<'a, D: BidiDataSource, T: TextSource<'a> + ?Sized>(
         original_classes,
         para_level.unwrap_or(LTR_LEVEL),
         is_pure_ltr,
+        has_isolate_controls,
     )
 }
 
@@ -482,20 +499,21 @@ impl<'text> BidiInfo<'text> {
         text: &'a str,
         default_para_level: Option<Level>,
     ) -> BidiInfo<'a> {
-        let InitialInfoExt { base, pure_ltr, .. } =
+        let InitialInfoExt { base, flags, .. } =
             InitialInfoExt::new_with_data_source(data_source, text, default_para_level);
 
         let mut levels = Vec::<Level>::with_capacity(text.len());
         let mut processing_classes = base.original_classes.clone();
 
-        for (para, is_pure_ltr) in base.paragraphs.iter().zip(pure_ltr.iter()) {
+        for (para, flags) in base.paragraphs.iter().zip(flags.iter()) {
             let text = &text[para.range.clone()];
             let original_classes = &base.original_classes[para.range.clone()];
 
             compute_bidi_info_for_para(
                 data_source,
                 para,
-                *is_pure_ltr,
+                flags.is_pure_ltr,
+                flags.has_isolate_controls,
                 text,
                 original_classes,
                 &mut processing_classes,
@@ -720,7 +738,7 @@ impl<'text> ParagraphBidiInfo<'text> {
     ) -> ParagraphBidiInfo<'a> {
         // Here we could create a ParagraphInitialInfo struct to parallel the one
         // used by BidiInfo, but there doesn't seem any compelling reason for it.
-        let (original_classes, paragraph_level, is_pure_ltr) =
+        let (original_classes, paragraph_level, is_pure_ltr, has_isolate_controls) =
             compute_initial_info(data_source, text, default_para_level, None);
 
         let mut levels = Vec::<Level>::with_capacity(text.len());
@@ -738,6 +756,7 @@ impl<'text> ParagraphBidiInfo<'text> {
             data_source,
             &para_info,
             is_pure_ltr,
+            has_isolate_controls,
             text,
             &original_classes,
             &mut processing_classes,
@@ -1066,6 +1085,7 @@ fn compute_bidi_info_for_para<'a, D: BidiDataSource, T: TextSource<'a> + ?Sized>
     data_source: &D,
     para: &ParagraphInfo,
     is_pure_ltr: bool,
+    has_isolate_controls: bool,
     text: &'a T,
     original_classes: &[BidiClass],
     processing_classes: &mut [BidiClass],
@@ -1079,6 +1099,7 @@ fn compute_bidi_info_for_para<'a, D: BidiDataSource, T: TextSource<'a> + ?Sized>
 
     let processing_classes = &mut processing_classes[para.range.clone()];
     let levels = &mut levels[para.range.clone()];
+    let mut level_runs = LevelRunVec::new();
 
     explicit::compute(
         text,
@@ -1086,9 +1107,18 @@ fn compute_bidi_info_for_para<'a, D: BidiDataSource, T: TextSource<'a> + ?Sized>
         original_classes,
         levels,
         processing_classes,
+        &mut level_runs,
     );
 
-    let sequences = prepare::isolating_run_sequences(para.level, original_classes, levels);
+    let mut sequences = prepare::IsolatingRunSequenceVec::new();
+    prepare::isolating_run_sequences(
+        para.level,
+        original_classes,
+        levels,
+        level_runs,
+        has_isolate_controls,
+        &mut sequences,
+    );
     for sequence in &sequences {
         implicit::resolve_weak(text, sequence, processing_classes);
         implicit::resolve_neutral(
@@ -1100,6 +1130,7 @@ fn compute_bidi_info_for_para<'a, D: BidiDataSource, T: TextSource<'a> + ?Sized>
             processing_classes,
         );
     }
+
     implicit::resolve_levels(processing_classes, levels);
 
     assign_levels_to_removed_chars(para.level, original_classes, levels);
@@ -1551,6 +1582,24 @@ mod tests {
         let tests = vec![
             (
                 // text
+                "",
+                // base level
+                Some(RTL_LEVEL),
+                // levels
+                Level::vec(&[]),
+                // original_classes
+                vec![],
+                // paragraphs
+                vec![],
+                // levels_u16
+                Level::vec(&[]),
+                // original_classes_u16
+                vec![],
+                // paragraphs_u16
+                vec![],
+            ),
+            (
+                // text
                 "abc123",
                 // base level
                 Some(LTR_LEVEL),
@@ -1710,6 +1759,19 @@ mod tests {
                     paragraphs: t.4.clone(),
                 }
             );
+            // If it was empty, also test that ParagraphBidiInfo handles it safely.
+            if t.4.len() == 0 {
+                assert_eq!(
+                    ParagraphBidiInfo::new(t.0, t.1),
+                    ParagraphBidiInfo {
+                        text: t.0,
+                        original_classes: t.3.clone(),
+                        levels: t.2.clone(),
+                        paragraph_level: RTL_LEVEL,
+                        is_pure_ltr: true,
+                    }
+                )
+            }
             // If it was a single paragraph, also test ParagraphBidiInfo.
             if t.4.len() == 1 {
                 assert_eq!(

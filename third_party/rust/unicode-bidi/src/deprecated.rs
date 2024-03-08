@@ -9,8 +9,6 @@
 
 //! This module holds deprecated assets only.
 
-use alloc::vec::Vec;
-
 use super::*;
 
 /// Find the level runs within a line and return them in visual order.

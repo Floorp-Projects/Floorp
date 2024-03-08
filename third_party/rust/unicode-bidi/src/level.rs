@@ -17,10 +17,7 @@ use alloc::{
     string::{String, ToString},
     vec::Vec,
 };
-use core::{
-    convert::{From, Into},
-    slice,
-};
+use core::slice;
 
 use super::char_data::BidiClass;
 

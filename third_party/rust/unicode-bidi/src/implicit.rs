@@ -9,6 +9,7 @@
 
 //! 3.3.4 - 3.3.6. Resolve implicit levels and types.
 
+#[cfg(not(feature = "smallvec"))]
 use alloc::vec::Vec;
 use core::cmp::max;
 #[cfg(feature = "smallvec")]
@@ -250,6 +251,11 @@ pub fn resolve_weak<'a, T: TextSource<'a> + ?Sized>(
     }
 }
 
+#[cfg(feature = "smallvec")]
+type BracketPairVec = SmallVec<[BracketPair; 8]>;
+#[cfg(not(feature = "smallvec"))]
+type BracketPairVec = Vec<BracketPair>;
+
 /// 3.3.5 Resolving Neutral Types
 ///
 /// <http://www.unicode.org/reports/tr9/#Resolving_Neutral_Types>
@@ -273,7 +279,14 @@ pub fn resolve_neutral<'a, D: BidiDataSource, T: TextSource<'a> + ?Sized>(
 
     // > Identify the bracket pairs in the current isolating run sequence according to BD16.
     // We use processing_classes, not original_classes, due to BD14/BD15
-    let bracket_pairs = identify_bracket_pairs(text, data_source, sequence, processing_classes);
+    let mut bracket_pairs = BracketPairVec::new();
+    identify_bracket_pairs(
+        text,
+        data_source,
+        sequence,
+        processing_classes,
+        &mut bracket_pairs,
+    );
 
     // > For each bracket-pair element in the list of pairs of text positions
     //
@@ -493,8 +506,8 @@ fn identify_bracket_pairs<'a, T: TextSource<'a> + ?Sized, D: BidiDataSource>(
     data_source: &D,
     run_sequence: &IsolatingRunSequence,
     original_classes: &[BidiClass],
-) -> Vec<BracketPair> {
-    let mut ret = vec![];
+    bracket_pairs: &mut BracketPairVec,
+) {
     #[cfg(feature = "smallvec")]
     let mut stack = SmallVec::<[(char, usize, usize); 8]>::new();
     #[cfg(not(feature = "smallvec"))]
@@ -544,7 +557,7 @@ fn identify_bracket_pairs<'a, T: TextSource<'a> + ?Sized, D: BidiDataSource>(
                                 start_run: element.2,
                                 end_run: run_index,
                             };
-                            ret.push(pair);
+                            bracket_pairs.push(pair);
 
                             // > Pop the stack through the current stack element inclusively.
                             stack.truncate(stack_index);
@@ -557,8 +570,7 @@ fn identify_bracket_pairs<'a, T: TextSource<'a> + ?Sized, D: BidiDataSource>(
     }
     // > Sort the list of pairs of text positions in ascending order based on
     // > the text position of the opening paired bracket.
-    ret.sort_by_key(|r| r.start);
-    ret
+    bracket_pairs.sort_by_key(|r| r.start);
 }
 
 /// 3.3.6 Resolving Implicit Levels
@@ -567,11 +579,11 @@ fn identify_bracket_pairs<'a, T: TextSource<'a> + ?Sized, D: BidiDataSource>(
 ///
 /// <http://www.unicode.org/reports/tr9/#Resolving_Implicit_Levels>
 #[cfg_attr(feature = "flame_it", flamer::flame)]
-pub fn resolve_levels(original_classes: &[BidiClass], levels: &mut [Level]) -> Level {
+pub fn resolve_levels(processing_classes: &[BidiClass], levels: &mut [Level]) -> Level {
     let mut max_level = Level::ltr();
-    assert_eq!(original_classes.len(), levels.len());
+    assert_eq!(processing_classes.len(), levels.len());
     for i in 0..levels.len() {
-        match (levels[i].is_rtl(), original_classes[i]) {
+        match (levels[i].is_rtl(), processing_classes[i]) {
             (false, AN) | (false, EN) => levels[i].raise(2).expect("Level number error"),
             (false, R) | (true, L) | (true, EN) | (true, AN) => {
                 levels[i].raise(1).expect("Level number error")
