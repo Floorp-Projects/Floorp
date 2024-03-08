@@ -292,15 +292,14 @@ http://www.briangrinstead.com/blog/keep-aspect-ratio-with-html-and-css */
 }
 
 .spectrum-color-contrast .accessibility-color-contrast-large-text {
-  margin-inline-start: 1px;
-  margin-inline-end: 1px;
+  margin-inline: 1px;
   unicode-bidi: isolate;
 }
 
 .learn-more {
   background-repeat: no-repeat;
   -moz-context-properties: fill;
-  background-image: url(chrome://devtools/skin/images/info-small.svg);
+  background-image: url(resource://devtools-shared-images/info-small.svg);
   background-color: transparent;
   fill: var(--theme-icon-dimmed-color);
   border: none;

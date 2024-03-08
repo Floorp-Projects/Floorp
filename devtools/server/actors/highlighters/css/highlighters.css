@@ -1010,12 +1010,12 @@ button.paused-dbg-resume-button {
 }
 
 .accessible-infobar-audit .accessible-audit.WARNING::before {
-  background-image: url(chrome://devtools/skin/images/alert-small.svg);
+  background-image: url(resource://devtools-shared-images/alert-small.svg);
   fill: var(--yellow-60);
 }
 
 .accessible-infobar-audit .accessible-audit.BEST_PRACTICES::before {
-  background-image: url(chrome://devtools/skin/images/info-small.svg);
+  background-image: url(resource://devtools-shared-images/info-small.svg);
 }
 
 .accessible-infobar-name {
