@@ -1,0 +1,63 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+// Check that CA is active if and only if:
+// 1. browser.contentanalysis.enabled is true and
+// 2. Either browser.contentanalysis.enabled was set by an enteprise
+//    policy or the "-allow-content-analysis" command line arg was present
+// We can't really test command line arguments so we instead use a test-only
+// method to set the value the command-line is supposed to update.
+
+"use strict";
+
+const { EnterprisePolicyTesting } = ChromeUtils.importESModule(
+  "resource://testing-common/EnterprisePolicyTesting.sys.mjs"
+);
+
+const ca = Cc["@mozilla.org/contentanalysis;1"].getService(
+  Ci.nsIContentAnalysis
+);
+
+add_task(async function test_ca_active() {
+  ok(!ca.isActive, "CA is inactive when pref and cmd line arg are missing");
+
+  // Set the pref without enterprise policy.  CA should not be active.
+  Services.prefs.setBoolPref("browser.contentanalysis.enabled", true);
+  ok(
+    !ca.isActive,
+    "CA is inactive when pref is set but cmd line arg is missing"
+  );
+
+  // Set the pref without enterprise policy but also set command line arg
+  // property.  CA should be active.
+  ca.testOnlySetCACmdLineArg(true);
+  ok(ca.isActive, "CA is active when pref is set and cmd line arg is present");
+
+  // Undo test-only value before later tests.
+  ca.testOnlySetCACmdLineArg(false);
+  ok(!ca.isActive, "properly unset cmd line arg value");
+
+  // Disabled the pref with enterprise policy.  CA should not be active.
+  await EnterprisePolicyTesting.setupPolicyEngineWithJson({
+    policies: {
+      ContentAnalysis: { Enabled: false },
+    },
+  });
+  ok(!ca.isActive, "CA is inactive when disabled by enterprise policy pref");
+
+  // Enabled the pref with enterprise policy.  CA should be active.
+  await EnterprisePolicyTesting.setupPolicyEngineWithJson({
+    policies: {
+      ContentAnalysis: { Enabled: true },
+    },
+  });
+  ok(ca.isActive, "CA is active when enabled by enterprise policy pref");
+});
+
+add_task(async function test_cleanup() {
+  ca.testOnlySetCACmdLineArg(false);
+  await EnterprisePolicyTesting.setupPolicyEngineWithJson({
+    policies: {},
+  });
+});
