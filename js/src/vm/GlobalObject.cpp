@@ -202,7 +202,7 @@ bool GlobalObject::skipDeselectedConstructor(JSContext* cx, JSProtoKey key) {
       return false;
 
     case JSProto_Segmenter:
-#  if defined(MOZ_ICU4X) && defined(NIGHTLY_BUILD)
+#  if defined(MOZ_ICU4X)
       return false;
 #  else
       return true;
