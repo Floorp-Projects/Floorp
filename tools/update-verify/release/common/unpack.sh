@@ -13,6 +13,12 @@ unpack_build () {
     locale=$4
     unpack_jars=$5
     update_settings_string=$6
+    # If provided, must be a directory containing `update-settings.ini` which
+    # will be used instead of attempting to find this file in the unpacked
+    # build. `update_settings_string` modifications will still be performed on
+    # the file.
+    local mac_update_settings_dir_override
+    mac_update_settings_dir_override=$7
 
     if [ ! -f "$pkg_file" ]; then
       return 1
@@ -44,13 +50,17 @@ unpack_build () {
                 rm -rf "${unpack_dir}"
                 appdir=$(ls -1)
                 appdir=$(ls -d *.app)
-                # The updater guesses the location of these files based on
-                # its own target architecture, not the mar. If we're not
-                # unpacking mac-on-mac, we need to copy them so it can find
-                # them. It's important to copy (and not move), because when
-                # we diff the installer vs updated build afterwards, the
-                # installer version will have them in their original place.
-                cp "${appdir}/Contents/Resources/update-settings.ini" "${appdir}/update-settings.ini"
+                if [ -d "${mac_update_settings_dir_override}" ]; then
+                    cp "${mac_update_settings_dir_override}/update-settings.ini" "${appdir}/update-settings.ini"
+                else
+                    # The updater guesses the location of these files based on
+                    # its own target architecture, not the mar. If we're not
+                    # unpacking mac-on-mac, we need to copy them so it can find
+                    # them. It's important to copy (and not move), because when
+                    # we diff the installer vs updated build afterwards, the
+                    # installer version will have them in their original place.
+                    cp "${appdir}/Contents/Resources/update-settings.ini" "${appdir}/update-settings.ini"
+                fi
                 cp "${appdir}/Contents/Resources/precomplete" "${appdir}/precomplete"
             fi
             update_settings_file="${appdir}/update-settings.ini"

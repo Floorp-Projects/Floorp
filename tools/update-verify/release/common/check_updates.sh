@@ -12,17 +12,29 @@ check_updates () {
   channel=$8
   mar_channel_IDs=$9
   update_to_dep=${10}
+  local mac_update_settings_dir_override
+  mac_update_settings_dir_override=${11}
 
   # cleanup
   rm -rf source/*
   rm -rf target/*
 
-  unpack_build $update_platform source "$source_package" $locale '' $mar_channel_IDs
+  # $mac_update_settings_dir_override allows unpack_build to find a host platform appropriate
+  # `update-settings.ini` file, which is needed to successfully run the updater later in this
+  # function.
+  unpack_build $update_platform source "$source_package" $locale '' "$mar_channel_IDs" $mac_update_settings_dir_override
   if [ "$?" != "0" ]; then
     echo "FAILED: cannot unpack_build $update_platform source $source_package"
     return 1
   fi
-  unpack_build $update_platform target "$target_package" $locale
+
+  # Unlike unpacking the `source` build, we don't actually _need_ $mac_update_settings_dir_override
+  # here to succesfully apply the update, but its usage in `source` causes an `update-settings.ini`
+  # file to be present in the directory we diff, which means we either also need it present in the
+  # `target` directory, or to remove it after the update is applied. The latter was chosen
+  # because it keeps the workaround close together (as opposed to just above this, and then much
+  # further down).
+  unpack_build $update_platform target "$target_package" $locale '' '' $mac_update_settings_dir_override
   if [ "$?" != "0" ]; then
     echo "FAILED: cannot unpack_build $update_platform target $target_package"
     return 1
