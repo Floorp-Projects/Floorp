@@ -106,18 +106,10 @@ const TOPIC_EXPERIMENT_ENROLLMENT_CHANGED = "nimbus:enrollments-updated";
 const USE_REMOTE_L10N_PREF =
   "browser.newtabpage.activity-stream.asrouter.useRemoteL10n";
 
-// Experiment groups that need to report the reach event in Messaging-Experiments.
-// If you're adding new groups to it, make sure they're also added in the
-// `messaging_experiments.reach.objects` defined in "toolkit/components/telemetry/Events.yaml"
-const REACH_EVENT_GROUPS = [
-  "cfr",
-  "moments-page",
-  "infobar",
-  "spotlight",
-  "featureCallout",
-];
 const REACH_EVENT_CATEGORY = "messaging_experiments";
 const REACH_EVENT_METHOD = "reach";
+// Reach for the pbNewtab feature will be added in bug 1755401
+const NO_REACH_EVENT_GROUPS = ["pbNewtab"];
 
 export const MessageLoaderUtils = {
   STARTPAGE_VERSION,
@@ -405,7 +397,11 @@ export const MessageLoaderUtils = {
       // Add Reach messages from unenrolled sibling branches, provided we are
       // recording Reach events for this feature. If we are in a rollout, we do
       // not have sibling branches.
-      if (!REACH_EVENT_GROUPS.includes(featureId) || !experimentData) {
+      if (
+        NO_REACH_EVENT_GROUPS.includes(featureId) ||
+        !MESSAGING_EXPERIMENTS_DEFAULT_FEATURES.includes(featureId) ||
+        !experimentData
+      ) {
         continue;
       }
 

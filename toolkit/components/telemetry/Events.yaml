@@ -1550,7 +1550,18 @@ messaging_experiments:
       "moments_page",
       "infobar",
       "spotlight",
-      "featureCallout"
+      "featureCallout",
+      "fxms_message_1",
+      "fxms_message_2",
+      "fxms_message_3",
+      "fxms_message_4",
+      "fxms_message_5",
+      "fxms_message_6",
+      "fxms_message_7",
+      "fxms_message_8",
+      "fxms_message_9",
+      "fxms_message_10",
+      "fxms_message_11"
     ]
     methods: ["reach"]
     release_channel_collection: opt-out

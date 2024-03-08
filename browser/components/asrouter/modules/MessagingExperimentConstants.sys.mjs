@@ -15,6 +15,10 @@
  * FeatureManifest.yaml. Conversely, messaging experiment features contain
  * actual messages, with the usual message keys like `template` and `targeting`.
  * @see FeatureManifest.yaml
+ * Messages delivered through these feature IDs record reach events, with the
+ * exception of "pbNewtab". If you're adding new features to this list, make
+ * sure they're also added in the `messaging_experiments.reach.objects` defined
+ * in "toolkit/components/telemetry/Events.yaml"
  */
 export const MESSAGING_EXPERIMENTS_DEFAULT_FEATURES = [
   "cfr",
