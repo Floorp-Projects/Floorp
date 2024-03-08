@@ -25,6 +25,7 @@ import mozilla.components.support.images.decoder.ImageDecoder
 class SvgIconDecoder(val context: Context) : ImageDecoder {
     private val logger = Logger("SvgIconDecoder")
 
+    @Suppress("TooGenericExceptionCaught")
     override fun decode(data: ByteArray, desiredSize: DesiredSize): Bitmap? =
         try {
             val svg = SVG.getFromInputStream(data.inputStream())
@@ -65,6 +66,9 @@ class SvgIconDecoder(val context: Context) : ImageDecoder {
             svg.renderToCanvas(Canvas(bitmap))
 
             bitmap
+        } catch (e: NullPointerException) {
+            logger.error("Failed to decode SVG: " + e.message.toString())
+            null
         } catch (e: IllegalArgumentException) {
             logger.error("Failed to decode SVG: " + e.message.toString())
             null
