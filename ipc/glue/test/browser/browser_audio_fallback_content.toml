@@ -8,6 +8,7 @@ support-files = [
 prefs = [
   "media.allow-audio-non-utility=true",
   "media.rdd-process.enabled=false",
+  "media.wmf.media-engine.channel-decoder.enabled=false"
 ]
 
 ["browser_utility_multipleAudio_fallback_content.js"]

@@ -5,7 +5,10 @@ support-files = [
   "head.js",
   "head-multiple.js",
 ]
-prefs = ["media.allow-audio-non-utility=true"]
+prefs = [
+  "media.allow-audio-non-utility=true",
+  "media.wmf.media-engine.channel-decoder.enabled=false"
+]
 # Set this since we want to continue monitoring the disabling of pref since we
 # still allow it a little bit.
 environment = "MOZ_DONT_LOCK_UTILITY_PLZ_FILE_A_BUG=1"
