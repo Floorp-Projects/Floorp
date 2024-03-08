@@ -62,6 +62,8 @@
 mozilla::LazyLogModule mozilla::layers::APZCTreeManager::sLog("apz.manager");
 #define APZCTM_LOG(...) \
   MOZ_LOG(APZCTreeManager::sLog, LogLevel::Debug, (__VA_ARGS__))
+#define APZCTM_LOGV(...) \
+  MOZ_LOG(APZCTreeManager::sLog, LogLevel::Verbose, (__VA_ARGS__))
 
 static mozilla::LazyLogModule sApzKeyLog("apz.key");
 #define APZ_KEY_LOG(...) MOZ_LOG(sApzKeyLog, LogLevel::Debug, (__VA_ARGS__))
@@ -770,7 +772,7 @@ void APZCTreeManager::SampleForWebRender(const Maybe<VsyncId>& aVsyncId,
     controller->ScheduleRenderOnCompositorThread(
         wr::RenderReasons::ANIMATED_PROPERTY);
   }
-  APZCTM_LOG(
+  APZCTM_LOGV(
       "APZCTreeManager(%p)::SampleForWebRender, want more composites: %d\n",
       this, (activeAnimations && controller));
 

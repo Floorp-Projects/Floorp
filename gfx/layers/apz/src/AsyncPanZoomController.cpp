@@ -106,6 +106,10 @@ static mozilla::LazyLogModule sApzCtlLog("apz.controller");
   APZC_LOG("%p(%s scrollId=%" PRIu64 "): " fmt, (apzc),   \
            (apzc)->IsRootContent() ? "root" : "subframe", \
            (apzc)->GetScrollId(), ##__VA_ARGS__)
+#define APZC_LOGV_DETAIL(fmt, apzc, ...)                   \
+  APZC_LOGV("%p(%s scrollId=%" PRIu64 "): " fmt, (apzc),   \
+            (apzc)->IsRootContent() ? "root" : "subframe", \
+            (apzc)->GetScrollId(), ##__VA_ARGS__)
 
 #define APZC_LOG_FM_COMMON(fm, prefix, level, ...)                 \
   if (MOZ_LOG_TEST(sApzCtlLog, level)) {                           \
@@ -4739,7 +4743,7 @@ bool AsyncPanZoomController::UpdateAnimation(
   // Even if there's no animation, if we have a scroll offset change pending due
   // to the frame delay, we need to keep compositing.
   if (mLastSampleTime == aSampleTime) {
-    APZC_LOG_DETAIL(
+    APZC_LOGV_DETAIL(
         "UpdateAnimation short-circuit, animation=%p, pending frame-delayed "
         "offset=%d\n",
         this, mAnimation.get(), HavePendingFrameDelayedOffset());
@@ -4759,8 +4763,8 @@ bool AsyncPanZoomController::UpdateAnimation(
   // so that e.g. a main-thread animation can stay in sync with user-driven
   // scrolling or a compositor animation.
   bool needComposite = SampleCompositedAsyncTransform(aProofOfLock);
-  APZC_LOG_DETAIL("UpdateAnimation needComposite=%d mAnimation=%p\n", this,
-                  needComposite, mAnimation.get());
+  APZC_LOGV_DETAIL("UpdateAnimation needComposite=%d mAnimation=%p\n", this,
+                   needComposite, mAnimation.get());
 
   TimeDuration sampleTimeDelta = aSampleTime - mLastSampleTime;
   mLastSampleTime = aSampleTime;
