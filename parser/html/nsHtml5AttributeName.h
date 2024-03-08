@@ -460,6 +460,7 @@ class nsHtml5AttributeName {
   static nsHtml5AttributeName* ATTR_ASYNC;
   static nsHtml5AttributeName* ATTR_ALINK;
   static nsHtml5AttributeName* ATTR_IN;
+  static nsHtml5AttributeName* ATTR_EVENT;
   static nsHtml5AttributeName* ATTR_ICON;
   static nsHtml5AttributeName* ATTR_KERNELMATRIX;
   static nsHtml5AttributeName* ATTR_KERNING;
