@@ -188,7 +188,7 @@ toolkit/components/translation/cld2/
 toolkit/components/translations/bergamot-translator/thirdparty
 toolkit/components/translations/bergamot-translator/bergamot-translator.js
 toolkit/components/url-classifier/chromium/
-toolkit/components/utils/mozjexl.js
+toolkit/components/utils/mozjexl.sys.mjs
 toolkit/components/viaduct/fetch_msg_types.pb.cc
 toolkit/components/viaduct/fetch_msg_types.pb.h
 toolkit/content/widgets/vendor/lit.all.mjs
