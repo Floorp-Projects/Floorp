@@ -95,6 +95,10 @@ XPCOMUtils.defineLazyPreferenceGetter(
 export const SearchSERPTelemetryUtils = {
   ACTIONS: {
     CLICKED: "clicked",
+    // specific to cookie banner
+    CLICKED_ACCEPT: "clicked_accept",
+    CLICKED_REJECT: "clicked_reject",
+    CLICKED_MORE_OPTIONS: "clicked_more_options",
     EXPANDED: "expanded",
     SUBMITTED: "submitted",
   },
@@ -104,6 +108,7 @@ export const SearchSERPTelemetryUtils = {
     AD_LINK: "ad_link",
     AD_SIDEBAR: "ad_sidebar",
     AD_SITELINK: "ad_sitelink",
+    COOKIE_BANNER: "cookie_banner",
     INCONTENT_SEARCHBOX: "incontent_searchbox",
     NON_ADS_LINK: "non_ads_link",
     REFINED_SEARCH_BUTTONS: "refined_search_buttons",

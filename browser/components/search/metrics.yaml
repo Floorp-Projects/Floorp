@@ -202,9 +202,11 @@ serp:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1814773
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1816730
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1816735
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1849371
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1814773
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1816730
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1849371
     data_sensitivity:
       - interaction
     notification_emails:
@@ -216,7 +218,13 @@ serp:
       action:
         description: >
           The action taken on the page.
-          Possible values are `clicked`, `expanded`, and `submitted`.
+          Possible values are:
+          `clicked`,
+          `clicked_accept`,
+          `clicked_reject`,
+          `clicked_more_options`,
+          `expanded`,
+          `submitted`.
         type: string
       target:
         description: >
@@ -227,6 +235,7 @@ serp:
           `ad_link`,
           `ad_sidebar`,
           `ad_sitelink`,
+          `cookie_banner`,
           `incontent_searchbox`,
           `non_ads_link`,
           `refined_search_buttons`,
@@ -240,8 +249,10 @@ serp:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1816728
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1816729
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1849371
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1816728
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1849371
     data_sensitivity:
       - interaction
     notification_emails:
@@ -258,6 +269,7 @@ serp:
           `ad_link`,
           `ad_sidebar`,
           `ad_sitelink`,
+          `cookie_banner`,
           `refined_search_buttons`,
           `shopping_tab`.
           Defaults to `ad_link`.

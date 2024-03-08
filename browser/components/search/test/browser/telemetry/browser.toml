@@ -28,6 +28,7 @@ support-files = [
   "searchTelemetryAd_components_carousel_outer_container.html",
   "searchTelemetryAd_components_text.html",
   "searchTelemetryAd_components_visibility.html",
+  "searchTelemetryAd_components_cookie_banner.html",
   "serp.css",
 ]
 
