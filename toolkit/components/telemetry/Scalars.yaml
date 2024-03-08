@@ -4030,7 +4030,7 @@ apz:
       - 1836870
     description: >
       Count of overshoot events, where the user reverses scrollwheel direction soon after the last scrollwheel input.
-    expires: "126"
+    expires: "134"
     kind: uint
     notification_emails:
       - botond@mozilla.com
