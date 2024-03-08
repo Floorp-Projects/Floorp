@@ -536,12 +536,7 @@ bool ArrayBufferObject::maxByteLengthGetterImpl(JSContext* cx,
   auto* buffer = &args.thisv().toObject().as<ArrayBufferObject>();
 
   // Steps 4-6.
-  size_t maxByteLength;
-  if (buffer->isResizable()) {
-    maxByteLength = buffer->as<ResizableArrayBufferObject>().maxByteLength();
-  } else {
-    maxByteLength = buffer->byteLength();
-  }
+  size_t maxByteLength = buffer->maxByteLength();
   MOZ_ASSERT_IF(buffer->isDetached(), maxByteLength == 0);
 
   // Step 7.
@@ -1502,10 +1497,7 @@ size_t ArrayBufferObject::byteLength() const {
 
 inline size_t ArrayBufferObject::associatedBytes() const {
   if (isMalloced()) {
-    if (isResizable()) {
-      return as<ResizableArrayBufferObject>().maxByteLength();
-    }
-    return byteLength();
+    return maxByteLength();
   }
   if (isMapped()) {
     return RoundUp(byteLength(), js::gc::SystemPageSize());
@@ -2484,7 +2476,7 @@ bool ArrayBufferObject::ensureNonInline(JSContext* cx,
     return true;
   }
 
-  size_t nbytes = buffer->byteLength();
+  size_t nbytes = buffer->maxByteLength();
   ArrayBufferContents copy = NewCopiedBufferContents(cx, buffer);
   if (!copy) {
     return false;
