@@ -111,6 +111,7 @@ job-defaults:
 jobs:
     focus-arm-debug:
         attributes:
+            build-type: focus-debug-firebase
             shipping-product: focus
         description: 'Focus UI tests with firebase'
         run:
@@ -191,6 +192,7 @@ jobs:
                 GOOGLE_PROJECT: 'moz-focus-android'
     fenix-arm-debug:
         attributes:
+            build-type: fenix-debug-firebase
             shipping-product: fenix
         description: Test Fenix
         dependencies:
@@ -216,6 +218,7 @@ jobs:
                 GOOGLE_PROJECT: moz-fenix
     screenshots-arm:
         attributes:
+            build-type: fenix-debug-screenshots
             shipping-product: fenix
             screenshots: true
             cron: true
@@ -297,6 +300,7 @@ jobs:
                 GOOGLE_PROJECT: moz-fenix
     fenix-legacy-arm:
         attributes:
+            build-type: fenix-legacy
             legacy: true
             shipping-product: fenix
             code-review: false
@@ -325,6 +329,7 @@ jobs:
 
     fenix-robo-arm-debug:
         attributes:
+            build-type: fenix-robo
             shipping-product: fenix
             code-review: false
         description: Run Robo test on ARM devices

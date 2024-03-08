@@ -107,6 +107,23 @@ class Test(Section):
 
 
 @register_section
+class Android(Section):
+    name = "android"
+    kind = (
+        "build-apk,build-bundle,build-components,test-apk,test-components,ui-test-apk"
+    )
+    title = "Firefox for Android"
+    attrs = ["kind", "build-type", "component", "shipping-product"]
+
+    def labelfn(self, task):
+        if task["kind"] in ("build-components", "test-components"):
+            label = "{}-{}".format(task["kind"], task.get("component"))
+        else:
+            label = "{}-{}".format(task["kind"], task.get("build-type"))
+        return label
+
+
+@register_section
 class Perf(Section):
     name = "perf"
     kind = "test"
