@@ -246,6 +246,7 @@
 
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">Emboava kuatiarogue ñepyrũgua</string>
+
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Mba’erechaha ñepyrũgua</string>
@@ -253,6 +254,14 @@
     <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
          history and go back to the home screen. -->
     <string name="browser_toolbar_erase">Embogue kundahára rembiasakue</string>
+    <!-- Content description for the translate page toolbar button that opens the translations dialog when no translation has occurred. -->
+    <string name="browser_toolbar_translate">Emoñe’ẽasa kuatiarogue</string>
+
+    <!-- Content description (not visible, for screen readers etc.) for the translate page toolbar button that opens the translations dialog when the page is translated successfully.
+         The first parameter is the name of the language that is displayed in the original page. (For example: English)
+         The second parameter is the name of the language which the page was translated to. (For example: French) -->
+    <string name="browser_toolbar_translated_successfully">Kuatiarogue moñe’ẽasapyre %1$s-gui %2$s-pe.</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Ñe’ẽ poravopyre</string>
@@ -264,8 +273,6 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Moha’ãnga</string>
-    <!-- Button in the search view that lets a user change their search engine -->
-    <string name="search_engine_button" moz:RemovedIn="121" tools:ignore="UnusedResources">Hekaha mongu’eha</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Hekaha ñemboheko</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
@@ -320,21 +327,27 @@
     <!-- Notification pre-permission dialog -->
     <!-- Enable notification pre permission dialog title
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_title">Marandu’i ne pytyvõta ejapovéta %s ndive</string>
+    <string name="onboarding_home_enable_notifications_title" moz:removedIn="124" tools:ignore="UnusedResources">Marandu’i ne pytyvõta ejapovéta %s ndive</string>
     <!-- Enable notification pre permission dialog description with rationale
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="onboarding_home_enable_notifications_description">Embojuehe tendayke mba’e’oka pa’ũme, eñangareko ñemboguejýre, ehendu ñemoñe’ẽ mba’éichapa eiporuporãta %s rekorosã ñemigua ha ambue.</string>
+    <string name="onboarding_home_enable_notifications_description" moz:removedIn="124" tools:ignore="UnusedResources">Embojuehe tendayke mba’e’oka pa’ũme, eñangareko ñemboguejýre, ehendu ñemoñe’ẽ mba’éichapa eiporuporãta %s rekorosã ñemigua ha ambue.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="onboarding_home_enable_notifications_positive_button">Ku’ejey</string>
+    <string name="onboarding_home_enable_notifications_positive_button" moz:removedIn="124" tools:ignore="UnusedResources">Ku’ejey</string>
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
-    <string name="onboarding_home_enable_notifications_negative_button">Ani ko’ág̃a</string>
+    <string name="onboarding_home_enable_notifications_negative_button" moz:removedIn="124" tools:ignore="UnusedResources">Ani ko’ág̃a</string>
 
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
     <string name="juno_onboarding_privacy_notice_text">Firefox marandu’i ñemigua</string>
-    <!-- Text for the button to set firefox as default browser on the device -->
+    <!-- Description for learning more about our privacy notice. -->
+    <string name="juno_onboarding_privacy_notice_text_2" moz:removedIn="125" tools:ignore="UnusedResources">Eikuaave ore marandu’i ñemigua rupive</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Rovy’ã eimére tekorosãme</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="UnusedResources">Ehecha mba’érepa hetaiterei ohayhúva Firefox</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources">Ñeikundaha tekorosãme hetaháicha</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_3">Ore kundahára oykeko atyguasu viru’ỹgua oipytyvõ omboykévo umi mba’apohaguasu ani nde rapykueho ñanduti rupive.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
@@ -446,22 +459,11 @@
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">HTTPS ayvúpe añoite</string>
 
-    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
-    <string name="preferences_cookie_banner_reduction" moz:RemovedIn="121" tools:ignore="UnusedResources">Kookie Banner Ñemomichĩ</string>
     <!-- Label for cookie banner section in quick settings panel. -->
     <string name="cookie_banner_blocker">Ejoko Banner kookie rehegua</string>
     <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->
     <string name="preferences_cookie_banner_reduction_private_mode">Kookie ñe’ẽmondo jokoha ñeikundaha ñemíme</string>
-    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
-    <string name="reduce_cookie_banner_option" moz:RemovedIn="121" tools:ignore="UnusedResources">Emomichĩ kookie banner</string>
 
-    <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
-    <string name="reduce_cookie_banner_option_off" moz:RemovedIn="121" tools:ignore="UnusedResources">Mboguepyre</string>
-    <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
-    <string name="reduce_cookie_banner_option_on" moz:RemovedIn="121" tools:ignore="UnusedResources">Hendypyre</string>
-
-    <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_summary_1" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s omboykese ijehegui kookie mba’ejerure kookie marandu ñemurãme.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Ogue ko tendápe</string>
     <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
@@ -479,36 +481,17 @@
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site">Tenda ko’ág̃a ojokupyty’ỹva</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
-    <string name="reduce_cookie_banner_details_panel_title_on_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">¿Emyandy kookie ñemurã momichĩ %1$s peg̃uarã?</string>
-    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site_1">¿Emyandy Kookie Banner jokoha %1$s peg̃uarã?</string>
-    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
-    <string name="reduce_cookie_banner_details_panel_title_off_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">¿Embogue kookie ñemurã momichĩ %1$s peg̃uarã?</string>
 
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site_1">¿Embogue Kookie Banner jokoha %1$s peg̃uarã?</string>
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
     <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s nomboykekuaái ijehegui kookie marandu ñemurã ko tendápe. Emba’ejerurekuaa omoneĩ hag̃ua ko tenda tenonderãve.</string>
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_off_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s omboguéta kookie ko tendagua ha omyanyhẽjeýta kuatiarogue. Emboguepaitérõ kookie ombotykuaa ne rembiapo térã omonandi ne mba’ejoguakue.</string>
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site_1">Eipe’ãvo, %1$s omboguéta kookie ha omyanyhẽta tenda. Kóva ombotykuaa emba’apoha térã omonandi ejoguáva.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site_2" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s omboykese ijehegui umi kookie mba’ejerure tenda ojokupytývape.</string>
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_3">Emyandývo, %1$s oñeha’ãta omboyke ijeheguiete umi kookie ñe’ẽmondo ko tendápe.</string>
-    <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_dialog_title" moz:RemovedIn="121" tools:ignore="UnusedResources">¿Emoneĩ %1$s tomboyke kookie ñe’ẽmondo?</string>
-    <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_dialog_body" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s omboykekuaa ijehegui umi kookie mba’ejerure.</string>
-    <!-- Remind me later text button for the onboarding dialog -->
-    <string name="reduce_cookie_banner_dialog_not_now_button" moz:RemovedIn="121" tools:ignore="UnusedResources">Ani ko’ág̃a</string>
-    <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
-    <string name="reduce_cookie_banner_dialog_snackbar_text" moz:RemovedIn="121" tools:ignore="UnusedResources">Ehecha’ivéta kookie mba’ejerure</string>
-
-    <!-- Change setting text button, for the cookie banner re-engagement dialog -->
-    <string name="reduce_cookie_banner_dialog_change_setting_button" moz:RemovedIn="121" tools:ignore="UnusedResources">Moneĩ</string>
 
     <!--Title for the cookie banner re-engagement CFR, the placeholder is replaced with app name -->
     <string name="cookie_banner_cfr_title">%1$s omboyke kookie nde rehehápe</string>
@@ -730,9 +713,9 @@
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Techaukaha</string>
     <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins">Tembiapo ñepyrũ</string>
+    <string name="preferences_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Tembiapo ñepyrũ</string>
     <!-- Preference for syncing passwords -->
-    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">Ñe’ẽñemi</string>
+    <string name="preferences_sync_logins_2">Ñe’ẽñemi</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">Tendayke ijurujáva</string>
     <!-- Preference for signing out -->
@@ -758,9 +741,9 @@
     <string name="default_device_name_2">%1$s %2$s %3$s-pe</string>
 
     <!-- Preference for syncing credit cards -->
-    <string name="preferences_sync_credit_cards">Kuatia’atã ñemurã</string>
+    <string name="preferences_sync_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Kuatia’atã ñemurã</string>
     <!-- Preference for syncing payment methods -->
-    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">Mba’éicha ehepyme’ẽta</string>
+    <string name="preferences_sync_credit_cards_2">Mba’éicha ehepyme’ẽta</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">Kundaharape</string>
 
@@ -1310,8 +1293,6 @@
     <!-- Text for standard error snackbar dismiss button. -->
     <string name="standard_snackbar_error_dismiss">Mboyke</string>
     <!-- Text for error message when printing a page and it fails. -->
-    <string name="unable_to_print_error" moz:removedIn="121" tools:ignore="UnusedResources">Ndaikatúi embokuatia</string>
-    <!-- Text for error message when printing a page and it fails. -->
     <string name="unable_to_print_page_error">Ndaikatúi emonguatia ko kuatiarogue</string>
     <!-- Text for the print feature in the share and browser menu -->
     <string name="menu_print">Mbokuatia</string>
@@ -1728,13 +1709,13 @@
     <string name="add_to_homescreen_description_2">Ikatu embojuaju ko ñanduti renda ne mba’e’oka mba’erechaha ñepyrũgua rehe eike hag̃ua ha eikundaha pya’eve, peteĩ tembiporu’ícharamo.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords">Tembiapo ñepyrũ ha ñe’ẽñemi</string>
+    <string name="preferences_passwords_logins_and_passwords" moz:RemovedIn="125" tools:ignore="UnusedResources">Tembiapo ñepyrũ ha ñe’ẽñemi</string>
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">Ñe’ẽñemi</string>
+    <string name="preferences_passwords_logins_and_passwords_2">Ñe’ẽñemi</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins">Eñongatu tembiapo ñepyrũ ha ñe’ẽñemi</string>
+    <string name="preferences_passwords_save_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Eñongatu tembiapo ñepyrũ ha ñe’ẽñemi</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">Eñongatu ñe’ẽñemi</string>
+    <string name="preferences_passwords_save_logins_2">Eñongatu ñe’ẽñemi</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Ejerure ñemoneĩ eñongatu hag̃ua</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1751,39 +1732,41 @@
     <string name="preferences_android_autofill_description">Emoĩmba ha eñongatu poruhára réra ha ñe’ẽñemi ambue tembiporu’ípe ne mba’e’oka pegua.</string>
 
     <!-- Preference option for adding a login -->
-    <string name="preferences_logins_add_login">Embojuaju jeike</string>
+    <string name="preferences_logins_add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Embojuaju jeike</string>
 
     <!-- Preference option for adding a password -->
-    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">Embojuaju ñe’ẽñemi</string>
+    <string name="preferences_logins_add_login_2">Embojuaju ñe’ẽñemi</string>
 
-    <!-- Preference for syncing saved logins in Fenix -->
-    <string name="preferences_passwords_sync_logins">Embojuehe tembiapo ñepyrũ</string>
     <!-- Preference for syncing saved passwords in Fenix -->
-    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">Embojuehe ñe’ẽñemi</string>
+    <string name="preferences_passwords_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Embojuehe tembiapo ñepyrũ</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2">Embojuehe ñe’ẽñemi</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices">Embojuehe tembiapo ñepyrũ mba’e’oka pa’ũme</string>
+    <string name="preferences_passwords_sync_logins_across_devices" moz:RemovedIn="125" tools:ignore="UnusedResources">Embojuehe tembiapo ñepyrũ mba’e’oka pa’ũme</string>
+    <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices_2">Embojuehe ñe’ẽñemi mba’e’oka pa’ũme</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins">Tembiapo ñepyrũ ñongatupyre</string>
+    <string name="preferences_passwords_saved_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Tembiapo ñepyrũ ñongatupyre</string>
     <!-- Preference to access list of saved passwords -->
-    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">Ñe’ẽñemi ñongatupyre</string>
+    <string name="preferences_passwords_saved_logins_2">Ñe’ẽñemi ñongatupyre</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text">Ko’ápe ojehecháta tembiapo ñepyrũ eñongatu térã embojuehéva %s ndive.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_text" moz:RemovedIn="125" tools:ignore="UnusedResources">Ko’ápe ojehecháta tembiapo ñepyrũ eñongatu térã embojuehéva %s ndive.</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Eikuaave Sync rehegua</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link" moz:RemovedIn="125" tools:ignore="UnusedResources">Eikuaave Sync rehegua</string>
     <!-- Clickable text for opening an external link for more information about Sync. -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2" tools:ignore="UnusedResources">Eikuaave ñembojuehe rehegua</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2">Eikuaave ñembojuehe rehegua</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Oĩ’ỹva</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty">Ápe ojehecháta tembiapo ñepyrũ ha ñe’ẽñemi oñeñongatu’ỹva.</string>
+    <string name="preferences_passwords_exceptions_description_empty" moz:RemovedIn="125" tools:ignore="UnusedResources">Ápe ojehecháta tembiapo ñepyrũ ha ñe’ẽñemi oñeñongatu’ỹva.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description">Noñeñongatumo’ãi tembiapo ñepyrũ ha ñe’ẽñemi ko’ã tendápe g̃uarã.</string>
+    <string name="preferences_passwords_exceptions_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Noñeñongatumo’ãi tembiapo ñepyrũ ha ñe’ẽñemi ko’ã tendápe g̃uarã.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Emboguete opaite oĩ’ỹva</string>
     <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search">Eheka tembiapo ñepyrũ</string>
+    <string name="preferences_passwords_saved_logins_search" moz:RemovedIn="125" tools:ignore="UnusedResources">Eheka tembiapo ñepyrũ</string>
     <!-- Hint for search box in passwords list -->
-    <string name="preferences_passwords_saved_logins_search_2" tools:ignore="UnusedResources">Eheka ñe’ẽñemi</string>
+    <string name="preferences_passwords_saved_logins_search_2">Eheka ñe’ẽñemi</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Tenda</string>
     <!-- The header for the username for a login -->
@@ -1811,11 +1794,11 @@
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Emokañy ñe’ẽñemi</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message">Emyandyjey ehecha hag̃ua ne rembiapo ñepyrũ ñongatupyre</string>
+    <string name="logins_biometric_prompt_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Emyandyjey ehecha hag̃ua ne rembiapo ñepyrũ ñongatupyre</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title">Erekokuaa nde poruhára ha ñe’ẽñemi</string>
+    <string name="logins_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Erekokuaa nde poruhára ha ñe’ẽñemi</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message">Emboheko pe patrõ jokoháva mba’e’oka pegua, PIN térã ñe’ẽñemi emo’ã hag̃ua nde poruhára ha ñe’ẽñemi ñongatupyrépe jeike ambue orekórõ ne mba’e’oka.</string>
+    <string name="logins_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Emboheko pe patrõ jokoháva mba’e’oka pegua, PIN térã ñe’ẽñemi emo’ã hag̃ua nde poruhára ha ñe’ẽñemi ñongatupyrépe jeike ambue orekórõ ne mba’e’oka.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Upéi</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1834,10 +1817,10 @@
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">Jejuru paha</string>
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Emoĩporã poravorã tembiapo ñepyrũgua</string>
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Emoĩporã poravorã tembiapo ñepyrũgua</string>
 
     <!-- Content description (not visible, for screen readers etc.) -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2" tools:ignore="UnusedResources">Emoĩporã ñe’ẽñemi poravorã</string>
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2">Emoĩporã ñe’ẽñemi poravorã</string>
 
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
@@ -1845,40 +1828,40 @@
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">Kundaharape</string>
     <!-- Preference and title for managing the settings for credit cards -->
-    <string name="preferences_credit_cards">Kuatia’atã ñemurã</string>
+    <string name="preferences_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Kuatia’atã ñemurã</string>
     <!-- Preference and title for managing the settings for payment methods -->
-    <string name="preferences_credit_cards_2" tools:ignore="UnusedResources">Mba’éicha ehepyme’ẽta</string>
+    <string name="preferences_credit_cards_2">Mba’éicha ehepyme’ẽta</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards">Eñongatu ha emyanyhẽ kuatia’atã</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Eñongatu ha emyanyhẽ kuatia’atã</string>
 
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_2" tools:ignore="UnusedResources">Eñongatu ha emyanyhẽ mba’éicha ehepyme’ẽta</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_2">Eñongatu ha emyanyhẽ mba’éicha ehepyme’ẽta</string>
     <!-- Preference summary for saving and autofilling credit card data -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary">Mba’ekuaarã ipapapypa</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Mba’ekuaarã ipapapypa</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Embojuehe kuatia’atã mba’e’oka pa’ũme</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">Embojuehe kuatia’atã</string>
     <!-- Preference option for adding a credit card -->
-    <string name="preferences_credit_cards_add_credit_card">Embojuaju kuatia’atã ñemurã</string>
+    <string name="preferences_credit_cards_add_credit_card" moz:RemovedIn="125" tools:ignore="UnusedResources">Embojuaju kuatia’atã ñemurã</string>
 
     <!-- Preference option for adding a card -->
-    <string name="preferences_credit_cards_add_credit_card_2" tools:ignore="UnusedResources">Embojuaju kuatia’atã</string>
+    <string name="preferences_credit_cards_add_credit_card_2">Embojuaju kuatia’atã</string>
     <!-- Preference option for managing saved credit cards -->
-    <string name="preferences_credit_cards_manage_saved_cards">Eñangareko kuatia’atã ñongatupyrére</string>
+    <string name="preferences_credit_cards_manage_saved_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Eñangareko kuatia’atã ñongatupyrére</string>
     <!-- Preference option for managing saved cards -->
-    <string name="preferences_credit_cards_manage_saved_cards_2" tools:ignore="UnusedResources">Eñangareko kuatia’atã</string>
+    <string name="preferences_credit_cards_manage_saved_cards_2">Eñangareko kuatia’atã</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Embojuaju kundaharape</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Kundaharape ñangareko</string>
     <!-- Preference for saving and autofilling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses">Eñongatu ha emyanyhẽ kundaharape</string>
+    <string name="preferences_addresses_save_and_autofill_addresses" moz:RemovedIn="125" tools:ignore="UnusedResources">Eñongatu ha emyanyhẽ kundaharape</string>
 
     <!-- Preference for saving and filling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">Eñongatu ha emyanyhẽ kundaharape</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_2">Eñongatu ha emyanyhẽ kundaharape</string>
     <!-- Preference summary for saving and autofilling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary">Emoĩ marandu ipapapy, ñanduti veve ha kundaharape ñemondorãva</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Emoĩ marandu ipapapy, ñanduti veve ha kundaharape ñemondorãva</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Embojuaju kuatia’atã</string>
@@ -1899,9 +1882,9 @@
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Emboguete kuatia’atã</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation">¿Emboguesépa añetehápe ko kuatia’atã ñemurã?</string>
+    <string name="credit_cards_delete_dialog_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">¿Emboguesépa añetehápe ko kuatia’atã ñemurã?</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation_2" tools:ignore="UnusedResources">¿Emboguete kuatia’atã?</string>
+    <string name="credit_cards_delete_dialog_confirmation_2">¿Emboguete kuatia’atã?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Mboguete</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1915,18 +1898,18 @@
     <string name="credit_cards_saved_cards">Kuatia’atã ñongatupyre</string>
 
     <!-- Error message for credit card number validation -->
-    <string name="credit_cards_number_validation_error_message">Ikatúpiko ehai kuatia’atã ñemurã papapy oikóva</string>
+    <string name="credit_cards_number_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Ikatúpiko ehai kuatia’atã ñemurã papapy oikóva</string>
 
     <!-- Error message for credit card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message">Ikatúpiko emyanyhẽ ko kora</string>
+    <string name="credit_cards_name_on_card_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Ikatúpiko emyanyhẽ ko kora</string>
     <!-- Error message for card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message_2" tools:ignore="UnusedResources">Embojuaju téra</string>
+    <string name="credit_cards_name_on_card_validation_error_message_2">Embojuaju téra</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Embojuruja ehecha hag̃ua kuatia’atã ñongatupyre</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title">Emohekorosã nde kuatia’atã ñemurã</string>
+    <string name="credit_cards_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Emohekorosã nde kuatia’atã ñemurã</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message">Emboheko peteĩ jekokoha rape, PIN térã ñe’ẽñemi emo’ã hag̃ua nde kuatia’atã ñongatupyre ambue oikeséramo ne mba’e’okápe.</string>
+    <string name="credit_cards_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Emboheko peteĩ jekokoha rape, PIN térã ñe’ẽñemi emo’ã hag̃ua nde kuatia’atã ñongatupyre ambue oikeséramo ne mba’e’okápe.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Emboheko ko’ág̃a</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1935,7 +1918,7 @@
     <string name="credit_cards_biometric_prompt_message_pin">Embojuruja ne mba’e’oka</string>
 
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
-    <string name="credit_cards_biometric_prompt_unlock_message">Embojuruja eiporu hag̃ua kuatia’atã ñemurã marandu mbyatypyre</string>
+    <string name="credit_cards_biometric_prompt_unlock_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Embojuruja eiporu hag̃ua kuatia’atã ñemurã marandu mbyatypyre</string>
 
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Embojuaju kundaharape</string>
@@ -1944,11 +1927,13 @@
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Kundaharape ñangareko</string>
     <!-- The header for the first name of an address -->
-    <string name="addresses_first_name">Téra Peteĩha</string>
+    <string name="addresses_first_name" moz:removedIn="125" tools:ignore="UnusedResources">Téra Peteĩha</string>
     <!-- The header for the middle name of an address -->
-    <string name="addresses_middle_name">Téra Mokõiha</string>
+    <string name="addresses_middle_name" moz:removedIn="125" tools:ignore="UnusedResources">Téra Mokõiha</string>
     <!-- The header for the last name of an address -->
-    <string name="addresses_last_name">Terajoapy</string>
+    <string name="addresses_last_name" moz:removedIn="125" tools:ignore="UnusedResources">Terajoapy</string>
+    <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
+    <string name="addresses_name">Téra</string>
     <!-- The header for the street address of an address -->
     <string name="addresses_street_address">Kundaharape</string>
     <!-- The header for the city of an address -->
@@ -1973,7 +1958,9 @@
     <string name="addressess_delete_address_button">Embogue kundaharape</string>
 
     <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message">¿Añetehápepa remboguese ko kundaharape?</string>
+    <string name="addressess_confirm_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">¿Añetehápepa remboguese ko kundaharape?</string>
+    <!-- The title for the "Delete address" confirmation dialog -->
+    <string name="addressess_confirm_dialog_message_2">¿Embogue kundaharape?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">Mboguete</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -2073,41 +2060,41 @@
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">Mbosako’i</string>
     <!-- Message in delete confirmation dialog for logins -->
-    <string name="login_deletion_confirmation">¿Emboguese añetehápe ko tembiapo ñepyrũ?</string>
+    <string name="login_deletion_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">¿Emboguese añetehápe ko tembiapo ñepyrũ?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Mboguete</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Heja</string>
     <!--  The saved login options menu description. -->
-    <string name="login_options_menu">Jeporavorã tembiapo ñepyrũgua</string>
+    <string name="login_options_menu" moz:RemovedIn="125" tools:ignore="UnusedResources">Jeporavorã tembiapo ñepyrũgua</string>
     <!--  The saved password options menu description. -->
-    <string name="login_options_menu_2" tools:ignore="UnusedResources">Ñe’ẽñemi jeporavorã</string>
+    <string name="login_options_menu_2">Ñe’ẽñemi jeporavorã</string>
     <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description">Moñe’ẽha kora isako’ikuaáava ñanduti kundaharape rembiapo ñepyrũme.</string>
+    <string name="saved_login_hostname_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Moñe’ẽha kora isako’ikuaáava ñanduti kundaharape rembiapo ñepyrũme.</string>
     <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description">Moñe’ẽha kora isako’ikuaáava poruhára réra rembiapo ñepyrũme.</string>
+    <string name="saved_login_username_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Moñe’ẽha kora isako’ikuaáava poruhára réra rembiapo ñepyrũme.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description">Moñe’ẽha kora isako’ikuaáava ñe’ẽñemi rembiapo ñepyrũme.</string>
+    <string name="saved_login_password_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Moñe’ẽha kora isako’ikuaáava ñe’ẽñemi rembiapo ñepyrũme.</string>
     <!--  The button description to save changes to an edited login. -->
-    <string name="save_changes_to_login">Eñongatu moambue tembiapo ñepyrũme.</string>
+    <string name="save_changes_to_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Eñongatu moambue tembiapo ñepyrũme.</string>
     <!--  The button description to save changes to an edited password. -->
-    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">Moambue ñongatu.</string>
+    <string name="save_changes_to_login_2">Moambue ñongatu.</string>
     <!--  The page title for editing a saved login. -->
-    <string name="edit">Mbosako’i</string>
+    <string name="edit" moz:RemovedIn="125" tools:ignore="UnusedResources">Mbosako’i</string>
     <!--  The page title for editing a saved password. -->
-    <string name="edit_2" tools:ignore="UnusedResources">Embosako’i ñe’ẽñemi</string>
+    <string name="edit_2">Embosako’i ñe’ẽñemi</string>
     <!--  The page title for adding new login. -->
-    <string name="add_login">Embojuaju terarenda pyahu</string>
+    <string name="add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Embojuaju terarenda pyahu</string>
     <!--  The page title for adding new password. -->
-    <string name="add_login_2" tools:ignore="UnusedResources">Embojuaju ñe’ẽñemi</string>
+    <string name="add_login_2">Embojuaju ñe’ẽñemi</string>
     <!--  The error message in add/edit login view when password field is blank. -->
-    <string name="saved_login_password_required">Tekotevẽ ñe’ẽñemi</string>
+    <string name="saved_login_password_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Tekotevẽ ñe’ẽñemi</string>
     <!--  Error text displayed underneath the password field when it is in an error case. -->
-    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">Emoinge ñe’ẽñemi</string>
+    <string name="saved_login_password_required_2">Emoinge ñe’ẽñemi</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required">Poruhára réra jerurepyre</string>
+    <string name="saved_login_username_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Poruhára réra jerurepyre</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">Ehai poruhára réra</string>
+    <string name="saved_login_username_required_2">Ehai poruhára réra</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Mohendahavusu réra jerurepyre</string>
     <!-- Voice search button content description  -->
@@ -2207,7 +2194,7 @@
     <!-- Title for search suggestions when the default search suggestion engine is anything other than Google. The first parameter is default search engine name. -->
     <string name="other_default_search_engine_suggestion_header">Eheka %s ndive</string>
 
-    <!-- Default browser experiment -->
+    <!-- Default browser card text -->
     <string name="default_browser_experiment_card_text">Emboheko ñanduti renda juajuha, ñanduti veve ha ñe’ẽmondo ijuruja hag̃ua ijehegui Firefox-pe.</string>
 
     <!-- Content description for close button in collection placeholder. -->
@@ -2217,7 +2204,7 @@
     <string name="radio_preference_info_content_description">Eikutu ápe eikuaave hag̃ua</string>
 
     <!-- Content description for the action bar "up" button -->
-    <string name="action_bar_up_description">Eikundaha yvate gotyo</string>
+    <string name="action_bar_up_description" moz:removedIn="124" tools:ignore="UnusedResources">Eikundaha yvate gotyo</string>
 
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">Mboty</string>
@@ -2258,8 +2245,6 @@
     <!-- Title for when the rating has been updated by the review checker -->
     <string name="review_quality_check_adjusted_rating_title">Ñeha’ãmby ha’etéva</string>
     <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
-    <string name="review_quality_check_adjusted_rating_description" moz:RemovedIn="122" tools:ignore="UnusedResources">Oñemboguéta marandu’i jerovia’ỹha</string>
-    <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
     <string name="review_quality_check_adjusted_rating_description_2">Oiko hechajey jeroviahápe</string>
     <!-- Title for list of highlights from a product's review emphasizing a product's important traits. -->
     <string name="review_quality_check_highlights_title">Mba’e iporãva marandu’i osẽramóvare</string>
@@ -2281,8 +2266,6 @@
     <string name="review_quality_check_explanation_body_highlights"><![CDATA[Umi <b>kyta mba’eguasúva</b> ou marandu’i %s 80 ára ohasaramóvagui ikatuha ejerovia.]]></string>
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
     <string name="review_quality_check_info_learn_more">Eikuaave ko’ãvare %s.</string>
-    <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_info_learn_more_link" moz:RemovedIn="121" tools:ignore="UnusedResources">mba’éichapa %s Mozilla mba’e ohechaukáta marandu’i iporãha</string>
     <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. -->
     <string name="review_quality_check_info_learn_more_link_2">mba’éicha %s oikuaa marandu’i iporãha</string>
     <!-- Text for title of settings section. -->
@@ -2318,10 +2301,6 @@
     <string name="review_quality_check_product_availability_warning_body">Ehechárõ ko apopyre ojejoguakuaajeýma, oremomarandu ha romba’apóta hekopyahu hag̃ua ñehesa’ijo.</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action_2">Emomarandu apopyre ojeporukuaaha</string>
-    <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
-    <string name="review_quality_check_reanalysis_in_progress_warning_title" moz:RemovedIn="122">Ehechajey marandu’i porãngue</string>
-    <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_title" moz:RemovedIn="122">Ehechajey marandu’i porãngue</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. The parameter is the percentage progress (0-100%) of the analysis process (e.g. 56%). -->
     <string name="review_quality_check_analysis_in_progress_warning_title_2">Ehechajey marandu’i porãngue (%s)</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
@@ -2367,11 +2346,11 @@
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Eikuaave</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_contextual_onboarding_caption">Eiporavóvo “Héẽ, eiporu”, emoneĩ %1$s %2$s-gua ha %3$s Mozilla mba’e.</string>
+    <string name="review_quality_check_contextual_onboarding_caption" moz:RemovedIn="123" tools:ignore="UnusedResources">Eiporavóvo “Héẽ, eiporu”, emoneĩ %1$s %2$s-gua ha %3$s Mozilla mba’e.</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
     <string name="review_quality_check_contextual_onboarding_caption_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Eiporavóvo “H’éẽ, eiporu”, emoneĩ upeigua %1$s mba’áva:</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy">temiñemi porureko</string>
+    <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="123" tools:ignore="UnusedResources">temiñemi porureko</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Temiñemi porureko</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
@@ -2457,6 +2436,8 @@
     <string name="translations_bottom_sheet_translate_to">Emoñe’ẽasa pe</string>
     <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button">Ani ko’ág̃a</string>
+    <!-- Button text on the translations dialog to restore the translated website back to the original untranslated version. -->
+    <string name="translations_bottom_sheet_negative_button_restore">Ehechauka ypykuéva</string>
     <!-- Button text on the translations dialog when a translation error appears, used to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button_error">Oĩma</string>
     <!-- Button text on the translations dialog to begin a translation of the website. -->
@@ -2468,6 +2449,8 @@
     <!-- Button content description (not visible, for screen readers etc.) for the translations dialog translate button that indicates a translation is currently in progress. -->
     <string name="translations_bottom_sheet_translating_in_progress_content_description">Ñe’ẽasa oñemboguatáva</string>
 
+    <!-- Default dropdown option when initially selecting a language from the translations dialog language selection dropdown. -->
+    <string name="translations_bottom_sheet_default_dropdown_selection">Eiporavo peteĩ ñe’ẽ</string>
     <!-- The title of the warning card informs the user that a translation could not be completed. -->
     <string name="translation_error_could_not_translate_warning_text">Iñapañuãi emoñe’ẽasakuévo. Eha’ãjey ag̃amieve.</string>
     <!-- The title of the warning card informs the user that the list of languages cannot be loaded. -->
@@ -2476,6 +2459,11 @@
     <string name="translation_error_language_not_supported_warning_text">Rombyasy, noroykekói gueteri %1$s.</string>
     <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
     <string name="translation_error_language_not_supported_learn_more">Kuaave</string>
+
+
+    <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
+    <string name="translation_in_progress_snackbar">Ñemoñe’ẽasa…</string>
+
 
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->

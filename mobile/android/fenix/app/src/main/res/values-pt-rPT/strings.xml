@@ -346,13 +346,13 @@
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="UnusedResources">Descubra porque milhões adoram o Firefox</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
-    <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources">Navegação segura com mais opções</string>
+    <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources">Navegação segura, com mais opções</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_3">O nosso navegador, apoiado por uma organização sem fins lucrativos, ajuda a impedir que as empresas o sigam secretamente pela Internet.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources">Mais de 100 milhões de pessoas protegem a sua privacidade ao escolher um navegador apoiado por uma organização sem fins lucrativos.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-    <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources">Rastreadores conhecidos? Bloqueado automaticamente. Extensões? Experimente todos os 700. PDFs? O nosso leitor integrado facilita a gestão.</string>
+    <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources">Rastreadores conhecidos? Bloqueados automaticamente. Extensões? Experimente todas as 700. PDF? O nosso leitor integrado facilita a sua gestão.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">O nosso navegador, apoiado por uma organização sem fins lucrativos, ajuda a impedir que as empresas o sigam secretamente pela web.\n\n Saiba mais nas nossas informações de privacidade.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
