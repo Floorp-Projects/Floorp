@@ -5,13 +5,9 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  mozjexl: "resource://gre/modules/components-utils/mozjexl.sys.mjs",
   Sampling: "resource://gre/modules/components-utils/Sampling.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "mozjexl",
-  "resource://gre/modules/components-utils/mozjexl.js"
-);
 
 function getPrefValue(prefKey, defaultValue) {
   switch (Services.prefs.getPrefType(prefKey)) {
