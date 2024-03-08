@@ -1988,10 +1988,6 @@ void CodeGenerator::visitNotF(LNotF* ins) {
                           Assembler::DoubleEqualOrUnordered);
 }
 
-void CodeGenerator::visitMemoryBarrier(LMemoryBarrier* ins) {
-  masm.memoryBarrier(ins->type());
-}
-
 void CodeGenerator::visitWasmLoad(LWasmLoad* lir) { emitWasmLoad(lir); }
 
 void CodeGenerator::visitWasmStore(LWasmStore* lir) { emitWasmStore(lir); }

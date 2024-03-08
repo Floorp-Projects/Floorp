@@ -2404,10 +2404,6 @@ void CodeGenerator::visitNegF(LNegF* ins) {
   masm.ma_vneg_f32(input, ToFloatRegister(ins->output()));
 }
 
-void CodeGenerator::visitMemoryBarrier(LMemoryBarrier* ins) {
-  masm.memoryBarrier(ins->type());
-}
-
 void CodeGenerator::visitWasmTruncateToInt32(LWasmTruncateToInt32* lir) {
   auto input = ToFloatRegister(lir->input());
   auto output = ToRegister(lir->output());

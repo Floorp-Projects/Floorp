@@ -1401,10 +1401,6 @@ void CodeGenerator::visitNotF(LNotF* ins) {
                           Assembler::DoubleEqualOrUnordered);
 }
 
-void CodeGenerator::visitMemoryBarrier(LMemoryBarrier* ins) {
-  masm.memoryBarrier(ins->type());
-}
-
 void CodeGeneratorMIPSShared::generateInvalidateEpilogue() {
   // Ensure that there is enough space in the buffer for the OsiPoint
   // patching to occur. Otherwise, we could overwrite the invalidation

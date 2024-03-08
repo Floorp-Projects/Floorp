@@ -2078,12 +2078,6 @@ void CodeGenerator::visitAtomicTypedArrayElementBinopForEffect(
   }
 }
 
-void CodeGenerator::visitMemoryBarrier(LMemoryBarrier* ins) {
-  if (ins->type() & MembarStoreLoad) {
-    masm.storeLoadFence();
-  }
-}
-
 void CodeGeneratorX86Shared::visitOutOfLineWasmTruncateCheck(
     OutOfLineWasmTruncateCheck* ool) {
   FloatRegister input = ool->input();
