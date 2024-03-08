@@ -24,7 +24,7 @@ const PC_COREQUEST_CID = Components.ID(
   "{74b2122d-65a8-4824-aa9e-3d664cb75dc2}"
 );
 
-function logMsg(msg, file, line, flag, winID) {
+function logWebRTCMsg(msg, file, line, flag, win) {
   let scriptErrorClass = Cc["@mozilla.org/scripterror;1"];
   let scriptError = scriptErrorClass.createInstance(Ci.nsIScriptError);
   scriptError.initWithWindowID(
@@ -35,9 +35,14 @@ function logMsg(msg, file, line, flag, winID) {
     0,
     flag,
     "content javascript",
-    winID
+    win.windowGlobalChild.innerWindowId
   );
   Services.console.logMessage(scriptError);
+  if (
+    Services.prefs.getBoolPref("media.peerconnection.treat_warnings_as_errors")
+  ) {
+    throw new win.TypeError(msg);
+  }
 }
 
 let setupPrototype = (_class, dict) => {
@@ -277,12 +282,12 @@ export class RTCSessionDescription {
 
   logWarning(msg) {
     let err = this._win.Error();
-    logMsg(
+    logWebRTCMsg(
       msg,
       err.fileName,
       err.lineNumber,
       Ci.nsIScriptError.warningFlag,
-      this._winID
+      this._win
     );
   }
 }
@@ -861,7 +866,7 @@ export class RTCPeerConnection {
   }
 
   logMsg(msg, file, line, flag) {
-    return logMsg(msg, file, line, flag, this._winID);
+    return logWebRTCMsg(msg, file, line, flag, this._win);
   }
 
   getEH(type) {
