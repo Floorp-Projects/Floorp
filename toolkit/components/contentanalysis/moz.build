@@ -59,4 +59,4 @@ DEFINES["GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER"] = True
 
 FINAL_LIBRARY = "xul"
 
-TEST_DIRS += ["tests/gtest"]
+TEST_DIRS += ["tests"]
