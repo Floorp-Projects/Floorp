@@ -128,6 +128,9 @@ void PopulatePrefs() {
 
   mozilla::glean::characteristics::prefs_media_eme_enabled.Set(
       mozilla::StaticPrefs::media_eme_enabled());
+
+  mozilla::glean::characteristics::prefs_zoom_text_only.Set(
+      !mozilla::Preferences::GetBool("browser.zoom.full"));
 }
 
 // ==================================================================
