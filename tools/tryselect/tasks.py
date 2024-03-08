@@ -152,6 +152,17 @@ def generate_tasks(params=None, full=False, disable_target_task_filter=False):
     return tg_target
 
 
+def filter_tasks_by_worker_type(tasks, params):
+    worker_types = params.get("try_task_config", {}).get("worker-types", [])
+    if worker_types:
+        retVal = {}
+        for t in tasks:
+            if tasks[t].task["workerType"] in worker_types:
+                retVal[t] = tasks[t]
+        return retVal
+    return tasks
+
+
 def filter_tasks_by_paths(tasks, paths):
     resolver = TestResolver.from_environment(cwd=here, loader_cls=TestManifestLoader)
     run_suites, run_tests = resolver.resolve_metadata(paths)

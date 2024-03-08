@@ -6,7 +6,103 @@ import os
 
 import mozunit
 import pytest
-from tryselect.tasks import cache_key, filter_tasks_by_paths, resolve_tests_by_suite
+from tryselect.tasks import (
+    cache_key,
+    filter_tasks_by_paths,
+    filter_tasks_by_worker_type,
+    resolve_tests_by_suite,
+)
+
+
+class task:
+    def __init__(self, workerType):
+        self.workerType = workerType
+
+    @property
+    def task(self):
+        return {"workerType": self.workerType}
+
+
+@pytest.mark.parametrize(
+    "tasks, params, expected",
+    (
+        pytest.param(
+            {
+                "foobar/xpcshell-1": task("t-unittest-314"),
+                "foobar/mochitest": task("t-unittest-157"),
+                "foobar/xpcshell-gpu": task("t-unittest-314-gpu"),
+                "foobar/xpcshell": task("t-unittest-314"),
+            },
+            {"try_task_config": {"worker-types": ["t-unittest-314"]}},
+            [
+                "foobar/xpcshell-1",
+                "foobar/xpcshell",
+            ],
+            id="single worker",
+        ),
+        pytest.param(
+            {
+                "foobar/xpcshell-1": task("t-unittest-314"),
+                "foobar/mochitest": task("t-unittest-157"),
+                "foobar/xpcshell-gpu": task("t-unittest-314-gpu"),
+                "foobar/xpcshell": task("t-unittest-314"),
+            },
+            {
+                "try_task_config": {
+                    "worker-types": ["t-unittest-314", "t-unittest-314-gpu"]
+                }
+            },
+            [
+                "foobar/xpcshell-1",
+                "foobar/xpcshell-gpu",
+                "foobar/xpcshell",
+            ],
+            id="multiple workers worker",
+        ),
+        pytest.param(
+            {
+                "foobar/xpcshell-1": task("t-unittest-314"),
+                "foobar/mochitest": task("t-unittest-157"),
+                "foobar/xpcshell-gpu": task("t-unittest-314-gpu"),
+                "foobar/xpcshell": task("t-unittest-314"),
+            },
+            {"try_task_config": {"worker-types": ["t-unittest-157"]}},
+            [
+                "foobar/mochitest",
+            ],
+            id="single task",
+        ),
+        pytest.param(
+            {
+                "foobar/xpcshell-1": task("t-unittest-314"),
+                "foobar/mochitest": task("t-unittest-157"),
+                "foobar/xpcshell-gpu": task("t-unittest-314-gpu"),
+                "foobar/xpcshell": task("t-unittest-314"),
+            },
+            {"try_task_config": {"worker-types": []}},
+            [
+                "foobar/xpcshell-1",
+                "foobar/mochitest",
+                "foobar/xpcshell-gpu",
+                "foobar/xpcshell",
+            ],
+            id="no worker",
+        ),
+        pytest.param(
+            {
+                "foobar/xpcshell-1": task("t-unittest-314"),
+                "foobar/mochitest": task("t-unittest-157"),
+                "foobar/xpcshell-gpu": task("t-unittest-314-gpu"),
+                "foobar/xpcshell": task("t-unittest-314"),
+            },
+            {"try_task_config": {"worker-types": ["fake-worker"]}},
+            [],
+            id="invalid worker",
+        ),
+    ),
+)
+def test_filter_tasks_by_worker_type(patch_resolver, tasks, params, expected):
+    assert list(filter_tasks_by_worker_type(tasks, params)) == expected
 
 
 def test_filter_tasks_by_paths(patch_resolver):
