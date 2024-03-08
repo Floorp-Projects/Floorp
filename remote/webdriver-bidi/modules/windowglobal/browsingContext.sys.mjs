@@ -17,6 +17,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "chrome://remote/content/webdriver-bidi/modules/root/browsingContext.sys.mjs",
   OriginType:
     "chrome://remote/content/webdriver-bidi/modules/root/browsingContext.sys.mjs",
+  PollPromise: "chrome://remote/content/shared/Sync.sys.mjs",
 });
 
 const DOCUMENT_FRAGMENT_NODE = 11;
@@ -353,6 +354,29 @@ class BrowsingContextModule extends WindowGlobalBiDiModule {
       checkBrowserSize();
     }).finally(() => {
       win.removeEventListener("resize", checkBrowserSize);
+    });
+  }
+
+  /**
+   * Waits until the visibility state of the document has the expected value.
+   *
+   * @param {object} options
+   * @param {number} options.value
+   *     Expected value of the visibility state.
+   *
+   * @returns {Promise}
+   *     Promise that resolves when the visibility state has the expected value.
+   */
+  async _awaitVisibilityState(options) {
+    const { value } = options;
+    const win = this.messageHandler.window;
+
+    await lazy.PollPromise((resolve, reject) => {
+      if (win.document.visibilityState === value) {
+        resolve();
+      } else {
+        reject();
+      }
     });
   }
 

@@ -232,11 +232,27 @@ class BrowsingContextModule extends Module {
       );
     }
 
-    const tab = lazy.TabManager.getTabForBrowsingContext(context);
-    const window = lazy.TabManager.getWindowForTab(tab);
+    const targetTab = lazy.TabManager.getTabForBrowsingContext(context);
+    const targetWindow = lazy.TabManager.getWindowForTab(targetTab);
+    const selectedTab = lazy.TabManager.getTabBrowser(targetWindow).selectedTab;
 
-    await lazy.windowManager.focusWindow(window);
-    await lazy.TabManager.selectTab(tab);
+    const activated = [
+      lazy.windowManager.focusWindow(targetWindow),
+      lazy.TabManager.selectTab(targetTab),
+    ];
+
+    if (targetTab !== selectedTab && !lazy.AppInfo.isAndroid) {
+      // We need to wait until the "document.visibilityState" of the currently
+      // selected tab in the target window is marked as "hidden".
+      //
+      // Bug 1884142: It's not supported on Android for the TestRunner package.
+      const selectedBrowser = lazy.TabManager.getBrowserForTab(selectedTab);
+      activated.push(
+        this.#waitForVisibilityChange(selectedBrowser.browsingContext)
+      );
+    }
+
+    await Promise.all(activated);
   }
 
   /**
@@ -532,33 +548,58 @@ class BrowsingContextModule extends Module {
     const type = lazy.AppInfo.isAndroid ? "tab" : typeHint;
 
     switch (type) {
-      case "window":
+      case "window": {
         const newWindow = await lazy.windowManager.openBrowserWindow({
           focus: !background,
           userContextId: userContext,
         });
         browser = lazy.TabManager.getTabBrowser(newWindow).selectedBrowser;
         break;
-
-      case "tab":
+      }
+      case "tab": {
         if (!lazy.TabManager.supportsTabs()) {
           throw new lazy.error.UnsupportedOperationError(
             `browsingContext.create with type "tab" not supported in ${lazy.AppInfo.name}`
           );
         }
 
+        // The window to open the new tab in.
+        let window = Services.wm.getMostRecentWindow(null);
+
         let referenceTab;
         if (referenceContext !== null) {
           referenceTab =
             lazy.TabManager.getTabForBrowsingContext(referenceContext);
+          window = lazy.TabManager.getWindowForTab(referenceTab);
         }
 
-        const tab = await lazy.TabManager.addTab({
-          focus: !background,
-          referenceTab,
-          userContextId: userContext,
-        });
+        const promises = [];
+
+        if (!background && !lazy.AppInfo.isAndroid) {
+          // When opening a new foreground tab we need to wait until the
+          // "document.visibilityState" of the currently selected tab in this
+          // window is marked as "hidden".
+          //
+          // Bug 1884142: It's not supported on Android for the TestRunner package.
+          const selectedTab = lazy.TabManager.getTabBrowser(window).selectedTab;
+          promises.push(
+            this.#waitForVisibilityChange(
+              lazy.TabManager.getBrowserForTab(selectedTab).browsingContext
+            )
+          );
+        }
+
+        promises.unshift(
+          lazy.TabManager.addTab({
+            focus: !background,
+            referenceTab,
+            userContextId: userContext,
+          })
+        );
+
+        const [tab] = await Promise.all(promises);
         browser = lazy.TabManager.getBrowserForTab(tab);
+      }
     }
 
     await lazy.waitForInitialNavigationCompleted(
@@ -1916,6 +1957,21 @@ class BrowsingContextModule extends Module {
         break;
       }
     }
+  }
+
+  #waitForVisibilityChange(browsingContext) {
+    return this.messageHandler.forwardCommand({
+      moduleName: "browsingContext",
+      commandName: "_awaitVisibilityState",
+      destination: {
+        type: lazy.WindowGlobalMessageHandler.type,
+        id: browsingContext.id,
+      },
+      params: {
+        value: "hidden",
+      },
+      retryOnAbort: true,
+    });
   }
 
   /**
