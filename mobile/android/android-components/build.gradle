@@ -156,8 +156,8 @@ subprojects {
                             break
 
                         case ResultType.FAILURE:
-                            out.style(Style.Failure).println("  FAILURE")
-                            logger.lifecycle("", result.getException())
+                            def testId = descriptor.getClassName() + "." + descriptor.getName()
+                            out.style(Style.Failure).println("  TEST-UNEXPECTED-FAIL | " + testId + " | " + result.getException())
                             break
 
                         case ResultType.SKIPPED:
