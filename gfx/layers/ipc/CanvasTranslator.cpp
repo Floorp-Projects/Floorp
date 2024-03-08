@@ -640,7 +640,11 @@ bool CanvasTranslator::HandleExtensionEvent(int32_t aType) {
   }
 }
 
-void CanvasTranslator::BeginTransaction() { mIsInTransaction = true; }
+void CanvasTranslator::BeginTransaction() {
+  PROFILER_MARKER_TEXT("CanvasTranslator", GRAPHICS, {},
+                       "CanvasTranslator::BeginTransaction"_ns);
+  mIsInTransaction = true;
+}
 
 void CanvasTranslator::Flush() {
 #if defined(XP_WIN)
@@ -1034,6 +1038,8 @@ bool CanvasTranslator::UnlockTexture(int64_t aTextureId) {
 }
 
 bool CanvasTranslator::PresentTexture(int64_t aTextureId, RemoteTextureId aId) {
+  AUTO_PROFILER_MARKER_TEXT("CanvasTranslator", GRAPHICS, {},
+                            "CanvasTranslator::PresentTexture"_ns);
   auto result = mTextureInfo.find(aTextureId);
   if (result == mTextureInfo.end()) {
     return false;
