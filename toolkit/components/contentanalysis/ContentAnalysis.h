@@ -126,6 +126,8 @@ class ContentAnalysis final : public nsIContentAnalysis {
   // Only accessed from the main thread
   bool mClientCreationAttempted;
 
+  bool mSetByEnterprise;
+
   class CallbackData final {
    public:
     CallbackData(

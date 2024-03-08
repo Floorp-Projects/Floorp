@@ -45,6 +45,8 @@ policy-CaptivePortal = Enable or disable captive portal support.
 
 policy-CertificatesDescription = Add certificates or use built-in certificates.
 
+policy-ContentAnalysis = Enable or disable connection to data-loss-prevention agent.
+
 policy-Cookies = Allow or deny websites to set cookies.
 
 # Containers in this context is referring to container tabs in Firefox.
