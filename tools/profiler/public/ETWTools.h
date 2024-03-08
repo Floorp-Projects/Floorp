@@ -250,7 +250,11 @@ static inline void StoreBaseEventDataDesc(
     BaseEventStorage& aStorage, EVENT_DATA_DESCRIPTOR* aDescriptors,
     const mozilla::MarkerCategory& aCategory,
     const mozilla::MarkerOptions& aOptions) {
-  if (!aOptions.IsTimingUnspecified()) {
+  if (aOptions.IsTimingUnspecified()) {
+    aStorage.mStartTime =
+        mozilla::TimeStamp::Now().RawQueryPerformanceCounterValue().value();
+    aStorage.mPhase = 0;
+  } else {
     aStorage.mStartTime =
         aOptions.Timing().StartTime().RawQueryPerformanceCounterValue().value();
     aStorage.mEndTime =
