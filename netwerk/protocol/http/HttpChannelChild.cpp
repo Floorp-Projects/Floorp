@@ -89,7 +89,8 @@ HttpChannelChild::HttpChannelChild()
       mIsLastPartOfMultiPart(false),
       mSuspendForWaitCompleteRedirectSetup(false),
       mRecvOnStartRequestSentCalled(false),
-      mSuspendedByWaitingForPermissionCookie(false) {
+      mSuspendedByWaitingForPermissionCookie(false),
+      mAlreadyReleased(false) {
   LOG(("Creating HttpChannelChild @%p\n", this));
 
   mChannelCreationTime = PR_Now();
@@ -201,11 +202,15 @@ NS_IMETHODIMP_(MozExternalRefCountType) HttpChannelChild::Release() {
     // We don't have a listener when AsyncOpen has failed or when this channel
     // has been sucessfully redirected.
     if (MOZ_LIKELY(LoadOnStartRequestCalled() && LoadOnStopRequestCalled()) ||
-        !mListener) {
+        !mListener || mAlreadyReleased) {
       NS_LOG_RELEASE(this, 0, "HttpChannelChild");
       delete this;
       return 0;
     }
+
+    // This ensures that when the refcount goes to 0 again, we don't dispatch
+    // yet another runnable and get in a loop.
+    mAlreadyReleased = true;
 
     // This makes sure we fulfill the stream listener contract all the time.
     if (NS_SUCCEEDED(mStatus)) {
