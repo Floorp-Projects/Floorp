@@ -20,11 +20,16 @@ exclude: true
 while a user gesture was active (e.g., a tap).
 ([bug 1837601]({{bugzilla}}1837601))
 - Added [`WebExtension.MetaData.optionalPermissions`][125.3] and [`WebExtension.MetaData.optionalOrigins`][125.4] which expose the optional and origin optional permissions of an extension ([bug 1811900]({{bugzilla}}1811900)).
+- ⚠️ Deprecated [`RuntimeTelemetry`][125.5], [`GeckoRuntimeSettings.getTelemetryDelegate`][125.6] and [`GeckoRuntimeSettings.telemetryDelegate`][125.7], to be removed in v127.
+([bug 1877836]({{bugzilla}}1877836))
 
 [125.1]: {{javadoc_uri}}/GeckoSession.NavigationDelegate#onLocationChange(org.mozilla.geckoview.GeckoSession,java.lang.String,java.util.List)
 [125.2]: {{javadoc_uri}}/GeckoSession.NavigationDelegate#onLocationChange(org.mozilla.geckoview.GeckoSession,java.lang.String,java.util.List,boolean)
 [125.3]: {{javadoc_uri}}/WebExtension.MetaData.html#optionalPermissions
 [125.4]: {{javadoc_uri}}/WebExtension.MetaData.html#optionalOrigins
+[125.5]: {{javadoc_uri}}/RuntimeTelemetry.html
+[125.6]: {{javadoc_uri}}/GeckoRuntimeSettings.html#getTelemetryDelegate
+[125.6]: {{javadoc_uri}}/GeckoRuntimeSettings.html#telemetryDelegate
 
 ## v124
 
@@ -1532,4 +1537,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 9a832c4f0796f8b484d67f163d10ffe6dfbe51d6
+[api-version]: 7cd231d02216cef5aa7e59144dfe2091c88c5644
