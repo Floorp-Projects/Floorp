@@ -391,3 +391,21 @@ characteristics:
     expires: never
     data_sensitivity:
       - interaction
+
+  prefs_zoom_text_only:
+    type: boolean
+    description: >
+      Text-only zoom enabled (vs. full-zoom)
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879151
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1882482
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1882482#c6
+    expires: never
+    data_sensitivity:
+      - interaction
