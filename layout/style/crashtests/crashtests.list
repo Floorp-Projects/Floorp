@@ -16,11 +16,8 @@ load 391034-1.xhtml
 load 397022-1.html
 load 399289-1.svg
 load 404470-1.html
-load 411603-1.html
 load 412588-1.html
-load 413274-1.xhtml
 skip-if(Android) load chrome://reftest/content/crashtests/layout/style/crashtests/416461-1.xhtml
-load 418007-1.xhtml
 load chrome://reftest/content/crashtests/layout/style/crashtests/431705-1.xhtml
 load 432561-1.html
 load 437170-1.html
@@ -229,7 +226,6 @@ load 1384232.html
 load 1395725.html
 load 1396041.html
 pref(dom.animations-api.compositing.enabled,true) load 1397363-1.html
-load 1397439-1.html
 load 1395719.html
 load 1397091.html
 load 1398479.html
@@ -251,7 +247,6 @@ load 1402419.html
 load 1402472.html
 load 1403028.html
 load 1403433.html
-load 1403465.html
 load 1403592.html
 load 1403615.html
 load 1403712.html
