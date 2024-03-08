@@ -18,6 +18,7 @@
 #include "mozilla/RelativeLuminanceUtils.h"
 #include "mozilla/ServoStyleConsts.h"
 #include "mozilla/dom/ScreenBinding.h"
+#include "mozilla/intl/TimeZone.h"
 #include "mozilla/widget/ScreenManager.h"
 
 #include "gfxPlatformFontList.h"
@@ -251,6 +252,16 @@ nsresult nsUserCharacteristics::PopulateData(bool aTesting /* = false */) {
     processorCount = PR_GetNumberOfProcessors();
   }
   mozilla::glean::characteristics::processor_count.Set(processorCount);
+
+  AutoTArray<char16_t, 128> tzBuffer;
+  auto result = mozilla::intl::TimeZone::GetDefaultTimeZone(tzBuffer);
+  if (result.isOk()) {
+    NS_ConvertUTF16toUTF8 timeZone(
+        nsDependentString(tzBuffer.Elements(), tzBuffer.Length()));
+    mozilla::glean::characteristics::timezone.Set(timeZone);
+  } else {
+    mozilla::glean::characteristics::timezone.Set("<error>"_ns);
+  }
 
   return NS_OK;
 }
