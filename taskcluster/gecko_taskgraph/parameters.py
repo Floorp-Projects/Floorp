@@ -74,6 +74,10 @@ gecko_parameters_schema = {
             "worker-overrides",
             description="Mapping of worker alias to worker pools to use for those aliases.",
         ): {str: str},
+        Optional(
+            "worker-types",
+            description="List of worker types that we will use to run tasks on.",
+        ): [str],
         Optional("routes"): [str],
     },
     Required("version"): str,

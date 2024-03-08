@@ -80,7 +80,7 @@ class TryConfig(ParameterConfig):
 
     def get_parameters(self, **kwargs):
         result = self.try_config(**kwargs)
-        if result is None:
+        if not result:
             return None
         return {"try_task_config": result}
 
@@ -579,9 +579,18 @@ class WorkerOverrides(TryConfig):
                 ),
             },
         ],
+        [
+            ["--worker-type"],
+            {
+                "action": "append",
+                "dest": "worker_types",
+                "default": [],
+                "help": "Select tasks that only run on the specified worker.",
+            },
+        ],
     ]
 
-    def try_config(self, worker_overrides, worker_suffixes, **kwargs):
+    def try_config(self, worker_overrides, worker_suffixes, worker_types, **kwargs):
         from gecko_taskgraph.util.workertypes import get_worker_type
         from taskgraph.config import load_graph_config
 
@@ -621,8 +630,13 @@ class WorkerOverrides(TryConfig):
                     provisioner=provisioner, worker_type=worker_type, suffix=suffix
                 )
 
+        retVal = {}
+        if worker_types:
+            retVal["worker-types"] = list(overrides.keys()) + worker_types
+
         if overrides:
-            return {"worker-overrides": overrides}
+            retVal["worker-overrides"] = overrides
+        return retVal
 
 
 all_task_configs = {
