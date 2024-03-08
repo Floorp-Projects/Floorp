@@ -12225,7 +12225,11 @@
 # Use platform DNS APIs (where available) to resolve HTTPS queries
 - name: network.dns.native_https_query
   type: RelaxedAtomicBool
+#if defined(NIGHTLY_BUILD) && !defined(XP_MACOSX)
+  value: true
+#else
   value: false
+#endif
   mirror: always
 
 # DnsQuery_A is broken for HTTPS queries on Windows 10.
