@@ -99,7 +99,8 @@ class gfxVarReceiver;
   _(WebglOopAsyncPresentForceSync, bool, true)                     \
   _(UseAcceleratedCanvas2D, bool, false)                           \
   _(AllowSoftwareWebRenderOGL, bool, false)                        \
-  _(WebglUseHardware, bool, true)
+  _(WebglUseHardware, bool, true)                                  \
+  _(WebRenderOverlayVpAutoHDR, bool, false)
 
 /* Add new entries above this line. */
 

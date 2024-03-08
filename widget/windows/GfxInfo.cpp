@@ -1809,6 +1809,16 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         "Intel driver 10.18.15.*");
 
     ////////////////////////////////////
+    // FEATURE_OVERLAY_VP_AUTO_HDR
+
+    APPEND_TO_DRIVER_BLOCKLIST(
+        OperatingSystem::Windows, DeviceFamily::NvidiaAll,
+        nsIGfxInfo::FEATURE_OVERLAY_VP_AUTO_HDR,
+        nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_LESS_THAN_OR_EQUAL,
+        V(31, 0, 15, 5050), "FEATURE_FAILURE_VP_AUTO_HDR",
+        "nVidia driver > 550.50");
+
+    ////////////////////////////////////
     // FEATURE_WEBRENDER
     // Block 8.56.1.15/16
     APPEND_TO_DRIVER_BLOCKLIST2(OperatingSystem::Windows, DeviceFamily::AtiAll,
