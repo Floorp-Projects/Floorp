@@ -6,8 +6,30 @@
 
 #include ps_quad
 
+#ifndef SWGL_ANTIALIAS
+varying highp vec2 vLocalPos;
+#endif
+
 #ifdef WR_VERTEX_SHADER
-void pattern_vertex(PrimitiveInfo info) {
+void main(void) {
+    PrimitiveInfo info = ps_quad_main();
+
+#ifndef SWGL_ANTIALIAS
+    RectWithEndpoint xf_bounds = RectWithEndpoint(
+        max(info.local_prim_rect.p0, info.local_clip_rect.p0),
+        min(info.local_prim_rect.p1, info.local_clip_rect.p1)
+    );
+    vTransformBounds = vec4(xf_bounds.p0, xf_bounds.p1);
+
+    vLocalPos = info.local_pos;
+
+    if (info.edge_flags == 0) {
+        v_flags.x = 0;
+    } else {
+        v_flags.x = 1;
+    }
+#endif
+
     if ((info.quad_flags & QF_SAMPLE_AS_MASK) != 0) {
         v_flags.z = 1;
     } else {
@@ -17,7 +39,16 @@ void pattern_vertex(PrimitiveInfo info) {
 #endif
 
 #ifdef WR_FRAGMENT_SHADER
-vec4 pattern_fragment(vec4 color) {
+void main(void) {
+    vec4 color = v_color;
+
+#ifndef SWGL_ANTIALIAS
+    if (v_flags.x != 0) {
+        float alpha = init_transform_fs(vLocalPos);
+        color *= alpha;
+    }
+#endif
+
     if (v_flags.y != 0) {
         vec2 uv = clamp(v_uv, v_uv_sample_bounds.xy, v_uv_sample_bounds.zw);
         vec4 texel = TEX_SAMPLE(sColor0, uv);
@@ -27,7 +58,7 @@ vec4 pattern_fragment(vec4 color) {
         color *= texel;
     }
 
-    return color;
+    oFragColor = color;
 }
 
 #if defined(SWGL_DRAW_SPAN)
