@@ -24,7 +24,11 @@ if (findProject(":geckoview") != null) {
 
 import com.android.build.api.variant.FilterConfiguration
 import groovy.json.JsonOutput
+import org.gradle.internal.logging.text.StyledTextOutput.Style
+import org.gradle.internal.logging.text.StyledTextOutputFactory
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
+import static org.gradle.api.tasks.testing.TestResult.ResultType
 
 android {
     if (project.hasProperty("testBuildType")) {
@@ -748,3 +752,48 @@ tasks.register('printVariants') {
 
 // Enable expiration by major version.
 ext.gleanExpireByVersion = 1
+
+afterEvaluate {
+
+    // Format test output. Copied from Fenix, which was ported from AC #2401
+    tasks.withType(Test).configureEach {
+        systemProperty "robolectric.logging", "stdout"
+        systemProperty "logging.test-mode", "true"
+
+        testLogging.events = []
+
+        def out = services.get(StyledTextOutputFactory).create("tests")
+
+        beforeSuite { descriptor ->
+            if (descriptor.getClassName() != null) {
+                out.style(Style.Header).println("\nSUITE: " + descriptor.getClassName())
+            }
+        }
+
+        beforeTest { descriptor ->
+            out.style(Style.Description).println("  TEST: " + descriptor.getName())
+        }
+
+        onOutput { descriptor, event ->
+            logger.lifecycle("    " + event.message.trim())
+        }
+
+        afterTest { descriptor, result ->
+            switch (result.getResultType()) {
+                case ResultType.SUCCESS:
+                    out.style(Style.Success).println("  SUCCESS")
+                    break
+
+                case ResultType.FAILURE:
+                    def testId = descriptor.getClassName() + "." + descriptor.getName()
+                    out.style(Style.Failure).println("  TEST-UNEXPECTED-FAIL | " + testId + " | " + result.getException())
+                    break
+
+                case ResultType.SKIPPED:
+                    out.style(Style.Info).println("  SKIPPED")
+                    break
+            }
+            logger.lifecycle("")
+        }
+    }
+}
