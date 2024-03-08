@@ -82,11 +82,6 @@ interface FeatureSettingsHelper {
      */
     var composeTopSitesEnabled: Boolean
 
-    /**
-     * Enable or disable translations flow.
-     */
-    var isTranslationsEnabled: Boolean
-
     fun applyFlagUpdates()
 
     fun resetAllFeatureFlags()

@@ -76,12 +76,6 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
 
-        requirePreference<SwitchPreference>(R.string.pref_key_enable_translations).apply {
-            isVisible = FeatureFlags.translations
-            isChecked = context.settings().enableTranslations
-            onPreferenceChangeListener = SharedPreferenceUpdater()
-        }
-
         requirePreference<SwitchPreference>(R.string.pref_key_enable_fxsuggest).apply {
             isVisible = FeatureFlags.fxSuggest
             isChecked = context.settings().enableFxSuggest

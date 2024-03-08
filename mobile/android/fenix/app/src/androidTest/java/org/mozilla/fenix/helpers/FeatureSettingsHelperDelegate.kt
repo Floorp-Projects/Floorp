@@ -37,7 +37,6 @@ class FeatureSettingsHelperDelegate() : FeatureSettingsHelper {
         etpPolicy = getETPPolicy(settings),
         tabsTrayRewriteEnabled = settings.enableTabsTrayToCompose,
         composeTopSitesEnabled = settings.enableComposeTopSites,
-        translationsEnabled = settings.enableTranslations,
     )
 
     /**
@@ -67,7 +66,6 @@ class FeatureSettingsHelperDelegate() : FeatureSettingsHelper {
     override var etpPolicy: ETPPolicy by updatedFeatureFlags::etpPolicy
     override var tabsTrayRewriteEnabled: Boolean by updatedFeatureFlags::tabsTrayRewriteEnabled
     override var composeTopSitesEnabled: Boolean by updatedFeatureFlags::composeTopSitesEnabled
-    override var isTranslationsEnabled: Boolean by updatedFeatureFlags::translationsEnabled
 
     override fun applyFlagUpdates() {
         applyFeatureFlags(updatedFeatureFlags)
@@ -93,7 +91,6 @@ class FeatureSettingsHelperDelegate() : FeatureSettingsHelper {
         settings.shouldShowOpenInAppBanner = featureFlags.isOpenInAppBannerEnabled
         settings.enableTabsTrayToCompose = featureFlags.tabsTrayRewriteEnabled
         settings.enableComposeTopSites = featureFlags.composeTopSitesEnabled
-        settings.enableTranslations = featureFlags.translationsEnabled
         setETPPolicy(featureFlags.etpPolicy)
     }
 }
@@ -113,7 +110,6 @@ private data class FeatureFlags(
     var etpPolicy: ETPPolicy,
     var tabsTrayRewriteEnabled: Boolean,
     var composeTopSitesEnabled: Boolean,
-    var translationsEnabled: Boolean,
 )
 
 internal fun getETPPolicy(settings: Settings): ETPPolicy {

@@ -1875,14 +1875,6 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
-     * Indicates if Firefox translations are enabled.
-     */
-    var enableTranslations by booleanPreference(
-        key = appContext.getPreferenceKey(R.string.pref_key_enable_translations),
-        default = false,
-    )
-
-    /**
      * Adjust Activated User sent
      */
     var growthUserActivatedSent by booleanPreference(

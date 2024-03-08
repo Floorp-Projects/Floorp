@@ -64,12 +64,6 @@ object FeatureFlags {
     const val unifiedSearchSettings = true
 
     /**
-     * Allows users to enable translations.
-     * Preference to fully enable translations is pref_key_enable_translations.
-     */
-    val translations = Config.channel.isNightlyOrDebug
-
-    /**
      * Allows users to enable Firefox Suggest.
      */
     const val fxSuggest = true
