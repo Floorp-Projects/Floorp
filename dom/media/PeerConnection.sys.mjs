@@ -364,6 +364,13 @@ export class RTCPeerConnection {
   constructor() {
     this._pc = null;
     this._closed = false;
+    this._pendingLocalDescription = null;
+    this._pendingRemoteDescription = null;
+    this._currentLocalDescription = null;
+    this._currentRemoteDescription = null;
+    this._legacyPref = Services.prefs.getBoolPref(
+      "media.peerconnection.description.legacy.enabled"
+    );
 
     // http://rtcweb-wg.github.io/jsep/#rfc.section.4.1.9
     // canTrickle == null means unknown; when a remote description is received it
@@ -1546,24 +1553,36 @@ export class RTCPeerConnection {
     return this.pendingLocalDescription || this.currentLocalDescription;
   }
 
+  cacheDescription(name, type, sdp) {
+    if (
+      !this[name] ||
+      this[name].type != type ||
+      this[name].sdp != sdp ||
+      this._legacyPref
+    ) {
+      this[name] = sdp.length
+        ? new this._win.RTCSessionDescription({ type, sdp })
+        : null;
+    }
+    return this[name];
+  }
+
   get currentLocalDescription() {
     this._checkClosed();
-    const sdp = this._pc.currentLocalDescription;
-    if (!sdp.length) {
-      return null;
-    }
-    const type = this._pc.currentOfferer ? "offer" : "answer";
-    return new this._win.RTCSessionDescription({ type, sdp });
+    return this.cacheDescription(
+      "_currentLocalDescription",
+      this._pc.currentOfferer ? "offer" : "answer",
+      this._pc.currentLocalDescription
+    );
   }
 
   get pendingLocalDescription() {
     this._checkClosed();
-    const sdp = this._pc.pendingLocalDescription;
-    if (!sdp.length) {
-      return null;
-    }
-    const type = this._pc.pendingOfferer ? "offer" : "answer";
-    return new this._win.RTCSessionDescription({ type, sdp });
+    return this.cacheDescription(
+      "_pendingLocalDescription",
+      this._pc.pendingOfferer ? "offer" : "answer",
+      this._pc.pendingLocalDescription
+    );
   }
 
   get remoteDescription() {
@@ -1572,22 +1591,20 @@ export class RTCPeerConnection {
 
   get currentRemoteDescription() {
     this._checkClosed();
-    const sdp = this._pc.currentRemoteDescription;
-    if (!sdp.length) {
-      return null;
-    }
-    const type = this._pc.currentOfferer ? "answer" : "offer";
-    return new this._win.RTCSessionDescription({ type, sdp });
+    return this.cacheDescription(
+      "_currentRemoteDescription",
+      this._pc.currentOfferer ? "answer" : "offer",
+      this._pc.currentRemoteDescription
+    );
   }
 
   get pendingRemoteDescription() {
     this._checkClosed();
-    const sdp = this._pc.pendingRemoteDescription;
-    if (!sdp.length) {
-      return null;
-    }
-    const type = this._pc.pendingOfferer ? "answer" : "offer";
-    return new this._win.RTCSessionDescription({ type, sdp });
+    return this.cacheDescription(
+      "_pendingRemoteDescription",
+      this._pc.pendingOfferer ? "answer" : "offer",
+      this._pc.pendingRemoteDescription
+    );
   }
 
   get peerIdentity() {
