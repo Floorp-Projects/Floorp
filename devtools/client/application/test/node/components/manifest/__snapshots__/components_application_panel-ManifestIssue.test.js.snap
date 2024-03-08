@@ -15,7 +15,7 @@ exports[`ManifestIssue renders the expected snapshot for a warning 1`] = `
   >
     <img
       className="manifest-issue__icon manifest-issue__icon--warning"
-      src="chrome://devtools/skin/images/alert-small.svg"
+      src="resource://devtools-shared-images/alert-small.svg"
     />
   </Localized>
   <span>
