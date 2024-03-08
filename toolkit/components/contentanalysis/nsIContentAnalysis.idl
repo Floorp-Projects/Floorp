@@ -185,6 +185,13 @@ interface nsIContentAnalysis : nsISupports
   readonly attribute bool mightBeActive;
 
   /**
+   * True if content-analysis activation was determined by enterprise policy,
+   * as opposed to enabled with the `allow-content-analysis` command-line
+   * parameter.
+   */
+  attribute bool isSetByEnterprisePolicy;
+
+  /**
    * Consults content analysis server, if any, to request a permission
    * decision for a network operation.  Allows blocking downloading/
    * uploading/printing/etc, based on the request.
@@ -241,4 +248,10 @@ interface nsIContentAnalysis : nsISupports
    * Cancels all outstanding DLP requests. Used on shutdown.
    */
   void cancelAllRequests();
+
+  /**
+   * Test-only function that pretends that "-allow-content-analysis" was
+   * given to Gecko on the command line.
+   */
+  void testOnlySetCACmdLineArg(in boolean aVal);
 };

@@ -509,10 +509,14 @@ export var Policies = {
   },
 
   ContentAnalysis: {
-    onBeforeUIStartup(manager, param) {
+    onBeforeAddons(manager, param) {
       if ("Enabled" in param) {
         let enabled = !!param.Enabled;
         setAndLockPref("browser.contentanalysis.enabled", enabled);
+        let ca = Cc["@mozilla.org/contentanalysis;1"].getService(
+          Ci.nsIContentAnalysis
+        );
+        ca.isSetByEnterprisePolicy = true;
       }
     },
   },

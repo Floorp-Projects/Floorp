@@ -235,6 +235,15 @@
       }
     },
 
+    "ContentAnalysis": {
+      "type": "object",
+      "properties": {
+        "Enabled": {
+          "type": "boolean"
+        }
+      }
+    },
+
     "Cookies": {
       "type": "object",
       "properties": {

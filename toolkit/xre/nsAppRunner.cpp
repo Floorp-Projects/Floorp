@@ -330,7 +330,7 @@ bool gIsGtest = false;
 bool gKioskMode = false;
 int gKioskMonitor = -1;
 
-bool gAllowContentAnalysis = false;
+bool gAllowContentAnalysisArgPresent = false;
 
 nsString gAbsoluteArgv0Path;
 
@@ -3986,8 +3986,9 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
     gKioskMonitor = atoi(kioskMonitorNumber);
   }
 
-  gAllowContentAnalysis = CheckArg("allow-content-analysis", nullptr,
-                                   CheckArgFlag::RemoveArg) == ARG_FOUND;
+  gAllowContentAnalysisArgPresent =
+      CheckArg("allow-content-analysis", nullptr, CheckArgFlag::RemoveArg) ==
+      ARG_FOUND;
 
   nsresult rv;
   ArgResult ar;
