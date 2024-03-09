@@ -27,6 +27,12 @@ ChromeUtils.defineLazyGetter(lazy, "logger", () =>
 const PRIVATE_USER_CONTEXT_ID = -1;
 
 /**
+ * Maps the open tabs by userContextId.
+ * Each entry is a Map of url => count.
+ */
+var gOpenTabUrls = new Map();
+
+/**
  * Class used to create the provider.
  */
 export class UrlbarProviderOpenTabs extends UrlbarProvider {
@@ -73,19 +79,16 @@ export class UrlbarProviderOpenTabs extends UrlbarProvider {
   static memoryTableInitialized = false;
 
   /**
-   * Maps the open tabs by userContextId.
-   * Each entry is a Map of url => count.
-   */
-  static _openTabs = new Map();
-
-  /**
    * Return unique urls that are open for given user context id.
    *
    * @param {integer|string} userContextId Containers user context id
    * @param {boolean} [isInPrivateWindow] In private browsing window or not
    * @returns {Array} urls
    */
-  static getOpenTabs(userContextId, isInPrivateWindow = false) {
+  static getOpenTabUrlsForUserContextId(
+    userContextId,
+    isInPrivateWindow = false
+  ) {
     // It's fairly common to retrieve the value from an HTML attribute, that
     // means we're getting sometimes a string, sometimes an integer. As we're
     // using this as key of a Map, we must treat it consistently.
@@ -94,9 +97,41 @@ export class UrlbarProviderOpenTabs extends UrlbarProvider {
       userContextId,
       isInPrivateWindow
     );
-    return Array.from(
-      UrlbarProviderOpenTabs._openTabs.get(userContextId)?.keys() ?? []
-    );
+    return Array.from(gOpenTabUrls.get(userContextId)?.keys() ?? []);
+  }
+
+  /**
+   * Return unique urls that are open, along with their user context id.
+   *
+   * @param {boolean} [isInPrivateWindow] Whether it's for a private browsing window
+   * @returns {Map} { url => Set({userContextIds}) }
+   */
+  static getOpenTabUrls(isInPrivateWindow = false) {
+    let uniqueUrls = new Map();
+    if (isInPrivateWindow) {
+      let urls = UrlbarProviderOpenTabs.getOpenTabUrlsForUserContextId(
+        PRIVATE_USER_CONTEXT_ID,
+        true
+      );
+      for (let url of urls) {
+        uniqueUrls.set(url, new Set([PRIVATE_USER_CONTEXT_ID]));
+      }
+    } else {
+      for (let [userContextId, urls] of gOpenTabUrls) {
+        if (userContextId == PRIVATE_USER_CONTEXT_ID) {
+          continue;
+        }
+        for (let url of urls.keys()) {
+          let userContextIds = uniqueUrls.get(url);
+          if (!userContextIds) {
+            userContextIds = new Set();
+            uniqueUrls.set(url, userContextIds);
+          }
+          userContextIds.add(userContextId);
+        }
+      }
+    }
+    return uniqueUrls;
   }
 
   /**
@@ -158,7 +193,7 @@ export class UrlbarProviderOpenTabs extends UrlbarProvider {
       // Must be set before populating.
       UrlbarProviderOpenTabs.memoryTableInitialized = true;
       // Populate the table with the current cached tabs.
-      for (let [userContextId, entries] of UrlbarProviderOpenTabs._openTabs) {
+      for (let [userContextId, entries] of gOpenTabUrls) {
         for (let [url, count] of entries) {
           await addToMemoryTable(url, userContextId, count).catch(
             console.error
@@ -197,10 +232,10 @@ export class UrlbarProviderOpenTabs extends UrlbarProvider {
       isInPrivateWindow
     );
 
-    let entries = UrlbarProviderOpenTabs._openTabs.get(userContextId);
+    let entries = gOpenTabUrls.get(userContextId);
     if (!entries) {
       entries = new Map();
-      UrlbarProviderOpenTabs._openTabs.set(userContextId, entries);
+      gOpenTabUrls.set(userContextId, entries);
     }
     entries.set(url, (entries.get(url) ?? 0) + 1);
     await addToMemoryTable(url, userContextId).catch(console.error);
@@ -228,7 +263,7 @@ export class UrlbarProviderOpenTabs extends UrlbarProvider {
       isInPrivateWindow
     );
 
-    let entries = UrlbarProviderOpenTabs._openTabs.get(userContextId);
+    let entries = gOpenTabUrls.get(userContextId);
     if (entries) {
       let oldCount = entries.get(url);
       if (oldCount == 0) {
@@ -238,7 +273,7 @@ export class UrlbarProviderOpenTabs extends UrlbarProvider {
       if (oldCount == 1) {
         entries.delete(url);
         // Note: `entries` might be an empty Map now, though we don't remove it
-        // from `_openTabs` as it's likely to be reused later.
+        // from `gOpenTabUrls` as it's likely to be reused later.
       } else {
         entries.set(url, oldCount - 1);
       }

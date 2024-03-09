@@ -25,16 +25,15 @@ add_task(async function test_adaptive_with_search_term_and_switch_tab() {
 
   info(`Load tabs in same order as urls`);
   let tabs = [];
+  let waitForVisits = PlacesTestUtils.waitForNotification(
+    "page-visited",
+    events => events.some(e => e.url === urls[3])
+  );
   for (let url of urls) {
-    let tabPromise = BrowserTestUtils.waitForNewTab(gBrowser, url, false, true);
-    gBrowser.loadTabs([url], {
-      inBackground: true,
-      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-    });
-
-    let tab = await tabPromise;
-    tabs.push(tab);
+    tabs.push(await BrowserTestUtils.openNewForegroundTab({ gBrowser, url }));
   }
+  // Ensure visits have been added.
+  await waitForVisits;
 
   info(`Switch to tab 0`);
   await BrowserTestUtils.switchTab(gBrowser, tabs[0]);

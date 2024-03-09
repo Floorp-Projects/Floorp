@@ -2652,7 +2652,7 @@ export class UrlbarView {
       if (
         actionNode.classList.contains("urlbarView-userContext") &&
         label &&
-        actionNode.querySelector("span").innerText == label
+        actionNode.querySelector("span")?.innerText == label
       ) {
         return;
       }
@@ -2688,7 +2688,6 @@ export class UrlbarView {
           if (identity.icon) {
             let userContextIcon = this.#createElement("img");
             userContextIcon.classList.add("urlbarView-userContext-icon");
-            userContextIcon.classList.add("identity-icon-" + identity.icon);
             userContextIcon.setAttribute("alt", label);
             userContextIcon.src =
               "resource://usercontext-content/" + identity.icon + ".svg";

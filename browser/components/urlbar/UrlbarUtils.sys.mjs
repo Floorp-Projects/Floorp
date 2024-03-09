@@ -1647,6 +1647,12 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
       icon: {
         type: "string",
       },
+      isPinned: {
+        type: "boolean",
+      },
+      isSponsored: {
+        type: "boolean",
+      },
       title: {
         type: "string",
       },
