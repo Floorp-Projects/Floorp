@@ -718,6 +718,9 @@ static void MarkActiveICScriptsAndCopyStubs(
           ICCacheIRStub* newStub = stub->clone(cx->runtime(), newStubSpace);
           layout->setStubPtr(newStub);
 
+          // If this is a trial-inlining call site, also preserve the callee
+          // ICScript. Inlined constructor calls invoke CreateThisFromIC (which
+          // can trigger GC) before using the inlined ICScript.
           JSJitFrameIter parentFrame(frame);
           ++parentFrame;
           BaselineFrame* blFrame = parentFrame.baselineFrame();
