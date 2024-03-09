@@ -423,7 +423,7 @@ const PREF_URLBAR_DEFAULTS = new Map([
 
   // Controls whether searching for open tabs returns tabs from any container
   // or only from the current container.
-  ["switchTabs.searchAllContainers", false],
+  ["switchTabs.searchAllContainers", true],
 
   // The number of remaining times the user can interact with tab-to-search
   // onboarding results before we stop showing them.
