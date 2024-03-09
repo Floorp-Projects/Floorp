@@ -53,7 +53,7 @@ fail-if = ["os == 'linux' && display != 'wayland'"]
 
 ["ensure-exts/test_OVR_multiview2.html"]
 fail-if = [
-  "os == 'linux' && os_version == '18.04'",
+  "os == 'linux'",
   "apple_catalina",
   "apple_silicon",
 ]
@@ -78,7 +78,7 @@ fail-if = [
 
 ["ensure-exts/test_WEBGL_compressed_texture_etc1.html"]
 fail-if = [
-  "os == 'linux' && os_version == '18.04'",
+  "os == 'linux'",
   "apple_catalina",
   "apple_silicon",
   "win10_2009",
@@ -88,7 +88,7 @@ fail-if = [
 ["ensure-exts/test_WEBGL_compressed_texture_pvrtc.html"]
 fail-if = [
   "os == 'android'",
-  "os == 'linux' && os_version == '18.04'",
+  "os == 'linux'",
   "apple_catalina",
   "apple_silicon",
   "win10_2009",
@@ -106,7 +106,7 @@ fail-if = ["os == 'android'"]
 ["ensure-exts/test_WEBGL_provoking_vertex.html"]
 fail-if = [
   "os == 'android'",
-  "os == 'linux' && os_version == '18.04'",
+  "os == 'linux'",
 ]
 
 ["ensure-exts/test_common.html"]
@@ -147,7 +147,7 @@ support-files = ["../captureStream_common.js"]
 
 ["test_has_rbab.html"]
 fail-if = [
-  "os == 'linux' && os_version == '18.04'",
+  "os == 'linux'",
   "apple_catalina",
   "apple_silicon",
 ]
