@@ -816,7 +816,8 @@ void Selection::SetAnchorFocusRange(size_t aIndex) {
 
 static int32_t CompareToRangeStart(const nsINode& aCompareNode,
                                    uint32_t aCompareOffset,
-                                   const AbstractRange& aRange) {
+                                   const AbstractRange& aRange,
+                                   nsContentUtils::NodeIndexCache* aCache) {
   MOZ_ASSERT(aRange.GetStartContainer());
   nsINode* start = aRange.GetStartContainer();
   // If the nodes that we're comparing are not in the same document, assume that
@@ -830,7 +831,13 @@ static int32_t CompareToRangeStart(const nsINode& aCompareNode,
 
   // The points are in the same subtree, hence there has to be an order.
   return *nsContentUtils::ComparePoints(&aCompareNode, aCompareOffset, start,
-                                        aRange.StartOffset());
+                                        aRange.StartOffset(), aCache);
+}
+
+static int32_t CompareToRangeStart(const nsINode& aCompareNode,
+                                   uint32_t aCompareOffset,
+                                   const AbstractRange& aRange) {
+  return CompareToRangeStart(aCompareNode, aCompareOffset, aRange, nullptr);
 }
 
 static int32_t CompareToRangeEnd(const nsINode& aCompareNode,
@@ -1462,10 +1469,45 @@ void Selection::StyledRanges::ReorderRangesIfNecessary() {
     mInvalidStaticRanges.AppendElements(std::move(invalidStaticRanges));
   }
   if (domMutationHasHappened || mRangesMightHaveChanged) {
-    mRanges.Sort([](const StyledRange& a, const StyledRange& b) -> int {
-      return CompareToRangeStart(*a.mRange->GetStartContainer(),
-                                 a.mRange->StartOffset(), *b.mRange);
-    });
+    // This is hot code. Proceed with caution.
+    // This path uses a cache that keep the last 100 node/index combinations
+    // in a stack-allocated array to save up on expensive calls to
+    // nsINode::ComputeIndexOf() (which happen in
+    // nsContentUtils::ComparePoints()).
+    // The second expensive call here is the sort() below, which should be
+    // avoided if possible. Sorting can be avoided if the ranges are still in
+    // order. Checking the order is cheap compared to sorting (also, it fills up
+    // the cache, which is reused by the sort call).
+    nsContentUtils::NodeIndexCache cache;
+    bool rangeOrderHasChanged = false;
+    const nsINode* prevStartContainer = nullptr;
+    uint32_t prevStartOffset = 0;
+    for (const StyledRange& range : mRanges) {
+      const nsINode* startContainer = range.mRange->GetStartContainer();
+      uint32_t startOffset = range.mRange->StartOffset();
+      if (!prevStartContainer) {
+        prevStartContainer = startContainer;
+        prevStartOffset = startOffset;
+        continue;
+      }
+      // Calling ComparePoints here saves one call of
+      // AbstractRange::StartOffset() per iteration (which is surprisingly
+      // expensive).
+      if (*nsContentUtils::ComparePoints(startContainer, startOffset,
+                                         prevStartContainer, prevStartOffset,
+                                         &cache) != 1) {
+        rangeOrderHasChanged = true;
+        break;
+      }
+      prevStartContainer = startContainer;
+      prevStartOffset = startOffset;
+    }
+    if (rangeOrderHasChanged) {
+      mRanges.Sort([&cache](const StyledRange& a, const StyledRange& b) -> int {
+        return CompareToRangeStart(*a.mRange->GetStartContainer(),
+                                   a.mRange->StartOffset(), *b.mRange, &cache);
+      });
+    }
     mDocumentGeneration = currentDocumentGeneration;
     mRangesMightHaveChanged = false;
   }
