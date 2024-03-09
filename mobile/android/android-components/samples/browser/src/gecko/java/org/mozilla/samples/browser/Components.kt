@@ -1,6 +1,10 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+// Needed until bug 1884527 is fixed.
+@file:Suppress("DEPRECATION")
+
 package org.mozilla.samples.browser
 
 import android.content.Context
