@@ -3451,6 +3451,9 @@ void BaselineCacheIRCompiler::createThis(Register argcReg, Register calleeReg,
 
   // Restore saved registers.
   masm.PopRegsInMask(liveNonGCRegs);
+
+  // Restore ICStubReg. The stub might have been moved if CreateThisFromIC
+  // discarded JIT code.
   Address stubAddr(FramePointer, BaselineStubFrameLayout::ICStubOffsetFromFP);
   masm.loadPtr(stubAddr, ICStubReg);
 
