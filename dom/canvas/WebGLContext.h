@@ -317,7 +317,8 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
                                      webgl::InitContextResult* out);
 
  private:
-  bool mIsRgb8Renderable = false;
+  webgl::OptionalRenderableFormatBits mOptionalRenderableFormatBits =
+      webgl::OptionalRenderableFormatBits{0};
   void FinishInit();
 
  protected:

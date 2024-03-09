@@ -668,11 +668,10 @@ bool TexUnpackImage::Validate(const WebGLContext* const webgl,
   return ValidateUnpackPixels(webgl, pi, fullRows, *this);
 }
 
-Maybe<std::string> BlitPreventReason(const int32_t level, const ivec3& offset,
-                                     const GLenum internalFormat,
-                                     const webgl::PackingInfo& pi,
-                                     const TexUnpackBlobDesc& desc,
-                                     const bool isRgb8Renderable) {
+Maybe<std::string> BlitPreventReason(
+    const int32_t level, const ivec3& offset, const GLenum internalFormat,
+    const webgl::PackingInfo& pi, const TexUnpackBlobDesc& desc,
+    const OptionalRenderableFormatBits optionalRenderableFormatBits) {
   const auto& size = desc.size;
   const auto& unpacking = desc.unpacking;
 
@@ -705,26 +704,71 @@ Maybe<std::string> BlitPreventReason(const int32_t level, const ivec3& offset,
 
     const auto formatReason = [&]() -> const char* {
       if (pi.type != LOCAL_GL_UNSIGNED_BYTE) {
-        return "`type` must be `UNSIGNED_BYTE`";
+        return "`unpackType` must be `UNSIGNED_BYTE`";
       }
 
-      switch (internalFormat) {
+      switch (pi.format) {
         case LOCAL_GL_RGBA:
-        case LOCAL_GL_RGBA8:
-          return nullptr;
+          return nullptr;  // All internalFormats for unpackFormat=RGBA are
+                           // renderable.
 
         case LOCAL_GL_RGB:
-        case LOCAL_GL_RGB8:
-          if (isRgb8Renderable) {
-            return nullptr;
-          }
           break;
+
+        default:
+          return "`unpackFormat` must be `RGBA` or maybe `RGB`";
       }
-      if (isRgb8Renderable) {
-        return "effective format must be RGB8 or RGBA8";
-      } else {
-        return "effective format must be RGBA8";
+
+      // -
+
+      struct {
+        OptionalRenderableFormatBits bits;
+        const char* errorMsg;
+      } required;
+
+      switch (internalFormat) {
+        case LOCAL_GL_RGB565:
+          return nullptr;
+        case LOCAL_GL_RGB:
+        case LOCAL_GL_RGB8:
+          required = {
+              OptionalRenderableFormatBits::RGB8,
+              "Unavailable, as blitting internalFormats RGB or RGB8 requires "
+              "that RGB8 must be a renderable format.",
+          };
+          break;
+        case LOCAL_GL_SRGB:
+        case LOCAL_GL_SRGB8:
+          required = {
+              OptionalRenderableFormatBits::SRGB8,
+              "Unavailable, as blitting internalFormats SRGB or SRGB8 requires "
+              "that SRGB8 must be a renderable format.",
+          };
+          break;
+        case 0:
+          // texSubImage, so internalFormat is unknown, and could be anything!
+          required = {
+              OptionalRenderableFormatBits::RGB8 |
+                  OptionalRenderableFormatBits::SRGB8,
+              "Unavailable, as blitting texSubImage with unpackFormat=RGB "
+              "requires that RGB8 and SRGB8 must be renderable formats.",
+          };
+          break;
+        default:
+          gfxCriticalError()
+              << "Unexpected internalFormat for unpackFormat=RGB: 0x"
+              << gfx::hexa(internalFormat);
+          return "Unexpected internalFormat for unpackFormat=RGB";
       }
+
+      const auto availableBits = optionalRenderableFormatBits;
+      if ((required.bits | availableBits) != availableBits) {
+        return required.errorMsg;
+      }
+
+      // -
+
+      return nullptr;
     }();
     if (formatReason) return formatReason;
 
@@ -756,7 +800,7 @@ bool TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec,
 
   const auto reason =
       BlitPreventReason(level, {xOffset, yOffset, zOffset}, dui->internalFormat,
-                        pi, mDesc, webgl->mIsRgb8Renderable);
+                        pi, mDesc, webgl->mOptionalRenderableFormatBits);
   if (reason) {
     webgl->GeneratePerfWarning(
         "Failed to hit GPU-copy fast-path."
