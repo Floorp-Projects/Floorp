@@ -22,7 +22,6 @@ class NavbarIntegrationTest {
             toolbar = mockk(),
             store = mockk(),
             appStore = mockk(),
-            viewLifecycleOwner = mockk(),
             bottomToolbarContainerView = mockk(),
             sessionId = null,
         ).apply {

@@ -6,7 +6,6 @@ package org.mozilla.fenix.components.toolbar.navbar
 
 import androidx.annotation.VisibleForTesting
 import androidx.core.view.isVisible
-import androidx.lifecycle.LifecycleOwner
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.distinctUntilChangedBy
@@ -26,19 +25,18 @@ class NavbarIntegration(
     val toolbar: ScrollableToolbar,
     val store: BrowserStore,
     val appStore: AppStore,
-    val viewLifecycleOwner: LifecycleOwner,
     val bottomToolbarContainerView: BottomToolbarContainerView,
     sessionId: String?,
 ) : LifecycleAwareFeature {
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     var toolbarController = ToolbarBehaviorController(toolbar, store, sessionId)
-    var scope: CoroutineScope? = null
+    private var scope: CoroutineScope? = null
 
     override fun start() {
         toolbarController.start()
 
-        scope = appStore.flowScoped(viewLifecycleOwner) { flow ->
+        scope = appStore.flowScoped { flow ->
             flow.distinctUntilChangedBy { it.isSearchDialogVisible }
                 .collect { state ->
                     bottomToolbarContainerView.composeView.isVisible = !state.isSearchDialogVisible
