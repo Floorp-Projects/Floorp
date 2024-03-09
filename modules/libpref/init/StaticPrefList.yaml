@@ -12168,16 +12168,10 @@
   value: true
   mirror: always
 
-# Whether we can send OnDataFinished to content process directly.
+# Whether we can send OnDataAvailable to content process directly.
 - name: network.send_OnDataFinished.nsInputStreamPump
   type: RelaxedAtomicBool
   value: true
-  mirror: always
-
-# Whether we can send OnDataFinished to cssLoader in content process.
-- name: network.send_OnDataFinished.cssLoader
-  type: RelaxedAtomicBool
-  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 # Whether we can send send OnDataFinished only after dispatching
