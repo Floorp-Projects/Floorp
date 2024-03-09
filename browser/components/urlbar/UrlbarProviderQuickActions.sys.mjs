@@ -40,9 +40,6 @@ class ProviderQuickActions extends UrlbarProvider {
   constructor() {
     super();
     lazy.UrlbarResult.addDynamicResultType(DYNAMIC_TYPE_NAME);
-    Services.tm.idleDispatchToMainThread(() =>
-      lazy.QuickActionsLoaderDefault.load()
-    );
   }
 
   /**
@@ -97,6 +94,7 @@ class ProviderQuickActions extends UrlbarProvider {
    * @returns {Promise}
    */
   async startQuery(queryContext, addCallback) {
+    await lazy.QuickActionsLoaderDefault.ensureLoaded();
     let input = queryContext.trimmedSearchString.toLowerCase();
 
     if (
