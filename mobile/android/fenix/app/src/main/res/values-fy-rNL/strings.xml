@@ -255,6 +255,11 @@
     <!-- Content description for the translate page toolbar button that opens the translations dialog when no translation has occurred. -->
     <string name="browser_toolbar_translate">Side oersette</string>
 
+    <!-- Content description (not visible, for screen readers etc.) for the translate page toolbar button that opens the translations dialog when the page is translated successfully.
+         The first parameter is the name of the language that is displayed in the original page. (For example: English)
+         The second parameter is the name of the language which the page was translated to. (For example: French) -->
+    <string name="browser_toolbar_translated_successfully">Side oerset fan it %1$s nei it %2$s.</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Selektearre taal</string>
@@ -333,11 +338,21 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
     <string name="juno_onboarding_privacy_notice_text">Firefox-privacyferklearring</string>
-    <!-- Text for the button to set firefox as default browser on the device -->
+    <!-- Description for learning more about our privacy notice. -->
+    <string name="juno_onboarding_privacy_notice_text_2" moz:removedIn="125" tools:ignore="UnusedResources">Lês mear yn ús privacyferklearring</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Wy hâlde jo graach feilich</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="UnusedResources">Untdek wêrom miljoenen sa gek binne op Firefox</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources">Feilich sneupe mei mear kar</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_3">Us troch in non-profitorganisaasje browser helpt bedriuwen foar te kommen dat bedriuwen jo stikem folgje op ynternet.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources">Mear as 100 miljoen minsken beskermje harren privacy troch in browser te kiezen dy’t stipe wurdt troch in non-profitorganisaasje.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources">Bekende trackers? Automatysk blokkearre. Utwreidingen? Probearje se alle 700. PDF’s? Troch ús ynboude lêzer binne se ienfâldich te behearen.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">Us troch in non-profitorganisaasje stipe browser helpt foar te kommen dat bedriuwen jo stikem folgje op ynternet.\n\nMear ynfo yn ús privacyferklearring.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
@@ -692,9 +707,9 @@
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Blêdwizers</string>
     <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins">Oanmeldingen</string>
+    <string name="preferences_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Oanmeldingen</string>
     <!-- Preference for syncing passwords -->
-    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">Wachtwurden</string>
+    <string name="preferences_sync_logins_2">Wachtwurden</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">Iepen ljeplêden</string>
     <!-- Preference for signing out -->
@@ -720,9 +735,9 @@
     <string name="default_device_name_2">%1$s op %2$s  %3$s</string>
 
     <!-- Preference for syncing credit cards -->
-    <string name="preferences_sync_credit_cards">Creditcards</string>
+    <string name="preferences_sync_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Creditcards</string>
     <!-- Preference for syncing payment methods -->
-    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">Betellingsmetoaden</string>
+    <string name="preferences_sync_credit_cards_2">Betellingsmetoaden</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">Adressen</string>
 
@@ -1658,13 +1673,13 @@
     <string name="add_to_homescreen_description_2">Jo kinne dizze website ienfâldich oan it startskerm fan jo apparaat tafoegje, om sa daliks tagong te hawwen en flugger te navigearjen mei in app-eftige ûnderfining.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords">Oanmeldingen en wachtwurden</string>
+    <string name="preferences_passwords_logins_and_passwords" moz:RemovedIn="125" tools:ignore="UnusedResources">Oanmeldingen en wachtwurden</string>
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">Wachtwurden</string>
+    <string name="preferences_passwords_logins_and_passwords_2">Wachtwurden</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins">Oanmeldingen en wachtwurden bewarje</string>
+    <string name="preferences_passwords_save_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Oanmeldingen en wachtwurden bewarje</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">Wachtwurden bewarje</string>
+    <string name="preferences_passwords_save_logins_2">Wachtwurden bewarje</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Freegje om te bewarjen</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1679,48 +1694,48 @@
     <string name="preferences_android_autofill_description">Brûkersnammen en wachtwurden yn oare apps op jo apparaat ynfolje.</string>
 
     <!-- Preference option for adding a login -->
-    <string name="preferences_logins_add_login">Oanmelding tafoegje</string>
+    <string name="preferences_logins_add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Oanmelding tafoegje</string>
 
     <!-- Preference option for adding a password -->
-    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">Wachtwurd tafoegje</string>
+    <string name="preferences_logins_add_login_2">Wachtwurd tafoegje</string>
 
-    <!-- Preference for syncing saved logins in Fenix -->
-    <string name="preferences_passwords_sync_logins">Oanmeldingen syngronisearje</string>
     <!-- Preference for syncing saved passwords in Fenix -->
-    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">Wachtwurden syngronisearje</string>
+    <string name="preferences_passwords_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Oanmeldingen syngronisearje</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2">Wachtwurden syngronisearje</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices">Oanmeldingen op apparaten syngronisearje</string>
+    <string name="preferences_passwords_sync_logins_across_devices" moz:RemovedIn="125" tools:ignore="UnusedResources">Oanmeldingen op apparaten syngronisearje</string>
     <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices_2" tools:ignore="UnusedResources">Wachtwurden syngronisearje tusken apparaten</string>
+    <string name="preferences_passwords_sync_logins_across_devices_2">Wachtwurden syngronisearje tusken apparaten</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins">Bewarre oanmeldingen</string>
+    <string name="preferences_passwords_saved_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Bewarre oanmeldingen</string>
     <!-- Preference to access list of saved passwords -->
-    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">Bewarre wachtwurden</string>
+    <string name="preferences_passwords_saved_logins_2">Bewarre wachtwurden</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text">De oanmeldingen dy’t jo bewarje of syngronisearje mei %s wurde hjir toand.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_text" moz:RemovedIn="125" tools:ignore="UnusedResources">De oanmeldingen dy’t jo bewarje of syngronisearje mei %s wurde hjir toand.</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text_2" tools:ignore="UnusedResources">De wachtwurden dy’t jo bewarje of syngronisearje mei %s sille hjir fermeld wurde. Alle wachtwurden dy’t jo bewarje binne fersifere.
+    <string name="preferences_passwords_saved_logins_description_empty_text_2">De wachtwurden dy’t jo bewarje of syngronisearje mei %s sille hjir fermeld wurde. Alle wachtwurden dy’t jo bewarje binne fersifere.
 </string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Mear ynfo oer Sync.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link" moz:RemovedIn="125" tools:ignore="UnusedResources">Mear ynfo oer Sync.</string>
     <!-- Clickable text for opening an external link for more information about Sync. -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2" tools:ignore="UnusedResources">Mear ynfo oer syngronisaasje</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2">Mear ynfo oer syngronisaasje</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Utsûnderingen</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty">Net-bewarre oanmeldingen en wachtwurden wurde hjir werjûn.</string>
+    <string name="preferences_passwords_exceptions_description_empty" moz:RemovedIn="125" tools:ignore="UnusedResources">Net-bewarre oanmeldingen en wachtwurden wurde hjir werjûn.</string>
     <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
-    <string name="preferences_passwords_exceptions_description_empty_2" tools:ignore="UnusedResources">%s sil gjin wachtwurden foar de hjir fermelde websites bewarje.</string>
+    <string name="preferences_passwords_exceptions_description_empty_2">%s sil gjin wachtwurden foar de hjir fermelde websites bewarje.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description">Oanmeldingen en wachtwurden wurde foar dizze websites net bewarre. </string>
+    <string name="preferences_passwords_exceptions_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Oanmeldingen en wachtwurden wurde foar dizze websites net bewarre. </string>
     <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
-    <string name="preferences_passwords_exceptions_description_2" tools:ignore="UnusedResources">%s sil gjin wachtwurden foar dizze websites bewarje.</string>
+    <string name="preferences_passwords_exceptions_description_2">%s sil gjin wachtwurden foar dizze websites bewarje.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Alle útsûnderingen fuortsmite</string>
     <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search">Oanmeldingen sykje</string>
+    <string name="preferences_passwords_saved_logins_search" moz:RemovedIn="125" tools:ignore="UnusedResources">Oanmeldingen sykje</string>
     <!-- Hint for search box in passwords list -->
-    <string name="preferences_passwords_saved_logins_search_2" tools:ignore="UnusedResources">Wachtwurden sykje</string>
+    <string name="preferences_passwords_saved_logins_search_2">Wachtwurden sykje</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Website</string>
     <!-- The header for the username for a login -->
@@ -1748,17 +1763,17 @@
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Wachtwurd ferstopje</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message">Untskoattelje om jo bewarre oanmeldingen te besjen</string>
+    <string name="logins_biometric_prompt_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Untskoattelje om jo bewarre oanmeldingen te besjen</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
-    <string name="logins_biometric_prompt_message_2" tools:ignore="UnusedResources">Untskoattelje om jo bewarre wachtwurden te besjen</string>
+    <string name="logins_biometric_prompt_message_2">Untskoattelje om jo bewarre wachtwurden te besjen</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title">Befeiligje jo oanmeldingen en wachtwurden</string>
+    <string name="logins_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Befeiligje jo oanmeldingen en wachtwurden</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">Befeiligje jo bewarre wachtwurden</string>
+    <string name="logins_warning_dialog_title_2">Befeiligje jo bewarre wachtwurden</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message">Stel in beskoattelingspatroan, pinkoade of wachtwurd foar jo apparaat yn om jo bewarre oanmeldingen en wachtwurden te beskermjen tsjin tagong as in oar jo apparaat hat.</string>
+    <string name="logins_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Stel in beskoattelingspatroan, pinkoade of wachtwurd foar jo apparaat yn om jo bewarre oanmeldingen en wachtwurden te beskermjen tsjin tagong as in oar jo apparaat hat.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message_2" tools:ignore="UnusedResources">Stel in beskoattelingspatroan, pinkoade of wachtwurd foar jo apparaat yn om jo bewarre wachtwurden te beskermjen tsjin tagong as in oar jo apparaat hat.</string>
+    <string name="logins_warning_dialog_message_2">Stel in beskoattelingspatroan, pinkoade of wachtwurd foar jo apparaat yn om jo bewarre wachtwurden te beskermjen tsjin tagong as in oar jo apparaat hat.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Letter</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1775,10 +1790,10 @@
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">Lêst brûkt</string>
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Menu Oanmeldingen sortearje</string>
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Menu Oanmeldingen sortearje</string>
 
     <!-- Content description (not visible, for screen readers etc.) -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2" tools:ignore="UnusedResources">Wachtwurdmenu sortearje</string>
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2">Wachtwurdmenu sortearje</string>
 
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
@@ -1786,43 +1801,43 @@
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">Adressen</string>
     <!-- Preference and title for managing the settings for credit cards -->
-    <string name="preferences_credit_cards">Creditcards</string>
+    <string name="preferences_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Creditcards</string>
     <!-- Preference and title for managing the settings for payment methods -->
-    <string name="preferences_credit_cards_2" tools:ignore="UnusedResources">Betellingsmetoaden</string>
+    <string name="preferences_credit_cards_2">Betellingsmetoaden</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards">Kaarten bewarje en automatysk ynfolje</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Kaarten bewarje en automatysk ynfolje</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_2" tools:ignore="UnusedResources">Betellingsmetoaden bewarje en ynfolje</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_2">Betellingsmetoaden bewarje en ynfolje</string>
     <!-- Preference summary for saving and autofilling credit card data -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary">Gegevens binne fersifere</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Gegevens binne fersifere</string>
     <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2" tools:ignore="UnusedResources">%s fersiferet alle betellingsmetoaden dy’t jo bewarje</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">%s fersiferet alle betellingsmetoaden dy’t jo bewarje</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Kaarten syngronisearje tusken apparaten</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">Kaarten syngronisearje</string>
     <!-- Preference option for adding a credit card -->
-    <string name="preferences_credit_cards_add_credit_card">Creditcard tafoegje</string>
+    <string name="preferences_credit_cards_add_credit_card" moz:RemovedIn="125" tools:ignore="UnusedResources">Creditcard tafoegje</string>
 
     <!-- Preference option for adding a card -->
-    <string name="preferences_credit_cards_add_credit_card_2" tools:ignore="UnusedResources">Kaart tafoegje</string>
+    <string name="preferences_credit_cards_add_credit_card_2">Kaart tafoegje</string>
     <!-- Preference option for managing saved credit cards -->
-    <string name="preferences_credit_cards_manage_saved_cards">Bewarre kaarten beheare</string>
+    <string name="preferences_credit_cards_manage_saved_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Bewarre kaarten beheare</string>
     <!-- Preference option for managing saved cards -->
-    <string name="preferences_credit_cards_manage_saved_cards_2" tools:ignore="UnusedResources">Kaarten beheare</string>
+    <string name="preferences_credit_cards_manage_saved_cards_2">Kaarten beheare</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Adres tafoegje</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Adressen beheare</string>
     <!-- Preference for saving and autofilling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses">Adressen bewarje en automatysk ynfolje</string>
+    <string name="preferences_addresses_save_and_autofill_addresses" moz:RemovedIn="125" tools:ignore="UnusedResources">Adressen bewarje en automatysk ynfolje</string>
     <!-- Preference for saving and filling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">Adressen bewarje en ynfolje</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_2">Adressen bewarje en ynfolje</string>
     <!-- Preference summary for saving and autofilling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary">Ynformaasje lykas nûmers, e-mail- en ferstjoeradressen tafoegje</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Ynformaasje lykas nûmers, e-mail- en ferstjoeradressen tafoegje</string>
 
     <!-- Preference summary for saving and filling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary_2" tools:ignore="UnusedResources">Ynklusyf telefoannûmers en e-mailadressen</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_summary_2">Ynklusyf telefoannûmers en e-mailadressen</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Kaart tafoegje</string>
@@ -1844,9 +1859,9 @@
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Kaart fuortsmite</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation">Binne jo wis dat jo dizze creditcard fuortsmite wolle?</string>
+    <string name="credit_cards_delete_dialog_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Binne jo wis dat jo dizze creditcard fuortsmite wolle?</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation_2" tools:ignore="UnusedResources">Kaart fuortsmite?</string>
+    <string name="credit_cards_delete_dialog_confirmation_2">Kaart fuortsmite?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Fuortsmite</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1860,25 +1875,25 @@
     <string name="credit_cards_saved_cards">Bewarre kaarten</string>
 
     <!-- Error message for credit card number validation -->
-    <string name="credit_cards_number_validation_error_message">Fier in jildich creditkaartnûmer yn</string>
+    <string name="credit_cards_number_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Fier in jildich creditkaartnûmer yn</string>
 
     <!-- Error message for card number validation -->
-    <string name="credit_cards_number_validation_error_message_2" tools:ignore="UnusedResources">Fier in jildich kaartnûmer yn</string>
+    <string name="credit_cards_number_validation_error_message_2">Fier in jildich kaartnûmer yn</string>
     <!-- Error message for credit card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message">Folje dit fjild yn</string>
+    <string name="credit_cards_name_on_card_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Folje dit fjild yn</string>
     <!-- Error message for card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message_2" tools:ignore="UnusedResources">Foegje in namme ta</string>
+    <string name="credit_cards_name_on_card_validation_error_message_2">Foegje in namme ta</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Untskoattelje om jo bewarre kaarten te besjen</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title">Befeiligje jo creditcards</string>
+    <string name="credit_cards_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Befeiligje jo creditcards</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title_2" tools:ignore="UnusedResources">Befeiligje jo bewarre betelmetoaden</string>
+    <string name="credit_cards_warning_dialog_title_2">Befeiligje jo bewarre betelmetoaden</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message">Stel in beskoattelingspatroan, pinkoade of wachtwurd foar jo apparaat yn om jo bewarre creditcards te beskermjen tsjin tagong as in oar jo apparaat hat.</string>
+    <string name="credit_cards_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Stel in beskoattelingspatroan, pinkoade of wachtwurd foar jo apparaat yn om jo bewarre creditcards te beskermjen tsjin tagong as in oar jo apparaat hat.</string>
 
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message_3" tools:ignore="UnusedResources">Stel in beskoattelingspatroan, pinkoade of wachtwurd foar jo apparaat yn om jo bewarre betellingsmetoaden te beskermjen tsjin tagong as in oar jo apparaat hat.</string>
+    <string name="credit_cards_warning_dialog_message_3">Stel in beskoattelingspatroan, pinkoade of wachtwurd foar jo apparaat yn om jo bewarre betellingsmetoaden te beskermjen tsjin tagong as in oar jo apparaat hat.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">No ynstelle</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1887,10 +1902,10 @@
     <string name="credit_cards_biometric_prompt_message_pin">Untskoattelje jo apparaat</string>
 
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
-    <string name="credit_cards_biometric_prompt_unlock_message">Untskoattelje om bewarre creditkaartynformaasje te brûken</string>
+    <string name="credit_cards_biometric_prompt_unlock_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Untskoattelje om bewarre creditkaartynformaasje te brûken</string>
 
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
-    <string name="credit_cards_biometric_prompt_unlock_message_2" tools:ignore="UnusedResources">Untskoattelje om bewarre betellingsmetoaden te brûken</string>
+    <string name="credit_cards_biometric_prompt_unlock_message_2">Untskoattelje om bewarre betellingsmetoaden te brûken</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Adres tafoegje</string>
     <!-- Title of the "Edit address" screen -->
@@ -1898,11 +1913,13 @@
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Adressen beheare</string>
     <!-- The header for the first name of an address -->
-    <string name="addresses_first_name">Foarnamme</string>
+    <string name="addresses_first_name" moz:removedIn="125" tools:ignore="UnusedResources">Foarnamme</string>
     <!-- The header for the middle name of an address -->
-    <string name="addresses_middle_name">Twadde namme</string>
+    <string name="addresses_middle_name" moz:removedIn="125" tools:ignore="UnusedResources">Twadde namme</string>
     <!-- The header for the last name of an address -->
-    <string name="addresses_last_name">Efternamme</string>
+    <string name="addresses_last_name" moz:removedIn="125" tools:ignore="UnusedResources">Efternamme</string>
+    <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
+    <string name="addresses_name">Namme</string>
     <!-- The header for the street address of an address -->
     <string name="addresses_street_address">Adres</string>
     <!-- The header for the city of an address -->
@@ -1927,9 +1944,9 @@
     <string name="addressess_delete_address_button">Adres fuortsmite</string>
 
     <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message">Binne jo wis dat jo dit adres fuortsmite wolle?</string>
+    <string name="addressess_confirm_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Binne jo wis dat jo dit adres fuortsmite wolle?</string>
     <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message_2" tools:ignore="UnusedResources">Dit adres fuortsmite?</string>
+    <string name="addressess_confirm_dialog_message_2">Dit adres fuortsmite?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">Fuortsmite</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -2027,49 +2044,49 @@
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">Bewurkje</string>
     <!-- Message in delete confirmation dialog for logins -->
-    <string name="login_deletion_confirmation">Binne jo wis dat jo dizze oanmelding fuortsmite wolle?</string>
+    <string name="login_deletion_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Binne jo wis dat jo dizze oanmelding fuortsmite wolle?</string>
     <!-- Message in delete confirmation dialog for password -->
-    <string name="login_deletion_confirmation_2" tools:ignore="UnusedResources">Binne jo wis dat jo dit wachtwurd fuortsmite wolle?</string>
+    <string name="login_deletion_confirmation_2">Binne jo wis dat jo dit wachtwurd fuortsmite wolle?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Fuortsmite</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Annulearje</string>
     <!--  The saved login options menu description. -->
-    <string name="login_options_menu">Oanmeldopsjes</string>
+    <string name="login_options_menu" moz:RemovedIn="125" tools:ignore="UnusedResources">Oanmeldopsjes</string>
     <!--  The saved password options menu description. -->
-    <string name="login_options_menu_2" tools:ignore="UnusedResources">Wachtwurdopsjes</string>
+    <string name="login_options_menu_2">Wachtwurdopsjes</string>
     <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description">It bewurkbere tekstfjild foar it webadres fan de oanmelding.</string>
+    <string name="saved_login_hostname_description" moz:RemovedIn="125" tools:ignore="UnusedResources">It bewurkbere tekstfjild foar it webadres fan de oanmelding.</string>
     <!--  The editable text field for a website address. -->
-    <string name="saved_login_hostname_description_3" tools:ignore="UnusedResources">It bewurkbere tekstfjild foar it websiteadres.</string>
+    <string name="saved_login_hostname_description_3">It bewurkbere tekstfjild foar it websiteadres.</string>
     <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description">It bewurkbere tekstfjild foar de brûkersnamme fan de oanmelding.</string>
+    <string name="saved_login_username_description" moz:RemovedIn="125" tools:ignore="UnusedResources">It bewurkbere tekstfjild foar de brûkersnamme fan de oanmelding.</string>
     <!--  The editable text field for a username. -->
-    <string name="saved_login_username_description_3" tools:ignore="UnusedResources">It bewurkbere tekstfjild foar de brûkersnamme.</string>
+    <string name="saved_login_username_description_3">It bewurkbere tekstfjild foar de brûkersnamme.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description">It bewurkbere tekstfjild foar it wachtwurd fan de oanmelding.</string>
+    <string name="saved_login_password_description" moz:RemovedIn="125" tools:ignore="UnusedResources">It bewurkbere tekstfjild foar it wachtwurd fan de oanmelding.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description_2" tools:ignore="UnusedResources">It bewurkbere tekstfjild foar it wachtwurd.</string>
+    <string name="saved_login_password_description_2">It bewurkbere tekstfjild foar it wachtwurd.</string>
     <!--  The button description to save changes to an edited login. -->
-    <string name="save_changes_to_login">Wizigingen oan oanmelding bewarje.</string>
+    <string name="save_changes_to_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Wizigingen oan oanmelding bewarje.</string>
     <!--  The button description to save changes to an edited password. -->
-    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">Wizigingen bewarje.</string>
+    <string name="save_changes_to_login_2">Wizigingen bewarje.</string>
     <!--  The page title for editing a saved login. -->
-    <string name="edit">Bewurkje</string>
+    <string name="edit" moz:RemovedIn="125" tools:ignore="UnusedResources">Bewurkje</string>
     <!--  The page title for editing a saved password. -->
-    <string name="edit_2" tools:ignore="UnusedResources">Wachtwurd bewurkje</string>
+    <string name="edit_2">Wachtwurd bewurkje</string>
     <!--  The page title for adding new login. -->
-    <string name="add_login">Nije oanmelding tafoegje</string>
+    <string name="add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Nije oanmelding tafoegje</string>
     <!--  The page title for adding new password. -->
-    <string name="add_login_2" tools:ignore="UnusedResources">Wachtwurd tafoegje</string>
+    <string name="add_login_2">Wachtwurd tafoegje</string>
     <!--  The error message in add/edit login view when password field is blank. -->
-    <string name="saved_login_password_required">Wachtwurd fereaske</string>
+    <string name="saved_login_password_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Wachtwurd fereaske</string>
     <!--  Error text displayed underneath the password field when it is in an error case. -->
-    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">Folje in wachtwurd yn</string>
+    <string name="saved_login_password_required_2">Folje in wachtwurd yn</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required">Brûkersnamme fereaske</string>
+    <string name="saved_login_username_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Brûkersnamme fereaske</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">Folje in brûkersnamme yn</string>
+    <string name="saved_login_username_required_2">Folje in brûkersnamme yn</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Hostnamme fereaske</string>
     <!--  The error message in add login view when hostname field is blank. -->
@@ -2183,7 +2200,7 @@
     <string name="radio_preference_info_content_description">Klik foar mear details</string>
 
     <!-- Content description for the action bar "up" button -->
-    <string name="action_bar_up_description">Omheech</string>
+    <string name="action_bar_up_description" moz:removedIn="124" tools:ignore="UnusedResources">Omheech</string>
 
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">Slute</string>
@@ -2223,8 +2240,6 @@
     <string name="review_quality_check_grade_title">Hoe betrouber binne dizze beoardielingen?</string>
     <!-- Title for when the rating has been updated by the review checker -->
     <string name="review_quality_check_adjusted_rating_title">Oanpaste wurdearring</string>
-    <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
-    <string name="review_quality_check_adjusted_rating_description" moz:RemovedIn="122" tools:ignore="UnusedResources">Unbetroubere beoardielingen fuortsmiten</string>
     <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
     <string name="review_quality_check_adjusted_rating_description_2">Basearre op betroubere beoardielingen</string>
     <!-- Title for list of highlights from a product's review emphasizing a product's important traits. -->
@@ -2283,10 +2298,6 @@ Dizze analyze sil jo allinnich helpe om de beoardielingskwaliteit te beoardielen
     <string name="review_quality_check_product_availability_warning_body">As jo sjogge dat dit produkt wer op foarried is, meld it dan oan ús en wy sille wurkje om de beoardielingen te kontrolearjen.</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action_2">Rapportearje dat produkt op foarried is</string>
-    <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
-    <string name="review_quality_check_reanalysis_in_progress_warning_title" moz:RemovedIn="122">Beoardielingskwaliteit kontrolearje</string>
-    <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_title" moz:RemovedIn="122">Beoardielingskwaliteit kontrolearje</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. The parameter is the percentage progress (0-100%) of the analysis process (e.g. 56%). -->
     <string name="review_quality_check_analysis_in_progress_warning_title_2">Beoardielingskwaliteit kontrolearje (%s)</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
@@ -2333,13 +2344,19 @@ Dizze analyze sil jo allinnich helpe om de beoardielingskwaliteit te beoardielen
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Mear ynfo</string>
 
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_contextual_onboarding_caption">Troch ‘Ja, probearje’ te selektearjen, geane jo akkoard mei it %2$s en de %3$s fan %1$s troch Mozilla.</string>
+    <string name="review_quality_check_contextual_onboarding_caption" moz:RemovedIn="123" tools:ignore="UnusedResources">Troch ‘Ja, probearje’ te selektearjen, geane jo akkoard mei it %2$s en de %3$s fan %1$s troch Mozilla.</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
     <string name="review_quality_check_contextual_onboarding_caption_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Troch ‘Ja, probearje’ te selektearjen, geane jo akkoard mei it folgjende fan %1$s:</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
+    <string name="review_quality_check_contextual_onboarding_caption_3" moz:RemovedIn="124" tools:ignore="UnusedResources">Troch ‘Ja, probearje’ te selektearjen, geane jo akkoard mei de %2$s fan %1$s en de %4$s fan %3$s.</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
+    <string name="review_quality_check_contextual_onboarding_caption_4">Troch ‘Ja, probearje’ te selektearjen, geane jo akkoard mei de %2$s fan %1$s en de %4$s fan %3$s.</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy">privacybelied</string>
+    <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="123" tools:ignore="UnusedResources">privacybelied</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Privacybelied</string>
+    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy notice. -->
+    <string name="review_quality_check_contextual_onboarding_privacy_policy_3">privacyferklearring</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
     <string name="review_quality_check_contextual_onboarding_terms_use">brûksbetingsten</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
@@ -2410,6 +2427,10 @@ Dizze analyze sil jo allinnich helpe om de beoardielingskwaliteit te beoardielen
     <!-- Translation request dialog -->
     <!-- Title for the translation dialog that allows a user to translate the webpage. -->
     <string name="translations_bottom_sheet_title">Dizze side oersette?</string>
+    <!-- Title for the translation dialog after a translation was completed successfully.
+    The first parameter is the name of the language that the page was translated from, for example, "French".
+    The second parameter is the name of the language that the page was translated to, for example, "English". -->
+    <string name="translations_bottom_sheet_title_translation_completed">Side oerset fan it %1$s nei it %2$s</string>
     <!-- Title for the translation dialog that allows a user to translate the webpage when a user uses the translation feature the first time. The first parameter is the name of the application, for example, "Fenix". -->
     <string name="translations_bottom_sheet_title_first_time">Probearje priveeoersettingen yn %1$s</string>
     <!-- Additional information on the translation dialog that appears when a user uses the translation feature the first time. The first parameter is clickable text with a link, for example, "Learn more". -->
@@ -2422,6 +2443,8 @@ Dizze analyze sil jo allinnich helpe om de beoardielingskwaliteit te beoardielen
     <string name="translations_bottom_sheet_translate_to">Oersette nei it</string>
     <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button">No net</string>
+    <!-- Button text on the translations dialog to restore the translated website back to the original untranslated version. -->
+    <string name="translations_bottom_sheet_negative_button_restore">Orizjineel toane</string>
     <!-- Button text on the translations dialog when a translation error appears, used to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button_error">Dien</string>
     <!-- Button text on the translations dialog to begin a translation of the website. -->
@@ -2443,6 +2466,15 @@ Dizze analyze sil jo allinnich helpe om de beoardielingskwaliteit te beoardielen
     <string name="translation_error_language_not_supported_warning_text">Sorry, wy stypje %1$s noch net.</string>
     <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
     <string name="translation_error_language_not_supported_learn_more">Mear ynfo</string>
+
+    <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
+    <string name="translation_in_progress_snackbar">Oersette…</string>
+    <!-- Title for the data saving mode warning dialog used in the translation request dialog.
+    This dialog will be presented when the user attempts to perform
+    a translation without the necessary language files downloaded first when Android's data saver mode is enabled and the user is not using WiFi.
+    The first parameter is the size in kilobytes or megabytes of the language file. -->
+    <string name="translations_download_language_file_dialog_title">Taal downloade yn gegevensbesparringsmodus (%1$s)?</string>
+
 
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->

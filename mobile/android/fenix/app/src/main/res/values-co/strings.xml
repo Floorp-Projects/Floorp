@@ -258,6 +258,11 @@
     <!-- Content description for the translate page toolbar button that opens the translations dialog when no translation has occurred. -->
     <string name="browser_toolbar_translate">Traduce a pagina</string>
 
+    <!-- Content description (not visible, for screen readers etc.) for the translate page toolbar button that opens the translations dialog when the page is translated successfully.
+         The first parameter is the name of the language that is displayed in the original page. (For example: English)
+         The second parameter is the name of the language which the page was translated to. (For example: French) -->
+    <string name="browser_toolbar_translated_successfully">Pagina tradutta in %2$s, l’origine hè in %1$s.</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Lingua selezziunata</string>
@@ -335,11 +340,21 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
     <string name="juno_onboarding_privacy_notice_text">Dichjarazione di cunfidenzialità di Firefox</string>
-    <!-- Text for the button to set firefox as default browser on the device -->
+    <!-- Description for learning more about our privacy notice. -->
+    <string name="juno_onboarding_privacy_notice_text_2" moz:removedIn="125" tools:ignore="UnusedResources">Sapene di più in a nostra dichjarazione di cunfidenzialità</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">A vostra prutezzione cunta per noi</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="UnusedResources">Scuprite perchè Firefox piace à milioni di persone</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources">A navigazione assicurizata cù più di scelta</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_3">U nostru navigatore sustinutu da un urganismu senza scopu lucrativu impedisce l’imprese di seguitavvi da manera sicreta nant’à u Web.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources">Più di 10 milioni di persone prutegenu a so vita privata scigliendu un navigatore sustinutu da un’organizazione senza scopu lucrativu.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources">Perseguitatori cunnisciuti ? Bluccati autumaticamente. Estensioni ? Ci n’hè più di 700 ; pruvatele. Schedarii PDF ? U nostru lettore integratu ne faciliteghja a ghjestione.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">U nostru navigatore sustinutu da un urganismu senza scopu lucrativu impedisce l’imprese di seguitavvi da manera sicreta nant’à u Web.\n\nSapene di più in a nostra dichjarazione di cunfidenzialità.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
@@ -701,9 +716,9 @@
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Indette</string>
     <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins">Identificazioni di cunnessione</string>
+    <string name="preferences_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Identificazioni di cunnessione</string>
     <!-- Preference for syncing passwords -->
-    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">Parolle d’intesa</string>
+    <string name="preferences_sync_logins_2">Parolle d’intesa</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">Apre l’unghjette</string>
     <!-- Preference for signing out -->
@@ -729,10 +744,10 @@
     <string name="default_device_name_2">%1$s nant’à %2$s %3$s</string>
 
     <!-- Preference for syncing credit cards -->
-    <string name="preferences_sync_credit_cards">Carte bancarie</string>
+    <string name="preferences_sync_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Carte bancarie</string>
 
     <!-- Preference for syncing payment methods -->
-    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">Metode di pagamentu</string>
+    <string name="preferences_sync_credit_cards_2">Metode di pagamentu</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">Indirizzi</string>
 
@@ -1675,13 +1690,13 @@
     <string name="add_to_homescreen_description_2">Hè faciule d’aghjunghje stu situ nant’à u screnu d’accolta di u vostru apparechju per accedeci direttamente è navigà più prestu cum’è s’ella fussi un’appiecazione.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords">Identificazioni è parolle d’intesa</string>
+    <string name="preferences_passwords_logins_and_passwords" moz:RemovedIn="125" tools:ignore="UnusedResources">Identificazioni è parolle d’intesa</string>
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">Parolle d’intesa</string>
+    <string name="preferences_passwords_logins_and_passwords_2">Parolle d’intesa</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins">Arregistrà l’identificazioni è e parolle d’intesa</string>
+    <string name="preferences_passwords_save_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Arregistrà l’identificazioni è e parolle d’intesa</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">Arregistrà e parolle d’intesa</string>
+    <string name="preferences_passwords_save_logins_2">Arregistrà e parolle d’intesa</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Dumandà per arregistrà</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1697,48 +1712,48 @@
     <string name="preferences_android_autofill_description">Riimpiete nomi d’utilizatore è parolle d’intesa in l’altre appiecazioni nant’à u vostru apparechju.</string>
 
     <!-- Preference option for adding a login -->
-    <string name="preferences_logins_add_login">Aghjunghje un’identificazione di cunnessione</string>
+    <string name="preferences_logins_add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Aghjunghje un’identificazione di cunnessione</string>
 
     <!-- Preference option for adding a password -->
-    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">Aghjunghje una parolla d’intesa</string>
+    <string name="preferences_logins_add_login_2">Aghjunghje una parolla d’intesa</string>
 
-    <!-- Preference for syncing saved logins in Fenix -->
-    <string name="preferences_passwords_sync_logins">Sincrunizà l’identificazioni</string>
     <!-- Preference for syncing saved passwords in Fenix -->
-    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">Sincrunizà e parolle d’intesa</string>
+    <string name="preferences_passwords_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Sincrunizà l’identificazioni</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2">Sincrunizà e parolle d’intesa</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices">Sincrunizà l’identificazioni di cunnessione trà l’apparechji</string>
+    <string name="preferences_passwords_sync_logins_across_devices" moz:RemovedIn="125" tools:ignore="UnusedResources">Sincrunizà l’identificazioni di cunnessione trà l’apparechji</string>
     <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices_2" tools:ignore="UnusedResources">Sincrunizà e parolle d’intesa trà l’apparechji</string>
+    <string name="preferences_passwords_sync_logins_across_devices_2">Sincrunizà e parolle d’intesa trà l’apparechji</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins">Identificazioni di cunnessione arregistrate</string>
+    <string name="preferences_passwords_saved_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Identificazioni di cunnessione arregistrate</string>
     <!-- Preference to access list of saved passwords -->
-    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">Parolle d’intesa arregistrate</string>
+    <string name="preferences_passwords_saved_logins_2">Parolle d’intesa arregistrate</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text">L’identificazioni di cunnessione chì voi arregistrate o sincrunizate cù %s seranu affissate quì.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_text" moz:RemovedIn="125" tools:ignore="UnusedResources">L’identificazioni di cunnessione chì voi arregistrate o sincrunizate cù %s seranu affissate quì.</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text_2" tools:ignore="UnusedResources">E parolle d’intesa chì vo arregistrate o sincrunizate cù %s seranu affissate quì. Tutte e parolle d’intesa chì vo arregistrate sò cifrate.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_text_2">E parolle d’intesa chì vo arregistrate o sincrunizate cù %s seranu affissate quì. Tutte e parolle d’intesa chì vo arregistrate sò cifrate.</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Sapene di più nant’à Sync.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link" moz:RemovedIn="125" tools:ignore="UnusedResources">Sapene di più nant’à Sync.</string>
     <!-- Clickable text for opening an external link for more information about Sync. -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2" tools:ignore="UnusedResources">Sapene di più nant’à a sincrunizazione</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2">Sapene di più nant’à a sincrunizazione</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Eccezzioni</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty">L’identificazioni è parolle d’intesa chì ùn sò micca arregistrate seranu affissate quì.</string>
+    <string name="preferences_passwords_exceptions_description_empty" moz:RemovedIn="125" tools:ignore="UnusedResources">L’identificazioni è parolle d’intesa chì ùn sò micca arregistrate seranu affissate quì.</string>
     <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
-    <string name="preferences_passwords_exceptions_description_empty_2" tools:ignore="UnusedResources">%s ùn arregistrerà micca e parolle d’intesa per i siti allistinati quì.</string>
+    <string name="preferences_passwords_exceptions_description_empty_2">%s ùn arregistrerà micca e parolle d’intesa per i siti allistinati quì.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description">L’identificazioni è parolle d’intesa ùn seranu micca arregistrate per sti siti.</string>
+    <string name="preferences_passwords_exceptions_description" moz:RemovedIn="125" tools:ignore="UnusedResources">L’identificazioni è parolle d’intesa ùn seranu micca arregistrate per sti siti.</string>
     <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
-    <string name="preferences_passwords_exceptions_description_2" tools:ignore="UnusedResources">%s ùn arregistrerà micca e parolle d’intesa per sti siti.</string>
+    <string name="preferences_passwords_exceptions_description_2">%s ùn arregistrerà micca e parolle d’intesa per sti siti.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Squassà tutte l’eccezzioni</string>
     <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search">Ricercà identificazioni di cunnessione</string>
+    <string name="preferences_passwords_saved_logins_search" moz:RemovedIn="125" tools:ignore="UnusedResources">Ricercà identificazioni di cunnessione</string>
 
     <!-- Hint for search box in passwords list -->
-    <string name="preferences_passwords_saved_logins_search_2" tools:ignore="UnusedResources">Ricercà parolle d’intesa</string>
+    <string name="preferences_passwords_saved_logins_search_2">Ricercà parolle d’intesa</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Situ</string>
     <!-- The header for the username for a login -->
@@ -1767,17 +1782,17 @@
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Piattà a parolla d’intesa</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message">Spalancate per affissà l’identificazioni di cunnessione arregistrate</string>
+    <string name="logins_biometric_prompt_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Spalancate per affissà l’identificazioni di cunnessione arregistrate</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
-    <string name="logins_biometric_prompt_message_2" tools:ignore="UnusedResources">Spalancate per affissà e vostre parolle d’intesa arregistrate</string>
+    <string name="logins_biometric_prompt_message_2">Spalancate per affissà e vostre parolle d’intesa arregistrate</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title">Prutigite e vostre identificazioni di cunnessione è parolle d’intesa</string>
+    <string name="logins_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Prutigite e vostre identificazioni di cunnessione è parolle d’intesa</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">Prutigite e vostre parolle d’intesa arregistrate</string>
+    <string name="logins_warning_dialog_title_2">Prutigite e vostre parolle d’intesa arregistrate</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message">Definite un dissegnu di chjusura, un codice PIN o una parolla d’intesa per prutege e vostre identificazioni di cunnessione è parolle d’intesa arregistrate s’ellu ci era qualchissia chì accidissi à u vostru apparechju.</string>
+    <string name="logins_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Definite un dissegnu di chjusura, un codice PIN o una parolla d’intesa per prutege e vostre identificazioni di cunnessione è parolle d’intesa arregistrate s’ellu ci era qualchissia chì accidissi à u vostru apparechju.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message_2" tools:ignore="UnusedResources">Definite un dissegnu di chjuditura, un codice PIN o una parolla d’intesa per prutege e vostre parolle d’intesa arregistrate s’ellu ci era qualchissia chì accidissi à u vostru apparechju.</string>
+    <string name="logins_warning_dialog_message_2">Definite un dissegnu di chjuditura, un codice PIN o una parolla d’intesa per prutege e vostre parolle d’intesa arregistrate s’ellu ci era qualchissia chì accidissi à u vostru apparechju.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Dopu</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1795,10 +1810,10 @@
     <string name="saved_logins_sort_strategy_last_used">Ultimu impiegu</string>
 
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Listinu di classificazione di l’identificazioni</string>
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Listinu di classificazione di l’identificazioni</string>
 
     <!-- Content description (not visible, for screen readers etc.) -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2" tools:ignore="UnusedResources">Listinu di classificazione di e parolle d’intesa</string>
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2">Listinu di classificazione di e parolle d’intesa</string>
 
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
@@ -1806,43 +1821,43 @@
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">Indirizzi</string>
     <!-- Preference and title for managing the settings for credit cards -->
-    <string name="preferences_credit_cards">Carte bancarie</string>
+    <string name="preferences_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Carte bancarie</string>
     <!-- Preference and title for managing the settings for payment methods -->
-    <string name="preferences_credit_cards_2" tools:ignore="UnusedResources">Metode di pagamentu</string>
+    <string name="preferences_credit_cards_2">Metode di pagamentu</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards">Arregistrà è riempie autumaticamente e carte</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Arregistrà è riempie autumaticamente e carte</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_2" tools:ignore="UnusedResources">Arregistrà è rinsignà e metode di pagamentu</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_2">Arregistrà è rinsignà e metode di pagamentu</string>
     <!-- Preference summary for saving and autofilling credit card data -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary">I dati sò cifrati</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">I dati sò cifrati</string>
     <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2" tools:ignore="UnusedResources">%s cifra tutte e metode di pagamentu chì vo arregistrate</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">%s cifra tutte e metode di pagamentu chì vo arregistrate</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Sincrunizate e carte trà i vostri apparechji</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">Sincrunizà e carte</string>
     <!-- Preference option for adding a credit card -->
-    <string name="preferences_credit_cards_add_credit_card">Aghjunghje una carta bancaria</string>
+    <string name="preferences_credit_cards_add_credit_card" moz:RemovedIn="125" tools:ignore="UnusedResources">Aghjunghje una carta bancaria</string>
     <!-- Preference option for adding a card -->
-    <string name="preferences_credit_cards_add_credit_card_2" tools:ignore="UnusedResources">Aghjunghje una carta</string>
+    <string name="preferences_credit_cards_add_credit_card_2">Aghjunghje una carta</string>
     <!-- Preference option for managing saved credit cards -->
-    <string name="preferences_credit_cards_manage_saved_cards">Amministrà e carte arregistrate</string>
+    <string name="preferences_credit_cards_manage_saved_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Amministrà e carte arregistrate</string>
     <!-- Preference option for managing saved cards -->
-    <string name="preferences_credit_cards_manage_saved_cards_2" tools:ignore="UnusedResources">Amministrà e carte</string>
+    <string name="preferences_credit_cards_manage_saved_cards_2">Amministrà e carte</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Aghjunghje un indirizzu</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Urganizà l’indirizzi</string>
 
     <!-- Preference for saving and autofilling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses">Arregistrà è riempie autumaticamente l’indirizzi</string>
+    <string name="preferences_addresses_save_and_autofill_addresses" moz:RemovedIn="125" tools:ignore="UnusedResources">Arregistrà è riempie autumaticamente l’indirizzi</string>
     <!-- Preference for saving and filling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">Arregistrà è rinsignà autumaticamente l’indirizzi</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_2">Arregistrà è rinsignà autumaticamente l’indirizzi</string>
     <!-- Preference summary for saving and autofilling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary">Include l’infurmazioni cum’è i numeri, i messaghji elettronichi è l’indirizzi di spedizione</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Include l’infurmazioni cum’è i numeri, i messaghji elettronichi è l’indirizzi di spedizione</string>
 
     <!-- Preference summary for saving and filling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary_2" tools:ignore="UnusedResources">Include i numeri di telefonu è l’indirizzi elettronichi</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_summary_2">Include i numeri di telefonu è l’indirizzi elettronichi</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Aghjunghje una carta</string>
@@ -1864,9 +1879,9 @@
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Squassà a carta</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation">Vulete veramente squassà sta carta bancaria ?</string>
+    <string name="credit_cards_delete_dialog_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Vulete veramente squassà sta carta bancaria ?</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation_2" tools:ignore="UnusedResources">Squassà a carta ?</string>
+    <string name="credit_cards_delete_dialog_confirmation_2">Squassà a carta ?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Squassà</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1879,25 +1894,25 @@
     <string name="credit_cards_saved_cards">Carte arregistrate</string>
 
     <!-- Error message for credit card number validation -->
-    <string name="credit_cards_number_validation_error_message">Ci vole à stampittà un numeru accettevule di carta bancaria</string>
+    <string name="credit_cards_number_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Ci vole à stampittà un numeru accettevule di carta bancaria</string>
 
     <!-- Error message for card number validation -->
-    <string name="credit_cards_number_validation_error_message_2" tools:ignore="UnusedResources">Stampittate un numeru di carta bancaria accettevule</string>
+    <string name="credit_cards_number_validation_error_message_2">Stampittate un numeru di carta bancaria accettevule</string>
     <!-- Error message for credit card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message">Ci vole à riempie stu campu</string>
+    <string name="credit_cards_name_on_card_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Ci vole à riempie stu campu</string>
     <!-- Error message for card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message_2" tools:ignore="UnusedResources">Aghjunghje un nome</string>
+    <string name="credit_cards_name_on_card_validation_error_message_2">Aghjunghje un nome</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Spalancate per affissà e vostre carte arregistrate</string>
 
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title">Prutege e vostre carte bancarie</string>
+    <string name="credit_cards_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Prutege e vostre carte bancarie</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title_2" tools:ignore="UnusedResources">Prutigite e vostre metode di pagamentu arregistrate</string>
+    <string name="credit_cards_warning_dialog_title_2">Prutigite e vostre metode di pagamentu arregistrate</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message">Definite un dissegnu di chjusura, un codice PIN o una parolla d’intesa per prutege e vostre carte arregistrate s’ellu ci era qualchissia chì accidissi à u vostru apparechju.</string>
+    <string name="credit_cards_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Definite un dissegnu di chjusura, un codice PIN o una parolla d’intesa per prutege e vostre carte arregistrate s’ellu ci era qualchissia chì accidissi à u vostru apparechju.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message_3" tools:ignore="UnusedResources">Definite un dissegnu di chjusura, un codice PIN o una parolla d’intesa per prutege e vostre metode di pagamentu arregistrate s’ellu ci era qualchissia chì accidissi à u vostru apparechju.</string>
+    <string name="credit_cards_warning_dialog_message_3">Definite un dissegnu di chjusura, un codice PIN o una parolla d’intesa per prutege e vostre metode di pagamentu arregistrate s’ellu ci era qualchissia chì accidissi à u vostru apparechju.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Cunfigurà subitu</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1905,10 +1920,10 @@
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
     <string name="credit_cards_biometric_prompt_message_pin">Spalancate u vostru apparechju</string>
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
-    <string name="credit_cards_biometric_prompt_unlock_message">Spalancate per impiegà l’infurmazione di e carte bancarie arregistrate</string>
+    <string name="credit_cards_biometric_prompt_unlock_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Spalancate per impiegà l’infurmazione di e carte bancarie arregistrate</string>
 
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
-    <string name="credit_cards_biometric_prompt_unlock_message_2" tools:ignore="UnusedResources">Spalancate per impiegà e metode di pagamentu arregistrate</string>
+    <string name="credit_cards_biometric_prompt_unlock_message_2">Spalancate per impiegà e metode di pagamentu arregistrate</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Aghjunghje un indirizzu</string>
     <!-- Title of the "Edit address" screen -->
@@ -1916,11 +1931,13 @@
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Urganizà l’indirizzi</string>
     <!-- The header for the first name of an address -->
-    <string name="addresses_first_name">Nome</string>
+    <string name="addresses_first_name" moz:removedIn="125" tools:ignore="UnusedResources">Nome</string>
     <!-- The header for the middle name of an address -->
-    <string name="addresses_middle_name">Secondu nome</string>
+    <string name="addresses_middle_name" moz:removedIn="125" tools:ignore="UnusedResources">Secondu nome</string>
     <!-- The header for the last name of an address -->
-    <string name="addresses_last_name">Casata</string>
+    <string name="addresses_last_name" moz:removedIn="125" tools:ignore="UnusedResources">Casata</string>
+    <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
+    <string name="addresses_name">Nome cumpletu</string>
     <!-- The header for the street address of an address -->
     <string name="addresses_street_address">Indirizzu pustale</string>
     <!-- The header for the city of an address -->
@@ -1945,9 +1962,9 @@
     <!-- The text for the "Delete address" button for deleting an address -->
     <string name="addressess_delete_address_button">Squassà l’indirizzu</string>
     <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message">Vulete veramente squassà st’indirizzu ?</string>
+    <string name="addressess_confirm_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Vulete veramente squassà st’indirizzu ?</string>
     <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message_2" tools:ignore="UnusedResources">Squassà st’indirizzu ?</string>
+    <string name="addressess_confirm_dialog_message_2">Squassà st’indirizzu ?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">Squassà</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -2046,49 +2063,49 @@
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">Mudificà</string>
     <!-- Message in delete confirmation dialog for logins -->
-    <string name="login_deletion_confirmation">Vulete veramente squassà st’identificazione di cunnessione ?</string>
+    <string name="login_deletion_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Vulete veramente squassà st’identificazione di cunnessione ?</string>
     <!-- Message in delete confirmation dialog for password -->
-    <string name="login_deletion_confirmation_2" tools:ignore="UnusedResources">Vulete veramente squassà sta parolla d’intesa ?</string>
+    <string name="login_deletion_confirmation_2">Vulete veramente squassà sta parolla d’intesa ?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Squassà</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Abbandunà</string>
     <!--  The saved login options menu description. -->
-    <string name="login_options_menu">Ozzioni di l’identificazione</string>
+    <string name="login_options_menu" moz:RemovedIn="125" tools:ignore="UnusedResources">Ozzioni di l’identificazione</string>
     <!--  The saved password options menu description. -->
-    <string name="login_options_menu_2" tools:ignore="UnusedResources">Ozzioni di parolla d’intesa</string>
+    <string name="login_options_menu_2">Ozzioni di parolla d’intesa</string>
     <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description">U campu di testu mudifichevule per l’indirizzu web di l’identificazione.</string>
+    <string name="saved_login_hostname_description" moz:RemovedIn="125" tools:ignore="UnusedResources">U campu di testu mudifichevule per l’indirizzu web di l’identificazione.</string>
     <!--  The editable text field for a website address. -->
-    <string name="saved_login_hostname_description_3" tools:ignore="UnusedResources">U campu di testu mudifichevule per l’indirizzu di u situ web.</string>
+    <string name="saved_login_hostname_description_3">U campu di testu mudifichevule per l’indirizzu di u situ web.</string>
     <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description">U campu di testu mudifichevule per u nome d’utilizatore di l’identificazione.</string>
+    <string name="saved_login_username_description" moz:RemovedIn="125" tools:ignore="UnusedResources">U campu di testu mudifichevule per u nome d’utilizatore di l’identificazione.</string>
     <!--  The editable text field for a username. -->
-    <string name="saved_login_username_description_3" tools:ignore="UnusedResources">U campu di testu mudifichevule per u nome d’utilizatore.</string>
+    <string name="saved_login_username_description_3">U campu di testu mudifichevule per u nome d’utilizatore.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description">U campu di testu mudifichevule per a parolla d’intesa di l’identificazione.</string>
+    <string name="saved_login_password_description" moz:RemovedIn="125" tools:ignore="UnusedResources">U campu di testu mudifichevule per a parolla d’intesa di l’identificazione.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description_2" tools:ignore="UnusedResources">U campu di testu mudifichevule per a parolla d’intesa.</string>
+    <string name="saved_login_password_description_2">U campu di testu mudifichevule per a parolla d’intesa.</string>
     <!--  The button description to save changes to an edited login. -->
-    <string name="save_changes_to_login">Arregistrà i cambiamenti di l’identificazione.</string>
+    <string name="save_changes_to_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Arregistrà i cambiamenti di l’identificazione.</string>
     <!--  The button description to save changes to an edited password. -->
-    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">Arregistrà i cambiamenti.</string>
+    <string name="save_changes_to_login_2">Arregistrà i cambiamenti.</string>
     <!--  The page title for editing a saved login. -->
-    <string name="edit">Mudificà</string>
+    <string name="edit" moz:RemovedIn="125" tools:ignore="UnusedResources">Mudificà</string>
     <!--  The page title for editing a saved password. -->
-    <string name="edit_2" tools:ignore="UnusedResources">Mudificà a parolla d’intesa</string>
+    <string name="edit_2">Mudificà a parolla d’intesa</string>
     <!--  The page title for adding new login. -->
-    <string name="add_login">Aghjunghje una nova identificazione di cunnessione</string>
+    <string name="add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Aghjunghje una nova identificazione di cunnessione</string>
     <!--  The page title for adding new password. -->
-    <string name="add_login_2" tools:ignore="UnusedResources">Aghjunghje una parolla d’intesa</string>
+    <string name="add_login_2">Aghjunghje una parolla d’intesa</string>
     <!--  The error message in add/edit login view when password field is blank. -->
-    <string name="saved_login_password_required">Parolla d’intesa richiesta</string>
+    <string name="saved_login_password_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Parolla d’intesa richiesta</string>
     <!--  Error text displayed underneath the password field when it is in an error case. -->
-    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">Stampittate una parolla d’intesa</string>
+    <string name="saved_login_password_required_2">Stampittate una parolla d’intesa</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required">U nome d’utilizatore hè richiestu</string>
+    <string name="saved_login_username_required" moz:RemovedIn="125" tools:ignore="UnusedResources">U nome d’utilizatore hè richiestu</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">Stampittate un nome d’utilizatore</string>
+    <string name="saved_login_username_required_2">Stampittate un nome d’utilizatore</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">U nome d’ospite hè richiestu</string>
     <!--  The error message in add login view when hostname field is blank. -->
@@ -2203,7 +2220,7 @@
     <string name="radio_preference_info_content_description">Cliccu per sapene di più</string>
 
     <!-- Content description for the action bar "up" button -->
-    <string name="action_bar_up_description">Navigà insù</string>
+    <string name="action_bar_up_description" moz:removedIn="124" tools:ignore="UnusedResources">Navigà insù</string>
 
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">Chjode</string>
@@ -2244,8 +2261,6 @@
 
     <!-- Title for when the rating has been updated by the review checker -->
     <string name="review_quality_check_adjusted_rating_title">Valutazione rettificata</string>
-    <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
-    <string name="review_quality_check_adjusted_rating_description" moz:RemovedIn="122" tools:ignore="UnusedResources">Avisi micca degni di cunfidenza cacciati</string>
     <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
     <string name="review_quality_check_adjusted_rating_description_2">Nant’à a basa d’avisi degni di cunfidenza</string>
     <!-- Title for list of highlights from a product's review emphasizing a product's important traits. -->
@@ -2308,10 +2323,6 @@
     <string name="review_quality_check_product_availability_warning_body">S’è vo fighjate chì stu pruduttu hè torna dispunibule, fatecilu sapè è cuntinueremu à cuntrollà l’avisi.</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action_2">Signalà chì u pruduttu hè dispunibule</string>
-    <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
-    <string name="review_quality_check_reanalysis_in_progress_warning_title" moz:RemovedIn="122">Cuntrollà a qualità di l’avisi</string>
-    <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_title" moz:RemovedIn="122">Cuntrollà a qualità di l’avisi</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. The parameter is the percentage progress (0-100%) of the analysis process (e.g. 56%). -->
     <string name="review_quality_check_analysis_in_progress_warning_title_2">Cuntrollu di a qualità di l’avisi (%s)</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
@@ -2357,13 +2368,19 @@
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Sapene di più</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_contextual_onboarding_caption">A selezzione di « Sì, pruvallu » vole dì chì vo site d.accunsenti cù %2$s è %3$s di %1$s da Mozilla.</string>
+    <string name="review_quality_check_contextual_onboarding_caption" moz:RemovedIn="123" tools:ignore="UnusedResources">A selezzione di « Sì, pruvallu » vole dì chì vo site d.accunsenti cù %2$s è %3$s di %1$s da Mozilla.</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
     <string name="review_quality_check_contextual_onboarding_caption_2" moz:RemovedIn="123" tools:ignore="UnusedResources">A selezzione di « Sì, pruvallu » vole dì chì vo accettate quell’elementi di %1$s :</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
+    <string name="review_quality_check_contextual_onboarding_caption_3" moz:RemovedIn="124" tools:ignore="UnusedResources">A selezzione di « Sì, pruvallu » vole dì chì vo site d’accunsenti cù a %2$s di %1$s è a %4$s di %3$s.</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
+    <string name="review_quality_check_contextual_onboarding_caption_4">A selezzione di « Sì, pruvallu » vole dì chì vo site d’accunsenti cù a %2$s di %1$s è a %4$s di %3$s.</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy">pulitica di cunfidenzialità</string>
+    <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="123" tools:ignore="UnusedResources">pulitica di cunfidenzialità</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Pulitica di cunfidenzialità</string>
+    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy notice. -->
+    <string name="review_quality_check_contextual_onboarding_privacy_policy_3">dichjarazione di cunfidenzialità</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
     <string name="review_quality_check_contextual_onboarding_terms_use">cundizioni d’utilizazione</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
@@ -2436,6 +2453,10 @@
     <!-- Translation request dialog -->
     <!-- Title for the translation dialog that allows a user to translate the webpage. -->
     <string name="translations_bottom_sheet_title">Traduce sta pagina ?</string>
+    <!-- Title for the translation dialog after a translation was completed successfully.
+    The first parameter is the name of the language that the page was translated from, for example, "French".
+    The second parameter is the name of the language that the page was translated to, for example, "English". -->
+    <string name="translations_bottom_sheet_title_translation_completed">Pagina tradutta in %2$s, l’origine hè in %1$s</string>
     <!-- Title for the translation dialog that allows a user to translate the webpage when a user uses the translation feature the first time. The first parameter is the name of the application, for example, "Fenix". -->
     <string name="translations_bottom_sheet_title_first_time">Pruvà e traduzzioni private di %1$s</string>
 
@@ -2449,6 +2470,8 @@
     <string name="translations_bottom_sheet_translate_to">Traduce versu</string>
     <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button">Micca subitu</string>
+    <!-- Button text on the translations dialog to restore the translated website back to the original untranslated version. -->
+    <string name="translations_bottom_sheet_negative_button_restore">Affissà a pagina d’origine</string>
     <!-- Button text on the translations dialog when a translation error appears, used to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button_error">Compiu</string>
     <!-- Button text on the translations dialog to begin a translation of the website. -->
@@ -2470,6 +2493,16 @@
     <string name="translation_error_language_not_supported_warning_text">Per disgrazia, a lingua %1$s ùn hè ancu accettata.</string>
     <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
     <string name="translation_error_language_not_supported_learn_more">Sapene di più</string>
+
+
+    <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
+    <string name="translation_in_progress_snackbar">Traduzzione…</string>
+    <!-- Title for the data saving mode warning dialog used in the translation request dialog.
+    This dialog will be presented when the user attempts to perform
+    a translation without the necessary language files downloaded first when Android's data saver mode is enabled and the user is not using WiFi.
+    The first parameter is the size in kilobytes or megabytes of the language file. -->
+    <string name="translations_download_language_file_dialog_title">Scaricà a lingua in modu di risparmiu di dati (%1$s) ?</string>
+
 
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->

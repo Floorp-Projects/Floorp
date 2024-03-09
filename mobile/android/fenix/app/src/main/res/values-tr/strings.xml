@@ -338,15 +338,21 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
     <string name="juno_onboarding_privacy_notice_text">Firefox gizlilik bildirimi</string>
+    <!-- Description for learning more about our privacy notice. -->
+    <string name="juno_onboarding_privacy_notice_text_2" moz:removedIn="125" tools:ignore="UnusedResources">Ayrıntıları gizlilik bildirimimizde bulabilirsiniz</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Sizi güvende tutmayı seviyoruz</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="UnusedResources">Milyonların Firefox’u neden sevdiğini öğrenin</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources">Daha fazla seçenekle güvenli gezinti</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_3">Kâr amacı gütmeyen tarayıcımız, şirketlerin sizi web’de gizlice takip etmesini engelliyor.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources">100 milyondan fazla insan, kâr amacı gütmeyen bir kuruluş tarafından desteklenen bu tarayıcıyla gizliliğini koruyor.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources">Takip kodları mı dediniz? Otomatik olarak engelliyoruz. Uzantı desteği mi? 700 uzantıyı deneyebilirsiniz. Ya PDF desteği? Yerleşik okuyucumuzla PDF’leri yönetmek çok daha kolay.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">Kâr amacı gütmeyen tarayıcımız, şirketlerin sizi web’de gizlice takip etmesini engelliyor.\n\nAyrıntıları gizlilik bildirimimizde bulabilirsiniz.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
@@ -2344,6 +2350,10 @@
     <string name="review_quality_check_contextual_onboarding_caption" moz:RemovedIn="123" tools:ignore="UnusedResources">“Evet, deneyeceğim”i seçtiğinizde Mozilla %1$s %2$s ve %3$snı kabul etmiş olursunuz.</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
     <string name="review_quality_check_contextual_onboarding_caption_2" moz:RemovedIn="123" tools:ignore="UnusedResources">“Evet, deneyeceğim”i seçtiğinizde %1$s için şunları kabul etmiş olursunuz:</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
+    <string name="review_quality_check_contextual_onboarding_caption_3" moz:RemovedIn="124" tools:ignore="UnusedResources">“Evet, deneyeceğim”i seçtiğinizde %1$s %2$s ve %3$s %4$snı kabul etmiş olursunuz.</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
+    <string name="review_quality_check_contextual_onboarding_caption_4">“Evet, deneyeceğim”i seçtiğinizde %1$s %2$s ve %3$s %4$snı kabul etmiş olursunuz.</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="123" tools:ignore="UnusedResources">gizlilik politikası</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->

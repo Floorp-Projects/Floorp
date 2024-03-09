@@ -10,4 +10,6 @@
     <string name="mozac_browser_menu_addons_manager">Ghjestiunariu di moduli addiziunali</string>
     <!-- Content description for the action bar "up" button -->
     <string name="action_bar_up_description">Navigà insù</string>
+    <!-- Content description for the action bar "up" button of the add-ons sub menu item -->
+    <string name="mozac_browser_menu_addons_description">Moduli addiziunali, ricullà</string>
 </resources>

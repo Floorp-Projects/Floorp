@@ -355,6 +355,8 @@
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_3">ਕੰਪਨੀਆਂ ਨੂੰ ਚੋਰੀ ਚੋਰੀ ਵੈੱਬ ਉੱਤੇ ਤੁਹਾਡਾ ਪਿੱਛਾ ਕਰਨ ਤੋਂ ਸਾਡਾ ਗ਼ੈਰ-ਫਾਇਦਾ ਸਮਰੱਥ ਬਰਾਊਜ਼ਰ ਆਪਣੇ-ਆਪ ਹੀ ਰੋਕਦਾ ਹੈ।</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources">10 ਕਰੋੜ ਤੋਂ ਵੱਧ ਲੋਕ ਨੇ ਆਪਣੀ ਪਰਦੇਦਾਰੀ ਦੀ ਸੁਰੱਖਿਆ ਲਈ ਉਸ ਬਰਾਊਜ਼ਰ ਦੀ ਚੋਣ ਕੀਤੀ ਹੈ, ਜਿਸ ਦਾ ਮਕਸਦ ਕੋਈ ਫਾਇਦਾ ਨਹੀਂ ਹੈ।</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources">ਜਾਣੇ-ਪਛਾਣੇ ਟਰੈਕਰ? ਆਪਣੇ ਆਪ ਪਾਬੰਦੀ ਲਾਈ। ਇਕਸਟੈਨਸ਼ਨ? 700 ਤੋਂ ਵੱਧ ਅਜ਼ਮਾਉਣ ਲਈ। PDF? ਸਾਡੇ ਬਿਲਟ-ਇਨ ਰੀਡਰ ਨਾਲ ਉਹਨਾਂ ਨੂੰ ਵਰਤਣਾ ਸੌਖਾ।</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">ਸਾਡਾ ਗ਼ੈਰ-ਮੁਨਾਫ਼ਾ ਸਮਰੱਥ ਬਰਾਊਜ਼ਰ ਕੰਪਨੀਆਂ ਨੂੰ ਵੈੱਬ ਉੱਤੇ ਚੋਰੀ ਛਿਪੇ ਪਿੱਛਾ ਕਰਨ ਤੋਂ ਰੋਕਣ ਲਈ ਮਦਦ ਕਰਦਾ ਹੈ।\n\nਸਾਡੇ ਪਰਦੇਦਾਰੀ ਨੋਟਿਸ ਬਾਰੇ ਹੋਰ ਸਿੱਖੋ।</string>
@@ -2487,6 +2489,13 @@
 
     <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
     <string name="translation_in_progress_snackbar">…ਉਲੱਥਾ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ</string>
+
+    <!-- Title for the data saving mode warning dialog used in the translation request dialog.
+    This dialog will be presented when the user attempts to perform
+    a translation without the necessary language files downloaded first when Android's data saver mode is enabled and the user is not using WiFi.
+    The first parameter is the size in kilobytes or megabytes of the language file. -->
+    <string name="translations_download_language_file_dialog_title">ਡਾਟਾ ਬੱਚਤ ਮੋਡ ਵਿੱਚ ਭਾਸ਼ਾ ਨੂੰ ਡਾਊਨਲੋਡ ਕਰਨਾ ਹੈ (%1$s)?</string>
+
 
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
