@@ -730,7 +730,8 @@ export class FxviewTabRow extends MozLitElement {
       !this.indicators.includes("soundplaying") &&
       this.currentActiveElementId === "fxview-tab-row-media-button";
 
-    if (e?.type === "keydown" && shouldMoveFocus) {
+    // detail=0 is from keyboard
+    if (e?.type == "click" && !e?.detail && shouldMoveFocus) {
       let tabList = this.getRootNode().host;
       if (document.dir == "rtl") {
         tabList.moveFocusLeft(this);
@@ -899,7 +900,6 @@ export class FxviewTabRow extends MozLitElement {
           !this.indicators?.includes("muted")
         }
         @click=${this.muteOrUnmuteTab}
-        @keydown=${this.muteOrUnmuteTab}
         tabindex="${
           this.active &&
           this.currentActiveElementId === "fxview-tab-row-media-button"

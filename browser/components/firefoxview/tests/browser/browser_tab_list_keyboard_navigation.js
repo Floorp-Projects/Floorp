@@ -115,6 +115,49 @@ add_task(async function test_focus_moves_after_unmute() {
     info(
       "Focus should be on the tab's secondary button element after unmuting."
     );
+
+    // Mute tab again and check that only Enter keys will toggle it
+    unmutedTab.muteOrUnmuteTab();
+    await TestUtils.waitForCondition(
+      () => mutedTab.indicators.includes("muted"),
+      "The tab has been muted."
+    );
+    mutedTab = card.tabList.rowEls[0];
+
+    card.tabList.currentActiveElementId = mutedTab.focusLink();
+    isActiveElement(mutedTab.mainEl);
+    info("The 'main' element has focus.");
+
+    EventUtils.synthesizeKey("KEY_ArrowRight", {}, win);
+    isActiveElement(mutedTab.mediaButtonEl);
+    info("The media button has focus.");
+
+    EventUtils.synthesizeKey("KEY_ArrowRight", {}, win);
+    isActiveElement(mutedTab.secondaryButtonEl);
+    info("The secondary/more button has focus.");
+
+    ok(
+      mutedTab.indicators.includes("muted"),
+      "The muted tab is still muted after arrowing past it."
+    );
+
+    EventUtils.synthesizeKey("KEY_ArrowLeft", {}, win);
+    isActiveElement(mutedTab.mediaButtonEl);
+    info("The media button has focus.");
+
+    EventUtils.synthesizeKey("KEY_Enter", {}, win);
+    await tabChangeRaised;
+    await openTabs.updateComplete;
+
+    unmutedTab = card.tabList.rowEls[0];
+    await TestUtils.waitForCondition(
+      () => !unmutedTab.indicators.includes("muted"),
+      "The tab is no longer muted."
+    );
+    isActiveElement(unmutedTab.secondaryButtonEl);
+    info(
+      "Focus should be on the tab's secondary button element after unmuting."
+    );
   });
 
   cleanupTabs();
