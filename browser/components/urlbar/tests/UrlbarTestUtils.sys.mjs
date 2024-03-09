@@ -545,6 +545,7 @@ export var UrlbarTestUtils = {
     details.title = result.title;
     details.tags = "tags" in result.payload ? result.payload.tags : [];
     details.isSponsored = result.payload.isSponsored;
+    details.userContextId = result.payload.userContextId;
     let actions = element.getElementsByClassName("urlbarView-action");
     let urls = element.getElementsByClassName("urlbarView-url");
     let typeIcon = element.querySelector(".urlbarView-type-icon");

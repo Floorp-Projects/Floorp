@@ -198,6 +198,24 @@ class ProviderTopSites extends UrlbarProvider {
       this.sponsoredSites = sponsoredSites;
     }
 
+    let tabUrlsToContextIds;
+    if (lazy.UrlbarPrefs.get("suggest.openpage")) {
+      if (lazy.UrlbarPrefs.get("switchTabs.searchAllContainers")) {
+        tabUrlsToContextIds = lazy.UrlbarProviderOpenTabs.getOpenTabUrls(
+          queryContext.isPrivate
+        );
+      } else {
+        // Build an object compatible with the output of getOpenTabs.
+        tabUrlsToContextIds = new Map();
+        for (let url of lazy.UrlbarProviderOpenTabs.getOpenTabUrlsForUserContextId(
+          queryContext.userContextId,
+          queryContext.isPrivate
+        )) {
+          tabUrlsToContextIds.set(url, new Set([queryContext.userContextId]));
+        }
+      }
+    }
+
     for (let site of sites) {
       switch (site.type) {
         case "url": {
@@ -207,49 +225,60 @@ class ProviderTopSites extends UrlbarProvider {
             icon: site.favicon,
             isPinned: site.isPinned,
             isSponsored: site.isSponsored,
-            sendAttributionRequest: site.sendAttributionRequest,
           };
-          if (site.isSponsored) {
-            payload = {
-              ...payload,
-              sponsoredTileId: site.sponsoredTileId,
-              sponsoredClickUrl: site.sponsoredClickUrl,
-            };
+
+          // Fuzzy match both the URL as-is, and the URL without ref, then
+          // generate a merged Set.
+          if (tabUrlsToContextIds) {
+            let tabUserContextIds = new Set([
+              ...(tabUrlsToContextIds.get(site.url) ?? []),
+              ...(tabUrlsToContextIds.get(site.url.replace(/#.*$/, "")) ?? []),
+            ]);
+            if (tabUserContextIds.size) {
+              for (let userContextId of tabUserContextIds) {
+                payload.userContextId = userContextId;
+                let result = new lazy.UrlbarResult(
+                  UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
+                  UrlbarUtils.RESULT_SOURCE.TABS,
+                  ...lazy.UrlbarResult.payloadAndSimpleHighlights(
+                    queryContext.tokens,
+                    payload
+                  )
+                );
+                addCallback(this, result);
+              }
+              break;
+            }
           }
+
+          if (site.isSponsored) {
+            payload.sponsoredTileId = site.sponsoredTileId;
+            payload.sponsoredClickUrl = site.sponsoredClickUrl;
+          }
+          payload.sendAttributionRequest = site.sendAttributionRequest;
+
+          let resultSource = UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL;
+          if (lazy.UrlbarPrefs.get("suggest.bookmark")) {
+            let bookmark = await lazy.PlacesUtils.bookmarks.fetch({
+              url: new URL(payload.url),
+            });
+            // Check if query has been cancelled.
+            if (instance != this.queryInstance) {
+              break;
+            }
+            if (bookmark) {
+              resultSource = UrlbarUtils.RESULT_SOURCE.BOOKMARKS;
+            }
+          }
+
           let result = new lazy.UrlbarResult(
             UrlbarUtils.RESULT_TYPE.URL,
-            UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+            resultSource,
             ...lazy.UrlbarResult.payloadAndSimpleHighlights(
               queryContext.tokens,
               payload
             )
           );
-
-          let tabs;
-          if (lazy.UrlbarPrefs.get("suggest.openpage")) {
-            tabs = lazy.UrlbarProviderOpenTabs.getOpenTabs(
-              queryContext.userContextId || 0,
-              queryContext.isPrivate
-            );
-          }
-
-          if (tabs && tabs.includes(site.url.replace(/#.*$/, ""))) {
-            result.type = UrlbarUtils.RESULT_TYPE.TAB_SWITCH;
-            result.source = UrlbarUtils.RESULT_SOURCE.TABS;
-          } else if (lazy.UrlbarPrefs.get("suggest.bookmark")) {
-            let bookmark = await lazy.PlacesUtils.bookmarks.fetch({
-              url: new URL(result.payload.url),
-            });
-            if (bookmark) {
-              result.source = UrlbarUtils.RESULT_SOURCE.BOOKMARKS;
-            }
-          }
-
-          // Our query has been cancelled.
-          if (instance != this.queryInstance) {
-            break;
-          }
-
           addCallback(this, result);
           break;
         }

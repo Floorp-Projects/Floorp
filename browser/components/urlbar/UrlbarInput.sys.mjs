@@ -3529,7 +3529,7 @@ export class UrlbarInput {
 
   _on_mousedown(event) {
     switch (event.currentTarget) {
-      case this.textbox:
+      case this.textbox: {
         this._mousedownOnUrlbarDescendant = true;
 
         if (
@@ -3574,6 +3574,7 @@ export class UrlbarInput {
           });
         }
         break;
+      }
       case this.window:
         if (this._mousedownOnUrlbarDescendant) {
           this._mousedownOnUrlbarDescendant = false;
