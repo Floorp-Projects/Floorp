@@ -55,6 +55,7 @@
 #include "vm/BytecodeUtil.h"  // JSDVG_IGNORE_STACK
 #include "vm/ErrorObject.h"
 #include "vm/ErrorReporting.h"
+#include "vm/FrameIter.h"
 #include "vm/JSFunction.h"
 #include "vm/JSObject.h"
 #include "vm/PlainObject.h"  // js::PlainObject
@@ -997,7 +998,6 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
       suppressProfilerSampling(false),
       tempLifoAlloc_(this, (size_t)TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
       debuggerMutations(this, 0),
-      ionPcScriptCache(this, nullptr),
       status(this, JS::ExceptionStatus::None),
       unwrappedException_(this),
       unwrappedExceptionStack_(this),
@@ -1262,6 +1262,34 @@ void JSContext::resetJitStackLimit() {
 }
 
 void JSContext::initJitStackLimit() { resetJitStackLimit(); }
+
+JSScript* JSContext::currentScript(jsbytecode** ppc,
+                                   AllowCrossRealm allowCrossRealm) {
+  if (ppc) {
+    *ppc = nullptr;
+  }
+
+  // Fast path: there are no JS frames on the stack if there's no activation.
+  if (!activation()) {
+    return nullptr;
+  }
+
+  FrameIter iter(this);
+  if (iter.done() || !iter.hasScript()) {
+    return nullptr;
+  }
+
+  JSScript* script = iter.script();
+  if (allowCrossRealm == AllowCrossRealm::DontAllow &&
+      script->realm() != realm()) {
+    return nullptr;
+  }
+
+  if (ppc) {
+    *ppc = iter.pc();
+  }
+  return script;
+}
 
 #ifdef JS_CRASH_DIAGNOSTICS
 void ContextChecks::check(AbstractFramePtr frame, int argIndex) {

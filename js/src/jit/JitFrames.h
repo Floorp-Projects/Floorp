@@ -771,8 +771,6 @@ class InvalidationBailoutStack {
   void checkInvariants() const;
 };
 
-void GetPcScript(JSContext* cx, JSScript** scriptRes, jsbytecode** pcRes);
-
 // Baseline requires one slot for this/argument type checks.
 static const uint32_t MinJITStackSize = 1;
 
