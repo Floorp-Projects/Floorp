@@ -546,11 +546,7 @@ pref("browser.urlbar.switchTabs.adoptIntoActiveWindow", false);
 
 // Controls whether searching for open tabs returns tabs from any container
 // or only from the current container.
-#ifdef NIGHTLY_BUILD
 pref("browser.urlbar.switchTabs.searchAllContainers", true);
-#else
-pref("browser.urlbar.switchTabs.searchAllContainers", false);
-#endif
 
 // Whether addresses and search results typed into the address bar
 // should be opened in new tabs by default.
