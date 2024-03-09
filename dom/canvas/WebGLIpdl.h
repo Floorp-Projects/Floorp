@@ -641,6 +641,35 @@ struct ParamTraits<mozilla::avec3<U>> final {
   }
 };
 
+// -
+
+template <class TT>
+struct ParamTraits_IsEnumCase {
+  using T = TT;
+
+  static void Write(IPC::MessageWriter* const writer, const T& in) {
+    MOZ_RELEASE_ASSERT(IsEnumCase(in));
+    WriteParam(writer, mozilla::UnderlyingValue(in));
+  }
+
+  static bool Read(IPC::MessageReader* const reader, T* const out) {
+    std::underlying_type_t<T> rawVal;
+    if (!ReadParam(reader, &rawVal)) return false;
+    *out = static_cast<T>(rawVal);
+    return IsEnumCase(*out);
+  }
+};
+
+// -
+
+#define USE_IS_ENUM_CASE(T) \
+  template <>               \
+  struct ParamTraits<T> : public ParamTraits_IsEnumCase<T> {};
+
+USE_IS_ENUM_CASE(mozilla::webgl::OptionalRenderableFormatBits)
+
+#undef USE_IS_ENUM_CASE
+
 }  // namespace IPC
 
 #endif

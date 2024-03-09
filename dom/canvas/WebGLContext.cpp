@@ -653,7 +653,7 @@ RefPtr<WebGLContext> WebGLContext::Create(HostWebGLContext* host,
   out->limits = *webgl->mLimits;
   out->uploadableSdTypes = UploadableSdTypes();
   out->vendor = webgl->gl->Vendor();
-  out->isRgb8Renderable = webgl->mIsRgb8Renderable;
+  out->optionalRenderableFormatBits = webgl->mOptionalRenderableFormatBits;
 
   return webgl;
 }
@@ -710,15 +710,36 @@ void WebGLContext::FinishInit() {
     const auto tex = gl::ScopedTexture(gl);
     const auto fb = gl::ScopedFramebuffer(gl);
     gl->fBindTexture(LOCAL_GL_TEXTURE_2D, tex);
-    gl->fTexImage2D(LOCAL_GL_TEXTURE_2D, 0, LOCAL_GL_RGB, 1, 1, 0, LOCAL_GL_RGB,
-                    LOCAL_GL_UNSIGNED_BYTE, nullptr);
-
     gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, fb);
     gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_COLOR_ATTACHMENT0,
                               LOCAL_GL_TEXTURE_2D, tex, 0);
 
-    const auto status = gl->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
-    mIsRgb8Renderable = (status == LOCAL_GL_FRAMEBUFFER_COMPLETE);
+    const auto IsRenderable = [&](const GLint internalFormat,
+                                  const GLenum unpackFormat) {
+      gl->fTexImage2D(LOCAL_GL_TEXTURE_2D, 0, internalFormat, 1, 1, 0,
+                      unpackFormat, LOCAL_GL_UNSIGNED_BYTE, nullptr);
+      const auto status = gl->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
+      return (status == LOCAL_GL_FRAMEBUFFER_COMPLETE);
+    };
+
+    if (IsRenderable(LOCAL_GL_RGB, LOCAL_GL_RGB)) {
+      mOptionalRenderableFormatBits |=
+          webgl::OptionalRenderableFormatBits::RGB8;
+    }
+    if (gl->IsSupported(gl::GLFeature::sRGB)) {
+      struct {
+        GLint internal;
+        GLenum unpack;
+      } formats = {LOCAL_GL_SRGB8, LOCAL_GL_RGB};
+      const bool isEs2 = (gl->IsGLES() && gl->Version() < 300);
+      if (isEs2) {
+        formats = {LOCAL_GL_SRGB, LOCAL_GL_SRGB};
+      }
+      if (IsRenderable(formats.internal, formats.unpack)) {
+        mOptionalRenderableFormatBits |=
+            webgl::OptionalRenderableFormatBits::SRGB8;
+      }
+    }
   }
 
   //////

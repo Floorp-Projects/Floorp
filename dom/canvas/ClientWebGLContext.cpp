@@ -1268,8 +1268,9 @@ RefPtr<gfx::DataSourceSurface> ClientWebGLContext::BackBufferSnapshot() {
     if (!DoReadPixels(desc, pixels)) return nullptr;
 
     // RGBA->BGRA and flip-y.
-    MOZ_RELEASE_ASSERT(gfx::SwizzleYFlipData(pixels.data(), stride, gfx::SurfaceFormat::R8G8B8A8,
-                               pixels.data(), stride, gfx::SurfaceFormat::B8G8R8A8, {size.x, size.y}));
+    MOZ_RELEASE_ASSERT(gfx::SwizzleYFlipData(
+        pixels.data(), stride, gfx::SurfaceFormat::R8G8B8A8, pixels.data(),
+        stride, gfx::SurfaceFormat::B8G8R8A8, {size.x, size.y}));
   }
 
   return surf;
@@ -4356,12 +4357,9 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
     const auto& contextInfo = mNotLost->info;
 
     const auto fallbackReason = [&]() -> Maybe<std::string> {
-      if (!respecFormat) {
-        return Some(std::string{
-            "Fast uploads not supported for TexSubImage. Use TexImage."});
-      }
-      auto fallbackReason = BlitPreventReason(
-          level, offset, respecFormat, pi, *desc, contextInfo.isRgb8Renderable);
+      auto fallbackReason =
+          BlitPreventReason(level, offset, respecFormat, pi, *desc,
+                            contextInfo.optionalRenderableFormatBits);
       if (fallbackReason) return fallbackReason;
 
       const bool canUploadViaSd = contextInfo.uploadableSdTypes[sdType];

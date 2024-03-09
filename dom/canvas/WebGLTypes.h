@@ -19,12 +19,14 @@
 #include "ImageContainer.h"
 #include "mozilla/Casting.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/EnumTypeTraits.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Range.h"
 #include "mozilla/RefCounted.h"
 #include "mozilla/Result.h"
 #include "mozilla/ResultVariant.h"
 #include "mozilla/Span.h"
+#include "mozilla/TypedEnumBits.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/BuildConstants.h"
 #include "mozilla/gfx/Logging.h"
@@ -679,18 +681,41 @@ struct Padded {
 
 // -
 
+enum class OptionalRenderableFormatBits : uint8_t {
+  RGB8 = (1 << 0),
+  SRGB8 = (1 << 1),
+};
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(OptionalRenderableFormatBits)
+inline constexpr bool IsEnumCase(const OptionalRenderableFormatBits raw) {
+  auto rawWithoutValidBits = UnderlyingValue(raw);
+  auto bit = decltype(rawWithoutValidBits){1};
+  while (bit) {
+    switch (OptionalRenderableFormatBits{bit}) {
+      // -Werror=switch ensures exhaustive.
+      case OptionalRenderableFormatBits::RGB8:
+      case OptionalRenderableFormatBits::SRGB8:
+        rawWithoutValidBits &= ~bit;
+        break;
+    }
+    bit <<= 1;
+  }
+  return rawWithoutValidBits == 0;
+}
+
+// -
+
 struct InitContextResult final {
   Padded<std::string, 32> error;  // MINGW 32-bit needs this padding.
   WebGLContextOptions options;
   gl::GLVendor vendor;
-  bool isRgb8Renderable;
+  OptionalRenderableFormatBits optionalRenderableFormatBits;
   uint8_t _padding = {};
-  webgl::Limits limits;
+  Limits limits;
   EnumMask<layers::SurfaceDescriptor::Type> uploadableSdTypes;
 
   auto MutTiedFields() {
-    return std::tie(error, options, vendor, isRgb8Renderable, _padding, limits,
-                    uploadableSdTypes);
+    return std::tie(error, options, vendor, optionalRenderableFormatBits,
+                    _padding, limits, uploadableSdTypes);
   }
 };
 
