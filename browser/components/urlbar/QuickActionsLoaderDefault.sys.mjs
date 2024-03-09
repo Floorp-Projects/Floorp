@@ -303,6 +303,9 @@ function shuffle(array, seed) {
  * Loads the default QuickActions.
  */
 export class QuickActionsLoaderDefault {
+  // Track the loading of the QuickActions to ensure they aren't loaded multiple times.
+  static #loadedPromise = null;
+
   static async load() {
     let keys = Object.keys(DEFAULT_ACTIONS);
     if (lazy.UrlbarPrefs.get("quickactions.randomOrderActions")) {
@@ -327,5 +330,11 @@ export class QuickActionsLoaderDefault {
         .flat();
       lazy.UrlbarProviderQuickActions.addAction(key, actionData);
     }
+  }
+  static async ensureLoaded() {
+    if (!this.#loadedPromise) {
+      this.#loadedPromise = this.load();
+    }
+    await this.#loadedPromise;
   }
 }
