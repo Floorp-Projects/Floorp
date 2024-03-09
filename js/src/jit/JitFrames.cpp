@@ -20,7 +20,6 @@
 #include "jit/JitRuntime.h"
 #include "jit/JitSpewer.h"
 #include "jit/LIR.h"
-#include "jit/PcScriptCache.h"
 #include "jit/Recover.h"
 #include "jit/Safepoints.h"
 #include "jit/ScriptFromCalleeToken.h"
@@ -1537,90 +1536,6 @@ JSScript* GetTopJitJSScript(JSContext* cx) {
 
   MOZ_ASSERT(frame.isScripted());
   return frame.script();
-}
-
-void GetPcScript(JSContext* cx, JSScript** scriptRes, jsbytecode** pcRes) {
-  JitSpew(JitSpew_IonSnapshots, "Recover PC & Script from the last frame.");
-
-  // Recover the return address so that we can look it up in the
-  // PcScriptCache, as script/pc computation is expensive.
-  JitActivationIterator actIter(cx);
-  OnlyJSJitFrameIter it(actIter);
-  uint8_t* retAddr;
-  if (it.frame().isExitFrame()) {
-    ++it;
-
-    // Skip baseline interpreter entry frames.
-    // Can exist before rectifier frames.
-    if (it.frame().isBaselineInterpreterEntry()) {
-      ++it;
-    }
-
-    // Skip rectifier frames.
-    if (it.frame().isRectifier()) {
-      ++it;
-      MOZ_ASSERT(it.frame().isBaselineStub() || it.frame().isBaselineJS() ||
-                 it.frame().isIonJS());
-    }
-
-    // Skip Baseline/Ion stub and IC call frames.
-    if (it.frame().isBaselineStub()) {
-      ++it;
-      MOZ_ASSERT(it.frame().isBaselineJS());
-    } else if (it.frame().isIonICCall()) {
-      ++it;
-      MOZ_ASSERT(it.frame().isIonJS());
-    }
-
-    MOZ_ASSERT(it.frame().isBaselineJS() || it.frame().isIonJS());
-
-    // Don't use the return address and the cache if the BaselineFrame is
-    // running in the Baseline Interpreter. In this case the bytecode pc is
-    // cheap to get, so we won't benefit from the cache, and the return address
-    // does not map to a single bytecode pc.
-    if (it.frame().isBaselineJS() &&
-        it.frame().baselineFrame()->runningInInterpreter()) {
-      it.frame().baselineScriptAndPc(scriptRes, pcRes);
-      return;
-    }
-
-    retAddr = it.frame().resumePCinCurrentFrame();
-  } else {
-    MOZ_ASSERT(it.frame().isBailoutJS());
-    retAddr = it.frame().returnAddress();
-  }
-
-  MOZ_ASSERT(retAddr);
-
-  uint32_t hash = PcScriptCache::Hash(retAddr);
-
-  // Lazily initialize the cache. The allocation may safely fail and will not
-  // GC.
-  if (MOZ_UNLIKELY(cx->ionPcScriptCache == nullptr)) {
-    cx->ionPcScriptCache =
-        MakeUnique<PcScriptCache>(cx->runtime()->gc.gcNumber());
-  }
-
-  if (cx->ionPcScriptCache.ref() &&
-      cx->ionPcScriptCache->get(cx->runtime(), hash, retAddr, scriptRes,
-                                pcRes)) {
-    return;
-  }
-
-  // Lookup failed: undertake expensive process to determine script and pc.
-  if (it.frame().isIonJS() || it.frame().isBailoutJS()) {
-    InlineFrameIterator ifi(cx, &it.frame());
-    *scriptRes = ifi.script();
-    *pcRes = ifi.pc();
-  } else {
-    MOZ_ASSERT(it.frame().isBaselineJS());
-    it.frame().baselineScriptAndPc(scriptRes, pcRes);
-  }
-
-  // Add entry to cache.
-  if (cx->ionPcScriptCache.ref()) {
-    cx->ionPcScriptCache->add(hash, retAddr, *pcRes, *scriptRes);
-  }
 }
 
 RInstructionResults::RInstructionResults(JitFrameLayout* fp)

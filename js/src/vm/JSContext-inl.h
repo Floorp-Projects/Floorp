@@ -352,52 +352,6 @@ inline void JSContext::setRealmForJitExceptionHandler(JS::Realm* realm) {
   realm_ = realm;
 }
 
-inline JSScript* JSContext::currentScript(
-    jsbytecode** ppc, AllowCrossRealm allowCrossRealm) const {
-  if (ppc) {
-    *ppc = nullptr;
-  }
-
-  js::Activation* act = activation();
-  if (!act) {
-    return nullptr;
-  }
-
-  MOZ_ASSERT(act->cx() == this);
-
-  // Cross-compartment implies cross-realm.
-  if (allowCrossRealm == AllowCrossRealm::DontAllow &&
-      act->compartment() != compartment()) {
-    return nullptr;
-  }
-
-  JSScript* script = nullptr;
-  jsbytecode* pc = nullptr;
-  if (act->isJit()) {
-    if (act->hasWasmExitFP()) {
-      return nullptr;
-    }
-    js::jit::GetPcScript(const_cast<JSContext*>(this), &script, &pc);
-  } else {
-    js::InterpreterFrame* fp = act->asInterpreter()->current();
-    MOZ_ASSERT(!fp->runningInJit());
-    script = fp->script();
-    pc = act->asInterpreter()->regs().pc;
-  }
-
-  MOZ_ASSERT(script->containsPC(pc));
-
-  if (allowCrossRealm == AllowCrossRealm::DontAllow &&
-      script->realm() != realm()) {
-    return nullptr;
-  }
-
-  if (ppc) {
-    *ppc = pc;
-  }
-  return script;
-}
-
 inline js::RuntimeCaches& JSContext::caches() { return runtime()->caches(); }
 
 template <typename T, js::AllowGC allowGC, typename... Args>
