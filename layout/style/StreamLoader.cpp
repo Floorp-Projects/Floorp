@@ -116,6 +116,13 @@ StreamLoader::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
   // Resolution of parse promise fires onLoadEvent and this should not happen
   // before main thread OnStopRequest is dispatched.
   if (NS_IsMainThread()) {
+    if (mOnDataFinishedTime) {
+      // collect telemetry for the delta between OnDataFinished and
+      // OnStopRequest
+      TimeDuration delta = (TimeStamp::Now() - mOnDataFinishedTime);
+      glean::networking::http_content_cssloader_ondatafinished_to_onstop_delay
+          .AccumulateRawDuration(delta);
+    }
     mSheetLoadData->mSheet->BlockOrUnblockParsePromise(false);
   }
 
@@ -230,6 +237,9 @@ void StreamLoader::HandleBOM() {
 NS_IMETHODIMP
 StreamLoader::OnDataFinished(nsresult aResult) {
   if (StaticPrefs::network_send_OnDataFinished_cssLoader()) {
+    MOZ_ASSERT(mOnDataFinishedTime.IsNull(),
+               "OnDataFinished should only be called once");
+    mOnDataFinishedTime = TimeStamp::Now();
     return OnStopRequest(mRequest, aResult);
   }
 

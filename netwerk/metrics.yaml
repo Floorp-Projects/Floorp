@@ -500,6 +500,21 @@ networking:
       - rjesup@mozilla.com
     expires: 130
 
+  http_content_cssloader_ondatafinished_to_onstop_delay:
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      The time between processing OnDataFinished and processing OnStopRequest for CSSLoader in the content process
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1883391
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1883391
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+    expires: 130
+
   http_1_download_throughput:
     type: custom_distribution
     unit: mbps
