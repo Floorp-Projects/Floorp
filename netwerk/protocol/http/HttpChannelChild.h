@@ -395,6 +395,12 @@ class HttpChannelChild final : public PHttpChannelChild,
   // permission or cookie. That is, RecvOnStartRequestSent is received.
   uint8_t mSuspendedByWaitingForPermissionCookie : 1;
 
+  // HttpChannelChild::Release has some special logic that makes sure
+  // OnStart/OnStop are always called when releasing the channel.
+  // But we have to make sure we only do this once - otherwise we could
+  // get stuck in a loop.
+  uint8_t mAlreadyReleased : 1;
+
   void CleanupRedirectingChannel(nsresult rv);
 
   // Calls OnStartRequest and/or OnStopRequest on our listener in case we didn't
