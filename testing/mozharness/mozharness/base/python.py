@@ -128,7 +128,6 @@ class VirtualenvMixin(object):
         method=None,
         requirements=None,
         optional=False,
-        two_pass=False,
         editable=False,
     ):
         """Register a module to be installed with the virtualenv.
@@ -140,7 +139,7 @@ class VirtualenvMixin(object):
         applied.
         """
         self._virtualenv_modules.append(
-            (name, url, method, requirements, optional, two_pass, editable)
+            (name, url, method, requirements, optional, editable)
         )
 
     def query_virtualenv_path(self):
@@ -291,6 +290,9 @@ class VirtualenvMixin(object):
                 command = [pip, "install"]
             if no_deps:
                 command += ["--no-deps"]
+
+            command += ["--no-use-pep517"]
+
             # To avoid timeouts with our pypi server, increase default timeout:
             # https://bugzilla.mozilla.org/show_bug.cgi?id=1007230#c802
             command += ["--timeout", str(c.get("pip_timeout", 120))]
@@ -625,19 +627,8 @@ class VirtualenvMixin(object):
             method,
             requirements,
             optional,
-            two_pass,
             editable,
         ) in self._virtualenv_modules:
-            if two_pass:
-                self.install_module(
-                    module=module,
-                    module_url=url,
-                    install_method=method,
-                    requirements=requirements or (),
-                    optional=optional,
-                    no_deps=True,
-                    editable=editable,
-                )
             self.install_module(
                 module=module,
                 module_url=url,
@@ -1132,6 +1123,8 @@ class Python3Virtualenv(object):
 
         if c.get("find_links") and not c["pip_index"]:
             pip_args += ["--no-index"]
+
+        pip_args += ["--no-use-pep517"]
 
         # Add --find-links pages to look at. Add --trusted-host automatically if
         # the host isn't secure. This allows modern versions of pip to connect

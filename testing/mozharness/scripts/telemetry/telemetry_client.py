@@ -138,7 +138,7 @@ class TelemetryTests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
             "config",
             "telemetry_tests_requirements.txt",
         )
-        self.register_virtualenv_module(requirements=[requirements], two_pass=True)
+        self.register_virtualenv_module(requirements=[requirements])
 
     def query_abs_dirs(self):
         if self.abs_dirs:

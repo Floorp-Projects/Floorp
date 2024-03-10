@@ -794,7 +794,6 @@ class Talos(
             )
         self.register_virtualenv_module(
             requirements=[mozbase_requirements],
-            two_pass=True,
             editable=True,
         )
         super(Talos, self).create_virtualenv()

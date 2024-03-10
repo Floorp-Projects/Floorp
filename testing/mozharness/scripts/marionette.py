@@ -257,7 +257,7 @@ class MarionetteTest(TestingMixin, MercurialScript, TransferMixin, CodeCoverageM
                 "Could not find marionette requirements file: {}".format(requirements)
             )
 
-        self.register_virtualenv_module(requirements=[requirements], two_pass=True)
+        self.register_virtualenv_module(requirements=[requirements])
 
     def _get_test_suite(self, is_emulator):
         """
