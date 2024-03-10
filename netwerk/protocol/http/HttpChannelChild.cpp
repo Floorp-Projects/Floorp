@@ -223,27 +223,11 @@ NS_IMETHODIMP_(MozExternalRefCountType) HttpChannelChild::Release() {
 
     // 3) Finally, we turn the reference into a regular smart pointer.
     RefPtr<HttpChannelChild> channel = dont_AddRef(this);
-
-    // This runnable will create a strong reference to |this|.
-    NS_DispatchToMainThread(
-        NewRunnableMethod("~HttpChannelChild>DoNotifyListener", channel,
-                          &HttpChannelChild::DoNotifyListener));
-
+    NS_DispatchToMainThread(NS_NewRunnableFunction(
+        "~HttpChannelChild>DoNotifyListener",
+        [chan = std::move(channel)] { chan->DoNotifyListener(); }));
     // If NS_DispatchToMainThread failed then we're going to leak the runnable,
     // and thus the channel, so there's no need to do anything else.
-
-    // We should have already done any special handling for the refcount = 1
-    // case when the refcount first went from 2 to 1. We don't want it to happen
-    // when |channel| is destroyed.
-    MOZ_ASSERT(!mKeptAlive || !CanSend());
-
-    // XXX If std::move(channel) is allowed, then we don't have to have extra
-    // checks for the refcount going from 2 to 1. See bug 1680217.
-
-    // This will release the stabilization refcount, which is necessary to avoid
-    // a leak.
-    channel = nullptr;
-
     return mRefCnt;
   }
 
@@ -1246,8 +1230,8 @@ void HttpChannelChild::DoNotifyListener() {
 
   if (mListener && !LoadOnStartRequestCalled()) {
     nsCOMPtr<nsIStreamListener> listener = mListener;
-    StoreOnStartRequestCalled(
-        true);  // avoid reentrancy bugs by setting this now
+    // avoid reentrancy bugs by setting this now
+    StoreOnStartRequestCalled(true);
     listener->OnStartRequest(this);
   }
   StoreOnStartRequestCalled(true);
