@@ -590,7 +590,8 @@ class Loader final {
   //
   // If this function returns Completed::Yes, then ParseSheet also called
   // SheetComplete on aLoadData.
-  Completed ParseSheet(const nsACString&, SheetLoadData&, AllowAsyncParse);
+  Completed ParseSheet(const nsACString&, const RefPtr<SheetLoadDataHolder>&,
+                       AllowAsyncParse);
 
   // The load of the sheet in the load data is done, one way or another.
   // Do final cleanup.
@@ -646,7 +647,7 @@ class Loader final {
   uint32_t mPendingLoadCount = 0;
 
   // The number of stylesheets that we have parsed, for testing purposes.
-  uint32_t mParsedSheetCount = 0;
+  Atomic<uint32_t, MemoryOrdering::Relaxed> mParsedSheetCount{0};
 
   bool mEnabled = true;
 

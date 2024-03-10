@@ -9,6 +9,7 @@
 
 #include "nsIStreamListener.h"
 #include "nsIThreadRetargetableStreamListener.h"
+#include "nsIURI.h"
 #include "nsString.h"
 #include "mozilla/css/SheetLoadData.h"
 #include "mozilla/Assertions.h"
@@ -52,10 +53,15 @@ class StreamLoader : public nsIThreadRetargetableStreamListener {
   // mBytes, and store all subsequent data in that buffer.
   nsCString mBytes;
   nsAutoCStringN<3> mBOMBytes;
+  nsCOMPtr<nsIRequest> mRequest;
+  nsCOMPtr<nsIURI> mFinalChannelURI;
+  nsCOMPtr<nsIPrincipal> mChannelResultPrincipal;
+  // flag to indicate that we can skip processing of data in OnStopRequest
+  bool mOnStopProcessingDone{false};
+  RefPtr<SheetLoadDataHolder> mMainThreadSheetLoadData;
 
 #ifdef NIGHTLY_BUILD
   bool mChannelOpenFailed = false;
-  bool mOnStopRequestCalled = false;
 #endif
 };
 
