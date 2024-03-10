@@ -60,8 +60,6 @@ class StreamLoader : public nsIThreadRetargetableStreamListener {
   bool mOnStopProcessingDone{false};
   RefPtr<SheetLoadDataHolder> mMainThreadSheetLoadData;
 
-  mozilla::TimeStamp mOnDataFinishedTime;
-
 #ifdef NIGHTLY_BUILD
   bool mChannelOpenFailed = false;
 #endif
