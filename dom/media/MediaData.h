@@ -97,8 +97,16 @@ class AlignedBuffer {
   }
 
   AlignedBuffer& operator=(AlignedBuffer&& aOther) noexcept {
-    this->~AlignedBuffer();
-    new (this) AlignedBuffer(std::move(aOther));
+    if (&aOther == this) {
+      return *this;
+    }
+    mData = aOther.mData;
+    mLength = aOther.mLength;
+    mBuffer = std::move(aOther.mBuffer);
+    mCapacity = aOther.mCapacity;
+    aOther.mData = nullptr;
+    aOther.mLength = 0;
+    aOther.mCapacity = 0;
     return *this;
   }
 
