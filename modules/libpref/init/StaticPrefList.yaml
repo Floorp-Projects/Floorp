@@ -15960,6 +15960,15 @@
   value: false
   mirror: always
 
+# Whether GTK global menubar support is enabled using wayland's experimental
+# dbus_annotation protocol:
+# https://gitlab.freedesktop.org/wayland/wayland-protocols/-/merge_requests/52
+# Disabled until it has a final shape and it is available in compositors.
+- name: widget.gtk.global-menu.wayland.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Whether native GTK context menus are enabled.
 # Disabled because at the very least there's missing custom icon support.
 - name: widget.gtk.native-context-menus

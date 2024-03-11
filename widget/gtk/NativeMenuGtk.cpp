@@ -735,6 +735,9 @@ void DBusMenuBar::OnNameOwnerChanged() {
 
 #  ifdef MOZ_WAYLAND
   if (auto* display = widget::WaylandDisplayGet()) {
+    if (!StaticPrefs::widget_gtk_global_menu_wayland_enabled()) {
+      return;
+    }
     xdg_dbus_annotation_manager_v1* annotationManager =
         display->GetXdgDbusAnnotationManager();
     if (NS_WARN_IF(!annotationManager)) {
