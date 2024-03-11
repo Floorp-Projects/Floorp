@@ -406,9 +406,9 @@ void RTCRtpTransceiver::Unlink() {
 // TODO: Only called from one place in PeerConnectionImpl, synchronously, when
 // the JSEP engine has successfully completed an offer/answer exchange. This is
 // a bit squirrely, since identity validation happens asynchronously in
-// PeerConnection.jsm. This probably needs to happen once all the "in parallel"
-// steps have succeeded, but before we queue the task for JS observable state
-// updates.
+// PeerConnection.sys.mjs. This probably needs to happen once all the "in
+// parallel" steps have succeeded, but before we queue the task for JS
+// observable state updates.
 nsresult RTCRtpTransceiver::UpdateTransport() {
   if (!mHasTransport) {
     return NS_OK;
@@ -444,9 +444,9 @@ void RTCRtpTransceiver::ResetSync() { mSyncGroup = std::string(); }
 // TODO: Only called from one place in PeerConnectionImpl, synchronously, when
 // the JSEP engine has successfully completed an offer/answer exchange. This is
 // a bit squirrely, since identity validation happens asynchronously in
-// PeerConnection.jsm. This probably needs to happen once all the "in parallel"
-// steps have succeeded, but before we queue the task for JS observable state
-// updates.
+// PeerConnection.sys.mjs. This probably needs to happen once all the "in
+// parallel" steps have succeeded, but before we queue the task for JS
+// observable state updates.
 nsresult RTCRtpTransceiver::SyncWithMatchingVideoConduits(
     nsTArray<RefPtr<RTCRtpTransceiver>>& transceivers) {
   if (mStopped) {

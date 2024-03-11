@@ -6,7 +6,7 @@ var gift = require("gift"),
   fs = require("fs"),
   argv = require("optimist")
     .usage(
-      "Update vtt.jsm with the latest from a vtt.js directory.\nUsage:" +
+      "Update vtt.sys.mjs with the latest from a vtt.js directory.\nUsage:" +
         " $0 -d [dir]"
     )
     .demand("d")
@@ -22,7 +22,7 @@ var gift = require("gift"),
     .options("w", {
       alias: "write",
       describe: "Path to file to write to.",
-      default: "./vtt.jsm",
+      default: "./vtt.sys.mjs",
     }).argv;
 
 var repo = gift(argv.d);

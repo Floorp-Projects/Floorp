@@ -3583,7 +3583,7 @@ nsresult nsFrameLoader::PopulateOriginContextIdsFromAttributes(
       mOwnerContent->GetAttr(nsGkAtoms::geckoViewSessionContextId,
                              attributeValue) &&
       !attributeValue.IsEmpty()) {
-    // XXX: Should we check the format from `GeckoViewNavigation.jsm` here?
+    // XXX: Should we check the format from `GeckoViewNavigation.sys.mjs` here?
     aAttr.mGeckoViewSessionContextId = attributeValue;
   }
 

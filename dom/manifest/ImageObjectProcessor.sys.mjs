@@ -6,7 +6,7 @@
  * Implementation of Image Object processing algorithms from:
  * http://www.w3.org/TR/appmanifest/#image-object-and-its-members
  *
- * This is intended to be used in conjunction with ManifestProcessor.jsm
+ * This is intended to be used in conjunction with ManifestProcessor.sys.mjs
  *
  * Creates an object to process Image Objects as defined by the
  * W3C specification. This is used to process things like the

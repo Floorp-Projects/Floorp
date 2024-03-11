@@ -91,9 +91,9 @@ mozilla::ipc::IPCResult ServiceWorkerManagerParent::RecvPropagateUnregister(
   // one and only ServiceWorkerManager, but it is necessary for us to have run
   // the unregister call above because until Bug 1183245 is fixed,
   // nsIServiceWorkerManager.propagateUnregister() is a de facto API for
-  // clearing ServiceWorker registrations by Sanitizer.jsm via
-  // ServiceWorkerCleanUp.jsm, as well as devtools "unregister" affordance and
-  // the no-longer-relevant about:serviceworkers UI.
+  // clearing ServiceWorker registrations by Sanitizer.sys.mjs via
+  // ServiceWorkerCleanUp.sys.mjs, as well as devtools "unregister" affordance
+  // and the no-longer-relevant about:serviceworkers UI.
 
   return IPC_OK();
 }

@@ -18702,7 +18702,7 @@ nsIPrincipal* Document::EffectiveStoragePrincipal() const {
   }
 
   // Calling StorageAllowedForDocument will notify the ContentBlockLog. This
-  // loads TrackingDBService.jsm, which in turn pulls in osfile.jsm, making us
+  // loads TrackingDBService.sys.mjs, making us potentially
   // fail // browser/base/content/test/performance/browser_startup.js. To avoid
   // that, we short-circuit the check here by allowing storage access to system
   // and addon principles, avoiding the test-failure.
