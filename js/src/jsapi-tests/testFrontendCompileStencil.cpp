@@ -41,11 +41,9 @@ BEGIN_FRONTEND_TEST(testFrontendContextCompileGlobalScriptToStencil) {
     JS::SourceText<mozilla::Utf8Unit> srcBuf;
     CHECK(
         srcBuf.init(fc, source, strlen(source), JS::SourceOwnership::Borrowed));
-    JS::CompilationStorage compileStorage;
     RefPtr<JS::Stencil> stencil =
-        JS::CompileGlobalScriptToStencil(fc, options, srcBuf, compileStorage);
+        JS::CompileGlobalScriptToStencil(fc, options, srcBuf);
     CHECK(stencil);
-    CHECK(compileStorage.hasInput());
   }
 
   {
@@ -54,11 +52,9 @@ BEGIN_FRONTEND_TEST(testFrontendContextCompileGlobalScriptToStencil) {
     JS::SourceText<char16_t> srcBuf;
     CHECK(srcBuf.init(fc, source, std::char_traits<char16_t>::length(source),
                       JS::SourceOwnership::Borrowed));
-    JS::CompilationStorage compileStorage;
     RefPtr<JS::Stencil> stencil =
-        JS::CompileGlobalScriptToStencil(fc, options, srcBuf, compileStorage);
+        JS::CompileGlobalScriptToStencil(fc, options, srcBuf);
     CHECK(stencil);
-    CHECK(compileStorage.hasInput());
   }
 
   JS::DestroyFrontendContext(fc);

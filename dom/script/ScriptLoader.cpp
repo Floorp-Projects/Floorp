@@ -1891,14 +1891,13 @@ class ScriptOrModuleCompileTask final : public CompileOrDecodeTask {
     JS::SetNativeStackQuota(mFrontendContext,
                             JS::ThreadStackQuotaForSize(stackSize));
 
-    JS::CompilationStorage compileStorage;
     auto compile = [&](auto& source) {
       if constexpr (target == CompilationTarget::Script) {
         return JS::CompileGlobalScriptToStencil(mFrontendContext, mOptions,
-                                                source, compileStorage);
+                                                source);
       }
       return JS::CompileModuleScriptToStencil(mFrontendContext, mOptions,
-                                              source, compileStorage);
+                                              source);
     };
     return mMaybeSource.mapNonEmpty(compile);
   }
@@ -1962,7 +1961,6 @@ class ScriptDecodeTask final : public CompileOrDecodeTask {
   already_AddRefed<JS::Stencil> Decode() {
     // NOTE: JS::DecodeStencil doesn't need the stack quota.
 
-    JS::CompilationStorage compileStorage;
     RefPtr<JS::Stencil> stencil;
     mResult = JS::DecodeStencil(mFrontendContext, mDecodeOptions, mRange,
                                 getter_AddRefs(stencil));

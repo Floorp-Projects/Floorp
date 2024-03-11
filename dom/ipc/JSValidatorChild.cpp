@@ -207,9 +207,8 @@ JSValidatorChild::ValidatorResult JSValidatorChild::ShouldAllowJS(
   prefableOptions.setAsmJSOption(JS::AsmJSOption::DisabledByAsmJSPref);
 
   JS::CompileOptions options(prefableOptions);
-  JS::CompilationStorage storage;
   RefPtr<JS::Stencil> stencil =
-      JS::CompileGlobalScriptToStencil(fc, options, srcBuf, storage);
+      JS::CompileGlobalScriptToStencil(fc, options, srcBuf);
 
   if (!stencil) {
     JS::ClearFrontendErrors(fc);

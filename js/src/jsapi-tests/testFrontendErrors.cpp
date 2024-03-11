@@ -51,9 +51,8 @@ BEGIN_TEST(testFrontendErrors_error) {
     JS::SourceText<mozilla::Utf8Unit> srcBuf;
     CHECK(
         srcBuf.init(fc, source, strlen(source), JS::SourceOwnership::Borrowed));
-    JS::CompilationStorage compileStorage;
     RefPtr<JS::Stencil> stencil =
-        JS::CompileGlobalScriptToStencil(fc, options, srcBuf, compileStorage);
+        JS::CompileGlobalScriptToStencil(fc, options, srcBuf);
     CHECK(!stencil);
   }
 
@@ -133,9 +132,8 @@ BEGIN_TEST(testFrontendErrors_warning) {
     JS::SourceText<mozilla::Utf8Unit> srcBuf;
     CHECK(
         srcBuf.init(fc, source, strlen(source), JS::SourceOwnership::Borrowed));
-    JS::CompilationStorage compileStorage;
     RefPtr<JS::Stencil> stencil =
-        JS::CompileGlobalScriptToStencil(fc, options, srcBuf, compileStorage);
+        JS::CompileGlobalScriptToStencil(fc, options, srcBuf);
     CHECK(stencil);
   }
 

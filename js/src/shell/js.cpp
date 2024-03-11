@@ -127,7 +127,7 @@
 #include "js/ErrorReport.h"                 // JS::PrintError
 #include "js/Exception.h"                   // JS::StealPendingExceptionStack
 #include "js/experimental/CodeCoverage.h"   // js::EnableCodeCoverage
-#include "js/experimental/CompileScript.h"  // JS::NewFrontendContext, JS::DestroyFrontendContext, JS::HadFrontendErrors, JS::ConvertFrontendErrorsToRuntimeErrors, JS::CompileGlobalScriptToStencil, JS::CompileModuleScriptToStencil, JS::CompilationStorage
+#include "js/experimental/CompileScript.h"  // JS::NewFrontendContext, JS::DestroyFrontendContext, JS::HadFrontendErrors, JS::ConvertFrontendErrorsToRuntimeErrors, JS::CompileGlobalScriptToStencil, JS::CompileModuleScriptToStencil
 #include "js/experimental/CTypes.h"         // JS::InitCTypesClass
 #include "js/experimental/Intl.h"  // JS::AddMoz{DateTimeFormat,DisplayNames}Constructor
 #include "js/experimental/JitInfo.h"  // JSJit{Getter,Setter,Method}CallArgs, JSJitGetterInfo, JSJit{Getter,Setter}Op, JSJitInfo
@@ -637,15 +637,11 @@ void OffThreadJob::run() {
 
   switch (kind_) {
     case Kind::CompileScript: {
-      JS::CompilationStorage compileStorage;
-      stencil_ = JS::CompileGlobalScriptToStencil(fc_, options_, srcBuf_,
-                                                  compileStorage);
+      stencil_ = JS::CompileGlobalScriptToStencil(fc_, options_, srcBuf_);
       break;
     }
     case Kind::CompileModule: {
-      JS::CompilationStorage compileStorage;
-      stencil_ = JS::CompileModuleScriptToStencil(fc_, options_, srcBuf_,
-                                                  compileStorage);
+      stencil_ = JS::CompileModuleScriptToStencil(fc_, options_, srcBuf_);
       break;
     }
     case Kind::Decode: {
