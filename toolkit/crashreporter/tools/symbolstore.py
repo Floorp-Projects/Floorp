@@ -23,6 +23,7 @@
 
 import ctypes
 import errno
+import io
 import os
 import platform
 import re
@@ -550,8 +551,25 @@ class Dumper:
         """
         Get the commandline used to invoke dump_syms.
         """
+        path = os.path.join(buildconfig.topobjdir, "buildid.h")
+        buildid = io.open(path, "r", encoding="utf-8").read().split()[2]
+
         # The Mac dumper overrides this.
-        return [self.dump_syms, "--inlines", file]
+        return [
+            self.dump_syms,
+            "--inlines",
+            "--extra-info",
+            "VENDOR " + buildconfig.substs["MOZ_APP_VENDOR"],
+            "--extra-info",
+            "PRODUCTNAME " + buildconfig.substs["MOZ_APP_BASENAME"],
+            "--extra-info",
+            "RELEASECHANNEL " + buildconfig.substs["MOZ_UPDATE_CHANNEL"],
+            "--extra-info",
+            "VERSION " + buildconfig.substs["MOZ_APP_VERSION"],
+            "--extra-info",
+            "BUILDID " + buildid,
+            file,
+        ]
 
     def ProcessFileWork(
         self, file, arch_num, arch, vcs_root, dsymbundle=None, count_ctors=False
