@@ -319,7 +319,7 @@ A marker type must have a unique name, it is used to keep track of the type of
 markers in the profiler storage, and to identify them uniquely on profiler.firefox.com.
 (It does not need to be the same as the ``struct``'s name.)
 
-This name is defined in a special static data member ``Name``:
+This type name is defined in a special static data member ``Name``:
 
 .. code-block:: cpp
 
@@ -332,6 +332,14 @@ In addition you must add a description of your marker in a special static data m
 
     // …
       static constexpr const char* Description = "This is my marker!";
+
+If you expect users to be passing unique names for individual instances of the marker,
+you may want to add the following to ensure those names get stored when using ETW:
+
+.. code-block:: cpp
+
+    // …
+      static constexpr bool StoreName = true;
 
 Marker Type Data
 ^^^^^^^^^^^^^^^^
