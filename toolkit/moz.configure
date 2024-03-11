@@ -101,7 +101,7 @@ def gecko_profiler(enable_gecko_profiler, target):
         return target.cpu in ("aarch64", "arm", "x86", "x86_64", "mips64")
     elif target.kernel == "FreeBSD":
         return target.cpu in ("aarch64", "x86_64")
-    return target.os in ("OSX", "WINNT")
+    return target.kernel in ("Darwin", "WINNT")
 
 
 @depends(gecko_profiler)
