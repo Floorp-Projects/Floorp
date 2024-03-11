@@ -190,6 +190,8 @@ These developer tools are also built into Firefox. Unlike the "Core Tools" above
   * - :doc:`Custom formatters <custom_formatters/index>`
     - Customize the way objects are displayed within the DevTools.
 
+  * - :doc:`JavaScript tracer <javascript_tracer/index>`
+    - Live display all JavaScript function calls.
 
 .. image:: logo-developer-quantum.png
     :class: center
