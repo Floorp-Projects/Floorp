@@ -131,11 +131,13 @@ pub enum GenericValueComponent<
     /// A <resolution> value
     Resolution(Resolution),
     /// A <transform-function> value
+    /// TODO(bug 1884606): <transform-function> `none` should not interpolate.
     TransformFunction(TransformFunction),
     /// A <custom-ident> value
     #[animation(error)]
     CustomIdent(CustomIdent),
     /// A <transform-list> value, equivalent to <transform-function>+
+    /// TODO(bug 1884606): <transform-list> `none` should not interpolate.
     TransformList(ComponentList<Self>),
     /// A <string> value
     #[animation(error)]
@@ -268,27 +270,9 @@ impl ToComputedValue for SpecifiedValue {
 pub type ComputedValue = Value<ComputedValueComponent>;
 
 impl SpecifiedValue {
-    /// Convert a Computed custom property value to a VariableValue.
-    pub fn compute<'i, 't>(
-        input: &mut CSSParser<'i, 't>,
-        registration: &PropertyRegistrationData,
-        url_data: &UrlExtraData,
-        context: &computed::Context,
-        allow_computationally_dependent: AllowComputationallyDependent,
-    ) -> Result<ComputedPropertyValue, ()> {
-        let value = Self::get_computed_value(
-            input,
-            registration,
-            url_data,
-            context,
-            allow_computationally_dependent,
-        )?;
-        Ok(value.to_variable_value())
-    }
-
     /// Convert a registered custom property to a Computed custom property value, given input and a
     /// property registration.
-    pub fn get_computed_value<'i, 't>(
+    pub fn compute<'i, 't>(
         input: &mut CSSParser<'i, 't>,
         registration: &PropertyRegistrationData,
         url_data: &UrlExtraData,
@@ -371,6 +355,12 @@ impl ComputedValue {
         } else {
             None
         }
+    }
+
+    /// Returns whether the the property is computed.
+    #[cfg(debug_assertions)]
+    pub fn is_parsed(&self, registration: &PropertyRegistrationData) -> bool {
+        registration.syntax.is_universal() || !matches!(self.v, ValueInner::Universal(_))
     }
 
     /// Convert to an untyped variable value.
@@ -664,7 +654,7 @@ impl CustomAnimatedValue {
         } else {
             let mut input = cssparser::ParserInput::new(&value.css);
             let mut input = CSSParser::new(&mut input);
-            SpecifiedValue::get_computed_value(
+            SpecifiedValue::compute(
                 &mut input,
                 registration,
                 &value.url_data,
