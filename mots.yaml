@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2024-03-05T11:48:45.404337'
+updated_at: '2024-03-11T20:06:03.398018'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -2912,6 +2912,7 @@ modules:
       - *karlt
     peers:
       - *stransky
+      - *emilio
     machine_name: core_widget_gtk
 
   - name: 'Core: Widget - Headless'
@@ -4207,5 +4208,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: 69214cbe3c0162116ed32033eb34c57002695c94
-  export: 3c59a5200ba747c72cd85eb2b76f75160794d088
+  config: 5da25cdade8c3ca168423b36c757a0e644834301
+  export: 394e18b09afb95f63803d96bdf28fb2a47eac270
