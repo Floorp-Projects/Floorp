@@ -3171,6 +3171,13 @@
   value: 10
   mirror: always
 
+# Whether to allow <object> and <embed> element loads to be retargeted to an
+# external application or download.
+- name: dom.navigation.object_embed.allow_retargeting
+  type: bool
+  value: false
+  mirror: always
+
 # Network Information API
 # This feature is not available on Firefox desktop. It exposes too much
 # user information. Let's be consistent and disable it on Android.
