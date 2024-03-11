@@ -920,18 +920,14 @@ def gen_substs(manifests):
 
     cid_phf = PerfectHash(modules, PHF_SIZE, key=lambda module: module.cid.bytes)
 
-    contract_phf = PerfectHash(
-        contracts, PHF_SIZE, key=lambda entry: entry.contract.encode()
-    )
+    contract_phf = PerfectHash(contracts, PHF_SIZE, key=lambda entry: entry.contract)
 
     js_services_phf = PerfectHash(
-        list(js_services.values()), PHF_SIZE, key=lambda entry: entry.js_name.encode()
+        list(js_services.values()), PHF_SIZE, key=lambda entry: entry.js_name
     )
 
     protocol_handlers_phf = PerfectHash(
-        list(protocol_handlers.values()),
-        TINY_PHF_SIZE,
-        key=lambda entry: entry.scheme.encode(),
+        list(protocol_handlers.values()), TINY_PHF_SIZE, key=lambda entry: entry.scheme
     )
 
     js_services_json = {}
@@ -949,7 +945,7 @@ def gen_substs(manifests):
     substs["contract_count"] = len(contracts)
     substs["protocol_handler_count"] = len(protocol_handlers)
 
-    substs["default_protocol_handler_idx"] = protocol_handlers_phf.get_index(b"default")
+    substs["default_protocol_handler_idx"] = protocol_handlers_phf.get_index("default")
 
     gen_module_funcs(substs, module_funcs)
 
