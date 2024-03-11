@@ -8,7 +8,7 @@ Some of these source files (such as ``.js``, ``.jsx``, and ``.scss``) require an
 We are working on migrating this to work with ``mach``, but in the meantime, please
 follow the following steps if you need to make changes in this directory:
 
-For ``.jsm`` or ``.sys.mjs`` files (system modules)
+For ``.sys.mjs`` files (system modules)
 ---------------------------------------------------
 
 No build step is necessary. Use ``mach`` and run mochitests according to your regular Firefox workflow.

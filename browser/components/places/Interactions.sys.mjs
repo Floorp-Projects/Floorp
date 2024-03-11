@@ -612,7 +612,7 @@ class InteractionsStore {
     // Block async shutdown to ensure the last write goes through.
     this.progress = {};
     lazy.PlacesUtils.history.shutdownClient.jsclient.addBlocker(
-      "Interactions.jsm:: store",
+      "Interactions.sys.mjs:: store",
       async () => this.flush(),
       { fetchState: () => this.progress }
     );
@@ -640,7 +640,7 @@ class InteractionsStore {
    */
   async reset() {
     await lazy.PlacesUtils.withConnectionWrapper(
-      "Interactions.jsm::reset",
+      "Interactions.sys.mjs::reset",
       async db => {
         await db.executeCached(`DELETE FROM moz_places_metadata`);
       }
@@ -735,7 +735,7 @@ class InteractionsStore {
 
     this.progress.pendingUpdates = i;
     await lazy.PlacesUtils.withConnectionWrapper(
-      "Interactions.jsm::updateDatabase",
+      "Interactions.sys.mjs::updateDatabase",
       async db => {
         await db.executeCached(
           `

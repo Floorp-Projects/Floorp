@@ -27,7 +27,7 @@ var logConsole;
 function log(msg) {
   if (!logConsole) {
     logConsole = console.createInstance({
-      prefix: "** Sanitizer.jsm",
+      prefix: "Sanitizer",
       maxLogLevelPref: "browser.sanitizer.loglevel",
     });
   }
@@ -456,7 +456,7 @@ export var Sanitizer = {
 
   // When making any changes to the sanitize implementations here,
   // please check whether the changes are applicable to Android
-  // (mobile/android/modules/geckoview/GeckoViewStorageController.jsm) as well.
+  // (mobile/android/modules/geckoview/GeckoViewStorageController.sys.mjs) as well.
 
   items: {
     cache: {

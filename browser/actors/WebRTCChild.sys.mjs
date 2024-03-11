@@ -95,7 +95,7 @@ export class WebRTCChild extends JSWindowActorChild {
   }
 
   // This observer is called from BrowserProcessChild to avoid
-  // loading this .jsm when WebRTC is not in use.
+  // loading this module when WebRTC is not in use.
   static observe(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "getUserMedia:request":

@@ -27,7 +27,7 @@ export class UrlbarSearchOneOffs extends SearchOneOffs {
     this.view = view;
     this.input = view.input;
     lazy.UrlbarPrefs.addObserver(this);
-    // Override the SearchOneOffs.jsm value for the Address Bar.
+    // Override the SearchOneOffs.sys.mjs value for the Address Bar.
     this.disableOneOffsHorizontalKeyNavigation = true;
     this._webEngines = [];
     this.addEventListener("rebuild", this);

@@ -1,5 +1,5 @@
-History.jsm
-===========
+History.sys.mjs
+===============
 
 Asynchronous API for managing history.
 
@@ -40,4 +40,4 @@ Main functions
 
 Each successful operation is notified through the PlacesObservers :doc:`notifyObservers` interface.
 
-Full file with actual javadoc and description of each method - `History.jsm`_
+Full file with actual javadoc and description of each method - `History.sys.mjs`_

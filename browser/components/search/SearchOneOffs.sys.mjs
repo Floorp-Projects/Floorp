@@ -14,7 +14,7 @@ const EMPTY_ADD_ENGINES = [];
 /**
  * Defines the search one-off button elements. These are displayed at the bottom
  * of the address bar and search bar. The address bar buttons are a subclass in
- * browser/components/urlbar/UrlbarSearchOneOffs.jsm. If you are adding a new
+ * browser/components/urlbar/UrlbarSearchOneOffs.sys.mjs. If you are adding a new
  * subclass, see "Methods for subclasses to override" below.
  */
 export class SearchOneOffs {

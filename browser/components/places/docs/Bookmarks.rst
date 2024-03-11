@@ -1,5 +1,5 @@
-Bookmarks.jsm
-=============
+Bookmarks.sys.mjs
+=================
 
 Asynchronous API for managing bookmarks.
 Bookmarks are organized in a tree structure, and include URLs, folders and separators. Multiple bookmarks for the same URL are allowed.
@@ -47,4 +47,4 @@ Main functions
 
 Each successful operation is notified through the PlacesObservers :doc:`notifyObservers` interface.
 
-Full file with actual javadoc and description of each method - `Bookmarks.jsm`_
+Full file with actual javadoc and description of each method - `Bookmarks.sys.mjs`_

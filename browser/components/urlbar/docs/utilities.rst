@@ -3,8 +3,8 @@ Utilities
 
 Various modules provide shared utilities to the other components:
 
-`UrlbarPrefs.jsm <https://searchfox.org/mozilla-central/source/browser/components/urlbar/UrlbarPrefs.jsm>`_
--------------------------------------------------------------------------------------------------------------
+`UrlbarPrefs.sys.mjs <https://searchfox.org/mozilla-central/source/browser/components/urlbar/UrlbarPrefs.sys.mjs>`_
+-------------------------------------------------------------------------------------------------------------------
 
 Implements a Map-like storage or urlbar related preferences. The values are kept
 up-to-date.
@@ -19,7 +19,7 @@ up-to-date.
 
   Newly added preferences should always be properly documented in UrlbarPrefs.
 
-`UrlbarUtils.jsm <https://searchfox.org/mozilla-central/source/browser/components/urlbar/UrlbarUtils.jsm>`_
--------------------------------------------------------------------------------------------------------------
+`UrlbarUtils.sys.mjs <https://searchfox.org/mozilla-central/source/browser/components/urlbar/UrlbarUtils.sys.mjs>`_
+-------------------------------------------------------------------------------------------------------------------
 
 Includes shared utils and constants shared across all the components.

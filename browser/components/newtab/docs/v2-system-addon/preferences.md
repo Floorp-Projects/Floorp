@@ -43,7 +43,7 @@ pref in the following files:
 
 You can see an example in [this patch](https://github.com/mozilla/activity-stream/pull/2977).
 
-## Reading, setting, and observing preferences from `.jsm`s
+## Reading, setting, and observing preferences from `.sys.mjs`s
 
 To read/set/observe Activity Stream preferences, construct a `Prefs` instance found in `lib/ActivityStreamPrefs.sys.mjs`.
 

@@ -19,8 +19,8 @@
  * const { Integration } = ChromeUtils.importESModule(
  *   "resource://gre/modules/Integration.sys.mjs"
  * );
- * const { PermissionUI } = ChromeUtils.import(
- *   "resource:///modules/PermissionUI.jsm"
+ * const { PermissionUI } = ChromeUtils.importESModule(
+ *   "resource:///modules/PermissionUI.sys.mjs"
  * );
  *
  * const SoundCardIntegration = base => {
