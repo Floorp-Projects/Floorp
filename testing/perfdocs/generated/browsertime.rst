@@ -34,7 +34,7 @@ For example, here's a test on ``https://www.sitespeed.io`` using this custom tes
 
 ::
 
-  ./mach raptor --browsertime -t browsertime --browsertime-arg test_script=pageload --browsertime-arg browsertime.url=https://www.sitespeed.io --browsertime-arg iterations=3
+  ./mach raptor -t browsertime --browsertime-arg test_script=pageload --browsertime-arg browsertime.url=https://www.sitespeed.io --browsertime-arg iterations=3
 
 That test will perform 3 iterations of the given url. Note also that we can use simplified names to make use of test scripts that are built into raptor. You can use ``pageload``, ``interactive``, or provide a path to another test script.
 
@@ -50,7 +50,7 @@ There are two ways to run performance tests through browsertime listed below.
 
 ::
 
-  ./mach raptor --browsertime -t google-search
+  ./mach raptor -t google-search
 
 * Browsertime-"native":
 
@@ -64,23 +64,25 @@ Benchmark tests
 
 ::
 
-  ./mach raptor -t raptor-speedometer --browsertime
+  ./mach raptor -t speedometer
 
 Running on Android
 ------------------
+To run on android, the device needs to have Geckoview or Fenix installed on it. Our tests will only work with physical devices, and `bug 1881570 <https://bugzilla.mozilla.org/show_bug.cgi?id=1881570>`__ tracks progress for enabling virtual devices (emulators). Running either of the commands below will attempt to install locally built APKs to the device **while uninstalling/removing any existing APKs of the package on the device**, but this can be skipped by setting ``MOZ_DISABLE_ADB_INSTALL=1`` in your environment. When that environment variable exists, we expect the APK to be pre-installed on the device.
+
 Running on Raptor-Browsertime (recommended):
 
 * Running on Fenix
 
 ::
 
-  ./mach raptor --browsertime -t amazon --app fenix --binary org.mozilla.fenix
+  ./mach raptor -t amazon --app fenix --binary org.mozilla.fenix
 
 * Running on Geckoview
 
 ::
 
-  ./mach raptor --browsertime -t amazon --app geckoview --binary org.mozilla.geckoview_example
+  ./mach raptor -t amazon --app geckoview --binary org.mozilla.geckoview_example
 
 Running on vanilla Browsertime:
 
@@ -122,7 +124,7 @@ Or for Raptor-Browsertime (use ``chrome`` for desktop, and ``chrome-m`` for mobi
 
 ::
 
-  ./mach raptor --browsertime -t amazon --app chrome --browsertime-chromedriver <PATH/TO/CHROMEDRIVER>
+  ./mach raptor -t amazon --app chrome --browsertime-chromedriver <PATH/TO/CHROMEDRIVER>
 
 Running Page-load tests with third party WebExtensions
 ------------------------------------------------------
@@ -137,14 +139,14 @@ Launch amazon tp6 page-load test on Firefox Desktop:
 
 ::
 
-   ./mach raptor --browsertime -t amazon --conditioned-profile settled-webext
+   ./mach raptor -t amazon --conditioned-profile settled-webext
 
 Launch amazon tp6 mobile page-load test on Firefox for Android (the apk has to be pre-installed, mach raptor does detect if already installed but
 it does not install it):
 
 ::
 
-   ./mach raptor --browsertime -t amazon --app fenix --binary org.mozilla.fenix --conditioned-profile settled-webext
+   ./mach raptor -t amazon --app fenix --binary org.mozilla.fenix --conditioned-profile settled-webext
 
 To run these jobs on try, make sure to select the tp6 jobs that include the string `webextensions`, as an example (add ``--no-push`` to force try fuzzy to only
 list the jobs selected by the try fuzzy query) to run all tp6 page-load webextensons jobs currently defined:
@@ -153,11 +155,13 @@ list the jobs selected by the try fuzzy query) to run all tp6 page-load webexten
 
    ./mach try fuzzy -q "'tp6 'webextensions"
 
-Similarly for running tp6m on Firefox for Android builds:
+Similarly for running tp6m (equivalent to tp6 but for mobile) on Firefox for Android builds:
 
 ::
 
    ./mach try fuzzy --full -q "'tp6m 'webextensions"
+
+Note that this can also be done using ``./mach try perf --show-all -q "'tp6m 'webextensions"`` to produce a compare view link of the changes before/after the patch being tested.
 
 The set of extensions installed are the ones listed in the ``"addons"`` property of the condprof customization file
 `webext.json`_ from the ``testing/condprofile/condprof/customization/`` directory.
@@ -196,20 +200,27 @@ Other methods for adding additional arguments are:
 
 Running Browsertime on Try
 --------------------------
-You can run all of our browsertime pageload tests through ``./mach try fuzzy --full``. We use chimera mode in these tests which means that both cold and warm pageload variants are running at the same time.
 
-For example:
+You can run all of our browsertime pageload tests through ``./mach try perf`` by selecting the ``Pageload`` category. We use chimera mode in these tests which means that both cold and warm pageload variants are running at the same time. There are a lot of other tests/categories available as well. Documentation about this tool can be found in :ref:`Mach Try Perf`.
+
+For example, the following will select all ``Pageload`` categories to run on desktop:
 
 ::
 
-  ./mach try fuzzy -q "'g5 'imdb 'geckoview 'vismet '-wr 'shippable"
+  ./mach try perf -q "'Pageload"
 
-Retriggering Browsertime Visual Metrics Tasks
----------------------------------------------
+If you need to target android tasks, include the ``--android`` flag like so (remove the ``'android`` from the query string to target desktop tests at the same time):
 
-You can retrigger Browsertime tasks just like you retrigger any other tasks from Treeherder (using the retrigger buttons, add-new-jobs, retrigger-multiple, etc.).
+::
 
-The following metrics are collected each time: ``fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange``
+  ./mach try perf --android -q "'Pageload 'android"
+
+If you exclude the ``-q "..."`` option, an interface similar to the fuzzy interface will open, and show all available categories.
+
+Visual Metrics
+--------------
+
+The following visual metrics are collected in all page load tests: ``ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange``
 
 Further information regarding these metrics can be viewed at `visual-metrics <https://www.sitespeed.io/documentation/sitespeed.io/metrics/#visual-metrics>`_
 
@@ -220,7 +231,7 @@ To run gecko profiling using Raptor-Browsertime you can add the ``--gecko-profil
 
 ::
 
-  ./mach raptor --browsertime -t amazon --gecko-profile
+  ./mach raptor -t amazon --gecko-profile
 
 Note that vanilla Browsertime does support Gecko Profiling but **it does not symbolicate the profiles** so it is **not recommended** to use for debugging performance regressions/improvements.
 
@@ -248,6 +259,7 @@ Likewise, for chrome trace you will want to be aware of `these defaults. <https:
 
 Upgrading Browsertime In-Tree
 -----------------------------
+
 To upgrade the browsertime version used in-tree you can run, then commit the changes made to ``package.json`` and ``package-lock.json``:
 
 ::
@@ -260,6 +272,7 @@ To test the upgrade, run a raptor test locally (with and without visual-metrics 
 
 Updating Benchmark Tests
 ------------------------
+
 To upgrade any of our benchmark tests, you will need to change the revision used in the test manifest. There are three fields that you have available to use there: ``repository_revision`` to denote the revision, ``repository_branch`` to denote the branch name, and ``repository`` to provide the link of the Github repo that contains the benchmark.
 
 For instance, with Speedometer 3 (sp3), we can update the revision `by changing the repository_revision field found here <https://searchfox.org/mozilla-central/rev/aa3ccd258b64abfd4c5ce56c1f512bc7f65b844c/testing/raptor/raptor/tests/benchmarks/speedometer-desktop.ini#29>`_. If the change isn't found on the default branch (master/main branch), then you will need to add an entry for ``repository_branch`` to specify this.
@@ -268,6 +281,7 @@ If the path to the test file changes (the file that is invoked to run the test),
 
 Finding the Geckodriver Being Used
 ----------------------------------
+
 If you're looking for the latest geckodriver being used there are two ways:
 * Find the latest one from here: https://treeherder.mozilla.org/jobs?repo=mozilla-central&searchStr=geckodriver
 * Alternatively, if you're trying to figure out which geckodriver a given CI task is using, you can click on the browsertime task in treeherder, and then click on the ``Task`` id in the bottom left of the pop-up interface. Then in the window that opens up, click on `See more` in the task details tab on the left, this will show you the dependent tasks with the latest toolchain-geckodriver being used. There's an Artifacts drop down on the right hand side for the toolchain-geckodriver task that you can find the latest geckodriver in.
@@ -287,7 +301,7 @@ Mach Browsertime Setup
 ----------------------
 
 **WARNING**
- Raptor-Browsertime (i.e. ``./mach raptor --browsertime -t <TEST>``) is currently required to be ran first in order to acquire the Node-16 binary. In general, it is also not recommended to use ``./mach browsertime`` for testing as it will be deprecated soon.
+ Raptor-Browsertime (i.e. ``./mach raptor -t <TEST>``) is currently required to be ran first in order to acquire the Node-16 binary. In general, it is also not recommended to use ``./mach browsertime`` for testing as it will be deprecated soon.
 
 Note that if you are running Raptor-Browsertime then it will get installed automatically and also update itself. Otherwise, you can run:
 
@@ -311,8 +325,8 @@ With the replacement of ImageMagick, former cross platform installation issues h
 
 
 
-- For other issues, try deleting the ``~/.mozbuild/browsertime`` folder and re-running the browsertime setup command or a Raptor-Browsertime test
+- For other issues, try deleting the ``~/.mozbuild/browsertime`` folder and re-running the browsertime setup command or a Raptor-Browsertime test. Alternatively, you may need to delete the ``tools/browsertime/node_modules`` folder.
 
-- If you plan on running Browsertime on Android, your Android device must already be set up (see more below in the :ref: `Running on Android` section)
+- If you plan on running Browsertime on Android, your Android device must already be set up (see more above in the :ref: `Running on Android` section)
 
 - **If you encounter any issues not mentioned here, please** `file a bug <https://bugzilla.mozilla.org/enter_bug.cgi?product=Testing&component=Raptor>`_ **in the** ``Testing::Raptor`` **component.**
