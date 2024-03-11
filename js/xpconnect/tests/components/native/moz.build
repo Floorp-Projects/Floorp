@@ -14,7 +14,6 @@ UNIFIED_SOURCES += [
     "xpctest_esmreturncode.cpp",
     "xpctest_module.cpp",
     "xpctest_params.cpp",
-    "xpctest_returncode.cpp",
 ]
 
 LOCAL_INCLUDES += [

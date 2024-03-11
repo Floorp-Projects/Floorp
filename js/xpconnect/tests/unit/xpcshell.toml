@@ -15,7 +15,6 @@ support-files = [
   "importer.jsm",
   "recursive_importA.jsm",
   "recursive_importB.jsm",
-  "ReturnCodeChild.jsm",
   "ReturnCodeChild.sys.mjs",
   "syntax_error.jsm",
   "uninitialized_lexical.jsm",

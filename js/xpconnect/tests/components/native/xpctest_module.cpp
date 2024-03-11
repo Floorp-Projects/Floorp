@@ -35,8 +35,6 @@ nsresult xpcTestRegisterComponents() {
       "@mozilla.org/js/xpc/test/native/ObjectReadWrite;1"));
   MOZ_TRY(RegisterFactory<nsXPCTestParams>(
       "@mozilla.org/js/xpc/test/native/Params;1"));
-  MOZ_TRY(RegisterFactory<nsXPCTestReturnCodeParent>(
-      "@mozilla.org/js/xpc/test/native/ReturnCodeParent;1"));
   MOZ_TRY(RegisterFactory<nsXPCTestESMReturnCodeParent>(
       "@mozilla.org/js/xpc/test/native/ESMReturnCodeParent;1"));
   MOZ_TRY(RegisterFactory<xpcTestCEnums>(

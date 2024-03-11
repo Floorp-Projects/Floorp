@@ -14,10 +14,6 @@ function run_test() {
   // Load the component manifests.
   registerXPCTestComponents();
 
-  // and the tests.
-  test_simple("@mozilla.org/js/xpc/test/native/ReturnCodeParent;1");
-  test_nested("@mozilla.org/js/xpc/test/native/ReturnCodeParent;1");
-
   test_simple("@mozilla.org/js/xpc/test/native/ESMReturnCodeParent;1");
   test_nested("@mozilla.org/js/xpc/test/native/ESMReturnCodeParent;1");
 }
