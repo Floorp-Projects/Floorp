@@ -81,14 +81,15 @@ void nsXULTooltipListener::MouseOut(Event* aEvent) {
   // hide the tooltip
   if (currentTooltip) {
     // which node did the mouse leave?
-    EventTarget* eventTarget = aEvent->GetOriginalTarget();
+    EventTarget* eventTarget = aEvent->GetComposedTarget();
     nsCOMPtr<nsINode> targetNode = nsINode::FromEventTargetOrNull(eventTarget);
     if (targetNode && targetNode->IsContent() &&
         !targetNode->AsContent()->GetContainingShadow()) {
       eventTarget = aEvent->GetTarget();
     }
 
-    if (nsXULPopupManager* pm = nsXULPopupManager::GetInstance()) {
+    nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+    if (pm) {
       nsCOMPtr<nsINode> tooltipNode =
           pm->GetLastTriggerTooltipNode(currentTooltip->GetComposedDoc());
 
@@ -133,7 +134,7 @@ void nsXULTooltipListener::MouseMove(Event* aEvent) {
   }
 
   nsCOMPtr<nsIContent> currentTooltip = do_QueryReferent(mCurrentTooltip);
-  nsCOMPtr<EventTarget> eventTarget = aEvent->GetOriginalTarget();
+  nsCOMPtr<EventTarget> eventTarget = aEvent->GetComposedTarget();
   nsIContent* content = nsIContent::FromEventTargetOrNull(eventTarget);
 
   bool isSameTarget = true;
@@ -156,7 +157,7 @@ void nsXULTooltipListener::MouseMove(Event* aEvent) {
   mPreviousMouseMoveTarget = do_GetWeakReference(content);
 
   nsCOMPtr<nsIContent> sourceContent =
-      nsIContent::FromEventTargetOrNull(aEvent->GetOriginalTarget());
+      do_QueryInterface(aEvent->GetCurrentTarget());
   mSourceNode = do_GetWeakReference(sourceContent);
   mIsSourceTree = sourceContent->IsXULElement(nsGkAtoms::treechildren);
   if (mIsSourceTree) CheckTreeBodyMove(mouseEvent);

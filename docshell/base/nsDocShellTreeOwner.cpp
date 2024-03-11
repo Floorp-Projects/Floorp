@@ -1177,7 +1177,7 @@ nsresult ChromeTooltipListener::MouseMove(Event* aMouseEvent) {
   }
 
   if (!mShowingTooltip) {
-    if (nsCOMPtr<EventTarget> eventTarget = aMouseEvent->GetOriginalTarget()) {
+    if (nsCOMPtr<EventTarget> eventTarget = aMouseEvent->GetComposedTarget()) {
       mPossibleTooltipNode = nsINode::FromEventTarget(eventTarget);
     }
 
