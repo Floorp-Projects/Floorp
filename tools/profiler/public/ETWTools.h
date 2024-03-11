@@ -171,10 +171,11 @@ struct PayloadBuffer {
 // Theoretically we could probably avoid these assignments when passed a POD
 // variable we know is going to be alive but that would require some more
 // template magic.
+
 template <typename T>
-static void CreateDataDescForPayload(PayloadBuffer& aBuffer,
-                                     EVENT_DATA_DESCRIPTOR& aDescriptor,
-                                     const T& aPayload) {
+void CreateDataDescForPayloadPOD(PayloadBuffer& aBuffer,
+                                 EVENT_DATA_DESCRIPTOR& aDescriptor,
+                                 const T& aPayload) {
   static_assert(std::is_pod<T>::value,
                 "Writing a non-POD payload requires template specialization.");
 
@@ -189,16 +190,22 @@ static void CreateDataDescForPayload(PayloadBuffer& aBuffer,
   EventDataDescCreate(&aDescriptor, storedValue, sizeof(T));
 }
 
-template <>
-inline void CreateDataDescForPayload<mozilla::ProfilerString8View>(
+static inline void CreateDataDescForPayloadNonPOD(
     PayloadBuffer& aBuffer, EVENT_DATA_DESCRIPTOR& aDescriptor,
     const mozilla::ProfilerString8View& aPayload) {
   EventDataDescCreate(&aDescriptor, aPayload.StringView().data(),
                       aPayload.StringView().size() + 1);
 }
 
-template <>
-inline void CreateDataDescForPayload<mozilla::TimeStamp>(
+template <typename T>
+static inline void CreateDataDescForPayloadNonPOD(
+    PayloadBuffer& aBuffer, EVENT_DATA_DESCRIPTOR& aDescriptor,
+    const mozilla::detail::nsTStringRepr<T>& aPayload) {
+  EventDataDescCreate(&aDescriptor, aPayload.BeginReading(),
+                      (aPayload.Length() + 1) * sizeof(T));
+}
+
+static inline void CreateDataDescForPayloadNonPOD(
     PayloadBuffer& aBuffer, EVENT_DATA_DESCRIPTOR& aDescriptor,
     const mozilla::TimeStamp& aPayload) {
   if (aPayload.RawQueryPerformanceCounterValue().isNothing()) {
@@ -207,32 +214,25 @@ inline void CreateDataDescForPayload<mozilla::TimeStamp>(
     return;
   }
 
-  CreateDataDescForPayload(aBuffer, aDescriptor,
-                           aPayload.RawQueryPerformanceCounterValue().value());
+  CreateDataDescForPayloadPOD(
+      aBuffer, aDescriptor, aPayload.RawQueryPerformanceCounterValue().value());
 }
 
-template <>
-inline void CreateDataDescForPayload<mozilla::TimeDuration>(
+static inline void CreateDataDescForPayloadNonPOD(
     PayloadBuffer& aBuffer, EVENT_DATA_DESCRIPTOR& aDescriptor,
     const mozilla::TimeDuration& aPayload) {
-  CreateDataDescForPayload(aBuffer, aDescriptor, aPayload.ToMilliseconds());
+  CreateDataDescForPayloadPOD(aBuffer, aDescriptor, aPayload.ToMilliseconds());
 }
 
-// For reasons that are beyond me if this isn't marked inline it generates an
-// unused function warning despite being a template specialization.
 template <typename T>
-inline void CreateDataDescForPayload(PayloadBuffer& aBuffer,
-                                     EVENT_DATA_DESCRIPTOR& aDescriptor,
-                                     const nsTString<T>& aPayload) {
-  EventDataDescCreate(&aDescriptor, aPayload.BeginReading(),
-                      (aPayload.Length() + 1) * sizeof(T));
-}
-template <typename T>
-inline void CreateDataDescForPayload(PayloadBuffer& aBuffer,
-                                     EVENT_DATA_DESCRIPTOR& aDescriptor,
-                                     const nsTSubstring<T>& aPayload) {
-  EventDataDescCreate(&aDescriptor, aPayload.BeginReading(),
-                      (aPayload.Length() + 1) * sizeof(T));
+static inline void CreateDataDescForPayload(PayloadBuffer& aBuffer,
+                                            EVENT_DATA_DESCRIPTOR& aDescriptor,
+                                            const T& aPayload) {
+  if constexpr (std::is_pod<T>::value) {
+    CreateDataDescForPayloadPOD(aBuffer, aDescriptor, aPayload);
+  } else {
+    CreateDataDescForPayloadNonPOD(aBuffer, aDescriptor, aPayload);
+  }
 }
 
 // Template specialization that writes out empty data descriptors for an empty
@@ -246,6 +246,13 @@ void CreateDataDescForPayload(PayloadBuffer& aBuffer,
   } else {
     CreateDataDescForPayload(aBuffer, aDescriptor, *aPayload);
   }
+}
+
+template <size_t N>
+void CreateDataDescForPayload(PayloadBuffer& aBuffer,
+                              EVENT_DATA_DESCRIPTOR& aDescriptor,
+                              const char (&aPayload)[N]) {
+  EventDataDescCreate(&aDescriptor, aPayload, N + 1);
 }
 
 template <typename T, typename = void>
