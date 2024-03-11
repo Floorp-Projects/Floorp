@@ -88,9 +88,9 @@ ExtensionAPIRequestForwarder::APIRequestHandler() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (MOZ_UNLIKELY(!sAPIRequestHandler)) {
-    sAPIRequestHandler =
-        do_ImportModule("resource://gre/modules/ExtensionProcessScript.jsm",
-                        "ExtensionAPIRequestHandler");
+    sAPIRequestHandler = do_ImportESModule(
+        "resource://gre/modules/ExtensionProcessScript.sys.mjs",
+        "ExtensionAPIRequestHandler");
     MOZ_RELEASE_ASSERT(sAPIRequestHandler);
     ClearOnShutdown(&sAPIRequestHandler);
   }
