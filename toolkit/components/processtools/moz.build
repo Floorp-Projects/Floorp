@@ -47,7 +47,7 @@ if toolkit == "gtk" or toolkit == "android":
         UNIFIED_SOURCES += ["ProcInfo_linux.cpp"]
 elif toolkit == "windows":
     UNIFIED_SOURCES += ["ProcInfo_win.cpp"]
-elif toolkit == "cocoa":
+elif toolkit in ("cocoa", "uikit"):
     UNIFIED_SOURCES += ["ProcInfo.mm"]
 
 include("/ipc/chromium/chromium-config.mozbuild")

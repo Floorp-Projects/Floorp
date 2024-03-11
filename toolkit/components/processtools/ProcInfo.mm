@@ -14,7 +14,6 @@
 #include <cstring>
 #include <unistd.h>
 
-#include <libproc.h>
 #include <sys/sysctl.h>
 #include <mach/mach.h>
 #include <mach/mach_time.h>
@@ -30,18 +29,19 @@ static void GetTimeBase(mach_timebase_info_data_t* timebase) {
 namespace mozilla {
 
 nsresult GetCpuTimeSinceProcessStartInMs(uint64_t* aResult) {
-  struct proc_taskinfo pti;
-  if ((unsigned long)proc_pidinfo(getpid(), PROC_PIDTASKINFO, 0, &pti,
-                                  PROC_PIDTASKINFO_SIZE) <
-      PROC_PIDTASKINFO_SIZE) {
+  task_power_info_data_t task_power_info;
+  mach_msg_type_number_t count = TASK_POWER_INFO_COUNT;
+  kern_return_t kr = task_info(mach_task_self(), TASK_POWER_INFO,
+                               (task_info_t)&task_power_info, &count);
+  if (kr != KERN_SUCCESS) {
     return NS_ERROR_FAILURE;
   }
 
   mach_timebase_info_data_t timebase;
   GetTimeBase(&timebase);
 
-  *aResult = (pti.pti_total_user + pti.pti_total_system) * timebase.numer /
-             timebase.denom / PR_NSEC_PER_MSEC;
+  *aResult = (task_power_info.total_user + task_power_info.total_system) *
+             timebase.numer / timebase.denom / PR_NSEC_PER_MSEC;
   return NS_OK;
 }
 
@@ -82,18 +82,6 @@ ProcInfoPromise::ResolveOrRejectValue GetProcInfoSync(
     info.windows = std::move(request.windowInfo);
     info.utilityActors = std::move(request.utilityInfo);
 
-    struct proc_taskinfo pti;
-    if ((unsigned long)proc_pidinfo(request.pid, PROC_PIDTASKINFO, 0, &pti,
-                                    PROC_PIDTASKINFO_SIZE) <
-        PROC_PIDTASKINFO_SIZE) {
-      // Can't read data for this process.
-      // Probably either a sandboxing issue or a race condition, e.g.
-      // the process has been just been killed. Regardless, skip process.
-      continue;
-    }
-    info.cpuTime = (pti.pti_total_user + pti.pti_total_system) *
-                   timebase.numer / timebase.denom;
-
     mach_port_t selectedTask;
     // If we did not get a task from a child process, we use mach_task_self()
     if (request.childTask == MACH_PORT_NULL) {
@@ -102,12 +90,25 @@ ProcInfoPromise::ResolveOrRejectValue GetProcInfoSync(
       selectedTask = request.childTask;
     }
 
+    task_power_info_data_t task_power_info;
+    mach_msg_type_number_t count = TASK_POWER_INFO_COUNT;
+    kern_return_t kr = task_info(selectedTask, TASK_POWER_INFO,
+                                 (task_info_t)&task_power_info, &count);
+    if (kr != KERN_SUCCESS) {
+      // Can't read data for this process.
+      // Probably either a sandboxing issue or a race condition, e.g.
+      // the process has been just been killed. Regardless, skip process.
+      continue;
+    }
+    info.cpuTime = (task_power_info.total_user + task_power_info.total_system) *
+                   timebase.numer / timebase.denom;
+
     // The phys_footprint value (introduced in 10.11) of the TASK_VM_INFO data
     // matches the value in the 'Memory' column of the Activity Monitor.
     task_vm_info_data_t task_vm_info;
-    mach_msg_type_number_t count = TASK_VM_INFO_COUNT;
-    kern_return_t kr = task_info(selectedTask, TASK_VM_INFO,
-                                 (task_info_t)&task_vm_info, &count);
+    count = TASK_VM_INFO_COUNT;
+    kr = task_info(selectedTask, TASK_VM_INFO, (task_info_t)&task_vm_info,
+                   &count);
     info.memory = kr == KERN_SUCCESS ? task_vm_info.phys_footprint : 0;
 
     // Now getting threads info
