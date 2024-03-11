@@ -50,7 +50,7 @@ module.exports = {
       // environment for them.
       env: {
         browser: false,
-        "mozilla/jsm": true,
+        "mozilla/sysmjs": true,
       },
       files: ["**/*.sys.mjs", "**/*.jsm"],
       rules: {

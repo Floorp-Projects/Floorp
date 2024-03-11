@@ -9,9 +9,10 @@ Examples of incorrect code for this rule:
 
 .. code-block:: js
 
-    const { SomeProp } = ChromeUtils.import("resource://gre/modules/Foo.jsm");
-    ChromeUtils.defineLazyModuleGetters(lazy, {
-      OtherProp: "resource://gre/modules/Foo.jsm",
+    const { SomeProp } =
+      ChromeUtils.importESModule("resource://gre/modules/Foo.sys.mjs");
+    ChromeUtils.defineESModuleGetters(lazy, {
+      OtherProp: "resource://gre/modules/Foo.sys.mjs",
     });
 
 Examples of correct code for this rule:
@@ -19,4 +20,6 @@ Examples of correct code for this rule:
 
 .. code-block:: js
 
-    const { SomeProp, OtherProp } = ChromeUtils.import("resource://gre/modules/Foo.jsm");
+    const { SomeProp, OtherProp } = ChromeUtils.importESModule(
+      "resource://gre/modules/Foo.sys.mjs"
+    );
