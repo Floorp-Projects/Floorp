@@ -410,7 +410,7 @@ mozilla::ipc::IPCResult MediaTransportChild::RecvOnGatheringStateChange(
   MutexAutoLock lock(mMutex);
   if (mUser) {
     mUser->OnGatheringStateChange(transportId,
-        static_cast<dom::RTCIceGathererState>(state));
+                                  static_cast<dom::RTCIceGathererState>(state));
   }
   return ipc::IPCResult::Ok();
 }
@@ -419,8 +419,8 @@ mozilla::ipc::IPCResult MediaTransportChild::RecvOnConnectionStateChange(
     const string& transportId, const int& state) {
   MutexAutoLock lock(mMutex);
   if (mUser) {
-    mUser->OnConnectionStateChange(transportId,
-        static_cast<dom::RTCIceTransportState>(state));
+    mUser->OnConnectionStateChange(
+        transportId, static_cast<dom::RTCIceTransportState>(state));
   }
   return ipc::IPCResult::Ok();
 }

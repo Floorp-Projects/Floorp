@@ -5082,7 +5082,7 @@ nsGlobalWindowInner::ShowSlowScriptDialog(JSContext* aCx,
   }
 
   // Reached only on non-e10s - once per slow script dialog.
-  // On e10s - we probe once at ProcessHangsMonitor.jsm
+  // On e10s - we probe once at ProcessHangsMonitor.sys.mjs
   Telemetry::Accumulate(Telemetry::SLOW_SCRIPT_NOTICE_COUNT, 1);
 
   // Get the nsIPrompt interface from the docshell

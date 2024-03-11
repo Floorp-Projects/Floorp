@@ -35,9 +35,9 @@ interface Addon {
 [ChromeOnly, JSImplementation="dummy",
  Exposed=Window]
 interface AddonInstall : EventTarget {
-  // One of the STATE_* symbols from AddonManager.jsm
+  // One of the STATE_* symbols from AddonManager.sys.mjs
   readonly attribute DOMString state;
-  // One of the ERROR_* symbols from AddonManager.jsm, or null
+  // One of the ERROR_* symbols from AddonManager.sys.mjs, or null
   readonly attribute DOMString? error;
   // How many bytes have been downloaded
   readonly attribute long long progress;

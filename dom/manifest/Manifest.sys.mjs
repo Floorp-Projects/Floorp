@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * Manifest.jsm is the top level api for managing installed web applications
+ * Manifest.sys.mjs is the top level api for managing installed web applications
  * https://www.w3.org/TR/appmanifest/
  *
  * It is used to trigger the installation of a web application via .install()

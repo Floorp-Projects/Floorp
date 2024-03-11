@@ -40,7 +40,7 @@ const OBSERVER_TOPIC_SUBSCRIPTION_MODIFIED = "push-subscription-modified";
  * similar to the Push DOM API, but does not require service workers.
  *
  * Push service methods may be called from the parent or content process. The
- * parent process implementation loads `PushService.jsm` at app startup, and
+ * parent process implementation loads `PushService.sys.mjs` at app startup, and
  * calls its methods directly. The content implementation forwards calls to
  * the parent Push service via IPC.
  *
@@ -102,7 +102,7 @@ PushServiceBase.prototype = {
 
 /**
  * The parent process implementation of `nsIPushService`. This version loads
- * `PushService.jsm` at startup and calls its methods directly. It also
+ * `PushService.sys.mjs` at startup and calls its methods directly. It also
  * receives and responds to requests from the content process.
  */
 let parentInstance;
