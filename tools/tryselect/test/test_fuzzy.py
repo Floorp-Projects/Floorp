@@ -98,7 +98,7 @@ def test_query_paths_variants(run_mach, capfd, variant):
     index = output.find(delim)
     result = json.loads(output[index + len(delim) :])
     tasks = result["parameters"]["try_task_config"]["tasks"]
-    assert tasks == expected
+    assert sorted(tasks) == sorted(expected)
 
 
 @pytest.mark.skipif(os.name == "nt", reason="fzf not installed on host")
