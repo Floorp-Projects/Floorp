@@ -398,6 +398,10 @@ nsIFrame* nsCaret::GetGeometry(const Selection* aSelection, nsRect* aRect) {
 }
 
 void nsCaret::SchedulePaint(Selection* aSelection) {
+  if (mLastCaretFrame) {
+    mLastCaretFrame->MarkNeedsDisplayItemRebuild();
+  }
+
   Selection* selection;
   if (aSelection) {
     selection = aSelection;
@@ -409,14 +413,16 @@ void nsCaret::SchedulePaint(Selection* aSelection) {
   nsIFrame* frame = GetFrameAndOffset(selection, mOverrideContent,
                                       mOverrideOffset, &frameOffset);
   if (!frame) {
+    mLastCaretFrame = nullptr;
     return;
   }
 
   if (nsIFrame* cb = GetContainingBlockIfNeeded(frame)) {
-    cb->SchedulePaint();
-  } else {
-    frame->SchedulePaint();
+    frame = cb;
   }
+
+  mLastCaretFrame = frame;
+  frame->SchedulePaint();
 }
 
 void nsCaret::SetVisibilityDuringSelection(bool aVisibility) {
@@ -555,6 +561,9 @@ void nsCaret::PaintCaret(DrawTarget& aDrawTarget, nsIFrame* aForFrame,
 NS_IMETHODIMP
 nsCaret::NotifySelectionChanged(Document*, Selection* aDomSel, int16_t aReason,
                                 int32_t aAmount) {
+  if (mLastCaretFrame) {
+    mLastCaretFrame->MarkNeedsDisplayItemRebuild();
+  }
   // Note that aDomSel, per the comment below may not be the same as our
   // selection, but that's OK since if that is the case, it wouldn't have
   // mattered what IsVisible() returns here, so we just opt for checking
