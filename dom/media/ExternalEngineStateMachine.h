@@ -306,6 +306,7 @@ class ExternalEngineStateMachine final
   // Only used if setting CDM happens before the engine finishes initialization.
   MozPromiseHolder<SetCDMPromise> mSetCDMProxyPromise;
   MozPromiseRequestHolder<SetCDMPromise> mSetCDMProxyRequest;
+  MozPromiseRequestHolder<GenericNonExclusivePromise> mInitEngineForCDMRequest;
 
   // It would be zero for audio-only playback.
   gfx::IntSize mVideoDisplay;
