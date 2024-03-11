@@ -137,6 +137,9 @@ class TestNoWindowUpdateRestart(MarionetteTestCase):
         )
         self.assertTrue(quit_flags_correct)
 
+        # Normally, the update status file would have been removed at this point by Post Update
+        # Processing. But restarting resets app.update.disabledForTesting, which causes that to be
+        # skipped, allowing us to look at the update status file directly.
         update_status_path = self.marionette.execute_script(
             """
             let statusFile = FileUtils.getDir("UpdRootD", ["updates", "0"]);
@@ -144,39 +147,14 @@ class TestNoWindowUpdateRestart(MarionetteTestCase):
             return statusFile.path;
         """
         )
-        try:
-            with open(update_status_path, "r") as f:
-                # If Firefox was built with "--enable-unverified-updates" (or presumably if we
-                # tested with an actual, signed update), the update should succeed. Otherwise, it
-                # will fail with CERT_VERIFY_ERROR (error code 19). Unfortunately, there is no good
-                # way to tell which of those situations we are in. Luckily, it doesn't matter,
-                # because we aren't trying to test whether the update applied successfully, just
-                # whether the "No Window Update Restart" feature works.
-                self.assertIn(f.read().strip(), ["succeeded", "failed: 19"])
-        except FileNotFoundError:
-            # Unfortunately the last test we want to do here involves some race conditions. We want
-            # to ensure that when we restarted, we tried to apply the update. In theory, when we
-            # restarted, `app.update.disabledForTesting` was reset, preventing post update
-            # processing from running. But, in practice, `app.update.disabledForTesting` isn't set
-            # before launch, it is set early during startup. Since post update processing also
-            # happens sometime early during startup, it isn't well defined whether or not post
-            # update processing will have run.
-            # To resolve this, if the update status file appears to be missing, we'll try getting
-            # the information out of the update history.
-            update_status = self.marionette.execute_script(
-                """
-                let UM =
-                    Cc["@mozilla.org/updates/update-manager;1"].getService(Ci.nsIUpdateManager);
-                if (UM.getUpdateCount() == 0) {
-                    return null;
-                }
-                return UM.getUpdateAt(0).state;
-            """
-            )
-            # Like above, whether we succeeded or failed isn't really important, only whether we
-            # got far enough through to succeed or fail (i.e. "pending" would be a test failure
-            # here).
-            self.assertIn(update_status, ["succeeded", "failed"])
+        with open(update_status_path, "r") as f:
+            # If Firefox was built with "--enable-unverified-updates" (or presumably if we tested
+            # with an actual, signed update), the update should succeed. Otherwise, it will fail
+            # with CERT_VERIFY_ERROR (error code 19). Unfortunately, there is no good way to tell
+            # which of those situations we are in. Luckily, it doesn't matter, because we aren't
+            # trying to test whether the update applied successfully, just whether the
+            # "No Window Update Restart" feature works.
+            self.assertIn(f.read().strip(), ["succeeded", "failed: 19"])
 
     def resetUpdate(self):
         self.marionette.execute_script(
