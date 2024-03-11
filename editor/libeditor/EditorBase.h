@@ -2519,6 +2519,25 @@ class EditorBase : public nsIEditor,
                                  nsIEditor::EStripWrappers aStripWrappers);
 
   /**
+   * DeleteRangeWithTransaction() removes content in aRangeToDelete or content
+   * around collapsed aRangeToDelete with transactions and remove empty
+   * inclusive ancestor inline elements of the collapsed range after removing
+   * the contents.
+   *
+   * @param aDirectionAndAmount How much range should be removed.
+   * @param aStripWrappers      Whether the parent blocks should be removed
+   *                            when they become empty.
+   *                            Note that this must be `nsIEditor::eNoStrip`
+   *                            if this is a TextEditor because anyway it'll
+   *                            be ignored.
+   * @param aRangeToDelete     The range to delete content.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<CaretPoint, nsresult>
+  DeleteRangeWithTransaction(nsIEditor::EDirection aDirectionAndAmount,
+                             nsIEditor::EStripWrappers aStripWrappers,
+                             nsRange& aRangeToDelete);
+
+  /**
    * DeleteRangesWithTransaction() removes content in aRangesToDelete or content
    * around collapsed ranges in aRangesToDelete with transactions and remove
    * empty inclusive ancestor inline elements of collapsed ranges after
