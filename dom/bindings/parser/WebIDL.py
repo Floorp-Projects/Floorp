@@ -43,22 +43,25 @@ def parseInt(literal):
     return value * sign
 
 
-# This is surprisingly faster than using the enum.IntEnum type (which doesn't
-# support 'base' anyway)
-def enum(*names, base=None):
-    if base is not None:
-        names = base.attrs + names
+def enum(*names, **kw):
+    class Foo(object):
+        attrs = OrderedDict()
 
-    class CustomEnumType(object):
-        attrs = names
+        def __init__(self, names):
+            for v, k in enumerate(names):
+                self.attrs[k] = v
+
+        def __getattr__(self, attr):
+            if attr in self.attrs:
+                return self.attrs[attr]
+            raise AttributeError
 
         def __setattr__(self, name, value):  # this makes it read-only
             raise NotImplementedError
 
-    for v, k in enumerate(names):
-        setattr(CustomEnumType, k, v)
-
-    return CustomEnumType()
+    if "base" not in kw:
+        return Foo(names)
+    return Foo(chain(kw["base"].attrs.keys(), names))
 
 
 class WebIDLError(Exception):
@@ -82,10 +85,13 @@ class Location(object):
         self._lineno = lineno
         self._lexpos = lexpos
         self._lexdata = lexer.lexdata
-        self.filename = filename if filename else "<unknown>"
+        self._file = filename if filename else "<unknown>"
 
     def __eq__(self, other):
-        return self._lexpos == other._lexpos and self.filename == other.filename
+        return self._lexpos == other._lexpos and self._file == other._file
+
+    def filename(self):
+        return self._file
 
     def resolve(self):
         if self._line:
@@ -104,7 +110,7 @@ class Location(object):
 
     def get(self):
         self.resolve()
-        return "%s line %s:%s" % (self.filename, self._lineno, self._colno)
+        return "%s line %s:%s" % (self._file, self._lineno, self._colno)
 
     def _pointerline(self):
         return " " * self._colno + "^"
@@ -112,7 +118,7 @@ class Location(object):
     def __str__(self):
         self.resolve()
         return "%s line %s:%s\n%s\n%s" % (
-            self.filename,
+            self._file,
             self._lineno,
             self._colno,
             self._line,
@@ -123,10 +129,12 @@ class Location(object):
 class BuiltinLocation(object):
     def __init__(self, text):
         self.msg = text + "\n"
-        self.filename = "<builtin>"
 
     def __eq__(self, other):
         return isinstance(other, BuiltinLocation) and self.msg == other.msg
+
+    def filename(self):
+        return "<builtin>"
 
     def resolve(self):
         pass
@@ -145,7 +153,9 @@ class IDLObject(object):
     def __init__(self, location):
         self.location = location
         self.userData = dict()
-        self.filename = location and location.filename
+
+    def filename(self):
+        return self.location.filename()
 
     def isInterface(self):
         return False
@@ -210,8 +220,8 @@ class IDLObject(object):
         visited.add(self)
 
         deps = set()
-        if self.filename != "<builtin>":
-            deps.add(self.filename)
+        if self.filename() != "<builtin>":
+            deps.add(self.filename())
 
         for d in self._getDependentObjects():
             deps.update(d.getDeps(visited))
