@@ -815,6 +815,34 @@ def test_category_expansion(
 
 
 @pytest.mark.parametrize(
+    "category_options, call_counts",
+    [
+        (
+            {},
+            0,
+        ),
+        (
+            {"non_pgo": True},
+            58,
+        ),
+    ],
+)
+def test_category_expansion_with_non_pgo_flag(category_options, call_counts):
+    PerfParser.categories = TEST_CATEGORIES
+    PerfParser.variants = TEST_VARIANTS
+
+    expanded_cats = PerfParser.get_categories(**category_options)
+
+    non_shippable_count = 0
+    for cat_name in expanded_cats:
+        queries = str(expanded_cats[cat_name].get("queries", None))
+        if "!shippable !nightlyasrelease" in queries and "'shippable" not in queries:
+            non_shippable_count += 1
+
+    assert non_shippable_count == call_counts
+
+
+@pytest.mark.parametrize(
     "options, call_counts, log_ind, expected_log_message",
     [
         (
