@@ -14,7 +14,6 @@ import os
 from copy import deepcopy
 
 import mozpack.path as mozpath
-import six
 from mach.mixin.logging import LoggingMixin
 from mozbuild.makeutil import Makefile
 from mozbuild.pythonutil import iter_modules_in_path
@@ -339,10 +338,8 @@ class WebIDLCodegenManager(LoggingMixin):
         if self._make_deps_path:
             mk = Makefile()
             codegen_rule = mk.create_rule([self._make_deps_target])
-            codegen_rule.add_dependencies(
-                six.ensure_text(s) for s in global_hashes.keys()
-            )
-            codegen_rule.add_dependencies(six.ensure_text(p) for p in self._input_paths)
+            codegen_rule.add_dependencies(global_hashes.keys())
+            codegen_rule.add_dependencies(self._input_paths)
 
             with FileAvoidWrite(self._make_deps_path) as fh:
                 mk.dump(fh)
@@ -380,7 +377,7 @@ class WebIDLCodegenManager(LoggingMixin):
         for path in sorted(self._input_paths):
             with io.open(path, "r", encoding="utf-8") as fh:
                 data = fh.read()
-                hashes[path] = hashlib.sha1(six.ensure_binary(data)).hexdigest()
+                hashes[path] = hashlib.sha1(data.encode()).hexdigest()
                 parser.parse(data, path)
 
         # Only these directories may contain WebIDL files with interfaces
