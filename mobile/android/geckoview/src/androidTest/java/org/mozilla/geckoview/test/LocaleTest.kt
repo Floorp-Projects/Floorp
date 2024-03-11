@@ -40,4 +40,16 @@ class LocaleTest : BaseSessionTest() {
             equalTo(listOf("en-GB", "en-US", "en-FR")),
         )
     }
+
+    @Test
+    fun acceptLangaugeFormat() {
+        // No way to override default language settings from unit test.
+        // So we only test this on current settings.
+
+        val intlAcceptLanauge = "intl.accept_languages"
+        val prefValue = (sessionRule.getPrefs(intlAcceptLanauge)[0] as String).split(",")
+        for (value in prefValue) {
+            assertThat("Accept-Lanauge format should be language or language-region", value.filter { it == '-' }.count(), lessThanOrEqualTo(1))
+        }
+    }
 }
