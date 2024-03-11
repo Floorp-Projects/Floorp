@@ -61,11 +61,6 @@
   height: calc(var(--tab-min-height) - var(--tabs-navbar-shadow-size));
 }
 
-#print-preview-toolbar:not(:-moz-lwtheme) {
-  appearance: auto;
-  -moz-default-appearance: toolbox;
-}
-
 /* Titlebar */
 
 .titlebar-buttonbox {
