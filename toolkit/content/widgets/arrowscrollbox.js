@@ -21,7 +21,7 @@
       return `
       <html:link rel="stylesheet" href="chrome://global/skin/toolbarbutton.css"/>
       <html:link rel="stylesheet" href="chrome://global/skin/arrowscrollbox.css"/>
-      <toolbarbutton id="scrollbutton-up" part="scrollbutton-up" keyNav="false"/>
+      <toolbarbutton id="scrollbutton-up" part="scrollbutton-up" keyNav="false" data-l10n-id="overflow-scroll-button-up"/>
       <spacer part="overflow-start-indicator"/>
       <box class="scrollbox-clip" part="scrollbox-clip" flex="1">
         <scrollbox part="scrollbox" flex="1">
@@ -29,7 +29,7 @@
         </scrollbox>
       </box>
       <spacer part="overflow-end-indicator"/>
-      <toolbarbutton id="scrollbutton-down" part="scrollbutton-down" keyNav="false"/>
+      <toolbarbutton id="scrollbutton-down" part="scrollbutton-down" keyNav="false" data-l10n-id="overflow-scroll-button-down"/>
     `;
     }
 
@@ -42,6 +42,8 @@
       this._scrollButtonUp = this.shadowRoot.getElementById("scrollbutton-up");
       this._scrollButtonDown =
         this.shadowRoot.getElementById("scrollbutton-down");
+
+      MozXULElement.insertFTLIfNeeded("toolkit/global/arrowscrollbox.ftl");
 
       this._arrowScrollAnim = {
         scrollbox: this,
@@ -133,6 +135,8 @@
         return;
       }
       this.hasConnected = true;
+
+      document.l10n.connectRoot(this.shadowRoot);
 
       if (!this.hasAttribute("smoothscroll")) {
         this.smoothScroll = Services.prefs.getBoolPref(
@@ -639,6 +643,7 @@
         this._scrollTimer.cancel();
         this._scrollTimer = null;
       }
+      document.l10n.disconnectRoot(this.shadowRoot);
     }
 
     on_wheel(event) {
