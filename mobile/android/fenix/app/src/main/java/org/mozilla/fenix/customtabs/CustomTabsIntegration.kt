@@ -5,6 +5,9 @@
 package org.mozilla.fenix.customtabs
 
 import android.app.Activity
+import androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+import androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
+import androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES
 import androidx.appcompat.content.res.AppCompatResources.getDrawable
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.toolbar.BrowserToolbar
@@ -15,6 +18,8 @@ import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.feature.UserInteractionHandler
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.toolbar.ToolbarMenu
+import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.utils.Settings
 
 @Suppress("LongParameterList")
 class CustomTabsIntegration(
@@ -58,19 +63,30 @@ class CustomTabsIntegration(
     }
 
     private val feature = CustomTabsToolbarFeature(
-        store,
-        toolbar,
-        sessionId,
-        useCases,
+        store = store,
+        toolbar = toolbar,
+        sessionId = sessionId,
+        useCases = useCases,
         menuBuilder = customTabToolbarMenu.menuBuilder,
         menuItemIndex = START_OF_MENU_ITEMS_INDEX,
         window = activity.window,
         shareListener = { onItemTapped.invoke(ToolbarMenu.Item.Share) },
         closeListener = { activity.finishAndRemoveTask() },
         updateTheme = !isPrivate,
+        appNightMode = activity.settings().getAppNightMode(),
         forceActionButtonTinting = isPrivate,
         isNavBarEnabled = isNavBarEnabled,
     )
+
+    private fun Settings.getAppNightMode() = if (shouldFollowDeviceTheme) {
+        MODE_NIGHT_FOLLOW_SYSTEM
+    } else {
+        if (shouldUseLightTheme) {
+            MODE_NIGHT_NO
+        } else {
+            MODE_NIGHT_YES
+        }
+    }
 
     override fun start() = feature.start()
     override fun stop() = feature.stop()

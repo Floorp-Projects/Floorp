@@ -75,7 +75,7 @@ class CustomTabsToolbarFeatureTest {
 
         feature.start()
 
-        verify(feature, never()).init(any())
+        verify(feature, never()).init(any(), any())
     }
 
     @Test
@@ -1164,6 +1164,71 @@ class CustomTabsToolbarFeatureTest {
     }
 
     @Test
+    fun `WHEN theme should not be updated THEN the app night mode is not set`() {
+        val colorScheme = CustomTabsIntent.COLOR_SCHEME_DARK
+        val customTabConfig = CustomTabConfig(colorScheme = colorScheme)
+
+        val toolbar = spy(BrowserToolbar(testContext))
+
+        val feature = spy(
+            CustomTabsToolbarFeature(
+                store = mock(),
+                toolbar = toolbar,
+                useCases = mock(),
+                updateTheme = false,
+            ) {},
+        )
+
+        val setDefaultNightMode = mock<(Int) -> Unit>()
+        feature.init(customTabConfig, setDefaultNightMode)
+
+        verify(setDefaultNightMode, never()).invoke(colorScheme)
+    }
+
+    @Test
+    fun `WHEN theme should be updated & intent has color scheme THEN the app night mode is set with it`() {
+        val colorScheme = CustomTabsIntent.COLOR_SCHEME_DARK
+        val customTabConfig = CustomTabConfig(colorScheme = colorScheme)
+
+        val toolbar = spy(BrowserToolbar(testContext))
+
+        val feature = spy(
+            CustomTabsToolbarFeature(
+                store = mock(),
+                toolbar = toolbar,
+                useCases = mock(),
+                updateTheme = true,
+            ) {},
+        )
+
+        val setDefaultNightMode = mock<(Int) -> Unit>()
+        feature.init(customTabConfig, setDefaultNightMode)
+
+        verify(setDefaultNightMode).invoke(colorScheme)
+    }
+
+    @Test
+    fun `WHEN theme should be updated & intent has no color scheme THEN the app night mode is set with the fallback`() {
+        val customTabConfig = CustomTabConfig()
+
+        val toolbar = spy(BrowserToolbar(testContext))
+
+        val feature = spy(
+            CustomTabsToolbarFeature(
+                store = mock(),
+                toolbar = toolbar,
+                useCases = mock(),
+                updateTheme = true,
+            ) {},
+        )
+
+        val setDefaultNightMode = mock<(Int) -> Unit>()
+        feature.init(customTabConfig, setDefaultNightMode)
+
+        verify(setDefaultNightMode).invoke(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+    }
+
+    @Test
     fun `WHEN COLOR_SCHEME_SYSTEM THEN toNightMode returns MODE_NIGHT_FOLLOW_SYSTEM`() {
         assertEquals(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM, CustomTabsIntent.COLOR_SCHEME_SYSTEM.toNightMode())
     }
@@ -1204,7 +1269,7 @@ class CustomTabsToolbarFeatureTest {
     }
 
     @Test
-    fun `WHEN color scheme use system and is light mode THEN getConfiguredColorSchemeParams returns light color scheme`() {
+    fun `WHEN night mode follow system and is light mode THEN getConfiguredColorSchemeParams returns light color scheme`() {
         val customTabConfig = CustomTabConfig(
             colorSchemes = ColorSchemes(
                 defaultColorSchemeParams = defaultColorSchemeParams,
@@ -1216,13 +1281,13 @@ class CustomTabsToolbarFeatureTest {
         assertEquals(
             lightColorSchemeParams,
             customTabConfig.colorSchemes!!.getConfiguredColorSchemeParams(
-                colorScheme = CustomTabsIntent.COLOR_SCHEME_SYSTEM,
+                nightMode = AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM,
             ),
         )
     }
 
     @Test
-    fun `WHEN color scheme use system, is light mode no light color scheme THEN getConfiguredColorSchemeParams returns default scheme`() {
+    fun `WHEN night mode follow system, is light mode no light color scheme THEN getConfiguredColorSchemeParams returns default scheme`() {
         val customTabConfig = CustomTabConfig(
             colorSchemes = ColorSchemes(
                 defaultColorSchemeParams = defaultColorSchemeParams,
@@ -1233,13 +1298,13 @@ class CustomTabsToolbarFeatureTest {
         assertEquals(
             defaultColorSchemeParams,
             customTabConfig.colorSchemes!!.getConfiguredColorSchemeParams(
-                CustomTabsIntent.COLOR_SCHEME_SYSTEM,
+                nightMode = AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM,
             ),
         )
     }
 
     @Test
-    fun `WHEN color scheme use system and is dark mode THEN getConfiguredColorSchemeParams returns dark color scheme`() {
+    fun `WHEN night mode follow system and is dark mode THEN getConfiguredColorSchemeParams returns dark color scheme`() {
         val customTabConfig = CustomTabConfig(
             colorSchemes = ColorSchemes(
                 defaultColorSchemeParams = defaultColorSchemeParams,
@@ -1251,14 +1316,14 @@ class CustomTabsToolbarFeatureTest {
         assertEquals(
             darkColorSchemeParams,
             customTabConfig.colorSchemes!!.getConfiguredColorSchemeParams(
-                CustomTabsIntent.COLOR_SCHEME_SYSTEM,
-                true,
+                nightMode = AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM,
+                isDarkMode = true,
             ),
         )
     }
 
     @Test
-    fun `WHEN color scheme use system, is dark mode no dark color scheme THEN getConfiguredColorSchemeParams returns default scheme`() {
+    fun `WHEN night mode follow system, is dark mode no dark color scheme THEN getConfiguredColorSchemeParams returns default scheme`() {
         val customTabConfig = CustomTabConfig(
             colorSchemes = ColorSchemes(
                 defaultColorSchemeParams = defaultColorSchemeParams,
@@ -1269,14 +1334,14 @@ class CustomTabsToolbarFeatureTest {
         assertEquals(
             defaultColorSchemeParams,
             customTabConfig.colorSchemes!!.getConfiguredColorSchemeParams(
-                CustomTabsIntent.COLOR_SCHEME_SYSTEM,
-                true,
+                nightMode = AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM,
+                isDarkMode = true,
             ),
         )
     }
 
     @Test
-    fun `WHEN light color scheme THEN getConfiguredColorSchemeParams returns light color scheme`() {
+    fun `WHEN night mode no THEN getConfiguredColorSchemeParams returns light color scheme`() {
         val customTabConfig = CustomTabConfig(
             colorSchemes = ColorSchemes(
                 defaultColorSchemeParams = defaultColorSchemeParams,
@@ -1288,13 +1353,13 @@ class CustomTabsToolbarFeatureTest {
         assertEquals(
             lightColorSchemeParams,
             customTabConfig.colorSchemes!!.getConfiguredColorSchemeParams(
-                CustomTabsIntent.COLOR_SCHEME_LIGHT,
+                nightMode = AppCompatDelegate.MODE_NIGHT_NO,
             ),
         )
     }
 
     @Test
-    fun `WHEN light color scheme & no light color params THEN getConfiguredColorSchemeParams returns default color scheme`() {
+    fun `WHEN night mode no & no light color params THEN getConfiguredColorSchemeParams returns default color scheme`() {
         val customTabConfig = CustomTabConfig(
             colorSchemes = ColorSchemes(
                 defaultColorSchemeParams = defaultColorSchemeParams,
@@ -1305,13 +1370,13 @@ class CustomTabsToolbarFeatureTest {
         assertEquals(
             defaultColorSchemeParams,
             customTabConfig.colorSchemes!!.getConfiguredColorSchemeParams(
-                CustomTabsIntent.COLOR_SCHEME_LIGHT,
+                nightMode = AppCompatDelegate.MODE_NIGHT_NO,
             ),
         )
     }
 
     @Test
-    fun `WHEN dark color scheme THEN getConfiguredColorSchemeParams returns dark color scheme`() {
+    fun `WHEN night mode yes THEN getConfiguredColorSchemeParams returns dark color scheme`() {
         val customTabConfig = CustomTabConfig(
             colorSchemes = ColorSchemes(
                 defaultColorSchemeParams = defaultColorSchemeParams,
@@ -1323,13 +1388,13 @@ class CustomTabsToolbarFeatureTest {
         assertEquals(
             darkColorSchemeParams,
             customTabConfig.colorSchemes!!.getConfiguredColorSchemeParams(
-                CustomTabsIntent.COLOR_SCHEME_DARK,
+                nightMode = AppCompatDelegate.MODE_NIGHT_YES,
             ),
         )
     }
 
     @Test
-    fun `WHEN dark color scheme & no dark color params THEN getConfiguredColorSchemeParams returns default color scheme`() {
+    fun `WHEN night mode yes & no dark color params THEN getConfiguredColorSchemeParams returns default color scheme`() {
         val customTabConfig = CustomTabConfig(
             colorSchemes = ColorSchemes(
                 defaultColorSchemeParams = defaultColorSchemeParams,
@@ -1340,13 +1405,13 @@ class CustomTabsToolbarFeatureTest {
         assertEquals(
             defaultColorSchemeParams,
             customTabConfig.colorSchemes!!.getConfiguredColorSchemeParams(
-                CustomTabsIntent.COLOR_SCHEME_DARK,
+                nightMode = AppCompatDelegate.MODE_NIGHT_YES,
             ),
         )
     }
 
     @Test
-    fun `WHEN no color scheme set THEN getConfiguredColorSchemeParams returns default color scheme`() {
+    fun `WHEN night mode not set THEN getConfiguredColorSchemeParams returns default color scheme`() {
         val customTabConfig = CustomTabConfig(
             colorSchemes = ColorSchemes(
                 defaultColorSchemeParams = defaultColorSchemeParams,

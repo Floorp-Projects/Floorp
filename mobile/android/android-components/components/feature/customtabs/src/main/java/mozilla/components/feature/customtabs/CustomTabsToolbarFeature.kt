@@ -67,6 +67,7 @@ import mozilla.components.ui.icons.R as iconsR
  * @property menuItemIndex Location to insert any custom menu options into the predefined menu list.
  * @property window Reference to the [Window] so the navigation bar color can be set.
  * @property updateTheme Whether or not the toolbar and system bar colors should be changed.
+ * @property appNightMode The [NightMode] used in the app. Defaults to [MODE_NIGHT_FOLLOW_SYSTEM].
  * @property forceActionButtonTinting When set to true the [toolbar] action button will always be tinted
  * based on the [toolbar] background, ignoring the value of [CustomTabActionButtonConfig.tint].
  * @property isNavBarEnabled Whether or not the navigation bar is enabled.
@@ -83,6 +84,7 @@ class CustomTabsToolbarFeature(
     private val menuItemIndex: Int = menuBuilder?.items?.size ?: 0,
     private val window: Window? = null,
     private val updateTheme: Boolean = true,
+    @NightMode private val appNightMode: Int = MODE_NIGHT_FOLLOW_SYSTEM,
     private val forceActionButtonTinting: Boolean = false,
     private val isNavBarEnabled: Boolean = false,
     private val shareListener: (() -> Unit)? = null,
@@ -127,16 +129,22 @@ class CustomTabsToolbarFeature(
     }
 
     @VisibleForTesting
-    internal fun init(config: CustomTabConfig) {
+    internal fun init(
+        config: CustomTabConfig,
+        setAppNightMode: (Int) -> Unit = AppCompatDelegate::setDefaultNightMode,
+    ) {
         // Don't allow clickable toolbar so a custom tab can't switch to edit mode.
         toolbar.display.onUrlClicked = { false }
 
+        // Use the intent provided color scheme or fallback to the app night mode preference.
+        val nightMode = config.colorScheme?.toNightMode() ?: appNightMode
+
         if (updateTheme) {
-            config.colorScheme?.toNightMode()?.let { AppCompatDelegate.setDefaultNightMode(it) }
+            setAppNightMode.invoke(nightMode)
         }
 
         val colorSchemeParams = config.colorSchemes?.getConfiguredColorSchemeParams(
-            colorScheme = config.colorScheme,
+            nightMode = nightMode,
             isDarkMode = context.isDarkMode(),
         )
 
@@ -356,7 +364,7 @@ class CustomTabsToolbarFeature(
 
 @VisibleForTesting
 internal fun ColorSchemes.getConfiguredColorSchemeParams(
-    @ColorScheme colorScheme: Int? = null,
+    @NightMode nightMode: Int? = null,
     isDarkMode: Boolean = false,
 ) = when {
     noColorSchemeParamsSet() -> null
@@ -364,7 +372,7 @@ internal fun ColorSchemes.getConfiguredColorSchemeParams(
     defaultColorSchemeParamsOnly() -> defaultColorSchemeParams
 
     // Try to follow specified color scheme.
-    colorScheme == COLOR_SCHEME_SYSTEM -> {
+    nightMode == MODE_NIGHT_FOLLOW_SYSTEM -> {
         if (isDarkMode) {
             darkColorSchemeParams?.withDefault(defaultColorSchemeParams)
                 ?: defaultColorSchemeParams
@@ -374,11 +382,11 @@ internal fun ColorSchemes.getConfiguredColorSchemeParams(
         }
     }
 
-    colorScheme == COLOR_SCHEME_LIGHT -> lightColorSchemeParams?.withDefault(
+    nightMode == MODE_NIGHT_NO -> lightColorSchemeParams?.withDefault(
         defaultColorSchemeParams,
     ) ?: defaultColorSchemeParams
 
-    colorScheme == COLOR_SCHEME_DARK -> darkColorSchemeParams?.withDefault(
+    nightMode == MODE_NIGHT_YES -> darkColorSchemeParams?.withDefault(
         defaultColorSchemeParams,
     ) ?: defaultColorSchemeParams
 
