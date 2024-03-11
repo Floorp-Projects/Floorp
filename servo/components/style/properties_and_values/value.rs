@@ -194,9 +194,38 @@ impl<Component: ToCss> ToCss for ComponentList<Component> {
     }
 }
 
+/// A struct for a single specified registered custom property value that includes its original URL
+// data so the value can be uncomputed later.
+#[derive(Clone, Debug, MallocSizeOf, PartialEq, ToCss)]
+pub struct Value<Component> {
+    /// The registered custom property value.
+    pub(crate) v: ValueInner<Component>,
+    /// The URL data of the registered custom property from before it was computed. This is
+    /// necessary to uncompute registered custom properties.
+    #[css(skip)]
+    url_data: UrlExtraData,
+}
+
+impl<Component: Animate> Animate for Value<Component> {
+    fn animate(&self, other: &Self, procedure: Procedure) -> Result<Self, ()> {
+        let v = self.v.animate(&other.v, procedure)?;
+        Ok(Value {
+            v,
+            url_data: self.url_data.clone(),
+        })
+    }
+}
+
+impl<Component> Value<Component> {
+    /// Creates a new registered custom property value.
+    pub fn new(v: ValueInner<Component>, url_data: UrlExtraData) -> Self {
+        Self { v, url_data }
+    }
+}
+
 /// A specified registered custom property value.
 #[derive(Animate, ToComputedValue, ToCss, Clone, Debug, MallocSizeOf, PartialEq)]
-pub enum Value<Component> {
+pub enum ValueInner<Component> {
     /// A single specified component value whose syntax descriptor component did not have a
     /// multiplier.
     Component(Component),
@@ -209,6 +238,24 @@ pub enum Value<Component> {
 
 /// Specified custom property value.
 pub type SpecifiedValue = Value<SpecifiedValueComponent>;
+
+impl ToComputedValue for SpecifiedValue {
+    type ComputedValue = ComputedValue;
+
+    fn to_computed_value(&self, context: &computed::Context) -> Self::ComputedValue {
+        Self::ComputedValue {
+            v: self.v.to_computed_value(context),
+            url_data: self.url_data.clone(),
+        }
+    }
+
+    fn from_computed_value(computed: &Self::ComputedValue) -> Self {
+        Self {
+            v: ToComputedValue::from_computed_value(&computed.v),
+            url_data: computed.url_data.clone(),
+        }
+    }
+}
 
 /// Computed custom property value.
 pub type ComputedValue = Value<ComputedValueComponent>;
@@ -263,9 +310,11 @@ impl SpecifiedValue {
         allow_computationally_dependent: AllowComputationallyDependent,
     ) -> Result<Self, StyleParseError<'i>> {
         if syntax.is_universal() {
-            return Ok(Self::Universal(Arc::new(ComputedPropertyValue::parse(
-                &mut input, url_data,
-            )?)));
+            let parsed = ComputedPropertyValue::parse(&mut input, url_data)?;
+            return Ok(SpecifiedValue {
+                v: ValueInner::Universal(Arc::new(parsed)),
+                url_data: url_data.clone(),
+            });
         }
 
         let mut values = SmallComponentVec::new();
@@ -274,24 +323,27 @@ impl SpecifiedValue {
             let mut parser = Parser::new(syntax, &mut values, &mut multiplier);
             parser.parse(&mut input, url_data, allow_computationally_dependent)?;
         }
-        let computed_value = if let Some(multiplier) = multiplier {
-            Self::List(ComponentList {
+        let v = if let Some(multiplier) = multiplier {
+            ValueInner::List(ComponentList {
                 multiplier,
                 components: values.to_vec().into(),
             })
         } else {
-            Self::Component(values[0].clone())
+            ValueInner::Component(values[0].clone())
         };
-        Ok(computed_value)
+        Ok(Self {
+            v,
+            url_data: url_data.clone(),
+        })
     }
 }
 
 impl ComputedValue {
     fn serialization_types(&self) -> (TokenSerializationType, TokenSerializationType) {
-        match self {
-            Self::Component(component) => component.serialization_types(),
-            Self::Universal(_) => unreachable!(),
-            Self::List(list) => list
+        match &self.v {
+            ValueInner::Component(component) => component.serialization_types(),
+            ValueInner::Universal(_) => unreachable!(),
+            ValueInner::List(list) => list
                 .components
                 .first()
                 .map_or(Default::default(), |f| f.serialization_types()),
@@ -299,16 +351,22 @@ impl ComputedValue {
     }
 
     fn to_declared_value(&self, url_data: &UrlExtraData) -> Arc<ComputedPropertyValue> {
-        if let Self::Universal(var) = self {
+        if let ValueInner::Universal(ref var) = self.v {
             return Arc::clone(var);
         }
         Arc::new(self.to_variable_value(url_data))
     }
 
     fn to_variable_value(&self, url_data: &UrlExtraData) -> ComputedPropertyValue {
-        debug_assert!(!matches!(self, Self::Universal(..)), "Shouldn't be needed");
+        debug_assert!(
+            !matches!(self.v, ValueInner::Universal(..)),
+            "Shouldn't be needed"
+        );
         // TODO(zrhoffman, 1864736): Preserve the computed type instead of converting back to a
         // string.
+        if let ValueInner::Universal(ref value) = self.v {
+            return (**value).clone();
+        }
         let serialization_types = self.serialization_types();
         ComputedPropertyValue::new(
             self.to_css_string(),
@@ -569,11 +627,15 @@ impl CustomAnimatedValue {
         name: &crate::custom_properties::Name,
         value: &Arc<ComputedPropertyValue>,
     ) -> Self {
+        let value = ComputedValue {
+            // FIXME: Should probably preserve type-ness in ComputedPropertyValue.
+            v: ValueInner::Universal(value.clone()),
+            url_data: value.url_data.clone(),
+        };
         Self {
             name: name.clone(),
-            // FIXME: Should probably preserve type-ness in ComputedPropertyValue.
-            value: ComputedValue::Universal(value.clone()),
             url_data: value.url_data.clone(),
+            value,
         }
     }
 
@@ -616,7 +678,10 @@ impl CustomAnimatedValue {
         };
 
         let url_data = value.url_data.clone();
-        let value = computed_value.unwrap_or_else(|| ComputedValue::Universal(Arc::clone(value)));
+        let value = computed_value.unwrap_or_else(|| ComputedValue {
+            v: ValueInner::Universal(Arc::clone(value)),
+            url_data: value.url_data.clone(),
+        });
         Some(Self {
             name: declaration.name.clone(),
             url_data,
