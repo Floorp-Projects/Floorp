@@ -1124,6 +1124,14 @@ void nsDisplayListBuilder::EnterPresShell(const nsIFrame* aReferenceFrame,
   // instead.
   if (state->mCaretFrame) {
     MOZ_ASSERT(state->mCaretFrame->PresShell() == state->mPresShell);
+    // Generally, nsCaret sets the last caret frame in
+    // nsCaret::SchedulePaint to call MarkNeedsDisplayItemRebuild()
+    // on the frame accordingly, so we shouldn't need do to this manually.
+    // However, it's possible for nsCaret::SchedulePaint fails to find
+    // the caret frame (i.e, selection changes), we end up not calling
+    // MarkNeedsDisplayItemRebuild() on this frame. This is not good,
+    // so we are manually setting the last caret frame here.
+    caret->SetLastCaretFrame(state->mCaretFrame);
     MarkFrameForDisplay(state->mCaretFrame, aReferenceFrame);
   }
 }
