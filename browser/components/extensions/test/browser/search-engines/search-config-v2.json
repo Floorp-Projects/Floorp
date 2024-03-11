@@ -1,0 +1,97 @@
+{
+  "data": [
+    {
+      "recordType": "engine",
+      "identifier": "basic",
+      "base": {
+        "name": "basic",
+        "urls": {
+          "search": {
+            "base": "https://mochi.test:8888/browser/browser/components/search/test/browser/",
+            "params": [
+              {
+                "name": "foo",
+                "value": "1"
+              }
+            ],
+            "searchTermParamName": "search"
+          },
+          "suggestions": {
+            "base": "https://mochi.test:8888/browser/browser/modules/test/browser/usageTelemetrySearchSuggestions.sjs",
+            "searchTermParamName": "q"
+          }
+        }
+      },
+      "variants": [
+        {
+          "environment": { "allRegionsAndLocales": true }
+        }
+      ]
+    },
+    {
+      "recordType": "engine",
+      "identifier": "simple",
+      "base": {
+        "name": "Simple Engine",
+        "urls": {
+          "search": {
+            "base": "https://example.com",
+            "params": [
+              {
+                "name": "sourceId",
+                "value": "Mozilla-search"
+              }
+            ],
+            "searchTermParamName": "search"
+          },
+          "suggestions": {
+            "base": "https://example.com",
+            "searchTermParamName": "search"
+          }
+        }
+      },
+      "variants": [
+        {
+          "environment": { "allRegionsAndLocales": true }
+        }
+      ]
+    },
+    {
+      "recordType": "engine",
+      "identifier": "another",
+      "base": {
+        "name": "another",
+        "urls": {
+          "search": {
+            "base": "https://mochi.test:8888/browser/browser/components/search/test/browser/",
+            "params": [
+              {
+                "name": "bar",
+                "value": "1"
+              }
+            ],
+            "searchTermParamName": "search"
+          },
+          "suggestions": {
+            "base": "https://mochi.test:8888/browser/browser/modules/test/browser/usageTelemetrySearchSuggestions.sjs",
+            "searchTermParamName": "q"
+          }
+        }
+      },
+      "variants": [
+        {
+          "environment": { "allRegionsAndLocales": true }
+        }
+      ]
+    },
+    {
+      "recordType": "defaultEngines",
+      "globalDefault": "basic",
+      "specificDefaults": []
+    },
+    {
+      "recordType": "engineOrders",
+      "orders": []
+    }
+  ]
+}

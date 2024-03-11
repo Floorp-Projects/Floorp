@@ -1,3 +1,7 @@
+const { PromiseTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/PromiseTestUtils.sys.mjs"
+);
+
 var pref = "browser.fixup.typo.scheme";
 
 var data = [
@@ -103,11 +107,20 @@ var dontFixURIs = [
 var len = data.length;
 
 add_task(async function setup() {
-  await setupSearchService();
-  // Now we've initialised the search service, we force remove the engines
-  // it has, so they don't interfere with this test.
+  // Force search service to fail, so we do not have any engines that can
+  // interfere with this test.
   // Search engine integration is tested in test_URIFixup_search.js.
-  Services.search.wrappedJSObject._engines.clear();
+  Services.search.wrappedJSObject.errorToThrowInTest = "Settings";
+
+  // When search service fails, we want the promise rejection to be uncaught
+  // so we can continue running the test.
+  PromiseTestUtils.expectUncaughtRejection(
+    /Fake Settings error during search service initialization./
+  );
+
+  try {
+    await setupSearchService();
+  } catch {}
 });
 
 // Make sure we fix what needs fixing when there is no pref set.

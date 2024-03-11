@@ -13,6 +13,7 @@
 ChromeUtils.defineESModuleGetters(this, {
   UrlbarProviderClipboard:
     "resource:///modules/UrlbarProviderClipboard.sys.mjs",
+  SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
 });
 
 // This test has many subtests and can time out in verify mode.
@@ -756,29 +757,76 @@ add_task(async function selected_result_trending() {
   });
 
   let defaultEngine = await Services.search.getDefault();
-  let extension = await SearchTestUtils.installSearchExtension(
-    {
-      name: "mozengine",
-      search_url: "https://example.org/",
-    },
-    { setAsDefault: true, skipUnload: true }
-  );
+  let extension;
+  if (!SearchUtils.newSearchConfigEnabled) {
+    extension = await SearchTestUtils.installSearchExtension(
+      {
+        name: "mozengine",
+        search_url: "https://example.org/",
+      },
+      { setAsDefault: true, skipUnload: true }
+    );
+  }
 
   SearchTestUtils.useMockIdleService();
-  await SearchTestUtils.updateRemoteSettingsConfig([
-    {
-      webExtension: { id: "mozengine@tests.mozilla.org" },
-      urls: {
-        trending: {
-          fullPath:
-            "https://example.com/browser/browser/components/search/test/browser/trendingSuggestionEngine.sjs",
-          query: "",
-        },
-      },
-      appliesTo: [{ included: { everywhere: true } }],
-      default: "yes",
-    },
-  ]);
+  await SearchTestUtils.updateRemoteSettingsConfig(
+    SearchUtils.newSearchConfigEnabled
+      ? [
+          {
+            recordType: "engine",
+            identifier: "mozengine",
+            base: {
+              name: "mozengine",
+              urls: {
+                search: {
+                  base: "https://example.org/",
+                  searchTermParamName: "q",
+                },
+                trending: {
+                  base: "https://example.com/browser/browser/components/search/test/browser/trendingSuggestionEngine.sjs",
+                  method: "GET",
+                },
+              },
+            },
+            variants: [
+              {
+                environment: { allRegionsAndLocales: true },
+              },
+            ],
+          },
+          {
+            recordType: "defaultEngines",
+            globalDefault: "mozengine",
+            specificDefaults: [],
+          },
+          {
+            recordType: "engineOrders",
+            orders: [],
+          },
+        ]
+      : [
+          {
+            webExtension: { id: "mozengine@tests.mozilla.org" },
+            urls: {
+              trending: {
+                fullPath:
+                  "https://example.com/browser/browser/components/search/test/browser/trendingSuggestionEngine.sjs",
+                query: "",
+              },
+            },
+            appliesTo: [{ included: { everywhere: true } }],
+            default: "yes",
+          },
+        ]
+  );
+
+  if (SearchUtils.newSearchConfigEnabled) {
+    let engine = Services.search.getEngineByName("mozengine");
+    await Services.search.setDefault(
+      engine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
+  }
 
   await doTest(async () => {
     await openPopup("");
@@ -796,7 +844,13 @@ add_task(async function selected_result_trending() {
     ]);
   });
 
-  await extension.unload();
+  if (SearchUtils.newSearchConfigEnabled) {
+    let engine = Services.search.getEngineByName("mozengine");
+    await Services.search.removeEngine(engine);
+  } else {
+    await extension.unload();
+  }
+
   await Services.search.setDefault(
     defaultEngine,
     Ci.nsISearchService.CHANGE_REASON_UNKNOWN
@@ -823,29 +877,82 @@ add_task(async function selected_result_trending_rich() {
   });
 
   let defaultEngine = await Services.search.getDefault();
-  let extension = await SearchTestUtils.installSearchExtension(
-    {
-      name: "mozengine",
-      search_url: "https://example.org/",
-    },
-    { setAsDefault: true, skipUnload: true }
-  );
+  let extension;
+  if (!SearchUtils.newSearchConfigEnabled) {
+    extension = await SearchTestUtils.installSearchExtension(
+      {
+        name: "mozengine",
+        search_url: "https://example.org/",
+      },
+      { setAsDefault: true, skipUnload: true }
+    );
+  }
 
   SearchTestUtils.useMockIdleService();
-  await SearchTestUtils.updateRemoteSettingsConfig([
-    {
-      webExtension: { id: "mozengine@tests.mozilla.org" },
-      urls: {
-        trending: {
-          fullPath:
-            "https://example.com/browser/browser/components/search/test/browser/trendingSuggestionEngine.sjs?richsuggestions=true",
-          query: "",
-        },
-      },
-      appliesTo: [{ included: { everywhere: true } }],
-      default: "yes",
-    },
-  ]);
+  await SearchTestUtils.updateRemoteSettingsConfig(
+    SearchUtils.newSearchConfigEnabled
+      ? [
+          {
+            recordType: "engine",
+            identifier: "mozengine",
+            base: {
+              name: "mozengine",
+              urls: {
+                search: {
+                  base: "https://example.org/",
+                  searchTermParamName: "q",
+                },
+                trending: {
+                  base: "https://example.com/browser/browser/components/search/test/browser/trendingSuggestionEngine.sjs",
+                  method: "GET",
+                  params: [
+                    {
+                      name: "richsuggestions",
+                      value: "true",
+                    },
+                  ],
+                },
+              },
+            },
+            variants: [
+              {
+                environment: { allRegionsAndLocales: true },
+              },
+            ],
+          },
+          {
+            recordType: "defaultEngines",
+            globalDefault: "mozengine",
+            specificDefaults: [],
+          },
+          {
+            recordType: "engineOrders",
+            orders: [],
+          },
+        ]
+      : [
+          {
+            webExtension: { id: "mozengine@tests.mozilla.org" },
+            urls: {
+              trending: {
+                fullPath:
+                  "https://example.com/browser/browser/components/search/test/browser/trendingSuggestionEngine.sjs?richsuggestions=true",
+                query: "",
+              },
+            },
+            appliesTo: [{ included: { everywhere: true } }],
+            default: "yes",
+          },
+        ]
+  );
+
+  if (SearchUtils.newSearchConfigEnabled) {
+    let engine = Services.search.getEngineByName("mozengine");
+    await Services.search.setDefault(
+      engine,
+      Ci.nsISearchService.CHANGE_REASON_UNKNOWN
+    );
+  }
 
   await doTest(async () => {
     await openPopup("");
@@ -863,7 +970,13 @@ add_task(async function selected_result_trending_rich() {
     ]);
   });
 
-  await extension.unload();
+  if (SearchUtils.newSearchConfigEnabled) {
+    let engine = Services.search.getEngineByName("mozengine");
+    await Services.search.removeEngine(engine);
+  } else {
+    await extension.unload();
+  }
+
   await Services.search.setDefault(
     defaultEngine,
     Ci.nsISearchService.CHANGE_REASON_UNKNOWN
