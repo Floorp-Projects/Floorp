@@ -87,6 +87,8 @@ browsertime-tp6m:
         mozharness:
             extra-options:
                 - --chimera
+                # Bug 1884667 - Fresh profiles cause high frequency intermittents
+                - --conditioned-profile=settled
         tier:
             by-app:
                 geckoview: 1
