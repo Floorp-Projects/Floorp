@@ -236,6 +236,8 @@ Maybe<CodecType> CodecStringToCodecType(const nsAString& aCodecString);
 
 nsString ConfigToString(const VideoDecoderConfig& aConfig);
 
+bool IsSupportedVideoCodec(const nsAString& aCodec);
+
 }  // namespace dom
 
 }  // namespace mozilla

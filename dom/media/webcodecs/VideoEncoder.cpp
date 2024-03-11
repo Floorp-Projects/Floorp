@@ -332,27 +332,6 @@ VideoEncoderConfigInternal::Diff(
   return list.forget();
 }
 
-/*
- * The followings are helpers for VideoEncoder methods
- */
-static bool IsEncodeSupportedCodec(const nsAString& aCodec) {
-  LOG("IsEncodeSupported: %s", NS_ConvertUTF16toUTF8(aCodec).get());
-  if (!IsVP9CodecString(aCodec) && !IsVP8CodecString(aCodec) &&
-      !IsH264CodecString(aCodec) && !IsAV1CodecString(aCodec)) {
-    return false;
-  }
-
-  // Gecko allows codec string starts with vp9 or av1 but Webcodecs requires to
-  // starts with av01 and vp09.
-  // https://www.w3.org/TR/webcodecs-codec-registry/#video-codec-registry
-  if (StringBeginsWith(aCodec, u"vp9"_ns) ||
-      StringBeginsWith(aCodec, u"av1"_ns)) {
-    return false;
-  }
-
-  return true;
-}
-
 // https://w3c.github.io/webcodecs/#check-configuration-support
 static bool CanEncode(const RefPtr<VideoEncoderConfigInternal>& aConfig) {
   auto parsedCodecString =
@@ -361,7 +340,7 @@ static bool CanEncode(const RefPtr<VideoEncoderConfigInternal>& aConfig) {
   if (IsOnAndroid()) {
     return false;
   }
-  if (!IsEncodeSupportedCodec(parsedCodecString)) {
+  if (!IsSupportedVideoCodec(parsedCodecString)) {
     return false;
   }
 
