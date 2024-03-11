@@ -258,6 +258,8 @@ class RaptorGatherer(FrameworkGatherer):
                 result += f"   {idx+1}. **{description['name']}**\n\n"
             if "owner" in description.keys():
                 result += f"   **Owner**: {description['owner']}\n\n"
+            if test_description:
+                result += f"   **Description**: {test_description}\n\n"
 
             for key in sorted(description.keys()):
                 if key in ["owner", "name", "manifest", "metrics"]:

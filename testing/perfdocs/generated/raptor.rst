@@ -12145,6 +12145,8 @@ Browsertime tests that use a custom pageload test script. These use the pageload
 
    **Owner**: DOM Lifecycle, Workers and Storage Team
 
+   **Description**: Use add API to send many small ArrayBuffers to IndexedDB in one transaction
+
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 1
@@ -12391,6 +12393,8 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    :class-container: anchor-id-addMabN-c
 
    **Owner**: DOM Lifecycle, Workers and Storage Team
+
+   **Description**: Use add API to send many small ArrayBuffers to IndexedDB independently
 
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari
@@ -12639,6 +12643,8 @@ Browsertime tests that use a custom pageload test script. These use the pageload
 
    **Owner**: DOM Lifecycle, Workers and Storage Team
 
+   **Description**: Use add API to send many small Arrays to IndexedDB in one transaction
+
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 1
@@ -12885,6 +12891,8 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    :class-container: anchor-id-addMarN-c
 
    **Owner**: DOM Lifecycle, Workers and Storage Team
+
+   **Description**: Use add API to send many small Arrays to IndexedDB independently
 
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari
@@ -13133,6 +13141,8 @@ Browsertime tests that use a custom pageload test script. These use the pageload
 
    **Owner**: DOM Lifecycle, Workers and Storage Team
 
+   **Description**: Use add API to send many small Blobs to IndexedDB in one transaction
+
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 1
@@ -13379,6 +13389,8 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    :class-container: anchor-id-addMblN-c
 
    **Owner**: DOM Lifecycle, Workers and Storage Team
+
+   **Description**: Use add API to send many small Blobs to IndexedDB independently
 
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari
@@ -13627,6 +13639,8 @@ Browsertime tests that use a custom pageload test script. These use the pageload
 
    **Owner**: DOM Lifecycle, Workers and Storage Team
 
+   **Description**: Use add API to send a couple of large ArrayBuffers to IndexedDB in one transaction
+
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 1
@@ -13873,6 +13887,8 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    :class-container: anchor-id-addkABN-c
 
    **Owner**: DOM Lifecycle, Workers and Storage Team
+
+   **Description**: Use add API to send a couple of large ArrayBuffers to IndexedDB independently
 
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari
@@ -14121,6 +14137,8 @@ Browsertime tests that use a custom pageload test script. These use the pageload
 
    **Owner**: DOM Lifecycle, Workers and Storage Team
 
+   **Description**: Use add API to send a couple of large JS Arrays to IndexedDB in one transaction
+
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 1
@@ -14367,6 +14385,8 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    :class-container: anchor-id-addkARN-c
 
    **Owner**: DOM Lifecycle, Workers and Storage Team
+
+   **Description**: Use add API to send a couple of large JS Arrays to IndexedDB independently
 
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari
@@ -14615,6 +14635,8 @@ Browsertime tests that use a custom pageload test script. These use the pageload
 
    **Owner**: DOM Lifecycle, Workers and Storage Team
 
+   **Description**: Use add API to send a couple of large Blobs to IndexedDB in one transaction
+
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 1
@@ -14861,6 +14883,8 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    :class-container: anchor-id-addkBLN-c
 
    **Owner**: DOM Lifecycle, Workers and Storage Team
+
+   **Description**: Use add API to send a couple of large Blobs to IndexedDB independently
 
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari
@@ -15109,6 +15133,8 @@ Browsertime tests that use a custom pageload test script. These use the pageload
 
    **Owner**: PerfTest Team
 
+   **Description**: Used to run vanilla browsertime tests through raptor. For example: `./mach raptor --browsertime -t browsertime --browsertime-arg url=https://www.sitespeed.io --browsertime-arg iterations=3`
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: firefox
@@ -15132,6 +15158,8 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    :class-container: anchor-id-connect-c
 
    **Owner**: Network Team
+
+   **Description**: Verifies that connection time on a pageload is zero when a speculative connection has first been made
 
    * **alert change type**: absolute
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange
@@ -15334,6 +15362,8 @@ Browsertime tests that use a custom pageload test script. These use the pageload
 
    **Owner**: PerfTest Team
 
+   **Description**: Generates a constant value that can be changed to induce a regression.
+
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari, geckoview, fenix
    * **browser cycles**: 1
@@ -15394,6 +15424,8 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    :class-container: anchor-id-getkeyrng-c
 
    **Owner**: DOM Lifecycle, Workers and Storage Team
+
+   **Description**: Measures the speed of key-range based reads of IndexedDB
 
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari
@@ -15641,6 +15673,8 @@ Browsertime tests that use a custom pageload test script. These use the pageload
 
    **Owner**: PerfTest Team
 
+   **Description**: Runs the Grandprix benchmark
+
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 1
@@ -15665,6 +15699,8 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    :class-container: anchor-id-process-switch-c
 
    **Owner**: PerfTest Team
+
+   **Description**: Measures process switch time
 
    * **accept zero vismet**: true
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
@@ -15870,6 +15906,8 @@ Browsertime tests that use a custom pageload test script. These use the pageload
 
    **Owner**: PerfTest Team
 
+   **Description**: A sample test that uses a python support file to modify the test command.
+
    * **alert threshold**: 2.0
    * **apps**: firefox
    * **browser cycles**: 1
@@ -15897,6 +15935,8 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    :class-container: anchor-id-throttled-c
 
    **Owner**: Network Team
+
+   **Description**: Pageload test using a throttled network environment
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange
    * **alert threshold**: 2.0
@@ -16097,6 +16137,8 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    :class-container: anchor-id-tp6-bench-c
 
    **Owner**: PerfTest Team
+
+   **Description**: A pageload benchmark test that quickly runs through all of the pages available to produce a single overall metric.
 
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari
@@ -16302,6 +16344,8 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    :class-container: anchor-id-upload-c
 
    **Owner**: Network Team
+
+   **Description**: Measures http/2 file upload throughput
 
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari
@@ -16531,6 +16575,8 @@ Browsertime tests that use a custom pageload test script. These use the pageload
 
    **Owner**: Network Team
 
+   **Description**: Measures http/3 file upload throughput
+
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari
    * **browser cycles**: 1
@@ -16758,6 +16804,8 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    :class-container: anchor-id-welcome-c
 
    **Owner**: PerfTest Team
+
+   **Description**: Measures pageload metrics for the first-install about:welcome page
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
@@ -28430,6 +28478,8 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
 
    **Owner**: PerfTest Team
 
+   **Description**: Navigates to cnn main page, then to the world sub-page.
+
    * **accept zero vismet**: true
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
@@ -28668,6 +28718,8 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
    :class-container: anchor-id-facebook-nav-i
 
    **Owner**: PerfTest Team
+
+   **Description**: Navigates to facebook, then the sub-pages friends, marketplace, groups.
 
    * **accept zero vismet**: true
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
@@ -28908,6 +28960,8 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
 
    **Owner**: PerfTest Team
 
+   **Description**: Navigates from the Bill Gates AMA to the Reddit members section.
+
    * **accept zero vismet**: true
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
@@ -29147,6 +29201,8 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
 
    **Owner**: PerfTest Team
 
+   **Description**: Navigates the `thisisbillgates` user starting at the main user page, then to the posts, comments, hot, and top sections.
+
    * **accept zero vismet**: true
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
@@ -29385,6 +29441,8 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
    :class-container: anchor-id-reddit-billgates-post-2-i
 
    **Owner**: PerfTest Team
+
+   **Description**: Navigates the `thisisbillgates` user starting at the main user page, then to the posts, comments, hot, and top sections.
 
    * **accept zero vismet**: true
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
