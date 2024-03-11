@@ -249,9 +249,6 @@ def wantsGetWrapperCache(desc):
 # We'll want to insert the indent at the beginnings of lines, but we
 # don't want to indent empty lines.  So only indent lines that have a
 # non-newline character on them.
-lineStartDetector = re.compile("^(?=[^\n#])", re.MULTILINE)
-
-
 def indent(s, indentLevel=2):
     """
     Indent C++ code.
@@ -259,9 +256,9 @@ def indent(s, indentLevel=2):
     Weird secret feature: this doesn't indent lines that start with # (such as
     #include lines or #ifdef/#endif).
     """
-    if s == "":
+    if not s or s[0] in "\n#":
         return s
-    return re.sub(lineStartDetector, indentLevel * " ", s)
+    return (indentLevel * " ") + s
 
 
 # dedent() and fill() are often called on the same string multiple
