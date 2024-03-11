@@ -11,6 +11,8 @@ import mozilla.components.concept.engine.EngineSession.LoadUrlFlags.Companion.AL
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags.Companion.BYPASS_CACHE
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags.Companion.LOAD_FLAGS_BYPASS_LOAD_URI_DELEGATE
 import mozilla.components.concept.engine.request.RequestInterceptor
+import java.net.MalformedURLException
+import java.net.URL
 
 /**
  * [RequestInterceptor] implementation for intercepting URL load requests to allow custom
@@ -23,6 +25,7 @@ class UrlRequestInterceptor(private val isDeviceRamAboveThreshold: Boolean) : Re
     private val isGoogleRequest by lazy {
         Regex("^https://www\\.google\\..+")
     }
+    private val googleRequestPaths = setOf("/search", "/webhp", "/preferences")
 
     @VisibleForTesting
     internal fun getAdditionalHeaders(isDeviceRamAboveThreshold: Boolean): Map<String, String> {
@@ -42,7 +45,15 @@ class UrlRequestInterceptor(private val isDeviceRamAboveThreshold: Boolean) : Re
         uri: String,
         isSubframeRequest: Boolean,
     ): Boolean {
-        return !isSubframeRequest && isGoogleRequest.containsMatchIn(uri)
+        if (isSubframeRequest || !isGoogleRequest.containsMatchIn(uri)) {
+            return false
+        }
+
+        return try {
+            googleRequestPaths.contains(URL(uri).path)
+        } catch (e: MalformedURLException) {
+            false
+        }
     }
 
     override fun onLoadRequest(

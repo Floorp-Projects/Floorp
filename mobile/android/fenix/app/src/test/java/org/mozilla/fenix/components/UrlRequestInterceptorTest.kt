@@ -60,7 +60,7 @@ class UrlRequestInterceptorTest {
     fun `WHEN should intercept request is called THEN return the correct boolean value`() {
         val urlRequestInterceptor = getUrlRequestInterceptor()
 
-        assertTrue(
+        assertFalse(
             urlRequestInterceptor.shouldInterceptRequest(
                 uri = "https://www.google.com",
                 isSubframeRequest = false,
@@ -128,8 +128,8 @@ class UrlRequestInterceptorTest {
     }
 
     @Test
-    fun `WHEN a Google request is loaded THEN request is intercepted`() {
-        val uri = "https://www.google.com"
+    fun `WHEN a Google preferences request is loaded THEN request is intercepted`() {
+        val uri = "https://www.google.com/preferences"
 
         assertEquals(
             RequestInterceptor.InterceptionResponse.Url(
