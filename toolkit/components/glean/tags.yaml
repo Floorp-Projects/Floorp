@@ -35,6 +35,8 @@ $schema: moz://mozilla.org/schemas/glean/tags/1-0-0
   description: The Bugzilla component which applies to this object.
 'Core :: Cycle Collector':
   description: The Bugzilla component which applies to this object.
+'Core :: DLL Services':
+  description: The Bugzilla component which applies to this object.
 'Core :: DOM: Animation':
   description: The Bugzilla component which applies to this object.
 'Core :: DOM: Bindings (WebIDL)':
@@ -95,8 +97,6 @@ $schema: moz://mozilla.org/schemas/glean/tags/1-0-0
   description: The Bugzilla component which applies to this object.
 'Core :: Disability Access APIs':
   description: The Bugzilla component which applies to this object.
-'Core :: Document Navigation':
-  description: The Bugzilla component which applies to this object.
 'Core :: Gecko Profiler':
   description: The Bugzilla component which applies to this object.
 'Core :: General':
@@ -118,6 +118,8 @@ $schema: moz://mozilla.org/schemas/glean/tags/1-0-0
 'Core :: Hardware Abstraction Layer (HAL)':
   description: The Bugzilla component which applies to this object.
 'Core :: IPC':
+  description: The Bugzilla component which applies to this object.
+'Core :: IPC: MSCOM':
   description: The Bugzilla component which applies to this object.
 'Core :: Internationalization':
   description: The Bugzilla component which applies to this object.
@@ -169,6 +171,8 @@ $schema: moz://mozilla.org/schemas/glean/tags/1-0-0
   description: The Bugzilla component which applies to this object.
 'Core :: MFBT':
   description: The Bugzilla component which applies to this object.
+'Core :: Machine Learning':
+  description: The Bugzilla component which applies to this object.
 'Core :: MathML':
   description: The Bugzilla component which applies to this object.
 'Core :: Memory Allocator':
@@ -210,6 +214,8 @@ $schema: moz://mozilla.org/schemas/glean/tags/1-0-0
 'Core :: Security: PSM':
   description: The Bugzilla component which applies to this object.
 'Core :: Security: Process Sandboxing':
+  description: The Bugzilla component which applies to this object.
+'Core :: Security: RLBox':
   description: The Bugzilla component which applies to this object.
 'Core :: Spelling checker':
   description: The Bugzilla component which applies to this object.
@@ -337,6 +343,8 @@ $schema: moz://mozilla.org/schemas/glean/tags/1-0-0
   description: The Bugzilla component which applies to this object.
 'Firefox :: Keyboard Navigation':
   description: The Bugzilla component which applies to this object.
+'Firefox :: Launcher Process':
+  description: The Bugzilla component which applies to this object.
 'Firefox :: Menus':
   description: The Bugzilla component which applies to this object.
 'Firefox :: Messaging System':
@@ -356,6 +364,8 @@ $schema: moz://mozilla.org/schemas/glean/tags/1-0-0
 'Firefox :: Pocket':
   description: The Bugzilla component which applies to this object.
 'Firefox :: Private Browsing':
+  description: The Bugzilla component which applies to this object.
+'Firefox :: Profiles':
   description: The Bugzilla component which applies to this object.
 'Firefox :: Protections UI':
   description: The Bugzilla component which applies to this object.
@@ -497,8 +507,6 @@ $schema: moz://mozilla.org/schemas/glean/tags/1-0-0
   description: The Bugzilla component which applies to this object.
 'Toolkit :: IOUtils and PathUtils':
   description: The Bugzilla component which applies to this object.
-'Toolkit :: NSIS Installer':
-  description: The Bugzilla component which applies to this object.
 'Toolkit :: Password Manager':
   description: The Bugzilla component which applies to this object.
 'Toolkit :: Performance Monitoring':
@@ -525,13 +533,13 @@ $schema: moz://mozilla.org/schemas/glean/tags/1-0-0
   description: The Bugzilla component which applies to this object.
 'Toolkit :: Themes':
   description: The Bugzilla component which applies to this object.
+'Toolkit :: UI Widgets':
+  description: The Bugzilla component which applies to this object.
 'Toolkit :: UniFFI Bindings':
   description: The Bugzilla component which applies to this object.
 'Toolkit :: Video/Audio Controls':
   description: The Bugzilla component which applies to this object.
 'Toolkit :: View Source':
-  description: The Bugzilla component which applies to this object.
-'Toolkit :: UI Widgets':
   description: The Bugzilla component which applies to this object.
 'Toolkit :: about:memory':
   description: The Bugzilla component which applies to this object.
