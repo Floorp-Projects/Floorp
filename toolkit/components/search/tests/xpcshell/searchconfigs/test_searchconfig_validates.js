@@ -65,103 +65,79 @@ function disallowAdditionalProperties(section) {
   }
 }
 
-let searchConfigSchemaV1;
-let searchConfigSchema;
-
-add_setup(async function () {
-  searchConfigSchemaV1 = await IOUtils.readJSON(
-    PathUtils.join(do_get_cwd().path, "search-config-schema.json")
+/**
+ * Asserts the remote setting collection validates against the schema.
+ *
+ * @param {object} options
+ *   The options for the assertion.
+ * @param {string} options.collectionName
+ *   The name of the collection under validation.
+ * @param {object[]} options.collectionData
+ *   The collection data to validate.
+ * @param {string[]} [options.ignoreFields=[]]
+ *   A list of fields to ignore in the collection data, e.g. where remote
+ *   settings itself adds extra fields. `schema`, `id`, and `last_modified` are
+ *   always ignored.
+ * @param {Function} [options.extraAssertsFn]
+ *   An optional function to run additional assertions on each entry in the
+ *   collection.
+ * @param {Function} options.getEntryId
+ *   A function to get the identifier for each entry in the collection.
+ */
+async function assertSearchConfigValidates({
+  collectionName,
+  collectionData,
+  ignoreFields = [],
+  extraAssertsFn,
+  getEntryId,
+}) {
+  let schema = await IOUtils.readJSON(
+    PathUtils.join(do_get_cwd().path, `${collectionName}-schema.json`)
   );
-  searchConfigSchema = await IOUtils.readJSON(
-    PathUtils.join(do_get_cwd().path, "search-config-v2-schema.json")
-  );
-});
 
-async function checkSearchConfigValidates(schema, searchConfig) {
   disallowAdditionalProperties(schema);
   let validator = new JsonSchema.Validator(schema);
 
-  for (let entry of searchConfig) {
+  for (let entry of collectionData) {
     // Records in Remote Settings contain additional properties independent of
     // the schema. Hence, we don't want to validate their presence.
-    delete entry.schema;
-    delete entry.id;
-    delete entry.last_modified;
+    for (let field of [...ignoreFields, "schema", "id", "last_modified"]) {
+      delete entry[field];
+    }
 
     let result = validator.validate(entry);
-    // entry.webExtension.id supports search-config v1.
-    let message = `Should validate ${
-      entry.identifier ?? entry.recordType ?? entry.webExtension.id
-    }`;
+    let message = `Should validate ${getEntryId(entry)}`;
     if (!result.valid) {
       message += `:\n${JSON.stringify(result.errors, null, 2)}`;
     }
     Assert.ok(result.valid, message);
 
-    // All engine objects should have the base URL defined for each entry in
-    // entry.base.urls.
-    // Unfortunately this is difficult to enforce in the schema as it would
-    // need a `required` field that works across multiple levels.
-    if (entry.recordType == "engine") {
-      for (let urlEntry of Object.values(entry.base.urls)) {
-        Assert.ok(
-          urlEntry.base,
-          "Should have a base url for every URL defined on the top-level base object."
-        );
-      }
-    }
+    extraAssertsFn?.(entry);
   }
 }
 
-async function checkSearchConfigOverrideValidates(
-  schema,
-  searchConfigOverride
-) {
-  let validator = new JsonSchema.Validator(schema);
-
-  for (let entry of searchConfigOverride) {
-    // Records in Remote Settings contain additional properties independent of
-    // the schema. Hence, we don't want to validate their presence.
-    delete entry.schema;
-    delete entry.id;
-    delete entry.last_modified;
-
-    let result = validator.validate(entry);
-
-    let message = `Should validate ${entry.identifier ?? entry.telemetryId}`;
-    if (!result.valid) {
-      message += `:\n${JSON.stringify(result.errors, null, 2)}`;
-    }
-    Assert.ok(result.valid, message);
-  }
-}
+add_setup(async function () {
+  updateAppInfo({ ID: "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}" });
+});
 
 add_task(async function test_search_config_validates_to_schema_v1() {
   let selector = new SearchEngineSelectorOld(() => {});
-  let searchConfig = await selector.getEngineConfiguration();
 
-  await checkSearchConfigValidates(searchConfigSchemaV1, searchConfig);
-});
-
-add_task(async function test_ui_schema_valid_v1() {
-  let uiSchema = await IOUtils.readJSON(
-    PathUtils.join(do_get_cwd().path, "search-config-ui-schema.json")
-  );
-
-  await checkUISchemaValid(searchConfigSchemaV1, uiSchema);
+  await assertSearchConfigValidates({
+    collectionName: "search-config",
+    collectionData: await selector.getEngineConfiguration(),
+    getEntryId: entry => entry.webExtension.id,
+  });
 });
 
 add_task(async function test_search_config_override_validates_to_schema_v1() {
   let selector = new SearchEngineSelectorOld(() => {});
-  let searchConfigOverrides = await selector.getEngineConfigurationOverrides();
-  let overrideSchema = await IOUtils.readJSON(
-    PathUtils.join(do_get_cwd().path, "search-config-overrides-schema.json")
-  );
 
-  await checkSearchConfigOverrideValidates(
-    overrideSchema,
-    searchConfigOverrides
-  );
+  await assertSearchConfigValidates({
+    collectionName: "search-config-overrides",
+    collectionData: await selector.getEngineConfigurationOverrides(),
+    getEntryId: entry => entry.telemetryId,
+  });
 });
 
 add_task(
@@ -171,20 +147,26 @@ add_task(
     SearchUtils.newSearchConfigEnabled = true;
 
     let selector = new SearchEngineSelector(() => {});
-    let searchConfig = await selector.getEngineConfiguration();
 
-    await checkSearchConfigValidates(searchConfigSchema, searchConfig);
-  }
-);
-
-add_task(
-  { skip_if: () => !SearchUtils.newSearchConfigEnabled },
-  async function test_ui_schema_valid() {
-    let uiSchema = await IOUtils.readJSON(
-      PathUtils.join(do_get_cwd().path, "search-config-v2-ui-schema.json")
-    );
-
-    await checkUISchemaValid(searchConfigSchema, uiSchema);
+    await assertSearchConfigValidates({
+      collectionName: "search-config-v2",
+      collectionData: await selector.getEngineConfiguration(),
+      getEntryId: entry => entry.identifier,
+      extraAssertsFn: entry => {
+        // All engine objects should have the base URL defined for each entry in
+        // entry.base.urls.
+        // Unfortunately this is difficult to enforce in the schema as it would
+        // need a `required` field that works across multiple levels.
+        if (entry.recordType == "engine") {
+          for (let urlEntry of Object.values(entry.base.urls)) {
+            Assert.ok(
+              urlEntry.base,
+              "Should have a base url for every URL defined on the top-level base object."
+            );
+          }
+        }
+      },
+    });
   }
 );
 
@@ -192,18 +174,33 @@ add_task(
   { skip_if: () => !SearchUtils.newSearchConfigEnabled },
   async function test_search_config_override_validates_to_schema() {
     let selector = new SearchEngineSelector(() => {});
-    let searchConfigOverrides =
-      await selector.getEngineConfigurationOverrides();
-    let overrideSchema = await IOUtils.readJSON(
-      PathUtils.join(
-        do_get_cwd().path,
-        "search-config-overrides-v2-schema.json"
-      )
-    );
 
-    await checkSearchConfigOverrideValidates(
-      overrideSchema,
-      searchConfigOverrides
-    );
+    await assertSearchConfigValidates({
+      collectionName: "search-config-overrides-v2",
+      collectionData: await selector.getEngineConfigurationOverrides(),
+      getEntryId: entry => entry.identifier,
+    });
   }
 );
+
+add_task(async function test_search_config_icons_validates_to_schema() {
+  let searchIcons = RemoteSettings("search-config-icons");
+
+  await assertSearchConfigValidates({
+    collectionName: "search-config-icons",
+    collectionData: await searchIcons.get(),
+    ignoreFields: ["attachment"],
+    getEntryId: entry => entry.engineIdentifiers[0],
+  });
+});
+
+add_task(async function test_search_default_override_allowlist_validates() {
+  let allowlist = RemoteSettings("search-default-override-allowlist");
+
+  await assertSearchConfigValidates({
+    collectionName: "search-default-override-allowlist",
+    collectionData: await allowlist.get(),
+    ignoreFields: ["attachment"],
+    getEntryId: entry => entry.engineName || entry.thirdPartyId,
+  });
+});

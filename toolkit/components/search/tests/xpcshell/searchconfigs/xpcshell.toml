@@ -40,20 +40,30 @@ requesttimeoutfactor = 2
 
 ["test_rakuten.js"]
 
-["test_searchconfig_validates.js"]
+["test_searchconfig_ui_schemas_valid.js"]
 support-files = [
+  "../../../schema/search-config-icons-schema.json",
+  "../../../schema/search-config-icons-ui-schema.json",
   "../../../schema/search-config-overrides-schema.json",
+  "../../../schema/search-config-overrides-ui-schema.json",
   "../../../schema/search-config-overrides-v2-schema.json",
+  "../../../schema/search-config-overrides-v2-ui-schema.json",
   "../../../schema/search-config-schema.json",
   "../../../schema/search-config-ui-schema.json",
   "../../../schema/search-config-v2-schema.json",
   "../../../schema/search-config-v2-ui-schema.json",
+  "../../../schema/search-default-override-allowlist-schema.json",
+  "../../../schema/search-default-override-allowlist-ui-schema.json",
 ]
 
-["test_searchicons_validates.js"]
+["test_searchconfig_validates.js"]
 support-files = [
   "../../../schema/search-config-icons-schema.json",
-  "../../../schema/search-config-icons-ui-schema.json",
+  "../../../schema/search-config-overrides-schema.json",
+  "../../../schema/search-config-overrides-v2-schema.json",
+  "../../../schema/search-config-schema.json",
+  "../../../schema/search-config-v2-schema.json",
+  "../../../schema/search-default-override-allowlist-schema.json",
 ]
 
 ["test_selector_db_out_of_date.js"]

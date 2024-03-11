@@ -1,0 +1,9 @@
+{
+  "ui:order": [
+    "identifier",
+    "clickUrl",
+    "telemetrySuffix",
+    "partnerCode",
+    "urls"
+  ]
+}
