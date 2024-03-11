@@ -203,10 +203,6 @@ void StructuredSpewer::parseSpewFlags(const char* flags) {
         // List Channels
         "  BaselineICStats          Dump the IC Entry counters during Ion "
         "analysis\n"
-        "  ScriptStats              Dump statistics collected by tracelogger "
-        "that\n"
-        "                           is aggregated by script. Requires\n"
-        "                           JS_TRACE_LOGGING=1\n"
         "  CacheIRHealthReport      Dump the CacheIR information and "
         "associated "
         "rating\n"

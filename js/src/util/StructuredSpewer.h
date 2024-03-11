@@ -73,7 +73,6 @@ namespace js {
 
 #  define STRUCTURED_CHANNEL_LIST(_) \
     _(BaselineICStats)               \
-    _(ScriptStats)                   \
     _(CacheIRHealthReport)
 
 // Structured spew channels
