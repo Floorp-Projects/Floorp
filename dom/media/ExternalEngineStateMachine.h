@@ -235,6 +235,7 @@ class ExternalEngineStateMachine final
   void PreservesPitchChanged() override;
   void PlayStateChanged() override;
   void LoopingChanged() override;
+  void PlaybackRateChanged();
 
   // Not supported.
   void SetIsLiveStream(bool aIsLiveStream) override {}
@@ -311,6 +312,11 @@ class ExternalEngineStateMachine final
 
   // It would be set if playback is encrypted.
   nsCString mKeySystem;
+
+  // This array stores the tasks which needs to be executed only after the
+  // engine is ready but is called before that. It will be executed when
+  // starting running the engine.
+  nsTArray<RefPtr<nsIRunnable>> mPendingTasks;
 };
 
 class ExternalPlaybackEngine {
