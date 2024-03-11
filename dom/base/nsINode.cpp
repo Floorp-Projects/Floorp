@@ -305,7 +305,7 @@ class IsItemInRangeComparator {
   // @param aStartOffset has to be less or equal to aEndOffset.
   IsItemInRangeComparator(const nsINode& aNode, const uint32_t aStartOffset,
                           const uint32_t aEndOffset,
-                          nsContentUtils::NodeIndexCache* aCache)
+                          nsContentUtils::ComparePointsCache* aCache)
       : mNode(aNode),
         mStartOffset(aStartOffset),
         mEndOffset(aEndOffset),
@@ -333,7 +333,7 @@ class IsItemInRangeComparator {
   const nsINode& mNode;
   const uint32_t mStartOffset;
   const uint32_t mEndOffset;
-  nsContentUtils::NodeIndexCache* mCache;
+  nsContentUtils::ComparePointsCache* mCache;
 };
 
 bool nsINode::IsSelected(const uint32_t aStartOffset,
@@ -368,7 +368,7 @@ bool nsINode::IsSelected(const uint32_t aStartOffset,
     }
   }
 
-  nsContentUtils::NodeIndexCache cache;
+  nsContentUtils::ComparePointsCache cache;
   IsItemInRangeComparator comparator{*this, aStartOffset, aEndOffset, &cache};
   for (Selection* selection : ancestorSelections) {
     // Binary search the sorted ranges in this selection.
@@ -1809,10 +1809,6 @@ Maybe<uint32_t> nsINode::ComputeIndexOf(const nsINode* aPossibleChild) const {
 
   if (aPossibleChild->GetParentNode() != this) {
     return Nothing();
-  }
-
-  if (aPossibleChild == GetFirstChild()) {
-    return Some(0);
   }
 
   if (aPossibleChild == GetLastChild()) {
