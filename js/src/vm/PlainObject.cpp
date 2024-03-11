@@ -207,16 +207,15 @@ void js::NewPlainObjectWithPropsCache::add(SharedShape* shape) {
   entries_[0] = shape;
 }
 
-static bool ShapeMatches(IdValuePair* properties, size_t nproperties,
-                         SharedShape* shape) {
-  if (shape->slotSpan() != nproperties) {
+static bool ShapeMatches(Handle<IdValueVector> properties, SharedShape* shape) {
+  if (shape->slotSpan() != properties.length()) {
     return false;
   }
   SharedShapePropertyIter<NoGC> iter(shape);
-  for (size_t i = nproperties; i > 0; i--) {
+  for (size_t i = properties.length(); i > 0; i--) {
     MOZ_ASSERT(iter->isDataProperty());
     MOZ_ASSERT(iter->flags() == PropertyFlags::defaultDataPropFlags);
-    if (properties[i - 1].id != iter->key()) {
+    if (properties[i - 1].get().id != iter->key()) {
       return false;
     }
     iter++;
@@ -226,10 +225,10 @@ static bool ShapeMatches(IdValuePair* properties, size_t nproperties,
 }
 
 SharedShape* js::NewPlainObjectWithPropsCache::lookup(
-    IdValuePair* properties, size_t nproperties) const {
+    Handle<IdValueVector> properties) const {
   for (size_t i = 0; i < NumEntries; i++) {
     SharedShape* shape = entries_[i];
-    if (shape && ShapeMatches(properties, nproperties, shape)) {
+    if (shape && ShapeMatches(properties, shape)) {
       return shape;
     }
   }
@@ -239,35 +238,33 @@ SharedShape* js::NewPlainObjectWithPropsCache::lookup(
 enum class KeysKind { UniqueNames, Unknown };
 
 template <KeysKind Kind>
-static PlainObject* NewPlainObjectWithProperties(JSContext* cx,
-                                                 IdValuePair* properties,
-                                                 size_t nproperties,
-                                                 NewObjectKind newKind) {
+static PlainObject* NewPlainObjectWithProperties(
+    JSContext* cx, Handle<IdValueVector> properties, NewObjectKind newKind) {
   auto& cache = cx->realm()->newPlainObjectWithPropsCache;
 
   // If we recently created an object with these properties, we can use that
   // Shape directly.
-  if (SharedShape* shape = cache.lookup(properties, nproperties)) {
+  if (SharedShape* shape = cache.lookup(properties)) {
     Rooted<SharedShape*> shapeRoot(cx, shape);
     PlainObject* obj = PlainObject::createWithShape(cx, shapeRoot, newKind);
     if (!obj) {
       return nullptr;
     }
-    MOZ_ASSERT(obj->slotSpan() == nproperties);
-    for (size_t i = 0; i < nproperties; i++) {
-      obj->initSlot(i, properties[i].value);
+    MOZ_ASSERT(obj->slotSpan() == properties.length());
+    for (size_t i = 0; i < properties.length(); i++) {
+      obj->initSlot(i, properties[i].get().value);
     }
     return obj;
   }
 
-  gc::AllocKind allocKind = gc::GetGCObjectKind(nproperties);
+  gc::AllocKind allocKind = gc::GetGCObjectKind(properties.length());
   Rooted<PlainObject*> obj(cx,
                            NewPlainObjectWithAllocKind(cx, allocKind, newKind));
   if (!obj) {
     return nullptr;
   }
 
-  if (nproperties == 0) {
+  if (properties.empty()) {
     return obj;
   }
 
@@ -275,9 +272,9 @@ static PlainObject* NewPlainObjectWithProperties(JSContext* cx,
   Rooted<Value> value(cx);
   bool canCache = true;
 
-  for (size_t i = 0; i < nproperties; i++) {
-    key = properties[i].id;
-    value = properties[i].value;
+  for (const auto& prop : properties) {
+    key = prop.id;
+    value = prop.value;
 
     // Integer keys may need to be stored in dense elements. This is uncommon so
     // just fall back to NativeDefineDataProperty.
@@ -314,7 +311,7 @@ static PlainObject* NewPlainObjectWithProperties(JSContext* cx,
 
   if (canCache && !obj->inDictionaryMode()) {
     MOZ_ASSERT(obj->getDenseInitializedLength() == 0);
-    MOZ_ASSERT(obj->slotSpan() == nproperties);
+    MOZ_ASSERT(obj->slotSpan() == properties.length());
     cache.add(obj->sharedShape());
   }
 
@@ -322,17 +319,14 @@ static PlainObject* NewPlainObjectWithProperties(JSContext* cx,
 }
 
 PlainObject* js::NewPlainObjectWithUniqueNames(JSContext* cx,
-                                               IdValuePair* properties,
-                                               size_t nproperties,
+                                               Handle<IdValueVector> properties,
                                                NewObjectKind newKind) {
-  return NewPlainObjectWithProperties<KeysKind::UniqueNames>(
-      cx, properties, nproperties, newKind);
+  return NewPlainObjectWithProperties<KeysKind::UniqueNames>(cx, properties,
+                                                             newKind);
 }
 
-PlainObject* js::NewPlainObjectWithMaybeDuplicateKeys(JSContext* cx,
-                                                      IdValuePair* properties,
-                                                      size_t nproperties,
-                                                      NewObjectKind newKind) {
+PlainObject* js::NewPlainObjectWithMaybeDuplicateKeys(
+    JSContext* cx, Handle<IdValueVector> properties, NewObjectKind newKind) {
   return NewPlainObjectWithProperties<KeysKind::Unknown>(cx, properties,
-                                                         nproperties, newKind);
+                                                         newKind);
 }
