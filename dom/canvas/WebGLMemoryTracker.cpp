@@ -12,8 +12,9 @@
 #include "WebGLTexture.h"
 
 namespace mozilla {
-
-MOZ_DEFINE_MALLOC_SIZE_OF(WebGLShaderMallocSizeOf)
+namespace webgl {
+MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
+}  // namespace webgl
 
 void WebGLMemoryTracker::EnsureRegistered() {
   static bool sIsRegistered = []() {
@@ -42,6 +43,7 @@ WebGLMemoryTracker::CollectReports(nsIHandleReportCallback* aHandleReport,
   int64_t shaderCpuSize = 0;
 
   size_t texCount = 0;
+  size_t texHeapOverhead = 0;
   int64_t texGpuSize = 0;
 
   for (const auto& context : contexts) {
@@ -70,7 +72,7 @@ WebGLMemoryTracker::CollectReports(nsIHandleReportCallback* aHandleReport,
     shaderCount += context->mShaderMap.size();
     for (const auto& pair : context->mShaderMap) {
       const auto& shader = pair.second;
-      shaderCpuSize += shader->SizeOfIncludingThis(WebGLShaderMallocSizeOf);
+      shaderCpuSize += shader->SizeOfIncludingThis(webgl::MallocSizeOf);
     }
 
     // -
@@ -79,6 +81,7 @@ WebGLMemoryTracker::CollectReports(nsIHandleReportCallback* aHandleReport,
     for (const auto& pair : context->mTextureMap) {
       const auto& texture = pair.second;
       texGpuSize += texture->MemoryUsage();
+      texHeapOverhead += texture->SizeOfIncludingThis(webgl::MallocSizeOf);
     }
   }
 
@@ -126,9 +129,13 @@ WebGLMemoryTracker::CollectReports(nsIHandleReportCallback* aHandleReport,
                      "Number of WebGL renderbuffers.");
 
   MOZ_COLLECT_REPORT(
-      "explicit/webgl/shader", KIND_HEAP, UNITS_BYTES, shaderCpuSize,
+      "explicit/webgl/shaders", KIND_HEAP, UNITS_BYTES, shaderCpuSize,
       "Combined size of WebGL shader ASCII sources and translation logs "
       "cached on the heap.");
+
+  MOZ_COLLECT_REPORT("explicit/webgl/textures", KIND_HEAP, UNITS_BYTES,
+                     texHeapOverhead,
+                     "WebGLTexture implementation detail overhead.");
 
   MOZ_COLLECT_REPORT("webgl-shader-count", KIND_OTHER, UNITS_COUNT,
                      static_cast<int64_t>(shaderCount),
