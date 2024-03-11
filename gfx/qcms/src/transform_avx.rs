@@ -35,22 +35,22 @@ unsafe extern "C" fn qcms_transform_data_template_lut_avx<F: Format>(
     let igtbl_b: *const f32 = transform.input_gamma_table_b.as_ref().unwrap().as_ptr();
     /* deref *transform now to avoid it in loop */
     let otdata_r: *const u8 = transform
-        .output_table_r
+        .precache_output
         .as_deref()
         .unwrap()
-        .data
+        .lut_r
         .as_ptr();
     let otdata_g: *const u8 = (*transform)
-        .output_table_g
+        .precache_output
         .as_deref()
         .unwrap()
-        .data
+        .lut_g
         .as_ptr();
     let otdata_b: *const u8 = (*transform)
-        .output_table_b
+        .precache_output
         .as_deref()
         .unwrap()
-        .data
+        .lut_b
         .as_ptr();
     /* input matrix values never change */
     let mat0: __m256 = _mm256_broadcast_ps(&*((*mat.offset(0isize)).as_ptr() as *const __m128));

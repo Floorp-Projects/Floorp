@@ -73,13 +73,17 @@ pub struct PrecacheOuput {
      * improve startup performance and reduce memory usage. ColorSync on
      * 10.5 uses 4097 which is perhaps because they use a fixed point
      * representation where 1. is represented by 0x1000. */
-    pub data: [u8; PRECACHE_OUTPUT_SIZE],
+    pub lut_r: [u8; PRECACHE_OUTPUT_SIZE],
+    pub lut_g: [u8; PRECACHE_OUTPUT_SIZE],
+    pub lut_b: [u8; PRECACHE_OUTPUT_SIZE],
 }
 
 impl Default for PrecacheOuput {
     fn default() -> PrecacheOuput {
         PrecacheOuput {
-            data: [0; PRECACHE_OUTPUT_SIZE],
+            lut_r: [0; PRECACHE_OUTPUT_SIZE],
+            lut_g: [0; PRECACHE_OUTPUT_SIZE],
+            lut_b: [0; PRECACHE_OUTPUT_SIZE],
         }
     }
 }
@@ -113,9 +117,7 @@ pub struct qcms_transform {
     pub output_gamma_lut_g_length: usize,
     pub output_gamma_lut_b_length: usize,
     pub output_gamma_lut_gray_length: usize,
-    pub output_table_r: Option<Arc<PrecacheOuput>>,
-    pub output_table_g: Option<Arc<PrecacheOuput>>,
-    pub output_table_b: Option<Arc<PrecacheOuput>>,
+    pub precache_output: Option<Arc<PrecacheOuput>>,
     pub transform_fn: transform_fn_t,
 }
 
@@ -481,9 +483,10 @@ unsafe fn qcms_transform_data_gray_template_precache<I: GrayFormat, F: Format>(
     length: usize,
 ) {
     let components: u32 = if F::kAIndex == 0xff { 3 } else { 4 } as u32;
-    let output_table_r = transform.output_table_r.as_deref().unwrap();
-    let output_table_g = transform.output_table_g.as_deref().unwrap();
-    let output_table_b = transform.output_table_b.as_deref().unwrap();
+    let precache_output = transform.precache_output.as_deref().unwrap();
+    let output_r = &precache_output.lut_r;
+    let output_g = &precache_output.lut_g;
+    let output_b = &precache_output.lut_b;
 
     let input_gamma_table_gray = transform
         .input_gamma_table_gray
@@ -506,9 +509,9 @@ unsafe fn qcms_transform_data_gray_template_precache<I: GrayFormat, F: Format>(
         let linear: f32 = *input_gamma_table_gray.offset(device as isize);
         /* we could round here... */
         let gray: u16 = (linear * PRECACHE_OUTPUT_MAX as f32) as u16;
-        *dest.add(F::kRIndex) = (output_table_r).data[gray as usize];
-        *dest.add(F::kGIndex) = (output_table_g).data[gray as usize];
-        *dest.add(F::kBIndex) = (output_table_b).data[gray as usize];
+        *dest.add(F::kRIndex) = output_r[gray as usize];
+        *dest.add(F::kGIndex) = output_g[gray as usize];
+        *dest.add(F::kBIndex) = output_b[gray as usize];
         if F::kAIndex != 0xff {
             *dest.add(F::kAIndex) = alpha
         }
@@ -563,9 +566,9 @@ unsafe fn qcms_transform_data_template_lut_precache<F: Format>(
     length: usize,
 ) {
     let components: u32 = if F::kAIndex == 0xff { 3 } else { 4 } as u32;
-    let output_table_r = transform.output_table_r.as_deref().unwrap();
-    let output_table_g = transform.output_table_g.as_deref().unwrap();
-    let output_table_b = transform.output_table_b.as_deref().unwrap();
+    let output_table_r = &transform.precache_output.as_deref().unwrap().lut_r;
+    let output_table_g = &transform.precache_output.as_deref().unwrap().lut_g;
+    let output_table_b = &transform.precache_output.as_deref().unwrap().lut_b;
     let input_gamma_table_r = transform.input_gamma_table_r.as_ref().unwrap().as_ptr();
     let input_gamma_table_g = transform.input_gamma_table_g.as_ref().unwrap().as_ptr();
     let input_gamma_table_b = transform.input_gamma_table_b.as_ref().unwrap().as_ptr();
@@ -596,9 +599,9 @@ unsafe fn qcms_transform_data_template_lut_precache<F: Format>(
         let r: u16 = (out_linear_r * PRECACHE_OUTPUT_MAX as f32) as u16;
         let g: u16 = (out_linear_g * PRECACHE_OUTPUT_MAX as f32) as u16;
         let b: u16 = (out_linear_b * PRECACHE_OUTPUT_MAX as f32) as u16;
-        *dest.add(F::kRIndex) = (output_table_r).data[r as usize];
-        *dest.add(F::kGIndex) = (output_table_g).data[g as usize];
-        *dest.add(F::kBIndex) = (output_table_b).data[b as usize];
+        *dest.add(F::kRIndex) = output_table_r[r as usize];
+        *dest.add(F::kGIndex) = output_table_g[g as usize];
+        *dest.add(F::kBIndex) = output_table_b[b as usize];
         if F::kAIndex != 0xff {
             *dest.add(F::kAIndex) = alpha
         }
@@ -1172,30 +1175,22 @@ pub extern "C" fn qcms_profile_precache_output_transform(profile: &mut Profile) 
     if profile.redTRC.is_none() || profile.greenTRC.is_none() || profile.blueTRC.is_none() {
         return;
     }
-    if profile.output_table_r.is_none() {
-        let mut output_table_r = precache_create();
+    if profile.precache_output.is_none() {
+        let mut precache = precache_create();
         compute_precache(
             profile.redTRC.as_deref().unwrap(),
-            &mut Arc::get_mut(&mut output_table_r).unwrap().data,
+            &mut Arc::get_mut(&mut precache).unwrap().lut_r,
         );
-        profile.output_table_r = Some(output_table_r);
-    }
-    if profile.output_table_g.is_none() {
-        let mut output_table_g = precache_create();
         compute_precache(
             profile.greenTRC.as_deref().unwrap(),
-            &mut Arc::get_mut(&mut output_table_g).unwrap().data,
+            &mut Arc::get_mut(&mut precache).unwrap().lut_g,
         );
-        profile.output_table_g = Some(output_table_g);
-    }
-    if profile.output_table_b.is_none() {
-        let mut output_table_b = precache_create();
         compute_precache(
             profile.blueTRC.as_deref().unwrap(),
-            &mut Arc::get_mut(&mut output_table_b).unwrap().data,
+            &mut Arc::get_mut(&mut precache).unwrap().lut_b,
         );
-        profile.output_table_b = Some(output_table_b);
-    };
+        profile.precache_output = Some(precache);
+    }
 }
 /* Replace the current transformation with a LUT transformation using a given number of sample points */
 fn transform_precacheLUT_float(
@@ -1300,10 +1295,7 @@ pub fn transform_create(
     }
     let mut transform: Box<qcms_transform> = Box::new(Default::default());
     let mut precache: bool = false;
-    if output.output_table_r.is_some()
-        && output.output_table_g.is_some()
-        && output.output_table_b.is_some()
-    {
+    if output.precache_output.is_some() {
         precache = true
     }
     // This precache assumes RGB_SIGNATURE (fails on GRAY_SIGNATURE, for instance)
@@ -1327,9 +1319,7 @@ pub fn transform_create(
         return result;
     }
     if precache {
-        transform.output_table_r = Some(Arc::clone(output.output_table_r.as_ref().unwrap()));
-        transform.output_table_g = Some(Arc::clone(output.output_table_g.as_ref().unwrap()));
-        transform.output_table_b = Some(Arc::clone(output.output_table_b.as_ref().unwrap()));
+        transform.precache_output = Some(Arc::clone(output.precache_output.as_ref().unwrap()));
     } else {
         if output.redTRC.is_none() || output.greenTRC.is_none() || output.blueTRC.is_none() {
             return None;
