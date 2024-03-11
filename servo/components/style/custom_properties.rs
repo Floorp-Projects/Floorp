@@ -1847,14 +1847,13 @@ fn compute_value(
     let mut input = ParserInput::new(&css);
     let mut input = Parser::new(&mut input);
 
-    let value = SpecifiedRegisteredValue::compute(
+    SpecifiedRegisteredValue::compute(
         &mut input,
         registration,
         url_data,
         computed_context,
         AllowComputationallyDependent::Yes,
-    )?;
-    Ok(ComputedRegisteredValue::universal(Arc::new(value)))
+    )
 }
 
 /// Removes the named registered custom property and inserts its uncomputed initial value.
@@ -1961,6 +1960,7 @@ fn substitute_one_reference<'a>(
     if reference.is_var {
         registration = stylist.get_custom_property_registration(&reference.name);
         if let Some(v) = custom_properties.get(registration, &reference.name) {
+            debug_assert!(v.is_parsed(registration), "Should be already computed");
             if registration.syntax.is_universal() {
                 // Skip references that are inside the outer variable (in fallback for example).
                 while references

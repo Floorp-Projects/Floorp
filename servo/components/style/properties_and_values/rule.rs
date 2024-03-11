@@ -239,7 +239,7 @@ impl PropertyRegistration {
             computed_context,
             AllowComputationallyDependent::No,
         ) {
-            Ok(computed) => Ok(ComputedRegisteredValue::universal(Arc::new(computed))),
+            Ok(computed) => Ok(computed),
             Err(_) => Err(()),
         }
     }
