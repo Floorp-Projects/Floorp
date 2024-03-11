@@ -1304,9 +1304,6 @@ nsDNSService::Observe(nsISupports* subject, const char* topic,
     nsAutoCString converted = NS_ConvertUTF16toUTF8(data);
     if (!strcmp(converted.get(), NS_NETWORK_LINK_DATA_CHANGED)) {
       flushCache = true;
-      if (mResolver) {
-        mResolver->ResetDNSConfigurations();
-      }
     }
   } else if (!strcmp(topic, "last-pb-context-exited")) {
     flushCache = true;
