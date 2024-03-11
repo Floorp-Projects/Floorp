@@ -56,7 +56,7 @@ def get_global_excludes(**lintargs):
         ]
     )
 
-    if lintargs.get("include_thirdparty"):
+    if lintargs.get("include_third-party"):
         # For some linters, we want to include the thirdparty code too.
         # Example: trojan-source linter should run also on third party code.
         return excludes
