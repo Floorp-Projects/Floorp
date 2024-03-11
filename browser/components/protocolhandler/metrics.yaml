@@ -28,6 +28,8 @@ protocolhandler.mailto:
     expires: never
     labels:
       - set_os_default
+      - set_os_default_error
+      - set_os_default_impossible
       - dismiss_os_default
       - set_local_default
       - dismiss_local_default
