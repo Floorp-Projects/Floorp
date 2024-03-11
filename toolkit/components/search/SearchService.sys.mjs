@@ -651,7 +651,7 @@ export class SearchService {
       // In either case, there will not be an existing engine.
       let existing = await this.#upgradeExtensionEngine(extension);
       if (existing?.length) {
-        return existing;
+        return;
       }
     }
 
@@ -664,26 +664,27 @@ export class SearchService {
         let { engines } = await this._fetchEngineSelectorEngines();
         let inConfig = engines.filter(el => el.webExtension.id == extension.id);
         if (inConfig.length) {
-          return this.#installExtensionEngine(
+          await this.#installExtensionEngine(
             extension,
             inConfig.map(el => el.webExtension.locale)
           );
+          return;
         }
       }
       lazy.logConsole.debug(
         "addEnginesFromExtension: Ignoring builtIn engine."
       );
-      return [];
+      return;
     }
 
     // If we havent started SearchService yet, store this extension
     // to install in SearchService.init().
     if (!this.isInitialized) {
       this.#startupExtensions.add(extension);
-      return [];
+      return;
     }
 
-    return this.#installExtensionEngine(extension, [
+    await this.#installExtensionEngine(extension, [
       lazy.SearchUtils.DEFAULT_TAG,
     ]);
   }
@@ -2915,7 +2916,7 @@ export class SearchService {
           "Engine already loaded via settings, skipping due to APP_STARTUP:",
           extension.id
         );
-        return engine;
+        return;
       }
     }
 
@@ -2999,7 +3000,6 @@ export class SearchService {
     if (shouldSetAsDefault) {
       this.#setEngineDefault(false, newEngine, changeReason);
     }
-    return newEngine;
   }
 
   /**
@@ -3057,16 +3057,6 @@ export class SearchService {
   ) {
     lazy.logConsole.debug("installExtensionEngine:", extension.id);
 
-    let installLocale = async locale => {
-      return this._createAndAddEngine({
-        extension,
-        locale,
-        settings,
-        initEngine,
-      });
-    };
-
-    let engines = [];
     for (let locale of locales) {
       lazy.logConsole.debug(
         "addEnginesFromExtension: installing:",
@@ -3074,9 +3064,13 @@ export class SearchService {
         ":",
         locale
       );
-      engines.push(await installLocale(locale));
+      await this._createAndAddEngine({
+        extension,
+        locale,
+        settings,
+        initEngine,
+      });
     }
-    return engines;
   }
 
   #internalRemoveEngine(engine) {
