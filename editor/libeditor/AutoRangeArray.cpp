@@ -86,6 +86,15 @@ AutoRangeArray::~AutoRangeArray() {
   }
 }
 
+AutoRangeArray::AutoRangeArray(nsRange& aRange) {
+  MOZ_ASSERT(aRange.IsPositioned());
+  if (NS_WARN_IF(!aRange.IsPositioned())) {
+    return;
+  }
+  mRanges.AppendElement(aRange);
+  mAnchorFocusRange = &aRange;
+}
+
 // static
 bool AutoRangeArray::IsEditableRange(const dom::AbstractRange& aRange,
                                      const Element& aEditingHost) {
