@@ -25,6 +25,7 @@ extern LazyLogModule gMediaDecoderLog;
 
 class AudioData;
 class VideoData;
+class EncodedFrame;
 
 template <typename T>
 struct TimestampAdjustmentTrait {
@@ -46,13 +47,24 @@ struct NonTimestampAdjustmentTrait {
   static const bool mValue = !TimestampAdjustmentTrait<T>::mValue;
 };
 
+template <typename T>
+struct DurationTypeTrait {
+  using type = media::TimeUnit;
+};
+
+template <>
+struct DurationTypeTrait<EncodedFrame> {
+  using type = uint64_t;
+};
+
 template <class T>
 class MediaQueue : private nsRefPtrDeque<T> {
  public:
-  MediaQueue()
+  explicit MediaQueue(bool aEnablePreciseDuration = false)
       : nsRefPtrDeque<T>(),
         mRecursiveMutex("mediaqueue"),
-        mEndOfStream(false) {}
+        mEndOfStream(false),
+        mEnablePreciseDuration(aEnablePreciseDuration) {}
 
   ~MediaQueue() { Reset(); }
 
@@ -97,6 +109,7 @@ class MediaQueue : private nsRefPtrDeque<T> {
       AdjustTimeStampIfNeeded(aItem);
     }
     nsRefPtrDeque<T>::PushFront(aItem);
+    AddDurationToPreciseDuration(aItem);
   }
 
   inline void Push(T* aItem) {
@@ -112,6 +125,7 @@ class MediaQueue : private nsRefPtrDeque<T> {
     MOZ_DIAGNOSTIC_ASSERT(item->GetEndTime() >= item->mTime);
     AdjustTimeStampIfNeeded(item);
     nsRefPtrDeque<T>::Push(dont_AddRef(item));
+    AddDurationToPreciseDuration(item);
     mPushEvent.Notify(RefPtr<T>(item));
 
     // Pushing new data after queue has ended means that the stream is active
@@ -126,6 +140,7 @@ class MediaQueue : private nsRefPtrDeque<T> {
     RefPtr<T> rv = nsRefPtrDeque<T>::PopFront();
     if (rv) {
       MOZ_DIAGNOSTIC_ASSERT(rv->GetEndTime() >= rv->mTime);
+      SubtractDurationFromPreciseDuration(rv);
       mPopFrontEvent.Notify(RefPtr<T>(rv));
     }
     return rv.forget();
@@ -133,7 +148,12 @@ class MediaQueue : private nsRefPtrDeque<T> {
 
   inline already_AddRefed<T> PopBack() {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
-    return nsRefPtrDeque<T>::Pop();
+    RefPtr<T> rv = nsRefPtrDeque<T>::Pop();
+    if (rv) {
+      MOZ_DIAGNOSTIC_ASSERT(rv->GetEndTime() >= rv->mTime);
+      SubtractDurationFromPreciseDuration(rv);
+    }
+    return rv.forget();
   }
 
   inline RefPtr<T> PeekFront() const {
@@ -151,6 +171,7 @@ class MediaQueue : private nsRefPtrDeque<T> {
     nsRefPtrDeque<T>::Erase();
     SetOffset(media::TimeUnit::Zero());
     mEndOfStream = false;
+    ResetPreciseDuration();
   }
 
   bool AtEndOfStream() const {
@@ -184,6 +205,12 @@ class MediaQueue : private nsRefPtrDeque<T> {
     T* last = nsRefPtrDeque<T>::Peek();
     T* first = nsRefPtrDeque<T>::PeekFront();
     return (last->GetEndTime() - first->mTime).ToMicroseconds();
+  }
+
+  // Return a precise duration if the feature is enabled. Otherwise, return -1.
+  int64_t PreciseDuration() const {
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
+    return GetPreciseDuration();
   }
 
   void LockedForEach(nsDequeFunctor<T>& aFunctor) const {
@@ -268,6 +295,59 @@ class MediaQueue : private nsRefPtrDeque<T> {
   // the media queue starts receiving looped data, which timestamp needs to be
   // modified.
   media::TimeUnit mOffset;
+
+  inline void AddDurationToPreciseDuration(T* aItem) {
+    if (!mEnablePreciseDuration) {
+      return;
+    }
+    if constexpr (std::is_same_v<typename DurationTypeTrait<T>::type,
+                                 media::TimeUnit> ||
+                  std::is_same_v<typename DurationTypeTrait<T>::type,
+                                 uint64_t>) {
+      mPreciseDuration += aItem->mDuration;
+    }
+  }
+
+  inline void SubtractDurationFromPreciseDuration(T* aItem) {
+    if (!mEnablePreciseDuration) {
+      return;
+    }
+    if constexpr (std::is_same_v<typename DurationTypeTrait<T>::type,
+                                 media::TimeUnit> ||
+                  std::is_same_v<typename DurationTypeTrait<T>::type,
+                                 uint64_t>) {
+      mPreciseDuration -= aItem->mDuration;
+    }
+  }
+
+  inline void ResetPreciseDuration() {
+    if (!mEnablePreciseDuration) {
+      return;
+    }
+    if constexpr (std::is_same_v<typename DurationTypeTrait<T>::type,
+                                 media::TimeUnit>) {
+      mPreciseDuration = media::TimeUnit::Zero();
+    } else if constexpr (std::is_same_v<typename DurationTypeTrait<T>::type,
+                                        uint64_t>) {
+      mPreciseDuration = 0;
+    }
+  }
+
+  inline int64_t GetPreciseDuration() const {
+    if (mEnablePreciseDuration) {
+      if constexpr (std::is_same_v<typename DurationTypeTrait<T>::type,
+                                   media::TimeUnit>) {
+        return mPreciseDuration.ToMicroseconds();
+      } else if constexpr (std::is_same_v<typename DurationTypeTrait<T>::type,
+                                          uint64_t>) {
+        return mPreciseDuration;
+      }
+    }
+    return -1;
+  }
+
+  typename DurationTypeTrait<T>::type mPreciseDuration;
+  const bool mEnablePreciseDuration = false;
 };
 
 }  // namespace mozilla
