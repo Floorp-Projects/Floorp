@@ -47,10 +47,158 @@ import java.util.Date
  */
 class SettingsSubMenuAboutRobot {
     fun verifyAboutFirefoxPreviewInfo() {
-        assertVersionNumber()
-        assertProductCompany()
-        assertCurrentTimestamp()
+        verifyVersionNumber()
+        verifyProductCompany()
+        verifyCurrentTimestamp()
         verifyTheLinksList()
+    }
+
+    fun verifyVersionNumber() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+
+        val packageInfo = context.packageManager.getPackageInfoCompat(context.packageName, 0)
+        val versionCode = PackageInfoCompat.getLongVersionCode(packageInfo).toString()
+        val buildNVersion = "${packageInfo.versionName} (Build #$versionCode)\n"
+        val geckoVersion =
+            org.mozilla.geckoview.BuildConfig.MOZ_APP_VERSION + "-" + org.mozilla.geckoview.BuildConfig.MOZ_APP_BUILDID
+        val asVersion = mozilla.components.Build.applicationServicesVersion
+
+        onView(withId(R.id.about_text))
+            .check(matches(withText(containsString(buildNVersion))))
+            .check(matches(withText(containsString(geckoVersion))))
+            .check(matches(withText(containsString(asVersion))))
+    }
+
+    fun verifyProductCompany() {
+        onView(withId(R.id.about_content))
+            .check(matches(withText(containsString("$appName is produced by Mozilla."))))
+    }
+
+    fun verifyCurrentTimestamp() {
+        onView(withId(R.id.build_date))
+            // Currently UI tests run against debug builds, which display a hard-coded string 'debug build'
+            // instead of the date. See https://github.com/mozilla-mobile/fenix/pull/10812#issuecomment-633746833
+            .check(matches(withText(containsString("debug build"))))
+        // This assertion should be valid for non-debug build types.
+        // .check(BuildDateAssertion.isDisplayedDateAccurate())
+    }
+
+    fun verifyAboutToolbar() =
+        onView(
+            allOf(
+                withId(R.id.navigationToolbar),
+                hasDescendant(withText("About $appName")),
+            ),
+        ).check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+
+    fun verifyWhatIsNewInFirefoxLink() {
+        aboutMenuList.scrollToEnd(LISTS_MAXSWIPES)
+
+        val firefox = TestHelper.appContext.getString(R.string.firefox)
+        onView(withText("What’s new in $firefox"))
+            .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+            .perform(click())
+    }
+    fun verifySupport() {
+        aboutMenuList.scrollToEnd(LISTS_MAXSWIPES)
+
+        onView(withText("Support"))
+            .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+            .perform(click())
+
+        TestHelper.verifyUrl(
+            "support.mozilla.org",
+            "org.mozilla.fenix.debug:id/mozac_browser_toolbar_url_view",
+            R.id.mozac_browser_toolbar_url_view,
+        )
+    }
+
+    fun verifyCrashesLink() {
+        navigationToolbar {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openAboutFirefoxPreview {}
+
+        aboutMenuList.scrollToEnd(LISTS_MAXSWIPES)
+
+        onView(withText("Crashes"))
+            .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+            .perform(click())
+
+        assertUIObjectExists(itemContainingText("No crash reports have been submitted."))
+
+        for (i in 1..3) {
+            Espresso.pressBack()
+        }
+    }
+
+    fun verifyPrivacyNoticeLink() {
+        aboutMenuList.scrollToEnd(LISTS_MAXSWIPES)
+
+        onView(withText("Privacy notice"))
+            .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+            .perform(click())
+
+        TestHelper.verifyUrl(
+            "/privacy/firefox",
+            "org.mozilla.fenix.debug:id/mozac_browser_toolbar_url_view",
+            R.id.mozac_browser_toolbar_url_view,
+        )
+    }
+
+    fun verifyKnowYourRightsLink() {
+        aboutMenuList.scrollToEnd(LISTS_MAXSWIPES)
+
+        onView(withText("Know your rights"))
+            .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+            .perform(click())
+
+        TestHelper.verifyUrl(
+            SupportUtils.SumoTopic.YOUR_RIGHTS.topicStr,
+            "org.mozilla.fenix.debug:id/mozac_browser_toolbar_url_view",
+            R.id.mozac_browser_toolbar_url_view,
+        )
+    }
+
+    fun verifyLicensingInformationLink() {
+        aboutMenuList.scrollToEnd(LISTS_MAXSWIPES)
+
+        onView(withText("Licensing information"))
+            .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+            .perform(click())
+
+        TestHelper.verifyUrl(
+            "about:license",
+            "org.mozilla.fenix.debug:id/mozac_browser_toolbar_url_view",
+            R.id.mozac_browser_toolbar_url_view,
+        )
+    }
+
+    fun verifyLibrariesUsedLink() {
+        aboutMenuList.scrollToEnd(LISTS_MAXSWIPES)
+
+        onView(withText("Libraries that we use"))
+            .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+            .perform(click())
+
+        onView(withId(R.id.navigationToolbar)).check(matches(hasDescendant(withText(containsString("$appName | OSS Libraries")))))
+        Espresso.pressBack()
+    }
+
+    fun verifyTheLinksList() {
+        verifyAboutToolbar()
+        verifyWhatIsNewInFirefoxLink()
+        navigateBackToAboutPage()
+        verifySupport()
+        verifyCrashesLink()
+        navigateBackToAboutPage()
+        verifyPrivacyNoticeLink()
+        navigateBackToAboutPage()
+        verifyKnowYourRightsLink()
+        navigateBackToAboutPage()
+        verifyLicensingInformationLink()
+        navigateBackToAboutPage()
+        verifyLibrariesUsedLink()
     }
 
     class Transition {
@@ -63,157 +211,12 @@ class SettingsSubMenuAboutRobot {
     }
 }
 
-private fun navigateBackToAboutPage(itemToInteract: () -> Unit) {
+private fun navigateBackToAboutPage() {
     navigationToolbar {
     }.openThreeDotMenu {
     }.openSettings {
     }.openAboutFirefoxPreview {
-        itemToInteract()
     }
-}
-
-private fun verifyTheLinksList() {
-    assertAboutToolbar()
-    assertWhatIsNewInFirefoxPreview()
-    navigateBackToAboutPage(::assertSupport)
-    assertCrashes()
-    navigateBackToAboutPage(::assertPrivacyNotice)
-    navigateBackToAboutPage(::assertKnowYourRights)
-    navigateBackToAboutPage(::assertLicensingInformation)
-    navigateBackToAboutPage(::assertLibrariesUsed)
-}
-
-private fun assertAboutToolbar() =
-    onView(
-        allOf(
-            withId(R.id.navigationToolbar),
-            hasDescendant(withText("About $appName")),
-        ),
-    ).check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-
-private fun assertVersionNumber() {
-    val context = InstrumentationRegistry.getInstrumentation().targetContext
-
-    val packageInfo = context.packageManager.getPackageInfoCompat(context.packageName, 0)
-    val versionCode = PackageInfoCompat.getLongVersionCode(packageInfo).toString()
-    val buildNVersion = "${packageInfo.versionName} (Build #$versionCode)\n"
-    val geckoVersion =
-        org.mozilla.geckoview.BuildConfig.MOZ_APP_VERSION + "-" + org.mozilla.geckoview.BuildConfig.MOZ_APP_BUILDID
-    val asVersion = mozilla.components.Build.applicationServicesVersion
-
-    onView(withId(R.id.about_text))
-        .check(matches(withText(containsString(buildNVersion))))
-        .check(matches(withText(containsString(geckoVersion))))
-        .check(matches(withText(containsString(asVersion))))
-}
-
-private fun assertProductCompany() {
-    onView(withId(R.id.about_content))
-        .check(matches(withText(containsString("$appName is produced by Mozilla."))))
-}
-
-private fun assertCurrentTimestamp() {
-    onView(withId(R.id.build_date))
-        // Currently UI tests run against debug builds, which display a hard-coded string 'debug build'
-        // instead of the date. See https://github.com/mozilla-mobile/fenix/pull/10812#issuecomment-633746833
-        .check(matches(withText(containsString("debug build"))))
-    // This assertion should be valid for non-debug build types.
-    // .check(BuildDateAssertion.isDisplayedDateAccurate())
-}
-
-private fun assertWhatIsNewInFirefoxPreview() {
-    aboutMenuList.scrollToEnd(LISTS_MAXSWIPES)
-
-    val firefox = TestHelper.appContext.getString(R.string.firefox)
-    onView(withText("What’s new in $firefox"))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-        .perform(click())
-}
-
-private fun assertSupport() {
-    aboutMenuList.scrollToEnd(LISTS_MAXSWIPES)
-
-    onView(withText("Support"))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-        .perform(click())
-
-    TestHelper.verifyUrl(
-        "support.mozilla.org",
-        "org.mozilla.fenix.debug:id/mozac_browser_toolbar_url_view",
-        R.id.mozac_browser_toolbar_url_view,
-    )
-}
-
-private fun assertCrashes() {
-    navigationToolbar {
-    }.openThreeDotMenu {
-    }.openSettings {
-    }.openAboutFirefoxPreview {}
-
-    aboutMenuList.scrollToEnd(LISTS_MAXSWIPES)
-
-    onView(withText("Crashes"))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-        .perform(click())
-
-    assertUIObjectExists(itemContainingText("No crash reports have been submitted."))
-
-    for (i in 1..3) {
-        Espresso.pressBack()
-    }
-}
-
-private fun assertPrivacyNotice() {
-    aboutMenuList.scrollToEnd(LISTS_MAXSWIPES)
-
-    onView(withText("Privacy notice"))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-        .perform(click())
-
-    TestHelper.verifyUrl(
-        "/privacy/firefox",
-        "org.mozilla.fenix.debug:id/mozac_browser_toolbar_url_view",
-        R.id.mozac_browser_toolbar_url_view,
-    )
-}
-
-private fun assertKnowYourRights() {
-    aboutMenuList.scrollToEnd(LISTS_MAXSWIPES)
-
-    onView(withText("Know your rights"))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-        .perform(click())
-
-    TestHelper.verifyUrl(
-        SupportUtils.SumoTopic.YOUR_RIGHTS.topicStr,
-        "org.mozilla.fenix.debug:id/mozac_browser_toolbar_url_view",
-        R.id.mozac_browser_toolbar_url_view,
-    )
-}
-
-private fun assertLicensingInformation() {
-    aboutMenuList.scrollToEnd(LISTS_MAXSWIPES)
-
-    onView(withText("Licensing information"))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-        .perform(click())
-
-    TestHelper.verifyUrl(
-        "about:license",
-        "org.mozilla.fenix.debug:id/mozac_browser_toolbar_url_view",
-        R.id.mozac_browser_toolbar_url_view,
-    )
-}
-
-private fun assertLibrariesUsed() {
-    aboutMenuList.scrollToEnd(LISTS_MAXSWIPES)
-
-    onView(withText("Libraries that we use"))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-        .perform(click())
-
-    onView(withId(R.id.navigationToolbar)).check(matches(hasDescendant(withText(containsString("$appName | OSS Libraries")))))
-    Espresso.pressBack()
 }
 
 private val aboutMenuList = UiScrollable(UiSelector().resourceId("$packageName:id/about_layout"))
