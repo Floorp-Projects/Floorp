@@ -584,4 +584,23 @@ Result<RefPtr<MediaByteBuffer>, nsresult> GetExtraDataFromArrayBuffer(
   return data->Length() > 0 ? data : nullptr;
 }
 
+bool IsSupportedVideoCodec(const nsAString& aCodec) {
+  LOG("IsSupportedVideoCodec: %s", NS_ConvertUTF16toUTF8(aCodec).get());
+  // The only codec string accepted for vp8 is "vp8"
+  if (!IsVP9CodecString(aCodec) && !IsH264CodecString(aCodec) &&
+      !IsAV1CodecString(aCodec) && !aCodec.EqualsLiteral("vp8")) {
+    return false;
+  }
+
+  // Gecko allows codec string starts with vp9 or av1 but Webcodecs requires to
+  // starts with av01 and vp09.
+  // https://w3c.github.io/webcodecs/codec_registry.html.
+  if (StringBeginsWith(aCodec, u"vp9"_ns) ||
+      StringBeginsWith(aCodec, u"av1"_ns)) {
+    return false;
+  }
+
+  return true;
+}
+
 }  // namespace mozilla::dom

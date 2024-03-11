@@ -208,24 +208,6 @@ static nsTArray<nsCString> GuessMIMETypes(const MIMECreateParam& aParam) {
   return types;
 }
 
-static bool IsSupportedCodec(const nsAString& aCodec) {
-  // H265 is unsupported.
-  if (!IsAV1CodecString(aCodec) && !IsVP9CodecString(aCodec) &&
-      !IsVP8CodecString(aCodec) && !IsH264CodecString(aCodec)) {
-    return false;
-  }
-
-  // Gecko allows codec string starts with vp9 or av1 but Webcodecs requires to
-  // starts with av01 and vp09.
-  // https://www.w3.org/TR/webcodecs-codec-registry/#video-codec-registry
-  if (StringBeginsWith(aCodec, u"vp9"_ns) ||
-      StringBeginsWith(aCodec, u"av1"_ns)) {
-    return false;
-  }
-
-  return true;
-}
-
 // https://w3c.github.io/webcodecs/#check-configuration-support
 template <typename Config>
 static bool CanDecode(const Config& aConfig) {
@@ -234,7 +216,7 @@ static bool CanDecode(const Config& aConfig) {
   if (IsOnAndroid()) {
     return false;
   }
-  if (!IsSupportedCodec(param.mParsedCodec)) {
+  if (!IsSupportedVideoCodec(param.mParsedCodec)) {
     return false;
   }
   // TODO: Instead of calling CanHandleContainerType with the guessed the
