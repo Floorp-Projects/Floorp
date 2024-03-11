@@ -270,17 +270,6 @@ const DEFAULT_SOCKET_RETRYTIMEOUT = 2000;
 // giving up.
 const DEFAULT_CANCELATIONS_OSX_MAX = 3;
 
-// This maps app IDs to their respective notification topic which signals when
-// the application's user interface has been displayed.
-const APPID_TO_TOPIC = {
-  // Firefox
-  "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}": "sessionstore-windows-restored",
-  // SeaMonkey
-  "{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}": "sessionstore-windows-restored",
-  // Thunderbird
-  "{3550f703-e582-4d05-9a08-453d09bdfdc6}": "mail-startup-done",
-};
-
 // The interval for the update xml write deferred task.
 const XML_SAVER_INTERVAL_MS = 200;
 
@@ -2709,38 +2698,6 @@ UpdateService.prototype = {
   observe: async function AUS_observe(subject, topic, data) {
     switch (topic) {
       case "post-update-processing":
-        // This pref was not cleared out of profiles after it stopped being used
-        // (Bug 1420514), so clear it out on the next update to avoid confusion
-        // regarding its use.
-        Services.prefs.clearUserPref("app.update.enabled");
-        Services.prefs.clearUserPref("app.update.BITS.inTrialGroup");
-
-        // Background tasks do not notify any delayed startup notifications.
-        if (
-          !lazy.gIsBackgroundTaskMode &&
-          Services.appinfo.ID in APPID_TO_TOPIC
-        ) {
-          // Delay post-update processing to ensure that possible update
-          // dialogs are shown in front of the app window, if possible.
-          // See bug 311614.
-          Services.obs.addObserver(this, APPID_TO_TOPIC[Services.appinfo.ID]);
-          break;
-        }
-      // intentional fallthrough
-      case "sessionstore-windows-restored":
-      case "mail-startup-done":
-        // Background tasks do not notify any delayed startup notifications.
-        if (
-          !lazy.gIsBackgroundTaskMode &&
-          Services.appinfo.ID in APPID_TO_TOPIC
-        ) {
-          Services.obs.removeObserver(
-            this,
-            APPID_TO_TOPIC[Services.appinfo.ID]
-          );
-        }
-      // intentional fallthrough
-      case "test-post-update-processing":
         // Clean up any extant updates
         await this._postUpdateProcessing();
         break;
