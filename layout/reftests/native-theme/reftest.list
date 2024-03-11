@@ -33,7 +33,7 @@ needs-focus == listbox-nonnative-when-styled.html listbox-nonnative-when-styled-
 == 492155-1.html about:blank
 == 492155-2.html about:blank
 == 492155-3.html about:blank
-fails-if(Android&&!asyncPan) != 492155-4.html about:blank
+!= 492155-4.html about:blank
 
 != box-shadow-input.html box-shadow-input-ref.html
 != box-shadow-button.html box-shadow-button-ref.html

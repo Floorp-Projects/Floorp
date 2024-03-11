@@ -27,7 +27,7 @@ fuzzy(0-1,0-6) == 339388-1b.html 339388-1-ref.html
 == 372641-1c.xhtml 372641-1-ref.xhtml
 == 372649-1.html 372649-1-ref.html
 == 373379-1.html 373379-1-ref.html
-random-if(d2d) == 394402-1a.html 394402-1-ref.html # bug 586833
+random-if(winWidget) == 394402-1a.html 394402-1-ref.html # bug 586833
 == 394402-1b.html 394402-1-ref.html # bug 586833
 == 398095-1.html 398095-1-ref.html
 == 407115-1.html 407115-1-ref.html

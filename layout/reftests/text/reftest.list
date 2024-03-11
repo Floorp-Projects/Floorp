@@ -58,7 +58,7 @@ skip == subpixel-glyphs-x-1a.html subpixel-glyphs-x-1b.html
 # inconsistencies.  On those platforms we just test that glyph positions are
 # subpixel.
 # D2D/DirectWrite results depend on the rendering mode chosen, so considering this as random for now.
-skip-if(!(d2d||cocoaWidget)) random-if(d2d) != subpixel-glyphs-x-2a.html subpixel-glyphs-x-2b.html
+skip-if(!(winWidget||cocoaWidget)) random-if(winWidget) != subpixel-glyphs-x-2a.html subpixel-glyphs-x-2b.html
 == subpixel-glyphs-x-3a.html subpixel-glyphs-x-3b.html
 # No platforms do subpixel positioning vertically
 fuzzy-if(Android,0-19,0-2) == subpixel-glyphs-y-1a.html subpixel-glyphs-y-1b.html

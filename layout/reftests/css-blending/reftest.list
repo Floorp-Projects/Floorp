@@ -8,7 +8,7 @@ fuzzy(0-1,0-30000) == background-blending-alpha.html background-blending-alpha-r
 == background-blending-gradient-color.html background-blending-gradient-color-ref.html
 fuzzy(0-2,0-9450) fuzzy-if(!geckoview,0-1,0-6200) == background-blending-gradient-gradient.html background-blending-gradient-gradient-ref.html
 == background-blending-gradient-image.html background-blending-gradient-color-ref.html
-fuzzy-if(azureSkia||d2d||gtkWidget,0-1,0-10000) == background-blending-image-color-jpg.html background-blending-image-color-ref.html
+fuzzy(0-1,0-10000) == background-blending-image-color-jpg.html background-blending-image-color-ref.html
 == background-blending-image-color-png.html background-blending-image-color-ref.html
 == background-blending-image-color-svg.html background-blending-image-color-ref.html
 == background-blending-image-gradient.html background-blending-gradient-color-ref.html
@@ -20,22 +20,22 @@ random-if(useDrawSnapshot) == background-blending-list-repeat.html background-bl
 == background-blending-color-burn.html background-blending-color-burn-ref.svg
 == background-blending-color-dodge.html background-blending-color-dodge-ref.svg
 # need to investigate why these tests are fuzzy - first suspect is a possible color space conversion on some platforms; same for mix-blend-mode tests
-fuzzy-if(azureSkia||gtkWidget,0-2,0-9600) fuzzy-if(appleSilicon,0-1,0-11200) fuzzy-if(d2d,0-1,0-8000) fuzzy-if(swgl&&!Android,1-1,8000-9600) == background-blending-color.html background-blending-color-ref.svg
+fuzzy-if(!winWidget,0-2,0-9600) fuzzy-if(appleSilicon,0-1,0-11200) fuzzy-if(winWidget,0-1,0-8000) fuzzy-if(swgl&&!Android,1-1,8000-9600) == background-blending-color.html background-blending-color-ref.svg
 == background-blending-darken.html background-blending-darken-ref.svg
 == background-blending-difference.html background-blending-difference-ref.svg
 fuzzy(0-1,0-1600) == background-blending-exclusion.html background-blending-exclusion-ref.svg
-fuzzy-if(cocoaWidget||d2d||swgl,0-1,0-1600) == background-blending-hard-light.html background-blending-hard-light-ref.svg
-fuzzy-if(d2d,0-1,0-9600) fuzzy-if(azureSkia||gtkWidget,0-1,0-11200) fuzzy-if(!geckoview,1-1,9600-11240) == background-blending-hue.html background-blending-hue-ref.svg
+fuzzy-if(cocoaWidget||winWidget||swgl,0-1,0-1600) == background-blending-hard-light.html background-blending-hard-light-ref.svg
+fuzzy-if(winWidget,0-1,0-9600) fuzzy-if(!winWidget,0-1,0-11200) fuzzy-if(!geckoview,1-1,9600-11240) == background-blending-hue.html background-blending-hue-ref.svg
 == background-blending-lighten.html background-blending-lighten-ref.svg
-fuzzy-if(d2d,0-1,0-8000) fuzzy-if(azureSkia||gtkWidget,0-2,0-9600) fuzzy-if(appleSilicon,0-1,0-11200) fuzzy-if(swgl&&!Android,1-1,8000-9600) == background-blending-luminosity.html background-blending-luminosity-ref.svg
+fuzzy-if(winWidget,0-1,0-8000) fuzzy-if(!winWidget,0-2,0-9600) fuzzy-if(appleSilicon,0-1,0-11200) fuzzy-if(swgl&&!Android,1-1,8000-9600) == background-blending-luminosity.html background-blending-luminosity-ref.svg
 fuzzy(0-1,0-1600) == background-blending-multiply.html background-blending-multiply-ref.svg
 == background-blending-normal.html background-blending-normal-ref.svg
-fuzzy-if(azureSkia||gtkWidget,0-1,0-1600) == background-blending-overlay.html background-blending-overlay-ref.svg
-fuzzy-if(d2d,0-1,0-3200) fuzzy-if(azureSkia||gtkWidget,0-2,0-12800) == background-blending-saturation.html background-blending-saturation-ref.svg
-fuzzy-if(d2d||azureSkia||gtkWidget,0-1,0-1600) == background-blending-screen.html background-blending-screen-ref.svg
-fuzzy-if(d2d||azureSkia||gtkWidget,0-10,0-4800) == background-blending-soft-light.html background-blending-soft-light-ref.svg
+fuzzy-if(!winWidget,0-1,0-1600) == background-blending-overlay.html background-blending-overlay-ref.svg
+fuzzy-if(winWidget,0-1,0-3200) fuzzy-if(!winWidget,0-2,0-12800) == background-blending-saturation.html background-blending-saturation-ref.svg
+fuzzy(0-1,0-1600) == background-blending-screen.html background-blending-screen-ref.svg
+fuzzy(0-10,0-4800) == background-blending-soft-light.html background-blending-soft-light-ref.svg
 
-fuzzy-if(azureSkia||d2d||gtkWidget,0-1,0-40000) == background-blending-image-color-959674.html background-blending-image-color-959674-ref.html
+fuzzy(0-1,0-40000) == background-blending-image-color-959674.html background-blending-image-color-959674-ref.html
 
 #fuzzy due to inconsistencies in rounded rect cliping between parent and child; may be related to antialiasing. Between platforms, the max difference is the same, and the number of different pixels is either 36 or 37. (Win, Mac and Lin)
 fuzzy(0-65,0-53) fuzzy-if(geckoview&&device,63-64,163-328) == mix-blend-mode-952051.html mix-blend-mode-952051-ref.html

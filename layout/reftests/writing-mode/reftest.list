@@ -16,7 +16,7 @@ fuzzy-if(gtkWidget,0-255,0-2) fuzzy-if(winWidget||Android,0-4,0-8704) == 1083848
 == 1090168-1.html 1090168-1-ref.html
 != 1090168-1.html 1090168-1-notref.html
 == 1090168-2.html 1090168-2-ref.html
-fuzzy-if(azureSkia,0-255,0-2700) == 1090168-3.html 1090168-3-ref.html # bug 1230357 mark fuzzy for skia.
+fuzzy-if(!winWidget,0-255,0-2700) == 1090168-3.html 1090168-3-ref.html # bug 1230357 mark fuzzy for skia.
 == 1091058-1.html 1091058-1-ref.html
 random-if(useDrawSnapshot) == 1094434-1.html 1094434-1-ref.html
 == 1094434-2.html 1094434-2-ref.html

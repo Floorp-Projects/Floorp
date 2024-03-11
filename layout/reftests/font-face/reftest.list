@@ -3,7 +3,7 @@
 != download-2.html about:blank
 random-if(gtkWidget||winWidget) == download-2-big.html download-2-big-otf.html # bug 470713
 != download-2-big-otf.html about:blank
-asserts-if(Android&&!asyncPan,1-8) != download-3-notref.html download-3.html # bug 1019192
+!= download-3-notref.html download-3.html # bug 1019192
 asserts-if(Android,0-8) == download-3-ref.html download-3.html # same bugs as above
 asserts-if(Android,0-8) == fallback-to-system-1.html fallback-to-system-1-ref.html # just delayed assertions from above tests
 == name-override-simple-1.html name-override-simple-1-ref.html

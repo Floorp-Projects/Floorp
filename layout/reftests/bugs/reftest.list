@@ -185,18 +185,18 @@ test-pref(font.minimum-size.x-western,32) == 1503662.html 1503662-ref.html
 == chrome://reftest/content/bugs/192767-27.xhtml chrome://reftest/content/bugs/192767-37.xhtml
 != chrome://reftest/content/bugs/192767-01.xhtml chrome://reftest/content/bugs/192767-21.xhtml
 != chrome://reftest/content/bugs/192767-02.xhtml chrome://reftest/content/bugs/192767-22.xhtml
-fails-if(Android&&!asyncPan) != chrome://reftest/content/bugs/192767-03.xhtml chrome://reftest/content/bugs/192767-23.xhtml
+!= chrome://reftest/content/bugs/192767-03.xhtml chrome://reftest/content/bugs/192767-23.xhtml
 != chrome://reftest/content/bugs/192767-04.xhtml chrome://reftest/content/bugs/192767-24.xhtml
 != chrome://reftest/content/bugs/192767-05.xhtml chrome://reftest/content/bugs/192767-25.xhtml
-fails-if(Android&&!asyncPan) != chrome://reftest/content/bugs/192767-06.xhtml chrome://reftest/content/bugs/192767-26.xhtml
-fails-if(Android&&!asyncPan) != chrome://reftest/content/bugs/192767-07.xhtml chrome://reftest/content/bugs/192767-27.xhtml
+!= chrome://reftest/content/bugs/192767-06.xhtml chrome://reftest/content/bugs/192767-26.xhtml
+!= chrome://reftest/content/bugs/192767-07.xhtml chrome://reftest/content/bugs/192767-27.xhtml
 != chrome://reftest/content/bugs/192767-11.xhtml chrome://reftest/content/bugs/192767-31.xhtml
 != chrome://reftest/content/bugs/192767-12.xhtml chrome://reftest/content/bugs/192767-32.xhtml
-fails-if(Android&&!asyncPan) != chrome://reftest/content/bugs/192767-13.xhtml chrome://reftest/content/bugs/192767-33.xhtml
+!= chrome://reftest/content/bugs/192767-13.xhtml chrome://reftest/content/bugs/192767-33.xhtml
 != chrome://reftest/content/bugs/192767-14.xhtml chrome://reftest/content/bugs/192767-34.xhtml
 != chrome://reftest/content/bugs/192767-15.xhtml chrome://reftest/content/bugs/192767-35.xhtml
-fails-if(Android&&!asyncPan) != chrome://reftest/content/bugs/192767-16.xhtml chrome://reftest/content/bugs/192767-36.xhtml
-fails-if(Android&&!asyncPan) != chrome://reftest/content/bugs/192767-17.xhtml chrome://reftest/content/bugs/192767-37.xhtml
+!= chrome://reftest/content/bugs/192767-16.xhtml chrome://reftest/content/bugs/192767-36.xhtml
+!= chrome://reftest/content/bugs/192767-17.xhtml chrome://reftest/content/bugs/192767-37.xhtml
 != 200774-1.html about:blank
 == 201215-1.html 201215-1-ref.html
 == 201293-1a.html 201293-1-ref.html
@@ -258,7 +258,7 @@ fuzzy(0-4,0-2) == 236539-1.html 236539-1-ref.html
 skip-if(Android) == 240933-2.html 240933-2-ref.html
 == 243266-1.html 243266-1-ref.html
 == 243302-1.html 243302-1-ref.html
-skip-if(Android&&asyncPan) == 243519-1.html 243519-1-ref.html
+skip-if(Android) == 243519-1.html 243519-1-ref.html
 == 243519-2.html 243519-2-ref.html
 == 243519-3.html 243519-3-ref.html
 == 243519-4a.html 243519-4-ref.html
@@ -315,7 +315,7 @@ fuzzy(0-1,0-133) == 273681-1.html 273681-1-ref.html
 == 283686-2.html 283686-2-ref.html
 == 283686-3.html about:blank
 == 289384-1.xhtml 289384-ref.xhtml
-random-if(d2d) fuzzy(0-25,0-2148) fails-if(useDrawSnapshot) HTTP == 289480.html#top 289480-ref.html # basically-verbatim acid2 test, HTTP for a 404 page -- bug 578114 for the d2d failures
+random-if(winWidget) fuzzy(0-25,0-2148) fails-if(useDrawSnapshot) HTTP == 289480.html#top 289480-ref.html # basically-verbatim acid2 test, HTTP for a 404 page -- bug 578114 for the winWidget failures
 == 290129-1.html 290129-1-ref.html
 == 291078-1.html 291078-1-ref.html
 == 291078-2.html 291078-2-ref.html
@@ -326,7 +326,7 @@ random-if(d2d) fuzzy(0-25,0-2148) fails-if(useDrawSnapshot) HTTP == 289480.html#
 == 296904-1.html 296904-1-ref.html
 == 299136-1.html 299136-1-ref.html
 == 299837-1.html 299837-1-ref.html
-skip-if(Android) random-if(d2d) == chrome://reftest/content/bugs/299837-3.xhtml chrome://reftest/content/bugs/299837-3-ref.xhtml # bug 587631
+skip-if(Android) random-if(winWidget) == chrome://reftest/content/bugs/299837-3.xhtml chrome://reftest/content/bugs/299837-3-ref.xhtml # bug 587631
 == 300691-1a.html 300691-1-ref.html
 == 300691-1b.html 300691-1-ref.html
 == 300691-1c.html 300691-1-ref.html
@@ -574,7 +574,7 @@ fuzzy-if(Android,0-1,0-4) == 363858-5b.html 363858-5-ref.html
 == 367247-s-hidden.html 367247-s-auto.html
 fails-if(Android) != 367247-s-auto.html 367247-s-scroll.html
 != 367247-l-visible.html 367247-l-hidden.html
-fails-if(Android&&!asyncPan) != 367247-l-hidden.html 367247-l-scroll.html
+!= 367247-l-hidden.html 367247-l-scroll.html
 == 367247-l-scroll.html 367247-l-auto.html
 == 367332-1a.html 367332-1-ref.html
 == 367332-1b.html 367332-1-ref.html
@@ -595,7 +595,7 @@ fails-if(Android&&!asyncPan) != 367247-l-hidden.html 367247-l-scroll.html
 == 367612-1e.html 367612-1-ref.html
 == 367612-1f.html 367612-1-ref.html
 != 367612-1g.html 367612-1-ref.html
-fuzzy(0-32,0-33) fuzzy-if(d2d,0-5,0-2) == 368020-1.html 368020-1-ref.html
+fuzzy(0-32,0-33) fuzzy-if(winWidget,0-5,0-2) == 368020-1.html 368020-1-ref.html
 == 368020-2.html 368020-2-ref.html
 random-if(useDrawSnapshot) == 368020-3.html 368020-3-ref.html # Bug 1715408
 random-if(useDrawSnapshot) == 368020-5.html 368020-5-ref.html # Bug 1715408
@@ -638,7 +638,7 @@ fuzzy(0-1,0-4) == 370422-1.html 370422-1-ref.html
 == 371043-1.html 371043-1-ref.html
 == 371354-1.html 371354-1-ref.html
 == 371483-1.html about:blank # assertion test
-fails-if(Android&&!asyncPan) == 371561-1.html 371561-1-ref.html
+== 371561-1.html 371561-1-ref.html
 != 371681-1.xhtml about:blank
 == 371925-1a.html 371925-1-ref.html
 == 371925-1b.html 371925-1-ref.html
@@ -652,7 +652,7 @@ fuzzy-if(winWidget,46-92,1-2) == 373295-1.html 373295-1-ref.html
 == 373298-1.html 373298-1-ref.html
 == 373381-1.html 373381-1-ref.html
 fuzzy-if(!Android,0-2,0-40) == 373381-2.html 373381-2-ref.html
-random-if(d2d) == 373381-3.html 373381-3-ref.html
+random-if(winWidget) == 373381-3.html 373381-3-ref.html
 == 373381-4.html 373381-4-ref.html
 == 373383-1.html 373383-1-ref.html
 == 373433-1.html 373433-1-ref.html
@@ -693,7 +693,7 @@ fuzzy-if(Android,0-2,0-140) == 379349-3b.xhtml 379349-3-ref.xhtml
 == 379461-1.xhtml 379461-1.html
 == 379461-2.xhtml 379461-2.html
 == 379461-3-container-xhtml.html 379461-3-container-html.html
-fails-if(Android&&!asyncPan) != 379461-3-container-xhtml.html 379461-3-container-blank.html # there is a scrollbar
+!= 379461-3-container-xhtml.html 379461-3-container-blank.html # there is a scrollbar
 fuzzy(0-1,0-5) == 380004-1.html 380004-1-ref.html
 fuzzy(0-2,0-5) == 380227-1.html 380227-1-ref.html
 == 380825-1.html 380825-1-ref.html
@@ -990,7 +990,7 @@ fuzzy(0-92,0-430) == chrome://reftest/content/bugs/421203-2.xhtml 421203-1-ref.h
 == 421436-1b.html 421436-1-ref.html
 fuzzy(0-1,0-40) == 421632-1.html 421632-1-ref.html
 != 421710-1.html about:blank
-fails-if(Android) fuzzy(63-65,1024-1024) fails-if(usesRepeatResampling&&!winWidget) == 421885-1.xml 421885-1-ref.xml
+fails-if(Android) fuzzy(63-65,1024-1024) == 421885-1.xml 421885-1-ref.xml
 == 421955-1.html 421955-1-ref.html
 == 422249-1.html 422249-1-ref.html
 == 422394-1.html 422394-1-ref.html
@@ -1140,13 +1140,13 @@ random == 445004-1.html 445004-1-ref.html # bug 472268
 == 445142-1c.html 445142-1-ref.html
 == 445142-2a.html 445142-2-ref.html
 == 445142-2b.html 445142-2-ref.html
-skip-if(winWidget&&isCoverageBuild) fails-if(usesRepeatResampling) fails-if(!winWidget) == 446100-1a.html about:blank
-fuzzy-if(winWidget,177-178,127-127) fails-if(usesRepeatResampling) fails-if(!winWidget) == 446100-1b.html about:blank
+skip-if(winWidget&&isCoverageBuild) fails == 446100-1a.html about:blank
+fuzzy-if(winWidget,177-178,127-127) fails == 446100-1b.html about:blank
 fuzzy-if(winWidget,171-172,192-192) fails-if(!winWidget) == 446100-1c.html about:blank
-fails-if(usesRepeatResampling) fails-if(!winWidget) == 446100-1d.html about:blank
-fails-if(usesRepeatResampling) fails-if(!useDrawSnapshot&&!winWidget) == 446100-1e.html about:blank
+fails == 446100-1d.html about:blank
+fails-if(!useDrawSnapshot) == 446100-1e.html about:blank
 == 446100-1f.html about:blank
-fails-if(winWidget&&isCoverageBuild) fails-if(usesRepeatResampling) fails-if(Android) fails-if(!useDrawSnapshot&&!winWidget) == 446100-1g.html about:blank
+fails-if(!useDrawSnapshot) == 446100-1g.html about:blank
 == 446100-1h.html about:blank
 == 447749-1.html 447749-1-ref.html
 fuzzy(0-127,0-2) == 448193.html 448193-ref.html
@@ -1253,7 +1253,7 @@ fuzzy(0-1,0-5) == 474472-1.html 474472-1-ref.html
 == 476598-1b.html 476598-1-ref2.html
 != 476598-1-ref.html about:blank
 == 476856-1.html 476856-1-ref.html
-skip-if(Android) random-if(d2d) == chrome://reftest/content/bugs/478377-1.xhtml chrome://reftest/content/bugs/478377-1-ref.xhtml
+skip-if(Android) random-if(winWidget) == chrome://reftest/content/bugs/478377-1.xhtml chrome://reftest/content/bugs/478377-1-ref.xhtml
 == 478614-1.html 478614-1-ref.html
 == 478614-2.html 478614-1-ref.html
 == 478614-3.html 478614-3-ref.html
@@ -1282,8 +1282,8 @@ skip-if(Android) random-if(d2d) == chrome://reftest/content/bugs/478377-1.xhtml 
 != 481948-2.html 481948-2-ref.html
 fails-if(Android||gtkWidget) random-if(winWidget||cocoaWidget) == 481948-3.html 481948-3-ref.html # questionable test, see bug 488364
 == 482398-1.html 482398-1-ref.html
-random-if(d2d) == 482592-1a-shadow.xhtml 482592-1-ref.html # bug 586771
-random-if(d2d) == 482592-1b-shadow.xhtml 482592-1-ref.html # bug 586771
+random-if(winWidget) == 482592-1a-shadow.xhtml 482592-1-ref.html # bug 586771
+random-if(winWidget) == 482592-1b-shadow.xhtml 482592-1-ref.html # bug 586771
 random-if(winWidget) fuzzy(0-1,0-5) == 482659-1a.html 482659-1-ref.html
 fuzzy(0-1,0-5) == 482659-1b.html 482659-1-ref.html
 fuzzy(0-1,0-5) == 482659-1c.html 482659-1-ref.html
@@ -1373,7 +1373,7 @@ fuzzy(0-1,0-4) == 513153-1b.html 513153-1-ref.html
 pref(widget.non-native-theme.webrender,true) == 513153-2a.html 513153-2-ref.html # appleSilicon: bug 1724583
 fuzzy-if(cocoaWidget,0-112,0-108) == 513153-2b.html 513153-2-ref.html # only fuzzy when widget.non-native-theme.webrender=false, snapping difference
 == chrome://reftest/content/bugs/513318-1.xhtml chrome://reftest/content/bugs/513318-1-ref.xhtml
-fails-if(Android&&(!asyncPan)) != chrome://reftest/content/bugs/513318-2.xhtml chrome://reftest/content/bugs/513318-2-ref.xhtml
+!= chrome://reftest/content/bugs/513318-2.xhtml chrome://reftest/content/bugs/513318-2-ref.xhtml
 == 514917-1.html 514917-1-ref.html
 == 518172-1a.html 518172-a-ref.html
 fuzzy-if(winWidget,0-73,0-133) fuzzy-if(cocoaWidget,0-103,0-133) == 518172-1b.html 518172-b-ref.html
@@ -1389,7 +1389,7 @@ fuzzy(0-1,0-3) == 521525-1.html 521525-1-ref.html
 == 521685-1.html 521685-1-ref.html
 == 522632-1.html 522632-1-ref.html
 == 523096-1.html 523096-1-ref.html
-random-if(d2d) == 523468-1.html 523468-1-ref.html
+random-if(winWidget) == 523468-1.html 523468-1-ref.html
 == 524175-1.html 524175-1-ref.html
 fuzzy(0-5,0-50) == 526463-1.html 526463-1-ref.html
 == 527464-1.html 527464-ref.html
@@ -1445,7 +1445,7 @@ fuzzy-if(Android,0-12,0-300) == 551463-1.html 551463-1-ref.html
 # Marked "random" rather than "fails" because it may (spuriously) appear to pass
 # on Android devices that completely lack any Sinhala font support.
 random != 553571-1.html 553571-1-notref.html # expect dotted circle in test, not in ref: "fails" under harfbuzz, which doesn't consider the sequence invalid
-random-if(d2d) fuzzy(0-32,0-219) == 555388-1.html 555388-1-ref.html
+random-if(winWidget) fuzzy(0-32,0-219) == 555388-1.html 555388-1-ref.html
 == 556661-1.html 556661-1-ref.html
 fuzzy(0-4,0-9) == 557087-1.html 557087-ref.html
 fuzzy(0-2,0-5) fuzzy-if(Android,0-1,0-9) == 557087-2.html 557087-ref.html
@@ -1527,7 +1527,7 @@ asserts(1-2) == 582146-1.html about:blank
 == 584699-1.html 584699-1-ref.html
 fuzzy(0-2,0-48) fuzzy-if(winWidget,0-1,0-33) == 585598-2.xhtml 585598-2-ref.xhtml
 == 586400-1.html 586400-1-ref.html
-fuzzy-if(d2d,0-52,0-1051) == 586683-1.html 586683-1-ref.html
+fuzzy-if(winWidget,0-52,0-1051) == 586683-1.html 586683-1-ref.html
 == 589615-1a.xhtml 589615-1-ref.html
 == 589615-1b.html 589615-1-ref.html
 == 589672-1.html 589672-1-ref.html
@@ -1590,7 +1590,7 @@ fails-if(useDrawSnapshot) == 621253-2-externalFilter.html 621253-2-ref.html
 fails-if(useDrawSnapshot) == 621253-2-internalFilter.html 621253-2-ref.html
 random-if(winWidget) == 621918-1.svg 621918-1-ref.svg # 1-pixel diacritic positioning discrepancy in rotated text (may depend on platform fonts)
 random-if(winWidget) fuzzy-if(geckoview&&!emulator,0-255,0-22) == 621918-2.svg 621918-2-ref.svg # same 1px issue as above
-fuzzy-if(d2d,0-5,0-1) == 622585-1.html 622585-1-ref.html # bug 789402
+fuzzy-if(winWidget,0-5,0-1) == 622585-1.html 622585-1-ref.html # bug 789402
 fuzzy(0-1,0-40000) == 625409-1.html 625409-1-ref.html
 == 627393-1.html about:blank
 fuzzy(0-1,0-500) == 630835-1.html about:blank
@@ -1601,8 +1601,8 @@ random-if(winWidget) == 632781-verybig.html 632781-ref.html
 fuzzy(0-1,0-500) == 634232-1.html 634232-1-ref.html
 skip-if(Android&&emulator) fuzzy(0-3,0-120000) == 635302-1.html 635302-1-ref.html
 fuzzy(0-1,0-68) fuzzy-if(gtkWidget,0-1,0-70) fuzzy-if(!Android,0-2,0-300) == 635373-1.html 635373-1-ref.html
-random-if(d2d) fuzzy-if(winWidget&&!d2d,0-20,0-118) fuzzy-if(!Android,0-2,0-550) == 635373-2.html 635373-2-ref.html
-random-if(d2d) fuzzy-if(winWidget&&!d2d,0-20,0-116) fuzzy-if(!Android,0-2,0-650) == 635373-3.html 635373-3-ref.html
+random-if(winWidget) fuzzy-if(!Android,0-2,0-550) == 635373-2.html 635373-2-ref.html
+random-if(winWidget) fuzzy-if(!Android,0-2,0-650) == 635373-3.html 635373-3-ref.html
 == 635639-1.html 635639-1-ref.html
 == 635639-2.html 635639-2-ref.html
 == 637597-1.html 637597-1-ref.html
@@ -1660,7 +1660,7 @@ fuzzy(0-1,0-3) needs-focus == 712130-2.html 712130-2-ref.html
 == 714519-1-q.html 714519-1-ref.html
 == 714519-2-as.html 714519-2-ref.html
 == 714519-2-q.html 714519-2-ref.html
-skip-if(Android&&emulator) fuzzy(0-1,0-21) fuzzy-if(d2d,0-77,0-173) fuzzy-if(cocoaWidget,0-1,0-170) fuzzy-if(useDrawSnapshot,1-1,163-163) == 718521.html 718521-ref.html # bug 773482
+skip-if(Android&&emulator) fuzzy(0-1,0-21) fuzzy-if(winWidget,0-77,0-173) fuzzy-if(cocoaWidget,0-1,0-170) fuzzy-if(useDrawSnapshot,1-1,163-163) == 718521.html 718521-ref.html # bug 773482
 == 720987.html 720987-ref.html
 == 722888-1.html 722888-1-ref.html
 fuzzy(0-2,0-40000) == 722923-1.html 722923-1-ref.html
@@ -1711,7 +1711,7 @@ fuzzy-if(Android,0-4,0-400) == 815593-1.html 815593-1-ref.html
 fuzzy(0-1,0-5) == 816948-1.html 816948-1-ref.html
 == 817019-1.html about:blank
 fuzzy(0-1,0-5) == 818276-1.html 818276-1-ref.html
-fuzzy-if(asyncPan,0-190,0-510) == 825999.html 825999-ref.html
+fuzzy-if(!useDrawSnapshot,0-190,0-510) == 825999.html 825999-ref.html
 == 827577-1a.html 827577-1-ref.html
 == 827577-1b.html 827577-1-ref.html
 == 827799-1.html about:blank
@@ -1813,7 +1813,7 @@ fuzzy(15-65,100-500) fuzzy-if(useDrawSnapshot,33-33,218-218) == 1081185-1.html 1
 == 1097437-1.html 1097437-1-ref.html
 == 1103258-1.html 1103258-1-ref.html # assertion crash test with layers culling test
 == 1105137-1.html 1105137-1-ref.html
-fuzzy-if(d2d,0-36,0-304) fuzzy-if(winWidget&&d2d,0-139,0-701) == 1116480-1-fakeitalic-overflow.html 1116480-1-fakeitalic-overflow-ref.html
+fuzzy-if(winWidget,0-139,0-701) == 1116480-1-fakeitalic-overflow.html 1116480-1-fakeitalic-overflow-ref.html
 == 1111753-1.html about:blank
 == chrome://reftest/content/bugs/1114526-1.html 1114526-1-ref.html
 fuzzy(0-1,0-800000) == 1119117-1a.html 1119117-1-ref.html
@@ -2017,7 +2017,7 @@ skip-if(winWidget&&isCoverageBuild) == 1424177.html 1424177-ref.html
 == 1424680.html 1424680-ref.html
 == 1424798-1.html 1424798-ref.html
 fuzzy-if(swgl,0-1,0-31430) == 1425243-1.html 1425243-1-ref.html
-fuzzy-if(Android,0-66,0-574) fuzzy-if(d2d,0-89,0-777) fuzzy-if(!Android&&!d2d,0-1,0-31430) fuzzy-if(winWidget,1-1,31240-31430) == 1425243-2.html 1425243-2-ref.html
+fuzzy-if(Android,0-66,0-574) fuzzy-if(winWidget,1-1,31240-31430) fuzzy-if(!Android&&!winWidget,0-1,0-31430) == 1425243-2.html 1425243-2-ref.html
 == 1430869.html 1430869-ref.html
 == 1432541.html 1432541-ref.html
 == 1446470.html 1035091-ref.html
@@ -2046,7 +2046,7 @@ fuzzy(0-5,0-2300) == 1529992-1.html 1529992-1-ref.html
 fuzzy-if(Android,9-14,44-60) fails-if(!useDrawSnapshot) == 1529992-2.html 1529992-2-ref.html
 == 1535040-1.html 1535040-1-ref.html
 == 1545360-1.xhtml 1545360-1-ref.xhtml
-skip-if(!asyncPan) == 1544895.html 1544895-ref.html
+skip-if(useDrawSnapshot) == 1544895.html 1544895-ref.html
 random-if(useDrawSnapshot) == 1546856-1.html 1546856-ref.html
 == 1546856-2.html 1546856-ref.html
 == 1547759-1.html 1547759-1-ref.html

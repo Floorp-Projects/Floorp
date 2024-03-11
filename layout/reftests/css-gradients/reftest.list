@@ -32,8 +32,8 @@ fuzzy(0-3,0-21070) == linear-vertical-subpixel-1.html linear-vertical-subpixel-1
 == linear-viewport.html linear-viewport-ref.html
 == nostops.html about:blank
 == onestop.html about:blank
-random-if(d2d) fuzzy(0-4,0-6000) == radial-1a.html radial-1-ref.html
-random-if(d2d) fuzzy(0-4,0-6000) == radial-1b.html radial-1-ref.html
+random-if(winWidget) fuzzy(0-4,0-6000) == radial-1a.html radial-1-ref.html
+random-if(winWidget) fuzzy(0-4,0-6000) == radial-1b.html radial-1-ref.html
 fuzzy(0-3,0-7860) fuzzy-if(cocoaWidget,0-5,0-89041) == radial-2a.html radial-2-ref.html
 fuzzy(0-3,0-7860) fuzzy-if(cocoaWidget,0-5,0-89041) == radial-2b.html radial-2-ref.html
 fuzzy(0-3,0-7860) fuzzy-if(cocoaWidget,0-5,0-89041) == radial-2c.html radial-2-ref.html
@@ -60,9 +60,9 @@ fuzzy(0-1,0-40) == radial-premul.html radial-premul-ref.html
 == repeating-linear-1a.html repeating-linear-1-ref.html
 == repeating-linear-1b.html repeating-linear-1-ref.html
 == repeating-linear-2a.html repeating-linear-2-ref.html
-fuzzy-if(d2d,0-127,0-2612) == repeating-radial-1a.html repeating-radial-1-ref.html
+fuzzy-if(winWidget,0-127,0-2612) == repeating-radial-1a.html repeating-radial-1-ref.html
 == repeating-radial-1b.html repeating-radial-1-ref.html
-fuzzy-if(d2d,0-127,0-2612) == repeating-radial-1c.html repeating-radial-1-ref.html
+fuzzy-if(winWidget,0-127,0-2612) == repeating-radial-1c.html repeating-radial-1-ref.html
 == repeating-radial-1d.html repeating-radial-1-ref.html
 == repeating-radial-2a.html repeating-radial-2-ref.html
 == repeating-radial-2b.html repeating-radial-2-ref.html
@@ -90,7 +90,7 @@ fuzzy-if(cocoaWidget,0-1,0-40000) fuzzy-if(Android,0-6,0-10576) == height-depend
 fuzzy-if(Android,0-6,0-10576) == height-dependence-3.html height-dependence-3-ref.html
 
 == linear-onestopposition-1.html linear-onestopposition-1-ref.html
-fuzzy-if(d2d,0-47,0-400) fuzzy-if(winWidget,0-1,0-1375) == linear-onestopposition-1.html linear-onestopposition-1-ref2.html # d2d interpolates the hard stop
+fuzzy-if(winWidget,0-1,0-1375) == linear-onestopposition-1.html linear-onestopposition-1-ref2.html # winWidget interpolates the hard stop
 == radial-onestopposition-1a.html radial-onestopposition-1-ref.html
 == radial-onestopposition-1b.html radial-onestopposition-1-ref.html
 fuzzy-if(winWidget,0-1,0-1875) == repeating-linear-onestopposition-1.html orange-square.html
