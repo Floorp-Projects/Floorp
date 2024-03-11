@@ -22,8 +22,6 @@ namespace ETW {
 
 extern std::atomic<ULONGLONG> gETWCollectionMask;
 
-constexpr const char* kNameKey = "MarkerName";
-
 // Forward-declare the g_hMyComponentProvider variable that you will use for
 // tracing in this component
 TRACELOGGING_DECLARE_PROVIDER(kFirefoxTraceLoggingProvider);
@@ -31,16 +29,9 @@ TRACELOGGING_DECLARE_PROVIDER(kFirefoxTraceLoggingProvider);
 void Init();
 void Shutdown();
 
-template <typename T, typename = void>
-struct MarkerHasPayload : std::false_type {};
-template <typename T>
-struct MarkerHasPayload<T, std::void_t<decltype(T::PayloadFields)>>
-    : std::true_type {};
-
 // This describes the base fields for all markers (information extracted from
 // MarkerOptions.
 struct BaseMarkerDescription {
-  static constexpr bool StoreName = false;
   using MS = mozilla::MarkerSchema;
   static constexpr MS::PayloadField PayloadFields[] = {
       {"StartTime", MS::InputType::TimeStamp, "Start Time"},
@@ -52,25 +43,19 @@ struct BaseMarkerDescription {
 
 // This is the MarkerType object for markers with no statically declared type,
 // their name is written dynamically.
-struct SimpleMarkerType : public mozilla::BaseMarkerType<SimpleMarkerType> {
+struct SimpleMarkerType {
   using MS = mozilla::MarkerSchema;
-
   static constexpr const char* Name = "SimpleMarker";
-  static constexpr bool StoreName = true;
+  static constexpr MS::PayloadField PayloadFields[] = {
+      {"MarkerName", MS::InputType::CString, "Simple Marker Name"}};
 };
 
 // This gets the space required in the Tlg static struct to pack the fields.
 template <typename T>
 constexpr std::size_t GetPackingSpace() {
   size_t length = 0;
-  if constexpr (MarkerHasPayload<T>::value) {
-    for (size_t i = 0; i < std::size(T::PayloadFields); i++) {
-      length += std::string_view{T::PayloadFields[i].Key}.size() + 1;
-      length += sizeof(uint8_t);
-    }
-  }
-  if (T::StoreName) {
-    length += std::string_view{kNameKey}.size() + 1;
+  for (size_t i = 0; i < std::size(T::PayloadFields); i++) {
+    length += std::string_view{T::PayloadFields[i].Key}.size() + 1;
     length += sizeof(uint8_t);
   }
   return length;
@@ -138,20 +123,12 @@ struct StaticMetaData {
       fieldStorage[pos++] =
           GetTlgInputType(BaseMarkerDescription::PayloadFields[i].InputTy);
     }
-    if (T::StoreName) {
-      for (size_t c = 0; c < std::string_view{kNameKey}.size() + 1; c++) {
-        fieldStorage[pos++] = kNameKey[c];
+    for (uint32_t i = 0; i < std::size(T::PayloadFields); i++) {
+      for (size_t c = 0;
+           c < std::string_view{T::PayloadFields[i].Key}.size() + 1; c++) {
+        fieldStorage[pos++] = T::PayloadFields[i].Key[c];
       }
-      fieldStorage[pos++] = TlgInANSISTRING;
-    }
-    if constexpr (MarkerHasPayload<T>::value) {
-      for (uint32_t i = 0; i < std::size(T::PayloadFields); i++) {
-        for (size_t c = 0;
-             c < std::string_view{T::PayloadFields[i].Key}.size() + 1; c++) {
-          fieldStorage[pos++] = T::PayloadFields[i].Key[c];
-        }
-        fieldStorage[pos++] = GetTlgInputType(T::PayloadFields[i].InputTy);
-      }
+      fieldStorage[pos++] = GetTlgInputType(T::PayloadFields[i].InputTy);
     }
   }
 };
@@ -171,11 +148,10 @@ struct PayloadBuffer {
 // Theoretically we could probably avoid these assignments when passed a POD
 // variable we know is going to be alive but that would require some more
 // template magic.
-
 template <typename T>
-void CreateDataDescForPayloadPOD(PayloadBuffer& aBuffer,
-                                 EVENT_DATA_DESCRIPTOR& aDescriptor,
-                                 const T& aPayload) {
+static void CreateDataDescForPayload(PayloadBuffer& aBuffer,
+                                     EVENT_DATA_DESCRIPTOR& aDescriptor,
+                                     const T& aPayload) {
   static_assert(std::is_pod<T>::value,
                 "Writing a non-POD payload requires template specialization.");
 
@@ -190,22 +166,16 @@ void CreateDataDescForPayloadPOD(PayloadBuffer& aBuffer,
   EventDataDescCreate(&aDescriptor, storedValue, sizeof(T));
 }
 
-static inline void CreateDataDescForPayloadNonPOD(
+template <>
+inline void CreateDataDescForPayload<mozilla::ProfilerString8View>(
     PayloadBuffer& aBuffer, EVENT_DATA_DESCRIPTOR& aDescriptor,
     const mozilla::ProfilerString8View& aPayload) {
   EventDataDescCreate(&aDescriptor, aPayload.StringView().data(),
                       aPayload.StringView().size() + 1);
 }
 
-template <typename T>
-static inline void CreateDataDescForPayloadNonPOD(
-    PayloadBuffer& aBuffer, EVENT_DATA_DESCRIPTOR& aDescriptor,
-    const mozilla::detail::nsTStringRepr<T>& aPayload) {
-  EventDataDescCreate(&aDescriptor, aPayload.BeginReading(),
-                      (aPayload.Length() + 1) * sizeof(T));
-}
-
-static inline void CreateDataDescForPayloadNonPOD(
+template <>
+inline void CreateDataDescForPayload<mozilla::TimeStamp>(
     PayloadBuffer& aBuffer, EVENT_DATA_DESCRIPTOR& aDescriptor,
     const mozilla::TimeStamp& aPayload) {
   if (aPayload.RawQueryPerformanceCounterValue().isNothing()) {
@@ -214,25 +184,32 @@ static inline void CreateDataDescForPayloadNonPOD(
     return;
   }
 
-  CreateDataDescForPayloadPOD(
-      aBuffer, aDescriptor, aPayload.RawQueryPerformanceCounterValue().value());
+  CreateDataDescForPayload(aBuffer, aDescriptor,
+                           aPayload.RawQueryPerformanceCounterValue().value());
 }
 
-static inline void CreateDataDescForPayloadNonPOD(
+template <>
+inline void CreateDataDescForPayload<mozilla::TimeDuration>(
     PayloadBuffer& aBuffer, EVENT_DATA_DESCRIPTOR& aDescriptor,
     const mozilla::TimeDuration& aPayload) {
-  CreateDataDescForPayloadPOD(aBuffer, aDescriptor, aPayload.ToMilliseconds());
+  CreateDataDescForPayload(aBuffer, aDescriptor, aPayload.ToMilliseconds());
 }
 
+// For reasons that are beyond me if this isn't marked inline it generates an
+// unused function warning despite being a template specialization.
 template <typename T>
-static inline void CreateDataDescForPayload(PayloadBuffer& aBuffer,
-                                            EVENT_DATA_DESCRIPTOR& aDescriptor,
-                                            const T& aPayload) {
-  if constexpr (std::is_pod<T>::value) {
-    CreateDataDescForPayloadPOD(aBuffer, aDescriptor, aPayload);
-  } else {
-    CreateDataDescForPayloadNonPOD(aBuffer, aDescriptor, aPayload);
-  }
+inline void CreateDataDescForPayload(PayloadBuffer& aBuffer,
+                                     EVENT_DATA_DESCRIPTOR& aDescriptor,
+                                     const nsTString<T>& aPayload) {
+  EventDataDescCreate(&aDescriptor, aPayload.BeginReading(),
+                      (aPayload.Length() + 1) * sizeof(T));
+}
+template <typename T>
+inline void CreateDataDescForPayload(PayloadBuffer& aBuffer,
+                                     EVENT_DATA_DESCRIPTOR& aDescriptor,
+                                     const nsTSubstring<T>& aPayload) {
+  EventDataDescCreate(&aDescriptor, aPayload.BeginReading(),
+                      (aPayload.Length() + 1) * sizeof(T));
 }
 
 // Template specialization that writes out empty data descriptors for an empty
@@ -248,17 +225,11 @@ void CreateDataDescForPayload(PayloadBuffer& aBuffer,
   }
 }
 
-template <size_t N>
-void CreateDataDescForPayload(PayloadBuffer& aBuffer,
-                              EVENT_DATA_DESCRIPTOR& aDescriptor,
-                              const char (&aPayload)[N]) {
-  EventDataDescCreate(&aDescriptor, aPayload, N + 1);
-}
-
 template <typename T, typename = void>
 struct MarkerSupportsETW : std::false_type {};
 template <typename T>
-struct MarkerSupportsETW<T, std::void_t<decltype(T::Name)>> : std::true_type {};
+struct MarkerSupportsETW<T, std::void_t<decltype(T::PayloadFields)>>
+    : std::true_type {};
 
 template <typename T, typename = void>
 struct MarkerHasTranslator : std::false_type {};
@@ -302,16 +273,32 @@ static inline void StoreBaseEventDataDesc(
                       sizeof(uint32_t));
 }
 
-template <typename MarkerType>
-constexpr size_t GetETWDescriptorCount() {
-  size_t count = 2 + std::size(BaseMarkerDescription::PayloadFields);
-  if (MarkerType::StoreName) {
-    count++;
+// This is used for markers with no explicit type or markers which have not
+// been converted to the updated schema yet.
+static inline void EmitETWMarker(const mozilla::ProfilerString8View& aName,
+                                 const mozilla::MarkerCategory& aCategory,
+                                 const mozilla::MarkerOptions& aOptions = {}) {
+  if (!(gETWCollectionMask &
+        uint64_t(mozilla::MarkerSchema::ETWMarkerGroup::Generic))) {
+    return;
   }
-  if constexpr (MarkerHasPayload<MarkerType>::value) {
-    count += std::size(MarkerType::PayloadFields);
-  }
-  return count;
+
+  static const __declspec(allocate(_tlgSegMetadataEvents)) __declspec(
+      align(1)) constexpr StaticMetaData<SimpleMarkerType>
+      staticData;
+
+  std::array<EVENT_DATA_DESCRIPTOR, 8> descriptors = {};
+
+  // This is storage space allocated on the stack for POD values.
+  BaseEventStorage dataStorage = {};
+
+  StoreBaseEventDataDesc(dataStorage, descriptors.data(), aCategory,
+                         std::move(aOptions));
+
+  EventDataDescCreate(&descriptors[7], aName.StringView().data(),
+                      aName.StringView().size() + 1);
+  _tlgWriteTransfer(kFirefoxTraceLoggingProvider, &staticData.metaData.Channel,
+                    NULL, NULL, descriptors.size(), descriptors.data());
 }
 
 template <typename MarkerType, typename... PayloadArguments>
@@ -323,7 +310,7 @@ static inline void EmitETWMarker(const mozilla::ProfilerString8View& aName,
   // If our MarkerType has not been made to support ETW, emit only the base
   // event. Avoid attempting to compile the rest of the function.
   if constexpr (!MarkerSupportsETW<MarkerType>::value) {
-    return EmitETWMarker(aName, aCategory, aOptions, SimpleMarkerType{});
+    return EmitETWMarker(aName, aCategory, aOptions);
   } else {
     if (!(gETWCollectionMask & uint64_t(MarkerType::Group))) {
       return;
@@ -334,7 +321,9 @@ static inline void EmitETWMarker(const mozilla::ProfilerString8View& aName,
         staticData;
 
     // Allocate the exact amount of descriptors required by this event.
-    std::array<EVENT_DATA_DESCRIPTOR, GetETWDescriptorCount<MarkerType>()>
+    std::array<EVENT_DATA_DESCRIPTOR,
+               2 + std::size(MarkerType::PayloadFields) +
+                   std::size(BaseMarkerDescription::PayloadFields)>
         descriptors = {};
 
     // Memory allocated on the stack for storing intermediate values.
@@ -344,33 +333,23 @@ static inline void EmitETWMarker(const mozilla::ProfilerString8View& aName,
     StoreBaseEventDataDesc(dataStorage, descriptors.data(), aCategory,
                            aOptions);
 
-    if constexpr (MarkerType::StoreName) {
-      EventDataDescCreate(&descriptors[7], aName.StringView().data(),
-                          aName.StringView().size() + 1);
-    }
-
-    if constexpr (MarkerHasPayload<MarkerType>::value) {
-      if constexpr (MarkerHasTranslator<MarkerType>::value) {
-        // When this function is implemented the arguments are passed back to
-        // the MarkerType object which is expected to call OutputMarkerSchema
-        // with the correct argument format.
-        buffer.mDescriptors = descriptors.data() + 2 +
-                              std::size(BaseMarkerDescription::PayloadFields) +
-                              (MarkerType::StoreName ? 1 : 0);
-
-        MarkerType::TranslateMarkerInputToSchema(&buffer, aPayloadArguments...);
-      } else {
-        const size_t argCount = sizeof...(PayloadArguments);
-        static_assert(
-            argCount == std::size(MarkerType::PayloadFields),
-            "Number and type of fields must be equal to number and type of "
-            "payload arguments. If this is not the case a "
-            "TranslateMarkerInputToSchema function must be defined.");
-        size_t i = 2 + std::size(BaseMarkerDescription::PayloadFields) +
-                   (MarkerType::StoreName ? 1 : 0);
-        (CreateDataDescForPayload(buffer, descriptors[i++], aPayloadArguments),
-         ...);
-      }
+    if constexpr (MarkerHasTranslator<MarkerType>::value) {
+      // When this function is implemented the arguments are passed back to the
+      // MarkerType object which is expected to call OutputMarkerSchema with
+      // the correct argument format.
+      buffer.mDescriptors = descriptors.data() + 2 +
+                            std::size(BaseMarkerDescription::PayloadFields);
+      MarkerType::TranslateMarkerInputToSchema(&buffer, aPayloadArguments...);
+    } else {
+      const size_t argCount = sizeof...(PayloadArguments);
+      static_assert(
+          argCount == std::size(MarkerType::PayloadFields),
+          "Number and type of fields must be equal to number and type of "
+          "payload arguments. If this is not the case a "
+          "TranslateMarkerInputToSchema function must be defined.");
+      size_t i = 2 + std::size(BaseMarkerDescription::PayloadFields);
+      (CreateDataDescForPayload(buffer, descriptors[i++], aPayloadArguments),
+       ...);
     }
 
     _tlgWriteTransfer(kFirefoxTraceLoggingProvider,
@@ -402,6 +381,9 @@ void OutputMarkerSchema(void* aContext, MarkerType aMarkerType,
 namespace ETW {
 static inline void Init() {}
 static inline void Shutdown() {}
+static inline void EmitETWMarker(const mozilla::ProfilerString8View& aName,
+                                 const mozilla::MarkerCategory& aCategory,
+                                 const mozilla::MarkerOptions& aOptions = {}) {}
 template <typename MarkerType, typename... PayloadArguments>
 static inline void EmitETWMarker(const mozilla::ProfilerString8View& aName,
                                  const mozilla::MarkerCategory& aCategory,
