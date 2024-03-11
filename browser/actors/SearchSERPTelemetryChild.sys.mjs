@@ -70,7 +70,8 @@ class SearchProviders {
    * Gets the search provider information for any provider with advert information.
    * If there is nothing in the cache, it will obtain it from shared data.
    *
-   * @returns {object} Returns the search provider information. @see SearchTelemetry.jsm
+   * @returns {object} Returns the search provider information.
+   * @see SearchTelemetry.sys.mjs
    */
   get info() {
     if (this._searchProviderInfo) {

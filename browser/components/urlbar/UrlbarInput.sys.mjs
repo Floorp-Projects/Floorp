@@ -1150,7 +1150,7 @@ export class UrlbarInput {
           // to the list that we use to make decisions.
           // Because we are directly asking for a search here, bypassing the
           // docShell, we need to do the same ourselves.
-          // See also URIFixupChild.jsm and keyword-uri-fixup.
+          // See also URIFixupChild.sys.mjs and keyword-uri-fixup.
           let fixupInfo = this._getURIFixupInfo(originalUntrimmedValue.trim());
           if (fixupInfo) {
             this.window.gKeywordURIFixup.check(

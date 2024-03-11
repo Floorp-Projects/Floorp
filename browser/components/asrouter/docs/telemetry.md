@@ -86,5 +86,5 @@ before we can automatically act on them.
 * If you have any questions, the Glean Team is available across a lot of
   timezones on the [`#glean:mozilla.org` channel](https://chat.mozilla.org/#/room/#glean:mozilla.org) on Matrix and Slack `#data-help`.
 
-  [submit-glean-for-glean]: https://searchfox.org/mozilla-central/search?q=.submitGleanPingForPing&path=*.jsm&case=false&regexp=false
+  [submit-glean-for-glean]: https://searchfox.org/mozilla-central/search?q=.submitGleanPingForPing&path=*.sys.mjs&case=false&regexp=false
   [metrics-yaml]: https://searchfox.org/mozilla-central/source/browser/components/newtab/metrics.yaml

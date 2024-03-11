@@ -896,7 +896,7 @@ Action.prototype = {
    *        The chosen icon URL.
    */
   _iconURLForSize(urls, preferredSize) {
-    // This case is copied from ExtensionParent.jsm so that our image logic is
+    // This case is copied from ExtensionParent.sys.mjs so that our image logic is
     // the same, so that WebExtensions page action tests that deal with icons
     // pass.
     let bestSize = null;

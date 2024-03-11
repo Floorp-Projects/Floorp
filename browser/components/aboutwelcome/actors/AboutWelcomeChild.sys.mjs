@@ -242,7 +242,7 @@ export class AboutWelcomeChild extends JSWindowActorChild {
   }
 
   /**
-   * Send message that can be handled by AboutWelcomeParent.jsm
+   * Send message that can be handled by AboutWelcomeParent.sys.mjs
    *
    * @param {string} type
    * @param {any=} data

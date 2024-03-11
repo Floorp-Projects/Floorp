@@ -53,10 +53,10 @@ If you are writing a test for a urlbarProvider, you can test the Provider
 through a XPCShell test. Providers do not modify the UI, instead what they do is
 receive a url string query, search for the string and bring back the result. An
 example is the `ProviderPlaces <https://searchfox.org/mozilla-central/sou
-rce/browser/components/urlbar/UrlbarProviderPlaces.jsm>`_, which fetches
+rce/browser/components/urlbar/UrlbarProviderPlaces.sys.mjs>`_, which fetches
 results from the Places database. Another component that’s good for writing
 XPCShell test is the `urlbarMuxer <https://searchfox.org/mozilla-central/
-source/browser/components/urlbar/UrlbarMuxerUnifiedComplete.jsm>`_.
+source/browser/components/urlbar/UrlbarMuxerUnifiedComplete.sys.mjs>`_.
 
 There may be times where writing both an XPCShell test and browser test is
 necessary. In these situations, you could be testing the result from a Provider
@@ -131,10 +131,10 @@ This section describes common test utilities which may be useful when writing a
 test for the address bar. Below are a description of common utils where you can
 find helpful testing methods.
 
-Many test utils modules end with ``TestUtils.jsm``. However not every testing
-function will end with ``TestUtils.jsm``. For example, `PlacesUtils <https://
+Many test utils modules end with ``TestUtils.sys.mjs``. However not every testing
+function will end with ``TestUtils.sys.mjs``. For example, `PlacesUtils <https://
 searchfox.org/mozilla-central/source/toolkit/components/places/PlacesUtils.
-jsm>`_ does not have “Test” within its name.
+sys.mjs>`_ does not have “Test” within its name.
 
 A critical function to remember is the ``registerCleanupFunction`` within
 the ``head.js`` file mentioned below. This function's purpose may be to clean
@@ -150,7 +150,7 @@ test and contains imports to modules which are useful for each test.
 Any tasks ``head.js`` adds (via add_task) will run first for each test, and
 any variables and functions it defines will be available in the scope of
 each test. This file is small because most of our Utils are actually in other
-`.jsm` files.
+`.sys.mjs` files.
 
 The ``XPCOMUtils.defineLazyModuleGetters`` method within ``head.js`` sets up
 modules names to where they can be found, their paths. ``Lazy`` means the files
@@ -189,7 +189,7 @@ new or private windows, and etc.
 
 TestUtils
 ~~~~~~~~~
-`TestUtils.jsm <../../testing/testutils.html>`_ is useful for general
+`TestUtils.sys.mjs <../../testing/testutils.html>`_ is useful for general
 purpose testing and does not depend on the browser window. This file contains
 methods that are useful when waiting for a condition to return true, waiting for
 a specific preference to change, and etc.
@@ -204,7 +204,7 @@ EventUtils
 ~~~~~~~~~~
 `EventUtils.js <https://searchfox.org/mozilla-central/source/testing/mochitest
 /tests/SimpleTest/EventUtils.js>`_ is an older test file and does not
-need to be imported because it is not a ``.jsm`` file. ``EventUtils`` is only
+need to be imported because it is not a ``.sys.mjs`` file. ``EventUtils`` is only
 used for browser tests, unlike the other TestUtils listed above which are
 used for browser tests, XPCShell tests and other tests.
 

@@ -336,7 +336,9 @@ class nsContextMenu {
     InlineSpellCheckerUI.clearDictionaryListFromMenu();
     InlineSpellCheckerUI.uninit();
     if (
-      Cu.isModuleLoaded("resource://gre/modules/LoginManagerContextMenu.jsm")
+      Cu.isESModuleLoaded(
+        "resource://gre/modules/LoginManagerContextMenu.sys.mjs"
+      )
     ) {
       nsContextMenu.LoginManagerContextMenu.clearLoginsFromMenu(document);
     }

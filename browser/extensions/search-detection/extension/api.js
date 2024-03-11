@@ -61,7 +61,7 @@ this.addonsSearchDetection = class extends ExtensionAPI {
 
               _urls
                 // We only want to collect "search URLs" (and not "suggestion"
-                // ones for instance). See `URL_TYPE` in `SearchUtils.jsm`.
+                // ones for instance). See `URL_TYPE` in `SearchUtils.sys.mjs`.
                 .filter(({ type }) => type === "text/html")
                 .forEach(({ template }) => {
                   // If this is changed, double check the code in the background
@@ -116,7 +116,7 @@ this.addonsSearchDetection = class extends ExtensionAPI {
         // search engines has changed, e.g., a new engine has been added or an
         // engine has been removed.
         //
-        // See: https://searchfox.org/mozilla-central/source/toolkit/components/search/SearchUtils.jsm#145-152
+        // See: https://searchfox.org/mozilla-central/rev/cb44fc4f7bb84f2a18fedba64c8563770df13e34/toolkit/components/search/SearchUtils.sys.mjs#185-193
         onSearchEngineModified: new ExtensionCommon.EventManager({
           context,
           name: "addonsSearchDetection.onSearchEngineModified",

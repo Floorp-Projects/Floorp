@@ -132,7 +132,7 @@ export class AboutWelcomeParent extends JSWindowActorParent {
   }
 
   /**
-   * Handle messages from AboutWelcomeChild.jsm
+   * Handle messages from AboutWelcomeChild.sys.mjs
    *
    * @param {string} type
    * @param {any=} data
@@ -273,7 +273,7 @@ export class AboutWelcomeParent extends JSWindowActorParent {
 
 export class AboutWelcomeShoppingParent extends AboutWelcomeParent {
   /**
-   * Handle messages from AboutWelcomeChild.jsm
+   * Handle messages from AboutWelcomeChild.sys.mjs
    *
    * @param {string} type
    * @param {any=} data

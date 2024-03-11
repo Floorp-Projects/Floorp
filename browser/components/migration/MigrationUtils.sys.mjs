@@ -412,7 +412,7 @@ class MigrationUtils {
       });
 
     Services.tm.spinEventLoopUntil(
-      "MigrationUtils.jsm:MU_spinResolve",
+      "MigrationUtils.sys.mjs:MU_spinResolve",
       () => done || gForceExitSpinResolve
     );
     if (!done) {

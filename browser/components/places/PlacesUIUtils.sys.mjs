@@ -1230,8 +1230,8 @@ export var PlacesUIUtils = {
    * Helpers for consumers of editBookmarkOverlay which don't have a node as their input.
    *
    * Given a bookmark object for either a url bookmark or a folder, returned by
-   * Bookmarks.fetch (see Bookmark.jsm), this creates a node-like object suitable for
-   * initialising the edit overlay with it.
+   * Bookmarks.fetch (see Bookmark.sys.mjs), this creates a node-like object
+   * suitable for initialising the edit overlay with it.
    *
    * @param {object} aFetchInfo
    *        a bookmark object returned by Bookmarks.fetch.

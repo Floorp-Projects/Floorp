@@ -86,7 +86,7 @@ Most part of backend code is located in : `Toolkit/Components/Places`_:
   - :doc:`PlacesTransactions` - This module serves as the transactions manager for Places
 
   .. _Toolkit/Components/Places: https://searchfox.org/mozilla-central/source/toolkit/components/places
-  .. _PlacesUtils: https://searchfox.org/mozilla-central/source/toolkit/components/places/PlacesUtils.jsm
+  .. _PlacesUtils: https://searchfox.org/mozilla-central/source/toolkit/components/places/PlacesUtils.sys.mjs
 
 Storage
 -------

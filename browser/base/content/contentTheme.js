@@ -137,7 +137,7 @@
   /**
    * ContentThemeController handles theme updates sent by the frame script.
    * To be able to use ContentThemeController, you must add your page to the whitelist
-   * in LightweightThemeChildListener.jsm
+   * in LightweightThemeChild.sys.mjs
    */
   const ContentThemeController = {
     /**

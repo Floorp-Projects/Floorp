@@ -4,7 +4,7 @@
 
 Our unit tests in Activity Stream are written with mocha, chai, and sinon, and run
 with karma. They include unit tests for both content code (React components, etc.)
-and `.jsm`s.
+and `.sys.mjs`s.
 
 You can find unit tests in `tests/unit`.
 
@@ -32,7 +32,7 @@ If you are creating a new test, add it to a subdirectory of the `tests/unit`
 that corresponds to the file you are testing. Tests should end with `.test.js` or
 `.test.jsx` if the test includes any jsx.
 
-For example, if the file you are testing is `lib/Foo.jsm`, the test
+For example, if the file you are testing is `lib/Foo.sys.mjs`, the test
 file should be `test/unit/lib/Foo.test.js`
 
 ## Mocha tests
@@ -96,9 +96,9 @@ assert.isUserEventAction({type: "FOO"});
 assert.isUserEventAction(ac.UserEvent({event: "BLOOP"}));
 ```
 
-## Overriding globals in `.jsm`s
+## Overriding globals in `.sys.mjs`s
 
-Most `.jsm`s you will be testing use `Cu.import` or `XPCOMUtils` to inject globals.
+Most `.sys.mjs`s you will be testing use `Cu.import` or `XPCOMUtils` to inject globals.
 In order to add mocks/stubs/fakes for these globals, you should use the `GlobalOverrider`
 utility in `test/unit/utils`:
 

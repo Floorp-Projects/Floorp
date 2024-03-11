@@ -9,7 +9,7 @@ const DEVTOOLS_PREF =
 
 /**
  * Use `ASRouterPreferences.console.debug()` and friends from ASRouter files to
- * log messages during development.  See LOG_LEVELS in ConsoleAPI.jsm for the
+ * log messages during development.  See LOG_LEVELS in Console.sys.mjs for the
  * available methods as well as the available values for this pref.
  */
 const DEBUG_PREF = "browser.newtabpage.activity-stream.asrouter.debugLogLevel";

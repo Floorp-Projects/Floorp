@@ -4,7 +4,7 @@
 Browser Usage Telemetry
 =======================
 
-The `BrowserUsageTelemetry.jsm <https://searchfox.org/mozilla-central/source/browser/modules/BrowserUsageTelemetry.jsm>`_ module is the main module for measurements regarding the browser usage (e.g. tab and window counts, search counts, ...).
+The `BrowserUsageTelemetry.sys.mjs <https://searchfox.org/mozilla-central/source/browser/modules/BrowserUsageTelemetry.sys.mjs>`_ module is the main module for measurements regarding the browser usage (e.g. tab and window counts, search counts, ...).
 
 The measurements recording begins right after the ``SessionStore`` has finished restoring the session (i.e. restoring tabs/windows after Firefox starts).
 
