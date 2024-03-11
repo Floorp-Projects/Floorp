@@ -8,7 +8,7 @@ job-defaults:
 geckoview-junit:
     description: "Geckoview junit run"
     suite: geckoview-junit
-    variants: ["geckoview-fission", "no-fission"]
+    variants: ["geckoview-fission", "no-fission", "geckoview-no-fission-ship"]
     treeherder-symbol: gv-junit
     loopback-video: true
     target: geckoview-androidTest.apk
@@ -17,6 +17,7 @@ geckoview-junit:
         by-variant:
             geckoview-fission: ['trunk']
             no-fission: built-projects
+            geckoview-no-fission-ship: built-projects
             default: []
     tier: default
     mozharness:

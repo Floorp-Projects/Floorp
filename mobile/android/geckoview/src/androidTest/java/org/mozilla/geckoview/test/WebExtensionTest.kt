@@ -7,6 +7,7 @@ package org.mozilla.geckoview.test
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers
 import org.hamcrest.Matchers.greaterThan
 import org.hamcrest.core.IsEqual.equalTo
 import org.hamcrest.core.StringEndsWith.endsWith
@@ -1677,6 +1678,11 @@ class WebExtensionTest : BaseSessionTest() {
     // - verifies that the messages are received when restoring the tab in a fresh session
     @Test
     fun testRestoringExtensionPagePreservesMessages() {
+        // TODO: Bug 1884334
+        val geckoPrefs = sessionRule.getPrefs(
+            "fission.disableSessionHistoryInParent",
+        )
+        assumeThat(geckoPrefs[0] as Boolean, Matchers.equalTo(true))
         // TODO: Bug 1837551
         assumeThat(sessionRule.env.isFission, equalTo(false))
 
