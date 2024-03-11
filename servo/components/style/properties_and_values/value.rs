@@ -156,7 +156,11 @@ impl<Component: Animate> Animate for ComponentList<Component> {
         if self.multiplier != other.multiplier {
             return Err(());
         }
-        let components = animated::lists::by_computed_value::animate(&self.components, &other.components, procedure)?;
+        let components = animated::lists::by_computed_value::animate(
+            &self.components,
+            &other.components,
+            procedure,
+        )?;
         Ok(Self {
             multiplier: self.multiplier,
             components,
@@ -530,7 +534,6 @@ impl<'a> Parser<'a> {
     }
 }
 
-
 /// An animated value for custom property.
 #[derive(Clone, Debug, MallocSizeOf, PartialEq)]
 pub struct CustomAnimatedValue {
@@ -548,7 +551,7 @@ pub struct CustomAnimatedValue {
 impl Animate for CustomAnimatedValue {
     fn animate(&self, other: &Self, procedure: Procedure) -> Result<Self, ()> {
         if self.name != other.name {
-            return Err(())
+            return Err(());
         }
         let value = self.value.animate(&other.value, procedure)?;
         Ok(Self {
@@ -590,8 +593,11 @@ impl CustomAnimatedValue {
             context.builder.stylist.is_some(),
             "Need a Stylist to get property registration!"
         );
-        let registration =
-            context.builder.stylist.unwrap().get_custom_property_registration(&declaration.name);
+        let registration = context
+            .builder
+            .stylist
+            .unwrap()
+            .get_custom_property_registration(&declaration.name);
 
         // FIXME: Do we need to perform substitution here somehow?
         let computed_value = if registration.syntax.is_universal() {
@@ -605,7 +611,8 @@ impl CustomAnimatedValue {
                 &value.url_data,
                 context,
                 AllowComputationallyDependent::Yes,
-            ).ok()
+            )
+            .ok()
         };
 
         let url_data = value.url_data.clone();
@@ -620,7 +627,9 @@ impl CustomAnimatedValue {
     pub(crate) fn to_declaration(&self) -> properties::PropertyDeclaration {
         properties::PropertyDeclaration::Custom(properties::CustomDeclaration {
             name: self.name.clone(),
-            value: properties::CustomDeclarationValue::Value(self.value.to_declared_value(&self.url_data)),
+            value: properties::CustomDeclarationValue::Value(
+                self.value.to_declared_value(&self.url_data),
+            ),
         })
     }
 }
