@@ -17,8 +17,8 @@
 #include "js/CompileOptions.h"  // JS::CompileOptions, JS::OwningCompileOptions
 #include "js/CompilationAndEvaluation.h"
 #include "js/experimental/CompileScript.h"  // JS::CompileGlobalScriptToStencil, JS::NewFrontendContext, JS::DestroyFrontendContext, JS::SetNativeStackQuota, JS::ThreadStackQuotaForSize, JS::HadFrontendErrors, JS::ConvertFrontendErrorsToRuntimeErrors
-#include "js/experimental/JSStencil.h"  // JS::Stencil, JS::CompileGlobalScriptToStencil, JS::InstantiateGlobalStencil, JS::CompilationStorage
-#include "js/SourceText.h"              // JS::SourceText
+#include "js/experimental/JSStencil.h"  // JS::Stencil, JS::CompileGlobalScriptToStencil, JS::InstantiateGlobalStencil
+#include "js/SourceText.h"  // JS::SourceText
 #include "js/Utility.h"
 
 #include "mozilla/AlreadyAddRefed.h"  // already_AddRefed
@@ -119,9 +119,8 @@ class AsyncScriptCompileTask final : public Task {
     JS::SetNativeStackQuota(mFrontendContext,
                             JS::ThreadStackQuotaForSize(stackSize));
 
-    JS::CompilationStorage compileStorage;
-    mStencil = JS::CompileGlobalScriptToStencil(mFrontendContext, mOptions,
-                                                mSrcBuf, compileStorage);
+    mStencil =
+        JS::CompileGlobalScriptToStencil(mFrontendContext, mOptions, mSrcBuf);
   }
 
   // Cancel the task.

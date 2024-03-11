@@ -87,73 +87,46 @@ JS_PUBLIC_API const JSErrorReport* JS::GetFrontendWarningAt(
   return &fc->warnings()[index];
 }
 
-JS::CompilationStorage::~CompilationStorage() {
-  if (input_ && !isBorrowed_) {
-    js_delete(input_);
-    input_ = nullptr;
-  }
-}
-
-size_t JS::CompilationStorage::sizeOfIncludingThis(
-    mozilla::MallocSizeOf mallocSizeOf) const {
-  size_t sizeOfCompilationInput =
-      input_ ? input_->sizeOfExcludingThis(mallocSizeOf) : 0;
-  return mallocSizeOf(this) + sizeOfCompilationInput;
-}
-
-bool JS::CompilationStorage::allocateInput(
-    FrontendContext* fc, const JS::ReadOnlyCompileOptions& options) {
-  MOZ_ASSERT(!input_);
-  input_ = fc->getAllocator()->new_<frontend::CompilationInput>(options);
-  return !!input_;
-}
-
-void JS::CompilationStorage::trace(JSTracer* trc) {
-  if (input_) {
-    input_->trace(trc);
-  }
-}
-
 template <typename CharT>
 static already_AddRefed<JS::Stencil> CompileGlobalScriptToStencilImpl(
     JS::FrontendContext* fc, const JS::ReadOnlyCompileOptions& options,
-    JS::SourceText<CharT>& srcBuf, JS::CompilationStorage& compilationStorage) {
+    JS::SourceText<CharT>& srcBuf) {
   ScopeKind scopeKind =
       options.nonSyntacticScope ? ScopeKind::NonSyntactic : ScopeKind::Global;
 
   JS::SourceText<CharT> data(std::move(srcBuf));
 
-  compilationStorage.allocateInput(fc, options);
-  if (!compilationStorage.hasInput()) {
-    return nullptr;
-  }
+  frontend::CompilationInput compilationInput(options);
 
   frontend::NoScopeBindingCache scopeCache;
   LifoAlloc tempLifoAlloc(JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
-  RefPtr<frontend::CompilationStencil> stencil_ =
-      frontend::CompileGlobalScriptToStencil(nullptr, fc, tempLifoAlloc,
-                                             compilationStorage.getInput(),
-                                             &scopeCache, data, scopeKind);
+  RefPtr<JS::Stencil> stencil_ = frontend::CompileGlobalScriptToStencil(
+      nullptr, fc, tempLifoAlloc, compilationInput, &scopeCache, data,
+      scopeKind);
+  // CompilationInput initialized with CompileGlobalScriptToStencil only
+  // references information from the JS::Stencil context and the
+  // ref-counted ScriptSource, which are both GC-free.
+  JS_HAZ_VALUE_IS_GC_SAFE(compilationInput);
   return stencil_.forget();
 }
 
 template <typename CharT>
 static already_AddRefed<JS::Stencil> CompileModuleScriptToStencilImpl(
     JS::FrontendContext* fc, const JS::ReadOnlyCompileOptions& optionsInput,
-    JS::SourceText<CharT>& srcBuf, JS::CompilationStorage& compilationStorage) {
+    JS::SourceText<CharT>& srcBuf) {
   JS::CompileOptions options(nullptr, optionsInput);
   options.setModule();
 
-  compilationStorage.allocateInput(fc, options);
-  if (!compilationStorage.hasInput()) {
-    return nullptr;
-  }
+  frontend::CompilationInput compilationInput(options);
 
   NoScopeBindingCache scopeCache;
   js::LifoAlloc tempLifoAlloc(JSContext::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
-  RefPtr<JS::Stencil> stencil =
-      ParseModuleToStencil(nullptr, fc, tempLifoAlloc,
-                           compilationStorage.getInput(), &scopeCache, srcBuf);
+  RefPtr<JS::Stencil> stencil = ParseModuleToStencil(
+      nullptr, fc, tempLifoAlloc, compilationInput, &scopeCache, srcBuf);
+  // CompilationInput initialized with ParseModuleToStencil only
+  // references information from the JS::Stencil context and the
+  // ref-counted ScriptSource, which are both GC-free.
+  JS_HAZ_VALUE_IS_GC_SAFE(compilationInput);
   if (!stencil) {
     return nullptr;
   }
@@ -164,42 +137,38 @@ static already_AddRefed<JS::Stencil> CompileModuleScriptToStencilImpl(
 
 already_AddRefed<JS::Stencil> JS::CompileGlobalScriptToStencil(
     JS::FrontendContext* fc, const JS::ReadOnlyCompileOptions& options,
-    JS::SourceText<mozilla::Utf8Unit>& srcBuf,
-    JS::CompilationStorage& compileStorage) {
+    JS::SourceText<mozilla::Utf8Unit>& srcBuf) {
 #ifdef DEBUG
   fc->assertNativeStackLimitThread();
 #endif
-  return CompileGlobalScriptToStencilImpl(fc, options, srcBuf, compileStorage);
+  return CompileGlobalScriptToStencilImpl(fc, options, srcBuf);
 }
 
 already_AddRefed<JS::Stencil> JS::CompileGlobalScriptToStencil(
     JS::FrontendContext* fc, const JS::ReadOnlyCompileOptions& options,
-    JS::SourceText<char16_t>& srcBuf, JS::CompilationStorage& compileStorage) {
+    JS::SourceText<char16_t>& srcBuf) {
 #ifdef DEBUG
   fc->assertNativeStackLimitThread();
 #endif
-  return CompileGlobalScriptToStencilImpl(fc, options, srcBuf, compileStorage);
+  return CompileGlobalScriptToStencilImpl(fc, options, srcBuf);
 }
 
 already_AddRefed<JS::Stencil> JS::CompileModuleScriptToStencil(
     JS::FrontendContext* fc, const JS::ReadOnlyCompileOptions& optionsInput,
-    JS::SourceText<mozilla::Utf8Unit>& srcBuf,
-    JS::CompilationStorage& compileStorage) {
+    JS::SourceText<mozilla::Utf8Unit>& srcBuf) {
 #ifdef DEBUG
   fc->assertNativeStackLimitThread();
 #endif
-  return CompileModuleScriptToStencilImpl(fc, optionsInput, srcBuf,
-                                          compileStorage);
+  return CompileModuleScriptToStencilImpl(fc, optionsInput, srcBuf);
 }
 
 already_AddRefed<JS::Stencil> JS::CompileModuleScriptToStencil(
     JS::FrontendContext* fc, const JS::ReadOnlyCompileOptions& optionsInput,
-    JS::SourceText<char16_t>& srcBuf, JS::CompilationStorage& compileStorage) {
+    JS::SourceText<char16_t>& srcBuf) {
 #ifdef DEBUG
   fc->assertNativeStackLimitThread();
 #endif
-  return CompileModuleScriptToStencilImpl(fc, optionsInput, srcBuf,
-                                          compileStorage);
+  return CompileModuleScriptToStencilImpl(fc, optionsInput, srcBuf);
 }
 
 bool JS::PrepareForInstantiate(JS::FrontendContext* fc, JS::Stencil& stencil,

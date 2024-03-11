@@ -26,13 +26,12 @@
 #include <stdint.h>  // uint32_t, uint64_t
 #include <utility>   // std::move
 
-#include "ds/Fifo.h"                        // Fifo
-#include "frontend/CompilationStencil.h"    // frontend::CompilationStencil
-#include "gc/GCRuntime.h"                   // gc::GCRuntime
-#include "js/AllocPolicy.h"                 // SystemAllocPolicy
-#include "js/CompileOptions.h"              // JS::ReadOnlyCompileOptions
-#include "js/experimental/CompileScript.h"  // JS::CompilationStorage
-#include "js/experimental/JSStencil.h"      // JS::InstantiationStorage
+#include "ds/Fifo.h"                      // Fifo
+#include "frontend/CompilationStencil.h"  // frontend::CompilationStencil
+#include "gc/GCRuntime.h"                 // gc::GCRuntime
+#include "js/AllocPolicy.h"               // SystemAllocPolicy
+#include "js/CompileOptions.h"            // JS::ReadOnlyCompileOptions
+#include "js/experimental/JSStencil.h"    // JS::InstantiationStorage
 #include "js/HelperThreadAPI.h"  // JS::HelperThreadTaskCallback, JS::DispatchReason
 #include "js/MemoryMetrics.h"  // JS::GlobalStats
 #include "js/ProfilingStack.h"  // JS::RegisterThreadCallback, JS::UnregisterThreadCallback

@@ -1839,9 +1839,8 @@ class ScriptCompileTask final : public Task {
       return;
     }
 
-    JS::CompilationStorage compileStorage;
-    mStencil = JS::CompileGlobalScriptToStencil(mFrontendContext, mOptions,
-                                                srcBuf, compileStorage);
+    mStencil =
+        JS::CompileGlobalScriptToStencil(mFrontendContext, mOptions, srcBuf);
 #ifdef DEBUG
     // Chrome-privileged code shouldn't have any compilation error.
     CheckErrorsAndWarnings(mFrontendContext, mOptions);
