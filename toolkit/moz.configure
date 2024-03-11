@@ -2855,18 +2855,8 @@ def pdbstr_paths(valid_windows_sdk_dir, host):
     ]
 
 
-check_prog(
-    "PDBSTR",
-    ["pdbstr.exe"],
-    allow_missing=True,
-    when=compile_environment & target_is_windows,
-    paths=pdbstr_paths,
-    allow_spaces=True,
-)
-
-
 @depends("MOZ_AUTOMATION", c_compiler)
-def allow_missing_winchecksec(automation, c_compiler):
+def allow_missing_wintools(automation, c_compiler):
     if not automation:
         return True
     if c_compiler and c_compiler.type != "clang-cl":
@@ -2874,10 +2864,20 @@ def allow_missing_winchecksec(automation, c_compiler):
 
 
 check_prog(
+    "PDBSTR",
+    ["pdbstr.exe"],
+    allow_missing=allow_missing_wintools,
+    when=compile_environment & target_is_windows,
+    paths=pdbstr_paths,
+    allow_spaces=True,
+)
+
+
+check_prog(
     "WINCHECKSEC",
     ["winchecksec.exe", "winchecksec"],
     bootstrap="winchecksec",
-    allow_missing=allow_missing_winchecksec,
+    allow_missing=allow_missing_wintools,
     when=compile_environment & target_is_windows,
 )
 
