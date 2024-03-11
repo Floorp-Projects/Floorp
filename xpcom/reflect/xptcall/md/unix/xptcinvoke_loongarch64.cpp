@@ -44,7 +44,9 @@ extern "C" void invoke_copy_to_stack(uint64_t* gpregs, double* fpregs,
           value = s->val.u16;
           break;
         case nsXPTType::T_U32:
-          value = s->val.u32;
+          // 32-bit values need to be sign-extended in 64-bit registers,
+          // so use the signed value here.
+          value = s->val.i32;
           break;
         case nsXPTType::T_U64:
           value = s->val.u64;
