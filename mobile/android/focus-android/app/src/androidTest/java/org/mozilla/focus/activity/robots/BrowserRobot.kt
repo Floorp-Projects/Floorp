@@ -11,6 +11,7 @@ import androidx.test.espresso.ViewInteraction
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.RootMatchers
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -246,7 +247,8 @@ class BrowserRobot {
 
     fun clickContextMenuCopyLink(): ViewInteraction = copyLink.perform(click())
 
-    fun clickShareImage(): ViewInteraction = shareImage.perform(click())
+    fun clickShareImage() =
+        shareImage.inRoot(RootMatchers.isDialog()).check(matches(isDisplayed())).perform(click())
 
     fun clickShareLink(): ViewInteraction = shareLink.perform(click())
 
@@ -560,7 +562,7 @@ class BrowserRobot {
         }
 
         fun clickSaveImage(interact: DownloadRobot.() -> Unit): DownloadRobot.Transition {
-            saveImage.perform(click())
+            saveImage.inRoot(RootMatchers.isDialog()).check(matches(isDisplayed())).perform(click())
 
             DownloadRobot().interact()
             return DownloadRobot.Transition()
