@@ -197,7 +197,7 @@ class MediaDecoderStateMachineBase {
 
   virtual RefPtr<MediaDecoder::SeekPromise> Seek(const SeekTarget& aTarget) = 0;
 
-  void DecodeError(const MediaResult& aError);
+  virtual void DecodeError(const MediaResult& aError);
 
   // Functions used by assertions to ensure we're calling things
   // on the appropriate threads.
