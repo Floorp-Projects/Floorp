@@ -11,7 +11,6 @@ import re
 import string
 import textwrap
 
-import six
 from Configuration import (
     Descriptor,
     MemberIsLegacyUnforgeable,
@@ -14865,7 +14864,7 @@ class CGCountMaybeMissingProperty(CGAbstractMethod):
            generate nested switches) or strings to use for case bodies.
         """
         cases = []
-        for label, body in sorted(six.iteritems(switchDecriptor["cases"])):
+        for label, body in sorted(switchDecriptor["cases"].items()):
             if isinstance(body, dict):
                 body = self.gen_switch(body)
             cases.append(
@@ -18410,7 +18409,7 @@ class CGGlobalNames(CGGeneric):
                 ),
             )
 
-            entries.append((name, nativeEntry))
+            entries.append((name.encode(), nativeEntry))
 
         # Unfortunately, when running tests, we may have no entries.
         # PerfectHash will assert if we give it an empty set of entries, so we
@@ -18567,7 +18566,7 @@ class ForwardDeclarationBuilder:
                     ]
                 )
             )
-        for namespace, child in sorted(six.iteritems(self.children)):
+        for namespace, child in sorted(self.children.items()):
             decls.append(CGNamespace(namespace, child._build(atTopLevel=False)))
 
         cg = CGList(decls, "\n")
@@ -19200,12 +19199,10 @@ class CGBindingRoot(CGThing):
 
         # Add header includes.
         bindingHeaders = [
-            header for header, include in six.iteritems(bindingHeaders) if include
+            header for header, include in bindingHeaders.items() if include
         ]
         bindingDeclareHeaders = [
-            header
-            for header, include in six.iteritems(bindingDeclareHeaders)
-            if include
+            header for header, include in bindingDeclareHeaders.items() if include
         ]
 
         curr = CGHeaders(
