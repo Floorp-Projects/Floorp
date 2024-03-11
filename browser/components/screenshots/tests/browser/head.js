@@ -282,10 +282,15 @@ class ScreenshotsHelper {
       this.waitForStateChange("resizing"),
     ]);
     Assert.ok(true, "The overlay is in the dragging or resizing state");
-
+    // We intentionally turn off this a11y check, because the following mouse
+    // event is emitted at the end of the dragging event. Its keyboard
+    // accessible alternative is provided and tested elsewhere, therefore
+    // this rule check shall be ignored by a11y_checks suite.
+    AccessibilityUtils.setEnv({ mustHaveAccessibleRule: false });
     mouse.up(endX, endY);
 
     await this.assertStateChange("selected");
+    AccessibilityUtils.resetEnv();
 
     this.endX = endX;
     this.endY = endY;
