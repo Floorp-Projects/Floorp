@@ -315,9 +315,25 @@ def initialize(topsrcdir, args=()):
     )
     from argparse import Namespace
 
+    from mach.main import (
+        SUGGESTED_COMMANDS_MESSAGE,
+        UNKNOWN_COMMAND_ERROR,
+        UnknownCommandError,
+    )
+
     namespace_in = Namespace()
     setattr(namespace_in, "mach_command_aliases", aliases)
-    namespace = parser.parse_args(args, namespace_in)
+
+    try:
+        namespace = parser.parse_args(args, namespace_in)
+    except UnknownCommandError as e:
+        suggestion_message = (
+            SUGGESTED_COMMANDS_MESSAGE % (e.verb, ", ".join(e.suggested_commands))
+            if e.suggested_commands
+            else ""
+        )
+        print(UNKNOWN_COMMAND_ERROR % (e.verb, e.command, suggestion_message))
+        sys.exit(1)
 
     command_name = getattr(namespace, "command_name", None)
     site_name = getattr(namespace, "site_name", "common")
