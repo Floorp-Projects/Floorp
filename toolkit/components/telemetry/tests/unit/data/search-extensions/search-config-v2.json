@@ -1,0 +1,40 @@
+{
+  "data": [
+    {
+      "recordType": "engine",
+      "identifier": "telemetrySearchIdentifier",
+      "base": {
+        "name": "telemetrySearchIdentifier",
+        "urls": {
+          "search": {
+            "base": "https://ar.wikipedia.org/wiki/%D8%AE%D8%A7%D8%B5:%D8%A8%D8%AD%D8%AB",
+            "params": [
+              {
+                "name": "sourceId",
+                "value": "Mozilla-search"
+              }
+            ],
+            "searchTermParamName": "search"
+          },
+          "suggestions": {
+            "base": "https://ar.wikipedia.org/w/api.php?action=opensearch",
+            "searchTermParamName": "search"
+          }
+        }
+      },
+      "variants": [
+        {
+          "environment": { "allRegionsAndLocales": true }
+        }
+      ]
+    },
+    {
+      "recordType": "defaultEngines",
+      "specificDefaults": []
+    },
+    {
+      "recordType": "engineOrders",
+      "orders": []
+    }
+  ]
+}

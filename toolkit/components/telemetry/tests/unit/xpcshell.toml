@@ -5,6 +5,7 @@ firefox-appdir = "browser"
 # xpcshell fails to install tests if we move them under the test entry.
 support-files = [
   "data/search-extensions/engines.json",
+  "data/search-extensions/search-config-v2.json",
   "data/search-extensions/telemetrySearchIdentifier/manifest.json",
   "engine.xml",
   "system.xpi",
