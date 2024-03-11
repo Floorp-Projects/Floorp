@@ -69,9 +69,13 @@ void Queue::WriteBuffer(const Buffer& aBuffer, uint64_t aBufferOffset,
     return;
   }
 
-  size_t elementByteSize = aData.IsArrayBufferView()
-                               ? byteSize(aData.GetAsArrayBufferView().Type())
-                               : 1;
+  size_t elementByteSize = 1;
+  if (aData.IsArrayBufferView()) {
+    auto type = aData.GetAsArrayBufferView().Type();
+    if (type != JS::Scalar::MaxTypedArrayViewType) {
+      elementByteSize = byteSize(type);
+    }
+  }
   dom::ProcessTypedArraysFixed(aData, [&, elementByteSize](
                                           const Span<const uint8_t>& aData) {
     uint64_t byteLength = aData.Length();
