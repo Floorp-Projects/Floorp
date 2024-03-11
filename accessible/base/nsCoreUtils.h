@@ -305,6 +305,11 @@ class nsCoreUtils {
            aChar == 0xa0;
   }
 
+  /**
+   * Remove non-breaking spaces from the beginning and end of the string.
+   */
+  static void TrimNonBreakingSpaces(nsAString& aString);
+
   /*
    * Return true if there are any observers of accessible events.
    */
