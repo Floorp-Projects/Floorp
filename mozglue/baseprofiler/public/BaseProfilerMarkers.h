@@ -138,44 +138,53 @@ inline ProfileBufferBlockIndex AddMarker(const ProfilerString8View& aName,
 
 namespace mozilla::baseprofiler::markers {
 // Most common marker type. Others are in BaseProfilerMarkerTypes.h.
-struct TextMarker {
-  static constexpr Span<const char> MarkerTypeName() {
-    return MakeStringSpan("Text");
-  }
+struct TextMarker : public BaseMarkerType<TextMarker> {
+  static constexpr const char* Name = "Text";
+  static constexpr const char* Description = "Generic text marker";
+
+  static constexpr bool StoreName = true;
+
+  using MS = MarkerSchema;
+  static constexpr MS::PayloadField PayloadFields[] =
+      // XXX - This is confusingly labeled 'name'. We probably want to fix that.
+      {{"name", MS::InputType::CString, "Details", MS::Format::String,
+        MS::PayloadFlags::Searchable}};
+
+  static constexpr MS::Location Locations[] = {MS::Location::MarkerChart,
+                                               MS::Location::MarkerTable};
+
+  static constexpr const char* ChartLabel = "{marker.data.name}";
+  static constexpr const char* TableLabel =
+      "{marker.name} - {marker.data.name}";
+
   static void StreamJSONMarkerData(baseprofiler::SpliceableJSONWriter& aWriter,
                                    const ProfilerString8View& aText) {
     aWriter.StringProperty("name", aText);
-  }
-  static MarkerSchema MarkerTypeDisplay() {
-    using MS = MarkerSchema;
-    MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
-    schema.SetChartLabel("{marker.data.name}");
-    schema.SetTableLabel("{marker.name} - {marker.data.name}");
-    schema.AddKeyLabelFormatSearchable("name", "Details", MS::Format::String,
-                                       MS::Searchable::Searchable);
-    return schema;
   }
 };
 
 // Keep this struct in sync with the `gecko_profiler::marker::Tracing` Rust
 // counterpart.
-struct Tracing {
-  static constexpr Span<const char> MarkerTypeName() {
-    return MakeStringSpan("tracing");
-  }
+struct Tracing : public BaseMarkerType<Tracing> {
+  static constexpr const char* Name = "tracing";
+  static constexpr const char* Description = "Generic tracing marker";
+
+  static constexpr bool StoreName = true;
+
+  using MS = MarkerSchema;
+  static constexpr MS::PayloadField PayloadFields[] = {
+      {"category", MS::InputType::CString, "Type", MS::Format::String,
+       MS::PayloadFlags::Searchable}};
+
+  static constexpr MS::Location Locations[] = {MS::Location::MarkerChart,
+                                               MS::Location::MarkerTable,
+                                               MS::Location::TimelineOverview};
+
   static void StreamJSONMarkerData(SpliceableJSONWriter& aWriter,
                                    const ProfilerString8View& aCategory) {
     if (aCategory.Length() != 0) {
       aWriter.StringProperty("category", aCategory);
     }
-  }
-  static MarkerSchema MarkerTypeDisplay() {
-    using MS = MarkerSchema;
-    MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable,
-              MS::Location::TimelineOverview};
-    schema.AddKeyLabelFormatSearchable("category", "Type", MS::Format::String,
-                                       MS::Searchable::Searchable);
-    return schema;
   }
 };
 }  // namespace mozilla::baseprofiler::markers

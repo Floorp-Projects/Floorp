@@ -3228,12 +3228,14 @@ TEST(GeckoProfiler, Markers)
             EXPECT_EQ(display[0u].asString(), "marker-chart");
             EXPECT_EQ(display[1u].asString(), "marker-table");
 
-            ASSERT_EQ(data.size(), 1u);
+            ASSERT_EQ(data.size(), 2u);
 
             ASSERT_TRUE(data[0u].isObject());
             EXPECT_EQ_JSON(data[0u]["key"], String, "name");
             EXPECT_EQ_JSON(data[0u]["label"], String, "Details");
             EXPECT_EQ_JSON(data[0u]["format"], String, "string");
+            EXPECT_EQ_JSON(data[1u]["label"], String, "Description");
+            EXPECT_EQ_JSON(data[1u]["value"], String, "Generic text marker");
 
           } else if (nameString == "NoPayloadUserData") {
             // TODO: Remove this when bug 1646714 lands.
@@ -3252,12 +3254,14 @@ TEST(GeckoProfiler, Markers)
             EXPECT_EQ(display[1u].asString(), "marker-table");
             EXPECT_EQ(display[2u].asString(), "timeline-overview");
 
-            ASSERT_EQ(data.size(), 1u);
+            ASSERT_EQ(data.size(), 2u);
 
             ASSERT_TRUE(data[0u].isObject());
             EXPECT_EQ_JSON(data[0u]["key"], String, "category");
             EXPECT_EQ_JSON(data[0u]["label"], String, "Type");
             EXPECT_EQ_JSON(data[0u]["format"], String, "string");
+            EXPECT_EQ_JSON(data[1u]["label"], String, "Description");
+            EXPECT_EQ_JSON(data[1u]["value"], String, "Generic tracing marker");
 
           } else if (nameString == "BHR-detected hang") {
             EXPECT_EQ(display.size(), 2u);
