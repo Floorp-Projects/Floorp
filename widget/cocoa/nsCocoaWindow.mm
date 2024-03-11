@@ -322,6 +322,7 @@ nsresult nsCocoaWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   mParent = aParent;
   mAncestorLink = aParent;
   mAlwaysOnTop = aInitData->mAlwaysOnTop;
+  mIsAlert = aInitData->mIsAlert;
 
   // If we have a parent widget, the new widget will be offset from the
   // parent widget by aRect.{x,y}. Otherwise, we'll use aRect for the
@@ -548,12 +549,11 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect& aRect,
     mWindow.opaque = YES;
   }
 
-  NSWindowCollectionBehavior newBehavior = mWindow.collectionBehavior;
-  if (mAlwaysOnTop) {
+  if (mAlwaysOnTop || mIsAlert) {
     mWindow.level = NSFloatingWindowLevel;
-    newBehavior |= NSWindowCollectionBehaviorCanJoinAllSpaces;
+    mWindow.collectionBehavior =
+        mWindow.collectionBehavior | NSWindowCollectionBehaviorCanJoinAllSpaces;
   }
-  mWindow.collectionBehavior = newBehavior;
   mWindow.contentMinSize = NSMakeSize(60, 60);
   [mWindow disableCursorRects];
 
@@ -984,9 +984,9 @@ void nsCocoaWindow::Show(bool aState) {
         mWindowAnimationBehavior = behavior;
       }
 
-      // We don't want alwaysontop windows to pull focus when they're opened,
-      // as these tend to be for peripheral indicators and displays.
-      if (mAlwaysOnTop) {
+      // We don't want alwaysontop / alert windows to pull focus when they're
+      // opened, as these tend to be for peripheral indicators and displays.
+      if (mAlwaysOnTop || mIsAlert) {
         [mWindow orderFront:nil];
       } else {
         [mWindow makeKeyAndOrderFront:nil];
