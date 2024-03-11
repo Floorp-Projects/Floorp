@@ -30,7 +30,6 @@ excluded_files = [
     "js/xpconnect/tests/unit/not-esmified-not-exported.jsm",
     "js/xpconnect/tests/unit/recursive_importA.jsm",
     "js/xpconnect/tests/unit/recursive_importB.jsm",
-    "js/xpconnect/tests/unit/ReturnCodeChild.jsm",
     "js/xpconnect/tests/unit/syntax_error.jsm",
     "js/xpconnect/tests/unit/TestBlob.jsm",
     "js/xpconnect/tests/unit/TestFile.jsm",
