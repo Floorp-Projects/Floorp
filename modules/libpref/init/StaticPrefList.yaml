@@ -1192,6 +1192,22 @@
   value: "path_user"
   mirror: never
 
+# Space-separated list of regexs that are compared to URLs of resources
+# being checked by content-analysis.  Resources that match are not checked
+# and are always permitted.
+- name: browser.contentanalysis.allow_url_regex_list
+  type: String
+  value: ""
+  mirror: never
+
+# Space-separated list of regexs that are compared to URLs of resources
+# being checked by content-analysis.  Resources that match are not checked
+# and are always denied.
+- name: browser.contentanalysis.deny_url_regex_list
+  type: String
+  value: ""
+  mirror: never
+
 # Should CA ignore the system setting and use silent notifications?
 - name: browser.contentanalysis.silent_notifications
   type: bool
