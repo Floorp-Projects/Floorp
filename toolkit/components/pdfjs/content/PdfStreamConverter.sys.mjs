@@ -433,6 +433,7 @@ class ChromeActions {
         hasSomethingToUndo: false,
         hasSomethingToRedo: false,
         hasSelectedEditor: false,
+        hasSelectedText: false,
       };
     }
     const { editorStates } = doc;
