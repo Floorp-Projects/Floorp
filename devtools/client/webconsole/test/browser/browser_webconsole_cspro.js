@@ -21,13 +21,20 @@ const TEST_URI =
 const TEST_VIOLATION =
   "http://example.com/browser/devtools/client/webconsole/" +
   "test/browser/test-cspro.html";
-const CSP_VIOLATION_MSG =
-  "Content-Security-Policy: The page\u2019s settings blocked the loading of a resource " +
-  "at http://some.example.com/cspro.png (\u201cimg-src\u201d).";
-const CSP_REPORT_MSG =
-  "Content-Security-Policy: The page\u2019s settings observed the loading of a " +
-  "resource at http://some.example.com/cspro.js " +
-  "(\u201cscript-src\u201d). A CSP report is being sent.";
+
+const bundle = Services.strings.createBundle(
+  "chrome://global/locale/security/csp.properties"
+);
+const CSP_VIOLATION_MSG = bundle.formatStringFromName("CSPGenericViolation", [
+  "img-src 'self'",
+  "http://some.example.com/cspro.png",
+  "img-src",
+]);
+const CSP_REPORT_MSG = bundle.formatStringFromName("CSPROScriptViolation", [
+  "script-src 'self'",
+  "http://some.example.com/cspro.js",
+  "script-src-elem",
+]);
 
 add_task(async function () {
   const hud = await openNewTabAndConsole(TEST_URI);
