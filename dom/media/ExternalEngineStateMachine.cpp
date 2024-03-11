@@ -565,6 +565,7 @@ RefPtr<ShutdownPromise> ExternalEngineStateMachine::Shutdown() {
 
   mSetCDMProxyPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_ABORT_ERR, __func__);
   mSetCDMProxyRequest.DisconnectIfExists();
+  mInitEngineForCDMRequest.DisconnectIfExists();
 
   mPendingTasks.Clear();
 
@@ -1200,24 +1201,28 @@ RefPtr<SetCDMPromise> ExternalEngineStateMachine::SetCDMProxy(
 
   if (mState.IsInitEngine() && mState.AsInitEngine()->mInitPromise) {
     LOG("SetCDMProxy is called before init");
-    mState.AsInitEngine()->mInitPromise->Then(
-        OwnerThread(), __func__,
-        [self = RefPtr{this}, proxy = RefPtr{aProxy},
-         this](const GenericNonExclusivePromise::ResolveOrRejectValue& aVal) {
-          SetCDMProxy(proxy)
-              ->Then(OwnerThread(), __func__,
-                     [self = RefPtr{this},
-                      this](const SetCDMPromise::ResolveOrRejectValue& aVal) {
-                       mSetCDMProxyRequest.Complete();
-                       if (aVal.IsResolve()) {
-                         mSetCDMProxyPromise.Resolve(true, __func__);
-                       } else {
-                         mSetCDMProxyPromise.Reject(NS_ERROR_DOM_MEDIA_CDM_ERR,
-                                                    __func__);
-                       }
-                     })
-              ->Track(mSetCDMProxyRequest);
-        });
+    mState.AsInitEngine()
+        ->mInitPromise
+        ->Then(
+            OwnerThread(), __func__,
+            [self = RefPtr{this}, proxy = RefPtr{aProxy}, this](
+                const GenericNonExclusivePromise::ResolveOrRejectValue& aVal) {
+              mInitEngineForCDMRequest.Complete();
+              SetCDMProxy(proxy)
+                  ->Then(OwnerThread(), __func__,
+                         [self = RefPtr{this}, this](
+                             const SetCDMPromise::ResolveOrRejectValue& aVal) {
+                           mSetCDMProxyRequest.Complete();
+                           if (aVal.IsResolve()) {
+                             mSetCDMProxyPromise.Resolve(true, __func__);
+                           } else {
+                             mSetCDMProxyPromise.Reject(
+                                 NS_ERROR_DOM_MEDIA_CDM_ERR, __func__);
+                           }
+                         })
+                  ->Track(mSetCDMProxyRequest);
+            })
+        ->Track(mInitEngineForCDMRequest);
     return mSetCDMProxyPromise.Ensure(__func__);
   }
 
