@@ -6,6 +6,7 @@
 
 #include "MediaData.h"
 #include "MediaQueue.h"
+#include "nsISupportsImpl.h"
 
 using namespace mozilla;
 using mozilla::media::TimeUnit;
@@ -283,6 +284,21 @@ TEST(MediaQueue, TimestampAdjustmentForNotSupportDataType)
   data = queue.PopFront();
   EXPECT_EQ(data->mTime, TimeUnit::FromMicroseconds(0));
   EXPECT_EQ(data->GetEndTime(), TimeUnit::FromMicroseconds(10));
+}
+
+TEST(MediaQueue, PreciseDuration)
+{
+  MediaQueue<MediaData> queueOff;
+  queueOff.Push(CreateDataRawPtr(5, 10));
+  queueOff.Push(CreateDataRawPtr(0, 5));
+  EXPECT_EQ(queueOff.Duration(), 0);
+  EXPECT_EQ(queueOff.PreciseDuration(), -1);
+
+  MediaQueue<MediaData> queueOn(true /* aEnablePreciseDuration */);
+  queueOn.Push(CreateDataRawPtr(5, 10));
+  queueOn.Push(CreateDataRawPtr(0, 5));
+  EXPECT_EQ(queueOn.Duration(), 0);
+  EXPECT_EQ(queueOn.PreciseDuration(), 10);
 }
 
 #undef EXPECT_EQUAL_SIZE_T
