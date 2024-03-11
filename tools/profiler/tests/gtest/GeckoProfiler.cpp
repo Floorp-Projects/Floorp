@@ -140,8 +140,10 @@ TEST(GeckoProfiler, ThreadRegistrationInfo)
     EXPECT_STREQ(trInfoHere.Name(), "Here");
     EXPECT_NE(trInfoHere.Name(), "Here")
         << "ThreadRegistrationInfo should keep its own copy of the name";
-    TimeStamp baseRegistrationTime =
-        baseprofiler::detail::GetThreadRegistrationTime();
+    TimeStamp baseRegistrationTime;
+#ifdef MOZ_GECKO_PROFILER
+    baseRegistrationTime = baseprofiler::detail::GetThreadRegistrationTime();
+#endif
     if (baseRegistrationTime) {
       EXPECT_EQ(trInfoHere.RegisterTime(), baseRegistrationTime);
     } else {
