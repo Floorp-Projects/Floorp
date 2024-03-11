@@ -230,6 +230,12 @@ function doPageNavigation(params) {
         observers: observers.keys(),
       },
       allFrames: true,
+      // We avoid messages from system addons event pages here, as
+      // the tests test_bug321671.xhtml and test_bug690056.xhtml do
+      // not expect those events, and so will intermittently fail.
+      // They require messages from "browsers", "test", and "" to pass.
+      // See bug 1784831 and bug 1883434 for more context.
+      messageManagerGroups: ["browsers", "test", ""],
     });
     DocShellHelpersParent.eventsToListenFor = eventsToListenFor;
     DocShellHelpersParent.observers = observers;
