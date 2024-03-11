@@ -203,6 +203,14 @@ class WebGLTexture final : public WebGLContextBoundObject,
   ~WebGLTexture() override;
 
  public:
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf mso) const {
+    return CacheInvalidator::SizeOfExcludingThis(mso) +
+           mSamplingCache.SizeOfExcludingThis(mso);
+  }
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf mso) const {
+    return mso(this) + SizeOfExcludingThis(mso);
+  }
+
   ////////////////////////////////////
   // GL calls
   bool BindTexture(TexTarget texTarget);

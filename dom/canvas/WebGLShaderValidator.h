@@ -39,7 +39,7 @@ class ShaderValidatorResults final {
 
   bool CanLinkTo(const ShaderValidatorResults& vert,
                  nsCString* const out_log) const;
-  size_t SizeOfIncludingThis(MallocSizeOf) const;
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf) const;
 };
 
 class ShaderValidator final {

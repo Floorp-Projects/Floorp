@@ -52,6 +52,13 @@ constexpr bool kIsAndroid =
     false;
 #endif
 
+constexpr bool kIsDmd =
+#ifdef MOZ_DMD
+    true;
+#else
+    false;
+#endif
+
 }  // namespace mozilla
 
 #endif  // BUILD_CONSTANTS_H_

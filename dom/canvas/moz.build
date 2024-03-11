@@ -52,6 +52,7 @@ EXPORTS.mozilla.dom += [
     "CanvasRenderingContext2D.h",
     "CanvasRenderingContextHelper.h",
     "CanvasUtils.h",
+    "DmdStdContainers.h",
     "GeneratePlaceholderCanvasData.h",
     "ImageBitmap.h",
     "ImageBitmapRenderingContext.h",
