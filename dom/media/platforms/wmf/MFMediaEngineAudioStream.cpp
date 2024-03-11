@@ -93,7 +93,7 @@ HRESULT MFMediaEngineAudioStream::CreateMediaType(const TrackInfo& aInfo,
 bool MFMediaEngineAudioStream::HasEnoughRawData() const {
   // If more than this much raw audio is queued, we'll hold off request more
   // audio.
-  return mRawDataQueueForFeedingEngine.Duration() >=
+  return mRawDataQueueForFeedingEngine.PreciseDuration() >=
          StaticPrefs::media_wmf_media_engine_raw_data_threshold_audio();
 }
 

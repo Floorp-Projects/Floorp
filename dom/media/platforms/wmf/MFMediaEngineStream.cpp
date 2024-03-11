@@ -107,7 +107,11 @@ MFMediaEngineStreamWrapper::NeedsConversion() const {
 }
 
 MFMediaEngineStream::MFMediaEngineStream()
-    : mIsShutdown(false), mIsSelected(false), mReceivedEOS(false) {
+    : mIsShutdown(false),
+      mIsSelected(false),
+      mRawDataQueueForFeedingEngine(true /* aEnablePreciseDuration */),
+      mRawDataQueueForGeneratingOutput(true /* aEnablePreciseDuration */),
+      mReceivedEOS(false) {
   MOZ_COUNT_CTOR(MFMediaEngineStream);
 }
 
@@ -489,7 +493,7 @@ void MFMediaEngineStream::NotifyNewData(MediaRawData* aSample) {
         "], queue size=%zu, queue duration=%" PRId64,
         aSample->mTime.ToMicroseconds(), aSample->GetEndTime().ToMicroseconds(),
         mRawDataQueueForFeedingEngine.GetSize(),
-        mRawDataQueueForFeedingEngine.Duration());
+        mRawDataQueueForFeedingEngine.PreciseDuration());
   if (mReceivedEOS) {
     SLOG("Receive a new data, cancel old EOS flag");
     mReceivedEOS = false;
@@ -504,7 +508,7 @@ void MFMediaEngineStream::SendRequestSampleEvent(bool aIsEnough) {
   AssertOnTaskQueue();
   SLOGV("data is %s, queue duration=%" PRId64,
         aIsEnough ? "enough" : "not enough",
-        mRawDataQueueForFeedingEngine.Duration());
+        mRawDataQueueForFeedingEngine.PreciseDuration());
   mParentSource->mRequestSampleEvent.Notify(
       SampleRequest{TrackType(), aIsEnough});
 }
