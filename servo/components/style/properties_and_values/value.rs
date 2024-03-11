@@ -276,7 +276,7 @@ impl SpecifiedValue {
             context,
             allow_computationally_dependent,
         )?;
-        Ok(value.to_variable_value(url_data))
+        Ok(value.to_variable_value())
     }
 
     /// Convert a registered custom property to a Computed custom property value, given input and a
@@ -350,14 +350,14 @@ impl ComputedValue {
         }
     }
 
-    fn to_declared_value(&self, url_data: &UrlExtraData) -> Arc<ComputedPropertyValue> {
+    fn to_declared_value(&self) -> Arc<ComputedPropertyValue> {
         if let ValueInner::Universal(ref var) = self.v {
             return Arc::clone(var);
         }
-        Arc::new(self.to_variable_value(url_data))
+        Arc::new(self.to_variable_value())
     }
 
-    fn to_variable_value(&self, url_data: &UrlExtraData) -> ComputedPropertyValue {
+    fn to_variable_value(&self) -> ComputedPropertyValue {
         debug_assert!(
             !matches!(self.v, ValueInner::Universal(..)),
             "Shouldn't be needed"
@@ -370,7 +370,7 @@ impl ComputedValue {
         let serialization_types = self.serialization_types();
         ComputedPropertyValue::new(
             self.to_css_string(),
-            url_data,
+            &self.url_data,
             serialization_types.0,
             serialization_types.1,
         )
@@ -599,11 +599,6 @@ pub struct CustomAnimatedValue {
     pub(crate) name: crate::custom_properties::Name,
     /// The computed value of the custom property.
     value: ComputedValue,
-    /// The url data where the value came from.
-    /// FIXME: This seems like it should not be needed: registered properties don't need it, and
-    /// unregistered properties animate discretely. But we need it so far because the computed
-    /// value representation isn't typed.
-    url_data: UrlExtraData,
 }
 
 impl Animate for CustomAnimatedValue {
@@ -615,9 +610,6 @@ impl Animate for CustomAnimatedValue {
         Ok(Self {
             name: self.name.clone(),
             value,
-            // NOTE: This is sketchy AF, but it's ~fine, since values that can animate (non-universal)
-            // don't need it.
-            url_data: self.url_data.clone(),
         })
     }
 }
@@ -634,7 +626,6 @@ impl CustomAnimatedValue {
         };
         Self {
             name: name.clone(),
-            url_data: value.url_data.clone(),
             value,
         }
     }
@@ -677,14 +668,12 @@ impl CustomAnimatedValue {
             .ok()
         };
 
-        let url_data = value.url_data.clone();
         let value = computed_value.unwrap_or_else(|| ComputedValue {
             v: ValueInner::Universal(Arc::clone(value)),
             url_data: value.url_data.clone(),
         });
         Some(Self {
             name: declaration.name.clone(),
-            url_data,
             value,
         })
     }
@@ -692,9 +681,7 @@ impl CustomAnimatedValue {
     pub(crate) fn to_declaration(&self) -> properties::PropertyDeclaration {
         properties::PropertyDeclaration::Custom(properties::CustomDeclaration {
             name: self.name.clone(),
-            value: properties::CustomDeclarationValue::Value(
-                self.value.to_declared_value(&self.url_data),
-            ),
+            value: properties::CustomDeclarationValue::Value(self.value.to_declared_value()),
         })
     }
 }
