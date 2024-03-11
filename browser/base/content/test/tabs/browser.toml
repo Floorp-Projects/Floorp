@@ -236,7 +236,6 @@ support-files = [
 ]
 
 ["browser_overflowScroll.js"]
-fail-if = ["a11y_checks"] # Bugs 1854233 and 1873049 scrollbutton-down/up are not labeled
 skip-if = [
   "win11_2009", # Bug 1797751
 ]
