@@ -3009,9 +3009,8 @@ pref("ui.new-webcompat-reporter.reason-dropdown.randomized", true);
 pref("browser.privatebrowsing.resetPBM.showConfirmationDialog", true);
 
 // the preferences related to the Nimbus experiment, to activate and deactivate
-// the the entire rollout or deactivate only the OS prompt (see: bug 1864216)
+// the the entire rollout (see: bug 1864216 - two prompts, 1877500 - set two in one prompt)
 pref("browser.mailto.dualPrompt", false);
-pref("browser.mailto.dualPrompt.os", false);
 // When visiting a site which uses registerProtocolHandler: Ask the user to set Firefox as
 // default mailto handler.
 pref("browser.mailto.prompt.os", true);
