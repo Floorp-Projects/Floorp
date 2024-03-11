@@ -18,5 +18,5 @@ Examples of correct code for this rule:
 .. code-block:: js
 
     require("devtools/absolute/path")
-    require("resource://gre/modules/SomeModule.jsm")
+    require("resource://gre/modules/SomeModule.sys.mjs")
     loader.lazyRequireGetter(this, "path", "devtools/absolute/path", true)

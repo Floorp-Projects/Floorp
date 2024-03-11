@@ -46,7 +46,7 @@ module.exports = {
     {
       // Use a configuration that's appropriate for modules, workers and
       // non-production files.
-      files: ["modules/*.jsm", "tests/**"],
+      files: ["tests/**"],
       rules: {
         "no-implicit-globals": "off",
       },

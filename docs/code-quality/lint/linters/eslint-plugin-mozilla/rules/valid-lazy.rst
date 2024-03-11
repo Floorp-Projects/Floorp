@@ -19,10 +19,10 @@ Examples of incorrect code for this rule:
 .. code-block:: js
 
     const lazy = {};
-    ChromeUtils.defineLazyGetter(lazy, "foo", "foo.jsm");
+    ChromeUtils.defineESModuleGetters(lazy, { foo: "foo.sys.mjs"});
 
     // Duplicate symbol foo being added to lazy.
-    ChromeUtils.defineLazyGetter(lazy, "foo", "foo1.jsm");
+    ChromeUtils.defineLazyGetter(lazy, "foo", () => {});
     if (x) {
       lazy.foo3.bar();
     }
@@ -31,12 +31,12 @@ Examples of incorrect code for this rule:
 
     const lazy = {};
     // Unused lazy property foo
-    ChromeUtils.defineLazyGetter(lazy, "foo", "foo.jsm");
+    ChromeUtils.defineESModuleGetters(lazy, { foo: "foo.sys.mjs"});
 
 .. code-block:: js
 
     const lazy = {};
-    ChromeUtils.defineLazyGetter(lazy, "foo", "foo.jsm");
+    ChromeUtils.defineESModuleGetters(lazy, { foo: "foo.sys.mjs"});
     // Used at top-level unconditionally.
     lazy.foo.bar();
 
@@ -47,7 +47,7 @@ Examples of correct code for this rule:
 
     const lazy = {};
     ChromeUtils.defineLazyGetter(lazy, "foo1", () => {});
-    XPCOMUtils.defineLazyModuleGetters(lazy, { foo2: "foo2.jsm" });
+    ChromeUtils.defineESModuleGetters(lazy, { foo2: "foo2.sys.mjs"});
 
     if (x) {
       lazy.foo1.bar();

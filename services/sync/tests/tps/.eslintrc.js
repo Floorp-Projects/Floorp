@@ -2,7 +2,7 @@
 
 module.exports = {
   globals: {
-    // Injected into tests via tps.jsm
+    // Injected into tests via tps.sys.mjs
     Addons: false,
     Addresses: false,
     Bookmarks: false,

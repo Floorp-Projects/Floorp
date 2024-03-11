@@ -27,7 +27,7 @@ module.exports = {
     "chrome-script": require("../lib/environments/chrome-script.js"),
     "chrome-worker": require("../lib/environments/chrome-worker.js"),
     "frame-script": require("../lib/environments/frame-script.js"),
-    jsm: require("../lib/environments/jsm.js"),
+    sysmjs: require("../lib/environments/sysmjs.js"),
     privileged: require("../lib/environments/privileged.js"),
     "process-script": require("../lib/environments/process-script.js"),
     "remote-page": require("../lib/environments/remote-page.js"),
