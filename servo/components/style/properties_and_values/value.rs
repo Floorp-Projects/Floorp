@@ -221,6 +221,13 @@ impl<Component> Value<Component> {
     pub fn new(v: ValueInner<Component>, url_data: UrlExtraData) -> Self {
         Self { v, url_data }
     }
+
+    /// Creates a new registered custom property value presumed to have universal syntax.
+    pub fn universal(var: Arc<ComputedPropertyValue>) -> Self {
+        let url_data = var.url_data.clone();
+        let v = ValueInner::Universal(var);
+        Self { v, url_data }
+    }
 }
 
 /// A specified registered custom property value.
@@ -281,7 +288,7 @@ impl SpecifiedValue {
 
     /// Convert a registered custom property to a Computed custom property value, given input and a
     /// property registration.
-    fn get_computed_value<'i, 't>(
+    pub fn get_computed_value<'i, 't>(
         input: &mut CSSParser<'i, 't>,
         registration: &PropertyRegistrationData,
         url_data: &UrlExtraData,
@@ -357,13 +364,17 @@ impl ComputedValue {
         Arc::new(self.to_variable_value())
     }
 
-    fn to_variable_value(&self) -> ComputedPropertyValue {
-        debug_assert!(
-            !matches!(self.v, ValueInner::Universal(..)),
-            "Shouldn't be needed"
-        );
-        // TODO(zrhoffman, 1864736): Preserve the computed type instead of converting back to a
-        // string.
+    /// Returns the contained variable value if it exists, otherwise `None`.
+    pub fn as_universal(&self) -> Option<&Arc<ComputedPropertyValue>> {
+        if let ValueInner::Universal(ref var) = self.v {
+            Some(var)
+        } else {
+            None
+        }
+    }
+
+    /// Convert to an untyped variable value.
+    pub fn to_variable_value(&self) -> ComputedPropertyValue {
         if let ValueInner::Universal(ref value) = self.v {
             return (**value).clone();
         }
@@ -617,16 +628,11 @@ impl Animate for CustomAnimatedValue {
 impl CustomAnimatedValue {
     pub(crate) fn from_computed(
         name: &crate::custom_properties::Name,
-        value: &Arc<ComputedPropertyValue>,
+        value: &ComputedValue,
     ) -> Self {
-        let value = ComputedValue {
-            // FIXME: Should probably preserve type-ness in ComputedPropertyValue.
-            v: ValueInner::Universal(value.clone()),
-            url_data: value.url_data.clone(),
-        };
         Self {
             name: name.clone(),
-            value,
+            value: value.clone(),
         }
     }
 
