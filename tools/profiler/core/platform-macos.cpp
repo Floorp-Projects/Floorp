@@ -15,7 +15,6 @@
 #include <semaphore.h>
 #include <signal.h>
 #include <libkern/OSAtomic.h>
-#include <libproc.h>
 #include <mach/mach.h>
 #include <mach/semaphore.h>
 #include <mach/task.h>
@@ -83,13 +82,12 @@ static RunningTimes GetProcessRunningTimesDiff(
   {
     AUTO_PROFILER_STATS(GetProcessRunningTimes_task_info);
 
-    static const auto pid = getpid();
-    struct proc_taskinfo pti;
-    if ((unsigned long)proc_pidinfo(pid, PROC_PIDTASKINFO, 0, &pti,
-                                    PROC_PIDTASKINFO_SIZE) >=
-        PROC_PIDTASKINFO_SIZE) {
-      newRunningTimes.SetThreadCPUDelta(pti.pti_total_user +
-                                        pti.pti_total_system);
+    task_power_info_data_t task_power_info;
+    mach_msg_type_number_t count = TASK_POWER_INFO_COUNT;
+    if (task_info(mach_task_self(), TASK_POWER_INFO,
+                  (task_info_t)&task_power_info, &count) == KERN_SUCCESS) {
+      newRunningTimes.SetThreadCPUDelta(task_power_info.total_user +
+                                        task_power_info.total_system);
     }
     newRunningTimes.SetPostMeasurementTimeStamp(TimeStamp::Now());
   };
