@@ -20,6 +20,7 @@
 #include "mozilla/StaticPrefs_widget.h"
 #include "DBusMenu.h"
 #include "nsLayoutUtils.h"
+#include "nsGtkUtils.h"
 #include "nsGtkKeyUtils.h"
 
 #include <dlfcn.h>
@@ -813,7 +814,11 @@ RefPtr<DBusMenuBar> DBusMenuBar::Create(dom::Element* aElement) {
   return self;
 }
 
-DBusMenuBar::~DBusMenuBar() = default;
+DBusMenuBar::~DBusMenuBar() {
+#  ifdef MOZ_WAYLAND
+  MozClearPointer(mAnnotation, xdg_dbus_annotation_v1_destroy);
+#  endif
+}
 #endif
 
 }  // namespace mozilla::widget
