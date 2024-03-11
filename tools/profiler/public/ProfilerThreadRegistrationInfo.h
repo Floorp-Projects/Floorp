@@ -46,7 +46,10 @@ class ThreadRegistrationInfo {
 
  private:
   static TimeStamp ExistingRegisterTimeOrNow() {
-    TimeStamp registerTime = baseprofiler::detail::GetThreadRegistrationTime();
+    TimeStamp registerTime;
+#ifdef MOZ_GECKO_PROFILER
+    registerTime = baseprofiler::detail::GetThreadRegistrationTime();
+#endif
     if (!registerTime) {
       registerTime = TimeStamp::Now();
     }
