@@ -784,7 +784,9 @@ class MarkerSchema {
     Generic = 1,
     UserMarkers = 1 << 1,
     Memory = 1 << 2,
-    Scheduling = 1 << 3
+    Scheduling = 1 << 3,
+    Text = 1 << 4,
+    Tracing = 1 << 5
   };
 
   // Flags which describe additional information for a PayloadField.
