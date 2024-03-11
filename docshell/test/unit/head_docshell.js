@@ -42,6 +42,36 @@ const SEARCH_CONFIG = [
   },
 ];
 
+const CONFIG_V2 = [
+  {
+    recordType: "engine",
+    identifier: "test_urifixup_search_engine_app_provided",
+    base: {
+      name: "test_urifixup_search_engine_app_provided",
+      urls: {
+        search: {
+          base: "https://www.example.org/",
+          searchTermParamName: "search",
+        },
+      },
+    },
+    variants: [
+      {
+        environment: { allRegionsAndLocales: true },
+      },
+    ],
+  },
+  {
+    recordType: "defaultEngines",
+    globalDefault: "test_urifixup_search_engine_app_provided",
+    specificDefaults: [],
+  },
+  {
+    recordType: "engineOrders",
+    orders: [],
+  },
+];
+
 async function setupSearchService() {
   SearchTestUtils.init(this);
 
@@ -54,7 +84,11 @@ async function setupSearchService() {
     "42"
   );
 
-  await SearchTestUtils.useTestEngines(".", null, SEARCH_CONFIG);
+  await SearchTestUtils.useTestEngines(
+    ".",
+    null,
+    SearchUtils.newSearchConfigEnabled ? CONFIG_V2 : SEARCH_CONFIG
+  );
   await AddonTestUtils.promiseStartupManager();
   await Services.search.init();
 }

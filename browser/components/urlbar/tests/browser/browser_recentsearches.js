@@ -17,6 +17,40 @@ const CONFIG_DEFAULT = [
   },
 ];
 
+const CONFIG_DEFAULT_V2 = [
+  {
+    recordType: "engine",
+    identifier: "basic",
+    base: {
+      name: "basic",
+      urls: {
+        search: {
+          base: "https://example.com",
+          searchTermParamName: "q",
+        },
+        trending: {
+          base: "https://example.com/browser/browser/components/search/test/browser/trendingSuggestionEngine.sjs",
+          method: "GET",
+        },
+      },
+    },
+    variants: [
+      {
+        environment: { allRegionsAndLocales: true },
+      },
+    ],
+  },
+  {
+    recordType: "defaultEngines",
+    globalDefault: "basic",
+    specificDefaults: [],
+  },
+  {
+    recordType: "engineOrders",
+    orders: [],
+  },
+];
+
 const TOP_SITES = [
   "https://example-1.com/",
   "https://example-2.com/",
@@ -45,7 +79,9 @@ add_setup(async () => {
   });
 
   SearchTestUtils.useMockIdleService();
-  await SearchTestUtils.updateRemoteSettingsConfig(CONFIG_DEFAULT);
+  await SearchTestUtils.updateRemoteSettingsConfig(
+    SearchUtils.newSearchConfigEnabled ? CONFIG_DEFAULT_V2 : CONFIG_DEFAULT
+  );
   Services.telemetry.clearScalars();
 
   registerCleanupFunction(async () => {

@@ -80,6 +80,7 @@ export const NON_SPLIT_ENGINE_IDS = [
   "engine-same-name-gd",
   "engine-purpose",
   "engine-fr",
+  "fixup_search",
 ];
 
 const TOPIC_LOCALES_CHANGE = "intl:app-locales-changed";
