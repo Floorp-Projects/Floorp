@@ -250,6 +250,11 @@
     <!-- Content description for the translate page toolbar button that opens the translations dialog when no translation has occurred. -->
     <string name="browser_toolbar_translate">Traduki paĝon</string>
 
+    <!-- Content description (not visible, for screen readers etc.) for the translate page toolbar button that opens the translations dialog when the page is translated successfully.
+         The first parameter is the name of the language that is displayed in the original page. (For example: English)
+         The second parameter is the name of the language which the page was translated to. (For example: French) -->
+    <string name="browser_toolbar_translated_successfully">Paĝo tradukita el la %1$s en la %2$sn.</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Elektita lingvo</string>
@@ -326,11 +331,21 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
     <string name="juno_onboarding_privacy_notice_text">Rimarko de Firefox pri privateco</string>
-    <!-- Text for the button to set firefox as default browser on the device -->
+    <!-- Description for learning more about our privacy notice. -->
+    <string name="juno_onboarding_privacy_notice_text_2" moz:removedIn="125" tools:ignore="UnusedResources">Pli da informo en nia rimarko pri privateco</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Ni amas teni vin sekura</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="UnusedResources">Malkovru kial milionoj da personoj amas Firefox</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources">Sekura retumo kun pli da elektebloj</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_3">Nia retumilo, subtenata de nenprofitcela organizo, helpas eviti ke entreprenoj kaŝe sekvu vin tra la reto.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources">Pli ol 100 milionoj da personoj protektas sian privatecon per la elekto de retumilo farita de neprofitcela organizo.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources">Kio pri konataj spuriloj? Aŭtomate blokitaj.  Kio pri etendaĵoj? Testu ĉiujn 700. Kaj pri PDFs? Nia integrita legilo faciligas pritrakti ilin.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">Nia retumilo, subtenata de nenprofitcela organizo, helpas eviti ke entreprenoj kaŝe sekvu vin tra la reto.\n\nPli da informo en nia rimarko pri privateco.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
@@ -689,9 +704,9 @@
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">legosignojn</string>
     <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins">legitimilojn</string>
+    <string name="preferences_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">legitimilojn</string>
     <!-- Preference for syncing passwords -->
-    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">Pasvortoj</string>
+    <string name="preferences_sync_logins_2">Pasvortoj</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">Malfermitaj langetoj</string>
     <!-- Preference for signing out -->
@@ -717,9 +732,9 @@
     <string name="default_device_name_2">%1$s en %2$s %3$s</string>
 
     <!-- Preference for syncing credit cards -->
-    <string name="preferences_sync_credit_cards">Kreditkartoj</string>
+    <string name="preferences_sync_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Kreditkartoj</string>
     <!-- Preference for syncing payment methods -->
-    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">Pagmetodoj</string>
+    <string name="preferences_sync_credit_cards_2">Pagmetodoj</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">Adresoj</string>
 
@@ -1670,13 +1685,13 @@
     <string name="add_to_homescreen_description_2">Vi povas facile aldoni tiun ĉi retejon al la hejmpaĝo de via aparato, por havi tujan aliron kaj retumi pli rapide per kvazaŭprograma sperto.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords">Legitimiloj kaj pasvortoj</string>
+    <string name="preferences_passwords_logins_and_passwords" moz:RemovedIn="125" tools:ignore="UnusedResources">Legitimiloj kaj pasvortoj</string>
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">Pasvortoj</string>
+    <string name="preferences_passwords_logins_and_passwords_2">Pasvortoj</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins">Konservi legitimilojn kaj pasvortojn</string>
+    <string name="preferences_passwords_save_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Konservi legitimilojn kaj pasvortojn</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">Konservi pasvortojn</string>
+    <string name="preferences_passwords_save_logins_2">Konservi pasvortojn</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Demandi antaŭ ol konservi</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1691,48 +1706,48 @@
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill_description">Plenigi nomojn de uzanto kaj pasvortojn en aliaj programoj en via aparato.</string>
     <!-- Preference option for adding a login -->
-    <string name="preferences_logins_add_login">Aldoni legitimilon</string>
+    <string name="preferences_logins_add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Aldoni legitimilon</string>
 
     <!-- Preference option for adding a password -->
-    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">Aldoni pasvorton</string>
+    <string name="preferences_logins_add_login_2">Aldoni pasvorton</string>
 
-    <!-- Preference for syncing saved logins in Fenix -->
-    <string name="preferences_passwords_sync_logins">Speguli legitimilojn</string>
     <!-- Preference for syncing saved passwords in Fenix -->
-    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">Speguli pasvortojn</string>
+    <string name="preferences_passwords_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Speguli legitimilojn</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2">Speguli pasvortojn</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices">Speguli legitimilojn inter aparatoj</string>
+    <string name="preferences_passwords_sync_logins_across_devices" moz:RemovedIn="125" tools:ignore="UnusedResources">Speguli legitimilojn inter aparatoj</string>
     <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices_2" tools:ignore="UnusedResources">Speguli pasvortojn inter aparatoj</string>
+    <string name="preferences_passwords_sync_logins_across_devices_2">Speguli pasvortojn inter aparatoj</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins">Konservitaj legitimiloj</string>
+    <string name="preferences_passwords_saved_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Konservitaj legitimiloj</string>
     <!-- Preference to access list of saved passwords -->
-    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">Konservitaj pasvortoj</string>
+    <string name="preferences_passwords_saved_logins_2">Konservitaj pasvortoj</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text">La legitimiloj, kiujn vi konservas aŭ spegulas al %s, aperos ĉi tie.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_text" moz:RemovedIn="125" tools:ignore="UnusedResources">La legitimiloj, kiujn vi konservas aŭ spegulas al %s, aperos ĉi tie.</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text_2" tools:ignore="UnusedResources">La pasvortoj konservitaj aŭ spegulitaj al %s estos listigitaj ĉi tie. Ĉiuj konservitaj pasvortoj estos ĉifritaj.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_text_2">La pasvortoj konservitaj aŭ spegulitaj al %s estos listigitaj ĉi tie. Ĉiuj konservitaj pasvortoj estos ĉifritaj.</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Pli da informo pri Spegulado.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link" moz:RemovedIn="125" tools:ignore="UnusedResources">Pli da informo pri Spegulado.</string>
 
     <!-- Clickable text for opening an external link for more information about Sync. -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2" tools:ignore="UnusedResources">Pli da informo pri spegulado</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2">Pli da informo pri spegulado</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Esceptoj</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty">Nekonservitaj nomoj de uzantoj kaj pasvortoj estos montritaj ĉi tie.</string>
+    <string name="preferences_passwords_exceptions_description_empty" moz:RemovedIn="125" tools:ignore="UnusedResources">Nekonservitaj nomoj de uzantoj kaj pasvortoj estos montritaj ĉi tie.</string>
     <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
-    <string name="preferences_passwords_exceptions_description_empty_2" tools:ignore="UnusedResources">%s ne konservos pasvortojn por retejoj listigitaj ĉi tie.</string>
+    <string name="preferences_passwords_exceptions_description_empty_2">%s ne konservos pasvortojn por retejoj listigitaj ĉi tie.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description">Nomoj de uzanto kaj pasvortoj por tiuj ĉi retejoj ne estos konservitaj.</string>
+    <string name="preferences_passwords_exceptions_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Nomoj de uzanto kaj pasvortoj por tiuj ĉi retejoj ne estos konservitaj.</string>
     <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
-    <string name="preferences_passwords_exceptions_description_2" tools:ignore="UnusedResources">%s ne konservos pasvortojn por tiuj ĉi retejoj.</string>
+    <string name="preferences_passwords_exceptions_description_2">%s ne konservos pasvortojn por tiuj ĉi retejoj.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Forigi ĉiujn esceptojn</string>
     <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search">Serĉi legitimilojn</string>
+    <string name="preferences_passwords_saved_logins_search" moz:RemovedIn="125" tools:ignore="UnusedResources">Serĉi legitimilojn</string>
     <!-- Hint for search box in passwords list -->
-    <string name="preferences_passwords_saved_logins_search_2" tools:ignore="UnusedResources">Serĉi pasvortojn</string>
+    <string name="preferences_passwords_saved_logins_search_2">Serĉi pasvortojn</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Retejo</string>
     <!-- The header for the username for a login -->
@@ -1760,18 +1775,18 @@
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Kaŝi pasvorton</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message">Malŝlosu por vidi viajn konservitajn legitimilojn</string>
+    <string name="logins_biometric_prompt_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Malŝlosu por vidi viajn konservitajn legitimilojn</string>
 
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
-    <string name="logins_biometric_prompt_message_2" tools:ignore="UnusedResources">Malŝlosi por vidi viajn konservitajn pasvortojn</string>
+    <string name="logins_biometric_prompt_message_2">Malŝlosi por vidi viajn konservitajn pasvortojn</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title">Protektu viajn legitimilojn kaj pasvortojn</string>
+    <string name="logins_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Protektu viajn legitimilojn kaj pasvortojn</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">Protektu viajn konservitajn pasvortojn</string>
+    <string name="logins_warning_dialog_title_2">Protektu viajn konservitajn pasvortojn</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message">Difinu blokan desegnon, PIN aŭ pasvorton por protekti viajn konservitajn legitimilojn kaj pasvortojn se iu alia havas vian aparaton.</string>
+    <string name="logins_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Difinu blokan desegnon, PIN aŭ pasvorton por protekti viajn konservitajn legitimilojn kaj pasvortojn se iu alia havas vian aparaton.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message_2" tools:ignore="UnusedResources">Difinu blokan desegnon, PIN aŭ pasvorton por protekti viajn konservitajn pasvortojn se iu alia havas vian aparaton.</string>
+    <string name="logins_warning_dialog_message_2">Difinu blokan desegnon, PIN aŭ pasvorton por protekti viajn konservitajn pasvortojn se iu alia havas vian aparaton.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Poste</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1788,10 +1803,10 @@
     <string name="saved_logins_sort_strategy_last_used">Laste uzita</string>
 
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Ordigi menuon de legitimiloj</string>
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Ordigi menuon de legitimiloj</string>
 
     <!-- Content description (not visible, for screen readers etc.) -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2" tools:ignore="UnusedResources">Menuo por ordigi pasvortojn</string>
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2">Menuo por ordigi pasvortojn</string>
 
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
@@ -1799,42 +1814,42 @@
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">Adresoj</string>
     <!-- Preference and title for managing the settings for credit cards -->
-    <string name="preferences_credit_cards">Kreditkartoj</string>
+    <string name="preferences_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Kreditkartoj</string>
     <!-- Preference and title for managing the settings for payment methods -->
-    <string name="preferences_credit_cards_2" tools:ignore="UnusedResources">Pagmetodoj</string>
+    <string name="preferences_credit_cards_2">Pagmetodoj</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards">Konservi kaj aŭtomate plenigi kreditkartojn</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Konservi kaj aŭtomate plenigi kreditkartojn</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_2" tools:ignore="UnusedResources">Konservi kaj aŭtomate plenigi pagmetodojn</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_2">Konservi kaj aŭtomate plenigi pagmetodojn</string>
     <!-- Preference summary for saving and autofilling credit card data -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary">La datumoj estas ĉifritaj</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">La datumoj estas ĉifritaj</string>
     <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2" tools:ignore="UnusedResources">%s ĉifras ĉiujn pagmetodojn, kiujn vi konservis</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">%s ĉifras ĉiujn pagmetodojn, kiujn vi konservis</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Speguli kreditkartojn inter aparatoj</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">Speguli kreditkartojn</string>
     <!-- Preference option for adding a credit card -->
-    <string name="preferences_credit_cards_add_credit_card">Aldoni kreditkarton</string>
+    <string name="preferences_credit_cards_add_credit_card" moz:RemovedIn="125" tools:ignore="UnusedResources">Aldoni kreditkarton</string>
     <!-- Preference option for adding a card -->
-    <string name="preferences_credit_cards_add_credit_card_2" tools:ignore="UnusedResources">Aldoni kreditkarton</string>
+    <string name="preferences_credit_cards_add_credit_card_2">Aldoni kreditkarton</string>
     <!-- Preference option for managing saved credit cards -->
-    <string name="preferences_credit_cards_manage_saved_cards">Administri konservitajn kreditkartojn</string>
+    <string name="preferences_credit_cards_manage_saved_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Administri konservitajn kreditkartojn</string>
     <!-- Preference option for managing saved cards -->
-    <string name="preferences_credit_cards_manage_saved_cards_2" tools:ignore="UnusedResources">Administri kartojn</string>
+    <string name="preferences_credit_cards_manage_saved_cards_2">Administri kartojn</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Aldoni adreson</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Administri adresojn</string>
     <!-- Preference for saving and autofilling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses">Konservi kaj aŭtomate plenigi adresojn</string>
+    <string name="preferences_addresses_save_and_autofill_addresses" moz:RemovedIn="125" tools:ignore="UnusedResources">Konservi kaj aŭtomate plenigi adresojn</string>
     <!-- Preference for saving and filling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">Konservi kaj aŭtomate plenigi adresojn</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_2">Konservi kaj aŭtomate plenigi adresojn</string>
     <!-- Preference summary for saving and autofilling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary">Inkluzivi informojn kiel numerojn, retpoŝtajn kaj liverajn adresojn</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Inkluzivi informojn kiel numerojn, retpoŝtajn kaj liverajn adresojn</string>
 
     <!-- Preference summary for saving and filling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary_2" tools:ignore="UnusedResources">Telefonnumeroj kaj retpoŝtaj adresoj inkluzivitaj</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_summary_2">Telefonnumeroj kaj retpoŝtaj adresoj inkluzivitaj</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Aldoni kreditkarton</string>
@@ -1856,9 +1871,9 @@
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Forigi kreditkarton</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation">Ĉu vi certe volas forigi tiun ĉi kreditkarton?</string>
+    <string name="credit_cards_delete_dialog_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Ĉu vi certe volas forigi tiun ĉi kreditkarton?</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation_2" tools:ignore="UnusedResources">Ĉu forigi karton?</string>
+    <string name="credit_cards_delete_dialog_confirmation_2">Ĉu forigi karton?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Forigi</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1871,24 +1886,24 @@
     <string name="credit_cards_saved_cards">Konservitaj kreditkartoj</string>
 
     <!-- Error message for credit card number validation -->
-    <string name="credit_cards_number_validation_error_message">Bonvolu tajpi validan kreditkaran numeron</string>
+    <string name="credit_cards_number_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Bonvolu tajpi validan kreditkaran numeron</string>
 
     <!-- Error message for card number validation -->
-    <string name="credit_cards_number_validation_error_message_2" tools:ignore="UnusedResources">Tajpu validan numeron de karto</string>
+    <string name="credit_cards_number_validation_error_message_2">Tajpu validan numeron de karto</string>
     <!-- Error message for credit card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message">Bonvolu plenigi tiun ĉi kampon</string>
+    <string name="credit_cards_name_on_card_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Bonvolu plenigi tiun ĉi kampon</string>
     <!-- Error message for card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message_2" tools:ignore="UnusedResources">Aldoni nomon</string>
+    <string name="credit_cards_name_on_card_validation_error_message_2">Aldoni nomon</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Malŝlosu por vidi viajn konservitajn kreditkartojn</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title">Sekurigu viajn kreditkartojn</string>
+    <string name="credit_cards_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Sekurigu viajn kreditkartojn</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title_2" tools:ignore="UnusedResources">Protektu viajn konservitajn pagmetodojn</string>
+    <string name="credit_cards_warning_dialog_title_2">Protektu viajn konservitajn pagmetodojn</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message">Difinu blokan desegnon, PIN aŭ pasvorton por protekti viajn konservitajn kreditkartojn se iu alia havas vian aparaton.</string>
+    <string name="credit_cards_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Difinu blokan desegnon, PIN aŭ pasvorton por protekti viajn konservitajn kreditkartojn se iu alia havas vian aparaton.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message_3" tools:ignore="UnusedResources">Difinu blokan desegnon, PIN aŭ pasvorton por protekti viajn konservitajn pagmetodojn se iu alia havas vian aparaton.</string>
+    <string name="credit_cards_warning_dialog_message_3">Difinu blokan desegnon, PIN aŭ pasvorton por protekti viajn konservitajn pagmetodojn se iu alia havas vian aparaton.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Agordi nun</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1896,10 +1911,10 @@
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
     <string name="credit_cards_biometric_prompt_message_pin">Malbloki vian aparaton</string>
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
-    <string name="credit_cards_biometric_prompt_unlock_message">Malŝlosu por uzi la konservitan informon pri kreditkartojn</string>
+    <string name="credit_cards_biometric_prompt_unlock_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Malŝlosu por uzi la konservitan informon pri kreditkartojn</string>
 
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
-    <string name="credit_cards_biometric_prompt_unlock_message_2" tools:ignore="UnusedResources">Malŝlosu por uzi konservitajn pagmetodojn</string>
+    <string name="credit_cards_biometric_prompt_unlock_message_2">Malŝlosu por uzi konservitajn pagmetodojn</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Aldoni adreson</string>
     <!-- Title of the "Edit address" screen -->
@@ -1907,11 +1922,13 @@
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Administri adresojn</string>
     <!-- The header for the first name of an address -->
-    <string name="addresses_first_name">Persona nomo</string>
+    <string name="addresses_first_name" moz:removedIn="125" tools:ignore="UnusedResources">Persona nomo</string>
     <!-- The header for the middle name of an address -->
-    <string name="addresses_middle_name">Dua nomo</string>
+    <string name="addresses_middle_name" moz:removedIn="125" tools:ignore="UnusedResources">Dua nomo</string>
     <!-- The header for the last name of an address -->
-    <string name="addresses_last_name">Familia nomo</string>
+    <string name="addresses_last_name" moz:removedIn="125" tools:ignore="UnusedResources">Familia nomo</string>
+    <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
+    <string name="addresses_name">Nomo</string>
     <!-- The header for the street address of an address -->
     <string name="addresses_street_address">Strata adreso</string>
     <!-- The header for the city of an address -->
@@ -1936,9 +1953,9 @@
     <!-- The text for the "Delete address" button for deleting an address -->
     <string name="addressess_delete_address_button">Forigi adreson</string>
     <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message">Ĉu vi certe volas forigi tiun ĉi adreson?</string>
+    <string name="addressess_confirm_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Ĉu vi certe volas forigi tiun ĉi adreson?</string>
     <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message_2" tools:ignore="UnusedResources">Ĉu forigi tiun ĉi adreson?</string>
+    <string name="addressess_confirm_dialog_message_2">Ĉu forigi tiun ĉi adreson?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">Forigi</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -2037,49 +2054,49 @@
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">Modifi</string>
     <!-- Message in delete confirmation dialog for logins -->
-    <string name="login_deletion_confirmation">Ĉu vi certe volas forigi tiun ĉi legitimilon?</string>
+    <string name="login_deletion_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Ĉu vi certe volas forigi tiun ĉi legitimilon?</string>
     <!-- Message in delete confirmation dialog for password -->
-    <string name="login_deletion_confirmation_2" tools:ignore="UnusedResources">Ĉu vi certe volas forigi tiun ĉi pasvorton?</string>
+    <string name="login_deletion_confirmation_2">Ĉu vi certe volas forigi tiun ĉi pasvorton?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Forigi</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Nuligi</string>
     <!--  The saved login options menu description. -->
-    <string name="login_options_menu">Preferoj de komenco de seanco</string>
+    <string name="login_options_menu" moz:RemovedIn="125" tools:ignore="UnusedResources">Preferoj de komenco de seanco</string>
     <!--  The saved password options menu description. -->
-    <string name="login_options_menu_2" tools:ignore="UnusedResources">Pasvortaj elektebloj</string>
+    <string name="login_options_menu_2">Pasvortaj elektebloj</string>
     <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description">La modifebla teksta kampo de la retadreso por komenci seancon.</string>
+    <string name="saved_login_hostname_description" moz:RemovedIn="125" tools:ignore="UnusedResources">La modifebla teksta kampo de la retadreso por komenci seancon.</string>
     <!--  The editable text field for a website address. -->
-    <string name="saved_login_hostname_description_3" tools:ignore="UnusedResources">La modifebla teksta kampo de la reteja retadreso.</string>
+    <string name="saved_login_hostname_description_3">La modifebla teksta kampo de la reteja retadreso.</string>
     <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description">La modifebla teksta kampo de la nomo de uzanto por komenci seancon.</string>
+    <string name="saved_login_username_description" moz:RemovedIn="125" tools:ignore="UnusedResources">La modifebla teksta kampo de la nomo de uzanto por komenci seancon.</string>
     <!--  The editable text field for a username. -->
-    <string name="saved_login_username_description_3" tools:ignore="UnusedResources">La modifebla teksta kampo de la uzanto.</string>
+    <string name="saved_login_username_description_3">La modifebla teksta kampo de la uzanto.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description">La modifebla teksta kampo de la pasvorto por komenci seancon.</string>
+    <string name="saved_login_password_description" moz:RemovedIn="125" tools:ignore="UnusedResources">La modifebla teksta kampo de la pasvorto por komenci seancon.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description_2" tools:ignore="UnusedResources">La modifebla teksta kampo de la pasvorto.</string>
+    <string name="saved_login_password_description_2">La modifebla teksta kampo de la pasvorto.</string>
     <!--  The button description to save changes to an edited login. -->
-    <string name="save_changes_to_login">Konservi ŝanĝojn je komenco de seanco.</string>
+    <string name="save_changes_to_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Konservi ŝanĝojn je komenco de seanco.</string>
     <!--  The button description to save changes to an edited password. -->
-    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">Konservi ŝanĝojn.</string>
+    <string name="save_changes_to_login_2">Konservi ŝanĝojn.</string>
     <!--  The page title for editing a saved login. -->
-    <string name="edit">Modifi</string>
+    <string name="edit" moz:RemovedIn="125" tools:ignore="UnusedResources">Modifi</string>
     <!--  The page title for editing a saved password. -->
-    <string name="edit_2" tools:ignore="UnusedResources">Modifi pasvorton</string>
+    <string name="edit_2">Modifi pasvorton</string>
     <!--  The page title for adding new login. -->
-    <string name="add_login">Aldoni novan legitimilon</string>
+    <string name="add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Aldoni novan legitimilon</string>
     <!--  The page title for adding new password. -->
-    <string name="add_login_2" tools:ignore="UnusedResources">Aldoni pasvorton</string>
+    <string name="add_login_2">Aldoni pasvorton</string>
     <!--  The error message in add/edit login view when password field is blank. -->
-    <string name="saved_login_password_required">Pasvorto postulata</string>
+    <string name="saved_login_password_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Pasvorto postulata</string>
     <!--  Error text displayed underneath the password field when it is in an error case. -->
-    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">Tajpu pasvorton</string>
+    <string name="saved_login_password_required_2">Tajpu pasvorton</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required">Nomo de uzanto postulata</string>
+    <string name="saved_login_username_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Nomo de uzanto postulata</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">Tajpu nomon de uzanto</string>
+    <string name="saved_login_username_required_2">Tajpu nomon de uzanto</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Nomo de servilo postulata</string>
     <!--  The error message in add login view when hostname field is blank. -->
@@ -2194,7 +2211,7 @@
     <string name="radio_preference_info_content_description">Alklaku por havi pli da informo</string>
 
     <!-- Content description for the action bar "up" button -->
-    <string name="action_bar_up_description">Iri supren</string>
+    <string name="action_bar_up_description" moz:removedIn="124" tools:ignore="UnusedResources">Iri supren</string>
 
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">Fermi</string>
@@ -2234,8 +2251,6 @@
     <string name="review_quality_check_grade_title">Kiel fidindaj estas tiuj recenzoj?</string>
     <!-- Title for when the rating has been updated by the review checker -->
     <string name="review_quality_check_adjusted_rating_title">Alĝustigita taksado</string>
-    <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
-    <string name="review_quality_check_adjusted_rating_description" moz:RemovedIn="122" tools:ignore="UnusedResources">Nefidindaj recenzoj forigitaj</string>
     <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
     <string name="review_quality_check_adjusted_rating_description_2">Bazita sur fidindaj recenzoj</string>
     <!-- Title for list of highlights from a product's review emphasizing a product's important traits. -->
@@ -2293,10 +2308,6 @@
     <string name="review_quality_check_product_availability_warning_body">Se vi vidas ke denove estas stoko de tiu ĉi produko, raportu tion kaj ni kontrolos la recenzojn.</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action_2">Raporti ke denove estas stoko de tiu ĉi produkto</string>
-    <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
-    <string name="review_quality_check_reanalysis_in_progress_warning_title" moz:RemovedIn="122">Kvalito de recenzoj estas taksata</string>
-    <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_title" moz:RemovedIn="122">Kvalito de recenzoj estas taksata</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. The parameter is the percentage progress (0-100%) of the analysis process (e.g. 56%). -->
     <string name="review_quality_check_analysis_in_progress_warning_title_2">Kvalito de recenzoj estas taksata (%s)</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
@@ -2343,13 +2354,19 @@
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Pli da informo</string>
 
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_contextual_onboarding_caption">Se vi elektas “Jes, provi ĝin” vi akceptas la %2$s kaj %3$s de %1$s de Mozilla.</string>
+    <string name="review_quality_check_contextual_onboarding_caption" moz:RemovedIn="123" tools:ignore="UnusedResources">Se vi elektas “Jes, provi ĝin” vi akceptas la %2$s kaj %3$s de %1$s de Mozilla.</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
     <string name="review_quality_check_contextual_onboarding_caption_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Se vi elektas “Jes, provi ĝin” vi akceptas la jenon el %1$s:</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
+    <string name="review_quality_check_contextual_onboarding_caption_3" moz:RemovedIn="124" tools:ignore="UnusedResources">Se vi elektas “Jes, provi ĝin” vi akceptas la jenon: %2$s de %1$s kaj %4$s de %3$s.</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
+    <string name="review_quality_check_contextual_onboarding_caption_4">Se vi elektas “Jes, provi ĝin” vi akceptas la jenon: %2$s de %1$s kaj %4$s de %3$s.</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy">politiko pri privateco</string>
+    <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="123" tools:ignore="UnusedResources">politiko pri privateco</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Politiko pri privateco</string>
+    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy notice. -->
+    <string name="review_quality_check_contextual_onboarding_privacy_policy_3">rimarko pri privateco</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
     <string name="review_quality_check_contextual_onboarding_terms_use">kondiĉoj de uzo</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
@@ -2420,6 +2437,10 @@
     <!-- Translation request dialog -->
     <!-- Title for the translation dialog that allows a user to translate the webpage. -->
     <string name="translations_bottom_sheet_title">Ĉu traduki ĉi tiun paĝon?</string>
+    <!-- Title for the translation dialog after a translation was completed successfully.
+    The first parameter is the name of the language that the page was translated from, for example, "French".
+    The second parameter is the name of the language that the page was translated to, for example, "English". -->
+    <string name="translations_bottom_sheet_title_translation_completed">Paĝo tradukita el la %1$s en la %2$sn</string>
     <!-- Title for the translation dialog that allows a user to translate the webpage when a user uses the translation feature the first time. The first parameter is the name of the application, for example, "Fenix". -->
     <string name="translations_bottom_sheet_title_first_time">Provu privatajn tradukojn en %1$s</string>
     <!-- Additional information on the translation dialog that appears when a user uses the translation feature the first time. The first parameter is clickable text with a link, for example, "Learn more". -->
@@ -2432,6 +2453,8 @@
     <string name="translations_bottom_sheet_translate_to">Traduki en</string>
     <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button">Ne nun</string>
+    <!-- Button text on the translations dialog to restore the translated website back to the original untranslated version. -->
+    <string name="translations_bottom_sheet_negative_button_restore">Montri originalon</string>
     <!-- Button text on the translations dialog when a translation error appears, used to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button_error">Farita</string>
     <!-- Button text on the translations dialog to begin a translation of the website. -->
@@ -2452,6 +2475,16 @@
     <string name="translation_error_language_not_supported_warning_text">Bedaŭrinde ni ankoraŭ ne subtenas %1$s.</string>
     <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
     <string name="translation_error_language_not_supported_learn_more">Pli da informo</string>
+
+
+    <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
+    <string name="translation_in_progress_snackbar">Traduko…</string>
+    <!-- Title for the data saving mode warning dialog used in the translation request dialog.
+    This dialog will be presented when the user attempts to perform
+    a translation without the necessary language files downloaded first when Android's data saver mode is enabled and the user is not using WiFi.
+    The first parameter is the size in kilobytes or megabytes of the language file. -->
+    <string name="translations_download_language_file_dialog_title">Ĉu elŝuti lingvon dum datumŝpara reĝimo (%1$s)?</string>
+
 
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->

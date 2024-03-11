@@ -253,6 +253,11 @@
     <!-- Content description for the translate page toolbar button that opens the translations dialog when no translation has occurred. -->
     <string name="browser_toolbar_translate">Перакласці старонку</string>
 
+    <!-- Content description (not visible, for screen readers etc.) for the translate page toolbar button that opens the translations dialog when the page is translated successfully.
+         The first parameter is the name of the language that is displayed in the original page. (For example: English)
+         The second parameter is the name of the language which the page was translated to. (For example: French) -->
+    <string name="browser_toolbar_translated_successfully">Старонка перакладзена з %1$s на %2$s.</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Абраная мова</string>
@@ -330,11 +335,19 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
     <string name="juno_onboarding_privacy_notice_text">Паведамленне аб прыватнасці Firefox</string>
-    <!-- Text for the button to set firefox as default browser on the device -->
+    <!-- Description for learning more about our privacy notice. -->
+    <string name="juno_onboarding_privacy_notice_text_2" moz:removedIn="125" tools:ignore="UnusedResources">Даведайцеся больш у нашым паведамленні аб прыватнасці</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Нам падабаецца забяспечваць вашу бяспеку</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="UnusedResources">Даведайцеся, чаму мільёны людзей любяць Firefox</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_3">Наш браўзер, падтрыманы некамерцыйнай арганізацыяй, дапамагае не даваць кампаніям таемна сачыць за вамі ў сеціве.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources">Больш за 100 мільёнаў чалавек абараняюць сваю прыватнасць, выбіраючы браўзер, які падтрымліваецца некамерцыйнай арганізацыяй.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources">Вядомыя трэкеры? Блакуюцца аўтаматычна. Пашырэнні? Паспрабуйце ўсе 700. PDF? Наш убудаваны чытальнік дазваляе лёгка імі кіраваць.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">Наш браўзер, падтрыманы некамерцыйнай арганізацыяй, дапамагае абмяжоўваць кампаніі ад сачэння за вамі ў Інтэрнэце.\n\nДаведайцеся больш у нашым паведамленні аб прыватнасці.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
@@ -693,9 +706,9 @@
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Закладкі</string>
     <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins">Лагіны</string>
+    <string name="preferences_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Лагіны</string>
     <!-- Preference for syncing passwords -->
-    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">Паролі</string>
+    <string name="preferences_sync_logins_2">Паролі</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">Адкрытыя карткі</string>
     <!-- Preference for signing out -->
@@ -721,9 +734,9 @@
     <string name="default_device_name_2">%1$s на %2$s %3$s</string>
 
     <!-- Preference for syncing credit cards -->
-    <string name="preferences_sync_credit_cards">Крэдытныя карты</string>
+    <string name="preferences_sync_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Крэдытныя карты</string>
     <!-- Preference for syncing payment methods -->
-    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">Спосабы аплаты</string>
+    <string name="preferences_sync_credit_cards_2">Спосабы аплаты</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">Адрасы</string>
 
@@ -1678,13 +1691,13 @@
     <string name="add_to_homescreen_description_2">Вы можаце лёгка дадаць гэты вэб-сайт на хатні экран вашай прылады, каб мець да яго імгненны доступ і аглядаць хутчэй, нібыта гэта асобная праграма.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords">Лагіны і паролі</string>
+    <string name="preferences_passwords_logins_and_passwords" moz:RemovedIn="125" tools:ignore="UnusedResources">Лагіны і паролі</string>
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">Паролі</string>
+    <string name="preferences_passwords_logins_and_passwords_2">Паролі</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins">Захаванне лагінаў і пароляў</string>
+    <string name="preferences_passwords_save_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Захаванне лагінаў і пароляў</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">Захоўваць паролі</string>
+    <string name="preferences_passwords_save_logins_2">Захоўваць паролі</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Пытаць пра захаванне</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1699,36 +1712,42 @@
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill_description">Запаўняць імёны карыстальнікаў і паролі ў іншых праграмах на вашай прыладзе.</string>
     <!-- Preference option for adding a login -->
-    <string name="preferences_logins_add_login">Дадаць лагін</string>
+    <string name="preferences_logins_add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Дадаць лагін</string>
 
     <!-- Preference option for adding a password -->
-    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">Дадаць пароль</string>
+    <string name="preferences_logins_add_login_2">Дадаць пароль</string>
 
-    <!-- Preference for syncing saved logins in Fenix -->
-    <string name="preferences_passwords_sync_logins">Сінхранізацыя лагінаў</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Сінхранізацыя лагінаў</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2">Сінхранізаваць паролі</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices">Сінхранізаваць лагіны паміж прыладамі</string>
+    <string name="preferences_passwords_sync_logins_across_devices" moz:RemovedIn="125" tools:ignore="UnusedResources">Сінхранізаваць лагіны паміж прыладамі</string>
+    <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices_2">Сінхранізаваць паролі паміж прыладамі</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins">Захаваныя лагіны</string>
+    <string name="preferences_passwords_saved_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Захаваныя лагіны</string>
     <!-- Preference to access list of saved passwords -->
-    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">Захаваныя паролі</string>
+    <string name="preferences_passwords_saved_logins_2">Захаваныя паролі</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text">Лагіны, якія вы захаваеце альбо сінхранізуеце праз %s, з’явяцца тут.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_text" moz:RemovedIn="125" tools:ignore="UnusedResources">Лагіны, якія вы захаваеце альбо сінхранізуеце праз %s, з’явяцца тут.</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Даведацца больш пра сінхранізацыю.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link" moz:RemovedIn="125" tools:ignore="UnusedResources">Даведацца больш пра сінхранізацыю.</string>
+    <!-- Clickable text for opening an external link for more information about Sync. -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2">Даведайцеся больш пра сінхранізацыю</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Выключэнні</string>
 
     <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty">Не захаваныя лагіны і паролі з’явяцца тут.</string>
+    <string name="preferences_passwords_exceptions_description_empty" moz:RemovedIn="125" tools:ignore="UnusedResources">Не захаваныя лагіны і паролі з’явяцца тут.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description">Лагіны і паролі не будуць захаваны для гэтых сайтаў.</string>
+    <string name="preferences_passwords_exceptions_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Лагіны і паролі не будуць захаваны для гэтых сайтаў.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Выдаліць усе выключэнні</string>
     <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search">Шукаць лагіны</string>
+    <string name="preferences_passwords_saved_logins_search" moz:RemovedIn="125" tools:ignore="UnusedResources">Шукаць лагіны</string>
     <!-- Hint for search box in passwords list -->
-    <string name="preferences_passwords_saved_logins_search_2" tools:ignore="UnusedResources">Пошук пароляў</string>
+    <string name="preferences_passwords_saved_logins_search_2">Пошук пароляў</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Сайт</string>
     <!-- The header for the username for a login -->
@@ -1757,16 +1776,16 @@
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Схаваць пароль</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message">Разблакуйце, каб пабачыць захаваныя лагіны</string>
+    <string name="logins_biometric_prompt_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Разблакуйце, каб пабачыць захаваныя лагіны</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
-    <string name="logins_biometric_prompt_message_2" tools:ignore="UnusedResources">Разблакуйце, каб пабачыць захаваныя паролі</string>
+    <string name="logins_biometric_prompt_message_2">Разблакуйце, каб пабачыць захаваныя паролі</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title">Абараніце свае лагіны і паролі</string>
+    <string name="logins_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Абараніце свае лагіны і паролі</string>
 
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">Абараніце захаваныя паролі</string>
+    <string name="logins_warning_dialog_title_2">Абараніце захаваныя паролі</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message">Наладзьце графічны ключ, пін ці пароль для блакавання прылады, каб абараніць захаваныя лагіны і паролі ад крадзяжу, калі Вашай прыладай завалодае хтосьці іншы.</string>
+    <string name="logins_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Наладзьце графічны ключ, пін ці пароль для блакавання прылады, каб абараніць захаваныя лагіны і паролі ад крадзяжу, калі Вашай прыладай завалодае хтосьці іншы.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Пазней</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1783,7 +1802,7 @@
     <string name="saved_logins_sort_strategy_last_used">Апошняе выкарыстанне</string>
 
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Меню сартавання лагінаў</string>
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Меню сартавання лагінаў</string>
 
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
@@ -1791,40 +1810,40 @@
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">Адрасы</string>
     <!-- Preference and title for managing the settings for credit cards -->
-    <string name="preferences_credit_cards">Крэдытныя карты</string>
+    <string name="preferences_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Крэдытныя карты</string>
 
     <!-- Preference and title for managing the settings for payment methods -->
-    <string name="preferences_credit_cards_2" tools:ignore="UnusedResources">Спосабы аплаты</string>
+    <string name="preferences_credit_cards_2">Спосабы аплаты</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards">Захоўваць і аўтаматычна запаўняць карты</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Захоўваць і аўтаматычна запаўняць карты</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_2" tools:ignore="UnusedResources">Захоўваць і запаўняць спосабы аплаты</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_2">Захоўваць і запаўняць спосабы аплаты</string>
     <!-- Preference summary for saving and autofilling credit card data -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary">Дадзеныя зашыфраваны</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Дадзеныя зашыфраваны</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Сінхранізаваць карты паміж прыладамі</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">Сінхранізаваць карты</string>
     <!-- Preference option for adding a credit card -->
-    <string name="preferences_credit_cards_add_credit_card">Дадаць крэдытную карту</string>
+    <string name="preferences_credit_cards_add_credit_card" moz:RemovedIn="125" tools:ignore="UnusedResources">Дадаць крэдытную карту</string>
     <!-- Preference option for adding a card -->
-    <string name="preferences_credit_cards_add_credit_card_2" tools:ignore="UnusedResources">Дадаць карту</string>
+    <string name="preferences_credit_cards_add_credit_card_2">Дадаць карту</string>
     <!-- Preference option for managing saved credit cards -->
-    <string name="preferences_credit_cards_manage_saved_cards">Кіраванне захаванымі картамі</string>
+    <string name="preferences_credit_cards_manage_saved_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Кіраванне захаванымі картамі</string>
 
     <!-- Preference option for managing saved cards -->
-    <string name="preferences_credit_cards_manage_saved_cards_2" tools:ignore="UnusedResources">Кіраваць картамі</string>
+    <string name="preferences_credit_cards_manage_saved_cards_2">Кіраваць картамі</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Дадаць адрас</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Кіраваць адрасамі</string>
     <!-- Preference for saving and autofilling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses">Захоўваць і аўтаматычна запаўняць адрасы</string>
+    <string name="preferences_addresses_save_and_autofill_addresses" moz:RemovedIn="125" tools:ignore="UnusedResources">Захоўваць і аўтаматычна запаўняць адрасы</string>
 
     <!-- Preference for saving and filling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">Захоўваць і запаўняць адрасы</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_2">Захоўваць і запаўняць адрасы</string>
     <!-- Preference summary for saving and autofilling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary">Уключаць звесткі, такія як нумары, адрасы электроннай пошты і дастаўкі</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Уключаць звесткі, такія як нумары, адрасы электроннай пошты і дастаўкі</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Дадаць карту</string>
@@ -1846,9 +1865,9 @@
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Выдаліць карту</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation">Вы ўпэўнены, што жадаеце выдаліць гэту крэдытную карту?</string>
+    <string name="credit_cards_delete_dialog_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Вы ўпэўнены, што жадаеце выдаліць гэту крэдытную карту?</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation_2" tools:ignore="UnusedResources">Выдаліць карту?</string>
+    <string name="credit_cards_delete_dialog_confirmation_2">Выдаліць карту?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Выдаліць</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1861,22 +1880,22 @@
     <string name="credit_cards_saved_cards">Захаваныя карты</string>
 
     <!-- Error message for credit card number validation -->
-    <string name="credit_cards_number_validation_error_message">Калі ласка, увядзіце сапраўдны нумар крэдытнай карты</string>
+    <string name="credit_cards_number_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Калі ласка, увядзіце сапраўдны нумар крэдытнай карты</string>
 
     <!-- Error message for card number validation -->
-    <string name="credit_cards_number_validation_error_message_2" tools:ignore="UnusedResources">Увядзіце сапраўдны нумар карты</string>
+    <string name="credit_cards_number_validation_error_message_2">Увядзіце сапраўдны нумар карты</string>
     <!-- Error message for credit card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message">Калі ласка, запоўніце гэтае поле</string>
+    <string name="credit_cards_name_on_card_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Калі ласка, запоўніце гэтае поле</string>
     <!-- Error message for card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message_2" tools:ignore="UnusedResources">Дадайце імя</string>
+    <string name="credit_cards_name_on_card_validation_error_message_2">Дадайце імя</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Разблакуйце, каб пабачыць захаваныя карты</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title">Абараніце свае крэдытныя карты</string>
+    <string name="credit_cards_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Абараніце свае крэдытныя карты</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title_2" tools:ignore="UnusedResources">Абараніце захаваныя спосабы аплаты</string>
+    <string name="credit_cards_warning_dialog_title_2">Абараніце захаваныя спосабы аплаты</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message">Наладзьце графічны ключ, пін або пароль для блакавання прылады, каб абараніць захаваныя крэдытныя карты, калі хтось іншы атрымае доступ да вашай прылады.</string>
+    <string name="credit_cards_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Наладзьце графічны ключ, пін або пароль для блакавання прылады, каб абараніць захаваныя крэдытныя карты, калі хтось іншы атрымае доступ да вашай прылады.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Наладзіць зараз</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1885,7 +1904,7 @@
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
     <string name="credit_cards_biometric_prompt_message_pin">Разблакуйце сваю прыладу</string>
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
-    <string name="credit_cards_biometric_prompt_unlock_message">Разблакуйце, каб выкарыстаць захаваную інфармацыю крэдытнай карты</string>
+    <string name="credit_cards_biometric_prompt_unlock_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Разблакуйце, каб выкарыстаць захаваную інфармацыю крэдытнай карты</string>
 
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Дадаць адрас</string>
@@ -1894,11 +1913,13 @@
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Кіраваць адрасамі</string>
     <!-- The header for the first name of an address -->
-    <string name="addresses_first_name">Імя</string>
+    <string name="addresses_first_name" moz:removedIn="125" tools:ignore="UnusedResources">Імя</string>
     <!-- The header for the middle name of an address -->
-    <string name="addresses_middle_name">Імя па бацьку</string>
+    <string name="addresses_middle_name" moz:removedIn="125" tools:ignore="UnusedResources">Імя па бацьку</string>
     <!-- The header for the last name of an address -->
-    <string name="addresses_last_name">Прозвішча</string>
+    <string name="addresses_last_name" moz:removedIn="125" tools:ignore="UnusedResources">Прозвішча</string>
+    <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
+    <string name="addresses_name">Назва</string>
     <!-- The header for the street address of an address -->
     <string name="addresses_street_address">Вуліца</string>
     <!-- The header for the city of an address -->
@@ -1923,9 +1944,9 @@
     <string name="addressess_delete_address_button">Выдаліць адрас</string>
 
     <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message">Вы ўпэўнены, што жадаеце выдаліць гэты адрас?</string>
+    <string name="addressess_confirm_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Вы ўпэўнены, што жадаеце выдаліць гэты адрас?</string>
     <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message_2" tools:ignore="UnusedResources">Выдаліць гэты адрас?</string>
+    <string name="addressess_confirm_dialog_message_2">Выдаліць гэты адрас?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">Выдаліць</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -2029,37 +2050,49 @@
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">Змяніць</string>
     <!-- Message in delete confirmation dialog for logins -->
-    <string name="login_deletion_confirmation">Вы сапраўды хочаце выдаліць гэтае лагін?</string>
+    <string name="login_deletion_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Вы сапраўды хочаце выдаліць гэтае лагін?</string>
+    <!-- Message in delete confirmation dialog for password -->
+    <string name="login_deletion_confirmation_2">Вы ўпэўнены, што хочаце выдаліць гэты пароль?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Выдаліць</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Адмяніць</string>
     <!--  The saved login options menu description. -->
-    <string name="login_options_menu">Налады лагіна</string>
+    <string name="login_options_menu" moz:RemovedIn="125" tools:ignore="UnusedResources">Налады лагіна</string>
+    <!--  The saved password options menu description. -->
+    <string name="login_options_menu_2">Параметры пароля</string>
     <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description">Тэкставае поле для рэдагавання вэб-адраса для ўваходу ў сістэму.</string>
+    <string name="saved_login_hostname_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Тэкставае поле для рэдагавання вэб-адраса для ўваходу ў сістэму.</string>
+    <!--  The editable text field for a website address. -->
+    <string name="saved_login_hostname_description_3">Тэкставае поле для рэдагавання адраса сайта.</string>
     <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description">Тэкставае поле для рэдагавання імені карыстальніка для ўваходу ў сістэму.</string>
+    <string name="saved_login_username_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Тэкставае поле для рэдагавання імені карыстальніка для ўваходу ў сістэму.</string>
+    <!--  The editable text field for a username. -->
+    <string name="saved_login_username_description_3">Тэкставае поле для рэдагавання імя карыстальніка.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description">Тэкставае поле для рэдагавання пароля для ўваходу ў сістэму.</string>
+    <string name="saved_login_password_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Тэкставае поле для рэдагавання пароля для ўваходу ў сістэму.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description_2">Тэкставае поле для рэдагавання пароля.</string>
     <!--  The button description to save changes to an edited login. -->
-    <string name="save_changes_to_login">Захаваць змены ва ўваходных даных.</string>
+    <string name="save_changes_to_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Захаваць змены ва ўваходных даных.</string>
     <!--  The button description to save changes to an edited password. -->
-    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">Захаваць змены.</string>
+    <string name="save_changes_to_login_2">Захаваць змены.</string>
     <!--  The page title for editing a saved login. -->
-    <string name="edit">Рэдагаванне</string>
+    <string name="edit" moz:RemovedIn="125" tools:ignore="UnusedResources">Рэдагаванне</string>
+    <!--  The page title for editing a saved password. -->
+    <string name="edit_2">Змяніць пароль</string>
     <!--  The page title for adding new login. -->
-    <string name="add_login">Дадаць новы лагін</string>
+    <string name="add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Дадаць новы лагін</string>
     <!--  The page title for adding new password. -->
-    <string name="add_login_2" tools:ignore="UnusedResources">Дадаць пароль</string>
+    <string name="add_login_2">Дадаць пароль</string>
     <!--  The error message in add/edit login view when password field is blank. -->
-    <string name="saved_login_password_required">Патрабуецца пароль</string>
+    <string name="saved_login_password_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Патрабуецца пароль</string>
     <!--  Error text displayed underneath the password field when it is in an error case. -->
-    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">Увядзіце пароль</string>
+    <string name="saved_login_password_required_2">Увядзіце пароль</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required">Патрабуецца імя карыстальніка</string>
+    <string name="saved_login_username_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Патрабуецца імя карыстальніка</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">Увядзіце імя карыстальніка</string>
+    <string name="saved_login_username_required_2">Увядзіце імя карыстальніка</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Патрабуецца імя хоста</string>
     <!--  The error message in add login view when hostname field is blank. -->
@@ -2173,7 +2206,7 @@
     <string name="radio_preference_info_content_description">Пстрыкніце, каб атрымаць падрабязнасці</string>
 
     <!-- Content description for the action bar "up" button -->
-    <string name="action_bar_up_description">Перайсці ўверх</string>
+    <string name="action_bar_up_description" moz:removedIn="124" tools:ignore="UnusedResources">Перайсці ўверх</string>
 
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">Закрыць</string>
@@ -2213,8 +2246,6 @@
     <string name="review_quality_check_grade_title">Наколькі надзейныя гэтыя водгукі?</string>
     <!-- Title for when the rating has been updated by the review checker -->
     <string name="review_quality_check_adjusted_rating_title">Скарэктаваны рэйтынг</string>
-    <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
-    <string name="review_quality_check_adjusted_rating_description" moz:RemovedIn="122" tools:ignore="UnusedResources">Ненадзейныя водгукі выдалены</string>
     <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
     <string name="review_quality_check_adjusted_rating_description_2">На аснове надзейных водгукаў</string>
     <!-- Title for list of highlights from a product's review emphasizing a product's important traits. -->
@@ -2271,10 +2302,8 @@
     <string name="review_quality_check_product_availability_warning_body">Калі вы ўбачыце гэты прадукт ізноў у наяўнасці, паведаміце нам пра гэта, і мы будзем правяраць водгукі.</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action_2">Паведаміць, што прадукт ёсць у наяўнасці</string>
-    <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
-    <string name="review_quality_check_reanalysis_in_progress_warning_title" moz:RemovedIn="122">Праверка якасці водгукаў</string>
-    <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_title" moz:RemovedIn="122">Праверка якасці водгукаў</string>
+    <!-- Title for warning card informing the user that the current product's analysis is still processing. The parameter is the percentage progress (0-100%) of the analysis process (e.g. 56%). -->
+    <string name="review_quality_check_analysis_in_progress_warning_title_2">Праверка якасці водгукаў (%s)</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
     <string name="review_quality_check_analysis_in_progress_warning_body">Гэта можа заняць каля 60 секунд.</string>
     <!-- Title for info card displayed after the user reports a product is back in stock. -->
@@ -2318,13 +2347,19 @@
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Даведацца больш</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_contextual_onboarding_caption">Выбіраючы «Так, паспрабаваць», вы пагаджаецеся з %2$s і %3$s ад %1$s ад Mozilla.</string>
+    <string name="review_quality_check_contextual_onboarding_caption" moz:RemovedIn="123" tools:ignore="UnusedResources">Выбіраючы «Так, паспрабаваць», вы пагаджаецеся з %2$s і %3$s ад %1$s ад Mozilla.</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
     <string name="review_quality_check_contextual_onboarding_caption_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Выбіраючы «Так, паспрабаваць», вы згаджаецеся з наступным ад %1$s:</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
+    <string name="review_quality_check_contextual_onboarding_caption_3" moz:RemovedIn="124" tools:ignore="UnusedResources">Выбіраючы «Так, паспрабаваць», вы пагаджаецеся з %2$s ад %1$s і %4$s ад %3$s.</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
+    <string name="review_quality_check_contextual_onboarding_caption_4">Выбіраючы «Так, паспрабаваць», вы пагаджаецеся з %2$s ад %1$s і %4$s ад %3$s.</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy">палітыкай прыватнасці</string>
+    <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="123" tools:ignore="UnusedResources">палітыкай прыватнасці</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Палітыка прыватнасці</string>
+    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy notice. -->
+    <string name="review_quality_check_contextual_onboarding_privacy_policy_3">паведамленні аб прыватнасці</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
     <string name="review_quality_check_contextual_onboarding_terms_use">ўмовамі выкарыстання</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
@@ -2394,6 +2429,14 @@
     <!-- Translation request dialog -->
     <!-- Title for the translation dialog that allows a user to translate the webpage. -->
     <string name="translations_bottom_sheet_title">Перакласці старонку?</string>
+    <!-- Title for the translation dialog after a translation was completed successfully.
+    The first parameter is the name of the language that the page was translated from, for example, "French".
+    The second parameter is the name of the language that the page was translated to, for example, "English". -->
+    <string name="translations_bottom_sheet_title_translation_completed">Старонка перакладзена з %1$s на %2$s</string>
+    <!-- Title for the translation dialog that allows a user to translate the webpage when a user uses the translation feature the first time. The first parameter is the name of the application, for example, "Fenix". -->
+    <string name="translations_bottom_sheet_title_first_time">Паспрабуйце прыватныя пераклады ў %1$s</string>
+    <!-- Additional information on the translation dialog that appears when a user uses the translation feature the first time. The first parameter is clickable text with a link, for example, "Learn more". -->
+    <string name="translations_bottom_sheet_info_message">Дзеля вашай прыватнасці пераклады ніколі не пакідаюць вашу прыладу. Новыя мовы і паляпшэнні хутка! %1$s</string>
     <!-- Text that links to additional information about the Firefox translations feature. -->
     <string name="translations_bottom_sheet_info_message_learn_more">Падрабязней</string>
 
@@ -2403,6 +2446,8 @@
     <string name="translations_bottom_sheet_translate_to">Перакласці на</string>
     <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button">Не зараз</string>
+    <!-- Button text on the translations dialog to restore the translated website back to the original untranslated version. -->
+    <string name="translations_bottom_sheet_negative_button_restore">Паказаць арыгінал</string>
     <!-- Button text on the translations dialog when a translation error appears, used to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button_error">Гатова</string>
     <!-- Button text on the translations dialog to begin a translation of the website. -->
@@ -2413,12 +2458,28 @@
     <string name="translations_bottom_sheet_translating_in_progress">Пераклад</string>
     <!-- Button content description (not visible, for screen readers etc.) for the translations dialog translate button that indicates a translation is currently in progress. -->
     <string name="translations_bottom_sheet_translating_in_progress_content_description">Ідзе пераклад</string>
+    <!-- Default dropdown option when initially selecting a language from the translations dialog language selection dropdown. -->
+    <string name="translations_bottom_sheet_default_dropdown_selection">Выбраць мову</string>
     <!-- The title of the warning card informs the user that a translation could not be completed. -->
     <string name="translation_error_could_not_translate_warning_text">Узнікла праблема з перакладам. Калі ласка, паспрабуйце яшчэ раз.</string>
+    <!-- The title of the warning card informs the user that the list of languages cannot be loaded. -->
+    <string name="translation_error_could_not_load_languages_warning_text">Не ўдалося загрузіць мовы. Праверце інтэрнэт-злучэнне і паўтарыце спробу.</string>
     <!-- The title of the warning card informs the user that a language is not supported. The first parameter is the name of the language that is not supported. -->
     <string name="translation_error_language_not_supported_warning_text">На жаль, мы пакуль не падтрымліваем %1$s.</string>
     <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
     <string name="translation_error_language_not_supported_learn_more">Падрабязней</string>
+
+
+    <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
+    <string name="translation_in_progress_snackbar">Пераклад…</string>
+
+
+    <!-- Title for the data saving mode warning dialog used in the translation request dialog.
+    This dialog will be presented when the user attempts to perform
+    a translation without the necessary language files downloaded first when Android's data saver mode is enabled and the user is not using WiFi.
+    The first parameter is the size in kilobytes or megabytes of the language file. -->
+    <string name="translations_download_language_file_dialog_title">Сцягнуць мову ў рэжыме эканоміі трафіку (%1$s)?</string>
+
 
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->
@@ -2431,6 +2492,10 @@
     <string name="translation_option_bottom_sheet_never_translate_in_language">Ніколі не перакладаць %1$s</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to never translate the site the user is currently visiting. -->
     <string name="translation_option_bottom_sheet_never_translate_site">Ніколі не перакладаць гэты сайт</string>
+    <!-- Toggle switch description that will appear under the "Never translate these sites" settings toggle switch to provide more information on how this setting interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_never_translate_site_description">Перавызначае ўсе іншыя налады</string>
+    <!-- Toggle switch description that will appear under the "Never translate" and "Always translate" toggle switch settings to provide more information on how these  settings interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_description">Перавызначае прапановы перакладу</string>
     <!-- Button text for the button that will take the user to the translation settings dialog. -->
     <string name="translation_option_bottom_sheet_translation_settings">Налады перакладу</string>
     <!-- Button text for the button that will take the user to a website to learn more about how translations works in the given app. The first parameter is the name of the application, for example, "Fenix". -->
@@ -2441,6 +2506,8 @@
     <string name="translation_settings_toolbar_title">Пераклады</string>
     <!-- Toggle switch label that indicates that the browser should signal or indicate when a translation is possible for any page. -->
     <string name="translation_settings_offer_to_translate">Прапаноўваць пераклад, калі гэта магчыма</string>
+    <!-- Toggle switch label that indicates that downloading files required for translating is permitted when using data saver mode in Android. -->
+    <string name="translation_settings_always_download">Заўсёды сцягваць мовы ў рэжыме эканоміі трафіку</string>
     <!-- Section header text that begins the section of a list of different options the user may select to adjust their translation preferences. -->
     <string name="translation_settings_translation_preference">Налады перакладу</string>
     <!-- Button text for the button that will take the user to the automatic translations settings dialog. On the automatic translations settings dialog, the user can set if translations should occur automatically for a given language. -->
@@ -2515,6 +2582,8 @@
     <!-- Button text on the dialog used by the translations feature to cancel deleting a language. -->
     <string name="delete_language_file_dialog_negative_button_text">Скасаваць</string>
 
+    <!-- Checkbox label text on the data saving mode warning dialog used by the translations feature. This checkbox allows users to ignore the data usage warnings. -->
+    <string name="download_language_file_dialog_checkbox_text">Заўсёды сцягваць у рэжыме эканоміі трафіку</string>
     <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file. -->
     <string name="download_language_file_dialog_positive_button_text">Сцягнуць</string>
     <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file and perform a translation. -->
@@ -2539,4 +2608,14 @@
     <string name="debug_drawer_tab_tools_tab_count_private">Прыватныя</string>
     <!-- The total tab count category in the tab count section in Tab Tools. -->
     <string name="debug_drawer_tab_tools_tab_count_total">Усяго</string>
-    </resources>
+    <!-- The title of the tab creation tool section in Tab Tools. -->
+    <string name="debug_drawer_tab_tools_tab_creation_tool_title">Інструмент стварэння картак</string>
+    <!-- The label of the text field in the tab creation tool. -->
+    <string name="debug_drawer_tab_tools_tab_creation_tool_text_field_label">Колькасць картак для стварэння</string>
+    <!-- The button text to add tabs to the active tab group in the tab creation tool. -->
+    <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_active">Дадаць да актыўных картак</string>
+    <!-- The button text to add tabs to the inactive tab group in the tab creation tool. -->
+    <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_inactive">Дадаць да неактыўных картак</string>
+    <!-- The button text to add tabs to the private tab group in the tab creation tool. -->
+    <string name="debug_drawer_tab_tools_tab_creation_tool_button_text_private">Дадаць да прыватных картак</string>
+</resources>

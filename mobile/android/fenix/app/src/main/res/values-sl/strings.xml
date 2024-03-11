@@ -2425,6 +2425,8 @@
     <string name="translations_bottom_sheet_translate_to">Ciljni jezik</string>
     <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button">Ne zdaj</string>
+    <!-- Button text on the translations dialog to restore the translated website back to the original untranslated version. -->
+    <string name="translations_bottom_sheet_negative_button_restore">Prikaži izvirnik</string>
     <!-- Button text on the translations dialog when a translation error appears, used to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button_error">Končano</string>
     <!-- Button text on the translations dialog to begin a translation of the website. -->
@@ -2446,6 +2448,10 @@
     <string name="translation_error_language_not_supported_warning_text">%1$s žal še ni podprt jezik.</string>
     <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
     <string name="translation_error_language_not_supported_learn_more">Več o tem</string>
+
+
+    <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
+    <string name="translation_in_progress_snackbar">Prevajanje …</string>
 
 
     <!-- Translations options dialog -->

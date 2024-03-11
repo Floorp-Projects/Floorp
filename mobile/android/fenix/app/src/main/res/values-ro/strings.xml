@@ -203,7 +203,6 @@
     <!-- Content description (not visible, for screen readers etc.): Search engine icon. The first parameter is the search engine name (for example: DuckDuckGo). -->
     <string name="search_engine_icon_content_description" tools:ignore="UnusedResources">Motor de căutare %s</string>
 
-    <!-- Text for the button to set firefox as default browser on the device -->
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Ne place să te protejăm</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
@@ -357,7 +356,7 @@
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Marcaje</string>
     <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins">Date de autentificare</string>
+    <string name="preferences_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Date de autentificare</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">File deschise</string>
     <!-- Preference for signing out -->
@@ -381,6 +380,9 @@
         The first parameter is the application name, the second is the device manufacturer name
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s pe %2$s %3$s</string>
+
+    <!-- Preference for syncing payment methods -->
+    <string name="preferences_sync_credit_cards_2">Metode de plată</string>
 
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
@@ -1033,34 +1035,34 @@
     <string name="add_to_homescreen_description_2">Poți adăuga cu ușurință acest site web în ecranul de start al dispozitivului pentru acces instant și o navigare mai rapidă, ca și cum ai fi într-o aplicație.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords">Date de autentificare și parole</string>
+    <string name="preferences_passwords_logins_and_passwords" moz:RemovedIn="125" tools:ignore="UnusedResources">Date de autentificare și parole</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins">Salvează datele de autentificare și parolele</string>
+    <string name="preferences_passwords_save_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Salvează datele de autentificare și parolele</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Întreabă pentru salvare</string>
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Nu salva niciodată</string>
 
-    <!-- Preference for syncing saved logins in Fenix -->
-    <string name="preferences_passwords_sync_logins">Sincronizează datele de autentificare</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Sincronizează datele de autentificare</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices">Sincronizează datele de autentificare între dispozitive</string>
+    <string name="preferences_passwords_sync_logins_across_devices" moz:RemovedIn="125" tools:ignore="UnusedResources">Sincronizează datele de autentificare între dispozitive</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins">Date de autentificare salvate</string>
+    <string name="preferences_passwords_saved_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Date de autentificare salvate</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text">Aici vor apărea datele de autentificare pe care le salvezi sau le sincronizezi în %s.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_text" moz:RemovedIn="125" tools:ignore="UnusedResources">Aici vor apărea datele de autentificare pe care le salvezi sau le sincronizezi în %s.</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Află mai multe despre Sync.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link" moz:RemovedIn="125" tools:ignore="UnusedResources">Află mai multe despre Sync.</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Excepții</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty">Aici vor apărea datele de autentificare și parolele nesalvate.</string>
+    <string name="preferences_passwords_exceptions_description_empty" moz:RemovedIn="125" tools:ignore="UnusedResources">Aici vor apărea datele de autentificare și parolele nesalvate.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description">Datele de autentificare și parolele nu vor fi salvate pentru aceste site-uri.</string>
+    <string name="preferences_passwords_exceptions_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Datele de autentificare și parolele nu vor fi salvate pentru aceste site-uri.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Șterge toate excepțiile</string>
     <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search">Caută date de autentificare</string>
+    <string name="preferences_passwords_saved_logins_search" moz:RemovedIn="125" tools:ignore="UnusedResources">Caută date de autentificare</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Site</string>
     <!-- The header for the username for a login -->
@@ -1082,12 +1084,12 @@
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Ascunde parola</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message">Deblochează pentru a vizualiza datele de autentificare salvate</string>
+    <string name="logins_biometric_prompt_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Deblochează pentru a vizualiza datele de autentificare salvate</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title">Securizează-ți datele de autentificare și parolele</string>
+    <string name="logins_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Securizează-ți datele de autentificare și parolele</string>
 
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message">Configurează un șablon de blocare a dispozitivului, un PIN sau o parolă pentru a-ți proteja datele de autentificare și parolele salvate împotriva accesării de către altcineva care are dispozitivul.</string>
+    <string name="logins_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Configurează un șablon de blocare a dispozitivului, un PIN sau o parolă pentru a-ți proteja datele de autentificare și parolele salvate împotriva accesării de către altcineva care are dispozitivul.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Mai târziu</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1104,7 +1106,12 @@
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
     <string name="saved_logins_sort_strategy_last_used">Folosite ultima dată</string>
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Meniu de sortare a datelor de autentificare</string>
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Meniu de sortare a datelor de autentificare</string>
+
+    <!-- Preference and title for managing the settings for payment methods -->
+    <string name="preferences_credit_cards_2">Metode de plată</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_2">Salvează și completează metodele de plată</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Adaugă un motor de căutare</string>
@@ -1163,24 +1170,24 @@
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">Editează</string>
     <!-- Message in delete confirmation dialog for logins -->
-    <string name="login_deletion_confirmation">Sigur vrei să ștergi aceste date de autentificare?</string>
+    <string name="login_deletion_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Sigur vrei să ștergi aceste date de autentificare?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Șterge</string>
 
     <!--  The saved login options menu description. -->
-    <string name="login_options_menu">Opțiuni de autentificare</string>
+    <string name="login_options_menu" moz:RemovedIn="125" tools:ignore="UnusedResources">Opțiuni de autentificare</string>
     <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description">Câmpul de text editabil pentru adresa web a datelor de autentificare.</string>
+    <string name="saved_login_hostname_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Câmpul de text editabil pentru adresa web a datelor de autentificare.</string>
     <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description">Câmpul de text editabil pentru numele de utilizator al datelor de autentificare.</string>
+    <string name="saved_login_username_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Câmpul de text editabil pentru numele de utilizator al datelor de autentificare.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description">Câmp de text editabil pentru parola datelor de autentificare.</string>
+    <string name="saved_login_password_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Câmp de text editabil pentru parola datelor de autentificare.</string>
     <!--  The button description to save changes to an edited login. -->
-    <string name="save_changes_to_login">Salvează modificările datelor de autentificare.</string>
+    <string name="save_changes_to_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Salvează modificările datelor de autentificare.</string>
     <!--  The page title for editing a saved login. -->
-    <string name="edit">Editează</string>
+    <string name="edit" moz:RemovedIn="125" tools:ignore="UnusedResources">Editează</string>
     <!--  The error message in add/edit login view when password field is blank. -->
-    <string name="saved_login_password_required">Necesită o parolă</string>
+    <string name="saved_login_password_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Necesită o parolă</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Căutare vocală</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -1224,5 +1231,12 @@
     <string name="remove_home_collection_placeholder_content_description">Elimină</string>
 
     <!-- Translations feature-->
+
+
+    <!-- Toggle switch label that allows a user to set the setting if they would like the browser to always offer or suggest translations when available. -->
+    <string name="translation_option_bottom_sheet_always_translate">Oferă întotdeauna traducerea</string>
+
+    <!-- Toggle switch description that will appear under the "Never translate" and "Always translate" toggle switch settings to provide more information on how these  settings interacts with other settings. -->
+    <string name="translation_option_bottom_sheet_switch_description">Suprascrie oferirea traducerii</string>
 
     </resources>

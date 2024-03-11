@@ -1549,7 +1549,7 @@
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_5">Illar as cookies entre sitios</string>
     <!-- Preference for Global Privacy Control for the custom privacy settings for Global Privacy Control. '&amp;' is replaced with the ampersand symbol: &-->
-    <string name="preference_enhanced_tracking_protection_custom_global_privacy_control">Dille aos sitios web que non compartan nin vendan datos</string>
+    <string name="preference_enhanced_tracking_protection_custom_global_privacy_control">Dígalle aos sitios web que non compartan nin vendan datos</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">Contido de rastrexo</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1702,7 +1702,7 @@
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text" moz:RemovedIn="125" tools:ignore="UnusedResources">Os inicios de sesión que garde ou sincronice co %s aparecerán aquí.</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text_2">Os contrasinais que gardes ou sincronices con %s listaranse aquí. Todos os contrasinais que gardas están cifrados.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_text_2">Os contrasinais que garde ou sincronice con %s listaranse aquí. Todos os contrasinais que garde están cifrados.</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link" moz:RemovedIn="125" tools:ignore="UnusedResources">Obteña máis información sobre Sync.</string>
     <!-- Clickable text for opening an external link for more information about Sync. -->
@@ -1752,15 +1752,15 @@
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
     <string name="logins_biometric_prompt_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Desbloquee para ver os seus inicios de sesión gardados</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
-    <string name="logins_biometric_prompt_message_2">Desbloquea para ver os teus contrasinais gardados</string>
+    <string name="logins_biometric_prompt_message_2">Desbloquear para ver os seus contrasinais gardados</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Protexa os seus inicios de sesión e contrasinais</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title_2">Protexe os teus contrasinais gardados</string>
+    <string name="logins_warning_dialog_title_2">Protexa os seus contrasinais gardados</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Configure un padrón de bloqueo de dispositivo, PIN ou contrasinal para protexer os accesos e contrasinais gardados de que non sexan accedidos se outra persoa ten o seu dispositivo.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message_2">Configura un patrón de bloqueo do dispositivo, un PIN ou un contrasinal para protexer o acceso aos teus contrasinais gardados se outra persoa ten o teu dispositivo.</string>
+    <string name="logins_warning_dialog_message_2">Configure un padrón de bloqueo do dispositivo, un PIN ou un contrasinal para protexer o acceso aos seus contrasinais gardados se outra persoa ten o seu dispositivo.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Máis tarde</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1876,7 +1876,7 @@
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Configure un padrón de bloqueo de dispositivo, PIN ou contrasinal para evitar que outra persoa co seu dispositivo poida acceder a elas.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message_3">Configura un patrón de bloqueo do dispositivo, un PIN ou un contrasinal para protexer o acceso aos teus métodos de pago gardados se outra persoa ten o teu dispositivo.</string>
+    <string name="credit_cards_warning_dialog_message_3">Configure un padrón de bloqueo do dispositivo, un PIN ou un contrasinal para protexer o acceso aos seus métodos de pago gardados se outra persoa ten o seu dispositivo.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Configurar agora</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1886,7 +1886,7 @@
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Desbloquee para empregar a información almacenada de tarxetas de crédito</string>
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
-    <string name="credit_cards_biometric_prompt_unlock_message_2">Desbloquea para usar os métodos de pago gardados</string>
+    <string name="credit_cards_biometric_prompt_unlock_message_2">Desbloquee para usar os métodos de pago gardados</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Engadir enderezo</string>
     <!-- Title of the "Edit address" screen -->
@@ -2321,9 +2321,9 @@
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
     <string name="review_quality_check_contextual_onboarding_caption_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Ao seleccionar «Si, probalo», acepta o seguinte de %1$s:</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
-    <string name="review_quality_check_contextual_onboarding_caption_3" moz:RemovedIn="124" tools:ignore="UnusedResources">Ao seleccionar &quot;Si, probalo&quot;, aceptas os %2$s de %1$s e os %4$s de %3$s.</string>
+    <string name="review_quality_check_contextual_onboarding_caption_3" moz:RemovedIn="124" tools:ignore="UnusedResources">Ao seleccionar «Si, probalo», acepta os %2$s de %1$s e os %4$s de %3$s.</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
-    <string name="review_quality_check_contextual_onboarding_caption_4">Ao seleccionar &quot;Si, probalo&quot;, aceptas os %2$s de %1$s e os %4$s de %3$s.</string>
+    <string name="review_quality_check_contextual_onboarding_caption_4">Ao seleccionar «Si, probalo», acepta os %2$s de %1$s e os %4$s de %3$s.</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="123" tools:ignore="UnusedResources">política de privacidade</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
@@ -2408,7 +2408,7 @@
     <!-- Title for the translation dialog that allows a user to translate the webpage when a user uses the translation feature the first time. The first parameter is the name of the application, for example, "Fenix". -->
     <string name="translations_bottom_sheet_title_first_time">Probe as traducións privadas en %1$s</string>
     <!-- Additional information on the translation dialog that appears when a user uses the translation feature the first time. The first parameter is clickable text with a link, for example, "Learn more". -->
-    <string name="translations_bottom_sheet_info_message">Para a túa privacidade, as traducións nunca saen do teu dispositivo. Novos idiomas e melloras en breve! %1$s</string>
+    <string name="translations_bottom_sheet_info_message">Para a súa privacidade, as traducións nunca saen do seu dispositivo. Novos idiomas e melloras en breve! %1$s</string>
     <!-- Text that links to additional information about the Firefox translations feature. -->
     <string name="translations_bottom_sheet_info_message_learn_more">Máis información</string>
     <!-- Label for the dropdown to select which language to translate from on the translations dialog. Usually the translate from language selected will be the same as the page language. -->
@@ -2455,7 +2455,7 @@
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to always offer or suggest translations when available. -->
     <string name="translation_option_bottom_sheet_always_translate">Ofrecer sempre a tradución</string>
     <!-- Toggle switch label that allows a user to set if they would like a given language to automatically translate or not. The first parameter is the language name, for example, "Spanish". -->
-    <string name="translation_option_bottom_sheet_always_translate_in_language">Traduce sempre %1$s</string>
+    <string name="translation_option_bottom_sheet_always_translate_in_language">Traducir sempre %1$s</string>
     <!-- Toggle switch label that allows a user to set if they would like to never be offered a translation of the given language. The first parameter is the language name, for example, "Spanish". -->
     <string name="translation_option_bottom_sheet_never_translate_in_language">Non traducir nunca %1$s</string>
     <!-- Toggle switch label that allows a user to set the setting if they would like the browser to never translate the site the user is currently visiting. -->
@@ -2463,7 +2463,7 @@
     <!-- Toggle switch description that will appear under the "Never translate these sites" settings toggle switch to provide more information on how this setting interacts with other settings. -->
     <string name="translation_option_bottom_sheet_switch_never_translate_site_description">Sobrescribe todas as demais configuracións</string>
     <!-- Toggle switch description that will appear under the "Never translate" and "Always translate" toggle switch settings to provide more information on how these  settings interacts with other settings. -->
-    <string name="translation_option_bottom_sheet_switch_description">Anula as ofertas para traducir</string>
+    <string name="translation_option_bottom_sheet_switch_description">Sobrescribir as ofertas para traducir</string>
     <!-- Button text for the button that will take the user to the translation settings dialog. -->
     <string name="translation_option_bottom_sheet_translation_settings">Configuración da tradución</string>
 
@@ -2476,7 +2476,7 @@
     <!-- Toggle switch label that indicates that the browser should signal or indicate when a translation is possible for any page. -->
     <string name="translation_settings_offer_to_translate">Ofrécese a traducir cando sexa posible</string>
     <!-- Toggle switch label that indicates that downloading files required for translating is permitted when using data saver mode in Android. -->
-    <string name="translation_settings_always_download">Descarga sempre os idiomas no modo de aforro de datos</string>
+    <string name="translation_settings_always_download">Descargar sempre os idiomas no modo de aforro de datos</string>
     <!-- Section header text that begins the section of a list of different options the user may select to adjust their translation preferences. -->
     <string name="translation_settings_translation_preference">Preferencias de tradución</string>
     <!-- Button text for the button that will take the user to the automatic translations settings dialog. On the automatic translations settings dialog, the user can set if translations should occur automatically for a given language. -->
@@ -2491,11 +2491,11 @@
     <string name="automatic_translation_toolbar_title_preference">Tradución automática</string>
 
     <!-- Screen header presenting the automatic translation preference feature. It will appear under the toolbar. -->
-    <string name="automatic_translation_header_preference">Selecciona un idioma para xestionar as preferencias de &quot;traducir sempre&quot; e &quot;nunca traducir&quot;.</string>
+    <string name="automatic_translation_header_preference">Seleccionar un idioma para xestionar as preferencias de «traducir sempre» e «nunca traducir».</string>
 
     <!-- Automatic translation options preference screen -->
     <!-- Preference option for offering to translate. Radio button title text.-->
-    <string name="automatic_translation_option_offer_to_translate_title_preference">Oferta para traducir (predeterminado)</string>
+    <string name="automatic_translation_option_offer_to_translate_title_preference">Ofrecer traducción (predeterminado)</string>
     <!-- Preference option for offering to translate. Radio button summary text. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="automatic_translation_option_offer_to_translate_summary_preference">%1$s ofrecerá traducir sitios neste idioma.</string>
     <!-- Preference option for always translate. Radio button title text. -->
@@ -2512,7 +2512,7 @@
     <!-- Title of the never translate site preference screen that will appear on the toolbar.-->
     <string name="never_translate_site_toolbar_title_preference">Non traducir nunca estes sitios</string>
     <!-- Screen header presenting the never translate site preference feature. It will appear under the toolbar. -->
-    <string name="never_translate_site_header_preference">Para engadir un sitio novo: visítao e selecciona &quot;Non traducir nunca este sitio&quot; no menú de tradución.</string>
+    <string name="never_translate_site_header_preference">Para engadir un sitio novo: visíteo e seleccione «Non traducir nunca este sitio» no menú de tradución.</string>
     <!-- Content description (not visible, for screen readers etc.): For a never-translated site list item that is selected.
              The first parameter is web site url (for example:"wikipedia.com") -->
     <string name="never_translate_site_item_list_content_description_preference">Retirar %1$s</string>
@@ -2528,7 +2528,7 @@
     <!-- Title of the download languages preference screen toolbar.-->
     <string name="download_languages_toolbar_title_preference">Descargar idiomas</string>
     <!-- Screen header presenting the download language preference feature. It will appear under the toolbar.The first parameter is "Learn More," a clickable text with a link. Talkback will append this to say "Double tap to open link to learn more". -->
-    <string name="download_languages_header_preference">Descarga idiomas completos para obter traducións máis rápidas e para traducir sen conexión. %1$s</string>
+    <string name="download_languages_header_preference">Descargar idiomas completos para obter traducións máis rápidas e para traducir sen conexión. %1$s</string>
     <!-- Clickable text from the screen header that links to a website. -->
     <string name="download_languages_header_learn_more_preference">Máis información</string>
     <!-- The subhead of the download language preference screen will appear above the pivot language. -->
@@ -2557,13 +2557,13 @@
     The first parameter is the name of the language, for example, "Spanish" and the second parameter is the size in kilobytes or megabytes of the language file. -->
     <string name="delete_language_file_dialog_title">Eliminar %1$s (%2$s)?</string>
     <!-- Additional information for the dialog used by the translations feature to confirm deleting a language. The first parameter is the name of the application, for example, "Fenix". -->
-    <string name="delete_language_file_dialog_message">Se eliminas este idioma, %1$s descargará idiomas parciais na túa caché mentres traduces.</string>
+    <string name="delete_language_file_dialog_message">Se elimina este idioma, %1$s descargará idiomas parciais na súa caché mentres traduce.</string>
     <!-- Title for the dialog used by the translations feature to confirm deleting all languages file.
     The dialog will be presented when the user requests deletion of all languages file.
     The first parameter is the size in kilobytes or megabytes of the language file. -->
-    <string name="delete_language_all_languages_file_dialog_title">Queres eliminar todos os idiomas (%1$s)?</string>
+    <string name="delete_language_all_languages_file_dialog_title">Eliminar todos os idiomas (%1$s)?</string>
     <!-- Additional information for the dialog used by the translations feature to confirm deleting all languages file. The first parameter is the name of the application, for example, "Fenix". -->
-    <string name="delete_language_all_languages_file_dialog_message">Se eliminas todos os idiomas, %1$s descargará linguas parciais na túa caché mentres traduces.</string>
+    <string name="delete_language_all_languages_file_dialog_message">Se elimina todos os idiomas, %1$s descargará linguas parciais na súa caché mentres traduce.</string>
     <!-- Button text on the dialog used by the translations feature to confirm deleting a language. -->
     <string name="delete_language_file_dialog_positive_button_text">Eliminar</string>
     <!-- Button text on the dialog used by the translations feature to cancel deleting a language. -->
@@ -2573,11 +2573,11 @@
     This dialog will be presented when the user attempts to download a language or perform
     a translation without the necessary language files downloaded first when Android's data saver mode is enabled and the user is not using WiFi.
     The first parameter is the size in kilobytes or megabytes of the language file.-->
-    <string name="download_language_file_dialog_title">Descargar mentres estás no modo de aforro de datos (%1$s)?</string>
+    <string name="download_language_file_dialog_title">Descargar no modo de aforro de datos (%1$s)?</string>
     <!-- Additional information for the data saving mode warning dialog used by the translations feature. This text explains the reason a download is required for a translation. -->
-    <string name="download_language_file_dialog_message_all_languages">Descargamos idiomas parciais na túa caché para manter as traducións privadas.</string>
+    <string name="download_language_file_dialog_message_all_languages">Descargamos idiomas parciais na súa caché para manter as traducións privadas.</string>
     <!-- Checkbox label text on the data saving mode warning dialog used by the translations feature. This checkbox allows users to ignore the data usage warnings. -->
-    <string name="download_language_file_dialog_checkbox_text">Descarga sempre no modo de aforro de datos</string>
+    <string name="download_language_file_dialog_checkbox_text">Descargar sempre no modo de aforro de datos</string>
     <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file. -->
     <string name="download_language_file_dialog_positive_button_text">Descargar</string>
     <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file and perform a translation. -->
