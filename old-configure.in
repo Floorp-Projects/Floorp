@@ -30,10 +30,6 @@ dnl Set the minimum version of toolkit libs used by mozilla
 dnl ========================================================
 W32API_VERSION=3.14
 
-dnl Set various checks
-dnl ========================================================
-MISSING_X=
-
 dnl Initialize the Pthread test variables early so they can be
 dnl  overridden by each platform.
 dnl ========================================================
@@ -52,9 +48,6 @@ dnl Checks for compilers.
 dnl ========================================================
 
 if test "$COMPILE_ENVIRONMENT"; then
-
-# Run some logic to figure out exe extensions (mostly for mingw's sake)
-AC_EXEEXT
 
 if test "$target" != "$host"; then
     MOZ_CROSS_COMPILER
@@ -473,13 +466,9 @@ fi # COMPILE_ENVIRONMENT
 if test -z "$SKIP_COMPILER_CHECKS"; then
 dnl Checks for typedefs, structures, and compiler characteristics.
 dnl ========================================================
-AC_C_CONST
 AC_TYPE_MODE_T
 AC_TYPE_OFF_T
 AC_TYPE_PID_T
-AC_TYPE_SIZE_T
-AC_LANG_CPLUSPLUS
-AC_LANG_C
 
 AC_LANG_CPLUSPLUS
 
