@@ -1,14 +1,14 @@
 # The following tests test the async positioning of the scrollbars.
 # Basic root-frame scrollbar with async scrolling
 # First make sure that we are actually drawing scrollbars
-skip-if(!asyncPan) pref(apz.allow_zooming,true) != async-scrollbar-1-v.html about:blank
-skip-if(!asyncPan) pref(apz.allow_zooming,true) != async-scrollbar-1-v-ref.html about:blank
-fuzzy-if(Android,0-5,0-6) fuzzy-if(gtkWidget,1-8,8-32) fuzzy-if(cocoaWidget,16-22,20-44) skip-if(!asyncPan) pref(apz.allow_zooming,true) == async-scrollbar-1-v.html async-scrollbar-1-v-ref.html
-fuzzy-if(Android,0-13,0-10) fuzzy-if(gtkWidget,1-30,4-32) fuzzy-if(cocoaWidget,14-22,20-44) skip-if(!asyncPan) pref(apz.allow_zooming,true) == async-scrollbar-1-h.html async-scrollbar-1-h-ref.html
-fuzzy-if(Android,0-13,0-21) fuzzy-if(gtkWidget,1-4,4-24) fuzzy-if(cocoaWidget,11-18,44-88) skip-if(!asyncPan) pref(apz.allow_zooming,true) == async-scrollbar-1-vh.html async-scrollbar-1-vh-ref.html
-fuzzy-if(Android,0-5,0-6) fuzzy-if(gtkWidget,1-8,8-32) fuzzy-if(cocoaWidget,16-22,20-44) skip-if(!asyncPan) pref(apz.allow_zooming,true) == async-scrollbar-1-v-rtl.html async-scrollbar-1-v-rtl-ref.html
-fuzzy-if(Android,0-14,0-10) fuzzy-if(gtkWidget,1-30,12-32) fuzzy-if(cocoaWidget,14-22,20-44) skip-if(!asyncPan) pref(apz.allow_zooming,true) == async-scrollbar-1-h-rtl.html async-scrollbar-1-h-rtl-ref.html
-fuzzy-if(Android,0-43,0-26) fuzzy-if(gtkWidget,0-14,12-32) fuzzy-if(cocoaWidget,11-18,26-76) skip-if(!asyncPan) pref(apz.allow_zooming,true) == async-scrollbar-1-vh-rtl.html async-scrollbar-1-vh-rtl-ref.html
+skip-if(useDrawSnapshot) pref(apz.allow_zooming,true) != async-scrollbar-1-v.html about:blank
+skip-if(useDrawSnapshot) pref(apz.allow_zooming,true) != async-scrollbar-1-v-ref.html about:blank
+fuzzy-if(Android,0-5,0-6) fuzzy-if(gtkWidget,1-8,8-32) fuzzy-if(cocoaWidget,16-22,20-44) skip-if(useDrawSnapshot) pref(apz.allow_zooming,true) == async-scrollbar-1-v.html async-scrollbar-1-v-ref.html
+fuzzy-if(Android,0-13,0-10) fuzzy-if(gtkWidget,1-30,4-32) fuzzy-if(cocoaWidget,14-22,20-44) skip-if(useDrawSnapshot) pref(apz.allow_zooming,true) == async-scrollbar-1-h.html async-scrollbar-1-h-ref.html
+fuzzy-if(Android,0-13,0-21) fuzzy-if(gtkWidget,1-4,4-24) fuzzy-if(cocoaWidget,11-18,44-88) skip-if(useDrawSnapshot) pref(apz.allow_zooming,true) == async-scrollbar-1-vh.html async-scrollbar-1-vh-ref.html
+fuzzy-if(Android,0-5,0-6) fuzzy-if(gtkWidget,1-8,8-32) fuzzy-if(cocoaWidget,16-22,20-44) skip-if(useDrawSnapshot) pref(apz.allow_zooming,true) == async-scrollbar-1-v-rtl.html async-scrollbar-1-v-rtl-ref.html
+fuzzy-if(Android,0-14,0-10) fuzzy-if(gtkWidget,1-30,12-32) fuzzy-if(cocoaWidget,14-22,20-44) skip-if(useDrawSnapshot) pref(apz.allow_zooming,true) == async-scrollbar-1-h-rtl.html async-scrollbar-1-h-rtl-ref.html
+fuzzy-if(Android,0-43,0-26) fuzzy-if(gtkWidget,0-14,12-32) fuzzy-if(cocoaWidget,11-18,26-76) skip-if(useDrawSnapshot) pref(apz.allow_zooming,true) == async-scrollbar-1-vh-rtl.html async-scrollbar-1-vh-rtl-ref.html
 
 # Different async zoom levels. Since the scrollthumb gets async-scaled in the
 # compositor, the border-radius ends of the scrollthumb are going to be a little
@@ -37,7 +37,7 @@ fuzzy-if(Android,0-28,0-23) fuzzy-if(!Android,0-107,0-34) pref(apz.allow_zooming
 # Meta-viewport tag support
 skip-if(!Android) pref(apz.allow_zooming,true) == initial-scale-1.html initial-scale-1-ref.html
 
-skip-if(!asyncPan) == frame-reconstruction-scroll-clamping.html frame-reconstruction-scroll-clamping-ref.html
+skip-if(useDrawSnapshot) == frame-reconstruction-scroll-clamping.html frame-reconstruction-scroll-clamping-ref.html
 
 # Test that position:fixed and position:sticky elements are attached to the
 # layout viewport.

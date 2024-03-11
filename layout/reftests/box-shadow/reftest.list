@@ -17,19 +17,19 @@ fuzzy(0-14,0-179) fuzzy-if(swgl&&!Android,0-1,0-952) fuzzy-if(useDrawSnapshot&&s
 fuzzy(13-19,28-51) == boxshadow-inner-basic.html boxshadow-inner-basic-ref.svg
 fuzzy(0-1,0-18) random == boxshadow-mixed.html boxshadow-mixed-ref.html
 fuzzy(0-1,0-17) == boxshadow-mixed-2.html boxshadow-mixed-2-ref.html
-random-if(d2d) fuzzy(0-127,0-3528) == boxshadow-rounded-spread.html boxshadow-rounded-spread-ref.html
+random-if(winWidget) fuzzy(0-127,0-3528) == boxshadow-rounded-spread.html boxshadow-rounded-spread-ref.html
 fuzzy(0-1,0-50) == chrome://reftest/content/box-shadow/boxshadow-dynamic.xhtml chrome://reftest/content/box-shadow/boxshadow-dynamic-ref.xhtml
-random-if(d2d) fuzzy(0-1,0-14) == boxshadow-onecorner.html boxshadow-onecorner-ref.html
-random-if(d2d) fuzzy(0-1,0-22) == boxshadow-twocorners.html boxshadow-twocorners-ref.html
-random-if(d2d) fuzzy(0-1,0-36) == boxshadow-threecorners.html boxshadow-threecorners-ref.html
+random-if(winWidget) fuzzy(0-1,0-14) == boxshadow-onecorner.html boxshadow-onecorner-ref.html
+random-if(winWidget) fuzzy(0-1,0-22) == boxshadow-twocorners.html boxshadow-twocorners-ref.html
+random-if(winWidget) fuzzy(0-1,0-36) == boxshadow-threecorners.html boxshadow-threecorners-ref.html
 fuzzy(0-2,0-440) == boxshadow-skiprect.html boxshadow-skiprect-ref.html
 fuzzy-if(useDrawSnapshot,1-1,1197-2400) == boxshadow-opacity.html boxshadow-opacity-ref.html
 == boxshadow-color-rounding.html boxshadow-color-rounding-ref.html
 == boxshadow-color-rounding-middle.html boxshadow-color-rounding-middle-ref.html
-fuzzy(0-3,0-500) fuzzy-if(d2d,0-2,0-1080) == boxshadow-border-radius-int.html boxshadow-border-radius-int-ref.html
+fuzzy(0-3,0-500) fuzzy-if(winWidget,0-2,0-1080) == boxshadow-border-radius-int.html boxshadow-border-radius-int-ref.html
 == boxshadow-inset-neg-spread.html about:blank
 == boxshadow-inset-neg-spread2.html boxshadow-inset-neg-spread2-ref.html
-fuzzy(0-26,0-3610) fuzzy-if(d2d,0-26,0-5910) fuzzy-if(!(swgl&&Android),0-6,378-4500) == boxshadow-rotated.html boxshadow-rotated-ref.html # Bug 1211264
+fuzzy(0-26,0-3610) fuzzy-if(winWidget,0-26,0-5910) fuzzy-if(!(swgl&&Android),0-6,378-4500) == boxshadow-rotated.html boxshadow-rotated-ref.html # Bug 1211264
 == boxshadow-inset-large-border-radius.html boxshadow-inset-large-border-radius-ref.html
 
 # fuzzy due to blur going inside, but as long as it's essentially black instead of a light gray its ok.
@@ -39,7 +39,7 @@ fuzzy(12-15,9400-13267) == boxshadow-inset-large-offset.html boxshadow-inset-lar
 == overflow-not-scrollable-1.html overflow-not-scrollable-1-ref2.html
 == overflow-not-scrollable-2.html overflow-not-scrollable-2-ref.html
 fuzzy(0-1,0-655) == 611574-1.html 611574-1-ref.html
-fuzzy(0-4,0-144) fuzzy-if(d2d,0-1,0-36) == 611574-2.html 611574-2-ref.html
+fuzzy(0-4,0-144) fuzzy-if(winWidget,0-1,0-36) == 611574-2.html 611574-2-ref.html
 fuzzy(0-16,0-10) == fieldset.html fieldset-ref.html # minor anti-aliasing problem on Windows
 fuzzy(0-16,0-10) == fieldset-inset.html fieldset-inset-ref.html # minor anti-aliasing problem on Windows
 == 1178575.html 1178575-ref.html

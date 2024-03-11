@@ -23,7 +23,7 @@ fails == quote-1e.html quote-1-ref.html # bug 509685
 == quote-1e.html quote-1b.html
 == quote-1f.html quote-1-ref.html
 == dynamic-1.html dynamic-1-ref.html
-random-if(d2d) == dynamic-2.html dynamic-2-ref.html
+random-if(winWidget) == dynamic-2.html dynamic-2-ref.html
 == dynamic-3a.html dynamic-3-ref.html
 == dynamic-3b.html dynamic-3-ref.html
 == dynamic-4.html dynamic-4-ref.html
@@ -66,7 +66,7 @@ fails-if(winWidget||cocoaWidget) fails-if(geckoview) == 617869-1.html 617869-1-r
 == 922550-1.html 922550-1-ref.html
 == 958249.html 958249-ref.html
 == font-text-styles.html font-text-styles-ref.html
-random-if(gtkWidget) random-if(winWidget&&!d2d) == font-text-styles-floater.html font-text-styles-floater-ref.html # bug 992846
+random-if(gtkWidget) == font-text-styles-floater.html font-text-styles-floater-ref.html # bug 992846
 == inline-height-empty.html inline-height-empty-ref.html
 == indic-clusters-1.html indic-clusters-1-ref.html
 == overflow-float-nooverflow.html overflow-float-nooverflow-ref.html

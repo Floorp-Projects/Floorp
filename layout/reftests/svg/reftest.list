@@ -37,11 +37,11 @@ needs-focus == autofocus-02b.svg pass.svg
 == baseline-middle-01.svg pass.svg
 
 == blend-color-burn.svg blend-color-burn-ref.svg
-fuzzy-if(winWidget&&gpuProcess&&!d2d,0-1,0-1600) == blend-color-dodge.svg blend-color-dodge-ref.svg
+== blend-color-dodge.svg blend-color-dodge-ref.svg
 # == blend-color.svg blend-color-ref.svg
 == blend-darken.svg blend-darken-ref.svg
 == blend-difference.svg blend-difference-ref.svg
-fuzzy(0-1,0-1600) fuzzy-if(geckoview,0-5,0-254) == blend-exclusion.svg blend-exclusion-ref.svg
+fuzzy(0-1,0-1600) fuzzy-if(Android,0-5,0-254) == blend-exclusion.svg blend-exclusion-ref.svg
 # == blend-hard-light.svg blend-hard-light-ref.svg
 # == blend-hue.svg blend-hue-ref.svg
 == blend-layer-blend.svg blend-layer-blend-ref.svg
@@ -164,7 +164,7 @@ fuzzy(0-1,0-10000) == dynamic-filter-contents-01b.svg dynamic-filter-contents-01
 == dynamic-pattern-contents-01.svg pass.svg
 == dynamic-pattern-contents-02.svg pass.svg
 == dynamic-rect-01.svg dynamic-rect-01-ref.svg
-fuzzy-if(d2d,0-3,0-1200) == dynamic-rect-02.svg dynamic-rect-02-ref.svg # bug 776038 for Win7, Win8
+fuzzy-if(winWidget,0-3,0-1200) == dynamic-rect-02.svg dynamic-rect-02-ref.svg # bug 776038 for Win7, Win8
 == dynamic-rect-03.svg dynamic-rect-03-ref.svg
 == dynamic-rect-04.xhtml pass.svg
 == dynamic-rect-05.svg pass.svg
@@ -176,8 +176,8 @@ fuzzy-if(d2d,0-3,0-1200) == dynamic-rect-02.svg dynamic-rect-02-ref.svg # bug 77
 == dynamic-stroke-width-01.svg pass.svg
 == dynamic-switch-01.svg pass.svg
 == dynamic-text-01.svg dynamic-text-01-ref.svg
-fuzzy-if(d2d,0-3,0-12739) == dynamic-text-02.svg dynamic-text-02-ref.svg # bug 776038 for Win7, Win8
-fuzzy-if(d2d,0-2,0-10539) == dynamic-text-03.svg dynamic-text-03-ref.svg # bug 776038 for Win7
+fuzzy-if(winWidget,0-3,0-12739) == dynamic-text-02.svg dynamic-text-02-ref.svg # bug 776038 for Win7, Win8
+fuzzy-if(winWidget,0-2,0-10539) == dynamic-text-03.svg dynamic-text-03-ref.svg # bug 776038 for Win7
 == dynamic-text-04.svg dynamic-text-04-ref.svg
 == dynamic-text-05.svg pass.svg
 == dynamic-text-06.svg pass.svg
@@ -350,7 +350,7 @@ fuzzy(0-51,0-900) fuzzy-if(Android,0-51,0-4090) fails-if(useDrawSnapshot) == non
 == objectBoundingBox-and-pattern-03.svg objectBoundingBox-and-pattern-03-ref.svg
 
 == opacity-and-gradient-01.svg pass.svg
-skip-if(d2d) fuzzy(0-1,0-200000) == opacity-and-gradient-02.svg opacity-and-gradient-02-ref.svg
+skip-if(winWidget) fuzzy(0-1,0-200000) == opacity-and-gradient-02.svg opacity-and-gradient-02-ref.svg
 == opacity-and-pattern-01.svg pass.svg
 fuzzy(0-1,0-10000) == opacity-and-transform-01.svg opacity-and-transform-01-ref.svg
 
@@ -373,7 +373,7 @@ fuzzy-if(winWidget,0-16,0-5) == paint-order-01.svg paint-order-01-ref.svg
 == paint-order-02.svg paint-order-02-ref.svg
 == paint-order-03.svg paint-order-03-ref.svg
 
-#fuzzy(0-23,0-60) fails-if(d2d) == path-01.svg path-01-ref.svg
+#fuzzy(0-23,0-60) fails-if(winWidget) == path-01.svg path-01-ref.svg
 == path-02.svg pass.svg
 == path-04.svg pass.svg
 == path-05.svg pass.svg

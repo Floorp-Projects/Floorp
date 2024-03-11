@@ -114,7 +114,7 @@ fuzzy(0-1,0-50) == downscale-orient.html downscale-orient-ref.html
 # ===============================================
 defaults pref(image.downscale-during-decode.enabled,true)
 
-fuzzy(0-31,0-127) fuzzy-if(d2d,0-31,0-147) == downscale-1.html downscale-1-ref.html # intermittently 147 pixels on win7 accelerated only (not win8)
+fuzzy(0-31,0-127) fuzzy-if(winWidget,0-31,0-147) == downscale-1.html downscale-1-ref.html # intermittently 147 pixels on win7 accelerated only (not win8)
 
 fuzzy(0-20,0-999) != downscale-2a.html?203,52,left about:blank
 fuzzy(0-20,0-999) != downscale-2b.html?203,52,left about:blank

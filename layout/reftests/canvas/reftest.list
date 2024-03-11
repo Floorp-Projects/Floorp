@@ -31,7 +31,7 @@ random-if(cocoaWidget) == subpixel-1.html about:blank # see bug 1192616, re-enab
 == text-rtl-alignment-test.html text-rtl-alignment-ref.html
 
 fuzzy-if(winWidget,0-1,0-256) == text-horzline-with-bottom.html text-horzline.html
-fuzzy-if(winWidget,0-1,0-256) fails-if(azureSkia&&cocoaWidget) == text-horzline-with-top.html text-horzline.html
+fuzzy-if(winWidget,0-1,0-256) fails-if(cocoaWidget) == text-horzline-with-top.html text-horzline.html
 
 != text-big-stroke.html text-blank.html
 != text-big-stroke.html text-big-fill.html
@@ -53,7 +53,7 @@ fuzzy-if(winWidget,0-1,0-256) fails-if(azureSkia&&cocoaWidget) == text-horzline-
 == text-measure.html text-measure-ref.html
 == text-small-caps-1.html text-small-caps-1-ref.html
 
-random-if(!d2d) != text-subpixel-1.html text-subpixel-1-ref.html
+random-if(!winWidget) != text-subpixel-1.html text-subpixel-1-ref.html
 
 == strokeText-path.html strokeText-path-ref.html
 
@@ -92,7 +92,7 @@ fuzzy(0-1,0-20) == transformed-gradient.html transformed-gradient-ref.html
 == 749467-1.html 749467-1-ref.html
 
 # You get a little bit of rounding fuzz on OSX from transforming the paths between user space and device space
-fuzzy(0-16,0-84) fuzzy-if(d2d&&winWidget,0-2,0-153) == 784573-1.html 784573-1-ref.html
+fuzzy(0-16,0-84) fuzzy-if(winWidget,0-2,0-153) == 784573-1.html 784573-1-ref.html
 
 == 802658-1.html 802658-1-ref.html
 == 1074733-1.html 1074733-1-ref.html
