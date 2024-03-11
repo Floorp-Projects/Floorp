@@ -131,6 +131,19 @@ no-fission:
             extra-options:
                 - "--disable-fission"
 
+geckoview-no-fission-ship:
+    description: "{description} with fission disabled and ship enabled"
+    component: "GeckoView::Sandboxing"
+    expiration: "2024-09-01"
+    suffix: "nofis-ship"
+    when:
+        <<: *gv_e10s_filter
+    merge:
+        mozharness:
+            extra-options:
+                - "--disable-fission"
+                - "--setpref=fission.disableSessionHistoryInParent=false"
+
 xorigin:
     description: "{description} with cross-origin"
     component: "Core::DOM: Content Processes"
