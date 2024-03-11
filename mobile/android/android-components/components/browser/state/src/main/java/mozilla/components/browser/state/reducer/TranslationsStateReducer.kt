@@ -97,7 +97,10 @@ internal object TranslationsStateReducer {
 
         is TranslationsAction.TranslateAction ->
             state.copyWithTranslationsState(action.tabId) {
-                it.copy(isTranslateProcessing = true)
+                it.copy(
+                    isOfferTranslate = false,
+                    isTranslateProcessing = true,
+                )
             }
 
         is TranslationsAction.TranslateRestoreAction ->

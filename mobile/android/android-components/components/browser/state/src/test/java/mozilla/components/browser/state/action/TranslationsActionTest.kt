@@ -117,6 +117,22 @@ class TranslationsActionTest {
     }
 
     @Test
+    fun `GIVEN isOfferTranslate is true WHEN a TranslateAction is dispatched THEN isOfferTranslate should be set to false`() {
+        // Initial State
+        assertFalse(tabState().translationsState.isOfferTranslate)
+
+        // Initial Offer State
+        store.dispatch(TranslationsAction.TranslateOfferAction(tabId = tab.id)).joinBlocking()
+        assertTrue(tabState().translationsState.isOfferTranslate)
+
+        // Action
+        store.dispatch(TranslationsAction.TranslateAction(tabId = tab.id, fromLanguage = "en", toLanguage = "en", options = null)).joinBlocking()
+
+        // Should revert to false
+        assertFalse(tabState().translationsState.isOfferTranslate)
+    }
+
+    @Test
     fun `WHEN a TranslateStateChangeAction is dispatched THEN the isExpectedTranslate status updates accordingly`() {
         // Initial State
         assertNull(tabState().translationsState.translationEngineState)
