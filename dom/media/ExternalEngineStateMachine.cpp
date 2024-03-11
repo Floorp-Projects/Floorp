@@ -10,6 +10,7 @@
 #  include "mozilla/MFMediaEngineChild.h"
 #  include "mozilla/StaticPrefs_media.h"
 #endif
+#include "mozilla/AppShutdown.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/ProfilerLabels.h"
@@ -201,6 +202,10 @@ ExternalEngineStateMachine::ExternalEngineStateMachine(
   LOG("Created ExternalEngineStateMachine");
   MOZ_ASSERT(mState.IsInitEngine());
   InitEngine();
+}
+
+ExternalEngineStateMachine::~ExternalEngineStateMachine() {
+  LOG("ExternalEngineStateMachine is destroyed");
 }
 
 void ExternalEngineStateMachine::InitEngine() {
@@ -610,19 +615,20 @@ void ExternalEngineStateMachine::BufferedRangeUpdated() {
   }
 }
 
-#define PERFORM_WHEN_ALLOW(Func)                                \
-  do {                                                          \
-    if (mState.IsShutdownEngine()) {                            \
-      return;                                                   \
-    }                                                           \
-    /* Initialzation is not done yet, postpone the operation */ \
-    if ((mState.IsInitEngine() || mState.IsRecoverEngine()) &&  \
-        mState.AsInitEngine()->mInitPromise) {                  \
-      LOG("%s is called before init", __func__);                \
-      mPendingTasks.AppendElement(NewRunnableMethod(            \
-          __func__, this, &ExternalEngineStateMachine::Func));  \
-      return;                                                   \
-    }                                                           \
+#define PERFORM_WHEN_ALLOW(Func)                                          \
+  do {                                                                    \
+    if (mState.IsShutdownEngine() || mHasFatalError ||                    \
+        AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) { \
+      return;                                                             \
+    }                                                                     \
+    /* Initialzation is not done yet, postpone the operation */           \
+    if ((mState.IsInitEngine() || mState.IsRecoverEngine()) &&            \
+        mState.AsInitEngine()->mInitPromise) {                            \
+      LOG("%s is called before init", __func__);                          \
+      mPendingTasks.AppendElement(NewRunnableMethod(                      \
+          __func__, this, &ExternalEngineStateMachine::Func));            \
+      return;                                                             \
+    }                                                                     \
   } while (false)
 
 void ExternalEngineStateMachine::SetPlaybackRate(double aPlaybackRate) {
@@ -1292,6 +1298,14 @@ void ExternalEngineStateMachine::ReportTelemetry(const MediaResult& aError) {
     }
     LOG("%s", logMessage.get());
   }
+}
+
+void ExternalEngineStateMachine::DecodeError(const MediaResult& aError) {
+  if (aError != NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA ||
+      aError != NS_ERROR_DOM_MEDIA_CANCELED) {
+    mHasFatalError = true;
+  }
+  MediaDecoderStateMachineBase ::DecodeError(aError);
 }
 
 #undef FMT
