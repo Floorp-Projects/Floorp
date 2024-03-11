@@ -12,6 +12,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/Selection.h"
 #include "nsCoord.h"
+#include "nsIFrame.h"
 #include "nsISelectionListener.h"
 #include "nsIWeakReferenceUtils.h"
 #include "nsPoint.h"
@@ -279,6 +280,11 @@ class nsCaret final : public nsISelectionListener {
    * it's in non-user-modifiable content.
    */
   bool mIgnoreUserModify;
+
+  /**
+   * mLastCaretFrame is the last caret frame that was scheduled to paint.
+   */
+  WeakFrame mLastCaretFrame;
 };
 
 #endif  // nsCaret_h__
