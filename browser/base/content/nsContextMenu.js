@@ -392,11 +392,6 @@ class nsContextMenu {
       this.showItem(id, this.inPDFEditor);
     }
 
-    this.showItem(
-      "context-pdfjs-highlight-selection",
-      this.pdfEditorStates?.hasSelectedText
-    );
-
     if (!this.inPDFEditor) {
       return;
     }

@@ -313,9 +313,6 @@
       <menuitem id="context-selectall"
                 data-l10n-id="text-action-select-all"
                 command="cmd_selectAll"/>
-      <menuitem id="context-pdfjs-highlight-selection"
-                data-l10n-id="text-action-highlight-selection"
-                oncommand="gContextMenu.pdfJSCmd('highlightSelection');"/>
       <menuitem id="context-reveal-password"
                 type="checkbox"
                 data-l10n-id="main-context-menu-reveal-password"
