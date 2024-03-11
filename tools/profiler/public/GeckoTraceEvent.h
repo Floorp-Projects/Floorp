@@ -627,7 +627,18 @@
 #  else
 #    define MOZ_INTERNAL_UPROFILER_SIMPLE_EVENT(phase, category_enabled, name, \
                                                 id, num_args, arg_names,       \
-                                                arg_types, arg_values, flags)
+                                                arg_types, arg_values, flags)  \
+      do {                                                                     \
+        (void)phase;                                                           \
+        (void)category_enabled;                                                \
+        (void)name;                                                            \
+        (void)id;                                                              \
+        (void)num_args;                                                        \
+        (void)arg_names;                                                       \
+        (void)arg_types;                                                       \
+        (void)arg_values;                                                      \
+        (void)flags;                                                           \
+      } while (0);
 #  endif
 
 // Notes regarding the following definitions:
