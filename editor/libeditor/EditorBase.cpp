@@ -4869,6 +4869,29 @@ nsresult EditorBase::DeleteSelectionWithTransaction(
   return NS_OK;
 }
 
+Result<CaretPoint, nsresult> EditorBase::DeleteRangeWithTransaction(
+    nsIEditor::EDirection aDirectionAndAmount,
+    nsIEditor::EStripWrappers aStripWrappers, nsRange& aRangeToDelete) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(!Destroyed());
+  MOZ_ASSERT(aStripWrappers == eStrip || aStripWrappers == eNoStrip);
+
+  HowToHandleCollapsedRange howToHandleCollapsedRange =
+      EditorBase::HowToHandleCollapsedRangeFor(aDirectionAndAmount);
+  if (MOZ_UNLIKELY(aRangeToDelete.Collapsed() &&
+                   howToHandleCollapsedRange ==
+                       HowToHandleCollapsedRange::Ignore)) {
+    return CaretPoint(EditorDOMPoint(aRangeToDelete.StartRef()));
+  }
+
+  AutoRangeArray rangesToDelete(aRangeToDelete);
+  Result<CaretPoint, nsresult> result = DeleteRangesWithTransaction(
+      aDirectionAndAmount, aStripWrappers, rangesToDelete);
+  NS_WARNING_ASSERTION(result.isOk(),
+                       "EditorBase::DeleteRangesWithTransaction() failed");
+  return result;
+}
+
 Result<CaretPoint, nsresult> EditorBase::DeleteRangesWithTransaction(
     nsIEditor::EDirection aDirectionAndAmount,
     nsIEditor::EStripWrappers aStripWrappers,
