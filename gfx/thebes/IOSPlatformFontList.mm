@@ -10,54 +10,6 @@ IOSPlatformFontList::IOSPlatformFontList() : CoreTextFontList() {}
 
 IOSPlatformFontList::~IOSPlatformFontList() {}
 
-namespace {
-class nsAutoreleasePool {
- public:
-  nsAutoreleasePool() { mLocalPool = [[NSAutoreleasePool alloc] init]; }
-  ~nsAutoreleasePool() { [mLocalPool release]; }
-
- private:
-  NSAutoreleasePool* mLocalPool;
-};
-
-static void GetUtf8StringFromNSString(NSString* aSrc, nsACString& aDest) {
-  nsAutoString temp;
-  temp.SetLength([aSrc length]);
-  [aSrc getCharacters:reinterpret_cast<unichar*>(temp.BeginWriting())
-                range:NSMakeRange(0, [aSrc length])];
-  CopyUTF16toUTF8(temp, aDest);
-}
-}  // namespace
-
-void IOSPlatformFontList::InitSystemFontNames() {
-  nsAutoreleasePool localPool;
-
-  UIFontDescriptor* desc = [UIFontDescriptor
-      preferredFontDescriptorWithTextStyle:UIFontTextStyleBody];
-  desc = [desc fontDescriptorWithDesign:UIFontDescriptorSystemDesignDefault];
-
-  NSString* name =
-      [[desc fontAttributes] objectForKey:UIFontDescriptorFamilyAttribute];
-
-  GetUtf8StringFromNSString(name, mSystemFontFamilyName);
-}
-
-FontFamily IOSPlatformFontList::GetDefaultFontForPlatform(
-    nsPresContext* aPresContext, const gfxFontStyle* aStyle,
-    nsAtom* aLanguage) {
-  nsAutoreleasePool localPool;
-
-  UIFontDescriptor* desc = [UIFontDescriptor
-      preferredFontDescriptorWithTextStyle:UIFontTextStyleBody];
-  NSString* name =
-      [[desc fontAttributes] objectForKey:UIFontDescriptorFamilyAttribute];
-
-  nsAutoCString familyName;
-  GetUtf8StringFromNSString(name, familyName);
-
-  return FindFamily(aPresContext, familyName);
-}
-
 void IOSPlatformFontList::LookupSystemFont(
     mozilla::LookAndFeel::FontID aSystemFontID, nsACString& aSystemFontName,
     gfxFontStyle& aFontStyle) {

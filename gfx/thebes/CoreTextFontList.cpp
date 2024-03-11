@@ -917,6 +917,47 @@ void CTFontFamily::FindStyleVariationsLocked(FontInfoData* aFontInfoData) {
   AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING("CTFontFamily::FindStyleVariations",
                                         LAYOUT, mName);
 
+  if (mForSystemFont) {
+    MOZ_ASSERT(gfxPlatform::HasVariationFontSupport());
+
+    auto addToFamily = [&](CTFontRef aFont) MOZ_REQUIRES(mLock) {
+      AutoCFRelease<CFStringRef> psName = CTFontCopyPostScriptName(aFont);
+      nsAutoString nameUTF16;
+      nsAutoCString nameUTF8;
+      GetStringForCFString(psName, nameUTF16);
+      CopyUTF16toUTF8(nameUTF16, nameUTF8);
+
+      auto* fe =
+          new CTFontEntry(nameUTF8, WeightRange(FontWeight::NORMAL), true, 0.0);
+
+      // Set the appropriate style, assuming it may not have a variation range.
+      CTFontSymbolicTraits traits = CTFontGetSymbolicTraits(aFont);
+      fe->mStyleRange = SlantStyleRange((traits & kCTFontTraitItalic)
+                                            ? FontSlantStyle::ITALIC
+                                            : FontSlantStyle::NORMAL);
+
+      // Set up weight (and width, if present) ranges.
+      fe->SetupVariationRanges();
+      AddFontEntryLocked(fe);
+    };
+
+    addToFamily(mForSystemFont);
+
+    // See if there is a corresponding italic face, and add it to the family.
+    AutoCFRelease<CTFontRef> italicFont = CTFontCreateCopyWithSymbolicTraits(
+        mForSystemFont, 0.0, nullptr, kCTFontTraitItalic, kCTFontTraitItalic);
+    if (italicFont != mForSystemFont) {
+      addToFamily(italicFont);
+    }
+
+    CFRelease(mForSystemFont);
+    mForSystemFont = nullptr;
+
+    SetHasStyles(true);
+
+    return;
+  }
+
   struct Context {
     CTFontFamily* family;
     const void* prevValue = nullptr;
@@ -1820,6 +1861,41 @@ void CoreTextFontList::ReadFaceNamesForFamily(
       aliasData->mFaces.AppendElement(facePtrs[i]);
     }
   }
+}
+
+void CoreTextFontList::InitSystemFontNames() {
+  // text font family
+  AutoCFRelease<CTFontRef> font = CTFontCreateUIFontForLanguage(
+      kCTFontUIFontSystem, 0.0, nullptr);  // TODO: language
+  AutoCFRelease<CFStringRef> name = CTFontCopyFamilyName(font);
+
+  nsAutoString familyName;
+  GetStringForCFString(name, familyName);
+  CopyUTF16toUTF8(familyName, mSystemFontFamilyName);
+
+  // We store an in-process gfxFontFamily for the system font even if using the
+  // shared fontlist to manage "normal" fonts, because the hidden system fonts
+  // may be excluded from the font list altogether. This family will be
+  // populated based on the given NSFont.
+  RefPtr<gfxFontFamily> fam = new CTFontFamily(mSystemFontFamilyName, font);
+  if (fam) {
+    nsAutoCString key;
+    GenerateFontListKey(mSystemFontFamilyName, key);
+    mFontFamilies.InsertOrUpdate(key, std::move(fam));
+  }
+}
+
+FontFamily CoreTextFontList::GetDefaultFontForPlatform(
+    nsPresContext* aPresContext, const gfxFontStyle* aStyle,
+    nsAtom* aLanguage) {
+  AutoCFRelease<CTFontRef> font = CTFontCreateUIFontForLanguage(
+      kCTFontUIFontUser, 0.0, nullptr);  // TODO: language
+  AutoCFRelease<CFStringRef> name = CTFontCopyFamilyName(font);
+
+  nsAutoString familyName;
+  GetStringForCFString(name, familyName);
+
+  return FindFamily(aPresContext, NS_ConvertUTF16toUTF8(familyName));
 }
 
 #ifdef MOZ_BUNDLED_FONTS

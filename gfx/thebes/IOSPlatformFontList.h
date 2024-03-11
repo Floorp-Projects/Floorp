@@ -21,21 +21,12 @@ class IOSPlatformFontList final : public CoreTextFontList {
                                nsACString& aSystemFontName,
                                gfxFontStyle& aFontStyle);
 
- protected:
-  FontFamily GetDefaultFontForPlatform(nsPresContext* aPresContext,
-                                       const gfxFontStyle* aStyle,
-                                       nsAtom* aLanguage = nullptr)
-      MOZ_REQUIRES(mLock) override;
-
  private:
   friend class gfxPlatformMac;
 
   // Only the friend class gfxPlatformMac constructs this.
   IOSPlatformFontList();
   virtual ~IOSPlatformFontList();
-
-  // initialize system fonts
-  void InitSystemFontNames() override MOZ_REQUIRES(mLock);
 };
 
 #endif /* IOSPlatformFontList_H_ */

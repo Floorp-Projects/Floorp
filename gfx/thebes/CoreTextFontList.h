@@ -118,6 +118,15 @@ class CTFontFamily : public gfxFontFamily {
   CTFontFamily(const nsACString& aName, FontVisibility aVisibility)
       : gfxFontFamily(aName, aVisibility) {}
 
+  CTFontFamily(const nsACString& aName, CTFontRef aSystemFont)
+      : gfxFontFamily(aName, FontVisibility::Unknown),
+        mForSystemFont(aSystemFont) {
+    // I don't think the system font instance is at much risk of being deleted,
+    // but to be on the safe side let's retain a reference until we're finished
+    // using it for lazy initialization.
+    CFRetain(mForSystemFont);
+  }
+
   virtual ~CTFontFamily() = default;
 
   void LocalizedName(nsACString& aLocalizedName) override;
@@ -127,6 +136,15 @@ class CTFontFamily : public gfxFontFamily {
 
  protected:
   void AddFace(CTFontDescriptorRef aFace) MOZ_REQUIRES(mLock);
+
+  // If non-null, this is a family representing the system UI font, and should
+  // use the given CTFontRef as the basis for initialization as the normal
+  // font-manager APIs based on family name won't handle it.
+  CTFontRef mForSystemFont = nullptr;
+};
+
+class gfxMacFontFamily final : public CTFontFamily {
+ public:
 };
 
 class CoreTextFontList : public gfxPlatformFontList {
@@ -179,7 +197,13 @@ class CoreTextFontList : public gfxPlatformFontList {
   void PreloadNamesList() MOZ_REQUIRES(mLock);
 
   // initialize system fonts
-  virtual void InitSystemFontNames() = 0;
+  void InitSystemFontNames() MOZ_REQUIRES(mLock);
+
+  // look up a default font to use as fallback
+  FontFamily GetDefaultFontForPlatform(nsPresContext* aPresContext,
+                                       const gfxFontStyle* aStyle,
+                                       nsAtom* aLanguage = nullptr)
+      MOZ_REQUIRES(mLock) override;
 
   // Hooks for the macOS-specific "single face family" hack (Osaka-mono).
   virtual void InitSingleFaceList() {}

@@ -28,11 +28,6 @@ class gfxMacPlatformFontList final : public CoreTextFontList {
   bool DeprecatedFamilyIsAvailable(const nsACString& aName) override;
   FontVisibility GetVisibilityForFamily(const nsACString& aName) const override;
 
-  FontFamily GetDefaultFontForPlatform(nsPresContext* aPresContext,
-                                       const gfxFontStyle* aStyle,
-                                       nsAtom* aLanguage = nullptr)
-      MOZ_REQUIRES(mLock) override;
-
  private:
   friend class gfxPlatformMac;
 
@@ -42,9 +37,6 @@ class gfxMacPlatformFontList final : public CoreTextFontList {
   // Special-case font faces treated as font families (set via prefs)
   void InitSingleFaceList() MOZ_REQUIRES(mLock) override;
   void InitAliasesForSingleFaceList() MOZ_REQUIRES(mLock) override;
-
-  // initialize system fonts
-  void InitSystemFontNames() override MOZ_REQUIRES(mLock);
 
   nsTArray<nsCString> mSingleFaceFonts;
 };
