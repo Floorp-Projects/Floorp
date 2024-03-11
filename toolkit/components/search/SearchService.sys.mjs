@@ -638,7 +638,6 @@ export class SearchService {
    *   An Extension object containing data about the extension.
    */
   async addEnginesFromExtension(extension) {
-    lazy.logConsole.debug("addEnginesFromExtension: " + extension.id);
     // Treat add-on upgrade and downgrades the same - either way, the search
     // engine gets updated, not added. Generally, we don't expect a downgrade,
     // but just in case...
@@ -672,10 +671,12 @@ export class SearchService {
         }
       }
       lazy.logConsole.debug(
-        "addEnginesFromExtension: Ignoring builtIn engine."
+        "addEnginesFromExtension: Ignoring app engine during init or reload:",
+        extension.id
       );
       return;
     }
+    lazy.logConsole.debug("addEnginesFromExtension:", extension.id);
 
     // If we havent started SearchService yet, store this extension
     // to install in SearchService.init().
@@ -684,9 +685,10 @@ export class SearchService {
       return;
     }
 
-    await this.#installExtensionEngine(extension, [
-      lazy.SearchUtils.DEFAULT_TAG,
-    ]);
+    await this.#createAndAddAddonEngine({
+      extension,
+      locale: lazy.SearchUtils.DEFAULT_TAG,
+    });
   }
 
   async addOpenSearchEngine(engineURL, iconURL) {
@@ -1094,7 +1096,7 @@ export class SearchService {
   /**
    * A Set of installed search extensions reported by AddonManager
    * startup before SearchSevice has started. Will be installed
-   * during init().
+   * during init(). Does not contain application provided engines.
    *
    * @type {Set<object>}
    */
@@ -1812,21 +1814,21 @@ export class SearchService {
     }
 
     lazy.logConsole.debug(
-      "#loadEngines: loading",
+      "#loadStartupEngines: loading",
       this.#startupExtensions.size,
       "engines reported by AddonManager startup"
     );
     for (let extension of this.#startupExtensions) {
       try {
-        await this.#installExtensionEngine(
+        await this.#createAndAddAddonEngine({
           extension,
-          [lazy.SearchUtils.DEFAULT_TAG],
+          locale: lazy.SearchUtils.DEFAULT_TAG,
           settings,
-          true
-        );
+          initEngine: true,
+        });
       } catch (ex) {
         lazy.logConsole.error(
-          `#installExtensionEngine failed for ${extension.id}`,
+          `#createAndAddAddonEngine failed for ${extension.id}`,
           ex
         );
       }
@@ -2897,7 +2899,7 @@ export class SearchService {
    * @param {initEngine} [options.initEngine]
    *   Set to true if this engine is being loaded during initialization.
    */
-  async _createAndAddEngine({
+  async #createAndAddAddonEngine({
     extension,
     locale = lazy.SearchUtils.DEFAULT_TAG,
     settings,
@@ -2926,6 +2928,12 @@ export class SearchService {
     if (!this.isInitialized && !extension.isAppProvided && !initEngine) {
       await this.init();
     }
+
+    lazy.logConsole.debug(
+      "#createAndAddAddonEngine: installing:",
+      extension.id,
+      locale
+    );
 
     let shouldSetAsDefault = false;
     let changeReason = Ci.nsISearchService.CHANGE_REASON_UNKNOWN;
@@ -3058,13 +3066,7 @@ export class SearchService {
     lazy.logConsole.debug("installExtensionEngine:", extension.id);
 
     for (let locale of locales) {
-      lazy.logConsole.debug(
-        "addEnginesFromExtension: installing:",
-        extension.id,
-        ":",
-        locale
-      );
-      await this._createAndAddEngine({
+      await this.#createAndAddAddonEngine({
         extension,
         locale,
         settings,
