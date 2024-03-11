@@ -578,8 +578,6 @@ skip-if = ["xorigin"] # Testing internal API for comm-central
 
 ["test_paste_no_formatting.html"]
 
-["test_paste_paragraphs_ending_with_invisible_br.html"]
-
 ["test_paste_redirect_focus_in_paste_event_listener.html"]
 
 ["test_pasting_in_root_element.xhtml"]

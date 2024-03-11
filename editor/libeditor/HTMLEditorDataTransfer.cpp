@@ -4003,23 +4003,17 @@ nsresult HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
     MoveStartAndEndAccordingToHTMLInfo(const nsAString& aInfoStr,
                                        nsCOMPtr<nsINode>* aOutStartNode,
                                        nsCOMPtr<nsINode>* aOutEndNode) {
-  nsresult rvIgnored = NS_OK;
-  const int32_t sep = aInfoStr.FindChar((char16_t)',');
-  const int32_t startDepth = Substring(aInfoStr, 0, sep).ToInteger(&rvIgnored);
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rvIgnored),
-      "nsAString::ToInteger() for startDepth failed, but ignored");
-  const int32_t endDepth =
-      Substring(aInfoStr, sep + 1, aInfoStr.Length() - (sep + 1))
-          .ToInteger(&rvIgnored);
-  NS_WARNING_ASSERTION(
-      NS_SUCCEEDED(rvIgnored),
-      "nsAString::ToInteger() for endDepth failed, but ignored");
-  if (!startDepth && !endDepth) {
-    return NS_OK;
-  }
+  int32_t sep = aInfoStr.FindChar((char16_t)',');
+  nsAutoString numstr1(Substring(aInfoStr, 0, sep));
+  nsAutoString numstr2(
+      Substring(aInfoStr, sep + 1, aInfoStr.Length() - (sep + 1)));
 
-  for ([[maybe_unused]] int32_t i : IntegerRange(std::max(startDepth, 0))) {
+  // Move the start and end children.
+  nsresult rvIgnored;
+  int32_t num = numstr1.ToInteger(&rvIgnored);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                       "nsAString::ToInteger() failed, but ignored");
+  while (num--) {
     nsINode* tmp = (*aOutStartNode)->GetFirstChild();
     if (!tmp) {
       NS_WARNING("aOutStartNode did not have children");
@@ -4028,43 +4022,11 @@ nsresult HTMLEditor::HTMLWithContextInserter::FragmentFromPasteCreator::
     *aOutStartNode = tmp;
   }
 
-  for ([[maybe_unused]] int32_t i : IntegerRange(std::max(endDepth, 0))) {
+  num = numstr2.ToInteger(&rvIgnored);
+  while (num--) {
     nsINode* tmp = (*aOutEndNode)->GetLastChild();
     if (!tmp) {
       NS_WARNING("aOutEndNode did not have children");
-      return NS_ERROR_FAILURE;
-    }
-    *aOutEndNode = tmp;
-  }
-
-  // However, unless they are in common ancestor, we need to climbing up the
-  // tree again because user must want to copy the parent blocks too.
-  const nsINode* commonAncestor =
-      nsContentUtils::GetClosestCommonInclusiveAncestor(*aOutStartNode,
-                                                        *aOutEndNode);
-  if (NS_WARN_IF(!commonAncestor)) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  for ([[maybe_unused]] int32_t i : IntegerRange(std::max(startDepth, 0))) {
-    if (*aOutStartNode == commonAncestor) {
-      break;
-    }
-    nsINode* tmp = (*aOutStartNode)->GetParentNode();
-    if (!tmp) {
-      NS_WARNING("aOutStartNode did not have parent");
-      return NS_ERROR_FAILURE;
-    }
-    *aOutStartNode = tmp;
-  }
-
-  for ([[maybe_unused]] int32_t i : IntegerRange(std::max(endDepth, 0))) {
-    if (*aOutEndNode == commonAncestor) {
-      break;
-    }
-    nsINode* tmp = (*aOutEndNode)->GetParentNode();
-    if (!tmp) {
-      NS_WARNING("aOutEndNode did not have parent");
       return NS_ERROR_FAILURE;
     }
     *aOutEndNode = tmp;
