@@ -23,7 +23,6 @@
 
 import ctypes
 import errno
-import io
 import os
 import platform
 import re
@@ -391,13 +390,13 @@ def validate_install_manifests(install_manifest_args):
 def make_file_mapping(install_manifests):
     file_mapping = {}
     for manifest, destination in install_manifests:
-        absolute_destination = os.path.abspath(destination)
+        destination = os.path.abspath(destination)
         reg = FileRegistry()
         manifest.populate_registry(reg)
         for dst, src in reg:
             if hasattr(src, "path"):
                 # Any paths that get compared to source file names need to go through realpath.
-                abs_dest = realpath(os.path.join(absolute_destination, dst))
+                abs_dest = realpath(os.path.join(destination, dst))
                 file_mapping[abs_dest] = realpath(src.path)
     return file_mapping
 
@@ -551,25 +550,8 @@ class Dumper:
         """
         Get the commandline used to invoke dump_syms.
         """
-        path = os.path.join(buildconfig.topobjdir, "buildid.h")
-        buildid = io.open(path, "r", encoding="utf-8").read().split()[2]
-
         # The Mac dumper overrides this.
-        return [
-            self.dump_syms,
-            "--inlines",
-            "--extra-info",
-            "VENDOR " + buildconfig.substs["MOZ_APP_VENDOR"],
-            "--extra-info",
-            "PRODUCTNAME " + buildconfig.substs["MOZ_APP_BASENAME"],
-            "--extra-info",
-            "RELEASECHANNEL " + buildconfig.substs["MOZ_UPDATE_CHANNEL"],
-            "--extra-info",
-            "VERSION " + buildconfig.substs["MOZ_APP_VERSION"],
-            "--extra-info",
-            "BUILDID " + buildid,
-            file,
-        ]
+        return [self.dump_syms, "--inlines", file]
 
     def ProcessFileWork(
         self, file, arch_num, arch, vcs_root, dsymbundle=None, count_ctors=False
@@ -877,8 +859,9 @@ class Dumper_Linux(Dumper):
             full_path = os.path.normpath(os.path.join(self.symbol_path, rel_path))
             shutil.move(file_dbg, full_path)
             print(rel_path)
-        elif os.path.isfile(file_dbg):
-            os.unlink(file_dbg)
+        else:
+            if os.path.isfile(file_dbg):
+                os.unlink(file_dbg)
 
 
 class Dumper_Solaris(Dumper):
@@ -1083,13 +1066,13 @@ to canonical locations in the source repository. Specify
 
     if len(args) < 3:
         parser.error("not enough arguments")
-        sys.exit(1)
+        exit(1)
 
     try:
         manifests = validate_install_manifests(options.install_manifests)
     except (IOError, ValueError) as e:
         parser.error(str(e))
-        sys.exit(1)
+        exit(1)
     file_mapping = make_file_mapping(manifests)
     _, bucket = get_s3_region_and_bucket()
     dumper = GetPlatformSpecificDumper(
