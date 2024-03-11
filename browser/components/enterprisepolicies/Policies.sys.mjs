@@ -43,7 +43,7 @@ ChromeUtils.defineLazyGetter(lazy, "log", () => {
     "resource://gre/modules/Console.sys.mjs"
   );
   return new ConsoleAPI({
-    prefix: "Policies.jsm",
+    prefix: "Policies",
     // tip: set maxLogLevel to "debug" and use log.debug() to create detailed
     // messages during development. See LOG_LEVELS in Console.sys.mjs for details.
     maxLogLevel: "error",
@@ -233,12 +233,12 @@ export var Policies = {
 
       return true;
     },
-    // No additional implementation needed here. UpdateService.jsm will check
+    // No additional implementation needed here. UpdateService.sys.mjs will check
     // for this policy directly when determining the update URL.
   },
 
   AppUpdateURL: {
-    // No implementation needed here. UpdateService.jsm will check for this
+    // No implementation needed here. UpdateService.sys.mjs will check for this
     // policy directly when determining the update URL.
   },
 
@@ -1120,7 +1120,7 @@ export var Policies = {
   },
 
   ExemptDomainFileTypePairsFromFileTypeDownloadWarnings: {
-    // This policy is handled directly in EnterprisePoliciesParent.jsm
+    // This policy is handled directly in EnterprisePoliciesParent.sys.mjs
     // and requires no validation (It's done by the schema).
   },
 

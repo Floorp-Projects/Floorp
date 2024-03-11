@@ -11,7 +11,7 @@ ChromeUtils.defineLazyGetter(lazy, "log", () => {
     "resource://gre/modules/Console.sys.mjs"
   );
   return new ConsoleAPI({
-    prefix: "macOSPoliciesParser.jsm",
+    prefix: "macOSPoliciesParser",
     // tip: set maxLogLevel to "debug" and use log.debug() to create detailed
     // messages during development. See LOG_LEVELS in Console.sys.mjs for details.
     maxLogLevel: "error",
