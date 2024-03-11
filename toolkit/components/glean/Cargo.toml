@@ -18,6 +18,10 @@ cstr = "0.2"
 viaduct = "0.1"
 url = "2.1"
 thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }
+ohttp = { version = "0.3", default-features = false, features = ["gecko", "nss", "client"] }
+bhttp = "0.3"
+thiserror = "1.0"
+mozbuild = "0.1"
 
 [features]
 # Leave data collection enabled, but disable upload.

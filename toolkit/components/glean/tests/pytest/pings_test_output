@@ -76,6 +76,19 @@ pub static not_metrics: Lazy<Ping> = Lazy::new(|| {
     )
 });
 
+#[allow(non_upper_case_globals)]
+/// A fake OHTTP-using ping
+pub static not_ohttp: Lazy<Ping> = Lazy::new(|| {
+    Ping::new(
+        "not-ohttp",
+        false,
+        true,
+        true,
+        false,
+        vec![],
+    )
+});
+
 
 /// Instantiate custom pings once to trigger registration.
 ///
@@ -91,6 +104,7 @@ pub fn register_pings(application_id: Option<&str>) {
             let _ = &*not_deletion_request;
             let _ = &*not_events;
             let _ = &*not_metrics;
+            let _ = &*not_ohttp;
         }
     }
 }
@@ -114,6 +128,7 @@ pub(crate) fn submit_ping_by_id(id: u32, reason: Option<&str>) {
         2 => not_deletion_request.submit(reason),
         3 => not_events.submit(reason),
         4 => not_metrics.submit(reason),
+        5 => not_ohttp.submit(reason),
         _ => {
             // TODO: instrument this error.
             log::error!("Cannot submit unknown ping {} by id.", id);

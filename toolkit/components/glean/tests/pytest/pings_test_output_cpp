@@ -56,6 +56,13 @@ constexpr glean::impl::Ping NotEvents(3);
  */
 constexpr glean::impl::Ping NotMetrics(4);
 
+/*
+ * Generated from not-ohttp.
+ *
+ * A fake OHTTP-using ping
+ */
+constexpr glean::impl::Ping NotOhttp(5);
+
 
 }  // namespace mozilla::glean_pings
 
