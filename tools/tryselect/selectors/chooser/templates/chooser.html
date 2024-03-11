@@ -40,6 +40,17 @@
         {% else %}
         <div class="tab-pane" id="{{ section.name }}" role="tabpanel" aria-labelledby="{{ section.name }}-tab">
         {% endif %}
+          {% if section.name == "perf" %}
+          <div>
+            <p style="color:red">
+              WARNING: The try chooser is no longer supported for selecting performance tests.
+              Please use
+                <a href="https://firefox-source-docs.mozilla.org/testing/perfdocs/mach-try-perf.html">
+                  ./mach try perf
+                </a>.
+            </p>
+          </div>
+          {% endif %}
           {% for label, meta in section.labels|dictsort %}
           <label class="multiselect filter-label" for={{ label }}>
             <span>
