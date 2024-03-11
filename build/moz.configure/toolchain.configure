@@ -225,13 +225,27 @@ with only_when(target_is_ios):
     )
 
     def ios_sdk_min_version():
-        return "16.4"
+        return "17.4"
 
-    @depends("--with-ios-sdk", host, target)
+    @depends(target)
+    def ios_sdk_name(target):
+        return "iPhone{}{}.sdk".format(
+            "Simulator" if target.raw_os == "ios-sim" else "OS",
+            ios_sdk_min_version(),
+        )
+
+    @depends(
+        "--with-ios-sdk",
+        host,
+        target,
+        bootstrap_path(ios_sdk_name, when=depends("--with-ios-sdk")(lambda x: not x)),
+    )
     @imports(_from="__builtin__", _import="Exception")
     @imports(_from="os.path", _import="isdir")
     @imports(_from="os", _import="listdir")
-    def ios_sdk(sdk, host, target):
+    def ios_sdk(sdk, host, target, bootstrapped):
+        if bootstrapped:
+            sdk = [bootstrapped]
         if sdk:
             sdk = sdk[0]
             try:

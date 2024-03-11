@@ -42,6 +42,7 @@ EXCLUSIVE_COMPONENTS = [
     "linux",
     "macosx",
     "windows",
+    "ios",
     # broad test harness categories
     "awsy",
     "condprofile",

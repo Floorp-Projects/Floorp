@@ -1486,8 +1486,10 @@ items from that key's value."
             if build_platform == "android-geckoview-docs":
                 return
             main_platform = "android"
+        elif build_platform.startswith("ios"):
+            return
         else:
-            err = "Build platform {} didn't start with 'mac', 'linux', 'win', or 'android'".format(
+            err = "Build platform {} didn't start with 'mac', 'linux', 'win', 'android' or 'ios'".format(
                 build_platform
             )
             self.fatal(err)

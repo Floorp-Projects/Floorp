@@ -22,6 +22,7 @@ jobs-from:
     - android.yml
     - android-asan.yml
     - android-stuff.yml
+    - ios.yml
     - linux.yml
     - linux-base-toolchains.yml
     - macosx.yml

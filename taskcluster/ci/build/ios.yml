@@ -1,0 +1,127 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    index:
+        product: firefox
+    treeherder:
+        tier: 2
+    worker-type: b-linux-gcp
+    worker:
+        max-run-time: 7200
+    run-on-projects: ['mozilla-central']
+    run:
+        using: mozharness
+        actions: [get-secrets, build]
+        secrets: true
+        script: "mozharness/scripts/fx_desktop_build.py"
+        config:
+            - builds/releng_base_firefox.py
+        extra-config:
+            app_name: mobile/ios
+            stage_platform: ios
+            disable_package_metrics: true
+    use-sccache: true
+    fetches:
+        toolchain:
+            - linux64-cctools-port
+            - linux64-clang
+            - linux64-dump_syms
+            - linux64-hfsplus
+            - linux64-libdmg
+            - linux64-rust-ios
+            - linux64-rust-size
+            - linux64-cbindgen
+            - linux64-nasm
+            - linux64-node
+            - linux64-sccache
+            - sysroot-x86_64-linux-gnu
+            - sysroot-wasm32-wasi
+
+ios/debug:
+    description: "ios debug"
+    index:
+        job-name: ios-debug
+    treeherder:
+        platform: ios/debug
+        symbol: B
+    run:
+        extra-config:
+            mozconfig_platform: ios
+        mozconfig-variant: debug
+    fetches:
+        toolchain:
+            - ios-sdk
+
+ios/opt:
+    description: "ios opt"
+    index:
+        job-name: ios-opt
+    treeherder:
+        platform: ios/opt
+        symbol: B
+    run:
+        extra-config:
+            mozconfig_platform: ios
+        mozconfig-variant: opt
+    fetches:
+        toolchain:
+            - ios-sdk
+
+ios-non-unified/plain:
+    description: "ios non-unified"
+    index:
+        job-name: ios-non-unified-plain
+    treeherder:
+        platform: ios/plain
+        symbol: Bp-nu
+    worker:
+        env:
+            PERFHERDER_EXTRA_OPTIONS: non-unified
+            MOZ_AUTOMATION_BUILD_SYMBOLS: '0'
+    run:
+        extra-config:
+            mozconfig_platform: ios
+            extra_mozconfig_content:
+                - ac_add_options --disable-unified-build
+        mozconfig-variant: opt
+    fetches:
+        toolchain:
+            - ios-sdk
+
+ios-sim/debug:
+    description: "ios-sim debug"
+    index:
+        job-name: ios-sim-debug
+    treeherder:
+        platform: ios/debug
+        symbol: Bsim
+    worker:
+        env:
+            PERFHERDER_EXTRA_OPTIONS: ios-sim
+    run:
+        extra-config:
+            mozconfig_platform: ios-sim
+        mozconfig-variant: debug
+    fetches:
+        toolchain:
+            - ios-sim-sdk
+
+ios-sim/opt:
+    description: "ios-sim opt"
+    index:
+        job-name: ios-sim-opt
+    treeherder:
+        platform: ios/opt
+        symbol: Bsim
+    worker:
+        env:
+            PERFHERDER_EXTRA_OPTIONS: ios-sim
+    run:
+        extra-config:
+            mozconfig_platform: ios-sim
+        mozconfig-variant: opt
+    fetches:
+        toolchain:
+            - ios-sim-sdk
