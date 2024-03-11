@@ -5,8 +5,9 @@
 package org.mozilla.fenix.ui.robots
 
 import androidx.test.espresso.Espresso
-import androidx.test.espresso.assertion.ViewAssertions
+import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import org.hamcrest.CoreMatchers
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.click
@@ -15,12 +16,27 @@ import org.mozilla.fenix.helpers.click
  * Implementation of Robot Pattern for the URL toolbar.
  */
 class AccountSettingsRobot {
-    fun verifyBookmarksCheckbox() = assertBookmarksCheckbox()
+    fun verifyBookmarksCheckbox() =
+        bookmarksCheckbox().check(
+            matches(
+                withEffectiveVisibility(
+                    ViewMatchers.Visibility.VISIBLE,
+                ),
+            ),
+        )
 
-    fun verifyHistoryCheckbox() = assertHistoryCheckbox()
+    fun verifyHistoryCheckbox() =
+        historyCheckbox().check(
+            matches(
+                withEffectiveVisibility(
+                    ViewMatchers.Visibility.VISIBLE,
+                ),
+            ),
+        )
 
-    fun verifySignOutButton() = assertSignOutButton()
-    fun verifyDeviceName() = assertDeviceName()
+    fun verifySignOutButton() =
+        signOutButton().check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    fun verifyDeviceName() = deviceName().check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
     class Transition {
 
@@ -46,22 +62,3 @@ private fun signOutButton() = Espresso.onView(CoreMatchers.allOf(ViewMatchers.wi
 private fun deviceName() = Espresso.onView(CoreMatchers.allOf(ViewMatchers.withText("Device name")))
 
 private fun disconnectButton() = Espresso.onView(CoreMatchers.allOf(ViewMatchers.withId(R.id.signOutDisconnect)))
-
-private fun assertBookmarksCheckbox() = bookmarksCheckbox().check(
-    ViewAssertions.matches(
-        ViewMatchers.withEffectiveVisibility(
-            ViewMatchers.Visibility.VISIBLE,
-        ),
-    ),
-)
-
-private fun assertHistoryCheckbox() = historyCheckbox().check(
-    ViewAssertions.matches(
-        ViewMatchers.withEffectiveVisibility(
-            ViewMatchers.Visibility.VISIBLE,
-        ),
-    ),
-)
-
-private fun assertSignOutButton() = signOutButton().check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-private fun assertDeviceName() = deviceName().check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
