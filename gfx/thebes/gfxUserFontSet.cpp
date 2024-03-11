@@ -492,38 +492,54 @@ void gfxUserFontEntry::DoLoadNextSrc(bool aIsContinue) {
     else if (currSrc.mSourceType == gfxFontFaceSrc::eSourceType_URL) {
       if (gfxPlatform::GetPlatform()->IsFontFormatSupported(
               currSrc.mFormatHint, currSrc.mTechFlags)) {
-        if (ServoStyleSet* set = gfxFontUtils::CurrentServoStyleSet()) {
-          // Only support style worker threads synchronously getting
-          // entries from the font cache when it's not a data: URI
-          // @font-face that came from UA or user sheets, since we
-          // were not able to call IsFontLoadAllowed ahead of time
-          // for these entries.
-          if (currSrc.mUseOriginPrincipal && IgnorePrincipal(currSrc.mURI)) {
-            set->AppendTask(PostTraversalTask::LoadFontEntry(this));
-            SetLoadState(STATUS_LOAD_PENDING);
-            return;
+        // TODO(emilio): Make UserFontCache thread-safe maybe? But we need to
+        // potentially do CSP checks so maybe not trivial.
+        const bool canCheckCache = [&] {
+          if (NS_IsMainThread()) {
+            return true;
           }
-        }
+          if (gfxFontUtils::CurrentServoStyleSet()) {
+            // Only support style worker threads synchronously getting entries
+            // from the font cache when it's not a data: URI @font-face that
+            // came from UA or user sheets, since we were not able to call
+            // IsFontLoadAllowed ahead of time for these entries.
+            return !currSrc.mUseOriginPrincipal ||
+                   !IgnorePrincipal(currSrc.mURI);
+          }
+          return false;
+        }();
 
         // see if we have an existing entry for this source
-        gfxFontEntry* fe =
-            gfxUserFontSet::UserFontCache::GetFont(currSrc, *this);
-        if (fe) {
-          mPlatformFontEntry = fe;
-          SetLoadState(STATUS_LOADED);
-          LOG(
-              ("userfonts (%p) [src %d] "
-               "loaded uri from cache: (%s) for (%s)\n",
-               fontSet.get(), mCurrentSrcIndex,
-               currSrc.mURI->GetSpecOrDefault().get(), mFamilyName.get()));
-          return;
+        if (canCheckCache) {
+          gfxFontEntry* fe =
+              gfxUserFontSet::UserFontCache::GetFont(currSrc, *this);
+          if (fe) {
+            mPlatformFontEntry = fe;
+            SetLoadState(STATUS_LOADED);
+            LOG(
+                ("userfonts (%p) [src %d] "
+                 "loaded uri from cache: (%s) for (%s)\n",
+                 fontSet.get(), mCurrentSrcIndex,
+                 currSrc.mURI->GetSpecOrDefault().get(), mFamilyName.get()));
+            return;
+          }
         }
 
         if (ServoStyleSet* set = gfxFontUtils::CurrentServoStyleSet()) {
           // If we need to start a font load and we're on a style
           // worker thread, we have to defer it.
-          set->AppendTask(PostTraversalTask::LoadFontEntry(this));
           SetLoadState(STATUS_LOAD_PENDING);
+          set->AppendTask(PostTraversalTask::LoadFontEntry(this));
+          return;
+        }
+
+        if (dom::IsCurrentThreadRunningWorker()) {
+          // TODO: Maybe support loading the font entry in workers, at least for
+          // buffers or other sync sources?
+          SetLoadState(STATUS_LOAD_PENDING);
+          NS_DispatchToMainThread(
+              NewRunnableMethod("gfxUserFontEntry::ContinueLoad", this,
+                                &gfxUserFontEntry::ContinueLoad));
           return;
         }
 
@@ -551,9 +567,9 @@ void gfxUserFontEntry::DoLoadNextSrc(bool aIsContinue) {
           fontSet->LogMessage(this, mCurrentSrcIndex, "font load failed",
                               nsIScriptError::errorFlag, rv);
         } else if (!aIsContinue) {
-          RefPtr<nsIRunnable> runnable = NS_NewRunnableFunction(
-              "gfxUserFontSet::AsyncContinueLoad",
-              [loader = RefPtr{this}] { loader->ContinueLoad(); });
+          RefPtr<nsIRunnable> runnable =
+              NewRunnableMethod("gfxUserFontEntry::ContinueLoad", this,
+                                &gfxUserFontEntry::ContinueLoad);
           SetLoadState(STATUS_LOAD_PENDING);
           // We don't want to trigger the channel open at random points in
           // time, because it can run privileged JS.
@@ -815,13 +831,6 @@ bool gfxUserFontEntry::LoadPlatformFont(uint32_t aSrcIndex,
 
 void gfxUserFontEntry::Load() {
   if (mUserFontLoadState != STATUS_NOT_LOADED) {
-    return;
-  }
-  if (dom::IsCurrentThreadRunningWorker()) {
-    // TODO: Maybe support loading the font entry in workers, at least for
-    // buffers or other sync sources?
-    NS_DispatchToMainThread(NewRunnableMethod("gfxUserFontEntry::Load", this,
-                                              &gfxUserFontEntry::Load));
     return;
   }
   LoadNextSrc();
