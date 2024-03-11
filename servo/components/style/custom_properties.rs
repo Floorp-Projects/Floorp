@@ -674,7 +674,9 @@ fn parse_declaration_value_block<'i, 't>(
     let mut prev_reference_index: Option<usize> = None;
     loop {
         let token_start = input.position();
-        let Ok(token) = input.next_including_whitespace_and_comments() else { break };
+        let Ok(token) = input.next_including_whitespace_and_comments() else {
+            break;
+        };
 
         let prev_token_type = last_token_type;
         let serialization_type = token.serialization_type();
@@ -814,7 +816,8 @@ fn parse_declaration_value_block<'i, 't>(
                     check_closed!(")");
                     prev_reference_index = Some(our_ref_index);
                     let reference = &mut references.refs[our_ref_index];
-                    reference.end = input.position().byte_index() - input_start.byte_index() + missing_closing_characters.len();
+                    reference.end = input.position().byte_index() - input_start.byte_index() +
+                        missing_closing_characters.len();
                     reference.fallback = fallback;
                     if is_var {
                         references.any_var = true;
@@ -890,7 +893,11 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
     /// Create a new builder, inheriting from a given custom properties map.
     ///
     /// We expose this publicly mostly for @keyframe blocks.
-    pub fn new_with_properties(stylist: &'a Stylist, custom_properties: ComputedCustomProperties, computed_context: &'a mut computed::Context<'b>) -> Self {
+    pub fn new_with_properties(
+        stylist: &'a Stylist,
+        custom_properties: ComputedCustomProperties,
+        computed_context: &'a mut computed::Context<'b>,
+    ) -> Self {
         Self {
             seen: PrecomputedHashSet::default(),
             reverted: Default::default(),
@@ -920,7 +927,9 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
 
         // Reuse flags from computing registered custom properties initial values, such as
         // whether they depend on viewport units.
-        context.style().add_flags(stylist.get_custom_property_initial_values_flags());
+        context
+            .style()
+            .add_flags(stylist.get_custom_property_initial_values_flags());
         Self::new_with_properties(stylist, properties, context)
     }
 
@@ -1011,7 +1020,11 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
 
     /// Note a non-custom property with variable reference that may in turn depend on that property.
     /// e.g. `font-size` depending on a custom property that may be a registered property using `em`.
-    pub fn note_potentially_cyclic_non_custom_dependency(&mut self, id: LonghandId, decl: &VariableDeclaration) {
+    pub fn note_potentially_cyclic_non_custom_dependency(
+        &mut self,
+        id: LonghandId,
+        decl: &VariableDeclaration,
+    ) {
         // With unit algebra in `calc()`, references aren't limited to `font-size`.
         // For example, `--foo: 100ex; font-weight: calc(var(--foo) / 1ex);`,
         // or `--foo: 1em; zoom: calc(var(--foo) * 30px / 2em);`
@@ -1025,8 +1038,7 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
             },
             LonghandId::LineHeight => {
                 if self.computed_context.is_root_element() {
-                    NonCustomReferences::ROOT_LH_UNITS |
-                        NonCustomReferences::ROOT_FONT_UNITS
+                    NonCustomReferences::ROOT_LH_UNITS | NonCustomReferences::ROOT_FONT_UNITS
                 } else {
                     NonCustomReferences::LH_UNITS | NonCustomReferences::FONT_UNITS
                 }
@@ -1038,15 +1050,24 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
             return;
         }
 
-        let variables: Vec<Atom> = refs.refs.iter().filter_map(|reference| {
-            if !reference.is_var {
-                return None;
-            }
-            if !self.stylist.get_custom_property_registration(&reference.name).syntax.may_compute_length() {
-                return None;
-            }
-            Some(reference.name.clone())
-        }).collect();
+        let variables: Vec<Atom> = refs
+            .refs
+            .iter()
+            .filter_map(|reference| {
+                if !reference.is_var {
+                    return None;
+                }
+                if !self
+                    .stylist
+                    .get_custom_property_registration(&reference.name)
+                    .syntax
+                    .may_compute_length()
+                {
+                    return None;
+                }
+                Some(reference.name.clone())
+            })
+            .collect();
         references.for_each(|idx| {
             let entry = &mut self.references_from_non_custom_properties[idx];
             let was_none = entry.is_none();
@@ -1169,7 +1190,8 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
                 self.stylist,
                 self.computed_context,
             );
-            self.computed_context.builder.invalid_non_custom_properties = invalid_non_custom_properties;
+            self.computed_context.builder.invalid_non_custom_properties =
+                invalid_non_custom_properties;
         }
 
         self.custom_properties.shrink_to_fit();
@@ -1183,7 +1205,8 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
             inherited: if self
                 .computed_context
                 .inherited_custom_properties()
-                .inherited == self.custom_properties.inherited
+                .inherited ==
+                self.custom_properties.inherited
             {
                 self.computed_context
                     .inherited_custom_properties()
@@ -1481,10 +1504,10 @@ fn substitute_all(
                     .invalid_non_custom_properties
                     .insert(LonghandId::FontSize);
             }
-            if context.non_custom_references.intersects(
-                NonCustomReferences::LH_UNITS |
-                    NonCustomReferences::ROOT_LH_UNITS,
-            ) {
+            if context
+                .non_custom_references
+                .intersects(NonCustomReferences::LH_UNITS | NonCustomReferences::ROOT_LH_UNITS)
+            {
                 context
                     .invalid_non_custom_properties
                     .insert(LonghandId::LineHeight);
@@ -1558,8 +1581,9 @@ fn substitute_all(
                         continue;
                     }
                     if let Some(deferred) = &mut context.deferred_properties {
-                        let registration =
-                            context.stylist.get_custom_property_registration(&reference.name);
+                        let registration = context
+                            .stylist
+                            .get_custom_property_registration(&reference.name);
                         if deferred.get(registration, &reference.name).is_some() {
                             // This property depends on a custom property that depends on a non-custom property, defer.
                             deferred.insert(registration, &name, Arc::clone(v));
@@ -1654,7 +1678,13 @@ fn substitute_references_if_needed_and_apply(
     }
 
     let inherited = computed_context.inherited_custom_properties();
-    let value = match substitute_internal(value, custom_properties, stylist, registration, computed_context) {
+    let value = match substitute_internal(
+        value,
+        custom_properties,
+        stylist,
+        registration,
+        computed_context,
+    ) {
         Ok(v) => v,
         Err(..) => {
             handle_invalid_at_computed_value_time(
@@ -1666,7 +1696,8 @@ fn substitute_references_if_needed_and_apply(
             );
             return;
         },
-    }.into_value(&value.url_data);
+    }
+    .into_value(&value.url_data);
 
     // If variable fallback results in a wide keyword, deal with it now.
     {
@@ -1677,7 +1708,11 @@ fn substitute_references_if_needed_and_apply(
             // TODO: It's unclear what this should do for revert / revert-layer, see
             // https://github.com/w3c/csswg-drafts/issues/9131. For now treating as unset
             // seems fine?
-            match (kw, registration.inherits(), computed_context.is_root_element()) {
+            match (
+                kw,
+                registration.inherits(),
+                computed_context.is_root_element(),
+            ) {
                 (CSSWideKeyword::Initial, _, _) |
                 (CSSWideKeyword::Revert, false, _) |
                 (CSSWideKeyword::RevertLayer, false, _) |
@@ -1733,7 +1768,10 @@ impl<'a> Substitution<'a> {
     }
 
     fn from_value(v: VariableValue) -> Substitution<'static> {
-        debug_assert!(!v.has_references(), "Computed values shouldn't have references");
+        debug_assert!(
+            !v.has_references(),
+            "Computed values shouldn't have references"
+        );
         Substitution {
             css: Cow::from(v.css),
             first_token_type: v.first_token_type,
@@ -1904,7 +1942,9 @@ fn substitute_one_reference<'a>(
         }
     }
 
-    let Some(ref fallback) = reference.fallback else { return Err(()) };
+    let Some(ref fallback) = reference.fallback else {
+        return Err(());
+    };
 
     do_substitute_chunk(
         css,
