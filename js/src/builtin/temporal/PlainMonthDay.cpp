@@ -903,8 +903,7 @@ static bool PlainMonthDay_getISOFields(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 8.
-  auto* obj =
-      NewPlainObjectWithUniqueNames(cx, fields.begin(), fields.length());
+  auto* obj = NewPlainObjectWithUniqueNames(cx, fields);
   if (!obj) {
     return false;
   }

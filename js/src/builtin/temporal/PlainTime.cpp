@@ -2432,8 +2432,7 @@ static bool PlainTime_getISOFields(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 10.
-  auto* obj =
-      NewPlainObjectWithUniqueNames(cx, fields.begin(), fields.length());
+  auto* obj = NewPlainObjectWithUniqueNames(cx, fields);
   if (!obj) {
     return false;
   }

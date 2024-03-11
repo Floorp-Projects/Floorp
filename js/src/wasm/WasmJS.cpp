@@ -814,7 +814,7 @@ static JSObject* FuncTypeToObject(JSContext* cx, const FuncType& type) {
     return nullptr;
   }
 
-  return NewPlainObjectWithUniqueNames(cx, props.begin(), props.length());
+  return NewPlainObjectWithUniqueNames(cx, props);
 }
 
 static JSObject* TableTypeToObject(JSContext* cx, RefType type,
@@ -842,7 +842,7 @@ static JSObject* TableTypeToObject(JSContext* cx, RefType type,
     return nullptr;
   }
 
-  return NewPlainObjectWithUniqueNames(cx, props.begin(), props.length());
+  return NewPlainObjectWithUniqueNames(cx, props);
 }
 
 static JSObject* MemoryTypeToObject(JSContext* cx, bool shared,
@@ -896,7 +896,7 @@ static JSObject* MemoryTypeToObject(JSContext* cx, bool shared,
     return nullptr;
   }
 
-  return NewPlainObjectWithUniqueNames(cx, props.begin(), props.length());
+  return NewPlainObjectWithUniqueNames(cx, props);
 }
 
 static JSObject* GlobalTypeToObject(JSContext* cx, ValType type,
@@ -916,7 +916,7 @@ static JSObject* GlobalTypeToObject(JSContext* cx, ValType type,
     return nullptr;
   }
 
-  return NewPlainObjectWithUniqueNames(cx, props.begin(), props.length());
+  return NewPlainObjectWithUniqueNames(cx, props);
 }
 
 static JSObject* TagTypeToObject(JSContext* cx,
@@ -931,7 +931,7 @@ static JSObject* TagTypeToObject(JSContext* cx,
     return nullptr;
   }
 
-  return NewPlainObjectWithUniqueNames(cx, props.begin(), props.length());
+  return NewPlainObjectWithUniqueNames(cx, props);
 }
 #endif  // ENABLE_WASM_TYPE_REFLECTIONS
 
@@ -1187,8 +1187,7 @@ bool WasmModuleObject::imports(JSContext* cx, unsigned argc, Value* vp) {
     }
 #endif  // ENABLE_WASM_TYPE_REFLECTIONS
 
-    JSObject* obj =
-        NewPlainObjectWithUniqueNames(cx, props.begin(), props.length());
+    JSObject* obj = NewPlainObjectWithUniqueNames(cx, props);
     if (!obj) {
       return false;
     }
@@ -1291,8 +1290,7 @@ bool WasmModuleObject::exports(JSContext* cx, unsigned argc, Value* vp) {
     }
 #endif  // ENABLE_WASM_TYPE_REFLECTIONS
 
-    JSObject* obj =
-        NewPlainObjectWithUniqueNames(cx, props.begin(), props.length());
+    JSObject* obj = NewPlainObjectWithUniqueNames(cx, props);
     if (!obj) {
       return false;
     }

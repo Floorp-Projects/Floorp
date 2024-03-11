@@ -2117,8 +2117,7 @@ static bool wasmMetadataAnalysis(JSContext* cx, unsigned argc, Value* vp) {
       }
     }
 
-    JSObject* results =
-        NewPlainObjectWithUniqueNames(cx, props.begin(), props.length());
+    JSObject* results = NewPlainObjectWithUniqueNames(cx, props);
     if (!results) {
       return false;
     }
