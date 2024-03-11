@@ -98,7 +98,7 @@ class Configuration(DescriptorProvider):
                 # different .webidl file than their LHS interface.  Make sure we
                 # don't have any of those.  See similar block below for partial
                 # interfaces!
-                if thing.interface.filename() != thing.filename():
+                if thing.interface.filename != thing.filename:
                     raise TypeError(
                         "The binding build system doesn't really support "
                         "'includes' statements which don't appear in the "
@@ -124,7 +124,7 @@ class Configuration(DescriptorProvider):
             # statements!
             if not thing.isExternal():
                 for partial in thing.getPartials():
-                    if partial.filename() != thing.filename():
+                    if partial.filename != thing.filename:
                         raise TypeError(
                             "The binding build system doesn't really support "
                             "partial interfaces/namespaces/mixins which don't "
@@ -146,7 +146,7 @@ class Configuration(DescriptorProvider):
                     or iface.getExtendedAttribute("Func")
                     == ["nsContentUtils::IsCallerChromeOrFuzzingEnabled"]
                     or not iface.hasInterfaceObject()
-                    or isInWebIDLRoot(iface.filename())
+                    or isInWebIDLRoot(iface.filename)
                 ):
                     raise TypeError(
                         "Interfaces which are exposed to the web may only be "
@@ -187,7 +187,7 @@ class Configuration(DescriptorProvider):
 
         self.descriptorsByFile = {}
         for d in self.descriptors:
-            self.descriptorsByFile.setdefault(d.interface.filename(), []).append(d)
+            self.descriptorsByFile.setdefault(d.interface.filename, []).append(d)
 
         self.enums = [e for e in parseData if e.isEnum()]
 
@@ -212,19 +212,19 @@ class Configuration(DescriptorProvider):
 
         def addUnion(t):
             filenamesForUnion = self.filenamesPerUnion[t.name]
-            if t.filename() not in filenamesForUnion:
+            if t.filename not in filenamesForUnion:
                 # We have a to be a bit careful: some of our built-in
                 # typedefs are for unions, and those unions end up with
                 # "<unknown>" as the filename.  If that happens, we don't
                 # want to try associating this union with one particular
                 # filename, since there isn't one to associate it with,
                 # really.
-                if t.filename() == "<unknown>":
+                if t.filename == "<unknown>":
                     uniqueFilenameForUnion = None
                 elif len(filenamesForUnion) == 0:
                     # This is the first file that we found a union with this
                     # name in, record the union as part of the file.
-                    uniqueFilenameForUnion = t.filename()
+                    uniqueFilenameForUnion = t.filename
                 else:
                     # We already found a file that contains a union with
                     # this name.
@@ -246,7 +246,7 @@ class Configuration(DescriptorProvider):
                     # the filename as None, so that we can detect that.
                     uniqueFilenameForUnion = None
                 self.unionsPerFilename[uniqueFilenameForUnion].append(t)
-                filenamesForUnion.add(t.filename())
+                filenamesForUnion.add(t.filename)
 
         def addUnions(t):
             t = findInnermostType(t)
@@ -571,13 +571,13 @@ class Configuration(DescriptorProvider):
         return curr
 
     def getEnums(self, webIDLFile):
-        return [e for e in self.enums if e.filename() == webIDLFile]
+        return [e for e in self.enums if e.filename == webIDLFile]
 
     def getDictionaries(self, webIDLFile):
-        return [d for d in self.dictionaries if d.filename() == webIDLFile]
+        return [d for d in self.dictionaries if d.filename == webIDLFile]
 
     def getCallbacks(self, webIDLFile):
-        return [c for c in self.callbacks if c.filename() == webIDLFile]
+        return [c for c in self.callbacks if c.filename == webIDLFile]
 
     def getDescriptor(self, interfaceName):
         """
@@ -704,7 +704,7 @@ class Descriptor(DescriptorProvider):
             # import it here, sadly.
             # Use our local version of the header, not the exported one, so that
             # test bindings, which don't export, will work correctly.
-            basename = os.path.basename(self.interface.filename())
+            basename = os.path.basename(self.interface.filename)
             headerDefault = basename.replace(".webidl", "Binding.h")
         else:
             if not self.interface.isExternal() and self.interface.getExtendedAttribute(
