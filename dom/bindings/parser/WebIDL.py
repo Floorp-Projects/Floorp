@@ -82,13 +82,10 @@ class Location(object):
         self._lineno = lineno
         self._lexpos = lexpos
         self._lexdata = lexer.lexdata
-        self._file = filename if filename else "<unknown>"
+        self.filename = filename if filename else "<unknown>"
 
     def __eq__(self, other):
-        return self._lexpos == other._lexpos and self._file == other._file
-
-    def filename(self):
-        return self._file
+        return self._lexpos == other._lexpos and self.filename == other.filename
 
     def resolve(self):
         if self._line:
@@ -107,7 +104,7 @@ class Location(object):
 
     def get(self):
         self.resolve()
-        return "%s line %s:%s" % (self._file, self._lineno, self._colno)
+        return "%s line %s:%s" % (self.filename, self._lineno, self._colno)
 
     def _pointerline(self):
         return " " * self._colno + "^"
@@ -115,7 +112,7 @@ class Location(object):
     def __str__(self):
         self.resolve()
         return "%s line %s:%s\n%s\n%s" % (
-            self._file,
+            self.filename,
             self._lineno,
             self._colno,
             self._line,
@@ -126,12 +123,10 @@ class Location(object):
 class BuiltinLocation(object):
     def __init__(self, text):
         self.msg = text + "\n"
+        self.filename = "<builtin>"
 
     def __eq__(self, other):
         return isinstance(other, BuiltinLocation) and self.msg == other.msg
-
-    def filename(self):
-        return "<builtin>"
 
     def resolve(self):
         pass
@@ -150,9 +145,7 @@ class IDLObject(object):
     def __init__(self, location):
         self.location = location
         self.userData = dict()
-
-    def filename(self):
-        return self.location.filename()
+        self.filename = location and location.filename
 
     def isInterface(self):
         return False
@@ -217,8 +210,8 @@ class IDLObject(object):
         visited.add(self)
 
         deps = set()
-        if self.filename() != "<builtin>":
-            deps.add(self.filename())
+        if self.filename != "<builtin>":
+            deps.add(self.filename)
 
         for d in self._getDependentObjects():
             deps.update(d.getDeps(visited))
