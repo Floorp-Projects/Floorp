@@ -381,6 +381,7 @@ export class EngineURL {
     }
 
     switch (templateURI.scheme) {
+      case "about":
       case "http":
       case "https":
         this.template = template;
@@ -392,6 +393,10 @@ export class EngineURL {
         );
     }
 
+    if (templateURI.spec == "about:search") {
+      return;
+    }
+    
     this.templateHost = templateURI.host;
   }
 

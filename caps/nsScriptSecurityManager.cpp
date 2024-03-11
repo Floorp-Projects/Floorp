@@ -957,6 +957,16 @@ nsresult nsScriptSecurityManager::CheckLoadURIFlags(
 
   nsAutoCString targetScheme;
   nsresult rv = aTargetBaseURI->GetScheme(targetScheme);
+
+  // If uri is "about:search" we return NS_OK to allow the load.
+  if (targetScheme.EqualsLiteral("about")) {
+    nsAutoCString moduleName;
+    if (NS_SUCCEEDED(NS_GetAboutModuleName(aTargetBaseURI, moduleName)) &&
+        moduleName.EqualsLiteral("search")) {
+      return NS_OK;
+    }
+  }
+
   if (NS_FAILED(rv)) return rv;
 
   // Check for system target URI.  Regular (non web accessible) extension
