@@ -7,14 +7,24 @@
 #define mozilla_contentanalysis_h
 
 #include "mozilla/DataMutex.h"
-#include "mozilla/dom/WindowGlobalParent.h"
+#include "mozilla/MozPromise.h"
+#include "mozilla/dom/Promise.h"
 #include "nsIContentAnalysis.h"
 #include "nsProxyRelease.h"
 #include "nsString.h"
 #include "nsTHashMap.h"
 
 #include <atomic>
+#include <regex>
 #include <string>
+
+class nsIPrincipal;
+class ContentAnalysisTest;
+
+namespace mozilla::dom {
+class DataTransfer;
+class WindowGlobalParent;
+}  // namespace mozilla::dom
 
 namespace content_analysis::sdk {
 class Client;
@@ -116,6 +126,14 @@ class ContentAnalysis final : public nsIContentAnalysis {
       nsCString aRequestToken,
       content_analysis::sdk::ContentAnalysisRequest&& aRequest,
       const std::shared_ptr<content_analysis::sdk::Client>& aClient);
+  void IssueResponse(RefPtr<ContentAnalysisResponse>& response);
+
+  // Did the URL filter completely handle the request or do we need to check
+  // with the agent.
+  enum UrlFilterResult { eCheck, eDeny, eAllow };
+
+  UrlFilterResult FilterByUrlLists(nsIContentAnalysisRequest* aRequest);
+  void EnsureParsedUrlFilters();
 
   using ClientPromise =
       MozPromise<std::shared_ptr<content_analysis::sdk::Client>, nsresult,
@@ -158,6 +176,10 @@ class ContentAnalysis final : public nsIContentAnalysis {
   };
   DataMutex<nsTHashMap<nsCString, WarnResponseData>> mWarnResponseDataMap;
 
+  std::vector<std::regex> mAllowUrlList;
+  std::vector<std::regex> mDenyUrlList;
+  bool mParsedUrlLists;
+
   friend class ContentAnalysisResponse;
 };
 
@@ -172,6 +194,7 @@ class ContentAnalysisResponse final : public nsIContentAnalysisResponse {
       Action aAction, const nsACString& aRequestToken);
 
   void SetOwner(RefPtr<ContentAnalysis> aOwner);
+  void DoNotAcknowledge() { mDoNotAcknowledge = true; }
 
  private:
   ~ContentAnalysisResponse() = default;
@@ -197,7 +220,11 @@ class ContentAnalysisResponse final : public nsIContentAnalysisResponse {
   RefPtr<ContentAnalysis> mOwner;
 
   // Whether the response has been acknowledged
-  bool mHasAcknowledged;
+  bool mHasAcknowledged = false;
+
+  // If true, the request was completely handled by URL filter lists, so it
+  // was not sent to the agent and should not send an Acknowledge.
+  bool mDoNotAcknowledge = false;
 
   friend class ContentAnalysis;
 };
