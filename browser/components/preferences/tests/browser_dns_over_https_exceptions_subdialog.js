@@ -15,18 +15,19 @@ function acceptDoHExceptionsSubdialog(win) {
   button.doCommand();
 }
 
+function cancelDoHExceptionsSubdialog(win) {
+  const button = win.document.querySelector("dialog").getButton("cancel");
+  button.doCommand();
+}
+
 function addNewException(domain, dialog) {
   let url = dialog.document.getElementById("url");
   let addButton = dialog.document.getElementById("btnAddException");
 
-  if (dialog.document.getElementById("permissionsBox").itemCount > 0) {
-    // This fails when list is empty after opening the dialog (Bug 1884135).
-    // Move outside the if block along the fix to that bug.
-    ok(
-      addButton.disabled,
-      "The Add button is disabled when domain's input box is empty"
-    );
-  }
+  ok(
+    addButton.disabled,
+    "The Add button is disabled when domain's input box is empty"
+  );
 
   url.focus();
   EventUtils.sendString(domain);
@@ -48,6 +49,41 @@ function addNewException(domain, dialog) {
     "The Add button is disabled after exception has been added to the list"
   );
 }
+
+add_task(async function () {
+  Services.prefs.lockPref("network.trr.excluded-domains");
+
+  await openPreferencesViaOpenPreferencesAPI("panePrivacy", {
+    leaveOpen: true,
+  });
+  let dialogOverlay = content.gSubDialog._preloadDialog._overlay;
+  let win = await dohExceptionsSubdialogOpened(dialogOverlay);
+
+  ok(
+    win.document.getElementById("btnAddException").disabled,
+    "The Add button is disabled when preference is locked"
+  );
+  ok(
+    win.document.getElementById("url").disabled,
+    "The url input box is disabled when preference is locked"
+  );
+
+  cancelDoHExceptionsSubdialog(win);
+  Services.prefs.unlockPref("network.trr.excluded-domains");
+  win = await dohExceptionsSubdialogOpened(dialogOverlay);
+
+  ok(
+    win.document.getElementById("btnAddException").disabled,
+    "The Add button is disabled when preference is not locked"
+  );
+  ok(
+    !win.document.getElementById("url").disabled,
+    "The url input box is enabled when preference is not locked"
+  );
+
+  cancelDoHExceptionsSubdialog(win);
+  gBrowser.removeCurrentTab();
+});
 
 add_task(async function () {
   await openPreferencesViaOpenPreferencesAPI("panePrivacy", {
@@ -74,8 +110,7 @@ add_task(async function () {
     win.document.getElementById("removeAllExceptions").disabled,
     "The Remove All button is disabled when there are no exceptions on the list"
   );
-  //Bug 1884135
-  todo(
+  ok(
     win.document.getElementById("btnAddException").disabled,
     "The Add button is disabled when dialog box has just been opened"
   );

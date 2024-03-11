@@ -31,7 +31,6 @@ var gDoHExceptionsManager = {
       "network.trr.excluded-domains"
     );
 
-    this._btnAddException.disabled = this._prefLocked;
     document.getElementById("exceptionDialog").getButton("accept").disabled =
       this._prefLocked;
     this._urlField.disabled = this._prefLocked;
