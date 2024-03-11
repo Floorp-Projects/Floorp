@@ -426,3 +426,25 @@ async function cleanupDownloads(listId = Downloads.PUBLIC) {
     await download.finalize();
   }
 }
+
+function makePDFJSHandler() {
+  let mimeService = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
+  let handlerInfo = mimeService.getFromTypeAndExtension(
+    "application/pdf",
+    "pdf"
+  );
+
+  // Make sure pdf.js is the default handler.
+  is(
+    handlerInfo.alwaysAskBeforeHandling,
+    false,
+    "pdf handler defaults to always-ask is false"
+  );
+  is(
+    handlerInfo.preferredAction,
+    Ci.nsIHandlerInfo.handleInternally,
+    "pdf handler defaults to internal"
+  );
+
+  info("Pref action: " + handlerInfo.preferredAction);
+}
