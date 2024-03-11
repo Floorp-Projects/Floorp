@@ -1018,6 +1018,10 @@ struct BaseMarkerType {
   static constexpr const char* TableLabel = nullptr;
   static constexpr const char* TooltipLabel = nullptr;
 
+  // This indicates whether this marker type wants the names passed to the
+  // individual marker calls stores along with the marker.
+  static constexpr bool StoreName = false;
+
   static constexpr MarkerSchema::ETWMarkerGroup Group =
       MarkerSchema::ETWMarkerGroup::Generic;
 
