@@ -46,7 +46,6 @@ import android.os.Looper;
 import android.os.PowerManager;
 import android.os.Vibrator;
 import android.provider.Settings;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
 import android.view.Display;
@@ -1525,20 +1524,6 @@ public class GeckoAppShell {
     } catch (final SecurityException | NullPointerException e) {
       Log.e(LOGTAG, "could not set communication mode", e);
     }
-  }
-
-  private static String getLanguageTag(final Locale locale) {
-    final StringBuilder out = new StringBuilder(locale.getLanguage());
-    final String country = locale.getCountry();
-    final String variant = locale.getVariant();
-    if (!TextUtils.isEmpty(country)) {
-      out.append('-').append(country);
-    }
-    if (!TextUtils.isEmpty(variant)) {
-      out.append('-').append(variant);
-    }
-    // e.g. "en", "en-US", or "en-US-POSIX".
-    return out.toString();
   }
 
   @WrapForJNI

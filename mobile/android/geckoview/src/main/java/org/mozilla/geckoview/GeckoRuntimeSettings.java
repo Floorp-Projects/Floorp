@@ -1056,7 +1056,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
       }
     }
     // OS prefs come second:
-    for (final String locale : getDefaultLocales()) {
+    for (final String locale : getSystemLocalesForAcceptLanguage()) {
       final String localeLowerCase = locale.toLowerCase(Locale.ROOT);
       if (!locales.containsKey(localeLowerCase)) {
         locales.put(localeLowerCase, locale);
@@ -1066,32 +1066,29 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
     return TextUtils.join(",", locales.values());
   }
 
-  private static String[] getDefaultLocales() {
+  private static String[] getSystemLocalesForAcceptLanguage() {
     if (VERSION.SDK_INT >= 24) {
       final LocaleList localeList = LocaleList.getDefault();
       final String[] locales = new String[localeList.size()];
       for (int i = 0; i < localeList.size(); i++) {
-        locales[i] = localeList.get(i).toLanguageTag();
+        // accept-language should be language or language-region format.
+        locales[i] = getLanguageTagForAcceptLanguage(localeList.get(i));
       }
       return locales;
     }
     final String[] locales = new String[1];
     final Locale locale = Locale.getDefault();
-    locales[0] = locale.toLanguageTag();
+    locales[0] = getLanguageTagForAcceptLanguage(locale);
     return locales;
   }
 
-  private static String getLanguageTag(final Locale locale) {
+  private static String getLanguageTagForAcceptLanguage(final Locale locale) {
     final StringBuilder out = new StringBuilder(locale.getLanguage());
     final String country = locale.getCountry();
-    final String variant = locale.getVariant();
     if (!TextUtils.isEmpty(country)) {
       out.append('-').append(country);
     }
-    if (!TextUtils.isEmpty(variant)) {
-      out.append('-').append(variant);
-    }
-    // e.g. "en", "en-US", or "en-US-POSIX".
+    // e.g. "en", "en-US"
     return out.toString();
   }
 
