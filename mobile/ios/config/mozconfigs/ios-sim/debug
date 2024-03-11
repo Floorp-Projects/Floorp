@@ -1,0 +1,3 @@
+. $topsrcdir/mobile/ios/config/mozconfigs/ios-sim/opt
+
+ac_add_options --enable-debug

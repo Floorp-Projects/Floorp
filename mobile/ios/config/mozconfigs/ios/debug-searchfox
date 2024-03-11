@@ -1,0 +1,8 @@
+MOZ_AUTOMATION_BUILD_SYMBOLS=0
+MOZ_AUTOMATION_CHECK=0
+
+. $topsrcdir/mobile/ios/config/mozconfigs/ios/opt
+
+ac_add_options --enable-debug
+
+ac_add_options --enable-mozsearch-plugin

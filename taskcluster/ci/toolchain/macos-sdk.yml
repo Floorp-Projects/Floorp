@@ -46,3 +46,39 @@ macosx64-sdk-14.2:
             - macosx64-sdk
             - macosx64-sdk-toolchain
             - MacOSX14.2.sdk
+
+ios-sdk-17.4:
+    description: "iPhoneOS17.4 SDK"
+    treeherder:
+        symbol: TM(ios17.4)
+    # Because it's using an internal tooltool artifact, it can't be used as a local-toolchain for
+    # bootstrap. But we still want to use the same script as local-toolchains.
+    attributes:
+        local-toolchain: false
+    run:
+        script: private_local_toolchain.sh
+        arguments:
+            - unpack-sdk.py
+            - http://taskcluster/tooltool.mozilla-releng.net/sha512/7d9f1f1e0d4963fbafc8ec20ee604665e99d66699db2515f388b3b061aaab83349815e1ef862922f4f46ffbe1ac2d86fb00701802c7a9994c74f6e1d32894c34
+            - 7d9f1f1e0d4963fbafc8ec20ee604665e99d66699db2515f388b3b061aaab83349815e1ef862922f4f46ffbe1ac2d86fb00701802c7a9994c74f6e1d32894c34
+            - Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk
+        toolchain-artifact: project/gecko/mac-sdk/iPhoneOS17.4.sdk.tar.zst
+        toolchain-alias: ios-sdk
+
+ios-sim-sdk-17.4:
+    description: "iPhoneSimulator17.4 SDK"
+    treeherder:
+        symbol: TM(ios-sim-17.4)
+    # Because it's using an internal tooltool artifact, it can't be used as a local-toolchain for
+    # bootstrap. But we still want to use the same script as local-toolchains.
+    attributes:
+        local-toolchain: false
+    run:
+        script: private_local_toolchain.sh
+        arguments:
+            - unpack-sdk.py
+            - http://taskcluster/tooltool.mozilla-releng.net/sha512/7d9f1f1e0d4963fbafc8ec20ee604665e99d66699db2515f388b3b061aaab83349815e1ef862922f4f46ffbe1ac2d86fb00701802c7a9994c74f6e1d32894c34
+            - 7d9f1f1e0d4963fbafc8ec20ee604665e99d66699db2515f388b3b061aaab83349815e1ef862922f4f46ffbe1ac2d86fb00701802c7a9994c74f6e1d32894c34
+            - Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk
+        toolchain-artifact: project/gecko/mac-sdk/iPhoneSimulator17.4.sdk.tar.zst
+        toolchain-alias: ios-sim-sdk
