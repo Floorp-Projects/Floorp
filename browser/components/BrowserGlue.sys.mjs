@@ -2906,10 +2906,6 @@ BrowserGlue.prototype = {
             );
             Services.fog.setMetricsFeatureConfig(JSON.stringify(cfg));
           });
-
-          if (!AppConstants.RELEASE_OR_BETA) {
-            Glean.fogValidation.someObject.set({ name: "fog-init", set: true });
-          }
         },
       },
 
