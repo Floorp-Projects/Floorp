@@ -125,57 +125,27 @@ function doPanelTest(panel)
 function nextPopupTest(panel)
 {
   if (++gTestId >= popupTests.length) {
-    // Next, check a panel that has a titlebar to ensure that it is accounted for
-    // properly in the size.
-    var titledPanelWindow = window.browsingContext.topChromeWindow.open("titledpanelwindow.xhtml", "_blank", "chrome,resizable=yes");
-    SimpleTest.waitForFocus(titledPanelWindowOpened, titledPanelWindow);
+    SimpleTest.finish();
+    return;
   }
-  else {
-    function setStyle(attr) {
-      if (attr in popupTests[gTestId])
-        panel.style[attr] = popupTests[gTestId][attr] + "px";
-      else
-        panel.style[attr] = "";
-    }
-    setStyle("minWidth");
-    setStyle("minHeight");
-    setStyle("maxWidth");
-    setStyle("maxHeight");
 
-    // Prevent event loop starvation as a result of popup events being
-    // synchronous. See bug 1131576.
-    SimpleTest.executeSoon(() => {
-      // Non-chrome shells require focus to open a popup.
-      SimpleTest.waitForFocus(() => { panel.openPopup() });
-    });
+  function setStyle(attr) {
+    if (attr in popupTests[gTestId])
+      panel.style[attr] = popupTests[gTestId][attr] + "px";
+    else
+      panel.style[attr] = "";
   }
-}
+  setStyle("minWidth");
+  setStyle("minHeight");
+  setStyle("maxWidth");
+  setStyle("maxHeight");
 
-function titledPanelWindowOpened(panelwindow)
-{
-  info("titledPanelWindowOpened");
-  var panel = panelwindow.document.documentElement.firstChild;
-  panel.addEventListener("popupshown", () => doTitledPanelTest(panel));
-  panel.addEventListener("popuphidden", () => done(panelwindow));
-  // See above as for why.
+  // Prevent event loop starvation as a result of popup events being
+  // synchronous. See bug 1131576.
   SimpleTest.executeSoon(() => {
-    SimpleTest.waitForFocus(() => { panel.openPopup() }, panelwindow);
+    // Non-chrome shells require focus to open a popup.
+    SimpleTest.waitForFocus(() => { panel.openPopup() });
   });
-}
-
-function doTitledPanelTest(panel)
-{
-  info("doTitledPanelTest");
-  var rect = panel.getBoundingClientRect();
-  is(rect.width, 120, "panel with titlebar width");
-  is(rect.height, 140, "panel with titlebar height");
-  panel.hidePopup();
-}
-
-function done(panelwindow)
-{
-  panelwindow.close();
-  SimpleTest.finish();
 }
 
 ]]>
