@@ -9,10 +9,7 @@
 use super::{
     registry::{PropertyRegistration, PropertyRegistrationData},
     syntax::Descriptor,
-    value::{
-        AllowComputationallyDependent, ComputedValue as ComputedRegisteredValue,
-        SpecifiedValue as SpecifiedRegisteredValue,
-    },
+    value::{AllowComputationallyDependent, SpecifiedValue as SpecifiedRegisteredValue},
 };
 use crate::custom_properties::{Name as CustomPropertyName, SpecifiedValue};
 use crate::error_reporting::ContextualParseError;
@@ -219,13 +216,13 @@ impl PropertyRegistration {
     pub fn compute_initial_value(
         &self,
         computed_context: &computed::Context,
-    ) -> Result<ComputedRegisteredValue, ()> {
+    ) -> Result<InitialValue, ()> {
         let Some(ref initial) = self.data.initial_value else {
             return Err(());
         };
 
         if self.data.syntax.is_universal() {
-            return Ok(ComputedRegisteredValue::universal(Arc::clone(initial)));
+            return Ok(Arc::clone(initial));
         }
 
         let mut input = ParserInput::new(initial.css_text());
@@ -239,7 +236,7 @@ impl PropertyRegistration {
             computed_context,
             AllowComputationallyDependent::No,
         ) {
-            Ok(computed) => Ok(computed),
+            Ok(computed) => Ok(Arc::new(computed)),
             Err(_) => Err(()),
         }
     }

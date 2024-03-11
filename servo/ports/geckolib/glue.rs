@@ -6215,8 +6215,8 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
         let mut seen = PropertyDeclarationIdSet::default();
         let mut iter = PrioritizedPropertyIter::new(&keyframe.mPropertyValues);
 
-        // FIXME (bug 1883255): This is pretty much a hack. Instead, the AnimatedValue should be
-        // better integrated in the cascade.
+        // FIXME: This is pretty much a hack. Instead, the AnimatedValue should be better
+        // integrated in the cascade. This would allow us to fix revert() too.
         {
             let mut builder = CustomPropertiesBuilder::new_with_properties(
                 &data.stylist,
