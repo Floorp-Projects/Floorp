@@ -303,12 +303,12 @@ class ParentProcessDocumentOpenInfo final : public nsDocumentOpenInfo,
 
     nsresult rv = nsDocumentOpenInfo::OnStartRequest(request);
 
-    // If we didn't find a content handler,
-    // and we don't have a listener, then just forward to our
-    // default listener. This happens when the channel is in
-    // an error state, and we want to just forward that on to be
-    // handled in the content process.
-    if (NS_SUCCEEDED(rv) && !mUsedContentHandler && !m_targetStreamListener) {
+    // If we didn't find a content handler, and we don't have a listener, then
+    // just forward to our default listener. This happens when the channel is in
+    // an error state, and we want to just forward that on to be handled in the
+    // content process, or when DONT_RETARGET is set.
+    if ((NS_SUCCEEDED(rv) || rv == NS_ERROR_WONT_HANDLE_CONTENT) &&
+        !mUsedContentHandler && !m_targetStreamListener) {
       m_targetStreamListener = mListener;
       return m_targetStreamListener->OnStartRequest(request);
     }
