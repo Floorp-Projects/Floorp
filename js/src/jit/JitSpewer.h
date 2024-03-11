@@ -69,8 +69,6 @@ namespace jit {
   _(MarkLoadsUsedAsPropertyKeys)           \
   /* Output a list of MIR expressions */   \
   _(MIRExpressions)                        \
-  /* Spew Tracelogger summary stats */     \
-  _(ScriptStats)                           \
                                            \
   /* BASELINE COMPILER SPEW */             \
                                            \

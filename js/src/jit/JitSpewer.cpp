@@ -369,7 +369,6 @@ static void PrintHelpAndExit(int status = 0) {
       "compiled functions only).\n"
       "  profiling     Profiling-related information\n"
       "  dump-mir-expr Dump the MIR expressions\n"
-      "  scriptstats   Tracelogger summary stats\n"
       "  warp-snapshots WarpSnapshots created by WarpOracle\n"
       "  warp-transpiler Warp CacheIR transpiler\n"
       "  warp-trial-inlining Trial inlining for Warp\n"
@@ -475,8 +474,6 @@ void jit::CheckLogging() {
       EnableChannel(JitSpew_Profiling);
     } else if (IsFlag(found, "dump-mir-expr")) {
       EnableChannel(JitSpew_MIRExpressions);
-    } else if (IsFlag(found, "scriptstats")) {
-      EnableChannel(JitSpew_ScriptStats);
     } else if (IsFlag(found, "warp-snapshots")) {
       EnableChannel(JitSpew_WarpSnapshots);
     } else if (IsFlag(found, "warp-transpiler")) {
