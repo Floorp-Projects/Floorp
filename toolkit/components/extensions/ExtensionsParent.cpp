@@ -22,8 +22,8 @@ ExtensionsParent::~ExtensionsParent() {}
 
 extIWebNavigation* ExtensionsParent::WebNavigation() {
   if (!mWebNavigation) {
-    mWebNavigation = do_ImportModule("resource://gre/modules/WebNavigation.jsm",
-                                     "WebNavigationManager");
+    mWebNavigation = do_ImportESModule(
+        "resource://gre/modules/WebNavigation.sys.mjs", "WebNavigationManager");
   }
   return mWebNavigation;
 }

@@ -84,9 +84,9 @@ mozIExtensionProcessScript& ExtensionPolicyService::ProcessScript() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (MOZ_UNLIKELY(!sProcessScript)) {
-    sProcessScript =
-        do_ImportModule("resource://gre/modules/ExtensionProcessScript.jsm",
-                        "ExtensionProcessScript");
+    sProcessScript = do_ImportESModule(
+        "resource://gre/modules/ExtensionProcessScript.sys.mjs",
+        "ExtensionProcessScript");
     ClearOnShutdown(&sProcessScript);
   }
   return *sProcessScript;
