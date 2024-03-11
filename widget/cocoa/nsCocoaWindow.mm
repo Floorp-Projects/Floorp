@@ -2860,18 +2860,10 @@ void nsCocoaWindow::SetPopupWindowLevel() {
   if (!mWindow) {
     return;
   }
-
-  // Floating popups are at the floating level and hide when the window is
-  // deactivated.
-  if (mPopupLevel == PopupLevel::Floating) {
-    mWindow.level = NSFloatingWindowLevel;
-    mWindow.hidesOnDeactivate = YES;
-  } else {
-    // Otherwise, this is a top-level or parent popup. Parent popups always
-    // appear just above their parent and essentially ignore the level.
-    mWindow.level = NSPopUpMenuWindowLevel;
-    mWindow.hidesOnDeactivate = NO;
-  }
+  // Otherwise, this is a top-level or parent popup. Parent popups always
+  // appear just above their parent and essentially ignore the level.
+  mWindow.level = NSPopUpMenuWindowLevel;
+  mWindow.hidesOnDeactivate = NO;
 }
 
 void nsCocoaWindow::SetInputContext(const InputContext& aContext,

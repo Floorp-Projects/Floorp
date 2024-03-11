@@ -1310,13 +1310,6 @@ DWORD nsWindow::WindowStyle() {
     if (mBorderStyle == BorderStyle::None ||
         !(mBorderStyle & BorderStyle::Maximize))
       style &= ~WS_MAXIMIZEBOX;
-
-    if (IsPopupWithTitleBar()) {
-      style |= WS_CAPTION;
-      if (mBorderStyle & BorderStyle::Close) {
-        style |= WS_SYSMENU;
-      }
-    }
   }
 
   if (mIsChildWindow) {
@@ -3664,7 +3657,7 @@ LayoutDeviceIntPoint nsWindow::WidgetToScreenOffset() {
 }
 
 LayoutDeviceIntMargin nsWindow::ClientToWindowMargin() {
-  if (mWindowType == WindowType::Popup && !IsPopupWithTitleBar()) {
+  if (mWindowType == WindowType::Popup) {
     return {};
   }
 
