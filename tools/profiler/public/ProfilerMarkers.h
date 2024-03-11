@@ -389,34 +389,10 @@ extern template mozilla::ProfileBufferBlockIndex profiler_add_marker_impl(
 #endif  // MOZ_GECKO_PROFILER
 
 namespace mozilla {
-
 namespace detail {
-// GCC doesn't allow this to live inside the class.
-template <typename PayloadType>
-static void StreamPayload(baseprofiler::SpliceableJSONWriter& aWriter,
-                          const Span<const char> aKey,
-                          const PayloadType& aPayload) {
-  aWriter.StringProperty(aKey, aPayload);
-}
 
-template <typename PayloadType>
-inline void StreamPayload(baseprofiler::SpliceableJSONWriter& aWriter,
-                          const Span<const char> aKey,
-                          const Maybe<PayloadType>& aPayload) {
-  if (aPayload.isSome()) {
-    StreamPayload(aWriter, aKey, *aPayload);
-  } else {
-    aWriter.NullProperty(aKey);
-  }
-}
-
-template <>
-inline void StreamPayload<bool>(baseprofiler::SpliceableJSONWriter& aWriter,
-                                const Span<const char> aKey,
-                                const bool& aPayload) {
-  aWriter.BoolProperty(aKey, aPayload);
-}
-
+// Implement this here to prevent BaseProfilerMarkersPrerequisites from pulling
+// in nsString.h
 template <>
 inline void StreamPayload<ProfilerString16View>(
     baseprofiler::SpliceableJSONWriter& aWriter, const Span<const char> aKey,
@@ -424,86 +400,6 @@ inline void StreamPayload<ProfilerString16View>(
   aWriter.StringProperty(aKey, NS_ConvertUTF16toUTF8(aPayload));
 }
 
-template <>
-inline void StreamPayload<ProfilerString8View>(
-    baseprofiler::SpliceableJSONWriter& aWriter, const Span<const char> aKey,
-    const ProfilerString8View& aPayload) {
-  aWriter.StringProperty(aKey, aPayload);
-}
 }  // namespace detail
-
-// This helper class is used by MarkerTypes that want to support the general
-// MarkerType object schema. When using this the markers will also transmit
-// their payload to the ETW tracer as well as requiring less inline code.
-// This is a curiously recurring template, the template argument is the child
-// class itself.
-template <typename T>
-struct BaseMarkerType {
-  static constexpr const char* AllLabels = nullptr;
-  static constexpr const char* ChartLabel = nullptr;
-  static constexpr const char* TableLabel = nullptr;
-  static constexpr const char* TooltipLabel = nullptr;
-
-  static constexpr MarkerSchema::ETWMarkerGroup Group =
-      MarkerSchema::ETWMarkerGroup::Generic;
-
-  static MarkerSchema MarkerTypeDisplay() {
-    using MS = MarkerSchema;
-    MS schema{T::Locations, std::size(T::Locations)};
-    if (T::AllLabels) {
-      schema.SetAllLabels(T::AllLabels);
-    }
-    if (T::ChartLabel) {
-      schema.SetChartLabel(T::ChartLabel);
-    }
-    if (T::TableLabel) {
-      schema.SetTableLabel(T::TableLabel);
-    }
-    if (T::TooltipLabel) {
-      schema.SetTooltipLabel(T::TooltipLabel);
-    }
-    for (const MS::PayloadField field : T::PayloadFields) {
-      if (field.Label) {
-        if (uint32_t(field.Flags) & uint32_t(MS::PayloadFlags::Searchable)) {
-          schema.AddKeyLabelFormatSearchable(field.Key, field.Label, field.Fmt,
-                                             MS::Searchable::Searchable);
-        } else {
-          schema.AddKeyLabelFormat(field.Key, field.Label, field.Fmt);
-        }
-      } else {
-        if (uint32_t(field.Flags) & uint32_t(MS::PayloadFlags::Searchable)) {
-          schema.AddKeyFormatSearchable(field.Key, field.Fmt,
-                                        MS::Searchable::Searchable);
-        } else {
-          schema.AddKeyFormat(field.Key, field.Fmt);
-        }
-      }
-    }
-    if (T::Description) {
-      schema.AddStaticLabelValue("Description", T::Description);
-    }
-    return schema;
-  }
-
-  static constexpr Span<const char> MarkerTypeName() {
-    return MakeStringSpan(T::Name);
-  }
-
-  // This is called by the child class since the child class version of this
-  // function is used to infer the argument types by the profile buffer and
-  // allows the child to do any special data conversion it needs to do.
-  // Optionally the child can opt not to use this at all and write the data
-  // out itself.
-  template <typename... PayloadArguments>
-  static void StreamJSONMarkerDataImpl(
-      baseprofiler::SpliceableJSONWriter& aWriter,
-      const PayloadArguments&... aPayloadArguments) {
-    size_t i = 0;
-    (detail::StreamPayload(aWriter, MakeStringSpan(T::PayloadFields[i++].Key),
-                           aPayloadArguments),
-     ...);
-  }
-};
-
 }  // namespace mozilla
 #endif  // ProfilerMarkers_h
