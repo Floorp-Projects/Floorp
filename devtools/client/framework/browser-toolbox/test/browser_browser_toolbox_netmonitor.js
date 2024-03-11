@@ -29,6 +29,7 @@ add_task(async function () {
 
   await ToolboxTask.importFunctions({
     waitUntil,
+    waitForDOM,
   });
 
   await ToolboxTask.spawn(null, async () => {
@@ -94,7 +95,10 @@ add_task(async function () {
 
   await ToolboxTask.spawn(null, async () => {
     const monitor = gToolbox.getCurrentPanel();
-    const { document, store } = monitor.panelWin;
+    const { document, store, windowRequire } = monitor.panelWin;
+    const Actions = windowRequire(
+      "devtools/client/netmonitor/src/actions/index"
+    );
 
     await waitUntil(
       () => !document.querySelector(".request-list-empty-notice")
@@ -110,10 +114,19 @@ add_task(async function () {
       document.querySelectorAll("tbody .requests-list-column.requests-list-url")
     );
     is(requests.length, 1, "One request displayed");
+    const requestUrl =
+      "https://example.org/document-builder.sjs?html=fromParent";
+    is(requests[0].textContent, requestUrl, "Expected request is displayed");
+
+    const waitForHeaders = waitForDOM(document, ".headers-overview");
+    store.dispatch(Actions.toggleNetworkDetails());
+    await waitForHeaders;
+
+    const tabpanel = document.querySelector("#headers-panel");
     is(
-      requests[0].textContent,
-      "https://example.org/document-builder.sjs?html=fromParent",
-      "Expected request is displayed"
+      tabpanel.querySelector(".url-preview .url").innerText,
+      requestUrl,
+      "The url summary value is incorrect."
     );
   });
 
@@ -129,23 +142,24 @@ add_task(async function () {
     const monitor = gToolbox.getCurrentPanel();
     const { document, store } = monitor.panelWin;
 
+    // Note that we may have lots of other requests relates to browser activity,
+    // like file:// requests for many internal UI ressources.
     await waitUntil(() => store.getState().requests.requests.length >= 3);
     ok(true, "Expected content requests are displayed");
 
-    const requests = Array.from(
-      document.querySelectorAll("tbody .requests-list-column.requests-list-url")
-    );
-    is(requests.length, 3, "Three requests displayed");
-    ok(
-      requests[1].textContent.includes(
-        `https://example.com/document-builder.sjs`
-      ),
-      "Request for the tab is displayed"
-    );
-    is(
-      requests[2].textContent,
-      innerUrlImg,
-      "Request for image image in tab is displayed"
-    );
+    async function waitForRequest(url, requestName) {
+      info(`Wait for ${requestName} request`);
+      await waitUntil(() => {
+        const requests = Array.from(
+          document.querySelectorAll(
+            "tbody .requests-list-column.requests-list-url"
+          )
+        );
+        return requests.some(r => r.textContent.includes(url));
+      });
+      info(`Got ${requestName} request`);
+    }
+    await waitForRequest("https://example.com/document-builder.sjs", "tab");
+    await waitForRequest(innerUrlImg, "image in tab");
   });
 });
