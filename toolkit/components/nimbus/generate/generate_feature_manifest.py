@@ -14,7 +14,7 @@ HEADER_LINE = (
     " DO NOT EDIT.\n"
 )
 
-FEATURE_MANIFEST_SCHEMA = Path("schemas", "ExperimentFeatureManifest.schema.json")
+FEATURE_SCHEMA = Path("schemas", "ExperimentFeature.schema.json")
 
 NIMBUS_FALLBACK_PREFS = (
     "constexpr std::pair<nsLiteralCString, nsLiteralCString>"
@@ -140,7 +140,7 @@ def generate_feature_manifest(fd, input_file):
             manifest = yaml.safe_load(f)
 
         validate_feature_manifest(
-            Path(input_file).parent / FEATURE_MANIFEST_SCHEMA, input_file, manifest
+            Path(input_file).parent / FEATURE_SCHEMA, input_file, manifest
         )
 
         fd.write(f"export const FeatureManifest = {json.dumps(manifest)};")

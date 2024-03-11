@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "additionalProperties": false,
+  "type": "object",
+  "properties": {
+    "description": {
+      "type": "string"
+    },
+    "owner": {
+      "type": "string",
+      "description": "The owner of the feature."
+    },
+    "applications": {
+      "description": "The applications that can enroll in experiments for this feature. Defaults to firefox-desktop if not present.",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["firefox-desktop", "firefox-desktop-background-task"]
+      },
+      "minItems": 1
+    },
+    "hasExposure": {
+      "type": "boolean",
+      "description": "If the feature sends an exposure event."
+    },
+    "exposureDescription": {
+      "type": "string",
+      "description": "A description of the implementation details of the exposure event, if one is sent."
+    },
+    "isEarlyStartup": {
+      "type": "boolean",
+      "description": "If the feature values should be cached in prefs for fast early startup."
+    },
+    "schema": {
+      "type": "object",
+      "description": "For features with large number of variables we instead point to a JSONSchema file instead of specifying them in the variables field",
+      "properties": {
+        "uri": {
+          "type": "string",
+          "description": "A resource:// URI that can be loaded at runtime from within Firefox.",
+          "format": "uri"
+        },
+        "path": {
+          "type": "string",
+          "description": "The path to the schema file relative to the repository root"
+        }
+      },
+      "required": ["uri", "path"]
+    },
+    "variables": {
+      "additionalProperties": false,
+      "type": "object",
+      "patternProperties": {
+        "[a-zA-Z0-9_]+": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["json", "boolean", "int", "string"]
+            },
+            "fallbackPref": {
+              "type": "string",
+              "description": "A pref that provides the default value for a feature when none is present"
+            },
+            "setPref": {
+              "description": "A pref that should be set to the value of this variable when enrolling in experiments.",
+              "type": "object",
+              "properties": {
+                "branch": {
+                  "type": "string",
+                  "enum": ["default", "user"],
+                  "description": "The branch the pref will be set on."
+                },
+                "pref": {
+                  "type": "string",
+                  "description": "The name of the pref."
+                }
+              },
+              "required": ["branch", "pref"],
+              "additionalProperties": false
+            },
+            "enum": {
+              "description": "Validate feature value using a list of possible options (for string only values)."
+            },
+            "description": {
+              "type": "string",
+              "description": "Explain how this value is being used"
+            }
+          },
+          "required": ["type", "description"],
+          "additionalProperties": false,
+          "dependentSchemas": {
+            "fallbackPref": {
+              "description": "setPref is mutually exclusive with fallbackPref",
+              "properties": {
+                "setPref": {
+                  "const": null
+                }
+              }
+            },
+            "setPref": {
+              "description": "fallbackPref is mutually exclusive with setPref",
+              "properties": {
+                "fallbackPref": {
+                  "const": null
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "required": ["description", "hasExposure", "owner", "variables"],
+  "if": {
+    "properties": {
+      "hasExposure": {
+        "const": true
+      }
+    }
+  },
+  "then": {
+    "required": ["exposureDescription"]
+  }
+}
