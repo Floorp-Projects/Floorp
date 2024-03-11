@@ -16,6 +16,7 @@
 #include "mozilla/dom/HTMLDetailsElement.h"
 #include "mozilla/dom/HTMLSlotElement.h"
 #include "mozilla/dom/HTMLSummaryElement.h"
+#include "mozilla/dom/MutationObservers.h"
 #include "mozilla/dom/Text.h"
 #include "mozilla/dom/TreeOrderedArrayInlines.h"
 #include "mozilla/dom/UnbindContext.h"
@@ -188,6 +189,8 @@ void ShadowRoot::Unbind() {
        child = child->GetNextSibling()) {
     child->UnbindFromTree(context);
   }
+
+  MutationObservers::NotifyParentChainChanged(this);
 }
 
 void ShadowRoot::Unattach() {
