@@ -39,9 +39,10 @@ var gEngineView = null;
 
 var gSearchPane = {
   init() {
-    gEngineView = new EngineView(new EngineStore());
-    document.getElementById("engineList").view = gEngineView;
-    this.buildDefaultEngineDropDowns().catch(console.error);
+    let engineStore = new EngineStore();
+    gEngineView = new EngineView(engineStore);
+
+    engineStore.init().catch(console.error);
 
     if (
       Services.policies &&
@@ -856,10 +857,11 @@ function onDragEngineStart(event) {
 }
 
 class EngineStore {
-  constructor() {
-    this._engines = [];
-    this._defaultEngines = [];
-    Promise.all([
+  _engines = [];
+  _defaultEngines = [];
+
+  async init() {
+    await Promise.all([
       Services.search.getVisibleEngines(),
       Services.search.getAppProvidedEngines(),
     ]).then(([visibleEngines, defaultEngines]) => {
@@ -875,9 +877,6 @@ class EngineStore {
       gSearchPane.showRestoreDefaults(someHidden);
     });
   }
-
-  _engines = null;
-  _defaultEngines = null;
 
   get engines() {
     return this._engines;
@@ -1023,6 +1022,7 @@ class EngineStore {
 class EngineView {
   constructor(aEngineStore) {
     this._engineStore = aEngineStore;
+    document.getElementById("engineList").view = this;
 
     UrlbarPrefs.addObserver(this);
 
