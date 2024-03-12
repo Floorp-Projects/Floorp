@@ -13,14 +13,11 @@
 #include <comutil.h>
 #include <taskschd.h>
 
-#include "readstrings.h"
-#include "updatererrors.h"
 #include "EventLog.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
-#include "WindowsDefaultBrowser.h"
 
 #include "DefaultBrowser.h"
 

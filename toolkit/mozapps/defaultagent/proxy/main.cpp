@@ -7,10 +7,8 @@
 #include <windows.h>
 #include <shlwapi.h>
 #include <objbase.h>
-#include <string.h>
 #include <filesystem>
 
-#include "../ScheduledTask.h"
 #include "../ScheduledTaskRemove.h"
 #include "mozilla/CmdLineAndEnvUtils.h"
 
