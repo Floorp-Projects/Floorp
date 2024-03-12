@@ -1891,6 +1891,46 @@ var gEMETests = [
     sessionCount: 1,
     duration: 1.98,
   },
+  // ffmpeg -i bipbop.mp4 -t 00:00:02 -c:v libaom-av1 bipbop_av1.mp4
+  // packager-linux-x64 in=bipbop_av1.mp4,stream=video,out=bipbop-clearkey-video-av1.mp4 --enable_raw_key_encryption --keys label=:key_id=8b5df745ad84145b5617c33116e35a67:key=bddfd35dd9be033ee73bc18bc1885056 --clear_lead 0
+  {
+    name: "MP4 av1 video clearkey",
+    tracks: [
+      {
+        name: "video",
+        type: 'video/mp4; codecs="av1"',
+        fragments: ["bipbop-clearkey-video-av1.mp4"],
+      },
+    ],
+    keys: {
+      // "keyid" : "key"
+      "8b5df745ad84145b5617c33116e35a67": "bddfd35dd9be033ee73bc18bc1885056",
+    },
+    sessionType: "temporary",
+    sessionCount: 1,
+    duration: 2.0,
+    skipTests: ["waitingforkey"],
+  },
+  // ffmpeg -i bipbop.mp4 -t 00:00:02 -c:v libaom-av1 bipbop_av1.webm
+  // packager-linux-x64 in=bipbop_av1.webm,stream=video,out=bipbop-clearkey-video-av1.webm --enable_raw_key_encryption --keys label=:key_id=8b5df745ad84145b5617c33116e35a67:key=bddfd35dd9be033ee73bc18bc1885056 --clear_lead 0
+  {
+    name: "WebM av1 video clearkey",
+    tracks: [
+      {
+        name: "video",
+        type: 'video/webm; codecs="av1"',
+        fragments: ["bipbop-clearkey-video-av1.webm"],
+      },
+    ],
+    keys: {
+      // "keyid" : "key"
+      "8b5df745ad84145b5617c33116e35a67": "bddfd35dd9be033ee73bc18bc1885056",
+    },
+    sessionType: "temporary",
+    sessionCount: 1,
+    duration: 2.0,
+    skipTests: ["waitingforkey"],
+  },
   {
     name: "WebM vorbis audio & vp8 video clearkey",
     tracks: [

@@ -36,6 +36,7 @@ struct KeySystemConfig {
   static constexpr auto EME_CODEC_VORBIS = "vorbis"_ns;
   static constexpr auto EME_CODEC_FLAC = "flac"_ns;
   static constexpr auto EME_CODEC_H264 = "h264"_ns;
+  static constexpr auto EME_CODEC_AV1 = "av1"_ns;
   static constexpr auto EME_CODEC_VP8 = "vp8"_ns;
   static constexpr auto EME_CODEC_VP9 = "vp9"_ns;
   static constexpr auto EME_CODEC_HEVC = "hevc"_ns;
