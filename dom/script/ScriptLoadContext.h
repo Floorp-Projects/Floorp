@@ -147,7 +147,7 @@ class ScriptLoadContext : public JS::loader::LoadContextBase,
 
   static void PrioritizeAsPreload(nsIChannel* aChannel);
 
-  bool IsPreload() const;
+  bool IsPreload() const override;
 
   bool CompileStarted() const;
 
