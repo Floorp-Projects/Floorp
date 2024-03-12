@@ -784,7 +784,7 @@ private fun aboutFirefoxHeading(): UiObject {
             }
         }
     }
-    return mDevice.findObject(UiSelector().text("About $appName"))
+    return itemContainingText("About $appName")
 }
 
 fun swipeToBottom() = onView(withId(R.id.recycler_view)).perform(ViewActions.swipeUp())
