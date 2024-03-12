@@ -97,14 +97,16 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
       case "Screenshots:Download":
         this.requestDownloadScreenshot(event.detail.region);
         break;
-      case "Screenshots:OverlaySelection":
+      case "Screenshots:OverlaySelection": {
         let { hasSelection } = event.detail;
         this.sendOverlaySelection({ hasSelection });
         break;
-      case "Screenshots:RecordEvent":
+      }
+      case "Screenshots:RecordEvent": {
         let { eventName, reason, args } = event.detail;
         this.recordTelemetryEvent(eventName, reason, args);
         break;
+      }
       case "Screenshots:ShowPanel":
         this.showPanel();
         break;
