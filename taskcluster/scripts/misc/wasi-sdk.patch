@@ -1,3 +1,13 @@
+diff --git a/llvm_version_major.sh b/llvm_version_major.sh
+index 2e5d973..93fe9b0 100755
+--- a/llvm_version_major.sh
++++ b/llvm_version_major.sh
+@@ -1,4 +1,4 @@
+ #/bin/bash
+ LLVM_PROJ_DIR=${1:-./src/llvm-project}
+-MAJOR=`grep "set(LLVM_VERSION_MAJOR" $LLVM_PROJ_DIR/llvm/CMakeLists.txt | awk '{print substr($2, 1, length($2) - 1)}'`
++MAJOR=`(grep "set(LLVM_VERSION_MAJOR" $LLVM_PROJ_DIR/llvm/CMakeLists.txt || grep "set(LLVM_VERSION_MAJOR" $LLVM_PROJ_DIR/cmake/Modules/LLVMVersion.cmake) | awk '{print substr($2, 1, length($2) - 1)}'`
+ echo $MAJOR
 diff --git a/Makefile b/Makefile
 index d2ccff6..95f395b 100644
 --- a/Makefile
