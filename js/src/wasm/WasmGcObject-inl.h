@@ -342,8 +342,7 @@ MOZ_ALWAYS_INLINE WasmArrayObject* WasmArrayObject::createArray(
       calcStorageBytesChecked(typeDefData->arrayElemSize, numElements);
   if (!storageBytes.isValid() ||
       storageBytes.value() > uint32_t(wasm::MaxArrayPayloadBytes)) {
-    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                             JSMSG_WASM_ARRAY_IMP_LIMIT);
+    wasm::ReportTrapError(cx, JSMSG_WASM_ARRAY_IMP_LIMIT);
     return nullptr;
   }
 
