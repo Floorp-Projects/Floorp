@@ -371,7 +371,7 @@ export class GeckoViewNavigation extends GeckoViewModule {
 
     // Wait indefinitely for app to respond with a browser or null
     Services.tm.spinEventLoopUntil(
-      "GeckoViewNavigation.jsm:handleNewSession",
+      "GeckoViewNavigation.sys.mjs:handleNewSession",
       () => this.window.closed || browser !== undefined
     );
     return browser || null;

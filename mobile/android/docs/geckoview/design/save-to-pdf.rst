@@ -40,12 +40,12 @@ What
 ----
 
 This work will add a method to ``GeckoSession`` called ``savePdf`` for
-embedders to use, which will communicate with a new ``GeckoViewPdf.jsm`` to
+embedders to use, which will communicate with a new ``GeckoViewPdf.sys.mjs`` to
 create the PDF file. When the document is available, the
 ``GeckoViewPdfController`` will notify the
 ``ContentDelegate.onExternalResponse`` with the downloadable document.
 
-- ``GeckoViewPdf.jsm`` - JavaScript implementation that converts the content to
+- ``GeckoViewPdf.sys.mjs`` - JavaScript implementation that converts the content to
   a PDF and saves the file, also responds to messaging from
   ``GeckoViewPdfController``.
 - ``GeckoViewPdfController.java`` - The Controller coordinates between the Java
@@ -72,8 +72,8 @@ GeckoSession.java
   }
 
 
-GeckoViewPdf.jsm
-^^^^^^^^^^^^^^^^
+GeckoViewPdf.sys.mjs
+^^^^^^^^^^^^^^^^^^^^
 .. code:: java
 
   this.registerListener([
@@ -92,7 +92,7 @@ GeckoViewPdf.jsm
   }
 
   async saveToPDF() {
-   // Reference: https://searchfox.org/mozilla-central/source/remote/cdp/domains/parent/Page.jsm#519
+   // Reference: https://searchfox.org/mozilla-central/source/remote/cdp/domains/parent/Page.sys.mjs#519
   }
 
 
@@ -183,7 +183,7 @@ geckoview.js
   {
     name: "GeckoViewPdf",
     onInit: {
-       resource: "resource://gre/modules/GeckoViewPdf.jsm",
+       resource: "resource://gre/modules/GeckoViewPdf.sys.mjs",
     }
   }
 
@@ -191,7 +191,7 @@ geckoview.js
 Testing
 -------
 
-- Tests for the jsm and java code will be covered by mochitests and junit.
+- Tests for the sys.mjs and java code will be covered by mochitests and junit.
 - Make assertions to check that the text and images are in the finished PDF;
   the PDF is a non-zero file size.
 

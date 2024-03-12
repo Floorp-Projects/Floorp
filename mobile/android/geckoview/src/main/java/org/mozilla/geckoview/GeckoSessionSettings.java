@@ -203,7 +203,7 @@ public final class GeckoSessionSettings implements Parcelable {
   })
   public @interface DisplayMode {}
 
-  // This needs to match GeckoViewSettings.jsm
+  // This needs to match GeckoViewSettings.sys.mjs
   /** "browser" value of the display member in Web App Manifests */
   public static final int DISPLAY_MODE_BROWSER = 0;
 
@@ -225,7 +225,7 @@ public final class GeckoSessionSettings implements Parcelable {
   })
   public @interface UserAgentMode {}
 
-  // This needs to match GeckoViewSettingsChild.js and GeckoViewSettings.jsm
+  // This needs to match GeckoViewSettingsChild.js and GeckoViewSettings.sys.mjs
   /** The user agent mode is mobile device */
   public static final int USER_AGENT_MODE_MOBILE = 0;
 

@@ -30,7 +30,7 @@ export var ChildCrashHandler = {
   // Map a child ID to a remote type.
   childMap: new Map(),
 
-  // The event listener for this is hooked up in GeckoViewStartup.jsm
+  // The event listener for this is hooked up in GeckoViewStartup.sys.mjs
   observe(aSubject, aTopic, aData) {
     const childID = aData;
 

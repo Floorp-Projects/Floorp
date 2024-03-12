@@ -140,7 +140,7 @@ export class GeckoViewPrompter {
 
       // Spin this thread while we wait for a result
       Services.tm.spinEventLoopUntil(
-        "GeckoViewPrompter.jsm:showPrompt",
+        "GeckoViewPrompter.sys.mjs:showPrompt",
         () => this._domWin.closed || result !== undefined
       );
     } finally {
