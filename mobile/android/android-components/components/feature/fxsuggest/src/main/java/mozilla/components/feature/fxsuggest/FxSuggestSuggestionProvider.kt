@@ -13,6 +13,8 @@ import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.ktx.kotlin.toBitmap
 import java.util.UUID
 
+private const val MAX_NUM_OF_FIREFOX_SUGGESTIONS = 1
+
 /**
  * An [AwesomeBar.SuggestionProvider] that returns Firefox Suggest search suggestions.
  *
@@ -66,6 +68,7 @@ class FxSuggestSuggestionProvider(
                 SuggestionQuery(
                     keyword = text,
                     providers = providers,
+                    limit = MAX_NUM_OF_FIREFOX_SUGGESTIONS,
                 ),
             ).into()
         }

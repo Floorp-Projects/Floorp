@@ -103,13 +103,6 @@ class FxSuggestSuggestionProviderTest {
                     rawClickUrl = "https://example.com/click_url",
                     score = 0.3,
                 ),
-                Suggestion.Wikipedia(
-                    title = "Las Vegas",
-                    url = "https://wikipedia.org/wiki/Las_Vegas",
-                    icon = null,
-                    iconMimetype = null,
-                    fullKeyword = "las",
-                ),
             ),
         )
 
@@ -127,20 +120,16 @@ class FxSuggestSuggestionProviderTest {
                 SuggestionQuery(
                     keyword = "la",
                     providers = listOf(SuggestionProvider.AMP, SuggestionProvider.WIKIPEDIA),
+                    limit = 1,
                 ),
             ),
         )
-        assertEquals(2, suggestions.size)
+        assertEquals(1, suggestions.size)
         assertEquals("Lasagna Come Out Tomorrow", suggestions[0].title)
         assertEquals(testContext.resources.getString(R.string.sponsored_suggestion_description), suggestions[0].description)
         assertNotNull(suggestions[0].icon)
         assertEquals(Int.MIN_VALUE, suggestions[0].score)
         assertTrue(suggestions[0].metadata.isNullOrEmpty())
-        assertEquals("Las Vegas", suggestions[1].title)
-        assertNull(suggestions[1].description)
-        assertNull(suggestions[1].icon)
-        assertEquals(Int.MIN_VALUE, suggestions[1].score)
-        assertTrue(suggestions[1].metadata.isNullOrEmpty())
     }
 
     @Test
@@ -188,6 +177,7 @@ class FxSuggestSuggestionProviderTest {
                 SuggestionQuery(
                     keyword = "la",
                     providers = listOf(SuggestionProvider.WIKIPEDIA),
+                    limit = 1,
                 ),
             ),
         )
@@ -244,6 +234,7 @@ class FxSuggestSuggestionProviderTest {
                 SuggestionQuery(
                     keyword = "la",
                     providers = listOf(SuggestionProvider.AMP),
+                    limit = 1,
                 ),
             ),
         )
@@ -316,6 +307,7 @@ class FxSuggestSuggestionProviderTest {
                 SuggestionQuery(
                     keyword = "la",
                     providers = listOf(SuggestionProvider.AMP_MOBILE),
+                    limit = 1,
                 ),
             ),
         )
@@ -364,6 +356,7 @@ class FxSuggestSuggestionProviderTest {
                 SuggestionQuery(
                     keyword = "la",
                     providers = emptyList(),
+                    limit = 1,
                 ),
             ),
         )
@@ -392,6 +385,7 @@ class FxSuggestSuggestionProviderTest {
                 SuggestionQuery(
                     keyword = "la",
                     providers = emptyList(),
+                    limit = 1,
                 ),
             ),
         )
