@@ -299,6 +299,8 @@ extern JS_PUBLIC_API JSObject* GetModuleEnvironment(
  */
 extern JS_PUBLIC_API void ClearModuleEnvironment(JSObject* moduleObj);
 
+extern JS_PUBLIC_API bool ModuleIsLinked(JSObject* moduleObj);
+
 }  // namespace JS
 
 #endif  // js_Modules_h
