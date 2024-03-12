@@ -10,6 +10,7 @@ async def test_set_files(
     top_context,
     load_static_test_page,
     get_element,
+    create_files
 ):
     await load_static_test_page(page="files.html")
 
@@ -18,7 +19,7 @@ async def test_set_files(
     await bidi_session.input.set_files(
         context=top_context["context"],
         element=element,
-        files=["path/to/noop.txt"],
+        files=create_files(["path/to/noop.txt"]),
     )
 
     events = await get_events(bidi_session, top_context["context"])
@@ -68,6 +69,7 @@ async def test_set_files_multiple(
     top_context,
     load_static_test_page,
     get_element,
+    create_files
 ):
     await load_static_test_page(page="files.html")
 
@@ -76,7 +78,7 @@ async def test_set_files_multiple(
     await bidi_session.input.set_files(
         context=top_context["context"],
         element=element,
-        files=["path/to/noop.txt", "path/to/noop-2.txt"],
+        files=create_files(["path/to/noop.txt", "path/to/noop-2.txt"]),
     )
 
     events = await get_events(bidi_session, top_context["context"])
@@ -103,6 +105,7 @@ async def test_set_files_something_then_empty(
     top_context,
     load_static_test_page,
     get_element,
+    create_files
 ):
     await load_static_test_page(page="files.html")
 
@@ -111,7 +114,7 @@ async def test_set_files_something_then_empty(
     await bidi_session.input.set_files(
         context=top_context["context"],
         element=element,
-        files=["path/to/noop.txt"],
+        files=create_files(["path/to/noop.txt"]),
     )
 
     await bidi_session.input.set_files(
@@ -150,6 +153,7 @@ async def test_set_files_twice(
     top_context,
     load_static_test_page,
     get_element,
+    create_files
 ):
     await load_static_test_page(page="files.html")
 
@@ -158,13 +162,13 @@ async def test_set_files_twice(
     await bidi_session.input.set_files(
         context=top_context["context"],
         element=element,
-        files=["path/to/noop.txt"],
+        files=create_files(["path/to/noop.txt"]),
     )
 
     await bidi_session.input.set_files(
         context=top_context["context"],
         element=element,
-        files=["path/to/noop-2.txt"],
+        files=create_files(["path/to/noop-2.txt"]),
     )
 
     events = await get_events(bidi_session, top_context["context"])
@@ -196,11 +200,66 @@ async def test_set_files_twice(
     ]
 
 
+async def test_set_files_twice_intersected(
+    bidi_session,
+    top_context,
+    load_static_test_page,
+    get_element,
+    create_files
+):
+    await load_static_test_page(page="files.html")
+
+    element = await get_element("#input-multiple")
+
+    await bidi_session.input.set_files(
+        context=top_context["context"],
+        element=element,
+        files=create_files(["noop.txt"]),
+    )
+
+    await bidi_session.input.set_files(
+        context=top_context["context"],
+        element=element,
+        files=create_files(["noop.txt", "noop-2.txt"]),
+    )
+
+    events = await get_events(bidi_session, top_context["context"])
+    assert events == [
+        {
+            "files": [
+                "noop.txt",
+            ],
+            "type": "input",
+        },
+        {
+            "files": [
+                "noop.txt",
+            ],
+            "type": "change",
+        },
+        {
+            "files": [
+                "noop.txt",
+                "noop-2.txt",
+            ],
+            "type": "input",
+        },
+        {
+            "files": [
+                "noop.txt",
+                "noop-2.txt",
+            ],
+            "type": "change",
+        },
+    ]
+
+
 async def test_set_files_twice_same(
     bidi_session,
     top_context,
     load_static_test_page,
     get_element,
+    create_files
 ):
     await load_static_test_page(page="files.html")
 
@@ -209,13 +268,13 @@ async def test_set_files_twice_same(
     await bidi_session.input.set_files(
         context=top_context["context"],
         element=element,
-        files=["path/to/noop.txt"],
+        files=create_files(["path/to/noop.txt"]),
     )
 
     await bidi_session.input.set_files(
         context=top_context["context"],
         element=element,
-        files=["path/to/noop.txt"],
+        files=create_files(["path/to/noop.txt"]),
     )
 
     events = await get_events(bidi_session, top_context["context"])
@@ -237,5 +296,57 @@ async def test_set_files_twice_same(
                 "noop.txt",
             ],
             "type": "cancel",
+        },
+    ]
+
+
+async def test_set_files_twice_same_in_different_folders(
+    bidi_session,
+    top_context,
+    load_static_test_page,
+    get_element,
+    create_files
+):
+    await load_static_test_page(page="files.html")
+
+    element = await get_element("#input")
+
+    await bidi_session.input.set_files(
+        context=top_context["context"],
+        element=element,
+        files=create_files(["path/to/noop.txt"]),
+    )
+
+    await bidi_session.input.set_files(
+        context=top_context["context"],
+        element=element,
+        files=create_files(["different/to/noop.txt"]),
+    )
+
+    events = await get_events(bidi_session, top_context["context"])
+    assert events == [
+        {
+            "files": [
+                "noop.txt",
+            ],
+            "type": "input",
+        },
+        {
+            "files": [
+                "noop.txt",
+            ],
+            "type": "change",
+        },
+        {
+            "files": [
+                "noop.txt",
+            ],
+            "type": "input",
+        },
+        {
+            "files": [
+                "noop.txt",
+            ],
+            "type": "change",
         },
     ]
