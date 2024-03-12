@@ -17,6 +17,7 @@ import androidx.compose.material.IconButton
 import androidx.compose.material.LocalContentColor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -28,6 +29,7 @@ import androidx.core.content.ContextCompat
 import mozilla.components.browser.menu.view.MenuButton
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.privateTabs
+import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.R
@@ -74,16 +76,22 @@ fun BrowserNavBar(
             browserState.normalTabs.size
         }
     }.value
+    val canGoBack by browserStore.observeAsState(initialValue = false) { it.selectedTab?.content?.canGoBack ?: false }
+    val canGoForward by browserStore.observeAsState(initialValue = false) {
+        it.selectedTab?.content?.canGoForward ?: false
+    }
 
     NavBar {
         BackButton(
             onBackButtonClick = onBackButtonClick,
             onBackButtonLongPress = onBackButtonLongPress,
+            enabled = canGoBack,
         )
 
         ForwardButton(
             onForwardButtonClick = onForwardButtonClick,
             onForwardButtonLongPress = onForwardButtonLongPress,
+            enabled = canGoForward,
         )
 
         HomeButton(
@@ -134,6 +142,8 @@ fun HomeNavBar(
             onBackButtonLongPress = {
                 // no-op
             },
+            // Nav buttons are disabled on the home screen
+            enabled = false,
         )
 
         ForwardButton(
@@ -143,6 +153,8 @@ fun HomeNavBar(
             onForwardButtonLongPress = {
                 // no-op
             },
+            // Nav buttons are disabled on the home screen
+            enabled = false,
         )
 
         SearchWebButton(
@@ -177,15 +189,17 @@ private fun NavBar(
 private fun BackButton(
     onBackButtonClick: () -> Unit,
     onBackButtonLongPress: () -> Unit,
+    enabled: Boolean,
 ) {
     LongPressIconButton(
         onClick = onBackButtonClick,
         onLongClick = onBackButtonLongPress,
+        enabled = enabled,
     ) {
         Icon(
             painter = painterResource(R.drawable.mozac_ic_back_24),
             stringResource(id = R.string.browser_menu_back),
-            tint = FirefoxTheme.colors.iconPrimary,
+            tint = if (enabled) FirefoxTheme.colors.iconPrimary else FirefoxTheme.colors.iconDisabled,
         )
     }
 }
@@ -194,15 +208,17 @@ private fun BackButton(
 private fun ForwardButton(
     onForwardButtonClick: () -> Unit,
     onForwardButtonLongPress: () -> Unit,
+    enabled: Boolean,
 ) {
     LongPressIconButton(
         onClick = onForwardButtonClick,
         onLongClick = onForwardButtonLongPress,
+        enabled = enabled,
     ) {
         Icon(
             painter = painterResource(R.drawable.mozac_ic_forward_24),
             stringResource(id = R.string.browser_menu_forward),
-            tint = FirefoxTheme.colors.iconPrimary,
+            tint = if (enabled) FirefoxTheme.colors.iconPrimary else FirefoxTheme.colors.iconDisabled,
         )
     }
 }
