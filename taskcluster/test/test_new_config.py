@@ -48,8 +48,9 @@ PARAMS_NEW_CONFIG.update(
                 t.kind == "test"
                 and t.attributes["unittest_suite"] == "mochitest-browser-chrome"
                 and t.attributes["test_platform"] == "linux1804-64-qr/opt"
+                and ("spi-nw" not in t.label and "a11y-checks" not in t.label)
             ),
-            64,
+            32,
             id="mochitest-browser-chrome",
         ),
     ),
