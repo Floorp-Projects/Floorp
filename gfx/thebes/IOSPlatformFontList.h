@@ -21,6 +21,10 @@ class IOSPlatformFontList final : public CoreTextFontList {
                                nsACString& aSystemFontName,
                                gfxFontStyle& aFontStyle);
 
+ protected:
+  nsTArray<std::pair<const char**, uint32_t>> GetFilteredPlatformFontLists()
+      override;
+
  private:
   friend class gfxPlatformMac;
 
