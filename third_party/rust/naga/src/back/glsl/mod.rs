@@ -178,7 +178,7 @@ impl Version {
     /// Note: `location=` for vertex inputs and fragment outputs is supported
     /// unconditionally for GLES 300.
     fn supports_explicit_locations(&self) -> bool {
-        *self >= Version::Desktop(410) || *self >= Version::new_gles(310)
+        *self >= Version::Desktop(420) || *self >= Version::new_gles(310)
     }
 
     fn supports_early_depth_test(&self) -> bool {
@@ -2454,6 +2454,9 @@ impl<'a, W: Write> Writer<'a, W> {
                     crate::Literal::I32(value) => write!(self.out, "{}", value)?,
                     crate::Literal::Bool(value) => write!(self.out, "{}", value)?,
                     crate::Literal::I64(_) => {
+                        return Err(Error::Custom("GLSL has no 64-bit integer type".into()));
+                    }
+                    crate::Literal::U64(_) => {
                         return Err(Error::Custom("GLSL has no 64-bit integer type".into()));
                     }
                     crate::Literal::AbstractInt(_) | crate::Literal::AbstractFloat(_) => {
