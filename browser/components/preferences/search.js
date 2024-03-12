@@ -39,10 +39,21 @@ var gEngineView = null;
 
 var gSearchPane = {
   _engineStore: null,
+  _engineDropDown: null,
+  _engineDropDownPrivate: null,
 
   init() {
     this._engineStore = new EngineStore();
     gEngineView = new EngineView(this._engineStore);
+
+    this._engineDropDown = new DefaultEngineDropDown(
+      "normal",
+      this._engineStore
+    );
+    this._engineDropDownPrivate = new DefaultEngineDropDown(
+      "private",
+      this._engineStore
+    );
 
     this._engineStore.init().catch(console.error);
 
@@ -135,7 +146,7 @@ var gSearchPane = {
 
     const listener = () => {
       this._updatePrivateEngineDisplayBoxes();
-      this.buildDefaultEngineDropDowns().catch(console.error);
+      this._engineStore.notifyRebuildViews();
     };
 
     this._separatePrivateDefaultEnabledPref.on("change", listener);
@@ -275,30 +286,6 @@ var gSearchPane = {
     trendingBox.hidden = !Preferences.get("browser.urlbar.trending.featureGate")
       .value;
     trendingCheckBox.disabled = suggestDisabled || !trendingSupported;
-  },
-
-  /**
-   * Builds the default and private engines drop down lists. This is called
-   * each time something affects the list of engines.
-   */
-  async buildDefaultEngineDropDowns() {
-    await this._buildEngineDropDown(
-      document.getElementById("defaultEngine"),
-      (
-        await Services.search.getDefault()
-      ).name,
-      false
-    );
-
-    if (this._separatePrivateDefaultEnabledPref.value) {
-      await this._buildEngineDropDown(
-        document.getElementById("defaultPrivateEngine"),
-        (
-          await Services.search.getDefaultPrivate()
-        ).name,
-        true
-      );
-    }
   },
 
   // ADDRESS BAR
@@ -470,44 +457,6 @@ var gSearchPane = {
     Services.prefs.clearUserPref(PREF_URLBAR_WEATHER_USER_ENABLED);
   },
 
-  /**
-   * Builds a drop down menu of search engines.
-   *
-   * @param {DOMMenuList} list
-   *   The menu list element to attach the list of engines.
-   * @param {string} currentEngine
-   *   The name of the current default engine.
-   * @param {boolean} isPrivate
-   *   True if we are dealing with the default engine for private mode.
-   */
-  async _buildEngineDropDown(list, currentEngine) {
-    // If the current engine isn't in the list any more, select the first item.
-    let engines = this._engineStore.engines;
-    if (!engines.length) {
-      return;
-    }
-    if (!engines.some(e => e.name == currentEngine)) {
-      currentEngine = engines[0].name;
-    }
-
-    // Now clean-up and rebuild the list.
-    list.removeAllItems();
-    this._engineStore.engines.forEach(e => {
-      let item = list.appendItem(e.name);
-      item.setAttribute(
-        "class",
-        "menuitem-iconic searchengine-menuitem menuitem-with-favicon"
-      );
-      if (e.iconURL) {
-        item.setAttribute("image", e.iconURL);
-      }
-      item.engine = e;
-      if (e.name == currentEngine) {
-        list.selectedItem = item;
-      }
-    });
-  },
-
   handleEvent(aEvent) {
     if (aEvent.type != "command") {
       return;
@@ -550,36 +499,13 @@ var gSearchPane = {
         let engine = subject.QueryInterface(Ci.nsISearchEngine);
         switch (data) {
           case "engine-default": {
-            // If the user is going through the drop down using up/down keys, the
-            // dropdown may still be open (eg. on Windows) when engine-default is
-            // fired, so rebuilding the list unconditionally would get in the way.
-            let selectedEngine =
-              document.getElementById("defaultEngine").selectedItem.engine;
-            if (selectedEngine.name != engine.name) {
-              gSearchPane.buildDefaultEngineDropDowns();
-            }
+            // Pass through to the engine store to handle updates.
+            this._engineStore.browserSearchEngineModified(engine, data);
             gSearchPane._updateSuggestionCheckboxes();
             break;
           }
-          case "engine-default-private": {
-            if (
-              this._separatePrivateDefaultEnabledPref.value &&
-              this._separatePrivateDefaultPref.value
-            ) {
-              // If the user is going through the drop down using up/down keys, the
-              // dropdown may still be open (eg. on Windows) when engine-default is
-              // fired, so rebuilding the list unconditionally would get in the way.
-              const selectedEngine = document.getElementById(
-                "defaultPrivateEngine"
-              ).selectedItem.engine;
-              if (selectedEngine.name != engine.name) {
-                gSearchPane.buildDefaultEngineDropDowns();
-              }
-            }
-            break;
-          }
           default:
-            this._engineStore.browserSearchEngineModified(subject, data);
+            this._engineStore.browserSearchEngineModified(engine, data);
         }
       }
     }
@@ -611,6 +537,9 @@ var gSearchPane = {
   },
 };
 
+/**
+ * Keeps track of the search engine objects and notifies the views for updates.
+ */
 class EngineStore {
   /**
    * A list of engines that are currently visible in the UI.
@@ -627,21 +556,76 @@ class EngineStore {
    */
   #appProvidedEngines = [];
 
+  /**
+   * A list of listeners to be notified when the engine list changes.
+   *
+   * @type {Object[]}
+   */
+  #listeners = [];
+
   async init() {
     let visibleEngines = await Services.search.getVisibleEngines();
     for (let engine of visibleEngines) {
       this.addEngine(engine);
-      gEngineView.rowCountChanged(gEngineView.lastEngineIndex, 1);
     }
 
     let appProvidedEngines = await Services.search.getAppProvidedEngines();
     this.#appProvidedEngines = appProvidedEngines.map(this._cloneEngine, this);
 
-    gSearchPane.buildDefaultEngineDropDowns();
+    this.notifyRowCountChanged(0, visibleEngines.length);
 
     // check if we need to disable the restore defaults button
     var someHidden = this.#appProvidedEngines.some(e => e.hidden);
     gSearchPane.showRestoreDefaults(someHidden);
+  }
+
+  /**
+   * Adds a listener to be notified when the engine list changes.
+   *
+   * @param {object} aListener
+   */
+  addListener(aListener) {
+    this.#listeners.push(aListener);
+  }
+
+  /**
+   * Notifies all listeners that the engine list has changed and they should
+   * rebuild.
+   */
+  notifyRebuildViews() {
+    for (let listener of this.#listeners) {
+      try {
+        listener.rebuild(this.engines);
+      } catch (ex) {
+        console.error("Error notifying EngineStore listener", ex);
+      }
+    }
+  }
+
+  /**
+   * Notifies all listeners that the number of engines in the list has changed.
+   *
+   * @param {number} index
+   * @param {number} count
+   */
+  notifyRowCountChanged(index, count) {
+    for (let listener of this.#listeners) {
+      listener.rowCountChanged(index, count, this.engines);
+    }
+  }
+
+  /**
+   * Notifies all listeners that the default engine has changed.
+   *
+   * @param {string} type
+   * @param {object} engine
+   */
+  notifyDefaultEngineChanged(type, engine) {
+    for (let listener of this.#listeners) {
+      if ("defaultEngineChanged" in listener) {
+        listener.defaultEngineChanged(type, engine, this.engines);
+      }
+    }
   }
 
   _getIndexForEngine(aEngine) {
@@ -719,18 +703,7 @@ class EngineStore {
       gSearchPane.showRestoreDefaults(true);
     }
 
-    gSearchPane.buildDefaultEngineDropDowns();
-
-    if (!gEngineView.tree) {
-      // Only update the selection if it's visible in the UI.
-      return;
-    }
-
-    gEngineView.rowCountChanged(index, -1);
-    gEngineView.invalidate();
-
-    gEngineView.selection.select(Math.min(index, gEngineView.rowCount - 1));
-    gEngineView.ensureRowIsVisible(gEngineView.currentIndex);
+    this.notifyRowCountChanged(index, -1);
 
     document.getElementById("engineList").focus();
   }
@@ -739,7 +712,7 @@ class EngineStore {
    * Update the default engine UI and engine tree view as appropriate when engine changes
    * or locale changes occur.
    *
-   * @param {Object} engine
+   * @param {nsISearchEngine} engine
    * @param {string} data
    */
   browserSearchEngineModified(engine, data) {
@@ -747,16 +720,20 @@ class EngineStore {
     switch (data) {
       case "engine-added":
         this.addEngine(engine);
-        gEngineView.rowCountChanged(gEngineView.lastEngineIndex, 1);
-        gSearchPane.buildDefaultEngineDropDowns();
+        this.notifyRowCountChanged(gEngineView.lastEngineIndex, 1);
         break;
       case "engine-changed":
-        gSearchPane.buildDefaultEngineDropDowns();
         this.updateEngine(engine);
-        gEngineView.invalidate();
+        this.notifyRebuildViews();
         break;
       case "engine-removed":
         this.removeEngine(engine);
+        break;
+      case "engine-default":
+        this.notifyDefaultEngineChanged("normal", engine);
+        break;
+      case "engine-default-private":
+        this.notifyDefaultEngineChanged("private", engine);
         break;
     }
   }
@@ -802,7 +779,7 @@ class EngineStore {
 
     Services.search.resetToAppDefaultEngine();
     gSearchPane.showRestoreDefaults(false);
-    gSearchPane.buildDefaultEngineDropDowns();
+    this.notifyRebuildViews();
     return added;
   }
 
@@ -817,6 +794,9 @@ class EngineStore {
   }
 }
 
+/**
+ * Manages the view of the Search Shortcuts tree on the search pane of preferences.
+ */
 class EngineView {
   _engineStore = null;
   _engineList = null;
@@ -828,6 +808,7 @@ class EngineView {
     this._engineList.view = this;
 
     UrlbarPrefs.addObserver(this);
+    aEngineStore.addListener(this);
 
     this.loadL10nNames();
     this.#addListeners();
@@ -897,9 +878,20 @@ class EngineView {
   }
 
   // Helpers
+  rebuild() {
+    this.invalidate();
+  }
+
   rowCountChanged(index, count) {
-    if (this.tree) {
-      this.tree.rowCountChanged(index, count);
+    if (!this.tree) {
+      return;
+    }
+    this.tree.rowCountChanged(index, count);
+
+    // If we're removing elements, ensure that we still have a selection.
+    if (count < 0) {
+      this.selection.select(Math.min(index, this.rowCount - 1));
+      this.ensureRowIsVisible(this.currentIndex);
     }
   }
 
@@ -1040,7 +1032,6 @@ class EngineView {
   async #onRestoreDefaults() {
     let num = await this._engineStore.restoreDefaultEngines();
     this.rowCountChanged(0, num);
-    this.invalidate();
   }
 
   #onDragEngineStart(event) {
@@ -1203,7 +1194,6 @@ class EngineView {
 
     await this._engineStore.moveEngine(sourceEngine, dropIndex);
     gSearchPane.showRestoreDefaults(true);
-    gSearchPane.buildDefaultEngineDropDowns();
 
     // Redraw, and adjust selection
     this.invalidate();
@@ -1354,5 +1344,73 @@ class EngineView {
     this._engineStore.changeEngine(aEngine, "alias", keyword);
     this.invalidate();
     return true;
+  }
+}
+
+/**
+ * Manages the default engine dropdown buttons in the search pane of preferences.
+ */
+class DefaultEngineDropDown {
+  #element = null;
+  #type = null;
+
+  constructor(type, engineStore) {
+    this.#type = type;
+    this.#element = document.getElementById(
+      type == "private" ? "defaultPrivateEngine" : "defaultEngine"
+    );
+
+    engineStore.addListener(this);
+  }
+
+  rowCountChanged(index, count, enginesList) {
+    // Simply rebuild the menulist, rather than trying to update the changed row.
+    this.rebuild(enginesList);
+  }
+
+  defaultEngineChanged(type, engine, enginesList) {
+    if (type != this.#type) {
+      return;
+    }
+    // If the user is going through the drop down using up/down keys, the
+    // dropdown may still be open (eg. on Windows) when engine-default is
+    // fired, so rebuilding the list unconditionally would get in the way.
+    let selectedEngineName = this.#element.selectedItem?.engine?.name;
+    if (selectedEngineName != engine.name) {
+      this.rebuild(enginesList);
+    }
+  }
+
+  async rebuild(enginesList) {
+    if (
+      this.#type == "private" &&
+      !gSearchPane._separatePrivateDefaultPref.value
+    ) {
+      return;
+    }
+    let defaultEngine = await Services.search[
+      this.#type == "normal" ? "getDefault" : "getDefaultPrivate"
+    ]();
+
+    this.#element.removeAllItems();
+    for (let engine of enginesList) {
+      let item = this.#element.appendItem(engine.name);
+      item.setAttribute(
+        "class",
+        "menuitem-iconic searchengine-menuitem menuitem-with-favicon"
+      );
+      if (engine.iconURL) {
+        item.setAttribute("image", engine.iconURL);
+      }
+      item.engine = engine;
+      if (engine.name == defaultEngine.name) {
+        this.#element.selectedItem = item;
+      }
+    }
+    // This should never happen, but try and make sure we have at least one
+    // selected item.
+    if (!this.#element.selectedItem) {
+      this.#element.selectedIndex = 0;
+    }
   }
 }
