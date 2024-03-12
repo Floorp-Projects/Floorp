@@ -82,9 +82,9 @@ export default class TabPreview extends MozLitElement {
   getPrettyURI(uri) {
     try {
       const url = new URL(uri);
-      return `${url.hostname}${url.pathname}`.replace(/\/+$/, "");
+      return `${url.hostname}`.replace(/^w{3}\./, "");
     } catch {
-      return this.pageURI;
+      return uri;
     }
   }
 
