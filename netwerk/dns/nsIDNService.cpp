@@ -730,6 +730,16 @@ bool nsIDNService::isLabelSafe(const nsAString& label, const nsAString& tld) {
       return false;
     }
 
+    Script nextScript = Script::INVALID;
+    if (current != end) {
+      nextScript = UnicodeProperties::GetScriptCode(*current);
+    }
+
+    if (ch == 0x30FB &&
+        (lastScript == Script::LATIN || nextScript == Script::LATIN)) {
+      return false;
+    }
+
     if (ch == 0x307 &&
         (previousChar == 'i' || previousChar == 'j' || previousChar == 'l')) {
       return false;
