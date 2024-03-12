@@ -10,7 +10,7 @@ job-defaults:
     worker-type: b-linux-gcp
     worker:
         max-run-time: 7200
-    run-on-projects: ['mozilla-central']
+    run-on-projects: ['trunk']
     run:
         using: mozharness
         actions: [get-secrets, build]
