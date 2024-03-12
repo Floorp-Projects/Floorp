@@ -1,0 +1,14 @@
+include "mozilla/_ipdltest/TestInterruptErrorCleanup.h";
+
+namespace mozilla {
+namespace _ipdltest {
+
+[ManualDealloc, ChildImpl="TestInterruptErrorCleanupChild", ParentImpl="TestInterruptErrorCleanupParent"]
+intr protocol PTestInterruptErrorCleanup {
+child:
+    [LegacyIntr] intr Error();
+    [LegacyIntr] intr __delete__();
+};
+
+} // namespace _ipdltest
+} // namespace mozilla

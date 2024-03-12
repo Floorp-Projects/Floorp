@@ -1,0 +1,31 @@
+include "mozilla/_ipdltest/TestUrgentHangs.h";
+
+namespace mozilla {
+namespace _ipdltest {
+
+[ManualDealloc, NestedUpTo=inside_sync, ChildImpl="TestUrgentHangsChild", ParentImpl="TestUrgentHangsParent"]
+sync protocol PTestUrgentHangs
+{
+parent:
+    [Nested=inside_sync] sync Test1_2();
+
+    [Nested=inside_sync] sync TestInner();
+    [Nested=inside_cpow] sync TestInnerUrgent();
+
+child:
+    [Nested=inside_sync] sync Test1_1();
+    [Nested=inside_sync] sync Test1_3();
+
+    [Nested=inside_sync] sync Test2();
+
+    [Nested=inside_sync] sync Test3();
+
+    async Test4();
+    [Nested=inside_sync] sync Test4_1();
+
+    async Test5();
+    [Nested=inside_sync] sync Test5_1();
+};
+
+} // namespace _ipdltest
+} // namespace mozilla

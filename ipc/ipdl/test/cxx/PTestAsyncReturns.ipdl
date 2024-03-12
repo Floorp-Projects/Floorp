@@ -1,0 +1,20 @@
+include "mozilla/_ipdltest/TestAsyncReturns.h";
+
+namespace mozilla {
+namespace _ipdltest {
+
+
+[ManualDealloc, ChildImpl="TestAsyncReturnsChild", ParentImpl="TestAsyncReturnsParent"]
+protocol PTestAsyncReturns {
+
+child:
+    async Ping() returns (bool one);
+    async NoReturn() returns (bool unused);
+
+parent:
+    async Pong() returns (uint32_t param1, uint32_t param2);
+};
+
+
+} // namespace mozilla
+} // namespace _ipdltest

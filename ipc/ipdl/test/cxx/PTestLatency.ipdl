@@ -1,0 +1,28 @@
+include "mozilla/_ipdltest/TestLatency.h";
+
+namespace mozilla {
+namespace _ipdltest {
+
+
+[ManualDealloc, ChildImpl="TestLatencyChild", ParentImpl="TestLatencyParent"]
+intr protocol PTestLatency {
+
+child:
+    async __delete__();
+    async Ping();
+    async Ping5();
+    [LegacyIntr] intr Rpc();
+    async Spam();
+    [LegacyIntr] intr Synchro();
+    [Compress] async CompressedSpam(uint32_t seqno);
+    [LegacyIntr] intr Synchro2() returns (uint32_t lastSeqno,
+                            uint32_t numMessagesDispatched);
+
+parent:
+    async Pong();
+    async Pong5();
+};
+
+
+} // namespace mozilla
+} // namespace _ipdltest

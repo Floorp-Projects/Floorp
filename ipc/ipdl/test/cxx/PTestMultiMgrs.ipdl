@@ -1,0 +1,25 @@
+include protocol PTestMultiMgrsLeft;
+include protocol PTestMultiMgrsRight;
+
+include "mozilla/_ipdltest/TestMultiMgrs.h";
+
+namespace mozilla {
+namespace _ipdltest {
+
+[ManualDealloc, ChildImpl="TestMultiMgrsChild", ParentImpl="TestMultiMgrsParent"]
+protocol PTestMultiMgrs {
+    manages PTestMultiMgrsLeft;
+    manages PTestMultiMgrsRight;
+
+parent:
+    async OK();
+
+child:
+    async PTestMultiMgrsLeft();
+    async PTestMultiMgrsRight();
+    async Check();
+    async __delete__();
+};
+
+} // namespace _ipdltest
+} // namespace mozilla

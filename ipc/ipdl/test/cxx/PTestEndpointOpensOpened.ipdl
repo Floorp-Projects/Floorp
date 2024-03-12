@@ -1,0 +1,25 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+include "mozilla/_ipdltest/TestEndpointOpens.h";
+
+namespace mozilla {
+namespace _ipdltest2 {
+
+// (Opens protocols can have different semantics than the endpoints
+// that opened them)
+[ManualDealloc, ChildImpl="TestEndpointOpensOpenedChild", ParentImpl="TestEndpointOpensOpenedParent"]
+intr protocol PTestEndpointOpensOpened {
+child:
+    async Hi();
+    [LegacyIntr] intr HiRpc();
+
+parent:
+    async Hello();
+    sync HelloSync();
+    [LegacyIntr] intr HelloRpc();
+    async __delete__();
+};
+
+
+} // namespace mozilla
+} // namespace _ipdltest2

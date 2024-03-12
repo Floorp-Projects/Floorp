@@ -73,12 +73,6 @@ IPCResult IPCResult::FailImpl(NotNull<IProtocol*> actor, const char* where,
 #endif
 }
 
-/* static */
-IPCResult IPCResult::FailForTesting(NotNull<IProtocol*> actor,
-                                    const char* where, const char* why) {
-  return IPCResult(false);
-}
-
 void AnnotateSystemError() {
   uint32_t error = 0;
 #if defined(XP_WIN)

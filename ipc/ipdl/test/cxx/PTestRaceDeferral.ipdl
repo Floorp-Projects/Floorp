@@ -1,0 +1,22 @@
+include "mozilla/_ipdltest/TestRaceDeferral.h";
+
+namespace mozilla {
+namespace _ipdltest {
+
+[ManualDealloc, ChildImpl="TestRaceDeferralChild", ParentImpl="TestRaceDeferralParent"]
+intr protocol PTestRaceDeferral {
+parent:
+    [LegacyIntr] intr Lose();
+
+child:
+    async StartRace();
+    [LegacyIntr] intr Win();
+    [LegacyIntr] intr Rpc();
+    async __delete__();
+
+// Test that messages deferred due to race resolution are
+// re-considered when the winner makes later RPCs
+};
+
+} // namespace _ipdltest
+} // namespace mozilla

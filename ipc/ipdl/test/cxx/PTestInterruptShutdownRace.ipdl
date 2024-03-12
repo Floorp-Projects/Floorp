@@ -1,0 +1,19 @@
+include "mozilla/_ipdltest/TestInterruptShutdownRace.h";
+
+namespace mozilla {
+namespace _ipdltest {
+
+[ManualDealloc, ChildImpl="TestInterruptShutdownRaceChild", ParentImpl="TestInterruptShutdownRaceParent"]
+intr protocol PTestInterruptShutdownRace {
+parent:
+    sync StartDeath();
+    async Orphan();
+
+child:
+    async Start();
+    [LegacyIntr] intr Exit();
+    async __delete__();
+};
+
+} // namespace _ipdltest
+} // namespace mozilla

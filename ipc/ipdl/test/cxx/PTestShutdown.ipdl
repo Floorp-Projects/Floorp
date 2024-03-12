@@ -1,0 +1,29 @@
+include protocol PTestShutdownSub;
+
+include "mozilla/_ipdltest/TestShutdown.h";
+
+namespace mozilla {
+namespace _ipdltest {
+
+[ManualDealloc, ChildImpl="TestShutdownChild", ParentImpl="TestShutdownParent"]
+intr protocol PTestShutdown {
+    manages PTestShutdownSub;
+
+child:
+    async Start();
+
+parent:
+    // NB: we test deletion and crashing only, not shutdown, because
+    // crashing is the same code path as shutdown, and other IPDL unit
+    // tests check shutdown semantics
+    async PTestShutdownSub(bool expectCrash);
+
+    // Used to synchronize between parent and child, to avoid races
+    // around flushing socket write queues
+    sync Sync();
+
+    async __delete__();
+};
+
+} // namespace _ipdltest
+} // namespace mozilla

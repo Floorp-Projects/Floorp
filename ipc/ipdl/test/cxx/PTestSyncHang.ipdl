@@ -1,0 +1,16 @@
+include "mozilla/_ipdltest/TestSyncHang.h";
+
+namespace mozilla {
+namespace _ipdltest {
+
+
+[ManualDealloc, ChildImpl="TestSyncHangChild", ParentImpl="TestSyncHangParent"]
+protocol PTestSyncHang {
+
+child:
+    async UnusedMessage();
+};
+
+
+} // namespace mozilla
+} // namespace _ipdltest

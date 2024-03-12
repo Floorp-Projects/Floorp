@@ -1,0 +1,17 @@
+include "mozilla/_ipdltest/TestShmem.h";
+
+namespace mozilla {
+namespace _ipdltest {
+
+[ManualDealloc, ChildImpl="TestShmemChild", ParentImpl="TestShmemParent"]
+protocol PTestShmem {
+child:
+    async Give(Shmem mem, Shmem unsafe, uint32_t expectedSize);
+
+parent:
+    async Take(Shmem mem, Shmem unsafe, uint32_t expectedSize);
+    async __delete__();
+};
+
+}
+}

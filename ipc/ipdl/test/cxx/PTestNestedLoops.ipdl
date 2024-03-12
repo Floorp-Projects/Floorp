@@ -1,0 +1,22 @@
+
+include "mozilla/_ipdltest/TestNestedLoops.h";
+
+namespace mozilla {
+namespace _ipdltest {
+
+
+[ManualDealloc, ChildImpl="TestNestedLoopsChild", ParentImpl="TestNestedLoopsParent"]
+intr protocol PTestNestedLoops {
+
+child:
+    async Start();
+    [LegacyIntr] intr R();
+    async __delete__();
+
+parent:
+    async Nonce();
+};
+
+
+} // namespace mozilla
+} // namespace _ipdltest

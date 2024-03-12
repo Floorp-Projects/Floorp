@@ -1,0 +1,27 @@
+include "mozilla/_ipdltest/TestInterruptRaces.h";
+
+namespace mozilla {
+namespace _ipdltest {
+
+[ManualDealloc, ChildImpl="TestInterruptRacesChild", ParentImpl="TestInterruptRacesParent"]
+intr protocol PTestInterruptRaces {
+both:
+    [LegacyIntr] intr Race() returns (bool hasReply);
+    [LegacyIntr] intr StackFrame() returns ();
+    [LegacyIntr] intr StackFrame3() returns ();
+
+parent:
+    sync StartRace();
+    [LegacyIntr] intr Parent();
+    sync GetAnsweredParent() returns (bool answeredParent);
+
+child:
+    async Start();
+    async Wakeup();
+    async Wakeup3();
+    [LegacyIntr] intr Child();
+    async __delete__();
+};
+
+} // namespace _ipdltest
+} // namespace mozilla

@@ -1,0 +1,20 @@
+include "mozilla/_ipdltest/TestRacyInterruptReplies.h";
+
+namespace mozilla {
+namespace _ipdltest {
+
+[ManualDealloc, ChildImpl="TestRacyInterruptRepliesChild", ParentImpl="TestRacyInterruptRepliesParent"]
+intr protocol PTestRacyInterruptReplies {
+child:
+    [LegacyIntr] intr R_() returns (int replyNum);
+    async _A();
+    async ChildTest();
+    async __delete__();
+
+parent:
+    [LegacyIntr] intr _R() returns (int replyNum);
+    async A_();
+};
+
+} // namespace _ipdltest
+} // namespace mozilla

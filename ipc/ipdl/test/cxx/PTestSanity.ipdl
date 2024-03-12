@@ -1,0 +1,21 @@
+
+include "mozilla/_ipdltest/TestSanity.h";
+
+namespace mozilla {
+namespace _ipdltest {
+
+
+[ManualDealloc, ChildImpl="TestSanityChild", ParentImpl="TestSanityParent"]
+protocol PTestSanity {
+
+child:
+    async Ping(int zero, float zeroPtFive, int8_t dummy);
+    async __delete__();
+
+parent:
+    async Pong(int one, float zeroPtTwoFive, uint8_t dummy);
+};
+
+
+} // namespace mozilla
+} // namespace _ipdltest

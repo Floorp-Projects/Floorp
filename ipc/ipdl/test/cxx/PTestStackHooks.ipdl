@@ -1,0 +1,28 @@
+include "mozilla/_ipdltest/TestStackHooks.h";
+
+namespace mozilla {
+namespace _ipdltest {
+
+
+[ManualDealloc, ChildImpl="TestStackHooksChild", ParentImpl="TestStackHooksParent"]
+intr protocol PTestStackHooks {
+child:
+    async Start();
+
+    // These tests are more fruitful running child->parent, because
+    // children can send |sync| messages
+parent:
+    async Async();
+    sync Sync();
+    [LegacyIntr] intr Rpc();
+
+both:
+    [LegacyIntr] intr StackFrame();
+
+parent:
+    async __delete__();
+};
+
+
+} // namespace mozilla
+} // namespace _ipdltest
