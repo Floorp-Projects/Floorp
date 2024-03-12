@@ -21,11 +21,13 @@ import mozilla.components.ui.widgets.behavior.ViewPosition
  *
  * @param context The Context the view is running in.
  * @param parent The ViewGroup into which the NavigationBar composable will be added.
+ * @param hideOnScroll If the container should react to the [EngineView] content being scrolled.
  * @param composableContent
  */
 class BottomToolbarContainerView(
     context: Context,
     parent: ViewGroup,
+    hideOnScroll: Boolean = false,
     composableContent: @Composable () -> Unit,
 ) {
 
@@ -46,7 +48,9 @@ class BottomToolbarContainerView(
             CoordinatorLayout.LayoutParams.WRAP_CONTENT,
         ).apply {
             gravity = Gravity.BOTTOM
-            behavior = EngineViewScrollingBehavior(parent.context, null, ViewPosition.BOTTOM)
+            if (hideOnScroll) {
+                behavior = EngineViewScrollingBehavior(parent.context, null, ViewPosition.BOTTOM)
+            }
         }
 
         parent.addView(toolbarContainerView)

@@ -621,6 +621,7 @@ dependencies {
     implementation project(':lib-push-firebase')
     implementation project(':lib-state')
     implementation project(':lib-dataprotect')
+    testImplementation project(':support-test-fakes')
 
     debugImplementation ComponentsDependencies.leakcanary
     debugImplementation ComponentsDependencies.androidx_compose_ui_tooling

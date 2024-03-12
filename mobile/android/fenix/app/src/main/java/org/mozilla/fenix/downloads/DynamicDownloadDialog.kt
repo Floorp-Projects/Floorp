@@ -30,7 +30,7 @@ class DynamicDownloadDialog(
     private val tryAgain: (String) -> Unit,
     private val onCannotOpenFile: (DownloadState) -> Unit,
     private val binding: DownloadDialogLayoutBinding,
-    private val toolbarHeight: Int,
+    private val bottomToolbarHeight: Int,
     private val onDismiss: () -> Unit,
 ) {
 
@@ -49,7 +49,7 @@ class DynamicDownloadDialog(
                         DynamicDownloadDialogBehavior<View>(
                             context,
                             null,
-                            toolbarHeight.toFloat(),
+                            bottomToolbarHeight.toFloat(),
                         )
                 }
             }
@@ -58,7 +58,7 @@ class DynamicDownloadDialog(
         if (settings.shouldUseBottomToolbar) {
             val params: ViewGroup.MarginLayoutParams =
                 binding.root.layoutParams as ViewGroup.MarginLayoutParams
-            params.bottomMargin = toolbarHeight
+            params.bottomMargin = bottomToolbarHeight
         }
 
         if (didFail) {

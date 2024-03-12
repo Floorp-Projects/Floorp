@@ -1984,6 +1984,40 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     )
 
     /**
+     * Returns the height of the bottom toolbar.
+     *
+     * The bottom toolbar can consist of a navigation bar,
+     * a combination of a navigation and address bar, or be absent.
+     */
+    fun getBottomToolbarHeight(): Int {
+        val isNavBarEnabled = enableIncompleteToolbarRedesign
+        val isToolbarAtBottom = shouldUseBottomToolbar
+        val toolbarHeight = appContext.resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
+        val navbarHeight = appContext.resources.getDimensionPixelSize(R.dimen.browser_navbar_height)
+
+        return when {
+            isNavBarEnabled && isToolbarAtBottom -> toolbarHeight + navbarHeight
+            isNavBarEnabled -> navbarHeight
+            isToolbarAtBottom -> toolbarHeight
+            else -> 0
+        }
+    }
+
+    /**
+     * Returns the height of the top toolbar.
+     */
+    fun getTopToolbarHeight(): Int {
+        val isToolbarAtTop = !shouldUseBottomToolbar
+        val toolbarHeight = appContext.resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
+
+        return if (isToolbarAtTop) {
+            toolbarHeight
+        } else {
+            0
+        }
+    }
+
+    /**
      * Indicates if the user is shown incomplete new redesigned Toolbar UI components and behaviors.
      *
      * DEV ONLY

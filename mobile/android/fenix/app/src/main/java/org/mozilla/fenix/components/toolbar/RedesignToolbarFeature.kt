@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.components.toolbar
 
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.utils.Settings
 
 /**

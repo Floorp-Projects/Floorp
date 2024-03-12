@@ -7,8 +7,8 @@ package org.mozilla.fenix.browser
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.state.content.DownloadState.Status
 import mozilla.components.feature.downloads.AbstractFetchDownloadService
-import org.mozilla.fenix.R
 import org.mozilla.fenix.downloads.DynamicDownloadDialog
+import org.mozilla.fenix.ext.settings
 
 internal fun BaseBrowserFragment.handleOnDownloadFinished(
     downloadState: DownloadState,
@@ -43,7 +43,7 @@ internal fun BaseBrowserFragment.handleOnDownloadFinished(
                 tryAgain = tryAgain,
                 onCannotOpenFile = onCannotOpenFile,
                 binding = binding.viewDynamicDownloadDialog,
-                toolbarHeight = resources.getDimensionPixelSize(R.dimen.browser_toolbar_height),
+                bottomToolbarHeight = safeContext.settings().getBottomToolbarHeight(),
             ) { sharedViewModel.downloadDialogState.remove(downloadState.sessionId) }
 
             dynamicDownloadDialog.show()

@@ -475,6 +475,7 @@ class HomeFragment : Fragment() {
             _bottomToolbarContainerView = BottomToolbarContainerView(
                 context = requireContext(),
                 parent = binding.homeLayout,
+                hideOnScroll = false,
                 composableContent = {
                     FirefoxTheme {
                         Column {
