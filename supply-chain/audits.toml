@@ -1325,11 +1325,11 @@ who = [
     "Erich Gubler <egubler@mozilla.com>",
     "Jim Blandy <jimb@red-bean.com>",
     "Nicolas Silva <nical@fastmail.com>",
-    "Erich Gubler <erichdongubler@gmail.com>",
     "Teodor Tanasoaia <ttanasoaia@mozilla.com>",
+    "Erich Gubler <erichdongubler@gmail.com>",
 ]
 criteria = "safe-to-deploy"
-delta = "0.7.0 -> 0.19.0@git:9c9418e84a9dd9730c0ab316e0f30f2a571827e4"
+delta = "0.7.0 -> 0.19.0@git:6040820099bc72b827a6a5f53d66dda3e301f944"
 importable = false
 
 [[audits.darling]]
@@ -2667,11 +2667,11 @@ delta = "0.13.0 -> 0.14.0"
 who = [
     "Jim Blandy <jimb@red-bean.com>",
     "Nicolas Silva <nical@fastmail.com>",
-    "Erich Gubler <erichdongubler@gmail.com>",
     "Teodor Tanasoaia <ttanasoaia@mozilla.com>",
+    "Erich Gubler <erichdongubler@gmail.com>",
 ]
 criteria = "safe-to-deploy"
-delta = "0.14.0 -> 0.19.0@git:9c9418e84a9dd9730c0ab316e0f30f2a571827e4"
+delta = "0.14.0 -> 0.19.0@git:6040820099bc72b827a6a5f53d66dda3e301f944"
 importable = false
 
 [[audits.net2]]
@@ -4481,11 +4481,11 @@ delta = "0.17.0 -> 0.18.0"
 who = [
     "Jim Blandy <jimb@red-bean.com>",
     "Nicolas Silva <nical@fastmail.com>",
-    "Erich Gubler <erichdongubler@gmail.com>",
     "Teodor Tanasoaia <ttanasoaia@mozilla.com>",
+    "Erich Gubler <erichdongubler@gmail.com>",
 ]
 criteria = "safe-to-deploy"
-delta = "0.18.0 -> 0.19.0@git:9c9418e84a9dd9730c0ab316e0f30f2a571827e4"
+delta = "0.18.0 -> 0.19.0@git:6040820099bc72b827a6a5f53d66dda3e301f944"
 importable = false
 
 [[audits.wgpu-hal]]
@@ -4535,11 +4535,11 @@ delta = "0.17.0 -> 0.18.0"
 who = [
     "Jim Blandy <jimb@red-bean.com>",
     "Nicolas Silva <nical@fastmail.com>",
-    "Erich Gubler <erichdongubler@gmail.com>",
     "Teodor Tanasoaia <ttanasoaia@mozilla.com>",
+    "Erich Gubler <erichdongubler@gmail.com>",
 ]
 criteria = "safe-to-deploy"
-delta = "0.18.0 -> 0.19.0@git:9c9418e84a9dd9730c0ab316e0f30f2a571827e4"
+delta = "0.18.0 -> 0.19.0@git:6040820099bc72b827a6a5f53d66dda3e301f944"
 importable = false
 
 [[audits.wgpu-types]]
@@ -4589,11 +4589,11 @@ delta = "0.17.0 -> 0.18.0"
 who = [
     "Jim Blandy <jimb@red-bean.com>",
     "Nicolas Silva <nical@fastmail.com>",
-    "Erich Gubler <erichdongubler@gmail.com>",
     "Teodor Tanasoaia <ttanasoaia@mozilla.com>",
+    "Erich Gubler <erichdongubler@gmail.com>",
 ]
 criteria = "safe-to-deploy"
-delta = "0.18.0 -> 0.19.0@git:9c9418e84a9dd9730c0ab316e0f30f2a571827e4"
+delta = "0.18.0 -> 0.19.0@git:6040820099bc72b827a6a5f53d66dda3e301f944"
 importable = false
 
 [[audits.whatsys]]

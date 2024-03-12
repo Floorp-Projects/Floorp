@@ -4,6 +4,7 @@ use std::sync::{atomic::AtomicU8, Arc};
 use wgt::AstcChannel;
 
 use crate::auxil::db;
+use crate::gles::ShaderClearProgram;
 
 // https://webgl2fundamentals.org/webgl/lessons/webgl-data-textures.html
 
@@ -435,7 +436,8 @@ impl super::Adapter {
         let mut features = wgt::Features::empty()
             | wgt::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES
             | wgt::Features::CLEAR_TEXTURE
-            | wgt::Features::PUSH_CONSTANTS;
+            | wgt::Features::PUSH_CONSTANTS
+            | wgt::Features::DEPTH32FLOAT_STENCIL8;
         features.set(
             wgt::Features::ADDRESS_MODE_CLAMP_TO_BORDER | wgt::Features::ADDRESS_MODE_CLAMP_TO_ZERO,
             extensions.contains("GL_EXT_texture_border_clamp")
@@ -801,6 +803,7 @@ impl super::Adapter {
         }
 
         let downlevel_defaults = wgt::DownlevelLimits {};
+        let max_samples = unsafe { gl.get_parameter_i32(glow::MAX_SAMPLES) };
 
         // Drop the GL guard so we can move the context into AdapterShared
         // ( on Wasm the gl handle is just a ref so we tell clippy to allow
@@ -819,6 +822,7 @@ impl super::Adapter {
                     next_shader_id: Default::default(),
                     program_cache: Default::default(),
                     es: es_ver.is_some(),
+                    max_msaa_samples: max_samples,
                 }),
             },
             info: Self::make_info(vendor, renderer),
@@ -875,7 +879,7 @@ impl super::Adapter {
     unsafe fn create_shader_clear_program(
         gl: &glow::Context,
         es: bool,
-    ) -> Option<(glow::Program, glow::UniformLocation)> {
+    ) -> Option<ShaderClearProgram> {
         let program = unsafe { gl.create_program() }.expect("Could not create shader program");
         let vertex = unsafe {
             Self::compile_shader(
@@ -911,7 +915,10 @@ impl super::Adapter {
         unsafe { gl.delete_shader(vertex) };
         unsafe { gl.delete_shader(fragment) };
 
-        Some((program, color_uniform_location))
+        Some(ShaderClearProgram {
+            program,
+            color_uniform_location,
+        })
     }
 }
 
@@ -937,9 +944,18 @@ impl crate::Adapter<super::Api> for super::Adapter {
         // Compile the shader program we use for doing manual clears to work around Mesa fastclear
         // bug.
 
-        let (shader_clear_program, shader_clear_program_color_uniform_location) = unsafe {
-            Self::create_shader_clear_program(gl, self.shared.es)
-                .ok_or(crate::DeviceError::ResourceCreationFailed)?
+        let shader_clear_program = if self
+            .shared
+            .workarounds
+            .contains(super::Workarounds::MESA_I915_SRGB_SHADER_CLEAR)
+        {
+            Some(unsafe {
+                Self::create_shader_clear_program(gl, self.shared.es)
+                    .ok_or(crate::DeviceError::ResourceCreationFailed)?
+            })
+        } else {
+            // If we don't need the workaround, don't waste time and resources compiling the clear program
+            None
         };
 
         Ok(crate::OpenDevice {
@@ -957,7 +973,6 @@ impl crate::Adapter<super::Api> for super::Adapter {
                 copy_fbo: unsafe { gl.create_framebuffer() }
                     .map_err(|_| crate::DeviceError::OutOfMemory)?,
                 shader_clear_program,
-                shader_clear_program_color_uniform_location,
                 zero_buffer,
                 temp_query_results: Mutex::new(Vec::new()),
                 draw_buffer_count: AtomicU8::new(1),
@@ -974,12 +989,7 @@ impl crate::Adapter<super::Api> for super::Adapter {
         use wgt::TextureFormat as Tf;
 
         let sample_count = {
-            let max_samples = unsafe {
-                self.shared
-                    .context
-                    .lock()
-                    .get_parameter_i32(glow::MAX_SAMPLES)
-            };
+            let max_samples = self.shared.max_msaa_samples;
             if max_samples >= 16 {
                 Tfc::MULTISAMPLE_X2
                     | Tfc::MULTISAMPLE_X4
