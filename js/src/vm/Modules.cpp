@@ -327,11 +327,6 @@ JS_PUBLIC_API void JS::ClearModuleEnvironment(JSObject* moduleObj) {
   }
 }
 
-JS_PUBLIC_API bool JS::ModuleIsLinked(JSObject* moduleObj) {
-  AssertHeapIsIdle();
-  return moduleObj->as<ModuleObject>().status() != ModuleStatus::Unlinked;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // Internal implementation
 
