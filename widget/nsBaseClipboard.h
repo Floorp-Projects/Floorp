@@ -55,10 +55,6 @@ class nsBaseClipboard : public nsIClipboard {
       mozilla::dom::WindowContext* aRequestingWindowContext,
       nsIPrincipal* aRequestingPrincipal,
       nsIAsyncClipboardGetCallback* aCallback) override final;
-  NS_IMETHOD GetDataSnapshotSync(
-      const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard,
-      mozilla::dom::WindowContext* aRequestingWindowContext,
-      nsIAsyncGetClipboardData** _retval) override final;
   NS_IMETHOD EmptyClipboard(int32_t aWhichClipboard) override final;
   NS_IMETHOD HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
                                     int32_t aWhichClipboard,
@@ -209,11 +205,6 @@ class nsBaseClipboard : public nsIClipboard {
                                mozilla::dom::WindowContext* aWindowContext,
                                nsIPrincipal* aRequestingPrincipal,
                                nsIAsyncClipboardGetCallback* aCallback);
-
-  already_AddRefed<nsIAsyncGetClipboardData>
-  MaybeCreateGetRequestFromClipboardCache(
-      const nsTArray<nsCString>& aFlavorList, int32_t aClipboardType,
-      mozilla::dom::WindowContext* aRequestingWindowContext);
 
   // Track the pending request for each clipboard type separately. And only need
   // to track the latest request for each clipboard type as the prior pending
