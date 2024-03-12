@@ -84,14 +84,33 @@ impl CustomDistributionMetric {
     /// for each of them.
     pub fn accumulate_samples(&self, samples: Vec<i64>) {
         let metric = self.clone();
-        crate::launch_with_glean(move |glean| metric.accumulate_samples_sync(glean, samples))
+        crate::launch_with_glean(move |glean| metric.accumulate_samples_sync(glean, &samples))
+    }
+
+    /// Accumulates precisely one signed sample and appends it to the metric.
+    ///
+    /// Signed is required so that the platform-specific code can provide us with a
+    /// 64 bit signed integer if no `u64` comparable type is available. This
+    /// will take care of filtering and reporting errors.
+    ///
+    /// # Arguments
+    ///
+    /// - `sample` - The singular sample to be recorded by the metric.
+    ///
+    /// ## Notes
+    ///
+    /// Discards any negative value of `sample` and reports an
+    /// [`ErrorType::InvalidValue`](crate::ErrorType::InvalidValue).
+    pub fn accumulate_single_sample(&self, sample: i64) {
+        let metric = self.clone();
+        crate::launch_with_glean(move |glean| metric.accumulate_samples_sync(glean, &[sample]))
     }
 
     /// Accumulates the provided sample in the metric synchronously.
     ///
     /// See [`accumulate_samples`](Self::accumulate_samples) for details.
     #[doc(hidden)]
-    pub fn accumulate_samples_sync(&self, glean: &Glean, samples: Vec<i64>) {
+    pub fn accumulate_samples_sync(&self, glean: &Glean, samples: &[i64]) {
         if !self.should_record(glean) {
             return;
         }
@@ -132,7 +151,7 @@ impl CustomDistributionMetric {
                             self.bucket_count as usize,
                         )
                     };
-                    accumulate(&samples, hist, Metric::CustomDistributionLinear)
+                    accumulate(samples, hist, Metric::CustomDistributionLinear)
                 }
                 HistogramType::Exponential => {
                     let hist = if let Some(Metric::CustomDistributionExponential(hist)) = old_value
@@ -145,7 +164,7 @@ impl CustomDistributionMetric {
                             self.bucket_count as usize,
                         )
                     };
-                    accumulate(&samples, hist, Metric::CustomDistributionExponential)
+                    accumulate(samples, hist, Metric::CustomDistributionExponential)
                 }
             };
 

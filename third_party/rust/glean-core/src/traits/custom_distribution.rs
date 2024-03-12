@@ -28,6 +28,22 @@ pub trait CustomDistribution {
     /// them.
     fn accumulate_samples_signed(&self, samples: Vec<i64>);
 
+    /// Accumulates precisely one signed sample in the metric.
+    ///
+    /// This is required so that the platform-specific code can provide us with a
+    /// 64 bit signed integer if no `u64` comparable type is available. This
+    /// will take care of filtering and reporting errors.
+    ///
+    /// # Arguments
+    ///
+    /// - `sample` - The singular sample to be recorded by the metric.
+    ///
+    /// ## Notes
+    ///
+    /// Discards any negative value of `sample` and reports an
+    /// [`ErrorType::InvalidValue`](crate::ErrorType::InvalidValue).
+    fn accumulate_single_sample_signed(&self, sample: i64);
+
     /// **Exported for test purposes.**
     ///
     /// Gets the currently stored histogram.

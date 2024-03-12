@@ -374,6 +374,10 @@ impl TimingDistribution for TimingDistributionMetric {
         }
     }
 
+    pub fn accumulate_single_sample(&self, _sample: i64) {
+        unimplemented!("bug 1884183: expose this to FOG")
+    }
+
     /// **Exported for test purposes.**
     ///
     /// Gets the currently stored value of the metric.

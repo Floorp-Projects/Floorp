@@ -89,7 +89,7 @@ fn test_metrics_must_report_experimentation_id() {
         trim_data_to_registered_pings: false,
         log_level: None,
         rate_limit: None,
-        enable_event_timestamps: false,
+        enable_event_timestamps: true,
         experimentation_id: Some("test-experimentation-id".to_string()),
     })
     .unwrap();
@@ -141,7 +141,7 @@ fn experimentation_id_is_removed_if_send_if_empty_is_false() {
         trim_data_to_registered_pings: false,
         log_level: None,
         rate_limit: None,
-        enable_event_timestamps: false,
+        enable_event_timestamps: true,
         experimentation_id: Some("test-experimentation-id".to_string()),
     })
     .unwrap();
