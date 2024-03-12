@@ -1,0 +1,39 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+namespace mozilla {
+namespace _ipdltest {
+
+[NestedUpTo=inside_sync, ChildProc=any, ChildImpl=virtual, ParentImpl=virtual]
+sync protocol PTestCancel
+{
+    // Immediate Cancel: child sync function cancels immediately, both ends check after cancellation.
+child:
+    [Nested=inside_sync] sync ImmediateCancel();
+
+
+    // Nested Cancel: child nested sync function cancels
+child:
+    async StartNestedCancel();
+    [Nested=inside_sync] sync NestedCancel();
+parent:
+    [Nested=inside_sync] sync CallNestedCancel();
+
+
+    // Nested Cancel Parent: parent nested sync function cancels
+child:
+    [Nested=inside_sync] sync StartNestedCancelParent();
+parent:
+    [Nested=inside_sync] sync NestedCancelParent();
+
+
+// Common functions to check that sync messages still work.
+child:
+    [Nested=inside_sync] sync CheckChild() returns (uint32_t reply);
+parent:
+    [Nested=inside_sync] sync CheckParent() returns (uint32_t reply);
+};
+
+} // namespace _ipdltest
+} // namespace mozilla
