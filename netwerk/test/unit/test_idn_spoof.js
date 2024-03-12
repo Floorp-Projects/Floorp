@@ -416,7 +416,7 @@ let testCases = [
   // þħĸŧƅ.com
   ["xn--vda6f3b2kpf.com", "\u00fe\u0127\u0138\u0167\u0185.com", kUnsafe],
   // þhktb.com
-  ["xn--hktb-9ra.com", "\u00fehktb.com", kUnsafe, "DISABLED"],
+  ["xn--hktb-9ra.com", "\u00fehktb.com", kUnsafe],
   // pħktb.com
   ["xn--pktb-5xa.com", "p\u0127ktb.com", kUnsafe, "DISABLED"],
   // phĸtb.com
@@ -876,8 +876,8 @@ let testCases = [
   ["xn--ceba.com", "\u05d7\u05d7.com", kUnsafe, "DISABLED"],
 
   // U+00FE (þ) and U+00F0 (ð) are only allowed under the .is TLD.
-  ["xn--acdef-wva.com", "a\u00fecdef.com", kUnsafe, "DISABLED"],
-  ["xn--mnpqr-jta.com", "mn\u00f0pqr.com", kUnsafe, "DISABLED"],
+  ["xn--acdef-wva.com", "a\u00fecdef.com", kUnsafe],
+  ["xn--mnpqr-jta.com", "mn\u00f0pqr.com", kUnsafe],
   ["xn--acdef-wva.is", "a\u00fecdef.is", kSafe],
   ["xn--mnpqr-jta.is", "mn\u00f0pqr.is", kSafe],
 
