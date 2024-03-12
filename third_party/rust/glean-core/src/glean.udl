@@ -484,6 +484,8 @@ interface TimingDistributionMetric {
 
     void accumulate_samples(sequence<i64> samples);
 
+    void accumulate_single_sample(i64 sample);
+
     DistributionData? test_get_value(optional string? ping_name = null);
 
     i32 test_get_num_recorded_errors(ErrorType error);
@@ -526,6 +528,8 @@ interface CustomDistributionMetric {
     constructor(CommonMetricData meta, i64 range_min, i64 range_max, i64 bucket_count, HistogramType histogram_type);
 
     void accumulate_samples(sequence<i64> samples);
+
+    void accumulate_single_sample(i64 sample);
 
     DistributionData? test_get_value(optional string? ping_name = null);
 

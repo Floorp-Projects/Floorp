@@ -92,6 +92,10 @@ impl CustomDistribution for CustomDistributionMetric {
         }
     }
 
+    pub fn accumulate_single_sample_signed(&self, _sample: i64) {
+        unimplemented!("bug 1884183: expose this to FOG")
+    }
+
     pub fn test_get_value<'a, S: Into<Option<&'a str>>>(
         &self,
         ping_name: S,

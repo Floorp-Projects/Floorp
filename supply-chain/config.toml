@@ -598,10 +598,6 @@ criteria = "safe-to-run"
 version = "0.15.0"
 criteria = "safe-to-deploy"
 
-[[exemptions.nom]]
-version = "7.1.1"
-criteria = "safe-to-deploy"
-
 [[exemptions.objc]]
 version = "0.2.7"
 criteria = "safe-to-deploy"
@@ -752,14 +748,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.stable_deref_trait]]
 version = "1.2.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.static_assertions]]
-version = "1.1.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.strsim]]
-version = "0.10.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.tempfile]]

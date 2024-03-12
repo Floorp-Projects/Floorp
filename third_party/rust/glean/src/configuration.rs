@@ -113,7 +113,7 @@ impl Builder {
             trim_data_to_registered_pings: false,
             log_level: None,
             rate_limit: None,
-            enable_event_timestamps: false,
+            enable_event_timestamps: true,
             experimentation_id: None,
         }
     }

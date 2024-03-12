@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.66"
 name = "glean"
-version = "58.0.0"
+version = "58.1.0"
 authors = [
     "Jan-Erik Rediger <jrediger@mozilla.com>",
     "The Glean Team <glean-team@mozilla.com>",
@@ -35,7 +35,7 @@ license = "MPL-2.0"
 repository = "https://github.com/mozilla/glean"
 
 [dependencies.glean-core]
-version = "58.0.0"
+version = "58.1.0"
 
 [dependencies.inherent]
 version = "1"

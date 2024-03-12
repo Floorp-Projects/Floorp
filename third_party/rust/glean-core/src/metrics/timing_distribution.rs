@@ -293,7 +293,35 @@ impl TimingDistributionMetric {
     /// are longer than `MAX_SAMPLE_TIME`.
     pub fn accumulate_samples(&self, samples: Vec<i64>) {
         let metric = self.clone();
-        crate::launch_with_glean(move |glean| metric.accumulate_samples_sync(glean, samples))
+        crate::launch_with_glean(move |glean| metric.accumulate_samples_sync(glean, &samples))
+    }
+
+    /// Accumulates precisely one signed sample and appends it to the metric.
+    ///
+    /// Precludes the need for a collection in the most common use case.
+    ///
+    /// Sign is required so that the platform-specific code can provide us with
+    /// a 64 bit signed integer if no `u64` comparable type is available. This
+    /// will take care of filtering and reporting errors for any provided negative
+    /// sample.
+    ///
+    /// Please note that this assumes that the provided sample is already in
+    /// the "unit" declared by the instance of the metric type (e.g. if the
+    /// instance this method was called on is using [`crate::TimeUnit::Second`], then
+    /// `sample` is assumed to be in that unit).
+    ///
+    /// # Arguments
+    ///
+    /// * `sample` - The singular sample to be recorded by the metric.
+    ///
+    /// ## Notes
+    ///
+    /// Discards any negative value and reports an [`ErrorType::InvalidValue`].
+    /// Reports an [`ErrorType::InvalidOverflow`] error if the sample is longer than
+    /// `MAX_SAMPLE_TIME`.
+    pub fn accumulate_single_sample(&self, sample: i64) {
+        let metric = self.clone();
+        crate::launch_with_glean(move |glean| metric.accumulate_samples_sync(glean, &[sample]))
     }
 
     /// **Test-only API (exported for testing purposes).**
@@ -301,7 +329,7 @@ impl TimingDistributionMetric {
     ///
     /// Use [`accumulate_samples`](Self::accumulate_samples)
     #[doc(hidden)]
-    pub fn accumulate_samples_sync(&self, glean: &Glean, samples: Vec<i64>) {
+    pub fn accumulate_samples_sync(&self, glean: &Glean, samples: &[i64]) {
         if !self.should_record(glean) {
             return;
         }
