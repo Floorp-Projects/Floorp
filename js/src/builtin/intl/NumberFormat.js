@@ -190,7 +190,7 @@ function UnwrapNumberFormat(nf) {
  *
  * Applies digit options used for number formatting onto the intl object.
  *
- * ES2024 Intl draft rev 74ca7099f103d143431b2ea422ae640c6f43e3e6
+ * ES2024 Intl draft rev a1db4567870dbe505121a4255f1210338757190a
  */
 function SetNumberFormatDigitOptions(
   lazyData,
@@ -216,15 +216,6 @@ function SetNumberFormatDigitOptions(
   lazyData.minimumIntegerDigits = mnid;
 
   // Step 7.
-  var roundingPriority = GetOption(
-    options,
-    "roundingPriority",
-    "string",
-    ["auto", "morePrecision", "lessPrecision"],
-    "auto"
-  );
-
-  // Step 8.
   var roundingIncrement = GetNumberOption(
     options,
     "roundingIncrement",
@@ -233,7 +224,7 @@ function SetNumberFormatDigitOptions(
     1
   );
 
-  // Step 9.
+  // Step 8.
   switch (roundingIncrement) {
     case 1:
     case 2:
@@ -259,7 +250,7 @@ function SetNumberFormatDigitOptions(
       );
   }
 
-  // Step 10.
+  // Step 9.
   var roundingMode = GetOption(
     options,
     "roundingMode",
@@ -276,6 +267,15 @@ function SetNumberFormatDigitOptions(
       "halfEven",
     ],
     "halfExpand"
+  );
+
+  // Step 10.
+  var roundingPriority = GetOption(
+    options,
+    "roundingPriority",
+    "string",
+    ["auto", "morePrecision", "lessPrecision"],
+    "auto"
   );
 
   // Step 11.
@@ -303,52 +303,52 @@ function SetNumberFormatDigitOptions(
   // Step 16.
   lazyData.trailingZeroDisplay = trailingZeroDisplay;
 
-  // Steps 17-18.
+  // Step 17.
   var hasSignificantDigits = mnsd !== undefined || mxsd !== undefined;
 
-  // Step 19-20.
+  // Step 28.
   var hasFractionDigits = mnfd !== undefined || mxfd !== undefined;
 
-  // Steps 21 and 23.a.
+  // Steps 19 and 21.a.
   var needSignificantDigits =
     roundingPriority !== "auto" || hasSignificantDigits;
 
-  // Steps 22 and 23.b.i.
+  // Steps 20 and 21.b.i.
   var needFractionalDigits =
     roundingPriority !== "auto" ||
     !(hasSignificantDigits || (!hasFractionDigits && notation === "compact"));
 
-  // Step 24.
+  // Step 22.
   if (needSignificantDigits) {
-    // Step 24.a.
+    // Step 22.a.
     if (hasSignificantDigits) {
-      // Step 24.a.i.
+      // Step 22.a.i.
       mnsd = DefaultNumberOption(mnsd, 1, 21, 1);
       lazyData.minimumSignificantDigits = mnsd;
 
-      // Step 24.a.ii.
+      // Step 22.a.ii.
       mxsd = DefaultNumberOption(mxsd, mnsd, 21, 21);
       lazyData.maximumSignificantDigits = mxsd;
     } else {
-      // Step 24.b.i.
+      // Step 22.b.i.
       lazyData.minimumSignificantDigits = 1;
 
-      // Step 24.b.ii.
+      // Step 22.b.ii.
       lazyData.maximumSignificantDigits = 21;
     }
   }
 
-  // Step 25.
+  // Step 23.
   if (needFractionalDigits) {
-    // Step 25.a.
+    // Step 23.a.
     if (hasFractionDigits) {
-      // Step 25.a.i.
+      // Step 23.a.i.
       mnfd = DefaultNumberOption(mnfd, 0, 100, undefined);
 
-      // Step 25.a.ii.
+      // Step 23.a.ii.
       mxfd = DefaultNumberOption(mxfd, 0, 100, undefined);
 
-      // Step 25.a.iii.
+      // Step 23.a.iii.
       if (mnfd === undefined) {
         assert(
           mxfd !== undefined,
@@ -357,31 +357,31 @@ function SetNumberFormatDigitOptions(
         mnfd = std_Math_min(mnfdDefault, mxfd);
       }
 
-      // Step 25.a.iv.
+      // Step 23.a.iv.
       else if (mxfd === undefined) {
         mxfd = std_Math_max(mxfdDefault, mnfd);
       }
 
-      // Step 25.a.v.
+      // Step 23.a.v.
       else if (mnfd > mxfd) {
         ThrowRangeError(JSMSG_INVALID_DIGITS_VALUE, mxfd);
       }
 
-      // Step 25.a.vi.
+      // Step 23.a.vi.
       lazyData.minimumFractionDigits = mnfd;
 
-      // Step 25.a.vii.
+      // Step 23.a.vii.
       lazyData.maximumFractionDigits = mxfd;
     } else {
-      // Step 25.b.i.
+      // Step 23.b.i.
       lazyData.minimumFractionDigits = mnfdDefault;
 
-      // Step 25.b.ii.
+      // Step 23.b.ii.
       lazyData.maximumFractionDigits = mxfdDefault;
     }
   }
 
-  // Steps 26-30.
+  // Steps 24-28.
   if (!needSignificantDigits && !needFractionalDigits) {
     assert(!hasSignificantDigits, "bad significant digits in fallback case");
     assert(
@@ -393,23 +393,23 @@ function SetNumberFormatDigitOptions(
       `bad notation in fallback case: ${notation}`
     );
 
-    // Steps 26.a-e.
+    // Steps 24.a-f.
     lazyData.minimumFractionDigits = 0;
     lazyData.maximumFractionDigits = 0;
     lazyData.minimumSignificantDigits = 1;
     lazyData.maximumSignificantDigits = 2;
     lazyData.roundingPriority = "morePrecision";
   } else {
-    // Steps 27-30.
+    // Steps 25-28.
     //
     // Our implementation stores |roundingPriority| instead of using
     // [[RoundingType]].
     lazyData.roundingPriority = roundingPriority;
   }
 
-  // Step 31.
+  // Step 29.
   if (roundingIncrement !== 1) {
-    // Step 31.a.
+    // Step 29.a.
     //
     // [[RoundingType]] is `fractionDigits` if |roundingPriority| is equal to
     // "auto" and |hasSignificantDigits| is false.
@@ -428,7 +428,7 @@ function SetNumberFormatDigitOptions(
       );
     }
 
-    // Step 31.b.
+    // Step 29.b.
     //
     // Minimum and maximum fraction digits must be equal.
     if (
@@ -1128,7 +1128,7 @@ function Intl_NumberFormat_formatRangeToParts(start, end) {
  *
  * Returns the resolved options for a NumberFormat object.
  *
- * ES2024 Intl draft rev 74ca7099f103d143431b2ea422ae640c6f43e3e6
+ * ES2024 Intl draft rev a1db4567870dbe505121a4255f1210338757190a
  */
 function Intl_NumberFormat_resolvedOptions() {
   // Steps 1-3.
@@ -1244,20 +1244,15 @@ function Intl_NumberFormat_resolvedOptions() {
   }
 
   DefineDataProperty(result, "signDisplay", internals.signDisplay);
-  DefineDataProperty(result, "roundingMode", internals.roundingMode);
   DefineDataProperty(result, "roundingIncrement", internals.roundingIncrement);
+  DefineDataProperty(result, "roundingMode", internals.roundingMode);
+  DefineDataProperty(result, "roundingPriority", internals.roundingPriority);
   DefineDataProperty(
     result,
     "trailingZeroDisplay",
     internals.trailingZeroDisplay
   );
 
-  // Steps 6-8.
-  //
-  // Our implementation doesn't use [[RoundingType]], but instead directly
-  // stores the computed `roundingPriority` value.
-  DefineDataProperty(result, "roundingPriority", internals.roundingPriority);
-
-  // Step 9.
+  // Step 6.
   return result;
 }

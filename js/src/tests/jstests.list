@@ -620,13 +620,6 @@ skip script test262/built-ins/RegExp/unicodeSets/generated/rgi-emoji-15.1.js
 skip script test262/intl402/DateTimeFormat/timezone-not-canonicalized.js
 skip script test262/intl402/DateTimeFormat/timezone-case-insensitive.js
 
-# Resolved options reordered.
-# https://github.com/tc39/ecma402/pull/811
-skip script test262/intl402/NumberFormat/constructor-option-read-order.js
-skip script test262/intl402/NumberFormat/prototype/resolvedOptions/return-keys-order-default.js
-skip script test262/intl402/PluralRules/constructor-option-read-order.js
-skip script test262/intl402/PluralRules/prototype/resolvedOptions/return-keys-order-default.js
-
 # Requires Unicode 15.1
 # https://github.com/tc39/test262/pull/3947
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1859752

@@ -339,7 +339,7 @@ function Intl_PluralRules_selectRange(start, end) {
  *
  * Returns the resolved options for a PluralRules object.
  *
- * ES2024 Intl draft rev 74ca7099f103d143431b2ea422ae640c6f43e3e6
+ * ES2024 Intl draft rev a1db4567870dbe505121a4255f1210338757190a
  */
 function Intl_PluralRules_resolvedOptions() {
   // Step 1.
@@ -359,7 +359,20 @@ function Intl_PluralRules_resolvedOptions() {
 
   var internals = getPluralRulesInternals(pluralRules);
 
-  // Steps 3-4.
+  // Step 4.
+  var internalsPluralCategories = internals.pluralCategories;
+  if (internalsPluralCategories === null) {
+    internalsPluralCategories = intl_GetPluralCategories(pluralRules);
+    internals.pluralCategories = internalsPluralCategories;
+  }
+
+  // Step 5.b.
+  var pluralCategories = [];
+  for (var i = 0; i < internalsPluralCategories.length; i++) {
+    DefineDataProperty(pluralCategories, i, internalsPluralCategories[i]);
+  }
+
+  // Steps 3 and 5.
   var result = {
     locale: internals.locale,
     type: internals.type,
@@ -406,35 +419,16 @@ function Intl_PluralRules_resolvedOptions() {
     );
   }
 
-  DefineDataProperty(result, "roundingMode", internals.roundingMode);
+  DefineDataProperty(result, "pluralCategories", pluralCategories);
   DefineDataProperty(result, "roundingIncrement", internals.roundingIncrement);
+  DefineDataProperty(result, "roundingMode", internals.roundingMode);
+  DefineDataProperty(result, "roundingPriority", internals.roundingPriority);
   DefineDataProperty(
     result,
     "trailingZeroDisplay",
     internals.trailingZeroDisplay
   );
 
-  // Step 5.
-  var internalsPluralCategories = internals.pluralCategories;
-  if (internalsPluralCategories === null) {
-    internalsPluralCategories = intl_GetPluralCategories(pluralRules);
-    internals.pluralCategories = internalsPluralCategories;
-  }
-
-  var pluralCategories = [];
-  for (var i = 0; i < internalsPluralCategories.length; i++) {
-    DefineDataProperty(pluralCategories, i, internalsPluralCategories[i]);
-  }
-
   // Step 6.
-  DefineDataProperty(result, "pluralCategories", pluralCategories);
-
-  // Steps 7-9.
-  //
-  // Our implementation doesn't use [[RoundingType]], but instead directly
-  // stores the computed `roundingPriority` value.
-  DefineDataProperty(result, "roundingPriority", internals.roundingPriority);
-
-  // Step 10.
   return result;
 }
