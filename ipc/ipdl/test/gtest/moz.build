@@ -23,6 +23,7 @@ SOURCES += [
     "TestDataStructures.cpp",
     "TestDescendant.cpp",
     "TestEndpointOpens.cpp",
+    "TestHangs.cpp",
     "TestInduceConnectionError.cpp",
     "TestManyHandles.cpp",
 ]
@@ -41,6 +42,7 @@ IPDL_SOURCES += [
     "PTestDescendantSubsub.ipdl",
     "PTestEndpointOpens.ipdl",
     "PTestEndpointOpensOpened.ipdl",
+    "PTestHangs.ipdl",
     "PTestInduceConnectionError.ipdl",
     "PTestManyHandles.ipdl",
 ]
