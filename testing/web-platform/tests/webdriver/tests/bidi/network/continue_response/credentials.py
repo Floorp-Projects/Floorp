@@ -11,7 +11,7 @@ pytestmark = pytest.mark.asyncio
 
 @pytest.mark.parametrize("navigate", [False, True], ids=["fetch", "navigate"])
 async def test_wrong_credentials(
-    setup_blocked_request, subscribe_events, wait_for_event, bidi_session, navigate
+    setup_blocked_request, subscribe_events, wait_for_event, bidi_session, navigate, wait_for_future_safe
 ):
     username = f"test_missing_credentials_{navigate}"
     password = f"test_missing_credentials_password_{navigate}"
@@ -27,7 +27,7 @@ async def test_wrong_credentials(
     await bidi_session.network.continue_response(
         request=request, credentials=wrong_credentials
     )
-    await on_auth_required
+    await wait_for_future_safe(on_auth_required)
 
 
 @pytest.mark.parametrize("navigate", [False, True], ids=["fetch", "navigate"])
