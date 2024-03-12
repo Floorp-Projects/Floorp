@@ -12,7 +12,6 @@ EXPORTS.mozilla._ipdltest += [
     "IPDLUnitTestTypes.h",
     "IPDLUnitTestUtils.h",
     "TestOffMainThreadPainting.h",
-    "TestSyncHang.h",
     "TestSyncWakeup.h",
     "TestUniquePtrIPC.h",
     "TestUrgency.h",
@@ -21,7 +20,6 @@ EXPORTS.mozilla._ipdltest += [
 
 SOURCES += [
     "TestOffMainThreadPainting.cpp",
-    "TestSyncHang.cpp",
     "TestSyncWakeup.cpp",
     "TestUniquePtrIPC.cpp",
     "TestUrgency.cpp",
@@ -41,7 +39,6 @@ IPDL_SOURCES += [
     "PTestIndirectProtocolParamSecond.ipdl",
     "PTestPaintThread.ipdl",
     "PTestPriority.ipdl",
-    "PTestSyncHang.ipdl",
     "PTestSyncWakeup.ipdl",
     "PTestUniquePtrIPC.ipdl",
     "PTestUrgency.ipdl",
