@@ -16037,6 +16037,12 @@
   mirror: always
   rust: true
 
+# Whether non-native titlebar buttons are enabled for lightweight themes.
+- name: widget.gtk.non-native-titlebar-buttons.enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # Whether selection colors for the non-system theme get passed from the system
 # GTK theme.
 - name: widget.gtk.alt-theme.selection
