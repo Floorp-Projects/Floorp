@@ -54,7 +54,9 @@ def set_tp_preferences(test, browser_config):
             "of cycles, please disregard reported numbers"
         )
         for cycle_var in ["tppagecycles", "tpcycles", "cycles"]:
-            if test[cycle_var] > 2:
+            if test["name"] == "tp5o_scroll" and test[cycle_var] > 1:
+                test[cycle_var] = 1
+            elif test[cycle_var] > 2:
                 test[cycle_var] = 2
 
     CLI_bool_options = [
