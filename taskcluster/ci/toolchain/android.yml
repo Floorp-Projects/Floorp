@@ -202,6 +202,9 @@ linux64-android-gradle-dependencies:
             - 'mobile/android/config/mozconfigs/android-arm-gradle-dependencies/**'
             - 'mobile/android/config/mozconfigs/common*'
             - 'mobile/android/gradle.configure'
+            - 'mobile/android/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt'
+            - 'mobile/android/fenix/plugins/fenixdependencies/src/main/java/FenixDependenciesPlugin.kt'
+            - 'mobile/android/focus-android/plugins/focusdependencies/src/main/java/FocusDependenciesPlugin.kt'
         toolchain-artifact: public/build/android-gradle-dependencies.tar.zst
         toolchain-alias: android-gradle-dependencies
     fetches:
@@ -233,6 +236,7 @@ linux64-android-gradle-dependencies-lite:
             - 'mobile/android/config/mozconfigs/android-arm-gradle-dependencies/**'
             - 'mobile/android/config/mozconfigs/common*'
             - 'mobile/android/gradle.configure'
+            - 'mobile/android/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt'
         toolchain-artifact: public/build/android-gradle-dependencies.tar.zst
         toolchain-alias: android-gradle-dependencies-lite
     fetches:
