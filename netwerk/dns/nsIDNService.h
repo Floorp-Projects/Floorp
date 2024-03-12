@@ -139,6 +139,17 @@ class nsIDNService final : public nsIIDNService {
       MOZ_EXCLUDES(mLock);
 
   /**
+   * Restriction-level Detection profiles defined in UTR 39
+   * http://www.unicode.org/reports/tr39/#Restriction_Level_Detection,
+   * and selected by the pref network.IDN.restriction_profile
+   */
+  enum restrictionProfile {
+    eASCIIOnlyProfile,
+    eHighlyRestrictiveProfile,
+    eModeratelyRestrictiveProfile
+  };
+
+  /**
    * Determine whether a combination of scripts in a single label is
    * permitted according to the algorithm defined in UTR 39 and the
    * profile selected in mRestrictionProfile.
@@ -152,9 +163,9 @@ class nsIDNService final : public nsIIDNService {
    * For the "Moderately restrictive" profile, Latin is also allowed
    *  with other scripts except Cyrillic and Greek
    */
-  bool illegalScriptCombo(mozilla::intl::Script script,
-                          mozilla::net::ScriptCombo& savedScript)
-      MOZ_REQUIRES_SHARED(mLock);
+  bool illegalScriptCombo(restrictionProfile profile,
+                          mozilla::intl::Script script,
+                          mozilla::net::ScriptCombo& savedScript);
 
   /**
    * Convert a DNS label from ASCII to Unicode using IDNA2008
@@ -177,16 +188,6 @@ class nsIDNService final : public nsIIDNService {
   // guarded by mLock
   nsTArray<mozilla::net::BlocklistRange> mIDNBlocklist MOZ_GUARDED_BY(mLock);
 
-  /**
-   * Restriction-level Detection profiles defined in UTR 39
-   * http://www.unicode.org/reports/tr39/#Restriction_Level_Detection,
-   * and selected by the pref network.IDN.restriction_profile
-   */
-  enum restrictionProfile {
-    eASCIIOnlyProfile,
-    eHighlyRestrictiveProfile,
-    eModeratelyRestrictiveProfile
-  };
   // guarded by mLock;
   restrictionProfile mRestrictionProfile MOZ_GUARDED_BY(mLock){
       eASCIIOnlyProfile};

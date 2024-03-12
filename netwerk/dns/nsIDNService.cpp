@@ -675,16 +675,20 @@ enum ScriptCombo : int32_t {
 }  // namespace mozilla::net
 
 bool nsIDNService::isLabelSafe(const nsAString& label, const nsAString& tld) {
-  AutoReadLock lock(mLock);
+  restrictionProfile profile{eASCIIOnlyProfile};
+  {
+    AutoReadLock lock(mLock);
 
-  if (!isOnlySafeChars(PromiseFlatString(label), mIDNBlocklist)) {
-    return false;
-  }
+    if (!isOnlySafeChars(PromiseFlatString(label), mIDNBlocklist)) {
+      return false;
+    }
 
-  // We should never get here if the label is ASCII
-  NS_ASSERTION(!IsAscii(label), "ASCII label in IDN checking");
-  if (mRestrictionProfile == eASCIIOnlyProfile) {
-    return false;
+    // We should never get here if the label is ASCII
+    NS_ASSERTION(!IsAscii(label), "ASCII label in IDN checking");
+    if (mRestrictionProfile == eASCIIOnlyProfile) {
+      return false;
+    }
+    profile = mRestrictionProfile;
   }
 
   nsAString::const_iterator current, end;
@@ -719,7 +723,7 @@ bool nsIDNService::isLabelSafe(const nsAString& label, const nsAString& tld) {
     Script script = UnicodeProperties::GetScriptCode(ch);
     if (script != Script::COMMON && script != Script::INHERITED &&
         script != lastScript) {
-      if (illegalScriptCombo(script, savedScript)) {
+      if (illegalScriptCombo(profile, script, savedScript)) {
         return false;
       }
     }
@@ -884,7 +888,8 @@ static const ScriptCombo scriptComboTable[13][9] = {
     /* KORE */ {FAIL, FAIL, FAIL, KORE, KORE, FAIL, FAIL, KORE, FAIL},
     /* HNLT */ {CHNA, FAIL, FAIL, KORE, HNLT, JPAN, JPAN, HNLT, FAIL}};
 
-bool nsIDNService::illegalScriptCombo(Script script, ScriptCombo& savedScript) {
+bool nsIDNService::illegalScriptCombo(restrictionProfile profile, Script script,
+                                      ScriptCombo& savedScript) {
   if (savedScript == ScriptCombo::UNSET) {
     savedScript = findScriptIndex(script);
     return false;
@@ -899,7 +904,6 @@ bool nsIDNService::illegalScriptCombo(Script script, ScriptCombo& savedScript) {
    * In the Moderately Restrictive profile Latin mixed with any other
    *  single script is allowed.
    */
-  return ((savedScript == OTHR &&
-           mRestrictionProfile == eHighlyRestrictiveProfile) ||
+  return ((savedScript == OTHR && profile == eHighlyRestrictiveProfile) ||
           savedScript == FAIL);
 }
