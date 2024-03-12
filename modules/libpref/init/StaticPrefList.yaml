@@ -15263,11 +15263,10 @@
   mirror: always
 
 # If the user has clicked an element, how long do we keep the :active state
-# before it is cleared by the mouse sequences fired after a
-# touchstart/touchend.
+# before it is cleared.
 - name: ui.touch_activation.duration_ms
   type: int32_t
-  value: 10
+  value: 50
   mirror: always
 
 # Prevent system colors from being exposed to CSS or canvas.
