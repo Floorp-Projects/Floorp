@@ -21,6 +21,8 @@ prefs = [
   "dom.element.popover.enabled=true"
 ]
 
+["browser_aria_activedescendant.js"]
+
 # Caching tests
 ["browser_caching_actions.js"]
 
