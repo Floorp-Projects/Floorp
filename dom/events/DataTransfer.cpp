@@ -622,7 +622,8 @@ already_AddRefed<DataTransfer> DataTransfer::MozCloneForEvent(
 }
 
 // The order of the types matters. `kFileMime` needs to be one of the first two
-// types.
+// types. And the order should be the same as the types order defined in
+// MandatoryDataTypesAsCStrings() for Clipboard API.
 static const nsCString kNonPlainTextExternalFormats[] = {
     nsLiteralCString(kCustomTypesMime), nsLiteralCString(kFileMime),
     nsLiteralCString(kHTMLMime),        nsLiteralCString(kRTFMime),
