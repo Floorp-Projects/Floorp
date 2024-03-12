@@ -127,38 +127,51 @@ def test_raptor_venv(ConcretePerftest, options):
     assert perftest.raptor_venv.endswith("raptor-venv")
 
 
+@mock.patch("perftest.Perftest.build_browser_profile", new=mock.MagicMock())
 @pytest.mark.parametrize(
+    "app,"
     "run_local,"
     "debug_mode,"
+    "conditioned_profile,"
     "post_startup_delay,"
     "expected_post_startup_delay,"
     "expected_debug_mode",
     [
-        [True, True, 1234, 1234, True],
-        [True, True, None, 3000, True],
-        [False, False, 1234, 1234, False],
-        [False, False, 12345, 12345, False],
-        [True, False, 1234, 1234, False],
-        [True, False, 12345, 12345, False],
-        [False, True, 1234, 1234, False],
-        [False, True, 12345, 12345, False],
+        ["firefox", True, True, None, 1234, 1234, True],
+        ["firefox", True, True, None, None, 3000, True],
+        ["firefox", True, False, None, None, 30000, False],
+        ["firefox", True, False, "settled", None, 1000, False],
+        ["fenix", True, False, None, None, 20000, False],
+        ["fenix", True, False, "settled", None, 1000, False],
+        ["firefox", False, False, None, 1234, 1234, False],
+        ["firefox", False, False, None, 12345, 12345, False],
+        ["firefox", True, False, None, 1234, 1234, False],
+        ["firefox", True, False, None, 12345, 12345, False],
+        ["firefox", False, True, None, 1234, 1234, False],
+        ["firefox", False, True, None, 12345, 12345, False],
     ],
 )
 def test_post_startup_delay(
     ConcretePerftest,
     options,
+    app,
     run_local,
     debug_mode,
+    conditioned_profile,
     post_startup_delay,
     expected_post_startup_delay,
     expected_debug_mode,
 ):
+    options["app"] = app
+
     perftest = ConcretePerftest(
         run_local=run_local,
         debug_mode=debug_mode,
         post_startup_delay=post_startup_delay,
+        conditioned_profile=conditioned_profile,
         **options
     )
+
     assert perftest.post_startup_delay == expected_post_startup_delay
     assert perftest.debug_mode == expected_debug_mode
 
