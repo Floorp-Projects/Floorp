@@ -178,6 +178,31 @@ interface nsIClipboard : nsISupports
                       in nsIPrincipal aRequestingPrincipal,
                       in nsIAsyncClipboardGetCallback aCallback);
 
+    /**
+     * Requests getting data from the native clipboard. This does not actually
+     * retreive the data, but returns a nsIAsyncGetClipboardData contains
+     * current avaiable data formats. If the native clipboard is updated, either
+     * by us or other application, the existing nsIAsyncGetClipboardData becomes
+     * invalid.
+     *
+     * @param  aFlavorList
+     *         Specific data formats ('flavors') that can be retrieved from the
+     *         clipboard.
+     * @param  aWhichClipboard
+     *         Specifies the clipboard to which this operation applies.
+     * @param  aRequestingWindowContext [optional]
+     *         The window context window that is requesting the clipboard, which is
+     *         used for content analysis. Passing null means that the content is
+     *         exempt from content analysis. (for example, scripted clipboard read by
+     *         system code) This parameter should not be null when calling this from a
+     *         content process.
+     * @return nsIAsyncSetClipboardData if successful.
+     * @throws if the request can not be made.
+     */
+    nsIAsyncGetClipboardData getDataSnapshotSync(in Array<ACString> aFlavorList,
+                                                 in long aWhichClipboard,
+                                                 [optional] in WindowContext aRequestingWindowContext);
+
    /**
     * This empties the clipboard and notifies the clipboard owner.
     * This empties the "logical" clipboard. It does not clear the native clipboard.

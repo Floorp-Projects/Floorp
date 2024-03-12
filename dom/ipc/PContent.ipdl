@@ -1238,6 +1238,11 @@ parent:
                             nsIPrincipal aRequestingPrincipal)
         returns (ClipboardReadRequestOrError aClipboardReadRequestOrError);
 
+    // Requests getting data from clipboard.
+    sync GetClipboardDataSnapshotSync(nsCString[] aTypes, int32_t aWhichClipboard,
+                                      MaybeDiscardedWindowContext aRequestingWindowContext)
+        returns (ClipboardReadRequestOrError aClipboardReadRequestOrError);
+
     // Clears the clipboard.
     async EmptyClipboard(int32_t aWhichClipboard);
 
