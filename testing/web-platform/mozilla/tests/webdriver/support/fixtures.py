@@ -1,9 +1,9 @@
 import pytest
-from mozprofile import Profile
 
 from .helpers import (
     Browser,
     Geckodriver,
+    create_custom_profile,
     get_pref,
     get_profile_folder,
     read_user_preferences,
@@ -12,7 +12,7 @@ from .helpers import (
 
 
 @pytest.fixture(scope="module")
-def browser(configuration):
+def browser(configuration, firefox_options):
     """Start a Firefox instance without using geckodriver.
 
     geckodriver will automatically use the --remote-allow-hosts and
@@ -24,7 +24,13 @@ def browser(configuration):
     """
     current_browser = None
 
-    def _browser(use_bidi=False, use_cdp=False, extra_args=None, extra_prefs=None):
+    def _browser(
+        use_bidi=False,
+        use_cdp=False,
+        extra_args=None,
+        extra_prefs=None,
+        clone_profile=True,
+    ):
         nonlocal current_browser
 
         # If the requested preferences and arguments match the ones for the
@@ -46,10 +52,16 @@ def browser(configuration):
 
         binary = configuration["browser"]["binary"]
         env = configuration["browser"]["env"]
-        firefox_options = configuration["capabilities"]["moz:firefoxOptions"]
+
+        profile_path = get_profile_folder(firefox_options)
+        default_prefs = read_user_preferences(profile_path)
+        profile = create_custom_profile(
+            profile_path, default_prefs, clone=clone_profile
+        )
+
         current_browser = Browser(
             binary,
-            firefox_options,
+            profile,
             use_bidi=use_bidi,
             use_cdp=use_cdp,
             extra_args=extra_args,
@@ -67,14 +79,22 @@ def browser(configuration):
         current_browser = None
 
 
-@pytest.fixture
-def custom_profile(profile_folder):
-    # Clone the known profile for automation preferences
-    profile = Profile.clone(profile_folder)
+@pytest.fixture(name="create_custom_profile")
+def fixture_create_custom_profile(default_preferences, profile_folder):
+    profile = None
 
-    yield profile
+    def _create_custom_profile(clone=True):
+        profile = create_custom_profile(
+            profile_folder, default_preferences, clone=clone
+        )
 
-    profile.cleanup()
+        return profile
+
+    yield _create_custom_profile
+
+    # if profile is not None:
+    if profile:
+        profile.cleanup()
 
 
 @pytest.fixture
@@ -82,7 +102,7 @@ def default_preferences(profile_folder):
     return read_user_preferences(profile_folder)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def firefox_options(configuration):
     return configuration["capabilities"]["moz:firefoxOptions"]
 

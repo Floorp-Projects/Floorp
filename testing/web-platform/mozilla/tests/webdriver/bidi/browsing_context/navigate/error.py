@@ -1,4 +1,3 @@
-import os
 from copy import deepcopy
 
 import pytest
@@ -7,13 +6,12 @@ from tests.bidi.browsing_context.navigate import navigate_and_assert
 pytestmark = pytest.mark.asyncio
 
 
-async def test_insecure_certificate(configuration, url, custom_profile, geckodriver):
-    try:
-        # Create a new profile and remove the certificate storage so that
-        # loading a HTTPS page will cause an insecure certificate error
-        os.remove(os.path.join(custom_profile.profile, "cert9.db"))
-    except Exception:
-        pass
+async def test_insecure_certificate(
+    configuration, url, create_custom_profile, geckodriver
+):
+    # Create a fresh profile without any item in the certificate storage so that
+    # loading a HTTPS page will cause an insecure certificate error
+    custom_profile = create_custom_profile(clone=False)
 
     config = deepcopy(configuration)
     config["capabilities"]["moz:firefoxOptions"]["args"] = [

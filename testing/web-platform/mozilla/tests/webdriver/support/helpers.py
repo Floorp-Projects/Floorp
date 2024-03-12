@@ -4,6 +4,7 @@ import os
 import re
 import socket
 import subprocess
+import tempfile
 import threading
 import time
 from contextlib import suppress
@@ -20,13 +21,14 @@ class Browser:
     def __init__(
         self,
         binary,
-        firefox_options,
+        profile,
         use_bidi=False,
         use_cdp=False,
         extra_args=None,
         extra_prefs=None,
         env=None,
     ):
+        self.profile = profile
         self.use_bidi = use_bidi
         self.bidi_port_file = None
         self.use_cdp = use_cdp
@@ -38,9 +40,6 @@ class Browser:
         self.remote_agent_host = None
         self.remote_agent_port = None
 
-        # Prepare temporary profile
-        _profile_arg, profile_folder = firefox_options["args"]
-        self.profile = Profile.clone(profile_folder)
         if self.extra_prefs is not None:
             self.profile.set_preferences(self.extra_prefs)
 
@@ -50,6 +49,7 @@ class Browser:
             )
             with suppress(FileNotFoundError):
                 os.remove(self.cdp_port_file)
+
         if use_bidi:
             self.webdriver_bidi_file = os.path.join(
                 self.profile.profile, "WebDriverBiDiServer.json"
@@ -218,6 +218,21 @@ def clear_pref(session, pref):
            """,
             args=(pref,),
         )
+
+
+def create_custom_profile(base_profile, default_preferences, clone=True):
+    if clone:
+        # Clone the current profile and remove the prefs.js file to only
+        # keep default preferences as set in user.js.
+        profile = Profile.clone(base_profile)
+        prefs_path = os.path.join(profile.profile, "prefs.js")
+        if os.path.exists(prefs_path):
+            os.remove(prefs_path)
+    else:
+        profile = Profile(tempfile.mkdtemp(prefix="wdspec-"))
+        profile.set_preferences(default_preferences)
+
+    return profile
 
 
 def get_arg_value(arg_names, args):

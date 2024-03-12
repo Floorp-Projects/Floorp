@@ -14,9 +14,10 @@ def test_marionette_port(geckodriver, port):
 
 
 def test_marionette_port_outdated_active_port_file(
-    configuration, geckodriver, custom_profile
+    configuration, create_custom_profile, geckodriver
 ):
     config = deepcopy(configuration)
+    custom_profile = create_custom_profile()
     extra_args = ["--marionette-port", "0"]
 
     # Prepare a Marionette active port file that contains a port which will
