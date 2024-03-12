@@ -482,7 +482,7 @@ var gSearchPane = {
    */
   async _buildEngineDropDown(list, currentEngine) {
     // If the current engine isn't in the list any more, select the first item.
-    let engines = this._engineStore._engines;
+    let engines = this._engineStore.engines;
     if (!engines.length) {
       return;
     }
@@ -492,7 +492,7 @@ var gSearchPane = {
 
     // Now clean-up and rebuild the list.
     list.removeAllItems();
-    this._engineStore._engines.forEach(e => {
+    this._engineStore.engines.forEach(e => {
       let item = list.appendItem(e.name);
       item.setAttribute(
         "class",
@@ -612,7 +612,13 @@ var gSearchPane = {
 };
 
 class EngineStore {
-  _engines = [];
+  /**
+   * A list of engines that are currently visible in the UI.
+   *
+   * @type {Object[]}
+   */
+  engines = [];
+
   /**
    * A list of application provided engines used when restoring the list of
    * engines to the default set and order.
@@ -638,19 +644,12 @@ class EngineStore {
     gSearchPane.showRestoreDefaults(someHidden);
   }
 
-  get engines() {
-    return this._engines;
-  }
-  set engines(val) {
-    this._engines = val;
-  }
-
   _getIndexForEngine(aEngine) {
-    return this._engines.indexOf(aEngine);
+    return this.engines.indexOf(aEngine);
   }
 
   _getEngineByName(aName) {
-    return this._engines.find(engine => engine.name == aName);
+    return this.engines.find(engine => engine.name == aName);
   }
 
   _cloneEngine(aEngine) {
@@ -670,11 +669,11 @@ class EngineStore {
   }
 
   addEngine(aEngine) {
-    this._engines.push(this._cloneEngine(aEngine));
+    this.engines.push(this._cloneEngine(aEngine));
   }
 
   updateEngine(newEngine) {
-    let engineToUpdate = this._engines.findIndex(
+    let engineToUpdate = this.engines.findIndex(
       e => e.originalEngine.id == newEngine.id
     );
     if (engineToUpdate != -1) {
@@ -683,7 +682,7 @@ class EngineStore {
   }
 
   moveEngine(aEngine, aNewIndex) {
-    if (aNewIndex < 0 || aNewIndex > this._engines.length - 1) {
+    if (aNewIndex < 0 || aNewIndex > this.engines.length - 1) {
       throw new Error("ES_moveEngine: invalid aNewIndex!");
     }
     var index = this._getIndexForEngine(aEngine);
@@ -696,25 +695,25 @@ class EngineStore {
     } // nothing to do
 
     // Move the engine in our internal store
-    var removedEngine = this._engines.splice(index, 1)[0];
-    this._engines.splice(aNewIndex, 0, removedEngine);
+    var removedEngine = this.engines.splice(index, 1)[0];
+    this.engines.splice(aNewIndex, 0, removedEngine);
 
     return Services.search.moveEngine(aEngine.originalEngine, aNewIndex);
   }
 
   removeEngine(aEngine) {
-    if (this._engines.length == 1) {
+    if (this.engines.length == 1) {
       throw new Error("Cannot remove last engine!");
     }
 
     let engineName = aEngine.name;
-    let index = this._engines.findIndex(element => element.name == engineName);
+    let index = this.engines.findIndex(element => element.name == engineName);
 
     if (index == -1) {
       throw new Error("invalid engine?");
     }
 
-    this._engines.splice(index, 1)[0];
+    this.engines.splice(index, 1)[0];
 
     if (aEngine.isAppProvided) {
       gSearchPane.showRestoreDefaults(true);
@@ -769,7 +768,7 @@ class EngineStore {
       var e = this.#appProvidedEngines[i];
 
       // If the engine is already in the list, just move it.
-      if (this._engines.some(this._isSameEngine, e)) {
+      if (this.engines.some(this._isSameEngine, e)) {
         await this.moveEngine(this._getEngineByName(e.name), i);
       } else {
         // Otherwise, add it back to our internal store
@@ -778,7 +777,7 @@ class EngineStore {
         // so clear any alias we may have cached before unhiding the engine.
         e.alias = "";
 
-        this._engines.splice(i, 0, e);
+        this.engines.splice(i, 0, e);
         let engine = e.originalEngine;
         engine.hidden = false;
         await Services.search.moveEngine(engine, i);
@@ -813,7 +812,7 @@ class EngineStore {
       throw new Error("invalid engine?");
     }
 
-    this._engines[index][aProp] = aNewValue;
+    this.engines[index][aProp] = aNewValue;
     aEngine.originalEngine[aProp] = aNewValue;
   }
 }
