@@ -2,7 +2,7 @@ import pytest
 from webdriver.transport import HTTPWireProtocol
 
 
-@pytest.fixture(name="configuration")
+@pytest.fixture(name="configuration", scope="session")
 def fixture_configuration(configuration):
     """Remove "acceptInsecureCerts" from capabilities if it exists.
 
