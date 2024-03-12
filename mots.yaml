@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2024-03-11T20:06:03.398018'
+updated_at: '2024-03-12T14:00:55.317689'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -279,6 +279,10 @@ people:
     bmo_id: 713270
     name: DJ
     nick: dwalker
+  - &edenchuang
+    bmo_id: 516138
+    name: Eden Chuang
+    nick: edenchuang
   - &edgar
     bmo_id: 455480
     name: Edgar Chen
@@ -2728,10 +2732,12 @@ modules:
   - name: 'Core: Web Workers'
     description: ''
     includes:
+      - dom/serviceworkers/**/*
       - dom/workers/**/*
     meta:
       owners_emeritus:
         - Ben Turner
+        - Andrea Marchesini
       peers_emeritus:
         - Blake Kaplan
         - Jonas Sicking
@@ -2746,7 +2752,9 @@ modules:
     owners:
       - *asuth
     peers:
-      - *baku
+      - *edenchuang
+      - *jstutte
+      - *smaug
     machine_name: core_web_workers
 
   - name: 'Core: WebGPU (Graphics submodule)'
@@ -4208,5 +4216,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: 5da25cdade8c3ca168423b36c757a0e644834301
-  export: 394e18b09afb95f63803d96bdf28fb2a47eac270
+  config: f4dc27240e751971bf5ac38de3cfa9de0a7352fe
+  export: 2f7dc332d42fde93526052add2e2bdae3b37756d
