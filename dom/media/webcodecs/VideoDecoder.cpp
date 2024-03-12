@@ -161,7 +161,7 @@ nsString VideoDecoderConfigInternal::ToString() const {
   if (mColorSpace.isSome()) {
     rv.AppendPrintf("colorspace %s", "todo");
   }
-  if (mDescription.isSome()) {
+  if (mDescription.isSome() && mDescription.value()) {
     rv.AppendPrintf("extradata: %zu bytes", mDescription.value()->Length());
   }
   rv.AppendPrintf("hw accel: %s", GetEnumString(mHardwareAcceleration).get());
@@ -254,7 +254,7 @@ static nsTArray<UniquePtr<TrackInfo>> GetTracksInfo(
 
 static Result<Ok, nsresult> CloneConfiguration(
     RootedDictionary<VideoDecoderConfig>& aDest, JSContext* aCx,
-    const VideoDecoderConfig& aConfig) {
+    const VideoDecoderConfig& aConfig, ErrorResult& aRv) {
   DebugOnly<nsCString> str;
   MOZ_ASSERT(VideoDecoderTraits::Validate(aConfig, str));
 
@@ -271,7 +271,7 @@ static Result<Ok, nsresult> CloneConfiguration(
   if (aConfig.mDescription.WasPassed()) {
     aDest.mDescription.Construct();
     MOZ_TRY(CloneBuffer(aCx, aDest.mDescription.Value(),
-                        aConfig.mDescription.Value()));
+                        aConfig.mDescription.Value(), aRv));
   }
   if (aConfig.mDisplayAspectHeight.WasPassed()) {
     aDest.mDisplayAspectHeight.Construct(aConfig.mDisplayAspectHeight.Value());
@@ -750,6 +750,21 @@ bool VideoDecoderTraits::Validate(const VideoDecoderConfig& aConfig,
     return false;
   }
 
+  bool detached =
+      aConfig.mDescription.WasPassed() &&
+      (aConfig.mDescription.Value().IsArrayBuffer()
+           ? JS::ArrayBuffer::fromObject(
+                 aConfig.mDescription.Value().GetAsArrayBuffer().Obj())
+                 .isDetached()
+           : JS::ArrayBufferView::fromObject(
+                 aConfig.mDescription.Value().GetAsArrayBufferView().Obj())
+                 .isDetached());
+
+  if (detached) {
+    LOGE("description is detached.");
+    return false;
+  }
+
   return true;
 }
 
@@ -835,17 +850,13 @@ already_AddRefed<Promise> VideoDecoder::IsConfigSupported(
     return p.forget();
   }
 
-  // TODO: Move the following works to another thread to unblock the current
-  // thread, as what spec suggests.
-
   RootedDictionary<VideoDecoderConfig> config(aGlobal.Context());
-  auto r = CloneConfiguration(config, aGlobal.Context(), aConfig);
+  auto r = CloneConfiguration(config, aGlobal.Context(), aConfig, aRv);
   if (r.isErr()) {
-    nsresult e = r.unwrapErr();
-    LOGE("Failed to clone VideoDecoderConfig. Error: 0x%08" PRIx32,
-         static_cast<uint32_t>(e));
-    p->MaybeRejectWithTypeError("Failed to clone VideoDecoderConfig");
-    aRv.Throw(e);
+    // This can only be an OOM: all members to clone are known to be valid
+    // because this is check by ::Validate above.
+    MOZ_ASSERT(r.inspectErr() == NS_ERROR_OUT_OF_MEMORY &&
+               aRv.ErrorCodeIs(NS_ERROR_OUT_OF_MEMORY));
     return p.forget();
   }
 

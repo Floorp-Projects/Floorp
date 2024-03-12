@@ -202,12 +202,12 @@ static nsTArray<UniquePtr<TrackInfo>> GetTracksInfo(
 
 static Result<Ok, nsresult> CloneConfiguration(
     RootedDictionary<AudioDecoderConfig>& aDest, JSContext* aCx,
-    const AudioDecoderConfig& aConfig) {
+    const AudioDecoderConfig& aConfig, ErrorResult& aRv) {
   aDest.mCodec = aConfig.mCodec;
   if (aConfig.mDescription.WasPassed()) {
     aDest.mDescription.Construct();
     MOZ_TRY(CloneBuffer(aCx, aDest.mDescription.Value(),
-                        aConfig.mDescription.Value()));
+                        aConfig.mDescription.Value(), aRv));
   }
 
   aDest.mNumberOfChannels = aConfig.mNumberOfChannels;
@@ -309,6 +309,21 @@ bool AudioDecoderTraits::Validate(const AudioDecoderConfig& aConfig,
     return false;
   }
 
+  bool detached =
+      aConfig.mDescription.WasPassed() &&
+      (aConfig.mDescription.Value().IsArrayBuffer()
+           ? JS::ArrayBuffer::fromObject(
+                 aConfig.mDescription.Value().GetAsArrayBuffer().Obj())
+                 .isDetached()
+           : JS::ArrayBufferView::fromObject(
+                 aConfig.mDescription.Value().GetAsArrayBufferView().Obj())
+                 .isDetached());
+
+  if (detached) {
+    LOGE("description is detached.");
+    return false;
+  }
+
   return true;
 }
 
@@ -396,18 +411,13 @@ already_AddRefed<Promise> AudioDecoder::IsConfigSupported(
     return p.forget();
   }
 
-  // TODO: Move the following works to another thread to unblock the current
-  // thread, as what spec suggests.
-
   RootedDictionary<AudioDecoderConfig> config(aGlobal.Context());
-  auto r = CloneConfiguration(config, aGlobal.Context(), aConfig);
+  auto r = CloneConfiguration(config, aGlobal.Context(), aConfig, aRv);
   if (r.isErr()) {
-    nsresult e = r.unwrapErr();
-    nsCString error;
-    GetErrorName(e, error);
-    LOGE("Failed to clone AudioDecoderConfig. Error: %s", error.get());
-    p->MaybeRejectWithTypeError("Failed to clone AudioDecoderConfig");
-    aRv.Throw(e);
+    // This can only be an OOM: all members to clone are known to be valid
+    // because this is check by ::Validate above.
+    MOZ_ASSERT(r.inspectErr() == NS_ERROR_OUT_OF_MEMORY &&
+               aRv.ErrorCodeIs(NS_ERROR_OUT_OF_MEMORY));
     return p.forget();
   }
 

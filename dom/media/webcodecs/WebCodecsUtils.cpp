@@ -129,7 +129,8 @@ static std::tuple<JS::ArrayBufferOrView, size_t, size_t> GetArrayBufferInfo(
 Result<Ok, nsresult> CloneBuffer(
     JSContext* aCx,
     OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aDest,
-    const OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aSrc) {
+    const OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aSrc,
+    ErrorResult& aRv) {
   std::tuple<JS::ArrayBufferOrView, size_t, size_t> info =
       GetArrayBufferInfo(aCx, aSrc);
   JS::Rooted<JS::ArrayBufferOrView> abov(aCx);
@@ -144,6 +145,8 @@ Result<Ok, nsresult> CloneBuffer(
   JS::Rooted<JSObject*> cloned(aCx,
                                JS::ArrayBufferClone(aCx, obj, offset, len));
   if (NS_WARN_IF(!cloned)) {
+    aRv.MightThrowJSException();
+    aRv.StealExceptionFromJSContext(aCx);
     return Err(NS_ERROR_OUT_OF_MEMORY);
   }
 
