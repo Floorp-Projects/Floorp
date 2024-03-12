@@ -96,42 +96,48 @@ object MatcherHelper {
     ) {
         for (appItem in appItems) {
             if (exists) {
+                Log.i(TAG, "assertUIObjectExists: Trying to verify that ${appItem.selector} exists")
                 assertTrue("${appItem.selector} does not exist", appItem.waitForExists(waitingTime))
-                Log.i(TAG, "assertUIObjectExists: Verified ${appItem.selector} exists")
+                Log.i(TAG, "assertUIObjectExists: Verified that ${appItem.selector} exists")
             } else {
+                Log.i(TAG, "assertUIObjectExists: Trying to verify that ${appItem.selector} does not exist")
                 assertFalse("${appItem.selector} exists", appItem.waitForExists(waitingTimeShort))
-                Log.i(TAG, "assertUIObjectExists: Verified ${appItem.selector} does not exist")
+                Log.i(TAG, "assertUIObjectExists: Verified that ${appItem.selector} does not exist")
             }
         }
     }
 
     fun assertUIObjectIsGone(vararg appItems: UiObject) {
         for (appItem in appItems) {
+            Log.i(TAG, "assertUIObjectIsGone: Trying to verify that ${appItem.selector} is gone")
             assertTrue("${appItem.selector} is not gone", appItem.waitUntilGone(waitingTime))
-            Log.i(TAG, "assertUIObjectIsGone: Verified ${appItem.selector} is gone")
+            Log.i(TAG, "assertUIObjectIsGone: Verified that ${appItem.selector} is gone")
         }
     }
 
     fun assertItemTextEquals(vararg appItems: UiObject, expectedText: String, isEqual: Boolean = true) {
         for (appItem in appItems) {
             if (isEqual) {
+                Log.i(TAG, "assertItemTextEquals: Trying to verify that ${appItem.selector} text equals to $expectedText")
                 assertTrue(
                     "${appItem.selector} text does not equal to $expectedText",
                     appItem.text.equals(expectedText),
                 )
                 Log.i(TAG, "assertItemTextEquals: Verified ${appItem.selector} text equals to $expectedText")
             } else {
+                Log.i(TAG, "assertItemTextEquals: Trying to verify that ${appItem.selector} text does not equal to $expectedText")
                 assertFalse(
                     "${appItem.selector} text equals to $expectedText",
                     appItem.text.equals(expectedText),
                 )
-                Log.i(TAG, "assertItemTextEquals: Verified ${appItem.selector} text does not equal to $expectedText")
+                Log.i(TAG, "assertItemTextEquals: Verified that ${appItem.selector} text does not equal to $expectedText")
             }
         }
     }
 
     fun assertItemTextContains(vararg appItems: UiObject, itemText: String) {
         for (appItem in appItems) {
+            Log.i(TAG, "assertItemTextContains: Trying to verify that ${appItem.selector} text contains $itemText")
             assertTrue(
                 "${appItem.selector} text does not contain $itemText",
                 appItem.text.contains(itemText),
@@ -142,6 +148,7 @@ object MatcherHelper {
 
     fun assertItemIsEnabledAndVisible(vararg appItems: UiObject) {
         for (appItem in appItems) {
+            Log.i(TAG, "assertItemIsEnabledAndVisible: Trying to verify that ${appItem.selector} is visible and enabled")
             assertTrue(appItem.waitForExists(waitingTime) && appItem.isEnabled)
             Log.i(TAG, "assertItemIsEnabledAndVisible: Verified ${appItem.selector} is visible and enabled")
         }
