@@ -1,0 +1,22 @@
+include protocol PTestDescendantSub;
+include protocol PTestDescendantSubsub;
+
+namespace mozilla {
+namespace _ipdltest {
+
+[ChildProc=any, ChildImpl=virtual, ParentImpl=virtual]
+async protocol PTestDescendant {
+    manages PTestDescendantSub; 
+child:
+    async PTestDescendantSub(nullable PTestDescendantSubsub dummy);
+
+    async Test(PTestDescendantSubsub a);
+
+    async __delete__();
+
+parent:
+    async Ok(PTestDescendantSubsub a);
+};
+
+}
+}
