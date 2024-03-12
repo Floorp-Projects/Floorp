@@ -1,9 +1,7 @@
-include "mozilla/_ipdltest/TestUrgency.h";
-
 namespace mozilla {
 namespace _ipdltest {
 
-[ManualDealloc, NestedUpTo=inside_cpow, ChildImpl="TestUrgencyChild", ParentImpl="TestUrgencyParent"]
+[ChildProc=any, NestedUpTo=inside_cpow, ChildImpl=virtual, ParentImpl=virtual]
 sync protocol PTestUrgency
 {
 parent:
