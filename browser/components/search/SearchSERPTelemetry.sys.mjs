@@ -422,6 +422,9 @@ class TelemetryHandler {
           regexp: new RegExp(provider.shoppingTab.regexp),
         };
       }
+
+      newProvider.nonAdsLinkQueryParamNames =
+        provider.nonAdsLinkQueryParamNames ?? [];
       return newProvider;
     });
     this._contentHandler._searchProviderInfo = this._searchProviderInfo;
@@ -1449,6 +1452,30 @@ class ContentHandler {
 
         let startFindComponent = Cu.now();
         let parsedUrl = new URL(url);
+
+        // Organic links may contain query param values mapped to links shown
+        // on the SERP at page load. If a stored component depends on that
+        // value, we need to be able to recover it or else we'll always consider
+        // it a non_ads_link.
+        if (
+          info.nonAdsLinkQueryParamNames.length &&
+          info.nonAdsLinkRegexps.some(r => r.test(url))
+        ) {
+          let newParsedUrl;
+          for (let key of info.nonAdsLinkQueryParamNames) {
+            let paramValue = parsedUrl.searchParams.get(key);
+            if (paramValue) {
+              try {
+                newParsedUrl = /^https?:\/\//.test(paramValue)
+                  ? new URL(paramValue)
+                  : new URL(paramValue, parsedUrl.origin);
+                break;
+              } catch (e) {}
+            }
+          }
+          parsedUrl = newParsedUrl ?? parsedUrl;
+        }
+
         // Determine the component type of the link.
         let type;
         for (let [

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" type="text/css" href="./serp.css" />
+</head>
+<body>
+  <nav>
+    <a href="/">All Results</a>
+    <a id="shopping-redirect-relative-link" href="https://example.org/browser/browser/components/search/test/browser/telemetry/searchTelemetryAd_shopping.html?s=test&page=shopping&abc=ff">Shopping Relative</a>
+    <a id="shopping-redirect-absolute-link" href="https://example.org/browser/browser/components/search/test/browser/telemetry/searchTelemetryAd_shopping.html?s=test&page=shopping&abc=ff">Shopping Absolute</a>
+  </nav>
+  <section>
+    <form role="search">
+      <input type="text" value="test" />
+    </form>
+  </section>
+  <section id="searchresults">
+    <a id="organic-redirect" href="https://example.org/foo/bar">Organic Redirect Result</a>
+  </section>
+</body>
+<script type="text/javascript">
+  const ORIGIN = "https://example.org";
+  const PATH = "/browser/browser/components/search/test/browser/telemetry/"
+  const REDIRECT_URL = `${ORIGIN + PATH}searchTelemetry_redirect_with_js.html`;
+  const SHOPPING_PAGE = "searchTelemetryAd_shopping.html?s=test&page=shopping&abc=ff";
+  document.getElementById("shopping-redirect-relative-link").addEventListener("click", event => {
+    event.preventDefault();
+    window.location.href = `${REDIRECT_URL}?url=${encodeURIComponent(PATH + SHOPPING_PAGE)}`;
+  });
+  document.getElementById("shopping-redirect-absolute-link").addEventListener("click", event => {
+    event.preventDefault();
+    window.location.href = `${REDIRECT_URL}?url=${encodeURIComponent(ORIGIN + PATH + SHOPPING_PAGE)}`;
+  });
+  document.getElementById("organic-redirect").addEventListener("click", event => {
+    event.preventDefault();
+    window.location.href = `${REDIRECT_URL}?url=${encodeURIComponent("https://example.org/foo/bar")}`;
+  });
+</script>
+</html>

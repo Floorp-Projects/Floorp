@@ -110,6 +110,14 @@ support-files = [
   "serp.css",
 ]
 
+["browser_search_telemetry_engagement_nonAdsLinkQueryParamNames.js"]
+support-files = [
+  "searchTelemetryAd_searchbox_with_redirecting_links.html",
+  "searchTelemetryAd_shopping.html",
+  "searchTelemetry_redirect_with_js.html",
+  "serp.css",
+]
+
 ["browser_search_telemetry_engagement_query_params.js"]
 support-files = [
   "searchTelemetryAd_components_query_parameters.html",
