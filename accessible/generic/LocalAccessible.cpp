@@ -3053,11 +3053,10 @@ LocalAccessible* LocalAccessible::CurrentItem() const {
   // For activedescendant, the ARIA spec does not require that the user agent
   // checks whether pointed node is actually a DOM descendant of the element
   // with the aria-activedescendant attribute.
-  nsAutoString id;
-  if (HasOwnContent() && mContent->IsElement() &&
-      mContent->AsElement()->GetAttr(nsGkAtoms::aria_activedescendant, id)) {
-    dom::Element* activeDescendantElm = IDRefsIterator::GetElem(mContent, id);
-    if (activeDescendantElm) {
+  if (HasOwnContent() && mContent->IsElement()) {
+    if (dom::Element* activeDescendantElm =
+            nsCoreUtils::GetAriaActiveDescendantElement(
+                mContent->AsElement())) {
       if (mContent->IsInclusiveDescendantOf(activeDescendantElm)) {
         // Don't want a cyclical descendant relationship. That would be bad.
         return nullptr;
@@ -3086,8 +3085,8 @@ LocalAccessible* LocalAccessible::ContainerWidget() const {
          parent = parent->LocalParent()) {
       nsIContent* parentContent = parent->GetContent();
       if (parentContent && parentContent->IsElement() &&
-          parentContent->AsElement()->HasAttr(
-              nsGkAtoms::aria_activedescendant)) {
+          nsCoreUtils::GetAriaActiveDescendantElement(
+              parentContent->AsElement())) {
         return parent;
       }
 
@@ -3098,7 +3097,7 @@ LocalAccessible* LocalAccessible::ContainerWidget() const {
   return nullptr;
 }
 
-bool LocalAccessible::IsActiveDescendant(LocalAccessible** aWidget) const {
+bool LocalAccessible::IsActiveDescendantId(LocalAccessible** aWidget) const {
   if (!HasOwnContent() || !mContent->HasID()) {
     return false;
   }

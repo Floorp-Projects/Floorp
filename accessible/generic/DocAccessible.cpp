@@ -769,7 +769,7 @@ void DocAccessible::AttributeWillChange(dom::Element* aElement,
   }
 
   if (aAttribute == nsGkAtoms::id) {
-    if (accessible->IsActiveDescendant()) {
+    if (accessible->IsActiveDescendantId()) {
       RefPtr<AccEvent> event =
           new AccStateChangeEvent(accessible, states::ACTIVE, false);
       FireDelayedEvent(event);
@@ -910,25 +910,23 @@ void DocAccessible::ARIAAttributeDefaultChanged(dom::Element* aElement,
 void DocAccessible::ARIAActiveDescendantChanged(LocalAccessible* aAccessible) {
   if (dom::Element* elm = aAccessible->Elm()) {
     nsAutoString id;
-    if (elm->GetAttr(nsGkAtoms::aria_activedescendant, id)) {
-      dom::Element* activeDescendantElm = IDRefsIterator::GetElem(elm, id);
-      if (activeDescendantElm) {
-        LocalAccessible* activeDescendant = GetAccessible(activeDescendantElm);
-        if (activeDescendant) {
-          RefPtr<AccEvent> event =
-              new AccStateChangeEvent(activeDescendant, states::ACTIVE, true);
-          FireDelayedEvent(event);
-          if (aAccessible->IsActiveWidget()) {
-            FocusMgr()->ActiveItemChanged(activeDescendant, false);
+    if (dom::Element* activeDescendantElm =
+            nsCoreUtils::GetAriaActiveDescendantElement(elm)) {
+      LocalAccessible* activeDescendant = GetAccessible(activeDescendantElm);
+      if (activeDescendant) {
+        RefPtr<AccEvent> event =
+            new AccStateChangeEvent(activeDescendant, states::ACTIVE, true);
+        FireDelayedEvent(event);
+        if (aAccessible->IsActiveWidget()) {
+          FocusMgr()->ActiveItemChanged(activeDescendant, false);
 #ifdef A11Y_LOG
-            if (logging::IsEnabled(logging::eFocus)) {
-              logging::ActiveItemChangeCausedBy("ARIA activedescedant changed",
-                                                activeDescendant);
-            }
-#endif
+          if (logging::IsEnabled(logging::eFocus)) {
+            logging::ActiveItemChangeCausedBy("ARIA activedescedant changed",
+                                              activeDescendant);
           }
-          return;
+#endif
         }
+        return;
       }
     }
 
@@ -2846,7 +2844,7 @@ void DocAccessible::DispatchScrollingEvent(nsINode* aTarget,
 void DocAccessible::ARIAActiveDescendantIDMaybeMoved(
     LocalAccessible* aAccessible) {
   LocalAccessible* widget = nullptr;
-  if (aAccessible->IsActiveDescendant(&widget) && widget) {
+  if (aAccessible->IsActiveDescendantId(&widget) && widget) {
     // The active descendant might have just been inserted and may not be in the
     // tree yet. Therefore, schedule this async to ensure the tree is up to
     // date.

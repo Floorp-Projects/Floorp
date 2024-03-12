@@ -587,7 +587,12 @@ class LocalAccessible : public nsISupports, public Accessible {
    */
   virtual LocalAccessible* ContainerWidget() const;
 
-  bool IsActiveDescendant(LocalAccessible** aWidget = nullptr) const;
+  /**
+   * Accessible's element ID is referenced as a aria-activedescendant in the
+   * document. This method is only used for ID changes and therefore does not
+   * need to work for direct element references via ariaActiveDescendantElement.
+   */
+  bool IsActiveDescendantId(LocalAccessible** aWidget = nullptr) const;
 
   /**
    * Return true if the accessible is defunct.
