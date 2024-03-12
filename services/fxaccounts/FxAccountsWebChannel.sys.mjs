@@ -431,7 +431,7 @@ FxAccountsWebChannelHelpers.prototype = {
     // A sync-specific hack - we want to ensure sync has been initialized
     // before we set the signed-in user.
     // XXX - probably not true any more, especially now we have observerPreloads
-    // in FxAccounts.jsm?
+    // in FxAccounts.sys.mjs?
     let xps =
       this._weaveXPCOM ||
       Cc["@mozilla.org/weave/service;1"].getService(Ci.nsISupports)

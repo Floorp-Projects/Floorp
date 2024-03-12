@@ -446,7 +446,7 @@ SyncAuthManager.prototype = {
         // A hawkclient error.
       } else if (err.code && err.code === 401) {
         err = new AuthenticationError(err, "hawkclient");
-        // An FxAccounts.jsm error.
+        // An FxAccounts.sys.mjs error.
       } else if (err.message == fxAccountsCommon.ERROR_AUTH_ERROR) {
         err = new AuthenticationError(err, "fxaccounts");
       }
