@@ -1,6 +1,4 @@
-include protocol PTestHandle;
-
-include "mozilla/_ipdltest/TestJSON.h";
+include protocol PTestJSONHandle;
 
 using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
 using struct mozilla::null_t from "mozilla/ipc/IPCCore.h";
@@ -8,17 +6,13 @@ using struct mozilla::null_t from "mozilla/ipc/IPCCore.h";
 namespace mozilla {
 namespace _ipdltest {
 
-union Key {
-//    int;
-//    double;
-    nsString;
-};
-
+[Comparable]
 struct KeyValue {
-    Key key;
+    nsString key;
     JSONVariant value;
 };
 
+[Comparable]
 union JSONVariant {
     void_t;
     null_t;
@@ -26,20 +20,20 @@ union JSONVariant {
     int;
     double;
     nsString;
-    PTestHandle;
+    PTestJSONHandle;
     KeyValue[];
     JSONVariant[];
 };
 
-[ManualDealloc, ChildImpl="TestJSONChild", ParentImpl="TestJSONParent"]
+[ChildProc=any, ChildImpl=virtual, ParentImpl=virtual]
 sync protocol PTestJSON {
-    manages PTestHandle;
+    manages PTestJSONHandle;
 
 child:
     async Start();
 
 parent:
-    async PTestHandle();
+    async PTestJSONHandle();
     sync Test(JSONVariant i)
         returns (JSONVariant o);
     async __delete__();
