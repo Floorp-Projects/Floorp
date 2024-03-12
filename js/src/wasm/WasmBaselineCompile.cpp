@@ -11972,10 +11972,7 @@ bool js::wasm::BaselineCompileFunctions(const ModuleEnvironment& moduleEnv,
     // Build the local types vector.
 
     ValTypeVector locals;
-    if (!locals.appendAll(moduleEnv.funcs[func.index].type->args())) {
-      return false;
-    }
-    if (!DecodeLocalEntries(d, *moduleEnv.types, moduleEnv.features, &locals)) {
+    if (!DecodeLocalEntriesWithParams(d, moduleEnv, func.index, &locals)) {
       return false;
     }
 

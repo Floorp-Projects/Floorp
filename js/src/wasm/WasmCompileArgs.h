@@ -103,6 +103,15 @@ struct FeatureArgs {
   FeatureArgs(FeatureArgs&&) = default;
 
   static FeatureArgs build(JSContext* cx, const FeatureOptions& options);
+  static FeatureArgs allEnabled() {
+    FeatureArgs args;
+#define WASM_FEATURE(NAME, LOWER_NAME, ...) args.LOWER_NAME = true;
+    JS_FOR_WASM_FEATURES(WASM_FEATURE)
+#undef WASM_FEATURE
+    args.sharedMemory = Shareable::True;
+    args.simd = true;
+    return args;
+  }
 
 #define WASM_FEATURE(NAME, LOWER_NAME, ...) bool LOWER_NAME;
   JS_FOR_WASM_FEATURES(WASM_FEATURE)

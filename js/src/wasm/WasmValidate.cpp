@@ -89,12 +89,17 @@ bool wasm::EncodeLocalEntries(Encoder& e, const ValTypeVector& locals) {
   return true;
 }
 
-bool wasm::DecodeLocalEntries(Decoder& d, const TypeContext& types,
-                              const FeatureArgs& features,
-                              ValTypeVector* locals) {
+bool wasm::DecodeLocalEntriesWithParams(Decoder& d,
+                                        const ModuleEnvironment& env,
+                                        uint32_t funcIndex,
+                                        ValTypeVector* locals) {
   uint32_t numLocalEntries;
   if (!d.readVarU32(&numLocalEntries)) {
     return d.fail("failed to read number of local entries");
+  }
+
+  if (!locals->appendAll(env.funcs[funcIndex].type->args())) {
+    return false;
   }
 
   for (uint32_t i = 0; i < numLocalEntries; i++) {
@@ -108,7 +113,7 @@ bool wasm::DecodeLocalEntries(Decoder& d, const TypeContext& types,
     }
 
     ValType type;
-    if (!d.readValType(types, features, &type)) {
+    if (!d.readValType(*env.types, env.features, &type)) {
       return false;
     }
 
@@ -1523,14 +1528,10 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
 bool wasm::ValidateFunctionBody(const ModuleEnvironment& env,
                                 uint32_t funcIndex, uint32_t bodySize,
                                 Decoder& d) {
-  ValTypeVector locals;
-  if (!locals.appendAll(env.funcs[funcIndex].type->args())) {
-    return false;
-  }
-
   const uint8_t* bodyBegin = d.currentPosition();
 
-  if (!DecodeLocalEntries(d, *env.types, env.features, &locals)) {
+  ValTypeVector locals;
+  if (!DecodeLocalEntriesWithParams(d, env, funcIndex, &locals)) {
     return false;
   }
 

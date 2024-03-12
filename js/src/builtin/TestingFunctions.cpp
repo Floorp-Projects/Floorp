@@ -2045,6 +2045,95 @@ static bool WasmDisassemble(JSContext* cx, unsigned argc, Value* vp) {
   return false;
 }
 
+static bool ToIonDumpContents(JSContext* cx, HandleValue value,
+                              wasm::IonDumpContents* contents) {
+  RootedString option(cx, JS::ToString(cx, value));
+
+  if (!option) {
+    return false;
+  }
+
+  bool isEqual = false;
+  if (!JS_StringEqualsLiteral(cx, option, "mir", &isEqual) || isEqual) {
+    *contents = wasm::IonDumpContents::UnoptimizedMIR;
+    return isEqual;
+  } else if (!JS_StringEqualsLiteral(cx, option, "unopt-mir", &isEqual) ||
+             isEqual) {
+    *contents = wasm::IonDumpContents::UnoptimizedMIR;
+    return isEqual;
+  } else if (!JS_StringEqualsLiteral(cx, option, "opt-mir", &isEqual) ||
+             isEqual) {
+    *contents = wasm::IonDumpContents::OptimizedMIR;
+    return isEqual;
+  } else if (!JS_StringEqualsLiteral(cx, option, "lir", &isEqual) || isEqual) {
+    *contents = wasm::IonDumpContents::LIR;
+    return isEqual;
+  } else {
+    return false;
+  }
+}
+
+static bool WasmDumpIon(JSContext* cx, unsigned argc, Value* vp) {
+  if (!wasm::HasSupport(cx)) {
+    JS_ReportErrorASCII(cx, "wasm support unavailable");
+    return false;
+  }
+
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  args.rval().set(UndefinedValue());
+
+  SharedMem<uint8_t*> dataPointer;
+  size_t byteLength;
+  if (!args.get(0).isObject() || !IsBufferSource(args.get(0).toObjectOrNull(),
+                                                 &dataPointer, &byteLength)) {
+    JS_ReportErrorASCII(cx, "argument is not a buffer source");
+    return false;
+  }
+
+  uint32_t targetFuncIndex;
+  if (!ToUint32(cx, args.get(1), &targetFuncIndex)) {
+    JS_ReportErrorASCII(cx, "argument is not a func index");
+    return false;
+  }
+
+  wasm::IonDumpContents contents = wasm::IonDumpContents::Default;
+  if (args.length() > 2 && !ToIonDumpContents(cx, args.get(2), &contents)) {
+    JS_ReportErrorASCII(cx, "argument is not a valid dump contents");
+    return false;
+  }
+
+  wasm::MutableBytes bytecode = cx->new_<wasm::ShareableBytes>();
+  if (!bytecode) {
+    return false;
+  }
+  if (!bytecode->append(dataPointer.unwrap(), byteLength)) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  UniqueChars error;
+  JSSprinter out(cx);
+  if (!out.init()) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  if (!wasm::DumpIonFunctionInModule(*bytecode, targetFuncIndex, contents, out,
+                                     &error)) {
+    if (error) {
+      JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                               JSMSG_WASM_COMPILE_ERROR, error.get());
+      return false;
+    }
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  args.rval().set(StringValue(out.release(cx)));
+  return true;
+}
+
 enum class Flag { Tier2Complete, Deserialized };
 
 static bool WasmReturnFlag(JSContext* cx, unsigned argc, Value* vp, Flag flag) {
@@ -9757,6 +9846,15 @@ JS_FOR_WASM_FEATURES(WASM_FEATURE)
 "      ImportInterpExit - wasm-to-C++ stubs\n"
 "      ImportJitExit    - wasm-to-jitted-JS stubs\n"
 "      all              - all kinds, including obscure ones\n"),
+
+    JS_FN_HELP("wasmDumpIon", WasmDumpIon, 2, 0,
+"wasmDumpIon(bytecode, funcIndex, [, contents])\n",
+"wasmDumpIon(bytecode, funcIndex, [, contents])"
+"  Returns a dump of compiling a function in the specified module with Ion."
+"  The `contents` flag controls what is dumped. one of:"
+"    `mir` | `unopt-mir`: Unoptimized MIR (the default)"
+"    `opt-mir`: Optimized MIR"
+"    `lir`: LIR"),
 
     JS_FN_HELP("wasmHasTier2CompilationCompleted", WasmHasTier2CompilationCompleted, 1, 0,
 "wasmHasTier2CompilationCompleted(module)",
