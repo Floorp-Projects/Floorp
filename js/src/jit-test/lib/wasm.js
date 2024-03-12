@@ -42,8 +42,7 @@ if (largeArrayBufferSupported()) {
 }
 var MaxPagesIn32BitMemory = Math.floor(MaxBytesIn32BitMemory / PageSizeInBytes);
 
-function wasmEvalText(str, imports, compileOptions) {
-    let binary = wasmTextToBinary(str);
+function wasmEvalBinary(binary, imports, compileOptions) {
     let valid = WebAssembly.validate(binary, compileOptions);
 
     let m;
@@ -60,8 +59,11 @@ function wasmEvalText(str, imports, compileOptions) {
     return new WebAssembly.Instance(m, imports);
 }
 
-function wasmValidateText(str) {
-    let binary = wasmTextToBinary(str);
+function wasmEvalText(str, imports, compileOptions) {
+    return wasmEvalBinary(wasmTextToBinary(str), imports, compileOptions);
+}
+
+function wasmValidateBinary(binary) {
     let valid = WebAssembly.validate(binary);
     if (!valid) {
         new WebAssembly.Module(binary);
@@ -70,10 +72,17 @@ function wasmValidateText(str) {
     assertEq(valid, true, "wasm module was invalid");
 }
 
-function wasmFailValidateText(str, pattern) {
-    let binary = wasmTextToBinary(str);
+function wasmFailValidateBinary(binary, pattern) {
     assertEq(WebAssembly.validate(binary), false, "module passed WebAssembly.validate when it should not have");
     assertErrorMessage(() => new WebAssembly.Module(binary), WebAssembly.CompileError, pattern, "module failed WebAssembly.validate but did not fail to compile as expected");
+}
+
+function wasmValidateText(str) {
+    return wasmValidateBinary(wasmTextToBinary(str));
+}
+
+function wasmFailValidateText(str, pattern) {
+    return wasmFailValidateBinary(wasmTextToBinary(str), pattern);
 }
 
 // Expected compilation failure can happen in a couple of ways:

@@ -44,6 +44,7 @@ const F64Code          = 0x7c;
 const V128Code         = 0x7b;
 const AnyFuncCode      = 0x70;
 const ExternRefCode    = 0x6f;
+const AnyRefCode       = 0x6e;
 const EqRefCode        = 0x6d;
 const OptRefCode       = 0x63; // (ref null $t), needs heap type immediate
 const RefCode          = 0x64; // (ref $t), needs heap type immediate
@@ -52,6 +53,9 @@ const StructCode       = 0x5f;
 const ArrayCode        = 0x5e;
 const VoidCode         = 0x40;
 const BadType          = 0x79; // reserved for testing
+const RecGroupCode     = 0x4e;
+const SubFinalTypeCode = 0x4f;
+const SubNoFinalTypeCode = 0x50;
 
 // Opcodes
 const UnreachableCode  = 0x00
@@ -220,6 +224,7 @@ const ElemDropCode = 0x0d;      // Pending
 const TableCopyCode = 0x0e;     // Pending
 
 const StructNew = 0x00;         // UNOFFICIAL
+const StructNewDefault = 0x01;  // UNOFFICIAL
 const StructGet = 0x03;         // UNOFFICIAL
 const StructSet = 0x06;         // UNOFFICIAL
 
@@ -234,8 +239,9 @@ const TagCode          = 0x04;
 const HasMaximumFlag   = 0x1;
 
 function toU8(array) {
-    for (let b of array)
-        assertEq(b < 256, true);
+    for (const [i, b] of array.entries()) {
+        assertEq(b < 256, true, `expected byte at index ${i} but got ${b}`);
+    }
     return Uint8Array.from(array);
 }
 
@@ -286,12 +292,14 @@ function encodedString(name, len) {
     return varU32(len === undefined ? nameBytes.length : len).concat(nameBytes);
 }
 
-function moduleWithSections(sectionArray) {
-    var bytes = moduleHeaderThen();
-    for (let section of sectionArray) {
+function moduleWithSections(sections) {
+    const bytes = moduleHeaderThen();
+    for (const section of sections) {
         bytes.push(section.name);
         bytes.push(...varU32(section.body.length));
-        bytes.push(...section.body);
+        for (let byte of section.body) {
+            bytes.push(byte);
+        }
     }
     return toU8(bytes);
 }
@@ -387,13 +395,17 @@ function typeSection(types) {
     body.push(...varU32(types.length)); // technically a count of recursion groups
     for (const type of types) {
         if (type.isRecursionGroup) {
-            body.push(0x4f);
+            body.push(RecGroupCode);
             body.push(...varU32(type.types.length));
             for (const t of type.types) {
-                body.push(..._encodeType(t));
+                for (const byte of _encodeType(t)) {
+                    body.push(byte);
+                }
             }
         } else {
-            body.push(..._encodeType(type));
+            for (const byte of _encodeType(type)) {
+                body.push(byte);
+            }
         }
     }
     return { name: typeId, body };
@@ -441,12 +453,12 @@ function _encodeType(typeObj) {
     // Types are now final by default.
     const final = typeObj.final ?? true;
     if (typeObj.sub !== undefined) {
-        typeBytes.push(final ? 0x4e : 0x50);
+        typeBytes.push(final ? SubFinalTypeCode : SubNoFinalTypeCode);
         typeBytes.push(...varU32(1), ...varU32(typeObj.sub));
     }
     else if (final == false) {
         // This type is extensible even if no supertype is defined.
-        typeBytes.push(0x50);
+        typeBytes.push(SubNoFinalTypeCode);
         typeBytes.push(0x00);
     }
     typeBytes.push(typeObj.kind);
@@ -516,7 +528,9 @@ function funcBody(func, withEndCode=true) {
     var body = varU32(func.locals.length);
     for (let local of func.locals)
         body.push(...varU32(local));
-    body = body.concat(...func.body);
+    for (let byte of func.body) {
+        body.push(byte);
+    }
     if (withEndCode)
         body.push(EndCode);
     body.splice(0, 0, ...varU32(body.length));

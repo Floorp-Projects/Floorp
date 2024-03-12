@@ -77,7 +77,7 @@ for ( let [opcode, xs, ys, as, operator] of [[F32x4RelaxedMaddCode, fxs, fys, fa
                       body: [...V128StoreExpr(0, [...V128Load(16),
                                                   ...V128Load(32),
                                                   ...V128Load(48),
-                                                  SimdPrefix, varU32(opcode)])]})])]));
+                                                  SimdPrefix, ...varU32(opcode)])]})])]));
 
     var mem = new (k == 4 ? Float32Array : Float64Array)(ins.exports.mem.buffer);
     set(mem, k, xs);
@@ -97,7 +97,7 @@ for ( let [opcode, xs, ys, as, operator] of [[F32x4RelaxedMaddCode, fxs, fys, fa
             funcBody({locals:[],
                       body: [...V128StoreExpr(0, [...V128Load(0),
                                                   ...V128Load(0),
-                                                  SimdPrefix, varU32(opcode)])]})])])));    
+                                                  SimdPrefix, ...varU32(opcode)])]})])])));
 }
 
 // Relaxed swizzle, https://github.com/WebAssembly/relaxed-simd/issues/22
@@ -112,7 +112,7 @@ var ins = wasmValidateAndEval(moduleWithSections([
         funcBody({locals:[],
                   body: [...V128StoreExpr(0, [...V128Load(16),
                                               ...V128Load(32),
-                                              SimdPrefix, varU32(I8x16RelaxedSwizzleCode)])]})])]));
+                                              SimdPrefix, ...varU32(I8x16RelaxedSwizzleCode)])]})])]));
 var mem = new Uint8Array(ins.exports.mem.buffer);
 var test = [1, 4, 3, 7, 123, 0, 8, 222];
 set(mem, 16, test);
@@ -134,7 +134,7 @@ assertEq(false, WebAssembly.validate(moduleWithSections([
     bodySection([
         funcBody({locals:[],
             body: [...V128StoreExpr(0, [...V128Load(16),
-                                        SimdPrefix, varU32(I8x16RelaxedSwizzleCode)])]})])])));
+                                        SimdPrefix, ...varU32(I8x16RelaxedSwizzleCode)])]})])])));
 
 
 // Relaxed MIN/MAX, https://github.com/WebAssembly/relaxed-simd/issues/33
@@ -164,11 +164,11 @@ for (let k of [4, 2]) {
             funcBody({locals:[],
                       body: [...V128StoreExpr(0, [...V128Load(16),
                                                   ...V128Load(32),
-                                                  SimdPrefix, varU32(minOpcode)])]}),
+                                                  SimdPrefix, ...varU32(minOpcode)])]}),
             funcBody({locals:[],
                       body: [...V128StoreExpr(0, [...V128Load(16),
                                                   ...V128Load(32),
-                                                  SimdPrefix, varU32(maxOpcode)])]})])]));
+                                                  SimdPrefix, ...varU32(maxOpcode)])]})])]));
     for (let i = 0; i < minMaxTests.length; i++) {
         var Ty = k == 4 ? Float32Array : Float64Array;
         var mem = new Ty(ins.exports.mem.buffer);
@@ -198,7 +198,7 @@ for (let k of [4, 2]) {
             bodySection([
                 funcBody({locals:[],
                           body: [...V128StoreExpr(0, [...V128Load(0),
-                                                      SimdPrefix, varU32(op)])]})])])));
+                                                      SimdPrefix, ...varU32(op)])]})])])));
     }
 }
 
@@ -216,16 +216,16 @@ var ins = wasmValidateAndEval(moduleWithSections([
     bodySection([
         funcBody({locals:[],
                   body: [...V128StoreExpr(0, [...V128Load(16),
-                                              SimdPrefix, varU32(I32x4RelaxedTruncSSatF32x4Code)])]}),
+                                              SimdPrefix, ...varU32(I32x4RelaxedTruncSSatF32x4Code)])]}),
         funcBody({locals:[],
                   body: [...V128StoreExpr(0, [...V128Load(16),
-                                              SimdPrefix, varU32(I32x4RelaxedTruncUSatF32x4Code)])]}),
+                                              SimdPrefix, ...varU32(I32x4RelaxedTruncUSatF32x4Code)])]}),
         funcBody({locals:[],
                   body: [...V128StoreExpr(0, [...V128Load(16),
-                                              SimdPrefix, varU32(I32x4RelaxedTruncSatF64x2SZeroCode)])]}),
+                                              SimdPrefix, ...varU32(I32x4RelaxedTruncSatF64x2SZeroCode)])]}),
         funcBody({locals:[],
                   body: [...V128StoreExpr(0, [...V128Load(16),
-                                              SimdPrefix, varU32(I32x4RelaxedTruncSatF64x2UZeroCode)])]})])]));
+                                              SimdPrefix, ...varU32(I32x4RelaxedTruncSatF64x2UZeroCode)])]})])]));
 
 var mem = ins.exports.mem.buffer;
 set(new Float32Array(mem), 4, [0, 2.3, -3.4, 100000]);
@@ -260,7 +260,7 @@ for (let op of [I32x4RelaxedTruncSSatF32x4Code, I32x4RelaxedTruncUSatF32x4Code,
         exportSection([]),
         bodySection([
             funcBody({locals:[],
-                      body: [...V128StoreExpr(0, [SimdPrefix, varU32(op)])]})])])));
+                      body: [...V128StoreExpr(0, [SimdPrefix, ...varU32(op)])]})])])));
 }
 
 // Relaxed blend / laneselect, https://github.com/WebAssembly/relaxed-simd/issues/17
@@ -281,7 +281,7 @@ for (let [k, opcode, AT] of [[1, I8x16RelaxedLaneSelectCode, Int8Array],
                         body: [...V128StoreExpr(0, [...V128Load(16),
                                                     ...V128Load(32),
                                                     ...V128Load(48),
-                                                    SimdPrefix, varU32(opcode)])]})])]));
+                                                    SimdPrefix, ...varU32(opcode)])]})])]));
 
     var mem = ins.exports.mem.buffer;
     var mem8 = new Uint8Array(mem);
@@ -310,7 +310,7 @@ for (let [k, opcode, AT] of [[1, I8x16RelaxedLaneSelectCode, Int8Array],
             funcBody({locals:[],
                       body: [...V128StoreExpr(0, [...V128Load(0),
                                                   ...V128Load(0),
-                                                  SimdPrefix, varU32(opcode)])]})])])));    
+                                                  SimdPrefix, ...varU32(opcode)])]})])])));
 }
 
 
@@ -325,7 +325,7 @@ var ins = wasmValidateAndEval(moduleWithSections([
         funcBody({locals:[],
                     body: [...V128StoreExpr(0, [...V128Load(16),
                                                 ...V128Load(32),
-                                                SimdPrefix, varU32(I16x8RelaxedQ15MulrSCode)])]})])]));
+                                                SimdPrefix, ...varU32(I16x8RelaxedQ15MulrSCode)])]})])]));
 
 var mem16 = new Int16Array(ins.exports.mem.buffer);
 for (let [as, bs] of cross([
@@ -355,7 +355,7 @@ var ins = wasmValidateAndEval(moduleWithSections([
         funcBody({locals:[],
                     body: [...V128StoreExpr(0, [...V128Load(16),
                                                 ...V128Load(32),
-                                                SimdPrefix, varU32(I16x8DotI8x16I7x16SCode)])]})])]));
+                                                SimdPrefix, ...varU32(I16x8DotI8x16I7x16SCode)])]})])]));
 var mem8 = new Int8Array(ins.exports.mem.buffer);
 var mem16 = new Int16Array(ins.exports.mem.buffer);
 var test7bit = [1, 2, 3, 4, 5, 64, 65, 127, 127, 0, 0,
@@ -385,7 +385,7 @@ var ins = wasmValidateAndEval(moduleWithSections([
                     body: [...V128StoreExpr(0, [...V128Load(16),
                                                 ...V128Load(32),
                                                 ...V128Load(48),
-                                                SimdPrefix, varU32(I32x4DotI8x16I7x16AddSCode)])]})])]));
+                                                SimdPrefix, ...varU32(I32x4DotI8x16I7x16AddSCode)])]})])]));
 var mem8 = new Int8Array(ins.exports.mem.buffer);
 var mem32 = new Int32Array(ins.exports.mem.buffer);
 var test7bit = [1, 2, 3, 4, 5, 64, 65, 127, 127, 0, 0,
