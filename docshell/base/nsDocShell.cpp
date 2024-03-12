@@ -6475,6 +6475,9 @@ nsresult nsDocShell::CreateAboutBlankDocumentViewer(
   nsCOMPtr<nsIDocumentViewer> viewer;
   nsresult rv = NS_ERROR_FAILURE;
 
+  PROFILER_MARKER_UNTYPED("CreateAboutBlankDocumentViewer", DOM,
+                          MarkerStack::Capture());
+
   MOZ_ASSERT_IF(aActor, aActor->DocumentPrincipal() == aPrincipal);
 
   /* mCreatingDocument should never be true at this point. However, it's
