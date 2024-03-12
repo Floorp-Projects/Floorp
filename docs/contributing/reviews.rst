@@ -134,6 +134,9 @@ Review groups
    * - #style or #firefox-style-system-reviewers
      - Firefox style system (servo, layout/style).
      - `Member list <https://phabricator.services.mozilla.com/project/members/90/>`__
+   * - #supply-chain-reviewers
+     - Changes to third-party audits and vendoring (cargo-vet, supply_chain).
+     - `Member list <https://phabricator.services.mozilla.com/project/members/164/>`__
    * - #webcompat-reviewers
      - System addons maintained by the Web Compatibility team
      - `Member list <https://phabricator.services.mozilla.com/project/members/124/>`__
