@@ -388,19 +388,19 @@ this.AccessibilityUtils = (function () {
     if (accessible.role != Ci.nsIAccessibleRole.ROLE_PAGETAB) {
       return false; // Not a tab.
     }
-    // ToDo: We may eventually need to support intervening generics between
-    // a tab and its tablist here.
-    const tablist = accessible.parent;
+    const tablist = findNonGenericParentAccessible(accessible);
     if (!tablist || tablist.role != Ci.nsIAccessibleRole.ROLE_PAGETABLIST) {
       return false; // The tab isn't inside a tablist.
     }
     // ToDo: We may eventually need to support tablists which use
     // aria-activedescendant here.
     // Check that there is only one keyboard reachable tab.
-    const childCount = tablist.childCount;
     let foundFocusable = false;
-    for (let c = 0; c < childCount; c++) {
-      const tab = tablist.getChildAt(c);
+    for (const tab of findNonGenericChildrenAccessible(tablist)) {
+      if (!tab || tab.role != Ci.nsIAccessibleRole.ROLE_PAGETAB) {
+        // The tablist includes children other than tabs or no tabs at all
+        a11yFail("Only tabs should be included in a tablist", accessible);
+      }
       // Use tabIndex rather than a11y focusable state because all tabs might
       // have tabindex="-1".
       if (tab.DOMNode.tabIndex == 0) {
@@ -1080,6 +1080,36 @@ this.AccessibilityUtils = (function () {
     }
     // No interactive ancestor.
     return null;
+  }
+
+  /**
+   * Find the nearest non-generic ancestor for a node to account for generic
+   * containers to intervene between the ancestor and it child.
+   */
+  function findNonGenericParentAccessible(childAcc) {
+    for (let acc = childAcc.parent; acc; acc = acc.parent) {
+      if (acc.computedARIARole != "generic") {
+        return acc;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Find the nearest non-generic children for a node to account for generic
+   * containers to intervene between the ancestor and its children.
+   */
+  function* findNonGenericChildrenAccessible(parentAcc) {
+    const count = parentAcc.childCount;
+    for (let c = 0; c < count; ++c) {
+      const child = parentAcc.getChildAt(c);
+      // When Gecko will consider only one role as generic, we'd use child.role
+      if (child.computedARIARole == "generic") {
+        yield* findNonGenericChildrenAccessible(child);
+      } else {
+        yield child;
+      }
+    }
   }
 
   function runIfA11YChecks(task) {
