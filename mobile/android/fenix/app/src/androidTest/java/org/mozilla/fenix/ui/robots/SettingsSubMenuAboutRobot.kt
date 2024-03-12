@@ -76,21 +76,21 @@ class SettingsSubMenuAboutRobot {
     }
 
     fun verifyProductCompany() {
-        Log.i(TAG, "verifyVersionNumber: Trying to verify that the about section contains the company that produced the app info: ${"$appName is produced by Mozilla."}")
+        Log.i(TAG, "verifyProductCompany: Trying to verify that the about section contains the company that produced the app info: ${"$appName is produced by Mozilla."}")
         onView(withId(R.id.about_content))
             .check(matches(withText(containsString("$appName is produced by Mozilla."))))
-        Log.i(TAG, "verifyVersionNumber: Verified that the about section contains the company that produced the app info: ${"$appName is produced by Mozilla."}")
+        Log.i(TAG, "verifyProductCompany: Verified that the about section contains the company that produced the app info: \"$appName is produced by Mozilla.\"")
     }
 
     fun verifyCurrentTimestamp() {
-        Log.i(TAG, "verifyVersionNumber: Trying to verify that the about section contains \"debug build\"")
+        Log.i(TAG, "verifyCurrentTimestamp: Trying to verify that the about section contains \"debug build\"")
         onView(withId(R.id.build_date))
             // Currently UI tests run against debug builds, which display a hard-coded string 'debug build'
             // instead of the date. See https://github.com/mozilla-mobile/fenix/pull/10812#issuecomment-633746833
             .check(matches(withText(containsString("debug build"))))
         // This assertion should be valid for non-debug build types.
         // .check(BuildDateAssertion.isDisplayedDateAccurate())
-        Log.i(TAG, "verifyVersionNumber: Verified that the about section contains \"debug build\"")
+        Log.i(TAG, "verifyCurrentTimestamp: Verified that the about section contains \"debug build\"")
     }
 
     fun verifyAboutToolbar() {
@@ -110,12 +110,12 @@ class SettingsSubMenuAboutRobot {
         Log.i(TAG, "verifyWhatIsNewInFirefoxLink: Performed ${LISTS_MAXSWIPES}x a scroll action to the end of the about list")
 
         val firefox = TestHelper.appContext.getString(R.string.firefox)
-        Log.i(TAG, "verifyAboutToolbar: Trying to verify that the \"What’s new in $firefox\" link is visible")
+        Log.i(TAG, "verifyWhatIsNewInFirefoxLink: Trying to verify that the \"What’s new in $firefox\" link is visible")
         onView(withText("What’s new in $firefox")).check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-        Log.i(TAG, "verifyAboutToolbar: Verified that the \"What’s new in $firefox\" link is visible")
-        Log.i(TAG, "verifyAboutToolbar: Trying to click the \"What’s new in $firefox\" link")
+        Log.i(TAG, "verifyWhatIsNewInFirefoxLink: Verified that the \"What’s new in $firefox\" link is visible")
+        Log.i(TAG, "verifyWhatIsNewInFirefoxLink: Trying to click the \"What’s new in $firefox\" link")
         onView(withText("What’s new in $firefox")).perform(click())
-        Log.i(TAG, "verifyAboutToolbar: Clicked the \"What’s new in $firefox\" link")
+        Log.i(TAG, "verifyWhatIsNewInFirefoxLink: Clicked the \"What’s new in $firefox\" link")
     }
     fun verifySupport() {
         Log.i(TAG, "verifySupport: Trying to perform ${LISTS_MAXSWIPES}x a scroll action to the end of the about list")
