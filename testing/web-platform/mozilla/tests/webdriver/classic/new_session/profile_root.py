@@ -4,7 +4,7 @@ import os
 import pytest
 
 
-def test_profile_root(tmp_path, configuration, geckodriver, user_prefs):
+def test_profile_root(tmp_path, configuration, geckodriver, default_preferences):
     profile_path = os.path.join(tmp_path, "geckodriver-test")
     os.makedirs(profile_path)
 
@@ -12,7 +12,7 @@ def test_profile_root(tmp_path, configuration, geckodriver, user_prefs):
 
     # Pass all the wpt preferences from the default profile's user.js via
     # capabilities to allow geckodriver to create a new valid profile itself.
-    config["capabilities"]["moz:firefoxOptions"]["prefs"] = user_prefs
+    config["capabilities"]["moz:firefoxOptions"]["prefs"] = default_preferences
 
     # Ensure we don't set a profile in command line arguments
     del config["capabilities"]["moz:firefoxOptions"]["args"]
