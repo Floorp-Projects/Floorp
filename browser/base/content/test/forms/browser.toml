@@ -1,5 +1,5 @@
 [DEFAULT]
-prefs = ["gfx.font_loader.delay=0", "dom.select.showPicker.enabled=true"]
+prefs = ["gfx.font_loader.delay=0", "dom.select.showPicker.enabled=true", "font.minimum-size.x-western=9"]
 support-files = ["head.js"]
 
 ["browser_selectpopup.js"]
@@ -17,6 +17,8 @@ skip-if = ["os == 'linux'"] # Bug 1329991 - test fails intermittently on Linux b
 ["browser_selectpopup_hr.js"]
 
 ["browser_selectpopup_large.js"]
+
+["browser_selectpopup_minFontSize.js"]
 
 ["browser_selectpopup_searchfocus.js"]
 fail-if = ["a11y_checks"] # Bug 1854233 input may not be labeled

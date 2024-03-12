@@ -733,6 +733,16 @@ static void CollectImageURLsForProperty(nsCSSPropertyID aProp,
   }
 }
 
+float nsComputedDOMStyle::UsedFontSize() {
+  UpdateCurrentStyleSources(eCSSProperty_font_size);
+
+  if (!mComputedStyle) {
+    return -1.0;
+  }
+
+  return mComputedStyle->StyleFont()->mFont.size.ToCSSPixels();
+}
+
 void nsComputedDOMStyle::GetCSSImageURLs(const nsACString& aPropertyName,
                                          nsTArray<nsCString>& aImageURLs,
                                          mozilla::ErrorResult& aRv) {

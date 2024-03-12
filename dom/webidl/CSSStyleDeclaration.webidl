@@ -21,6 +21,9 @@ interface CSSStyleDeclaration {
   [Throws, ChromeOnly]
   sequence<UTF8String> getCSSImageURLs(UTF8String property);
 
+  [ChromeOnly]
+  readonly attribute float usedFontSize;
+
   UTF8String getPropertyValue(UTF8String property);
   UTF8String getPropertyPriority(UTF8String property);
   [CEReactions, NeedsSubjectPrincipal=NonSystem, Throws]
