@@ -1984,12 +1984,6 @@ PRemotePrintJobChild* ContentChild::AllocPRemotePrintJobChild() {
 #endif
 }
 
-already_AddRefed<PClipboardReadRequestChild>
-ContentChild::AllocPClipboardReadRequestChild(
-    const nsTArray<nsCString>& aTypes) {
-  return MakeAndAddRef<ClipboardReadRequestChild>(aTypes);
-}
-
 media::PMediaChild* ContentChild::AllocPMediaChild() {
   return media::AllocPMediaChild();
 }
