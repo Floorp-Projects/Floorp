@@ -39,41 +39,10 @@ export class BackupService {
     if (this.#instance) {
       return this.#instance;
     }
-    this.#instance = new BackupService();
-    this.#instance.takeMeasurements();
-
-    return this.#instance;
+    return (this.#instance = new BackupService());
   }
 
   constructor() {
     lazy.logConsole.debug("Instantiated");
-  }
-
-  /**
-   * Take measurements of the current profile state for Telemetry.
-   *
-   * @returns {Promise<undefined>}
-   */
-  async takeMeasurements() {
-    lazy.logConsole.debug("Taking Telemetry measurements");
-
-    // Note: We're talking about kilobytes here, not kibibytes. That means
-    // 1000 bytes, and not 1024 bytes.
-    const BYTES_IN_KB = 1000;
-    const BYTES_IN_MB = 1000000;
-
-    // We'll start by measuring the available disk space on the storage
-    // device that the profile directory is on.
-    let profileDir = await IOUtils.getFile(PathUtils.profileDir);
-
-    let profDDiskSpaceBytes = profileDir.diskSpaceAvailable;
-
-    // Make the measurement fuzzier by rounding to the nearest 10MB.
-    let profDDiskSpaceMB =
-      Math.round(profDDiskSpaceBytes / BYTES_IN_MB / 100) * 100;
-
-    // And then record the value in kilobytes, since that's what everything
-    // else is going to be measured in.
-    Glean.browserBackup.profDDiskSpace.set(profDDiskSpaceMB * BYTES_IN_KB);
   }
 }
