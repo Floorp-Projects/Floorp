@@ -12,12 +12,10 @@ EXPORTS.mozilla._ipdltest += [
     "IPDLUnitTestTypes.h",
     "IPDLUnitTestUtils.h",
     "TestOffMainThreadPainting.h",
-    "TestUrgentHangs.h",
 ]
 
 SOURCES += [
     "TestOffMainThreadPainting.cpp",
-    "TestUrgentHangs.cpp",
 ]
 
 SOURCES += [
@@ -33,7 +31,6 @@ IPDL_SOURCES += [
     "PTestIndirectProtocolParamSecond.ipdl",
     "PTestPaintThread.ipdl",
     "PTestPriority.ipdl",
-    "PTestUrgentHangs.ipdl",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")
