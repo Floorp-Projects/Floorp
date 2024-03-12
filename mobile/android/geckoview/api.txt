@@ -2677,8 +2677,6 @@ package org.mozilla.geckoview {
     field @Nullable public final String downloadUrl;
     field public final boolean enabled;
     field @Nullable public final String fullDescription;
-    field @NonNull public final String[] grantedOptionalOrigins;
-    field @NonNull public final String[] grantedOptionalPermissions;
     field @Nullable public final String homepageUrl;
     field @NonNull public final Image icon;
     field @Nullable public final String incognito;

@@ -1832,17 +1832,6 @@ public class WebExtension {
 
     /**
      * API <a
-     * href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/optional_permissions">optional
-     * permissions</a> granted to this extension.
-     *
-     * <p>Permission identifiers match entries in the manifest, see <a
-     * href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/permissions#API_permissions">
-     * API permissions </a>.
-     */
-    public final @NonNull String[] grantedOptionalPermissions;
-
-    /**
-     * API <a
      * href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/optional_permissions">
      * optional origin permissions</a> requested or granted to this extension.
      *
@@ -1851,17 +1840,6 @@ public class WebExtension {
      * API permissions </a>.
      */
     public final @NonNull String[] optionalOrigins;
-
-    /**
-     * API <a
-     * href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/optional_permissions">
-     * optional origin permissions</a> granted to this extension.
-     *
-     * <p>Permission identifiers match entries in the manifest, see <a
-     * href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/permissions#API_permissions">
-     * API permissions </a>.
-     */
-    public final @NonNull String[] grantedOptionalOrigins;
 
     /**
      * Host permissions requested or granted to this extension.
@@ -2044,8 +2022,6 @@ public class WebExtension {
       icon = null;
       permissions = null;
       optionalPermissions = null;
-      grantedOptionalPermissions = null;
-      grantedOptionalOrigins = null;
       optionalOrigins = null;
       origins = null;
       name = null;
@@ -2078,9 +2054,7 @@ public class WebExtension {
       // We only expose permissions that the embedder should prompt for
       permissions = bundle.getStringArray("promptPermissions");
       optionalPermissions = bundle.getStringArray("optionalPermissions");
-      grantedOptionalPermissions = bundle.getStringArray("grantedOptionalPermissions");
       optionalOrigins = bundle.getStringArray("optionalOrigins");
-      grantedOptionalOrigins = bundle.getStringArray("grantedOptionalOrigins");
       origins = bundle.getStringArray("origins");
       description = bundle.getString("description");
       version = bundle.getString("version");
