@@ -3053,7 +3053,9 @@ export class SearchService {
       }
     }
 
-    if (sendSubmissionURL) {
+    // Floorp Injections
+    if (sendSubmissionURL && !engine.name == "Floorp Search") {
+    // End Floorp Injections
       let uri = engine.searchURLWithNoTerms;
       uri = uri
         .mutate()
