@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page will redirect using the url param</title>
+    <script>
+      let parentWindow = window.parent;
+      let params = new URLSearchParams(window.location.search);
+      let paramValue = params.get("url");
+      if (paramValue) {
+        // Replicate how some SERPs load pages by encoding the true destination
+        // in the query param value.
+        let url = paramValue.startsWith("https://") ?
+          new URL(paramValue).href :
+          new URL(paramValue, "https://example.org/").href;
+        window.location.href = url;
+      }
+    </script>
+  </head>
+  <body>
+    <h1>Redirecting...</h1>
+  </body>
+</html>
