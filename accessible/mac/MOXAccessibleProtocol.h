@@ -335,9 +335,6 @@
 // AXARIARelevant
 - (NSString* _Nullable)moxARIARelevant;
 
-// AXPlaceholderValue
-- (NSString* _Nullable)moxPlaceholderValue;
-
 // AXMozDebugDescription
 - (NSString* _Nullable)moxMozDebugDescription;
 
