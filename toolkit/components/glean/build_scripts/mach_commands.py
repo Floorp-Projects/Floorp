@@ -183,8 +183,13 @@ def update_glean(command_context, version):
     )
     replace_in_file_or_die(
         topsrcdir / "gfx" / "wr" / "webrender" / "Cargo.toml",
-        r'^glean = "[0-9.]+"',
-        f'glean = "{version}"',
+        r'^glean = { version = "[0-9.]+"(.+)}',
+        f'glean = {{ version = "{version}"\\1}}',
+    )
+    replace_in_file_or_die(
+        topsrcdir / "gfx" / "wr" / "wr_glyph_rasterizer" / "Cargo.toml",
+        r'^glean = { version = "[0-9.]+"(.+)}',
+        f'glean = {{ version = "{version}"\\1}}',
     )
     replace_in_file_or_die(
         topsrcdir / "python" / "sites" / "mach.txt",
@@ -193,13 +198,9 @@ def update_glean(command_context, version):
     )
 
     instructions = f"""
-    We've edited most of the necessary files to require Glean SDK {version}.
+    We've edited the necessary files to require Glean SDK {version}.
 
-    You will have to edit the following files yourself:
-
-        gfx/wr/wr_glyph_rasterizer/Cargo.toml
-
-    Then, to ensure Glean and Firefox's other Rust dependencies are appropriately vendored,
+    To ensure Glean and Firefox's other Rust dependencies are appropriately vendored,
     please run the following commands:
 
         cargo update -p glean
