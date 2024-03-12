@@ -212,7 +212,7 @@ pref("dom.webshare.enabled", true);
 pref("extensions.abuseReport.amWebAPI.enabled", false);
 
 // Disable add-ons that are not installed by the user in all scopes by default (See the SCOPE
-// constants in AddonManager.jsm for values to use here, and Bug 1405528 for a rationale)
+// constants in AddonManager.sys.mjs for values to use here, and Bug 1405528 for a rationale)
 pref("extensions.autoDisableScopes", 15);
 
 pref("extensions.enabledScopes", 5);

@@ -1932,7 +1932,7 @@ public class GeckoSession {
   // https://searchfox.org/mozilla-central/source/docshell/base/nsIWebNavigation.idl
   //
   // We do not use the same values directly in order to insulate ourselves from
-  // changes in Gecko. Instead, the flags are converted in GeckoViewNavigation.jsm.
+  // changes in Gecko. Instead, the flags are converted in GeckoViewNavigation.sys.mjs.
 
   /** Default load flag, no special considerations. */
   public static final int LOAD_FLAGS_NONE = 0;

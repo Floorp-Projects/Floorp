@@ -47,7 +47,7 @@ Specified and active tabs would be ``PRIORITY_HIGH``. The default would be
 
   public void setPriorityHint(final @Priority int priorityHint)
 
-Listeners in ``GeckoViewContent.jsm`` will set
+Listeners in ``GeckoViewContent.sys.mjs`` will set
 ``this.browser.frameLoader.remoteTab.priorityHint`` to the boolean passed in.
 
 .. code:: java

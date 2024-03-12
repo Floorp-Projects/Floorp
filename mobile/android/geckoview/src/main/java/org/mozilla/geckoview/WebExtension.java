@@ -1688,7 +1688,7 @@ public class WebExtension {
    * in Firefox. </a>
    */
   public static class SignedStateFlags {
-    // Keep in sync with AddonManager.jsm
+    // Keep in sync with AddonManager.sys.mjs
     /**
      * This extension may be signed but by a certificate that doesn't chain to our our trusted
      * certificate.
