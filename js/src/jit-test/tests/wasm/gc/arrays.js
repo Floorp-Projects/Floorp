@@ -604,7 +604,37 @@ assertErrorMessage(() => wasmEvalText(`(module
     },WebAssembly.RuntimeError, /index out of bounds/);
 }
 
-// run: zeroes everywhere
+// run: zero-length copies are allowed
+{
+  let { newData } = wasmEvalText(`(module
+      (type $a (array i8))
+      (data $d "1337")
+      (func (export "newData") (result eqref)
+              (; offset=0 into data ;) i32.const 0
+              (; size=0 into data ;) i32.const 0
+              array.new_data $a $d
+      )
+      )`).exports;
+  let arr = newData();
+  assertEq(wasmGcArrayLength(arr), 0);
+}
+
+// run: a zero-length copy from the end is allowed
+{
+  let { newData } = wasmEvalText(`(module
+      (type $a (array i8))
+      (data $d "1337")
+      (func (export "newData") (result eqref)
+              (; offset=4 into data ;) i32.const 4
+              (; size=0 into data ;) i32.const 0
+              array.new_data $a $d
+      )
+      )`).exports;
+  let arr = newData();
+  assertEq(wasmGcArrayLength(arr), 0);
+}
+
+// run: even empty data segments are allowed
 {
   let { newData } = wasmEvalText(`(module
       (type $a (array i8))
@@ -817,7 +847,45 @@ assertErrorMessage(() => wasmEvalText(`(module
     },WebAssembly.RuntimeError, /index out of bounds/);
 }
 
-// run: zeroes everywhere
+// run: zero-length copies are allowed
+{
+  let { newElem, f1, f2, f3, f4 } = wasmEvalText(`(module
+      (type $a (array funcref))
+      (elem $e func $f1 $f2 $f3 $f4)
+      (func $f1 (export "f1"))
+      (func $f2 (export "f2"))
+      (func $f3 (export "f3"))
+      (func $f4 (export "f4"))
+      (func (export "newElem") (result eqref)
+              (; offset=0 into elem ;) i32.const 0
+              (; size=0 into elem ;) i32.const 0
+              array.new_elem $a $e
+      )
+      )`).exports;
+  let arr = newElem();
+  assertEq(wasmGcArrayLength(arr), 0);
+}
+
+// run: a zero-length copy from the end is allowed
+{
+  let { newElem, f1, f2, f3, f4 } = wasmEvalText(`(module
+      (type $a (array funcref))
+      (elem $e func $f1 $f2 $f3 $f4)
+      (func $f1 (export "f1"))
+      (func $f2 (export "f2"))
+      (func $f3 (export "f3"))
+      (func $f4 (export "f4"))
+      (func (export "newElem") (result eqref)
+              (; offset=4 into elem ;) i32.const 4
+              (; size=0 into elem ;) i32.const 0
+              array.new_elem $a $e
+      )
+      )`).exports;
+  let arr = newElem();
+  assertEq(wasmGcArrayLength(arr), 0);
+}
+
+// run: even empty elem segments are allowed
 {
     let { newElem, f1, f2, f3, f4 } = wasmEvalText(`(module
         (type $a (array funcref))
