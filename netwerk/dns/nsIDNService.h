@@ -16,6 +16,7 @@
 #include "mozilla/UniquePtr.h"
 
 #include "nsString.h"
+#include "nsStringFwd.h"
 
 class nsIPrefBranch;
 
@@ -83,8 +84,8 @@ class nsIDNService final : public nsIIDNService {
    *           display, the output is the same as the input
    *        @see isLabelSafe
    */
-  nsresult decodeACE(const nsACString& in, nsACString& out,
-                     stringPrepFlag flag);
+  nsresult decodeACE(const nsACString& in, nsACString& out, stringPrepFlag flag,
+                     const nsACString& tld);
 
   /**
    * Convert complete domain names between UTF8 and ACE and vice versa
@@ -134,7 +135,8 @@ class nsIDNService final : public nsIIDNService {
    *  Both simplified-only and traditional-only Chinese characters
    *   XXX this test was disabled by bug 857481
    */
-  bool isLabelSafe(const nsAString& label) MOZ_EXCLUDES(mLock);
+  bool isLabelSafe(const nsAString& label, const nsAString& tld)
+      MOZ_EXCLUDES(mLock);
 
   /**
    * Determine whether a combination of scripts in a single label is

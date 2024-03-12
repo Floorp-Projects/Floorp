@@ -886,13 +886,13 @@ let testCases = [
   ["xn--xample-vyc.az", "\u0259xample.az", kSafe],
 
   // U+00B7 is only allowed on Catalan domains between two l's.
-  ["xn--googlecom-5pa.com", "google\u00b7com.com", kUnsafe, "DISABLED"],
-  ["xn--ll-0ea.com", "l\u00b7l.com", kUnsafe, "DISABLED"],
+  ["xn--googlecom-5pa.com", "google\u00b7com.com", kUnsafe],
+  ["xn--ll-0ea.com", "l\u00b7l.com", kUnsafe],
   ["xn--ll-0ea.cat", "l\u00b7l.cat", kSafe],
-  ["xn--al-0ea.cat", "a\u00b7l.cat", kUnsafe, "DISABLED"],
-  ["xn--la-0ea.cat", "l\u00b7a.cat", kUnsafe, "DISABLED"],
-  ["xn--l-fda.cat", "\u00b7l.cat", kUnsafe, "DISABLED"],
-  ["xn--l-gda.cat", "l\u00b7.cat", kUnsafe, "DISABLED"],
+  ["xn--al-0ea.cat", "a\u00b7l.cat", kUnsafe],
+  ["xn--la-0ea.cat", "l\u00b7a.cat", kUnsafe],
+  ["xn--l-fda.cat", "\u00b7l.cat", kUnsafe],
+  ["xn--l-gda.cat", "l\u00b7.cat", kUnsafe],
 
   ["xn--googlecom-gk6n.com", "google\u4e28com.com", kUnsafe, "DISABLED"],
   ["xn--googlecom-0y6n.com", "google\u4e5bcom.com", kUnsafe, "DISABLED"],
@@ -1049,4 +1049,10 @@ add_task(async function test_chrome_spoofs() {
       );
     }
   }
+});
+
+add_task(async function test_interpuncts_fqdn() {
+  let isAscii = {};
+  let result = idnService.convertToDisplayIDN("xn--ll-0ea.cat.", isAscii);
+  Assert.equal(result, "l\u00b7l.cat.");
 });
