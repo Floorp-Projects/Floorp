@@ -290,7 +290,7 @@ class ScriptModule extends WindowGlobalBiDiModule {
       const rawObject = maybeDebuggerObject.unsafeDereference();
 
       // TODO: Getters for Maps and Sets iterators return "Opaque" objects and
-      // are not iterable. RemoteValue.jsm' serializer should handle calling
+      // are not iterable. RemoteValue.sys.mjs' serializer should handle calling
       // waiveXrays on Maps/Sets/... and then unwaiveXrays on entries but since
       // we serialize with maxDepth=1, calling waiveXrays once on the root
       // object allows to return correctly serialized values.

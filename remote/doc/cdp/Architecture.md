@@ -84,7 +84,7 @@ When a request is made to a target URL, `cdp/targets/Target:handle` is called an
 From a given connection you can know about the other potential targets.
 You typically do that via `Target.setDiscoverTargets()`, which will emit `Target.targetCreated` events providing a target ID.
 You may create a new session for the new target by handing the ID to `Target.attachToTarget()`, which will return a session ID.
-"Target" here is a reference to the CDP Domain implemented in `cdp/domains/parent/Target.jsm`. That is different from `cdp/targets/Target`
+"Target" here is a reference to the CDP Domain implemented in `cdp/domains/parent/Target.sys.mjs`. That is different from `cdp/targets/Target`
 class which is an implementation detail of the Remote Agent.
 
 Then, there is two ways to communicate with the other targets:

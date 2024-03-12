@@ -29,7 +29,7 @@ do this, provided you haven’t touched any compiled code (C++ or Rust):
 
 Component files include the likes of components.conf,
 RemoteAgent.manifest, moz.build files, and jar.mn.
-All the JS modules (files ending with `.jsm`) are symlinked into
+All the JS modules (files ending with `.sys.mjs`) are symlinked into
 the build and can be changed without rebuilding.
 
 You may also opt out of building all the WebDriver specific components

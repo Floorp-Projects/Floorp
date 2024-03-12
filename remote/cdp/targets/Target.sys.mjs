@@ -21,7 +21,7 @@ export class Target {
    */
   constructor(targetList, sessionClass) {
     // Save a reference to TargetList instance in order to expose it to:
-    // domains/parent/Target.jsm
+    // domains/parent/Target.sys.mjs
     this.targetList = targetList;
 
     // When a new connection is made to this target,

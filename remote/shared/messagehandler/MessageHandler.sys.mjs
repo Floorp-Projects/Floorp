@@ -215,7 +215,7 @@ export class MessageHandler extends EventEmitter {
 
   /**
    * Retrieve all module classes matching the moduleName and destination.
-   * See `getAllModuleClasses` (ModuleCache.jsm) for more details.
+   * See `getAllModuleClasses` (ModuleCache.sys.mjs) for more details.
    *
    * @param {string} moduleName
    *     The name of the module.

@@ -171,5 +171,5 @@ export class EnvironmentPrefs {
 }
 
 // There is a future potential of exposing this as Marionette.prefs.port
-// if we introduce a Marionette.jsm module.
+// if we introduce a Marionette.sys.mjs module.
 export const MarionettePrefs = new MarionetteBranch();
