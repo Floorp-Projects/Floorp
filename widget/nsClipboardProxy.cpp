@@ -174,6 +174,28 @@ NS_IMETHODIMP AsyncGetClipboardDataProxy::GetData(
   return NS_OK;
 }
 
+static Result<RefPtr<AsyncGetClipboardDataProxy>, nsresult>
+CreateAsyncGetClipboardDataProxy(
+    ClipboardReadRequestOrError&& aClipboardReadRequestOrError) {
+  if (aClipboardReadRequestOrError.type() ==
+      ClipboardReadRequestOrError::Tnsresult) {
+    MOZ_ASSERT(NS_FAILED(aClipboardReadRequestOrError.get_nsresult()));
+    return Err(aClipboardReadRequestOrError.get_nsresult());
+  }
+
+  ClipboardReadRequest& request =
+      aClipboardReadRequestOrError.get_ClipboardReadRequest();
+  auto requestChild = MakeRefPtr<ClipboardReadRequestChild>(
+      std::move(request.availableTypes()));
+  if (NS_WARN_IF(
+          !ContentChild::GetSingleton()->BindPClipboardReadRequestEndpoint(
+              std::move(request.childEndpoint()), requestChild))) {
+    return Err(NS_ERROR_FAILURE);
+  }
+
+  return MakeRefPtr<AsyncGetClipboardDataProxy>(requestChild);
+}
+
 }  // namespace
 
 NS_IMETHODIMP nsClipboardProxy::AsyncGetData(
@@ -198,23 +220,16 @@ NS_IMETHODIMP nsClipboardProxy::AsyncGetData(
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
           /* resolve */
-          [callback = nsCOMPtr{aCallback}](const PClipboardReadRequestOrError&
-                                               aClipboardReadRequestOrError) {
-            if (aClipboardReadRequestOrError.type() ==
-                PClipboardReadRequestOrError::Tnsresult) {
-              MOZ_ASSERT(
-                  NS_FAILED(aClipboardReadRequestOrError.get_nsresult()));
-              callback->OnError(aClipboardReadRequestOrError.get_nsresult());
+          [callback = nsCOMPtr{aCallback}](
+              ClipboardReadRequestOrError&& aClipboardReadRequestOrError) {
+            auto result = CreateAsyncGetClipboardDataProxy(
+                std::move(aClipboardReadRequestOrError));
+            if (result.isErr()) {
+              callback->OnError(result.unwrapErr());
               return;
             }
 
-            auto asyncGetClipboardData = MakeRefPtr<AsyncGetClipboardDataProxy>(
-                static_cast<ClipboardReadRequestChild*>(
-                    aClipboardReadRequestOrError.get_PClipboardReadRequest()
-                        .AsChild()
-                        .get()));
-
-            callback->OnSuccess(asyncGetClipboardData);
+            callback->OnSuccess(result.inspect());
           },
           /* reject */
           [callback = nsCOMPtr{aCallback}](
