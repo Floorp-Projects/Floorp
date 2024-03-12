@@ -41,6 +41,7 @@ const ERRORS = new Set([
   "TimeoutError",
   "UnableToCaptureScreen",
   "UnableToSetCookieError",
+  "UnableToSetFileInputError",
   "UnexpectedAlertOpenError",
   "UnknownCommandError",
   "UnknownError",
@@ -757,6 +758,21 @@ class UnableToSetCookieError extends WebDriverError {
 }
 
 /**
+ * A command to set a file could not be satisfied.
+ *
+ * @param {string=} message
+ *     Optional string describing error situation.
+ * @param {object=} data
+ *     Additional error data helpful in diagnosing the error.
+ */
+class UnableToSetFileInputError extends WebDriverError {
+  constructor(message, data = {}) {
+    super(message, data);
+    this.status = "unable to set file input";
+  }
+}
+
+/**
  * A command to capture a screenshot could not be satisfied.
  *
  * @param {string=} message
@@ -865,6 +881,7 @@ const STATUSES = new Map([
   ["timeout", TimeoutError],
   ["unable to capture screen", UnableToCaptureScreen],
   ["unable to set cookie", UnableToSetCookieError],
+  ["unable to set file input", UnableToSetFileInputError],
   ["unexpected alert open", UnexpectedAlertOpenError],
   ["unknown command", UnknownCommandError],
   ["unknown error", UnknownError],

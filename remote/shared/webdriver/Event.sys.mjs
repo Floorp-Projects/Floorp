@@ -278,6 +278,10 @@ event.mouseup = function (el, modifiers = {}, opts = {}) {
   return event.sendEvent("mouseup", el, modifiers, opts);
 };
 
+event.cancel = function (el, modifiers = {}, opts = {}) {
+  return event.sendEvent("cancel", el, modifiers, opts);
+};
+
 event.click = function (el, modifiers = {}, opts = {}) {
   return event.sendEvent("click", el, modifiers, opts);
 };
