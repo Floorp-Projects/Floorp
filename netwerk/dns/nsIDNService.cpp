@@ -751,6 +751,13 @@ bool nsIDNService::isLabelSafe(const nsAString& label, const nsAString& tld) {
       return false;
     }
 
+    // Disallow Icelandic confusables for domains outside Icelandic and Faroese
+    // ccTLD (.is, .fo)
+    if ((ch == 0xFE || ch == 0xF0) && !tld.EqualsLiteral("is") &&
+        !tld.EqualsLiteral("fo")) {
+      return false;
+    }
+
     // Check for mixed numbering systems
     auto genCat = GetGeneralCategory(ch);
     if (genCat == HB_UNICODE_GENERAL_CATEGORY_DECIMAL_NUMBER) {
