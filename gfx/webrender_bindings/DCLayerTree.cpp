@@ -1190,6 +1190,46 @@ static UINT GetVendorId(ID3D11VideoDevice* const aVideoDevice) {
   return adapterDesc.VendorId;
 }
 
+static HRESULT SetNvidiaVpSuperResolution(ID3D11VideoContext* aVideoContext,
+                                          ID3D11VideoProcessor* aVideoProcessor,
+                                          bool aEnable) {
+  LOG("SetNvidiaVpSuperResolution() aEnable=%d", aEnable);
+
+  // Undocumented NVIDIA driver constants
+  constexpr GUID nvGUID = {0xD43CE1B3,
+                           0x1F4B,
+                           0x48AC,
+                           {0xBA, 0xEE, 0xC3, 0xC2, 0x53, 0x75, 0xE6, 0xF7}};
+
+  constexpr UINT nvExtensionVersion = 0x1;
+  constexpr UINT nvExtensionMethodSuperResolution = 0x2;
+  struct {
+    UINT version;
+    UINT method;
+    UINT enable;
+  } streamExtensionInfo = {nvExtensionVersion, nvExtensionMethodSuperResolution,
+                           aEnable ? 1u : 0};
+
+  HRESULT hr;
+  hr = aVideoContext->VideoProcessorSetStreamExtension(
+      aVideoProcessor, 0, &nvGUID, sizeof(streamExtensionInfo),
+      &streamExtensionInfo);
+  return hr;
+}
+
+static HRESULT SetVpSuperResolution(UINT aGpuVendorId,
+                                    ID3D11VideoContext* aVideoContext,
+                                    ID3D11VideoProcessor* aVideoProcessor,
+                                    bool aEnable) {
+  MOZ_ASSERT(aVideoContext);
+  MOZ_ASSERT(aVideoProcessor);
+
+  if (aGpuVendorId == 0x10DE) {
+    return SetNvidiaVpSuperResolution(aVideoContext, aVideoProcessor, aEnable);
+  }
+  return E_NOTIMPL;
+}
+
 static bool GetNvidiaRTXVideoTrueHDRSupported(
     ID3D11VideoContext* aVideoContext, ID3D11VideoProcessor* aVideoProcessor) {
   const GUID kNvidiaTrueHDRInterfaceGUID = {
@@ -1605,38 +1645,6 @@ static Maybe<DXGI_COLOR_SPACE_TYPE> GetSourceDXGIColorSpace(
   return GetSourceDXGIColorSpace(info.space, info.range);
 }
 
-static void SetNvidiaVideoSuperRes(ID3D11VideoContext* videoContext,
-                                   ID3D11VideoProcessor* videoProcessor,
-                                   bool enabled) {
-  LOG("SetNvidiaVideoSuperRes() enabled=%d", enabled);
-
-  // Undocumented NVIDIA driver constants
-  constexpr GUID nvGUID = {0xD43CE1B3,
-                           0x1F4B,
-                           0x48AC,
-                           {0xBA, 0xEE, 0xC3, 0xC2, 0x53, 0x75, 0xE6, 0xF7}};
-
-  constexpr UINT nvExtensionVersion = 0x1;
-  constexpr UINT nvExtensionMethodSuperResolution = 0x2;
-  struct {
-    UINT version;
-    UINT method;
-    UINT enable;
-  } streamExtensionInfo = {nvExtensionVersion, nvExtensionMethodSuperResolution,
-                           enabled ? 1u : 0};
-
-  HRESULT hr;
-  hr = videoContext->VideoProcessorSetStreamExtension(
-      videoProcessor, 0, &nvGUID, sizeof(streamExtensionInfo),
-      &streamExtensionInfo);
-
-  // Ignore errors as could be unsupported
-  if (FAILED(hr)) {
-    LOG("SetNvidiaVideoSuperRes() error: %lx", hr);
-    return;
-  }
-}
-
 bool DCSurfaceVideo::CallVideoProcessorBlt() {
   MOZ_ASSERT(mRenderTextureHost);
 
@@ -1781,10 +1789,15 @@ bool DCSurfaceVideo::CallVideoProcessorBlt() {
 
   const UINT vendorId = GetVendorId(videoDevice);
   const auto powerIsCharging = RenderThread::Get()->GetPowerIsCharging();
-  if (vendorId == 0x10DE &&
-      StaticPrefs::gfx_webrender_super_resolution_nvidia_AtStartup() &&
-      powerIsCharging) {
-    SetNvidiaVideoSuperRes(videoContext, videoProcessor, true);
+  if (StaticPrefs::gfx_webrender_overlay_vp_super_resolution_AtStartup() &&
+      !mVpSuperResolutionFailed && powerIsCharging) {
+    hr = SetVpSuperResolution(vendorId, videoContext, videoProcessor, true);
+    if (FAILED(hr)) {
+      if (hr != E_NOTIMPL) {
+        gfxCriticalNoteOnce << "SetVpSuperResolution failed: " << gfx::hexa(hr);
+      }
+      mVpSuperResolutionFailed = true;
+    }
   }
 
   if (mUseVpAutoHDR) {
