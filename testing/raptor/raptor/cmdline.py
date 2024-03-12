@@ -244,7 +244,7 @@ def create_parser(mach_interface=False):
         "--post-startup-delay",
         dest="post_startup_delay",
         type=int,
-        default=30000,
+        default=None,
         help="How long to wait (ms) after browser start-up before starting the tests",
     )
     add_arg(
