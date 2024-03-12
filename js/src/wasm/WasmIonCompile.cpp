@@ -9241,6 +9241,41 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
 #undef CHECK
 }
 
+static bool IonBuildMIR(Decoder& d, const ModuleEnvironment& moduleEnv,
+                        const FuncCompileInput& func,
+                        const ValTypeVector& locals, MIRGenerator& mir,
+                        TryNoteVector& tryNotes, FeatureUsage* observedFeatures,
+                        UniqueChars* error) {
+  // Initialize MIR global information used for optimization
+  if (moduleEnv.numMemories() > 0) {
+    if (moduleEnv.memories[0].indexType() == IndexType::I32) {
+      mir.initMinWasmMemory0Length(moduleEnv.memories[0].initialLength32());
+    } else {
+      mir.initMinWasmMemory0Length(moduleEnv.memories[0].initialLength64());
+    }
+  }
+
+  // Build MIR graph
+  FunctionCompiler f(moduleEnv, d, func, locals, mir, tryNotes);
+  if (!f.init()) {
+    return false;
+  }
+
+  if (!f.startBlock()) {
+    return false;
+  }
+
+  if (!EmitBodyExprs(f)) {
+    return false;
+  }
+
+  f.finish();
+
+  *observedFeatures = f.featureUsage();
+
+  return true;
+}
+
 bool wasm::IonCompileFunctions(const ModuleEnvironment& moduleEnv,
                                const CompilerEnvironment& compilerEnv,
                                LifoAlloc& lifo,
@@ -9281,51 +9316,27 @@ bool wasm::IonCompileFunctions(const ModuleEnvironment& moduleEnv,
     Decoder d(func.begin, func.end, func.lineOrBytecode, error);
 
     // Build the local types vector.
-
-    const FuncType& funcType = *moduleEnv.funcs[func.index].type;
     ValTypeVector locals;
-    if (!locals.appendAll(funcType.args())) {
-      return false;
-    }
-    if (!DecodeLocalEntries(d, *moduleEnv.types, moduleEnv.features, &locals)) {
+    if (!DecodeLocalEntriesWithParams(d, moduleEnv, func.index, &locals)) {
       return false;
     }
 
     // Set up for Ion compilation.
-
     const JitCompileOptions options;
     MIRGraph graph(&alloc);
     CompileInfo compileInfo(locals.length());
     MIRGenerator mir(nullptr, options, &alloc, &graph, &compileInfo,
                      IonOptimizations.get(OptimizationLevel::Wasm));
-    if (moduleEnv.numMemories() > 0) {
-      if (moduleEnv.memories[0].indexType() == IndexType::I32) {
-        mir.initMinWasmMemory0Length(moduleEnv.memories[0].initialLength32());
-      } else {
-        mir.initMinWasmMemory0Length(moduleEnv.memories[0].initialLength64());
-      }
-    }
 
     // Build MIR graph
-    {
-      FunctionCompiler f(moduleEnv, d, func, locals, mir, masm.tryNotes());
-      if (!f.init()) {
-        return false;
-      }
-
-      if (!f.startBlock()) {
-        return false;
-      }
-
-      if (!EmitBodyExprs(f)) {
-        return false;
-      }
-
-      f.finish();
-
-      // Record observed feature usage
-      code->featureUsage |= f.featureUsage();
+    FeatureUsage observedFeatures;
+    if (!IonBuildMIR(d, moduleEnv, func, locals, mir, masm.tryNotes(),
+                     &observedFeatures, error)) {
+      return false;
     }
+
+    // Record observed feature usage
+    code->featureUsage |= observedFeatures;
 
     // Compile MIR graph
     {
@@ -9347,7 +9358,7 @@ bool wasm::IonCompileFunctions(const ModuleEnvironment& moduleEnv,
 
       BytecodeOffset prologueTrapOffset(func.lineOrBytecode);
       FuncOffsets offsets;
-      ArgTypeVector args(funcType);
+      ArgTypeVector args(*moduleEnv.funcs[func.index].type);
       if (!codegen.generateWasm(CallIndirectId::forFunc(moduleEnv, func.index),
                                 prologueTrapOffset, args, trapExitLayout,
                                 trapExitLayoutNumWords, &offsets,
@@ -9379,6 +9390,66 @@ bool wasm::IonCompileFunctions(const ModuleEnvironment& moduleEnv,
   }
 
   return code->swap(masm);
+}
+
+bool wasm::IonDumpFunction(const ModuleEnvironment& moduleEnv,
+                           const FuncCompileInput& func,
+                           IonDumpContents contents, GenericPrinter& out,
+                           UniqueChars* error) {
+  LifoAlloc lifo(TempAllocator::PreferredLifoChunkSize);
+  TempAllocator alloc(&lifo);
+  JitContext jitContext;
+  Decoder d(func.begin, func.end, func.lineOrBytecode, error);
+
+  // Decode the locals.
+  ValTypeVector locals;
+  if (!DecodeLocalEntriesWithParams(d, moduleEnv, func.index, &locals)) {
+    return false;
+  }
+
+  // Set up for Ion compilation.
+  const JitCompileOptions options;
+  MIRGraph graph(&alloc);
+  CompileInfo compileInfo(locals.length());
+  MIRGenerator mir(nullptr, options, &alloc, &graph, &compileInfo,
+                   IonOptimizations.get(OptimizationLevel::Wasm));
+
+  // Build MIR graph
+  TryNoteVector tryNotes;
+  FeatureUsage observedFeatures;
+  if (!IonBuildMIR(d, moduleEnv, func, locals, mir, tryNotes, &observedFeatures,
+                   error)) {
+    return false;
+  }
+
+  if (contents == IonDumpContents::UnoptimizedMIR) {
+    graph.dump(out);
+    return true;
+  }
+
+  // Optimize the MIR graph
+  if (!OptimizeMIR(&mir)) {
+    return false;
+  }
+
+  if (contents == IonDumpContents::OptimizedMIR) {
+    graph.dump(out);
+    return true;
+  }
+
+#ifdef JS_JITSPEW
+  // Generate the LIR graph
+  LIRGraph* lir = GenerateLIR(&mir);
+  if (!lir) {
+    return false;
+  }
+
+  MOZ_ASSERT(contents == IonDumpContents::LIR);
+  lir->dump(out);
+#else
+  out.printf("cannot dump LIR without --enable-jitspew");
+#endif
+  return true;
 }
 
 bool js::wasm::IonPlatformSupport() {

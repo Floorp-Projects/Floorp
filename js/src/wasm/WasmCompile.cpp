@@ -726,8 +726,8 @@ void CompilerEnvironment::computeParameters(Decoder& d) {
   state_ = Computed;
 }
 
-template <class DecoderT>
-static bool DecodeFunctionBody(DecoderT& d, ModuleGenerator& mg,
+template <class DecoderT, class ModuleGeneratorT>
+static bool DecodeFunctionBody(DecoderT& d, ModuleGeneratorT& mg,
                                uint32_t funcIndex) {
   uint32_t bodySize;
   if (!d.readVarU32(&bodySize)) {
@@ -751,9 +751,9 @@ static bool DecodeFunctionBody(DecoderT& d, ModuleGenerator& mg,
                            bodyBegin + bodySize);
 }
 
-template <class DecoderT>
+template <class DecoderT, class ModuleGeneratorT>
 static bool DecodeCodeSection(const ModuleEnvironment& env, DecoderT& d,
-                              ModuleGenerator& mg) {
+                              ModuleGeneratorT& mg) {
   if (!env.codeSection) {
     if (env.numFuncDefs() != 0) {
       return d.fail("expected code section");
@@ -995,4 +995,47 @@ SharedModule wasm::CompileStreaming(
   }
 
   return mg.finishModule(*bytecode, streamEnd.tier2Listener);
+}
+
+class DumpIonModuleGenerator {
+ private:
+  ModuleEnvironment& moduleEnv_;
+  uint32_t targetFuncIndex_;
+  IonDumpContents contents_;
+  GenericPrinter& out_;
+  UniqueChars* error_;
+
+ public:
+  DumpIonModuleGenerator(ModuleEnvironment& moduleEnv, uint32_t targetFuncIndex,
+                         IonDumpContents contents, GenericPrinter& out,
+                         UniqueChars* error)
+      : moduleEnv_(moduleEnv),
+        targetFuncIndex_(targetFuncIndex),
+        contents_(contents),
+        out_(out),
+        error_(error) {}
+
+  bool finishFuncDefs() { return true; }
+  bool compileFuncDef(uint32_t funcIndex, uint32_t lineOrBytecode,
+                      const uint8_t* begin, const uint8_t* end) {
+    if (funcIndex != targetFuncIndex_) {
+      return true;
+    }
+
+    FuncCompileInput input(funcIndex, lineOrBytecode, begin, end,
+                           Uint32Vector());
+    return IonDumpFunction(moduleEnv_, input, contents_, out_, error_);
+  }
+};
+
+bool wasm::DumpIonFunctionInModule(const ShareableBytes& bytecode,
+                                   uint32_t targetFuncIndex,
+                                   IonDumpContents contents,
+                                   GenericPrinter& out, UniqueChars* error) {
+  UniqueCharsVector warnings;
+  Decoder d(bytecode.bytes, 0, error, &warnings);
+  ModuleEnvironment moduleEnv(FeatureArgs::allEnabled());
+  DumpIonModuleGenerator mg(moduleEnv, targetFuncIndex, contents, out, error);
+  return moduleEnv.init() && DecodeModuleEnvironment(d, &moduleEnv) &&
+         DecodeCodeSection(moduleEnv, d, mg);
 }
