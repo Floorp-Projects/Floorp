@@ -87,7 +87,7 @@ def set_artifact_expiration(config, jobs):
                     art_dict = manifest["android"]
                 else:
                     print(
-                        'The platform name "{plat}" didn\'t start with',
+                        f'The platform name "{plat}" didn\'t start with',
                         '"win", "mac", "android", or "linux".',
                         file=sys.stderr,
                     )
