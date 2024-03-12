@@ -254,10 +254,31 @@ def add_eager_cache_index_tasks(taskgraph, label_to_taskid, parameters, graph_co
 
 @register_morph
 def add_try_task_duplicates(taskgraph, label_to_taskid, parameters, graph_config):
-    try_config = parameters["try_task_config"]
+    return _add_try_task_duplicates(
+        taskgraph, label_to_taskid, parameters, graph_config
+    )
+
+
+# this shim function exists so we can call it from the unittests.
+# this works around an issue with
+# third_party/python/taskcluster_taskgraph/taskgraph/morph.py#40
+def _add_try_task_duplicates(taskgraph, label_to_taskid, parameters, graph_config):
+    try_config = parameters.get("try_task_config", {})
+    tasks = try_config.get("tasks", [])
+    glob_tasks = {x.strip("-*") for x in tasks if x.endswith("-*")}
+    tasks = set(tasks) - glob_tasks
+
     rebuild = try_config.get("rebuild")
     if rebuild:
         for task in taskgraph.tasks.values():
-            if task.label in try_config.get("tasks", []):
+            chunk_index = -1
+            if task.label.endswith("-cf"):
+                chunk_index = -2
+            label_parts = task.label.split("-")
+            label_no_chunk = "-".join(label_parts[:chunk_index])
+
+            if label_parts[chunk_index].isnumeric() and label_no_chunk in glob_tasks:
+                task.attributes["task_duplicates"] = rebuild
+            elif task.label in tasks:
                 task.attributes["task_duplicates"] = rebuild
     return taskgraph, label_to_taskid
