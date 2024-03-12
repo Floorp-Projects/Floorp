@@ -10,6 +10,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   action: "chrome://remote/content/shared/webdriver/Actions.sys.mjs",
   dom: "chrome://remote/content/shared/DOM.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
+  event: "chrome://remote/content/shared/webdriver/Event.sys.mjs",
 });
 
 class InputModule extends WindowGlobalBiDiModule {
@@ -41,6 +42,67 @@ class InputModule extends WindowGlobalBiDiModule {
     }
     await this.#actionState.release(this.messageHandler.window);
     this.#actionState = null;
+  }
+
+  async setFiles(options) {
+    const { element: sharedReference, files } = options;
+
+    const element = await this.#deserializeElementSharedReference(
+      sharedReference
+    );
+
+    if (
+      !HTMLInputElement.isInstance(element) ||
+      element.type !== "file" ||
+      element.disabled
+    ) {
+      throw new lazy.error.UnableToSetFileInputError(
+        `Element needs to be an <input> element with type "file" and not disabled`
+      );
+    }
+
+    if (files.length > 1 && !element.hasAttribute("multiple")) {
+      throw new lazy.error.UnableToSetFileInputError(
+        `Element should have an attribute "multiple" set when trying to set more than 1 file`
+      );
+    }
+
+    const fileObjects = [];
+    for (const file of files) {
+      try {
+        fileObjects.push(await File.createFromFileName(file));
+      } catch (e) {
+        throw new lazy.error.InvalidArgumentError(
+          `Failed to add file ${file} (${e})`
+        );
+      }
+    }
+
+    const selectedFiles = Array.from(element.files);
+
+    const intersection = fileObjects.filter(fileObject =>
+      selectedFiles.some(
+        selectedFile =>
+          // Compare file fields to identify if the files are equal.
+          // TODO: Bug 1883856. Add check for full path or use a different way
+          // to compare files when it's available.
+          selectedFile.name === fileObject.name &&
+          selectedFile.size === fileObject.size &&
+          selectedFile.type === fileObject.type
+      )
+    );
+
+    if (
+      intersection.length === selectedFiles.length &&
+      selectedFiles.length === fileObjects.length
+    ) {
+      lazy.event.cancel(element);
+    } else {
+      element.mozSetFileArray(fileObjects);
+
+      lazy.event.input(element);
+      lazy.event.change(element);
+    }
   }
 
   /**
@@ -75,8 +137,8 @@ class InputModule extends WindowGlobalBiDiModule {
         if (action?.origin?.type === "element") {
           promises.push(
             (async () => {
-              action.origin = await this.#getElementFromElementOrigin(
-                action.origin
+              action.origin = await this.#deserializeElementSharedReference(
+                action.origin.element
               );
             })()
           );
@@ -87,11 +149,10 @@ class InputModule extends WindowGlobalBiDiModule {
     return Promise.all(promises);
   }
 
-  async #getElementFromElementOrigin(origin) {
-    const sharedReference = origin.element;
+  async #deserializeElementSharedReference(sharedReference) {
     if (typeof sharedReference?.sharedId !== "string") {
       throw new lazy.error.InvalidArgumentError(
-        `Expected "origin.element" to be a SharedReference, got: ${sharedReference}`
+        `Expected "element" to be a SharedReference, got: ${sharedReference}`
       );
     }
 

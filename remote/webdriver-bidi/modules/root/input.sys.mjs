@@ -91,6 +91,63 @@ class InputModule extends Module {
     return {};
   }
 
+  /**
+   * Sets the file property of a given input element with type file to a set of file paths.
+   *
+   * @param {object=} options
+   * @param {string} options.context
+   *     Id of the browsing context to set the file property
+   *     of a given input element.
+   * @param {SharedReference} options.element
+   *     A reference to a node, which is used as
+   *     a target for setting files.
+   * @param {Array<string>} options.files
+   *     A list of file paths which should be set.
+   *
+   * @throws {InvalidArgumentError}
+   *     Raised if an argument is of an invalid type or value.
+   * @throws {NoSuchElementError}
+   *     If the input element cannot be found.
+   * @throws {NoSuchFrameError}
+   *     If the browsing context cannot be found.
+   * @throws {UnableToSetFileInputError}
+   *     If the set of file paths was not set to the input element.
+   */
+  async setFiles(options = {}) {
+    const { context: contextId, element, files } = options;
+
+    lazy.assert.string(
+      contextId,
+      `Expected "context" to be a string, got ${contextId}`
+    );
+
+    const context = lazy.TabManager.getBrowsingContextById(contextId);
+    if (!context) {
+      throw new lazy.error.NoSuchFrameError(
+        `Browsing context with id ${contextId} not found`
+      );
+    }
+
+    lazy.assert.array(files, `Expected "files" to be an array, got ${files}`);
+
+    for (const file of files) {
+      lazy.assert.string(
+        file,
+        `Expected an element of "files" to be a string, got ${file}`
+      );
+    }
+
+    await this.messageHandler.forwardCommand({
+      moduleName: "input",
+      commandName: "setFiles",
+      destination: {
+        type: lazy.WindowGlobalMessageHandler.type,
+        id: context.id,
+      },
+      params: { element, files },
+    });
+  }
+
   static get supportedEvents() {
     return [];
   }
