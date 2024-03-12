@@ -51,10 +51,12 @@ object TestHelper {
 
     fun scrollToElementByText(text: String): UiScrollable {
         val appView = UiScrollable(UiSelector().scrollable(true))
-        Log.i(TAG, "scrollToElementByText: Waiting for app view")
+        Log.i(TAG, "scrollToElementByText: Waiting for $waitingTime ms for app view to exist")
         appView.waitForExists(waitingTime)
+        Log.i(TAG, "scrollToElementByText: Waited for $waitingTime ms for app view to exist")
+        Log.i(TAG, "scrollToElementByText: Trying to scroll text: $text into the view")
         appView.scrollTextIntoView(text)
-        Log.i(TAG, "scrollToElementByText: Scrolled to element with text: $text")
+        Log.i(TAG, "scrollToElementByText: Scrolled text: $text into the view")
         return appView
     }
 
@@ -63,30 +65,45 @@ object TestHelper {
             Until.findObject(By.text(url.toString())),
             waitingTime,
         )
+        Log.i(TAG, "longTapSelectItem: Trying to long click item with $url")
         onView(
             allOf(
                 withId(R.id.url),
                 withText(url.toString()),
             ),
         ).perform(longClick())
+        Log.i(TAG, "longTapSelectItem: Long clicked item with $url")
     }
 
     fun restartApp(activity: HomeActivityIntentTestRule) {
         with(activity) {
             updateCachedSettings()
+            Log.i(TAG, "restartApp: Trying to finish the current activity")
             finishActivity()
+            Log.i(TAG, "restartApp: Finished the current activity")
+            Log.i(TAG, "restartApp: Waiting for device to be idle")
             mDevice.waitForIdle()
+            Log.i(TAG, "restartApp: Waited for device to be idle")
+            Log.i(TAG, "restartApp: Trying to launch the activity")
             launchActivity(null)
+            Log.i(TAG, "restartApp: Launched the activity")
         }
     }
 
-    fun closeApp(activity: HomeActivityIntentTestRule) =
+    fun closeApp(activity: HomeActivityIntentTestRule) {
+        Log.i(TAG, "closeApp: Trying to finish and remove the task of the current activity")
         activity.activity.finishAndRemoveTask()
+        Log.i(TAG, "closeApp: Finished and removed the task of the current activity")
+    }
 
     fun relaunchCleanApp(activity: HomeActivityIntentTestRule) {
         closeApp(activity)
+        Log.i(TAG, "relaunchCleanApp: Trying to clear intents state")
         Intents.release()
+        Log.i(TAG, "relaunchCleanApp: Cleared intents state")
+        Log.i(TAG, "relaunchCleanApp: Trying to launch the activity")
         activity.launchActivity(null)
+        Log.i(TAG, "relaunchCleanApp: Launched the activity")
     }
 
     fun waitUntilObjectIsFound(resourceName: String) {
@@ -100,17 +117,23 @@ object TestHelper {
         clickPageObject(itemWithResIdAndText("$packageName:id/snackbar_btn", expectedText))
 
     fun waitUntilSnackbarGone() {
+        Log.i(TAG, "waitUntilSnackbarGone: Waiting for $waitingTime ms until the snckabar is gone")
         mDevice.findObject(
             UiSelector().resourceId("$packageName:id/snackbar_layout"),
         ).waitUntilGone(waitingTime)
+        Log.i(TAG, "waitUntilSnackbarGone: Waited for $waitingTime ms until the snckabar was gone")
     }
 
     fun verifySnackBarText(expectedText: String) = assertUIObjectExists(itemContainingText(expectedText))
 
     fun verifyUrl(urlSubstring: String, resourceName: String, resId: Int) {
         waitUntilObjectIsFound(resourceName)
+        Log.i(TAG, "verifyUrl: Waiting for $waitingTime ms for url substring: $urlSubstring to exist")
         mDevice.findObject(UiSelector().text(urlSubstring)).waitForExists(waitingTime)
+        Log.i(TAG, "verifyUrl: Waited for $waitingTime ms for url substring: $urlSubstring to exist")
+        Log.i(TAG, "verifyUrl: Trying to verify that item with $resId contains url substring: $urlSubstring")
         onView(withId(resId)).check(ViewAssertions.matches(withText(CoreMatchers.containsString(urlSubstring))))
+        Log.i(TAG, "verifyUrl: Verified that item with $resId contains url substring: $urlSubstring")
     }
 
     // exit from Menus to home screen or browser
@@ -125,8 +148,12 @@ object TestHelper {
     }
 
     fun UiDevice.waitForObjects(obj: UiObject, waitingTime: Long = TestAssetHelper.waitingTime) {
+        Log.i(TAG, "waitForObjects: Waiting for device to be idle")
         this.waitForIdle()
+        Log.i(TAG, "waitForObjects: Waited for device to be idle")
+        Log.i(TAG, "waitForObjects: Waiting for $waitingTime ms to assert that ${obj.selector} is not null")
         Assert.assertNotNull(obj.waitForExists(waitingTime))
+        Log.i(TAG, "waitForObjects: Waited for $waitingTime ms and asserted that ${obj.selector} is not null")
     }
 
     fun hasCousin(matcher: Matcher<View>): Matcher<View> {
@@ -139,10 +166,17 @@ object TestHelper {
         )
     }
 
-    fun verifyLightThemeApplied(expected: Boolean) =
-        assertFalse("Light theme not selected", expected)
+    fun verifyLightThemeApplied(expected: Boolean) {
+        Log.i(TAG, "verifyLightThemeApplied: Trying to verify that that the \"Light\" theme was applied")
+        assertFalse("$TAG: Light theme not selected", expected)
+        Log.i(TAG, "verifyLightThemeApplied: Verified that that the \"Light\" theme was applied")
+    }
 
-    fun verifyDarkThemeApplied(expected: Boolean) = assertTrue("Dark theme not selected", expected)
+    fun verifyDarkThemeApplied(expected: Boolean) {
+        Log.i(TAG, "verifyDarkThemeApplied: Trying to verify that that the \"Dark\" theme was applied")
+        assertTrue("$TAG: Dark theme not selected", expected)
+        Log.i(TAG, "verifyDarkThemeApplied: Verified that that the \"Dark\" theme was applied")
+    }
 
     fun waitForAppWindowToBeUpdated() {
         Log.i(TAG, "waitForAppWindowToBeUpdated: Waiting for $waitingTimeVeryShort ms for $packageName window to be updated")
