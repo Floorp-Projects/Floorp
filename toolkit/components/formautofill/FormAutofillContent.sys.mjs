@@ -149,10 +149,6 @@ export var FormAutofillContent = {
   ) {
     this.debug(`Handling form submission - infered by ${formSubmissionReason}`);
 
-    // Unregister the progress listener since we detected a form submission
-    // (domWin is null in unit tests)
-    getActorFromWindow(domWin)?.unregisterProgressListener();
-
     lazy.AutofillTelemetry.recordFormSubmissionHeuristicCount(
       formSubmissionReason
     );
@@ -175,6 +171,11 @@ export var FormAutofillContent = {
       this.debug("Form element could not map to an existing handler");
       return;
     }
+
+    // Unregister the progress listener since we detected a form submission
+    // (domWin is null in unit tests)
+    const formAutofillChild = getActorFromWindow(domWin);
+    formAutofillChild?.unregisterFormSubmissionListeners();
 
     [records.address, records.creditCard].forEach((rs, idx) => {
       lazy.AutofillTelemetry.recordSubmittedSectionCount(

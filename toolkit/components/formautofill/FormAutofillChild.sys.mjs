@@ -150,9 +150,7 @@ export class FormAutofillChild extends JSWindowActorChild {
         );
       if (isAnyFieldIdentified) {
         if (lazy.FormAutofill.captureOnFormRemoval) {
-          this.registerDOMDocFetchSuccessEventListener(
-            this._nextHandleElement.ownerDocument
-          );
+          this.registerDOMDocFetchSuccessEventListener();
         }
         if (lazy.FormAutofill.captureOnPageNavigation) {
           this.registerProgressListener();
@@ -198,8 +196,13 @@ export class FormAutofillChild extends JSWindowActorChild {
    * @returns {boolean} whether the navigation affects the active window
    */
   isActiveWindowNavigation() {
-    const activeWindow = lazy.FormAutofillContent.activeHandler.window;
+    const activeWindow = lazy.FormAutofillContent.activeHandler?.window;
     const navigatedWindow = this.document.defaultView;
+
+    if (!activeWindow || !navigatedWindow) {
+      return false;
+    }
+
     const navigatedBrowsingContext =
       BrowsingContext.getFromWindow(navigatedWindow);
 
@@ -219,10 +222,13 @@ export class FormAutofillChild extends JSWindowActorChild {
    * Infer a form submission after document is navigated
    */
   onPageNavigation() {
+    if (!this.isActiveWindowNavigation()) {
+      return;
+    }
+
     const activeElement =
       lazy.FormAutofillContent.activeFieldDetail?.elementWeakRef.deref();
-
-    if (!this.isActiveWindowNavigation()) {
+    if (!activeElement) {
       return;
     }
 
@@ -267,11 +273,9 @@ export class FormAutofillChild extends JSWindowActorChild {
   /**
    * After a focusin event and after we identify formautofill fields,
    * we set up an event listener for the DOMDocFetchSuccess event
-   *
-   * @param {Document} document The document we want to be notified by of a DOMDocFetchSuccess event
    */
-  registerDOMDocFetchSuccessEventListener(document) {
-    document.setNotifyFetchSuccess(true);
+  registerDOMDocFetchSuccessEventListener() {
+    this.document.setNotifyFetchSuccess(true);
 
     // Is removed after a DOMDocFetchSuccess event (bug 1864855)
     /* eslint-disable mozilla/balanced-listeners */
@@ -284,11 +288,9 @@ export class FormAutofillChild extends JSWindowActorChild {
 
   /**
    * After a DOMDocFetchSuccess event, we register an event listener for the DOMFormRemoved event
-   *
-   * @param {Document} document The document we want to be notified by of a DOMFormRemoved event
    */
-  registerDOMFormRemovedEventListener(document) {
-    document.setNotifyFormOrPasswordRemoved(true);
+  registerDOMFormRemovedEventListener() {
+    this.document.setNotifyFormOrPasswordRemoved(true);
 
     // Is removed after a DOMFormRemoved event (bug 1864855)
     /* eslint-disable mozilla/balanced-listeners */
@@ -301,11 +303,9 @@ export class FormAutofillChild extends JSWindowActorChild {
 
   /**
    * After a DOMDocFetchSuccess event we remove the DOMDocFetchSuccess event listener
-   *
-   * @param {Document} document The document we are notified by of a DOMDocFetchSuccess event
    */
-  unregisterDOMDocFetchSuccessEventListener(document) {
-    document.setNotifyFetchSuccess(false);
+  unregisterDOMDocFetchSuccessEventListener() {
+    this.document.setNotifyFetchSuccess(false);
     this.docShell.chromeEventHandler.removeEventListener(
       "DOMDocFetchSuccess",
       this
@@ -314,11 +314,9 @@ export class FormAutofillChild extends JSWindowActorChild {
 
   /**
    * After a DOMFormRemoved event we remove the DOMFormRemoved event listener
-   *
-   * @param {Document} document The document we are notified by of a DOMFormRemoved event
    */
-  unregisterDOMFormRemovedEventListener(document) {
-    document.setNotifyFormOrPasswordRemoved(false);
+  unregisterDOMFormRemovedEventListener() {
+    this.document.setNotifyFormOrPasswordRemoved(false);
     this.docShell.chromeEventHandler.removeEventListener(
       "DOMFormRemoved",
       this
@@ -338,6 +336,12 @@ export class FormAutofillChild extends JSWindowActorChild {
       return;
     }
 
+    if (!this.windowContext) {
+      // !this.windowContext must not be null, because we need the
+      // windowContext and/or docShell to (un)register form submission listeners
+      return;
+    }
+
     switch (evt.type) {
       case "focusin": {
         if (lazy.FormAutofill.isAutofillEnabled) {
@@ -350,7 +354,7 @@ export class FormAutofillChild extends JSWindowActorChild {
         break;
       }
       case "DOMDocFetchSuccess": {
-        this.onDOMDocFetchSuccess(evt);
+        this.onDOMDocFetchSuccess();
         break;
       }
       case "form-submission-detected": {
@@ -415,14 +419,10 @@ export class FormAutofillChild extends JSWindowActorChild {
    * @param {Event} evt DOMFormRemoved
    */
   onDOMFormRemoved(evt) {
-    const document = evt.composedTarget.ownerDocument;
-
     const formSubmissionReason =
       lazy.FORM_SUBMISSION_REASON.FORM_REMOVAL_AFTER_FETCH;
 
     lazy.FormAutofillContent.formSubmitted(evt.target, formSubmissionReason);
-
-    this.unregisterDOMFormRemovedEventListener(document);
   }
 
   /**
@@ -430,15 +430,21 @@ export class FormAutofillChild extends JSWindowActorChild {
    *
    * Sets up an event listener for the DOMFormRemoved event
    * and unregisters the event listener for DOMDocFetchSuccess event.
-   *
-   * @param {Event} evt DOMDocFetchSuccess
    */
-  onDOMDocFetchSuccess(evt) {
-    const document = evt.target;
+  onDOMDocFetchSuccess() {
+    this.registerDOMFormRemovedEventListener();
 
-    this.registerDOMFormRemovedEventListener(document);
+    this.unregisterDOMDocFetchSuccessEventListener();
+  }
 
-    this.unregisterDOMDocFetchSuccessEventListener(document);
+  /**
+   * Unregister all listeners that notify of a form submission,
+   * because we just detected and acted on a form submission
+   */
+  unregisterFormSubmissionListeners() {
+    this.unregisterDOMDocFetchSuccessEventListener();
+    this.unregisterDOMFormRemovedEventListener();
+    this.unregisterProgressListener();
   }
 
   receiveMessage(message) {
