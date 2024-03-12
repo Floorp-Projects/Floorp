@@ -855,43 +855,44 @@ function onDragEngineStart(event) {
   }
 }
 
-function EngineStore() {
-  this._engines = [];
-  this._defaultEngines = [];
-  Promise.all([
-    Services.search.getVisibleEngines(),
-    Services.search.getAppProvidedEngines(),
-  ]).then(([visibleEngines, defaultEngines]) => {
-    for (let engine of visibleEngines) {
-      this.addEngine(engine);
-      gEngineView.rowCountChanged(gEngineView.lastEngineIndex, 1);
-    }
-    this._defaultEngines = defaultEngines.map(this._cloneEngine, this);
-    gSearchPane.buildDefaultEngineDropDowns();
+class EngineStore {
+  constructor() {
+    this._engines = [];
+    this._defaultEngines = [];
+    Promise.all([
+      Services.search.getVisibleEngines(),
+      Services.search.getAppProvidedEngines(),
+    ]).then(([visibleEngines, defaultEngines]) => {
+      for (let engine of visibleEngines) {
+        this.addEngine(engine);
+        gEngineView.rowCountChanged(gEngineView.lastEngineIndex, 1);
+      }
+      this._defaultEngines = defaultEngines.map(this._cloneEngine, this);
+      gSearchPane.buildDefaultEngineDropDowns();
 
-    // check if we need to disable the restore defaults button
-    var someHidden = this._defaultEngines.some(e => e.hidden);
-    gSearchPane.showRestoreDefaults(someHidden);
-  });
-}
-EngineStore.prototype = {
-  _engines: null,
-  _defaultEngines: null,
+      // check if we need to disable the restore defaults button
+      var someHidden = this._defaultEngines.some(e => e.hidden);
+      gSearchPane.showRestoreDefaults(someHidden);
+    });
+  }
+
+  _engines = null;
+  _defaultEngines = null;
 
   get engines() {
     return this._engines;
-  },
+  }
   set engines(val) {
     this._engines = val;
-  },
+  }
 
   _getIndexForEngine(aEngine) {
     return this._engines.indexOf(aEngine);
-  },
+  }
 
   _getEngineByName(aName) {
     return this._engines.find(engine => engine.name == aName);
-  },
+  }
 
   _cloneEngine(aEngine) {
     var clonedObj = {
@@ -902,16 +903,16 @@ EngineStore.prototype = {
     }
     clonedObj.originalEngine = aEngine;
     return clonedObj;
-  },
+  }
 
   // Callback for Array's some(). A thisObj must be passed to some()
   _isSameEngine(aEngineClone) {
     return aEngineClone.originalEngine.id == this.originalEngine.id;
-  },
+  }
 
   addEngine(aEngine) {
     this._engines.push(this._cloneEngine(aEngine));
-  },
+  }
 
   updateEngine(newEngine) {
     let engineToUpdate = this._engines.findIndex(
@@ -920,7 +921,7 @@ EngineStore.prototype = {
     if (engineToUpdate != -1) {
       this.engines[engineToUpdate] = this._cloneEngine(newEngine);
     }
-  },
+  }
 
   moveEngine(aEngine, aNewIndex) {
     if (aNewIndex < 0 || aNewIndex > this._engines.length - 1) {
@@ -940,7 +941,7 @@ EngineStore.prototype = {
     this._engines.splice(aNewIndex, 0, removedEngine);
 
     return Services.search.moveEngine(aEngine.originalEngine, aNewIndex);
-  },
+  }
 
   removeEngine(aEngine) {
     if (this._engines.length == 1) {
@@ -961,7 +962,7 @@ EngineStore.prototype = {
     }
     gSearchPane.buildDefaultEngineDropDowns();
     return index;
-  },
+  }
 
   async restoreDefaultEngines() {
     var added = 0;
@@ -1006,7 +1007,7 @@ EngineStore.prototype = {
     gSearchPane.showRestoreDefaults(false);
     gSearchPane.buildDefaultEngineDropDowns();
     return added;
-  },
+  }
 
   changeEngine(aEngine, aProp, aNewValue) {
     var index = this._getIndexForEngine(aEngine);
@@ -1016,20 +1017,20 @@ EngineStore.prototype = {
 
     this._engines[index][aProp] = aNewValue;
     aEngine.originalEngine[aProp] = aNewValue;
-  },
-};
-
-function EngineView(aEngineStore) {
-  this._engineStore = aEngineStore;
-
-  UrlbarPrefs.addObserver(this);
-
-  this.loadL10nNames();
+  }
 }
 
-EngineView.prototype = {
-  _engineStore: null,
-  tree: null,
+class EngineView {
+  constructor(aEngineStore) {
+    this._engineStore = aEngineStore;
+
+    UrlbarPrefs.addObserver(this);
+
+    this.loadL10nNames();
+  }
+
+  _engineStore = null;
+  tree = null;
 
   loadL10nNames() {
     // This maps local shortcut sources to their l10n names.  The names are needed
@@ -1051,11 +1052,11 @@ EngineView.prototype = {
         // called before name retrieval finished.
         this.invalidate();
       });
-  },
+  }
 
   get lastEngineIndex() {
     return this._engineStore.engines.length - 1;
-  },
+  }
 
   get selectedIndex() {
     var seln = this.selection;
@@ -1065,34 +1066,34 @@ EngineView.prototype = {
       return min.value;
     }
     return -1;
-  },
+  }
 
   get selectedEngine() {
     return this._engineStore.engines[this.selectedIndex];
-  },
+  }
 
   // Helpers
   rowCountChanged(index, count) {
     if (this.tree) {
       this.tree.rowCountChanged(index, count);
     }
-  },
+  }
 
   invalidate() {
     this.tree?.invalidate();
-  },
+  }
 
   ensureRowIsVisible(index) {
     this.tree.ensureRowIsVisible(index);
-  },
+  }
 
   getSourceIndexFromDrag(dataTransfer) {
     return parseInt(dataTransfer.getData(ENGINE_FLAVOR));
-  },
+  }
 
   isCheckBox(index, column) {
     return column.id == "engineShown";
-  },
+  }
 
   isEngineSelectedAndRemovable() {
     let defaultEngine = Services.search.defaultEngine;
@@ -1107,7 +1108,7 @@ EngineView.prototype = {
       this.selectedEngine.name != defaultEngine.name &&
       this.selectedEngine.name != defaultPrivateEngine.name
     );
-  },
+  }
 
   /**
    * Returns the local shortcut corresponding to a tree row, or null if the row
@@ -1124,7 +1125,7 @@ EngineView.prototype = {
       return null;
     }
     return UrlbarUtils.LOCAL_SEARCH_MODES[index - engineCount];
-  },
+  }
 
   /**
    * Called by UrlbarPrefs when a urlbar pref changes.
@@ -1139,14 +1140,14 @@ EngineView.prototype = {
     if (parts[0] == "shortcuts" && parts[1] && parts.length == 2) {
       this.invalidate();
     }
-  },
+  }
 
   // nsITreeView
   get rowCount() {
     return (
       this._engineStore.engines.length + UrlbarUtils.LOCAL_SEARCH_MODES.length
     );
-  },
+  }
 
   getImageSrc(index, column) {
     if (column.id == "engineName") {
@@ -1166,7 +1167,7 @@ EngineView.prototype = {
     }
 
     return "";
-  },
+  }
 
   getCellText(index, column) {
     if (column.id == "engineName") {
@@ -1183,11 +1184,11 @@ EngineView.prototype = {
       return this._engineStore.engines[index].originalEngine.aliases.join(", ");
     }
     return "";
-  },
+  }
 
   setTree(tree) {
     this.tree = tree;
-  },
+  }
 
   canDrop(targetIndex, orientation, dataTransfer) {
     var sourceIndex = this.getSourceIndexFromDrag(dataTransfer);
@@ -1198,7 +1199,7 @@ EngineView.prototype = {
       // Local shortcut rows can't be dragged or dropped on.
       targetIndex < this._engineStore.engines.length
     );
-  },
+  }
 
   async drop(dropIndex, orientation, dataTransfer) {
     // Local shortcut rows can't be dragged or dropped on.  This can sometimes
@@ -1226,12 +1227,12 @@ EngineView.prototype = {
     // Redraw, and adjust selection
     this.invalidate();
     this.selection.select(dropIndex);
-  },
+  }
 
-  selection: null,
+  selection = null;
   getRowProperties() {
     return "";
-  },
+  }
   getCellProperties(index, column) {
     if (column.id == "engineName") {
       // For local shortcut rows, return the result source name so we can style
@@ -1242,34 +1243,34 @@ EngineView.prototype = {
       }
     }
     return "";
-  },
+  }
   getColumnProperties() {
     return "";
-  },
+  }
   isContainer() {
     return false;
-  },
+  }
   isContainerOpen() {
     return false;
-  },
+  }
   isContainerEmpty() {
     return false;
-  },
+  }
   isSeparator() {
     return false;
-  },
+  }
   isSorted() {
     return false;
-  },
+  }
   getParentIndex() {
     return -1;
-  },
+  }
   hasNextSibling() {
     return false;
-  },
+  }
   getLevel() {
     return 0;
-  },
+  }
   getCellValue(index, column) {
     if (column.id == "engineShown") {
       let shortcut = this._getLocalShortcut(index);
@@ -1279,17 +1280,17 @@ EngineView.prototype = {
       return !this._engineStore.engines[index].originalEngine.hideOneOffButton;
     }
     return undefined;
-  },
-  toggleOpenState() {},
-  cycleHeader() {},
-  selectionChanged() {},
-  cycleCell() {},
+  }
+  toggleOpenState() {}
+  cycleHeader() {}
+  selectionChanged() {}
+  cycleCell() {}
   isEditable(index, column) {
     return (
       column.id != "engineName" &&
       (column.id == "engineShown" || !this._getLocalShortcut(index))
     );
-  },
+  }
   setCellValue(index, column, value) {
     if (column.id == "engineShown") {
       let shortcut = this._getLocalShortcut(index);
@@ -1302,7 +1303,7 @@ EngineView.prototype = {
         value != "true";
       gEngineView.invalidate();
     }
-  },
+  }
   setCellText(index, column, value) {
     if (column.id == "engineKeyword") {
       gSearchPane
@@ -1313,5 +1314,5 @@ EngineView.prototype = {
           }
         });
     }
-  },
-};
+  }
+}
