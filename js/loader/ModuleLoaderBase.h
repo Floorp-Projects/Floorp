@@ -165,30 +165,20 @@ class ScriptLoaderInterface : public nsISupports {
  */
 class ModuleLoaderBase : public nsISupports {
   /*
-   * Represents an ongoing load operation for a URI initiated for one request
-   * and which may have other requests waiting for it to complete.
-   *
-   * These are tracked in the mFetchingModules map.
+   * The set of requests that are waiting for an ongoing fetch to complete.
    */
-  class LoadingRequest final : public nsISupports {
-    virtual ~LoadingRequest() = default;
+  class WaitingRequests final : public nsISupports {
+    virtual ~WaitingRequests() = default;
 
    public:
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_CLASS(LoadingRequest)
+    NS_DECL_CYCLE_COLLECTION_CLASS(WaitingRequests)
 
-    // The request that initiated the load and which is currently fetching or
-    // being compiled.
-    RefPtr<ModuleLoadRequest> mRequest;
-
-    // A list of any other requests for the same URI that are waiting for the
-    // initial load to complete. These will be resumed by ResumeWaitingRequests
-    // when that happens.
     nsTArray<RefPtr<ModuleLoadRequest>> mWaiting;
   };
 
   // Module map
-  nsRefPtrHashtable<nsURIHashKey, LoadingRequest> mFetchingModules;
+  nsRefPtrHashtable<nsURIHashKey, WaitingRequests> mFetchingModules;
   nsRefPtrHashtable<nsURIHashKey, ModuleScript> mFetchedModules;
 
   // List of dynamic imports that are currently being loaded.
@@ -431,7 +421,7 @@ class ModuleLoaderBase : public nsISupports {
 
   void SetModuleFetchFinishedAndResumeWaitingRequests(
       ModuleLoadRequest* aRequest, nsresult aResult);
-  void ResumeWaitingRequests(LoadingRequest* aLoadingRequest, bool aSuccess);
+  void ResumeWaitingRequests(WaitingRequests* aWaitingRequests, bool aSuccess);
   void ResumeWaitingRequest(ModuleLoadRequest* aRequest, bool aSuccess);
 
   void StartFetchingModuleDependencies(ModuleLoadRequest* aRequest);
