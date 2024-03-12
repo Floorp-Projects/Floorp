@@ -286,11 +286,11 @@ def readOutputLine(stream, callback):
         callback(line)
 
 
-def read_user_preferences(profile_path):
-    user_js = os.path.join(profile_path, "user.js")
+def read_user_preferences(profile_path, filename="user.js"):
+    prefs_file = os.path.join(profile_path, filename)
 
     prefs = {}
-    for pref_name, pref_value in Preferences().read_prefs(user_js):
+    for pref_name, pref_value in Preferences().read_prefs(prefs_file):
         prefs[pref_name] = pref_value
 
     return prefs
