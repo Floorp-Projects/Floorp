@@ -254,37 +254,35 @@ class UsingStmt(Node):
 # "singletons"
 
 
-class PrettyPrinted:
-    @classmethod
+class PrettyPrinted(type):
     def __hash__(cls):
         return hash_str(cls.pretty)
 
-    @classmethod
     def __str__(cls):
         return cls.pretty
 
 
-class ASYNC(PrettyPrinted):
+class ASYNC(metaclass=PrettyPrinted):
     pretty = "async"
 
 
-class INTR(PrettyPrinted):
+class INTR(metaclass=PrettyPrinted):
     pretty = "intr"
 
 
-class SYNC(PrettyPrinted):
+class SYNC(metaclass=PrettyPrinted):
     pretty = "sync"
 
 
-class INOUT(PrettyPrinted):
+class INOUT(metaclass=PrettyPrinted):
     pretty = "inout"
 
 
-class IN(PrettyPrinted):
+class IN(metaclass=PrettyPrinted):
     pretty = "in"
 
 
-class OUT(PrettyPrinted):
+class OUT(metaclass=PrettyPrinted):
     pretty = "out"
 
 
