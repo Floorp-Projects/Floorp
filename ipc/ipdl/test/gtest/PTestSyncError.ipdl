@@ -1,10 +1,7 @@
-include "mozilla/_ipdltest/TestSyncError.h";
-
 namespace mozilla {
 namespace _ipdltest {
 
-
-[ManualDealloc, ChildImpl="TestSyncErrorChild", ParentImpl="TestSyncErrorParent"]
+[ChildProc=any, ChildImpl=virtual, ParentImpl=virtual]
 sync protocol PTestSyncError {
 
 child:
@@ -14,7 +11,6 @@ parent:
     sync Error();
     async __delete__();
 };
-
 
 } // namespace mozilla
 } // namespace _ipdltest
