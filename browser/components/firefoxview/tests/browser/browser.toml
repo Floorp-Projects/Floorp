@@ -28,24 +28,18 @@ skip-if = ["true"] # Bug 1869605 and # Bug 1870296
 ["browser_firefoxview.js"]
 
 ["browser_firefoxview_general_telemetry.js"]
-fail-if = ["a11y_checks"] # Bug 1850591 clicked moz-page-nav-button button is not focusable
 
 ["browser_firefoxview_navigation.js"]
-fail-if = ["a11y_checks"] # Bug 1850591 clicked moz-page-nav-button button is not focusable
 
 ["browser_firefoxview_paused.js"]
-fail-if = ["a11y_checks"] # Bug 1850591 clicked moz-page-nav-button button is not focusable
 
 ["browser_firefoxview_search_telemetry.js"]
-fail-if = ["a11y_checks"] # Bug 1850591 clicked moz-page-nav-button button is not focusable
 
 ["browser_firefoxview_tab.js"]
 
 ["browser_firefoxview_virtual_list.js"]
-fail-if = ["a11y_checks"] # Bug 1850591 clicked moz-page-nav-button button is not focusable
 
 ["browser_history_firefoxview.js"]
-fail-if = ["a11y_checks"] # Bug 1850591 clicked moz-page-nav-button button is not focusable
 
 ["browser_notification_dot.js"]
 skip-if = ["true"] # Bug 1851453
@@ -60,10 +54,9 @@ skip-if = [
 ["browser_opentabs_changes.js"]
 
 ["browser_opentabs_firefoxview.js"]
-fail-if = ["a11y_checks"] # Bug 1850591 clicked moz-page-nav-button button is not focusable
 
 ["browser_opentabs_pinned_tabs.js"]
-fail-if = ["a11y_checks"] # Bug 1850591 clicked moz-page-nav-button button is not focusable
+fail-if = ["a11y_checks"] # Bug 1884278
 
 ["browser_opentabs_recency.js"]
 skip-if = [
@@ -73,22 +66,17 @@ skip-if = [
 ] # macos times out, see bug 1857293, skipped for windows, see bug 1858460, Bug 1875877 - frequent fails on linux.
 
 ["browser_opentabs_tab_indicators.js"]
-fail-if = ["a11y_checks"] # Bug 1850591 clicked moz-page-nav-button button is not focusable
 
 ["browser_recentlyclosed_firefoxview.js"]
-fail-if = ["a11y_checks"] # Bug 1850591 clicked moz-page-nav-button button is not focusable
 
 ["browser_reload_firefoxview.js"]
 
 ["browser_syncedtabs_errors_firefoxview.js"]
-fail-if = ["a11y_checks"] # Bug 1850591 clicked moz-page-nav-button button is not focusable
 
 ["browser_syncedtabs_firefoxview.js"]
-fail-if = ["a11y_checks"] # Bug 1850591 clicked moz-page-nav-button button is not focusable
 
 ["browser_tab_close_last_tab.js"]
 
 ["browser_tab_list_keyboard_navigation.js"]
-fail-if = ["a11y_checks"] # Bug 1850591 clicked moz-page-nav-button button is not focusable
 
 ["browser_tab_on_close_warning.js"]
