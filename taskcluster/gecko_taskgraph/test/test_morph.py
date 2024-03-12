@@ -26,6 +26,102 @@ def make_taskgraph():
     return inner
 
 
+@pytest.mark.parametrize(
+    "params,expected",
+    (
+        pytest.param(
+            {
+                "try_mode": "try_task_config",
+                "try_task_config": {
+                    "rebuild": 10,
+                    "tasks": ["b"],
+                },
+                "project": "try",
+            },
+            {"b": 10},
+            id="duplicates no chunks",
+        ),
+        pytest.param(
+            {
+                "try_mode": "try_task_config",
+                "try_task_config": {
+                    "rebuild": 10,
+                    "tasks": ["a-*"],
+                },
+                "project": "try",
+            },
+            {"a-1": 10, "a-2": 10},
+            id="duplicates with chunks",
+        ),
+        pytest.param(
+            {
+                "try_mode": "try_task_config",
+                "try_task_config": {
+                    "rebuild": 10,
+                    "tasks": ["a-*", "b"],
+                },
+                "project": "try",
+            },
+            {"a-1": 10, "a-2": 10, "b": 10},
+            id="duplicates with and without chunks",
+        ),
+        pytest.param(
+            {
+                "try_mode": "try_task_config",
+                "try_task_config": {
+                    "tasks": ["a-*"],
+                },
+                "project": "try",
+            },
+            {"a-1": -1, "a-2": -1},
+            id="no rebuild, no duplicates",
+        ),
+        pytest.param(
+            {
+                "try_mode": "try_task_config",
+                "try_task_config": {
+                    "rebuild": 0,
+                    "tasks": ["a-*"],
+                },
+                "project": "try",
+            },
+            {"a-1": -1, "a-2": -1},
+            id="rebuild of zero",
+        ),
+        pytest.param(
+            {
+                "try_mode": "try_task_config",
+                "try_task_config": {
+                    "rebuild": 100,
+                    "tasks": ["a-*"],
+                },
+                "project": "try",
+            },
+            {"a-1": 100, "a-2": 100},
+            id="rebuild 100",
+        ),
+    ),
+)
+def test_try_task_duplicates(make_taskgraph, graph_config, params, expected):
+    taskb = Task(kind="test", label="b", attributes={}, task={})
+    task1 = Task(kind="test", label="a-1", attributes={}, task={})
+    task2 = Task(kind="test", label="a-2", attributes={}, task={})
+    taskgraph, label_to_taskid = make_taskgraph(
+        {
+            taskb.label: taskb,
+            task1.label: task1,
+            task2.label: task2,
+        }
+    )
+
+    taskgraph, label_to_taskid = morph._add_try_task_duplicates(
+        taskgraph, label_to_taskid, params, graph_config
+    )
+    for label in expected:
+        task = taskgraph.tasks[label]
+        assert task.attributes.get("task_duplicates", -1) == expected[label]
+
+
 def test_make_index_tasks(make_taskgraph, graph_config):
     task_def = {
         "routes": [
