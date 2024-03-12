@@ -145,7 +145,7 @@ class InterruptedError extends Error {
 
 /**
  * Adapts a `Log.sys.mjs` logger to a `mozIServicesLogSink`. This class is copied
- * from `SyncedBookmarksMirror.jsm`.
+ * from `SyncedBookmarksMirror.sys.mjs`.
  */
 export class LogAdapter {
   constructor(log) {

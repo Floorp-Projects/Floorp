@@ -59,7 +59,7 @@ FxAccountsClient.prototype = {
   /*
    * Return current time in milliseconds
    *
-   * Not used by this module, but made available to the FxAccounts.jsm
+   * Not used by this module, but made available to the FxAccounts.sys.mjs
    * that uses this client.
    */
   now() {
