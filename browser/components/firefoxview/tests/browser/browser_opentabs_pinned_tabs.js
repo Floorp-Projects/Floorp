@@ -322,7 +322,15 @@ add_task(async function test_mute_unmute_pinned_tab() {
     );
 
     // Mute tab
+    // We intentionally turn off this a11y check, because the following click
+    // is purposefully targeting a not focusable button within a pinned tab
+    // control. A keyboard-only user could mute/unmute this pinned tab via the
+    // context menu, while we do not want to create an additional, unnecessary
+    // tabstop for this control, therefore this rule check shall be ignored by
+    // a11y_checks suite.
+    AccessibilityUtils.setEnv({ focusableRule: false });
     EventUtils.synthesizeMouseAtCenter(openTabEl.mediaButtonEl, {}, content);
+    AccessibilityUtils.resetEnv();
     info("Mute Tab button clicked.");
 
     tabChangeRaised = BrowserTestUtils.waitForEvent(
@@ -339,7 +347,15 @@ add_task(async function test_mute_unmute_pinned_tab() {
     );
 
     // Unmute tab
+    // We intentionally turn off this a11y check, because the following click
+    // is purposefully targeting a not focusable button within a pinned tab
+    // control. A keyboard-only user could mute/unmute this pinned tab via the
+    // context menu, while we do not want to create an additional, unnecessary
+    // tabstop for this control, therefore this rule check shall be ignored by
+    // a11y_checks suite.
+    AccessibilityUtils.setEnv({ focusableRule: false });
     EventUtils.synthesizeMouseAtCenter(openTabEl.mediaButtonEl, {}, content);
+    AccessibilityUtils.resetEnv();
     info("Unmute Tab button clicked.");
 
     tabChangeRaised = BrowserTestUtils.waitForEvent(
