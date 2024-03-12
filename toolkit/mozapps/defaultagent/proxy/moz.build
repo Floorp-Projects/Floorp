@@ -17,7 +17,6 @@ UNIFIED_SOURCES += [
 SOURCES += [
     "/browser/components/shell/WindowsDefaultBrowser.cpp",
     "/other-licenses/nsis/Contrib/CityHash/cityhash/city.cpp",
-    "/toolkit/mozapps/update/common/readstrings.cpp",
 ]
 
 LOCAL_INCLUDES += [
