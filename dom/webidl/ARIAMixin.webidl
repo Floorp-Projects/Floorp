@@ -11,6 +11,9 @@
  */
 
 interface mixin ARIAMixin {
+  [Pref="accessibility.ARIAReflection.enabled", CEReactions]
+  attribute Element? ariaActiveDescendantElement;
+
   [Pref="accessibility.ARIAReflection.enabled", CEReactions, SetterThrows]
   attribute DOMString? role;
 

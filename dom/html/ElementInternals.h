@@ -27,6 +27,13 @@
     aResult = ErrorResult(SetAttr(nsGkAtoms::attr, aValue));        \
   }
 
+#define ARIA_REFLECT_ATTR_ELEMENT(method, attr)                            \
+  Element* Get##method() const { return GetAttrElement(nsGkAtoms::attr); } \
+                                                                           \
+  void Set##method(Element* aElement) {                                    \
+    SetAttrElement(nsGkAtoms::attr, aElement);                             \
+  }
+
 class nsINodeList;
 class nsGenericHTMLElement;
 
@@ -119,6 +126,7 @@ class ElementInternals final : public nsIFormControl,
   ARIA_REFLECT_ATTR(Role, role)
 
   // AriaAttributes
+  ARIA_REFLECT_ATTR_ELEMENT(AriaActiveDescendantElement, aria_activedescendant)
   ARIA_REFLECT_ATTR(AriaAtomic, aria_atomic)
   ARIA_REFLECT_ATTR(AriaAutoComplete, aria_autocomplete)
   ARIA_REFLECT_ATTR(AriaBusy, aria_busy)
@@ -174,6 +182,18 @@ class ElementInternals final : public nsIFormControl,
  private:
   ~ElementInternals() = default;
 
+  /**
+   * Gets the attribute element for the given attribute.
+   * https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#explicitly-set-attr-element
+   */
+  Element* GetAttrElement(nsAtom* aAttr) const;
+
+  /**
+   * Sets an attribute element for the given attribute.
+   * https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#explicitly-set-attr-element
+   */
+  void SetAttrElement(nsAtom* aAttr, Element* aElement);
+
   // It's a target element which is a custom element.
   RefPtr<HTMLElement> mTarget;
 
@@ -213,6 +233,12 @@ class ElementInternals final : public nsIFormControl,
   // owner document. This is only set to a number for elements inserted into the
   // document by the parser from the network. Otherwise, it is -1.
   int32_t mControlNumber;
+
+  /**
+   * Explicitly set attr-elements, see
+   * https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#explicitly-set-attr-element
+   */
+  nsTHashMap<RefPtr<nsAtom>, nsWeakPtr> mAttrElements;
 };
 
 }  // namespace mozilla::dom

@@ -2787,6 +2787,12 @@ bool Element::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
       return true;
     }
 
+    if (aAttribute == nsGkAtoms::aria_activedescendant) {
+      // String in aria-activedescendant is an id, so store as an atom.
+      aResult.ParseAtom(aValue);
+      return true;
+    }
+
     if (aAttribute == nsGkAtoms::id) {
       // Store id as an atom.  id="" means that the element has no id,
       // not that it has an emptystring as the id.
@@ -2841,6 +2847,8 @@ void Element::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
       if (ShadowRoot* shadow = GetParent()->GetShadowRoot()) {
         shadow->MaybeReassignContent(*this);
       }
+    } else if (aName == nsGkAtoms::aria_activedescendant) {
+      ClearExplicitlySetAttrElement(aName);
     }
   }
 }
@@ -2891,6 +2899,11 @@ void Element::OnAttrSetButNotChanged(int32_t aNamespaceID, nsAtom* aName,
       nsContentUtils::EnqueueLifecycleCallback(
           ElementCallbackType::eAttributeChanged, this, args, definition);
     }
+  }
+
+  if (aNamespaceID == kNameSpaceID_None &&
+      aName == nsGkAtoms::aria_activedescendant) {
+    ClearExplicitlySetAttrElement(aName);
   }
 }
 

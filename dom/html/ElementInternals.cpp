@@ -22,6 +22,10 @@
 #include "nsDebug.h"
 #include "nsGenericHTMLElement.h"
 
+#ifdef ACCESSIBILITY
+#  include "nsAccessibilityService.h"
+#endif
+
 namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(ElementInternals)
@@ -480,6 +484,46 @@ void ElementInternals::InitializeControlNumber() {
   MOZ_ASSERT(mControlNumber == -1,
              "FACE control number should only be initialized once!");
   mControlNumber = mTarget->OwnerDoc()->GetNextControlNumber();
+}
+
+void ElementInternals::SetAttrElement(nsAtom* aAttr, Element* aElement) {
+  // Accessibility requires that no other attribute changes occur between
+  // AttrElementWillChange and AttrElementChanged. Scripts could cause
+  // this, so don't let them run here. We do this even if accessibility isn't
+  // running so that the JS behavior is consistent regardless of accessibility.
+  // Otherwise, JS might be able to use this difference to determine whether
+  // accessibility is running, which would be a privacy concern.
+  nsAutoScriptBlocker scriptBlocker;
+
+#ifdef ACCESSIBILITY
+  // If the target has this attribute defined then it overrides the defaults
+  // defined here in the Internals instance. In that case we don't need to
+  // notify the change to a11y since the attribute hasn't changed, just the
+  // underlying default. We can set accService to null and not notify.
+  nsAccessibilityService* accService =
+      !mTarget->HasAttr(aAttr) ? GetAccService() : nullptr;
+  if (accService) {
+    accService->NotifyAttrElementWillChange(mTarget, aAttr);
+  }
+#endif
+
+  if (aElement) {
+    mAttrElements.InsertOrUpdate(aAttr, do_GetWeakReference(aElement));
+  } else {
+    mAttrElements.Remove(aAttr);
+  }
+
+#ifdef ACCESSIBILITY
+  if (accService) {
+    accService->NotifyAttrElementChanged(mTarget, aAttr);
+  }
+#endif
+}
+
+Element* ElementInternals::GetAttrElement(nsAtom* aAttr) const {
+  nsWeakPtr weakAttrEl = mAttrElements.Get(aAttr);
+  nsCOMPtr<Element> attrEl = do_QueryReferent(weakAttrEl);
+  return attrEl;
 }
 
 }  // namespace mozilla::dom
