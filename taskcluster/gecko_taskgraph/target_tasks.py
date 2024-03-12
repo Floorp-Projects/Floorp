@@ -4,6 +4,7 @@
 
 
 import itertools
+import logging
 import os
 import re
 from datetime import datetime, timedelta
@@ -20,6 +21,9 @@ from gecko_taskgraph.util.attributes import (
 )
 from gecko_taskgraph.util.hg import find_hg_revision_push_info, get_hg_commit_message
 from gecko_taskgraph.util.platforms import platform_family
+
+logger = logging.getLogger(__name__)
+
 
 # Some tasks show up in the target task set, but are possibly special cases,
 # uncommon tasks, or tasks running against limited hardware set that they
@@ -299,19 +303,30 @@ def _try_task_config(full_task_graph, parameters, graph_config):
     pattern_tasks = [x for x in requested_tasks if x.endswith("-*")]
     tasks = list(set(requested_tasks) - set(pattern_tasks))
     matched_tasks = []
+    missing = set()
     for pattern in pattern_tasks:
-        matched_tasks.extend(
-            [
-                t
-                for t in full_task_graph.graph.nodes
-                if t.split(pattern.replace("*", ""))[-1].isnumeric()
-            ]
-        )
+        found = [
+            t
+            for t in full_task_graph.graph.nodes
+            if t.split(pattern.replace("*", ""))[-1].isnumeric()
+        ]
+        if found:
+            matched_tasks.extend(found)
+        else:
+            missing.add(pattern)
 
         if "MOZHARNESS_TEST_PATHS" in parameters["try_task_config"].get("env", {}):
             matched_tasks = [x for x in matched_tasks if x.endswith("-1")]
 
-    return list(set(tasks) | set(matched_tasks))
+    selected_tasks = set(tasks) | set(matched_tasks)
+    missing.update(selected_tasks - set(full_task_graph.tasks))
+
+    if missing:
+        missing_str = "\n  ".join(sorted(missing))
+        logger.warning(
+            f"The following tasks were requested but do not exist in the full task graph and will be skipped:\n  {missing_str}"
+        )
+    return list(selected_tasks - missing)
 
 
 def _try_option_syntax(full_task_graph, parameters, graph_config):

@@ -15,10 +15,10 @@ head_repository: https://hg.mozilla.org/try
 head_rev: 482ccd66d49e0e4a0d260ca872f770df4983ccea
 hg_branch: default
 level: "1"
-message: "try: -b do -p linux64 -u none"
+message: "Fuzzy query='foobar"
 moz_build_date: "20171031195649"
 optimize_target_tasks: false
-owner: sfink@mozilla.com
+owner: user@example.com
 project: try
 pushdate: 1509479809
 pushlog_id: "232079"
@@ -30,27 +30,19 @@ release_partner_build_number: 1
 release_partner_config: null
 release_enable_emefree: false
 target_tasks_method: try_tasks
-try_mode: try_option_syntax
-try_options:
-    artifact: false
-    build_types: do
-    env: null
-    include_nightly: false
-    interactive: false
-    jobs: null
-    raptor: null
-    raptor_trigger_tests: null
-    no_retry: false
-    notifications: null
-    platforms: linux64
-    profile: false
-    tag: null
-    talos: none
-    talos_trigger_tests: 1
-    taskcluster_worker: false
-    trigger_tests: 1
-    unittests: none
-try_task_config: {}
+try_mode: try_task_config
+try_task_config:
+    disable-pgo: true
+    env:
+        TRY_SELECTOR: "fuzzy"
+    tasks:
+        - test-linux1804-64-qr/opt-mochitest-plain-*
+        - test-linux1804-64-shippable-qr/opt-mochitest-plain-headless-1
+        - test-linux1804-64-tsan-qr/opt-mochitest-plain-1
+        - missing-task-label-1
+        - missing-task-label-2
+        - missing-task-label-*
+    use-artifact-builds: true
 release_type: "nightly"
 release_product: null
 required_signoffs: []
