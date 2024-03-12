@@ -1,0 +1,109 @@
+include protocol PTestDataStructuresSub;
+include PTestDataStructuresCommon;
+
+include "mozilla/GfxMessageUtils.h";
+include "mozilla/_ipdltest/TestDataStructures.h";
+
+namespace mozilla {
+namespace _ipdltest {
+
+[ManualDealloc, ChildImpl="TestDataStructuresChild", ParentImpl="TestDataStructuresParent"]
+sync protocol PTestDataStructures {
+    manages PTestDataStructuresSub;
+
+child:
+    async PTestDataStructuresSub(int i);
+
+    async Start();
+
+parent:
+    async __delete__();
+
+    sync Test1(int[] i1)
+        returns (int[] o1);
+
+    sync Test2(PTestDataStructuresSub[] i1)
+        returns (PTestDataStructuresSub[] o1);
+
+    sync Test3(IntDouble i1,
+               IntDouble i2)
+        returns (IntDouble o1,
+                 IntDouble o2);
+
+    sync Test4(IntDouble[] i1)
+        returns (IntDouble[] o1);
+
+    sync Test5(IntDoubleArrays i1,
+               IntDoubleArrays i2,
+               IntDoubleArrays i3)
+        returns (IntDoubleArrays o1,
+                 IntDoubleArrays o2,
+                 IntDoubleArrays o3);
+
+    sync Test6(IntDoubleArrays[] i1)
+        returns (IntDoubleArrays[] o1);
+
+    sync Test7_0(ActorWrapper a1)
+        returns (ActorWrapper o1);
+
+    sync Test7(Actors i1,
+               Actors i2,
+               Actors i3)
+        returns (Actors o1,
+                 Actors o2,
+                 Actors o3);
+
+    sync Test8(Actors[] i1)
+        returns (Actors[] o1);
+
+    sync Test9(Unions i1,
+               Unions i2,
+               Unions i3,
+               Unions i4)
+        returns (Unions o1,
+                 Unions o2,
+                 Unions o3,
+                 Unions o4);
+
+    sync Test10(Unions[] i1)
+        returns (Unions[] o1);
+
+    sync Test11(SIntDouble i)
+        returns (SIntDouble o);
+
+    sync Test12(SIntDoubleArrays i)
+        returns (SIntDoubleArrays o);
+
+    sync Test13(SActors i)
+        returns (SActors o);
+
+    sync Test14(Structs i)
+        returns (Structs o);
+
+    sync Test15(WithStructs i1,
+                WithStructs i2,
+                WithStructs i3,
+                WithStructs i4,
+                WithStructs i5)
+        returns (WithStructs o1,
+                 WithStructs o2,
+                 WithStructs o3,
+                 WithStructs o4,
+                 WithStructs o5);
+
+    sync Test16(WithUnions i)
+        returns (WithUnions o);
+
+    sync Test17(Op[] ops);
+
+    // test that the ParamTraits<nsTArray>::Read() workaround for
+    // nsTArray's incorrect memmove() semantics works properly
+    // (nsIntRegion isn't memmove()able)
+    sync Test18(nsIntRegion[] ops);
+
+    sync Dummy(ShmemUnion su) returns (ShmemUnion rsu);
+};
+
+} // namespace _ipdltest
+} // namespace mozilla
+

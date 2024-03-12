@@ -1,0 +1,24 @@
+include protocol PTestDescSub;
+include protocol PTestDescSubsub;
+
+include "mozilla/_ipdltest/TestDesc.h";
+
+namespace mozilla {
+namespace _ipdltest {
+
+[ManualDealloc, ChildImpl="TestDescChild", ParentImpl="TestDescParent"]
+intr protocol PTestDesc {
+    manages PTestDescSub; 
+child:
+    [LegacyIntr] intr PTestDescSub(nullable PTestDescSubsub dummy);
+
+    async Test(PTestDescSubsub a);
+
+    async __delete__();
+
+parent:
+    async Ok(PTestDescSubsub a);
+};
+
+}
+}

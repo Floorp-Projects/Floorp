@@ -1,0 +1,21 @@
+include protocol PTestFailedCtor;
+include protocol PTestFailedCtorSubsub;
+
+include "mozilla/_ipdltest/TestFailedCtor.h";
+
+namespace mozilla {
+namespace _ipdltest {
+
+[ManualDealloc, ChildImpl="TestFailedCtorSubChild", ParentImpl="TestFailedCtorSubParent"]
+intr protocol PTestFailedCtorSub {
+    manager PTestFailedCtor;
+    manages PTestFailedCtorSubsub;
+
+parent:
+    async PTestFailedCtorSubsub();
+    sync Sync();
+    async __delete__();
+};
+
+}
+}

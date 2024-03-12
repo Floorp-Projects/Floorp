@@ -1,0 +1,24 @@
+include "mozilla/_ipdltest/TestRPC.h";
+
+namespace mozilla {
+namespace _ipdltest {
+
+[ManualDealloc, NestedUpTo=inside_sync, ChildImpl="TestRPCChild", ParentImpl="TestRPCParent"]
+sync protocol PTestRPC
+{
+parent:
+    [Nested=inside_sync] sync Test1_Start() returns (uint32_t result);
+    [Nested=inside_sync] sync Test1_InnerEvent() returns (uint32_t result);
+    async Test2_Start();
+    [Nested=inside_sync] sync Test2_OutOfOrder();
+
+child:
+    async Start();
+    [Nested=inside_sync] sync Test1_InnerQuery() returns (uint32_t result);
+    [Nested=inside_sync] sync Test1_NoReenter() returns (uint32_t result);
+    [Nested=inside_sync] sync Test2_FirstUrgent();
+    [Nested=inside_sync] sync Test2_SecondUrgent();
+};
+
+} // namespace _ipdltest
+} // namespace mozilla

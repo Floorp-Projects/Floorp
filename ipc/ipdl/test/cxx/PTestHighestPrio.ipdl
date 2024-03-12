@@ -1,0 +1,21 @@
+include "mozilla/_ipdltest/TestHighestPrio.h";
+
+namespace mozilla {
+namespace _ipdltest {
+
+[ManualDealloc, NestedUpTo=inside_cpow, ChildImpl="TestHighestPrioChild", ParentImpl="TestHighestPrioParent"]
+sync protocol PTestHighestPrio
+{
+parent:
+  [Nested=inside_cpow] async Msg1();
+  [Nested=inside_sync] sync Msg2();
+  [Nested=inside_cpow] async Msg3();
+  [Nested=inside_cpow] sync Msg4();
+
+child:
+  async Start();
+  [Nested=inside_sync] sync StartInner();
+};
+
+}
+}

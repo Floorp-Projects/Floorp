@@ -536,14 +536,6 @@ int32_t MessageChannel::CurrentNestedInsideSyncTransaction() const {
   return mTransactionStack->TransactionID();
 }
 
-void MessageChannel::TestOnlyWaitForTransactionCompletion() const {
-  AssertWorkerThread();
-  MonitorAutoLock lock(*mMonitor);
-  while (mTransactionStack && !mTransactionStack->IsComplete()) {
-    mMonitor->Wait();
-  }
-}
-
 bool MessageChannel::AwaitingSyncReply() const {
   mMonitor->AssertCurrentThreadOwns();
   return mTransactionStack ? mTransactionStack->AwaitingSyncReply() : false;

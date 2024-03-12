@@ -1,0 +1,23 @@
+include "mozilla/_ipdltest/TestSyncWakeup.h";
+
+namespace mozilla {
+namespace _ipdltest {
+
+[ManualDealloc, ChildImpl="TestSyncWakeupChild", ParentImpl="TestSyncWakeupParent"]
+intr protocol PTestSyncWakeup {
+both:
+    [LegacyIntr] intr StackFrame();
+
+child:
+    async Start();
+    async Note1();
+    async Note2();
+
+parent:
+    sync Sync1();
+    sync Sync2();
+    async __delete__();
+};
+
+} // namespace _ipdltest
+} // namespace mozilla

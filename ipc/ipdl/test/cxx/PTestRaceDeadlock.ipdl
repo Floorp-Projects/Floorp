@@ -1,0 +1,23 @@
+include "mozilla/_ipdltest/TestRaceDeadlock.h";
+
+namespace mozilla {
+namespace _ipdltest {
+
+[ManualDealloc, ChildImpl="TestRaceDeadlockChild", ParentImpl="TestRaceDeadlockParent"]
+intr protocol PTestRaceDeadlock {
+both:
+    async StartRace();
+
+parent:
+    [LegacyIntr] intr Lose();
+
+child:
+    [LegacyIntr] intr Win();
+    [LegacyIntr] intr Rpc();
+    async __delete__();
+
+/* Tests that race resolution does not cause deadlocks */
+};
+
+} // namespace _ipdltest
+} // namespace mozilla

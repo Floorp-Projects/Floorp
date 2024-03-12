@@ -1,0 +1,28 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+
+include protocol PTestEndpointBridgeMain;
+include protocol PTestEndpointBridgeSub;
+
+include "mozilla/_ipdltest/TestEndpointBridgeMain.h";
+
+namespace mozilla {
+namespace _ipdltest {
+
+// (Bridge protocols can have different semantics than the endpoints
+// they bridge)
+[ManualDealloc, ChildImpl="TestEndpointBridgeMainSubChild", ParentImpl="TestEndpointBridgeMainSubParent"]
+intr protocol PTestEndpointBridgeMainSub {
+child:
+  async Hi();
+  [LegacyIntr] intr HiRpc();
+
+parent:
+  async Hello();
+  sync HelloSync();
+  [LegacyIntr] intr HelloRpc();
+};
+
+
+} // namespace mozilla
+} // namespace _ipdltest

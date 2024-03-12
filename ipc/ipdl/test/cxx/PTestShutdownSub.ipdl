@@ -1,0 +1,23 @@
+include protocol PTestShutdown;
+include protocol PTestShutdownSubsub;
+
+include "mozilla/_ipdltest/TestShutdown.h";
+
+namespace mozilla {
+namespace _ipdltest {
+
+[ManualDealloc, ChildImpl="TestShutdownSubChild", ParentImpl="TestShutdownSubParent"]
+intr protocol PTestShutdownSub {
+    manager PTestShutdown;
+    manages PTestShutdownSubsub;
+
+both:
+    [LegacyIntr] intr StackFrame();
+
+parent:
+    async PTestShutdownSubsub(bool expectParentDeleted);
+    sync __delete__();
+};
+
+} // namespace _ipdltest
+} // namespace mozilla

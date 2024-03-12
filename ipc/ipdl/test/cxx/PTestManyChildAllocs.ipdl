@@ -1,0 +1,22 @@
+include protocol PTestManyChildAllocsSub;
+
+include "mozilla/_ipdltest/TestManyChildAllocs.h";
+
+namespace mozilla {
+namespace _ipdltest {
+
+[ManualDealloc, ChildImpl="TestManyChildAllocsChild", ParentImpl="TestManyChildAllocsParent"]
+protocol PTestManyChildAllocs {
+    manages PTestManyChildAllocsSub;
+
+child:
+    async Go();                       // start allocating
+
+parent:
+    async Done();
+
+    async PTestManyChildAllocsSub();
+};
+
+} // namespace _ipdltest
+} // namespace mozilla
