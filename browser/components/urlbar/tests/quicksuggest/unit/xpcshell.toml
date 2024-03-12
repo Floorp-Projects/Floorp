@@ -49,3 +49,4 @@ skip-if = ["true"] # Bug 1880214
 ["test_weather.js"]
 
 ["test_weather_keywords.js"]
+skip-if = ["verify"] # Bug 1880214 - Takes a very long time due to add_tasks_with_rust()
