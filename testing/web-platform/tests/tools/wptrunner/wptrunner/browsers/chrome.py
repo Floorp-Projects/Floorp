@@ -97,6 +97,8 @@ def executor_kwargs(logger, test_type, test_environment, run_info_data,
     chrome_options["args"].append("--use-fake-ui-for-media-stream")
     # Use a fake UI for FedCM to allow testing it.
     chrome_options["args"].append("--use-fake-ui-for-fedcm")
+    # Use a fake UI for digital identity to allow testing it.
+    chrome_options["args"].append("--use-fake-ui-for-digital-identity")
     # Shorten delay for Reporting <https://w3c.github.io/reporting/>.
     chrome_options["args"].append("--short-reporting-delay")
     # Point all .test domains to localhost for Chrome
