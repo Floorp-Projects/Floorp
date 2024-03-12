@@ -40,8 +40,6 @@ support-files = [
 
 ["test_flush.html"]
 
-["test_focus_aria_activedescendant.html"]
-
 ["test_focus_autocomplete.html"]
 
 ["test_focus_autocomplete.xhtml"]
