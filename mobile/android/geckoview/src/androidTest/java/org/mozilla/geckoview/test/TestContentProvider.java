@@ -18,6 +18,7 @@ public class TestContentProvider extends ContentProvider {
   private static final String LOGTAG = "TestContentProvider";
   private static byte[] sTestData;
   private static String sMimeType;
+  private static boolean sAllowNullData = false;
 
   @Override
   public boolean onCreate() {
@@ -62,7 +63,10 @@ public class TestContentProvider extends ContentProvider {
   public ParcelFileDescriptor openFile(final Uri uri, final String mode)
       throws FileNotFoundException {
     if (sTestData == null) {
-      throw new FileNotFoundException("No test data for: " + uri);
+      if (!sAllowNullData) {
+        throw new FileNotFoundException("No test data for: " + uri);
+      }
+      return null;
     }
 
     ParcelFileDescriptor[] pipe = null;
@@ -98,6 +102,19 @@ public class TestContentProvider extends ContentProvider {
    */
   public static void setTestData(final byte[] data, final String mimeType) {
     sTestData = data;
+    sAllowNullData = false;
+    sMimeType = mimeType;
+  }
+
+  /**
+   * Set null that is used from content resolver but don't throw when calling openFile.
+   *
+   * @param data test data
+   * @param mimeType A mime type of test data.
+   */
+  public static void setNullTestData(final String mimeType) {
+    sTestData = null;
+    sAllowNullData = true;
     sMimeType = mimeType;
   }
 }
