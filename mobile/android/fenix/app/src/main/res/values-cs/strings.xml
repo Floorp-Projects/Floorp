@@ -261,6 +261,11 @@
     <!-- Content description for the translate page toolbar button that opens the translations dialog when no translation has occurred. -->
     <string name="browser_toolbar_translate">Přeložit stránku</string>
 
+    <!-- Content description (not visible, for screen readers etc.) for the translate page toolbar button that opens the translations dialog when the page is translated successfully.
+         The first parameter is the name of the language that is displayed in the original page. (For example: English)
+         The second parameter is the name of the language which the page was translated to. (For example: French) -->
+    <string name="browser_toolbar_translated_successfully">Stránka byla přeložena z jazyka %1$s do jazyka %2$s.</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Vybraný jazyk</string>
@@ -338,11 +343,21 @@
     <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Description for learning more about our privacy notice. -->
     <string name="juno_onboarding_privacy_notice_text">Zásady ochrany osobních údajů</string>
-    <!-- Text for the button to set firefox as default browser on the device -->
+    <!-- Description for learning more about our privacy notice. -->
+    <string name="juno_onboarding_privacy_notice_text_2" moz:removedIn="125" tools:ignore="UnusedResources">Další informace naleznete v našich oznámeních o ochraně osobních údajů</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_title_nimbus_2">Rádi vás udržujeme v bezpečí</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="UnusedResources">Zjistěte, proč miliony lidí milují Firefox</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources">Bezpečné prohlížení s více možnostmi</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_3">Náš neziskový prohlížeč pomáhá zabránit společnostem v tajném sledování vašeho prohlížení webu.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources">Více než 100 milionů lidí chrání své soukromí tak, že si volí prohlížeč od neziskové organizace.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources">Známe sledovací prvky? Automaticky zablokováno. Rozšíření? Vyzkoušejte všech 700. PDF? Naše vestavěná čtečka usnadňuje jejich správu.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">Náš neziskový prohlížeč pomáhá zabránit společnostem v tajném sledování vašeho prohlížení webu.\n\nZjistěte více v našich zásadách ochrany osobních údajů.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
@@ -695,9 +710,9 @@
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Záložky</string>
     <!-- Preference for syncing logins -->
-    <string name="preferences_sync_logins">Přihlašovací údaje</string>
+    <string name="preferences_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Přihlašovací údaje</string>
     <!-- Preference for syncing passwords -->
-    <string name="preferences_sync_logins_2" tools:ignore="UnusedResources">Hesla</string>
+    <string name="preferences_sync_logins_2">Hesla</string>
     <!-- Preference for syncing tabs -->
     <string name="preferences_sync_tabs_2">Otevřené panely</string>
     <!-- Preference for signing out -->
@@ -724,9 +739,9 @@
     <string name="default_device_name_2">%1$s na %2$s %3$s</string>
 
     <!-- Preference for syncing credit cards -->
-    <string name="preferences_sync_credit_cards">Platební karty</string>
+    <string name="preferences_sync_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Platební karty</string>
     <!-- Preference for syncing payment methods -->
-    <string name="preferences_sync_credit_cards_2" tools:ignore="UnusedResources">Platební metody</string>
+    <string name="preferences_sync_credit_cards_2">Platební metody</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">Adresy</string>
 
@@ -1681,13 +1696,13 @@
     <string name="add_to_homescreen_description_2">Tuto stránku si můžete snadno přidat na domovskou obrazovku svého zařízení. Budete k ní mít okamžitý přístup a prohlížení bude rychlejší se zážitkem jako v aplikaci.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords">Přihlašovací údaje</string>
+    <string name="preferences_passwords_logins_and_passwords" moz:RemovedIn="125" tools:ignore="UnusedResources">Přihlašovací údaje</string>
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
-    <string name="preferences_passwords_logins_and_passwords_2" tools:ignore="UnusedResources">Hesla</string>
+    <string name="preferences_passwords_logins_and_passwords_2">Hesla</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins">Ukládat přihlašovací údaje</string>
+    <string name="preferences_passwords_save_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Ukládat přihlašovací údaje</string>
     <!-- Preference for managing the saving of logins and passwords in Fenix -->
-    <string name="preferences_passwords_save_logins_2" tools:ignore="UnusedResources">Ukládání hesel</string>
+    <string name="preferences_passwords_save_logins_2">Ukládání hesel</string>
     <!-- Preference option for asking to save passwords in Fenix -->
     <string name="preferences_passwords_save_logins_ask_to_save">Před uložením se zeptat</string>
     <!-- Preference option for never saving passwords in Fenix -->
@@ -1702,47 +1717,47 @@
     <string name="preferences_android_autofill_description">Vyplňování a ukládání uživatelských jmen a hesel v dalších aplikacích na vašem zařízení.</string>
 
     <!-- Preference option for adding a login -->
-    <string name="preferences_logins_add_login">Přidat přihlašovací údaje</string>
+    <string name="preferences_logins_add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Přidat přihlašovací údaje</string>
 
     <!-- Preference option for adding a password -->
-    <string name="preferences_logins_add_login_2" tools:ignore="UnusedResources">Přidat heslo</string>
+    <string name="preferences_logins_add_login_2">Přidat heslo</string>
 
-    <!-- Preference for syncing saved logins in Fenix -->
-    <string name="preferences_passwords_sync_logins">Synchronizovat přihlašovací údaje</string>
     <!-- Preference for syncing saved passwords in Fenix -->
-    <string name="preferences_passwords_sync_logins_2" tools:ignore="UnusedResources">Synchronizovat hesla</string>
+    <string name="preferences_passwords_sync_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Synchronizovat přihlašovací údaje</string>
+    <!-- Preference for syncing saved passwords in Fenix -->
+    <string name="preferences_passwords_sync_logins_2">Synchronizovat hesla</string>
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices">Synchronizovat přihlašovací údaje mezi zařízeními</string>
+    <string name="preferences_passwords_sync_logins_across_devices" moz:RemovedIn="125" tools:ignore="UnusedResources">Synchronizovat přihlašovací údaje mezi zařízeními</string>
     <!-- Preference for syncing saved passwords in Fenix, when not signed in-->
-    <string name="preferences_passwords_sync_logins_across_devices_2" tools:ignore="UnusedResources">Synchronizovat hesla napříč zařízeními</string>
+    <string name="preferences_passwords_sync_logins_across_devices_2">Synchronizovat hesla napříč zařízeními</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins">Uložené přihlašovací údaje</string>
+    <string name="preferences_passwords_saved_logins" moz:RemovedIn="125" tools:ignore="UnusedResources">Uložené přihlašovací údaje</string>
     <!-- Preference to access list of saved passwords -->
-    <string name="preferences_passwords_saved_logins_2" tools:ignore="UnusedResources">Uložená hesla</string>
+    <string name="preferences_passwords_saved_logins_2">Uložená hesla</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text">Uložené nebo synchronizované údaje aplikace %s se zobrazí tady.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_text" moz:RemovedIn="125" tools:ignore="UnusedResources">Uložené nebo synchronizované údaje aplikace %s se zobrazí tady.</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text_2" tools:ignore="UnusedResources">Hesla, která uložíte nebo synchronizujete s aplikací %s, budou uvedena zde. Všechna uložená hesla jsou šifrována.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_text_2">Hesla, která uložíte nebo synchronizujete s aplikací %s, budou uvedena zde. Všechna uložená hesla jsou šifrována.</string>
     <!-- Preference to access list of saved logins -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Zjistit více o službě Sync.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link" moz:RemovedIn="125" tools:ignore="UnusedResources">Zjistit více o službě Sync.</string>
     <!-- Clickable text for opening an external link for more information about Sync. -->
-    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2" tools:ignore="UnusedResources">Další informace o synchronizaci</string>
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2">Další informace o synchronizaci</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
     <string name="preferences_passwords_exceptions">Výjimky</string>
     <!-- Empty description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description_empty">Tady se zobrazí přihlašovací údaje, které se nebudou ukládat.</string>
+    <string name="preferences_passwords_exceptions_description_empty" moz:RemovedIn="125" tools:ignore="UnusedResources">Tady se zobrazí přihlašovací údaje, které se nebudou ukládat.</string>
     <!-- Empty description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
-    <string name="preferences_passwords_exceptions_description_empty_2" tools:ignore="UnusedResources">Aplikace %s nebude nikdy ukládat hesla pro stránky uvedené v tomto seznamu.</string>
+    <string name="preferences_passwords_exceptions_description_empty_2">Aplikace %s nebude nikdy ukládat hesla pro stránky uvedené v tomto seznamu.</string>
     <!-- Description of list of login exceptions that we never save logins for -->
-    <string name="preferences_passwords_exceptions_description">Pro následující servery se nebudou přihlašovací údaje ukládat.</string>
+    <string name="preferences_passwords_exceptions_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Pro následující servery se nebudou přihlašovací údaje ukládat.</string>
     <!-- Description of list of login exceptions that we never save passwords for. Parameter will be replaced by app name. -->
-    <string name="preferences_passwords_exceptions_description_2" tools:ignore="UnusedResources">Aplikace %s nebude nikdy ukládat hesla pro tyto stránky.</string>
+    <string name="preferences_passwords_exceptions_description_2">Aplikace %s nebude nikdy ukládat hesla pro tyto stránky.</string>
     <!-- Text on button to remove all saved login exceptions -->
     <string name="preferences_passwords_exceptions_remove_all">Odebrat všechny výjimky</string>
     <!-- Hint for search box in logins list -->
-    <string name="preferences_passwords_saved_logins_search">Hledat přihlašovací údaje</string>
+    <string name="preferences_passwords_saved_logins_search" moz:RemovedIn="125" tools:ignore="UnusedResources">Hledat přihlašovací údaje</string>
     <!-- Hint for search box in passwords list -->
-    <string name="preferences_passwords_saved_logins_search_2" tools:ignore="UnusedResources">Hledat v heslech</string>
+    <string name="preferences_passwords_saved_logins_search_2">Hledat v heslech</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Server</string>
     <!-- The header for the username for a login -->
@@ -1770,17 +1785,17 @@
     <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
     <string name="saved_login_hide_password">Skrýt heslo</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
-    <string name="logins_biometric_prompt_message">Odemknout pro zobrazení přihlašovacích údajů</string>
+    <string name="logins_biometric_prompt_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Odemknout pro zobrazení přihlašovacích údajů</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
-    <string name="logins_biometric_prompt_message_2" tools:ignore="UnusedResources">Pro zobrazení uložených hesel odemkněte</string>
+    <string name="logins_biometric_prompt_message_2">Pro zobrazení uložených hesel odemkněte</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title">Zabezpečte své přihlašovací údaje a hesla</string>
+    <string name="logins_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Zabezpečte své přihlašovací údaje a hesla</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_title_2" tools:ignore="UnusedResources">Zabezpečte svá uložená hesla</string>
+    <string name="logins_warning_dialog_title_2">Zabezpečte svá uložená hesla</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message">Nastavte si gesto, PIN nebo heslo zámku obrazovky, který ochrání vaše uložené přihlašovací údaje, pokud by se vaše zařízení dostalo do ruky někomu jinému.</string>
+    <string name="logins_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Nastavte si gesto, PIN nebo heslo zámku obrazovky, který ochrání vaše uložené přihlašovací údaje, pokud by se vaše zařízení dostalo do ruky někomu jinému.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message_2" tools:ignore="UnusedResources">Nastavte si gesto, PIN nebo heslo zámku obrazovky, který ochrání vaše uložená hesla, pokud by se vaše zařízení dostalo do ruky někomu jinému.</string>
+    <string name="logins_warning_dialog_message_2">Nastavte si gesto, PIN nebo heslo zámku obrazovky, který ochrání vaše uložená hesla, pokud by se vaše zařízení dostalo do ruky někomu jinému.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Později</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1799,10 +1814,10 @@
     <string name="saved_logins_sort_strategy_last_used">Naposledy použito</string>
 
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Seřadit podle</string>
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Seřadit podle</string>
 
     <!-- Content description (not visible, for screen readers etc.) -->
-    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2" tools:ignore="UnusedResources">Nabídka pro řazení hesel</string>
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2">Nabídka pro řazení hesel</string>
 
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
@@ -1810,43 +1825,43 @@
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">Adresy</string>
     <!-- Preference and title for managing the settings for credit cards -->
-    <string name="preferences_credit_cards">Platební karty</string>
+    <string name="preferences_credit_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Platební karty</string>
     <!-- Preference and title for managing the settings for payment methods -->
-    <string name="preferences_credit_cards_2" tools:ignore="UnusedResources">Platební metody</string>
+    <string name="preferences_credit_cards_2">Platební metody</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards">Ukládat a automaticky vyplňovat karty</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Ukládat a automaticky vyplňovat karty</string>
     <!-- Preference for saving and autofilling credit cards -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_2" tools:ignore="UnusedResources">Uložení a vyplnění platebních metod</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_2">Uložení a vyplnění platebních metod</string>
     <!-- Preference summary for saving and autofilling credit card data -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary">Data jsou šifrována</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Data jsou šifrována</string>
     <!-- Preference summary for saving and autofilling payment method data. Parameter will be replaced by app name. -->
-    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2" tools:ignore="UnusedResources">%s šifruje všechny vaše uložené platební metody</string>
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">%s šifruje všechny vaše uložené platební metody</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
     <string name="preferences_credit_cards_sync_cards_across_devices">Synchronizovat karty napříč zařízeními</string>
     <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
     <string name="preferences_credit_cards_sync_cards">Synchronizovat platební karty</string>
     <!-- Preference option for adding a credit card -->
-    <string name="preferences_credit_cards_add_credit_card">Přidat platební kartu</string>
+    <string name="preferences_credit_cards_add_credit_card" moz:RemovedIn="125" tools:ignore="UnusedResources">Přidat platební kartu</string>
 
     <!-- Preference option for adding a card -->
-    <string name="preferences_credit_cards_add_credit_card_2" tools:ignore="UnusedResources">Přidat kartu</string>
+    <string name="preferences_credit_cards_add_credit_card_2">Přidat kartu</string>
     <!-- Preference option for managing saved credit cards -->
-    <string name="preferences_credit_cards_manage_saved_cards">Správa uložených karet</string>
+    <string name="preferences_credit_cards_manage_saved_cards" moz:RemovedIn="125" tools:ignore="UnusedResources">Správa uložených karet</string>
     <!-- Preference option for managing saved cards -->
-    <string name="preferences_credit_cards_manage_saved_cards_2" tools:ignore="UnusedResources">Spravovat karty</string>
+    <string name="preferences_credit_cards_manage_saved_cards_2">Spravovat karty</string>
     <!-- Preference option for adding an address -->
     <string name="preferences_addresses_add_address">Přidat adresu</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Správa adres</string>
     <!-- Preference for saving and autofilling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses">Ukládat a automaticky vyplňovat adresy</string>
+    <string name="preferences_addresses_save_and_autofill_addresses" moz:RemovedIn="125" tools:ignore="UnusedResources">Ukládat a automaticky vyplňovat adresy</string>
     <!-- Preference for saving and filling addresses -->
-    <string name="preferences_addresses_save_and_autofill_addresses_2" tools:ignore="UnusedResources">Ukládat a vyplňovat adresy</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_2">Ukládat a vyplňovat adresy</string>
     <!-- Preference summary for saving and autofilling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary">Zahrnuje informace jako čísla a e-mailové a doručovací adresy</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Zahrnuje informace jako čísla a e-mailové a doručovací adresy</string>
 
     <!-- Preference summary for saving and filling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary_2" tools:ignore="UnusedResources">Zahrnuje telefonní čísla a e-mailové adresy</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_summary_2">Zahrnuje telefonní čísla a e-mailové adresy</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Přidat kartu</string>
@@ -1867,9 +1882,9 @@
     <!-- The text for the "Delete card" button for deleting a credit card -->
     <string name="credit_cards_delete_card_button">Odstranit kartu</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation">Opravdu chcete tuto platební kartu smazat?</string>
+    <string name="credit_cards_delete_dialog_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Opravdu chcete tuto platební kartu smazat?</string>
     <!-- The text for the confirmation message of "Delete card" dialog -->
-    <string name="credit_cards_delete_dialog_confirmation_2" tools:ignore="UnusedResources">Odstranit kartu?</string>
+    <string name="credit_cards_delete_dialog_confirmation_2">Odstranit kartu?</string>
     <!-- The text for the positive button on "Delete card" dialog -->
     <string name="credit_cards_delete_dialog_button">Smazat</string>
     <!-- The title for the "Save" menu item for saving a credit card -->
@@ -1883,22 +1898,24 @@
     <string name="credit_cards_saved_cards">Uložené karty</string>
 
     <!-- Error message for credit card number validation -->
-    <string name="credit_cards_number_validation_error_message">Zadejte prosím platné číslo platební karty</string>
+    <string name="credit_cards_number_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Zadejte prosím platné číslo platební karty</string>
 
     <!-- Error message for card number validation -->
-    <string name="credit_cards_number_validation_error_message_2" tools:ignore="UnusedResources">Zadejte platné číslo karty</string>
+    <string name="credit_cards_number_validation_error_message_2">Zadejte platné číslo karty</string>
     <!-- Error message for credit card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message">Vyplňte prosím toto pole</string>
+    <string name="credit_cards_name_on_card_validation_error_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Vyplňte prosím toto pole</string>
     <!-- Error message for card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message_2" tools:ignore="UnusedResources">Zadejte jméno</string>
+    <string name="credit_cards_name_on_card_validation_error_message_2">Zadejte jméno</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Odemknout pro zobrazení uložených karet</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title">Zabezpečte své platební karty</string>
+    <string name="credit_cards_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Zabezpečte své platební karty</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_title_2" tools:ignore="UnusedResources">Zabezpečte vaše uložené platební metody</string>
+    <string name="credit_cards_warning_dialog_title_2">Zabezpečte vaše uložené platební metody</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="credit_cards_warning_dialog_message">Nastavte si gesto, PIN nebo heslo zámku obrazovky, který ochrání vaše uložené platební karty, pokud by se vaše zařízení dostalo do ruky někomu jinému.</string>
+    <string name="credit_cards_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Nastavte si gesto, PIN nebo heslo zámku obrazovky, který ochrání vaše uložené platební karty, pokud by se vaše zařízení dostalo do ruky někomu jinému.</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message_3">Nastavením vzoru zámku zařízení, kódu PIN nebo hesla ochráníte uložené platební metody před přístupem, pokud má vaše zařízení někdo jiný.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Nastavit</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1907,10 +1924,10 @@
     <string name="credit_cards_biometric_prompt_message_pin">Odemkněte zařízení</string>
 
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
-    <string name="credit_cards_biometric_prompt_unlock_message">Odemkněte pro použití informací o platební kartě</string>
+    <string name="credit_cards_biometric_prompt_unlock_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Odemkněte pro použití informací o platební kartě</string>
 
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
-    <string name="credit_cards_biometric_prompt_unlock_message_2" tools:ignore="UnusedResources">Odemknout pro použití uložených způsobů platby</string>
+    <string name="credit_cards_biometric_prompt_unlock_message_2">Odemknout pro použití uložených způsobů platby</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Přidat adresu</string>
     <!-- Title of the "Edit address" screen -->
@@ -1918,11 +1935,13 @@
     <!-- Title of the "Manage addresses" screen -->
     <string name="addresses_manage_addresses">Správa adres</string>
     <!-- The header for the first name of an address -->
-    <string name="addresses_first_name">Křestní jméno</string>
+    <string name="addresses_first_name" moz:removedIn="125" tools:ignore="UnusedResources">Křestní jméno</string>
     <!-- The header for the middle name of an address -->
-    <string name="addresses_middle_name">Prostřední jméno</string>
+    <string name="addresses_middle_name" moz:removedIn="125" tools:ignore="UnusedResources">Prostřední jméno</string>
     <!-- The header for the last name of an address -->
-    <string name="addresses_last_name">Příjmení</string>
+    <string name="addresses_last_name" moz:removedIn="125" tools:ignore="UnusedResources">Příjmení</string>
+    <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
+    <string name="addresses_name">Název</string>
     <!-- The header for the street address of an address -->
     <string name="addresses_street_address">Ulice</string>
     <!-- The header for the city of an address -->
@@ -1947,9 +1966,9 @@
     <!-- The text for the "Delete address" button for deleting an address -->
     <string name="addressess_delete_address_button">Smazat adresu</string>
     <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message">Opravdu chcete tuto adresu smazat?</string>
+    <string name="addressess_confirm_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Opravdu chcete tuto adresu smazat?</string>
     <!-- The title for the "Delete address" confirmation dialog -->
-    <string name="addressess_confirm_dialog_message_2" tools:ignore="UnusedResources">Smazat tuto adresu?</string>
+    <string name="addressess_confirm_dialog_message_2">Smazat tuto adresu?</string>
     <!-- The text for the positive button on "Delete address" dialog -->
     <string name="addressess_confirm_dialog_ok_button">Smazat</string>
     <!-- The text for the negative button on "Delete address" dialog -->
@@ -2049,45 +2068,49 @@
     <!-- Login overflow menu edit button -->
     <string name="login_menu_edit_button">Upravit</string>
     <!-- Message in delete confirmation dialog for logins -->
-    <string name="login_deletion_confirmation">Opravdu chcete tyto přihlašovací údaje odstranit?</string>
+    <string name="login_deletion_confirmation" moz:RemovedIn="125" tools:ignore="UnusedResources">Opravdu chcete tyto přihlašovací údaje odstranit?</string>
     <!-- Message in delete confirmation dialog for password -->
-    <string name="login_deletion_confirmation_2" tools:ignore="UnusedResources">Opravdu chcete smazat toto heslo?</string>
+    <string name="login_deletion_confirmation_2">Opravdu chcete smazat toto heslo?</string>
     <!-- Positive action of a dialog asking to delete  -->
     <string name="dialog_delete_positive">Odstranit</string>
     <!-- Negative action of a dialog asking to delete login -->
     <string name="dialog_delete_negative">Zrušit</string>
     <!--  The saved login options menu description. -->
-    <string name="login_options_menu">Možnosti přihlášení</string>
+    <string name="login_options_menu" moz:RemovedIn="125" tools:ignore="UnusedResources">Možnosti přihlášení</string>
     <!--  The saved password options menu description. -->
-    <string name="login_options_menu_2" tools:ignore="UnusedResources">Možnosti hesel</string>
+    <string name="login_options_menu_2">Možnosti hesel</string>
     <!--  The editable text field for a login's web address. -->
-    <string name="saved_login_hostname_description">Textové pole pro webovou adresu pro přihlašovací údaje.</string>
+    <string name="saved_login_hostname_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Textové pole pro webovou adresu pro přihlašovací údaje.</string>
+    <!--  The editable text field for a website address. -->
+    <string name="saved_login_hostname_description_3">Upravitelné textové pole pro adresu webové stránky.</string>
     <!--  The editable text field for a login's username. -->
-    <string name="saved_login_username_description">Textové pole pro uživatelské jméno z přihlašovacích údajů.</string>
+    <string name="saved_login_username_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Textové pole pro uživatelské jméno z přihlašovacích údajů.</string>
+    <!--  The editable text field for a username. -->
+    <string name="saved_login_username_description_3">Upravitelné textové pole pro uživatelské jméno.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description">Textové pole pro heslo z přihlašovacích údajů.</string>
+    <string name="saved_login_password_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Textové pole pro heslo z přihlašovacích údajů.</string>
     <!--  The editable text field for a login's password. -->
-    <string name="saved_login_password_description_2" tools:ignore="UnusedResources">Upravitelné textové pole pro heslo.</string>
+    <string name="saved_login_password_description_2">Upravitelné textové pole pro heslo.</string>
     <!--  The button description to save changes to an edited login. -->
-    <string name="save_changes_to_login">Uložit změny přihlašovacích údajů.</string>
+    <string name="save_changes_to_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Uložit změny přihlašovacích údajů.</string>
     <!--  The button description to save changes to an edited password. -->
-    <string name="save_changes_to_login_2" tools:ignore="UnusedResources">Uložit změny.</string>
+    <string name="save_changes_to_login_2">Uložit změny.</string>
     <!--  The page title for editing a saved login. -->
-    <string name="edit">Upravit</string>
+    <string name="edit" moz:RemovedIn="125" tools:ignore="UnusedResources">Upravit</string>
     <!--  The page title for editing a saved password. -->
-    <string name="edit_2" tools:ignore="UnusedResources">Upravit heslo</string>
+    <string name="edit_2">Upravit heslo</string>
     <!--  The page title for adding new login. -->
-    <string name="add_login">Přidat nové přihlašovací údaje</string>
+    <string name="add_login" moz:RemovedIn="125" tools:ignore="UnusedResources">Přidat nové přihlašovací údaje</string>
     <!--  The page title for adding new password. -->
-    <string name="add_login_2" tools:ignore="UnusedResources">Přidat heslo</string>
+    <string name="add_login_2">Přidat heslo</string>
     <!--  The error message in add/edit login view when password field is blank. -->
-    <string name="saved_login_password_required">Je vyžadováno heslo</string>
+    <string name="saved_login_password_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Je vyžadováno heslo</string>
     <!--  Error text displayed underneath the password field when it is in an error case. -->
-    <string name="saved_login_password_required_2" tools:ignore="UnusedResources">Zadejte heslo</string>
+    <string name="saved_login_password_required_2">Zadejte heslo</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required">Uživatelské je povinné</string>
+    <string name="saved_login_username_required" moz:RemovedIn="125" tools:ignore="UnusedResources">Uživatelské je povinné</string>
     <!--  The error message in add login view when username field is blank. -->
-    <string name="saved_login_username_required_2" tools:ignore="UnusedResources">Zadejte uživatelské jméno</string>
+    <string name="saved_login_username_required_2">Zadejte uživatelské jméno</string>
     <!--  The error message in add login view when hostname field is blank. -->
     <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Adresa serveru je povinná</string>
     <!--  The error message in add login view when hostname field is blank. -->
@@ -2201,7 +2224,7 @@
     <string name="radio_preference_info_content_description">Pro více informací klepněte zde</string>
 
     <!-- Content description for the action bar "up" button -->
-    <string name="action_bar_up_description">Přejít nahoru</string>
+    <string name="action_bar_up_description" moz:removedIn="124" tools:ignore="UnusedResources">Přejít nahoru</string>
 
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">Zavřít</string>
@@ -2241,8 +2264,6 @@
     <string name="review_quality_check_grade_title">Jak spolehlivé jsou tyto recenze?</string>
     <!-- Title for when the rating has been updated by the review checker -->
     <string name="review_quality_check_adjusted_rating_title">Upravené hodnocení</string>
-    <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
-    <string name="review_quality_check_adjusted_rating_description" moz:RemovedIn="122" tools:ignore="UnusedResources">Nespolehlivé recenze odebrány</string>
     <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
     <string name="review_quality_check_adjusted_rating_description_2">Na základě spolehlivých recenzí</string>
     <!-- Title for list of highlights from a product's review emphasizing a product's important traits. -->
@@ -2299,10 +2320,6 @@
     <string name="review_quality_check_product_availability_warning_body">Pokud zjistíte, že je tento produkt opět skladem, nahlaste to a my se pokusíme recenze zkontrolovat.</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action_2">Oznámit, že produkt je skladem</string>
-    <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
-    <string name="review_quality_check_reanalysis_in_progress_warning_title" moz:RemovedIn="122">Kontroluje se kvalita recenzí</string>
-    <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
-    <string name="review_quality_check_analysis_in_progress_warning_title" moz:RemovedIn="122">Kontroluje se kvalita recenzí</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. The parameter is the percentage progress (0-100%) of the analysis process (e.g. 56%). -->
     <string name="review_quality_check_analysis_in_progress_warning_title_2">Kontroluje se kvalita recenzí (%s)</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
@@ -2348,13 +2365,19 @@
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Zjistit více</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_contextual_onboarding_caption">Výběrem možnosti &quot;Ano, vyzkoušet&quot; souhlasíte s %1$s od Mozilly %2$s a %3$s.</string>
+    <string name="review_quality_check_contextual_onboarding_caption" moz:RemovedIn="123" tools:ignore="UnusedResources">Výběrem možnosti &quot;Ano, vyzkoušet&quot; souhlasíte s %1$s od Mozilly %2$s a %3$s.</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
     <string name="review_quality_check_contextual_onboarding_caption_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Výběrem možnosti „Ano, vyzkoušet“ souhlasíte s následujícím dokumentem od %1$s:</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
+    <string name="review_quality_check_contextual_onboarding_caption_3" moz:RemovedIn="124" tools:ignore="UnusedResources">Výběrem možnosti “Ano, vyzkoušet” souhlasíte s %2$s prohlížeče %1$s a %4$s společnosti %3$s.</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
+    <string name="review_quality_check_contextual_onboarding_caption_4">Výběrem možnosti “Ano, vyzkoušet” souhlasíte s %2$s prohlížeče %1$s a %4$s společnosti %3$s.</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy">zásady ochrany osobních údajů</string>
+    <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="123" tools:ignore="UnusedResources">zásady ochrany osobních údajů</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Zásady ochrany soukromí</string>
+    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy notice. -->
+    <string name="review_quality_check_contextual_onboarding_privacy_policy_3">oznámení o ochraně osobních údajů</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
     <string name="review_quality_check_contextual_onboarding_terms_use">zásady používání</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
@@ -2425,6 +2448,10 @@
     <!-- Translation request dialog -->
     <!-- Title for the translation dialog that allows a user to translate the webpage. -->
     <string name="translations_bottom_sheet_title">Přeložit tuto stránku?</string>
+    <!-- Title for the translation dialog after a translation was completed successfully.
+    The first parameter is the name of the language that the page was translated from, for example, "French".
+    The second parameter is the name of the language that the page was translated to, for example, "English". -->
+    <string name="translations_bottom_sheet_title_translation_completed">Stránka byla přeložena z jazyka %1$s do jazyka %2$s</string>
     <!-- Title for the translation dialog that allows a user to translate the webpage when a user uses the translation feature the first time. The first parameter is the name of the application, for example, "Fenix". -->
     <string name="translations_bottom_sheet_title_first_time">Vyzkoušejte soukromé překlady v aplikaci %1$s</string>
     <!-- Additional information on the translation dialog that appears when a user uses the translation feature the first time. The first parameter is clickable text with a link, for example, "Learn more". -->
@@ -2437,6 +2464,8 @@
     <string name="translations_bottom_sheet_translate_to">Překlad do</string>
     <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button">Teď ne</string>
+    <!-- Button text on the translations dialog to restore the translated website back to the original untranslated version. -->
+    <string name="translations_bottom_sheet_negative_button_restore">Zobrazit původní stránku</string>
     <!-- Button text on the translations dialog when a translation error appears, used to dismiss the dialog and return to the browser. -->
     <string name="translations_bottom_sheet_negative_button_error">Hotovo</string>
     <!-- Button text on the translations dialog to begin a translation of the website. -->
@@ -2457,6 +2486,16 @@
     <string name="translation_error_language_not_supported_warning_text">Je nám líto, ale jazyk %1$s zatím není podporován.</string>
     <!-- Button text on the warning card when a language is not supported. The link will take the user to a page to a support page about translations. -->
     <string name="translation_error_language_not_supported_learn_more">Zjistit více</string>
+
+
+    <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
+    <string name="translation_in_progress_snackbar">Probíhá překlad…</string>
+    <!-- Title for the data saving mode warning dialog used in the translation request dialog.
+    This dialog will be presented when the user attempts to perform
+    a translation without the necessary language files downloaded first when Android's data saver mode is enabled and the user is not using WiFi.
+    The first parameter is the size in kilobytes or megabytes of the language file. -->
+    <string name="translations_download_language_file_dialog_title">Stáhnout jazyk v režimu úspory dat (%1$s)?</string>
+
 
     <!-- Translations options dialog -->
     <!-- Title of the translation options dialog that allows a user to set their translation options for the site the user is currently on. -->

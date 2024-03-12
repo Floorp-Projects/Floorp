@@ -84,7 +84,11 @@
     <string name="share_dialog_title">Sdílet přes</string>
 
     <string name="notification_erase_title_android_14">Vymazat historii prohlížení?</string>
-    <string name="notification_erase_text_android_14">Klepnutím na toto oznámení nebo jeho smazáním bezpečně vymažete svou historii prohlížení.</string>
+    <string name="notification_erase_text_android_14" moz:RemovedIn="124" tools:ignore="UnusedResources">Klepnutím na toto oznámení nebo jeho smazáním bezpečně vymažete svou historii prohlížení.</string>
+
+    <!-- Text shown in the notification description that pops up to remind the user that a browsing session is active
+    for Android 14+. -->
+    <string name="notification_erase_text_android_14_1">Klepnutím nebo přejetím po tomto oznámení bezpečně vymažete historii procházení.</string>
 
     <string name="notification_erase_text">Vymazat historii prohlížení</string>
 

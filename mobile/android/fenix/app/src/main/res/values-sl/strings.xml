@@ -255,6 +255,11 @@
     <!-- Content description for the translate page toolbar button that opens the translations dialog when no translation has occurred. -->
     <string name="browser_toolbar_translate">Prevedi stran</string>
 
+    <!-- Content description (not visible, for screen readers etc.) for the translate page toolbar button that opens the translations dialog when the page is translated successfully.
+         The first parameter is the name of the language that is displayed in the original page. (For example: English)
+         The second parameter is the name of the language which the page was translated to. (For example: French) -->
+    <string name="browser_toolbar_translated_successfully">Stran prevedena iz jezika %1$s v jezik %2$s.</string>
+
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Izbrani jezik</string>
@@ -1772,6 +1777,8 @@
     <string name="saved_login_hide_password">Skrij geslo</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
     <string name="logins_biometric_prompt_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Odklenite za ogled shranjenih prijav</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their passwords -->
+    <string name="logins_biometric_prompt_message_2">Odklenite za ogled shranjenih gesel</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Zavarujte svoje prijave in gesla</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
@@ -1779,7 +1786,7 @@
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Nastavite vzorec za zaklepanje naprave, PIN ali geslo za zaščito pred dostopom do shranjenih prijav in gesel, če vašo napravo uporablja še kdo.</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
-    <string name="logins_warning_dialog_message_2">Nastavite vzorec za zaklepanje naprave, PIN ali geslo za zaščito pred dostopom do shranjenih gesel, če vašo napravo uporablja še kdo.</string>
+    <string name="logins_warning_dialog_message_2">Nastavite vzorec za zaklepanje naprave, PIN ali geslo, da preprečite dostop do shranjenih gesel, če vašo napravo uporabi kdo drug.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Pozneje</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1890,8 +1897,12 @@
     <string name="credit_cards_biometric_prompt_message">Odklenite za ogled shranjenih kartic</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_title" moz:RemovedIn="125" tools:ignore="UnusedResources">Zavarujte svoje kreditne kartice</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title_2">Zavarujte shranjena plačilna sredstva</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Nastavite vzorec za zaklepanje naprave, PIN ali geslo za zaščito pred dostopom do kreditnih kartic, če vašo napravo uporablja še kdo.</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message_3">Nastavite vzorec za zaklepanje naprave, PIN ali geslo, da preprečite dostop do plačilnih sredstev, če vašo napravo uporabi kdo drug.</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
     <string name="credit_cards_warning_dialog_set_up_now">Nastavi zdaj</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -1902,6 +1913,8 @@
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Odklenite za uporabo shranjenih podatkov o kreditnih karticah</string>
 
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
+    <string name="credit_cards_biometric_prompt_unlock_message_2">Odklenite za ogled shranjenih plačilnih sredstev</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Dodaj naslov</string>
     <!-- Title of the "Edit address" screen -->
