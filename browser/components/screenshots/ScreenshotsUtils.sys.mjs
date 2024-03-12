@@ -895,6 +895,8 @@ export var ScreenshotsUtils = {
     canvas.width = region.width * devicePixelRatio;
     canvas.height = region.height * devicePixelRatio;
 
+    const snapshotSize = Math.floor(MAX_SNAPSHOT_DIMENSION * devicePixelRatio);
+
     for (
       let startLeft = region.left;
       startLeft < region.right;
@@ -921,10 +923,18 @@ export var ScreenshotsUtils = {
           "rgb(255,255,255)"
         );
 
+        // The `left` and `top` need to be a multiple of the `snapshotSize` to
+        // prevent gaps/lines from appearing in the screenshot.
+        // If devicePixelRatio is 0.3, snapshotSize would be 307 after flooring
+        // from 307.2. Therefore every fifth snapshot would have a start of
+        // 307.2 * 5 or 1536 which is not a multiple of 307 and would cause a
+        // gap/line in the snapshot.
+        let left = Math.floor((startLeft - region.left) * devicePixelRatio);
+        let top = Math.floor((startTop - region.top) * devicePixelRatio);
         context.drawImage(
           snapshot,
-          Math.floor((startLeft - region.left) * devicePixelRatio),
-          Math.floor((startTop - region.top) * devicePixelRatio),
+          left - (left % snapshotSize),
+          top - (top % snapshotSize),
           Math.floor(width * devicePixelRatio),
           Math.floor(height * devicePixelRatio)
         );
