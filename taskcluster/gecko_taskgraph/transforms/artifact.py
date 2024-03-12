@@ -85,6 +85,8 @@ def set_artifact_expiration(config, jobs):
                     art_dict = manifest["macos"]
                 elif plat.startswith("android"):
                     art_dict = manifest["android"]
+                elif plat.startswith("ios"):
+                    art_dict = manifest["ios"]
                 else:
                     print(
                         f'The platform name "{plat}" didn\'t start with',

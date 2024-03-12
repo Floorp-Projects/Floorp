@@ -18,3 +18,7 @@ android:
     target.crashreporter-symbols-full.tar.zst: shortest
     sccache.log: shortest
     sccache-stats.json: shortest
+
+ios:
+    sccache.log: shortest
+    sccache-stats.json: shortest
