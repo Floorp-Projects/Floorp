@@ -858,24 +858,29 @@ function onDragEngineStart(event) {
 
 class EngineStore {
   _engines = [];
-  _defaultEngines = [];
+  /**
+   * A list of application provided engines used when restoring the list of
+   * engines to the default set and order.
+   *
+   * @type {nsISearchEngine[]}
+   */
+  #appProvidedEngines = [];
 
   async init() {
-    await Promise.all([
-      Services.search.getVisibleEngines(),
-      Services.search.getAppProvidedEngines(),
-    ]).then(([visibleEngines, defaultEngines]) => {
-      for (let engine of visibleEngines) {
-        this.addEngine(engine);
-        gEngineView.rowCountChanged(gEngineView.lastEngineIndex, 1);
-      }
-      this._defaultEngines = defaultEngines.map(this._cloneEngine, this);
-      gSearchPane.buildDefaultEngineDropDowns();
+    let visibleEngines = await Services.search.getVisibleEngines();
+    for (let engine of visibleEngines) {
+      this.addEngine(engine);
+      gEngineView.rowCountChanged(gEngineView.lastEngineIndex, 1);
+    }
 
-      // check if we need to disable the restore defaults button
-      var someHidden = this._defaultEngines.some(e => e.hidden);
-      gSearchPane.showRestoreDefaults(someHidden);
-    });
+    let appProvidedEngines = await Services.search.getAppProvidedEngines();
+    this.#appProvidedEngines = appProvidedEngines.map(this._cloneEngine, this);
+
+    gSearchPane.buildDefaultEngineDropDowns();
+
+    // check if we need to disable the restore defaults button
+    var someHidden = this.#appProvidedEngines.some(e => e.hidden);
+    gSearchPane.showRestoreDefaults(someHidden);
   }
 
   get engines() {
@@ -966,8 +971,8 @@ class EngineStore {
   async restoreDefaultEngines() {
     var added = 0;
 
-    for (var i = 0; i < this._defaultEngines.length; ++i) {
-      var e = this._defaultEngines[i];
+    for (var i = 0; i < this.#appProvidedEngines.length; ++i) {
+      var e = this.#appProvidedEngines[i];
 
       // If the engine is already in the list, just move it.
       if (this._engines.some(this._isSameEngine, e)) {
