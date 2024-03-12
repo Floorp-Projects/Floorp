@@ -20,6 +20,8 @@ add_setup(async function setUpQuickSuggestXpcshellTest() {
   UrlbarPrefs._testSkipTelemetryEnvironmentInit = true;
 });
 
+let gAddTasksWithRustSetup;
+
 /**
  * Adds two tasks: One with the Rust backend disabled and one with it enabled.
  * The names of the task functions will be the name of the passed-in task
@@ -41,6 +43,12 @@ function add_tasks_with_rust(...args) {
       info("add_tasks_with_rust: Forcing sync");
       await QuickSuggestTestUtils.forceSync();
       info("add_tasks_with_rust: Done forcing sync");
+
+      if (gAddTasksWithRustSetup) {
+        info("add_tasks_with_rust: Calling setup function");
+        await gAddTasksWithRustSetup();
+        info("add_tasks_with_rust: Done calling setup function");
+      }
 
       let rv;
       try {
@@ -86,6 +94,22 @@ function add_tasks_with_rust(...args) {
     addTaskArgs[taskFnIndex] = newTaskFn;
     add_task(...addTaskArgs);
   }
+}
+
+/**
+ * Registers a setup function that `add_tasks_with_rust()` will await before
+ * calling each of your original tasks. Call this at most once in your test file
+ * (i.e., in `add_setup()`). This is useful when enabling/disabling Rust has
+ * side effects related to your particular test that need to be handled or
+ * awaited for each of your tasks. On the other hand, if only one or two of your
+ * tasks need special setup, do it directly in those tasks instead of using
+ * this.
+ *
+ * @param {Function} setupFn
+ *   A function that will be awaited before your original tasks are called.
+ */
+function registerAddTasksWithRustSetup(setupFn) {
+  gAddTasksWithRustSetup = setupFn;
 }
 
 /**

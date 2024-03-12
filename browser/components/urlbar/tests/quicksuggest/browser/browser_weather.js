@@ -11,6 +11,11 @@ ChromeUtils.defineESModuleGetters(this, {
   UrlbarProviderWeather: "resource:///modules/UrlbarProviderWeather.sys.mjs",
 });
 
+// This test takes a while and can time out in verify mode. Each task is run
+// twice, once with Rust enabled and once with it disabled. Once we remove the
+// JS backend this should improve a lot, but for now request a longer timeout.
+requestLongerTimeout(5);
+
 add_setup(async function () {
   await QuickSuggestTestUtils.ensureQuickSuggestInit({
     remoteSettingsRecords: [
@@ -21,6 +26,17 @@ add_setup(async function () {
     ],
   });
   await MerinoTestUtils.initWeather();
+
+  // When `add_tasks_with_rust()` disables the Rust backend and forces sync, the
+  // JS backend will sync `Weather` with remote settings. Since keywords are
+  // present in remote settings at that point (we added them above), `Weather`
+  // will then start fetching. The fetch may or may not be done before our test
+  // task starts. To make sure it's done, start another fetch and wait for all
+  // fetches to finish.
+  registerAddTasksWithRustSetup(async () => {
+    QuickSuggest.weather._test_fetch();
+    await QuickSuggest.weather.waitForFetches();
+  });
 });
 
 // Basic checks of the row DOM.
@@ -462,11 +478,21 @@ add_tasks_with_rust(async function simpleUI() {
       resultIndex
     );
     assertIsWeatherResult(details.result, true);
-    let { row } = details.element;
 
+    let { row } = details.element;
+    let summary = row.querySelector(".urlbarView-dynamic-weather-summaryText");
+
+    // `getViewUpdate()` is allowed to be async and `UrlbarView` awaits it even
+    // though the `Weather` implementation is not async. That means the summary
+    // text content will be updated asyncly, so we need to wait for it.
+    await TestUtils.waitForCondition(
+      () => summary.textContent == expectedSummary,
+      "Waiting for the row's summary text to be updated"
+    );
     Assert.equal(
-      row.querySelector(".urlbarView-dynamic-weather-summaryText").textContent,
-      expectedSummary
+      summary.textContent,
+      expectedSummary,
+      "The summary text should be correct"
     );
 
     await UrlbarTestUtils.promisePopupClose(window);
