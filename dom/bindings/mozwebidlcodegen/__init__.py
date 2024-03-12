@@ -356,7 +356,12 @@ class WebIDLCodegenManager(LoggingMixin):
 
         example_paths = self._example_paths(interface)
         for path in example_paths:
-            print("Generating {}".format(path))
+            self.log(
+                logging.INFO,
+                "webidl_generate_example_files",
+                {"filename": path},
+                "Generating WebIDL example files derived from {filename}",
+            )
 
         return self._maybe_write_codegen(root, *example_paths)
 
