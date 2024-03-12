@@ -6962,7 +6962,7 @@ class IDLExtendedAttribute(IDLObject):
 
 
 class Tokenizer(object):
-    tokens = ["INTEGER", "FLOATLITERAL", "IDENTIFIER", "STRING", "WHITESPACE", "OTHER"]
+    tokens = ["INTEGER", "FLOATLITERAL", "IDENTIFIER", "STRING", "COMMENTS", "OTHER"]
 
     def t_FLOATLITERAL(self, t):
         r"(-?(([0-9]+\.[0-9]*|[0-9]*\.[0-9]+)([Ee][+-]?[0-9]+)?|[0-9]+[Ee][+-]?[0-9]+|Infinity))|NaN"
@@ -6998,17 +6998,19 @@ class Tokenizer(object):
         t.value = t.value[1:-1]
         return t
 
-    def t_WHITESPACE(self, t):
-        r"[\t\n\r ]+|[\t\n\r ]*((//[^\n]*|/\*.*?\*/)[\t\n\r ]*)+"
+    t_ignore = "\t\n\r "
+
+    def t_COMMENTS(self, t):
+        r"//[^\n]*|/\*(?s:.)*?\*/"
         pass
 
     def t_ELLIPSIS(self, t):
         r"\.\.\."
-        t.type = self.keywords.get(t.value)
+        t.type = "ELLIPSIS"
         return t
 
     def t_OTHER(self, t):
-        r"[^\t\n\r 0-9A-Z_a-z]"
+        r"[^0-9A-Z_a-z]"
         t.type = self.keywords.get(t.value, "OTHER")
         return t
 
@@ -7105,14 +7107,14 @@ class Tokenizer(object):
         if lexer:
             self.lexer = lexer
         else:
-            self.lexer = lex.lex(object=self, reflags=re.DOTALL)
+            self.lexer = lex.lex(object=self)
 
 
 class SqueakyCleanLogger(object):
     errorWhitelist = [
-        # Web IDL defines the WHITESPACE token, but doesn't actually
+        # Web IDL defines the COMMENTS token, but doesn't actually
         # use it ... so far.
-        "Token 'WHITESPACE' defined, but not used",
+        "Token 'COMMENTS' defined, but not used",
         # And that means we have an unused token
         "There is 1 unused token",
         # Web IDL defines a OtherOrComma rule that's only used in
