@@ -11,6 +11,7 @@
 #include "mozilla/Assertions.h"  // MOZ_ASSERT, MOZ_ASSERT_IF, MOZ_RELEASE_ASSERT, MOZ_CRASH
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Compression.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/IntegerPrintfMacros.h"
@@ -212,6 +213,8 @@
 #include "vm/JSObject-inl.h"
 #include "vm/Realm-inl.h"
 #include "vm/Stack-inl.h"
+
+#undef compress
 
 using namespace js;
 using namespace js::cli;
@@ -8993,6 +8996,121 @@ static bool IsValidJSON(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+// Quick file format for a LZ4 compressed file
+static constexpr uint32_t LZ4MagicHeader = -1;
+// A magic word and a length field
+static constexpr size_t LZ4HeaderSize = sizeof(uint32_t) * 2;
+static constexpr size_t LZ4MaxSize = UINT32_MAX;
+
+static bool CompressLZ4(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  RootedObject callee(cx, &args.callee());
+
+  if (!args.get(0).isObject() ||
+      !args.get(0).toObject().is<ArrayBufferObject>()) {
+    ReportUsageErrorASCII(cx, callee, "First argument must be an ArrayBuffer");
+    return false;
+  }
+
+  JS::Rooted<ArrayBufferObject*> bytes(
+      cx, &args.get(0).toObject().as<ArrayBufferObject>());
+  size_t byteLength = bytes->byteLength();
+  if (byteLength > LZ4MaxSize) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  // Create a buffer big enough for the header and the max amount of compressed
+  // bytes.
+  size_t outputCapacity =
+      LZ4HeaderSize + mozilla::Compression::LZ4::maxCompressedSize(byteLength);
+
+  mozilla::UniquePtr<void, JS::FreePolicy> output(js_malloc(outputCapacity));
+  if (!output) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  // Write the magic header word and decompressed size in bytes.
+  ((uint32_t*)(output.get()))[0] = LZ4MagicHeader;
+  ((uint32_t*)(output.get()))[1] = byteLength;
+
+  // Compress the bytes into the output
+  char* compressedBytesStart = ((char*)output.get()) + LZ4HeaderSize;
+  size_t compressedBytesLength = mozilla::Compression::LZ4::compress(
+      (const char*)bytes->dataPointer(), byteLength, compressedBytesStart);
+  size_t outputLength = compressedBytesLength + LZ4HeaderSize;
+
+  // Create an ArrayBuffer wrapping the compressed bytes
+  JSObject* outputArrayBuffer =
+      NewArrayBufferWithContents(cx, outputLength, std::move(output));
+  if (!outputArrayBuffer) {
+    return false;
+  }
+
+  args.rval().setObject(*outputArrayBuffer);
+  return true;
+}
+
+static bool DecompressLZ4(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  RootedObject callee(cx, &args.callee());
+
+  if (!args.get(0).isObject() ||
+      !args.get(0).toObject().is<ArrayBufferObject>()) {
+    ReportUsageErrorASCII(cx, callee, "First argument must be an ArrayBuffer");
+    return false;
+  }
+
+  JS::Rooted<ArrayBufferObject*> bytes(
+      cx, &args.get(0).toObject().as<ArrayBufferObject>());
+  size_t byteLength = bytes->byteLength();
+  if (byteLength < LZ4HeaderSize) {
+    JS_ReportErrorASCII(cx, "Invalid LZ4 buffer");
+    return false;
+  }
+
+  // Check the magic header and get the decompressed byte length.
+  uint32_t magicHeader = ((uint32_t*)(bytes->dataPointer()))[0];
+  uint32_t decompressedBytesLength = ((uint32_t*)(bytes->dataPointer()))[1];
+  if (magicHeader != LZ4MagicHeader) {
+    JS_ReportErrorASCII(cx, "Invalid magic header");
+    return false;
+  }
+
+  // Allocate a buffer to store the decompressed bytes.
+  mozilla::UniquePtr<void, JS::FreePolicy> decompressedBytes(
+      js_malloc(decompressedBytesLength));
+  if (!decompressedBytes) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  // Decompress the bytes into the output
+  const char* compressedBytesStart =
+      ((const char*)bytes->dataPointer()) + LZ4HeaderSize;
+  size_t compressedBytesLength = byteLength - LZ4HeaderSize;
+  size_t actualDecompressedBytesLength = 0;
+  if (!mozilla::Compression::LZ4::decompress(
+          compressedBytesStart, compressedBytesLength,
+          (char*)decompressedBytes.get(), decompressedBytesLength,
+          &actualDecompressedBytesLength) ||
+      actualDecompressedBytesLength != decompressedBytesLength) {
+    JS_ReportErrorASCII(cx, "Invalid LZ4 buffer");
+    return false;
+  }
+
+  // Create an ArrayBuffer wrapping the decompressed bytes
+  JSObject* outputArrayBuffer = NewArrayBufferWithContents(
+      cx, decompressedBytesLength, std::move(decompressedBytes));
+  if (!outputArrayBuffer) {
+    return false;
+  }
+
+  args.rval().setObject(*outputArrayBuffer);
+  return true;
+}
+
 // clang-format off
 static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("options", Options, 0, 0,
@@ -9663,6 +9781,14 @@ JS_FN_HELP("createUserArrayBuffer", CreateUserArrayBuffer, 1, 0,
     JS_FN_HELP("isValidJSON", IsValidJSON, 1, 0,
 "isValidJSON(source)",
 " Returns true if the given source is valid JSON."),
+
+    JS_FN_HELP("compressLZ4", CompressLZ4, 1, 0,
+"compressLZ4(bytes)",
+" Return a compressed copy of bytes using LZ4."),
+
+    JS_FN_HELP("decompressLZ4", DecompressLZ4, 1, 0,
+"decompressLZ4(bytes)",
+" Return a decompressed copy of bytes using LZ4."),
 
     JS_FS_HELP_END
 };

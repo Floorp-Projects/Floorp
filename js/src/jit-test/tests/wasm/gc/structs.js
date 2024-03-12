@@ -665,46 +665,6 @@ assertErrorMessage(() => new WebAssembly.Module(bad),
     let exports = wasmEvalText(txt).exports;
 }
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// Checks for requests to create structs with more than MaxStructFields, where
-// MaxStructFields == 1000.
-
-function structNewOfManyFields(numFields) {
-    let defString = "(type $s (struct ";
-    for (i = 0; i < numFields; i++) {
-        defString += "(field i32) ";
-    }
-    defString += "))";
-
-    let insnString = "(struct.new $s ";
-    for (i = 0; i < numFields; i++) {
-        insnString += "(i32.const 1337) ";
-    }
-    insnString += ")";
-
-    return "(module " +
-           defString +
-           " (func (export \"create\") (result eqref) " +
-           insnString +
-           "))";
-}
-
-{
-    // 10_000 fields is allowable
-    let exports = wasmEvalText(structNewOfManyFields(10000)).exports;
-    let s = exports.create();
-    assertEq(s, s);
-}
-{
-    // but 10_001 is not
-    assertErrorMessage(() => wasmEvalText(structNewOfManyFields(10001)),
-                       WebAssembly.CompileError,
-                       /too many fields in struct/);
-}
-
-// FIXME: also check struct.new_default, once it is available in both compilers.
-
 // Exercise stack maps and GC
 {
   // Zeal will cause us to allocate structs via instance call, requiring live registers
