@@ -1,0 +1,17 @@
+namespace mozilla {
+namespace _ipdltest {
+
+struct DummyStruct {
+  int x;
+};
+
+[ChildProc=any, ChildImpl=virtual, ParentImpl=virtual]
+protocol PTestUniquePtrIPC {
+child:
+  async TestMessage(UniquePtr<int> a1, UniquePtr<DummyStruct> a2,
+                    DummyStruct a3, UniquePtr<int> a4);
+  async TestSendReference(UniquePtr<DummyStruct> a);
+};
+
+}  // namespace _ipdltest
+}  // namespace mozilla
