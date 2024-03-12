@@ -411,6 +411,7 @@ class DCSurfaceVideo : public DCSurface {
   const UINT mSwapChainBufferCount;
   bool mUseVpAutoHDR = false;
   bool mVpAutoHDRFailed = false;
+  bool mVpSuperResolutionFailed = false;
 };
 
 /**

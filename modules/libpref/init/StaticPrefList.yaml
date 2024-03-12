@@ -6848,10 +6848,8 @@
 #endif
   mirror: once
 
-# Enable NVIDIA RTX Video Super Resolution for video overlay on Windows
-# Note: This is also a setting in NVIDIA's driver settings, so once this is
-# stable, it should default to true
-- name: gfx.webrender.super-resolution.nvidia
+# Enable VideoProcessor Super Resolution for video overlay
+- name: gfx.webrender.overlay-vp-super-resolution
   type: bool
   value: false
   mirror: once
