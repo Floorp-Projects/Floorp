@@ -9116,13 +9116,8 @@ class Parser(Tokenizer):
             production.validate()
 
         # De-duplicate self._productions, without modifying its order.
-        seen = set()
-        result = []
-        for p in self._productions:
-            if p not in seen:
-                seen.add(p)
-                result.append(p)
-        return result
+        result = dict.fromkeys(self._productions)
+        return list(result.keys())
 
     def reset(self):
         return Parser(lexer=self.lexer)
