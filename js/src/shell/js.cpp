@@ -1528,7 +1528,6 @@ static bool BoundToAsyncStack(JSContext* cx, unsigned argc, Value* vp) {
   }
   RootedString causeString(cx, ToString(cx, v));
   if (!causeString) {
-    MOZ_ASSERT(cx->isExceptionPending());
     return false;
   }
 
