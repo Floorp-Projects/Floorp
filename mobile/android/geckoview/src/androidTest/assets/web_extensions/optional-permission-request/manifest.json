@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "optional-permission-request",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "optional-permission-request@example.com"
+    }
+  },
+  "version": "1.0",
+  "description": "Request optional extension permissions.",
+  "permissions": ["nativeMessaging", "geckoViewAddons"],
+  "granted_host_permissions": true,
+  "optional_permissions": ["geolocation", "*://example.com/*", "activeTab"]
+}
