@@ -21,15 +21,14 @@ Marionette is written in JavaScript and ships
 as part of Firefox.  We have access to all the latest ECMAScript
 features currently in development, usually before it ships in the
 wild and we try to make use of new features when appropriate,
-especially when they move us off legacy internal replacements
-(such as Promise.jsm and Task.jsm).
+especially when they move us off legacy internal replacements.
 
 One of the peculiarities of working on JavaScript code that ships as
 part of a runtime platform is, that unlike in a regular web document,
 we share a single global state with the rest of Firefox.  This means
 we have to be responsible and not leak resources unnecessarily.
 
-JS code in Gecko is organised into _modules_ carrying _.js_ or _.jsm_
+JS code in Gecko is organised into _modules_ carrying _.js_ or _.sys.mjs_
 file extensions.  Depending on the area of Gecko you’re working on,
 you may find they have different techniques for exporting symbols,
 varying indentation and code style, as well as varying linting
@@ -178,7 +177,7 @@ The practical details of working on the Marionette code is outlined
 in [Contributing.md], but generally you do not have to re-build
 Firefox when changing code.  Any change to remote/marionette/*.js
 will be picked up on restarting Firefox.  The only notable exception
-is remote/components/Marionette.jsm, which does require
+is remote/components/Marionette.sys.mjs, which does require
 a re-build.
 
 [strict mode]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Strict_mode

@@ -29,8 +29,8 @@ export class Domain {
 
   /**
    * Execute the provided method in the child domain that has the same domain
-   * name. eg. calling this.executeInChild from domains/parent/Input.jsm will
-   * attempt to execute the method in domains/content/Input.jsm.
+   * name. eg. calling this.executeInChild from domains/parent/Input.sys.mjs will
+   * attempt to execute the method in domains/content/Input.sys.mjs.
    *
    * This can only be called from parent domains managed by a TabSession.
    *

@@ -167,7 +167,7 @@ class RemoteAgentParentProcess {
 
   handle(cmdLine) {
     // remote-debugging-port has to be consumed in nsICommandLineHandler:handle
-    // to avoid issues on macos. See Marionette.jsm::handle() for more details.
+    // to avoid issues on macos. See Marionette.sys.mjs::handle() for more details.
     // TODO: remove after Bug 1724251 is fixed.
     try {
       cmdLine.handleFlagWithParam("remote-debugging-port", false);
