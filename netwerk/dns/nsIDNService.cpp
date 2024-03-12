@@ -758,6 +758,11 @@ bool nsIDNService::isLabelSafe(const nsAString& label, const nsAString& tld) {
       return false;
     }
 
+    // Block single/double-quote-like characters.
+    if (ch == 0x2BB || ch == 0x2BC) {
+      return false;
+    }
+
     // Check for mixed numbering systems
     auto genCat = GetGeneralCategory(ch);
     if (genCat == HB_UNICODE_GENERAL_CATEGORY_DECIMAL_NUMBER) {
