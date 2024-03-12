@@ -13,7 +13,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   dom: "chrome://remote/content/shared/DOM.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
-  event: "chrome://remote/content/marionette/event.sys.mjs",
+  event: "chrome://remote/content/shared/webdriver/Event.sys.mjs",
   keyData: "chrome://remote/content/shared/webdriver/KeyData.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
   pprint: "chrome://remote/content/shared/Format.sys.mjs",

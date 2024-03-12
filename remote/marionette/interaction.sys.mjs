@@ -13,7 +13,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   atom: "chrome://remote/content/marionette/atom.sys.mjs",
   dom: "chrome://remote/content/shared/DOM.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
-  event: "chrome://remote/content/marionette/event.sys.mjs",
+  event: "chrome://remote/content/shared/webdriver/Event.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
   pprint: "chrome://remote/content/shared/Format.sys.mjs",
   TimedPromise: "chrome://remote/content/marionette/sync.sys.mjs",

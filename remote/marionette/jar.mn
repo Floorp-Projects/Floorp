@@ -18,7 +18,6 @@ remote.jar:
   content/marionette/cookie.sys.mjs (cookie.sys.mjs)
   content/marionette/driver.sys.mjs (driver.sys.mjs)
   content/marionette/evaluate.sys.mjs (evaluate.sys.mjs)
-  content/marionette/event.sys.mjs  (event.sys.mjs)
   content/marionette/interaction.sys.mjs (interaction.sys.mjs)
   content/marionette/json.sys.mjs (json.sys.mjs)
   content/marionette/l10n.sys.mjs (l10n.sys.mjs)
