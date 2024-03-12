@@ -30,6 +30,7 @@ namespace mozilla {
 class PresShell;
 namespace dom {
 class Document;
+class Element;
 class XULTreeElement;
 }  // namespace dom
 }  // namespace mozilla
@@ -41,6 +42,7 @@ class nsCoreUtils {
  public:
   typedef mozilla::PresShell PresShell;
   typedef mozilla::dom::Document Document;
+  typedef mozilla::dom::Element Element;
 
   /**
    * Return true if the given node is a label of a control.
@@ -336,6 +338,8 @@ class nsCoreUtils {
    */
   static bool IsDescendantOfAnyShadowIncludingAncestor(nsINode* aDescendant,
                                                        nsINode* aStartAncestor);
+
+  static Element* GetAriaActiveDescendantElement(Element* aElement);
 };
 
 #endif

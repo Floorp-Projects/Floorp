@@ -26,7 +26,8 @@ async function changeARIAActiveDescendant(
   browser,
   container,
   itemId,
-  prevItemId
+  prevItemId,
+  elementReflection
 ) {
   let expectedEvents = [[EVENT_FOCUS, itemId]];
 
@@ -44,38 +45,69 @@ async function changeARIAActiveDescendant(
   let expectedPromise = waitForEvents(expectedEvents);
   await invokeContentTask(
     browser,
-    [container, itemId],
-    (_container, _itemId) => {
-      let elm = (
+    [container, itemId, elementReflection],
+    (_container, _itemId, _elementReflection) => {
+      let getElm = (
         content.document._testGetElementById || content.document.getElementById
-      ).bind(content.document)(_container);
-      elm.setAttribute("aria-activedescendant", _itemId);
+      ).bind(content.document);
+      let elm = getElm(_container);
+      if (_elementReflection) {
+        elm.ariaActiveDescendantElement = getElm(_itemId);
+      } else {
+        elm.setAttribute("aria-activedescendant", _itemId);
+      }
     }
   );
 
   await expectedPromise;
 }
 
-async function clearARIAActiveDescendant(browser, container, prevItemId) {
-  let expectedEvents = [[EVENT_FOCUS, container]];
+async function clearARIAActiveDescendant(
+  browser,
+  container,
+  prevItemId,
+  defaultId,
+  elementReflection
+) {
+  let expectedEvents = [[EVENT_FOCUS, defaultId || container]];
   if (prevItemId) {
     expectedEvents.push(
       stateChangeEventArgs(prevItemId, EXT_STATE_ACTIVE, false, true)
     );
   }
 
+  if (defaultId) {
+    expectedEvents.push(
+      stateChangeEventArgs(defaultId, EXT_STATE_ACTIVE, true, true)
+    );
+  }
+
   let expectedPromise = waitForEvents(expectedEvents);
-  await invokeContentTask(browser, [container], _container => {
-    let elm = (
-      content.document._testGetElementById || content.document.getElementById
-    ).bind(content.document)(_container);
-    elm.removeAttribute("aria-activedescendant");
-  });
+  await invokeContentTask(
+    browser,
+    [container, elementReflection],
+    (_container, _elementReflection) => {
+      let elm = (
+        content.document._testGetElementById || content.document.getElementById
+      ).bind(content.document)(_container);
+      if (_elementReflection) {
+        elm.ariaActiveDescendantElement = null;
+      } else {
+        elm.removeAttribute("aria-activedescendant");
+      }
+    }
+  );
 
   await expectedPromise;
 }
 
-async function insertItemNFocus(browser, container, newItemID, prevItemId) {
+async function insertItemNFocus(
+  browser,
+  container,
+  newItemID,
+  prevItemId,
+  elementReflection
+) {
   let expectedEvents = [
     [EVENT_SHOW, newItemID],
     [EVENT_FOCUS, newItemID],
@@ -96,8 +128,8 @@ async function insertItemNFocus(browser, container, newItemID, prevItemId) {
 
   await invokeContentTask(
     browser,
-    [container, newItemID],
-    (_container, _newItemID) => {
+    [container, newItemID, elementReflection],
+    (_container, _newItemID, _elementReflection) => {
       let elm = (
         content.document._testGetElementById || content.document.getElementById
       ).bind(content.document)(_container);
@@ -106,7 +138,11 @@ async function insertItemNFocus(browser, container, newItemID, prevItemId) {
       itemElm.setAttribute("role", "listitem");
       itemElm.textContent = _newItemID;
       elm.appendChild(itemElm);
-      elm.setAttribute("aria-activedescendant", _newItemID);
+      if (_elementReflection) {
+        elm.ariaActiveDescendantElement = itemElm;
+      } else {
+        elm.setAttribute("aria-activedescendant", _newItemID);
+      }
     }
   );
 
@@ -179,10 +215,22 @@ aria-owns="item3">
 </ul>
 </div>`;
 
-async function basicListboxTest(browser) {
+async function basicListboxTest(browser, elementReflection) {
   await synthFocus(browser, "listbox", "item1");
-  await changeARIAActiveDescendant(browser, "listbox", "item2", "item1");
-  await changeARIAActiveDescendant(browser, "listbox", "item3", "item2");
+  await changeARIAActiveDescendant(
+    browser,
+    "listbox",
+    "item2",
+    "item1",
+    elementReflection
+  );
+  await changeARIAActiveDescendant(
+    browser,
+    "listbox",
+    "item3",
+    "item2",
+    elementReflection
+  );
 
   info("Focus out of listbox");
   await synthFocus(browser, "combobox_entry", "combobox_entry");
@@ -190,21 +238,41 @@ async function basicListboxTest(browser) {
     browser,
     "combobox",
     "combobox_option2",
-    null
+    null,
+    elementReflection
   );
   await changeARIAActiveDescendant(
     browser,
     "combobox",
     "combobox_option1",
-    null
+    null,
+    elementReflection
   );
 
   info("Focus back in listbox");
   await synthFocus(browser, "listbox", "item3");
-  await insertItemNFocus(browser, "listbox", "item4", "item3");
+  await insertItemNFocus(
+    browser,
+    "listbox",
+    "item4",
+    "item3",
+    elementReflection
+  );
 
-  await clearARIAActiveDescendant(browser, "listbox", "item4");
-  await changeARIAActiveDescendant(browser, "listbox", "item1", null);
+  await clearARIAActiveDescendant(
+    browser,
+    "listbox",
+    "item4",
+    null,
+    elementReflection
+  );
+  await changeARIAActiveDescendant(
+    browser,
+    "listbox",
+    "item1",
+    null,
+    elementReflection
+  );
 }
 
 addAccessibleTask(
@@ -229,6 +297,15 @@ addAccessibleTask(
       "roaming"
     );
     await moveARIAActiveDescendantID(browser, "roaming", "roaming3");
+  },
+  { topLevel: true, chrome: true }
+);
+
+addAccessibleTask(
+  LISTBOX_MARKUP,
+  async function (browser, docAcc) {
+    info("Test ariaActiveDescendantElement element reflection");
+    await basicListboxTest(browser, true);
   },
   { topLevel: true, chrome: true }
 );
@@ -288,6 +365,14 @@ addAccessibleTask(
       "shadowItem2",
       "shadowItem1"
     );
+    info("Do it again with element reflection");
+    await changeARIAActiveDescendant(
+      browser,
+      "shadowListbox",
+      "shadowItem1",
+      "shadowItem2",
+      true
+    );
   },
   { topLevel: true, chrome: true }
 );
@@ -331,4 +416,70 @@ addAccessibleTask(
     );
   },
   { topLevel: true, chrome: true }
+);
+
+addAccessibleTask(
+  `
+<custom-listbox id="custom-listbox1">
+  <div role="listitem" id="l1_1"></div>
+  <div role="listitem" id="l1_2"></div>
+  <div role="listitem" id="l1_3"></div>
+</custom-listbox>
+
+<custom-listbox id="custom-listbox2" aria-activedescendant="l2_1">
+  <div role="listitem" id="l2_1"></div>
+  <div role="listitem" id="l2_2"></div>
+  <div role="listitem" id="l2_3"></div>
+</custom-listbox>
+
+<script>
+customElements.define("custom-listbox",
+  class extends HTMLElement {
+    constructor() {
+      super();
+      this.tabIndex = "0"
+      this._internals = this.attachInternals();
+      this._internals.role = "listbox";
+      this._internals.ariaActiveDescendantElement = this.lastElementChild;
+    }
+    get internals() {
+      return this._internals;
+    }
+  }
+);
+</script>`,
+  async function (browser, docAcc) {
+    await synthFocus(browser, "custom-listbox1", "l1_3");
+
+    let evtProm = Promise.all([
+      waitForEvent(EVENT_FOCUS, "l1_2"),
+      waitForStateChange("l1_3", EXT_STATE_ACTIVE, false, true),
+      waitForStateChange("l1_2", EXT_STATE_ACTIVE, true, true),
+    ]);
+
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById(
+        "custom-listbox1"
+      ).internals.ariaActiveDescendantElement =
+        content.document.getElementById("l1_2");
+    });
+
+    await evtProm;
+
+    evtProm = Promise.all([
+      waitForEvent(EVENT_FOCUS, "custom-listbox1"),
+      waitForStateChange("l1_2", EXT_STATE_ACTIVE, false, true),
+    ]);
+
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById(
+        "custom-listbox1"
+      ).internals.ariaActiveDescendantElement = null;
+    });
+
+    await evtProm;
+
+    await synthFocus(browser, "custom-listbox2", "l2_1");
+    await clearARIAActiveDescendant(browser, "custom-listbox2", "l2_1", "l2_3");
+  }
 );

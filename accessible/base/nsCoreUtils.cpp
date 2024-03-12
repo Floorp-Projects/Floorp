@@ -35,6 +35,7 @@
 #include "nsTreeColumns.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/ElementInternals.h"
 #include "mozilla/dom/HTMLLabelElement.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/Selection.h"
@@ -662,4 +663,18 @@ bool nsCoreUtils::IsDescendantOfAnyShadowIncludingAncestor(
     ancRoot = shadow->GetHost()->SubtreeRoot();
   }
   return false;
+}
+
+Element* nsCoreUtils::GetAriaActiveDescendantElement(Element* aElement) {
+  if (Element* activeDescendant = aElement->GetAriaActiveDescendantElement()) {
+    return activeDescendant;
+  }
+
+  if (auto* element = nsGenericHTMLElement::FromNode(aElement)) {
+    if (auto* internals = element->GetInternals()) {
+      return internals->GetAriaActiveDescendantElement();
+    }
+  }
+
+  return nullptr;
 }
