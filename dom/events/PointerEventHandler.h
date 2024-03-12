@@ -168,11 +168,39 @@ class PointerEventHandler final {
   static void PostHandlePointerEventsPreventDefault(
       WidgetPointerEvent* aPointerEvent, WidgetGUIEvent* aMouseOrTouchEvent);
 
-  MOZ_CAN_RUN_SCRIPT
-  static void DispatchPointerFromMouseOrTouch(
-      PresShell* aShell, nsIFrame* aFrame, nsIContent* aContent,
-      WidgetGUIEvent* aEvent, bool aDontRetargetEvents, nsEventStatus* aStatus,
-      nsIContent** aTargetContent);
+  /**
+   * Dispatch a pointer event for aMouseOrTouchEvent to aEventTargetContent.
+   *
+   * @param aShell              The PresShell which is handling the event.
+   * @param aEventTargetFrame   The frame for aEventTargetContent.
+   * @param aEventTargetContent The event target node.
+   * @param aMouseOrTouchEvent  A mouse or touch event.
+   * @param aDontRetargetEvents If true, this won't dispatch event with
+   *                            different PresShell from aShell.  Otherwise,
+   *                            pointer events may be fired on different
+   *                            document if and only if aMouseOrTOuchEvent is a
+   *                            touch event except eTouchStart.
+   * @param aState              [out] The result of the pointer event.
+   * @param aMouseOrTouchEventTarget
+   *                            [out] The event target for the following mouse
+   *                            or touch event. If aEventTargetContent has not
+   *                            been removed from the tree, this is always set
+   *                            to it. If aEventTargetContent is removed from
+   *                            the tree and aMouseOrTouchEvent is a mouse
+   *                            event, this is set to inclusive ancestor of
+   *                            aEventTargetContent which is still connected.
+   *                            If aEventTargetContent is removed from the tree
+   *                            and aMouseOrTouchEvent is a touch event, this is
+   *                            set to aEventTargetContent because touch event
+   *                            should be dispatched even on disconnected node.
+   *                            FIXME: If the event is a touch event but the
+   *                            message is not eTouchStart, this won't be set.
+   */
+  MOZ_CAN_RUN_SCRIPT static void DispatchPointerFromMouseOrTouch(
+      PresShell* aShell, nsIFrame* aEventTargetFrame,
+      nsIContent* aEventTargetContent, WidgetGUIEvent* aMouseOrTouchEvent,
+      bool aDontRetargetEvents, nsEventStatus* aStatus,
+      nsIContent** aMouseOrTouchEventTarget = nullptr);
 
   static void InitPointerEventFromMouse(WidgetPointerEvent* aPointerEvent,
                                         WidgetMouseEvent* aMouseEvent,
