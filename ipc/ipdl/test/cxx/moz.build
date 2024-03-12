@@ -12,7 +12,6 @@ EXPORTS.mozilla._ipdltest += [
     "IPDLUnitTestTypes.h",
     "IPDLUnitTestUtils.h",
     "TestOffMainThreadPainting.h",
-    "TestSelfManageRoot.h",
     "TestShmem.h",
     "TestShutdown.h",
     "TestStackHooks.h",
@@ -26,7 +25,6 @@ EXPORTS.mozilla._ipdltest += [
 
 SOURCES += [
     "TestOffMainThreadPainting.cpp",
-    "TestSelfManageRoot.cpp",
     "TestShmem.cpp",
     "TestShutdown.cpp",
     "TestStackHooks.cpp",
@@ -51,8 +49,6 @@ IPDL_SOURCES += [
     "PTestIndirectProtocolParamSecond.ipdl",
     "PTestPaintThread.ipdl",
     "PTestPriority.ipdl",
-    "PTestSelfManage.ipdl",
-    "PTestSelfManageRoot.ipdl",
     "PTestShmem.ipdl",
     "PTestShutdown.ipdl",
     "PTestShutdownSub.ipdl",
