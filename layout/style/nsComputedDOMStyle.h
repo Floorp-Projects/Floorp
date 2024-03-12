@@ -120,6 +120,8 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
     mExposeVisitedStyle = aExpose;
   }
 
+  float UsedFontSize() final;
+
   void GetCSSImageURLs(const nsACString& aPropertyName,
                        nsTArray<nsCString>& aImageURLs,
                        mozilla::ErrorResult& aRv) final;

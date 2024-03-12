@@ -86,6 +86,11 @@ class nsICSSDeclaration : public nsISupports, public nsWrapperCache {
     aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
   }
 
+  // [Chrome only]
+  // Used font-size (taking account of the min-font-size prefs), if available;
+  // returns -1.0 on failure to retrieve a value.
+  virtual float UsedFontSize() { return -1.0; }
+
   // WebIDL interface for CSSStyleDeclaration
   virtual void SetCssText(const nsACString& aString,
                           nsIPrincipal* aSubjectPrincipal,

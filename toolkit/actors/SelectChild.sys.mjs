@@ -277,7 +277,7 @@ SelectContentHelper.prototype = {
         InspectorUtils.removeContentState(this.element, kStateHover);
         break;
 
-      case "Forms:MouseUp":
+      case "Forms:MouseUp": {
         let win = this.element.ownerGlobal;
         if (message.data.onAnchor) {
           this.dispatchMouseEvent(win, this.element, "mouseup");
@@ -287,6 +287,7 @@ SelectContentHelper.prototype = {
           this.dispatchMouseEvent(win, this.element, "click");
         }
         break;
+      }
 
       case "Forms:SearchFocused":
         this._closeAfterBlur = false;
@@ -346,6 +347,13 @@ function getComputedStyles(element) {
 function supportedStyles(cs, supportedProps) {
   let styles = {};
   for (let property of supportedProps) {
+    if (property == "font-size") {
+      let usedSize = cs.usedFontSize;
+      if (usedSize >= 0.0) {
+        styles[property] = usedSize + "px";
+        continue;
+      }
+    }
     styles[property] = cs.getPropertyValue(property);
   }
   return styles;
