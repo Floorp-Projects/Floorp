@@ -15,3 +15,10 @@ void IOSPlatformFontList::LookupSystemFont(
     gfxFontStyle& aFontStyle) {
   MOZ_CRASH("UNIMPLEMENTED");
 }
+
+nsTArray<std::pair<const char**, uint32_t>>
+IOSPlatformFontList::GetFilteredPlatformFontLists() {
+  nsTArray<std::pair<const char**, uint32_t>> fontLists;
+
+  return fontLists;
+}
