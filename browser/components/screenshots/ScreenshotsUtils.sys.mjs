@@ -980,23 +980,8 @@ export var ScreenshotsUtils = {
       "@mozilla.org/widget/transferable;1"
     ].createInstance(Ci.nsITransferable);
     transferable.init(null);
-    // Internal consumers expect the image data to be stored as a
-    // nsIInputStream. On Linux and Windows, pasted data is directly
-    // retrieved from the system's native clipboard, and made available
-    // as a nsIInputStream.
-    //
-    // On macOS, nsClipboard::GetNativeClipboardData (nsClipboard.mm) uses
-    // a cached copy of nsITransferable if available, e.g. when the copy
-    // was initiated by the same browser instance. To make sure that a
-    // nsIInputStream is returned instead of the cached imgIContainer,
-    // the image is exported as as `kNativeImageMime`. Data associated
-    // with this type is converted to a platform-specific image format
-    // when written to the clipboard. The type is not used when images
-    // are read from the clipboard (on all platforms, not just macOS).
-    // This forces nsClipboard::GetNativeClipboardData to fall back to
-    // the native clipboard, and return the image as a nsITransferable.
-    transferable.addDataFlavor("application/x-moz-nativeimage");
-    transferable.setTransferData("application/x-moz-nativeimage", imgDecoded);
+    transferable.addDataFlavor("image/png");
+    transferable.setTransferData("image/png", imgDecoded);
 
     Services.clipboard.setData(
       transferable,
