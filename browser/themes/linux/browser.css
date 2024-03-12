@@ -233,21 +233,24 @@
     appearance: auto;
   }
 
-  /* When using lightweight themes, use our own buttons since native ones might
-   * assume a native background in order to be visible. */
-  &:-moz-lwtheme {
-    padding-inline: 3px;
+  /* stylelint-disable-next-line media-query-no-invalid */
+  @media (-moz-bool-pref: "widget.gtk.non-native-titlebar-buttons.enabled") {
+    /* When using lightweight themes, use our own buttons since native ones might
+     * assume a native background in order to be visible. */
+    &:-moz-lwtheme {
+      padding-inline: 3px;
 
-    > .toolbarbutton-icon {
-      appearance: none;
-      border-radius: 100%;
-      background-position: center center;
-      background-repeat: no-repeat;
-      -moz-context-properties: stroke;
-      stroke: currentColor;
-      /* Roughly the Adwaita size */
-      width: 24px;
-      height: 24px;
+      > .toolbarbutton-icon {
+        appearance: none;
+        border-radius: 100%;
+        background-position: center center;
+        background-repeat: no-repeat;
+        -moz-context-properties: stroke;
+        stroke: currentColor;
+        /* Roughly the Adwaita size */
+        width: 24px;
+        height: 24px;
+      }
     }
   }
 
