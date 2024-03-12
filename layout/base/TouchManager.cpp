@@ -174,7 +174,7 @@ nsIFrame* TouchManager::SuppressInvalidPointsAndGetTargetedFrame(
   }
 
   nsIFrame* frame = nullptr;
-  for (int32_t i = aEvent->mTouches.Length(); i;) {
+  for (uint32_t i = aEvent->mTouches.Length(); i;) {
     --i;
     dom::Touch* touch = aEvent->mTouches[i];
     if (TouchManager::HasCapturedTouch(touch->Identifier())) {
@@ -182,9 +182,35 @@ nsIFrame* TouchManager::SuppressInvalidPointsAndGetTargetedFrame(
     }
 
     MOZ_ASSERT(touch->mOriginalTarget);
-    nsCOMPtr<nsIContent> targetContent = do_QueryInterface(touch->GetTarget());
-    nsIFrame* targetFrame =
-        targetContent ? targetContent->GetPrimaryFrame() : nullptr;
+    nsIContent* const targetContent =
+        nsIContent::FromEventTargetOrNull(touch->GetTarget());
+    if (MOZ_UNLIKELY(!targetContent)) {
+      touch->mIsTouchEventSuppressed = true;
+      continue;
+    }
+
+    // Even if the target content is not connected, we should dispatch the touch
+    // start event except when the target content is owned by different
+    // document.
+    if (MOZ_UNLIKELY(!targetContent->IsInComposedDoc())) {
+      if (anyTarget && anyTarget->OwnerDoc() != targetContent->OwnerDoc()) {
+        touch->mIsTouchEventSuppressed = true;
+        continue;
+      }
+      if (!anyTarget) {
+        anyTarget = targetContent;
+      }
+      touch->SetTouchTarget(targetContent->GetAsElementOrParentElement());
+      if (PresShell* const presShell =
+              targetContent->OwnerDoc()->GetPresShell()) {
+        if (nsIFrame* rootFrame = presShell->GetRootFrame()) {
+          frame = rootFrame;
+        }
+      }
+      continue;
+    }
+
+    nsIFrame* targetFrame = targetContent->GetPrimaryFrame();
     if (targetFrame && !anyTarget) {
       anyTarget = targetContent;
     } else {
@@ -208,10 +234,12 @@ nsIFrame* TouchManager::SuppressInvalidPointsAndGetTargetedFrame(
         touch->mIsTouchEventSuppressed = true;
       } else {
         targetFrame = newTargetFrame;
-        targetFrame->GetContentForEvent(aEvent, getter_AddRefs(targetContent));
-        touch->SetTouchTarget(targetContent
-                                  ? targetContent->GetAsElementOrParentElement()
-                                  : nullptr);
+        nsCOMPtr<nsIContent> newTargetContent;
+        targetFrame->GetContentForEvent(aEvent,
+                                        getter_AddRefs(newTargetContent));
+        touch->SetTouchTarget(
+            newTargetContent ? newTargetContent->GetAsElementOrParentElement()
+                             : nullptr);
       }
     }
     if (targetFrame) {
