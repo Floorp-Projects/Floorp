@@ -1923,6 +1923,14 @@
     sha256: 263EA5A2E64E3DB5B5C60F0DDDD4EB9C708B60137C7980FF13E7D590F5DA7141
     size: 606208
     url: https://download.visualstudio.microsoft.com/download/pr/5eeaf3c7-015f-442c-8d63-aea17e5e6aef/e8e98df3eab5cb652127edce12f2a0af/sdk%20debuggers-x86_en-us.msi
+  - fileName: Installers\X86 Debuggers And Tools-x86_en-us.msi
+    sha256: D02E3641850A87E0ED5D2D3C17A489542479542E8110FBCA69E9C3A6F906BBF4
+    size: 28200960
+    url: https://download.visualstudio.microsoft.com/download/pr/5eeaf3c7-015f-442c-8d63-aea17e5e6aef/5b4c6bed7592095d8aa290154b243ad4/x86%20debuggers%20and%20tools-x86_en-us.msi
+  - fileName: Installers\X64 Debuggers And Tools-x64_en-us.msi
+    sha256: E9EDA93064502A6998DC94C85484B2E46E7C0781041653C28407DF9B6CF4A22D
+    size: 32108544
+    url: https://download.visualstudio.microsoft.com/download/pr/5eeaf3c7-015f-442c-8d63-aea17e5e6aef/683c3ee73ff9a0e0f4299856e007d278/x64%20debuggers%20and%20tools-x64_en-us.msi
   type: Exe
   version: 10.0.22621.5
 
