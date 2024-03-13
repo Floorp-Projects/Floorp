@@ -21,6 +21,7 @@ SOURCES += [
     "TestCancel.cpp",
     "TestCrossProcessSemaphore.cpp",
     "TestDataStructures.cpp",
+    "TestDescendant.cpp",
     "TestInduceConnectionError.cpp",
     "TestManyHandles.cpp",
 ]
@@ -34,6 +35,9 @@ IPDL_SOURCES += [
     "PTestDataStructures.ipdl",
     "PTestDataStructuresCommon.ipdlh",
     "PTestDataStructuresSub.ipdl",
+    "PTestDescendant.ipdl",
+    "PTestDescendantSub.ipdl",
+    "PTestDescendantSubsub.ipdl",
     "PTestInduceConnectionError.ipdl",
     "PTestManyHandles.ipdl",
 ]
