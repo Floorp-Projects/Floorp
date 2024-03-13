@@ -10,6 +10,8 @@
 
 namespace mozilla {
 
+// MFMediaEngineDecoderModule is used for the media engine playback, which only
+// supports hardware decoding.
 class MFMediaEngineDecoderModule final : public PlatformDecoderModule {
  public:
   static void Init();
