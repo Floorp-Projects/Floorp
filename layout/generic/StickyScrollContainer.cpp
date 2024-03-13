@@ -186,12 +186,17 @@ void StickyScrollContainer::ComputeStickyLimits(nsIFrame* aFrame,
 
   // Containing block limits for the position of aFrame relative to its parent.
   // The margin box of the sticky element stays within the content box of the
-  // contaning-block element.
+  // containing-block element.
   if (cbFrame == scrolledFrame) {
     // cbFrame is the scrolledFrame, and it won't have continuations. Unlike the
-    // else clause, we consider scrollable overflow rect because and the union
-    // of its in-flow rects doesn't include the scrollable overflow area.
+    // else clause, we consider scrollable overflow rect because the union of
+    // its in-flow rects doesn't include the scrollable overflow area. We need
+    // to subtract the padding however, which _is_ included in the scrollable
+    // area, since we want the content box.
+    MOZ_ASSERT(cbFrame->GetUsedBorder() == nsMargin(),
+               "How did the ::-moz-scrolled-frame end up with border?");
     *aContain = cbFrame->ScrollableOverflowRectRelativeToSelf();
+    aContain->Deflate(cbFrame->GetUsedPadding());
     nsLayoutUtils::TransformRect(cbFrame, aFrame->GetParent(), *aContain);
   } else {
     *aContain = nsLayoutUtils::GetAllInFlowRectsUnion(
