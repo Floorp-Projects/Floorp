@@ -206,6 +206,12 @@ interface nsIHttpProtocolHandler : nsIProxiedProtocolHandler
 #define NS_HTTP_ON_EXAMINE_CACHED_RESPONSE_TOPIC "http-on-examine-cached-response"
 
 /**
+ * This topic is notified for every http channel before calling
+ * OnStopRequest on its listener.
+ */
+#define NS_HTTP_ON_BEFORE_STOP_REQUEST_TOPIC "http-on-before-stop-request"
+
+/**
  * This topic is notified for every http channel right after it called
  * OnStopRequest on its listener, regardless whether it was finished
  * successfully, failed or has been canceled.
