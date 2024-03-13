@@ -32,4 +32,22 @@ void CopyNSStringToXPCOMString(const NSString* aFrom, nsAString& aTo) {
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
+NSString* XPCOMStringToNSString(const nsAString& aFrom) {
+  if (aFrom.IsEmpty()) {
+    return [NSString string];
+  }
+  return [NSString stringWithCharacters:reinterpret_cast<const unichar*>(
+                                            aFrom.BeginReading())
+                                 length:aFrom.Length()];
+}
+
+NSString* XPCOMStringToNSString(const nsACString& aFrom) {
+  if (aFrom.IsEmpty()) {
+    return [NSString string];
+  }
+  return [[[NSString alloc] initWithBytes:aFrom.BeginReading()
+                                   length:aFrom.Length()
+                                 encoding:NSUTF8StringEncoding] autorelease];
+}
+
 }  // namespace mozilla

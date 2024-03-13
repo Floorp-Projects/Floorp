@@ -632,26 +632,6 @@ nsresult nsCocoaUtils::CreateDualRepresentationNSImageFromImageContainer(
 }
 
 // static
-NSString* nsCocoaUtils::ToNSString(const nsAString& aString) {
-  if (aString.IsEmpty()) {
-    return [NSString string];
-  }
-  return [NSString stringWithCharacters:reinterpret_cast<const unichar*>(
-                                            aString.BeginReading())
-                                 length:aString.Length()];
-}
-
-// static
-NSString* nsCocoaUtils::ToNSString(const nsACString& aCString) {
-  if (aCString.IsEmpty()) {
-    return [NSString string];
-  }
-  return [[[NSString alloc] initWithBytes:aCString.BeginReading()
-                                   length:aCString.Length()
-                                 encoding:NSUTF8StringEncoding] autorelease];
-}
-
-// static
 NSURL* nsCocoaUtils::ToNSURL(const nsAString& aURLString) {
   nsAutoCString encodedURLString;
   nsresult rv = NS_GetSpecWithNSURLEncoding(encodedURLString,
