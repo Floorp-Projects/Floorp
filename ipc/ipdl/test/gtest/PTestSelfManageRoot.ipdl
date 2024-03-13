@@ -1,12 +1,9 @@
 include protocol PTestSelfManage;
 
-include "mozilla/_ipdltest/TestSelfManageRoot.h";
-
 namespace mozilla {
 namespace _ipdltest {
 
-
-[ManualDealloc, ChildImpl="TestSelfManageRootChild", ParentImpl="TestSelfManageRootParent"]
+[ChildProc=any, ChildImpl=virtual, ParentImpl=virtual]
 protocol PTestSelfManageRoot {
     manages PTestSelfManage;
 
@@ -14,7 +11,6 @@ child:
     async PTestSelfManage();
     async __delete__();
 };
-
 
 } // namespace mozilla
 } // namespace _ipdltest
