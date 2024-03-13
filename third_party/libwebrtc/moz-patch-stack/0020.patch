@@ -1,53 +1,46 @@
-From: Alex Chronopoulos <achronop@gmail.com>
-Date: Wed, 18 Sep 2019 13:12:00 +0000
-Subject: Bug 1572281 - Remove audio device change notifications from video
- capture in Windows. r=dminor
+From: Dan Minor <dminor@mozilla.com>
+Date: Mon, 5 Nov 2018 10:33:00 -0500
+Subject: Bug 1376873 - Reduce thread stack size in platform_thread.cc; r=bwc
 
-Video capture used to provide device change notifications for audio and video devices. From now on, CubebDeviceEnumerator will provide audio device change notifications thus video capture is updated to notify only changes of the video device. This is the windows part.
+Summary:
+The current default stack size of 1M results in intermittent OOMs on win32
+builds while running web-platform tests. The value of 256k was chosen for
+consistency with the default value used elsewhere in Gecko, which is defined in
+nsIThreadManager.idl.
 
-Differential Revision: https://phabricator.services.mozilla.com/D46274
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a5c23245837ebdd99532e8bfaca05774c5c96d9d
+Reviewers: bwc
+
+Tags: #secure-revision
+
+Bug #: 1376873
+
+Differential Revision: https://phabricator.services.mozilla.com/D11090
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/e83c311e5293902be4db4ecea17cff87c633f7cf
 ---
- modules/video_capture/windows/device_info_ds.cc | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ rtc_base/platform_thread.cc | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/modules/video_capture/windows/device_info_ds.cc b/modules/video_capture/windows/device_info_ds.cc
-index a7eca19bbf..9d22f42f4d 100644
---- a/modules/video_capture/windows/device_info_ds.cc
-+++ b/modules/video_capture/windows/device_info_ds.cc
-@@ -20,7 +20,7 @@
- namespace webrtc {
- namespace videocapturemodule {
- 
--BOOL isCaptureDevice(DEV_BROADCAST_HDR *pHdr)
-+BOOL isVideoDevice(DEV_BROADCAST_HDR *pHdr)
- {
-   if (pHdr == NULL) {
-     return FALSE;
-@@ -29,7 +29,7 @@ BOOL isCaptureDevice(DEV_BROADCAST_HDR *pHdr)
-     return FALSE;
-   }
-   DEV_BROADCAST_DEVICEINTERFACE* pDi = (DEV_BROADCAST_DEVICEINTERFACE*)pHdr;
--  return pDi->dbcc_classguid == KSCATEGORY_CAPTURE;
-+  return pDi->dbcc_classguid == KSCATEGORY_VIDEO_CAMERA;
- }
- 
- LRESULT CALLBACK WndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
-@@ -47,7 +47,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
-     else if (uiMsg == WM_DEVICECHANGE)
-     {
-         pParent = (DeviceInfoDS*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
--        if (pParent && isCaptureDevice((PDEV_BROADCAST_HDR)lParam))
-+        if (pParent && isVideoDevice((PDEV_BROADCAST_HDR)lParam))
-         {
-             pParent->DeviceChange();
-         }
-@@ -128,7 +128,7 @@ DeviceInfoDS::DeviceInfoDS()
-     DEV_BROADCAST_DEVICEINTERFACE di = { 0 };
-     di.dbcc_size = sizeof(di);
-     di.dbcc_devicetype  = DBT_DEVTYP_DEVICEINTERFACE;
--    di.dbcc_classguid  = KSCATEGORY_CAPTURE;
-+    di.dbcc_classguid  = KSCATEGORY_VIDEO_CAMERA;
- 
-     _hdevnotify = RegisterDeviceNotification(_hwnd, &di,
-                                              DEVICE_NOTIFY_WINDOW_HANDLE);
+diff --git a/rtc_base/platform_thread.cc b/rtc_base/platform_thread.cc
+index 6d369d747e..556204ac89 100644
+--- a/rtc_base/platform_thread.cc
++++ b/rtc_base/platform_thread.cc
+@@ -189,15 +189,17 @@ PlatformThread PlatformThread::SpawnThread(
+   // Set the reserved stack stack size to 1M, which is the default on Windows
+   // and Linux.
+   DWORD thread_id = 0;
++  // Mozilla: Set to 256kb for consistency with nsIThreadManager.idl
+   PlatformThread::Handle handle = ::CreateThread(
+-      nullptr, 1024 * 1024, &RunPlatformThread, start_thread_function_ptr,
++      nullptr, 256 * 1024, &RunPlatformThread, start_thread_function_ptr,
+       STACK_SIZE_PARAM_IS_A_RESERVATION, &thread_id);
+   RTC_CHECK(handle) << "CreateThread failed";
+ #else
+   pthread_attr_t attr;
+   pthread_attr_init(&attr);
+   // Set the stack stack size to 1M.
+-  pthread_attr_setstacksize(&attr, 1024 * 1024);
++  // Mozilla: Set to 256kb for consistency with nsIThreadManager.idl
++  pthread_attr_setstacksize(&attr, 256 * 1024);
+   pthread_attr_setdetachstate(
+       &attr, joinable ? PTHREAD_CREATE_JOINABLE : PTHREAD_CREATE_DETACHED);
+   PlatformThread::Handle handle;

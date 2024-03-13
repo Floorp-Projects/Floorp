@@ -1,57 +1,23 @@
-From: Nico Grunbaum <na-g@nostrum.com>
-Date: Tue, 6 Jun 2023 16:37:00 -0700
-Subject: Bug 1833237 - (fix-f0be3bee1f) remove reference to
- portal:pipewire_base;r?pehrsons
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Wed, 11 Jan 2023 22:42:00 +0000
+Subject: Bug 1800942 - Add DCHECKs to
+ TimestampExtrapolator::ExtrapolateLocalTime. r=mjf
 
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/8ff886a4d366b4be35b329d1ef733a6df542067c
+Differential Revision: https://phabricator.services.mozilla.com/D166536
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c5df7f40392464ffc63f44a53ddcaab2091741e0
 ---
- modules/video_capture/BUILD.gn                      | 4 ++++
- modules/video_capture/linux/device_info_pipewire.cc | 4 ++--
- modules/video_capture/linux/device_info_pipewire.h  | 3 ++-
- 3 files changed, 8 insertions(+), 3 deletions(-)
+ modules/video_coding/timing/timestamp_extrapolator.cc | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/modules/video_capture/BUILD.gn b/modules/video_capture/BUILD.gn
-index 8f89918359..45a0272eee 100644
---- a/modules/video_capture/BUILD.gn
-+++ b/modules/video_capture/BUILD.gn
-@@ -104,6 +104,10 @@ if (!build_with_chromium || is_linux || is_chromeos) {
-           "../../media:rtc_media_base",
-           "../portal",
-         ]
-+        if (build_with_mozilla) {
-+          configs -= [ "../portal:pipewire_base" ]
-+          public_deps = [ "//third_party/pipewire" ]
-+        }
-       }
-     }
-     if (is_win) {
-diff --git a/modules/video_capture/linux/device_info_pipewire.cc b/modules/video_capture/linux/device_info_pipewire.cc
-index e9f7e6a869..fc0554f384 100644
---- a/modules/video_capture/linux/device_info_pipewire.cc
-+++ b/modules/video_capture/linux/device_info_pipewire.cc
-@@ -49,9 +49,9 @@ int32_t DeviceInfoPipeWire::GetDeviceName(uint32_t deviceNumber,
-                                           char* deviceUniqueIdUTF8,
-                                           uint32_t deviceUniqueIdUTF8Length,
-                                           char* productUniqueIdUTF8,
--                                          uint32_t productUniqueIdUTF8Length) {
-+                                          uint32_t productUniqueIdUTF8Length,
-+                                          pid_t* pid) {
-   RTC_CHECK(pipewire_session_);
--
-   if (deviceNumber >= NumberOfDevices())
-     return -1;
+diff --git a/modules/video_coding/timing/timestamp_extrapolator.cc b/modules/video_coding/timing/timestamp_extrapolator.cc
+index a90df8bf7f..77e5508a76 100644
+--- a/modules/video_coding/timing/timestamp_extrapolator.cc
++++ b/modules/video_coding/timing/timestamp_extrapolator.cc
+@@ -125,6 +125,7 @@ void TimestampExtrapolator::Update(Timestamp now, uint32_t ts90khz) {
+ absl::optional<Timestamp> TimestampExtrapolator::ExtrapolateLocalTime(
+     uint32_t timestamp90khz) const {
+   int64_t unwrapped_ts90khz = unwrapper_.PeekUnwrap(timestamp90khz);
++  RTC_DCHECK_GE(unwrapped_ts90khz, 0);
  
-diff --git a/modules/video_capture/linux/device_info_pipewire.h b/modules/video_capture/linux/device_info_pipewire.h
-index 4da0c7a90b..8a33d75892 100644
---- a/modules/video_capture/linux/device_info_pipewire.h
-+++ b/modules/video_capture/linux/device_info_pipewire.h
-@@ -29,7 +29,8 @@ class DeviceInfoPipeWire : public DeviceInfoImpl {
-                         char* deviceUniqueIdUTF8,
-                         uint32_t deviceUniqueIdUTF8Length,
-                         char* productUniqueIdUTF8 = nullptr,
--                        uint32_t productUniqueIdUTF8Length = 0) override;
-+                        uint32_t productUniqueIdUTF8Length = 0,
-+                        pid_t* pid = 0) override;
-   /*
-    * Fills the membervariable _captureCapabilities with capabilites for the
-    * given device name.
+   if (!first_unwrapped_timestamp_) {
+     return absl::nullopt;

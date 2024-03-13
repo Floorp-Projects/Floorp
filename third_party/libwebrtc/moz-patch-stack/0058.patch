@@ -1,171 +1,197 @@
 From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Mon, 18 Jan 2021 11:07:00 +0100
-Subject: Bug 1766646 - (fix-ae0d117d51) ifdef our Csrc impl vs upstream's
- impl, see Bug 1771332.
+Date: Tue, 2 Nov 2021 14:35:00 +0000
+Subject: Bug 1729455 - Inject RTCStatsTimestampMakerRealtimeClock into Call
+ instances. r=bwc
 
+This patch makes libwebrtc use our clock for timestamps.
+It also makes sure there's no use of the libwebrtc realtime clock, other than
+for relative time tracking (like timeouts), and that future libwebrtc updates
+don't introduce unaudited use of it.
+
+Differential Revision: https://phabricator.services.mozilla.com/D127714
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0744d68b8c944e69945de4ac5c4ca71332e78ad8
 ---
- modules/rtp_rtcp/source/rtp_header_extensions.cc | 4 ++++
- modules/rtp_rtcp/source/rtp_header_extensions.h  | 4 ++++
- modules/rtp_rtcp/source/rtp_packet.cc            | 4 ++++
- modules/rtp_rtcp/source/rtp_sender.cc            | 4 ++++
- test/fuzzers/rtp_packet_fuzzer.cc                | 4 ++++
- 5 files changed, 20 insertions(+)
+ audio/channel_send.cc                       | 2 +-
+ call/call.cc                                | 2 ++
+ call/call_factory.cc                        | 4 ++++
+ call/degraded_call.cc                       | 2 ++
+ modules/audio_coding/acm2/acm_receiver.cc   | 2 +-
+ modules/rtp_rtcp/include/flexfec_receiver.h | 2 ++
+ modules/rtp_rtcp/source/flexfec_receiver.cc | 2 ++
+ rtc_base/task_utils/repeating_task.h        | 4 ++--
+ system_wrappers/include/clock.h             | 2 +-
+ system_wrappers/source/clock.cc             | 2 +-
+ 10 files changed, 18 insertions(+), 6 deletions(-)
 
-diff --git a/modules/rtp_rtcp/source/rtp_header_extensions.cc b/modules/rtp_rtcp/source/rtp_header_extensions.cc
-index b86a7d775c..ea41226abf 100644
---- a/modules/rtp_rtcp/source/rtp_header_extensions.cc
-+++ b/modules/rtp_rtcp/source/rtp_header_extensions.cc
-@@ -181,6 +181,7 @@ bool AudioLevel::Write(rtc::ArrayView<uint8_t> data,
-   return true;
+diff --git a/audio/channel_send.cc b/audio/channel_send.cc
+index 549e65a59c..8080f4a3b8 100644
+--- a/audio/channel_send.cc
++++ b/audio/channel_send.cc
+@@ -443,7 +443,7 @@ ChannelSend::ChannelSend(
+       transport_controller->GetRtcpObserver();
+   configuration.transport_feedback_callback =
+       transport_controller->transport_feedback_observer();
+-  configuration.clock = (clock ? clock : Clock::GetRealTimeClock());
++  configuration.clock = clock;
+   configuration.audio = true;
+   configuration.outgoing_transport = rtp_transport;
+ 
+diff --git a/call/call.cc b/call/call.cc
+index 42b3b988ea..d2ac705274 100644
+--- a/call/call.cc
++++ b/call/call.cc
+@@ -473,6 +473,7 @@ std::string Call::Stats::ToString(int64_t time_ms) const {
+   return ss.str();
  }
  
-+#if !defined(WEBRTC_MOZILLA_BUILD)
- // An RTP Header Extension for Mixer-to-Client Audio Level Indication
- //
- // https://tools.ietf.org/html/rfc6465
-@@ -230,6 +231,7 @@ bool CsrcAudioLevel::Write(rtc::ArrayView<uint8_t> data,
++/* Mozilla: Avoid this since it could use GetRealTimeClock().
+ std::unique_ptr<Call> Call::Create(const CallConfig& config) {
+   Clock* clock =
+       config.env.has_value() ? &config.env->clock() : Clock::GetRealTimeClock();
+@@ -480,6 +481,7 @@ std::unique_ptr<Call> Call::Create(const CallConfig& config) {
+                 RtpTransportControllerSendFactory().Create(
+                     config.ExtractTransportConfig(), clock));
+ }
++ */
+ 
+ std::unique_ptr<Call> Call::Create(
+     const CallConfig& config,
+diff --git a/call/call_factory.cc b/call/call_factory.cc
+index 043b11da37..78a4f1635f 100644
+--- a/call/call_factory.cc
++++ b/call/call_factory.cc
+@@ -94,6 +94,9 @@ std::unique_ptr<Call> CallFactory::CreateCall(const CallConfig& config) {
+ 
+   RtpTransportConfig transportConfig = config.ExtractTransportConfig();
+ 
++  RTC_CHECK(false);
++  return nullptr;
++  /* Mozilla: Avoid this since it could use GetRealTimeClock().
+   std::unique_ptr<Call> call =
+       Call::Create(config, Clock::GetRealTimeClock(),
+                    config.rtp_transport_controller_send_factory->Create(
+@@ -106,6 +109,7 @@ std::unique_ptr<Call> CallFactory::CreateCall(const CallConfig& config) {
    }
+ 
+   return call;
++   */
+ }
+ 
+ std::unique_ptr<CallFactoryInterface> CreateCallFactory() {
+diff --git a/call/degraded_call.cc b/call/degraded_call.cc
+index a511eda7bd..75a4a1cac0 100644
+--- a/call/degraded_call.cc
++++ b/call/degraded_call.cc
+@@ -126,6 +126,7 @@ bool DegradedCall::FakeNetworkPipeTransportAdapter::SendRtcp(
    return true;
  }
-+#endif
  
- // From RFC 5450: Transmission Time Offsets in RTP Streams.
- //
-@@ -423,6 +425,7 @@ bool PlayoutDelayLimits::Write(rtc::ArrayView<uint8_t> data,
-   return true;
- }
- 
-+#if defined(WEBRTC_MOZILLA_BUILD)
- // CSRCAudioLevel
- //  Sample Audio Level Encoding Using the One-Byte Header Format
- //  Note that the range of len is 1 to 15 which is encoded as 0 to 14
-@@ -461,6 +464,7 @@ bool CsrcAudioLevel::Write(rtc::ArrayView<uint8_t> data,
-   // This extension if used must have at least one audio level
-   return csrcAudioLevels.numAudioLevels;
- }
-+#endif
- 
- // Video Content Type.
- //
-diff --git a/modules/rtp_rtcp/source/rtp_header_extensions.h b/modules/rtp_rtcp/source/rtp_header_extensions.h
-index fff7db0294..09bd9912e1 100644
---- a/modules/rtp_rtcp/source/rtp_header_extensions.h
-+++ b/modules/rtp_rtcp/source/rtp_header_extensions.h
-@@ -94,6 +94,7 @@ class AudioLevel {
-                     uint8_t audio_level);
- };
- 
-+#if !defined(WEBRTC_MOZILLA_BUILD)
- class CsrcAudioLevel {
-  public:
-   static constexpr RTPExtensionType kId = kRtpExtensionCsrcAudioLevel;
-@@ -108,6 +109,7 @@ class CsrcAudioLevel {
-   static bool Write(rtc::ArrayView<uint8_t> data,
-                     rtc::ArrayView<const uint8_t> csrc_audio_levels);
- };
-+#endif
- 
- class TransmissionOffset {
-  public:
-@@ -298,6 +300,7 @@ class ColorSpaceExtension {
-   static size_t WriteLuminance(uint8_t* data, float f, int denominator);
- };
- 
-+#if defined(WEBRTC_MOZILLA_BUILD)
- class CsrcAudioLevel {
-  public:
-   static constexpr RTPExtensionType kId = kRtpExtensionCsrcAudioLevel;
-@@ -312,6 +315,7 @@ class CsrcAudioLevel {
-   static size_t ValueSize(const CsrcAudioLevelList& csrcAudioLevels);
-   static bool Write(rtc::ArrayView<uint8_t> data, const CsrcAudioLevelList& csrcAudioLevels);
- };
-+#endif
- 
- // Base extension class for RTP header extensions which are strings.
- // Subclasses must defined kId and kUri static constexpr members.
-diff --git a/modules/rtp_rtcp/source/rtp_packet.cc b/modules/rtp_rtcp/source/rtp_packet.cc
-index b152cdbd9e..7181b303e1 100644
---- a/modules/rtp_rtcp/source/rtp_packet.cc
-+++ b/modules/rtp_rtcp/source/rtp_packet.cc
-@@ -187,7 +187,9 @@ void RtpPacket::ZeroMutableExtensions() {
-         break;
-       }
-       case RTPExtensionType::kRtpExtensionAudioLevel:
-+#if !defined(WEBRTC_MOZILLA_BUILD)
-       case RTPExtensionType::kRtpExtensionCsrcAudioLevel:
-+#endif
-       case RTPExtensionType::kRtpExtensionAbsoluteCaptureTime:
-       case RTPExtensionType::kRtpExtensionColorSpace:
-       case RTPExtensionType::kRtpExtensionGenericFrameDescriptor:
-@@ -205,10 +207,12 @@ void RtpPacket::ZeroMutableExtensions() {
-         // Non-mutable extension. Don't change it.
-         break;
-       }
-+#if defined(WEBRTC_MOZILLA_BUILD)
-       case RTPExtensionType::kRtpExtensionCsrcAudioLevel: {
-         // TODO: This is a Mozilla addition, we need to add a handler for this.
-         RTC_CHECK(false);
-       }
-+#endif
++/* Mozilla: Avoid this since it could use GetRealTimeClock().
+ DegradedCall::DegradedCall(
+     std::unique_ptr<Call> call,
+     const std::vector<TimeScopedNetworkConfig>& send_configs,
+@@ -162,6 +163,7 @@ DegradedCall::DegradedCall(
      }
    }
  }
-diff --git a/modules/rtp_rtcp/source/rtp_sender.cc b/modules/rtp_rtcp/source/rtp_sender.cc
-index f4ba024444..4972aa0802 100644
---- a/modules/rtp_rtcp/source/rtp_sender.cc
-+++ b/modules/rtp_rtcp/source/rtp_sender.cc
-@@ -104,7 +104,9 @@ bool IsNonVolatile(RTPExtensionType type) {
-   switch (type) {
-     case kRtpExtensionTransmissionTimeOffset:
-     case kRtpExtensionAudioLevel:
-+#if !defined(WEBRTC_MOZILLA_BUILD)
-     case kRtpExtensionCsrcAudioLevel:
-+#endif
-     case kRtpExtensionAbsoluteSendTime:
-     case kRtpExtensionTransportSequenceNumber:
-     case kRtpExtensionTransportSequenceNumber02:
-@@ -128,10 +130,12 @@ bool IsNonVolatile(RTPExtensionType type) {
-     case kRtpExtensionNumberOfExtensions:
-       RTC_DCHECK_NOTREACHED();
-       return false;
-+#if defined(WEBRTC_MOZILLA_BUILD)
-     case kRtpExtensionCsrcAudioLevel:
-       // TODO: Mozilla implement for CsrcAudioLevel
-       RTC_CHECK(false);
-       return false;
-+#endif
-   }
-   RTC_CHECK_NOTREACHED();
- }
-diff --git a/test/fuzzers/rtp_packet_fuzzer.cc b/test/fuzzers/rtp_packet_fuzzer.cc
-index 0e10a8fa3a..5d117529bb 100644
---- a/test/fuzzers/rtp_packet_fuzzer.cc
-+++ b/test/fuzzers/rtp_packet_fuzzer.cc
-@@ -77,11 +77,13 @@ void FuzzOneInput(const uint8_t* data, size_t size) {
-         uint8_t audio_level;
-         packet.GetExtension<AudioLevel>(&voice_activity, &audio_level);
-         break;
-+#if !defined(WEBRTC_MOZILLA_BUILD)
-       case kRtpExtensionCsrcAudioLevel: {
-         std::vector<uint8_t> audio_levels;
-         packet.GetExtension<CsrcAudioLevel>(&audio_levels);
-         break;
-       }
-+#endif
-       case kRtpExtensionAbsoluteSendTime:
-         uint32_t sendtime;
-         packet.GetExtension<AbsoluteSendTime>(&sendtime);
-@@ -164,11 +166,13 @@ void FuzzOneInput(const uint8_t* data, size_t size) {
-         // This extension requires state to read and so complicated that
-         // deserves own fuzzer.
-         break;
-+#if defined(WEBRTC_MOZILLA_BUILD)
-       case kRtpExtensionCsrcAudioLevel: {
-         CsrcAudioLevelList levels;
-         packet.GetExtension<CsrcAudioLevel>(&levels);
-         break;
-       }
-+#endif
-     }
++*/
+ 
+ DegradedCall::~DegradedCall() {
+   RTC_DCHECK_RUN_ON(call_->worker_thread());
+diff --git a/modules/audio_coding/acm2/acm_receiver.cc b/modules/audio_coding/acm2/acm_receiver.cc
+index a77e472ec1..a5bf88e547 100644
+--- a/modules/audio_coding/acm2/acm_receiver.cc
++++ b/modules/audio_coding/acm2/acm_receiver.cc
+@@ -50,7 +50,7 @@ std::unique_ptr<NetEq> CreateNetEq(
+ 
+ AcmReceiver::Config::Config(
+     rtc::scoped_refptr<AudioDecoderFactory> decoder_factory)
+-    : clock(*Clock::GetRealTimeClock()), decoder_factory(decoder_factory) {
++    : clock(*Clock::GetRealTimeClockRaw()), decoder_factory(decoder_factory) {
+   // Post-decode VAD is disabled by default in NetEq, however, Audio
+   // Conference Mixer relies on VAD decisions and fails without them.
+   neteq_config.enable_post_decode_vad = true;
+diff --git a/modules/rtp_rtcp/include/flexfec_receiver.h b/modules/rtp_rtcp/include/flexfec_receiver.h
+index a869c8ad41..b6a33882d1 100644
+--- a/modules/rtp_rtcp/include/flexfec_receiver.h
++++ b/modules/rtp_rtcp/include/flexfec_receiver.h
+@@ -30,9 +30,11 @@ class Clock;
+ 
+ class FlexfecReceiver {
+  public:
++  /* Mozilla: Avoid this since it could use GetRealTimeClock().
+   FlexfecReceiver(uint32_t ssrc,
+                   uint32_t protected_media_ssrc,
+                   RecoveredPacketReceiver* recovered_packet_receiver);
++   */
+   FlexfecReceiver(Clock* clock,
+                   uint32_t ssrc,
+                   uint32_t protected_media_ssrc,
+diff --git a/modules/rtp_rtcp/source/flexfec_receiver.cc b/modules/rtp_rtcp/source/flexfec_receiver.cc
+index 7f2cc0cb3c..2ba85a2157 100644
+--- a/modules/rtp_rtcp/source/flexfec_receiver.cc
++++ b/modules/rtp_rtcp/source/flexfec_receiver.cc
+@@ -31,6 +31,7 @@ constexpr TimeDelta kPacketLogInterval = TimeDelta::Seconds(10);
+ 
+ }  // namespace
+ 
++/* Mozilla: Avoid this since it could use GetRealTimeClock().
+ FlexfecReceiver::FlexfecReceiver(
+     uint32_t ssrc,
+     uint32_t protected_media_ssrc,
+@@ -39,6 +40,7 @@ FlexfecReceiver::FlexfecReceiver(
+                       ssrc,
+                       protected_media_ssrc,
+                       recovered_packet_receiver) {}
++ */
+ 
+ FlexfecReceiver::FlexfecReceiver(
+     Clock* clock,
+diff --git a/rtc_base/task_utils/repeating_task.h b/rtc_base/task_utils/repeating_task.h
+index c45de95ecc..28c691c3de 100644
+--- a/rtc_base/task_utils/repeating_task.h
++++ b/rtc_base/task_utils/repeating_task.h
+@@ -57,7 +57,7 @@ class RepeatingTaskHandle {
+       absl::AnyInvocable<TimeDelta()> closure,
+       TaskQueueBase::DelayPrecision precision =
+           TaskQueueBase::DelayPrecision::kLow,
+-      Clock* clock = Clock::GetRealTimeClock(),
++      Clock* clock = Clock::GetRealTimeClockRaw(),
+       const Location& location = Location::Current());
+ 
+   // DelayedStart is equivalent to Start except that the first invocation of the
+@@ -68,7 +68,7 @@ class RepeatingTaskHandle {
+       absl::AnyInvocable<TimeDelta()> closure,
+       TaskQueueBase::DelayPrecision precision =
+           TaskQueueBase::DelayPrecision::kLow,
+-      Clock* clock = Clock::GetRealTimeClock(),
++      Clock* clock = Clock::GetRealTimeClockRaw(),
+       const Location& location = Location::Current());
+ 
+   // Stops future invocations of the repeating task closure. Can only be called
+diff --git a/system_wrappers/include/clock.h b/system_wrappers/include/clock.h
+index 60296070cc..214b34c970 100644
+--- a/system_wrappers/include/clock.h
++++ b/system_wrappers/include/clock.h
+@@ -49,7 +49,7 @@ class RTC_EXPORT Clock {
    }
  
+   // Returns an instance of the real-time system clock implementation.
+-  static Clock* GetRealTimeClock();
++  static Clock* GetRealTimeClockRaw();
+ };
+ 
+ class SimulatedClock : public Clock {
+diff --git a/system_wrappers/source/clock.cc b/system_wrappers/source/clock.cc
+index 88c99d6a68..f7460b831c 100644
+--- a/system_wrappers/source/clock.cc
++++ b/system_wrappers/source/clock.cc
+@@ -57,7 +57,7 @@ class RealTimeClock : public Clock {
+   }
+ };
+ 
+-Clock* Clock::GetRealTimeClock() {
++Clock* Clock::GetRealTimeClockRaw() {
+   static Clock* const clock = new RealTimeClock();
+   return clock;
+ }

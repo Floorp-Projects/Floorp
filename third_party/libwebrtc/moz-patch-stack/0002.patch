@@ -1,43 +1,106 @@
-From: Nico Grunbaum <na-g@nostrum.com>
-Date: Sat, 13 Feb 2021 04:20:00 -0800
-Subject: Bug 1654112 - Add pid_t to desktop_capture_types.h; r=pehrsons
+From: Victor Boivie <boivie@webrtc.org>
+Date: Wed, 13 Dec 2023 12:41:55 +0100
+Subject: (cherry-pick-branch-heads/6167) dcsctp: Fix not using iteraters after
+ NackItem
 
-Upstreaming bug 1697385
+OutstandingData::NackItem nacks a chunk, and if that chunk reaches its
+partial reliability critera, it will abandon the entire message. If that
+message hasn't been sent in full, a placeholder "end" message is
+inserted (see https://crbug.com/webrtc/12812). And when the message is
+inserted, any iterators may be invalidated (if e.g. std::deque would
+want to grow the deque).
 
-Also includes:
-Bug 1654112 - Clarifying prev. rev that moved pid_t into the global namespace; r=dminor
+So ensure that there are no iterators used after having called NackItem.
+By changing the interface of NackItem, and not passing an Item, but just
+the TSN, this is encouraged. NackAll was rewritten as a two-pass
+algorithm to first collect TSNs, then iterating that list, looking up
+the items in the second pass (constant complexity).
 
-Differential Revision: https://phabricator.services.mozilla.com/D107897
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/539b69f0e21118a1898f1ef689577c7193ff7be7
+(cherry picked from commit 161d2c84528ec9eb0c19bfb51024bca54353abc4)
+
+No-Try: True
+Bug: chromium:1510364
+Change-Id: I5156b6d6a683184f290e71c98f16bc68ea2a562f
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/331320
+Reviewed-by: Harald Alvestrand <hta@webrtc.org>
+Commit-Queue: Victor Boivie <boivie@webrtc.org>
+Reviewed-by: Sam Zackrisson <saza@webrtc.org>
+Cr-Original-Commit-Position: refs/heads/main@{#41374}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/331960
+Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
+Cr-Commit-Position: refs/branch-heads/6167@{#2}
+Cr-Branched-From: ece5cb83715dea85617114b6d4e981fdee2623ba-refs/heads/main@{#41315}
 ---
- modules/desktop_capture/desktop_capture_types.h | 4 ++++
- modules/video_capture/video_capture.h           | 1 +
- 2 files changed, 5 insertions(+)
+ net/dcsctp/tx/outstanding_data.cc | 16 +++++++++++-----
+ net/dcsctp/tx/outstanding_data.h  |  9 +++++----
+ 2 files changed, 16 insertions(+), 9 deletions(-)
 
-diff --git a/modules/desktop_capture/desktop_capture_types.h b/modules/desktop_capture/desktop_capture_types.h
-index a4e3e897fd..e777a45f92 100644
---- a/modules/desktop_capture/desktop_capture_types.h
-+++ b/modules/desktop_capture/desktop_capture_types.h
-@@ -13,6 +13,10 @@
+diff --git a/net/dcsctp/tx/outstanding_data.cc b/net/dcsctp/tx/outstanding_data.cc
+index 4972fc5f10..ca639abc54 100644
+--- a/net/dcsctp/tx/outstanding_data.cc
++++ b/net/dcsctp/tx/outstanding_data.cc
+@@ -240,9 +240,8 @@ void OutstandingData::NackBetweenAckBlocks(
+     for (UnwrappedTSN tsn = prev_block_last_acked.next_value();
+          tsn < cur_block_first_acked && tsn <= max_tsn_to_nack;
+          tsn = tsn.next_value()) {
+-      Item& item = GetItem(tsn);
+       ack_info.has_packet_loss |=
+-          NackItem(tsn, item, /*retransmit_now=*/false,
++          NackItem(tsn, /*retransmit_now=*/false,
+                    /*do_fast_retransmit=*/!is_in_fast_recovery);
+     }
+     prev_block_last_acked = UnwrappedTSN::AddTo(cumulative_tsn_ack, block.end);
+@@ -255,9 +254,9 @@ void OutstandingData::NackBetweenAckBlocks(
+ }
  
- #include <stdint.h>
+ bool OutstandingData::NackItem(UnwrappedTSN tsn,
+-                               Item& item,
+                                bool retransmit_now,
+                                bool do_fast_retransmit) {
++  Item& item = GetItem(tsn);
+   if (item.is_outstanding()) {
+     unacked_bytes_ -= GetSerializedChunkSize(item.data());
+     --unacked_items_;
+@@ -446,13 +445,20 @@ absl::optional<UnwrappedTSN> OutstandingData::Insert(
  
-+#ifdef XP_WIN      // Moving this into the global namespace
-+typedef int pid_t; // matching what used to be in
-+#endif             // video_capture_defines.h
+ void OutstandingData::NackAll() {
+   UnwrappedTSN tsn = last_cumulative_tsn_ack_;
++  // A two-pass algorithm is needed, as NackItem will invalidate iterators.
++  std::vector<UnwrappedTSN> tsns_to_nack;
+   for (Item& item : outstanding_data_) {
+     tsn.Increment();
+     if (!item.is_acked()) {
+-      NackItem(tsn, item, /*retransmit_now=*/true,
+-               /*do_fast_retransmit=*/false);
++      tsns_to_nack.push_back(tsn);
+     }
+   }
 +
- namespace webrtc {
++  for (UnwrappedTSN tsn : tsns_to_nack) {
++    NackItem(tsn, /*retransmit_now=*/true,
++             /*do_fast_retransmit=*/false);
++  }
++
+   RTC_DCHECK(IsConsistent());
+ }
  
- enum class CaptureType { kWindow, kScreen, kAnyScreenContent };
-diff --git a/modules/video_capture/video_capture.h b/modules/video_capture/video_capture.h
-index f31b239c71..7279bed476 100644
---- a/modules/video_capture/video_capture.h
-+++ b/modules/video_capture/video_capture.h
-@@ -13,6 +13,7 @@
+diff --git a/net/dcsctp/tx/outstanding_data.h b/net/dcsctp/tx/outstanding_data.h
+index 82e78337b8..2a214975e6 100644
+--- a/net/dcsctp/tx/outstanding_data.h
++++ b/net/dcsctp/tx/outstanding_data.h
+@@ -330,10 +330,11 @@ class OutstandingData {
+   // many times so that it should be retransmitted, this will schedule it to be
+   // "fast retransmitted". This is only done just before going into fast
+   // recovery.
+-  bool NackItem(UnwrappedTSN tsn,
+-                Item& item,
+-                bool retransmit_now,
+-                bool do_fast_retransmit);
++  //
++  // Note that since nacking an item may result in it becoming abandoned, which
++  // in turn could alter `outstanding_data_`, any iterators are invalidated
++  // after having called this method.
++  bool NackItem(UnwrappedTSN tsn, bool retransmit_now, bool do_fast_retransmit);
  
- #include "api/video/video_rotation.h"
- #include "api/video/video_sink_interface.h"
-+#include "modules/desktop_capture/desktop_capture_types.h"
- #include "modules/video_capture/raw_video_sink_interface.h"
- #include "modules/video_capture/video_capture_defines.h"
- #include <set>
+   // Given that a message fragment, `item` has been abandoned, abandon all other
+   // fragments that share the same message - both never-before-sent fragments

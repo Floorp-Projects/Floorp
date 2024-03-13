@@ -1,34 +1,53 @@
-From: Dan Minor <dminor@mozilla.com>
-Date: Thu, 31 Jan 2019 15:37:00 -0500
-Subject: Bug 1524208 - Calculate stride based upon target_width in
- video_capture_impl.cc; r=pehrsons
+From: "Byron Campen [:bwc]" <docfaraday@gmail.com>
+Date: Fri, 12 Feb 2021 14:27:00 +0000
+Subject: Bug 1654112 - Get OS X build working.
+ r=ng,firefox-build-system-reviewers,glandium
 
-Differential Revision: https://phabricator.services.mozilla.com/D18270
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/51d12094d825c4c4467cb132d03d4f3cad4b1b82
+* Pull in sdk/objc/base and sdk/objc/helpers
+* Add gclient_args.gni to keep build happy.
+* Add a missing include path for libyuv
+* Support .m files in build.
+
+Differential Revision: https://phabricator.services.mozilla.com/D105015
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/9314046d89ebc0836a50ab7addece71abbf0b5e4
 ---
- modules/video_capture/video_capture_impl.cc | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ modules/desktop_capture/mac/screen_capturer_mac.mm | 3 ++-
+ modules/desktop_capture/mac/window_list_utils.cc   | 4 ++--
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/modules/video_capture/video_capture_impl.cc b/modules/video_capture/video_capture_impl.cc
-index 7071776d0a..02404697ad 100644
---- a/modules/video_capture/video_capture_impl.cc
-+++ b/modules/video_capture/video_capture_impl.cc
-@@ -180,8 +180,6 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
-     }
+diff --git a/modules/desktop_capture/mac/screen_capturer_mac.mm b/modules/desktop_capture/mac/screen_capturer_mac.mm
+index a2370ed695..785a15dfa4 100644
+--- a/modules/desktop_capture/mac/screen_capturer_mac.mm
++++ b/modules/desktop_capture/mac/screen_capturer_mac.mm
+@@ -276,7 +276,8 @@ bool ScreenCapturerMac::GetSourceList(SourceList* screens) {
+   for (MacDisplayConfigurations::iterator it = desktop_config_.displays.begin();
+        it != desktop_config_.displays.end();
+        ++it) {
+-    screens->push_back({it->id, std::string()});
++    Source value = {it->id, 0, std::string()};
++    screens->push_back(value);
    }
- 
--  int stride_y = width;
--  int stride_uv = (width + 1) / 2;
-   int target_width = width;
-   int target_height = abs(height);
- 
-@@ -194,6 +192,9 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
-     }
-   }
- 
-+  int stride_y = target_width;
-+  int stride_uv = (target_width + 1) / 2;
-+
-   // Setting absolute height (in case it was negative).
-   // In Windows, the image starts bottom left, instead of top left.
-   // Setting a negative source height, inverts the image (within LibYuv).
+   return true;
+ }
+diff --git a/modules/desktop_capture/mac/window_list_utils.cc b/modules/desktop_capture/mac/window_list_utils.cc
+index 5d881662ea..989ec7ea54 100644
+--- a/modules/desktop_capture/mac/window_list_utils.cc
++++ b/modules/desktop_capture/mac/window_list_utils.cc
+@@ -198,7 +198,7 @@ bool GetWindowList(DesktopCapturer::SourceList* windows,
+             // the check in the map. Also skip the window if owner name is
+             // empty too.
+             if (!owner_name.empty() && (itr == pid_itr_map.end())) {
+-              sources.push_back(DesktopCapturer::Source{window_id, owner_name});
++              sources.push_back(DesktopCapturer::Source{window_id, pid, owner_name});
+               RTC_DCHECK(!sources.empty());
+               // Get an iterator on the last valid element in the source list.
+               std::list<DesktopCapturer::Source>::const_iterator last_source =
+@@ -209,7 +209,7 @@ bool GetWindowList(DesktopCapturer::SourceList* windows,
+                       pid, last_source));
+             }
+           } else {
+-            sources.push_back(DesktopCapturer::Source{window_id, title});
++            sources.push_back(DesktopCapturer::Source{window_id, pid, title});
+             // Once the window with empty title has been removed no other empty
+             // windows are allowed for the same pid.
+             if (itr != pid_itr_map.end() && (itr->second != sources.end())) {

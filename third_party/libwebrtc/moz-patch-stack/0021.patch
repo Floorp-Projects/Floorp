@@ -1,55 +1,34 @@
-From: Wang Qing <wangqing-hf@loongson.cn>
-Date: Wed, 25 Sep 2019 14:15:00 +0000
-Subject: Bug 1579834 - [WebRTC] Add mips64 support; r=dminor
+From: Dan Minor <dminor@mozilla.com>
+Date: Thu, 31 Jan 2019 15:37:00 -0500
+Subject: Bug 1524208 - Calculate stride based upon target_width in
+ video_capture_impl.cc; r=pehrsons
 
-Differential Revision: https://phabricator.services.mozilla.com/D45620
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/1387b2c480b55ecca3fbdf62bd7649dafc62438d
+Differential Revision: https://phabricator.services.mozilla.com/D18270
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/51d12094d825c4c4467cb132d03d4f3cad4b1b82
 ---
- modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc | 2 +-
- modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc | 6 +++---
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ modules/video_capture/video_capture_impl.cc | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc b/modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc
-index 5afd105949..9b77388f10 100644
---- a/modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc
-+++ b/modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc
-@@ -46,7 +46,7 @@ const char kVp8PostProcArmFieldTrial[] = "WebRTC-VP8-Postproc-Config-Arm";
- const char kVp8PostProcFieldTrial[] = "WebRTC-VP8-Postproc-Config";
+diff --git a/modules/video_capture/video_capture_impl.cc b/modules/video_capture/video_capture_impl.cc
+index 7071776d0a..02404697ad 100644
+--- a/modules/video_capture/video_capture_impl.cc
++++ b/modules/video_capture/video_capture_impl.cc
+@@ -180,8 +180,6 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
+     }
+   }
  
- #if defined(WEBRTC_ARCH_ARM) || defined(WEBRTC_ARCH_ARM64) || \
--    defined(WEBRTC_ANDROID)
-+    defined(WEBRTC_ANDROID)  || defined(WEBRTC_ARCH_MIPS)
- constexpr bool kIsArm = true;
- #else
- constexpr bool kIsArm = false;
-diff --git a/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc b/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc
-index 52ef6231ea..bff70ed70d 100644
---- a/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc
-+++ b/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc
-@@ -749,7 +749,7 @@ int LibvpxVp8Encoder::InitEncode(const VideoCodec* inst,
- }
+-  int stride_y = width;
+-  int stride_uv = (width + 1) / 2;
+   int target_width = width;
+   int target_height = abs(height);
  
- int LibvpxVp8Encoder::GetCpuSpeed(int width, int height) {
--#ifdef MOBILE_ARM
-+#if defined(MOBILE_ARM) || defined(WEBRTC_ARCH_MIPS)
-   // On mobile platform, use a lower speed setting for lower resolutions for
-   // CPUs with 4 or more cores.
-   RTC_DCHECK_GT(number_of_cores_, 0);
-@@ -782,7 +782,7 @@ int LibvpxVp8Encoder::GetCpuSpeed(int width, int height) {
- }
+@@ -194,6 +192,9 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
+     }
+   }
  
- int LibvpxVp8Encoder::NumberOfThreads(int width, int height, int cpus) {
--#if defined(WEBRTC_ANDROID)
-+#if defined(WEBRTC_ANDROID) || defined(WEBRTC_ARCH_MIPS)
-   if (width * height >= 320 * 180) {
-     if (cpus >= 4) {
-       // 3 threads for CPUs with 4 and more cores since most of times only 4
-@@ -854,7 +854,7 @@ int LibvpxVp8Encoder::InitAndSetControlSettings() {
-   // for getting the denoised frame from the encoder and using that
-   // when encoding lower resolution streams. Would it work with the
-   // multi-res encoding feature?
--#ifdef MOBILE_ARM
-+#if defined(MOBILE_ARM) || defined(WEBRTC_ARCH_MIPS)
-   denoiserState denoiser_state = kDenoiserOnYOnly;
- #else
-   denoiserState denoiser_state = kDenoiserOnAdaptive;
++  int stride_y = target_width;
++  int stride_uv = (target_width + 1) / 2;
++
+   // Setting absolute height (in case it was negative).
+   // In Windows, the image starts bottom left, instead of top left.
+   // Setting a negative source height, inverts the image (within LibYuv).

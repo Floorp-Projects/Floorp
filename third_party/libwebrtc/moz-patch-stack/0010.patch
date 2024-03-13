@@ -1,23 +1,46 @@
 From: Dan Minor <dminor@mozilla.com>
-Date: Mon, 13 Aug 2018 08:34:00 -0400
-Subject: Bug 1376873 - Allow single channel opus; r=padenot
+Date: Wed, 18 Nov 2020 13:33:00 -0500
+Subject: Bug 1654112 - Suppress -Wclass-varargs warning in logging.h. r=ng
 
-Differential Revision: https://phabricator.services.mozilla.com/D7469
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/92a7c3eee9f0c80ffbf79fdab8f8f2b8f6bd7701
+This needs some investigation to see why we get this warning when it is not
+present upstream.
+
+Since both were doing the same thing for different compiler chains,
+also includes:
+Bug 1654112 - linux build fix (pragmas) for base-toolchains* . r=ng
+
+Differential Revision: https://phabricator.services.mozilla.com/D130086
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/8d832e832ffe513246c0763a56376a8022b2447b
 ---
- modules/audio_coding/codecs/opus/audio_encoder_opus.cc | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ rtc_base/logging.h | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-diff --git a/modules/audio_coding/codecs/opus/audio_encoder_opus.cc b/modules/audio_coding/codecs/opus/audio_encoder_opus.cc
-index 51b0fcd492..17e0e33b1d 100644
---- a/modules/audio_coding/codecs/opus/audio_encoder_opus.cc
-+++ b/modules/audio_coding/codecs/opus/audio_encoder_opus.cc
-@@ -240,7 +240,7 @@ std::unique_ptr<AudioEncoder> AudioEncoderOpusImpl::MakeAudioEncoder(
- absl::optional<AudioEncoderOpusConfig> AudioEncoderOpusImpl::SdpToConfig(
-     const SdpAudioFormat& format) {
-   if (!absl::EqualsIgnoreCase(format.name, "opus") ||
--      format.clockrate_hz != kRtpTimestampRateHz || format.num_channels != 2) {
-+      format.clockrate_hz != kRtpTimestampRateHz) {
-     return absl::nullopt;
-   }
+diff --git a/rtc_base/logging.h b/rtc_base/logging.h
+index df7f173f58..a3733d7543 100644
+--- a/rtc_base/logging.h
++++ b/rtc_base/logging.h
+@@ -48,6 +48,14 @@
+ #ifndef RTC_BASE_LOGGING_H_
+ #define RTC_BASE_LOGGING_H_
  
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Wvarargs"
++
++#if defined(__clang__)
++#  pragma clang diagnostic push
++#  pragma clang diagnostic ignored "-Wclass-varargs"
++#endif
++
+ #include <errno.h>
+ 
+ #include <atomic>
+@@ -764,4 +772,9 @@ inline const char* AdaptString(const std::string& str) {
+ 
+ }  // namespace rtc
+ 
++#pragma GCC diagnostic pop
++#if defined(__clang__)
++#  pragma clang diagnostic pop
++#endif
++
+ #endif  // RTC_BASE_LOGGING_H_

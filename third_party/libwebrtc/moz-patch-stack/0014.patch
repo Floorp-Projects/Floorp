@@ -1,46 +1,65 @@
 From: Dan Minor <dminor@mozilla.com>
-Date: Mon, 5 Nov 2018 10:33:00 -0500
-Subject: Bug 1376873 - Reduce thread stack size in platform_thread.cc; r=bwc
+Date: Tue, 31 Jul 2018 13:32:00 -0400
+Subject: Bug 1376873 - OS X desktop capture fixes; r=pehrsons
 
-Summary:
-The current default stack size of 1M results in intermittent OOMs on win32
-builds while running web-platform tests. The value of 256k was chosen for
-consistency with the default value used elsewhere in Gecko, which is defined in
-nsIThreadManager.idl.
-
-Reviewers: bwc
-
-Tags: #secure-revision
-
-Bug #: 1376873
-
-Differential Revision: https://phabricator.services.mozilla.com/D11090
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/e83c311e5293902be4db4ecea17cff87c633f7cf
+Differential Revision: https://phabricator.services.mozilla.com/D7464
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/02c038eca65c1218b56fdf8937fdeab3d8767fe6
 ---
- rtc_base/platform_thread.cc | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ modules/desktop_capture/mac/screen_capturer_mac.h   | 7 +++++++
+ modules/desktop_capture/mac/screen_capturer_mac.mm  | 4 +++-
+ modules/desktop_capture/mouse_cursor_monitor_mac.mm | 2 +-
+ 3 files changed, 11 insertions(+), 2 deletions(-)
 
-diff --git a/rtc_base/platform_thread.cc b/rtc_base/platform_thread.cc
-index 6d369d747e..556204ac89 100644
---- a/rtc_base/platform_thread.cc
-+++ b/rtc_base/platform_thread.cc
-@@ -189,15 +189,17 @@ PlatformThread PlatformThread::SpawnThread(
-   // Set the reserved stack stack size to 1M, which is the default on Windows
-   // and Linux.
-   DWORD thread_id = 0;
-+  // Mozilla: Set to 256kb for consistency with nsIThreadManager.idl
-   PlatformThread::Handle handle = ::CreateThread(
--      nullptr, 1024 * 1024, &RunPlatformThread, start_thread_function_ptr,
-+      nullptr, 256 * 1024, &RunPlatformThread, start_thread_function_ptr,
-       STACK_SIZE_PARAM_IS_A_RESERVATION, &thread_id);
-   RTC_CHECK(handle) << "CreateThread failed";
- #else
-   pthread_attr_t attr;
-   pthread_attr_init(&attr);
-   // Set the stack stack size to 1M.
--  pthread_attr_setstacksize(&attr, 1024 * 1024);
-+  // Mozilla: Set to 256kb for consistency with nsIThreadManager.idl
-+  pthread_attr_setstacksize(&attr, 256 * 1024);
-   pthread_attr_setdetachstate(
-       &attr, joinable ? PTHREAD_CREATE_JOINABLE : PTHREAD_CREATE_DETACHED);
-   PlatformThread::Handle handle;
+diff --git a/modules/desktop_capture/mac/screen_capturer_mac.h b/modules/desktop_capture/mac/screen_capturer_mac.h
+index 7e38b5bd08..e4a2cc2fc9 100644
+--- a/modules/desktop_capture/mac/screen_capturer_mac.h
++++ b/modules/desktop_capture/mac/screen_capturer_mac.h
+@@ -113,6 +113,13 @@ class ScreenCapturerMac final : public DesktopCapturer {
+ 
+   // Start, CaptureFrame and destructor have to called in the same thread.
+   SequenceChecker thread_checker_;
++
++  // Used to force CaptureFrame to update it's screen configuration
++  // and reregister event handlers. This ensure that this
++  // occurs on the ScreenCapture thread. Read and written from
++  // both the VideoCapture thread and ScreenCapture thread.
++  // Protected by desktop_config_monitor_.
++  bool update_screen_configuration_ = false;
+ };
+ 
+ }  // namespace webrtc
+diff --git a/modules/desktop_capture/mac/screen_capturer_mac.mm b/modules/desktop_capture/mac/screen_capturer_mac.mm
+index 60089fd0f2..a2370ed695 100644
+--- a/modules/desktop_capture/mac/screen_capturer_mac.mm
++++ b/modules/desktop_capture/mac/screen_capturer_mac.mm
+@@ -182,6 +182,7 @@ void ScreenCapturerMac::Start(Callback* callback) {
+       "webrtc", "ScreenCapturermac::Start", "target display id ", current_display_);
+ 
+   callback_ = callback;
++  update_screen_configuration_ = false;
+   // Start and operate CGDisplayStream handler all from capture thread.
+   if (!RegisterRefreshAndMoveHandlers()) {
+     RTC_LOG(LS_ERROR) << "Failed to register refresh and move handlers.";
+@@ -202,7 +203,8 @@ void ScreenCapturerMac::CaptureFrame() {
+   }
+ 
+   MacDesktopConfiguration new_config = desktop_config_monitor_->desktop_configuration();
+-  if (!desktop_config_.Equals(new_config)) {
++  if (update_screen_configuration_ || !desktop_config_.Equals(new_config)) {
++    update_screen_configuration_ = false;
+     desktop_config_ = new_config;
+     // If the display configuraiton has changed then refresh capturer data
+     // structures. Occasionally, the refresh and move handlers are lost when
+diff --git a/modules/desktop_capture/mouse_cursor_monitor_mac.mm b/modules/desktop_capture/mouse_cursor_monitor_mac.mm
+index 3db4332cd1..512103ab5e 100644
+--- a/modules/desktop_capture/mouse_cursor_monitor_mac.mm
++++ b/modules/desktop_capture/mouse_cursor_monitor_mac.mm
+@@ -133,7 +133,7 @@ void MouseCursorMonitorMac::CaptureImage(float scale) {
+   NSSize nssize = [nsimage size];  // DIP size
+ 
+   // No need to caputre cursor image if it's unchanged since last capture.
+-  if ([[nsimage TIFFRepresentation] isEqual:[last_cursor_ TIFFRepresentation]]) return;
++  if (last_cursor_ && [[nsimage TIFFRepresentation] isEqual:[last_cursor_ TIFFRepresentation]]) return;
+   last_cursor_ = nsimage;
+ 
+   DesktopSize size(round(nssize.width * scale),

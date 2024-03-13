@@ -1,26 +1,29 @@
-From: Nico Grunbaum <na-g@nostrum.com>
-Date: Thu, 28 Oct 2021 18:13:00 +0000
-Subject: Bug 1729367 - P7 - restore mac PID tracking using new API;r=mjf
- a=webrtc-update
+From: "Byron Campen [:bwc]" <docfaraday@gmail.com>
+Date: Fri, 12 Mar 2021 08:53:00 -0600
+Subject: Bug 1654112 - libwebrtc modification: Init some stats that were being
+ passed to us uninitialized. r=ng
 
-Differential Revision: https://phabricator.services.mozilla.com/D129721
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/1495ca5ef535f8ad692a3a579ca42eddc14f39a8
+Differential Revision: https://phabricator.services.mozilla.com/D108673
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c385bb870413b925af48df97aa1f2b80a26e78d2
 ---
- modules/desktop_capture/window_capturer_mac.mm | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ call/video_receive_stream.h | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/modules/desktop_capture/window_capturer_mac.mm b/modules/desktop_capture/window_capturer_mac.mm
-index 56c94baada..8f5dc25516 100644
---- a/modules/desktop_capture/window_capturer_mac.mm
-+++ b/modules/desktop_capture/window_capturer_mac.mm
-@@ -169,8 +169,9 @@ explicit WindowCapturerMac(
-           return webrtc::GetWindowList(
-               [sources](CFDictionaryRef window) {
-                 WindowId window_id = GetWindowId(window);
-+                int pid = GetWindowOwnerPid(window);
-                 if (window_id != kNullWindowId) {
--                  sources->push_back(DesktopCapturer::Source{window_id, GetWindowTitle(window)});
-+                  sources->push_back(DesktopCapturer::Source{window_id, pid, GetWindowTitle(window)});
-                 }
-                 return true;
-               },
+diff --git a/call/video_receive_stream.h b/call/video_receive_stream.h
+index 01ac7e0ba4..01fb08a009 100644
+--- a/call/video_receive_stream.h
++++ b/call/video_receive_stream.h
+@@ -152,9 +152,10 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
+     RtcpPacketTypeCounter rtcp_packet_type_counts;
+     absl::optional<RtpReceiveStats> rtx_rtp_stats;
+ 
+-    uint32_t rtcp_sender_packets_sent;
+-    uint32_t rtcp_sender_octets_sent;
+-    int64_t rtcp_sender_ntp_timestamp_ms;
++    // Mozilla modification: Init these three.
++    uint32_t rtcp_sender_packets_sent = 0;
++    uint32_t rtcp_sender_octets_sent = 0;
++    int64_t rtcp_sender_ntp_timestamp_ms = 0;
+ 
+     // Timing frame info: all important timestamps for a full lifetime of a
+     // single 'timing frame'.
