@@ -632,23 +632,6 @@ nsresult nsCocoaUtils::CreateDualRepresentationNSImageFromImageContainer(
 }
 
 // static
-void nsCocoaUtils::GetStringForNSString(const NSString* aSrc,
-                                        nsAString& aDist) {
-  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
-
-  if (!aSrc) {
-    aDist.Truncate();
-    return;
-  }
-
-  aDist.SetLength([aSrc length]);
-  [aSrc getCharacters:reinterpret_cast<unichar*>(aDist.BeginWriting())
-                range:NSMakeRange(0, [aSrc length])];
-
-  NS_OBJC_END_TRY_IGNORE_BLOCK;
-}
-
-// static
 NSString* nsCocoaUtils::ToNSString(const nsAString& aString) {
   if (aString.IsEmpty()) {
     return [NSString string];
