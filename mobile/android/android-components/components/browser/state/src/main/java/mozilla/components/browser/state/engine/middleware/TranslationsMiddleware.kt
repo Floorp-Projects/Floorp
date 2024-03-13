@@ -198,7 +198,7 @@ class TranslationsMiddleware(
                             isEngineSupported = isEngineSupported,
                         ),
                     )
-                    logger.info("Success requesting engine support.")
+                    logger.info("Success requesting engine support. isEngineSupported: $isEngineSupported")
                     continuation.resume(isEngineSupported)
                 },
 
