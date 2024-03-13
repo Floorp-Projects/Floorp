@@ -4,13 +4,10 @@
 
 /** This file handles registering the Storybook addon */
 
-// eslint-disable-next-line no-unused-vars
-import React from "react";
-import { addons, types } from "@storybook/addons";
+import { addons, types } from "@storybook/manager-api";
 import { ADDON_ID, PANEL_ID, TOOL_ID } from "../constants.mjs";
-import { PseudoLocalizationButton } from "../PseudoLocalizationButton.mjs";
-// eslint-disable-next-line no-unused-vars
-import { FluentPanel } from "../FluentPanel.mjs";
+import { PseudoLocalizationButton } from "../PseudoLocalizationButton.jsx";
+import { FluentPanel } from "../FluentPanel.jsx";
 
 // Register the addon.
 addons.register(ADDON_ID, api => {
@@ -27,8 +24,6 @@ addons.register(ADDON_ID, api => {
     title: "Fluent",
     //👇 Sets the type of UI element in Storybook
     type: types.PANEL,
-    render: ({ active, key }) => (
-      <FluentPanel active={active} api={api} key={key}></FluentPanel>
-    ),
+    render: ({ active }) => FluentPanel({ active }),
   });
 });

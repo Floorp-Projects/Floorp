@@ -4,7 +4,7 @@
 
 // eslint-disable-next-line no-unused-vars
 import React from "react";
-import { useGlobals } from "@storybook/api";
+import { useGlobals } from "@storybook/manager-api";
 import {
   // eslint-disable-next-line no-unused-vars
   Icons,

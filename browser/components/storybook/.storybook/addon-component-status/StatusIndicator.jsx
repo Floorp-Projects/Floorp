@@ -4,7 +4,7 @@
 
 // eslint-disable-next-line no-unused-vars
 import React from "react";
-import { useParameter } from "@storybook/api";
+import { useParameter } from "@storybook/manager-api";
 import {
   // eslint-disable-next-line no-unused-vars
   Badge,
@@ -85,7 +85,7 @@ export const StatusIndicator = () => {
       style={{
         display: "flex",
       }}
-      onVisibilityChange={onVisibilityChange}
+      onVisibleChange={onVisibilityChange}
       tooltip={() => (
         <div id="statusMessage">
           <TooltipMessage

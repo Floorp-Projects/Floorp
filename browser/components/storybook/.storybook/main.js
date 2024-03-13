@@ -6,6 +6,7 @@
 const path = require("path");
 const webpack = require("webpack");
 const rewriteChromeUri = require("./chrome-uri-utils.js");
+const mdIndexer = require("./markdown-story-indexer.js");
 
 const projectRoot = path.resolve(__dirname, "../../../../");
 
@@ -37,34 +38,35 @@ module.exports = {
     path.resolve(__dirname, "addon-fluent"),
     path.resolve(__dirname, "addon-component-status"),
   ],
-  framework: "@storybook/web-components",
+  framework: {
+    name: "@storybook/web-components-webpack5",
+    options: {},
+  },
+
+  experimental_indexers: async existingIndexers => {
+    const customIndexer = {
+      test: /(stories|story)\.md$/,
+      createIndex: mdIndexer,
+    };
+    return [...existingIndexers, customIndexer];
+  },
   webpackFinal: async (config, { configType }) => {
     // `configType` has a value of 'DEVELOPMENT' or 'PRODUCTION'
     // You can change the configuration based on that.
     // 'PRODUCTION' is used when building the static version of storybook.
 
     // Make whatever fine-grained changes you need
-    config.resolve.alias.browser = `${projectRoot}/browser`;
-    config.resolve.alias.toolkit = `${projectRoot}/toolkit`;
-    config.resolve.alias[
-      "toolkit-widgets"
-    ] = `${projectRoot}/toolkit/content/widgets/`;
-    config.resolve.alias[
-      "lit.all.mjs"
-    ] = `${projectRoot}/toolkit/content/widgets/vendor/lit.all.mjs`;
-    // @mdx-js/react@1.x.x versions don't get hoisted to the root node_modules
-    // folder due to the versions of React it accepts as a peer dependency. That
-    // means we have to go one level deeper and look in the node_modules of
-    // @storybook/addon-docs, which depends on @mdx-js/react.
-    config.resolve.alias["@storybook/addon-docs"] =
-      "browser/components/storybook/node_modules/@storybook/addon-docs";
-    config.resolve.alias["@mdx-js/react"] =
-      "@storybook/addon-docs/node_modules/@mdx-js/react";
-
-    // The @storybook/web-components project uses lit-html. Redirect it to our
-    // bundled version.
-    config.resolve.alias["lit-html/directive-helpers.js"] = "lit.all.mjs";
-    config.resolve.alias["lit-html"] = "lit.all.mjs";
+    config.resolve.alias = {
+      browser: `${projectRoot}/browser`,
+      toolkit: `${projectRoot}/toolkit`,
+      "toolkit-widgets": `${projectRoot}/toolkit/content/widgets/`,
+      "lit.all.mjs": `${projectRoot}/toolkit/content/widgets/vendor/lit.all.mjs`,
+      react: "browser/components/storybook/node_modules/react",
+      "react/jsx-runtime":
+        "browser/components/storybook/node_modules/react/jsx-runtime",
+      "@storybook/addon-docs":
+        "browser/components/storybook/node_modules/@storybook/addon-docs",
+    };
 
     config.plugins.push(
       // Rewrite chrome:// URI imports to file system paths.
@@ -146,8 +148,5 @@ module.exports = {
 
     // Return the altered config
     return config;
-  },
-  core: {
-    builder: "webpack5",
   },
 };
