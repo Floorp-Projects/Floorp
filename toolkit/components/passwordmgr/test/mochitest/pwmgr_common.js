@@ -30,15 +30,6 @@ let authPromptModalType = SpecialPowers.Services.prefs.getIntPref(
   "prompts.modalType.httpAuth"
 );
 
-// Whether the auth prompt is a commonDialog.xhtml or a TabModalPrompt
-let authPromptIsCommonDialog =
-  authPromptModalType === SpecialPowers.Services.prompt.MODAL_TYPE_WINDOW ||
-  (authPromptModalType === SpecialPowers.Services.prompt.MODAL_TYPE_TAB &&
-    SpecialPowers.Services.prefs.getBoolPref(
-      "prompts.tabChromePromptSubDialog",
-      false
-    ));
-
 /**
  * Recreate a DOM tree using the outerHTML to ensure that any event listeners
  * and internal state for the elements are removed.
