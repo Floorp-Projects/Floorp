@@ -12,7 +12,6 @@ EXPORTS.mozilla._ipdltest += [
     "IPDLUnitTestTypes.h",
     "IPDLUnitTestUtils.h",
     "TestOffMainThreadPainting.h",
-    "TestRacyUndefer.h",
     "TestRPC.h",
     "TestSanity.h",
     "TestSelfManageRoot.h",
@@ -29,7 +28,6 @@ EXPORTS.mozilla._ipdltest += [
 
 SOURCES += [
     "TestOffMainThreadPainting.cpp",
-    "TestRacyUndefer.cpp",
     "TestRPC.cpp",
     "TestSanity.cpp",
     "TestSelfManageRoot.cpp",
@@ -57,7 +55,6 @@ IPDL_SOURCES += [
     "PTestIndirectProtocolParamSecond.ipdl",
     "PTestPaintThread.ipdl",
     "PTestPriority.ipdl",
-    "PTestRacyUndefer.ipdl",
     "PTestRPC.ipdl",
     "PTestSanity.ipdl",
     "PTestSelfManage.ipdl",
