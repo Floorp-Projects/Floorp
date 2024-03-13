@@ -25,7 +25,8 @@ class UtilityAudioDecoderParent final : public PUtilityAudioDecoderParent {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(UtilityAudioDecoderParent, override);
 
-  UtilityAudioDecoderParent();
+  explicit UtilityAudioDecoderParent(
+      nsTArray<mozilla::gfx::GfxVarUpdate>&& aUpdates);
 
   static void GenericPreloadForSandbox();
   static void WMFPreloadForSandbox();
@@ -39,7 +40,6 @@ class UtilityAudioDecoderParent final : public PUtilityAudioDecoderParent {
 #ifdef MOZ_WMF_MEDIA_ENGINE
   mozilla::ipc::IPCResult RecvInitVideoBridge(
       Endpoint<PVideoBridgeChild>&& aEndpoint,
-      nsTArray<mozilla::gfx::GfxVarUpdate>&& aUpdates,
       const ContentDeviceData& aContentDeviceData);
 
   IPCResult RecvUpdateVar(const mozilla::gfx::GfxVarUpdate& aUpdate);

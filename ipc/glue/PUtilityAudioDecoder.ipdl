@@ -30,7 +30,6 @@ parent:
 
 #ifdef MOZ_WMF_MEDIA_ENGINE
   async InitVideoBridge(Endpoint<PVideoBridgeChild> endpoint,
-                        GfxVarUpdate[] updates,
                         ContentDeviceData contentDeviceData);
 
   async UpdateVar(GfxVarUpdate var);

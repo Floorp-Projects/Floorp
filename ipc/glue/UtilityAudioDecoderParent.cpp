@@ -42,7 +42,8 @@
 
 namespace mozilla::ipc {
 
-UtilityAudioDecoderParent::UtilityAudioDecoderParent()
+UtilityAudioDecoderParent::UtilityAudioDecoderParent(
+    nsTArray<gfx::GfxVarUpdate>&& aUpdates)
     : mKind(GetCurrentSandboxingKind()),
       mAudioDecoderParentStart(TimeStamp::Now()) {
 #ifdef MOZ_WMF_MEDIA_ENGINE
@@ -51,6 +52,9 @@ UtilityAudioDecoderParent::UtilityAudioDecoderParent()
     profiler_set_process_name(nsCString("MF Media Engine CDM"));
     gfx::gfxConfig::Init();
     gfx::gfxVars::Initialize();
+    for (auto& update : aUpdates) {
+      gfx::gfxVars::ApplyUpdate(update);
+    }
     gfx::DeviceManagerDx::Init();
     return;
   }
@@ -141,16 +145,11 @@ UtilityAudioDecoderParent::RecvNewContentRemoteDecoderManager(
 #ifdef MOZ_WMF_MEDIA_ENGINE
 mozilla::ipc::IPCResult UtilityAudioDecoderParent::RecvInitVideoBridge(
     Endpoint<PVideoBridgeChild>&& aEndpoint,
-    nsTArray<gfx::GfxVarUpdate>&& aUpdates,
     const ContentDeviceData& aContentDeviceData) {
   MOZ_ASSERT(mKind == SandboxingKind::MF_MEDIA_ENGINE_CDM);
   if (!RemoteDecoderManagerParent::CreateVideoBridgeToOtherProcess(
           std::move(aEndpoint))) {
     return IPC_FAIL_NO_REASON(this);
-  }
-
-  for (const auto& update : aUpdates) {
-    gfx::gfxVars::ApplyUpdate(update);
   }
 
   gfx::gfxConfig::Inherit(
@@ -175,6 +174,17 @@ mozilla::ipc::IPCResult UtilityAudioDecoderParent::RecvInitVideoBridge(
 IPCResult UtilityAudioDecoderParent::RecvUpdateVar(
     const GfxVarUpdate& aUpdate) {
   MOZ_ASSERT(mKind == SandboxingKind::MF_MEDIA_ENGINE_CDM);
+  auto scopeExit = MakeScopeExit(
+      [self = RefPtr<UtilityAudioDecoderParent>{this},
+       location = GetRemoteDecodeInFromKind(mKind),
+       couldUseHWDecoder = gfx::gfxVars::CanUseHardwareVideoDecoding()] {
+        if (couldUseHWDecoder != gfx::gfxVars::CanUseHardwareVideoDecoding()) {
+          // The capabilities of the system may have changed, force a refresh by
+          // re-initializing the PDM.
+          Unused << self->SendUpdateMediaCodecsSupported(
+              location, PDMFactory::Supported(true /* force refresh */));
+        }
+      });
   gfx::gfxVars::ApplyUpdate(aUpdate);
   return IPC_OK();
 }

@@ -261,11 +261,13 @@ mozilla::ipc::IPCResult UtilityProcessChild::RecvTestTelemetryProbes() {
 
 mozilla::ipc::IPCResult
 UtilityProcessChild::RecvStartUtilityAudioDecoderService(
-    Endpoint<PUtilityAudioDecoderParent>&& aEndpoint) {
+    Endpoint<PUtilityAudioDecoderParent>&& aEndpoint,
+    nsTArray<gfx::GfxVarUpdate>&& aUpdates) {
   PROFILER_MARKER_UNTYPED(
       "UtilityProcessChild::RecvStartUtilityAudioDecoderService", MEDIA,
       MarkerOptions(MarkerTiming::IntervalUntilNowFrom(mChildStartTime)));
-  mUtilityAudioDecoderInstance = new UtilityAudioDecoderParent();
+  mUtilityAudioDecoderInstance =
+      new UtilityAudioDecoderParent(std::move(aUpdates));
   if (!mUtilityAudioDecoderInstance) {
     return IPC_FAIL(this, "Failed to create UtilityAudioDecoderParent");
   }
