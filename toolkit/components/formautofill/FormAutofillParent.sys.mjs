@@ -5,10 +5,10 @@
 /*
  * Implements a service used to access storage and communicate with content.
  *
- * A "fields" array is used to communicate with FormAutofillContent. Each item
+ * A "fields" array is used to communicate with FormAutofillChild. Each item
  * represents a single input field in the content page as well as its
  * @autocomplete properties. The schema is as below. Please refer to
- * FormAutofillContent.js for more details.
+ * FormAutofillChild.js for more details.
  *
  * [
  *   {
@@ -293,7 +293,7 @@ export class FormAutofillParent extends JSWindowActorParent {
   }
 
   /**
-   * Handles the message coming from FormAutofillContent.
+   * Handles the message coming from FormAutofillChild.
    *
    * @param   {object} message
    * @param   {string} message.name The name of the message.

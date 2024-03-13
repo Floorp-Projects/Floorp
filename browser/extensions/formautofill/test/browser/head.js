@@ -397,6 +397,14 @@ async function focusUpdateSubmitForm(target, args, submit = true) {
       element = form.querySelector(selector);
       if (content.HTMLInputElement.isInstance(element)) {
         element.setUserInput(value);
+      } else if (
+        content.HTMLSelectElement.isInstance(element) &&
+        Array.isArray(value)
+      ) {
+        element.multiple = true;
+        [...element.options].forEach(option => {
+          option.selected = value.includes(option.value);
+        });
       } else {
         element.value = value;
       }

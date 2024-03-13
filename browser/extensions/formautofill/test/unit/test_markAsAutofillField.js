@@ -1,5 +1,9 @@
 "use strict";
 
+const { FormStateManager } = ChromeUtils.importESModule(
+  "resource://gre/modules/shared/FormStateManager.sys.mjs"
+);
+
 const TESTCASES = [
   {
     description: "Form containing 8 fields with autocomplete attribute.",
@@ -158,19 +162,6 @@ const TESTCASES = [
   },
 ];
 
-let markedFieldId = [];
-
-var FormAutofillContent;
-add_setup(async () => {
-  ({ FormAutofillContent } = ChromeUtils.importESModule(
-    "resource://autofill/FormAutofillContent.sys.mjs"
-  ));
-
-  FormAutofillContent._markAsAutofillField = function (field) {
-    markedFieldId.push(field.id);
-  };
-});
-
 TESTCASES.forEach(testcase => {
   add_task(async function () {
     info("Starting testcase: " + testcase.description);
@@ -179,17 +170,20 @@ TESTCASES.forEach(testcase => {
       testcase.prefs.forEach(pref => SetPref(pref[0], pref[1]));
     }
 
-    markedFieldId = [];
-
-    let doc = MockDocument.createTestDocument(
+    const doc = MockDocument.createTestDocument(
       "http://localhost:8080/test/",
       testcase.document
     );
-    let element = doc.getElementById(testcase.targetElementId);
-    FormAutofillContent.identifyAutofillFields(element);
+    const element = doc.getElementById(testcase.targetElementId);
+
+    const fsm = new FormStateManager();
+    fsm.updateActiveInput(element);
+
+    const identifiedFields = fsm.identifyAutofillFields(element);
+    const identifiedFieldIds = identifiedFields.map(x => x.element.id);
 
     Assert.deepEqual(
-      markedFieldId,
+      identifiedFieldIds,
       testcase.expectedResult,
       "Check the fields were marked correctly."
     );

@@ -18,6 +18,8 @@ support-files = [
 
 ["browser_address_capture_page_navigation.js"]
 
+["browser_address_capture_trimmed_data.js"]
+
 ["browser_address_doorhanger_confirmation_popup.js"]
 
 ["browser_address_doorhanger_display.js"]
