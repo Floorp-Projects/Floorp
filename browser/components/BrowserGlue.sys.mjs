@@ -2657,7 +2657,8 @@ BrowserGlue.prototype = {
       {
         name: "firefoxBridgeNativeMessaging",
         condition:
-          AppConstants.platform == "macosx" &&
+          (AppConstants.platform == "macosx" ||
+            AppConstants.platform == "win") &&
           Services.prefs.getBoolPref("browser.firefoxbridge.enabled", false),
         task: async () => {
           await lazy.FirefoxBridgeExtensionUtils.ensureRegistered();
