@@ -15983,6 +15983,12 @@
   value: false
   mirror: always
 
+# Whether to ignore middle click events on widget level.
+- name: widget.gtk.middle-click-enabled
+  type: bool
+  value: true
+  mirror: always
+
 # Whether we enable rounded bottom corners on GTK by default.
 #
 # The implementation is a bit hacky (see details in bug 1850827) so behind a
