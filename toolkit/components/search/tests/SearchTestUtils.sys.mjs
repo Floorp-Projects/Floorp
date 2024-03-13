@@ -429,6 +429,8 @@ export var SearchTestUtils = {
    *
    * @param {object} [options]
    *   The options for the manifest.
+   * @param {object} [options.icons]
+   *   The icons to use for the WebExtension.
    * @param {string} [options.id]
    *   The id to use for the WebExtension.
    * @param {string} [options.name]
@@ -477,6 +479,10 @@ export var SearchTestUtils = {
         },
       },
     };
+
+    if (options.icons) {
+      manifest.icons = options.icons;
+    }
 
     if (options.default_locale) {
       manifest.default_locale = options.default_locale;
