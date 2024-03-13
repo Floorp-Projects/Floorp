@@ -7,6 +7,7 @@
 #ifndef mozilla_StyleSheet_h
 #define mozilla_StyleSheet_h
 
+#include "mozilla/Assertions.h"
 #include "mozilla/css/SheetParsingMode.h"
 #include "mozilla/dom/CSSStyleSheetBinding.h"
 #include "mozilla/dom/SRIMetadata.h"
@@ -82,12 +83,6 @@ enum class StyleSheetState : uint8_t {
   // This flag is set during the async Replace() function to ensure
   // that the sheet is not modified until the promise is resolved.
   ModificationDisallowed = 1 << 5,
-  // Flag to indicate if resolution of parse promise is blocked.
-  // Parse promise resolution should be blocked if we are parsing sheet data
-  // before main thread OnStopRequest is dispatched.
-  ParsePromiseResolutionBlocked = 1 << 6,
-  // Flag to indicate if Parse has been completed
-  AsyncParseOngoing = 1 << 7
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(StyleSheetState)
@@ -227,14 +222,6 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
 
   bool HasModifiedRulesForDevtools() const {
     return bool(mState & State::ModifiedRulesForDevtools);
-  }
-
-  bool IsAsyncParseOngoing() const {
-    return bool(mState & State::AsyncParseOngoing);
-  }
-
-  bool HasParsePromiseResolutionBlocked() const {
-    return bool(mState & State::ParsePromiseResolutionBlocked);
   }
 
   bool HasUniqueInner() const { return Inner().mSheets.Length() == 1; }
@@ -482,26 +469,20 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
   // Rejects mReplacePromise with a NetworkError.
   void MaybeRejectReplacePromise();
 
-  // Resolves mParsePromise with this sheet
-  void MayBeResolveParsePromise() {
-    if (!IsAsyncParseOngoing() && !HasParsePromiseResolutionBlocked() &&
-        !mParsePromise.IsEmpty()) {
-      mParsePromise.Resolve(true, __func__);
-    }
-  };
-
   // Gets the relevant global if exists.
   nsISupports* GetRelevantGlobal() const;
 
   // Blocks/Unblocks resolution of parse promise
-  void BlockOrUnblockParsePromise(bool aBlock) {
-    MOZ_ASSERT_IF(aBlock, !HasParsePromiseResolutionBlocked());
-    MOZ_ASSERT(NS_IsMainThread());
-    if (aBlock) {
-      mState |= State::ParsePromiseResolutionBlocked;
-    } else {
-      mState &= ~State::ParsePromiseResolutionBlocked;
-      MayBeResolveParsePromise();
+  void BlockParsePromise() {
+    uint32_t count = ++mAsyncParseBlockers;
+    MOZ_DIAGNOSTIC_ASSERT(count);
+  }
+
+  void UnblockParsePromise() {
+    uint32_t count = --mAsyncParseBlockers;
+    MOZ_DIAGNOSTIC_ASSERT(count != UINT32_MAX);
+    if (!count && !mParsePromise.IsEmpty()) {
+      mParsePromise.Resolve(true, __func__);
     }
   }
 
@@ -628,7 +609,8 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
 
   State mState;
 
-  mutable Mutex mMutex;
+  Atomic<uint32_t, ReleaseAcquire> mAsyncParseBlockers{0};
+
   // Core information we get from parsed sheets, which are shared amongst
   // StyleSheet clones.
   //
