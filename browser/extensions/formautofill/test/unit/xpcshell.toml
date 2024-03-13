@@ -101,9 +101,6 @@ skip-if = ["tsan"] # Times out, bug 1612707
 
 ["test_nameUtils.js"]
 
-["test_onFormSubmitted.js"]
-skip-if = ["tsan"] # Times out, bug 1612707
-
 ["test_parseAddressFormat.js"]
 
 ["test_parseStreetAddress.js"]

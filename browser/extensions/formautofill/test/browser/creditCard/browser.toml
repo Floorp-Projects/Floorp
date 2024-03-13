@@ -24,6 +24,13 @@ skip-if = [
 
 ["browser_creditCard_capture_form_removal.js"]
 
+["browser_creditCard_capture_multiple_cc_number.js"]
+skip-if = [
+  "apple_catalina && !debug", # perma-fail see Bug 1655601
+  "apple_silicon && !debug", # perma-fail see Bug 1655601
+  "win11_2009 && ccov",   # Bug 1655600
+]
+
 ["browser_creditCard_capture_page_navigation.js"]
 
 ["browser_creditCard_doorhanger_action.js"]
