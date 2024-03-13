@@ -11,7 +11,6 @@ EXPORTS.mozilla._ipdltest += [
     "IPDLUnitTests.h",
     "IPDLUnitTestTypes.h",
     "IPDLUnitTestUtils.h",
-    "TestBadActor.h",
     "TestCancel.h",
     "TestCrashCleanup.h",
     "TestDataStructures.h",
@@ -51,7 +50,6 @@ EXPORTS.mozilla._ipdltest += [
 ]
 
 SOURCES += [
-    "TestBadActor.cpp",
     "TestCancel.cpp",
     "TestCrashCleanup.cpp",
     "TestDataStructures.cpp",
@@ -97,8 +95,6 @@ SOURCES += [
 ]
 
 IPDL_SOURCES += [
-    "PTestBadActor.ipdl",
-    "PTestBadActorSub.ipdl",
     "PTestCancel.ipdl",
     "PTestCrashCleanup.ipdl",
     "PTestDataStructures.ipdl",
