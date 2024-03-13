@@ -6,7 +6,7 @@
 
 #include "OSReauthenticator.h"
 
-#include "nsCocoaUtils.h"
+#include "mozilla/MacStringHelpers.h"
 
 using namespace mozilla;
 
@@ -23,7 +23,7 @@ nsresult ReauthenticateUserMacOS(const nsAString& aPrompt,
   // password. If they correctly enter it, we'll set aReauthenticated to true.
 
   LAContext* context = [[LAContext alloc] init];
-  NSString* prompt = nsCocoaUtils::ToNSString(aPrompt);
+  NSString* prompt = mozilla::XPCOMStringToNSString(aPrompt);
 
   dispatch_semaphore_t sema = dispatch_semaphore_create(0);
 
