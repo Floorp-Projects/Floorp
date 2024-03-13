@@ -8,6 +8,11 @@ skip-if = ["os == 'android'"] # bug 1730213
 ["test_FirefoxBridgeExtensionUtils.js"]
 run-if = ["os == 'win'"] # Test of a Windows-specific feature
 
+["test_FirefoxBridgeExtensionUtilsNativeManifest.js"]
+run-if = [
+  "os == 'mac'",
+]
+
 ["test_HomePage.js"]
 
 ["test_HomePage_ignore.js"]
