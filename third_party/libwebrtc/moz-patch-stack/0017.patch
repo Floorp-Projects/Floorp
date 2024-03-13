@@ -1,93 +1,42 @@
 From: Dan Minor <dminor@mozilla.com>
-Date: Tue, 17 Sep 2019 06:47:00 +0000
-Subject: Bug 1581193 - Fix devicechange event on Windows; r=achronop
+Date: Wed, 19 Sep 2018 15:06:00 -0400
+Subject: Bug 1376873 - Fix up rotation in video_capture_impl.cc; r=pehrsons
 
-This restores the code for generating devicechange events that was
-accidentally removed as part of updating the Windows video capture code
-in Bug 1552755.
+This fixes a bug in the upstream code introduced when they removed the
+ConvertToI420 helper method from webrtc_libyuv.cc. The buffer size is
+passed into libyuv::ConvertI420 incorrectly when rotation is applied, which
+causes bad rendering and instabilities.
 
-Differential Revision: https://phabricator.services.mozilla.com/D46033
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/840c4edafa021eeac6a7e6ae0e828d0adcfea92e
+Differential Revision: https://phabricator.services.mozilla.com/D7478
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c56cb66f86518dfb046c642ebeb07cf51c23a3cb
 ---
- .../video_capture/windows/device_info_ds.cc   | 39 +++++++++++++++++++
- .../video_capture/windows/device_info_ds.h    |  3 ++
- 2 files changed, 42 insertions(+)
+ modules/video_capture/video_capture_impl.cc | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
 
-diff --git a/modules/video_capture/windows/device_info_ds.cc b/modules/video_capture/windows/device_info_ds.cc
-index d0d274cb02..460ef3b7b9 100644
---- a/modules/video_capture/windows/device_info_ds.cc
-+++ b/modules/video_capture/windows/device_info_ds.cc
-@@ -20,6 +20,29 @@
- namespace webrtc {
- namespace videocapturemodule {
- 
-+LRESULT CALLBACK WndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
-+{
-+    DeviceInfoDS* pParent;
-+    if (uiMsg == WM_CREATE)
-+    {
-+        pParent = (DeviceInfoDS*)((LPCREATESTRUCT)lParam)->lpCreateParams;
-+        SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)pParent);
-+    }
-+    else if (uiMsg == WM_DESTROY)
-+    {
-+        SetWindowLongPtr(hWnd, GWLP_USERDATA, NULL);
-+    }
-+    else if (uiMsg == WM_DEVICECHANGE)
-+    {
-+        pParent = (DeviceInfoDS*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-+        if (pParent)
-+        {
-+            pParent->DeviceChange();
-+        }
-+    }
-+    return DefWindowProc(hWnd, uiMsg, wParam, lParam);
-+}
-+
- // static
- DeviceInfoDS* DeviceInfoDS::Create() {
-   DeviceInfoDS* dsInfo = new DeviceInfoDS();
-@@ -77,6 +100,18 @@ DeviceInfoDS::DeviceInfoDS()
-                         << rtc::ToHex(hr);
+diff --git a/modules/video_capture/video_capture_impl.cc b/modules/video_capture/video_capture_impl.cc
+index 66fd0a0ebe..7071776d0a 100644
+--- a/modules/video_capture/video_capture_impl.cc
++++ b/modules/video_capture/video_capture_impl.cc
+@@ -218,12 +218,21 @@ int32_t VideoCaptureImpl::IncomingFrame(uint8_t* videoFrame,
      }
    }
-+
-+  _hInstance = reinterpret_cast<HINSTANCE>(GetModuleHandle(NULL));
-+  _wndClass = {0};
-+  _wndClass.lpfnWndProc = &WndProc;
-+  _wndClass.lpszClassName = TEXT("DeviceInfoDS");
-+  _wndClass.hInstance = _hInstance;
-+
-+  if (RegisterClass(&_wndClass)) {
-+    _hwnd = CreateWindow(_wndClass.lpszClassName, NULL, 0, CW_USEDEFAULT,
-+                         CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL,
-+                         NULL, _hInstance, this);
-+  }
- }
  
- DeviceInfoDS::~DeviceInfoDS() {
-@@ -85,6 +120,10 @@ DeviceInfoDS::~DeviceInfoDS() {
-   if (_CoUninitializeIsRequired) {
-     CoUninitialize();
-   }
-+  if (_hwnd != NULL) {
-+    DestroyWindow(_hwnd);
++  int dst_width = buffer->width();
++  int dst_height = buffer->height();
++
++  // LibYuv expects pre-rotation_mode values for dst.
++  // Stride values should correspond to the destination values.
++  if (rotation_mode == libyuv::kRotate90 || rotation_mode == libyuv::kRotate270) {
++    std::swap(dst_width, dst_height);
 +  }
-+  UnregisterClass(_wndClass.lpszClassName, _hInstance);
- }
- 
- int32_t DeviceInfoDS::Init() {
-diff --git a/modules/video_capture/windows/device_info_ds.h b/modules/video_capture/windows/device_info_ds.h
-index 1b52645cde..dc7b9b1a24 100644
---- a/modules/video_capture/windows/device_info_ds.h
-+++ b/modules/video_capture/windows/device_info_ds.h
-@@ -93,6 +93,9 @@ class DeviceInfoDS : public DeviceInfoImpl {
-   IEnumMoniker* _dsMonikerDevEnum;
-   bool _CoUninitializeIsRequired;
-   std::vector<VideoCaptureCapabilityWindows> _captureCapabilitiesWindows;
-+  HWND _hwnd;
-+  WNDCLASS _wndClass;
-+  HINSTANCE _hInstance;
- };
- }  // namespace videocapturemodule
- }  // namespace webrtc
++
+   const int conversionResult = libyuv::ConvertToI420(
+       videoFrame, videoFrameLength, buffer.get()->MutableDataY(),
+       buffer.get()->StrideY(), buffer.get()->MutableDataU(),
+       buffer.get()->StrideU(), buffer.get()->MutableDataV(),
+       buffer.get()->StrideV(), 0, 0,  // No Cropping
+-      width, height, target_width, target_height, rotation_mode,
++      width, height, dst_width, dst_height, rotation_mode,
+       ConvertVideoType(frameInfo.videoType));
+   if (conversionResult != 0) {
+     RTC_LOG(LS_ERROR) << "Failed to convert capture frame from type "

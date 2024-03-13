@@ -1,44 +1,23 @@
 From: Dan Minor <dminor@mozilla.com>
-Date: Fri, 29 Mar 2019 18:43:00 +0000
-Subject: Bug 1539220 - Prefer non-RGB24 capabilities when available;
- r=pehrsons
+Date: Mon, 13 Aug 2018 08:34:00 -0400
+Subject: Bug 1376873 - Allow single channel opus; r=padenot
 
-We've hit a number of problems with handling of RGB24 video capture on
-Windows. This adds a check that will ignore any RGB24 capture capabilities
-when determining a best match if there are other capabilities available to
-workaround the problems.
-
-Differential Revision: https://phabricator.services.mozilla.com/D25449
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c12307f3817bec87712ab5930493c3135c76b0a0
+Differential Revision: https://phabricator.services.mozilla.com/D7469
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/92a7c3eee9f0c80ffbf79fdab8f8f2b8f6bd7701
 ---
- modules/video_capture/device_info_impl.cc | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+ modules/audio_coding/codecs/opus/audio_encoder_opus.cc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/modules/video_capture/device_info_impl.cc b/modules/video_capture/device_info_impl.cc
-index 7cccdb51a7..2a6afb3147 100644
---- a/modules/video_capture/device_info_impl.cc
-+++ b/modules/video_capture/device_info_impl.cc
-@@ -100,10 +100,23 @@ int32_t DeviceInfoImpl::GetBestMatchedCapability(
-   const int32_t numberOfCapabilies =
-       static_cast<int32_t>(_captureCapabilities.size());
+diff --git a/modules/audio_coding/codecs/opus/audio_encoder_opus.cc b/modules/audio_coding/codecs/opus/audio_encoder_opus.cc
+index 51b0fcd492..17e0e33b1d 100644
+--- a/modules/audio_coding/codecs/opus/audio_encoder_opus.cc
++++ b/modules/audio_coding/codecs/opus/audio_encoder_opus.cc
+@@ -240,7 +240,7 @@ std::unique_ptr<AudioEncoder> AudioEncoderOpusImpl::MakeAudioEncoder(
+ absl::optional<AudioEncoderOpusConfig> AudioEncoderOpusImpl::SdpToConfig(
+     const SdpAudioFormat& format) {
+   if (!absl::EqualsIgnoreCase(format.name, "opus") ||
+-      format.clockrate_hz != kRtpTimestampRateHz || format.num_channels != 2) {
++      format.clockrate_hz != kRtpTimestampRateHz) {
+     return absl::nullopt;
+   }
  
-+  bool hasNonRGB24Capability = false;
-   for (int32_t tmp = 0; tmp < numberOfCapabilies;
-        ++tmp)  // Loop through all capabilities
-   {
-     VideoCaptureCapability& capability = _captureCapabilities[tmp];
-+    if (capability.videoType != VideoType::kRGB24) {
-+      hasNonRGB24Capability = true;
-+    }
-+  }
-+
-+  for (int32_t tmp = 0; tmp < numberOfCapabilies;
-+       ++tmp)  // Loop through all capabilities
-+  {
-+    VideoCaptureCapability& capability = _captureCapabilities[tmp];
-+    if (hasNonRGB24Capability && capability.videoType == VideoType::kRGB24) {
-+      continue;
-+    }
- 
-     const int32_t diffWidth = capability.width - requested.width;
-     const int32_t diffHeight = capability.height - requested.height;

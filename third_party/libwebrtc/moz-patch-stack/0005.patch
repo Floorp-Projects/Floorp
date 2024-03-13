@@ -1,49 +1,66 @@
-From: Dan Minor <dminor@mozilla.com>
-Date: Tue, 27 Mar 2018 15:43:00 -0400
-Subject: Bug 1376873 - Disable Mid support in RtpDemuxer; r=mjf
+From: Johannes Kron <kron@webrtc.org>
+Date: Thu, 18 Jan 2024 14:00:19 +0100
+Subject: (cherry-pick-branch-heads/6167) [M121] Disable the use of
+ CGDisplayStreamCreate() for desktop capture on Sonoma
 
-The only use of Mid in the current webrtc.org code is in the unit tests.
-RtpStreamReceiverController only allows adding sinks using SSRCs. Because
-of this, we'll end up dropping packets in the RtpDemuxer with the current
-code as none of our Mids will be recognized.
+CGDisplayStreamCreate is an deprecated API. It was believed that the use
+of it was disabled on Sonoma through the setting allow_iosurface = false
+[1], which causes the thumbnails to be created by the API CGDisplayCreateImage.
+This API is not marked as deprecated at the moment.
 
-Tip of webrtc.org fully supports using Mids, so we'll be able to enable this
-code again after the next update.
+However, although the thumbnails are created through CGDisplayCreateImage,
+CGDisplayStreamCreate() is still called and runs in the background.
+This makes the capture chip appear.
 
-Differential Revision: https://phabricator.services.mozilla.com/D7442
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b3ba8452e77105c72f6ddbc49cbe5a53dbea1507
+No capture chip appears if this CL is landed and the ScreenCaptureKit
+thumbnail capturer is enabled,
+--enable-features="ScreenCaptureKitMac,ScreenCaptureKitStreamPickerSonoma,ThumbnailCapturerMac:capture_mode/sc_screenshot_manager"
+
+[1] https://chromium-review.googlesource.com/c/chromium/src/+/4892397
+
+(cherry picked from commit fb99c6ebb57754e4b764a63dfae7f62ec272ba6b)
+
+Bug: chromium:1486851
+No-Try: True
+Change-Id: I3422efffc57dcb3e8965f19a5eca7f2a95d62da1
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/334721
+Reviewed-by: Mark Foltz <mfoltz@chromium.org>
+Commit-Queue: Johannes Kron <kron@webrtc.org>
+Cr-Original-Commit-Position: refs/heads/main@{#41563}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/335740
+Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
+Cr-Commit-Position: refs/branch-heads/6167@{#5}
+Cr-Branched-From: ece5cb83715dea85617114b6d4e981fdee2623ba-refs/heads/main@{#41315}
 ---
- call/rtp_demuxer.cc | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ modules/desktop_capture/mac/desktop_frame_provider.h | 2 ++
+ modules/desktop_capture/mac/screen_capturer_mac.mm   | 4 ++++
+ 2 files changed, 6 insertions(+)
 
-diff --git a/call/rtp_demuxer.cc b/call/rtp_demuxer.cc
-index 841d7e3b94..f5c4186871 100644
---- a/call/rtp_demuxer.cc
-+++ b/call/rtp_demuxer.cc
-@@ -285,13 +285,17 @@ RtpPacketSinkInterface* RtpDemuxer::ResolveSink(
-   // RSID and RRID are routed to the same sinks. If an RSID is specified on a
-   // repair packet, it should be ignored and the RRID should be used.
-   std::string packet_mid, packet_rsid;
--  bool has_mid = use_mid_ && packet.GetExtension<RtpMid>(&packet_mid);
-+  //bool has_mid = use_mid_ && packet.GetExtension<RtpMid>(&packet_mid);
-   bool has_rsid = packet.GetExtension<RepairedRtpStreamId>(&packet_rsid);
-   if (!has_rsid) {
-     has_rsid = packet.GetExtension<RtpStreamId>(&packet_rsid);
-   }
-   uint32_t ssrc = packet.Ssrc();
+diff --git a/modules/desktop_capture/mac/desktop_frame_provider.h b/modules/desktop_capture/mac/desktop_frame_provider.h
+index aad28d2f30..64ef5750ec 100644
+--- a/modules/desktop_capture/mac/desktop_frame_provider.h
++++ b/modules/desktop_capture/mac/desktop_frame_provider.h
+@@ -46,6 +46,8 @@ class DesktopFrameProvider {
+   // Expected to be called before stopping the CGDisplayStreamRef streams.
+   void Release();
  
-+  // Mid support is half-baked in branch 64. RtpStreamReceiverController only
-+  // supports adding sinks by ssrc, so our mids will never show up in
-+  // known_mids_, causing us to drop packets here.
-+#if 0
-   // The BUNDLE spec says to drop any packets with unknown MIDs, even if the
-   // SSRC is known/latched.
-   if (has_mid && known_mids_.find(packet_mid) == known_mids_.end()) {
-@@ -365,6 +369,7 @@ RtpPacketSinkInterface* RtpDemuxer::ResolveSink(
-     }
-   }
++  bool allow_iosurface() const { return allow_iosurface_; }
++
+  private:
+   SequenceChecker thread_checker_;
+   const bool allow_iosurface_;
+diff --git a/modules/desktop_capture/mac/screen_capturer_mac.mm b/modules/desktop_capture/mac/screen_capturer_mac.mm
+index 28cc410573..60089fd0f2 100644
+--- a/modules/desktop_capture/mac/screen_capturer_mac.mm
++++ b/modules/desktop_capture/mac/screen_capturer_mac.mm
+@@ -439,6 +439,10 @@ void ScreenCapturerMac::ScreenConfigurationChanged() {
  
-+#endif
-   // We trust signaled SSRC more than payload type which is likely to conflict
-   // between streams.
-   const auto ssrc_sink_it = sink_by_ssrc_.find(ssrc);
+ bool ScreenCapturerMac::RegisterRefreshAndMoveHandlers() {
+   RTC_DCHECK(thread_checker_.IsCurrent());
++  if (!desktop_frame_provider_.allow_iosurface()) {
++    return true;
++  }
++
+   desktop_config_ = desktop_config_monitor_->desktop_configuration();
+   for (const auto& config : desktop_config_.displays) {
+     size_t pixel_width = config.pixel_bounds.width();

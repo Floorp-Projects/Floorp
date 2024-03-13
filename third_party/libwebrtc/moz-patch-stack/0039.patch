@@ -1,34 +1,130 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Tue, 15 Jun 2021 12:18:00 -0500
-Subject: Bug 1654112 - suppress android lint warnings for WrongConstant in 2
- libwebrtc java files. r=ng
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Mon, 18 Jan 2021 11:04:00 +0100
+Subject: Bug 1654112 - Include RtcpPacketTypeCounter in audio send stats, to
+ not regress nackCount. r=ng
 
-Differential Revision: https://phabricator.services.mozilla.com/D118050
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/e60e2f295fb722f69a3a9fe9af34219880afe772
+This is similar to how it's already included for video send.
+
+Differential Revision: https://phabricator.services.mozilla.com/D102273
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d380a43d59f4f7cbc001f4eab9b63ee993b32cd8
 ---
- sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java | 5 +++++
- 1 file changed, 5 insertions(+)
+ audio/audio_send_stream.cc |  1 +
+ audio/channel_send.cc      | 31 +++++++++++++++++++++++++++++++
+ audio/channel_send.h       |  1 +
+ call/audio_send_stream.h   |  2 ++
+ 4 files changed, 35 insertions(+)
 
-diff --git a/sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java b/sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java
-index 7894659926..7b4b809ab1 100644
---- a/sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java
-+++ b/sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java
-@@ -15,6 +15,7 @@ import static android.media.AudioManager.MODE_IN_COMMUNICATION;
- import static android.media.AudioManager.MODE_NORMAL;
- import static android.media.AudioManager.MODE_RINGTONE;
+diff --git a/audio/audio_send_stream.cc b/audio/audio_send_stream.cc
+index c9dc42c04e..e7ebb2bf4e 100644
+--- a/audio/audio_send_stream.cc
++++ b/audio/audio_send_stream.cc
+@@ -431,6 +431,7 @@ webrtc::AudioSendStream::Stats AudioSendStream::GetStats(
+   stats.target_bitrate_bps = channel_send_->GetTargetBitrate();
  
-+import android.annotation.SuppressLint;
- import android.annotation.TargetApi;
- import android.content.Context;
- import android.content.pm.PackageManager;
-@@ -229,6 +230,10 @@ final class WebRtcAudioUtils {
-     }
-   }
+   webrtc::CallSendStatistics call_stats = channel_send_->GetRTCPStatistics();
++  stats.rtcp_packet_type_counts = call_stats.rtcp_packet_type_counts;
+   stats.payload_bytes_sent = call_stats.payload_bytes_sent;
+   stats.header_and_padding_bytes_sent =
+       call_stats.header_and_padding_bytes_sent;
+diff --git a/audio/channel_send.cc b/audio/channel_send.cc
+index 310e0517cf..549e65a59c 100644
+--- a/audio/channel_send.cc
++++ b/audio/channel_send.cc
+@@ -56,6 +56,31 @@ constexpr int64_t kMinRetransmissionWindowMs = 30;
+ class RtpPacketSenderProxy;
+ class TransportSequenceNumberProxy;
  
-+  // Moz linting complains even though AudioManager.GET_DEVICES_ALL is
-+  // listed in the docs here:
-+  // https://developer.android.com/reference/android/media/AudioManager#GET_DEVICES_ALL
-+  @SuppressLint("WrongConstant")
-   private static void logAudioDeviceInfo(String tag, AudioManager audioManager) {
-     if (Build.VERSION.SDK_INT < 23) {
-       return;
++class RtcpCounterObserver : public RtcpPacketTypeCounterObserver {
++ public:
++  explicit RtcpCounterObserver(uint32_t ssrc) : ssrc_(ssrc) {}
++
++  void RtcpPacketTypesCounterUpdated(
++      uint32_t ssrc, const RtcpPacketTypeCounter& packet_counter) override {
++    if (ssrc_ != ssrc) {
++      return;
++    }
++
++    MutexLock lock(&mutex_);
++    packet_counter_ = packet_counter;
++  }
++
++  RtcpPacketTypeCounter GetCounts() {
++    MutexLock lock(&mutex_);
++    return packet_counter_;
++  }
++
++ private:
++  Mutex mutex_;
++  const uint32_t ssrc_;
++  RtcpPacketTypeCounter packet_counter_;
++};
++
+ class ChannelSend : public ChannelSendInterface,
+                     public AudioPacketizationCallback,  // receive encoded
+                                                         // packets from the ACM
+@@ -210,6 +235,8 @@ class ChannelSend : public ChannelSendInterface,
+   bool input_mute_ RTC_GUARDED_BY(volume_settings_mutex_) = false;
+   bool previous_frame_muted_ RTC_GUARDED_BY(encoder_queue_) = false;
+ 
++  const std::unique_ptr<RtcpCounterObserver> rtcp_counter_observer_;
++
+   PacketRouter* packet_router_ RTC_GUARDED_BY(&worker_thread_checker_) =
+       nullptr;
+   const std::unique_ptr<RtpPacketSenderProxy> rtp_packet_pacer_proxy_;
+@@ -398,6 +425,7 @@ ChannelSend::ChannelSend(
+     const FieldTrialsView& field_trials)
+     : ssrc_(ssrc),
+       event_log_(rtc_event_log),
++      rtcp_counter_observer_(new RtcpCounterObserver(ssrc)),
+       rtp_packet_pacer_proxy_(new RtpPacketSenderProxy()),
+       retransmission_rate_limiter_(
+           new RateLimiter(clock, kMaxRetransmissionWindowMs)),
+@@ -423,6 +451,8 @@ ChannelSend::ChannelSend(
+ 
+   configuration.event_log = event_log_;
+   configuration.rtt_stats = rtcp_rtt_stats;
++  configuration.rtcp_packet_type_counter_observer =
++      rtcp_counter_observer_.get();
+   if (field_trials.IsDisabled("WebRTC-DisableRtxRateLimiter")) {
+     configuration.retransmission_rate_limiter =
+         retransmission_rate_limiter_.get();
+@@ -687,6 +717,7 @@ CallSendStatistics ChannelSend::GetRTCPStatistics() const {
+   RTC_DCHECK_RUN_ON(&worker_thread_checker_);
+   CallSendStatistics stats = {0};
+   stats.rttMs = GetRTT();
++  stats.rtcp_packet_type_counts = rtcp_counter_observer_->GetCounts();
+ 
+   StreamDataCounters rtp_stats;
+   StreamDataCounters rtx_stats;
+diff --git a/audio/channel_send.h b/audio/channel_send.h
+index b6a6a37bf5..f36085c1fa 100644
+--- a/audio/channel_send.h
++++ b/audio/channel_send.h
+@@ -43,6 +43,7 @@ struct CallSendStatistics {
+   TimeDelta total_packet_send_delay = TimeDelta::Zero();
+   // https://w3c.github.io/webrtc-stats/#dom-rtcoutboundrtpstreamstats-retransmittedpacketssent
+   uint64_t retransmitted_packets_sent;
++  RtcpPacketTypeCounter rtcp_packet_type_counts;
+   // A snapshot of Report Blocks with additional data of interest to statistics.
+   // Within this list, the sender-source SSRC pair is unique and per-pair the
+   // ReportBlockData represents the latest Report Block that was received for
+diff --git a/call/audio_send_stream.h b/call/audio_send_stream.h
+index f9e49db574..5f4f871bf0 100644
+--- a/call/audio_send_stream.h
++++ b/call/audio_send_stream.h
+@@ -31,6 +31,7 @@
+ #include "call/rtp_config.h"
+ #include "modules/audio_processing/include/audio_processing_statistics.h"
+ #include "modules/rtp_rtcp/include/report_block_data.h"
++#include "modules/rtp_rtcp/include/rtcp_statistics.h"
+ 
+ namespace webrtc {
+ 
+@@ -65,6 +66,7 @@ class AudioSendStream : public AudioSender {
+ 
+     ANAStats ana_statistics;
+     AudioProcessingStats apm_statistics;
++    RtcpPacketTypeCounter rtcp_packet_type_counts;
+ 
+     int64_t target_bitrate_bps = 0;
+     // A snapshot of Report Blocks with additional data of interest to

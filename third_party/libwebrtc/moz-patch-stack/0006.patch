@@ -1,139 +1,106 @@
-From: Dan Minor <dminor@mozilla.com>
-Date: Wed, 7 Feb 2018 15:00:00 -0500
-Subject: Bug 1376873 - Fix GetRTCPSenderReport; r=ng
+From: =?UTF-8?q?Erik=20Spr=C3=A5ng?= <sprang@webrtc.org>
+Date: Fri, 19 Jan 2024 16:59:01 +0100
+Subject: (cherry-pick-branch-heads/6167) Tighten som DCHECKs to CHECKs in VP9
+ packetization.
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Differential Revision: https://phabricator.services.mozilla.com/D7431
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b55b0368d9f21849fa465fa9b3f028285c9ea6ae
+(cherry picked from commit 6a992129fb0dede4a8fbdaf5de43abaf43c20299)
+
+No-Try: True
+Bug: chromium:1518991, chromium:1518994
+Change-Id: I47f68ba6aaf4874fd952332bf213e3a1e0389268
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/335241
+Auto-Submit: Erik Språng <sprang@webrtc.org>
+Reviewed-by: Danil Chapovalov <danilchap@webrtc.org>
+Commit-Queue: Danil Chapovalov <danilchap@webrtc.org>
+Cr-Original-Commit-Position: refs/heads/main@{#41580}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/338640
+Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
+Commit-Queue: Erik Språng <sprang@webrtc.org>
+Cr-Commit-Position: refs/branch-heads/6167@{#6}
+Cr-Branched-From: ece5cb83715dea85617114b6d4e981fdee2623ba-refs/heads/main@{#41315}
 ---
- call/video_receive_stream.h                  | 3 +++
- modules/rtp_rtcp/source/rtcp_receiver.cc     | 7 +++++++
- modules/rtp_rtcp/source/rtcp_receiver.h      | 4 ++++
- modules/rtp_rtcp/source/rtp_rtcp_impl.cc     | 5 +++++
- modules/rtp_rtcp/source/rtp_rtcp_impl.h      | 3 +++
- modules/rtp_rtcp/source/rtp_rtcp_impl2.cc    | 5 +++++
- modules/rtp_rtcp/source/rtp_rtcp_impl2.h     | 3 +++
- modules/rtp_rtcp/source/rtp_rtcp_interface.h | 4 ++++
- 8 files changed, 34 insertions(+)
+ modules/rtp_rtcp/source/rtp_format_vp9.cc | 26 ++++++++++++-----------
+ 1 file changed, 14 insertions(+), 12 deletions(-)
 
-diff --git a/call/video_receive_stream.h b/call/video_receive_stream.h
-index 542067d30c..500ca1447f 100644
---- a/call/video_receive_stream.h
-+++ b/call/video_receive_stream.h
-@@ -151,6 +151,9 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
-     RtcpPacketTypeCounter rtcp_packet_type_counts;
-     absl::optional<RtpReceiveStats> rtx_rtp_stats;
+diff --git a/modules/rtp_rtcp/source/rtp_format_vp9.cc b/modules/rtp_rtcp/source/rtp_format_vp9.cc
+index 15e059e85c..9ad4aa97c3 100644
+--- a/modules/rtp_rtcp/source/rtp_format_vp9.cc
++++ b/modules/rtp_rtcp/source/rtp_format_vp9.cc
+@@ -94,8 +94,8 @@ size_t RefIndicesLength(const RTPVideoHeaderVP9& hdr) {
+   if (!hdr.inter_pic_predicted || !hdr.flexible_mode)
+     return 0;
  
-+    uint32_t rtcp_sender_packets_sent;
-+    uint32_t rtcp_sender_octets_sent;
-+
-     // Timing frame info: all important timestamps for a full lifetime of a
-     // single 'timing frame'.
-     absl::optional<webrtc::TimingFrameInfo> timing_frame_info;
-diff --git a/modules/rtp_rtcp/source/rtcp_receiver.cc b/modules/rtp_rtcp/source/rtcp_receiver.cc
-index ba5b951f4d..61b88c89b8 100644
---- a/modules/rtp_rtcp/source/rtcp_receiver.cc
-+++ b/modules/rtp_rtcp/source/rtcp_receiver.cc
-@@ -361,6 +361,13 @@ RTCPReceiver::ConsumeReceivedXrReferenceTimeInfo() {
-   return last_xr_rtis;
+-  RTC_DCHECK_GT(hdr.num_ref_pics, 0U);
+-  RTC_DCHECK_LE(hdr.num_ref_pics, kMaxVp9RefPics);
++  RTC_CHECK_GT(hdr.num_ref_pics, 0U);
++  RTC_CHECK_LE(hdr.num_ref_pics, kMaxVp9RefPics);
+   return hdr.num_ref_pics;
  }
  
-+void RTCPReceiver::RemoteRTCPSenderInfo(uint32_t* packet_count,
-+                                        uint32_t* octet_count) const {
-+  MutexLock lock(&rtcp_receiver_lock_);
-+  *packet_count = remote_sender_packet_count_;
-+  *octet_count = remote_sender_octet_count_;
-+}
-+
- std::vector<ReportBlockData> RTCPReceiver::GetLatestReportBlockData() const {
-   std::vector<ReportBlockData> result;
-   MutexLock lock(&rtcp_receiver_lock_);
-diff --git a/modules/rtp_rtcp/source/rtcp_receiver.h b/modules/rtp_rtcp/source/rtcp_receiver.h
-index a6175d0774..59e0258df5 100644
---- a/modules/rtp_rtcp/source/rtcp_receiver.h
-+++ b/modules/rtp_rtcp/source/rtcp_receiver.h
-@@ -117,6 +117,10 @@ class RTCPReceiver final {
+@@ -123,9 +123,9 @@ size_t SsDataLength(const RTPVideoHeaderVP9& hdr) {
+   if (!hdr.ss_data_available)
+     return 0;
  
-   std::vector<rtcp::ReceiveTimeInfo> ConsumeReceivedXrReferenceTimeInfo();
+-  RTC_DCHECK_GT(hdr.num_spatial_layers, 0U);
+-  RTC_DCHECK_LE(hdr.num_spatial_layers, kMaxVp9NumberOfSpatialLayers);
+-  RTC_DCHECK_LE(hdr.gof.num_frames_in_gof, kMaxVp9FramesInGof);
++  RTC_CHECK_GT(hdr.num_spatial_layers, 0U);
++  RTC_CHECK_LE(hdr.num_spatial_layers, kMaxVp9NumberOfSpatialLayers);
++  RTC_CHECK_LE(hdr.gof.num_frames_in_gof, kMaxVp9FramesInGof);
+   size_t length = 1;  // V
+   if (hdr.spatial_layer_resolution_present) {
+     length += 4 * hdr.num_spatial_layers;  // Y
+@@ -136,7 +136,7 @@ size_t SsDataLength(const RTPVideoHeaderVP9& hdr) {
+   // N_G
+   length += hdr.gof.num_frames_in_gof;  // T, U, R
+   for (size_t i = 0; i < hdr.gof.num_frames_in_gof; ++i) {
+-    RTC_DCHECK_LE(hdr.gof.num_ref_pics[i], kMaxVp9RefPics);
++    RTC_CHECK_LE(hdr.gof.num_ref_pics[i], kMaxVp9RefPics);
+     length += hdr.gof.num_ref_pics[i];  // R times
+   }
+   return length;
+@@ -248,9 +248,9 @@ bool WriteRefIndices(const RTPVideoHeaderVP9& vp9,
+ //      +-+-+-+-+-+-+-+-+              -|           -|
+ //
+ bool WriteSsData(const RTPVideoHeaderVP9& vp9, rtc::BitBufferWriter* writer) {
+-  RTC_DCHECK_GT(vp9.num_spatial_layers, 0U);
+-  RTC_DCHECK_LE(vp9.num_spatial_layers, kMaxVp9NumberOfSpatialLayers);
+-  RTC_DCHECK_LE(vp9.gof.num_frames_in_gof, kMaxVp9FramesInGof);
++  RTC_CHECK_GT(vp9.num_spatial_layers, 0U);
++  RTC_CHECK_LE(vp9.num_spatial_layers, kMaxVp9NumberOfSpatialLayers);
++  RTC_CHECK_LE(vp9.gof.num_frames_in_gof, kMaxVp9FramesInGof);
+   bool g_bit = vp9.gof.num_frames_in_gof > 0;
  
-+  // Get received sender packet and octet counts
-+  void RemoteRTCPSenderInfo(uint32_t* packet_count,
-+                            uint32_t* octet_count) const;
-+
-   absl::optional<TimeDelta> AverageRtt() const;
-   absl::optional<TimeDelta> LastRtt() const;
+   RETURN_FALSE_ON_ERROR(writer->WriteBits(vp9.num_spatial_layers - 1, 3));
+@@ -288,6 +288,8 @@ bool WriteSsData(const RTPVideoHeaderVP9& vp9, rtc::BitBufferWriter* writer) {
+ // current API to invoke SVC is not flexible enough.
+ RTPVideoHeaderVP9 RemoveInactiveSpatialLayers(
+     const RTPVideoHeaderVP9& original_header) {
++  RTC_CHECK_LE(original_header.num_spatial_layers,
++               kMaxVp9NumberOfSpatialLayers);
+   RTPVideoHeaderVP9 hdr(original_header);
+   if (original_header.first_active_layer == 0)
+     return hdr;
+@@ -314,7 +316,7 @@ RtpPacketizerVp9::RtpPacketizerVp9(rtc::ArrayView<const uint8_t> payload,
+       header_size_(PayloadDescriptorLengthMinusSsData(hdr_)),
+       first_packet_extra_header_size_(SsDataLength(hdr_)),
+       remaining_payload_(payload) {
+-  RTC_DCHECK_EQ(hdr_.first_active_layer, 0);
++  RTC_CHECK_EQ(hdr_.first_active_layer, 0);
  
-diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
-index 20862e3c45..98c37c8d28 100644
---- a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
-+++ b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
-@@ -499,6 +499,11 @@ void ModuleRtpRtcpImpl::GetSendStreamDataCounters(
- }
+   limits.max_payload_len -= header_size_;
+   limits.first_packet_reduction_len += first_packet_extra_header_size_;
+@@ -357,8 +359,8 @@ bool RtpPacketizerVp9::NextPacket(RtpPacketToSend* packet) {
  
- // Received RTCP report.
-+void ModuleRtpRtcpImpl::RemoteRTCPSenderInfo(uint32_t* packet_count,
-+                                             uint32_t* octet_count) const {
-+  return rtcp_receiver_.RemoteRTCPSenderInfo(packet_count, octet_count);
-+}
-+
- std::vector<ReportBlockData> ModuleRtpRtcpImpl::GetLatestReportBlockData()
-     const {
-   return rtcp_receiver_.GetLatestReportBlockData();
-diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl.h b/modules/rtp_rtcp/source/rtp_rtcp_impl.h
-index d298081432..dd706e569d 100644
---- a/modules/rtp_rtcp/source/rtp_rtcp_impl.h
-+++ b/modules/rtp_rtcp/source/rtp_rtcp_impl.h
-@@ -182,6 +182,9 @@ class ABSL_DEPRECATED("") ModuleRtpRtcpImpl
-       StreamDataCounters* rtp_counters,
-       StreamDataCounters* rtx_counters) const override;
+   // Ensure end_of_picture is always set on top spatial layer when it is not
+   // dropped.
+-  RTC_DCHECK(hdr_.spatial_idx < hdr_.num_spatial_layers - 1 ||
+-             hdr_.end_of_picture);
++  RTC_CHECK(hdr_.spatial_idx < hdr_.num_spatial_layers - 1 ||
++            hdr_.end_of_picture);
  
-+  void RemoteRTCPSenderInfo(uint32_t* packet_count,
-+                            uint32_t* octet_count) const override;
-+
-   // A snapshot of the most recent Report Block with additional data of
-   // interest to statistics. Used to implement RTCRemoteInboundRtpStreamStats.
-   // Within this list, the `ReportBlockData::source_ssrc()`, which is the SSRC
-diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
-index 3dbbc77086..1d73bc3d87 100644
---- a/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
-+++ b/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
-@@ -503,6 +503,11 @@ void ModuleRtpRtcpImpl2::GetSendStreamDataCounters(
- }
- 
- // Received RTCP report.
-+void ModuleRtpRtcpImpl2::RemoteRTCPSenderInfo(uint32_t* packet_count,
-+                                              uint32_t* octet_count) const {
-+  return rtcp_receiver_.RemoteRTCPSenderInfo(packet_count, octet_count);
-+}
-+
- std::vector<ReportBlockData> ModuleRtpRtcpImpl2::GetLatestReportBlockData()
-     const {
-   return rtcp_receiver_.GetLatestReportBlockData();
-diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl2.h b/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
-index 36e6deffba..663b28af3e 100644
---- a/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
-+++ b/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
-@@ -194,6 +194,9 @@ class ModuleRtpRtcpImpl2 final : public RtpRtcpInterface,
-       StreamDataCounters* rtp_counters,
-       StreamDataCounters* rtx_counters) const override;
- 
-+  void RemoteRTCPSenderInfo(uint32_t* packet_count,
-+                            uint32_t* octet_count) const override;
-+
-   // A snapshot of the most recent Report Block with additional data of
-   // interest to statistics. Used to implement RTCRemoteInboundRtpStreamStats.
-   // Within this list, the `ReportBlockData::source_ssrc()`, which is the SSRC
-diff --git a/modules/rtp_rtcp/source/rtp_rtcp_interface.h b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-index 924c764ccd..8df810a95e 100644
---- a/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-+++ b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-@@ -387,6 +387,10 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
-       StreamDataCounters* rtp_counters,
-       StreamDataCounters* rtx_counters) const = 0;
- 
-+
-+  // Returns packet count and octet count from RTCP sender report.
-+  virtual void RemoteRTCPSenderInfo(uint32_t* packet_count,
-+                                    uint32_t* octet_count) const = 0;
-   // A snapshot of Report Blocks with additional data of interest to statistics.
-   // Within this list, the sender-source SSRC pair is unique and per-pair the
-   // ReportBlockData represents the latest Report Block that was received for
+   packet->SetMarker(layer_end && hdr_.end_of_picture);
+   return true;

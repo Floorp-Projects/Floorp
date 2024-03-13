@@ -1,29 +1,25 @@
-From: Jan-Ivar Bruaroey <jib@mozilla.com>
-Date: Wed, 28 Jun 2023 20:45:00 -0400
-Subject: Bug 1839451 - (fix-0f43da2248) Keep mozilla's
- RTCPReceiver::RemoteRTCPSenderInfo function working.
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Wed, 8 Feb 2023 08:01:00 +0000
+Subject: Bug 1814692 - Don't attempt realtime scheduling rtc::PlatformThreads.
+ r=webrtc-reviewers,bwc
 
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/154c9cdb386d0f50c5e1549270e1af6ab4969602
+Differential Revision: https://phabricator.services.mozilla.com/D169036
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/9e64a965e26c8379261466e5273c3b383164b2c7
 ---
- modules/rtp_rtcp/source/rtcp_receiver.cc | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ rtc_base/platform_thread.cc | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/modules/rtp_rtcp/source/rtcp_receiver.cc b/modules/rtp_rtcp/source/rtcp_receiver.cc
-index 94de316421..bda6ad9a52 100644
---- a/modules/rtp_rtcp/source/rtcp_receiver.cc
-+++ b/modules/rtp_rtcp/source/rtcp_receiver.cc
-@@ -368,10 +368,10 @@ void RTCPReceiver::RemoteRTCPSenderInfo(uint32_t* packet_count,
-                                         int64_t* ntp_timestamp_ms,
-                                         int64_t* remote_ntp_timestamp_ms) const {
-   MutexLock lock(&rtcp_receiver_lock_);
--  *packet_count = remote_sender_packet_count_;
--  *octet_count = remote_sender_octet_count_;
--  *ntp_timestamp_ms = last_received_sr_ntp_.ToMs();
--  *remote_ntp_timestamp_ms = remote_sender_ntp_time_.ToMs();
-+  *packet_count = remote_sender_.packets_sent;
-+  *octet_count = remote_sender_.bytes_sent;
-+  *ntp_timestamp_ms = remote_sender_.last_arrival_timestamp.ToMs();
-+  *remote_ntp_timestamp_ms = remote_sender_.last_remote_timestamp.ToMs();
- }
- 
- std::vector<ReportBlockData> RTCPReceiver::GetLatestReportBlockData() const {
+diff --git a/rtc_base/platform_thread.cc b/rtc_base/platform_thread.cc
+index 71a9f1b224..bcbb784b97 100644
+--- a/rtc_base/platform_thread.cc
++++ b/rtc_base/platform_thread.cc
+@@ -50,6 +50,9 @@ bool SetPriority(ThreadPriority priority) {
+   // TODO(tommi): Switch to the same mechanism as Chromium uses for changing
+   // thread priorities.
+   return true;
++#elif defined(WEBRTC_MOZILLA_BUILD) && defined(WEBRTC_LINUX)
++  // Only realtime audio uses realtime scheduling in Firefox.
++  return true;
+ #else
+   const int policy = SCHED_FIFO;
+   const int min_prio = sched_get_priority_min(policy);

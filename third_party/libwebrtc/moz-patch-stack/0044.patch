@@ -1,73 +1,62 @@
-From: "Byron Campen [:bwc]" <docfaraday@gmail.com>
-Date: Fri, 12 Mar 2021 08:55:00 -0600
-Subject: Bug 1654112 - libwebrtc modification: Surface video RTCP SR stats
- again. r=ng
+From: Michael Froman <mfroman@mozilla.com>
+Date: Fri, 16 Apr 2021 17:35:00 -0500
+Subject: Bug 1654112 - General build fixes for paths and naming changes. r=ng
 
-libwebrtc has stopped surfacing these, and Chromium does not support
-these stats at all.
-
-Differential Revision: https://phabricator.services.mozilla.com/D108674
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/edac9d01a9ac7594f4b22708a4690753638ca32c
+Differential Revision: https://phabricator.services.mozilla.com/D113438
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/99b99cca6b7b2c2ebffb5472457a4f927bda11c4
 ---
- video/rtp_video_stream_receiver2.cc | 10 ++++++++++
- video/rtp_video_stream_receiver2.h  |  6 ++++++
- video/video_receive_stream2.cc      |  8 ++++++++
- 3 files changed, 24 insertions(+)
+ modules/video_capture/video_capture_impl.h          | 6 ++++--
+ rtc_base/system/warn_current_thread_is_deadlocked.h | 2 +-
+ sdk/android/api/org/webrtc/VideoCodecInfo.java      | 2 +-
+ 3 files changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index 2ea8ce8c62..0a215f79cc 100644
---- a/video/rtp_video_stream_receiver2.cc
-+++ b/video/rtp_video_stream_receiver2.cc
-@@ -1066,6 +1066,16 @@ absl::optional<int64_t> RtpVideoStreamReceiver2::LastReceivedKeyframePacketMs()
-   return absl::nullopt;
- }
- 
-+// Mozilla modification: VideoReceiveStream2 and friends do not surface RTCP
-+// stats at all, and even on the most recent libwebrtc code there does not
-+// seem to be any support for these stats right now. So, we hack this in.
-+void RtpVideoStreamReceiver2::RemoteRTCPSenderInfo(
-+    uint32_t* packet_count, uint32_t* octet_count,
-+    int64_t* ntp_timestamp_ms) const {
-+  RTC_DCHECK_RUN_ON(&worker_task_checker_);
-+  rtp_rtcp_->RemoteRTCPSenderInfo(packet_count, octet_count, ntp_timestamp_ms);
-+}
+diff --git a/modules/video_capture/video_capture_impl.h b/modules/video_capture/video_capture_impl.h
+index e46e050609..dcc93fd3a0 100644
+--- a/modules/video_capture/video_capture_impl.h
++++ b/modules/video_capture/video_capture_impl.h
+@@ -97,6 +97,10 @@ class RTC_EXPORT VideoCaptureImpl : public VideoCaptureModule {
+   rtc::RaceChecker capture_checker_;
+   // current Device unique name;
+   char* _deviceUniqueId RTC_GUARDED_BY(api_checker_);
 +
- void RtpVideoStreamReceiver2::ManageFrame(
-     std::unique_ptr<RtpFrameObject> frame) {
-   RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
-diff --git a/video/rtp_video_stream_receiver2.h b/video/rtp_video_stream_receiver2.h
-index 0178355262..be8bce770f 100644
---- a/video/rtp_video_stream_receiver2.h
-+++ b/video/rtp_video_stream_receiver2.h
-@@ -207,6 +207,12 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
-   absl::optional<uint32_t> LastReceivedFrameRtpTimestamp() const;
-   absl::optional<int64_t> LastReceivedKeyframePacketMs() const;
- 
-+  // Mozilla modification: VideoReceiveStream2 and friends do not surface RTCP
-+  // stats at all, and even on the most recent libwebrtc code there does not
-+  // seem to be any support for these stats right now. So, we hack this in.
-+  void RemoteRTCPSenderInfo(uint32_t* packet_count, uint32_t* octet_count,
-+                            int64_t* ntp_timestamp_ms) const;
-+
++  // moved DeliverCapturedFrame to protected for VideoCaptureAndroid (mjf)
++  int32_t DeliverCapturedFrame(VideoFrame& captureFrame)
++      RTC_EXCLUSIVE_LOCKS_REQUIRED(api_lock_);
+   Mutex api_lock_;
+   // Should be set by platform dependent code in StartCapture.
+   VideoCaptureCapability _requestedCapability RTC_GUARDED_BY(api_checker_);
+@@ -104,8 +108,6 @@ class RTC_EXPORT VideoCaptureImpl : public VideoCaptureModule {
   private:
-   // Implements RtpVideoFrameReceiver.
-   void ManageFrame(std::unique_ptr<RtpFrameObject> frame) override;
-diff --git a/video/video_receive_stream2.cc b/video/video_receive_stream2.cc
-index af25c364de..776c49042b 100644
---- a/video/video_receive_stream2.cc
-+++ b/video/video_receive_stream2.cc
-@@ -570,6 +570,14 @@ VideoReceiveStreamInterface::Stats VideoReceiveStream2::GetStats() const {
-       stats.rtx_rtp_stats = rtx_statistician->GetStats();
-     }
-   }
-+
-+  // Mozilla modification: VideoReceiveStream2 and friends do not surface RTCP
-+  // stats at all, and even on the most recent libwebrtc code there does not
-+  // seem to be any support for these stats right now. So, we hack this in.
-+  rtp_video_stream_receiver_.RemoteRTCPSenderInfo(
-+      &stats.rtcp_sender_packets_sent, &stats.rtcp_sender_octets_sent,
-+      &stats.rtcp_sender_ntp_timestamp_ms);
-+
-   return stats;
- }
+   void UpdateFrameCount();
+   uint32_t CalculateFrameRate(int64_t now_ns);
+-  int32_t DeliverCapturedFrame(VideoFrame& captureFrame)
+-      RTC_EXCLUSIVE_LOCKS_REQUIRED(api_lock_);
+   void DeliverRawFrame(uint8_t* videoFrame,
+                        size_t videoFrameLength,
+                        const VideoCaptureCapability& frameInfo,
+diff --git a/rtc_base/system/warn_current_thread_is_deadlocked.h b/rtc_base/system/warn_current_thread_is_deadlocked.h
+index 4a0ba9dc09..eac12022ed 100644
+--- a/rtc_base/system/warn_current_thread_is_deadlocked.h
++++ b/rtc_base/system/warn_current_thread_is_deadlocked.h
+@@ -13,7 +13,7 @@
  
+ namespace webrtc {
+ 
+-#if defined(WEBRTC_ANDROID) && !defined(WEBRTC_CHROMIUM_BUILD)
++#if defined(WEBRTC_ANDROID) && !defined(WEBRTC_CHROMIUM_BUILD) && !defined(MOZ_WIDGET_ANDROID)
+ void WarnThatTheCurrentThreadIsProbablyDeadlocked();
+ #else
+ inline void WarnThatTheCurrentThreadIsProbablyDeadlocked() {}
+diff --git a/sdk/android/api/org/webrtc/VideoCodecInfo.java b/sdk/android/api/org/webrtc/VideoCodecInfo.java
+index 4f97cf74cf..363be347b5 100644
+--- a/sdk/android/api/org/webrtc/VideoCodecInfo.java
++++ b/sdk/android/api/org/webrtc/VideoCodecInfo.java
+@@ -80,7 +80,7 @@ public class VideoCodecInfo {
+   }
+ 
+   @CalledByNative
+-  Map getParams() {
++  Map<String, String> getParams() {
+     return params;
+   }
+ }

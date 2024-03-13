@@ -1,38 +1,24 @@
-From: Byron Campen <docfaraday@gmail.com>
-Date: Thu, 20 Jul 2023 14:24:00 +0000
-Subject: Bug 1838080: Ensure that last ref to transformation_queue_ is not
- released on itself. r=pehrsons,webrtc-reviewers
+From: Michael Froman <mfroman@mozilla.com>
+Date: Wed, 5 Jul 2023 19:15:00 +0000
+Subject: Bug 1841864 - upstream commit 4baea5b07f should properly check size
+ of encoder_config_.simulcast_layers. r=jib
 
-Differential Revision: https://phabricator.services.mozilla.com/D181699
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/91d9e8b6a5c430a73561ffd2330865f04fcb1a6d
+Differential Revision: https://phabricator.services.mozilla.com/D182813
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a7179d8d75313b6c9c76a496e10d102da019ff4f
 ---
- .../rtp_sender_video_frame_transformer_delegate.cc       | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ video/video_stream_encoder.cc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
-index ff15840529..ae9eb6b4bd 100644
---- a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
-+++ b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
-@@ -18,6 +18,7 @@
- #include "api/task_queue/task_queue_factory.h"
- #include "modules/rtp_rtcp/source/rtp_descriptor_authentication.h"
- #include "rtc_base/checks.h"
-+#include "rtc_base/event.h"
- #include "rtc_base/logging.h"
+diff --git a/video/video_stream_encoder.cc b/video/video_stream_encoder.cc
+index 552463e143..669f165635 100644
+--- a/video/video_stream_encoder.cc
++++ b/video/video_stream_encoder.cc
+@@ -1375,7 +1375,7 @@ void VideoStreamEncoder::ReconfigureEncoder() {
  
- namespace webrtc {
-@@ -257,6 +258,14 @@ void RTPSenderVideoFrameTransformerDelegate::Reset() {
-     MutexLock lock(&sender_lock_);
-     sender_ = nullptr;
-   }
-+  // Wait until all pending tasks are executed, to ensure that the last ref
-+  // standing is not on the transformation queue.
-+  rtc::Event flush;
-+  transformation_queue_->PostTask([this, &flush]() {
-+    RTC_DCHECK_RUN_ON(transformation_queue_.get());
-+    flush.Set();
-+  });
-+  flush.Wait(rtc::Event::kForever);
- }
- 
- std::unique_ptr<TransformableVideoFrameInterface> CloneSenderVideoFrame(
+   bool is_svc = false;
+   bool single_stream_or_non_first_inactive = true;
+-  for (size_t i = 1; i < encoder_config_.number_of_streams; ++i) {
++  for (size_t i = 1; i < encoder_config_.simulcast_layers.size(); ++i) {
+     if (encoder_config_.simulcast_layers[i].active) {
+       single_stream_or_non_first_inactive = false;
+       break;

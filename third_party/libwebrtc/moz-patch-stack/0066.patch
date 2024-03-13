@@ -1,78 +1,24 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Mon, 12 Dec 2022 15:47:00 +0000
-Subject: Bug 1451394 - Expose mac camera capture backend in .gn and switch it
- to gecko libyuv. r=webrtc-reviewers,mjf
+From: Michael Froman <mjfroman@mac.com>
+Date: Tue, 21 Jun 2022 11:11:09 -0500
+Subject: Bug 1773223 - Generate webrtc moz.builds for all platforms at once.
+ r=mjf,firefox-build-system-reviewers,ahochheiden
 
-Differential Revision: https://phabricator.services.mozilla.com/D163682
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b0658888969395dca938597783c8a377b9bea209
 ---
- BUILD.gn     | 4 ++++
- sdk/BUILD.gn | 6 ++++++
- 2 files changed, 10 insertions(+)
+ build_overrides/build.gni | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/BUILD.gn b/BUILD.gn
-index f595a2951a..7feca08e60 100644
---- a/BUILD.gn
-+++ b/BUILD.gn
-@@ -603,6 +603,10 @@ if (!build_with_chromium) {
-       ]
-     }
- 
-+    if (build_with_mozilla && is_mac) {
-+      deps += [ "sdk:videocapture_objc" ]
-+    }
-+
-     if (rtc_enable_protobuf) {
-       deps += [ "logging:rtc_event_log_proto" ]
-     }
-diff --git a/sdk/BUILD.gn b/sdk/BUILD.gn
-index e28bdcc5a2..586d4d1911 100644
---- a/sdk/BUILD.gn
-+++ b/sdk/BUILD.gn
-@@ -533,6 +533,7 @@ if (is_ios || is_mac) {
-       }
-     }
- 
-+    if (!build_with_mozilla) {
-     rtc_library("videosource_objc") {
-       sources = [
-         "objc/api/peerconnection/RTCVideoSource+Private.h",
-@@ -562,6 +563,7 @@ if (is_ios || is_mac) {
-         ":used_from_extension",
-       ]
-     }
-+    }
- 
-     rtc_library("videoframebuffer_objc") {
-       visibility = [ "*" ]
-@@ -594,6 +596,7 @@ if (is_ios || is_mac) {
-       ]
-     }
- 
-+    if (!build_with_mozilla) {
-     rtc_library("metal_objc") {
-       visibility = [ "*" ]
-       allow_poison = [
-@@ -655,6 +658,7 @@ if (is_ios || is_mac) {
-         ":videoframebuffer_objc",
-       ]
-     }
-+    }
- 
-     rtc_library("videocapture_objc") {
-       visibility = [ "*" ]
-@@ -683,6 +687,7 @@ if (is_ios || is_mac) {
-       ]
-     }
- 
-+    if (!build_with_mozilla) {
-     rtc_library("videocodec_objc") {
-       visibility = [ "*" ]
-       configs += [ "..:no_global_constructors" ]
-@@ -1729,5 +1734,6 @@ if (is_ios || is_mac) {
-         "VideoToolbox.framework",
-       ]
-     }
-+    }
-   }
+diff --git a/build_overrides/build.gni b/build_overrides/build.gni
+index cfa795870a..2272b01871 100644
+--- a/build_overrides/build.gni
++++ b/build_overrides/build.gni
+@@ -47,6 +47,10 @@ if (host_os == "mac" || host_os == "linux") {
+   use_system_xcode = _result == 0
  }
+ 
++use_system_xcode = false
++xcode_version = "10.15"
++mac_xcode_version = "default"
++
+ declare_args() {
+   # WebRTC doesn't depend on //base from production code but only for testing
+   # purposes. In any case, it doesn't depend on //third_party/perfetto which

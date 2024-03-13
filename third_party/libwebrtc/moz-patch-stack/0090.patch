@@ -1,56 +1,39 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Thu, 28 Sep 2023 14:12:00 +0000
-Subject: Bug 1832465 - remove libXtst usage from libwebrtc.
- r=ng,webrtc-reviewers
+From: Byron Campen <docfaraday@gmail.com>
+Date: Thu, 20 Jul 2023 14:24:00 +0000
+Subject: Bug 1838080: Work around a race in
+ ChannelSendFrameTransformerDelegate. r=pehrsons,webrtc-reviewers
 
-Differential Revision: https://phabricator.services.mozilla.com/D189386
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0ec1b33b95dbb2d39355f28b2812fe25b4ad9f20
+This variable can be null when a ChannelSendFrameTransformerDelegate is in use,
+because that does an async dispatch to the encoder queue in the handling for
+transformed frames. If this is unset while that dispatch is in flight, we
+nullptr crash.
+
+Differential Revision: https://phabricator.services.mozilla.com/D180735
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/56555ecee7f36ae73abff1cbbd06807c2b65fc19
 ---
- modules/desktop_capture/BUILD.gn                      | 3 +++
- modules/desktop_capture/linux/x11/shared_x_display.cc | 4 ++++
- 2 files changed, 7 insertions(+)
+ audio/channel_send.cc | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/modules/desktop_capture/BUILD.gn b/modules/desktop_capture/BUILD.gn
-index dcc1b3c6ac..0634e0e9c4 100644
---- a/modules/desktop_capture/BUILD.gn
-+++ b/modules/desktop_capture/BUILD.gn
-@@ -384,6 +384,9 @@ rtc_library("desktop_capture") {
-       "Xrandr",
-       "Xtst",
-     ]
-+    if (build_with_mozilla) {
-+      libs -= [ "Xtst" ]
+diff --git a/audio/channel_send.cc b/audio/channel_send.cc
+index 61e68d19df..3c59be52b4 100644
+--- a/audio/channel_send.cc
++++ b/audio/channel_send.cc
+@@ -286,12 +286,16 @@ class RtpPacketSenderProxy : public RtpPacketSender {
+   void EnqueuePackets(
+       std::vector<std::unique_ptr<RtpPacketToSend>> packets) override {
+     MutexLock lock(&mutex_);
+-    rtp_packet_pacer_->EnqueuePackets(std::move(packets));
++    if (rtp_packet_pacer_) {
++      rtp_packet_pacer_->EnqueuePackets(std::move(packets));
 +    }
    }
  
-   if (!is_win && !is_mac && !rtc_use_x11_extensions && !rtc_use_pipewire &&
-diff --git a/modules/desktop_capture/linux/x11/shared_x_display.cc b/modules/desktop_capture/linux/x11/shared_x_display.cc
-index d690b0e2ba..3f3617b074 100644
---- a/modules/desktop_capture/linux/x11/shared_x_display.cc
-+++ b/modules/desktop_capture/linux/x11/shared_x_display.cc
-@@ -11,7 +11,9 @@
- #include "modules/desktop_capture/linux/x11/shared_x_display.h"
- 
- #include <X11/Xlib.h>
-+#if !defined(WEBRTC_MOZILLA_BUILD)
- #include <X11/extensions/XTest.h>
-+#endif
- 
- #include <algorithm>
- 
-@@ -95,6 +97,7 @@ void SharedXDisplay::ProcessPendingXEvents() {
- }
- 
- void SharedXDisplay::IgnoreXServerGrabs() {
-+#if !defined(WEBRTC_MOZILLA_BUILD)
-   int test_event_base = 0;
-   int test_error_base = 0;
-   int major = 0;
-@@ -103,6 +106,7 @@ void SharedXDisplay::IgnoreXServerGrabs() {
-                           &minor)) {
-     XTestGrabControl(display(), true);
+   void RemovePacketsForSsrc(uint32_t ssrc) override {
+     MutexLock lock(&mutex_);
+-    rtp_packet_pacer_->RemovePacketsForSsrc(ssrc);
++    if (rtp_packet_pacer_) {
++      rtp_packet_pacer_->RemovePacketsForSsrc(ssrc);
++    }
    }
-+#endif
- }
  
- }  // namespace webrtc
+  private:

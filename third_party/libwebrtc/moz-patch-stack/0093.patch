@@ -1,40 +1,38 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Tue, 14 Feb 2023 03:27:00 +0000
-Subject: Bug 1816173 - pt12 - add shim config for
- third_party/libwebrtc/testing/{gmock|gtest} r=ng
+From: Byron Campen <docfaraday@gmail.com>
+Date: Thu, 20 Jul 2023 14:24:00 +0000
+Subject: Bug 1838080: Ensure that last ref to transformation_queue_ is not
+ released on itself. r=pehrsons,webrtc-reviewers
 
-We don't vendor third_party/libwebrtc/third_party/gmock
-                third_party/libwebrtc/third_party/gtest, so:
-- add BUILD.gn to avoid scattered BUILD.gn changes
-
-Differential Revision: https://phabricator.services.mozilla.com/D169674
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/4ea9d2db79c42a144235e45c47c71adf1dd01fdc
+Differential Revision: https://phabricator.services.mozilla.com/D181699
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/91d9e8b6a5c430a73561ffd2330865f04fcb1a6d
 ---
- testing/gmock/BUILD.gn | 5 +++++
- testing/gtest/BUILD.gn | 5 +++++
- 2 files changed, 10 insertions(+)
- create mode 100644 testing/gmock/BUILD.gn
- create mode 100644 testing/gtest/BUILD.gn
+ .../rtp_sender_video_frame_transformer_delegate.cc       | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/testing/gmock/BUILD.gn b/testing/gmock/BUILD.gn
-new file mode 100644
-index 0000000000..a2a1efdea9
---- /dev/null
-+++ b/testing/gmock/BUILD.gn
-@@ -0,0 +1,5 @@
-+import("//third_party/libaom/options.gni")
-+import("../../webrtc.gni")
-+
-+rtc_library("gmock") {
-+}
-diff --git a/testing/gtest/BUILD.gn b/testing/gtest/BUILD.gn
-new file mode 100644
-index 0000000000..c9c2703c37
---- /dev/null
-+++ b/testing/gtest/BUILD.gn
-@@ -0,0 +1,5 @@
-+import("//third_party/libaom/options.gni")
-+import("../../webrtc.gni")
-+
-+rtc_library("gtest") {
-+}
+diff --git a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
+index ff15840529..ae9eb6b4bd 100644
+--- a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
++++ b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
+@@ -18,6 +18,7 @@
+ #include "api/task_queue/task_queue_factory.h"
+ #include "modules/rtp_rtcp/source/rtp_descriptor_authentication.h"
+ #include "rtc_base/checks.h"
++#include "rtc_base/event.h"
+ #include "rtc_base/logging.h"
+ 
+ namespace webrtc {
+@@ -257,6 +258,14 @@ void RTPSenderVideoFrameTransformerDelegate::Reset() {
+     MutexLock lock(&sender_lock_);
+     sender_ = nullptr;
+   }
++  // Wait until all pending tasks are executed, to ensure that the last ref
++  // standing is not on the transformation queue.
++  rtc::Event flush;
++  transformation_queue_->PostTask([this, &flush]() {
++    RTC_DCHECK_RUN_ON(transformation_queue_.get());
++    flush.Set();
++  });
++  flush.Wait(rtc::Event::kForever);
+ }
+ 
+ std::unique_ptr<TransformableVideoFrameInterface> CloneSenderVideoFrame(

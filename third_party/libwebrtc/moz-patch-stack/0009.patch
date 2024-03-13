@@ -1,53 +1,34 @@
-From: "Byron Campen [:bwc]" <docfaraday@gmail.com>
-Date: Fri, 12 Feb 2021 14:27:00 +0000
-Subject: Bug 1654112 - Get OS X build working.
- r=ng,firefox-build-system-reviewers,glandium
+From: Michael Froman <mfroman@mozilla.com>
+Date: Fri, 9 Jul 2021 18:14:00 -0500
+Subject: Bug 1654112 - mutex changes to fix tsan errors. r=ng
 
-* Pull in sdk/objc/base and sdk/objc/helpers
-* Add gclient_args.gni to keep build happy.
-* Add a missing include path for libyuv
-* Support .m files in build.
-
-Differential Revision: https://phabricator.services.mozilla.com/D105015
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/9314046d89ebc0836a50ab7addece71abbf0b5e4
+Differential Revision: https://phabricator.services.mozilla.com/D119674
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/3d5503acf9a4b22e02c4300f29e4fbfed406ea2c
 ---
- modules/desktop_capture/mac/screen_capturer_mac.mm | 3 ++-
- modules/desktop_capture/mac/window_list_utils.cc   | 4 ++--
- 2 files changed, 4 insertions(+), 3 deletions(-)
+ rtc_base/logging.cc | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/modules/desktop_capture/mac/screen_capturer_mac.mm b/modules/desktop_capture/mac/screen_capturer_mac.mm
-index a2370ed695..785a15dfa4 100644
---- a/modules/desktop_capture/mac/screen_capturer_mac.mm
-+++ b/modules/desktop_capture/mac/screen_capturer_mac.mm
-@@ -276,7 +276,8 @@ DesktopRect GetExcludedWindowPixelBounds(CGWindowID window, float dip_to_pixel_s
-   for (MacDisplayConfigurations::iterator it = desktop_config_.displays.begin();
-        it != desktop_config_.displays.end();
-        ++it) {
--    screens->push_back({it->id, std::string()});
-+    Source value = {it->id, 0, std::string()};
-+    screens->push_back(value);
-   }
-   return true;
+diff --git a/rtc_base/logging.cc b/rtc_base/logging.cc
+index ad2303735e..9c2d3b0a39 100644
+--- a/rtc_base/logging.cc
++++ b/rtc_base/logging.cc
+@@ -275,8 +275,8 @@ void LogMessage::LogTimestamps(bool on) {
  }
-diff --git a/modules/desktop_capture/mac/window_list_utils.cc b/modules/desktop_capture/mac/window_list_utils.cc
-index 5d881662ea..989ec7ea54 100644
---- a/modules/desktop_capture/mac/window_list_utils.cc
-+++ b/modules/desktop_capture/mac/window_list_utils.cc
-@@ -198,7 +198,7 @@ bool GetWindowList(DesktopCapturer::SourceList* windows,
-             // the check in the map. Also skip the window if owner name is
-             // empty too.
-             if (!owner_name.empty() && (itr == pid_itr_map.end())) {
--              sources.push_back(DesktopCapturer::Source{window_id, owner_name});
-+              sources.push_back(DesktopCapturer::Source{window_id, pid, owner_name});
-               RTC_DCHECK(!sources.empty());
-               // Get an iterator on the last valid element in the source list.
-               std::list<DesktopCapturer::Source>::const_iterator last_source =
-@@ -209,7 +209,7 @@ bool GetWindowList(DesktopCapturer::SourceList* windows,
-                       pid, last_source));
-             }
-           } else {
--            sources.push_back(DesktopCapturer::Source{window_id, title});
-+            sources.push_back(DesktopCapturer::Source{window_id, pid, title});
-             // Once the window with empty title has been removed no other empty
-             // windows are allowed for the same pid.
-             if (itr != pid_itr_map.end() && (itr->second != sources.end())) {
+ 
+ void LogMessage::LogToDebug(LoggingSeverity min_sev) {
+-  g_dbg_sev = min_sev;
+   webrtc::MutexLock lock(&GetLoggingLock());
++  g_dbg_sev = min_sev;
+   UpdateMinLogSeverity();
+ }
+ 
+@@ -460,6 +460,9 @@ void LogMessage::OutputToDebug(const LogLineRef& log_line) {
+ 
+ // static
+ bool LogMessage::IsNoop(LoggingSeverity severity) {
++  // Added MutexLock to fix tsan warnings on accessing g_dbg_sev. (mjf)
++  // See https://bugs.chromium.org/p/chromium/issues/detail?id=1228729
++  webrtc::MutexLock lock(&GetLoggingLock());
+   if (severity >= g_dbg_sev || severity >= g_min_sev)
+     return false;
+   return streams_empty_.load(std::memory_order_relaxed);

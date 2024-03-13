@@ -1,65 +1,43 @@
-From: Dan Minor <dminor@mozilla.com>
-Date: Tue, 31 Jul 2018 13:32:00 -0400
-Subject: Bug 1376873 - OS X desktop capture fixes; r=pehrsons
+From: Nico Grunbaum <na-g@nostrum.com>
+Date: Sat, 13 Feb 2021 04:20:00 -0800
+Subject: Bug 1654112 - Add pid_t to desktop_capture_types.h; r=pehrsons
 
-Differential Revision: https://phabricator.services.mozilla.com/D7464
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/02c038eca65c1218b56fdf8937fdeab3d8767fe6
+Upstreaming bug 1697385
+
+Also includes:
+Bug 1654112 - Clarifying prev. rev that moved pid_t into the global namespace; r=dminor
+
+Differential Revision: https://phabricator.services.mozilla.com/D107897
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/539b69f0e21118a1898f1ef689577c7193ff7be7
 ---
- modules/desktop_capture/mac/screen_capturer_mac.h   | 7 +++++++
- modules/desktop_capture/mac/screen_capturer_mac.mm  | 4 +++-
- modules/desktop_capture/mouse_cursor_monitor_mac.mm | 2 +-
- 3 files changed, 11 insertions(+), 2 deletions(-)
+ modules/desktop_capture/desktop_capture_types.h | 4 ++++
+ modules/video_capture/video_capture.h           | 1 +
+ 2 files changed, 5 insertions(+)
 
-diff --git a/modules/desktop_capture/mac/screen_capturer_mac.h b/modules/desktop_capture/mac/screen_capturer_mac.h
-index 7e38b5bd08..e4a2cc2fc9 100644
---- a/modules/desktop_capture/mac/screen_capturer_mac.h
-+++ b/modules/desktop_capture/mac/screen_capturer_mac.h
-@@ -113,6 +113,13 @@ class ScreenCapturerMac final : public DesktopCapturer {
+diff --git a/modules/desktop_capture/desktop_capture_types.h b/modules/desktop_capture/desktop_capture_types.h
+index a4e3e897fd..e777a45f92 100644
+--- a/modules/desktop_capture/desktop_capture_types.h
++++ b/modules/desktop_capture/desktop_capture_types.h
+@@ -13,6 +13,10 @@
  
-   // Start, CaptureFrame and destructor have to called in the same thread.
-   SequenceChecker thread_checker_;
+ #include <stdint.h>
+ 
++#ifdef XP_WIN      // Moving this into the global namespace
++typedef int pid_t; // matching what used to be in
++#endif             // video_capture_defines.h
 +
-+  // Used to force CaptureFrame to update it's screen configuration
-+  // and reregister event handlers. This ensure that this
-+  // occurs on the ScreenCapture thread. Read and written from
-+  // both the VideoCapture thread and ScreenCapture thread.
-+  // Protected by desktop_config_monitor_.
-+  bool update_screen_configuration_ = false;
- };
+ namespace webrtc {
  
- }  // namespace webrtc
-diff --git a/modules/desktop_capture/mac/screen_capturer_mac.mm b/modules/desktop_capture/mac/screen_capturer_mac.mm
-index 60089fd0f2..a2370ed695 100644
---- a/modules/desktop_capture/mac/screen_capturer_mac.mm
-+++ b/modules/desktop_capture/mac/screen_capturer_mac.mm
-@@ -182,6 +182,7 @@ DesktopRect GetExcludedWindowPixelBounds(CGWindowID window, float dip_to_pixel_s
-       "webrtc", "ScreenCapturermac::Start", "target display id ", current_display_);
+ enum class CaptureType { kWindow, kScreen, kAnyScreenContent };
+diff --git a/modules/video_capture/video_capture.h b/modules/video_capture/video_capture.h
+index f31b239c71..7279bed476 100644
+--- a/modules/video_capture/video_capture.h
++++ b/modules/video_capture/video_capture.h
+@@ -13,6 +13,7 @@
  
-   callback_ = callback;
-+  update_screen_configuration_ = false;
-   // Start and operate CGDisplayStream handler all from capture thread.
-   if (!RegisterRefreshAndMoveHandlers()) {
-     RTC_LOG(LS_ERROR) << "Failed to register refresh and move handlers.";
-@@ -202,7 +203,8 @@ DesktopRect GetExcludedWindowPixelBounds(CGWindowID window, float dip_to_pixel_s
-   }
- 
-   MacDesktopConfiguration new_config = desktop_config_monitor_->desktop_configuration();
--  if (!desktop_config_.Equals(new_config)) {
-+  if (update_screen_configuration_ || !desktop_config_.Equals(new_config)) {
-+    update_screen_configuration_ = false;
-     desktop_config_ = new_config;
-     // If the display configuraiton has changed then refresh capturer data
-     // structures. Occasionally, the refresh and move handlers are lost when
-diff --git a/modules/desktop_capture/mouse_cursor_monitor_mac.mm b/modules/desktop_capture/mouse_cursor_monitor_mac.mm
-index 3db4332cd1..512103ab5e 100644
---- a/modules/desktop_capture/mouse_cursor_monitor_mac.mm
-+++ b/modules/desktop_capture/mouse_cursor_monitor_mac.mm
-@@ -133,7 +133,7 @@ void DisplaysReconfigured(CGDirectDisplayID display,
-   NSSize nssize = [nsimage size];  // DIP size
- 
-   // No need to caputre cursor image if it's unchanged since last capture.
--  if ([[nsimage TIFFRepresentation] isEqual:[last_cursor_ TIFFRepresentation]]) return;
-+  if (last_cursor_ && [[nsimage TIFFRepresentation] isEqual:[last_cursor_ TIFFRepresentation]]) return;
-   last_cursor_ = nsimage;
- 
-   DesktopSize size(round(nssize.width * scale),
+ #include "api/video/video_rotation.h"
+ #include "api/video/video_sink_interface.h"
++#include "modules/desktop_capture/desktop_capture_types.h"
+ #include "modules/video_capture/raw_video_sink_interface.h"
+ #include "modules/video_capture/video_capture_defines.h"
+ #include <set>

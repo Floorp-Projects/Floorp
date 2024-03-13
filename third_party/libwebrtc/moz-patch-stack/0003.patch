@@ -1,34 +1,143 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Fri, 9 Jul 2021 18:14:00 -0500
-Subject: Bug 1654112 - mutex changes to fix tsan errors. r=ng
+From: Tony Herre <herre@google.com>
+Date: Mon, 18 Dec 2023 17:44:57 +0100
+Subject: (cherry-pick-branch-heads/6167) [121] Allow RTP retransmission for
+ cloned encoded Video Frames
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Differential Revision: https://phabricator.services.mozilla.com/D119674
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/3d5503acf9a4b22e02c4300f29e4fbfed406ea2c
+Fix the unintended disabling of RTP retransmissions for cloned encoded
+frames, caused by passing an infinite "expected_retransmission_time".
+Instead use a constant 10ms for now. For frames encoded locally, this is
+set from an estimate of the RTT, but we currently don't have access to
+that here (TODO added to pipe it through)
+
+If an integration is cloning and then sending frames it received, it's
+almost certainly resending received media to other peers on a local
+network, so 10ms is a fair upperbound.
+
+Tested locally with Chrome on Mac, configuring packet drops & observing
+on chrome://webrtc-internals that retransmission packets are now sent.
+
+(cherry picked from commit 3e801c32086be59e502e276ff5d6beea42069582)
+
+No-Try: True
+Bug: chromium:1512631
+Change-Id: I2483415dc7e0079f8a7b66f6607f4907698514c4
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/331900
+Reviewed-by: Harald Alvestrand <hta@webrtc.org>
+Commit-Queue: Tony Herre <herre@google.com>
+Cr-Original-Commit-Position: refs/heads/main@{#41405}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/332261
+Reviewed-by: Stefan Holmer <stefan@webrtc.org>
+Commit-Queue: Mirko Bonadei <mbonadei@webrtc.org>
+Reviewed-by: Henrik Boström <hbos@webrtc.org>
+Cr-Commit-Position: refs/branch-heads/6167@{#3}
+Cr-Branched-From: ece5cb83715dea85617114b6d4e981fdee2623ba-refs/heads/main@{#41315}
 ---
- rtc_base/logging.cc | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ ...sender_video_frame_transformer_delegate.cc | 33 ++++++++++++-------
+ ...deo_frame_transformer_delegate_unittest.cc |  8 ++---
+ 2 files changed, 25 insertions(+), 16 deletions(-)
 
-diff --git a/rtc_base/logging.cc b/rtc_base/logging.cc
-index ad2303735e..9c2d3b0a39 100644
---- a/rtc_base/logging.cc
-+++ b/rtc_base/logging.cc
-@@ -275,8 +275,8 @@ void LogMessage::LogTimestamps(bool on) {
+diff --git a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
+index 26152df0f0..2bb71941f9 100644
+--- a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
++++ b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
+@@ -23,6 +23,12 @@
+ namespace webrtc {
+ namespace {
+ 
++// Using a reasonable default of 10ms for the retransmission delay for frames
++// not coming from this sender's encoder. This is usually taken from an
++// estimate of the RTT of the link,so 10ms should be a reasonable estimate for
++// frames being re-transmitted to a peer, probably on the same network.
++const TimeDelta kDefaultRetransmissionsTime = TimeDelta::Millis(10);
++
+ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
+  public:
+   TransformableVideoSenderFrame(const EncodedImage& encoded_image,
+@@ -209,15 +215,17 @@ void RTPSenderVideoFrameTransformerDelegate::SendVideo(
+     auto* transformed_video_frame =
+         static_cast<TransformableVideoFrameInterface*>(transformed_frame.get());
+     VideoFrameMetadata metadata = transformed_video_frame->Metadata();
+-    sender_->SendVideo(
+-        transformed_video_frame->GetPayloadType(), metadata.GetCodec(),
+-        transformed_video_frame->GetTimestamp(),
+-        /*capture_time=*/Timestamp::MinusInfinity(),
+-        transformed_video_frame->GetData(),
+-        transformed_video_frame->GetData().size(),
+-        RTPVideoHeader::FromMetadata(metadata),
+-        /*expected_retransmission_time=*/TimeDelta::PlusInfinity(),
+-        metadata.GetCsrcs());
++    // TODO(bugs.webrtc.org/14708): Use an actual RTT estimate for the
++    // retransmission time instead of a const default, in the same way as a
++    // locally encoded frame.
++    sender_->SendVideo(transformed_video_frame->GetPayloadType(),
++                       metadata.GetCodec(),
++                       transformed_video_frame->GetTimestamp(),
++                       /*capture_time=*/Timestamp::MinusInfinity(),
++                       transformed_video_frame->GetData(),
++                       transformed_video_frame->GetData().size(),
++                       RTPVideoHeader::FromMetadata(metadata),
++                       kDefaultRetransmissionsTime, metadata.GetCsrcs());
+   }
  }
  
- void LogMessage::LogToDebug(LoggingSeverity min_sev) {
--  g_dbg_sev = min_sev;
-   webrtc::MutexLock lock(&GetLoggingLock());
-+  g_dbg_sev = min_sev;
-   UpdateMinLogSeverity();
+@@ -254,13 +262,14 @@ std::unique_ptr<TransformableVideoFrameInterface> CloneSenderVideoFrame(
+                                  ? VideoFrameType::kVideoFrameKey
+                                  : VideoFrameType::kVideoFrameDelta;
+   // TODO(bugs.webrtc.org/14708): Fill in other EncodedImage parameters
+-
++  // TODO(bugs.webrtc.org/14708): Use an actual RTT estimate for the
++  // retransmission time instead of a const default, in the same way as a
++  // locally encoded frame.
+   VideoFrameMetadata metadata = original->Metadata();
+   RTPVideoHeader new_header = RTPVideoHeader::FromMetadata(metadata);
+   return std::make_unique<TransformableVideoSenderFrame>(
+       encoded_image, new_header, original->GetPayloadType(), new_header.codec,
+-      original->GetTimestamp(),
+-      /*expected_retransmission_time=*/TimeDelta::PlusInfinity(),
++      original->GetTimestamp(), kDefaultRetransmissionsTime,
+       original->GetSsrc(), metadata.GetCsrcs());
  }
  
-@@ -460,6 +460,9 @@ void LogMessage::OutputToDebug(const LogLineRef& log_line) {
+diff --git a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate_unittest.cc b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate_unittest.cc
+index ad00e6449f..6790fc3a71 100644
+--- a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate_unittest.cc
++++ b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate_unittest.cc
+@@ -83,7 +83,7 @@ class RtpSenderVideoFrameTransformerDelegateTest : public ::testing::Test {
+     delegate->TransformFrame(
+         /*payload_type=*/1, VideoCodecType::kVideoCodecVP8, /*rtp_timestamp=*/2,
+         encoded_image, RTPVideoHeader::FromMetadata(metadata),
+-        /*expected_retransmission_time=*/TimeDelta::PlusInfinity());
++        /*expected_retransmission_time=*/TimeDelta::Millis(10));
+     return frame;
+   }
  
- // static
- bool LogMessage::IsNoop(LoggingSeverity severity) {
-+  // Added MutexLock to fix tsan warnings on accessing g_dbg_sev. (mjf)
-+  // See https://bugs.chromium.org/p/chromium/issues/detail?id=1228729
-+  webrtc::MutexLock lock(&GetLoggingLock());
-   if (severity >= g_dbg_sev || severity >= g_min_sev)
-     return false;
-   return streams_empty_.load(std::memory_order_relaxed);
+@@ -123,7 +123,7 @@ TEST_F(RtpSenderVideoFrameTransformerDelegateTest,
+   delegate->TransformFrame(
+       /*payload_type=*/1, VideoCodecType::kVideoCodecVP8, /*rtp_timestamp=*/2,
+       encoded_image, RTPVideoHeader(),
+-      /*expected_retransmission_time=*/TimeDelta::PlusInfinity());
++      /*expected_retransmission_time=*/TimeDelta::Millis(10));
+ }
+ 
+ TEST_F(RtpSenderVideoFrameTransformerDelegateTest,
+@@ -260,7 +260,7 @@ TEST_F(RtpSenderVideoFrameTransformerDelegateTest,
+       test_sender_,
+       SendVideo(payload_type, absl::make_optional(kVideoCodecVP8), timestamp,
+                 /*capture_time=*/Timestamp::MinusInfinity(), buffer, _, _,
+-                /*expected_retransmission_time=*/TimeDelta::PlusInfinity(),
++                /*expected_retransmission_time=*/TimeDelta::Millis(10),
+                 frame_csrcs))
+       .WillOnce(WithoutArgs([&] {
+         event.Set();
+@@ -310,7 +310,7 @@ TEST_F(RtpSenderVideoFrameTransformerDelegateTest,
+   delegate->TransformFrame(
+       /*payload_type=*/1, VideoCodecType::kVideoCodecVP8, /*rtp_timestamp=*/2,
+       encoded_image, RTPVideoHeader(),
+-      /*expected_retransmission_time=*/TimeDelta::PlusInfinity());
++      /*expected_retransmission_time=*/TimeDelta::Millis(10));
+ }
+ 
+ }  // namespace

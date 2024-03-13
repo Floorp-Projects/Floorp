@@ -1,41 +1,64 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Fri, 19 Feb 2021 13:45:00 +0100
-Subject: Bug 1654112 - libwebrtc: Add a REMB on/off switch to
- VideoReceiveStream. r=ng
+From: Paul Adenot <paul@paul.cx>
+Date: Wed, 4 Nov 2020 13:03:00 +0000
+Subject: Bug 1675042 - Put IR camera last in the device selection list, so
+ that they are never the default. r=dminor
 
-Differential Revision: https://phabricator.services.mozilla.com/D105774
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7330681cf4de6d8dd868cc661cbdd6679bbc07b3
+Differential Revision: https://phabricator.services.mozilla.com/D95764
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/754900ff2a2b1c32878baf3c76d7c0e8219419ff
 ---
- call/video_receive_stream.h         | 3 +++
- video/rtp_video_stream_receiver2.cc | 3 +--
- 2 files changed, 4 insertions(+), 2 deletions(-)
+ sdk/android/api/org/webrtc/Camera1Enumerator.java |  5 +++++
+ sdk/android/api/org/webrtc/Camera2Enumerator.java | 12 ++++++++++++
+ sdk/android/api/org/webrtc/CameraEnumerator.java  |  1 +
+ 3 files changed, 18 insertions(+)
 
-diff --git a/call/video_receive_stream.h b/call/video_receive_stream.h
-index 95f1a47f4e..a1fc204e7c 100644
---- a/call/video_receive_stream.h
-+++ b/call/video_receive_stream.h
-@@ -210,6 +210,9 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
-       // disabled.
-       KeyFrameReqMethod keyframe_method = KeyFrameReqMethod::kPliRtcp;
+diff --git a/sdk/android/api/org/webrtc/Camera1Enumerator.java b/sdk/android/api/org/webrtc/Camera1Enumerator.java
+index fb1a21f323..4a1aacdb05 100644
+--- a/sdk/android/api/org/webrtc/Camera1Enumerator.java
++++ b/sdk/android/api/org/webrtc/Camera1Enumerator.java
+@@ -63,6 +63,11 @@ public class Camera1Enumerator implements CameraEnumerator {
+     return info != null && info.facing == android.hardware.Camera.CameraInfo.CAMERA_FACING_BACK;
+   }
  
-+      // See draft-alvestrand-rmcat-remb for information.
-+      bool remb = false;
++  @Override
++  public boolean isInfrared(String deviceName) {
++    return false;
++  }
 +
-       bool tmmbr = false;
+   @Override
+   public List<CaptureFormat> getSupportedFormats(String deviceName) {
+     return getSupportedFormats(getCameraIndex(deviceName));
+diff --git a/sdk/android/api/org/webrtc/Camera2Enumerator.java b/sdk/android/api/org/webrtc/Camera2Enumerator.java
+index 456d8cd060..44e239ad8e 100644
+--- a/sdk/android/api/org/webrtc/Camera2Enumerator.java
++++ b/sdk/android/api/org/webrtc/Camera2Enumerator.java
+@@ -74,6 +74,18 @@ public class Camera2Enumerator implements CameraEnumerator {
+         == CameraMetadata.LENS_FACING_BACK;
+   }
  
-       // See LntfConfig for description.
-diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index 9a38097a93..d12e833cab 100644
---- a/video/rtp_video_stream_receiver2.cc
-+++ b/video/rtp_video_stream_receiver2.cc
-@@ -296,9 +296,8 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
-       frames_decryptable_(false),
-       absolute_capture_time_interpolator_(clock) {
-   packet_sequence_checker_.Detach();
--  constexpr bool remb_candidate = true;
-   if (packet_router_)
--    packet_router_->AddReceiveRtpModule(rtp_rtcp_.get(), remb_candidate);
-+    packet_router_->AddReceiveRtpModule(rtp_rtcp_.get(), config_.rtp.remb);
++  @Override
++  public boolean isInfrared(String deviceName) {
++    CameraCharacteristics characteristics = getCameraCharacteristics(deviceName);
++
++    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
++      Integer colors = characteristics.get(CameraCharacteristics.SENSOR_INFO_COLOR_FILTER_ARRANGEMENT);
++      return colors != null && colors.equals(CameraCharacteristics.SENSOR_INFO_COLOR_FILTER_ARRANGEMENT_NIR);
++    }
++
++    return false;
++  }
++
+   @Nullable
+   @Override
+   public List<CaptureFormat> getSupportedFormats(String deviceName) {
+diff --git a/sdk/android/api/org/webrtc/CameraEnumerator.java b/sdk/android/api/org/webrtc/CameraEnumerator.java
+index dc954b62e0..db34d542c8 100644
+--- a/sdk/android/api/org/webrtc/CameraEnumerator.java
++++ b/sdk/android/api/org/webrtc/CameraEnumerator.java
+@@ -18,6 +18,7 @@ public interface CameraEnumerator {
+   public String[] getDeviceNames();
+   public boolean isFrontFacing(String deviceName);
+   public boolean isBackFacing(String deviceName);
++  public boolean isInfrared(String deviceName);
+   public List<CaptureFormat> getSupportedFormats(String deviceName);
  
-   RTC_DCHECK(config_.rtp.rtcp_mode != RtcpMode::kOff)
-       << "A stream should not be configured with RTCP disabled. This value is "
+   public CameraVideoCapturer createCapturer(
