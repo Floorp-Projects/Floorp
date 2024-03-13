@@ -386,7 +386,6 @@ function transformTraceResource(traceResource) {
     args,
     sourceId,
 
-    returnedValue,
     relatedTraceId,
     why,
 
@@ -411,9 +410,10 @@ function transformTraceResource(traceResource) {
     parameters: args
       ? args.map(p => (p ? getAdHocFrontOrPrimitiveGrip(p, targetFront) : p))
       : null,
-    returnedValue: why
-      ? getAdHocFrontOrPrimitiveGrip(returnedValue, targetFront)
-      : null,
+    returnedValue:
+      why && "returnedValue" in traceResource
+        ? getAdHocFrontOrPrimitiveGrip(traceResource.returnedValue, targetFront)
+        : undefined,
     relatedTraceId,
     why,
     messageText: null,
