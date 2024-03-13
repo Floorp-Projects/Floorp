@@ -71,7 +71,6 @@ async function verifyHeaders(monitor) {
     "Cookie",
     "Host",
     "Pragma",
-    "Priority",
     "Sec-Fetch-Dest",
     "Sec-Fetch-Mode",
     "Sec-Fetch-Site",
@@ -145,7 +144,6 @@ async function verifyRawHeaders(monitor) {
     "Sec-Fetch-Dest",
     "Sec-Fetch-Mode",
     "Sec-Fetch-Site",
-    "Priority",
     "Pragma",
     "Cache-Control",
   ];

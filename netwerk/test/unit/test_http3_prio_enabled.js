@@ -16,7 +16,6 @@ load("../unit/test_http3_prio_helpers.js");
 if (!inChildProcess()) {
   registerCleanupFunction(async () => {
     Services.prefs.clearUserPref("network.http.http3.priority");
-    Services.prefs.clearUserPref("network.http.priority_header.enabled");
     http3_clear_prefs();
   });
 }
@@ -83,7 +82,7 @@ async function test_http3_prio_enabled(incremental) {
     incremental
   );
   await test_flag_priority(
-    "enabled (tail)",
+    "enabled (background)",
     Ci.nsIClassOfService.Tail,
     "u=6",
     incremental,
@@ -96,7 +95,6 @@ add_task(async function test_http3_prio_enabled_incremental_true() {
   // wrapper handles when testing as content process for pref change
   if (!inChildProcess()) {
     Services.prefs.setBoolPref("network.http.http3.priority", true);
-    Services.prefs.setBoolPref("network.http.priority_header.enabled", true);
   }
   await test_http3_prio_enabled(true);
 });
@@ -105,7 +103,6 @@ add_task(async function test_http3_prio_enabled_incremental_false() {
   // wrapper handles when testing as content process for pref change
   if (!inChildProcess()) {
     Services.prefs.setBoolPref("network.http.http3.priority", true);
-    Services.prefs.setBoolPref("network.http.priority_header.enabled", true);
   }
   await test_http3_prio_enabled(false);
 });

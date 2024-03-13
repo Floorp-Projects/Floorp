@@ -47,7 +47,6 @@ add_task(async function () {
     "Accept-Encoding: gzip, deflate",
     "Connection: keep-alive",
     "Upgrade-Insecure-Requests: 1",
-    "Priority: u=1",
     "Pragma: no-cache",
     "Cache-Control: no-cache",
   ].join("\n");
