@@ -123,7 +123,7 @@ void CommandEncoder::CopyBufferToTexture(
 
   const auto& targetContext = aDestination.mTexture->mTargetContext;
   if (targetContext) {
-    mTargetContexts.AppendElement(targetContext);
+    mPresentationContexts.AppendElement(targetContext);
   }
 }
 void CommandEncoder::CopyTextureToBuffer(
@@ -158,7 +158,7 @@ void CommandEncoder::CopyTextureToTexture(
 
   const auto& targetContext = aDestination.mTexture->mTargetContext;
   if (targetContext) {
-    mTargetContexts.AppendElement(targetContext);
+    mPresentationContexts.AppendElement(targetContext);
   }
 }
 
@@ -218,11 +218,11 @@ already_AddRefed<RenderPassEncoder> CommandEncoder::BeginRenderPass(
   for (const auto& at : aDesc.mColorAttachments) {
     auto* targetContext = at.mView->GetTargetContext();
     if (targetContext) {
-      mTargetContexts.AppendElement(targetContext);
+      mPresentationContexts.AppendElement(targetContext);
     }
     if (at.mResolveTarget.WasPassed()) {
       targetContext = at.mResolveTarget.Value().GetTargetContext();
-      mTargetContexts.AppendElement(targetContext);
+      mPresentationContexts.AppendElement(targetContext);
     }
   }
 
@@ -263,7 +263,7 @@ already_AddRefed<CommandBuffer> CommandEncoder::Finish(
 
   RefPtr<CommandEncoder> me(this);
   RefPtr<CommandBuffer> comb = new CommandBuffer(
-      mParent, mId, std::move(mTargetContexts), std::move(me));
+      mParent, mId, std::move(mPresentationContexts), std::move(me));
   return comb.forget();
 }
 

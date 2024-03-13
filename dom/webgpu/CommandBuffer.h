@@ -22,7 +22,7 @@ class CommandBuffer final : public ObjectBase, public ChildOf<Device> {
   GPU_DECL_JS_WRAP(CommandBuffer)
 
   CommandBuffer(Device* const aParent, RawId aId,
-                nsTArray<WeakPtr<CanvasContext>>&& aTargetContexts,
+                nsTArray<WeakPtr<CanvasContext>>&& aPresentationContexts,
                 RefPtr<CommandEncoder>&& aEncoder);
 
   Maybe<RawId> Commit();
@@ -33,7 +33,7 @@ class CommandBuffer final : public ObjectBase, public ChildOf<Device> {
   void Cleanup();
 
   const RawId mId;
-  const nsTArray<WeakPtr<CanvasContext>> mTargetContexts;
+  const nsTArray<WeakPtr<CanvasContext>> mPresentationContexts;
   // Command buffers and encoders share the same identity (this is a
   // simplifcation currently made by wgpu). To avoid dropping the same ID twice,
   // the wgpu resource lifetime is tied to the encoder which is held alive by
