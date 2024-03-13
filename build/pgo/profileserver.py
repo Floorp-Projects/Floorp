@@ -17,7 +17,6 @@ from mozhttpd import MozHttpd
 from mozprofile import FirefoxProfile, Preferences
 from mozprofile.permissions import ServerLocations
 from mozrunner import CLI, FirefoxRunner
-from six import string_types
 
 PORT = 8888
 
@@ -120,7 +119,7 @@ if __name__ == "__main__":
         interpolation = {"server": "%s:%d" % httpd.httpd.server_address}
         sp3_interpolation = {"server": "%s:%d" % sp3_httpd.httpd.server_address}
         for k, v in prefs.items():
-            if isinstance(v, string_types):
+            if isinstance(v, str):
                 v = v.format(**interpolation)
             prefs[k] = Preferences.cast(v)
 
