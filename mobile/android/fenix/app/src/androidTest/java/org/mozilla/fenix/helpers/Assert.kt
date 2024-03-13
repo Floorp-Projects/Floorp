@@ -6,7 +6,9 @@ package org.mozilla.fenix.helpers
 
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.util.Log
 import org.junit.Assert.assertEquals
+import org.mozilla.fenix.helpers.Constants.TAG
 
 /**
  * Asserts the two bitmaps are the same by ensuring their dimensions, config, and
@@ -14,6 +16,7 @@ import org.junit.Assert.assertEquals
  * [Bitmap.sameAs] uses.
  */
 fun assertEqualsWithDelta(expectedB: Bitmap, actualB: Bitmap, delta: Float) {
+    Log.i(TAG, "assertEqualsWithDelta: Trying to verify that the Bitmap of $expectedB is equal with the Bitmap of $actualB within delta: $delta")
     assertEquals("widths should be equal", expectedB.width, actualB.width)
     assertEquals("heights should be equal", expectedB.height, actualB.height)
     assertEquals("config should be equal", expectedB.config, actualB.config)
@@ -29,4 +32,5 @@ fun assertEqualsWithDelta(expectedB: Bitmap, actualB: Bitmap, delta: Float) {
             assertEquals("$warn b", Color.blue(ePx).toFloat(), Color.blue(aPx).toFloat(), delta)
         }
     }
+    Log.i(TAG, "assertEqualsWithDelta: Verified that the Bitmap of $expectedB is equal with the Bitmap of $actualB within delta: $delta")
 }

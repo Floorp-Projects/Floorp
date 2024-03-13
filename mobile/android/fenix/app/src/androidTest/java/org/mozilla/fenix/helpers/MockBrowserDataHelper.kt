@@ -5,6 +5,7 @@
 package org.mozilla.fenix.helpers
 
 import android.content.Context
+import android.util.Log
 import androidx.test.platform.app.InstrumentationRegistry
 import kotlinx.coroutines.runBlocking
 import mozilla.appservices.places.BookmarkRoot
@@ -18,6 +19,7 @@ import mozilla.components.concept.storage.VisitType
 import mozilla.components.feature.search.ext.createSearchEngine
 import okhttp3.mockwebserver.MockWebServer
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.TestHelper.appContext
 import org.mozilla.fenix.search.SearchEngineSource.None.searchEngine
 
@@ -32,6 +34,7 @@ object MockBrowserDataHelper {
      * @param position Example for the position param: 1u, 2u, etc.
      */
     fun createBookmarkItem(url: String, title: String, position: UInt?) {
+        Log.i(TAG, "createBookmarkItem: Trying to add bookmark item at position: $position, with url: $url, and with title: $title")
         runBlocking {
             PlacesBookmarksStorage(context)
                 .addItem(
@@ -41,6 +44,7 @@ object MockBrowserDataHelper {
                     position,
                 )
         }
+        Log.i(TAG, "createBookmarkItem: Added bookmark item at position: $position, with url: $url, and with title: $title")
     }
 
     /**
@@ -49,6 +53,7 @@ object MockBrowserDataHelper {
      * @param url The URL of the history item to add. URLs should use the "https://example.com" format.
      */
     fun createHistoryItem(url: String) {
+        Log.i(TAG, "createHistoryItem: Trying to add history item with url: $url")
         runBlocking {
             PlacesHistoryStorage(appContext)
                 .recordVisit(
@@ -56,6 +61,7 @@ object MockBrowserDataHelper {
                     PageVisit(VisitType.LINK),
                 )
         }
+        Log.i(TAG, "createHistoryItem: Added history item with url: $url")
     }
 
     /**
@@ -64,9 +70,11 @@ object MockBrowserDataHelper {
      * URLs should use the "https://example.com" format.
      */
     fun createTabItem(url: String) {
+        Log.i(TAG, "createTabItem: Trying to create a new tab with url: $url")
         runBlocking {
             appContext.components.useCases.tabsUseCases.addTab(url)
         }
+        Log.i(TAG, "createTabItem: Created a new tab with url: $url")
     }
 
     /**
@@ -74,7 +82,9 @@ object MockBrowserDataHelper {
      *
      */
     fun createSearchHistory(searchTerm: String) {
+        Log.i(TAG, "createSearchHistory: Trying to perform a new search with search term: $searchTerm")
         appContext.components.useCases.searchUseCases.newTabSearch.invoke(searchTerm)
+        Log.i(TAG, "createSearchHistory: Performed a new search with search term: $searchTerm")
     }
 
     /**
@@ -86,6 +96,7 @@ object MockBrowserDataHelper {
     private fun createCustomSearchEngine(mockWebServer: MockWebServer, searchEngineName: String): SearchEngine {
         val searchString =
             "http://localhost:${mockWebServer.port}/pages/searchResults.html?search={searchTerms}"
+        Log.i(TAG, "createCustomSearchEngine: Trying to create a custom search engine named: $searchEngineName and search string: $searchString")
         return createSearchEngine(
             name = searchEngineName,
             url = searchString,
@@ -100,8 +111,9 @@ object MockBrowserDataHelper {
      */
     fun addCustomSearchEngine(mockWebServer: MockWebServer, searchEngineName: String) {
         val searchEngine = createCustomSearchEngine(mockWebServer, searchEngineName)
-
+        Log.i(TAG, "addCustomSearchEngine: Trying to add a custom search engine named: $searchEngineName")
         appContext.components.useCases.searchUseCases.addSearchEngine(searchEngine)
+        Log.i(TAG, "addCustomSearchEngine: Added a custom search engine named: $searchEngineName")
     }
 
     /**
@@ -111,10 +123,11 @@ object MockBrowserDataHelper {
      */
     fun setCustomSearchEngine(mockWebServer: MockWebServer, searchEngineName: String) {
         val searchEngine = createCustomSearchEngine(mockWebServer, searchEngineName)
-
+        Log.i(TAG, "setCustomSearchEngine: Trying to set a custom search engine named: $searchEngineName")
         with(appContext.components.useCases.searchUseCases) {
             addSearchEngine(searchEngine)
             selectSearchEngine(searchEngine)
         }
+        Log.i(TAG, "setCustomSearchEngine: A custom search engine named: $searchEngineName was set")
     }
 }

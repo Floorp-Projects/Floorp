@@ -6,33 +6,16 @@
 
 package org.mozilla.fenix.helpers
 
+import android.util.Log
 import androidx.test.espresso.IdlingRegistry
-import androidx.test.rule.ActivityTestRule
-import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.helpers.idlingresource.AddonsInstallingIdlingResource
+import org.mozilla.fenix.helpers.Constants.TAG
 
 object IdlingResourceHelper {
-
-    // Idling Resource to manage installing an addon
-    fun registerAddonInstallingIdlingResource(activityTestRule: ActivityTestRule<HomeActivity>) {
-        IdlingRegistry.getInstance().register(
-            AddonsInstallingIdlingResource(
-                activityTestRule.activity.supportFragmentManager,
-            ),
-        )
-    }
-
-    fun unregisterAddonInstallingIdlingResource(activityTestRule: ActivityTestRule<HomeActivity>) {
-        IdlingRegistry.getInstance().unregister(
-            AddonsInstallingIdlingResource(
-                activityTestRule.activity.supportFragmentManager,
-            ),
-        )
-    }
-
     fun unregisterAllIdlingResources() {
         for (resource in IdlingRegistry.getInstance().resources) {
+            Log.i(TAG, "unregisterAllIdlingResources: Trying to unregister ${resource.name} resource")
             IdlingRegistry.getInstance().unregister(resource)
+            Log.i(TAG, "unregisterAllIdlingResources: Unregistered ${resource.name} resource")
         }
     }
 }
