@@ -20,6 +20,7 @@ SOURCES += [
     "TestBasic.cpp",
     "TestCancel.cpp",
     "TestCrossProcessSemaphore.cpp",
+    "TestDataStructures.cpp",
     "TestInduceConnectionError.cpp",
     "TestManyHandles.cpp",
 ]
@@ -30,6 +31,9 @@ IPDL_SOURCES += [
     "PTestBasic.ipdl",
     "PTestCancel.ipdl",
     "PTestCrossProcessSemaphore.ipdl",
+    "PTestDataStructures.ipdl",
+    "PTestDataStructuresCommon.ipdlh",
+    "PTestDataStructuresSub.ipdl",
     "PTestInduceConnectionError.ipdl",
     "PTestManyHandles.ipdl",
 ]
