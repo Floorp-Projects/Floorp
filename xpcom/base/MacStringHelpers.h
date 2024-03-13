@@ -15,6 +15,10 @@ namespace mozilla {
 
 void CopyNSStringToXPCOMString(const NSString* aFrom, nsAString& aTo);
 
+NSString* XPCOMStringToNSString(const nsAString& aFrom);
+
+NSString* XPCOMStringToNSString(const nsACString& aFrom);
+
 }  // namespace mozilla
 
 #endif
