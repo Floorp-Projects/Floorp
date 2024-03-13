@@ -41,7 +41,7 @@ static JSObject* FindNamedConstructorForXray(
   // This is a call over Xrays, so we will actually use the return value
   // (instead of just having it defined on the global now).  Check for named
   // constructors with this id, in case that's what the caller is asking for.
-  for (unsigned slot = DOM_INTERFACE_SLOTS_BASE;
+  for (unsigned slot = INTERFACE_OBJECT_FIRST_LEGACY_FACTORY_FUNCTION;
        slot < JSCLASS_RESERVED_SLOTS(JS::GetClass(interfaceObject)); ++slot) {
     JSObject* constructor =
         &JS::GetReservedSlot(interfaceObject, slot).toObject();
