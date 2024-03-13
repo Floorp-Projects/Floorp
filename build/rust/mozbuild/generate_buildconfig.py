@@ -34,6 +34,14 @@ def escape_rust_string(value):
     return '"%s"' % result
 
 
+def generate_string(buildvar, output):
+    buildconfig_var = buildconfig.substs.get(buildvar)
+    if buildconfig_var is not None:
+        output.write(
+            f"pub const {buildvar}: &str = {escape_rust_string(buildconfig_var)};\n"
+        )
+
+
 def generate(output):
     # Write out a macro which can be used within `include!`-like methods to
     # reference the topobjdir.
@@ -84,6 +92,10 @@ def generate(output):
                 """
             )
         )
+
+    # Write out some useful strings from the buildconfig.
+    generate_string("MOZ_MACBUNDLE_ID", output)
+    generate_string("MOZ_APP_NAME", output)
 
     # Finally, write out some useful booleans from the buildconfig.
     output.write(generate_bool("MOZ_FOLD_LIBS"))

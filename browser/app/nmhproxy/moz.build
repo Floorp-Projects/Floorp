@@ -1,0 +1,15 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+RUST_PROGRAMS += [
+    "nmhproxy",
+]
+
+# Ideally, the build system would set @rpath to be @executable_path as
+# a default for this executable so that this addition to LDFLAGS would not be
+# needed here. Bug 1772575 is filed to implement that.
+if CONFIG["OS_ARCH"] == "Darwin":
+    LDFLAGS += ["-Wl,-rpath,@executable_path"]

@@ -1,0 +1,17 @@
+[package]
+name = "nmhproxy"
+version = "0.1.0"
+edition = "2021"
+license = "MPL-2.0"
+description = "A lightweight native messaging listener executable for the Firefox Bridge extension which launches Firefox in regular or private modes, avoiding the need to convert Firefox itself into a listener."
+
+[[bin]]
+name = "nmhproxy"
+path = "src/main.rs"
+
+[dependencies]
+mozbuild = "0.1"
+mozilla-central-workspace-hack = { version = "0.1", features = ["nmhproxy"], optional = true }
+serde = { version = "1", features = ["derive", "rc"] }
+serde_json = "1.0"
+url = "2.4"
