@@ -1,0 +1,23 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+namespace mozilla {
+namespace _ipdltest {
+
+[ChildProc=any, NestedUpTo=inside_cpow, ChildImpl=virtual, ParentImpl=virtual]
+sync protocol PTestMostNested
+{
+parent:
+  [Nested=inside_cpow] async Msg1();
+  [Nested=inside_sync] sync Msg2();
+  [Nested=inside_cpow] async Msg3();
+  [Nested=inside_cpow] sync Msg4();
+
+child:
+  async Start();
+  [Nested=inside_sync] sync StartInner();
+};
+
+}
+}
