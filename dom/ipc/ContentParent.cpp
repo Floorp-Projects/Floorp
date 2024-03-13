@@ -3540,6 +3540,28 @@ mozilla::ipc::IPCResult ContentParent::RecvGetExternalClipboardFormats(
 
 namespace {
 
+static Result<ClipboardReadRequest, nsresult> CreateClipboardReadRequest(
+    ContentParent& aContentParent,
+    nsIAsyncGetClipboardData& aAsyncGetClipboardData) {
+  nsTArray<nsCString> flavors;
+  nsresult rv = aAsyncGetClipboardData.GetFlavorList(flavors);
+  if (NS_FAILED(rv)) {
+    return Err(rv);
+  }
+
+  auto requestParent = MakeNotNull<RefPtr<ClipboardReadRequestParent>>(
+      &aContentParent, &aAsyncGetClipboardData);
+
+  // Open a remote endpoint for our PClipboardReadRequest actor.
+  ManagedEndpoint<PClipboardReadRequestChild> childEndpoint =
+      aContentParent.OpenPClipboardReadRequestEndpoint(requestParent);
+  if (NS_WARN_IF(!childEndpoint.IsValid())) {
+    return Err(NS_ERROR_FAILURE);
+  }
+
+  return ClipboardReadRequest(std::move(childEndpoint), std::move(flavors));
+}
+
 class ClipboardGetCallback final : public nsIAsyncClipboardGetCallback {
  public:
   ClipboardGetCallback(ContentParent* aContentParent,
@@ -3553,20 +3575,16 @@ class ClipboardGetCallback final : public nsIAsyncClipboardGetCallback {
   // nsIAsyncClipboardGetCallback
   NS_IMETHOD OnSuccess(
       nsIAsyncGetClipboardData* aAsyncGetClipboardData) override {
-    nsTArray<nsCString> flavors;
-    nsresult rv = aAsyncGetClipboardData->GetFlavorList(flavors);
-    if (NS_FAILED(rv)) {
-      return OnError(rv);
+    MOZ_ASSERT(mContentParent);
+    MOZ_ASSERT(aAsyncGetClipboardData);
+
+    auto result =
+        CreateClipboardReadRequest(*mContentParent, *aAsyncGetClipboardData);
+    if (result.isErr()) {
+      return OnError(result.unwrapErr());
     }
 
-    auto requestParent = MakeNotNull<RefPtr<ClipboardReadRequestParent>>(
-        mContentParent, aAsyncGetClipboardData);
-    if (!mContentParent->SendPClipboardReadRequestConstructor(
-            requestParent, std::move(flavors))) {
-      return OnError(NS_ERROR_FAILURE);
-    }
-
-    mResolver(PClipboardReadRequestOrError(requestParent));
+    mResolver(result.unwrap());
     return NS_OK;
   }
 
