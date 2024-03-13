@@ -236,7 +236,7 @@ export class FormAutofillChild extends JSWindowActorChild {
    * @returns {boolean} whether the navigation affects the active window
    */
   isActiveWindowNavigation() {
-    const activeWindow = this.activeHandler?.window;
+    const activeWindow = lazy.FormAutofillContent.activeHandler?.window;
     const navigatedWindow = this.document.defaultView;
 
     if (!activeWindow || !navigatedWindow) {
@@ -266,7 +266,10 @@ export class FormAutofillChild extends JSWindowActorChild {
       return;
     }
 
-    const activeElement = this.activeFieldDetail?.elementWeakRef.deref();
+    // TODO: We should not use FormAutofillContent and let the
+    //       parent decides which child to notify
+    const activeChild = lazy.FormAutofillContent.activeAutofillChild;
+    const activeElement = activeChild.activeFieldDetail?.elementWeakRef.deref();
     if (!activeElement) {
       return;
     }
@@ -275,7 +278,7 @@ export class FormAutofillChild extends JSWindowActorChild {
 
     // We only capture the form of the active field right now,
     // this means that we might miss some fields (see bug 1871356)
-    this.formSubmitted(activeElement, formSubmissionReason);
+    activeChild.formSubmitted(activeElement, formSubmissionReason);
   }
 
   /**
