@@ -30,7 +30,6 @@ impl<ValueType> ColorComponent<ValueType> {
             Self::Value(value) => ColorComponent::Value(f(value)),
         }
     }
-
     /// Return the component as its value.
     pub fn into_value(self) -> ValueType {
         match self {

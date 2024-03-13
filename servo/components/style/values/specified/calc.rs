@@ -6,7 +6,6 @@
 //!
 //! [calc]: https://drafts.csswg.org/css-values/#calc-notation
 
-use crate::color::parsing::{NumberOrAngle, NumberOrPercentage};
 use crate::parser::ParserContext;
 use crate::values::generics::calc::{
     self as generic, CalcNodeLeaf, CalcUnits, MinMaxOp, ModRemOp, PositivePercentageBasis,
@@ -486,7 +485,7 @@ impl CalcNode {
     /// Parse a top-level `calc` expression, with all nested sub-expressions.
     ///
     /// This is in charge of parsing, for example, `2 + 3 * 100%`.
-    fn parse<'i, 't>(
+    pub fn parse<'i, 't>(
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
         function: MathFunction,
@@ -1054,42 +1053,5 @@ impl CalcNode {
         Self::parse(context, input, function, CalcUnits::RESOLUTION)?
             .to_resolution()
             .map_err(|()| input.new_custom_error(StyleParseErrorKind::UnspecifiedError))
-    }
-
-    /// Convenience parsing function for `<number>` or `<percentage>`.
-    pub fn parse_number_or_percentage<'i, 't>(
-        context: &ParserContext,
-        input: &mut Parser<'i, 't>,
-        function: MathFunction,
-    ) -> Result<NumberOrPercentage, ParseError<'i>> {
-        let node = Self::parse(context, input, function, CalcUnits::PERCENTAGE)?;
-
-        if let Ok(value) = node.to_number() {
-            return Ok(NumberOrPercentage::Number { value });
-        }
-
-        match node.to_percentage() {
-            Ok(unit_value) => Ok(NumberOrPercentage::Percentage { unit_value }),
-            Err(()) => Err(input.new_custom_error(StyleParseErrorKind::UnspecifiedError)),
-        }
-    }
-
-    /// Convenience parsing function for `<number>` or `<angle>`.
-    pub fn parse_number_or_angle<'i, 't>(
-        context: &ParserContext,
-        input: &mut Parser<'i, 't>,
-        function: MathFunction,
-    ) -> Result<NumberOrAngle, ParseError<'i>> {
-        let node = Self::parse(context, input, function, CalcUnits::ANGLE)?;
-
-        if let Ok(angle) = node.to_angle() {
-            let degrees = angle.degrees();
-            return Ok(NumberOrAngle::Angle { degrees });
-        }
-
-        match node.to_number() {
-            Ok(value) => Ok(NumberOrAngle::Number { value }),
-            Err(()) => Err(input.new_custom_error(StyleParseErrorKind::UnspecifiedError)),
-        }
     }
 }
