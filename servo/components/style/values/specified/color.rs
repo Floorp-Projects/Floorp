@@ -5,7 +5,7 @@
 //! Specified color values.
 
 use super::AllowQuirks;
-use crate::color::parsing::{self, AngleOrNumber, FromParsedColor, NumberOrPercentage};
+use crate::color::parsing::{self, FromParsedColor, NumberOrAngle, NumberOrPercentage};
 use crate::color::{mix::ColorInterpolationMethod, AbsoluteColor, ColorSpace};
 use crate::media_queries::Device;
 use crate::parser::{Parse, ParserContext};
@@ -504,10 +504,10 @@ struct ColorParser<'a, 'b: 'a>(&'a ParserContext<'b>);
 impl<'a, 'b: 'a, 'i: 'a> parsing::ColorParser<'i> for ColorParser<'a, 'b> {
     type Output = Color;
 
-    fn parse_angle_or_number<'t>(
+    fn parse_number_or_angle<'t>(
         &self,
         input: &mut Parser<'i, 't>,
-    ) -> Result<AngleOrNumber, ParseError<'i>> {
+    ) -> Result<NumberOrAngle, ParseError<'i>> {
         use crate::values::specified::Angle;
 
         let location = input.current_source_location();
@@ -523,12 +523,12 @@ impl<'a, 'b: 'a, 'i: 'a> parsing::ColorParser<'i> for ColorParser<'a, 'b> {
                     Err(()) => return Err(location.new_unexpected_token_error(token.clone())),
                 };
 
-                Ok(AngleOrNumber::Angle { degrees })
+                Ok(NumberOrAngle::Angle { degrees })
             },
-            Token::Number { value, .. } => Ok(AngleOrNumber::Number { value }),
+            Token::Number { value, .. } => Ok(NumberOrAngle::Number { value }),
             Token::Function(ref name) => {
                 let function = CalcNode::math_function(self.0, name, location)?;
-                CalcNode::parse_angle_or_number(self.0, input, function)
+                CalcNode::parse_number_or_angle(self.0, input, function)
             },
             t => return Err(location.new_unexpected_token_error(t)),
         }
