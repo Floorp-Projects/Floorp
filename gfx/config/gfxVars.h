@@ -100,7 +100,8 @@ class gfxVarReceiver;
   _(UseAcceleratedCanvas2D, bool, false)                           \
   _(AllowSoftwareWebRenderOGL, bool, false)                        \
   _(WebglUseHardware, bool, true)                                  \
-  _(WebRenderOverlayVpAutoHDR, bool, false)
+  _(WebRenderOverlayVpAutoHDR, bool, false)                        \
+  _(WebRenderOverlayVpSuperResolution, bool, false)
 
 /* Add new entries above this line. */
 

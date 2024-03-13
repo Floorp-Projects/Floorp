@@ -2926,6 +2926,28 @@ void gfxPlatform::InitWebRenderConfig() {
     gfxVars::SetWebRenderOverlayVpAutoHDR(true);
   }
 
+  bool allowOverlayVpSuperResolution = false;
+  if (StaticPrefs::gfx_webrender_overlay_vp_super_resolution_AtStartup()) {
+    allowOverlayVpSuperResolution = true;
+
+    nsCString failureId;
+    int32_t status;
+    const nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
+    if (NS_FAILED(gfxInfo->GetFeatureStatus(
+            nsIGfxInfo::FEATURE_OVERLAY_VP_SUPER_RESOLUTION, failureId,
+            &status))) {
+      allowOverlayVpSuperResolution = false;
+    } else {
+      if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
+        allowOverlayVpSuperResolution = false;
+      }
+    }
+  }
+
+  if (allowOverlayVpSuperResolution) {
+    gfxVars::SetWebRenderOverlayVpSuperResolution(true);
+  }
+
   if (gfxConfig::IsEnabled(Feature::WEBRENDER_COMPOSITOR)) {
     gfxVars::SetUseWebRenderCompositor(true);
   }

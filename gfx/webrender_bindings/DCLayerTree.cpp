@@ -1789,7 +1789,7 @@ bool DCSurfaceVideo::CallVideoProcessorBlt() {
 
   const UINT vendorId = GetVendorId(videoDevice);
   const auto powerIsCharging = RenderThread::Get()->GetPowerIsCharging();
-  if (StaticPrefs::gfx_webrender_overlay_vp_super_resolution_AtStartup() &&
+  if (gfx::gfxVars::WebRenderOverlayVpSuperResolution() &&
       !mVpSuperResolutionFailed && powerIsCharging) {
     hr = SetVpSuperResolution(vendorId, videoContext, videoProcessor, true);
     if (FAILED(hr)) {
