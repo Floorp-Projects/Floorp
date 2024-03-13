@@ -232,7 +232,7 @@ where
     const LIGHTNESS_RANGE: f32 = 100.0;
     const SATURATION_RANGE: f32 = 100.0;
 
-    let maybe_hue = parse_none_or(arguments, |p| color_parser.parse_angle_or_number(p))?;
+    let maybe_hue = parse_none_or(arguments, |p| color_parser.parse_number_or_angle(p))?;
 
     // If the hue is not "none" and is followed by a comma, then we are parsing
     // the legacy syntax.
@@ -279,7 +279,7 @@ where
     let (hue, whiteness, blackness, alpha) = parse_components(
         color_parser,
         arguments,
-        P::parse_angle_or_number,
+        P::parse_number_or_angle,
         P::parse_number_or_percentage,
         P::parse_number_or_percentage,
     )?;
@@ -336,7 +336,7 @@ where
         arguments,
         P::parse_number_or_percentage,
         P::parse_number_or_percentage,
-        P::parse_angle_or_number,
+        P::parse_number_or_angle,
     )?;
 
     let lightness = lightness.map(|l| l.to_number(lightness_range));
@@ -447,7 +447,7 @@ impl NumberOrPercentage {
 }
 
 /// Either an angle or a number.
-pub enum AngleOrNumber {
+pub enum NumberOrAngle {
     /// `<number>`.
     Number {
         /// The numeric value parsed, as a float.
@@ -460,13 +460,13 @@ pub enum AngleOrNumber {
     },
 }
 
-impl AngleOrNumber {
-    /// Return the angle in degrees. `AngleOrNumber::Number` is returned as
+impl NumberOrAngle {
+    /// Return the angle in degrees. `NumberOrAngle::Number` is returned as
     /// degrees, because it is the canonical unit.
     pub fn degrees(&self) -> f32 {
         match *self {
-            AngleOrNumber::Number { value } => value,
-            AngleOrNumber::Angle { degrees } => degrees,
+            Self::Number { value } => value,
+            Self::Angle { degrees } => degrees,
         }
     }
 }
@@ -482,10 +482,10 @@ pub trait ColorParser<'i> {
     /// Parse an `<angle>` or `<number>`.
     ///
     /// Returns the result in degrees.
-    fn parse_angle_or_number<'t>(
+    fn parse_number_or_angle<'t>(
         &self,
         input: &mut Parser<'i, 't>,
-    ) -> Result<AngleOrNumber, ParseError<'i>>;
+    ) -> Result<NumberOrAngle, ParseError<'i>>;
 
     /// Parse a `<percentage>` value.
     ///

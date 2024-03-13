@@ -6,7 +6,7 @@
 //!
 //! [calc]: https://drafts.csswg.org/css-values/#calc-notation
 
-use crate::color::parsing::{AngleOrNumber, NumberOrPercentage};
+use crate::color::parsing::{NumberOrAngle, NumberOrPercentage};
 use crate::parser::ParserContext;
 use crate::values::generics::calc::{
     self as generic, CalcNodeLeaf, CalcUnits, MinMaxOp, ModRemOp, PositivePercentageBasis,
@@ -185,7 +185,11 @@ impl generic::CalcNodeLeaf for Leaf {
 
         let self_negative = self.is_negative();
         if self_negative != other.is_negative() {
-            return Some(if self_negative { cmp::Ordering::Less } else { cmp::Ordering::Greater });
+            return Some(if self_negative {
+                cmp::Ordering::Less
+            } else {
+                cmp::Ordering::Greater
+            });
         }
 
         match (self, other) {
@@ -1071,20 +1075,20 @@ impl CalcNode {
     }
 
     /// Convenience parsing function for `<number>` or `<angle>`.
-    pub fn parse_angle_or_number<'i, 't>(
+    pub fn parse_number_or_angle<'i, 't>(
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
         function: MathFunction,
-    ) -> Result<AngleOrNumber, ParseError<'i>> {
+    ) -> Result<NumberOrAngle, ParseError<'i>> {
         let node = Self::parse(context, input, function, CalcUnits::ANGLE)?;
 
         if let Ok(angle) = node.to_angle() {
             let degrees = angle.degrees();
-            return Ok(AngleOrNumber::Angle { degrees });
+            return Ok(NumberOrAngle::Angle { degrees });
         }
 
         match node.to_number() {
-            Ok(value) => Ok(AngleOrNumber::Number { value }),
+            Ok(value) => Ok(NumberOrAngle::Number { value }),
             Err(()) => Err(input.new_custom_error(StyleParseErrorKind::UnspecifiedError)),
         }
     }
