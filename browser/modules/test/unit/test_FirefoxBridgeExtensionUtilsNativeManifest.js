@@ -23,10 +23,16 @@ let userDir = dir.clone();
 userDir.append("user");
 userDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
 
+let appDir = dir.clone();
+appDir.append("app");
+appDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+
 let dirProvider = {
   getFile(property) {
     if (property == "Home") {
       return userDir.clone();
+    } else if (property == "AppData") {
+      return appDir.clone();
     }
     return null;
   },
@@ -34,6 +40,9 @@ let dirProvider = {
 
 try {
   Services.dirsvc.undefine("Home");
+} catch (e) {}
+try {
+  Services.dirsvc.undefine("AppData");
 } catch (e) {}
 Services.dirsvc.registerProvider(dirProvider);
 
@@ -47,7 +56,9 @@ const USER_TEST_PATH = PathUtils.join(userDir.path, "manifestDir");
 let binFile = null;
 add_setup(async function () {
   binFile = Services.dirsvc.get("XREExeF", Ci.nsIFile).parent.clone();
-  if (AppConstants.platform == "macosx") {
+  if (AppConstants.platform == "win") {
+    binFile.append("nmhproxy.exe");
+  } else if (AppConstants.platform == "macosx") {
     binFile.append("nmhproxy");
   } else {
     throw new Error("Unsupported platform");
@@ -179,6 +190,11 @@ add_task(async function test_ensureRegistered() {
     expectedJSONDirPath = PathUtils.joinRelative(
       userDir.path,
       "Library/Application Support/Google/Chrome/NativeMessagingHosts/"
+    );
+  } else if (AppConstants.platform == "win") {
+    expectedJSONDirPath = PathUtils.joinRelative(
+      appDir.path,
+      "Mozilla\\Firefox"
     );
   } else {
     throw new Error("Unsupported platform");

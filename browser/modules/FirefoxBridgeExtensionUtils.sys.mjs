@@ -252,7 +252,9 @@ export const FirefoxBridgeExtensionUtils = {
   ) {
     try {
       let binFile = Services.dirsvc.get("XREExeF", Ci.nsIFile).parent;
-      if (AppConstants.platform == "macosx") {
+      if (AppConstants.platform == "win") {
+        binFile.append("nmhproxy.exe");
+      } else if (AppConstants.platform == "macosx") {
         binFile.append("nmhproxy");
       } else {
         throw new Error("Unsupported platform");
@@ -291,7 +293,15 @@ export const FirefoxBridgeExtensionUtils = {
 
   async ensureRegistered() {
     let nmhManifestFolder = null;
-    if (AppConstants.platform == "macosx") {
+    if (AppConstants.platform == "win") {
+      // We don't have permission to write to the application install directory
+      // so instead write to %AppData%\Mozilla\Firefox.
+      nmhManifestFolder = PathUtils.join(
+        Services.dirsvc.get("AppData", Ci.nsIFile).path,
+        "Mozilla",
+        "Firefox"
+      );
+    } else if (AppConstants.platform == "macosx") {
       nmhManifestFolder =
         "~/Library/Application Support/Google/Chrome/NativeMessagingHosts/";
     } else {
@@ -302,5 +312,49 @@ export const FirefoxBridgeExtensionUtils = {
       this.getNativeMessagingHostId(),
       this.getExtensionOrigins()
     );
+    if (AppConstants.platform == "win") {
+      this.maybeWriteNativeMessagingRegKeys(
+        "Software\\Google\\Chrome\\NativeMessagingHosts",
+        nmhManifestFolder,
+        this.getNativeMessagingHostId()
+      );
+    }
+  },
+
+  maybeWriteNativeMessagingRegKeys(
+    regPath,
+    nmhManifestFolder,
+    NATIVE_MESSAGING_HOST_ID
+  ) {
+    let wrk = Cc["@mozilla.org/windows-registry-key;1"].createInstance(
+      Ci.nsIWindowsRegKey
+    );
+    try {
+      let expectedValue = PathUtils.join(
+        nmhManifestFolder,
+        `${NATIVE_MESSAGING_HOST_ID}.json`
+      );
+      try {
+        // If the key already exists it will just be opened
+        wrk.create(
+          wrk.ROOT_KEY_CURRENT_USER,
+          regPath + `\\${NATIVE_MESSAGING_HOST_ID}`,
+          wrk.ACCESS_ALL
+        );
+        if (wrk.readStringValue("") == expectedValue) {
+          return;
+        }
+      } catch (e) {
+        // The key either doesn't have a value or doesn't exist
+        // In either case we need to write it.
+      }
+      wrk.writeStringValue("", expectedValue);
+    } catch (e) {
+      // The method fails if we can't access the key
+      // which means it doesn't exist. That's a normal situation.
+      // We don't need to do anything here.
+    } finally {
+      wrk.close();
+    }
   },
 };

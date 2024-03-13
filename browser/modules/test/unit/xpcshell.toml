@@ -10,6 +10,7 @@ run-if = ["os == 'win'"] # Test of a Windows-specific feature
 
 ["test_FirefoxBridgeExtensionUtilsNativeManifest.js"]
 run-if = [
+  "os == 'win'",
   "os == 'mac'",
 ]
 
