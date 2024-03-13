@@ -718,6 +718,13 @@ pref("browser.download.clearHistoryOnDelete", 0);
 pref("browser.helperApps.showOpenOptionForPdfJS", true);
 pref("browser.helperApps.showOpenOptionForViewableInternally", true);
 
+// Whether search-config-v2 is enabled.
+#ifdef NIGHTLY_BUILD
+pref("browser.search.newSearchConfig.enabled", true);
+#else
+pref("browser.search.newSearchConfig.enabled", false);
+#endif
+
 // search engines URL
 pref("browser.search.searchEnginesURL",      "https://addons.mozilla.org/%LOCALE%/firefox/search-engines/");
 
