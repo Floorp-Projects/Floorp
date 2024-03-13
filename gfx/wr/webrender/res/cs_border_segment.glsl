@@ -13,7 +13,7 @@ flat varying mediump vec4 vColor11;
 
 // A point + tangent defining the line where the edge
 // transition occurs. Used for corners only.
-flat varying mediump vec4 vColorLine;
+flat varying highp vec4 vColorLine;
 
 // x: segment, y: clip mode
 // We cast these to/from floats rather than using an ivec due to a driver bug
@@ -31,13 +31,13 @@ flat varying highp vec4 vClipCenter_Sign;
 
 // An outer and inner elliptical radii for border
 // corner clipping.
-flat varying mediump vec4 vClipRadii;
+flat varying highp vec4 vClipRadii;
 
 // Reference point for determine edge clip lines.
-flat varying mediump vec4 vEdgeReference;
+flat varying highp vec4 vEdgeReference;
 
 // Stores widths/2 and widths/3 to save doing this in FS.
-flat varying mediump vec4 vPartialWidths;
+flat varying highp vec4 vPartialWidths;
 
 // Clipping parameters for dot or dash.
 flat varying mediump vec4 vClipParams1;
