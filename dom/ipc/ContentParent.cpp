@@ -3529,15 +3529,6 @@ mozilla::ipc::IPCResult ContentParent::RecvClipboardHasType(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ContentParent::RecvGetExternalClipboardFormats(
-    const int32_t& aWhichClipboard, const bool& aPlainTextOnly,
-    nsTArray<nsCString>* aTypes) {
-  MOZ_ASSERT(aTypes);
-  DataTransfer::GetExternalClipboardFormats(aWhichClipboard, aPlainTextOnly,
-                                            aTypes);
-  return IPC_OK();
-}
-
 namespace {
 
 static Result<ClipboardReadRequest, nsresult> CreateClipboardReadRequest(

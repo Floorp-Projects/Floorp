@@ -23,6 +23,7 @@
 #include "mozilla/dom/DataTransferItemList.h"
 #include "mozilla/dom/File.h"
 
+class nsIAsyncGetClipboardData;
 class nsINode;
 class nsITransferable;
 class nsILoadContext;
@@ -386,14 +387,6 @@ class DataTransfer final : public nsISupports, public nsWrapperCache {
   }
   bool MozShowFailAnimation() const { return mShowFailAnimation; }
 
-  // Retrieve a list of clipboard formats supported
-  //
-  // If kFileMime is supported, then it will be placed either at
-  // index 0 or at index 1 in aResult
-  static void GetExternalClipboardFormats(const int32_t& aWhichClipboard,
-                                          const bool& aPlainTextOnly,
-                                          nsTArray<nsCString>* aResult);
-
   // Retrieve a list of supporting formats in aTransferable.
   //
   // If kFileMime is supported, then it will be placed either at
@@ -428,7 +421,18 @@ class DataTransfer final : public nsISupports, public nsWrapperCache {
 
   already_AddRefed<nsIGlobalObject> GetGlobal() const;
 
+  already_AddRefed<WindowContext> GetWindowContext() const;
+
+  nsIAsyncGetClipboardData* GetAsyncGetClipboardData() const;
+
  protected:
+  // Retrieve a list of clipboard formats supported
+  //
+  // If kFileMime is supported, then it will be placed either at
+  // index 0 or at index 1 in aResult
+  void GetExternalClipboardFormats(const bool& aPlainTextOnly,
+                                   nsTArray<nsCString>& aResult);
+
   // caches text and uri-list data formats that exist in the drag service or
   // clipboard for retrieval later.
   nsresult CacheExternalData(const char* aFormat, uint32_t aIndex,
@@ -505,6 +509,11 @@ class DataTransfer final : public nsISupports, public nsWrapperCache {
   // Indicates which clipboard type to use for clipboard operations. Ignored for
   // drag and drop.
   int32_t mClipboardType;
+
+  // The nsIAsyncGetClipboardData that is used for getting clipboard formats.
+  // XXXedgar we should get the actual data from this in the future, see bug
+  // 1879401.
+  nsCOMPtr<nsIAsyncGetClipboardData> mAsyncGetClipboardData;
 
   // The items contained with the DataTransfer
   RefPtr<DataTransferItemList> mItems;
