@@ -251,6 +251,15 @@
         "description": "The matching regular expression."
       }
     },
+    "nonAdsLinkQueryParamNames": {
+      "type": "array",
+      "title": "Non-ads link query param names",
+      "description": "Query param names present in non-ads link that recover the link that will be redirected to.",
+      "items": {
+        "type": "string",
+        "string": "The query param name to examine."
+      }
+    },
     "nonAdsLinkRegexps": {
       "type": "array",
       "title": "Non-ads link matching regular expressions",
