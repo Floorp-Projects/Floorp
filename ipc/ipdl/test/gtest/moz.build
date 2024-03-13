@@ -29,6 +29,7 @@ SOURCES += [
     "TestManyChildAllocs.cpp",
     "TestManyHandles.cpp",
     "TestMostNested.cpp",
+    "TestMultiMgrs.cpp",
 ]
 
 IPDL_SOURCES += [
@@ -53,6 +54,10 @@ IPDL_SOURCES += [
     "PTestManyChildAllocsSub.ipdl",
     "PTestManyHandles.ipdl",
     "PTestMostNested.ipdl",
+    "PTestMultiMgrs.ipdl",
+    "PTestMultiMgrsBottom.ipdl",
+    "PTestMultiMgrsLeft.ipdl",
+    "PTestMultiMgrsRight.ipdl",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")

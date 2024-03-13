@@ -11,7 +11,6 @@ EXPORTS.mozilla._ipdltest += [
     "IPDLUnitTests.h",
     "IPDLUnitTestTypes.h",
     "IPDLUnitTestUtils.h",
-    "TestMultiMgrs.h",
     "TestNestedLoops.h",
     "TestOffMainThreadPainting.h",
     "TestRaceDeadlock.h",
@@ -34,7 +33,6 @@ EXPORTS.mozilla._ipdltest += [
 ]
 
 SOURCES += [
-    "TestMultiMgrs.cpp",
     "TestNestedLoops.cpp",
     "TestOffMainThreadPainting.cpp",
     "TestRaceDeadlock.cpp",
@@ -67,10 +65,6 @@ IPDL_SOURCES += [
     "PTestIndirectProtocolParamFirst.ipdl",
     "PTestIndirectProtocolParamManage.ipdl",
     "PTestIndirectProtocolParamSecond.ipdl",
-    "PTestMultiMgrs.ipdl",
-    "PTestMultiMgrsBottom.ipdl",
-    "PTestMultiMgrsLeft.ipdl",
-    "PTestMultiMgrsRight.ipdl",
     "PTestNestedLoops.ipdl",
     "PTestPaintThread.ipdl",
     "PTestPriority.ipdl",
