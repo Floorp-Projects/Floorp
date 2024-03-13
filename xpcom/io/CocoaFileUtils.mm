@@ -309,7 +309,7 @@ void CopyQuarantineReferrerUrl(const CFStringRef aFilePath,
       ::CFDictionaryGetValue(mutQuarantineProps, kLSQuarantineOriginURLKey);
   if (referrerRef && ::CFGetTypeID(referrerRef) == ::CFURLGetTypeID()) {
     // URL string must be copied prior to releasing the dictionary.
-    mozilla::CopyCocoaStringToXPCOMString(
+    mozilla::CopyNSStringToXPCOMString(
         (NSString*)::CFURLGetString(static_cast<CFURLRef>(referrerRef)),
         aReferrer);
   }

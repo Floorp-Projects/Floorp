@@ -18,6 +18,7 @@
 #include "nsObjCExceptions.h"
 
 #include "mozilla/EventForwards.h"
+#include "mozilla/MacStringHelpers.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
 #include "nsIWidget.h"
@@ -325,7 +326,9 @@ class nsCocoaUtils {
   /**
    * Returns nsAString for aSrc.
    */
-  static void GetStringForNSString(const NSString* aSrc, nsAString& aDist);
+  static void GetStringForNSString(const NSString* aSrc, nsAString& aDist) {
+    mozilla::CopyNSStringToXPCOMString(aSrc, aDist);
+  }
 
   /**
    * Makes NSString instance for aString.

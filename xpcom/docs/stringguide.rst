@@ -342,11 +342,11 @@ bucket could accommodate the new logical length.
 Helper Classes and Functions
 ----------------------------
 
-Converting Cocoa strings
-~~~~~~~~~~~~~~~~~~~~~~~~
+Converting NSString strings
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Use ``mozilla::CopyCocoaStringToXPCOMString()`` in
-``mozilla/MacStringHelpers.h`` to convert Cocoa strings to XPCOM strings.
+Use ``mozilla::CopyNSStringToXPCOMString()`` in
+``mozilla/MacStringHelpers.h`` to convert NSString strings to XPCOM strings.
 
 Searching strings - looking for substrings, characters, etc.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

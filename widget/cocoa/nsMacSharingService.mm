@@ -98,7 +98,7 @@ static NSString* NSImageToBase64(const NSImage* aImage) {
 static void SetStrAttribute(JSContext* aCx, JS::Rooted<JSObject*>& aObj,
                             const char* aKey, NSString* aVal) {
   nsAutoString strVal;
-  mozilla::CopyCocoaStringToXPCOMString(aVal, strVal);
+  mozilla::CopyNSStringToXPCOMString(aVal, strVal);
   JS::Rooted<JSString*> title(aCx, JS_NewUCStringCopyZ(aCx, strVal.get()));
   JS::Rooted<JS::Value> attVal(aCx, JS::StringValue(title));
   JS_SetProperty(aCx, aObj, aKey, attVal);

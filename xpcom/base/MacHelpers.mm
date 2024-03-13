@@ -24,8 +24,7 @@ nsresult GetSelectedCityInfo(nsAString& aCountryCode) {
     return NS_ERROR_FAILURE;
   }
 
-  return mozilla::CopyCocoaStringToXPCOMString((NSString*)countryCode,
-                                               aCountryCode);
+  mozilla::CopyNSStringToXPCOMString((NSString*)countryCode, aCountryCode);
 
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
