@@ -19,10 +19,12 @@ from comtypes import COMError, IServiceProvider
 CHILDID_SELF = 0
 COWAIT_DEFAULT = 0
 EVENT_OBJECT_FOCUS = 0x8005
+GA_ROOT = 2
 NAVRELATION_EMBEDS = 0x1009
 OBJID_CLIENT = -4
 RPC_S_CALLPENDING = -2147417835
 WINEVENT_OUTOFCONTEXT = 0
+WM_CLOSE = 0x0010
 
 user32 = ctypes.windll.user32
 oleacc = ctypes.oledll.oleacc

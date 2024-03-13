@@ -4403,6 +4403,17 @@ HWND nsWindow::GetTopLevelForFocus(HWND aCurWnd) {
 }
 
 void nsWindow::DispatchFocusToTopLevelWindow(bool aIsActivate) {
+  if (aIsActivate && mPickerDisplayCount) {
+    // We disable the root window when a picker opens. See PickerOpen. When the
+    // picker closes (but before PickerClosed is called), our window will get
+    // focus, but it will still be disabled. This confuses the focus system.
+    // Therefore, we ignore this focus and explicitly call this function once
+    // we re-enable the window. Rarely, the picker seems to re-enable our root
+    // window before we do, but for simplicity, we always ignore focus before
+    // the final call to PickerClosed. See bug 1883568 for further details.
+    return;
+  }
+
   if (aIsActivate) {
     sJustGotActivate = false;
   }
@@ -8221,6 +8232,7 @@ void nsWindow::PickerClosed() {
   // Once all the file-dialogs are gone, reenable the root-level window.
   if (!mPickerDisplayCount) {
     ::EnableWindow(::GetAncestor(GetWindowHandle(), GA_ROOT), TRUE);
+    DispatchFocusToTopLevelWindow(true);
   }
 
   if (!mPickerDisplayCount && mDestroyCalled) {
