@@ -1436,6 +1436,11 @@ struct DebuggerObject::PromiseReactionRecordBuilder
       // so we ignore it.
       return true;
     }
+    if (!unwrappedGenerator->realm()->isDebuggee()) {
+      // Caller can keep the reference to the debugger object even after
+      // removing the realm from debuggee.  Do nothing for this case.
+      return true;
+    }
     return dbg->getFrame(cx, unwrappedGenerator, &frame) && push(cx, frame);
   }
 
