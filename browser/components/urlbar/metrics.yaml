@@ -15,6 +15,11 @@ urlbar:
     type: event
     description: Recorded when the user abandons a search (blurring the urlbar).
     extra_keys:
+      abandonment_type:
+        description: >
+          Records the reason that resulted in an abandonment. The possible
+          values are: `blur` and `tab_switch`.
+        type: string
       sap:
         description: >
           `sap` is the meaning of `search access point`. It records where the

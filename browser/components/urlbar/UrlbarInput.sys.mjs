@@ -2204,11 +2204,24 @@ export class UrlbarInput {
     this.formatValue();
     this._resetSearchState();
 
-    // Switching tabs doesn't always change urlbar focus, so we must try to
-    // reopen here too, not just on focus.
     // We don't use the original TabSelect event because caching it causes
     // leaks on MacOS.
-    if (this.view.autoOpen({ event: new CustomEvent("tabswitch") })) {
+    const event = new CustomEvent("tabswitch");
+    // If the urlbar is focused after a tab switch, record a potential
+    // engagement event. When switching from a focused to a non-focused urlbar,
+    // the blur event would record the abandonment. When switching from an
+    // unfocused to a focused urlbar, there should be no search session ongoing,
+    // so this will be a no-op.
+    if (this.focused) {
+      this.controller.engagementEvent.record(event, {
+        searchString: this._lastSearchString,
+        searchSource: this.getSearchSource(event),
+      });
+    }
+
+    // Switching tabs doesn't always change urlbar focus, so we must try to
+    // reopen here too, not just on focus.
+    if (this.view.autoOpen({ event })) {
       return;
     }
     // The input may retain focus when switching tabs in which case we
