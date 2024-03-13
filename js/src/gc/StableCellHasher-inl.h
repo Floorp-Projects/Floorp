@@ -137,7 +137,7 @@ inline void TransferUniqueId(Cell* tgt, Cell* src) {
   MOZ_ASSERT(src->zone() == tgt->zone());
 
   Zone* zone = tgt->zone();
-  MOZ_ASSERT(!zone->uniqueIds().has(tgt));
+  MOZ_ASSERT_IF(zone->uniqueIds().has(src), !zone->uniqueIds().has(tgt));
   zone->uniqueIds().rekeyIfMoved(src, tgt);
 }
 
