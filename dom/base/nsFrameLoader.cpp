@@ -3016,7 +3016,7 @@ nsresult nsFrameLoader::EnsureMessageManager() {
     NS_ENSURE_TRUE(mChildMessageManager, NS_ERROR_UNEXPECTED);
 
     // Set up session store
-    if (StaticPrefs::browser_sessionstore_platform_collection_AtStartup()) {
+    if (SessionStorePlatformCollection()) {
       if (XRE_IsParentProcess() && mIsTopLevelContent) {
         mSessionStoreChild = SessionStoreChild::GetOrCreate(
             GetExtantBrowsingContext(), mOwnerContent);

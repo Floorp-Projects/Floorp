@@ -463,7 +463,7 @@ nsresult BrowserChild::Init(mozIDOMWindowProxy* aParent,
 
   mIPCOpen = true;
 
-  if (StaticPrefs::browser_sessionstore_platform_collection_AtStartup()) {
+  if (SessionStorePlatformCollection()) {
     mSessionStoreChild = SessionStoreChild::GetOrCreate(mBrowsingContext);
   }
 
