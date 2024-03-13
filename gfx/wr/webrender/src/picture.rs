@@ -3976,7 +3976,12 @@ impl SurfaceInfo {
         };
 
         let surface_rect = (raster_rect * self.device_pixel_scale).round_out().to_i32();
-        debug_assert!(!surface_rect.is_empty());
+        if surface_rect.is_empty() {
+            // The local_rect computed above may have non-empty size that is very
+            // close to zero. Due to limited arithmetic precision, the SpaceMapper
+            // might transform the near-zero-sized rect into a zero-sized one.
+            return None;
+        }
 
         Some(surface_rect)
     }
