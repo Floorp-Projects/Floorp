@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { Kinto } = ChromeUtils.import(
-  "resource://services-common/kinto-offline-client.js"
+const { Kinto } = ChromeUtils.importESModule(
+  "resource://services-common/kinto-offline-client.sys.mjs"
 );
 const { FirefoxAdapter } = ChromeUtils.importESModule(
   "resource://services-common/kinto-storage-adapter.sys.mjs"

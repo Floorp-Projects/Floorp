@@ -12,35 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-"use strict";
 
 /*
  * This file is generated from kinto.js - do not modify directly.
  */
 
-// This is required because with Babel compiles ES2015 modules into a
-// require() form that tries to keep its modules on "this", but
-// doesn't specify "this", leaving it to default to the global
-// object. However, in strict mode, "this" no longer defaults to the
-// global object, so expose the global object explicitly. Babel's
-// compiled output will use a variable called "global" if one is
-// present.
-//
-// See https://bugzilla.mozilla.org/show_bug.cgi?id=1394556#c3 for
-// more details.
-const global = this;
-
-var EXPORTED_SYMBOLS = ["Kinto"];
-
 /*
  * Version 13.0.0 - 7fbf95d
  */
-
-(function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-  typeof define === 'function' && define.amd ? define(factory) :
-  (global = global || self, global.Kinto = factory());
-}(this, (function () { 'use strict';
 
 /**
  * Base db adapter.
@@ -2592,19 +2571,13 @@ class KintoBase {
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-const { setTimeout, clearTimeout } = ChromeUtils.importESModule("resource://gre/modules/Timer.sys.mjs");
-const { XPCOMUtils } = ChromeUtils.importESModule("resource://gre/modules/XPCOMUtils.sys.mjs");
-XPCOMUtils.defineLazyGlobalGetters(global, ["fetch", "indexedDB"]);
-ChromeUtils.defineESModuleGetters(global, {
+const lazy = {};
+ChromeUtils.defineESModuleGetters(lazy, {
     EventEmitter: "resource://gre/modules/EventEmitter.sys.mjs",
     // Use standalone kinto-http module landed in FFx.
     KintoHttpClient: "resource://services-common/kinto-http-client.sys.mjs"
 });
-ChromeUtils.defineLazyGetter(global, "generateUUID", () => {
-    const { generateUUID } = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
-    return generateUUID;
-});
-class Kinto extends KintoBase {
+export class Kinto extends KintoBase {
     static get adapters() {
         return {
             BaseAdapter,
@@ -2612,11 +2585,11 @@ class Kinto extends KintoBase {
         };
     }
     get ApiClass() {
-        return KintoHttpClient;
+        return lazy.KintoHttpClient;
     }
     constructor(options = {}) {
         const events = {};
-        EventEmitter.decorate(events);
+        lazy.EventEmitter.decorate(events);
         const defaults = {
             adapter: IDB,
             events,
@@ -2629,7 +2602,7 @@ class Kinto extends KintoBase {
                 return typeof id == "string" && RE_RECORD_ID.test(id);
             },
             generate() {
-                return generateUUID()
+                return Services.uuid.generateUUID()
                     .toString()
                     .replace(/[{}]/g, "");
             },
@@ -2638,6 +2611,3 @@ class Kinto extends KintoBase {
     }
 }
 
-  return Kinto;
-
-})));

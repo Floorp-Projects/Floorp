@@ -13,9 +13,7 @@
  */
 import { Sqlite } from "resource://gre/modules/Sqlite.sys.mjs";
 
-const { Kinto } = ChromeUtils.import(
-  "resource://services-common/kinto-offline-client.js"
-);
+import { Kinto } from "resource://services-common/kinto-offline-client.sys.mjs";
 
 /**
  * Filter and sort list against provided filters and order.

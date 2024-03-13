@@ -1399,7 +1399,7 @@ security/nss/
 security/sandbox/chromium/
 security/sandbox/chromium-shim/
 services/common/kinto-http-client.sys.mjs
-services/common/kinto-offline-client.js
+services/common/kinto-offline-client.sys.mjs
 testing/gtest/gmock/
 testing/gtest/gtest/
 testing/mochitest/MochiKit/
