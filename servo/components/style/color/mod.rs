@@ -4,12 +4,14 @@
 
 //! Color support functions.
 
+pub mod component;
 /// cbindgen:ignore
 pub mod convert;
 pub mod mix;
 pub mod parsing;
 mod to_css;
 
+use component::ColorComponent;
 use cssparser::color::PredefinedColorSpace;
 
 /// The 3 components that make up a color.  (Does not include the alpha component)
@@ -246,6 +248,22 @@ impl From<u8> for ComponentDetails {
 impl From<Option<f32>> for ComponentDetails {
     fn from(value: Option<f32>) -> Self {
         if let Some(value) = value {
+            Self {
+                value,
+                is_none: false,
+            }
+        } else {
+            Self {
+                value: 0.0,
+                is_none: true,
+            }
+        }
+    }
+}
+
+impl From<ColorComponent<f32>> for ComponentDetails {
+    fn from(value: ColorComponent<f32>) -> Self {
+        if let ColorComponent::Value(value) = value {
             Self {
                 value,
                 is_none: false,

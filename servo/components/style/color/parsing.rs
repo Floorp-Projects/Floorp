@@ -17,6 +17,8 @@ use cssparser::{match_ignore_ascii_case, CowRcStr, Parser, Token};
 use std::str::FromStr;
 use style_traits::ParseError;
 
+use super::component::ColorComponent;
+
 /// Return the named color with the given name.
 ///
 /// Matching is case-insensitive in the ASCII range.
@@ -142,7 +144,7 @@ where
 fn parse_modern_alpha<'i, 't, P>(
     color_parser: &P,
     arguments: &mut Parser<'i, 't>,
-) -> Result<Option<f32>, ParseError<'i>>
+) -> Result<ColorComponent<f32>, ParseError<'i>>
 where
     P: ColorParser<'i>,
 {
@@ -150,7 +152,7 @@ where
         arguments.expect_delim('/')?;
         parse_none_or(arguments, |p| parse_alpha_component(color_parser, p))
     } else {
-        Ok(Some(OPAQUE))
+        Ok(ColorComponent::Value(OPAQUE))
     }
 }
 
@@ -166,10 +168,11 @@ where
 
     // If the first component is not "none" and is followed by a comma, then we
     // are parsing the legacy syntax.
-    let is_legacy_syntax = maybe_red.is_some() && arguments.try_parse(|p| p.expect_comma()).is_ok();
+    let is_legacy_syntax =
+        !maybe_red.is_none() && arguments.try_parse(|p| p.expect_comma()).is_ok();
 
     let (red, green, blue, alpha) = if is_legacy_syntax {
-        let (red, green, blue) = match maybe_red.unwrap() {
+        let (red, green, blue) = match maybe_red.into_value() {
             NumberOrPercentage::Number { value } => {
                 let red = clamp_floor_256_f32(value);
                 let green = clamp_floor_256_f32(color_parser.parse_number(arguments)?);
@@ -191,12 +194,12 @@ where
         (red, green, blue, alpha)
     } else {
         #[inline]
-        fn get_component_value(c: Option<NumberOrPercentage>) -> u8 {
-            c.map(|c| match c {
+        fn get_component_value(c: ColorComponent<NumberOrPercentage>) -> u8 {
+            c.map_value(|c| match c {
                 NumberOrPercentage::Number { value } => clamp_floor_256_f32(value),
                 NumberOrPercentage::Percentage { unit_value } => clamp_unit_f32(unit_value),
             })
-            .unwrap_or(0)
+            .into_value_or(0)
         }
 
         let red = get_component_value(maybe_red);
@@ -209,7 +212,7 @@ where
             color_parser.parse_number_or_percentage(p)
         })?);
 
-        let alpha = parse_modern_alpha(color_parser, arguments)?.unwrap_or(0.0);
+        let alpha = parse_modern_alpha(color_parser, arguments)?.into_value_or(0.0);
 
         (red, green, blue, alpha)
     };
@@ -236,27 +239,30 @@ where
 
     // If the hue is not "none" and is followed by a comma, then we are parsing
     // the legacy syntax.
-    let is_legacy_syntax = maybe_hue.is_some() && arguments.try_parse(|p| p.expect_comma()).is_ok();
+    let is_legacy_syntax =
+        !maybe_hue.is_none() && arguments.try_parse(|p| p.expect_comma()).is_ok();
 
-    let saturation: Option<f32>;
-    let lightness: Option<f32>;
+    let saturation: ColorComponent<f32>;
+    let lightness: ColorComponent<f32>;
 
     let alpha = if is_legacy_syntax {
-        saturation = Some(color_parser.parse_percentage(arguments)? * SATURATION_RANGE);
+        saturation =
+            ColorComponent::Value(color_parser.parse_percentage(arguments)? * SATURATION_RANGE);
         arguments.expect_comma()?;
-        lightness = Some(color_parser.parse_percentage(arguments)? * LIGHTNESS_RANGE);
-        Some(parse_legacy_alpha(color_parser, arguments)?)
+        lightness =
+            ColorComponent::Value(color_parser.parse_percentage(arguments)? * LIGHTNESS_RANGE);
+        ColorComponent::Value(parse_legacy_alpha(color_parser, arguments)?)
     } else {
         saturation = parse_none_or(arguments, |p| color_parser.parse_number_or_percentage(p))?
-            .map(|v| v.to_number(SATURATION_RANGE));
+            .map_value(|v| v.to_number(SATURATION_RANGE));
         lightness = parse_none_or(arguments, |p| color_parser.parse_number_or_percentage(p))?
-            .map(|v| v.to_number(LIGHTNESS_RANGE));
+            .map_value(|v| v.to_number(LIGHTNESS_RANGE));
         parse_modern_alpha(color_parser, arguments)?
     };
 
-    let hue = maybe_hue.map(|h| normalize_hue(h.degrees()));
-    let saturation = saturation.map(|s| s.clamp(0.0, SATURATION_RANGE));
-    let lightness = lightness.map(|l| l.clamp(0.0, LIGHTNESS_RANGE));
+    let hue = maybe_hue.map_value(|h| normalize_hue(h.degrees()));
+    let saturation = saturation.map_value(|s| s.clamp(0.0, SATURATION_RANGE));
+    let lightness = lightness.map_value(|l| l.clamp(0.0, LIGHTNESS_RANGE));
 
     Ok(P::Output::from_hsl(hue, saturation, lightness, alpha))
 }
@@ -284,15 +290,21 @@ where
         P::parse_number_or_percentage,
     )?;
 
-    let hue = hue.map(|h| normalize_hue(h.degrees()));
-    let whiteness = whiteness.map(|w| w.to_number(WHITENESS_RANGE).clamp(0.0, WHITENESS_RANGE));
-    let blackness = blackness.map(|b| b.to_number(BLACKNESS_RANGE).clamp(0.0, BLACKNESS_RANGE));
+    let hue = hue.map_value(|h| normalize_hue(h.degrees()));
+    let whiteness =
+        whiteness.map_value(|w| w.to_number(WHITENESS_RANGE).clamp(0.0, WHITENESS_RANGE));
+    let blackness =
+        blackness.map_value(|b| b.to_number(BLACKNESS_RANGE).clamp(0.0, BLACKNESS_RANGE));
 
     Ok(P::Output::from_hwb(hue, whiteness, blackness, alpha))
 }
 
-type IntoColorFn<Output> =
-    fn(l: Option<f32>, a: Option<f32>, b: Option<f32>, alpha: Option<f32>) -> Output;
+type IntoColorFn<Output> = fn(
+    l: ColorComponent<f32>,
+    a: ColorComponent<f32>,
+    b: ColorComponent<f32>,
+    alpha: ColorComponent<f32>,
+) -> Output;
 
 #[inline]
 fn parse_lab_like<'i, 't, P>(
@@ -313,9 +325,9 @@ where
         P::parse_number_or_percentage,
     )?;
 
-    let lightness = lightness.map(|l| l.to_number(lightness_range));
-    let a = a.map(|a| a.to_number(a_b_range));
-    let b = b.map(|b| b.to_number(a_b_range));
+    let lightness = lightness.map_value(|l| l.to_number(lightness_range));
+    let a = a.map_value(|a| a.to_number(a_b_range));
+    let b = b.map_value(|b| b.to_number(a_b_range));
 
     Ok(into_color(lightness, a, b, alpha))
 }
@@ -339,9 +351,9 @@ where
         P::parse_number_or_angle,
     )?;
 
-    let lightness = lightness.map(|l| l.to_number(lightness_range));
-    let chroma = chroma.map(|c| c.to_number(chroma_range));
-    let hue = hue.map(|h| normalize_hue(h.degrees()));
+    let lightness = lightness.map_value(|l| l.to_number(lightness_range));
+    let chroma = chroma.map_value(|c| c.to_number(chroma_range));
+    let hue = hue.map_value(|h| normalize_hue(h.degrees()));
 
     Ok(into_color(lightness, chroma, hue, alpha))
 }
@@ -371,9 +383,9 @@ where
         P::parse_number_or_percentage,
     )?;
 
-    let c1 = c1.map(|c| c.to_number(1.0));
-    let c2 = c2.map(|c| c.to_number(1.0));
-    let c3 = c3.map(|c| c.to_number(1.0));
+    let c1 = c1.map_value(|c| c.to_number(1.0));
+    let c2 = c2.map_value(|c| c.to_number(1.0));
+    let c3 = c3.map_value(|c| c.to_number(1.0));
 
     Ok(P::Output::from_color_function(
         color_space,
@@ -384,8 +396,15 @@ where
     ))
 }
 
-type ComponentParseResult<'i, R1, R2, R3> =
-    Result<(Option<R1>, Option<R2>, Option<R3>, Option<f32>), ParseError<'i>>;
+type ComponentParseResult<'i, R1, R2, R3> = Result<
+    (
+        ColorComponent<R1>,
+        ColorComponent<R2>,
+        ColorComponent<R3>,
+        ColorComponent<f32>,
+    ),
+    ParseError<'i>,
+>;
 
 /// Parse the color components and alpha with the modern [color-4] syntax.
 pub fn parse_components<'i, 't, P, F1, F2, F3, R1, R2, R3>(
@@ -410,13 +429,16 @@ where
     Ok((r1, r2, r3, alpha))
 }
 
-fn parse_none_or<'i, 't, F, T, E>(input: &mut Parser<'i, 't>, thing: F) -> Result<Option<T>, E>
+fn parse_none_or<'i, 't, F, T, E>(
+    input: &mut Parser<'i, 't>,
+    thing: F,
+) -> Result<ColorComponent<T>, E>
 where
     F: FnOnce(&mut Parser<'i, 't>) -> Result<T, E>,
 {
     match input.try_parse(|p| p.expect_ident_matching("none")) {
-        Ok(_) => Ok(None),
-        Err(_) => Ok(Some(thing(input)?)),
+        Ok(_) => Ok(ColorComponent::None),
+        Err(_) => Ok(ColorComponent::Value(thing(input)?)),
     }
 }
 
@@ -512,54 +534,58 @@ pub trait FromParsedColor {
 
     /// Construct a new color from hue, saturation, lightness and alpha components.
     fn from_hsl(
-        hue: Option<f32>,
-        saturation: Option<f32>,
-        lightness: Option<f32>,
-        alpha: Option<f32>,
+        hue: ColorComponent<f32>,
+        saturation: ColorComponent<f32>,
+        lightness: ColorComponent<f32>,
+        alpha: ColorComponent<f32>,
     ) -> Self;
 
     /// Construct a new color from hue, blackness, whiteness and alpha components.
     fn from_hwb(
-        hue: Option<f32>,
-        whiteness: Option<f32>,
-        blackness: Option<f32>,
-        alpha: Option<f32>,
+        hue: ColorComponent<f32>,
+        whiteness: ColorComponent<f32>,
+        blackness: ColorComponent<f32>,
+        alpha: ColorComponent<f32>,
     ) -> Self;
 
     /// Construct a new color from the `lab` notation.
-    fn from_lab(lightness: Option<f32>, a: Option<f32>, b: Option<f32>, alpha: Option<f32>)
-        -> Self;
+    fn from_lab(
+        lightness: ColorComponent<f32>,
+        a: ColorComponent<f32>,
+        b: ColorComponent<f32>,
+        alpha: ColorComponent<f32>,
+    ) -> Self;
 
     /// Construct a new color from the `lch` notation.
     fn from_lch(
-        lightness: Option<f32>,
-        chroma: Option<f32>,
-        hue: Option<f32>,
-        alpha: Option<f32>,
+        lightness: ColorComponent<f32>,
+        chroma: ColorComponent<f32>,
+        hue: ColorComponent<f32>,
+        alpha: ColorComponent<f32>,
     ) -> Self;
 
     /// Construct a new color from the `oklab` notation.
     fn from_oklab(
-        lightness: Option<f32>,
-        a: Option<f32>,
-        b: Option<f32>,
-        alpha: Option<f32>,
+        lightness: ColorComponent<f32>,
+        a: ColorComponent<f32>,
+        b: ColorComponent<f32>,
+        alpha: ColorComponent<f32>,
     ) -> Self;
 
     /// Construct a new color from the `oklch` notation.
     fn from_oklch(
-        lightness: Option<f32>,
-        chroma: Option<f32>,
-        hue: Option<f32>,
-        alpha: Option<f32>,
+        lightness: ColorComponent<f32>,
+        chroma: ColorComponent<f32>,
+        hue: ColorComponent<f32>,
+        alpha: ColorComponent<f32>,
     ) -> Self;
 
     /// Construct a new color with a predefined color space.
     fn from_color_function(
         color_space: PredefinedColorSpace,
-        c1: Option<f32>,
-        c2: Option<f32>,
-        c3: Option<f32>,
-        alpha: Option<f32>,
+        c1: ColorComponent<f32>,
+        c2: ColorComponent<f32>,
+        c3: ColorComponent<f32>,
+        alpha: ColorComponent<f32>,
     ) -> Self;
 }
