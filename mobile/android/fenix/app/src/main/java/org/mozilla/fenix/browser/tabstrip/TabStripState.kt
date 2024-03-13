@@ -5,6 +5,7 @@
 package org.mozilla.fenix.browser.tabstrip
 
 import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
+import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
 
 /**
@@ -41,23 +42,22 @@ data class TabStripItem(
  * Converts [BrowserState] to [TabStripState] that contains the information needed to render the
  * tabs strip.
  *
- * @param isSelectDisabled When true, the tabs will show as selected.
+ * @param isSelectDisabled When true, the tabs will show as unselected.
  * @param isPrivateMode Whether or not the browser is in private mode.
  */
 internal fun BrowserState.toTabStripState(
     isSelectDisabled: Boolean,
     isPrivateMode: Boolean,
-): TabStripState {
-    return TabStripState(
-        tabs = getNormalOrPrivateTabs(isPrivateMode)
-            .map {
-                TabStripItem(
-                    id = it.id,
-                    title = it.content.title.ifBlank { it.content.url },
-                    url = it.content.url,
-                    isPrivate = it.content.private,
-                    isSelected = !isSelectDisabled && it.id == selectedTabId,
-                )
-            },
-    )
-}
+): TabStripState = TabStripState(
+    tabs = getNormalOrPrivateTabs(
+        private = isPrivateMode || (!isSelectDisabled && selectedTab?.content?.private == true),
+    ).map {
+        TabStripItem(
+            id = it.id,
+            title = it.content.title.ifBlank { it.content.url },
+            url = it.content.url,
+            isPrivate = it.content.private,
+            isSelected = !isSelectDisabled && it.id == selectedTabId,
+        )
+    },
+)

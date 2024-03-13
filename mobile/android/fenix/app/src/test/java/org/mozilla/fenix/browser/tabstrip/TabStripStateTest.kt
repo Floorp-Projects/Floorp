@@ -157,6 +157,55 @@ class TabStripStateTest {
     }
 
     @Test
+    fun `WHEN isSelectDisabled is false and selected tab is private THEN tabs strip state tabs should have private tabs including the selected tab`() {
+        val browserState = BrowserState(
+            tabs = listOf(
+                createTab(
+                    url = "https://example.com",
+                    title = "Example 1",
+                    private = false,
+                    id = "1",
+                ),
+                createTab(
+                    url = "https://example2.com",
+                    title = "Example 2",
+                    private = true,
+                    id = "2",
+                ),
+                createTab(
+                    url = "https://example3.com",
+                    title = "Example 3",
+                    private = true,
+                    id = "3",
+                ),
+            ),
+            selectedTabId = "2",
+        )
+        val actual = browserState.toTabStripState(isSelectDisabled = false, isPrivateMode = false)
+
+        val expected = TabStripState(
+            tabs = listOf(
+                TabStripItem(
+                    id = "2",
+                    title = "Example 2",
+                    url = "https://example2.com",
+                    isSelected = true,
+                    isPrivate = true,
+                ),
+                TabStripItem(
+                    id = "3",
+                    title = "Example 3",
+                    url = "https://example3.com",
+                    isSelected = false,
+                    isPrivate = true,
+                ),
+            ),
+        )
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
     fun `WHEN isSelectDisabled is true THEN tabs strip state tabs should not have a selected tab`() {
         val browserState = BrowserState(
             tabs = listOf(
