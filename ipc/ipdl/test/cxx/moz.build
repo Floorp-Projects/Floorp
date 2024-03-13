@@ -11,7 +11,6 @@ EXPORTS.mozilla._ipdltest += [
     "IPDLUnitTests.h",
     "IPDLUnitTestTypes.h",
     "IPDLUnitTestUtils.h",
-    "TestDesc.h",
     "TestEndpointBridgeMain.h",
     "TestEndpointOpens.h",
     "TestFailedCtor.h",
@@ -46,7 +45,6 @@ EXPORTS.mozilla._ipdltest += [
 ]
 
 SOURCES += [
-    "TestDesc.cpp",
     "TestEndpointBridgeMain.cpp",
     "TestEndpointOpens.cpp",
     "TestFailedCtor.cpp",
@@ -87,9 +85,6 @@ SOURCES += [
 ]
 
 IPDL_SOURCES += [
-    "PTestDesc.ipdl",
-    "PTestDescSub.ipdl",
-    "PTestDescSubsub.ipdl",
     "PTestEndpointBridgeMain.ipdl",
     "PTestEndpointBridgeMainSub.ipdl",
     "PTestEndpointBridgeSub.ipdl",
