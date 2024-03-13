@@ -1262,6 +1262,9 @@ void HttpChannelChild::DoOnStopRequest(nsIRequest* aRequest,
   MOZ_ASSERT(!LoadOnStopRequestCalled(),
              "We should not call OnStopRequest twice");
 
+  // notify "http-on-before-stop-request" observers
+  gHttpHandler->OnBeforeStopRequest(this);
+
   if (mListener) {
     nsCOMPtr<nsIStreamListener> listener(mListener);
     StoreOnStopRequestCalled(true);
@@ -1280,7 +1283,7 @@ void HttpChannelChild::DoOnStopRequest(nsIRequest* aRequest,
     return;
   }
 
-  // notify "http-on-stop-connect" observers
+  // notify "http-on-stop-request" observers
   gHttpHandler->OnStopRequest(this);
 
   ReleaseListeners();
@@ -1470,6 +1473,9 @@ void HttpChannelChild::ContinueDoNotifyListener() {
   // the point of view of our consumer and we have to report our self
   // as not-pending.
   StoreIsPending(false);
+
+  // notify "http-on-before-stop-request" observers
+  gHttpHandler->OnBeforeStopRequest(this);
 
   if (mListener && !LoadOnStopRequestCalled()) {
     nsCOMPtr<nsIStreamListener> listener = mListener;
