@@ -829,7 +829,7 @@ static PropertyIteratorObject* CreatePropertyIterator(
     bool supportsIndices, PropertyIndexVector* indices,
     uint32_t cacheableProtoChainLength) {
   MOZ_ASSERT_IF(indices, supportsIndices);
-  if (props.length() > NativeIterator::PropCountLimit) {
+  if (props.length() >= NativeIterator::PropCountLimit) {
     ReportAllocationOverflow(cx);
     return nullptr;
   }
