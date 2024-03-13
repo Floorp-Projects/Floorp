@@ -1,0 +1,15 @@
+include protocol PTestDataStructures;
+
+namespace mozilla {
+namespace _ipdltest {
+
+[ChildProc=any, ChildImpl=virtual, ParentImpl=virtual]
+async protocol PTestDataStructuresSub {
+    manager PTestDataStructures;
+
+parent:
+    async __delete__();
+};
+
+} // namespace _ipdltest
+} // namespace mozilla
