@@ -6,29 +6,8 @@
  * nsIPromptService.
  */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { BrowserTestUtils } from "resource://testing-common/BrowserTestUtils.sys.mjs";
 import { TestUtils } from "resource://testing-common/TestUtils.sys.mjs";
-
-const kPrefs = {};
-
-// Whether prompts with modal type TAB are shown as SubDialog (true) or
-// TabModalPrompt (false).
-XPCOMUtils.defineLazyPreferenceGetter(
-  kPrefs,
-  "tabPromptSubDialogEnabled",
-  "prompts.tabChromePromptSubDialog",
-  false
-);
-
-function isCommonDialog(modalType) {
-  return (
-    modalType === Services.prompt.MODAL_TYPE_WINDOW ||
-    (kPrefs.tabPromptSubDialogEnabled &&
-      modalType === Services.prompt.MODAL_TYPE_TAB) ||
-    modalType === Services.prompt.MODAL_TYPE_CONTENT
-  );
-}
 
 export let PromptTestUtils = {
   /**
@@ -75,13 +54,7 @@ export let PromptTestUtils = {
     let promptClosePromise;
 
     // Get parent window to listen for prompt close event
-    let win;
-    if (isCommonDialog(dialog.args.modalType)) {
-      win = dialog.ui.prompt?.opener;
-    } else {
-      // Tab prompts should always have a parent window
-      win = dialog.ui.prompt.win;
-    }
+    let win = dialog.ui.prompt?.opener;
 
     if (win) {
       promptClosePromise = BrowserTestUtils.waitForEvent(
@@ -151,65 +124,50 @@ export let PromptTestUtils = {
       }
     }
 
-    let topic = isCommonDialog(modalType)
-      ? "common-dialog-loaded"
-      : "tabmodal-dialog-loaded";
+    let topic = "common-dialog-loaded";
 
     let dialog;
     await TestUtils.topicObserved(topic, subject => {
       // If we are not given a browser, use the currently selected browser of the window
       let browser =
         parentBrowser || subject.ownerGlobal.gBrowser?.selectedBrowser;
-      if (isCommonDialog(modalType)) {
-        // Is not associated with given parent window, skip
-        if (parentWindow && subject.opener !== parentWindow) {
-          return false;
-        }
-
-        // For tab prompts, ensure that the associated browser matches.
-        if (browser && modalType == Services.prompt.MODAL_TYPE_TAB) {
-          let dialogBox = parentWindow.gBrowser.getTabDialogBox(browser);
-          let hasMatchingDialog = dialogBox
-            .getTabDialogManager()
-            ._dialogs.some(
-              d => d._frame?.browsingContext == subject.browsingContext
-            );
-          if (!hasMatchingDialog) {
-            return false;
-          }
-        }
-
-        if (browser && modalType == Services.prompt.MODAL_TYPE_CONTENT) {
-          let dialogBox = parentWindow.gBrowser.getTabDialogBox(browser);
-          let hasMatchingDialog = dialogBox
-            .getContentDialogManager()
-            ._dialogs.some(
-              d => d._frame?.browsingContext == subject.browsingContext
-            );
-          if (!hasMatchingDialog) {
-            return false;
-          }
-        }
-
-        // subject is the window object of the prompt which has a Dialog object
-        // attached.
-        dialog = subject.Dialog;
-      } else {
-        // subject is the tabprompt dom node
-        // Get the full prompt object which has the dialog object
-        let prompt = browser.tabModalPromptBox.getPrompt(subject);
-
-        // Is not associated with given parent browser, skip.
-        if (!prompt) {
-          return false;
-        }
-
-        dialog = prompt.Dialog;
+      // Is not associated with given parent window, skip
+      if (parentWindow && subject.opener !== parentWindow) {
+        return false;
       }
+
+      // For tab prompts, ensure that the associated browser matches.
+      if (browser && modalType == Services.prompt.MODAL_TYPE_TAB) {
+        let dialogBox = parentWindow.gBrowser.getTabDialogBox(browser);
+        let hasMatchingDialog = dialogBox
+          .getTabDialogManager()
+          ._dialogs.some(
+            d => d._frame?.browsingContext == subject.browsingContext
+          );
+        if (!hasMatchingDialog) {
+          return false;
+        }
+      }
+
+      if (browser && modalType == Services.prompt.MODAL_TYPE_CONTENT) {
+        let dialogBox = parentWindow.gBrowser.getTabDialogBox(browser);
+        let hasMatchingDialog = dialogBox
+          .getContentDialogManager()
+          ._dialogs.some(
+            d => d._frame?.browsingContext == subject.browsingContext
+          );
+        if (!hasMatchingDialog) {
+          return false;
+        }
+      }
+
+      // subject is the window object of the prompt which has a Dialog object
+      // attached.
+      dialog = subject.Dialog;
 
       // Not the modalType we're looking for.
       // For window prompts dialog.args.modalType is undefined.
-      if (isCommonDialog(modalType) && dialog.args.modalType !== modalType) {
+      if (dialog.args.modalType !== modalType) {
         return false;
       }
 
