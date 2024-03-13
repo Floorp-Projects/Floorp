@@ -305,11 +305,21 @@ def verify_android_device(
     Returns True if the emulator was started or another device was
     already connected.
     """
-    if "MOZ_DISABLE_ADB_INSTALL" in os.environ:
+    if "MOZ_DISABLE_ADB_INSTALL" in os.environ or install == InstallIntent.NO:
         install = InstallIntent.NO
         _log_info(
-            "Found MOZ_DISABLE_ADB_INSTALL in environment, skipping android app"
-            "installation"
+            "Found MOZ_DISABLE_ADB_INSTALL in environment and/or the"
+            " --noinstall flag, skipping android app installation"
+        )
+    else:
+        _log_info(
+            "*********************************************************************\n"
+            "Neither the MOZ_DISABLE_ADB_INSTALL environment variable nor the\n"
+            "--noinstall flag was found. The code will now uninstall the current\n"
+            "app then re-install the android app from a different source. If you\n"
+            "don't want this set your local env so that\n"
+            "MOZ_DISABLE_ADB_INSTALL=True or pass the --noinstall flag\n"
+            "*********************************************************************"
         )
     device_verified = False
     emulator = AndroidEmulator("*", substs=build_obj.substs, verbose=verbose)
