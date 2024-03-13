@@ -654,6 +654,7 @@ class MacArtifactJob(ArtifactJob):
                 "{product}-bin",
                 "*.dylib",
                 "minidump-analyzer",
+                "nmhproxy",
                 "pingsender",
                 "plugin-container.app/Contents/MacOS/plugin-container",
                 "updater.app/Contents/Frameworks/UpdateSettings.framework/UpdateSettings",

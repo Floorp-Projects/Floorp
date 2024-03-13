@@ -411,6 +411,12 @@ bin/libfreebl_64int_3.so
 ;
 @BINPATH@/pingsender@BIN_SUFFIX@
 
+; [ Native Messaging Host Proxy ]
+;
+#if defined(XP_WIN) || defined(XP_MACOSX)
+@BINPATH@/nmhproxy@BIN_SUFFIX@
+#endif
+
 ; [ Notification COM Server ]
 ;
 #if defined(MOZ_NOTIFICATION_SERVER)

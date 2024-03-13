@@ -31,6 +31,9 @@ RUST_TESTS = [
     "gkrust",
 ]
 
+if CONFIG["TARGET_OS"] in ("WINNT", "OSX"):
+    RUST_TESTS += ["nmhproxy"]
+
 # Code coverage builds link a bunch of Gecko bindings code from the style
 # crate, which is not used by our tests but would cause link errors.
 #

@@ -135,6 +135,9 @@ if CONFIG["MOZ_SANDBOX"] and CONFIG["OS_ARCH"] == "WINNT":
         "usp10.dll",
     ]
 
+if CONFIG["TARGET_OS"] in ("WINNT", "OSX"):
+    DIRS += ["nmhproxy"]
+
 # Control the default heap size.
 # This is the heap returned by GetProcessHeap().
 # As we use the CRT heap, the default size is too large and wastes VM.

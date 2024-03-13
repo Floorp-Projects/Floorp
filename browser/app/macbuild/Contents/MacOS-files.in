@@ -16,6 +16,7 @@
 #if defined(MOZ_CRASHREPORTER)
 /minidump-analyzer
 #endif
+/nmhproxy
 /pingsender
 /pk12util
 /ssltunnel

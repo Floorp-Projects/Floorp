@@ -189,4 +189,5 @@ http3server = ["dep:arrayvec", "dep:bindgen", "dep:bitflags", "dep:bytes", "dep:
 ipcclientcerts-static = ["dep:bindgen", "dep:bitflags", "dep:memchr", "dep:nom", "dep:regex"]
 jsrust = ["dep:arrayvec", "dep:cc", "dep:env_logger", "dep:getrandom", "dep:hashbrown", "dep:indexmap", "dep:log", "dep:memchr", "dep:num-traits", "dep:once_cell", "dep:semver", "dep:smallvec", "dep:url"]
 mozwer_s = ["dep:getrandom", "dep:hashbrown", "dep:indexmap", "dep:once_cell", "dep:serde_json", "dep:uuid", "dep:windows-sys"]
+nmhproxy = ["dep:serde_json", "dep:url"]
 osclientcerts-static = ["dep:bindgen", "dep:bitflags", "dep:env_logger", "dep:log", "dep:memchr", "dep:nom", "dep:regex"]
