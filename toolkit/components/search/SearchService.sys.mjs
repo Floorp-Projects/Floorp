@@ -2321,10 +2321,6 @@ export class SearchService {
         // Use the internal remove - _reloadEngines already deals with default
         // engines etc, and we want to avoid adjusting the sort order unnecessarily.
         this.#internalRemoveEngine(engine);
-
-        if (engine instanceof lazy.AppProvidedSearchEngine) {
-          await engine.cleanup();
-        }
       } else {
         // If we have other engines that use the same extension ID, then
         // we do not want to remove the add-on - only remove the engine itself.
