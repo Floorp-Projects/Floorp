@@ -67,6 +67,7 @@ class Http3Stream final : public nsAHttpSegmentReader,
   bool GetHeadersString(const char* buf, uint32_t avail, uint32_t* countUsed);
   nsresult StartRequest();
 
+  void SetPriority(uint32_t aCos);
   void SetIncremental(bool incremental);
 
   /**

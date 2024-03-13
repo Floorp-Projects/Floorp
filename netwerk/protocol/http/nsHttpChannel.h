@@ -566,8 +566,6 @@ class nsHttpChannel final : public HttpBaseChannel,
   // This method can only be called on the main thread.
   void PerformBackgroundCacheRevalidationNow();
 
-  void SetPriorityHeader();
-
  private:
   nsCOMPtr<nsICancelable> mProxyRequest;
 
