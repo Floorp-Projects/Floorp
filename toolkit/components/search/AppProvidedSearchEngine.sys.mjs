@@ -12,8 +12,102 @@ import {
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
 });
+
+/**
+ * Handles loading application provided search engine icons from remote settings.
+ */
+class IconHandler {
+  /**
+   * @typedef {?object[]}
+   *   The list of icon records from the remote settings collection.
+   */
+  #iconList = null;
+
+  /**
+   * @typedef {?RemoteSettingsClient}
+   *   The remote settings client for the search engine icons.
+   */
+  #iconCollection = null;
+
+  /**
+   * Returns the icon for the record that matches the engine identifier
+   * and the preferred width.
+   *
+   * @param {string} engineIdentifier
+   *   The identifier of the engine to match against.
+   * @param {number} preferredWidth
+   *   The preferred with of the icon.
+   * @returns {string}
+   *   An object URL that can be used to reference the contents of the specified
+   *   source object.
+   */
+  async getIcon(engineIdentifier, preferredWidth) {
+    if (!this.#iconList) {
+      await this.#getIconList();
+    }
+
+    let iconRecords = this.#iconList.filter(r => {
+      return r.engineIdentifiers.some(i => {
+        if (i.endsWith("*")) {
+          return engineIdentifier.startsWith(i.slice(0, -1));
+        }
+        return engineIdentifier == i;
+      });
+    });
+
+    if (!iconRecords.length) {
+      console.warn("No icon found for", engineIdentifier);
+      return null;
+    }
+
+    // Default to the first record, in the event we don't have any records
+    // that match the width.
+    let iconRecord = iconRecords[0];
+    for (let record of iconRecords) {
+      // TODO: Bug 1655070. We should be using the closest size, but for now use
+      // an exact match.
+      if (record.imageSize == preferredWidth) {
+        iconRecord = record;
+        break;
+      }
+    }
+
+    let iconURL;
+    try {
+      iconURL = await this.#iconCollection.attachments.get(iconRecord);
+    } catch (ex) {
+      console.error(ex);
+      return null;
+    }
+    if (!iconURL) {
+      console.warn("Unable to find the icon for", engineIdentifier);
+      return null;
+    }
+    return URL.createObjectURL(
+      new Blob([iconURL.buffer]),
+      iconRecord.attachment.mimetype
+    );
+  }
+
+  /**
+   * Obtains the icon list from the remote settings collection.
+   */
+  async #getIconList() {
+    this.#iconCollection = lazy.RemoteSettings("search-config-icons");
+    try {
+      this.#iconList = await this.#iconCollection.get();
+    } catch (ex) {
+      console.error(ex);
+      this.#iconList = [];
+    }
+    if (!this.#iconList.length) {
+      console.error("Failed to obtain search engine icon list records");
+    }
+  }
+}
 
 /**
  * AppProvidedSearchEngine represents a search engine defined by the
@@ -25,6 +119,20 @@ export class AppProvidedSearchEngine extends SearchEngine {
     ["suggestions", lazy.SearchUtils.URL_TYPE.SUGGEST_JSON],
     ["trending", lazy.SearchUtils.URL_TYPE.TRENDING_JSON],
   ]);
+  static iconHandler = new IconHandler();
+
+  /**
+   * @typedef {?Promise<string>}
+   *   A promise for the blob URL of the icon. We save the promise to avoid
+   *   reentrancy issues.
+   */
+  #blobURLPromise = null;
+
+  /**
+   * @typedef {?string}
+   *   The identifier from the configuration.
+   */
+  #configurationId = null;
 
   /**
    * @param {object} options
@@ -51,9 +159,21 @@ export class AppProvidedSearchEngine extends SearchEngine {
     this._extensionID = extensionId;
     this._locale = config.webExtension.locale;
 
+    this.#configurationId = config.identifier;
     this.#init(config);
 
     this._loadSettings(settings);
+  }
+
+  /**
+   * Used to clean up the engine when it is removed. This will revoke the blob
+   * URL for the icon.
+   */
+  async cleanup() {
+    if (this.#blobURLPromise) {
+      URL.revokeObjectURL(await this.#blobURLPromise);
+      this.#blobURLPromise = null;
+    }
   }
 
   /**
@@ -68,7 +188,6 @@ export class AppProvidedSearchEngine extends SearchEngine {
    */
   update({ configuration } = {}) {
     this._urls = [];
-    this._iconMapObj = null;
     this.#init(configuration);
     lazy.SearchUtils.notifyAction(this, lazy.SearchUtils.MODIFIED_TYPE.CHANGED);
   }
@@ -129,6 +248,25 @@ export class AppProvidedSearchEngine extends SearchEngine {
   }
 
   /**
+   * Returns the icon URL for the search engine closest to the preferred width.
+   *
+   * @param {number} preferredWidth
+   *   The preferred width of the image.
+   * @returns {Promise<string>}
+   *   A promise that resolves to the URL of the icon.
+   */
+  async getIconURL(preferredWidth) {
+    if (this.#blobURLPromise) {
+      return this.#blobURLPromise;
+    }
+    this.#blobURLPromise = AppProvidedSearchEngine.iconHandler.getIcon(
+      this.#configurationId,
+      preferredWidth
+    );
+    return this.#blobURLPromise;
+  }
+
+  /**
    * Creates a JavaScript object that represents this engine.
    *
    * @returns {object}
@@ -158,38 +296,6 @@ export class AppProvidedSearchEngine extends SearchEngine {
     if (engineConfig.telemetrySuffix) {
       this._telemetryId += `-${engineConfig.telemetrySuffix}`;
     }
-
-    // Set the main icon URL for the engine.
-    // let iconURL = searchProvider.favicon_url;
-
-    // if (!iconURL) {
-    //   iconURL =
-    //     manifest.icons &&
-    //     extensionBaseURI.resolve(
-    //       lazy.ExtensionParent.IconDetails.getPreferredIcon(manifest.icons).icon
-    //     );
-    // }
-
-    // // Record other icons that the WebExtension has.
-    // if (manifest.icons) {
-    //   let iconList = Object.entries(manifest.icons).map(icon => {
-    //     return {
-    //       width: icon[0],
-    //       height: icon[0],
-    //       url: extensionBaseURI.resolve(icon[1]),
-    //     };
-    //   });
-    //   for (let icon of iconList) {
-    //     this._addIconToMap(icon.size, icon.size, icon.url);
-    //   }
-    // }
-
-    // this._initWithDetails(config);
-
-    // this._sendAttributionRequest = config.sendAttributionRequest ?? false; // TODO check if we need to this?
-    // if (details.iconURL) {
-    //   this._setIcon(details.iconURL, true);
-    // }
 
     this._name = engineConfig.name.trim();
     this._definedAliases =
