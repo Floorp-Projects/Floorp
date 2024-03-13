@@ -84,13 +84,12 @@ CallFactory::CallFactory() {
 
 std::unique_ptr<Call> CallFactory::CreateCall(const CallConfig& config) {
   RTC_DCHECK_RUN_ON(&call_thread_);
-  RTC_DCHECK(config.trials);
 
   std::vector<DegradedCall::TimeScopedNetworkConfig> send_degradation_configs =
-      GetNetworkConfigs(*config.trials, /*send=*/true);
+      GetNetworkConfigs(config.env.field_trials(), /*send=*/true);
   std::vector<DegradedCall::TimeScopedNetworkConfig>
       receive_degradation_configs =
-          GetNetworkConfigs(*config.trials, /*send=*/false);
+          GetNetworkConfigs(config.env.field_trials(), /*send=*/false);
 
   RtpTransportConfig transportConfig = config.ExtractTransportConfig();
 
