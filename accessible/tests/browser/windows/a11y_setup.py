@@ -9,19 +9,26 @@ import ctypes
 import os
 from ctypes import POINTER, byref
 from ctypes.wintypes import BOOL, HWND, LPARAM, POINT  # noqa: F401
+from dataclasses import dataclass
 
+import comtypes.automation
 import comtypes.client
 import psutil
 from comtypes import COMError, IServiceProvider
+
+CHILDID_SELF = 0
+COWAIT_DEFAULT = 0
+EVENT_OBJECT_FOCUS = 0x8005
+NAVRELATION_EMBEDS = 0x1009
+OBJID_CLIENT = -4
+RPC_S_CALLPENDING = -2147417835
+WINEVENT_OUTOFCONTEXT = 0
 
 user32 = ctypes.windll.user32
 oleacc = ctypes.oledll.oleacc
 oleaccMod = comtypes.client.GetModule("oleacc.dll")
 IAccessible = oleaccMod.IAccessible
 del oleaccMod
-OBJID_CLIENT = -4
-CHILDID_SELF = 0
-NAVRELATION_EMBEDS = 0x1009
 # This is the path if running locally.
 ia2Tlb = os.path.join(
     os.getcwd(),
@@ -65,6 +72,13 @@ def AccessibleObjectFromWindow(hwnd, objectID=OBJID_CLIENT):
     return p
 
 
+def getWindowClass(hwnd):
+    MAX_CHARS = 257
+    buffer = ctypes.create_unicode_buffer(MAX_CHARS)
+    user32.GetClassNameW(hwnd, buffer, MAX_CHARS)
+    return buffer.value
+
+
 def getFirefoxHwnd():
     """Search all top level windows for the Firefox instance being
     tested.
@@ -78,9 +92,7 @@ def getFirefoxHwnd():
 
     @ctypes.WINFUNCTYPE(BOOL, HWND, LPARAM)
     def callback(hwnd, lParam):
-        name = ctypes.create_unicode_buffer(100)
-        user32.GetClassNameW(hwnd, name, 100)
-        if name.value != "MozillaWindowClass":
+        if getWindowClass(hwnd) != "MozillaWindowClass":
             return True
         pid = ctypes.wintypes.DWORD()
         user32.GetWindowThreadProcessId(hwnd, byref(pid))
@@ -125,6 +137,106 @@ def findIa2ByDomId(root, id):
         descendant = findIa2ByDomId(child, id)
         if descendant:
             return descendant
+
+
+@dataclass
+class WinEvent:
+    event: int
+    hwnd: int
+    objectId: int
+    childId: int
+
+    def getIa2(self):
+        acc = ctypes.POINTER(IAccessible)()
+        child = comtypes.automation.VARIANT()
+        ctypes.oledll.oleacc.AccessibleObjectFromEvent(
+            self.hwnd,
+            self.objectId,
+            self.childId,
+            ctypes.byref(acc),
+            ctypes.byref(child),
+        )
+        if child.value != CHILDID_SELF:
+            # This isn't an IAccessible2 object.
+            return None
+        return toIa2(acc)
+
+
+class WaitForWinEvent:
+    """Wait for a win event, usually for IAccessible2.
+    This should be used as follows:
+    1. Create an instance to wait for the desired event.
+    2. Perform the action that should fire the event.
+    3. Call wait() on the instance you created in 1) to wait for the event.
+    """
+
+    def __init__(self, eventId, match):
+        """event is the event id to wait for.
+        match is either None to match any object, an str containing the DOM id
+        of the desired object, or a function taking a WinEvent which should
+        return True if this is the requested event.
+        """
+        self._matched = None
+        # A kernel event used to signal when we get the desired event.
+        self._signal = ctypes.windll.kernel32.CreateEventW(None, True, False, None)
+
+        # We define this as a nested function because it has to be a static
+        # function, but we need a reference to self.
+        @ctypes.WINFUNCTYPE(
+            None,
+            ctypes.wintypes.HANDLE,
+            ctypes.wintypes.DWORD,
+            ctypes.wintypes.HWND,
+            ctypes.wintypes.LONG,
+            ctypes.wintypes.LONG,
+            ctypes.wintypes.DWORD,
+            ctypes.wintypes.DWORD,
+        )
+        def winEventProc(hook, eventId, hwnd, objectId, childId, thread, time):
+            event = WinEvent(eventId, hwnd, objectId, childId)
+            if isinstance(match, str):
+                try:
+                    ia2 = event.getIa2()
+                    if f"id:{match};" in ia2.attributes:
+                        self._matched = event
+                except (comtypes.COMError, TypeError):
+                    pass
+            elif callable(match):
+                try:
+                    if match(event):
+                        self._matched = event
+                except Exception as e:
+                    self._matched = e
+            if self._matched:
+                ctypes.windll.kernel32.SetEvent(self._signal)
+
+        self._hook = user32.SetWinEventHook(
+            eventId, eventId, None, winEventProc, 0, 0, WINEVENT_OUTOFCONTEXT
+        )
+        # Hold a reference to winEventProc so it doesn't get destroyed.
+        self._proc = winEventProc
+
+    def wait(self):
+        """Wait for and return the desired WinEvent."""
+        # Pump Windows messages until we get the desired event, which will be
+        # signalled using a kernel event.
+        handles = (ctypes.c_void_p * 1)(self._signal)
+        index = ctypes.wintypes.DWORD()
+        TIMEOUT = 10000
+        try:
+            ctypes.oledll.ole32.CoWaitForMultipleHandles(
+                COWAIT_DEFAULT, TIMEOUT, 1, handles, ctypes.byref(index)
+            )
+        except WindowsError as e:
+            if e.winerror == RPC_S_CALLPENDING:
+                raise TimeoutError("Timeout before desired event received")
+            raise
+        finally:
+            user32.UnhookWinEvent(self._hook)
+            self._proc = None
+        if isinstance(self._matched, Exception):
+            raise self._matched from self._matched
+        return self._matched
 
 
 def getDocUia():
