@@ -1,0 +1,7 @@
+---
+InvalidExtensionAndExcludedExtensions:
+    type: string
+    payload: foobar
+    description: Having both extensions and exclude_extensions is not allowed.
+    extensions: ["*.js"]
+    exclude_extensions: ["*.png"]

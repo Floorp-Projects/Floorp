@@ -139,16 +139,20 @@ def collapse(paths, base=None, dotfiles=False):
     return list(covered)
 
 
-def filterpaths(root, paths, include, exclude=None, extensions=None):
+def filterpaths(
+    root, paths, include, exclude=None, extensions=None, exclude_extensions=None
+):
     """Filters a list of paths.
 
     Given a list of paths and some filtering rules, return the set of paths
-    that should be linted.
+    that should be linted. Note that at most one of extensions or
+    exclude_extensions should be provided (ie not both).
 
     :param paths: A starting list of paths to possibly lint.
     :param include: A list of paths that should be included (required).
     :param exclude: A list of paths that should be excluded (optional).
     :param extensions: A list of file extensions which should be considered (optional).
+    :param exclude_extensions: A list of file extensions which should not be considered (optional).
     :returns: A tuple containing a list of file paths to lint and a list of
               paths to exclude.
     """
@@ -172,6 +176,8 @@ def filterpaths(root, paths, include, exclude=None, extensions=None):
     for path in list(map(normalize, paths)):
         # Exclude bad file extensions
         if extensions and path.isfile and path.ext not in extensions:
+            continue
+        elif exclude_extensions and path.isfile and path.ext in exclude_extensions:
             continue
 
         if path.match(excludeglobs):
@@ -280,6 +286,9 @@ def expand_exclusions(paths, config, root):
         Generator which generates list of paths that weren't excluded.
     """
     extensions = [e.lstrip(".") for e in config.get("extensions", [])]
+    exclude_extensions = [e.lstrip(".") for e in config.get("exclude_extensions", [])]
+    if extensions and exclude_extensions:
+        raise ValueError("Can't specify both extensions and exclude_extensions.")
     find_dotfiles = config.get("find-dotfiles", False)
 
     def normalize(path):
@@ -289,6 +298,13 @@ def expand_exclusions(paths, config, root):
         return mozpath.join(root, path)
 
     exclude = list(map(normalize, config.get("exclude", [])))
+    # We need excluded extensions in both the ignore for the FileFinder and in
+    # the exclusion set. If we don't put it in the exclusion set, we would
+    # return files that are passed explicitly and whose extensions are in the
+    # exclusion set. If we don't put it in the ignore set, the FileFinder
+    # would return files in (sub)directories passed to us.
+    base_ignore = ["**/*.{}".format(ext) for ext in exclude_extensions]
+    exclude += base_ignore
     for path in paths:
         path = mozpath.normsep(path)
         if os.path.isfile(path):
@@ -301,16 +317,27 @@ def expand_exclusions(paths, config, root):
             yield path
             continue
 
-        ignore = [
+        # If there are neither extensions nor exclude_extensions, we can't do
+        # anything useful with a directory. Skip:
+        if not extensions and not exclude_extensions:
+            continue
+
+        # This is a directory. Check we don't have excludes for ancestors of
+        # this path. Mess with slashes to avoid "foo/bar" matching "foo/barry".
+        parent_path = os.path.dirname(path.rstrip("/")) + "/"
+        assert not any(parent_path.startswith(e.rstrip("/") + "/") for e in exclude)
+
+        ignore = base_ignore + [
             e[len(path) :].lstrip("/")
             for e in exclude
             if mozpath.commonprefix((path, e)) == path
         ]
+
         finder = FileFinder(path, ignore=ignore, find_dotfiles=find_dotfiles)
-
-        _, ext = os.path.splitext(path)
-        ext.lstrip(".")
-
-        for ext in extensions:
-            for p, f in finder.find("**/*.{}".format(ext)):
+        if extensions:
+            for ext in extensions:
+                for p, f in finder.find("**/*.{}".format(ext)):
+                    yield os.path.join(path, p)
+        else:
+            for p, f in finder.find("**/*.*"):
                 yield os.path.join(path, p)

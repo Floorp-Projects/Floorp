@@ -39,6 +39,7 @@ class BaseType(object):
                 config["include"],
                 config.get("exclude", []),
                 config.get("extensions", []),
+                config.get("exclude_extensions", []),
             )
             config["exclude"] = exclude
         elif config.get("exclude"):
