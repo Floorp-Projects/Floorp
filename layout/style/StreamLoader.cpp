@@ -86,11 +86,12 @@ StreamLoader::OnStartRequest(nsIRequest* aRequest) {
     return *info.mExpirationTime;
   }();
 
-  // we need to block block resolution of parse promise until we receive
-  // OnStopRequest on Main thread. This is necessary because, parse promise
+  // We need to block block resolution of parse promise until we receive
+  // OnStopRequest on Main thread. This is necessary because parse promise
   // resolution fires OnLoad event OnLoad event must not be dispatched until
-  // OnStopRequest in main thread is dispatched.
-  mSheetLoadData->mSheet->BlockOrUnblockParsePromise(true);
+  // OnStopRequest in main thread is processed, for stuff like performance
+  // resource entries.
+  mSheetLoadData->mSheet->BlockParsePromise();
 
   return NS_OK;
 }
@@ -124,7 +125,7 @@ StreamLoader::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
       glean::networking::http_content_cssloader_ondatafinished_to_onstop_delay
           .AccumulateRawDuration(delta);
     }
-    mSheetLoadData->mSheet->BlockOrUnblockParsePromise(false);
+    mSheetLoadData->mSheet->UnblockParsePromise();
   }
 
   if (mOnStopProcessingDone) {

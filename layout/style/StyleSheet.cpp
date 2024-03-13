@@ -40,7 +40,6 @@ StyleSheet::StyleSheet(css::SheetParsingMode aParsingMode, CORSMode aCORSMode,
       mDocumentOrShadowRoot(nullptr),
       mParsingMode(aParsingMode),
       mState(static_cast<State>(0)),
-      mMutex("StyleSheet::mMutex"),
       mInner(new StyleSheetInfo(aCORSMode, aIntegrity, aParsingMode)) {
   mInner->AddSheet(this);
 }
@@ -54,7 +53,6 @@ StyleSheet::StyleSheet(const StyleSheet& aCopy, StyleSheet* aParentSheetToUse,
       mDocumentOrShadowRoot(aDocOrShadowRootToUse),
       mParsingMode(aCopy.mParsingMode),
       mState(aCopy.mState),
-      mMutex("StyleSheet::mMutex"),
       // Shallow copy, but concrete subclasses will fix up.
       mInner(aCopy.mInner) {
   MOZ_ASSERT(!aConstructorDocToUse || aCopy.IsConstructed());
@@ -72,10 +70,6 @@ StyleSheet::StyleSheet(const StyleSheet& aCopy, StyleSheet* aParentSheetToUse,
     mState &= ~(State::ForcedUniqueInner | State::ModifiedRules |
                 State::ModifiedRulesForDevtools);
   }
-
-  // we could have cloned sheet which has not been parsed yet
-  // reset the parsing state flag
-  mState &= ~State::AsyncParseOngoing;
 
   if (aCopy.mMedia) {
     // XXX This is wrong; we should be keeping @import rules and
@@ -1170,18 +1164,15 @@ RefPtr<StyleSheetParsePromise> StyleSheet::ParseSheet(
     css::Loader& aLoader, const nsACString& aBytes,
     const RefPtr<css::SheetLoadDataHolder>& aLoadData) {
   MOZ_ASSERT(mParsePromise.IsEmpty());
+  MOZ_ASSERT_IF(NS_IsMainThread(), mAsyncParseBlockers == 0);
+
   RefPtr<StyleSheetParsePromise> p = mParsePromise.Ensure(__func__);
   if (!aLoadData->get()->ShouldDefer()) {
     mParsePromise.SetTaskPriority(nsIRunnablePriority::PRIORITY_RENDER_BLOCKING,
                                   __func__);
   }
+  BlockParsePromise();
   SetURLExtraData();
-  MOZ_ASSERT(!IsAsyncParseOngoing());
-  {
-    MutexAutoLock lock(mMutex);
-    mState |= State::AsyncParseOngoing;
-  }
-  MOZ_ASSERT_IF(NS_IsMainThread(), !HasParsePromiseResolutionBlocked());
   // @import rules are disallowed due to this decision:
   // https://github.com/WICG/construct-stylesheets/issues/119#issuecomment-588352418
   // We may allow @import rules again in the future.
@@ -1220,13 +1211,12 @@ RefPtr<StyleSheetParsePromise> StyleSheet::ParseSheet(
 void StyleSheet::FinishAsyncParse(
     already_AddRefed<StyleStylesheetContents> aSheetContents,
     UniquePtr<StyleUseCounters> aUseCounters) {
-  mState &= ~State::AsyncParseOngoing;
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mParsePromise.IsEmpty());
   Inner().mContents = aSheetContents;
   Inner().mUseCounters = std::move(aUseCounters);
   FixUpRuleListAfterContentsChangeIfNeeded();
-  MayBeResolveParsePromise();
+  UnblockParsePromise();
 }
 
 void StyleSheet::ParseSheetSync(
@@ -1353,7 +1343,6 @@ already_AddRefed<StyleSheet> StyleSheet::Clone(
     dom::DocumentOrShadowRoot* aCloneDocumentOrShadowRoot) const {
   MOZ_ASSERT(!IsConstructed(),
              "Cannot create a non-constructed sheet from a constructed sheet");
-  MutexAutoLock lock(mMutex);
   RefPtr<StyleSheet> clone =
       new StyleSheet(*this, aCloneParent, aCloneDocumentOrShadowRoot,
                      /* aConstructorDocToUse */ nullptr);
