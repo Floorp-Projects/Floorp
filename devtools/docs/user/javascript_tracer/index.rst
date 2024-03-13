@@ -105,6 +105,8 @@ This is disabled by default as it doubles the output of the tracer.
 
 .. image:: trace-returns.png
 
+(`:trace --returns`)
+
 Tracing values
 --------------
 

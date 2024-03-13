@@ -905,6 +905,7 @@ WebConsoleCommandsManager.register({
     const enabled = tracerActor.toggleTracing({
       logMethod,
       prefix: args.prefix || null,
+      traceFunctionReturn: !!args.returns,
       traceValues: !!args.values,
       traceOnNextInteraction: args["on-next-interaction"] || null,
       traceDOMMutations,
@@ -925,6 +926,7 @@ WebConsoleCommandsManager.register({
     "on-next-interaction",
     "dom-mutations",
     "prefix",
+    "returns",
     "values",
   ],
 });

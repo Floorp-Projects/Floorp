@@ -11,7 +11,7 @@ const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html>
   <div>
     <h1>Testing trace command</h1>
     <script>
-    function main() {}
+    function main() { return 42; }
     function someNoise() {}
     </script>
   </div>
@@ -44,7 +44,7 @@ add_task(async function testBasicRecord() {
   // Instead a JSTRACER_STATE resource logs a console-api message.
   msg = await evaluateExpressionInConsole(
     hud,
-    ":trace --logMethod console --prefix foo --values --on-next-interaction",
+    ":trace --logMethod console --prefix foo --returns --values --on-next-interaction",
     "console-api"
   );
   is(
@@ -79,6 +79,11 @@ add_task(async function testBasicRecord() {
     findTracerMessages(hud, `someNoise`).length,
     0,
     "The code running before the key press should not be traced"
+  );
+  await waitFor(
+    () => !!findTracerMessages(hud, `foo: ⟵ λ main return 42`).length,
+
+    "Got the function returns being logged, with the returned value"
   );
 
   // But now that the tracer is active, we will be able to log this call to someNoise
