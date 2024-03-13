@@ -200,7 +200,7 @@ async function performActionsOnDialog({
   cache = false,
   siteSettings = false,
 }) {
-  let dh = new ClearHistoryDialogHelper(context);
+  let dh = new ClearHistoryDialogHelper({ mode: context });
   dh.onload = function () {
     this.selectDuration(timespan);
     this.checkPrefCheckbox(
@@ -262,7 +262,7 @@ add_task(async function test_cancel() {
 
 // test remembering user options for various entry points
 add_task(async function test_pref_remembering() {
-  let dh = new ClearHistoryDialogHelper("clearSiteData");
+  let dh = new ClearHistoryDialogHelper({ mode: "clearSiteData" });
   dh.onload = function () {
     this.checkPrefCheckbox("cookiesAndStorage", false);
     this.checkPrefCheckbox("siteSettings", true);
@@ -273,7 +273,7 @@ add_task(async function test_pref_remembering() {
   await dh.promiseClosed;
 
   // validate if prefs are remembered
-  dh = new ClearHistoryDialogHelper("clearSiteData");
+  dh = new ClearHistoryDialogHelper({ mode: "clearSiteData" });
   dh.onload = function () {
     this.validateCheckbox("cookiesAndStorage", false);
     this.validateCheckbox("siteSettings", true);
@@ -289,7 +289,7 @@ add_task(async function test_pref_remembering() {
   await dh.promiseClosed;
 
   // validate if prefs did not change since we cancelled the dialog
-  dh = new ClearHistoryDialogHelper("clearSiteData");
+  dh = new ClearHistoryDialogHelper({ mode: "clearSiteData" });
   dh.onload = function () {
     this.validateCheckbox("cookiesAndStorage", false);
     this.validateCheckbox("siteSettings", true);
@@ -302,7 +302,7 @@ add_task(async function test_pref_remembering() {
   // test rememebering prefs from the clear history context
   // since clear history and clear site data have seperate remembering
   // of prefs
-  dh = new ClearHistoryDialogHelper("clearHistory");
+  dh = new ClearHistoryDialogHelper({ mode: "clearHistory" });
   dh.onload = function () {
     this.checkPrefCheckbox("cookiesAndStorage", true);
     this.checkPrefCheckbox("siteSettings", false);
@@ -314,7 +314,7 @@ add_task(async function test_pref_remembering() {
   await dh.promiseClosed;
 
   // validate if prefs are remembered across both clear history and browser
-  dh = new ClearHistoryDialogHelper("browser");
+  dh = new ClearHistoryDialogHelper({ mode: "browser" });
   dh.onload = function () {
     this.validateCheckbox("cookiesAndStorage", true);
     this.validateCheckbox("siteSettings", false);
@@ -448,7 +448,7 @@ add_task(async function testAcceptButtonDisabled() {
  * Tests to see if the warning box is hidden when opened in the clear on shutdown context
  */
 add_task(async function testWarningBoxInClearOnShutdown() {
-  let dh = new ClearHistoryDialogHelper("clearSiteData");
+  let dh = new ClearHistoryDialogHelper({ mode: "clearSiteData" });
   dh.onload = function () {
     this.selectDuration(Sanitizer.TIMESPAN_EVERYTHING);
     is(
@@ -461,7 +461,7 @@ add_task(async function testWarningBoxInClearOnShutdown() {
   dh.open();
   await dh.promiseClosed;
 
-  dh = new ClearHistoryDialogHelper("clearOnShutdown");
+  dh = new ClearHistoryDialogHelper({ mode: "clearOnShutdown" });
   dh.onload = function () {
     is(
       BrowserTestUtils.isVisible(this.getWarningPanel()),
@@ -639,7 +639,7 @@ add_task(async function test_clear_on_shutdown() {
     set: [["privacy.sanitize.sanitizeOnShutdown", true]],
   });
 
-  let dh = new ClearHistoryDialogHelper("clearOnShutdown");
+  let dh = new ClearHistoryDialogHelper({ mode: "clearOnShutdown" });
   dh.onload = async function () {
     this.uncheckAllCheckboxes();
     this.checkPrefCheckbox("historyFormDataAndDownloads", false);
@@ -708,7 +708,7 @@ add_task(async function test_clear_on_shutdown() {
   await ensureDownloadsClearedState(downloadIDs, false);
   await ensureDownloadsClearedState(olderDownloadIDs, false);
 
-  dh = new ClearHistoryDialogHelper("clearOnShutdown");
+  dh = new ClearHistoryDialogHelper({ mode: "clearOnShutdown" });
   dh.onload = async function () {
     this.uncheckAllCheckboxes();
     this.checkPrefCheckbox("historyFormDataAndDownloads", true);
@@ -908,7 +908,7 @@ add_task(async function testClearHistoryCheckboxStatesAfterMigration() {
     ],
   });
 
-  let dh = new ClearHistoryDialogHelper("clearHistory");
+  let dh = new ClearHistoryDialogHelper({ mode: "clearHistory" });
   dh.onload = function () {
     this.validateCheckbox("cookiesAndStorage", true);
     this.validateCheckbox("historyFormDataAndDownloads", false);
@@ -929,7 +929,7 @@ add_task(async function testClearHistoryCheckboxStatesAfterMigration() {
   );
 
   // make sure the migration doesn't run again
-  dh = new ClearHistoryDialogHelper("clearHistory");
+  dh = new ClearHistoryDialogHelper({ mode: "clearHistory" });
   dh.onload = function () {
     this.validateCheckbox("siteSettings", true);
     this.validateCheckbox("cookiesAndStorage", false);

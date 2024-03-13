@@ -5,6 +5,10 @@
 /**
  * This tests the new clear history dialog's data size display functionality
  */
+ChromeUtils.defineESModuleGetters(this, {
+  sinon: "resource://testing-common/Sinon.sys.mjs",
+  Sanitizer: "resource:///modules/Sanitizer.sys.mjs",
+});
 
 add_setup(async function () {
   await blankSlate();
@@ -84,13 +88,12 @@ async function clearAndValidateDataSizes({
 }) {
   await blankSlate();
 
-  await addToDownloadList();
   await addToSiteUsage();
   let promiseSanitized = promiseSanitizationComplete();
 
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
 
-  let dh = new ClearHistoryDialogHelper();
+  let dh = new ClearHistoryDialogHelper({ checkingDataSizes: true });
   dh.onload = async function () {
     await validateDataSizes(this);
     this.checkPrefCheckbox("cache", clearCache);
@@ -105,7 +108,7 @@ async function clearAndValidateDataSizes({
   dh.open();
   await dh.promiseClosed;
 
-  let dh2 = new ClearHistoryDialogHelper();
+  let dh2 = new ClearHistoryDialogHelper({ checkingDataSizes: true });
   // Check if the newly cleared values are reflected
   dh2.onload = async function () {
     await validateDataSizes(this);
@@ -179,4 +182,129 @@ add_task(async function test_all_data_sizes() {
     clearDownloads: true,
     timespan: Sanitizer.TIMESPAN_EVERYTHING,
   });
+});
+
+// This test makes sure that the user can change their timerange option
+// even if the data sizes are not loaded yet.
+add_task(async function testUIWithDataSizesLoading() {
+  await blankSlate();
+  await addToSiteUsage();
+
+  let origGetQuotaUsageForTimeRanges =
+    SiteDataManager.getQuotaUsageForTimeRanges.bind(SiteDataManager);
+  let resolveStubFn;
+  let resolverAssigned = false;
+
+  let dh = new ClearHistoryDialogHelper();
+  // Create a sandbox for isolated stubbing within the test
+  let sandbox = sinon.createSandbox();
+  sandbox
+    .stub(SiteDataManager, "getQuotaUsageForTimeRanges")
+    .callsFake(async (...args) => {
+      info("stub called");
+
+      let dataSizesReadyToLoadPromise = new Promise(resolve => {
+        resolveStubFn = resolve;
+        info("Sending message to notify dialog that the resolver is assigned");
+        window.postMessage("resolver-assigned", "*");
+        resolverAssigned = true;
+      });
+      await dataSizesReadyToLoadPromise;
+      return origGetQuotaUsageForTimeRanges(...args);
+    });
+  dh.onload = async function () {
+    // we add this event listener in the case where init finishes before the resolver is assigned
+    if (!resolverAssigned) {
+      await new Promise(resolve => {
+        let listener = event => {
+          if (event.data === "resolver-assigned") {
+            window.removeEventListener("message", listener);
+            // we are ready to test the dialog without any data sizes loaded
+            resolve();
+          }
+        };
+        window.addEventListener("message", listener);
+      });
+    }
+
+    ok(
+      !this.win.gSanitizePromptDialog._dataSizesUpdated,
+      "Data sizes should not have loaded yet"
+    );
+    this.selectDuration(Sanitizer.TIMESPAN_2HOURS);
+
+    info("triggering loading state end");
+    resolveStubFn();
+
+    await this.win.gSanitizePromptDialog.dataSizesFinishedUpdatingPromise;
+
+    validateDataSizes(this);
+    this.cancelDialog();
+  };
+  dh.open();
+  await dh.promiseClosed;
+
+  // Restore the sandbox after the test is complete
+  sandbox.restore();
+});
+
+add_task(async function testClearingBeforeDataSizesLoad() {
+  await blankSlate();
+  await addToSiteUsage();
+
+  // add site data that we can verify if it gets cleared
+  await createDummyDataForHost("example.org");
+  await createDummyDataForHost("example.com");
+
+  ok(
+    await SiteDataTestUtils.hasIndexedDB("https://example.org"),
+    "We have indexedDB data for example.org"
+  );
+  ok(
+    await SiteDataTestUtils.hasIndexedDB("https://example.com"),
+    "We have indexedDB data for example.com"
+  );
+
+  let dh = new ClearHistoryDialogHelper();
+  let promiseSanitized = promiseSanitizationComplete();
+  // Create a sandbox for isolated stubbing within the test
+  let sandbox = sinon.createSandbox();
+  sandbox
+    .stub(SiteDataManager, "getQuotaUsageForTimeRanges")
+    .callsFake(async () => {
+      info("stub called");
+
+      info("This promise should never resolve");
+      await new Promise(resolve => {});
+    });
+  dh.onload = async function () {
+    // we don't need to initiate a event listener to wait for the resolver to be assigned for this
+    // test since we do not want the data sizes to load
+    ok(
+      !this.win.gSanitizePromptDialog._dataSizesUpdated,
+      "Data sizes should not be loaded yet"
+    );
+    this.selectDuration(Sanitizer.TIMESPAN_2HOURS);
+    this.checkPrefCheckbox("cookiesAndStorage", true);
+    this.acceptDialog();
+  };
+  dh.onunload = async () => {
+    await promiseSanitized;
+  };
+  dh.open();
+  await dh.promiseClosed;
+
+  // Data for example.org should be cleared
+  ok(
+    !(await SiteDataTestUtils.hasIndexedDB("https://example.org")),
+    "We don't have indexedDB data for example.org"
+  );
+  // Data for example.com should be cleared
+  ok(
+    !(await SiteDataTestUtils.hasIndexedDB("https://example.com")),
+    "We don't have indexedDB data for example.com"
+  );
+
+  // Restore the sandbox after the test is complete
+  sandbox.restore();
 });

@@ -501,21 +501,29 @@ function promiseSanitizationComplete() {
  * This wraps the dialog and provides some convenience methods for interacting
  * with it.
  *
- * @param browserWin (optional)
+ * @param {Window} browserWin (optional)
  *        The browser window that the dialog is expected to open in. If not
  *        supplied, the initial browser window of the test run is used.
- * @param mode (optional)
- *        One of
- *          clear on shutdown settings context ("clearOnShutdown"),
- *          clear site data settings context ("clearSiteData"),
- *          clear history context ("clearHistory"),
- *          browser context ("browser")
- *        "browser" by default
+ * @param {Object} {mode, checkingDataSizes}
+ *        mode: context to open the dialog in
+ *          One of
+ *            clear on shutdown settings context ("clearOnShutdown"),
+ *            clear site data settings context ("clearSiteData"),
+ *            clear history context ("clearHistory"),
+ *            browser context ("browser")
+ *          "browser" by default
+ *        checkingDataSizes: boolean check if we should wait for the data sizes
+ *          to load
+ *
  */
-function ClearHistoryDialogHelper(openContext = "browser") {
+function ClearHistoryDialogHelper({
+  mode = "browser",
+  checkingDataSizes = false,
+} = {}) {
   this._browserWin = window;
   this.win = null;
-  this._mode = openContext;
+  this._mode = mode;
+  this._checkingDataSizes = checkingDataSizes;
   this.promiseClosed = new Promise(resolve => {
     this._resolveClosed = resolve;
   });
@@ -673,7 +681,11 @@ ClearHistoryDialogHelper.prototype = {
       () => {
         // Run onload on next tick so that gSanitizePromptDialog.init can run first.
         executeSoon(async () => {
-          await this.win.gSanitizePromptDialog.dataSizesFinishedUpdatingPromise;
+          if (this._checkingDataSizes) {
+            // we wait for the data sizes to load to avoid async errors when validating sizes
+            await this.win.gSanitizePromptDialog
+              .dataSizesFinishedUpdatingPromise;
+          }
           this.onload();
         });
       },
