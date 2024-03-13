@@ -356,9 +356,7 @@ void SessionStoreChangeListener::AddEventListeners() {
   if (EventTarget* target = GetEventTarget()) {
     target->AddSystemEventListener(kInput, this, false);
     target->AddSystemEventListener(kScroll, this, false);
-    if (StaticPrefs::browser_sessionstore_collect_zoom_AtStartup()) {
-      target->AddSystemEventListener(kResize, this, false);
-    }
+    target->AddSystemEventListener(kResize, this, false);
     mCurrentEventTarget = target;
   }
 }
@@ -367,9 +365,7 @@ void SessionStoreChangeListener::RemoveEventListeners() {
   if (mCurrentEventTarget) {
     mCurrentEventTarget->RemoveSystemEventListener(kInput, this, false);
     mCurrentEventTarget->RemoveSystemEventListener(kScroll, this, false);
-    if (StaticPrefs::browser_sessionstore_collect_zoom_AtStartup()) {
-      mCurrentEventTarget->RemoveSystemEventListener(kResize, this, false);
-    }
+    mCurrentEventTarget->RemoveSystemEventListener(kResize, this, false);
   }
 
   mCurrentEventTarget = nullptr;
