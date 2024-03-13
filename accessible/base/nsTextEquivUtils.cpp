@@ -177,18 +177,22 @@ nsresult nsTextEquivUtils::AppendFromAccessible(Accessible* aAccessible,
 
   bool isEmptyTextEquiv = true;
 
+  // Attempt to find the value. If it's non-empty, append and return it. See the
+  // "embedded control" section of the name spec.
+  nsAutoString val;
+  nsresult rv = AppendFromValue(aAccessible, &val);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (rv == NS_OK) {
+    AppendString(aString, val);
+    return NS_OK;
+  }
+
   // If the name is from tooltip then append it to result string in the end
   // (see h. step of name computation guide).
   nsAutoString text;
   if (aAccessible->Name(text) != eNameFromTooltip) {
     isEmptyTextEquiv = !AppendString(aString, text);
   }
-
-  // Implementation of f. step.
-  nsresult rv = AppendFromValue(aAccessible, aString);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (rv != NS_OK_NO_NAME_CLAUSE_HANDLED) isEmptyTextEquiv = false;
 
   // Implementation of g) step of text equivalent computation guide. Go down
   // into subtree if accessible allows "text equivalent from subtree rule" or
@@ -230,6 +234,19 @@ nsresult nsTextEquivUtils::AppendFromValue(Accessible* aAccessible,
 
   nsAutoString text;
   if (aAccessible != sInitiatorAcc) {
+    // For listboxes in non-initiator computations, we need to get the selected
+    // item and append its text alternative.
+    if (aAccessible->IsListControl()) {
+      Accessible* selected = aAccessible->GetSelectedItem(0);
+      if (selected) {
+        nsresult rv = AppendFromAccessible(selected, &text);
+        NS_ENSURE_SUCCESS(rv, rv);
+        return AppendString(aString, text) ? NS_OK
+                                           : NS_OK_NO_NAME_CLAUSE_HANDLED;
+      }
+      return NS_ERROR_FAILURE;
+    }
+
     aAccessible->Value(text);
 
     return AppendString(aString, text) ? NS_OK : NS_OK_NO_NAME_CLAUSE_HANDLED;
