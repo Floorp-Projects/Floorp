@@ -642,6 +642,7 @@ struct ZoneStats {
   MACRO(Other, MallocHeap, scopesMallocHeap)               \
   MACRO(Other, GCHeapUsed, regExpSharedsGCHeap)            \
   MACRO(Other, MallocHeap, regExpSharedsMallocHeap)        \
+  MACRO(Other, MallocHeap, zoneObject)                     \
   MACRO(Other, MallocHeap, regexpZone)                     \
   MACRO(Other, MallocHeap, jitZone)                        \
   MACRO(Other, MallocHeap, cacheIRStubs)                   \
