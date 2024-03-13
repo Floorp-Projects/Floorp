@@ -129,7 +129,7 @@ add_task(
 
     let engine = await Services.search.getEngineByName("Multilocale AN");
     Assert.ok(
-      engine.getIconURL().endsWith("favicon-an.ico"),
+      (await engine.getIconURL()).endsWith("favicon-an.ico"),
       "Should have the correct favicon for an extension of one locale using a different locale."
     );
     Assert.equal(
@@ -158,7 +158,11 @@ add_task(async function test_load_favicon_invalid() {
   await observed;
 
   let engine = await Services.search.getEngineByName("Example");
-  Assert.equal(null, engine.getIconURL(), "Should not have set an iconURI");
+  Assert.equal(
+    null,
+    await engine.getIconURL(),
+    "Should not have set an iconURI"
+  );
 
   // User uninstalls their engine
   await extension.awaitStartup();
@@ -184,7 +188,11 @@ add_task(async function test_load_favicon_invalid_redirect() {
   await observed;
 
   let engine = await Services.search.getEngineByName("Example");
-  Assert.equal(null, engine.getIconURL(), "Should not have set an iconURI");
+  Assert.equal(
+    null,
+    await engine.getIconURL(),
+    "Should not have set an iconURI"
+  );
 
   // User uninstalls their engine
   await extension.awaitStartup();
@@ -210,9 +218,9 @@ add_task(async function test_load_favicon_redirect() {
 
   await promiseEngineChanged;
 
-  Assert.ok(engine.getIconURL(), "Should have set an iconURI");
+  Assert.ok(await engine.getIconURL(), "Should have set an iconURI");
   Assert.ok(
-    engine.getIconURL().startsWith("data:image/x-icon;base64,"),
+    (await engine.getIconURL()).startsWith("data:image/x-icon;base64,"),
     "Should have saved the expected content type for the icon"
   );
 

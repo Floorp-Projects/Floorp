@@ -56,9 +56,9 @@ add_task(async function test_icon_types() {
     engine.QueryInterface(Ci.nsISearchEngine);
     await promiseEngineChanged;
 
-    Assert.ok(engine.getIconURL(), `${test.name} engine has an icon`);
+    Assert.ok(await engine.getIconURL(), `${test.name} engine has an icon`);
     Assert.ok(
-      engine.getIconURL().startsWith(test.expected),
+      (await engine.getIconURL()).startsWith(test.expected),
       `${test.name} iconURI starts with the expected information`
     );
   }
@@ -69,13 +69,13 @@ add_task(async function test_multiple_icons_in_file() {
     url: `${gDataUrl}engineImages.xml`,
   });
 
-  Assert.ok(engine.getIconURL().includes("ico16"));
-  Assert.ok(engine.getIconURL(16).includes("ico16"));
-  Assert.ok(engine.getIconURL(32).includes("ico32"));
-  Assert.ok(engine.getIconURL(74).includes("ico74"));
+  Assert.ok((await engine.getIconURL()).includes("ico16"));
+  Assert.ok((await engine.getIconURL(16)).includes("ico16"));
+  Assert.ok((await engine.getIconURL(32)).includes("ico32"));
+  Assert.ok((await engine.getIconURL(74)).includes("ico74"));
 
   info("Invalid dimensions should return null until bug 1655070 is fixed.");
-  Assert.equal(null, engine.getIconURL(50));
+  Assert.equal(null, await engine.getIconURL(50));
 });
 
 add_task(async function test_icon_not_in_opensearch_file() {
@@ -86,6 +86,6 @@ add_task(async function test_icon_not_in_opensearch_file() {
   );
 
   // Even though the icon wasn't specified inside the XML file, it should be
-  // available both in the iconURI attribute and with getIconURLBySize.
-  Assert.ok(engine.getIconURL(16).includes("ico16"));
+  // available.
+  Assert.ok((await engine.getIconURL(16)).includes("ico16"));
 });

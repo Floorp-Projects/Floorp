@@ -495,8 +495,8 @@ export class UrlbarSearchOneOffs extends SearchOneOffs {
    * @param {Array} addEngines
    *        The engines that can be added.
    */
-  _rebuildEngineList(engines, addEngines) {
-    super._rebuildEngineList(engines, addEngines);
+  async _rebuildEngineList(engines, addEngines) {
+    await super._rebuildEngineList(engines, addEngines);
 
     for (let { source, pref, restrict } of lazy.UrlbarUtils
       .LOCAL_SEARCH_MODES) {

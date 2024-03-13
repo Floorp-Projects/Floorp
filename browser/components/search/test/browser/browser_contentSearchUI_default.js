@@ -96,7 +96,7 @@ async function runNewTabTest(isHandoff) {
     waitForLoad: false,
   });
 
-  let engineIcon = defaultEngine.getIconURL(16);
+  let engineIcon = await defaultEngine.getIconURL(16);
 
   await ensureIcon(tab, engineIcon);
   if (isHandoff) {
@@ -162,7 +162,7 @@ add_task(async function test_content_search_attributes_in_private_window() {
   });
   let tab = win.gBrowser.selectedTab;
 
-  let engineIcon = defaultEngine.getIconURL(16);
+  let engineIcon = await defaultEngine.getIconURL(16);
 
   await ensureIcon(tab, engineIcon);
   await ensurePlaceholder(

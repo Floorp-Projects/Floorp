@@ -60,19 +60,19 @@ add_task(async function test_extension_adding_engine() {
 
   let { baseURI } = ext1.extension;
   equal(
-    engine.getIconURL(),
+    await engine.getIconURL(),
     baseURI.resolve("foo.ico"),
     "16x16 icon path matches"
   );
   equal(
-    engine.getIconURL(16),
+    await engine.getIconURL(16),
     baseURI.resolve("foo.ico"),
     "16x16 icon path matches"
   );
   // TODO: Bug 1871036 - Differently sized icons are currently incorrectly
   // handled for add-ons.
   // equal(
-  //   engine.getIconURL(32),
+  //   await engine.getIconURL(32),
   //   baseURI.resolve("foo32.ico"),
   //   "32x32 icon path matches"
   // );

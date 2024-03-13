@@ -466,7 +466,7 @@ export class SearchOneOffs {
     this.settingsButton.id = origin + "-anon-search-settings";
 
     let engines = (await this.getEngineInfo()).engines;
-    this._rebuildEngineList(engines, addEngines);
+    await this._rebuildEngineList(engines, addEngines);
   }
 
   /**
@@ -477,14 +477,14 @@ export class SearchOneOffs {
    * @param {Array} addEngines
    *        The engines that can be added.
    */
-  _rebuildEngineList(engines, addEngines) {
+  async _rebuildEngineList(engines, addEngines) {
     for (let i = 0; i < engines.length; ++i) {
       let engine = engines[i];
       let button = this.document.createXULElement("button");
       button.engine = engine;
       button.id = this._buttonIDForEngine(engine);
       let iconURL =
-        engine.getIconURL() ||
+        (await engine.getIconURL()) ||
         "chrome://browser/skin/search-engine-placeholder.png";
       button.setAttribute("image", iconURL);
       button.setAttribute("class", "searchbar-engine-one-off-item");
@@ -981,7 +981,7 @@ export class SearchOneOffs {
     this.handleSearchCommand(event, engine);
   }
 
-  _on_command(event) {
+  async _on_command(event) {
     let target = event.target;
 
     if (target == this.settingsButton) {
@@ -1043,7 +1043,7 @@ export class SearchOneOffs {
         // search engine first. Doing this as opposed to rebuilding all the
         // one-off buttons avoids flicker.
         let iconURL =
-          currentEngine.getIconURL() ||
+          (await currentEngine.getIconURL()) ||
           "chrome://browser/skin/search-engine-placeholder.png";
         button.setAttribute("image", iconURL);
         button.setAttribute("tooltiptext", currentEngine.name);

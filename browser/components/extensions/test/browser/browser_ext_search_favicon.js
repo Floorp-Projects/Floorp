@@ -25,17 +25,17 @@ server.registerPathHandler("/ico.png", (request, response) => {
   response.write(atob(HTTP_ICON_DATA));
 });
 
-function promiseEngineIconLoaded(engineName) {
-  return TestUtils.topicObserved(
+async function promiseEngineIconLoaded(engineName) {
+  await TestUtils.topicObserved(
     "browser-search-engine-modified",
     (engine, verb) => {
       engine.QueryInterface(Ci.nsISearchEngine);
-      return (
-        verb == "engine-changed" &&
-        engine.name == engineName &&
-        engine.getIconURL()
-      );
+      return verb == "engine-changed" && engine.name == engineName;
     }
+  );
+  Assert.ok(
+    await Services.search.getEngineByName(engineName).getIconURL(),
+    "Should have a valid icon URL"
   );
 }
 

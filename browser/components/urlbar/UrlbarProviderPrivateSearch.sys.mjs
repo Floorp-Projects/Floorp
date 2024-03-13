@@ -110,6 +110,7 @@ class ProviderPrivateSearch extends UrlbarProvider {
       logger: this.logger,
     }).promise;
 
+    let icon = await engine.getIconURL();
     if (instance != this.queryInstance) {
       return;
     }
@@ -120,7 +121,7 @@ class ProviderPrivateSearch extends UrlbarProvider {
       ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
         engine: [engine.name, UrlbarUtils.HIGHLIGHT.TYPED],
         query: [searchString, UrlbarUtils.HIGHLIGHT.NONE],
-        icon: engine.getIconURL(),
+        icon,
         inPrivateWindow: true,
         isPrivateEngine,
       })

@@ -1685,9 +1685,9 @@ export class SearchEngine {
    * @param {number} preferredWidth
    *   Width of the requested icon. If not specified, it is assumed that
    *   16x16 is desired.
-   * @returns {string|undefined}
+   * @returns {Promise<string|undefined>}
    */
-  getIconURL(preferredWidth) {
+  async getIconURL(preferredWidth) {
     // XPCOM interfaces pass optional number parameters as 0 and can't be
     // handled in the same way.
     if (!preferredWidth) {

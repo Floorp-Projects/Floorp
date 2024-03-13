@@ -21,8 +21,8 @@ add_task(async function test_installedresourceicon() {
     url: `${gDataUrl}opensearch/chromeicon.xml`,
   });
 
-  Assert.equal(undefined, engine1.getIconURL());
-  Assert.equal(undefined, engine2.getIconURL());
+  Assert.equal(undefined, await engine1.getIconURL());
+  Assert.equal(undefined, await engine2.getIconURL());
 });
 
 add_task(async function test_installedhttpplace() {
@@ -50,7 +50,7 @@ add_task(async function test_installedhttpplace() {
 
   Assert.equal(
     undefined,
-    engine.getIconURL(),
+    await engine.getIconURL(),
     "Should not have set an iconURI"
   );
 });

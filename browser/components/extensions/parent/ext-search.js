@@ -40,7 +40,7 @@ this.search = class extends ExtensionAPI {
           let defaultEngine = await Services.search.getDefault();
           return Promise.all(
             visibleEngines.map(async engine => {
-              let favIconUrl = engine.getIconURL();
+              let favIconUrl = await engine.getIconURL();
               // Convert moz-extension:-URLs to data:-URLs to make sure that
               // extensions can see icons from other extensions, even if they
               // are not web-accessible.

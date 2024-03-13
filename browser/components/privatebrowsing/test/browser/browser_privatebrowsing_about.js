@@ -55,7 +55,7 @@ add_setup(async function () {
     Ci.nsISearchService.CHANGE_REASON_UNKNOWN
   );
   expectedEngineAlias = privateEngine.aliases[0];
-  expectedIconURL = privateEngine.getIconURL();
+  expectedIconURL = await privateEngine.getIconURL();
 
   registerCleanupFunction(async () => {
     await Services.search.setDefaultPrivate(
