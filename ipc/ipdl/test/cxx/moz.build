@@ -11,7 +11,6 @@ EXPORTS.mozilla._ipdltest += [
     "IPDLUnitTests.h",
     "IPDLUnitTestTypes.h",
     "IPDLUnitTestUtils.h",
-    "TestActorPunning.h",
     "TestAsyncReturns.h",
     "TestBadActor.h",
     "TestCancel.h",
@@ -53,7 +52,6 @@ EXPORTS.mozilla._ipdltest += [
 ]
 
 SOURCES += [
-    "TestActorPunning.cpp",
     "TestAsyncReturns.cpp",
     "TestBadActor.cpp",
     "TestCancel.cpp",
@@ -101,9 +99,6 @@ SOURCES += [
 ]
 
 IPDL_SOURCES += [
-    "PTestActorPunning.ipdl",
-    "PTestActorPunningPunned.ipdl",
-    "PTestActorPunningSub.ipdl",
     "PTestAsyncReturns.ipdl",
     "PTestBadActor.ipdl",
     "PTestBadActorSub.ipdl",
