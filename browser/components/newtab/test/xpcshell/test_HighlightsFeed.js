@@ -23,7 +23,9 @@ const {
   BOOKMARKS_RESTORE_SUCCESS_EVENT,
   BOOKMARKS_RESTORE_FAILED_EVENT,
   SECTION_ID,
-} = ChromeUtils.import("resource://activity-stream/lib/HighlightsFeed.jsm");
+} = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/HighlightsFeed.sys.mjs"
+);
 
 const FAKE_LINKS = new Array(20)
   .fill(null)
