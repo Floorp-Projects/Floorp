@@ -64,7 +64,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/StaticPrefs_browser.h"
-#include "mozilla/StaticPrefs_middlemouse.h"
 #include "mozilla/StaticPrefs_full_screen_api.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Storage.h"
@@ -2443,43 +2442,25 @@ bool nsWindowWatcher::IsWindowOpenLocationModified(
     const mozilla::dom::UserActivation::Modifiers& aModifiers,
     int32_t* aLocation) {
   // Perform the subset of BrowserUtils.whereToOpenLink in
-  // toolkit/modules/BrowserUtils.sys.mjs for modifier key handling, and
-  // URILoadingHelper.openLinkIn in browser/modules/URILoadingHelper.sys.mjs
-  // for loadInBackground pref handling.
+  // toolkit/modules/BrowserUtils.sys.mjs
 #ifdef XP_MACOSX
   bool metaKey = aModifiers.IsMeta();
 #else
   bool metaKey = aModifiers.IsControl();
 #endif
   bool shiftKey = aModifiers.IsShift();
-
-  bool middleMouse = aModifiers.IsMiddleMouse();
-  bool middleUsesTabs = StaticPrefs::browser_tabs_opentabfor_middleclick();
-  bool middleUsesNewWindow = StaticPrefs::middlemouse_openNewWindow();
-
-  if (metaKey || (middleMouse && middleUsesTabs)) {
-    bool loadInBackground = StaticPrefs::browser_tabs_loadInBackground();
+  if (metaKey) {
     if (shiftKey) {
-      loadInBackground = !loadInBackground;
+      *aLocation = nsIBrowserDOMWindow::OPEN_NEWTAB;
+      return true;
     }
-    if (loadInBackground) {
-      *aLocation = nsIBrowserDOMWindow::OPEN_NEWTAB_BACKGROUND;
-    } else {
-      *aLocation = nsIBrowserDOMWindow::OPEN_NEWTAB_FOREGROUND;
-    }
+    *aLocation = nsIBrowserDOMWindow::OPEN_NEWTAB_BACKGROUND;
     return true;
   }
-
-  if (shiftKey || (middleMouse && !middleUsesTabs && middleUsesNewWindow)) {
+  if (shiftKey) {
     *aLocation = nsIBrowserDOMWindow::OPEN_NEWWINDOW;
     return true;
   }
-
-  // If both middleUsesTabs and middleUsesNewWindow are false, it means the
-  // middle-click is used for different purpose, such as paste or scroll.
-  // Webpage still can trigger `window.open` for the user activation, and in
-  // that case use the `window.open`'s `features` parameter and other prefs to
-  // decide where to open.
 
   return false;
 }
