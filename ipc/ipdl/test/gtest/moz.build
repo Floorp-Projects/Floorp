@@ -26,6 +26,7 @@ SOURCES += [
     "TestHangs.cpp",
     "TestInduceConnectionError.cpp",
     "TestManyHandles.cpp",
+    "TestMostNested.cpp",
 ]
 
 IPDL_SOURCES += [
@@ -45,6 +46,7 @@ IPDL_SOURCES += [
     "PTestHangs.ipdl",
     "PTestInduceConnectionError.ipdl",
     "PTestManyHandles.ipdl",
+    "PTestMostNested.ipdl",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")
