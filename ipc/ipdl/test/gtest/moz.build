@@ -31,6 +31,7 @@ SOURCES += [
     "TestMostNested.cpp",
     "TestMultiMgrs.cpp",
     "TestSelfManage.cpp",
+    "TestShmem.cpp",
 ]
 
 IPDL_SOURCES += [
@@ -61,6 +62,7 @@ IPDL_SOURCES += [
     "PTestMultiMgrsRight.ipdl",
     "PTestSelfManage.ipdl",
     "PTestSelfManageRoot.ipdl",
+    "PTestShmem.ipdl",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")
