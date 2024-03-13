@@ -915,36 +915,27 @@ saveToPocket:
   description: The save to Pocket feature
   owner: sdowne@getpocket.com
   hasExposure: false
+  isEarlyStartup: true
   variables:
     emailButton:
       type: boolean
-      setPref:
-        branch: user
-        pref: extensions.pocket.refresh.emailButton.enabled
+      fallbackPref: extensions.pocket.refresh.emailButton.enabled
       description: Just for the new Pocket panels, enables the email signup button.
     hideRecentSaves:
       type: boolean
-      setPref:
-        branch: user
-        pref: extensions.pocket.refresh.hideRecentSaves.enabled
+      fallbackPref: extensions.pocket.refresh.hideRecentSaves.enabled
       description: Hides the recently saved section in the home panel.
     bffRecentSaves:
       type: boolean
-      setPref:
-        branch: user
-        pref: extensions.pocket.bffRecentSaves
+      fallbackPref: "extensions.pocket.bffRecentSaves"
       description: Use the new BFF Proxy Service instead of the legacy Pocket Service for Recent Saves
     bffApi:
       type: string
-      setPref:
-        branch: user
-        pref: extensions.pocket.bffApi
+      fallbackPref: "extensions.pocket.bffApi"
       description: BFF Proxy Service domain
     oAuthConsumerKeyBff:
       type: string
-      setPref:
-        branch: user
-        pref: extensions.pocket.oAuthConsumerKeyBff
+      fallbackPref: "extensions.pocket.oAuthConsumerKeyBff"
       description: BFF Proxy Service OAuth Consumer Key
 
 password-autocomplete:

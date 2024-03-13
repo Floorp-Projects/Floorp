@@ -565,8 +565,8 @@ export class DiscoveryStreamFeed {
 
   generateFeedUrl(isBff) {
     if (isBff) {
-      return `https://${Services.prefs.getStringPref(
-        "extensions.pocket.bffApi"
+      return `https://${lazy.NimbusFeatures.saveToPocket.getVariable(
+        "bffApi"
       )}/desktop/v1/recommendations?locale=$locale&region=$region&count=30`;
     }
     return FEED_URL;
@@ -1324,8 +1324,8 @@ export class DiscoveryStreamFeed {
       let options = {};
       if (this.isBff) {
         const headers = new Headers();
-        const oAuthConsumerKey = Services.prefs.getStringPref(
-          "extensions.pocket.oAuthConsumerKeyBff"
+        const oAuthConsumerKey = lazy.NimbusFeatures.saveToPocket.getVariable(
+          "oAuthConsumerKeyBff"
         );
         headers.append("consumer_key", oAuthConsumerKey);
         options = {

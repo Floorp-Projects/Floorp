@@ -46,6 +46,7 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   pktApi: "chrome://pocket/content/pktApi.sys.mjs",
   pktTelemetry: "chrome://pocket/content/pktTelemetry.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
@@ -128,9 +129,7 @@ var pktUI = (function () {
       showPanel(
         "about:pocket-signup?" +
           "emailButton=" +
-          Services.prefs.getBoolPref(
-            "extensions.pocket.refresh.emailButton.enabled"
-          ),
+          NimbusFeatures.saveToPocket.getVariable("emailButton"),
         `signup`
       );
     });
@@ -155,9 +154,8 @@ var pktUI = (function () {
    * Show the Pocket home panel state
    */
   function showPocketHome() {
-    const hideRecentSaves = Services.prefs.getBoolPref(
-      "extensions.pocket.refresh.hideRecentSaves.enabled"
-    );
+    const hideRecentSaves =
+      NimbusFeatures.saveToPocket.getVariable("hideRecentSaves");
     const locale = getUILocale();
     let panel = `home_no_topics`;
     if (locale.startsWith("en-")) {
@@ -234,11 +232,7 @@ var pktUI = (function () {
   async function onShowHome() {
     pktTelemetry.submitPocketButtonPing("click", "home_button");
 
-    if (
-      !Services.prefs.getBoolPref(
-        "extensions.pocket.refresh.hideRecentSaves.enabled"
-      )
-    ) {
+    if (!NimbusFeatures.saveToPocket.getVariable("hideRecentSaves")) {
       let recentSaves = await pktApi.getRecentSavesCache();
       if (recentSaves) {
         // We have cache, so we can use those.
@@ -305,11 +299,7 @@ var pktUI = (function () {
         pktUIMessaging.sendMessageToPanel(saveLinkMessageId, successResponse);
         SaveToPocket.itemSaved();
 
-        if (
-          !Services.prefs.getBoolPref(
-            "extensions.pocket.refresh.hideRecentSaves.enabled"
-          )
-        ) {
+        if (!NimbusFeatures.saveToPocket.getVariable("hideRecentSaves")) {
           // Articles saved for the first time (by anyone) won't have a resolved_id
           if (item?.resolved_id && item?.resolved_id !== "0") {
             pktApi.getArticleInfo(item.resolved_url, {
