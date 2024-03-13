@@ -16,10 +16,13 @@ namespace mozilla::webgpu {
 GPU_IMPL_CYCLE_COLLECTION(CommandBuffer, mParent)
 GPU_IMPL_JS_WRAP(CommandBuffer)
 
-CommandBuffer::CommandBuffer(Device* const aParent, RawId aId,
-                             nsTArray<WeakPtr<CanvasContext>>&& aTargetContexts,
-                             RefPtr<CommandEncoder>&& aEncoder)
-    : ChildOf(aParent), mId(aId), mTargetContexts(std::move(aTargetContexts)) {
+CommandBuffer::CommandBuffer(
+    Device* const aParent, RawId aId,
+    nsTArray<WeakPtr<CanvasContext>>&& aPresentationContexts,
+    RefPtr<CommandEncoder>&& aEncoder)
+    : ChildOf(aParent),
+      mId(aId),
+      mPresentationContexts(std::move(aPresentationContexts)) {
   mEncoder = std::move(aEncoder);
   MOZ_RELEASE_ASSERT(aId);
 }
@@ -33,9 +36,9 @@ Maybe<RawId> CommandBuffer::Commit() {
     return Nothing();
   }
   mValid = false;
-  for (const auto& targetContext : mTargetContexts) {
-    if (targetContext) {
-      targetContext->MaybeQueueSwapChainPresent();
+  for (const auto& presentationContext : mPresentationContexts) {
+    if (presentationContext) {
+      presentationContext->MaybeQueueSwapChainPresent();
     }
   }
   return Some(mId);
