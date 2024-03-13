@@ -24,6 +24,7 @@ export class TranslationsChild extends JSWindowActorChild {
   /**
    * This cache is shared across TranslationsChild instances. This means
    * that it will be shared across multiple page loads in the same origin.
+   *
    * @type {LRUCache | null}
    */
   static #translationsCache = null;

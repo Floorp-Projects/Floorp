@@ -150,6 +150,7 @@ export class TranslationsEngine {
 
   /**
    * Removes the engine, and if it's the last, call the process to destroy itself.
+   *
    * @param {string} languagePairKey
    * @param {boolean} force - On forced shutdowns, it's not necessary to notify the
    *                          parent process.
@@ -207,6 +208,7 @@ export class TranslationsEngine {
 
   /**
    * Terminates the engine and its worker after a timeout.
+   *
    * @param {boolean} force
    */
   terminate = (force = false) => {
@@ -419,6 +421,7 @@ function getLanguagePairKey(fromLanguage, toLanguage) {
 
 /**
  * Maps the innerWindowId to the port.
+ *
  * @type {Map<number, { fromLanguage: string, toLanguage: string, port: MessagePort }}
  */
 const ports = new Map();
@@ -427,6 +430,7 @@ const ports = new Map();
  * Listen to the port to the content process for incoming messages, and pass
  * them to the TranslationsEngine manager. The other end of the port is held
  * in the content process by the TranslationsDocument.
+ *
  * @param {string} fromLanguage
  * @param {string} toLanguage
  * @param {number} innerWindowId

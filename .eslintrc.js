@@ -597,7 +597,6 @@ module.exports = {
         "toolkit/components/thumbnails/**",
         "toolkit/components/timermanager/UpdateTimerManager.*",
         "toolkit/components/translation/LanguageDetector.*",
-        "toolkit/components/translations/**",
         "toolkit/components/url-classifier/**",
         "toolkit/components/utils/**",
         "toolkit/components/viewsource/**",

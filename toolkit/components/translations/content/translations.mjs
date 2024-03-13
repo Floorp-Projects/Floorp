@@ -57,6 +57,7 @@ class TranslationsState {
 
   /**
    * Only send one translation in at a time to the worker.
+   *
    * @type {Promise<string[]>}
    */
   translationRequest = Promise.resolve([]);
@@ -75,6 +76,7 @@ class TranslationsState {
   constructor(isSupported) {
     /**
      * Is the engine supported by the device?
+     *
      * @type {boolean}
      */
     this.isTranslationEngineSupported = isSupported;
@@ -607,7 +609,7 @@ window.addEventListener("AboutTranslationsChromeToContent", ({ detail }) => {
  * Debounce a function so that it is only called after some wait time with no activity.
  * This is good for grouping text entry via keyboard.
  *
- * @param {Object} settings
+ * @param {object} settings
  * @param {Function} settings.onDebounce
  * @param {Function} settings.doEveryTime
  * @returns {Function}
@@ -671,6 +673,7 @@ class Translator {
 
   /**
    * Tie together a message id to a resolved response.
+   *
    * @type {Map<number, TranslationRequest}
    */
   #requests = new Map();

@@ -41,6 +41,7 @@ export class TranslationsTelemetry {
 
   /**
    * Telemetry functions for the Translations panel.
+   *
    * @returns {Panel}
    */
   static panel() {
@@ -49,6 +50,7 @@ export class TranslationsTelemetry {
 
   /**
    * Forces the creation of a new Translations telemetry flowId and returns it.
+   *
    * @returns {string}
    */
   static createFlowId() {
@@ -60,6 +62,7 @@ export class TranslationsTelemetry {
   /**
    * Returns a Translations telemetry flowId by retrieving the cached value
    * if available, or creating a new one otherwise.
+   *
    * @returns {string}
    */
   static getOrCreateFlowId() {
