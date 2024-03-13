@@ -30,6 +30,7 @@ jsmin==3.0.0
 json-e==4.5.3
 jsonschema==4.17.3
 looseversion==1.0.1
+mako==1.1.2
 mozilla-repo-urls==0.1.1
 mozilla-version==2.0.0
 packaging==23.1
