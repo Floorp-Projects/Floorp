@@ -360,8 +360,23 @@ async function exportExtension(aAddon, aPermissions, aSourceURI) {
     updateDate = null;
   }
 
+  const normalizePermissions = perms => {
+    if (perms?.permissions) {
+      perms = { ...perms };
+      perms.permissions = perms.permissions.filter(
+        perm => !perm.startsWith("internal:")
+      );
+    }
+    return perms;
+  };
+
   const optionalPermissions = aAddon.optionalPermissions?.permissions ?? [];
   const optionalOrigins = aAddon.optionalPermissions?.origins ?? [];
+  const grantedPermissions =
+    normalizePermissions(await lazy.ExtensionPermissions.get(id)) ?? [];
+  const grantedOptionalPermissions = grantedPermissions?.permissions ?? [];
+  const grantedOptionalOrigins = grantedPermissions?.origins ?? [];
+
   return {
     webExtensionId: id,
     locationURI: aSourceURI != null ? aSourceURI.spec : "",
@@ -397,6 +412,8 @@ async function exportExtension(aAddon, aPermissions, aSourceURI) {
       version,
       optionalPermissions,
       optionalOrigins,
+      grantedOptionalPermissions,
+      grantedOptionalOrigins,
     },
   };
 }
