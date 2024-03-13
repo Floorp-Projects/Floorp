@@ -321,17 +321,6 @@ const AVAILABLE_SHIMS = [
     onlyIfBlockedByETP: true,
   },
   {
-    id: "PBMWebAPIFixes",
-    platform: "all",
-    name: "Private Browsing Web APIs",
-    bug: "1773110",
-    runFirst: "private-browsing-web-api-fixes.js",
-    matches: [
-      "*://*.imgur.io/js/vendor.*.js", // Mobile: imgur.io (bug 1742344); desktop: imgur.com (unaffected)
-    ],
-    onlyIfPrivateBrowsing: true,
-  },
-  {
     id: "Eluminate",
     platform: "all",
     name: "Eluminate",
