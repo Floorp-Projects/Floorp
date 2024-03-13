@@ -3,6 +3,10 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
+);
+
 const { TelemetryTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
@@ -73,9 +77,25 @@ const testcases = [
       await requestFinished(request);
     },
     initFunction: initTemporaryStorage,
-    expectedNumberOfEvents: {
-      initFailure: 9,
-      initSuccess: 0,
+    getExpectedNumberOfEvents() {
+      if (AppConstants.EARLY_BETA_OR_EARLIER || AppConstants.DEBUG) {
+        if (AppConstants.NIGHTLY_BUILD) {
+          return {
+            initFailure: 9,
+            initSuccess: 0,
+          };
+        }
+
+        return {
+          initFailure: 14,
+          initSuccess: 0,
+        };
+      }
+
+      return {
+        initFailure: 0,
+        initSuccess: 0,
+      };
     },
     async cleanup() {
       const request = clear();
@@ -144,7 +164,9 @@ async function testSteps() {
         ok(!expectedInitResult, msg);
       }
 
-      const expectedNumberOfEventsObject = testcase.expectedNumberOfEvents;
+      const expectedNumberOfEventsObject = testcase.getExpectedNumberOfEvents
+        ? testcase.getExpectedNumberOfEvents()
+        : testcase.expectedNumberOfEvents;
 
       const expectedNumberOfEvents = expectedInitResult
         ? expectedNumberOfEventsObject.initSuccess
