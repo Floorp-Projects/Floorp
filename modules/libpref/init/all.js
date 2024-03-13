@@ -736,6 +736,7 @@ pref("devtools.performance.recording.threads.remote", "[\"GeckoMain\",\"Composit
 // build artifacts of local builds.
 pref("devtools.performance.recording.objdirs", "[]");
 pref("devtools.performance.recording.power.external-url", "");
+pref("devtools.performance.recording.markers.external-url", "");
 // The popup will display some introductory text the first time it is displayed.
 pref("devtools.performance.popup.intro-displayed", false);
 
