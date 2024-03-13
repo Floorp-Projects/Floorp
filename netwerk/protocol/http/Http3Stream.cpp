@@ -42,7 +42,7 @@ Http3Stream::Http3Stream(nsAHttpTransaction* httpTransaction,
     mTransactionBrowserId = trans->BrowserId();
   }
 
-  SetPriority(cos.Flags());
+  mPriorityUrgency = nsHttpHandler::UrgencyFromCoSFlags(cos.Flags());
   SetIncremental(cos.Incremental());
 }
 
@@ -78,31 +78,6 @@ bool Http3Stream::GetHeadersString(const char* buf, uint32_t avail,
   *countUsed = avail - (oldLen - endHeader) + 4;
 
   return true;
-}
-
-void Http3Stream::SetPriority(uint32_t aCos) {
-  if (aCos & nsIClassOfService::UrgentStart) {
-    // coming from an user interaction => response should be the highest
-    // priority
-    mPriorityUrgency = 1;
-  } else if (aCos & nsIClassOfService::Leader) {
-    // main html document normal priority
-    mPriorityUrgency = 2;
-  } else if (aCos & nsIClassOfService::Unblocked) {
-    mPriorityUrgency = 3;
-  } else if (aCos & nsIClassOfService::Follower) {
-    mPriorityUrgency = 4;
-  } else if (aCos & nsIClassOfService::Speculative) {
-    mPriorityUrgency = 6;
-  } else if (aCos & nsIClassOfService::Background) {
-    // background tasks can be deprioritzed to the lowest priority
-    mPriorityUrgency = 6;
-  } else if (aCos & nsIClassOfService::Tail) {
-    mPriorityUrgency = 6;
-  } else {
-    // all others get a lower priority than the main html document
-    mPriorityUrgency = 4;
-  }
 }
 
 void Http3Stream::SetIncremental(bool incremental) {
