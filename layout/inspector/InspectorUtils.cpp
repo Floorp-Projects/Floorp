@@ -399,56 +399,21 @@ bool InspectorUtils::HasRulesModifiedByCSSOM(GlobalObject& aGlobal,
   return aSheet.HasModifiedRulesForDevtools();
 }
 
-static uint32_t CollectAtRules(ServoCSSRuleList& aRuleList,
-                               Sequence<OwningNonNull<css::Rule>>& aResult) {
-  uint32_t len = aRuleList.Length();
-  uint32_t rulesCount = len;
-  for (uint32_t i = 0; i < len; ++i) {
+static void CollectRules(ServoCSSRuleList& aRuleList,
+                         nsTArray<RefPtr<css::Rule>>& aResult) {
+  for (uint32_t i = 0, len = aRuleList.Length(); i < len; ++i) {
     css::Rule* rule = aRuleList.GetRule(i);
-    // This collect rules we want to display in Devtools Style Editor toolbar.
-    // When adding a new StyleCssRuleType, put it in the "default" list, and
-    // file a new bug with
-    // https://bugzilla.mozilla.org/enter_bug.cgi?product=DevTools&component=Style%20Editor&short_desc=Consider%20displaying%20new%20XXX%20rule%20type%20in%20at-rules%20sidebar
-    // so the DevTools team gets notified and can decide if it should be
-    // displayed.
-    switch (rule->Type()) {
-      case StyleCssRuleType::Media:
-      case StyleCssRuleType::Supports:
-      case StyleCssRuleType::LayerBlock:
-      case StyleCssRuleType::Container: {
-        Unused << aResult.AppendElement(OwningNonNull(*rule), fallible);
-        break;
-      }
-      case StyleCssRuleType::Style:
-      case StyleCssRuleType::Import:
-      case StyleCssRuleType::Document:
-      case StyleCssRuleType::LayerStatement:
-      case StyleCssRuleType::FontFace:
-      case StyleCssRuleType::Page:
-      case StyleCssRuleType::Property:
-      case StyleCssRuleType::Keyframes:
-      case StyleCssRuleType::Keyframe:
-      case StyleCssRuleType::Margin:
-      case StyleCssRuleType::Namespace:
-      case StyleCssRuleType::CounterStyle:
-      case StyleCssRuleType::FontFeatureValues:
-      case StyleCssRuleType::FontPaletteValues:
-        break;
-    }
-
+    aResult.AppendElement(rule);
     if (rule->IsGroupRule()) {
-      rulesCount += CollectAtRules(
-          *static_cast<css::GroupRule*>(rule)->CssRules(), aResult);
+      CollectRules(*static_cast<css::GroupRule*>(rule)->CssRules(), aResult);
     }
   }
-  return rulesCount;
 }
 
-void InspectorUtils::GetStyleSheetRuleCountAndAtRules(
+void InspectorUtils::GetAllStyleSheetCSSStyleRules(
     GlobalObject& aGlobal, StyleSheet& aSheet,
-    InspectorStyleSheetRuleCountAndAtRulesResult& aResult) {
-  aResult.mRulesCount =
-      CollectAtRules(*aSheet.GetCssRulesInternal(), aResult.mAtRules);
+    nsTArray<RefPtr<css::Rule>>& aResult) {
+  CollectRules(*aSheet.GetCssRulesInternal(), aResult);
 }
 
 /* static */
