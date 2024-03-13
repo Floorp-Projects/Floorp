@@ -205,7 +205,7 @@ with only_when(target_is_ios):
         "--enable-ios-target",
         env="IPHONEOS_DEPLOYMENT_TARGET",
         nargs=1,
-        default="16.4",
+        default="17.4",
         help="Set the minimum iOS version needed at runtime",
     )
 
