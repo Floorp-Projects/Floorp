@@ -56,4 +56,5 @@ skip-if = [
   "os == 'linux' && debug", # Bug 1804804 - disabled on win && linux for extremely high failure rate
 ]
 
-["browser_aboutwelcome_multistage_urlbar_focus.js"]
+["browser_aboutwelcome_multistage_transitions.js"]
+skip-if = ["debug"] # Bug 1875203
