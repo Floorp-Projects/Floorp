@@ -78,9 +78,9 @@ class InspectorUtils {
   static bool HasRulesModifiedByCSSOM(GlobalObject& aGlobal,
                                       StyleSheet& aSheet);
 
-  static void GetStyleSheetRuleCountAndAtRules(
+  static void GetAllStyleSheetCSSStyleRules(
       GlobalObject& aGlobal, StyleSheet& aSheet,
-      InspectorStyleSheetRuleCountAndAtRulesResult& aResult);
+      nsTArray<RefPtr<css::Rule>>& aResult);
 
   // Utilities for working with CSS properties
   //
