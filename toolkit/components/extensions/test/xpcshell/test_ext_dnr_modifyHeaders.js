@@ -29,6 +29,7 @@ server.registerPathHandler("/echoheaders", (req, res) => {
   dropDefaultHeader("accept-language");
   dropDefaultHeader("accept-encoding");
   dropDefaultHeader("connection");
+  dropDefaultHeader("priority");
 
   res.write(JSON.stringify(headers));
 });

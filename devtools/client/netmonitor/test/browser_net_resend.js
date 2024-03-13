@@ -60,14 +60,23 @@ async function testResendRequest() {
     "The resent request has the same url and query parameters and the first request"
   );
 
+  // The priority header only appears when the urgency and incremental values
+  // are not both default values (u=3 and i=false). In this case the original
+  // request has no priority header and the resent request does, hence we subtract one.
   is(
     firstResend.originalResource.requestHeaders.headers.length,
-    firstResend.newResource.requestHeaders.headers.length,
+    firstResend.newResource.requestHeaders.headers.length - 1,
     "The no of headers are the same"
   );
 
+  // Because a resent request has a different purpose and principal it will
+  // also have a different CoS flag (meaning a different priority header).
+  // So we can't compare the original and resent request's priority and skip it.
   firstResend.originalResource.requestHeaders.headers.forEach(
     ({ name, value }) => {
+      if (name === "Priority") {
+        return;
+      }
       const foundHeader = firstResend.newResource.requestHeaders.headers.find(
         header => header.name == name
       );
