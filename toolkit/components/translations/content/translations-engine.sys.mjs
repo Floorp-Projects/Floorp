@@ -422,7 +422,7 @@ function getLanguagePairKey(fromLanguage, toLanguage) {
 /**
  * Maps the innerWindowId to the port.
  *
- * @type {Map<number, { fromLanguage: string, toLanguage: string, port: MessagePort }}
+ * @type {Map<number, { fromLanguage: string, toLanguage: string, port: MessagePort }>}
  */
 const ports = new Map();
 
@@ -515,7 +515,7 @@ function listenForPortMessages(fromLanguage, toLanguage, innerWindowId, port) {
 /**
  * Discards the queue and removes the port.
  *
- * @param {innerWindowId} number
+ * @param {number} innerWindowId
  */
 function discardTranslations(innerWindowId) {
   TE_log("Discarding translations, innerWindowId:", innerWindowId);

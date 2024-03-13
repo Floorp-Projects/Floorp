@@ -51,6 +51,7 @@ async function createDoc(html, options) {
   /**
    * Test utility to check that the document matches the expected markup
    *
+   * @param {string} message
    * @param {string} html
    */
   async function htmlMatches(message, html) {

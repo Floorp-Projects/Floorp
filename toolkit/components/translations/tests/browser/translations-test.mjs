@@ -60,7 +60,7 @@ export function getSelectors() {
  * Provide longer defaults for the waitForCondition.
  *
  * @param {Function} callback
- * @param {string} messages
+ * @param {string} message
  */
 function waitForCondition(callback, message) {
   const interval = 100;

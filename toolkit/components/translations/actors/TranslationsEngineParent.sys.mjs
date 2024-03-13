@@ -75,7 +75,6 @@ export class TranslationsEngineParent extends JSWindowActorParent {
   /**
    * @param {string} fromLanguage
    * @param {string} toLanguage
-   * @param {number} innerWindowId
    * @param {MessagePort} port
    * @param {number} innerWindowId
    * @param {TranslationsParent} [translationsParent]

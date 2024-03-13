@@ -514,7 +514,7 @@ export class TranslationsParent extends JSWindowActorParent {
    * about:* pages will not be translated. Keep this logic up to date with the "matches"
    * array in the `toolkit/modules/ActorManagerParent.sys.mjs` definition.
    *
-   * @param {string} scheme - The URI spec
+   * @param {object} gBrowser
    * @returns {boolean}
    */
   static isRestrictedPage(gBrowser) {
@@ -942,7 +942,7 @@ export class TranslationsParent extends JSWindowActorParent {
    * Create a unique list of languages, sorted by the display name.
    *
    * @param {object} supportedLanguages
-   * @returns {Array<{ langTag: string, displayName: string}}
+   * @returns {Array<{ langTag: string, displayName: string}>}
    */
   static getLanguageList(supportedLanguages) {
     const displayNames = new Map();
@@ -1053,6 +1053,7 @@ export class TranslationsParent extends JSWindowActorParent {
    *     Filters should correspond to properties on the RemoteSettings records themselves.
    *     For example, A filter to retrieve only records with a `fromLang` value of "en" and a `toLang` value of "es":
    *     { filters: { fromLang: "en", toLang: "es" } }
+   *   @param {number} options.majorVersion
    *   @param {Function} [options.lookupKey=(record => record.name)]
    *     The function to use to extract a lookup key from each record.
    *     This function should take a record as input and return a string that represents the lookup key for the record.
@@ -1437,7 +1438,7 @@ export class TranslationsParent extends JSWindowActorParent {
   /**
    * Deletes language files that match a language.
    *
-   * @param {string} requestedLanguage The BCP 47 language tag.
+   * @param {string} language The BCP 47 language tag.
    */
   static async deleteLanguageFiles(language) {
     const client = TranslationsParent.#getTranslationModelsRemoteClient();
@@ -1458,7 +1459,7 @@ export class TranslationsParent extends JSWindowActorParent {
   /**
    * Download language files that match a language.
    *
-   * @param {string} requestedLanguage The BCP 47 language tag.
+   * @param {string} language The BCP 47 language tag.
    */
   static async downloadLanguageFiles(language) {
     const client = TranslationsParent.#getTranslationModelsRemoteClient();
@@ -1768,8 +1769,10 @@ export class TranslationsParent extends JSWindowActorParent {
    * @param {string} fromLanguage
    * @param {string} toLanguage
    * @param {boolean} withQualityEstimation
-   * @returns {Promise<{downloadSize: long, modelFound: boolean}> Download size is the size in bytes of the estimated download for display purposes. Model found indicates a model was found.
-   * e.g., a result of {size: 0, modelFound: false} indicates no bytes to download, because a model wasn't located.
+   * @returns {Promise<{downloadSize: long, modelFound: boolean}>} Download size is the
+   *   size in bytes of the estimated download for display purposes. Model found indicates
+   *   a model was found. e.g., a result of {size: 0, modelFound: false} indicates no
+   *   bytes to download, because a model wasn't located.
    */
   static async #getModelDownloadSize(
     fromLanguage,
