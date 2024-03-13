@@ -37,6 +37,7 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     ]
 if CONFIG["OS_ARCH"] == "Darwin":
     EXPORTS += [
+        "CFTypeRefPtr.h",
         "nsObjCExceptions.h",
     ]
     EXPORTS.mozilla += [
