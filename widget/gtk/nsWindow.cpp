@@ -8217,6 +8217,10 @@ static gboolean button_press_event_cb(GtkWidget* widget,
                                       GdkEventButton* event) {
   UpdateLastInputEventTime(event);
 
+  if (event->button == 2 && !StaticPrefs::widget_gtk_middle_click_enabled()) {
+    return FALSE;
+  }
+
   RefPtr<nsWindow> window = GetFirstNSWindowForGDKWindow(event->window);
   if (!window) {
     return FALSE;
@@ -8234,6 +8238,10 @@ static gboolean button_press_event_cb(GtkWidget* widget,
 static gboolean button_release_event_cb(GtkWidget* widget,
                                         GdkEventButton* event) {
   UpdateLastInputEventTime(event);
+
+  if (event->button == 2 && !StaticPrefs::widget_gtk_middle_click_enabled()) {
+    return FALSE;
+  }
 
   RefPtr<nsWindow> window = GetFirstNSWindowForGDKWindow(event->window);
   if (!window) {
