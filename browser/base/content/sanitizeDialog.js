@@ -110,7 +110,7 @@ var gSanitizePromptDialog = {
     if (!lazy.USE_OLD_DIALOG) {
       // Begin collecting how long it takes to load from here
       let timerId = Glean.privacySanitize.loadTime.start();
-
+      this._dataSizesUpdated = false;
       this.dataSizesFinishedUpdatingPromise = this.getAndUpdateDataSizes()
         .then(() => {
           // We're done loading, stop telemetry here
@@ -208,8 +208,6 @@ var gSanitizePromptDialog = {
     if (!lazy.USE_OLD_DIALOG) {
       this.reportTelemetry("open");
     }
-
-    await this.dataSizesFinishedUpdatingPromise;
   },
 
   updateAcceptButtonState() {
@@ -399,6 +397,8 @@ var gSanitizePromptDialog = {
       );
     }
     this.cacheSize = lazy.DownloadUtils.convertByteUnits(cacheSize);
+
+    this._dataSizesUpdated = true;
     this.updateDataSizesInUI();
   },
 
@@ -474,6 +474,10 @@ var gSanitizePromptDialog = {
    * Updates data sizes displayed based on new selected timespan
    */
   updateDataSizesInUI() {
+    if (!this._dataSizesUpdated) {
+      return;
+    }
+
     const TIMESPAN_SELECTION_MAP = {
       0: "TIMESPAN_EVERYTHING",
       1: "TIMESPAN_HOUR",
