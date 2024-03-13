@@ -161,7 +161,11 @@ Tools.inspector = {
   // that trigger the element picker.
   preventRaisingOnKey: true,
   onkey(panel, toolbox) {
-    toolbox.nodePicker.togglePicker();
+    if (
+      Services.prefs.getBoolPref("devtools.command-button-pick.enabled", false)
+    ) {
+      toolbox.nodePicker.togglePicker();
+    }
   },
 
   isToolSupported(toolbox) {
