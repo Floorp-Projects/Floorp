@@ -466,11 +466,11 @@ index 84a0968ee9..c0209bf0d0 100644
  if (rtc_include_tests) {
    rtc_source_set("test_feedback_generator_interface") {
 diff --git a/call/BUILD.gn b/call/BUILD.gn
-index 66c8b2011a..fa733a67b9 100644
+index 5c0c9f77ca..4eb446f860 100644
 --- a/call/BUILD.gn
 +++ b/call/BUILD.gn
-@@ -46,7 +46,7 @@ rtc_library("call_interfaces") {
-     "../api:rtc_error",
+@@ -44,7 +44,7 @@ rtc_library("call_interfaces") {
+     "../api:network_state_predictor_api",
      "../api:rtp_headers",
      "../api:rtp_parameters",
 -    "../api:rtp_sender_interface",
@@ -478,7 +478,7 @@ index 66c8b2011a..fa733a67b9 100644
      "../api:scoped_refptr",
      "../api:transport_api",
      "../api/adaptation:resource_adaptation_api",
-@@ -347,6 +347,16 @@ rtc_library("call") {
+@@ -345,6 +345,16 @@ rtc_library("call") {
      "//third_party/abseil-cpp/absl/strings",
      "//third_party/abseil-cpp/absl/types:optional",
    ]
@@ -495,7 +495,7 @@ index 66c8b2011a..fa733a67b9 100644
  }
  
  rtc_source_set("receive_stream_interface") {
-@@ -374,7 +384,7 @@ rtc_library("video_stream_api") {
+@@ -372,7 +382,7 @@ rtc_library("video_stream_api") {
      "../api:frame_transformer_interface",
      "../api:rtp_headers",
      "../api:rtp_parameters",
