@@ -69,6 +69,8 @@ class CommandEncoder final : public ObjectBase, public ChildOf<Device> {
   RefPtr<WebGPUChild> mBridge;
   nsTArray<WeakPtr<CanvasContext>> mPresentationContexts;
 
+  void TrackPresentationContext(CanvasContext* aTargetContext);
+
  public:
   const auto& GetDevice() const { return mParent; };
 
