@@ -134,6 +134,7 @@ export class TranslationsEngineChild extends JSWindowActorChild {
    * @param {object} options
    * @param {number?} options.startTime
    * @param {string} options.message
+   * @param {number} options.innerWindowId
    */
   TE_addProfilerMarker({ startTime, message, innerWindowId }) {
     ChromeUtils.addProfilerMarker(

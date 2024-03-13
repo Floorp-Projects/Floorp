@@ -674,7 +674,7 @@ class Translator {
   /**
    * Tie together a message id to a resolved response.
    *
-   * @type {Map<number, TranslationRequest}
+   * @type {Map<number, TranslationRequest>}
    */
   #requests = new Map();
 

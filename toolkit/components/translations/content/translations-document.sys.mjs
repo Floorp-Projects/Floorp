@@ -292,7 +292,7 @@ export class TranslationsDocument {
    * The list of nodes that need updating with the translated HTML. These are batched
    * into an update.
    *
-   * @type {Set<{ node: Node, translatedHTML: string }}
+   * @type {Set<{ node: Node, translatedHTML: string }>}
    */
   #nodesWithTranslatedHTML = new Set();
 
@@ -300,7 +300,7 @@ export class TranslationsDocument {
    * The list of nodes that need updating with the translated Attribute HTML. These are batched
    * into an update.
    *
-   * @type {Set<{ node: Node, translation: string, attribute: string }}
+   * @type {Set<{ node: Node, translation: string, attribute: string }>}
    */
   #nodesWithTranslatedAttributes = new Set();
 
@@ -477,7 +477,7 @@ export class TranslationsDocument {
    * Queue a node for translation of attributes.
    *
    * @param {Node} node
-   * @param {Array<string>}
+   * @param {Array<string>} attributeList
    */
   queueAttributeNodeForTranslation(node, attributeList) {
     /** @type {NodeVisibility} */
@@ -1295,7 +1295,7 @@ export class TranslationsDocument {
  * Get the list of attributes that need to be translated
  * in a given node.
  *
- * @returns Array<string>
+ * @returns {Array<string>}
  */
 function getTranslatableAttributes(node) {
   if (node.nodeType !== Node.ELEMENT_NODE) {
@@ -1839,7 +1839,7 @@ class QueuedTranslator {
   /**
    * Tie together a message id to a resolved response.
    *
-   * @type {Map<number, TranslationRequest}
+   * @type {Map<number, TranslationRequest>}
    */
   #requests = new Map();
 
@@ -1858,7 +1858,6 @@ class QueuedTranslator {
 
   /**
    * @param {MessagePort} port
-   * @param {Document} document
    * @param {() => void} actorRequestNewPort
    */
   constructor(port, actorRequestNewPort) {
@@ -1970,7 +1969,7 @@ class QueuedTranslator {
    * then the request is stale. A rejection means there was an error in the translation.
    * This request may be queued.
    *
-   * @param {node} Node
+   * @param {Node} node
    * @param {string} sourceText
    * @param {boolean} isHTML
    */

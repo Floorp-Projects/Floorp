@@ -1158,11 +1158,11 @@ class TestTranslationsTelemetry {
   /**
    * Asserts qualities about an event telemetry metric.
    *
-   * @param {string} name - The name of the metric.
    * @param {object} event - The Glean event object.
    * @param {object} expectations - The test expectations.
    * @param {number} expectations.expectedEventCount - The expected count of events.
    * @param {boolean} expectations.expectNewFlowId
+   * @param {boolean} [expectations.expectFirstInteraction]
    * - Expects the flowId to be different than the previous flowId if true,
    *   and expects it to be the same if false.
    * @param {Array<Function>} [expectations.allValuePredicates=[]]
@@ -1298,7 +1298,7 @@ class TestTranslationsTelemetry {
  * Provide longer defaults for the waitForCondition.
  *
  * @param {Function} callback
- * @param {string} messages
+ * @param {string} message
  */
 function waitForCondition(callback, message) {
   const interval = 100;
