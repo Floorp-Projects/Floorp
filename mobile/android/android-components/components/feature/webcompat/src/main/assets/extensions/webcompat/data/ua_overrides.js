@@ -290,25 +290,6 @@ const AVAILABLE_UA_OVERRIDES = [
   },
   {
     /*
-     * Bug 1595215 - UA overrides for Uniqlo sites
-     * Webcompat issue #38825 - https://webcompat.com/issues/38825
-     *
-     * To receive the proper mobile version instead of the desktop version or
-     * avoid redirect loop, the UA is spoofed.
-     */
-    id: "bug1595215",
-    platform: "android",
-    domain: "uniqlo.com",
-    bug: "1595215",
-    config: {
-      matches: ["*://*.uniqlo.com/*"],
-      uaTransformer: originalUA => {
-        return originalUA + " Mobile Safari";
-      },
-    },
-  },
-  {
-    /*
      * Bug 1622063 - UA override for wp1-ext.usps.gov
      * Webcompat issue #29867 - https://webcompat.com/issues/29867
      *
@@ -685,42 +666,6 @@ const AVAILABLE_UA_OVERRIDES = [
   },
   {
     /*
-     * Bug 1790698 - UA override for wolf777.com
-     * Webcompat issue #103981 - https://webcompat.com/issues/103981
-     *
-     * Add 'Linux; ' next to the Android version or the site breaks
-     */
-    id: "bug1790698",
-    platform: "android",
-    domain: "wolf777.com",
-    bug: "1790698",
-    config: {
-      matches: ["*://wolf777.com/*"],
-      uaTransformer: originalUA => {
-        return originalUA.replace("Android", "Linux; Android");
-      },
-    },
-  },
-  {
-    /*
-     * Bug 1800936 - UA override for cov19ent.kdca.go.kr
-     * Webcompat issue #110655 - https://webcompat.com/issues/110655
-     *
-     * Add 'Chrome;' to the UA for the site to load styles
-     */
-    id: "bug1800936",
-    platform: "all",
-    domain: "cov19ent.kdca.go.kr",
-    bug: "1800936",
-    config: {
-      matches: ["*://cov19ent.kdca.go.kr/*"],
-      uaTransformer: originalUA => {
-        return originalUA + " Chrome";
-      },
-    },
-  },
-  {
-    /*
      * Bug 1819702 - UA override for feelgoodcontacts.com
      * Webcompat issue #118030 - https://webcompat.com/issues/118030
      *
@@ -916,22 +861,6 @@ const AVAILABLE_UA_OVERRIDES = [
   },
   {
     /*
-     * Bug 1827678 - UA override for f2bbs.com
-     * Webcompat issue #84932 - https://webcompat.com/issues/84932
-     */
-    id: "bug1827678-webc84932",
-    platform: "android",
-    domain: "f2bbs.com",
-    bug: "1827678",
-    config: {
-      matches: ["*://f2bbs.com/*"],
-      uaTransformer: originalUA => {
-        return UAHelpers.getDeviceAppropriateChromeUA();
-      },
-    },
-  },
-  {
-    /*
      * Bug 1827678 - UA override for kt.com
      * Webcompat issue #119012 - https://webcompat.com/issues/119012
      */
@@ -957,22 +886,6 @@ const AVAILABLE_UA_OVERRIDES = [
     bug: "1827678",
     config: {
       matches: ["*://*.oirsa.org/*"],
-      uaTransformer: originalUA => {
-        return UAHelpers.getDeviceAppropriateChromeUA();
-      },
-    },
-  },
-  {
-    /*
-     * Bug 1827678 - UA override for sistema.ibglbrasil.com.br
-     * Webcompat issue #119785 - https://webcompat.com/issues/119785
-     */
-    id: "bug1827678-webc119785",
-    platform: "all",
-    domain: "sistema.ibglbrasil.com.br",
-    bug: "1827678",
-    config: {
-      matches: ["*://sistema.ibglbrasil.com.br/*"],
       uaTransformer: originalUA => {
         return UAHelpers.getDeviceAppropriateChromeUA();
       },
@@ -1046,23 +959,6 @@ const AVAILABLE_UA_OVERRIDES = [
     bug: "1830821",
     config: {
       matches: ["*://enjoy.point.auone.jp/*"],
-      uaTransformer: originalUA => {
-        return UAHelpers.getDeviceAppropriateChromeUA();
-      },
-    },
-  },
-  {
-    /*
-     * Bug 1751604 - UA override for /www.otsuka.co.jp/fib/
-     *
-     * The site's content is not loaded on mobile unless a Chrome UA is used.
-     */
-    id: "bug1829126",
-    platform: "android",
-    domain: "www.otsuka.co.jp",
-    bug: "1829126",
-    config: {
-      matches: ["*://www.otsuka.co.jp/fib/*"],
       uaTransformer: originalUA => {
         return UAHelpers.getDeviceAppropriateChromeUA();
       },
@@ -1298,6 +1194,8 @@ const AVAILABLE_UA_OVERRIDES = [
         "*://thematiques.metro.fr/*",
         "*://volantino.metro.it/*",
         "*://view.publitas.com/*",
+        "*://magazine.kruidvat.be/*",
+        "*://folder.kruidvat.nl/*",
       ],
       uaTransformer: originalUA => {
         return UAHelpers.getDeviceAppropriateChromeUA();
@@ -1372,6 +1270,24 @@ const AVAILABLE_UA_OVERRIDES = [
     bug: "1865007",
     config: {
       matches: ["*://*.circle.ms/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1884779 - UA override for
+     * Webcompat issue #134287 - https://webcompat.com/issues/134287
+     *
+     * The site returns desktop layout on Firefox for Android
+     */
+    id: "bug1884779",
+    platform: "android",
+    domain: "memurlar.net",
+    bug: "1884779",
+    config: {
+      matches: ["*://*.memurlar.net/*"],
       uaTransformer: originalUA => {
         return UAHelpers.getDeviceAppropriateChromeUA();
       },
