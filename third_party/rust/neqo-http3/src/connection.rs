@@ -835,9 +835,6 @@ impl Http3Connection {
             final_headers.push(Header::new(":protocol", conn_type.string()));
         }
 
-        if let Some(priority_header) = request.priority.header() {
-            final_headers.push(priority_header);
-        }
         final_headers.extend_from_slice(request.headers);
         Ok(final_headers)
     }

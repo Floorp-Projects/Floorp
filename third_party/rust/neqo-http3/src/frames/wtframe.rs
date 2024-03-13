@@ -4,8 +4,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::convert::TryFrom;
-
 use neqo_common::{Decoder, Encoder};
 
 use crate::{frames::reader::FrameDecoder, Error, Res};

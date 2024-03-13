@@ -4,9 +4,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::{
-    any::Any, cell::RefCell, cmp::min, collections::VecDeque, convert::TryFrom, fmt::Debug, rc::Rc,
-};
+use std::{cell::RefCell, cmp::min, collections::VecDeque, fmt::Debug, rc::Rc};
 
 use neqo_common::{qdebug, qinfo, qtrace, Header};
 use neqo_qpack::decoder::QPackDecoder;
@@ -493,9 +491,5 @@ impl HttpRecvStream for RecvMessage {
 
     fn extended_connect_wait_for_response(&self) -> bool {
         matches!(self.state, RecvMessageState::ExtendedConnect)
-    }
-
-    fn any(&self) -> &dyn Any {
-        self
     }
 }

@@ -5,7 +5,6 @@
 // except according to those terms.
 
 use std::{
-    convert::{TryFrom, TryInto},
     ops::{Deref, DerefMut},
     os::raw::c_uint,
     ptr::null_mut,

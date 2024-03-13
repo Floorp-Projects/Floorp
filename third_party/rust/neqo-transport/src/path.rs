@@ -4,12 +4,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![deny(clippy::pedantic)]
 #![allow(clippy::module_name_repetitions)]
 
 use std::{
     cell::RefCell,
-    convert::TryFrom,
     fmt::{self, Display},
     mem,
     net::{IpAddr, SocketAddr},
@@ -72,7 +70,7 @@ pub struct Paths {
     /// Connection IDs that need to be retired.
     to_retire: Vec<u64>,
 
-    /// QLog handler.
+    /// `QLog` handler.
     qlog: NeqoQlog,
 }
 
@@ -156,7 +154,7 @@ impl Paths {
 
     /// Get a reference to the primary path.  Use this prior to handshake completion.
     pub fn primary_fallible(&self) -> Option<PathRef> {
-        self.primary.as_ref().map(Rc::clone)
+        self.primary.clone()
     }
 
     /// Returns true if the path is not permanent.
@@ -341,7 +339,7 @@ impl Paths {
                     None
                 }
             })
-            .or_else(|| self.primary.as_ref().map(Rc::clone))
+            .or_else(|| self.primary.clone())
     }
 
     /// A `PATH_RESPONSE` was received.
@@ -527,7 +525,7 @@ pub struct Path {
     /// For a path that is not validated, this is `None`.  For a validated
     /// path, the time that the path was last valid.
     validated: Option<Instant>,
-    /// A path challenge was received and PATH_RESPONSE has not been sent.
+    /// A path challenge was received and `PATH_RESPONSE` has not been sent.
     challenge: Option<[u8; 8]>,
 
     /// The round trip time estimate for this path.

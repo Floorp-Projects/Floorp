@@ -4,13 +4,8 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![cfg_attr(feature = "deny-warnings", deny(warnings))]
-#![warn(clippy::pedantic)]
-// Bindgen auto generated code
-// won't adhere to the clippy rules below
-#![allow(clippy::module_name_repetitions)]
-#![allow(clippy::unseparated_literal_suffix)]
-#![allow(clippy::used_underscore_binding)]
+#![allow(clippy::module_name_repetitions)] // This lint doesn't work here.
+#![allow(clippy::unseparated_literal_suffix, clippy::used_underscore_binding)] // For bindgen code.
 
 mod aead;
 #[cfg(feature = "fuzzing")]
@@ -36,13 +31,7 @@ pub mod selfencrypt;
 mod ssl;
 mod time;
 
-use std::{
-    convert::TryFrom,
-    ffi::CString,
-    path::{Path, PathBuf},
-    ptr::null,
-    sync::OnceLock,
-};
+use std::{ffi::CString, path::PathBuf, ptr::null, sync::OnceLock};
 
 #[cfg(not(feature = "fuzzing"))]
 pub use self::aead::RealAead as Aead;
@@ -87,7 +76,7 @@ fn secstatus_to_res(code: nss::SECStatus) -> Res<()> {
 enum NssLoaded {
     External,
     NoDb,
-    Db(Box<Path>),
+    Db,
 }
 
 impl Drop for NssLoaded {
@@ -189,7 +178,7 @@ pub fn init_db<P: Into<PathBuf>>(dir: P) {
         #[cfg(debug_assertions)]
         enable_ssl_trace();
 
-        NssLoaded::Db(path.into_boxed_path())
+        NssLoaded::Db
     });
 }
 

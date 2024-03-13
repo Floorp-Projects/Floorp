@@ -5,7 +5,6 @@
 // except according to those terms.
 
 use std::{
-    convert::TryFrom,
     mem,
     time::{Duration, Instant},
 };

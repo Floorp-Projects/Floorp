@@ -4,10 +4,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::{
-    collections::{HashMap, HashSet, VecDeque},
-    convert::TryFrom,
-};
+use std::collections::{HashMap, HashSet, VecDeque};
 
 use neqo_common::{qdebug, qerror, qlog::NeqoQlog, qtrace, Header};
 use neqo_transport::{Connection, Error as TransportError, StreamId};

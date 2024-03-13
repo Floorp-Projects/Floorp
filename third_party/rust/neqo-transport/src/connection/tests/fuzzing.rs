@@ -4,8 +4,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![cfg_attr(feature = "deny-warnings", deny(warnings))]
-#![warn(clippy::pedantic)]
 #![cfg(feature = "fuzzing")]
 
 use neqo_crypto::FIXED_TAG_FUZZING;

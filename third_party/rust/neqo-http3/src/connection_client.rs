@@ -6,7 +6,6 @@
 
 use std::{
     cell::RefCell,
-    convert::TryFrom,
     fmt::{Debug, Display},
     mem,
     net::SocketAddr,
@@ -894,13 +893,6 @@ impl Http3Client {
         self.process_http3(now);
     }
 
-    /// This should not be used because it gives access to functionalities that may disrupt the
-    /// proper functioning of the HTTP/3 session.
-    /// Only used by `neqo-interop`.
-    pub fn conn(&mut self) -> &mut Connection {
-        &mut self.conn
-    }
-
     /// Process HTTP3 layer.
     /// When `process_output`, `process_input`, or `process` is called we must call this function
     /// as well. The functions calls `Http3Client::check_connection_events` to handle events from
@@ -943,12 +935,12 @@ impl Http3Client {
     /// returned. After that, the application should call the function again if a new UDP packet is
     /// received and processed or the timer value expires.
     ///
-    /// The HTTP/3 neqo implementation drives the HTTP/3 and QUC layers, therefore this function
+    /// The HTTP/3 neqo implementation drives the HTTP/3 and QUIC layers, therefore this function
     /// will call both layers:
     ///  - First it calls HTTP/3 layer processing (`process_http3`) to make sure the layer writes
     ///    data to QUIC layer or cancels streams if needed.
     ///  - Then QUIC layer processing is called - [`Connection::process_output`][3]. This produces a
-    ///    packet or a timer value. It may also produce ned [`ConnectionEvent`][2]s, e.g. connection
+    ///    packet or a timer value. It may also produce new [`ConnectionEvent`][2]s, e.g. connection
     ///    state-change event.
     ///  - Therefore the HTTP/3 layer processing (`process_http3`) is called again.
     ///
@@ -1296,7 +1288,7 @@ impl EventProvider for Http3Client {
 
 #[cfg(test)]
 mod tests {
-    use std::{convert::TryFrom, mem, time::Duration};
+    use std::{mem, time::Duration};
 
     use neqo_common::{event::Provider, qtrace, Datagram, Decoder, Encoder};
     use neqo_crypto::{AllowZeroRtt, AntiReplay, ResumptionToken};
@@ -1997,7 +1989,7 @@ mod tests {
     // The response header from PUSH_DATA (0x01, 0x06, 0x00, 0x00, 0xd9, 0x54, 0x01, 0x34) are
     // decoded into:
     fn check_push_response_header(header: &[Header]) {
-        let expected_push_response_header = vec![
+        let expected_push_response_header = [
             Header::new(":status", "200"),
             Header::new("content-length", "4"),
         ];
@@ -3953,7 +3945,7 @@ mod tests {
                 );
             }
             x => {
-                panic!("event {:?}", x);
+                panic!("event {x:?}");
             }
         }
 
@@ -3999,7 +3991,7 @@ mod tests {
                 assert!(fin);
             }
             x => {
-                panic!("event {:?}", x);
+                panic!("event {x:?}");
             }
         }
         // Stream should now be closed and gone
@@ -4072,7 +4064,7 @@ mod tests {
                     assert_eq!(stream_id, request_stream_id);
                 }
                 x => {
-                    panic!("event {:?}", x);
+                    panic!("event {x:?}");
                 }
             }
         }
@@ -4136,7 +4128,7 @@ mod tests {
                 assert!(!interim);
                 recv_header = true;
             } else {
-                panic!("event {:?}", e);
+                panic!("event {e:?}");
             }
         }
         assert!(recv_header);

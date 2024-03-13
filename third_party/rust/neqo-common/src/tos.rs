@@ -46,6 +46,12 @@ impl From<u8> for IpTosEcn {
     }
 }
 
+impl From<IpTos> for IpTosEcn {
+    fn from(value: IpTos) -> Self {
+        IpTosEcn::from(value.0 & 0x3)
+    }
+}
+
 /// Diffserv Codepoints, mapped to the upper six bits of the TOS field.
 /// <https://www.iana.org/assignments/dscp-registry/dscp-registry.xhtml>
 #[derive(Copy, Clone, PartialEq, Eq, Enum, Default, Debug)]
@@ -159,6 +165,12 @@ impl From<u8> for IpTosDscp {
     }
 }
 
+impl From<IpTos> for IpTosDscp {
+    fn from(value: IpTos) -> Self {
+        IpTosDscp::from(value.0 & 0xfc)
+    }
+}
+
 /// The type-of-service field in an IP packet.
 #[allow(clippy::module_name_repetitions)]
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -169,19 +181,34 @@ impl From<IpTosEcn> for IpTos {
         Self(u8::from(v))
     }
 }
+
 impl From<IpTosDscp> for IpTos {
     fn from(v: IpTosDscp) -> Self {
         Self(u8::from(v))
     }
 }
+
 impl From<(IpTosDscp, IpTosEcn)> for IpTos {
     fn from(v: (IpTosDscp, IpTosEcn)) -> Self {
         Self(u8::from(v.0) | u8::from(v.1))
     }
 }
+
+impl From<(IpTosEcn, IpTosDscp)> for IpTos {
+    fn from(v: (IpTosEcn, IpTosDscp)) -> Self {
+        Self(u8::from(v.0) | u8::from(v.1))
+    }
+}
+
 impl From<IpTos> for u8 {
     fn from(v: IpTos) -> Self {
         v.0
+    }
+}
+
+impl From<u8> for IpTos {
+    fn from(v: u8) -> Self {
+        Self(v)
     }
 }
 
@@ -202,7 +229,7 @@ impl Default for IpTos {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::{IpTos, IpTosDscp, IpTosEcn};
 
     #[test]
     fn iptosecn_into_u8() {
@@ -286,5 +313,13 @@ mod tests {
         let dscp = IpTosDscp::default();
         let iptos_dscp: IpTos = dscp.into();
         assert_eq!(u8::from(iptos_dscp), dscp as u8);
+    }
+
+    #[test]
+    fn u8_to_iptos() {
+        let tos = 0x8b;
+        let iptos: IpTos = (IpTosEcn::Ce, IpTosDscp::Af41).into();
+        assert_eq!(tos, u8::from(iptos));
+        assert_eq!(IpTos::from(tos), iptos);
     }
 }

@@ -6,7 +6,6 @@
 
 use std::{
     cell::RefCell,
-    convert::TryFrom,
     os::raw::{c_uint, c_void},
     pin::Pin,
     rc::Rc,

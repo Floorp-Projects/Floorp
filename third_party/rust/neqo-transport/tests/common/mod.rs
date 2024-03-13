@@ -4,11 +4,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![cfg_attr(feature = "deny-warnings", deny(warnings))]
-#![warn(clippy::pedantic)]
 #![allow(unused)]
 
-use std::{cell::RefCell, convert::TryFrom, mem, ops::Range, rc::Rc};
+use std::{cell::RefCell, mem, ops::Range, rc::Rc};
 
 use neqo_common::{event::Provider, hex_with_len, qtrace, Datagram, Decoder, Role};
 use neqo_crypto::{
@@ -21,7 +19,7 @@ use neqo_transport::{
     server::{ActiveConnectionRef, Server, ValidateAddress},
     Connection, ConnectionEvent, ConnectionParameters, State,
 };
-use test_fixture::{self, default_client, now, CountingConnectionIdGenerator};
+use test_fixture::{default_client, now, CountingConnectionIdGenerator};
 
 /// Create a server.  This is different than the one in the fixture, which is a single connection.
 pub fn new_server(params: ConnectionParameters) -> Server {

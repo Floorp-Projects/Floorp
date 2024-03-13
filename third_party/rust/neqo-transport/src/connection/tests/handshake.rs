@@ -6,7 +6,6 @@
 
 use std::{
     cell::RefCell,
-    convert::TryFrom,
     mem,
     net::{IpAddr, Ipv6Addr, SocketAddr},
     rc::Rc,
@@ -18,8 +17,8 @@ use neqo_crypto::{
     constants::TLS_CHACHA20_POLY1305_SHA256, generate_ech_keys, AuthenticationStatus,
 };
 use test_fixture::{
-    self, assertions, assertions::assert_coalesced_0rtt, datagram, fixture_init, now,
-    split_datagram, DEFAULT_ADDR,
+    assertions, assertions::assert_coalesced_0rtt, datagram, fixture_init, now, split_datagram,
+    DEFAULT_ADDR,
 };
 
 use super::{
@@ -347,7 +346,7 @@ fn reorder_05rtt_with_0rtt() {
     let mut server = default_server();
     let validation = AddressValidation::new(now(), ValidateAddress::NoToken).unwrap();
     let validation = Rc::new(RefCell::new(validation));
-    server.set_validation(Rc::clone(&validation));
+    server.set_validation(&validation);
     let mut now = connect_with_rtt(&mut client, &mut server, now(), RTT);
 
     // Include RTT in sending the ticket or the ticket age reported by the

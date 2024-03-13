@@ -6,8 +6,6 @@
 
 #![allow(clippy::unused_unit)] // see https://github.com/Lymia/enumset/issues/44
 
-use std::convert::TryFrom;
-
 use enumset::{enum_set, EnumSet, EnumSetType};
 use neqo_common::Header;
 

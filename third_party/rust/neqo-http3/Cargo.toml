@@ -10,21 +10,21 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2018"
+edition = "2021"
 rust-version = "1.74.0"
 name = "neqo-http3"
-version = "0.7.1"
+version = "0.7.2"
 authors = ["The Neqo Authors <necko@mozilla.com>"]
 homepage = "https://github.com/mozilla/neqo/"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/mozilla/neqo/"
 
-[dependencies]
-enumset = "1.1"
-qlog = "0.12"
-sfv = "0.9"
-smallvec = "1.11"
-url = "2.5"
+[lib]
+bench = false
+
+[dependencies.enumset]
+version = "1.1"
+default-features = false
 
 [dependencies.log]
 version = "0.4"
@@ -42,12 +42,31 @@ path = "./../neqo-qpack"
 [dependencies.neqo-transport]
 path = "./../neqo-transport"
 
+[dependencies.qlog]
+version = "0.12"
+default-features = false
+
+[dependencies.sfv]
+version = "0.9"
+default-features = false
+
+[dependencies.smallvec]
+version = "1.11"
+default-features = false
+
+[dependencies.url]
+version = "2.5"
+default-features = false
+
 [dev-dependencies.test-fixture]
 path = "../test-fixture"
 
 [features]
-deny-warnings = []
 fuzzing = [
     "neqo-transport/fuzzing",
     "neqo-crypto/fuzzing",
 ]
+
+[lints.clippy.pedantic]
+level = "warn"
+priority = -1

@@ -43,7 +43,7 @@ pub enum InitialResult {
     Retry(Vec<u8>),
 }
 
-/// MIN_INITIAL_PACKET_SIZE is the smallest packet that can be used to establish
+/// `MIN_INITIAL_PACKET_SIZE` is the smallest packet that can be used to establish
 /// a new connection across all QUIC versions this server supports.
 const MIN_INITIAL_PACKET_SIZE: usize = 1200;
 /// The size of timer buckets.  This is higher than the actual timer granularity
@@ -168,7 +168,7 @@ pub struct Server {
     /// the same key are routed to the connection that was first accepted.
     /// This is cleared out when the connection is closed or established.
     active_attempts: HashMap<AttemptKey, StateRef>,
-    /// All connections, keyed by ConnectionId.
+    /// All connections, keyed by `ConnectionId`.
     connections: ConnectionTableRef,
     /// The connections that have new events.
     active: HashSet<ActiveConnectionRef>,
@@ -195,6 +195,8 @@ impl Server {
     ///   OK.
     /// * `cid_generator` is responsible for generating connection IDs and parsing them; connection
     ///   IDs produced by the manager cannot be zero-length.
+    /// # Errors
+    /// When address validation state cannot be created.
     pub fn new(
         now: Instant,
         certs: &[impl AsRef<str>],
@@ -240,6 +242,8 @@ impl Server {
         self.ciphers = Vec::from(ciphers.as_ref());
     }
 
+    /// # Errors
+    /// When the configuration is invalid.
     pub fn enable_ech(
         &mut self,
         config: u8,
@@ -251,6 +255,7 @@ impl Server {
         Ok(())
     }
 
+    #[must_use]
     pub fn ech_config(&self) -> &[u8] {
         self.ech_config.as_ref().map_or(&[], |cfg| &cfg.encoded)
     }
@@ -262,7 +267,7 @@ impl Server {
 
     fn process_connection(
         &mut self,
-        c: StateRef,
+        c: &StateRef,
         dgram: Option<&Datagram>,
         now: Instant,
     ) -> Option<Datagram> {
@@ -271,24 +276,24 @@ impl Server {
         match out {
             Output::Datagram(_) => {
                 qtrace!([self], "Sending packet, added to waiting connections");
-                self.waiting.push_back(Rc::clone(&c));
+                self.waiting.push_back(Rc::clone(c));
             }
             Output::Callback(delay) => {
                 let next = now + delay;
                 if next != c.borrow().last_timer {
                     qtrace!([self], "Change timer to {:?}", next);
-                    self.remove_timer(&c);
+                    self.remove_timer(c);
                     c.borrow_mut().last_timer = next;
-                    self.timers.add(next, Rc::clone(&c));
+                    self.timers.add(next, Rc::clone(c));
                 }
             }
             Output::None => {
-                self.remove_timer(&c);
+                self.remove_timer(c);
             }
         }
         if c.borrow().has_events() {
             qtrace!([self], "Connection active: {:?}", c);
-            self.active.insert(ActiveConnectionRef { c: Rc::clone(&c) });
+            self.active.insert(ActiveConnectionRef { c: Rc::clone(c) });
         }
 
         if *c.borrow().state() > State::Handshaking {
@@ -302,13 +307,13 @@ impl Server {
             c.borrow_mut().set_qlog(NeqoQlog::disabled());
             self.connections
                 .borrow_mut()
-                .retain(|_, v| !Rc::ptr_eq(v, &c));
+                .retain(|_, v| !Rc::ptr_eq(v, c));
         }
         out.dgram()
     }
 
     fn connection(&self, cid: ConnectionIdRef) -> Option<StateRef> {
-        self.connections.borrow().get(&cid[..]).map(Rc::clone)
+        self.connections.borrow().get(&cid[..]).cloned()
     }
 
     fn handle_initial(
@@ -387,7 +392,7 @@ impl Server {
                 attempt_key
             );
             let c = Rc::clone(c);
-            self.process_connection(c, Some(dgram), now)
+            self.process_connection(&c, Some(dgram), now)
         } else {
             self.accept_connection(attempt_key, initial, dgram, orig_dcid, now)
         }
@@ -395,9 +400,9 @@ impl Server {
 
     fn create_qlog_trace(&self, odcid: ConnectionIdRef<'_>) -> NeqoQlog {
         if let Some(qlog_dir) = &self.qlog_dir {
-            let mut qlog_path = qlog_dir.to_path_buf();
+            let mut qlog_path = qlog_dir.clone();
 
-            qlog_path.push(format!("{}.qlog", odcid));
+            qlog_path.push(format!("{odcid}.qlog"));
 
             // The original DCID is chosen by the client. Using create_new()
             // prevents attackers from overwriting existing logs.
@@ -456,9 +461,9 @@ impl Server {
         }
         if let Some(odcid) = orig_dcid {
             // There was a retry, so set the connection IDs for.
-            c.set_retry_cids(odcid, initial.src_cid, initial.dst_cid);
+            c.set_retry_cids(&odcid, initial.src_cid, &initial.dst_cid);
         }
-        c.set_validation(Rc::clone(&self.address_validation));
+        c.set_validation(&self.address_validation);
         c.set_qlog(self.create_qlog_trace(attempt_key.odcid.as_cid_ref()));
         if let Some(cfg) = &self.ech_config {
             if c.server_enable_ech(cfg.config, &cfg.public_name, &cfg.sk, &cfg.pk)
@@ -505,10 +510,10 @@ impl Server {
                     last_timer: now,
                     active_attempt: Some(attempt_key.clone()),
                 }));
-                cid_mgr.borrow_mut().set_connection(Rc::clone(&c));
+                cid_mgr.borrow_mut().set_connection(&c);
                 let previous_attempt = self.active_attempts.insert(attempt_key, Rc::clone(&c));
                 debug_assert!(previous_attempt.is_none());
-                self.process_connection(c, Some(dgram), now)
+                self.process_connection(&c, Some(dgram), now)
             }
             Err(e) => {
                 qwarn!([self], "Unable to create connection");
@@ -517,7 +522,7 @@ impl Server {
                         &mut self.create_qlog_trace(attempt_key.odcid.as_cid_ref()),
                         self.conn_params.get_versions().all(),
                         initial.version.wire_version(),
-                    )
+                    );
                 }
                 None
             }
@@ -544,7 +549,7 @@ impl Server {
                 attempt_key
             );
             let c = Rc::clone(c);
-            self.process_connection(c, Some(dgram), now)
+            self.process_connection(&c, Some(dgram), now)
         } else {
             qdebug!([self], "Dropping 0-RTT for unknown connection");
             None
@@ -564,7 +569,7 @@ impl Server {
 
         // Finding an existing connection. Should be the most common case.
         if let Some(c) = self.connection(packet.dcid()) {
-            return self.process_connection(c, Some(dgram), now);
+            return self.process_connection(&c, Some(dgram), now);
         }
 
         if packet.packet_type() == PacketType::Short {
@@ -637,13 +642,13 @@ impl Server {
     fn process_next_output(&mut self, now: Instant) -> Option<Datagram> {
         qtrace!([self], "No packet to send, look at waiting connections");
         while let Some(c) = self.waiting.pop_front() {
-            if let Some(d) = self.process_connection(c, None, now) {
+            if let Some(d) = self.process_connection(&c, None, now) {
                 return Some(d);
             }
         }
         qtrace!([self], "No packet to send still, run timers");
         while let Some(c) = self.timers.take_next(now) {
-            if let Some(d) = self.process_connection(c, None, now) {
+            if let Some(d) = self.process_connection(&c, None, now) {
                 return Some(d);
             }
         }
@@ -684,7 +689,7 @@ impl Server {
         mem::take(&mut self.active).into_iter().collect()
     }
 
-    pub fn add_to_waiting(&mut self, c: ActiveConnectionRef) {
+    pub fn add_to_waiting(&mut self, c: &ActiveConnectionRef) {
         self.waiting.push_back(c.connection());
     }
 }
@@ -695,6 +700,7 @@ pub struct ActiveConnectionRef {
 }
 
 impl ActiveConnectionRef {
+    #[must_use]
     pub fn borrow(&self) -> impl Deref<Target = Connection> + '_ {
         std::cell::Ref::map(self.c.borrow(), |c| &c.c)
     }
@@ -703,6 +709,7 @@ impl ActiveConnectionRef {
         std::cell::RefMut::map(self.c.borrow_mut(), |c| &mut c.c)
     }
 
+    #[must_use]
     pub fn connection(&self) -> StateRef {
         Rc::clone(&self.c)
     }
@@ -731,13 +738,13 @@ struct ServerConnectionIdGenerator {
 }
 
 impl ServerConnectionIdGenerator {
-    pub fn set_connection(&mut self, c: StateRef) {
+    pub fn set_connection(&mut self, c: &StateRef) {
         let saved = std::mem::replace(&mut self.saved_cids, Vec::with_capacity(0));
         for cid in saved {
             qtrace!("ServerConnectionIdGenerator inserting saved cid {}", cid);
-            self.insert_cid(cid, Rc::clone(&c));
+            self.insert_cid(cid, Rc::clone(c));
         }
-        self.c = Rc::downgrade(&c);
+        self.c = Rc::downgrade(c);
     }
 
     fn insert_cid(&mut self, cid: ConnectionId, rc: StateRef) {

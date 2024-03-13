@@ -153,6 +153,7 @@ run-sequentially = "http3server"
 skip-if = [
   "os == 'android'",
   "os == 'win' && msix",
+  "true", # Will be reenabled in bug 1865394
 ] # https://bugzilla.mozilla.org/show_bug.cgi?id=1807925
 run-sequentially = "http3server"
 

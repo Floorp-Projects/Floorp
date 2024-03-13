@@ -7,7 +7,7 @@
 use std::{mem, time::Duration};
 
 use neqo_common::{event::Provider, Decoder, Encoder};
-use test_fixture::{self, assertions, datagram, now};
+use test_fixture::{assertions, datagram, now};
 
 use super::{
     super::{ConnectionError, ConnectionEvent, Output, State, ZeroRttState},

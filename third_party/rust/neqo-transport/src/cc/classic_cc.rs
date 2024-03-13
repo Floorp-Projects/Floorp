@@ -5,7 +5,6 @@
 // except according to those terms.
 
 // Congestion control
-#![deny(clippy::pedantic)]
 
 use std::{
     cmp::{max, min},
@@ -536,10 +535,7 @@ impl<T: WindowAdjustment> ClassicCongestionControl<T> {
 
 #[cfg(test)]
 mod tests {
-    use std::{
-        convert::TryFrom,
-        time::{Duration, Instant},
-    };
+    use std::time::{Duration, Instant};
 
     use neqo_common::qinfo;
     use test_fixture::now;

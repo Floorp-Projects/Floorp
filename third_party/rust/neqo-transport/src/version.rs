@@ -4,17 +4,16 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::convert::TryFrom;
-
 use neqo_common::qdebug;
 
 use crate::{Error, Res};
 
 pub type WireVersion = u32;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Version {
     Version2,
+    #[default]
     Version1,
     Draft29,
     Draft30,
@@ -23,6 +22,7 @@ pub enum Version {
 }
 
 impl Version {
+    #[must_use]
     pub const fn wire_version(self) -> WireVersion {
         match self {
             Self::Version2 => 0x6b33_43cf,
@@ -94,6 +94,7 @@ impl Version {
     }
 
     /// Determine if `self` can be upgraded to `other` compatibly.
+    #[must_use]
     pub fn is_compatible(self, other: Self) -> bool {
         self == other
             || matches!(
@@ -102,6 +103,7 @@ impl Version {
             )
     }
 
+    #[must_use]
     pub fn all() -> Vec<Self> {
         vec![
             Self::Version2,
@@ -118,12 +120,6 @@ impl Version {
         all: impl IntoIterator<Item = &'a Self>,
     ) -> impl Iterator<Item = &'a Self> {
         all.into_iter().filter(move |&v| self.is_compatible(*v))
-    }
-}
-
-impl Default for Version {
-    fn default() -> Self {
-        Self::Version1
     }
 }
 
@@ -176,15 +172,20 @@ pub struct VersionConfig {
 }
 
 impl VersionConfig {
+    /// # Panics
+    /// When `all` does not include `initial`.
+    #[must_use]
     pub fn new(initial: Version, all: Vec<Version>) -> Self {
         assert!(all.contains(&initial));
         Self { initial, all }
     }
 
+    #[must_use]
     pub fn initial(&self) -> Version {
         self.initial
     }
 
+    #[must_use]
     pub fn all(&self) -> &[Version] {
         &self.all
     }

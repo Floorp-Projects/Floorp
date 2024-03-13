@@ -7,7 +7,7 @@
 use std::mem;
 
 use neqo_common::{qdebug, Datagram};
-use test_fixture::{self, now};
+use test_fixture::now;
 
 use super::{
     super::{

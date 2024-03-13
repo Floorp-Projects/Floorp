@@ -7,9 +7,7 @@
 // Encoding and decoding packets off the wire.
 use std::{
     cmp::min,
-    convert::TryFrom,
     fmt,
-    iter::ExactSizeIterator,
     ops::{Deref, DerefMut, Range},
     time::Instant,
 };
@@ -172,11 +170,12 @@ impl PacketBuilder {
     }
 
     /// Start building a long header packet.
-    /// For an Initial packet you will need to call initial_token(),
+    /// For an Initial packet you will need to call `initial_token()`,
     /// even if the token is empty.
     ///
     /// See `short()` for more on how to handle this in cases where there is no space.
     #[allow(clippy::reversed_empty_ranges)] // For initializing an empty range.
+    #[allow(clippy::similar_names)] // For dcid and scid, which are fine here.
     pub fn long(
         mut encoder: Encoder,
         pt: PacketType,
@@ -315,6 +314,7 @@ impl PacketBuilder {
         self.pn = pn;
     }
 
+    #[allow(clippy::cast_possible_truncation)] // Nope.
     fn write_len(&mut self, expansion: usize) {
         let len = self.encoder.len() - (self.offsets.len + 2) + expansion;
         self.encoder.as_mut()[self.offsets.len] = 0x40 | ((len >> 8) & 0x3f) as u8;
@@ -410,6 +410,7 @@ impl PacketBuilder {
     /// As this is a simple packet, this is just an associated function.
     /// As Retry is odd (it has to be constructed with leading bytes),
     /// this returns a [`Vec<u8>`] rather than building on an encoder.
+    #[allow(clippy::similar_names)] // scid and dcid are fine here.
     pub fn retry(
         version: Version,
         dcid: &[u8],
@@ -441,6 +442,7 @@ impl PacketBuilder {
     }
 
     /// Make a Version Negotiation packet.
+    #[allow(clippy::similar_names)] // scid and dcid are fine here.
     pub fn version_negotiation(
         dcid: &[u8],
         scid: &[u8],
@@ -492,7 +494,7 @@ impl From<PacketBuilder> for Encoder {
     }
 }
 
-/// PublicPacket holds information from packets that is public only.  This allows for
+/// `PublicPacket` holds information from packets that is public only.  This allows for
 /// processing of packets prior to decryption.
 pub struct PublicPacket<'a> {
     /// The packet type.
@@ -552,6 +554,7 @@ impl<'a> PublicPacket<'a> {
 
     /// Decode the common parts of a packet.  This provides minimal parsing and validation.
     /// Returns a tuple of a `PublicPacket` and a slice with any remainder from the datagram.
+    #[allow(clippy::similar_names)] // For dcid and scid, which are fine.
     pub fn decode(data: &'a [u8], dcid_decoder: &dyn ConnectionIdDecoder) -> Res<(Self, &'a [u8])> {
         let mut decoder = Decoder::new(data);
         let first = Self::opt(decoder.decode_byte())?;
@@ -868,10 +871,14 @@ mod tests {
     use neqo_common::Encoder;
     use test_fixture::{fixture_init, now};
 
-    use super::*;
     use crate::{
+        cid::MAX_CONNECTION_ID_LEN,
         crypto::{CryptoDxState, CryptoStates},
-        EmptyConnectionIdGenerator, RandomConnectionIdGenerator, Version,
+        packet::{
+            PacketBuilder, PacketType, PublicPacket, PACKET_BIT_FIXED_QUIC, PACKET_BIT_LONG,
+            PACKET_BIT_SPIN,
+        },
+        ConnectionId, EmptyConnectionIdGenerator, RandomConnectionIdGenerator, Version,
     };
 
     const CLIENT_CID: &[u8] = &[0x83, 0x94, 0xc8, 0xf0, 0x3e, 0x51, 0x57, 0x08];
@@ -1366,8 +1373,12 @@ mod tests {
     #[test]
     fn build_vn() {
         fixture_init();
-        let mut vn =
-            PacketBuilder::version_negotiation(SERVER_CID, CLIENT_CID, 0x0a0a0a0a, &Version::all());
+        let mut vn = PacketBuilder::version_negotiation(
+            SERVER_CID,
+            CLIENT_CID,
+            0x0a0a_0a0a,
+            &Version::all(),
+        );
         // Erase randomness from greasing...
         assert_eq!(vn.len(), SAMPLE_VN.len());
         vn[0] &= 0x80;
@@ -1380,8 +1391,12 @@ mod tests {
     #[test]
     fn vn_do_not_repeat_client_grease() {
         fixture_init();
-        let vn =
-            PacketBuilder::version_negotiation(SERVER_CID, CLIENT_CID, 0x0a0a0a0a, &Version::all());
+        let vn = PacketBuilder::version_negotiation(
+            SERVER_CID,
+            CLIENT_CID,
+            0x0a0a_0a0a,
+            &Version::all(),
+        );
         assert_ne!(&vn[SAMPLE_VN.len() - 4..], &[0x0a, 0x0a, 0x0a, 0x0a]);
     }
 

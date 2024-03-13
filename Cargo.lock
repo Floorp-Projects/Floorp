@@ -3880,8 +3880,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-common"
-version = "0.7.1"
-source = "git+https://github.com/mozilla/neqo?tag=v0.7.1#721a1eff430f644e23a3e06ef4c5a248a0cbf592"
+version = "0.7.2"
+source = "git+https://github.com/mozilla/neqo?tag=v0.7.2#ce5cbe4dfc2e38b238abb022c39eee4215058221"
 dependencies = [
  "enum-map",
  "env_logger",
@@ -3893,8 +3893,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-crypto"
-version = "0.7.1"
-source = "git+https://github.com/mozilla/neqo?tag=v0.7.1#721a1eff430f644e23a3e06ef4c5a248a0cbf592"
+version = "0.7.2"
+source = "git+https://github.com/mozilla/neqo?tag=v0.7.2#ce5cbe4dfc2e38b238abb022c39eee4215058221"
 dependencies = [
  "bindgen 0.69.4",
  "log",
@@ -3907,8 +3907,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-http3"
-version = "0.7.1"
-source = "git+https://github.com/mozilla/neqo?tag=v0.7.1#721a1eff430f644e23a3e06ef4c5a248a0cbf592"
+version = "0.7.2"
+source = "git+https://github.com/mozilla/neqo?tag=v0.7.2#ce5cbe4dfc2e38b238abb022c39eee4215058221"
 dependencies = [
  "enumset",
  "log",
@@ -3924,8 +3924,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-qpack"
-version = "0.7.1"
-source = "git+https://github.com/mozilla/neqo?tag=v0.7.1#721a1eff430f644e23a3e06ef4c5a248a0cbf592"
+version = "0.7.2"
+source = "git+https://github.com/mozilla/neqo?tag=v0.7.2#ce5cbe4dfc2e38b238abb022c39eee4215058221"
 dependencies = [
  "log",
  "neqo-common",
@@ -3937,8 +3937,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-transport"
-version = "0.7.1"
-source = "git+https://github.com/mozilla/neqo?tag=v0.7.1#721a1eff430f644e23a3e06ef4c5a248a0cbf592"
+version = "0.7.2"
+source = "git+https://github.com/mozilla/neqo?tag=v0.7.2#ce5cbe4dfc2e38b238abb022c39eee4215058221"
 dependencies = [
  "indexmap 1.9.3",
  "log",

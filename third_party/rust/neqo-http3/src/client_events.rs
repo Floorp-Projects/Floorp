@@ -61,7 +61,7 @@ pub enum Http3ClientEvent {
         error: AppError,
         local: bool,
     },
-    /// Peer has sent a STOP_SENDING.
+    /// Peer has sent a `STOP_SENDING`.
     StopSending {
         stream_id: StreamId,
         error: AppError,
@@ -83,7 +83,7 @@ pub enum Http3ClientEvent {
     PushDataReadable { push_id: u64 },
     /// A push has been canceled.
     PushCanceled { push_id: u64 },
-    /// A push stream was been reset due to a HttpGeneralProtocol error.
+    /// A push stream was been reset due to a `HttpGeneralProtocol` error.
     /// Most common case are malformed response headers.
     PushReset { push_id: u64, error: AppError },
     /// New stream can be created
@@ -102,7 +102,7 @@ pub enum Http3ClientEvent {
     GoawayReceived,
     /// Connection state change.
     StateChange(Http3State),
-    /// WebTransport events
+    /// `WebTransport` events
     WebTransport(WebTransportEvent),
 }
 

@@ -4,10 +4,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![deny(clippy::pedantic)]
-
 use std::{
-    convert::TryFrom,
     fmt::{self, Display},
     time::{Duration, Instant},
 };

@@ -8,7 +8,6 @@ use std::{
     cell::RefCell,
     cmp::{max, min},
     collections::HashMap,
-    convert::TryFrom,
     mem,
     ops::{Index, IndexMut, Range},
     rc::Rc,
@@ -101,10 +100,10 @@ impl Crypto {
             version,
             protocols,
             tls: agent,
-            streams: Default::default(),
+            streams: CryptoStreams::default(),
             states: CryptoStates {
                 fuzzing,
-                ..Default::default()
+                ..CryptoStates::default()
             },
         })
     }
@@ -239,14 +238,14 @@ impl Crypto {
 
     /// Returns true if new handshake keys were installed.
     pub fn install_keys(&mut self, role: Role) -> Res<bool> {
-        if !self.tls.state().is_final() {
+        if self.tls.state().is_final() {
+            Ok(false)
+        } else {
             let installed_hs = self.install_handshake_keys()?;
             if role == Role::Server {
                 self.maybe_install_application_write_key(self.version)?;
             }
             Ok(installed_hs)
-        } else {
-            Ok(false)
         }
     }
 
@@ -274,7 +273,7 @@ impl Crypto {
     fn maybe_install_application_write_key(&mut self, version: Version) -> Res<()> {
         qtrace!([self], "Attempt to install application write key");
         if let Some(secret) = self.tls.write_secret(TLS_EPOCH_APPLICATION_DATA) {
-            self.states.set_application_write_key(version, secret)?;
+            self.states.set_application_write_key(version, &secret)?;
             qdebug!([self], "Application write key installed");
         }
         Ok(())
@@ -290,7 +289,7 @@ impl Crypto {
             .read_secret(TLS_EPOCH_APPLICATION_DATA)
             .ok_or(Error::InternalError)?;
         self.states
-            .set_application_read_key(version, read_secret, expire_0rtt)?;
+            .set_application_read_key(version, &read_secret, expire_0rtt)?;
         qdebug!([self], "application read keys installed");
         Ok(())
     }
@@ -313,8 +312,8 @@ impl Crypto {
         builder: &mut PacketBuilder,
         tokens: &mut Vec<RecoveryToken>,
         stats: &mut FrameStats,
-    ) -> Res<()> {
-        self.streams.write_frame(space, builder, tokens, stats)
+    ) {
+        self.streams.write_frame(space, builder, tokens, stats);
     }
 
     pub fn acked(&mut self, token: &CryptoRecoveryToken) {
@@ -767,7 +766,7 @@ impl CryptoDxAppData {
     pub fn new(
         version: Version,
         dir: CryptoDxDirection,
-        secret: SymKey,
+        secret: &SymKey,
         cipher: Cipher,
         fuzzing: bool,
     ) -> Res<Self> {
@@ -776,12 +775,12 @@ impl CryptoDxAppData {
                 version,
                 dir,
                 TLS_EPOCH_APPLICATION_DATA,
-                &secret,
+                secret,
                 cipher,
                 fuzzing,
             ),
             cipher,
-            next_secret: Self::update_secret(cipher, &secret)?,
+            next_secret: Self::update_secret(cipher, secret)?,
             fuzzing,
         })
     }
@@ -1111,7 +1110,7 @@ impl CryptoStates {
         });
     }
 
-    pub fn set_application_write_key(&mut self, version: Version, secret: SymKey) -> Res<()> {
+    pub fn set_application_write_key(&mut self, version: Version, secret: &SymKey) -> Res<()> {
         debug_assert!(self.app_write.is_none());
         debug_assert_ne!(self.cipher, 0);
         let mut app = CryptoDxAppData::new(
@@ -1134,7 +1133,7 @@ impl CryptoStates {
     pub fn set_application_read_key(
         &mut self,
         version: Version,
-        secret: SymKey,
+        secret: &SymKey,
         expire_0rtt: Instant,
     ) -> Res<()> {
         debug_assert!(self.app_write.is_some(), "should have write keys installed");
@@ -1530,14 +1529,14 @@ impl CryptoStreams {
         builder: &mut PacketBuilder,
         tokens: &mut Vec<RecoveryToken>,
         stats: &mut FrameStats,
-    ) -> Res<()> {
+    ) {
         let cs = self.get_mut(space).unwrap();
         if let Some((offset, data)) = cs.tx.next_bytes() {
             let mut header_len = 1 + Encoder::varint_len(offset) + 1;
 
             // Don't bother if there isn't room for the header and some data.
             if builder.remaining() < header_len + 1 {
-                return Ok(());
+                return;
             }
             // Calculate length of data based on the minimum of:
             // - available data
@@ -1561,7 +1560,6 @@ impl CryptoStreams {
             }));
             stats.crypto += 1;
         }
-        Ok(())
     }
 }
 

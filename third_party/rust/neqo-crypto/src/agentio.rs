@@ -6,13 +6,11 @@
 
 use std::{
     cmp::min,
-    convert::{TryFrom, TryInto},
     fmt, mem,
     ops::Deref,
     os::raw::{c_uint, c_void},
     pin::Pin,
     ptr::{null, null_mut},
-    vec::Vec,
 };
 
 use neqo_common::{hex, hex_with_len, qtrace};

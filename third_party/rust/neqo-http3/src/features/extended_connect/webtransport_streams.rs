@@ -215,16 +215,6 @@ impl SendStream for WebTransportSendStream {
         }
     }
 
-    fn set_sendorder(&mut self, conn: &mut Connection, sendorder: Option<i64>) -> Res<()> {
-        conn.stream_sendorder(self.stream_id, sendorder)
-            .map_err(|_| crate::Error::InvalidStreamId)
-    }
-
-    fn set_fairness(&mut self, conn: &mut Connection, fairness: bool) -> Res<()> {
-        conn.stream_fairness(self.stream_id, fairness)
-            .map_err(|_| crate::Error::InvalidStreamId)
-    }
-
     fn handle_stop_sending(&mut self, close_type: CloseType) {
         self.set_done(close_type);
     }

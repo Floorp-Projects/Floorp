@@ -5,7 +5,7 @@
 // except according to those terms.
 
 // Congestion control
-#![deny(clippy::pedantic)]
+
 #![allow(clippy::module_name_repetitions)]
 
 use std::{

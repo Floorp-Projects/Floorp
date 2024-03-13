@@ -6,8 +6,6 @@
 
 // Tracking of sent packets and detecting their loss.
 
-#![deny(clippy::pedantic)]
-
 use std::{
     cmp::{max, min},
     time::{Duration, Instant},

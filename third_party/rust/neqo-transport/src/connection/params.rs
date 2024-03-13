@@ -4,7 +4,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::{cmp::max, convert::TryFrom, time::Duration};
+use std::{cmp::max, time::Duration};
 
 pub use crate::recovery::FAST_PTO_SCALE;
 use crate::{
@@ -41,7 +41,7 @@ pub enum PreferredAddressConfig {
     Address(PreferredAddress),
 }
 
-/// ConnectionParameters use for setting intitial value for QUIC parameters.
+/// `ConnectionParameters` use for setting intitial value for QUIC parameters.
 /// This collects configuration like initial limits, protocol version, and
 /// congestion control algorithm.
 #[derive(Debug, Clone)]
@@ -108,6 +108,7 @@ impl Default for ConnectionParameters {
 }
 
 impl ConnectionParameters {
+    #[must_use]
     pub fn get_versions(&self) -> &VersionConfig {
         &self.versions
     }
@@ -120,29 +121,35 @@ impl ConnectionParameters {
     /// versions that should be enabled.  This list should contain the initial
     /// version and be in order of preference, with more preferred versions
     /// before less preferred.
+    #[must_use]
     pub fn versions(mut self, initial: Version, all: Vec<Version>) -> Self {
         self.versions = VersionConfig::new(initial, all);
         self
     }
 
+    #[must_use]
     pub fn get_cc_algorithm(&self) -> CongestionControlAlgorithm {
         self.cc_algorithm
     }
 
+    #[must_use]
     pub fn cc_algorithm(mut self, v: CongestionControlAlgorithm) -> Self {
         self.cc_algorithm = v;
         self
     }
 
+    #[must_use]
     pub fn get_max_data(&self) -> u64 {
         self.max_data
     }
 
+    #[must_use]
     pub fn max_data(mut self, v: u64) -> Self {
         self.max_data = v;
         self
     }
 
+    #[must_use]
     pub fn get_max_streams(&self, stream_type: StreamType) -> u64 {
         match stream_type {
             StreamType::BiDi => self.max_streams_bidi,
@@ -153,6 +160,7 @@ impl ConnectionParameters {
     /// # Panics
     ///
     /// If v > 2^60 (the maximum allowed by the protocol).
+    #[must_use]
     pub fn max_streams(mut self, stream_type: StreamType, v: u64) -> Self {
         assert!(v <= (1 << 60), "max_streams is too large");
         match stream_type {
@@ -171,6 +179,7 @@ impl ConnectionParameters {
     /// # Panics
     ///
     /// If `StreamType::UniDi` and `false` are passed as that is not a valid combination.
+    #[must_use]
     pub fn get_max_stream_data(&self, stream_type: StreamType, remote: bool) -> u64 {
         match (stream_type, remote) {
             (StreamType::BiDi, false) => self.max_stream_data_bidi_local,
@@ -188,6 +197,7 @@ impl ConnectionParameters {
     ///
     /// If `StreamType::UniDi` and `false` are passed as that is not a valid combination
     /// or if v >= 62 (the maximum allowed by the protocol).
+    #[must_use]
     pub fn max_stream_data(mut self, stream_type: StreamType, remote: bool, v: u64) -> Self {
         assert!(v < (1 << 62), "max stream data is too large");
         match (stream_type, remote) {
@@ -208,26 +218,31 @@ impl ConnectionParameters {
     }
 
     /// Set a preferred address (which only has an effect for a server).
+    #[must_use]
     pub fn preferred_address(mut self, preferred: PreferredAddress) -> Self {
         self.preferred_address = PreferredAddressConfig::Address(preferred);
         self
     }
 
     /// Disable the use of preferred addresses.
+    #[must_use]
     pub fn disable_preferred_address(mut self) -> Self {
         self.preferred_address = PreferredAddressConfig::Disabled;
         self
     }
 
+    #[must_use]
     pub fn get_preferred_address(&self) -> &PreferredAddressConfig {
         &self.preferred_address
     }
 
+    #[must_use]
     pub fn ack_ratio(mut self, ack_ratio: u8) -> Self {
         self.ack_ratio = ack_ratio;
         self
     }
 
+    #[must_use]
     pub fn get_ack_ratio(&self) -> u8 {
         self.ack_ratio
     }
@@ -235,45 +250,54 @@ impl ConnectionParameters {
     /// # Panics
     ///
     /// If `timeout` is 2^62 milliseconds or more.
+    #[must_use]
     pub fn idle_timeout(mut self, timeout: Duration) -> Self {
         assert!(timeout.as_millis() < (1 << 62), "idle timeout is too long");
         self.idle_timeout = timeout;
         self
     }
 
+    #[must_use]
     pub fn get_idle_timeout(&self) -> Duration {
         self.idle_timeout
     }
 
+    #[must_use]
     pub fn get_datagram_size(&self) -> u64 {
         self.datagram_size
     }
 
+    #[must_use]
     pub fn datagram_size(mut self, v: u64) -> Self {
         self.datagram_size = v;
         self
     }
 
+    #[must_use]
     pub fn get_outgoing_datagram_queue(&self) -> usize {
         self.outgoing_datagram_queue
     }
 
+    #[must_use]
     pub fn outgoing_datagram_queue(mut self, v: usize) -> Self {
         // The max queue length must be at least 1.
         self.outgoing_datagram_queue = max(v, 1);
         self
     }
 
+    #[must_use]
     pub fn get_incoming_datagram_queue(&self) -> usize {
         self.incoming_datagram_queue
     }
 
+    #[must_use]
     pub fn incoming_datagram_queue(mut self, v: usize) -> Self {
         // The max queue length must be at least 1.
         self.incoming_datagram_queue = max(v, 1);
         self
     }
 
+    #[must_use]
     pub fn get_fast_pto(&self) -> u8 {
         self.fast_pto
     }
@@ -293,39 +317,50 @@ impl ConnectionParameters {
     /// # Panics
     ///
     /// A value of 0 is invalid and will cause a panic.
+    #[must_use]
     pub fn fast_pto(mut self, scale: u8) -> Self {
         assert_ne!(scale, 0);
         self.fast_pto = scale;
         self
     }
 
+    #[must_use]
     pub fn is_fuzzing(&self) -> bool {
         self.fuzzing
     }
 
+    #[must_use]
     pub fn fuzzing(mut self, enable: bool) -> Self {
         self.fuzzing = enable;
         self
     }
 
+    #[must_use]
     pub fn is_greasing(&self) -> bool {
         self.grease
     }
 
+    #[must_use]
     pub fn grease(mut self, grease: bool) -> Self {
         self.grease = grease;
         self
     }
 
+    #[must_use]
     pub fn pacing_enabled(&self) -> bool {
         self.pacing
     }
 
+    #[must_use]
     pub fn pacing(mut self, pacing: bool) -> Self {
         self.pacing = pacing;
         self
     }
 
+    /// # Errors
+    /// When a connection ID cannot be obtained.
+    /// # Panics
+    /// Only when this code includes a transport parameter that is invalid.
     pub fn create_transport_parameter(
         &self,
         role: Role,

@@ -4,7 +4,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::{convert::TryFrom, ops::Deref};
+use std::ops::Deref;
 
 use neqo_common::Encoder;
 
