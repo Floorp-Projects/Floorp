@@ -80,16 +80,9 @@ void nsXULTooltipListener::MouseOut(Event* aEvent) {
   // check to see if the mouse left the targetNode, and if so,
   // hide the tooltip
   if (currentTooltip) {
-    // which node did the mouse leave?
-    EventTarget* eventTarget = aEvent->GetComposedTarget();
-    nsCOMPtr<nsINode> targetNode = nsINode::FromEventTargetOrNull(eventTarget);
-    if (targetNode && targetNode->IsContent() &&
-        !targetNode->AsContent()->GetContainingShadow()) {
-      eventTarget = aEvent->GetTarget();
-    }
-
-    nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-    if (pm) {
+    nsCOMPtr<nsINode> targetNode =
+        nsINode::FromEventTargetOrNull(aEvent->GetOriginalTarget());
+    if (nsXULPopupManager* pm = nsXULPopupManager::GetInstance()) {
       nsCOMPtr<nsINode> tooltipNode =
           pm->GetLastTriggerTooltipNode(currentTooltip->GetComposedDoc());
 
@@ -99,8 +92,7 @@ void nsXULTooltipListener::MouseOut(Event* aEvent) {
       // tooltip appears positioned near the mouse.
       nsCOMPtr<EventTarget> relatedTarget =
           aEvent->AsMouseEvent()->GetRelatedTarget();
-      nsIContent* relatedContent =
-          nsIContent::FromEventTargetOrNull(relatedTarget);
+      auto* relatedContent = nsIContent::FromEventTargetOrNull(relatedTarget);
       if (tooltipNode == targetNode && relatedContent != currentTooltip) {
         HideTooltip();
         // reset special tree tracking
@@ -134,12 +126,12 @@ void nsXULTooltipListener::MouseMove(Event* aEvent) {
   }
 
   nsCOMPtr<nsIContent> currentTooltip = do_QueryReferent(mCurrentTooltip);
-  nsCOMPtr<EventTarget> eventTarget = aEvent->GetComposedTarget();
-  nsIContent* content = nsIContent::FromEventTargetOrNull(eventTarget);
+  auto* const mouseMoveTarget =
+      nsIContent::FromEventTargetOrNull(aEvent->GetOriginalTarget());
 
   bool isSameTarget = true;
   nsCOMPtr<nsIContent> tempContent = do_QueryReferent(mPreviousMouseMoveTarget);
-  if (tempContent && tempContent != content) {
+  if (tempContent && tempContent != mouseMoveTarget) {
     isSameTarget = false;
   }
 
@@ -154,13 +146,15 @@ void nsXULTooltipListener::MouseMove(Event* aEvent) {
     return;
   }
   mMouseScreenPoint = newMouseScreenPoint;
-  mPreviousMouseMoveTarget = do_GetWeakReference(content);
+  mPreviousMouseMoveTarget = do_GetWeakReference(mouseMoveTarget);
 
-  nsCOMPtr<nsIContent> sourceContent =
-      do_QueryInterface(aEvent->GetCurrentTarget());
+  auto* const sourceContent =
+      nsIContent::FromEventTargetOrNull(aEvent->GetCurrentTarget());
   mSourceNode = do_GetWeakReference(sourceContent);
   mIsSourceTree = sourceContent->IsXULElement(nsGkAtoms::treechildren);
-  if (mIsSourceTree) CheckTreeBodyMove(mouseEvent);
+  if (mIsSourceTree) {
+    CheckTreeBodyMove(mouseEvent);
+  }
 
   // as the mouse moves, we want to make sure we reset the timer to show it,
   // so that the delay is from when the mouse stops moving, not when it enters
@@ -192,8 +186,7 @@ void nsXULTooltipListener::MouseMove(Event* aEvent) {
              kNameSpaceID_None, nsGkAtoms::popupsinherittooltip,
              nsGkAtoms::_true, eCaseMatters));
     if (!allowTooltipCrossingPopup) {
-      for (nsIContent* targetContent =
-               nsIContent::FromEventTargetOrNull(eventTarget);
+      for (auto* targetContent = mouseMoveTarget;
            targetContent && targetContent != sourceContent;
            targetContent = targetContent->GetFlattenedTreeParent()) {
         if (targetContent->IsAnyOfXULElements(
@@ -204,7 +197,7 @@ void nsXULTooltipListener::MouseMove(Event* aEvent) {
       }
     }
 
-    mTargetNode = do_GetWeakReference(eventTarget);
+    mTargetNode = do_GetWeakReference(mouseMoveTarget);
     if (mTargetNode) {
       nsresult rv = NS_NewTimerWithFuncCallback(
           getter_AddRefs(mTooltipTimer), sTooltipCallback, this,
@@ -218,7 +211,9 @@ void nsXULTooltipListener::MouseMove(Event* aEvent) {
     return;
   }
 
-  if (mIsSourceTree) return;
+  if (mIsSourceTree) {
+    return;
+  }
   // Hide the tooltip if it is currently showing.
   if (currentTooltip) {
     HideTooltip();
@@ -505,7 +500,9 @@ static void GetImmediateChild(nsIContent* aContent, nsAtom* aTag,
 
 nsresult nsXULTooltipListener::FindTooltip(nsIContent* aTarget,
                                            nsIContent** aTooltip) {
-  if (!aTarget) return NS_ERROR_NULL_POINTER;
+  if (!aTarget) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
   // before we go on, make sure that target node still has a window
   Document* document = aTarget->GetComposedDoc();
