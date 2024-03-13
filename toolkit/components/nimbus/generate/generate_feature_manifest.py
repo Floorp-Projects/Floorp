@@ -27,7 +27,6 @@ ALLOWED_ISEARLYSTARTUP_FEATURE_IDS = {
     "abouthomecache",
     "aboutwelcome",
     "dapTelemetry",
-    "deviceMigration",
     "gleanInternalSdk",
     "majorRelease2022",
     "newtab",
