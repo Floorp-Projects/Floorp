@@ -844,7 +844,7 @@ ROLE(LISTBOX,
      ROLE_SYSTEM_LIST,
      java::SessionAccessibility::CLASSNAME_LISTVIEW,
      IsAccessibilityElementRule::IfChildlessWithNameAndFocusable,
-     eNoNameRule)
+     eNameFromValueRule)
 
 ROLE(FLAT_EQUATION,
      "flat equation",
