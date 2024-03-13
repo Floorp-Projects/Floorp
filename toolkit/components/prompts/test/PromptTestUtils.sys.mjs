@@ -21,22 +21,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
-// Whether web content prompts (alert etc.) are shown as SubDialog (true)
-// or TabModalPrompt (false)
-XPCOMUtils.defineLazyPreferenceGetter(
-  kPrefs,
-  "contentPromptSubDialogEnabled",
-  "prompts.contentPromptSubDialog",
-  false
-);
-
 function isCommonDialog(modalType) {
   return (
     modalType === Services.prompt.MODAL_TYPE_WINDOW ||
     (kPrefs.tabPromptSubDialogEnabled &&
       modalType === Services.prompt.MODAL_TYPE_TAB) ||
-    (kPrefs.contentPromptSubDialogEnabled &&
-      modalType === Services.prompt.MODAL_TYPE_CONTENT)
+    modalType === Services.prompt.MODAL_TYPE_CONTENT
   );
 }
 

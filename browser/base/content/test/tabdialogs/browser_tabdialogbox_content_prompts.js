@@ -3,7 +3,6 @@
 
 "use strict";
 
-const CONTENT_PROMPT_PREF = "prompts.contentPromptSubDialog";
 const TEST_ROOT_CHROME = getRootDirectory(gTestPath);
 const TEST_DIALOG_PATH = TEST_ROOT_CHROME + "subdialog.xhtml";
 
@@ -40,13 +39,6 @@ const TEST_PAGE =
 var commonDialogsBundle = Services.strings.createBundle(
   "chrome://global/locale/commonDialogs.properties"
 );
-
-// Setup.
-add_setup(async function () {
-  await SpecialPowers.pushPrefEnv({
-    set: [[CONTENT_PROMPT_PREF, true]],
-  });
-});
 
 /**
  * Test that a manager for content prompts is added to tab dialog box.

@@ -4,14 +4,7 @@
 // beforeunload confirmation ignores the beforeunload listener and
 // unblocks the original close call.
 
-const CONTENT_PROMPT_SUBDIALOG = Services.prefs.getBoolPref(
-  "prompts.contentPromptSubDialog",
-  false
-);
-
-const DIALOG_TOPIC = CONTENT_PROMPT_SUBDIALOG
-  ? "common-dialog-loaded"
-  : "tabmodal-dialog-loaded";
+const DIALOG_TOPIC = "common-dialog-loaded";
 
 add_task(async function () {
   await SpecialPowers.pushPrefEnv({
