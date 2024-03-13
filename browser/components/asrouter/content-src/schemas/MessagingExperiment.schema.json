@@ -752,6 +752,10 @@
             "startScreen": {
               "type": "integer",
               "description": "Index of first screen to show from message, defaulting to 0"
+            },
+            "no-rdm": {
+              "type": "boolean",
+              "description": "If true, prevents the spotlight from entering responsive design mode at widths less than 800px"
             }
           },
           "additionalProperties": true

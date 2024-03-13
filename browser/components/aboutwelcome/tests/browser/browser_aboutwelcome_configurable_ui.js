@@ -722,3 +722,26 @@ add_task(async function test_aboutwelcome_start_screen_configured() {
   browser.closeBrowser();
   sandbox.restore();
 });
+
+/**
+ * Test rendering a screen with that doesn't use responsive design
+ */
+add_task(async function test_aboutwelcome_logo_selection() {
+  let screens = [makeTestContent(`TEST_NO_RDM`, { no_rdm: "true" })];
+
+  let sandbox = sinon.createSandbox();
+  let browser = await openAboutWelcome(JSON.stringify(screens));
+
+  let screenPresent = await SpecialPowers.spawn(browser, [], async () => {
+    // Ensure screen has rendered
+    await ContentTaskUtils.waitForCondition(() =>
+      content.document.querySelector(".TEST_NO_RDM[no-rdm]")
+    );
+    return true;
+  });
+
+  ok(screenPresent, "No-RDM test screen is present with `no-rdm` attribute");
+
+  browser.closeBrowser();
+  sandbox.restore();
+});
