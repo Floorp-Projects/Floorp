@@ -292,6 +292,11 @@ class MessageChannel : HasResultCodes {
 
   void CancelCurrentTransaction() MOZ_EXCLUDES(*mMonitor);
 
+  // Return whether the current transaction is complete.
+  //
+  // This is intended only for tests.
+  bool TestOnlyIsTransactionComplete() const MOZ_EXCLUDES(*mMonitor);
+
   // IsClosed and NumQueuedMessages are safe to call from any thread, but
   // may provide an out-of-date value.
   bool IsClosed() MOZ_EXCLUDES(*mMonitor) {
