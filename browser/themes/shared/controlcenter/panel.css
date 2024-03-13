@@ -368,43 +368,42 @@
 
 /* Content Blocking categories */
 
-#protections-popup-no-trackers-found-description {
-  margin: 4.85em 7.25em;
-  font-size: 1.1em;
-  text-align: center;
-  color: var(--text-color-deemphasized);
+#tracking-protection-container {
+  #protections-popup:not([detected]) & {
+    flex: 0 1 10em;
+    margin-block: var(--space-medium);
+  }
+
+  > tooltip {
+    max-width: var(--popup-width);
+  }
 }
 
 .protections-popup-section-header {
   color: var(--text-color-deemphasized);
+
+  :root[uidensity="compact"] & {
+    margin-block: 4px;
+  }
 }
 
-:root[uidensity="compact"] .protections-popup-section-header {
-  margin-block: 4px;
-}
+#protections-popup-no-trackers-found-description {
+  margin: auto 7.25em;
+  font-size: 1.1em;
+  text-align: center;
+  color: var(--text-color-deemphasized);
 
-#tracking-protection-container > tooltip {
-  max-width: var(--popup-width);
-}
-/*
- * The category list is split into two sections: "Blocking" and "Not Blocking",
- * with five different category items distributed between them at runtime.
- * To achieve this, we use a grid layout with 12 rows: one row for each header
- * label and five rows in each section for the items.
- * Items with the "blocked" class are assigned rows 2-6, and those without
- * are assigned rows 8-12, with the headers taking rows 1 and 7.
- */
-
-#protections-popup-no-trackers-found-description:not([hidden]) ~ #protections-popup-content {
-  display: none;
+  &:not([hidden]) ~ #protections-popup-content {
+    display: none;
+  }
 }
 
 #protections-popup-not-blocking-section-why {
   border-radius: 2px;
-}
 
-#protections-popup-not-blocking-section-why:hover {
-  outline: 4px solid var(--panel-item-hover-bgcolor);
+  &:hover {
+    outline: 4px solid var(--panel-item-hover-bgcolor);
+  }
 }
 
 .trackers-icon {
