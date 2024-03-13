@@ -149,6 +149,7 @@ async function openAboutTranslations({
 /**
  * Naively prettify's html based on the opening and closing tags. This is not robust
  * for general usage, but should be adequate for these tests.
+ *
  * @param {string} html
  * @returns {string}
  */
@@ -358,6 +359,7 @@ async function closeAllOpenPanelsAndMenus() {
 
 /**
  * Closes the popup element with the given Id if it is open.
+ *
  * @param {string} popupElementId
  */
 async function closePopupIfOpen(popupElementId) {
@@ -655,7 +657,8 @@ async function captureTranslationsError(callback) {
 
 /**
  * Load a test page and run
- * @param {Object} options - The options for `loadTestPage` plus a `runInPage` function.
+ *
+ * @param {object} options - The options for `loadTestPage` plus a `runInPage` function.
  */
 async function autoTranslatePage(options) {
   const { prefs, languagePairs, ...otherOptions } = options;
@@ -827,7 +830,7 @@ let _remoteSettingsMockId = 0;
  * Creates a local RemoteSettingsClient for use within tests.
  *
  * @param {boolean} autoDownloadFromRemoteSettings
- * @param {Object[]} langPairs
+ * @param {object[]} langPairs
  * @returns {RemoteSettingsClient}
  */
 async function createTranslationModelsRemoteClient(
@@ -981,7 +984,7 @@ function hitEnterKey(button, message) {
  *
  * @see assertVisibility
  *
- * @param {Object} options
+ * @param {object} options
  * @param {string} options.message
  * @param {Record<string, Element[]>} options.visible
  * @param {Record<string, Element[]>} options.hidden
@@ -1012,7 +1015,7 @@ async function ensureVisibility({ message = null, visible = {}, hidden = {} }) {
 /**
  * Asserts that the provided elements are either visible or hidden.
  *
- * @param {Object} options
+ * @param {object} options
  * @param {string} options.message
  * @param {Record<string, Element[]>} options.visible
  * @param {Record<string, Element[]>} options.hidden
@@ -1137,8 +1140,8 @@ class TestTranslationsTelemetry {
    * Asserts qualities about a counter telemetry metric.
    *
    * @param {string} name - The name of the metric.
-   * @param {Object} counter - The Glean counter object.
-   * @param {Object} expectedCount - The expected value of the counter.
+   * @param {object} counter - The Glean counter object.
+   * @param {object} expectedCount - The expected value of the counter.
    */
   static async assertCounter(name, counter, expectedCount) {
     // Ensures that glean metrics are collected from all child processes
@@ -1156,15 +1159,15 @@ class TestTranslationsTelemetry {
    * Asserts qualities about an event telemetry metric.
    *
    * @param {string} name - The name of the metric.
-   * @param {Object} event - The Glean event object.
-   * @param {Object} expectations - The test expectations.
+   * @param {object} event - The Glean event object.
+   * @param {object} expectations - The test expectations.
    * @param {number} expectations.expectedEventCount - The expected count of events.
    * @param {boolean} expectations.expectNewFlowId
    * - Expects the flowId to be different than the previous flowId if true,
    *   and expects it to be the same if false.
-   * @param {Array<function>} [expectations.allValuePredicates=[]]
+   * @param {Array<Function>} [expectations.allValuePredicates=[]]
    * - An array of function predicates to assert for all event values.
-   * @param {Array<function>} [expectations.finalValuePredicates=[]]
+   * @param {Array<Function>} [expectations.finalValuePredicates=[]]
    * - An array of function predicates to assert for only the final event value.
    */
   static async assertEvent(
@@ -1264,8 +1267,8 @@ class TestTranslationsTelemetry {
    * Asserts qualities about a rate telemetry metric.
    *
    * @param {string} name - The name of the metric.
-   * @param {Object} rate - The Glean rate object.
-   * @param {Object} expectations - The test expectations.
+   * @param {object} rate - The Glean rate object.
+   * @param {object} expectations - The test expectations.
    * @param {number} expectations.expectedNumerator - The expected value of the numerator.
    * @param {number} expectations.expectedDenominator - The expected value of the denominator.
    */
@@ -1346,9 +1349,10 @@ function getNeverTranslateSitesFromPerms() {
 
 /**
  * Opens a dialog window for about:preferences
+ *
  * @param {string} dialogUrl - The URL of the dialog window
  * @param {Function} callback - The function to open the dialog via UI
- * @returns {Object} The dialog window object
+ * @returns {object} The dialog window object
  */
 async function waitForOpenDialogWindow(dialogUrl, callback) {
   const dialogLoaded = promiseLoadSubDialog(dialogUrl);
@@ -1360,7 +1364,7 @@ async function waitForOpenDialogWindow(dialogUrl, callback) {
 /**
  * Closes an open dialog window and waits for it to close.
  *
- * @param {Object} dialogWindow
+ * @param {object} dialogWindow
  */
 async function waitForCloseDialogWindow(dialogWindow) {
   const closePromise = BrowserTestUtils.waitForEvent(

@@ -183,6 +183,7 @@ export class AboutTranslationsChild extends JSWindowActorChild {
 
   /**
    * Does this device support the translation engine?
+   *
    * @returns {Promise<boolean>}
    */
   AT_isTranslationEngineSupported() {
