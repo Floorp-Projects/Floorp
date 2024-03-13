@@ -75,7 +75,7 @@ def gencxx(ipdlfilename, ast, outheadersdir, outcppdir, segmentcapacitydict):
 
 
 def genipdl(ast, outdir):
-    return IPDLCodeGen().cgen(ast)
+    return ast.accept(IPDLCodeGen())
 
 
 def genmsgenum(ast):
