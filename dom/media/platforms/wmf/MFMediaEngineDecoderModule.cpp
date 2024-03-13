@@ -101,7 +101,8 @@ media::DecodeSupportSet MFMediaEngineDecoderModule::SupportInternal(
     return media::DecodeSupportSet{};
   }
   // Only support hardware decoding.
-  if (!gfx::gfxVars::CanUseHardwareVideoDecoding()) {
+  if (!gfx::gfxVars::CanUseHardwareVideoDecoding() &&
+      !StaticPrefs::media_wmf_media_engine_bypass_gfx_blocklist()) {
     return media::DecodeSupportSet{};
   }
   bool supports = false;

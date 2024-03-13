@@ -355,6 +355,7 @@ wmf-media-engine:
                 - "--setpref=media.wmf.media-engine.enabled=1"
                 - "--setpref=media.wmf.media-engine.channel-decoder.enabled=true"
                 - "--setpref=media.eme.wmf.clearkey.enabled=true"
+                - "--setpref=media.wmf.media-engine.bypass-gfx-blocklist=true"
 
 media-gpu:
     description: "{description} for running media tests on the GPU worker"
