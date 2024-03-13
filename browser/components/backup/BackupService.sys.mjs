@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import * as BackupResources from "resource:///modules/backup/BackupResources.sys.mjs";
+
 const lazy = {};
 
 ChromeUtils.defineLazyGetter(lazy, "logConsole", function () {
@@ -28,6 +30,13 @@ export class BackupService {
   static #instance = null;
 
   /**
+   * Map of instantiated BackupResource classes.
+   *
+   * @type {Map<string, BackupResource>}
+   */
+  #resources = new Map();
+
+  /**
    * Returns a reference to a BackupService singleton. If this is the first time
    * that this getter is accessed, this causes the BackupService singleton to be
    * be instantiated.
@@ -39,14 +48,24 @@ export class BackupService {
     if (this.#instance) {
       return this.#instance;
     }
-    this.#instance = new BackupService();
+    this.#instance = new BackupService(BackupResources);
     this.#instance.takeMeasurements();
 
     return this.#instance;
   }
 
-  constructor() {
+  /**
+   * Create a BackupService instance.
+   *
+   * @param {object} [backupResources=BackupResources] - Object containing BackupResource classes to associate with this service.
+   */
+  constructor(backupResources = BackupResources) {
     lazy.logConsole.debug("Instantiated");
+
+    for (const resourceName in backupResources) {
+      let resource = BackupResources[resourceName];
+      this.#resources.set(resource.key, resource);
+    }
   }
 
   /**
@@ -75,5 +94,10 @@ export class BackupService {
     // And then record the value in kilobytes, since that's what everything
     // else is going to be measured in.
     Glean.browserBackup.profDDiskSpace.set(profDDiskSpaceMB * BYTES_IN_KB);
+
+    // Measure the size of each file we are going to backup.
+    for (let resourceClass of this.#resources.values()) {
+      await new resourceClass().measure(PathUtils.profileDir);
+    }
   }
 }
