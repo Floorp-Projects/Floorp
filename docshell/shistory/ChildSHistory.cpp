@@ -156,7 +156,8 @@ void ChildSHistory::Go(int32_t aOffset, bool aRequireUserInteraction,
     // Check for user interaction if desired, except for the first and last
     // history entries. We compare with >= to account for the case where
     // aOffset >= Count().
-    if (!aRequireUserInteraction || index.value() >= Count() - 1 ||
+    if (!StaticPrefs::browser_navigation_requireUserInteraction() ||
+        !aRequireUserInteraction || index.value() >= Count() - 1 ||
         index.value() <= 0) {
       break;
     }
