@@ -9,7 +9,7 @@ with Files("*"):
 
 TEST_DIRS += ["test"]
 
-DIRS += ["featurepolicy", "sanitizer"]
+DIRS += ["featurepolicy", "sanitizer", "trusted-types"]
 
 EXPORTS.mozilla.dom += [
     "CSPEvalChecker.h",

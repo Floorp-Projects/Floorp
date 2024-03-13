@@ -85,3 +85,10 @@ partial interface mixin WindowOrWorkerGlobalScope {
   [Replaceable, Pref="dom.enable_web_task_scheduling", SameObject]
   readonly attribute Scheduler scheduler;
 };
+
+
+// https://w3c.github.io/trusted-types/dist/spec/#extensions-to-the-windoworworkerglobalscope-interface
+partial interface mixin WindowOrWorkerGlobalScope {
+  [Pref="dom.security.trusted_types.enabled"]
+  readonly attribute TrustedTypePolicyFactory trustedTypes;
+};
