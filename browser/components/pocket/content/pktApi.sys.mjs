@@ -47,7 +47,6 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   IndexedDB: "resource://gre/modules/IndexedDB.sys.mjs",
-  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 
@@ -291,12 +290,12 @@ export var pktApi = (function () {
         "extensions.pocket.oAuthConsumerKey"
       );
     } else {
-      baseAPIUrl = `https://${lazy.NimbusFeatures.saveToPocket.getVariable(
-        "bffApi"
+      baseAPIUrl = `https://${Services.prefs.getStringPref(
+        "extensions.pocket.bffApi"
       )}/desktop/v1`;
 
-      oAuthConsumerKey = lazy.NimbusFeatures.saveToPocket.getVariable(
-        "oAuthConsumerKeyBff"
+      oAuthConsumerKey = Services.prefs.getStringPref(
+        "extensions.pocket.oAuthConsumerKeyBff"
       );
     }
 
@@ -761,8 +760,9 @@ export var pktApi = (function () {
       access_token: getAccessToken(),
     });
 
-    const useBFF =
-      lazy.NimbusFeatures.saveToPocket.getVariable("bffRecentSaves");
+    const useBFF = Services.prefs.getBoolPref(
+      "extensions.pocket.bffRecentSaves"
+    );
 
     return apiRequest(
       {
@@ -816,8 +816,9 @@ export var pktApi = (function () {
       { count: 4 },
       {
         success(data) {
-          const useBFF =
-            lazy.NimbusFeatures.saveToPocket.getVariable("bffRecentSaves");
+          const useBFF = Services.prefs.getBoolPref(
+            "extensions.pocket.bffRecentSaves"
+          );
 
           // Don't try to parse bad or missing data
           if (
