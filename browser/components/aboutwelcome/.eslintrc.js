@@ -113,7 +113,6 @@ module.exports = {
           "layout",
           "pos",
           "hide-secondary-section",
-          "no-rdm",
         ],
       },
     ],
