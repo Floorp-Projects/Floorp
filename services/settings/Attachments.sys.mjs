@@ -33,6 +33,14 @@ class ServerInfoError extends Error {
   }
 }
 
+class NotFoundError extends Error {
+  constructor(url, resp) {
+    super(`Could not find ${url} in cache or dump`);
+    this.name = "NotFoundError";
+    this.resp = resp;
+  }
+}
+
 // Helper for the `download` method for commonly used methods, to help with
 // lazily accessing the record and attachment content.
 class LazyRecordAndBuffer {
@@ -99,6 +107,9 @@ export class Downloader {
   static get ServerInfoError() {
     return ServerInfoError;
   }
+  static get NotFoundError() {
+    return NotFoundError;
+  }
 
   constructor(...folders) {
     this.folders = ["settings", ...folders];
@@ -122,15 +133,15 @@ export class Downloader {
    * @param {Object} record A Remote Settings entry with attachment.
    *                        If omitted, the attachmentId option must be set.
    * @param {Object} options Some download options.
-   * @param {Number} options.retries Number of times download should be retried (default: `3`)
-   * @param {Boolean} options.checkHash Check content integrity (default: `true`)
-   * @param {string} options.attachmentId The attachment identifier to use for
+   * @param {Number} [options.retries] Number of times download should be retried (default: `3`)
+   * @param {Boolean} [options.checkHash] Check content integrity (default: `true`)
+   * @param {string} [options.attachmentId] The attachment identifier to use for
    *                                      caching and accessing the attachment.
    *                                      (default: `record.id`)
-   * @param {Boolean} options.fallbackToCache Return the cached attachment when the
+   * @param {Boolean} [options.fallbackToCache] Return the cached attachment when the
    *                                          input record cannot be fetched.
    *                                          (default: `false`)
-   * @param {Boolean} options.fallbackToDump Use the remote settings dump as a
+   * @param {Boolean} [options.fallbackToDump] Use the remote settings dump as a
    *                                         potential source of the attachment.
    *                                         (default: `false`)
    * @throws {Downloader.DownloadError} if the file could not be fetched.
@@ -143,12 +154,55 @@ export class Downloader {
    *   `_source` `String`: identifies the source of the result. Used for testing.
    */
   async download(record, options) {
+    return this.#fetchAttachment(record, options);
+  }
+
+  /**
+   * Gets an attachment from the cache or local dump, avoiding requesting it
+   * from the server.
+   * If the only found attachment hash does not match the requested record, the
+   * returned attachment may have a different record, e.g. packaged in binary
+   * resources or one that is outdated.
+   *
+   * @param {Object} record A Remote Settings entry with attachment.
+   *                        If omitted, the attachmentId option must be set.
+   * @param {Object} options Some download options.
+   * @param {Number} [options.retries] Number of times download should be retried (default: `3`)
+   * @param {Boolean} [options.checkHash] Check content integrity (default: `true`)
+   * @param {string} [options.attachmentId] The attachment identifier to use for
+   *                                      caching and accessing the attachment.
+   *                                      (default: `record.id`)
+   * @throws {Downloader.DownloadError} if the file could not be fetched.
+   * @throws {Downloader.BadContentError} if the downloaded content integrity is not valid.
+   * @throws {Downloader.ServerInfoError} if the server response is not valid.
+   * @throws {NetworkError} if fetching the server infos and fetching the attachment fails.
+   * @returns {Object} An object with two properties:
+   *   `buffer` `ArrayBuffer`: the file content.
+   *   `record` `Object`: record associated with the attachment.
+   *   `_source` `String`: identifies the source of the result. Used for testing.
+   */
+  async get(
+    record,
+    options = {
+      attachmentId: record?.id,
+    }
+  ) {
+    return this.#fetchAttachment(record, {
+      ...options,
+      avoidDownload: true,
+      fallbackToCache: true,
+      fallbackToDump: true,
+    });
+  }
+
+  async #fetchAttachment(record, options) {
     let {
       retries,
       checkHash,
       attachmentId = record?.id,
       fallbackToCache = false,
       fallbackToDump = false,
+      avoidDownload = false,
     } = options || {};
     if (!attachmentId) {
       // Check for pre-condition. This should not happen, but it is explicitly
@@ -195,7 +249,7 @@ export class Downloader {
 
     // There is no local version that matches the requested record.
     // Try to download the attachment specified in record.
-    if (record && record.attachment) {
+    if (!avoidDownload && record && record.attachment) {
       try {
         const newBuffer = await this.downloadAsBytes(record, {
           retries,
@@ -253,6 +307,9 @@ export class Downloader {
       throw errorIfAllFails;
     }
 
+    if (avoidDownload) {
+      throw new Downloader.NotFoundError(attachmentId);
+    }
     throw new Downloader.DownloadError(attachmentId);
   }
 
