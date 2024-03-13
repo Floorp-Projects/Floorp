@@ -5,6 +5,7 @@
 //! Specified color values.
 
 use super::AllowQuirks;
+use crate::color::component::ColorComponent;
 use crate::color::parsing::{self, FromParsedColor, NumberOrAngle, NumberOrPercentage};
 use crate::color::{mix::ColorInterpolationMethod, AbsoluteColor, ColorSpace};
 use crate::media_queries::Device;
@@ -436,65 +437,65 @@ impl FromParsedColor for Color {
     }
 
     fn from_hsl(
-        hue: Option<f32>,
-        saturation: Option<f32>,
-        lightness: Option<f32>,
-        alpha: Option<f32>,
+        hue: ColorComponent<f32>,
+        saturation: ColorComponent<f32>,
+        lightness: ColorComponent<f32>,
+        alpha: ColorComponent<f32>,
     ) -> Self {
         AbsoluteColor::new(ColorSpace::Hsl, hue, saturation, lightness, alpha).into()
     }
 
     fn from_hwb(
-        hue: Option<f32>,
-        whiteness: Option<f32>,
-        blackness: Option<f32>,
-        alpha: Option<f32>,
+        hue: ColorComponent<f32>,
+        whiteness: ColorComponent<f32>,
+        blackness: ColorComponent<f32>,
+        alpha: ColorComponent<f32>,
     ) -> Self {
         AbsoluteColor::new(ColorSpace::Hwb, hue, whiteness, blackness, alpha).into()
     }
 
     fn from_lab(
-        lightness: Option<f32>,
-        a: Option<f32>,
-        b: Option<f32>,
-        alpha: Option<f32>,
+        lightness: ColorComponent<f32>,
+        a: ColorComponent<f32>,
+        b: ColorComponent<f32>,
+        alpha: ColorComponent<f32>,
     ) -> Self {
         AbsoluteColor::new(ColorSpace::Lab, lightness, a, b, alpha).into()
     }
 
     fn from_lch(
-        lightness: Option<f32>,
-        chroma: Option<f32>,
-        hue: Option<f32>,
-        alpha: Option<f32>,
+        lightness: ColorComponent<f32>,
+        chroma: ColorComponent<f32>,
+        hue: ColorComponent<f32>,
+        alpha: ColorComponent<f32>,
     ) -> Self {
         AbsoluteColor::new(ColorSpace::Lch, lightness, chroma, hue, alpha).into()
     }
 
     fn from_oklab(
-        lightness: Option<f32>,
-        a: Option<f32>,
-        b: Option<f32>,
-        alpha: Option<f32>,
+        lightness: ColorComponent<f32>,
+        a: ColorComponent<f32>,
+        b: ColorComponent<f32>,
+        alpha: ColorComponent<f32>,
     ) -> Self {
         AbsoluteColor::new(ColorSpace::Oklab, lightness, a, b, alpha).into()
     }
 
     fn from_oklch(
-        lightness: Option<f32>,
-        chroma: Option<f32>,
-        hue: Option<f32>,
-        alpha: Option<f32>,
+        lightness: ColorComponent<f32>,
+        chroma: ColorComponent<f32>,
+        hue: ColorComponent<f32>,
+        alpha: ColorComponent<f32>,
     ) -> Self {
         AbsoluteColor::new(ColorSpace::Oklch, lightness, chroma, hue, alpha).into()
     }
 
     fn from_color_function(
         color_space: PredefinedColorSpace,
-        c1: Option<f32>,
-        c2: Option<f32>,
-        c3: Option<f32>,
-        alpha: Option<f32>,
+        c1: ColorComponent<f32>,
+        c2: ColorComponent<f32>,
+        c3: ColorComponent<f32>,
+        alpha: ColorComponent<f32>,
     ) -> Self {
         AbsoluteColor::new(color_space.into(), c1, c2, c3, alpha).into()
     }
