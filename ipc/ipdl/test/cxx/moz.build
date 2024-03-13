@@ -11,7 +11,6 @@ EXPORTS.mozilla._ipdltest += [
     "IPDLUnitTests.h",
     "IPDLUnitTestTypes.h",
     "IPDLUnitTestUtils.h",
-    "TestLatency.h",
     "TestManyChildAllocs.h",
     "TestMultiMgrs.h",
     "TestNestedLoops.h",
@@ -36,7 +35,6 @@ EXPORTS.mozilla._ipdltest += [
 ]
 
 SOURCES += [
-    "TestLatency.cpp",
     "TestManyChildAllocs.cpp",
     "TestMultiMgrs.cpp",
     "TestNestedLoops.cpp",
@@ -71,7 +69,6 @@ IPDL_SOURCES += [
     "PTestIndirectProtocolParamFirst.ipdl",
     "PTestIndirectProtocolParamManage.ipdl",
     "PTestIndirectProtocolParamSecond.ipdl",
-    "PTestLatency.ipdl",
     "PTestManyChildAllocs.ipdl",
     "PTestManyChildAllocsSub.ipdl",
     "PTestMultiMgrs.ipdl",
