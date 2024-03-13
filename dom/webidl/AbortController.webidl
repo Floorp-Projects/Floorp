@@ -7,7 +7,7 @@
  * https://dom.spec.whatwg.org/#abortcontroller
  */
 
-[Exposed=(Window,Worker)]
+[Exposed=*]
 interface AbortController {
   [Throws]
   constructor();
