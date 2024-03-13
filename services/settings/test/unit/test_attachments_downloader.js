@@ -47,7 +47,7 @@ function pathFromURL(url) {
 
 const PROFILE_URL = PathUtils.toFileURI(PathUtils.localProfileDir);
 
-function run_test() {
+add_setup(() => {
   server = new HttpServer();
   server.start(-1);
   registerCleanupFunction(() => server.stop(() => {}));
@@ -56,9 +56,7 @@ function run_test() {
     "/cdn/main-workspace/some-collection/",
     do_get_file("test_attachments_downloader")
   );
-
-  run_next_test();
-}
+});
 
 async function clear_state() {
   Services.prefs.setStringPref(
@@ -606,6 +604,74 @@ add_task(async function test_download_from_dump() {
 
   await Assert.rejects(
     client.attachments.download(null, {
+      attachmentId: "filename-without-content.txt",
+      fallbackToDump: true,
+    }),
+    /Could not download resource:\/\/rs-downloader-test\/settings\/dump-bucket\/dump-collection\/filename-without-content\.txt(?!\.meta\.json)/,
+    "Cannot download dump that is missing, despite the existing .meta.json"
+  );
+
+  // Restore, just in case.
+  Downloader._RESOURCE_BASE_URL = orig_RESOURCE_BASE_URL;
+  resProto.setSubstitution("rs-downloader-test", null);
+});
+// Not really needed because the last test doesn't modify the main collection,
+// but added for consistency with other tests tasks around here.
+add_task(clear_state);
+
+add_task(async function test_attachment_get() {
+  // Since get() is largely a wrapper around the same code as download(),
+  // we only test a couple of parts to check it functions as expected, and
+  // rely on the download() testing for the rest.
+
+  await Assert.rejects(
+    downloader.get(RECORD),
+    /NotFoundError: Could not find /,
+    "get() fails when there is no local cache nor dump"
+  );
+
+  const client = RemoteSettings("dump-collection", {
+    bucketName: "dump-bucket",
+  });
+
+  // Temporarily replace the resource:-URL with another resource:-URL.
+  const orig_RESOURCE_BASE_URL = Downloader._RESOURCE_BASE_URL;
+  Downloader._RESOURCE_BASE_URL = "resource://rs-downloader-test";
+  const resProto = Services.io
+    .getProtocolHandler("resource")
+    .QueryInterface(Ci.nsIResProtocolHandler);
+  resProto.setSubstitution(
+    "rs-downloader-test",
+    Services.io.newFileURI(do_get_file("test_attachments_downloader"))
+  );
+
+  function checkInfo(result, expectedSource, expectedRecord = RECORD_OF_DUMP) {
+    Assert.equal(
+      new TextDecoder().decode(new Uint8Array(result.buffer)),
+      "This would be a RS dump.\n",
+      "expected content from dump"
+    );
+    Assert.deepEqual(result.record, expectedRecord, "expected record for dump");
+    Assert.equal(result._source, expectedSource, "expected source of dump");
+  }
+
+  // When a record is given, use whichever that has the matching last_modified.
+  const dump = await client.attachments.get(RECORD_OF_DUMP);
+  checkInfo(dump, "dump_match");
+
+  await client.attachments.deleteDownloaded(RECORD_OF_DUMP);
+
+  await Assert.rejects(
+    client.attachments.get(null, {
+      attachmentId: "filename-without-meta.txt",
+      fallbackToDump: true,
+    }),
+    /NotFoundError: Could not find filename-without-meta.txt in cache or dump/,
+    "Cannot download dump that lacks a .meta.json file"
+  );
+
+  await Assert.rejects(
+    client.attachments.get(null, {
       attachmentId: "filename-without-content.txt",
       fallbackToDump: true,
     }),
