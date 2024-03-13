@@ -1229,9 +1229,6 @@ parent:
                       MaybeDiscardedWindowContext aRequestingWindowContext)
         returns (IPCTransferableData transferableData);
 
-    // Returns a list of formats supported by the clipboard
-    sync GetExternalClipboardFormats(int32_t aWhichClipboard, bool aPlainTextOnly) returns (nsCString[] aTypes);
-
     // Requests getting data from clipboard.
     async GetClipboardAsync(nsCString[] aTypes, int32_t aWhichClipboard,
                             MaybeDiscardedWindowContext aRequestingWindowContext,
