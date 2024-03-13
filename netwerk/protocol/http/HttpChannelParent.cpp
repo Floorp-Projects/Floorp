@@ -26,7 +26,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/ProfilerMarkers.h"
-#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
@@ -2122,8 +2121,7 @@ HttpChannelParent::OnRedirectResult(nsresult status) {
       mParentListener->SetListenerAfterRedirect(redirectChannel);
       redirectChannel->SetParentListener(mParentListener);
     }
-  } else if (redirectChannel &&
-             StaticPrefs::network_http_redirect_raceDeletion()) {
+  } else if (redirectChannel) {
     // Delete the redirect target channel: continue using old channel
     redirectChannel->Delete();
   }
