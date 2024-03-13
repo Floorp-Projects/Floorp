@@ -45,7 +45,6 @@ def valgrind_test(command_context, suppressions):
     from mozprofile.permissions import ServerLocations
     from mozrunner import FirefoxRunner
     from mozrunner.utils import findInPath
-    from six import string_types
     from valgrind.output_handler import OutputHandler
 
     build_dir = os.path.join(command_context.topsrcdir, "build")
@@ -75,7 +74,7 @@ def valgrind_test(command_context, suppressions):
             "server": "%s:%d" % httpd.httpd.server_address,
         }
         for k, v in prefs.items():
-            if isinstance(v, string_types):
+            if isinstance(v, str):
                 v = v.format(**interpolation)
             prefs[k] = Preferences.cast(v)
 
