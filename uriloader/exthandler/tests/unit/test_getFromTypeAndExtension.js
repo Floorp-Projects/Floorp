@@ -24,7 +24,10 @@ add_task(async function test_default_executable() {
       let defaultExecutableFile = mimeInfo.defaultExecutable;
       if (defaultExecutableFile) {
         if (AppConstants.platform == "win") {
-          Assert.ok(defaultExecutableFile.leafName.endsWith(".exe"), "Default browser on Windows should end with .exe");
+          Assert.ok(
+            defaultExecutableFile.leafName.endsWith(".exe"),
+            "Default browser on Windows should end with .exe"
+          );
         }
       }
 
@@ -41,7 +44,10 @@ add_task(async function test_default_executable() {
         }
       }
 
-      Assert.ok(foundDefaultInList, "The default browser must be returned in the list of executables from the mime info");
+      Assert.ok(
+        foundDefaultInList,
+        "The default browser must be returned in the list of executables from the mime info"
+      );
     } else {
       Assert.throws(
         () => mimeInfo.defaultExecutable,
