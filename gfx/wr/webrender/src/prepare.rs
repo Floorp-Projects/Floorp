@@ -803,10 +803,12 @@ fn prepare_interned_prim_for_render(
                     }
                     QuadRenderStrategy::Indirect => {
                         let surface = &frame_state.surfaces[pic_context.surface_index.0];
-                        let clipped_surface_rect = surface.get_surface_rect(
+                        let Some(clipped_surface_rect) = surface.get_surface_rect(
                             &prim_instance.vis.clip_chain.pic_coverage_rect,
                             frame_context.spatial_tree,
-                        ).expect("bug: what can cause this?");
+                        ) else {
+                            return;
+                        };
 
                         let p0 = clipped_surface_rect.min.to_f32();
                         let p1 = clipped_surface_rect.max.to_f32();
@@ -842,10 +844,12 @@ fn prepare_interned_prim_for_render(
                     QuadRenderStrategy::Tiled { x_tiles, y_tiles } => {
                         let surface = &frame_state.surfaces[pic_context.surface_index.0];
 
-                        let clipped_surface_rect = surface.get_surface_rect(
+                        let Some(clipped_surface_rect) = surface.get_surface_rect(
                             &prim_instance.vis.clip_chain.pic_coverage_rect,
                             frame_context.spatial_tree,
-                        ).expect("bug: what can cause this?");
+                        ) else {
+                            return;
+                        };
 
                         let unclipped_surface_rect = surface.map_to_device_rect(
                             &prim_instance.vis.clip_chain.pic_coverage_rect,
@@ -921,10 +925,12 @@ fn prepare_interned_prim_for_render(
                     }
                     QuadRenderStrategy::NinePatch { clip_rect, radius } => {
                         let surface = &frame_state.surfaces[pic_context.surface_index.0];
-                        let clipped_surface_rect = surface.get_surface_rect(
+                        let Some(clipped_surface_rect) = surface.get_surface_rect(
                             &prim_instance.vis.clip_chain.pic_coverage_rect,
                             frame_context.spatial_tree,
-                        ).expect("bug: what can cause this?");
+                        ) else {
+                            return;
+                        };
 
                         let unclipped_surface_rect = surface.map_to_device_rect(
                             &prim_instance.vis.clip_chain.pic_coverage_rect,
@@ -1355,10 +1361,12 @@ fn prepare_interned_prim_for_render(
                     let device_pixel_scale = surface.device_pixel_scale;
                     let raster_spatial_node_index = surface.raster_spatial_node_index;
 
-                    let clipped_surface_rect = surface.get_surface_rect(
+                    let Some(clipped_surface_rect) = surface.get_surface_rect(
                         &coverage_rect,
                         frame_context.spatial_tree,
-                    ).expect("bug: what can cause this?");
+                    ) else {
+                        return;
+                    };
 
                     // Draw a normal screens-space mask to an alpha target that
                     // can be sampled when compositing this picture.
