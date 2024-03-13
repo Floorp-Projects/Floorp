@@ -11,9 +11,7 @@ ChromeUtils.defineESModuleGetters(this, {
     "resource:///modules/asrouter/FeatureCalloutMessages.sys.mjs",
 
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
-});
-XPCOMUtils.defineLazyModuleGetters(this, {
-  QueryCache: "resource:///modules/asrouter/ASRouterTargeting.jsm",
+  QueryCache: "resource:///modules/asrouter/ASRouterTargeting.sys.mjs",
 });
 const { FxAccounts } = ChromeUtils.importESModule(
   "resource://gre/modules/FxAccounts.sys.mjs"
