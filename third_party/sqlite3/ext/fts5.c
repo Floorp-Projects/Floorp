@@ -16004,23 +16004,26 @@ static void fts5IterSetOutputsTokendata(Fts5Iter *pIter){
 static void fts5TokendataIterNext(Fts5Iter *pIter, int bFrom, i64 iFrom){
   int ii;
   Fts5TokenDataIter *pT = pIter->pTokenDataIter;
+  Fts5Index *pIndex = pIter->pIndex;
 
   for(ii=0; ii<pT->nIter; ii++){
     Fts5Iter *p = pT->apIter[ii];
     if( p->base.bEof==0 
      && (p->base.iRowid==pIter->base.iRowid || (bFrom && p->base.iRowid<iFrom))
     ){
-      fts5MultiIterNext(p->pIndex, p, bFrom, iFrom);
+      fts5MultiIterNext(pIndex, p, bFrom, iFrom);
       while( bFrom && p->base.bEof==0 
           && p->base.iRowid<iFrom 
-          && p->pIndex->rc==SQLITE_OK 
+          && pIndex->rc==SQLITE_OK 
       ){
-        fts5MultiIterNext(p->pIndex, p, 0, 0);
+        fts5MultiIterNext(pIndex, p, 0, 0);
       }
     }
   }
 
-  fts5IterSetOutputsTokendata(pIter);
+  if( pIndex->rc==SQLITE_OK ){
+    fts5IterSetOutputsTokendata(pIter);
+  }
 }
 
 /*
@@ -21175,7 +21178,7 @@ static void fts5SourceIdFunc(
 ){
   assert( nArg==0 );
   UNUSED_PARAM2(nArg, apUnused);
-  sqlite3_result_text(pCtx, "fts5: 2024-01-30 16:01:20 e876e51a0ed5c5b3126f52e532044363a014bc594cfefa87ffb5b82257cc467a", -1, SQLITE_TRANSIENT);
+  sqlite3_result_text(pCtx, "fts5: 2024-03-12 11:06:23 d8cd6d49b46a395b13955387d05e9e1a2a47e54fb99f3c9b59835bbefad6af77", -1, SQLITE_TRANSIENT);
 }
 
 /*
