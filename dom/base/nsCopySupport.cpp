@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsCopySupport.h"
+#include "nsGlobalWindowInner.h"
 #include "nsIDocumentEncoder.h"
 #include "nsISupports.h"
 #include "nsIContent.h"
@@ -713,6 +714,33 @@ static Element* GetElementOrNearestFlattenedTreeParentElement(nsINode* aNode) {
   return nullptr;
 }
 
+/**
+ * This class is used while processing clipboard paste event.
+ */
+class MOZ_RAII AutoHandlingPasteEvent final {
+ public:
+  explicit AutoHandlingPasteEvent(nsGlobalWindowInner* aWindow,
+                                  DataTransfer* aDataTransfer,
+                                  const EventMessage& aEventMessage,
+                                  const int32_t& aClipboardType) {
+    MOZ_ASSERT(aDataTransfer);
+    if (aWindow && aEventMessage == ePaste &&
+        aClipboardType == nsIClipboard::kGlobalClipboard) {
+      aWindow->SetCurrentPasteDataTransfer(aDataTransfer);
+      mInnerWindow = aWindow;
+    }
+  }
+
+  ~AutoHandlingPasteEvent() {
+    if (mInnerWindow) {
+      mInnerWindow->SetCurrentPasteDataTransfer(nullptr);
+    }
+  }
+
+ private:
+  RefPtr<nsGlobalWindowInner> mInnerWindow;
+};
+
 bool nsCopySupport::FireClipboardEvent(EventMessage aEventMessage,
                                        int32_t aClipboardType,
                                        PresShell* aPresShell,
@@ -790,9 +818,16 @@ bool nsCopySupport::FireClipboardEvent(EventMessage aEventMessage,
     InternalClipboardEvent evt(true, originalEventMessage);
     evt.mClipboardData = clipboardData;
 
-    RefPtr<nsPresContext> presContext = presShell->GetPresContext();
-    EventDispatcher::Dispatch(targetElement, presContext, &evt, nullptr,
-                              &status);
+    {
+      AutoHandlingPasteEvent autoHandlingPasteEvent(
+          nsGlobalWindowInner::Cast(doc->GetInnerWindow()), clipboardData,
+          aEventMessage, aClipboardType);
+
+      RefPtr<nsPresContext> presContext = presShell->GetPresContext();
+      EventDispatcher::Dispatch(targetElement, presContext, &evt, nullptr,
+                                &status);
+    }
+
     // If the event was cancelled, don't do the clipboard operation
     doDefault = (status != nsEventStatus_eConsumeNoDefault);
   }

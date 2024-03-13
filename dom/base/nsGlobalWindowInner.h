@@ -104,6 +104,7 @@ class ClientSource;
 class Console;
 class Crypto;
 class CustomElementRegistry;
+class DataTransfer;
 class DocGroup;
 class External;
 class Function;
@@ -1257,6 +1258,9 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   mozilla::dom::TrustedTypePolicyFactory* TrustedTypes();
 
+  void SetCurrentPasteDataTransfer(mozilla::dom::DataTransfer* aDataTransfer);
+  mozilla::dom::DataTransfer* GetCurrentPasteDataTransfer() const;
+
  private:
   RefPtr<mozilla::dom::ContentMediaController> mContentMediaController;
 
@@ -1464,6 +1468,10 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
     nsRefPtrHashtable<nsStringHashKey, mozilla::dom::ChromeMessageBroadcaster>
         mGroupMessageManagers{1};
   } mChromeFields;
+
+  // Cache the DataTransfer created for a paste event, this will be reset after
+  // the event is dispatched.
+  RefPtr<mozilla::dom::DataTransfer> mCurrentPasteDataTransfer;
 
   // These fields are used by the inner and outer windows to prevent
   // programatically moving the window while the mouse is down.
