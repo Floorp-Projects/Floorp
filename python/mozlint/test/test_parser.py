@@ -59,6 +59,7 @@ def test_parser_valid_multiple(parse):
         "invalid_include_with_glob.yml",
         "invalid_exclude.yml",
         "invalid_support_files.yml",
+        "invalid_ext_and_exclude_ext.yml",
         "missing_attrs.yml",
         "missing_definition.yml",
         "non_existing_include.yml",
