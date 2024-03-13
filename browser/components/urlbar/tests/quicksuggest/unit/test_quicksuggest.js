@@ -1516,7 +1516,7 @@ add_tasks_with_rust(async function tabToSearch() {
       // search heuristic
       makeSearchResult(context, {
         engineName: Services.search.defaultEngine.name,
-        engineIconUri: Services.search.defaultEngine.getIconURL(),
+        engineIconUri: await Services.search.defaultEngine.getIconURL(),
         heuristic: true,
       }),
       // tab to search
@@ -1602,7 +1602,7 @@ add_tasks_with_rust(async function position() {
       // search heuristic
       makeSearchResult(context, {
         engineName: Services.search.defaultEngine.name,
-        engineIconUri: Services.search.defaultEngine.getIconURL(),
+        engineIconUri: await Services.search.defaultEngine.getIconURL(),
         heuristic: true,
       }),
       // best match whose backing suggestion has a `position`

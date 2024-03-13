@@ -140,6 +140,12 @@ class ProviderContextualSearch extends UrlbarProvider {
     }
 
     if (engine) {
+      let instance = this.queryInstance;
+      let icon = await engine.getIconURL();
+      if (instance != this.queryInstance) {
+        return;
+      }
+
       this.engines.set(hostname, engine);
       // Check to see if the engine that was found is the default engine.
       // The default engine will often be used to populate the heuristic result,
@@ -155,7 +161,7 @@ class ProviderContextualSearch extends UrlbarProvider {
       let result = this.makeResult({
         url,
         engine: engine.name,
-        icon: engine.getIconURL(),
+        icon,
         input: queryContext.searchString,
         shouldNavigate: true,
       });

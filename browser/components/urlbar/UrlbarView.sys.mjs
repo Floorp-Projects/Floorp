@@ -3136,6 +3136,7 @@ export class UrlbarView {
 
     let engine = this.oneOffSearchButtons.selectedButton?.engine;
     let source = this.oneOffSearchButtons.selectedButton?.source;
+    let icon = this.oneOffSearchButtons.selectedButton?.image;
 
     let localSearchMode;
     if (source) {
@@ -3259,7 +3260,15 @@ export class UrlbarView {
       }
 
       // Update result favicons.
-      let iconOverride = localSearchMode?.icon || engine?.getIconURL();
+      let iconOverride = localSearchMode?.icon;
+      // If the icon is the default one-off search placeholder, assume we
+      // don't have an icon for the engine.
+      if (
+        !iconOverride &&
+        icon != "chrome://browser/skin/search-engine-placeholder.png"
+      ) {
+        iconOverride = icon;
+      }
       if (!iconOverride && (localSearchMode || engine)) {
         // For one-offs without an icon, do not allow restyled URL results to
         // use their own icons.

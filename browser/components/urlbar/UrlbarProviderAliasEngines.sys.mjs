@@ -72,6 +72,7 @@ class ProviderAliasEngines extends UrlbarProvider {
       alias,
       queryContext.searchString
     );
+    let icon = await engine?.getIconURL();
     if (!engine || instance != this.queryInstance) {
       return;
     }
@@ -83,7 +84,7 @@ class ProviderAliasEngines extends UrlbarProvider {
         engine: engine.name,
         keyword: alias,
         query: query.trimStart(),
-        icon: engine.getIconURL(),
+        icon,
       })
     );
     result.heuristic = true;

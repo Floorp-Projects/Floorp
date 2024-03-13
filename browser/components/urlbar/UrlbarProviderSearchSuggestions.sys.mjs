@@ -506,7 +506,7 @@ class ProviderSearchSuggestions extends UrlbarProvider {
           trending: entry.trending,
           description: entry.description || undefined,
           query: [searchString.trim(), UrlbarUtils.HIGHLIGHT.NONE],
-          icon: !entry.value ? engine.getIconURL() : entry.icon,
+          icon: !entry.value ? await engine.getIconURL() : entry.icon,
         };
 
         if (entry.trending) {

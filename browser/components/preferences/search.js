@@ -628,6 +628,16 @@ class EngineStore {
     }
   }
 
+  notifyEngineIconUpdated(engine) {
+    // Check the engine is still in the list.
+    let index = this._getIndexForEngine(engine);
+    if (index != -1) {
+      for (let listener of this.#listeners) {
+        listener.engineIconUpdated(index, this.engines);
+      }
+    }
+  }
+
   _getIndexForEngine(aEngine) {
     return this.engines.indexOf(aEngine);
   }
@@ -638,12 +648,28 @@ class EngineStore {
 
   _cloneEngine(aEngine) {
     var clonedObj = {
-      iconURL: aEngine.getIconURL(),
+      iconURL: null,
     };
     for (let i of ["id", "name", "alias", "hidden"]) {
       clonedObj[i] = aEngine[i];
     }
     clonedObj.originalEngine = aEngine;
+
+    // Trigger getting the iconURL for this engine.
+    aEngine.getIconURL().then(iconURL => {
+      if (iconURL) {
+        clonedObj.iconURL = iconURL;
+      } else if (window.devicePixelRatio > 1) {
+        clonedObj.iconURL =
+          "chrome://browser/skin/search-engine-placeholder@2x.png";
+      } else {
+        clonedObj.iconURL =
+          "chrome://browser/skin/search-engine-placeholder.png";
+      }
+
+      this.notifyEngineIconUpdated(clonedObj);
+    });
+
     return clonedObj;
   }
 
@@ -895,6 +921,13 @@ class EngineView {
     }
   }
 
+  engineIconUpdated(index) {
+    this.tree?.invalidateCell(
+      index,
+      this.tree.columns.getNamedColumn("engineName")
+    );
+  }
+
   invalidate() {
     this.tree?.invalidate();
   }
@@ -1128,14 +1161,7 @@ class EngineView {
         return shortcut.icon;
       }
 
-      if (this._engineStore.engines[index].iconURL) {
-        return this._engineStore.engines[index].iconURL;
-      }
-
-      if (window.devicePixelRatio > 1) {
-        return "chrome://browser/skin/search-engine-placeholder@2x.png";
-      }
-      return "chrome://browser/skin/search-engine-placeholder.png";
+      return this._engineStore.engines[index].iconURL;
     }
 
     return "";
@@ -1378,6 +1404,14 @@ class DefaultEngineDropDown {
     let selectedEngineName = this.#element.selectedItem?.engine?.name;
     if (selectedEngineName != engine.name) {
       this.rebuild(enginesList);
+    }
+  }
+
+  engineIconUpdated(index, enginesList) {
+    let item = this.#element.getItemAtIndex(index);
+    // Check this is the right item.
+    if (item?.label == enginesList[index].name) {
+      item.setAttribute("image", enginesList[index].iconURL);
     }
   }
 

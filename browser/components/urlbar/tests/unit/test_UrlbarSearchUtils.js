@@ -91,7 +91,7 @@ add_task(async function add_search_engine_match() {
   Assert.ok(matchedEngine);
   Assert.equal(matchedEngine.searchForm, "https://www.bacon.moz");
   Assert.equal(matchedEngine.name, "bacon");
-  Assert.equal(matchedEngine.getIconURL(), null);
+  Assert.equal(await matchedEngine.getIconURL(), null);
   info("also type part of the public suffix");
   matchedEngine = (
     await UrlbarSearchUtils.enginesForDomainPrefix("bacon.m")
@@ -99,7 +99,7 @@ add_task(async function add_search_engine_match() {
   Assert.ok(matchedEngine);
   Assert.equal(matchedEngine.searchForm, "https://www.bacon.moz");
   Assert.equal(matchedEngine.name, "bacon");
-  Assert.equal(matchedEngine.getIconURL(), null);
+  Assert.equal(await matchedEngine.getIconURL(), null);
 });
 
 add_task(async function match_multiple_search_engines() {
@@ -130,19 +130,19 @@ add_task(async function test_aliased_search_engine_match() {
   Assert.ok(matchedEngine);
   Assert.equal(matchedEngine.name, "bacon");
   Assert.ok(matchedEngine.aliases.includes("pork"));
-  Assert.equal(matchedEngine.getIconURL(), null);
+  Assert.equal(await matchedEngine.getIconURL(), null);
   // Upper case
   matchedEngine = await UrlbarSearchUtils.engineForAlias("PORK");
   Assert.ok(matchedEngine);
   Assert.equal(matchedEngine.name, "bacon");
   Assert.ok(matchedEngine.aliases.includes("pork"));
-  Assert.equal(matchedEngine.getIconURL(), null);
+  Assert.equal(await matchedEngine.getIconURL(), null);
   // Cap case
   matchedEngine = await UrlbarSearchUtils.engineForAlias("Pork");
   Assert.ok(matchedEngine);
   Assert.equal(matchedEngine.name, "bacon");
   Assert.ok(matchedEngine.aliases.includes("pork"));
-  Assert.equal(matchedEngine.getIconURL(), null);
+  Assert.equal(await matchedEngine.getIconURL(), null);
 });
 
 add_task(async function test_aliased_search_engine_match_upper_case_alias() {
@@ -160,19 +160,19 @@ add_task(async function test_aliased_search_engine_match_upper_case_alias() {
   Assert.ok(matchedEngine);
   Assert.equal(matchedEngine.name, "patch");
   Assert.ok(matchedEngine.aliases.includes("PR"));
-  Assert.equal(matchedEngine.getIconURL(), null);
+  Assert.equal(await matchedEngine.getIconURL(), null);
   // Upper case
   matchedEngine = await UrlbarSearchUtils.engineForAlias("PR");
   Assert.ok(matchedEngine);
   Assert.equal(matchedEngine.name, "patch");
   Assert.ok(matchedEngine.aliases.includes("PR"));
-  Assert.equal(matchedEngine.getIconURL(), null);
+  Assert.equal(await matchedEngine.getIconURL(), null);
   // Cap case
   matchedEngine = await UrlbarSearchUtils.engineForAlias("Pr");
   Assert.ok(matchedEngine);
   Assert.equal(matchedEngine.name, "patch");
   Assert.ok(matchedEngine.aliases.includes("PR"));
-  Assert.equal(matchedEngine.getIconURL(), null);
+  Assert.equal(await matchedEngine.getIconURL(), null);
 });
 
 add_task(async function remove_search_engine_nomatch() {

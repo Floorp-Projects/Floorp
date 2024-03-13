@@ -97,7 +97,7 @@ class ProviderHeuristicFallback extends UrlbarProvider {
           }) ||
             lazy.UrlbarTokenizer.REGEXP_COMMON_EMAIL.test(str))
         ) {
-          let searchResult = this._engineSearchResult(queryContext);
+          let searchResult = await this._engineSearchResult(queryContext);
           if (instance != this.queryInstance) {
             return;
           }
@@ -107,13 +107,16 @@ class ProviderHeuristicFallback extends UrlbarProvider {
       return;
     }
 
-    result = this._searchModeKeywordResult(queryContext);
+    result = await this._searchModeKeywordResult(queryContext);
+    if (instance != this.queryInstance) {
+      return;
+    }
     if (result) {
       addCallback(this, result);
       return;
     }
 
-    result = this._engineSearchResult(queryContext);
+    result = await this._engineSearchResult(queryContext);
     if (instance != this.queryInstance) {
       return;
     }
@@ -228,7 +231,7 @@ class ProviderHeuristicFallback extends UrlbarProvider {
     return result;
   }
 
-  _searchModeKeywordResult(queryContext) {
+  async _searchModeKeywordResult(queryContext) {
     if (!queryContext.tokens.length) {
       return null;
     }
@@ -266,7 +269,7 @@ class ProviderHeuristicFallback extends UrlbarProvider {
 
     let result;
     if (queryContext.restrictSource == UrlbarUtils.RESULT_SOURCE.SEARCH) {
-      result = this._engineSearchResult(queryContext, firstToken);
+      result = await this._engineSearchResult(queryContext, firstToken);
     } else {
       result = new lazy.UrlbarResult(
         UrlbarUtils.RESULT_TYPE.SEARCH,
@@ -281,7 +284,7 @@ class ProviderHeuristicFallback extends UrlbarProvider {
     return result;
   }
 
-  _engineSearchResult(queryContext, keyword = null) {
+  async _engineSearchResult(queryContext, keyword = null) {
     let engine;
     if (queryContext.searchMode?.engineName) {
       engine = lazy.UrlbarSearchUtils.getEngineByName(
@@ -315,7 +318,7 @@ class ProviderHeuristicFallback extends UrlbarProvider {
       UrlbarUtils.RESULT_SOURCE.SEARCH,
       ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
         engine: [engine.name, UrlbarUtils.HIGHLIGHT.TYPED],
-        icon: engine.getIconURL(),
+        icon: await engine.getIconURL(),
         query: [query, UrlbarUtils.HIGHLIGHT.NONE],
         keyword: keyword ? [keyword, UrlbarUtils.HIGHLIGHT.NONE] : undefined,
       })

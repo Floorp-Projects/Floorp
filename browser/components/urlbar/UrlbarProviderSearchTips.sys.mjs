@@ -192,6 +192,7 @@ class ProviderSearchTips extends UrlbarProvider {
     this.currentTip = TIPS.NONE;
 
     let defaultEngine = await Services.search.getDefault();
+    let icon = await defaultEngine.getIconURL();
     if (instance != this.queryInstance) {
       return;
     }
@@ -202,7 +203,7 @@ class ProviderSearchTips extends UrlbarProvider {
       {
         type: tip,
         buttons: [{ l10n: { id: "urlbar-search-tips-confirm" } }],
-        icon: defaultEngine.getIconURL(),
+        icon,
       }
     );
 

@@ -99,7 +99,7 @@ interface nsISearchEngine : nsISupports
    *   Width of the requested icon. If not specified, it is assumed that
    *   16x16 is desired.
    */
-  jsval getIconURL([optional] in unsigned short preferredWidth);
+  Promise getIconURL([optional] in unsigned short preferredWidth);
 
   /**
    * Opens a speculative connection to the engine's search URI
