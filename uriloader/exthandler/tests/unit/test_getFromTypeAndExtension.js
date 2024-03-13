@@ -16,6 +16,42 @@ add_task(async function test_utf8_extension() {
   }
 });
 
+add_task(async function test_default_executable() {
+  const mimeService = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
+  let mimeInfo = mimeService.getFromTypeAndExtension("text/html", "html");
+  if (mimeInfo !== undefined) {
+    if (mimeInfo.hasDefaultHandler) {
+      let defaultExecutableFile = mimeInfo.defaultExecutable;
+      if (defaultExecutableFile) {
+        if (AppConstants.platform == "win") {
+          Assert.ok(defaultExecutableFile.leafName.endsWith(".exe"), "Default browser on Windows should end with .exe");
+        }
+      }
+
+      let foundDefaultInList = false;
+
+      let appList = mimeInfo.possibleLocalHandlers || [];
+      for (let index = 0; index < appList.length; index++) {
+        let app = appList.queryElementAt(index, Ci.nsILocalHandlerApp);
+        let executablePath = app.executable.path;
+
+        if (executablePath == defaultExecutableFile.path) {
+          foundDefaultInList = true;
+          break;
+        }
+      }
+
+      Assert.ok(foundDefaultInList, "The default browser must be returned in the list of executables from the mime info");
+    } else {
+      Assert.throws(
+        () => mimeInfo.defaultExecutable,
+        /NS_ERROR_FAILURE/,
+        "Fetching the defaultExecutable should generate an exception; this line should never be reached"
+      );
+    }
+  }
+});
+
 add_task(async function test_pretty_name_for_edge() {
   if (AppConstants.platform == "win" && !AppConstants.IS_ESR) {
     const mimeService = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
