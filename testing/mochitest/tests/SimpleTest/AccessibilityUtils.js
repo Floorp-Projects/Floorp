@@ -397,8 +397,12 @@ this.AccessibilityUtils = (function () {
     // Check that there is only one keyboard reachable tab.
     let foundFocusable = false;
     for (const tab of findNonGenericChildrenAccessible(tablist)) {
-      if (!tab || tab.role != Ci.nsIAccessibleRole.ROLE_PAGETAB) {
-        // The tablist includes children other than tabs or no tabs at all
+      // Allow whitespaces to be included in the tablist for styling purposes
+      const isWhitespace =
+        tab.role == Ci.nsIAccessibleRole.ROLE_TEXT_LEAF &&
+        tab.DOMNode.textContent.trim().length === 0;
+      if (tab.role != Ci.nsIAccessibleRole.ROLE_PAGETAB && !isWhitespace) {
+        // The tablist includes children other than tabs or whitespaces
         a11yFail("Only tabs should be included in a tablist", accessible);
       }
       // Use tabIndex rather than a11y focusable state because all tabs might
