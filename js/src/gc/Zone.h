@@ -375,15 +375,13 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   bool registerObjectWithWeakPointers(JSObject* obj);
   void sweepObjectsWithWeakPointers(JSTracer* trc);
 
-  void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
-                              JS::CodeSizes* code, size_t* regexpZone,
-                              size_t* jitZone, size_t* cacheIRStubs,
-                              size_t* uniqueIdMap, size_t* initialPropMapTable,
-                              size_t* shapeTables, size_t* atomsMarkBitmaps,
-                              size_t* compartmentObjects,
-                              size_t* crossCompartmentWrappersTables,
-                              size_t* compartmentsPrivateData,
-                              size_t* scriptCountsMapArg);
+  void addSizeOfIncludingThis(
+      mozilla::MallocSizeOf mallocSizeOf, size_t* zoneObject,
+      JS::CodeSizes* code, size_t* regexpZone, size_t* jitZone,
+      size_t* cacheIRStubs, size_t* uniqueIdMap, size_t* initialPropMapTable,
+      size_t* shapeTables, size_t* atomsMarkBitmaps, size_t* compartmentObjects,
+      size_t* crossCompartmentWrappersTables, size_t* compartmentsPrivateData,
+      size_t* scriptCountsMapArg);
 
   // Iterate over all cells in the zone. See the definition of ZoneCellIter
   // in gc/GC-inl.h for the possible arguments and documentation.
