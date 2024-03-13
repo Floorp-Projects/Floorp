@@ -84,6 +84,8 @@ class CanvasContext final : public nsICanvasRenderingContextInternal,
   already_AddRefed<layers::FwdTransactionTracker> UseCompositableForwarder(
       layers::CompositableForwarder* aForwarder) override;
 
+  bool IsOffscreenCanvas() { return !!mOffscreenCanvas; }
+
  public:
   void GetCanvas(dom::OwningHTMLCanvasElementOrOffscreenCanvas&) const;
 

@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/dom/UnionTypes.h"
 #include "mozilla/dom/WebGPUBinding.h"
 #include "CommandEncoder.h"
 
@@ -89,6 +90,14 @@ void CommandEncoder::Cleanup() {
   }
 }
 
+void CommandEncoder::TrackPresentationContext(CanvasContext* aTargetContext) {
+  if (aTargetContext) {
+    if (!aTargetContext->IsOffscreenCanvas()) {
+      mPresentationContexts.AppendElement(aTargetContext);
+    }
+  }
+}
+
 void CommandEncoder::CopyBufferToBuffer(const Buffer& aSource,
                                         BufferAddress aSourceOffset,
                                         const Buffer& aDestination,
@@ -121,10 +130,7 @@ void CommandEncoder::CopyBufferToTexture(
       ConvertExtent(aCopySize), ToFFI(&bb));
   mBridge->SendCommandEncoderAction(mId, mParent->mId, std::move(bb));
 
-  const auto& targetContext = aDestination.mTexture->mTargetContext;
-  if (targetContext) {
-    mPresentationContexts.AppendElement(targetContext);
-  }
+  TrackPresentationContext(aDestination.mTexture->mTargetContext);
 }
 void CommandEncoder::CopyTextureToBuffer(
     const dom::GPUImageCopyTexture& aSource,
@@ -156,10 +162,7 @@ void CommandEncoder::CopyTextureToTexture(
       ConvertExtent(aCopySize), ToFFI(&bb));
   mBridge->SendCommandEncoderAction(mId, mParent->mId, std::move(bb));
 
-  const auto& targetContext = aDestination.mTexture->mTargetContext;
-  if (targetContext) {
-    mPresentationContexts.AppendElement(targetContext);
-  }
+  TrackPresentationContext(aDestination.mTexture->mTargetContext);
 }
 
 void CommandEncoder::ClearBuffer(const Buffer& aBuffer, const uint64_t aOffset,
@@ -216,13 +219,9 @@ already_AddRefed<ComputePassEncoder> CommandEncoder::BeginComputePass(
 already_AddRefed<RenderPassEncoder> CommandEncoder::BeginRenderPass(
     const dom::GPURenderPassDescriptor& aDesc) {
   for (const auto& at : aDesc.mColorAttachments) {
-    auto* targetContext = at.mView->GetTargetContext();
-    if (targetContext) {
-      mPresentationContexts.AppendElement(targetContext);
-    }
+    TrackPresentationContext(at.mView->GetTargetContext());
     if (at.mResolveTarget.WasPassed()) {
-      targetContext = at.mResolveTarget.Value().GetTargetContext();
-      mPresentationContexts.AppendElement(targetContext);
+      TrackPresentationContext(at.mResolveTarget.Value().GetTargetContext());
     }
   }
 
