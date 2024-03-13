@@ -79,10 +79,8 @@ export class FormAutofillChild extends JSWindowActorChild {
     super();
 
     this._nextHandleElement = null;
-    this._alreadyDOMContentLoaded = false;
     this._hasDOMContentLoadedHandler = false;
     this._hasPendingTask = false;
-    this.testListener = null;
 
     lazy.AutoCompleteChild.addPopupStateListener(this);
   }
@@ -373,26 +371,25 @@ export class FormAutofillChild extends JSWindowActorChild {
   onFocusIn(evt) {
     lazy.FormAutofillContent.updateActiveInput();
 
-    let element = evt.target;
+    const element = evt.target;
     if (!lazy.FormAutofillUtils.isCreditCardOrAddressFieldType(element)) {
       return;
     }
-    this._nextHandleElement = element;
 
-    if (!this._alreadyDOMContentLoaded) {
-      let doc = element.ownerDocument;
-      if (doc.readyState === "loading") {
-        if (!this._hasDOMContentLoadedHandler) {
-          this._hasDOMContentLoadedHandler = true;
-          doc.addEventListener(
-            "DOMContentLoaded",
-            () => this._doIdentifyAutofillFields(),
-            { once: true }
-          );
-        }
-        return;
+    this._nextHandleElement = element;
+    const doc = element.ownerDocument;
+    if (doc.readyState === "loading") {
+      // For auto-focused input, we might receive focus event before document becomes ready.
+      // When this happens, run field identification after receiving `DOMContentLoaded` event
+      if (!this._hasDOMContentLoadedHandler) {
+        this._hasDOMContentLoadedHandler = true;
+        doc.addEventListener(
+          "DOMContentLoaded",
+          () => this._doIdentifyAutofillFields(),
+          { once: true }
+        );
       }
-      this._alreadyDOMContentLoaded = true;
+      return;
     }
 
     this._doIdentifyAutofillFields();
