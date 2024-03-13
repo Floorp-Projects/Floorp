@@ -874,6 +874,8 @@ class TelemetryEvent {
         startEventInfo.interactionType == "dropped" ? "drop_go" : "paste_go";
     } else if (event.type == "blur") {
       action = "blur";
+    } else if (event.type == "tabswitch") {
+      action = "tab_switch";
     } else if (
       details.element?.dataset.command &&
       // The "help" selType is recognized by legacy telemetry, and `action`
@@ -892,7 +894,8 @@ class TelemetryEvent {
       action = "enter";
     }
 
-    let method = action == "blur" ? "abandonment" : "engagement";
+    let method =
+      action == "blur" || action == "tab_switch" ? "abandonment" : "engagement";
 
     if (method == "engagement") {
       // Not all engagements end the search session. The session remains ongoing
@@ -1060,6 +1063,7 @@ class TelemetryEvent {
       };
     } else if (method === "abandonment") {
       eventInfo = {
+        abandonment_type: action,
         sap,
         interaction,
         search_mode,
