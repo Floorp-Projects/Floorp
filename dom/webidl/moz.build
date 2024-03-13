@@ -976,6 +976,7 @@ WEBIDL_FILES = [
     "TransformStreamDefaultController.webidl",
     "TransitionEvent.webidl",
     "TreeWalker.webidl",
+    "TrustedTypes.webidl",
     "UDPMessageEvent.webidl",
     "UDPSocket.webidl",
     "UIEvent.webidl",

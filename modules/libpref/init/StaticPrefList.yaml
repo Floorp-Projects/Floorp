@@ -3708,6 +3708,13 @@
   value: false
   mirror: always
 
+# If and only if true, support for Trusted Types
+# (https://w3c.github.io/trusted-types/dist/spec/) is enabled.
+- name: dom.security.trusted_types.enabled
+  type: RelaxedAtomicBool
+  value: False
+  mirror: always
+
 # If true, all content requests will get upgraded to HTTPS://
 # (some Firefox functionality requests, like OCSP will not be affected)
 - name: dom.security.https_only_mode
