@@ -163,7 +163,9 @@ bool MediaDecoderStateMachineBase::OnTaskQueue() const {
 
 void MediaDecoderStateMachineBase::DecodeError(const MediaResult& aError) {
   MOZ_ASSERT(OnTaskQueue());
-  LOGE("Decode error: %s", aError.Description().get());
+  if (aError != NS_ERROR_DOM_MEDIA_EXTERNAL_ENGINE_NOT_SUPPORTED_ERR) {
+    LOGE("Decode error: %s", aError.Description().get());
+  }
   PROFILER_MARKER_TEXT("MDSMBase::DecodeError", MEDIA_PLAYBACK, {},
                        aError.Description());
   // Notify the decode error and MediaDecoder will shut down MDSM.
