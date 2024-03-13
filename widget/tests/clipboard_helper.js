@@ -157,6 +157,13 @@ function getClipboardData(aFlavor, aClipboardType) {
   }
 }
 
+function getClipboardDataSnapshotSync(aClipboardType) {
+  return clipboard.getDataSnapshotSync(
+    ["text/plain", "text/html", "image/png"],
+    aClipboardType
+  );
+}
+
 function asyncGetClipboardData(aClipboardType) {
   return new Promise((resolve, reject) => {
     try {
