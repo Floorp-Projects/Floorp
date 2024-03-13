@@ -30,6 +30,7 @@ vendored:third_party/python/glean_parser
 vendored:third_party/python/gyp/pylib
 vendored:third_party/python/jinja2_time
 vendored:third_party/python/json_e
+vendored:third_party/python/Mako
 vendored:third_party/python/mohawk
 vendored:third_party/python/mozilla_repo_urls
 vendored:third_party/python/multidict
