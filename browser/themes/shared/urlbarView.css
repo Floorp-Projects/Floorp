@@ -18,10 +18,10 @@
   --urlbarView-action-color: LinkText;
   --urlbarView-action-slide-in-distance: 200px;
 
-  --urlbarView-row-gutter: 2px;
-
   --urlbarView-small-font-size: 0.85em;
 
+  --urlbarView-results-padding: 4px;
+  --urlbarView-row-gutter: 2px;
   --urlbarView-item-inline-padding: var(--urlbar-icon-padding);
   --urlbarView-item-block-padding: 6px;
 
@@ -98,7 +98,7 @@
 }
 
 .urlbarView-results {
-  padding-block: 4px;
+  padding-block: var(--urlbarView-results-padding);
   white-space: nowrap;
 
   /* Vertically center the one-offs when no results are present. */
@@ -442,6 +442,7 @@
 
 .urlbarView-row[type=tip] {
   padding-block: 18px;
+  border-block: 0;
   border-radius: 0;
 
   &:not(:last-child) {
@@ -505,6 +506,10 @@
 
   &[tip-type=dismissalAcknowledgment] {
     padding-block: 6px;
+
+    &:last-child {
+      padding-block-end: max(0px, 6px - var(--urlbarView-results-padding));
+    }
   }
 }
 
