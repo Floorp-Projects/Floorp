@@ -876,14 +876,6 @@ var SessionStoreInternal = {
             1
           );
         } else {
-          if (state && state.windows) {
-            for (let win of state.windows) {
-              if(win.isWebpanelWindow) {
-                state.windows.splice(state.windows.indexOf(win), 1);
-              }
-            }
-          }
-
           // Get the last deferred session in case the user still wants to
           // restore it
           LastSession.setState(state.lastSessionState);
@@ -923,6 +915,25 @@ var SessionStoreInternal = {
               restoreAsCrashed = false;
             }
           }
+          
+          // Floorp injections
+          if (
+            state.windows[0] == undefined
+          ) {
+            let lastSessionWindows = state._closedWindows;
+            let closedTime = lastSessionWindows[0].closedAt;
+            for (let i = 0; i < lastSessionWindows.length; i++) {
+              let closedWindow = state._closedWindows[i];
+              let closedWindowTime = closedWindow.closedAt;
+              // If the last closed window is closed in +-100, we will restore it
+              if (closedWindowTime > closedTime - 100 && closedWindowTime < closedTime + 100) {
+                state.windows.push(closedWindow);
+                // Remove the closed window from the closed windows
+                state._closedWindows.splice(i, 1);
+              }
+            }            
+          }
+          // End of floorp injections
 
           // If we didn't use about:sessionrestore, record that:
           if (!restoreAsCrashed) {
@@ -959,6 +970,7 @@ var SessionStoreInternal = {
         state?.windows?.forEach(win => delete win._maybeDontRestoreTabs);
         state?._closedWindows?.forEach(win => delete win._maybeDontRestoreTabs);
       } catch (ex) {
+        console.error(ex);
         this._log.error("The session file is invalid: " + ex);
       }
     }
@@ -1932,7 +1944,7 @@ var SessionStoreInternal = {
     // Floorp Injections
     if (
       aWindow.document.documentElement.getAttribute("FloorpEnableSSBWindow") ==
-      "true" || aWindow.IsWebpanelWindow
+      "true" || aWindow.floorpWebPanelWindow
     ) {
       return completionPromise;
     }
@@ -4075,8 +4087,8 @@ var SessionStoreInternal = {
       delete winData.windowUuid;
     }
 
-    let isWebpanelWindow = aWindow.IsWebpanelWindow;
-    winData.isWebpanelWindow = !!isWebpanelWindow;
+    let floorpWebPanelWindow = aWindow.floorpWebPanelWindow;
+    winData.floorpWebPanelWindow = !!floorpWebPanelWindow;
 
     // Floorp Injections end
 

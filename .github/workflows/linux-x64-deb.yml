@@ -28,7 +28,7 @@ jobs:
 
     steps:
     - name: Checkout 🛎️
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Change PPA mirror servers
       run: |
@@ -48,9 +48,9 @@ jobs:
         export DEBWORK=$WORKDIR/floorp-$DISPVER
         mkdir -p $DEBWORK/usr/lib/
         cd $DEBWORK/usr/lib/
-        mkdir -p floorp-addons/distribution/extensions
-        mkdir floorp-addons/extensions
-        mkdir floorp-addons/plugins
+        mkdir -p floorp/distribution/extensions
+        mkdir floorp/extensions
+        mkdir floorp/plugins
         cp /home/runner/artifact/*.tar.bz2 $WORKDIR/floorp-$DISPVER.en-US.linux-x86_64.tar.bz2
         tar -xjvf $WORKDIR/floorp-$DISPVER.en-US.linux-x86_64.tar.bz2
         cd ..
@@ -111,7 +111,7 @@ jobs:
         rm init_script.txt finish_script.txt Floorp_sec.asc
 
     - name: Publish 🎁
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v4
       with:
         name: floorp-debian-amd64
         path: dist.zip

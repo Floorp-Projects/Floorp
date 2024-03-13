@@ -69,7 +69,7 @@ jobs:
         arch: [x86_64, aarch64]
     steps:
     - name: Use Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: "lts/*"
     - name: Check Argument Compatibility
@@ -91,7 +91,7 @@ jobs:
         sudo apt update
         echo "$GHA_aarch64"
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       name: Clone 🧬
       with:
         submodules: 'recursive'
@@ -102,13 +102,13 @@ jobs:
         .github/workflows/src/disk_swap_for_github_runner.sh
 
     - name: Configure sccache
-      uses: actions/github-script@v6
+      uses: actions/github-script@v7
       with:
         script: |
           core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
           core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       name: Download artifact if use profdata📥
       if: inputs.build-with-profdata-and-jarlog
       with:
@@ -238,13 +238,12 @@ jobs:
         if [[ -n $GHA_MOZ_BUILD_DATE ]];then
           export MOZ_BUILD_DATE=$GHA_MOZ_BUILD_DATE
         fi
-  
+
         ./mach build
       env:
         GHA_MOZ_BUILD_DATE: ${{inputs.MOZ_BUILD_DATE}}
-  
-    - name: Package 📦
 
+    - name: Package 📦
       run: |
         if [[ -n $GHA_MOZ_BUILD_DATE ]];then
           export MOZ_BUILD_DATE=$GHA_MOZ_BUILD_DATE
@@ -289,7 +288,7 @@ jobs:
         GHA_default_name: floorp-mac-${{ matrix.arch }}-${{fromJson('["package","build-with-profgen"]')[inputs.profgen]}}
 
     - name: Publish Package🎁
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{env.ARTIFACT_NAME}}
         path: ~/output

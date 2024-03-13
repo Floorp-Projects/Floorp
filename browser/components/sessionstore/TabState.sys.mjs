@@ -125,7 +125,6 @@ var TabStateInternal = {
 
     // WebPanel
     tabData.floorpWebPanel = tab.hasAttribute("BMS-webpanel-tab");
-    console.log("tabData.floorpWebPanel", tabData.floorpWebPanel, "url", tab.linkedBrowser.currentURI.spec);
 
     /*****Floorp Injections*****/
 

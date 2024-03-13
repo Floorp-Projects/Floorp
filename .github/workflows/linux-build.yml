@@ -59,7 +59,7 @@ jobs:
       mar_size: ${{steps.gen-mar.outputs.MAR_SIZE}}
     steps:
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       name: Clone 🧬
       with:
         submodules: 'recursive'
@@ -68,7 +68,7 @@ jobs:
       run: |
         sudo perl -p -i -e 's%(deb(?:-src|)\s+)https?://(?!archive\.canonical\.com|security\.ubuntu\.com)[^\s]+%$1http://archive.ubuntu.com/ubuntu/%' /etc/apt/sources.list
         sudo apt update
-  
+
     - name: Setup Disk & Swap Space 💿
       run: |
         chmod +x .github/workflows/src/disk_swap_for_github_runner.sh
@@ -92,7 +92,7 @@ jobs:
         GHA_aarch64: ${{inputs.aarch64}}
 
     - name: Configure sccache
-      uses: actions/github-script@v6
+      uses: actions/github-script@v7
       with:
         script: |
           core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
@@ -222,7 +222,7 @@ jobs:
       run: |
         rm -fr ./third_party/rust
         rm -fr ./third_party/libwebrtc
-        
+
     - name: Package 1 - mach 🎁
       run: |
         if [[ -n $GHA_MOZ_BUILD_DATE ]];then
@@ -269,7 +269,7 @@ jobs:
 
           echo "MAR_NAME=LINUX-aarch64.mar" >> $GITHUB_OUTPUT
           echo "MAR_SIZE=$(stat -c "%s" ~/output/LINUX-aarch64.mar)" >> $GITHUB_OUTPUT
-  
+
         else
 
           touch "obj-x86_64-pc-linux-gnu/dist/floorp/precomplete"
@@ -289,7 +289,7 @@ jobs:
 
     #PUBLISH START
     - name: Publish🎁
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: floorp-linux-${{fromJson('["x64","aarch64"]')[inputs.aarch64]}}
         path: ~/output
