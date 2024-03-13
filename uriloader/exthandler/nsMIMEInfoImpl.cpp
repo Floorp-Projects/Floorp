@@ -231,11 +231,6 @@ nsMIMEInfoBase::GetDefaultDescription(nsAString& aDefaultDescription) {
 }
 
 NS_IMETHODIMP
-nsMIMEInfoBase::GetDefaultExecutable(nsIFile** aExecutable) {
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
 nsMIMEInfoBase::GetPreferredApplicationHandler(
     nsIHandlerApp** aPreferredAppHandler) {
   *aPreferredAppHandler = mPreferredApplication;
@@ -486,16 +481,6 @@ nsMIMEInfoImpl::GetDefaultDescription(nsAString& aDefaultDescription) {
   aDefaultDescription = mDefaultAppDescription;
 
   return NS_OK;
-}
-
-NS_IMETHODIMP nsMIMEInfoImpl::GetDefaultExecutable(nsIFile** aExecutable) {
-  nsCOMPtr<nsIFile> defaultApp = GetDefaultApplication();
-  if (defaultApp) {
-    defaultApp.forget(aExecutable);
-    return NS_OK;
-  }
-
-  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
