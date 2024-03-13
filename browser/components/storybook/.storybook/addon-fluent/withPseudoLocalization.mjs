@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { useEffect, useGlobals, addons } from "@storybook/addons";
+import { useEffect, useGlobals, useChannel } from "@storybook/preview-api";
 import {
   DIRECTIONS,
   DIRECTION_BY_STRATEGY,
@@ -25,11 +25,11 @@ export const withPseudoLocalization = (StoryFn, context) => {
   const [{ pseudoStrategy }] = useGlobals();
   const direction = DIRECTION_BY_STRATEGY[pseudoStrategy] || DIRECTIONS.ltr;
   const isInDocs = context.viewMode === "docs";
-  const channel = addons.getChannel();
+  const emit = useChannel({});
 
   useEffect(() => {
     if (pseudoStrategy) {
-      channel.emit(UPDATE_STRATEGY_EVENT, pseudoStrategy);
+      emit(UPDATE_STRATEGY_EVENT, pseudoStrategy);
     }
   }, [pseudoStrategy]);
 
@@ -56,8 +56,7 @@ export const withPseudoLocalization = (StoryFn, context) => {
  */
 export const withFluentStrings = (StoryFn, context) => {
   const [{ fluentStrings }, updateGlobals] = useGlobals();
-  const channel = addons.getChannel();
-
+  const emit = useChannel({});
   const fileName = context.component + ".ftl";
   let strings = [];
 
@@ -83,7 +82,7 @@ export const withFluentStrings = (StoryFn, context) => {
     }
   }
 
-  channel.emit(FLUENT_CHANGED, strings);
+  emit(FLUENT_CHANGED, strings, fileName);
 
   return StoryFn();
 };

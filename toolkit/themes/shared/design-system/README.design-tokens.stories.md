@@ -713,7 +713,7 @@ We rely on the [light-dark()](https://developer.mozilla.org/en-US/docs/Web/CSS/c
 ### High contrast mode
 We rely on two queries for assigning HCM counterpart variables, @media (prefers-contrast) and @media (forced-colors). They are found at the bottom of [tokens-shared.css](https://searchfox.org/mozilla-central/rev/6eb2ebcafb1b4a8576eb513e6cd2c61e3f3ae6dc/toolkit/themes/shared/design-system/tokens-shared.css#109).
 
-<!-- This part of the documentation will link to Bug 1863436 once it lands -->
+/* This part of the documentation will link to Bug 1863436 once it lands */
 
 ## Help and support
 If you have any questions, concerns, or feedback, and if this document has not answered something specific, please reach out to Desktop Theme Reviewers or Reusable Components Reviewers.

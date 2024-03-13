@@ -4,11 +4,9 @@
 
 /** This file handles registering the Storybook addon */
 
-// eslint-disable-next-line no-unused-vars
-import React from "react";
-import { addons, types } from "@storybook/addons";
+import { addons, types } from "@storybook/manager-api";
 import { ADDON_ID, TOOL_ID } from "../constants.mjs";
-import { StatusIndicator } from "../StatusIndicator.mjs";
+import { StatusIndicator } from "../StatusIndicator.jsx";
 
 addons.register(ADDON_ID, () => {
   addons.add(TOOL_ID, {
