@@ -3969,10 +3969,16 @@ impl SurfaceInfo {
 
             local_to_world.map(&local_rect).unwrap()
         } else {
+            // The content should have been culled out earlier.
+            assert!(self.device_pixel_scale.0 > 0.0);
+
             local_rect.cast_unit()
         };
 
-        Some((raster_rect * self.device_pixel_scale).round_out().to_i32())
+        let surface_rect = (raster_rect * self.device_pixel_scale).round_out().to_i32();
+        debug_assert!(!surface_rect.is_empty());
+
+        Some(surface_rect)
     }
 }
 
