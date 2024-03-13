@@ -58,22 +58,11 @@ async function ensureIcon(tab, expectedIcon) {
         "Search Icon not set."
       );
 
-      if (icon.startsWith("blob:")) {
-        // We don't check the data here as `browser_contentSearch.js` performs
-        // those checks.
-        Assert.ok(
-          computedStyle
-            .getPropertyValue("--newtab-search-icon")
-            .startsWith("url(blob:"),
-          "Should have a blob URL"
-        );
-      } else {
-        Assert.equal(
-          computedStyle.getPropertyValue("--newtab-search-icon"),
-          `url(${icon})`,
-          "Should have the expected icon"
-        );
-      }
+      Assert.equal(
+        computedStyle.getPropertyValue("--newtab-search-icon"),
+        `url(${icon})`,
+        "Should have the expected icon"
+      );
     }
   );
 }

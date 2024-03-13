@@ -101,28 +101,11 @@ add_task(async function test_search_icon() {
   let { win, tab } = await openAboutPrivateBrowsing();
 
   await SpecialPowers.spawn(tab, [expectedIconURL], async function (iconURL) {
-    let computedStyle = content.window.getComputedStyle(content.document.body);
-    await ContentTaskUtils.waitForCondition(
-      () => computedStyle.getPropertyValue("--newtab-search-icon") != "null",
-      "Search Icon should get set."
+    is(
+      content.document.body.getAttribute("style"),
+      `--newtab-search-icon: url(${iconURL});`,
+      "Should have the correct icon URL for the logo"
     );
-
-    if (iconURL.startsWith("blob:")) {
-      // We don't check the data here as `browser_contentSearch.js` performs
-      // those checks.
-      Assert.ok(
-        computedStyle
-          .getPropertyValue("--newtab-search-icon")
-          .startsWith("url(blob:"),
-        "Should have a blob URL for the logo"
-      );
-    } else {
-      Assert.equal(
-        computedStyle.getPropertyValue("--newtab-search-icon"),
-        `url(${iconURL})`,
-        "Should have the correct icon URL for the logo"
-      );
-    }
   });
 
   await BrowserTestUtils.closeWindow(win);
