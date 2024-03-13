@@ -893,6 +893,47 @@ static bool InterfaceIsInstance(JSContext* cx, unsigned argc, JS::Value* vp) {
   return true;
 }
 
+bool InitInterfaceOrNamespaceObject(
+    JSContext* cx, JS::Handle<JSObject*> obj,
+    const NativeProperties* properties,
+    const NativeProperties* chromeOnlyProperties, bool isChrome) {
+  if (properties) {
+    if (properties->HasStaticMethods() &&
+        !DefinePrefable(cx, obj, properties->StaticMethods())) {
+      return false;
+    }
+
+    if (properties->HasStaticAttributes() &&
+        !DefinePrefable(cx, obj, properties->StaticAttributes())) {
+      return false;
+    }
+
+    if (properties->HasConstants() &&
+        !DefinePrefable(cx, obj, properties->Constants())) {
+      return false;
+    }
+  }
+
+  if (chromeOnlyProperties && isChrome) {
+    if (chromeOnlyProperties->HasStaticMethods() &&
+        !DefinePrefable(cx, obj, chromeOnlyProperties->StaticMethods())) {
+      return false;
+    }
+
+    if (chromeOnlyProperties->HasStaticAttributes() &&
+        !DefinePrefable(cx, obj, chromeOnlyProperties->StaticAttributes())) {
+      return false;
+    }
+
+    if (chromeOnlyProperties->HasConstants() &&
+        !DefinePrefable(cx, obj, chromeOnlyProperties->Constants())) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 // name must be an atom (or JS::PropertyKey::NonIntAtom will assert).
 static JSObject* CreateInterfaceObject(
     JSContext* cx, JS::Handle<JSObject*> global,
@@ -901,8 +942,8 @@ static JSObject* CreateInterfaceObject(
     const Span<const LegacyFactoryFunction>& legacyFactoryFunctions,
     JS::Handle<JSObject*> proto, const NativeProperties* properties,
     const NativeProperties* chromeOnlyProperties, JS::Handle<JSString*> name,
-    bool isChrome, bool defineOnGlobal, const char* const* legacyWindowAliases,
-    bool isNamespace) {
+    bool isChrome, bool defineOnGlobal,
+    const char* const* legacyWindowAliases) {
   JS::Rooted<JSObject*> constructor(cx);
   MOZ_ASSERT(constructorProto);
   MOZ_ASSERT(constructorClass);
@@ -912,15 +953,13 @@ static JSObject* CreateInterfaceObject(
     return nullptr;
   }
 
-  if (!isNamespace) {
-    if (!JS_DefineProperty(cx, constructor, "length", ctorNargs,
-                           JSPROP_READONLY)) {
-      return nullptr;
-    }
+  if (!JS_DefineProperty(cx, constructor, "length", ctorNargs,
+                         JSPROP_READONLY)) {
+    return nullptr;
+  }
 
-    if (!JS_DefineProperty(cx, constructor, "name", name, JSPROP_READONLY)) {
-      return nullptr;
-    }
+  if (!JS_DefineProperty(cx, constructor, "name", name, JSPROP_READONLY)) {
+    return nullptr;
   }
 
   if (constructorClass->wantsInterfaceIsInstance && isChrome &&
@@ -930,47 +969,12 @@ static JSObject* CreateInterfaceObject(
     return nullptr;
   }
 
-  if (properties) {
-    if (properties->HasStaticMethods() &&
-        !DefinePrefable(cx, constructor, properties->StaticMethods())) {
-      return nullptr;
-    }
-
-    if (properties->HasStaticAttributes() &&
-        !DefinePrefable(cx, constructor, properties->StaticAttributes())) {
-      return nullptr;
-    }
-
-    if (properties->HasConstants() &&
-        !DefinePrefable(cx, constructor, properties->Constants())) {
-      return nullptr;
-    }
-  }
-
-  if (chromeOnlyProperties && isChrome) {
-    if (chromeOnlyProperties->HasStaticMethods() &&
-        !DefinePrefable(cx, constructor,
-                        chromeOnlyProperties->StaticMethods())) {
-      return nullptr;
-    }
-
-    if (chromeOnlyProperties->HasStaticAttributes() &&
-        !DefinePrefable(cx, constructor,
-                        chromeOnlyProperties->StaticAttributes())) {
-      return nullptr;
-    }
-
-    if (chromeOnlyProperties->HasConstants() &&
-        !DefinePrefable(cx, constructor, chromeOnlyProperties->Constants())) {
-      return nullptr;
-    }
-  }
-
-  if (isNamespace && !DefineToStringTag(cx, constructor, name)) {
+  if (proto && !JS_LinkConstructorAndPrototype(cx, constructor, proto)) {
     return nullptr;
   }
 
-  if (proto && !JS_LinkConstructorAndPrototype(cx, constructor, proto)) {
+  if (!InitInterfaceOrNamespaceObject(cx, constructor, properties,
+                                      chromeOnlyProperties, isChrome)) {
     return nullptr;
   }
 
@@ -1113,7 +1117,7 @@ void CreateInterfaceObjects(
     JS::Heap<JSObject*>* constructorCache, const NativeProperties* properties,
     const NativeProperties* chromeOnlyProperties, const char* name,
     bool defineOnGlobal, const char* const* unscopableNames, bool isGlobal,
-    const char* const* legacyWindowAliases, bool isNamespace) {
+    const char* const* legacyWindowAliases) {
   MOZ_ASSERT(protoClass || constructorClass, "Need at least one class!");
   MOZ_ASSERT(
       !((properties &&
@@ -1167,7 +1171,7 @@ void CreateInterfaceObjects(
         cx, global, constructorProto, constructorClass,
         (isChrome || !isConstructorChromeOnly) ? ctorNargs : 0,
         legacyFactoryFunctions, proto, properties, chromeOnlyProperties,
-        nameStr, isChrome, defineOnGlobal, legacyWindowAliases, isNamespace);
+        nameStr, isChrome, defineOnGlobal, legacyWindowAliases);
     if (!interface) {
       if (protoCache) {
         // If we fail we need to make sure to clear the value of protoCache we
@@ -1181,6 +1185,43 @@ void CreateInterfaceObjects(
 }
 
 }  // namespace binding_detail
+
+void CreateNamespaceObject(JSContext* cx, JS::Handle<JSObject*> global,
+                           JS::Handle<JSObject*> namespaceProto,
+                           const DOMIfaceAndProtoJSClass& namespaceClass,
+                           JS::Heap<JSObject*>* namespaceCache,
+                           const NativeProperties* properties,
+                           const NativeProperties* chromeOnlyProperties,
+                           const char* name, bool defineOnGlobal) {
+  JS::Rooted<JSString*> nameStr(cx, JS_AtomizeString(cx, name));
+  if (!nameStr) {
+    return;
+  }
+  JS::Rooted<jsid> nameId(cx, JS::PropertyKey::NonIntAtom(nameStr));
+
+  JS::Rooted<JSObject*> namespaceObj(
+      cx, JS_NewObjectWithGivenProto(cx, namespaceClass.ToJSClass(),
+                                     namespaceProto));
+  if (!namespaceObj) {
+    return;
+  }
+
+  if (!InitInterfaceOrNamespaceObject(
+          cx, namespaceObj, properties, chromeOnlyProperties,
+          nsContentUtils::ThreadsafeIsSystemCaller(cx))) {
+    return;
+  }
+
+  if (defineOnGlobal && !DefineConstructor(cx, global, nameId, namespaceObj)) {
+    return;
+  }
+
+  if (!DefineToStringTag(cx, namespaceObj, nameStr)) {
+    return;
+  }
+
+  *namespaceCache = namespaceObj;
+}
 
 // Only set aAllowNativeWrapper to false if you really know you need it; if in
 // doubt use true. Setting it to false disables security wrappers.
