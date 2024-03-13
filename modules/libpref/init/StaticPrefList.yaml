@@ -10289,6 +10289,12 @@
     value: 2
     mirror: always
 
+# Bypass the gfx block list check for the media engine playback.
+-   name: media.wmf.media-engine.bypass-gfx-blocklist
+    type: RelaxedAtomicBool
+    value: false
+    mirror: always
+
 # [TEST-ONLY] Use Media Foundation Clearkey CDM for EME related testing.
 -   name: media.eme.wmf.clearkey.enabled
     type: RelaxedAtomicBool
