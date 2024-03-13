@@ -31,7 +31,6 @@ ALLOWED_ISEARLYSTARTUP_FEATURE_IDS = {
     "majorRelease2022",
     "newtab",
     "pocketNewtab",
-    "saveToPocket",
     "searchConfiguration",
     "shellService",
     "testFeature",
