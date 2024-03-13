@@ -225,6 +225,7 @@
 #include "nsIBrowserChild.h"
 #include "nsICancelableRunnable.h"
 #include "nsIChannel.h"
+#include "nsIClipboard.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIControllers.h"
 #include "nsICookieJarSettings.h"
@@ -1451,6 +1452,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindowInner)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mInstallTrigger)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIntlUtils)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mVisualViewport)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCurrentPasteDataTransfer)
 
   tmp->TraverseObjectsInGlobal(cb);
 
@@ -1561,6 +1563,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowInner)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mInstallTrigger)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mIntlUtils)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mVisualViewport)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCurrentPasteDataTransfer)
 
   tmp->UnlinkObjectsInGlobal();
 
@@ -7608,6 +7611,19 @@ JS::loader::ModuleLoaderBase* nsGlobalWindowInner::GetModuleLoader(
   }
 
   return loader->GetModuleLoader();
+}
+
+void nsGlobalWindowInner::SetCurrentPasteDataTransfer(
+    DataTransfer* aDataTransfer) {
+  MOZ_ASSERT_IF(aDataTransfer, aDataTransfer->GetEventMessage() == ePaste);
+  MOZ_ASSERT_IF(aDataTransfer, aDataTransfer->ClipboardType() ==
+                                   nsIClipboard::kGlobalClipboard);
+  MOZ_ASSERT_IF(aDataTransfer, aDataTransfer->GetAsyncGetClipboardData());
+  mCurrentPasteDataTransfer = aDataTransfer;
+}
+
+DataTransfer* nsGlobalWindowInner::GetCurrentPasteDataTransfer() const {
+  return mCurrentPasteDataTransfer;
 }
 
 TrustedTypePolicyFactory* nsGlobalWindowInner::TrustedTypes() {
