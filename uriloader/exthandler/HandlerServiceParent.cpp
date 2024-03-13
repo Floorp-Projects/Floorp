@@ -110,10 +110,6 @@ NS_IMETHODIMP ProxyHandlerInfo::GetDefaultDescription(
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP ProxyHandlerInfo::GetDefaultExecutable(nsIFile** aExecutable) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 /* void launchWithURI (in nsIURI aURI,
                        [optional] in BrowsingContext aBrowsingContext); */
 NS_IMETHODIMP ProxyHandlerInfo::LaunchWithURI(

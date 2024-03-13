@@ -57,7 +57,6 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
   NS_IMETHOD GetPossibleApplicationHandlers(
       nsIMutableArray** aPossibleAppHandlers) override;
   NS_IMETHOD GetDefaultDescription(nsAString& aDefaultDescription) override;
-  NS_IMETHOD GetDefaultExecutable(nsIFile** aExecutable) override;
   NS_IMETHOD LaunchWithFile(nsIFile* aFile) override;
   NS_IMETHOD LaunchWithURI(
       nsIURI* aURI, mozilla::dom::BrowsingContext* aBrowsingContext) override;
@@ -188,7 +187,6 @@ class nsMIMEInfoImpl : public nsMIMEInfoBase {
   // nsIMIMEInfo methods
   NS_IMETHOD GetHasDefaultHandler(bool* _retval) override;
   NS_IMETHOD GetDefaultDescription(nsAString& aDefaultDescription) override;
-  NS_IMETHOD GetDefaultExecutable(nsIFile** aExecutable) override;
   NS_IMETHOD IsCurrentAppOSDefault(bool* _retval) override;
 
   // additional methods
