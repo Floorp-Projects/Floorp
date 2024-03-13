@@ -6,6 +6,7 @@
 
 #include "MFTDecoder.h"
 #include "VideoUtils.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/MFMediaEngineParent.h"
 #include "mozilla/MFMediaEngineUtils.h"
 #include "mozilla/RemoteDecoderManagerChild.h"
@@ -99,6 +100,10 @@ media::DecodeSupportSet MFMediaEngineDecoderModule::SupportInternal(
   if (!StaticPrefs::media_wmf_media_engine_enabled()) {
     return media::DecodeSupportSet{};
   }
+  // Only support hardware decoding.
+  if (!gfx::gfxVars::CanUseHardwareVideoDecoding()) {
+    return media::DecodeSupportSet{};
+  }
   bool supports = false;
   WMFStreamType type = GetStreamTypeFromMimeType(aParams.MimeType());
   if (type != WMFStreamType::Unknown) {
@@ -107,13 +112,11 @@ media::DecodeSupportSet MFMediaEngineDecoderModule::SupportInternal(
   MOZ_LOG(sPDMLog, LogLevel::Debug,
           ("MFMediaEngine decoder %s requested type '%s'",
            supports ? "supports" : "rejects", aParams.MimeType().get()));
-  // We only support HEVC hardware decoding.
-  if (supports && type == WMFStreamType::HEVC) {
-    return media::DecodeSupport::HardwareDecode;
+  if (!supports) {
+    return media::DecodeSupportSet{};
   }
-  // TODO : find a way to report accurate result.
-  return supports ? media::DecodeSupport::SoftwareDecode
-                  : media::DecodeSupportSet{};
+  return StreamTypeIsVideo(type) ? media::DecodeSupport::HardwareDecode
+                                 : media::DecodeSupport::SoftwareDecode;
 }
 
 static bool CreateMFTDecoderOnMTA(const WMFStreamType& aType) {
