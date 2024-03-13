@@ -22,9 +22,13 @@ const SEARCH_ENGINE_DETAILS = [
   },
   {
     alias: "b",
-    baseURL: `https://www.bing.com/search?{code}pc=${
-      SearchUtils.MODIFIED_APP_CHANNEL == "esr" ? "MOZR" : "MOZI"
-    }&q=foo`,
+    baseURL: SearchUtils.newSearchConfigEnabled
+      ? `https://www.bing.com/search?pc=${
+          SearchUtils.MODIFIED_APP_CHANNEL == "esr" ? "MOZR" : "MOZI"
+        }&{code}q=foo`
+      : `https://www.bing.com/search?{code}pc=${
+          SearchUtils.MODIFIED_APP_CHANNEL == "esr" ? "MOZR" : "MOZI"
+        }&q=foo`,
     codes: {
       context: "form=MOZCON&",
       keyword: "form=MOZLBR&",

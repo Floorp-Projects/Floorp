@@ -106,7 +106,7 @@ add_task(async function () {
   );
 
   ss._removeObservers();
-  updateConfig(
+  await updateConfig(
     SearchUtils.newSearchConfigEnabled
       ? SEARCH_CONFIG_V2_UPDATED
       : CONFIG_UPDATED
@@ -119,7 +119,7 @@ add_task(async function () {
   );
 
   ss._removeObservers();
-  updateConfig("test-extensions");
+  await updateConfig("test-extensions");
 
   ss = await startup();
 

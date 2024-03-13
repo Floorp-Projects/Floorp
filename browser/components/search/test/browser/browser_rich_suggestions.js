@@ -17,6 +17,58 @@ const CONFIG_DEFAULT = [
   },
 ];
 
+const CONFIG_V2 = [
+  {
+    recordType: "engine",
+    identifier: "basic",
+    base: {
+      name: "basic",
+      urls: {
+        search: {
+          base: "https://example.com",
+          searchTermParamName: "q",
+        },
+        trending: {
+          base: "https://example.com/browser/browser/components/search/test/browser/trendingSuggestionEngine.sjs",
+          method: "GET",
+          params: [
+            {
+              name: "richsuggestions",
+              value: "true",
+            },
+          ],
+        },
+        suggestions: {
+          base: "https://example.com/browser/browser/components/search/test/browser/trendingSuggestionEngine.sjs",
+          method: "GET",
+          params: [
+            {
+              name: "richsuggestions",
+              value: "true",
+            },
+          ],
+          searchTermParamName: "query",
+        },
+      },
+      aliases: ["basic"],
+    },
+    variants: [
+      {
+        environment: { allRegionsAndLocales: true },
+      },
+    ],
+  },
+  {
+    recordType: "defaultEngines",
+    globalDefault: "basic",
+    specificDefaults: [],
+  },
+  {
+    recordType: "engineOrders",
+    orders: [],
+  },
+];
+
 SearchTestUtils.init(this);
 
 add_setup(async () => {
@@ -37,7 +89,9 @@ add_setup(async () => {
   });
 
   SearchTestUtils.useMockIdleService();
-  await SearchTestUtils.updateRemoteSettingsConfig(CONFIG_DEFAULT);
+  await SearchTestUtils.updateRemoteSettingsConfig(
+    SearchUtils.newSearchConfigEnabled ? CONFIG_V2 : CONFIG_DEFAULT
+  );
 
   registerCleanupFunction(async () => {
     let settingsWritten = SearchTestUtils.promiseSearchNotification(
