@@ -26,6 +26,7 @@ SOURCES += [
     "TestHangs.cpp",
     "TestInduceConnectionError.cpp",
     "TestJSON.cpp",
+    "TestManyChildAllocs.cpp",
     "TestManyHandles.cpp",
     "TestMostNested.cpp",
 ]
@@ -48,6 +49,8 @@ IPDL_SOURCES += [
     "PTestInduceConnectionError.ipdl",
     "PTestJSON.ipdl",
     "PTestJSONHandle.ipdl",
+    "PTestManyChildAllocs.ipdl",
+    "PTestManyChildAllocsSub.ipdl",
     "PTestManyHandles.ipdl",
     "PTestMostNested.ipdl",
 ]
