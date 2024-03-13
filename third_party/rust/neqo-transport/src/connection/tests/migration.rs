@@ -6,6 +6,7 @@
 
 use std::{
     cell::RefCell,
+    mem,
     net::{IpAddr, Ipv6Addr, SocketAddr},
     rc::Rc,
     time::{Duration, Instant},
@@ -13,7 +14,6 @@ use std::{
 
 use neqo_common::{Datagram, Decoder};
 use test_fixture::{
-    self,
     assertions::{assert_v4_path, assert_v6_path},
     fixture_init, new_neqo_qlog, now, DEFAULT_ADDR, DEFAULT_ADDR_V4,
 };
@@ -950,4 +950,40 @@ fn retire_prior_to_migration_success() {
     assert_v4_path(&dgram, false);
     assert_ne!(get_cid(&dgram), original_cid);
     assert_ne!(get_cid(&dgram), probe_cid);
+}
+
+struct GarbageWriter {}
+
+impl crate::connection::test_internal::FrameWriter for GarbageWriter {
+    fn write_frames(&mut self, builder: &mut PacketBuilder) {
+        // Not a valid frame type.
+        builder.encode_varint(u32::MAX);
+    }
+}
+
+/// Test the case that we run out of connection ID and receive an invalid frame
+/// from a new path.
+#[test]
+#[should_panic(expected = "attempting to close with a temporary path")]
+fn error_on_new_path_with_no_connection_id() {
+    let mut client = default_client();
+    let mut server = default_server();
+    connect_force_idle(&mut client, &mut server);
+
+    let cid_gen: Rc<RefCell<dyn ConnectionIdGenerator>> =
+        Rc::new(RefCell::new(CountingConnectionIdGenerator::default()));
+    server.test_frame_writer = Some(Box::new(RetireAll { cid_gen }));
+    let retire_all = send_something(&mut server, now());
+
+    client.process_input(&retire_all, now());
+
+    server.test_frame_writer = Some(Box::new(GarbageWriter {}));
+    let garbage = send_something(&mut server, now());
+
+    let dgram = change_path(&garbage, DEFAULT_ADDR_V4);
+    client.process_input(&dgram, now());
+
+    // See issue #1697. We had a crash when the client had a temporary path and
+    // process_output is called.
+    mem::drop(client.process_output(now()));
 }

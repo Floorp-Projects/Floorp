@@ -6,7 +6,7 @@
 
 #![allow(clippy::module_name_repetitions)]
 
-use std::{convert::TryFrom, fmt::Debug};
+use std::fmt::Debug;
 
 use neqo_common::{
     hex_with_len, qtrace, Decoder, IncrementalDecoderBuffer, IncrementalDecoderIgnore,

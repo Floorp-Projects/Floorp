@@ -10,7 +10,7 @@ use std::{
 };
 
 use neqo_common::{qtrace, Encoder};
-use test_fixture::{self, now, split_datagram};
+use test_fixture::{now, split_datagram};
 
 use super::{
     super::{Connection, ConnectionParameters, IdleTimeout, Output, State},
@@ -310,28 +310,20 @@ fn idle_caching() {
     server.process_input(&dgram.unwrap(), middle);
     assert_eq!(server.stats().frame_rx.ping, ping_before_s + 1);
     let mut tokens = Vec::new();
-    server
-        .crypto
-        .streams
-        .write_frame(
-            PacketNumberSpace::Initial,
-            &mut builder,
-            &mut tokens,
-            &mut FrameStats::default(),
-        )
-        .unwrap();
+    server.crypto.streams.write_frame(
+        PacketNumberSpace::Initial,
+        &mut builder,
+        &mut tokens,
+        &mut FrameStats::default(),
+    );
     assert_eq!(tokens.len(), 1);
     tokens.clear();
-    server
-        .crypto
-        .streams
-        .write_frame(
-            PacketNumberSpace::Initial,
-            &mut builder,
-            &mut tokens,
-            &mut FrameStats::default(),
-        )
-        .unwrap();
+    server.crypto.streams.write_frame(
+        PacketNumberSpace::Initial,
+        &mut builder,
+        &mut tokens,
+        &mut FrameStats::default(),
+    );
     assert!(tokens.is_empty());
     let dgram = server.process_output(middle).dgram();
 

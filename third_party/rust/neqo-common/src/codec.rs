@@ -4,7 +4,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::{convert::TryFrom, fmt::Debug};
+use std::fmt::Debug;
 
 use crate::hex_with_len;
 

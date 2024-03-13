@@ -4,9 +4,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![cfg_attr(feature = "deny-warnings", deny(warnings))]
-#![warn(clippy::use_self)]
-
 use neqo_common::{qdebug, qerror, qinfo, qtrace, qwarn};
 
 #[test]

@@ -4,9 +4,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![cfg_attr(feature = "deny-warnings", deny(warnings))]
-#![warn(clippy::pedantic)]
-
 use std::{ops::Range, time::Duration};
 
 use neqo_transport::{ConnectionError, ConnectionParameters, Error, State};

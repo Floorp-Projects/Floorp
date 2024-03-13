@@ -4,8 +4,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::convert::TryFrom;
-
 use neqo_common::{qdebug, Header};
 use neqo_transport::{Connection, StreamId};
 
@@ -287,7 +285,7 @@ fn map_error(err: &Error) -> Error {
 
 #[cfg(test)]
 mod tests {
-    use std::{convert::TryFrom, mem};
+    use std::mem;
 
     use neqo_common::Header;
     use neqo_transport::{StreamId, StreamType};

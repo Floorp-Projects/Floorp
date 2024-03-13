@@ -6,7 +6,7 @@
 
 use std::{cell::RefCell, mem, rc::Rc, time::Duration};
 
-use test_fixture::{self, assertions, now};
+use test_fixture::{assertions, now};
 
 use super::{
     connect, connect_with_rtt, default_client, default_server, exchange_ticket, get_tokens,
@@ -50,7 +50,7 @@ fn remember_smoothed_rtt() {
     // wants to acknowledge; so the ticket will include an ACK frame too.
     let validation = AddressValidation::new(now, ValidateAddress::NoToken).unwrap();
     let validation = Rc::new(RefCell::new(validation));
-    server.set_validation(Rc::clone(&validation));
+    server.set_validation(&validation);
     server.send_ticket(now, &[]).expect("can send ticket");
     let ticket = server.process_output(now).dgram();
     assert!(ticket.is_some());
@@ -84,7 +84,7 @@ fn address_validation_token_resume() {
     let mut server = default_server();
     let validation = AddressValidation::new(now(), ValidateAddress::Always).unwrap();
     let validation = Rc::new(RefCell::new(validation));
-    server.set_validation(Rc::clone(&validation));
+    server.set_validation(&validation);
     let mut now = connect_with_rtt(&mut client, &mut server, now(), RTT);
 
     let token = exchange_ticket(&mut client, &mut server, now);
@@ -155,7 +155,7 @@ fn two_tickets_with_new_token() {
     let mut server = default_server();
     let validation = AddressValidation::new(now(), ValidateAddress::Always).unwrap();
     let validation = Rc::new(RefCell::new(validation));
-    server.set_validation(Rc::clone(&validation));
+    server.set_validation(&validation);
     connect(&mut client, &mut server);
 
     // Send two tickets with tokens and then bundle those into a packet.

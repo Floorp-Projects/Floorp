@@ -5,7 +5,6 @@
 // except according to those terms.
 
 // Congestion control
-#![deny(clippy::pedantic)]
 
 use std::{
     fmt::{self, Display},

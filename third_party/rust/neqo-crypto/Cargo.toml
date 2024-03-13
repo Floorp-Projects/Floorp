@@ -10,15 +10,18 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2018"
+edition = "2021"
 rust-version = "1.74.0"
 name = "neqo-crypto"
-version = "0.7.1"
+version = "0.7.2"
 authors = ["The Neqo Authors <necko@mozilla.com>"]
 build = "build.rs"
 homepage = "https://github.com/mozilla/neqo/"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/mozilla/neqo/"
+
+[lib]
+bench = false
 
 [dependencies.log]
 version = "0.4"
@@ -30,11 +33,6 @@ path = "../neqo-common"
 [dev-dependencies.test-fixture]
 path = "../test-fixture"
 
-[build-dependencies]
-serde = "1.0"
-serde_derive = "1.0"
-toml = "0.5"
-
 [build-dependencies.bindgen]
 version = "0.69"
 features = ["runtime"]
@@ -43,8 +41,24 @@ default-features = false
 [build-dependencies.mozbuild]
 version = "0.1"
 optional = true
+default-features = false
+
+[build-dependencies.serde]
+version = "1.0"
+default-features = false
+
+[build-dependencies.serde_derive]
+version = "1.0"
+default-features = false
+
+[build-dependencies.toml]
+version = "0.5"
+default-features = false
 
 [features]
-deny-warnings = []
 fuzzing = []
 gecko = ["mozbuild"]
+
+[lints.clippy.pedantic]
+level = "warn"
+priority = -1

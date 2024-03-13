@@ -4,8 +4,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::convert::TryFrom;
-
 use crate::{
     huffman_decode_helper::{huffman_decoder_root, HuffmanDecoderNode},
     huffman_table::HUFFMAN_TABLE,

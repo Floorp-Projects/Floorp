@@ -4,7 +4,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::{iter::Iterator, marker::PhantomData};
+use std::marker::PhantomData;
 
 /// An event provider is able to generate a stream of events.
 pub trait Provider {

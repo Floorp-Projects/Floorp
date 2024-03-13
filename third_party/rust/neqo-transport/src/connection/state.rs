@@ -21,7 +21,7 @@ use crate::{
     packet::PacketBuilder,
     path::PathRef,
     recovery::RecoveryToken,
-    ConnectionError, Error, Res,
+    ConnectionError, Error,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -66,6 +66,7 @@ impl State {
         )
     }
 
+    #[must_use]
     pub fn error(&self) -> Option<&ConnectionError> {
         if let Self::Closing { error, .. } | Self::Draining { error, .. } | Self::Closed(error) =
             self
@@ -184,13 +185,13 @@ impl ClosingFrame {
     }
 }
 
-/// `StateSignaling` manages whether we need to send HANDSHAKE_DONE and CONNECTION_CLOSE.
+/// `StateSignaling` manages whether we need to send `HANDSHAKE_DONE` and `CONNECTION_CLOSE`.
 /// Valid state transitions are:
-/// * Idle -> HandshakeDone: at the server when the handshake completes
-/// * HandshakeDone -> Idle: when a HANDSHAKE_DONE frame is sent
+/// * Idle -> `HandshakeDone`: at the server when the handshake completes
+/// * `HandshakeDone` -> Idle: when a `HANDSHAKE_DONE` frame is sent
 /// * Idle/HandshakeDone -> Closing/Draining: when closing or draining
-/// * Closing/Draining -> CloseSent: after sending CONNECTION_CLOSE
-/// * CloseSent -> Closing: any time a new CONNECTION_CLOSE is needed
+/// * Closing/Draining -> `CloseSent`: after sending `CONNECTION_CLOSE`
+/// * `CloseSent` -> Closing: any time a new `CONNECTION_CLOSE` is needed
 /// * -> Reset: from any state in case of a stateless reset
 #[derive(Debug, Clone)]
 pub enum StateSignaling {
@@ -214,13 +215,13 @@ impl StateSignaling {
         *self = Self::HandshakeDone;
     }
 
-    pub fn write_done(&mut self, builder: &mut PacketBuilder) -> Res<Option<RecoveryToken>> {
+    pub fn write_done(&mut self, builder: &mut PacketBuilder) -> Option<RecoveryToken> {
         if matches!(self, Self::HandshakeDone) && builder.remaining() >= 1 {
             *self = Self::Idle;
             builder.encode_varint(FRAME_TYPE_HANDSHAKE_DONE);
-            Ok(Some(RecoveryToken::HandshakeDone))
+            Some(RecoveryToken::HandshakeDone)
         } else {
-            Ok(None)
+            None
         }
     }
 

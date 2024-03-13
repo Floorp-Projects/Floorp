@@ -8,7 +8,7 @@ use std::{cell::RefCell, rc::Rc};
 
 use neqo_common::event::Provider;
 use neqo_crypto::{AllowZeroRtt, AntiReplay};
-use test_fixture::{self, assertions, now};
+use test_fixture::{assertions, now};
 
 use super::{
     super::Connection, connect, default_client, default_server, exchange_ticket, new_server,

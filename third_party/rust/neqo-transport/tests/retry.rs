@@ -4,14 +4,11 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![cfg_attr(feature = "deny-warnings", deny(warnings))]
-#![warn(clippy::pedantic)]
 #![cfg(not(feature = "fuzzing"))]
 
 mod common;
 
 use std::{
-    convert::TryFrom,
     mem,
     net::{IpAddr, Ipv4Addr, SocketAddr},
     time::Duration,
@@ -24,7 +21,7 @@ use common::{
 use neqo_common::{hex_with_len, qdebug, qtrace, Datagram, Encoder, Role};
 use neqo_crypto::AuthenticationStatus;
 use neqo_transport::{server::ValidateAddress, ConnectionError, Error, State, StreamType};
-use test_fixture::{self, assertions, datagram, default_client, now, split_datagram};
+use test_fixture::{assertions, datagram, default_client, now, split_datagram};
 
 #[test]
 fn retry_basic() {

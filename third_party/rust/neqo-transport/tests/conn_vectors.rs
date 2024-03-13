@@ -5,7 +5,7 @@
 // except according to those terms.
 
 // Tests with the test vectors from the spec.
-#![deny(clippy::pedantic)]
+
 #![cfg(not(feature = "fuzzing"))]
 
 use std::{cell::RefCell, rc::Rc};
@@ -13,7 +13,7 @@ use std::{cell::RefCell, rc::Rc};
 use neqo_transport::{
     Connection, ConnectionParameters, RandomConnectionIdGenerator, State, Version,
 };
-use test_fixture::{self, datagram, now};
+use test_fixture::{datagram, now};
 
 const INITIAL_PACKET_V2: &[u8] = &[
     0xd7, 0x6b, 0x33, 0x43, 0xcf, 0x08, 0x83, 0x94, 0xc8, 0xf0, 0x3e, 0x51, 0x57, 0x08, 0x00, 0x00,

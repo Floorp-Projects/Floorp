@@ -10,14 +10,17 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2018"
+edition = "2021"
 rust-version = "1.74.0"
 name = "neqo-transport"
-version = "0.7.1"
+version = "0.7.2"
 authors = ["The Neqo Authors <necko@mozilla.com>"]
 homepage = "https://github.com/mozilla/neqo/"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/mozilla/neqo/"
+
+[lib]
+bench = false
 
 [[bench]]
 name = "transfer"
@@ -34,10 +37,9 @@ name = "range_tracker"
 harness = false
 required-features = ["bench"]
 
-[dependencies]
-indexmap = "1.9"
-qlog = "0.12"
-smallvec = "1.11"
+[dependencies.indexmap]
+version = "1.9"
+default-features = false
 
 [dependencies.log]
 version = "0.4"
@@ -49,17 +51,30 @@ path = "../neqo-common"
 [dependencies.neqo-crypto]
 path = "../neqo-crypto"
 
-[dev-dependencies]
-enum-map = "2.7"
+[dependencies.qlog]
+version = "0.12"
+default-features = false
+
+[dependencies.smallvec]
+version = "1.11"
+default-features = false
 
 [dev-dependencies.criterion]
 version = "0.5"
 features = ["html_reports"]
+default-features = false
+
+[dev-dependencies.enum-map]
+version = "2.7"
+default-features = false
 
 [dev-dependencies.test-fixture]
 path = "../test-fixture"
 
 [features]
 bench = []
-deny-warnings = []
 fuzzing = ["neqo-crypto/fuzzing"]
+
+[lints.clippy.pedantic]
+level = "warn"
+priority = -1

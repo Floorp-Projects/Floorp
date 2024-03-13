@@ -4,12 +4,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![deny(clippy::pedantic)]
-
 use std::{
     cell::RefCell,
     cmp::min,
-    convert::TryFrom,
     mem,
     rc::Rc,
     time::{Duration, Instant},
@@ -18,7 +15,7 @@ use std::{
 use enum_map::enum_map;
 use neqo_common::{event::Provider, qdebug, qtrace, Datagram, Decoder, Role};
 use neqo_crypto::{random, AllowZeroRtt, AuthenticationStatus, ResumptionToken};
-use test_fixture::{self, fixture_init, new_neqo_qlog, now, DEFAULT_ADDR};
+use test_fixture::{fixture_init, new_neqo_qlog, now, DEFAULT_ADDR};
 
 use super::{Connection, ConnectionError, ConnectionId, Output, State};
 use crate::{
@@ -278,7 +275,7 @@ fn exchange_ticket(
 ) -> ResumptionToken {
     let validation = AddressValidation::new(now, ValidateAddress::NoToken).unwrap();
     let validation = Rc::new(RefCell::new(validation));
-    server.set_validation(Rc::clone(&validation));
+    server.set_validation(&validation);
     server.send_ticket(now, &[]).expect("can send ticket");
     let ticket = server.process_output(now).dgram();
     assert!(ticket.is_some());

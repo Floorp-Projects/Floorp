@@ -53,6 +53,12 @@ impl Datagram {
     pub fn ttl(&self) -> Option<u8> {
         self.ttl
     }
+
+    #[cfg(feature = "udp")]
+    #[must_use]
+    pub(crate) fn into_data(self) -> Vec<u8> {
+        self.d
+    }
 }
 
 impl Deref for Datagram {

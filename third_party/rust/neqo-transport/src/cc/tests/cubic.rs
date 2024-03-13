@@ -8,7 +8,6 @@
 #![allow(clippy::cast_sign_loss)]
 
 use std::{
-    convert::TryFrom,
     ops::Sub,
     time::{Duration, Instant},
 };

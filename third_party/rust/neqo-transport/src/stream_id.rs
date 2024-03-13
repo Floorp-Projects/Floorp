@@ -20,10 +20,12 @@ pub enum StreamType {
 pub struct StreamId(u64);
 
 impl StreamId {
+    #[must_use]
     pub const fn new(id: u64) -> Self {
         Self(id)
     }
 
+    #[must_use]
     pub fn init(stream_type: StreamType, role: Role) -> Self {
         let type_val = match stream_type {
             StreamType::BiDi => 0,
@@ -32,18 +34,22 @@ impl StreamId {
         Self(type_val + Self::role_bit(role))
     }
 
+    #[must_use]
     pub fn as_u64(self) -> u64 {
         self.0
     }
 
+    #[must_use]
     pub fn is_bidi(self) -> bool {
         self.as_u64() & 0x02 == 0
     }
 
+    #[must_use]
     pub fn is_uni(self) -> bool {
         !self.is_bidi()
     }
 
+    #[must_use]
     pub fn stream_type(self) -> StreamType {
         if self.is_bidi() {
             StreamType::BiDi
@@ -52,14 +58,17 @@ impl StreamId {
         }
     }
 
+    #[must_use]
     pub fn is_client_initiated(self) -> bool {
         self.as_u64() & 0x01 == 0
     }
 
+    #[must_use]
     pub fn is_server_initiated(self) -> bool {
         !self.is_client_initiated()
     }
 
+    #[must_use]
     pub fn role(self) -> Role {
         if self.is_client_initiated() {
             Role::Client
@@ -68,6 +77,7 @@ impl StreamId {
         }
     }
 
+    #[must_use]
     pub fn is_self_initiated(self, my_role: Role) -> bool {
         match my_role {
             Role::Client if self.is_client_initiated() => true,
@@ -76,14 +86,17 @@ impl StreamId {
         }
     }
 
+    #[must_use]
     pub fn is_remote_initiated(self, my_role: Role) -> bool {
         !self.is_self_initiated(my_role)
     }
 
+    #[must_use]
     pub fn is_send_only(self, my_role: Role) -> bool {
         self.is_uni() && self.is_self_initiated(my_role)
     }
 
+    #[must_use]
     pub fn is_recv_only(self, my_role: Role) -> bool {
         self.is_uni() && self.is_remote_initiated(my_role)
     }
@@ -93,6 +106,7 @@ impl StreamId {
     }
 
     /// This returns a bit that is shared by all streams created by this role.
+    #[must_use]
     pub fn role_bit(role: Role) -> u64 {
         match role {
             Role::Server => 1,

@@ -6,7 +6,7 @@
 
 use std::time::Duration;
 
-use test_fixture::{self, datagram, now};
+use test_fixture::{datagram, now};
 
 use super::{
     super::{Connection, Output, State},

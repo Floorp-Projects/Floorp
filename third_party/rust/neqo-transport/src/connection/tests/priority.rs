@@ -7,7 +7,7 @@
 use std::{cell::RefCell, mem, rc::Rc};
 
 use neqo_common::event::Provider;
-use test_fixture::{self, now};
+use test_fixture::now;
 
 use super::{
     super::{Connection, Error, Output},
@@ -370,7 +370,7 @@ fn low() {
     let validation = Rc::new(RefCell::new(
         AddressValidation::new(now, ValidateAddress::Never).unwrap(),
     ));
-    server.set_validation(Rc::clone(&validation));
+    server.set_validation(&validation);
     connect(&mut client, &mut server);
 
     let id = server.stream_create(StreamType::UniDi).unwrap();

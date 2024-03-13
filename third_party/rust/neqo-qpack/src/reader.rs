@@ -4,7 +4,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::{convert::TryInto, mem, str};
+use std::{mem, str};
 
 use neqo_common::{qdebug, qerror};
 use neqo_transport::{Connection, StreamId};
@@ -223,18 +223,17 @@ impl IntReader {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 enum LiteralReaderState {
+    #[default]
     ReadHuffman,
-    ReadLength { reader: IntReader },
-    ReadLiteral { offset: usize },
+    ReadLength {
+        reader: IntReader,
+    },
+    ReadLiteral {
+        offset: usize,
+    },
     Done,
-}
-
-impl Default for LiteralReaderState {
-    fn default() -> Self {
-        Self::ReadHuffman
-    }
 }
 
 /// This is decoder of a literal with a prefix:
