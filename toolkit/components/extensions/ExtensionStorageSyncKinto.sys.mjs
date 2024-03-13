@@ -42,6 +42,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   CryptoUtils: "resource://services-crypto/utils.sys.mjs",
   ExtensionCommon: "resource://gre/modules/ExtensionCommon.sys.mjs",
   FirefoxAdapter: "resource://services-common/kinto-storage-adapter.sys.mjs",
+  Kinto: "resource://services-common/kinto-offline-client.sys.mjs",
   KintoHttpClient: "resource://services-common/kinto-http-client.sys.mjs",
   Observers: "resource://services-common/observers.sys.mjs",
   Utils: "resource://services-sync/util.sys.mjs",
@@ -54,9 +55,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
  * @typedef {any} KeyBundle
  * @typedef {any} SyncResultObject
  */
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  Kinto: "resource://services-common/kinto-offline-client.js",
-});
 
 ChromeUtils.defineLazyGetter(lazy, "fxAccounts", () => {
   return ChromeUtils.importESModule(

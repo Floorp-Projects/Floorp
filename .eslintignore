@@ -209,10 +209,6 @@ remote/shared/messagehandler/test/browser/resources/modules/root/invalid.sys.mjs
 
 # services/ exclusions
 
-# Third party services
-services/common/kinto-http-client.sys.mjs
-services/common/kinto-offline-client.js
-
 # Webpack-bundled library
 services/fxaccounts/FxAccountsPairingChannel.sys.mjs
 

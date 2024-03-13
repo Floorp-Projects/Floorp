@@ -140,7 +140,7 @@ let gPendingTransactions = new Set();
 /**
  * Import the records into the Remote Settings Chrome IndexedDB.
  *
- * Note: This duplicates some logics from `kinto-offline-client.js`.
+ * Note: This duplicates some logics from `kinto-offline-client.sys.mjs`.
  *
  * @param {String} bucket
  * @param {String} collection
