@@ -58,32 +58,7 @@ class UtilityAudioDecoderChild final : public PUtilityAudioDecoderChild
 
   UtilityActorName GetActorName() { return GetAudioActorName(mSandbox); }
 
-  nsresult BindToUtilityProcess(RefPtr<UtilityProcessParent> aUtilityParent) {
-    Endpoint<PUtilityAudioDecoderChild> utilityAudioDecoderChildEnd;
-    Endpoint<PUtilityAudioDecoderParent> utilityAudioDecoderParentEnd;
-    nsresult rv = PUtilityAudioDecoder::CreateEndpoints(
-        aUtilityParent->OtherPid(), base::GetCurrentProcId(),
-        &utilityAudioDecoderParentEnd, &utilityAudioDecoderChildEnd);
-
-    if (NS_FAILED(rv)) {
-      MOZ_ASSERT(false, "Protocol endpoints failure");
-      return NS_ERROR_FAILURE;
-    }
-
-    if (!aUtilityParent->SendStartUtilityAudioDecoderService(
-            std::move(utilityAudioDecoderParentEnd))) {
-      MOZ_ASSERT(false, "StartUtilityAudioDecoder service failure");
-      return NS_ERROR_FAILURE;
-    }
-
-    Bind(std::move(utilityAudioDecoderChildEnd));
-
-    PROFILER_MARKER_UNTYPED(
-        "UtilityAudioDecoderChild::BindToUtilityProcess", IPC,
-        MarkerOptions(
-            MarkerTiming::IntervalUntilNowFrom(mAudioDecoderChildStart)));
-    return NS_OK;
-  }
+  nsresult BindToUtilityProcess(RefPtr<UtilityProcessParent> aUtilityParent);
 
   void ActorDestroy(ActorDestroyReason aReason) override;
 

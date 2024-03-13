@@ -21,6 +21,8 @@ include protocol PSandboxTesting;
 
 include "mozilla/ipc/ByteBufUtils.h";
 
+include GraphicsMessages;
+
 using mozilla::dom::NativeThreadId from "mozilla/dom/NativeThreadId.h";
 
 // Telemetry
@@ -98,7 +100,7 @@ child:
 
   async TestTelemetryProbes();
 
-  async StartUtilityAudioDecoderService(Endpoint<PUtilityAudioDecoderParent> aEndpoint);
+  async StartUtilityAudioDecoderService(Endpoint<PUtilityAudioDecoderParent> aEndpoint, GfxVarUpdate[] updates);
 
   async StartJSOracleService(Endpoint<PJSOracleChild> aEndpoint);
 

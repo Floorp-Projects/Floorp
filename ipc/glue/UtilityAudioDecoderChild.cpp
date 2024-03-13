@@ -56,6 +56,40 @@ UtilityAudioDecoderChild::UtilityAudioDecoderChild(SandboxingKind aKind)
   }
 }
 
+nsresult UtilityAudioDecoderChild::BindToUtilityProcess(
+    RefPtr<UtilityProcessParent> aUtilityParent) {
+  Endpoint<PUtilityAudioDecoderChild> utilityAudioDecoderChildEnd;
+  Endpoint<PUtilityAudioDecoderParent> utilityAudioDecoderParentEnd;
+  nsresult rv = PUtilityAudioDecoder::CreateEndpoints(
+      aUtilityParent->OtherPid(), base::GetCurrentProcId(),
+      &utilityAudioDecoderParentEnd, &utilityAudioDecoderChildEnd);
+
+  if (NS_FAILED(rv)) {
+    MOZ_ASSERT(false, "Protocol endpoints failure");
+    return NS_ERROR_FAILURE;
+  }
+
+  nsTArray<gfx::GfxVarUpdate> updates;
+#ifdef MOZ_WMF_MEDIA_ENGINE
+  // Only MFCDM process needs gfxVars
+  if (mSandbox == SandboxingKind::MF_MEDIA_ENGINE_CDM) {
+    updates = gfx::gfxVars::FetchNonDefaultVars();
+  }
+#endif
+  if (!aUtilityParent->SendStartUtilityAudioDecoderService(
+          std::move(utilityAudioDecoderParentEnd), std::move(updates))) {
+    MOZ_ASSERT(false, "StartUtilityAudioDecoder service failure");
+    return NS_ERROR_FAILURE;
+  }
+
+  Bind(std::move(utilityAudioDecoderChildEnd));
+
+  PROFILER_MARKER_UNTYPED("UtilityAudioDecoderChild::BindToUtilityProcess", IPC,
+                          MarkerOptions(MarkerTiming::IntervalUntilNowFrom(
+                              mAudioDecoderChildStart)));
+  return NS_OK;
+}
+
 void UtilityAudioDecoderChild::ActorDestroy(ActorDestroyReason aReason) {
   MOZ_ASSERT(NS_IsMainThread());
 #ifdef MOZ_WMF_MEDIA_ENGINE
@@ -167,11 +201,10 @@ bool UtilityAudioDecoderChild::CreateVideoBridge() {
     return false;
   }
 
-  nsTArray<gfx::GfxVarUpdate> updates = gfx::gfxVars::FetchNonDefaultVars();
   gpuManager->InitVideoBridge(
       std::move(parentPipe),
       layers::VideoBridgeSource::MFMediaEngineCDMProcess);
-  SendInitVideoBridge(std::move(childPipe), updates, contentDeviceData);
+  SendInitVideoBridge(std::move(childPipe), contentDeviceData);
   return true;
 }
 #endif
