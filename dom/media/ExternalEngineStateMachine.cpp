@@ -1168,6 +1168,14 @@ void ExternalEngineStateMachine::RecoverFromCDMProcessCrashIfNeeded() {
     return;
   }
 
+  if (mState.IsInitEngine()) {
+    LOG("Failed on the engine initialization, the media engine playback might "
+        "not be supported");
+    DecodeError(
+        MediaResult(NS_ERROR_DOM_MEDIA_EXTERNAL_ENGINE_NOT_SUPPORTED_ERR));
+    return;
+  }
+
   LOG("CDM process crashed, recover the engine again (last time=%" PRId64 ")",
       mCurrentPosition.Ref().ToMicroseconds());
   ChangeStateTo(State::RecoverEngine);
