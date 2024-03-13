@@ -2607,7 +2607,7 @@ void CanonicalBrowsingContext::UpdateSessionStoreForStorage(
 }
 
 void CanonicalBrowsingContext::MaybeScheduleSessionStoreUpdate() {
-  if (!StaticPrefs::browser_sessionstore_platform_collection_AtStartup()) {
+  if (!SessionStorePlatformCollection()) {
     return;
   }
 

@@ -1024,6 +1024,12 @@ bool SessionHistoryInParent() {
              fission_disableSessionHistoryInParent_AtStartup_DoNotUseDirectly();
 }
 
+bool SessionStorePlatformCollection() {
+  return SessionHistoryInParent() &&
+         !StaticPrefs::
+             browser_sessionstore_disable_platform_collection_AtStartup_DoNotUseDirectly();
+}
+
 bool BFCacheInParent() {
   return SessionHistoryInParent() &&
          StaticPrefs::fission_bfcacheInParent_DoNotUseDirectly();
@@ -1425,6 +1431,12 @@ nsXULAppInfo::GetFissionDecisionStatusString(nsACString& aResult) {
 NS_IMETHODIMP
 nsXULAppInfo::GetSessionHistoryInParent(bool* aResult) {
   *aResult = SessionHistoryInParent();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULAppInfo::GetSessionStorePlatformCollection(bool* aResult) {
+  *aResult = SessionStorePlatformCollection();
   return NS_OK;
 }
 

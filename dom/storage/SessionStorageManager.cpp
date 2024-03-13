@@ -26,6 +26,7 @@
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/PBackgroundChild.h"
+#include "nsIXULRuntime.h"
 #include "nsTHashMap.h"
 #include "nsThreadUtils.h"
 
@@ -918,7 +919,7 @@ void BackgroundSessionStorageManager::SetCurrentBrowsingContextId(
 }
 
 void BackgroundSessionStorageManager::MaybeScheduleSessionStoreUpdate() {
-  if (!StaticPrefs::browser_sessionstore_platform_collection_AtStartup()) {
+  if (!SessionStorePlatformCollection()) {
     return;
   }
 

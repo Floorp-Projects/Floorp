@@ -30,6 +30,10 @@ bool FissionExperimentEnrolled();
 // fission.disableSessionHistoryInParent is false.
 bool SessionHistoryInParent();
 
+// Returns true if SessionHistoryInParent() is true and
+// browser.sessionstore.disable_platform_collection is false.
+bool SessionStorePlatformCollection();
+
 // Returns true if SessionHistoryInParent() returns true and
 // fission.bfcacheInParent is true.
 bool BFCacheInParent();
@@ -167,6 +171,11 @@ interface nsIXULRuntime : nsISupports
    * Whether session history is stored in the parent process.
    */
   readonly attribute boolean sessionHistoryInParent;
+
+  /**
+   * Whether Gecko code drives session store collection data.
+   */
+  readonly attribute boolean sessionStorePlatformCollection;
 
   /**
    * Whether to write console errors to a log file. If a component

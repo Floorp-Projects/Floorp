@@ -1655,15 +1655,18 @@
   value: 15000
   mirror: always
 
-# Platform collection of data for session store
-- name: browser.sessionstore.platform_collection
+# Disable collection of data for session store using the native collector code,
+# instead use the older implementation that's not compatible with session
+# history in the parent (and thus Fission).
+- name: browser.sessionstore.disable_platform_collection
   type: bool
-#if defined(ANDROID) || defined(MOZ_THUNDERBIRD)
-  value: false
-#else
+#if defined(MOZ_THUNDERBIRD)
   value: true
+#else
+  value: false
 #endif
   mirror: once
+  do_not_use_directly: true
 
 # Causes SessionStore to ignore non-final update messages from
 # browser tabs that were not caused by a flush from the parent.

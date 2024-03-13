@@ -5666,7 +5666,7 @@ nsDocShell::OnStateChange(nsIWebProgress* aProgress, nsIRequest* aRequest,
     mBusyFlags = (BusyFlags)(BUSY_FLAGS_BUSY | BUSY_FLAGS_BEFORE_PAGE_LOAD);
 
     if ((aStateFlags & STATE_RESTORING) == 0) {
-      if (StaticPrefs::browser_sessionstore_platform_collection_AtStartup()) {
+      if (SessionStorePlatformCollection()) {
         if (IsForceReloadType(mLoadType)) {
           if (WindowContext* windowContext =
                   mBrowsingContext->GetCurrentWindowContext()) {
@@ -6393,7 +6393,7 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
     // incorrectly overrides session store data from the following load.
     return NS_OK;
   }
-  if (StaticPrefs::browser_sessionstore_platform_collection_AtStartup()) {
+  if (SessionStorePlatformCollection()) {
     if (WindowContext* windowContext =
             mBrowsingContext->GetCurrentWindowContext()) {
       using Change = SessionStoreChangeListener::Change;
