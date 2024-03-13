@@ -2,6 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+
+const lazy = {};
+ChromeUtils.defineESModuleGetters(lazy, {
+  ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
+});
+
 /**
  * Default implementation of the helper class to assist in deleting the firefox protocols.
  * See maybeDeleteBridgeProtocolRegistryEntries for more info.
@@ -218,5 +225,82 @@ export const FirefoxBridgeExtensionUtils = {
     } finally {
       wrk.close();
     }
+  },
+
+  getNativeMessagingHostId() {
+    let nativeMessagingHostId = "org.mozilla.firefox_bridge_nmh";
+    if (AppConstants.NIGHTLY_BUILD) {
+      nativeMessagingHostId += "_nightly";
+    } else if (AppConstants.MOZ_DEV_EDITION) {
+      nativeMessagingHostId += "_dev";
+    } else if (AppConstants.IS_ESR) {
+      nativeMessagingHostId += "_esr";
+    }
+    return nativeMessagingHostId;
+  },
+
+  getExtensionOrigins() {
+    return Services.prefs
+      .getStringPref("browser.firefoxbridge.extensionOrigins", "")
+      .split(",");
+  },
+
+  async maybeWriteManifestFiles(
+    nmhManifestFolder,
+    nativeMessagingHostId,
+    dualBrowserExtensionOrigins
+  ) {
+    try {
+      let binFile = Services.dirsvc.get("XREExeF", Ci.nsIFile).parent;
+      if (AppConstants.platform == "macosx") {
+        binFile.append("nmhproxy");
+      } else {
+        throw new Error("Unsupported platform");
+      }
+
+      let jsonContent = {
+        name: nativeMessagingHostId,
+        description: "Firefox Native Messaging Host",
+        path: binFile.path,
+        type: "stdio",
+        allowed_origins: dualBrowserExtensionOrigins,
+      };
+      let nmhManifestFile = await IOUtils.getFile(
+        nmhManifestFolder,
+        `${nativeMessagingHostId}.json`
+      );
+
+      // This throws an error if the JSON file doesn't exist
+      // or if it's corrupt.
+      let correctFileExists = true;
+      try {
+        correctFileExists = lazy.ObjectUtils.deepEqual(
+          await IOUtils.readJSON(nmhManifestFile.path),
+          jsonContent
+        );
+      } catch (e) {
+        correctFileExists = false;
+      }
+      if (!correctFileExists) {
+        await IOUtils.writeJSON(nmhManifestFile.path, jsonContent);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  },
+
+  async ensureRegistered() {
+    let nmhManifestFolder = null;
+    if (AppConstants.platform == "macosx") {
+      nmhManifestFolder =
+        "~/Library/Application Support/Google/Chrome/NativeMessagingHosts/";
+    } else {
+      throw new Error("Unsupported platform");
+    }
+    await this.maybeWriteManifestFiles(
+      nmhManifestFolder,
+      this.getNativeMessagingHostId(),
+      this.getExtensionOrigins()
+    );
   },
 };

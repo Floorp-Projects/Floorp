@@ -2654,6 +2654,16 @@ BrowserGlue.prototype = {
         },
       },
 
+      {
+        name: "firefoxBridgeNativeMessaging",
+        condition:
+          AppConstants.platform == "macosx" &&
+          Services.prefs.getBoolPref("browser.firefoxbridge.enabled", false),
+        task: async () => {
+          await lazy.FirefoxBridgeExtensionUtils.ensureRegistered();
+        },
+      },
+
       // Ensure a Private Browsing Shortcut exists. This is needed in case
       // a user tries to use Windows functionality to pin our Private Browsing
       // mode icon to the Taskbar (eg: the "Pin to Taskbar" context menu item).
