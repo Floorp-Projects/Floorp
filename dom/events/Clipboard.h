@@ -13,8 +13,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
-
-class nsIAsyncGetClipboardData;
+#include "mozilla/dom/DataTransfer.h"
 
 namespace mozilla::dom {
 
@@ -76,10 +75,6 @@ class Clipboard : public DOMEventTargetHelper {
 
   void RequestRead(Promise* aPromise, ReadRequestType aType,
                    nsPIDOMWindowInner* aOwner, nsIPrincipal& aPrincipal);
-
-  void RequestRead(Promise& aPromise, const ReadRequestType& aType,
-                   nsPIDOMWindowInner& aOwner, nsIPrincipal& aSubjectPrincipal,
-                   nsIAsyncGetClipboardData& aRequest);
 };
 
 }  // namespace mozilla::dom

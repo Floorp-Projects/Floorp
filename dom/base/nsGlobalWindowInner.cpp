@@ -225,7 +225,6 @@
 #include "nsIBrowserChild.h"
 #include "nsICancelableRunnable.h"
 #include "nsIChannel.h"
-#include "nsIClipboard.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIControllers.h"
 #include "nsICookieJarSettings.h"
@@ -1438,7 +1437,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindowInner)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFocusedElement)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBrowsingContext)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindowGlobalChild)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCurrentPasteDataTransfer)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMenubar)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mToolbar)
@@ -1549,7 +1547,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowInner)
       !tmp->mWindowGlobalChild || tmp->mWindowGlobalChild->IsClosed(),
       "How are we unlinking a window before its actor has been destroyed?");
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindowGlobalChild)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCurrentPasteDataTransfer)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mMenubar)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mToolbar)
@@ -7691,19 +7688,6 @@ nsPIDOMWindowInner::SaveStorageAccessPermissionRevoked() {
   }
 
   return nsGlobalWindowInner::Cast(this)->StorageAccessPermissionChanged(false);
-}
-
-void nsPIDOMWindowInner::SetCurrentPasteDataTransfer(
-    DataTransfer* aDataTransfer) {
-  MOZ_ASSERT_IF(aDataTransfer, aDataTransfer->GetEventMessage() == ePaste);
-  MOZ_ASSERT_IF(aDataTransfer, aDataTransfer->ClipboardType() ==
-                                   nsIClipboard::kGlobalClipboard);
-  MOZ_ASSERT_IF(aDataTransfer, aDataTransfer->GetAsyncGetClipboardData());
-  mCurrentPasteDataTransfer = aDataTransfer;
-}
-
-DataTransfer* nsPIDOMWindowInner::GetCurrentPasteDataTransfer() const {
-  return mCurrentPasteDataTransfer;
 }
 
 bool nsPIDOMWindowInner::UsingStorageAccess() {

@@ -812,122 +812,54 @@ NS_IMETHODIMP nsBaseClipboard::AsyncGetData(
   return NS_OK;
 }
 
-already_AddRefed<nsIAsyncGetClipboardData>
-nsBaseClipboard::MaybeCreateGetRequestFromClipboardCache(
-    const nsTArray<nsCString>& aFlavorList, int32_t aClipboardType,
-    mozilla::dom::WindowContext* aRequestingWindowContext) {
-  MOZ_DIAGNOSTIC_ASSERT(nsIClipboard::IsClipboardTypeSupported(aClipboardType));
-
-  if (!mozilla::StaticPrefs::widget_clipboard_use_cached_data_enabled()) {
-    return nullptr;
-  }
-
-  // If we were the last ones to put something on the native clipboard, then
-  // just use the cached transferable. Otherwise clear it because it isn't
-  // relevant any more.
-  ClipboardCache* clipboardCache = GetClipboardCacheIfValid(aClipboardType);
-  if (!clipboardCache) {
-    return nullptr;
-  }
-
-  nsITransferable* cachedTransferable = clipboardCache->GetTransferable();
-  MOZ_ASSERT(cachedTransferable);
-
-  nsTArray<nsCString> transferableFlavors;
-  if (NS_FAILED(cachedTransferable->FlavorsTransferableCanExport(
-          transferableFlavors))) {
-    return nullptr;
-  }
-
-  nsTArray<nsCString> results;
-  for (const auto& transferableFlavor : transferableFlavors) {
-    for (const auto& flavor : aFlavorList) {
-      // XXX We need special check for image as we always put the
-      // image as "native" on the clipboard.
-      if (transferableFlavor.Equals(flavor) ||
-          (transferableFlavor.Equals(kNativeImageMime) &&
-           nsContentUtils::IsFlavorImage(flavor))) {
-        MOZ_CLIPBOARD_LOG("    has %s", flavor.get());
-        results.AppendElement(flavor);
-      }
-    }
-  }
-
-  // XXX Do we need to check system clipboard for the flavors that cannot
-  // be found in cache?
-  return mozilla::MakeAndAddRef<AsyncGetClipboardData>(
-      aClipboardType, clipboardCache->GetSequenceNumber(), std::move(results),
-      true /* aFromCache */, this, aRequestingWindowContext);
-}
-
 void nsBaseClipboard::AsyncGetDataInternal(
     const nsTArray<nsCString>& aFlavorList, int32_t aClipboardType,
     mozilla::dom::WindowContext* aRequestingWindowContext,
     nsIAsyncClipboardGetCallback* aCallback) {
   MOZ_ASSERT(nsIClipboard::IsClipboardTypeSupported(aClipboardType));
 
-  if (nsCOMPtr<nsIAsyncGetClipboardData> asyncGetClipboardData =
-          MaybeCreateGetRequestFromClipboardCache(aFlavorList, aClipboardType,
-                                                  aRequestingWindowContext)) {
-    aCallback->OnSuccess(asyncGetClipboardData);
-    return;
+  if (mozilla::StaticPrefs::widget_clipboard_use_cached_data_enabled()) {
+    // If we were the last ones to put something on the native clipboard, then
+    // just use the cached transferable. Otherwise clear it because it isn't
+    // relevant any more.
+    if (auto* clipboardCache = GetClipboardCacheIfValid(aClipboardType)) {
+      nsITransferable* cachedTransferable = clipboardCache->GetTransferable();
+      MOZ_ASSERT(cachedTransferable);
+
+      nsTArray<nsCString> transferableFlavors;
+      if (NS_SUCCEEDED(cachedTransferable->FlavorsTransferableCanExport(
+              transferableFlavors))) {
+        nsTArray<nsCString> results;
+        for (const auto& transferableFlavor : transferableFlavors) {
+          for (const auto& flavor : aFlavorList) {
+            // XXX We need special check for image as we always put the
+            // image as "native" on the clipboard.
+            if (transferableFlavor.Equals(flavor) ||
+                (transferableFlavor.Equals(kNativeImageMime) &&
+                 nsContentUtils::IsFlavorImage(flavor))) {
+              MOZ_CLIPBOARD_LOG("    has %s", flavor.get());
+              results.AppendElement(flavor);
+            }
+          }
+        }
+
+        // XXX Do we need to check system clipboard for the flavors that cannot
+        // be found in cache?
+        auto asyncGetClipboardData = mozilla::MakeRefPtr<AsyncGetClipboardData>(
+            aClipboardType, clipboardCache->GetSequenceNumber(),
+            std::move(results), true, this, aRequestingWindowContext);
+        aCallback->OnSuccess(asyncGetClipboardData);
+        return;
+      }
+    }
+
+    // At this point we can't satisfy the request from cache data so let's look
+    // for things other people put on the system clipboard.
   }
 
-  // At this point we can't satisfy the request from cache data so let's
-  // look for things other people put on the system clipboard.
   MaybeRetryGetAvailableFlavors(aFlavorList, aClipboardType, aCallback,
                                 kGetAvailableFlavorsRetryCount,
                                 aRequestingWindowContext);
-}
-
-NS_IMETHODIMP nsBaseClipboard::GetDataSnapshotSync(
-    const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard,
-    mozilla::dom::WindowContext* aRequestingWindowContext,
-    nsIAsyncGetClipboardData** _retval) {
-  MOZ_CLIPBOARD_LOG("%s: clipboard=%d", __FUNCTION__, aWhichClipboard);
-
-  *_retval = nullptr;
-
-  if (aFlavorList.IsEmpty()) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  if (!nsIClipboard::IsClipboardTypeSupported(aWhichClipboard)) {
-    MOZ_CLIPBOARD_LOG("%s: clipboard %d is not supported.", __FUNCTION__,
-                      aWhichClipboard);
-    return NS_ERROR_FAILURE;
-  }
-
-  if (nsCOMPtr<nsIAsyncGetClipboardData> asyncGetClipboardData =
-          MaybeCreateGetRequestFromClipboardCache(aFlavorList, aWhichClipboard,
-                                                  aRequestingWindowContext)) {
-    asyncGetClipboardData.forget(_retval);
-    return NS_OK;
-  }
-
-  auto sequenceNumberOrError =
-      GetNativeClipboardSequenceNumber(aWhichClipboard);
-  if (sequenceNumberOrError.isErr()) {
-    MOZ_CLIPBOARD_LOG("%s: unable to get sequence number for clipboard %d.",
-                      __FUNCTION__, aWhichClipboard);
-    return sequenceNumberOrError.unwrapErr();
-  }
-
-  nsTArray<nsCString> results;
-  for (const auto& flavor : aFlavorList) {
-    auto resultOrError = HasNativeClipboardDataMatchingFlavors(
-        AutoTArray<nsCString, 1>{flavor}, aWhichClipboard);
-    if (resultOrError.isOk() && resultOrError.unwrap()) {
-      results.AppendElement(flavor);
-    }
-  }
-
-  *_retval =
-      mozilla::MakeAndAddRef<AsyncGetClipboardData>(
-          aWhichClipboard, sequenceNumberOrError.unwrap(), std::move(results),
-          false /* aFromCache */, this, aRequestingWindowContext)
-          .take();
-  return NS_OK;
 }
 
 NS_IMETHODIMP nsBaseClipboard::EmptyClipboard(int32_t aWhichClipboard) {
