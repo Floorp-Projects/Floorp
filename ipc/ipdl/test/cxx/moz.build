@@ -11,7 +11,6 @@ EXPORTS.mozilla._ipdltest += [
     "IPDLUnitTests.h",
     "IPDLUnitTestTypes.h",
     "IPDLUnitTestUtils.h",
-    "TestDemon.h",
     "TestDesc.h",
     "TestEndpointBridgeMain.h",
     "TestEndpointOpens.h",
@@ -47,7 +46,6 @@ EXPORTS.mozilla._ipdltest += [
 ]
 
 SOURCES += [
-    "TestDemon.cpp",
     "TestDesc.cpp",
     "TestEndpointBridgeMain.cpp",
     "TestEndpointOpens.cpp",
@@ -89,7 +87,6 @@ SOURCES += [
 ]
 
 IPDL_SOURCES += [
-    "PTestDemon.ipdl",
     "PTestDesc.ipdl",
     "PTestDescSub.ipdl",
     "PTestDescSubsub.ipdl",
