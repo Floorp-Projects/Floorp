@@ -1,0 +1,18 @@
+{
+  "chrome://browser/content/browser.xhtml": {
+    "PersonalToolbar": { "collapsed": "false" },
+    "main-window": {
+      "screenX": "852",
+      "screenY": "125",
+      "width": "1484",
+      "height": "1256",
+      "sizemode": "normal"
+    },
+    "sidebar-box": {
+      "sidebarcommand": "viewBookmarksSidebar",
+      "width": "323",
+      "style": "width: 323px;"
+    },
+    "sidebar-title": { "value": "Bookmarks" }
+  }
+}
