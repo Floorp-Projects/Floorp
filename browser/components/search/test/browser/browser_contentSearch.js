@@ -50,6 +50,14 @@ add_setup(async function () {
   await SearchTestUtils.promiseNewSearchEngine({
     url: getRootDirectory(gTestPath) + "testEngine_chromeicon.xml",
   });
+
+  // Install a WebExtension based engine to allow testing passing of plain
+  // URIs (moz-extension://) to the content process.
+  await SearchTestUtils.installSearchExtension({
+    icons: {
+      16: "favicon.ico",
+    },
+  });
 });
 
 add_task(async function GetState() {
@@ -491,7 +499,7 @@ function iconDataFromURI(uri) {
     );
   }
 
-  if (!uri.startsWith("data:")) {
+  if (!uri.startsWith("data:") && !uri.startsWith("blob:")) {
     plainURIIconTested = true;
     return Promise.resolve(uri);
   }

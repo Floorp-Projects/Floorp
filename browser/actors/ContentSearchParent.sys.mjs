@@ -553,7 +553,13 @@ export let ContentSearch = {
   },
 
   /**
-   * Converts the engine's icon into an appropriate URL for display at
+   * Converts the engine's icon into a URL or an ArrayBuffer for passing to the
+   * content process.
+   *
+   * @param {nsISearchEngine} engine
+   *   The engine to get the icon for.
+   * @returns {string|ArrayBuffer}
+   *   The icon's URL or an ArrayBuffer containing the icon data.
    */
   async _getEngineIconURL(engine) {
     let url = await engine.getIconURL();
@@ -561,14 +567,20 @@ export let ContentSearch = {
       return SEARCH_ENGINE_PLACEHOLDER_ICON;
     }
 
-    // The uri received here can be of two types
+    // The uri received here can be one of several types:
     // 1 - moz-extension://[uuid]/path/to/icon.ico
     // 2 - data:image/x-icon;base64,VERY-LONG-STRING
+    // 3 - blob:
     //
-    // If the URI is not a data: URI, there's no point in converting
-    // it to an arraybuffer (which is used to optimize passing the data
-    // accross processes): we can just pass the original URI, which is cheaper.
-    if (!url.startsWith("data:")) {
+    // For moz-extension URIs we can pass the URI to the content process and
+    // use it directly as they can be accessed from there and it is cheaper.
+    //
+    // For blob URIs the content process is a different scope and we can't share
+    // the blob with that scope. Hence we have to create a copy of the data.
+    //
+    // For data: URIs we convert to an ArrayBuffer as that is more optimal for
+    // passing the data across to the content process.
+    if (!url.startsWith("data:") && !url.startsWith("blob:")) {
       return url;
     }
 
