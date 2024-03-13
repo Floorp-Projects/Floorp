@@ -174,28 +174,6 @@ NS_IMETHODIMP AsyncGetClipboardDataProxy::GetData(
   return NS_OK;
 }
 
-static Result<RefPtr<AsyncGetClipboardDataProxy>, nsresult>
-CreateAsyncGetClipboardDataProxy(
-    ClipboardReadRequestOrError&& aClipboardReadRequestOrError) {
-  if (aClipboardReadRequestOrError.type() ==
-      ClipboardReadRequestOrError::Tnsresult) {
-    MOZ_ASSERT(NS_FAILED(aClipboardReadRequestOrError.get_nsresult()));
-    return Err(aClipboardReadRequestOrError.get_nsresult());
-  }
-
-  ClipboardReadRequest& request =
-      aClipboardReadRequestOrError.get_ClipboardReadRequest();
-  auto requestChild = MakeRefPtr<ClipboardReadRequestChild>(
-      std::move(request.availableTypes()));
-  if (NS_WARN_IF(
-          !ContentChild::GetSingleton()->BindPClipboardReadRequestEndpoint(
-              std::move(request.childEndpoint()), requestChild))) {
-    return Err(NS_ERROR_FAILURE);
-  }
-
-  return MakeRefPtr<AsyncGetClipboardDataProxy>(requestChild);
-}
-
 }  // namespace
 
 NS_IMETHODIMP nsClipboardProxy::AsyncGetData(
@@ -220,51 +198,29 @@ NS_IMETHODIMP nsClipboardProxy::AsyncGetData(
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
           /* resolve */
-          [callback = nsCOMPtr{aCallback}](
-              ClipboardReadRequestOrError&& aClipboardReadRequestOrError) {
-            auto result = CreateAsyncGetClipboardDataProxy(
-                std::move(aClipboardReadRequestOrError));
-            if (result.isErr()) {
-              callback->OnError(result.unwrapErr());
+          [callback = nsCOMPtr{aCallback}](const PClipboardReadRequestOrError&
+                                               aClipboardReadRequestOrError) {
+            if (aClipboardReadRequestOrError.type() ==
+                PClipboardReadRequestOrError::Tnsresult) {
+              MOZ_ASSERT(
+                  NS_FAILED(aClipboardReadRequestOrError.get_nsresult()));
+              callback->OnError(aClipboardReadRequestOrError.get_nsresult());
               return;
             }
 
-            callback->OnSuccess(result.inspect());
+            auto asyncGetClipboardData = MakeRefPtr<AsyncGetClipboardDataProxy>(
+                static_cast<ClipboardReadRequestChild*>(
+                    aClipboardReadRequestOrError.get_PClipboardReadRequest()
+                        .AsChild()
+                        .get()));
+
+            callback->OnSuccess(asyncGetClipboardData);
           },
           /* reject */
           [callback = nsCOMPtr{aCallback}](
               mozilla::ipc::ResponseRejectReason aReason) {
             callback->OnError(NS_ERROR_FAILURE);
           });
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsClipboardProxy::GetDataSnapshotSync(
-    const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard,
-    mozilla::dom::WindowContext* aRequestingWindowContext,
-    nsIAsyncGetClipboardData** _retval) {
-  *_retval = nullptr;
-
-  if (aFlavorList.IsEmpty()) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  if (!nsIClipboard::IsClipboardTypeSupported(aWhichClipboard)) {
-    MOZ_CLIPBOARD_LOG("%s: clipboard %d is not supported.", __FUNCTION__,
-                      aWhichClipboard);
-    return NS_ERROR_FAILURE;
-  }
-
-  ContentChild* contentChild = ContentChild::GetSingleton();
-  ClipboardReadRequestOrError requestOrError;
-  contentChild->SendGetClipboardDataSnapshotSync(
-      aFlavorList, aWhichClipboard, aRequestingWindowContext, &requestOrError);
-  auto result = CreateAsyncGetClipboardDataProxy(std::move(requestOrError));
-  if (result.isErr()) {
-    return result.unwrapErr();
-  }
-
-  result.unwrap().forget(_retval);
   return NS_OK;
 }
 

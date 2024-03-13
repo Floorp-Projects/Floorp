@@ -713,33 +713,6 @@ static Element* GetElementOrNearestFlattenedTreeParentElement(nsINode* aNode) {
   return nullptr;
 }
 
-/**
- * This class is used while processing clipboard paste event.
- */
-class MOZ_RAII AutoHandlingPasteEvent final {
- public:
-  explicit AutoHandlingPasteEvent(nsPIDOMWindowInner* aWindow,
-                                  DataTransfer* aDataTransfer,
-                                  const EventMessage& aEventMessage,
-                                  const int32_t& aClipboardType) {
-    MOZ_ASSERT(aDataTransfer);
-    if (aWindow && aEventMessage == ePaste &&
-        aClipboardType == nsIClipboard::kGlobalClipboard) {
-      aWindow->SetCurrentPasteDataTransfer(aDataTransfer);
-      mInnerWindow = aWindow;
-    }
-  }
-
-  ~AutoHandlingPasteEvent() {
-    if (mInnerWindow) {
-      mInnerWindow->SetCurrentPasteDataTransfer(nullptr);
-    }
-  }
-
- private:
-  RefPtr<nsPIDOMWindowInner> mInnerWindow;
-};
-
 bool nsCopySupport::FireClipboardEvent(EventMessage aEventMessage,
                                        int32_t aClipboardType,
                                        PresShell* aPresShell,
@@ -817,15 +790,9 @@ bool nsCopySupport::FireClipboardEvent(EventMessage aEventMessage,
     InternalClipboardEvent evt(true, originalEventMessage);
     evt.mClipboardData = clipboardData;
 
-    {
-      AutoHandlingPasteEvent autoHandlingPasteEvent(
-          doc->GetInnerWindow(), clipboardData, aEventMessage, aClipboardType);
-
-      RefPtr<nsPresContext> presContext = presShell->GetPresContext();
-      EventDispatcher::Dispatch(targetElement, presContext, &evt, nullptr,
-                                &status);
-    }
-
+    RefPtr<nsPresContext> presContext = presShell->GetPresContext();
+    EventDispatcher::Dispatch(targetElement, presContext, &evt, nullptr,
+                              &status);
     // If the event was cancelled, don't do the clipboard operation
     doDefault = (status != nsEventStatus_eConsumeNoDefault);
   }
