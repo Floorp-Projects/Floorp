@@ -2471,7 +2471,7 @@
     This dialog will be presented when the user attempts to perform
     a translation without the necessary language files downloaded first when Android's data saver mode is enabled and the user is not using WiFi.
     The first parameter is the size in kilobytes or megabytes of the language file. -->
-    <string name="translations_download_language_file_dialog_title">Llwytho i lawr iaith yn y modd cadw data (%1$s)?</string>
+    <string name="translations_download_language_file_dialog_title">Llwytho i lawr iaith yn y modd data cynnil (%1$s)?</string>
 
 
     <!-- Translations options dialog -->
