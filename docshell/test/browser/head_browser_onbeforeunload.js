@@ -4,19 +4,12 @@ const BASE_URL = "http://mochi.test:8888/browser/docshell/test/browser/";
 
 const TEST_PAGE = BASE_URL + "file_onbeforeunload_0.html";
 
-const CONTENT_PROMPT_SUBDIALOG = Services.prefs.getBoolPref(
-  "prompts.contentPromptSubDialog",
-  false
-);
-
 const { PromptTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/PromptTestUtils.sys.mjs"
 );
 
 async function withTabModalPromptCount(expected, task) {
-  const DIALOG_TOPIC = CONTENT_PROMPT_SUBDIALOG
-    ? "common-dialog-loaded"
-    : "tabmodal-dialog-loaded";
+  const DIALOG_TOPIC = "common-dialog-loaded";
 
   let count = 0;
   function observer() {

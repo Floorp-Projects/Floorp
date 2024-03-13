@@ -1,13 +1,7 @@
 "use strict";
 
-const CONTENT_PROMPT_SUBDIALOG = Services.prefs.getBoolPref(
-  "prompts.contentPromptSubDialog",
-  false
-);
-
 /**
- * Goes through a stacked series of dialogs opened with
- * CONTENT_PROMPT_SUBDIALOG set to true, and ensures that
+ * Goes through a stacked series of dialogs  and ensures that
  * the oldest one is front-most and has the right type. It
  * then closes the oldest to newest dialog.
  *
@@ -58,64 +52,6 @@ async function closeDialogs(tab, dialogCount) {
   is(dialogs.length, 0, "Dialogs should all be dismissed.");
 }
 
-/**
- * Goes through a stacked series of tabprompt modals opened with
- * CONTENT_PROMPT_SUBDIALOG set to false, and ensures that
- * the oldest one is front-most and has the right type. It also
- * ensures that the other tabprompt modals are hidden. It
- * then closes the oldest to newest dialog.
- *
- * @param {Element} tab The <tab> that has had tabprompt modals opened
- * for it.
- * @param {Number} promptCount How many modals we expected to have been
- * opened.
- *
- * @return {Promise}
- * @resolves {undefined} Once the modals have all been closed.
- */
-async function closeTabModals(tab, promptCount) {
-  let promptElementsCount = promptCount;
-  while (promptElementsCount--) {
-    let promptElements =
-      tab.linkedBrowser.parentNode.querySelectorAll("tabmodalprompt");
-    is(
-      promptElements.length,
-      promptElementsCount + 1,
-      "There should be " + (promptElementsCount + 1) + " prompt(s)."
-    );
-    // The oldest should be the first.
-    let i = 0;
-
-    for (let promptElement of promptElements) {
-      let prompt = tab.linkedBrowser.tabModalPromptBox.getPrompt(promptElement);
-      let expectedType = ["alert", "prompt", "confirm"][i % 3];
-      is(
-        prompt.Dialog.args.text,
-        expectedType + " countdown #" + i,
-        "The #" + i + " alert should be labelled as such."
-      );
-      if (i !== promptElementsCount) {
-        is(prompt.element.hidden, true, "This prompt should be hidden.");
-        i++;
-        continue;
-      }
-
-      is(prompt.element.hidden, false, "The last prompt should not be hidden.");
-      prompt.onButtonClick(0);
-
-      // The click is handled async; wait for an event loop turn for that to
-      // happen.
-      await new Promise(function (resolve) {
-        Services.tm.dispatchToMainThread(resolve);
-      });
-    }
-  }
-
-  let promptElements =
-    tab.linkedBrowser.parentNode.querySelectorAll("tabmodalprompt");
-  is(promptElements.length, 0, "Prompts should all be dismissed.");
-}
-
 /*
  * This test triggers multiple alerts on one single tab, because it"s possible
  * for web content to do so. The behavior is described in bug 1266353.
@@ -161,11 +97,7 @@ add_task(async function () {
 
   await promptsOpenedPromise;
 
-  if (CONTENT_PROMPT_SUBDIALOG) {
-    await closeDialogs(tab, PROMPTCOUNT);
-  } else {
-    await closeTabModals(tab, PROMPTCOUNT);
-  }
+  await closeDialogs(tab, PROMPTCOUNT);
 
   BrowserTestUtils.removeTab(tab);
 });
