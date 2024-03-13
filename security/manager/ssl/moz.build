@@ -169,7 +169,7 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
     CFLAGS += CONFIG["GLIB_CFLAGS"]
     CXXFLAGS += CONFIG["GLIB_CFLAGS"]
 
-if CONFIG["TARGET_OS"] == "OSX":
+if CONFIG["TARGET_KERNEL"] == "Darwin":
     UNIFIED_SOURCES += [
         "KeychainSecret.cpp",
         "OSReauthenticatorDarwin.mm",
