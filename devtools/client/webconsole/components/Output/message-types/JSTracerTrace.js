@@ -120,9 +120,11 @@ function JSTracerTrace(props) {
   if (why) {
     messageBody.push(
       // Add a spaces in order to improve copy paste rendering
-      dom.span({ className: "jstracer-exit-frame-reason" }, " " + why + " "),
-      formatRep(messageBodyConfig, returnedValue)
+      dom.span({ className: "jstracer-exit-frame-reason" }, " " + why + " ")
     );
+    if (returnedValue !== undefined) {
+      messageBody.push(formatRep(messageBodyConfig, returnedValue));
+    }
   }
 
   if (prefix) {
