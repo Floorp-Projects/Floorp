@@ -13,7 +13,6 @@ add_task(async function testStopStartingAutoScroll() {
         "accessibility.mouse_focuses_formcontrol",
         !navigator.platform.includes("Mac"),
       ],
-      ["browser.tabs.loadInBackground", false],
     ],
   });
 

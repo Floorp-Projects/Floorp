@@ -1685,18 +1685,6 @@
   value: false
   mirror: always
 
-# If set, when a link is opened to a new tab, do not switch to the new tab.
-#
-# This pref is used when the link is opened with "Open Link in New Tab",
-# middle-click, etc.
-#
-# See also browser.tabs.loadDivertedInBackground, which is used when the website
-# diverts the link into a new tab.
-- name: browser.tabs.loadInBackground
-  type: bool
-  value: true
-  mirror: always
-
 # Whether we should draw the tabs on top of the titlebar.
 #
 # no (0), yes (1), or default (2), which is true everywhere except Linux.
@@ -1710,12 +1698,6 @@
 - name: browser.tabs.documentchannel.parent-controlled
   type: bool
   value: false
-  mirror: always
-
-# If set, middle clicking on a link opens the link in a new tab.
-- name: browser.tabs.opentabfor.middleclick
-  type: bool
-  value: true
   mirror: always
 
 # Testing-only pref which makes data: URIs be loaded in a "web" content process
@@ -11210,21 +11192,6 @@
 - name: memory.phc.avg_delay.page_reuse
   type: uint32_t
   value: 262144
-  mirror: always
-
-#---------------------------------------------------------------------------
-# Prefs starting with "middlemouse."
-#---------------------------------------------------------------------------
-
-# If set and browser.tabs.opentabfor.middleclick is not set, middle clicking on
-# a link opens the link in a new window.
-- name: middlemouse.openNewWindow
-  type: bool
-#if defined(ANDROID) || !defined(XP_MACOSX) && defined(XP_UNIX)
-  value: true
-#else
-  value: false
-#endif
   mirror: always
 
 #---------------------------------------------------------------------------
