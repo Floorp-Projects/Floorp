@@ -21,6 +21,15 @@
     text-decoration: underline !important;
   }
 
+  div:has(p, .toc-wrapper) {
+    width: unset !important;
+    min-width: 10rem !important;
+  }
+
+  .toc-wrapper {
+    margin-inline-end: 8px;
+  }
+
   /* Override the default Storybook padding in favour of styles
    provided by our WithCommonStyles wrapper */
   .sb-show-main.sb-main-padded {
