@@ -146,12 +146,22 @@
     color: var(--urlbarView-highlight-color);
   }
 
-  :root:not([uidensity=compact]) &:not([type=tip], [type=dynamic]) {
-    min-height: 32px;
+  &:not([type=tip], [type=dynamic]) {
+    :root:not([uidensity=compact]) & {
+      min-height: 32px;
+    }
+    :root[uidensity=touch] & {
+      padding-block: 11px;
+    }
   }
 
-  :root[uidensity=touch] &:not([type=tip], [type=dynamic]) {
-    padding-block: 11px;
+  &[rich-suggestion][type=search] {
+    :root:not([uidensity=compact]) & {
+      min-height: 46px;
+    }
+    :root[uidensity=touch] & {
+      padding-block: 4px;
+    }
   }
 }
 
