@@ -212,7 +212,7 @@ Notice: Floorp is not based on Waterfox. The structure is a reference and has no
 
 ### 🎨 firefox-gnome-theme
 
-- [Firefox-Gnome-Theme](https://github.com/rafaelmardojai/firefox-gnome-theme/blob/master/LICENSE)
+- [Firefox-Gnome-Theme](https://github.com/rafaelmardojai/firefox-gnome-theme/)
 - [The Unlicense](https://github.com/rafaelmardojai/firefox-gnome-theme/blob/master/LICENSE)
 - Author: [rafaelmardojai](https://github.com/rafaelmardojai)
 
