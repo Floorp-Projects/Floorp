@@ -747,17 +747,8 @@ class QATests(SnapTestsBase):
             download_dir_pref == new
         ), "download directory from pref should match new directory"
 
-    def open_thinkbroadband(self):
-        download_site = self.open_tab("https://www.thinkbroadband.com/download")
-        try:
-            consent = self._wait.until(
-                EC.visibility_of_element_located(
-                    (By.CSS_SELECTOR, ".t-acceptAllButton")
-                )
-            )
-            consent.click()
-        except TimeoutException:
-            self._logger.info("Wait for consent form: timed out, maybe it is not here")
+    def open_lafibre(self):
+        download_site = self.open_tab("https://ip.lafibre.info/test-debit.php")
         return download_site
 
     def test_download_folder_change(self, exp):
@@ -765,15 +756,12 @@ class QATests(SnapTestsBase):
         C1756713
         """
 
-        # Bug 1884547 - we get captcha
-        return True
-
-        download_site = self.open_thinkbroadband()
+        download_site = self.open_lafibre()
         extra_small = self._wait.until(
             EC.presence_of_element_located(
                 (
                     By.CSS_SELECTOR,
-                    "div.module:nth-child(8) > p:nth-child(1) > a:nth-child(1)",
+                    ".tableau > tbody:nth-child(1) > tr:nth-child(6) > td:nth-child(2) > a:nth-child(1)",
                 )
             )
         )
@@ -821,15 +809,12 @@ class QATests(SnapTestsBase):
         C1756715
         """
 
-        # Bug 1884547 - we get captcha
-        return True
-
-        download_site = self.open_thinkbroadband()
+        download_site = self.open_lafibre()
         extra_small = self._wait.until(
             EC.presence_of_element_located(
                 (
                     By.CSS_SELECTOR,
-                    "div.module:nth-child(8) > p:nth-child(1) > a:nth-child(1)",
+                    ".tableau > tbody:nth-child(1) > tr:nth-child(6) > td:nth-child(2) > a:nth-child(1)",
                 )
             )
         )
