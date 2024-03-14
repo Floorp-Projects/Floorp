@@ -874,15 +874,10 @@ pocketNewtab:
       fallbackPref: >-
         browser.newtabpage.activity-stream.discoverystream.ctaButtonSponsors
     ctaButtonVariant:
-      description: Specifies which variant to use for any sponsors in ctaButtonSponsors
+      description: Specifies which veriant to use for any sponsors in ctaButtonSponsors
       type: string
       fallbackPref: >-
         browser.newtabpage.activity-stream.discoverystream.ctaButtonVariant
-    spocMessageVariant:
-      description: Adds some message dialogs explainging sponsored content to the user
-      type: string
-      fallbackPref: >-
-        browser.newtabpage.activity-stream.discoverystream.spocMessageVariant
     regionStoriesConfig:
       description: A comma-separated list of region to get stories for.
       type: string

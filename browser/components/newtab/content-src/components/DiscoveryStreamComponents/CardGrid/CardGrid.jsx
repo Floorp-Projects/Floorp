@@ -326,7 +326,6 @@ export class _CardGrid extends React.PureComponent {
       onboardingExperience,
       ctaButtonSponsors,
       ctaButtonVariant,
-      spocMessageVariant,
       widgets,
       recentSavesEnabled,
       hideDescriptions,
@@ -375,7 +374,6 @@ export class _CardGrid extends React.PureComponent {
             saveToPocketCard={saveToPocketCard}
             ctaButtonSponsors={ctaButtonSponsors}
             ctaButtonVariant={ctaButtonVariant}
-            spocMessageVariant={spocMessageVariant}
             recommendation_id={rec.recommendation_id}
           />
         )

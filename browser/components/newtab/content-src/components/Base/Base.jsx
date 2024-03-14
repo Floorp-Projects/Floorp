@@ -165,21 +165,12 @@ export class BaseContent extends React.PureComponent {
     const { App } = props;
     const { initialized, customizeMenuVisible } = App;
     const prefs = props.Prefs.values;
-    const { pocketConfig } = prefs;
 
     const isDiscoveryStream =
       props.DiscoveryStream.config && props.DiscoveryStream.config.enabled;
     let filteredSections = props.Sections.filter(
       section => section.id !== "topstories"
     );
-
-    let spocMessageVariant = "";
-    if (
-      props.App.locale?.startsWith("en-") &&
-      pocketConfig?.spocMessageVariant === "variant-c"
-    ) {
-      spocMessageVariant = pocketConfig.spocMessageVariant;
-    }
 
     const pocketEnabled =
       prefs["feeds.section.topstories"] && prefs["feeds.system.topstories"];
@@ -227,7 +218,6 @@ export class BaseContent extends React.PureComponent {
           pocketRegion={pocketRegion}
           mayHaveSponsoredTopSites={mayHaveSponsoredTopSites}
           mayHaveSponsoredStories={mayHaveSponsoredStories}
-          spocMessageVariant={spocMessageVariant}
           showing={customizeMenuVisible}
         />
         {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions*/}
@@ -249,10 +239,7 @@ export class BaseContent extends React.PureComponent {
             <div className={`body-wrapper${initialized ? " on" : ""}`}>
               {isDiscoveryStream ? (
                 <ErrorBoundary className="borderless-error">
-                  <DiscoveryStreamBase
-                    locale={props.App.locale}
-                    mayHaveSponsoredStories={mayHaveSponsoredStories}
-                  />
+                  <DiscoveryStreamBase locale={props.App.locale} />
                 </ErrorBoundary>
               ) : (
                 <Sections />
