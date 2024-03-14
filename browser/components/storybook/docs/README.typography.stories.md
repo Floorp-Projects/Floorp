@@ -23,7 +23,7 @@ We also don't specify line height units and rely on the default.
       <td><code>h1,<br/>.heading-xlarge</code></td>
       <td>
         ```html story
-          <h1 class="text-truncated-ellipsis">The quick brown fox jumps over the lazy dog</h1>
+          <h1 class="text-truncated-ellipsis toc-ignore">The quick brown fox jumps over the lazy dog</h1>
         ```
       </td>
       <td>
@@ -38,7 +38,7 @@ We also don't specify line height units and rely on the default.
       <td><code>h2,<br/>.heading-large</code></td>
       <td>
         ```html story
-          <h2 class="text-truncated-ellipsis">The quick brown fox jumps over the lazy dog</h2>
+          <h2 class="text-truncated-ellipsis toc-ignore">The quick brown fox jumps over the lazy dog</h2>
         ```
       </td>
       <td>
@@ -53,7 +53,7 @@ We also don't specify line height units and rely on the default.
       <td><code>h3,<br/>.heading-medium</code></td>
       <td >
         ```html story
-          <h3 class="text-truncated-ellipsis">The quick brown fox jumps over the lazy dog</h3>
+          <h3 class="text-truncated-ellipsis toc-ignore">The quick brown fox jumps over the lazy dog</h3>
         ```
       </td>
       <td>
@@ -324,7 +324,7 @@ h1,
 
 ##### Large (h2)
 ```html story
-  <h2>Recent browsing</h2>
+  <h2 class="toc-ignore">Recent browsing</h2>
 ```
 
 ```css story
