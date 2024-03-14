@@ -566,15 +566,10 @@ static inline void CopyChars(CharT* to, const JSLinearString* from,
   MOZ_ASSERT(begin + length <= from->length());
 
   JS::AutoCheckCannotGC nogc;
-  if constexpr (std::is_same_v<CharT, Latin1Char>) {
-    MOZ_ASSERT(from->hasLatin1Chars());
+  if (from->hasLatin1Chars()) {
     CopyChars(to, from->latin1Chars(nogc) + begin, length);
   } else {
-    if (from->hasLatin1Chars()) {
-      CopyChars(to, from->latin1Chars(nogc) + begin, length);
-    } else {
-      CopyChars(to, from->twoByteChars(nogc) + begin, length);
-    }
+    CopyChars(to, from->twoByteChars(nogc) + begin, length);
   }
 }
 
