@@ -1131,22 +1131,32 @@ void nsContainerFrame::ReflowOverflowContainerChildren(
           frame->HasAnyStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER),
           "overflow container frame must have overflow container bit set");
       WritingMode wm = frame->GetWritingMode();
-      LogicalSize availSpace(wm, prevInFlow->ISize(wm),
-                             aReflowInput.AvailableSize(wm).BSize(wm));
+      // Note: aReflowInput's available inline-size is technically wrong for us
+      // to hand off to children here, because it doesn't account for the space
+      // that's been used for the container's margin/border/padding (and some
+      // other space that a concrete container type, e.g. fieldset and grid [1],
+      // might reserve before setting up the available space for their
+      // children). Since we don't have a way to query the specific available
+      // inline-size each container type used, nor do we know how the container
+      // computes its non-overflow-container children's inline-size, we just
+      // unconditionally override the frame's inline-size, so that the available
+      // inline-size for the children doesn't really matter anyway.
+      //
+      // [1] For example, fieldset uses its computed inline-size with padding as
+      // the available inline-size to reflow its inner child frame.
+      // https://searchfox.org/mozilla-central/rev/04f7743d94691fa24212fb43099f9d84c3bfc890/layout/forms/nsFieldSetFrame.cpp#535-536
+      const LogicalSize availSpace = aReflowInput.AvailableSize(wm);
 
       StyleSizeOverrides sizeOverride;
-      if (frame->IsFlexItem()) {
-        // A flex item's size is determined by the flex algorithm, not solely by
-        // its style. Thus, the following overrides are necessary.
-        //
-        // Use the overflow container flex item's prev-in-flow inline-size since
-        // this continuation's inline-size is the same.
-        sizeOverride.mStyleISize.emplace(
-            StyleSize::LengthPercentage(LengthPercentage::FromAppUnits(
-                frame->StylePosition()->mBoxSizing == StyleBoxSizing::Border
-                    ? prevInFlow->ISize(wm)
-                    : prevInFlow->ContentISize(wm))));
+      // We override current continuation's inline-size by using the
+      // prev-in-flow's inline-size since both should be the same.
+      sizeOverride.mStyleISize.emplace(
+          StyleSize::LengthPercentage(LengthPercentage::FromAppUnits(
+              frame->StylePosition()->mBoxSizing == StyleBoxSizing::Border
+                  ? prevInFlow->ISize(wm)
+                  : prevInFlow->ContentISize(wm))));
 
+      if (frame->IsFlexItem()) {
         // An overflow container's block-size must be 0.
         sizeOverride.mStyleBSize.emplace(
             StyleSize::LengthPercentage(LengthPercentage::FromAppUnits(0)));
