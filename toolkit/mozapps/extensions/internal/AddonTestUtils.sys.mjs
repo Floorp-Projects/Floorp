@@ -298,7 +298,7 @@ export var AddonTestUtils = {
     // And scan for changes at startup
     Services.prefs.setIntPref("extensions.startupScanScopes", 15);
 
-    // By default, don't cache add-ons in AddonRepository.sys.mjs
+    // By default, don't cache add-ons in AddonRepository.jsm
     Services.prefs.setBoolPref("extensions.getAddons.cache.enabled", false);
 
     // Point update checks to the local machine for fast failures
@@ -1743,7 +1743,7 @@ export var AddonTestUtils = {
    * @param {object} extension
    *        The return value of ExtensionTestUtils.loadExtension.
    *        For browser tests, see mochitest/tests/SimpleTest/ExtensionTestUtils.js
-   *        For xpcshell tests, see toolkit/components/extensions/ExtensionXPCShellUtils.sys.mjs
+   *        For xpcshell tests, see toolkit/components/extensions/ExtensionXPCShellUtils.jsm
    * @param {object} [options]
    *        Optional options.
    * @param {boolean} [options.expectPending = false]

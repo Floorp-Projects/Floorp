@@ -4016,7 +4016,7 @@ pref("toolkit.osKeyStore.loglevel", "Warn");
 
 pref("extensions.formautofill.supportRTL", false);
 
-// Controls the log level for CookieBannerListService.sys.mjs.
+// Controls the log level for CookieBannerListService.jsm.
 pref("cookiebanners.listService.logLevel", "Error");
 
 // Controls the log level for Cookie Banner Auto Clicking.

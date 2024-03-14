@@ -4,7 +4,7 @@
 
 /**
  * This @file implements the child side of Conduits, an abstraction over
- * Fission IPC for extension API subject.  See {@link ConduitsParent.sys.mjs}
+ * Fission IPC for extension API subject.  See {@link ConduitsParent.jsm}
  * for more details about the overall design.
  *
  * @typedef {object} MessageData

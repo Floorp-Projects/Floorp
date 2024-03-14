@@ -86,7 +86,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 /**
  * Implements nsIPromptFactory
  *
- * Invoked by [toolkit/components/prompts/src/Prompter.sys.mjs]
+ * Invoked by [toolkit/components/prompts/src/Prompter.jsm]
  */
 export function LoginManagerAuthPromptFactory() {
   Services.obs.addObserver(this, "passwordmgr-crypto-login", true);
@@ -795,7 +795,7 @@ LoginManagerAuthPrompter.prototype = {
       .then(ok => (result = ok))
       .finally(() => (closed = true));
     Services.tm.spinEventLoopUntilOrQuit(
-      "LoginManagerAuthPrompter.sys.mjs:promptAuth",
+      "LoginManagerAuthPrompter.jsm:promptAuth",
       () => closed
     );
     return result;

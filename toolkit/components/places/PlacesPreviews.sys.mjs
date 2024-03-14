@@ -85,7 +85,7 @@ class DeletionHandler {
   constructor() {
     // Clear any pending timeouts on shutdown.
     lazy.PlacesUtils.history.shutdownClient.jsclient.addBlocker(
-      "PlacesPreviews.sys.mjs::DeletionHandler",
+      "PlacesPreviews.jsm::DeletionHandler",
       async () => {
         this.#shutdownProgress.shuttingDown = true;
         lazy.clearTimeout(this.#timeoutId);
@@ -164,7 +164,7 @@ class DeletionHandler {
       return p;
     }, {});
     await lazy.PlacesUtils.withConnectionWrapper(
-      "PlacesPreviews.sys.mjs::ExpirePreviews",
+      "PlacesPreviews.jsm::ExpirePreviews",
       async db => {
         await db.execute(
           `DELETE FROM moz_previews_tombstones WHERE hash in
@@ -288,7 +288,7 @@ export const PlacesPreviews = new (class extends EventEmitter {
    * Updates the preview for the given page url. The update happens in
    * background, using a windowless browser with very conservative privacy
    * settings. Due to this, it may not look exactly like the page that the user
-   * is normally facing when logged in. See BackgroundPageThumbs.sys.mjs for
+   * is normally facing when logged in. See BackgroundPageThumbs.jsm for
    * additional details.
    * Unless `forceUpdate` is set, the preview is not updated if:
    *  - It was already fetched recently
@@ -385,7 +385,7 @@ export const PlacesPreviews = new (class extends EventEmitter {
       .map(n => n.substring(0, n.lastIndexOf(".")));
 
     await lazy.PlacesUtils.withConnectionWrapper(
-      "PlacesPreviews.sys.mjs::deleteOrphans",
+      "PlacesPreviews.jsm::deleteOrphans",
       async db => {
         await db.execute(
           `

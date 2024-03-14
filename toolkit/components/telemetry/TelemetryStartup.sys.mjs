@@ -12,7 +12,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 /**
  * TelemetryStartup is needed to forward the "profile-after-change" notification
- * to TelemetryController.sys.mjs.
+ * to TelemetryController.jsm.
  */
 export function TelemetryStartup() {}
 

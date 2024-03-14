@@ -4,7 +4,7 @@ WebIDL WebExtensions API Bindings
 While on ``manifest_version: 2`` all the extension globals (extension pages and content scripts)
 that lives on the main thread and the WebExtensions API bindings can be injected into the extension
 global from the JS privileged code part of the WebExtensions internals (`See Schemas.inject defined in
-Schemas.sys.mjs <https://searchfox.org/mozilla-central/search?q=symbol:Schemas%23inject&redirect=false>`_),
+Schemas.jsm <https://searchfox.org/mozilla-central/search?q=symbol:Schemas%23inject&redirect=false>`_),
 in ``manifest_version: 3`` the extension will be able to declare a background service worker
 instead of a background page, and the existing WebExtensions API bindings can't be injected into this
 new extension global, because it lives off of the main thread.

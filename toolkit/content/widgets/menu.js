@@ -129,7 +129,7 @@
   };
 
   // The <menucaption> element is used for rendering <html:optgroup> inside of <html:select>,
-  // See SelectParentHelper.sys.mjs.
+  // See SelectParentHelper.jsm.
   class MozMenuCaption extends MozMenuBaseMixin(MozXULElement) {
     static get inheritedAttributes() {
       return {

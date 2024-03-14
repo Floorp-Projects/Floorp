@@ -1913,7 +1913,7 @@ const NetworkIntegration = {
   maxEvaluatedRulesCount: 0,
 
   register() {
-    // We register via WebRequest.sys.mjs to ensure predictable ordering of DNR and
+    // We register via WebRequest.jsm to ensure predictable ordering of DNR and
     // WebRequest behavior.
     lazy.WebRequest.setDNRHandlingEnabled(true);
   },

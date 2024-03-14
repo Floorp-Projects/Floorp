@@ -74,7 +74,7 @@ NS_IMETHODIMP nsEffectiveTLDService::Observe(nsISupports* aSubject,
                                              const char* aTopic,
                                              const char16_t* aData) {
   /**
-   * Signal sent from netwerk/dns/PublicSuffixList.sys.mjs
+   * Signal sent from netwerk/dns/PublicSuffixList.jsm
    * aSubject is the nsIFile object for dafsa.bin
    * aData is the absolute path to the dafsa.bin file (not used)
    */

@@ -90,7 +90,7 @@ _ContextualIdentityService.prototype = {
       name: "userContextIdInternal.thumbnail",
       accessKey: "",
     },
-    // This userContextId is used by ExtensionStorageIDB.sys.mjs to create an IndexedDB database
+    // This userContextId is used by ExtensionStorageIDB.jsm to create an IndexedDB database
     // opened with the extension principal but not directly accessible to the extension code
     // (do not change the userContextId assigned here, otherwise the installed extensions will
     // not be able to access the data previously stored with the browser.storage.local API).

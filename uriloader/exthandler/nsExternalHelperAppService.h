@@ -544,8 +544,8 @@ class nsExternalAppHandler final : public nsIStreamListener,
                         const nsString& path);
 
   /**
-   * Set in HelperAppDlg.sys.mjs. This is always null after the user has chosen
-   * an action.
+   * Set in HelperAppDlg.jsm. This is always null after the user has chosen an
+   * action.
    */
   nsCOMPtr<nsIWebProgressListener2> mDialogProgressListener;
   /**

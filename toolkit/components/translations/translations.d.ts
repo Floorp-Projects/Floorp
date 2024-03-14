@@ -187,7 +187,7 @@ export namespace Bergamot {
 
 /**
  * The client to interact with RemoteSettings.
- * See services/settings/RemoteSettingsClient.sys.mjs
+ * See services/settings/RemoteSettingsClient.jsm
  */
 interface RemoteSettingsClient {
   on: Function,

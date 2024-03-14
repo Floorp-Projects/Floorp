@@ -117,7 +117,7 @@ const nsIFile = Components.Constructor(
 );
 
 // Create a new logger for use by the Addons XPI Provider Utils
-// (Requires AddonManager.sys.mjs)
+// (Requires AddonManager.jsm)
 var logger = Log.repository.getLogger(LOGGER_ID);
 
 const FILE_JSON_DB = "extensions.json";

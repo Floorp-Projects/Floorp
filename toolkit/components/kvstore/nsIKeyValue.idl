@@ -22,7 +22,7 @@ interface nsIKeyValuePair;
  * for all use cases.  Extension of this API to support transactions is tracked
  * by bug 1499238.
  *
- * The kvstore.sys.mjs module wraps this API in a more idiomatic, Promise-based
+ * The kvstore.jsm module wraps this API in a more idiomatic, Promise-based
  * JS API that supports async/await.  In most cases, you're better off using
  * that API from JS rather than using this one directly.  Bug 1512319 tracks
  * native support for Promise in Rust-implemented XPCOM methods.
@@ -169,7 +169,7 @@ interface nsIKeyValuePair : nsISupports {
  * an nsIKeyValuePair rather than an nsISupports, so consumers don't need
  * to QI it to that interface; but this interface doesn't implement the JS
  * iteration protocol (because the Rust-XPCOM bindings don't yet support it),
- * which is another reason why you should use the kvstore.sys.mjs module from JS
+ * which is another reason why you should use the kvstore.jsm module from JS
  * instead of accessing this API directly.
  */
 [scriptable, builtinclass, rust_sync, uuid(b9ba7116-b7ff-4717-9a28-a08e6879b199)]

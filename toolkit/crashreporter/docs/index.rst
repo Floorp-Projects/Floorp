@@ -155,7 +155,7 @@ with information about the crash.
 
 Submission of child process crashes is handled by application code. This
 code prompts the user to submit crashes in context-appropriate UI and then
-submits the crashes using ``CrashSubmit.sys.mjs``.
+submits the crashes using ``CrashSubmit.jsm``.
 
 Memory Reports
 ==============
