@@ -23,7 +23,7 @@ class UpsampleXSlowStage : public RenderPipelineStage {
     for (size_t c = 0; c < input_rows.size(); c++) {
       const float* row = GetInputRow(input_rows, c, 0);
       float* row_out = GetOutputRow(output_rows, c, 0);
-      for (int64_t x = -xextra; x < (int64_t)(xsize + xextra); x++) {
+      for (int64_t x = -xextra; x < static_cast<int64_t>(xsize + xextra); x++) {
         float xp = *(row + x - 1);
         float xc = *(row + x);
         float xn = *(row + x + 1);
@@ -57,7 +57,7 @@ class UpsampleYSlowStage : public RenderPipelineStage {
       const float* rown = GetInputRow(input_rows, c, 1);
       float* row_out0 = GetOutputRow(output_rows, c, 0);
       float* row_out1 = GetOutputRow(output_rows, c, 1);
-      for (int64_t x = -xextra; x < (int64_t)(xsize + xextra); x++) {
+      for (int64_t x = -xextra; x < static_cast<int64_t>(xsize + xextra); x++) {
         float xp = *(rowp + x);
         float xc = *(rowc + x);
         float xn = *(rown + x);

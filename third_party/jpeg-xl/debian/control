@@ -11,7 +11,6 @@ Build-Depends:
  libgdk-pixbuf-2.0-dev | libgdk-pixbuf2.0-dev,
  libgif-dev,
  libgimp2.0-dev,
- libgmock-dev,
  libgoogle-perftools-dev,
  libgtest-dev,
  libhwy-dev (>= 1.0.0),

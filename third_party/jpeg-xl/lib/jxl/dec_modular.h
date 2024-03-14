@@ -123,7 +123,7 @@ class ModularFrameDecoder {
                                    PassesDecoderState* dec_state,
                                    jxl::ThreadPool* pool,
                                    RenderPipelineInput& render_pipeline_input,
-                                   Rect modular_rect);
+                                   Rect modular_rect) const;
 
   Image full_image;
   std::vector<Transform> global_transform;

@@ -85,7 +85,7 @@ Status EncodeWithLibjpeg(const PackedPixelFile& ppf, int quality,
   std::unique_ptr<Encoder> encoder = GetJPEGEncoder();
   encoder->SetOption("q", std::to_string(quality));
   EncodedImage encoded;
-  JXL_RETURN_IF_ERROR(encoder->Encode(ppf, &encoded));
+  JXL_RETURN_IF_ERROR(encoder->Encode(ppf, &encoded, nullptr));
   JXL_RETURN_IF_ERROR(!encoded.bitstreams.empty());
   *compressed = std::move(encoded.bitstreams[0]);
   return true;
@@ -156,8 +156,8 @@ TEST(JpegliTest, JpegliXYBEncodeTest) {
 
   PackedPixelFile ppf_out;
   ASSERT_TRUE(DecodeWithLibjpeg(compressed, &ppf_out));
-  EXPECT_THAT(BitsPerPixel(ppf_in, compressed), IsSlightlyBelow(1.45f));
-  EXPECT_THAT(ButteraugliDistance(ppf_in, ppf_out), IsSlightlyBelow(1.32f));
+  EXPECT_SLIGHTLY_BELOW(BitsPerPixel(ppf_in, compressed), 1.45f);
+  EXPECT_SLIGHTLY_BELOW(ButteraugliDistance(ppf_in, ppf_out), 1.32f);
 }
 
 TEST(JpegliTest, JpegliDecodeTestLargeSmoothArea) {
@@ -205,8 +205,8 @@ TEST(JpegliTest, JpegliYUVEncodeTest) {
 
   PackedPixelFile ppf_out;
   ASSERT_TRUE(DecodeWithLibjpeg(compressed, &ppf_out));
-  EXPECT_THAT(BitsPerPixel(ppf_in, compressed), IsSlightlyBelow(1.7f));
-  EXPECT_THAT(ButteraugliDistance(ppf_in, ppf_out), IsSlightlyBelow(1.32f));
+  EXPECT_SLIGHTLY_BELOW(BitsPerPixel(ppf_in, compressed), 1.7f);
+  EXPECT_SLIGHTLY_BELOW(ButteraugliDistance(ppf_in, ppf_out), 1.32f);
 }
 
 TEST(JpegliTest, JpegliYUVChromaSubsamplingEncodeTest) {
@@ -247,8 +247,8 @@ TEST(JpegliTest, JpegliYUVEncodeTestNoAq) {
 
   PackedPixelFile ppf_out;
   ASSERT_TRUE(DecodeWithLibjpeg(compressed, &ppf_out));
-  EXPECT_THAT(BitsPerPixel(ppf_in, compressed), IsSlightlyBelow(1.85f));
-  EXPECT_THAT(ButteraugliDistance(ppf_in, ppf_out), IsSlightlyBelow(1.25f));
+  EXPECT_SLIGHTLY_BELOW(BitsPerPixel(ppf_in, compressed), 1.85f);
+  EXPECT_SLIGHTLY_BELOW(ButteraugliDistance(ppf_in, ppf_out), 1.25f);
 }
 
 TEST(JpegliTest, JpegliHDRRoundtripTest) {
@@ -267,8 +267,8 @@ TEST(JpegliTest, JpegliHDRRoundtripTest) {
   JpegDecompressParams dparams;
   dparams.output_data_type = JXL_TYPE_UINT16;
   ASSERT_TRUE(DecodeJpeg(compressed, dparams, nullptr, &ppf_out));
-  EXPECT_THAT(BitsPerPixel(ppf_in, compressed), IsSlightlyBelow(2.95f));
-  EXPECT_THAT(ButteraugliDistance(ppf_in, ppf_out), IsSlightlyBelow(1.05f));
+  EXPECT_SLIGHTLY_BELOW(BitsPerPixel(ppf_in, compressed), 2.95f);
+  EXPECT_SLIGHTLY_BELOW(ButteraugliDistance(ppf_in, ppf_out), 1.05f);
 }
 
 TEST(JpegliTest, JpegliSetAppData) {

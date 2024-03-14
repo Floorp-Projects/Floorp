@@ -97,24 +97,29 @@ TEST(ColorEncodingTest, InternalExternalConversion) {
   ColorEncoding source_internal;
   ColorEncoding destination_internal;
 
+  const auto rand_float = []() {
+    return (static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 0.5) +
+           0.25;
+  };
+
   for (int i = 0; i < 100; i++) {
     source_internal.color_space = static_cast<ColorSpace>(rand() % 4);
     CIExy wp;
-    wp.x = (float(rand()) / float((RAND_MAX)) * 0.5) + 0.25;
-    wp.y = (float(rand()) / float((RAND_MAX)) * 0.5) + 0.25;
+    wp.x = rand_float();
+    wp.y = rand_float();
     EXPECT_TRUE(source_internal.SetWhitePoint(wp));
     if (source_internal.HasPrimaries()) {
       PrimariesCIExy primaries;
-      primaries.r.x = (float(rand()) / float((RAND_MAX)) * 0.5) + 0.25;
-      primaries.r.y = (float(rand()) / float((RAND_MAX)) * 0.5) + 0.25;
-      primaries.g.x = (float(rand()) / float((RAND_MAX)) * 0.5) + 0.25;
-      primaries.g.y = (float(rand()) / float((RAND_MAX)) * 0.5) + 0.25;
-      primaries.b.x = (float(rand()) / float((RAND_MAX)) * 0.5) + 0.25;
-      primaries.b.y = (float(rand()) / float((RAND_MAX)) * 0.5) + 0.25;
+      primaries.r.x = rand_float();
+      primaries.r.y = rand_float();
+      primaries.g.x = rand_float();
+      primaries.g.y = rand_float();
+      primaries.b.x = rand_float();
+      primaries.b.y = rand_float();
       EXPECT_TRUE(source_internal.SetPrimaries(primaries));
     }
     jxl::cms::CustomTransferFunction tf;
-    EXPECT_TRUE(tf.SetGamma((float(rand()) / float((RAND_MAX)) * 0.5) + 0.25));
+    EXPECT_TRUE(tf.SetGamma(rand_float()));
     source_internal.tf = tf;
     source_internal.rendering_intent = static_cast<RenderingIntent>(rand() % 4);
 

@@ -191,7 +191,7 @@ HWY_NOINLINE void TestFastIDCT() {
     }
   }
   printf("max error: %f mantissa bits: %d\n", max_error,
-         14 - (int)integer_bits);
+         14 - static_cast<int>(integer_bits));
 #endif
 }
 

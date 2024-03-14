@@ -247,7 +247,8 @@ Status ConvertChannelsToExternal(const ImageF* in_channels[],
   JXL_DASSERT(in_channels[0] != nullptr);
   JXL_CHECK(float_out ? bits_per_sample == 16 || bits_per_sample == 32
                       : bits_per_sample > 0 && bits_per_sample <= 16);
-  if (!!out_image == out_callback.IsPresent()) {
+  const bool has_out_image = (out_image != nullptr);
+  if (has_out_image == out_callback.IsPresent()) {
     return JXL_FAILURE(
         "Must provide either an out_image or an out_callback, but not both.");
   }

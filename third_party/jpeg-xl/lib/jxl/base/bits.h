@@ -26,7 +26,8 @@ struct SizeTag {};
 
 template <typename T>
 constexpr bool IsSigned() {
-  return T(0) > T(-1);
+  // TODO(eustas): remove dupes
+  return static_cast<T>(0) > static_cast<T>(-1);
 }
 
 // Undefined results for x == 0.

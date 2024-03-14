@@ -6,7 +6,7 @@
 #ifndef LIB_JXL_CMS_OPSIN_PARAMS_H_
 #define LIB_JXL_CMS_OPSIN_PARAMS_H_
 
-#include <array>
+#include "lib/jxl/base/matrix_ops.h"
 
 // Constants that define the XYB color space.
 
@@ -35,21 +35,20 @@ constexpr float kOpsinAbsorbanceBias1 = kOpsinAbsorbanceBias0;
 constexpr float kOpsinAbsorbanceBias2 = kOpsinAbsorbanceBias0;
 
 // Opsin absorbance matrix is now frozen.
-constexpr std::array<float, 9> kOpsinAbsorbanceMatrix = {
-    kM00, kM01, kM02, kM10, kM11, kM12, kM20, kM21, kM22,
-};
+constexpr Matrix3x3 kOpsinAbsorbanceMatrix{
+    {{kM00, kM01, kM02}, {kM10, kM11, kM12}, {kM20, kM21, kM22}}};
 
-constexpr std::array<float, 9> kDefaultInverseOpsinAbsorbanceMatrix = {
-    11.031566901960783f,  -9.866943921568629f, -0.16462299647058826f,
-    -3.254147380392157f,  4.418770392156863f,  -0.16462299647058826f,
-    -3.6588512862745097f, 2.7129230470588235f, 1.9459282392156863f};
+constexpr Matrix3x3 kDefaultInverseOpsinAbsorbanceMatrix{
+    {{11.031566901960783f, -9.866943921568629f, -0.16462299647058826f},
+     {-3.254147380392157f, 4.418770392156863f, -0.16462299647058826f},
+     {-3.6588512862745097f, 2.7129230470588235f, 1.9459282392156863f}}};
 
 // Must be the inverse matrix of kOpsinAbsorbanceMatrix and match the spec.
-static inline const float* DefaultInverseOpsinAbsorbanceMatrix() {
-  return kDefaultInverseOpsinAbsorbanceMatrix.data();
+static inline const Matrix3x3& DefaultInverseOpsinAbsorbanceMatrix() {
+  return kDefaultInverseOpsinAbsorbanceMatrix;
 }
 
-constexpr std::array<float, 3> kOpsinAbsorbanceBias = {
+constexpr Vector3 kOpsinAbsorbanceBias = {
     kOpsinAbsorbanceBias0,
     kOpsinAbsorbanceBias1,
     kOpsinAbsorbanceBias2,
@@ -63,14 +62,14 @@ constexpr float kScaledXYBOffset0 = 0.015386134f;
 constexpr float kScaledXYBOffset1 = 0.0f;
 constexpr float kScaledXYBOffset2 = 0.27770459f;
 
-constexpr std::array<float, 3> kScaledXYBOffset = {
-    kScaledXYBOffset0, kScaledXYBOffset1, kScaledXYBOffset2};
+constexpr Vector3 kScaledXYBOffset = {kScaledXYBOffset0, kScaledXYBOffset1,
+                                      kScaledXYBOffset2};
 
 constexpr float kScaledXYBScale0 = 22.995788804f;
 constexpr float kScaledXYBScale1 = 1.183000077f;
 constexpr float kScaledXYBScale2 = 1.502141333f;
 
-constexpr std::array<float, 3> kScaledXYBScale = {
+constexpr Vector3 kScaledXYBScale = {
     kScaledXYBScale0,
     kScaledXYBScale1,
     kScaledXYBScale2,

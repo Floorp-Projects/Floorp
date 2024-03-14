@@ -183,7 +183,8 @@ void CreateHuffmanTree(const uint32_t* data, const size_t length,
     size_t i = 0;      // Points to the next leaf node.
     size_t j = n + 1;  // Points to the next non-leaf node.
     for (size_t k = n - 1; k != 0; --k) {
-      size_t left, right;
+      size_t left;
+      size_t right;
       if (tree[i].total_count <= tree[j].total_count) {
         left = i;
         ++i;
@@ -210,7 +211,7 @@ void CreateHuffmanTree(const uint32_t* data, const size_t length,
       tree.push_back(sentinel);
     }
     JXL_DASSERT(tree.size() == 2 * n + 1);
-    SetDepth(tree[2 * n - 1], &tree[0], depth, 0);
+    SetDepth(tree[2 * n - 1], tree.data(), depth, 0);
 
     // We need to pack the Huffman tree in tree_limit bits.
     // If this was not successful, add fake entities to the lowest values

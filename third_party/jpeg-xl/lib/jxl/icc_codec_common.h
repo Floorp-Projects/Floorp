@@ -95,7 +95,7 @@ void AppendKeyword(const Tag& keyword, PaddedBytes* data);
 Status CheckOutOfBounds(uint64_t a, uint64_t b, uint64_t size);
 Status CheckIs32Bit(uint64_t v);
 
-const Span<const uint8_t> ICCInitialHeaderPrediction();
+Span<const uint8_t> ICCInitialHeaderPrediction();
 void ICCPredictHeader(const uint8_t* icc, size_t size, uint8_t* header,
                       size_t pos);
 uint8_t LinearPredictICCValue(const uint8_t* data, size_t start, size_t i,

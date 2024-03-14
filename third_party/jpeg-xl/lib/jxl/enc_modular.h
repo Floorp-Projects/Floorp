@@ -90,7 +90,8 @@ class ModularFrameEncoder {
  private:
   Status PrepareStreamParams(const Rect& rect, const CompressParams& cparams,
                              int minShift, int maxShift,
-                             const ModularStreamId& stream, bool do_color);
+                             const ModularStreamId& stream, bool do_color,
+                             bool groupwise);
   std::vector<Image> stream_images_;
   std::vector<ModularOptions> stream_options_;
   std::vector<uint32_t> quants_;

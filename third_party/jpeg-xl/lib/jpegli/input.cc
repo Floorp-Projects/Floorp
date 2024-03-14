@@ -89,7 +89,7 @@ void ReadUint8RowInterleaved2(const uint8_t* row_in, size_t len,
   const size_t simd_len = len & (~(N - 1));
   float* JXL_RESTRICT const row0 = row_out[0];
   float* JXL_RESTRICT const row1 = row_out[1];
-  Vec<DU8> out0, out1;
+  Vec<DU8> out0, out1;  // NOLINT
   for (size_t x = 0; x < simd_len; x += N) {
     LoadInterleaved2(du8, row_in + 2 * x, out0, out1);
     Store(ConvertTo(d, PromoteTo(du, out0)), d, row0 + x);
@@ -105,7 +105,7 @@ void ReadUint8RowInterleaved3(const uint8_t* row_in, size_t len,
   float* JXL_RESTRICT const row0 = row_out[0];
   float* JXL_RESTRICT const row1 = row_out[1];
   float* JXL_RESTRICT const row2 = row_out[2];
-  Vec<DU8> out0, out1, out2;
+  Vec<DU8> out0, out1, out2;  // NOLINT
   for (size_t x = 0; x < simd_len; x += N) {
     LoadInterleaved3(du8, row_in + 3 * x, out0, out1, out2);
     Store(ConvertTo(d, PromoteTo(du, out0)), d, row0 + x);
@@ -123,7 +123,7 @@ void ReadUint8RowInterleaved4(const uint8_t* row_in, size_t len,
   float* JXL_RESTRICT const row1 = row_out[1];
   float* JXL_RESTRICT const row2 = row_out[2];
   float* JXL_RESTRICT const row3 = row_out[3];
-  Vec<DU8> out0, out1, out2, out3;
+  Vec<DU8> out0, out1, out2, out3;  // NOLINT
   for (size_t x = 0; x < simd_len; x += N) {
     LoadInterleaved4(du8, row_in + 4 * x, out0, out1, out2, out3);
     Store(ConvertTo(d, PromoteTo(du, out0)), d, row0 + x);
@@ -158,7 +158,7 @@ void ReadUint16RowInterleaved2(const uint8_t* row_in, size_t len,
       reinterpret_cast<const uint16_t*>(row_in);
   float* JXL_RESTRICT const row0 = row_out[0];
   float* JXL_RESTRICT const row1 = row_out[1];
-  Vec<DU16> out0, out1;
+  Vec<DU16> out0, out1;  // NOLINT
   for (size_t x = 0; x < simd_len; x += N) {
     LoadInterleaved2(du16, row + 2 * x, out0, out1);
     Store(Mul(mul, ConvertTo(d, PromoteTo(du, out0))), d, row0 + x);
@@ -177,7 +177,7 @@ void ReadUint16RowInterleaved3(const uint8_t* row_in, size_t len,
   float* JXL_RESTRICT const row0 = row_out[0];
   float* JXL_RESTRICT const row1 = row_out[1];
   float* JXL_RESTRICT const row2 = row_out[2];
-  Vec<DU16> out0, out1, out2;
+  Vec<DU16> out0, out1, out2;  // NOLINT
   for (size_t x = 0; x < simd_len; x += N) {
     LoadInterleaved3(du16, row + 3 * x, out0, out1, out2);
     Store(Mul(mul, ConvertTo(d, PromoteTo(du, out0))), d, row0 + x);
@@ -198,7 +198,7 @@ void ReadUint16RowInterleaved4(const uint8_t* row_in, size_t len,
   float* JXL_RESTRICT const row1 = row_out[1];
   float* JXL_RESTRICT const row2 = row_out[2];
   float* JXL_RESTRICT const row3 = row_out[3];
-  Vec<DU16> out0, out1, out2, out3;
+  Vec<DU16> out0, out1, out2, out3;  // NOLINT
   for (size_t x = 0; x < simd_len; x += N) {
     LoadInterleaved4(du16, row + 4 * x, out0, out1, out2, out3);
     Store(Mul(mul, ConvertTo(d, PromoteTo(du, out0))), d, row0 + x);
@@ -250,7 +250,7 @@ void ReadFloatRowInterleaved2(const uint8_t* row_in, size_t len,
   const float* JXL_RESTRICT const row = reinterpret_cast<const float*>(row_in);
   float* JXL_RESTRICT const row0 = row_out[0];
   float* JXL_RESTRICT const row1 = row_out[1];
-  Vec<D> out0, out1;
+  Vec<D> out0, out1;  // NOLINT
   for (size_t x = 0; x < simd_len; x += N) {
     LoadInterleaved2(d, row + 2 * x, out0, out1);
     Store(Mul(mul, out0), d, row0 + x);
@@ -268,7 +268,7 @@ void ReadFloatRowInterleaved3(const uint8_t* row_in, size_t len,
   float* JXL_RESTRICT const row0 = row_out[0];
   float* JXL_RESTRICT const row1 = row_out[1];
   float* JXL_RESTRICT const row2 = row_out[2];
-  Vec<D> out0, out1, out2;
+  Vec<D> out0, out1, out2;  // NOLINT
   for (size_t x = 0; x < simd_len; x += N) {
     LoadInterleaved3(d, row + 3 * x, out0, out1, out2);
     Store(Mul(mul, out0), d, row0 + x);
@@ -288,7 +288,7 @@ void ReadFloatRowInterleaved4(const uint8_t* row_in, size_t len,
   float* JXL_RESTRICT const row1 = row_out[1];
   float* JXL_RESTRICT const row2 = row_out[2];
   float* JXL_RESTRICT const row3 = row_out[3];
-  Vec<D> out0, out1, out2, out3;
+  Vec<D> out0, out1, out2, out3;  // NOLINT
   for (size_t x = 0; x < simd_len; x += N) {
     LoadInterleaved4(d, row + 4 * x, out0, out1, out2, out3);
     Store(Mul(mul, out0), d, row0 + x);

@@ -6,6 +6,7 @@
 #include "lib/jxl/dec_context_map.h"
 
 #include <algorithm>
+#include <cstdint>
 #include <vector>
 
 #include "lib/jxl/ans_params.h"
@@ -41,18 +42,18 @@ Status VerifyContextMap(const std::vector<uint8_t>& context_map,
 
 Status DecodeContextMap(std::vector<uint8_t>* context_map, size_t* num_htrees,
                         BitReader* input) {
-  bool is_simple = input->ReadFixedBits<1>();
+  bool is_simple = static_cast<bool>(input->ReadFixedBits<1>());
   if (is_simple) {
     int bits_per_entry = input->ReadFixedBits<2>();
     if (bits_per_entry != 0) {
-      for (size_t i = 0; i < context_map->size(); i++) {
-        (*context_map)[i] = input->ReadBits(bits_per_entry);
+      for (uint8_t& entry : *context_map) {
+        entry = input->ReadBits(bits_per_entry);
       }
     } else {
       std::fill(context_map->begin(), context_map->end(), 0);
     }
   } else {
-    bool use_mtf = input->ReadFixedBits<1>();
+    bool use_mtf = static_cast<bool>(input->ReadFixedBits<1>());
     ANSCode code;
     std::vector<uint8_t> sink_ctx_map;
     // Usage of LZ77 is disallowed if decoding only two symbols. This doesn't

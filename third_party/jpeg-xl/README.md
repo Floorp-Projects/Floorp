@@ -73,11 +73,14 @@ To decode a JPEG XL file run:
 djxl input.jxl output.png
 ```
 
-When possible `cjxl`/`djxl` are able to read/write the following
-image formats: .exr, .gif, .jpeg/.jpg, .pfm, .pgm/.ppm, .pgx, .png.
+When possible, `cjxl`/`djxl` are able to read/write the following image formats:
+OpenEXR (`.exr`), GIF (`.gif`), JPEG (`.jpg`/`.jpeg`), NetPBM (`.pam`/`.pgm`/`.ppm`),
+Portable FloatMap (`.pfm`), PGX Test Format (`.pgx`), Portable Network Graphics (`.png`),
+Animated PNG (`.png`/`.apng`), and JPEG XL itself (`.jxl`).
+
 Specifically for JPEG files, the default `cjxl` behavior is to apply lossless
 recompression and the default `djxl` behavior is to reconstruct the original
-JPEG file (when the extension of the output file is .jpg).
+JPEG file (when the extension of the output file is `.jpg`).
 
 ### Benchmarking
 

@@ -6,21 +6,16 @@
 #include <stdint.h>
 
 #include <algorithm>
+#include <cmath>
 #include <hwy/aligned_allocator.h>
 #include <vector>
 
-#include "lib/jxl/ans_params.h"
-#include "lib/jxl/base/span.h"
 #include "lib/jxl/coeff_order.h"
 #include "lib/jxl/coeff_order_fwd.h"
-#include "lib/jxl/dec_ans.h"
-#include "lib/jxl/dec_bit_reader.h"
+#include "lib/jxl/dct_util.h"
 #include "lib/jxl/enc_ans.h"
 #include "lib/jxl/enc_bit_writer.h"
-#include "lib/jxl/entropy_coder.h"
 #include "lib/jxl/lehmer_code.h"
-#include "lib/jxl/modular/encoding/encoding.h"
-#include "lib/jxl/modular/modular_image.h"
 
 namespace jxl {
 
@@ -240,7 +235,7 @@ void EncodePermutation(const coeff_order_t* JXL_RESTRICT order, size_t skip,
                        size_t size, BitWriter* writer, int layer,
                        AuxOut* aux_out) {
   std::vector<std::vector<Token>> tokens(1);
-  TokenizePermutation(order, skip, size, &tokens[0]);
+  TokenizePermutation(order, skip, size, tokens.data());
   std::vector<uint8_t> context_map;
   EntropyEncodingData codes;
   BuildAndEncodeHistograms(HistogramParams(), kPermutationContexts, tokens,
@@ -280,7 +275,7 @@ void EncodeCoeffOrders(uint16_t used_orders,
     if (natural_order_lut.size() < size) natural_order_lut.resize(size);
     acs.ComputeNaturalCoeffOrderLut(natural_order_lut.data());
     for (size_t c = 0; c < 3; c++) {
-      EncodeCoeffOrder(&order[CoeffOrderOffset(ord, c)], acs, &tokens[0],
+      EncodeCoeffOrder(&order[CoeffOrderOffset(ord, c)], acs, tokens.data(),
                        mem.get(), natural_order_lut);
     }
   }

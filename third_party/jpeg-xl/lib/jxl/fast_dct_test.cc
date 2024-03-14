@@ -12,7 +12,6 @@
 #include "lib/jxl/base/random.h"
 #include "lib/jxl/dct-inl.h"
 #include "lib/jxl/fast_dct-inl.h"
-#include "lib/jxl/fast_dct.h"
 #include "lib/jxl/testing.h"
 #include "lib/jxl/transpose-inl.h"
 
@@ -21,8 +20,12 @@
 #include <hwy/tests/hwy_gtest.h>
 HWY_BEFORE_NAMESPACE();
 namespace jxl {
+
 namespace HWY_NAMESPACE {
 namespace {
+
+void BenchmarkFloatIDCT32x32() { TestFloatIDCT<32, 32>(); }
+void BenchmarkFastIDCT32x32() { TestFastIDCT<32, 32>(); }
 
 template <size_t N, size_t M>
 HWY_NOINLINE void TestFastTranspose() {
@@ -370,8 +373,8 @@ HWY_EXPORT_AND_TEST_P(FastDCTTargetTest, TestFloatIDCT256x256);
 HWY_EXPORT_AND_TEST_P(FastDCTTargetTest, TestFastIDCT256x256);
 */
 
-TEST(FastDCTTest, TestWrapperFloat) { BenchmarkFloatIDCT32x32(); }
-TEST(FastDCTTest, TestWrapperFast) { BenchmarkFastIDCT32x32(); }
+HWY_EXPORT_AND_TEST_P(FastDCTTargetTest, BenchmarkFloatIDCT32x32);
+HWY_EXPORT_AND_TEST_P(FastDCTTargetTest, BenchmarkFastIDCT32x32);
 
 }  // namespace jxl
 #endif  // HWY_ONCE

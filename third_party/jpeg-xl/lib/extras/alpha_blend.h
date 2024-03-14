@@ -11,7 +11,7 @@
 namespace jxl {
 namespace extras {
 
-void AlphaBlend(PackedPixelFile* ppf, float background[3]);
+void AlphaBlend(PackedPixelFile* ppf, const float background[3]);
 
 }  // namespace extras
 }  // namespace jxl

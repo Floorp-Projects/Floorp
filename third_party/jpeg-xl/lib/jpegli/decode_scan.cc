@@ -61,7 +61,7 @@ struct BitReaderState {
     if (bits_left_ <= 16) {
       while (bits_left_ <= 56) {
         val_ <<= 8;
-        val_ |= (uint64_t)GetNextByte();
+        val_ |= static_cast<uint64_t>(GetNextByte());
         bits_left_ += 8;
       }
     }
@@ -427,7 +427,7 @@ void PrepareForiMCURow(j_decompress_ptr cinfo) {
     int offset = m->streaming_mode_ ? 0 : by0;
     m->coeff_rows[c] = (*cinfo->mem->access_virt_barray)(
         reinterpret_cast<j_common_ptr>(cinfo), m->coef_arrays[c], offset,
-        max_block_rows, true);
+        max_block_rows, TRUE);
   }
 }
 
@@ -451,7 +451,8 @@ int ProcessScan(j_decompress_ptr cinfo, const uint8_t* const data,
         ++num_skipped;
       }
       if (num_skipped > 0) {
-        JPEGLI_WARN("Skipped %d bytes before restart marker", (int)num_skipped);
+        JPEGLI_WARN("Skipped %d bytes before restart marker",
+                    static_cast<int>(num_skipped));
       }
       if (*pos + 2 > len) {
         return kNeedMoreInput;
@@ -471,7 +472,7 @@ int ProcessScan(j_decompress_ptr cinfo, const uint8_t* const data,
     }
 
     // Decode one MCU.
-    HWY_ALIGN_MAX coeff_t sink_block[DCTSIZE2];
+    HWY_ALIGN_MAX static coeff_t sink_block[DCTSIZE2] = {0};
     bool scan_ok = true;
     for (int i = 0; i < cinfo->comps_in_scan; ++i) {
       const jpeg_component_info* comp = cinfo->cur_comp_info[i];

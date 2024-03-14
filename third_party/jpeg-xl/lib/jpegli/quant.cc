@@ -26,7 +26,7 @@ namespace {
 constexpr float kGlobalScaleXYB = 1.43951668f;
 constexpr float kGlobalScaleYCbCr = 1.73966010f;
 
-static constexpr float kBaseQuantMatrixXYB[] = {
+constexpr float kBaseQuantMatrixXYB[] = {
     // c = 0
     7.5629935265f,
     19.8247814178f,
@@ -224,7 +224,7 @@ static constexpr float kBaseQuantMatrixXYB[] = {
     63.6065597534f,
 };
 
-static const float kBaseQuantMatrixYCbCr[] = {
+const float kBaseQuantMatrixYCbCr[] = {
     // c = 0
     1.2397409345866273f,  //
     1.7227115097630963f,  //
@@ -422,8 +422,8 @@ static const float kBaseQuantMatrixYCbCr[] = {
     114.89202448569779f,  //
 };
 
-static const float k420GlobalScale = 1.22;
-static const float k420Rescale[64] = {
+const float k420GlobalScale = 1.22;
+const float k420Rescale[64] = {
     0.4093, 0.3209, 0.3477, 0.3333, 0.3144, 0.2823, 0.3214, 0.3354,  //
     0.3209, 0.3111, 0.3489, 0.2801, 0.3059, 0.3119, 0.4135, 0.3445,  //
     0.3477, 0.3489, 0.3586, 0.3257, 0.2727, 0.3754, 0.3369, 0.3484,  //
@@ -434,7 +434,7 @@ static const float k420Rescale[64] = {
     0.3354, 0.3445, 0.3484, 0.3839, 0.3836, 0.0726, 0.0553, 0.3368,  //
 };
 
-static const float kBaseQuantMatrixStd[] = {
+const float kBaseQuantMatrixStd[] = {
     // c = 0
     16.0f, 11.0f, 10.0f, 16.0f, 24.0f, 40.0f, 51.0f, 61.0f,      //
     12.0f, 12.0f, 14.0f, 19.0f, 26.0f, 58.0f, 60.0f, 55.0f,      //
@@ -455,7 +455,7 @@ static const float kBaseQuantMatrixStd[] = {
     99.0f, 99.0f, 99.0f, 99.0f, 99.0f, 99.0f, 99.0f, 99.0f,  //
 };
 
-static const float kZeroBiasMulYCbCrLQ[] = {
+const float kZeroBiasMulYCbCrLQ[] = {
     // c = 0
     0.0000f, 0.0568f, 0.3880f, 0.6190f, 0.6190f, 0.4490f, 0.4490f, 0.6187f,  //
     0.0568f, 0.5829f, 0.6189f, 0.6190f, 0.6190f, 0.7190f, 0.6190f, 0.6189f,  //
@@ -485,7 +485,7 @@ static const float kZeroBiasMulYCbCrLQ[] = {
     0.2960f, 0.2113f, 0.2426f, 0.1590f, 0.5403f, 0.3060f, 0.3060f, 0.3060f,  //
 };
 
-static const float kZeroBiasMulYCbCrHQ[] = {
+const float kZeroBiasMulYCbCrHQ[] = {
     // c = 0
     0.0000f, 0.0044f, 0.2521f, 0.6547f, 0.8161f, 0.6130f, 0.8841f, 0.8155f,  //
     0.0044f, 0.6831f, 0.6553f, 0.6295f, 0.7848f, 0.7843f, 0.8474f, 0.7836f,  //
@@ -515,9 +515,9 @@ static const float kZeroBiasMulYCbCrHQ[] = {
     0.4836f, 0.4897f, 0.2583f, 0.3565f, 0.5949f, 0.6629f, 0.6644f, 0.6644f,  //
 };
 
-static const float kZeroBiasOffsetYCbCrDC[] = {0.0f, 0.0f, 0.0f};
+const float kZeroBiasOffsetYCbCrDC[] = {0.0f, 0.0f, 0.0f};
 
-static const float kZeroBiasOffsetYCbCrAC[] = {
+const float kZeroBiasOffsetYCbCrAC[] = {
     0.59082f,
     0.58146f,
     0.57988f,

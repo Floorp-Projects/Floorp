@@ -5,6 +5,7 @@
 
 #include "lib/jxl/enc_bit_writer.h"
 
+#include <jxl/types.h>
 #include <string.h>  // memcpy
 
 #include "lib/jxl/base/byte_order.h"
@@ -43,10 +44,11 @@ void BitWriter::Allotment::FinishedHistogram(BitWriter* JXL_RESTRICT writer) {
 void BitWriter::Allotment::ReclaimAndCharge(BitWriter* JXL_RESTRICT writer,
                                             size_t layer,
                                             AuxOut* JXL_RESTRICT aux_out) {
-  size_t used_bits = 0, unused_bits = 0;
+  size_t used_bits = 0;
+  size_t unused_bits = 0;
   PrivateReclaim(writer, &used_bits, &unused_bits);
 
-#if 0
+#if JXL_FALSE
   printf("Layer %s bits: max %" PRIuS " used %" PRIuS " unused %" PRIuS "\n",
          LayerName(layer), MaxBits(), used_bits, unused_bits);
 #endif
@@ -77,7 +79,7 @@ void BitWriter::Allotment::PrivateReclaim(BitWriter* JXL_RESTRICT writer,
   writer->storage_.resize(writer->storage_.size() - unused_bytes);
   writer->current_allotment_ = parent_;
   // Ensure we don't also charge the parent for these bits.
-  auto parent = parent_;
+  auto* parent = parent_;
   while (parent != nullptr) {
     parent->prev_bits_written_ += *used_bits;
     parent = parent->parent_;

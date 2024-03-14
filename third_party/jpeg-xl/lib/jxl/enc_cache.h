@@ -55,7 +55,7 @@ struct PassesEncoderState {
   };
 
   std::vector<PassData> passes;
-  std::vector<uint8_t> histogram_idx;
+  std::vector<size_t> histogram_idx;
 
   // Block sizes seen so far.
   uint32_t used_acs = 0;

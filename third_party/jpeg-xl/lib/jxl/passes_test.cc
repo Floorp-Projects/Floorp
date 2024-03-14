@@ -47,10 +47,11 @@ TEST(PassesTest, RoundtripSmallPasses) {
 
   CodecInOut io2;
   JXL_EXPECT_OK(Roundtrip(&io, cparams, {}, &io2, _));
-  EXPECT_THAT(ButteraugliDistance(io.frames, io2.frames, ButteraugliParams(),
-                                  *JxlGetDefaultCms(),
-                                  /*distmap=*/nullptr),
-              IsSlightlyBelow(0.8222));
+  EXPECT_SLIGHTLY_BELOW(
+      ButteraugliDistance(io.frames, io2.frames, ButteraugliParams(),
+                          *JxlGetDefaultCms(),
+                          /*distmap=*/nullptr),
+      0.8222);
 }
 
 TEST(PassesTest, RoundtripUnalignedPasses) {
@@ -67,10 +68,11 @@ TEST(PassesTest, RoundtripUnalignedPasses) {
 
   CodecInOut io2;
   JXL_EXPECT_OK(Roundtrip(&io, cparams, {}, &io2, _));
-  EXPECT_THAT(ButteraugliDistance(io.frames, io2.frames, ButteraugliParams(),
-                                  *JxlGetDefaultCms(),
-                                  /*distmap=*/nullptr),
-              IsSlightlyBelow(1.72));
+  EXPECT_SLIGHTLY_BELOW(
+      ButteraugliDistance(io.frames, io2.frames, ButteraugliParams(),
+                          *JxlGetDefaultCms(),
+                          /*distmap=*/nullptr),
+      1.72);
 }
 
 TEST(PassesTest, RoundtripMultiGroupPasses) {
@@ -91,10 +93,11 @@ TEST(PassesTest, RoundtripMultiGroupPasses) {
     CodecInOut io2;
     JXL_EXPECT_OK(Roundtrip(&io, cparams, {}, &io2, _,
                             /* compressed_size */ nullptr, &pool));
-    EXPECT_THAT(ButteraugliDistance(io.frames, io2.frames, ButteraugliParams(),
-                                    *JxlGetDefaultCms(),
-                                    /*distmap=*/nullptr, &pool),
-                IsSlightlyBelow(target_distance + threshold));
+    EXPECT_SLIGHTLY_BELOW(
+        ButteraugliDistance(io.frames, io2.frames, ButteraugliParams(),
+                            *JxlGetDefaultCms(),
+                            /*distmap=*/nullptr, &pool),
+        target_distance + threshold);
   };
 
   auto run1 = std::async(std::launch::async, test, 1.0f, 0.15f);
@@ -268,7 +271,7 @@ TEST(PassesTest, ProgressiveDownsample2DegradesCorrectlyGrayscale) {
   CompressParams cparams;
   cparams.speed_tier = SpeedTier::kSquirrel;
   cparams.progressive_dc = 1;
-  cparams.responsive = true;
+  cparams.responsive = JXL_TRUE;
   cparams.qprogressive_mode = Override::kOn;
   cparams.butteraugli_distance = 1.0;
   ASSERT_TRUE(test::EncodeFile(cparams, &io, &compressed, &pool));
@@ -311,7 +314,7 @@ TEST(PassesTest, ProgressiveDownsample2DegradesCorrectly) {
   CompressParams cparams;
   cparams.speed_tier = SpeedTier::kSquirrel;
   cparams.progressive_dc = 1;
-  cparams.responsive = true;
+  cparams.responsive = JXL_TRUE;
   cparams.qprogressive_mode = Override::kOn;
   cparams.butteraugli_distance = 1.0;
   ASSERT_TRUE(test::EncodeFile(cparams, &io, &compressed, &pool));
@@ -375,10 +378,11 @@ TEST(PassesTest, RoundtripSmallNoGaborishPasses) {
 
   CodecInOut io2;
   JXL_EXPECT_OK(Roundtrip(&io, cparams, {}, &io2, _));
-  EXPECT_THAT(ButteraugliDistance(io.frames, io2.frames, ButteraugliParams(),
-                                  *JxlGetDefaultCms(),
-                                  /*distmap=*/nullptr),
-              IsSlightlyBelow(1.2));
+  EXPECT_SLIGHTLY_BELOW(
+      ButteraugliDistance(io.frames, io2.frames, ButteraugliParams(),
+                          *JxlGetDefaultCms(),
+                          /*distmap=*/nullptr),
+      1.2);
 }
 
 }  // namespace

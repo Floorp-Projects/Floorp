@@ -23,6 +23,18 @@
 namespace jxl {
 namespace {
 
+// This should have been static assert; not compiling though with C++<17.
+TEST(QuantWeightsTest, Invariant) {
+  size_t sum = 0;
+  ASSERT_EQ(DequantMatrices::required_size_x.size(),
+            DequantMatrices::required_size_y.size());
+  for (size_t i = 0; i < DequantMatrices::required_size_x.size(); ++i) {
+    sum += DequantMatrices::required_size_x[i] *
+           DequantMatrices::required_size_y[i];
+  }
+  ASSERT_EQ(DequantMatrices::kSumRequiredXy, sum);
+}
+
 template <typename T>
 void CheckSimilar(T a, T b) {
   EXPECT_EQ(a, b);

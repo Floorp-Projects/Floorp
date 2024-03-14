@@ -5,6 +5,7 @@
 
 #include "lib/jxl/convolve.h"
 
+#include <jxl/types.h>
 #include <time.h>
 
 #undef HWY_TARGET_INCLUDE
@@ -86,7 +87,7 @@ std::vector<Rect> GenerateTestRectangles(size_t xsize, size_t ysize) {
   for (size_t tl : {0, 1, 13}) {
     for (size_t br : {0, 1, 13}) {
       if (xsize > tl + br && ysize > tl + br) {
-        out.push_back(Rect(tl, tl, xsize - tl - br, ysize - tl - br));
+        out.emplace_back(tl, tl, xsize - tl - br, ysize - tl - br);
       }
     }
   }
@@ -241,7 +242,7 @@ struct ConvSeparable5 {
 };
 
 void BenchmarkAll() {
-#if 0  // disabled to avoid test timeouts, run manually on demand
+#if JXL_FALSE  // disabled to avoid test timeouts, run manually on demand
   const hwy::FuncInput unpredictable1 = time(nullptr) != 1234;
   BenchmarkConv("Symmetric3", ConvSymmetric3(), unpredictable1);
   BenchmarkConv("Separable5", ConvSeparable5(), unpredictable1);

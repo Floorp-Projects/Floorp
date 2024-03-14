@@ -5,6 +5,8 @@
 
 #include "lib/jxl/enc_gaborish.h"
 
+#include <jxl/types.h>
+
 #include <hwy/base.h>
 
 #include "lib/jxl/base/compiler_specific.h"
@@ -62,7 +64,7 @@ TEST(GaborishTest, TestZero) {
 }
 
 // Disabled: large difference.
-#if 0
+#if JXL_FALSE
 TEST(GaborishTest, TestDirac) {
   JXL_ASSIGN_OR_DIE(Image3F in, Image3F::Create(20, 20));
   ZeroFillImage(&in);

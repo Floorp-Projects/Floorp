@@ -126,7 +126,7 @@ typedef enum {
 typedef enum {
   /** Sets encoder effort/speed level without affecting decoding speed. Valid
    * values are, from faster to slower speed: 1:lightning 2:thunder 3:falcon
-   * 4:cheetah 5:hare 6:wombat 7:squirrel 8:kitten 9:tortoise.
+   * 4:cheetah 5:hare 6:wombat 7:squirrel 8:kitten 9:tortoise 10:glacier.
    * Default: squirrel (7).
    */
   JXL_ENC_FRAME_SETTING_EFFORT = 0,
@@ -1530,7 +1530,7 @@ JXL_EXPORT void JxlColorEncodingSetToLinearSRGB(
 /**
  * Enables usage of expert options.
  *
- * At the moment, the only expert option is setting an effort value of 10,
+ * At the moment, the only expert option is setting an effort value of 11,
  * which gives the best compression for pixel-lossless modes but is very slow.
  *
  * @param enc encoder object.

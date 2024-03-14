@@ -40,7 +40,7 @@ using hwy::HWY_NAMESPACE::Sub;
 
 // Given a set of DCT coefficients, this returns the result of performing cosine
 // interpolation on the original samples.
-float ContinuousIDCT(const float dct[32], const float t) {
+float ContinuousIDCT(const Dct32& dct, const float t) {
   // We compute here the DCT-3 of the `dct` vector, rescaled by a factor of
   // sqrt(32). This is such that an input vector vector {x, 0, ..., 0} produces
   // a constant result of x. dct[0] was scaled in Dequantize() to allow uniform
@@ -60,7 +60,7 @@ float ContinuousIDCT(const float dct[32], const float t) {
   for (int i = 0; i < 32; i += Lanes(df)) {
     auto cos_arg = Mul(LoadU(df, kMultipliers + i), tandhalf);
     auto cos = FastCosf(df, cos_arg);
-    auto local_res = Mul(LoadU(df, dct + i), cos);
+    auto local_res = Mul(LoadU(df, dct.data() + i), cos);
     result = MulAdd(Set(df, kSqrt2), local_res, result);
   }
   return GetLane(SumOfLanes(df, result));
@@ -140,8 +140,9 @@ void ComputeSegments(const Spline::Point& center, const float intensity,
   segment.inv_sigma = 1.0f / sigma;
   segment.sigma_over_4_times_intensity = .25f * sigma * intensity;
   segment.maximum_distance = maximum_distance;
-  ssize_t y0 = center.y - maximum_distance + .5f;
-  ssize_t y1 = center.y + maximum_distance + 1.5f;  // one-past-the-end
+  ssize_t y0 = std::llround(center.y - maximum_distance);
+  ssize_t y1 =
+      std::llround(center.y + maximum_distance) + 1;  // one-past-the-end
   for (ssize_t y = std::max<ssize_t>(y0, 0); y < y1; y++) {
     segments_by_y.emplace_back(y, segments.size());
   }
@@ -227,7 +228,7 @@ float InvAdjustedQuant(const int32_t adjustment) {
 }
 
 // X, Y, B, sigma.
-static constexpr float kChannelWeight[] = {0.0042f, 0.075f, 0.07f, .3333f};
+constexpr float kChannelWeight[] = {0.0042f, 0.075f, 0.07f, .3333f};
 
 Status DecodeAllStartingPoints(std::vector<Spline::Point>* const points,
                                BitReader* const br, ANSSymbolReader* reader,
@@ -366,7 +367,8 @@ QuantizedSpline::QuantizedSpline(const Spline& original,
   const Spline::Point& starting_point = original.control_points.front();
   int previous_x = static_cast<int>(std::roundf(starting_point.x));
   int previous_y = static_cast<int>(std::roundf(starting_point.y));
-  int previous_delta_x = 0, previous_delta_y = 0;
+  int previous_delta_x = 0;
+  int previous_delta_y = 0;
   for (auto it = original.control_points.begin() + 1;
        it != original.control_points.end(); ++it) {
     const int new_x = static_cast<int>(std::roundf(it->x));
@@ -426,9 +428,10 @@ Status QuantizedSpline::Dequantize(const Spline::Point& starting_point,
   JXL_RETURN_IF_ERROR(ValidateSplinePointPos(px, py));
   int current_x = static_cast<int>(px);
   int current_y = static_cast<int>(py);
-  result.control_points.push_back(Spline::Point{static_cast<float>(current_x),
-                                                static_cast<float>(current_y)});
-  int current_delta_x = 0, current_delta_y = 0;
+  result.control_points.emplace_back(static_cast<float>(current_x),
+                                     static_cast<float>(current_y));
+  int current_delta_x = 0;
+  int current_delta_y = 0;
   uint64_t manhattan_distance = 0;
   for (const auto& point : control_points_) {
     current_delta_x += point.first;
@@ -443,8 +446,8 @@ Status QuantizedSpline::Dequantize(const Spline::Point& starting_point,
     current_x += current_delta_x;
     current_y += current_delta_y;
     JXL_RETURN_IF_ERROR(ValidateSplinePointPos(current_x, current_y));
-    result.control_points.push_back(Spline::Point{
-        static_cast<float>(current_x), static_cast<float>(current_y)});
+    result.control_points.emplace_back(static_cast<float>(current_x),
+                                       static_cast<float>(current_y));
   }
 
   const auto inv_quant = InvAdjustedQuant(quantization_adjustment);
@@ -605,15 +608,15 @@ Status Splines::Decode(jxl::BitReader* br, const size_t num_pixels) {
 
 void Splines::AddTo(Image3F* const opsin, const Rect& opsin_rect,
                     const Rect& image_rect) const {
-  return Apply</*add=*/true>(opsin, opsin_rect, image_rect);
+  Apply</*add=*/true>(opsin, opsin_rect, image_rect);
 }
 void Splines::AddToRow(float* JXL_RESTRICT row_x, float* JXL_RESTRICT row_y,
                        float* JXL_RESTRICT row_b, const Rect& image_row) const {
-  return ApplyToRow</*add=*/true>(row_x, row_y, row_b, image_row);
+  ApplyToRow</*add=*/true>(row_x, row_y, row_b, image_row);
 }
 
 void Splines::SubtractFrom(Image3F* const opsin) const {
-  return Apply</*add=*/false>(opsin, Rect(*opsin), Rect(*opsin));
+  Apply</*add=*/false>(opsin, Rect(*opsin), Rect(*opsin));
 }
 
 Status Splines::InitializeDrawCache(const size_t image_xsize,
@@ -646,8 +649,9 @@ Status Splines::InitializeDrawCache(const size_t image_xsize,
   }
   // TODO(firsching) Change this into a JXL_FAILURE for level 5 codestreams.
   if (total_estimated_area_reached >
-      std::min((8 * image_xsize * image_ysize + (uint64_t(1) << 25)),
-               (uint64_t(1) << 30))) {
+      std::min(
+          (8 * image_xsize * image_ysize + (static_cast<uint64_t>(1) << 25)),
+          (static_cast<uint64_t>(1) << 30))) {
     JXL_WARNING(
         "Large total_estimated_area_reached, expect slower decoding: %" PRIu64,
         total_estimated_area_reached);

@@ -33,7 +33,7 @@ Status DecodeBlockCtxMap(BitReader* br, BlockCtxMap* block_ctx_map) {
   auto& dct = block_ctx_map->dc_thresholds;
   auto& qft = block_ctx_map->qf_thresholds;
   auto& ctx_map = block_ctx_map->ctx_map;
-  bool is_default = br->ReadFixedBits<1>();
+  bool is_default = static_cast<bool>(br->ReadFixedBits<1>());
   if (is_default) {
     *block_ctx_map = BlockCtxMap();
     return true;

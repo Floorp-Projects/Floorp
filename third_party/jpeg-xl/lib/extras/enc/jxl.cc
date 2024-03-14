@@ -7,6 +7,7 @@
 
 #include <jxl/encode.h>
 #include <jxl/encode_cxx.h>
+#include <jxl/types.h>
 
 #include "lib/jxl/base/exif.h"
 
@@ -132,7 +133,7 @@ bool EncodeImageJXL(const JXLCompressParams& params, const PackedPixelFile& ppf,
     return false;
   }
 
-  auto settings = JxlEncoderFrameSettingsCreate(enc, nullptr);
+  auto* settings = JxlEncoderFrameSettingsCreate(enc, nullptr);
   size_t option_idx = 0;
   if (!SetFrameOptions(params.options, 0, &option_idx, settings)) {
     return false;
@@ -150,10 +151,11 @@ bool EncodeImageJXL(const JXLCompressParams& params, const PackedPixelFile& ppf,
     JxlEncoderCollectStats(settings, params.stats);
   }
 
+  bool has_jpeg_bytes = (jpeg_bytes != nullptr);
   bool use_boxes = !ppf.metadata.exif.empty() || !ppf.metadata.xmp.empty() ||
                    !ppf.metadata.jumbf.empty() || !ppf.metadata.iptc.empty();
   bool use_container = params.use_container || use_boxes ||
-                       (jpeg_bytes && params.jpeg_store_metadata);
+                       (has_jpeg_bytes && params.jpeg_store_metadata);
 
   if (JXL_ENC_SUCCESS !=
       JxlEncoderUseContainer(enc, static_cast<int>(use_container))) {
@@ -161,7 +163,7 @@ bool EncodeImageJXL(const JXLCompressParams& params, const PackedPixelFile& ppf,
     return false;
   }
 
-  if (jpeg_bytes) {
+  if (has_jpeg_bytes) {
     if (params.jpeg_store_metadata &&
         JXL_ENC_SUCCESS != JxlEncoderStoreJPEGMetadata(enc, JXL_TRUE)) {
       fprintf(stderr, "Storing JPEG metadata failed.\n");
@@ -220,8 +222,8 @@ bool EncodeImageJXL(const JXLCompressParams& params, const PackedPixelFile& ppf,
     basic_info.num_extra_channels =
         std::max<uint32_t>(num_alpha_channels, ppf.info.num_extra_channels);
     basic_info.num_color_channels = ppf.info.num_color_channels;
-    const bool lossless = params.distance == 0;
-    basic_info.uses_original_profile = lossless;
+    const bool lossless = (params.distance == 0);
+    basic_info.uses_original_profile = TO_JXL_BOOL(lossless);
     if (params.override_bitdepth != 0) {
       basic_info.bits_per_sample = params.override_bitdepth;
       basic_info.exponent_bits_per_sample =
@@ -243,7 +245,7 @@ bool EncodeImageJXL(const JXLCompressParams& params, const PackedPixelFile& ppf,
       return false;
     }
     if (JXL_ENC_SUCCESS !=
-        JxlEncoderSetFrameBitDepth(settings, &params.input_bitdepth)) {
+        JxlEncoderSetFrameBitDepth(settings, &ppf.input_bitdepth)) {
       fprintf(stderr, "JxlEncoderSetFrameBitDepth() failed.\n");
       return false;
     }
@@ -294,14 +296,15 @@ bool EncodeImageJXL(const JXLCompressParams& params, const PackedPixelFile& ppf,
           {"jumb", ppf.metadata.jumbf},
           {"xml ", ppf.metadata.iptc},
       };
-      for (size_t i = 0; i < sizeof boxes / sizeof *boxes; ++i) {
-        const BoxInfo& box = boxes[i];
-        if (!box.bytes.empty() &&
-            JXL_ENC_SUCCESS != JxlEncoderAddBox(enc, box.type, box.bytes.data(),
-                                                box.bytes.size(),
-                                                params.compress_boxes)) {
-          fprintf(stderr, "JxlEncoderAddBox() failed (%s).\n", box.type);
-          return false;
+      for (auto box : boxes) {
+        if (!box.bytes.empty()) {
+          if (JXL_ENC_SUCCESS !=
+              JxlEncoderAddBox(enc, box.type, box.bytes.data(),
+                               box.bytes.size(),
+                               TO_JXL_BOOL(params.compress_boxes))) {
+            fprintf(stderr, "JxlEncoderAddBox() failed (%s).\n", box.type);
+            return false;
+          }
         }
       }
       JxlEncoderCloseBoxes(enc);
@@ -346,7 +349,7 @@ bool EncodeImageJXL(const JXLCompressParams& params, const PackedPixelFile& ppf,
       }
       const bool last_frame = fi + 1 == ppf.chunked_frames.size();
       if (JXL_ENC_SUCCESS !=
-          JxlEncoderAddChunkedFrame(settings, last_frame,
+          JxlEncoderAddChunkedFrame(settings, TO_JXL_BOOL(last_frame),
                                     chunked_frame.GetInputSource())) {
         fprintf(stderr, "JxlEncoderAddChunkedFrame() failed.\n");
         return false;

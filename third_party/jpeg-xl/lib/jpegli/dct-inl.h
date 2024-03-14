@@ -187,7 +187,7 @@ void DCT1D(const float* JXL_RESTRICT pixels, size_t pixels_stride,
   }
 }
 
-static JXL_INLINE JXL_MAYBE_UNUSED void TransformFromPixels(
+JXL_INLINE JXL_MAYBE_UNUSED void TransformFromPixels(
     const float* JXL_RESTRICT pixels, size_t pixels_stride,
     float* JXL_RESTRICT coefficients, float* JXL_RESTRICT scratch_space) {
   DCT1D(pixels, pixels_stride, scratch_space);
@@ -196,14 +196,14 @@ static JXL_INLINE JXL_MAYBE_UNUSED void TransformFromPixels(
   Transpose8x8Block(scratch_space, coefficients);
 }
 
-static JXL_INLINE JXL_MAYBE_UNUSED void StoreQuantizedValue(const Vec<DI>& ival,
-                                                            int16_t* out) {
+JXL_INLINE JXL_MAYBE_UNUSED void StoreQuantizedValue(const Vec<DI>& ival,
+                                                     int16_t* out) {
   Rebind<int16_t, DI> di16;
   Store(DemoteTo(di16, ival), di16, out);
 }
 
-static JXL_INLINE JXL_MAYBE_UNUSED void StoreQuantizedValue(const Vec<DI>& ival,
-                                                            int32_t* out) {
+JXL_INLINE JXL_MAYBE_UNUSED void StoreQuantizedValue(const Vec<DI>& ival,
+                                                     int32_t* out) {
   DI di;
   Store(ival, di, out);
 }

@@ -11,6 +11,7 @@
 #include <jxl/decode_cxx.h>
 #include <limits.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
 #include <vector>
@@ -55,8 +56,9 @@ bool DecodeJpegXlExif(const uint8_t* jxl, size_t size,
         return true;
       }
       JxlBoxType type;
-      if (JXL_DEC_SUCCESS !=
-          JxlDecoderGetBoxType(dec.get(), type, support_decompression)) {
+      status = JxlDecoderGetBoxType(dec.get(), type,
+                                    TO_JXL_BOOL(support_decompression));
+      if (JXL_DEC_SUCCESS != status) {
         fprintf(stderr, "Error, failed to get box type\n");
         return false;
       }

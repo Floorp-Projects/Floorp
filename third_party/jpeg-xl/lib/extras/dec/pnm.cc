@@ -9,6 +9,7 @@
 #include <string.h>
 
 #include <cmath>
+#include <cstdint>
 #include <mutex>
 
 #include "jxl/encode.h"
@@ -55,8 +56,10 @@ class Parser {
       case 'f':
         header->is_gray = true;
         return ParseHeaderPFM(header, pos);
+
+      default:
+        return false;
     }
-    return false;
   }
 
   // Exposed for testing
@@ -160,11 +163,12 @@ class Parser {
 
   Status MatchString(const char* keyword, bool skipws = true) {
     const uint8_t* ppos = pos_;
-    while (*keyword) {
+    const uint8_t* kw = reinterpret_cast<const uint8_t*>(keyword);
+    while (*kw) {
       if (ppos >= end_) return JXL_FAILURE("PAM: unexpected end of input");
-      if (*keyword != *ppos) return false;
+      if (*kw != *ppos) return false;
       ppos++;
-      keyword++;
+      kw++;
     }
     pos_ = ppos;
     if (skipws) {
@@ -387,8 +391,8 @@ StatusOr<ChunkedPNMDecoder> ChunkedPNMDecoder::Init(const char* path) {
   const size_t num_channels = dec.header_.is_gray ? 1 : 3;
   const size_t bytes_per_pixel = num_channels * bytes_per_channel;
   size_t row_size = dec.header_.xsize * bytes_per_pixel;
-  if (header.ysize * row_size + dec.data_start_ < size) {
-    return JXL_FAILURE("Invalid ppm");
+  if (size < header.ysize * row_size + dec.data_start_) {
+    return JXL_FAILURE("PNM file too small");
   }
   return dec;
 }
@@ -495,10 +499,18 @@ Status DecodeImagePNM(const Span<const uint8_t> bytes,
   };
   const JxlPixelFormat ec_format{1, format.data_type, format.endianness, 0};
   ppf->frames.clear();
-  ppf->frames.emplace_back(header.xsize, header.ysize, format);
+  {
+    JXL_ASSIGN_OR_RETURN(
+        PackedFrame frame,
+        PackedFrame::Create(header.xsize, header.ysize, format));
+    ppf->frames.emplace_back(std::move(frame));
+  }
   auto* frame = &ppf->frames.back();
   for (size_t i = 0; i < header.ec_types.size(); ++i) {
-    frame->extra_channels.emplace_back(header.xsize, header.ysize, ec_format);
+    JXL_ASSIGN_OR_RETURN(
+        PackedImage ec,
+        PackedImage::Create(header.xsize, header.ysize, ec_format));
+    frame->extra_channels.emplace_back(std::move(ec));
   }
   size_t pnm_remaining_size = bytes.data() + bytes.size() - pos;
   if (pnm_remaining_size < frame->color.pixels_size) {
@@ -532,6 +544,9 @@ Status DecodeImagePNM(const Span<const uint8_t> bytes,
         }
       }
     }
+  }
+  if (ppf->info.exponent_bits_per_sample == 0) {
+    ppf->input_bitdepth.type = JXL_BIT_DEPTH_FROM_CODESTREAM;
   }
   return true;
 }

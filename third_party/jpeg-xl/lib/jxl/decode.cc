@@ -721,7 +721,7 @@ void JxlDecoderRewindDecodingState(JxlDecoder* dec) {
 
   dec->events_wanted = dec->orig_events_wanted;
   dec->basic_info_size_hint = InitialBasicInfoSizeHint();
-  dec->have_container = 0;
+  dec->have_container = false;
   dec->box_count = 0;
   dec->downsampling_target = 8;
   dec->image_out_buffer_set = false;
@@ -733,7 +733,7 @@ void JxlDecoderRewindDecodingState(JxlDecoder* dec) {
   dec->image_out_size = 0;
   dec->image_out_bit_depth.type = JXL_BIT_DEPTH_FROM_PIXEL_FORMAT;
   dec->extra_channel_output.clear();
-  dec->next_in = 0;
+  dec->next_in = nullptr;
   dec->avail_in = 0;
   dec->input_closed = false;
 
@@ -839,9 +839,9 @@ void JxlDecoderSkipFrames(JxlDecoder* dec, size_t amount) {
           internal_index, dec->frame_saved_as, dec->frame_references);
 
       dec->frame_required.resize(internal_index + 1, 0);
-      for (size_t i = 0; i < deps.size(); i++) {
-        JXL_ASSERT(deps[i] < dec->frame_required.size());
-        dec->frame_required[deps[i]] = 1;
+      for (size_t idx : deps) {
+        JXL_ASSERT(idx < dec->frame_required.size());
+        dec->frame_required[idx] = 1;
       }
     }
   }
@@ -894,7 +894,7 @@ JxlDecoderStatus JxlDecoderSetKeepOrientation(JxlDecoder* dec,
   if (dec->stage != DecoderStage::kInited) {
     return JXL_API_ERROR("Must set keep_orientation option before starting");
   }
-  dec->keep_orientation = !!skip_reorientation;
+  dec->keep_orientation = FROM_JXL_BOOL(skip_reorientation);
   return JXL_DEC_SUCCESS;
 }
 
@@ -903,7 +903,7 @@ JxlDecoderStatus JxlDecoderSetUnpremultiplyAlpha(JxlDecoder* dec,
   if (dec->stage != DecoderStage::kInited) {
     return JXL_API_ERROR("Must set unpremul_alpha option before starting");
   }
-  dec->unpremul_alpha = !!unpremul_alpha;
+  dec->unpremul_alpha = FROM_JXL_BOOL(unpremul_alpha);
   return JXL_DEC_SUCCESS;
 }
 
@@ -912,7 +912,7 @@ JxlDecoderStatus JxlDecoderSetRenderSpotcolors(JxlDecoder* dec,
   if (dec->stage != DecoderStage::kInited) {
     return JXL_API_ERROR("Must set render_spotcolors option before starting");
   }
-  dec->render_spotcolors = !!render_spotcolors;
+  dec->render_spotcolors = FROM_JXL_BOOL(render_spotcolors);
   return JXL_DEC_SUCCESS;
 }
 
@@ -920,7 +920,7 @@ JxlDecoderStatus JxlDecoderSetCoalescing(JxlDecoder* dec, JXL_BOOL coalescing) {
   if (dec->stage != DecoderStage::kInited) {
     return JXL_API_ERROR("Must set coalescing option before starting");
   }
-  dec->coalescing = !!coalescing;
+  dec->coalescing = FROM_JXL_BOOL(coalescing);
   return JXL_DEC_SUCCESS;
 }
 
@@ -1076,7 +1076,7 @@ JxlDecoderStatus JxlDecoderReadAllHeaders(JxlDecoder* dec) {
       return JXL_DEC_ERROR;
     }
     IccBytes icc;
-    Bytes(decoded_icc).AppendTo(&icc);
+    Bytes(decoded_icc).AppendTo(icc);
     dec->metadata.m.color_encoding.SetICCRaw(std::move(icc));
   }
 
@@ -1118,7 +1118,7 @@ JxlDecoderStatus JxlDecoderProcessSections(JxlDecoder* dec) {
     if (OutOfBounds(pos, size, span.size())) {
       break;
     }
-    auto br = new jxl::BitReader(jxl::Bytes(span.data() + pos, size));
+    auto* br = new jxl::BitReader(jxl::Bytes(span.data() + pos, size));
     section_info.emplace_back(jxl::FrameDecoder::SectionInfo{br, id, i});
     section_status.emplace_back();
     pos += size;
@@ -1263,9 +1263,9 @@ JxlDecoderStatus JxlDecoderProcessCodestream(JxlDecoder* dec) {
                           frame_dim.ysize_upsampled_padded)) {
         return JXL_INPUT_ERROR("frame is too large");
       }
-      bool output_needed =
-          (dec->preview_frame ? (dec->events_wanted & JXL_DEC_PREVIEW_IMAGE)
-                              : (dec->events_wanted & JXL_DEC_FULL_IMAGE));
+      int output_type =
+          dec->preview_frame ? JXL_DEC_PREVIEW_IMAGE : JXL_DEC_FULL_IMAGE;
+      bool output_needed = ((dec->events_wanted & output_type) != 0);
       if (output_needed) {
         JXL_API_RETURN_IF_ERROR(dec->frame_dec->InitFrameOutput());
       }
@@ -1376,7 +1376,7 @@ JxlDecoderStatus JxlDecoderProcessCodestream(JxlDecoder* dec) {
       } else {
         dec->frame_prog_detail = JxlProgressiveDetail::kFrames;
       }
-      dec->dc_frame_progression_done = 0;
+      dec->dc_frame_progression_done = false;
 
       dec->next_section = 0;
       dec->section_processed.clear();
@@ -1413,7 +1413,8 @@ JxlDecoderStatus JxlDecoderProcessCodestream(JxlDecoder* dec) {
       }
 
       if (dec->image_out_buffer_set) {
-        size_t xsize, ysize;
+        size_t xsize;
+        size_t ysize;
         GetCurrentDimensions(dec, xsize, ysize);
         size_t bits_per_sample = GetBitDepth(
             dec->image_out_bit_depth, dec->metadata.m, dec->image_out_format);
@@ -1765,7 +1766,8 @@ static JxlDecoderStatus HandleBoxes(JxlDecoder* dec) {
         return JXL_DEC_SUCCESS;
       }
 
-      uint64_t box_size, header_size;
+      uint64_t box_size;
+      uint64_t header_size;
       JxlDecoderStatus status =
           ParseBoxHeader(dec->next_in, dec->avail_in, 0, dec->file_pos,
                          dec->box_type, &box_size, &header_size);
@@ -2042,7 +2044,7 @@ JxlDecoderStatus JxlDecoderProcessInput(JxlDecoder* dec) {
     dec->got_signature = true;
 
     if (sig == JXL_SIG_CONTAINER) {
-      dec->have_container = 1;
+      dec->have_container = true;
     } else {
       dec->last_codestream_seen = true;
     }
@@ -2083,16 +2085,16 @@ JxlDecoderStatus JxlDecoderGetBasicInfo(const JxlDecoder* dec,
 
     const jxl::ImageMetadata& meta = dec->metadata.m;
 
-    info->have_container = dec->have_container;
+    info->have_container = TO_JXL_BOOL(dec->have_container);
     info->xsize = dec->metadata.size.xsize();
     info->ysize = dec->metadata.size.ysize();
-    info->uses_original_profile = !meta.xyb_encoded;
+    info->uses_original_profile = TO_JXL_BOOL(!meta.xyb_encoded);
 
     info->bits_per_sample = meta.bit_depth.bits_per_sample;
     info->exponent_bits_per_sample = meta.bit_depth.exponent_bits_per_sample;
 
-    info->have_preview = meta.have_preview;
-    info->have_animation = meta.have_animation;
+    info->have_preview = TO_JXL_BOOL(meta.have_preview);
+    info->have_animation = TO_JXL_BOOL(meta.have_animation);
     info->orientation = static_cast<JxlOrientation>(meta.orientation);
 
     if (!dec->keep_orientation) {
@@ -2107,14 +2109,15 @@ JxlDecoderStatus JxlDecoderGetBasicInfo(const JxlDecoder* dec,
       info->intensity_target = dec->desired_intensity_target;
     }
     info->min_nits = meta.tone_mapping.min_nits;
-    info->relative_to_max_display = meta.tone_mapping.relative_to_max_display;
+    info->relative_to_max_display =
+        TO_JXL_BOOL(meta.tone_mapping.relative_to_max_display);
     info->linear_below = meta.tone_mapping.linear_below;
 
     const jxl::ExtraChannelInfo* alpha = meta.Find(jxl::ExtraChannel::kAlpha);
     if (alpha != nullptr) {
       info->alpha_bits = alpha->bit_depth.bits_per_sample;
       info->alpha_exponent_bits = alpha->bit_depth.exponent_bits_per_sample;
-      info->alpha_premultiplied = alpha->alpha_associated;
+      info->alpha_premultiplied = TO_JXL_BOOL(alpha->alpha_associated);
     } else {
       info->alpha_bits = 0;
       info->alpha_exponent_bits = 0;
@@ -2136,7 +2139,8 @@ JxlDecoderStatus JxlDecoderGetBasicInfo(const JxlDecoder* dec,
       info->animation.tps_denominator =
           dec->metadata.m.animation.tps_denominator;
       info->animation.num_loops = dec->metadata.m.animation.num_loops;
-      info->animation.have_timecodes = dec->metadata.m.animation.have_timecodes;
+      info->animation.have_timecodes =
+          TO_JXL_BOOL(dec->metadata.m.animation.have_timecodes);
     }
 
     if (meta.have_intrinsic_size) {
@@ -2170,7 +2174,7 @@ JxlDecoderStatus JxlDecoderGetExtraChannelInfo(const JxlDecoder* dec,
           : 0;
   info->dim_shift = channel.dim_shift;
   info->name_length = channel.name.size();
-  info->alpha_premultiplied = channel.alpha_associated;
+  info->alpha_premultiplied = TO_JXL_BOOL(channel.alpha_associated);
   info->spot_color[0] = channel.spot_color[0];
   info->spot_color[1] = channel.spot_color[1];
   info->spot_color[2] = channel.spot_color[2];
@@ -2355,7 +2359,8 @@ static JxlDecoderStatus GetMinSize(const JxlDecoder* dec,
   size_t bits;
   JxlDecoderStatus status = PrepareSizeCheck(dec, format, &bits);
   if (status != JXL_DEC_SUCCESS) return status;
-  size_t xsize, ysize;
+  size_t xsize;
+  size_t ysize;
   if (preview) {
     xsize = dec->metadata.oriented_preview_xsize(dec->keep_orientation);
     ysize = dec->metadata.oriented_preview_ysize(dec->keep_orientation);
@@ -2562,8 +2567,9 @@ JxlDecoderStatus JxlDecoderGetFrameHeader(const JxlDecoder* dec,
     }
   }
   header->name_length = dec->frame_header->name.size();
-  header->is_last = dec->frame_header->is_last;
-  size_t xsize, ysize;
+  header->is_last = TO_JXL_BOOL(dec->frame_header->is_last);
+  size_t xsize;
+  size_t ysize;
   GetCurrentDimensions(dec, xsize, ysize);
   header->layer_info.xsize = xsize;
   header->layer_info.ysize = ysize;
@@ -2605,7 +2611,7 @@ JxlDecoderStatus JxlDecoderGetFrameHeader(const JxlDecoder* dec,
     header->layer_info.blend_info.alpha =
         dec->frame_header->blending_info.alpha_channel;
     header->layer_info.blend_info.clamp =
-        dec->frame_header->blending_info.clamp;
+        TO_JXL_BOOL(dec->frame_header->blending_info.clamp);
     header->layer_info.save_as_reference = dec->frame_header->save_as_reference;
   }
   return JXL_DEC_SUCCESS;
@@ -2628,7 +2634,7 @@ JxlDecoderStatus JxlDecoderGetExtraChannelBlendInfo(const JxlDecoder* dec,
   blend_info->alpha =
       dec->frame_header->extra_channel_blending_info[index].alpha_channel;
   blend_info->clamp =
-      dec->frame_header->extra_channel_blending_info[index].clamp;
+      TO_JXL_BOOL(dec->frame_header->extra_channel_blending_info[index].clamp);
   return JXL_DEC_SUCCESS;
 }
 
@@ -2702,7 +2708,7 @@ JxlDecoderStatus JxlDecoderSetOutputColorProfile(
         "setting output color profile from icc_data not yet implemented.");
   }
   JXL_API_RETURN_IF_ERROR(
-      (int)output_encoding.MaybeSetColorEncoding(std::move(c_dst)));
+      static_cast<int>(output_encoding.MaybeSetColorEncoding(c_dst)));
 
   return JXL_DEC_SUCCESS;
 }
@@ -2754,7 +2760,7 @@ JxlDecoderStatus JxlDecoderSetDecompressBoxes(JxlDecoder* dec,
                                               JXL_BOOL decompress) {
   // TODO(lode): return error if libbrotli is not compiled in the jxl decoding
   // library
-  dec->decompress_boxes = decompress;
+  dec->decompress_boxes = FROM_JXL_BOOL(decompress);
   return JXL_DEC_SUCCESS;
 }
 

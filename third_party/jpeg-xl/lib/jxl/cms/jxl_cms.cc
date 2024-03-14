@@ -307,7 +307,7 @@ int DoColorSpaceTransform(void* t, size_t thread, const float* buf_src,
 
 #if JPEGXL_ENABLE_SKCMS
 
-JXL_MUST_USE_RESULT CIExy CIExyFromXYZ(const float XYZ[3]) {
+JXL_MUST_USE_RESULT CIExy CIExyFromXYZ(const Color& XYZ) {
   const float factor = 1.f / (XYZ[0] + XYZ[1] + XYZ[2]);
   CIExy xy;
   xy.x = XYZ[0] * factor;
@@ -405,8 +405,8 @@ ColorSpace ColorSpaceFromProfile(const skcms_ICCProfile& profile) {
 }
 
 // vector_out := matmul(matrix, vector_in)
-void MatrixProduct(const skcms_Matrix3x3& matrix, const float vector_in[3],
-                   float vector_out[3]) {
+void MatrixProduct(const skcms_Matrix3x3& matrix, const Color& vector_in,
+                   Color& vector_out) {
   for (int i = 0; i < 3; ++i) {
     vector_out[i] = 0;
     for (int j = 0; j < 3; ++j) {
@@ -418,8 +418,8 @@ void MatrixProduct(const skcms_Matrix3x3& matrix, const float vector_in[3],
 // Returns white point that was specified when creating the profile.
 JXL_MUST_USE_RESULT Status UnadaptedWhitePoint(const skcms_ICCProfile& profile,
                                                CIExy* out) {
-  float media_white_point_XYZ[3];
-  if (!skcms_GetWTPT(&profile, media_white_point_XYZ)) {
+  Color media_white_point_XYZ;
+  if (!skcms_GetWTPT(&profile, media_white_point_XYZ.data())) {
     return JXL_FAILURE("ICC profile does not contain WhitePoint tag");
   }
   skcms_Matrix3x3 CHAD;
@@ -435,7 +435,7 @@ JXL_MUST_USE_RESULT Status UnadaptedWhitePoint(const skcms_ICCProfile& profile,
   if (!skcms_Matrix3x3_invert(&CHAD, &inverse_CHAD)) {
     return JXL_FAILURE("Non-invertible ChromaticAdaptation matrix");
   }
-  float unadapted_white_point_XYZ[3];
+  Color unadapted_white_point_XYZ;
   MatrixProduct(inverse_CHAD, media_white_point_XYZ, unadapted_white_point_XYZ);
   *out = CIExyFromXYZ(unadapted_white_point_XYZ);
   return true;
@@ -445,7 +445,8 @@ Status IdentifyPrimaries(const skcms_ICCProfile& profile,
                          const CIExy& wp_unadapted, ColorEncoding* c) {
   if (!c->HasPrimaries()) return true;
 
-  skcms_Matrix3x3 CHAD, inverse_CHAD;
+  skcms_Matrix3x3 CHAD;
+  skcms_Matrix3x3 inverse_CHAD;
   if (skcms_GetCHAD(&profile, &CHAD)) {
     JXL_RETURN_IF_ERROR(skcms_Matrix3x3_invert(&CHAD, &inverse_CHAD));
   } else {
@@ -457,11 +458,12 @@ Status IdentifyPrimaries(const skcms_ICCProfile& profile,
         {{0.9869929, -0.1470543, 0.1599627},
          {0.4323053, 0.5183603, 0.0492912},
          {-0.0085287, 0.0400428, 0.9684867}}};
-    static constexpr float kWpD50XYZ[3] = {0.96420288, 1.0, 0.82490540};
-    float wp_unadapted_XYZ[3];
+    static constexpr Color kWpD50XYZ{0.96420288, 1.0, 0.82490540};
+    Color wp_unadapted_XYZ;
     JXL_RETURN_IF_ERROR(
         CIEXYZFromWhiteCIExy(wp_unadapted.x, wp_unadapted.y, wp_unadapted_XYZ));
-    float wp_D50_LMS[3], wp_unadapted_LMS[3];
+    Color wp_D50_LMS;
+    Color wp_unadapted_LMS;
     MatrixProduct(kLMSFromXYZ, kWpD50XYZ, wp_D50_LMS);
     MatrixProduct(kLMSFromXYZ, wp_unadapted_XYZ, wp_unadapted_LMS);
     inverse_CHAD = {{{wp_unadapted_LMS[0] / wp_D50_LMS[0], 0, 0},
@@ -471,16 +473,16 @@ Status IdentifyPrimaries(const skcms_ICCProfile& profile,
     inverse_CHAD = skcms_Matrix3x3_concat(&inverse_CHAD, &kLMSFromXYZ);
   }
 
-  float XYZ[3];
+  Color XYZ;
   PrimariesCIExy primaries;
   CIExy* const chromaticities[] = {&primaries.r, &primaries.g, &primaries.b};
   for (int i = 0; i < 3; ++i) {
     float RGB[3] = {};
     RGB[i] = 1;
     skcms_Transform(RGB, skcms_PixelFormat_RGB_fff, skcms_AlphaFormat_Opaque,
-                    &profile, XYZ, skcms_PixelFormat_RGB_fff,
+                    &profile, XYZ.data(), skcms_PixelFormat_RGB_fff,
                     skcms_AlphaFormat_Opaque, skcms_XYZD50_profile(), 1);
-    float unadapted_XYZ[3];
+    Color unadapted_XYZ;
     MatrixProduct(inverse_CHAD, XYZ, unadapted_XYZ);
     *chromaticities[i] = CIExyFromXYZ(unadapted_XYZ);
   }
@@ -829,17 +831,17 @@ Status GetPrimariesLuminances(const ColorEncoding& encoding,
   // From there, by multiplying each total by its corresponding y, we get Y for
   // that primary.
 
-  float white_XYZ[3];
+  Color white_XYZ;
   CIExy wp = encoding.GetWhitePoint();
   JXL_RETURN_IF_ERROR(CIEXYZFromWhiteCIExy(wp.x, wp.y, white_XYZ));
 
   const PrimariesCIExy primaries = encoding.GetPrimaries();
-  double chromaticities[3][3] = {
-      {primaries.r.x, primaries.g.x, primaries.b.x},
-      {primaries.r.y, primaries.g.y, primaries.b.y},
-      {1 - primaries.r.x - primaries.r.y, 1 - primaries.g.x - primaries.g.y,
-       1 - primaries.b.x - primaries.b.y}};
-  JXL_RETURN_IF_ERROR(Inv3x3Matrix(&chromaticities[0][0]));
+  Matrix3x3d chromaticities{
+      {{primaries.r.x, primaries.g.x, primaries.b.x},
+       {primaries.r.y, primaries.g.y, primaries.b.y},
+       {1 - primaries.r.x - primaries.r.y, 1 - primaries.g.x - primaries.g.y,
+        1 - primaries.b.x - primaries.b.y}}};
+  JXL_RETURN_IF_ERROR(Inv3x3Matrix(chromaticities));
   const double ys[3] = {primaries.r.y, primaries.g.y, primaries.b.y};
   for (size_t i = 0; i < 3; ++i) {
     luminances[i] = ys[i] * (chromaticities[i][0] * white_XYZ[0] +
@@ -1003,11 +1005,11 @@ JXL_BOOL JxlCmsSetFieldsFromICC(void* user_data, const uint8_t* icc_data,
                 profile.CICP.matrix_coefficients,
                 profile.CICP.video_full_range_flag, &c_enc)) {
     *c = c_enc.ToExternal();
-    return true;
+    return JXL_TRUE;
   }
 
   c_enc.color_space = ColorSpaceFromProfile(profile);
-  *cmyk = (profile.data_color_space == skcms_Signature_CMYK);
+  *cmyk = TO_JXL_BOOL(profile.data_color_space == skcms_Signature_CMYK);
 
   CIExy wp_unadapted;
   JXL_RETURN_IF_ERROR(UnadaptedWhitePoint(profile, &wp_unadapted));
@@ -1043,14 +1045,14 @@ JXL_BOOL JxlCmsSetFieldsFromICC(void* user_data, const uint8_t* icc_data,
       ApplyCICP(cicp_buffer[8], cicp_buffer[9], cicp_buffer[10],
                 cicp_buffer[11], &c_enc)) {
     *c = c_enc.ToExternal();
-    return true;
+    return JXL_TRUE;
   }
 
   c_enc.color_space = ColorSpaceFromProfile(profile);
   if (cmsGetColorSpace(profile.get()) == cmsSigCmykData) {
     *cmyk = JXL_TRUE;
     *c = c_enc.ToExternal();
-    return true;
+    return JXL_TRUE;
   }
 
   const cmsCIEXYZ wp_unadapted = UnadaptedWhitePoint(context, profile, c_enc);
@@ -1066,7 +1068,7 @@ JXL_BOOL JxlCmsSetFieldsFromICC(void* user_data, const uint8_t* icc_data,
 #endif  // JPEGXL_ENABLE_SKCMS
 
   *c = c_enc.ToExternal();
-  return true;
+  return JXL_TRUE;
 }
 
 }  // namespace
@@ -1101,9 +1103,10 @@ void* JxlCmsInit(void* init_data, size_t num_threads, size_t xsize,
                  const JxlColorProfile* input, const JxlColorProfile* output,
                  float intensity_target) {
   JXL_ASSERT(init_data != nullptr);
-  auto cms = static_cast<const JxlCmsInterface*>(init_data);
+  const auto* cms = static_cast<const JxlCmsInterface*>(init_data);
   auto t = jxl::make_unique<JxlCms>();
-  IccBytes icc_src, icc_dst;
+  IccBytes icc_src;
+  IccBytes icc_dst;
   if (input->icc.size == 0) {
     JXL_NOTIFY_ERROR("JxlCmsInit: empty input ICC");
     return nullptr;
@@ -1276,8 +1279,6 @@ void* JxlCmsInit(void* init_data, size_t num_threads, size_t xsize,
   // Not including alpha channel (copied separately).
   const size_t channels_src = (c_src.cmyk ? 4 : c_src.Channels());
   const size_t channels_dst = c_dst.Channels();
-  JXL_CHECK(channels_src == channels_dst ||
-            (channels_src == 4 && channels_dst == 3));
 #if JXL_CMS_VERBOSE
   printf("Channels: %" PRIuS "; Threads: %" PRIuS "\n", channels_src,
          num_threads);
@@ -1311,13 +1312,14 @@ void* JxlCmsInit(void* init_data, size_t num_threads, size_t xsize,
   // outputs (or vice versa), we use floating point input/output.
   t->channels_src = channels_src;
   t->channels_dst = channels_dst;
+#if !JPEGXL_ENABLE_SKCMS
   size_t actual_channels_src = channels_src;
   size_t actual_channels_dst = channels_dst;
-#if JPEGXL_ENABLE_SKCMS
+#else
   // SkiaCMS doesn't support grayscale float buffers, so we create space for RGB
   // float buffers anyway.
-  actual_channels_src = (channels_src == 4 ? 4 : 3);
-  actual_channels_dst = 3;
+  size_t actual_channels_src = (channels_src == 4 ? 4 : 3);
+  size_t actual_channels_dst = 3;
 #endif
   AllocateBuffer(xsize * actual_channels_src, num_threads, &t->src_storage,
                  &t->buf_src);

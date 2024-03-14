@@ -19,7 +19,8 @@ void InitMemoryManager(j_common_ptr cinfo);
 
 template <typename T>
 T* Allocate(j_common_ptr cinfo, size_t len, int pool_id = JPOOL_PERMANENT) {
-  void* p = (*cinfo->mem->alloc_small)(cinfo, pool_id, len * sizeof(T));
+  const size_t size = len * sizeof(T);  // NOLINT
+  void* p = (*cinfo->mem->alloc_small)(cinfo, pool_id, size);
   return reinterpret_cast<T*>(p);
 }
 

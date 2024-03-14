@@ -95,7 +95,7 @@ std::string PropertyName(size_t i) {
     case 15:
       return "WGH";
     default:
-      return "ch[" + ToString(15 - (int)i) + "]";
+      return "ch[" + ToString(15 - static_cast<int>(i)) + "]";
   }
 }
 

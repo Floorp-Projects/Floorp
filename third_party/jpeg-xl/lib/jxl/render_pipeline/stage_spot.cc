@@ -23,7 +23,7 @@ class SpotColorStage : public RenderPipelineStage {
     for (size_t c = 0; c < 3; c++) {
       float* JXL_RESTRICT p = GetInputRow(input_rows, c, 0);
       const float* JXL_RESTRICT s = GetInputRow(input_rows, spot_c_, 0);
-      for (ssize_t x = -xextra; x < ssize_t(xsize + xextra); x++) {
+      for (ssize_t x = -xextra; x < static_cast<ssize_t>(xsize + xextra); x++) {
         float mix = scale * s[x];
         p[x] = mix * spot_color_[c] + (1.0f - mix) * p[x];
       }

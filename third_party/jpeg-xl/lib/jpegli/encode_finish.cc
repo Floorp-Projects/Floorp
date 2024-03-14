@@ -213,6 +213,8 @@ float FindDistanceForPSNR(j_compress_ptr cinfo) {
     d = best_distance;
     if (sampling == 1 && PSNR_SEARCH_DBG) {
       printf("Final PSNR %.2f at distance %.4f\n", best_psnr, d);
+    } else {
+      (void)best_psnr;
     }
   }
   return d;

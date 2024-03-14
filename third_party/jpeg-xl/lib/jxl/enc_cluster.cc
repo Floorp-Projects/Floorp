@@ -236,7 +236,7 @@ void HistogramReindex(std::vector<Histogram>* out, size_t prev_histograms,
 // Clusters similar histograms in 'in' together, the selected histograms are
 // placed in 'out', and for each index in 'in', *histogram_symbols will
 // indicate which of the 'out' histograms is the best approximation.
-void ClusterHistograms(const HistogramParams params,
+void ClusterHistograms(const HistogramParams& params,
                        const std::vector<Histogram>& in, size_t max_histograms,
                        std::vector<Histogram>* out,
                        std::vector<uint32_t>* histogram_symbols) {
@@ -252,9 +252,9 @@ void ClusterHistograms(const HistogramParams params,
 
   if (prev_histograms == 0 &&
       params.clustering == HistogramParams::ClusteringType::kBest) {
-    for (size_t i = 0; i < out->size(); i++) {
-      (*out)[i].entropy_ =
-          ANSPopulationCost((*out)[i].data_.data(), (*out)[i].data_.size());
+    for (auto& histo : *out) {
+      histo.entropy_ =
+          ANSPopulationCost(histo.data_.data(), histo.data_.size());
     }
     uint32_t next_version = 2;
     std::vector<uint32_t> version(out->size(), 1);
@@ -308,9 +308,9 @@ void ClusterHistograms(const HistogramParams params,
       (*out)[first].AddHistogram((*out)[second]);
       (*out)[first].entropy_ = ANSPopulationCost((*out)[first].data_.data(),
                                                  (*out)[first].data_.size());
-      for (size_t i = 0; i < renumbering.size(); i++) {
-        if (renumbering[i] == second) {
-          renumbering[i] = first;
+      for (uint32_t& item : renumbering) {
+        if (item == second) {
+          item = first;
         }
       }
       version[second] = 0;
@@ -338,9 +338,8 @@ void ClusterHistograms(const HistogramParams params,
       reverse_renumbering[i] = num_alive - 1;
     }
     out->resize(num_alive);
-    for (size_t i = 0; i < histogram_symbols->size(); i++) {
-      (*histogram_symbols)[i] =
-          reverse_renumbering[renumbering[(*histogram_symbols)[i]]];
+    for (uint32_t& item : *histogram_symbols) {
+      item = reverse_renumbering[renumbering[item]];
     }
   }
 

@@ -39,7 +39,7 @@ struct StdioSourceManager {
   uint8_t* buffer;
 
   static boolean fill_input_buffer(j_decompress_ptr cinfo) {
-    auto src = reinterpret_cast<StdioSourceManager*>(cinfo->src);
+    auto* src = reinterpret_cast<StdioSourceManager*>(cinfo->src);
     size_t num_bytes_read = fread(src->buffer, 1, kStdioBufferSize, src->f);
     if (num_bytes_read == 0) {
       return EmitFakeEoiMarker(cinfo);
@@ -77,7 +77,7 @@ void jpegli_stdio_src(j_decompress_ptr cinfo, FILE* infile) {
     cinfo->src = reinterpret_cast<jpeg_source_mgr*>(
         jpegli::Allocate<jpegli::StdioSourceManager>(cinfo, 1));
   }
-  auto src = reinterpret_cast<jpegli::StdioSourceManager*>(cinfo->src);
+  auto* src = reinterpret_cast<jpegli::StdioSourceManager*>(cinfo->src);
   src->f = infile;
   src->buffer = jpegli::Allocate<uint8_t>(cinfo, jpegli::kStdioBufferSize);
   src->pub.next_input_byte = src->buffer;

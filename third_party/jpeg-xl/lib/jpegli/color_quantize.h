@@ -20,7 +20,7 @@ void CreateOrderedDitherTables(j_decompress_ptr cinfo);
 
 void InitFSDitherState(j_decompress_ptr cinfo);
 
-int LookupColorIndex(j_decompress_ptr cinfo, JSAMPLE* pixel);
+int LookupColorIndex(j_decompress_ptr cinfo, const JSAMPLE* pixel);
 
 }  // namespace jpegli
 

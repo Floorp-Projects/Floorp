@@ -1034,7 +1034,7 @@ static void MaltaDiffMapT(const Tag tag, const ImageF& lum0, const ImageF& lum1,
   }
 
   const HWY_FULL(float) df;
-  const size_t aligned_x = std::max(size_t(4), Lanes(df));
+  const size_t aligned_x = std::max(static_cast<size_t>(4), Lanes(df));
   const intptr_t stride = diffs->PixelsPerRow();
 
   // Middle
@@ -1107,7 +1107,7 @@ void CombineChannelsForMasking(const ImageF* hf, const ImageF* uhf,
       float xdiff = (row_x_uhf[x] + row_x_hf[x]) * muls[0];
       float ydiff = row_y_uhf[x] * muls[1] + row_y_hf[x] * muls[2];
       row[x] = xdiff * xdiff + ydiff * ydiff;
-      row[x] = sqrt(row[x]);
+      row[x] = std::sqrt(row[x]);
     }
   }
 }
@@ -1116,13 +1116,13 @@ void DiffPrecompute(const ImageF& xyb, float mul, float bias_arg, ImageF* out) {
   const size_t xsize = xyb.xsize();
   const size_t ysize = xyb.ysize();
   const float bias = mul * bias_arg;
-  const float sqrt_bias = sqrt(bias);
+  const float sqrt_bias = std::sqrt(bias);
   for (size_t y = 0; y < ysize; ++y) {
     const float* BUTTERAUGLI_RESTRICT row_in = xyb.Row(y);
     float* BUTTERAUGLI_RESTRICT row_out = out->Row(y);
     for (size_t x = 0; x < xsize; ++x) {
       // kBias makes sqrt behave more linearly.
-      row_out[x] = sqrt(mul * std::abs(row_in[x]) + bias) - sqrt_bias;
+      row_out[x] = std::sqrt(mul * std::abs(row_in[x]) + bias) - sqrt_bias;
     }
   }
 }
@@ -1287,8 +1287,8 @@ void CombineChannelsToDiffmap(const ImageF& mask, const Image3F& block_diff_dc,
       }
       diff_ac[0] *= xmul;
       diff_dc[0] *= xmul;
-      row_out[x] =
-          sqrt(MaskColor(diff_dc, dc_maskval) + MaskColor(diff_ac, maskval));
+      row_out[x] = std::sqrt(MaskColor(diff_dc, dc_maskval) +
+                             MaskColor(diff_ac, maskval));
     }
   }
 }

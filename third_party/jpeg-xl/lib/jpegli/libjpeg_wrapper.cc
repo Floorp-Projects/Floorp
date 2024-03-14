@@ -122,11 +122,11 @@ boolean jpeg_read_icc_profile(j_decompress_ptr cinfo, JOCTET **icc_data_ptr,
 }
 
 void jpeg_abort_decompress(j_decompress_ptr cinfo) {
-  return jpegli_abort_decompress(cinfo);
+  jpegli_abort_decompress(cinfo);
 }
 
 void jpeg_destroy_decompress(j_decompress_ptr cinfo) {
-  return jpegli_destroy_decompress(cinfo);
+  jpegli_destroy_decompress(cinfo);
 }
 
 void jpeg_CreateCompress(j_compress_ptr cinfo, int version, size_t structsize) {

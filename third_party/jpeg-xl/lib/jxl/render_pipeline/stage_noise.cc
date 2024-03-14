@@ -5,6 +5,8 @@
 
 #include "lib/jxl/render_pipeline/stage_noise.h"
 
+#include "lib/jxl/noise.h"
+
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "lib/jxl/render_pipeline/stage_noise.cc"
 #include <hwy/foreach_target.h>
@@ -61,9 +63,10 @@ class StrengthEvalLut {
 #endif
   {
 #if HWY_TARGET != HWY_SCALAR
-    uint32_t lut[8];
-    memcpy(lut, noise_params.lut, sizeof(lut));
-    for (size_t i = 0; i < 8; i++) {
+    uint32_t lut[NoiseParams::kNumNoisePoints];
+    memcpy(lut, noise_params.lut.data(),
+           NoiseParams::kNumNoisePoints * sizeof(uint32_t));
+    for (size_t i = 0; i < NoiseParams::kNumNoisePoints; i++) {
       low16_lut[2 * i] = (lut[i] >> 0) & 0xFF;
       low16_lut[2 * i + 1] = (lut[i] >> 8) & 0xFF;
       high16_lut[2 * i] = (lut[i] >> 16) & 0xFF;
@@ -253,7 +256,7 @@ class ConvolveNoiseStage : public RenderPipelineStage {
       }
       float* JXL_RESTRICT row_out = GetOutputRow(output_rows, c, 0);
       for (ssize_t x = -RoundUpTo(xextra, Lanes(d));
-           x < (ssize_t)(xsize + xextra); x += Lanes(d)) {
+           x < static_cast<ssize_t>(xsize + xextra); x += Lanes(d)) {
         const auto p00 = LoadU(d, rows[2] + x);
         auto others = Zero(d);
         // TODO(eustas): sum loaded values to reduce the calculation chain

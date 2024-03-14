@@ -314,7 +314,6 @@ class ColorSpaceTransform {
 
   Status Init(const ColorEncoding& c_src, const ColorEncoding& c_dst,
               float intensity_target, size_t xsize, size_t num_threads) {
-    xsize_ = xsize;
     JxlColorProfile input_profile;
     icc_src_ = c_src.ICC();
     input_profile.icc.data = icc_src_.data();
@@ -343,8 +342,10 @@ class ColorSpaceTransform {
     return cms_.get_dst_buf(cms_data_, thread);
   }
 
-  Status Run(const size_t thread, const float* buf_src, float* buf_dst) {
-    return cms_.run(cms_data_, thread, buf_src, buf_dst, xsize_);
+  Status Run(const size_t thread, const float* buf_src, float* buf_dst,
+             size_t xsize) {
+    // TODO(eustas): convert false to Status?
+    return FROM_JXL_BOOL(cms_.run(cms_data_, thread, buf_src, buf_dst, xsize));
   }
 
  private:
@@ -353,7 +354,6 @@ class ColorSpaceTransform {
   // The interface may retain pointers into these.
   IccBytes icc_src_;
   IccBytes icc_dst_;
-  size_t xsize_;
 };
 
 }  // namespace jxl

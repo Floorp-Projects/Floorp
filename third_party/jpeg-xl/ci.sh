@@ -16,6 +16,8 @@ MYDIR=$(dirname $(realpath "$0"))
 
 ### Environment parameters:
 TEST_STACK_LIMIT="${TEST_STACK_LIMIT:-256}"
+BENCHMARK_NUM_THREADS="${BENCHMARK_NUM_THREADS:-0}"
+BUILD_CONFIG=${BUILD_CONFIG:-}
 CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE:-RelWithDebInfo}
 CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH:-}
 CMAKE_C_COMPILER_LAUNCHER=${CMAKE_C_COMPILER_LAUNCHER:-}
@@ -79,6 +81,12 @@ if [[ "${ENABLE_WASM_SIMD}" -eq "2" ]]; then
   CMAKE_C_FLAGS="${CMAKE_C_FLAGS} -DHWY_WANT_WASM2"
 fi
 
+if [[ -z "${BUILD_CONFIG}" ]]; then
+  TOOLS_DIR="${BUILD_DIR}/tools"
+else
+  TOOLS_DIR="${BUILD_DIR}/tools/${BUILD_CONFIG}"
+fi
+
 if [[ ! -z "${HWY_BASELINE_TARGETS}" ]]; then
   CMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS} -DHWY_BASELINE_TARGETS=${HWY_BASELINE_TARGETS}"
 fi
@@ -128,17 +136,17 @@ if [[ "${BUILD_TARGET%%-*}" != "arm" ]]; then
   )
 fi
 
-CLANG_TIDY_BIN=$(which clang-tidy-6.0 clang-tidy-7 clang-tidy-8 clang-tidy | head -n 1)
+CLANG_TIDY_BIN=$(which clang-tidy-6.0 clang-tidy-7 clang-tidy-8 clang-tidy 2>/dev/null | head -n 1)
 # Default to "cat" if "colordiff" is not installed or if stdout is not a tty.
 if [[ -t 1 ]]; then
-  COLORDIFF_BIN=$(which colordiff cat | head -n 1)
+  COLORDIFF_BIN=$(which colordiff cat 2>/dev/null | head -n 1)
 else
   COLORDIFF_BIN="cat"
 fi
-FIND_BIN=$(which gfind find | head -n 1)
+FIND_BIN=$(which gfind find 2>/dev/null | head -n 1)
 # "false" will disable wine64 when not installed. This won't allow
 # cross-compiling.
-WINE_BIN=$(which wine64 false | head -n 1)
+WINE_BIN=$(which wine64 false 2>/dev/null | head -n 1)
 
 CLANG_VERSION="${CLANG_VERSION:-}"
 # Detect the clang version suffix and store it in CLANG_VERSION. For example,
@@ -411,7 +419,7 @@ cmake_build_and_test() {
   if [[ "${PACK_TEST:-}" == "1" ]]; then
     (cd "${BUILD_DIR}"
      ${FIND_BIN} -name '*.cmake' -a '!' -path '*CMakeFiles*'
-     # gtest / gmock / gtest_main shared libs
+     # gtest / gtest_main shared libs
      ${FIND_BIN} lib/ -name 'libg*.so*'
      ${FIND_BIN} -type d -name tests -a '!' -path '*CMakeFiles*'
     ) | tar -C "${BUILD_DIR}" -cf "${BUILD_DIR}/tests.tar.xz" -T - \
@@ -791,9 +799,13 @@ cmd_ossfuzz_ninja() {
 
 cmd_fast_benchmark() {
   local small_corpus_tar="${BENCHMARK_CORPORA}/jyrki-full.tar"
+  local small_corpus_url="https://storage.googleapis.com/artifacts.jpegxl.appspot.com/corpora/jyrki-full.tar"
   mkdir -p "${BENCHMARK_CORPORA}"
-  curl --show-error -o "${small_corpus_tar}" -z "${small_corpus_tar}" \
-    "https://storage.googleapis.com/artifacts.jpegxl.appspot.com/corpora/jyrki-full.tar"
+  if [ -f "${small_corpus_tar}" ]; then
+    curl --show-error -o "${small_corpus_tar}" -z "${small_corpus_tar}" "${small_corpus_url}"
+  else
+    curl --show-error -o "${small_corpus_tar}" "${small_corpus_url}"
+  fi
 
   local tmpdir=$(mktemp -d)
   CLEANUP_FILES+=("${tmpdir}")
@@ -831,7 +843,7 @@ cmd_benchmark() {
     png_filename="${filename%.ppm}.png"
     png_filename=$(echo "${png_filename}" | tr '/' '_')
     sem --bg --id "${sem_id}" -j"${nprocs}" -- \
-      "${BUILD_DIR}/tools/decode_and_encode" \
+      "${TOOLS_DIR}/decode_and_encode" \
         "${tmpdir}/${filename}" "${mode}" "${tmpdir}/${png_filename}"
     images+=( "${png_filename}" )
   done < <(cd "${tmpdir}"; ${FIND_BIN} . -name '*.ppm' -type f)
@@ -844,6 +856,8 @@ cmd_benchmark() {
 get_mem_available() {
   if [[ "${OS}" == "Darwin" ]]; then
     echo $(vm_stat | grep -F 'Pages free:' | awk '{print $3 * 4}')
+  elif [[ "${OS}" == MINGW* ]]; then
+    echo $(vmstat | tail -n 1 | awk '{print $4 * 4}')
   else
     echo $(grep -F MemAvailable: /proc/meminfo | awk '{print $2}')
   fi
@@ -856,15 +870,24 @@ run_benchmark() {
   local output_dir="${BUILD_DIR}/benchmark_results"
   mkdir -p "${output_dir}"
 
-  # The memory available at the beginning of the benchmark run in kB. The number
-  # of threads depends on the available memory, and the passed memory per
-  # thread. We also add a 2 GiB of constant memory.
-  local mem_available="$(get_mem_available)"
-  # Check that we actually have a MemAvailable value.
-  [[ -n "${mem_available}" ]]
-  local num_threads=$(( (${mem_available} - 1048576) / ${mem_per_thread} ))
-  if [[ ${num_threads} -le 0 ]]; then
-    num_threads=1
+  if [[ "${OS}" == MINGW* ]]; then
+    src_img_dir=`cygpath -w "${src_img_dir}"`
+  fi
+
+  local num_threads=1
+  if [[ ${BENCHMARK_NUM_THREADS} -gt 0 ]]; then
+    num_threads=${BENCHMARK_NUM_THREADS}
+  else
+    # The memory available at the beginning of the benchmark run in kB. The number
+    # of threads depends on the available memory, and the passed memory per
+    # thread. We also add a 2 GiB of constant memory.
+    local mem_available="$(get_mem_available)"
+    # Check that we actually have a MemAvailable value.
+    [[ -n "${mem_available}" ]]
+    num_threads=$(( (${mem_available} - 1048576) / ${mem_per_thread} ))
+    if [[ ${num_threads} -le 0 ]]; then
+      num_threads=1
+    fi
   fi
 
   local benchmark_args=(
@@ -873,20 +896,20 @@ run_benchmark() {
     --output_dir "${output_dir}"
     --show_progress
     --num_threads="${num_threads}"
+    --decode_reps=11
+    --encode_reps=11
   )
   if [[ "${STORE_IMAGES}" == "1" ]]; then
     benchmark_args+=(--save_decompressed --save_compressed)
   fi
   (
     [[ "${TEST_STACK_LIMIT}" == "none" ]] || ulimit -s "${TEST_STACK_LIMIT}"
-    "${BUILD_DIR}/tools/benchmark_xl" "${benchmark_args[@]}" | \
+    "${TOOLS_DIR}/benchmark_xl" "${benchmark_args[@]}" | \
        tee "${output_dir}/results.txt"
 
     # Check error code for benckmark_xl command. This will exit if not.
     return ${PIPESTATUS[0]}
   )
-
-
 }
 
 # Helper function to wait for the CPU temperature to cool down on ARM.
@@ -1027,7 +1050,7 @@ cmd_arm_benchmark() {
   local src_img
   for src_img in "${jpg_images[@]}" "${images[@]}"; do
     local src_img_hash=$(sha1sum "${src_img}" | cut -f 1 -d ' ')
-    local enc_binaries=("${BUILD_DIR}/tools/cjxl")
+    local enc_binaries=("${TOOLS_DIR}/cjxl")
     local src_ext="${src_img##*.}"
     for enc_binary in "${enc_binaries[@]}"; do
       local enc_binary_base=$(basename "${enc_binary}")
@@ -1076,7 +1099,7 @@ cmd_arm_benchmark() {
 
           local dec_output
           wait_for_temp
-          dec_output=$("${BUILD_DIR}/tools/djxl" "${enc_file}" \
+          dec_output=$("${TOOLS_DIR}/djxl" "${enc_file}" \
             --num_reps=5 --num_threads="${num_threads}" 2>&1 | tee /dev/stderr |
             grep -E "M[BP]/s \[")
           local img_size=$(echo "${dec_output}" | cut -f 1 -d ',')
@@ -1092,7 +1115,7 @@ cmd_arm_benchmark() {
           if [[ "${src_ext}" == "jpg" ]]; then
             wait_for_temp
             local dec_file="${BUILD_DIR}/arm_benchmark/${enc_file_hash}.jpg"
-            dec_output=$("${BUILD_DIR}/tools/djxl" "${enc_file}" \
+            dec_output=$("${TOOLS_DIR}/djxl" "${enc_file}" \
               "${dec_file}" --num_reps=5 --num_threads="${num_threads}" 2>&1 | \
                 tee /dev/stderr | grep -E "M[BP]/s \[")
             local jpeg_dec_mps_speed=$(_speed_from_output "${dec_output}")
@@ -1122,12 +1145,12 @@ cmd_fuzz() {
   local fuzzer_crash_dir=$(realpath "${BUILD_DIR}/fuzzer_crash")
   mkdir -p "${corpus_dir}" "${fuzzer_crash_dir}"
   # Generate step.
-  "${BUILD_DIR}/tools/fuzzer_corpus" "${corpus_dir}"
+  "${TOOLS_DIR}/fuzzer_corpus" "${corpus_dir}"
   # Run step:
   local nprocs=$(nproc --all || echo 1)
   (
-   cd "${BUILD_DIR}"
-   "tools/djxl_fuzzer" "${fuzzer_crash_dir}" "${corpus_dir}" \
+   cd "${TOOLS_DIR}"
+   djxl_fuzzer "${fuzzer_crash_dir}" "${corpus_dir}" \
      -max_total_time="${FUZZER_MAX_TIME}" -jobs=${nprocs} \
      -artifact_prefix="${fuzzer_crash_dir}/"
   )

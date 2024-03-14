@@ -1,4 +1,7 @@
 bazel_dep(name = "bazel_skylib", version = "1.5.0")
+bazel_dep(name = "giflib", version = "5.2.1")
 bazel_dep(name = "googletest", version = "1.14.0")
-bazel_dep(name = "openexr", version = "3.2.1")
+bazel_dep(name = "libjpeg_turbo", version = "2.1.91")
 bazel_dep(name = "libpng", version = "1.6.40")
+bazel_dep(name = "libwebp", version = "1.3.2")
+bazel_dep(name = "openexr", version = "3.2.1")

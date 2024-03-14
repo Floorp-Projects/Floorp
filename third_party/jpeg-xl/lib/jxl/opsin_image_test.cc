@@ -78,13 +78,13 @@ void OpsinRoundtripTestRGB(float r, float g, float b) {
 }
 
 TEST(OpsinImageTest, VerifyOpsinAbsorbanceInverseMatrix) {
-  float matrix[9];  // writable copy
-  for (int i = 0; i < 9; i++) {
-    matrix[i] = GetOpsinAbsorbanceInverseMatrix()[i];
-  }
+  Matrix3x3 matrix;  // writable copy
+  matrix = GetOpsinAbsorbanceInverseMatrix();
   EXPECT_TRUE(Inv3x3Matrix(matrix));
-  for (int i = 0; i < 9; i++) {
-    EXPECT_NEAR(matrix[i], jxl::cms::kOpsinAbsorbanceMatrix[i], 1e-6);
+  for (int j = 0; j < 3; j++) {
+    for (int i = 0; i < 3; i++) {
+      EXPECT_NEAR(matrix[j][i], jxl::cms::kOpsinAbsorbanceMatrix[j][i], 1e-6);
+    }
   }
 }
 

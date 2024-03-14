@@ -41,11 +41,13 @@ bool ThreadMemoryManagerInit(JxlMemoryManager* self,
   } else {
     memset(self, 0, sizeof(*self));
   }
-  if (!self->alloc != !self->free) {
+  bool is_default_alloc = (self->alloc == nullptr);
+  bool is_default_free = (self->free == nullptr);
+  if (is_default_alloc != is_default_free) {
     return false;
   }
-  if (!self->alloc) self->alloc = ThreadMemoryManagerDefaultAlloc;
-  if (!self->free) self->free = ThreadMemoryManagerDefaultFree;
+  if (is_default_alloc) self->alloc = ThreadMemoryManagerDefaultAlloc;
+  if (is_default_free) self->free = ThreadMemoryManagerDefaultFree;
 
   return true;
 }
@@ -57,7 +59,7 @@ void* ThreadMemoryManagerAlloc(const JxlMemoryManager* memory_manager,
 
 void ThreadMemoryManagerFree(const JxlMemoryManager* memory_manager,
                              void* address) {
-  return memory_manager->free(memory_manager->opaque, address);
+  memory_manager->free(memory_manager->opaque, address);
 }
 
 }  // namespace

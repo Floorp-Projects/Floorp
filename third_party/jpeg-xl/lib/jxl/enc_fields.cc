@@ -74,7 +74,8 @@ class WriteVisitor : public VisitorBase {
 
 Status Bundle::Write(const Fields& fields, BitWriter* writer, size_t layer,
                      AuxOut* aux_out) {
-  size_t extension_bits, total_bits;
+  size_t extension_bits;
+  size_t total_bits;
   JXL_RETURN_IF_ERROR(Bundle::CanEncode(fields, &extension_bits, &total_bits));
 
   BitWriter::Allotment allotment(writer, total_bits);
@@ -173,7 +174,8 @@ Status F16Coder::Write(float value, BitWriter* JXL_RESTRICT writer) {
     return true;
   }
 
-  uint32_t biased_exp16, mantissa16;
+  uint32_t biased_exp16;
+  uint32_t mantissa16;
 
   // exp = [-24, -15] => subnormal
   if (JXL_UNLIKELY(exp < -14)) {

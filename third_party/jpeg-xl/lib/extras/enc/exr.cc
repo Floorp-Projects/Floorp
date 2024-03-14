@@ -84,7 +84,7 @@ Status EncodeImageEXR(const PackedImage& image, const JxlBasicInfo& info,
   const size_t xsize = info.xsize;
   const size_t ysize = info.ysize;
   const bool has_alpha = info.alpha_bits > 0;
-  const bool alpha_is_premultiplied = info.alpha_premultiplied;
+  const bool alpha_is_premultiplied = FROM_JXL_BOOL(info.alpha_premultiplied);
 
   if (info.num_color_channels != 3 ||
       c_enc.color_space != JXL_COLOR_SPACE_RGB ||
@@ -177,7 +177,7 @@ class EXREncoder : public Encoder {
     return formats;
   }
   Status Encode(const PackedPixelFile& ppf, EncodedImage* encoded_image,
-                ThreadPool* pool = nullptr) const override {
+                ThreadPool* pool) const override {
     JXL_RETURN_IF_ERROR(VerifyBasicInfo(ppf.info));
     encoded_image->icc.clear();
     encoded_image->bitstreams.clear();

@@ -82,8 +82,8 @@ struct YCbCrChromaSubsampling : public Fields {
 
   Status VisitFields(Visitor* JXL_RESTRICT visitor) override {
     // TODO(veluca): consider allowing 4x downsamples
-    for (size_t i = 0; i < 3; i++) {
-      JXL_QUIET_RETURN_IF_ERROR(visitor->Bits(2, 0, &channel_mode_[i]));
+    for (uint32_t& ch : channel_mode_) {
+      JXL_QUIET_RETURN_IF_ERROR(visitor->Bits(2, 0, &ch));
     }
     Recompute();
     return true;
@@ -152,9 +152,9 @@ struct YCbCrChromaSubsampling : public Fields {
   void Recompute() {
     maxhs_ = 0;
     maxvs_ = 0;
-    for (size_t i = 0; i < 3; i++) {
-      maxhs_ = std::max(maxhs_, kHShift[channel_mode_[i]]);
-      maxvs_ = std::max(maxvs_, kVShift[channel_mode_[i]]);
+    for (uint32_t ch : channel_mode_) {
+      maxhs_ = std::max(maxhs_, kHShift[ch]);
+      maxvs_ = std::max(maxvs_, kVShift[ch]);
     }
   }
   static const uint8_t kHShift[4];

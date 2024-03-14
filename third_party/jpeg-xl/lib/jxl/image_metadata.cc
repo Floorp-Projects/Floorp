@@ -10,6 +10,7 @@
 
 #include "lib/jxl/alpha.h"
 #include "lib/jxl/base/byte_order.h"
+#include "lib/jxl/base/matrix_ops.h"
 #include "lib/jxl/cms/opsin_params.h"
 #include "lib/jxl/fields.h"
 #include "lib/jxl/frame_header.h"
@@ -245,8 +246,8 @@ Status ExtraChannelInfo::VisitFields(Visitor* JXL_RESTRICT visitor) {
   }
 
   if (type == ExtraChannel::kUnknown ||
-      (int(ExtraChannel::kReserved0) <= int(type) &&
-       int(type) <= int(ExtraChannel::kReserved7))) {
+      (static_cast<int>(ExtraChannel::kReserved0) <= static_cast<int>(type) &&
+       static_cast<int>(type) <= static_cast<int>(ExtraChannel::kReserved7))) {
     return JXL_FAILURE("Unknown extra channel (bits %u, shift %u, name '%s')\n",
                        bit_depth.bits_per_sample, dim_shift, name.c_str());
   }
@@ -354,10 +355,13 @@ Status OpsinInverseMatrix::VisitFields(Visitor* JXL_RESTRICT visitor) {
     visitor->SetDefault(this);
     return true;
   }
-  for (int i = 0; i < 9; ++i) {
-    JXL_QUIET_RETURN_IF_ERROR(
-        visitor->F16(jxl::cms::DefaultInverseOpsinAbsorbanceMatrix()[i],
-                     &inverse_matrix[i]));
+  const Matrix3x3& default_inverse =
+      jxl::cms::DefaultInverseOpsinAbsorbanceMatrix();
+  for (int j = 0; j < 3; ++j) {
+    for (int i = 0; i < 3; ++i) {
+      JXL_QUIET_RETURN_IF_ERROR(
+          visitor->F16(default_inverse[j][i], &inverse_matrix[j][i]));
+    }
   }
   for (int i = 0; i < 3; ++i) {
     JXL_QUIET_RETURN_IF_ERROR(visitor->F16(

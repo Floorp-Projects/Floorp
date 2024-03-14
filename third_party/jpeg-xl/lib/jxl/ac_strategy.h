@@ -144,7 +144,7 @@ class AcStrategy {
                                        8, 4, 8, 16, 8, 16, 32, 16, 32};
     static_assert(sizeof(kLut) / sizeof(*kLut) == kNumValidStrategies,
                   "Update LUT");
-    return kLut[size_t(strategy_)];
+    return kLut[static_cast<size_t>(strategy_)];
   }
 
   JXL_INLINE size_t covered_blocks_y() const {
@@ -153,7 +153,7 @@ class AcStrategy {
                                        8, 8, 4, 16, 16, 8, 32, 32, 16};
     static_assert(sizeof(kLut) / sizeof(*kLut) == kNumValidStrategies,
                   "Update LUT");
-    return kLut[size_t(strategy_)];
+    return kLut[static_cast<size_t>(strategy_)];
   }
 
   JXL_INLINE size_t log2_covered_blocks() const {
@@ -162,7 +162,7 @@ class AcStrategy {
                                        6, 5, 5, 8, 7, 7, 10, 9, 9};
     static_assert(sizeof(kLut) / sizeof(*kLut) == kNumValidStrategies,
                   "Update LUT");
-    return kLut[size_t(strategy_)];
+    return kLut[static_cast<size_t>(strategy_)];
   }
 
  private:
@@ -181,7 +181,9 @@ class AcStrategyRow {
  public:
   explicit AcStrategyRow(const uint8_t* row) : row_(row) {}
   AcStrategy operator[](size_t x) const {
-    return AcStrategy(static_cast<AcStrategy::Type>(row_[x] >> 1), row_[x] & 1);
+    AcStrategy::Type strategy = static_cast<AcStrategy::Type>(row_[x] >> 1);
+    bool is_first = static_cast<bool>(row_[x] & 1);
+    return AcStrategy(strategy, is_first);
   }
 
  private:

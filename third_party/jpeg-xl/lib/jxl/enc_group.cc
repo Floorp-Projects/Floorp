@@ -286,10 +286,11 @@ void AdjustQuantBlockAC(const Quantizer& quantizer, size_t c,
   {
     // Reduce quant in highly active areas.
     int32_t div = (xsize * ysize);
-    int32_t activity = (hfNonZeros[0] + div / 2) / div;
+    int32_t activity = (static_cast<int32_t>(hfNonZeros[0]) + div / 2) / div;
     int32_t orig_qp_limit = std::max(4, *quant / 2);
     for (int i = 1; i < 4; ++i) {
-      activity = std::min<int32_t>(activity, (hfNonZeros[i] + div / 2) / div);
+      activity = std::min(
+          activity, (static_cast<int32_t>(hfNonZeros[i]) + div / 2) / div);
     }
     if (activity >= 15) {
       activity = 15;
@@ -512,8 +513,8 @@ namespace jxl {
 HWY_EXPORT(ComputeCoefficients);
 void ComputeCoefficients(size_t group_idx, PassesEncoderState* enc_state,
                          const Image3F& opsin, const Rect& rect, Image3F* dc) {
-  return HWY_DYNAMIC_DISPATCH(ComputeCoefficients)(group_idx, enc_state, opsin,
-                                                   rect, dc);
+  HWY_DYNAMIC_DISPATCH(ComputeCoefficients)
+  (group_idx, enc_state, opsin, rect, dc);
 }
 
 Status EncodeGroupTokenizedCoefficients(size_t group_idx, size_t pass_idx,

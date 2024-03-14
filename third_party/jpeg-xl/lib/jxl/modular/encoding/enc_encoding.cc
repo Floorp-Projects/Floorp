@@ -50,7 +50,7 @@ inline std::array<uint8_t, 3> PredictorColor(Predictor p) {
       return {{255, 0, 255}};
     case Predictor::Weighted:
       return {{0, 255, 255}};
-      // TODO
+      // TODO(jon)
     default:
       return {{255, 255, 255}};
   };
@@ -100,7 +100,7 @@ Status GatherTreeData(const Image &image, pixel_type chan, size_t group_id,
               channel.h, chan);
 
   std::array<pixel_type, kNumStaticProperties> static_props = {
-      {chan, (int)group_id}};
+      {chan, static_cast<int>(group_id)}};
   Properties properties(kNumNonrefProperties +
                         kExtraPropsPerChannel * options.max_properties);
   double pixel_fraction = std::min(1.0f, options.nb_repeats);
@@ -319,7 +319,7 @@ Status EncodeModularChannelMAANS(const Image &image, pixel_type chan,
               channel.w, channel.h, chan, channel.hshift, channel.vshift);
 
   std::array<pixel_type, kNumStaticProperties> static_props = {
-      {chan, (int)group_id}};
+      {chan, static_cast<int>(group_id)}};
   bool use_wp;
   bool is_wp_only;
   bool is_gradient_only;
@@ -434,7 +434,8 @@ Status EncodeModularChannelMAANS(const Image &image, pixel_type chan,
       FillImage(static_cast<float>(PredictorColor(tree[0].predictor)[c]),
                 &predictor_img.Plane(c));
     }
-    uint32_t mul_shift = FloorLog2Nonzero((uint32_t)tree[0].multiplier);
+    uint32_t mul_shift =
+        FloorLog2Nonzero(static_cast<uint32_t>(tree[0].multiplier));
     const intptr_t onerow = channel.plane.PixelsPerRow();
     for (size_t y = 0; y < channel.h; y++) {
       const pixel_type *JXL_RESTRICT r = channel.Row(y);
@@ -702,7 +703,7 @@ Status ModularGenericCompress(Image &image, const ModularOptions &opts,
   if (image.w == 0 || image.h == 0) return true;
   ModularOptions options = opts;  // Make a copy to modify it.
 
-  if (options.predictor == static_cast<Predictor>(-1)) {
+  if (options.predictor == kUndefinedPredictor) {
     options.predictor = Predictor::Gradient;
   }
 

@@ -79,14 +79,14 @@ struct State {
       294337,   289262,  284359,  279620,  275036,  270600,  266305,  262144};
 
   constexpr static pixel_type_w AddBits(pixel_type_w x) {
-    return uint64_t(x) << kPredExtraBits;
+    return static_cast<uint64_t>(x) << kPredExtraBits;
   }
 
   State(Header header, size_t xsize, size_t ysize) : header(header) {
     // Extra margin to avoid out-of-bounds writes.
     // All have space for two rows of data.
-    for (size_t i = 0; i < 4; i++) {
-      pred_errors[i].resize((xsize + 2) * 2);
+    for (auto &pred_error : pred_errors) {
+      pred_error.resize((xsize + 2) * 2);
     }
     error.resize((xsize + 2) * 2);
   }
@@ -539,8 +539,9 @@ JXL_INLINE PredictionResult Predict(
   }
   if (mode & kAllPredictions) {
     for (size_t i = 0; i < kNumModularPredictors; i++) {
-      predictions[i] = PredictOne((Predictor)i, left, top, toptop, topleft,
-                                  topright, leftleft, toprightright, wp_pred);
+      predictions[i] =
+          PredictOne(static_cast<Predictor>(i), left, top, toptop, topleft,
+                     topright, leftleft, toprightright, wp_pred);
     }
   }
   result.guess += PredictOne(predictor, left, top, toptop, topleft, topright,

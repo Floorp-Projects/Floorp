@@ -79,7 +79,6 @@ JXL_INLINE void InterpretExif(const std::vector<uint8_t>& exif,
     uint32_t count = (bigendian ? LoadBE32(t) : LoadLE32(t));
     t += 4;
     uint16_t value = (bigendian ? LoadBE16(t) : LoadLE16(t));
-    t += 4;
     if (type == 3 && count == 1 && value >= 1 && value <= 8) {
       *orientation = static_cast<JxlOrientation>(value);
     }

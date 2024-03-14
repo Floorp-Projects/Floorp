@@ -52,7 +52,8 @@ class XYBStage : public RenderPipelineStage {
       const auto offset_x = Set(d, jxl::cms::kScaledXYBOffset[0]);
       const auto offset_y = Set(d, jxl::cms::kScaledXYBOffset[1]);
       const auto offset_bmy = Set(d, jxl::cms::kScaledXYBOffset[2]);
-      for (ssize_t x = -xextra; x < (ssize_t)(xsize + xextra); x += Lanes(d)) {
+      for (ssize_t x = -xextra; x < static_cast<ssize_t>(xsize + xextra);
+           x += Lanes(d)) {
         const auto in_x = LoadU(d, row0 + x);
         const auto in_y = LoadU(d, row1 + x);
         const auto in_b = LoadU(d, row2 + x);
@@ -64,7 +65,8 @@ class XYBStage : public RenderPipelineStage {
         StoreU(out_b, d, row2 + x);
       }
     } else {
-      for (ssize_t x = -xextra; x < (ssize_t)(xsize + xextra); x += Lanes(d)) {
+      for (ssize_t x = -xextra; x < static_cast<ssize_t>(xsize + xextra);
+           x += Lanes(d)) {
         const auto in_opsin_x = LoadU(d, row0 + x);
         const auto in_opsin_y = LoadU(d, row1 + x);
         const auto in_opsin_b = LoadU(d, row2 + x);

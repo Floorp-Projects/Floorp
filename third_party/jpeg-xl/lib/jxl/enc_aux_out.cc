@@ -5,16 +5,10 @@
 
 #include "lib/jxl/enc_aux_out.h"
 
-#ifndef __STDC_FORMAT_MACROS
-#define __STDC_FORMAT_MACROS
-#endif
-
 #include <inttypes.h>
 #include <stddef.h>
 #include <stdint.h>
 
-#include <algorithm>
-#include <numeric>  // accumulate
 #include <sstream>
 
 #include "lib/jxl/base/printf_macros.h"
@@ -61,13 +55,11 @@ const char* LayerName(size_t layer) {
 
 void AuxOut::LayerTotals::Print(size_t num_inputs) const {
   if (JXL_DEBUG_V_LEVEL > 0) {
-    printf("%10" PRId64, static_cast<int64_t>(total_bits));
+    printf("%10" PRIuS, total_bits);
     if (histogram_bits != 0) {
-      printf("   [c/i:%6.2f | hst:%8" PRId64 " | ex:%8" PRId64
-             " | h+c+e:%12.3f",
-             num_clustered_histograms * 1.0 / num_inputs,
-             static_cast<int64_t>(histogram_bits >> 3),
-             static_cast<int64_t>(extra_bits >> 3),
+      printf("   [c/i:%6.2f | hst:%8" PRIuS " | ex:%8" PRIuS " | h+c+e:%12.3f",
+             num_clustered_histograms * 1.0 / num_inputs, histogram_bits >> 3,
+             extra_bits >> 3,
              (histogram_bits + clustered_entropy + extra_bits) / 8.0);
       printf("]");
     }
@@ -99,8 +91,8 @@ void AuxOut::Print(size_t num_inputs) const {
     if (num_inputs == 0) return;
 
     LayerTotals all_layers;
-    for (size_t i = 0; i < layers.size(); ++i) {
-      all_layers.Assimilate(layers[i]);
+    for (const auto& layer : layers) {
+      all_layers.Assimilate(layer);
     }
 
     printf("Average butteraugli iters: %10.2f\n",

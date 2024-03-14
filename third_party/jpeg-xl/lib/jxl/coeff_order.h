@@ -10,10 +10,10 @@
 #include <stdint.h>
 
 #include "lib/jxl/ac_strategy.h"
+#include "lib/jxl/base/common.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/coeff_order_fwd.h"
-#include "lib/jxl/dct_util.h"
 #include "lib/jxl/frame_dimensions.h"
 
 namespace jxl {
@@ -21,22 +21,21 @@ namespace jxl {
 class BitReader;
 
 // Those offsets get multiplied by kDCTBlockSize.
-static constexpr size_t kCoeffOrderOffset[] = {
+
+static constexpr size_t kCoeffOrderLimit = 6156;
+
+static constexpr std::array<size_t, 3 * kNumOrders + 1> kCoeffOrderOffset = {
     0,    1,    2,    3,    4,    5,    6,    10,   14,   18,
     34,   50,   66,   68,   70,   72,   76,   80,   84,   92,
     100,  108,  172,  236,  300,  332,  364,  396,  652,  908,
-    1164, 1292, 1420, 1548, 2572, 3596, 4620, 5132, 5644, 6156,
-};
-static_assert(3 * kNumOrders + 1 ==
-                  sizeof(kCoeffOrderOffset) / sizeof(*kCoeffOrderOffset),
-              "Update this array when adding or removing order types.");
+    1164, 1292, 1420, 1548, 2572, 3596, 4620, 5132, 5644, kCoeffOrderLimit};
 
-static constexpr size_t CoeffOrderOffset(size_t order, size_t c) {
-  return kCoeffOrderOffset[3 * order + c] * kDCTBlockSize;
-}
+// TODO(eustas): rollback to constexpr once modern C++ becomes reuired.
+#define CoeffOrderOffset(O, C) \
+  (kCoeffOrderOffset[3 * (O) + (C)] * kDCTBlockSize)
 
-static constexpr size_t kCoeffOrderMaxSize =
-    kCoeffOrderOffset[3 * kNumOrders] * kDCTBlockSize;
+static JXL_MAYBE_UNUSED constexpr size_t kCoeffOrderMaxSize =
+    kCoeffOrderLimit * kDCTBlockSize;
 
 // Mapping from AC strategy to order bucket. Strategies with different natural
 // orders must have different buckets.
@@ -49,7 +48,7 @@ static_assert(AcStrategy::kNumValidStrategies ==
                   sizeof(kStrategyOrder) / sizeof(*kStrategyOrder),
               "Update this array when adding or removing AC strategies.");
 
-constexpr uint32_t kPermutationContexts = 8;
+constexpr JXL_MAYBE_UNUSED uint32_t kPermutationContexts = 8;
 
 uint32_t CoeffOrderContext(uint32_t val);
 

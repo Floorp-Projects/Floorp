@@ -58,7 +58,7 @@ struct EllipseQuantParams {
 
 // Detects dots in XYB image.
 StatusOr<std::vector<PatchInfo>> DetectGaussianEllipses(
-    const Image3F& opsin, const GaussianDetectParams& params,
+    const Image3F& opsin, const Rect& rect, const GaussianDetectParams& params,
     const EllipseQuantParams& qParams, ThreadPool* pool);
 
 }  // namespace jxl

@@ -530,7 +530,8 @@ class Rows {
               .Translate(-group_data_x_border, -group_data_y_border)
               .ShiftLeft(base_color_shift)
               .CeilShiftRight(group_data_shift[c])
-              .Translate(group_data_x_border - ssize_t(kRenderPipelineXOffset),
+              .Translate(group_data_x_border -
+                             static_cast<ssize_t>(kRenderPipelineXOffset),
                          group_data_y_border);
       rows_[0][c].base_ptr = channel_group_data_rect.Row(&input_data[c], 0);
       rows_[0][c].stride = input_data[c].PixelsPerRow();
@@ -543,7 +544,8 @@ class Rows {
   JXL_INLINE float* GetBuffer(int stage, int y, size_t c) const {
     JXL_DASSERT(stage >= -1);
     const RowInfo& info = rows_[stage + 1][c];
-    return info.base_ptr + ssize_t(info.stride) * (y & info.ymod_minus_1);
+    return info.base_ptr +
+           static_cast<ssize_t>(info.stride) * (y & info.ymod_minus_1);
   }
 
  private:
@@ -653,7 +655,7 @@ Status LowMemoryRenderPipeline::RenderRect(size_t thread_id,
       }
       // If we already have rows from a previous iteration, we can just shift
       // the rows by 1 and insert the new one.
-      if (input_rows[i][c].size() == 2 * size_t(bordery) + 1) {
+      if (input_rows[i][c].size() == 2 * static_cast<size_t>(bordery) + 1) {
         for (ssize_t iy = 0; iy < 2 * bordery; iy++) {
           input_rows[i][c][iy] = input_rows[i][c][iy + 1];
         }
@@ -684,7 +686,7 @@ Status LowMemoryRenderPipeline::RenderRect(size_t thread_id,
                                          virtual_ypadding_for_output_.end());
 
   for (int vy = -num_extra_rows;
-       vy < int(image_area_rect.ysize()) + num_extra_rows; vy++) {
+       vy < static_cast<int>(image_area_rect.ysize()) + num_extra_rows; vy++) {
     for (size_t i = 0; i < first_trailing_stage_; i++) {
       int stage_vy = vy - num_extra_rows + virtual_ypadding_for_output_[i];
 
@@ -698,9 +700,10 @@ Status LowMemoryRenderPipeline::RenderRect(size_t thread_id,
 
       int y = stage_vy >> channel_shifts_[i][anyc_[i]].second;
 
-      ssize_t image_y = ssize_t(group_rect[i].y0()) + y;
+      ssize_t image_y = static_cast<ssize_t>(group_rect[i].y0()) + y;
       // Do not produce rows in out-of-bounds areas.
-      if (image_y < 0 || image_y >= ssize_t(image_rect_[i].ysize())) {
+      if (image_y < 0 ||
+          image_y >= static_cast<ssize_t>(image_rect_[i].ysize())) {
         continue;
       }
 
@@ -729,7 +732,7 @@ Status LowMemoryRenderPipeline::RenderRect(size_t thread_id,
     // Check that we are not outside of the bounds for the current rendering
     // rect. Not doing so might result in overwriting some rows that have been
     // written (or will be written) by other threads.
-    if (y < 0 || y >= ssize_t(image_area_rect.ysize())) {
+    if (y < 0 || y >= static_cast<ssize_t>(image_area_rect.ysize())) {
       continue;
     }
 
@@ -738,7 +741,8 @@ Status LowMemoryRenderPipeline::RenderRect(size_t thread_id,
     // (and may be necessary for correctness, as some stages assume coordinates
     // are within bounds).
     ssize_t full_image_y = frame_y0 + image_area_rect.y0() + y;
-    if (full_image_y < 0 || full_image_y >= ssize_t(full_image_ysize)) {
+    if (full_image_y < 0 ||
+        full_image_y >= static_cast<ssize_t>(full_image_ysize)) {
       continue;
     }
 

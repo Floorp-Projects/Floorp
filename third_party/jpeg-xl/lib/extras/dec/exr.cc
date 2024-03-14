@@ -121,7 +121,12 @@ Status DecodeImageEXR(Span<const uint8_t> bytes, const ColorHints& color_hints,
   };
   ppf->frames.clear();
   // Allocates the frame buffer.
-  ppf->frames.emplace_back(image_size.x, image_size.y, format);
+  {
+    JXL_ASSIGN_OR_RETURN(
+        PackedFrame frame,
+        PackedFrame::Create(image_size.x, image_size.y, format));
+    ppf->frames.emplace_back(std::move(frame));
+  }
   const auto& frame = ppf->frames.back();
 
   const int row_size = input.dataWindow().size().x + 1;
@@ -188,7 +193,7 @@ Status DecodeImageEXR(Span<const uint8_t> bytes, const ColorHints& color_hints,
   if (has_alpha) {
     ppf->info.alpha_bits = kExrAlphaBits;
     ppf->info.alpha_exponent_bits = ppf->info.exponent_bits_per_sample;
-    ppf->info.alpha_premultiplied = true;
+    ppf->info.alpha_premultiplied = JXL_TRUE;
   }
   ppf->info.intensity_target = intensity_target;
   return true;

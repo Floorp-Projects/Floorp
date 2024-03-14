@@ -35,7 +35,7 @@ const std::array<size_t, 3> kEllipseIntensityQ{{10, 36, 10}};
 }  // namespace
 
 StatusOr<std::vector<PatchInfo>> FindDotDictionary(
-    const CompressParams& cparams, const Image3F& opsin,
+    const CompressParams& cparams, const Image3F& opsin, const Rect& rect,
     const ColorCorrelationMap& cmap, ThreadPool* pool) {
   if (ApplyOverride(cparams.dots,
                     cparams.butteraugli_distance >= kMinButteraugliForDots)) {
@@ -52,13 +52,13 @@ StatusOr<std::vector<PatchInfo>> FindDotDictionary(
     ellipse_params.maxCC = 100;
     ellipse_params.percCC = 100;
     EllipseQuantParams qParams{
-        opsin.xsize(),      opsin.ysize(),        kEllipsePosQ,
+        rect.xsize(),       rect.ysize(),         kEllipsePosQ,
         kEllipseMinSigma,   kEllipseMaxSigma,     kEllipseSigmaQ,
         kEllipseAngleQ,     kEllipseMinIntensity, kEllipseMaxIntensity,
         kEllipseIntensityQ, kEllipsePosQ <= 5,    cmap.YtoXRatio(0),
         cmap.YtoBRatio(0)};
 
-    return DetectGaussianEllipses(opsin, ellipse_params, qParams, pool);
+    return DetectGaussianEllipses(opsin, rect, ellipse_params, qParams, pool);
   }
   std::vector<PatchInfo> nothing;
   return nothing;

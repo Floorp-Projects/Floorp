@@ -96,8 +96,8 @@ struct PlaneBase {
 #if defined(ADDRESS_SANITIZER) || defined(MEMORY_SANITIZER) || \
     defined(THREAD_SANITIZER)
     if (y >= ysize_) {
-      JXL_ABORT("Row(%" PRIu64 ") in (%u x %u) image\n", (uint64_t)y, xsize_,
-                ysize_);
+      JXL_ABORT("Row(%" PRIu64 ") in (%u x %u) image\n",
+                static_cast<uint64_t>(y), xsize_, ysize_);
     }
 #endif
 
@@ -328,7 +328,8 @@ class RectT {
 
   template <typename U>
   RectT<U> As() const {
-    return RectT<U>(U(x0_), U(y0_), U(xsize_), U(ysize_));
+    return RectT<U>(static_cast<U>(x0_), static_cast<U>(y0_),
+                    static_cast<U>(xsize_), static_cast<U>(ysize_));
   }
 
  private:

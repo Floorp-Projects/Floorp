@@ -15,13 +15,10 @@ JpegXlGimpProgress::JpegXlGimpProgress(const char *message) {
 }
 
 void JpegXlGimpProgress::update() {
-  gimp_progress_update((float)++cur_progress / (float)max_progress);
-  return;
+  gimp_progress_update(static_cast<float>(++cur_progress) /
+                       static_cast<float>(max_progress));
 }
 
-void JpegXlGimpProgress::finished() {
-  gimp_progress_update(1.0);
-  return;
-}
+void JpegXlGimpProgress::finished() { gimp_progress_update(1.0); }
 
 }  // namespace jxl

@@ -5,6 +5,7 @@
 
 #include "lib/jxl/cache_aligned.h"
 
+#include <jxl/types.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -95,7 +96,7 @@ void* CacheAligned::Allocate(const size_t payload_size, size_t offset) {
   aligned &= ~(kAlias - 1);
 #endif
 
-#if 0
+#if JXL_FALSE
   // No effect.
   uintptr_t page_aligned = reinterpret_cast<uintptr_t>(allocated);
   page_aligned &= ~(4096 - 1);

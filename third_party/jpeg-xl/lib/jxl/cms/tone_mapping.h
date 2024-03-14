@@ -12,6 +12,7 @@
 
 #include "lib/jxl/base/common.h"
 #include "lib/jxl/base/compiler_specific.h"
+#include "lib/jxl/base/matrix_ops.h"
 #include "lib/jxl/cms/transfer_functions.h"
 
 namespace jxl {
@@ -20,7 +21,7 @@ class Rec2408ToneMapperBase {
  public:
   explicit Rec2408ToneMapperBase(std::pair<float, float> source_range,
                                  std::pair<float, float> target_range,
-                                 const float primaries_luminances[3])
+                                 const Vector3& primaries_luminances)
       : source_range_(source_range),
         target_range_(target_range),
         red_Y_(primaries_luminances[0]),
@@ -28,10 +29,10 @@ class Rec2408ToneMapperBase {
         blue_Y_(primaries_luminances[2]) {}
 
   // TODO(eustas): test me
-  void ToneMap(float* red, float* green, float* blue) const {
+  void ToneMap(Color& rgb) const {
     const float luminance =
         source_range_.second *
-        (red_Y_ * *red + green_Y_ * *green + blue_Y_ * *blue);
+        (red_Y_ * rgb[0] + green_Y_ * rgb[1] + blue_Y_ * rgb[2]);
     const float normalized_pq =
         std::min(1.f, (InvEOTF(luminance) - pq_mastering_min_) *
                           inv_pq_mastering_range_);
@@ -49,8 +50,8 @@ class Rec2408ToneMapperBase {
     const float ratio = new_luminance / std::max(luminance, min_luminance);
     const float cap = new_luminance * inv_target_peak_;
     const float multiplier = ratio * normalizer_;
-    for (float* const val : {red, green, blue}) {
-      *val = use_cap ? cap : *val * multiplier;
+    for (size_t idx : {0, 1, 2}) {
+      rgb[idx] = use_cap ? cap : rgb[idx] * multiplier;
     }
   }
 
@@ -96,23 +97,24 @@ class Rec2408ToneMapperBase {
 class HlgOOTF_Base {
  public:
   explicit HlgOOTF_Base(float source_luminance, float target_luminance,
-                        const float primaries_luminances[3])
+                        const Vector3& primaries_luminances)
       : HlgOOTF_Base(/*gamma=*/std::pow(1.111f, std::log2(target_luminance /
                                                           source_luminance)),
                      primaries_luminances) {}
 
   // TODO(eustas): test me
-  void Apply(float* red, float* green, float* blue) const {
+  void Apply(Color& rgb) const {
     if (!apply_ootf_) return;
-    const float luminance = red_Y_ * *red + green_Y_ * *green + blue_Y_ * *blue;
+    const float luminance =
+        red_Y_ * rgb[0] + green_Y_ * rgb[1] + blue_Y_ * rgb[2];
     const float ratio = std::min<float>(powf(luminance, exponent_), 1e9);
-    *red *= ratio;
-    *green *= ratio;
-    *blue *= ratio;
+    rgb[0] *= ratio;
+    rgb[1] *= ratio;
+    rgb[2] *= ratio;
   }
 
  protected:
-  explicit HlgOOTF_Base(float gamma, const float luminances[3])
+  explicit HlgOOTF_Base(float gamma, const Vector3& luminances)
       : exponent_(gamma - 1),
         red_Y_(luminances[0]),
         green_Y_(luminances[1]),
@@ -124,13 +126,12 @@ class HlgOOTF_Base {
   const float blue_Y_;
 };
 
-static JXL_MAYBE_UNUSED void GamutMapScalar(float* red, float* green,
-                                            float* blue,
-                                            const float primaries_luminances[3],
+static JXL_MAYBE_UNUSED void GamutMapScalar(Color& rgb,
+                                            const Vector3& primaries_luminances,
                                             float preserve_saturation = 0.1f) {
-  const float luminance = primaries_luminances[0] * *red +
-                          primaries_luminances[1] * *green +
-                          primaries_luminances[2] * *blue;
+  const float luminance = primaries_luminances[0] * rgb[0] +
+                          primaries_luminances[1] * rgb[1] +
+                          primaries_luminances[2] * rgb[2];
 
   // Desaturate out-of-gamut pixels. This is done by mixing each pixel
   // with just enough gray of the target luminance to make all
@@ -142,8 +143,8 @@ static JXL_MAYBE_UNUSED void GamutMapScalar(float* red, float* green,
   // done by mixing in yet more gray. That will desaturate it further.
   float gray_mix_saturation = 0.0f;
   float gray_mix_luminance = 0.0f;
-  for (const float* ch : {red, green, blue}) {
-    const float& val = *ch;
+  for (size_t idx : {0, 1, 2}) {
+    const float& val = rgb[idx];
     const float val_minus_gray = val - luminance;
     const float inv_val_minus_gray =
         1.0f / ((val_minus_gray == 0.0f) ? 1.0f : val_minus_gray);
@@ -162,15 +163,14 @@ static JXL_MAYBE_UNUSED void GamutMapScalar(float* red, float* green,
       Clamp1((preserve_saturation * (gray_mix_saturation - gray_mix_luminance) +
               gray_mix_luminance),
              0.0f, 1.0f);
-  for (float* const ch : {red, green, blue}) {
-    float& val = *ch;
+  for (size_t idx : {0, 1, 2}) {
+    float& val = rgb[idx];
     val = gray_mix * (luminance - val) + val;
   }
-  const float max_clr = std::max({1.0f, *red, *green, *blue});
+  const float max_clr = std::max({1.0f, rgb[0], rgb[1], rgb[2]});
   const float normalizer = 1.0f / max_clr;
-  for (float* const ch : {red, green, blue}) {
-    float& val = *ch;
-    val *= normalizer;
+  for (size_t idx : {0, 1, 2}) {
+    rgb[idx] *= normalizer;
   }
 }
 

@@ -82,7 +82,7 @@ HWY_AFTER_NAMESPACE();
 
 namespace jxl {
 inline void InverseMoveToFrontTransform(uint8_t* v, int v_len) {
-  return HWY_STATIC_DISPATCH(InverseMoveToFrontTransform)(v, v_len);
+  HWY_STATIC_DISPATCH(InverseMoveToFrontTransform)(v, v_len);
 }
 }  // namespace jxl
 

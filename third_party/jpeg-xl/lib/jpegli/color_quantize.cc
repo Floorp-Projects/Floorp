@@ -11,13 +11,14 @@
 
 #include "lib/jpegli/decode_internal.h"
 #include "lib/jpegli/error.h"
+#include "lib/jxl/base/status.h"
 
 namespace jpegli {
 
 namespace {
 
-static constexpr int kNumColorCellBits[kMaxComponents] = {3, 4, 3, 3};
-static constexpr int kCompW[kMaxComponents] = {2, 3, 1, 1};
+constexpr int kNumColorCellBits[kMaxComponents] = {3, 4, 3, 3};
+constexpr int kCompW[kMaxComponents] = {2, 3, 1, 1};
 
 int Pow(int a, int b) {
   int r = 1;
@@ -102,8 +103,8 @@ namespace {
 
 // 2^13 priority levels for the PQ seems to be a good compromise between
 // accuracy, running time and stack space usage.
-static const int kMaxPriority = 1 << 13;
-static const int kMaxLevel = 3;
+const int kMaxPriority = 1 << 13;
+const int kMaxLevel = 3;
 
 // This function is used in the multi-resolution grid to be able to compute
 // the keys for the different resolutions by just shifting the first key.
@@ -153,7 +154,7 @@ inline int ColorIntQuadDistanceRGB(uint8_t r1, uint8_t g1, uint8_t b1,
 }
 
 inline int ScaleQuadDistanceRGB(int d) {
-  return static_cast<int>(sqrt(d * 0.25) + 0.5);
+  return static_cast<int>(std::lround(sqrt(d * 0.25)));
 }
 
 // The function updates the minimal distances, the clustering and the
@@ -216,9 +217,9 @@ struct WangHasher {
 // to a unique integer index assigned to the different colors in order of
 // appearance in the image.  Return the number of unique colors found.
 // The colors are pre-quantized to 3 * 6 bits precision.
-static int BuildRGBColorIndex(const uint8_t* const image, int const num_pixels,
-                              int* const count, uint8_t* const red,
-                              uint8_t* const green, uint8_t* const blue) {
+int BuildRGBColorIndex(const uint8_t* const image, int const num_pixels,
+                       int* const count, uint8_t* const red,
+                       uint8_t* const green, uint8_t* const blue) {
   // Impossible because rgb are in the low 24 bits, and the upper 8 bits is 0.
   const uint32_t impossible_pixel_value = 0x10000000;
   std::unordered_map<uint32_t, int, RGBPixelHasher> index_map(1 << 12);
@@ -264,7 +265,7 @@ void ChooseColorMap2Pass(j_decompress_ptr cinfo) {
   std::unique_ptr<uint8_t[]> blue(new uint8_t[max_color_count]);
   std::vector<int> count(max_color_count, 0);
   // number of colors
-  int n = BuildRGBColorIndex(m->pixels_, num_pixels, &count[0], &red[0],
+  int n = BuildRGBColorIndex(m->pixels_, num_pixels, count.data(), &red[0],
                              &green[0], &blue[0]);
 
   std::vector<int> dist(n, std::numeric_limits<int>::max());
@@ -285,14 +286,14 @@ void ChooseColorMap2Pass(j_decompress_ptr cinfo) {
       winner = i;
     }
     if (!in_palette[i] && count[i] > count_threshold) {
-      AddToRGBPalette(&red[0], &green[0], &blue[0], &count[0], i, k++, n,
-                      &dist[0], &cluster[0], &center[0], &error);
+      AddToRGBPalette(&red[0], &green[0], &blue[0], count.data(), i, k++, n,
+                      dist.data(), cluster.data(), &center[0], &error);
       in_palette[i] = true;
     }
   }
   if (k == 0) {
-    AddToRGBPalette(&red[0], &green[0], &blue[0], &count[0], winner, k++, n,
-                    &dist[0], &cluster[0], &center[0], &error);
+    AddToRGBPalette(&red[0], &green[0], &blue[0], count.data(), winner, k++, n,
+                    dist.data(), cluster.data(), &center[0], &error);
     in_palette[winner] = true;
   }
 
@@ -365,8 +366,8 @@ void ChooseColorMap2Pass(j_decompress_ptr cinfo) {
     if (priority < top_priority) {
       bucket_array[priority].push_back(i);
     } else {
-      AddToRGBPalette(&red[0], &green[0], &blue[0], &count[0], i, k++, n,
-                      &dist[0], &cluster[0], &center[0], &error);
+      AddToRGBPalette(&red[0], &green[0], &blue[0], count.data(), i, k++, n,
+                      dist.data(), cluster.data(), &center[0], &error);
     }
     bucket_array[top_priority].pop_back();
     while (top_priority >= 0 && bucket_array[top_priority].empty()) {
@@ -387,7 +388,7 @@ void ChooseColorMap2Pass(j_decompress_ptr cinfo) {
 
 namespace {
 
-void FindCandidatesForCell(j_decompress_ptr cinfo, int ncomp, int cell[],
+void FindCandidatesForCell(j_decompress_ptr cinfo, int ncomp, const int cell[],
                            std::vector<uint8_t>* candidates) {
   int cell_min[kMaxComponents];
   int cell_max[kMaxComponents];
@@ -404,7 +405,8 @@ void FindCandidatesForCell(j_decompress_ptr cinfo, int ncomp, int cell[],
     int dmax = 0;
     for (int c = 0; c < ncomp; ++c) {
       int palette_c = cinfo->colormap[c][i];
-      int dminc = 0, dmaxc;
+      int dminc = 0;
+      int dmaxc;
       if (palette_c < cell_min[c]) {
         dminc = cell_min[c] - palette_c;
         dmaxc = cell_max[c] - palette_c;
@@ -436,6 +438,8 @@ void FindCandidatesForCell(j_decompress_ptr cinfo, int ncomp, int cell[],
 void CreateInverseColorMap(j_decompress_ptr cinfo) {
   jpeg_decomp_master* m = cinfo->master;
   int ncomp = cinfo->out_color_components;
+  JXL_ASSERT(ncomp > 0);
+  JXL_ASSERT(ncomp <= kMaxComponents);
   int num_cells = 1;
   for (int c = 0; c < ncomp; ++c) {
     num_cells *= (1 << kNumColorCellBits[c]);
@@ -455,7 +459,7 @@ void CreateInverseColorMap(j_decompress_ptr cinfo) {
   m->regenerate_inverse_colormap_ = false;
 }
 
-int LookupColorIndex(j_decompress_ptr cinfo, JSAMPLE* pixel) {
+int LookupColorIndex(j_decompress_ptr cinfo, const JSAMPLE* pixel) {
   jpeg_decomp_master* m = cinfo->master;
   int num_channels = cinfo->out_color_components;
   int index = 0;

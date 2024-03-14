@@ -93,7 +93,9 @@ class Symmetric3Strategy {
     const V mc = LoadU(d, row_m + x);
     const V bc = LoadU(d, row_b + x);
 
-    V tr, mr, br;
+    V tr;
+    V mr;
+    V br;
 #if HWY_TARGET == HWY_SCALAR
     tr = tc;  // Single-lane => mirrored right neighbor = center value.
     mr = mc;
@@ -169,10 +171,11 @@ void Symmetric3(const ImageF& in, const Rect& rect,
                 ImageF* out) {
   using Conv = ConvolveT<Symmetric3Strategy>;
   if (rect.xsize() >= Conv::MinWidth()) {
-    return Conv::Run(in, rect, weights, pool, out);
+    Conv::Run(in, rect, weights, pool, out);
+    return;
   }
 
-  return SlowSymmetric3(in, rect, weights, pool, out);
+  SlowSymmetric3(in, rect, weights, pool, out);
 }
 
 // NOLINTNEXTLINE(google-readability-namespace-comments)
@@ -187,7 +190,7 @@ HWY_EXPORT(Symmetric3);
 void Symmetric3(const ImageF& in, const Rect& rect,
                 const WeightsSymmetric3& weights, ThreadPool* pool,
                 ImageF* out) {
-  return HWY_DYNAMIC_DISPATCH(Symmetric3)(in, rect, weights, pool, out);
+  HWY_DYNAMIC_DISPATCH(Symmetric3)(in, rect, weights, pool, out);
 }
 
 }  // namespace jxl

@@ -90,8 +90,8 @@ int32_t NumNonZeroExceptLLF(const size_t cx, const size_t cy,
   }
 
   // We want area - sum_zero, add because neg_sum_zero is already negated.
-  const int32_t nzeros =
-      int32_t(cx * cy * kDCTBlockSize) + GetLane(SumOfLanes(di, neg_sum_zero));
+  const int32_t nzeros = static_cast<int32_t>(cx * cy * kDCTBlockSize) +
+                         GetLane(SumOfLanes(di, neg_sum_zero));
 
   const int32_t shifted_nzeros = static_cast<int32_t>(
       (nzeros + covered_blocks - 1) >> log2_covered_blocks);
@@ -139,8 +139,8 @@ int32_t NumNonZero8x8ExceptDC(const int32_t* JXL_RESTRICT block,
   }
 
   // We want 64 - sum_zero, add because neg_sum_zero is already negated.
-  const int32_t nzeros =
-      int32_t(kDCTBlockSize) + GetLane(SumOfLanes(di, neg_sum_zero));
+  const int32_t nzeros = static_cast<int32_t>(kDCTBlockSize) +
+                         GetLane(SumOfLanes(di, neg_sum_zero));
 
   *nzeros_pos = nzeros;
 
@@ -157,7 +157,7 @@ void TokenizeCoefficients(const coeff_order_t* JXL_RESTRICT orders,
                           const Rect& rect,
                           const int32_t* JXL_RESTRICT* JXL_RESTRICT ac_rows,
                           const AcStrategyImage& ac_strategy,
-                          YCbCrChromaSubsampling cs,
+                          const YCbCrChromaSubsampling& cs,
                           Image3I* JXL_RESTRICT tmp_num_nzeroes,
                           std::vector<Token>* JXL_RESTRICT output,
                           const ImageB& qdc, const ImageI& qf,
@@ -236,7 +236,7 @@ void TokenizeCoefficients(const coeff_order_t* JXL_RESTRICT orders,
                                                 log2_covered_blocks, prev);
           uint32_t u_coeff = PackSigned(coeff);
           output->emplace_back(ctx, u_coeff);
-          prev = coeff != 0;
+          prev = (coeff != 0) ? 1 : 0;
           nzeros -= prev;
         }
         JXL_DASSERT(nzeros == 0);
@@ -258,14 +258,14 @@ void TokenizeCoefficients(const coeff_order_t* JXL_RESTRICT orders,
                           const Rect& rect,
                           const int32_t* JXL_RESTRICT* JXL_RESTRICT ac_rows,
                           const AcStrategyImage& ac_strategy,
-                          YCbCrChromaSubsampling cs,
+                          const YCbCrChromaSubsampling& cs,
                           Image3I* JXL_RESTRICT tmp_num_nzeroes,
                           std::vector<Token>* JXL_RESTRICT output,
                           const ImageB& qdc, const ImageI& qf,
                           const BlockCtxMap& block_ctx_map) {
-  return HWY_DYNAMIC_DISPATCH(TokenizeCoefficients)(
-      orders, rect, ac_rows, ac_strategy, cs, tmp_num_nzeroes, output, qdc, qf,
-      block_ctx_map);
+  HWY_DYNAMIC_DISPATCH(TokenizeCoefficients)
+  (orders, rect, ac_rows, ac_strategy, cs, tmp_num_nzeroes, output, qdc, qf,
+   block_ctx_map);
 }
 
 }  // namespace jxl

@@ -154,12 +154,12 @@ struct DCT1DImpl;
 
 template <size_t SZ>
 struct DCT1DImpl<1, SZ> {
-  JXL_INLINE void operator()(float* JXL_RESTRICT mem, float*) {}
+  JXL_INLINE void operator()(float* JXL_RESTRICT mem, float* /* tmp */) {}
 };
 
 template <size_t SZ>
 struct DCT1DImpl<2, SZ> {
-  JXL_INLINE void operator()(float* JXL_RESTRICT mem, float*) {
+  JXL_INLINE void operator()(float* JXL_RESTRICT mem, float* /* tmp */) {
     auto in1 = Load(FV<SZ>(), mem);
     auto in2 = Load(FV<SZ>(), mem + SZ);
     Store(Add(in1, in2), FV<SZ>(), mem);
@@ -186,7 +186,7 @@ struct IDCT1DImpl;
 template <size_t SZ>
 struct IDCT1DImpl<1, SZ> {
   JXL_INLINE void operator()(const float* from, size_t from_stride, float* to,
-                             size_t to_stride, float* JXL_RESTRICT) {
+                             size_t to_stride, float* JXL_RESTRICT /* tmp */) {
     StoreU(LoadU(FV<SZ>(), from), FV<SZ>(), to);
   }
 };
@@ -194,7 +194,7 @@ struct IDCT1DImpl<1, SZ> {
 template <size_t SZ>
 struct IDCT1DImpl<2, SZ> {
   JXL_INLINE void operator()(const float* from, size_t from_stride, float* to,
-                             size_t to_stride, float* JXL_RESTRICT) {
+                             size_t to_stride, float* JXL_RESTRICT /* tmp */) {
     JXL_DASSERT(from_stride >= SZ);
     JXL_DASSERT(to_stride >= SZ);
     auto in1 = LoadU(FV<SZ>(), from);

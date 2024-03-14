@@ -12,7 +12,7 @@ namespace extras {
 
 namespace {
 
-void AlphaBlend(PackedFrame* frame, float background[3]) {
+void AlphaBlend(PackedFrame* frame, const float background[3]) {
   if (!frame) return;
   const PackedImage& im = frame->color;
   JxlPixelFormat format = im.format;
@@ -20,7 +20,8 @@ void AlphaBlend(PackedFrame* frame, float background[3]) {
     return;
   }
   --format.num_channels;
-  PackedImage blended(im.xsize, im.ysize, format);
+  JXL_ASSIGN_OR_DIE(PackedImage blended,
+                    PackedImage::Create(im.xsize, im.ysize, format));
   // TODO(szabadka) SIMDify this and make it work for float16.
   for (size_t y = 0; y < im.ysize; ++y) {
     for (size_t x = 0; x < im.xsize; ++x) {
@@ -48,7 +49,7 @@ void AlphaBlend(PackedFrame* frame, float background[3]) {
 
 }  // namespace
 
-void AlphaBlend(PackedPixelFile* ppf, float background[3]) {
+void AlphaBlend(PackedPixelFile* ppf, const float background[3]) {
   if (!ppf || ppf->info.alpha_bits == 0) {
     return;
   }

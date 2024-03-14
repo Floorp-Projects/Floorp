@@ -10,8 +10,8 @@
 namespace jpegli {
 namespace {
 
-static constexpr size_t kInitialBufferSize = 1024;
-static constexpr size_t kFinalBufferSize = 18;
+constexpr size_t kInitialBufferSize = 1024;
+constexpr size_t kFinalBufferSize = 18;
 
 struct DestinationManager {
   jpeg_destination_mgr pub;
@@ -37,7 +37,7 @@ struct DestinationManager {
   }
 
   static void init_destination(j_compress_ptr cinfo) {
-    auto us = reinterpret_cast<DestinationManager*>(cinfo->dest);
+    auto* us = reinterpret_cast<DestinationManager*>(cinfo->dest);
     us->buffer.resize(kInitialBufferSize);
     us->Rewind();
   }
@@ -84,7 +84,7 @@ TEST_P(OutputSuspensionTestParam, PixelData) {
     while (cinfo.next_scanline < cinfo.image_height) {
       size_t lines_left = cinfo.image_height - cinfo.next_scanline;
       size_t num_lines = std::min(config.lines_batch_size, lines_left);
-      memcpy(&row_bytes[0], &input.pixels[cinfo.next_scanline * stride],
+      memcpy(row_bytes.data(), &input.pixels[cinfo.next_scanline * stride],
              num_lines * stride);
       std::vector<JSAMPROW> rows(num_lines);
       for (size_t i = 0; i < num_lines; ++i) {
@@ -142,7 +142,7 @@ TEST_P(OutputSuspensionTestParam, RawData) {
     std::vector<JSAMPARRAY> data(cinfo.num_components);
     for (int c = 0; c < cinfo.num_components; ++c) {
       rowdata[c].resize(config.jparams.v_samp(c) * DCTSIZE);
-      data[c] = &rowdata[c][0];
+      data[c] = rowdata[c].data();
     }
     while (cinfo.next_scanline < cinfo.image_height) {
       for (int c = 0; c < cinfo.num_components; ++c) {
@@ -155,7 +155,7 @@ TEST_P(OutputSuspensionTestParam, RawData) {
               (y0 + i < cheight ? &raw_data[c][(y0 + i) * cwidth] : nullptr);
         }
       }
-      while (jpegli_write_raw_data(&cinfo, &data[0], max_lines) == 0) {
+      while (jpegli_write_raw_data(&cinfo, data.data(), max_lines) == 0) {
         dest.EmptyTo(&compressed, config.buffer_size);
       }
     }

@@ -73,7 +73,7 @@ class Quantizer {
   }
 
   float ScaleGlobalScale(const float scale) {
-    int new_global_scale = static_cast<int>(global_scale_ * scale + 0.5f);
+    int new_global_scale = static_cast<int>(std::lround(global_scale_ * scale));
     float scale_out = new_global_scale * 1.0f / global_scale_;
     global_scale_ = new_global_scale;
     RecomputeFromGlobalScale();

@@ -348,7 +348,9 @@ bool MultiBlockTransformCrossesVerticalBoundary(
 float EstimateEntropy(const AcStrategy& acs, float entropy_mul, size_t x,
                       size_t y, const ACSConfig& config,
                       const float* JXL_RESTRICT cmap_factors, float* block,
-                      float* scratch_space, uint32_t* quantized) {
+                      float* full_scratch_space, uint32_t* quantized) {
+  float* mem = full_scratch_space;
+  float* scratch_space = full_scratch_space + AcStrategy::kMaxCoeffArea;
   const size_t size = (1 << acs.log2_covered_blocks()) * kDCTBlockSize;
 
   // Apply transform.
@@ -398,8 +400,6 @@ float EstimateEntropy(const AcStrategy& acs, float entropy_mul, size_t x,
   float entropy = 0.0f;
   const HWY_CAPPED(float, 8) df8;
 
-  auto mem_alloc = hwy::AllocateAligned<float>(AcStrategy::kMaxCoeffArea);
-  float* mem = mem_alloc.get();
   auto loss = Zero(df8);
   for (size_t c = 0; c < 3; c++) {
     const float* inv_matrix = config.dequant->InvMatrix(acs.RawStrategy(), c);
@@ -787,6 +787,7 @@ void FindBestFirstLevelDivisionForSquare(
 
 void ProcessRectACS(const CompressParams& cparams, const ACSConfig& config,
                     const Rect& rect, const ColorCorrelationMap& cmap,
+                    float* JXL_RESTRICT block, uint32_t* JXL_RESTRICT quantized,
                     AcStrategyImage* ac_strategy) {
   // Main philosophy here:
   // 1. First find best 8x8 transform for each area.
@@ -799,15 +800,7 @@ void ProcessRectACS(const CompressParams& cparams, const ACSConfig& config,
   // integral transforms cross these boundaries leads to
   // additional complications.
   const float butteraugli_target = cparams.butteraugli_distance;
-  const size_t dct_scratch_size =
-      3 * (MaxVectorSize() / sizeof(float)) * AcStrategy::kMaxBlockDim;
-  // TODO(veluca): reuse allocations
-  auto mem = hwy::AllocateAligned<float>(5 * AcStrategy::kMaxCoeffArea +
-                                         dct_scratch_size);
-  auto qmem = hwy::AllocateAligned<uint32_t>(AcStrategy::kMaxCoeffArea);
-  uint32_t* JXL_RESTRICT quantized = qmem.get();
-  float* JXL_RESTRICT block = mem.get();
-  float* JXL_RESTRICT scratch_space = mem.get() + 3 * AcStrategy::kMaxCoeffArea;
+  float* JXL_RESTRICT scratch_space = block + 3 * AcStrategy::kMaxCoeffArea;
   size_t bx = rect.x0();
   size_t by = rect.y0();
   JXL_ASSERT(rect.xsize() <= 8);
@@ -1080,21 +1073,32 @@ void AcStrategyHeuristics::Init(const Image3F& src, const Rect& rect_in,
   static const float kPow1 = 0.33677806662454718;
   static const float kPow2 = 0.50990926717963703;
   static const float kPow3 = 0.36702940662370243;
-  config.info_loss_multiplier *= pow(ratio, kPow1);
-  config.zeros_mul *= pow(ratio, kPow2);
-  config.cost_delta *= pow(ratio, kPow3);
+  config.info_loss_multiplier *= std::pow(ratio, kPow1);
+  config.zeros_mul *= std::pow(ratio, kPow2);
+  config.cost_delta *= std::pow(ratio, kPow3);
+}
+
+void AcStrategyHeuristics::PrepareForThreads(std::size_t num_threads) {
+  const size_t dct_scratch_size =
+      3 * (MaxVectorSize() / sizeof(float)) * AcStrategy::kMaxBlockDim;
+  mem_per_thread = 6 * AcStrategy::kMaxCoeffArea + dct_scratch_size;
+  mem = hwy::AllocateAligned<float>(num_threads * mem_per_thread);
+  qmem_per_thread = AcStrategy::kMaxCoeffArea;
+  qmem = hwy::AllocateAligned<uint32_t>(num_threads * qmem_per_thread);
 }
 
 void AcStrategyHeuristics::ProcessRect(const Rect& rect,
                                        const ColorCorrelationMap& cmap,
-                                       AcStrategyImage* ac_strategy) {
+                                       AcStrategyImage* ac_strategy,
+                                       size_t thread) {
   // In Falcon mode, use DCT8 everywhere and uniform quantization.
   if (cparams.speed_tier >= SpeedTier::kCheetah) {
     ac_strategy->FillDCT8(rect);
     return;
   }
   HWY_DYNAMIC_DISPATCH(ProcessRectACS)
-  (cparams, config, rect, cmap, ac_strategy);
+  (cparams, config, rect, cmap, mem.get() + thread * mem_per_thread,
+   qmem.get() + thread * qmem_per_thread, ac_strategy);
 }
 
 Status AcStrategyHeuristics::Finalize(const FrameDimensions& frame_dim,

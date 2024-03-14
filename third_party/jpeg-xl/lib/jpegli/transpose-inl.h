@@ -18,8 +18,8 @@ namespace HWY_NAMESPACE {
 namespace {
 
 #if HWY_CAP_GE256
-static JXL_INLINE void Transpose8x8Block(const float* JXL_RESTRICT from,
-                                         float* JXL_RESTRICT to) {
+JXL_INLINE void Transpose8x8Block(const float* JXL_RESTRICT from,
+                                  float* JXL_RESTRICT to) {
   const HWY_CAPPED(float, 8) d;
   auto i0 = Load(d, from);
   auto i1 = Load(d, from + 1 * 8);
@@ -67,8 +67,8 @@ static JXL_INLINE void Transpose8x8Block(const float* JXL_RESTRICT from,
   Store(i7, d, to + 7 * 8);
 }
 #elif HWY_TARGET != HWY_SCALAR
-static JXL_INLINE void Transpose8x8Block(const float* JXL_RESTRICT from,
-                                         float* JXL_RESTRICT to) {
+JXL_INLINE void Transpose8x8Block(const float* JXL_RESTRICT from,
+                                  float* JXL_RESTRICT to) {
   const HWY_CAPPED(float, 4) d;
   for (size_t n = 0; n < 8; n += 4) {
     for (size_t m = 0; m < 8; m += 4) {

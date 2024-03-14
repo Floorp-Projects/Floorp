@@ -86,7 +86,7 @@ class APNGEncoder : public Encoder {
                                      std::vector<uint8_t>* bytes) const;
 };
 
-static void PngWrite(png_structp png_ptr, png_bytep data, png_size_t length) {
+void PngWrite(png_structp png_ptr, png_bytep data, png_size_t length) {
   std::vector<uint8_t>* bytes =
       static_cast<std::vector<uint8_t>*>(png_get_io_ptr(png_ptr));
   bytes->insert(bytes->end(), data, data + length);
@@ -137,7 +137,7 @@ class BlobsWriterPNG {
                              std::vector<std::string>* strings) {
     // Encoding: base16 with newline after 72 chars.
     const size_t base16_size =
-        2 * bytes.size() + DivCeil(bytes.size(), size_t(36)) + 1;
+        2 * bytes.size() + DivCeil(bytes.size(), static_cast<size_t>(36)) + 1;
     std::string base16;
     base16.reserve(base16_size);
     for (size_t i = 0; i < bytes.size(); ++i) {
@@ -155,7 +155,7 @@ class BlobsWriterPNG {
     snprintf(header, sizeof(header), "\n%s\n%8" PRIuS, type.c_str(),
              bytes.size());
 
-    strings->push_back(std::string(key));
+    strings->emplace_back(key);
     strings->push_back(std::string(header) + base16);
     return true;
   }
@@ -303,7 +303,7 @@ Status APNGEncoder::EncodePackedPixelFileToAPNG(
           out[i] = static_cast<uint8_t>(in[i] * mul + 0.5);
         }
       } else {
-        memcpy(&out[0], in, out_size);
+        memcpy(out.data(), in, out_size);
       }
     } else if (format.data_type == JXL_TYPE_UINT16) {
       if (ppf.info.bits_per_sample < 16 ||
@@ -317,20 +317,21 @@ Status APNGEncoder::EncodePackedPixelFileToAPNG(
           StoreBE16(static_cast<uint32_t>(val * mul + 0.5), p_out);
         }
       } else {
-        memcpy(&out[0], in, out_size);
+        memcpy(out.data(), in, out_size);
       }
     }
     png_structp png_ptr;
     png_infop info_ptr;
 
-    png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr,
+                                      nullptr);
 
     if (!png_ptr) return JXL_FAILURE("Could not init png encoder");
 
     info_ptr = png_create_info_struct(png_ptr);
     if (!info_ptr) return JXL_FAILURE("Could not init png info struct");
 
-    png_set_write_fn(png_ptr, bytes, PngWrite, NULL);
+    png_set_write_fn(png_ptr, bytes, PngWrite, nullptr);
     png_set_flush(png_ptr, 0);
 
     int width = xsize;
@@ -406,7 +407,7 @@ Status APNGEncoder::EncodePackedPixelFileToAPNG(
 
     png_write_flush(png_ptr);
     const size_t pos = bytes->size();
-    png_write_image(png_ptr, &rows[0]);
+    png_write_image(png_ptr, rows.data());
     png_write_flush(png_ptr);
     if (count > 0) {
       std::vector<uint8_t> fdata(4);
@@ -430,7 +431,7 @@ Status APNGEncoder::EncodePackedPixelFileToAPNG(
 
     count++;
     if (count == ppf.frames.size() || !ppf.info.have_animation) {
-      png_write_end(png_ptr, NULL);
+      png_write_end(png_ptr, nullptr);
     }
 
     png_destroy_write_struct(&png_ptr, &info_ptr);

@@ -27,7 +27,7 @@ enum class JpegReadMode {
 // If mode is kReadHeader, it fills in only the image dimensions in *jpg.
 // Returns false if the data is not valid JPEG, or if it contains an unsupported
 // JPEG feature.
-bool ReadJpeg(const uint8_t* data, const size_t len, JpegReadMode mode,
+bool ReadJpeg(const uint8_t* data, size_t len, JpegReadMode mode,
               JPEGData* jpg);
 
 }  // namespace jpeg

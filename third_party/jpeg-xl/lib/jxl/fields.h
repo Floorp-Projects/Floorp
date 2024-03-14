@@ -298,7 +298,7 @@ class ExtensionStates {
 
 class VisitorBase : public Visitor {
  public:
-  explicit VisitorBase() {}
+  explicit VisitorBase() = default;
   ~VisitorBase() override { JXL_ASSERT(depth_ == 0); }
 
   // This is the only call site of Fields::VisitFields.
