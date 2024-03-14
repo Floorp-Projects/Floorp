@@ -4376,6 +4376,7 @@ struct {
     EXP(SetResumptionToken),
     EXP(SetServerEchConfigs),
     EXP(SetTimeFunc),
+    EXP(SetCertificateCompressionAlgorithm),
 #endif
     { "", NULL }
 };

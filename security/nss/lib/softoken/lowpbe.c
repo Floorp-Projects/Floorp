@@ -803,13 +803,7 @@ nsspkcs5_ComputeKeyAndIV(NSSPKCS5PBEParameter *pbe_param, SECItem *pwitem,
         goto loser;
     }
 
-    if (pbe_param->is2KeyDES) {
-        PORT_Memcpy(key->data, hash->data, (key->len * 2) / 3);
-        PORT_Memcpy(&(key->data[(key->len * 2) / 3]), key->data,
-                    key->len / 3);
-    } else {
-        PORT_Memcpy(key->data, hash->data, key->len);
-    }
+    PORT_Memcpy(key->data, hash->data, key->len);
 
     SECITEM_ZfreeItem(hash, PR_TRUE);
     return key;
@@ -878,10 +872,15 @@ nsspkcs5_FillInParam(SECOidTag algorithm, HASH_HashType hashType,
         /* DES3 Algorithms */
         case SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_2KEY_TRIPLE_DES_CBC:
             pbe_param->is2KeyDES = PR_TRUE;
-        /* fall through */
+            pbe_param->pbeType = NSSPKCS5_PKCS12_V2;
+            pbe_param->keyLen = 16;
+            pbe_param->encAlg = SEC_OID_DES_EDE3_CBC;
+            break;
         case SEC_OID_PKCS12_V2_PBE_WITH_SHA1_AND_3KEY_TRIPLE_DES_CBC:
             pbe_param->pbeType = NSSPKCS5_PKCS12_V2;
-        /* fall through */
+            pbe_param->keyLen = 24;
+            pbe_param->encAlg = SEC_OID_DES_EDE3_CBC;
+            break;
         case SEC_OID_PKCS12_PBE_WITH_SHA1_AND_TRIPLE_DES_CBC:
             pbe_param->keyLen = 24;
             pbe_param->encAlg = SEC_OID_DES_EDE3_CBC;

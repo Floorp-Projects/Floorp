@@ -118,6 +118,8 @@ nss_cmsrecipientinfo_create(NSSCMSMessage *cmsg,
     certalgtag = SECOID_GetAlgorithmTag(&(spki->algorithm));
 
     rid = &ri->ri.keyTransRecipientInfo.recipientIdentifier;
+
+    // This switch must match the switch in NSS_CMSRecipient_IsSupported.
     switch (certalgtag) {
         case SEC_OID_PKCS1_RSA_ENCRYPTION:
             ri->recipientInfoType = NSSCMSRecipientInfoID_KeyTrans;
@@ -255,6 +257,28 @@ loser:
         NSS_CMSMessage_Destroy(cmsg);
     }
     return NULL;
+}
+
+/*
+ * NSS_CMSRecipient_IsSupported - checks for a support certificate
+ *
+ * Use this function to confirm that the given certificate will be
+ * accepted by NSS_CMSRecipientInfo_Create, which means that the
+ * certificate can be used with a supported encryption algorithm.
+ */
+PRBool
+NSS_CMSRecipient_IsSupported(CERTCertificate *cert)
+{
+    CERTSubjectPublicKeyInfo *spki = &(cert->subjectPublicKeyInfo);
+    SECOidTag certalgtag = SECOID_GetAlgorithmTag(&(spki->algorithm));
+
+    switch (certalgtag) {
+        case SEC_OID_PKCS1_RSA_ENCRYPTION:
+        case SEC_OID_X942_DIFFIE_HELMAN_KEY: /* dh-public-number */
+            return PR_TRUE;
+        default:
+            return PR_FALSE;
+    }
 }
 
 /*

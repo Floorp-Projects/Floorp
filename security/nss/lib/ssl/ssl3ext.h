@@ -30,16 +30,6 @@ typedef struct {
     sslExtensionBuilderFunc ex_sender;
 } sslExtensionBuilder;
 
-/* RFC 8879: TLS Certificate Compression - 3. Negotiating Certificate Compression 
-** enum {
-**  zlib(1),
-**  brotli(2),
-**  zstd(3),
-**  (65535)
-** } CertificateCompressionAlgorithm; 
-*/
-typedef PRUint16 SSLCertificateCompressionAlgorithmID;
-
 struct TLSExtensionDataStr {
     /* registered callbacks that send server hello extensions */
     sslExtensionBuilder serverHelloSenders[SSL_MAX_EXTENSIONS];

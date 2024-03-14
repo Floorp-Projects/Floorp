@@ -41,6 +41,7 @@ pk11_MakeIDFromPublicKey(SECKEYPublicKey *pubKey)
         case dhKey:
             pubKeyIndex = &pubKey->u.dh.publicValue;
             break;
+        case edKey:
         case ecKey:
             pubKeyIndex = &pubKey->u.ec.publicValue;
             break;
@@ -190,6 +191,19 @@ PK11_ImportPublicKey(PK11SlotInfo *slot, SECKEYPublicKey *pubKey,
                               pubKey->u.dh.publicValue.len);
                 attrs++;
                 break;
+            case edKey:
+                keyType = CKK_EC_EDWARDS;
+                PK11_SETATTRS(attrs, CKA_VERIFY, &cktrue, sizeof(CK_BBOOL));
+                attrs++;
+                PK11_SETATTRS(attrs, CKA_EC_PARAMS,
+                              pubKey->u.ec.DEREncodedParams.data,
+                              pubKey->u.ec.DEREncodedParams.len);
+                attrs++;
+                PK11_SETATTRS(attrs, CKA_EC_POINT,
+                              pubKey->u.ec.publicValue.data,
+                              pubKey->u.ec.publicValue.len);
+                attrs++;
+                break;
             case ecKey:
                 keyType = CKK_EC;
                 PK11_SETATTRS(attrs, CKA_VERIFY, &cktrue, sizeof(CK_BBOOL));
@@ -248,7 +262,7 @@ PK11_ImportPublicKey(PK11SlotInfo *slot, SECKEYPublicKey *pubKey,
         }
         templateCount = attrs - theTemplate;
         PORT_Assert(templateCount <= (sizeof(theTemplate) / sizeof(CK_ATTRIBUTE)));
-        if (pubKey->keyType != ecKey && pubKey->keyType != kyberKey) {
+        if (pubKey->keyType != ecKey && pubKey->keyType != kyberKey && pubKey->keyType != edKey) {
             PORT_Assert(signedattr);
             signedcount = attrs - signedattr;
             for (attrs = signedattr; signedcount; attrs++, signedcount--) {
@@ -407,6 +421,7 @@ pk11_get_EC_PointLenInBytes(PLArenaPool *arena, const SECItem *ecParams,
         case SEC_OID_SECG_EC_SECT571R1:
             return 145; /*curve len in bytes = 72 bytes */
         case SEC_OID_CURVE25519:
+        case SEC_OID_ED25519_PUBLIC_KEY:
             *plain = PR_TRUE;
             return 32; /* curve len in bytes = 32 bytes (only X) */
         /* unknown or unrecognized OIDs. return unknown length */
@@ -642,6 +657,9 @@ PK11_ExtractPublicKey(PK11SlotInfo *slot, KeyType keyType, CK_OBJECT_HANDLE id)
             case CKK_EC:
                 keyType = ecKey;
                 break;
+            case CKK_EC_EDWARDS:
+                keyType = edKey;
+                break;
             case CKK_NSS_KYBER:
                 keyType = kyberKey;
                 break;
@@ -771,6 +789,7 @@ PK11_ExtractPublicKey(PK11SlotInfo *slot, KeyType keyType, CK_OBJECT_HANDLE id)
             if (crv != CKR_OK)
                 break;
             break;
+        case edKey:
         case ecKey:
             pubKey->u.ec.size = 0;
             ecparams = attrs;
@@ -785,7 +804,7 @@ PK11_ExtractPublicKey(PK11SlotInfo *slot, KeyType keyType, CK_OBJECT_HANDLE id)
             if (crv != CKR_OK)
                 break;
 
-            if ((keyClass != CKO_PUBLIC_KEY) || (pk11KeyType != CKK_EC)) {
+            if ((keyClass != CKO_PUBLIC_KEY) || (pk11KeyType != CKK_EC && pk11KeyType != CKK_EC_EDWARDS)) {
                 crv = CKR_OBJECT_HANDLE_INVALID;
                 break;
             }
@@ -885,6 +904,9 @@ PK11_MakePrivKey(PK11SlotInfo *slot, KeyType keyType,
                 break;
             case CKK_EC:
                 keyType = ecKey;
+                break;
+            case CKK_EC_EDWARDS:
+                keyType = edKey;
                 break;
             case CKK_NSS_KYBER:
                 keyType = kyberKey;
@@ -1093,6 +1115,7 @@ pk11_loadPrivKeyWithFlags(PK11SlotInfo *slot, SECKEYPrivateKey *privKey,
             extra_count++;
             break;
         case ecKey:
+        case edKey:
             ap->type = CKA_EC_PARAMS;
             ap++;
             count++;
@@ -1101,10 +1124,13 @@ pk11_loadPrivKeyWithFlags(PK11SlotInfo *slot, SECKEYPrivateKey *privKey,
             ap++;
             count++;
             extra_count++;
-            ap->type = CKA_DERIVE;
-            ap++;
-            count++;
-            extra_count++;
+            if (privKey->keyType == ecKey) {
+                ap->type = CKA_DERIVE;
+                ap++;
+                count++;
+                extra_count++;
+            }
+
             ap->type = CKA_SIGN;
             ap++;
             count++;
@@ -1143,7 +1169,7 @@ pk11_loadPrivKeyWithFlags(PK11SlotInfo *slot, SECKEYPrivateKey *privKey,
      * them the raw data as unsigned. The exception is EC,
      * where the values are encoded or zero-preserving
      * per-RFC5915 */
-    if (privKey->keyType != ecKey) {
+    if (privKey->keyType != ecKey && privKey->keyType != edKey) {
         for (ap = attrs; extra_count; ap++, extra_count--) {
             pk11_SignedToUnsigned(ap);
         }
@@ -1499,6 +1525,16 @@ PK11_GenerateKeyPairWithOpFlags(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
             keyType = kyberKey;
             test_mech.mechanism = CKM_NSS_KYBER;
             break;
+        case CKM_EC_EDWARDS_KEY_PAIR_GEN:
+            ecParams = (SECKEYECParams *)param;
+            attrs = ecPubTemplate;
+            PK11_SETATTRS(attrs, CKA_EC_PARAMS, ecParams->data,
+                          ecParams->len);
+            attrs++;
+            pubTemplate = ecPubTemplate;
+            keyType = edKey;
+            test_mech.mechanism = CKM_EDDSA;
+            break;
         default:
             PORT_SetError(SEC_ERROR_BAD_KEY);
             return NULL;
@@ -1555,6 +1591,10 @@ PK11_GenerateKeyPairWithOpFlags(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
             case CKM_ECDSA:
                 mechanism_info.flags = CKF_SIGN | CKF_VERIFY;
                 break;
+            case CKM_EDDSA:
+                mechanism_info.flags = CKF_SIGN | CKF_VERIFY;
+                break;
+
             default:
                 break;
         }
@@ -1835,6 +1875,7 @@ SECKEY_SetPublicValue(SECKEYPrivateKey *privKey, SECItem *publicValue)
             rv = PK11_ReadAttribute(slot, privKeyID, CKA_BASE,
                                     arena, &pubKey.u.dh.base);
             break;
+        case edKey:
         case ecKey:
             pubKey.u.ec.publicValue = *publicValue;
             pubKey.u.ec.encoding = ECPoint_Undefined;
@@ -1905,6 +1946,7 @@ PK11_ImportEncryptedPrivateKeyInfoAndReturnKey(PK11SlotInfo *slot,
     CK_ATTRIBUTE_TYPE dsaUsage[] = { CKA_SIGN };
     CK_ATTRIBUTE_TYPE dhUsage[] = { CKA_DERIVE };
     CK_ATTRIBUTE_TYPE ecUsage[] = { CKA_SIGN, CKA_DERIVE };
+    CK_ATTRIBUTE_TYPE edUsage[] = { CKA_SIGN };
     if ((epki == NULL) || (pwitem == NULL))
         return SECFailure;
 
@@ -1958,6 +2000,11 @@ PK11_ImportEncryptedPrivateKeyInfoAndReturnKey(PK11SlotInfo *slot,
                     usageCount = 2;
                     break;
             }
+            break;
+        case edKey:
+            key_type = CKK_EC_EDWARDS;
+            usage = edUsage;
+            usageCount = 1;
             break;
     }
 

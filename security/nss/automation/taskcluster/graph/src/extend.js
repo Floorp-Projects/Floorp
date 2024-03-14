@@ -1146,7 +1146,6 @@ async function scheduleTools() {
     ]
   }));
 
-
   queue.scheduleTask(merge(base, {
     symbol: "scan-build",
     name: "scan-build",

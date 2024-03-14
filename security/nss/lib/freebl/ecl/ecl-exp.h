@@ -132,6 +132,7 @@ typedef enum {
     /* ECCurve_WTLS_12 == ECCurve_NIST_P224 */
 
     ECCurve25519,
+    ECCurve_Ed25519,
 
     ECCurve_pastLastCurve
 } ECCurveName;

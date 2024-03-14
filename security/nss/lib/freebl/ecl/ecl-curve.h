@@ -178,6 +178,13 @@ static const ECCurveBytes ecCurve_25519 = {
     KU_KEY_AGREEMENT
 };
 
+static const ECCurveBytes ecCurve_Ed25519 = {
+    "ED25119", ECField_GFp, 255,
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+    8, 128, 66, 32,
+    KU_DIGITAL_SIGNATURE
+};
+
 /* mapping between ECCurveName enum and pointers to ECCurveParams */
 static const ECCurveBytes *ecCurve_map[] = {
     NULL,               /* ECCurve_noName */
@@ -239,7 +246,8 @@ static const ECCurveBytes *ecCurve_map[] = {
     NULL,               /* ECCurve_WTLS_8 */
     NULL,               /* ECCurve_WTLS_9 */
     &ecCurve_25519,     /* ECCurve25519 */
-    NULL                /* ECCurve_pastLastCurve */
+    &ecCurve_Ed25519,
+    NULL /* ECCurve_pastLastCurve */
 };
 
 #endif

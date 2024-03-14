@@ -18,6 +18,7 @@
 #include "verified/Hacl_P384.h"
 #include "verified/Hacl_P521.h"
 #include "secport.h"
+#include "verified/Hacl_Ed25519.h"
 
 #define EC_DOUBLECHECK PR_FALSE
 
@@ -65,6 +66,27 @@ ec_secp521r1_scalar_validate(const SECItem *scalar)
     return SECSuccess;
 }
 
+SECStatus
+ec_ED25519_pt_validate(const SECItem *px)
+{
+    if (!px || !px->data || px->len != Ed25519_PUBLIC_KEYLEN) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+    return SECSuccess;
+}
+
+SECStatus
+ec_ED25519_scalar_validate(const SECItem *scalar)
+{
+    if (!scalar || !scalar->data || scalar->len != Ed25519_PRIVATE_KEYLEN) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+
+    return SECSuccess;
+}
+
 static const ECMethod kMethods[] = {
     { ECCurve25519,
       ec_Curve25519_pt_mul,
@@ -96,6 +118,12 @@ static const ECMethod kMethods[] = {
         NULL,
         NULL,
     },
+    { ECCurve_Ed25519,
+      NULL,
+      ec_ED25519_pt_validate,
+      ec_ED25519_scalar_validate,
+      NULL,
+      NULL },
 };
 
 static const ECMethod *
@@ -353,6 +381,16 @@ ec_NewKey(ECParams *ecParams, ECPrivateKey **privKey,
     /* Compute corresponding public key */
 
     /* Use curve specific code for point multiplication */
+
+    if (ecParams->name == ECCurve_Ed25519) {
+        rv = ED_DerivePublicKey(&key->privateValue, &key->publicValue);
+        if (rv != SECSuccess) {
+            goto cleanup;
+        }
+        NSS_DECLASSIFY(key->publicValue.data, key->publicValue.len); /* Declassifying public key to avoid false positive */
+        goto done;
+    }
+
     if (ecParams->fieldID.type == ec_field_plain) {
         const ECMethod *method = ec_get_method_from_name(ecParams->name);
         if (method == NULL || method->pt_mul == NULL) {
@@ -435,6 +473,7 @@ ec_GenerateRandomPrivateKey(ECParams *ecParams, SECItem *privKey)
 
     uint8_t leading_coeff_mask;
     switch (ecParams->name) {
+        case ECCurve_Ed25519:
         case ECCurve25519:
         case ECCurve_NIST_P256:
         case ECCurve_NIST_P384:
@@ -490,8 +529,9 @@ EC_NewKey(ECParams *ecParams, ECPrivateKey **privKey)
         goto cleanup;
     }
     rv = ec_GenerateRandomPrivateKey(ecParams, &privKeyRand);
-    if (rv != SECSuccess || privKeyRand.data == NULL)
+    if (rv != SECSuccess || privKeyRand.data == NULL) {
         goto cleanup;
+    }
     /* generate public key */
     CHECK_SEC_OK(ec_NewKey(ecParams, privKey, privKeyRand.data, privKeyRand.len));
 
@@ -1316,4 +1356,104 @@ done:
 #endif
 
     return rv;
+}
+
+/*EdDSA: Currently only Ed22519 is implemented.*/
+
+/*
+** Computes the EdDSA signature on the message using the given key.
+*/
+
+SECStatus
+ec_ED25519_public_key_validate(const ECPublicKey *key)
+{
+    if (!key || !(key->ecParams.name == ECCurve_Ed25519)) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+    return ec_ED25519_pt_validate(&key->publicValue);
+}
+
+SECStatus
+ec_ED25519_private_key_validate(const ECPrivateKey *key)
+{
+    if (!key || !(key->ecParams.name == ECCurve_Ed25519)) {
+
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+    return ec_ED25519_scalar_validate(&key->privateValue);
+}
+
+SECStatus
+ED_SignMessage(ECPrivateKey *key, SECItem *signature, const SECItem *msg)
+{
+    if (!msg || !signature || signature->len != Ed25519_SIGN_LEN) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+
+    if (ec_ED25519_private_key_validate(key) != SECSuccess) {
+        return SECFailure; /* error code set by ec_ED25519_scalar_validate. */
+    }
+
+    if (signature->data) {
+        Hacl_Ed25519_sign(signature->data, key->privateValue.data, msg->len,
+                          msg->data);
+    }
+    signature->len = ED25519_SIGN_LEN;
+    BLAPI_CLEAR_STACK(2048);
+    return SECSuccess;
+}
+
+/*
+** Checks the signature on the given message using the key provided.
+*/
+
+SECStatus
+ED_VerifyMessage(ECPublicKey *key, const SECItem *signature,
+                 const SECItem *msg)
+{
+    if (!msg || !signature || !signature->data || signature->len != Ed25519_SIGN_LEN) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+
+    if (ec_ED25519_public_key_validate(key) != SECSuccess) {
+        return SECFailure; /* error code set by ec_ED25519_pt_validate. */
+    }
+
+    bool rv = Hacl_Ed25519_verify(key->publicValue.data, msg->len, msg->data,
+                                  signature->data);
+    BLAPI_CLEAR_STACK(2048);
+
+#if EC_DEBUG
+    printf("ED_VerifyMessage returning %s\n",
+           (rv) ? "success" : "failure");
+#endif
+
+    if (rv) {
+        return SECSuccess;
+    }
+
+    PORT_SetError(SEC_ERROR_BAD_SIGNATURE);
+    return SECFailure;
+}
+
+SECStatus
+ED_DerivePublicKey(const SECItem *privateKey, SECItem *publicKey)
+{
+    /* Currently supporting only Ed25519.*/
+    if (!privateKey || privateKey->len == 0 || !publicKey || publicKey->len != Ed25519_PUBLIC_KEYLEN) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+
+    if (ec_ED25519_scalar_validate(privateKey) != SECSuccess) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+
+    Hacl_Ed25519_secret_to_public(publicKey->data, privateKey->data);
+    return SECSuccess;
 }

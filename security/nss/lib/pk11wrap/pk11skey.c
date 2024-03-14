@@ -2097,7 +2097,7 @@ PK11_DerivePubKeyFromPrivKey(SECKEYPrivateKey *privKey)
 /*
  * This Generates a wrapping key based on a privateKey, publicKey, and two
  * random numbers. For Mail usage RandomB should be NULL. In the Sender's
- * case RandomA is generate, outherwize it is passed.
+ * case RandomA is generate, otherwise it is passed.
  */
 PK11SymKey *
 PK11_PubDerive(SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey,
@@ -2218,6 +2218,9 @@ PK11_PubDerive(SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey,
                 return symKey;
             PORT_SetError(PK11_MapError(crv));
         } break;
+        case edKey:
+            PORT_SetError(SEC_ERROR_BAD_KEY);
+            break;
         case ecKey: {
             CK_BBOOL cktrue = CK_TRUE;
             CK_OBJECT_CLASS keyClass = CKO_SECRET_KEY;

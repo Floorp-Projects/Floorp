@@ -11,7 +11,6 @@
 #include "databuffer.h"
 
 #include "gtest/gtest.h"
-
 namespace nss_test {
 
 // For test vectors.
@@ -28,6 +27,11 @@ class Pk11SignatureTest : public ::testing::Test {
                     CK_MECHANISM_TYPE combo)
       : mechanism_(mech), hash_oid_(hash_oid), combo_(combo) {
     skip_raw_ = false;
+    skip_digest_ = false;
+  }
+
+  Pk11SignatureTest(CK_MECHANISM_TYPE mech) : mechanism_(mech) {
+    skip_digest_ = true;
   }
 
   virtual const SECItem* parameters() const { return nullptr; }
@@ -54,10 +58,10 @@ class Pk11SignatureTest : public ::testing::Test {
     return rv == SECSuccess;
   }
 
-  bool SignHashedData(ScopedSECKEYPrivateKey& privKey, const DataBuffer& hash,
-                      DataBuffer* sig);
-  bool SignData(ScopedSECKEYPrivateKey& privKey, const DataBuffer& data,
-                DataBuffer* sig);
+  bool SignRaw(ScopedSECKEYPrivateKey& privKey, const DataBuffer& hash,
+               DataBuffer* sig);
+  bool DigestAndSign(ScopedSECKEYPrivateKey& privKey, const DataBuffer& data,
+                     DataBuffer* sig);
   bool ImportPrivateKeyAndSignHashedData(const DataBuffer& pkcs8,
                                          const DataBuffer& data,
                                          DataBuffer* sig, DataBuffer* sig2);
@@ -96,6 +100,15 @@ class Pk11SignatureTest : public ::testing::Test {
     Verify(params, sig2, true);
   }
 
+  void SignAndVerifyRaw(const Pkcs11SignatureTestParams& params) {
+    ScopedSECKEYPrivateKey privKey(ImportPrivateKey(params.pkcs8_));
+    ASSERT_NE(privKey, nullptr);
+    DataBuffer sig;
+    SignRaw(privKey, params.data_, &sig);
+    EXPECT_EQ(sig, params.signature_);
+    Verify(params, sig, true);
+  }
+
   // Importing a private key in PKCS#8 format and reexporting it should
   // result in the same binary representation.
   void ImportExport(const DataBuffer& k) {
@@ -110,6 +123,7 @@ class Pk11SignatureTest : public ::testing::Test {
   SECOidTag hash_oid_;
   CK_MECHANISM_TYPE combo_;
   bool skip_raw_;
+  bool skip_digest_;
 };
 
 }  // namespace nss_test

@@ -306,7 +306,7 @@ sec_GetEncAlgFromSigAlg(SECOidTag sigAlg)
  * encalg: address of a SECOidTag which will be set with the signing alg.
  *
  * Returns: SECSuccess if the algorithm was acceptable, SECFailure if the
- *	algorithm was not found or was not a signing algorithm.
+ *  algorithm was not found or was not a signing algorithm.
  */
 SECStatus
 sec_DecodeSigAlg(const SECKEYPublicKey *key, SECOidTag sigAlg,

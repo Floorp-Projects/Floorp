@@ -69,6 +69,14 @@ typedef struct EcdsaTestVectorStr {
 
 typedef EcdsaTestVector DsaTestVector;
 
+typedef struct EddsaTestVectorStr {
+  uint32_t id;
+  std::vector<uint8_t> sig;
+  std::vector<uint8_t> public_key;
+  std::vector<uint8_t> msg;
+  bool valid;
+} EddsaTestVector;
+
 typedef struct EcdhTestVectorStr {
   uint64_t id;
   std::vector<uint8_t> private_key;

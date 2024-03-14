@@ -2854,3 +2854,31 @@ Kyber_Decapsulate(KyberParams params, const SECItem *privKey, const SECItem *cip
         return SECFailure;
     return (vector->p_Kyber_Decapsulate)(params, privKey, ciphertext, secret);
 }
+
+/* ============== New for 3.0028 =============================== */
+
+SECStatus
+ED_SignMessage(ECPrivateKey *key, SECItem *signature,
+               const SECItem *msg)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+        return SECFailure;
+    return (vector->p_ED_SignMessage)(key, signature, msg);
+}
+
+SECStatus
+ED_VerifyMessage(ECPublicKey *key, const SECItem *signature,
+                 const SECItem *msg)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+        return SECFailure;
+    return (vector->p_ED_VerifyMessage)(key, signature, msg);
+}
+
+SECStatus
+ED_DerivePublicKey(const SECItem *privateKey, SECItem *publicKey)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+        return SECFailure;
+    return (vector->p_ED_DerivePublicKey)(privateKey, publicKey);
+}
