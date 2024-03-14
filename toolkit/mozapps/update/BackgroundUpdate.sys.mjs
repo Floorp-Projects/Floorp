@@ -570,7 +570,7 @@ export var BackgroundUpdate = {
     };
 
     try {
-      // Interacting with `TaskScheduler.jsm` can throw, so we'll catch.
+      // Interacting with `TaskScheduler.sys.mjs` can throw, so we'll catch.
       if (!enabled) {
         lazy.log.info(
           `${SLUG}: not scheduling background update: '${JSON.stringify(

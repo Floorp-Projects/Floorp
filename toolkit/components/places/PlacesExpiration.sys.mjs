@@ -435,7 +435,7 @@ export function nsPlacesExpiration() {
   );
 
   this._dbInitializedPromise = lazy.PlacesUtils.withConnectionWrapper(
-    "PlacesExpiration.jsm: setup",
+    "PlacesExpiration.sys.mjs: setup",
     async db => {
       await db.execute(
         `CREATE TEMP TABLE expiration_notify (
@@ -758,7 +758,7 @@ nsPlacesExpiration.prototype = {
     try {
       let notifications = [];
       await lazy.PlacesUtils.withConnectionWrapper(
-        "PlacesExpiration.jsm: expire",
+        "PlacesExpiration.sys.mjs: expire",
         async db => {
           await db.executeTransaction(async () => {
             for (let queryType in EXPIRATION_QUERIES) {

@@ -1700,7 +1700,7 @@ Version 1 was introduced with Firefox 37 and includes the following properties:
 
 state
    Corresponds to either a STATE_USER_* string or a STATE_INTERNAL_* string in
-   FxaMigration.jsm.  This reflects a state where we are waiting for the user,
+   FxaMigration.sys.mjs.  This reflects a state where we are waiting for the user,
    or waiting for some internal process to complete on the way to completing
    the migration.
 

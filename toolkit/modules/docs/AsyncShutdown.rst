@@ -58,8 +58,8 @@ The following snippet presents an example of a client of FooService that has a s
 
     // Some client of FooService called FooClient
 
-    const { FooService } = ChromeUtils.import(
-      "resource://gre/modules/FooService.jsm"
+    const { FooService } = ChromeUtils.importESModule(
+      "resource://gre/modules/FooService.sys.mjs"
     );
 
     // FooService.shutdown is the `client` capability of a `Barrier`.
@@ -117,8 +117,8 @@ The following snippet presents FooClient2, a more sophisticated client of FooSer
 
     // Some client of FooService called FooClient2
 
-    const { FooService } = ChromeUtils.import(
-      "resource://gre/modules/FooService.jsm"
+    const { FooService } = ChromeUtils.importESModule(
+      "resource://gre/modules/FooService.sys.mjs"
     );
 
     FooService.shutdown.addBlocker(

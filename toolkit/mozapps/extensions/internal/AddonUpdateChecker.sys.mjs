@@ -26,7 +26,7 @@ import { Log } from "resource://gre/modules/Log.sys.mjs";
 const LOGGER_ID = "addons.update-checker";
 
 // Create a new logger for use by the Addons Update Checker
-// (Requires AddonManager.jsm)
+// (Requires AddonManager.sys.mjs)
 var logger = Log.repository.getLogger(LOGGER_ID);
 
 /**

@@ -93,7 +93,7 @@ export var TaskScheduler = {
    *
    *          options.disabled
    *            If true the task will be created disabled, so that it will not be run.
-   *            Ignored on macOS: see comments in TaskSchedulerMacOSImpl.jsm.
+   *            Ignored on macOS: see comments in TaskSchedulerMacOSImpl.sys.mjs.
    *            Default false, intended for tests.
    *
    *          options.executionTimeoutSec

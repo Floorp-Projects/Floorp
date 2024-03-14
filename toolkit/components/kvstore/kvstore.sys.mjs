@@ -18,7 +18,8 @@ function promisify(fn, ...args) {
  * with a database's path and (optionally) its name:
  *
  * ```
- *     ChromeUtils.import("resource://gre/modules/kvstore.jsm");
+ *     let { keyValueService } =
+ *       ChromeUtils.importESModule("resource://gre/modules/kvstore.sys.mjs");
  *     let database = await KeyValueService.getOrCreate(path, name);
  * ```
  *

@@ -360,7 +360,7 @@ button.text-link .button-text {
   --panel-padding: 0;
   --panel-background: rgba(249,249,250,.8) no-repeat center var(--autoscroll-background-image);
   --panel-shadow-margin: 4px;
-  /* Set pointer-events: none; so that mousemove events can be handled by AutoScrollChild.jsm. */
+  /* Set pointer-events: none; so that mousemove events can be handled by AutoScrollChild.sys.mjs. */
   pointer-events: none;
 }
 

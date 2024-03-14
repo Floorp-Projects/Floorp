@@ -7,7 +7,7 @@
 /**
  * This module contains code for managing APIs that need to run in the
  * parent process, and handles the parent side of operations that need
- * to be proxied from ExtensionChild.jsm.
+ * to be proxied from ExtensionChild.sys.mjs.
  */
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
@@ -481,7 +481,7 @@ GlobalManager = {
 };
 
 /**
- * The proxied parent side of a context in ExtensionChild.jsm, for the
+ * The proxied parent side of a context in ExtensionChild.sys.mjs, for the
  * parent side of a proxied API.
  */
 class ProxyContextParent extends BaseContext {
@@ -685,14 +685,14 @@ class ProxyContextParent extends BaseContext {
 
 /**
  * The parent side of proxied API context for extension content script
- * running in ExtensionContent.jsm.
+ * running in ExtensionContent.sys.mjs.
  */
 class ContentScriptContextParent extends ProxyContextParent {}
 
 /**
  * The parent side of proxied API context for extension page, such as a
  * background script, a tab page, or a popup, running in
- * ExtensionChild.jsm.
+ * ExtensionChild.sys.mjs.
  */
 class ExtensionPageContextParent extends ProxyContextParent {
   constructor(envType, extension, params, browsingContext) {
@@ -741,7 +741,7 @@ class ExtensionPageContextParent extends ProxyContextParent {
 
 /**
  * The parent side of proxied API context for devtools extension page, such as a
- * devtools pages and panels running in ExtensionChild.jsm.
+ * devtools pages and panels running in ExtensionChild.sys.mjs.
  */
 class DevToolsExtensionPageContextParent extends ExtensionPageContextParent {
   constructor(...params) {

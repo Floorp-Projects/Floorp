@@ -251,8 +251,9 @@ export var History = Object.freeze({
   insert(pageInfo) {
     let info = lazy.PlacesUtils.validatePageInfo(pageInfo);
 
-    return lazy.PlacesUtils.withConnectionWrapper("History.jsm: insert", db =>
-      insert(db, info)
+    return lazy.PlacesUtils.withConnectionWrapper(
+      "History.sys.mjs: insert",
+      db => insert(db, info)
     );
   },
 
@@ -322,7 +323,7 @@ export var History = Object.freeze({
     }
 
     return lazy.PlacesUtils.withConnectionWrapper(
-      "History.jsm: insertMany",
+      "History.sys.mjs: insertMany",
       db => insertMany(db, infos, onResult, onError)
     );
   },
@@ -400,7 +401,7 @@ export var History = Object.freeze({
         let pages = { guids: guidsSlice, urls: urlsSlice };
 
         let result = await lazy.PlacesUtils.withConnectionWrapper(
-          "History.jsm: remove",
+          "History.sys.mjs: remove",
           db => remove(db, pages, onResult)
         );
 
@@ -499,7 +500,7 @@ export var History = Object.freeze({
     }
 
     return lazy.PlacesUtils.withConnectionWrapper(
-      "History.jsm: removeVisitsByFilter",
+      "History.sys.mjs: removeVisitsByFilter",
       db => removeVisitsByFilter(db, filter, onResult)
     );
   },
@@ -592,7 +593,7 @@ export var History = Object.freeze({
     }
 
     return lazy.PlacesUtils.withConnectionWrapper(
-      "History.jsm: removeByFilter",
+      "History.sys.mjs: removeByFilter",
       db => removeByFilter(db, filter, onResult)
     );
   },
@@ -644,7 +645,10 @@ export var History = Object.freeze({
    *      A promise resolved once the operation is complete.
    */
   clear() {
-    return lazy.PlacesUtils.withConnectionWrapper("History.jsm: clear", clear);
+    return lazy.PlacesUtils.withConnectionWrapper(
+      "History.sys.mjs: clear",
+      clear
+    );
   },
 
   /**
@@ -705,7 +709,7 @@ export var History = Object.freeze({
    *      1). A null `previewImageURL` will clear the existing value in the
    *          database.
    *      2). It throws if its length is greater than DB_URL_LENGTH_MAX
-   *          defined in PlacesUtils.jsm.
+   *          defined in PlacesUtils.sys.mjs.
    *
    *      If a property `annotations` is provided, the annotations will be
    *      updated. Note that:
@@ -728,7 +732,7 @@ export var History = Object.freeze({
    *      If `pageInfo` has neither `description` nor `previewImageURL`.
    * @throws (Error)
    *      If the length of `pageInfo.previewImageURL` is greater than
-   *      DB_URL_LENGTH_MAX defined in PlacesUtils.jsm.
+   *      DB_URL_LENGTH_MAX defined in PlacesUtils.sys.mjs.
    */
   update(pageInfo) {
     let info = lazy.PlacesUtils.validatePageInfo(pageInfo, false);
@@ -744,8 +748,9 @@ export var History = Object.freeze({
       );
     }
 
-    return lazy.PlacesUtils.withConnectionWrapper("History.jsm: update", db =>
-      update(db, info)
+    return lazy.PlacesUtils.withConnectionWrapper(
+      "History.sys.mjs: update",
+      db => update(db, info)
     );
   },
 

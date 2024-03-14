@@ -38,7 +38,7 @@ The client id is submitted with this ping.
 Send behavior
 -------------
 
-``HealthPing.jsm`` tracks several problems:
+``HealthPing.sys.mjs`` tracks several problems:
 
 * The size of other assembled pings exceeds the ping limit.
 * Failures while sending other pings.
