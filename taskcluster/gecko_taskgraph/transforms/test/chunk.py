@@ -44,7 +44,8 @@ def set_test_verify_chunks(config, tasks):
             task["chunks"] = perfile_number_of_chunks(
                 is_try(config.params),
                 env.get("MOZHARNESS_TEST_PATHS", ""),
-                frozenset(config.params["files_changed"]),
+                config.params.get("head_repository", ""),
+                config.params.get("head_rev", ""),
                 task["test-name"],
             )
 

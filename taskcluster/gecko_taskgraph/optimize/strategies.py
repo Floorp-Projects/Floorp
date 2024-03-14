@@ -9,7 +9,8 @@ import mozpack.path as mozpath
 from mozbuild.base import MozbuildObject
 from mozbuild.util import memoize
 from taskgraph.optimize.base import OptimizationStrategy, register_strategy
-from taskgraph.util.path import match as match_path
+
+from gecko_taskgraph import files_changed
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +18,9 @@ logger = logging.getLogger(__name__)
 @register_strategy("skip-unless-schedules")
 class SkipUnlessSchedules(OptimizationStrategy):
     @memoize
-    def scheduled_by_push(self, files_changed):
+    def scheduled_by_push(self, repository, revision):
+        changed_files = files_changed.get_changed_files(repository, revision)
+
         mbo = MozbuildObject.from_environment()
         # the decision task has a sparse checkout, so, mozbuild_reader will use
         # a MercurialRevisionFinder with revision '.', which should be the same
@@ -25,7 +28,7 @@ class SkipUnlessSchedules(OptimizationStrategy):
         rdr = mbo.mozbuild_reader(config_mode="empty")
 
         components = set()
-        for p, m in rdr.files_info(files_changed).items():
+        for p, m in rdr.files_info(changed_files).items():
             components |= set(m["SCHEDULES"].components)
 
         return components
@@ -34,7 +37,9 @@ class SkipUnlessSchedules(OptimizationStrategy):
         if params.get("pushlog_id") == -1:
             return False
 
-        scheduled = self.scheduled_by_push(frozenset(params["files_changed"]))
+        scheduled = self.scheduled_by_push(
+            params["head_repository"], params["head_rev"]
+        )
         conditions = set(conditions)
         # if *any* of the condition components are scheduled, do not optimize
         if conditions & scheduled:
@@ -50,8 +55,8 @@ class SkipUnlessHasRelevantTests(OptimizationStrategy):
     """
 
     @memoize
-    def get_changed_dirs(self, files_changed):
-        changed = map(mozpath.dirname, files_changed)
+    def get_changed_dirs(self, repo, rev):
+        changed = map(mozpath.dirname, files_changed.get_changed_files(repo, rev))
         # Filter out empty directories (from files modified in the root).
         # Otherwise all tasks would be scheduled.
         return {d for d in changed if d}
@@ -60,7 +65,7 @@ class SkipUnlessHasRelevantTests(OptimizationStrategy):
         if not task.attributes.get("test_manifests"):
             return True
 
-        for d in self.get_changed_dirs(frozenset(params["files_changed"])):
+        for d in self.get_changed_dirs(params["head_repository"], params["head_rev"]):
             for t in task.attributes["test_manifests"]:
                 if t.startswith(d):
                     logger.debug(
@@ -70,33 +75,3 @@ class SkipUnlessHasRelevantTests(OptimizationStrategy):
                     )
                     return False
         return True
-
-
-# TODO: This overwrites upstream Taskgraph's `skip-unless-changed`
-# optimization. Once the firefox-android migration is landed and we upgrade
-# upstream Taskgraph to a version that doesn't call files_changed.check`, this
-# class can be deleted. Also remove the `taskgraph.optimize.base.registry` tweak
-# in `gecko_taskgraph.register` at the same time.
-@register_strategy("skip-unless-changed")
-class SkipUnlessChanged(OptimizationStrategy):
-    def check(self, files_changed, patterns):
-        for pattern in patterns:
-            for path in files_changed:
-                if match_path(path, pattern):
-                    return True
-        return False
-
-    def should_remove_task(self, task, params, file_patterns):
-        # pushlog_id == -1 - this is the case when run from a cron.yml job or on a git repository
-        if params.get("repository_type") == "hg" and params.get("pushlog_id") == -1:
-            return False
-
-        changed = self.check(params["files_changed"], file_patterns)
-        if not changed:
-            logger.debug(
-                'no files found matching a pattern in `skip-unless-changed` for "{}"'.format(
-                    task.label
-                )
-            )
-            return True
-        return False
