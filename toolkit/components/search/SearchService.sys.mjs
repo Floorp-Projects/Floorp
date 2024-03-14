@@ -2288,12 +2288,19 @@ export class SearchService {
 
     const engines = [
       { webExtension: { id: "google@search.mozilla.org",    locale: "default"}, default: "yes" },
-      { webExtension: { id: "floorp@search.mozilla.org", locale: "default"}},
       { webExtension: { id: "bing@search.mozilla.org",      locale: "default"}},
       { webExtension: { id: "startpage@search.mozilla.org", locale: "default"}},
       { webExtension: { id: "ddg@search.mozilla.org",       locale: "default"}},
       { webExtension: { id: "you.com@search.mozilla.org",   locale: "default"}},
     ];
+
+    var { FloorpAppConstants } = ChromeUtils.importESModule(
+      "resource:///modules/FloorpAppConstants.sys.mjs"
+    );
+
+    if (FloorpAppConstants.FLOORP_PRIVATE_COMPONENTS_ENABLED) {
+      engines.push({ webExtension: { id: "floorp@search.mozilla.org", locale: "default"}})
+    }
 
     const privateDefault = (
       { webExtension:{ id:"ddg@search.mozilla.org", locale:"default"}, defaultPrivate:"yes"}
