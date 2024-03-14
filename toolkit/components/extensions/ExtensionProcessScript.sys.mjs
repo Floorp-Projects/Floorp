@@ -325,7 +325,7 @@ ExtensionManager = {
           if (!policy) {
             break;
           }
-          // In the parent process, Extension.jsm updates the policy.
+          // In the parent process, Extension.sys.mjs updates the policy.
           if (lazy.isContentProcess) {
             lazy.ExtensionCommon.updateAllowedOrigins(
               policy,

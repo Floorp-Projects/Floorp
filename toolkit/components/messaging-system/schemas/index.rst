@@ -178,8 +178,8 @@ Triggers and actions
 
 ..  _Experimenter: https://experimenter.info
 
-..  _CFRMessageProvider: https://searchfox.org/mozilla-central/source/browser/components/asrouter/modules/CFRMessageProvider.jsm
-..  _PanelTestProvider: https://searchfox.org/mozilla-central/source/browser/components/asrouter/modules/PanelTestProvider.jsm
+..  _CFRMessageProvider: https://searchfox.org/mozilla-central/source/browser/components/asrouter/modules/CFRMessageProvider.sys.mjs
+..  _PanelTestProvider: https://searchfox.org/mozilla-central/source/browser/components/asrouter/modules/PanelTestProvider.sys.mjs
 ..  _OnboardingMessageProvider: https://searchfox.org/mozilla-central/source/browser/components/asrouter/modules/OnboardingMessageProvider.sys.mjs
 ..  _Test_CFRMessageProvider: https://searchfox.org/mozilla-central/source/browser/components/asrouter/tests//xpcshell/test_CFMessageProvider.js
 ..  _Test_OnboardingMessageProvider: https://searchfox.org/mozilla-central/source/browser/components/asrouter/tests//xpcshell/test_OnboardingMessageProvider.js

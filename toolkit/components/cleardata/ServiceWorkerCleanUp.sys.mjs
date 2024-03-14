@@ -15,7 +15,7 @@ XPCOMUtils.defineLazyServiceGetter(
 
 if (Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_CONTENT) {
   throw new Error(
-    "ServiceWorkerCleanUp.jsm can only be used in the parent process"
+    "ServiceWorkerCleanUp.sys.mjs can only be used in the parent process"
   );
 }
 

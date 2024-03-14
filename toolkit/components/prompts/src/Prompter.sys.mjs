@@ -1058,7 +1058,7 @@ class ModalPrompter {
         closed = true;
       });
     Services.tm.spinEventLoopUntilOrQuit(
-      "prompts/Prompter.jsm:openPromptSync",
+      "prompts/Prompter.sys.mjs:openPromptSync",
       () => closed
     );
   }
