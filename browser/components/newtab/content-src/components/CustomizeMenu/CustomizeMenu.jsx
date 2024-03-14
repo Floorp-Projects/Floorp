@@ -71,6 +71,7 @@ export class _CustomizeMenu extends React.PureComponent {
               mayHaveSponsoredTopSites={this.props.mayHaveSponsoredTopSites}
               mayHaveSponsoredStories={this.props.mayHaveSponsoredStories}
               mayHaveRecentSaves={this.props.DiscoveryStream.recentSavesEnabled}
+              spocMessageVariant={this.props.spocMessageVariant}
               dispatch={this.props.dispatch}
             />
           </div>

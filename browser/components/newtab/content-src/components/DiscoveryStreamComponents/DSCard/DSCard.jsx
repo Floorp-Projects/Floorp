@@ -86,6 +86,8 @@ export const DefaultMeta = ({
   sponsored_by_override,
   saveToPocketCard,
   ctaButtonVariant,
+  dispatch,
+  spocMessageVariant,
 }) => (
   <div className="meta">
     <div className="info-wrap">
@@ -112,6 +114,8 @@ export const DefaultMeta = ({
         sponsored_by_override={sponsored_by_override}
         cta_button_variant={ctaButtonVariant}
         source={source}
+        dispatch={dispatch}
+        spocMessageVariant={spocMessageVariant}
       />
     )}
     {/* Sponsored label is normally in the way of any message.
@@ -411,39 +415,23 @@ export class _DSCard extends React.PureComponent {
         className={`ds-card ${compactImagesClassName} ${imageGradientClassName} ${titleLinesName} ${descLinesClassName} ${ctaButtonClassName} ${ctaButtonVariantClassName}`}
         ref={this.setContextMenuButtonHostRef}
       >
+        <div className="img-wrapper">
+          <DSImage
+            extraClassNames="img"
+            source={this.props.image_src}
+            rawSource={this.props.raw_image_src}
+            sizes={this.dsImageSizes}
+            url={this.props.url}
+            title={this.props.title}
+            isRecentSave={isRecentSave}
+          />
+        </div>
         <SafeAnchor
           className="ds-card-link"
           dispatch={this.props.dispatch}
           onLinkClick={!this.props.placeholder ? this.onLinkClick : undefined}
           url={this.props.url}
         >
-          <div className="img-wrapper">
-            <DSImage
-              extraClassNames="img"
-              source={this.props.image_src}
-              rawSource={this.props.raw_image_src}
-              sizes={this.dsImageSizes}
-              url={this.props.url}
-              title={this.props.title}
-              isRecentSave={isRecentSave}
-            />
-          </div>
-          {ctaButtonVariant === "variant-b" && (
-            <div className="cta-header">Shop Now</div>
-          )}
-          <DefaultMeta
-            source={source}
-            title={this.props.title}
-            excerpt={excerpt}
-            newSponsoredLabel={newSponsoredLabel}
-            timeToRead={timeToRead}
-            context={this.props.context}
-            context_type={this.props.context_type}
-            sponsor={this.props.sponsor}
-            sponsored_by_override={this.props.sponsored_by_override}
-            saveToPocketCard={saveToPocketCard}
-            ctaButtonVariant={ctaButtonVariant}
-          />
           <ImpressionStats
             flightId={this.props.flightId}
             rows={[
@@ -460,6 +448,24 @@ export class _DSCard extends React.PureComponent {
             source={this.props.type}
           />
         </SafeAnchor>
+        {ctaButtonVariant === "variant-b" && (
+          <div className="cta-header">Shop Now</div>
+        )}
+        <DefaultMeta
+          source={source}
+          title={this.props.title}
+          excerpt={excerpt}
+          newSponsoredLabel={newSponsoredLabel}
+          timeToRead={timeToRead}
+          context={this.props.context}
+          context_type={this.props.context_type}
+          sponsor={this.props.sponsor}
+          sponsored_by_override={this.props.sponsored_by_override}
+          saveToPocketCard={saveToPocketCard}
+          ctaButtonVariant={ctaButtonVariant}
+          dispatch={this.props.dispatch}
+          spocMessageVariant={this.props.spocMessageVariant}
+        />
         {saveToPocketCard && (
           <div className="card-stp-button-hover-background">
             <div className="card-stp-button-position-wrapper">
