@@ -12,6 +12,7 @@ elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     gl_provider = "CGL"
 elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "uikit":
     gl_provider = "EAGL"
+    DEFINES["GLES_SILENCE_DEPRECATION"] = 1
 elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
     gl_provider = "Linux"
 elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":

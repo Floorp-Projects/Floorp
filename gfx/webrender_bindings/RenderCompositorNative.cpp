@@ -31,7 +31,7 @@ RenderCompositorNative::RenderCompositorNative(
       mNativeLayerRoot(GetWidget()->GetNativeLayerRoot()) {
   LOG("RenderCompositorNative::RenderCompositorNative()");
 
-#if defined(XP_MACOSX) || defined(MOZ_WAYLAND)
+#if defined(XP_DARWIN) || defined(MOZ_WAYLAND)
   auto pool = RenderThread::Get()->SharedSurfacePool();
   if (pool) {
     mSurfacePoolHandle = pool->GetHandleForGL(aGL);
@@ -103,7 +103,7 @@ bool RenderCompositorNative::Resume() { return true; }
 inline layers::WebRenderCompositor RenderCompositorNative::CompositorType()
     const {
   if (gfx::gfxVars::UseWebRenderCompositor()) {
-#if defined(XP_MACOSX)
+#if defined(XP_DARWIN)
     return layers::WebRenderCompositor::CORE_ANIMATION;
 #elif defined(MOZ_WAYLAND)
     return layers::WebRenderCompositor::WAYLAND;
@@ -123,7 +123,7 @@ bool RenderCompositorNative::ShouldUseNativeCompositor() {
 void RenderCompositorNative::GetCompositorCapabilities(
     CompositorCapabilities* aCaps) {
   RenderCompositor::GetCompositorCapabilities(aCaps);
-#if defined(XP_MACOSX)
+#if defined(XP_DARWIN)
   aCaps->supports_surface_for_backdrop = !gfx::gfxVars::UseSoftwareWebRender();
 #endif
 }
@@ -509,7 +509,7 @@ void RenderCompositorNativeOGL::DoSwap() {
 void RenderCompositorNativeOGL::DoFlush() { mGL->fFlush(); }
 
 void RenderCompositorNativeOGL::InsertFrameDoneSync() {
-#ifdef XP_MACOSX
+#ifdef XP_DARWIN
   // Only do this on macOS.
   // On other platforms, SwapBuffers automatically applies back-pressure.
   if (mThisFrameDoneSync) {

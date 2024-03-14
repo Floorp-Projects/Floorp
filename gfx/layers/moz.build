@@ -260,7 +260,7 @@ if CONFIG["MOZ_WAYLAND"]:
         "SurfacePoolWayland.cpp",
     ]
 
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+if CONFIG["MOZ_WIDGET_TOOLKIT"] in ("cocoa", "uikit"):
     EXPORTS.mozilla.layers += [
         "NativeLayerCA.h",
         "SurfacePoolCA.h",
