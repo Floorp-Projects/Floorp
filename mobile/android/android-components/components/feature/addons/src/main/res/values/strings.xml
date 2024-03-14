@@ -96,7 +96,7 @@
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_settings_on">On</string>
     <!-- Indicates the add-on is disabled. -->
-    <string name="mozac_feature_addons_settings_off">Off</string>
+    <string name="mozac_feature_addons_settings_off" moz:removedIn="125" tools:ignore="UnusedResources">Off</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
     <string name="mozac_feature_addons_settings_allow_in_private_browsing">Allow in private browsing</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
@@ -106,7 +106,7 @@
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">Enabled</string>
     <!-- Indicates the add-on is disabled. -->
-    <string name="mozac_feature_addons_disabled">Disabled</string>
+    <string name="mozac_feature_addons_disabled" moz:removedIn="125" tools:ignore="UnusedResources">Disabled</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the installed section. -->
     <string name="mozac_feature_addons_installed_section">Installed</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the recommended section. -->

@@ -24,7 +24,7 @@
                 android:checked="true"
                 android:clickable="true"
                 android:focusable="true"
-                android:text="@string/mozac_feature_addons_settings_off"
+                android:text="@string/mozac_feature_addons_enabled"
                 android:padding="16dp"
                 android:textSize="18sp"/>
 

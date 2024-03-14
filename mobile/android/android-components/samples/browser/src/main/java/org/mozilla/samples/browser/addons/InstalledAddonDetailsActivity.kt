@@ -81,13 +81,13 @@ class InstalledAddonDetailsActivity : AppCompatActivity() {
 
     private fun bindEnableSwitch(addon: Addon) {
         val switch = findViewById<SwitchCompat>(R.id.enable_switch)
-        switch.setState(addon.isEnabled())
+        switch.isChecked = addon.isEnabled()
         switch.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 this.components.addonManager.enableAddon(
                     addon,
                     onSuccess = {
-                        switch.setState(true)
+                        switch.isChecked = true
                         showAddonToast(
                             addonsR.string.mozac_feature_addons_successfully_enabled,
                             addon,
@@ -104,7 +104,7 @@ class InstalledAddonDetailsActivity : AppCompatActivity() {
                 this.components.addonManager.disableAddon(
                     addon,
                     onSuccess = {
-                        switch.setState(false)
+                        switch.isChecked = false
                         showAddonToast(
                             addonsR.string.mozac_feature_addons_successfully_disabled,
                             addon,
@@ -196,15 +196,5 @@ class InstalledAddonDetailsActivity : AppCompatActivity() {
             getString(textId, addon.translateName(context = this)),
             Toast.LENGTH_SHORT,
         ).show()
-    }
-
-    private fun SwitchCompat.setState(checked: Boolean) {
-        val text = if (checked) {
-            addonsR.string.mozac_feature_addons_enabled
-        } else {
-            addonsR.string.mozac_feature_addons_disabled
-        }
-        setText(text)
-        isChecked = checked
     }
 }
