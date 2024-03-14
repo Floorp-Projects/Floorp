@@ -184,7 +184,7 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "AudioData", insecureContext: true, nightly: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "AudioDecoder" },
+  { name: "AudioDecoder", nightly: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "AudioBufferSourceNode", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
