@@ -80,10 +80,14 @@ def phc_default(build_project, milestone, target):
         return False
 
     # PHC has a performance bottleneck on aarch64 (Bug 1874022) it's okay
-    # for nightly but not for release yet.
+    # for nightly but not for release yet.  To support unified builds on
+    # MacOS the x86_64 and aarch64 builds must match, so we disable PHC for
+    # x86_64 on MacOS late beta and release.
     cpu_support = ("x86_64",)
     if milestone.is_early_beta_or_earlier:
         cpu_support = ("x86_64", "aarch64")
+    elif target.os == "OSX":
+        cpu_support = ()
 
     # Both Linux32 and Win32 have frequent crashes when stack tracing (for
     # unclear reasons), so PHC is enabled only on 64-bit only in both cases.
