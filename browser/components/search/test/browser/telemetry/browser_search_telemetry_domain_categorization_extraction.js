@@ -54,7 +54,7 @@ const TESTS = [
     extractorInfos: [
       {
         selectors: "#test4 [data-dtld]",
-        method: "data-attribute",
+        method: "dataAttribute",
         options: {
           dataAttributeKey: "dtld",
         },
@@ -67,7 +67,7 @@ const TESTS = [
     extractorInfos: [
       {
         selectors: "#test5 [data-dtld]",
-        method: "data-attribute",
+        method: "dataAttribute",
         options: {
           dataAttributeKey: "dtld",
         },
@@ -143,7 +143,7 @@ const TESTS = [
       },
       {
         selectors: "#test10 [data-dtld]",
-        method: "data-attribute",
+        method: "dataAttribute",
         options: {
           dataAttributeKey: "dtld",
         },
@@ -175,7 +175,7 @@ const TESTS = [
     extractorInfos: [
       {
         selectors: "#test12 [data-dtld]",
-        method: "data-attribute",
+        method: "dataAttribute",
         options: {
           dataAttributeKey: "dtld",
         },
@@ -290,6 +290,77 @@ const TESTS = [
       // This is from the second selector.
       "foobaz1.com",
     ],
+  },
+  {
+    title: "Bing organic result.",
+    extractorInfos: [
+      {
+        selectors: "#test20 #b_results .b_algo .b_attribution cite",
+        method: "textContent",
+      },
+    ],
+    expectedDomains: ["organic.com"],
+  },
+  {
+    title: "Bing sponsored result.",
+    extractorInfos: [
+      {
+        selectors: "#test21 #b_results .b_ad .b_attribution cite",
+        method: "textContent",
+      },
+    ],
+    expectedDomains: ["sponsored.com"],
+  },
+  {
+    title: "Bing carousel result.",
+    extractorInfos: [
+      {
+        selectors: "#test22 .adsMvCarousel cite",
+        method: "textContent",
+      },
+    ],
+    expectedDomains: ["fixedupfromthecarousel.com"],
+  },
+  {
+    title: "Bing sidebar result.",
+    extractorInfos: [
+      {
+        selectors: "#test23 aside cite",
+        method: "textContent",
+      },
+    ],
+    expectedDomains: ["fixedupfromthesidebar.com"],
+  },
+  {
+    title: "Extraction threshold respected using text content method.",
+    extractorInfos: [
+      {
+        selectors: "#test24 #b_results .b_ad .b_attribution cite",
+        method: "textContent",
+      },
+    ],
+    expectedDomains: [
+      "sponsored1.com",
+      "sponsored2.com",
+      "sponsored3.com",
+      "sponsored4.com",
+      "sponsored5.com",
+      "sponsored6.com",
+      "sponsored7.com",
+      "sponsored8.com",
+      "sponsored9.com",
+      "sponsored10.com",
+    ],
+  },
+  {
+    title: "Bing organic result with no protocol.",
+    extractorInfos: [
+      {
+        selectors: "#test25 #b_results .b_algo .b_attribution cite",
+        method: "textContent",
+      },
+    ],
+    expectedDomains: ["organic.com"],
   },
 ];
 

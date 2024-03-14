@@ -30,7 +30,7 @@ const TEST_PROVIDER_INFO = [
       ads: [
         {
           selectors: "[data-ad-domain]",
-          method: "data-attribute",
+          method: "dataAttribute",
           options: {
             dataAttributeKey: "adDomain",
           },
