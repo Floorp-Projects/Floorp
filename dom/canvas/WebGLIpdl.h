@@ -10,6 +10,7 @@
 #include "ipc/EnumSerializer.h"
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/GfxMessageUtils.h"
+#include "mozilla/dom/BindingIPCUtils.h"
 #include "mozilla/ipc/IPDLParamTraits.h"
 #include "mozilla/ipc/Shmem.h"
 #include "mozilla/layers/LayersSurfaces.h"
@@ -233,6 +234,16 @@ struct ParamTraits<gfxAlphaType>
     : public ContiguousEnumSerializerInclusive<
           gfxAlphaType, gfxAlphaType::Opaque, gfxAlphaType::NonPremult> {};
 
+template <>
+struct ParamTraits<mozilla::dom::WebGLPowerPreference> final
+    : public mozilla::dom::WebIDLEnumSerializer<
+          mozilla::dom::WebGLPowerPreference> {};
+
+template <>
+struct ParamTraits<mozilla::dom::PredefinedColorSpace> final
+    : public mozilla::dom::WebIDLEnumSerializer<
+          mozilla::dom::PredefinedColorSpace> {};
+
 // -
 // ParamTraits_TiedFields
 
@@ -242,7 +253,7 @@ struct ParamTraits_TiedFields {
 
   static void Write(MessageWriter* const writer, const T& in) {
     const auto& fields = mozilla::TiedFields(in);
-    MapTuple(fields, [&](const auto& field) {
+    mozilla::MapTuple(fields, [&](const auto& field) {
       WriteParam(writer, field);
       return true;  // ignored
     });
@@ -251,7 +262,7 @@ struct ParamTraits_TiedFields {
   static bool Read(MessageReader* const reader, T* const out) {
     const auto& fields = mozilla::TiedFields(*out);
     bool ok = true;
-    MapTuple(fields, [&](auto& field) {
+    mozilla::MapTuple(fields, [&](auto& field) {
       if (ok) {
         ok &= ReadParam(reader, &field);
       }
@@ -263,74 +274,17 @@ struct ParamTraits_TiedFields {
 
 // -
 
-template <typename T>
-bool ValidateParam(const T& val) {
-  return ParamTraits<T>::Validate(val);
-}
-
-template <typename T>
-struct ValidatedPlainOldDataSerializer : public PlainOldDataSerializer<T> {
-  static void Write(MessageWriter* const writer, const T& in) {
-    MOZ_ASSERT(ValidateParam(in));
-    PlainOldDataSerializer<T>::Write(writer, in);
-  }
-
-  static bool Read(MessageReader* const reader, T* const out) {
-    if (!PlainOldDataSerializer<T>::Read(reader, out)) return false;
-    return ValidateParam(*out);
-  }
-
-  // static bool Validate(const T&) = 0;
-};
-
-// -
-
 template <>
 struct ParamTraits<mozilla::webgl::InitContextDesc> final
-    : public ValidatedPlainOldDataSerializer<mozilla::webgl::InitContextDesc> {
-  using T = mozilla::webgl::InitContextDesc;
-
-  static bool Validate(const T& val) {
-    return ValidateParam(val.options) && (val.size.x && val.size.y);
-  }
-};
+    : public ParamTraits_TiedFields<mozilla::webgl::InitContextDesc> {};
 
 template <>
 struct ParamTraits<mozilla::WebGLContextOptions> final
-    : public ValidatedPlainOldDataSerializer<mozilla::WebGLContextOptions> {
-  using T = mozilla::WebGLContextOptions;
-
-  static bool Validate(const T& val) {
-    bool ok = true;
-    ok &= ValidateParam(val.powerPreference);
-    ok &= ValidateParam(val.colorSpace);
-    return ok;
-  }
-};
-
-template <>
-struct ParamTraits<mozilla::dom::WebGLPowerPreference> final
-    : public ValidatedPlainOldDataSerializer<
-          mozilla::dom::WebGLPowerPreference> {
-  using T = mozilla::dom::WebGLPowerPreference;
-
-  static bool Validate(const T& val) { return val <= T::High_performance; }
-};
-
-template <>
-struct ParamTraits<mozilla::dom::PredefinedColorSpace> final
-    : public ValidatedPlainOldDataSerializer<
-          mozilla::dom::PredefinedColorSpace> {
-  using T = mozilla::dom::PredefinedColorSpace;
-
-  static bool Validate(const T& val) {
-    return val <= mozilla::ContiguousEnumValues<T>::max;
-  }
-};
+    : public ParamTraits_TiedFields<mozilla::WebGLContextOptions> {};
 
 template <>
 struct ParamTraits<mozilla::webgl::OpaqueFramebufferOptions> final
-    : public PlainOldDataSerializer<mozilla::webgl::OpaqueFramebufferOptions> {
+    : public ParamTraits_TiedFields<mozilla::webgl::OpaqueFramebufferOptions> {
 };
 
 // -
@@ -342,28 +296,24 @@ struct ParamTraits<mozilla::gl::GLVendor>
                                                mozilla::gl::kHighestGLVendor> {
 };
 
-template <typename T>
-struct ParamTraits<mozilla::webgl::EnumMask<T>> final
-    : public PlainOldDataSerializer<mozilla::webgl::EnumMask<T>> {};
+template <typename U>
+struct ParamTraits<mozilla::webgl::EnumMask<U>> final
+    : public ParamTraits_TiedFields<mozilla::webgl::EnumMask<U>> {};
 
 template <>
 struct ParamTraits<mozilla::webgl::InitContextResult> final
     : public ParamTraits_TiedFields<mozilla::webgl::InitContextResult> {};
 
 template <>
-struct ParamTraits<mozilla::webgl::ExtensionBits> final
-    : public PlainOldDataSerializer<mozilla::webgl::ExtensionBits> {};
-
-template <>
 struct ParamTraits<mozilla::webgl::Limits> final
-    : public PlainOldDataSerializer<mozilla::webgl::Limits> {};
+    : public ParamTraits_TiedFields<mozilla::webgl::Limits> {};
 
 template <>
 struct ParamTraits<mozilla::webgl::PixelPackingState> final
-    : public PlainOldDataSerializer<mozilla::webgl::PixelPackingState> {};
+    : public ParamTraits_TiedFields<mozilla::webgl::PixelPackingState> {};
 template <>
 struct ParamTraits<mozilla::webgl::PixelUnpackStateWebgl> final
-    : public PlainOldDataSerializer<mozilla::webgl::PixelUnpackStateWebgl> {};
+    : public ParamTraits_TiedFields<mozilla::webgl::PixelUnpackStateWebgl> {};
 
 // -
 
@@ -570,6 +520,24 @@ struct ParamTraits<mozilla::webgl::ShaderPrecisionFormat> final {
 };
 
 // -
+
+template <typename U, size_t N>
+struct ParamTraits<std::array<U, N>> final {
+  using T = std::array<U, N>;
+
+  static void Write(MessageWriter* const writer, const T& in) {
+    for (const auto& v : in) {
+      WriteParam(writer, v);
+    }
+  }
+
+  static bool Read(MessageReader* const reader, T* const out) {
+    for (auto& v : *out) {
+      if (!ReadParam(reader, &v)) return false;
+    }
+    return true;
+  }
+};
 
 template <typename U, size_t N>
 struct ParamTraits<U[N]> final {
