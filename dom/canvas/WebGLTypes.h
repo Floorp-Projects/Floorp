@@ -599,9 +599,13 @@ class EnumMask {
  public:
   BitRef operator[](const E i) { return {*this, Mask(i)}; }
   bool operator[](const E i) const { return mBits & Mask(i); }
+
+  // -
+
+  auto MutTiedFields() { return std::tie(mBits); }
 };
 
-class ExtensionBits : public EnumMask<WebGLExtensionID> {};
+using ExtensionBits = EnumMask<WebGLExtensionID>;
 
 // -
 
@@ -625,9 +629,16 @@ inline bool ReadContextLossReason(const uint8_t val,
 struct InitContextDesc final {
   bool isWebgl2 = false;
   bool resistFingerprinting = false;
+  std::array<uint8_t, 2> _padding;
+  uint32_t principalKey = 0;
   uvec2 size = {};
   WebGLContextOptions options;
-  uint32_t principalKey = 0;
+  std::array<uint8_t, 3> _padding2;
+
+  auto MutTiedFields() {
+    return std::tie(isWebgl2, resistFingerprinting, _padding, principalKey,
+                    size, options, _padding2);
+  }
 };
 
 constexpr uint32_t kMaxTransformFeedbackSeparateAttribs = 4;
@@ -652,10 +663,24 @@ struct Limits final {
 
   // Exts
   bool astcHdr = false;
+  std::array<uint8_t, 3> _padding;
   uint32_t maxColorDrawBuffers = 1;
+  uint32_t maxMultiviewLayers = 0;
   uint64_t queryCounterBitsTimeElapsed = 0;
   uint64_t queryCounterBitsTimestamp = 0;
-  uint32_t maxMultiviewLayers = 0;
+
+  auto MutTiedFields() {
+    return std::tie(supportedExtensions,
+
+                    maxTexUnits, maxTex2dSize, maxTexCubeSize, maxVertexAttribs,
+                    maxViewportDim, pointSizeRange, lineWidthRange,
+
+                    maxTexArrayLayers, maxTex3dSize, maxUniformBufferBindings,
+                    uniformBufferOffsetAlignment,
+
+                    astcHdr, _padding, maxColorDrawBuffers, maxMultiviewLayers,
+                    queryCounterBitsTimeElapsed, queryCounterBitsTimestamp);
+  }
 };
 
 // -
@@ -756,8 +781,13 @@ struct CompileResult final {
 struct OpaqueFramebufferOptions final {
   bool depthStencil = true;
   bool antialias = true;
+  std::array<uint8_t, 2> _padding;
   uint32_t width = 0;
   uint32_t height = 0;
+
+  auto MutTiedFields() {
+    return std::tie(depthStencil, antialias, _padding, width, height);
+  }
 };
 
 // -

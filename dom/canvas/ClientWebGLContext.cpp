@@ -847,7 +847,12 @@ bool ClientWebGLContext::CreateHostContext(const uvec2& requestedSize) {
         ShouldResistFingerprinting(RFPTarget::WebGLRenderCapability);
     const auto principalKey = GetPrincipalHashValue();
     const auto initDesc = webgl::InitContextDesc{
-        mIsWebGL2, resistFingerprinting, requestedSize, options, principalKey};
+        .isWebgl2 = mIsWebGL2,
+        .resistFingerprinting = resistFingerprinting,
+        .principalKey = principalKey,
+        .size = requestedSize,
+        .options = options,
+    };
 
     // -
 

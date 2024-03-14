@@ -465,9 +465,13 @@ bool SharedContextWebgl::Initialize() {
 
   const bool resistFingerprinting = nsContentUtils::ShouldResistFingerprinting(
       "Fallback", RFPTarget::WebGLRenderCapability);
-  const auto initDesc =
-      webgl::InitContextDesc{/*isWebgl2*/ true, resistFingerprinting,
-                             /*size*/ {1, 1}, options, /*principalKey*/ 0};
+  const auto initDesc = webgl::InitContextDesc{
+      .isWebgl2 = true,
+      .resistFingerprinting = resistFingerprinting,
+      .principalKey = 0,
+      .size = {1, 1},
+      .options = options,
+  };
 
   webgl::InitContextResult initResult;
   mWebgl = WebGLContext::Create(nullptr, initDesc, &initResult);
@@ -619,7 +623,8 @@ bool SharedContextWebgl::SetNoClipMask() {
   }
   mWebgl->ActiveTexture(1);
   mWebgl->BindTexture(LOCAL_GL_TEXTURE_2D, mNoClipMask);
-  static const auto solidMask = std::array<const uint8_t, 4>{0xFF, 0xFF, 0xFF, 0xFF};
+  static const auto solidMask =
+      std::array<const uint8_t, 4>{0xFF, 0xFF, 0xFF, 0xFF};
   mWebgl->TexImage(0, LOCAL_GL_RGBA8, {0, 0, 0},
                    {LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE},
                    {LOCAL_GL_TEXTURE_2D,
