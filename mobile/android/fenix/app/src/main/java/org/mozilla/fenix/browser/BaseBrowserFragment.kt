@@ -1287,13 +1287,14 @@ abstract class BaseBrowserFragment :
                     ToolbarPosition.BOTTOM -> OldToolbarPosition.BOTTOM
                     ToolbarPosition.TOP -> OldToolbarPosition.TOP
                 }
-                OldEngineViewClippingBehavior(
-                    context,
-                    null,
-                    getSwipeRefreshLayout(),
-                    toolbarHeight,
-                    toolbarPosition,
-                )
+                (getSwipeRefreshLayout().layoutParams as CoordinatorLayout.LayoutParams).behavior =
+                    OldEngineViewClippingBehavior(
+                        context,
+                        null,
+                        getSwipeRefreshLayout(),
+                        toolbarHeight,
+                        toolbarPosition,
+                    )
             }
         } else {
             // Ensure webpage's bottom elements are aligned to the very bottom of the engineView.
