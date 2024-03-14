@@ -226,6 +226,9 @@ add_task(async function test_network_markers_redirect_resources() {
       id: Expect.number(),
       pri: Expect.number(),
       innerWindowID: Expect.number(),
+      requestStart: Expect.number(),
+      responseStart: Expect.number(),
+      responseEnd: Expect.number(),
     };
 
     // These properties are present when a connection is fully opened. This is
@@ -240,9 +243,6 @@ add_task(async function test_network_markers_redirect_resources() {
       connectStart: Expect.number(),
       tcpConnectEnd: Expect.number(),
       connectEnd: Expect.number(),
-      requestStart: Expect.number(),
-      responseStart: Expect.number(),
-      responseEnd: Expect.number(),
     };
 
     const expectedPropertiesForStopMarker = {
@@ -251,7 +251,6 @@ add_task(async function test_network_markers_redirect_resources() {
 
     const expectedDataPropertiesForStopMarker = {
       ...expectedCommonDataProperties,
-      ...expectedConnectionProperties,
       status: "STATUS_STOP",
       URI: Expect.stringContains("/firefox-logo-nightly.svg"),
       contentType: "image/svg+xml",
@@ -281,6 +280,7 @@ add_task(async function test_network_markers_redirect_resources() {
     );
     Assert.objectContainsOnly(parentFirstStopMarker.data, {
       ...expectedDataPropertiesForStopMarker,
+      ...expectedConnectionProperties,
       // The cache information is missing from the content marker, it's only part
       // of the parent marker. See Bug 1544821.
       // Also, because the request races with the cache, these 2 values are valid:
@@ -293,10 +293,10 @@ add_task(async function test_network_markers_redirect_resources() {
       contentFirstStopMarker,
       expectedPropertiesForStopMarker
     );
-    Assert.objectContainsOnly(
-      contentFirstStopMarker.data,
-      expectedDataPropertiesForStopMarker
-    );
+    Assert.objectContainsOnly(contentFirstStopMarker.data, {
+      ...expectedDataPropertiesForStopMarker,
+      ...expectedConnectionProperties,
+    });
 
     Assert.objectContains(
       parentRedirectMarker,
@@ -322,7 +322,11 @@ add_task(async function test_network_markers_redirect_resources() {
       parentSecondStopMarker,
       expectedPropertiesForStopMarker
     );
-    Assert.objectContainsOnly(parentSecondStopMarker.data, {
+    // In Test-Verify mode, sometimes the properties from
+    // `expectedConnectionProperties` are missing. That's why they're not
+    // included here, and objectContains is used instead of objectContainsOnly
+    // like above.
+    Assert.objectContains(parentSecondStopMarker.data, {
       ...expectedDataPropertiesForStopMarker,
       // The "count" property is absent from the content marker.
       count: Expect.number(),
@@ -334,7 +338,7 @@ add_task(async function test_network_markers_redirect_resources() {
       contentSecondStopMarker,
       expectedPropertiesForStopMarker
     );
-    Assert.objectContainsOnly(
+    Assert.objectContains(
       contentSecondStopMarker.data,
       expectedDataPropertiesForStopMarker
     );
