@@ -24,8 +24,7 @@ const AGGREGATE_STARTUP_DELAY_MS = 57000;
 const MILLISECONDS_IN_DAY = 24 * 60 * 60 * 1000;
 
 // Converts Date to days since UNIX epoch.
-// This was copied from /services/metrics.storage.jsm. The implementation
-// does not account for leap seconds.
+// The implementation does not account for leap seconds.
 export function dateToDays(date) {
   return Math.floor(date.getTime() / MILLISECONDS_IN_DAY);
 }

@@ -14,4 +14,4 @@ In order to regenerate this file, do the following:
 
   $ make bundleESModule
   $ export MOZ_FATHOM="../../mozilla-central/toolkit/modules/third_party/fathom"
-  $ cat $MOZ_FATHOM/fx-header dist/fathom.js > $MOZ_FATHOM/fathom.jsm
+  $ cat $MOZ_FATHOM/fx-header dist/fathom.js > $MOZ_FATHOM/fathom.mjs

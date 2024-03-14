@@ -230,7 +230,7 @@ export var Bookmarks = Object.freeze({
     if (addedTime > now) {
       modTime = now;
     }
-    let insertInfo = validateBookmarkObject("Bookmarks.jsm: insert", info, {
+    let insertInfo = validateBookmarkObject("Bookmarks.sys.mjs: insert", info, {
       type: { defaultValue: this.TYPE_BOOKMARK },
       index: { defaultValue: this.DEFAULT_INDEX },
       url: {
@@ -488,7 +488,7 @@ export var Bookmarks = Object.freeze({
         }
         try {
           insertInfo = validateBookmarkObject(
-            "Bookmarks.jsm: insertTree",
+            "Bookmarks.sys.mjs: insertTree",
             info,
             insertInfo
           );
@@ -681,7 +681,7 @@ export var Bookmarks = Object.freeze({
     // The info object is first validated here to ensure it's consistent, then
     // it's compared to the existing item to remove any properties that don't
     // need to be updated.
-    let updateInfo = validateBookmarkObject("Bookmarks.jsm: update", info, {
+    let updateInfo = validateBookmarkObject("Bookmarks.sys.mjs: update", info, {
       guid: { required: true },
       index: {
         requiredIf: b => b.hasOwnProperty("parentGuid"),
@@ -722,23 +722,27 @@ export var Bookmarks = Object.freeze({
           Math.max(item.lastModified, updateInfo.dateAdded)
         );
       }
-      updateInfo = validateBookmarkObject("Bookmarks.jsm: update", updateInfo, {
-        url: { validIf: () => item.type == this.TYPE_BOOKMARK },
-        title: {
-          validIf: () =>
-            [this.TYPE_BOOKMARK, this.TYPE_FOLDER].includes(item.type),
-        },
-        lastModified: {
-          defaultValue: lastModifiedDefault,
-          validIf: b =>
-            b.lastModified >= now ||
-            b.lastModified >= (b.dateAdded || item.dateAdded),
-        },
-        dateAdded: { defaultValue: item.dateAdded },
-      });
+      updateInfo = validateBookmarkObject(
+        "Bookmarks.sys.mjs: update",
+        updateInfo,
+        {
+          url: { validIf: () => item.type == this.TYPE_BOOKMARK },
+          title: {
+            validIf: () =>
+              [this.TYPE_BOOKMARK, this.TYPE_FOLDER].includes(item.type),
+          },
+          lastModified: {
+            defaultValue: lastModifiedDefault,
+            validIf: b =>
+              b.lastModified >= now ||
+              b.lastModified >= (b.dateAdded || item.dateAdded),
+          },
+          dateAdded: { defaultValue: item.dateAdded },
+        }
+      );
 
       return lazy.PlacesUtils.withConnectionWrapper(
-        "Bookmarks.jsm: update",
+        "Bookmarks.sys.mjs: update",
         async db => {
           let parent;
           if (updateInfo.hasOwnProperty("parentGuid")) {
@@ -1031,7 +1035,7 @@ export var Bookmarks = Object.freeze({
         lazy.PlacesSyncUtils.bookmarks.determineSyncChangeDelta(source);
 
       await lazy.PlacesUtils.withConnectionWrapper(
-        "Bookmarks.jsm: moveToFolder",
+        "Bookmarks.sys.mjs: moveToFolder",
         async db => {
           const lastModified = new Date();
 
@@ -1283,7 +1287,10 @@ export var Bookmarks = Object.freeze({
 
       // Even if we ignore any other unneeded property, we still validate any
       // known property to reduce likelihood of hidden bugs.
-      let removeInfo = validateBookmarkObject("Bookmarks.jsm: remove", info);
+      let removeInfo = validateBookmarkObject(
+        "Bookmarks.sys.mjs: remove",
+        info
+      );
       removeInfos.push(removeInfo);
     }
 
@@ -1372,7 +1379,7 @@ export var Bookmarks = Object.freeze({
     }
 
     return lazy.PlacesUtils.withConnectionWrapper(
-      "Bookmarks.jsm: eraseEverything",
+      "Bookmarks.sys.mjs: eraseEverything",
       async function (db) {
         let urls;
         await db.executeTransaction(async function () {
@@ -1552,7 +1559,7 @@ export var Bookmarks = Object.freeze({
     // Even if we ignore any other unneeded property, we still validate any
     // known property to reduce likelihood of hidden bugs.
     let fetchInfo = validateBookmarkObject(
-      "Bookmarks.jsm: fetch",
+      "Bookmarks.sys.mjs: fetch",
       info,
       behavior
     );
@@ -1695,7 +1702,7 @@ export var Bookmarks = Object.freeze({
    *         }
    */
   async fetchTags() {
-    // TODO: Once the tagging API is implemented in Bookmarks.jsm, we can cache
+    // TODO: Once the tagging API is implemented in Bookmarks.sys.mjs, we can cache
     // the list of tags, instead of querying every time.
     let db = await lazy.PlacesUtils.promiseDBConnection();
     let rows = await db.executeCached(
@@ -1742,7 +1749,7 @@ export var Bookmarks = Object.freeze({
    */
   reorder(parentGuid, orderedChildrenGuids, options = {}) {
     let info = { guid: parentGuid };
-    info = validateBookmarkObject("Bookmarks.jsm: reorder", info, {
+    info = validateBookmarkObject("Bookmarks.sys.mjs: reorder", info, {
       guid: { required: true },
     });
 
@@ -2104,7 +2111,7 @@ async function updateBookmark(
 
 function insertBookmark(item, parent) {
   return lazy.PlacesUtils.withConnectionWrapper(
-    "Bookmarks.jsm: insertBookmark",
+    "Bookmarks.sys.mjs: insertBookmark",
     async function (db) {
       // If a guid was not provided, generate one, so we won't need to fetch the
       // bookmark just after having created it.
@@ -2202,7 +2209,7 @@ function insertBookmark(item, parent) {
 
 function insertBookmarkTree(items, source, parent, urls, lastAddedForParent) {
   return lazy.PlacesUtils.withConnectionWrapper(
-    "Bookmarks.jsm: insertBookmarkTree",
+    "Bookmarks.sys.mjs: insertBookmarkTree",
     async function (db) {
       await db.executeTransaction(async function transaction() {
         await lazy.PlacesUtils.maybeInsertManyPlaces(db, urls);
@@ -2353,7 +2360,7 @@ async function queryBookmarks(info) {
   }
 
   return lazy.PlacesUtils.withConnectionWrapper(
-    "Bookmarks.jsm: queryBookmarks",
+    "Bookmarks.sys.mjs: queryBookmarks",
     async function (db) {
       // _id, _childCount, _grandParentId and _parentId fields
       // are required to be in the result by the converting function
@@ -2422,7 +2429,7 @@ async function fetchBookmark(info, options = {}) {
     return query(options.db);
   }
   return lazy.PlacesUtils.withConnectionWrapper(
-    "Bookmarks.jsm: fetchBookmark",
+    "Bookmarks.sys.mjs: fetchBookmark",
     query
   );
 }
@@ -2454,7 +2461,7 @@ async function fetchBookmarkByPosition(info, options = {}) {
     return query(db);
   }
   return lazy.PlacesUtils.withConnectionWrapper(
-    "Bookmarks.jsm: fetchBookmarkByPosition",
+    "Bookmarks.sys.mjs: fetchBookmarkByPosition",
     query
   );
 }
@@ -2502,7 +2509,7 @@ async function fetchBookmarksByTags(info, options = {}) {
     return query(db);
   }
   return lazy.PlacesUtils.withConnectionWrapper(
-    "Bookmarks.jsm: fetchBookmarksByTags",
+    "Bookmarks.sys.mjs: fetchBookmarksByTags",
     query
   );
 }
@@ -2532,7 +2539,7 @@ async function fetchBookmarksByGUIDPrefix(info, options = {}) {
     return query(db);
   }
   return lazy.PlacesUtils.withConnectionWrapper(
-    "Bookmarks.jsm: fetchBookmarksByGUIDPrefix",
+    "Bookmarks.sys.mjs: fetchBookmarksByGUIDPrefix",
     query
   );
 }
@@ -2574,7 +2581,7 @@ async function fetchBookmarksByURL(info, options = {}) {
     return query(db);
   }
   return lazy.PlacesUtils.withConnectionWrapper(
-    "Bookmarks.jsm: fetchBookmarksByURL",
+    "Bookmarks.sys.mjs: fetchBookmarksByURL",
     query
   );
 }
@@ -2607,14 +2614,14 @@ async function fetchBookmarksByParentGUID(info, options = {}) {
     return query(db);
   }
   return lazy.PlacesUtils.withConnectionWrapper(
-    "Bookmarks.jsm: fetchBookmarksByParentGUID",
+    "Bookmarks.sys.mjs: fetchBookmarksByParentGUID",
     query
   );
 }
 
 function fetchRecentBookmarks(numberOfItems) {
   return lazy.PlacesUtils.withConnectionWrapper(
-    "Bookmarks.jsm: fetchRecentBookmarks",
+    "Bookmarks.sys.mjs: fetchRecentBookmarks",
     async function (db) {
       let rows = await db.executeCached(
         `SELECT b.guid, IFNULL(p.guid, '') AS parentGuid, b.position AS 'index',
@@ -2667,7 +2674,7 @@ async function fetchBookmarksByParent(db, info) {
 
 function removeBookmarks(items, options) {
   return lazy.PlacesUtils.withConnectionWrapper(
-    "Bookmarks.jsm: removeBookmarks",
+    "Bookmarks.sys.mjs: removeBookmarks",
     async function (db) {
       let urls = [];
 
@@ -2780,7 +2787,7 @@ function removeBookmarks(items, options) {
 
 function reorderChildren(parent, orderedChildrenGuids, options) {
   return lazy.PlacesUtils.withConnectionWrapper(
-    "Bookmarks.jsm: reorderChildren",
+    "Bookmarks.sys.mjs: reorderChildren",
     db =>
       db.executeTransaction(async function () {
         // Fetch old indices for the notifications.
@@ -3314,7 +3321,7 @@ async function retrieveFullBookmarkPath(guid, options = {}) {
     return query(db);
   }
   return lazy.PlacesUtils.withConnectionWrapper(
-    "Bookmarks.jsm: retrieveFullBookmarkPath",
+    "Bookmarks.sys.mjs: retrieveFullBookmarkPath",
     query
   );
 }

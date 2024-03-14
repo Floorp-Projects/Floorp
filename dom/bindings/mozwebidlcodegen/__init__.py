@@ -496,7 +496,7 @@ class WebIDLCodegenManager(LoggingMixin):
         for name in changedDictionaryNames:
             d = self._config.getDictionaryIfExists(name)
             if d:
-                changed_inputs.add(d.filename())
+                changed_inputs.add(d.filename)
 
         # Only use paths that are known to our current state.
         # This filters out files that were deleted or changed type (e.g. from

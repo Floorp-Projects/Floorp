@@ -758,10 +758,10 @@ async function doDedupeAgainstURLTest({
 }
 
 // Tests the remote settings latency histogram.
-add_task(
+add_tasks_with_rust(
   {
     // Not supported by the Rust backend.
-    skip_if: () => UrlbarPrefs.get("quickSuggestRustEnabled"),
+    skip_if_rust_enabled: true,
   },
   async function latencyTelemetry() {
     UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
@@ -798,10 +798,10 @@ add_task(
 
 // Tests setup and teardown of the remote settings client depending on whether
 // quick suggest is enabled.
-add_task(
+add_tasks_with_rust(
   {
     // Not supported by the Rust backend.
-    skip_if: () => UrlbarPrefs.get("quickSuggestRustEnabled"),
+    skip_if_rust_enabled: true,
   },
   async function setupAndTeardown() {
     Assert.ok(
@@ -892,7 +892,7 @@ add_task(
       "Remote settings backend is disabled after enabling the Rust backend"
     );
 
-    UrlbarPrefs.clear("quicksuggest.rustEnabled");
+    UrlbarPrefs.set("quicksuggest.rustEnabled", false);
     Assert.ok(
       QuickSuggest.jsBackend.rs,
       "Settings client is non-null after disabling the Rust backend"
@@ -905,6 +905,7 @@ add_task(
     // Leave the prefs in the same state as when the task started.
     UrlbarPrefs.clear("suggest.quicksuggest.nonsponsored");
     UrlbarPrefs.clear("suggest.quicksuggest.sponsored");
+    UrlbarPrefs.clear("quicksuggest.rustEnabled");
     UrlbarPrefs.set("quicksuggest.enabled", true);
     Assert.ok(
       !QuickSuggest.jsBackend.rs,
@@ -1356,10 +1357,10 @@ add_tasks_with_rust(async function block_timestamp() {
 
 // Makes sure remote settings data is fetched using the correct `type` based on
 // the value of the `quickSuggestRemoteSettingsDataType` Nimbus variable.
-add_task(
+add_tasks_with_rust(
   {
     // Not supported by the Rust backend.
-    skip_if: () => UrlbarPrefs.get("quickSuggestRustEnabled"),
+    skip_if_rust_enabled: true,
   },
   async function remoteSettingsDataType() {
     UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);

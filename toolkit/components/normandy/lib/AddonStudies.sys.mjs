@@ -162,7 +162,7 @@ export var AddonStudies = {
   },
 
   /**
-   * These migrations should only be called from `NormandyMigrations.jsm` and
+   * These migrations should only be called from `NormandyMigrations.sys.mjs` and
    * tests.
    */
   migrations: {

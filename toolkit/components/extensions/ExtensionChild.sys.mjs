@@ -8,7 +8,7 @@
  * This file handles addon logic that is independent of the chrome process and
  * may run in all web content and extension processes.
  *
- * Don't put contentscript logic here, use ExtensionContent.jsm instead.
+ * Don't put contentscript logic here, use ExtensionContent.sys.mjs instead.
  */
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
@@ -397,7 +397,7 @@ class BrowserExtensionContent extends EventEmitter {
     this.optionalPermissions = policy.optionalPermissions;
 
     if (WebExtensionPolicy.isExtensionProcess) {
-      // Keep in sync with serializeExtended in Extension.jsm
+      // Keep in sync with serializeExtended in Extension.sys.mjs
       let ed = this.getSharedData("extendedData");
       this.backgroundScripts = ed.backgroundScripts;
       this.backgroundWorkerScript = ed.backgroundWorkerScript;
@@ -727,8 +727,8 @@ class ChildLocalAPIImplementation extends LocalAPIImplementation {
 
 // We create one instance of this class for every extension context that
 // needs to use remote APIs. It uses the the JSWindowActor and
-// JSProcessActor Conduits actors (see ConduitsChild.jsm) to communicate
-// with the ParentAPIManager singleton in ExtensionParent.jsm.
+// JSProcessActor Conduits actors (see ConduitsChild.sys.mjs) to communicate
+// with the ParentAPIManager singleton in ExtensionParent.sys.mjs.
 // It handles asynchronous function calls as well as event listeners.
 class ChildAPIManager {
   constructor(context, messageManager, localAPICan, contextData) {

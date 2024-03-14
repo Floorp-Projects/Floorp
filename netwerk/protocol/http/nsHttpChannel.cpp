@@ -547,7 +547,8 @@ nsresult nsHttpChannel::OnBeforeConnect() {
   }
   rv = sss->IsSecureURI(mURI, originAttributes, &isSecureURI);
   NS_ENSURE_SUCCESS(rv, rv);
-  // Save that on the loadInfo so it can later be consumed by SecurityInfo.jsm
+  // Save that on the loadInfo so it can later be consumed by
+  // SecurityInfo.sys.mjs
   mLoadInfo->SetHstsStatus(isSecureURI);
 
   RefPtr<mozilla::dom::BrowsingContext> bc;

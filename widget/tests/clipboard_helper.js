@@ -164,11 +164,14 @@ function getClipboardDataSnapshotSync(aClipboardType) {
   );
 }
 
-function asyncGetClipboardData(aClipboardType) {
+function asyncGetClipboardData(
+  aClipboardType,
+  aFormats = ["text/plain", "text/html", "image/png"]
+) {
   return new Promise((resolve, reject) => {
     try {
       clipboard.asyncGetData(
-        ["text/plain", "text/html", "image/png"],
+        aFormats,
         aClipboardType,
         null,
         SpecialPowers.Services.scriptSecurityManager.getSystemPrincipal(),

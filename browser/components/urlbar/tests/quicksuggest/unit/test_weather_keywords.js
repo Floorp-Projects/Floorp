@@ -28,11 +28,9 @@ add_setup(async () => {
   // JS backend will sync `Weather` with remote settings. Since keywords are
   // present in remote settings at that point (we added them above), `Weather`
   // will then start fetching. The fetch may or may not be done before our test
-  // task starts. To make sure it's done, start another fetch and wait for all
-  // fetches to finish.
+  // task starts. To make sure it's done, queue another fetch and await it.
   registerAddTasksWithRustSetup(async () => {
-    QuickSuggest.weather._test_fetch();
-    await QuickSuggest.weather.waitForFetches();
+    await QuickSuggest.weather._test_fetch();
   });
 });
 
@@ -100,9 +98,9 @@ add_tasks_with_rust(async function () {
 //
 // JS backend only. The Rust component expects settings data to contain
 // min_keyword_length.
-add_task(
+add_tasks_with_rust(
   {
-    skip_if: () => UrlbarPrefs.get("quickSuggestRustEnabled"),
+    skip_if_rust_enabled: true,
   },
   async function () {
     await doKeywordsTest({
@@ -139,9 +137,9 @@ add_task(
 //
 // JS backend only. The Rust component doesn't treat minKeywordLength == 0 as a
 // special case.
-add_task(
+add_tasks_with_rust(
   {
-    skip_if: () => UrlbarPrefs.get("quickSuggestRustEnabled"),
+    skip_if_rust_enabled: true,
   },
   async function () {
     await doKeywordsTest({
@@ -307,9 +305,9 @@ add_tasks_with_rust(async function () {
 //
 // JS backend only. The Rust component expects settings data to contain
 // min_keyword_length.
-add_task(
+add_tasks_with_rust(
   {
-    skip_if: () => UrlbarPrefs.get("quickSuggestRustEnabled"),
+    skip_if_rust_enabled: true,
   },
   async function () {
     await doKeywordsTest({
@@ -349,9 +347,9 @@ add_task(
 //
 // JS backend only. The Rust component doesn't treat minKeywordLength == 0 as a
 // special case.
-add_task(
+add_tasks_with_rust(
   {
-    skip_if: () => UrlbarPrefs.get("quickSuggestRustEnabled"),
+    skip_if_rust_enabled: true,
   },
   async function () {
     await doKeywordsTest({
@@ -589,9 +587,9 @@ add_tasks_with_rust(async function () {
 // TODO bug 1879209: This doesn't work with the Rust backend because if
 // min_keyword_length isn't specified on ingest, the Rust database will retain
 // the last known good min_keyword_length, which interferes with this task.
-add_task(
+add_tasks_with_rust(
   {
-    skip_if: () => UrlbarPrefs.get("quickSuggestRustEnabled"),
+    skip_if_rust_enabled: true,
   },
   async function () {
     await doKeywordsTest({
@@ -629,9 +627,9 @@ add_task(
 // TODO bug 1879209: This doesn't work with the Rust backend because if
 // min_keyword_length isn't specified on ingest, the Rust database will retain
 // the last known good min_keyword_length, which interferes with this task.
-add_task(
+add_tasks_with_rust(
   {
-    skip_if: () => UrlbarPrefs.get("quickSuggestRustEnabled"),
+    skip_if_rust_enabled: true,
   },
   async function () {
     await doKeywordsTest({
@@ -828,7 +826,7 @@ async function doKeywordsTest({
     !UrlbarPrefs.get("quickSuggestRustEnabled") &&
     (nimbusValues?.weatherKeywords || settingsData?.keywords)
   ) {
-    fetchPromise = QuickSuggest.weather.waitForFetches();
+    fetchPromise = waitForNewWeatherFetch();
   }
 
   let nimbusCleanup;
@@ -849,7 +847,6 @@ async function doKeywordsTest({
 
   if (fetchPromise) {
     info("Waiting for fetch");
-    assertFetchingStarted({ pendingFetchCount: 1 });
     await fetchPromise;
     info("Got fetch");
   }
@@ -883,10 +880,10 @@ async function doKeywordsTest({
 
   await nimbusCleanup?.();
 
-  fetchPromise = null;
   if (!QuickSuggest.weather.suggestion) {
-    fetchPromise = QuickSuggest.weather.waitForFetches();
+    fetchPromise = waitForNewWeatherFetch();
   }
+
   await QuickSuggestTestUtils.setRemoteSettingsRecords([
     {
       type: "weather",
@@ -916,28 +913,8 @@ async function doMatchingQuickSuggestTest(pref, isSponsored) {
   let keyword = "test";
 
   let attachment = isSponsored
-    ? {
-        id: 1,
-        url: "http://example.com/amp",
-        title: "AMP Suggestion",
-        keywords: [keyword],
-        click_url: "http://example.com/amp-click",
-        impression_url: "http://example.com/amp-impression",
-        advertiser: "Amp",
-        iab_category: "22 - Shopping",
-        icon: "1234",
-      }
-    : {
-        id: 2,
-        url: "http://example.com/wikipedia",
-        title: "Wikipedia Suggestion",
-        keywords: [keyword],
-        click_url: "http://example.com/wikipedia-click",
-        impression_url: "http://example.com/wikipedia-impression",
-        advertiser: "Wikipedia",
-        iab_category: "5 - Education",
-        icon: "1234",
-      };
+    ? QuickSuggestTestUtils.ampRemoteSettings({ keywords: [keyword] })
+    : QuickSuggestTestUtils.wikipediaRemoteSettings({ keywords: [keyword] });
 
   // Add a remote settings result to quick suggest.
   let oldPrefValue = UrlbarPrefs.get(pref);
@@ -954,27 +931,6 @@ async function doMatchingQuickSuggestTest(pref, isSponsored) {
   ]);
 
   // First do a search to verify the quick suggest result matches the keyword.
-  let payload;
-  if (!UrlbarPrefs.get("quickSuggestRustEnabled")) {
-    payload = {
-      source: "remote-settings",
-      provider: "AdmWikipedia",
-      sponsoredImpressionUrl: attachment.impression_url,
-      sponsoredClickUrl: attachment.click_url,
-      sponsoredBlockId: attachment.id,
-    };
-  } else {
-    payload = {
-      source: "rust",
-      provider: isSponsored ? "Amp" : "Wikipedia",
-    };
-    if (isSponsored) {
-      payload.sponsoredImpressionUrl = attachment.impression_url;
-      payload.sponsoredClickUrl = attachment.click_url;
-      payload.sponsoredBlockId = attachment.id;
-    }
-  }
-
   info("Doing first search for quick suggest result");
   await check_results({
     context: createContext(keyword, {
@@ -982,35 +938,9 @@ async function doMatchingQuickSuggestTest(pref, isSponsored) {
       isPrivate: false,
     }),
     matches: [
-      {
-        type: UrlbarUtils.RESULT_TYPE.URL,
-        source: UrlbarUtils.RESULT_SOURCE.SEARCH,
-        heuristic: false,
-        payload: {
-          ...payload,
-          telemetryType: isSponsored ? "adm_sponsored" : "adm_nonsponsored",
-          qsSuggestion: keyword,
-          title: attachment.title,
-          url: attachment.url,
-          displayUrl: attachment.url.replace(/[/]$/, ""),
-          originalUrl: attachment.url,
-          icon: null,
-          sponsoredAdvertiser: attachment.advertiser,
-          sponsoredIabCategory: attachment.iab_category,
-          isSponsored,
-          descriptionL10n: isSponsored
-            ? { id: "urlbar-result-action-sponsored" }
-            : undefined,
-          helpUrl: QuickSuggest.HELP_URL,
-          helpL10n: {
-            id: "urlbar-result-menu-learn-more-about-firefox-suggest",
-          },
-          isBlockable: true,
-          blockL10n: {
-            id: "urlbar-result-menu-dismiss-firefox-suggest",
-          },
-        },
-      },
+      isSponsored
+        ? makeAmpResult({ keyword })
+        : makeWikipediaResult({ keyword }),
     ],
   });
 
@@ -1409,7 +1339,7 @@ async function doIncrementTest({
     !UrlbarPrefs.get("quickSuggestRustEnabled") &&
     (nimbusValues?.weatherKeywords || settingsData?.weather?.keywords)
   ) {
-    fetchPromise = QuickSuggest.weather.waitForFetches();
+    fetchPromise = waitForNewWeatherFetch();
   }
 
   let nimbusCleanup;
@@ -1430,7 +1360,6 @@ async function doIncrementTest({
 
   if (fetchPromise) {
     info("Waiting for fetch");
-    assertFetchingStarted({ pendingFetchCount: 1 });
     await fetchPromise;
     info("Got fetch");
   }
@@ -1483,9 +1412,8 @@ async function doIncrementTest({
 
   await nimbusCleanup?.();
 
-  fetchPromise = null;
   if (!QuickSuggest.weather.suggestion) {
-    fetchPromise = QuickSuggest.weather.waitForFetches();
+    fetchPromise = waitForNewWeatherFetch();
   }
   await QuickSuggestTestUtils.setRemoteSettingsRecords([
     {
@@ -1495,20 +1423,4 @@ async function doIncrementTest({
   ]);
   UrlbarPrefs.clear("weather.minKeywordLength");
   await fetchPromise;
-}
-
-function assertFetchingStarted() {
-  info("Asserting fetching has started");
-
-  Assert.notEqual(
-    QuickSuggest.weather._test_fetchTimer,
-    0,
-    "Fetch timer is non-zero"
-  );
-  Assert.ok(QuickSuggest.weather._test_merino, "Merino client is non-null");
-  Assert.equal(
-    QuickSuggest.weather._test_pendingFetchCount,
-    1,
-    "Expected pending fetch count"
-  );
 }

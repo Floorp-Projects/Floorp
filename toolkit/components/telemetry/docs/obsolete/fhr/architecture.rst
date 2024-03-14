@@ -4,11 +4,11 @@
 Architecture
 ============
 
-``healthreporter.jsm`` contains the main interface for FHR, the
+``healthreporter.sys.mjs`` contains the main interface for FHR, the
 ``HealthReporter`` type. An instance of this is created by the
 ``data_reporting_service``.
 
-``providers.jsm`` contains numerous ``Metrics.Provider`` and
+``providers.sys.mjs`` contains numerous ``Metrics.Provider`` and
 ``Metrics.Measurement`` used for collecting application metrics. If you
 are looking for the FHR probes, this is where they are.
 
@@ -157,7 +157,7 @@ See ``HealthReportComponents.manifest`` for providers defined in this
 directory.
 
 Essentially, the category manager receives the name of a JS type and the
-URI of a JSM to import that exports this symbol. At run-time, the
+URI of a sys.mjs to import that exports this symbol. At run-time, the
 providers registered in the category manager are instantiated.
 
 Providers are registered via the category manager to make registration

@@ -207,6 +207,17 @@ pub trait TNode: Sized + Copy + Clone + Debug + NodeInfo + PartialEq {
         }
     }
 
+    /// Returns the depth of this node in the DOM.
+    fn depth(&self) -> usize {
+        let mut depth = 0;
+        let mut curr = *self;
+        while let Some(parent) = curr.traversal_parent() {
+            depth += 1;
+            curr = parent.as_node();
+        }
+        depth
+    }
+
     /// Get this node's parent element from the perspective of a restyle
     /// traversal.
     fn traversal_parent(&self) -> Option<Self::ConcreteElement>;
@@ -396,18 +407,6 @@ pub trait TElement:
     /// We use this for Native Anonymous Content in Gecko.
     fn matches_user_and_content_rules(&self) -> bool {
         true
-    }
-
-    /// Returns the depth of this element in the DOM.
-    fn depth(&self) -> usize {
-        let mut depth = 0;
-        let mut curr = *self;
-        while let Some(parent) = curr.traversal_parent() {
-            depth += 1;
-            curr = parent;
-        }
-
-        depth
     }
 
     /// Get this node's parent element from the perspective of a restyle

@@ -11,7 +11,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 /**
  * This module exports functions for Sync to use when applying remote
- * records. The calls are similar to those in `Bookmarks.jsm` and
+ * records. The calls are similar to those in `Bookmarks.sys.mjs` and
  * `nsINavBookmarksService`, with special handling for
  * tags, keywords, synced annotations, and missing parents.
  */
@@ -1405,7 +1405,7 @@ function validateChangeRecord(name, changeRecord, behavior) {
 }
 
 // Similar to the private `fetchBookmarksByParent` implementation in
-// `Bookmarks.jsm`.
+// `Bookmarks.sys.mjs`.
 var fetchChildGuids = async function (db, parentGuid) {
   let rows = await db.executeCached(
     `

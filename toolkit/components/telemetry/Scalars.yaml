@@ -5016,7 +5016,7 @@ update:
       to be moved from the downloading update directory to the ready update
       directory. This probe counts the results that we get when attempting to
       perform this file move. Valid values for the keys for this probe are
-      stored in the MOVE_RESULT_* values in UpdateTelemetry.jsm.
+      stored in the MOVE_RESULT_* values in UpdateTelemetry.sys.mjs.
     expires: never
     kind: uint
     keyed: true

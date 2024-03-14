@@ -139,11 +139,11 @@ use std::collections::hash_map::Entry;
 use std::ops::Range;
 use crate::picture_textures::PictureCacheTextureHandle;
 use crate::util::{MaxRect, VecHelper, MatrixHelpers, Recycler, ScaleOffset};
-use crate::filterdata::{FilterDataHandle};
+use crate::filterdata::FilterDataHandle;
 use crate::tile_cache::{SliceDebugInfo, TileDebugInfo, DirtyTileDebugInfo};
 use crate::visibility::{PrimitiveVisibilityFlags, FrameVisibilityContext};
 use crate::visibility::{VisibilityState, FrameVisibilityState};
-use crate::scene_building::{SliceFlags};
+use crate::scene_building::SliceFlags;
 
 // Maximum blur radius for blur filter (different than box-shadow blur).
 // Taken from FilterNodeSoftware.cpp in Gecko.
@@ -3951,7 +3951,7 @@ impl SurfaceInfo {
         &self,
         local_rect: &PictureRect,
         spatial_tree: &SpatialTree,
-    ) -> Option<DeviceRect> {
+    ) -> Option<DeviceIntRect> {
         let local_rect = match local_rect.intersection(&self.clipping_rect) {
             Some(rect) => rect,
             None => return None,
@@ -3969,10 +3969,21 @@ impl SurfaceInfo {
 
             local_to_world.map(&local_rect).unwrap()
         } else {
+            // The content should have been culled out earlier.
+            assert!(self.device_pixel_scale.0 > 0.0);
+
             local_rect.cast_unit()
         };
 
-        Some((raster_rect * self.device_pixel_scale).round_out())
+        let surface_rect = (raster_rect * self.device_pixel_scale).round_out().to_i32();
+        if surface_rect.is_empty() {
+            // The local_rect computed above may have non-empty size that is very
+            // close to zero. Due to limited arithmetic precision, the SpaceMapper
+            // might transform the near-zero-sized rect into a zero-sized one.
+            return None;
+        }
+
+        Some(surface_rect)
     }
 }
 

@@ -26,14 +26,43 @@ let gAddTasksWithRustSetup;
  * Adds two tasks: One with the Rust backend disabled and one with it enabled.
  * The names of the task functions will be the name of the passed-in task
  * function appended with "_rustDisabled" and "_rustEnabled". If the passed-in
- * task doesn't have a name, "anonymousTask" will be used. Call this with the
- * usual `add_task()` arguments.
+ * task doesn't have a name, "anonymousTask" will be used.
+ *
+ * Call this with the usual `add_task()` arguments. Additionally, an object with
+ * the following properties can be specified as any argument:
+ *
+ * {boolean} skip_if_rust_enabled
+ *   If true, a "_rustEnabled" task won't be added. Useful when Rust is enabled
+ *   by default but the task doesn't make sense with Rust and you still want to
+ *   test some behavior when Rust is disabled.
+ *
+ * @param {...any} args
+ *   The usual `add_task()` arguments.
  */
 function add_tasks_with_rust(...args) {
+  let skipIfRustEnabled = false;
+  let i = args.findIndex(a => a.skip_if_rust_enabled);
+  if (i >= 0) {
+    skipIfRustEnabled = true;
+    args.splice(i, 1);
+  }
+
   let taskFnIndex = args.findIndex(a => typeof a == "function");
   let taskFn = args[taskFnIndex];
 
   for (let rustEnabled of [false, true]) {
+    let newTaskName =
+      (taskFn.name || "anonymousTask") +
+      (rustEnabled ? "_rustEnabled" : "_rustDisabled");
+
+    if (rustEnabled && skipIfRustEnabled) {
+      info(
+        "add_tasks_with_rust: Skipping due to skip_if_rust_enabled: " +
+          newTaskName
+      );
+      continue;
+    }
+
     let newTaskFn = async (...taskFnArgs) => {
       info("add_tasks_with_rust: Setting rustEnabled: " + rustEnabled);
       UrlbarPrefs.set("quicksuggest.rustEnabled", rustEnabled);
@@ -85,13 +114,15 @@ function add_tasks_with_rust(...args) {
       return rv;
     };
 
-    Object.defineProperty(newTaskFn, "name", {
-      value:
-        (taskFn.name || "anonymousTask") +
-        (rustEnabled ? "_rustEnabled" : "_rustDisabled"),
-    });
-    let addTaskArgs = [...args];
-    addTaskArgs[taskFnIndex] = newTaskFn;
+    Object.defineProperty(newTaskFn, "name", { value: newTaskName });
+
+    let addTaskArgs = [];
+    for (let j = 0; j < args.length; j++) {
+      addTaskArgs[j] =
+        j == taskFnIndex
+          ? newTaskFn
+          : Cu.cloneInto(args[j], this, { cloneFunctions: true });
+    }
     add_task(...addTaskArgs);
   }
 }
@@ -130,7 +161,7 @@ function makeWikipediaResult({
   iconBlob = new Blob([new Uint8Array([])]),
   impressionUrl = "http://example.com/wikipedia-impression",
   clickUrl = "http://example.com/wikipedia-click",
-  blockId = 1,
+  blockId = 2,
   advertiser = "Wikipedia",
   iabCategory = "5 - Education",
   suggestedIndex = -1,
@@ -931,4 +962,41 @@ async function doRustProvidersTests({ searchString, tests }) {
   info("Clearing rustEnabled pref and forcing sync");
   UrlbarPrefs.clear("quicksuggest.rustEnabled");
   await QuickSuggestTestUtils.forceSync();
+}
+
+/**
+ * Waits for `Weather` to start and finish a new fetch. Typically you call this
+ * before you know a new fetch will start, save but don't await the promise, do
+ * the thing that triggers the new fetch, and then await the promise to wait for
+ * the fetch to finish.
+ *
+ * If a fetch is currently ongoing, this will first wait for a new fetch to
+ * start, which might not be what you want. If you only want to wait for any
+ * ongoing fetch to finish, await `QuickSuggest.weather.fetchPromise` instead.
+ */
+async function waitForNewWeatherFetch() {
+  let { fetchPromise: oldFetchPromise } = QuickSuggest.weather;
+
+  // Wait for a new fetch to start.
+  let newFetchPromise;
+  await TestUtils.waitForCondition(() => {
+    let { fetchPromise } = QuickSuggest.weather;
+    if (
+      (oldFetchPromise && fetchPromise != oldFetchPromise) ||
+      (!oldFetchPromise && fetchPromise)
+    ) {
+      newFetchPromise = fetchPromise;
+      return true;
+    }
+    return false;
+  }, "Waiting for a new weather fetch to start");
+
+  Assert.equal(
+    QuickSuggest.weather.fetchPromise,
+    newFetchPromise,
+    "Sanity check: fetchPromise hasn't changed since waitForCondition returned"
+  );
+
+  // Wait for the new fetch to finish.
+  await newFetchPromise;
 }

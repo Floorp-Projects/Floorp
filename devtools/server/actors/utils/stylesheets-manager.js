@@ -640,10 +640,14 @@ class StyleSheetsManager extends EventEmitter {
       return win;
     };
 
-    const styleSheetRules =
-      InspectorUtils.getAllStyleSheetCSSStyleRules(styleSheet);
-    const ruleCount = styleSheetRules.length;
-    // We need to go through nested rules to extract all the rules we're interested in
+    // This returns the following type of at-rules:
+    // - CSSMediaRule
+    // - CSSContainerRule
+    // - CSSSupportsRule
+    // - CSSLayerBlockRule
+    // New types can be added from InpsectorUtils.cpp `CollectAtRules`
+    const { atRules: styleSheetRules, ruleCount } =
+      InspectorUtils.getStyleSheetRuleCountAndAtRules(styleSheet);
     const atRules = [];
     for (const rule of styleSheetRules) {
       const className = ChromeUtils.getClassName(rule);
@@ -703,7 +707,10 @@ class StyleSheetsManager extends EventEmitter {
         });
       }
     }
-    return { ruleCount, atRules };
+    return {
+      ruleCount,
+      atRules,
+    };
   }
 
   /**

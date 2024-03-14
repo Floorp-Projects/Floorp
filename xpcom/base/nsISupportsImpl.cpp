@@ -50,12 +50,24 @@ bool nsAutoOwningThread::IsCurrentThread() const {
 
 nsAutoOwningEventTarget::nsAutoOwningEventTarget()
     : mTarget(GetCurrentSerialEventTarget()) {
-  mTarget->AddRef();
+  NS_ADDREF(mTarget);
 }
 
-nsAutoOwningEventTarget::~nsAutoOwningEventTarget() {
-  nsCOMPtr<nsISerialEventTarget> target = dont_AddRef(mTarget);
+nsAutoOwningEventTarget::nsAutoOwningEventTarget(
+    const nsAutoOwningEventTarget& aOther)
+    : mTarget(aOther.mTarget) {
+  NS_ADDREF(mTarget);
 }
+
+nsAutoOwningEventTarget& nsAutoOwningEventTarget::operator=(
+    const nsAutoOwningEventTarget& aRhs) {
+  nsISerialEventTarget* previous = std::exchange(mTarget, aRhs.mTarget);
+  NS_ADDREF(mTarget);
+  NS_RELEASE(previous);
+  return *this;
+}
+
+nsAutoOwningEventTarget::~nsAutoOwningEventTarget() { NS_RELEASE(mTarget); }
 
 void nsAutoOwningEventTarget ::AssertCurrentThreadOwnsMe(
     const char* msg) const {

@@ -31,11 +31,9 @@ add_setup(async function () {
   // JS backend will sync `Weather` with remote settings. Since keywords are
   // present in remote settings at that point (we added them above), `Weather`
   // will then start fetching. The fetch may or may not be done before our test
-  // task starts. To make sure it's done, start another fetch and wait for all
-  // fetches to finish.
+  // task starts. To make sure it's done, queue another fetch and await it.
   registerAddTasksWithRustSetup(async () => {
-    QuickSuggest.weather._test_fetch();
-    await QuickSuggest.weather.waitForFetches();
+    await QuickSuggest.weather._test_fetch();
   });
 });
 
@@ -357,11 +355,8 @@ async function doDismissTest(command) {
   await UrlbarTestUtils.promisePopupClose(window);
 
   // Enable the weather suggestion again and wait for it to be fetched.
-  let fetchPromise = QuickSuggest.weather.waitForFetches();
   UrlbarPrefs.clear("suggest.weather");
-  info("Waiting for weather fetch after re-enabling the suggestion");
-  await fetchPromise;
-  info("Got weather fetch");
+  await QuickSuggest.weather._test_fetch();
 
   // Wait for keywords to be re-synced from remote settings.
   await QuickSuggestTestUtils.forceSync();

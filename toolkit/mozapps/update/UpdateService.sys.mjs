@@ -193,7 +193,7 @@ const WRITE_ERROR_DIR_ACCESS_DENIED = 68;
 const WRITE_ERROR_DELETE_BACKUP = 69;
 const WRITE_ERROR_EXTRACT = 70;
 
-// Error codes 80 through 99 are reserved for UpdateService.jsm and are not
+// Error codes 80 through 99 are reserved for UpdateService.sys.mjs and are not
 // defined in common/updatererrors.h
 const ERR_UPDATER_CRASHED = 89;
 const ERR_OLDER_VERSION_OR_SAME_BUILD = 90;
@@ -1907,7 +1907,7 @@ function pingStateAndStatusCodes(aUpdate, aStartup, aStatus) {
         stateCode = 13;
         break;
       // Note: Do not use stateCode 14 here. It is defined in
-      // UpdateTelemetry.jsm
+      // UpdateTelemetry.sys.mjs
       default:
         stateCode = 1;
     }
@@ -3399,7 +3399,7 @@ UpdateService.prototype = {
       // See Bug 1599590.
       // Note that we exit unconditionally here if we are only doing manual
       // update checks, because manual update checking uses a completely
-      // different code path (AppUpdater.jsm creates its own nsIUpdateChecker),
+      // different code path (AppUpdater.sys.mjs creates its own nsIUpdateChecker),
       // bypassing this function completely.
       AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_DISABLED_BY_POLICY);
       return false;

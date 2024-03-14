@@ -545,6 +545,19 @@ MacOSWebAuthnService::MakeCredential(uint64_t aTransactionId,
       "MacOSWebAuthnService::MakeCredential",
       [self = RefPtr{this}, browsingContextId(aBrowsingContextId),
        aArgs = nsCOMPtr{aArgs}, aPromise = nsCOMPtr{aPromise}]() {
+        // Bug 1884574 - The Reset() call above should have cancelled any
+        // transactions that were dispatched to the platform, the platform
+        // should have called didCompleteWithError, and didCompleteWithError
+        // should have rejected the pending promise. However, in some scenarios,
+        // the platform fails to call the callback, and this leads to a
+        // diagnostic assertion failure when we drop `mRegisterPromise`. Avoid
+        // this by aborting the transaction here.
+        if (self->mRegisterPromise) {
+          MOZ_LOG(gMacOSWebAuthnServiceLog, mozilla::LogLevel::Debug,
+                  ("MacOSAuthenticatorRequestDelegate::MakeCredential: "
+                   "platform failed to call callback"));
+          self->AbortTransaction(NS_ERROR_DOM_ABORT_ERR);
+        }
         self->mRegisterPromise = aPromise;
 
         nsAutoString rpId;
@@ -847,6 +860,14 @@ void MacOSWebAuthnService::DoGetAssertion(
       [self = RefPtr{this}, browsingContextId(aBrowsingContextId), aArgs,
        aPromise,
        aSelectedCredentialId = std::move(aSelectedCredentialId)]() mutable {
+        // Bug 1884574 - This AbortTransaction call is necessary.
+        // See comment in MacOSWebAuthnService::MakeCredential.
+        if (self->mSignPromise) {
+          MOZ_LOG(gMacOSWebAuthnServiceLog, mozilla::LogLevel::Debug,
+                  ("MacOSAuthenticatorRequestDelegate::DoGetAssertion: "
+                   "platform failed to call callback"));
+          self->AbortTransaction(NS_ERROR_DOM_ABORT_ERR);
+        }
         self->mSignPromise = aPromise;
 
         nsAutoString rpId;
