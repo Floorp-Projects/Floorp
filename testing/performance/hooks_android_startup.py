@@ -16,6 +16,7 @@ from mozperftest.system.android_startup import (
     KEY_NAME,
     KEY_PRODUCT,
 )
+from mozversioncontrol import get_repository_object
 
 HTTP_200_OKAY = 200
 
@@ -25,8 +26,11 @@ def before_iterations(kw):
     architecture = "arm64-v8a"
     if product == "geckoview_example":
         architecture = "aarch64"
-    commit_info = subprocess.getoutput("hg log -l 1")
-    commit_date = re.search(r"date:\s+([:\s\w]+)\s+", str(commit_info)).group(1)
+    if get_repository_object("").name == "git":
+        commit_info = subprocess.getoutput("git log --max-count 1")
+    else:
+        commit_info = subprocess.getoutput("hg log -l 1")
+    commit_date = re.search(r"[Dd]ate:\s+([:\s\w]+)\s+", str(commit_info)).group(1)
     download_date = (
         datetime.strptime(commit_date, "%a %b %d %H:%M:%S %Y") - timedelta(days=1)
     ).strftime(DATETIME_FORMAT)
