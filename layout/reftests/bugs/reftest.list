@@ -1461,7 +1461,7 @@ fuzzy(0-1,0-5) == 561981-5.html 561981-5-ref.html
 fuzzy(0-1,0-5) == 561981-7.html 561981-7-ref.html
 == 561981-8.html 561981-8-ref.html
 == 562835-1.html 562835-ref.html
-== 562835-2.html 562835-ref.html
+pref(layout.css.h1-in-section-ua-styles.enabled,true) == 562835-2.html 562835-ref.html
 fuzzy-if(Android,0-2,0-48) == 563584-1.html 563584-1-ref.html
 fuzzy-if(Android,0-2,0-48) == 563584-2.html 563584-2-ref.html
 fuzzy-if(Android,0-4,0-180) == 563584-3.html 563584-3-ref.html

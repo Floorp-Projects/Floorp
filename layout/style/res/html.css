@@ -149,10 +149,8 @@ dd {
 
 blockquote, figure {
   display: block;
-  margin-block-start: 1em;
-  margin-block-end: 1em;
-  margin-inline-start: 40px;
-  margin-inline-end: 40px;
+  margin-block: 1em;
+  margin-inline: 40px;
 }
 
 address {
@@ -169,68 +167,85 @@ h1 {
   display: block;
   font-size: 2em;
   font-weight: bold;
-  margin-block-start: .67em;
-  margin-block-end: .67em;
+  margin-block: .67em;
 }
 
-h2,
-:is(article, aside, nav, section)
-h1 {
+h2 {
   display: block;
   font-size: 1.5em;
   font-weight: bold;
-  margin-block-start: .83em;
-  margin-block-end: .83em;
+  margin-block: .83em;
 }
 
-h3,
-:is(article, aside, nav, section)
-:is(article, aside, nav, section)
-h1 {
+h3 {
   display: block;
   font-size: 1.17em;
   font-weight: bold;
-  margin-block-start: 1em;
-  margin-block-end: 1em;
+  margin-block: 1em;
 }
 
-h4,
-:is(article, aside, nav, section)
-:is(article, aside, nav, section)
-:is(article, aside, nav, section)
-h1 {
+h4 {
   display: block;
   font-size: 1.00em;
   font-weight: bold;
-  margin-block-start: 1.33em;
-  margin-block-end: 1.33em;
+  margin-block: 1.33em;
 }
 
-h5,
-:is(article, aside, nav, section)
-:is(article, aside, nav, section)
-:is(article, aside, nav, section)
-:is(article, aside, nav, section)
-h1 {
+h5 {
   display: block;
   font-size: 0.83em;
   font-weight: bold;
-  margin-block-start: 1.67em;
-  margin-block-end: 1.67em;
+  margin-block: 1.67em;
 }
 
-h6,
-:is(article, aside, nav, section)
-:is(article, aside, nav, section)
-:is(article, aside, nav, section)
-:is(article, aside, nav, section)
-:is(article, aside, nav, section)
-h1 {
+h6 {
   display: block;
   font-size: 0.67em;
   font-weight: bold;
-  margin-block-start: 2.33em;
-  margin-block-end: 2.33em;
+  margin-block: 2.33em;
+}
+
+/* stylelint-disable-next-line media-query-no-invalid */
+@media (-moz-bool-pref: "layout.css.h1-in-section-ua-styles.enabled") {
+  :is(article, aside, nav, section)
+  h1 {
+    margin-block: 0.83em;
+    font-size: 1.50em;
+  }
+
+  :is(article, aside, nav, section)
+  :is(article, aside, nav, section)
+  h1 {
+    margin-block: 1.00em;
+    font-size: 1.17em;
+  }
+
+  :is(article, aside, nav, section)
+  :is(article, aside, nav, section)
+  :is(article, aside, nav, section)
+  h1 {
+    margin-block: 1.33em;
+    font-size: 1.00em;
+  }
+
+  :is(article, aside, nav, section)
+  :is(article, aside, nav, section)
+  :is(article, aside, nav, section)
+  :is(article, aside, nav, section)
+  h1 {
+    margin-block: 1.67em;
+    font-size: 0.83em;
+  }
+
+  :is(article, aside, nav, section)
+  :is(article, aside, nav, section)
+  :is(article, aside, nav, section)
+  :is(article, aside, nav, section)
+  :is(article, aside, nav, section)
+  h1 {
+    margin-block: 2.33em;
+    font-size: 0.67em;
+  }
 }
 
 listing {
@@ -238,16 +253,14 @@ listing {
   font-family: -moz-fixed;
   font-size: medium;
   white-space: pre;
-  margin-block-start: 1em;
-  margin-block-end: 1em;
+  margin-block: 1em;
 }
 
 xmp, pre, plaintext {
   display: block;
   font-family: -moz-fixed;
   white-space: pre;
-  margin-block-start: 1em;
-  margin-block-end: 1em;
+  margin-block: 1em;
 }
 
 /* tables */
@@ -380,25 +393,19 @@ table[rules][rules="cols"] > tr > td,
 table[rules][rules="cols"] > * > tr > td,
 table[rules][rules="cols"] > tr > th,
 table[rules][rules="cols"] > * > tr > th {
-  border-inline-start-width: thin;
-  border-inline-end-width: thin;
-  border-inline-start-style: solid;
-  border-inline-end-style: solid;
+  border-inline-width: thin;
+  border-inline-style: solid;
 }
 
 table[rules][rules="groups"] > colgroup {
-  border-inline-start-width: thin;
-  border-inline-end-width: thin;
-  border-inline-start-style: solid;
-  border-inline-end-style: solid;
+  border-inline-width: thin;
+  border-inline-style: solid;
 }
 table[rules][rules="groups"] > tfoot,
 table[rules][rules="groups"] > thead,
 table[rules][rules="groups"] > tbody {
-  border-block-start-width: thin;
-  border-block-end-width: thin;
-  border-block-start-style: solid;
-  border-block-end-style: solid;
+  border-block-width: thin;
+  border-block-style: solid;
 }
 
 
@@ -409,8 +416,7 @@ caption {
 }
 
 table[align="center"] > caption {
-  margin-inline-start: auto;
-  margin-inline-end: auto;
+  margin-inline: auto;
 }
 
 table[align="center"] > caption[align="left"]:dir(ltr) {
@@ -589,8 +595,7 @@ li {
 :is(ul, ol, dir, menu, dl) dir,
 :is(ul, ol, dir, menu, dl) menu,
 :is(ul, ol, dir, menu, dl) dl {
-  margin-block-start: 0;
-  margin-block-end: 0;
+  margin-block: 0;
 }
 
 /* 2 deep unordered lists use a circle */
@@ -618,10 +623,8 @@ hr {
   color: gray;
   border-width: 1px;
   border-style: inset;
-  margin-block-start: 0.5em;
-  margin-block-end: 0.5em;
-  margin-inline-start: auto;
-  margin-inline-end: auto;
+  margin-block: 0.5em;
+  margin-inline: auto;
   overflow: hidden;
 
   /* FIXME: This is not really per spec */
