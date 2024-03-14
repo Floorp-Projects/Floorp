@@ -23,10 +23,10 @@ namespace InspectorUtils {
   unsigned long getRelativeRuleLine(CSSRule rule);
   sequence<unsigned long> getRuleIndex(CSSRule rule);
   boolean hasRulesModifiedByCSSOM(CSSStyleSheet sheet);
-  // Get a flat list of all rules (including nested ones) of a given stylesheet.
-  // Useful for DevTools as this is faster than in JS where we'd have a lot of
-  // proxy access overhead building the same list.
-  sequence<CSSRule> getAllStyleSheetCSSStyleRules(CSSStyleSheet sheet);
+  // Get a flat list of specific at-rules (including nested ones) of a given stylesheet.
+  // Useful for DevTools (StyleEditor at-rules sidebar) as this is faster than in JS
+  // where we'd have a lot of proxy access overhead building the same list.
+  InspectorStyleSheetRuleCountAndAtRulesResult getStyleSheetRuleCountAndAtRules(CSSStyleSheet sheet);
   boolean isInheritedProperty(Document document, UTF8String property);
   sequence<DOMString> getCSSPropertyNames(optional PropertyNamesOptions options = {});
   sequence<PropertyPref> getCSSPropertyPrefs();
@@ -180,6 +180,11 @@ dictionary InspectorCSSPropertyDefinition {
 dictionary InspectorGetRuleBodyTextResult {
   required double startOffset;
   required double endOffset;
+};
+
+dictionary InspectorStyleSheetRuleCountAndAtRulesResult {
+  required sequence<CSSRule> atRules;
+  required unsigned long ruleCount;
 };
 
 [Func="nsContentUtils::IsCallerChromeOrFuzzingEnabled",
