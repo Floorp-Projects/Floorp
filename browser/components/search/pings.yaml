@@ -20,3 +20,27 @@ search-with:
     - https://bugzilla.mozilla.org/show_bug.cgi?id=1870138
   notification_emails:
     - mkaply@mozilla.com
+
+serp-categorization:
+  description: |
+    A ping representing a series of SERP loads that have been categorized. Does
+    not contain `client_id`. Is sent after a threshold of SERP loads is reached.
+  reasons:
+    startup: |
+      Submitted as one of the startup idle tasks.
+    inactivity: |
+      Submitted after 2 minutes of uninterrupted activity, followed by inactivity.
+    threshold_reached: |
+      Submitted after 10 SERPs have been categorized.
+  include_client_id: false
+  send_if_empty: false
+  metadata:
+    include_info_sections: false
+    use_ohttp: true
+  bugs:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1868476
+  data_reviews:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1868476
+  notification_emails:
+    - fx-search-telemetry@mozilla.com
+    - rev-data@mozilla.com
