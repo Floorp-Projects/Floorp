@@ -7,6 +7,7 @@
 package org.mozilla.fenix.helpers
 
 import android.content.Intent
+import android.util.Log
 import android.view.ViewConfiguration.getLongPressTimeout
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.test.espresso.intent.rule.IntentsTestRule
@@ -14,6 +15,7 @@ import androidx.test.rule.ActivityTestRule
 import androidx.test.uiautomator.UiSelector
 import org.junit.rules.TestRule
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.FeatureSettingsHelper.Companion.settings
 import org.mozilla.fenix.helpers.TestHelper.appContext
 import org.mozilla.fenix.helpers.TestHelper.mDevice
@@ -76,10 +78,12 @@ class HomeActivityTestRule(
      * Update settings after the activity was created.
      */
     fun applySettingsExceptions(settings: (FeatureSettingsHelper) -> Unit) {
+        Log.i(TAG, "applySettingsExceptions: Trying to update the settings after the activity was created")
         FeatureSettingsHelperDelegate().also {
             settings(this)
             applyFlagUpdates()
         }
+        Log.i(TAG, "applySettingsExceptions: Updated the settings after the activity was created")
     }
 
     private val longTapUserPreference = getLongPressTimeout()
@@ -87,14 +91,18 @@ class HomeActivityTestRule(
     override fun beforeActivityLaunched() {
         super.beforeActivityLaunched()
         setLongTapTimeout(3000)
+        Log.i(TAG, "beforeActivityLaunched: Trying to apply the feature flags updates")
         applyFlagUpdates()
+        Log.i(TAG, "beforeActivityLaunched: Successfully applied the feature flag updates")
         if (skipOnboarding) { skipOnboardingBeforeLaunch() }
     }
 
     override fun afterActivityFinished() {
         super.afterActivityFinished()
         setLongTapTimeout(longTapUserPreference)
+        Log.i(TAG, "afterActivityFinished: Trying to reset all feature flags")
         resetAllFeatureFlags()
+        Log.i(TAG, "afterActivityFinished: Successfully performed the reset of all feature flags")
         closeNotificationShade()
     }
 
@@ -189,10 +197,12 @@ class HomeActivityIntentTestRule internal constructor(
      * Update settings after the activity was created.
      */
     fun applySettingsExceptions(settings: (FeatureSettingsHelper) -> Unit) {
+        Log.i(TAG, "applySettingsExceptions: Trying to update the settings after the activity was created")
         FeatureSettingsHelperDelegate().apply {
             settings(this)
             applyFlagUpdates()
         }
+        Log.i(TAG, "applySettingsExceptions: Updated the settings after the activity was created")
     }
 
     override fun getActivityIntent(): Intent? {
@@ -211,7 +221,9 @@ class HomeActivityIntentTestRule internal constructor(
     override fun beforeActivityLaunched() {
         super.beforeActivityLaunched()
         setLongTapTimeout(3000)
+        Log.i(TAG, "beforeActivityLaunched: Trying to apply the feature flag updates")
         applyFlagUpdates()
+        Log.i(TAG, "beforeActivityLaunched: Successfully applied the feature flag updates")
         if (skipOnboarding) { skipOnboardingBeforeLaunch() }
     }
 
@@ -219,7 +231,9 @@ class HomeActivityIntentTestRule internal constructor(
         super.afterActivityFinished()
         setLongTapTimeout(longTapUserPreference)
         closeNotificationShade()
+        Log.i(TAG, "afterActivityFinished: Trying to reset all feature flags")
         resetAllFeatureFlags()
+        Log.i(TAG, "afterActivityFinished: Successfully performed the reset of all feature flags")
     }
 
     /**
@@ -281,9 +295,12 @@ fun setLongTapTimeout(delay: Int) {
     var attempts = 0
     while (attempts++ < 3) {
         try {
+            Log.i(TAG, "setLongTapTimeout: Trying to set the \"Touch and hold delay\" to: $delay ms")
             mDevice.executeShellCommand("settings put secure long_press_timeout $delay")
+            Log.i(TAG, "setLongTapTimeout: Executed command \"settings put secure long_press_timeout $delay\"")
             break
         } catch (e: RuntimeException) {
+            Log.i(TAG, "setLongTapTimeout: RuntimeException caught, executing fallback methods")
             e.printStackTrace()
         }
     }
@@ -292,7 +309,9 @@ fun setLongTapTimeout(delay: Int) {
 private fun skipOnboardingBeforeLaunch() {
     // The production code isn't aware that we're using
     // this API so it can be fragile.
+    Log.i(TAG, "skipOnboardingBeforeLaunch: Trying to skip the onboarding before launching the app")
     FenixOnboarding(appContext).finish()
+    Log.i(TAG, "skipOnboardingBeforeLaunch: Successfully skipped the onboarding before launching the app")
 }
 
 private fun closeNotificationShade() {
@@ -300,6 +319,8 @@ private fun closeNotificationShade() {
             UiSelector().resourceId("com.android.systemui:id/notification_stack_scroller"),
         ).exists()
     ) {
+        Log.i(TAG, "closeNotificationShade: Trying to press device home button")
         mDevice.pressHome()
+        Log.i(TAG, "closeNotificationShade: Pressed the device home button")
     }
 }
