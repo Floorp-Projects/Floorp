@@ -123,13 +123,6 @@ extern "C" uint32_t FOG_MaxPingLimit(void) {
                                 "gleanMaxPingsPerMinute"_ns, 15);
 }
 
-// This allows us to pass whether to enable precise event timestamps to Rust.
-// Default is false.
-extern "C" bool FOG_EventTimestampsEnabled(void) {
-  return NimbusFeatures::GetBool("gleanInternalSdk"_ns,
-                                 "enableEventTimestamps"_ns, false);
-}
-
 // Called when knowing if we're in automation is necessary.
 extern "C" bool FOG_IPCIsInAutomation(void) { return xpc::IsInAutomation(); }
 
