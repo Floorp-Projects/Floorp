@@ -4536,7 +4536,23 @@ function toOpenWindowByType(inType, uri, features) {
  * @return a reference to the new window.
  */
 function OpenBrowserWindow(options = {}) {
-  return BrowserWindowTracker.openWindow({ openerWindow: window, ...options });
+  let telemetryObj = {};
+  TelemetryStopwatch.start("FX_NEW_WINDOW_MS", telemetryObj);
+
+  let win = BrowserWindowTracker.openWindow({
+    openerWindow: window,
+    ...options,
+  });
+
+  win.addEventListener(
+    "MozAfterPaint",
+    () => {
+      TelemetryStopwatch.finish("FX_NEW_WINDOW_MS", telemetryObj);
+    },
+    { once: true }
+  );
+
+  return win;
 }
 
 /**

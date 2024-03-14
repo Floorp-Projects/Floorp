@@ -287,9 +287,6 @@ export const BrowserWindowTracker = {
     remote = undefined,
     fission = undefined,
   } = {}) {
-    let telemetryObj = {};
-    TelemetryStopwatch.start("FX_NEW_WINDOW_MS", telemetryObj);
-
     let windowFeatures = "chrome,dialog=no,all";
     if (features) {
       windowFeatures += `,${features}`;
@@ -344,7 +341,6 @@ export const BrowserWindowTracker = {
     win.addEventListener(
       "MozAfterPaint",
       () => {
-        TelemetryStopwatch.finish("FX_NEW_WINDOW_MS", telemetryObj);
         if (
           Services.prefs.getIntPref("browser.startup.page") == 1 &&
           loadURIString == lazy.HomePage.get()
