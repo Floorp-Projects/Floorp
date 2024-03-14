@@ -8985,6 +8985,12 @@
   mirror: always
   rust: true
 
+# UA styles for h1 in article/aside/nav/section. See bug 1883896.
+- name: layout.css.h1-in-section-ua-styles.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NOT_NIGHTLY_BUILD@
+  mirror: always
+
 # The maximum width or height of the cursor we should allow when intersecting
 # the UI, in CSS pixels.
 - name: layout.cursor.block.max-size
