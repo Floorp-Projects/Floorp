@@ -192,8 +192,8 @@ this.storage = class extends ExtensionAPIPersistent {
         extension,
         onStorageSyncChanged
       );
-      // May be void if ExtensionStorageSyncKinto.jsm was not used.
-      // ExtensionStorageSync.jsm does not use the context.
+      // May be void if ExtensionStorageSyncKinto.sys.mjs was not used.
+      // ExtensionStorageSync.sys.mjs does not use the context.
       closeCallback?.();
     };
   }

@@ -16,11 +16,11 @@
 //! and `storage.managed`, which is provisioned in a native manifest and
 //! read-only.
 //!
-//! * `storage.local` is implemented in `ExtensionStorageIDB.jsm`.
+//! * `storage.local` is implemented in `ExtensionStorageIDB.sys.mjs`.
 //! * `storage.sync` is implemented in a Rust component, `webext_storage`. This
 //!   Rust component is vendored in m-c, and exposed to JavaScript via an XPCOM
 //!   API in `webext_storage_bridge` (this crate). Eventually, we'll change
-//!   `ExtensionStorageSync.jsm` to call the XPCOM API instead of using the
+//!   `ExtensionStorageSync.sys.mjs` to call the XPCOM API instead of using the
 //!   old Kinto storage adapter.
 //! * `storage.managed` is implemented directly in `parent/ext-storage.js`.
 //!

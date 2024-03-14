@@ -88,7 +88,7 @@ interface nsIUrlListManager : nsISupports
 
     /**
      * Return true if someone registers a table, this is used by testcase
-     * to figure out it SafeBrowsing.jsm is initialized.
+     * to figure out it SafeBrowsing.sys.mjs is initialized.
      */
     boolean isRegistered();
 };

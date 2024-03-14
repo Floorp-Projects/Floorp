@@ -67,7 +67,7 @@ export class FormHistoryStartup {
     target,
   }) {
     // This case is only used for the search field. There is a
-    // similar algorithm in FormHistoryParent.jsm that uses
+    // similar algorithm in FormHistoryParent.sys.mjs that uses
     // sendQuery for other form fields.
 
     const instance = (this._queryInstance = {});

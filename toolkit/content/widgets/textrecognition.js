@@ -4,7 +4,7 @@
 "use strict";
 
 // This is a UA widget. It runs in per-origin UA widget scope,
-// to be loaded by UAWidgetsChild.jsm.
+// to be loaded by UAWidgetsChild.sys.mjs.
 
 this.TextRecognitionWidget = class {
   /**

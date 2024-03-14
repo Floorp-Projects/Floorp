@@ -22,7 +22,7 @@ XPCOMUtils.defineLazyServiceGetters(lazy, {
 /**
  * Task generation and management for Windows, using Task Scheduler 2.0 (taskschd).
  *
- * Implements the API exposed in TaskScheduler.jsm
+ * Implements the API exposed in TaskScheduler.sys.mjs
  * Not intended for external use, this is in a separate module to ship the code only
  * on Windows, and to expose for testing.
  */

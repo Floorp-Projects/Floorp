@@ -140,7 +140,7 @@ interface nsIClearDataService : nsISupports
    * whose base domain does not have any storage associated with it.
    *
    * The principals to be considered will need to be passed by the API consumer.
-   * It is recommended to use PrincipalsCollector.jsm for that.
+   * It is recommended to use PrincipalsCollector.sys.mjs for that.
    *
    * @param aPrincipalsWithStorage principals to be excluded from clearing
    * @param aFrom microseconds from the epoch
