@@ -64,6 +64,13 @@ GECKO_PROFILER_APPS = (FIREFOX, GECKOVIEW, REFBROW, FENIX)
 
 TRACE_APPS = (CHROME, CHROMIUM, CHROMIUM_RELEASE)
 
+APP_BINARIES = {
+    "fenix": "org.mozilla.fenix",
+    "focus": "org.mozilla.focus",
+    "geckoview": "org.mozilla.geckoview_example",
+    "refbrow": "org.mozilla.reference.browser",
+}
+
 
 def print_all_activities():
     all_activities = []
@@ -535,7 +542,11 @@ def create_parser(mach_interface=False):
 def verify_options(parser, args):
     ctx = vars(args)
     if args.binary is None and args.app != "chrome-m":
-        parser.error("--binary is required!")
+        args.binary = APP_BINARIES.get(args.app, None)
+        if args.binary is None:
+            parser.error("--binary is required!")
+        else:
+            print(f"Using {args.binary} as default binary argument for {args.app} app")
 
     # Debug-mode is disabled in CI (check for attribute in case of mach_interface issues)
     if hasattr(args, "run_local") and (not args.run_local and args.debug_mode):
