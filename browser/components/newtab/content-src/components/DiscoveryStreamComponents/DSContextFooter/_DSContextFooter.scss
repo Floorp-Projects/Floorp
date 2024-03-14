@@ -2,7 +2,10 @@
   color: var(--newtab-text-secondary-color);
   inset-inline-start: 0;
   margin-top: 12px;
+  display: flex;
+  gap: var(--space-large);
   position: relative;
+  pointer-events: none;
 
   .story-sponsored-label span {
     display: inline-block;

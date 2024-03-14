@@ -2253,6 +2253,97 @@ const cardContextTypes = {
     icon: "download"
   }
 };
+;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/FeatureHighlight/FeatureHighlight.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+
+function FeatureHighlight({
+  message,
+  icon,
+  toggle,
+  position = "top-left",
+  title,
+  ariaLabel,
+  source = "FEATURE_HIGHLIGHT_DEFAULT",
+  dispatch = () => {},
+  windowObj = __webpack_require__.g
+}) {
+  const [opened, setOpened] = (0,external_React_namespaceObject.useState)(false);
+  const ref = (0,external_React_namespaceObject.useRef)(null);
+  (0,external_React_namespaceObject.useEffect)(() => {
+    const handleOutsideClick = e => {
+      if (!ref?.current?.contains(e.target)) {
+        setOpened(false);
+      }
+    };
+    windowObj.document.addEventListener("click", handleOutsideClick);
+    return () => {
+      windowObj.document.removeEventListener("click", handleOutsideClick);
+    };
+  }, [windowObj]);
+  const onToggleClick = (0,external_React_namespaceObject.useCallback)(() => {
+    setOpened(!opened);
+    dispatch(actionCreators.DiscoveryStreamUserEvent({
+      event: "CLICK",
+      source
+    }));
+  }, [dispatch, source, opened]);
+  const openedClassname = opened ? `opened` : `closed`;
+  return /*#__PURE__*/external_React_default().createElement("div", {
+    ref: ref,
+    className: "feature-highlight"
+  }, /*#__PURE__*/external_React_default().createElement("button", {
+    title: title,
+    "aria-haspopup": "true",
+    "aria-label": ariaLabel,
+    className: "toggle-button",
+    onClick: onToggleClick
+  }, toggle), /*#__PURE__*/external_React_default().createElement("div", {
+    className: `feature-highlight-modal ${position} ${openedClassname}`
+  }, /*#__PURE__*/external_React_default().createElement("div", {
+    className: "message-icon"
+  }, icon), /*#__PURE__*/external_React_default().createElement("p", null, message), /*#__PURE__*/external_React_default().createElement("button", {
+    title: "Dismiss",
+    "aria-label": "Close sponsored content more info popup",
+    className: "icon icon-dismiss",
+    onClick: () => setOpened(false)
+  })));
+}
+;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/FeatureHighlight/SponsoredContentHighlight.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+
+
+function SponsoredContentHighlight({
+  position,
+  dispatch
+}) {
+  return /*#__PURE__*/external_React_default().createElement("div", {
+    className: "sponsored-content-highlight"
+  }, /*#__PURE__*/external_React_default().createElement(FeatureHighlight, {
+    position: position,
+    ariaLabel: "Sponsored content supports our mission to build a better web.",
+    title: "Sponsored content more info",
+    source: "FEATURE_HIGHLIGHT_SPONSORED_CONTENT",
+    dispatch: dispatch,
+    message: /*#__PURE__*/external_React_default().createElement("span", null, "Sponsored content supports our mission to build a better web.", " ", /*#__PURE__*/external_React_default().createElement(SafeAnchor, {
+      dispatch: dispatch,
+      url: "https://support.mozilla.org/kb/pocket-sponsored-stories-new-tabs"
+    }, "Find out how")),
+    icon: /*#__PURE__*/external_React_default().createElement("div", {
+      className: "sponsored-message-icon"
+    }),
+    toggle: /*#__PURE__*/external_React_default().createElement("div", {
+      className: "icon icon-help"
+    })
+  }));
+}
 ;// CONCATENATED MODULE: external "ReactTransitionGroup"
 const external_ReactTransitionGroup_namespaceObject = ReactTransitionGroup;
 ;// CONCATENATED MODULE: ./content-src/components/FluentOrText/FluentOrText.jsx
@@ -2299,6 +2390,7 @@ class FluentOrText extends (external_React_default()).PureComponent {
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 
 
 
@@ -2385,7 +2477,9 @@ class DSContextFooter extends (external_React_default()).PureComponent {
       sponsor,
       sponsored_by_override,
       cta_button_variant,
-      source
+      source,
+      spocMessageVariant,
+      dispatch
     } = this.props;
     const sponsorLabel = SponsorLabel({
       sponsored_by_override,
@@ -2414,7 +2508,10 @@ class DSContextFooter extends (external_React_default()).PureComponent {
     if (sponsorLabel || dsMessageLabel) {
       return /*#__PURE__*/external_React_default().createElement("div", {
         className: "story-footer"
-      }, sponsorLabel, dsMessageLabel);
+      }, sponsorLabel, sponsorLabel && spocMessageVariant === "variant-b" && /*#__PURE__*/external_React_default().createElement(SponsoredContentHighlight, {
+        dispatch: dispatch,
+        position: "inset-block-end inset-inline-start"
+      }), dsMessageLabel);
     }
     return null;
   }
@@ -2517,7 +2614,9 @@ const DefaultMeta = ({
   sponsor,
   sponsored_by_override,
   saveToPocketCard,
-  ctaButtonVariant
+  ctaButtonVariant,
+  dispatch,
+  spocMessageVariant
 }) => /*#__PURE__*/external_React_default().createElement("div", {
   className: "meta"
 }, /*#__PURE__*/external_React_default().createElement("div", {
@@ -2540,7 +2639,9 @@ const DefaultMeta = ({
   sponsor: sponsor,
   sponsored_by_override: sponsored_by_override,
   cta_button_variant: ctaButtonVariant,
-  source: source
+  source: source,
+  dispatch: dispatch,
+  spocMessageVariant: spocMessageVariant
 }), newSponsoredLabel && /*#__PURE__*/external_React_default().createElement(DSMessageFooter, {
   context_type: context_type,
   context: null,
@@ -2782,11 +2883,6 @@ class _DSCard extends (external_React_default()).PureComponent {
     return /*#__PURE__*/external_React_default().createElement("div", {
       className: `ds-card ${compactImagesClassName} ${imageGradientClassName} ${titleLinesName} ${descLinesClassName} ${ctaButtonClassName} ${ctaButtonVariantClassName}`,
       ref: this.setContextMenuButtonHostRef
-    }, /*#__PURE__*/external_React_default().createElement(SafeAnchor, {
-      className: "ds-card-link",
-      dispatch: this.props.dispatch,
-      onLinkClick: !this.props.placeholder ? this.onLinkClick : undefined,
-      url: this.props.url
     }, /*#__PURE__*/external_React_default().createElement("div", {
       className: "img-wrapper"
     }, /*#__PURE__*/external_React_default().createElement(DSImage, {
@@ -2797,6 +2893,23 @@ class _DSCard extends (external_React_default()).PureComponent {
       url: this.props.url,
       title: this.props.title,
       isRecentSave: isRecentSave
+    })), /*#__PURE__*/external_React_default().createElement(SafeAnchor, {
+      className: "ds-card-link",
+      dispatch: this.props.dispatch,
+      onLinkClick: !this.props.placeholder ? this.onLinkClick : undefined,
+      url: this.props.url
+    }, /*#__PURE__*/external_React_default().createElement(ImpressionStats_ImpressionStats, {
+      flightId: this.props.flightId,
+      rows: [{
+        id: this.props.id,
+        pos: this.props.pos,
+        ...(this.props.shim && this.props.shim.impression ? {
+          shim: this.props.shim.impression
+        } : {}),
+        recommendation_id: this.props.recommendation_id
+      }],
+      dispatch: this.props.dispatch,
+      source: this.props.type
     })), ctaButtonVariant === "variant-b" && /*#__PURE__*/external_React_default().createElement("div", {
       className: "cta-header"
     }, "Shop Now"), /*#__PURE__*/external_React_default().createElement(DefaultMeta, {
@@ -2810,20 +2923,10 @@ class _DSCard extends (external_React_default()).PureComponent {
       sponsor: this.props.sponsor,
       sponsored_by_override: this.props.sponsored_by_override,
       saveToPocketCard: saveToPocketCard,
-      ctaButtonVariant: ctaButtonVariant
-    }), /*#__PURE__*/external_React_default().createElement(ImpressionStats_ImpressionStats, {
-      flightId: this.props.flightId,
-      rows: [{
-        id: this.props.id,
-        pos: this.props.pos,
-        ...(this.props.shim && this.props.shim.impression ? {
-          shim: this.props.shim.impression
-        } : {}),
-        recommendation_id: this.props.recommendation_id
-      }],
+      ctaButtonVariant: ctaButtonVariant,
       dispatch: this.props.dispatch,
-      source: this.props.type
-    })), saveToPocketCard && /*#__PURE__*/external_React_default().createElement("div", {
+      spocMessageVariant: this.props.spocMessageVariant
+    }), saveToPocketCard && /*#__PURE__*/external_React_default().createElement("div", {
       className: "card-stp-button-hover-background"
     }, /*#__PURE__*/external_React_default().createElement("div", {
       className: "card-stp-button-position-wrapper"
@@ -3407,6 +3510,7 @@ class _CardGrid extends (external_React_default()).PureComponent {
       onboardingExperience,
       ctaButtonSponsors,
       ctaButtonVariant,
+      spocMessageVariant,
       widgets,
       recentSavesEnabled,
       hideDescriptions,
@@ -3452,6 +3556,7 @@ class _CardGrid extends (external_React_default()).PureComponent {
         saveToPocketCard: saveToPocketCard,
         ctaButtonSponsors: ctaButtonSponsors,
         ctaButtonVariant: ctaButtonVariant,
+        spocMessageVariant: spocMessageVariant,
         recommendation_id: rec.recommendation_id
       }));
     }
@@ -3801,6 +3906,7 @@ ErrorBoundary.defaultProps = {
 
 
 
+
 /**
  * A section that can collapse. As of bug 1710937, it can no longer collapse.
  * See bug 1727365 for follow-up work to simplify this component.
@@ -3851,7 +3957,8 @@ class _CollapsibleSection extends (external_React_default()).PureComponent {
       collapsed,
       learnMore,
       title,
-      subTitle
+      subTitle,
+      mayHaveSponsoredStories
     } = this.props;
     const active = menuButtonHover || showContextMenu;
     let bodyStyle;
@@ -3897,7 +4004,10 @@ class _CollapsibleSection extends (external_React_default()).PureComponent {
       className: "section-sub-title"
     }, /*#__PURE__*/external_React_default().createElement(FluentOrText, {
       message: subTitle
-    })))), /*#__PURE__*/external_React_default().createElement(ErrorBoundary, {
+    })), mayHaveSponsoredStories && this.props.spocMessageVariant === "variant-a" && /*#__PURE__*/external_React_default().createElement(SponsoredContentHighlight, {
+      position: "inset-block-start inset-inline-start",
+      dispatch: this.props.dispatch
+    }))), /*#__PURE__*/external_React_default().createElement(ErrorBoundary, {
       className: "section-body-fallback"
     }, /*#__PURE__*/external_React_default().createElement("div", {
       ref: this.onBodyMount,
@@ -8441,6 +8551,7 @@ class _DiscoveryStreamBase extends (external_React_default()).PureComponent {
           onboardingExperience: component.properties.onboardingExperience,
           ctaButtonSponsors: component.properties.ctaButtonSponsors,
           ctaButtonVariant: component.properties.ctaButtonVariant,
+          spocMessageVariant: component.properties.spocMessageVariant,
           editorsPicksHeader: component.properties.editorsPicksHeader,
           recentSavesEnabled: this.props.DiscoveryStream.recentSavesEnabled,
           hideDescriptions: this.props.DiscoveryStream.hideDescriptions
@@ -8467,7 +8578,8 @@ class _DiscoveryStreamBase extends (external_React_default()).PureComponent {
   }
   render() {
     const {
-      locale
+      locale,
+      mayHaveSponsoredStories
     } = this.props;
     // Select layout render data by adding spocs and position to recommendations
     const {
@@ -8562,6 +8674,8 @@ class _DiscoveryStreamBase extends (external_React_default()).PureComponent {
       showPrefName: topStories.pref.feed,
       title: sectionTitle,
       subTitle: subTitle,
+      mayHaveSponsoredStories: mayHaveSponsoredStories,
+      spocMessageVariant: message?.properties?.spocMessageVariant,
       eventSource: "CARDGRID"
     }, this.renderLayout(layoutRender)), this.renderLayout([{
       width: 12,
@@ -8615,6 +8729,7 @@ class BackgroundsSection extends (external_React_default()).PureComponent {
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 
 
 
@@ -8695,7 +8810,8 @@ class ContentSection extends (external_React_default()).PureComponent {
       pocketRegion,
       mayHaveSponsoredStories,
       mayHaveRecentSaves,
-      openPreferences
+      openPreferences,
+      spocMessageVariant
     } = this.props;
     const {
       topSitesEnabled,
@@ -8829,7 +8945,14 @@ class ContentSection extends (external_React_default()).PureComponent {
       "data-eventSource": "HIGHLIGHTS",
       "data-l10n-id": "newtab-custom-recent-toggle",
       "data-l10n-attrs": "label, description"
-    }))), /*#__PURE__*/external_React_default().createElement("span", {
+    }))), pocketRegion && mayHaveSponsoredStories && spocMessageVariant === "variant-c" && /*#__PURE__*/external_React_default().createElement("div", {
+      className: "sponsored-content-info"
+    }, /*#__PURE__*/external_React_default().createElement("div", {
+      className: "icon icon-help"
+    }), /*#__PURE__*/external_React_default().createElement("div", null, "Sponsored content supports our mission to build a better web.", " ", /*#__PURE__*/external_React_default().createElement(SafeAnchor, {
+      dispatch: this.props.dispatch,
+      url: "https://support.mozilla.org/kb/pocket-sponsored-stories-new-tabs"
+    }, "Find out how"))), /*#__PURE__*/external_React_default().createElement("span", {
       className: "divider",
       role: "separator"
     }), /*#__PURE__*/external_React_default().createElement("div", null, /*#__PURE__*/external_React_default().createElement("button", {
@@ -8901,6 +9024,7 @@ class _CustomizeMenu extends (external_React_default()).PureComponent {
       mayHaveSponsoredTopSites: this.props.mayHaveSponsoredTopSites,
       mayHaveSponsoredStories: this.props.mayHaveSponsoredStories,
       mayHaveRecentSaves: this.props.DiscoveryStream.recentSavesEnabled,
+      spocMessageVariant: this.props.spocMessageVariant,
       dispatch: this.props.dispatch
     }))));
   }
@@ -9277,8 +9401,15 @@ class BaseContent extends (external_React_default()).PureComponent {
       customizeMenuVisible
     } = App;
     const prefs = props.Prefs.values;
+    const {
+      pocketConfig
+    } = prefs;
     const isDiscoveryStream = props.DiscoveryStream.config && props.DiscoveryStream.config.enabled;
     let filteredSections = props.Sections.filter(section => section.id !== "topstories");
+    let spocMessageVariant = "";
+    if (props.App.locale?.startsWith("en-") && pocketConfig?.spocMessageVariant === "variant-c") {
+      spocMessageVariant = pocketConfig.spocMessageVariant;
+    }
     const pocketEnabled = prefs["feeds.section.topstories"] && prefs["feeds.system.topstories"];
     const noSectionsEnabled = !prefs["feeds.topsites"] && !pocketEnabled && filteredSections.filter(section => section.enabled).length === 0;
     const searchHandoffEnabled = prefs["improvesearch.handoffToAwesomebar"];
@@ -9306,6 +9437,7 @@ class BaseContent extends (external_React_default()).PureComponent {
       pocketRegion: pocketRegion,
       mayHaveSponsoredTopSites: mayHaveSponsoredTopSites,
       mayHaveSponsoredStories: mayHaveSponsoredStories,
+      spocMessageVariant: spocMessageVariant,
       showing: customizeMenuVisible
     }), /*#__PURE__*/external_React_default().createElement("div", {
       className: outerClassName,
@@ -9320,7 +9452,8 @@ class BaseContent extends (external_React_default()).PureComponent {
     }, isDiscoveryStream ? /*#__PURE__*/external_React_default().createElement(ErrorBoundary, {
       className: "borderless-error"
     }, /*#__PURE__*/external_React_default().createElement(DiscoveryStreamBase, {
-      locale: props.App.locale
+      locale: props.App.locale,
+      mayHaveSponsoredStories: mayHaveSponsoredStories
     })) : /*#__PURE__*/external_React_default().createElement(Sections_Sections, null)), /*#__PURE__*/external_React_default().createElement(ConfirmDialog, null))));
   }
 }
