@@ -1734,18 +1734,21 @@ function isNodeQueued(node, queuedNodes) {
 }
 
 /**
- * Reads the elements computed style and determines if the element is inline or not.
+ * Reads the elements computed style and determines if the element is a block-like
+ * element or not. Every element that lays out like a block should be sent in as one
+ * cohesive unit to be translated.
  *
  * @param {Element} element
  */
-function getIsInline(element) {
+function getIsBlockLike(element) {
   const win = element.ownerGlobal;
   if (element.namespaceURI === "http://www.w3.org/2000/svg") {
     // SVG elements will report as inline, but there is no block layout in SVG.
     // Treat every SVG element as being block so that every node will be subdivided.
-    return false;
+    return true;
   }
-  return win.getComputedStyle(element).display === "inline";
+  const { display } = win.getComputedStyle(element);
+  return display !== "inline" && display !== "none";
 }
 
 /**
@@ -1762,7 +1765,8 @@ function nodeNeedsSubdividing(node) {
     return false;
   }
 
-  if (getIsInline(node)) {
+  if (!getIsBlockLike(node)) {
+    // This element is inline, or not displayed.
     return false;
   }
 
@@ -1772,12 +1776,12 @@ function nodeNeedsSubdividing(node) {
         // Keep checking for more inline or text nodes.
         continue;
       case Node.ELEMENT_NODE: {
-        if (getIsInline(child)) {
-          // Keep checking for more inline or text nodes.
-          continue;
+        if (getIsBlockLike(child)) {
+          // This node is a block node, so it needs further subdividing.
+          return true;
         }
-        // A child element is not inline, so subdivide this node further.
-        return true;
+        // Keep checking for more inline or text nodes.
+        continue;
       }
       default:
         return true;
