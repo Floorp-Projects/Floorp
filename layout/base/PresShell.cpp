@@ -565,41 +565,43 @@ class nsBeforeFirstPaintDispatcher : public Runnable {
 class MOZ_STACK_CLASS AutoPointerEventTargetUpdater final {
  public:
   AutoPointerEventTargetUpdater(PresShell* aShell, WidgetEvent* aEvent,
-                                nsIFrame* aFrame, nsIContent** aTargetContent) {
+                                nsIFrame* aFrame, nsIContent* aTargetContent,
+                                nsIContent** aOutTargetContent) {
     MOZ_ASSERT(aEvent);
-    if (!aTargetContent || aEvent->mClass != ePointerEventClass) {
+    if (!aOutTargetContent || aEvent->mClass != ePointerEventClass) {
       // Make the destructor happy.
-      mTargetContent = nullptr;
+      mOutTargetContent = nullptr;
       return;
     }
     MOZ_ASSERT(aShell);
-    MOZ_ASSERT(aFrame);
-    MOZ_ASSERT(!aFrame->GetContent() ||
-               aShell->GetDocument() == aFrame->GetContent()->OwnerDoc());
+    MOZ_ASSERT_IF(aFrame && aFrame->GetContent(),
+                  aShell->GetDocument() == aFrame->GetContent()->OwnerDoc());
 
     mShell = aShell;
     mWeakFrame = aFrame;
-    mTargetContent = aTargetContent;
+    mOutTargetContent = aOutTargetContent;
     mFromTouch = aEvent->AsPointerEvent()->mFromTouchEvent;
+    // Touch event target may have no frame, e.g., removed from the DOM
+    MOZ_ASSERT_IF(!mFromTouch, aFrame);
     mOriginalPointerEventTarget = aShell->mPointerEventTarget =
-        aFrame->GetContent();
+        aFrame ? aFrame->GetContent() : aTargetContent;
   }
 
   ~AutoPointerEventTargetUpdater() {
-    if (!mTargetContent || !mShell || mWeakFrame.IsAlive()) {
+    if (!mOutTargetContent || !mShell || mWeakFrame.IsAlive()) {
       return;
     }
     if (mFromTouch) {
       // If the source event is a touch event, the touch event target should
       // always be same target as preceding ePointerDown.  Therefore, we should
       // always set it back to the original event target.
-      mOriginalPointerEventTarget.swap(*mTargetContent);
+      mOriginalPointerEventTarget.swap(*mOutTargetContent);
     } else {
       // If the source event is not a touch event (must be a mouse event in
       // this case), the event should be fired on the closest inclusive ancestor
       // of the pointer event target which is still connected.  The mutations
       // are tracked by PresShell::ContentRemoved.  Therefore, we should set it.
-      mShell->mPointerEventTarget.swap(*mTargetContent);
+      mShell->mPointerEventTarget.swap(*mOutTargetContent);
     }
   }
 
@@ -607,7 +609,7 @@ class MOZ_STACK_CLASS AutoPointerEventTargetUpdater final {
   RefPtr<PresShell> mShell;
   nsCOMPtr<nsIContent> mOriginalPointerEventTarget;
   AutoWeakFrame mWeakFrame;
-  nsIContent** mTargetContent;
+  nsIContent** mOutTargetContent;
   bool mFromTouch = false;
 };
 
@@ -8339,7 +8341,7 @@ nsresult PresShell::EventHandler::HandleEventWithTarget(
     mPresShell->RecordPointerLocation(aEvent->AsMouseEvent());
   }
   AutoPointerEventTargetUpdater updater(mPresShell, aEvent, aNewEventFrame,
-                                        aTargetContent);
+                                        aNewEventContent, aTargetContent);
   AutoCurrentEventInfoSetter eventInfoSetter(*this, aNewEventFrame,
                                              aNewEventContent);
   nsresult rv = HandleEventWithCurrentEventInfo(aEvent, aEventStatus, false,
