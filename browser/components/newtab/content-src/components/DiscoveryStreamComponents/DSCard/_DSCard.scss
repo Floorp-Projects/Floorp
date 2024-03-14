@@ -131,9 +131,9 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 100%);
   }
 
   .ds-card-link {
-    position: absolute;
     height: 100%;
-    width: 100%;
+    display: flex;
+    flex-direction: column;
     text-decoration: none;
 
     &:hover {
@@ -255,7 +255,7 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 100%);
       flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
-      gap: 0 var(--space-small);
+      column-gap: var(--space-small);
       margin-top: 0;
     }
 

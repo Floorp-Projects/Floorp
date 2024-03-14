@@ -217,25 +217,6 @@
     }
   }
 
-  .sponsored-content-info {
-    display: flex;
-    gap: var(--space-small);
-    font-size: var(--font-size-small);
-    border-radius: var(--border-radius-medium);
-    background-color: var(--newtab-element-secondary-color);
-    padding: var(--space-small) var(--space-large);
-
-    .icon-help {
-      flex-shrink: 0;
-      color: var(--color-accent-primary);
-      height: 20px;
-    }
-
-    a {
-      color: var(--newtab-primary-action-background);
-    }
-  }
-
   .divider {
     border-top: 1px var(--newtab-border-color) solid;
     margin: 0 -16px;

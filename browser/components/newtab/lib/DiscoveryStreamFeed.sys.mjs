@@ -606,13 +606,6 @@ export class DiscoveryStreamFeed {
     ) {
       ctaButtonVariant = pocketConfig.ctaButtonVariant;
     }
-    let spocMessageVariant = "";
-    if (
-      pocketConfig.spocMessageVariant === "variant-a" ||
-      pocketConfig.spocMessageVariant === "variant-b"
-    ) {
-      spocMessageVariant = pocketConfig.spocMessageVariant;
-    }
 
     const prepConfArr = arr => {
       return arr
@@ -688,9 +681,6 @@ export class DiscoveryStreamFeed {
       // For now button variants are for experimentation and English only.
       ctaButtonSponsors: this.locale.startsWith("en-") ? ctaButtonSponsors : [],
       ctaButtonVariant: this.locale.startsWith("en-") ? ctaButtonVariant : "",
-      spocMessageVariant: this.locale.startsWith("en-")
-        ? spocMessageVariant
-        : "",
     });
 
     sendUpdate({
@@ -2050,7 +2040,6 @@ export class DiscoveryStreamFeed {
      `onboardingExperience` Show new users some UI explaining Pocket above the Pocket section.
      `ctaButtonSponsors` An array of sponsors we want to show a cta button on the card for.
      `ctaButtonVariant` Sets the variant for the cta sponsor button.
-     `spocMessageVariant` Sets the variant for the sponsor message dialog.
 */
 getHardcodedLayout = ({
   spocsUrl = SPOCS_URL,
@@ -2074,7 +2063,6 @@ getHardcodedLayout = ({
   onboardingExperience = false,
   ctaButtonSponsors = [],
   ctaButtonVariant = "",
-  spocMessageVariant = "",
 }) => ({
   lastUpdate: Date.now(),
   spocs: {
@@ -2156,9 +2144,7 @@ getHardcodedLayout = ({
             link_url: "https://getpocket.com/firefox/new_tab_learn_more",
             icon: "chrome://global/skin/icons/pocket.svg",
           },
-          properties: {
-            spocMessageVariant,
-          },
+          properties: {},
           styles: {
             ".ds-message": "margin-bottom: -20px",
           },
@@ -2176,7 +2162,6 @@ getHardcodedLayout = ({
             onboardingExperience,
             ctaButtonSponsors,
             ctaButtonVariant,
-            spocMessageVariant,
           },
           widgets: {
             positions: widgetPositions.map(position => {

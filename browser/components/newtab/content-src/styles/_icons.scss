@@ -70,10 +70,6 @@
     background-image: url('chrome://global/skin/icons/info.svg');
   }
 
-  &.icon-help {
-    background-image: url('chrome://global/skin/icons/help.svg');
-  }
-
   &.icon-new-window {
     @include flip-icon;
 
