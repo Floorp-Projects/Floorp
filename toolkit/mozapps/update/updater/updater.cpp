@@ -2704,21 +2704,20 @@ static int ReadMARChannelIDsFromBuffer(char* aChannels,
  */
 static int GetAcceptableChannelIDs(MARChannelStringTable* aMARStrings) {
   int rv = UPDATE_SETTINGS_FILE_CHANNEL;
-#ifdef XP_MACOSX
-  if (auto marChannels =
-          UpdateSettingsUtil::GetAcceptedMARChannelsValue()) {
+#  ifdef XP_MACOSX
+  if (auto marChannels = UpdateSettingsUtil::GetAcceptedMARChannelsValue()) {
     rv = ReadMARChannelIDsFromBuffer(marChannels->data(), aMARStrings);
   }
-#else
+#  else
   NS_tchar updateSettingsPath[MAXPATHLEN];
   NS_tsnprintf(updateSettingsPath,
                sizeof(updateSettingsPath) / sizeof(updateSettingsPath[0]),
                NS_T("%s/update-settings.ini"), gInstallDirPath);
   rv = ReadMARChannelIDsFromPath(updateSettingsPath, aMARStrings);
-#endif
+#  endif
   return rv == OK ? OK : UPDATE_SETTINGS_FILE_CHANNEL;
 }
-#endif    // MOZ_VERIFY_MAR_SIGNATURE
+#endif  // MOZ_VERIFY_MAR_SIGNATURE
 
 static int GetUpdateFileName(NS_tchar* fileName, int maxChars) {
   NS_tsnprintf(fileName, maxChars, NS_T("%s/update.mar"), gPatchDirPath);
@@ -2999,8 +2998,8 @@ int NS_main(int argc, NS_tchar** argv) {
     printf("Error: %d\n", rv);
     return 1;
 #else
-    printf("Not Applicable: No support for signature verification\n");
-    return 0;
+      printf("Not Applicable: No support for signature verification\n");
+      return 0;
 #endif
   }
 
