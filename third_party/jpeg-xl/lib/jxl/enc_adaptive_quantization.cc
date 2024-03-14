@@ -994,8 +994,10 @@ Status FindBestQuantization(const FrameHeader& frame_header,
           if (diff > 1.0f) {
             float old = row_q[x];
             row_q[x] *= diff;
-            int qf_old = old * quantizer.InvGlobalScale() + 0.5;
-            int qf_new = row_q[x] * quantizer.InvGlobalScale() + 0.5;
+            int qf_old =
+                static_cast<int>(std::lround(old * quantizer.InvGlobalScale()));
+            int qf_new = static_cast<int>(
+                std::lround(row_q[x] * quantizer.InvGlobalScale()));
             if (qf_old == qf_new) {
               row_q[x] = old + quantizer.Scale();
             }
@@ -1015,8 +1017,10 @@ Status FindBestQuantization(const FrameHeader& frame_header,
           } else {
             float old = row_q[x];
             row_q[x] *= diff;
-            int qf_old = old * quantizer.InvGlobalScale() + 0.5;
-            int qf_new = row_q[x] * quantizer.InvGlobalScale() + 0.5;
+            int qf_old =
+                static_cast<int>(std::lround(old * quantizer.InvGlobalScale()));
+            int qf_new = static_cast<int>(
+                std::lround(row_q[x] * quantizer.InvGlobalScale()));
             if (qf_old == qf_new) {
               row_q[x] = old + quantizer.Scale();
             }

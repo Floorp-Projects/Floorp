@@ -100,14 +100,14 @@ class HlgOOTF : HlgOOTF_Base {
   using HlgOOTF_Base::HlgOOTF_Base;
 
   static HlgOOTF FromSceneLight(float display_luminance,
-                                const float primaries_luminances[3]) {
+                                const Vector3& primaries_luminances) {
     return HlgOOTF(/*gamma=*/1.2f *
                        std::pow(1.111f, std::log2(display_luminance / 1000.f)),
                    primaries_luminances);
   }
 
   static HlgOOTF ToSceneLight(float display_luminance,
-                              const float primaries_luminances[3]) {
+                              const Vector3& primaries_luminances) {
     return HlgOOTF(
         /*gamma=*/(1 / 1.2f) *
             std::pow(1.111f, -std::log2(display_luminance / 1000.f)),
@@ -132,7 +132,7 @@ class HlgOOTF : HlgOOTF_Base {
 };
 
 template <typename V>
-void GamutMap(V* red, V* green, V* blue, const float primaries_luminances[3],
+void GamutMap(V* red, V* green, V* blue, const Vector3& primaries_luminances,
               float preserve_saturation = 0.1f) {
   hwy::HWY_NAMESPACE::DFromV<V> df;
   const V luminance =

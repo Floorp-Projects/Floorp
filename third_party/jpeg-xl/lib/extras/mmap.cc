@@ -55,7 +55,7 @@ struct MemoryMappedFileImpl {
 
 }  // namespace jxl
 
-#elif __WIN32__
+#elif defined(_WIN32)
 #include <string.h>
 #include <windows.h>
 

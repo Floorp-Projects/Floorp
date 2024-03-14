@@ -143,7 +143,7 @@ Status DecodeModularChannelMAANS(BitReader *br, ANSSymbolReader *reader,
   Channel &channel = image->channel[chan];
 
   std::array<pixel_type, kNumStaticProperties> static_props = {
-      {chan, (int)group_id}};
+      {chan, static_cast<int>(group_id)}};
   // TODO(veluca): filter the tree according to static_props.
 
   // zero pixel channel? could happen

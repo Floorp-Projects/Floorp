@@ -24,7 +24,7 @@ namespace jxl {
 constexpr U32Enc kTocDist(Bits(10), BitsOffset(14, 1024), BitsOffset(22, 17408),
                           BitsOffset(30, 4211712));
 
-size_t MaxBits(const size_t num_sizes);
+size_t MaxBits(size_t num_sizes);
 
 // TODO(veluca): move these to FrameDimensions.
 static JXL_INLINE size_t AcGroupIndex(size_t pass, size_t group,

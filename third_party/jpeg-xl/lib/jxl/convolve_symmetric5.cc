@@ -175,14 +175,13 @@ HWY_EXPORT(Symmetric5);
 void Symmetric5(const ImageF& in, const Rect& in_rect,
                 const WeightsSymmetric5& weights, ThreadPool* pool,
                 ImageF* JXL_RESTRICT out, const Rect& out_rect) {
-  return HWY_DYNAMIC_DISPATCH(Symmetric5)(in, in_rect, weights, pool, out,
-                                          out_rect);
+  HWY_DYNAMIC_DISPATCH(Symmetric5)(in, in_rect, weights, pool, out, out_rect);
 }
 
 void Symmetric5(const ImageF& in, const Rect& rect,
                 const WeightsSymmetric5& weights, ThreadPool* pool,
                 ImageF* JXL_RESTRICT out) {
-  return Symmetric5(in, rect, weights, pool, out, Rect(*out));
+  Symmetric5(in, rect, weights, pool, out, Rect(*out));
 }
 
 }  // namespace jxl

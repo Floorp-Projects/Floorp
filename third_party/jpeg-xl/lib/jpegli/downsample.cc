@@ -29,7 +29,7 @@ void DownsampleRow2x1(const float* row_in, size_t len, float* row_out) {
   const size_t N = Lanes(d);
   const size_t len_out = len / 2;
   const auto mul = Set(d, 0.5f);
-  Vec<D> v0, v1;
+  Vec<D> v0, v1;  // NOLINT
   for (size_t x = 0; x < len_out; x += N) {
     LoadInterleaved2(d, row_in + 2 * x, v0, v1);
     Store(Mul(mul, Add(v0, v1)), d, row_out + x);
@@ -40,7 +40,7 @@ void DownsampleRow3x1(const float* row_in, size_t len, float* row_out) {
   const size_t N = Lanes(d);
   const size_t len_out = len / 3;
   const auto mul = Set(d, 1.0f / 3);
-  Vec<D> v0, v1, v2;
+  Vec<D> v0, v1, v2;  // NOLINT
   for (size_t x = 0; x < len_out; x += N) {
     LoadInterleaved3(d, row_in + 3 * x, v0, v1, v2);
     Store(Mul(mul, Add(Add(v0, v1), v2)), d, row_out + x);
@@ -51,7 +51,7 @@ void DownsampleRow4x1(const float* row_in, size_t len, float* row_out) {
   const size_t N = Lanes(d);
   const size_t len_out = len / 4;
   const auto mul = Set(d, 0.25f);
-  Vec<D> v0, v1, v2, v3;
+  Vec<D> v0, v1, v2, v3;  // NOLINT
   for (size_t x = 0; x < len_out; x += N) {
     LoadInterleaved4(d, row_in + 4 * x, v0, v1, v2, v3);
     Store(Mul(mul, Add(Add(v0, v1), Add(v2, v3))), d, row_out + x);
@@ -91,7 +91,7 @@ void Downsample2x2(float* rows_in[MAX_SAMP_FACTOR], size_t len,
   const auto mul = Set(d, 0.25f);
   float* row0 = rows_in[0];
   float* row1 = rows_in[1];
-  Vec<D> v0, v1, v2, v3;
+  Vec<D> v0, v1, v2, v3;  // NOLINT
   for (size_t x = 0; x < len_out; x += N) {
     LoadInterleaved2(d, row0 + 2 * x, v0, v1);
     LoadInterleaved2(d, row1 + 2 * x, v2, v3);

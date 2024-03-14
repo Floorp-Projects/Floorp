@@ -14,6 +14,8 @@
 
 namespace jxl {
 
+#define AVERAGE(X, Y) (((X) + (Y) + (((X) > (Y)) ? 1 : 0)) >> 1)
+
 Status FwdHSqueeze(Image &input, int c, int rc) {
   const Channel &chin = input.channel[c];
 
@@ -34,18 +36,19 @@ Status FwdHSqueeze(Image &input, int c, int rc) {
     for (size_t x = 0; x < chout_residual.w; x++) {
       pixel_type A = p_in[x * 2];
       pixel_type B = p_in[x * 2 + 1];
-      pixel_type avg = (A + B + (A > B)) >> 1;
+      pixel_type avg = AVERAGE(A, B);
       p_out[x] = avg;
 
       pixel_type diff = A - B;
 
       pixel_type next_avg = avg;
       if (x + 1 < chout_residual.w) {
-        next_avg = (p_in[x * 2 + 2] + p_in[x * 2 + 3] +
-                    (p_in[x * 2 + 2] > p_in[x * 2 + 3])) >>
-                   1;  // which will be chout.value(y,x+1)
-      } else if (chin.w & 1)
+        pixel_type C = p_in[x * 2 + 2];
+        pixel_type D = p_in[x * 2 + 3];
+        next_avg = AVERAGE(C, D);  // which will be chout.value(y,x+1)
+      } else if (chin.w & 1) {
         next_avg = p_in[x * 2 + 2];
+      }
       pixel_type left = (x > 0 ? p_in[x * 2 - 1] : avg);
       pixel_type tendency = SmoothTendency(left, avg, next_avg);
 
@@ -81,16 +84,16 @@ Status FwdVSqueeze(Image &input, int c, int rc) {
     for (size_t x = 0; x < chout.w; x++) {
       pixel_type A = p_in[x];
       pixel_type B = p_in[x + onerow_in];
-      pixel_type avg = (A + B + (A > B)) >> 1;
+      pixel_type avg = AVERAGE(A, B);
       p_out[x] = avg;
 
       pixel_type diff = A - B;
 
       pixel_type next_avg = avg;
       if (y + 1 < chout_residual.h) {
-        next_avg = (p_in[x + 2 * onerow_in] + p_in[x + 3 * onerow_in] +
-                    (p_in[x + 2 * onerow_in] > p_in[x + 3 * onerow_in])) >>
-                   1;  // which will be chout.value(y+1,x)
+        pixel_type C = p_in[x + 2 * onerow_in];
+        pixel_type D = p_in[x + 3 * onerow_in];
+        next_avg = AVERAGE(C, D);  // which will be chout.value(y+1,x)
       } else if (chin.h & 1) {
         next_avg = p_in[x + 2 * onerow_in];
       }

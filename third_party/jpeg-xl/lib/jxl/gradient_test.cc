@@ -46,8 +46,8 @@ Image3F GenerateTestGradient(uint32_t color0, uint32_t color1, double angle,
                              size_t xsize, size_t ysize) {
   JXL_ASSIGN_OR_DIE(Image3F image, Image3F::Create(xsize, ysize));
 
-  double x0 = xsize / 2;
-  double y0 = ysize / 2;
+  double x0 = xsize / 2.0;
+  double y0 = ysize / 2.0;
   double x1 = x0 + std::sin(angle / 360.0 * 2.0 * kPi);
   double y1 = y0 + std::cos(angle / 360.0 * 2.0 * kPi);
 

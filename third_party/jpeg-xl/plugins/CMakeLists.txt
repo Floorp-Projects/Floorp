@@ -15,4 +15,7 @@ if(JPEGXL_ENABLE_PLUGIN_GIMP210)
   add_subdirectory(gimp)
 endif()
 
-
+option(JPEGXL_ENABLE_PLUGIN_MIME "Enable image/jxl declaration for shared-mime-info" ON)
+if(JPEGXL_ENABLE_PLUGIN_MIME)
+  add_subdirectory(mime)
+endif()

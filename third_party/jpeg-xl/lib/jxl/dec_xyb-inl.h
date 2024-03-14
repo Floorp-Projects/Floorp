@@ -83,7 +83,7 @@ HWY_INLINE HWY_MAYBE_UNUSED void XybToRgb(D d, const V opsin_x, const V opsin_y,
   *linear_b = MulAdd(LoadDup128(d, &inverse_matrix[8 * 4]), mixed_b, *linear_b);
 }
 
-static inline HWY_MAYBE_UNUSED bool HasFastXYBTosRGB8() {
+inline HWY_MAYBE_UNUSED bool HasFastXYBTosRGB8() {
 #if HWY_TARGET == HWY_NEON
   return true;
 #else
@@ -91,9 +91,9 @@ static inline HWY_MAYBE_UNUSED bool HasFastXYBTosRGB8() {
 #endif
 }
 
-static inline HWY_MAYBE_UNUSED void FastXYBTosRGB8(const float* input[4],
-                                                   uint8_t* output,
-                                                   bool is_rgba, size_t xsize) {
+inline HWY_MAYBE_UNUSED void FastXYBTosRGB8(const float* input[4],
+                                            uint8_t* output, bool is_rgba,
+                                            size_t xsize) {
   // This function is very NEON-specific. As such, it uses intrinsics directly.
 #if HWY_TARGET == HWY_NEON
   // WARNING: doing fixed point arithmetic correctly is very complicated.

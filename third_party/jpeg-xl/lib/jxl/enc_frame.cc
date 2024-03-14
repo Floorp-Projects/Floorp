@@ -745,7 +745,7 @@ Status ComputeJPEGTranscodingData(const jpeg::JPEGData& jpeg_data,
   JXL_ASSIGN_OR_RETURN(shared.cmap,
                        ColorCorrelationMap::Create(xsize, ysize, false));
   shared.ac_strategy.FillDCT8();
-  FillImage(uint8_t(0), &shared.epf_sharpness);
+  FillImage(static_cast<uint8_t>(0), &shared.epf_sharpness);
 
   enc_state->coeffs.clear();
   while (enc_state->coeffs.size() < enc_state->passes.size()) {
@@ -950,7 +950,7 @@ Status ComputeJPEGTranscodingData(const jpeg::JPEGData& jpeg_data,
             idc = inputjpeg[base] + 1024 / qt[c * 64];
           }
           dc_counts[c][std::min(static_cast<uint32_t>(idc + 1024),
-                                uint32_t(2047))]++;
+                                static_cast<uint32_t>(2047))]++;
           total_dc[c]++;
           fdc[bx >> hshift] = idc * dcquantization_r[c];
           if (c == 1 || !enc_state->cparams.force_cfl_jpeg_recompression ||
@@ -1233,10 +1233,13 @@ Status EncodeGroups(const FrameHeader& frame_header,
   const size_t num_groups = frame_dim.num_groups;
   const size_t num_passes = enc_state->progressive_splitter.GetNumPasses();
   const size_t global_ac_index = frame_dim.num_dc_groups + 1;
-  const bool is_small_image = frame_dim.num_groups == 1 && num_passes == 1;
-
-  group_codes->resize(
-      NumTocEntries(num_groups, frame_dim.num_dc_groups, num_passes));
+  const bool is_small_image =
+      !enc_state->streaming_mode && num_groups == 1 && num_passes == 1;
+  const size_t num_toc_entries =
+      is_small_image ? 1
+                     : AcGroupIndex(0, 0, num_groups, frame_dim.num_dc_groups) +
+                           num_groups * num_passes;
+  group_codes->resize(num_toc_entries);
 
   const auto get_output = [&](const size_t index) {
     return &(*group_codes)[is_small_image ? 0 : index];
@@ -1363,6 +1366,11 @@ Status EncodeGroups(const FrameHeader& frame_header,
         has_error = true;
         return;
       }
+      JXL_DEBUG_V(2,
+                  "AC group %u [abs %" PRIuS "] pass %" PRIuS
+                  " encoded size is %" PRIuS " bits",
+                  group_index, ac_group_id, i,
+                  ac_group_code(i, group_index)->BitsWritten());
     }
   };
   JXL_RETURN_IF_ERROR(RunOnPool(pool, 0, num_groups, resize_aux_outs,
@@ -1860,7 +1868,7 @@ void RemoveUnusedHistograms(std::vector<uint8_t>& context_map,
   for (uint8_t histo_idx : inv_remap) {
     new_codes.encoding_info.emplace_back(
         std::move(codes.encoding_info[histo_idx]));
-    new_codes.uint_config.emplace_back(std::move(codes.uint_config[histo_idx]));
+    new_codes.uint_config.emplace_back(codes.uint_config[histo_idx]);
     new_codes.encoded_histograms.emplace_back(
         std::move(codes.encoded_histograms[histo_idx]));
   }
@@ -1963,8 +1971,7 @@ Status EncodeFrameStreaming(const CompressParams& cparams,
     enc_state.streaming_mode = true;
     enc_state.initialize_global_state = (i == 0);
     enc_state.dc_group_index = dc_ix;
-    enc_state.histogram_idx =
-        std::vector<uint8_t>(group_xsize * group_ysize, i);
+    enc_state.histogram_idx = std::vector<size_t>(group_xsize * group_ysize, i);
     std::vector<BitWriter> group_codes;
     JXL_RETURN_IF_ERROR(ComputeEncodingData(
         cparams, frame_info, metadata, frame_data, jpeg_data.get(), x0, y0,
@@ -2102,8 +2109,9 @@ Status EncodeFrame(const CompressParams& cparams_orig,
         // modular headers.
         for (int K : {0, 1 << 10, 70000}) {
           cparams_attempt.palette_colors = K;
-          for (int tree_mode : {-1, (int)ModularOptions::TreeMode::kNoWP,
-                                (int)ModularOptions::TreeMode::kDefault}) {
+          for (int tree_mode :
+               {-1, static_cast<int>(ModularOptions::TreeMode::kNoWP),
+                static_cast<int>(ModularOptions::TreeMode::kDefault)}) {
             if (tree_mode == -1) {
               // LZ77 only
               cparams_attempt.options.nb_repeats = 0;

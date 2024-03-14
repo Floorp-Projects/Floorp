@@ -37,12 +37,12 @@ void TestProfile(const IccBytes& icc) {
 
 void TestProfile(const std::string& icc) {
   IccBytes data;
-  Bytes(icc).AppendTo(&data);
+  Bytes(icc).AppendTo(data);
   TestProfile(data);
 }
 
 // Valid profile from one of the images output by the decoder.
-static const unsigned char kTestProfile[] = {
+const unsigned char kTestProfile[] = {
     0x00, 0x00, 0x03, 0x80, 0x6c, 0x63, 0x6d, 0x73, 0x04, 0x30, 0x00, 0x00,
     0x6d, 0x6e, 0x74, 0x72, 0x52, 0x47, 0x42, 0x20, 0x58, 0x59, 0x5a, 0x20,
     0x07, 0xe3, 0x00, 0x04, 0x00, 0x1d, 0x00, 0x0f, 0x00, 0x32, 0x00, 0x2e,
@@ -139,7 +139,7 @@ TEST(IccCodecTest, Icc) {
 
   {
     IccBytes profile;
-    Bytes(kTestProfile, sizeof(kTestProfile)).AppendTo(&profile);
+    Bytes(kTestProfile, sizeof(kTestProfile)).AppendTo(profile);
     TestProfile(profile);
   }
 

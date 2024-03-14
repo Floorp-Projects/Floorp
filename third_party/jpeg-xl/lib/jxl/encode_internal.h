@@ -580,12 +580,9 @@ jxl::Status AppendData(JxlEncoderOutputProcessorWrapper& output_processor,
 // Internal use only struct, can only be initialized correctly by
 // JxlEncoderCreate.
 struct JxlEncoderStruct {
-  JxlEncoderError error = JxlEncoderError::JXL_ENC_ERR_OK;
   JxlMemoryManager memory_manager;
   jxl::MemoryManagerUniquePtr<jxl::ThreadPool> thread_pool{
       nullptr, jxl::MemoryManagerDeleteHelper(&memory_manager)};
-  JxlCmsInterface cms;
-  bool cms_set;
   std::vector<jxl::MemoryManagerUniquePtr<JxlEncoderFrameSettings>>
       encoder_options;
 
@@ -603,6 +600,9 @@ struct JxlEncoderStruct {
   size_t codestream_bytes_written_end_of_frame;
   jxl::JxlEncoderFrameIndexBox frame_index_box;
 
+  JxlCmsInterface cms;
+  bool cms_set;
+
   // Force using the container even if not needed
   bool use_container;
   // User declared they will add metadata boxes
@@ -611,22 +611,25 @@ struct JxlEncoderStruct {
   // TODO(lode): move level into jxl::CompressParams since some C++
   // implementation decisions should be based on it: level 10 allows more
   // features to be used.
-  int32_t codestream_level;
   bool store_jpeg_metadata;
+  int32_t codestream_level;
   jxl::CodecMetadata metadata;
   std::vector<uint8_t> jpeg_metadata;
 
-  // Wrote any output at all, so wrote the data before the first user added
-  // frame or box, such as signature, basic info, ICC profile or jpeg
-  // reconstruction box.
-  bool wrote_bytes;
   jxl::CompressParams last_used_cparams;
   JxlBasicInfo basic_info;
+
+  JxlEncoderError error = JxlEncoderError::JXL_ENC_ERR_OK;
 
   // Encoder wrote a jxlp (partial codestream) box, so any next codestream
   // parts must also be written in jxlp boxes, a single jxlc box cannot be
   // used. The counter is used for the 4-byte jxlp box index header.
   size_t jxlp_counter;
+
+  // Wrote any output at all, so wrote the data before the first user added
+  // frame or box, such as signature, basic info, ICC profile or jpeg
+  // reconstruction box.
+  bool wrote_bytes;
 
   bool frames_closed;
   bool boxes_closed;

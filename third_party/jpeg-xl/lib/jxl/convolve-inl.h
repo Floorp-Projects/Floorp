@@ -118,7 +118,7 @@ class Neighbors {
 // Returns indices for SetTableIndices such that TableLookupLanes on the
 // rightmost unaligned vector (rightmost sample in its most-significant lane)
 // returns the mirrored values, with the mirror outside the last valid sample.
-static inline const int32_t* MirrorLanes(const size_t mod) {
+inline const int32_t* MirrorLanes(const size_t mod) {
   const HWY_CAPPED(float, 16) d;
   constexpr size_t kN = MaxLanes(d);
 
@@ -181,7 +181,7 @@ class ConvolveT {
     JXL_CHECK(SameSize(rect, *out));
     JXL_CHECK(rect.xsize() >= MinWidth());
 
-    static_assert(int64_t(kRadius) <= 3,
+    static_assert(static_cast<int64_t>(kRadius) <= 3,
                   "Must handle [0, kRadius) and >= kRadius");
     switch (rect.xsize() % Lanes(Simd())) {
       case 0:
@@ -273,15 +273,17 @@ class ConvolveT {
                                  const Weights& weights, ThreadPool* pool,
                                  Image* out) {
     const int64_t ysize = rect.ysize();
-    RunBorderRows<kSizeModN>(in, rect, 0, std::min(int64_t(kRadius), ysize),
+    RunBorderRows<kSizeModN>(in, rect, 0,
+                             std::min(static_cast<int64_t>(kRadius), ysize),
                              weights, out);
-    if (ysize > 2 * int64_t(kRadius)) {
-      RunInteriorRows<kSizeModN>(in, rect, int64_t(kRadius),
-                                 ysize - int64_t(kRadius), weights, pool, out);
+    if (ysize > 2 * static_cast<int64_t>(kRadius)) {
+      RunInteriorRows<kSizeModN>(in, rect, static_cast<int64_t>(kRadius),
+                                 ysize - static_cast<int64_t>(kRadius), weights,
+                                 pool, out);
     }
-    if (ysize > int64_t(kRadius)) {
-      RunBorderRows<kSizeModN>(in, rect, ysize - int64_t(kRadius), ysize,
-                               weights, out);
+    if (ysize > static_cast<int64_t>(kRadius)) {
+      RunBorderRows<kSizeModN>(in, rect, ysize - static_cast<int64_t>(kRadius),
+                               ysize, weights, out);
     }
   }
 };

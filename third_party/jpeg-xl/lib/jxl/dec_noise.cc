@@ -108,9 +108,8 @@ void Random3Planes(size_t visible_frame_index, size_t nonvisible_frame_index,
                    size_t x0, size_t y0, const std::pair<ImageF*, Rect>& plane0,
                    const std::pair<ImageF*, Rect>& plane1,
                    const std::pair<ImageF*, Rect>& plane2) {
-  return HWY_DYNAMIC_DISPATCH(Random3Planes)(visible_frame_index,
-                                             nonvisible_frame_index, x0, y0,
-                                             plane0, plane1, plane2);
+  HWY_DYNAMIC_DISPATCH(Random3Planes)
+  (visible_frame_index, nonvisible_frame_index, x0, y0, plane0, plane1, plane2);
 }
 
 void DecodeFloatParam(float precision, float* val, BitReader* br) {

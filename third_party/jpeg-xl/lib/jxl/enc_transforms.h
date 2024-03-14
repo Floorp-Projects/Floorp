@@ -9,14 +9,13 @@
 // Facade for (non-inlined) integral transforms.
 
 #include <stddef.h>
-#include <stdint.h>
 
 #include "lib/jxl/ac_strategy.h"
 #include "lib/jxl/base/compiler_specific.h"
 
 namespace jxl {
 
-void TransformFromPixels(const AcStrategy::Type strategy,
+void TransformFromPixels(AcStrategy::Type strategy,
                          const float* JXL_RESTRICT pixels, size_t pixels_stride,
                          float* JXL_RESTRICT coefficients,
                          float* JXL_RESTRICT scratch_space);

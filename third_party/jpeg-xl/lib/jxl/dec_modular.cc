@@ -186,7 +186,7 @@ Status ModularFrameDecoder::DecodeGlobalInfo(BitReader* reader,
   }
   do_color = decode_color;
   size_t nb_extra = metadata.extra_channel_info.size();
-  bool has_tree = reader->ReadBits(1);
+  bool has_tree = static_cast<bool>(reader->ReadBits(1));
   if (!allow_truncated_group ||
       reader->TotalBitsConsumed() < reader->TotalBytes() * kBitsPerByte) {
     if (has_tree) {
@@ -416,7 +416,7 @@ Status ModularFrameDecoder::DecodeVarDCTDC(const FrameHeader& frame_header,
           reader, image, /*header=*/nullptr, stream_id, &options,
           /*undo_transforms=*/true, &tree, &code, &context_map)) {
     return JXL_FAILURE("Failed to decode VarDCT DC group (DC group id %d)",
-                       (int)group_id);
+                       static_cast<int>(group_id));
   }
   DequantDC(r, &dec_state->shared_storage.dc_storage,
             &dec_state->shared_storage.quant_dc, image,
@@ -519,7 +519,7 @@ Status ModularFrameDecoder::DecodeAcMetadata(const FrameHeader& frame_header,
 Status ModularFrameDecoder::ModularImageToDecodedRect(
     const FrameHeader& frame_header, Image& gi, PassesDecoderState* dec_state,
     jxl::ThreadPool* pool, RenderPipelineInput& render_pipeline_input,
-    Rect modular_rect) {
+    Rect modular_rect) const {
   const auto* metadata = frame_header.nonserialized_metadata;
   JXL_CHECK(gi.transform.empty());
 

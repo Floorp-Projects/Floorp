@@ -133,12 +133,11 @@ TEST(EncodeAPITest, ReuseCinfoSameMemOutput) {
     jpegli_destroy_compress(&cinfo);
   }
   size_t pos = 0;
-  for (size_t i = 0; i < all_configs.size(); ++i) {
+  for (auto& config : all_configs) {
     TestImage output;
-    pos +=
-        DecodeWithLibjpeg(all_configs[i].jparams, DecompressParams(), nullptr,
-                          0, buffer + pos, buffer_size - pos, &output);
-    VerifyOutputImage(all_configs[i].input, output, all_configs[i].max_dist);
+    pos += DecodeWithLibjpeg(config.jparams, DecompressParams(), nullptr, 0,
+                             buffer + pos, buffer_size - pos, &output);
+    VerifyOutputImage(config.input, output, config.max_dist);
   }
   if (buffer) free(buffer);
 }
@@ -164,20 +163,21 @@ TEST(EncodeAPITest, ReuseCinfoSameStdOutput) {
   size_t total_size = ftell(tmpf);
   rewind(tmpf);
   std::vector<uint8_t> compressed(total_size);
-  JXL_CHECK(total_size == fread(&compressed[0], 1, total_size, tmpf));
+  JXL_CHECK(total_size == fread(compressed.data(), 1, total_size, tmpf));
   fclose(tmpf);
   size_t pos = 0;
-  for (size_t i = 0; i < all_configs.size(); ++i) {
+  for (auto& config : all_configs) {
     TestImage output;
-    pos += DecodeWithLibjpeg(all_configs[i].jparams, DecompressParams(),
-                             nullptr, 0, &compressed[pos],
-                             compressed.size() - pos, &output);
-    VerifyOutputImage(all_configs[i].input, output, all_configs[i].max_dist);
+    pos +=
+        DecodeWithLibjpeg(config.jparams, DecompressParams(), nullptr, 0,
+                          &compressed[pos], compressed.size() - pos, &output);
+    VerifyOutputImage(config.input, output, config.max_dist);
   }
 }
 
 TEST(EncodeAPITest, ReuseCinfoChangeParams) {
-  TestImage input, output;
+  TestImage input;
+  TestImage output;
   CompressParams jparams;
   DecompressParams dparams;
   uint8_t* buffer = nullptr;

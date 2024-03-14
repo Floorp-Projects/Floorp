@@ -13,6 +13,7 @@
 #define LIB_JXL_BASE_RATIONAL_POLYNOMIAL_INL_H_
 #endif
 
+#include <jxl/types.h>
 #include <stddef.h>
 
 #include <hwy/highway.h>
@@ -42,7 +43,7 @@ struct FastDivision<float, V> {
   }
 
   V operator()(const V n, const V d) const {
-#if 1  // Faster on SKX
+#if JXL_TRUE  // Faster on SKX
     return Div(n, d);
 #else
     return n * ReciprocalNR(d);

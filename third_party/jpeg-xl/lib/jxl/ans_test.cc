@@ -113,8 +113,8 @@ void RoundtripRandomUnbalancedStream(int alphabet_size) {
   Rng rng(0);
   for (size_t i = 0; i < kReps; i++) {
     std::vector<int> distributions[kNumHistograms] = {};
-    for (int j = 0; j < kNumHistograms; j++) {
-      distributions[j].resize(kPrecision);
+    for (auto& distr : distributions) {
+      distr.resize(kPrecision);
       int symbol = 0;
       int remaining = 1;
       for (int k = 0; k < kPrecision; k++) {
@@ -126,7 +126,7 @@ void RoundtripRandomUnbalancedStream(int alphabet_size) {
           // sufficiently dissimilar.
           remaining = rng.UniformU(0, kPrecision - k + 1);
         }
-        distributions[j][k] = symbol;
+        distr[k] = symbol;
         remaining--;
       }
     }
@@ -158,7 +158,8 @@ TEST(ANSTest, RandomUnbalancedStreamRoundtripBig) {
 
 TEST(ANSTest, UintConfigRoundtrip) {
   for (size_t log_alpha_size = 5; log_alpha_size <= 8; log_alpha_size++) {
-    std::vector<HybridUintConfig> uint_config, uint_config_dec;
+    std::vector<HybridUintConfig> uint_config;
+    std::vector<HybridUintConfig> uint_config_dec;
     for (size_t i = 0; i < log_alpha_size; i++) {
       for (size_t j = 0; j <= i; j++) {
         for (size_t k = 0; k <= i - j; k++) {
@@ -187,16 +188,16 @@ TEST(ANSTest, UintConfigRoundtrip) {
 void TestCheckpointing(bool ans, bool lz77) {
   std::vector<std::vector<Token>> input_values(1);
   for (size_t i = 0; i < 1024; i++) {
-    input_values[0].push_back(Token(0, i % 4));
+    input_values[0].emplace_back(0, i % 4);
   }
   // up to lz77 window size.
   for (size_t i = 0; i < (1 << 20) - 1022; i++) {
-    input_values[0].push_back(Token(0, (i % 5) + 4));
+    input_values[0].emplace_back(0, (i % 5) + 4);
   }
   // Ensure that when the window wraps around, new values are different.
-  input_values[0].push_back(Token(0, 0));
+  input_values[0].emplace_back(0, 0);
   for (size_t i = 0; i < 1024; i++) {
-    input_values[0].push_back(Token(0, i % 4));
+    input_values[0].emplace_back(0, i % 4);
   }
 
   std::vector<uint8_t> context_map;

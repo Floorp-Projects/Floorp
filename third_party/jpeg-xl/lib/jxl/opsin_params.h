@@ -9,14 +9,15 @@
 // Constants that define the XYB color space.
 
 #include "lib/jxl/base/compiler_specific.h"
+#include "lib/jxl/base/matrix_ops.h"
 
 namespace jxl {
 
 // Returns 3x3 row-major matrix inverse of kOpsinAbsorbanceMatrix.
 // opsin_image_test verifies this is actually the inverse.
-const float* GetOpsinAbsorbanceInverseMatrix();
+const Matrix3x3& GetOpsinAbsorbanceInverseMatrix();
 
-void InitSIMDInverseMatrix(const float* JXL_RESTRICT inverse,
+void InitSIMDInverseMatrix(const Matrix3x3& inverse,
                            float* JXL_RESTRICT simd_inverse,
                            float intensity_target);
 

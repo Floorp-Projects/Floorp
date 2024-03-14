@@ -54,7 +54,7 @@ Status Encoder::VerifyBitDepth(JxlDataType data_type, uint32_t bits_per_sample,
        (bits_per_sample > 16 || exponent_bits > 5))) {
     return JXL_FAILURE(
         "Incompatible data_type %d and bit depth %u with exponent bits %u",
-        (int)data_type, bits_per_sample, exponent_bits);
+        static_cast<int>(data_type), bits_per_sample, exponent_bits);
   }
   return true;
 }

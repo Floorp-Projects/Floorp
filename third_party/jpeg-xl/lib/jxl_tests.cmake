@@ -76,7 +76,6 @@ foreach (TESTFILE IN LISTS JPEGXL_INTERNAL_TESTS)
     ${JPEGXL_COVERAGE_FLAGS}
   )
   target_link_libraries(${TESTNAME}
-    gmock
     GTest::GTest
     GTest::Main
     jxl_testlib-internal

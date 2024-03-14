@@ -90,8 +90,8 @@ bool EncodeDQT(j_compress_ptr cinfo, bool write_all_tables) {
       JPEGLI_ERROR("Missing quant table %d", i);
     }
     int precision = 0;
-    for (size_t k = 0; k < DCTSIZE2; ++k) {
-      if (quant_table->quantval[k] > 255) {
+    for (UINT16 q : quant_table->quantval) {
+      if (q > 255) {
         precision = 1;
         is_baseline = false;
       }
@@ -123,7 +123,6 @@ bool EncodeDQT(j_compress_ptr cinfo, bool write_all_tables) {
 
 void EncodeSOF(j_compress_ptr cinfo, bool is_baseline) {
   if (cinfo->data_precision != kJpegPrecision) {
-    is_baseline = false;
     JPEGLI_ERROR("Unsupported data precision %d", cinfo->data_precision);
   }
   const uint8_t marker = cinfo->progressive_mode ? 0xc2
@@ -302,7 +301,7 @@ void WriteBlock(const int32_t* JXL_RESTRICT symbols,
 
 namespace {
 
-static JXL_INLINE void EmitMarker(JpegBitWriter* bw, int marker) {
+JXL_INLINE void EmitMarker(JpegBitWriter* bw, int marker) {
   bw->data[bw->pos++] = 0xFF;
   bw->data[bw->pos++] = marker;
 }

@@ -57,7 +57,7 @@ struct FrameInfo {
   // Corresponds to BlendingInfo::source from the FrameHeader.
   size_t source = 1;
   // Corresponds to BlendingInfo::clamp from the FrameHeader.
-  size_t clamp = 1;
+  bool clamp = true;
   // Corresponds to BlendingInfo::alpha_channel from the FrameHeader, or set to
   // -1 to automatically choose it as the index of the first extra channel of
   // type alpha.

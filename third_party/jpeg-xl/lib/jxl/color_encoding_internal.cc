@@ -47,12 +47,12 @@ std::array<ColorEncoding, 2> ColorEncoding::CreateC2(Primaries pr,
 const ColorEncoding& ColorEncoding::SRGB(bool is_gray) {
   static std::array<ColorEncoding, 2> c2 =
       CreateC2(Primaries::kSRGB, TransferFunction::kSRGB);
-  return c2[is_gray];
+  return c2[is_gray ? 1 : 0];
 }
 const ColorEncoding& ColorEncoding::LinearSRGB(bool is_gray) {
   static std::array<ColorEncoding, 2> c2 =
       CreateC2(Primaries::kSRGB, TransferFunction::kLinear);
-  return c2[is_gray];
+  return c2[is_gray ? 1 : 0];
 }
 
 Status ColorEncoding::SetWhitePointType(const WhitePoint& wp) {

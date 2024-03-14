@@ -39,8 +39,9 @@ bool ReadPFM(const char* filename, std::vector<float>* pixels, uint32_t* xsize,
     return false;
   }
   uint32_t endian_test = 1;
-  uint8_t little_endian[4];
-  memcpy(little_endian, &endian_test, 4);
+  uint8_t little_endian_check[4];
+  memcpy(little_endian_check, &endian_test, 4);
+  bool little_endian = (little_endian_check[0] == 1);
 
   if (fseek(file, 0, SEEK_END) != 0) {
     fclose(file);
@@ -63,7 +64,7 @@ bool ReadPFM(const char* filename, std::vector<float>* pixels, uint32_t* xsize,
   data.resize(size);
 
   size_t readsize = fread(data.data(), 1, size, file);
-  if ((long)readsize != size) {
+  if (static_cast<long>(readsize) != size) {
     fclose(file);
     return false;
   }
@@ -116,12 +117,13 @@ bool ReadPFM(const char* filename, std::vector<float>* pixels, uint32_t* xsize,
     fprintf(stderr,
             "%s doesn't seem to be a Portable FloatMap file (pixel data bytes "
             "are %d, but expected %d * %d * 3 * 4 + %d (%d).\n",
-            filename, (int)data.size(), (int)*ysize, (int)*xsize, (int)offset,
-            (int)(*ysize * *xsize * 3 * 4 + offset));
+            filename, static_cast<int>(data.size()), static_cast<int>(*ysize),
+            static_cast<int>(*xsize), static_cast<int>(offset),
+            static_cast<int>(*ysize * *xsize * 3 * 4 + offset));
     return false;
   }
 
-  if (!!little_endian[0] != input_little_endian) {
+  if (little_endian != input_little_endian) {
     fprintf(stderr,
             "%s has a different endianness than we do, conversion is not "
             "supported.\n",
@@ -132,7 +134,7 @@ bool ReadPFM(const char* filename, std::vector<float>* pixels, uint32_t* xsize,
   pixels->resize(*ysize * *xsize * 3);
 
   for (int y = *ysize - 1; y >= 0; y--) {
-    for (int x = 0; x < (int)*xsize; x++) {
+    for (int x = 0; x < static_cast<int>(*xsize); x++) {
       for (int c = 0; c < 3; c++) {
         memcpy(pixels->data() + (y * *xsize + x) * 3 + c, data.data() + offset,
                sizeof(float));
@@ -180,8 +182,8 @@ bool EncodeJxlOneshot(const std::vector<float>& pixels, const uint32_t xsize,
   }
 
   JxlColorEncoding color_encoding = {};
-  JxlColorEncodingSetToSRGB(&color_encoding,
-                            /*is_gray=*/pixel_format.num_channels < 3);
+  JXL_BOOL is_gray = TO_JXL_BOOL(pixel_format.num_channels < 3);
+  JxlColorEncodingSetToSRGB(&color_encoding, is_gray);
   if (JXL_ENC_SUCCESS !=
       JxlEncoderSetColorEncoding(enc.get(), &color_encoding)) {
     fprintf(stderr, "JxlEncoderSetColorEncoding failed\n");
@@ -193,7 +195,7 @@ bool EncodeJxlOneshot(const std::vector<float>& pixels, const uint32_t xsize,
 
   if (JXL_ENC_SUCCESS !=
       JxlEncoderAddImageFrame(frame_settings, &pixel_format,
-                              (void*)pixels.data(),
+                              static_cast<const void*>(pixels.data()),
                               sizeof(float) * pixels.size())) {
     fprintf(stderr, "JxlEncoderAddImageFrame failed\n");
     return false;

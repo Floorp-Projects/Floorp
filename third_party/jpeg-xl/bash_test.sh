@@ -106,12 +106,6 @@ test_printf_size_t() {
     ret=1
   fi
 
-  if grep -n -E 'gmock\.h' \
-      $(git ls-files | grep -E '(\.c|\.cc|\.cpp|\.h)$' | grep -v -F /testing.h); then
-    echo "Don't include gmock directly, instead include 'testing.h'. " >&2
-    ret=1
-  fi
-
   local f
   for f in $(git ls-files | grep -E "\.cc$" | xargs grep 'PRI[udx]S' |
       cut -f 1 -d : | uniq); do

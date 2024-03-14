@@ -7,6 +7,7 @@
 
 #include <jxl/encode.h>
 #include <jxl/encode_cxx.h>
+#include <jxl/types.h>
 
 #include <cmath>
 #include <utility>
@@ -229,7 +230,7 @@ bool JpegXlSaveGui::GuiOnChangeAdvancedMode(GtkWidget* toggle,
   gtk_widget_set_sensitive(self->frame_advanced, jxl_save_opts.advanced_mode);
 
   if (!jxl_save_opts.advanced_mode) {
-    jxl_save_opts.basic_info.uses_original_profile = false;
+    jxl_save_opts.basic_info.uses_original_profile = JXL_FALSE;
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(self->toggle_no_xyb), false);
 
     jxl_save_opts.use_container = true;
@@ -290,19 +291,20 @@ bool JpegXlSaveGui::SaveDialog() {
       "\n\td\u00A0=\u00A03\tFair"
       "\n\td\u00A0=\u00A06\tPoor";
 
-  entry_distance = (GtkAdjustment*)gimp_scale_entry_new(
-      GTK_TABLE(table), 0, 0, "Distance", SCALE_WIDTH, 0,
-      jxl_save_opts.distance, 0.0, 15.0, 0.001, 1.0, 3, true, 0.0, 0.0,
-      distance_help, SAVE_PROC);
-  gimp_scale_entry_set_logarithmic((GtkObject*)entry_distance, true);
+  entry_distance = reinterpret_cast<GtkAdjustment*>(
+      gimp_scale_entry_new(GTK_TABLE(table), 0, 0, "Distance", SCALE_WIDTH, 0,
+                           jxl_save_opts.distance, 0.0, 15.0, 0.001, 1.0, 3,
+                           true, 0.0, 0.0, distance_help, SAVE_PROC));
+  gimp_scale_entry_set_logarithmic(reinterpret_cast<GtkObject*>(entry_distance),
+                                   true);
 
   // Quality Slider
   static gchar quality_help[] =
       "JPEG-style Quality is remapped to distance.  "
       "Values roughly match libjpeg quality settings.";
-  entry_quality = (GtkAdjustment*)gimp_scale_entry_new(
+  entry_quality = reinterpret_cast<GtkAdjustment*>(gimp_scale_entry_new(
       GTK_TABLE(table), 0, 1, "Quality", SCALE_WIDTH, 0, jxl_save_opts.quality,
-      8.26, 100.0, 1.0, 10.0, 2, true, 0.0, 0.0, quality_help, SAVE_PROC);
+      8.26, 100.0, 1.0, 10.0, 2, true, 0.0, 0.0, quality_help, SAVE_PROC));
 
   // Distance and Quality Signals
   handle_entry_distance = g_signal_connect(
@@ -322,10 +324,10 @@ bool JpegXlSaveGui::SaveDialog() {
       "the encoder uses less effort to hit distance targets.  "
       "As\u00A0a\u00A0result, image quality may be decreased.  "
       "Default\u00A0=\u00A03.";
-  entry_effort = (GtkAdjustment*)gimp_scale_entry_new(
-      GTK_TABLE(table), 0, 3, "Speed", SCALE_WIDTH, 0,
-      10 - jxl_save_opts.encoding_effort, 1, 9, 1, 2, 0, true, 0.0, 0.0,
-      effort_help, SAVE_PROC);
+  entry_effort = reinterpret_cast<GtkAdjustment*>(
+      gimp_scale_entry_new(GTK_TABLE(table), 0, 3, "Speed", SCALE_WIDTH, 0,
+                           10 - jxl_save_opts.encoding_effort, 1, 9, 1, 2, 0,
+                           true, 0.0, 0.0, effort_help, SAVE_PROC));
 
   // effort signal
   g_signal_connect(entry_effort, "value-changed", G_CALLBACK(GuiOnChangeEffort),
@@ -415,10 +417,10 @@ bool JpegXlSaveGui::SaveDialog() {
   gtk_container_add(GTK_CONTAINER(vbox), table);
   gtk_widget_show(table);
 
-  entry_faster = (GtkAdjustment*)gimp_scale_entry_new(
-      GTK_TABLE(table), 0, 0, "Faster Decoding", SCALE_WIDTH, 0,
-      jxl_save_opts.faster_decoding, 0, 4, 1, 1, 0, true, 0.0, 0.0, faster_help,
-      SAVE_PROC);
+  entry_faster = reinterpret_cast<GtkAdjustment*>(
+      gimp_scale_entry_new(GTK_TABLE(table), 0, 0, "Faster Decoding",
+                           SCALE_WIDTH, 0, jxl_save_opts.faster_decoding, 0, 4,
+                           1, 1, 0, true, 0.0, 0.0, faster_help, SAVE_PROC));
 
   // Faster Decoding Signals
   g_signal_connect(entry_faster, "value-changed",
@@ -472,7 +474,6 @@ JpegXlSaveOpts::JpegXlSaveOpts() {
   pixel_format.align = 0;
 
   JxlEncoderInitBasicInfo(&basic_info);
-  return;
 }  // JpegXlSaveOpts constructor
 
 bool JpegXlSaveOpts::SetModel(bool is_linear_) {
@@ -568,7 +569,8 @@ bool JpegXlSaveOpts::SetNumChannels(int channels) {
       pixel_format.num_channels = 2;
       basic_info.num_color_channels = 1;
       basic_info.num_extra_channels = 1;
-      basic_info.alpha_bits = int(std::fmin(16, basic_info.bits_per_sample));
+      basic_info.alpha_bits =
+          static_cast<int>(std::fmin(16, basic_info.bits_per_sample));
       basic_info.alpha_exponent_bits = 0;
       break;
     case 3:
@@ -582,7 +584,8 @@ bool JpegXlSaveOpts::SetNumChannels(int channels) {
       pixel_format.num_channels = 4;
       basic_info.num_color_channels = 3;
       basic_info.num_extra_channels = 1;
-      basic_info.alpha_bits = int(std::fmin(16, basic_info.bits_per_sample));
+      basic_info.alpha_bits =
+          static_cast<int>(std::fmin(16, basic_info.bits_per_sample));
       basic_info.alpha_exponent_bits = 0;
       break;
     default:
@@ -698,7 +701,7 @@ bool SaveJpegXlImage(const gint32 image_id, const gint32 drawable_id,
 
   // treat layers as animation frames, for now
   if (nlayers > 1) {
-    jxl_save_opts.basic_info.have_animation = true;
+    jxl_save_opts.basic_info.have_animation = JXL_TRUE;
     jxl_save_opts.basic_info.animation.tps_numerator = 100;
   }
 
@@ -738,12 +741,12 @@ bool SaveJpegXlImage(const gint32 image_id, const gint32 drawable_id,
       jxl_save_opts.icc_attached = true;
     } else {
       g_printerr(SAVE_PROC " Warning: JxlEncoderSetICCProfile failed.\n");
-      jxl_save_opts.basic_info.uses_original_profile = false;
+      jxl_save_opts.basic_info.uses_original_profile = JXL_FALSE;
       jxl_save_opts.lossless = false;
     }
   } else {
     g_printerr(SAVE_PROC " Warning: Using internal profile.\n");
-    jxl_save_opts.basic_info.uses_original_profile = false;
+    jxl_save_opts.basic_info.uses_original_profile = JXL_FALSE;
     jxl_save_opts.lossless = false;
   }
 
@@ -751,9 +754,11 @@ bool SaveJpegXlImage(const gint32 image_id, const gint32 drawable_id,
   JxlColorEncoding color_encoding = {};
 
   if (jxl_save_opts.is_linear) {
-    JxlColorEncodingSetToLinearSRGB(&color_encoding, jxl_save_opts.is_gray);
+    JxlColorEncodingSetToLinearSRGB(&color_encoding,
+                                    TO_JXL_BOOL(jxl_save_opts.is_gray));
   } else {
-    JxlColorEncodingSetToSRGB(&color_encoding, jxl_save_opts.is_gray);
+    JxlColorEncodingSetToSRGB(&color_encoding,
+                              TO_JXL_BOOL(jxl_save_opts.is_gray));
   }
 
   if (JXL_ENC_SUCCESS !=
@@ -777,15 +782,15 @@ bool SaveJpegXlImage(const gint32 image_id, const gint32 drawable_id,
       // lossless mode doesn't work well with floating point
       jxl_save_opts.distance = 0.01;
       jxl_save_opts.lossless = false;
-      JxlEncoderSetFrameLossless(frame_settings, false);
+      JxlEncoderSetFrameLossless(frame_settings, JXL_FALSE);
       JxlEncoderSetFrameDistance(frame_settings, 0.01);
     } else {
       JxlEncoderSetFrameDistance(frame_settings, 0);
-      JxlEncoderSetFrameLossless(frame_settings, true);
+      JxlEncoderSetFrameLossless(frame_settings, JXL_TRUE);
     }
   } else {
     jxl_save_opts.lossless = false;
-    JxlEncoderSetFrameLossless(frame_settings, false);
+    JxlEncoderSetFrameLossless(frame_settings, JXL_FALSE);
     JxlEncoderSetFrameDistance(frame_settings, jxl_save_opts.distance);
   }
 

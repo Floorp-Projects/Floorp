@@ -197,7 +197,7 @@ void InverseTransformBlock8x8(const int16_t* JXL_RESTRICT qblock,
 
 // Computes the N-point IDCT of in[], and stores the result in out[]. The in[]
 // array is at most 8 values long, values in[8:N-1] are assumed to be 0.
-void Compute1dIDCT(float* in, float* out, size_t N) {
+void Compute1dIDCT(const float* in, float* out, size_t N) {
   switch (N) {
     case 3: {
       static constexpr float kC3[3] = {
@@ -608,6 +608,9 @@ void Compute1dIDCT(float* in, float* out, size_t N) {
       out[8] = even7 - odd7;
       break;
     }
+    default:
+      JXL_ABORT("Compute1dIDCT does not support N=%d", static_cast<int>(N));
+      break;
   }
 }
 

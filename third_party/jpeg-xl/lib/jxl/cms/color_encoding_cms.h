@@ -96,6 +96,8 @@ enum class RenderingIntent : uint32_t {
 // Chromaticity (Y is omitted because it is 1 for white points and implicit for
 // primaries)
 struct CIExy {
+  CIExy() = default;
+  CIExy(double x, double y) : x(x), y(y) {}
   double x = 0.0;
   double y = 0.0;
 };
@@ -516,7 +518,7 @@ struct ColorEncoding {
     JXL_RETURN_IF_ERROR(cms.set_fields_from_icc(cms.set_fields_data,
                                                 new_icc.data(), new_icc.size(),
                                                 &external, &new_cmyk));
-    cmyk = new_cmyk;
+    cmyk = static_cast<bool>(new_cmyk);
     JXL_RETURN_IF_ERROR(FromExternal(external));
     icc = std::move(new_icc);
     return true;

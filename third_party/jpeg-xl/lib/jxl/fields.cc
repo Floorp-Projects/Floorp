@@ -109,7 +109,7 @@ struct SetDefaultVisitor : public VisitorBase {
 
 class AllDefaultVisitor : public VisitorBase {
  public:
-  explicit AllDefaultVisitor() : VisitorBase() {}
+  explicit AllDefaultVisitor() = default;
 
   Status Bits(const size_t bits, const uint32_t default_value,
               uint32_t* JXL_RESTRICT value) override {
@@ -148,7 +148,7 @@ class AllDefaultVisitor : public VisitorBase {
 
 class ReadVisitor : public VisitorBase {
  public:
-  explicit ReadVisitor(BitReader* reader) : VisitorBase(), reader_(reader) {}
+  explicit ReadVisitor(BitReader* reader) : reader_(reader) {}
 
   Status Bits(const size_t bits, const uint32_t /*default_value*/,
               uint32_t* JXL_RESTRICT value) override {
@@ -267,7 +267,8 @@ class ReadVisitor : public VisitorBase {
   uint64_t total_extension_bits_ = 0;
   size_t pos_after_ext_size_ = 0;  // 0 iff extensions == 0.
 
-  friend Status jxl::CheckHasEnoughBits(Visitor*, size_t);
+  friend Status jxl::CheckHasEnoughBits(Visitor* /* visitor */,
+                                        size_t /* bits */);
 };
 
 class MaxBitsVisitor : public VisitorBase {
@@ -321,7 +322,7 @@ class MaxBitsVisitor : public VisitorBase {
 
 class CanEncodeVisitor : public VisitorBase {
  public:
-  explicit CanEncodeVisitor() : VisitorBase() {}
+  explicit CanEncodeVisitor() = default;
 
   Status Bits(const size_t bits, const uint32_t /*default_value*/,
               uint32_t* JXL_RESTRICT value) override {

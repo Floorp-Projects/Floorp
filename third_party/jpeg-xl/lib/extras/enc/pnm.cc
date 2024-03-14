@@ -31,7 +31,7 @@ constexpr size_t kMaxHeaderSize = 200;
 class BasePNMEncoder : public Encoder {
  public:
   Status Encode(const PackedPixelFile& ppf, EncodedImage* encoded_image,
-                ThreadPool* pool = nullptr) const override {
+                ThreadPool* pool) const override {
     JXL_RETURN_IF_ERROR(VerifyBasicInfo(ppf.info));
     if (!ppf.metadata.exif.empty() || !ppf.metadata.iptc.empty() ||
         !ppf.metadata.jumbf.empty() || !ppf.metadata.xmp.empty()) {

@@ -248,6 +248,7 @@ Status PassesDecoderState::PreparePipeline(const FrameHeader& frame_header,
       }
       linear = false;
     }
+    (void)linear;
 
     if (main_output.callback.IsPresent() || main_output.buffer) {
       builder.AddStage(GetWriteToOutputStage(main_output, width, height,

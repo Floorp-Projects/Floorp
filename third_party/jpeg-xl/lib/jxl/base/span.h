@@ -64,8 +64,8 @@ class Span {
 
   // NCT == non-const-T; compiler will complain if NCT is not compatible with T.
   template <typename NCT>
-  void AppendTo(std::vector<NCT>* dst) const {
-    dst->insert(dst->end(), begin(), end());
+  void AppendTo(std::vector<NCT>& dst) const {
+    dst.insert(dst.end(), begin(), end());
   }
 
  private:

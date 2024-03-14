@@ -43,7 +43,7 @@ JXL_INLINE Status SetFromBytes(const Span<const uint8_t> bytes, CodecInOut* io,
                       orig_codec);
 }
 
-Status Encode(const extras::PackedPixelFile& ppf, const extras::Codec codec,
+Status Encode(const extras::PackedPixelFile& ppf, extras::Codec codec,
               std::vector<uint8_t>* bytes, ThreadPool* pool);
 
 Status Encode(const extras::PackedPixelFile& ppf, const std::string& pathname,

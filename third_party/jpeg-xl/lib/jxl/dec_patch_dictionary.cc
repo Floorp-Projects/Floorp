@@ -128,7 +128,8 @@ Status PatchDictionary::Decode(BitReader* br, size_t xsize, size_t ysize,
       }
       for (size_t j = 0; j < num_ec + 1; j++) {
         uint32_t blend_mode = read_num(kPatchBlendModeContext);
-        if (blend_mode >= uint32_t(PatchBlendMode::kNumBlendModes)) {
+        if (blend_mode >=
+            static_cast<uint32_t>(PatchBlendMode::kNumBlendModes)) {
           return JXL_FAILURE("Invalid patch blend mode: %u", blend_mode);
         }
         PatchBlending info;
@@ -147,21 +148,22 @@ Status PatchDictionary::Decode(BitReader* br, size_t xsize, size_t ysize,
             return JXL_FAILURE(
                 "Invalid alpha channel for blending: %u out of %u\n",
                 info.alpha_channel,
-                (uint32_t)shared_->metadata->m.extra_channel_info.size());
+                static_cast<uint32_t>(
+                    shared_->metadata->m.extra_channel_info.size()));
           }
         } else {
           info.alpha_channel = 0;
         }
         if (UsesClamp(info.mode)) {
-          info.clamp = read_num(kPatchClampContext);
+          info.clamp = static_cast<bool>(read_num(kPatchClampContext));
         } else {
           info.clamp = false;
         }
         blendings_.push_back(info);
       }
-      positions_.push_back(std::move(pos));
+      positions_.emplace_back(pos);
     }
-    ref_positions_.emplace_back(std::move(ref_pos));
+    ref_positions_.emplace_back(ref_pos);
   }
   positions_.shrink_to_fit();
 
@@ -175,8 +177,8 @@ Status PatchDictionary::Decode(BitReader* br, size_t xsize, size_t ysize,
 
 int PatchDictionary::GetReferences() const {
   int result = 0;
-  for (size_t i = 0; i < ref_positions_.size(); ++i) {
-    result |= (1 << static_cast<int>(ref_positions_[i].ref));
+  for (const auto& ref_pos : ref_positions_) {
+    result |= (1 << static_cast<int>(ref_pos.ref));
   }
   return result;
 }
@@ -253,11 +255,11 @@ void PatchDictionary::ComputePatchTree() {
     node.start = sorted_patches_y0_.size();
     for (ssize_t i = static_cast<ssize_t>(right_start) - 1;
          i >= static_cast<ssize_t>(left_end); --i) {
-      sorted_patches_y1_.push_back({intervals[i].y1, intervals[i].idx});
+      sorted_patches_y1_.emplace_back(intervals[i].y1, intervals[i].idx);
     }
     sort_by_y0(left_end, right_start);
     for (size_t i = left_end; i < right_start; ++i) {
-      sorted_patches_y0_.push_back({intervals[i].y0, intervals[i].idx});
+      sorted_patches_y0_.emplace_back(intervals[i].y0, intervals[i].idx);
     }
     // Create the left and right nodes (if not empty).
     node.left_child = node.right_child = -1;
@@ -284,7 +286,7 @@ std::vector<size_t> PatchDictionary::GetPatchesForRow(size_t y) const {
   if (y < num_patches_.size() && num_patches_[y] > 0) {
     result.reserve(num_patches_[y]);
     for (ssize_t tree_idx = 0; tree_idx != -1;) {
-      JXL_DASSERT(tree_idx < (ssize_t)patch_tree_.size());
+      JXL_DASSERT(tree_idx < static_cast<ssize_t>(patch_tree_.size()));
       const auto& node = patch_tree_[tree_idx];
       if (y <= node.y_center) {
         for (size_t i = 0; i < node.num; ++i) {

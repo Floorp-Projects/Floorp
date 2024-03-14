@@ -743,7 +743,7 @@ Status DecodeGroup(const FrameHeader& frame_header,
            y++) {
         for (ssize_t iy = 0; iy < 5; iy++) {
           input_rows[0][iy] = group_dec_cache->dc_buffer.Row(
-              Mirror(ssize_t(y) + iy - 2,
+              Mirror(static_cast<ssize_t>(y) + iy - 2,
                      dec_state->shared->dc->Plane(c).ysize() >> vs) +
               2 - src_rect.y0());
         }

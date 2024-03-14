@@ -7,6 +7,7 @@
 #include <jxl/encode.h>
 #include <jxl/types.h>
 
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <sstream>
@@ -130,10 +131,11 @@ TEST(ModularTest, RoundtripLossyDeltaPalette) {
   size_t compressed_size;
   JXL_EXPECT_OK(Roundtrip(&io, cparams, {}, &io_out, _, &compressed_size));
   EXPECT_LE(compressed_size, 6800u);
-  EXPECT_THAT(ButteraugliDistance(io.frames, io_out.frames, ButteraugliParams(),
-                                  *JxlGetDefaultCms(),
-                                  /*distmap=*/nullptr),
-              IsSlightlyBelow(1.5));
+  EXPECT_SLIGHTLY_BELOW(
+      ButteraugliDistance(io.frames, io_out.frames, ButteraugliParams(),
+                          *JxlGetDefaultCms(),
+                          /*distmap=*/nullptr),
+      1.5);
 }
 TEST(ModularTest, RoundtripLossyDeltaPaletteWP) {
   const std::vector<uint8_t> orig =
@@ -153,10 +155,11 @@ TEST(ModularTest, RoundtripLossyDeltaPaletteWP) {
   size_t compressed_size;
   JXL_EXPECT_OK(Roundtrip(&io, cparams, {}, &io_out, _, &compressed_size));
   EXPECT_LE(compressed_size, 7000u);
-  EXPECT_THAT(ButteraugliDistance(io.frames, io_out.frames, ButteraugliParams(),
-                                  *JxlGetDefaultCms(),
-                                  /*distmap=*/nullptr),
-              IsSlightlyBelow(10.1));
+  EXPECT_SLIGHTLY_BELOW(
+      ButteraugliDistance(io.frames, io_out.frames, ButteraugliParams(),
+                          *JxlGetDefaultCms(),
+                          /*distmap=*/nullptr),
+      10.1);
 }
 
 TEST(ModularTest, RoundtripLossy) {
@@ -175,10 +178,11 @@ TEST(ModularTest, RoundtripLossy) {
   size_t compressed_size;
   JXL_EXPECT_OK(Roundtrip(&io, cparams, {}, &io_out, _, &compressed_size));
   EXPECT_LE(compressed_size, 30000u);
-  EXPECT_THAT(ButteraugliDistance(io.frames, io_out.frames, ButteraugliParams(),
-                                  *JxlGetDefaultCms(),
-                                  /*distmap=*/nullptr),
-              IsSlightlyBelow(2.3));
+  EXPECT_SLIGHTLY_BELOW(
+      ButteraugliDistance(io.frames, io_out.frames, ButteraugliParams(),
+                          *JxlGetDefaultCms(),
+                          /*distmap=*/nullptr),
+      2.3);
 }
 
 TEST(ModularTest, RoundtripLossy16) {
@@ -201,10 +205,11 @@ TEST(ModularTest, RoundtripLossy16) {
   size_t compressed_size;
   JXL_EXPECT_OK(Roundtrip(&io, cparams, {}, &io_out, _, &compressed_size));
   EXPECT_LE(compressed_size, 300u);
-  EXPECT_THAT(ButteraugliDistance(io.frames, io_out.frames, ButteraugliParams(),
-                                  *JxlGetDefaultCms(),
-                                  /*distmap=*/nullptr),
-              IsSlightlyBelow(1.6));
+  EXPECT_SLIGHTLY_BELOW(
+      ButteraugliDistance(io.frames, io_out.frames, ButteraugliParams(),
+                          *JxlGetDefaultCms(),
+                          /*distmap=*/nullptr),
+      1.6);
 }
 
 TEST(ModularTest, RoundtripExtraProperties) {
@@ -316,7 +321,7 @@ TEST_P(ModularTestParam, RoundtripLossless) {
         float f = in[x] + generator.UniformF(0.0f, 1.f / 255.f);
         if (f > 1.f) f = 1.f;
         // quantize to the bitdepth we're testing
-        unsigned int u = f * factor + 0.5;
+        unsigned int u = static_cast<unsigned int>(std::lround(f * factor));
         out[x] = u * ifactor;
       }
     }
@@ -333,7 +338,7 @@ TEST_P(ModularTestParam, RoundtripLossless) {
   CodecInOut io2;
   size_t compressed_size;
   JXL_EXPECT_OK(Roundtrip(&io, cparams, {}, &io2, _, &compressed_size));
-  EXPECT_LE(compressed_size, bitdepth * xsize * ysize / 3 * 1.1);
+  EXPECT_LE(compressed_size, bitdepth * xsize * ysize / 3.0 * 1.1);
   EXPECT_LE(0, ComputeDistance2(io.Main(), io2.Main(), *JxlGetDefaultCms()));
   size_t different = 0;
   for (size_t c = 0; c < 3; c++) {

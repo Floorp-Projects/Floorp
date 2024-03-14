@@ -70,6 +70,7 @@ void StoreHuffmanTreeToBitMask(const size_t huffman_tree_size,
   for (size_t i = 0; i < huffman_tree_size; ++i) {
     size_t ix = huffman_tree[i];
     writer->Write(code_length_bitdepth[ix], code_length_bitdepth_symbols[ix]);
+    JXL_ASSERT(ix <= 17);
     // Extra bits
     switch (ix) {
       case 16:
@@ -77,6 +78,9 @@ void StoreHuffmanTreeToBitMask(const size_t huffman_tree_size,
         break;
       case 17:
         writer->Write(3, huffman_tree_extra_bits[i]);
+        break;
+      default:
+        // no-op
         break;
     }
   }

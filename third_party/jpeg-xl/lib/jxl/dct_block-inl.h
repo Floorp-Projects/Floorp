@@ -44,7 +44,7 @@ class DCTFrom {
   DCTFrom(const float* data, size_t stride) : stride_(stride), data_(data) {}
 
   template <typename D>
-  HWY_INLINE Vec<D> LoadPart(D, const size_t row, size_t i) const {
+  HWY_INLINE Vec<D> LoadPart(D /* tag */, const size_t row, size_t i) const {
     JXL_DASSERT(Lanes(D()) <= stride_);
     // Since these functions are used also for DC, no alignment at all is
     // guaranteed in the case of floating blocks.
@@ -74,7 +74,7 @@ class DCTTo {
   DCTTo(float* data, size_t stride) : stride_(stride), data_(data) {}
 
   template <typename D>
-  HWY_INLINE void StorePart(D, const Vec<D>& v, const size_t row,
+  HWY_INLINE void StorePart(D /* tag */, const Vec<D>& v, const size_t row,
                             size_t i) const {
     JXL_DASSERT(Lanes(D()) <= stride_);
     // Since these functions are used also for DC, no alignment at all is

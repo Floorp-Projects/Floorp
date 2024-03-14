@@ -19,7 +19,7 @@ HWY_BEFORE_NAMESPACE();
 namespace jxl {
 namespace HWY_NAMESPACE {
 
-static constexpr float rec2020_luminances[3] = {0.2627f, 0.6780f, 0.0593f};
+static constexpr Vector3 rec2020_luminances{0.2627f, 0.6780f, 0.0593f};
 
 Status ToneMapFrame(const std::pair<float, float> display_nits,
                     ImageBundle* const ib, ThreadPool* const pool) {

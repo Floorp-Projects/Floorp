@@ -6,10 +6,6 @@
 // This C++ example decodes a JPEG XL image progressively (input bytes are
 // passed in chunks). The example outputs the intermediate steps to PAM files.
 
-#ifndef __STDC_FORMAT_MACROS
-#define __STDC_FORMAT_MACROS
-#endif
-
 #include <inttypes.h>
 #include <jxl/decode.h>
 #include <jxl/decode_cxx.h>
@@ -29,10 +25,9 @@ bool WritePAM(const char* filename, const uint8_t* buffer, size_t w, size_t h) {
     return false;
   }
   fprintf(fp,
-          "P7\nWIDTH %" PRIu64 "\nHEIGHT %" PRIu64
-          "\nDEPTH 4\nMAXVAL 255\nTUPLTYPE "
+          "P7\nWIDTH %d\nHEIGHT %d\nDEPTH 4\nMAXVAL 255\nTUPLTYPE "
           "RGB_ALPHA\nENDHDR\n",
-          static_cast<uint64_t>(w), static_cast<uint64_t>(h));
+          static_cast<int>(w), static_cast<int>(h));
   size_t num_bytes = w * h * 4;
   if (fwrite(buffer, 1, num_bytes, fp) != num_bytes) {
     fclose(fp);
@@ -51,7 +46,8 @@ bool DecodeJpegXlProgressive(const uint8_t* jxl, size_t size,
                              const char* filename, size_t chunksize) {
   std::vector<uint8_t> pixels;
   std::vector<uint8_t> icc_profile;
-  size_t xsize = 0, ysize = 0;
+  size_t xsize = 0;
+  size_t ysize = 0;
 
   // Multi-threaded parallel runner.
   auto runner = JxlResizableParallelRunnerMake(nullptr);

@@ -25,16 +25,31 @@ Checks: >-
   modernize-*,
   performance-*,
   readability-*,
+  -bugprone-narrowing-conversions,
+  -bugprone-branch-clone,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-implicit-widening-of-multiplication-result,
+  -bugprone-infinite-loop,
+  -bugprone-unused-local-non-trivial-variable,
+  -modernize-avoid-c-arrays,
   -modernize-deprecated-headers,
   -modernize-return-braced-init-list,
   -modernize-use-auto,
   -modernize-use-default-member-init,
   -modernize-use-trailing-return-type,
   -modernize-use-using,
+  -performance-enum-size,
+  -readability-avoid-nested-conditional-operator,
   -readability-else-after-return,
   -readability-function-cognitive-complexity,
+  -readability-identifier-length,
+  -readability-magic-numbers,
+  -readability-redundant-access-specifiers,
+  -readability-simplify-boolean-expr,
   -readability-static-accessed-through-instance,
+  -readability-suspicious-call-argument,
   -readability-uppercase-literal-suffix,
+  -readability-use-anyofallof,
 
 
 WarningsAsErrors: >-
@@ -57,11 +72,13 @@ WarningsAsErrors: >-
 HeaderFilterRegex: '^.*/(lib|tools)/.*\.h$'
 
 CheckOptions:
-  - key:             readability-braces-around-statements.ShortStatementLines
-    value:           '2'
-  - key:             google-readability-braces-around-statements.ShortStatementLines
-    value:           '2'
-  - key:             readability-implicit-bool-conversion.AllowPointerConditions
-    value:           '1'
-  - key:             readability-implicit-bool-conversion.AllowIntegerConditions
-    value:           '1'
+  - key:   readability-braces-around-statements.ShortStatementLines
+    value: '2'
+  - key:   google-readability-braces-around-statements.ShortStatementLines
+    value: '2'
+  - key:   readability-implicit-bool-conversion.AllowPointerConditions
+    value: '1'
+  - key:   readability-implicit-bool-conversion.AllowIntegerConditions
+    value: '1'
+  - key:   bugprone-signed-char-misuse.CharTypdefsToIgnore
+    value: 'int8_t'

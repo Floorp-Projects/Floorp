@@ -185,7 +185,8 @@ class Separable5Strategy {
     const V l1 = LoadU(d, row + x - 1);
     const V l2 = LoadU(d, row + x - 2);
 
-    V r1, r2;
+    V r1;
+    V r2;
 #if HWY_TARGET == HWY_SCALAR
     r1 = LoadU(d, row + Mirror(x + 1, xsize));
     r2 = LoadU(d, row + Mirror(x + 2, xsize));
@@ -236,10 +237,11 @@ void Separable5(const ImageF& in, const Rect& rect,
                 ImageF* out) {
   using Conv = ConvolveT<Separable5Strategy>;
   if (rect.xsize() >= Conv::MinWidth()) {
-    return Conv::Run(in, rect, weights, pool, out);
+    Conv::Run(in, rect, weights, pool, out);
+    return;
   }
 
-  return SlowSeparable5(in, rect, weights, pool, out, Rect(*out));
+  SlowSeparable5(in, rect, weights, pool, out, Rect(*out));
 }
 
 // NOLINTNEXTLINE(google-readability-namespace-comments)
@@ -254,7 +256,7 @@ HWY_EXPORT(Separable5);
 void Separable5(const ImageF& in, const Rect& rect,
                 const WeightsSeparable5& weights, ThreadPool* pool,
                 ImageF* out) {
-  return HWY_DYNAMIC_DISPATCH(Separable5)(in, rect, weights, pool, out);
+  HWY_DYNAMIC_DISPATCH(Separable5)(in, rect, weights, pool, out);
 }
 
 }  // namespace jxl

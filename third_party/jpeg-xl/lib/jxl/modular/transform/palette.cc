@@ -46,7 +46,8 @@ Status InvPalette(Image &input, uint32_t begin_c, uint32_t nb_colors,
             const size_t y = task;
             pixel_type *p = input.channel[c0].Row(y);
             for (size_t x = 0; x < w; x++) {
-              const int index = Clamp1<int>(p[x], 0, (pixel_type)palette.w - 1);
+              const int index =
+                  Clamp1<int>(p[x], 0, static_cast<pixel_type>(palette.w) - 1);
               p[x] = palette_internal::GetPaletteValue(
                   p_palette, index, /*c=*/0,
                   /*palette_size=*/palette.w,

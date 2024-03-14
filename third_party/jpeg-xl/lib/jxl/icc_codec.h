@@ -39,12 +39,6 @@ struct ICCReader {
   PaddedBytes decompressed_;
 };
 
-// Exposed only for testing
-Status PredictICC(const uint8_t* icc, size_t size, PaddedBytes* result);
-
-// Exposed only for testing
-Status UnpredictICC(const uint8_t* enc, size_t size, PaddedBytes* result);
-
 }  // namespace jxl
 
 #endif  // LIB_JXL_ICC_CODEC_H_

@@ -17,7 +17,7 @@
 
 namespace jxl {
 namespace {
-static uint8_t ByteKind1(uint8_t b) {
+uint8_t ByteKind1(uint8_t b) {
   if ('a' <= b && b <= 'z') return 0;
   if ('A' <= b && b <= 'Z') return 0;
   if ('0' <= b && b <= '9') return 1;
@@ -30,7 +30,7 @@ static uint8_t ByteKind1(uint8_t b) {
   return 7;
 }
 
-static uint8_t ByteKind2(uint8_t b) {
+uint8_t ByteKind2(uint8_t b) {
   if ('a' <= b && b <= 'z') return 0;
   if ('A' <= b && b <= 'Z') return 0;
   if ('0' <= b && b <= '9') return 1;
@@ -105,7 +105,7 @@ const uint8_t kIccInitialHeaderPrediction[kICCHeaderSize] = {
     0,   0,   0,   0,   0,   0,   0,   0,   0, 0, 0, 0, 0,   0,   0,   0,
 };
 
-const Span<const uint8_t> ICCInitialHeaderPrediction() {
+Span<const uint8_t> ICCInitialHeaderPrediction() {
   return Bytes(kIccInitialHeaderPrediction);
 }
 

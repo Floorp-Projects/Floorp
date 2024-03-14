@@ -34,7 +34,7 @@ constexpr unsigned char kExifSignature[6] = {0x45, 0x78, 0x69,
                                              0x66, 0x00, 0x00};
 constexpr int kExifMarker = JPEG_APP0 + 1;
 
-static inline bool IsJPG(const Span<const uint8_t> bytes) {
+inline bool IsJPG(const Span<const uint8_t> bytes) {
   if (bytes.size() < 2) return false;
   if (bytes[0] != 0xFF || bytes[1] != 0xD8) return false;
   return true;
@@ -270,7 +270,7 @@ Status DecodeImageJPG(const Span<const uint8_t> bytes,
     ppf->info.bits_per_sample = BITS_IN_JSAMPLE;
     JXL_ASSERT(BITS_IN_JSAMPLE == 8 || BITS_IN_JSAMPLE == 16);
     ppf->info.exponent_bits_per_sample = 0;
-    ppf->info.uses_original_profile = true;
+    ppf->info.uses_original_profile = JXL_TRUE;
 
     // No alpha in JPG
     ppf->info.alpha_bits = 0;
@@ -283,7 +283,7 @@ Status DecodeImageJPG(const Span<const uint8_t> bytes,
       cinfo.quantize_colors = TRUE;
       cinfo.desired_number_of_colors = dparams->num_colors;
       cinfo.two_pass_quantize = static_cast<boolean>(dparams->two_pass_quant);
-      cinfo.dither_mode = (J_DITHER_MODE)dparams->dither_mode;
+      cinfo.dither_mode = static_cast<J_DITHER_MODE>(dparams->dither_mode);
     }
 
     jpeg_start_decompress(&cinfo);
@@ -299,19 +299,25 @@ Status DecodeImageJPG(const Span<const uint8_t> bytes,
     };
     ppf->frames.clear();
     // Allocates the frame buffer.
-    ppf->frames.emplace_back(cinfo.image_width, cinfo.image_height, format);
+    {
+      JXL_ASSIGN_OR_RETURN(
+          PackedFrame frame,
+          PackedFrame::Create(cinfo.image_width, cinfo.image_height, format));
+      ppf->frames.emplace_back(std::move(frame));
+    }
     const auto& frame = ppf->frames.back();
     JXL_ASSERT(sizeof(JSAMPLE) * cinfo.out_color_components *
                    cinfo.image_width <=
                frame.color.stride);
 
     if (cinfo.quantize_colors) {
-      jxl::msan::UnpoisonMemory(cinfo.colormap, cinfo.out_color_components *
-                                                    sizeof(cinfo.colormap[0]));
+      JSAMPLE** colormap = cinfo.colormap;
+      jxl::msan::UnpoisonMemory(reinterpret_cast<void*>(colormap),
+                                cinfo.out_color_components * sizeof(JSAMPLE*));
       for (int c = 0; c < cinfo.out_color_components; ++c) {
         jxl::msan::UnpoisonMemory(
-            cinfo.colormap[c],
-            cinfo.actual_number_of_colors * sizeof(cinfo.colormap[c][0]));
+            reinterpret_cast<void*>(colormap[c]),
+            cinfo.actual_number_of_colors * sizeof(JSAMPLE));
       }
     }
     for (size_t y = 0; y < cinfo.image_height; ++y) {

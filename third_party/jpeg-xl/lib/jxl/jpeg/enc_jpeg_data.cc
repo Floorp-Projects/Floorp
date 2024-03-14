@@ -166,7 +166,7 @@ Status ParseChunkedMarker(const jpeg::JPEGData& src, uint8_t marker_type,
     if (!presence[index]) {
       return JXL_FAILURE("Missing chunk.");
     }
-    chunks[index].AppendTo(output);
+    chunks[index].AppendTo(*output);
   }
 
   return true;
@@ -333,7 +333,7 @@ Status EncodeJPEGData(JPEGData& jpeg_data, std::vector<uint8_t>* bytes,
   {
     PaddedBytes serialized_jpeg_data = std::move(writer).TakeBytes();
     bytes->reserve(serialized_jpeg_data.size() + brotli_capacity);
-    Bytes(serialized_jpeg_data).AppendTo(bytes);
+    Bytes(serialized_jpeg_data).AppendTo(*bytes);
   }
 
   BrotliEncoderState* brotli_enc =

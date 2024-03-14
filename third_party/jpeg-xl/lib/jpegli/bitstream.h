@@ -32,9 +32,8 @@ void EncodeSOS(j_compress_ptr cinfo, int scan_index);
 void WriteScanHeader(j_compress_ptr cinfo, int scan_index);
 
 void WriteBlock(const int32_t* JXL_RESTRICT symbols,
-                const int32_t* JXL_RESTRICT extra_bits, const int num_nonzeros,
-                const bool emit_eob,
-                const HuffmanCodeTable* JXL_RESTRICT dc_code,
+                const int32_t* JXL_RESTRICT extra_bits, int num_nonzeros,
+                bool emit_eob, const HuffmanCodeTable* JXL_RESTRICT dc_code,
                 const HuffmanCodeTable* JXL_RESTRICT ac_code,
                 JpegBitWriter* JXL_RESTRICT bw);
 void WriteScanData(j_compress_ptr cinfo, int scan_index);

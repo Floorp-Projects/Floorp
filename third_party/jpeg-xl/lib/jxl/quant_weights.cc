@@ -160,8 +160,8 @@ Status ComputeQuantTable(const QuantEncoding& encoding,
                          float* JXL_RESTRICT inv_table, size_t table_num,
                          DequantMatrices::QuantTable kind, size_t* pos) {
   constexpr size_t N = kBlockDim;
-  size_t wrows = 8 * DequantMatrices::required_size_x[kind],
-         wcols = 8 * DequantMatrices::required_size_y[kind];
+  size_t wrows = 8 * DequantMatrices::required_size_x[kind];
+  size_t wcols = 8 * DequantMatrices::required_size_y[kind];
   size_t num = wrows * wcols;
 
   std::vector<float> weights(3 * num);
@@ -361,7 +361,7 @@ namespace {
 
 HWY_EXPORT(ComputeQuantTable);
 
-static constexpr const float kAlmostZero = 1e-8f;
+constexpr const float kAlmostZero = 1e-8f;
 
 Status DecodeDctParams(BitReader* br, DctQuantWeightParams* params) {
   params->num_distance_bands =
@@ -474,16 +474,16 @@ Status Decode(BitReader* br, QuantEncoding* encoding, size_t required_size_x,
     default:
       return JXL_FAILURE("Invalid quantization table encoding");
   }
-  encoding->mode = QuantEncoding::Mode(mode);
+  encoding->mode = static_cast<QuantEncoding::Mode>(mode);
   return true;
 }
 
 }  // namespace
 
 // These definitions are needed before C++17.
-constexpr size_t DequantMatrices::required_size_[];
-constexpr size_t DequantMatrices::required_size_x[];
-constexpr size_t DequantMatrices::required_size_y[];
+constexpr const std::array<int, 17> DequantMatrices::required_size_x;
+constexpr const std::array<int, 17> DequantMatrices::required_size_y;
+constexpr const size_t DequantMatrices::kSumRequiredXy;
 constexpr DequantMatrices::QuantTable DequantMatrices::kQuantTable[];
 
 Status DequantMatrices::Decode(BitReader* br,
@@ -502,7 +502,7 @@ Status DequantMatrices::Decode(BitReader* br,
 }
 
 Status DequantMatrices::DecodeDC(BitReader* br) {
-  bool all_default = br->ReadBits(1);
+  bool all_default = static_cast<bool>(br->ReadBits(1));
   if (!br->AllReadsWithinBounds()) return JXL_FAILURE("EOS during DecodeDC");
   if (!all_default) {
     for (size_t c = 0; c < 3; c++) {
@@ -1162,11 +1162,12 @@ const QuantEncoding* DequantMatrices::Library() {
 }
 
 DequantMatrices::DequantMatrices() {
-  encodings_.resize(size_t(QuantTable::kNum), QuantEncoding::Library(0));
+  encodings_.resize(static_cast<size_t>(QuantTable::kNum),
+                    QuantEncoding::Library(0));
   size_t pos = 0;
   size_t offsets[kNum * 3];
-  for (size_t i = 0; i < size_t(QuantTable::kNum); i++) {
-    size_t num = required_size_[i] * kDCTBlockSize;
+  for (size_t i = 0; i < static_cast<size_t>(QuantTable::kNum); i++) {
+    size_t num = required_size_x[i] * required_size_y[i] * kDCTBlockSize;
     for (size_t c = 0; c < 3; c++) {
       offsets[3 * i + c] = pos + c * num;
     }
@@ -1191,7 +1192,7 @@ Status DequantMatrices::EnsureComputed(uint32_t acs_mask) {
   size_t offsets[kNum * 3 + 1];
   size_t pos = 0;
   for (size_t i = 0; i < kNum; i++) {
-    size_t num = required_size_[i] * kDCTBlockSize;
+    size_t num = required_size_x[i] * required_size_y[i] * kDCTBlockSize;
     for (size_t c = 0; c < 3; c++) {
       offsets[3 * i + c] = pos + c * num;
     }

@@ -71,7 +71,7 @@ class PaddedBytes {
     return *this;
   }
 
-  void swap(PaddedBytes& other) {
+  void swap(PaddedBytes& other) noexcept {
     std::swap(size_, other.size_);
     std::swap(capacity_, other.capacity_);
     std::swap(data_, other.data_);

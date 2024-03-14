@@ -94,9 +94,9 @@ Status InitializePassesEncoder(const FrameHeader& frame_header,
     // and kModular for the smallest DC (first in the bitstream)
     if (cparams.progressive_dc == 0) {
       cparams.modular_mode = true;
-      cparams.speed_tier =
-          SpeedTier(std::max(static_cast<int>(SpeedTier::kTortoise),
-                             static_cast<int>(cparams.speed_tier) - 1));
+      cparams.speed_tier = static_cast<SpeedTier>(
+          std::max(static_cast<int>(SpeedTier::kTortoise),
+                   static_cast<int>(cparams.speed_tier) - 1));
       cparams.butteraugli_distance =
           std::max(kMinButteraugliDistance,
                    enc_state->cparams.butteraugli_distance * 0.02f);

@@ -39,6 +39,8 @@ enum class Predictor : uint32_t {
       15,  // Find the best decision tree for predictors/predictor per row
 };
 
+constexpr Predictor kUndefinedPredictor = static_cast<Predictor>(~0u);
+
 constexpr size_t kNumModularPredictors =
     static_cast<size_t>(Predictor::Average4) + 1;
 constexpr size_t kNumModularEncoderPredictors =
@@ -82,7 +84,7 @@ struct ModularOptions {
   size_t max_property_values = 32;
 
   // Predictor to use for each channel.
-  Predictor predictor = static_cast<Predictor>(-1);
+  Predictor predictor = kUndefinedPredictor;
 
   int wp_mode = 0;
 

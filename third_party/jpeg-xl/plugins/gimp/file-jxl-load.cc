@@ -39,11 +39,14 @@ bool LoadJpegXlImage(const gchar *const filename, gint32 *const image_id) {
   GimpColorProfile *profile_icc = nullptr;
   GimpColorProfile *profile_int = nullptr;
   bool is_linear = false;
-  unsigned long xsize = 0, ysize = 0;
-  long crop_x0 = 0, crop_y0 = 0;
+  unsigned long xsize = 0;
+  unsigned long ysize = 0;
+  long crop_x0 = 0;
+  long crop_y0 = 0;
   size_t layer_idx = 0;
   uint32_t frame_duration = 0;
-  double tps_denom = 1.f, tps_numer = 1.f;
+  double tps_denom = 1.f;
+  double tps_numer = 1.f;
 
   gint32 layer;
 
@@ -356,13 +359,13 @@ bool LoadJpegXlImage(const gchar *const filename, gint32 *const image_id) {
         const GString *blend_null_flag = g_string_new("");
         const GString *blend_replace_flag = g_string_new(" (replace)");
         const GString *blend_combine_flag = g_string_new(" (combine)");
-        GString *blend;
+        const GString *blend;
         if (blend_mode == JXL_BLEND_REPLACE) {
-          blend = (GString *)blend_replace_flag;
+          blend = blend_replace_flag;
         } else if (blend_mode == JXL_BLEND_BLEND) {
-          blend = (GString *)blend_combine_flag;
+          blend = blend_combine_flag;
         } else {
-          blend = (GString *)blend_null_flag;
+          blend = blend_null_flag;
         }
         char *temp_frame_name = nullptr;
         bool must_free_frame_name = false;
@@ -433,8 +436,10 @@ bool LoadJpegXlImage(const gchar *const filename, gint32 *const image_id) {
             " Warning: JxlDecoderGetFrameHeader: Unhandled blend mode: %d\n",
             blend_mode);
       }
-      if ((frame_name_len = frame_header.name_length) > 0) {
-        frame_name = (char *)realloc(frame_name, frame_name_len);
+      frame_name_len = frame_header.name_length;
+      if (frame_name_len > 0) {
+        frame_name =
+            reinterpret_cast<char *>(realloc(frame_name, frame_name_len));
         if (JXL_DEC_SUCCESS !=
             JxlDecoderGetFrameName(dec.get(), frame_name, frame_name_len)) {
           g_printerr(LOAD_PROC "Error: JxlDecoderGetFrameName failed");

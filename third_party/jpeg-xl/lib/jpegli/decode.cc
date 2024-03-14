@@ -115,8 +115,10 @@ void InitProgressMonitor(j_decompress_ptr cinfo, bool coef_only) {
     cinfo->progress->total_passes = 1;
   } else {
     int input_passes = !cinfo->buffered_image && m->is_multiscan_ ? 1 : 0;
-    bool two_pass_quant = cinfo->quantize_colors && !cinfo->colormap &&
-                          cinfo->two_pass_quantize && cinfo->enable_2pass_quant;
+    bool two_pass_quant = FROM_JXL_BOOL(cinfo->quantize_colors) &&
+                          (cinfo->colormap != nullptr) &&
+                          FROM_JXL_BOOL(cinfo->two_pass_quantize) &&
+                          FROM_JXL_BOOL(cinfo->enable_2pass_quant);
     cinfo->progress->total_passes = input_passes + (two_pass_quant ? 2 : 1);
   }
   cinfo->progress->completed_passes = 0;
@@ -175,7 +177,7 @@ void BuildHuffmanLookupTable(j_decompress_ptr cinfo, JHUFF_TBL* table,
   for (int i = 0; i < total_count; ++i) {
     int value = table->huffval[i];
     if (values_seen[value]) {
-      return JPEGLI_ERROR("Duplicate Huffman code value %d", value);
+      JPEGLI_ERROR("Duplicate Huffman code value %d", value);
     }
     values_seen[value] = 1;
     values[i] = value;
@@ -223,7 +225,7 @@ void PrepareForScan(j_decompress_ptr cinfo) {
       HuffmanTableEntry* huff_lut =
           &m->dc_huff_lut_[dc_tbl_idx * kJpegHuffmanLutSize];
       if (!table) {
-        return JPEGLI_ERROR("DC Huffman table %d not found", dc_tbl_idx);
+        JPEGLI_ERROR("DC Huffman table %d not found", dc_tbl_idx);
       }
       BuildHuffmanLookupTable(cinfo, table, huff_lut);
     }
@@ -233,7 +235,7 @@ void PrepareForScan(j_decompress_ptr cinfo) {
       HuffmanTableEntry* huff_lut =
           &m->ac_huff_lut_[ac_tbl_idx * kJpegHuffmanLutSize];
       if (!table) {
-        return JPEGLI_ERROR("AC Huffman table %d not found", ac_tbl_idx);
+        JPEGLI_ERROR("AC Huffman table %d not found", ac_tbl_idx);
       }
       BuildHuffmanLookupTable(cinfo, table, huff_lut);
     }
@@ -543,8 +545,8 @@ void jpegli_CreateDecompress(j_decompress_ptr cinfo, int version,
   cinfo->is_decompressor = TRUE;
   cinfo->progress = nullptr;
   cinfo->src = nullptr;
-  for (int i = 0; i < NUM_QUANT_TBLS; i++) {
-    cinfo->quant_tbl_ptrs[i] = nullptr;
+  for (auto& quant_tbl_ptr : cinfo->quant_tbl_ptrs) {
+    quant_tbl_ptr = nullptr;
   }
   for (int i = 0; i < NUM_HUFF_TBLS; i++) {
     cinfo->dc_huff_tbl_ptrs[i] = nullptr;
@@ -555,8 +557,8 @@ void jpegli_CreateDecompress(j_decompress_ptr cinfo, int version,
   cinfo->rec_outbuf_height = 1;         // output works with any buffer height
   cinfo->master = new jpeg_decomp_master;
   jpeg_decomp_master* m = cinfo->master;
-  for (int i = 0; i < 16; ++i) {
-    m->app_marker_parsers[i] = nullptr;
+  for (auto& app_marker_parser : m->app_marker_parsers) {
+    app_marker_parser = nullptr;
   }
   m->com_marker_parser = nullptr;
   memset(m->markers_to_save_, 0, sizeof(m->markers_to_save_));
@@ -661,7 +663,7 @@ boolean jpegli_read_icc_profile(j_decompress_ptr cinfo, JOCTET** icc_data_ptr,
     return FALSE;
   }
   *icc_data_len = m->icc_profile_.size();
-  *icc_data_ptr = (JOCTET*)malloc(*icc_data_len);
+  *icc_data_ptr = static_cast<JOCTET*>(malloc(*icc_data_len));
   if (*icc_data_ptr == nullptr) {
     JPEGLI_ERROR("jpegli_read_icc_profile: Out of memory");
   }
@@ -738,21 +740,26 @@ void jpegli_calc_output_dimensions(j_decompress_ptr cinfo) {
 }
 
 boolean jpegli_has_multiple_scans(j_decompress_ptr cinfo) {
-  if (cinfo->input_scan_number == 0) {
-    JPEGLI_ERROR("No SOS marker found.");
+  if (cinfo->global_state != jpegli::kDecHeaderDone &&
+      cinfo->global_state != jpegli::kDecProcessScan &&
+      cinfo->global_state != jpegli::kDecProcessMarkers) {
+    JPEGLI_ERROR("jpegli_has_multiple_scans: unexpected state %d",
+                 cinfo->global_state);
   }
-  return cinfo->master->is_multiscan_;
+  return TO_JXL_BOOL(cinfo->master->is_multiscan_);
 }
 
 boolean jpegli_input_complete(j_decompress_ptr cinfo) {
-  return cinfo->master->found_eoi_;
+  return TO_JXL_BOOL(cinfo->master->found_eoi_);
 }
 
 boolean jpegli_start_decompress(j_decompress_ptr cinfo) {
   jpeg_decomp_master* m = cinfo->master;
   if (cinfo->global_state == jpegli::kDecHeaderDone) {
-    m->streaming_mode_ = !m->is_multiscan_ && !cinfo->buffered_image &&
-                         (!cinfo->quantize_colors || !cinfo->two_pass_quantize);
+    m->streaming_mode_ = !m->is_multiscan_ &&
+                         !FROM_JXL_BOOL(cinfo->buffered_image) &&
+                         (!FROM_JXL_BOOL(cinfo->quantize_colors) ||
+                          !FROM_JXL_BOOL(cinfo->two_pass_quantize));
     jpegli::AllocateCoefficientBuffer(cinfo);
     jpegli_calc_output_dimensions(cinfo);
     jpegli::PrepareForScan(cinfo);

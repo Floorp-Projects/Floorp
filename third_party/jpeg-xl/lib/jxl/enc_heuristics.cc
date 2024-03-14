@@ -149,8 +149,10 @@ void FindBestBlockEntropyModel(const CompressParams& cparams, const ImageI& rqf,
   std::vector<uint8_t> remap((qft.size() + 1) * kNumOrders);
   std::iota(remap.begin(), remap.end(), 0);
   std::vector<uint8_t> clusters(remap);
-  size_t nb_clusters = Clamp1((int)(tot / size_for_ctx_model / 2), 2, 9);
-  size_t nb_clusters_chroma = Clamp1((int)(tot / size_for_ctx_model / 3), 1, 5);
+  size_t nb_clusters =
+      Clamp1(static_cast<int>(tot / size_for_ctx_model / 2), 2, 9);
+  size_t nb_clusters_chroma =
+      Clamp1(static_cast<int>(tot / size_for_ctx_model / 3), 1, 5);
   // This is O(n^2 log n), but n is small.
   while (clusters.size() > nb_clusters) {
     std::sort(clusters.begin(), clusters.end(),
@@ -181,8 +183,8 @@ void FindBestBlockEntropyModel(const CompressParams& cparams, const ImageI& rqf,
   // for chroma, only use up to nb_clusters_chroma separate block contexts
   // (those for the biggest clusters)
   for (size_t i = remap.size(); i < remap.size() * 3; i++) {
-    ctx_map[i] = num + Clamp1((int)remap[i % remap.size()], 0,
-                              (int)nb_clusters_chroma - 1);
+    ctx_map[i] = num + Clamp1(static_cast<int>(remap[i % remap.size()]), 0,
+                              static_cast<int>(nb_clusters_chroma) - 1);
   }
   block_ctx_map->num_ctxs =
       *std::max_element(ctx_map.begin(), ctx_map.end()) + 1;
@@ -603,8 +605,8 @@ void ReduceRinging(const ImageF& initial, const ImageF& mask, ImageF& down) {
       float max = initial.Row(y)[x];
       for (int64_t yi = -1; yi < 2; yi++) {
         for (int64_t xi = -1; xi < 2; xi++) {
-          int64_t x2 = (int64_t)x + xi;
-          int64_t y2 = (int64_t)y + yi;
+          int64_t x2 = static_cast<int64_t>(x) + xi;
+          int64_t y2 = static_cast<int64_t>(y) + yi;
           if (x2 < 0 || y2 < 0 || x2 >= xsize2 || y2 >= ysize2) continue;
           min = std::min<float>(min, initial.Row(y2)[x2]);
           max = std::max<float>(max, initial.Row(y2)[x2]);
@@ -880,7 +882,7 @@ Status LossyFrameHeuristics(const FrameHeader& frame_header,
     }
 
     // Choose block sizes.
-    acs_heuristics.ProcessRect(r, cmap, &ac_strategy);
+    acs_heuristics.ProcessRect(r, cmap, &ac_strategy, thread);
 
     // Choose amount of post-processing smoothing.
     // TODO(veluca): should this go *after* AdjustQuantField?
@@ -911,6 +913,7 @@ Status LossyFrameHeuristics(const FrameHeader& frame_header,
       DivCeil(frame_dim.xsize_blocks, kEncTileDimInBlocks) *
           DivCeil(frame_dim.ysize_blocks, kEncTileDimInBlocks),
       [&](const size_t num_threads) {
+        acs_heuristics.PrepareForThreads(num_threads);
         ar_heuristics.PrepareForThreads(num_threads);
         cfl_heuristics.PrepareForThreads(num_threads);
         return true;

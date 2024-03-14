@@ -303,12 +303,12 @@ bool Near(double expected, double value, double max_dist) {
 
 float LoadLEFloat16(const uint8_t* p) {
   uint16_t bits16 = LoadLE16(p);
-  return LoadFloat16(bits16);
+  return detail::LoadFloat16(bits16);
 }
 
 float LoadBEFloat16(const uint8_t* p) {
   uint16_t bits16 = LoadBE16(p);
-  return LoadFloat16(bits16);
+  return detail::LoadFloat16(bits16);
 }
 
 size_t GetPrecision(JxlDataType data_type) {
@@ -479,8 +479,8 @@ size_t ComparePixels(const uint8_t* a, const uint8_t* b, size_t xsize,
   std::vector<double> b_full = ConvertToRGBA32(b, xsize, ysize, format_b);
   bool gray_a = format_a.num_channels < 3;
   bool gray_b = format_b.num_channels < 3;
-  bool alpha_a = !(format_a.num_channels & 1);
-  bool alpha_b = !(format_b.num_channels & 1);
+  bool alpha_a = ((format_a.num_channels & 1) == 0);
+  bool alpha_b = ((format_b.num_channels & 1) == 0);
   size_t bits_a = GetPrecision(format_a.data_type);
   size_t bits_b = GetPrecision(format_b.data_type);
   size_t bits = std::min(bits_a, bits_b);
@@ -720,7 +720,7 @@ Status ReadICC(BitReader* JXL_RESTRICT reader,
   PaddedBytes icc_buffer;
   JXL_RETURN_IF_ERROR(icc_reader.Init(reader, output_limit));
   JXL_RETURN_IF_ERROR(icc_reader.Process(reader, &icc_buffer));
-  Bytes(icc_buffer).AppendTo(icc);
+  Bytes(icc_buffer).AppendTo(*icc);
   return true;
 }
 
@@ -824,7 +824,7 @@ Status EncodeFile(const CompressParams& params, const CodecInOut* io,
   }
 
   PaddedBytes output = std::move(writer).TakeBytes();
-  Bytes(output).AppendTo(compressed);
+  Bytes(output).AppendTo(*compressed);
   return true;
 }
 

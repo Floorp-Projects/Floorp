@@ -331,6 +331,8 @@ struct PrefixCode {
                                             uint8_t* min_limit,
                                             uint8_t* max_limit,
                                             uint8_t* nbits) {
+    assert(precision < 15);
+    assert(n <= kMaxNumSymbols);
     std::vector<T> dynp(((1U << precision) + 1) * (n + 1), infty);
     auto d = [&](size_t sym, size_t off) -> T& {
       return dynp[sym * ((1 << precision) + 1) + off];
@@ -428,10 +430,11 @@ struct PrefixCode {
   }
 
   // Invalid code, used to construct arrays.
-  PrefixCode() {}
+  PrefixCode() = default;
 
   template <typename BitDepth>
-  PrefixCode(BitDepth, uint64_t* raw_counts, uint64_t* lz77_counts) {
+  PrefixCode(BitDepth /* bitdepth */, uint64_t* raw_counts,
+             uint64_t* lz77_counts) {
     // "merge" together all the lz77 counts in a single symbol for the level 1
     // table (containing just the raw symbols, up to length 7).
     uint64_t level1_counts[kNumRawSymbols + 1];
@@ -1317,7 +1320,7 @@ struct Mask32 {
   SIMDVec32 IfThenElse(const SIMDVec32& if_true, const SIMDVec32& if_false);
   size_t CountPrefix() const {
     return CtzNonZero(~static_cast<uint64_t>(
-        (uint8_t)_mm256_movemask_ps(_mm256_castsi256_ps(mask))));
+        static_cast<uint8_t>(_mm256_movemask_ps(_mm256_castsi256_ps(mask)))));
   }
 };
 
@@ -1414,8 +1417,8 @@ struct Mask16 {
     return Mask16{_mm256_and_si256(mask, oth.mask)};
   }
   size_t CountPrefix() const {
-    return CtzNonZero(
-               ~static_cast<uint64_t>((uint32_t)_mm256_movemask_epi8(mask))) /
+    return CtzNonZero(~static_cast<uint64_t>(
+               static_cast<uint32_t>(_mm256_movemask_epi8(mask)))) /
            2;
   }
 };
@@ -3151,9 +3154,9 @@ void StoreYCoCg(SIMDVec16 r, SIMDVec16 g, SIMDVec16 b, int16_t* y, int16_t* co,
   SIMDVec16 tmp = b.Add(co_v.SignedShiftRight<1>());
   SIMDVec16 cg_v = g.Sub(tmp);
   SIMDVec16 y_v = tmp.Add(cg_v.SignedShiftRight<1>());
-  y_v.Store((uint16_t*)y);
-  co_v.Store((uint16_t*)co);
-  cg_v.Store((uint16_t*)cg);
+  y_v.Store(reinterpret_cast<uint16_t*>(y));
+  co_v.Store(reinterpret_cast<uint16_t*>(co));
+  cg_v.Store(reinterpret_cast<uint16_t*>(cg));
 }
 
 void StoreYCoCg(SIMDVec16 r, SIMDVec16 g, SIMDVec16 b, int32_t* y, int32_t* co,
@@ -3169,12 +3172,12 @@ void StoreYCoCg(SIMDVec16 r, SIMDVec16 g, SIMDVec16 b, int32_t* y, int32_t* co,
   SIMDVec32 tmp_hi = b_up.hi.Add(co_hi_v.SignedShiftRight<1>());
   SIMDVec32 cg_hi_v = g_up.hi.Sub(tmp_hi);
   SIMDVec32 y_hi_v = tmp_hi.Add(cg_hi_v.SignedShiftRight<1>());
-  y_lo_v.Store((uint32_t*)y);
-  co_lo_v.Store((uint32_t*)co);
-  cg_lo_v.Store((uint32_t*)cg);
-  y_hi_v.Store((uint32_t*)y + SIMDVec32::kLanes);
-  co_hi_v.Store((uint32_t*)co + SIMDVec32::kLanes);
-  cg_hi_v.Store((uint32_t*)cg + SIMDVec32::kLanes);
+  y_lo_v.Store(reinterpret_cast<uint32_t*>(y));
+  co_lo_v.Store(reinterpret_cast<uint32_t*>(co));
+  cg_lo_v.Store(reinterpret_cast<uint32_t*>(cg));
+  y_hi_v.Store(reinterpret_cast<uint32_t*>(y) + SIMDVec32::kLanes);
+  co_hi_v.Store(reinterpret_cast<uint32_t*>(co) + SIMDVec32::kLanes);
+  cg_hi_v.Store(reinterpret_cast<uint32_t*>(cg) + SIMDVec32::kLanes);
 }
 #endif
 
@@ -3573,8 +3576,7 @@ void PrepareDCGlobalPalette(bool is_single_group, size_t width, size_t height,
   int16_t p[4][32 + 1024] = {};
   uint8_t prgba[4];
   size_t i = 0;
-  size_t have_zero = 0;
-  if (palette[pcolors - 1] == 0) have_zero = 1;
+  size_t have_zero = 1;
   for (; i < pcolors; i++) {
     memcpy(prgba, &palette[i], 4);
     p[0][16 + i + have_zero] = prgba[0];
@@ -4023,7 +4025,7 @@ namespace default_implementation {
 #else  // FJXL_ENABLE_NEON
 
 namespace default_implementation {
-#include "lib/jxl/enc_fast_lossless.cc"
+#include "lib/jxl/enc_fast_lossless.cc"  // NOLINT
 }
 
 #if FJXL_ENABLE_AVX2
@@ -4042,7 +4044,7 @@ namespace default_implementation {
 
 namespace AVX2 {
 #define FJXL_AVX2
-#include "lib/jxl/enc_fast_lossless.cc"
+#include "lib/jxl/enc_fast_lossless.cc"  // NOLINT
 #undef FJXL_AVX2
 }  // namespace AVX2
 
@@ -4177,18 +4179,20 @@ void JxlFastLosslessProcessFrame(
       __builtin_cpu_supports("avx512vbmi") &&
       __builtin_cpu_supports("avx512bw") && __builtin_cpu_supports("avx512f") &&
       __builtin_cpu_supports("avx512vl")) {
-    return AVX512::JxlFastLosslessProcessFrameImpl(
-        frame_state, is_last, runner_opaque, runner, output_processor);
+    AVX512::JxlFastLosslessProcessFrameImpl(frame_state, is_last, runner_opaque,
+                                            runner, output_processor);
+    return;
   }
 #endif
 #if FJXL_ENABLE_AVX2
   if (__builtin_cpu_supports("avx2")) {
-    return AVX2::JxlFastLosslessProcessFrameImpl(
-        frame_state, is_last, runner_opaque, runner, output_processor);
+    AVX2::JxlFastLosslessProcessFrameImpl(frame_state, is_last, runner_opaque,
+                                          runner, output_processor);
+    return;
   }
 #endif
 
-  return default_implementation::JxlFastLosslessProcessFrameImpl(
+  default_implementation::JxlFastLosslessProcessFrameImpl(
       frame_state, is_last, runner_opaque, runner, output_processor);
 }
 

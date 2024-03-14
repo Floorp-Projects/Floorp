@@ -11,6 +11,7 @@
 #include <stddef.h>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <utility>
 
@@ -23,7 +24,9 @@ const float kNoisePrecision = 1 << 10;
 struct NoiseParams {
   // LUT index is an intensity of pixel / mean intensity of patch
   static constexpr size_t kNumNoisePoints = 8;
-  float lut[kNumNoisePoints];
+  using Lut = std::array<float, kNumNoisePoints>;
+
+  Lut lut;
 
   void Clear() {
     for (float& i : lut) i = 0.f;
@@ -39,7 +42,7 @@ struct NoiseParams {
 static inline std::pair<int, float> IndexAndFrac(float x) {
   constexpr size_t kScaleNumerator = NoiseParams::kNumNoisePoints - 2;
   // TODO(user): instead of 1, this should be a proper Y range.
-  constexpr float kScale = kScaleNumerator / 1;
+  constexpr float kScale = kScaleNumerator / 1.0f;
   float scaled_x = std::max(0.f, x * kScale);
   float floor_x;
   float frac_x = std::modf(scaled_x, &floor_x);

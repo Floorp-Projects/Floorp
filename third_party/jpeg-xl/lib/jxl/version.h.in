@@ -29,7 +29,7 @@
  * #endif
  * @endcode
  */
-#define JPEGXL_COMPUTE_NUMERIC_VERSION(major,minor,patch) ((major<<24) | (minor<<16) | (patch<<8) | 0)
+#define JPEGXL_COMPUTE_NUMERIC_VERSION(major,minor,patch) (((major)<<24) | ((minor)<<16) | ((patch)<<8) | 0)
 
 /* Numeric representation of the version */
 #define JPEGXL_NUMERIC_VERSION JPEGXL_COMPUTE_NUMERIC_VERSION(JPEGXL_MAJOR_VERSION,JPEGXL_MINOR_VERSION,JPEGXL_PATCH_VERSION)

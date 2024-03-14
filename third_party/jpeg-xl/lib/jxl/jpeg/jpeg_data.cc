@@ -5,6 +5,8 @@
 
 #include "lib/jxl/jpeg/jpeg_data.h"
 
+#include <jxl/types.h>
+
 #include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/common.h"  // kMaxNumPasses, JPEGXL_ENABLE_TRANSCODE_JPEG
@@ -214,7 +216,7 @@ Status JPEGData::VisitFields(Visitor* visitor) {
     huffman_code.resize(num_huff);
   }
   for (JPEGHuffmanCode& hc : huffman_code) {
-    bool is_ac = hc.slot_id >> 4;
+    bool is_ac = ((hc.slot_id >> 4) != 0);
     uint32_t id = hc.slot_id & 0xF;
     JXL_RETURN_IF_ERROR(visitor->Bool(false, &is_ac));
     JXL_RETURN_IF_ERROR(visitor->Bits(2, 0, &id));
@@ -240,7 +242,8 @@ Status JPEGData::VisitFields(Visitor* visitor) {
       JXL_RETURN_IF_ERROR(visitor->U32(Bits(2), BitsOffset(2, 4),
                                        BitsOffset(4, 8), BitsOffset(8, 1), 0,
                                        &hc.values[i]));
-      value_slots[hc.values[i] >> 6] |= (uint64_t)1 << (hc.values[i] & 0x3F);
+      value_slots[hc.values[i] >> 6] |= static_cast<uint64_t>(1)
+                                        << (hc.values[i] & 0x3F);
     }
     if (hc.values[num_symbols - 1] != kJpegHuffmanAlphabetSize) {
       return JXL_FAILURE("Missing EOI symbol");
@@ -361,13 +364,13 @@ Status JPEGData::VisitFields(Visitor* visitor) {
       for (uint32_t i = 0; i < nbit; i++) {
         bool bbit = false;
         JXL_RETURN_IF_ERROR(visitor->Bool(false, &bbit));
-        padding_bits.push_back(bbit);
+        padding_bits.push_back(TO_JXL_BOOL(bbit));
       }
     } else {
       for (uint8_t& bit : padding_bits) {
-        bool bbit = bit;
+        bool bbit = FROM_JXL_BOOL(bit);
         JXL_RETURN_IF_ERROR(visitor->Bool(false, &bbit));
-        bit = bbit;
+        bit = TO_JXL_BOOL(bbit);
       }
     }
   }

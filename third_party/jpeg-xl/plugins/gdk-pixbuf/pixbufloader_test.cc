@@ -16,12 +16,13 @@ int main(int argc, char* argv[]) {
 
   const char* loaders_cache = argv[1];
   const char* filename = argv[2];
-  setenv("GDK_PIXBUF_MODULE_FILE", loaders_cache, true);
+  const int kDoOverwrite = 1;
+  setenv("GDK_PIXBUF_MODULE_FILE", loaders_cache, kDoOverwrite);
 
   // XDG_DATA_HOME is the path where we look for the mime cache.
   // XDG_DATA_DIRS directories are used in addition to XDG_DATA_HOME.
-  setenv("XDG_DATA_HOME", ".", true);
-  setenv("XDG_DATA_DIRS", "", true);
+  setenv("XDG_DATA_HOME", ".", kDoOverwrite);
+  setenv("XDG_DATA_DIRS", "", kDoOverwrite);
 
   if (!gdk_init_check(nullptr, nullptr)) {
     fprintf(stderr, "This test requires a DISPLAY\n");

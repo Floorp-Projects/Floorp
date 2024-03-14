@@ -114,7 +114,7 @@ class NoiseHistogram {
  private:
   template <typename T>
   T ClampX(const T x) const {
-    return std::min(std::max(T(0), x), T(kBins - 1));
+    return std::min(std::max(static_cast<T>(0), x), static_cast<T>(kBins - 1));
   }
   size_t Index(const float x) const { return ClampX(static_cast<int>(x)); }
 
@@ -321,7 +321,7 @@ std::vector<NoiseLevel> GetNoiseLevel(
 
 void EncodeFloatParam(float val, float precision, BitWriter* writer) {
   JXL_ASSERT(val >= 0);
-  const int absval_quant = static_cast<int>(val * precision + 0.5f);
+  const int absval_quant = static_cast<int>(std::lround(val * precision));
   JXL_ASSERT(absval_quant < (1 << 10));
   writer->Write(10, absval_quant);
 }

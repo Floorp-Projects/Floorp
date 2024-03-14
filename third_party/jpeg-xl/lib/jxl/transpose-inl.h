@@ -45,9 +45,9 @@ struct TransposeSimdTag {};
 
 // TODO(veluca): it's not super useful to have this in the SIMD namespace.
 template <size_t ROWS_or_0, size_t COLS_or_0, class From, class To>
-JXL_INLINE_TRANSPOSE void GenericTransposeBlock(TransposeSimdTag<false>,
-                                                const From& from, const To& to,
-                                                size_t ROWSp, size_t COLSp) {
+JXL_INLINE_TRANSPOSE void GenericTransposeBlock(
+    TransposeSimdTag<false> /* tag */, const From& from, const To& to,
+    size_t ROWSp, size_t COLSp) {
   size_t ROWS = ROWS_or_0 == 0 ? ROWSp : ROWS_or_0;
   size_t COLS = COLS_or_0 == 0 ? COLSp : COLS_or_0;
   for (size_t n = 0; n < ROWS; ++n) {
@@ -64,9 +64,9 @@ constexpr bool TransposeUseSimd(size_t ROWS, size_t COLS) {
 }
 
 template <size_t ROWS_or_0, size_t COLS_or_0, class From, class To>
-JXL_INLINE_TRANSPOSE void GenericTransposeBlock(TransposeSimdTag<true>,
-                                                const From& from, const To& to,
-                                                size_t ROWSp, size_t COLSp) {
+JXL_INLINE_TRANSPOSE void GenericTransposeBlock(
+    TransposeSimdTag<true> /* tag */, const From& from, const To& to,
+    size_t ROWSp, size_t COLSp) {
   size_t ROWS = ROWS_or_0 == 0 ? ROWSp : ROWS_or_0;
   size_t COLS = COLS_or_0 == 0 ? COLSp : COLS_or_0;
   static_assert(MaxLanes(BlockDesc<8>()) == 8, "Invalid descriptor size");
@@ -128,9 +128,9 @@ constexpr bool TransposeUseSimd(size_t ROWS, size_t COLS) {
 }
 
 template <size_t ROWS_or_0, size_t COLS_or_0, class From, class To>
-JXL_INLINE_TRANSPOSE void GenericTransposeBlock(TransposeSimdTag<true>,
-                                                const From& from, const To& to,
-                                                size_t ROWSp, size_t COLSp) {
+JXL_INLINE_TRANSPOSE void GenericTransposeBlock(
+    TransposeSimdTag<true> /* tag */, const From& from, const To& to,
+    size_t ROWSp, size_t COLSp) {
   size_t ROWS = ROWS_or_0 == 0 ? ROWSp : ROWS_or_0;
   size_t COLS = COLS_or_0 == 0 ? COLSp : COLS_or_0;
   static_assert(MaxLanes(BlockDesc<4>()) == 4, "Invalid descriptor size");

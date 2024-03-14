@@ -81,7 +81,8 @@ class AcStrategyRoundtrip : public ::hwy::TestWithParamTargetAndT<int> {
 
 HWY_TARGET_INSTANTIATE_TEST_SUITE_P_T(
     AcStrategyRoundtrip,
-    ::testing::Range(0, int(AcStrategy::Type::kNumValidStrategies)));
+    ::testing::Range(0,
+                     static_cast<int>(AcStrategy::Type::kNumValidStrategies)));
 
 TEST_P(AcStrategyRoundtrip, Test) { Run(); }
 
@@ -141,7 +142,8 @@ class AcStrategyRoundtripDownsample
 
 HWY_TARGET_INSTANTIATE_TEST_SUITE_P_T(
     AcStrategyRoundtripDownsample,
-    ::testing::Range(0, int(AcStrategy::Type::kNumValidStrategies)));
+    ::testing::Range(0,
+                     static_cast<int>(AcStrategy::Type::kNumValidStrategies)));
 
 TEST_P(AcStrategyRoundtripDownsample, Test) { Run(); }
 
@@ -205,7 +207,8 @@ class AcStrategyDownsample : public ::hwy::TestWithParamTargetAndT<int> {
 
 HWY_TARGET_INSTANTIATE_TEST_SUITE_P_T(
     AcStrategyDownsample,
-    ::testing::Range(0, int(AcStrategy::Type::kNumValidStrategies)));
+    ::testing::Range(0,
+                     static_cast<int>(AcStrategy::Type::kNumValidStrategies)));
 
 TEST_P(AcStrategyDownsample, Test) { Run(); }
 

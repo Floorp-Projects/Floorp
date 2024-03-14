@@ -17,9 +17,9 @@
 
 namespace jxl {
 
-namespace {
+namespace detail {
 // Based on highway scalar implementation, for testing
-float LoadFloat16(uint16_t bits16) {
+static JXL_INLINE float LoadFloat16(uint16_t bits16) {
   const uint32_t sign = bits16 >> 15;
   const uint32_t biased_exp = (bits16 >> 10) & 0x1F;
   const uint32_t mantissa = bits16 & 0x3FF;
@@ -40,7 +40,7 @@ float LoadFloat16(uint16_t bits16) {
   memcpy(&result, &bits32, 4);
   return result;
 }
-}  // namespace
+}  // namespace detail
 
 template <typename SaveFloatAtFn>
 static Status JXL_INLINE LoadFloatRow(const uint8_t* src, size_t count,
@@ -83,11 +83,11 @@ static Status JXL_INLINE LoadFloatRow(const uint8_t* src, size_t count,
     case JXL_TYPE_FLOAT16:
       if (little_endian) {
         for (size_t i = 0; i < count; ++i) {
-          callback(i, LoadFloat16(LoadLE16(src + stride * i)));
+          callback(i, detail::LoadFloat16(LoadLE16(src + stride * i)));
         }
       } else {
         for (size_t i = 0; i < count; ++i) {
-          callback(i, LoadFloat16(LoadBE16(src + stride * i)));
+          callback(i, detail::LoadFloat16(LoadBE16(src + stride * i)));
         }
       }
       return true;

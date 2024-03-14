@@ -19,13 +19,13 @@ struct StdioDestinationManager {
   uint8_t* buffer;
 
   static void init_destination(j_compress_ptr cinfo) {
-    auto dest = reinterpret_cast<StdioDestinationManager*>(cinfo->dest);
+    auto* dest = reinterpret_cast<StdioDestinationManager*>(cinfo->dest);
     dest->pub.next_output_byte = dest->buffer;
     dest->pub.free_in_buffer = kDestBufferSize;
   }
 
   static boolean empty_output_buffer(j_compress_ptr cinfo) {
-    auto dest = reinterpret_cast<StdioDestinationManager*>(cinfo->dest);
+    auto* dest = reinterpret_cast<StdioDestinationManager*>(cinfo->dest);
     if (fwrite(dest->buffer, 1, kDestBufferSize, dest->f) != kDestBufferSize) {
       JPEGLI_ERROR("Failed to write to output stream.");
     }
@@ -35,7 +35,7 @@ struct StdioDestinationManager {
   }
 
   static void term_destination(j_compress_ptr cinfo) {
-    auto dest = reinterpret_cast<StdioDestinationManager*>(cinfo->dest);
+    auto* dest = reinterpret_cast<StdioDestinationManager*>(cinfo->dest);
     size_t bytes_left = kDestBufferSize - dest->pub.free_in_buffer;
     if (bytes_left &&
         fwrite(dest->buffer, 1, bytes_left, dest->f) != bytes_left) {
@@ -62,7 +62,7 @@ struct MemoryDestinationManager {
   static void init_destination(j_compress_ptr cinfo) {}
 
   static boolean empty_output_buffer(j_compress_ptr cinfo) {
-    auto dest = reinterpret_cast<MemoryDestinationManager*>(cinfo->dest);
+    auto* dest = reinterpret_cast<MemoryDestinationManager*>(cinfo->dest);
     uint8_t* next_buffer =
         reinterpret_cast<uint8_t*>(malloc(dest->buffer_size * 2));
     memcpy(next_buffer, dest->current_buffer, dest->buffer_size);
@@ -80,7 +80,7 @@ struct MemoryDestinationManager {
   }
 
   static void term_destination(j_compress_ptr cinfo) {
-    auto dest = reinterpret_cast<MemoryDestinationManager*>(cinfo->dest);
+    auto* dest = reinterpret_cast<MemoryDestinationManager*>(cinfo->dest);
     *dest->output_size = dest->buffer_size - dest->pub.free_in_buffer;
   }
 };
@@ -99,7 +99,7 @@ void jpegli_stdio_dest(j_compress_ptr cinfo, FILE* outfile) {
     cinfo->dest = reinterpret_cast<jpeg_destination_mgr*>(
         jpegli::Allocate<jpegli::StdioDestinationManager>(cinfo, 1));
   }
-  auto dest = reinterpret_cast<jpegli::StdioDestinationManager*>(cinfo->dest);
+  auto* dest = reinterpret_cast<jpegli::StdioDestinationManager*>(cinfo->dest);
   dest->f = outfile;
   dest->buffer = jpegli::Allocate<uint8_t>(cinfo, jpegli::kDestBufferSize);
   dest->pub.next_output_byte = dest->buffer;
@@ -122,11 +122,11 @@ void jpegli_mem_dest(j_compress_ptr cinfo, unsigned char** outbuffer,
     JPEGLI_ERROR("jpegli_mem_dest: a different dest manager was already set");
   }
   if (!cinfo->dest) {
-    auto dest = jpegli::Allocate<jpegli::MemoryDestinationManager>(cinfo, 1);
+    auto* dest = jpegli::Allocate<jpegli::MemoryDestinationManager>(cinfo, 1);
     dest->temp_buffer = nullptr;
     cinfo->dest = reinterpret_cast<jpeg_destination_mgr*>(dest);
   }
-  auto dest = reinterpret_cast<jpegli::MemoryDestinationManager*>(cinfo->dest);
+  auto* dest = reinterpret_cast<jpegli::MemoryDestinationManager*>(cinfo->dest);
   dest->pub.init_destination =
       jpegli::MemoryDestinationManager::init_destination;
   dest->pub.empty_output_buffer =

@@ -180,7 +180,7 @@ class ThreadPoolForTests {
   }
   ThreadPoolForTests(const ThreadPoolForTests&) = delete;
   ThreadPoolForTests& operator&(const ThreadPoolForTests&) = delete;
-  // TODO(eustas): avoid `&` overload?
+  // TODO(eustas): avoid unary `&` overload?
   ThreadPool* operator&() { return pool_.get(); }
 
  private:
@@ -199,6 +199,8 @@ Status ReadICC(BitReader* JXL_RESTRICT reader,
 // `io->metadata.m.original` must be set.
 Status EncodeFile(const CompressParams& params, const CodecInOut* io,
                   std::vector<uint8_t>* compressed, ThreadPool* pool = nullptr);
+
+constexpr const char* BoolToCStr(bool b) { return b ? "true" : "false"; }
 
 }  // namespace test
 

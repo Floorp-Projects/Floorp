@@ -7,11 +7,13 @@
 
 #include <jxl/types.h>
 
+#include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
 
 #include "lib/extras/packed_image.h"
+#include "lib/jxl/base/common.h"
 
 namespace jxl {
 namespace extras {
@@ -52,14 +54,17 @@ class JSONDict : public JSONField {
     static_assert(std::is_convertible<T*, JSONField*>::value,
                   "T must be a JSONField");
     T* ret = new T();
-    values_.emplace_back(
-        key, std::unique_ptr<JSONField>(static_cast<JSONField*>(ret)));
+    JSONField* field = static_cast<JSONField*>(ret);
+    auto handle = std::unique_ptr<JSONField>(field);
+    values_.emplace_back(key, std::move(handle));
     return ret;
   }
 
   template <typename T>
   void Add(const std::string& key, const T& value) {
-    values_.emplace_back(key, std::unique_ptr<JSONField>(new JSONValue(value)));
+    JSONField* field = static_cast<JSONField*>(new JSONValue(value));
+    auto handle = std::unique_ptr<JSONField>(field);
+    values_.emplace_back(key, std::move(handle));
   }
 
   void Write(std::ostream& o, uint32_t indent) const override {
@@ -71,11 +76,11 @@ class JSONDict : public JSONField {
         o << ",";
       }
       is_first = false;
-      o << std::endl << indent_str << "  \"" << key_value.first << "\": ";
+      o << "\n" << indent_str << "  \"" << key_value.first << "\": ";
       key_value.second->Write(o, indent + 2);
     }
     if (!values_.empty()) {
-      o << std::endl << indent_str;
+      o << "\n" << indent_str;
     }
     o << "}";
   }
@@ -112,11 +117,11 @@ class JSONArray : public JSONField {
         o << ",";
       }
       is_first = false;
-      o << std::endl << indent_str << "  ";
+      o << "\n" << indent_str << "  ";
       value->Write(o, indent + 2);
     }
     if (!values_.empty()) {
-      o << std::endl << indent_str;
+      o << "\n" << indent_str;
     }
     o << "]";
   }
@@ -160,13 +165,13 @@ void GenerateMetadata(const PackedPixelFile& ppf, std::vector<uint8_t>* out) {
   }
 
   {
-    auto ectype = meta.AddEmpty<JSONArray>("extra_channel_type");
-    auto bps = meta.AddEmpty<JSONArray>("bits_per_sample");
-    auto ebps = meta.AddEmpty<JSONArray>("exp_bits_per_sample");
+    auto* ectype = meta.AddEmpty<JSONArray>("extra_channel_type");
+    auto* bps = meta.AddEmpty<JSONArray>("bits_per_sample");
+    auto* ebps = meta.AddEmpty<JSONArray>("exp_bits_per_sample");
     bps->Add(ppf.info.bits_per_sample);
     ebps->Add(ppf.info.exponent_bits_per_sample);
-    for (size_t i = 0; i < ppf.extra_channels_info.size(); i++) {
-      switch (ppf.extra_channels_info[i].ec_info.type) {
+    for (const auto& eci : ppf.extra_channels_info) {
+      switch (eci.ec_info.type) {
         case JXL_CHANNEL_ALPHA: {
           ectype->Add(std::string("Alpha"));
           break;
@@ -200,8 +205,8 @@ void GenerateMetadata(const PackedPixelFile& ppf, std::vector<uint8_t>* out) {
           break;
         }
       }
-      bps->Add(ppf.extra_channels_info[i].ec_info.bits_per_sample);
-      ebps->Add(ppf.extra_channels_info[i].ec_info.exponent_bits_per_sample);
+      bps->Add(eci.ec_info.bits_per_sample);
+      ebps->Add(eci.ec_info.exponent_bits_per_sample);
     }
   }
 
@@ -282,7 +287,7 @@ bool WriteNPYArray(const PackedPixelFile& ppf, std::vector<uint8_t>* out) {
 class NumPyEncoder : public Encoder {
  public:
   Status Encode(const PackedPixelFile& ppf, EncodedImage* encoded_image,
-                ThreadPool* pool = nullptr) const override {
+                ThreadPool* pool) const override {
     JXL_RETURN_IF_ERROR(VerifyBasicInfo(ppf.info));
     GenerateMetadata(ppf, &encoded_image->metadata);
     encoded_image->bitstreams.emplace_back();

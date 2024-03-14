@@ -101,6 +101,7 @@ GetPaletteValue(const pixel_type *const palette, int index, const size_t c,
     //               index >= kLargeCube ** 3 ?
     switch (c) {
       case 0:
+      default:
         break;
       case 1:
         index /= kLargeCube;

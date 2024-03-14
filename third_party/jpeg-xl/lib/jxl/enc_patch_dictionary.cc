@@ -5,6 +5,7 @@
 
 #include "lib/jxl/enc_patch_dictionary.h"
 
+#include <jxl/types.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -17,6 +18,7 @@
 #include "lib/jxl/base/common.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/override.h"
+#include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/base/random.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/dec_cache.h"
@@ -95,7 +97,7 @@ void PatchDictionaryEncoder::Encode(const PatchDictionary& pdic,
           add_num(kPatchAlphaChannelContext, info.alpha_channel);
         }
         if (UsesClamp(info.mode)) {
-          add_num(kPatchClampContext, info.clamp);
+          add_num(kPatchClampContext, TO_JXL_BOOL(info.clamp));
         }
       }
     }
@@ -154,7 +156,7 @@ void PatchDictionaryEncoder::SubtractFrom(const PatchDictionary& pdic,
             // Nothing to do.
           } else {
             JXL_UNREACHABLE("Blending mode %u not yet implemented",
-                            (uint32_t)mode);
+                            static_cast<uint32_t>(mode));
           }
         }
       }
@@ -586,7 +588,9 @@ Status FindBestPatchDictionary(const Image3F& opsin,
           state->cparams.dots,
           state->cparams.speed_tier <= SpeedTier::kSquirrel &&
               state->cparams.butteraugli_distance >= kMinButteraugliForDots)) {
-    JXL_ASSIGN_OR_RETURN(info, FindDotDictionary(state->cparams, opsin,
+    Rect rect(0, 0, state->shared.frame_dim.xsize,
+              state->shared.frame_dim.ysize);
+    JXL_ASSIGN_OR_RETURN(info, FindDotDictionary(state->cparams, opsin, rect,
                                                  state->shared.cmap, pool));
   }
 
@@ -672,7 +676,7 @@ Status FindBestPatchDictionary(const Image3F& opsin,
       ref_positions[patch] = {x0, y0};
       for (size_t y = y0; y < y0 + ysize; y++) {
         for (size_t x = x0; x < x0 + xsize; x++) {
-          occupied_rows[y * occupied_stride + x] = true;
+          occupied_rows[y * occupied_stride + x] = JXL_TRUE;
         }
       }
       max_y = std::max(max_y, y0 + ysize);
@@ -716,6 +720,8 @@ Status FindBestPatchDictionary(const Image3F& opsin,
       }
     }
     for (const auto& pos : info[i].second) {
+      JXL_DEBUG_V(4, "Patch %" PRIuS "x%" PRIuS " at position %u,%u",
+                  ref_pos.xsize, ref_pos.ysize, pos.first, pos.second);
       positions.emplace_back(
           PatchPosition{pos.first, pos.second, pref_positions.size()});
       // Add blending for color channels, ignore other channels.
@@ -724,7 +730,7 @@ Status FindBestPatchDictionary(const Image3F& opsin,
         blendings.push_back({PatchBlendMode::kNone, 0, false});
       }
     }
-    pref_positions.emplace_back(std::move(ref_pos));
+    pref_positions.emplace_back(ref_pos);
   }
 
   CompressParams cparams = state->cparams;

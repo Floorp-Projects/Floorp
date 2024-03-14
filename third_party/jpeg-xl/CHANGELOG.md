@@ -8,11 +8,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Added
- - decoder API: added `JxlDecoderGetBoxSizeContents` for getting the size of the
-   content of a box without the headers.
+
 ### Removed
 
 ### Changed / clarified
+
+### Fixed
+
+
+##  [0.10.0] - 2024-02-21
+
+### Added
+ - decoder API: added `JxlDecoderGetBoxSizeContents` for getting the size of the
+   content of a box without the headers.
+ - encoder API: implemented new api functions for streaming encoding.
+
+### Changed / clarified
+ - decoder/encoder API: return failure when surface allocation fail
+ - encoder API / cjxl: updated modular effort levels to faster settings; the
+   effort range is now 1-10, with 11 available in advanced mode.
 
 ## [0.9.2] - 2024-02-07
 

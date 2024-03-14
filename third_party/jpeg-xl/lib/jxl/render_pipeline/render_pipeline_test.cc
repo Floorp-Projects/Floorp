@@ -267,11 +267,11 @@ Splines CreateTestSplines() {
   const ColorCorrelationMap cmap;
   std::vector<Spline::Point> control_points{{9, 54},  {118, 159}, {97, 3},
                                             {10, 40}, {150, 25},  {120, 300}};
-  const Spline spline{
-      control_points,
-      /*color_dct=*/
-      {{0.03125f, 0.00625f, 0.003125f}, {1.f, 0.321875f}, {1.f, 0.24375f}},
-      /*sigma_dct=*/{0.3125f, 0.f, 0.f, 0.0625f}};
+  const Spline spline{control_points,
+                      /*color_dct=*/
+                      {Dct32{0.03125f, 0.00625f, 0.003125f},
+                       Dct32{1.f, 0.321875f}, Dct32{1.f, 0.24375f}},
+                      /*sigma_dct=*/{0.3125f, 0.f, 0.f, 0.0625f}};
   std::vector<Spline> spline_data = {spline};
   std::vector<QuantizedSpline> quantized_splines;
   std::vector<Spline::Point> starting_points;
@@ -522,7 +522,7 @@ std::ostream& operator<<(std::ostream& os,
     filename = c.input_path.substr(pos + 1);
   }
   std::replace_if(
-      filename.begin(), filename.end(), [](char c) { return !isalnum(c); },
+      filename.begin(), filename.end(), [](char c) { return isalnum(c) == 0; },
       '_');
   os << filename << "_" << (c.jpeg_transcode ? "JPEG_" : "") << c.xsize << "x"
      << c.ysize << "_" << c.cparams_descr;

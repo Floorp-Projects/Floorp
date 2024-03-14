@@ -46,18 +46,18 @@ TEST(ImageTest, TestAllocator) {
 
 template <typename T>
 void TestFillImpl(Image3<T>* img, const char* layout) {
-  FillImage(T(1), img);
+  FillImage(static_cast<T>(1), img);
   for (size_t y = 0; y < img->ysize(); ++y) {
     for (size_t c = 0; c < 3; ++c) {
       T* JXL_RESTRICT row = img->PlaneRow(c, y);
       for (size_t x = 0; x < img->xsize(); ++x) {
-        if (row[x] != T(1)) {
+        if (row[x] != static_cast<T>(1)) {
           printf("Not 1 at c=%" PRIuS " %" PRIuS ", %" PRIuS " (%" PRIuS
                  " x %" PRIuS ") (%s)\n",
                  c, x, y, img->xsize(), img->ysize(), layout);
           abort();
         }
-        row[x] = T(2);
+        row[x] = static_cast<T>(2);
       }
     }
   }
@@ -68,13 +68,13 @@ void TestFillImpl(Image3<T>* img, const char* layout) {
     for (size_t y = 0; y < img->ysize(); ++y) {
       T* JXL_RESTRICT row = img->PlaneRow(c, y);
       for (size_t x = 0; x < img->xsize(); ++x) {
-        if (row[x] != T(0)) {
+        if (row[x] != static_cast<T>(0)) {
           printf("Not 0 at c=%" PRIuS " %" PRIuS ", %" PRIuS " (%" PRIuS
                  " x %" PRIuS ") (%s)\n",
                  c, x, y, img->xsize(), img->ysize(), layout);
           abort();
         }
-        row[x] = T(3);
+        row[x] = static_cast<T>(3);
       }
     }
   }

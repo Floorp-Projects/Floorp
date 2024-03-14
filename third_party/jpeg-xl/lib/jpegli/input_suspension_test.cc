@@ -17,7 +17,7 @@
 namespace jpegli {
 namespace {
 
-static constexpr uint8_t kFakeEoiMarker[2] = {0xff, 0xd9};
+constexpr uint8_t kFakeEoiMarker[2] = {0xff, 0xd9};
 
 struct SourceManager {
   SourceManager(const uint8_t* data, size_t len, size_t max_chunk_size,
@@ -50,14 +50,14 @@ struct SourceManager {
     }
     if (pub_.bytes_in_buffer > 0) {
       EXPECT_LE(pub_.bytes_in_buffer, buffer_.size());
-      memmove(&buffer_[0], pub_.next_input_byte, pub_.bytes_in_buffer);
+      memmove(buffer_.data(), pub_.next_input_byte, pub_.bytes_in_buffer);
     }
     size_t chunk_size =
         pos_ < len_ ? std::min(len_ - pos_, max_chunk_size_) : 2;
     buffer_.resize(pub_.bytes_in_buffer + chunk_size);
     memcpy(&buffer_[pub_.bytes_in_buffer],
            pos_ < len_ ? data_ + pos_ : kFakeEoiMarker, chunk_size);
-    pub_.next_input_byte = &buffer_[0];
+    pub_.next_input_byte = buffer_.data();
     pub_.bytes_in_buffer += chunk_size;
     pos_ += chunk_size;
     return true;
@@ -73,7 +73,7 @@ struct SourceManager {
   bool is_partial_file_;
 
   static void init_source(j_decompress_ptr cinfo) {
-    auto src = reinterpret_cast<SourceManager*>(cinfo->src);
+    auto* src = reinterpret_cast<SourceManager*>(cinfo->src);
     src->pub_.next_input_byte = nullptr;
     src->pub_.bytes_in_buffer = 0;
   }
@@ -81,7 +81,7 @@ struct SourceManager {
   static boolean fill_input_buffer(j_decompress_ptr cinfo) { return FALSE; }
 
   static void skip_input_data(j_decompress_ptr cinfo, long num_bytes) {
-    auto src = reinterpret_cast<SourceManager*>(cinfo->src);
+    auto* src = reinterpret_cast<SourceManager*>(cinfo->src);
     if (num_bytes <= 0) {
       return;
     }
@@ -156,10 +156,10 @@ void ReadOutputImage(const DecompressParams& dparams, j_decompress_ptr cinfo,
           rowdata[c][i] =
               y0 + i < ysize ? &output->raw_data[c][(y0 + i) * xsize] : nullptr;
         }
-        data[c] = &rowdata[c][0];
+        data[c] = rowdata[c].data();
       }
       while ((num_output_lines =
-                  jpegli_read_raw_data(cinfo, &data[0], max_lines)) == 0) {
+                  jpegli_read_raw_data(cinfo, data.data(), max_lines)) == 0) {
         JXL_CHECK(src && src->LoadNextChunk());
       }
     } else {
@@ -173,7 +173,7 @@ void ReadOutputImage(const DecompressParams& dparams, j_decompress_ptr cinfo,
         size_t yidx = cinfo->output_scanline + i;
         scanlines[i] = &output->pixels[yidx * stride];
       }
-      while ((num_output_lines = jpegli_read_scanlines(cinfo, &scanlines[0],
+      while ((num_output_lines = jpegli_read_scanlines(cinfo, scanlines.data(),
                                                        max_lines)) == 0) {
         JXL_CHECK(src && src->LoadNextChunk());
       }
@@ -197,7 +197,7 @@ struct TestConfig {
 
 std::vector<uint8_t> GetTestJpegData(TestConfig& config) {
   if (!config.fn.empty()) {
-    return ReadTestData(config.fn.c_str());
+    return ReadTestData(config.fn);
   }
   GeneratePixels(&config.input);
   std::vector<uint8_t> compressed;
@@ -249,7 +249,7 @@ TEST_P(InputSuspensionTestParam, InputOutputLockStepNonBuffered) {
       EXPECT_EQ(0, memcmp(markers_seen, kMarkerSequence, num_markers_seen));
     }
     VerifyHeader(config.jparams, &cinfo);
-    cinfo.raw_data_out = dparams.output_mode == RAW_DATA;
+    cinfo.raw_data_out = TO_JXL_BOOL(dparams.output_mode == RAW_DATA);
 
     if (dparams.output_mode == COEFFICIENTS) {
       jvirt_barray_ptr* coef_arrays;
@@ -303,7 +303,7 @@ TEST_P(InputSuspensionTestParam, InputOutputLockStepBuffered) {
     jpegli_set_output_format(&cinfo, dparams.data_type, dparams.endianness);
 
     cinfo.buffered_image = TRUE;
-    cinfo.raw_data_out = dparams.output_mode == RAW_DATA;
+    cinfo.raw_data_out = TO_JXL_BOOL(dparams.output_mode == RAW_DATA);
 
     EXPECT_TRUE(jpegli_start_decompress(&cinfo));
     EXPECT_FALSE(jpegli_input_complete(&cinfo));
@@ -380,8 +380,8 @@ TEST_P(InputSuspensionTestParam, PreConsumeInputBuffered) {
     }
     EXPECT_EQ(JPEG_REACHED_SOS, jpegli_consume_input(&cinfo));
     cinfo.buffered_image = TRUE;
-    cinfo.raw_data_out = dparams.output_mode == RAW_DATA;
-    cinfo.do_block_smoothing = dparams.do_block_smoothing;
+    cinfo.raw_data_out = TO_JXL_BOOL(dparams.output_mode == RAW_DATA);
+    cinfo.do_block_smoothing = TO_JXL_BOOL(dparams.do_block_smoothing);
 
     EXPECT_TRUE(jpegli_start_decompress(&cinfo));
     EXPECT_FALSE(jpegli_input_complete(&cinfo));
@@ -446,8 +446,8 @@ TEST_P(InputSuspensionTestParam, PreConsumeInputNonBuffered) {
       }
     }
     EXPECT_EQ(JPEG_REACHED_SOS, jpegli_consume_input(&cinfo));
-    cinfo.raw_data_out = dparams.output_mode == RAW_DATA;
-    cinfo.do_block_smoothing = dparams.do_block_smoothing;
+    cinfo.raw_data_out = TO_JXL_BOOL(dparams.output_mode == RAW_DATA);
+    cinfo.do_block_smoothing = TO_JXL_BOOL(dparams.do_block_smoothing);
 
     if (dparams.output_mode == COEFFICIENTS) {
       jpegli_read_coefficients(&cinfo);

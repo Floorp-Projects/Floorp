@@ -132,8 +132,8 @@ class ThreadParallelRunner {
 
   // Attempts to reserve and perform some work from the global range of tasks,
   // which is encoded within "command". Returns after all tasks are reserved.
-  static void RunRange(ThreadParallelRunner* self, const WorkerCommand command,
-                       const int thread);
+  static void RunRange(ThreadParallelRunner* self, WorkerCommand command,
+                       int thread);
 
   static void ThreadFunc(ThreadParallelRunner* self, int thread);
 

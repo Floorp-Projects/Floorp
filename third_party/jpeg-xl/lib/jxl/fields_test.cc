@@ -200,7 +200,8 @@ TEST(FieldsTest, TestRoundtripSize) {
     SizeHeader size;
     ASSERT_TRUE(size.Set(123 + 77 * i, 7 + i));
 
-    size_t extension_bits = 999, total_bits = 999;  // Initialize as garbage.
+    size_t extension_bits = 999;
+    size_t total_bits = 999;  // Initialize as garbage.
     ASSERT_TRUE(Bundle::CanEncode(size, &extension_bits, &total_bits));
     EXPECT_EQ(0u, extension_bits);
 
@@ -230,7 +231,8 @@ TEST(FieldsTest, TestCropRect) {
     f.frame_origin.y0 = i;
     f.frame_size.xsize = 1000 + i;
     f.frame_size.ysize = 1000 + i;
-    size_t extension_bits = 0, total_bits = 0;
+    size_t extension_bits = 0;
+    size_t total_bits = 0;
     ASSERT_TRUE(Bundle::CanEncode(f, &extension_bits, &total_bits));
     EXPECT_EQ(0u, extension_bits);
     EXPECT_GE(total_bits, 9u);
@@ -241,7 +243,8 @@ TEST(FieldsTest, TestPreview) {
   for (uint32_t i = 1; i < 4360; ++i) {
     PreviewHeader p;
     ASSERT_TRUE(p.Set(i, i));
-    size_t extension_bits = 0, total_bits = 0;
+    size_t extension_bits = 0;
+    size_t total_bits = 0;
     ASSERT_TRUE(Bundle::CanEncode(p, &extension_bits, &total_bits));
     EXPECT_EQ(0u, extension_bits);
     EXPECT_GE(total_bits, 6u);
@@ -254,7 +257,8 @@ TEST(FieldsTest, TestRoundtripFrame) {
   FrameHeader h(&metadata);
   h.extensions = 0x800;
 
-  size_t extension_bits = 999, total_bits = 999;  // Initialize as garbage.
+  size_t extension_bits = 999;
+  size_t total_bits = 999;  // Initialize as garbage.
   ASSERT_TRUE(Bundle::CanEncode(h, &extension_bits, &total_bits));
   EXPECT_EQ(0u, extension_bits);
   BitWriter writer;
@@ -277,7 +281,8 @@ TEST(FieldsTest, TestRoundtripFrame) {
 TEST(FieldsTest, TestOutOfRange) {
   SizeHeader h;
   ASSERT_TRUE(h.Set(0xFFFFFFFFull, 0xFFFFFFFFull));
-  size_t extension_bits = 999, total_bits = 999;  // Initialize as garbage.
+  size_t extension_bits = 999;
+  size_t total_bits = 999;  // Initialize as garbage.
   ASSERT_FALSE(Bundle::CanEncode(h, &extension_bits, &total_bits));
 }
 #endif
@@ -315,12 +320,12 @@ struct NewBundle : public Fields {
         visitor->U32(Bits(7), Bits(12), Bits(16), Bits(32), 0, &old_large));
 
     JXL_QUIET_RETURN_IF_ERROR(visitor->BeginExtensions(&extensions));
-    if (visitor->Conditional(extensions & 1)) {
+    if (visitor->Conditional((extensions & 1) != 0)) {
       JXL_QUIET_RETURN_IF_ERROR(
           visitor->U32(Val(2), Bits(2), Bits(3), Bits(4), 2, &new_small));
       JXL_QUIET_RETURN_IF_ERROR(visitor->F16(-2.0f, &new_f));
     }
-    if (visitor->Conditional(extensions & 2)) {
+    if (visitor->Conditional((extensions & 2) != 0)) {
       JXL_QUIET_RETURN_IF_ERROR(
           visitor->U32(Bits(9), Bits(12), Bits(16), Bits(32), 0, &new_large));
     }
@@ -349,7 +354,8 @@ TEST(FieldsTest, TestNewDecoderOldData) {
   const size_t kMaxOutBytes = 999;
   BitWriter writer;
   // Make sure values are initialized by code under test.
-  size_t extension_bits = 12345, total_bits = 12345;
+  size_t extension_bits = 12345;
+  size_t total_bits = 12345;
   ASSERT_TRUE(Bundle::CanEncode(old_bundle, &extension_bits, &total_bits));
   ASSERT_LE(total_bits, kMaxOutBytes * kBitsPerByte);
   EXPECT_EQ(0u, extension_bits);
@@ -393,7 +399,8 @@ TEST(FieldsTest, TestOldDecoderNewData) {
   constexpr size_t kMaxOutBytes = 999;
   BitWriter writer;
   // Make sure values are initialized by code under test.
-  size_t extension_bits = 12345, total_bits = 12345;
+  size_t extension_bits = 12345;
+  size_t total_bits = 12345;
   ASSERT_TRUE(Bundle::CanEncode(new_bundle, &extension_bits, &total_bits));
   EXPECT_NE(0u, extension_bits);
   AuxOut aux_out;

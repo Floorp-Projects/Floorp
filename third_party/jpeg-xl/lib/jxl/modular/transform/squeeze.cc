@@ -242,7 +242,8 @@ Status InvVSqueeze(Image &input, uint32_t c, uint32_t rc, ThreadPool *pool) {
   static constexpr const int kColsPerThread = 64;
   const auto unsqueeze_slice = [&](const uint32_t task, size_t /* thread */) {
     const size_t x0 = task * kColsPerThread;
-    const size_t x1 = std::min((size_t)(task + 1) * kColsPerThread, chin.w);
+    const size_t x1 =
+        std::min(static_cast<size_t>(task + 1) * kColsPerThread, chin.w);
     const size_t w = x1 - x0;
     // We only iterate up to std::min(chin_residual.h, chin.h) which is
     // always chin_residual.h.

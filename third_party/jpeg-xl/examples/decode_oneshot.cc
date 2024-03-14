@@ -7,11 +7,6 @@
 // available at once). The example outputs the pixels and color information to a
 // floating point image and an ICC profile on disk.
 
-#ifndef __STDC_FORMAT_MACROS
-#define __STDC_FORMAT_MACROS
-#endif
-
-#include <inttypes.h>
 #include <jxl/codestream_header.h>
 #include <jxl/decode.h>
 #include <jxl/decode_cxx.h>
@@ -102,13 +97,13 @@ bool DecodeJpegXlOneShot(const uint8_t* jxl, size_t size,
         return false;
       }
       if (buffer_size != *xsize * *ysize * 16) {
-        fprintf(stderr, "Invalid out buffer size %" PRIu64 " %" PRIu64 "\n",
-                static_cast<uint64_t>(buffer_size),
-                static_cast<uint64_t>(*xsize * *ysize * 16));
+        fprintf(stderr, "Invalid out buffer size %d %d\n",
+                static_cast<int>(buffer_size),
+                static_cast<int>(*xsize * *ysize * 16));
         return false;
       }
       pixels->resize(*xsize * *ysize * 4);
-      void* pixels_buffer = (void*)pixels->data();
+      void* pixels_buffer = static_cast<void*>(pixels->data());
       size_t pixels_buffer_size = pixels->size() * sizeof(float);
       if (JXL_DEC_SUCCESS != JxlDecoderSetImageOutBuffer(dec.get(), &format,
                                                          pixels_buffer,
@@ -147,8 +142,8 @@ bool WritePFM(const char* filename, const float* pixels, size_t xsize,
   uint8_t little_endian[4];
   memcpy(little_endian, &endian_test, 4);
 
-  fprintf(file, "PF\n%d %d\n%s\n", (int)xsize, (int)ysize,
-          little_endian[0] ? "-1.0" : "1.0");
+  fprintf(file, "PF\n%d %d\n%s\n", static_cast<int>(xsize),
+          static_cast<int>(ysize), little_endian[0] ? "-1.0" : "1.0");
   for (int y = ysize - 1; y >= 0; y--) {
     for (size_t x = 0; x < xsize; x++) {
       for (size_t c = 0; c < 3; c++) {
@@ -233,7 +228,8 @@ int main(int argc, char* argv[]) {
 
   std::vector<float> pixels;
   std::vector<uint8_t> icc_profile;
-  size_t xsize = 0, ysize = 0;
+  size_t xsize = 0;
+  size_t ysize = 0;
   if (!DecodeJpegXlOneShot(jxl.data(), jxl.size(), &pixels, &xsize, &ysize,
                            &icc_profile)) {
     fprintf(stderr, "Error while decoding the jxl file\n");

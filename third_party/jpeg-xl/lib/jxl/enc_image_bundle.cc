@@ -72,7 +72,7 @@ Status ApplyColorTransform(const ColorEncoding& c_current,
           }
         }
         float* JXL_RESTRICT dst_buf = c_transform.BufDst(thread);
-        if (!c_transform.Run(thread, src_buf, dst_buf)) {
+        if (!c_transform.Run(thread, src_buf, dst_buf, rect.xsize())) {
           has_error = true;
           return;
         }

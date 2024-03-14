@@ -9,6 +9,8 @@
 
 #include <cmath>
 
+#include "lib/jxl/base/common.h"
+
 namespace jxl {
 
 namespace {
@@ -19,49 +21,46 @@ struct EnumName {
   T value;
 };
 
-const EnumName<JxlColorSpace> kJxlColorSpaceNames[] = {
-    {"RGB", JXL_COLOR_SPACE_RGB},
-    {"Gra", JXL_COLOR_SPACE_GRAY},
-    {"XYB", JXL_COLOR_SPACE_XYB},
-    {"CS?", JXL_COLOR_SPACE_UNKNOWN},
-};
+constexpr auto kJxlColorSpaceNames =
+    to_array<EnumName<JxlColorSpace>>({{"RGB", JXL_COLOR_SPACE_RGB},
+                                       {"Gra", JXL_COLOR_SPACE_GRAY},
+                                       {"XYB", JXL_COLOR_SPACE_XYB},
+                                       {"CS?", JXL_COLOR_SPACE_UNKNOWN}});
 
-const EnumName<JxlWhitePoint> kJxlWhitePointNames[] = {
-    {"D65", JXL_WHITE_POINT_D65},
-    {"Cst", JXL_WHITE_POINT_CUSTOM},
-    {"EER", JXL_WHITE_POINT_E},
-    {"DCI", JXL_WHITE_POINT_DCI},
-};
+constexpr auto kJxlWhitePointNames =
+    to_array<EnumName<JxlWhitePoint>>({{"D65", JXL_WHITE_POINT_D65},
+                                       {"Cst", JXL_WHITE_POINT_CUSTOM},
+                                       {"EER", JXL_WHITE_POINT_E},
+                                       {"DCI", JXL_WHITE_POINT_DCI}});
 
-const EnumName<JxlPrimaries> kJxlPrimariesNames[] = {
-    {"SRG", JXL_PRIMARIES_SRGB},
-    {"Cst", JXL_PRIMARIES_CUSTOM},
-    {"202", JXL_PRIMARIES_2100},
-    {"DCI", JXL_PRIMARIES_P3},
-};
+constexpr auto kJxlPrimariesNames =
+    to_array<EnumName<JxlPrimaries>>({{"SRG", JXL_PRIMARIES_SRGB},
+                                      {"Cst", JXL_PRIMARIES_CUSTOM},
+                                      {"202", JXL_PRIMARIES_2100},
+                                      {"DCI", JXL_PRIMARIES_P3}});
 
-const EnumName<JxlTransferFunction> kJxlTransferFunctionNames[] = {
-    {"709", JXL_TRANSFER_FUNCTION_709},
-    {"TF?", JXL_TRANSFER_FUNCTION_UNKNOWN},
-    {"Lin", JXL_TRANSFER_FUNCTION_LINEAR},
-    {"SRG", JXL_TRANSFER_FUNCTION_SRGB},
-    {"PeQ", JXL_TRANSFER_FUNCTION_PQ},
-    {"DCI", JXL_TRANSFER_FUNCTION_DCI},
-    {"HLG", JXL_TRANSFER_FUNCTION_HLG},
-    {"", JXL_TRANSFER_FUNCTION_GAMMA},
-};
+constexpr auto kJxlTransferFunctionNames =
+    to_array<EnumName<JxlTransferFunction>>(
+        {{"709", JXL_TRANSFER_FUNCTION_709},
+         {"TF?", JXL_TRANSFER_FUNCTION_UNKNOWN},
+         {"Lin", JXL_TRANSFER_FUNCTION_LINEAR},
+         {"SRG", JXL_TRANSFER_FUNCTION_SRGB},
+         {"PeQ", JXL_TRANSFER_FUNCTION_PQ},
+         {"DCI", JXL_TRANSFER_FUNCTION_DCI},
+         {"HLG", JXL_TRANSFER_FUNCTION_HLG},
+         {"", JXL_TRANSFER_FUNCTION_GAMMA}});
 
-const EnumName<JxlRenderingIntent> kJxlRenderingIntentNames[] = {
-    {"Per", JXL_RENDERING_INTENT_PERCEPTUAL},
-    {"Rel", JXL_RENDERING_INTENT_RELATIVE},
-    {"Sat", JXL_RENDERING_INTENT_SATURATION},
-    {"Abs", JXL_RENDERING_INTENT_ABSOLUTE},
-};
+constexpr auto kJxlRenderingIntentNames =
+    to_array<EnumName<JxlRenderingIntent>>(
+        {{"Per", JXL_RENDERING_INTENT_PERCEPTUAL},
+         {"Rel", JXL_RENDERING_INTENT_RELATIVE},
+         {"Sat", JXL_RENDERING_INTENT_SATURATION},
+         {"Abs", JXL_RENDERING_INTENT_ABSOLUTE}});
 
-template <typename T>
-Status ParseEnum(const std::string& token, const EnumName<T>* enum_values,
-                 size_t enum_len, T* value) {
-  for (size_t i = 0; i < enum_len; i++) {
+template <typename T, size_t N>
+Status ParseEnum(const std::string& token,
+                 const std::array<EnumName<T>, N>& enum_values, T* value) {
+  for (size_t i = 0; i < enum_values.size(); i++) {
     if (enum_values[i].name == token) {
       *value = enum_values[i].value;
       return true;
@@ -69,9 +68,6 @@ Status ParseEnum(const std::string& token, const EnumName<T>* enum_values,
   }
   return false;
 }
-#define ARRAY_SIZE(X) (sizeof(X) / sizeof((X)[0]))
-#define PARSE_ENUM(type, token, value) \
-  ParseEnum<type>(token, k##type##Names, ARRAY_SIZE(k##type##Names), value)
 
 class Tokenizer {
  public:
@@ -122,7 +118,7 @@ Status ParseColorSpace(Tokenizer* tokenizer, JxlColorEncoding* c) {
   std::string str;
   JXL_RETURN_IF_ERROR(tokenizer->Next(&str));
   JxlColorSpace cs;
-  if (PARSE_ENUM(JxlColorSpace, str, &cs)) {
+  if (ParseEnum(str, kJxlColorSpaceNames, &cs)) {
     c->color_space = cs;
     return true;
   }
@@ -139,7 +135,7 @@ Status ParseWhitePoint(Tokenizer* tokenizer, JxlColorEncoding* c) {
 
   std::string str;
   JXL_RETURN_IF_ERROR(tokenizer->Next(&str));
-  if (PARSE_ENUM(JxlWhitePoint, str, &c->white_point)) return true;
+  if (ParseEnum(str, kJxlWhitePointNames, &c->white_point)) return true;
 
   Tokenizer xy_tokenizer(&str, ';');
   c->white_point = JXL_WHITE_POINT_CUSTOM;
@@ -157,7 +153,7 @@ Status ParsePrimaries(Tokenizer* tokenizer, JxlColorEncoding* c) {
 
   std::string str;
   JXL_RETURN_IF_ERROR(tokenizer->Next(&str));
-  if (PARSE_ENUM(JxlPrimaries, str, &c->primaries)) return true;
+  if (ParseEnum(str, kJxlPrimariesNames, &c->primaries)) return true;
 
   Tokenizer xy_tokenizer(&str, ';');
   JXL_RETURN_IF_ERROR(ParseDouble(&xy_tokenizer, c->primaries_red_xy + 0));
@@ -174,7 +170,8 @@ Status ParsePrimaries(Tokenizer* tokenizer, JxlColorEncoding* c) {
 Status ParseRenderingIntent(Tokenizer* tokenizer, JxlColorEncoding* c) {
   std::string str;
   JXL_RETURN_IF_ERROR(tokenizer->Next(&str));
-  if (PARSE_ENUM(JxlRenderingIntent, str, &c->rendering_intent)) return true;
+  if (ParseEnum(str, kJxlRenderingIntentNames, &c->rendering_intent))
+    return true;
 
   return JXL_FAILURE("Invalid RenderingIntent %s\n", str.c_str());
 }
@@ -189,7 +186,7 @@ Status ParseTransferFunction(Tokenizer* tokenizer, JxlColorEncoding* c) {
 
   std::string str;
   JXL_RETURN_IF_ERROR(tokenizer->Next(&str));
-  if (PARSE_ENUM(JxlTransferFunction, str, &c->transfer_function)) {
+  if (ParseEnum(str, kJxlTransferFunctionNames, &c->transfer_function)) {
     return true;
   }
 

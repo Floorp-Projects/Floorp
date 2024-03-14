@@ -44,7 +44,7 @@ class CmsStage : public RenderPipelineStage {
   Status ProcessRow(const RowInfo& input_rows, const RowInfo& output_rows,
                     size_t xextra, size_t xsize, size_t xpos, size_t ypos,
                     size_t thread_id) const final {
-    JXL_ASSERT(xsize == xsize_);
+    JXL_ASSERT(xsize <= xsize_);
     // TODO(firsching): handle grey case seperately
     //  interleave
     float* JXL_RESTRICT row0 = GetInputRow(input_rows, 0, 0);
@@ -60,7 +60,7 @@ class CmsStage : public RenderPipelineStage {
     const float* buf_src = mutable_buf_src;
     float* JXL_RESTRICT buf_dst = color_space_transform->BufDst(thread_id);
     JXL_RETURN_IF_ERROR(
-        color_space_transform->Run(thread_id, buf_src, buf_dst));
+        color_space_transform->Run(thread_id, buf_src, buf_dst, xsize));
     // de-interleave
     for (size_t x = 0; x < xsize; x++) {
       row0[x] = buf_dst[3 * x + 0];

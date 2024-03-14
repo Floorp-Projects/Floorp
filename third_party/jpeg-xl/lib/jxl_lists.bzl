@@ -188,8 +188,6 @@ libjxl_dec_sources = [
     "jxl/epf.cc",
     "jxl/epf.h",
     "jxl/fast_dct-inl.h",
-    "jxl/fast_dct.cc",
-    "jxl/fast_dct.h",
     "jxl/fast_dct128-inl.h",
     "jxl/fast_dct16-inl.h",
     "jxl/fast_dct256-inl.h",
