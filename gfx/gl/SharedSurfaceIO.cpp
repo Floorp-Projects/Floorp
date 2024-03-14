@@ -43,7 +43,7 @@ static bool BackTextureWithIOSurf(GLContext* const gl, const GLuint tex,
   gl->fTexParameteri(LOCAL_GL_TEXTURE_RECTANGLE_ARB, LOCAL_GL_TEXTURE_WRAP_T,
                      LOCAL_GL_CLAMP_TO_EDGE);
 
-  ioSurf->BindTexImage(gl, 0);
+  return ioSurf->BindTexImage(gl, 0);
 }
 
 /*static*/
