@@ -1287,6 +1287,25 @@ class TextInputDelegateTest : BaseSessionTest() {
         assertText("commit abc", ic, "abc")
     }
 
+    // Bug 1837931 - When 2nd commitText uses -1 as newCursorPosition into batch mode, text
+    // cannot insert correct position.
+    @WithDisplay(width = 512, height = 512)
+    // Child process updates require having a display.
+    @Test
+    fun inputConnection_multiple_commitText_into_batchEdit() {
+        setupContent("")
+        val ic = mainSession.textInput.onCreateInputConnection(EditorInfo())!!
+
+        // Emulate GBoard's InputConnection API calls
+        ic.beginBatchEdit()
+        ic.commitText("( ", 1)
+        ic.commitText(")", -1)
+        ic.endBatchEdit()
+        processChildEvents()
+
+        assertText("commit ()", ic, "( )")
+    }
+
     // Bug 1593683 - Cursor is jumping when using the arrow keys in input field on GBoard
     @WithDisplay(width = 512, height = 512)
     // Child process updates require having a display.

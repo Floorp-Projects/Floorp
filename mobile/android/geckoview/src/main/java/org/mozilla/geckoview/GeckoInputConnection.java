@@ -655,6 +655,48 @@ import org.mozilla.gecko.util.ThreadUtils;
       return replaceComposingSpanWithSelection()
           && mKeyInputConnection.commitText(text, newCursorPosition);
     }
+
+    // Default implementation is
+    // 1. Set selection
+    // 2. Call Editable.replace
+    // 3. Set selection in Editable.replace
+    //
+    // However, this results in additional IPC in Gecko and unexpected selection before replacing
+    // text.
+    // When changing text in Gecko, the selection will be updated, so the default implementation is
+    // not compatible with Gecko's text handling.
+    // Therefore, we set the selection after replacing the text. However, if there is a composition,
+    // the selection may be an IME cursor, not a standard selection. In such cases, this step is not
+    // necessary.
+    final Editable content = getEditable();
+    if (content != null) {
+      final int compositionStart = getComposingSpanStart(content);
+      final int compositionEnd = getComposingSpanEnd(content);
+
+      if (compositionStart < 0 || compositionEnd < 0) {
+        // No composition
+        int selStart = Math.max(Selection.getSelectionStart(content), 0);
+        int selEnd = Math.max(Selection.getSelectionEnd(content), 0);
+        if (selStart > selEnd) {
+          final int tmp = selEnd;
+          selEnd = selStart;
+          selStart = tmp;
+        }
+
+        beginBatchEdit();
+        content.replace(selStart, selEnd, text);
+
+        int cursorPosition =
+            newCursorPosition > 0
+                ? selStart + text.length() + newCursorPosition - 1
+                : selStart + newCursorPosition;
+        cursorPosition = Math.min(Math.max(0, cursorPosition), content.length());
+        Selection.setSelection(content, cursorPosition);
+        endBatchEdit();
+        return true;
+      }
+    }
+
     return super.commitText(text, newCursorPosition);
   }
 
