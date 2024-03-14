@@ -71,6 +71,20 @@ class nsISerialEventTarget;
 class nsAutoOwningEventTarget {
  public:
   nsAutoOwningEventTarget();
+
+  nsAutoOwningEventTarget(const nsAutoOwningEventTarget& aOther);
+
+  // Per https://en.cppreference.com/w/cpp/language/move_constructor
+  // there's no implicitly-declared move constructor if there are user-declared
+  // copy constructors, and we have one, immediately above.
+
+  nsAutoOwningEventTarget& operator=(const nsAutoOwningEventTarget& aRhs);
+
+  // Per https://en.cppreference.com/w/cpp/language/move_assignment
+  // there's no implicitly-declared move assignment operator if there are
+  // user-declared copy assignment operators, and we have one, immediately
+  // above.
+
   ~nsAutoOwningEventTarget();
 
   // We move the actual assertion checks out-of-line to minimize code bloat,
@@ -88,6 +102,7 @@ class nsAutoOwningEventTarget {
  private:
   void AssertCurrentThreadOwnsMe(const char* aMsg) const;
 
+  // A raw pointer to avoid nsCOMPtr.h dependency.
   nsISerialEventTarget* mTarget;
 };
 
