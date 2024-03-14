@@ -588,7 +588,7 @@ impl RenderTaskKind {
     }
 
     pub fn new_mask(
-        outer_rect: DeviceRect,
+        outer_rect: DeviceIntRect,
         clip_node_range: ClipNodeRange,
         root_spatial_node_index: SpatialNodeIndex,
         clip_store: &mut ClipStore,
@@ -610,7 +610,7 @@ impl RenderTaskKind {
         // TODO(gw): If this ever shows up in a profile, we could pre-calculate
         //           whether a ClipSources contains any box-shadows and skip
         //           this iteration for the majority of cases.
-        let task_size = outer_rect.size().to_i32();
+        let task_size = outer_rect.size();
 
         // If we have a potentially tiled clip mask, clear the mask area first. Otherwise,
         // the first (primary) clip mask will overwrite all the clip mask pixels with
@@ -620,7 +620,7 @@ impl RenderTaskKind {
             RenderTask::new_dynamic(
                 task_size,
                 RenderTaskKind::CacheMask(CacheMaskTask {
-                    actual_rect: outer_rect,
+                    actual_rect: outer_rect.to_f32(),
                     clip_node_range,
                     root_spatial_node_index,
                     device_pixel_scale,
