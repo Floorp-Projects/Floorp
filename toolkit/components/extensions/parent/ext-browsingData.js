@@ -80,7 +80,7 @@ const clearCache = options => {
 
 const clearCookies = async function (options) {
   let cookieMgr = Services.cookies;
-  // This code has been borrowed from Sanitizer.sys.mjs.
+  // This code has been borrowed from Sanitizer.jsm.
   let yieldCounter = 0;
 
   if (options.since || options.hostnames || options.cookieStoreId) {
@@ -126,7 +126,7 @@ const clearCookies = async function (options) {
   }
 };
 
-// Ideally we could reuse the logic in Sanitizer.sys.mjs or nsIClearDataService,
+// Ideally we could reuse the logic in Sanitizer.jsm or nsIClearDataService,
 // but this API exposes an ability to wipe data at a much finger granularity
 // than those APIs. (See also Bug 1531276)
 async function clearQuotaManager(options, dataType) {

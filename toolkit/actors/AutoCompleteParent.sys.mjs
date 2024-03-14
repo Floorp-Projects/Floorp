@@ -503,8 +503,7 @@ export class AutoCompleteParent extends JSWindowActorParent {
    * that the open popup should be focused.
    */
   requestFocus() {
-    // Bug 1582722 - See the response in AutoCompleteChild.sys.mjs for why this
-    // disabled.
+    // Bug 1582722 - See the response in AutoCompleteChild.jsm for why this disabled.
     /*
     if (this.openedPopup) {
       this.sendAsyncMessage("FormAutoComplete:Focus");

@@ -316,7 +316,7 @@ urlbar:
         Whether Firefox Suggest will use the new Rust backend instead of the
         original JS backend.
     quickSuggestScenario:
-      # IMPORTANT: This should not have a fallbackPref. See UrlbarPrefs.sys.mjs.
+      # IMPORTANT: This should not have a fallbackPref. See UrlbarPrefs.jsm.
       type: string
       description: The Firefox Suggest scenario in which the user is enrolled
       enum:

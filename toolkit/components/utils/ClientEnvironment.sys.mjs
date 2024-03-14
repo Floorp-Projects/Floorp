@@ -216,7 +216,7 @@ export class ClientEnvironmentBase {
 
       /**
        * Gets the windows build number by querying the OS directly. The initial
-       * version was copied from toolkit/components/telemetry/app/TelemetryEnvironment.sys.mjs
+       * version was copied from toolkit/components/telemetry/app/TelemetryEnvironment.jsm
        * @returns {number | null} The build number, or null on non-Windows platform or if there is an error.
        */
       get windowsBuildNumber() {

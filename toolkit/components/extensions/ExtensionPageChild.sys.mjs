@@ -299,7 +299,7 @@ class ExtensionPageContextChild extends ExtensionBaseContextChild {
    * APIs (provided that the correct permissions have been requested).
    *
    * This is the child side of the ExtensionPageContextParent class
-   * defined in ExtensionParent.sys.mjs.
+   * defined in ExtensionParent.jsm.
    *
    * @param {BrowserExtensionContent} extension This context's owner.
    * @param {object} params

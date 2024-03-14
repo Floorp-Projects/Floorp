@@ -1371,7 +1371,7 @@ export const LoginHelper = {
    * @returns {boolean} True if any of the rules matches
    */
   isInferredLoginForm(formElement) {
-    // This is copied from 'loginFormAttrRegex' in NewPasswordModel.sys.mjs
+    // This is copied from 'loginFormAttrRegex' in NewPasswordModel.jsm
     const loginExpr =
       /login|log in|log on|log-on|sign in|sigin|sign\/in|sign-in|sign on|sign-on/i;
 

@@ -32,7 +32,7 @@ const PROPERTIES_RESET_WHEN_ACTIVE = [
   "text-shadow",
 ];
 
-// Duplicated in SelectChild.sys.mjs
+// Duplicated in SelectChild.jsm
 // Please keep these lists in sync.
 const SUPPORTED_OPTION_OPTGROUP_PROPERTIES = [
   "direction",

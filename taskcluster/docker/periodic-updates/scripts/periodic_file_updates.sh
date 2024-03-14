@@ -322,7 +322,7 @@ function compare_remote_settings_files {
 
     # 5. Download attachments if needed.
     if [ "${bucket}" = "blocklists" ] && [ "${collection}" = "addons-bloomfilters" ]; then
-      # Find the attachment with the most recent generation_time, like _updateMLBF in Blocklist.sys.mjs.
+      # Find the attachment with the most recent generation_time, like _updateMLBF in Blocklist.jsm.
       # The server should return one "bloomfilter-base" record, but in case it returns multiple,
       # return the most recent one. The server may send multiple entries if we ever decide to use
       # the "filter_expression" feature of Remote Settings to send different records to specific
@@ -364,7 +364,7 @@ function update_remote_settings_attachment() {
   # $4 is a jq filter on the arrays that should return one record with the attachment
   local jq_attachment_selector=".data | map(select(.attachment)) | $4"
 
-  # These paths match _readAttachmentDump in services/settings/Attachments.sys.mjs.
+  # These paths match _readAttachmentDump in services/settings/Attachments.jsm.
   local path_to_attachment="${bucket}/${collection}/${attachment_id}"
   local path_to_meta="${bucket}/${collection}/${attachment_id}.meta.json"
   local old_meta="$REMOTE_SETTINGS_INPUT/${path_to_meta}"

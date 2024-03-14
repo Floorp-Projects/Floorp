@@ -207,7 +207,7 @@ the actual result of the function (also a set of changes to send to observers, b
 beyond this doc).
 
 Ultimately, the `PuntResult` ends up back on the main thread once the call is complete
-and arranges to callback the JS implementation, which in turn resolves the promise created in `ExtensionStorageSync.sys.mjs`
+and arranges to callback the JS implementation, which in turn resolves the promise created in `ExtensionStorageSync.jsm`
 
 End result:
 -----------

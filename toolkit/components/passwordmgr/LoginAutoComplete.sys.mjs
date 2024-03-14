@@ -503,7 +503,7 @@ export class LoginAutoComplete {
     let searchStartTimeMS = Services.telemetry.msSystemNow();
 
     // Show the insecure login warning in the passwords field on null principal documents.
-    // Avoid loading InsecurePasswordUtils.sys.mjs in a sandboxed document (e.g. an ad. frame) if we
+    // Avoid loading InsecurePasswordUtils.jsm in a sandboxed document (e.g. an ad. frame) if we
     // already know it has a null principal and will therefore get the insecure autocomplete
     // treatment.
     // InsecurePasswordUtils doesn't handle the null principal case as not secure because we don't

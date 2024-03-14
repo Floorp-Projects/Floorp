@@ -3205,7 +3205,7 @@ export class Extension extends ExtensionData {
 
   // Extended serialized data which is only needed in the extensions process,
   // and is never deserialized in web content processes.
-  // Keep in sync with BrowserExtensionContent in ExtensionChild.sys.mjs
+  // Keep in sync with BrowserExtensionContent in ExtensionChild.jsm
   serializeExtended() {
     return {
       backgroundScripts: this.backgroundScripts,

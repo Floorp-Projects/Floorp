@@ -7,7 +7,7 @@
 /**
  * This module contains utilities and base classes for logic which is
  * common between the parent and child process, and in particular
- * between ExtensionParent.sys.mjs and ExtensionChild.sys.mjs.
+ * between ExtensionParent.jsm and ExtensionChild.jsm.
  */
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
@@ -1033,7 +1033,7 @@ class BaseContext {
 
 /**
  * An object that runs the implementation of a schema API. Instantiations of
- * this interfaces are used by Schemas.sys.mjs.
+ * this interfaces are used by Schemas.jsm.
  *
  * @interface
  */
@@ -1865,7 +1865,7 @@ class SchemaAPIManager extends EventEmitter {
       {
         wantXrays: false,
         wantGlobalProperties: ["ChromeUtils"],
-        sandboxName: `Namespace of ext-*.js scripts for ${this.processType} (from: resource://gre/modules/ExtensionCommon.sys.mjs)`,
+        sandboxName: `Namespace of ext-*.js scripts for ${this.processType} (from: resource://gre/modules/ExtensionCommon.jsm)`,
       }
     );
 

@@ -5,7 +5,7 @@
 "use strict";
 
 // This is a UA widget. It runs in per-origin UA widget scope,
-// to be loaded by UAWidgetsChild.sys.mjs.
+// to be loaded by UAWidgetsChild.jsm.
 
 /*
  * This is the class of entry. It will construct the actual implementation

@@ -15,7 +15,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   WebRequestUpload: "resource://gre/modules/WebRequestUpload.sys.mjs",
 });
 
-// WebRequest.sys.mjs's only consumer is ext-webRequest.js, so we can depend on
+// WebRequest.jsm's only consumer is ext-webRequest.js, so we can depend on
 // the apiManager.global being initialized.
 ChromeUtils.defineLazyGetter(lazy, "tabTracker", () => {
   return lazy.ExtensionParent.apiManager.global.tabTracker;

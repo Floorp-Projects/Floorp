@@ -40,7 +40,7 @@ static bool IsOptionInteractivelySelectable(HTMLSelectElement& aSelect,
   // options in a display: contents subtree interactively.
   // test_select_key_navigation_bug1498769.html tests for this and should
   // probably be changed (and this loop removed) or alternatively
-  // SelectChild.sys.mjs should be changed to match it.
+  // SelectChild.jsm should be changed to match it.
   for (Element* el = &aOption; el && el != &aSelect;
        el = el->GetParentElement()) {
     if (Servo_Element_IsDisplayContents(el)) {

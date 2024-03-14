@@ -15,7 +15,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 const kStateActive = 0x00000001; // ElementState::ACTIVE
 const kStateHover = 0x00000004; // ElementState::HOVER
 
-// Duplicated in SelectParent.sys.mjs
+// Duplicated in SelectParent.jsm
 // Please keep these lists in sync.
 const SUPPORTED_OPTION_OPTGROUP_PROPERTIES = [
   "direction",

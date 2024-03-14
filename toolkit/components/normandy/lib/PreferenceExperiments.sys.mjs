@@ -906,7 +906,7 @@ export var PreferenceExperiments = {
   InvalidPreferenceName: class extends Error {},
 
   /**
-   * These migrations should only be called from `NormandyMigrations.sys.mjs` and tests.
+   * These migrations should only be called from `NormandyMigrations.jsm` and tests.
    */
   migrations: {
     /** Move experiments into a specific key. */

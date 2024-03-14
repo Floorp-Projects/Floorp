@@ -7011,7 +7011,7 @@
     "n_values": 50,
     "releaseChannelCollection": "opt-out",
     "bug_numbers": [353804],
-    "description": "Update: background update check result code except for no updates found (after we already have an update ready). Possible codes are enumerated by constants starting with CHK_ in toolkit/mozapps/update/UpdateTelemetry.sys.mjs"
+    "description": "Update: background update check result code except for no updates found (after we already have an update ready). Possible codes are enumerated by constants starting with CHK_ in toolkit/mozapps/update/UpdateTelemetry.jsm"
   },
   "UPDATE_CHECK_EXTENDED_ERROR_EXTERNAL": {
     "record_in_processes": ["main"],
@@ -7757,7 +7757,7 @@
     "n_values": 30,
     "releaseChannelCollection": "opt-out",
     "bug_numbers": [1137447],
-    "description": "Update: the update wizard page displayed when the UI was closed (mapped in toolkit/mozapps/update/UpdateTelemetry.sys.mjs)"
+    "description": "Update: the update wizard page displayed when the UI was closed (mapped in toolkit/mozapps/update/UpdateTelemetry.jsm)"
   },
   "UPDATE_NOTIFICATION_SHOWN": {
     "record_in_processes": ["main"],
@@ -8322,7 +8322,7 @@
     "kind": "enumerated",
     "n_values": 15,
     "releaseChannelCollection": "opt-out",
-    "description": "The browser that data is pulled from. The values correspond to the internal browser ID (see MigrationUtils.sys.mjs)"
+    "description": "The browser that data is pulled from. The values correspond to the internal browser ID (see MigrationUtils.jsm)"
   },
   "FX_MIGRATION_ERRORS": {
     "record_in_processes": ["main"],
@@ -8402,7 +8402,7 @@
     "high": 60000,
     "releaseChannelCollection": "opt-out",
     "keyed": true,
-    "description": "Accumulated timer delay (variance between when the timer was expected to fire and when it actually fired) in milliseconds as an indicator for decreased main-thread responsiveness while importing bookmarks from another browser, keyed by the name of the browser (see gAvailableMigratorKeys in MigrationUtils.sys.mjs). The import is happening on a background thread and should ideally not affect the UI noticeably."
+    "description": "Accumulated timer delay (variance between when the timer was expected to fire and when it actually fired) in milliseconds as an indicator for decreased main-thread responsiveness while importing bookmarks from another browser, keyed by the name of the browser (see gAvailableMigratorKeys in MigrationUtils.jsm). The import is happening on a background thread and should ideally not affect the UI noticeably."
   },
   "FX_MIGRATION_HISTORY_JANK_MS": {
     "record_in_processes": ["main"],
@@ -8415,7 +8415,7 @@
     "high": 60000,
     "releaseChannelCollection": "opt-out",
     "keyed": true,
-    "description": "Accumulated timer delay (variance between when the timer was expected to fire and when it actually fired) in milliseconds as an indicator for decreased main-thread responsiveness while importing history from another browser, keyed by the name of the browser (see gAvailableMigratorKeys in MigrationUtils.sys.mjs). The import is happening on a background thread and should ideally not affect the UI noticeably."
+    "description": "Accumulated timer delay (variance between when the timer was expected to fire and when it actually fired) in milliseconds as an indicator for decreased main-thread responsiveness while importing history from another browser, keyed by the name of the browser (see gAvailableMigratorKeys in MigrationUtils.jsm). The import is happening on a background thread and should ideally not affect the UI noticeably."
   },
   "FX_MIGRATION_LOGINS_JANK_MS": {
     "record_in_processes": ["main"],
@@ -8428,7 +8428,7 @@
     "high": 60000,
     "releaseChannelCollection": "opt-out",
     "keyed": true,
-    "description": "Accumulated timer delay (variance between when the timer was expected to fire and when it actually fired) in milliseconds as an indicator for decreased main-thread responsiveness while importing logins / passwords from another browser, keyed by the name of the browser (see gAvailableMigratorKeys in MigrationUtils.sys.mjs). The import is happening on a background thread and should ideally not affect the UI noticeably. The time with the blocking Keychain dialog on macOS can skew this data."
+    "description": "Accumulated timer delay (variance between when the timer was expected to fire and when it actually fired) in milliseconds as an indicator for decreased main-thread responsiveness while importing logins / passwords from another browser, keyed by the name of the browser (see gAvailableMigratorKeys in MigrationUtils.jsm). The import is happening on a background thread and should ideally not affect the UI noticeably. The time with the blocking Keychain dialog on macOS can skew this data."
   },
   "FX_MIGRATION_BOOKMARKS_QUANTITY": {
     "record_in_processes": ["main"],
@@ -12479,7 +12479,7 @@
     "expires_in_version": "default",
     "kind": "enumerated",
     "n_values": 10,
-    "description": "BACKGROUND THUMBNAILS: Reason the capture completed (see TEL_CAPTURE_DONE_* constants in BackgroundPageThumbs.sys.mjs)"
+    "description": "BACKGROUND THUMBNAILS: Reason the capture completed (see TEL_CAPTURE_DONE_* constants in BackgroundPageThumbs.jsm)"
   },
   "FX_THUMBNAILS_BG_CAPTURE_PAGE_LOAD_TIME_MS": {
     "record_in_processes": ["main", "content"],

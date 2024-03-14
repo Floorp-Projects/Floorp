@@ -335,7 +335,8 @@ function getOrigin(topFrame, filename = null, lineNumber = null, stack = null) {
       lineNumber = frame ? frame.lineNumber : 0;
     }
     if (stack == null) {
-      // Now build the rest of the stack as a string.
+      // Now build the rest of the stack as a string, using Task.jsm's rewriting
+      // to ensure that we do not lose information at each call to `Task.spawn`.
       stack = [];
       while (frame != null) {
         stack.push(frame.filename + ":" + frame.name + ":" + frame.lineNumber);

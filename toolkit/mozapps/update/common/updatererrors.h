@@ -10,7 +10,7 @@
 #define OK 0
 
 // Error codes that are no longer used should not be used again unless they
-// aren't used in client code (e.g. UpdateService.sys.mjs, updates.js, etc.).
+// aren't used in client code (e.g. UpdateService.jsm, updates.js, etc.).
 
 #define MAR_ERROR_EMPTY_ACTION_LIST 1
 #define LOADSOURCE_ERROR_WRONG_SIZE 2
@@ -26,8 +26,8 @@
 
 // Error codes 10-14 are related to memory allocation failures.
 // Note: If more memory allocation error codes are added, the implementation of
-// isMemoryAllocationErrorCode in UpdateService.sys.mjs should be updated to
-// account for them.
+// isMemoryAllocationErrorCode in UpdateService.jsm should be updated to account
+// for them.
 #define READ_STRINGS_MEM_ERROR 10
 #define ARCHIVE_READER_MEM_ERROR 11
 #define BSPATCH_MEM_ERROR 12
@@ -49,8 +49,8 @@
 
 // Error codes 24-33 and 49-58 are for the Windows maintenance service.
 // Note: If more maintenance service error codes are added, the implementations
-// of IsServiceSpecificErrorCode in updater.cpp and UpdateService.sys.mjs should
-// be updated to account for them.
+// of IsServiceSpecificErrorCode in updater.cpp and UpdateService.jsm should be
+// updated to account for them.
 #define SERVICE_UPDATER_COULD_NOT_BE_STARTED 24
 #define SERVICE_NOT_ENOUGH_COMMAND_LINE_ARGS 25
 #define SERVICE_UPDATER_SIGN_ERROR 26
@@ -79,8 +79,8 @@
 
 // Error codes 24-33 and 49-58 are for the Windows maintenance service.
 // Note: If more maintenance service error codes are added, the implementations
-// of IsServiceSpecificErrorCode in updater.cpp and UpdateService.sys.mjs should
-// be updated to account for them.
+// of IsServiceSpecificErrorCode in updater.cpp and UpdateService.jsm should be
+// updated to account for them.
 #define SERVICE_COULD_NOT_COPY_UPDATER 49
 #define SERVICE_STILL_APPLYING_TERMINATED 50
 #define SERVICE_STILL_APPLYING_NO_EXIT_CODE 51
@@ -112,7 +112,7 @@
 #define INVALID_CALLBACK_DIR_ERROR 78
 #define UPDATE_STATUS_UNCHANGED 79
 
-// Error codes 80 through 99 are reserved for UpdateService.sys.mjs
+// Error codes 80 through 99 are reserved for UpdateService.jsm
 
 // The following error codes are only used by updater.exe
 // when a fallback key exists for tests.
@@ -125,6 +125,6 @@
 #define SILENT_UPDATE_NEEDED_ELEVATION_ERROR 105
 #define WRITE_ERROR_BACKGROUND_TASK_SHARING_VIOLATION 106
 
-// Error codes 110 and 111 are reserved for UpdateService.sys.mjs
+// Error codes 110 and 111 are reserved for UpdateService.jsm
 
 #endif  // UPDATEERRORS_H

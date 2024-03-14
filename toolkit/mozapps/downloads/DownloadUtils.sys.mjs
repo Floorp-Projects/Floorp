@@ -610,7 +610,7 @@ function convertTimeUnitsUnits(timeValue, aIndex) {
  *        Error message to log or an array of strings to concat
  */
 // function log(aMsg) {
-//   let msg = "DownloadUtils.sys.mjs: " + (aMsg.join ? aMsg.join("") : aMsg);
+//   let msg = "DownloadUtils.jsm: " + (aMsg.join ? aMsg.join("") : aMsg);
 //   Services.console.logStringMessage(msg);
 //   dump(msg + "\n");
 // }

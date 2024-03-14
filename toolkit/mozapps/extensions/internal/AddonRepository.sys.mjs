@@ -78,7 +78,7 @@ import { Log } from "resource://gre/modules/Log.sys.mjs";
 const LOGGER_ID = "addons.repository";
 
 // Create a new logger for use by the Addons Repository
-// (Requires AddonManager.sys.mjs)
+// (Requires AddonManager.jsm)
 var logger = Log.repository.getLogger(LOGGER_ID);
 
 function convertHTMLToPlainText(html) {

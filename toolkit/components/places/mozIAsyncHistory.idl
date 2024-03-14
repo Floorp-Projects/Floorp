@@ -128,11 +128,11 @@ interface mozIVisitedStatusCallback : nsISupports
 
 /**
  * This interface contains APIs for cpp consumers.
- * Javascript consumers should look at History.sys.mjs instead,
+ * Javascript consumers should look at History.jsm instead,
  * that is exposed through PlacesUtils.history.
  *
  * If you're evaluating adding a new history API, it should
- * usually go to History.sys.mjs, unless it needs to do long and
+ * usually go to History.jsm, unless it needs to do long and
  * expensive work in a batch, then it could be worth doing
  * that in History.cpp.
  */
