@@ -1809,29 +1809,15 @@ MarkStack::MarkStack() { MOZ_ASSERT(isEmpty()); }
 
 MarkStack::~MarkStack() { MOZ_ASSERT(isEmpty()); }
 
-MarkStack::MarkStack(const MarkStack& other) {
-  MOZ_CRASH("Compiler requires this but doesn't call it");
-}
-
-MarkStack& MarkStack::operator=(const MarkStack& other) {
-  new (this) MarkStack(other);
-  return *this;
-}
-
-MarkStack::MarkStack(MarkStack&& other) noexcept
-    : stack_(std::move(other.stack_.ref())),
-      topIndex_(other.topIndex_.ref())
+void MarkStack::swap(MarkStack& other) {
+  std::swap(stack_, other.stack_);
+  std::swap(topIndex_, other.topIndex_);
 #ifdef JS_GC_ZEAL
-      ,
-      maxCapacity_(other.maxCapacity_)
+  std::swap(maxCapacity_, other.maxCapacity_);
 #endif
-{
-  other.topIndex_ = 0;
-}
-
-MarkStack& MarkStack::operator=(MarkStack&& other) noexcept {
-  new (this) MarkStack(std::move(other));
-  return *this;
+#ifdef DEBUG
+  std::swap(elementsRangesAreValid, other.elementsRangesAreValid);
+#endif
 }
 
 bool MarkStack::init() { return resetStackCapacity(); }
@@ -2186,7 +2172,7 @@ void GCMarker::setMarkColor(gc::MarkColor newColor) {
   // Switch stacks. We only need to do this if there are any stack entries (as
   // empty stacks are interchangeable) or to swtich back to the original stack.
   if (!isDrained() || haveSwappedStacks) {
-    std::swap(stack, otherStack);
+    stack.swap(otherStack);
     haveSwappedStacks = !haveSwappedStacks;
   }
 }
