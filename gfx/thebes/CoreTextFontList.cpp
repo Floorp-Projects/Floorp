@@ -1863,11 +1863,26 @@ void CoreTextFontList::ReadFaceNamesForFamily(
   }
 }
 
+static CFStringRef CopyRealFamilyName(CTFontRef aFont) {
+  AutoCFRelease<CFStringRef> psName = CTFontCopyPostScriptName(aFont);
+  AutoCFRelease<CGFontRef> cgFont =
+      CGFontCreateWithFontName(CFStringRef(psName));
+  if (!cgFont) {
+    return CTFontCopyFamilyName(aFont);
+  }
+  AutoCFRelease<CTFontRef> ctFont =
+      CTFontCreateWithGraphicsFont(cgFont, 0.0, nullptr, nullptr);
+  if (!ctFont) {
+    return CTFontCopyFamilyName(aFont);
+  }
+  return CTFontCopyFamilyName(ctFont);
+}
+
 void CoreTextFontList::InitSystemFontNames() {
   // text font family
   AutoCFRelease<CTFontRef> font = CTFontCreateUIFontForLanguage(
       kCTFontUIFontSystem, 0.0, nullptr);  // TODO: language
-  AutoCFRelease<CFStringRef> name = CTFontCopyFamilyName(font);
+  AutoCFRelease<CFStringRef> name = CopyRealFamilyName(font);
 
   nsAutoString familyName;
   GetStringForCFString(name, familyName);
