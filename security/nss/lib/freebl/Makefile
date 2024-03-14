@@ -608,11 +608,12 @@ ifndef NSS_DISABLE_CHACHAPOLY
 endif # NSS_DISABLE_CHACHAPOLY
 
 VERIFIED_SRCS += Hacl_Hash_SHA3.c Hacl_P256.c Hacl_P384.c Hacl_P521.c
+VERIFIED_SRCS += Hacl_Ed25519.c
+VERIFIED_SRCS += Hacl_Curve25519_51.c
 
 ifeq (,$(filter-out x86_64 aarch64,$(CPU_ARCH)))
     # All 64-bit architectures get the 64 bit version.
     ECL_SRCS += curve25519_64.c
-    VERIFIED_SRCS += Hacl_Curve25519_51.c
 else
     # All other architectures get the generic 32 bit implementation
     ECL_SRCS += curve25519_32.c

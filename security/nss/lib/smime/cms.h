@@ -815,6 +815,9 @@ NSS_CMSEnvelopedData_Decode_AfterEnd(NSSCMSEnvelopedData *envd);
  * cmsrecinfo.c - CMS recipientInfo methods
  ************************************************************************/
 
+extern PRBool
+NSS_CMSRecipient_IsSupported(CERTCertificate *cert);
+
 /*
  * NSS_CMSRecipientInfo_Create - create a recipientinfo
  *

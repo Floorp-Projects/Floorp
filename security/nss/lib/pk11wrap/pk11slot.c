@@ -36,6 +36,7 @@ const PK11DefaultArrayEntry PK11_DefaultArray[] = {
     { "RSA", SECMOD_RSA_FLAG, CKM_RSA_PKCS },
     { "DSA", SECMOD_DSA_FLAG, CKM_DSA },
     { "ECC", SECMOD_ECC_FLAG, CKM_ECDSA },
+    { "EDDSA", SECMOD_ECC_FLAG, CKM_EDDSA },
     { "DH", SECMOD_DH_FLAG, CKM_DH_PKCS_DERIVE },
     { "RC2", SECMOD_RC2_FLAG, CKM_RC2_CBC },
     { "RC4", SECMOD_RC4_FLAG, CKM_RC4 },
@@ -940,6 +941,8 @@ PK11_GetSlotList(CK_MECHANISM_TYPE type)
         case CKM_DH_PKCS_KEY_PAIR_GEN:
         case CKM_DH_PKCS_DERIVE:
             return &pk11_dhSlotList;
+        case CKM_EDDSA:
+        case CKM_EC_EDWARDS_KEY_PAIR_GEN:
         case CKM_ECDSA:
         case CKM_ECDSA_SHA1:
         case CKM_EC_KEY_PAIR_GEN: /* aka CKM_ECDSA_KEY_PAIR_GEN */

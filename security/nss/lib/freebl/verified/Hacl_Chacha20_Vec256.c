@@ -468,9 +468,8 @@ Hacl_Chacha20_Vec256_chacha20_encrypt_256(
     }
     if (rem1 > (uint32_t)0U) {
         uint8_t *uu____2 = out + nb * (uint32_t)512U;
-        uint8_t *uu____3 = text + nb * (uint32_t)512U;
         uint8_t plain[512U] = { 0U };
-        memcpy(plain, uu____3, rem * sizeof(uint8_t));
+        memcpy(plain, text + nb * (uint32_t)512U, rem * sizeof(uint8_t));
         KRML_PRE_ALIGN(32)
         Lib_IntVector_Intrinsics_vec256 k[16U] KRML_POST_ALIGN(32) = { 0U };
         chacha20_core_256(k, ctx, nb);
@@ -966,9 +965,8 @@ Hacl_Chacha20_Vec256_chacha20_decrypt_256(
     }
     if (rem1 > (uint32_t)0U) {
         uint8_t *uu____2 = out + nb * (uint32_t)512U;
-        uint8_t *uu____3 = cipher + nb * (uint32_t)512U;
         uint8_t plain[512U] = { 0U };
-        memcpy(plain, uu____3, rem * sizeof(uint8_t));
+        memcpy(plain, cipher + nb * (uint32_t)512U, rem * sizeof(uint8_t));
         KRML_PRE_ALIGN(32)
         Lib_IntVector_Intrinsics_vec256 k[16U] KRML_POST_ALIGN(32) = { 0U };
         chacha20_core_256(k, ctx, nb);

@@ -73,6 +73,8 @@
     'verified/Hacl_Hash_SHA3.c',
     'sha3.c',
     'shake.c',
+    'verified/Hacl_Curve25519_51.c',
+    'verified/Hacl_Ed25519.c',
   ],
   'defines': [
     # For kyber-pqcrystals-ref.c. If we ever decide to support Kyber512 or

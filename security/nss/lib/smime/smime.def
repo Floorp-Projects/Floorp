@@ -291,3 +291,9 @@ NSS_CMSSignerInfo_GetDigestAlgTag;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.99 {    # NSS 3.99 release
+;+    global:
+NSS_CMSRecipient_IsSupported;
+;+    local:
+;+       *;
+;+};

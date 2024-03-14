@@ -1,0 +1,50 @@
+28d27
+< #include "internal/Hacl_Hash_SHA2.h"
+33a33,34
+> #include "../Hacl_Hash_SHA2_shim.h"
+> 
+1670,1713d1670
+< }
+< 
+< static inline void
+< sha512_pre_msg(uint8_t *hash, uint8_t *prefix, uint32_t len, uint8_t *input)
+< {
+<     uint8_t buf[128U] = { 0U };
+<     uint64_t block_state[8U] = { 0U };
+<     Hacl_Streaming_MD_state_64
+<         s = { .block_state = block_state, .buf = buf, .total_len = (uint64_t)(uint32_t)0U };
+<     Hacl_Streaming_MD_state_64 p = s;
+<     Hacl_SHA2_Scalar32_sha512_init(block_state);
+<     Hacl_Streaming_MD_state_64 *st = &p;
+<     Hacl_Streaming_Types_error_code
+<         err0 = Hacl_Streaming_SHA2_update_512(st, prefix, (uint32_t)32U);
+<     Hacl_Streaming_Types_error_code err1 = Hacl_Streaming_SHA2_update_512(st, input, len);
+<     KRML_HOST_IGNORE(err0);
+<     KRML_HOST_IGNORE(err1);
+<     Hacl_Streaming_SHA2_finish_512(st, hash);
+< }
+< 
+< static inline void
+< sha512_pre_pre2_msg(
+<     uint8_t *hash,
+<     uint8_t *prefix,
+<     uint8_t *prefix2,
+<     uint32_t len,
+<     uint8_t *input)
+< {
+<     uint8_t buf[128U] = { 0U };
+<     uint64_t block_state[8U] = { 0U };
+<     Hacl_Streaming_MD_state_64
+<         s = { .block_state = block_state, .buf = buf, .total_len = (uint64_t)(uint32_t)0U };
+<     Hacl_Streaming_MD_state_64 p = s;
+<     Hacl_SHA2_Scalar32_sha512_init(block_state);
+<     Hacl_Streaming_MD_state_64 *st = &p;
+<     Hacl_Streaming_Types_error_code
+<         err0 = Hacl_Streaming_SHA2_update_512(st, prefix, (uint32_t)32U);
+<     Hacl_Streaming_Types_error_code
+<         err1 = Hacl_Streaming_SHA2_update_512(st, prefix2, (uint32_t)32U);
+<     Hacl_Streaming_Types_error_code err2 = Hacl_Streaming_SHA2_update_512(st, input, len);
+<     KRML_HOST_IGNORE(err0);
+<     KRML_HOST_IGNORE(err1);
+<     KRML_HOST_IGNORE(err2);
+<     Hacl_Streaming_SHA2_finish_512(st, hash);

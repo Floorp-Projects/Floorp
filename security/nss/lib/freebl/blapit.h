@@ -29,6 +29,8 @@
 
 #define DES_KEY_LENGTH 8 /* Bytes */
 
+#define ED25519_SIGN_LEN 64U /* Bytes */
+
 /* AES operation modes */
 #define NSS_AES 0
 #define NSS_AES_CBC 1
@@ -80,6 +82,9 @@ typedef int __BLAPI_DEPRECATED __attribute__((deprecated));
 
 #define EC_MAX_KEY_BITS 521 /* in bits */
 #define EC_MIN_KEY_BITS 256 /* in bits */
+
+#define ECD_MAX_KEY_BITS 255 /* in bits */
+#define ECD_MIN_KEY_BITS 255 /* in bits */
 
 /* EC point compression format */
 #define EC_POINT_FORM_COMPRESSED_Y0 0x02

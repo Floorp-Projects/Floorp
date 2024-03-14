@@ -180,6 +180,13 @@ const SEC_ASN1Template SECKEY_ECPrivateKeyExportTemplate[] = {
     { 0 }
 };
 
+/* The template operates a private key consisting only of private key. */
+const SEC_ASN1Template SECKEY_EDPrivateKeyExportTemplate[] = {
+    { SEC_ASN1_OCTET_STRING,
+      offsetof(SECKEYRawPrivateKey, u.ec.privateValue) },
+    { 0 }
+};
+
 const SEC_ASN1Template SECKEY_EncryptedPrivateKeyInfoTemplate[] = {
     { SEC_ASN1_SEQUENCE,
       0, NULL, sizeof(SECKEYEncryptedPrivateKeyInfo) },
@@ -270,8 +277,10 @@ PK11_ImportDERPrivateKeyInfoAndReturnKey(PK11SlotInfo *slot, SECItem *derPKI,
     SECStatus rv = SECFailure;
 
     temparena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    if (!temparena)
+    if (!temparena) {
         return rv;
+    }
+
     pki = PORT_ArenaZNew(temparena, SECKEYPrivateKeyInfo);
     if (!pki) {
         PORT_FreeArena(temparena, PR_FALSE);
@@ -523,13 +532,31 @@ PK11_ImportAndReturnPrivateKey(PK11SlotInfo *slot, SECKEYRawPrivateKey *lpk,
                           lpk->u.ec.publicValue.len);
             attrs++;
             break;
+        case edKey:
+            keyType = CKK_EC_EDWARDS;
+            PK11_SETATTRS(attrs, CKA_SIGN, &cktrue, sizeof(CK_BBOOL));
+            attrs++;
+            if (nickname) {
+                PK11_SETATTRS(attrs, CKA_LABEL, nickname->data, nickname->len);
+                attrs++;
+            }
+
+            /* No signed attrs for EC */
+            /* curveOID always is a copy of AlgorithmID.parameters. */
+            PK11_SETATTRS(attrs, CKA_EC_PARAMS, lpk->u.ec.curveOID.data,
+                          lpk->u.ec.curveOID.len);
+            attrs++;
+            PK11_SETATTRS(attrs, CKA_VALUE, lpk->u.ec.privateValue.data,
+                          lpk->u.ec.privateValue.len);
+            attrs++;
+            break;
         default:
             PORT_SetError(SEC_ERROR_BAD_KEY);
             goto loser;
     }
     templateCount = attrs - theTemplate;
     PORT_Assert(templateCount <= sizeof(theTemplate) / sizeof(CK_ATTRIBUTE));
-    if (lpk->keyType != ecKey) {
+    if (lpk->keyType != ecKey && lpk->keyType != edKey) {
         PORT_Assert(signedattr);
         signedcount = attrs - signedattr;
         for (ap = signedattr; signedcount; ap++, signedcount--) {
@@ -604,6 +631,12 @@ PK11_ImportPrivateKeyInfoAndReturnKey(PK11SlotInfo *slot,
             paramDest = NULL;
             lpk->keyType = dhKey;
             break;
+        case SEC_OID_ED25519_PUBLIC_KEY:
+            keyTemplate = SECKEY_EDPrivateKeyExportTemplate;
+            paramTemplate = NULL;
+            paramDest = NULL;
+            lpk->keyType = edKey;
+            break;
         case SEC_OID_ANSIX962_EC_PUBLIC_KEY:
             prepare_ec_priv_key_export_for_asn1(lpk);
             keyTemplate = SECKEY_ECPrivateKeyExportTemplate;
@@ -641,6 +674,26 @@ PK11_ImportPrivateKeyInfoAndReturnKey(PK11SlotInfo *slot,
         }
     }
 
+    if (lpk->keyType == edKey) {
+        /* Convert length in bits to length in bytes. */
+        lpk->u.ec.publicValue.len >>= 3;
+
+        if (pki->algorithm.parameters.len != 0) {
+            /* Currently supporting only (Pure)Ed25519 .*/
+            PORT_SetError(SEC_ERROR_UNSUPPORTED_KEYALG);
+            goto loser;
+        }
+
+        SECOidData *oidEd25519 = SECOID_FindOIDByTag(SEC_OID_ED25519_PUBLIC_KEY);
+
+        if (!SECITEM_AllocItem(arena, &lpk->u.ec.curveOID, oidEd25519->oid.len + 2)) {
+            goto loser;
+        }
+        lpk->u.ec.curveOID.data[0] = SEC_ASN1_OBJECT_ID;
+        lpk->u.ec.curveOID.data[1] = oidEd25519->oid.len;
+        PORT_Memcpy(lpk->u.ec.curveOID.data + 2, oidEd25519->oid.data, oidEd25519->oid.len);
+    }
+
     if (paramDest && paramTemplate) {
         rv = SEC_ASN1DecodeItem(arena, paramDest, paramTemplate,
                                 &(pki->algorithm.parameters));
@@ -651,7 +704,6 @@ PK11_ImportPrivateKeyInfoAndReturnKey(PK11SlotInfo *slot,
 
     rv = PK11_ImportAndReturnPrivateKey(slot, lpk, nickname, publicValue, isPerm,
                                         isPrivate, keyUsage, privk, wincx);
-
 loser:
     if (arena != NULL) {
         PORT_FreeArena(arena, PR_TRUE);
@@ -795,6 +847,28 @@ PK11_ExportPrivKeyInfo(SECKEYPrivateKey *pk, void *wincx)
             rawKey.u.ec.publicValue.len <<= 3;
 
             rv = SECOID_SetAlgorithmID(arena, &pki->algorithm, SEC_OID_ANSIX962_EC_PUBLIC_KEY, &curveOID);
+            if (rv != SECSuccess) {
+                goto loser;
+            }
+
+        } break;
+        case edKey: {
+            rawKey.u.ec.version.type = siUnsignedInteger;
+            rawKey.u.ec.version.data = (unsigned char *)PORT_ArenaAlloc(arena, 1);
+            if (!rawKey.u.ec.version.data) {
+                goto loser;
+            }
+            rawKey.u.ec.version.data[0] = ecVersion;
+            rawKey.u.ec.version.len = 1;
+
+            if (!ReadAttribute(pk, CKA_VALUE, arena,
+                               &rawKey.u.ec.privateValue)) {
+                goto loser;
+            }
+
+            keyTemplate = SECKEY_EDPrivateKeyExportTemplate;
+            /* Currently, ED25519 does not support any parameter.  */
+            rv = SECOID_SetAlgorithmID(arena, &pki->algorithm, SEC_OID_ED25519_PUBLIC_KEY, NULL);
             if (rv != SECSuccess) {
                 goto loser;
             }

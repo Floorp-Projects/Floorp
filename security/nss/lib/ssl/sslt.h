@@ -585,4 +585,21 @@ typedef enum {
     ssl_dhe_group_max
 } SSLDHEGroupType;
 
+/* RFC 8879: TLS Certificate Compression - 3. Negotiating Certificate Compression 
+** enum {
+**  zlib(1),
+**  brotli(2),
+**  zstd(3),
+**  (65535)
+** } CertificateCompressionAlgorithm; 
+*/
+typedef PRUint16 SSLCertificateCompressionAlgorithmID;
+
+typedef struct SSLCertificateCompressionAlgorithmStr {
+    SSLCertificateCompressionAlgorithmID id;
+    const char* name;
+    SECStatus (*encode)(const SECItem* input, SECItem* output);
+    SECStatus (*decode)(const SECItem* input, SECItem* output, size_t expectedLenDecodedCertificate);
+} SSLCertificateCompressionAlgorithm;
+
 #endif /* __sslt_h_ */

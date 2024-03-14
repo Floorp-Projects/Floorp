@@ -1079,10 +1079,10 @@ typedef struct SSLMaskingContextStr {
  * The function SSL_SetCertificateCompressionAlgorithm() adds a certificate
  * compression mechanism to the socket fd. */
 
-#define SSL_SetCertificateCompressionAlgorithm(fd, t)                \
-    SSL_EXPERIMENTAL_API("SSL_SetCertificateCompressionAlgorithm",   \
-                         (PRFileDesc * _fd,                          \
-                          SSLCertificateCompressionAlgorithmType t), \
+#define SSL_SetCertificateCompressionAlgorithm(fd, t)              \
+    SSL_EXPERIMENTAL_API("SSL_SetCertificateCompressionAlgorithm", \
+                         (PRFileDesc * _fd,                        \
+                          SSLCertificateCompressionAlgorithm t),   \
                          (fd, t))
 
 /* Deprecated experimental APIs */

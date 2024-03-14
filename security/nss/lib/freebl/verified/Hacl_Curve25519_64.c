@@ -35,7 +35,7 @@ add_scalar0(uint64_t *out, uint64_t *f1, uint64_t f2)
 #if HACL_CAN_COMPILE_INLINE_ASM
     add_scalar(out, f1, f2);
 #else
-    uint64_t uu____0 = add_scalar_e(out, f1, f2);
+    KRML_HOST_IGNORE(add_scalar_e(out, f1, f2));
 #endif
 }
 
@@ -45,7 +45,7 @@ fadd0(uint64_t *out, uint64_t *f1, uint64_t *f2)
 #if HACL_CAN_COMPILE_INLINE_ASM
     fadd(out, f1, f2);
 #else
-    uint64_t uu____0 = fadd_e(out, f1, f2);
+    KRML_HOST_IGNORE(fadd_e(out, f1, f2));
 #endif
 }
 
@@ -55,7 +55,7 @@ fsub0(uint64_t *out, uint64_t *f1, uint64_t *f2)
 #if HACL_CAN_COMPILE_INLINE_ASM
     fsub(out, f1, f2);
 #else
-    uint64_t uu____0 = fsub_e(out, f1, f2);
+    KRML_HOST_IGNORE(fsub_e(out, f1, f2));
 #endif
 }
 
@@ -65,7 +65,7 @@ fmul0(uint64_t *out, uint64_t *f1, uint64_t *f2, uint64_t *tmp)
 #if HACL_CAN_COMPILE_INLINE_ASM
     fmul(out, f1, f2, tmp);
 #else
-    uint64_t uu____0 = fmul_e(tmp, f1, out, f2);
+    KRML_HOST_IGNORE(fmul_e(tmp, f1, out, f2));
 #endif
 }
 
@@ -75,7 +75,7 @@ fmul20(uint64_t *out, uint64_t *f1, uint64_t *f2, uint64_t *tmp)
 #if HACL_CAN_COMPILE_INLINE_ASM
     fmul2(out, f1, f2, tmp);
 #else
-    uint64_t uu____0 = fmul2_e(tmp, f1, out, f2);
+    KRML_HOST_IGNORE(fmul2_e(tmp, f1, out, f2));
 #endif
 }
 
@@ -85,7 +85,7 @@ fmul_scalar0(uint64_t *out, uint64_t *f1, uint64_t f2)
 #if HACL_CAN_COMPILE_INLINE_ASM
     fmul_scalar(out, f1, f2);
 #else
-    uint64_t uu____0 = fmul_scalar_e(out, f1, f2);
+    KRML_HOST_IGNORE(fmul_scalar_e(out, f1, f2));
 #endif
 }
 
@@ -95,7 +95,7 @@ fsqr0(uint64_t *out, uint64_t *f1, uint64_t *tmp)
 #if HACL_CAN_COMPILE_INLINE_ASM
     fsqr(out, f1, tmp);
 #else
-    uint64_t uu____0 = fsqr_e(tmp, f1, out);
+    KRML_HOST_IGNORE(fsqr_e(tmp, f1, out));
 #endif
 }
 
@@ -105,7 +105,7 @@ fsqr20(uint64_t *out, uint64_t *f, uint64_t *tmp)
 #if HACL_CAN_COMPILE_INLINE_ASM
     fsqr2(out, f, tmp);
 #else
-    uint64_t uu____0 = fsqr2_e(tmp, f, out);
+    KRML_HOST_IGNORE(fsqr2_e(tmp, f, out));
 #endif
 }
 
@@ -115,7 +115,7 @@ cswap20(uint64_t bit, uint64_t *p1, uint64_t *p2)
 #if HACL_CAN_COMPILE_INLINE_ASM
     cswap2(bit, p1, p2);
 #else
-    uint64_t uu____0 = cswap2_e(bit, p1, p2);
+    KRML_HOST_IGNORE(cswap2_e(bit, p1, p2));
 #endif
 }
 
