@@ -161,6 +161,13 @@ const TEST_DATA = [
     column: 1,
     expected: { offset: 4, text: ".nested{color;}" },
   },
+  {
+    desc: "Rule contains unicode chars",
+    input: `#id /*🙃*/ {content: "☃️";}`,
+    line: 1,
+    column: 1,
+    expected: { offset: 12, text: `content: "☃️";` },
+  },
 ];
 
 function run_test() {
