@@ -32,6 +32,7 @@ from taskgraph.util.yaml import load_yaml
 
 from . import GECKO
 from .actions import render_actions_json
+from .files_changed import get_changed_files
 from .parameters import get_app_version, get_version
 from .try_option_syntax import parse_message
 from .util.backstop import BACKSTOP_INDEX, is_backstop
@@ -307,6 +308,9 @@ def get_decision_parameters(graph_config, options):
     parameters["message"] = try_syntax_from_message(commit_message)
     parameters["hg_branch"] = get_hg_revision_branch(
         GECKO, revision=parameters["head_rev"]
+    )
+    parameters["files_changed"] = sorted(
+        get_changed_files(parameters["head_repository"], parameters["head_rev"])
     )
     parameters["next_version"] = None
     parameters["optimize_strategies"] = None

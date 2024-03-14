@@ -74,6 +74,7 @@ def test_write_artifact_yml():
 @patch("gecko_taskgraph.decision.get_hg_revision_branch")
 @patch("gecko_taskgraph.decision.get_hg_commit_message")
 @patch("gecko_taskgraph.decision._determine_more_accurate_base_rev")
+@patch("gecko_taskgraph.decision.get_changed_files")
 @pytest.mark.parametrize(
     "extra_options,commit_msg,ttc,expected",
     (
@@ -84,6 +85,7 @@ def test_write_artifact_yml():
             {
                 "pushlog_id": "143",
                 "build_date": 1503691511,
+                "files_changed": ["bar/baz.md", "foo.txt"],
                 "hg_branch": "default",
                 "moz_build_date": "20170825200511",
                 "try_mode": None,
@@ -148,6 +150,7 @@ def test_write_artifact_yml():
     ),
 )
 def test_get_decision_parameters(
+    mock_get_changed_files,
     mock_determine_more_accurate_base_rev,
     mock_get_hg_commit_message,
     mock_get_hg_revision_branch,
@@ -160,6 +163,7 @@ def test_get_decision_parameters(
     mock_get_hg_revision_branch.return_value = "default"
     mock_get_hg_commit_message.return_value = commit_msg or "commit message"
     mock_determine_more_accurate_base_rev.return_value = "baserev"
+    mock_get_changed_files.return_value = ["foo.txt", "bar/baz.md"]
 
     options.update(extra_options)
     contents = None
