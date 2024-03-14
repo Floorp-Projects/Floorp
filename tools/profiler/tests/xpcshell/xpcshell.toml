@@ -39,6 +39,7 @@ skip-if = ["tsan"] # Times out on TSan, bug 1612707
 skip-if = [
   "release_or_beta",
   "os == 'win' && socketprocess_networking",
+  "tsan", # bug 1885381
 ]
 
 ["test_feature_nativeallocations.js"]
