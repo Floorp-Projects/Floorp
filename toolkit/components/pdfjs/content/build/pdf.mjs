@@ -139,7 +139,8 @@ const AnnotationEditorParamsType = {
   HIGHLIGHT_COLOR: 31,
   HIGHLIGHT_DEFAULT_COLOR: 32,
   HIGHLIGHT_THICKNESS: 33,
-  HIGHLIGHT_FREE: 34
+  HIGHLIGHT_FREE: 34,
+  HIGHLIGHT_SHOW_ALL: 35
 };
 const PermissionFlag = {
   PRINT: 0x04,
@@ -1591,7 +1592,167 @@ function setLayerDimensions(div, viewport, mustFlip = false, mustRotate = true) 
   }
 }
 
+;// CONCATENATED MODULE: ./src/display/editor/toolbar.js
+
+class EditorToolbar {
+  #toolbar = null;
+  #colorPicker = null;
+  #editor;
+  #buttons = null;
+  constructor(editor) {
+    this.#editor = editor;
+  }
+  render() {
+    const editToolbar = this.#toolbar = document.createElement("div");
+    editToolbar.className = "editToolbar";
+    editToolbar.setAttribute("role", "toolbar");
+    editToolbar.addEventListener("contextmenu", noContextMenu);
+    editToolbar.addEventListener("pointerdown", EditorToolbar.#pointerDown);
+    const buttons = this.#buttons = document.createElement("div");
+    buttons.className = "buttons";
+    editToolbar.append(buttons);
+    const position = this.#editor.toolbarPosition;
+    if (position) {
+      const {
+        style
+      } = editToolbar;
+      const x = this.#editor._uiManager.direction === "ltr" ? 1 - position[0] : position[0];
+      style.insetInlineEnd = `${100 * x}%`;
+      style.top = `calc(${100 * position[1]}% + var(--editor-toolbar-vert-offset))`;
+    }
+    this.#addDeleteButton();
+    return editToolbar;
+  }
+  static #pointerDown(e) {
+    e.stopPropagation();
+  }
+  #focusIn(e) {
+    this.#editor._focusEventsAllowed = false;
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  #focusOut(e) {
+    this.#editor._focusEventsAllowed = true;
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  #addListenersToElement(element) {
+    element.addEventListener("focusin", this.#focusIn.bind(this), {
+      capture: true
+    });
+    element.addEventListener("focusout", this.#focusOut.bind(this), {
+      capture: true
+    });
+    element.addEventListener("contextmenu", noContextMenu);
+  }
+  hide() {
+    this.#toolbar.classList.add("hidden");
+    this.#colorPicker?.hideDropdown();
+  }
+  show() {
+    this.#toolbar.classList.remove("hidden");
+  }
+  #addDeleteButton() {
+    const button = document.createElement("button");
+    button.className = "delete";
+    button.tabIndex = 0;
+    button.setAttribute("data-l10n-id", `pdfjs-editor-remove-${this.#editor.editorType}-button`);
+    this.#addListenersToElement(button);
+    button.addEventListener("click", e => {
+      this.#editor._uiManager.delete();
+    });
+    this.#buttons.append(button);
+  }
+  get #divider() {
+    const divider = document.createElement("div");
+    divider.className = "divider";
+    return divider;
+  }
+  addAltTextButton(button) {
+    this.#addListenersToElement(button);
+    this.#buttons.prepend(button, this.#divider);
+  }
+  addColorPicker(colorPicker) {
+    this.#colorPicker = colorPicker;
+    const button = colorPicker.renderButton();
+    this.#addListenersToElement(button);
+    this.#buttons.prepend(button, this.#divider);
+  }
+  remove() {
+    this.#toolbar.remove();
+    this.#colorPicker?.destroy();
+    this.#colorPicker = null;
+  }
+}
+class HighlightToolbar {
+  #buttons = null;
+  #toolbar = null;
+  #uiManager;
+  constructor(uiManager) {
+    this.#uiManager = uiManager;
+  }
+  #render() {
+    const editToolbar = this.#toolbar = document.createElement("div");
+    editToolbar.className = "editToolbar";
+    editToolbar.setAttribute("role", "toolbar");
+    editToolbar.addEventListener("contextmenu", noContextMenu);
+    const buttons = this.#buttons = document.createElement("div");
+    buttons.className = "buttons";
+    editToolbar.append(buttons);
+    this.#addHighlightButton();
+    return editToolbar;
+  }
+  #getLastPoint(boxes, isLTR) {
+    let lastY = 0;
+    let lastX = 0;
+    for (const box of boxes) {
+      const y = box.y + box.height;
+      if (y < lastY) {
+        continue;
+      }
+      const x = box.x + (isLTR ? box.width : 0);
+      if (y > lastY) {
+        lastX = x;
+        lastY = y;
+        continue;
+      }
+      if (isLTR) {
+        if (x > lastX) {
+          lastX = x;
+        }
+      } else if (x < lastX) {
+        lastX = x;
+      }
+    }
+    return [isLTR ? 1 - lastX : lastX, lastY];
+  }
+  show(parent, boxes, isLTR) {
+    const [x, y] = this.#getLastPoint(boxes, isLTR);
+    const {
+      style
+    } = this.#toolbar ||= this.#render();
+    parent.append(this.#toolbar);
+    style.insetInlineEnd = `${100 * x}%`;
+    style.top = `calc(${100 * y}% + var(--editor-toolbar-vert-offset))`;
+  }
+  hide() {
+    this.#toolbar.remove();
+  }
+  #addHighlightButton() {
+    const button = document.createElement("button");
+    button.className = "highlightButton";
+    button.tabIndex = 0;
+    button.setAttribute("data-l10n-id", `pdfjs-highlight-floating-button`);
+    button.addEventListener("contextmenu", noContextMenu);
+    button.addEventListener("click", () => {
+      this.#uiManager.highlightSelection("floating_button");
+    });
+    this.#buttons.append(button);
+  }
+}
+
 ;// CONCATENATED MODULE: ./src/display/editor/tools.js
+
 
 
 function bindEvents(obj, element, names) {
@@ -1933,10 +2094,12 @@ class AnnotationEditorUIManager {
   #draggingEditors = null;
   #editorTypes = null;
   #editorsToRescale = new Set();
+  #enableHighlightFloatingButton = false;
   #filterFactory = null;
   #focusMainContainerTimeoutId = null;
   #highlightColors = null;
   #highlightWhenShiftUp = false;
+  #highlightToolbar = null;
   #idManager = new IdManager();
   #isEnabled = false;
   #isWaiting = false;
@@ -1947,6 +2110,7 @@ class AnnotationEditorUIManager {
   #selectedEditors = new Set();
   #selectedTextNode = null;
   #pageColors = null;
+  #showAllStates = null;
   #boundBlur = this.blur.bind(this);
   #boundFocus = this.focus.bind(this);
   #boundCopy = this.copy.bind(this);
@@ -2031,7 +2195,7 @@ class AnnotationEditorUIManager {
       checker: arrowChecker
     }]]));
   }
-  constructor(container, viewer, altTextManager, eventBus, pdfDocument, pageColors, highlightColors, mlManager) {
+  constructor(container, viewer, altTextManager, eventBus, pdfDocument, pageColors, highlightColors, enableHighlightFloatingButton, mlManager) {
     this.#container = container;
     this.#viewer = viewer;
     this.#altTextManager = altTextManager;
@@ -2041,10 +2205,12 @@ class AnnotationEditorUIManager {
     this._eventBus._on("scalechanging", this.#boundOnScaleChanging);
     this._eventBus._on("rotationchanging", this.#boundOnRotationChanging);
     this.#addSelectionListener();
+    this.#addKeyboardManager();
     this.#annotationStorage = pdfDocument.annotationStorage;
     this.#filterFactory = pdfDocument.filterFactory;
     this.#pageColors = pageColors;
     this.#highlightColors = highlightColors || null;
+    this.#enableHighlightFloatingButton = enableHighlightFloatingButton;
     this.#mlManager = mlManager || null;
     this.viewParameters = {
       realScale: PixelsPerInch.PDF_TO_CSS_UNITS,
@@ -2069,6 +2235,8 @@ class AnnotationEditorUIManager {
     this.#selectedEditors.clear();
     this.#commandManager.destroy();
     this.#altTextManager?.destroy();
+    this.#highlightToolbar?.hide();
+    this.#highlightToolbar = null;
     if (this.#focusMainContainerTimeoutId) {
       clearTimeout(this.#focusMainContainerTimeoutId);
       this.#focusMainContainerTimeoutId = null;
@@ -2149,6 +2317,11 @@ class AnnotationEditorUIManager {
     this.commitOrRemove();
     this.viewParameters.rotation = pagesRotation;
   }
+  #getAnchorElementForSelection({
+    anchorNode
+  }) {
+    return anchorNode.nodeType === Node.TEXT_NODE ? anchorNode.parentElement : anchorNode;
+  }
   highlightSelection(methodOfCreation = "") {
     const selection = document.getSelection();
     if (!selection || selection.isCollapsed) {
@@ -2160,15 +2333,20 @@ class AnnotationEditorUIManager {
       focusNode,
       focusOffset
     } = selection;
-    const anchorElement = anchorNode.nodeType === Node.TEXT_NODE ? anchorNode.parentElement : anchorNode;
+    const text = selection.toString();
+    const anchorElement = this.#getAnchorElementForSelection(selection);
     const textLayer = anchorElement.closest(".textLayer");
     const boxes = this.getSelectionBoxes(textLayer);
+    if (!boxes) {
+      return;
+    }
     selection.empty();
     if (this.#mode === AnnotationEditorType.NONE) {
       this._eventBus.dispatch("showannotationeditorui", {
         source: this,
         mode: AnnotationEditorType.HIGHLIGHT
       });
+      this.showAllEditors("highlight", true, true);
     }
     for (const layer of this.#allLayers.values()) {
       if (layer.hasTextLayer(textLayer)) {
@@ -2181,11 +2359,26 @@ class AnnotationEditorUIManager {
           anchorNode,
           anchorOffset,
           focusNode,
-          focusOffset
+          focusOffset,
+          text
         });
         break;
       }
     }
+  }
+  #displayHighlightToolbar() {
+    const selection = document.getSelection();
+    if (!selection || selection.isCollapsed) {
+      return;
+    }
+    const anchorElement = this.#getAnchorElementForSelection(selection);
+    const textLayer = anchorElement.closest(".textLayer");
+    const boxes = this.getSelectionBoxes(textLayer);
+    if (!boxes) {
+      return;
+    }
+    this.#highlightToolbar ||= new HighlightToolbar(this);
+    this.#highlightToolbar.show(textLayer, boxes, this.direction === "ltr");
   }
   addToAnnotationStorage(editor) {
     if (!editor.isEmpty() && this.#annotationStorage && !this.#annotationStorage.has(editor.id)) {
@@ -2196,6 +2389,7 @@ class AnnotationEditorUIManager {
     const selection = document.getSelection();
     if (!selection || selection.isCollapsed) {
       if (this.#selectedTextNode) {
+        this.#highlightToolbar?.hide();
         this.#selectedTextNode = null;
         this.#dispatchUpdateStates({
           hasSelectedText: false
@@ -2209,9 +2403,11 @@ class AnnotationEditorUIManager {
     if (anchorNode === this.#selectedTextNode) {
       return;
     }
-    const anchorElement = anchorNode.nodeType === Node.TEXT_NODE ? anchorNode.parentElement : anchorNode;
-    if (!anchorElement.closest(".textLayer")) {
+    const anchorElement = this.#getAnchorElementForSelection(selection);
+    const textLayer = anchorElement.closest(".textLayer");
+    if (!textLayer) {
       if (this.#selectedTextNode) {
+        this.#highlightToolbar?.hide();
         this.#selectedTextNode = null;
         this.#dispatchUpdateStates({
           hasSelectedText: false
@@ -2219,12 +2415,16 @@ class AnnotationEditorUIManager {
       }
       return;
     }
+    this.#highlightToolbar?.hide();
     this.#selectedTextNode = anchorNode;
     this.#dispatchUpdateStates({
       hasSelectedText: true
     });
-    if (this.#mode !== AnnotationEditorType.HIGHLIGHT) {
+    if (this.#mode !== AnnotationEditorType.HIGHLIGHT && this.#mode !== AnnotationEditorType.NONE) {
       return;
+    }
+    if (this.#mode === AnnotationEditorType.HIGHLIGHT) {
+      this.showAllEditors("highlight", true, true);
     }
     this.#highlightWhenShiftUp = this.isShiftKeyDown;
     if (!this.isShiftKeyDown) {
@@ -2235,11 +2435,18 @@ class AnnotationEditorUIManager {
         window.removeEventListener("pointerup", pointerup);
         window.removeEventListener("blur", pointerup);
         if (e.type === "pointerup") {
-          this.highlightSelection("main_toolbar");
+          this.#onSelectEnd("main_toolbar");
         }
       };
       window.addEventListener("pointerup", pointerup);
       window.addEventListener("blur", pointerup);
+    }
+  }
+  #onSelectEnd(methodOfCreation = "") {
+    if (this.#mode === AnnotationEditorType.HIGHLIGHT) {
+      this.highlightSelection(methodOfCreation);
+    } else if (this.#enableHighlightFloatingButton) {
+      this.#displayHighlightToolbar();
     }
   }
   #addSelectionListener() {
@@ -2260,7 +2467,7 @@ class AnnotationEditorUIManager {
     this.isShiftKeyDown = false;
     if (this.#highlightWhenShiftUp) {
       this.#highlightWhenShiftUp = false;
-      this.highlightSelection("main_toolbar");
+      this.#onSelectEnd("main_toolbar");
     }
     if (!this.hasSelection) {
       return;
@@ -2398,7 +2605,7 @@ class AnnotationEditorUIManager {
     if (!this.isShiftKeyDown && event.key === "Shift") {
       this.isShiftKeyDown = true;
     }
-    if (!this.isEditorHandlingKeyboard) {
+    if (this.#mode !== AnnotationEditorType.NONE && !this.isEditorHandlingKeyboard) {
       AnnotationEditorUIManager._keyboardManager.exec(this, event);
     }
   }
@@ -2407,7 +2614,7 @@ class AnnotationEditorUIManager {
       this.isShiftKeyDown = false;
       if (this.#highlightWhenShiftUp) {
         this.#highlightWhenShiftUp = false;
-        this.highlightSelection("main_toolbar");
+        this.#onSelectEnd("main_toolbar");
       }
     }
   }
@@ -2447,7 +2654,6 @@ class AnnotationEditorUIManager {
   setEditingState(isEditing) {
     if (isEditing) {
       this.#addFocusManager();
-      this.#addKeyboardManager();
       this.#addCopyPasteListeners();
       this.#dispatchUpdateStates({
         isEditing: this.#mode !== AnnotationEditorType.NONE,
@@ -2458,7 +2664,6 @@ class AnnotationEditorUIManager {
       });
     } else {
       this.#removeFocusManager();
-      this.#removeKeyboardManager();
       this.#removeCopyPasteListeners();
       this.#dispatchUpdateStates({
         isEditing: false
@@ -2554,12 +2759,37 @@ class AnnotationEditorUIManager {
       case AnnotationEditorParamsType.HIGHLIGHT_DEFAULT_COLOR:
         this.#mainHighlightColorPicker?.updateColor(value);
         break;
+      case AnnotationEditorParamsType.HIGHLIGHT_SHOW_ALL:
+        this._eventBus.dispatch("reporttelemetry", {
+          source: this,
+          details: {
+            type: "editing",
+            data: {
+              type: "highlight",
+              action: "toggle_visibility"
+            }
+          }
+        });
+        (this.#showAllStates ||= new Map()).set(type, value);
+        this.showAllEditors("highlight", value);
+        break;
     }
     for (const editor of this.#selectedEditors) {
       editor.updateParams(type, value);
     }
     for (const editorType of this.#editorTypes) {
       editorType.updateDefaultParams(type, value);
+    }
+  }
+  showAllEditors(type, visible, updateButton = false) {
+    for (const editor of this.#allEditors.values()) {
+      if (editor.editorType === type) {
+        editor.show(visible);
+      }
+    }
+    const state = this.#showAllStates?.get(AnnotationEditorParamsType.HIGHLIGHT_SHOW_ALL) ?? true;
+    if (state !== visible) {
+      this.#dispatchUpdateUI([[AnnotationEditorParamsType.HIGHLIGHT_SHOW_ALL, visible]]);
     }
   }
   enableWaiting(mustWait = false) {
@@ -3172,98 +3402,6 @@ class AltText {
   }
 }
 
-;// CONCATENATED MODULE: ./src/display/editor/toolbar.js
-
-class EditorToolbar {
-  #toolbar = null;
-  #colorPicker = null;
-  #editor;
-  #buttons = null;
-  constructor(editor) {
-    this.#editor = editor;
-  }
-  render() {
-    const editToolbar = this.#toolbar = document.createElement("div");
-    editToolbar.className = "editToolbar";
-    editToolbar.addEventListener("contextmenu", noContextMenu);
-    editToolbar.addEventListener("pointerdown", EditorToolbar.#pointerDown);
-    const buttons = this.#buttons = document.createElement("div");
-    buttons.className = "buttons";
-    editToolbar.append(buttons);
-    const position = this.#editor.toolbarPosition;
-    if (position) {
-      const {
-        style
-      } = editToolbar;
-      const x = this.#editor._uiManager.direction === "ltr" ? 1 - position[0] : position[0];
-      style.insetInlineEnd = `${100 * x}%`;
-      style.top = `calc(${100 * position[1]}% + var(--editor-toolbar-vert-offset))`;
-    }
-    this.#addDeleteButton();
-    return editToolbar;
-  }
-  static #pointerDown(e) {
-    e.stopPropagation();
-  }
-  #focusIn(e) {
-    this.#editor._focusEventsAllowed = false;
-    e.preventDefault();
-    e.stopPropagation();
-  }
-  #focusOut(e) {
-    this.#editor._focusEventsAllowed = true;
-    e.preventDefault();
-    e.stopPropagation();
-  }
-  #addListenersToElement(element) {
-    element.addEventListener("focusin", this.#focusIn.bind(this), {
-      capture: true
-    });
-    element.addEventListener("focusout", this.#focusOut.bind(this), {
-      capture: true
-    });
-    element.addEventListener("contextmenu", noContextMenu);
-  }
-  hide() {
-    this.#toolbar.classList.add("hidden");
-    this.#colorPicker?.hideDropdown();
-  }
-  show() {
-    this.#toolbar.classList.remove("hidden");
-  }
-  #addDeleteButton() {
-    const button = document.createElement("button");
-    button.className = "delete";
-    button.tabIndex = 0;
-    button.setAttribute("data-l10n-id", `pdfjs-editor-remove-${this.#editor.editorType}-button`);
-    this.#addListenersToElement(button);
-    button.addEventListener("click", e => {
-      this.#editor._uiManager.delete();
-    });
-    this.#buttons.append(button);
-  }
-  get #divider() {
-    const divider = document.createElement("div");
-    divider.className = "divider";
-    return divider;
-  }
-  addAltTextButton(button) {
-    this.#addListenersToElement(button);
-    this.#buttons.prepend(button, this.#divider);
-  }
-  addColorPicker(colorPicker) {
-    this.#colorPicker = colorPicker;
-    const button = colorPicker.renderButton();
-    this.#addListenersToElement(button);
-    this.#buttons.prepend(button, this.#divider);
-  }
-  remove() {
-    this.#toolbar.remove();
-    this.#colorPicker?.destroy();
-    this.#colorPicker = null;
-  }
-}
-
 ;// CONCATENATED MODULE: ./src/display/editor/editor.js
 
 
@@ -3289,6 +3427,7 @@ class AnnotationEditor {
   #prevDragY = 0;
   #telemetryTimeouts = null;
   _initialOptions = Object.create(null);
+  _isVisible = true;
   _uiManager = null;
   _focusEventsAllowed = true;
   _l10nPromise = null;
@@ -3908,6 +4047,9 @@ class AnnotationEditor {
     this.div.className = this.name;
     this.div.setAttribute("id", this.id);
     this.div.setAttribute("tabIndex", 0);
+    if (!this._isVisible) {
+      this.div.classList.add("hidden");
+    }
     this.setInForeground();
     this.div.addEventListener("focusin", this.#boundFocusin);
     this.div.addEventListener("focusout", this.#boundFocusout);
@@ -4062,6 +4204,7 @@ class AnnotationEditor {
   rebuild() {
     this.div?.addEventListener("focusin", this.#boundFocusin);
     this.div?.addEventListener("focusout", this.#boundFocusout);
+    this.show(this._isVisible);
   }
   rotate(_angle) {}
   serialize(isForCopying = false, context = null) {
@@ -4323,6 +4466,10 @@ class AnnotationEditor {
         data
       }
     });
+  }
+  show(visible) {
+    this.div.classList.toggle("hidden", !visible);
+    this._isVisible = visible;
   }
 }
 class FakeEditor extends AnnotationEditor {
@@ -8378,18 +8525,44 @@ class Metadata {
 
 const INTERNAL = Symbol("INTERNAL");
 class OptionalContentGroup {
+  #isDisplay = false;
+  #isPrint = false;
+  #userSet = false;
   #visible = true;
-  constructor(name, intent) {
+  constructor(renderingIntent, {
+    name,
+    intent,
+    usage
+  }) {
+    this.#isDisplay = !!(renderingIntent & RenderingIntentFlag.DISPLAY);
+    this.#isPrint = !!(renderingIntent & RenderingIntentFlag.PRINT);
     this.name = name;
     this.intent = intent;
+    this.usage = usage;
   }
   get visible() {
-    return this.#visible;
+    if (this.#userSet) {
+      return this.#visible;
+    }
+    if (!this.#visible) {
+      return false;
+    }
+    const {
+      print,
+      view
+    } = this.usage;
+    if (this.#isDisplay) {
+      return view?.viewState !== "OFF";
+    } else if (this.#isPrint) {
+      return print?.printState !== "OFF";
+    }
+    return true;
   }
-  _setVisible(internal, visible) {
+  _setVisible(internal, visible, userSet = false) {
     if (internal !== INTERNAL) {
       unreachable("Internal method `_setVisible` called.");
     }
+    this.#userSet = userSet;
     this.#visible = visible;
   }
 }
@@ -8398,7 +8571,8 @@ class OptionalContentConfig {
   #groups = new Map();
   #initialHash = null;
   #order = null;
-  constructor(data) {
+  constructor(data, renderingIntent = RenderingIntentFlag.DISPLAY) {
+    this.renderingIntent = renderingIntent;
     this.name = null;
     this.creator = null;
     if (data === null) {
@@ -8408,7 +8582,7 @@ class OptionalContentConfig {
     this.creator = data.creator;
     this.#order = data.order;
     for (const group of data.groups) {
-      this.#groups.set(group.id, new OptionalContentGroup(group.name, group.intent));
+      this.#groups.set(group.id, new OptionalContentGroup(renderingIntent, group));
     }
     if (data.baseState === "OFF") {
       for (const group of this.#groups.values()) {
@@ -8529,11 +8703,43 @@ class OptionalContentConfig {
     return true;
   }
   setVisibility(id, visible = true) {
-    if (!this.#groups.has(id)) {
+    const group = this.#groups.get(id);
+    if (!group) {
       warn(`Optional content group not found: ${id}`);
       return;
     }
-    this.#groups.get(id)._setVisible(INTERNAL, !!visible);
+    group._setVisible(INTERNAL, !!visible, true);
+    this.#cachedGetHash = null;
+  }
+  setOCGState({
+    state,
+    preserveRB
+  }) {
+    let operator;
+    for (const elem of state) {
+      switch (elem) {
+        case "ON":
+        case "OFF":
+        case "Toggle":
+          operator = elem;
+          continue;
+      }
+      const group = this.#groups.get(elem);
+      if (!group) {
+        continue;
+      }
+      switch (operator) {
+        case "ON":
+          group._setVisible(INTERNAL, true);
+          break;
+        case "OFF":
+          group._setVisible(INTERNAL, false);
+          break;
+        case "Toggle":
+          group._setVisible(INTERNAL, !group.visible);
+          break;
+      }
+    }
     this.#cachedGetHash = null;
   }
   get hasInitialVisibility() {
@@ -8975,7 +9181,7 @@ function getDocument(src) {
   }
   const fetchDocParams = {
     docId,
-    apiVersion: "4.1.266",
+    apiVersion: "4.1.287",
     data,
     password,
     disableAutoFetch,
@@ -9212,8 +9418,13 @@ class PDFDocumentProxy {
   getOutline() {
     return this._transport.getOutline();
   }
-  getOptionalContentConfig() {
-    return this._transport.getOptionalContentConfig();
+  getOptionalContentConfig({
+    intent = "display"
+  } = {}) {
+    const {
+      renderingIntent
+    } = this._transport.getRenderingIntent(intent);
+    return this._transport.getOptionalContentConfig(renderingIntent);
   }
   getPermissions() {
     return this._transport.getPermissions();
@@ -9304,8 +9515,10 @@ class PDFPageProxy {
   getAnnotations({
     intent = "display"
   } = {}) {
-    const intentArgs = this._transport.getRenderingIntent(intent);
-    return this._transport.getAnnotations(this._pageIndex, intentArgs.renderingIntent);
+    const {
+      renderingIntent
+    } = this._transport.getRenderingIntent(intent);
+    return this._transport.getAnnotations(this._pageIndex, renderingIntent);
   }
   getJSActions() {
     return this._transport.getPageJSActions(this._pageIndex);
@@ -9333,21 +9546,23 @@ class PDFPageProxy {
   }) {
     this._stats?.time("Overall");
     const intentArgs = this._transport.getRenderingIntent(intent, annotationMode, printAnnotationStorage);
+    const {
+      renderingIntent,
+      cacheKey
+    } = intentArgs;
     this.#pendingCleanup = false;
     this.#abortDelayedCleanup();
-    if (!optionalContentConfigPromise) {
-      optionalContentConfigPromise = this._transport.getOptionalContentConfig();
-    }
-    let intentState = this._intentStates.get(intentArgs.cacheKey);
+    optionalContentConfigPromise ||= this._transport.getOptionalContentConfig(renderingIntent);
+    let intentState = this._intentStates.get(cacheKey);
     if (!intentState) {
       intentState = Object.create(null);
-      this._intentStates.set(intentArgs.cacheKey, intentState);
+      this._intentStates.set(cacheKey, intentState);
     }
     if (intentState.streamReaderCancelTimeout) {
       clearTimeout(intentState.streamReaderCancelTimeout);
       intentState.streamReaderCancelTimeout = null;
     }
-    const intentPrint = !!(intentArgs.renderingIntent & RenderingIntentFlag.PRINT);
+    const intentPrint = !!(renderingIntent & RenderingIntentFlag.PRINT);
     if (!intentState.displayReadyCapability) {
       intentState.displayReadyCapability = new PromiseCapability();
       intentState.operatorList = {
@@ -9404,6 +9619,9 @@ class PDFPageProxy {
         return;
       }
       this._stats?.time("Rendering");
+      if (!(optionalContentConfig.renderingIntent & renderingIntent)) {
+        throw new Error("Must use the same `intent`-argument when calling the `PDFPageProxy.render` " + "and `PDFDocumentProxy.getOptionalContentConfig` methods.");
+      }
       internalRenderTask.initializeGraphics({
         transparency,
         optionalContentConfig
@@ -10343,8 +10561,8 @@ class WorkerTransport {
   getOutline() {
     return this.messageHandler.sendWithPromise("GetOutline", null);
   }
-  getOptionalContentConfig() {
-    return this.messageHandler.sendWithPromise("GetOptionalContentConfig", null).then(results => new OptionalContentConfig(results));
+  getOptionalContentConfig(renderingIntent) {
+    return this.#cacheSimpleMethod("GetOptionalContentConfig").then(data => new OptionalContentConfig(data, renderingIntent));
   }
   getPermissions() {
     return this.messageHandler.sendWithPromise("GetPermissions", null);
@@ -10607,8 +10825,8 @@ class InternalRenderTask {
     }
   }
 }
-const version = "4.1.266";
-const build = "6bb6ce6a5";
+const version = "4.1.287";
+const build = "30e69956d";
 
 ;// CONCATENATED MODULE: ./src/shared/scripting_utils.js
 function makeColorComp(n) {
@@ -14430,6 +14648,7 @@ class ColorPicker {
     button.addEventListener("keydown", this.#boundKeyDown);
     const swatch = this.#buttonSwatch = document.createElement("span");
     swatch.className = "swatch";
+    swatch.setAttribute("aria-hidden", true);
     swatch.style.backgroundColor = this.#defaultColor;
     button.append(swatch);
     return button;
@@ -14611,6 +14830,7 @@ class HighlightEditor extends AnnotationEditor {
   #lastPoint = null;
   #opacity;
   #outlineId = null;
+  #text = "";
   #thickness;
   #methodOfCreation = "";
   static _defaultColor = null;
@@ -14644,6 +14864,7 @@ class HighlightEditor extends AnnotationEditor {
     this.#opacity = params.opacity || HighlightEditor._defaultOpacity;
     this.#boxes = params.boxes || null;
     this.#methodOfCreation = params.methodOfCreation || "";
+    this.#text = params.text || "";
     this._isDraggable = false;
     if (params.highlightId > -1) {
       this.#isFreeHighlight = true;
@@ -14896,6 +15117,7 @@ class HighlightEditor extends AnnotationEditor {
       mustBeSelected = !this.parent && this.div?.classList.contains("selectedEditor");
     }
     super.setParent(parent);
+    this.show(this._isVisible);
     if (mustBeSelected) {
       this.select();
     }
@@ -14990,6 +15212,12 @@ class HighlightEditor extends AnnotationEditor {
       return this.div;
     }
     const div = super.render();
+    if (this.#text) {
+      const mark = document.createElement("mark");
+      div.append(mark);
+      mark.append(document.createTextNode(this.#text));
+      mark.className = "visuallyHidden";
+    }
     if (this.#isFreeHighlight) {
       div.classList.add("free");
     } else {
@@ -14997,6 +15225,7 @@ class HighlightEditor extends AnnotationEditor {
     }
     const highlightDiv = this.#highlightDiv = document.createElement("div");
     div.append(highlightDiv);
+    highlightDiv.setAttribute("aria-hidden", "true");
     highlightDiv.className = "internal";
     highlightDiv.style.clipPath = this.#clipPathId;
     const [parentWidth, parentHeight] = this.parentDimensions;
@@ -15052,6 +15281,13 @@ class HighlightEditor extends AnnotationEditor {
   }
   get _mustFixPosition() {
     return !this.#isFreeHighlight;
+  }
+  show(visible) {
+    super.show(visible);
+    if (this.parent) {
+      this.parent.drawLayer.show(this.#id, visible);
+      this.parent.drawLayer.show(this.#outlineId, visible);
+    }
   }
   #getRotation() {
     return this.#isFreeHighlight ? this.rotation : 0;
@@ -16156,6 +16392,7 @@ class StampEditor extends AnnotationEditor {
     }
     super.render();
     this.div.hidden = true;
+    this.addAltTextButton();
     if (this.#bitmap) {
       this.#createCanvas();
     } else {
@@ -16200,7 +16437,6 @@ class StampEditor extends AnnotationEditor {
     this._reportTelemetry({
       action: "inserted_image"
     });
-    this.addAltTextButton();
     if (this.#bitmapFileName) {
       canvas.setAttribute("aria-label", this.#bitmapFileName);
     }
@@ -16631,6 +16867,7 @@ class AnnotationEditorLayer {
       if (event.button !== 0 || event.ctrlKey && isMac) {
         return;
       }
+      this.#uiManager.showAllEditors("highlight", true, true);
       this.#textLayer.div.classList.add("free");
       HighlightEditor.startHighlighting(this, this.#uiManager.direction === "ltr", event);
       this.#textLayer.div.addEventListener("pointerup", () => {
@@ -17004,6 +17241,7 @@ class DrawLayer {
   #createSVG(box) {
     const svg = DrawLayer._svgFactory.create(1, 1, true);
     this.#parent.append(svg);
+    svg.setAttribute("aria-hidden", true);
     DrawLayer.#setBox(svg, box);
     return svg;
   }
@@ -17116,6 +17354,9 @@ class DrawLayer {
   updateBox(id, box) {
     DrawLayer.#setBox(this.#mapping.get(id), box);
   }
+  show(id, visible) {
+    this.#mapping.get(id).classList.toggle("hidden", !visible);
+  }
   rotate(id, angle) {
     this.#mapping.get(id).setAttribute("data-main-rotation", angle);
   }
@@ -17160,8 +17401,8 @@ class DrawLayer {
 
 
 
-const pdfjsVersion = "4.1.266";
-const pdfjsBuild = "6bb6ce6a5";
+const pdfjsVersion = "4.1.287";
+const pdfjsBuild = "30e69956d";
 
 var __webpack_exports__AbortException = __webpack_exports__.AbortException;
 var __webpack_exports__AnnotationEditorLayer = __webpack_exports__.AnnotationEditorLayer;
