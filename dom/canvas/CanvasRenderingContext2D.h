@@ -699,16 +699,8 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
    *
    * Returns true on success.
    */
-  bool EnsureTarget(ErrorResult& aError,
-                    const gfx::Rect* aCoveredRect = nullptr,
-                    bool aWillClear = false);
-
   bool EnsureTarget(const gfx::Rect* aCoveredRect = nullptr,
-                    bool aWillClear = false) {
-    IgnoredErrorResult error;
-    return EnsureTarget(error, aCoveredRect, aWillClear);
-  }
-
+                    bool aWillClear = false);
   // Attempt to borrow a new target from an existing buffer provider.
   bool BorrowTarget(const gfx::IntRect& aPersistedRect, bool aNeedsClear);
 
@@ -722,8 +714,7 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
                        RefPtr<layers::PersistentBufferProvider>& aOutProvider);
 
   bool TryBasicTarget(RefPtr<gfx::DrawTarget>& aOutDT,
-                      RefPtr<layers::PersistentBufferProvider>& aOutProvider,
-                      ErrorResult& aError);
+                      RefPtr<layers::PersistentBufferProvider>& aOutProvider);
 
   void RegisterAllocation();
 
