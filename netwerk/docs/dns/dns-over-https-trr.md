@@ -142,7 +142,7 @@ Some domains will never be resolved via TRR. This includes:
 
 
 A small set of TRR providers are only available on certain networks.
-Detection is performed in DoHHeuristics.jsm followed by a call to
+Detection is performed in DoHHeuristics.sys.mjs followed by a call to
 _TRRService::SetDetectedURI_. This causes Firefox to use the
 network specific TRR provider until a network change occurs.
 

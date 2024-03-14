@@ -42,7 +42,7 @@ nsConverterInputStream::Init(nsIInputStream* aStream, const char* aCharset,
     aBufferSize = CONVERTER_BUFFER_SIZE;
     outputBufferSize = CONVERTER_BUFFER_SIZE;
   } else {
-    // NetUtil.jsm assumes that if buffer size equals
+    // NetUtil.sys.mjs assumes that if buffer size equals
     // the input size, the whole stream will be processed
     // as one readString. This is not true with encoding_rs,
     // because encoding_rs might want to see space for a

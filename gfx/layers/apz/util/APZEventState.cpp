@@ -240,7 +240,7 @@ void APZEventState::ProcessLongTap(PresShell* aPresShell,
       false;
 #elif defined(MOZ_WIDGET_ANDROID)
       // On Android, GeckoView calls preventDefault() in a JSActor
-      // (ContentDelegateChild.jsm) when opening context menu so that we can
+      // (ContentDelegateChild.sys.mjs) when opening context menu so that we can
       // tell whether contextmenu opens in response to the contextmenu event by
       // checking where preventDefault() got called.
       preventDefaultResult == PreventDefaultResult::ByChrome;
