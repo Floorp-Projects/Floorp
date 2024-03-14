@@ -6,7 +6,6 @@
 #include "mozilla/layers/SurfacePoolCA.h"
 
 #import <CoreVideo/CVPixelBuffer.h>
-#include <IOSurface/IOSurfaceTypes.h>
 
 #include <algorithm>
 #include <unordered_set>
@@ -17,12 +16,7 @@
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPrefs_gfx.h"
 
-#ifdef XP_MACOSX
-#  include "GLContextCGL.h"
-#else
-#  include "GLContextEAGL.h"
-#endif
-
+#include "GLContextCGL.h"
 #include "MozFramebuffer.h"
 #include "ScopedGLHelpers.h"
 
@@ -34,11 +28,7 @@ using gfx::IntRect;
 using gfx::IntRegion;
 using gfx::IntSize;
 using gl::GLContext;
-#ifdef XP_MACOSX
 using gl::GLContextCGL;
-#else
-using gl::GLContextEAGL;
-#endif
 
 /* static */ RefPtr<SurfacePool> SurfacePool::Create(size_t aPoolSizeLimit) {
   return new SurfacePoolCA(aPoolSizeLimit);
@@ -316,13 +306,8 @@ Maybe<GLuint> SurfacePoolCA::LockedPool::GetFramebufferForSurface(
       "Framebuffer creation", GRAPHICS_TileAllocation,
       nsPrintfCString("%dx%d", entry.mSize.width, entry.mSize.height));
 
-#ifdef XP_MACOSX
   RefPtr<GLContextCGL> cgl = GLContextCGL::Cast(aGL);
   MOZ_RELEASE_ASSERT(cgl, "Unexpected GLContext type");
-#else
-  RefPtr<GLContextEAGL> eagl = GLContextEAGL::Cast(aGL);
-  MOZ_RELEASE_ASSERT(eagl, "Unexpected GLContext type");
-#endif
 
   if (!aGL->MakeCurrent()) {
     // Context may have been destroyed.
@@ -333,14 +318,10 @@ Maybe<GLuint> SurfacePoolCA::LockedPool::GetFramebufferForSurface(
   {
     const gl::ScopedBindTexture bindTex(aGL, tex,
                                         LOCAL_GL_TEXTURE_RECTANGLE_ARB);
-#ifdef XP_MACOSX
     CGLTexImageIOSurface2D(cgl->GetCGLContext(), LOCAL_GL_TEXTURE_RECTANGLE_ARB,
                            LOCAL_GL_RGBA, entry.mSize.width, entry.mSize.height,
                            LOCAL_GL_BGRA, LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV,
                            entry.mIOSurface.get(), 0);
-#else
-    MOZ_CRASH("unimplemented");
-#endif
   }
 
   auto fb =

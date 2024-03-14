@@ -5902,7 +5902,7 @@
   value: false
   mirror: always
 
-#ifdef XP_DARWIN
+#ifdef XP_MACOSX
   # Create specialized video-only layers for video content in
   # fullscreen windows. Consistently works well on Apple Silicon,
   # some issues remain on Intel hardware.
@@ -5916,7 +5916,7 @@
     mirror: always
 #endif
 
-#if defined(XP_DARWIN) && defined(NIGHTLY_BUILD)
+#if defined(XP_MACOSX) && defined(NIGHTLY_BUILD)
   # Spoof the timing of the video sample instead of marking the untimed
   # sample to be displayed immediately.
 -   name: gfx.core-animation.specialize-video.spoof-timing
@@ -5938,7 +5938,7 @@
     mirror: always
 #endif
 
-#ifdef XP_DARWIN
+#ifdef XP_MACOSX
 -   name: gfx.core-animation.low-power-telemetry-frames
     type: int32_t
     value: 600
@@ -6704,7 +6704,7 @@
     mirror: always
 #endif
 
-#ifdef XP_DARWIN
+#ifdef XP_MACOSX
   # Files show up in $HOME/Desktop/nativelayerdumps-PID/frame-123.html
 -   name: gfx.webrender.debug.dump-native-layer-tree-to-file
     type: RelaxedAtomicBool

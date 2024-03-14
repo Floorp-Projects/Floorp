@@ -5,12 +5,10 @@
 
 #include "mozilla/layers/NativeLayerCA.h"
 
-#ifdef XP_MACOSX
-#  import <AppKit/NSAnimationContext.h>
-#  import <AppKit/NSColor.h>
-#  import <OpenGL/gl.h>
-#endif
+#import <AppKit/NSAnimationContext.h>
+#import <AppKit/NSColor.h>
 #import <AVFoundation/AVFoundation.h>
+#import <OpenGL/gl.h>
 #import <QuartzCore/QuartzCore.h>
 
 #include <algorithm>
@@ -21,11 +19,7 @@
 
 #include "gfxUtils.h"
 #include "GLBlitHelper.h"
-#ifdef XP_MACOSX
-#  include "GLContextCGL.h"
-#else
-#  include "GLContextEAGL.h"
-#endif
+#include "GLContextCGL.h"
 #include "GLContextProvider.h"
 #include "MozFramebuffer.h"
 #include "mozilla/gfx/Swizzle.h"
@@ -51,9 +45,7 @@ using gfx::IntSize;
 using gfx::Matrix4x4;
 using gfx::SurfaceFormat;
 using gl::GLContext;
-#ifdef XP_MACOSX
 using gl::GLContextCGL;
-#endif
 
 static Maybe<Telemetry::LABELS_GFX_MACOS_VIDEO_LOW_POWER>
 VideoLowPowerTypeToTelemetryType(VideoLowPowerType aVideoLowPower) {
@@ -158,23 +150,13 @@ class AsyncReadbackBufferNLRS
 // protection, see bug 1585523.
 struct MOZ_STACK_CLASS AutoCATransaction final {
   AutoCATransaction() {
-#ifdef XP_MACOSX
     [NSAnimationContext beginGrouping];
-#else
-    [CATransaction begin];
-#endif
     // By default, mutating a CALayer property triggers an animation which
     // smoothly transitions the property to the new value. We don't need these
     // animations, and this call turns them off:
     [CATransaction setDisableActions:YES];
   }
-  ~AutoCATransaction() {
-#ifdef XP_MACOSX
-    [NSAnimationContext endGrouping];
-#else
-    [CATransaction commit];
-#endif
-  }
+  ~AutoCATransaction() { [NSAnimationContext endGrouping]; }
 };
 
 /* static */ already_AddRefed<NativeLayerRootCA>
@@ -196,9 +178,9 @@ static CALayer* MakeOffscreenRootCALayer() {
   // down).
   AutoCATransaction transaction;
   CALayer* layer = [CALayer layer];
-  layer.position = CGPointZero;
-  layer.bounds = CGRectZero;
-  layer.anchorPoint = CGPointZero;
+  layer.position = NSZeroPoint;
+  layer.bounds = NSZeroRect;
+  layer.anchorPoint = NSZeroPoint;
   layer.contentsGravity = kCAGravityTopLeft;
   layer.masksToBounds = YES;
   layer.geometryFlipped = YES;
@@ -365,7 +347,6 @@ bool NativeLayerRootCA::CommitToScreen() {
 }
 
 UniquePtr<NativeLayerRootSnapshotter> NativeLayerRootCA::CreateSnapshotter() {
-#ifdef XP_MACOSX
   MutexAutoLock lock(mMutex);
   MOZ_RELEASE_ASSERT(!mWeakSnapshotter,
                      "No NativeLayerRootSnapshotter for this NativeLayerRoot "
@@ -377,19 +358,14 @@ UniquePtr<NativeLayerRootSnapshotter> NativeLayerRootCA::CreateSnapshotter() {
     mWeakSnapshotter = cr.get();
   }
   return cr;
-#else
-  return nullptr;
-#endif
 }
 
-#ifdef XP_MACOSX
 void NativeLayerRootCA::OnNativeLayerRootSnapshotterDestroyed(
     NativeLayerRootSnapshotterCA* aNativeLayerRootSnapshotter) {
   MutexAutoLock lock(mMutex);
   MOZ_RELEASE_ASSERT(mWeakSnapshotter == aNativeLayerRootSnapshotter);
   mWeakSnapshotter = nullptr;
 }
-#endif
 
 void NativeLayerRootCA::CommitOffscreen() {
   MutexAutoLock lock(mMutex);
@@ -463,7 +439,7 @@ void NativeLayerRootCA::Representation::Commit(
     mustRebuild |= layer->WillUpdateAffectLayers(aRepresentation);
     layer->ApplyChanges(aRepresentation, NativeLayerCA::UpdateType::All);
     CALayer* caLayer = layer->UnderlyingCALayer(aRepresentation);
-    if (!caLayer.masksToBounds || !CGRectIsEmpty(caLayer.bounds)) {
+    if (!caLayer.masksToBounds || !NSIsEmptyRect(caLayer.bounds)) {
       // This layer has an extent. If it didn't before, we need to rebuild.
       mustRebuild |= !layer->HasExtent();
       layer->SetHasExtent(true);
@@ -496,7 +472,6 @@ void NativeLayerRootCA::Representation::Commit(
   mMutatedLayerStructure = false;
 }
 
-#ifdef XP_MACOSX
 /* static */ UniquePtr<NativeLayerRootSnapshotterCA>
 NativeLayerRootSnapshotterCA::Create(NativeLayerRootCA* aLayerRoot,
                                      CALayer* aRootCALayer) {
@@ -523,7 +498,6 @@ NativeLayerRootSnapshotterCA::Create(NativeLayerRootCA* aLayerRoot,
       new NativeLayerRootSnapshotterCA(aLayerRoot, std::move(gl),
                                        aRootCALayer));
 }
-#endif
 
 void NativeLayerRootCA::DumpLayerTreeToFile(const char* aPath) {
   MutexAutoLock lock(mMutex);
@@ -667,7 +641,6 @@ VideoLowPowerType NativeLayerRootCA::CheckVideoLowPower(
   return VideoLowPowerType::LowPower;
 }
 
-#ifdef XP_MACOSX
 NativeLayerRootSnapshotterCA::NativeLayerRootSnapshotterCA(
     NativeLayerRootCA* aLayerRoot, RefPtr<GLContext>&& aGL,
     CALayer* aRootCALayer)
@@ -806,7 +779,6 @@ NativeLayerRootSnapshotterCA::CreateAsyncReadbackBuffer(const IntSize& aSize) {
                    LOCAL_GL_STREAM_READ);
   return MakeAndAddRef<AsyncReadbackBufferNLRS>(mGL, aSize, bufferHandle);
 }
-#endif
 
 NativeLayerCA::NativeLayerCA(const IntSize& aSize, bool aIsOpaque,
                              SurfacePoolHandleCA* aSurfacePoolHandle)
@@ -1485,10 +1457,8 @@ static NSString* NSStringForOSType(OSType type) {
   CFRelease(surfaceValues);
 
   if (aBuffer) {
-#ifdef XP_MACOSX
     CGColorSpaceRef colorSpace = CVImageBufferGetColorSpace(aBuffer);
     NSLog(@"ColorSpace is %@.\n", colorSpace);
-#endif
 
     CFDictionaryRef bufferAttachments =
         CVBufferGetAttachments(aBuffer, kCVAttachmentMode_ShouldPropagate);
@@ -1542,7 +1512,7 @@ bool NativeLayerCA::Representation::EnqueueSurface(IOSurfaceRef aSurfaceRef) {
     return false;
   }
 
-#if defined(NIGHTLY_BUILD) && defined(XP_MACOSX)
+#ifdef NIGHTLY_BUILD
   if (StaticPrefs::gfx_core_animation_specialize_video_check_color_space()) {
     // Ensure the resulting pixel buffer has a color space. If it doesn't, then
     // modify the surface and create the buffer again.
@@ -1794,10 +1764,10 @@ bool NativeLayerCA::Representation::ApplyChanges(
     mOpaquenessTintLayer.contentsGravity = kCAGravityTopLeft;
     if (aIsOpaque) {
       mOpaquenessTintLayer.backgroundColor =
-          CGColorCreateGenericRGB(0, 1, 0, 0.5);
+          [[[NSColor greenColor] colorWithAlphaComponent:0.5] CGColor];
     } else {
       mOpaquenessTintLayer.backgroundColor =
-          CGColorCreateGenericRGB(1, 0, 0, 0.5);
+          [[[NSColor redColor] colorWithAlphaComponent:0.5] CGColor];
     }
     [mWrappingCALayer addSublayer:mOpaquenessTintLayer];
   } else if (!shouldTintOpaqueness && mOpaquenessTintLayer) {

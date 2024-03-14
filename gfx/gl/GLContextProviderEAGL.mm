@@ -39,10 +39,56 @@ GLContextEAGL::~GLContextEAGL() {
 
   MarkDestroyed();
 
+  if (mLayer) {
+    mLayer = nil;
+  }
+
   if (mContext) {
     [EAGLContext setCurrentContext:nil];
     [mContext release];
   }
+}
+
+bool GLContextEAGL::AttachToWindow(nsIWidget* aWidget) {
+  // This should only be called once
+  MOZ_ASSERT(!mBackbufferFB && !mBackbufferRB);
+
+  UIView* view =
+      reinterpret_cast<UIView*>(aWidget->GetNativeData(NS_NATIVE_WIDGET));
+
+  if (!view) {
+    MOZ_CRASH("no view!");
+  }
+
+  mLayer = [view layer];
+
+  fGenFramebuffers(1, &mBackbufferFB);
+  return RecreateRB();
+}
+
+bool GLContextEAGL::RecreateRB() {
+  MakeCurrent();
+
+  CAEAGLLayer* layer = (CAEAGLLayer*)mLayer;
+
+  if (mBackbufferRB) {
+    // It doesn't seem to be enough to just call renderbufferStorage: below,
+    // we apparently have to recreate the RB.
+    fDeleteRenderbuffers(1, &mBackbufferRB);
+    mBackbufferRB = 0;
+  }
+
+  fGenRenderbuffers(1, &mBackbufferRB);
+  fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, mBackbufferRB);
+
+  [mContext renderbufferStorage:LOCAL_GL_RENDERBUFFER fromDrawable:layer];
+
+  fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mBackbufferFB);
+  fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_COLOR_ATTACHMENT0,
+                           LOCAL_GL_RENDERBUFFER, mBackbufferRB);
+
+  return LOCAL_GL_FRAMEBUFFER_COMPLETE ==
+         fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
 }
 
 bool GLContextEAGL::MakeCurrentImpl() const {
@@ -128,20 +174,29 @@ static RefPtr<GLContext> CreateEAGLContext(const GLContextDesc& desc,
 already_AddRefed<GLContext> GLContextProviderEAGL::CreateForCompositorWidget(
     CompositorWidget* aCompositorWidget, bool aHardwareWebRender,
     bool aForceAccelerated) {
-  CreateContextFlags flags = CreateContextFlags::ALLOW_OFFLINE_RENDERER;
-  if (aForceAccelerated) {
-    flags |= CreateContextFlags::FORBID_SOFTWARE;
+  if (!aCompositorWidget) {
+    MOZ_ASSERT(false);
+    return nullptr;
   }
-  if (!aHardwareWebRender) {
-    flags |= CreateContextFlags::REQUIRE_COMPAT_PROFILE;
+
+  const GLContextDesc desc = {};
+  auto glContext = CreateEAGLContext(desc, GetGlobalContextEAGL());
+  if (!glContext) {
+    return nullptr;
   }
-  nsCString failureUnused;
-  return CreateHeadless({flags}, &failureUnused);
+
+  if (!GLContextEAGL::Cast(glContext)->AttachToWindow(
+          aCompositorWidget->RealWidget())) {
+    return nullptr;
+  }
+
+  return glContext.forget();
 }
 
 already_AddRefed<GLContext> GLContextProviderEAGL::CreateHeadless(
     const GLContextCreateDesc& createDesc, nsACString* const out_failureId) {
   auto desc = GLContextDesc{createDesc};
+  desc.isOffscreen = true;
   return CreateEAGLContext(desc, GetGlobalContextEAGL()).forget();
 }
 

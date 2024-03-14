@@ -63,7 +63,7 @@ class MemoryOrShmem;
 class D3D11RecycleAllocator;
 class D3D11YCbCrRecycleAllocator;
 #endif
-#ifdef XP_DARWIN
+#ifdef XP_MACOSX
 class MacIOSurfaceRecycleAllocator;
 #endif
 class SurfaceDescriptorBuffer;
@@ -80,7 +80,7 @@ class GLImage;
 class SharedRGBImage;
 #ifdef MOZ_WIDGET_ANDROID
 class SurfaceTextureImage;
-#elif defined(XP_DARWIN)
+#elif defined(XP_MACOSX)
 class MacIOSurfaceImage;
 #elif MOZ_WIDGET_GTK
 class DMABUFSurfaceImage;
@@ -159,7 +159,7 @@ class Image {
 #ifdef MOZ_WIDGET_ANDROID
   virtual SurfaceTextureImage* AsSurfaceTextureImage() { return nullptr; }
 #endif
-#ifdef XP_DARWIN
+#ifdef XP_MACOSX
   virtual MacIOSurfaceImage* AsMacIOSurfaceImage() { return nullptr; }
 #endif
   virtual PlanarYCbCrImage* AsPlanarYCbCrImage() { return nullptr; }
@@ -530,7 +530,7 @@ class ImageContainer final : public SupportsThreadSafeWeakPtr<ImageContainer> {
       KnowsCompositor* aKnowsCompositor);
 #endif
 
-#ifdef XP_DARWIN
+#ifdef XP_MACOSX
   already_AddRefed<MacIOSurfaceRecycleAllocator>
   GetMacIOSurfaceRecycleAllocator();
 #endif
@@ -618,7 +618,7 @@ class ImageContainer final : public SupportsThreadSafeWeakPtr<ImageContainer> {
   RefPtr<D3D11YCbCrRecycleAllocator> mD3D11YCbCrRecycleAllocator
       MOZ_GUARDED_BY(mRecursiveMutex);
 #endif
-#ifdef XP_DARWIN
+#ifdef XP_MACOSX
   RefPtr<MacIOSurfaceRecycleAllocator> mMacIOSurfaceRecycleAllocator
       MOZ_GUARDED_BY(mRecursiveMutex);
 #endif

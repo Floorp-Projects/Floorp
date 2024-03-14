@@ -34,7 +34,7 @@
 #include "nsProxyRelease.h"
 #include "nsISupportsUtils.h"  // for NS_IF_ADDREF
 
-#ifdef XP_DARWIN
+#ifdef XP_MACOSX
 #  include "MacIOSurfaceImage.h"
 #endif
 
@@ -563,7 +563,7 @@ ImageContainer::GetD3D11YCbCrRecycleAllocator(
 }
 #endif
 
-#ifdef XP_DARWIN
+#ifdef XP_MACOSX
 already_AddRefed<MacIOSurfaceRecycleAllocator>
 ImageContainer::GetMacIOSurfaceRecycleAllocator() {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
