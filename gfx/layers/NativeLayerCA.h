@@ -6,7 +6,7 @@
 #ifndef mozilla_layers_NativeLayerCA_h
 #define mozilla_layers_NativeLayerCA_h
 
-#include <IOSurface/IOSurface.h>
+#include <IOSurface/IOSurfaceRef.h>
 
 #include <deque>
 #include <unordered_map>
@@ -39,7 +39,9 @@ class RenderMacIOSurfaceTextureHost;
 
 namespace layers {
 
+#ifdef XP_MACOSX
 class NativeLayerRootSnapshotterCA;
+#endif
 class SurfacePoolHandleCA;
 
 enum class VideoLowPowerType {
@@ -102,8 +104,10 @@ class NativeLayerRootCA : public NativeLayerRoot {
   bool CommitToScreen() override;
 
   void CommitOffscreen();
+#ifdef XP_MACOSX
   void OnNativeLayerRootSnapshotterDestroyed(
       NativeLayerRootSnapshotterCA* aNativeLayerRootSnapshotter);
+#endif
 
   // Enters a mode during which CommitToScreen(), when called on a non-main
   // thread, will not apply any updates to the CALayer tree.
@@ -160,7 +164,9 @@ class NativeLayerRootCA : public NativeLayerRoot {
   Mutex mMutex MOZ_UNANNOTATED;  // protects all other fields
   Representation mOnscreenRepresentation;
   Representation mOffscreenRepresentation;
+#ifdef XP_MACOSX
   NativeLayerRootSnapshotterCA* mWeakSnapshotter = nullptr;
+#endif
   nsTArray<RefPtr<NativeLayerCA>> mSublayers;  // in z-order
   float mBackingScale = 1.0f;
   bool mMutated = false;
@@ -188,6 +194,7 @@ class NativeLayerRootCA : public NativeLayerRoot {
 
 class RenderSourceNLRS;
 
+#ifdef XP_MACOSX
 class NativeLayerRootSnapshotterCA final : public NativeLayerRootSnapshotter {
  public:
   static UniquePtr<NativeLayerRootSnapshotterCA> Create(
@@ -217,6 +224,7 @@ class NativeLayerRootSnapshotterCA final : public NativeLayerRootSnapshotter {
   RefPtr<RenderSourceNLRS> mSnapshot;
   CARenderer* mRenderer = nullptr;  // strong
 };
+#endif
 
 // NativeLayerCA wraps a CALayer and lets you draw to it. It ensures that only
 // fully-drawn frames make their way to the screen, by maintaining a swap chain
