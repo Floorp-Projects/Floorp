@@ -31,7 +31,7 @@
 #  include "mozilla/webrender/RenderCompositorNative.h"
 #endif
 
-#ifdef XP_DARWIN
+#ifdef XP_MACOSX
 #  include "mozilla/webrender/RenderCompositorNative.h"
 #endif
 
@@ -168,7 +168,7 @@ void wr_partial_present_compositor_set_buffer_damage_region(
 UniquePtr<RenderCompositor> RenderCompositor::Create(
     const RefPtr<widget::CompositorWidget>& aWidget, nsACString& aError) {
   if (aWidget->GetCompositorOptions().UseSoftwareWebRender()) {
-#ifdef XP_DARWIN
+#ifdef XP_MACOSX
     // Mac uses NativeLayerCA
     if (!gfxPlatform::IsHeadless()) {
       return RenderCompositorNativeSWGL::Create(aWidget, aError);
@@ -216,7 +216,7 @@ UniquePtr<RenderCompositor> RenderCompositor::Create(
 #if defined(MOZ_WIDGET_ANDROID)
   // RenderCompositorOGL is not used on android
   return nullptr;
-#elif defined(XP_DARWIN)
+#elif defined(XP_MACOSX)
   // Mac uses NativeLayerCA
   return RenderCompositorNativeOGL::Create(aWidget, aError);
 #else

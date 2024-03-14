@@ -69,7 +69,6 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] in ("cocoa", "uikit"):
         "UnscaledFontMac.h",
     ]
     UNIFIED_SOURCES += [
-        "MacIOSurface.cpp",
         "NativeFontResourceMac.cpp",
         "ScaledFontMac.cpp",
     ]
@@ -188,6 +187,11 @@ UNIFIED_SOURCES += [
 SOURCES += [
     "InlineTranslator.cpp",
 ]
+
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
+    SOURCES += [
+        "MacIOSurface.cpp",
+    ]
 
 if CONFIG["TARGET_CPU"] == "aarch64" or CONFIG["BUILD_ARM_NEON"]:
     SOURCES += [

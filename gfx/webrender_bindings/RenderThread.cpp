@@ -1398,7 +1398,7 @@ RenderThread::GetProgramsForCompositorOGL() {
 }
 
 RefPtr<layers::SurfacePool> RenderThread::SharedSurfacePool() {
-#if defined(XP_DARWIN) || defined(MOZ_WAYLAND)
+#if defined(XP_MACOSX) || defined(MOZ_WAYLAND)
   if (!mSurfacePool) {
     size_t poolSizeLimit =
         StaticPrefs::gfx_webrender_compositor_surface_pool_size_AtStartup();
@@ -1575,7 +1575,7 @@ static already_AddRefed<gl::GLContext> CreateGLContextEGL() {
 }
 #endif
 
-#ifdef XP_DARWIN
+#ifdef XP_MACOSX
 static already_AddRefed<gl::GLContext> CreateGLContextCGL() {
   nsCString failureUnused;
   return gl::GLContextProvider::CreateHeadless(
@@ -1598,7 +1598,7 @@ static already_AddRefed<gl::GLContext> CreateGLContext(nsACString& aError) {
   if (gfx::gfxVars::UseEGL()) {
     gl = CreateGLContextEGL();
   }
-#elif XP_DARWIN
+#elif XP_MACOSX
   gl = CreateGLContextCGL();
 #endif
 
