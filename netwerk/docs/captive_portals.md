@@ -26,7 +26,7 @@ The [CaptivePortalService](https://searchfox.org/mozilla-central/source/netwerk/
     - A captive portal was detected, and internet connectivity is not currently available.
     - A [captive portal notification bar](https://searchfox.org/mozilla-central/source/browser/base/content/browser-captivePortal.js) might be displayed to the user.
 
-The Captive portal service uses [CaptiveDetect.sys.mjs](https://searchfox.org/mozilla-central/source/toolkit/components/captivedetect/CaptiveDetect.jsm) to perform the checks, which in turn uses XMLHttpRequest.
+The Captive portal service uses [CaptiveDetect.sys.mjs](https://searchfox.org/mozilla-central/source/toolkit/components/captivedetect/CaptiveDetect.sys.mjs) to perform the checks, which in turn uses XMLHttpRequest.
 This request needs to be exempted from HTTPS upgrades, DNS over HTTPS, and many new browser features in order to function as expected.
 
 ```{note}

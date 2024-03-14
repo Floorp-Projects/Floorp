@@ -595,7 +595,7 @@ UniqueChars Statistics::formatDetailedTotals() const {
 void Statistics::formatJsonSlice(size_t sliceNum, JSONPrinter& json) const {
   /*
    * We number each of the slice properties to keep the code in
-   * GCTelemetry.jsm in sync.  See MAX_SLICE_KEYS.
+   * GCTelemetry.sys.mjs in sync.  See MAX_SLICE_KEYS.
    */
   json.beginObject();
   formatJsonSliceDescription(sliceNum, slices_[sliceNum], json);  // # 1-11
