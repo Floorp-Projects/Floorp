@@ -37,6 +37,9 @@ skip-if = ["os == 'linux' && bits == 64"] # Bug 1757875
 ["browser_aboutwelcome_multistage_mr.js"]
 skip-if = ["os == 'linux' && bits == 64 && debug"] # Bug 1812050
 
+["browser_aboutwelcome_multistage_transitions.js"]
+skip-if = ["debug"] # Bug 1875203
+
 ["browser_aboutwelcome_multistage_video.js"]
 
 ["browser_aboutwelcome_observer.js"]
@@ -50,11 +53,10 @@ skip-if = [
 
 ["browser_aboutwelcome_screen_targeting.js"]
 
+["browser_aboutwelcome_toolbar_button.js"]
+
 ["browser_aboutwelcome_upgrade_multistage_mr.js"]
 skip-if = [
   "win11_2009 && debug",
   "os == 'linux' && debug", # Bug 1804804 - disabled on win && linux for extremely high failure rate
 ]
-
-["browser_aboutwelcome_multistage_transitions.js"]
-skip-if = ["debug"] # Bug 1875203
