@@ -232,6 +232,33 @@ function runClipboardCacheTests(aIsSupportGetFromCachedTransferable) {
       await testClipboardData(await asyncGetClipboardData(type), clipboardData);
     });
 
+    add_task(async function test_flavorList_order() {
+      info(`test_flavorList_order with pref ` +
+           `${aIsSupportGetFromCachedTransferable ? "enabled" : "disabled"}`);
+
+      const trans = generateNewTransferable("text/plain", generateRandomString());
+      addStringToTransferable("text/html", `<div>${generateRandomString()}</div>`, trans);
+
+      info(`Writedata to clipboard ${type}`);
+      clipboard.setData(trans, null, type);
+
+      // Read with reverse order.
+      let flavors = trans.flavorsTransferableCanExport().reverse();
+      let request = await asyncGetClipboardData(type, flavors);
+      // XXX Not all clipboard type supports html format, e.g. kFindClipboard
+      // on macOS only support writing text/plain.
+      if (
+        navigator.platform.includes("Mac") &&
+        type == clipboard.kFindClipboard &&
+        !aIsSupportGetFromCachedTransferable &&
+        !SpecialPowers.isHeadless
+      ) {
+        isDeeply(request.flavorList, ["text/plain"], "check flavor orders");
+      } else {
+        isDeeply(request.flavorList, flavors, "check flavor orders");
+      }
+    });
+
     // Test sync set clipboard data.
     testClipboardCache(type, false, aIsSupportGetFromCachedTransferable);
 

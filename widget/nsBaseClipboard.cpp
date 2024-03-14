@@ -840,8 +840,8 @@ nsBaseClipboard::MaybeCreateGetRequestFromClipboardCache(
   }
 
   nsTArray<nsCString> results;
-  for (const auto& transferableFlavor : transferableFlavors) {
-    for (const auto& flavor : aFlavorList) {
+  for (const auto& flavor : aFlavorList) {
+    for (const auto& transferableFlavor : transferableFlavors) {
       // XXX We need special check for image as we always put the
       // image as "native" on the clipboard.
       if (transferableFlavor.Equals(flavor) ||
