@@ -641,17 +641,44 @@ let gAddTasksWithRustSetup;
 /**
  * Adds two tasks: One with the Rust backend disabled and one with it enabled.
  * The names of the task functions will be the name of the passed-in task
- * function appended with "_rustDisabled" and "_rustEnabled" respectively. Call
- * with the usual `add_task()` arguments.
+ * function appended with "_rustDisabled" and "_rustEnabled". If the passed-in
+ * task doesn't have a name, "anonymousTask" will be used.
+ *
+ * Call this with the usual `add_task()` arguments. Additionally, an object with
+ * the following properties can be specified as any argument:
+ *
+ * {boolean} skip_if_rust_enabled
+ *   If true, a "_rustEnabled" task won't be added. Useful when Rust is enabled
+ *   by default but the task doesn't make sense with Rust and you still want to
+ *   test some behavior when Rust is disabled.
  *
  * @param {...any} args
  *   The usual `add_task()` arguments.
  */
 function add_tasks_with_rust(...args) {
+  let skipIfRustEnabled = false;
+  let i = args.findIndex(a => a.skip_if_rust_enabled);
+  if (i >= 0) {
+    skipIfRustEnabled = true;
+    args.splice(i, 1);
+  }
+
   let taskFnIndex = args.findIndex(a => typeof a == "function");
   let taskFn = args[taskFnIndex];
 
   for (let rustEnabled of [false, true]) {
+    let newTaskName =
+      (taskFn.name || "anonymousTask") +
+      (rustEnabled ? "_rustEnabled" : "_rustDisabled");
+
+    if (rustEnabled && skipIfRustEnabled) {
+      info(
+        "add_tasks_with_rust: Skipping due to skip_if_rust_enabled: " +
+          newTaskName
+      );
+      continue;
+    }
+
     let newTaskFn = async (...taskFnArgs) => {
       info("add_tasks_with_rust: Setting rustEnabled: " + rustEnabled);
       UrlbarPrefs.set("quicksuggest.rustEnabled", rustEnabled);
@@ -674,6 +701,18 @@ function add_tasks_with_rust(...args) {
           "add_tasks_with_rust: Calling original task function: " + taskFn.name
         );
         rv = await taskFn(...taskFnArgs);
+      } catch (e) {
+        // Clearly report any unusual errors to make them easier to spot and to
+        // make the flow of the test clearer. The harness throws NS_ERROR_ABORT
+        // when a normal assertion fails, so don't report that.
+        if (e.result != Cr.NS_ERROR_ABORT) {
+          Assert.ok(
+            false,
+            "add_tasks_with_rust: The original task function threw an error: " +
+              e
+          );
+        }
+        throw e;
       } finally {
         info(
           "add_tasks_with_rust: Done calling original task function: " +
@@ -691,11 +730,15 @@ function add_tasks_with_rust(...args) {
       return rv;
     };
 
-    Object.defineProperty(newTaskFn, "name", {
-      value: taskFn.name + (rustEnabled ? "_rustEnabled" : "_rustDisabled"),
-    });
-    let addTaskArgs = [...args];
-    addTaskArgs[taskFnIndex] = newTaskFn;
+    Object.defineProperty(newTaskFn, "name", { value: newTaskName });
+
+    let addTaskArgs = [];
+    for (let j = 0; j < args.length; j++) {
+      addTaskArgs[j] =
+        j == taskFnIndex
+          ? newTaskFn
+          : Cu.cloneInto(args[j], this, { cloneFunctions: true });
+    }
     add_task(...addTaskArgs);
   }
 }
