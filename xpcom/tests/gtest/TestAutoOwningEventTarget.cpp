@@ -70,7 +70,7 @@ void CheckAutoOwningEventTarget(
 
 }  // namespace
 
-TEST(TestAutoOwningEventTarget, DISABLED_Simple)
+TEST(TestAutoOwningEventTarget, Simple)
 {
   {
     nsAutoOwningEventTarget autoOwningEventTarget;
@@ -81,7 +81,7 @@ TEST(TestAutoOwningEventTarget, DISABLED_Simple)
   }
 }
 
-TEST(TestAutoOwningEventTarget, DISABLED_TaskQueue)
+TEST(TestAutoOwningEventTarget, TaskQueue)
 {
   nsresult rv;
   nsCOMPtr<nsIEventTarget> threadPool =
