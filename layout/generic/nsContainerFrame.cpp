@@ -1124,7 +1124,6 @@ void nsContainerFrame::ReflowOverflowContainerChildren(
     // isn't dirty.
     if (shouldReflowAllKids || frame->IsSubtreeDirty() ||
         ScrollableOverflowExceedsAvailableBSize(frame)) {
-      // Get prev-in-flow
       nsIFrame* prevInFlow = frame->GetPrevInFlow();
       NS_ASSERTION(prevInFlow,
                    "overflow container frame must have a prev-in-flow");
@@ -1132,15 +1131,8 @@ void nsContainerFrame::ReflowOverflowContainerChildren(
           frame->HasAnyStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER),
           "overflow container frame must have overflow container bit set");
       WritingMode wm = frame->GetWritingMode();
-      nsSize containerSize =
-          aContainerSize ? *aContainerSize
-                         : aReflowInput.AvailableSize(wm).GetPhysicalSize(wm);
-      LogicalRect prevRect = prevInFlow->GetLogicalRect(wm, containerSize);
-
-      // Initialize reflow params
-      LogicalSize availSpace(wm, prevRect.ISize(wm),
+      LogicalSize availSpace(wm, prevInFlow->ISize(wm),
                              aReflowInput.AvailableSize(wm).BSize(wm));
-      ReflowOutput desiredSize(aReflowInput);
 
       StyleSizeOverrides sizeOverride;
       if (frame->IsFlexItem()) {
@@ -1152,18 +1144,22 @@ void nsContainerFrame::ReflowOverflowContainerChildren(
         sizeOverride.mStyleISize.emplace(
             StyleSize::LengthPercentage(LengthPercentage::FromAppUnits(
                 frame->StylePosition()->mBoxSizing == StyleBoxSizing::Border
-                    ? prevRect.ISize(wm)
+                    ? prevInFlow->ISize(wm)
                     : prevInFlow->ContentISize(wm))));
 
         // An overflow container's block-size must be 0.
         sizeOverride.mStyleBSize.emplace(
             StyleSize::LengthPercentage(LengthPercentage::FromAppUnits(0)));
       }
+      ReflowOutput desiredSize(wm);
       ReflowInput reflowInput(aPresContext, aReflowInput, frame, availSpace,
                               Nothing(), {}, sizeOverride);
-
-      LogicalPoint pos(wm, prevRect.IStart(wm), 0);
+      const nsSize containerSize =
+          aContainerSize ? *aContainerSize
+                         : aReflowInput.AvailableSize(wm).GetPhysicalSize(wm);
+      const LogicalPoint pos(wm, prevInFlow->IStart(wm, containerSize), 0);
       nsReflowStatus frameStatus;
+
       ReflowChild(frame, aPresContext, desiredSize, reflowInput, wm, pos,
                   containerSize, aFlags, frameStatus, &tracker);
       FinishReflowChild(frame, aPresContext, desiredSize, &reflowInput, wm, pos,
