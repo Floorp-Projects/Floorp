@@ -70,7 +70,7 @@ function PROT_ListManager() {
   this.updateCheckers_ = {};
   this.requestBackoffs_ = {};
 
-  // This is only used by testcases to ensure SafeBrowsing.jsm is inited
+  // This is only used by testcases to ensure SafeBrowsing.sys.mjs is inited
   this.registered = false;
 
   this.dbService_ = Cc["@mozilla.org/url-classifier/dbservice;1"].getService(

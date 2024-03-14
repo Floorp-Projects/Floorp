@@ -20,7 +20,7 @@ var logConsole;
 function log(msg) {
   if (!logConsole) {
     logConsole = console.createInstance({
-      prefix: "RFPHelper.jsm",
+      prefix: "RFPHelper",
       maxLogLevelPref: "privacy.resistFingerprinting.jsmloglevel",
     });
   }

@@ -3783,7 +3783,7 @@ int NS_main(int argc, NS_tchar** argv) {
           }
           // Set an error so we don't get into an update loop when the callback
           // runs. This will be reset to pending by handleUpdateFailure in
-          // UpdateService.jsm.
+          // UpdateService.sys.mjs.
           WriteStatusFile(SILENT_UPDATE_NEEDED_ELEVATION_ERROR);
           LOG(("Skipping update to avoid UAC prompt from background task."));
           output_finish();

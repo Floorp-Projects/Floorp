@@ -787,7 +787,7 @@ var contentScripts = new DefaultWeakMap(matcher => {
  * An execution context for semi-privileged extension content scripts.
  *
  * This is the child side of the ContentScriptContextParent class
- * defined in ExtensionParent.jsm.
+ * defined in ExtensionParent.sys.mjs.
  */
 class ContentScriptContextChild extends BaseContext {
   constructor(extension, contentWindow) {

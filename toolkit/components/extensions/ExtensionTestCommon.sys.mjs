@@ -100,7 +100,7 @@ export class MockExtension {
     this._extensionPromise.then(extension => {
       extension.on(...args);
     });
-    // Extension.jsm emits a "startup" event on |extension| before emitting the
+    // Extension.sys.mjs emits a "startup" event on |extension| before emitting the
     // "startup" event on |apiManager|. Trigger the "startup" event anyway, to
     // make sure that the MockExtension behaves like an Extension with regards
     // to the startup event.

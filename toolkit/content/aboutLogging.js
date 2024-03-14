@@ -50,7 +50,7 @@ function moduleEnvVarPresent() {
  *   as markers.
  *
  * [1]: The keys of the `presets` object defined in
- * https://searchfox.org/mozilla-central/source/devtools/client/performance-new/shared/background.jsm.js
+ * https://searchfox.org/mozilla-central/source/devtools/client/performance-new/shared/background.sys.mjs
  */
 
 const gOsSpecificLoggingPresets = (() => {
