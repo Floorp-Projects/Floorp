@@ -182,6 +182,7 @@ export const SpecialMessageActions = {
   setPref(pref) {
     // Array of prefs that are allowed to be edited by SET_PREF
     const allowedPrefs = [
+      "browser.aboutwelcome.didSeeFinalScreen",
       "browser.dataFeatureRecommendations.enabled",
       "browser.migrate.content-modal.about-welcome-behavior",
       "browser.migrate.content-modal.import-all.enabled",

@@ -263,6 +263,7 @@ toolbarbutton.bookmark-item:not(.subviewbutton) {
 #bookmarks-toolbar-placeholder > .toolbarbutton-icon,
 #PlacesToolbarItems > .bookmark-item > .toolbarbutton-icon[label]:not([label=""]),
 #PersonalToolbar #import-button > .toolbarbutton-icon,
+#PersonalToolbar #aboutwelcome-button > .toolbarbutton-icon,
 #OtherBookmarks.bookmark-item[container] > .toolbarbutton-icon {
   margin-inline-end: 4px;
 }
