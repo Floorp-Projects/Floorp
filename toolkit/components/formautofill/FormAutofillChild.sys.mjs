@@ -579,9 +579,9 @@ export class FormAutofillChild extends JSWindowActorChild {
       return;
     }
 
-    // Unregister the progress listener since we detected a form submission
-    // (domWin is null in unit tests)
-    this.unregisterProgressListener();
+    // Unregister the form submission listeners after handling a form submission
+    this.debug("Unregistering form submission listeners");
+    this.unregisterFormSubmissionListeners();
 
     [records.address, records.creditCard].forEach((rs, idx) => {
       lazy.AutofillTelemetry.recordSubmittedSectionCount(
