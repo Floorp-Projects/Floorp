@@ -2616,6 +2616,9 @@ existing_tasks:
   upload-symbols-dummy-devedition-macosx64-devedition: AeYpgYaIRfmdjFrKPOO9uA
   upload-symbols-dummy-firefox-macosx64-shippable: Trr26UFNQGmPT-hfxc8X9Q
   valgrind-linux64-valgrind-qr/opt-swr: VZTkrQ1hTHO7ldWwbQUd4g
+files_changed:
+  - dom/html/HTMLDetailsElement.cpp
+  - gfx/thebes/gfxUserFontSet.cpp
 filters:
   - target_tasks_method
 head_ref: 2251a5bd1148826e0c1e6b3d0c5c6985f6284372

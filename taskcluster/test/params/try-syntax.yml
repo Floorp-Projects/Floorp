@@ -8,8 +8,11 @@ next_version: null
 do_not_optimize: []
 enable_always_target: true
 existing_tasks: {}
+files_changed:
+  - dom/html/HTMLDetailsElement.cpp
+  - gfx/thebes/gfxUserFontSet.cpp
 filters:
-    - target_tasks_method
+  - target_tasks_method
 head_ref: 482ccd66d49e0e4a0d260ca872f770df4983ccea
 head_repository: https://hg.mozilla.org/try
 head_rev: 482ccd66d49e0e4a0d260ca872f770df4983ccea
@@ -32,24 +35,24 @@ release_enable_emefree: false
 target_tasks_method: try_tasks
 try_mode: try_option_syntax
 try_options:
-    artifact: false
-    build_types: do
-    env: null
-    include_nightly: false
-    interactive: false
-    jobs: null
-    raptor: null
-    raptor_trigger_tests: null
-    no_retry: false
-    notifications: null
-    platforms: linux64
-    profile: false
-    tag: null
-    talos: none
-    talos_trigger_tests: 1
-    taskcluster_worker: false
-    trigger_tests: 1
-    unittests: none
+  artifact: false
+  build_types: do
+  env: null
+  include_nightly: false
+  interactive: false
+  jobs: null
+  raptor: null
+  raptor_trigger_tests: null
+  no_retry: false
+  notifications: null
+  platforms: linux64
+  profile: false
+  tag: null
+  talos: none
+  talos_trigger_tests: 1
+  taskcluster_worker: false
+  trigger_tests: 1
+  unittests: none
 try_task_config: {}
 release_type: "nightly"
 release_product: null

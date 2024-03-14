@@ -1728,6 +1728,9 @@ existing_tasks:
   upload-generated-sources-win64-shippable/opt: ObsHfOu6QhaQaOyJbezeVQ
   upload-symbols-dummy-firefox-macosx64-shippable: KogndV7fRwWgGPtpOPE3lQ
   valgrind-linux64-valgrind-qr/opt-swr: b4r2-6N-R1mctQYfMmvo_Q
+files_changed:
+  - dom/html/HTMLDetailsElement.cpp
+  - gfx/thebes/gfxUserFontSet.cpp
 filters:
   - target_tasks_method
 head_ref: 07abd36f38ed80ea2d96b8bc58a38af3de126234
