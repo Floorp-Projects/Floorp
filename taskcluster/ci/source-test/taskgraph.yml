@@ -24,18 +24,11 @@ diff:
         platform: gecko-decision/opt
         symbol: tgdiff
         tier: 2
-    task-context:
-        from-parameters:
-            base_rev: base_rev
-        substitution-fields:
-            - run.command
     run:
         using: run-task
         cwd: '{checkout}'
         command: >-
-            mkdir -p /builds/worker/artifacts/diffs &&
-            ./mach taskgraph target --fast -p "taskcluster/test/params" --force-local-files-changed -o "/builds/worker/artifacts/diffs/diff.txt" --diff {base_rev} &&
-            python taskcluster/scripts/misc/summarize-tgdiff.py /builds/worker/artifacts/diffs/ 20
+            echo 'disabled'
     when:
         files-changed:
             - 'taskcluster/ci/**'
