@@ -1006,7 +1006,6 @@ void js::gc::PerformIncrementalPreWriteBarrier(TenuredCell* cell) {
   // runtime for cells in atoms zone.
 
   Zone* zone = cell->zoneFromAnyThread();
-  MOZ_ASSERT(zone->needsIncrementalBarrier());
 
   MOZ_ASSERT(cell);
   if (cell->isMarkedBlack()) {
@@ -1023,6 +1022,7 @@ void js::gc::PerformIncrementalPreWriteBarrier(TenuredCell* cell) {
     return;
   }
 
+  MOZ_ASSERT(zone->needsIncrementalBarrier());
   MOZ_ASSERT(CurrentThreadIsMainThread());
   MOZ_ASSERT(!JS::RuntimeHeapIsMajorCollecting());
 
