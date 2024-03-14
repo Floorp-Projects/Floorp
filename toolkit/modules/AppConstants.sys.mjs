@@ -5,10 +5,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const lazy = {};
-ChromeUtils.defineModuleGetter(lazy, "AddonManager", "resource://gre/modules/AddonManager.jsm");
-
-// Immutable for export.
+/**
+ * AppConstants is a set of immutable constants that are defined at build time.
+ * These should not depend on any other JavaScript module.
+ */
 export var AppConstants = Object.freeze({
   // See this wiki page for more details about channel specific build
   // defines: https://wiki.mozilla.org/Platform/Channel-specific_build_defines
@@ -292,16 +292,19 @@ export var AppConstants = Object.freeze({
   false,
 #endif
 
-  get MOZ_UNSIGNED_SCOPES() {
-    let result = 0;
+  MOZ_UNSIGNED_APP_SCOPE:
 #ifdef MOZ_UNSIGNED_APP_SCOPE
-    result |= lazy.AddonManager.SCOPE_APPLICATION;
+  true,
+#else
+  false,
 #endif
+
+  MOZ_UNSIGNED_SYSTEM_SCOPE:
 #ifdef MOZ_UNSIGNED_SYSTEM_SCOPE
-    result |= lazy.AddonManager.SCOPE_SYSTEM;
+  true,
+#else
+  false,
 #endif
-    return result;
-  },
 
   MOZ_ALLOW_ADDON_SIDELOAD:
 #ifdef MOZ_ALLOW_ADDON_SIDELOAD

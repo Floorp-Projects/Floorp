@@ -99,6 +99,17 @@ const PREF_SELECTED_THEME = "extensions.activeThemeID";
 
 const TOOLKIT_ID = "toolkit@mozilla.org";
 
+ChromeUtils.defineLazyGetter(lazy, "MOZ_UNSIGNED_SCOPES", () => {
+  let result = 0;
+  if (AppConstants.MOZ_UNSIGNED_APP_SCOPE) {
+    result |= AddonManager.SCOPE_APPLICATION;
+  }
+  if (AppConstants.MOZ_UNSIGNED_SYSTEM_SCOPE) {
+    result |= AddonManager.SCOPE_SYSTEM;
+  }
+  return result;
+});
+
 /**
  * Returns a nsIFile instance for the given path, relative to the given
  * base file, if provided.
@@ -881,10 +892,7 @@ function shouldVerifySignedState(aAddonType, aLocation) {
     return true;
   }
 
-  if (
-    aLocation.isBuiltin ||
-    aLocation.scope & AppConstants.MOZ_UNSIGNED_SCOPES
-  ) {
+  if (aLocation.isBuiltin || aLocation.scope & lazy.MOZ_UNSIGNED_SCOPES) {
     return false;
   }
 
