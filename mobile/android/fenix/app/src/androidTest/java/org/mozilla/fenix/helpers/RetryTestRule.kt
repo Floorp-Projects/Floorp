@@ -32,6 +32,7 @@ class RetryTestRule(private val retryCount: Int = 5) : TestRule {
                     base.evaluate()
                     break
                 } catch (t: AssertionError) {
+                    Log.i(TAG, "RetryTestRule: AssertionError caught, retrying the UI test")
                     unregisterAllIdlingResources()
                     exitMenu()
                     if (i == retryCount) {
@@ -39,6 +40,7 @@ class RetryTestRule(private val retryCount: Int = 5) : TestRule {
                         throw t
                     }
                 } catch (t: AssertionFailedError) {
+                    Log.i(TAG, "RetryTestRule: AssertionFailedError caught, retrying the UI test")
                     unregisterAllIdlingResources()
                     exitMenu()
                     if (i == retryCount) {
@@ -46,6 +48,7 @@ class RetryTestRule(private val retryCount: Int = 5) : TestRule {
                         throw t
                     }
                 } catch (t: UiObjectNotFoundException) {
+                    Log.i(TAG, "RetryTestRule: UiObjectNotFoundException caught, retrying the UI test")
                     unregisterAllIdlingResources()
                     exitMenu()
                     if (i == retryCount) {
@@ -53,6 +56,7 @@ class RetryTestRule(private val retryCount: Int = 5) : TestRule {
                         throw t
                     }
                 } catch (t: NoMatchingViewException) {
+                    Log.i(TAG, "RetryTestRule: NoMatchingViewException caught, retrying the UI test")
                     unregisterAllIdlingResources()
                     exitMenu()
                     if (i == retryCount) {
@@ -60,6 +64,7 @@ class RetryTestRule(private val retryCount: Int = 5) : TestRule {
                         throw t
                     }
                 } catch (t: IdlingResourceTimeoutException) {
+                    Log.i(TAG, "RetryTestRule: IdlingResourceTimeoutException caught, retrying the UI test")
                     unregisterAllIdlingResources()
                     exitMenu()
                     if (i == retryCount) {
@@ -67,6 +72,7 @@ class RetryTestRule(private val retryCount: Int = 5) : TestRule {
                         throw t
                     }
                 } catch (t: RuntimeException) {
+                    Log.i(TAG, "RetryTestRule: RuntimeException caught, retrying the UI test")
                     unregisterAllIdlingResources()
                     exitMenu()
                     if (i == retryCount) {
@@ -74,6 +80,7 @@ class RetryTestRule(private val retryCount: Int = 5) : TestRule {
                         throw t
                     }
                 } catch (t: NullPointerException) {
+                    Log.i(TAG, "RetryTestRule: NullPointerException caught, retrying the UI test")
                     unregisterAllIdlingResources()
                     exitMenu()
                     if (i == retryCount) {
