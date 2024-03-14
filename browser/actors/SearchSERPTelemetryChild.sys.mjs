@@ -1009,7 +1009,7 @@ class SearchAdImpression {
  *  page that contain domains we want to extract.
  * @property {string} method
  *  A string representing which domain extraction heuristic to use.
- *  One of: "href" or "data-attribute".
+ *  One of: "href", "dataAttribute" or "textContent".
  * @property {object | null} options
  *  Options related to the domain extraction heuristic used.
  * @property {string | null} options.dataAttributeKey
@@ -1067,13 +1067,17 @@ class DomainExtractor {
           );
           break;
         }
-        case "data-attribute": {
+        case "dataAttribute": {
           this.#fromElementsRetrieveDataAttributeValues(
             elements,
             providerName,
             extractorInfo.options?.dataAttributeKey,
             extractedDomains
           );
+          break;
+        }
+        case "textContent": {
+          this.#fromElementsRetrieveTextContent(elements, extractedDomains);
           break;
         }
       }
@@ -1180,6 +1184,43 @@ class DomainExtractor {
       value = this.#processDomain(value, providerName);
       if (value && !extractedDomains.has(value)) {
         extractedDomains.add(value);
+      }
+    }
+  }
+
+  /* Given a list of elements, examine the text content for each element, which
+   * may be 1) a URL from which we can extract a domain or 2) text we can fix
+   * up to create a best guess as to a URL. If either condition is met, we add
+   * the domain to the result set.
+   *
+   * @param {NodeList<Element>} elements
+   *  A list of elements from the page whose text content we want to inspect.
+   * @param {Set<string>} extractedDomains
+   *  The result set of domains extracted from the page.
+   */
+  #fromElementsRetrieveTextContent(elements, extractedDomains) {
+    for (let element of elements) {
+      if (this.#exceedsThreshold(extractedDomains.size)) {
+        return;
+      }
+      let textContent = element.textContent;
+      if (!textContent) {
+        continue;
+      }
+
+      let domain;
+      try {
+        domain = new URL(textContent).hostname;
+      } catch (e) {
+        domain = textContent.toLowerCase().replaceAll(" ", "");
+        // If the attempt to turn the text content into a URL object only fails
+        // because we're missing a protocol, ".com" may already be present.
+        if (!domain.endsWith(".com")) {
+          domain = domain.concat(".com");
+        }
+      }
+      if (!extractedDomains.has(domain)) {
+        extractedDomains.add(domain);
       }
     }
   }
