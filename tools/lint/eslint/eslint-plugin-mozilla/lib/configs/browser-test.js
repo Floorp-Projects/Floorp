@@ -79,6 +79,7 @@ module.exports = {
       {
         exceptions: [
           "^http:\\/\\/mochi\\.test?.*",
+          "^http:\\/\\/mochi\\.xorigin-test?.*",
           "^http:\\/\\/localhost?.*",
           "^http:\\/\\/127\\.0\\.0\\.1?.*",
           // Exempt xmlns urls

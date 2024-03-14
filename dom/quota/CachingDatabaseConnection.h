@@ -14,6 +14,7 @@
 #include "nscore.h"
 #include "nsHashKeys.h"
 #include "nsInterfaceHashtable.h"
+#include "nsISupportsImpl.h"
 #include "nsString.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
@@ -67,8 +68,9 @@ class CachingDatabaseConnection {
   class LazyStatement;
 
   void AssertIsOnConnectionThread() const {
-#ifdef CACHING_DB_CONNECTION_CHECK_THREAD_OWNERSHIP
-    mOwningThread->AssertOwnership("CachingDatabaseConnection not thread-safe");
+#ifdef MOZ_THREAD_SAFETY_OWNERSHIP_CHECKS_SUPPORTED
+    mOwningEventTarget->AssertOwnership(
+        "CachingDatabaseConnection not thread-safe");
 #endif
   }
 
@@ -125,8 +127,8 @@ class CachingDatabaseConnection {
   void Close();
 
  private:
-#ifdef CACHING_DB_CONNECTION_CHECK_THREAD_OWNERSHIP
-  LazyInitializedOnce<const nsAutoOwningThread> mOwningThread;
+#ifdef MOZ_THREAD_SAFETY_OWNERSHIP_CHECKS_SUPPORTED
+  LazyInitializedOnce<const nsAutoOwningEventTarget> mOwningEventTarget;
 #endif
 
   LazyInitializedOnceEarlyDestructible<

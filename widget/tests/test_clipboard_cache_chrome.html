@@ -37,7 +37,12 @@ function testClipboardCache(aClipboardType, aAsync, aIsSupportGetFromCachedTrans
     addStringToTransferable("text/foo", string, trans);
     // XXX macOS caches the transferable to implement kSelectionCache type, too,
     // so it behaves differently than other types.
-    if (aClipboardType == clipboard.kSelectionCache && !aIsSupportGetFromCachedTransferable) {
+    if (
+      navigator.platform.includes("Mac") &&
+      aClipboardType == clipboard.kSelectionCache &&
+      !aIsSupportGetFromCachedTransferable &&
+      !SpecialPowers.isHeadless
+    ) {
       todo_is(getClipboardData("text/foo", aClipboardType),
               aIsSupportGetFromCachedTransferable ? string : null,
               `Check text/foo data on clipboard ${aClipboardType}`);
@@ -66,7 +71,12 @@ function testClipboardCache(aClipboardType, aAsync, aIsSupportGetFromCachedTrans
        `Check text/plain data on clipboard ${aClipboardType} again`);
     // XXX macOS caches the transferable to implement kSelectionCache type, too,
     // so it behaves differently than other types.
-    if (aClipboardType == clipboard.kSelectionCache && !aIsSupportGetFromCachedTransferable) {
+    if (
+      navigator.platform.includes("Mac") &&
+      aClipboardType == clipboard.kSelectionCache &&
+      !aIsSupportGetFromCachedTransferable &&
+      !SpecialPowers.isHeadless
+    ) {
       todo_is(getClipboardData("text/foo", aClipboardType),
               aIsSupportGetFromCachedTransferable ? string : null,
               `Check text/foo data on clipboard ${aClipboardType} again`);
@@ -118,7 +128,12 @@ function runClipboardCacheTests(aIsSupportGetFromCachedTransferable) {
          `Check if there is text/plain flavor on clipboard ${type}`);
       // XXX macOS caches the transferable to implement kSelectionCache type, too,
       // so it behaves differently than other types.
-      if (type == clipboard.kSelectionCache && !aIsSupportGetFromCachedTransferable) {
+      if (
+        navigator.platform.includes("Mac") &&
+        type == clipboard.kSelectionCache &&
+        !aIsSupportGetFromCachedTransferable &&
+        !SpecialPowers.isHeadless
+      ) {
         todo_is(clipboard.hasDataMatchingFlavors(["text/foo"], type),
                 aIsSupportGetFromCachedTransferable,
                 `Check if there is text/foo flavor on clipboard ${type}`);
@@ -147,7 +162,12 @@ function runClipboardCacheTests(aIsSupportGetFromCachedTransferable) {
          `Check if there is text/plain flavor on clipboard ${type}`);
       // XXX macOS caches the transferable to implement kSelectionCache type, too,
       // so it behaves differently than other types.
-      if (type == clipboard.kSelectionCache && !aIsSupportGetFromCachedTransferable) {
+      if (
+        navigator.platform.includes("Mac") &&
+        type == clipboard.kSelectionCache &&
+        !aIsSupportGetFromCachedTransferable &&
+        !SpecialPowers.isHeadless
+      ) {
         todo_is(clipboard.hasDataMatchingFlavors(["text/foo"], type),
                 aIsSupportGetFromCachedTransferable,
                 `Check if there is text/foo flavor on clipboard ${type}`);
@@ -210,6 +230,33 @@ function runClipboardCacheTests(aIsSupportGetFromCachedTransferable) {
 
       info(`Check data on clipboard ${type} again`);
       await testClipboardData(await asyncGetClipboardData(type), clipboardData);
+    });
+
+    add_task(async function test_flavorList_order() {
+      info(`test_flavorList_order with pref ` +
+           `${aIsSupportGetFromCachedTransferable ? "enabled" : "disabled"}`);
+
+      const trans = generateNewTransferable("text/plain", generateRandomString());
+      addStringToTransferable("text/html", `<div>${generateRandomString()}</div>`, trans);
+
+      info(`Writedata to clipboard ${type}`);
+      clipboard.setData(trans, null, type);
+
+      // Read with reverse order.
+      let flavors = trans.flavorsTransferableCanExport().reverse();
+      let request = await asyncGetClipboardData(type, flavors);
+      // XXX Not all clipboard type supports html format, e.g. kFindClipboard
+      // on macOS only support writing text/plain.
+      if (
+        navigator.platform.includes("Mac") &&
+        type == clipboard.kFindClipboard &&
+        !aIsSupportGetFromCachedTransferable &&
+        !SpecialPowers.isHeadless
+      ) {
+        isDeeply(request.flavorList, ["text/plain"], "check flavor orders");
+      } else {
+        isDeeply(request.flavorList, flavors, "check flavor orders");
+      }
     });
 
     // Test sync set clipboard data.

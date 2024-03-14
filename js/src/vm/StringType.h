@@ -297,7 +297,10 @@ class JSString : public js::gc::CellWithLengthAndFlags {
    * If LATIN1_CHARS_BIT is set, the string's characters are stored as Latin1
    * instead of TwoByte. This flag can also be set for ropes, if both the
    * left and right nodes are Latin1. Flattening will result in a Latin1
-   * string in this case.
+   * string in this case. When we flatten a TwoByte rope, we turn child ropes
+   * (including Latin1 ropes) into TwoByte dependent strings. If one of these
+   * strings is also part of another Latin1 rope tree, we can have a Latin1 rope
+   * with a TwoByte descendent.
    *
    * The other flags store the string's type. Instead of using a dense index
    * to represent the most-derived type, string types are encoded to allow
@@ -385,6 +388,15 @@ class JSString : public js::gc::CellWithLengthAndFlags {
   static_assert((TYPE_FLAGS_MASK & js::gc::HeaderWord::RESERVED_MASK) == 0,
                 "GC reserved bits must not be used for Strings");
 
+  // Linear strings:
+  // - Content and representation are Latin-1 characters.
+  // - Unmodifiable after construction.
+  //
+  // Ropes:
+  // - Content are Latin-1 characters.
+  // - Flag may be cleared when the rope is changed into a dependent string.
+  //
+  // Also see LATIN1_CHARS_BIT description under "Flag Encoding".
   static const uint32_t LATIN1_CHARS_BIT = js::Bit(9);
 
   // Whether this atom's characters store an uint32 index value less than or

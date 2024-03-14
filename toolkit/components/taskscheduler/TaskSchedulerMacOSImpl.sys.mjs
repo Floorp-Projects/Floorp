@@ -36,7 +36,7 @@ ChromeUtils.defineLazyGetter(lazy, "log", () => {
 /**
  * Task generation and management for macOS, using `launchd` via `launchctl`.
  *
- * Implements the API exposed in TaskScheduler.jsm
+ * Implements the API exposed in TaskScheduler.sys.mjs
  * Not intended for external use, this is in a separate module to ship the code only
  * on macOS, and to expose for testing.
  */

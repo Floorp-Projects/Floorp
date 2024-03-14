@@ -321,6 +321,10 @@ inline JSRope::JSRope(JSString* left, JSString* right, size_t length) {
   // |length| must be the sum of the length of both child nodes.
   MOZ_ASSERT(left->length() + right->length() == length);
 
+  // |isLatin1| is set when both children are guaranteed to contain only Latin-1
+  // characters. Note that flattening either rope child can clear the Latin-1
+  // flag of that child, so it's possible that a Latin-1 rope can end up with
+  // both children being two-byte (dependent) strings.
   bool isLatin1 = left->hasLatin1Chars() && right->hasLatin1Chars();
 
   // Do not try to make a rope that could fit inline.

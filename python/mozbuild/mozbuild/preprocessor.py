@@ -29,7 +29,6 @@ import re
 import sys
 from optparse import OptionParser
 
-import six
 from mozpack.path import normsep
 
 from mozbuild.makeutil import Makefile
@@ -50,9 +49,11 @@ def _to_text(a):
     # We end up converting a lot of different types (text_type, binary_type,
     # int, etc.) to Unicode in this script. This function handles all of those
     # possibilities.
-    if isinstance(a, (six.text_type, six.binary_type)):
-        return six.ensure_text(a)
-    return six.text_type(a)
+    if isinstance(a, bytes):
+        return a.decode()
+    if isinstance(a, str):
+        return a
+    return str(a)
 
 
 def path_starts_with(path, prefix):
@@ -540,9 +541,7 @@ class Preprocessor:
                     self.processFile(input=input_, output=out)
             if depfile:
                 mk = Makefile()
-                mk.create_rule([six.ensure_text(options.output)]).add_dependencies(
-                    self.includes
-                )
+                mk.create_rule([options.output]).add_dependencies(self.includes)
                 mk.dump(depfile)
                 depfile.close()
 
@@ -712,7 +711,7 @@ class Preprocessor:
         except Exception:
             # XXX do real error reporting
             raise Preprocessor.Error(self, "SYNTAX_ERR", args)
-        if isinstance(val, six.text_type) or isinstance(val, six.binary_type):
+        if isinstance(val, (str, bytes)):
             # we're looking for a number value, strings are false
             val = False
         if not val:
@@ -802,7 +801,7 @@ class Preprocessor:
         for i in range(1, len(lst), 2):
             lst[i] = vsubst(lst[i])
         lst.append("\n")  # add back the newline
-        self.write(six.moves.reduce(lambda x, y: x + y, lst, ""))
+        self.write("".join(lst))
 
     def do_literal(self, args):
         self.write(args + "\n")
@@ -863,7 +862,7 @@ class Preprocessor:
         args can either be a file name, or a file-like object.
         Files should be opened, and will be closed after processing.
         """
-        isName = isinstance(args, six.string_types)
+        isName = isinstance(args, str)
         oldCheckLineNumbers = self.checkLineNumbers
         self.checkLineNumbers = False
         if isName:
@@ -895,7 +894,7 @@ class Preprocessor:
         else:
             abspath = os.path.abspath(args.name)
             self.curdir = os.path.dirname(abspath)
-            self.includes.add(six.ensure_text(abspath))
+            self.includes.add(abspath)
             if self.topobjdir and path_starts_with(abspath, self.topobjdir):
                 abspath = "$OBJDIR" + normsep(abspath[len(self.topobjdir) :])
             elif self.topsrcdir and path_starts_with(abspath, self.topsrcdir):

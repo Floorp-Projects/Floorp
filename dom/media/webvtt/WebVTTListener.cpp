@@ -65,7 +65,7 @@ nsresult WebVTTListener::LoadResource() {
   if (IsCanceled()) {
     return NS_OK;
   }
-  // Exit if we failed to create the WebVTTParserWrapper (vtt.jsm)
+  // Exit if we failed to create the WebVTTParserWrapper (vtt.sys.mjs)
   NS_ENSURE_SUCCESS(mParserWrapperError, mParserWrapperError);
 
   mElement->SetReadyState(TextTrackReadyState::Loading);

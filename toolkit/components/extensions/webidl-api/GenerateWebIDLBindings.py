@@ -139,8 +139,8 @@ def read_json(json_file_path):
     """
     Helper function used to read the WebExtensions API schema JSON files
     by ignoring the license comment on the top of some of those files.
-    Same helper as the one available in Schemas.jsm:
-    https://searchfox.org/mozilla-central/rev/3434a9df60373a997263107e6f124fb164ddebf2/toolkit/components/extensions/Schemas.jsm#70
+    Same helper as the one available in Schemas.sys.mjs:
+    https://searchfox.org/mozilla-central/rev/b60cb73160843adb5a5a3ec8058e75a69b46acf7/toolkit/components/extensions/Schemas.sys.mjs#53
     """
     with open(json_file_path) as json_file:
         txt = json_file.read()

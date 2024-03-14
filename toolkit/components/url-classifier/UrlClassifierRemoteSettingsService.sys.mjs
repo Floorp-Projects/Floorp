@@ -55,7 +55,7 @@ UrlClassifierRemoteSettingsService.prototype = {
     });
   },
 
-  // Parse the update request. See UrlClassifierListManager.jsm makeUpdateRequest
+  // Parse the update request. See UrlClassifierListManager.sys.mjs makeUpdateRequest
   // for more details about how we build the update request.
   //
   // @param aRequest the request payload of the update request

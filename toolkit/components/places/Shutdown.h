@@ -28,8 +28,8 @@ class Database;
 
  * PHASE 2 (Modern clients shutdown)
  * Modern clients should instead register as a blocker by passing a promise to
- * nsINavHistoryService::shutdownClient (for example see Sanitizer.jsm), so they
- * block Places shutdown until the promise is resolved.
+ * nsINavHistoryService::shutdownClient (for example see Sanitizer.sys.mjs), so
+ * they block Places shutdown until the promise is resolved.
  * When profile-change-teardown is observed by async shutdown, it calls
  * ClientsShutdownBlocker::BlockShutdown. This class is registered as a teardown
  * phase blocker in Database::Init (see Database::mClientsShutdown).

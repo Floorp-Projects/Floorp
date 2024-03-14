@@ -185,7 +185,7 @@ import { Log } from "resource://gre/modules/Log.sys.mjs";
 const LOGGER_ID = "addons.xpi";
 
 // Create a new logger for use by all objects in this Addons XPI Provider module
-// (Requires AddonManager.jsm)
+// (Requires AddonManager.sys.mjs)
 var logger = Log.repository.getLogger(LOGGER_ID);
 
 /**
