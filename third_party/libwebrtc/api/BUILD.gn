@@ -1425,12 +1425,12 @@ if (rtc_include_tests) {
       ":time_controller",
       "../call",
       "../call:call_interfaces",
-      "../call:rtp_interfaces",
       "../pc:media_factory",
       "../rtc_base:checks",
       "../system_wrappers",
       "../test/time_controller",
       "environment",
+      "environment:environment_factory",
     ]
     absl_deps = [ "//third_party/abseil-cpp/absl/base:nullability" ]
   }
