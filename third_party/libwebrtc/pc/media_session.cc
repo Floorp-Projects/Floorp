@@ -1881,11 +1881,13 @@ MediaSessionDescriptionFactory::CreateOfferOrError(
     // Be conservative and signal using both a=msid and a=ssrc lines. Unified
     // Plan answerers will look at a=msid and Plan B answerers will look at the
     // a=ssrc MSID line.
-    offer->set_msid_signaling(cricket::kMsidSignalingMediaSection |
+    offer->set_msid_signaling(cricket::kMsidSignalingSemantic |
+                              cricket::kMsidSignalingMediaSection |
                               cricket::kMsidSignalingSsrcAttribute);
   } else {
     // Plan B always signals MSID using a=ssrc lines.
-    offer->set_msid_signaling(cricket::kMsidSignalingSsrcAttribute);
+    offer->set_msid_signaling(cricket::kMsidSignalingSemantic |
+                              cricket::kMsidSignalingSsrcAttribute);
   }
 
   offer->set_extmap_allow_mixed(session_options.offer_extmap_allow_mixed);
@@ -2058,7 +2060,9 @@ MediaSessionDescriptionFactory::CreateAnswerOrError(
   if (is_unified_plan_) {
     // Unified Plan needs to look at what the offer included to find the most
     // compatible answer.
-    if (offer->msid_signaling() == 0) {
+    int msid_signaling = offer->msid_signaling();
+    if (msid_signaling == cricket::kMsidSignalingNotUsed ||
+        msid_signaling == cricket::kMsidSignalingSemantic) {
       // We end up here in one of three cases:
       // 1. An empty offer. We'll reply with an empty answer so it doesn't
       //    matter what we pick here.
@@ -2067,23 +2071,26 @@ MediaSessionDescriptionFactory::CreateAnswerOrError(
       // 3. Media that's either sendonly or inactive from the remote endpoint.
       //    We don't have any information to say whether the endpoint is Plan B
       //    or Unified Plan, so be conservative and send both.
-      answer->set_msid_signaling(cricket::kMsidSignalingMediaSection |
+      answer->set_msid_signaling(cricket::kMsidSignalingSemantic |
+                                 cricket::kMsidSignalingMediaSection |
                                  cricket::kMsidSignalingSsrcAttribute);
-    } else if (offer->msid_signaling() ==
-               (cricket::kMsidSignalingMediaSection |
-                cricket::kMsidSignalingSsrcAttribute)) {
+    } else if (msid_signaling == (cricket::kMsidSignalingSemantic |
+                                  cricket::kMsidSignalingMediaSection |
+                                  cricket::kMsidSignalingSsrcAttribute)) {
       // If both a=msid and a=ssrc MSID signaling methods were used, we're
       // probably talking to a Unified Plan endpoint so respond with just
       // a=msid.
-      answer->set_msid_signaling(cricket::kMsidSignalingMediaSection);
+      answer->set_msid_signaling(cricket::kMsidSignalingSemantic |
+                                 cricket::kMsidSignalingMediaSection);
     } else {
       // Otherwise, it's clear which method the offerer is using so repeat that
       // back to them.
-      answer->set_msid_signaling(offer->msid_signaling());
+      answer->set_msid_signaling(msid_signaling);
     }
   } else {
     // Plan B always signals MSID using a=ssrc lines.
-    answer->set_msid_signaling(cricket::kMsidSignalingSsrcAttribute);
+    answer->set_msid_signaling(cricket::kMsidSignalingSemantic |
+                               cricket::kMsidSignalingSsrcAttribute);
   }
 
   return answer;

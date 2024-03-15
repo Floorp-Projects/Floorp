@@ -2814,7 +2814,7 @@ TEST_F(PeerConnectionInterfaceTestPlanB,
 // This tests that a default MediaStream is not created if a remote session
 // description is updated to not have any MediaStreams.
 // Don't run under Unified Plan since this behavior is Plan B specific.
-TEST_F(PeerConnectionInterfaceTestPlanB, VerifyDefaultStreamIsNotCreated) {
+TEST_F(PeerConnectionInterfaceTestPlanB, VerifyDefaultStreamIsNotRecreated) {
   RTCConfiguration config;
   CreatePeerConnection(config);
   CreateAndSetRemoteOffer(GetSdpStringWithStream1());
@@ -2822,7 +2822,7 @@ TEST_F(PeerConnectionInterfaceTestPlanB, VerifyDefaultStreamIsNotCreated) {
   EXPECT_TRUE(
       CompareStreamCollections(observer_.remote_streams(), reference.get()));
 
-  CreateAndSetRemoteOffer(kSdpStringWithoutStreams);
+  CreateAndSetRemoteOffer(kSdpStringWithMsidWithoutStreams);
   EXPECT_EQ(0u, observer_.remote_streams()->count());
 }
 

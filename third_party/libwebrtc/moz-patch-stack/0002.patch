@@ -1489,7 +1489,7 @@ index f5e258c664..7696d82be8 100644
  
  }  // namespace webrtc
 diff --git a/pc/sdp_offer_answer.cc b/pc/sdp_offer_answer.cc
-index b61fbf5d31..1e43833a0b 100644
+index d49506a4f7..892a1d7d29 100644
 --- a/pc/sdp_offer_answer.cc
 +++ b/pc/sdp_offer_answer.cc
 @@ -1996,8 +1996,11 @@ RTCError SdpOfferAnswerHandler::ReplaceRemoteDescription(
@@ -1505,7 +1505,7 @@ index b61fbf5d31..1e43833a0b 100644
  }
  
  void SdpOfferAnswerHandler::ApplyRemoteDescription(
-@@ -4918,13 +4921,15 @@ RTCError SdpOfferAnswerHandler::PushdownTransportDescription(
+@@ -4910,13 +4913,15 @@ RTCError SdpOfferAnswerHandler::PushdownTransportDescription(
    if (source == cricket::CS_LOCAL) {
      const SessionDescriptionInterface* sdesc = local_description();
      RTC_DCHECK(sdesc);
