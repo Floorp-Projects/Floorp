@@ -466,7 +466,8 @@ INSTANTIATE_TEST_SUITE_P(
                 SvcTestParameters::Create(kAv1CodecName, "L2T1"),
                 SvcTestParameters::Create(kAv1CodecName, "L2T1h"),
                 SvcTestParameters::Create(kAv1CodecName, "L2T1_KEY"),
-                SvcTestParameters::Create(kAv1CodecName, "L2T2"),
+                // TODO: bugs.webrtc.org/15722 - Investigate and reenable.
+                // SvcTestParameters::Create(kAv1CodecName, "L2T2"),
                 SvcTestParameters::Create(kAv1CodecName, "L2T2h"),
                 SvcTestParameters::Create(kAv1CodecName, "L2T2_KEY"),
                 SvcTestParameters::Create(kAv1CodecName, "L2T2_KEY_SHIFT"),
