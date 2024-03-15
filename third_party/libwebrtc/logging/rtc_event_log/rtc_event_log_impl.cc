@@ -56,10 +56,9 @@ RtcEventLogImpl::RtcEventLogImpl(std::unique_ptr<RtcEventLogEncoder> encoder,
       max_config_events_in_history_(max_config_events_in_history),
       event_encoder_(std::move(encoder)),
       last_output_ms_(rtc::TimeMillis()),
-      task_queue_(
-          std::make_unique<rtc::TaskQueue>(task_queue_factory->CreateTaskQueue(
-              "rtc_event_log",
-              TaskQueueFactory::Priority::NORMAL))) {}
+      task_queue_(task_queue_factory->CreateTaskQueue(
+          "rtc_event_log",
+          TaskQueueFactory::Priority::NORMAL)) {}
 
 RtcEventLogImpl::~RtcEventLogImpl() {
   // If we're logging to the output, this will stop that. Blocking function.
@@ -72,10 +71,12 @@ RtcEventLogImpl::~RtcEventLogImpl() {
     StopLogging();
   }
 
-  // We want to block on any executing task by invoking ~TaskQueue() before
+  // Since we are posting tasks bound to `this`, it is critical that the event
+  // log and its members outlive `task_queue_`. Destruct `task_queue_` first
+  // to ensure tasks living on the queue can access other members.
+  // We want to block on any executing task by deleting TaskQueue before
   // we set unique_ptr's internal pointer to null.
-  rtc::TaskQueue* tq = task_queue_.get();
-  delete tq;
+  task_queue_.get_deleter()(task_queue_.get());
   task_queue_.release();
 }
 
