@@ -75,6 +75,8 @@ class PropertyIteratorActor extends Actor {
           this.iterator = enumMidiInputMapEntries(objectActor);
         } else if (cls == "MIDIOutputMap") {
           this.iterator = enumMidiOutputMapEntries(objectActor);
+        } else if (cls == "CustomStateSet") {
+          this.iterator = enumCustomStateSetEntries(objectActor);
         } else {
           throw new Error(
             "Unsupported class to enumerate entries from: " + cls
@@ -658,6 +660,35 @@ function enumWeakSetEntries(objectActor) {
   };
 }
 
+function enumCustomStateSetEntries(objectActor) {
+  let raw = objectActor.obj.unsafeDereference();
+  // We need to waive `raw` as we can't get the iterator from the Xray for SetLike (See Bug 1173651).
+  // We also need to waive Xrays on the result of the call to `values` as we don't have
+  // Xrays to Iterator objects (see Bug 1023984)
+  const values = Array.from(
+    waiveXrays(CustomStateSet.prototype.values.call(waiveXrays(raw)))
+  );
+
+  return {
+    [Symbol.iterator]: function*() {
+      for (const item of values) {
+        yield gripFromEntry(objectActor, item);
+      }
+    },
+    size: values.length,
+    propertyName(index) {
+      return index;
+    },
+    propertyDescription(index) {
+      const val = values[index];
+      return {
+        enumerable: true,
+        value: gripFromEntry(objectActor, val),
+      };
+    },
+  };
+}
+
 /**
  * Returns true if the parameter can be stored as a 32-bit unsigned integer.
  * If so, it will be suitable for use as the length of an array object.
@@ -672,6 +703,7 @@ function isUint32(num) {
 
 module.exports = {
   PropertyIteratorActor,
+  enumCustomStateSetEntries,
   enumMapEntries,
   enumMidiInputMapEntries,
   enumMidiOutputMapEntries,
