@@ -2602,3 +2602,42 @@ nimbusTelemetry:
     gleanMetricConfiguration:
       description: A Glean metric configuration JSON blob.
       type: json
+
+httpsFirst:
+  description: >-
+    Prefs for HTTPS-First, which upgrades all top-level page loads to HTTPS and
+    provides a automatic fallback to HTTP if the site isn't available via HTTPS.
+  owner: mjurgens@mozilla.com, seceng-telemetry@mozilla.com
+  hasExposure: false
+  variables:
+    enabled:
+      description: Enable HTTPS-First
+      type: boolean
+      setPref:
+        branch: default
+        pref: dom.security.https_first
+    enabledPbm:
+      description: Enable HTTPS-First in private browsing only
+      type: boolean
+      setPref:
+        branch: default
+        pref: dom.security.https_first_pbm
+    enabledSchemeless:
+      description: >-
+        Enables schemeless HTTPS-First, which will only apply HTTPS-First to address
+        bar inputs without a scheme. This essentially makes HTTPS the default
+        scheme in the address bar, while providing a fallback to HTTP.
+      type: boolean
+      setPref:
+        branch: default
+        pref: dom.security.https_first_schemeless
+    backgroundTimerMs:
+      description: >-
+        After a request gets upgraded to HTTPS, specifies the time after which a
+        second HTTP request is fired to check if the site is available via
+        HTTPS, but timing out via HTTPS. This also applies to HTTPS-Only, not
+        just HTTPS-First.
+      type: int
+      setPref:
+        branch: default
+        pref: dom.security.https_only_fire_http_request_background_timer_ms
