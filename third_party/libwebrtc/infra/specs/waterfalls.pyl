@@ -576,6 +576,20 @@
           'isolated_scripts': 'desktop_tests',
         },
       },
+      'win11_debug': {
+        'os_type': 'win',
+        'mixins': ['win11', 'x86-64', 'resultdb-json-format'],
+        'test_suites': {
+          'isolated_scripts': 'desktop_tests',
+        },
+      },
+      'win11_release': {
+        'os_type': 'win',
+        'mixins': ['win11', 'x86-64', 'resultdb-json-format'],
+        'test_suites': {
+          'isolated_scripts': 'desktop_tests_tryserver',
+        },
+      },
       'win_asan': {
         'os_type': 'win',
         'mixins': ['win10', 'x86-64', 'resultdb-json-format'],
