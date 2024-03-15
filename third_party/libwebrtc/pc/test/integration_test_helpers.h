@@ -800,8 +800,7 @@ class PeerConnectionIntegrationWrapper : public PeerConnectionObserver,
       pc_factory_dependencies.event_log_factory = std::move(event_log_factory);
     } else {
       pc_factory_dependencies.event_log_factory =
-          std::make_unique<RtcEventLogFactory>(
-              pc_factory_dependencies.task_queue_factory.get());
+          std::make_unique<RtcEventLogFactory>();
     }
     peer_connection_factory_ =
         CreateModularPeerConnectionFactory(std::move(pc_factory_dependencies));

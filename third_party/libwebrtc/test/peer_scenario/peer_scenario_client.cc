@@ -248,8 +248,7 @@ PeerScenarioClient::PeerScenarioClient(
   pcf_deps.worker_thread = worker_thread_.get();
   pcf_deps.task_queue_factory =
       net->time_controller()->CreateTaskQueueFactory();
-  pcf_deps.event_log_factory =
-      std::make_unique<RtcEventLogFactory>(task_queue_factory_);
+  pcf_deps.event_log_factory = std::make_unique<RtcEventLogFactory>();
   pcf_deps.trials = std::make_unique<FieldTrialBasedConfig>();
 
   pcf_deps.adm = TestAudioDeviceModule::Create(
