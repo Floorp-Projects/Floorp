@@ -187,15 +187,17 @@ static void AddLoadFlags(nsIRequest* request, nsLoadFlags newFlags) {
 // invoked for increased scrutability.  Save the previous value on the stack.
 namespace {
 struct DebugWorkerRefs {
+  Mutex& mMutex;
   RefPtr<ThreadSafeWorkerRef> mTSWorkerRef;
   nsCString mPrev;
 
-  DebugWorkerRefs(RefPtr<ThreadSafeWorkerRef>& aTSWorkerRef,
-                  const std::string& aStatus)
-      : mTSWorkerRef(aTSWorkerRef) {
+  DebugWorkerRefs(XMLHttpRequestMainThread& aXHR, const std::string& aStatus)
+      : mMutex(aXHR.mTSWorkerRefMutex) {
+    MutexAutoLock lock(mMutex);
+
+    mTSWorkerRef = aXHR.mTSWorkerRef;
+
     if (!mTSWorkerRef) {
-      MOZ_LOG(gXMLHttpRequestLog, LogLevel::Info,
-              ("No WorkerRef during: %s", aStatus.c_str()));
       return;
     }
 
@@ -207,6 +209,8 @@ struct DebugWorkerRefs {
   }
 
   ~DebugWorkerRefs() {
+    MutexAutoLock lock(mMutex);
+
     if (!mTSWorkerRef) {
       return;
     }
@@ -214,6 +218,8 @@ struct DebugWorkerRefs {
     MOZ_ASSERT(mTSWorkerRef->Private());
 
     SET_WORKERREF_DEBUG_STATUS(mTSWorkerRef->Ref(), mPrev);
+
+    mTSWorkerRef = nullptr;
   }
 };
 }  // namespace
@@ -221,11 +227,13 @@ struct DebugWorkerRefs {
 #  define STREAM_STRING(stuff)                                    \
     (((const std::ostringstream&)(std::ostringstream() << stuff)) \
          .str())  // NOLINT
+
 #  define DEBUG_WORKERREFS \
-    DebugWorkerRefs MOZ_UNIQUE_VAR(debugWR__)(mTSWorkerRef, __func__)
+    DebugWorkerRefs MOZ_UNIQUE_VAR(debugWR__)(*this, __func__)
+
 #  define DEBUG_WORKERREFS1(x)                 \
     DebugWorkerRefs MOZ_UNIQUE_VAR(debugWR__)( \
-        mTSWorkerRef, STREAM_STRING(__func__ << ": " << x))  // NOLINT
+        *this, STREAM_STRING(__func__ << ": " << x))  // NOLINT
 
 #else
 #  define DEBUG_WORKERREFS void()
@@ -237,6 +245,9 @@ bool XMLHttpRequestMainThread::sDontWarnAboutSyncXHR = false;
 XMLHttpRequestMainThread::XMLHttpRequestMainThread(
     nsIGlobalObject* aGlobalObject)
     : XMLHttpRequest(aGlobalObject),
+#ifdef DEBUG
+      mTSWorkerRefMutex("Debug WorkerRefs"),
+#endif
       mResponseBodyDecodedPos(0),
       mResponseType(XMLHttpRequestResponseType::_empty),
       mState(XMLHttpRequest_Binding::UNSENT),

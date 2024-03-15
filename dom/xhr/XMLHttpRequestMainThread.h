@@ -450,7 +450,8 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
 
 #ifdef DEBUG
   // For logging when there's trouble
-  RefPtr<ThreadSafeWorkerRef> mTSWorkerRef = nullptr;
+  RefPtr<ThreadSafeWorkerRef> mTSWorkerRef MOZ_GUARDED_BY(mTSWorkerRefMutex);
+  Mutex mTSWorkerRefMutex;
 #endif
 
  protected:
