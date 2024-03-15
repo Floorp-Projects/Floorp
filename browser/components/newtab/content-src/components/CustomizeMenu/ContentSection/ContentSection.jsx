@@ -4,6 +4,7 @@
 
 import React from "react";
 import { actionCreators as ac } from "common/Actions.sys.mjs";
+import { SafeAnchor } from "../../DiscoveryStreamComponents/SafeAnchor/SafeAnchor";
 
 export class ContentSection extends React.PureComponent {
   constructor(props) {
@@ -96,6 +97,7 @@ export class ContentSection extends React.PureComponent {
       mayHaveSponsoredStories,
       mayHaveRecentSaves,
       openPreferences,
+      spocMessageVariant,
     } = this.props;
     const {
       topSitesEnabled,
@@ -253,6 +255,23 @@ export class ContentSection extends React.PureComponent {
             />
           </label>
         </div>
+
+        {pocketRegion &&
+          mayHaveSponsoredStories &&
+          spocMessageVariant === "variant-c" && (
+            <div className="sponsored-content-info">
+              <div className="icon icon-help"></div>
+              <div>
+                Sponsored content supports our mission to build a better web.{" "}
+                <SafeAnchor
+                  dispatch={this.props.dispatch}
+                  url="https://support.mozilla.org/kb/pocket-sponsored-stories-new-tabs"
+                >
+                  Find out how
+                </SafeAnchor>
+              </div>
+            </div>
+          )}
 
         <span className="divider" role="separator"></span>
 

@@ -1,0 +1,33 @@
+.sponsored-content-highlight {
+  float: inline-end;
+
+  .sponsored-message-icon {
+    background-image: url('chrome://activity-stream/content/data/content/assets/sponsor-message-icon.svg');
+    background-size: 18px;
+    height: 18px;
+    width: 18px;
+  }
+
+  .icon-help {
+    cursor: pointer;
+    height: 20px;
+    width: 20px;
+    background-size: 20px;
+    color: var(--icon-color);
+    vertical-align: text-bottom;
+  }
+
+  .feature-highlight-modal {
+    &.inset-inline-start {
+      &::after {
+        margin-inline-end: 11px;
+      }
+    }
+
+    &.inset-inline-end {
+      &::after {
+        margin-inline-start: 9px;
+      }
+    }
+  }
+}

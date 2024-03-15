@@ -111,6 +111,9 @@
 .icon.icon-info {
   background-image: url("chrome://global/skin/icons/info.svg");
 }
+.icon.icon-help {
+  background-image: url("chrome://global/skin/icons/help.svg");
+}
 .icon.icon-new-window {
   background-image: url("chrome://activity-stream/content/data/content/assets/glyph-newWindow-16.svg");
 }
