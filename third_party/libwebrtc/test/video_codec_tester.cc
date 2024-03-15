@@ -1016,12 +1016,17 @@ class Encoder : public EncodedImageCallback {
         ScalabilityModeToNumSpatialLayers(es.scalability_mode);
     const int num_temporal_layers =
         ScalabilityModeToNumTemporalLayers(es.scalability_mode);
+    DataRate total_bitrate = std::accumulate(
+        es.layers_settings.begin(), es.layers_settings.end(), DataRate::Zero(),
+        [](DataRate acc, const std::pair<const LayerId, LayerSettings> layer) {
+          return acc + layer.second.bitrate;
+        });
 
     VideoCodec vc;
     vc.width = top_layer_settings.resolution.width;
     vc.height = top_layer_settings.resolution.height;
-    vc.startBitrate = top_layer_settings.bitrate.kbps();
-    vc.maxBitrate = top_layer_settings.bitrate.kbps();
+    vc.startBitrate = total_bitrate.kbps();
+    vc.maxBitrate = total_bitrate.kbps();
     vc.minBitrate = 0;
     vc.maxFramerate = top_layer_settings.framerate.hertz<uint32_t>();
     vc.active = true;
@@ -1040,23 +1045,6 @@ class Encoder : public EncodedImageCallback {
             ScalabilityMode::kL1T1, ScalabilityMode::kL1T2,
             ScalabilityMode::kL1T3}[num_temporal_layers - 1]);
         vc.qpMax = cricket::kDefaultVideoMaxQpVpx;
-        if (num_spatial_layers > 1) {
-          vc.numberOfSimulcastStreams = num_spatial_layers;
-          for (int sidx = 0; sidx < num_spatial_layers; ++sidx) {
-            const LayerSettings& layer_settings = es.layers_settings.at(LayerId{
-                .spatial_idx = sidx, .temporal_idx = num_temporal_layers - 1});
-            SimulcastStream& ss = vc.simulcastStream[sidx];
-            ss.width = layer_settings.resolution.width;
-            ss.height = layer_settings.resolution.height;
-            ss.numberOfTemporalLayers = num_temporal_layers;
-            ss.maxBitrate = layer_settings.bitrate.kbps();
-            ss.targetBitrate = layer_settings.bitrate.kbps();
-            ss.minBitrate = 0;
-            ss.maxFramerate = vc.maxFramerate;
-            ss.qpMax = vc.qpMax;
-            ss.active = true;
-          }
-        }
         break;
       case kVideoCodecVP9:
         *(vc.VP9()) = VideoEncoder::GetDefaultVp9Settings();
@@ -1069,6 +1057,7 @@ class Encoder : public EncodedImageCallback {
         break;
       case kVideoCodecH264:
         *(vc.H264()) = VideoEncoder::GetDefaultH264Settings();
+        vc.H264()->SetNumberOfTemporalLayers(num_temporal_layers);
         vc.qpMax = cricket::kDefaultVideoMaxQpH26x;
         break;
       case kVideoCodecH265:
@@ -1078,6 +1067,36 @@ class Encoder : public EncodedImageCallback {
       case kVideoCodecMultiplex:
         RTC_CHECK_NOTREACHED();
         break;
+    }
+
+    bool is_simulcast =
+        num_spatial_layers > 1 &&
+        (vc.codecType == kVideoCodecVP8 || vc.codecType == kVideoCodecH264 ||
+         vc.codecType == kVideoCodecH265);
+    if (is_simulcast) {
+      vc.numberOfSimulcastStreams = num_spatial_layers;
+      for (int sidx = 0; sidx < num_spatial_layers; ++sidx) {
+        auto tl0_settings = es.layers_settings.find(
+            LayerId{.spatial_idx = sidx, .temporal_idx = 0});
+        auto tlx_settings = es.layers_settings.find(LayerId{
+            .spatial_idx = sidx, .temporal_idx = num_temporal_layers - 1});
+        DataRate total_bitrate = std::accumulate(
+            tl0_settings, tlx_settings, DataRate::Zero(),
+            [](DataRate acc,
+               const std::pair<const LayerId, LayerSettings> layer) {
+              return acc + layer.second.bitrate;
+            });
+        SimulcastStream& ss = vc.simulcastStream[sidx];
+        ss.width = tl0_settings->second.resolution.width;
+        ss.height = tl0_settings->second.resolution.height;
+        ss.numberOfTemporalLayers = num_temporal_layers;
+        ss.maxBitrate = total_bitrate.kbps();
+        ss.targetBitrate = total_bitrate.kbps();
+        ss.minBitrate = 0;
+        ss.maxFramerate = vc.maxFramerate;
+        ss.qpMax = vc.qpMax;
+        ss.active = true;
+      }
     }
 
     VideoEncoder::Settings ves(
@@ -1185,12 +1204,22 @@ class Encoder : public EncodedImageCallback {
 void ConfigureSimulcast(VideoCodec* vc) {
   int num_spatial_layers =
       ScalabilityModeToNumSpatialLayers(*vc->GetScalabilityMode());
+  int num_temporal_layers =
+      ScalabilityModeToNumTemporalLayers(*vc->GetScalabilityMode());
+
   if (num_spatial_layers == 1) {
+    SimulcastStream* ss = &vc->simulcastStream[0];
+    ss->width = vc->width;
+    ss->height = vc->height;
+    ss->numberOfTemporalLayers = num_temporal_layers;
+    ss->maxBitrate = vc->maxBitrate;
+    ss->targetBitrate = vc->maxBitrate;
+    ss->minBitrate = vc->minBitrate;
+    ss->qpMax = vc->qpMax;
+    ss->active = true;
     return;
   }
 
-  int num_temporal_layers =
-      ScalabilityModeToNumTemporalLayers(*vc->GetScalabilityMode());
   ScopedKeyValueConfig field_trials((rtc::StringBuilder()
                                      << "WebRTC-VP8ConferenceTemporalLayers/"
                                      << num_temporal_layers << "/")
@@ -1213,8 +1242,8 @@ void ConfigureSimulcast(VideoCodec* vc) {
     SimulcastStream* ss = &vc->simulcastStream[i];
     ss->width = streams[i].width;
     ss->height = streams[i].height;
-    RTC_CHECK_EQ(ss->numberOfTemporalLayers, num_temporal_layers);
-    ss->numberOfTemporalLayers = num_temporal_layers;
+    RTC_CHECK_EQ(*streams[i].num_temporal_layers, num_temporal_layers);
+    ss->numberOfTemporalLayers = *streams[i].num_temporal_layers;
     ss->maxBitrate = streams[i].max_bitrate_bps / 1000;
     ss->targetBitrate = streams[i].target_bitrate_bps / 1000;
     ss->minBitrate = streams[i].min_bitrate_bps / 1000;
@@ -1282,6 +1311,7 @@ SplitBitrateAndUpdateScalabilityMode(std::string codec_type,
     case kVideoCodecH264: {
       *(vc.H264()) = VideoEncoder::GetDefaultH264Settings();
       vc.H264()->SetNumberOfTemporalLayers(num_temporal_layers);
+      ConfigureSimulcast(&vc);
     } break;
     case kVideoCodecH265:
       break;
