@@ -650,7 +650,7 @@ function getMatchedPropsImpl(obj, match, { chainIterator, getProperties }) {
       // This uses a trick: converting a string to a number yields NaN if
       // the operation failed, and NaN is not equal to itself.
       // eslint-disable-next-line no-self-compare
-      if (+prop != +prop) {
+      if (+prop != +prop || prop === "Infinity") {
         matches.add(prop);
       }
 

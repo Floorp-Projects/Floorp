@@ -164,6 +164,7 @@ function runChecks(dbgObject, environment, sandbox) {
   info("Test that suggestions are given for '(globalThis).'");
   results = propertyProvider("(globalThis).");
   test_has_result(results, "testObject");
+  test_has_result(results, "Infinity");
 
   info(
     "Test that suggestions are given for deep 'globalThis' properties access"
@@ -705,6 +706,10 @@ function runChecks(dbgObject, environment, sandbox) {
   results = propertyProvider(`testSelfPrototypeProxy.`);
   test_has_result(results, `hello`);
   test_has_result(results, `hasOwnProperty`);
+
+  info("Test suggestion for Infinity");
+  results = propertyProvider("Inf");
+  test_has_result(results, "Infinity");
 }
 
 /**
