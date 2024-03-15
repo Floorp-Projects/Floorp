@@ -124,7 +124,13 @@ struct KeySystemConfig {
 
   // Return true if given key system is supported on the current device.
   static bool Supports(const nsAString& aKeySystem);
+
+  enum class DecryptionInfo : uint8_t {
+    Software,
+    Hardware,
+  };
   static bool CreateKeySystemConfigs(const nsAString& aKeySystem,
+                                     const DecryptionInfo aDecryption,
                                      nsTArray<KeySystemConfig>& aOutConfigs);
   static void GetGMPKeySystemConfigs(dom::Promise* aPromise);
 

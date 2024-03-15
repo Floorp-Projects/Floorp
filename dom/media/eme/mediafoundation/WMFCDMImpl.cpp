@@ -15,7 +15,8 @@
 
 namespace mozilla {
 
-bool WMFCDMImpl::GetCapabilities(nsTArray<KeySystemConfig>& aOutConfigs) {
+bool WMFCDMImpl::GetCapabilities(bool aIsHardwareDecryption,
+                                 nsTArray<KeySystemConfig>& aOutConfigs) {
   MOZ_ASSERT(NS_IsMainThread());
   if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
     return false;
@@ -37,13 +38,14 @@ bool WMFCDMImpl::GetCapabilities(nsTArray<KeySystemConfig>& aOutConfigs) {
   auto keySystem = std::string{NS_ConvertUTF16toUTF8(mKeySystem).get()};
   if (auto rv = sKeySystemConfigs.find(keySystem);
       rv != sKeySystemConfigs.end()) {
-    EME_LOG("Return cached capabilities for %s", keySystem.c_str());
     for (const auto& config : rv->second) {
-      aOutConfigs.AppendElement(config);
-      EME_LOG("-- capabilities (%s)",
-              NS_ConvertUTF16toUTF8(config.GetDebugInfo()).get());
+      if (IsHardwareDecryptionSupported(config) == aIsHardwareDecryption) {
+        EME_LOG("Return cached capabilities for %s (%s)", keySystem.c_str(),
+                NS_ConvertUTF16toUTF8(config.GetDebugInfo()).get());
+        aOutConfigs.AppendElement(config);
+        return true;
+      }
     }
-    return true;
   }
 
   // Not cached result, ask the remote process.
@@ -53,42 +55,33 @@ bool WMFCDMImpl::GetCapabilities(nsTArray<KeySystemConfig>& aOutConfigs) {
     mCDM = MakeRefPtr<MFCDMChild>(mKeySystem);
   }
   bool ok = false;
-  static const bool sIsHwSecure[2] = {false, true};
-  for (const auto& isHWSecure : sIsHwSecure) {
-    media::Await(
-        do_AddRef(backgroundTaskQueue), mCDM->GetCapabilities(isHWSecure),
-        [&ok, &aOutConfigs, keySystem,
-         isHWSecure](const MFCDMCapabilitiesIPDL& capabilities) {
-          EME_LOG("capabilities: keySystem=%s (hw-secure=%d)",
-                  keySystem.c_str(), isHWSecure);
-          for (const auto& v : capabilities.videoCapabilities()) {
-            EME_LOG("capabilities: video=%s",
-                    NS_ConvertUTF16toUTF8(v.contentType()).get());
-          }
-          for (const auto& a : capabilities.audioCapabilities()) {
-            EME_LOG("capabilities: audio=%s",
-                    NS_ConvertUTF16toUTF8(a.contentType()).get());
-          }
-          for (const auto& v : capabilities.encryptionSchemes()) {
-            EME_LOG("capabilities: encryptionScheme=%s",
-                    EncryptionSchemeStr(v));
-          }
-          KeySystemConfig* config = aOutConfigs.AppendElement();
-          MFCDMCapabilitiesIPDLToKeySystemConfig(capabilities, *config);
-          sKeySystemConfigs[keySystem].AppendElement(*config);
-          // This is equal to "com.microsoft.playready.recommendation.3000", so
-          // we can store it directly without asking the remote process again.
-          if (keySystem.compare(kPlayReadyKeySystemName) == 0 && isHWSecure) {
-            config->mKeySystem.AssignLiteral(kPlayReadyKeySystemHardware);
-            sKeySystemConfigs["com.microsoft.playready.recommendation.3000"]
-                .AppendElement(*config);
-          }
-          ok = true;
-        },
-        [](nsresult rv) {
-          EME_LOG("Fail to get key system capabilities. rv=%x", uint32_t(rv));
-        });
-  }
+  media::Await(
+      do_AddRef(backgroundTaskQueue),
+      mCDM->GetCapabilities(aIsHardwareDecryption),
+      [&ok, &aOutConfigs, keySystem,
+       aIsHardwareDecryption](const MFCDMCapabilitiesIPDL& capabilities) {
+        EME_LOG("capabilities: keySystem=%s (hw-secure=%d)", keySystem.c_str(),
+                aIsHardwareDecryption);
+        for (const auto& v : capabilities.videoCapabilities()) {
+          EME_LOG("capabilities: video=%s",
+                  NS_ConvertUTF16toUTF8(v.contentType()).get());
+        }
+        for (const auto& a : capabilities.audioCapabilities()) {
+          EME_LOG("capabilities: audio=%s",
+                  NS_ConvertUTF16toUTF8(a.contentType()).get());
+        }
+        for (const auto& v : capabilities.encryptionSchemes()) {
+          EME_LOG("capabilities: encryptionScheme=%s", EncryptionSchemeStr(v));
+        }
+        KeySystemConfig* config = aOutConfigs.AppendElement();
+        MFCDMCapabilitiesIPDLToKeySystemConfig(capabilities, *config);
+        sKeySystemConfigs[keySystem].AppendElement(*config);
+        ok = true;
+      },
+      [](nsresult rv) {
+        EME_LOG("Fail to get key system capabilities. rv=%x", uint32_t(rv));
+      });
+
   return ok;
 }
 
