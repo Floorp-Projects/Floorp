@@ -410,21 +410,23 @@ void PrioritizedPacketQueue::DequeuePacketInternal(QueuedPacket& packet) {
 }
 
 void PrioritizedPacketQueue::MaybeUpdateTopPrioLevel() {
-  if (top_active_prio_level_ == -1 ||
-      streams_by_prio_[top_active_prio_level_].empty()) {
-    // No stream queues have packets at this prio level, find top priority
-    // that is not empty.
-    if (size_packets_ == 0) {
-      top_active_prio_level_ = -1;
-    } else {
-      for (int i = 0; i < kNumPriorityLevels; ++i) {
-        PurgeOldPacketsAtPriorityLevel(i, last_update_time_);
-        if (!streams_by_prio_[i].empty()) {
-          top_active_prio_level_ = i;
-          break;
-        }
-      }
+  if (top_active_prio_level_ != -1 &&
+      !streams_by_prio_[top_active_prio_level_].empty()) {
+    return;
+  }
+  // No stream queues have packets at top_active_prio_level_, find top priority
+  // that is not empty.
+  for (int i = 0; i < kNumPriorityLevels; ++i) {
+    PurgeOldPacketsAtPriorityLevel(i, last_update_time_);
+    if (!streams_by_prio_[i].empty()) {
+      top_active_prio_level_ = i;
+      break;
     }
+  }
+  if (size_packets_ == 0) {
+    // There are no packets left to send. Last packet may have been purged. Prio
+    // will change when a new packet is pushed.
+    top_active_prio_level_ = -1;
   }
 }
 

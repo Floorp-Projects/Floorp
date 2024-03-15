@@ -519,6 +519,29 @@ TEST(PrioritizedPacketQueue, DontSendPacketsAfterTttl) {
   EXPECT_EQ(queue.SizeInPackets(), 0);
 }
 
+TEST(PrioritizedPacketQueue, SendsNewVideoPacketAfterPurgingLastOldRtxPacket) {
+  Timestamp now = Timestamp::Zero();
+  PacketQueueTTL ttls;
+  ttls.video_retransmission = TimeDelta::Millis(400);
+  PrioritizedPacketQueue queue(now, /*prioritize_audio_retransmission=*/true,
+                               ttls);
+
+  queue.Push(now,
+             CreateRetransmissionPacket(RtpPacketMediaType::kVideo, /*seq=*/1));
+  now += ttls.video_retransmission + TimeDelta::Millis(1);
+  queue.Push(now, CreatePacket(RtpPacketMediaType::kAudio, /*seq=*/2));
+  EXPECT_EQ(queue.SizeInPackets(), 2);
+  // Expect the audio packet to be send and the video retransmission packet to
+  // be dropped since it is old.
+  EXPECT_EQ(queue.Pop()->SequenceNumber(), 2);
+  EXPECT_EQ(queue.SizeInPackets(), 0);
+
+  queue.Push(now, CreatePacket(RtpPacketMediaType::kVideo, /*seq=*/3));
+  EXPECT_EQ(queue.SizeInPackets(), 1);
+  EXPECT_EQ(queue.Pop()->SequenceNumber(), 3);
+  EXPECT_EQ(queue.SizeInPackets(), 0);
+}
+
 TEST(PrioritizedPacketQueue,
      SendsPacketsAfterTttlIfPrioHigherThanPushedPackets) {
   Timestamp now = Timestamp::Zero();
