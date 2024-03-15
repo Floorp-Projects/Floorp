@@ -313,8 +313,10 @@ void AndroidVoipClient::StartSession(JNIEnv* env) {
                                             /*isSuccessful=*/false);
     return;
   }
-  rtp_socket_->SignalReadPacket.connect(
-      this, &AndroidVoipClient::OnSignalReadRTPPacket);
+  rtp_socket_->RegisterReceivedPacketCallback(
+      [&](rtc::AsyncPacketSocket* socket, const rtc::ReceivedPacket& packet) {
+        OnSignalReadRTPPacket(socket, packet);
+      });
 
   rtcp_socket_.reset(rtc::AsyncUDPSocket::Create(voip_thread_->socketserver(),
                                                  rtcp_local_address_));
@@ -324,8 +326,10 @@ void AndroidVoipClient::StartSession(JNIEnv* env) {
                                             /*isSuccessful=*/false);
     return;
   }
-  rtcp_socket_->SignalReadPacket.connect(
-      this, &AndroidVoipClient::OnSignalReadRTCPPacket);
+  rtcp_socket_->RegisterReceivedPacketCallback(
+      [&](rtc::AsyncPacketSocket* socket, const rtc::ReceivedPacket& packet) {
+        OnSignalReadRTCPPacket(socket, packet);
+      });
   Java_VoipClient_onStartSessionCompleted(env_, j_voip_client_,
                                           /*isSuccessful=*/true);
 }
@@ -467,12 +471,11 @@ void AndroidVoipClient::ReadRTPPacket(const std::vector<uint8_t>& packet_copy) {
   RTC_CHECK(result == webrtc::VoipResult::kOk);
 }
 
-void AndroidVoipClient::OnSignalReadRTPPacket(rtc::AsyncPacketSocket* socket,
-                                              const char* rtp_packet,
-                                              size_t size,
-                                              const rtc::SocketAddress& addr,
-                                              const int64_t& timestamp) {
-  std::vector<uint8_t> packet_copy(rtp_packet, rtp_packet + size);
+void AndroidVoipClient::OnSignalReadRTPPacket(
+    rtc::AsyncPacketSocket* socket,
+    const rtc::ReceivedPacket& packet) {
+  std::vector<uint8_t> packet_copy(packet.payload().begin(),
+                                   packet.payload().end());
   voip_thread_->PostTask([this, packet_copy = std::move(packet_copy)] {
     ReadRTPPacket(packet_copy);
   });
@@ -492,12 +495,11 @@ void AndroidVoipClient::ReadRTCPPacket(
   RTC_CHECK(result == webrtc::VoipResult::kOk);
 }
 
-void AndroidVoipClient::OnSignalReadRTCPPacket(rtc::AsyncPacketSocket* socket,
-                                               const char* rtcp_packet,
-                                               size_t size,
-                                               const rtc::SocketAddress& addr,
-                                               const int64_t& timestamp) {
-  std::vector<uint8_t> packet_copy(rtcp_packet, rtcp_packet + size);
+void AndroidVoipClient::OnSignalReadRTCPPacket(
+    rtc::AsyncPacketSocket* socket,
+    const rtc::ReceivedPacket& packet) {
+  std::vector<uint8_t> packet_copy(packet.payload().begin(),
+                                   packet.payload().end());
   voip_thread_->PostTask([this, packet_copy = std::move(packet_copy)] {
     ReadRTCPPacket(packet_copy);
   });
