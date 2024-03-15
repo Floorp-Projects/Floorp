@@ -135,7 +135,11 @@ already_AddRefed<StyleSheet> StyleSheet::Constructor(
 
   // 3. Set the sheet's disabled flag according to aOptions.
   sheet->SetDisabled(aOptions.mDisabled);
+  sheet->SetURLExtraData();
   sheet->SetComplete();
+
+  sheet->ReplaceSync(""_ns, aRv);
+  MOZ_ASSERT(!aRv.Failed());
 
   // 4. Return sheet.
   return sheet.forget();
@@ -770,7 +774,6 @@ void StyleSheet::ReplaceSync(const nsACString& aText, ErrorResult& aRv) {
   // 3. Parse aText into rules.
   // 4. If rules contain @imports, skip them and continue parsing.
   auto* loader = mConstructorDocument->CSSLoader();
-  SetURLExtraData();
   RefPtr<const StyleStylesheetContents> rawContent =
       Servo_StyleSheet_FromUTF8Bytes(
           loader, this,
