@@ -158,7 +158,7 @@
     },
     'ios_simulator_tests': {
       'apprtcmobile_tests': {
-        'mixins': ['xcode_parallelization']
+        'mixins': ['xcodebuild_sim_runner']
       },
       'audio_decoder_unittests': {},
       'common_audio_unittests': {},
@@ -177,10 +177,10 @@
         'mixins': ['shards-6'],
       },
       'sdk_framework_unittests': {
-        'mixins': ['xcode_parallelization']
+        'mixins': ['xcodebuild_sim_runner']
       },
       'sdk_unittests': {
-        'mixins': ['xcode_parallelization']
+        'mixins': ['xcodebuild_sim_runner']
       },
       'svc_tests': {
         'mixins': ['shards-4', 'cores-12'],
