@@ -773,7 +773,7 @@ class PeerConnectionIntegrationWrapper : public PeerConnectionObserver,
     pc_factory_dependencies.task_queue_factory =
         CreateDefaultTaskQueueFactory();
     pc_factory_dependencies.trials = std::make_unique<FieldTrialBasedConfig>();
-    pc_factory_dependencies.metronome =
+    pc_factory_dependencies.decode_metronome =
         std::make_unique<TaskQueueMetronome>(TimeDelta::Millis(8));
 
     pc_factory_dependencies.adm = fake_audio_capture_module_;

@@ -1441,6 +1441,11 @@ struct RTC_EXPORT PeerConnectionFactoryDependencies final {
   std::unique_ptr<FieldTrialsView> trials;
   std::unique_ptr<RtpTransportControllerSendFactoryInterface>
       transport_controller_send_factory;
+  // Metronome used for decoding, must be called on the worker thread.
+  std::unique_ptr<Metronome> decode_metronome;
+  // Old name for `decode_metronome`.
+  // TODO(https://crbug.com/webrtc/15704): When callers have migrated to
+  // `decode_metronome`, delete this.
   std::unique_ptr<Metronome> metronome;
 
   // Media specific dependencies. Unused when `media_factory == nullptr`.

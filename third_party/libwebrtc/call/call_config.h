@@ -68,7 +68,7 @@ struct CallConfig {
   RtpTransportControllerSendFactoryInterface*
       rtp_transport_controller_send_factory = nullptr;
 
-  Metronome* metronome = nullptr;
+  Metronome* decode_metronome = nullptr;
 
   // Enables send packet batching from the egress RTP sender.
   bool enable_send_packet_batching = false;
