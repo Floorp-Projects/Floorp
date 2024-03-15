@@ -14,7 +14,8 @@
 
 #include "api/audio/audio_frame.h"
 #include "api/audio_codecs/builtin_audio_encoder_factory.h"
-#include "api/rtc_event_log/rtc_event_log.h"
+#include "api/environment/environment.h"
+#include "api/environment/environment_factory.h"
 #include "api/scoped_refptr.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
@@ -53,18 +54,17 @@ class ChannelSendTest : public ::testing::Test {
  protected:
   ChannelSendTest()
       : time_controller_(Timestamp::Seconds(1)),
+        env_(CreateEnvironment(&field_trials_,
+                               time_controller_.GetClock(),
+                               time_controller_.CreateTaskQueueFactory())),
         transport_controller_(
-            time_controller_.GetClock(),
-            RtpTransportConfig{
-                .bitrate_config = GetBitrateConfig(),
-                .event_log = &event_log_,
-                .task_queue_factory = time_controller_.GetTaskQueueFactory(),
-                .trials = &field_trials_,
-            }) {
+            RtpTransportConfig{.env = env_,
+                               .bitrate_config = GetBitrateConfig()}) {
     channel_ = voe::CreateChannelSend(
         time_controller_.GetClock(), time_controller_.GetTaskQueueFactory(),
-        &transport_, nullptr, &event_log_, nullptr, crypto_options_, false,
-        kRtcpIntervalMs, kSsrc, nullptr, &transport_controller_, field_trials_);
+        &transport_, nullptr, &env_.event_log(), nullptr, crypto_options_,
+        false, kRtcpIntervalMs, kSsrc, nullptr, &transport_controller_,
+        env_.field_trials());
     encoder_factory_ = CreateBuiltinAudioEncoderFactory();
     SdpAudioFormat opus = SdpAudioFormat("opus", kRtpRateHz, 2);
     std::unique_ptr<AudioEncoder> encoder =
@@ -94,7 +94,7 @@ class ChannelSendTest : public ::testing::Test {
 
   GlobalSimulatedTimeController time_controller_;
   webrtc::test::ScopedKeyValueConfig field_trials_;
-  RtcEventLogNull event_log_;
+  Environment env_;
   NiceMock<MockTransport> transport_;
   CryptoOptions crypto_options_;
   RtpTransportControllerSend transport_controller_;

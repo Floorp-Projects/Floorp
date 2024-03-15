@@ -23,17 +23,14 @@ CallConfig::CallConfig(const Environment& env,
 CallConfig::CallConfig(const CallConfig& config) = default;
 
 RtpTransportConfig CallConfig::ExtractTransportConfig() const {
-  RtpTransportConfig transportConfig;
-  transportConfig.bitrate_config = bitrate_config;
-  transportConfig.event_log = &env.event_log();
-  transportConfig.network_controller_factory = network_controller_factory;
-  transportConfig.network_state_predictor_factory =
+  RtpTransportConfig transport_config = {.env = env};
+  transport_config.bitrate_config = bitrate_config;
+  transport_config.network_controller_factory = network_controller_factory;
+  transport_config.network_state_predictor_factory =
       network_state_predictor_factory;
-  transportConfig.task_queue_factory = &env.task_queue_factory();
-  transportConfig.trials = &env.field_trials();
-  transportConfig.pacer_burst_interval = pacer_burst_interval;
+  transport_config.pacer_burst_interval = pacer_burst_interval;
 
-  return transportConfig;
+  return transport_config;
 }
 
 CallConfig::~CallConfig() = default;
