@@ -4590,10 +4590,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 sendmethod, (recvlbl, recvcase) = self.genAsyncCtor(md)
             elif isctor:
                 sendmethod = self.genBlockingCtorMethod(md)
-            elif isdtor and isasync:
-                sendmethod, (recvlbl, recvcase) = self.genAsyncDtor(md)
             elif isdtor:
-                sendmethod = self.genBlockingDtorMethod(md)
+                assert isasync
+                sendmethod, (recvlbl, recvcase) = self.genDtor(md)
             elif isasync:
                 (
                     sendmethod,
@@ -4781,7 +4780,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         )
         return helper
 
-    def genAsyncDtor(self, md):
+    def genDtor(self, md):
         actorvar = ExprVar("actor")
         method = MethodDefn(self.makeDtorMethodDecl(md, actorvar))
 
@@ -4804,39 +4803,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         # until the other side acks
 
         return method, (lbl, case)
-
-    def genBlockingDtorMethod(self, md):
-        actorvar = ExprVar("actor")
-        method = MethodDefn(self.makeDtorMethodDecl(md, actorvar))
-
-        method.addstmt(self.dtorPrologue(actorvar))
-
-        msgvar, stmts = self.makeMessage(md, errfnSendDtor, actorvar)
-
-        replyvar = self.replyvar
-        sendok, sendstmts = self.sendBlocking(md, msgvar, replyvar, actorvar)
-        method.addstmts(
-            stmts
-            + [Whitespace.NL, StmtDecl(Decl(Type("UniquePtr<Message>"), replyvar.name))]
-            + sendstmts
-        )
-
-        destmts = self.deserializeReply(
-            md, replyvar, self.side, errfnSend, errfnSentinel(), actorvar
-        )
-        ifsendok = StmtIf(ExprLiteral.FALSE)
-        ifsendok.addifstmts(destmts)
-        ifsendok.addifstmts(
-            [Whitespace.NL, StmtExpr(ExprAssn(sendok, ExprLiteral.FALSE, "&="))]
-        )
-
-        method.addstmt(ifsendok)
-
-        method.addstmts(
-            self.dtorEpilogue(md, actorvar) + [Whitespace.NL, StmtReturn(sendok)]
-        )
-
-        return method
 
     def destroyActor(self, md, actorexpr, why=_DestroyReason.Deletion):
         if md and md.decl.type.isCtor():
