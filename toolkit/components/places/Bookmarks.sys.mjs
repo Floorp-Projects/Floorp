@@ -3335,42 +3335,38 @@ async function retrieveFullBookmarkPath(guid, options = {}) {
  */
 async function getBookmarkDetailMap(aGuids) {
   return lazy.PlacesUtils.withConnectionWrapper(
-    "Bookmarks.geBookmarkDetails",
+    "Bookmarks.geBookmarkDetailMap",
     async db => {
-      const rows = await db.executeCached(
-        `
-          SELECT
-            b.guid,
-            b.id,
-            b.parent,
-            IFNULL(h.frecency, 0),
-            IFNULL(h.hidden, 0),
-            IFNULL(h.visit_count, 0),
-            h.last_visit_date,
-            (
-              SELECT group_concat(pp.title ORDER BY pp.title)
-              FROM moz_bookmarks bb
-              JOIN moz_bookmarks pp ON pp.id = bb.parent
-              JOIN moz_bookmarks gg ON gg.id = pp.parent
-              WHERE bb.fk = h.id
-              AND gg.guid = '${Bookmarks.tagsGuid}'
-            ),
-            t.guid, t.id, t.title
-          FROM moz_bookmarks b
-          LEFT JOIN moz_places h ON h.id = b.fk
-          LEFT JOIN moz_bookmarks t ON t.guid = target_folder_guid(h.url)
-          WHERE b.guid IN (${lazy.PlacesUtils.sqlBindPlaceholders(aGuids)})
-          `,
-        aGuids
-      );
-
-      return new Map(
-        rows.map(row => {
-          const lastVisitDate = row.getResultByIndex(6);
-
-          return [
-            row.getResultByIndex(0),
-            {
+      let entries = new Map();
+      for (let chunk of lazy.PlacesUtils.chunkArray(aGuids, db.variableLimit)) {
+        await db.executeCached(
+          `
+            SELECT
+              b.guid,
+              b.id,
+              b.parent,
+              IFNULL(h.frecency, 0),
+              IFNULL(h.hidden, 0),
+              IFNULL(h.visit_count, 0),
+              h.last_visit_date,
+              (
+                SELECT group_concat(pp.title ORDER BY pp.title)
+                FROM moz_bookmarks bb
+                JOIN moz_bookmarks pp ON pp.id = bb.parent
+                JOIN moz_bookmarks gg ON gg.id = pp.parent
+                WHERE bb.fk = h.id
+                AND gg.guid = '${Bookmarks.tagsGuid}'
+              ),
+              t.guid, t.id, t.title
+            FROM moz_bookmarks b
+            LEFT JOIN moz_places h ON h.id = b.fk
+            LEFT JOIN moz_bookmarks t ON t.guid = target_folder_guid(h.url)
+            WHERE b.guid IN (${lazy.PlacesUtils.sqlBindPlaceholders(chunk)})
+            `,
+          chunk,
+          row => {
+            const lastVisitDate = row.getResultByIndex(6);
+            entries.set(row.getResultByIndex(0), {
               id: row.getResultByIndex(1),
               parentId: row.getResultByIndex(2),
               frecency: row.getResultByIndex(3),
@@ -3383,10 +3379,11 @@ async function getBookmarkDetailMap(aGuids) {
               targetFolderGuid: row.getResultByIndex(8),
               targetFolderItemId: row.getResultByIndex(9),
               targetFolderTitle: row.getResultByIndex(10),
-            },
-          ];
-        })
-      );
+            });
+          }
+        );
+      }
+      return entries;
     }
   );
 }
