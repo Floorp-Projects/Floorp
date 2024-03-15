@@ -416,11 +416,11 @@
           "required": ["selectors", "method"]
         }
       ]
+    },
+    "skipCount": {
+      "title": "Skip Count",
+      "description": "Whether to skip reporting of the count of these elements to ad_impressions. Defaults to false.",
+      "type": "boolean"
     }
-  },
-  "skipCount": {
-    "title": "Skip Count",
-    "description": "Whether to skip reporting of the count of these elements to ad_impressions. Defaults to false.",
-    "type": "boolean"
   }
 }
