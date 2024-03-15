@@ -52,7 +52,7 @@ static const uint32_t MAX_CENC_INIT_DATA_LENGTH = 64 * 1024;
 MediaKeySession::MediaKeySession(nsPIDOMWindowInner* aParent, MediaKeys* aKeys,
                                  const nsAString& aKeySystem,
                                  MediaKeySessionType aSessionType,
-                                 ErrorResult& aRv)
+                                 bool aHardwareDecryption, ErrorResult& aRv)
     : DOMEventTargetHelper(aParent),
       mKeys(aKeys),
       mKeySystem(aKeySystem),
@@ -61,7 +61,8 @@ MediaKeySession::MediaKeySession(nsPIDOMWindowInner* aParent, MediaKeys* aKeys,
       mIsClosed(false),
       mUninitialized(true),
       mKeyStatusMap(new MediaKeyStatusMap(aParent)),
-      mExpiration(JS::GenericNaN()) {
+      mExpiration(JS::GenericNaN()),
+      mHardwareDecryption(aHardwareDecryption) {
   EME_LOG("MediaKeySession[%p,''] ctor", this);
 
   MOZ_ASSERT(aParent);
@@ -249,8 +250,8 @@ already_AddRefed<Promise> MediaKeySession::GenerateRequest(
   // cdm implementation value does not support initDataType as an
   // Initialization Data Type, return a promise rejected with a
   // NotSupportedError. String comparison is case-sensitive.
-  if (!MediaKeySystemAccess::KeySystemSupportsInitDataType(mKeySystem,
-                                                           aInitDataType)) {
+  if (!MediaKeySystemAccess::KeySystemSupportsInitDataType(
+          mKeySystem, aInitDataType, mHardwareDecryption)) {
     promise->MaybeRejectWithNotSupportedError(
         "Unsupported initDataType passed to MediaKeySession.generateRequest()");
     EME_LOG(

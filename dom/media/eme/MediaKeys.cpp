@@ -662,8 +662,12 @@ already_AddRefed<MediaKeySession> MediaKeys::CreateSession(
 
   EME_LOG("MediaKeys[%p] Creating session", this);
 
-  RefPtr<MediaKeySession> session = new MediaKeySession(
-      GetParentObject(), this, mKeySystem, aSessionType, aRv);
+  const bool isHardwareDecryption =
+      IsHardwareDecryptionSupported(mConfig) ||
+      DoesKeySystemSupportHardwareDecryption(mKeySystem);
+  RefPtr<MediaKeySession> session =
+      new MediaKeySession(GetParentObject(), this, mKeySystem, aSessionType,
+                          isHardwareDecryption, aRv);
 
   if (aRv.Failed()) {
     return nullptr;

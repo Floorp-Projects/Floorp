@@ -67,7 +67,8 @@ class MediaKeySystemAccess final : public nsISupports, public nsWrapperCache {
       const std::function<void(const char*)>& aDeprecationLogFn);
 
   static bool KeySystemSupportsInitDataType(const nsAString& aKeySystem,
-                                            const nsAString& aInitDataType);
+                                            const nsAString& aInitDataType,
+                                            bool aIsHardwareDecryption);
 
   static nsCString ToCString(
       const Sequence<MediaKeySystemConfiguration>& aConfig);

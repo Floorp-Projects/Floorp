@@ -47,7 +47,7 @@ class MediaKeySession final : public DOMEventTargetHelper,
  public:
   MediaKeySession(nsPIDOMWindowInner* aParent, MediaKeys* aKeys,
                   const nsAString& aKeySystem, MediaKeySessionType aSessionType,
-                  ErrorResult& aRv);
+                  bool aHardwareDecryption, ErrorResult& aRv);
 
   void SetSessionId(const nsAString& aSessionId);
 
@@ -132,6 +132,9 @@ class MediaKeySession final : public DOMEventTargetHelper,
   bool mUninitialized;
   RefPtr<MediaKeyStatusMap> mKeyStatusMap;
   double mExpiration;
+
+  // True if this key session is related with hardware decryption.
+  bool mHardwareDecryption;
 };
 
 }  // namespace dom
