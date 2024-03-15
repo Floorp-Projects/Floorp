@@ -74,15 +74,6 @@ struct StringParamToString {
   }
 };
 
-// RTX, RED and FEC are reliability mechanisms used in combinations with other
-// codecs, but are not themselves a specific codec. Typically you don't want to
-// filter these out of the list of codec preferences.
-bool IsReliabilityMechanism(const RtpCodecCapability& codec) {
-  return absl::EqualsIgnoreCase(codec.name, cricket::kRtxCodecName) ||
-         absl::EqualsIgnoreCase(codec.name, cricket::kRedCodecName) ||
-         absl::EqualsIgnoreCase(codec.name, cricket::kUlpfecCodecName);
-}
-
 std::string GetCurrentCodecMimeType(
     rtc::scoped_refptr<const RTCStatsReport> report,
     const RTCOutboundRtpStreamStats& outbound_rtp) {
@@ -163,7 +154,7 @@ class PeerConnectionEncodingsIntegrationTest : public ::testing::Test {
             .codecs;
     codecs.erase(std::remove_if(codecs.begin(), codecs.end(),
                                 [&codec_name](const RtpCodecCapability& codec) {
-                                  return !IsReliabilityMechanism(codec) &&
+                                  return !codec.IsResiliencyCodec() &&
                                          !absl::EqualsIgnoreCase(codec.name,
                                                                  codec_name);
                                 }),

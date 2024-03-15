@@ -536,6 +536,7 @@ rtc_library("rtp_parameters") {
     ":array_view",
     ":priority",
     ":rtp_transceiver_direction",
+    "../media:media_constants",
     "../rtc_base:checks",
     "../rtc_base:stringutils",
     "../rtc_base/system:rtc_export",
