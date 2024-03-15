@@ -1133,6 +1133,8 @@ export class UrlbarView {
    */
   #rowCanUpdateToResult(rowIndex, result, seenSearchSuggestion) {
     // The heuristic result must always be current, thus it's always compatible.
+    // Note that the `updateResults` code, when updating the selection, relies
+    // on the fact the heuristic is the first selectable row.
     if (result.heuristic) {
       return true;
     }
@@ -1325,6 +1327,13 @@ export class UrlbarView {
     // compensate, we set `role=option` on the row-inner and `role=presentation`
     // on the row itself so that screen readers ignore it.
     item.setAttribute("role", "presentation");
+
+    // These are used to cleanup result specific entities when row contents are
+    // cleared to reuse the row for a different result.
+    item._sharedAttributes = new Set(
+      [...item.attributes].map(v => v.name).concat(["stale", "id"])
+    );
+    item._sharedClassList = new Set(item.classList);
 
     return item;
   }
@@ -1618,7 +1627,7 @@ export class UrlbarView {
   // eslint-disable-next-line complexity
   #updateRow(item, result) {
     let oldResult = item.result;
-    let oldResultType = item.result && item.result.type;
+    let oldResultType = item.result?.type;
     let provider = lazy.UrlbarProvidersManager.getProvider(result.providerName);
     item.result = result;
     item.removeAttribute("stale");
@@ -1641,6 +1650,18 @@ export class UrlbarView {
         oldResult.payload.buttons,
         result.payload.buttons
       ) ||
+      // Reusing a non-heuristic as a heuristic is risky as it may have DOM
+      // nodes/attributes/classes that are normally not present in a heuristic
+      // result. This may happen for example when switching from a zero-prefix
+      // search not having a heuristic to a search string one.
+      result.heuristic != oldResult.heuristic ||
+      // Container switch-tab results have a more complex DOM content that is
+      // only updated correctly by another switch-tab result.
+      (oldResultType == lazy.UrlbarUtils.RESULT_TYPE.TAB_SWITCH &&
+        lazy.UrlbarProviderOpenTabs.isContainerUserContextId(
+          oldResult.payload.userContextId
+        ) &&
+        result.type != oldResultType) ||
       result.testForceNewContent;
 
     if (needsNewContent) {
@@ -1652,8 +1673,18 @@ export class UrlbarView {
       item._content = this.#createElement("span");
       item._content.className = "urlbarView-row-inner";
       item.appendChild(item._content);
-      item.removeAttribute("tip-type");
-      item.removeAttribute("dynamicType");
+      // Clear previously set attributes and classes that may refer to a
+      // different result type.
+      for (const attribute of item.attributes) {
+        if (!item._sharedAttributes.has(attribute.name)) {
+          item.removeAttribute(attribute.name);
+        }
+      }
+      for (const className of item.classList) {
+        if (!item._sharedClassList.has(className)) {
+          item.classList.remove(className);
+        }
+      }
       if (item.result.type == lazy.UrlbarUtils.RESULT_TYPE.DYNAMIC) {
         this.#createRowContentForDynamicType(item, result);
       } else if (result.isRichSuggestion) {
@@ -1878,7 +1909,6 @@ export class UrlbarView {
     item.toggleAttribute("has-url", setURL);
     let url = item._elements.get("url");
     if (setURL) {
-      item.setAttribute("has-url", "true");
       let displayedUrl = result.payload.displayUrl;
       let urlHighlights = result.payloadHighlights.displayUrl || [];
       if (lazy.UrlbarUtils.isTextDirectionRTL(displayedUrl, this.window)) {
