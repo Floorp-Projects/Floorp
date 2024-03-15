@@ -1,0 +1,7 @@
+//error: destructor must be async
+
+[ChildProc=any]
+protocol SyncDestructor {
+child:
+    sync __delete__();
+};

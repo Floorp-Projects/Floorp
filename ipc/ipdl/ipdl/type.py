@@ -1424,6 +1424,10 @@ class GatherDecls(TcheckVisitor):
             # if we error here, no big deal; move on to find more
 
         if _DELETE_MSG == msgname:
+            if md.sendSemantics is not ASYNC:
+                self.error(loc, "destructor must be async")
+            if md.outParams:
+                self.error(loc, "destructors cannot return values")
             isdtor = True
             cdtype = self.currentProtocolDecl.type
 

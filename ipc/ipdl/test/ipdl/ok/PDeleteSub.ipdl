@@ -4,7 +4,7 @@ sync protocol PDeleteSub {
     manager PDelete;
 
 parent:
-    sync __delete__(int x) returns (double d);
+    async __delete__(int x);
 
 };
 
