@@ -16,6 +16,11 @@
 
 namespace webrtc {
 
+RTCStats::RTCStats(const RTCStats& other)
+    : RTCStats(other.id_, other.timestamp_) {}
+
+RTCStats::~RTCStats() {}
+
 bool RTCStats::operator==(const RTCStats& other) const {
   if (type() != other.type() || id() != other.id())
     return false;
@@ -60,14 +65,26 @@ std::string RTCStats::ToJson() const {
 }
 
 std::vector<const RTCStatsMemberInterface*> RTCStats::Members() const {
-  return MembersOfThisObjectAndAncestors(0);
+  if (cached_attributes_.empty()) {
+    cached_attributes_ = Attributes();
+  }
+  std::vector<const RTCStatsMemberInterface*> members;
+  members.reserve(cached_attributes_.size());
+  for (const auto& attribute : cached_attributes_) {
+    members.push_back(&attribute);
+  }
+  return members;
 }
 
-std::vector<const RTCStatsMemberInterface*>
-RTCStats::MembersOfThisObjectAndAncestors(size_t additional_capacity) const {
-  std::vector<const RTCStatsMemberInterface*> members;
-  members.reserve(additional_capacity);
-  return members;
+std::vector<Attribute> RTCStats::Attributes() const {
+  return AttributesImpl(0);
+}
+
+std::vector<Attribute> RTCStats::AttributesImpl(
+    size_t additional_capacity) const {
+  std::vector<Attribute> attributes;
+  attributes.reserve(additional_capacity);
+  return attributes;
 }
 
 }  // namespace webrtc

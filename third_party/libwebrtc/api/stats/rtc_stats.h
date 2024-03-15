@@ -20,6 +20,7 @@
 #include <utility>
 #include <vector>
 
+#include "api/stats/attribute.h"
 #include "api/stats/rtc_stats_member.h"
 #include "api/units/timestamp.h"
 #include "rtc_base/checks.h"
@@ -56,8 +57,8 @@ class RTC_EXPORT RTCStats {
  public:
   RTCStats(const std::string& id, Timestamp timestamp)
       : id_(id), timestamp_(timestamp) {}
-
-  virtual ~RTCStats() {}
+  RTCStats(const RTCStats& other);
+  virtual ~RTCStats();
 
   virtual std::unique_ptr<RTCStats> copy() const = 0;
 
@@ -67,9 +68,12 @@ class RTC_EXPORT RTCStats {
 
   // Returns the static member variable `kType` of the implementing class.
   virtual const char* type() const = 0;
-  // Returns a vector of pointers to all the `RTCStatsMemberInterface` members
-  // of this class. This allows for iteration of members. For a given class,
-  // `Members` always returns the same members in the same order.
+  // Returns all attributes of this stats object, i.e. a list of its individual
+  // metrics as viewed via the Attribute wrapper.
+  std::vector<Attribute> Attributes() const;
+  // Returns Attributes() as `RTCStatsMemberInterface` pointers.
+  // TODO(https://crbug.com/webrtc/15164): Update callers to use Attributes()
+  // instead and delete this method as well as the RTCStatsMemberInterface.
   std::vector<const RTCStatsMemberInterface*> Members() const;
   // Checks if the two stats objects are of the same type and have the same
   // member values. Timestamps are not compared. These operators are exposed for
@@ -90,15 +94,18 @@ class RTC_EXPORT RTCStats {
   }
 
  protected:
-  // Gets a vector of all members of this `RTCStats` object, including members
-  // derived from parent classes. `additional_capacity` is how many more members
-  // shall be reserved in the vector (so that subclasses can allocate a vector
-  // with room for both parent and child members without it having to resize).
-  virtual std::vector<const RTCStatsMemberInterface*>
-  MembersOfThisObjectAndAncestors(size_t additional_capacity) const;
+  virtual std::vector<Attribute> AttributesImpl(
+      size_t additional_capacity) const;
 
   std::string const id_;
   Timestamp timestamp_;
+
+  // Because Members() return a raw pointers we need to cache attributes to
+  // ensure the pointers are still valid after the method has returned. Mutable
+  // to allow lazy instantiation the first time the method is called.
+  // TODO(https://crbug.com/webrtc/15164): Migrate all uses of Members() to
+  // Attributes() and delete Members() and `cached_attributes_`.
+  mutable std::vector<Attribute> cached_attributes_;
 };
 
 // All `RTCStats` classes should use these macros.
@@ -142,16 +149,15 @@ class RTC_EXPORT RTCStats {
 //         bar("bar") {
 //   }
 //
-#define WEBRTC_RTCSTATS_DECL()                                          \
- protected:                                                             \
-  std::vector<const webrtc::RTCStatsMemberInterface*>                   \
-  MembersOfThisObjectAndAncestors(size_t local_var_additional_capacity) \
-      const override;                                                   \
-                                                                        \
- public:                                                                \
-  static const char kType[];                                            \
-                                                                        \
-  std::unique_ptr<webrtc::RTCStats> copy() const override;              \
+#define WEBRTC_RTCSTATS_DECL()                                              \
+ protected:                                                                 \
+  std::vector<webrtc::Attribute> AttributesImpl(size_t additional_capacity) \
+      const override;                                                       \
+                                                                            \
+ public:                                                                    \
+  static const char kType[];                                                \
+                                                                            \
+  std::unique_ptr<webrtc::RTCStats> copy() const override;                  \
   const char* type() const override
 
 #define WEBRTC_RTCSTATS_IMPL(this_class, parent_class, type_str, ...)          \
@@ -165,23 +171,17 @@ class RTC_EXPORT RTCStats {
     return this_class::kType;                                                  \
   }                                                                            \
                                                                                \
-  std::vector<const webrtc::RTCStatsMemberInterface*>                          \
-  this_class::MembersOfThisObjectAndAncestors(                                 \
-      size_t local_var_additional_capacity) const {                            \
-    const webrtc::RTCStatsMemberInterface* local_var_members[] = {             \
-        __VA_ARGS__};                                                          \
-    size_t local_var_members_count =                                           \
-        sizeof(local_var_members) / sizeof(local_var_members[0]);              \
-    std::vector<const webrtc::RTCStatsMemberInterface*>                        \
-        local_var_members_vec = parent_class::MembersOfThisObjectAndAncestors( \
-            local_var_members_count + local_var_additional_capacity);          \
-    RTC_DCHECK_GE(                                                             \
-        local_var_members_vec.capacity() - local_var_members_vec.size(),       \
-        local_var_members_count + local_var_additional_capacity);              \
-    local_var_members_vec.insert(local_var_members_vec.end(),                  \
-                                 &local_var_members[0],                        \
-                                 &local_var_members[local_var_members_count]); \
-    return local_var_members_vec;                                              \
+  std::vector<webrtc::Attribute> this_class::AttributesImpl(                   \
+      size_t additional_capacity) const {                                      \
+    const webrtc::RTCStatsMemberInterface* this_members[] = {__VA_ARGS__};     \
+    size_t this_members_size = sizeof(this_members) / sizeof(this_members[0]); \
+    std::vector<webrtc::Attribute> attributes =                                \
+        parent_class::AttributesImpl(this_members_size + additional_capacity); \
+    for (size_t i = 0; i < this_members_size; ++i) {                           \
+      attributes.push_back(                                                    \
+          webrtc::Attribute::FromMemberInterface(this_members[i]));            \
+    }                                                                          \
+    return attributes;                                                         \
   }
 
 // A version of WEBRTC_RTCSTATS_IMPL() where "..." is omitted, used to avoid a
@@ -198,10 +198,9 @@ class RTC_EXPORT RTCStats {
     return this_class::kType;                                               \
   }                                                                         \
                                                                             \
-  std::vector<const webrtc::RTCStatsMemberInterface*>                       \
-  this_class::MembersOfThisObjectAndAncestors(                              \
-      size_t local_var_additional_capacity) const {                         \
-    return parent_class::MembersOfThisObjectAndAncestors(0);                \
+  std::vector<webrtc::Attribute> this_class::AttributesImpl(                \
+      size_t additional_capacity) const {                                   \
+    return parent_class::AttributesImpl(0);                                 \
   }
 
 }  // namespace webrtc

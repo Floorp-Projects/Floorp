@@ -207,13 +207,13 @@ class RTCStatsVerifier {
     RTC_CHECK(report_);
     RTC_CHECK(stats_);
     for (const RTCStatsMemberInterface* member : stats_->Members()) {
-      untested_members_.insert(member);
+      untested_members_.insert(member->member_ptr());
     }
   }
 
   void MarkMemberTested(const RTCStatsMemberInterface& member,
                         bool test_successful) {
-    untested_members_.erase(&member);
+    untested_members_.erase(member.member_ptr());
     all_tests_successful_ &= test_successful;
   }
 
