@@ -245,6 +245,11 @@ headers_arrays_certs = [
     ),
     ("addons-stage.inc", "addonsStageRoot", "addons-stage.crt"),
     (
+        "addons-stage-intermediate.inc",
+        "addonsStageIntermediate",
+        "addons-stage-intermediate.crt",
+    ),
+    (
         "content-signature-prod.inc",
         "contentSignatureProdRoot",
         "content-signature-prod.crt",
