@@ -603,7 +603,9 @@ class GMut {
   // The mutex that protects the other members.
   static Mutex sMutex MOZ_UNANNOTATED;
 
-  GMut() : mRNG(RandomSeed<0>(), RandomSeed<1>()) { sMutex.Init(); }
+  // The RNG seeds here are poor, but non-reentrant since this can be called
+  // from malloc().  SetState() will reset the RNG later.
+  GMut() : mRNG(RandomSeed<1>(), RandomSeed<2>()) { sMutex.Init(); }
 
   uint64_t Random64(GMutLock) { return mRNG.next(); }
 
@@ -865,10 +867,16 @@ class GMut {
   void SetState(PHCState aState) {
     if (mPhcState != PHCState::Enabled && aState == PHCState::Enabled) {
       MutexAutoLock lock(GMut::sMutex);
+      // Reset the RNG at this point with a better seed.
+      ResetRNG();
       GAtomic::Init(Rnd64ToDelay(mAvgFirstAllocDelay, Random64(lock)));
     }
 
     mPhcState = aState;
+  }
+
+  void ResetRNG() {
+    mRNG = non_crypto::XorShift128PlusRNG(RandomSeed<0>(), RandomSeed<1>());
   }
 
   void SetProbabilities(int64_t aAvgDelayFirst, int64_t aAvgDelayNormal,
@@ -885,15 +893,18 @@ class GMut {
   uint64_t RandomSeed() {
     // An older version of this code used RandomUint64() here, but on Mac that
     // function uses arc4random(), which can allocate, which would cause
-    // re-entry, which would be bad. So we just use time() and a local variable
-    // address. These are mediocre sources of entropy, but good enough for PHC.
-    static_assert(N == 0 || N == 1, "must be 0 or 1");
+    // re-entry, which would be bad. So we just use time(), a local variable
+    // address and a global variable address. These are mediocre sources of
+    // entropy, but good enough for PHC.
+    static_assert(N == 0 || N == 1 || N == 2, "must be 0, 1 or 2");
     uint64_t seed;
     if (N == 0) {
       time_t t = time(nullptr);
       seed = t ^ (t << 32);
-    } else {
+    } else if (N == 1) {
       seed = uintptr_t(&seed) ^ (uintptr_t(&seed) << 32);
+    } else {
+      seed = uintptr_t(&gConst) ^ (uintptr_t(&gConst) << 32);
     }
     return seed;
   }
