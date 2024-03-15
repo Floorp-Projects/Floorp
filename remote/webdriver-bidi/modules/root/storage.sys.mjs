@@ -741,18 +741,14 @@ class StorageModule extends Module {
 
     // Prepare the data in the format required for the platform API.
     const originAttributes = this.#getOriginAttributes(storagePartitionKey);
-    // In case we want to get the cookies for a certain `sourceOrigin`,
-    // we have to additionally specify `hostname`. When `sourceOrigin` is not present
-    // `hostname` will stay equal undefined.
-    let hostname;
 
     // In case we want to get the cookies for a certain `sourceOrigin`,
     // we have to separately retrieve cookies for a hostname built from `sourceOrigin`,
     // and with `partitionKey` equal an empty string to retrieve the cookies that which were set
-    // by this hostname but without `partitionKey`, e.g. with `document.cookie`
+    // by this hostname but without `partitionKey`, e.g. with `document.cookie`.
     if (storagePartitionKey.sourceOrigin) {
       const url = new URL(storagePartitionKey.sourceOrigin);
-      hostname = url.hostname;
+      const hostname = url.hostname;
 
       const principal = Services.scriptSecurityManager.createContentPrincipal(
         Services.io.newURI(url),
@@ -780,8 +776,7 @@ class StorageModule extends Module {
     // Add the cookies which exactly match a built partition attributes.
     store = store.concat(
       Services.cookies.getCookiesWithOriginAttributes(
-        JSON.stringify(originAttributes),
-        hostname
+        JSON.stringify(originAttributes)
       )
     );
 
