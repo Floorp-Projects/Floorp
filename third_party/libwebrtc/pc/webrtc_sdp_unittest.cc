@@ -5096,3 +5096,42 @@ TEST_F(WebRtcSdpTest, IgnoresUnknownAttributeLines) {
   JsepSessionDescription jdesc(kDummyType);
   EXPECT_TRUE(SdpDeserialize(sdp, &jdesc));
 }
+
+TEST_F(WebRtcSdpTest, BackfillsDefaultFmtpValues) {
+  std::string sdp =
+      "v=0\r\n"
+      "o=- 0 3 IN IP4 127.0.0.1\r\n"
+      "s=-\r\n"
+      "t=0 0\r\n"
+      "a=group:BUNDLE 0\r\n"
+      "a=fingerprint:sha-1 "
+      "4A:AD:B9:B1:3F:82:18:3B:54:02:12:DF:3E:5D:49:6B:19:E5:7C:AB\r\n"
+      "a=setup:actpass\r\n"
+      "a=ice-ufrag:ETEn\r\n"
+      "a=ice-pwd:OtSK0WpNtpUjkY4+86js7Z/l\r\n"
+      "m=video 9 UDP/TLS/RTP/SAVPF 96 97\r\n"
+      "c=IN IP4 0.0.0.0\r\n"
+      "a=rtcp-mux\r\n"
+      "a=sendonly\r\n"
+      "a=mid:0\r\n"
+      "a=rtpmap:96 H264/90000\r\n"
+      "a=rtpmap:97 VP9/90000\r\n"
+      "a=ssrc:1234 cname:test\r\n";
+  JsepSessionDescription jdesc(kDummyType);
+  EXPECT_TRUE(SdpDeserialize(sdp, &jdesc));
+  ASSERT_EQ(1u, jdesc.description()->contents().size());
+  const auto content = jdesc.description()->contents()[0];
+  const auto* description = content.media_description();
+  ASSERT_NE(description, nullptr);
+  const std::vector<cricket::Codec> codecs = description->codecs();
+  ASSERT_EQ(codecs.size(), 2u);
+  std::string value;
+
+  EXPECT_EQ(codecs[0].name, "H264");
+  EXPECT_TRUE(codecs[0].GetParam("packetization-mode", &value));
+  EXPECT_EQ(value, "0");
+
+  EXPECT_EQ(codecs[1].name, "VP9");
+  EXPECT_TRUE(codecs[1].GetParam("profile-id", &value));
+  EXPECT_EQ(value, "0");
+}
