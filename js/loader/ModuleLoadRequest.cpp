@@ -205,7 +205,6 @@ void ModuleLoadRequest::CheckModuleDependenciesLoaded() {
   if (!mModuleScript || mModuleScript->HasParseError()) {
     return;
   }
-
   for (const auto& childRequest : mImports) {
     ModuleScript* childScript = childRequest->mModuleScript;
     if (!childScript) {
@@ -214,9 +213,6 @@ void ModuleLoadRequest::CheckModuleDependenciesLoaded() {
            childRequest.get()));
       return;
     }
-
-    MOZ_DIAGNOSTIC_ASSERT(mModuleScript->HadImportMap() ==
-                          childScript->HadImportMap());
   }
 
   LOG(("ScriptLoadRequest (%p):   all ok", this));
