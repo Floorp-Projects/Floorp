@@ -19,10 +19,12 @@
 #include <string>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/array_view.h"
 #include "api/function_view.h"
+#include "api/task_queue/task_queue_base.h"
 #include "modules/audio_processing/aec3/echo_canceller3.h"
 #include "modules/audio_processing/agc/agc_manager_direct.h"
 #include "modules/audio_processing/agc/gain_control.h"
@@ -71,12 +73,14 @@ class AudioProcessingImpl : public AudioProcessing {
   int Initialize() override;
   int Initialize(const ProcessingConfig& processing_config) override;
   void ApplyConfig(const AudioProcessing::Config& config) override;
-  bool CreateAndAttachAecDump(absl::string_view file_name,
-                              int64_t max_log_size_bytes,
-                              rtc::TaskQueue* worker_queue) override;
-  bool CreateAndAttachAecDump(FILE* handle,
-                              int64_t max_log_size_bytes,
-                              rtc::TaskQueue* worker_queue) override;
+  bool CreateAndAttachAecDump(
+      absl::string_view file_name,
+      int64_t max_log_size_bytes,
+      absl::Nonnull<TaskQueueBase*> worker_queue) override;
+  bool CreateAndAttachAecDump(
+      FILE* handle,
+      int64_t max_log_size_bytes,
+      absl::Nonnull<TaskQueueBase*> worker_queue) override;
   // TODO(webrtc:5298) Deprecated variant.
   void AttachAecDump(std::unique_ptr<AecDump> aec_dump) override;
   void DetachAecDump() override;

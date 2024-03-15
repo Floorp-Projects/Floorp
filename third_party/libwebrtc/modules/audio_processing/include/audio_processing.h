@@ -23,6 +23,7 @@
 
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/array_view.h"
@@ -30,6 +31,7 @@
 #include "api/audio/echo_control.h"
 #include "api/ref_count.h"
 #include "api/scoped_refptr.h"
+#include "api/task_queue/task_queue_base.h"
 #include "modules/audio_processing/include/audio_processing_statistics.h"
 #include "rtc_base/arraysize.h"
 #include "rtc_base/system/file_wrapper.h"
@@ -632,12 +634,23 @@ class RTC_EXPORT AudioProcessing : public RefCountInterface {
   // return value of true indicates that the file has been
   // sucessfully opened, while a value of false indicates that
   // opening the file failed.
+  // TODO: bugs.webrtc.org/14169 - Delete rtc::TaskQueue variants
   virtual bool CreateAndAttachAecDump(absl::string_view file_name,
                                       int64_t max_log_size_bytes,
-                                      rtc::TaskQueue* worker_queue) = 0;
+                                      rtc::TaskQueue* worker_queue);
   virtual bool CreateAndAttachAecDump(FILE* handle,
                                       int64_t max_log_size_bytes,
-                                      rtc::TaskQueue* worker_queue) = 0;
+                                      rtc::TaskQueue* worker_queue);
+  // TODO: bugs.webrtc.org/14169 - Make TaskQueueBase variants pure virtual when
+  // implemented by derived classes.
+  virtual bool CreateAndAttachAecDump(
+      absl::string_view file_name,
+      int64_t max_log_size_bytes,
+      absl::Nonnull<TaskQueueBase*> worker_queue);
+  virtual bool CreateAndAttachAecDump(
+      absl::Nonnull<FILE*> handle,
+      int64_t max_log_size_bytes,
+      absl::Nonnull<TaskQueueBase*> worker_queue);
 
   // TODO(webrtc:5298) Deprecated variant.
   // Attaches provided webrtc::AecDump for recording debugging

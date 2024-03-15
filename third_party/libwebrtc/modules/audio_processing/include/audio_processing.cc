@@ -12,6 +12,7 @@
 
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/system/arch.h"
+#include "rtc_base/task_queue.h"
 
 namespace webrtc {
 namespace {
@@ -205,6 +206,38 @@ std::string AudioProcessing::Config::ToString() const {
           << " }, input_volume_control : { enabled "
           << gain_controller2.input_volume_controller.enabled << "}}";
   return builder.str();
+}
+
+bool AudioProcessing::CreateAndAttachAecDump(absl::string_view file_name,
+                                             int64_t max_log_size_bytes,
+                                             rtc::TaskQueue* worker_queue) {
+  return CreateAndAttachAecDump(file_name, max_log_size_bytes,
+                                worker_queue->Get());
+}
+
+bool AudioProcessing::CreateAndAttachAecDump(FILE* handle,
+                                             int64_t max_log_size_bytes,
+                                             rtc::TaskQueue* worker_queue) {
+  return CreateAndAttachAecDump(handle, max_log_size_bytes,
+                                worker_queue->Get());
+}
+
+bool AudioProcessing::CreateAndAttachAecDump(
+    absl::string_view file_name,
+    int64_t max_log_size_bytes,
+    absl::Nonnull<TaskQueueBase*> worker_queue) {
+  // Newer code should implement this variant,
+  // Older code shouldn't call this variant.
+  RTC_CHECK_NOTREACHED();
+}
+
+bool AudioProcessing::CreateAndAttachAecDump(
+    FILE* handle,
+    int64_t max_log_size_bytes,
+    absl::Nonnull<TaskQueueBase*> worker_queue) {
+  // New ercode should implement this variant,
+  // Older code shouldn't call this variant.
+  RTC_CHECK_NOTREACHED();
 }
 
 }  // namespace webrtc
