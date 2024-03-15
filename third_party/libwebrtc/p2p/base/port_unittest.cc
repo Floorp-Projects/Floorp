@@ -620,8 +620,8 @@ class PortTest : public ::testing::Test, public sigslot::has_slots<> {
 
   std::unique_ptr<rtc::NATServer> CreateNatServer(const SocketAddress& addr,
                                                   rtc::NATType type) {
-    return std::make_unique<rtc::NATServer>(type, ss_.get(), addr, addr,
-                                            ss_.get(), addr);
+    return std::make_unique<rtc::NATServer>(type, main_, ss_.get(), addr, addr,
+                                            main_, ss_.get(), addr);
   }
   static const char* StunName(NATType type) {
     switch (type) {
