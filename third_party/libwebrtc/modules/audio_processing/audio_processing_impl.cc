@@ -18,11 +18,13 @@
 #include <type_traits>
 #include <utility>
 
+#include "absl/base/nullability.h"
 #include "absl/strings/match.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/array_view.h"
 #include "api/audio/audio_frame.h"
+#include "api/task_queue/task_queue_base.h"
 #include "common_audio/audio_converter.h"
 #include "common_audio/include/audio_util.h"
 #include "modules/audio_processing/aec_dump/aec_dump_factory.h"
@@ -33,7 +35,6 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/task_queue.h"
 #include "rtc_base/time_utils.h"
 #include "rtc_base/trace_event.h"
 #include "system_wrappers/include/denormal_disabler.h"
@@ -2084,11 +2085,12 @@ void AudioProcessingImpl::UpdateRecommendedInputVolumeLocked() {
   capture_.recommended_input_volume = capture_.applied_input_volume;
 }
 
-bool AudioProcessingImpl::CreateAndAttachAecDump(absl::string_view file_name,
-                                                 int64_t max_log_size_bytes,
-                                                 rtc::TaskQueue* worker_queue) {
-  std::unique_ptr<AecDump> aec_dump = AecDumpFactory::Create(
-      file_name, max_log_size_bytes, worker_queue->Get());
+bool AudioProcessingImpl::CreateAndAttachAecDump(
+    absl::string_view file_name,
+    int64_t max_log_size_bytes,
+    absl::Nonnull<TaskQueueBase*> worker_queue) {
+  std::unique_ptr<AecDump> aec_dump =
+      AecDumpFactory::Create(file_name, max_log_size_bytes, worker_queue);
   if (!aec_dump) {
     return false;
   }
@@ -2097,11 +2099,12 @@ bool AudioProcessingImpl::CreateAndAttachAecDump(absl::string_view file_name,
   return true;
 }
 
-bool AudioProcessingImpl::CreateAndAttachAecDump(FILE* handle,
-                                                 int64_t max_log_size_bytes,
-                                                 rtc::TaskQueue* worker_queue) {
+bool AudioProcessingImpl::CreateAndAttachAecDump(
+    FILE* handle,
+    int64_t max_log_size_bytes,
+    absl::Nonnull<TaskQueueBase*> worker_queue) {
   std::unique_ptr<AecDump> aec_dump =
-      AecDumpFactory::Create(handle, max_log_size_bytes, worker_queue->Get());
+      AecDumpFactory::Create(handle, max_log_size_bytes, worker_queue);
   if (!aec_dump) {
     return false;
   }
