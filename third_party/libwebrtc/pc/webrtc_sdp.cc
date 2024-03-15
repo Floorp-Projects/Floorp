@@ -2614,6 +2614,25 @@ void MaybeCreateStaticPayloadAudioCodecs(const std::vector<int>& fmts,
   }
 }
 
+static void BackfillCodecParameters(std::vector<cricket::Codec>& codecs) {
+  for (auto& codec : codecs) {
+    std::string unused_value;
+    if (absl::EqualsIgnoreCase(cricket::kVp9CodecName, codec.name)) {
+      // https://datatracker.ietf.org/doc/html/draft-ietf-payload-vp9#section-6
+      // profile-id defaults to "0"
+      if (!codec.GetParam(cricket::kVP9ProfileId, &unused_value)) {
+        codec.SetParam(cricket::kVP9ProfileId, "0");
+      }
+    } else if (absl::EqualsIgnoreCase(cricket::kH264CodecName, codec.name)) {
+      // https://www.rfc-editor.org/rfc/rfc6184#section-6.2
+      // packetization-mode defaults to "0"
+      if (!codec.GetParam(cricket::kH264FmtpPacketizationMode, &unused_value)) {
+        codec.SetParam(cricket::kH264FmtpPacketizationMode, "0");
+      }
+    }
+  }
+}
+
 static std::unique_ptr<MediaContentDescription> ParseContentDescription(
     absl::string_view message,
     const cricket::MediaType media_type,
@@ -2657,6 +2676,9 @@ static std::unique_ptr<MediaContentDescription> ParseContentDescription(
                                                    const cricket::Codec& b) {
     return payload_type_preferences[a.id] > payload_type_preferences[b.id];
   });
+  // Backfill any default parameters.
+  BackfillCodecParameters(codecs);
+
   media_desc->set_codecs(codecs);
   return media_desc;
 }
