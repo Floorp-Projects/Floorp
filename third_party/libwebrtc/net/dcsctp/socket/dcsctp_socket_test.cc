@@ -66,6 +66,7 @@ namespace {
 using ::testing::_;
 using ::testing::AllOf;
 using ::testing::ElementsAre;
+using ::testing::ElementsAreArray;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::IsEmpty;
@@ -1559,6 +1560,33 @@ TEST(DcSctpSocketTest, SetMaxMessageSize) {
 
   a.socket.SetMaxMessageSize(42u);
   EXPECT_EQ(a.socket.options().max_message_size, 42u);
+}
+
+TEST_P(DcSctpSocketParametrizedTest, SendManyMessages) {
+  SocketUnderTest a("A");
+  auto z = std::make_unique<SocketUnderTest>("Z");
+
+  ConnectSockets(a, *z);
+  z = MaybeHandoverSocket(std::move(z));
+
+  static constexpr int kIterations = 100;
+  std::vector<DcSctpMessage> messages;
+  std::vector<SendStatus> statuses;
+  for (int i = 0; i < kIterations; ++i) {
+    messages.push_back(DcSctpMessage(StreamID(1), PPID(53), {1, 2}));
+    statuses.push_back(SendStatus::kSuccess);
+  }
+  EXPECT_THAT(a.socket.SendMany(messages, {}), ElementsAreArray(statuses));
+
+  ExchangeMessages(a, *z);
+
+  for (int i = 0; i < kIterations; ++i) {
+    EXPECT_TRUE(z->cb.ConsumeReceivedMessage().has_value());
+  }
+
+  EXPECT_FALSE(z->cb.ConsumeReceivedMessage().has_value());
+
+  MaybeHandoverSocketAndSendMessage(a, std::move(z));
 }
 
 TEST_P(DcSctpSocketParametrizedTest, SendsMessagesWithLowLifetime) {

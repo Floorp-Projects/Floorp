@@ -475,8 +475,43 @@ SendStatus DcSctpSocket::Send(DcSctpMessage message,
                               const SendOptions& send_options) {
   RTC_DCHECK_RUN_ON(&thread_checker_);
   CallbackDeferrer::ScopedDeferrer deferrer(callbacks_);
-  LifecycleId lifecycle_id = send_options.lifecycle_id;
+  SendStatus send_status = InternalSend(message, send_options);
+  if (send_status != SendStatus::kSuccess)
+    return send_status;
+  Timestamp now = callbacks_.Now();
+  ++metrics_.tx_messages_count;
+  send_queue_.Add(now, std::move(message), send_options);
+  if (tcb_ != nullptr)
+    tcb_->SendBufferedPackets(now);
+  RTC_DCHECK(IsConsistent());
+  return SendStatus::kSuccess;
+}
 
+std::vector<SendStatus> DcSctpSocket::SendMany(
+    rtc::ArrayView<DcSctpMessage> messages,
+    const SendOptions& send_options) {
+  RTC_DCHECK_RUN_ON(&thread_checker_);
+  CallbackDeferrer::ScopedDeferrer deferrer(callbacks_);
+  Timestamp now = callbacks_.Now();
+  std::vector<SendStatus> send_statuses;
+  send_statuses.reserve(messages.size());
+  for (DcSctpMessage& message : messages) {
+    SendStatus send_status = InternalSend(message, send_options);
+    send_statuses.push_back(send_status);
+    if (send_status != SendStatus::kSuccess)
+      continue;
+    ++metrics_.tx_messages_count;
+    send_queue_.Add(now, std::move(message), send_options);
+  }
+  if (tcb_ != nullptr)
+    tcb_->SendBufferedPackets(now);
+  RTC_DCHECK(IsConsistent());
+  return send_statuses;
+}
+
+SendStatus DcSctpSocket::InternalSend(const DcSctpMessage& message,
+                                      const SendOptions& send_options) {
+  LifecycleId lifecycle_id = send_options.lifecycle_id;
   if (message.payload().empty()) {
     if (lifecycle_id.IsSet()) {
       callbacks_.OnLifecycleEnd(lifecycle_id);
@@ -514,15 +549,6 @@ SendStatus DcSctpSocket::Send(DcSctpMessage message,
                        "Unable to send message as the send queue is full");
     return SendStatus::kErrorResourceExhaustion;
   }
-
-  Timestamp now = callbacks_.Now();
-  ++metrics_.tx_messages_count;
-  send_queue_.Add(now, std::move(message), send_options);
-  if (tcb_ != nullptr) {
-    tcb_->SendBufferedPackets(now);
-  }
-
-  RTC_DCHECK(IsConsistent());
   return SendStatus::kSuccess;
 }
 

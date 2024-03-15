@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <memory>
 #include <utility>
+#include <vector>
 
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
@@ -576,6 +577,16 @@ class DcSctpSocketInterface {
   // be queued.
   virtual SendStatus Send(DcSctpMessage message,
                           const SendOptions& send_options) = 0;
+
+  // Sends the messages `messages` using the provided send options.
+  // Sending a message is an asynchronous operation, and the `OnError` callback
+  // may be invoked to indicate any errors in sending the message.
+  //
+  // This has identical semantics to Send, except that it may coalesce many
+  // messages into a single SCTP packet if they would fit.
+  virtual std::vector<SendStatus> SendMany(
+      rtc::ArrayView<DcSctpMessage> messages,
+      const SendOptions& send_options) = 0;
 
   // Resetting streams is an asynchronous operation and the results will
   // be notified using `DcSctpSocketCallbacks::OnStreamsResetDone()` on success
