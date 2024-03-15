@@ -12,6 +12,7 @@
 
 #include <utility>
 
+#include "api/stats/attribute.h"
 #include "api/stats/rtc_stats.h"
 #include "rtc_base/checks.h"
 

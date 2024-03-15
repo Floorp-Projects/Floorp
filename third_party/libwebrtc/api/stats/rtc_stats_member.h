@@ -74,10 +74,11 @@ class RTCStatsMemberInterface {
   // instead.
   virtual std::string ValueToJson() const = 0;
 
+  virtual const RTCStatsMemberInterface* member_ptr() const { return this; }
   template <typename T>
   const T& cast_to() const {
     RTC_DCHECK_EQ(type(), T::StaticType());
-    return static_cast<const T&>(*this);
+    return static_cast<const T&>(*member_ptr());
   }
 
  protected:
@@ -151,7 +152,6 @@ class RTCStatsMember : public RTCStatsMemberInterface {
     return &(*value_);
   }
 
- protected:
   bool IsEqual(const RTCStatsMemberInterface& other) const override {
     if (type() != other.type())
       return false;
