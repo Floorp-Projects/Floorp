@@ -15,7 +15,7 @@ This section should include a brief description of the proposal.
 
 ## Motivation
 
-This section should include reasoning about why the proposal is useful. Examples, specific scenarios, 
+This section should include reasoning about why the proposal is useful. Examples, specific scenarios,
 open bugs, records of performance metrics, and other empirical data are beneficial to include here if available.
 
 ## Guide-level explanation
@@ -24,7 +24,7 @@ This section should include a high-level walkthrough of the steps required to im
 
 ## Reference-level explanation (optional)
 
-This section should include a detailed walkthrough of technical steps or code changes that 
+This section should include a detailed walkthrough of technical steps or code changes that
 will be required to implement the proposal. Code samples and prototypes are beneficial to include here.
 
 ## Drawbacks (optional)

@@ -5,8 +5,8 @@ permalink: /docs/rfcs/0013-rfc-process-updates
 ---
 
 * RFC PR: https://github.com/mozilla-mobile/firefox-android/pull/5681
-* Start date: 2024-02-20 
-* End date: 2024-03-22 
+* Start date: 2024-02-20
+* End date: 2024-03-22
 * Stakeholders: @jonalmeida, @boek
 
 ## Summary
@@ -15,8 +15,8 @@ Clarify requirements for RFCs by introducing a README and a template.
 
 ## Motivation
 
-- The scale of the Firefox Android team has grown substantially since the RFC process was first introduced. 
-- More external teams are using and contributing to Android Components. 
+- The scale of the Firefox Android team has grown substantially since the RFC process was first introduced.
+- More external teams are using and contributing to Android Components.
 - Implicit deadlines have encouraged a lack of engagement with RFCs, slowing follow-up work.
 - There has been a low level of engagement with RFCs because of a lack of clarity around the process and when they are appropriate.
 
@@ -35,7 +35,7 @@ This proposal suggests improving the RFC process by introducing the following:
 The RFC process has been successful in some cases, but has not been consistently followed. This proposal aims to make the process more accessible and clear, by introducing high-level concepts in the README and a clear template. These documents can be more easily treated as living documents, and updated with any future changes to the process.
 
 ### Amend RFC 0001 with additional template information
-- This was not included in the proposal in order to keep past RFCs consistent and free of modern context, and so that past RFCs do not become treated as living documents. 
+- This was not included in the proposal in order to keep past RFCs consistent and free of modern context, and so that past RFCs do not become treated as living documents.
 
 ## Resources and Docs
 

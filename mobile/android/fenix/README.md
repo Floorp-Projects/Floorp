@@ -72,7 +72,7 @@ Pre-requisites:
 * Android SDK
 * To run command line tools, you'll need to configure Java: see [our how-to guide](https://github.com/mozilla-mobile/shared-docs/blob/master/android/configure_java.md).
 
-> [!NOTE]  
+> [!NOTE]
 > If you're building using Apple Silicon you will also need to install Rosetta
 > ```shell
 > softwareupdate --install-rosetta
