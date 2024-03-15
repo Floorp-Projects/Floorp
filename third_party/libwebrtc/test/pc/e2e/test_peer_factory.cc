@@ -327,6 +327,7 @@ std::unique_ptr<TestPeer> TestPeerFactory::CreateTestPeer(
       components->worker_thread, components->network_thread);
   rtc::scoped_refptr<PeerConnectionFactoryInterface> peer_connection_factory =
       CreateModularPeerConnectionFactory(std::move(pcf_deps));
+  peer_connection_factory->SetOptions(params->peer_connection_factory_options);
 
   // Create peer connection.
   PeerConnectionDependencies pc_deps =
