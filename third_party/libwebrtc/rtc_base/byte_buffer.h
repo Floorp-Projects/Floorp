@@ -141,14 +141,8 @@ class ByteBufferWriter : public ByteBufferWriterT<BufferT<char>> {
 // valid during the lifetime of the reader.
 class ByteBufferReader {
  public:
-  [[deprecated("Use ArrayView<uint8_t>")]] ByteBufferReader(const char* bytes,
-                                                            size_t len);
-
   explicit ByteBufferReader(
       rtc::ArrayView<const uint8_t> bytes ABSL_ATTRIBUTE_LIFETIME_BOUND);
-
-  // Initializes buffer from a zero-terminated string.
-  explicit ByteBufferReader(const char* bytes);
 
   explicit ByteBufferReader(const ByteBufferWriter& buf);
 

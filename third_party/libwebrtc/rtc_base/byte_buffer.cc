@@ -23,14 +23,6 @@ ByteBufferReader::ByteBufferReader(rtc::ArrayView<const uint8_t> bytes) {
   Construct(bytes.data(), bytes.size());
 }
 
-ByteBufferReader::ByteBufferReader(const char* bytes, size_t len) {
-  Construct(reinterpret_cast<const uint8_t*>(bytes), len);
-}
-
-ByteBufferReader::ByteBufferReader(const char* bytes) {
-  Construct(reinterpret_cast<const uint8_t*>(bytes), strlen(bytes));
-}
-
 ByteBufferReader::ByteBufferReader(const ByteBufferWriter& buf) {
   Construct(reinterpret_cast<const uint8_t*>(buf.Data()), buf.Length());
 }
