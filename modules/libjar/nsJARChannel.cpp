@@ -890,7 +890,8 @@ static void RecordZeroLengthEvent(bool aIsSync, const nsCString& aSpec,
   } else if (StringEndsWith(fileName, ".properties"_ns)) {
     eventType = Telemetry::EventID::Zero_byte_load_Load_Properties;
   } else if (StringEndsWith(fileName, ".js"_ns) ||
-             StringEndsWith(fileName, ".jsm"_ns)) {
+             StringEndsWith(fileName, ".jsm"_ns) ||
+             StringEndsWith(fileName, ".mjs"_ns)) {
     // We're going to skip reporting telemetry on JS loads
     // coming not from omni.ja.
     // See Bug 1693711 for investigation into those empty loads.
