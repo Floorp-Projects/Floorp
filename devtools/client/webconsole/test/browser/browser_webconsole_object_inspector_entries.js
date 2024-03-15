@@ -18,6 +18,8 @@ add_task(async function () {
   await pushPref("media.navigator.permission.disabled", true);
   // enable custom highlight API
   await pushPref("dom.customHighlightAPI.enabled", true);
+  // enable custom state
+  await pushPref("dom.element.customstateset.enabled", true);
 
   const hud = await openNewTabAndConsole(TEST_URI);
 
@@ -39,6 +41,16 @@ add_task(async function () {
       content.CSS.highlights.set("search", new content.Highlight());
       content.CSS.highlights.set("glow", new content.Highlight());
       content.CSS.highlights.set("anchor", new content.Highlight());
+
+      content.customElements.define(
+        "fx-test",
+        class extends content.HTMLElement {}
+      );
+      const { states } = content.document
+        .createElement("fx-test")
+        .attachInternals();
+      states.add("custom-state");
+      states.add("another-custom-state");
 
       content.wrappedJSObject.console.log(
         "oi-entries-test",
@@ -70,7 +82,8 @@ add_task(async function () {
         formData,
         midiAccess.inputs,
         midiAccess.outputs,
-        content.CSS.highlights
+        content.CSS.highlights,
+        states
       );
 
       return {
@@ -98,7 +111,7 @@ add_task(async function () {
   const objectInspectors = [...node.querySelectorAll(".tree")];
   is(
     objectInspectors.length,
-    12,
+    13,
     "There is the expected number of object inspectors"
   );
 
@@ -115,6 +128,7 @@ add_task(async function () {
     midiInputsOi,
     midiOutputsOi,
     highlightsRegistryOi,
+    customStateSetOi,
   ] = objectInspectors;
 
   await testSmallMap(smallMapOi);
@@ -129,6 +143,7 @@ add_task(async function () {
   await testMidiInputs(midiInputsOi, taskResult.midi.inputs);
   await testMidiOutputs(midiOutputsOi, taskResult.midi.outputs);
   await testHighlightsRegistry(highlightsRegistryOi);
+  await testCustomStateSet(customStateSetOi);
 });
 
 async function testSmallMap(oi) {
@@ -827,5 +842,53 @@ async function testHighlightsRegistry(oi) {
     oiNodes[11].textContent,
     `<prototype>: HighlightPrototype { add: add(), clear: clear(), delete: delete(), … }`,
     `Got expected prototype property`
+  );
+}
+
+async function testCustomStateSet(oi) {
+  info("Expanding the CustomStateSet");
+  let onCustomStateSetOiMutation = waitForNodeMutation(oi, {
+    childList: true,
+  });
+
+  oi.querySelector(".arrow").click();
+  await onCustomStateSetOiMutation;
+
+  ok(
+    oi.querySelector(".arrow").classList.contains("expanded"),
+    "The arrow of the node has the expected class after clicking on it"
+  );
+
+  let oiNodes = oi.querySelectorAll(".node");
+  // There are 4 nodes: the root, size, entries and the proto.
+  is(oiNodes.length, 4, "There is the expected number of nodes in the tree");
+
+  info("Expanding the <entries> leaf of the map");
+  const entriesNode = oiNodes[2];
+  is(
+    entriesNode.textContent,
+    "<entries>",
+    "There is the expected <entries> node"
+  );
+  onCustomStateSetOiMutation = waitForNodeMutation(oi, {
+    childList: true,
+  });
+
+  entriesNode.querySelector(".arrow").click();
+  await onCustomStateSetOiMutation;
+
+  oiNodes = oi.querySelectorAll(".node");
+  // There are now 6 nodes, the 4 original ones, and the 2 entries.
+  is(oiNodes.length, 6, "There is the expected number of nodes in the tree");
+
+  is(
+    oiNodes[3].textContent,
+    `0: "custom-state"`,
+    `Got expected first entry item`
+  );
+  is(
+    oiNodes[4].textContent,
+    `1: "another-custom-state"`,
+    `Got expected second entry item`
   );
 }

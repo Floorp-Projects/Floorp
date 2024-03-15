@@ -14,17 +14,18 @@ const {
 } = require("resource://devtools/client/fronts/string.js");
 
 const SUPPORT_ENUM_ENTRIES_SET = new Set([
-  "Headers",
-  "Map",
-  "WeakMap",
-  "Set",
-  "WeakSet",
-  "Storage",
-  "URLSearchParams",
+  "CustomStateSet",
   "FormData",
+  "Headers",
+  "HighlightRegistry",
+  "Map",
   "MIDIInputMap",
   "MIDIOutputMap",
-  "HighlightRegistry",
+  "Set",
+  "Storage",
+  "URLSearchParams",
+  "WeakMap",
+  "WeakSet",
 ]);
 
 /**

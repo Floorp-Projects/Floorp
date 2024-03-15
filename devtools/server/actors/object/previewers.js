@@ -612,6 +612,30 @@ const previewers = {
       return true;
     },
   ],
+
+  CustomStateSet: [
+    function(objectActor, grip) {
+      const size = DevToolsUtils.getProperty(objectActor.obj, "size");
+      if (typeof size != "number") {
+        return false;
+      }
+
+      grip.preview = {
+        kind: "ArrayLike",
+        length: size,
+      };
+
+      const items = (grip.preview.items = []);
+      for (const item of PropertyIterators.enumCustomStateSetEntries(objectActor)) {
+        items.push(item);
+        if (items.length == OBJECT_PREVIEW_MAX_ITEMS) {
+          break;
+        }
+      }
+
+      return true;
+    },
+  ],
 };
 
 /**
