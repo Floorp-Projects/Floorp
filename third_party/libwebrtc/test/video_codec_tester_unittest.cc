@@ -49,6 +49,7 @@ using ::testing::InvokeWithoutArgs;
 using ::testing::NiceMock;
 using ::testing::Return;
 using ::testing::SizeIs;
+using ::testing::UnorderedElementsAreArray;
 using ::testing::Values;
 
 using VideoCodecStats = VideoCodecTester::VideoCodecStats;
@@ -83,6 +84,7 @@ rtc::scoped_refptr<I420Buffer> CreateYuvBuffer(uint8_t y = 0,
   return buffer;
 }
 
+// TODO(ssilkin): Wrap this into a class that removes file in dtor.
 std::string CreateYuvFile(int width, int height, int num_frames) {
   std::string path = webrtc::test::TempFilename(webrtc::test::OutputPath(),
                                                 "video_codec_tester_unittest");
@@ -161,6 +163,7 @@ class TestVideoDecoder : public MockVideoDecoder {
             .set_timestamp_rtp(encoded_frame.RtpTimestamp())
             .build();
     callback_->Decoded(decoded_frame);
+    frame_sizes_.push_back(DataSize::Bytes(encoded_frame.size()));
     return WEBRTC_VIDEO_CODEC_OK;
   }
 
@@ -169,8 +172,11 @@ class TestVideoDecoder : public MockVideoDecoder {
     return WEBRTC_VIDEO_CODEC_OK;
   }
 
+  const std::vector<DataSize>& frame_sizes() const { return frame_sizes_; }
+
  private:
   DecodedImageCallback* callback_;
+  std::vector<DataSize> frame_sizes_;
 };
 
 class VideoCodecTesterTest : public ::testing::Test {
@@ -196,7 +202,27 @@ class VideoCodecTesterTest : public ::testing::Test {
     NiceMock<MockVideoDecoderFactory> decoder_factory;
     ON_CALL(decoder_factory, CreateVideoDecoder)
         .WillByDefault([&](const SdpVideoFormat&) {
-          return std::make_unique<NiceMock<TestVideoDecoder>>();
+          // Video codec tester destroyes decoder at the end of test. Test
+          // decoder collects stats which we need to access after test. To keep
+          // the decode alive we wrap it into a wrapper and pass the wrapper to
+          // the tester.
+          class DecoderWrapper : public TestVideoDecoder {
+           public:
+            explicit DecoderWrapper(TestVideoDecoder* decoder)
+                : decoder_(decoder) {}
+            int32_t Decode(const EncodedImage& encoded_frame,
+                           int64_t render_time_ms) {
+              return decoder_->Decode(encoded_frame, render_time_ms);
+            }
+            int32_t RegisterDecodeCompleteCallback(
+                DecodedImageCallback* callback) {
+              return decoder_->RegisterDecodeCompleteCallback(callback);
+            }
+            TestVideoDecoder* decoder_;
+          };
+          decoders_.push_back(std::make_unique<NiceMock<TestVideoDecoder>>());
+          return std::make_unique<NiceMock<DecoderWrapper>>(
+              decoders_.back().get());
         });
 
     int num_spatial_layers =
@@ -232,6 +258,9 @@ class VideoCodecTesterTest : public ::testing::Test {
     remove(yuv_path.c_str());
     return stats;
   }
+
+ protected:
+  std::vector<std::unique_ptr<TestVideoDecoder>> decoders_;
 };
 
 EncodedImage CreateEncodedImage(uint32_t timestamp_rtp) {
@@ -456,6 +485,66 @@ TEST_F(VideoCodecTesterTest, Psnr) {
   EXPECT_NEAR(slice[1].psnr->u, 36, 1);
   EXPECT_NEAR(slice[1].psnr->v, 34, 1);
 }
+
+struct ScalabilityTestParameters {
+  std::string codec_type;
+  ScalabilityMode scalability_mode;
+  // Temporal unit -> spatial layer -> frame size.
+  std::vector<std::map<int, DataSize>> encoded_frame_sizes;
+  std::vector<DataSize> expected_decode_frame_sizes;
+};
+
+class VideoCodecTesterTestScalability
+    : public VideoCodecTesterTest,
+      public ::testing::WithParamInterface<ScalabilityTestParameters> {};
+
+TEST_P(VideoCodecTesterTestScalability, EncodeDecode) {
+  ScalabilityTestParameters test_params = GetParam();
+  std::vector<std::vector<Frame>> frames;
+  for (size_t frame_num = 0; frame_num < test_params.encoded_frame_sizes.size();
+       ++frame_num) {
+    std::vector<Frame> temporal_unit;
+    for (auto [sidx, frame_size] : test_params.encoded_frame_sizes[frame_num]) {
+      temporal_unit.push_back(
+          Frame{.timestamp_rtp = static_cast<uint32_t>(3000 * frame_num),
+                .layer_id = {.spatial_idx = sidx, .temporal_idx = 0},
+                .frame_size = frame_size,
+                .keyframe = (frame_num == 0 && sidx == 0)});
+    }
+    frames.push_back(temporal_unit);
+  }
+  RunEncodeDecodeTest(test_params.codec_type, test_params.scalability_mode,
+                      frames);
+
+  size_t num_spatial_layers =
+      ScalabilityModeToNumSpatialLayers(test_params.scalability_mode);
+  EXPECT_EQ(num_spatial_layers, decoders_.size());
+
+  // Collect input frame sizes from all decoders.
+  std::vector<DataSize> decode_frame_sizes;
+  for (const auto& decoder : decoders_) {
+    const auto& frame_sizes = decoder->frame_sizes();
+    decode_frame_sizes.insert(decode_frame_sizes.end(), frame_sizes.begin(),
+                              frame_sizes.end());
+  }
+  EXPECT_THAT(decode_frame_sizes, UnorderedElementsAreArray(
+                                      test_params.expected_decode_frame_sizes));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    All,
+    VideoCodecTesterTestScalability,
+    Values(ScalabilityTestParameters{
+        .codec_type = "VP8",
+        .scalability_mode = ScalabilityMode::kS2T1,
+        .encoded_frame_sizes = {{{0, DataSize::Bytes(1)},
+                                 {1, DataSize::Bytes(2)}},
+                                {{0, DataSize::Bytes(3)},
+                                 // Emulate frame drop.
+                                 {1, DataSize::Bytes(0)}}},
+        .expected_decode_frame_sizes = {DataSize::Bytes(1), DataSize::Bytes(2),
+                                        DataSize::Bytes(3)},
+    }));
 
 class VideoCodecTesterTestPacing
     : public ::testing::TestWithParam<std::tuple<PacingSettings, int>> {
