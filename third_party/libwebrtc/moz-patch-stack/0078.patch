@@ -1,25 +1,74 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Wed, 8 Feb 2023 08:01:00 +0000
-Subject: Bug 1814692 - Don't attempt realtime scheduling rtc::PlatformThreads.
- r=webrtc-reviewers,bwc
+From: Jan Grulich <jgrulich@redhat.com>
+Date: Fri, 10 Mar 2023 09:21:00 +0000
+Subject: Bug 1819035 - get EGL display based on the used platform in the
+ browser r=webrtc-reviewers,ng
 
-Differential Revision: https://phabricator.services.mozilla.com/D169036
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/9e64a965e26c8379261466e5273c3b383164b2c7
+Because of a possible misconfiguration or a possible driver issue it
+might happen that the browser will use a different driver on X11 and
+end up using yet another one for wayland/gbm, which might lead to not
+working screen sharing in the better case, but also to a crash in the
+other driver (Nvidia). This adds a check for platform the browser runs
+on, if it's XWayland or Wayland and based on that query EGL display for
+that specific platform, rather than going for the Wayland one only.
+
+Differential Revision: https://phabricator.services.mozilla.com/D171858
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c8606497de1f461a6352456e0e511c2ae498d526
 ---
- rtc_base/platform_thread.cc | 3 +++
- 1 file changed, 3 insertions(+)
+ .../linux/wayland/egl_dmabuf.cc               | 30 +++++++++++++++++--
+ 1 file changed, 28 insertions(+), 2 deletions(-)
 
-diff --git a/rtc_base/platform_thread.cc b/rtc_base/platform_thread.cc
-index 71a9f1b224..bcbb784b97 100644
---- a/rtc_base/platform_thread.cc
-+++ b/rtc_base/platform_thread.cc
-@@ -50,6 +50,9 @@ bool SetPriority(ThreadPriority priority) {
-   // TODO(tommi): Switch to the same mechanism as Chromium uses for changing
-   // thread priorities.
-   return true;
-+#elif defined(WEBRTC_MOZILLA_BUILD) && defined(WEBRTC_LINUX)
-+  // Only realtime audio uses realtime scheduling in Firefox.
-+  return true;
- #else
-   const int policy = SCHED_FIFO;
-   const int min_prio = sched_get_priority_min(policy);
+diff --git a/modules/desktop_capture/linux/wayland/egl_dmabuf.cc b/modules/desktop_capture/linux/wayland/egl_dmabuf.cc
+index b529077c6d..6a019c64b4 100644
+--- a/modules/desktop_capture/linux/wayland/egl_dmabuf.cc
++++ b/modules/desktop_capture/linux/wayland/egl_dmabuf.cc
+@@ -13,6 +13,7 @@
+ #include <asm/ioctl.h>
+ #include <dlfcn.h>
+ #include <fcntl.h>
++#include <gdk/gdk.h>
+ #include <libdrm/drm_fourcc.h>
+ #include <linux/types.h>
+ #include <spa/param/video/format-utils.h>
+@@ -217,6 +218,26 @@ static void CloseLibrary(void* library) {
+   }
+ }
+ 
++static bool IsWaylandDisplay() {
++  static auto sGdkWaylandDisplayGetType =
++    (GType (*)(void))dlsym(RTLD_DEFAULT, "gdk_wayland_display_get_type");
++  if (!sGdkWaylandDisplayGetType) {
++    return false;
++  }
++  return (G_TYPE_CHECK_INSTANCE_TYPE ((gdk_display_get_default()),
++                                      sGdkWaylandDisplayGetType()));
++}
++
++static bool IsX11Display() {
++  static auto sGdkX11DisplayGetType =
++    (GType (*)(void))dlsym(RTLD_DEFAULT, "gdk_x11_display_get_type");
++  if (!sGdkX11DisplayGetType) {
++    return false;
++  }
++  return (G_TYPE_CHECK_INSTANCE_TYPE ((gdk_display_get_default()),
++                                      sGdkX11DisplayGetType()));
++}
++
+ static void* g_lib_egl = nullptr;
+ 
+ RTC_NO_SANITIZE("cfi-icall")
+@@ -362,8 +383,13 @@ EglDmaBuf::EglDmaBuf() {
+     return;
+   }
+ 
+-  egl_.display = EglGetPlatformDisplay(EGL_PLATFORM_WAYLAND_KHR,
+-                                       (void*)EGL_DEFAULT_DISPLAY, nullptr);
++  if (IsWaylandDisplay()) {
++    egl_.display = EglGetPlatformDisplay(EGL_PLATFORM_WAYLAND_KHR,
++                                         (void*)EGL_DEFAULT_DISPLAY, nullptr);
++  } else if (IsX11Display()) {
++    egl_.display = EglGetPlatformDisplay(EGL_PLATFORM_X11_KHR,
++                                         (void*)EGL_DEFAULT_DISPLAY, nullptr);
++  }
+ 
+   if (egl_.display == EGL_NO_DISPLAY) {
+     RTC_LOG(LS_ERROR) << "Failed to obtain default EGL display: "
