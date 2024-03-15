@@ -1,407 +1,154 @@
-From: Tony Herre <herre@google.com>
-Date: Thu, 7 Dec 2023 12:39:40 +0100
-Subject: (cherry-pick-branch-heads/6167) [121] Ensure cloning and then sending
- audio encoded frames propagates CSRCs
+From: Daniel Baker <dbaker@mozilla.com>
+Date: Fri, 15 Mar 2024 13:13:59 -0600
+Subject: (tmp-cherry-pick) Revert "Enable DD and VLA header extensions by
+ default for Simulcast/SVC" (5e3eb52497)
 
-(cherry picked from commit 5f3ac435518cd5c05a74b58419fe6cfc504fc7da)
+This reverts commit 33c7edd58ad0edc71939b9372fff3ab563c1f4a7.
 
-Bug: chromium:1508337
-Change-Id: I9f28fc0958d28bc97f9378a46fbec3e45148736f
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/330260
-Reviewed-by: Guido Urdaneta <guidou@webrtc.org>
-Commit-Queue: Tony Herre <herre@google.com>
+Reason for revert: Breaks downstream project
+
+Original change's description:
+> Enable DD and VLA header extensions by default for Simulcast/SVC
+>
+> When Simulcast (more than one encoding) or SVC (a scalability mode
+> other than the default L1T1) is used, enable the AV1 Dependency
+> Descriptor and the video-layer-allocations RTP header extensions by
+> default.
+>
+> The RTP header extensions API can be used to disable them if needed.
+>
+> BUG=webrtc:15378
+>
+> Change-Id: I587ac32c9d681461496a136f6950b007e72da86d
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/326100
+> Reviewed-by: Harald Alvestrand <hta@webrtc.org>
+> Reviewed-by: Danil Chapovalov <danilchap@webrtc.org>
+> Commit-Queue: Philipp Hancke <phancke@microsoft.com>
+> Cr-Commit-Position: refs/heads/main@{#41332}
+
+Bug: webrtc:15378
+Change-Id: I6b5f71f321d30a510db3bd180deaa57732f9349b
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/330540
+Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
 Reviewed-by: Harald Alvestrand <hta@webrtc.org>
-Cr-Original-Commit-Position: refs/heads/main@{#41337}
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/330564
-Commit-Queue: Guido Urdaneta <guidou@webrtc.org>
-Cr-Commit-Position: refs/branch-heads/6167@{#1}
-Cr-Branched-From: ece5cb83715dea85617114b6d4e981fdee2623ba-refs/heads/main@{#41315}
+Commit-Queue: Emil Lundmark <lndmrk@webrtc.org>
+Cr-Commit-Position: refs/heads/main@{#41341}
 ---
- audio/BUILD.gn                                |  1 +
- audio/channel_send.cc                         | 16 ++--
- ...channel_send_frame_transformer_delegate.cc | 19 +++-
- .../channel_send_frame_transformer_delegate.h |  3 +-
- ...end_frame_transformer_delegate_unittest.cc | 92 ++++++++++++++++---
- modules/rtp_rtcp/source/rtp_sender_audio.cc   |  3 +-
- modules/rtp_rtcp/source/rtp_sender_audio.h    |  3 +
- .../source/rtp_sender_audio_unittest.cc       | 15 +++
- 8 files changed, 126 insertions(+), 26 deletions(-)
+ pc/rtp_transceiver.cc          | 17 --------
+ pc/rtp_transceiver_unittest.cc | 75 ----------------------------------
+ 2 files changed, 92 deletions(-)
 
-diff --git a/audio/BUILD.gn b/audio/BUILD.gn
-index bbc294bd75..09562b9131 100644
---- a/audio/BUILD.gn
-+++ b/audio/BUILD.gn
-@@ -223,6 +223,7 @@ if (rtc_include_tests) {
-       "utility:utility_tests",
-       "//testing/gtest",
-     ]
-+    absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
-   }
- 
-   rtc_library("channel_receive_unittest") {
-diff --git a/audio/channel_send.cc b/audio/channel_send.cc
-index b71f564498..ecf2cb5175 100644
---- a/audio/channel_send.cc
-+++ b/audio/channel_send.cc
-@@ -169,7 +169,8 @@ class ChannelSend : public ChannelSendInterface,
-                        uint8_t payloadType,
-                        uint32_t rtp_timestamp_without_offset,
-                        rtc::ArrayView<const uint8_t> payload,
--                       int64_t absolute_capture_timestamp_ms)
-+                       int64_t absolute_capture_timestamp_ms,
-+                       rtc::ArrayView<const uint32_t> csrcs)
-       RTC_RUN_ON(encoder_queue_);
- 
-   void OnReceivedRtt(int64_t rtt_ms);
-@@ -294,14 +295,15 @@ int32_t ChannelSend::SendData(AudioFrameType frameType,
-     return 0;
-   }
-   return SendRtpAudio(frameType, payloadType, rtp_timestamp, payload,
--                      absolute_capture_timestamp_ms);
-+                      absolute_capture_timestamp_ms, /*csrcs=*/{});
+diff --git a/pc/rtp_transceiver.cc b/pc/rtp_transceiver.cc
+index ec58847485..ca626cc94b 100644
+--- a/pc/rtp_transceiver.cc
++++ b/pc/rtp_transceiver.cc
+@@ -177,23 +177,6 @@ RtpTransceiver::RtpTransceiver(
+           : media_engine()->voice().send_codecs());
+   senders_.push_back(sender);
+   receivers_.push_back(receiver);
+-
+-  // Set default header extensions depending on whether simulcast/SVC is used.
+-  RtpParameters parameters = sender->internal()->GetParametersInternal();
+-  bool uses_simulcast = parameters.encodings.size() > 1;
+-  bool uses_svc = !parameters.encodings.empty() &&
+-                  parameters.encodings[0].scalability_mode.has_value() &&
+-                  parameters.encodings[0].scalability_mode !=
+-                      ScalabilityModeToString(ScalabilityMode::kL1T1);
+-  if (uses_simulcast || uses_svc) {
+-    // Enable DD and VLA extensions, can be deactivated by the API.
+-    for (RtpHeaderExtensionCapability& ext : header_extensions_to_negotiate_) {
+-      if (ext.uri == RtpExtension::kVideoLayersAllocationUri ||
+-          ext.uri == RtpExtension::kDependencyDescriptorUri) {
+-        ext.direction = RtpTransceiverDirection::kSendRecv;
+-      }
+-    }
+-  }
  }
  
- int32_t ChannelSend::SendRtpAudio(AudioFrameType frameType,
-                                   uint8_t payloadType,
-                                   uint32_t rtp_timestamp_without_offset,
-                                   rtc::ArrayView<const uint8_t> payload,
--                                  int64_t absolute_capture_timestamp_ms) {
-+                                  int64_t absolute_capture_timestamp_ms,
-+                                  rtc::ArrayView<const uint32_t> csrcs) {
-   // E2EE Custom Audio Frame Encryption (This is optional).
-   // Keep this buffer around for the lifetime of the send call.
-   rtc::Buffer encrypted_audio_payload;
-@@ -363,7 +365,8 @@ int32_t ChannelSend::SendRtpAudio(AudioFrameType frameType,
-       .payload = payload,
-       .payload_id = payloadType,
-       .rtp_timestamp =
--          rtp_timestamp_without_offset + rtp_rtcp_->StartTimestamp()};
-+          rtp_timestamp_without_offset + rtp_rtcp_->StartTimestamp(),
-+      .csrcs = csrcs};
-   if (absolute_capture_timestamp_ms > 0) {
-     frame.capture_time = Timestamp::Millis(absolute_capture_timestamp_ms);
-   }
-@@ -859,12 +862,13 @@ void ChannelSend::InitFrameTransformerDelegate(
-       [this](AudioFrameType frameType, uint8_t payloadType,
-              uint32_t rtp_timestamp_with_offset,
-              rtc::ArrayView<const uint8_t> payload,
--             int64_t absolute_capture_timestamp_ms) {
-+             int64_t absolute_capture_timestamp_ms,
-+             rtc::ArrayView<const uint32_t> csrcs) {
-         RTC_DCHECK_RUN_ON(&encoder_queue_);
-         return SendRtpAudio(
-             frameType, payloadType,
-             rtp_timestamp_with_offset - rtp_rtcp_->StartTimestamp(), payload,
--            absolute_capture_timestamp_ms);
-+            absolute_capture_timestamp_ms, csrcs);
-       };
-   frame_transformer_delegate_ =
-       rtc::make_ref_counted<ChannelSendFrameTransformerDelegate>(
-diff --git a/audio/channel_send_frame_transformer_delegate.cc b/audio/channel_send_frame_transformer_delegate.cc
-index f66f29df08..2eea0d2387 100644
---- a/audio/channel_send_frame_transformer_delegate.cc
-+++ b/audio/channel_send_frame_transformer_delegate.cc
-@@ -11,6 +11,7 @@
- #include "audio/channel_send_frame_transformer_delegate.h"
+ RtpTransceiver::~RtpTransceiver() {
+diff --git a/pc/rtp_transceiver_unittest.cc b/pc/rtp_transceiver_unittest.cc
+index b6dc7b2bb9..d75e964509 100644
+--- a/pc/rtp_transceiver_unittest.cc
++++ b/pc/rtp_transceiver_unittest.cc
+@@ -481,81 +481,6 @@ TEST_F(RtpTransceiverTestForHeaderExtensions,
+                                 RtpTransceiverDirection::kStopped)));
+ }
  
- #include <utility>
-+#include <vector>
- 
- namespace webrtc {
- namespace {
-@@ -56,6 +57,7 @@ class TransformableOutgoingAudioFrame
-       size_t payload_size,
-       absl::optional<uint64_t> absolute_capture_timestamp_ms,
-       uint32_t ssrc,
-+      std::vector<uint32_t> csrcs,
-       const std::string& codec_mime_type)
-       : frame_type_(frame_type),
-         payload_type_(payload_type),
-@@ -63,6 +65,7 @@ class TransformableOutgoingAudioFrame
-         payload_(payload_data, payload_size),
-         absolute_capture_timestamp_ms_(absolute_capture_timestamp_ms),
-         ssrc_(ssrc),
-+        csrcs_(std::move(csrcs)),
-         codec_mime_type_(codec_mime_type) {}
-   ~TransformableOutgoingAudioFrame() override = default;
-   rtc::ArrayView<const uint8_t> GetData() const override { return payload_; }
-@@ -81,7 +84,7 @@ class TransformableOutgoingAudioFrame
-   std::string GetMimeType() const override { return codec_mime_type_; }
- 
-   rtc::ArrayView<const uint32_t> GetContributingSources() const override {
--    return {};
-+    return csrcs_;
-   }
- 
-   const absl::optional<uint16_t> SequenceNumber() const override {
-@@ -103,6 +106,7 @@ class TransformableOutgoingAudioFrame
-   rtc::Buffer payload_;
-   absl::optional<uint64_t> absolute_capture_timestamp_ms_;
-   uint32_t ssrc_;
-+  std::vector<uint32_t> csrcs_;
-   std::string codec_mime_type_;
- };
+-TEST_F(RtpTransceiverTestForHeaderExtensions,
+-       SimulcastOrSvcEnablesExtensionsByDefault) {
+-  std::vector<RtpHeaderExtensionCapability> extensions = {
+-      {RtpExtension::kDependencyDescriptorUri, 1,
+-       RtpTransceiverDirection::kStopped},
+-      {RtpExtension::kVideoLayersAllocationUri, 2,
+-       RtpTransceiverDirection::kStopped},
+-  };
+-
+-  // Default is stopped.
+-  auto sender = rtc::make_ref_counted<MockRtpSenderInternal>();
+-  auto transceiver = rtc::make_ref_counted<RtpTransceiver>(
+-      RtpSenderProxyWithInternal<RtpSenderInternal>::Create(
+-          rtc::Thread::Current(), sender),
+-      RtpReceiverProxyWithInternal<RtpReceiverInternal>::Create(
+-          rtc::Thread::Current(), rtc::Thread::Current(), receiver_),
+-      context(), extensions,
+-      /* on_negotiation_needed= */ [] {});
+-  std::vector<webrtc::RtpHeaderExtensionCapability> header_extensions =
+-      transceiver->GetHeaderExtensionsToNegotiate();
+-  ASSERT_EQ(header_extensions.size(), 2u);
+-  EXPECT_EQ(header_extensions[0].uri, RtpExtension::kDependencyDescriptorUri);
+-  EXPECT_EQ(header_extensions[0].direction, RtpTransceiverDirection::kStopped);
+-  EXPECT_EQ(header_extensions[1].uri, RtpExtension::kVideoLayersAllocationUri);
+-  EXPECT_EQ(header_extensions[1].direction, RtpTransceiverDirection::kStopped);
+-
+-  // Simulcast, i.e. more than one encoding.
+-  RtpParameters simulcast_parameters;
+-  simulcast_parameters.encodings.resize(2);
+-  auto simulcast_sender = rtc::make_ref_counted<MockRtpSenderInternal>();
+-  EXPECT_CALL(*simulcast_sender, GetParametersInternal())
+-      .WillRepeatedly(Return(simulcast_parameters));
+-  auto simulcast_transceiver = rtc::make_ref_counted<RtpTransceiver>(
+-      RtpSenderProxyWithInternal<RtpSenderInternal>::Create(
+-          rtc::Thread::Current(), simulcast_sender),
+-      RtpReceiverProxyWithInternal<RtpReceiverInternal>::Create(
+-          rtc::Thread::Current(), rtc::Thread::Current(), receiver_),
+-      context(), extensions,
+-      /* on_negotiation_needed= */ [] {});
+-  auto simulcast_extensions =
+-      simulcast_transceiver->GetHeaderExtensionsToNegotiate();
+-  ASSERT_EQ(simulcast_extensions.size(), 2u);
+-  EXPECT_EQ(simulcast_extensions[0].uri,
+-            RtpExtension::kDependencyDescriptorUri);
+-  EXPECT_EQ(simulcast_extensions[0].direction,
+-            RtpTransceiverDirection::kSendRecv);
+-  EXPECT_EQ(simulcast_extensions[1].uri,
+-            RtpExtension::kVideoLayersAllocationUri);
+-  EXPECT_EQ(simulcast_extensions[1].direction,
+-            RtpTransceiverDirection::kSendRecv);
+-
+-  // SVC, a single encoding with a scalabilityMode other than L1T1.
+-  webrtc::RtpParameters svc_parameters;
+-  svc_parameters.encodings.resize(1);
+-  svc_parameters.encodings[0].scalability_mode = "L3T3";
+-
+-  auto svc_sender = rtc::make_ref_counted<MockRtpSenderInternal>();
+-  EXPECT_CALL(*svc_sender, GetParametersInternal())
+-      .WillRepeatedly(Return(svc_parameters));
+-  auto svc_transceiver = rtc::make_ref_counted<RtpTransceiver>(
+-      RtpSenderProxyWithInternal<RtpSenderInternal>::Create(
+-          rtc::Thread::Current(), svc_sender),
+-      RtpReceiverProxyWithInternal<RtpReceiverInternal>::Create(
+-          rtc::Thread::Current(), rtc::Thread::Current(), receiver_),
+-      context(), extensions,
+-      /* on_negotiation_needed= */ [] {});
+-  std::vector<webrtc::RtpHeaderExtensionCapability> svc_extensions =
+-      svc_transceiver->GetHeaderExtensionsToNegotiate();
+-  ASSERT_EQ(svc_extensions.size(), 2u);
+-  EXPECT_EQ(svc_extensions[0].uri, RtpExtension::kDependencyDescriptorUri);
+-  EXPECT_EQ(svc_extensions[0].direction, RtpTransceiverDirection::kSendRecv);
+-  EXPECT_EQ(svc_extensions[1].uri, RtpExtension::kVideoLayersAllocationUri);
+-  EXPECT_EQ(svc_extensions[1].direction, RtpTransceiverDirection::kSendRecv);
+-}
+-
  }  // namespace
-@@ -143,14 +147,15 @@ void ChannelSendFrameTransformerDelegate::Transform(
-       send_frame_callback_(
-           frame_type, payload_type, rtp_timestamp,
-           rtc::ArrayView<const uint8_t>(payload_data, payload_size),
--          absolute_capture_timestamp_ms);
-+          absolute_capture_timestamp_ms, /*csrcs=*/{});
-       return;
-     }
-   }
-   frame_transformer_->Transform(
-       std::make_unique<TransformableOutgoingAudioFrame>(
-           frame_type, payload_type, rtp_timestamp, payload_data, payload_size,
--          absolute_capture_timestamp_ms, ssrc, codec_mimetype));
-+          absolute_capture_timestamp_ms, ssrc,
-+          /*csrcs=*/std::vector<uint32_t>(), codec_mimetype));
- }
  
- void ChannelSendFrameTransformerDelegate::OnTransformedFrame(
-@@ -184,17 +189,21 @@ void ChannelSendFrameTransformerDelegate::SendFrame(
-       transformed_frame->GetData(),
-       transformed_frame->AbsoluteCaptureTimestamp()
-           ? *transformed_frame->AbsoluteCaptureTimestamp()
--          : 0);
-+          : 0,
-+      transformed_frame->GetContributingSources());
- }
- 
- std::unique_ptr<TransformableAudioFrameInterface> CloneSenderAudioFrame(
-     TransformableAudioFrameInterface* original) {
-+  std::vector<uint32_t> csrcs;
-+  csrcs.assign(original->GetContributingSources().begin(),
-+               original->GetContributingSources().end());
-   return std::make_unique<TransformableOutgoingAudioFrame>(
-       InterfaceFrameTypeToInternalFrameType(original->Type()),
-       original->GetPayloadType(), original->GetTimestamp(),
-       original->GetData().data(), original->GetData().size(),
-       original->AbsoluteCaptureTimestamp(), original->GetSsrc(),
--      original->GetMimeType());
-+      std::move(csrcs), original->GetMimeType());
- }
- 
- }  // namespace webrtc
-diff --git a/audio/channel_send_frame_transformer_delegate.h b/audio/channel_send_frame_transformer_delegate.h
-index bcec018922..97fc14f737 100644
---- a/audio/channel_send_frame_transformer_delegate.h
-+++ b/audio/channel_send_frame_transformer_delegate.h
-@@ -35,7 +35,8 @@ class ChannelSendFrameTransformerDelegate : public TransformedFrameCallback {
-                             uint8_t payloadType,
-                             uint32_t rtp_timestamp_with_offset,
-                             rtc::ArrayView<const uint8_t> payload,
--                            int64_t absolute_capture_timestamp_ms)>;
-+                            int64_t absolute_capture_timestamp_ms,
-+                            rtc::ArrayView<const uint32_t> csrcs)>;
-   ChannelSendFrameTransformerDelegate(
-       SendFrameCallback send_frame_callback,
-       rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
-diff --git a/audio/channel_send_frame_transformer_delegate_unittest.cc b/audio/channel_send_frame_transformer_delegate_unittest.cc
-index a47cbd59c8..4dcd15cd95 100644
---- a/audio/channel_send_frame_transformer_delegate_unittest.cc
-+++ b/audio/channel_send_frame_transformer_delegate_unittest.cc
-@@ -12,7 +12,9 @@
- 
- #include <memory>
- #include <utility>
-+#include <vector>
- 
-+#include "absl/memory/memory.h"
- #include "rtc_base/task_queue_for_test.h"
- #include "test/gmock.h"
- #include "test/gtest.h"
-@@ -24,10 +26,13 @@ namespace {
- 
- using ::testing::_;
- using ::testing::ElementsAre;
-+using ::testing::ElementsAreArray;
- using ::testing::NiceMock;
- using ::testing::Return;
- using ::testing::SaveArg;
- 
-+const uint8_t mock_data[] = {1, 2, 3, 4};
-+
- class MockChannelSend {
-  public:
-   MockChannelSend() = default;
-@@ -39,30 +44,56 @@ class MockChannelSend {
-                uint8_t payloadType,
-                uint32_t rtp_timestamp,
-                rtc::ArrayView<const uint8_t> payload,
--               int64_t absolute_capture_timestamp_ms));
-+               int64_t absolute_capture_timestamp_ms,
-+               rtc::ArrayView<const uint32_t> csrcs));
- 
-   ChannelSendFrameTransformerDelegate::SendFrameCallback callback() {
-     return [this](AudioFrameType frameType, uint8_t payloadType,
-                   uint32_t rtp_timestamp, rtc::ArrayView<const uint8_t> payload,
--                  int64_t absolute_capture_timestamp_ms) {
-+                  int64_t absolute_capture_timestamp_ms,
-+                  rtc::ArrayView<const uint32_t> csrcs) {
-       return SendFrame(frameType, payloadType, rtp_timestamp, payload,
--                       absolute_capture_timestamp_ms);
-+                       absolute_capture_timestamp_ms, csrcs);
-     };
-   }
- };
- 
--std::unique_ptr<MockTransformableAudioFrame> CreateMockReceiverFrame() {
--  const uint8_t mock_data[] = {1, 2, 3, 4};
-+std::unique_ptr<TransformableAudioFrameInterface> CreateMockReceiverFrame(
-+    std::vector<const uint32_t> csrcs) {
-   std::unique_ptr<MockTransformableAudioFrame> mock_frame =
--      std::make_unique<MockTransformableAudioFrame>();
-+      std::make_unique<NiceMock<MockTransformableAudioFrame>>();
-   rtc::ArrayView<const uint8_t> payload(mock_data);
-   ON_CALL(*mock_frame, GetData).WillByDefault(Return(payload));
-   ON_CALL(*mock_frame, GetPayloadType).WillByDefault(Return(0));
-   ON_CALL(*mock_frame, GetDirection)
-       .WillByDefault(Return(TransformableFrameInterface::Direction::kReceiver));
-+  ON_CALL(*mock_frame, GetContributingSources).WillByDefault(Return(csrcs));
-   return mock_frame;
- }
- 
-+std::unique_ptr<TransformableAudioFrameInterface> CreateFrame() {
-+  TaskQueueForTest channel_queue("channel_queue");
-+  rtc::scoped_refptr<MockFrameTransformer> mock_frame_transformer =
-+      rtc::make_ref_counted<NiceMock<MockFrameTransformer>>();
-+  MockChannelSend mock_channel;
-+  rtc::scoped_refptr<ChannelSendFrameTransformerDelegate> delegate =
-+      rtc::make_ref_counted<ChannelSendFrameTransformerDelegate>(
-+          mock_channel.callback(), mock_frame_transformer, &channel_queue);
-+
-+  std::unique_ptr<TransformableFrameInterface> frame;
-+  ON_CALL(*mock_frame_transformer, Transform)
-+      .WillByDefault(
-+          [&frame](
-+              std::unique_ptr<TransformableFrameInterface> transform_frame) {
-+            frame = std::move(transform_frame);
-+          });
-+  delegate->Transform(AudioFrameType::kEmptyFrame, 0, 0, mock_data,
-+                      sizeof(mock_data), 0,
-+                      /*ssrc=*/0, /*mimeType=*/"audio/opus");
-+  return absl::WrapUnique(
-+      static_cast<webrtc::TransformableAudioFrameInterface*>(frame.release()));
-+}
-+
- // Test that the delegate registers itself with the frame transformer on Init().
- TEST(ChannelSendFrameTransformerDelegateTest,
-      RegisterTransformedFrameCallbackOnInit) {
-@@ -136,15 +167,16 @@ TEST(ChannelSendFrameTransformerDelegateTest,
-   delegate->Init();
-   ASSERT_TRUE(callback);
- 
--  const uint8_t data[] = {1, 2, 3, 4};
-+  std::vector<const uint32_t> csrcs = {123, 234, 345, 456};
-   EXPECT_CALL(mock_channel, SendFrame).Times(0);
--  EXPECT_CALL(mock_channel, SendFrame(_, 0, 0, ElementsAre(1, 2, 3, 4), _));
-+  EXPECT_CALL(mock_channel, SendFrame(_, 0, 0, ElementsAreArray(mock_data), _,
-+                                      ElementsAreArray(csrcs)));
-   ON_CALL(*mock_frame_transformer, Transform)
--      .WillByDefault(
--          [&callback](std::unique_ptr<TransformableFrameInterface> frame) {
--            callback->OnTransformedFrame(CreateMockReceiverFrame());
--          });
--  delegate->Transform(AudioFrameType::kEmptyFrame, 0, 0, data, sizeof(data), 0,
-+      .WillByDefault([&](std::unique_ptr<TransformableFrameInterface> frame) {
-+        callback->OnTransformedFrame(CreateMockReceiverFrame(csrcs));
-+      });
-+  delegate->Transform(AudioFrameType::kEmptyFrame, 0, 0, mock_data,
-+                      sizeof(mock_data), 0,
-                       /*ssrc=*/0, /*mimeType=*/"audio/opus");
-   channel_queue.WaitForPreviouslyPostedTasks();
- }
-@@ -188,5 +220,39 @@ TEST(ChannelSendFrameTransformerDelegateTest, ShortCircuitingSkipsTransform) {
-                       /*ssrc=*/0, /*mimeType=*/"audio/opus");
- }
- 
-+TEST(ChannelSendFrameTransformerDelegateTest,
-+     CloningSenderFramePreservesInformation) {
-+  std::unique_ptr<TransformableAudioFrameInterface> frame = CreateFrame();
-+  std::unique_ptr<TransformableAudioFrameInterface> cloned_frame =
-+      CloneSenderAudioFrame(frame.get());
-+
-+  EXPECT_EQ(cloned_frame->GetTimestamp(), frame->GetTimestamp());
-+  EXPECT_EQ(cloned_frame->GetSsrc(), frame->GetSsrc());
-+  EXPECT_EQ(cloned_frame->Type(), frame->Type());
-+  EXPECT_EQ(cloned_frame->GetPayloadType(), frame->GetPayloadType());
-+  EXPECT_EQ(cloned_frame->GetMimeType(), frame->GetMimeType());
-+  EXPECT_THAT(cloned_frame->GetContributingSources(),
-+              ElementsAreArray(frame->GetContributingSources()));
-+}
-+
-+TEST(ChannelSendFrameTransformerDelegateTest, CloningReceiverFrameWithCsrcs) {
-+  std::unique_ptr<TransformableAudioFrameInterface> frame =
-+      CreateMockReceiverFrame(/*csrcs=*/{123, 234, 345});
-+  std::unique_ptr<TransformableAudioFrameInterface> cloned_frame =
-+      CloneSenderAudioFrame(frame.get());
-+
-+  EXPECT_EQ(cloned_frame->GetTimestamp(), frame->GetTimestamp());
-+  EXPECT_EQ(cloned_frame->GetSsrc(), frame->GetSsrc());
-+  EXPECT_EQ(cloned_frame->Type(), frame->Type());
-+  EXPECT_EQ(cloned_frame->GetPayloadType(), frame->GetPayloadType());
-+  EXPECT_EQ(cloned_frame->GetMimeType(), frame->GetMimeType());
-+  EXPECT_EQ(cloned_frame->AbsoluteCaptureTimestamp(),
-+            frame->AbsoluteCaptureTimestamp());
-+
-+  ASSERT_NE(frame->GetContributingSources().size(), 0u);
-+  EXPECT_THAT(cloned_frame->GetContributingSources(),
-+              ElementsAreArray(frame->GetContributingSources()));
-+}
-+
- }  // namespace
- }  // namespace webrtc
-diff --git a/modules/rtp_rtcp/source/rtp_sender_audio.cc b/modules/rtp_rtcp/source/rtp_sender_audio.cc
-index b826c30e07..9d2258dc66 100644
---- a/modules/rtp_rtcp/source/rtp_sender_audio.cc
-+++ b/modules/rtp_rtcp/source/rtp_sender_audio.cc
-@@ -254,7 +254,8 @@ bool RTPSenderAudio::SendAudio(const RtpAudioFrame& frame) {
-     return false;
-   }
- 
--  std::unique_ptr<RtpPacketToSend> packet = rtp_sender_->AllocatePacket();
-+  std::unique_ptr<RtpPacketToSend> packet =
-+      rtp_sender_->AllocatePacket(frame.csrcs);
-   packet->SetMarker(MarkerBit(frame.type, frame.payload_id));
-   packet->SetPayloadType(frame.payload_id);
-   packet->SetTimestamp(frame.rtp_timestamp);
-diff --git a/modules/rtp_rtcp/source/rtp_sender_audio.h b/modules/rtp_rtcp/source/rtp_sender_audio.h
-index 662f908216..83a2cb211f 100644
---- a/modules/rtp_rtcp/source/rtp_sender_audio.h
-+++ b/modules/rtp_rtcp/source/rtp_sender_audio.h
-@@ -61,6 +61,9 @@ class RTPSenderAudio {
-     // header-extension-for-audio-level-indication.
-     // Valid range is [0,127]. Actual value is negative.
-     absl::optional<int> audio_level_dbov;
-+
-+    // Contributing sources list.
-+    rtc::ArrayView<const uint32_t> csrcs;
-   };
-   bool SendAudio(const RtpAudioFrame& frame);
- 
-diff --git a/modules/rtp_rtcp/source/rtp_sender_audio_unittest.cc b/modules/rtp_rtcp/source/rtp_sender_audio_unittest.cc
-index 0db610c149..724cd3a5e0 100644
---- a/modules/rtp_rtcp/source/rtp_sender_audio_unittest.cc
-+++ b/modules/rtp_rtcp/source/rtp_sender_audio_unittest.cc
-@@ -222,4 +222,19 @@ TEST_F(RtpSenderAudioTest, CheckMarkerBitForTelephoneEvents) {
-   EXPECT_FALSE(transport_.last_sent_packet().Marker());
- }
- 
-+TEST_F(RtpSenderAudioTest, SendsCsrcs) {
-+  const char payload_name[] = "audio";
-+  const uint8_t payload_type = 127;
-+  ASSERT_EQ(0, rtp_sender_audio_->RegisterAudioPayload(
-+                   payload_name, payload_type, 48000, 0, 1500));
-+  uint8_t payload[] = {47, 11, 32, 93, 89};
-+
-+  std::vector<uint32_t> csrcs({123, 456, 789});
-+
-+  ASSERT_TRUE(rtp_sender_audio_->SendAudio(
-+      {.payload = payload, .payload_id = payload_type, .csrcs = csrcs}));
-+
-+  EXPECT_EQ(transport_.last_sent_packet().Csrcs(), csrcs);
-+}
-+
  }  // namespace webrtc
