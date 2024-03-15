@@ -122,18 +122,6 @@ class RTC_EXPORT AsyncPacketSocket : public sigslot::has_slots<> {
           received_packet_callback);
   void DeregisterReceivedPacketCallback();
 
-  // Emitted each time a packet is read. Used only for UDP and
-  // connected TCP sockets.
-  // TODO(bugs.webrtc.org:15368): Deprecate and remove.
-  sigslot::signal5<AsyncPacketSocket*,
-                   const char*,
-                   size_t,
-                   const SocketAddress&,
-                   // TODO(bugs.webrtc.org/9584): Change to passing the int64_t
-                   // timestamp by value.
-                   const int64_t&>
-      SignalReadPacket;
-
   // Emitted each time a packet is sent.
   sigslot::signal2<AsyncPacketSocket*, const SentPacket&> SignalSentPacket;
 
