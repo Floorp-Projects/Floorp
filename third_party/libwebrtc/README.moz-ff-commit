@@ -28005,3 +28005,6 @@ b2e9babeb7
 # MOZ_LIBWEBRTC_SRC=/Users/danielbaker/elm/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
 # base of lastest vendoring
 f698a39eec
+# MOZ_LIBWEBRTC_SRC=/Users/danielbaker/elm/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+afedc5e7a3
