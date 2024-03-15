@@ -90,8 +90,7 @@ class PeerConnectionHeaderExtensionTest
     EnableFakeMedia(factory_dependencies, std::move(media_engine));
 
     factory_dependencies.event_log_factory =
-        std::make_unique<RtcEventLogFactory>(
-            factory_dependencies.task_queue_factory.get());
+        std::make_unique<RtcEventLogFactory>();
 
     auto pc_factory =
         CreateModularPeerConnectionFactory(std::move(factory_dependencies));

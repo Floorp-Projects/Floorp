@@ -126,8 +126,7 @@ void ObjCCallClient::CreatePeerConnectionFactory() {
       [[RTC_OBJC_TYPE(RTCDefaultVideoDecoderFactory) alloc] init]);
   dependencies.audio_processing = webrtc::AudioProcessingBuilder().Create();
   webrtc::EnableMedia(dependencies);
-  dependencies.event_log_factory =
-      std::make_unique<webrtc::RtcEventLogFactory>(dependencies.task_queue_factory.get());
+  dependencies.event_log_factory = std::make_unique<webrtc::RtcEventLogFactory>();
   pcf_ = webrtc::CreateModularPeerConnectionFactory(std::move(dependencies));
   RTC_LOG(LS_INFO) << "PeerConnectionFactory created: " << pcf_.get();
 }

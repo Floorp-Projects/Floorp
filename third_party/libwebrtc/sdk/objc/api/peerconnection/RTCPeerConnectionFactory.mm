@@ -206,8 +206,7 @@
       dependencies.audio_processing = webrtc::AudioProcessingBuilder().Create();
     }
     webrtc::EnableMedia(dependencies);
-    dependencies.event_log_factory =
-        std::make_unique<webrtc::RtcEventLogFactory>(dependencies.task_queue_factory.get());
+    dependencies.event_log_factory = std::make_unique<webrtc::RtcEventLogFactory>();
     dependencies.network_controller_factory = std::move(networkControllerFactory);
     _nativeFactory = webrtc::CreateModularPeerConnectionFactory(std::move(dependencies));
     NSAssert(_nativeFactory, @"Failed to initialize PeerConnectionFactory!");
