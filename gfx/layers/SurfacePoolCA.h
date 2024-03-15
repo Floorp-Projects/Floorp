@@ -6,7 +6,7 @@
 #ifndef mozilla_layers_SurfacePoolCA_h
 #define mozilla_layers_SurfacePoolCA_h
 
-#include <IOSurface/IOSurface.h>
+#include <IOSurface/IOSurfaceRef.h>
 
 #include <deque>
 #include <unordered_map>

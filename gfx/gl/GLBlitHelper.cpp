@@ -1176,8 +1176,6 @@ bool GLBlitHelper::BlitImage(MacIOSurface* const iosurf,
     MOZ_ASSERT(false);
     return false;
   }
-  const auto glCGL = static_cast<GLContextCGL*>(mGL);
-  const auto cglContext = glCGL->GetCGLContext();
 
   const auto& srcOrigin = OriginPos::BottomLeft;
 
@@ -1268,8 +1266,7 @@ bool GLBlitHelper::BlitImage(MacIOSurface* const iosurf,
     mGL->fBindTexture(texTarget, texs[p]);
     mGL->TexParams_SetClampNoMips(texTarget);
 
-    auto err = iosurf->CGLTexImageIOSurface2D(mGL, cglContext, p);
-    if (err) {
+    if (!iosurf->BindTexImage(mGL, p)) {
       return false;
     }
 

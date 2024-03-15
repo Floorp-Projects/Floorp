@@ -28,7 +28,7 @@ SurfaceFactory_IOSurface::SurfaceFactory_IOSurface(GLContext& gl)
 // -
 // Surface
 
-static void BackTextureWithIOSurf(GLContext* const gl, const GLuint tex,
+static bool BackTextureWithIOSurf(GLContext* const gl, const GLuint tex,
                                   MacIOSurface* const ioSurf) {
   MOZ_ASSERT(gl->IsCurrent());
 
@@ -43,10 +43,7 @@ static void BackTextureWithIOSurf(GLContext* const gl, const GLuint tex,
   gl->fTexParameteri(LOCAL_GL_TEXTURE_RECTANGLE_ARB, LOCAL_GL_TEXTURE_WRAP_T,
                      LOCAL_GL_CLAMP_TO_EDGE);
 
-  CGLContextObj cgl = GLContextCGL::Cast(gl)->GetCGLContext();
-  MOZ_ASSERT(cgl);
-
-  ioSurf->CGLTexImageIOSurface2D(gl, cgl, 0);
+  return ioSurf->BindTexImage(gl, 0);
 }
 
 /*static*/
@@ -65,7 +62,9 @@ UniquePtr<SharedSurface_IOSurface> SharedSurface_IOSurface::Create(
   // -
 
   auto tex = MakeUnique<Texture>(*desc.gl);
-  BackTextureWithIOSurf(desc.gl, tex->name, ioSurf);
+  if (!BackTextureWithIOSurf(desc.gl, tex->name, ioSurf)) {
+    return nullptr;
+  }
 
   const GLenum target = LOCAL_GL_TEXTURE_RECTANGLE;
   auto fb = MozFramebuffer::CreateForBacking(desc.gl, desc.size, 0, false,
