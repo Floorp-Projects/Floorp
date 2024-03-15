@@ -8,13 +8,13 @@
 
 #include "jsfriendapi.h"
 #include "MediaData.h"
+#include "KeySystemConfig.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/dom/KeySystemNames.h"
 #include "mozilla/dom/UnionTypes.h"
 
 #ifdef MOZ_WMF_CDM
 #  include "mozilla/PMFCDM.h"
-#  include "KeySystemConfig.h"
 #endif
 
 namespace mozilla {
@@ -154,6 +154,25 @@ bool IsHardwareDecryptionSupported(
     if (capabilities.mRobustness.EqualsLiteral("3000") ||
         capabilities.mRobustness.EqualsLiteral("HW_SECURE_ALL") ||
         capabilities.mRobustness.EqualsLiteral("HW_SECURE_DECODE")) {
+      supportHardwareDecryption = true;
+      break;
+    }
+  }
+  return supportHardwareDecryption;
+}
+
+bool IsHardwareDecryptionSupported(const KeySystemConfig& aConfig) {
+  bool supportHardwareDecryption = false;
+  for (const auto& robustness : aConfig.mAudioRobustness) {
+    if (robustness.EqualsLiteral("HW_SECURE_ALL")) {
+      supportHardwareDecryption = true;
+      break;
+    }
+  }
+  for (const auto& robustness : aConfig.mVideoRobustness) {
+    if (robustness.EqualsLiteral("3000") ||
+        robustness.EqualsLiteral("HW_SECURE_ALL") ||
+        robustness.EqualsLiteral("HW_SECURE_DECODE")) {
       supportHardwareDecryption = true;
       break;
     }

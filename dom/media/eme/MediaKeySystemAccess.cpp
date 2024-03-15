@@ -233,21 +233,27 @@ static KeySystemConfig::EMECodecString ToEMEAPICodecString(
 
 static nsTArray<KeySystemConfig> GetSupportedKeySystems(
     const nsAString& aKeySystem, bool aIsHardwareDecryption) {
+  using DecryptionInfo = KeySystemConfig::DecryptionInfo;
   nsTArray<KeySystemConfig> keySystemConfigs;
   if (IsWidevineKeySystem(aKeySystem) || IsClearkeyKeySystem(aKeySystem)) {
-    Unused << KeySystemConfig::CreateKeySystemConfigs(aKeySystem,
-                                                      keySystemConfigs);
+    Unused << KeySystemConfig::CreateKeySystemConfigs(
+        aKeySystem, DecryptionInfo::Software, keySystemConfigs);
   }
 #ifdef MOZ_WMF_CDM
   if (IsPlayReadyKeySystem(aKeySystem)) {
     Unused << KeySystemConfig::CreateKeySystemConfigs(
-        NS_ConvertUTF8toUTF16(kPlayReadyKeySystemName), keySystemConfigs);
+        NS_ConvertUTF8toUTF16(kPlayReadyKeySystemName),
+        DecryptionInfo::Software, keySystemConfigs);
     if (aIsHardwareDecryption) {
       Unused << KeySystemConfig::CreateKeySystemConfigs(
-          NS_ConvertUTF8toUTF16(kPlayReadyKeySystemHardware), keySystemConfigs);
+          NS_ConvertUTF8toUTF16(kPlayReadyKeySystemName),
+          DecryptionInfo::Hardware, keySystemConfigs);
+      Unused << KeySystemConfig::CreateKeySystemConfigs(
+          NS_ConvertUTF8toUTF16(kPlayReadyKeySystemHardware),
+          DecryptionInfo::Hardware, keySystemConfigs);
       Unused << KeySystemConfig::CreateKeySystemConfigs(
           NS_ConvertUTF8toUTF16(kPlayReadyHardwareClearLeadKeySystemName),
-          keySystemConfigs);
+          DecryptionInfo::Hardware, keySystemConfigs);
     }
   }
   // If key system is kWidevineKeySystemName but with hardware decryption
@@ -257,10 +263,10 @@ static nsTArray<KeySystemConfig> GetSupportedKeySystems(
       (IsWidevineKeySystem(aKeySystem) && aIsHardwareDecryption)) {
     Unused << KeySystemConfig::CreateKeySystemConfigs(
         NS_ConvertUTF8toUTF16(kWidevineExperimentKeySystemName),
-        keySystemConfigs);
+        DecryptionInfo::Hardware, keySystemConfigs);
     Unused << KeySystemConfig::CreateKeySystemConfigs(
         NS_ConvertUTF8toUTF16(kWidevineExperiment2KeySystemName),
-        keySystemConfigs);
+        DecryptionInfo::Hardware, keySystemConfigs);
   }
 #endif
   return keySystemConfigs;

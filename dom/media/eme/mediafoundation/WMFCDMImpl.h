@@ -35,7 +35,8 @@ class WMFCDMImpl final {
   explicit WMFCDMImpl(const nsAString& aKeySystem) : mKeySystem(aKeySystem) {}
 
   // TODO: make this async?
-  bool GetCapabilities(nsTArray<KeySystemConfig>& aOutConfigs);
+  bool GetCapabilities(bool aIsHardwareDecryption,
+                       nsTArray<KeySystemConfig>& aOutConfigs);
 
   using InitPromise = GenericPromise;
   struct InitParams {
