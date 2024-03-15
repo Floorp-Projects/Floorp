@@ -248,6 +248,7 @@ webrtc_fuzzer_test("receive_side_congestion_controller_fuzzer") {
     "../../modules/rtp_rtcp:rtp_rtcp_format",
     "../../system_wrappers",
   ]
+  seed_corpus = "corpora/receive-side-cc"
 }
 
 rtc_library("audio_decoder_fuzzer") {
