@@ -1,65 +1,53 @@
-From: Dan Minor <dminor@mozilla.com>
-Date: Tue, 31 Jul 2018 13:32:00 -0400
-Subject: Bug 1376873 - OS X desktop capture fixes; r=pehrsons
+From: "Byron Campen [:bwc]" <docfaraday@gmail.com>
+Date: Fri, 12 Feb 2021 14:27:00 +0000
+Subject: Bug 1654112 - Get OS X build working.
+ r=ng,firefox-build-system-reviewers,glandium
 
-Differential Revision: https://phabricator.services.mozilla.com/D7464
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/02c038eca65c1218b56fdf8937fdeab3d8767fe6
+* Pull in sdk/objc/base and sdk/objc/helpers
+* Add gclient_args.gni to keep build happy.
+* Add a missing include path for libyuv
+* Support .m files in build.
+
+Differential Revision: https://phabricator.services.mozilla.com/D105015
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/9314046d89ebc0836a50ab7addece71abbf0b5e4
 ---
- modules/desktop_capture/mac/screen_capturer_mac.h   | 7 +++++++
- modules/desktop_capture/mac/screen_capturer_mac.mm  | 4 +++-
- modules/desktop_capture/mouse_cursor_monitor_mac.mm | 2 +-
- 3 files changed, 11 insertions(+), 2 deletions(-)
+ modules/desktop_capture/mac/screen_capturer_mac.mm | 3 ++-
+ modules/desktop_capture/mac/window_list_utils.cc   | 4 ++--
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/modules/desktop_capture/mac/screen_capturer_mac.h b/modules/desktop_capture/mac/screen_capturer_mac.h
-index 7e38b5bd08..e4a2cc2fc9 100644
---- a/modules/desktop_capture/mac/screen_capturer_mac.h
-+++ b/modules/desktop_capture/mac/screen_capturer_mac.h
-@@ -113,6 +113,13 @@ class ScreenCapturerMac final : public DesktopCapturer {
- 
-   // Start, CaptureFrame and destructor have to called in the same thread.
-   SequenceChecker thread_checker_;
-+
-+  // Used to force CaptureFrame to update it's screen configuration
-+  // and reregister event handlers. This ensure that this
-+  // occurs on the ScreenCapture thread. Read and written from
-+  // both the VideoCapture thread and ScreenCapture thread.
-+  // Protected by desktop_config_monitor_.
-+  bool update_screen_configuration_ = false;
- };
- 
- }  // namespace webrtc
 diff --git a/modules/desktop_capture/mac/screen_capturer_mac.mm b/modules/desktop_capture/mac/screen_capturer_mac.mm
-index 60089fd0f2..a2370ed695 100644
+index a2370ed695..785a15dfa4 100644
 --- a/modules/desktop_capture/mac/screen_capturer_mac.mm
 +++ b/modules/desktop_capture/mac/screen_capturer_mac.mm
-@@ -182,6 +182,7 @@ void ScreenCapturerMac::Start(Callback* callback) {
-       "webrtc", "ScreenCapturermac::Start", "target display id ", current_display_);
- 
-   callback_ = callback;
-+  update_screen_configuration_ = false;
-   // Start and operate CGDisplayStream handler all from capture thread.
-   if (!RegisterRefreshAndMoveHandlers()) {
-     RTC_LOG(LS_ERROR) << "Failed to register refresh and move handlers.";
-@@ -202,7 +203,8 @@ void ScreenCapturerMac::CaptureFrame() {
+@@ -276,7 +276,8 @@ bool ScreenCapturerMac::GetSourceList(SourceList* screens) {
+   for (MacDisplayConfigurations::iterator it = desktop_config_.displays.begin();
+        it != desktop_config_.displays.end();
+        ++it) {
+-    screens->push_back({it->id, std::string()});
++    Source value = {it->id, 0, std::string()};
++    screens->push_back(value);
    }
- 
-   MacDesktopConfiguration new_config = desktop_config_monitor_->desktop_configuration();
--  if (!desktop_config_.Equals(new_config)) {
-+  if (update_screen_configuration_ || !desktop_config_.Equals(new_config)) {
-+    update_screen_configuration_ = false;
-     desktop_config_ = new_config;
-     // If the display configuraiton has changed then refresh capturer data
-     // structures. Occasionally, the refresh and move handlers are lost when
-diff --git a/modules/desktop_capture/mouse_cursor_monitor_mac.mm b/modules/desktop_capture/mouse_cursor_monitor_mac.mm
-index 3db4332cd1..512103ab5e 100644
---- a/modules/desktop_capture/mouse_cursor_monitor_mac.mm
-+++ b/modules/desktop_capture/mouse_cursor_monitor_mac.mm
-@@ -133,7 +133,7 @@ void MouseCursorMonitorMac::CaptureImage(float scale) {
-   NSSize nssize = [nsimage size];  // DIP size
- 
-   // No need to caputre cursor image if it's unchanged since last capture.
--  if ([[nsimage TIFFRepresentation] isEqual:[last_cursor_ TIFFRepresentation]]) return;
-+  if (last_cursor_ && [[nsimage TIFFRepresentation] isEqual:[last_cursor_ TIFFRepresentation]]) return;
-   last_cursor_ = nsimage;
- 
-   DesktopSize size(round(nssize.width * scale),
+   return true;
+ }
+diff --git a/modules/desktop_capture/mac/window_list_utils.cc b/modules/desktop_capture/mac/window_list_utils.cc
+index 5d881662ea..989ec7ea54 100644
+--- a/modules/desktop_capture/mac/window_list_utils.cc
++++ b/modules/desktop_capture/mac/window_list_utils.cc
+@@ -198,7 +198,7 @@ bool GetWindowList(DesktopCapturer::SourceList* windows,
+             // the check in the map. Also skip the window if owner name is
+             // empty too.
+             if (!owner_name.empty() && (itr == pid_itr_map.end())) {
+-              sources.push_back(DesktopCapturer::Source{window_id, owner_name});
++              sources.push_back(DesktopCapturer::Source{window_id, pid, owner_name});
+               RTC_DCHECK(!sources.empty());
+               // Get an iterator on the last valid element in the source list.
+               std::list<DesktopCapturer::Source>::const_iterator last_source =
+@@ -209,7 +209,7 @@ bool GetWindowList(DesktopCapturer::SourceList* windows,
+                       pid, last_source));
+             }
+           } else {
+-            sources.push_back(DesktopCapturer::Source{window_id, title});
++            sources.push_back(DesktopCapturer::Source{window_id, pid, title});
+             // Once the window with empty title has been removed no other empty
+             // windows are allowed for the same pid.
+             if (itr != pid_itr_map.end() && (itr->second != sources.end())) {
