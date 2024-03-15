@@ -1490,23 +1490,36 @@ bool CanvasRenderingContext2D::BorrowTarget(const IntRect& aPersistedRect,
   return true;
 }
 
-bool CanvasRenderingContext2D::EnsureTarget(const gfx::Rect* aCoveredRect,
+bool CanvasRenderingContext2D::EnsureTarget(ErrorResult& aError,
+                                            const gfx::Rect* aCoveredRect,
                                             bool aWillClear) {
   if (AlreadyShutDown()) {
     gfxCriticalNoteOnce << "Attempt to render into a Canvas2d after shutdown.";
     SetErrorState();
+    aError.ThrowInvalidStateError(
+        "Cannot use canvas after shutdown initiated.");
     return false;
   }
 
   if (mTarget) {
-    return mTarget != sErrorTarget.get();
+    if (mTarget == sErrorTarget.get()) {
+      aError.ThrowInvalidStateError("Canvas is already in error state.");
+      return false;
+    }
+    return true;
   }
 
   // Check that the dimensions are sane
   if (mWidth > StaticPrefs::gfx_canvas_max_size() ||
-      mHeight > StaticPrefs::gfx_canvas_max_size() || mWidth < 0 ||
-      mHeight < 0) {
+      mHeight > StaticPrefs::gfx_canvas_max_size()) {
     SetErrorState();
+    aError.ThrowInvalidStateError("Canvas exceeds max size.");
+    return false;
+  }
+
+  if (mWidth < 0 || mHeight < 0) {
+    SetErrorState();
+    aError.ThrowInvalidStateError("Canvas has invalid size.");
     return false;
   }
 
@@ -1548,7 +1561,7 @@ bool CanvasRenderingContext2D::EnsureTarget(const gfx::Rect* aCoveredRect,
 
   if (!TryAcceleratedTarget(newTarget, newProvider) &&
       !TrySharedTarget(newTarget, newProvider) &&
-      !TryBasicTarget(newTarget, newProvider)) {
+      !TryBasicTarget(newTarget, newProvider, aError)) {
     gfxCriticalError(
         CriticalLog::DefaultOptions(Factory::ReasonableSurfaceSize(GetSize())))
         << "Failed borrow shared and basic targets.";
@@ -1770,10 +1783,12 @@ bool CanvasRenderingContext2D::TrySharedTarget(
 
 bool CanvasRenderingContext2D::TryBasicTarget(
     RefPtr<gfx::DrawTarget>& aOutDT,
-    RefPtr<layers::PersistentBufferProvider>& aOutProvider) {
+    RefPtr<layers::PersistentBufferProvider>& aOutProvider,
+    ErrorResult& aError) {
   aOutDT = gfxPlatform::GetPlatform()->CreateOffscreenCanvasDrawTarget(
       GetSize(), GetSurfaceFormat());
   if (!aOutDT) {
+    aError.ThrowInvalidStateError("Canvas could not create basic draw target.");
     return false;
   }
 
@@ -1782,6 +1797,7 @@ bool CanvasRenderingContext2D::TryBasicTarget(
 
   if (!aOutDT->IsValid()) {
     aOutDT = nullptr;
+    aError.ThrowInvalidStateError("Canvas could not init basic draw target.");
     return false;
   }
 
@@ -2125,11 +2141,11 @@ void CanvasRenderingContext2D::Restore() {
 
 void CanvasRenderingContext2D::Scale(double aX, double aY,
                                      ErrorResult& aError) {
-  EnsureTarget();
-  if (!IsTargetValid()) {
-    aError.Throw(NS_ERROR_FAILURE);
+  if (!EnsureTarget(aError)) {
     return;
   }
+
+  MOZ_ASSERT(IsTargetValid());
 
   Matrix newMatrix = mTarget->GetTransform();
   newMatrix.PreScale(aX, aY);
@@ -2137,11 +2153,11 @@ void CanvasRenderingContext2D::Scale(double aX, double aY,
 }
 
 void CanvasRenderingContext2D::Rotate(double aAngle, ErrorResult& aError) {
-  EnsureTarget();
-  if (!IsTargetValid()) {
-    aError.Throw(NS_ERROR_FAILURE);
+  if (!EnsureTarget(aError)) {
     return;
   }
+
+  MOZ_ASSERT(IsTargetValid());
 
   Matrix newMatrix = Matrix::Rotation(aAngle) * mTarget->GetTransform();
   SetTransformInternal(newMatrix);
@@ -2149,11 +2165,11 @@ void CanvasRenderingContext2D::Rotate(double aAngle, ErrorResult& aError) {
 
 void CanvasRenderingContext2D::Translate(double aX, double aY,
                                          ErrorResult& aError) {
-  EnsureTarget();
-  if (!IsTargetValid()) {
-    aError.Throw(NS_ERROR_FAILURE);
+  if (!EnsureTarget(aError)) {
     return;
   }
+
+  MOZ_ASSERT(IsTargetValid());
 
   Matrix newMatrix = mTarget->GetTransform();
   newMatrix.PreTranslate(aX, aY);
@@ -2163,11 +2179,11 @@ void CanvasRenderingContext2D::Translate(double aX, double aY,
 void CanvasRenderingContext2D::Transform(double aM11, double aM12, double aM21,
                                          double aM22, double aDx, double aDy,
                                          ErrorResult& aError) {
-  EnsureTarget();
-  if (!IsTargetValid()) {
-    aError.Throw(NS_ERROR_FAILURE);
+  if (!EnsureTarget(aError)) {
     return;
   }
+
+  MOZ_ASSERT(IsTargetValid());
 
   Matrix newMatrix(aM11, aM12, aM21, aM22, aDx, aDy);
   newMatrix *= mTarget->GetTransform();
@@ -2176,11 +2192,12 @@ void CanvasRenderingContext2D::Transform(double aM11, double aM12, double aM21,
 
 already_AddRefed<DOMMatrix> CanvasRenderingContext2D::GetTransform(
     ErrorResult& aError) {
-  EnsureTarget();
-  if (!IsTargetValid()) {
-    aError.Throw(NS_ERROR_FAILURE);
+  if (!EnsureTarget(aError)) {
     return nullptr;
   }
+
+  MOZ_ASSERT(IsTargetValid());
+
   RefPtr<DOMMatrix> matrix =
       new DOMMatrix(GetParentObject(), mTarget->GetTransform());
   return matrix.forget();
@@ -2190,11 +2207,11 @@ void CanvasRenderingContext2D::SetTransform(double aM11, double aM12,
                                             double aM21, double aM22,
                                             double aDx, double aDy,
                                             ErrorResult& aError) {
-  EnsureTarget();
-  if (!IsTargetValid()) {
-    aError.Throw(NS_ERROR_FAILURE);
+  if (!EnsureTarget(aError)) {
     return;
   }
+
+  MOZ_ASSERT(IsTargetValid());
 
   Matrix newMatrix(aM11, aM12, aM21, aM22, aDx, aDy);
   SetTransformInternal(newMatrix);
@@ -2202,11 +2219,11 @@ void CanvasRenderingContext2D::SetTransform(double aM11, double aM12,
 
 void CanvasRenderingContext2D::SetTransform(const DOMMatrix2DInit& aInit,
                                             ErrorResult& aError) {
-  EnsureTarget();
-  if (!IsTargetValid()) {
-    aError.Throw(NS_ERROR_FAILURE);
+  if (!EnsureTarget(aError)) {
     return;
   }
+
+  MOZ_ASSERT(IsTargetValid());
 
   RefPtr<DOMMatrixReadOnly> matrix =
       DOMMatrixReadOnly::FromMatrix(GetParentObject(), aInit, aError);
@@ -2435,11 +2452,12 @@ already_AddRefed<CanvasPattern> CanvasRenderingContext2D::CreatePattern(
   } else {
     // Special case for ImageBitmap
     ImageBitmap& imgBitmap = aSource.GetAsImageBitmap();
-    EnsureTarget();
-    if (!IsTargetValid()) {
-      aError.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    if (!EnsureTarget(aError)) {
       return nullptr;
     }
+
+    MOZ_ASSERT(IsTargetValid());
+
     RefPtr<SourceSurface> srcSurf = imgBitmap.PrepareForDrawTarget(mTarget);
     if (!srcSurf) {
       aError.ThrowInvalidStateError(
@@ -2456,11 +2474,11 @@ already_AddRefed<CanvasPattern> CanvasRenderingContext2D::CreatePattern(
     return pat.forget();
   }
 
-  EnsureTarget();
-  if (!IsTargetValid()) {
-    aError.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+  if (!EnsureTarget(aError)) {
     return nullptr;
   }
+
+  MOZ_ASSERT(IsTargetValid());
 
   // The canvas spec says that createPattern should use the first frame
   // of animated images
@@ -4898,11 +4916,11 @@ UniquePtr<TextMetrics> CanvasRenderingContext2D::DrawOrMeasureText(
   processor.mPt.x *= processor.mAppUnitsPerDevPixel;
   processor.mPt.y *= processor.mAppUnitsPerDevPixel;
 
-  EnsureTarget();
-  if (!IsTargetValid()) {
-    aError = NS_ERROR_FAILURE;
+  if (!EnsureTarget(aError)) {
     return nullptr;
   }
+
+  MOZ_ASSERT(IsTargetValid());
 
   Matrix oldTransform = mTarget->GetTransform();
   bool restoreTransform = false;
@@ -5344,10 +5362,11 @@ void CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
   OffscreenCanvas* offscreenCanvas = nullptr;
   VideoFrame* videoFrame = nullptr;
 
-  EnsureTarget();
-  if (!IsTargetValid()) {
+  if (!EnsureTarget(aError)) {
     return;
   }
+
+  MOZ_ASSERT(IsTargetValid());
 
   if (aImage.IsHTMLCanvasElement()) {
     HTMLCanvasElement* canvas = &aImage.GetAsHTMLCanvasElement();
@@ -5791,10 +5810,11 @@ void CanvasRenderingContext2D::DrawWindow(nsGlobalWindowInner& aWindow,
       GlobalAlpha() == 1.0f &&
       (op == CompositionOp::OP_OVER || op == CompositionOp::OP_SOURCE);
   const gfx::Rect drawRect(aX, aY, aW, aH);
-  EnsureTarget(discardContent ? &drawRect : nullptr);
-  if (!IsTargetValid()) {
+  if (!EnsureTarget(aError, discardContent ? &drawRect : nullptr)) {
     return;
   }
+
+  MOZ_ASSERT(IsTargetValid());
 
   RefPtr<nsPresContext> presContext;
   nsIDocShell* docshell = aWindow.GetDocShell();
@@ -5897,7 +5917,11 @@ void CanvasRenderingContext2D::DrawWindow(nsGlobalWindowInner& aWindow,
                                       &thebes.ref());
   // If this canvas was contained in the drawn window, the pre-transaction
   // callback may have returned its DT. If so, we must reacquire it here.
-  EnsureTarget(discardContent ? &drawRect : nullptr);
+  if (!EnsureTarget(aError, discardContent ? &drawRect : nullptr)) {
+    return;
+  }
+
+  MOZ_ASSERT(IsTargetValid());
 
   if (drawDT) {
     RefPtr<SourceSurface> snapshot = drawDT->Snapshot();
@@ -6237,11 +6261,11 @@ void CanvasRenderingContext2D::PutImageData_explicit(
   // composition operator must not affect the getImageData() and
   // putImageData() methods.
   const gfx::Rect putRect(dirtyRect);
-  EnsureTarget(&putRect);
-
-  if (!IsTargetValid()) {
-    return aRv.Throw(NS_ERROR_FAILURE);
+  if (!EnsureTarget(aRv, &putRect)) {
+    return;
   }
+
+  MOZ_ASSERT(IsTargetValid());
 
   DataSourceSurface::MappedSurface map;
   uint8_t* dstData;
