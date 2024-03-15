@@ -18,6 +18,7 @@
 
 #include "absl/algorithm/container.h"
 #include "api/crypto/crypto_options.h"
+#include "api/field_trials_view.h"
 #include "api/rtp_parameters.h"
 #include "api/scoped_refptr.h"
 #include "api/sequence_checker.h"
@@ -139,12 +140,15 @@ int CalculateMaxPadBitrateBps(const std::vector<VideoStream>& streams,
 }
 
 absl::optional<AlrExperimentSettings> GetAlrSettings(
+    const FieldTrialsView& field_trials,
     VideoEncoderConfig::ContentType content_type) {
   if (content_type == VideoEncoderConfig::ContentType::kScreen) {
     return AlrExperimentSettings::CreateFromFieldTrial(
+        field_trials,
         AlrExperimentSettings::kScreenshareProbingBweExperimentName);
   }
   return AlrExperimentSettings::CreateFromFieldTrial(
+      field_trials,
       AlrExperimentSettings::kStrictPacingAndProbingExperimentName);
 }
 
@@ -171,7 +175,7 @@ absl::optional<float> GetConfiguredPacingFactor(
     return absl::nullopt;
 
   absl::optional<AlrExperimentSettings> alr_settings =
-      GetAlrSettings(content_type);
+      GetAlrSettings(field_trials, content_type);
   if (alr_settings)
     return alr_settings->pacing_factor;
 
@@ -230,7 +234,7 @@ VideoSendStreamImpl::VideoSendStreamImpl(
     const FieldTrialsView& field_trials)
     : clock_(clock),
       has_alr_probing_(config->periodic_alr_bandwidth_probing ||
-                       GetAlrSettings(content_type)),
+                       GetAlrSettings(field_trials, content_type)),
       pacing_config_(PacingConfig(field_trials)),
       stats_proxy_(stats_proxy),
       config_(config),
@@ -258,7 +262,7 @@ VideoSendStreamImpl::VideoSendStreamImpl(
   RTC_DCHECK_NE(initial_encoder_max_bitrate, 0);
   RTC_LOG(LS_INFO) << "VideoSendStreamImpl: " << config_->ToString();
 
-  RTC_CHECK(AlrExperimentSettings::MaxOneFieldTrialEnabled());
+  RTC_CHECK(AlrExperimentSettings::MaxOneFieldTrialEnabled(field_trials));
 
   // Only request rotation at the source when we positively know that the remote
   // side doesn't support the rotation extension. This allows us to prepare the
@@ -277,7 +281,7 @@ VideoSendStreamImpl::VideoSendStreamImpl(
   // pacing settings.
   if (configured_pacing_factor_) {
     absl::optional<AlrExperimentSettings> alr_settings =
-        GetAlrSettings(content_type);
+        GetAlrSettings(field_trials, content_type);
     int queue_time_limit_ms;
     if (alr_settings) {
       enable_alr_bw_probing = true;
