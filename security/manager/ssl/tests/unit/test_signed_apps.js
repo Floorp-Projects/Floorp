@@ -642,25 +642,32 @@ var cosePolicies = [
   COSERequiredAndPKCS7WithSHA1OrSHA256,
 ];
 
-// PS256 is not yet supported.
+// NOTE: The zip files referenced in coseTestcasesStage and coseTestcasesProd
+// were originally generated with
+// https://github.com/mozilla-services/autograph/blob/c890e14de5b04dcff9be0d07fdea4ae6bbb58557/tools/autograph-client/build_test_xpis.sh
+// Since then, the mechanism to sign these packages have changed, see
+// https://bugzilla.mozilla.org/show_bug.cgi?id=1885457 for details.
+
 var coseTestcasesStage = [
   {
-    name: "autograph-714ba248-stage-tomato-clock-PKCS7-SHA1-ES256-ES384",
+    name: "addons-stage-tomato-clock-sha1-es256-es384",
     expectedResult: Cr.NS_OK,
     root: Ci.nsIX509CertDB.AddonsStageRoot,
   },
   {
-    name: "autograph-714ba248-stage-tomato-clock-PKCS7-SHA1-ES256-PS256",
+    name: "addons-stage-tomato-clock-sha1-es256-ps256",
+    // PS256 is not yet supported.
     expectedResult: Cr.NS_ERROR_SIGNED_JAR_MANIFEST_INVALID,
     root: Ci.nsIX509CertDB.AddonsStageRoot,
   },
   {
-    name: "autograph-714ba248-stage-tomato-clock-PKCS7-SHA1-ES256",
+    name: "addons-stage-tomato-clock-sha1-es256",
     expectedResult: Cr.NS_OK,
     root: Ci.nsIX509CertDB.AddonsStageRoot,
   },
   {
-    name: "autograph-714ba248-stage-tomato-clock-PKCS7-SHA1-PS256",
+    name: "addons-stage-tomato-clock-sha1-ps256",
+    // PS256 is not yet supported.
     expectedResult: Cr.NS_ERROR_SIGNED_JAR_MANIFEST_INVALID,
     root: Ci.nsIX509CertDB.AddonsStageRoot,
   },
@@ -674,6 +681,7 @@ var coseTestcasesProd = [
   },
   {
     name: "autograph-714ba248-prod-tomato-clock-PKCS7-SHA1-ES256-PS256",
+    // PS256 is not yet supported.
     expectedResult: Cr.NS_ERROR_SIGNED_JAR_MANIFEST_INVALID,
     root: Ci.nsIX509CertDB.AddonsPublicRoot,
   },
@@ -684,6 +692,7 @@ var coseTestcasesProd = [
   },
   {
     name: "autograph-714ba248-prod-tomato-clock-PKCS7-SHA1-PS256",
+    // PS256 is not yet supported.
     expectedResult: Cr.NS_ERROR_SIGNED_JAR_MANIFEST_INVALID,
     root: Ci.nsIX509CertDB.AddonsPublicRoot,
   },
