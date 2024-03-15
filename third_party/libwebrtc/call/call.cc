@@ -457,10 +457,10 @@ std::unique_ptr<Call> Call::Create(const CallConfig& config) {
   std::unique_ptr<RtpTransportControllerSendInterface> transport_send;
   if (config.rtp_transport_controller_send_factory != nullptr) {
     transport_send = config.rtp_transport_controller_send_factory->Create(
-        config.ExtractTransportConfig(), &config.env.clock());
+        config.ExtractTransportConfig());
   } else {
     transport_send = RtpTransportControllerSendFactory().Create(
-        config.ExtractTransportConfig(), &config.env.clock());
+        config.ExtractTransportConfig());
   }
 
   return std::make_unique<internal::Call>(config, std::move(transport_send));

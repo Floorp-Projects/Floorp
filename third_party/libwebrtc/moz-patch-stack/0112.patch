@@ -9,10 +9,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b86cb7278bc4e5571
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/call/BUILD.gn b/call/BUILD.gn
-index 7d91eafcfc..e129b43b3f 100644
+index 9cde97fad7..50a8257631 100644
 --- a/call/BUILD.gn
 +++ b/call/BUILD.gn
-@@ -352,7 +352,7 @@ rtc_library("call") {
+@@ -353,7 +353,7 @@ rtc_library("call") {
    ]
    if (build_with_mozilla) { # See Bug 1820869.
      sources -= [
