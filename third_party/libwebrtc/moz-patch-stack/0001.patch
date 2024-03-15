@@ -1,1273 +1,143 @@
-From: Daniel Baker <dbaker@mozilla.com>
-Date: Fri, 15 Mar 2024 14:19:17 -0600
-Subject: (tmp-cherry-pick) Revert "Unify access to SDP codec parameters"
- (6c9c958c69)
+From: Tony Herre <herre@google.com>
+Date: Mon, 18 Dec 2023 17:44:57 +0100
+Subject: (cherry-pick-branch-heads/6167) [121] Allow RTP retransmission for
+ cloned encoded Video Frames
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-This reverts commit 63d03f586bb668f72113b61030ec0930aa192010.
+Fix the unintended disabling of RTP retransmissions for cloned encoded
+frames, caused by passing an infinite "expected_retransmission_time".
+Instead use a constant 10ms for now. For frames encoded locally, this is
+set from an estimate of the RTT, but we currently don't have access to
+that here (TODO added to pipe it through)
 
-Reason for revert: Breaks downstream project (not backwards compatible API change)
+If an integration is cloning and then sending frames it received, it's
+almost certainly resending received media to other peers on a local
+network, so 10ms is a fair upperbound.
 
-Original change's description:
-> Unify access to SDP codec parameters
->
-> which come from the a=fmtp:<pt> lines in the SDP and were used as either
->   std::map<std::string, std:string>
-> with three aliases,
->   cricket::CodecParameterMap
->   SdpAudioFormat::Parameters
->   SdpVideoFormat::Parameters
->
-> Use webrtc::CodecParameterMap in all places.
->
-> BUG=None
->
-> Change-Id: If47692bde7347834c349c6539b43309d8770e67b
-> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/330420
-> Reviewed-by: Florent Castelli <orphis@webrtc.org>
-> Reviewed-by: Harald Alvestrand <hta@webrtc.org>
-> Commit-Queue: Philipp Hancke <phancke@microsoft.com>
-> Cr-Commit-Position: refs/heads/main@{#41375}
+Tested locally with Chrome on Mac, configuring packet drops & observing
+on chrome://webrtc-internals that retransmission packets are now sent.
 
-Bug: None
-Change-Id: I841735d98533d3b66850b9cfcf7ee0a99ddde078
-No-Presubmit: true
-No-Tree-Checks: true
-No-Try: true
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/331400
+(cherry picked from commit 3e801c32086be59e502e276ff5d6beea42069582)
+
+No-Try: True
+Bug: chromium:1512631
+Change-Id: I2483415dc7e0079f8a7b66f6607f4907698514c4
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/331900
+Reviewed-by: Harald Alvestrand <hta@webrtc.org>
+Commit-Queue: Tony Herre <herre@google.com>
+Cr-Original-Commit-Position: refs/heads/main@{#41405}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/332261
+Reviewed-by: Stefan Holmer <stefan@webrtc.org>
 Commit-Queue: Mirko Bonadei <mbonadei@webrtc.org>
-Auto-Submit: Mirko Bonadei <mbonadei@webrtc.org>
-Owners-Override: Mirko Bonadei <mbonadei@webrtc.org>
-Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
-Cr-Commit-Position: refs/heads/main@{#41377}
+Reviewed-by: Henrik Boström <hbos@webrtc.org>
+Cr-Commit-Position: refs/branch-heads/6167@{#3}
+Cr-Branched-From: ece5cb83715dea85617114b6d4e981fdee2623ba-refs/heads/main@{#41315}
 ---
- api/audio_codecs/BUILD.gn                     |  1 -
- api/audio_codecs/audio_format.cc              |  4 +-
- api/audio_codecs/audio_format.h               |  9 +++--
- api/rtp_parameters.h                          |  2 -
- api/test/video_quality_test_fixture.h         |  2 +-
- api/video_codecs/BUILD.gn                     |  1 -
- api/video_codecs/av1_profile.cc               |  6 +--
- api/video_codecs/av1_profile.h                |  6 +--
- api/video_codecs/h264_profile_level_id.cc     |  6 +--
- api/video_codecs/h264_profile_level_id.h      |  6 +--
- api/video_codecs/h265_profile_tier_level.cc   |  6 +--
- api/video_codecs/h265_profile_tier_level.h    |  7 ++--
- api/video_codecs/sdp_video_format.cc          | 11 ++---
- api/video_codecs/sdp_video_format.h           |  9 +++--
- .../test/h264_profile_level_id_unittest.cc    |  6 +--
- .../test/h265_profile_tier_level_unittest.cc  | 14 +++----
- .../test/sdp_video_format_unittest.cc         |  2 +-
- ...oder_factory_template_libaom_av1_adapter.h |  3 +-
- ...oder_factory_template_libvpx_vp8_adapter.h |  3 +-
- api/video_codecs/vp9_profile.cc               |  6 +--
- api/video_codecs/vp9_profile.h                |  6 +--
- media/base/codec.cc                           | 21 +++++-----
- media/base/codec.h                            |  4 +-
- media/base/sdp_video_format_utils.cc          | 22 +++++-----
- media/base/sdp_video_format_utils.h           | 18 +++++----
- media/base/sdp_video_format_utils_unittest.cc | 40 ++++++++++---------
- .../simulcast_encoder_adapter_unittest.cc     |  2 +-
- media/engine/webrtc_video_engine_unittest.cc  |  8 ++--
- .../builtin_audio_decoder_factory_unittest.cc |  2 +-
- .../opus/audio_encoder_opus_unittest.cc       |  2 +-
- .../neteq/test/neteq_opus_quality_test.cc     |  4 +-
- modules/audio_coding/test/TestStereo.cc       |  2 +-
- .../test/videocodec_test_fixture_impl.cc      |  2 +-
- pc/peer_connection_end_to_end_unittest.cc     |  6 ++-
- pc/webrtc_sdp.cc                              | 10 ++---
- pc/webrtc_sdp.h                               |  2 +-
- pc/webrtc_sdp_unittest.cc                     | 12 +++---
- test/scenario/audio_stream.cc                 |  2 +-
- video/full_stack_tests.cc                     |  2 +-
- video/rtp_video_stream_receiver2.cc           |  2 +-
- video/rtp_video_stream_receiver2.h            |  4 +-
- video/rtp_video_stream_receiver2_unittest.cc  |  6 +--
- 42 files changed, 149 insertions(+), 140 deletions(-)
+ ...sender_video_frame_transformer_delegate.cc | 33 ++++++++++++-------
+ ...deo_frame_transformer_delegate_unittest.cc |  8 ++---
+ 2 files changed, 25 insertions(+), 16 deletions(-)
 
-diff --git a/api/audio_codecs/BUILD.gn b/api/audio_codecs/BUILD.gn
-index 2719942488..158ab74cce 100644
---- a/api/audio_codecs/BUILD.gn
-+++ b/api/audio_codecs/BUILD.gn
-@@ -35,7 +35,6 @@ rtc_library("audio_codecs_api") {
-     "..:ref_count",
-     "..:scoped_refptr",
-     "../../api:field_trials_view",
--    "../../api:rtp_parameters",
-     "../../rtc_base:buffer",
-     "../../rtc_base:checks",
-     "../../rtc_base:event_tracer",
-diff --git a/api/audio_codecs/audio_format.cc b/api/audio_codecs/audio_format.cc
-index 8dc11fd80f..2a529a49ee 100644
---- a/api/audio_codecs/audio_format.cc
-+++ b/api/audio_codecs/audio_format.cc
-@@ -27,7 +27,7 @@ SdpAudioFormat::SdpAudioFormat(absl::string_view name,
- SdpAudioFormat::SdpAudioFormat(absl::string_view name,
-                                int clockrate_hz,
-                                size_t num_channels,
--                               const CodecParameterMap& param)
-+                               const Parameters& param)
-     : name(name),
-       clockrate_hz(clockrate_hz),
-       num_channels(num_channels),
-@@ -36,7 +36,7 @@ SdpAudioFormat::SdpAudioFormat(absl::string_view name,
- SdpAudioFormat::SdpAudioFormat(absl::string_view name,
-                                int clockrate_hz,
-                                size_t num_channels,
--                               CodecParameterMap&& param)
-+                               Parameters&& param)
-     : name(name),
-       clockrate_hz(clockrate_hz),
-       num_channels(num_channels),
-diff --git a/api/audio_codecs/audio_format.h b/api/audio_codecs/audio_format.h
-index 2fa35625b5..0cf67799b8 100644
---- a/api/audio_codecs/audio_format.h
-+++ b/api/audio_codecs/audio_format.h
-@@ -17,7 +17,6 @@
- #include <string>
- 
- #include "absl/strings/string_view.h"
--#include "api/rtp_parameters.h"
- #include "rtc_base/checks.h"
- #include "rtc_base/system/rtc_export.h"
- 
-@@ -25,17 +24,19 @@ namespace webrtc {
- 
- // SDP specification for a single audio codec.
- struct RTC_EXPORT SdpAudioFormat {
-+  using Parameters = std::map<std::string, std::string>;
-+
-   SdpAudioFormat(const SdpAudioFormat&);
-   SdpAudioFormat(SdpAudioFormat&&);
-   SdpAudioFormat(absl::string_view name, int clockrate_hz, size_t num_channels);
-   SdpAudioFormat(absl::string_view name,
-                  int clockrate_hz,
-                  size_t num_channels,
--                 const CodecParameterMap& param);
-+                 const Parameters& param);
-   SdpAudioFormat(absl::string_view name,
-                  int clockrate_hz,
-                  size_t num_channels,
--                 CodecParameterMap&& param);
-+                 Parameters&& param);
-   ~SdpAudioFormat();
- 
-   // Returns true if this format is compatible with `o`. In SDP terminology:
-@@ -54,7 +55,7 @@ struct RTC_EXPORT SdpAudioFormat {
-   std::string name;
-   int clockrate_hz;
-   size_t num_channels;
--  CodecParameterMap parameters;
-+  Parameters parameters;
- };
- 
- // Information about how an audio format is treated by the codec implementation.
-diff --git a/api/rtp_parameters.h b/api/rtp_parameters.h
-index e78cc6667f..09473a6ce9 100644
---- a/api/rtp_parameters.h
-+++ b/api/rtp_parameters.h
-@@ -29,8 +29,6 @@
- 
+diff --git a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
+index 26152df0f0..2bb71941f9 100644
+--- a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
++++ b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
+@@ -23,6 +23,12 @@
  namespace webrtc {
- 
--using CodecParameterMap = std::map<std::string, std::string>;
--
- // These structures are intended to mirror those defined by:
- // http://draft.ortc.org/#rtcrtpdictionaries*
- // Contains everything specified as of 2017 Jan 24.
-diff --git a/api/test/video_quality_test_fixture.h b/api/test/video_quality_test_fixture.h
-index cbe547b60d..b45faef286 100644
---- a/api/test/video_quality_test_fixture.h
-+++ b/api/test/video_quality_test_fixture.h
-@@ -61,7 +61,7 @@ class VideoQualityTestFixtureInterface {
-       bool automatic_scaling = false;
-       std::string clip_path;  // "Generator" to generate frames instead.
-       size_t capture_device_index = 0;
--      CodecParameterMap sdp_params;
-+      SdpVideoFormat::Parameters sdp_params;
-       double encoder_overshoot_factor = 0.0;
-     } video[2];
-     struct Audio {
-diff --git a/api/video_codecs/BUILD.gn b/api/video_codecs/BUILD.gn
-index 3865f4fee7..94c9cc8b87 100644
---- a/api/video_codecs/BUILD.gn
-+++ b/api/video_codecs/BUILD.gn
-@@ -83,7 +83,6 @@ rtc_library("video_codecs_api") {
-     "..:fec_controller_api",
-     "..:scoped_refptr",
-     "../../api:array_view",
--    "../../api:rtp_parameters",
-     "../../modules/video_coding:codec_globals_headers",
-     "../../rtc_base:checks",
-     "../../rtc_base:logging",
-diff --git a/api/video_codecs/av1_profile.cc b/api/video_codecs/av1_profile.cc
-index 59d7b13e51..eefe166d80 100644
---- a/api/video_codecs/av1_profile.cc
-+++ b/api/video_codecs/av1_profile.cc
-@@ -50,7 +50,7 @@ absl::optional<AV1Profile> StringToAV1Profile(absl::string_view str) {
- }
- 
- absl::optional<AV1Profile> ParseSdpForAV1Profile(
--    const CodecParameterMap& params) {
-+    const SdpVideoFormat::Parameters& params) {
-   const auto profile_it = params.find(kAV1FmtpProfile);
-   if (profile_it == params.end())
-     return AV1Profile::kProfile0;
-@@ -58,8 +58,8 @@ absl::optional<AV1Profile> ParseSdpForAV1Profile(
-   return StringToAV1Profile(profile_str);
- }
- 
--bool AV1IsSameProfile(const CodecParameterMap& params1,
--                      const CodecParameterMap& params2) {
-+bool AV1IsSameProfile(const SdpVideoFormat::Parameters& params1,
-+                      const SdpVideoFormat::Parameters& params2) {
-   const absl::optional<AV1Profile> profile = ParseSdpForAV1Profile(params1);
-   const absl::optional<AV1Profile> other_profile =
-       ParseSdpForAV1Profile(params2);
-diff --git a/api/video_codecs/av1_profile.h b/api/video_codecs/av1_profile.h
-index bc9767631c..2254d5ecd3 100644
---- a/api/video_codecs/av1_profile.h
-+++ b/api/video_codecs/av1_profile.h
-@@ -45,12 +45,12 @@ absl::optional<AV1Profile> StringToAV1Profile(absl::string_view profile);
- // specified and an empty value if the profile key is present but contains an
- // invalid value.
- RTC_EXPORT absl::optional<AV1Profile> ParseSdpForAV1Profile(
--    const CodecParameterMap& params);
-+    const SdpVideoFormat::Parameters& params);
- 
- // Returns true if the parameters have the same AV1 profile or neither contains
- // an AV1 profile, otherwise false.
--bool AV1IsSameProfile(const CodecParameterMap& params1,
--                      const CodecParameterMap& params2);
-+bool AV1IsSameProfile(const SdpVideoFormat::Parameters& params1,
-+                      const SdpVideoFormat::Parameters& params2);
- 
- }  // namespace webrtc
- 
-diff --git a/api/video_codecs/h264_profile_level_id.cc b/api/video_codecs/h264_profile_level_id.cc
-index 9bd9c9e4ab..5844ca0e32 100644
---- a/api/video_codecs/h264_profile_level_id.cc
-+++ b/api/video_codecs/h264_profile_level_id.cc
-@@ -178,7 +178,7 @@ absl::optional<H264Level> H264SupportedLevel(int max_frame_pixel_count,
- }
- 
- absl::optional<H264ProfileLevelId> ParseSdpForH264ProfileLevelId(
--    const CodecParameterMap& params) {
-+    const SdpVideoFormat::Parameters& params) {
-   // TODO(magjed): The default should really be kProfileBaseline and kLevel1
-   // according to the spec: https://tools.ietf.org/html/rfc6184#section-8.1. In
-   // order to not break backwards compatibility with older versions of WebRTC
-@@ -243,8 +243,8 @@ absl::optional<std::string> H264ProfileLevelIdToString(
-   return {str};
- }
- 
--bool H264IsSameProfile(const CodecParameterMap& params1,
--                       const CodecParameterMap& params2) {
-+bool H264IsSameProfile(const SdpVideoFormat::Parameters& params1,
-+                       const SdpVideoFormat::Parameters& params2) {
-   const absl::optional<H264ProfileLevelId> profile_level_id =
-       ParseSdpForH264ProfileLevelId(params1);
-   const absl::optional<H264ProfileLevelId> other_profile_level_id =
-diff --git a/api/video_codecs/h264_profile_level_id.h b/api/video_codecs/h264_profile_level_id.h
-index 37709fae64..4b46ad329d 100644
---- a/api/video_codecs/h264_profile_level_id.h
-+++ b/api/video_codecs/h264_profile_level_id.h
-@@ -67,7 +67,7 @@ absl::optional<H264ProfileLevelId> ParseH264ProfileLevelId(const char* str);
- // returned if the profile-level-id key is missing. Nothing will be returned if
- // the key is present but the string is invalid.
- RTC_EXPORT absl::optional<H264ProfileLevelId> ParseSdpForH264ProfileLevelId(
--    const CodecParameterMap& params);
-+    const SdpVideoFormat::Parameters& params);
- 
- // Given that a decoder supports up to a given frame size (in pixels) at up to a
- // given number of frames per second, return the highest H.264 level where it
-@@ -84,8 +84,8 @@ RTC_EXPORT absl::optional<std::string> H264ProfileLevelIdToString(
- 
- // Returns true if the parameters have the same H264 profile (Baseline, High,
- // etc).
--RTC_EXPORT bool H264IsSameProfile(const CodecParameterMap& params1,
--                                  const CodecParameterMap& params2);
-+RTC_EXPORT bool H264IsSameProfile(const SdpVideoFormat::Parameters& params1,
-+                                  const SdpVideoFormat::Parameters& params2);
- 
- }  // namespace webrtc
- 
-diff --git a/api/video_codecs/h265_profile_tier_level.cc b/api/video_codecs/h265_profile_tier_level.cc
-index 77b53f1ad4..f5b376e287 100644
---- a/api/video_codecs/h265_profile_tier_level.cc
-+++ b/api/video_codecs/h265_profile_tier_level.cc
-@@ -182,7 +182,7 @@ std::string H265LevelToString(H265Level level) {
- }
- 
- absl::optional<H265ProfileTierLevel> ParseSdpForH265ProfileTierLevel(
--    const CodecParameterMap& params) {
-+    const SdpVideoFormat::Parameters& params) {
-   static const H265ProfileTierLevel kDefaultProfileTierLevel(
-       H265Profile::kProfileMain, H265Tier::kTier0, H265Level::kLevel3_1);
-   bool profile_tier_level_specified = false;
-@@ -235,8 +235,8 @@ absl::optional<H265ProfileTierLevel> ParseSdpForH265ProfileTierLevel(
-                                     level.value());
- }
- 
--bool H265IsSameProfileTierLevel(const CodecParameterMap& params1,
--                                const CodecParameterMap& params2) {
-+bool H265IsSameProfileTierLevel(const SdpVideoFormat::Parameters& params1,
-+                                const SdpVideoFormat::Parameters& params2) {
-   const absl::optional<H265ProfileTierLevel> ptl1 =
-       ParseSdpForH265ProfileTierLevel(params1);
-   const absl::optional<H265ProfileTierLevel> ptl2 =
-diff --git a/api/video_codecs/h265_profile_tier_level.h b/api/video_codecs/h265_profile_tier_level.h
-index 7a1f28f150..c757e54af1 100644
---- a/api/video_codecs/h265_profile_tier_level.h
-+++ b/api/video_codecs/h265_profile_tier_level.h
-@@ -97,12 +97,13 @@ RTC_EXPORT absl::optional<H265Level> StringToH265Level(
- // Returns empty value if any of the profile/tier/level key is present but
- // contains an invalid value.
- RTC_EXPORT absl::optional<H265ProfileTierLevel> ParseSdpForH265ProfileTierLevel(
--    const CodecParameterMap& params);
-+    const SdpVideoFormat::Parameters& params);
- 
- // Returns true if the parameters have the same H265 profile or neither contains
- // an H265 profile, otherwise false.
--RTC_EXPORT bool H265IsSameProfileTierLevel(const CodecParameterMap& params1,
--                                           const CodecParameterMap& params2);
-+RTC_EXPORT bool H265IsSameProfileTierLevel(
-+    const SdpVideoFormat::Parameters& params1,
-+    const SdpVideoFormat::Parameters& params2);
- 
- }  // namespace webrtc
- 
-diff --git a/api/video_codecs/sdp_video_format.cc b/api/video_codecs/sdp_video_format.cc
-index 0f313e84a9..51ae18cd78 100644
---- a/api/video_codecs/sdp_video_format.cc
-+++ b/api/video_codecs/sdp_video_format.cc
-@@ -28,7 +28,8 @@ namespace webrtc {
- 
  namespace {
  
--std::string H264GetPacketizationModeOrDefault(const CodecParameterMap& params) {
-+std::string H264GetPacketizationModeOrDefault(
-+    const SdpVideoFormat::Parameters& params) {
-   constexpr char kH264FmtpPacketizationMode[] = "packetization-mode";
-   const auto it = params.find(kH264FmtpPacketizationMode);
-   if (it != params.end()) {
-@@ -39,8 +40,8 @@ std::string H264GetPacketizationModeOrDefault(const CodecParameterMap& params) {
-   return "0";
- }
- 
--bool H264IsSamePacketizationMode(const CodecParameterMap& left,
--                                 const CodecParameterMap& right) {
-+bool H264IsSamePacketizationMode(const SdpVideoFormat::Parameters& left,
-+                                 const SdpVideoFormat::Parameters& right) {
-   return H264GetPacketizationModeOrDefault(left) ==
-          H264GetPacketizationModeOrDefault(right);
- }
-@@ -76,12 +77,12 @@ bool IsSameCodecSpecific(const SdpVideoFormat& format1,
- SdpVideoFormat::SdpVideoFormat(const std::string& name) : name(name) {}
- 
- SdpVideoFormat::SdpVideoFormat(const std::string& name,
--                               const CodecParameterMap& parameters)
-+                               const Parameters& parameters)
-     : name(name), parameters(parameters) {}
- 
- SdpVideoFormat::SdpVideoFormat(
-     const std::string& name,
--    const CodecParameterMap& parameters,
-+    const Parameters& parameters,
-     const absl::InlinedVector<ScalabilityMode, kScalabilityModeCount>&
-         scalability_modes)
-     : name(name),
-diff --git a/api/video_codecs/sdp_video_format.h b/api/video_codecs/sdp_video_format.h
-index 3f115c38ab..faaa66c241 100644
---- a/api/video_codecs/sdp_video_format.h
-+++ b/api/video_codecs/sdp_video_format.h
-@@ -17,7 +17,6 @@
- #include "absl/container/inlined_vector.h"
- #include "absl/types/optional.h"
- #include "api/array_view.h"
--#include "api/rtp_parameters.h"
- #include "api/video_codecs/scalability_mode.h"
- #include "rtc_base/system/rtc_export.h"
- 
-@@ -26,11 +25,13 @@ namespace webrtc {
- // SDP specification for a single video codec.
- // NOTE: This class is still under development and may change without notice.
- struct RTC_EXPORT SdpVideoFormat {
-+  using Parameters = std::map<std::string, std::string>;
++// Using a reasonable default of 10ms for the retransmission delay for frames
++// not coming from this sender's encoder. This is usually taken from an
++// estimate of the RTT of the link,so 10ms should be a reasonable estimate for
++// frames being re-transmitted to a peer, probably on the same network.
++const TimeDelta kDefaultRetransmissionsTime = TimeDelta::Millis(10);
 +
-   explicit SdpVideoFormat(const std::string& name);
--  SdpVideoFormat(const std::string& name, const CodecParameterMap& parameters);
-+  SdpVideoFormat(const std::string& name, const Parameters& parameters);
-   SdpVideoFormat(
-       const std::string& name,
--      const CodecParameterMap& parameters,
-+      const Parameters& parameters,
-       const absl::InlinedVector<ScalabilityMode, kScalabilityModeCount>&
-           scalability_modes);
-   SdpVideoFormat(const SdpVideoFormat&);
-@@ -57,7 +58,7 @@ struct RTC_EXPORT SdpVideoFormat {
-   }
- 
-   std::string name;
--  CodecParameterMap parameters;
-+  Parameters parameters;
-   absl::InlinedVector<ScalabilityMode, kScalabilityModeCount> scalability_modes;
- };
- 
-diff --git a/api/video_codecs/test/h264_profile_level_id_unittest.cc b/api/video_codecs/test/h264_profile_level_id_unittest.cc
-index 404d3e2cb3..47098d2682 100644
---- a/api/video_codecs/test/h264_profile_level_id_unittest.cc
-+++ b/api/video_codecs/test/h264_profile_level_id_unittest.cc
-@@ -145,7 +145,7 @@ TEST(H264ProfileLevelId, TestToStringInvalid) {
- 
- TEST(H264ProfileLevelId, TestParseSdpProfileLevelIdEmpty) {
-   const absl::optional<H264ProfileLevelId> profile_level_id =
--      ParseSdpForH264ProfileLevelId(CodecParameterMap());
-+      ParseSdpForH264ProfileLevelId(SdpVideoFormat::Parameters());
-   EXPECT_TRUE(profile_level_id);
-   EXPECT_EQ(H264Profile::kProfileConstrainedBaseline,
-             profile_level_id->profile);
-@@ -153,7 +153,7 @@ TEST(H264ProfileLevelId, TestParseSdpProfileLevelIdEmpty) {
- }
- 
- TEST(H264ProfileLevelId, TestParseSdpProfileLevelIdConstrainedHigh) {
--  CodecParameterMap params;
-+  SdpVideoFormat::Parameters params;
-   params["profile-level-id"] = "640c2a";
-   const absl::optional<H264ProfileLevelId> profile_level_id =
-       ParseSdpForH264ProfileLevelId(params);
-@@ -163,7 +163,7 @@ TEST(H264ProfileLevelId, TestParseSdpProfileLevelIdConstrainedHigh) {
- }
- 
- TEST(H264ProfileLevelId, TestParseSdpProfileLevelIdInvalid) {
--  CodecParameterMap params;
-+  SdpVideoFormat::Parameters params;
-   params["profile-level-id"] = "foobar";
-   EXPECT_FALSE(ParseSdpForH264ProfileLevelId(params));
- }
-diff --git a/api/video_codecs/test/h265_profile_tier_level_unittest.cc b/api/video_codecs/test/h265_profile_tier_level_unittest.cc
-index 73498b8fe5..a9fdf966a5 100644
---- a/api/video_codecs/test/h265_profile_tier_level_unittest.cc
-+++ b/api/video_codecs/test/h265_profile_tier_level_unittest.cc
-@@ -108,7 +108,7 @@ TEST(H265ProfileTierLevel, TestStringToTier) {
- 
- TEST(H265ProfileTierLevel, TestParseSdpProfileTierLevelAllEmpty) {
-   const absl::optional<H265ProfileTierLevel> profile_tier_level =
--      ParseSdpForH265ProfileTierLevel(CodecParameterMap());
-+      ParseSdpForH265ProfileTierLevel(SdpVideoFormat::Parameters());
-   EXPECT_TRUE(profile_tier_level);
-   EXPECT_EQ(H265Profile::kProfileMain, profile_tier_level->profile);
-   EXPECT_EQ(H265Level::kLevel3_1, profile_tier_level->level);
-@@ -116,7 +116,7 @@ TEST(H265ProfileTierLevel, TestParseSdpProfileTierLevelAllEmpty) {
- }
- 
- TEST(H265ProfileTierLevel, TestParseSdpProfileTierLevelPartialEmpty) {
--  CodecParameterMap params;
-+  SdpVideoFormat::Parameters params;
-   params["profile-id"] = "1";
-   params["tier-flag"] = "0";
-   absl::optional<H265ProfileTierLevel> profile_tier_level =
-@@ -144,7 +144,7 @@ TEST(H265ProfileTierLevel, TestParseSdpProfileTierLevelPartialEmpty) {
- }
- 
- TEST(H265ProfileTierLevel, TestParseSdpProfileTierLevelInvalid) {
--  CodecParameterMap params;
-+  SdpVideoFormat::Parameters params;
- 
-   // Invalid profile-tier-level combination.
-   params["profile-id"] = "1";
-@@ -170,7 +170,7 @@ TEST(H265ProfileTierLevel, TestParseSdpProfileTierLevelInvalid) {
- }
- 
- TEST(H265ProfileTierLevel, TestToStringRoundTrip) {
--  CodecParameterMap params;
-+  SdpVideoFormat::Parameters params;
-   params["profile-id"] = "1";
-   params["tier-flag"] = "0";
-   params["level-id"] = "93";
-@@ -193,8 +193,8 @@ TEST(H265ProfileTierLevel, TestToStringRoundTrip) {
- }
- 
- TEST(H265ProfileTierLevel, TestProfileTierLevelCompare) {
--  CodecParameterMap params1;
--  CodecParameterMap params2;
-+  SdpVideoFormat::Parameters params1;
-+  SdpVideoFormat::Parameters params2;
- 
-   // None of profile-id/tier-flag/level-id is specified,
-   EXPECT_TRUE(H265IsSameProfileTierLevel(params1, params2));
-@@ -235,7 +235,7 @@ TEST(H265ProfileTierLevel, TestProfileTierLevelCompare) {
-   params2["tier-flag"] = "1";
-   EXPECT_FALSE(H265IsSameProfileTierLevel(params1, params2));
- 
--  // One of the CodecParameterMap is invalid.
-+  // One of the SdpVideoFormat::Parameters is invalid.
-   params1.clear();
-   params2.clear();
-   params1["profile-id"] = "1";
-diff --git a/api/video_codecs/test/sdp_video_format_unittest.cc b/api/video_codecs/test/sdp_video_format_unittest.cc
-index 26e50d6945..797a9a2e72 100644
---- a/api/video_codecs/test/sdp_video_format_unittest.cc
-+++ b/api/video_codecs/test/sdp_video_format_unittest.cc
-@@ -18,7 +18,7 @@
- namespace webrtc {
- 
- typedef SdpVideoFormat Sdp;
--typedef CodecParameterMap Params;
-+typedef SdpVideoFormat::Parameters Params;
- 
- TEST(SdpVideoFormatTest, SameCodecNameNoParameters) {
-   EXPECT_TRUE(Sdp("H264").IsSameCodec(Sdp("h264")));
-diff --git a/api/video_codecs/video_encoder_factory_template_libaom_av1_adapter.h b/api/video_codecs/video_encoder_factory_template_libaom_av1_adapter.h
-index 0f801ad3c7..417df1e192 100644
---- a/api/video_codecs/video_encoder_factory_template_libaom_av1_adapter.h
-+++ b/api/video_codecs/video_encoder_factory_template_libaom_av1_adapter.h
-@@ -24,7 +24,8 @@ struct LibaomAv1EncoderTemplateAdapter {
-   static std::vector<SdpVideoFormat> SupportedFormats() {
-     absl::InlinedVector<ScalabilityMode, kScalabilityModeCount>
-         scalability_modes = LibaomAv1EncoderSupportedScalabilityModes();
--    return {SdpVideoFormat("AV1", CodecParameterMap(), scalability_modes)};
-+    return {
-+        SdpVideoFormat("AV1", SdpVideoFormat::Parameters(), scalability_modes)};
-   }
- 
-   static std::unique_ptr<VideoEncoder> CreateEncoder(
-diff --git a/api/video_codecs/video_encoder_factory_template_libvpx_vp8_adapter.h b/api/video_codecs/video_encoder_factory_template_libvpx_vp8_adapter.h
-index c60aa04795..0f0a9bacd5 100644
---- a/api/video_codecs/video_encoder_factory_template_libvpx_vp8_adapter.h
-+++ b/api/video_codecs/video_encoder_factory_template_libvpx_vp8_adapter.h
-@@ -28,7 +28,8 @@ struct LibvpxVp8EncoderTemplateAdapter {
-       scalability_modes.push_back(scalability_mode);
-     }
- 
--    return {SdpVideoFormat("VP8", CodecParameterMap(), scalability_modes)};
-+    return {
-+        SdpVideoFormat("VP8", SdpVideoFormat::Parameters(), scalability_modes)};
-   }
- 
-   static std::unique_ptr<VideoEncoder> CreateEncoder(
-diff --git a/api/video_codecs/vp9_profile.cc b/api/video_codecs/vp9_profile.cc
-index ccd3937296..7e627cc080 100644
---- a/api/video_codecs/vp9_profile.cc
-+++ b/api/video_codecs/vp9_profile.cc
-@@ -54,7 +54,7 @@ absl::optional<VP9Profile> StringToVP9Profile(const std::string& str) {
- }
- 
- absl::optional<VP9Profile> ParseSdpForVP9Profile(
--    const CodecParameterMap& params) {
-+    const SdpVideoFormat::Parameters& params) {
-   const auto profile_it = params.find(kVP9FmtpProfileId);
-   if (profile_it == params.end())
-     return VP9Profile::kProfile0;
-@@ -62,8 +62,8 @@ absl::optional<VP9Profile> ParseSdpForVP9Profile(
-   return StringToVP9Profile(profile_str);
- }
- 
--bool VP9IsSameProfile(const CodecParameterMap& params1,
--                      const CodecParameterMap& params2) {
-+bool VP9IsSameProfile(const SdpVideoFormat::Parameters& params1,
-+                      const SdpVideoFormat::Parameters& params2) {
-   const absl::optional<VP9Profile> profile = ParseSdpForVP9Profile(params1);
-   const absl::optional<VP9Profile> other_profile =
-       ParseSdpForVP9Profile(params2);
-diff --git a/api/video_codecs/vp9_profile.h b/api/video_codecs/vp9_profile.h
-index 27f84cbecc..b570bc3bb6 100644
---- a/api/video_codecs/vp9_profile.h
-+++ b/api/video_codecs/vp9_profile.h
-@@ -42,12 +42,12 @@ absl::optional<VP9Profile> StringToVP9Profile(const std::string& str);
- // profile key is missing. Nothing will be returned if the key is present but
- // the string is invalid.
- RTC_EXPORT absl::optional<VP9Profile> ParseSdpForVP9Profile(
--    const CodecParameterMap& params);
-+    const SdpVideoFormat::Parameters& params);
- 
- // Returns true if the parameters have the same VP9 profile, or neither contains
- // VP9 profile.
--bool VP9IsSameProfile(const CodecParameterMap& params1,
--                      const CodecParameterMap& params2);
-+bool VP9IsSameProfile(const SdpVideoFormat::Parameters& params1,
-+                      const SdpVideoFormat::Parameters& params2);
- 
- }  // namespace webrtc
- 
-diff --git a/media/base/codec.cc b/media/base/codec.cc
-index fe780548cb..05bdb7fe58 100644
---- a/media/base/codec.cc
-+++ b/media/base/codec.cc
-@@ -28,8 +28,7 @@
- namespace cricket {
- namespace {
- 
--std::string GetH264PacketizationModeOrDefault(
--    const webrtc::CodecParameterMap& params) {
-+std::string GetH264PacketizationModeOrDefault(const CodecParameterMap& params) {
-   auto it = params.find(kH264FmtpPacketizationMode);
-   if (it != params.end()) {
-     return it->second;
-@@ -39,14 +38,14 @@ std::string GetH264PacketizationModeOrDefault(
-   return "0";
- }
- 
--bool IsSameH264PacketizationMode(const webrtc::CodecParameterMap& left,
--                                 const webrtc::CodecParameterMap& right) {
-+bool IsSameH264PacketizationMode(const CodecParameterMap& left,
-+                                 const CodecParameterMap& right) {
-   return GetH264PacketizationModeOrDefault(left) ==
-          GetH264PacketizationModeOrDefault(right);
- }
- 
- #ifdef RTC_ENABLE_H265
--std::string GetH265TxModeOrDefault(const webrtc::CodecParameterMap& params) {
-+std::string GetH265TxModeOrDefault(const CodecParameterMap& params) {
-   auto it = params.find(kH265FmtpTxMode);
-   if (it != params.end()) {
-     return it->second;
-@@ -56,8 +55,8 @@ std::string GetH265TxModeOrDefault(const webrtc::CodecParameterMap& params) {
-   return "SRST";
- }
- 
--bool IsSameH265TxMode(const webrtc::CodecParameterMap& left,
--                      const webrtc::CodecParameterMap& right) {
-+bool IsSameH265TxMode(const CodecParameterMap& left,
-+                      const CodecParameterMap& right) {
-   return absl::EqualsIgnoreCase(GetH265TxModeOrDefault(left),
-                                 GetH265TxModeOrDefault(right));
- }
-@@ -66,9 +65,9 @@ bool IsSameH265TxMode(const webrtc::CodecParameterMap& left,
- // Some (video) codecs are actually families of codecs and rely on parameters
- // to distinguish different incompatible family members.
- bool IsSameCodecSpecific(const std::string& name1,
--                         const webrtc::CodecParameterMap& params1,
-+                         const CodecParameterMap& params1,
-                          const std::string& name2,
--                         const webrtc::CodecParameterMap& params2) {
-+                         const CodecParameterMap& params2) {
-   // The names might not necessarily match, so check both.
-   auto either_name_matches = [&](const std::string name) {
-     return absl::EqualsIgnoreCase(name, name1) ||
-@@ -250,7 +249,7 @@ bool Codec::MatchesRtpCodec(const webrtc::RtpCodec& codec_capability) const {
- }
- 
- bool Codec::GetParam(const std::string& name, std::string* out) const {
--  webrtc::CodecParameterMap::const_iterator iter = params.find(name);
-+  CodecParameterMap::const_iterator iter = params.find(name);
-   if (iter == params.end())
-     return false;
-   *out = iter->second;
-@@ -258,7 +257,7 @@ bool Codec::GetParam(const std::string& name, std::string* out) const {
- }
- 
- bool Codec::GetParam(const std::string& name, int* out) const {
--  webrtc::CodecParameterMap::const_iterator iter = params.find(name);
-+  CodecParameterMap::const_iterator iter = params.find(name);
-   if (iter == params.end())
-     return false;
-   return rtc::FromString(iter->second, out);
-diff --git a/media/base/codec.h b/media/base/codec.h
-index f586f78973..bc8b841fb9 100644
---- a/media/base/codec.h
-+++ b/media/base/codec.h
-@@ -27,6 +27,8 @@
- 
- namespace cricket {
- 
-+using CodecParameterMap = std::map<std::string, std::string>;
-+
- class FeedbackParam {
+ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
   public:
-   FeedbackParam() = default;
-@@ -101,7 +103,7 @@ struct RTC_EXPORT Codec {
- 
-   // Non key-value parameters such as the telephone-event "0‐15" are
-   // represented using an empty string as key, i.e. {"": "0-15"}.
--  webrtc::CodecParameterMap params;
-+  CodecParameterMap params;
-   FeedbackParams feedback_params;
- 
-   Codec(const Codec& c);
-diff --git a/media/base/sdp_video_format_utils.cc b/media/base/sdp_video_format_utils.cc
-index 2b756ba734..88d6d58504 100644
---- a/media/base/sdp_video_format_utils.cc
-+++ b/media/base/sdp_video_format_utils.cc
-@@ -36,7 +36,7 @@ constexpr char kH265TierFlag[] = "tier-flag";
- constexpr char kH265LevelId[] = "level-id";
- #endif
- 
--bool IsH264LevelAsymmetryAllowed(const CodecParameterMap& params) {
-+bool IsH264LevelAsymmetryAllowed(const SdpVideoFormat::Parameters& params) {
-   const auto it = params.find(kH264LevelAsymmetryAllowed);
-   return it != params.end() && strcmp(it->second.c_str(), "1") == 0;
- }
-@@ -55,7 +55,7 @@ H264Level H264LevelMin(H264Level a, H264Level b) {
- }
- 
- absl::optional<int> ParsePositiveNumberFromParams(
--    const CodecParameterMap& params,
-+    const SdpVideoFormat::Parameters& params,
-     const char* parameter_name) {
-   const auto max_frame_rate_it = params.find(parameter_name);
-   if (max_frame_rate_it == params.end())
-@@ -76,7 +76,7 @@ H265Level H265LevelMin(H265Level a, H265Level b) {
- 
- // Returns true if none of profile-id/tier-flag/level-id is specified
- // explicitly in the param.
--bool IsDefaultH265PTL(const CodecParameterMap& params) {
-+bool IsDefaultH265PTL(const SdpVideoFormat::Parameters& params) {
-   return !params.count(kH265ProfileId) && !params.count(kH265TierFlag) &&
-          !params.count(kH265LevelId);
- }
-@@ -87,9 +87,9 @@ bool IsDefaultH265PTL(const CodecParameterMap& params) {
- #ifdef RTC_ENABLE_H265
- // Set level according to https://tools.ietf.org/html/rfc7798#section-7.1
- void H265GenerateProfileTierLevelForAnswer(
--    const CodecParameterMap& local_supported_params,
--    const CodecParameterMap& remote_offered_params,
--    CodecParameterMap* answer_params) {
-+    const SdpVideoFormat::Parameters& local_supported_params,
-+    const SdpVideoFormat::Parameters& remote_offered_params,
-+    SdpVideoFormat::Parameters* answer_params) {
-   // If local and remote haven't set profile-id/tier-flag/level-id, they
-   // are both using the default PTL In this case, don't set PTL in answer
-   // either.
-@@ -123,9 +123,9 @@ void H265GenerateProfileTierLevelForAnswer(
- 
- // Set level according to https://tools.ietf.org/html/rfc6184#section-8.2.2.
- void H264GenerateProfileLevelIdForAnswer(
--    const CodecParameterMap& local_supported_params,
--    const CodecParameterMap& remote_offered_params,
--    CodecParameterMap* answer_params) {
-+    const SdpVideoFormat::Parameters& local_supported_params,
-+    const SdpVideoFormat::Parameters& remote_offered_params,
-+    SdpVideoFormat::Parameters* answer_params) {
-   // If both local and remote haven't set profile-level-id, they are both using
-   // the default profile. In this case, don't set profile-level-id in answer
-   // either.
-@@ -165,12 +165,12 @@ void H264GenerateProfileLevelIdForAnswer(
+   TransformableVideoSenderFrame(const EncodedImage& encoded_image,
+@@ -209,15 +215,17 @@ void RTPSenderVideoFrameTransformerDelegate::SendVideo(
+     auto* transformed_video_frame =
+         static_cast<TransformableVideoFrameInterface*>(transformed_frame.get());
+     VideoFrameMetadata metadata = transformed_video_frame->Metadata();
+-    sender_->SendVideo(
+-        transformed_video_frame->GetPayloadType(), metadata.GetCodec(),
+-        transformed_video_frame->GetTimestamp(),
+-        /*capture_time=*/Timestamp::MinusInfinity(),
+-        transformed_video_frame->GetData(),
+-        transformed_video_frame->GetData().size(),
+-        RTPVideoHeader::FromMetadata(metadata),
+-        /*expected_retransmission_time=*/TimeDelta::PlusInfinity(),
+-        metadata.GetCsrcs());
++    // TODO(bugs.webrtc.org/14708): Use an actual RTT estimate for the
++    // retransmission time instead of a const default, in the same way as a
++    // locally encoded frame.
++    sender_->SendVideo(transformed_video_frame->GetPayloadType(),
++                       metadata.GetCodec(),
++                       transformed_video_frame->GetTimestamp(),
++                       /*capture_time=*/Timestamp::MinusInfinity(),
++                       transformed_video_frame->GetData(),
++                       transformed_video_frame->GetData().size(),
++                       RTPVideoHeader::FromMetadata(metadata),
++                       kDefaultRetransmissionsTime, metadata.GetCsrcs());
+   }
  }
  
- absl::optional<int> ParseSdpForVPxMaxFrameRate(
--    const CodecParameterMap& params) {
-+    const SdpVideoFormat::Parameters& params) {
-   return ParsePositiveNumberFromParams(params, kVPxFmtpMaxFrameRate);
+@@ -254,13 +262,14 @@ std::unique_ptr<TransformableVideoFrameInterface> CloneSenderVideoFrame(
+                                  ? VideoFrameType::kVideoFrameKey
+                                  : VideoFrameType::kVideoFrameDelta;
+   // TODO(bugs.webrtc.org/14708): Fill in other EncodedImage parameters
+-
++  // TODO(bugs.webrtc.org/14708): Use an actual RTT estimate for the
++  // retransmission time instead of a const default, in the same way as a
++  // locally encoded frame.
+   VideoFrameMetadata metadata = original->Metadata();
+   RTPVideoHeader new_header = RTPVideoHeader::FromMetadata(metadata);
+   return std::make_unique<TransformableVideoSenderFrame>(
+       encoded_image, new_header, original->GetPayloadType(), new_header.codec,
+-      original->GetTimestamp(),
+-      /*expected_retransmission_time=*/TimeDelta::PlusInfinity(),
++      original->GetTimestamp(), kDefaultRetransmissionsTime,
+       original->GetSsrc(), metadata.GetCsrcs());
  }
  
- absl::optional<int> ParseSdpForVPxMaxFrameSize(
--    const CodecParameterMap& params) {
-+    const SdpVideoFormat::Parameters& params) {
-   const absl::optional<int> i =
-       ParsePositiveNumberFromParams(params, kVPxFmtpMaxFrameSize);
-   return i ? absl::make_optional(i.value() * kVPxFmtpFrameSizeSubBlockPixels)
-diff --git a/media/base/sdp_video_format_utils.h b/media/base/sdp_video_format_utils.h
-index 931caa8a29..421cab885a 100644
---- a/media/base/sdp_video_format_utils.h
-+++ b/media/base/sdp_video_format_utils.h
-@@ -32,9 +32,9 @@ namespace webrtc {
- // parameters that are used when negotiating are the level part of
- // profile-level-id and level-asymmetry-allowed.
- void H264GenerateProfileLevelIdForAnswer(
--    const CodecParameterMap& local_supported_params,
--    const CodecParameterMap& remote_offered_params,
--    CodecParameterMap* answer_params);
-+    const SdpVideoFormat::Parameters& local_supported_params,
-+    const SdpVideoFormat::Parameters& remote_offered_params,
-+    SdpVideoFormat::Parameters* answer_params);
+diff --git a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate_unittest.cc b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate_unittest.cc
+index ad00e6449f..6790fc3a71 100644
+--- a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate_unittest.cc
++++ b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate_unittest.cc
+@@ -83,7 +83,7 @@ class RtpSenderVideoFrameTransformerDelegateTest : public ::testing::Test {
+     delegate->TransformFrame(
+         /*payload_type=*/1, VideoCodecType::kVideoCodecVP8, /*rtp_timestamp=*/2,
+         encoded_image, RTPVideoHeader::FromMetadata(metadata),
+-        /*expected_retransmission_time=*/TimeDelta::PlusInfinity());
++        /*expected_retransmission_time=*/TimeDelta::Millis(10));
+     return frame;
+   }
  
- #ifdef RTC_ENABLE_H265
- // Works similarly as H264GenerateProfileLevelIdForAnswer, but generates codec
-@@ -43,19 +43,21 @@ void H264GenerateProfileLevelIdForAnswer(
- // For level-id, the highest level indicated by the answer must not be higher
- // than that indicated by the offer.
- void H265GenerateProfileTierLevelForAnswer(
--    const CodecParameterMap& local_supported_params,
--    const CodecParameterMap& remote_offered_params,
--    CodecParameterMap* answer_params);
-+    const SdpVideoFormat::Parameters& local_supported_params,
-+    const SdpVideoFormat::Parameters& remote_offered_params,
-+    SdpVideoFormat::Parameters* answer_params);
- #endif
+@@ -123,7 +123,7 @@ TEST_F(RtpSenderVideoFrameTransformerDelegateTest,
+   delegate->TransformFrame(
+       /*payload_type=*/1, VideoCodecType::kVideoCodecVP8, /*rtp_timestamp=*/2,
+       encoded_image, RTPVideoHeader(),
+-      /*expected_retransmission_time=*/TimeDelta::PlusInfinity());
++      /*expected_retransmission_time=*/TimeDelta::Millis(10));
+ }
  
- // Parse max frame rate from SDP FMTP line. absl::nullopt is returned if the
- // field is missing or not a number.
--absl::optional<int> ParseSdpForVPxMaxFrameRate(const CodecParameterMap& params);
-+absl::optional<int> ParseSdpForVPxMaxFrameRate(
-+    const SdpVideoFormat::Parameters& params);
+ TEST_F(RtpSenderVideoFrameTransformerDelegateTest,
+@@ -260,7 +260,7 @@ TEST_F(RtpSenderVideoFrameTransformerDelegateTest,
+       test_sender_,
+       SendVideo(payload_type, absl::make_optional(kVideoCodecVP8), timestamp,
+                 /*capture_time=*/Timestamp::MinusInfinity(), buffer, _, _,
+-                /*expected_retransmission_time=*/TimeDelta::PlusInfinity(),
++                /*expected_retransmission_time=*/TimeDelta::Millis(10),
+                 frame_csrcs))
+       .WillOnce(WithoutArgs([&] {
+         event.Set();
+@@ -310,7 +310,7 @@ TEST_F(RtpSenderVideoFrameTransformerDelegateTest,
+   delegate->TransformFrame(
+       /*payload_type=*/1, VideoCodecType::kVideoCodecVP8, /*rtp_timestamp=*/2,
+       encoded_image, RTPVideoHeader(),
+-      /*expected_retransmission_time=*/TimeDelta::PlusInfinity());
++      /*expected_retransmission_time=*/TimeDelta::Millis(10));
+ }
  
- // Parse max frame size from SDP FMTP line. absl::nullopt is returned if the
- // field is missing or not a number. Please note that the value is stored in sub
- // blocks but the returned value is in total number of pixels.
--absl::optional<int> ParseSdpForVPxMaxFrameSize(const CodecParameterMap& params);
-+absl::optional<int> ParseSdpForVPxMaxFrameSize(
-+    const SdpVideoFormat::Parameters& params);
- 
- }  // namespace webrtc
- 
-diff --git a/media/base/sdp_video_format_utils_unittest.cc b/media/base/sdp_video_format_utils_unittest.cc
-index 9f505c19d7..3ae2b3bf29 100644
---- a/media/base/sdp_video_format_utils_unittest.cc
-+++ b/media/base/sdp_video_format_utils_unittest.cc
-@@ -27,28 +27,29 @@ const char kVPxFmtpMaxFrameSize[] = "max-fs";
  }  // namespace
- 
- TEST(SdpVideoFormatUtilsTest, TestH264GenerateProfileLevelIdForAnswerEmpty) {
--  CodecParameterMap answer_params;
--  H264GenerateProfileLevelIdForAnswer(CodecParameterMap(), CodecParameterMap(),
-+  SdpVideoFormat::Parameters answer_params;
-+  H264GenerateProfileLevelIdForAnswer(SdpVideoFormat::Parameters(),
-+                                      SdpVideoFormat::Parameters(),
-                                       &answer_params);
-   EXPECT_TRUE(answer_params.empty());
- }
- 
- TEST(SdpVideoFormatUtilsTest,
-      TestH264GenerateProfileLevelIdForAnswerLevelSymmetryCapped) {
--  CodecParameterMap low_level;
-+  SdpVideoFormat::Parameters low_level;
-   low_level["profile-level-id"] = "42e015";
--  CodecParameterMap high_level;
-+  SdpVideoFormat::Parameters high_level;
-   high_level["profile-level-id"] = "42e01f";
- 
-   // Level asymmetry is not allowed; test that answer level is the lower of the
-   // local and remote levels.
--  CodecParameterMap answer_params;
-+  SdpVideoFormat::Parameters answer_params;
-   H264GenerateProfileLevelIdForAnswer(low_level /* local_supported */,
-                                       high_level /* remote_offered */,
-                                       &answer_params);
-   EXPECT_EQ("42e015", answer_params["profile-level-id"]);
- 
--  CodecParameterMap answer_params2;
-+  SdpVideoFormat::Parameters answer_params2;
-   H264GenerateProfileLevelIdForAnswer(high_level /* local_supported */,
-                                       low_level /* remote_offered */,
-                                       &answer_params2);
-@@ -57,13 +58,13 @@ TEST(SdpVideoFormatUtilsTest,
- 
- TEST(SdpVideoFormatUtilsTest,
-      TestH264GenerateProfileLevelIdForAnswerConstrainedBaselineLevelAsymmetry) {
--  CodecParameterMap local_params;
-+  SdpVideoFormat::Parameters local_params;
-   local_params["profile-level-id"] = "42e01f";
-   local_params["level-asymmetry-allowed"] = "1";
--  CodecParameterMap remote_params;
-+  SdpVideoFormat::Parameters remote_params;
-   remote_params["profile-level-id"] = "42e015";
-   remote_params["level-asymmetry-allowed"] = "1";
--  CodecParameterMap answer_params;
-+  SdpVideoFormat::Parameters answer_params;
-   H264GenerateProfileLevelIdForAnswer(local_params, remote_params,
-                                       &answer_params);
-   // When level asymmetry is allowed, we can answer a higher level than what was
-@@ -75,9 +76,10 @@ TEST(SdpVideoFormatUtilsTest,
- // Answer should not include explicit PTL info if neither local nor remote set
- // any of them.
- TEST(SdpVideoFormatUtilsTest, H265GenerateProfileTierLevelEmpty) {
--  CodecParameterMap answer_params;
--  H265GenerateProfileTierLevelForAnswer(CodecParameterMap(),
--                                        CodecParameterMap(), &answer_params);
-+  SdpVideoFormat::Parameters answer_params;
-+  H265GenerateProfileTierLevelForAnswer(SdpVideoFormat::Parameters(),
-+                                        SdpVideoFormat::Parameters(),
-+                                        &answer_params);
-   EXPECT_TRUE(answer_params.empty());
- }
- 
-@@ -86,15 +88,15 @@ TEST(SdpVideoFormatUtilsTest, H265GenerateProfileTierLevelNoEmpty) {
-   constexpr char kLocallySupportedLevelId[] = "93";
-   constexpr char kRemoteOfferedLevelId[] = "120";
- 
--  CodecParameterMap local_params;
-+  SdpVideoFormat::Parameters local_params;
-   local_params["profile-id"] = "1";
-   local_params["tier-flag"] = "0";
-   local_params["level-id"] = kLocallySupportedLevelId;
--  CodecParameterMap remote_params;
-+  SdpVideoFormat::Parameters remote_params;
-   remote_params["profile-id"] = "1";
-   remote_params["tier-flag"] = "0";
-   remote_params["level-id"] = kRemoteOfferedLevelId;
--  CodecParameterMap answer_params;
-+  SdpVideoFormat::Parameters answer_params;
-   H265GenerateProfileTierLevelForAnswer(local_params, remote_params,
-                                         &answer_params);
-   EXPECT_EQ(kLocallySupportedLevelId, answer_params["level-id"]);
-@@ -102,7 +104,7 @@ TEST(SdpVideoFormatUtilsTest, H265GenerateProfileTierLevelNoEmpty) {
- #endif
- 
- TEST(SdpVideoFormatUtilsTest, MaxFrameRateIsMissingOrInvalid) {
--  CodecParameterMap params;
-+  SdpVideoFormat::Parameters params;
-   absl::optional<int> empty = ParseSdpForVPxMaxFrameRate(params);
-   EXPECT_FALSE(empty);
-   params[kVPxFmtpMaxFrameRate] = "-1";
-@@ -114,7 +116,7 @@ TEST(SdpVideoFormatUtilsTest, MaxFrameRateIsMissingOrInvalid) {
- }
- 
- TEST(SdpVideoFormatUtilsTest, MaxFrameRateIsSpecified) {
--  CodecParameterMap params;
-+  SdpVideoFormat::Parameters params;
-   params[kVPxFmtpMaxFrameRate] = "30";
-   EXPECT_EQ(ParseSdpForVPxMaxFrameRate(params), 30);
-   params[kVPxFmtpMaxFrameRate] = "60";
-@@ -122,7 +124,7 @@ TEST(SdpVideoFormatUtilsTest, MaxFrameRateIsSpecified) {
- }
- 
- TEST(SdpVideoFormatUtilsTest, MaxFrameSizeIsMissingOrInvalid) {
--  CodecParameterMap params;
-+  SdpVideoFormat::Parameters params;
-   absl::optional<int> empty = ParseSdpForVPxMaxFrameSize(params);
-   EXPECT_FALSE(empty);
-   params[kVPxFmtpMaxFrameSize] = "-1";
-@@ -134,7 +136,7 @@ TEST(SdpVideoFormatUtilsTest, MaxFrameSizeIsMissingOrInvalid) {
- }
- 
- TEST(SdpVideoFormatUtilsTest, MaxFrameSizeIsSpecified) {
--  CodecParameterMap params;
-+  SdpVideoFormat::Parameters params;
-   params[kVPxFmtpMaxFrameSize] = "8100";  // 1920 x 1080 / (16^2)
-   EXPECT_EQ(ParseSdpForVPxMaxFrameSize(params), 1920 * 1080);
-   params[kVPxFmtpMaxFrameSize] = "32400";  // 3840 x 2160 / (16^2)
-diff --git a/media/engine/simulcast_encoder_adapter_unittest.cc b/media/engine/simulcast_encoder_adapter_unittest.cc
-index 3ee3465e13..e2ac5ea390 100644
---- a/media/engine/simulcast_encoder_adapter_unittest.cc
-+++ b/media/engine/simulcast_encoder_adapter_unittest.cc
-@@ -586,7 +586,7 @@ class TestSimulcastEncoderAdapterFake : public ::testing::Test,
-   absl::optional<int> last_encoded_image_simulcast_index_;
-   std::unique_ptr<SimulcastRateAllocator> rate_allocator_;
-   bool use_fallback_factory_;
--  CodecParameterMap sdp_video_parameters_;
-+  SdpVideoFormat::Parameters sdp_video_parameters_;
-   test::ScopedKeyValueConfig field_trials_;
- };
- 
-diff --git a/media/engine/webrtc_video_engine_unittest.cc b/media/engine/webrtc_video_engine_unittest.cc
-index 148223f497..f5736679be 100644
---- a/media/engine/webrtc_video_engine_unittest.cc
-+++ b/media/engine/webrtc_video_engine_unittest.cc
-@@ -3781,7 +3781,7 @@ class Vp9SettingsTest : public WebRtcVideoChannelTest {
- 
- TEST_F(Vp9SettingsTest, VerifyVp9SpecificSettings) {
-   encoder_factory_->AddSupportedVideoCodec(
--      webrtc::SdpVideoFormat("VP9", webrtc::CodecParameterMap(),
-+      webrtc::SdpVideoFormat("VP9", webrtc::SdpVideoFormat::Parameters(),
-                              {ScalabilityMode::kL1T1, ScalabilityMode::kL2T1}));
- 
-   cricket::VideoSenderParameters parameters;
-@@ -8545,7 +8545,7 @@ TEST_F(WebRtcVideoChannelTest, FallbackForUnsetOrUnsupportedScalabilityMode) {
-                          ScalabilityMode::kL1T3};
- 
-   encoder_factory_->AddSupportedVideoCodec(webrtc::SdpVideoFormat(
--      "VP8", webrtc::CodecParameterMap(), kSupportedModes));
-+      "VP8", webrtc::SdpVideoFormat::Parameters(), kSupportedModes));
- 
-   FakeVideoSendStream* stream = SetUpSimulcast(true, /*with_rtx=*/false);
- 
-@@ -8615,9 +8615,9 @@ TEST_F(WebRtcVideoChannelTest,
-       kVp9SupportedModes = {ScalabilityMode::kL3T3};
- 
-   encoder_factory_->AddSupportedVideoCodec(webrtc::SdpVideoFormat(
--      "VP8", webrtc::CodecParameterMap(), {ScalabilityMode::kL1T1}));
-+      "VP8", webrtc::SdpVideoFormat::Parameters(), {ScalabilityMode::kL1T1}));
-   encoder_factory_->AddSupportedVideoCodec(webrtc::SdpVideoFormat(
--      "VP9", webrtc::CodecParameterMap(), {ScalabilityMode::kL3T3}));
-+      "VP9", webrtc::SdpVideoFormat::Parameters(), {ScalabilityMode::kL3T3}));
- 
-   cricket::VideoSenderParameters send_parameters;
-   send_parameters.codecs.push_back(GetEngineCodec("VP9"));
-diff --git a/modules/audio_coding/codecs/builtin_audio_decoder_factory_unittest.cc b/modules/audio_coding/codecs/builtin_audio_decoder_factory_unittest.cc
-index 998e78e1d3..bd8d1cc341 100644
---- a/modules/audio_coding/codecs/builtin_audio_decoder_factory_unittest.cc
-+++ b/modules/audio_coding/codecs/builtin_audio_decoder_factory_unittest.cc
-@@ -146,7 +146,7 @@ TEST(AudioDecoderFactoryTest, CreateOpus) {
-   for (int hz : {8000, 16000, 32000, 48000}) {
-     for (int channels : {0, 1, 2, 3}) {
-       for (std::string stereo : {"XX", "0", "1", "2"}) {
--        CodecParameterMap params;
-+        SdpAudioFormat::Parameters params;
-         if (stereo != "XX") {
-           params["stereo"] = stereo;
-         }
-diff --git a/modules/audio_coding/codecs/opus/audio_encoder_opus_unittest.cc b/modules/audio_coding/codecs/opus/audio_encoder_opus_unittest.cc
-index f82ef965db..a2ebe43bbe 100644
---- a/modules/audio_coding/codecs/opus/audio_encoder_opus_unittest.cc
-+++ b/modules/audio_coding/codecs/opus/audio_encoder_opus_unittest.cc
-@@ -39,7 +39,7 @@ constexpr int kDefaultOpusPacSize = 960;
- constexpr int64_t kInitialTimeUs = 12345678;
- 
- AudioEncoderOpusConfig CreateConfigWithParameters(
--    const CodecParameterMap& params) {
-+    const SdpAudioFormat::Parameters& params) {
-   const SdpAudioFormat format("opus", 48000, 2, params);
-   return *AudioEncoderOpus::SdpToConfig(format);
- }
-diff --git a/modules/audio_coding/neteq/test/neteq_opus_quality_test.cc b/modules/audio_coding/neteq/test/neteq_opus_quality_test.cc
-index eddacd3680..5a2df24ef6 100644
---- a/modules/audio_coding/neteq/test/neteq_opus_quality_test.cc
-+++ b/modules/audio_coding/neteq/test/neteq_opus_quality_test.cc
-@@ -106,8 +106,8 @@ NetEqOpusQualityTest::NetEqOpusQualityTest()
- 
-   // Redefine decoder type if input is stereo.
-   if (channels_ > 1) {
--    audio_format_ =
--        SdpAudioFormat("opus", 48000, 2, CodecParameterMap{{"stereo", "1"}});
-+    audio_format_ = SdpAudioFormat("opus", 48000, 2,
-+                                   SdpAudioFormat::Parameters{{"stereo", "1"}});
-   }
-   application_ = absl::GetFlag(FLAGS_application);
- }
-diff --git a/modules/audio_coding/test/TestStereo.cc b/modules/audio_coding/test/TestStereo.cc
-index 1e65e4a219..94a1576026 100644
---- a/modules/audio_coding/test/TestStereo.cc
-+++ b/modules/audio_coding/test/TestStereo.cc
-@@ -469,7 +469,7 @@ void TestStereo::RegisterSendCodec(char side,
-                                : sampling_freq_hz;
-   const std::string ptime = rtc::ToString(rtc::CheckedDivExact(
-       pack_size, rtc::CheckedDivExact(sampling_freq_hz, 1000)));
--  CodecParameterMap params = {{"ptime", ptime}};
-+  SdpAudioFormat::Parameters params = {{"ptime", ptime}};
-   RTC_CHECK(channels == 1 || channels == 2);
-   if (absl::EqualsIgnoreCase(codec_name, "opus")) {
-     if (channels == 2) {
-diff --git a/modules/video_coding/codecs/test/videocodec_test_fixture_impl.cc b/modules/video_coding/codecs/test/videocodec_test_fixture_impl.cc
-index 35355d4387..eb264e5285 100644
---- a/modules/video_coding/codecs/test/videocodec_test_fixture_impl.cc
-+++ b/modules/video_coding/codecs/test/videocodec_test_fixture_impl.cc
-@@ -167,7 +167,7 @@ SdpVideoFormat CreateSdpVideoFormat(
-                 H264PacketizationMode::NonInterleaved
-             ? "1"
-             : "0";
--    CodecParameterMap codec_params = {
-+    SdpVideoFormat::Parameters codec_params = {
-         {cricket::kH264FmtpProfileLevelId,
-          *H264ProfileLevelIdToString(H264ProfileLevelId(
-              config.h264_codec_settings.profile, H264Level::kLevel3_1))},
-diff --git a/pc/peer_connection_end_to_end_unittest.cc b/pc/peer_connection_end_to_end_unittest.cc
-index 5881cf45b5..a21d455ec5 100644
---- a/pc/peer_connection_end_to_end_unittest.cc
-+++ b/pc/peer_connection_end_to_end_unittest.cc
-@@ -319,7 +319,8 @@ struct AudioEncoderUnicornSparklesRainbow {
-   using Config = webrtc::AudioEncoderL16::Config;
-   static absl::optional<Config> SdpToConfig(webrtc::SdpAudioFormat format) {
-     if (absl::EqualsIgnoreCase(format.name, "UnicornSparklesRainbow")) {
--      const webrtc::CodecParameterMap expected_params = {{"num_horns", "1"}};
-+      const webrtc::SdpAudioFormat::Parameters expected_params = {
-+          {"num_horns", "1"}};
-       EXPECT_EQ(expected_params, format.parameters);
-       format.parameters.clear();
-       format.name = "L16";
-@@ -355,7 +356,8 @@ struct AudioDecoderUnicornSparklesRainbow {
-   using Config = webrtc::AudioDecoderL16::Config;
-   static absl::optional<Config> SdpToConfig(webrtc::SdpAudioFormat format) {
-     if (absl::EqualsIgnoreCase(format.name, "UnicornSparklesRainbow")) {
--      const webrtc::CodecParameterMap expected_params = {{"num_horns", "1"}};
-+      const webrtc::SdpAudioFormat::Parameters expected_params = {
-+          {"num_horns", "1"}};
-       EXPECT_EQ(expected_params, format.parameters);
-       format.parameters.clear();
-       format.name = "L16";
-diff --git a/pc/webrtc_sdp.cc b/pc/webrtc_sdp.cc
-index 04434fe1d9..8bd8d369cc 100644
---- a/pc/webrtc_sdp.cc
-+++ b/pc/webrtc_sdp.cc
-@@ -1839,7 +1839,7 @@ bool IsFmtpParam(absl::string_view name) {
-   return name != kCodecParamPTime && name != kCodecParamMaxPTime;
- }
- 
--bool WriteFmtpParameters(const webrtc::CodecParameterMap& parameters,
-+bool WriteFmtpParameters(const cricket::CodecParameterMap& parameters,
-                          rtc::StringBuilder* os) {
-   bool empty = true;
-   const char* delimiter = "";  // No delimiter before first parameter.
-@@ -1902,7 +1902,7 @@ bool GetMinValue(const std::vector<int>& values, int* value) {
- }
- 
- bool GetParameter(const std::string& name,
--                  const webrtc::CodecParameterMap& params,
-+                  const cricket::CodecParameterMap& params,
-                   int* value) {
-   std::map<std::string, std::string>::const_iterator found = params.find(name);
-   if (found == params.end()) {
-@@ -2876,7 +2876,7 @@ bool ParseMediaDescription(
-   return true;
- }
- 
--void AddParameters(const webrtc::CodecParameterMap& parameters,
-+void AddParameters(const cricket::CodecParameterMap& parameters,
-                    cricket::Codec* codec) {
-   for (const auto& entry : parameters) {
-     const std::string& key = entry.first;
-@@ -2939,7 +2939,7 @@ void AddOrReplaceCodec(MediaContentDescription* content_desc,
- // to `parameters`.
- void UpdateCodec(MediaContentDescription* content_desc,
-                  int payload_type,
--                 const webrtc::CodecParameterMap& parameters) {
-+                 const cricket::CodecParameterMap& parameters) {
-   // Codec might already have been populated (from rtpmap).
-   cricket::Codec new_codec = GetCodecWithPayloadType(
-       content_desc->type(), content_desc->codecs(), payload_type);
-@@ -3762,7 +3762,7 @@ bool ParseFmtpAttributes(absl::string_view line,
-   }
- 
-   // Parse out format specific parameters.
--  webrtc::CodecParameterMap codec_params;
-+  cricket::CodecParameterMap codec_params;
-   for (absl::string_view param :
-        rtc::split(line_params, kSdpDelimiterSemicolonChar)) {
-     std::string name;
-diff --git a/pc/webrtc_sdp.h b/pc/webrtc_sdp.h
-index 052ed546c8..f7759bd139 100644
---- a/pc/webrtc_sdp.h
-+++ b/pc/webrtc_sdp.h
-@@ -109,7 +109,7 @@ RTC_EXPORT bool ParseCandidate(absl::string_view message,
- // parameters are not considered to be part of the FMTP line, see the function
- // IsFmtpParam(). Returns true if the set of FMTP parameters is nonempty, false
- // otherwise.
--bool WriteFmtpParameters(const webrtc::CodecParameterMap& parameters,
-+bool WriteFmtpParameters(const cricket::CodecParameterMap& parameters,
-                          rtc::StringBuilder* os);
- 
- }  // namespace webrtc
-diff --git a/pc/webrtc_sdp_unittest.cc b/pc/webrtc_sdp_unittest.cc
-index cef8c2e603..bc79d174ac 100644
---- a/pc/webrtc_sdp_unittest.cc
-+++ b/pc/webrtc_sdp_unittest.cc
-@@ -1815,10 +1815,10 @@ class WebRtcSdpTest : public ::testing::Test {
-     }
-   }
- 
--  void VerifyCodecParameter(const webrtc::CodecParameterMap& params,
-+  void VerifyCodecParameter(const cricket::CodecParameterMap& params,
-                             const std::string& name,
-                             int expected_value) {
--    webrtc::CodecParameterMap::const_iterator found = params.find(name);
-+    cricket::CodecParameterMap::const_iterator found = params.find(name);
-     ASSERT_TRUE(found != params.end());
-     EXPECT_EQ(found->second, rtc::ToString(expected_value));
-   }
-@@ -2449,7 +2449,7 @@ TEST_F(WebRtcSdpTest, DeserializeSessionDescriptionWithoutRtpmapButWithFmtp) {
-   EXPECT_EQ("G729", g729.name);
-   EXPECT_EQ(8000, g729.clockrate);
-   EXPECT_EQ(18, g729.id);
--  webrtc::CodecParameterMap::iterator found = g729.params.find("annexb");
-+  cricket::CodecParameterMap::iterator found = g729.params.find("annexb");
-   ASSERT_TRUE(found != g729.params.end());
-   EXPECT_EQ(found->second, "yes");
- 
-@@ -3292,7 +3292,7 @@ TEST_F(WebRtcSdpTest, DeserializeVideoFmtp) {
-   cricket::VideoCodec vp8 = vcd->codecs()[0];
-   EXPECT_EQ("VP8", vp8.name);
-   EXPECT_EQ(120, vp8.id);
--  webrtc::CodecParameterMap::iterator found =
-+  cricket::CodecParameterMap::iterator found =
-       vp8.params.find("x-google-min-bitrate");
-   ASSERT_TRUE(found != vp8.params.end());
-   EXPECT_EQ(found->second, "10");
-@@ -3326,7 +3326,7 @@ TEST_F(WebRtcSdpTest, DeserializeVideoFmtpWithSprops) {
-   cricket::VideoCodec h264 = vcd->codecs()[0];
-   EXPECT_EQ("H264", h264.name);
-   EXPECT_EQ(98, h264.id);
--  webrtc::CodecParameterMap::const_iterator found =
-+  cricket::CodecParameterMap::const_iterator found =
-       h264.params.find("profile-level-id");
-   ASSERT_TRUE(found != h264.params.end());
-   EXPECT_EQ(found->second, "42A01E");
-@@ -3359,7 +3359,7 @@ TEST_F(WebRtcSdpTest, DeserializeVideoFmtpWithSpace) {
-   cricket::VideoCodec vp8 = vcd->codecs()[0];
-   EXPECT_EQ("VP8", vp8.name);
-   EXPECT_EQ(120, vp8.id);
--  webrtc::CodecParameterMap::iterator found =
-+  cricket::CodecParameterMap::iterator found =
-       vp8.params.find("x-google-min-bitrate");
-   ASSERT_TRUE(found != vp8.params.end());
-   EXPECT_EQ(found->second, "10");
-diff --git a/test/scenario/audio_stream.cc b/test/scenario/audio_stream.cc
-index 232f7382bd..5f7db7acdf 100644
---- a/test/scenario/audio_stream.cc
-+++ b/test/scenario/audio_stream.cc
-@@ -89,7 +89,7 @@ SendAudioStream::SendAudioStream(
-   AudioSendStream::Config send_config(send_transport);
-   ssrc_ = sender->GetNextAudioSsrc();
-   send_config.rtp.ssrc = ssrc_;
--  CodecParameterMap sdp_params;
-+  SdpAudioFormat::Parameters sdp_params;
-   if (config.source.channels == 2)
-     sdp_params["stereo"] = "1";
-   if (config.encoder.initial_frame_length != TimeDelta::Millis(20))
-diff --git a/video/full_stack_tests.cc b/video/full_stack_tests.cc
-index 335a9363af..7791afc854 100644
---- a/video/full_stack_tests.cc
-+++ b/video/full_stack_tests.cc
-@@ -135,7 +135,7 @@ TEST(FullStackTest, Generator_Net_Delay_0_0_Plr_0_VP9Profile2) {
-     return;
-   auto fixture = CreateVideoQualityTestFixture();
- 
--  CodecParameterMap vp92 = {
-+  SdpVideoFormat::Parameters vp92 = {
-       {kVP9FmtpProfileId, VP9ProfileToString(VP9Profile::kProfile2)}};
-   ParamsWithLogging generator;
-   generator.call.send_side_bwe = true;
-diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index 9b8733f775..9a38097a93 100644
---- a/video/rtp_video_stream_receiver2.cc
-+++ b/video/rtp_video_stream_receiver2.cc
-@@ -353,7 +353,7 @@ RtpVideoStreamReceiver2::~RtpVideoStreamReceiver2() {
- void RtpVideoStreamReceiver2::AddReceiveCodec(
-     uint8_t payload_type,
-     VideoCodecType video_codec,
--    const webrtc::CodecParameterMap& codec_params,
-+    const std::map<std::string, std::string>& codec_params,
-     bool raw_payload) {
-   RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
-   if (codec_params.count(cricket::kH264FmtpSpsPpsIdrInKeyframe) > 0 ||
-diff --git a/video/rtp_video_stream_receiver2.h b/video/rtp_video_stream_receiver2.h
-index 9a09ec43c3..0178355262 100644
---- a/video/rtp_video_stream_receiver2.h
-+++ b/video/rtp_video_stream_receiver2.h
-@@ -102,7 +102,7 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
- 
-   void AddReceiveCodec(uint8_t payload_type,
-                        VideoCodecType video_codec,
--                       const webrtc::CodecParameterMap& codec_params,
-+                       const std::map<std::string, std::string>& codec_params,
-                        bool raw_payload);
-   void RemoveReceiveCodec(uint8_t payload_type);
- 
-@@ -393,7 +393,7 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
-   // TODO(johan): Remove pt_codec_params_ once
-   // https://bugs.chromium.org/p/webrtc/issues/detail?id=6883 is resolved.
-   // Maps a payload type to a map of out-of-band supplied codec parameters.
--  std::map<uint8_t, webrtc::CodecParameterMap> pt_codec_params_
-+  std::map<uint8_t, std::map<std::string, std::string>> pt_codec_params_
-       RTC_GUARDED_BY(packet_sequence_checker_);
-   int16_t last_payload_type_ RTC_GUARDED_BY(packet_sequence_checker_) = -1;
- 
-diff --git a/video/rtp_video_stream_receiver2_unittest.cc b/video/rtp_video_stream_receiver2_unittest.cc
-index ad49a1ac9e..d82f7bb9a5 100644
---- a/video/rtp_video_stream_receiver2_unittest.cc
-+++ b/video/rtp_video_stream_receiver2_unittest.cc
-@@ -307,7 +307,7 @@ TEST_F(RtpVideoStreamReceiver2Test, CacheColorSpaceFromLastPacketOfKeyframe) {
-   received_packet_generator.SetColorSpace(kColorSpace);
- 
-   // Prepare the receiver for VP9.
--  webrtc::CodecParameterMap codec_params;
-+  std::map<std::string, std::string> codec_params;
-   rtp_video_stream_receiver_->AddReceiveCodec(kVp9PayloadType, kVideoCodecVP9,
-                                               codec_params,
-                                               /*raw_payload=*/false);
-@@ -571,7 +571,7 @@ TEST_P(RtpVideoStreamReceiver2TestH264, InBandSpsPps) {
- 
- TEST_P(RtpVideoStreamReceiver2TestH264, OutOfBandFmtpSpsPps) {
-   constexpr int kPayloadType = 99;
--  webrtc::CodecParameterMap codec_params;
-+  std::map<std::string, std::string> codec_params;
-   // Example parameter sets from https://tools.ietf.org/html/rfc3984#section-8.2
-   // .
-   codec_params.insert(
-@@ -612,7 +612,7 @@ TEST_P(RtpVideoStreamReceiver2TestH264, OutOfBandFmtpSpsPps) {
- 
- TEST_P(RtpVideoStreamReceiver2TestH264, ForceSpsPpsIdrIsKeyframe) {
-   constexpr int kPayloadType = 99;
--  webrtc::CodecParameterMap codec_params;
-+  std::map<std::string, std::string> codec_params;
-   if (GetParam() ==
-       "") {  // Forcing can be done either with field trial or codec_params.
-     codec_params.insert({cricket::kH264FmtpSpsPpsIdrInKeyframe, ""});
