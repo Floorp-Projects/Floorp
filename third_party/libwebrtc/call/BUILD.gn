@@ -278,8 +278,8 @@ rtc_library("bitrate_allocator") {
 rtc_library("call") {
   sources = [
     "call.cc",
-    "call_factory.cc",
-    "call_factory.h",
+    "create_call.cc",
+    "create_call.h",
     "degraded_call.cc",
     "degraded_call.h",
     "flexfec_receive_stream_impl.cc",
@@ -299,7 +299,6 @@ rtc_library("call") {
     ":version",
     ":video_stream_api",
     "../api:array_view",
-    "../api:callfactory_api",
     "../api:fec_controller_api",
     "../api:field_trials_view",
     "../api:rtp_headers",

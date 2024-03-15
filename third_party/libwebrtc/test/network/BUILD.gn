@@ -117,7 +117,6 @@ if (rtc_include_tests && !build_with_chromium) {
     deps = [
       ":emulated_network",
       "../:test_support",
-      "../../api:callfactory_api",
       "../../api:enable_media_with_defaults",
       "../../api:libjingle_peerconnection_api",
       "../../api:scoped_refptr",

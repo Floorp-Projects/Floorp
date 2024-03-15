@@ -13,7 +13,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0744d68b8c944e699
 ---
  audio/channel_send.cc                       | 2 +-
  call/call.cc                                | 2 ++
- call/call_factory.cc                        | 4 ++++
+ call/create_call.cc                         | 4 ++++
  call/degraded_call.cc                       | 2 ++
  modules/audio_coding/acm2/acm_receiver.cc   | 2 +-
  modules/rtp_rtcp/include/flexfec_receiver.h | 2 ++
@@ -55,11 +55,11 @@ index d9ea94a06a..23b94c43c2 100644
  
  std::unique_ptr<Call> Call::Create(
      const CallConfig& config,
-diff --git a/call/call_factory.cc b/call/call_factory.cc
-index d97940fc3c..71d7c4cc2b 100644
---- a/call/call_factory.cc
-+++ b/call/call_factory.cc
-@@ -93,6 +93,9 @@ std::unique_ptr<Call> CallFactory::CreateCall(const CallConfig& config) {
+diff --git a/call/create_call.cc b/call/create_call.cc
+index 44b204db5c..4a28d380c3 100644
+--- a/call/create_call.cc
++++ b/call/create_call.cc
+@@ -87,6 +87,9 @@ std::unique_ptr<Call> CreateCall(const CallConfig& config) {
  
    RtpTransportConfig transportConfig = config.ExtractTransportConfig();
  
@@ -69,14 +69,14 @@ index d97940fc3c..71d7c4cc2b 100644
    std::unique_ptr<Call> call =
        Call::Create(config, Clock::GetRealTimeClock(),
                     config.rtp_transport_controller_send_factory->Create(
-@@ -105,6 +108,7 @@ std::unique_ptr<Call> CallFactory::CreateCall(const CallConfig& config) {
+@@ -99,6 +102,7 @@ std::unique_ptr<Call> CreateCall(const CallConfig& config) {
    }
  
    return call;
 +   */
  }
  
- std::unique_ptr<CallFactoryInterface> CreateCallFactory() {
+ }  // namespace webrtc
 diff --git a/call/degraded_call.cc b/call/degraded_call.cc
 index a511eda7bd..75a4a1cac0 100644
 --- a/call/degraded_call.cc

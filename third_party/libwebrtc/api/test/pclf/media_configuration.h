@@ -26,7 +26,6 @@
 #include "api/array_view.h"
 #include "api/audio/audio_mixer.h"
 #include "api/audio_options.h"
-#include "api/call/call_factory_interface.h"
 #include "api/fec_controller.h"
 #include "api/function_view.h"
 #include "api/media_stream_interface.h"

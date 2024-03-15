@@ -793,7 +793,6 @@ rtc_source_set("peerconnection") {
     "../api:async_dns_resolver",
     "../api:audio_options_api",
     "../api:call_api",
-    "../api:callfactory_api",
     "../api:fec_controller_api",
     "../api:field_trials_view",
     "../api:frame_transformer_interface",
@@ -930,7 +929,6 @@ rtc_library("connection_context") {
   ]
   deps = [
     ":media_factory",
-    "../api:callfactory_api",
     "../api:field_trials_view",
     "../api:libjingle_peerconnection_api",
     "../api:media_stream_interface",
@@ -1512,7 +1510,6 @@ rtc_source_set("peer_connection_factory") {
     ":peer_connection_factory_proxy",
     ":peer_connection_proxy",
     "../api:audio_options_api",
-    "../api:callfactory_api",
     "../api:fec_controller_api",
     "../api:field_trials_view",
     "../api:ice_transport_interface",
@@ -2419,7 +2416,6 @@ if (rtc_include_tests && !build_with_chromium) {
       ":webrtc_sdp",
       "../api:array_view",
       "../api:audio_options_api",
-      "../api:callfactory_api",
       "../api:candidate",
       "../api:create_peerconnection_factory",
       "../api:dtls_transport_interface",

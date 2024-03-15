@@ -8,30 +8,18 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef CALL_CALL_FACTORY_H_
-#define CALL_CALL_FACTORY_H_
+#ifndef CALL_CREATE_CALL_H_
+#define CALL_CREATE_CALL_H_
 
 #include <memory>
 
-#include "api/call/call_factory_interface.h"
-#include "api/sequence_checker.h"
 #include "call/call.h"
 #include "call/call_config.h"
-#include "rtc_base/system/no_unique_address.h"
 
 namespace webrtc {
 
-class CallFactory : public CallFactoryInterface {
- public:
-  CallFactory();
-  ~CallFactory() override = default;
-
- private:
-  std::unique_ptr<Call> CreateCall(const CallConfig& config) override;
-
-  RTC_NO_UNIQUE_ADDRESS SequenceChecker call_thread_;
-};
+std::unique_ptr<Call> CreateCall(const CallConfig& config);
 
 }  // namespace webrtc
 
-#endif  // CALL_CALL_FACTORY_H_
+#endif  // CALL_CREATE_CALL_H_

@@ -15,7 +15,7 @@
 
 #include "api/environment/environment.h"
 #include "api/peer_connection_interface.h"
-#include "call/call_factory.h"
+#include "call/create_call.h"
 #include "media/engine/webrtc_media_engine.h"
 #include "media/engine/webrtc_video_engine.h"
 #include "media/engine/webrtc_voice_engine.h"
@@ -37,8 +37,7 @@ class MediaFactoryImpl : public MediaFactory {
   ~MediaFactoryImpl() override = default;
 
   std::unique_ptr<Call> CreateCall(const CallConfig& config) override {
-    CallFactory call_factory;
-    return static_cast<CallFactoryInterface&>(call_factory).CreateCall(config);
+    return webrtc::CreateCall(config);
   }
 
   std::unique_ptr<MediaEngineInterface> CreateMediaEngine(
