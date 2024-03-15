@@ -3230,13 +3230,6 @@ var gPrivacyPane = {
       "toolkit.crashreporter.infoURL",
       "crashReporterLearnMore"
     );
-    setEventListener("crashReporterLabel", "click", function (event) {
-      if (event.target.localName == "a") {
-        return;
-      }
-      const checkboxId = event.target.getAttribute("for");
-      document.getElementById(checkboxId).click();
-    });
   },
 
   initPrivacySegmentation() {

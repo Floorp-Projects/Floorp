@@ -414,12 +414,12 @@ var gSearchResultsPane = {
     let matchesFound = false;
     if (
       nodeObject.childElementCount == 0 ||
-      nodeObject.tagName == "button" ||
-      nodeObject.tagName == "label" ||
-      nodeObject.tagName == "description" ||
-      nodeObject.tagName == "menulist" ||
-      nodeObject.tagName == "menuitem" ||
-      nodeObject.tagName == "checkbox" ||
+      nodeObject.localName == "button" ||
+      nodeObject.localName == "label" ||
+      nodeObject.localName == "description" ||
+      nodeObject.localName == "menulist" ||
+      nodeObject.localName == "menuitem" ||
+      nodeObject.localName == "checkbox" ||
       nodeObject.localName == "moz-toggle"
     ) {
       let simpleTextNodes = this.textNodeDescendants(nodeObject);
@@ -446,8 +446,8 @@ var gSearchResultsPane = {
       let accessKeyTextNodes = [];
 
       if (
-        nodeObject.tagName == "label" ||
-        nodeObject.tagName == "description"
+        nodeObject.localName == "label" ||
+        nodeObject.localName == "description"
       ) {
         accessKeyTextNodes.push(...simpleTextNodes);
       }
@@ -475,7 +475,7 @@ var gSearchResultsPane = {
       // Searching some elements, such as xul:label, store their user-visible text in a "value" attribute.
       // Value will be skipped for menuitem since value in menuitem could represent index number to distinct each item.
       let valueResult =
-        nodeObject.tagName !== "menuitem" && nodeObject.tagName !== "radio"
+        nodeObject.localName !== "menuitem" && nodeObject.localName !== "radio"
           ? this.queryMatchesContent(
               nodeObject.getAttribute("value"),
               searchPhrase
@@ -503,12 +503,13 @@ var gSearchResultsPane = {
       // Creating tooltips for buttons
       if (
         keywordsResult &&
-        (nodeObject.tagName === "button" || nodeObject.tagName == "menulist")
+        (nodeObject.localName === "button" ||
+          nodeObject.localName == "menulist")
       ) {
         this.listSearchTooltips.add(nodeObject);
       }
 
-      if (keywordsResult && nodeObject.tagName === "menuitem") {
+      if (keywordsResult && nodeObject.localName === "menuitem") {
         nodeObject.setAttribute("indicator", "true");
         this.listSearchMenuitemIndicators.add(nodeObject);
         let menulist = nodeObject.closest("menulist");
@@ -518,8 +519,8 @@ var gSearchResultsPane = {
       }
 
       if (
-        (nodeObject.tagName == "menulist" ||
-          nodeObject.tagName == "menuitem") &&
+        (nodeObject.localName == "menulist" ||
+          nodeObject.localName == "menuitem") &&
         (labelResult || valueResult || keywordsResult)
       ) {
         nodeObject.setAttribute("highlightable", "true");
@@ -535,7 +536,7 @@ var gSearchResultsPane = {
 
     // Should not search unselected child nodes of a <xul:deck> element
     // except the "historyPane" <xul:deck> element.
-    if (nodeObject.tagName == "deck" && nodeObject.id != "historyPane") {
+    if (nodeObject.localName == "deck" && nodeObject.id != "historyPane") {
       let index = nodeObject.selectedIndex;
       if (index != -1) {
         let result = await this.searchChildNodeIfVisible(
@@ -578,7 +579,7 @@ var gSearchResultsPane = {
     ) {
       result = await this.searchWithinNode(child, searchPhrase);
       // Creating tooltips for menulist element
-      if (result && nodeObject.tagName === "menulist") {
+      if (result && nodeObject.localName === "menulist") {
         this.listSearchTooltips.add(nodeObject);
       }
 
