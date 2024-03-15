@@ -10,7 +10,6 @@
 #include "mozilla/webrender/RenderMacIOSurfaceTextureHost.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/webrender/WebRenderAPI.h"
-#include "GLContextCGL.h"
 
 namespace mozilla {
 namespace layers {
