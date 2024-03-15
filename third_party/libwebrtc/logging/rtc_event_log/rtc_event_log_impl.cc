@@ -17,6 +17,8 @@
 #include <vector>
 
 #include "absl/strings/string_view.h"
+#include "api/environment/environment.h"
+#include "api/field_trials_view.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/units/time_delta.h"
 #include "logging/rtc_event_log/encoder/rtc_event_log_encoder_legacy.h"
@@ -29,23 +31,22 @@
 #include "rtc_base/time_utils.h"
 
 namespace webrtc {
+namespace {
 
-std::unique_ptr<RtcEventLogEncoder> RtcEventLogImpl::CreateEncoder(
-    RtcEventLog::EncodingType type) {
-  switch (type) {
-    case RtcEventLog::EncodingType::Legacy:
-      RTC_DLOG(LS_INFO) << "Creating legacy encoder for RTC event log.";
-      return std::make_unique<RtcEventLogEncoderLegacy>();
-    case RtcEventLog::EncodingType::NewFormat:
-      RTC_DLOG(LS_INFO) << "Creating new format encoder for RTC event log.";
-      return std::make_unique<RtcEventLogEncoderNewFormat>();
-    default:
-      RTC_LOG(LS_ERROR) << "Unknown RtcEventLog encoder type (" << int(type)
-                        << ")";
-      RTC_DCHECK_NOTREACHED();
-      return std::unique_ptr<RtcEventLogEncoder>(nullptr);
+std::unique_ptr<RtcEventLogEncoder> CreateEncoder(const Environment& env) {
+  if (env.field_trials().IsDisabled("WebRTC-RtcEventLogNewFormat")) {
+    RTC_DLOG(LS_INFO) << "Creating legacy encoder for RTC event log.";
+    return std::make_unique<RtcEventLogEncoderLegacy>();
+  } else {
+    RTC_DLOG(LS_INFO) << "Creating new format encoder for RTC event log.";
+    return std::make_unique<RtcEventLogEncoderNewFormat>();
   }
 }
+
+}  // namespace
+
+RtcEventLogImpl::RtcEventLogImpl(const Environment& env)
+    : RtcEventLogImpl(CreateEncoder(env), &env.task_queue_factory()) {}
 
 RtcEventLogImpl::RtcEventLogImpl(std::unique_ptr<RtcEventLogEncoder> encoder,
                                  TaskQueueFactory* task_queue_factory,
