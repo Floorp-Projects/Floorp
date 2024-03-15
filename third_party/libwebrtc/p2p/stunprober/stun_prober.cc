@@ -156,8 +156,8 @@ void StunProber::Requester::SendStunRequest() {
   // request timing could become too complicated. Callback is ignored by passing
   // empty AsyncCallback.
   rtc::PacketOptions options;
-  int rv = socket_->SendTo(const_cast<char*>(request_packet->Data()),
-                           request_packet->Length(), addr, options);
+  int rv = socket_->SendTo(request_packet->Data(), request_packet->Length(),
+                           addr, options);
   if (rv < 0) {
     prober_->ReportOnFinished(WRITE_FAILED);
     return;

@@ -3601,7 +3601,8 @@ class P2PTransportChannelPingTest : public ::testing::Test,
     rtc::ByteBufferWriter buf;
     msg.Write(&buf);
     conn->OnReadPacket(rtc::ReceivedPacket::CreateFromLegacy(
-        buf.Data(), buf.Length(), rtc::TimeMicros()));
+        reinterpret_cast<const char*>(buf.Data()), buf.Length(),
+        rtc::TimeMicros()));
   }
 
   void ReceivePingOnConnection(Connection* conn,

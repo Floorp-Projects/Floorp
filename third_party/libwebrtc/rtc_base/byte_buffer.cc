@@ -16,7 +16,7 @@ namespace rtc {
 
 ByteBufferWriter::ByteBufferWriter() : ByteBufferWriterT() {}
 
-ByteBufferWriter::ByteBufferWriter(const char* bytes, size_t len)
+ByteBufferWriter::ByteBufferWriter(const uint8_t* bytes, size_t len)
     : ByteBufferWriterT(bytes, len) {}
 
 ByteBufferReader::ByteBufferReader(rtc::ArrayView<const uint8_t> bytes) {

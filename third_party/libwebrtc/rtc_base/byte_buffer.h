@@ -58,25 +58,25 @@ class ByteBufferWriterT {
   // Write value to the buffer. Resizes the buffer when it is
   // neccessary.
   void WriteUInt8(uint8_t val) {
-    WriteBytes(reinterpret_cast<const value_type*>(&val), 1);
+    WriteBytesInternal(reinterpret_cast<const value_type*>(&val), 1);
   }
   void WriteUInt16(uint16_t val) {
     uint16_t v = HostToNetwork16(val);
-    WriteBytes(reinterpret_cast<const value_type*>(&v), 2);
+    WriteBytesInternal(reinterpret_cast<const value_type*>(&v), 2);
   }
   void WriteUInt24(uint32_t val) {
     uint32_t v = HostToNetwork32(val);
     value_type* start = reinterpret_cast<value_type*>(&v);
     ++start;
-    WriteBytes(start, 3);
+    WriteBytesInternal(start, 3);
   }
   void WriteUInt32(uint32_t val) {
     uint32_t v = HostToNetwork32(val);
-    WriteBytes(reinterpret_cast<const value_type*>(&v), 4);
+    WriteBytesInternal(reinterpret_cast<const value_type*>(&v), 4);
   }
   void WriteUInt64(uint64_t val) {
     uint64_t v = HostToNetwork64(val);
-    WriteBytes(reinterpret_cast<const value_type*>(&v), 8);
+    WriteBytesInternal(reinterpret_cast<const value_type*>(&v), 8);
   }
   // Serializes an unsigned varint in the format described by
   // https://developers.google.com/protocol-buffers/docs/encoding#varints
@@ -86,17 +86,25 @@ class ByteBufferWriterT {
       // Write 7 bits at a time, then set the msb to a continuation byte
       // (msb=1).
       value_type byte = static_cast<value_type>(val) | 0x80;
-      WriteBytes(&byte, 1);
+      WriteBytesInternal(&byte, 1);
       val >>= 7;
     }
     value_type last_byte = static_cast<value_type>(val);
-    WriteBytes(&last_byte, 1);
+    WriteBytesInternal(&last_byte, 1);
   }
   void WriteString(absl::string_view val) {
-    WriteBytes(reinterpret_cast<const value_type*>(val.data()), val.size());
+    WriteBytesInternal(reinterpret_cast<const value_type*>(val.data()),
+                       val.size());
   }
-  void WriteBytes(const value_type* val, size_t len) {
-    buffer_.AppendData(val, len);
+  // Write an array of bytes (uint8_t)
+  void WriteBytes(const uint8_t* val, size_t len) {
+    WriteBytesInternal(reinterpret_cast<const value_type*>(val), len);
+  }
+  // For backwards compatibility: Write an array of char
+  // TODO(bugs.webrtc.org/15665): Remove when users converted
+  [[deprecated("Use WriteString")]] void WriteBytes(const char* val,
+                                                    size_t len) {
+    WriteBytesInternal(reinterpret_cast<const value_type*>(val), len);
   }
 
   // Reserves the given number of bytes and returns a value_type* that can be
@@ -124,16 +132,20 @@ class ByteBufferWriterT {
     }
   }
 
+  void WriteBytesInternal(const value_type* val, size_t len) {
+    buffer_.AppendData(val, len);
+  }
+
   BufferClassT buffer_;
 
   // There are sensible ways to define these, but they aren't needed in our code
   // base.
 };
 
-class ByteBufferWriter : public ByteBufferWriterT<BufferT<char>> {
+class ByteBufferWriter : public ByteBufferWriterT<BufferT<uint8_t>> {
  public:
   ByteBufferWriter();
-  ByteBufferWriter(const char* bytes, size_t len);
+  ByteBufferWriter(const uint8_t* bytes, size_t len);
 
   ByteBufferWriter(const ByteBufferWriter&) = delete;
   ByteBufferWriter& operator=(const ByteBufferWriter&) = delete;
