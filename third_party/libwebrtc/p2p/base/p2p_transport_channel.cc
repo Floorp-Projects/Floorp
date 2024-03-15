@@ -872,20 +872,6 @@ void P2PTransportChannel::MaybeStartGathering() {
       SendGatheringStateEvent();
     }
 
-    if (!allocator_sessions_.empty()) {
-      IceRestartState state;
-      if (writable()) {
-        state = IceRestartState::CONNECTED;
-      } else if (IsGettingPorts()) {
-        state = IceRestartState::CONNECTING;
-      } else {
-        state = IceRestartState::DISCONNECTED;
-      }
-      RTC_HISTOGRAM_ENUMERATION("WebRTC.PeerConnection.IceRestartState",
-                                static_cast<int>(state),
-                                static_cast<int>(IceRestartState::MAX_VALUE));
-    }
-
     for (const auto& session : allocator_sessions_) {
       if (session->IsStopped()) {
         continue;
