@@ -44,7 +44,8 @@ class StunServerTest : public ::testing::Test {
   void Send(const StunMessage& msg) {
     rtc::ByteBufferWriter buf;
     msg.Write(&buf);
-    Send(buf.Data(), static_cast<int>(buf.Length()));
+    Send(reinterpret_cast<const char*>(buf.Data()),
+         static_cast<int>(buf.Length()));
   }
   void Send(const char* buf, int len) {
     client_->SendTo(buf, len, server_addr);

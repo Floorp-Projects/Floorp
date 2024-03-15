@@ -1802,7 +1802,7 @@ int TurnEntry::Send(const void* data,
     // If the channel is bound, we can send the data as a Channel Message.
     buf.WriteUInt16(channel_id_);
     buf.WriteUInt16(static_cast<uint16_t>(size));
-    buf.WriteBytes(reinterpret_cast<const char*>(data), size);
+    buf.WriteBytes(reinterpret_cast<const uint8_t*>(data), size);
   }
   rtc::PacketOptions modified_options(options);
   modified_options.info_signaled_after_sent.turn_overhead_bytes =

@@ -47,6 +47,15 @@ class RTC_EXPORT ReceivedPacket {
       const char* data,
       size_t size,
       int64_t packet_time_us,
+      const rtc::SocketAddress& addr = rtc::SocketAddress()) {
+    return CreateFromLegacy(reinterpret_cast<const uint8_t*>(data), size,
+                            packet_time_us, addr);
+  }
+
+  static ReceivedPacket CreateFromLegacy(
+      const uint8_t* data,
+      size_t size,
+      int64_t packet_time_us,
       const rtc::SocketAddress& = rtc::SocketAddress());
 
  private:

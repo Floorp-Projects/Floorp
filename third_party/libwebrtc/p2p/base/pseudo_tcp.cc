@@ -1183,7 +1183,8 @@ void PseudoTcp::queueConnectMessage() {
     buf.WriteUInt8(m_rwnd_scale);
   }
   m_snd_wnd = static_cast<uint32_t>(buf.Length());
-  queue(buf.Data(), static_cast<uint32_t>(buf.Length()), true);
+  queue(reinterpret_cast<const char*>(buf.Data()),
+        static_cast<uint32_t>(buf.Length()), true);
 }
 
 void PseudoTcp::parseOptions(const char* data, uint32_t len) {
