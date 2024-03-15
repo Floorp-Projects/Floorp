@@ -1,62 +1,66 @@
-From: Daniel Baker <dbaker@mozilla.com>
-Date: Fri, 15 Mar 2024 17:24:40 -0600
-Subject: (tmp-cherry-pick) Revert "Fix 'Image will be cropped if
- WindowCapturerWinGdi used'" (634cb403e6)
+From: Johannes Kron <kron@webrtc.org>
+Date: Thu, 18 Jan 2024 14:00:19 +0100
+Subject: (cherry-pick-branch-heads/6167) [M121] Disable the use of
+ CGDisplayStreamCreate() for desktop capture on Sonoma
 
-This reverts commit 844225a76a98aa3be5aca09c19ab72a5e7b6c38a.
+CGDisplayStreamCreate is an deprecated API. It was believed that the use
+of it was disabled on Sonoma through the setting allow_iosurface = false
+[1], which causes the thumbnails to be created by the API CGDisplayCreateImage.
+This API is not marked as deprecated at the moment.
 
-Reason for revert: potential nullptr dereference
+However, although the thumbnails are created through CGDisplayCreateImage,
+CGDisplayStreamCreate() is still called and runs in the background.
+This makes the capture chip appear.
 
-Original change's description:
-> Fix 'Image will be cropped if WindowCapturerWinGdi used'
->
-> Bug: webrtc:15719
-> Change-Id: I7daf8ee5b90fbe9f1246f1d99211ffa0d8a19f73
-> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/330780
-> Reviewed-by: Alexander Cooper <alcooper@chromium.org>
-> Commit-Queue: Alexander Cooper <alcooper@chromium.org>
-> Cr-Commit-Position: refs/heads/main@{#41503}
+No capture chip appears if this CL is landed and the ScreenCaptureKit
+thumbnail capturer is enabled,
+--enable-features="ScreenCaptureKitMac,ScreenCaptureKitStreamPickerSonoma,ThumbnailCapturerMac:capture_mode/sc_screenshot_manager"
 
-Bug: webrtc:15719
-Change-Id: Ib38e1345c4c590b6a71bbea476a9d780a2f5e800
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/334200
-Owners-Override: Jeremy Leconte <jleconte@google.com>
-Commit-Queue: Jeremy Leconte <jleconte@google.com>
-Reviewed-by: Manashi Sarkar <manashi@google.com>
-Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
-Cr-Commit-Position: refs/heads/main@{#41509}
+[1] https://chromium-review.googlesource.com/c/chromium/src/+/4892397
+
+(cherry picked from commit fb99c6ebb57754e4b764a63dfae7f62ec272ba6b)
+
+Bug: chromium:1486851
+No-Try: True
+Change-Id: I3422efffc57dcb3e8965f19a5eca7f2a95d62da1
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/334721
+Reviewed-by: Mark Foltz <mfoltz@chromium.org>
+Commit-Queue: Johannes Kron <kron@webrtc.org>
+Cr-Original-Commit-Position: refs/heads/main@{#41563}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/335740
+Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
+Cr-Commit-Position: refs/branch-heads/6167@{#5}
+Cr-Branched-From: ece5cb83715dea85617114b6d4e981fdee2623ba-refs/heads/main@{#41315}
 ---
- AUTHORS                                             | 1 -
- modules/desktop_capture/win/window_capture_utils.cc | 7 -------
- 2 files changed, 8 deletions(-)
+ modules/desktop_capture/mac/desktop_frame_provider.h | 2 ++
+ modules/desktop_capture/mac/screen_capturer_mac.mm   | 4 ++++
+ 2 files changed, 6 insertions(+)
 
-diff --git a/AUTHORS b/AUTHORS
-index 968c896856..6e922401d0 100644
---- a/AUTHORS
-+++ b/AUTHORS
-@@ -120,7 +120,6 @@ Silviu Caragea <silviu.cpp@gmail.com>
- Stefan Gula <steweg@gmail.com>
- Stephan Hartmann <stha09@googlemail.com>
- Steve Reid <sreid@sea-to-sky.net>
--Tao chen <meemetao@gmail.com>
- Takaaki Suzuki <takaakisuzuki.14@gmail.com>
- Tarun Chawla <trnkumarchawla@gmail.com>
- Todd Wong <todd.wong.ndq@gmail.com>
-diff --git a/modules/desktop_capture/win/window_capture_utils.cc b/modules/desktop_capture/win/window_capture_utils.cc
-index 13f498f332..ccfef49bc5 100644
---- a/modules/desktop_capture/win/window_capture_utils.cc
-+++ b/modules/desktop_capture/win/window_capture_utils.cc
-@@ -183,13 +183,6 @@ bool GetCroppedWindowRect(HWND window,
-       is_maximized) {
-     // Only apply this cropping to windows with a resize border (otherwise,
-     // it'd clip the edges of captured pop-up windows without this border).
--    RECT rect;
--    DwmGetWindowAttribute(window, DWMWA_EXTENDED_FRAME_BOUNDS, &rect,
--                          sizeof(RECT));
--    // it's means that the window edge is not transparent
--    if (rect.left == original_rect->left()) {
--      return true;
--    }
-     LONG style = GetWindowLong(window, GWL_STYLE);
-     if (style & WS_THICKFRAME || style & DS_MODALFRAME) {
-       int width = GetSystemMetrics(SM_CXSIZEFRAME);
+diff --git a/modules/desktop_capture/mac/desktop_frame_provider.h b/modules/desktop_capture/mac/desktop_frame_provider.h
+index aad28d2f30..64ef5750ec 100644
+--- a/modules/desktop_capture/mac/desktop_frame_provider.h
++++ b/modules/desktop_capture/mac/desktop_frame_provider.h
+@@ -46,6 +46,8 @@ class DesktopFrameProvider {
+   // Expected to be called before stopping the CGDisplayStreamRef streams.
+   void Release();
+ 
++  bool allow_iosurface() const { return allow_iosurface_; }
++
+  private:
+   SequenceChecker thread_checker_;
+   const bool allow_iosurface_;
+diff --git a/modules/desktop_capture/mac/screen_capturer_mac.mm b/modules/desktop_capture/mac/screen_capturer_mac.mm
+index 28cc410573..60089fd0f2 100644
+--- a/modules/desktop_capture/mac/screen_capturer_mac.mm
++++ b/modules/desktop_capture/mac/screen_capturer_mac.mm
+@@ -439,6 +439,10 @@ void ScreenCapturerMac::ScreenConfigurationChanged() {
+ 
+ bool ScreenCapturerMac::RegisterRefreshAndMoveHandlers() {
+   RTC_DCHECK(thread_checker_.IsCurrent());
++  if (!desktop_frame_provider_.allow_iosurface()) {
++    return true;
++  }
++
+   desktop_config_ = desktop_config_monitor_->desktop_configuration();
+   for (const auto& config : desktop_config_.displays) {
+     size_t pixel_width = config.pixel_bounds.width();
