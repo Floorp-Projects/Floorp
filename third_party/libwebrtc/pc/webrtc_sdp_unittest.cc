@@ -1817,10 +1817,10 @@ class WebRtcSdpTest : public ::testing::Test {
     }
   }
 
-  void VerifyCodecParameter(const cricket::CodecParameterMap& params,
+  void VerifyCodecParameter(const webrtc::CodecParameterMap& params,
                             const std::string& name,
                             int expected_value) {
-    cricket::CodecParameterMap::const_iterator found = params.find(name);
+    webrtc::CodecParameterMap::const_iterator found = params.find(name);
     ASSERT_TRUE(found != params.end());
     EXPECT_EQ(found->second, rtc::ToString(expected_value));
   }
@@ -2451,7 +2451,7 @@ TEST_F(WebRtcSdpTest, DeserializeSessionDescriptionWithoutRtpmapButWithFmtp) {
   EXPECT_EQ("G729", g729.name);
   EXPECT_EQ(8000, g729.clockrate);
   EXPECT_EQ(18, g729.id);
-  cricket::CodecParameterMap::iterator found = g729.params.find("annexb");
+  webrtc::CodecParameterMap::iterator found = g729.params.find("annexb");
   ASSERT_TRUE(found != g729.params.end());
   EXPECT_EQ(found->second, "yes");
 
@@ -3294,7 +3294,7 @@ TEST_F(WebRtcSdpTest, DeserializeVideoFmtp) {
   cricket::VideoCodec vp8 = vcd->codecs()[0];
   EXPECT_EQ("VP8", vp8.name);
   EXPECT_EQ(120, vp8.id);
-  cricket::CodecParameterMap::iterator found =
+  webrtc::CodecParameterMap::iterator found =
       vp8.params.find("x-google-min-bitrate");
   ASSERT_TRUE(found != vp8.params.end());
   EXPECT_EQ(found->second, "10");
@@ -3328,7 +3328,7 @@ TEST_F(WebRtcSdpTest, DeserializeVideoFmtpWithSprops) {
   cricket::VideoCodec h264 = vcd->codecs()[0];
   EXPECT_EQ("H264", h264.name);
   EXPECT_EQ(98, h264.id);
-  cricket::CodecParameterMap::const_iterator found =
+  webrtc::CodecParameterMap::const_iterator found =
       h264.params.find("profile-level-id");
   ASSERT_TRUE(found != h264.params.end());
   EXPECT_EQ(found->second, "42A01E");
@@ -3361,7 +3361,7 @@ TEST_F(WebRtcSdpTest, DeserializeVideoFmtpWithSpace) {
   cricket::VideoCodec vp8 = vcd->codecs()[0];
   EXPECT_EQ("VP8", vp8.name);
   EXPECT_EQ(120, vp8.id);
-  cricket::CodecParameterMap::iterator found =
+  webrtc::CodecParameterMap::iterator found =
       vp8.params.find("x-google-min-bitrate");
   ASSERT_TRUE(found != vp8.params.end());
   EXPECT_EQ(found->second, "10");

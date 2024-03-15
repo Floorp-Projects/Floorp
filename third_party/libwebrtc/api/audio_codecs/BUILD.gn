@@ -35,6 +35,7 @@ rtc_library("audio_codecs_api") {
     "..:ref_count",
     "..:scoped_refptr",
     "../../api:field_trials_view",
+    "../../api:rtp_parameters",
     "../../rtc_base:buffer",
     "../../rtc_base:checks",
     "../../rtc_base:event_tracer",

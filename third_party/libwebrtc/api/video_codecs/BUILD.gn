@@ -83,6 +83,7 @@ rtc_library("video_codecs_api") {
     "..:fec_controller_api",
     "..:scoped_refptr",
     "../../api:array_view",
+    "../../api:rtp_parameters",
     "../../modules/video_coding:codec_globals_headers",
     "../../rtc_base:checks",
     "../../rtc_base:logging",

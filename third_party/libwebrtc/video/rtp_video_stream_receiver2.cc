@@ -358,7 +358,7 @@ RtpVideoStreamReceiver2::~RtpVideoStreamReceiver2() {
 void RtpVideoStreamReceiver2::AddReceiveCodec(
     uint8_t payload_type,
     VideoCodecType video_codec,
-    const std::map<std::string, std::string>& codec_params,
+    const webrtc::CodecParameterMap& codec_params,
     bool raw_payload) {
   RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
   if (codec_params.count(cricket::kH264FmtpSpsPpsIdrInKeyframe) > 0 ||

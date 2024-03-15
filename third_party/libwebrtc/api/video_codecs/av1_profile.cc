@@ -50,7 +50,7 @@ absl::optional<AV1Profile> StringToAV1Profile(absl::string_view str) {
 }
 
 absl::optional<AV1Profile> ParseSdpForAV1Profile(
-    const SdpVideoFormat::Parameters& params) {
+    const CodecParameterMap& params) {
   const auto profile_it = params.find(kAV1FmtpProfile);
   if (profile_it == params.end())
     return AV1Profile::kProfile0;
@@ -58,8 +58,8 @@ absl::optional<AV1Profile> ParseSdpForAV1Profile(
   return StringToAV1Profile(profile_str);
 }
 
-bool AV1IsSameProfile(const SdpVideoFormat::Parameters& params1,
-                      const SdpVideoFormat::Parameters& params2) {
+bool AV1IsSameProfile(const CodecParameterMap& params1,
+                      const CodecParameterMap& params2) {
   const absl::optional<AV1Profile> profile = ParseSdpForAV1Profile(params1);
   const absl::optional<AV1Profile> other_profile =
       ParseSdpForAV1Profile(params2);
