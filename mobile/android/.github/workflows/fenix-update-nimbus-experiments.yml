@@ -5,8 +5,6 @@
 name: "Fenix - Update Nimbus Experiments"
 
 on:
-  schedule:
-    - cron: '*/30 * * * *'
   workflow_dispatch: {}
 
 jobs:

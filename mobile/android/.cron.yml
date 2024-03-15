@@ -9,17 +9,13 @@ jobs:
           type: decision-task
           treeherder-symbol: nightly-D
           target-tasks-method: nightly
-      when:
-          - {hour: 4, minute: 0}
-          - {hour: 16, minute: 0}
+      when: []
     - name: nightly-test
       job:
           type: decision-task
           treeherder-symbol: Nt
           target-tasks-method: nightly-test
-      when:
-        - {hour: 5, minute: 0}
-        - {hour: 16, minute: 0}
+      when: []
     - name: screenshots
       job:
           type: decision-task
