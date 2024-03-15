@@ -18,20 +18,6 @@
       }
     }
   },
-  'baremetal-pool': {
-    'swarming': {
-      'dimensions': {
-        'pool': 'WebRTC-baremetal'
-      }
-    }
-  },
-  'baremetal-try-pool': {
-    'swarming': {
-      'dimensions': {
-        'pool': 'WebRTC-baremetal-try'
-      }
-    }
-  },
   'chrome-tester-service-account': {
     'swarming': {
       'service_account':
