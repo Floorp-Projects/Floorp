@@ -2059,14 +2059,19 @@ rtc_source_set("legacy_stats_collector_interface") {
   ]
 }
 
+# This target contains the libraries that are required in order to get an
+# usable peerconnection-using binary.
 rtc_source_set("libjingle_peerconnection") {
   # TODO(bugs.webrtc.org/13661): Reduce visibility if possible
   visibility = [ "*" ]  # Used by Chrome and others
   allow_poison = [ "environment_construction" ]
 
   deps = [
-    ":peerconnection",
+    ":jsep_session_description",
+    ":peer_connection_factory",
+    ":rtc_stats_collector",
     "../api:libjingle_peerconnection_api",
+    "../stats",
   ]
 }
 
