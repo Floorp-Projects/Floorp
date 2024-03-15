@@ -16,9 +16,25 @@
 
 #include "rtc_base/arraysize.h"
 #include "rtc_base/byte_order.h"
+#include "test/gmock.h"
 #include "test/gtest.h"
 
 namespace rtc {
+
+using ::testing::ElementsAre;
+
+TEST(ByteBufferTest, WriterAccessors) {
+  // To be changed into ByteBufferWriter when base type is converted.
+  ByteBufferWriterT<BufferT<uint8_t>> buffer;
+  buffer.WriteString("abc");
+  EXPECT_EQ(buffer.Length(), 3U);
+  EXPECT_THAT(buffer.DataView(), ElementsAre('a', 'b', 'c'));
+  EXPECT_EQ(absl::string_view("abc"), buffer.DataAsStringView());
+
+  buffer.WriteUInt8(0);
+  EXPECT_STREQ(buffer.DataAsCharPointer(), "abc");
+  EXPECT_STREQ(reinterpret_cast<const char*>(buffer.Data()), "abc");
+}
 
 TEST(ByteBufferTest, TestByteOrder) {
   uint16_t n16 = 1;

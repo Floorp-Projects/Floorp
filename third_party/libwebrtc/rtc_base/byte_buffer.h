@@ -51,7 +51,9 @@ class ByteBufferWriterT {
   absl::string_view DataAsStringView() const {
     return absl::string_view(reinterpret_cast<const char*>(Data()), Length());
   }
-  char* DataAsCharPointer() const { return reinterpret_cast<char*>(Data()); }
+  const char* DataAsCharPointer() const {
+    return reinterpret_cast<const char*>(Data());
+  }
 
   // Write value to the buffer. Resizes the buffer when it is
   // neccessary.
@@ -91,7 +93,7 @@ class ByteBufferWriterT {
     WriteBytes(&last_byte, 1);
   }
   void WriteString(absl::string_view val) {
-    WriteBytes(val.data(), val.size());
+    WriteBytes(reinterpret_cast<const value_type*>(val.data()), val.size());
   }
   void WriteBytes(const value_type* val, size_t len) {
     buffer_.AppendData(val, len);
