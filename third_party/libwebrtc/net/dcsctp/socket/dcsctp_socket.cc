@@ -297,7 +297,6 @@ void DcSctpSocket::SendInit() {
 }
 
 void DcSctpSocket::Connect() {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
   CallbackDeferrer::ScopedDeferrer deferrer(callbacks_);
 
   if (state_ == State::kClosed) {
@@ -343,7 +342,6 @@ void DcSctpSocket::CreateTransmissionControlBlock(
 }
 
 void DcSctpSocket::RestoreFromState(const DcSctpSocketHandoverState& state) {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
   CallbackDeferrer::ScopedDeferrer deferrer(callbacks_);
 
   if (state_ != State::kClosed) {
@@ -386,7 +384,6 @@ void DcSctpSocket::RestoreFromState(const DcSctpSocketHandoverState& state) {
 }
 
 void DcSctpSocket::Shutdown() {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
   CallbackDeferrer::ScopedDeferrer deferrer(callbacks_);
 
   if (tcb_ != nullptr) {
@@ -415,7 +412,6 @@ void DcSctpSocket::Shutdown() {
 }
 
 void DcSctpSocket::Close() {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
   CallbackDeferrer::ScopedDeferrer deferrer(callbacks_);
 
   if (state_ != State::kClosed) {
@@ -463,17 +459,14 @@ void DcSctpSocket::InternalClose(ErrorKind error, absl::string_view message) {
 
 void DcSctpSocket::SetStreamPriority(StreamID stream_id,
                                      StreamPriority priority) {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
   send_queue_.SetStreamPriority(stream_id, priority);
 }
 StreamPriority DcSctpSocket::GetStreamPriority(StreamID stream_id) const {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
   return send_queue_.GetStreamPriority(stream_id);
 }
 
 SendStatus DcSctpSocket::Send(DcSctpMessage message,
                               const SendOptions& send_options) {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
   CallbackDeferrer::ScopedDeferrer deferrer(callbacks_);
   SendStatus send_status = InternalSend(message, send_options);
   if (send_status != SendStatus::kSuccess)
@@ -490,7 +483,6 @@ SendStatus DcSctpSocket::Send(DcSctpMessage message,
 std::vector<SendStatus> DcSctpSocket::SendMany(
     rtc::ArrayView<DcSctpMessage> messages,
     const SendOptions& send_options) {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
   CallbackDeferrer::ScopedDeferrer deferrer(callbacks_);
   Timestamp now = callbacks_.Now();
   std::vector<SendStatus> send_statuses;
@@ -554,7 +546,6 @@ SendStatus DcSctpSocket::InternalSend(const DcSctpMessage& message,
 
 ResetStreamsStatus DcSctpSocket::ResetStreams(
     rtc::ArrayView<const StreamID> outgoing_streams) {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
   CallbackDeferrer::ScopedDeferrer deferrer(callbacks_);
 
   if (tcb_ == nullptr) {
@@ -576,7 +567,6 @@ ResetStreamsStatus DcSctpSocket::ResetStreams(
 }
 
 SocketState DcSctpSocket::state() const {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
   switch (state_) {
     case State::kClosed:
       return SocketState::kClosed;
@@ -594,29 +584,23 @@ SocketState DcSctpSocket::state() const {
 }
 
 void DcSctpSocket::SetMaxMessageSize(size_t max_message_size) {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
   options_.max_message_size = max_message_size;
 }
 
 size_t DcSctpSocket::buffered_amount(StreamID stream_id) const {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
   return send_queue_.buffered_amount(stream_id);
 }
 
 size_t DcSctpSocket::buffered_amount_low_threshold(StreamID stream_id) const {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
   return send_queue_.buffered_amount_low_threshold(stream_id);
 }
 
 void DcSctpSocket::SetBufferedAmountLowThreshold(StreamID stream_id,
                                                  size_t bytes) {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
   send_queue_.SetBufferedAmountLowThreshold(stream_id, bytes);
 }
 
 absl::optional<Metrics> DcSctpSocket::GetMetrics() const {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
-
   if (tcb_ == nullptr) {
     return absl::nullopt;
   }
@@ -771,7 +755,6 @@ bool DcSctpSocket::ValidatePacket(const SctpPacket& packet) {
 }
 
 void DcSctpSocket::HandleTimeout(TimeoutID timeout_id) {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
   CallbackDeferrer::ScopedDeferrer deferrer(callbacks_);
 
   timer_manager_.HandleTimeout(timeout_id);
@@ -785,7 +768,6 @@ void DcSctpSocket::HandleTimeout(TimeoutID timeout_id) {
 }
 
 void DcSctpSocket::ReceivePacket(rtc::ArrayView<const uint8_t> data) {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
   CallbackDeferrer::ScopedDeferrer deferrer(callbacks_);
 
   ++metrics_.rx_packets_count;
@@ -1789,7 +1771,6 @@ void DcSctpSocket::SendShutdownAck() {
 }
 
 HandoverReadinessStatus DcSctpSocket::GetHandoverReadiness() const {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
   HandoverReadinessStatus status;
   if (state_ != State::kClosed && state_ != State::kEstablished) {
     status.Add(HandoverUnreadinessReason::kWrongConnectionState);
@@ -1803,7 +1784,6 @@ HandoverReadinessStatus DcSctpSocket::GetHandoverReadiness() const {
 
 absl::optional<DcSctpSocketHandoverState>
 DcSctpSocket::GetHandoverStateAndClose() {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
   CallbackDeferrer::ScopedDeferrer deferrer(callbacks_);
 
   if (!GetHandoverReadiness().IsReady()) {

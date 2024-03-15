@@ -18,7 +18,6 @@
 
 #include "absl/strings/string_view.h"
 #include "api/array_view.h"
-#include "api/sequence_checker.h"
 #include "net/dcsctp/packet/chunk/abort_chunk.h"
 #include "net/dcsctp/packet/chunk/chunk.h"
 #include "net/dcsctp/packet/chunk/cookie_ack_chunk.h"
@@ -271,7 +270,6 @@ class DcSctpSocket : public DcSctpSocketInterface {
 
   const std::string log_prefix_;
   const std::unique_ptr<PacketObserver> packet_observer_;
-  RTC_NO_UNIQUE_ADDRESS webrtc::SequenceChecker thread_checker_;
   Metrics metrics_;
   DcSctpOptions options_;
 
