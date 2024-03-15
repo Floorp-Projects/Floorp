@@ -79,8 +79,9 @@ EmulatedNetworkNode* NetworkEmulationManagerImpl::CreateEmulatedNode(
 
 EmulatedNetworkNode* NetworkEmulationManagerImpl::CreateEmulatedNode(
     std::unique_ptr<NetworkBehaviorInterface> network_behavior) {
-  auto node = std::make_unique<EmulatedNetworkNode>(
-      clock_, &task_queue_, std::move(network_behavior), stats_gathering_mode_);
+  auto node = std::make_unique<EmulatedNetworkNode>(clock_, task_queue_.Get(),
+                                                    std::move(network_behavior),
+                                                    stats_gathering_mode_);
   EmulatedNetworkNode* out = node.get();
   task_queue_.PostTask([this, node = std::move(node)]() mutable {
     network_nodes_.push_back(std::move(node));
@@ -115,7 +116,7 @@ EmulatedEndpointImpl* NetworkEmulationManagerImpl::CreateEndpoint(
   auto node = std::make_unique<EmulatedEndpointImpl>(
       EmulatedEndpointImpl::Options(next_node_id_++, *ip, config,
                                     stats_gathering_mode_),
-      config.start_as_enabled, &task_queue_, clock_);
+      config.start_as_enabled, task_queue_.Get(), clock_);
   EmulatedEndpointImpl* out = node.get();
   endpoints_.push_back(std::move(node));
   return out;
