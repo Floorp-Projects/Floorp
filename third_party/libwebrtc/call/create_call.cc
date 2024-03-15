@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "call/call_factory.h"
+#include "call/create_call.h"
 
 #include <stdio.h>
 
@@ -78,13 +78,7 @@ std::vector<TimeScopedNetworkConfig> GetNetworkConfigs(
 
 }  // namespace
 
-CallFactory::CallFactory() {
-  call_thread_.Detach();
-}
-
-std::unique_ptr<Call> CallFactory::CreateCall(const CallConfig& config) {
-  RTC_DCHECK_RUN_ON(&call_thread_);
-
+std::unique_ptr<Call> CreateCall(const CallConfig& config) {
   std::vector<DegradedCall::TimeScopedNetworkConfig> send_degradation_configs =
       GetNetworkConfigs(config.env.field_trials(), /*send=*/true);
   std::vector<DegradedCall::TimeScopedNetworkConfig>
@@ -109,10 +103,6 @@ std::unique_ptr<Call> CallFactory::CreateCall(const CallConfig& config) {
 
   return call;
    */
-}
-
-std::unique_ptr<CallFactoryInterface> CreateCallFactory() {
-  return std::make_unique<CallFactory>();
 }
 
 }  // namespace webrtc

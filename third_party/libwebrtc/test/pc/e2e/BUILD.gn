@@ -286,7 +286,6 @@ if (!build_with_chromium) {
         ":default_audio_quality_analyzer",
         ":network_quality_metrics_reporter",
         ":stats_based_network_quality_metrics_reporter",
-        "../../../api:callfactory_api",
         "../../../api:create_network_emulation_manager",
         "../../../api:create_peer_connection_quality_test_frame_generator",
         "../../../api:create_peerconnection_quality_test_fixture",

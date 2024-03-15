@@ -14,7 +14,6 @@
 #include <memory>
 #include <string>
 
-#include "api/call/call_factory_interface.h"
 #include "api/environment/environment.h"
 #include "api/field_trials_view.h"
 #include "api/media_stream_interface.h"

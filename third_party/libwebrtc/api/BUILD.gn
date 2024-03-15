@@ -26,15 +26,6 @@ rtc_source_set("call_api") {
   sources = [ "call/audio_sink.h" ]
 }
 
-rtc_source_set("callfactory_api") {
-  visibility = [ "*" ]
-  sources = [ "call/call_factory_interface.h" ]
-  deps = [
-    "../call:rtp_interfaces",
-    "../rtc_base/system:rtc_export",
-  ]
-}
-
 rtc_source_set("enable_media") {
   visibility = [ "*" ]
   sources = [
@@ -604,7 +595,6 @@ if (!build_with_mozilla) {
   deps = [
     ":array_view",
     ":audio_quality_analyzer_api",
-    ":callfactory_api",
     ":fec_controller_api",
     ":frame_generator_api",
     ":function_view",
