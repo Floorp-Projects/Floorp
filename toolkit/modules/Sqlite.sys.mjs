@@ -1688,10 +1688,21 @@ OpenedConnection.prototype = Object.freeze({
    * Returns the maximum number of bound parameters for statements executed
    * on this connection.
    *
-   * @type {number}
+   * @returns {number} The bound parameters limit.
    */
   get variableLimit() {
     return this.unsafeRawConnection.variableLimit;
+  },
+
+  /**
+   * Set the the maximum number of bound parameters for statements executed
+   * on this connection. If the passed-in value is higher than the maximum
+   * default value, it will be silently truncated.
+   *
+   * @param {number} newLimit The bound parameters limit.
+   */
+  set variableLimit(newLimit) {
+    this.unsafeRawConnection.variableLimit = newLimit;
   },
 
   /**

@@ -980,6 +980,10 @@ add_task(async function test_variableLimit() {
   info("Open connection");
   let db = Services.storage.openDatabase(getTestDB());
   Assert.equal(db.variableLimit, 32766, "Should return default limit");
+  db.variableLimit = 999;
+  Assert.equal(db.variableLimit, 999, "Should return the set limit");
+  db.variableLimit = 33000;
+  Assert.equal(db.variableLimit, 32766, "Should silently truncate");
   await asyncClose(db);
 });
 
