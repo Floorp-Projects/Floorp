@@ -2191,6 +2191,7 @@ struct GlobalProperties {
   bool ChromeUtils : 1;
   bool CSS : 1;
   bool CSSRule : 1;
+  bool CustomStateSet : 1;
   bool Directory : 1;
   bool Document : 1;
   bool DOMException : 1;
