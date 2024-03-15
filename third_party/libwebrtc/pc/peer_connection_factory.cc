@@ -103,9 +103,7 @@ PeerConnectionFactory::PeerConnectionFactory(
           (dependencies->transport_controller_send_factory)
               ? std::move(dependencies->transport_controller_send_factory)
               : std::make_unique<RtpTransportControllerSendFactory>()),
-      decode_metronome_(dependencies->decode_metronome
-                            ? std::move(dependencies->decode_metronome)
-                            : std::move(dependencies->metronome)) {}
+      decode_metronome_(std::move(dependencies->decode_metronome)) {}
 
 PeerConnectionFactory::PeerConnectionFactory(
     PeerConnectionFactoryDependencies dependencies)
