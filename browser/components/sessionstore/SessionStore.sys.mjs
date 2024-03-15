@@ -925,8 +925,8 @@ var SessionStoreInternal = {
             for (let i = 0; i < lastSessionWindows.length; i++) {
               let closedWindow = state._closedWindows[i];
               let closedWindowTime = closedWindow.closedAt;
-              // If the last closed window is closed in +-100, we will restore it
-              if (closedWindowTime > closedTime - 100 && closedWindowTime < closedTime + 100) {
+              // If the last closed window is closed in +-1000, we will restore it
+              if (closedWindowTime > closedTime - 2000 && closedWindowTime < closedTime + 2000) {
                 state.windows.push(closedWindow);
                 // Remove the closed window from the closed windows
                 state._closedWindows.splice(i, 1);
