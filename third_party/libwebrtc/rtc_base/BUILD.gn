@@ -1123,6 +1123,7 @@ rtc_library("socket") {
     ":macromagic",
     ":socket_address",
     "../api/units:timestamp",
+    "system:rtc_export",
     "third_party/sigslot",
   ]
   if (is_win) {

@@ -30,6 +30,7 @@
 #include "api/units/timestamp.h"
 #include "rtc_base/buffer.h"
 #include "rtc_base/socket_address.h"
+#include "rtc_base/system/rtc_export.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
 
 // Rather than converting errors into a private namespace,
@@ -82,7 +83,7 @@ inline bool IsBlockingError(int e) {
 
 // General interface for the socket implementations of various networks.  The
 // methods match those of normal UNIX sockets very closely.
-class Socket {
+class RTC_EXPORT Socket {
  public:
   struct ReceiveBuffer {
     ReceiveBuffer(rtc::Buffer& payload) : payload(payload) {}
