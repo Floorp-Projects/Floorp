@@ -9,6 +9,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
+  AWToolbarButton: "resource:///modules/aboutwelcome/AWToolbarUtils.sys.mjs",
   ASRouter: "resource:///modules/asrouter/ASRouter.sys.mjs",
   ASRouterDefaultConfig:
     "resource:///modules/asrouter/ASRouterDefaultConfig.sys.mjs",
@@ -2947,6 +2948,22 @@ BrowserGlue.prototype = {
             !Cu.isInAutomation
           ) {
             await lazy.PlacesUIUtils.maybeAddImportButton();
+          }
+        },
+      },
+
+      // Add the setup button if this is the first startup
+      {
+        name: "AWToolbarButton.SetupButton",
+        task: async () => {
+          if (
+            // Not in automation: the button changes CUI state,
+            // breaking tests. Check this first, so that the module
+            // doesn't load if it doesn't have to.
+            !Cu.isInAutomation &&
+            lazy.AWToolbarButton.hasToolbarButtonEnabled
+          ) {
+            await lazy.AWToolbarButton.maybeAddSetupButton();
           }
         },
       },

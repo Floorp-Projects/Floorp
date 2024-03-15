@@ -464,6 +464,10 @@ toolbarbutton.bookmark-item {
   list-style-image: url("chrome://browser/skin/import.svg");
 }
 
+#aboutwelcome-button {
+  list-style-image: url("chrome://browser/skin/circle-check-dotted.svg");
+}
+
 #firefox-view-button {
   list-style-image: url("chrome://browser/skin/firefox-view.svg");
 }
