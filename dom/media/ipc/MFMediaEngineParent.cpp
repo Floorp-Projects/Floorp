@@ -190,6 +190,9 @@ void MFMediaEngineParent::InitializeDXGIDeviceManager() {
   UINT deviceResetToken;
   RETURN_VOID_IF_FAILED(
       wmf::MFLockDXGIDeviceManager(&deviceResetToken, &mDXGIDeviceManager));
+  if (!mDXGIDeviceManager) {
+    return;
+  }
   RETURN_VOID_IF_FAILED(
       mDXGIDeviceManager->ResetDevice(d3d11Device.get(), deviceResetToken));
   LOG("Initialized DXGI manager");
