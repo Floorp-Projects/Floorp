@@ -173,6 +173,7 @@ if (!build_with_chromium || is_linux || is_chromeos) {
         "../../api/video:video_frame",
         "../../api/video:video_rtp_headers",
         "../../common_video",
+        "../../rtc_base:gunit_helpers",
         "../../rtc_base:timeutils",
         "../../rtc_base/synchronization:mutex",
         "../../system_wrappers",
