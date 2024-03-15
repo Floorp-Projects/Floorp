@@ -2124,7 +2124,9 @@ void RTCStatsCollector::PrepareTransceiverStatsInfosAndCallStats_s_w_n() {
       }
     }
 
-    // Create the TrackMediaInfoMap for each transceiver stats object.
+    // Create the TrackMediaInfoMap for each transceiver stats object
+    // and keep track of whether we have at least one audio receiver.
+    bool has_audio_receiver = false;
     for (auto& stats : transceiver_stats_infos_) {
       auto transceiver = stats.transceiver;
       absl::optional<cricket::VoiceMediaInfo> voice_media_info;
@@ -2159,10 +2161,14 @@ void RTCStatsCollector::PrepareTransceiverStatsInfosAndCallStats_s_w_n() {
       stats.track_media_info_map.Initialize(std::move(voice_media_info),
                                             std::move(video_media_info),
                                             senders, receivers);
+      if (transceiver->media_type() == cricket::MEDIA_TYPE_AUDIO) {
+        has_audio_receiver |= !receivers.empty();
+      }
     }
 
     call_stats_ = pc_->GetCallStats();
-    audio_device_stats_ = pc_->GetAudioDeviceStats();
+    audio_device_stats_ =
+        has_audio_receiver ? pc_->GetAudioDeviceStats() : absl::nullopt;
   });
 
   for (auto& stats : transceiver_stats_infos_) {
