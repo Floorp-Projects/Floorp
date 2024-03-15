@@ -34,7 +34,6 @@ class WMFCDMImpl final {
 
   explicit WMFCDMImpl(const nsAString& aKeySystem) : mKeySystem(aKeySystem) {}
 
-  static bool Supports(const nsAString& aKeySystem);
   // TODO: make this async?
   bool GetCapabilities(nsTArray<KeySystemConfig>& aOutConfigs);
 
