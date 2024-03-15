@@ -15,6 +15,9 @@
 #include "api/audio_codecs/audio_format.h"
 #include "api/video_codecs/av1_profile.h"
 #include "api/video_codecs/h264_profile_level_id.h"
+#ifdef RTC_ENABLE_H265
+#include "api/video_codecs/h265_profile_tier_level.h"
+#endif
 #include "api/video_codecs/vp9_profile.h"
 #include "media/base/media_constants.h"
 #include "rtc_base/checks.h"
@@ -41,6 +44,24 @@ bool IsSameH264PacketizationMode(const CodecParameterMap& left,
          GetH264PacketizationModeOrDefault(right);
 }
 
+#ifdef RTC_ENABLE_H265
+std::string GetH265TxModeOrDefault(const CodecParameterMap& params) {
+  auto it = params.find(kH265FmtpTxMode);
+  if (it != params.end()) {
+    return it->second;
+  }
+  // If TxMode is not present, a value of "SRST" must be inferred.
+  // https://tools.ietf.org/html/rfc7798@section-7.1
+  return "SRST";
+}
+
+bool IsSameH265TxMode(const CodecParameterMap& left,
+                      const CodecParameterMap& right) {
+  return absl::EqualsIgnoreCase(GetH265TxModeOrDefault(left),
+                                GetH265TxModeOrDefault(right));
+}
+#endif
+
 // Some (video) codecs are actually families of codecs and rely on parameters
 // to distinguish different incompatible family members.
 bool IsSameCodecSpecific(const std::string& name1,
@@ -59,6 +80,12 @@ bool IsSameCodecSpecific(const std::string& name1,
     return webrtc::VP9IsSameProfile(params1, params2);
   if (either_name_matches(kAv1CodecName))
     return webrtc::AV1IsSameProfile(params1, params2);
+#ifdef RTC_ENABLE_H265
+  if (either_name_matches(kH265CodecName)) {
+    return webrtc::H265IsSameProfileTierLevel(params1, params2) &&
+           IsSameH265TxMode(params1, params2);
+  }
+#endif
   return true;
 }
 

@@ -4323,6 +4323,80 @@ TEST_F(MediaSessionDescriptionFactoryTest,
   EXPECT_EQ(vcd1->codecs()[0].id, vcd2->codecs()[0].id);
 }
 
+#ifdef RTC_ENABLE_H265
+// Test verifying that negotiating codecs with the same tx-mode retains the
+// tx-mode value.
+TEST_F(MediaSessionDescriptionFactoryTest, H265TxModeIsEqualRetainIt) {
+  std::vector f1_codecs = {CreateVideoCodec(96, "H265")};
+  f1_codecs.back().tx_mode = "mrst";
+  f1_.set_video_codecs(f1_codecs, f1_codecs);
+
+  std::vector f2_codecs = {CreateVideoCodec(96, "H265")};
+  f2_codecs.back().tx_mode = "mrst";
+  f2_.set_video_codecs(f2_codecs, f2_codecs);
+
+  MediaSessionOptions opts;
+  AddMediaDescriptionOptions(MEDIA_TYPE_VIDEO, "video1",
+                             RtpTransceiverDirection::kSendRecv, kActive,
+                             &opts);
+
+  // Create an offer with two video sections using same codecs.
+  std::unique_ptr<SessionDescription> offer =
+      f1_.CreateOfferOrError(opts, nullptr).MoveValue();
+  ASSERT_TRUE(offer);
+  ASSERT_EQ(1u, offer->contents().size());
+  const MediaContentDescription* vcd1 =
+      offer->contents()[0].media_description();
+  ASSERT_EQ(1u, vcd1->codecs().size());
+  EXPECT_EQ(vcd1->codecs()[0].tx_mode, "mrst");
+
+  // Create answer and negotiate the codecs.
+  std::unique_ptr<SessionDescription> answer =
+      f2_.CreateAnswerOrError(offer.get(), opts, nullptr).MoveValue();
+  ASSERT_TRUE(answer);
+  ASSERT_EQ(1u, answer->contents().size());
+  vcd1 = answer->contents()[0].media_description();
+  ASSERT_EQ(1u, vcd1->codecs().size());
+  EXPECT_EQ(vcd1->codecs()[0].tx_mode, "mrst");
+}
+
+// Test verifying that negotiating codecs with different tx_mode removes
+// the tx_mode value.
+TEST_F(MediaSessionDescriptionFactoryTest, H265TxModeIsDifferentDropCodecs) {
+  std::vector f1_codecs = {CreateVideoCodec(96, "H265")};
+  f1_codecs.back().tx_mode = "mrst";
+  f1_.set_video_codecs(f1_codecs, f1_codecs);
+
+  std::vector f2_codecs = {CreateVideoCodec(96, "H265")};
+  f2_codecs.back().tx_mode = "mrmt";
+  f2_.set_video_codecs(f2_codecs, f2_codecs);
+
+  MediaSessionOptions opts;
+  AddMediaDescriptionOptions(MEDIA_TYPE_VIDEO, "video1",
+                             RtpTransceiverDirection::kSendRecv, kActive,
+                             &opts);
+
+  // Create an offer with two video sections using same codecs.
+  std::unique_ptr<SessionDescription> offer =
+      f1_.CreateOfferOrError(opts, nullptr).MoveValue();
+  ASSERT_TRUE(offer);
+  ASSERT_EQ(1u, offer->contents().size());
+  const VideoContentDescription* vcd1 =
+      offer->contents()[0].media_description()->as_video();
+  ASSERT_EQ(1u, vcd1->codecs().size());
+  EXPECT_EQ(vcd1->codecs()[0].tx_mode, "mrst");
+
+  // Create answer and negotiate the codecs.
+  std::unique_ptr<SessionDescription> answer =
+      f2_.CreateAnswerOrError(offer.get(), opts, nullptr).MoveValue();
+  ASSERT_TRUE(answer);
+  ASSERT_EQ(1u, answer->contents().size());
+  vcd1 = answer->contents()[0].media_description()->as_video();
+  ASSERT_EQ(1u, vcd1->codecs().size());
+  EXPECT_EQ(vcd1->codecs()[0].tx_mode, absl::nullopt);
+}
+#endif
+
 // Test verifying that negotiating codecs with the same packetization retains
 // the packetization value.
 TEST_F(MediaSessionDescriptionFactoryTest, PacketizationIsEqual) {

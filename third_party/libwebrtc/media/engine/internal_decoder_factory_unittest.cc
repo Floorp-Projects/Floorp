@@ -43,6 +43,8 @@ constexpr bool kDav1dIsIncluded = true;
 #else
 constexpr bool kDav1dIsIncluded = false;
 #endif
+constexpr bool kH265Enabled = false;
+
 constexpr VideoDecoderFactory::CodecSupport kSupported = {
     /*is_supported=*/true, /*is_power_efficient=*/false};
 constexpr VideoDecoderFactory::CodecSupport kUnsupported = {
@@ -97,6 +99,14 @@ TEST(InternalDecoderFactoryTest, Av1Profile0) {
         factory.GetSupportedFormats(),
         Not(Contains(Field(&SdpVideoFormat::name, cricket::kAv1CodecName))));
   }
+}
+
+// At current stage since internal H.265 decoder is not implemented,
+TEST(InternalDecoderFactoryTest, H265IsNotEnabled) {
+  InternalDecoderFactory factory;
+  std::unique_ptr<VideoDecoder> decoder =
+      factory.CreateVideoDecoder(SdpVideoFormat(cricket::kH265CodecName));
+  EXPECT_EQ(static_cast<bool>(decoder), kH265Enabled);
 }
 
 #if defined(RTC_DAV1D_IN_INTERNAL_DECODER_FACTORY)

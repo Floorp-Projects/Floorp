@@ -728,6 +728,16 @@ void NegotiatePacketization(const Codec& local_codec,
           : absl::nullopt;
 }
 
+#ifdef RTC_ENABLE_H265
+void NegotiateTxMode(const Codec& local_codec,
+                     const Codec& remote_codec,
+                     Codec* negotiated_codec) {
+  negotiated_codec->tx_mode = (local_codec.tx_mode == remote_codec.tx_mode)
+                                  ? local_codec.tx_mode
+                                  : absl::nullopt;
+}
+#endif
+
 // Finds a codec in `codecs2` that matches `codec_to_match`, which is
 // a member of `codecs1`. If `codec_to_match` is an RED or RTX codec, both
 // the codecs themselves and their associated codecs must match.
@@ -849,6 +859,13 @@ void NegotiateCodecs(const std::vector<Codec>& local_codecs,
         webrtc::H264GenerateProfileLevelIdForAnswer(ours.params, theirs->params,
                                                     &negotiated.params);
       }
+#ifdef RTC_ENABLE_H265
+      if (absl::EqualsIgnoreCase(ours.name, kH265CodecName)) {
+        webrtc::H265GenerateProfileTierLevelForAnswer(
+            ours.params, theirs->params, &negotiated.params);
+        NegotiateTxMode(ours, *theirs, &negotiated);
+      }
+#endif
       negotiated.id = theirs->id;
       negotiated.name = theirs->name;
       negotiated_codecs->push_back(std::move(negotiated));
