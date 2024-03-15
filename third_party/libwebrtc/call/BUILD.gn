@@ -352,7 +352,7 @@ rtc_library("call") {
   ]
   if (build_with_mozilla) { # See Bug 1820869.
     sources -= [
-      "call_factory.cc",
+      "create_call.cc",
       "degraded_call.cc",
     ]
     deps -= [
