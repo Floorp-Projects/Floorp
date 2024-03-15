@@ -1219,7 +1219,8 @@ class WebRtcSdpTest : public ::testing::Test {
                      absl::WrapUnique(video_desc_3));
     desc_.AddTransportInfo(TransportInfo(
         kVideoContentName3, TransportDescription(kUfragVideo3, kPwdVideo3)));
-    desc_.set_msid_signaling(cricket::kMsidSignalingMediaSection);
+    desc_.set_msid_signaling(cricket::kMsidSignalingMediaSection |
+                             cricket::kMsidSignalingSemantic);
 
     ASSERT_TRUE(jdesc_.Initialize(desc_.Clone(), jdesc_.session_id(),
                                   jdesc_.session_version()));
@@ -1299,7 +1300,8 @@ class WebRtcSdpTest : public ::testing::Test {
                      absl::WrapUnique(audio_desc));
 
     // Enable signaling a=msid lines.
-    desc_.set_msid_signaling(cricket::kMsidSignalingMediaSection);
+    desc_.set_msid_signaling(cricket::kMsidSignalingMediaSection |
+                             cricket::kMsidSignalingSemantic);
     ASSERT_TRUE(jdesc_.Initialize(desc_.Clone(), jdesc_.session_id(),
                                   jdesc_.session_version()));
   }
@@ -1508,7 +1510,7 @@ class WebRtcSdpTest : public ::testing::Test {
     }
 
     // global attributes
-    EXPECT_EQ(desc1.msid_supported(), desc2.msid_supported());
+    EXPECT_EQ(desc1.msid_signaling(), desc2.msid_signaling());
     EXPECT_EQ(desc1.extmap_allow_mixed(), desc2.extmap_allow_mixed());
   }
 
@@ -3751,7 +3753,7 @@ TEST_F(WebRtcSdpTest, DeserializeSessionDescriptionSpecialMsid) {
   // Create both msid lines for Plan B and Unified Plan support.
   MakeUnifiedPlanDescriptionMultipleStreamIds(
       cricket::kMsidSignalingMediaSection |
-      cricket::kMsidSignalingSsrcAttribute);
+      cricket::kMsidSignalingSsrcAttribute | cricket::kMsidSignalingSemantic);
 
   JsepSessionDescription deserialized_description(kDummyType);
   EXPECT_TRUE(SdpDeserialize(kUnifiedPlanSdpFullStringWithSpecialMsid,
@@ -3759,7 +3761,8 @@ TEST_F(WebRtcSdpTest, DeserializeSessionDescriptionSpecialMsid) {
 
   EXPECT_TRUE(CompareSessionDescription(jdesc_, deserialized_description));
   EXPECT_EQ(cricket::kMsidSignalingMediaSection |
-                cricket::kMsidSignalingSsrcAttribute,
+                cricket::kMsidSignalingSsrcAttribute |
+                cricket::kMsidSignalingSemantic,
             deserialized_description.description()->msid_signaling());
 }
 
@@ -3771,7 +3774,7 @@ TEST_F(WebRtcSdpTest, SerializeSessionDescriptionSpecialMsid) {
   // Create both msid lines for Plan B and Unified Plan support.
   MakeUnifiedPlanDescriptionMultipleStreamIds(
       cricket::kMsidSignalingMediaSection |
-      cricket::kMsidSignalingSsrcAttribute);
+      cricket::kMsidSignalingSsrcAttribute | cricket::kMsidSignalingSemantic);
   std::string serialized_sdp = webrtc::SdpSerialize(jdesc_);
   // We explicitly test that the serialized SDP string is equal to the hard
   // coded SDP string. This is necessary, because in the parser "a=msid" lines
@@ -3787,7 +3790,7 @@ TEST_F(WebRtcSdpTest, SerializeSessionDescriptionSpecialMsid) {
 TEST_F(WebRtcSdpTest, UnifiedPlanDeserializeSessionDescriptionSpecialMsid) {
   // Only create a=msid lines for strictly Unified Plan stream ID support.
   MakeUnifiedPlanDescriptionMultipleStreamIds(
-      cricket::kMsidSignalingMediaSection);
+      cricket::kMsidSignalingMediaSection | cricket::kMsidSignalingSemantic);
 
   JsepSessionDescription deserialized_description(kDummyType);
   std::string unified_plan_sdp_string =
@@ -3805,7 +3808,7 @@ TEST_F(WebRtcSdpTest, UnifiedPlanDeserializeSessionDescriptionSpecialMsid) {
 TEST_F(WebRtcSdpTest, UnifiedPlanSerializeSessionDescriptionSpecialMsid) {
   // Only create a=msid lines for strictly Unified Plan stream ID support.
   MakeUnifiedPlanDescriptionMultipleStreamIds(
-      cricket::kMsidSignalingMediaSection);
+      cricket::kMsidSignalingMediaSection | cricket::kMsidSignalingSemantic);
 
   TestSerialize(jdesc_);
 }
@@ -3837,7 +3840,8 @@ TEST_F(WebRtcSdpTest, SerializeUnifiedPlanSessionDescriptionNoSsrcSignaling) {
 TEST_F(WebRtcSdpTest, EmptyDescriptionHasNoMsidSignaling) {
   JsepSessionDescription jsep_desc(kDummyType);
   ASSERT_TRUE(SdpDeserialize(kSdpSessionString, &jsep_desc));
-  EXPECT_EQ(0, jsep_desc.description()->msid_signaling());
+  EXPECT_EQ(cricket::kMsidSignalingSemantic,
+            jsep_desc.description()->msid_signaling());
 }
 
 TEST_F(WebRtcSdpTest, DataChannelOnlyHasNoMsidSignaling) {
@@ -3845,21 +3849,24 @@ TEST_F(WebRtcSdpTest, DataChannelOnlyHasNoMsidSignaling) {
   std::string sdp = kSdpSessionString;
   sdp += kSdpSctpDataChannelString;
   ASSERT_TRUE(SdpDeserialize(sdp, &jsep_desc));
-  EXPECT_EQ(0, jsep_desc.description()->msid_signaling());
+  EXPECT_EQ(cricket::kMsidSignalingSemantic,
+            jsep_desc.description()->msid_signaling());
 }
 
 TEST_F(WebRtcSdpTest, PlanBHasSsrcAttributeMsidSignaling) {
   JsepSessionDescription jsep_desc(kDummyType);
   ASSERT_TRUE(SdpDeserialize(kPlanBSdpFullString, &jsep_desc));
-  EXPECT_EQ(cricket::kMsidSignalingSsrcAttribute,
-            jsep_desc.description()->msid_signaling());
+  EXPECT_EQ(
+      cricket::kMsidSignalingSsrcAttribute | cricket::kMsidSignalingSemantic,
+      jsep_desc.description()->msid_signaling());
 }
 
 TEST_F(WebRtcSdpTest, UnifiedPlanHasMediaSectionMsidSignaling) {
   JsepSessionDescription jsep_desc(kDummyType);
   ASSERT_TRUE(SdpDeserialize(kUnifiedPlanSdpFullString, &jsep_desc));
-  EXPECT_EQ(cricket::kMsidSignalingMediaSection,
-            jsep_desc.description()->msid_signaling());
+  EXPECT_EQ(
+      cricket::kMsidSignalingMediaSection | cricket::kMsidSignalingSemantic,
+      jsep_desc.description()->msid_signaling());
 }
 
 const char kMediaSectionMsidLine[] = "a=msid:local_stream_1 audio_track_id_1";

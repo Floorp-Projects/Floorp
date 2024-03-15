@@ -22,7 +22,6 @@ void RemoveSsrcsAndMsids(cricket::SessionDescription* desc) {
   for (ContentInfo& content : desc->contents()) {
     content.media_description()->mutable_streams().clear();
   }
-  desc->set_msid_supported(false);
   desc->set_msid_signaling(0);
 }
 
