@@ -198,11 +198,13 @@ class Proxy final : public nsIDOMEventListener {
 #ifdef DEBUG
   void DebugStoreWorkerRef(RefPtr<StrongWorkerRef>& aWorkerRef) {
     MOZ_ASSERT(!NS_IsMainThread());
+    MutexAutoLock lock(mXHR->mTSWorkerRefMutex);
     mXHR->mTSWorkerRef = new ThreadSafeWorkerRef(aWorkerRef);
   }
 
   void DebugForgetWorkerRef() {
     MOZ_ASSERT(!NS_IsMainThread());
+    MutexAutoLock lock(mXHR->mTSWorkerRefMutex);
     mXHR->mTSWorkerRef = nullptr;
   }
 #endif
