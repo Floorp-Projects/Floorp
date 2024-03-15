@@ -1478,7 +1478,7 @@ TEST_F(P2PTransportChannelTest, GetStatsSwitchConnection) {
   DestroyChannels();
 }
 
-// Tests that a UMA on ICE regathering is recorded when there is a network
+// Tests that an ICE regathering reason is recorded when there is a network
 // change if and only if continual gathering is enabled.
 TEST_F(P2PTransportChannelTest,
        TestIceRegatheringReasonContinualGatheringByNetworkChange) {
@@ -1514,7 +1514,7 @@ TEST_F(P2PTransportChannelTest,
   DestroyChannels();
 }
 
-// Tests that a UMA on ICE regathering is recorded when there is a network
+// Tests that an ICE regathering reason is recorded when there is a network
 // failure if and only if continual gathering is enabled.
 TEST_F(P2PTransportChannelTest,
        TestIceRegatheringReasonContinualGatheringByNetworkFailure) {
@@ -1537,10 +1537,6 @@ TEST_F(P2PTransportChannelTest,
   SIMULATED_WAIT(false, kNetworkFailureTimeout, clock);
   EXPECT_LE(1, GetEndpoint(0)->GetIceRegatheringCountForReason(
                    IceRegatheringReason::NETWORK_FAILURE));
-  EXPECT_METRIC_LE(
-      1, webrtc::metrics::NumEvents(
-             "WebRTC.PeerConnection.IceRegatheringReason",
-             static_cast<int>(IceRegatheringReason::NETWORK_FAILURE)));
   EXPECT_EQ(0, GetEndpoint(1)->GetIceRegatheringCountForReason(
                    IceRegatheringReason::NETWORK_FAILURE));
 
