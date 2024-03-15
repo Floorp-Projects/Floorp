@@ -180,13 +180,14 @@ nsresult nsObserverService::EnsureValidCall() const {
 }
 
 nsresult nsObserverService::FilterHttpOnTopics(const char* aTopic) {
-  // Specifically allow http-on-opening-request and http-on-stop-request in the
-  // child process; see bug 1269765.
+  // Specifically allow some http-on-* observer notifications in the child
+  // process.
   if (mozilla::net::IsNeckoChild() && !strncmp(aTopic, "http-on-", 8) &&
+      strcmp(aTopic, "http-on-before-stop-request") &&
       strcmp(aTopic, "http-on-failed-opening-request") &&
+      strcmp(aTopic, "http-on-image-cache-response") &&
       strcmp(aTopic, "http-on-opening-request") &&
-      strcmp(aTopic, "http-on-stop-request") &&
-      strcmp(aTopic, "http-on-image-cache-response")) {
+      strcmp(aTopic, "http-on-stop-request")) {
     nsCOMPtr<nsIConsoleService> console(
         do_GetService(NS_CONSOLESERVICE_CONTRACTID));
     nsCOMPtr<nsIScriptError> error(
