@@ -4790,10 +4790,6 @@ var SessionStoreInternal = {
       return;
     }
 
-    if (tabData.floorpDisableHistory) {
-      return;
-    }
-
     let loadArguments = options.loadArguments;
     let window = tab.ownerGlobal;
     let tabbrowser = window.gBrowser;

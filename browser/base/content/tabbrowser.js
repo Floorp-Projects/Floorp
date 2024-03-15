@@ -3158,6 +3158,10 @@
         let tab;
         let tabWasReused = false;
 
+        if (tabData.floorpDisableHistory) {
+          continue;
+        }
+
         let { WorkspacesService } = ChromeUtils.importESModule(
           "resource:///modules/WorkspacesService.sys.mjs"
         );
