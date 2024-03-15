@@ -101,8 +101,9 @@ RTC_EXPORT absl::optional<H265ProfileTierLevel> ParseSdpForH265ProfileTierLevel(
 
 // Returns true if the parameters have the same H265 profile or neither contains
 // an H265 profile, otherwise false.
-bool H265IsSameProfileTierLevel(const SdpVideoFormat::Parameters& params1,
-                                const SdpVideoFormat::Parameters& params2);
+RTC_EXPORT bool H265IsSameProfileTierLevel(
+    const SdpVideoFormat::Parameters& params1,
+    const SdpVideoFormat::Parameters& params2);
 
 }  // namespace webrtc
 
