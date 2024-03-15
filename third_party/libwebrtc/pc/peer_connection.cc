@@ -87,10 +87,6 @@ namespace webrtc {
 
 namespace {
 
-// UMA metric names.
-const char kSimulcastNumberOfEncodings[] =
-    "WebRTC.PeerConnection.Simulcast.NumberOfSendEncodings";
-
 static const int REPORT_USAGE_PATTERN_DELAY_MS = 60000;
 
 uint32_t ConvertIceTransportTypeToCandidateFilter(
@@ -1099,9 +1095,6 @@ PeerConnection::AddTransceiver(
                        ? cricket::MEDIA_TYPE_AUDIO
                        : cricket::MEDIA_TYPE_VIDEO));
   }
-
-  RTC_HISTOGRAM_COUNTS_LINEAR(kSimulcastNumberOfEncodings,
-                              init.send_encodings.size(), 0, 7, 8);
 
   size_t num_rids = absl::c_count_if(init.send_encodings,
                                      [](const RtpEncodingParameters& encoding) {
