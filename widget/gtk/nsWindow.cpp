@@ -7842,13 +7842,240 @@ static GtkWidget* get_gtk_widget_for_gdk_window(GdkWindow* window) {
   return GTK_WIDGET(user_data);
 }
 
-static GdkCursor* get_gtk_cursor(nsCursor aCursor) {
+static GdkCursor* get_gtk_cursor_from_type(uint8_t aCursorType) {
+  GdkDisplay* defaultDisplay = gdk_display_get_default();
+  GdkCursor* gdkcursor = nullptr;
+
+  // If by now we don't have a xcursor, this means we have to make a custom
+  // one. First, we try creating a named cursor based on the hash of our
+  // custom bitmap, as libXcursor has some magic to convert bitmapped cursors
+  // to themed cursors
+  if (GtkCursors[aCursorType].hash) {
+    gdkcursor =
+        gdk_cursor_new_from_name(defaultDisplay, GtkCursors[aCursorType].hash);
+    if (gdkcursor) {
+      return gdkcursor;
+    }
+  }
+
+  LOGW("get_gtk_cursor_from_type(): Failed to get cursor type %d, try bitmap",
+       aCursorType);
+
+  // If we still don't have a xcursor, we now really create a bitmap cursor
+  GdkPixbuf* cursor_pixbuf =
+      gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8, 32, 32);
+  if (!cursor_pixbuf) {
+    return nullptr;
+  }
+
+  guchar* data = gdk_pixbuf_get_pixels(cursor_pixbuf);
+
+  // Read data from GtkCursors and compose RGBA surface from 1bit bitmap and
+  // mask GtkCursors bits and mask are 32x32 monochrome bitmaps (1 bit for
+  // each pixel) so it's 128 byte array (4 bytes for are one bitmap row and
+  // there are 32 rows here).
+  const unsigned char* bits = GtkCursors[aCursorType].bits;
+  const unsigned char* mask_bits = GtkCursors[aCursorType].mask_bits;
+
+  for (int i = 0; i < 128; i++) {
+    char bit = (char)*bits++;
+    char mask = (char)*mask_bits++;
+    for (int j = 0; j < 8; j++) {
+      unsigned char pix = ~(((bit >> j) & 0x01) * 0xff);
+      *data++ = pix;
+      *data++ = pix;
+      *data++ = pix;
+      *data++ = (((mask >> j) & 0x01) * 0xff);
+    }
+  }
+
+  gdkcursor = gdk_cursor_new_from_pixbuf(
+      gdk_display_get_default(), cursor_pixbuf, GtkCursors[aCursorType].hot_x,
+      GtkCursors[aCursorType].hot_y);
+
+  g_object_unref(cursor_pixbuf);
+  return gdkcursor;
+}
+
+static GdkCursor* get_gtk_cursor_legacy(nsCursor aCursor) {
   GdkCursor* gdkcursor = nullptr;
   uint8_t newType = 0xff;
 
-  if ((gdkcursor = gCursorCache[aCursor])) {
-    return gdkcursor;
+  GdkDisplay* defaultDisplay = gdk_display_get_default();
+
+  // The strategy here is to use standard GDK cursors, and, if not available,
+  // load by standard name with gdk_cursor_new_from_name.
+  // Spec is here: http://www.freedesktop.org/wiki/Specifications/cursor-spec/
+  switch (aCursor) {
+    case eCursor_standard:
+      gdkcursor = gdk_cursor_new_for_display(defaultDisplay, GDK_LEFT_PTR);
+      break;
+    case eCursor_wait:
+      gdkcursor = gdk_cursor_new_for_display(defaultDisplay, GDK_WATCH);
+      break;
+    case eCursor_select:
+      gdkcursor = gdk_cursor_new_for_display(defaultDisplay, GDK_XTERM);
+      break;
+    case eCursor_hyperlink:
+      gdkcursor = gdk_cursor_new_for_display(defaultDisplay, GDK_HAND2);
+      break;
+    case eCursor_n_resize:
+      gdkcursor = gdk_cursor_new_for_display(defaultDisplay, GDK_TOP_SIDE);
+      break;
+    case eCursor_s_resize:
+      gdkcursor = gdk_cursor_new_for_display(defaultDisplay, GDK_BOTTOM_SIDE);
+      break;
+    case eCursor_w_resize:
+      gdkcursor = gdk_cursor_new_for_display(defaultDisplay, GDK_LEFT_SIDE);
+      break;
+    case eCursor_e_resize:
+      gdkcursor = gdk_cursor_new_for_display(defaultDisplay, GDK_RIGHT_SIDE);
+      break;
+    case eCursor_nw_resize:
+      gdkcursor =
+          gdk_cursor_new_for_display(defaultDisplay, GDK_TOP_LEFT_CORNER);
+      break;
+    case eCursor_se_resize:
+      gdkcursor =
+          gdk_cursor_new_for_display(defaultDisplay, GDK_BOTTOM_RIGHT_CORNER);
+      break;
+    case eCursor_ne_resize:
+      gdkcursor =
+          gdk_cursor_new_for_display(defaultDisplay, GDK_TOP_RIGHT_CORNER);
+      break;
+    case eCursor_sw_resize:
+      gdkcursor =
+          gdk_cursor_new_for_display(defaultDisplay, GDK_BOTTOM_LEFT_CORNER);
+      break;
+    case eCursor_crosshair:
+      gdkcursor = gdk_cursor_new_for_display(defaultDisplay, GDK_CROSSHAIR);
+      break;
+    case eCursor_move:
+      gdkcursor = gdk_cursor_new_for_display(defaultDisplay, GDK_FLEUR);
+      break;
+    case eCursor_help:
+      gdkcursor =
+          gdk_cursor_new_for_display(defaultDisplay, GDK_QUESTION_ARROW);
+      break;
+    case eCursor_copy:  // CSS3
+      gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "copy");
+      if (!gdkcursor) newType = MOZ_CURSOR_COPY;
+      break;
+    case eCursor_alias:
+      gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "alias");
+      if (!gdkcursor) newType = MOZ_CURSOR_ALIAS;
+      break;
+    case eCursor_context_menu:
+      gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "context-menu");
+      if (!gdkcursor) newType = MOZ_CURSOR_CONTEXT_MENU;
+      break;
+    case eCursor_cell:
+      gdkcursor = gdk_cursor_new_for_display(defaultDisplay, GDK_PLUS);
+      break;
+    // Those two aren’t standardized. Trying both KDE’s and GNOME’s names
+    case eCursor_grab:
+      gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "openhand");
+      if (!gdkcursor) newType = MOZ_CURSOR_HAND_GRAB;
+      break;
+    case eCursor_grabbing:
+      gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "closedhand");
+      if (!gdkcursor) {
+        gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "grabbing");
+      }
+      if (!gdkcursor) newType = MOZ_CURSOR_HAND_GRABBING;
+      break;
+    case eCursor_spinning:
+      gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "progress");
+      if (!gdkcursor) newType = MOZ_CURSOR_SPINNING;
+      break;
+    case eCursor_zoom_in:
+      gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "zoom-in");
+      if (!gdkcursor) newType = MOZ_CURSOR_ZOOM_IN;
+      break;
+    case eCursor_zoom_out:
+      gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "zoom-out");
+      if (!gdkcursor) newType = MOZ_CURSOR_ZOOM_OUT;
+      break;
+    case eCursor_not_allowed:
+      gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "not-allowed");
+      if (!gdkcursor) {  // nonstandard, yet common
+        gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "crossed_circle");
+      }
+      if (!gdkcursor) newType = MOZ_CURSOR_NOT_ALLOWED;
+      break;
+    case eCursor_no_drop:
+      gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "no-drop");
+      if (!gdkcursor) {  // this nonstandard sequence makes it work on KDE and
+                         // GNOME
+        gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "forbidden");
+      }
+      if (!gdkcursor) {
+        gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "circle");
+      }
+      if (!gdkcursor) newType = MOZ_CURSOR_NOT_ALLOWED;
+      break;
+    case eCursor_vertical_text:
+      gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "vertical-text");
+      if (!gdkcursor) {
+        newType = MOZ_CURSOR_VERTICAL_TEXT;
+      }
+      break;
+    case eCursor_all_scroll:
+      gdkcursor = gdk_cursor_new_for_display(defaultDisplay, GDK_FLEUR);
+      break;
+    case eCursor_nesw_resize:
+      gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "size_bdiag");
+      if (!gdkcursor) newType = MOZ_CURSOR_NESW_RESIZE;
+      break;
+    case eCursor_nwse_resize:
+      gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "size_fdiag");
+      if (!gdkcursor) newType = MOZ_CURSOR_NWSE_RESIZE;
+      break;
+    case eCursor_ns_resize:
+      gdkcursor =
+          gdk_cursor_new_for_display(defaultDisplay, GDK_SB_V_DOUBLE_ARROW);
+      break;
+    case eCursor_ew_resize:
+      gdkcursor =
+          gdk_cursor_new_for_display(defaultDisplay, GDK_SB_H_DOUBLE_ARROW);
+      break;
+    // Here, two better fitting cursors exist in some cursor themes. Try those
+    // first
+    case eCursor_row_resize:
+      gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "split_v");
+      if (!gdkcursor) {
+        gdkcursor =
+            gdk_cursor_new_for_display(defaultDisplay, GDK_SB_V_DOUBLE_ARROW);
+      }
+      break;
+    case eCursor_col_resize:
+      gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "split_h");
+      if (!gdkcursor) {
+        gdkcursor =
+            gdk_cursor_new_for_display(defaultDisplay, GDK_SB_H_DOUBLE_ARROW);
+      }
+      break;
+    case eCursor_none:
+      newType = MOZ_CURSOR_NONE;
+      break;
+    default:
+      NS_ASSERTION(aCursor, "Invalid cursor type");
+      gdkcursor = gdk_cursor_new_for_display(defaultDisplay, GDK_LEFT_PTR);
+      break;
   }
+
+  if (!gdkcursor) {
+    LOGW("get_gtk_cursor_legacy(): Failed to get cursor %d, try fallback",
+         aCursor);
+    gdkcursor = get_gtk_cursor_from_type(newType);
+  }
+
+  return gdkcursor;
+}
+
+static GdkCursor* get_gtk_cursor_from_name(nsCursor aCursor) {
+  GdkCursor* gdkcursor = nullptr;
+  uint8_t newType = 0xff;
 
   GdkDisplay* defaultDisplay = gdk_display_get_default();
 
@@ -7987,50 +8214,25 @@ static GdkCursor* get_gtk_cursor(nsCursor aCursor) {
       break;
   }
 
-  // If by now we don't have a xcursor, this means we have to make a custom
-  // one. First, we try creating a named cursor based on the hash of our
-  // custom bitmap, as libXcursor has some magic to convert bitmapped cursors
-  // to themed cursors
-  if (newType != 0xFF && GtkCursors[newType].hash) {
-    gdkcursor =
-        gdk_cursor_new_from_name(defaultDisplay, GtkCursors[newType].hash);
+  if (!gdkcursor) {
+    LOGW("get_gtk_cursor_from_name(): Failed to get cursor %d, try fallback",
+         aCursor);
+    gdkcursor = get_gtk_cursor_from_type(newType);
   }
 
-  // If we still don't have a xcursor, we now really create a bitmap cursor
-  if (newType != 0xff && !gdkcursor) {
-    GdkPixbuf* cursor_pixbuf =
-        gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8, 32, 32);
-    if (!cursor_pixbuf) {
-      return nullptr;
-    }
+  return gdkcursor;
+}
 
-    guchar* data = gdk_pixbuf_get_pixels(cursor_pixbuf);
+static GdkCursor* get_gtk_cursor(nsCursor aCursor) {
+  GdkCursor* gdkcursor = nullptr;
 
-    // Read data from GtkCursors and compose RGBA surface from 1bit bitmap and
-    // mask GtkCursors bits and mask are 32x32 monochrome bitmaps (1 bit for
-    // each pixel) so it's 128 byte array (4 bytes for are one bitmap row and
-    // there are 32 rows here).
-    const unsigned char* bits = GtkCursors[newType].bits;
-    const unsigned char* mask_bits = GtkCursors[newType].mask_bits;
-
-    for (int i = 0; i < 128; i++) {
-      char bit = (char)*bits++;
-      char mask = (char)*mask_bits++;
-      for (int j = 0; j < 8; j++) {
-        unsigned char pix = ~(((bit >> j) & 0x01) * 0xff);
-        *data++ = pix;
-        *data++ = pix;
-        *data++ = pix;
-        *data++ = (((mask >> j) & 0x01) * 0xff);
-      }
-    }
-
-    gdkcursor = gdk_cursor_new_from_pixbuf(
-        gdk_display_get_default(), cursor_pixbuf, GtkCursors[newType].hot_x,
-        GtkCursors[newType].hot_y);
-
-    g_object_unref(cursor_pixbuf);
+  if ((gdkcursor = gCursorCache[aCursor])) {
+    return gdkcursor;
   }
+
+  gdkcursor = StaticPrefs::widget_gtk_legacy_cursors_enabled()
+                  ? get_gtk_cursor_legacy(aCursor)
+                  : get_gtk_cursor_from_name(aCursor);
 
   gCursorCache[aCursor] = gdkcursor;
 
