@@ -944,13 +944,54 @@ class Encoder : public EncodedImageCallback {
 
   void Flush() {
     task_queue_.PostTaskAndWait([this] { encoder_->Release(); });
+    if (last_superframe_) {
+      int num_spatial_layers =
+          ScalabilityModeToNumSpatialLayers(last_superframe_->scalability_mode);
+      for (int sidx = *last_superframe_->encoded_frame.SpatialIndex() + 1;
+           sidx < num_spatial_layers; ++sidx) {
+        last_superframe_->encoded_frame.SetSpatialIndex(sidx);
+        DeliverEncodedFrame(last_superframe_->encoded_frame);
+      }
+      last_superframe_.reset();
+    }
   }
 
  private:
+  struct Superframe {
+    EncodedImage encoded_frame;
+    rtc::scoped_refptr<EncodedImageBuffer> encoded_data;
+    ScalabilityMode scalability_mode;
+  };
+
   Result OnEncodedImage(const EncodedImage& encoded_frame,
                         const CodecSpecificInfo* codec_specific_info) override {
     analyzer_->FinishEncode(encoded_frame);
 
+    if (last_superframe_ && last_superframe_->encoded_frame.RtpTimestamp() !=
+                                encoded_frame.RtpTimestamp()) {
+      // New temporal unit. We have frame of previous temporal unit (TU) stored
+      // which means that the previous TU used spatial prediction. If encoder
+      // dropped a frame of layer X in the previous TU, mark the stored frame
+      // as a frame belonging to layer >X and deliver it such that decoders of
+      // layer >X receive encoded lower layers.
+      int num_spatial_layers =
+          ScalabilityModeToNumSpatialLayers(last_superframe_->scalability_mode);
+      for (int sidx = *last_superframe_->encoded_frame.SpatialIndex() + 1;
+           sidx < num_spatial_layers; ++sidx) {
+        last_superframe_->encoded_frame.SetSpatialIndex(sidx);
+        DeliverEncodedFrame(last_superframe_->encoded_frame);
+      }
+      last_superframe_.reset();
+    }
+
+    const EncodedImage& superframe =
+        MakeSuperFrame(encoded_frame, codec_specific_info);
+    DeliverEncodedFrame(superframe);
+
+    return Result(Result::Error::OK);
+  }
+
+  void DeliverEncodedFrame(const EncodedImage& encoded_frame) {
     {
       MutexLock lock(&mutex_);
       auto it = callbacks_.find(encoded_frame.RtpTimestamp());
@@ -962,8 +1003,6 @@ class Encoder : public EncodedImageCallback {
     if (ivf_writer_ != nullptr) {
       ivf_writer_->Write(encoded_frame);
     }
-
-    return Result(Result::Error::OK);
   }
 
   void Configure(const EncodingSettings& es) {
@@ -1081,6 +1120,48 @@ class Encoder : public EncodedImageCallback {
     return true;
   }
 
+  static bool IsSvc(const EncodedImage& encoded_frame,
+                    const CodecSpecificInfo* codec_specific_info) {
+    ScalabilityMode scalability_mode = *codec_specific_info->scalability_mode;
+    return (kFullSvcScalabilityModes.count(scalability_mode) ||
+            (kKeySvcScalabilityModes.count(scalability_mode) &&
+             encoded_frame.FrameType() == VideoFrameType::kVideoFrameKey));
+  }
+
+  const EncodedImage& MakeSuperFrame(
+      const EncodedImage& encoded_frame,
+      const CodecSpecificInfo* codec_specific_info) {
+    if (last_superframe_) {
+      // Append to base spatial layer frame(s).
+      RTC_CHECK_EQ(*encoded_frame.SpatialIndex(),
+                   *last_superframe_->encoded_frame.SpatialIndex() + 1)
+          << "Inter-layer frame drops are not supported.";
+      size_t current_size = last_superframe_->encoded_data->size();
+      last_superframe_->encoded_data->Realloc(current_size +
+                                              encoded_frame.size());
+      memcpy(last_superframe_->encoded_data->data() + current_size,
+             encoded_frame.data(), encoded_frame.size());
+      last_superframe_->encoded_frame.SetEncodedData(
+          last_superframe_->encoded_data);
+      last_superframe_->encoded_frame.SetSpatialIndex(
+          encoded_frame.SpatialIndex());
+      return last_superframe_->encoded_frame;
+    }
+
+    if (IsSvc(encoded_frame, codec_specific_info)) {
+      last_superframe_ = Superframe{
+          .encoded_frame = EncodedImage(encoded_frame),
+          .encoded_data = EncodedImageBuffer::Create(encoded_frame.data(),
+                                                     encoded_frame.size()),
+          .scalability_mode = *codec_specific_info->scalability_mode};
+      last_superframe_->encoded_frame.SetEncodedData(
+          last_superframe_->encoded_data);
+      return last_superframe_->encoded_frame;
+    }
+
+    return encoded_frame;
+  }
+
   VideoEncoderFactory* const encoder_factory_;
   std::unique_ptr<VideoEncoder> encoder_;
   VideoCodecAnalyzer* const analyzer_;
@@ -1092,6 +1173,7 @@ class Encoder : public EncodedImageCallback {
   std::unique_ptr<TesterIvfWriter> ivf_writer_;
   std::map<uint32_t, int> sidx_ RTC_GUARDED_BY(mutex_);
   std::map<uint32_t, EncodeCallback> callbacks_ RTC_GUARDED_BY(mutex_);
+  absl::optional<Superframe> last_superframe_;
   Mutex mutex_;
 };
 

@@ -293,7 +293,7 @@ class MockCodedVideoSource : public CodedVideoSource {
 
 TEST_F(VideoCodecTesterTest, Slice) {
   std::unique_ptr<VideoCodecStats> stats =
-      RunEncodeDecodeTest("VP8", ScalabilityMode::kL2T2,
+      RunEncodeDecodeTest("VP9", ScalabilityMode::kL2T2,
                           {{{.timestamp_rtp = 0,
                              .layer_id = {.spatial_idx = 0, .temporal_idx = 0},
                              .frame_size = DataSize::Bytes(1)},
@@ -307,11 +307,13 @@ TEST_F(VideoCodecTesterTest, Slice) {
   EXPECT_THAT(slice,
               ElementsAre(Field(&Frame::frame_size, DataSize::Bytes(1)),
                           Field(&Frame::frame_size, DataSize::Bytes(2)),
-                          Field(&Frame::frame_size, DataSize::Bytes(3))));
+                          Field(&Frame::frame_size, DataSize::Bytes(3)),
+                          Field(&Frame::frame_size, DataSize::Bytes(0))));
 
   slice = stats->Slice({.min_timestamp_rtp = 1}, /*merge=*/false);
   EXPECT_THAT(slice,
-              ElementsAre(Field(&Frame::frame_size, DataSize::Bytes(3))));
+              ElementsAre(Field(&Frame::frame_size, DataSize::Bytes(3)),
+                          Field(&Frame::frame_size, DataSize::Bytes(0))));
 
   slice = stats->Slice({.max_timestamp_rtp = 0}, /*merge=*/false);
   EXPECT_THAT(slice,
@@ -534,17 +536,58 @@ TEST_P(VideoCodecTesterTestScalability, EncodeDecode) {
 INSTANTIATE_TEST_SUITE_P(
     All,
     VideoCodecTesterTestScalability,
-    Values(ScalabilityTestParameters{
-        .codec_type = "VP8",
-        .scalability_mode = ScalabilityMode::kS2T1,
-        .encoded_frame_sizes = {{{0, DataSize::Bytes(1)},
-                                 {1, DataSize::Bytes(2)}},
-                                {{0, DataSize::Bytes(3)},
-                                 // Emulate frame drop.
-                                 {1, DataSize::Bytes(0)}}},
-        .expected_decode_frame_sizes = {DataSize::Bytes(1), DataSize::Bytes(2),
-                                        DataSize::Bytes(3)},
-    }));
+    Values(
+        ScalabilityTestParameters{
+            .codec_type = "VP8",
+            .scalability_mode = ScalabilityMode::kS2T1,
+            .encoded_frame_sizes = {{{0, DataSize::Bytes(1)},
+                                     {1, DataSize::Bytes(2)}},
+                                    {{0, DataSize::Bytes(4)},
+                                     // Emulate frame drop.
+                                     {1, DataSize::Bytes(0)}}},
+            .expected_decode_frame_sizes = {DataSize::Bytes(1),
+                                            DataSize::Bytes(2),
+                                            DataSize::Bytes(4)},
+        },
+        ScalabilityTestParameters{
+            .codec_type = "VP9",
+            .scalability_mode = ScalabilityMode::kL2T1,
+            .encoded_frame_sizes =
+                {{{0, DataSize::Bytes(1)}, {1, DataSize::Bytes(2)}},
+                 {{0, DataSize::Bytes(4)}, {1, DataSize::Bytes(8)}},
+                 {{0, DataSize::Bytes(16)},
+                  // Emulate frame drop.
+                  {1, DataSize::Bytes(0)}}},
+            .expected_decode_frame_sizes =
+                {DataSize::Bytes(1), DataSize::Bytes(3), DataSize::Bytes(4),
+                 DataSize::Bytes(12), DataSize::Bytes(16), DataSize::Bytes(16)},
+        },
+        ScalabilityTestParameters{
+            .codec_type = "VP9",
+            .scalability_mode = ScalabilityMode::kL2T1_KEY,
+            .encoded_frame_sizes =
+                {{{0, DataSize::Bytes(1)}, {1, DataSize::Bytes(2)}},
+                 {{0, DataSize::Bytes(4)}, {1, DataSize::Bytes(8)}},
+                 {{0, DataSize::Bytes(16)},
+                  // Emulate frame drop.
+                  {1, DataSize::Bytes(0)}}},
+            .expected_decode_frame_sizes =
+                {DataSize::Bytes(1), DataSize::Bytes(3), DataSize::Bytes(4),
+                 DataSize::Bytes(8), DataSize::Bytes(16)},
+        },
+        ScalabilityTestParameters{
+            .codec_type = "VP9",
+            .scalability_mode = ScalabilityMode::kS2T1,
+            .encoded_frame_sizes =
+                {{{0, DataSize::Bytes(1)}, {1, DataSize::Bytes(2)}},
+                 {{0, DataSize::Bytes(4)}, {1, DataSize::Bytes(8)}},
+                 {{0, DataSize::Bytes(16)},
+                  // Emulate frame drop.
+                  {1, DataSize::Bytes(0)}}},
+            .expected_decode_frame_sizes =
+                {DataSize::Bytes(1), DataSize::Bytes(2), DataSize::Bytes(4),
+                 DataSize::Bytes(8), DataSize::Bytes(16)},
+        }));
 
 class VideoCodecTesterTestPacing
     : public ::testing::TestWithParam<std::tuple<PacingSettings, int>> {
