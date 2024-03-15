@@ -27,3 +27,4 @@ browser.backup:
     notification_emails:
       - mconley@mozilla.com
     expires: never
+    telemetry_mirror: BROWSER_BACKUP_PROF_D_DISK_SPACE

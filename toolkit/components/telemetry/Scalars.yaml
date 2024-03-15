@@ -155,6 +155,24 @@ a11y:
     record_in_processes:
       - 'main'
 
+browser.backup:
+  prof_d_disk_space:
+    bug_numbers:
+      - 1884407
+    description: >
+      The total disk space available on the storage device that the profile
+      directory is stored on. To reduce fingerprintability, we round to the
+      nearest 10 megabytes and return the result in kilobytes.
+    expires: never
+    kind: uint
+    notification_emails:
+      - mconley@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
 # The following section contains the browser engagement scalars.
 browser.engagement:
   max_concurrent_tab_count:
