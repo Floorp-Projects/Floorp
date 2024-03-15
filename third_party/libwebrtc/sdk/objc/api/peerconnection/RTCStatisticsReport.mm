@@ -17,105 +17,91 @@ namespace webrtc {
 
 /** Converts a single value to a suitable NSNumber, NSString or NSArray containing NSNumbers
     or NSStrings, or NSDictionary of NSString keys to NSNumber values.*/
-NSObject *ValueFromStatsMember(const RTCStatsMemberInterface *member) {
-  if (member->is_defined()) {
-    switch (member->type()) {
-      case RTCStatsMemberInterface::kBool:
-        return [NSNumber numberWithBool:*member->cast_to<RTCStatsMember<bool>>()];
-      case RTCStatsMemberInterface::kInt32:
-        return [NSNumber numberWithInt:*member->cast_to<RTCStatsMember<int32_t>>()];
-      case RTCStatsMemberInterface::kUint32:
-        return [NSNumber numberWithUnsignedInt:*member->cast_to<RTCStatsMember<uint32_t>>()];
-      case RTCStatsMemberInterface::kInt64:
-        return [NSNumber numberWithLong:*member->cast_to<RTCStatsMember<int64_t>>()];
-      case RTCStatsMemberInterface::kUint64:
-        return [NSNumber numberWithUnsignedLong:*member->cast_to<RTCStatsMember<uint64_t>>()];
-      case RTCStatsMemberInterface::kDouble:
-        return [NSNumber numberWithDouble:*member->cast_to<RTCStatsMember<double>>()];
-      case RTCStatsMemberInterface::kString:
-        return [NSString stringForStdString:*member->cast_to<RTCStatsMember<std::string>>()];
-      case RTCStatsMemberInterface::kSequenceBool: {
-        std::vector<bool> sequence = *member->cast_to<RTCStatsMember<std::vector<bool>>>();
-        NSMutableArray *array = [NSMutableArray arrayWithCapacity:sequence.size()];
-        for (auto item : sequence) {
-          [array addObject:[NSNumber numberWithBool:item]];
-        }
-        return [array copy];
-      }
-      case RTCStatsMemberInterface::kSequenceInt32: {
-        std::vector<int32_t> sequence = *member->cast_to<RTCStatsMember<std::vector<int32_t>>>();
-        NSMutableArray<NSNumber *> *array = [NSMutableArray arrayWithCapacity:sequence.size()];
-        for (const auto &item : sequence) {
-          [array addObject:[NSNumber numberWithInt:item]];
-        }
-        return [array copy];
-      }
-      case RTCStatsMemberInterface::kSequenceUint32: {
-        std::vector<uint32_t> sequence = *member->cast_to<RTCStatsMember<std::vector<uint32_t>>>();
-        NSMutableArray<NSNumber *> *array = [NSMutableArray arrayWithCapacity:sequence.size()];
-        for (const auto &item : sequence) {
-          [array addObject:[NSNumber numberWithUnsignedInt:item]];
-        }
-        return [array copy];
-      }
-      case RTCStatsMemberInterface::kSequenceInt64: {
-        std::vector<int64_t> sequence = *member->cast_to<RTCStatsMember<std::vector<int64_t>>>();
-        NSMutableArray<NSNumber *> *array = [NSMutableArray arrayWithCapacity:sequence.size()];
-        for (const auto &item : sequence) {
-          [array addObject:[NSNumber numberWithLong:item]];
-        }
-        return [array copy];
-      }
-      case RTCStatsMemberInterface::kSequenceUint64: {
-        std::vector<uint64_t> sequence = *member->cast_to<RTCStatsMember<std::vector<uint64_t>>>();
-        NSMutableArray<NSNumber *> *array = [NSMutableArray arrayWithCapacity:sequence.size()];
-        for (const auto &item : sequence) {
-          [array addObject:[NSNumber numberWithUnsignedLong:item]];
-        }
-        return [array copy];
-      }
-      case RTCStatsMemberInterface::kSequenceDouble: {
-        std::vector<double> sequence = *member->cast_to<RTCStatsMember<std::vector<double>>>();
-        NSMutableArray<NSNumber *> *array = [NSMutableArray arrayWithCapacity:sequence.size()];
-        for (const auto &item : sequence) {
-          [array addObject:[NSNumber numberWithDouble:item]];
-        }
-        return [array copy];
-      }
-      case RTCStatsMemberInterface::kSequenceString: {
-        std::vector<std::string> sequence =
-            *member->cast_to<RTCStatsMember<std::vector<std::string>>>();
-        NSMutableArray<NSString *> *array = [NSMutableArray arrayWithCapacity:sequence.size()];
-        for (const auto &item : sequence) {
-          [array addObject:[NSString stringForStdString:item]];
-        }
-        return [array copy];
-      }
-      case RTCStatsMemberInterface::kMapStringUint64: {
-        std::map<std::string, uint64_t> map =
-            *member->cast_to<RTCStatsMember<std::map<std::string, uint64_t>>>();
-        NSMutableDictionary<NSString *, NSNumber *> *dictionary =
-            [NSMutableDictionary dictionaryWithCapacity:map.size()];
-        for (const auto &item : map) {
-          dictionary[[NSString stringForStdString:item.first]] = @(item.second);
-        }
-        return [dictionary copy];
-      }
-      case RTCStatsMemberInterface::kMapStringDouble: {
-        std::map<std::string, double> map =
-            *member->cast_to<RTCStatsMember<std::map<std::string, double>>>();
-        NSMutableDictionary<NSString *, NSNumber *> *dictionary =
-            [NSMutableDictionary dictionaryWithCapacity:map.size()];
-        for (const auto &item : map) {
-          dictionary[[NSString stringForStdString:item.first]] = @(item.second);
-        }
-        return [dictionary copy];
-      }
-      default:
-        RTC_DCHECK_NOTREACHED();
-    }
+NSObject *ValueFromStatsAttribute(const Attribute &attribute) {
+  if (!attribute.has_value()) {
+    return nil;
   }
-
+  if (attribute.holds_alternative<bool>()) {
+    return [NSNumber numberWithBool:attribute.get<bool>()];
+  } else if (attribute.holds_alternative<int32_t>()) {
+    return [NSNumber numberWithInt:attribute.get<int32_t>()];
+  } else if (attribute.holds_alternative<uint32_t>()) {
+    return [NSNumber numberWithUnsignedInt:attribute.get<uint32_t>()];
+  } else if (attribute.holds_alternative<int64_t>()) {
+    return [NSNumber numberWithLong:attribute.get<int64_t>()];
+  } else if (attribute.holds_alternative<uint64_t>()) {
+    return [NSNumber numberWithUnsignedLong:attribute.get<uint64_t>()];
+  } else if (attribute.holds_alternative<double>()) {
+    return [NSNumber numberWithDouble:attribute.get<double>()];
+  } else if (attribute.holds_alternative<std::string>()) {
+    return [NSString stringForStdString:attribute.get<std::string>()];
+  } else if (attribute.holds_alternative<std::vector<bool>>()) {
+    std::vector<bool> sequence = attribute.get<std::vector<bool>>();
+    NSMutableArray *array = [NSMutableArray arrayWithCapacity:sequence.size()];
+    for (auto item : sequence) {
+      [array addObject:[NSNumber numberWithBool:item]];
+    }
+    return [array copy];
+  } else if (attribute.holds_alternative<std::vector<int32_t>>()) {
+    std::vector<int32_t> sequence = attribute.get<std::vector<int32_t>>();
+    NSMutableArray<NSNumber *> *array = [NSMutableArray arrayWithCapacity:sequence.size()];
+    for (const auto &item : sequence) {
+      [array addObject:[NSNumber numberWithInt:item]];
+    }
+    return [array copy];
+  } else if (attribute.holds_alternative<std::vector<uint32_t>>()) {
+    std::vector<uint32_t> sequence = attribute.get<std::vector<uint32_t>>();
+    NSMutableArray<NSNumber *> *array = [NSMutableArray arrayWithCapacity:sequence.size()];
+    for (const auto &item : sequence) {
+      [array addObject:[NSNumber numberWithUnsignedInt:item]];
+    }
+    return [array copy];
+  } else if (attribute.holds_alternative<std::vector<int64_t>>()) {
+    std::vector<int64_t> sequence = attribute.get<std::vector<int64_t>>();
+    NSMutableArray<NSNumber *> *array = [NSMutableArray arrayWithCapacity:sequence.size()];
+    for (const auto &item : sequence) {
+      [array addObject:[NSNumber numberWithLong:item]];
+    }
+    return [array copy];
+  } else if (attribute.holds_alternative<std::vector<uint64_t>>()) {
+    std::vector<uint64_t> sequence = attribute.get<std::vector<uint64_t>>();
+    NSMutableArray<NSNumber *> *array = [NSMutableArray arrayWithCapacity:sequence.size()];
+    for (const auto &item : sequence) {
+      [array addObject:[NSNumber numberWithUnsignedLong:item]];
+    }
+    return [array copy];
+  } else if (attribute.holds_alternative<std::vector<double>>()) {
+    std::vector<double> sequence = attribute.get<std::vector<double>>();
+    NSMutableArray<NSNumber *> *array = [NSMutableArray arrayWithCapacity:sequence.size()];
+    for (const auto &item : sequence) {
+      [array addObject:[NSNumber numberWithDouble:item]];
+    }
+    return [array copy];
+  } else if (attribute.holds_alternative<std::vector<std::string>>()) {
+    std::vector<std::string> sequence = attribute.get<std::vector<std::string>>();
+    NSMutableArray<NSString *> *array = [NSMutableArray arrayWithCapacity:sequence.size()];
+    for (const auto &item : sequence) {
+      [array addObject:[NSString stringForStdString:item]];
+    }
+    return [array copy];
+  } else if (attribute.holds_alternative<std::map<std::string, uint64_t>>()) {
+    std::map<std::string, uint64_t> map = attribute.get<std::map<std::string, uint64_t>>();
+    NSMutableDictionary<NSString *, NSNumber *> *dictionary =
+        [NSMutableDictionary dictionaryWithCapacity:map.size()];
+    for (const auto &item : map) {
+      dictionary[[NSString stringForStdString:item.first]] = @(item.second);
+    }
+    return [dictionary copy];
+  } else if (attribute.holds_alternative<std::map<std::string, double>>()) {
+    std::map<std::string, double> map = attribute.get<std::map<std::string, double>>();
+    NSMutableDictionary<NSString *, NSNumber *> *dictionary =
+        [NSMutableDictionary dictionaryWithCapacity:map.size()];
+    for (const auto &item : map) {
+      dictionary[[NSString stringForStdString:item.first]] = @(item.second);
+    }
+    return [dictionary copy];
+  }
+  RTC_DCHECK_NOTREACHED();
   return nil;
 }
 }  // namespace webrtc
@@ -134,10 +120,11 @@ NSObject *ValueFromStatsMember(const RTCStatsMemberInterface *member) {
     _type = [NSString stringWithCString:statistics.type() encoding:NSUTF8StringEncoding];
 
     NSMutableDictionary<NSString *, NSObject *> *values = [NSMutableDictionary dictionary];
-    for (const webrtc::RTCStatsMemberInterface *member : statistics.Members()) {
-      NSObject *value = ValueFromStatsMember(member);
+    for (const auto &attribute : statistics.Attributes()) {
+      NSObject *value = ValueFromStatsAttribute(attribute);
       if (value) {
-        NSString *name = [NSString stringWithCString:member->name() encoding:NSUTF8StringEncoding];
+        NSString *name = [NSString stringWithCString:attribute.name()
+                                            encoding:NSUTF8StringEncoding];
         RTC_DCHECK(name.length > 0);
         RTC_DCHECK(!values[name]);
         values[name] = value;
