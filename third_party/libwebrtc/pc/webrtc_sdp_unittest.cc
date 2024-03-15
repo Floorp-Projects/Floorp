@@ -173,6 +173,7 @@ static const char kSdpFullString[] =
     "a=ice-ufrag:ufrag_voice\r\na=ice-pwd:pwd_voice\r\n"
     "a=mid:audio_content_name\r\n"
     "a=sendrecv\r\n"
+    "a=msid:local_stream_1 audio_track_id_1\r\n"
     "a=rtcp-mux\r\n"
     "a=rtcp-rsize\r\n"
     "a=crypto:1 AES_CM_128_HMAC_SHA1_32 "
@@ -182,7 +183,6 @@ static const char kSdpFullString[] =
     "a=rtpmap:103 ISAC/16000\r\n"
     "a=rtpmap:104 ISAC/32000\r\n"
     "a=ssrc:1 cname:stream_1_cname\r\n"
-    "a=ssrc:1 msid:local_stream_1 audio_track_id_1\r\n"
     "m=video 3457 RTP/SAVPF 120\r\n"
     "c=IN IP4 74.125.224.39\r\n"
     "a=rtcp:3456 IN IP4 74.125.224.39\r\n"
@@ -201,14 +201,13 @@ static const char kSdpFullString[] =
     "a=ice-ufrag:ufrag_video\r\na=ice-pwd:pwd_video\r\n"
     "a=mid:video_content_name\r\n"
     "a=sendrecv\r\n"
+    "a=msid:local_stream_1 video_track_id_1\r\n"
     "a=crypto:1 AES_CM_128_HMAC_SHA1_80 "
     "inline:d0RmdmcmVCspeEc3QGZiNWpVLFJhQX1cfHAwJSoj|2^20|1:32\r\n"
     "a=rtpmap:120 VP8/90000\r\n"
     "a=ssrc-group:FEC 2 3\r\n"
     "a=ssrc:2 cname:stream_1_cname\r\n"
-    "a=ssrc:2 msid:local_stream_1 video_track_id_1\r\n"
-    "a=ssrc:3 cname:stream_1_cname\r\n"
-    "a=ssrc:3 msid:local_stream_1 video_track_id_1\r\n";
+    "a=ssrc:3 cname:stream_1_cname\r\n";
 
 // SDP reference string without the candidates.
 static const char kSdpString[] =
@@ -224,6 +223,7 @@ static const char kSdpString[] =
     "a=ice-ufrag:ufrag_voice\r\na=ice-pwd:pwd_voice\r\n"
     "a=mid:audio_content_name\r\n"
     "a=sendrecv\r\n"
+    "a=msid:local_stream_1 audio_track_id_1\r\n"
     "a=rtcp-mux\r\n"
     "a=rtcp-rsize\r\n"
     "a=crypto:1 AES_CM_128_HMAC_SHA1_32 "
@@ -233,21 +233,19 @@ static const char kSdpString[] =
     "a=rtpmap:103 ISAC/16000\r\n"
     "a=rtpmap:104 ISAC/32000\r\n"
     "a=ssrc:1 cname:stream_1_cname\r\n"
-    "a=ssrc:1 msid:local_stream_1 audio_track_id_1\r\n"
     "m=video 9 RTP/SAVPF 120\r\n"
     "c=IN IP4 0.0.0.0\r\n"
     "a=rtcp:9 IN IP4 0.0.0.0\r\n"
     "a=ice-ufrag:ufrag_video\r\na=ice-pwd:pwd_video\r\n"
     "a=mid:video_content_name\r\n"
     "a=sendrecv\r\n"
+    "a=msid:local_stream_1 video_track_id_1\r\n"
     "a=crypto:1 AES_CM_128_HMAC_SHA1_80 "
     "inline:d0RmdmcmVCspeEc3QGZiNWpVLFJhQX1cfHAwJSoj|2^20|1:32\r\n"
     "a=rtpmap:120 VP8/90000\r\n"
     "a=ssrc-group:FEC 2 3\r\n"
     "a=ssrc:2 cname:stream_1_cname\r\n"
-    "a=ssrc:2 msid:local_stream_1 video_track_id_1\r\n"
-    "a=ssrc:3 cname:stream_1_cname\r\n"
-    "a=ssrc:3 msid:local_stream_1 video_track_id_1\r\n";
+    "a=ssrc:3 cname:stream_1_cname\r\n";
 
 // draft-ietf-mmusic-sctp-sdp-03
 static const char kSdpSctpDataChannelString[] =
@@ -363,6 +361,7 @@ static const char kBundleOnlySdpFullString[] =
     "generation 2\r\n"
     "a=ice-ufrag:ufrag_voice\r\na=ice-pwd:pwd_voice\r\n"
     "a=mid:audio_content_name\r\n"
+    "a=msid:local_stream_1 audio_track_id_1\r\n"
     "a=sendrecv\r\n"
     "a=rtcp-mux\r\n"
     "a=rtcp-rsize\r\n"
@@ -373,21 +372,19 @@ static const char kBundleOnlySdpFullString[] =
     "a=rtpmap:103 ISAC/16000\r\n"
     "a=rtpmap:104 ISAC/32000\r\n"
     "a=ssrc:1 cname:stream_1_cname\r\n"
-    "a=ssrc:1 msid:local_stream_1 audio_track_id_1\r\n"
     "m=video 0 RTP/SAVPF 120\r\n"
     "c=IN IP4 0.0.0.0\r\n"
     "a=rtcp:9 IN IP4 0.0.0.0\r\n"
     "a=bundle-only\r\n"
     "a=mid:video_content_name\r\n"
+    "a=msid:local_stream_1 video_track_id_1\r\n"
     "a=sendrecv\r\n"
     "a=crypto:1 AES_CM_128_HMAC_SHA1_80 "
     "inline:d0RmdmcmVCspeEc3QGZiNWpVLFJhQX1cfHAwJSoj|2^20|1:32\r\n"
     "a=rtpmap:120 VP8/90000\r\n"
     "a=ssrc-group:FEC 2 3\r\n"
     "a=ssrc:2 cname:stream_1_cname\r\n"
-    "a=ssrc:2 msid:local_stream_1 video_track_id_1\r\n"
-    "a=ssrc:3 cname:stream_1_cname\r\n"
-    "a=ssrc:3 msid:local_stream_1 video_track_id_1\r\n";
+    "a=ssrc:3 cname:stream_1_cname\r\n";
 
 // Plan B SDP reference string, with 2 streams, 2 audio tracks and 3 video
 // tracks.
@@ -1168,7 +1165,8 @@ class WebRtcSdpTest : public ::testing::Test {
                      absl::WrapUnique(audio_desc_));
     desc_.AddContent(kVideoContentName, MediaProtocolType::kRtp,
                      absl::WrapUnique(video_desc_));
-
+    desc_.set_msid_signaling(cricket::kMsidSignalingSsrcAttribute |
+                             cricket::kMsidSignalingSemantic);
     ASSERT_TRUE(jdesc_.Initialize(desc_.Clone(), jdesc_.session_id(),
                                   jdesc_.session_version()));
   }
@@ -3037,7 +3035,7 @@ TEST_F(WebRtcSdpTest, DeserializeSessionDescriptionWithoutEndLineBreak) {
   // Deserialize
   SdpParseError error;
   EXPECT_FALSE(webrtc::SdpDeserialize(sdp, &jdesc, &error));
-  const std::string lastline = "a=ssrc:3 msid:local_stream_1 video_track_id_1";
+  const std::string lastline = "a=ssrc:3 cname:stream_1_cname";
   EXPECT_EQ(lastline, error.line);
   EXPECT_EQ("Invalid SDP line.", error.description);
 }
@@ -3900,6 +3898,13 @@ TEST_F(WebRtcSdpTest, SerializeBothMediaSectionAndSsrcAttributeMsid) {
   EXPECT_NE(std::string::npos, sdp.find(kSsrcAttributeMsidLine));
 }
 
+TEST_F(WebRtcSdpTest, SerializeWithoutMsidSemantics) {
+  jdesc_.description()->set_msid_signaling(cricket::kMsidSignalingNotUsed);
+  std::string sdp = webrtc::SdpSerialize(jdesc_);
+
+  EXPECT_EQ(std::string::npos, sdp.find("a=msid-semantic:"));
+}
+
 // Regression test for integer overflow bug:
 // https://bugs.chromium.org/p/chromium/issues/detail?id=648071
 TEST_F(WebRtcSdpTest, DeserializeLargeBandwidthLimit) {
@@ -4466,16 +4471,15 @@ TEST_F(WebRtcSdpTest, DeserializeEmptySessionName) {
 
 // Simulcast malformed input test for invalid format.
 TEST_F(WebRtcSdpTest, DeserializeSimulcastNegative_EmptyAttribute) {
-  ExpectParseFailureWithNewLines(
-      "a=ssrc:3 msid:local_stream_1 video_track_id_1\r\n", "a=simulcast:\r\n",
-      "a=simulcast:");
+  ExpectParseFailureWithNewLines("a=ssrc:3 cname:stream_1_cname\r\n",
+                                 "a=simulcast:\r\n", "a=simulcast:");
 }
 
 // Tests that duplicate simulcast entries in the SDP triggers a parse failure.
 TEST_F(WebRtcSdpTest, DeserializeSimulcastNegative_DuplicateAttribute) {
-  ExpectParseFailureWithNewLines(
-      "a=ssrc:3 msid:local_stream_1 video_track_id_1\r\n",
-      "a=simulcast:send 1\r\na=simulcast:recv 2\r\n", "a=simulcast:");
+  ExpectParseFailureWithNewLines("a=ssrc:3 cname:stream_1_cname\r\n",
+                                 "a=simulcast:send 1\r\na=simulcast:recv 2\r\n",
+                                 "a=simulcast:");
 }
 
 // Validates that deserialization uses the a=simulcast: attribute
@@ -4809,6 +4813,7 @@ TEST_F(WebRtcSdpTest, DeserializeSessionDescriptionWithoutCname) {
   EXPECT_TRUE(SdpDeserialize(sdp_without_cname, &new_jdesc));
 
   audio_desc_->mutable_streams()[0].cname = "";
+  audio_desc_->mutable_streams()[0].ssrcs = {};
   ASSERT_TRUE(jdesc_.Initialize(desc_.Clone(), jdesc_.session_id(),
                                 jdesc_.session_version()));
   EXPECT_TRUE(CompareSessionDescription(jdesc_, new_jdesc));
