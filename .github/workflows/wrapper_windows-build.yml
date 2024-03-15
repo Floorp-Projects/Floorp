@@ -32,3 +32,5 @@ jobs:
       profgen: ${{inputs.profgen}}
       aarch64: ${{inputs.aarch64}}
       build32bit: ${{inputs.bit-32}}
+    secrets:
+      PAT: ${{ secrets.PAT }}

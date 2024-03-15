@@ -7,6 +7,10 @@
 
 on:
     workflow_call:
+      secrets:
+        PAT:
+          description: "Personal Access Token for checkout"
+          required: true
     workflow_dispatch:
 jobs:
   macOS-Universal-gen-profdata-and-jarlog:
@@ -27,6 +31,7 @@ jobs:
         name: Clone 🧬
         with:
           submodules: 'recursive'
+          token: ${{ secrets.PAT }}
 
       - name: Check Arch type
         shell: bash

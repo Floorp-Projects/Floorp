@@ -29,6 +29,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
       with:
+        token: ${{ secrets.PAT }}
         sparse-checkout: 'browser/config/version_display.txt'
     - name: Get Display Version
       id: get
@@ -42,6 +43,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
       with:
+        token: ${{ secrets.PAT }}
         sparse-checkout: 'browser/config/version.txt'
     - name: Get Inside Version
       id: get
@@ -69,13 +71,17 @@ jobs:
       profgen: true
       aarch64: false
       zstd: true
-
+    secrets:
+      PAT: ${{ secrets.PAT }}
+  
   Part2-win-x86_64-gen-profdata-and-jarlog:
     needs: Part1-win-x86_64-build-with-profgen-zstd
     uses: ./.github/workflows/window-generate-profile-data-and-jarlog.yml
     with:
       browser-artifact-name: floorp-windows-x86_64-build-with-profgen-zstd
       arch: x86_64
+    secrets:
+      PAT: ${{ secrets.PAT }}
 
   Part3-win-x86_64-build-with-profdata-and-jarlog:
     needs: [Part2-win-x86_64-gen-profdata-and-jarlog, get-buildid]
@@ -87,6 +93,8 @@ jobs:
       profdata_jarlog_artifact_name: "floorp-windows-x86_64-profdata-and-jarlog"
       out_artifact_name: please-use-this-floorp-windows-x86_64-package-build-with-profdata-and-jarlog
       MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
+    secrets:
+      PAT: ${{ secrets.PAT }}
 
   Part4-win-x86_64-gen-update-xml:
     needs: [get-display-version, get-buildid, get-inside-version, Part3-win-x86_64-build-with-profdata-and-jarlog]
@@ -135,6 +143,8 @@ jobs:
       beta: true
       mar: true
       MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
+    secrets:
+      PAT: ${{ secrets.PAT }}
 
   Part2-linux-x86_64-gen-update-xml:
     runs-on: 'ubuntu-latest'
@@ -181,10 +191,13 @@ jobs:
       profgen: true
     secrets:
       MACOS_CROSS_TOOLS_KEY: ${{ secrets.MACOS_CROSS_TOOLS_KEY }}
+      PAT: ${{ secrets.PAT }}
 
   Part2-macOS-Universal-gen-profdata-and-jarlog:
     uses: ./.github/workflows/macOS-generate-profile-data-and-jarlog.yml
     needs: Part1-macOS-Universal-build-with-profgen
+    secrets:
+      PAT: ${{ secrets.PAT }}
 
   Part3-macOS-Universal-build-with-profdata-and-jarlog:
     uses: ./.github/workflows/macOS-Universal.yml
@@ -195,6 +208,7 @@ jobs:
       MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
     secrets:
       MACOS_CROSS_TOOLS_KEY: ${{ secrets.MACOS_CROSS_TOOLS_KEY }}
+      PAT: ${{ secrets.PAT }}
 
   Part4-macOS-Universal-package-and-sign:
     uses: ./.github/workflows/macOS-integration.yml
@@ -214,6 +228,7 @@ jobs:
       macOS_AppleAccountId: ${{ secrets.macOS_AppleAccountId }}
       macOS_AppleTeamId: ${{ secrets.macOS_AppleTeamId }}
       macOS_AppleAccountAppSpecificPassword: ${{ secrets.macOS_AppleAccountAppSpecificPassword }}
+      PAT: ${{ secrets.PAT }}
 
 ##################################################################### Deployments #######################################################################################################
   Deployments:

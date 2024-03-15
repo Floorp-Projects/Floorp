@@ -36,6 +36,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
       with:
+        token: ${{ secrets.PAT }}
         sparse-checkout: 'browser/config/version_display.txt'
     - name: Get Display Version
       id: get
@@ -49,6 +50,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
       with:
+        token: ${{ secrets.PAT }}
         sparse-checkout: 'browser/config/version.txt'
     - name: Get Inside Version
       id: get
@@ -77,6 +79,8 @@ jobs:
       profgen: true
       aarch64: false
       zstd: true
+    secrets:
+      PAT: ${{ secrets.PAT }}
 
   Part2-win-x86_64-gen-profdata-and-jarlog:
     needs: Part1-win-x86_64-build-with-profgen-zstd
@@ -84,6 +88,8 @@ jobs:
     with:
       browser-artifact-name: floorp-windows-x86_64-build-with-profgen-zstd
       arch: x86_64
+    secrets:
+      PAT: ${{ secrets.PAT }}
 
   Part3-win-x86_64-build-with-profdata-and-jarlog:
     needs: [Part2-win-x86_64-gen-profdata-and-jarlog, get-buildid]
@@ -96,6 +102,8 @@ jobs:
       MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
       release-note-url: ${{ inputs.release-note-url }}
       release-note-url-ja: ${{ inputs.release-note-url-ja }}
+    secrets:
+      PAT: ${{ secrets.PAT }}
 
 ################################################################ ↑ Windows x86_64 Build ###################################################################################
 
@@ -106,6 +114,8 @@ jobs:
       aarch64: false
       build32bit: true
       zstd: true
+    secrets:
+      PAT: ${{ secrets.PAT }}
 
   Part2-win-x86-gen-profdata-and-jarlog:
     needs: Part1-win-x86-build-with-profgen-zstd
@@ -113,7 +123,9 @@ jobs:
     with:
       browser-artifact-name: floorp-windows-x86-build-with-profgen-zstd
       arch: x86
-
+    secrets:
+      PAT: ${{ secrets.PAT }}
+  
   Part3-win-x86-build-with-profdata-and-jarlog:
     needs: [get-buildid, Part2-win-x86-gen-profdata-and-jarlog]
     uses: ./.github/workflows/windows-build.yml
@@ -125,6 +137,8 @@ jobs:
       MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
       release-note-url: ${{ inputs.release-note-url }}
       release-note-url-ja: ${{ inputs.release-note-url-ja }}
+    secrets:
+      PAT: ${{ secrets.PAT }}
 
 ################################################################ ↑ Windows x86 Build ####################################################################################
 
@@ -138,6 +152,8 @@ jobs:
       MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
       release-note-url: ${{ inputs.release-note-url }}
       release-note-url-ja: ${{ inputs.release-note-url-ja }}
+    secrets:
+      PAT: ${{ secrets.PAT }}
 
 ################################################################ ↑ Linux x86_64 Build ####################################################################################
   Part1-linux-aarch64-build:
@@ -150,6 +166,8 @@ jobs:
       MOZ_BUILD_DATE: ${{needs.get-buildid.outputs.buildids}}
       release-note-url: ${{ inputs.release-note-url }}
       release-note-url-ja: ${{ inputs.release-note-url-ja }}
+    secrets:
+      PAT: ${{ secrets.PAT }}
 
 ################################################ ↑ Linux AArch64 Build ################################################
 
@@ -161,10 +179,13 @@ jobs:
       profgen: true
     secrets:
       MACOS_CROSS_TOOLS_KEY: ${{ secrets.MACOS_CROSS_TOOLS_KEY }}
+      PAT: ${{ secrets.PAT }}
 
   Part2-macOS-Universal-gen-profdata-and-jarlog:
     needs: Part1-macOS-Universal-build-with-profgen
     uses: ./.github/workflows/macOS-generate-profile-data-and-jarlog.yml
+    secrets:
+      PAT: ${{ secrets.PAT }}
 
   Part3-macOS-Universal-build-with-profdata-and-jarlog:
     uses: ./.github/workflows/macOS-Universal.yml
@@ -177,6 +198,7 @@ jobs:
       release-note-url-ja: ${{ inputs.release-note-url-ja }}
     secrets:
       MACOS_CROSS_TOOLS_KEY: ${{ secrets.MACOS_CROSS_TOOLS_KEY }}
+      PAT: ${{ secrets.PAT }}
 
   Part4-macOS-Universal-package-and-sign:
     uses: ./.github/workflows/macOS-integration.yml
@@ -196,6 +218,7 @@ jobs:
       macOS_AppleAccountId: ${{ secrets.macOS_AppleAccountId }}
       macOS_AppleTeamId: ${{ secrets.macOS_AppleTeamId }}
       macOS_AppleAccountAppSpecificPassword: ${{ secrets.macOS_AppleAccountAppSpecificPassword }}
+      PAT: ${{ secrets.PAT }}
 
 ####################################################################### macOS Universal #######################################################################
 

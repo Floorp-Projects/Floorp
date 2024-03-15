@@ -18,6 +18,10 @@ on:
           required: true
           default: 'x86_64'
           type: string
+      secrets:
+        PAT:
+          description: "Personal Access Token"
+          required: true
     workflow_dispatch:
       inputs:
         browser-artifact:
@@ -50,7 +54,8 @@ jobs:
         - uses: actions/checkout@v4
           name: Clone 🧬
           with:
-            submodules: 'recursive'    
+            submodules: 'recursive'
+            token: ${{ secrets.PAT }}
 
         - name: Setup 🪛
           run: |

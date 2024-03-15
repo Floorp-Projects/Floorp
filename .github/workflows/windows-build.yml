@@ -63,7 +63,10 @@ on:
         value: ${{jobs.win-build.outputs.mar_name}}
       mar_size:
         value: ${{jobs.win-build.outputs.mar_size}}
-
+    secrets:
+      PAT:
+        description: "Personal Access Token"
+        required: true
 jobs:
   win-build:
     runs-on: ubuntu-latest
@@ -117,6 +120,7 @@ jobs:
       name: Clone 🧬
       with:
         submodules: 'recursive'
+        token: ${{ secrets.PAT }}
 
     - name: Setup Disk & Swap Space 💿
       run: |

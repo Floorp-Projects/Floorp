@@ -42,6 +42,9 @@ on:
       MACOS_CROSS_TOOLS_KEY:
         description: macOS cross tools 7z password
         required: true
+      PAT:
+        description: "Personal Access Token"
+        required: true
   workflow_dispatch:
     inputs:
       profgen:
@@ -95,6 +98,7 @@ jobs:
       name: Clone 🧬
       with:
         submodules: 'recursive'
+        token: ${{ secrets.PAT }}
 
     - name: Setup Disk & Swap Space 💿
       run: |
