@@ -4,6 +4,7 @@
 
 import { ErrorBoundary } from "content-src/components/ErrorBoundary/ErrorBoundary";
 import { FluentOrText } from "content-src/components/FluentOrText/FluentOrText";
+import { SponsoredContentHighlight } from "../DiscoveryStreamComponents/FeatureHighlight/SponsoredContentHighlight";
 import React from "react";
 import { connect } from "react-redux";
 
@@ -48,7 +49,14 @@ export class _CollapsibleSection extends React.PureComponent {
   render() {
     const { isAnimating, maxHeight, menuButtonHover, showContextMenu } =
       this.state;
-    const { id, collapsed, learnMore, title, subTitle } = this.props;
+    const {
+      id,
+      collapsed,
+      learnMore,
+      title,
+      subTitle,
+      mayHaveSponsoredStories,
+    } = this.props;
     const active = menuButtonHover || showContextMenu;
     let bodyStyle;
     if (isAnimating && !collapsed) {
@@ -91,6 +99,13 @@ export class _CollapsibleSection extends React.PureComponent {
                 <FluentOrText message={subTitle} />
               </span>
             )}
+            {mayHaveSponsoredStories &&
+              this.props.spocMessageVariant === "variant-a" && (
+                <SponsoredContentHighlight
+                  position="inset-block-start inset-inline-start"
+                  dispatch={this.props.dispatch}
+                />
+              )}
           </h3>
         </div>
         <ErrorBoundary className="section-body-fallback">

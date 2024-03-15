@@ -1,0 +1,98 @@
+.feature-highlight {
+  position: relative;
+  // This is needed because in 1 case this is positioned under a link
+  // and in an element that's not clickable.
+  pointer-events: auto;
+  z-index: 1;
+
+  .feature-highlight-modal {
+    position: absolute;
+    display: flex;
+    opacity: 0;
+    visibility: hidden;
+    cursor: default;
+    justify-content: space-between;
+    border-radius: var(--border-radius-small);
+    background: var(--newtab-background-color-secondary);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 15%);
+    width: 298px;
+    transition: opacity 0.3s, visibility 0.3s;
+
+    .icon-dismiss {
+      flex-shrink: 0;
+      cursor: pointer;
+      background-size: $smaller-icon-size;
+      height: $smaller-icon-size;
+      width: $smaller-icon-size;
+      margin: var(--space-medium);
+      color: var(--icon-color);
+      border: none;
+    }
+
+    .message-icon {
+      margin-block: var(--space-large);
+      margin-inline: var(--space-large) var(--space-medium);
+    }
+
+    &.opened {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    &::after {
+      content: '';
+      position: absolute;
+      height: 24px;
+      width: 24px;
+      background: var(--newtab-background-color-secondary);
+      box-shadow: 4px 4px 6px -2px rgba(0, 0, 0, 15%);
+    }
+
+    &.inset-block-start {
+      inset-block-end: 100%;
+      margin-bottom: var(--space-xlarge);
+
+      &::after {
+        inset-block-end: -12px;
+        transform: rotate(45deg);
+      }
+    }
+
+    &.inset-block-end {
+      inset-block-start: 100%;
+      margin-top: var(--space-xlarge);
+
+      &::after {
+        inset-block-start: -12px;
+        transform: rotate(225deg);
+      }
+    }
+
+    &.inset-inline-start {
+      inset-inline-end: calc(var(--space-xxlarge) * -1);
+
+      &::after {
+        inset-inline-end: calc(var(--space-xxlarge) - 12px);
+      }
+    }
+
+    &.inset-inline-end {
+      inset-inline-start: calc(var(--space-xxlarge) * -1);
+
+      &::after {
+        inset-inline-start: calc(var(--space-xxlarge) - 12px);
+      }
+    }
+
+    p {
+      font-size: var(--font-size-small);
+      font-weight: normal;
+      margin: var(--space-large) 0;
+    }
+  }
+
+  .toggle-button {
+    border: none;
+    padding: 0;
+  }
+}

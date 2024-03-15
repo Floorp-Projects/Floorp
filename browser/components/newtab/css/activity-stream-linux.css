@@ -142,6 +142,9 @@ input {
 .icon.icon-info {
   background-image: url("chrome://global/skin/icons/info.svg");
 }
+.icon.icon-help {
+  background-image: url("chrome://global/skin/icons/help.svg");
+}
 .icon.icon-new-window {
   background-image: url("chrome://activity-stream/content/data/content/assets/glyph-newWindow-16.svg");
 }
@@ -1771,6 +1774,22 @@ main section {
 }
 .home-section .section .more-info-top-wrapper .check-wrapper {
   margin-top: 10px;
+}
+.home-section .sponsored-content-info {
+  display: flex;
+  gap: var(--space-small);
+  font-size: var(--font-size-small);
+  border-radius: var(--border-radius-medium);
+  background-color: var(--newtab-element-secondary-color);
+  padding: var(--space-small) var(--space-large);
+}
+.home-section .sponsored-content-info .icon-help {
+  flex-shrink: 0;
+  color: var(--color-accent-primary);
+  height: 20px;
+}
+.home-section .sponsored-content-info a {
+  color: var(--newtab-primary-action-background);
 }
 .home-section .divider {
   border-top: 1px var(--newtab-border-color) solid;
@@ -3552,9 +3571,9 @@ main section {
   box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.15);
 }
 .ds-card .ds-card-link {
+  position: absolute;
   height: 100%;
-  display: flex;
-  flex-direction: column;
+  width: 100%;
   text-decoration: none;
 }
 .ds-card .ds-card-link:hover header {
@@ -3648,7 +3667,7 @@ main section {
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  column-gap: var(--space-small);
+  gap: 0 var(--space-small);
   margin-top: 0;
 }
 .ds-card.ds-card-cta-button.variant-a .story-cta-button, .ds-card.ds-card-cta-button.variant-b .story-cta-button {
@@ -3692,7 +3711,10 @@ main section {
   color: var(--newtab-text-secondary-color);
   inset-inline-start: 0;
   margin-top: 12px;
+  display: flex;
+  gap: var(--space-large);
   position: relative;
+  pointer-events: none;
 }
 .story-footer .story-sponsored-label span {
   display: inline-block;
@@ -4226,6 +4248,112 @@ main section {
   outline: 0;
   box-shadow: 0 0 0 3px var(--newtab-primary-action-background-pocket-dimmed), 0 0 0 1px var(--newtab-primary-action-background-pocket);
   transition: box-shadow 150ms;
+}
+
+.feature-highlight {
+  position: relative;
+  pointer-events: auto;
+  z-index: 1;
+}
+.feature-highlight .feature-highlight-modal {
+  position: absolute;
+  display: flex;
+  opacity: 0;
+  visibility: hidden;
+  cursor: default;
+  justify-content: space-between;
+  border-radius: var(--border-radius-small);
+  background: var(--newtab-background-color-secondary);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  width: 298px;
+  transition: opacity 0.3s, visibility 0.3s;
+}
+.feature-highlight .feature-highlight-modal .icon-dismiss {
+  flex-shrink: 0;
+  cursor: pointer;
+  background-size: 12px;
+  height: 12px;
+  width: 12px;
+  margin: var(--space-medium);
+  color: var(--icon-color);
+  border: none;
+}
+.feature-highlight .feature-highlight-modal .message-icon {
+  margin-block: var(--space-large);
+  margin-inline: var(--space-large) var(--space-medium);
+}
+.feature-highlight .feature-highlight-modal.opened {
+  opacity: 1;
+  visibility: visible;
+}
+.feature-highlight .feature-highlight-modal::after {
+  content: "";
+  position: absolute;
+  height: 24px;
+  width: 24px;
+  background: var(--newtab-background-color-secondary);
+  box-shadow: 4px 4px 6px -2px rgba(0, 0, 0, 0.15);
+}
+.feature-highlight .feature-highlight-modal.inset-block-start {
+  inset-block-end: 100%;
+  margin-bottom: var(--space-xlarge);
+}
+.feature-highlight .feature-highlight-modal.inset-block-start::after {
+  inset-block-end: -12px;
+  transform: rotate(45deg);
+}
+.feature-highlight .feature-highlight-modal.inset-block-end {
+  inset-block-start: 100%;
+  margin-top: var(--space-xlarge);
+}
+.feature-highlight .feature-highlight-modal.inset-block-end::after {
+  inset-block-start: -12px;
+  transform: rotate(225deg);
+}
+.feature-highlight .feature-highlight-modal.inset-inline-start {
+  inset-inline-end: calc(var(--space-xxlarge) * -1);
+}
+.feature-highlight .feature-highlight-modal.inset-inline-start::after {
+  inset-inline-end: calc(var(--space-xxlarge) - 12px);
+}
+.feature-highlight .feature-highlight-modal.inset-inline-end {
+  inset-inline-start: calc(var(--space-xxlarge) * -1);
+}
+.feature-highlight .feature-highlight-modal.inset-inline-end::after {
+  inset-inline-start: calc(var(--space-xxlarge) - 12px);
+}
+.feature-highlight .feature-highlight-modal p {
+  font-size: var(--font-size-small);
+  font-weight: normal;
+  margin: var(--space-large) 0;
+}
+.feature-highlight .toggle-button {
+  border: none;
+  padding: 0;
+}
+
+.sponsored-content-highlight {
+  float: inline-end;
+}
+.sponsored-content-highlight .sponsored-message-icon {
+  background-image: url("chrome://activity-stream/content/data/content/assets/sponsor-message-icon.svg");
+  background-size: 18px;
+  height: 18px;
+  width: 18px;
+}
+.sponsored-content-highlight .icon-help {
+  cursor: pointer;
+  height: 20px;
+  width: 20px;
+  background-size: 20px;
+  color: var(--icon-color);
+  vertical-align: text-bottom;
+}
+.sponsored-content-highlight .feature-highlight-modal.inset-inline-start::after {
+  margin-inline-end: 11px;
+}
+.sponsored-content-highlight .feature-highlight-modal.inset-inline-end::after {
+  margin-inline-start: 9px;
 }
 
 .ASRouterButton {
