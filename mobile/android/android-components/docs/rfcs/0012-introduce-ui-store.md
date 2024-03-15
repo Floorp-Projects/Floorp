@@ -174,4 +174,3 @@ We have opportunities to iterate from here and consider if/how we want to pass a
 [0]: https://kotlinlang.org/docs/data-classes.html#copying
 [^1]: https://github.com/mozilla-mobile/android-components/issues/9424
 [2]: https://github.com/mozilla-mobile/android-components/issues/9424#issue-787013588
-
