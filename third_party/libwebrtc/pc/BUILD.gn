@@ -929,7 +929,6 @@ rtc_library("connection_context") {
   ]
   deps = [
     ":media_factory",
-    "../api:field_trials_view",
     "../api:libjingle_peerconnection_api",
     "../api:media_stream_interface",
     "../api:refcountedbase",
@@ -937,7 +936,6 @@ rtc_library("connection_context") {
     "../api:sequence_checker",
     "../api/environment",
     "../api/neteq:neteq_api",
-    "../api/transport:field_trial_based_config",
     "../api/transport:sctp_transport_factory_interface",
     "../media:rtc_data_sctp_transport_factory",
     "../media:rtc_media_base",

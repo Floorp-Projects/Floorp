@@ -109,7 +109,7 @@ class PeerConnectionFactory : public PeerConnectionFactoryInterface {
   }
 
   const FieldTrialsView& field_trials() const {
-    return context_->field_trials();
+    return context_->env().field_trials();
   }
 
   cricket::MediaEngineInterface* media_engine() const;
