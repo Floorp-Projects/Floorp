@@ -18,6 +18,7 @@
 #include <string>
 
 #include "absl/strings/string_view.h"
+#include "api/environment/environment.h"
 #include "api/rtc_event_log/rtc_event.h"
 #include "api/rtc_event_log/rtc_event_log.h"
 #include "api/rtc_event_log_output.h"
@@ -39,6 +40,7 @@ class RtcEventLogImpl final : public RtcEventLog {
   // bound to prevent an attack via unreasonable memory use.
   static constexpr size_t kMaxEventsInConfigHistory = 1000;
 
+  explicit RtcEventLogImpl(const Environment& env);
   RtcEventLogImpl(
       std::unique_ptr<RtcEventLogEncoder> encoder,
       TaskQueueFactory* task_queue_factory,
@@ -48,9 +50,6 @@ class RtcEventLogImpl final : public RtcEventLog {
   RtcEventLogImpl& operator=(const RtcEventLogImpl&) = delete;
 
   ~RtcEventLogImpl() override;
-
-  static std::unique_ptr<RtcEventLogEncoder> CreateEncoder(
-      EncodingType encoding_type);
 
   // TODO(eladalon): We should change these name to reflect that what we're
   // actually starting/stopping is the output of the log, not the log itself.
