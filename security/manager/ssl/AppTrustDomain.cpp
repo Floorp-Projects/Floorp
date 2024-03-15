@@ -33,6 +33,7 @@
 #include "addons-public.inc"
 #include "addons-public-intermediate.inc"
 #include "addons-stage.inc"
+#include "addons-stage-intermediate.inc"
 // Content signature root certificates
 #include "content-signature-dev.inc"
 #include "content-signature-local.inc"
@@ -86,8 +87,15 @@ nsresult AppTrustDomain::SetTrustedRoot(AppTrustedRoot trustedRoot) {
 
   // If we're verifying add-ons signed by our production root, we want to make
   // sure a valid intermediate certificate is available for path building.
+  // The intermediate bundled with signed XPI files may have expired and be
+  // considered invalid, which can result in bug 1548973.
   if (trustedRoot == nsIX509CertDB::AddonsPublicRoot) {
     mAddonsIntermediate = {addonsPublicIntermediate};
+  }
+  // Similarly to the above logic for production, we hardcode the intermediate
+  // stage certificate here, so that stage is equivalent to production.
+  if (trustedRoot == nsIX509CertDB::AddonsStageRoot) {
+    mAddonsIntermediate = {addonsStageIntermediate};
   }
 
   return NS_OK;
