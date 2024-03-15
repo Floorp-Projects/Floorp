@@ -573,13 +573,6 @@ aboutwelcome:
       fallbackPref: browser.aboutwelcome.newtabUrlBarFocus
       description: >-
         Should the urlbar be focused when the new tab page loads after new user onboarding
-    toolbarButtonEnabled:
-      type: boolean
-      setPref:
-        branch: user
-        pref: browser.aboutwelcome.toolbarButtonEnabled
-      description: >-
-        Should the return to about:welcome toolbar button be shown
 
 moreFromMozilla:
   description: "New page on about:preferences to suggest more Mozilla products"

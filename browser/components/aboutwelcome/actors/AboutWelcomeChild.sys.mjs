@@ -20,15 +20,6 @@ ChromeUtils.defineLazyGetter(lazy, "log", () => {
   return new Logger("AboutWelcomeChild");
 });
 
-const DID_SEE_FINAL_SCREEN_PREF = "browser.aboutwelcome.didSeeFinalScreen";
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "toolbarEntrypoint",
-  "browser.aboutwelcome.entrypoint",
-  ""
-);
-
 export class AboutWelcomeChild extends JSWindowActorChild {
   // Can be used to avoid accesses to the document/contentWindow after it's
   // destroyed, which may throw unhandled exceptions.
@@ -242,9 +233,6 @@ export class AboutWelcomeChild extends JSWindowActorChild {
    * @param {object} eventData
    */
   AWSendEventTelemetry(eventData) {
-    if (lazy.toolbarEntrypoint) {
-      eventData.event_context.entrypoint = lazy.toolbarEntrypoint;
-    }
     this.AWSendToParent("TELEMETRY_EVENT", {
       ...eventData,
       event_context: {
@@ -268,23 +256,9 @@ export class AboutWelcomeChild extends JSWindowActorChild {
     return this.wrapPromise(this.sendQuery("AWPage:WAIT_FOR_MIGRATION_CLOSE"));
   }
 
-  setDidSeeFinalScreen() {
-    this.AWSendToParent("SPECIAL_ACTION", {
-      type: "SET_PREF",
-      data: {
-        pref: {
-          name: DID_SEE_FINAL_SCREEN_PREF,
-          value: true,
-        },
-      },
-    });
-  }
-
   AWFinish() {
     const shouldFocusNewtabUrlBar =
       lazy.NimbusFeatures.aboutwelcome.getVariable("newtabUrlBarFocus");
-
-    this.setDidSeeFinalScreen();
 
     this.contentWindow.location.href = "about:home";
     if (shouldFocusNewtabUrlBar) {
