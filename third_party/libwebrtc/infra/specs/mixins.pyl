@@ -285,6 +285,13 @@
       }
     }
   },
+  'win11': {
+    'swarming': {
+      'dimensions': {
+        'os': 'Windows-11-22000'
+      }
+    }
+  },
   'x86-64': {
     'swarming': {
       'dimensions': {
