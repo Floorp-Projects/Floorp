@@ -33,6 +33,7 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/experiments/field_trial_parser.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/task_queue.h"
 #include "rtc_base/time_utils.h"
 #include "rtc_base/trace_event.h"
 #include "system_wrappers/include/denormal_disabler.h"
@@ -2086,8 +2087,8 @@ void AudioProcessingImpl::UpdateRecommendedInputVolumeLocked() {
 bool AudioProcessingImpl::CreateAndAttachAecDump(absl::string_view file_name,
                                                  int64_t max_log_size_bytes,
                                                  rtc::TaskQueue* worker_queue) {
-  std::unique_ptr<AecDump> aec_dump =
-      AecDumpFactory::Create(file_name, max_log_size_bytes, worker_queue);
+  std::unique_ptr<AecDump> aec_dump = AecDumpFactory::Create(
+      file_name, max_log_size_bytes, worker_queue->Get());
   if (!aec_dump) {
     return false;
   }
@@ -2100,7 +2101,7 @@ bool AudioProcessingImpl::CreateAndAttachAecDump(FILE* handle,
                                                  int64_t max_log_size_bytes,
                                                  rtc::TaskQueue* worker_queue) {
   std::unique_ptr<AecDump> aec_dump =
-      AecDumpFactory::Create(handle, max_log_size_bytes, worker_queue);
+      AecDumpFactory::Create(handle, max_log_size_bytes, worker_queue->Get());
   if (!aec_dump) {
     return false;
   }
