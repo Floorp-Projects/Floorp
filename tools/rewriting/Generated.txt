@@ -36,5 +36,6 @@ toolkit/components/uniffi-js/UniFFIFixtureScaffolding.cpp
 toolkit/components/uniffi-bindgen-gecko-js/fixtures/generated
 tools/browsertime/package.json
 tools/browsertime/package-lock.json
+tools/ts/error_list.json
 try_task_config.json
 xpcom/idl-parser/xpidl/fixtures/xpctest.d.json
