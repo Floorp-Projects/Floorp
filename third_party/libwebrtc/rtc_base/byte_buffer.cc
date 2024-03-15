@@ -139,10 +139,6 @@ bool ByteBufferReader::ReadBytes(rtc::ArrayView<uint8_t> val) {
   return ReadBytes(val.data(), val.size());
 }
 
-bool ByteBufferReader::ReadBytes(char* val, size_t len) {
-  return ReadBytes(reinterpret_cast<uint8_t*>(val), len);
-}
-
 // Private function supporting the other Read* functions.
 bool ByteBufferReader::ReadBytes(uint8_t* val, size_t len) {
   if (len > Length()) {

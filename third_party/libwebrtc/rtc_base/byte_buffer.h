@@ -100,12 +100,6 @@ class ByteBufferWriterT {
   void WriteBytes(const uint8_t* val, size_t len) {
     WriteBytesInternal(reinterpret_cast<const value_type*>(val), len);
   }
-  // For backwards compatibility: Write an array of char
-  // TODO(bugs.webrtc.org/15665): Remove when users converted
-  [[deprecated("Use WriteString")]] void WriteBytes(const char* val,
-                                                    size_t len) {
-    WriteBytesInternal(reinterpret_cast<const value_type*>(val), len);
-  }
 
   // Reserves the given number of bytes and returns a value_type* that can be
   // written into. Useful for functions that require a value_type* buffer and
@@ -163,14 +157,10 @@ class ByteBufferReader {
   ByteBufferReader(const ByteBufferReader&) = delete;
   ByteBufferReader& operator=(const ByteBufferReader&) = delete;
 
-  // Returns start of unprocessed data.
-  // TODO(bugs.webrtc.org/15661): Deprecate and remove.
-  const char* Data() const {
-    return reinterpret_cast<const char*>(bytes_ + start_);
-  }
+  const uint8_t* Data() const { return bytes_ + start_; }
   // Returns number of unprocessed bytes.
   size_t Length() const { return end_ - start_; }
-  // Returns a view of the unprocessed data.
+  // Returns a view of the unprocessed data. Does not move current position.
   rtc::ArrayView<const uint8_t> DataView() const {
     return rtc::ArrayView<const uint8_t>(bytes_ + start_, end_ - start_);
   }
@@ -183,11 +173,8 @@ class ByteBufferReader {
   bool ReadUInt32(uint32_t* val);
   bool ReadUInt64(uint64_t* val);
   bool ReadUVarint(uint64_t* val);
+  // Copies the val.size() next bytes into val.data().
   bool ReadBytes(rtc::ArrayView<uint8_t> val);
-  // For backwards compatibility.
-  // TODO(bugs.webrtc.org/15661): Deprecate and remove.
-  [[deprecated("Read using ArrayView")]] bool ReadBytes(char* val, size_t len);
-
   // Appends next `len` bytes from the buffer to `val`. Returns false
   // if there is less than `len` bytes left.
   bool ReadString(std::string* val, size_t len);

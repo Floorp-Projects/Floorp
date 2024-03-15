@@ -1213,7 +1213,7 @@ void PseudoTcp::parseOptions(const char* data, uint32_t len) {
 
     // Content of this option.
     if (opt_len <= buf.Length()) {
-      applyOption(kind, buf.Data(), opt_len);
+      applyOption(kind, reinterpret_cast<const char*>(buf.Data()), opt_len);
       buf.Consume(opt_len);
     } else {
       RTC_LOG(LS_ERROR) << "Invalid option length received.";
