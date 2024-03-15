@@ -761,9 +761,9 @@ std::vector<AudioCodec> WebRtcVoiceEngine::CollectCodecs(
       out.push_back(codec);
 
       if (codec.name == kOpusCodecName) {
-        std::string redFmtp =
+        std::string red_fmtp =
             rtc::ToString(codec.id) + "/" + rtc::ToString(codec.id);
-        map_format({kRedCodecName, 48000, 2, {{"", redFmtp}}}, &out);
+        map_format({kRedCodecName, 48000, 2, {{"", red_fmtp}}}, &out);
       }
     }
   }
@@ -1318,7 +1318,7 @@ bool WebRtcVoiceSendChannel::SetSenderParameters(
     }
   }
 
-  if (!SetMaxSendBitrate(params.max_bandwidth_bps)) {
+  if (send_codec_spec_ && !SetMaxSendBitrate(params.max_bandwidth_bps)) {
     return false;
   }
   return SetOptions(params.options);
@@ -1402,7 +1402,8 @@ bool WebRtcVoiceSendChannel::SetSendCodecs(
   }
 
   if (!send_codec_spec) {
-    return false;
+    // No codecs in common, bail out early.
+    return true;
   }
 
   RTC_DCHECK(voice_codec_info);
