@@ -1442,6 +1442,10 @@ struct RTC_EXPORT PeerConnectionFactoryDependencies final {
       transport_controller_send_factory;
   // Metronome used for decoding, must be called on the worker thread.
   std::unique_ptr<Metronome> decode_metronome;
+  // Metronome used for encoding, must be called on the worker thread.
+  // TODO(b/304158952): Consider merging into a single metronome for all codec
+  // usage.
+  std::unique_ptr<Metronome> encode_metronome;
 
   // Media specific dependencies. Unused when `media_factory == nullptr`.
   rtc::scoped_refptr<AudioDeviceModule> adm;

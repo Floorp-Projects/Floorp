@@ -92,6 +92,7 @@ rtc_library("video") {
     "../api/crypto:frame_decryptor_interface",
     "../api/crypto:options",
     "../api/environment",
+    "../api/metronome",
     "../api/task_queue",
     "../api/task_queue:pending_task_safety_flag",
     "../api/units:data_rate",
@@ -230,6 +231,7 @@ rtc_library("frame_cadence_adapter") {
   deps = [
     "../api:field_trials_view",
     "../api:sequence_checker",
+    "../api/metronome",
     "../api/task_queue",
     "../api/task_queue:pending_task_safety_flag",
     "../api/units:time_delta",
@@ -253,6 +255,7 @@ rtc_library("frame_cadence_adapter") {
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
     "//third_party/abseil-cpp/absl/base:core_headers",
+    "//third_party/abseil-cpp/absl/cleanup:cleanup",
   ]
 }
 

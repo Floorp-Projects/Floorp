@@ -49,6 +49,10 @@ void ForcedTickMetronome::Tick() {
 FakeMetronome::FakeMetronome(TimeDelta tick_period)
     : tick_period_(tick_period) {}
 
+void FakeMetronome::SetTickPeriod(TimeDelta tick_period) {
+  tick_period_ = tick_period;
+}
+
 void FakeMetronome::RequestCallOnNextTick(
     absl::AnyInvocable<void() &&> callback) {
   TaskQueueBase* current = TaskQueueBase::Current();
