@@ -216,6 +216,8 @@
         'dummy_audio_file_devices_no_protobuf':
         'dummy_audio_file_devices_no_protobuf_x86',
         'rtti_no_sctp': 'rtti_no_sctp_no_unicode_win_x86',
+      'win11_release': 'win_clang_release_bot_x64',
+      'win11_debug': 'win_clang_debug_bot_x64',
       },
     }
   },

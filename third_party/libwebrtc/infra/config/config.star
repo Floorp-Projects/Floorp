@@ -800,6 +800,8 @@ ci_builder("Win64 ASan", "Win Clang|x64|asan")
 try_builder("win_asan")
 ci_builder("Win (more configs)", "Win Clang|x86|more")
 try_builder("win_x86_more_configs")
+try_builder("win11_release", cq = None)
+try_builder("win11_debug", cq = None)
 chromium_try_builder("win_chromium_compile")
 chromium_try_builder("win_chromium_compile_dbg")
 
