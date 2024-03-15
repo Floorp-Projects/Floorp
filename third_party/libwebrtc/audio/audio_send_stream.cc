@@ -355,6 +355,7 @@ void AudioSendStream::Start() {
   if (sending_) {
     return;
   }
+  RTC_LOG(LS_INFO) << "AudioSendStream::Start: " << config_.rtp.ssrc;
   if (!config_.has_dscp && config_.min_bitrate_bps != -1 &&
       config_.max_bitrate_bps != -1 &&
       (allocate_audio_without_feedback_ || TransportSeqNumId(config_) != 0)) {
@@ -376,7 +377,7 @@ void AudioSendStream::Stop() {
   if (!sending_) {
     return;
   }
-
+  RTC_LOG(LS_INFO) << "AudioSendStream::Stop: " << config_.rtp.ssrc;
   RemoveBitrateObserver();
   channel_send_->StopSend();
   sending_ = false;

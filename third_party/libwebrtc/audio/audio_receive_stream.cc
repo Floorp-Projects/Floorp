@@ -186,6 +186,7 @@ void AudioReceiveStreamImpl::Start() {
   if (playing_) {
     return;
   }
+  RTC_LOG(LS_INFO) << "AudioReceiveStreamImpl::Start: " << remote_ssrc();
   channel_receive_->StartPlayout();
   playing_ = true;
   audio_state()->AddReceivingStream(this);
@@ -196,6 +197,7 @@ void AudioReceiveStreamImpl::Stop() {
   if (!playing_) {
     return;
   }
+  RTC_LOG(LS_INFO) << "AudioReceiveStreamImpl::Stop: " << remote_ssrc();
   channel_receive_->StopPlayout();
   playing_ = false;
   audio_state()->RemoveReceivingStream(this);
