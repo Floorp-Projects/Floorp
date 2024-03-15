@@ -600,6 +600,8 @@ class DesktopInstance(GeckoInstance):
         "browser.startup.homepage_override.mstone": "ignore",
         # Start with a blank page by default
         "browser.startup.page": 0,
+        # Unload the previously selected tab immediately
+        "browser.tabs.remote.unloadDelayMs": 0,
         # Don't unload tabs when available memory is running low
         "browser.tabs.unloadOnLowMemory": False,
         # Do not warn when closing all open tabs
