@@ -24,6 +24,7 @@ rtc_library("time_controller") {
   ]
 
   deps = [
+    "../../api:field_trials_view",
     "../../api:sequence_checker",
     "../../api:time_controller",
     "../../api/task_queue",

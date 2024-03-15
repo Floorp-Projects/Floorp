@@ -13,6 +13,7 @@
 
 #include <memory>
 
+#include "api/field_trials_view.h"
 #include "api/test/network_emulation_manager.h"
 
 namespace webrtc {
@@ -21,7 +22,8 @@ namespace webrtc {
 std::unique_ptr<NetworkEmulationManager> CreateNetworkEmulationManager(
     TimeMode time_mode = TimeMode::kRealTime,
     EmulatedNetworkStatsGatheringMode stats_gathering_mode =
-        EmulatedNetworkStatsGatheringMode::kDefault);
+        EmulatedNetworkStatsGatheringMode::kDefault,
+    const FieldTrialsView* field_trials = nullptr);
 
 }  // namespace webrtc
 

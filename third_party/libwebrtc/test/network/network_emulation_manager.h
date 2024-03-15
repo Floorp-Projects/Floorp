@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "api/array_view.h"
+#include "api/field_trials_view.h"
 #include "api/test/network_emulation_manager.h"
 #include "api/test/simulated_network.h"
 #include "api/test/time_controller.h"
@@ -38,7 +39,8 @@ class NetworkEmulationManagerImpl : public NetworkEmulationManager {
  public:
   NetworkEmulationManagerImpl(
       TimeMode mode,
-      EmulatedNetworkStatsGatheringMode stats_gathering_mode);
+      EmulatedNetworkStatsGatheringMode stats_gathering_mode,
+      const FieldTrialsView* field_trials = nullptr);
   ~NetworkEmulationManagerImpl();
 
   EmulatedNetworkNode* CreateEmulatedNode(BuiltInNetworkBehaviorConfig config,
