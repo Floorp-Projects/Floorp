@@ -125,6 +125,9 @@ ACTIVE_FIELD_TRIALS: FrozenSet[FieldTrial] = frozenset([
     FieldTrial('WebRTC-VideoEncoderSettings',
                'chromium:1406331',
                date(2024, 4, 1)),
+    FieldTrial('WebRTC-ZeroHertzQueueOverload',
+               'webrtc:332381',
+               date(2024, 7, 1)),
     # keep-sorted end
 ])  # yapf: disable
 

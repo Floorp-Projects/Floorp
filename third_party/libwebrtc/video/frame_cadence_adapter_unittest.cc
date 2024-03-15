@@ -39,9 +39,11 @@ namespace {
 
 using ::testing::_;
 using ::testing::ElementsAre;
+using ::testing::InSequence;
 using ::testing::Invoke;
 using ::testing::InvokeWithoutArgs;
 using ::testing::Mock;
+using ::testing::NiceMock;
 using ::testing::Pair;
 using ::testing::Values;
 
@@ -310,6 +312,7 @@ TEST(FrameCadenceAdapterTest, DelayedProcessingUnderHeavyContention) {
   }));
   adapter->OnFrame(CreateFrame());
   time_controller.SkipForwardBy(time_skipped);
+  time_controller.AdvanceTime(TimeDelta::Zero());
 }
 
 TEST(FrameCadenceAdapterTest, RepeatsFramesDelayed) {
@@ -1153,6 +1156,167 @@ TEST(FrameCadenceAdapterRealTimeTest,
     finalized.Set();
   });
   finalized.Wait(rtc::Event::kForever);
+}
+
+class ZeroHertzQueueOverloadTest : public ::testing::Test {
+ public:
+  static constexpr int kMaxFps = 10;
+
+  ZeroHertzQueueOverloadTest() {
+    Initialize();
+    metrics::Reset();
+  }
+
+  void Initialize() {
+    adapter_->Initialize(&callback_);
+    adapter_->SetZeroHertzModeEnabled(
+        FrameCadenceAdapterInterface::ZeroHertzModeParams{
+            /*num_simulcast_layers=*/1});
+    adapter_->OnConstraintsChanged(
+        VideoTrackSourceConstraints{/*min_fps=*/0, kMaxFps});
+    time_controller_.AdvanceTime(TimeDelta::Zero());
+  }
+
+  void ScheduleDelayed(TimeDelta delay, absl::AnyInvocable<void() &&> task) {
+    TaskQueueBase::Current()->PostDelayedTask(std::move(task), delay);
+  }
+
+  void PassFrame() { adapter_->OnFrame(CreateFrame()); }
+
+  void AdvanceTime(TimeDelta duration) {
+    time_controller_.AdvanceTime(duration);
+  }
+
+  void SkipForwardBy(TimeDelta duration) {
+    time_controller_.SkipForwardBy(duration);
+  }
+
+  Timestamp CurrentTime() { return time_controller_.GetClock()->CurrentTime(); }
+
+ protected:
+  test::ScopedKeyValueConfig field_trials_;
+  NiceMock<MockCallback> callback_;
+  GlobalSimulatedTimeController time_controller_{Timestamp::Zero()};
+  std::unique_ptr<FrameCadenceAdapterInterface> adapter_{
+      CreateAdapter(field_trials_, time_controller_.GetClock())};
+};
+
+TEST_F(ZeroHertzQueueOverloadTest,
+       ForwardedFramesDuringTooLongEncodeTimeAreFlaggedWithQueueOverload) {
+  InSequence s;
+  PassFrame();
+  EXPECT_CALL(callback_, OnFrame(_, false, _)).WillOnce(InvokeWithoutArgs([&] {
+    PassFrame();
+    PassFrame();
+    PassFrame();
+    SkipForwardBy(TimeDelta::Millis(301));
+  }));
+  EXPECT_CALL(callback_, OnFrame(_, true, _)).Times(3);
+  AdvanceTime(TimeDelta::Millis(100));
+  EXPECT_THAT(metrics::Samples("WebRTC.Screenshare.ZeroHz.QueueOverload"),
+              ElementsAre(Pair(false, 1), Pair(true, 3)));
+}
+
+TEST_F(ZeroHertzQueueOverloadTest,
+       ForwardedFramesAfterOverloadBurstAreNotFlaggedWithQueueOverload) {
+  InSequence s;
+  PassFrame();
+  EXPECT_CALL(callback_, OnFrame(_, false, _)).WillOnce(InvokeWithoutArgs([&] {
+    PassFrame();
+    PassFrame();
+    PassFrame();
+    SkipForwardBy(TimeDelta::Millis(301));
+  }));
+  EXPECT_CALL(callback_, OnFrame(_, true, _)).Times(3);
+  AdvanceTime(TimeDelta::Millis(100));
+  EXPECT_CALL(callback_, OnFrame(_, false, _)).Times(2);
+  PassFrame();
+  PassFrame();
+  AdvanceTime(TimeDelta::Millis(100));
+  EXPECT_THAT(metrics::Samples("WebRTC.Screenshare.ZeroHz.QueueOverload"),
+              ElementsAre(Pair(false, 3), Pair(true, 3)));
+}
+
+TEST_F(ZeroHertzQueueOverloadTest,
+       ForwardedFramesDuringNormalEncodeTimeAreNotFlaggedWithQueueOverload) {
+  InSequence s;
+  PassFrame();
+  EXPECT_CALL(callback_, OnFrame(_, false, _)).WillOnce(InvokeWithoutArgs([&] {
+    PassFrame();
+    PassFrame();
+    PassFrame();
+    // Long but not too long encode time.
+    SkipForwardBy(TimeDelta::Millis(99));
+  }));
+  EXPECT_CALL(callback_, OnFrame(_, false, _)).Times(3);
+  AdvanceTime(TimeDelta::Millis(199));
+  EXPECT_THAT(metrics::Samples("WebRTC.Screenshare.ZeroHz.QueueOverload"),
+              ElementsAre(Pair(false, 4)));
+}
+
+TEST_F(
+    ZeroHertzQueueOverloadTest,
+    AvoidSettingQueueOverloadAndSendRepeatWhenNoNewPacketsWhileTooLongEncode) {
+  // Receive one frame only and let OnFrame take such a long time that an
+  // overload normally is warranted. But the fact that no new frames arrive
+  // while being blocked should trigger a non-idle repeat to ensure that the
+  // video stream does not freeze and queue overload should be false.
+  PassFrame();
+  EXPECT_CALL(callback_, OnFrame(_, false, _))
+      .WillOnce(
+          InvokeWithoutArgs([&] { SkipForwardBy(TimeDelta::Millis(101)); }))
+      .WillOnce(InvokeWithoutArgs([&] {
+        // Non-idle repeat.
+        EXPECT_EQ(CurrentTime(), Timestamp::Zero() + TimeDelta::Millis(201));
+      }));
+  AdvanceTime(TimeDelta::Millis(100));
+  EXPECT_THAT(metrics::Samples("WebRTC.Screenshare.ZeroHz.QueueOverload"),
+              ElementsAre(Pair(false, 2)));
+}
+
+TEST_F(ZeroHertzQueueOverloadTest,
+       EnterFastRepeatAfterQueueOverloadWhenReceivedOnlyOneFrameDuringEncode) {
+  InSequence s;
+  // - Forward one frame frame during high load which triggers queue overload.
+  // - Receive only one new frame while being blocked and verify that the
+  //   cancelled repeat was for the first frame and not the second.
+  // - Fast repeat mode should happen after second frame.
+  PassFrame();
+  EXPECT_CALL(callback_, OnFrame(_, false, _)).WillOnce(InvokeWithoutArgs([&] {
+    PassFrame();
+    SkipForwardBy(TimeDelta::Millis(101));
+  }));
+  EXPECT_CALL(callback_, OnFrame(_, true, _));
+  AdvanceTime(TimeDelta::Millis(100));
+
+  // Fast repeats should take place from here on.
+  EXPECT_CALL(callback_, OnFrame(_, false, _)).Times(5);
+  AdvanceTime(TimeDelta::Millis(500));
+  EXPECT_THAT(metrics::Samples("WebRTC.Screenshare.ZeroHz.QueueOverload"),
+              ElementsAre(Pair(false, 6), Pair(true, 1)));
+}
+
+TEST_F(ZeroHertzQueueOverloadTest,
+       QueueOverloadIsDisabledForZeroHerzWhenKillSwitchIsEnabled) {
+  webrtc::test::ScopedKeyValueConfig field_trials(
+      field_trials_, "WebRTC-ZeroHertzQueueOverload/Disabled/");
+  adapter_.reset();
+  adapter_ = CreateAdapter(field_trials, time_controller_.GetClock());
+  Initialize();
+
+  // Same as ForwardedFramesDuringTooLongEncodeTimeAreFlaggedWithQueueOverload
+  // but this time the queue overload mechanism is disabled.
+  InSequence s;
+  PassFrame();
+  EXPECT_CALL(callback_, OnFrame(_, false, _)).WillOnce(InvokeWithoutArgs([&] {
+    PassFrame();
+    PassFrame();
+    PassFrame();
+    SkipForwardBy(TimeDelta::Millis(301));
+  }));
+  EXPECT_CALL(callback_, OnFrame(_, false, _)).Times(3);
+  AdvanceTime(TimeDelta::Millis(100));
+  EXPECT_EQ(metrics::NumSamples("WebRTC.Screenshare.ZeroHz.QueueOverload"), 0);
 }
 
 }  // namespace
