@@ -311,7 +311,8 @@ webrtc::RtpCodecParameters Codec::ToCodecParameters() const {
 }
 
 bool Codec::IsMediaCodec() const {
-  return !IsResiliencyCodec();
+  return !IsResiliencyCodec() &&
+         !absl::EqualsIgnoreCase(name, kComfortNoiseCodecName);
 }
 
 bool Codec::IsResiliencyCodec() const {

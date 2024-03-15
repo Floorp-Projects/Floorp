@@ -167,6 +167,8 @@ struct RTC_EXPORT RtpCodec {
            parameters == o.parameters;
   }
   bool operator!=(const RtpCodec& o) const { return !(*this == o); }
+  bool IsResiliencyCodec() const;
+  bool IsMediaCodec() const;
 };
 
 // RtpCodecCapability is to RtpCodecParameters as RtpCapabilities is to
