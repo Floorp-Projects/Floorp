@@ -15,36 +15,6 @@
 
 namespace mozilla {
 
-/* static */
-bool WMFCDMImpl::Supports(const nsAString& aKeySystem) {
-  MOZ_ASSERT(NS_IsMainThread());
-  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
-    return false;
-  }
-
-  static std::map<nsString, bool> sSupports;
-  static bool sSetRunOnShutdown = false;
-  if (!sSetRunOnShutdown) {
-    GetMainThreadSerialEventTarget()->Dispatch(
-        NS_NewRunnableFunction("WMFCDMImpl::Supports", [&] {
-          RunOnShutdown([&] { sSupports.clear(); },
-                        ShutdownPhase::XPCOMShutdown);
-        }));
-    sSetRunOnShutdown = true;
-  }
-
-  nsString key(aKeySystem);
-  if (const auto& s = sSupports.find(key); s != sSupports.end()) {
-    return s->second;
-  }
-
-  RefPtr<WMFCDMImpl> cdm = MakeRefPtr<WMFCDMImpl>(aKeySystem);
-  nsTArray<KeySystemConfig> configs;
-  bool s = cdm->GetCapabilities(configs);
-  sSupports[key] = s;
-  return s;
-}
-
 bool WMFCDMImpl::GetCapabilities(nsTArray<KeySystemConfig>& aOutConfigs) {
   MOZ_ASSERT(NS_IsMainThread());
   if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {

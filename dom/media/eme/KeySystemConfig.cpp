@@ -57,9 +57,10 @@ bool KeySystemConfig::Supports(const nsAString& aKeySystem) {
                       {nsCString(kWidevineExperimentKeySystemName)});
   }
 
-  if ((IsPlayReadyKeySystemAndSupported(aKeySystem) ||
-       IsWMFClearKeySystemAndSupported(aKeySystem)) &&
-      WMFCDMImpl::Supports(aKeySystem)) {
+  // PlayReady and WMF-based ClearKey are always installed, we don't need to
+  // download them.
+  if (IsPlayReadyKeySystemAndSupported(aKeySystem) ||
+      IsWMFClearKeySystemAndSupported(aKeySystem)) {
     return true;
   }
 #endif
