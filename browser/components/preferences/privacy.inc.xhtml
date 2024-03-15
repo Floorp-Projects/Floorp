@@ -985,11 +985,12 @@
       <html:input type="checkbox"
                 id="automaticallySubmitCrashesBox"
                 preference="browser.crashReports.unsubmittedCheck.autoSubmit2"/>
-      <label for="automaticallySubmitCrashesBox"
+      <html:label is="moz-label"
+                for="automaticallySubmitCrashesBox"
                 id="crashReporterLabel"
-                data-l10n-id="collection-backlogged-crash-reports-with-link">
-        <html:a data-l10n-name="crash-reports-link" id="crashReporterLearnMore" target="_blank"/>
-      </label>
+                data-l10n-id="collection-backlogged-crash-reports"
+                data-l10n-attrs="accesskey"/>
+      <html:a id="crashReporterLearnMore" is="moz-support-link" class="learnMore"/>
     </hbox>
 #endif
   </vbox>
