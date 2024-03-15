@@ -289,5 +289,5 @@ Target name `turnserver`. Used for unit tests.
 [rfc-5766]: https://tools.ietf.org/html/rfc5766
 [m80-log]: https://webrtc.googlesource.com/src/+log/branch-heads/3987
 [m80]: https://webrtc.googlesource.com/src/+/branch-heads/3987
-[fuzzers-test]: https://webrtc.googlesource.com/src/+/main/test/fuzzers/
+[fuzzers-dir]: https://webrtc.googlesource.com/src/+/main/test/fuzzers/
 [fuzzers]: https://webrtc.googlesource.com/src/+/main/docs/native-code/development/fuzzers/

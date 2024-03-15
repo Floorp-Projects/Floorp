@@ -19,7 +19,7 @@ platform specific tips on the [Android][webrtc-android-development] and
 ## Add new fuzzers
 Create a new `.cc` file in the [test/fuzzers][fuzzers] directory, use existing files as a guide.
 
-Add a new `webrtc_fuzzers_test` build rule in the [test/fuzzers/BUILD.gn][BUILD], use existing rules as a guide.
+Add a new `webrtc_fuzzers_test` build rule in the [test/fuzzers/BUILD.gn][BUILD.gn], use existing rules as a guide.
 
 Ensure it compiles and executes locally then add it to a gerrit CL and upload it for review, e.g.
 
