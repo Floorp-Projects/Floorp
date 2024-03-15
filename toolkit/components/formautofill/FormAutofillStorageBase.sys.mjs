@@ -141,7 +141,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource://gre/modules/shared/FormAutofillNameUtils.sys.mjs",
   FormAutofillUtils: "resource://gre/modules/shared/FormAutofillUtils.sys.mjs",
   OSKeyStore: "resource://gre/modules/OSKeyStore.sys.mjs",
-  PhoneNumber: "resource://autofill/phonenumberutils/PhoneNumber.sys.mjs",
+  PhoneNumber: "resource://gre/modules/shared/PhoneNumber.sys.mjs",
 });
 
 const CryptoHash = Components.Constructor(

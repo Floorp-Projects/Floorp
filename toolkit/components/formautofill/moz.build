@@ -27,6 +27,9 @@ EXTRA_JS_MODULES.shared += [
     "shared/FormStateManager.sys.mjs",
     "shared/HeuristicsRegExp.sys.mjs",
     "shared/LabelUtils.sys.mjs",
+    "shared/PhoneNumber.sys.mjs",
+    "shared/PhoneNumberMetaData.sys.mjs",
+    "shared/PhoneNumberNormalizer.sys.mjs",
 ]
 
 EXPORTS.mozilla += ["FormAutofillNative.h"]
