@@ -1,106 +1,143 @@
-From: Victor Boivie <boivie@webrtc.org>
-Date: Wed, 13 Dec 2023 12:41:55 +0100
-Subject: (cherry-pick-branch-heads/6167) dcsctp: Fix not using iteraters after
- NackItem
+From: Tony Herre <herre@google.com>
+Date: Mon, 18 Dec 2023 17:44:57 +0100
+Subject: (cherry-pick-branch-heads/6167) [121] Allow RTP retransmission for
+ cloned encoded Video Frames
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-OutstandingData::NackItem nacks a chunk, and if that chunk reaches its
-partial reliability critera, it will abandon the entire message. If that
-message hasn't been sent in full, a placeholder "end" message is
-inserted (see https://crbug.com/webrtc/12812). And when the message is
-inserted, any iterators may be invalidated (if e.g. std::deque would
-want to grow the deque).
+Fix the unintended disabling of RTP retransmissions for cloned encoded
+frames, caused by passing an infinite "expected_retransmission_time".
+Instead use a constant 10ms for now. For frames encoded locally, this is
+set from an estimate of the RTT, but we currently don't have access to
+that here (TODO added to pipe it through)
 
-So ensure that there are no iterators used after having called NackItem.
-By changing the interface of NackItem, and not passing an Item, but just
-the TSN, this is encouraged. NackAll was rewritten as a two-pass
-algorithm to first collect TSNs, then iterating that list, looking up
-the items in the second pass (constant complexity).
+If an integration is cloning and then sending frames it received, it's
+almost certainly resending received media to other peers on a local
+network, so 10ms is a fair upperbound.
 
-(cherry picked from commit 161d2c84528ec9eb0c19bfb51024bca54353abc4)
+Tested locally with Chrome on Mac, configuring packet drops & observing
+on chrome://webrtc-internals that retransmission packets are now sent.
+
+(cherry picked from commit 3e801c32086be59e502e276ff5d6beea42069582)
 
 No-Try: True
-Bug: chromium:1510364
-Change-Id: I5156b6d6a683184f290e71c98f16bc68ea2a562f
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/331320
+Bug: chromium:1512631
+Change-Id: I2483415dc7e0079f8a7b66f6607f4907698514c4
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/331900
 Reviewed-by: Harald Alvestrand <hta@webrtc.org>
-Commit-Queue: Victor Boivie <boivie@webrtc.org>
-Reviewed-by: Sam Zackrisson <saza@webrtc.org>
-Cr-Original-Commit-Position: refs/heads/main@{#41374}
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/331960
-Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
-Cr-Commit-Position: refs/branch-heads/6167@{#2}
+Commit-Queue: Tony Herre <herre@google.com>
+Cr-Original-Commit-Position: refs/heads/main@{#41405}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/332261
+Reviewed-by: Stefan Holmer <stefan@webrtc.org>
+Commit-Queue: Mirko Bonadei <mbonadei@webrtc.org>
+Reviewed-by: Henrik Boström <hbos@webrtc.org>
+Cr-Commit-Position: refs/branch-heads/6167@{#3}
 Cr-Branched-From: ece5cb83715dea85617114b6d4e981fdee2623ba-refs/heads/main@{#41315}
 ---
- net/dcsctp/tx/outstanding_data.cc | 16 +++++++++++-----
- net/dcsctp/tx/outstanding_data.h  |  9 +++++----
- 2 files changed, 16 insertions(+), 9 deletions(-)
+ ...sender_video_frame_transformer_delegate.cc | 33 ++++++++++++-------
+ ...deo_frame_transformer_delegate_unittest.cc |  8 ++---
+ 2 files changed, 25 insertions(+), 16 deletions(-)
 
-diff --git a/net/dcsctp/tx/outstanding_data.cc b/net/dcsctp/tx/outstanding_data.cc
-index 4972fc5f10..ca639abc54 100644
---- a/net/dcsctp/tx/outstanding_data.cc
-+++ b/net/dcsctp/tx/outstanding_data.cc
-@@ -240,9 +240,8 @@ void OutstandingData::NackBetweenAckBlocks(
-     for (UnwrappedTSN tsn = prev_block_last_acked.next_value();
-          tsn < cur_block_first_acked && tsn <= max_tsn_to_nack;
-          tsn = tsn.next_value()) {
--      Item& item = GetItem(tsn);
-       ack_info.has_packet_loss |=
--          NackItem(tsn, item, /*retransmit_now=*/false,
-+          NackItem(tsn, /*retransmit_now=*/false,
-                    /*do_fast_retransmit=*/!is_in_fast_recovery);
-     }
-     prev_block_last_acked = UnwrappedTSN::AddTo(cumulative_tsn_ack, block.end);
-@@ -255,9 +254,9 @@ void OutstandingData::NackBetweenAckBlocks(
- }
+diff --git a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
+index 26152df0f0..2bb71941f9 100644
+--- a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
++++ b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate.cc
+@@ -23,6 +23,12 @@
+ namespace webrtc {
+ namespace {
  
- bool OutstandingData::NackItem(UnwrappedTSN tsn,
--                               Item& item,
-                                bool retransmit_now,
-                                bool do_fast_retransmit) {
-+  Item& item = GetItem(tsn);
-   if (item.is_outstanding()) {
-     unacked_bytes_ -= GetSerializedChunkSize(item.data());
-     --unacked_items_;
-@@ -446,13 +445,20 @@ absl::optional<UnwrappedTSN> OutstandingData::Insert(
- 
- void OutstandingData::NackAll() {
-   UnwrappedTSN tsn = last_cumulative_tsn_ack_;
-+  // A two-pass algorithm is needed, as NackItem will invalidate iterators.
-+  std::vector<UnwrappedTSN> tsns_to_nack;
-   for (Item& item : outstanding_data_) {
-     tsn.Increment();
-     if (!item.is_acked()) {
--      NackItem(tsn, item, /*retransmit_now=*/true,
--               /*do_fast_retransmit=*/false);
-+      tsns_to_nack.push_back(tsn);
-     }
++// Using a reasonable default of 10ms for the retransmission delay for frames
++// not coming from this sender's encoder. This is usually taken from an
++// estimate of the RTT of the link,so 10ms should be a reasonable estimate for
++// frames being re-transmitted to a peer, probably on the same network.
++const TimeDelta kDefaultRetransmissionsTime = TimeDelta::Millis(10);
++
+ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
+  public:
+   TransformableVideoSenderFrame(const EncodedImage& encoded_image,
+@@ -209,15 +215,17 @@ void RTPSenderVideoFrameTransformerDelegate::SendVideo(
+     auto* transformed_video_frame =
+         static_cast<TransformableVideoFrameInterface*>(transformed_frame.get());
+     VideoFrameMetadata metadata = transformed_video_frame->Metadata();
+-    sender_->SendVideo(
+-        transformed_video_frame->GetPayloadType(), metadata.GetCodec(),
+-        transformed_video_frame->GetTimestamp(),
+-        /*capture_time=*/Timestamp::MinusInfinity(),
+-        transformed_video_frame->GetData(),
+-        transformed_video_frame->GetData().size(),
+-        RTPVideoHeader::FromMetadata(metadata),
+-        /*expected_retransmission_time=*/TimeDelta::PlusInfinity(),
+-        metadata.GetCsrcs());
++    // TODO(bugs.webrtc.org/14708): Use an actual RTT estimate for the
++    // retransmission time instead of a const default, in the same way as a
++    // locally encoded frame.
++    sender_->SendVideo(transformed_video_frame->GetPayloadType(),
++                       metadata.GetCodec(),
++                       transformed_video_frame->GetTimestamp(),
++                       /*capture_time=*/Timestamp::MinusInfinity(),
++                       transformed_video_frame->GetData(),
++                       transformed_video_frame->GetData().size(),
++                       RTPVideoHeader::FromMetadata(metadata),
++                       kDefaultRetransmissionsTime, metadata.GetCsrcs());
    }
-+
-+  for (UnwrappedTSN tsn : tsns_to_nack) {
-+    NackItem(tsn, /*retransmit_now=*/true,
-+             /*do_fast_retransmit=*/false);
-+  }
-+
-   RTC_DCHECK(IsConsistent());
  }
  
-diff --git a/net/dcsctp/tx/outstanding_data.h b/net/dcsctp/tx/outstanding_data.h
-index 82e78337b8..2a214975e6 100644
---- a/net/dcsctp/tx/outstanding_data.h
-+++ b/net/dcsctp/tx/outstanding_data.h
-@@ -330,10 +330,11 @@ class OutstandingData {
-   // many times so that it should be retransmitted, this will schedule it to be
-   // "fast retransmitted". This is only done just before going into fast
-   // recovery.
--  bool NackItem(UnwrappedTSN tsn,
--                Item& item,
--                bool retransmit_now,
--                bool do_fast_retransmit);
-+  //
-+  // Note that since nacking an item may result in it becoming abandoned, which
-+  // in turn could alter `outstanding_data_`, any iterators are invalidated
-+  // after having called this method.
-+  bool NackItem(UnwrappedTSN tsn, bool retransmit_now, bool do_fast_retransmit);
+@@ -254,13 +262,14 @@ std::unique_ptr<TransformableVideoFrameInterface> CloneSenderVideoFrame(
+                                  ? VideoFrameType::kVideoFrameKey
+                                  : VideoFrameType::kVideoFrameDelta;
+   // TODO(bugs.webrtc.org/14708): Fill in other EncodedImage parameters
+-
++  // TODO(bugs.webrtc.org/14708): Use an actual RTT estimate for the
++  // retransmission time instead of a const default, in the same way as a
++  // locally encoded frame.
+   VideoFrameMetadata metadata = original->Metadata();
+   RTPVideoHeader new_header = RTPVideoHeader::FromMetadata(metadata);
+   return std::make_unique<TransformableVideoSenderFrame>(
+       encoded_image, new_header, original->GetPayloadType(), new_header.codec,
+-      original->GetTimestamp(),
+-      /*expected_retransmission_time=*/TimeDelta::PlusInfinity(),
++      original->GetTimestamp(), kDefaultRetransmissionsTime,
+       original->GetSsrc(), metadata.GetCsrcs());
+ }
  
-   // Given that a message fragment, `item` has been abandoned, abandon all other
-   // fragments that share the same message - both never-before-sent fragments
+diff --git a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate_unittest.cc b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate_unittest.cc
+index ad00e6449f..6790fc3a71 100644
+--- a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate_unittest.cc
++++ b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate_unittest.cc
+@@ -83,7 +83,7 @@ class RtpSenderVideoFrameTransformerDelegateTest : public ::testing::Test {
+     delegate->TransformFrame(
+         /*payload_type=*/1, VideoCodecType::kVideoCodecVP8, /*rtp_timestamp=*/2,
+         encoded_image, RTPVideoHeader::FromMetadata(metadata),
+-        /*expected_retransmission_time=*/TimeDelta::PlusInfinity());
++        /*expected_retransmission_time=*/TimeDelta::Millis(10));
+     return frame;
+   }
+ 
+@@ -123,7 +123,7 @@ TEST_F(RtpSenderVideoFrameTransformerDelegateTest,
+   delegate->TransformFrame(
+       /*payload_type=*/1, VideoCodecType::kVideoCodecVP8, /*rtp_timestamp=*/2,
+       encoded_image, RTPVideoHeader(),
+-      /*expected_retransmission_time=*/TimeDelta::PlusInfinity());
++      /*expected_retransmission_time=*/TimeDelta::Millis(10));
+ }
+ 
+ TEST_F(RtpSenderVideoFrameTransformerDelegateTest,
+@@ -260,7 +260,7 @@ TEST_F(RtpSenderVideoFrameTransformerDelegateTest,
+       test_sender_,
+       SendVideo(payload_type, absl::make_optional(kVideoCodecVP8), timestamp,
+                 /*capture_time=*/Timestamp::MinusInfinity(), buffer, _, _,
+-                /*expected_retransmission_time=*/TimeDelta::PlusInfinity(),
++                /*expected_retransmission_time=*/TimeDelta::Millis(10),
+                 frame_csrcs))
+       .WillOnce(WithoutArgs([&] {
+         event.Set();
+@@ -310,7 +310,7 @@ TEST_F(RtpSenderVideoFrameTransformerDelegateTest,
+   delegate->TransformFrame(
+       /*payload_type=*/1, VideoCodecType::kVideoCodecVP8, /*rtp_timestamp=*/2,
+       encoded_image, RTPVideoHeader(),
+-      /*expected_retransmission_time=*/TimeDelta::PlusInfinity());
++      /*expected_retransmission_time=*/TimeDelta::Millis(10));
+ }
+ 
+ }  // namespace
