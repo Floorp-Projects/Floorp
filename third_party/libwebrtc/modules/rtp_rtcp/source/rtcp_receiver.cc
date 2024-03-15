@@ -1190,11 +1190,11 @@ std::vector<rtcp::TmmbItem> RTCPReceiver::TmmbrReceived() {
   MutexLock lock(&rtcp_receiver_lock_);
   std::vector<rtcp::TmmbItem> candidates;
 
-  Timestamp timeout = clock_->CurrentTime() - kTmmbrTimeoutInterval;
+  Timestamp now = clock_->CurrentTime();
 
   for (auto& kv : tmmbr_infos_) {
     for (auto it = kv.second.tmmbr.begin(); it != kv.second.tmmbr.end();) {
-      if (it->second.last_updated < timeout) {
+      if (now - it->second.last_updated > kTmmbrTimeoutInterval) {
         // Erase timeout entries.
         it = kv.second.tmmbr.erase(it);
       } else {
