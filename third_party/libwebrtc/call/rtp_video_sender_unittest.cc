@@ -146,8 +146,8 @@ class RtpVideoSenderTestFixture {
                         &stats_proxy_, frame_count_observer, &stats_proxy_),
         &transport_controller_, &env_.event_log(),
         &retransmission_rate_limiter_,
-        std::make_unique<FecControllerDefault>(time_controller_.GetClock()),
-        nullptr, CryptoOptions{}, frame_transformer, env_.field_trials(),
+        std::make_unique<FecControllerDefault>(env_), nullptr, CryptoOptions{},
+        frame_transformer, env_.field_trials(),
         time_controller_.GetTaskQueueFactory());
   }
 
