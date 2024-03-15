@@ -26,7 +26,7 @@ Cr-Branched-From: ece5cb83715dea85617114b6d4e981fdee2623ba-refs/heads/main@{#413
  1 file changed, 14 insertions(+), 12 deletions(-)
 
 diff --git a/modules/rtp_rtcp/source/rtp_format_vp9.cc b/modules/rtp_rtcp/source/rtp_format_vp9.cc
-index 15e059e85c..9ad4aa97c3 100644
+index 66b784705b..5e037859ce 100644
 --- a/modules/rtp_rtcp/source/rtp_format_vp9.cc
 +++ b/modules/rtp_rtcp/source/rtp_format_vp9.cc
 @@ -94,8 +94,8 @@ size_t RefIndicesLength(const RTPVideoHeaderVP9& hdr) {
@@ -93,7 +93,7 @@ index 15e059e85c..9ad4aa97c3 100644
  
    limits.max_payload_len -= header_size_;
    limits.first_packet_reduction_len += first_packet_extra_header_size_;
-@@ -357,8 +359,8 @@ bool RtpPacketizerVp9::NextPacket(RtpPacketToSend* packet) {
+@@ -358,8 +360,8 @@ bool RtpPacketizerVp9::NextPacket(RtpPacketToSend* packet) {
  
    // Ensure end_of_picture is always set on top spatial layer when it is not
    // dropped.
