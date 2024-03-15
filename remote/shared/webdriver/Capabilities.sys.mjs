@@ -445,6 +445,12 @@ export class Capabilities extends Map {
       ["timeouts", new Timeouts()],
       ["strictFileInteractability", false],
       ["unhandledPromptBehavior", UnhandledPromptBehavior.DismissAndNotify],
+      [
+        "userAgent",
+        Cc["@mozilla.org/network/protocol;1?name=http"].getService(
+          Ci.nsIHttpProtocolHandler
+        ).userAgent,
+      ],
       ["webSocketUrl", null],
 
       // proprietary
