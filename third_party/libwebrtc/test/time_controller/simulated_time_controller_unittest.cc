@@ -159,6 +159,8 @@ TEST(SimulatedTimeControllerTest, SkipsDelayedTaskForward) {
   }));
   main_thread->PostDelayedTask(fun.AsStdFunction(), shorter_duration);
   sim.SkipForwardBy(duration_during_which_nothing_runs);
+  // Run tasks that were pending during the skip.
+  sim.AdvanceTime(TimeDelta::Zero());
 }
 
 }  // namespace webrtc

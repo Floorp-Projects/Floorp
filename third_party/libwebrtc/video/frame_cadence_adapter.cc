@@ -103,7 +103,9 @@ class ZeroHertzAdapterMode : public AdapterMode {
   ZeroHertzAdapterMode(TaskQueueBase* queue,
                        Clock* clock,
                        FrameCadenceAdapterInterface::Callback* callback,
-                       double max_fps);
+                       double max_fps,
+                       std::atomic<int>& frames_scheduled_for_processing,
+                       bool zero_hertz_queue_overload);
   ~ZeroHertzAdapterMode() { refresh_frame_requester_.Stop(); }
 
   // Reconfigures according to parameters.
@@ -190,12 +192,20 @@ class ZeroHertzAdapterMode : public AdapterMode {
   // have arrived.
   void ProcessRepeatedFrameOnDelayedCadence(int frame_id)
       RTC_RUN_ON(sequence_checker_);
-  // Sends a frame, updating the timestamp to the current time.
-  void SendFrameNow(Timestamp post_time, const VideoFrame& frame) const
-      RTC_RUN_ON(sequence_checker_);
+  // Sends a frame, updating the timestamp to the current time. Also updates
+  // `queue_overload_count_` based on the time it takes to encode a frame and
+  // the amount of received frames while encoding. The `queue_overload`
+  // parameter in the OnFrame callback will be true while
+  // `queue_overload_count_` is larger than zero to allow the client to drop
+  // frames and thereby mitigate delay buildups.
+  // Repeated frames are sent with `post_time` set to absl::nullopt.
+  void SendFrameNow(absl::optional<Timestamp> post_time,
+                    const VideoFrame& frame) RTC_RUN_ON(sequence_checker_);
   // Returns the repeat duration depending on if it's an idle repeat or not.
   TimeDelta RepeatDuration(bool idle_repeat) const
       RTC_RUN_ON(sequence_checker_);
+  // Returns the frame duration taking potential restrictions into account.
+  TimeDelta FrameDuration() const RTC_RUN_ON(sequence_checker_);
   // Unless timer already running, starts repeatedly requesting refresh frames
   // after a grace_period. If a frame appears before the grace_period has
   // passed, the request is cancelled.
@@ -208,6 +218,14 @@ class ZeroHertzAdapterMode : public AdapterMode {
   // The configured max_fps.
   // TODO(crbug.com/1255737): support max_fps updates.
   const double max_fps_;
+
+  // Number of frames that are currently scheduled for processing on the
+  // `queue_`.
+  const std::atomic<int>& frames_scheduled_for_processing_;
+
+  // Can be used as kill-switch for the queue overload mechanism.
+  const bool zero_hertz_queue_overload_enabled_;
+
   // How much the incoming frame sequence is delayed by.
   const TimeDelta frame_delay_ = TimeDelta::Seconds(1) / max_fps_;
 
@@ -231,6 +249,9 @@ class ZeroHertzAdapterMode : public AdapterMode {
   // the max frame rate.
   absl::optional<TimeDelta> restricted_frame_delay_
       RTC_GUARDED_BY(sequence_checker_);
+  // Set in OnSendFrame to reflect how many future frames will be forwarded with
+  // the `queue_overload` flag set to true.
+  int queue_overload_count_ RTC_GUARDED_BY(sequence_checker_) = 0;
 
   ScopedTaskSafety safety_;
 };
@@ -359,6 +380,9 @@ class FrameCadenceAdapterImpl : public FrameCadenceAdapterInterface {
   // 0 Hz.
   const bool zero_hertz_screenshare_enabled_;
 
+  // Kill-switch for the queue overload mechanism in zero-hertz mode.
+  const bool frame_cadence_adapter_zero_hertz_queue_overload_enabled_;
+
   // The three possible modes we're under.
   absl::optional<PassthroughAdapterMode> passthrough_adapter_;
   absl::optional<ZeroHertzAdapterMode> zero_hertz_adapter_;
@@ -405,8 +429,15 @@ ZeroHertzAdapterMode::ZeroHertzAdapterMode(
     TaskQueueBase* queue,
     Clock* clock,
     FrameCadenceAdapterInterface::Callback* callback,
-    double max_fps)
-    : queue_(queue), clock_(clock), callback_(callback), max_fps_(max_fps) {
+    double max_fps,
+    std::atomic<int>& frames_scheduled_for_processing,
+    bool zero_hertz_queue_overload_enabled)
+    : queue_(queue),
+      clock_(clock),
+      callback_(callback),
+      max_fps_(max_fps),
+      frames_scheduled_for_processing_(frames_scheduled_for_processing),
+      zero_hertz_queue_overload_enabled_(zero_hertz_queue_overload_enabled) {
   sequence_checker_.Detach();
   MaybeStartRefreshFrameRequester();
 }
@@ -655,36 +686,70 @@ void ZeroHertzAdapterMode::ProcessRepeatedFrameOnDelayedCadence(int frame_id) {
 
   // Schedule another repeat before sending the frame off which could take time.
   ScheduleRepeat(frame_id, HasQualityConverged());
-  // Mark `post_time` with 0 to signal that this is a repeated frame.
-  SendFrameNow(Timestamp::Zero(), frame);
+  SendFrameNow(absl::nullopt, frame);
 }
 
-void ZeroHertzAdapterMode::SendFrameNow(Timestamp post_time,
-                                        const VideoFrame& frame) const {
+void ZeroHertzAdapterMode::SendFrameNow(absl::optional<Timestamp> post_time,
+                                        const VideoFrame& frame) {
   RTC_DCHECK_RUN_ON(&sequence_checker_);
   TRACE_EVENT0("webrtc", __func__);
-  Timestamp now = clock_->CurrentTime();
-  // Exclude repeated frames which are marked with zero as post time.
-  if (post_time != Timestamp::Zero()) {
-    TimeDelta delay = (now - post_time);
+
+  Timestamp encode_start_time = clock_->CurrentTime();
+  if (post_time.has_value()) {
+    TimeDelta delay = (encode_start_time - *post_time);
     RTC_HISTOGRAM_COUNTS_10000("WebRTC.Screenshare.ZeroHz.DelayMs", delay.ms());
   }
-  // TODO(crbug.com/1255737): ensure queue_overload is computed from current
-  // conditions on the encoder queue.
-  callback_->OnFrame(/*post_time=*/now,
-                     /*queue_overload=*/false, frame);
+
+  // Forward the frame and set `queue_overload` if is has been detected that it
+  // is not possible to deliver frames at the expected rate due to slow
+  // encoding.
+  callback_->OnFrame(/*post_time=*/encode_start_time, queue_overload_count_ > 0,
+                     frame);
+
+  // WebRTC-ZeroHertzQueueOverload kill-switch.
+  if (!zero_hertz_queue_overload_enabled_)
+    return;
+
+  // `queue_overload_count_` determines for how many future frames the
+  // `queue_overload` flag will be set and it is only increased if:
+  // o We are not already in an overload state.
+  // o New frames have been scheduled for processing on the queue while encoding
+  //   took place in OnFrame.
+  // o The duration of OnFrame is longer than the current frame duration.
+  // If all these conditions are fulfilled, `queue_overload_count_` is set to
+  // `frames_scheduled_for_processing_` and any pending repeat is canceled since
+  // new frames are available and the repeat is not needed.
+  // If the adapter is already in an overload state, simply decrease
+  // `queue_overload_count_` by one.
+  if (queue_overload_count_ == 0) {
+    const int frames_scheduled_for_processing =
+        frames_scheduled_for_processing_.load(std::memory_order_relaxed);
+    if (frames_scheduled_for_processing > 0) {
+      TimeDelta encode_time = clock_->CurrentTime() - encode_start_time;
+      if (encode_time > FrameDuration()) {
+        queue_overload_count_ = frames_scheduled_for_processing;
+        // Invalidates any outstanding repeat to avoid sending pending repeat
+        // directly after too long encode.
+        current_frame_id_++;
+      }
+    }
+  } else {
+    queue_overload_count_--;
+  }
+  RTC_HISTOGRAM_BOOLEAN("WebRTC.Screenshare.ZeroHz.QueueOverload",
+                        queue_overload_count_ > 0);
+}
+
+TimeDelta ZeroHertzAdapterMode::FrameDuration() const {
+  RTC_DCHECK_RUN_ON(&sequence_checker_);
+  return std::max(frame_delay_, restricted_frame_delay_.value_or(frame_delay_));
 }
 
 TimeDelta ZeroHertzAdapterMode::RepeatDuration(bool idle_repeat) const {
   RTC_DCHECK_RUN_ON(&sequence_checker_);
-  // By default use `frame_delay_` in non-idle repeat mode but use the
-  // restricted frame delay instead if it is set in
-  // UpdateVideoSourceRestrictions.
-  TimeDelta frame_delay =
-      std::max(frame_delay_, restricted_frame_delay_.value_or(frame_delay_));
   return idle_repeat
              ? FrameCadenceAdapterInterface::kZeroHertzIdleRepeatRatePeriod
-             : frame_delay;
+             : FrameDuration();
 }
 
 void ZeroHertzAdapterMode::MaybeStartRefreshFrameRequester() {
@@ -770,6 +835,8 @@ FrameCadenceAdapterImpl::FrameCadenceAdapterImpl(
       queue_(queue),
       zero_hertz_screenshare_enabled_(
           !field_trials.IsDisabled("WebRTC-ZeroHertzScreenshare")),
+      frame_cadence_adapter_zero_hertz_queue_overload_enabled_(
+          !field_trials.IsDisabled("WebRTC-ZeroHertzQueueOverload")),
       metronome_(metronome),
       worker_queue_(worker_queue) {}
 
@@ -943,8 +1010,10 @@ void FrameCadenceAdapterImpl::MaybeReconfigureAdapters(
     if (!was_zero_hertz_enabled || max_fps_has_changed) {
       RTC_LOG(LS_INFO) << "Zero hertz mode enabled (max_fps="
                        << source_constraints_->max_fps.value() << ")";
-      zero_hertz_adapter_.emplace(queue_, clock_, callback_,
-                                  source_constraints_->max_fps.value());
+      zero_hertz_adapter_.emplace(
+          queue_, clock_, callback_, source_constraints_->max_fps.value(),
+          frames_scheduled_for_processing_,
+          frame_cadence_adapter_zero_hertz_queue_overload_enabled_);
       zero_hertz_adapter_->UpdateVideoSourceRestrictions(
           restricted_max_frame_rate_);
       zero_hertz_adapter_created_timestamp_ = clock_->CurrentTime();
