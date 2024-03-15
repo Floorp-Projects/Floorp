@@ -648,11 +648,12 @@ Call::Call(Clock* clock,
       // must be made on `worker_thread_` (i.e. they're one and the same).
       network_thread_(config.network_task_queue_ ? config.network_task_queue_
                                                  : worker_thread_),
-      decode_sync_(config.metronome
-                       ? std::make_unique<DecodeSynchronizer>(clock_,
-                                                              config.metronome,
-                                                              worker_thread_)
-                       : nullptr),
+      decode_sync_(
+          config.decode_metronome
+              ? std::make_unique<DecodeSynchronizer>(clock_,
+                                                     config.decode_metronome,
+                                                     worker_thread_)
+              : nullptr),
       num_cpu_cores_(CpuInfo::DetectNumberOfCores()),
       call_stats_(new CallStats(clock_, worker_thread_)),
       bitrate_allocator_(new BitrateAllocator(this)),
