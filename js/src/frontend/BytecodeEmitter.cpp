@@ -9872,6 +9872,12 @@ static bool NeedsPrivateBrand(ParseNode* member) {
          !member->as<ClassMethod>().isStatic();
 }
 
+#ifdef ENABLE_DECORATORS
+static bool HasDecorators(ParseNode* member) {
+  return member->is<ClassMethod>() && member->as<ClassMethod>().decorators();
+}
+#endif
+
 mozilla::Maybe<MemberInitializers> BytecodeEmitter::setupMemberInitializers(
     ListNode* classMembers, FieldPlacement placement) {
   bool isStatic = placement == FieldPlacement::Static;
@@ -9879,6 +9885,9 @@ mozilla::Maybe<MemberInitializers> BytecodeEmitter::setupMemberInitializers(
   size_t numFields = 0;
   size_t numPrivateInitializers = 0;
   bool hasPrivateBrand = false;
+#ifdef ENABLE_DECORATORS
+  bool hasDecorators = false;
+#endif
   for (ParseNode* member : classMembers->contents()) {
     if (NeedsFieldInitializer(member, isStatic)) {
       numFields++;
@@ -9888,6 +9897,11 @@ mozilla::Maybe<MemberInitializers> BytecodeEmitter::setupMemberInitializers(
     } else if (NeedsPrivateBrand(member)) {
       hasPrivateBrand = true;
     }
+#ifdef ENABLE_DECORATORS
+    if (!hasDecorators && HasDecorators(member)) {
+      hasDecorators = true;
+    }
+#endif
   }
 
   // If there are more initializers than can be represented, return invalid.
@@ -9895,8 +9909,11 @@ mozilla::Maybe<MemberInitializers> BytecodeEmitter::setupMemberInitializers(
       MemberInitializers::MaxInitializers) {
     return Nothing();
   }
-  return Some(
-      MemberInitializers(hasPrivateBrand, numFields + numPrivateInitializers));
+  return Some(MemberInitializers(hasPrivateBrand,
+#ifdef ENABLE_DECORATORS
+                                 hasDecorators,
+#endif
+                                 numFields + numPrivateInitializers));
 }
 
 // Purpose of .fieldKeys:
@@ -10704,119 +10721,122 @@ bool BytecodeEmitter::emitInitializeInstanceMembers(
       }
     }
 #ifdef ENABLE_DECORATORS
-    // Decorators Proposal
-    // https://arai-a.github.io/ecma262-compare/?pr=2417&id=sec-initializeinstanceelements
-    // 4. For each element e of elements, do
-    //     4.a. If elementRecord.[[Kind]] is field or accessor, then
-    //         4.a.i. Perform ? InitializeFieldOrAccessor(O, elementRecord).
-    //
+    if (memberInitializers.hasDecorators) {
+      // Decorators Proposal
+      // https://arai-a.github.io/ecma262-compare/?pr=2417&id=sec-initializeinstanceelements
+      // 4. For each element e of elements, do
+      //     4.a. If elementRecord.[[Kind]] is field or accessor, then
+      //         4.a.i. Perform ? InitializeFieldOrAccessor(O, elementRecord).
+      //
 
-    // TODO: (See Bug 1817993) At the moment, we're applying the initialization
-    // logic in two steps. The pre-decorator initialization code runs, stores
-    // the initial value, and then we retrieve it here and apply the
-    // initializers added by decorators. We should unify these two steps.
-    if (!emitGetName(TaggedParserAtomIndex::WellKnown::dot_initializers_())) {
-      //              [stack] ARRAY
-      return false;
-    }
+      // TODO: (See Bug 1817993) At the moment, we're applying the
+      // initialization logic in two steps. The pre-decorator initialization
+      // code runs, stores the initial value, and then we retrieve it here and
+      // apply the initializers added by decorators. We should unify these two
+      // steps.
+      if (!emitGetName(TaggedParserAtomIndex::WellKnown::dot_initializers_())) {
+        //              [stack] ARRAY
+        return false;
+      }
 
-    if (!emit1(JSOp::Dup)) {
-      //          [stack] ARRAY ARRAY
-      return false;
-    }
+      if (!emit1(JSOp::Dup)) {
+        //          [stack] ARRAY ARRAY
+        return false;
+      }
 
-    if (!emitAtomOp(JSOp::GetProp,
-                    TaggedParserAtomIndex::WellKnown::length())) {
-      //          [stack] ARRAY LENGTH
-      return false;
-    }
+      if (!emitAtomOp(JSOp::GetProp,
+                      TaggedParserAtomIndex::WellKnown::length())) {
+        //          [stack] ARRAY LENGTH
+        return false;
+      }
 
-    if (!emitNumberOp(static_cast<double>(numInitializers))) {
-      //          [stack] ARRAY LENGTH INDEX
-      return false;
-    }
+      if (!emitNumberOp(static_cast<double>(numInitializers))) {
+        //          [stack] ARRAY LENGTH INDEX
+        return false;
+      }
 
-    InternalWhileEmitter wh(this);
-    // At this point, we have no context to determine offsets in the
-    // code for this while statement. Ideally, it would correspond to
-    // the field we're initializing.
-    if (!wh.emitCond()) {
-      //          [stack] ARRAY LENGTH INDEX
-      return false;
-    }
+      InternalWhileEmitter wh(this);
+      // At this point, we have no context to determine offsets in the
+      // code for this while statement. Ideally, it would correspond to
+      // the field we're initializing.
+      if (!wh.emitCond()) {
+        //          [stack] ARRAY LENGTH INDEX
+        return false;
+      }
 
-    if (!emit1(JSOp::Dup)) {
-      //          [stack] ARRAY LENGTH INDEX INDEX
-      return false;
-    }
+      if (!emit1(JSOp::Dup)) {
+        //          [stack] ARRAY LENGTH INDEX INDEX
+        return false;
+      }
 
-    if (!emitDupAt(2)) {
-      //          [stack] ARRAY LENGTH INDEX INDEX LENGTH
-      return false;
-    }
+      if (!emitDupAt(2)) {
+        //          [stack] ARRAY LENGTH INDEX INDEX LENGTH
+        return false;
+      }
 
-    if (!emit1(JSOp::Lt)) {
-      //          [stack] ARRAY LENGTH INDEX BOOL
-      return false;
-    }
+      if (!emit1(JSOp::Lt)) {
+        //          [stack] ARRAY LENGTH INDEX BOOL
+        return false;
+      }
 
-    if (!wh.emitBody()) {
-      //          [stack] ARRAY LENGTH INDEX
-      return false;
-    }
+      if (!wh.emitBody()) {
+        //          [stack] ARRAY LENGTH INDEX
+        return false;
+      }
 
-    if (!emitDupAt(2)) {
-      //          [stack] ARRAY LENGTH INDEX ARRAY
-      return false;
-    }
+      if (!emitDupAt(2)) {
+        //          [stack] ARRAY LENGTH INDEX ARRAY
+        return false;
+      }
 
-    if (!emitDupAt(1)) {
-      //          [stack] ARRAY LENGTH INDEX ARRAY INDEX
-      return false;
-    }
+      if (!emitDupAt(1)) {
+        //          [stack] ARRAY LENGTH INDEX ARRAY INDEX
+        return false;
+      }
 
-    // Retrieve initializers for this field
-    if (!emit1(JSOp::GetElem)) {
-      //            [stack] ARRAY LENGTH INDEX INITIALIZERS
-      return false;
-    }
+      // Retrieve initializers for this field
+      if (!emit1(JSOp::GetElem)) {
+        //            [stack] ARRAY LENGTH INDEX INITIALIZERS
+        return false;
+      }
 
-    // This is guaranteed to run after super(), so we don't need TDZ checks.
-    if (!emitGetName(TaggedParserAtomIndex::WellKnown::dot_this_())) {
-      //            [stack] ARRAY LENGTH INDEX INITIALIZERS THIS
-      return false;
-    }
+      // This is guaranteed to run after super(), so we don't need TDZ checks.
+      if (!emitGetName(TaggedParserAtomIndex::WellKnown::dot_this_())) {
+        //            [stack] ARRAY LENGTH INDEX INITIALIZERS THIS
+        return false;
+      }
 
-    if (!emit1(JSOp::Swap)) {
-      //            [stack] ARRAY LENGTH INDEX THIS INITIALIZERS
-      return false;
-    }
+      if (!emit1(JSOp::Swap)) {
+        //            [stack] ARRAY LENGTH INDEX THIS INITIALIZERS
+        return false;
+      }
 
-    DecoratorEmitter de(this);
-    if (!de.emitInitializeFieldOrAccessor()) {
-      //            [stack] ARRAY LENGTH INDEX
-      return false;
-    }
+      DecoratorEmitter de(this);
+      if (!de.emitInitializeFieldOrAccessor()) {
+        //            [stack] ARRAY LENGTH INDEX
+        return false;
+      }
 
-    if (!emit1(JSOp::Inc)) {
-      //            [stack] ARRAY LENGTH INDEX
-      return false;
-    }
+      if (!emit1(JSOp::Inc)) {
+        //            [stack] ARRAY LENGTH INDEX
+        return false;
+      }
 
-    if (!wh.emitEnd()) {
-      //          [stack] ARRAY LENGTH INDEX
-      return false;
-    }
+      if (!wh.emitEnd()) {
+        //          [stack] ARRAY LENGTH INDEX
+        return false;
+      }
 
-    if (!emitPopN(3)) {
-      //            [stack]
-      return false;
-    }
-    // 5. Return unused.
+      if (!emitPopN(3)) {
+        //            [stack]
+        return false;
+      }
+      // 5. Return unused.
 
-    if (!de.emitCallExtraInitializers(TaggedParserAtomIndex::WellKnown::
-                                          dot_instanceExtraInitializers_())) {
-      return false;
+      if (!de.emitCallExtraInitializers(TaggedParserAtomIndex::WellKnown::
+                                            dot_instanceExtraInitializers_())) {
+        return false;
+      }
     }
 #endif
   }
