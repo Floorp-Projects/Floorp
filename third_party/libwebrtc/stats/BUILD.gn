@@ -17,6 +17,7 @@ rtc_library("rtc_stats") {
   cflags = []
   sources = [
     "rtc_stats.cc",
+    "rtc_stats_member.cc",
     "rtc_stats_report.cc",
     "rtcstats_objects.cc",
   ]
