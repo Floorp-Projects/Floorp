@@ -461,6 +461,12 @@ add_task(async function test_fog_text_works_unusual_character() {
 });
 
 add_task(async function test_fog_object_works() {
+  if (!Glean.testOnly.balloons) {
+    // FIXME(bug 1883857): object metric type not available, e.g. in artifact builds.
+    // Skipping this test.
+    return;
+  }
+
   Assert.equal(
     undefined,
     Glean.testOnly.balloons.testGetValue(),
