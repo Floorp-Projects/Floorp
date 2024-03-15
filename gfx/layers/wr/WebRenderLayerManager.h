@@ -226,7 +226,6 @@ class WebRenderLayerManager final : public WindowRenderer {
   nsIWidget* MOZ_NON_OWNING_REF mWidget;
 
   RefPtr<WebRenderBridgeChild> mWrChild;
-  bool mHasFlushedThisChild;
 
   RefPtr<TransactionIdAllocator> mTransactionIdAllocator;
   TransactionId mLatestTransactionId;
