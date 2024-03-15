@@ -1,0 +1,62 @@
+.. _mozilla_projects_nss_nss_3_99_release_notes:
+
+NSS 3.99 release notes
+========================
+
+`Introduction <#introduction>`__
+--------------------------------
+
+.. container::
+
+   Network Security Services (NSS) 3.99 was released on *15th March 2024**.
+
+`Distribution Information <#distribution_information>`__
+--------------------------------------------------------
+
+.. container::
+
+   The HG tag is NSS_3_99_RTM. NSS 3.99 requires NSPR 4.35 or newer.
+
+   NSS 3.99 source distributions are available on ftp.mozilla.org for secure HTTPS download:
+
+   -  Source tarballs:
+      https://ftp.mozilla.org/pub/mozilla.org/security/nss/releases/NSS_3_99_RTM/src/
+
+   Other releases are available :ref:`mozilla_projects_nss_releases`.
+
+.. _changes_in_nss_3.99:
+
+`Changes in NSS 3.99 <#changes_in_nss_3.99>`__
+------------------------------------------------------------------
+
+.. container::
+
+ - Bug 1325335 - Removing check for message len in ed25519
+ - Bug 1884276 - add ed25519 to SECU_ecName2params.
+ - Bug 1325335 - add EdDSA wycheproof tests.
+ - Bug 1325335 - nss/lib layer code for EDDSA.
+ - Bug 1325335 - Adding EdDSA implementation.
+ - Bug 1881027 - Exporting Certificate Compression types
+ - Bug 1880857 - Updating ACVP docker to rust 1.74
+ - Bug 1325335 - Updating HACL* to 0f136f28935822579c244f287e1d2a1908a7e552
+ - Bug 1877730 - Add NSS_CMSRecipient_IsSupported.
+
+`Compatibility <#compatibility>`__
+----------------------------------
+
+.. container::
+
+   NSS 3.99 shared libraries are backwards-compatible with all older NSS 3.x shared
+   libraries. A program linked with older NSS 3.x shared libraries will work with
+   this new version of the shared libraries without recompiling or
+   relinking. Furthermore, applications that restrict their use of NSS APIs to the
+   functions listed in NSS Public Functions will remain compatible with future
+   versions of the NSS shared libraries.
+
+`Feedback <#feedback>`__
+------------------------
+
+.. container::
+
+   Bugs discovered should be reported by filing a bug report on
+   `bugzilla.mozilla.org <https://bugzilla.mozilla.org/enter_bug.cgi?product=NSS>`__ (product NSS).
