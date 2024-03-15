@@ -14,20 +14,6 @@
       },
     },
   },
-  'baremetal-pool': {
-    'swarming': {
-      'dimensions': {
-        'pool': 'WebRTC-baremetal',
-      },
-    },
-  },
-  'baremetal-try-pool': {
-    'swarming': {
-      'dimensions': {
-        'pool': 'WebRTC-baremetal-try',
-      },
-    },
-  },
   'cores-12': {
     'swarming': {
       'dimensions': {

@@ -95,9 +95,6 @@
       'shared_screencast_stream_test': {},
     },
     'desktop_tests_try_server_specific': {
-      'video_capture_tests': {
-        'mixins': ['baremetal-try-pool'],
-      },
       'video_codec_perf_tests': {
         'mixins': ['quick-perf-tests', 'resultdb-gtest-json-format'],
       },
@@ -155,7 +152,6 @@
       'system_wrappers_unittests': {},
       'test_support_unittests': {},
       'tools_unittests': {},
-      'video_capture_tests': {},
       'video_engine_tests': {
         'mixins': ['shards-4'],
       },
@@ -192,7 +188,6 @@
       'system_wrappers_unittests': {},
       'test_support_unittests': {},
       'tools_unittests': {},
-      'video_capture_tests': {},
       'video_engine_tests': {
         'mixins': ['shards-4'],
       },
@@ -231,11 +226,6 @@
         ],
       },
     },
-    'video_capture_tests': {
-      'video_capture_tests': {
-        'mixins': ['baremetal-pool'],
-      }
-    },
   },
 
   ##############################################################################
@@ -250,19 +240,10 @@
       'desktop_tests',
       'desktop_tests_try_server_specific',
     ],
-    'desktop_tests_with_video_capture': [
-      'desktop_tests',
-      'video_capture_tests',
-    ],
     'linux_desktop_tests_tryserver': [
       'desktop_tests',
       'desktop_tests_linux_specific',
       'desktop_tests_try_server_specific',
-    ],
-    'linux_desktop_tests_with_video_capture': [
-      'desktop_tests',
-      'desktop_tests_linux_specific',
-      'video_capture_tests',
     ],
     'linux_tests': [
       'desktop_tests',
