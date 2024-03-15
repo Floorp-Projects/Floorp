@@ -17,9 +17,9 @@
 #include <vector>
 
 #include "absl/types/optional.h"
+#include "api/environment/environment.h"
 #include "api/sequence_checker.h"
 #include "api/task_queue/pending_task_safety_flag.h"
-#include "api/task_queue/task_queue_factory.h"
 #include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
 #include "api/video/recordable_encoded_frame.h"
@@ -33,7 +33,6 @@
 #include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/task_queue.h"
 #include "rtc_base/thread_annotations.h"
-#include "system_wrappers/include/clock.h"
 #include "video/receive_statistics_proxy.h"
 #include "video/rtp_streams_synchronizer2.h"
 #include "video/rtp_video_stream_receiver2.h"
@@ -94,17 +93,15 @@ class VideoReceiveStream2
   // configured.
   static constexpr size_t kBufferedEncodedFramesMaxSize = 60;
 
-  VideoReceiveStream2(TaskQueueFactory* task_queue_factory,
+  VideoReceiveStream2(const Environment& env,
                       Call* call,
                       int num_cpu_cores,
                       PacketRouter* packet_router,
                       VideoReceiveStreamInterface::Config config,
                       CallStats* call_stats,
-                      Clock* clock,
                       std::unique_ptr<VCMTiming> timing,
                       NackPeriodicProcessor* nack_periodic_processor,
-                      DecodeSynchronizer* decode_sync,
-                      RtcEventLog* event_log);
+                      DecodeSynchronizer* decode_sync);
   // Destruction happens on the worker thread. Prior to destruction the caller
   // must ensure that a registration with the transport has been cleared. See
   // `RegisterWithTransport` for details.
@@ -253,13 +250,12 @@ class VideoReceiveStream2
   // on the network thread, this comment will be deleted.
   RTC_NO_UNIQUE_ADDRESS SequenceChecker packet_sequence_checker_;
 
-  TaskQueueFactory* const task_queue_factory_;
+  const Environment env_;
 
   TransportAdapter transport_adapter_;
   const VideoReceiveStreamInterface::Config config_;
   const int num_cpu_cores_;
   Call* const call_;
-  Clock* const clock_;
 
   CallStats* const call_stats_;
 
