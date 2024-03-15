@@ -660,7 +660,13 @@ class MDefinition : public MNode {
   virtual HashNumber valueHash() const;
   virtual bool congruentTo(const MDefinition* ins) const { return false; }
   const MDefinition* skipObjectGuards() const;
+
+  // Note that, for a call `congruentIfOperandsEqual(ins)` inside some class
+  // MFoo, if `true` is returned then we are ensured that `ins` is also an
+  // MFoo, so it is safe to do `ins->toMFoo()` without first checking whether
+  // `ins->isMFoo()`.
   bool congruentIfOperandsEqual(const MDefinition* ins) const;
+
   virtual MDefinition* foldsTo(TempAllocator& alloc);
   virtual void analyzeEdgeCasesForward();
   virtual void analyzeEdgeCasesBackward();
@@ -10886,6 +10892,8 @@ class MWasmReinterpret : public MUnaryInstruction, public NoTypePolicy::Data {
 
   AliasSet getAliasSet() const override { return AliasSet::None(); }
   bool congruentTo(const MDefinition* ins) const override {
+    // No need to check type() here, because congruentIfOperandsEqual will
+    // check it.
     return congruentIfOperandsEqual(ins);
   }
 
@@ -10945,7 +10953,8 @@ class MWasmTernarySimd128 : public MTernaryInstruction,
 
   AliasSet getAliasSet() const override { return AliasSet::None(); }
   bool congruentTo(const MDefinition* ins) const override {
-    return congruentIfOperandsEqual(ins);
+    return congruentIfOperandsEqual(ins) &&
+           simdOp() == ins->toWasmTernarySimd128()->simdOp();
   }
 #ifdef ENABLE_WASM_SIMD
   MDefinition* foldsTo(TempAllocator& alloc) override;
@@ -10986,8 +10995,8 @@ class MWasmBinarySimd128 : public MBinaryInstruction,
 
   AliasSet getAliasSet() const override { return AliasSet::None(); }
   bool congruentTo(const MDefinition* ins) const override {
-    return ins->toWasmBinarySimd128()->simdOp() == simdOp_ &&
-           congruentIfOperandsEqual(ins);
+    return congruentIfOperandsEqual(ins) &&
+           ins->toWasmBinarySimd128()->simdOp() == simdOp_;
   }
 #ifdef ENABLE_WASM_SIMD
   MDefinition* foldsTo(TempAllocator& alloc) override;
@@ -11023,8 +11032,8 @@ class MWasmBinarySimd128WithConstant : public MUnaryInstruction,
 
   AliasSet getAliasSet() const override { return AliasSet::None(); }
   bool congruentTo(const MDefinition* ins) const override {
-    return ins->toWasmBinarySimd128WithConstant()->simdOp() == simdOp_ &&
-           congruentIfOperandsEqual(ins) &&
+    return congruentIfOperandsEqual(ins) &&
+           ins->toWasmBinarySimd128WithConstant()->simdOp() == simdOp_ &&
            rhs_.bitwiseEqual(ins->toWasmBinarySimd128WithConstant()->rhs());
   }
 
@@ -11056,9 +11065,9 @@ class MWasmReplaceLaneSimd128 : public MBinaryInstruction,
 
   AliasSet getAliasSet() const override { return AliasSet::None(); }
   bool congruentTo(const MDefinition* ins) const override {
-    return ins->toWasmReplaceLaneSimd128()->simdOp() == simdOp_ &&
-           ins->toWasmReplaceLaneSimd128()->laneIndex() == laneIndex_ &&
-           congruentIfOperandsEqual(ins);
+    return congruentIfOperandsEqual(ins) &&
+           ins->toWasmReplaceLaneSimd128()->simdOp() == simdOp_ &&
+           ins->toWasmReplaceLaneSimd128()->laneIndex() == laneIndex_;
   }
 
   uint32_t laneIndex() const { return laneIndex_; }
@@ -11084,8 +11093,8 @@ class MWasmScalarToSimd128 : public MUnaryInstruction,
 
   AliasSet getAliasSet() const override { return AliasSet::None(); }
   bool congruentTo(const MDefinition* ins) const override {
-    return ins->toWasmScalarToSimd128()->simdOp() == simdOp_ &&
-           congruentIfOperandsEqual(ins);
+    return congruentIfOperandsEqual(ins) &&
+           ins->toWasmScalarToSimd128()->simdOp() == simdOp_;
   }
 #ifdef ENABLE_WASM_SIMD
   MDefinition* foldsTo(TempAllocator& alloc) override;
@@ -11114,9 +11123,9 @@ class MWasmReduceSimd128 : public MUnaryInstruction, public NoTypePolicy::Data {
 
   AliasSet getAliasSet() const override { return AliasSet::None(); }
   bool congruentTo(const MDefinition* ins) const override {
-    return ins->toWasmReduceSimd128()->simdOp() == simdOp_ &&
-           ins->toWasmReduceSimd128()->imm() == imm_ &&
-           congruentIfOperandsEqual(ins);
+    return congruentIfOperandsEqual(ins) &&
+           ins->toWasmReduceSimd128()->simdOp() == simdOp_ &&
+           ins->toWasmReduceSimd128()->imm() == imm_;
   }
 #ifdef ENABLE_WASM_SIMD
   MDefinition* foldsTo(TempAllocator& alloc) override;
