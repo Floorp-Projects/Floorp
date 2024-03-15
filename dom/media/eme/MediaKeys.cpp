@@ -428,7 +428,8 @@ class MediaKeysGMPCrashHelper : public GMPCrashHelper {
 
 already_AddRefed<CDMProxy> MediaKeys::CreateCDMProxy() {
   const bool isHardwareDecryptionSupported =
-      IsHardwareDecryptionSupported(mConfig);
+      IsHardwareDecryptionSupported(mConfig) ||
+      DoesKeySystemSupportHardwareDecryption(mKeySystem);
   EME_LOG("MediaKeys[%p]::CreateCDMProxy(), isHardwareDecryptionSupported=%d",
           this, isHardwareDecryptionSupported);
   RefPtr<CDMProxy> proxy;
