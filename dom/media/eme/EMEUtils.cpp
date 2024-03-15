@@ -245,4 +245,16 @@ bool CheckIfHarewareDRMConfigExists(
   return foundHWDRMconfig;
 }
 
+bool DoesKeySystemSupportHardwareDecryption(const nsAString& aKeySystem) {
+#ifdef MOZ_WMF_CDM
+  if (aKeySystem.EqualsLiteral(kPlayReadyKeySystemHardware) ||
+      aKeySystem.EqualsLiteral(kPlayReadyHardwareClearLeadKeySystemName) ||
+      aKeySystem.EqualsLiteral(kWidevineExperimentKeySystemName) ||
+      aKeySystem.EqualsLiteral(kWidevineExperiment2KeySystemName)) {
+    return true;
+  }
+#endif
+  return false;
+}
+
 }  // namespace mozilla
