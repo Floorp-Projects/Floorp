@@ -66,14 +66,14 @@ WEBRTC_RTCSTATS_IMPL(RTCGrandChildStats,
                      "grandchild-stats",
                      &grandchild_int)
 
-TEST(RTCStatsTest, RTCStatsAndMembers) {
+TEST(RTCStatsTest, RTCStatsAndAttributes) {
   RTCTestStats stats("testId", Timestamp::Micros(42));
   EXPECT_EQ(stats.id(), "testId");
   EXPECT_EQ(stats.timestamp().us(), static_cast<int64_t>(42));
-  std::vector<const RTCStatsMemberInterface*> members = stats.Members();
-  EXPECT_EQ(members.size(), static_cast<size_t>(16));
-  for (const RTCStatsMemberInterface* member : members) {
-    EXPECT_FALSE(member->is_defined());
+  std::vector<Attribute> attributes = stats.Attributes();
+  EXPECT_EQ(attributes.size(), static_cast<size_t>(16));
+  for (const auto& attribute : attributes) {
+    EXPECT_FALSE(attribute.has_value());
   }
   stats.m_bool = true;
   stats.m_int32 = 123;
@@ -111,8 +111,8 @@ TEST(RTCStatsTest, RTCStatsAndMembers) {
   stats.m_sequence_string = sequence_string;
   stats.m_map_string_uint64 = map_string_uint64;
   stats.m_map_string_double = map_string_double;
-  for (const RTCStatsMemberInterface* member : members) {
-    EXPECT_TRUE(member->is_defined());
+  for (const auto& attribute : attributes) {
+    EXPECT_TRUE(attribute.has_value());
   }
   EXPECT_EQ(*stats.m_bool, true);
   EXPECT_EQ(*stats.m_int32, static_cast<int32_t>(123));
@@ -217,8 +217,8 @@ TEST(RTCStatsTest, RTCStatsGrandChild) {
   stats.child_int = 1;
   stats.grandchild_int = 2;
   int32_t sum = 0;
-  for (const RTCStatsMemberInterface* member : stats.Members()) {
-    sum += *member->cast_to<const RTCStatsMember<int32_t>>();
+  for (const auto& attribute : stats.Attributes()) {
+    sum += attribute.get<int32_t>();
   }
   EXPECT_EQ(sum, static_cast<int32_t>(3));
 

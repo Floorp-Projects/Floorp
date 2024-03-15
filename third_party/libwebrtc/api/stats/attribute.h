@@ -53,6 +53,18 @@ class RTC_EXPORT Attribute : public RTCStatsMemberInterface {
   const char* name() const;
   const StatVariant& as_variant() const;
 
+  bool has_value() const;
+  template <typename T>
+  bool holds_alternative() const {
+    return absl::holds_alternative<const RTCStatsMember<T>*>(attribute_);
+  }
+  template <typename T>
+  const T& get() const {
+    RTC_CHECK(holds_alternative<T>());
+    RTC_CHECK(has_value());
+    return absl::get<const RTCStatsMember<T>*>(attribute_)->value();
+  }
+
   static Attribute FromMemberInterface(const RTCStatsMemberInterface* member);
   // RTCStatsMemberInterface implementation.
   // TODO(https://crbug.com/webrtc/15164): Delete RTCStatsMemberInterface in

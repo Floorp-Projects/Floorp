@@ -99,6 +99,11 @@ const Attribute::StatVariant& Attribute::as_variant() const {
   return attribute_;
 }
 
+bool Attribute::has_value() const {
+  return absl::visit([](const auto* attr) { return attr->has_value(); },
+                     attribute_);
+}
+
 RTCStatsMemberInterface::Type Attribute::type() const {
   return absl::visit([](const auto* attr) { return attr->type(); }, attribute_);
 }
