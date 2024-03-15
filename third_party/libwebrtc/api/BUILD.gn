@@ -673,6 +673,7 @@ if (rtc_include_tests) {
       "test/create_network_emulation_manager.h",
     ]
     deps = [
+      ":field_trials_view",
       ":network_emulation_manager_api",
       "../test/network:emulated_network",
     ]
