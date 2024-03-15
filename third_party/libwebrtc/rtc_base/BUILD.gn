@@ -1119,13 +1119,16 @@ rtc_library("socket") {
     "socket.h",
   ]
   deps = [
+    ":buffer",
     ":macromagic",
     ":socket_address",
+    "../api/units:timestamp",
     "third_party/sigslot",
   ]
   if (is_win) {
     deps += [ ":win32" ]
   }
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
 rtc_source_set("network_constants") {
@@ -1367,7 +1370,9 @@ if (!build_with_mozilla) {
     ":socket_factory",
     ":timeutils",
     "../api:sequence_checker",
+    "../api/units:time_delta",
     "../system_wrappers:field_trial",
+    "network:received_packet",
     "network:sent_packet",
     "system:no_unique_address",
   ]
