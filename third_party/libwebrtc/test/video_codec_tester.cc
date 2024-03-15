@@ -263,8 +263,8 @@ class TesterIvfWriter {
     task_queue_.SendTask([] {});
   }
 
-  void Write(const EncodedImage& encoded_frame) {
-    task_queue_.PostTask([this, encoded_frame] {
+  void Write(const EncodedImage& encoded_frame, VideoCodecType codec_type) {
+    task_queue_.PostTask([this, encoded_frame, codec_type] {
       int spatial_idx = encoded_frame.SpatialIndex().value_or(
           encoded_frame.SimulcastIndex().value_or(0));
       if (ivf_file_writers_.find(spatial_idx) == ivf_file_writers_.end()) {
@@ -281,8 +281,7 @@ class TesterIvfWriter {
       }
 
       // To play: ffplay -vcodec vp8|vp9|av1|hevc|h264 filename
-      ivf_file_writers_.at(spatial_idx)
-          ->WriteFrame(encoded_frame, VideoCodecType::kVideoCodecGeneric);
+      ivf_file_writers_.at(spatial_idx)->WriteFrame(encoded_frame, codec_type);
     });
   }
 
@@ -795,11 +794,13 @@ class Decoder : public DecodedImageCallback {
     RTC_CHECK(decoder_) << "Could not create decoder for video format "
                         << sdp_video_format.ToString();
 
-    task_queue_.PostTaskAndWait([this, &sdp_video_format] {
+    codec_type_ = PayloadStringToCodecType(sdp_video_format.name);
+
+    task_queue_.PostTaskAndWait([this] {
       decoder_->RegisterDecodeCompleteCallback(this);
 
       VideoDecoder::Settings ds;
-      ds.set_codec_type(PayloadStringToCodecType(sdp_video_format.name));
+      ds.set_codec_type(*codec_type_);
       ds.set_number_of_cores(1);
       ds.set_max_render_resolution({1280, 720});
       bool result = decoder_->Configure(ds);
@@ -834,7 +835,7 @@ class Decoder : public DecodedImageCallback {
         pacer_.Schedule(pts));
 
     if (ivf_writer_) {
-      ivf_writer_->Write(encoded_frame);
+      ivf_writer_->Write(encoded_frame, *codec_type_);
     }
   }
 
@@ -867,6 +868,7 @@ class Decoder : public DecodedImageCallback {
   LimitedTaskQueue task_queue_;
   std::unique_ptr<TesterIvfWriter> ivf_writer_;
   std::unique_ptr<TesterY4mWriter> y4m_writer_;
+  absl::optional<VideoCodecType> codec_type_;
   absl::optional<int> spatial_idx_ RTC_GUARDED_BY(mutex_);
   Mutex mutex_;
 };
@@ -901,6 +903,9 @@ class Encoder : public EncodedImageCallback {
     RTC_CHECK(encoder_) << "Could not create encoder for video format "
                         << encoding_settings.sdp_video_format.ToString();
 
+    codec_type_ =
+        PayloadStringToCodecType(encoding_settings.sdp_video_format.name);
+
     task_queue_.PostTaskAndWait([this, encoding_settings] {
       encoder_->RegisterEncodeCompleteCallback(this);
       Configure(encoding_settings);
@@ -926,14 +931,13 @@ class Encoder : public EncodedImageCallback {
               !IsSameRate(encoding_settings, *last_encoding_settings_)) {
             SetRates(encoding_settings);
           }
+          last_encoding_settings_ = encoding_settings;
 
           int error = encoder_->Encode(input_frame, /*frame_types=*/nullptr);
           if (error != 0) {
             RTC_LOG(LS_WARNING) << "Encode failed with error code " << error
                                 << " RTP timestamp " << input_frame.timestamp();
           }
-
-          last_encoding_settings_ = encoding_settings;
         },
         pacer_.Schedule(pts));
 
@@ -1001,7 +1005,7 @@ class Encoder : public EncodedImageCallback {
     }
 
     if (ivf_writer_ != nullptr) {
-      ivf_writer_->Write(encoded_frame);
+      ivf_writer_->Write(encoded_frame, codec_type_);
     }
   }
 
@@ -1173,6 +1177,7 @@ class Encoder : public EncodedImageCallback {
   std::unique_ptr<TesterIvfWriter> ivf_writer_;
   std::map<uint32_t, int> sidx_ RTC_GUARDED_BY(mutex_);
   std::map<uint32_t, EncodeCallback> callbacks_ RTC_GUARDED_BY(mutex_);
+  VideoCodecType codec_type_;
   absl::optional<Superframe> last_superframe_;
   Mutex mutex_;
 };
