@@ -909,7 +909,7 @@ webrtc::VideoSendStream* Call::CreateVideoSendStream(
   std::unique_ptr<FecController> fec_controller =
       config_.fec_controller_factory
           ? config_.fec_controller_factory->CreateFecController(env_)
-          : std::make_unique<FecControllerDefault>(&env_.clock());
+          : std::make_unique<FecControllerDefault>(env_);
   return CreateVideoSendStream(std::move(config), std::move(encoder_config),
                                std::move(fec_controller));
 }
