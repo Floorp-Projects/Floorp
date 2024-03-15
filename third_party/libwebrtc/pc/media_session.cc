@@ -2061,8 +2061,15 @@ MediaSessionDescriptionFactory::CreateAnswerOrError(
     // Unified Plan needs to look at what the offer included to find the most
     // compatible answer.
     int msid_signaling = offer->msid_signaling();
-    if (msid_signaling == cricket::kMsidSignalingNotUsed ||
-        msid_signaling == cricket::kMsidSignalingSemantic) {
+    if (msid_signaling ==
+        (cricket::kMsidSignalingSemantic | cricket::kMsidSignalingMediaSection |
+         cricket::kMsidSignalingSsrcAttribute)) {
+      // If both a=msid and a=ssrc MSID signaling methods were used, we're
+      // probably talking to a Unified Plan endpoint so respond with just
+      // a=msid.
+      answer->set_msid_signaling(cricket::kMsidSignalingSemantic |
+                                 cricket::kMsidSignalingMediaSection);
+    } else if (msid_signaling == cricket::kMsidSignalingSemantic) {
       // We end up here in one of three cases:
       // 1. An empty offer. We'll reply with an empty answer so it doesn't
       //    matter what we pick here.
@@ -2074,17 +2081,10 @@ MediaSessionDescriptionFactory::CreateAnswerOrError(
       answer->set_msid_signaling(cricket::kMsidSignalingSemantic |
                                  cricket::kMsidSignalingMediaSection |
                                  cricket::kMsidSignalingSsrcAttribute);
-    } else if (msid_signaling == (cricket::kMsidSignalingSemantic |
-                                  cricket::kMsidSignalingMediaSection |
-                                  cricket::kMsidSignalingSsrcAttribute)) {
-      // If both a=msid and a=ssrc MSID signaling methods were used, we're
-      // probably talking to a Unified Plan endpoint so respond with just
-      // a=msid.
-      answer->set_msid_signaling(cricket::kMsidSignalingSemantic |
-                                 cricket::kMsidSignalingMediaSection);
     } else {
       // Otherwise, it's clear which method the offerer is using so repeat that
-      // back to them.
+      // back to them. This includes the case where the msid-semantic line is
+      // not included.
       answer->set_msid_signaling(msid_signaling);
     }
   } else {

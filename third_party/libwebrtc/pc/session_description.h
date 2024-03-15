@@ -589,9 +589,7 @@ class SessionDescription {
   ContentInfos contents_;
   TransportInfos transport_infos_;
   ContentGroups content_groups_;
-  // Default to what Plan B would do.
-  // TODO(bugs.webrtc.org/8530): Change default to kMsidSignalingMediaSection.
-  int msid_signaling_ = kMsidSignalingSsrcAttribute | kMsidSignalingSemantic;
+  int msid_signaling_ = kMsidSignalingMediaSection | kMsidSignalingSemantic;
   bool extmap_allow_mixed_ = true;
 };
 
