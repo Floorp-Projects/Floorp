@@ -29,6 +29,8 @@
 
 namespace webrtc {
 
+using CodecParameterMap = std::map<std::string, std::string>;
+
 // These structures are intended to mirror those defined by:
 // http://draft.ortc.org/#rtcrtpdictionaries*
 // Contains everything specified as of 2017 Jan 24.

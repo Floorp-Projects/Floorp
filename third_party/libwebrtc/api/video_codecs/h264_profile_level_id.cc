@@ -178,7 +178,7 @@ absl::optional<H264Level> H264SupportedLevel(int max_frame_pixel_count,
 }
 
 absl::optional<H264ProfileLevelId> ParseSdpForH264ProfileLevelId(
-    const SdpVideoFormat::Parameters& params) {
+    const CodecParameterMap& params) {
   // TODO(magjed): The default should really be kProfileBaseline and kLevel1
   // according to the spec: https://tools.ietf.org/html/rfc6184#section-8.1. In
   // order to not break backwards compatibility with older versions of WebRTC
@@ -243,8 +243,8 @@ absl::optional<std::string> H264ProfileLevelIdToString(
   return {str};
 }
 
-bool H264IsSameProfile(const SdpVideoFormat::Parameters& params1,
-                       const SdpVideoFormat::Parameters& params2) {
+bool H264IsSameProfile(const CodecParameterMap& params1,
+                       const CodecParameterMap& params2) {
   const absl::optional<H264ProfileLevelId> profile_level_id =
       ParseSdpForH264ProfileLevelId(params1);
   const absl::optional<H264ProfileLevelId> other_profile_level_id =

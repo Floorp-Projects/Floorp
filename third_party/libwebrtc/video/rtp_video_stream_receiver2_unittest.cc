@@ -307,7 +307,7 @@ TEST_F(RtpVideoStreamReceiver2Test, CacheColorSpaceFromLastPacketOfKeyframe) {
   received_packet_generator.SetColorSpace(kColorSpace);
 
   // Prepare the receiver for VP9.
-  std::map<std::string, std::string> codec_params;
+  webrtc::CodecParameterMap codec_params;
   rtp_video_stream_receiver_->AddReceiveCodec(kVp9PayloadType, kVideoCodecVP9,
                                               codec_params,
                                               /*raw_payload=*/false);
@@ -571,7 +571,7 @@ TEST_P(RtpVideoStreamReceiver2TestH264, InBandSpsPps) {
 
 TEST_P(RtpVideoStreamReceiver2TestH264, OutOfBandFmtpSpsPps) {
   constexpr int kPayloadType = 99;
-  std::map<std::string, std::string> codec_params;
+  webrtc::CodecParameterMap codec_params;
   // Example parameter sets from https://tools.ietf.org/html/rfc3984#section-8.2
   // .
   codec_params.insert(
@@ -612,7 +612,7 @@ TEST_P(RtpVideoStreamReceiver2TestH264, OutOfBandFmtpSpsPps) {
 
 TEST_P(RtpVideoStreamReceiver2TestH264, ForceSpsPpsIdrIsKeyframe) {
   constexpr int kPayloadType = 99;
-  std::map<std::string, std::string> codec_params;
+  webrtc::CodecParameterMap codec_params;
   if (GetParam() ==
       "") {  // Forcing can be done either with field trial or codec_params.
     codec_params.insert({cricket::kH264FmtpSpsPpsIdrInKeyframe, ""});

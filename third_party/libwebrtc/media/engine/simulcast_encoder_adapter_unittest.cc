@@ -586,7 +586,7 @@ class TestSimulcastEncoderAdapterFake : public ::testing::Test,
   absl::optional<int> last_encoded_image_simulcast_index_;
   std::unique_ptr<SimulcastRateAllocator> rate_allocator_;
   bool use_fallback_factory_;
-  SdpVideoFormat::Parameters sdp_video_parameters_;
+  CodecParameterMap sdp_video_parameters_;
   test::ScopedKeyValueConfig field_trials_;
 };
 

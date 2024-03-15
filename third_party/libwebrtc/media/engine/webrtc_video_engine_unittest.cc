@@ -3781,7 +3781,7 @@ class Vp9SettingsTest : public WebRtcVideoChannelTest {
 
 TEST_F(Vp9SettingsTest, VerifyVp9SpecificSettings) {
   encoder_factory_->AddSupportedVideoCodec(
-      webrtc::SdpVideoFormat("VP9", webrtc::SdpVideoFormat::Parameters(),
+      webrtc::SdpVideoFormat("VP9", webrtc::CodecParameterMap(),
                              {ScalabilityMode::kL1T1, ScalabilityMode::kL2T1}));
 
   cricket::VideoSenderParameters parameters;
@@ -8545,7 +8545,7 @@ TEST_F(WebRtcVideoChannelTest, FallbackForUnsetOrUnsupportedScalabilityMode) {
                          ScalabilityMode::kL1T3};
 
   encoder_factory_->AddSupportedVideoCodec(webrtc::SdpVideoFormat(
-      "VP8", webrtc::SdpVideoFormat::Parameters(), kSupportedModes));
+      "VP8", webrtc::CodecParameterMap(), kSupportedModes));
 
   FakeVideoSendStream* stream = SetUpSimulcast(true, /*with_rtx=*/false);
 
@@ -8615,9 +8615,9 @@ TEST_F(WebRtcVideoChannelTest,
       kVp9SupportedModes = {ScalabilityMode::kL3T3};
 
   encoder_factory_->AddSupportedVideoCodec(webrtc::SdpVideoFormat(
-      "VP8", webrtc::SdpVideoFormat::Parameters(), {ScalabilityMode::kL1T1}));
+      "VP8", webrtc::CodecParameterMap(), {ScalabilityMode::kL1T1}));
   encoder_factory_->AddSupportedVideoCodec(webrtc::SdpVideoFormat(
-      "VP9", webrtc::SdpVideoFormat::Parameters(), {ScalabilityMode::kL3T3}));
+      "VP9", webrtc::CodecParameterMap(), {ScalabilityMode::kL3T3}));
 
   cricket::VideoSenderParameters send_parameters;
   send_parameters.codecs.push_back(GetEngineCodec("VP9"));
