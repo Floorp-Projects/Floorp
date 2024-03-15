@@ -19,8 +19,3 @@ amo-picker-subtitle = Extensions are like apps for your browser, and they let yo
 amo-picker-install-button-label = Add to { -brand-short-name }
 amo-picker-install-complete-label = Installed
 amo-picker-collection-link = Explore more add-ons
-
-# Button label for the experimental return to about:welcome toolbar button
-browser-aboutwelcome-button =
-    .label = Finish setup
-    .tooltiptext = Finish setting up { -brand-short-name }.

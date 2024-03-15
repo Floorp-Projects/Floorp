@@ -85,8 +85,6 @@ class AboutWelcomeObserver {
 
   stop() {
     lazy.log.debug(`Terminate reason is ${this.terminateReason}`);
-    // Clear the entrypoint pref
-    Services.prefs.clearUserPref("browser.aboutwelcome.entrypoint");
     Services.obs.removeObserver(this, "quit-application");
     if (!this.win) {
       return;
