@@ -63,48 +63,5 @@ TEST(AsyncPacketSocket, RegisteredCallbackReceivePacketsFromNotify) {
   mock_socket.NotifyPacketReceived();
 }
 
-TEST(AsyncPacketSocket, RegisteredCallbackReceivePacketsFromSignalReadPacket) {
-  MockAsyncPacketSocket mock_socket;
-  MockFunction<void(AsyncPacketSocket*, const rtc::ReceivedPacket&)>
-      received_packet;
-
-  EXPECT_CALL(received_packet, Call);
-  mock_socket.RegisterReceivedPacketCallback(received_packet.AsStdFunction());
-  char data[1] = {'a'};
-  mock_socket.SignalReadPacket(&mock_socket, data, 1, SocketAddress(), -1);
-}
-
-TEST(AsyncPacketSocket, SignalReadPacketTriggeredByNotifyPacketReceived) {
-  class SigslotPacketReceiver : public sigslot::has_slots<> {
-   public:
-    explicit SigslotPacketReceiver(rtc::AsyncPacketSocket& socket) {
-      socket.SignalReadPacket.connect(this,
-                                      &SigslotPacketReceiver::OnPacketReceived);
-    }
-
-    bool packet_received() const { return packet_received_; }
-
-   private:
-    void OnPacketReceived(AsyncPacketSocket*,
-                          const char*,
-                          size_t,
-                          const SocketAddress&,
-                          // TODO(bugs.webrtc.org/9584): Change to passing the
-                          // int64_t timestamp by value.
-                          const int64_t&) {
-      packet_received_ = true;
-    }
-
-    bool packet_received_ = false;
-  };
-
-  MockAsyncPacketSocket mock_socket;
-  SigslotPacketReceiver receiver(mock_socket);
-  ASSERT_FALSE(receiver.packet_received());
-
-  mock_socket.NotifyPacketReceived();
-  EXPECT_TRUE(receiver.packet_received());
-}
-
 }  // namespace
 }  // namespace rtc

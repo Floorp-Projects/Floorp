@@ -2020,6 +2020,7 @@ if (rtc_include_tests) {
         "containers:flat_map",
         "containers:unittests",
         "memory:unittests",
+        "network:received_packet",
         "synchronization:mutex",
         "task_utils:repeating_task",
         "third_party/base64",
@@ -2181,6 +2182,7 @@ if (rtc_include_tests) {
         "../test:test_main",
         "../test:test_support",
         "memory:fifo_buffer",
+        "network:received_packet",
         "synchronization:mutex",
         "third_party/sigslot",
       ]
