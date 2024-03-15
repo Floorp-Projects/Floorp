@@ -1144,8 +1144,11 @@ class Encoder : public EncodedImageCallback {
   }
 
   static bool IsSvc(const EncodedImage& encoded_frame,
-                    const CodecSpecificInfo* codec_specific_info) {
-    ScalabilityMode scalability_mode = *codec_specific_info->scalability_mode;
+                    const CodecSpecificInfo& codec_specific_info) {
+    if (!codec_specific_info.scalability_mode) {
+      return false;
+    }
+    ScalabilityMode scalability_mode = *codec_specific_info.scalability_mode;
     return (kFullSvcScalabilityModes.count(scalability_mode) ||
             (kKeySvcScalabilityModes.count(scalability_mode) &&
              encoded_frame.FrameType() == VideoFrameType::kVideoFrameKey));
@@ -1171,7 +1174,8 @@ class Encoder : public EncodedImageCallback {
       return last_superframe_->encoded_frame;
     }
 
-    if (IsSvc(encoded_frame, codec_specific_info)) {
+    RTC_CHECK(codec_specific_info != nullptr);
+    if (IsSvc(encoded_frame, *codec_specific_info)) {
       last_superframe_ = Superframe{
           .encoded_frame = EncodedImage(encoded_frame),
           .encoded_data = EncodedImageBuffer::Create(encoded_frame.data(),
