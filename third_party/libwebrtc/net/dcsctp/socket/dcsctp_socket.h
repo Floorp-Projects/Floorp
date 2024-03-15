@@ -148,8 +148,6 @@ class DcSctpSocket : public DcSctpSocketInterface {
 
   // Changes the socket state, given a `reason` (for debugging/logging).
   void SetState(State state, absl::string_view reason);
-  // Fills in `connect_params` with random verification tag and initial TSN.
-  void MakeConnectionParameters();
   // Closes the association. Note that the TCB will not be valid past this call.
   void InternalClose(ErrorKind error, absl::string_view message);
   // Closes the association, because of too many retransmission errors.
