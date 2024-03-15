@@ -111,6 +111,10 @@ RtpTransportControllerSend::RtpTransportControllerSend(
   pacer_.SetPacingRates(
       DataRate::BitsPerSec(config.bitrate_config.start_bitrate_bps),
       DataRate::Zero());
+  if (config.pacer_burst_interval) {
+    // Default burst interval overriden by config.
+    pacer_.SetSendBurstInterval(*config.pacer_burst_interval);
+  }
 }
 
 RtpTransportControllerSend::~RtpTransportControllerSend() {
