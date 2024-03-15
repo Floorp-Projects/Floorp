@@ -119,6 +119,7 @@ function Sandbox(options) {
       "ChromeUtils",
       "CSS",
       "CSSRule",
+      "CustomStateSet",
       "DOMParser",
       "Element",
       "Event",
