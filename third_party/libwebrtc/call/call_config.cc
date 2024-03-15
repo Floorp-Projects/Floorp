@@ -31,6 +31,7 @@ RtpTransportConfig CallConfig::ExtractTransportConfig() const {
       network_state_predictor_factory;
   transportConfig.task_queue_factory = &env.task_queue_factory();
   transportConfig.trials = &env.field_trials();
+  transportConfig.pacer_burst_interval = pacer_burst_interval;
 
   return transportConfig;
 }
