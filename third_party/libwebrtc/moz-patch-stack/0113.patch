@@ -1,0 +1,23 @@
+From: Dan Baker <dbaker@mozilla.com>
+Date: Fri, 15 Mar 2024 10:07:00 -0600
+Subject: Bug 1883116 - (fix-3d9c3687a4) Supporting change of call_factory.cc
+ to create_call.cc.
+
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b86cb7278bc4e557104cec0313d83511b9c8f40d
+---
+ call/BUILD.gn | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/call/BUILD.gn b/call/BUILD.gn
+index 9cde97fad7..50a8257631 100644
+--- a/call/BUILD.gn
++++ b/call/BUILD.gn
+@@ -353,7 +353,7 @@ rtc_library("call") {
+   ]
+   if (build_with_mozilla) { # See Bug 1820869.
+     sources -= [
+-      "call_factory.cc",
++      "create_call.cc",
+       "degraded_call.cc",
+     ]
+     deps -= [
