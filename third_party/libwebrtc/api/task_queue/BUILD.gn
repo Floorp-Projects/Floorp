@@ -123,7 +123,7 @@ if (!build_with_mozilla) {
   } else if (is_mac || is_ios) {
     sources += [ "default_task_queue_factory_gcd.cc" ]
     deps += [ "../../rtc_base:rtc_task_queue_gcd" ]
-  } else if (is_win && current_os != "winuwp") {
+  } else if (is_win && current_os != "winuwp" && !build_with_chromium) {
     sources += [ "default_task_queue_factory_win.cc" ]
     deps += [ "../../rtc_base:rtc_task_queue_win" ]
   } else {
