@@ -1398,6 +1398,7 @@ rtc_library("video_codec_tester") {
     "video_codec_tester.h",
   ]
   deps = [
+    ":scoped_key_value_config",
     "../api:array_view",
     "../api/numerics:numerics",
     "../api/test/metrics:metric",
@@ -1429,6 +1430,7 @@ rtc_library("video_codec_tester") {
     "../system_wrappers",
     "../test:fileutils",
     "../test:video_test_support",
+    "../video/config:streams_config",
     "//third_party/libyuv",
   ]
 
