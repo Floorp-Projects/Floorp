@@ -228,7 +228,7 @@
       },
       'iOS Debug (simulator)': {
         'mixins': [
-          'mac_12_x64', 'chromium-tester-service-account', 'mac_toolchain',
+          'mac_13_x64', 'chromium-tester-service-account', 'mac_toolchain',
           'has_native_resultdb_integration', 'out_dir_arg', 'webrtc-xctest'
         ],
         'test_suites': {
@@ -431,7 +431,7 @@
       'ios_compile_arm64_rel': {},
       'ios_dbg_simulator': {
         'mixins': [
-          'mac_12_x64', 'chromium-tester-service-account', 'mac_toolchain',
+          'mac_13_x64', 'chromium-tester-service-account', 'mac_toolchain',
           'has_native_resultdb_integration', 'out_dir_arg', 'webrtc-xctest'
         ],
         'test_suites': {

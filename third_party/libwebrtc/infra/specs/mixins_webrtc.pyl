@@ -58,22 +58,6 @@
       },
     },
   },
-  'ios_runtime_cache_14_5': {
-    'swarming': {
-      'named_caches': [{
-        'name': 'runtime_ios_14_5',
-        'path': 'Runtime-ios-14.5'
-      }]
-    }
-  },
-  'ios_runtime_cache_16_2': {
-    'swarming': {
-      'named_caches': [{
-        'name': 'runtime_ios_16_2',
-        'path': 'Runtime-ios-16.2'
-      }]
-    }
-  },
   'limited-capacity': {
     # Sometimes there are multiple tests that can be run only on one machine.
     # We need to increase timeouts so the tests dont expire before the machine is freed.
@@ -206,18 +190,6 @@
     'args': [
       '--xctest',
     ],
-  },
-  'xcode_13_main': {
-    'args': ['--xcode-build-version', '13c100'],
-    'swarming': {
-      'dimensions': {
-        'caches': 'xcode_ios_13c100',
-      },
-      'named_caches': [{
-        'name': 'xcode_ios_13c100',
-        'path': 'Xcode.app'
-      }]
-    }
   },
   'xcode_14_main': {
     'args': ['--xcode-build-version', '14c18'],
