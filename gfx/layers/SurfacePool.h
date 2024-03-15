@@ -31,7 +31,7 @@ class SurfacePool {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SurfacePool);
 
-#if defined(XP_MACOSX) || defined(MOZ_WAYLAND)
+#if defined(XP_DARWIN) || defined(MOZ_WAYLAND)
   static RefPtr<SurfacePool> Create(size_t aPoolSizeLimit);
 #endif
 
