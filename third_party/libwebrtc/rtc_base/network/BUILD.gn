@@ -18,6 +18,7 @@ rtc_library("sent_packet") {
 }
 
 rtc_library("received_packet") {
+  visibility = [ "*" ]
   sources = [
     "received_packet.cc",
     "received_packet.h",
