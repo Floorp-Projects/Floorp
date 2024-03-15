@@ -32,6 +32,7 @@ array_names = [
     "addonsPublicIntermediate",
     "addonsPublicRoot",
     "addonsStageRoot",
+    "addonsStageIntermediate",
     "contentSignatureDevRoot",
     "contentSignatureLocalRoot",
     "contentSignatureProdRoot",
