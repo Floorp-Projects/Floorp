@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "absl/functional/any_invocable.h"
+#include "api/metronome/test/fake_metronome.h"
 #include "api/task_queue/default_task_queue_factory.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/task_queue/task_queue_factory.h"
@@ -64,8 +65,9 @@ VideoFrame CreateFrameWithTimestamps(
 std::unique_ptr<FrameCadenceAdapterInterface> CreateAdapter(
     const FieldTrialsView& field_trials,
     Clock* clock) {
-  return FrameCadenceAdapterInterface::Create(clock, TaskQueueBase::Current(),
-                                              field_trials);
+  return FrameCadenceAdapterInterface::Create(
+      clock, TaskQueueBase::Current(), /*metronome=*/nullptr,
+      /*worker_queue=*/nullptr, field_trials);
 }
 
 class MockCallback : public FrameCadenceAdapterInterface::Callback {
@@ -593,7 +595,8 @@ TEST(FrameCadenceAdapterTest, IgnoresDropInducedCallbacksPostDestruction) {
   auto queue = time_controller.GetTaskQueueFactory()->CreateTaskQueue(
       "queue", TaskQueueFactory::Priority::NORMAL);
   auto adapter = FrameCadenceAdapterInterface::Create(
-      time_controller.GetClock(), queue.get(), enabler);
+      time_controller.GetClock(), queue.get(), /*metronome=*/nullptr,
+      /*worker_queue=*/nullptr, enabler);
   queue->PostTask([&adapter, &callback] {
     adapter->Initialize(callback.get());
     adapter->SetZeroHertzModeEnabled(
@@ -607,6 +610,82 @@ TEST(FrameCadenceAdapterTest, IgnoresDropInducedCallbacksPostDestruction) {
   callback = nullptr;
   queue->PostTask([adapter = std::move(adapter)]() mutable {});
   time_controller.AdvanceTime(3 * TimeDelta::Seconds(1) / kMaxFps);
+}
+
+TEST(FrameCadenceAdapterTest, EncodeFramesAreAlignedWithMetronomeTick) {
+  ZeroHertzFieldTrialEnabler enabler;
+  GlobalSimulatedTimeController time_controller(Timestamp::Zero());
+  // Here the metronome interval is 33ms, because the metronome is not
+  // infrequent then the encode tasks are aligned with the tick period.
+  static constexpr TimeDelta kTickPeriod = TimeDelta::Millis(33);
+  auto queue = time_controller.GetTaskQueueFactory()->CreateTaskQueue(
+      "queue", TaskQueueFactory::Priority::NORMAL);
+  auto worker_queue = time_controller.GetTaskQueueFactory()->CreateTaskQueue(
+      "work_queue", TaskQueueFactory::Priority::NORMAL);
+  static test::FakeMetronome metronome(kTickPeriod);
+  auto adapter = FrameCadenceAdapterInterface::Create(
+      time_controller.GetClock(), queue.get(), &metronome, worker_queue.get(),
+      enabler);
+  MockCallback callback;
+  adapter->Initialize(&callback);
+  auto frame = CreateFrame();
+
+  // `callback->OnFrame()` would not be called if only 32ms went by after
+  // `adapter->OnFrame()`.
+  EXPECT_CALL(callback, OnFrame(_, false, _)).Times(0);
+  adapter->OnFrame(frame);
+  time_controller.AdvanceTime(TimeDelta::Millis(32));
+  Mock::VerifyAndClearExpectations(&callback);
+
+  // `callback->OnFrame()` should be called if 33ms went by after
+  // `adapter->OnFrame()`.
+  EXPECT_CALL(callback, OnFrame(_, false, _)).Times(1);
+  time_controller.AdvanceTime(TimeDelta::Millis(1));
+  Mock::VerifyAndClearExpectations(&callback);
+
+  // `callback->OnFrame()` would not be called if only 32ms went by after
+  // `adapter->OnFrame()`.
+  EXPECT_CALL(callback, OnFrame(_, false, _)).Times(0);
+  // Send two frame before next tick.
+  adapter->OnFrame(frame);
+  adapter->OnFrame(frame);
+  time_controller.AdvanceTime(TimeDelta::Millis(32));
+  Mock::VerifyAndClearExpectations(&callback);
+
+  // `callback->OnFrame()` should be called if 33ms went by after
+  // `adapter->OnFrame()`.
+  EXPECT_CALL(callback, OnFrame(_, false, _)).Times(2);
+  time_controller.AdvanceTime(TimeDelta::Millis(1));
+  Mock::VerifyAndClearExpectations(&callback);
+
+  // Change the metronome tick period to 67ms (15Hz).
+  metronome.SetTickPeriod(TimeDelta::Millis(67));
+  // Expect the encode would happen immediately.
+  EXPECT_CALL(callback, OnFrame(_, false, _)).Times(1);
+  adapter->OnFrame(frame);
+  time_controller.AdvanceTime(TimeDelta::Zero());
+  Mock::VerifyAndClearExpectations(&callback);
+
+  // Change the metronome tick period to 16ms (60Hz).
+  metronome.SetTickPeriod(TimeDelta::Millis(16));
+  // Expect the encode would not happen if only 15ms went by after
+  // `adapter->OnFrame()`.
+  EXPECT_CALL(callback, OnFrame(_, false, _)).Times(0);
+  adapter->OnFrame(frame);
+  time_controller.AdvanceTime(TimeDelta::Millis(15));
+  Mock::VerifyAndClearExpectations(&callback);
+  // `callback->OnFrame()` should be called if 16ms went by after
+  // `adapter->OnFrame()`.
+  EXPECT_CALL(callback, OnFrame(_, false, _)).Times(1);
+  time_controller.AdvanceTime(TimeDelta::Millis(1));
+  Mock::VerifyAndClearExpectations(&callback);
+
+  rtc::Event finalized;
+  queue->PostTask([&] {
+    adapter = nullptr;
+    finalized.Set();
+  });
+  finalized.Wait(rtc::Event::kForever);
 }
 
 class FrameCadenceAdapterSimulcastLayersParamTest

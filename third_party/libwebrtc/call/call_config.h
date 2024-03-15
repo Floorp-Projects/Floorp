@@ -69,6 +69,7 @@ struct CallConfig {
       rtp_transport_controller_send_factory = nullptr;
 
   Metronome* decode_metronome = nullptr;
+  Metronome* encode_metronome = nullptr;
 
   // The burst interval of the pacer, see TaskQueuePacedSender constructor.
   absl::optional<TimeDelta> pacer_burst_interval;
