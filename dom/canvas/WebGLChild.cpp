@@ -87,10 +87,8 @@ void WebGLChild::FlushPendingCmds() {
 
   // Handle flushesSinceLastCongestionCheck
   mFlushedCmdInfo.flushesSinceLastCongestionCheck += 1;
-  const auto startCongestionCheck = 20;
-  const auto maybeIPCMessageCongestion = 70;
-  const auto eventTarget = GetCurrentSerialEventTarget();
-  MOZ_ASSERT(eventTarget);
+  constexpr auto START_CONGESTION_CHECK_THRESHOLD = 20;
+  constexpr auto ASSUME_IPC_CONGESTION_THRESHOLD = 70;
   RefPtr<WebGLChild> self = this;
   size_t generation = self->mFlushedCmdInfo.congestionCheckGeneration;
 
@@ -107,17 +105,24 @@ void WebGLChild::FlushPendingCmds() {
   // messages.
   // Due to the async nature of the async ping, it is possible for the flush
   // check to exceed maybeIPCMessageCongestion, but that it it still bounded.
-  if (mFlushedCmdInfo.flushesSinceLastCongestionCheck == startCongestionCheck) {
-    SendPing()->Then(eventTarget, __func__, [self, generation]() {
-      if (generation == self->mFlushedCmdInfo.congestionCheckGeneration) {
-        // Confirmed IPC messages congestion does not happen.
-        // Reset flushesSinceLastCongestionCheck for next congestion check.
-        self->mFlushedCmdInfo.flushesSinceLastCongestionCheck = 0;
-        self->mFlushedCmdInfo.congestionCheckGeneration++;
-      }
-    });
+  if (mFlushedCmdInfo.flushesSinceLastCongestionCheck ==
+      START_CONGESTION_CHECK_THRESHOLD) {
+    const auto eventTarget = RefPtr{GetCurrentSerialEventTarget()};
+    MOZ_ASSERT(eventTarget);
+    if (!eventTarget) {
+      NS_WARNING("GetCurrentSerialEventTarget()->nullptr in FlushPendingCmds.");
+    } else {
+      SendPing()->Then(eventTarget, __func__, [self, generation]() {
+        if (generation == self->mFlushedCmdInfo.congestionCheckGeneration) {
+          // Confirmed IPC messages congestion does not happen.
+          // Reset flushesSinceLastCongestionCheck for next congestion check.
+          self->mFlushedCmdInfo.flushesSinceLastCongestionCheck = 0;
+          self->mFlushedCmdInfo.congestionCheckGeneration++;
+        }
+      });
+    }
   } else if (mFlushedCmdInfo.flushesSinceLastCongestionCheck >
-             maybeIPCMessageCongestion) {
+             ASSUME_IPC_CONGESTION_THRESHOLD) {
     // IPC messages congestion might happen, send sync SyncPing for flushing
     // pending messages.
     SendSyncPing();
