@@ -5,6 +5,7 @@
   "license": "MPL-2.0",
   "devDependencies": {
     "@microsoft/eslint-plugin-sdl": "0.2.2",
+    "@types/gecko": "file:tools/@types",
     "eslint": "8.57.0",
     "eslint-config-prettier": "8.8.0",
     "eslint-plugin-eslint-plugin": "5.4.0",

@@ -83,6 +83,7 @@ browser/components/asrouter/node_modules/
 browser/components/newtab/node_modules/
 browser/components/aboutwelcome/node_modules/
 tools/esmify/node_modules/
+tools/ts/node_modules/
 
 # Ignore newtab component build assets
 browser/components/newtab/logs/
@@ -332,6 +333,9 @@ tools/esmify/jscodeshift
 tools/esmify/jscodeshift.cmd
 tools/esmify/jscodeshift.ps1
 tools/esmify/package-lock.json
+
+# Ignore TypeScript declarations reference file updated by tooling.
+tools/@types/index.d.ts
 
 # Ignore support files for en-US dictionary updates
 extensions/spellcheck/locales/en-US/hunspell/dictionary-sources/scowl
