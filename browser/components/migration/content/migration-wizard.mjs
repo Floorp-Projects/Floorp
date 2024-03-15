@@ -772,6 +772,7 @@ export class MigrationWizard extends HTMLElement {
             MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.EXTENSIONS
           ) {
             messageText.textContent = "";
+            this.#extensionsSuccessLink.target = "_blank";
             this.#extensionsSuccessLink.textContent =
               state.progress[resourceType].message;
           }
@@ -787,6 +788,7 @@ export class MigrationWizard extends HTMLElement {
           messageText.textContent = state.progress[resourceType].message;
           supportLink.textContent = state.progress[resourceType].linkText;
           supportLink.href = state.progress[resourceType].linkURL;
+          supportLink.target = "_blank";
           remainingProgressGroups--;
           totalWarnings++;
           break;
@@ -800,11 +802,13 @@ export class MigrationWizard extends HTMLElement {
           messageText.textContent = state.progress[resourceType].message;
           supportLink.textContent = state.progress[resourceType].linkText;
           supportLink.href = state.progress[resourceType].linkURL;
+          supportLink.target = "_blank";
           if (
             resourceType ==
             MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.EXTENSIONS
           ) {
             messageText.textContent = "";
+            this.#extensionsSuccessLink.target = "_blank";
             this.#extensionsSuccessLink.textContent =
               state.progress[resourceType].message;
           }

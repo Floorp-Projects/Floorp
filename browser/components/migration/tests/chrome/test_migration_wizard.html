@@ -725,12 +725,20 @@
           EXTENSIONS_INFO_HREF
         );
         is(
+          extensionsGroup.querySelector("a.message-text").target,
+          "_blank"
+        );
+        is(
           extensionsGroup.querySelector(".support-text").textContent,
           EXTENSIONS_SUPPORT_STRING
         );
         is(
           extensionsGroup.querySelector(".support-text").href,
           EXTENSIONS_SUPPORT_HREF
+        );
+        is(
+          extensionsGroup.querySelector(".support-text").target,
+          "_blank"
         );
 
         // With progress being complete, the header should be using the completed
@@ -791,6 +799,10 @@
         is(
           extensionsGroup.querySelector(".support-text").href,
           EXTENSIONS_SUPPORT_HREF
+        );
+        is(
+          extensionsGroup.querySelector(".support-text").target,
+          "_blank"
         );
 
         // With progress being complete, the header should be using the completed
