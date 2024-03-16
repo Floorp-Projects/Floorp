@@ -143,41 +143,35 @@ const char* ToMediaKeyStatusStr(dom::MediaKeyStatus aStatus) {
 
 bool IsHardwareDecryptionSupported(
     const dom::MediaKeySystemConfiguration& aConfig) {
-  bool supportHardwareDecryption = false;
   for (const auto& capabilities : aConfig.mAudioCapabilities) {
     if (capabilities.mRobustness.EqualsLiteral("HW_SECURE_ALL")) {
-      supportHardwareDecryption = true;
-      break;
+      return true;
     }
   }
   for (const auto& capabilities : aConfig.mVideoCapabilities) {
     if (capabilities.mRobustness.EqualsLiteral("3000") ||
         capabilities.mRobustness.EqualsLiteral("HW_SECURE_ALL") ||
         capabilities.mRobustness.EqualsLiteral("HW_SECURE_DECODE")) {
-      supportHardwareDecryption = true;
-      break;
+      return true;
     }
   }
-  return supportHardwareDecryption;
+  return false;
 }
 
 bool IsHardwareDecryptionSupported(const KeySystemConfig& aConfig) {
-  bool supportHardwareDecryption = false;
   for (const auto& robustness : aConfig.mAudioRobustness) {
     if (robustness.EqualsLiteral("HW_SECURE_ALL")) {
-      supportHardwareDecryption = true;
-      break;
+      return true;
     }
   }
   for (const auto& robustness : aConfig.mVideoRobustness) {
     if (robustness.EqualsLiteral("3000") ||
         robustness.EqualsLiteral("HW_SECURE_ALL") ||
         robustness.EqualsLiteral("HW_SECURE_DECODE")) {
-      supportHardwareDecryption = true;
-      break;
+      return true;
     }
   }
-  return supportHardwareDecryption;
+  return false;
 }
 
 const char* EncryptionSchemeStr(const CryptoScheme& aScheme) {
