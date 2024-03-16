@@ -114,7 +114,7 @@ class TransformableOutgoingAudioFrame
 ChannelSendFrameTransformerDelegate::ChannelSendFrameTransformerDelegate(
     SendFrameCallback send_frame_callback,
     rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
-    rtc::TaskQueue* encoder_queue)
+    TaskQueueBase* encoder_queue)
     : send_frame_callback_(send_frame_callback),
       frame_transformer_(std::move(frame_transformer)),
       encoder_queue_(encoder_queue) {}

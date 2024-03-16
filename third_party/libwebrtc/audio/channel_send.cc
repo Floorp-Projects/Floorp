@@ -906,7 +906,7 @@ void ChannelSend::InitFrameTransformerDelegate(
   frame_transformer_delegate_ =
       rtc::make_ref_counted<ChannelSendFrameTransformerDelegate>(
           std::move(send_audio_callback), std::move(frame_transformer),
-          &encoder_queue_);
+          encoder_queue_.Get());
   frame_transformer_delegate_->Init();
 }
 
