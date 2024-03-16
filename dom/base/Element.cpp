@@ -54,7 +54,6 @@
 #include "mozilla/PresShellForwards.h"
 #include "mozilla/ReflowOutput.h"
 #include "mozilla/RelativeTo.h"
-#include "mozilla/ScrollOrigin.h"
 #include "mozilla/ScrollTypes.h"
 #include "mozilla/ServoStyleConsts.h"
 #include "mozilla/ServoStyleConstsInlines.h"
@@ -114,6 +113,7 @@
 #include "mozilla/gfx/BaseRect.h"
 #include "mozilla/gfx/BaseSize.h"
 #include "mozilla/gfx/Matrix.h"
+#include "mozilla/widget/Screen.h"
 #include "nsAtom.h"
 #include "nsAttrName.h"
 #include "nsAttrValueInlines.h"
@@ -162,7 +162,6 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIMemoryReporter.h"
 #include "nsIPrincipal.h"
-#include "nsIScreenManager.h"
 #include "nsIScriptError.h"
 #include "nsIScrollableFrame.h"
 #include "nsISpeculativeConnect.h"
@@ -1047,20 +1046,13 @@ int32_t Element::ScreenY() {
 }
 
 already_AddRefed<nsIScreen> Element::GetScreen() {
-  nsIFrame* frame = GetPrimaryFrame(FlushType::Layout);
-  if (!frame) {
-    return nullptr;
+  // Flush layout to guarantee that frames are created if needed, and preserve
+  // behavior.
+  Unused << GetPrimaryFrame(FlushType::Frames);
+  if (nsIWidget* widget = nsContentUtils::WidgetForContent(this)) {
+    return widget->GetWidgetScreen();
   }
-  nsCOMPtr<nsIScreenManager> screenMgr =
-      do_GetService("@mozilla.org/gfx/screenmanager;1");
-  if (!screenMgr) {
-    return nullptr;
-  }
-  nsPresContext* pc = frame->PresContext();
-  const CSSIntRect rect = frame->GetScreenRect();
-  DesktopRect desktopRect = rect * pc->CSSToDevPixelScale() /
-                            pc->DeviceContext()->GetDesktopToDeviceScale();
-  return screenMgr->ScreenForRect(DesktopIntRect::Round(desktopRect));
+  return nullptr;
 }
 
 already_AddRefed<DOMRect> Element::GetBoundingClientRect() {
