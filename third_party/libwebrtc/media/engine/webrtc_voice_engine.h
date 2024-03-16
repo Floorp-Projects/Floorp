@@ -66,7 +66,6 @@
 #include "rtc_base/network/sent_packet.h"
 #include "rtc_base/network_route.h"
 #include "rtc_base/system/file_wrapper.h"
-#include "rtc_base/task_queue.h"
 
 namespace webrtc {
 class AudioFrameProcessor;
@@ -141,7 +140,8 @@ class WebRtcVoiceEngine final : public VoiceEngineInterface {
   void ApplyOptions(const AudioOptions& options);
 
   webrtc::TaskQueueFactory* const task_queue_factory_;
-  std::unique_ptr<rtc::TaskQueue> low_priority_worker_queue_;
+  std::unique_ptr<webrtc::TaskQueueBase, webrtc::TaskQueueDeleter>
+      low_priority_worker_queue_;
 
   webrtc::AudioDeviceModule* adm();
   webrtc::AudioProcessing* apm() const;

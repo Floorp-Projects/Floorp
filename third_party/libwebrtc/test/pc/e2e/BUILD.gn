@@ -99,6 +99,7 @@ if (!build_with_chromium) {
         "../../../api:enable_media_with_defaults",
         "../../../api:time_controller",
         "../../../api/rtc_event_log:rtc_event_log_factory",
+        "../../../api/task_queue",
         "../../../api/task_queue:default_task_queue_factory",
         "../../../api/test/pclf:media_configuration",
         "../../../api/test/pclf:media_quality_test_params",
