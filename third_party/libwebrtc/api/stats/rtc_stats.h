@@ -39,8 +39,8 @@ namespace webrtc {
 // Use the `WEBRTC_RTCSTATS_IMPL` macro when implementing subclasses, see macro
 // for details.
 //
-// Derived classes list their dictionary members, RTCStatsMember<T>, as public
-// fields, allowing the following:
+// Derived classes list their dictionary attributes (RTCStatsMember<T> to soon
+// be replaced by absl::optional<T>) as public fields, allowing the following:
 //
 // RTCFooStats foo("fooId", Timestamp::Micros(GetCurrentTime()));
 // foo.bar = 42;
@@ -48,10 +48,11 @@ namespace webrtc {
 // foo.baz->push_back("hello world");
 // uint32_t x = *foo.bar;
 //
-// Pointers to all the members are available with `Members`, allowing iteration:
+// Pointers to all the attributes are available with `Attributes()`, allowing
+// iteration:
 //
-// for (const RTCStatsMemberInterface* member : foo.Members()) {
-//   printf("%s = %s\n", member->name(), member->ValueToString().c_str());
+// for (const auto& attribute : foo.Attributes()) {
+//   printf("%s = %s\n", attribute.name(), attribute.ValueToString().c_str());
 // }
 class RTC_EXPORT RTCStats {
  public:
@@ -84,18 +85,14 @@ class RTC_EXPORT RTCStats {
     }
     RTC_CHECK_NOTREACHED();
   }
-  // Returns Attributes() as `RTCStatsMemberInterface` pointers.
-  // TODO(https://crbug.com/webrtc/15164): Update callers to use Attributes()
-  // instead and delete this method as well as the RTCStatsMemberInterface.
-  std::vector<const RTCStatsMemberInterface*> Members() const;
   // Checks if the two stats objects are of the same type and have the same
-  // member values. Timestamps are not compared. These operators are exposed for
-  // testing.
+  // attribute values. Timestamps are not compared. These operators are exposed
+  // for testing.
   bool operator==(const RTCStats& other) const;
   bool operator!=(const RTCStats& other) const;
 
   // Creates a JSON readable string representation of the stats
-  // object, listing all of its members (names and values).
+  // object, listing all of its attributes (names and values).
   std::string ToJson() const;
 
   // Downcasts the stats object to an `RTCStats` subclass `T`. DCHECKs that the
@@ -112,13 +109,6 @@ class RTC_EXPORT RTCStats {
 
   std::string const id_;
   Timestamp timestamp_;
-
-  // Because Members() return a raw pointers we need to cache attributes to
-  // ensure the pointers are still valid after the method has returned. Mutable
-  // to allow lazy instantiation the first time the method is called.
-  // TODO(https://crbug.com/webrtc/15164): Migrate all uses of Members() to
-  // Attributes() and delete Members() and `cached_attributes_`.
-  mutable std::vector<Attribute> cached_attributes_;
 };
 
 // All `RTCStats` classes should use these macros.
@@ -127,9 +117,8 @@ class RTC_EXPORT RTCStats {
 //
 // These macros declare (in _DECL) and define (in _IMPL) the static `kType` and
 // overrides methods as required by subclasses of `RTCStats`: `copy`, `type` and
-// `MembersOfThisObjectAndAncestors`. The |...| argument is a list of addresses
-// to each member defined in the implementing class. The list must have at least
-// one member.
+// `AttributesImpl`. The |...| argument is a list of addresses to each attribute
+// defined in the implementing class. The list must have at least one attribute.
 //
 // (Since class names need to be known to implement these methods this cannot be
 // part of the base `RTCStats`. While these methods could be implemented using
@@ -195,25 +184,6 @@ class RTC_EXPORT RTCStats {
           webrtc::Attribute::FromMemberInterface(this_members[i]));            \
     }                                                                          \
     return attributes;                                                         \
-  }
-
-// A version of WEBRTC_RTCSTATS_IMPL() where "..." is omitted, used to avoid a
-// compile error on windows. This is used if the stats dictionary does not
-// declare any members of its own (but perhaps its parent dictionary does).
-#define WEBRTC_RTCSTATS_IMPL_NO_MEMBERS(this_class, parent_class, type_str) \
-  const char this_class::kType[] = type_str;                                \
-                                                                            \
-  std::unique_ptr<webrtc::RTCStats> this_class::copy() const {              \
-    return std::make_unique<this_class>(*this);                             \
-  }                                                                         \
-                                                                            \
-  const char* this_class::type() const {                                    \
-    return this_class::kType;                                               \
-  }                                                                         \
-                                                                            \
-  std::vector<webrtc::Attribute> this_class::AttributesImpl(                \
-      size_t additional_capacity) const {                                   \
-    return parent_class::AttributesImpl(0);                                 \
   }
 
 }  // namespace webrtc
