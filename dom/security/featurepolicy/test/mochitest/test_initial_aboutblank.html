@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test feature policy - Initial about:blank</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe name="parentIframe" allow="fullscreen 'none'" srcdoc="
+  <iframe name='regular'></iframe>
+  <iframe name='transient'></iframe>
+  <script>transient.stop()</script>
+"></iframe>
+
+<script type="text/javascript">
+add_task(function testAboutBlank() {
+  isDeeply(frames[0].transient.document.featurePolicy.allowedFeatures(),
+           frames[0].document.featurePolicy.allowedFeatures(),
+           "check allowed feature list for initial about:blank");
+  isDeeply(frames[0].regular.document.featurePolicy.allowedFeatures(),
+           frames[0].document.featurePolicy.allowedFeatures(),
+           "check allowed feature list for real load about:blank");
+});
+</script>
+</body>
+</html>
