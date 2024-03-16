@@ -14,6 +14,7 @@
 #include <memory>
 #include <vector>
 
+#include "api/task_queue/task_queue_base.h"
 #include "api/task_queue/task_queue_factory.h"
 #include "modules/audio_device/audio_device_buffer.h"
 #include "modules/audio_device/audio_device_generic.h"
@@ -22,7 +23,6 @@
 #include "modules/audio_device/include/test_audio_device.h"
 #include "rtc_base/buffer.h"
 #include "rtc_base/synchronization/mutex.h"
-#include "rtc_base/task_queue.h"
 
 namespace webrtc {
 
@@ -190,7 +190,7 @@ class TestAudioDevice : public AudioDeviceGeneric {
 
   std::vector<int16_t> playout_buffer_ RTC_GUARDED_BY(lock_);
   rtc::BufferT<int16_t> recording_buffer_ RTC_GUARDED_BY(lock_);
-  std::unique_ptr<rtc::TaskQueue> task_queue_;
+  std::unique_ptr<TaskQueueBase, TaskQueueDeleter> task_queue_;
 };
 
 }  // namespace webrtc
