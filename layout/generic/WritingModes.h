@@ -62,11 +62,11 @@ constexpr auto AllLogicalSides() {
                                                eLogicalSideIEnd);
 }
 
-enum LogicalCorner {
-  eLogicalCornerBStartIStart = 0,
-  eLogicalCornerBStartIEnd = 1,
-  eLogicalCornerBEndIEnd = 2,
-  eLogicalCornerBEndIStart = 3
+enum class LogicalCorner : uint8_t {
+  BStartIStart,
+  BStartIEnd,
+  BEndIEnd,
+  BEndIStart,
 };
 
 // Physical axis constants.

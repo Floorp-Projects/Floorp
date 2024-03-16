@@ -981,13 +981,13 @@ void nsTableCellMap::SetBCBorderCorner(LogicalCorner aCorner,
   int32_t yPos = aRowIndex;
   int32_t rgYPos = aRowIndex - aCellMapStart;
 
-  if (eLogicalCornerBStartIEnd == aCorner) {
+  if (LogicalCorner::BStartIEnd == aCorner) {
     xPos++;
-  } else if (eLogicalCornerBEndIEnd == aCorner) {
+  } else if (LogicalCorner::BEndIEnd == aCorner) {
     xPos++;
     rgYPos++;
     yPos++;
-  } else if (eLogicalCornerBEndIStart == aCorner) {
+  } else if (LogicalCorner::BEndIStart == aCorner) {
     rgYPos++;
     yPos++;
   }
