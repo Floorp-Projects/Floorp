@@ -1191,7 +1191,7 @@ TEST_F(PeerConnectionEncodingsIntegrationTest,
   ASSERT_EQ(outbound_rtps.size(), 1u);
   std::string codec_name = GetCurrentCodecMimeType(report, *outbound_rtps[0]);
   EXPECT_STRCASEEQ(("video/" + vp9->name).c_str(), codec_name.c_str());
-  EXPECT_EQ(outbound_rtps[0]->scalability_mode.ValueOrDefault(""), "L3T3");
+  EXPECT_EQ(outbound_rtps[0]->scalability_mode.value_or(""), "L3T3");
 }
 
 TEST_F(PeerConnectionEncodingsIntegrationTest,

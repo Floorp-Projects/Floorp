@@ -47,7 +47,7 @@ void CrossMediaMetricsReporter::OnStatsReports(
   std::map<std::string, std::vector<const RTCInboundRtpStreamStats*>>
       sync_group_stats;
   for (const auto& stat : inbound_stats) {
-    if (stat->estimated_playout_timestamp.ValueOrDefault(0.) > 0 &&
+    if (stat->estimated_playout_timestamp.value_or(0.) > 0 &&
         stat->track_identifier.is_defined()) {
       sync_group_stats[reporter_helper_
                            ->GetStreamInfoFromTrackId(*stat->track_identifier)
