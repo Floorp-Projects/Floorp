@@ -90,10 +90,6 @@ class RTCStatsMember : public RTCStatsMemberInterface {
   Type type() const override { return StaticType(); }
   bool is_sequence() const override;
   bool is_string() const override;
-  // TODO(https://crbug.com/webrtc/15164): Delete both in favor of
-  // Attribute::ToString().
-  std::string ValueToString() const;
-  std::string ValueToJson() const;
 
   template <typename U>
   inline T value_or(U default_value) const {
@@ -164,10 +160,6 @@ typedef std::map<std::string, double> MapStringDouble;
   RTC_EXPORT bool RTCStatsMember<T>::is_sequence() const;                   \
   template <>                                                               \
   RTC_EXPORT bool RTCStatsMember<T>::is_string() const;                     \
-  template <>                                                               \
-  RTC_EXPORT std::string RTCStatsMember<T>::ValueToString() const;          \
-  template <>                                                               \
-  RTC_EXPORT std::string RTCStatsMember<T>::ValueToJson() const;            \
   extern template class RTC_EXPORT_TEMPLATE_DECLARE(RTC_EXPORT)             \
       RTCStatsMember<T>
 
