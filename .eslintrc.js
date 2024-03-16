@@ -253,6 +253,12 @@ module.exports = {
       },
     },
     {
+      files: ["browser/base/content/browser.js"],
+      rules: {
+        "mozilla/no-more-globals": "error",
+      },
+    },
+    {
       // Bug 881389 - Complete switching to console.createInstance from custom
       // modules. To support the gradual switch, we log these as warnings until
       // they have been transitioned.
