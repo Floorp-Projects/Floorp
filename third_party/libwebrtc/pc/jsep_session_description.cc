@@ -32,31 +32,8 @@ using cricket::SessionDescription;
 namespace webrtc {
 namespace {
 
-// RFC 5245
-// It is RECOMMENDED that default candidates be chosen based on the
-// likelihood of those candidates to work with the peer that is being
-// contacted.  It is RECOMMENDED that relayed > reflexive > host.
-constexpr int kPreferenceUnknown = 0;
-constexpr int kPreferenceHost = 1;
-constexpr int kPreferenceReflexive = 2;
-constexpr int kPreferenceRelayed = 3;
-
 constexpr char kDummyAddress[] = "0.0.0.0";
 constexpr int kDummyPort = 9;
-
-int GetCandidatePreferenceFromType(const Candidate& c) {
-  int preference = kPreferenceUnknown;
-  if (c.is_local()) {
-    preference = kPreferenceHost;
-  } else if (c.is_stun()) {
-    preference = kPreferenceReflexive;
-  } else if (c.is_relay()) {
-    preference = kPreferenceRelayed;
-  } else {
-    preference = kPreferenceUnknown;
-  }
-  return preference;
-}
 
 // Update the connection address for the MediaContentDescription based on the
 // candidates.
@@ -66,7 +43,7 @@ void UpdateConnectionAddress(
   int port = kDummyPort;
   std::string ip = kDummyAddress;
   std::string hostname;
-  int current_preference = kPreferenceUnknown;
+  int current_preference = 0;  // Start with lowest preference.
   int current_family = AF_UNSPEC;
   for (size_t i = 0; i < candidate_collection.count(); ++i) {
     const IceCandidateInterface* jsep_candidate = candidate_collection.at(i);
@@ -78,8 +55,7 @@ void UpdateConnectionAddress(
     if (jsep_candidate->candidate().protocol() != cricket::UDP_PROTOCOL_NAME) {
       continue;
     }
-    const int preference =
-        GetCandidatePreferenceFromType(jsep_candidate->candidate());
+    const int preference = jsep_candidate->candidate().type_preference();
     const int family = jsep_candidate->candidate().address().ipaddr().family();
     // See if this candidate is more preferable then the current one if it's the
     // same family. Or if the current family is IPv4 already so we could safely
