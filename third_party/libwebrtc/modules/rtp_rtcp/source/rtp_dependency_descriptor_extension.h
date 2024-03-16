@@ -54,6 +54,16 @@ class RtpDependencyDescriptorExtension {
   static constexpr std::bitset<32> kAllChainsAreActive = ~uint32_t{0};
 };
 
+// Trait to only read the mandatory part of the descriptor.
+class RtpDependencyDescriptorExtensionMandatory {
+ public:
+  static constexpr webrtc::RTPExtensionType kId =
+      webrtc::RtpDependencyDescriptorExtension::kId;
+
+  static bool Parse(rtc::ArrayView<const uint8_t> data,
+                    DependencyDescriptorMandatory* descriptor);
+};
+
 }  // namespace webrtc
 
 #endif  // MODULES_RTP_RTCP_SOURCE_RTP_DEPENDENCY_DESCRIPTOR_EXTENSION_H_
