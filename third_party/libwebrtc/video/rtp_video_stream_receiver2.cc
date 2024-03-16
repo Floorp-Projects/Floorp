@@ -659,12 +659,8 @@ void RtpVideoStreamReceiver2::OnReceivedPayloadData(
   }
 
   if (nack_module_) {
-    const bool is_keyframe =
-        video_header.is_first_packet_in_frame &&
-        video_header.frame_type == VideoFrameType::kVideoFrameKey;
-
     packet->times_nacked = nack_module_->OnReceivedPacket(
-        rtp_packet.SequenceNumber(), is_keyframe, rtp_packet.recovered());
+        rtp_packet.SequenceNumber(), rtp_packet.recovered());
   } else {
     packet->times_nacked = -1;
   }
@@ -1151,8 +1147,7 @@ void RtpVideoStreamReceiver2::NotifyReceiverOfEmptyPacket(uint16_t seq_num) {
 
   OnInsertedPacket(packet_buffer_.InsertPadding(seq_num));
   if (nack_module_) {
-    nack_module_->OnReceivedPacket(seq_num, /* is_keyframe = */ false,
-                                   /* is _recovered = */ false);
+    nack_module_->OnReceivedPacket(seq_num, /*is_recovered=*/false);
   }
   if (loss_notification_controller_) {
     // TODO(bugs.webrtc.org/10336): Handle empty packets.
