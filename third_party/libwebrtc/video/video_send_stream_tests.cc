@@ -75,7 +75,7 @@
 #include "video/config/encoder_stream_factory.h"
 #include "video/send_statistics_proxy.h"
 #include "video/transport_adapter.h"
-#include "video/video_send_stream.h"
+#include "video/video_send_stream_impl.h"
 
 namespace webrtc {
 namespace test {
@@ -83,13 +83,13 @@ class VideoSendStreamPeer {
  public:
   explicit VideoSendStreamPeer(webrtc::VideoSendStream* base_class_stream)
       : internal_stream_(
-            static_cast<internal::VideoSendStream*>(base_class_stream)) {}
+            static_cast<internal::VideoSendStreamImpl*>(base_class_stream)) {}
   absl::optional<float> GetPacingFactorOverride() const {
     return internal_stream_->GetPacingFactorOverride();
   }
 
  private:
-  internal::VideoSendStream const* const internal_stream_;
+  internal::VideoSendStreamImpl const* const internal_stream_;
 };
 }  // namespace test
 
