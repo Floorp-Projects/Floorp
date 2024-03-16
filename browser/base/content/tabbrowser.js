@@ -3164,7 +3164,6 @@
 
         
         let floorpWorkspaceId, floorpLastShowWorkspaceId, floorpWorkspace, floorpSSB;
-        let WorkspacesService;
 
         var { FloorpAppConstants } = ChromeUtils.importESModule(
           "resource:///modules/FloorpAppConstants.sys.mjs"
@@ -3175,10 +3174,6 @@
           floorpLastShowWorkspaceId = tabData.floorpLastShowWorkspaceId;
           floorpWorkspace = tabData.floorpWorkspace ? tabData.floorpWorkspace : Services.prefs.getStringPref("floorp.browser.workspace.all").split(",")[0];
           floorpSSB = tabData.floorpSSB;
-
-          ChromeUtils.importESModule(
-            "resource:///modules/FloorpWorkspacesService.sys.mjs"
-          )
         }
 
         if (floorpSSB) {
@@ -3196,12 +3191,18 @@
           tab = this.selectedTab;
           tab.setAttribute("floorpWorkspace", floorpWorkspace);
 
-          if (floorpWorkspaceId) {
-            tab.setAttribute(WorkspacesService.workspacesTabAttributionId, floorpWorkspaceId);
-          }
+          if (FloorpAppConstants.FLOORP_PRIVATE_COMPONENTS_ENABLED) {
+            let { WorkspacesService } = ChromeUtils.importESModule(
+              "resource:///modules/WorkspacesService.sys.mjs"
+            );      
 
-          if (floorpLastShowWorkspaceId) {
-            tab.setAttribute(WorkspacesService.workspaceLastShowId, floorpLastShowWorkspaceId);
+            if (floorpWorkspaceId) {
+              tab.setAttribute(WorkspacesService.workspacesTabAttributionId, floorpWorkspaceId);
+            }
+  
+            if (floorpLastShowWorkspaceId) {
+              tab.setAttribute(WorkspacesService.workspaceLastShowId, floorpLastShowWorkspaceId);
+            }
           }
 
           if (floorpSSB) {
@@ -3259,12 +3260,18 @@
 
           tab.setAttribute("floorpWorkspace", floorpWorkspace);
 
-          if (floorpWorkspaceId) {
-            tab.setAttribute(WorkspacesService.workspacesTabAttributionId, floorpWorkspaceId);
-          }
+          if (FloorpAppConstants.FLOORP_PRIVATE_COMPONENTS_ENABLED) {
+            let { WorkspacesService } = ChromeUtils.importESModule(
+              "resource:///modules/WorkspacesService.sys.mjs"
+            );      
 
-          if (floorpLastShowWorkspaceId) {
-            tab.setAttribute(WorkspacesService.workspaceLastShowId, floorpLastShowWorkspaceId);
+            if (floorpWorkspaceId) {
+              tab.setAttribute(WorkspacesService.workspacesTabAttributionId, floorpWorkspaceId);
+            }
+  
+            if (floorpLastShowWorkspaceId) {
+              tab.setAttribute(WorkspacesService.workspaceLastShowId, floorpLastShowWorkspaceId);
+            }
           }
 
           if (select) {
