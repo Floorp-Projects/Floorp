@@ -214,7 +214,8 @@ StunDictionaryView::ApplyDelta(const StunByteStringAttribute& delta) {
       if (attr->value_type() == STUN_VALUE_BYTE_STRING && attr->length() == 0) {
         attrs_.erase(attr->type());
       } else {
-        attrs_[attr->type()] = std::move(attr);
+        int attribute_type = attr->type();
+        attrs_[attribute_type] = std::move(attr);
       }
     }
   }
