@@ -37,7 +37,6 @@ rtc_library("api") {
     "../../api/task_queue",
     "../../rtc_base:macromagic",
     "../../rtc_base:refcount",
-    "../../rtc_base:rtc_task_queue",
     "../../rtc_base:stringutils",
     "../../rtc_base/system:arch",
     "../../rtc_base/system:file_wrapper",
