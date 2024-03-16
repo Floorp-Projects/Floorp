@@ -65,18 +65,6 @@ std::string RTCStats::ToJson() const {
   return sb.Release();
 }
 
-std::vector<const RTCStatsMemberInterface*> RTCStats::Members() const {
-  if (cached_attributes_.empty()) {
-    cached_attributes_ = Attributes();
-  }
-  std::vector<const RTCStatsMemberInterface*> members;
-  members.reserve(cached_attributes_.size());
-  for (const auto& attribute : cached_attributes_) {
-    members.push_back(&attribute);
-  }
-  return members;
-}
-
 std::vector<Attribute> RTCStats::Attributes() const {
   return AttributesImpl(0);
 }
