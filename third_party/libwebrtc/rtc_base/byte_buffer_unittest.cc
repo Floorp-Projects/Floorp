@@ -210,6 +210,27 @@ TEST(ByteBufferTest, TestReadWriteBuffer) {
   buffer.Clear();
 }
 
+TEST(ByteBufferTest, TestReadStringView) {
+  const absl::string_view tests[] = {"hello", " ", "string_view"};
+  std::string buffer;
+  for (const auto& test : tests)
+    buffer += test;
+
+  rtc::ArrayView<const uint8_t> bytes(
+      reinterpret_cast<const uint8_t*>(&buffer[0]), buffer.size());
+
+  ByteBufferReader read_buf(bytes);
+  size_t consumed = 0;
+  for (const auto& test : tests) {
+    absl::string_view sv;
+    EXPECT_TRUE(read_buf.ReadStringView(&sv, test.length()));
+    EXPECT_EQ(sv.compare(test), 0);
+    // The returned string view should point directly into the original string.
+    EXPECT_EQ(&sv[0], &buffer[0 + consumed]);
+    consumed += sv.size();
+  }
+}
+
 TEST(ByteBufferTest, TestReadWriteUVarint) {
   ByteBufferWriter write_buffer;
   size_t size = 0;
