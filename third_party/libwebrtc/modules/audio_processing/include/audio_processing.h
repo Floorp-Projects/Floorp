@@ -37,10 +37,6 @@
 #include "rtc_base/system/file_wrapper.h"
 #include "rtc_base/system/rtc_export.h"
 
-namespace rtc {
-class TaskQueue;
-}  // namespace rtc
-
 namespace webrtc {
 
 class AecDump;
@@ -634,14 +630,6 @@ class RTC_EXPORT AudioProcessing : public RefCountInterface {
   // return value of true indicates that the file has been
   // sucessfully opened, while a value of false indicates that
   // opening the file failed.
-  // TODO: bugs.webrtc.org/14169 - Delete rtc::TaskQueue variants
-  [[deprecated]] bool CreateAndAttachAecDump(absl::string_view file_name,
-                                             int64_t max_log_size_bytes,
-                                             rtc::TaskQueue* worker_queue);
-  [[deprecated]] bool CreateAndAttachAecDump(FILE* handle,
-                                             int64_t max_log_size_bytes,
-                                             rtc::TaskQueue* worker_queue);
-
   virtual bool CreateAndAttachAecDump(
       absl::string_view file_name,
       int64_t max_log_size_bytes,

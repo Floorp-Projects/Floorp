@@ -19,7 +19,6 @@
 #include "modules/audio_processing/include/aec_dump.h"
 #include "rtc_base/system/file_wrapper.h"
 #include "rtc_base/system/rtc_export.h"
-#include "rtc_base/task_queue.h"
 
 namespace webrtc {
 
@@ -42,15 +41,6 @@ class RTC_EXPORT AecDumpFactory {
       absl::Nonnull<FILE*> handle,
       int64_t max_log_size_bytes,
       absl::Nonnull<TaskQueueBase*> worker_queue);
-
-  // TODO: bugs.webrtc.org/14169 - Delete this variant when no longer used by
-  // chromium.
-  static absl::Nullable<std::unique_ptr<AecDump>> Create(
-      absl::Nonnull<FILE*> handle,
-      int64_t max_log_size_bytes,
-      absl::Nonnull<rtc::TaskQueue*> worker_queue) {
-    return Create(handle, max_log_size_bytes, worker_queue->Get());
-  }
 };
 
 }  // namespace webrtc
