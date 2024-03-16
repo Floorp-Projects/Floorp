@@ -3721,12 +3721,15 @@ class RTCTestStats : public RTCStats {
   WEBRTC_RTCSTATS_DECL();
 
   RTCTestStats(const std::string& id, Timestamp timestamp)
-      : RTCStats(id, timestamp), dummy_stat("dummyStat") {}
+      : RTCStats(id, timestamp) {}
 
   RTCStatsMember<int32_t> dummy_stat;
 };
 
-WEBRTC_RTCSTATS_IMPL(RTCTestStats, RTCStats, "test-stats", &dummy_stat)
+WEBRTC_RTCSTATS_IMPL(RTCTestStats,
+                     RTCStats,
+                     "test-stats",
+                     AttributeInit("dummyStat", &dummy_stat))
 
 // Overrides the stats collection to verify thread usage and that the resulting
 // partial reports are merged.

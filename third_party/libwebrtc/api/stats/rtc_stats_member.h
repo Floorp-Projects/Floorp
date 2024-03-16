@@ -53,7 +53,6 @@ class RTCStatsMemberInterface {
 
   virtual ~RTCStatsMemberInterface() {}
 
-  const char* name() const { return name_; }
   virtual Type type() const = 0;
   virtual bool is_sequence() const = 0;
   virtual bool is_string() const = 0;
@@ -82,11 +81,7 @@ class RTCStatsMemberInterface {
   }
 
  protected:
-  explicit RTCStatsMemberInterface(const char* name) : name_(name) {}
-
   virtual bool IsEqual(const RTCStatsMemberInterface& other) const = 0;
-
-  const char* const name_;
 };
 
 // Template implementation of `RTCStatsMemberInterface`.
@@ -95,16 +90,8 @@ class RTCStatsMemberInterface {
 template <typename T>
 class RTCStatsMember : public RTCStatsMemberInterface {
  public:
-  explicit RTCStatsMember(const char* name)
-      : RTCStatsMemberInterface(name), value_() {}
-  RTCStatsMember(const char* name, const T& value)
-      : RTCStatsMemberInterface(name), value_(value) {}
-  RTCStatsMember(const char* name, T&& value)
-      : RTCStatsMemberInterface(name), value_(std::move(value)) {}
-  explicit RTCStatsMember(const RTCStatsMember<T>& other)
-      : RTCStatsMemberInterface(other.name_), value_(other.value_) {}
-  explicit RTCStatsMember(RTCStatsMember<T>&& other)
-      : RTCStatsMemberInterface(other.name_), value_(std::move(other.value_)) {}
+  RTCStatsMember() {}
+  explicit RTCStatsMember(const T& value) : value_(value) {}
 
   static Type StaticType();
   Type type() const override { return StaticType(); }

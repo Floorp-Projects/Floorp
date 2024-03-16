@@ -33,66 +33,22 @@ struct VisitIsSequence {
 struct VisitIsEqual {
   template <typename T>
   bool operator()(const RTCStatsMember<T>* attribute) {
-    return attribute->IsEqual(other);
+    if (!other.holds_alternative<T>()) {
+      return false;
+    }
+    absl::optional<T> attribute_as_optional =
+        attribute->has_value() ? absl::optional<T>(attribute->value())
+                               : absl::nullopt;
+    return attribute_as_optional == other.as_optional<T>();
   }
 
-  const RTCStatsMemberInterface& other;
+  const Attribute& other;
 };
 
 }  // namespace
 
-Attribute::~Attribute() {}
-
-// static
-Attribute Attribute::FromMemberInterface(
-    const RTCStatsMemberInterface* member) {
-  switch (member->type()) {
-    case RTCStatsMemberInterface::Type::kBool:
-      return Attribute(&member->cast_to<RTCStatsMember<bool>>());
-    case RTCStatsMemberInterface::Type::kInt32:
-      return Attribute(&member->cast_to<RTCStatsMember<int32_t>>());
-    case RTCStatsMemberInterface::Type::kUint32:
-      return Attribute(&member->cast_to<RTCStatsMember<uint32_t>>());
-    case RTCStatsMemberInterface::Type::kInt64:
-      return Attribute(&member->cast_to<RTCStatsMember<int64_t>>());
-    case RTCStatsMemberInterface::Type::kUint64:
-      return Attribute(&member->cast_to<RTCStatsMember<uint64_t>>());
-    case RTCStatsMemberInterface::Type::kDouble:
-      return Attribute(&member->cast_to<RTCStatsMember<double>>());
-    case RTCStatsMemberInterface::Type::kString:
-      return Attribute(&member->cast_to<RTCStatsMember<std::string>>());
-    case RTCStatsMemberInterface::Type::kSequenceBool:
-      return Attribute(&member->cast_to<RTCStatsMember<std::vector<bool>>>());
-    case RTCStatsMemberInterface::Type::kSequenceInt32:
-      return Attribute(
-          &member->cast_to<RTCStatsMember<std::vector<int32_t>>>());
-    case RTCStatsMemberInterface::Type::kSequenceUint32:
-      return Attribute(
-          &member->cast_to<RTCStatsMember<std::vector<uint32_t>>>());
-    case RTCStatsMemberInterface::Type::kSequenceInt64:
-      return Attribute(
-          &member->cast_to<RTCStatsMember<std::vector<int64_t>>>());
-    case RTCStatsMemberInterface::Type::kSequenceUint64:
-      return Attribute(
-          &member->cast_to<RTCStatsMember<std::vector<uint64_t>>>());
-    case RTCStatsMemberInterface::Type::kSequenceDouble:
-      return Attribute(&member->cast_to<RTCStatsMember<std::vector<double>>>());
-    case RTCStatsMemberInterface::Type::kSequenceString:
-      return Attribute(
-          &member->cast_to<RTCStatsMember<std::vector<std::string>>>());
-    case RTCStatsMemberInterface::Type::kMapStringUint64:
-      return Attribute(
-          &member->cast_to<RTCStatsMember<std::map<std::string, uint64_t>>>());
-    case RTCStatsMemberInterface::Type::kMapStringDouble:
-      return Attribute(
-          &member->cast_to<RTCStatsMember<std::map<std::string, double>>>());
-    default:
-      RTC_CHECK_NOTREACHED();
-  }
-}
-
 const char* Attribute::name() const {
-  return absl::visit([](const auto* attr) { return attr->name(); }, attribute_);
+  return name_;
 }
 
 const Attribute::StatVariant& Attribute::as_variant() const {
@@ -104,18 +60,6 @@ bool Attribute::has_value() const {
                      attribute_);
 }
 
-RTCStatsMemberInterface::Type Attribute::type() const {
-  return absl::visit([](const auto* attr) { return attr->type(); }, attribute_);
-}
-
-const RTCStatsMemberInterface* Attribute::member_ptr() const {
-  return absl::visit(
-      [](const auto* attr) {
-        return static_cast<const RTCStatsMemberInterface*>(attr);
-      },
-      attribute_);
-}
-
 bool Attribute::is_sequence() const {
   return absl::visit(VisitIsSequence(), attribute_);
 }
@@ -123,11 +67,6 @@ bool Attribute::is_sequence() const {
 bool Attribute::is_string() const {
   return absl::holds_alternative<const RTCStatsMember<std::string>*>(
       attribute_);
-}
-
-bool Attribute::is_defined() const {
-  return absl::visit([](const auto* attr) { return attr->is_defined(); },
-                     attribute_);
 }
 
 std::string Attribute::ValueToString() const {
@@ -140,8 +79,16 @@ std::string Attribute::ValueToJson() const {
                      attribute_);
 }
 
-bool Attribute::IsEqual(const RTCStatsMemberInterface& other) const {
-  return absl::visit(VisitIsEqual{.other = *other.member_ptr()}, attribute_);
+bool Attribute::operator==(const Attribute& other) const {
+  return absl::visit(VisitIsEqual{.other = other}, attribute_);
 }
+
+bool Attribute::operator!=(const Attribute& other) const {
+  return !(*this == other);
+}
+
+AttributeInit::AttributeInit(const char* name,
+                             const Attribute::StatVariant& variant)
+    : name(name), variant(variant) {}
 
 }  // namespace webrtc

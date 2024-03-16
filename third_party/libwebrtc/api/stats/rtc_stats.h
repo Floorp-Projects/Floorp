@@ -162,28 +162,32 @@ class RTC_EXPORT RTCStats {
   std::unique_ptr<webrtc::RTCStats> copy() const override;                  \
   const char* type() const override
 
-#define WEBRTC_RTCSTATS_IMPL(this_class, parent_class, type_str, ...)          \
-  const char this_class::kType[] = type_str;                                   \
-                                                                               \
-  std::unique_ptr<webrtc::RTCStats> this_class::copy() const {                 \
-    return std::make_unique<this_class>(*this);                                \
-  }                                                                            \
-                                                                               \
-  const char* this_class::type() const {                                       \
-    return this_class::kType;                                                  \
-  }                                                                            \
-                                                                               \
-  std::vector<webrtc::Attribute> this_class::AttributesImpl(                   \
-      size_t additional_capacity) const {                                      \
-    const webrtc::RTCStatsMemberInterface* this_members[] = {__VA_ARGS__};     \
-    size_t this_members_size = sizeof(this_members) / sizeof(this_members[0]); \
-    std::vector<webrtc::Attribute> attributes =                                \
-        parent_class::AttributesImpl(this_members_size + additional_capacity); \
-    for (size_t i = 0; i < this_members_size; ++i) {                           \
-      attributes.push_back(                                                    \
-          webrtc::Attribute::FromMemberInterface(this_members[i]));            \
-    }                                                                          \
-    return attributes;                                                         \
+#define WEBRTC_RTCSTATS_IMPL(this_class, parent_class, type_str, ...)         \
+  const char this_class::kType[] = type_str;                                  \
+                                                                              \
+  std::unique_ptr<webrtc::RTCStats> this_class::copy() const {                \
+    return std::make_unique<this_class>(*this);                               \
+  }                                                                           \
+                                                                              \
+  const char* this_class::type() const {                                      \
+    return this_class::kType;                                                 \
+  }                                                                           \
+                                                                              \
+  std::vector<webrtc::Attribute> this_class::AttributesImpl(                  \
+      size_t additional_capacity) const {                                     \
+    webrtc::AttributeInit attribute_inits[] = {__VA_ARGS__};                  \
+    size_t attribute_inits_size =                                             \
+        sizeof(attribute_inits) / sizeof(attribute_inits[0]);                 \
+    std::vector<webrtc::Attribute> attributes = parent_class::AttributesImpl( \
+        attribute_inits_size + additional_capacity);                          \
+    for (size_t i = 0; i < attribute_inits_size; ++i) {                       \
+      attributes.push_back(absl::visit(                                       \
+          [&](const auto* field) {                                            \
+            return Attribute(attribute_inits[i].name, field);                 \
+          },                                                                  \
+          attribute_inits[i].variant));                                       \
+    }                                                                         \
+    return attributes;                                                        \
   }
 
 }  // namespace webrtc
