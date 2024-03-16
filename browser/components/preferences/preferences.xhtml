@@ -137,6 +137,7 @@
           <image class="category-icon"/>
           <label class="category-name" flex="1" data-l10n-id="files-and-applications-title"></label>  
           </richlistitem>
+#ifdef FLOORP_PRIVATE_COMPONENTS_ENABLED
           <richlistitem id="category-CSK"
                       class="category"
                       value="paneCSK"
@@ -147,7 +148,6 @@
           <image class="category-icon"/>
           <label class="category-name" flex="1" data-l10n-id="category-CSK-title"></label>
         </richlistitem>
-#ifdef  FLOORP_PRIVATE_COMPONENTS_ENABLED
         <richlistitem id="category-ssb"
                       class="category"
                       value="paneSsb"
@@ -305,12 +305,12 @@
 #include ../../../floorp/browser/components/preferences/bsb.inc.xhtml
 #include ../../../floorp/browser/components/preferences/userjs.inc.xhtml
 #include ../../../floorp/browser/components/preferences/design.inc.xhtml
-#include ../../../floorp/browser/components/preferences/csk.inc.xhtml
 #include ../../../floorp/browser/components/preferences/lepton.inc.xhtml
 
 #ifdef FLOORP_PRIVATE_COMPONENTS_ENABLED
-#include ../../../floorp/browser/components/preferences/workspaces.inc.xhtml
+#include ../../../floorp/browser/components/preferences/csk.inc.xhtml
 #include ../../../floorp/browser/components/preferences/ssb.inc.xhtml
+#include ../../../floorp/browser/components/preferences/workspaces.inc.xhtml
 #endif
 
 #include containers.inc.xhtml
