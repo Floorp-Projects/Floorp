@@ -220,11 +220,6 @@
   value: false
   mirror: always
 
-- name: accessibility.ARIAReflection.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # Whether form controls and images should be focusable with mouse, in content
 # documents.
 #
