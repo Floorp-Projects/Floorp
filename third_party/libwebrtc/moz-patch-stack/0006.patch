@@ -1,49 +1,46 @@
 From: Dan Minor <dminor@mozilla.com>
-Date: Tue, 27 Mar 2018 15:43:00 -0400
-Subject: Bug 1376873 - Disable Mid support in RtpDemuxer; r=mjf
+Date: Wed, 18 Nov 2020 13:33:00 -0500
+Subject: Bug 1654112 - Suppress -Wclass-varargs warning in logging.h. r=ng
 
-The only use of Mid in the current webrtc.org code is in the unit tests.
-RtpStreamReceiverController only allows adding sinks using SSRCs. Because
-of this, we'll end up dropping packets in the RtpDemuxer with the current
-code as none of our Mids will be recognized.
+This needs some investigation to see why we get this warning when it is not
+present upstream.
 
-Tip of webrtc.org fully supports using Mids, so we'll be able to enable this
-code again after the next update.
+Since both were doing the same thing for different compiler chains,
+also includes:
+Bug 1654112 - linux build fix (pragmas) for base-toolchains* . r=ng
 
-Differential Revision: https://phabricator.services.mozilla.com/D7442
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b3ba8452e77105c72f6ddbc49cbe5a53dbea1507
+Differential Revision: https://phabricator.services.mozilla.com/D130086
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/8d832e832ffe513246c0763a56376a8022b2447b
 ---
- call/rtp_demuxer.cc | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ rtc_base/logging.h | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-diff --git a/call/rtp_demuxer.cc b/call/rtp_demuxer.cc
-index 841d7e3b94..f5c4186871 100644
---- a/call/rtp_demuxer.cc
-+++ b/call/rtp_demuxer.cc
-@@ -285,13 +285,17 @@ RtpPacketSinkInterface* RtpDemuxer::ResolveSink(
-   // RSID and RRID are routed to the same sinks. If an RSID is specified on a
-   // repair packet, it should be ignored and the RRID should be used.
-   std::string packet_mid, packet_rsid;
--  bool has_mid = use_mid_ && packet.GetExtension<RtpMid>(&packet_mid);
-+  //bool has_mid = use_mid_ && packet.GetExtension<RtpMid>(&packet_mid);
-   bool has_rsid = packet.GetExtension<RepairedRtpStreamId>(&packet_rsid);
-   if (!has_rsid) {
-     has_rsid = packet.GetExtension<RtpStreamId>(&packet_rsid);
-   }
-   uint32_t ssrc = packet.Ssrc();
+diff --git a/rtc_base/logging.h b/rtc_base/logging.h
+index df7f173f58..a3733d7543 100644
+--- a/rtc_base/logging.h
++++ b/rtc_base/logging.h
+@@ -48,6 +48,14 @@
+ #ifndef RTC_BASE_LOGGING_H_
+ #define RTC_BASE_LOGGING_H_
  
-+  // Mid support is half-baked in branch 64. RtpStreamReceiverController only
-+  // supports adding sinks by ssrc, so our mids will never show up in
-+  // known_mids_, causing us to drop packets here.
-+#if 0
-   // The BUNDLE spec says to drop any packets with unknown MIDs, even if the
-   // SSRC is known/latched.
-   if (has_mid && known_mids_.find(packet_mid) == known_mids_.end()) {
-@@ -365,6 +369,7 @@ RtpPacketSinkInterface* RtpDemuxer::ResolveSink(
-     }
-   }
- 
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Wvarargs"
++
++#if defined(__clang__)
++#  pragma clang diagnostic push
++#  pragma clang diagnostic ignored "-Wclass-varargs"
 +#endif
-   // We trust signaled SSRC more than payload type which is likely to conflict
-   // between streams.
-   const auto ssrc_sink_it = sink_by_ssrc_.find(ssrc);
++
+ #include <errno.h>
+ 
+ #include <atomic>
+@@ -764,4 +772,9 @@ inline const char* AdaptString(const std::string& str) {
+ 
+ }  // namespace rtc
+ 
++#pragma GCC diagnostic pop
++#if defined(__clang__)
++#  pragma clang diagnostic pop
++#endif
++
+ #endif  // RTC_BASE_LOGGING_H_
