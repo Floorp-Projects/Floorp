@@ -91,6 +91,7 @@ if (!build_with_mozilla) { # See Bug 1820869.
     "../../system_wrappers",
     "../../system_wrappers:metrics",
   ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 }
 
@@ -460,6 +461,7 @@ rtc_source_set("mock_audio_device") {
     "../../api:make_ref_counted",
     "../../test:test_support",
   ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 }
 

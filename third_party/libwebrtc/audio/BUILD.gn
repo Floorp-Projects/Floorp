@@ -223,7 +223,10 @@ if (rtc_include_tests) {
       "utility:utility_tests",
       "//testing/gtest",
     ]
-    absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
+    absl_deps = [
+      "//third_party/abseil-cpp/absl/memory",
+      "//third_party/abseil-cpp/absl/types:optional",
+    ]
   }
 
   rtc_library("channel_receive_unittest") {
@@ -247,6 +250,9 @@ if (rtc_include_tests) {
       "../test:test_support",
       "../test/time_controller",
     ]
-    absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+    absl_deps = [
+      "//third_party/abseil-cpp/absl/strings",
+      "//third_party/abseil-cpp/absl/types:optional",
+    ]
   }
 }
