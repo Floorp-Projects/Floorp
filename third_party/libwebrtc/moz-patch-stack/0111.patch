@@ -1,36 +1,23 @@
 From: Dan Baker <dbaker@mozilla.com>
-Date: Thu, 14 Mar 2024 10:51:00 -0600
-Subject: Bug 1883116 - (fix-e79e722834) add enviroment_factory to libwebrtc
- build and change to use GetRealTimeClockRaw.
+Date: Fri, 15 Mar 2024 10:07:00 -0600
+Subject: Bug 1883116 - (fix-3d9c3687a4) Supporting change of call_factory.cc
+ to create_call.cc.
 
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2185cab977988fd4ab03b38dc67f9b06162444da
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b86cb7278bc4e557104cec0313d83511b9c8f40d
 ---
- BUILD.gn                               | 1 +
- api/environment/environment_factory.cc | 2 +-
- 2 files changed, 2 insertions(+), 1 deletion(-)
+ call/BUILD.gn | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/BUILD.gn b/BUILD.gn
-index 7feca08e60..85ead4162f 100644
---- a/BUILD.gn
-+++ b/BUILD.gn
-@@ -580,6 +580,7 @@ if (!build_with_chromium) {
- 
-     if (build_with_mozilla) {
-       deps += [
-+        "api/environment:environment_factory",
-         "api/video:video_frame",
-         "api/video:video_rtp_headers",
-         "test:rtp_test_utils",
-diff --git a/api/environment/environment_factory.cc b/api/environment/environment_factory.cc
-index c0b681aa08..c55cecd1ab 100644
---- a/api/environment/environment_factory.cc
-+++ b/api/environment/environment_factory.cc
-@@ -98,7 +98,7 @@ Environment EnvironmentFactory::CreateWithDefaults() && {
-     Set(std::make_unique<FieldTrialBasedConfig>());
-   }
-   if (clock_ == nullptr) {
--    Set(Clock::GetRealTimeClock());
-+    Set(Clock::GetRealTimeClockRaw());
-   }
-   if (task_queue_factory_ == nullptr) {
-     Set(CreateDefaultTaskQueueFactory(field_trials_));
+diff --git a/call/BUILD.gn b/call/BUILD.gn
+index 9cde97fad7..50a8257631 100644
+--- a/call/BUILD.gn
++++ b/call/BUILD.gn
+@@ -353,7 +353,7 @@ rtc_library("call") {
+   ]
+   if (build_with_mozilla) { # See Bug 1820869.
+     sources -= [
+-      "call_factory.cc",
++      "create_call.cc",
+       "degraded_call.cc",
+     ]
+     deps -= [
