@@ -222,22 +222,4 @@ bool AudioProcessing::CreateAndAttachAecDump(FILE* handle,
                                 worker_queue->Get());
 }
 
-bool AudioProcessing::CreateAndAttachAecDump(
-    absl::string_view file_name,
-    int64_t max_log_size_bytes,
-    absl::Nonnull<TaskQueueBase*> worker_queue) {
-  // Newer code should implement this variant,
-  // Older code shouldn't call this variant.
-  RTC_CHECK_NOTREACHED();
-}
-
-bool AudioProcessing::CreateAndAttachAecDump(
-    FILE* handle,
-    int64_t max_log_size_bytes,
-    absl::Nonnull<TaskQueueBase*> worker_queue) {
-  // New ercode should implement this variant,
-  // Older code shouldn't call this variant.
-  RTC_CHECK_NOTREACHED();
-}
-
 }  // namespace webrtc

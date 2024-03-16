@@ -18,6 +18,7 @@
 
 #include "absl/strings/string_view.h"
 #include "api/rtc_event_log/rtc_event_log_factory.h"
+#include "api/task_queue/task_queue_base.h"
 #include "api/test/pclf/media_configuration.h"
 #include "api/test/pclf/media_quality_test_params.h"
 #include "api/test/pclf/peer_configurer.h"
@@ -55,11 +56,21 @@ class TestPeerFactory {
   TestPeerFactory(rtc::Thread* signaling_thread,
                   TimeController& time_controller,
                   VideoQualityAnalyzerInjectionHelper* video_analyzer_helper,
-                  rtc::TaskQueue* task_queue)
+                  TaskQueueBase* task_queue)
       : signaling_thread_(signaling_thread),
         time_controller_(time_controller),
         video_analyzer_helper_(video_analyzer_helper),
         task_queue_(task_queue) {}
+
+  [[deprecated]] TestPeerFactory(
+      rtc::Thread* signaling_thread,
+      TimeController& time_controller,
+      VideoQualityAnalyzerInjectionHelper* video_analyzer_helper,
+      rtc::TaskQueue* task_queue)
+      : TestPeerFactory(signaling_thread,
+                        time_controller,
+                        video_analyzer_helper,
+                        task_queue->Get()) {}
 
   // Setups all components, that should be provided to WebRTC
   // PeerConnectionFactory and PeerConnection creation methods,
@@ -75,7 +86,7 @@ class TestPeerFactory {
   rtc::Thread* signaling_thread_;
   TimeController& time_controller_;
   VideoQualityAnalyzerInjectionHelper* video_analyzer_helper_;
-  rtc::TaskQueue* task_queue_;
+  TaskQueueBase* const task_queue_;
 };
 
 }  // namespace webrtc_pc_e2e
