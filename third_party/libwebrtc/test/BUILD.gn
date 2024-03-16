@@ -1414,6 +1414,7 @@ rtc_library("video_codec_tester") {
     "../media:media_constants",
     "../modules/video_coding:video_codec_interface",
     "../modules/video_coding:video_coding_utility",
+    "../modules/video_coding:webrtc_h264",
     "../modules/video_coding:webrtc_vp9_helpers",
     "../modules/video_coding/codecs/av1:av1_svc_config",
     "../modules/video_coding/svc:scalability_mode_util",
