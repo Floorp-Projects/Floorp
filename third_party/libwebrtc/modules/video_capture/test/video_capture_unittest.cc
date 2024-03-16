@@ -25,11 +25,9 @@
 #include "rtc_base/gunit.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/time_utils.h"
-#include "system_wrappers/include/sleep.h"
 #include "test/frame_utils.h"
 #include "test/gtest.h"
 
-using webrtc::SleepMs;
 using webrtc::VideoCaptureCapability;
 using webrtc::VideoCaptureFactory;
 using webrtc::VideoCaptureModule;

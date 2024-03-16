@@ -64,6 +64,7 @@
 #include "rtc_base/rtc_certificate_generator.h"
 #include "rtc_base/string_encode.h"
 #include "rtc_base/thread.h"
+#include "test/gmock.h"
 #include "test/gtest.h"
 #ifdef WEBRTC_ANDROID
 #include "pc/test/android_test_initializer.h"
@@ -80,6 +81,7 @@ using RTCConfiguration = PeerConnectionInterface::RTCConfiguration;
 using RTCOfferAnswerOptions = PeerConnectionInterface::RTCOfferAnswerOptions;
 using ::testing::Bool;
 using ::testing::Combine;
+using ::testing::StartsWith;
 using ::testing::Values;
 
 namespace {
@@ -343,8 +345,7 @@ TEST_P(PeerConnectionSignalingStateTest, CreateOffer) {
   } else {
     std::string error;
     ASSERT_FALSE(wrapper->CreateOffer(RTCOfferAnswerOptions(), &error));
-    EXPECT_PRED_FORMAT2(AssertStartsWith, error,
-                        "CreateOffer called when PeerConnection is closed.");
+    EXPECT_EQ(error, "CreateOffer called when PeerConnection is closed.");
   }
 }
 
@@ -379,9 +380,9 @@ TEST_P(PeerConnectionSignalingStateTest, SetLocalOffer) {
 
     std::string error;
     ASSERT_FALSE(wrapper->SetLocalDescription(std::move(offer), &error));
-    EXPECT_PRED_FORMAT2(
-        AssertStartsWith, error,
-        "Failed to set local offer sdp: Called in wrong state:");
+    EXPECT_THAT(
+        error,
+        StartsWith("Failed to set local offer sdp: Called in wrong state:"));
   }
 }
 
@@ -398,9 +399,9 @@ TEST_P(PeerConnectionSignalingStateTest, SetLocalPrAnswer) {
   } else {
     std::string error;
     ASSERT_FALSE(wrapper->SetLocalDescription(std::move(pranswer), &error));
-    EXPECT_PRED_FORMAT2(
-        AssertStartsWith, error,
-        "Failed to set local pranswer sdp: Called in wrong state:");
+    EXPECT_THAT(
+        error,
+        StartsWith("Failed to set local pranswer sdp: Called in wrong state:"));
   }
 }
 
@@ -416,9 +417,9 @@ TEST_P(PeerConnectionSignalingStateTest, SetLocalAnswer) {
   } else {
     std::string error;
     ASSERT_FALSE(wrapper->SetLocalDescription(std::move(answer), &error));
-    EXPECT_PRED_FORMAT2(
-        AssertStartsWith, error,
-        "Failed to set local answer sdp: Called in wrong state:");
+    EXPECT_THAT(
+        error,
+        StartsWith("Failed to set local answer sdp: Called in wrong state:"));
   }
 }
 
@@ -435,9 +436,9 @@ TEST_P(PeerConnectionSignalingStateTest, SetRemoteOffer) {
   } else {
     std::string error;
     ASSERT_FALSE(wrapper->SetRemoteDescription(std::move(offer), &error));
-    EXPECT_PRED_FORMAT2(
-        AssertStartsWith, error,
-        "Failed to set remote offer sdp: Called in wrong state:");
+    EXPECT_THAT(
+        error,
+        StartsWith("Failed to set remote offer sdp: Called in wrong state:"));
   }
 }
 
@@ -454,9 +455,10 @@ TEST_P(PeerConnectionSignalingStateTest, SetRemotePrAnswer) {
   } else {
     std::string error;
     ASSERT_FALSE(wrapper->SetRemoteDescription(std::move(pranswer), &error));
-    EXPECT_PRED_FORMAT2(
-        AssertStartsWith, error,
-        "Failed to set remote pranswer sdp: Called in wrong state:");
+    EXPECT_THAT(
+        error,
+        StartsWith(
+            "Failed to set remote pranswer sdp: Called in wrong state:"));
   }
 }
 
@@ -472,9 +474,9 @@ TEST_P(PeerConnectionSignalingStateTest, SetRemoteAnswer) {
   } else {
     std::string error;
     ASSERT_FALSE(wrapper->SetRemoteDescription(std::move(answer), &error));
-    EXPECT_PRED_FORMAT2(
-        AssertStartsWith, error,
-        "Failed to set remote answer sdp: Called in wrong state:");
+    EXPECT_THAT(
+        error,
+        StartsWith("Failed to set remote answer sdp: Called in wrong state:"));
   }
 }
 

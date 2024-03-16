@@ -66,7 +66,6 @@
 #ifdef WEBRTC_ANDROID
 #include "pc/test/android_test_initializer.h"
 #endif
-#include "rtc_base/gunit.h"
 #include "rtc_base/virtual_socket_server.h"
 #include "test/gmock.h"
 
@@ -78,6 +77,7 @@ using RTCOfferAnswerOptions = PeerConnectionInterface::RTCOfferAnswerOptions;
 using ::testing::Bool;
 using ::testing::Combine;
 using ::testing::ElementsAre;
+using ::testing::HasSubstr;
 using ::testing::NotNull;
 using ::testing::Values;
 
@@ -286,8 +286,8 @@ TEST_P(PeerConnectionMediaTest,
 
   std::string error;
   ASSERT_FALSE(callee->SetRemoteDescription(caller->CreateOffer(), &error));
-  EXPECT_PRED_FORMAT2(AssertStartsWith, error,
-                      "Failed to set remote offer sdp: Failed to create");
+  EXPECT_THAT(error,
+              HasSubstr("Failed to set remote offer sdp: Failed to create"));
 }
 
 TEST_P(PeerConnectionMediaTest,
@@ -297,8 +297,8 @@ TEST_P(PeerConnectionMediaTest,
 
   std::string error;
   ASSERT_FALSE(caller->SetLocalDescription(caller->CreateOffer(), &error));
-  EXPECT_PRED_FORMAT2(AssertStartsWith, error,
-                      "Failed to set local offer sdp: Failed to create");
+  EXPECT_THAT(error,
+              HasSubstr("Failed to set local offer sdp: Failed to create"));
 }
 
 std::vector<std::string> GetIds(
