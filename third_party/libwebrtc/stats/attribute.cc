@@ -10,8 +10,13 @@
 
 #include "api/stats/attribute.h"
 
+#include <string>
+
 #include "absl/types/variant.h"
+#include "rtc_base/arraysize.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/string_encode.h"
+#include "rtc_base/strings/string_builder.h"
 
 namespace webrtc {
 
@@ -27,6 +32,82 @@ struct VisitIsSequence {
   template <typename T>
   bool operator()(const RTCStatsMember<T>* attribute) {
     return false;
+  }
+};
+
+// Converts the attribute to string in a JSON-compatible way.
+struct VisitToString {
+  template <typename T,
+            typename std::enable_if_t<
+                std::is_same_v<T, int32_t> || std::is_same_v<T, uint32_t> ||
+                    std::is_same_v<T, bool> || std::is_same_v<T, std::string>,
+                bool> = true>
+  std::string ValueToString(const T& value) {
+    return rtc::ToString(value);
+  }
+  // Convert 64-bit integers to doubles before converting to string because JSON
+  // represents all numbers as floating points with ~15 digits of precision.
+  template <typename T,
+            typename std::enable_if_t<std::is_same_v<T, int64_t> ||
+                                          std::is_same_v<T, uint64_t> ||
+                                          std::is_same_v<T, double>,
+                                      bool> = true>
+  std::string ValueToString(const T& value) {
+    char buf[32];
+    const int len = std::snprintf(&buf[0], arraysize(buf), "%.16g",
+                                  static_cast<double>(value));
+    RTC_DCHECK_LE(len, arraysize(buf));
+    return std::string(&buf[0], len);
+  }
+
+  // Vector attributes.
+  template <typename T>
+  std::string operator()(const RTCStatsMember<std::vector<T>>* attribute) {
+    rtc::StringBuilder sb;
+    sb << "[";
+    const char* separator = "";
+    constexpr bool element_is_string = std::is_same<T, std::string>::value;
+    for (const T& element : attribute->value()) {
+      sb << separator;
+      if (element_is_string) {
+        sb << "\"";
+      }
+      sb << ValueToString(element);
+      if (element_is_string) {
+        sb << "\"";
+      }
+      separator = ",";
+    }
+    sb << "]";
+    return sb.Release();
+  }
+  // Map attributes.
+  template <typename T>
+  std::string operator()(
+      const RTCStatsMember<std::map<std::string, T>>* attribute) {
+    rtc::StringBuilder sb;
+    sb << "{";
+    const char* separator = "";
+    constexpr bool element_is_string = std::is_same<T, std::string>::value;
+    for (const auto& pair : attribute->value()) {
+      sb << separator;
+      sb << "\"" << pair.first << "\":";
+      if (element_is_string) {
+        sb << "\"";
+      }
+      sb << ValueToString(pair.second);
+      if (element_is_string) {
+        sb << "\"";
+      }
+      separator = ",";
+    }
+    sb << "}";
+    return sb.Release();
+  }
+  // Simple attributes.
+  template <typename T>
+  std::string operator()(const RTCStatsMember<T>* attribute) {
+    return ValueToString(attribute->value());
   }
 };
 
@@ -69,14 +150,11 @@ bool Attribute::is_string() const {
       attribute_);
 }
 
-std::string Attribute::ValueToString() const {
-  return absl::visit([](const auto* attr) { return attr->ValueToString(); },
-                     attribute_);
-}
-
-std::string Attribute::ValueToJson() const {
-  return absl::visit([](const auto* attr) { return attr->ValueToJson(); },
-                     attribute_);
+std::string Attribute::ToString() const {
+  if (!has_value()) {
+    return "null";
+  }
+  return absl::visit(VisitToString(), attribute_);
 }
 
 bool Attribute::operator==(const Attribute& other) const {
