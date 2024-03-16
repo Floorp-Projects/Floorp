@@ -220,6 +220,11 @@
   value: false
   mirror: always
 
+- name: accessibility.ARIAElementReflection.enabled
+  type: bool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 # Whether form controls and images should be focusable with mouse, in content
 # documents.
 #
