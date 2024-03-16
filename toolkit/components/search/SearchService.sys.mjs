@@ -2294,11 +2294,7 @@ export class SearchService {
       { webExtension: { id: "you.com@search.mozilla.org",   locale: "default"}},
     ];
 
-    var { FloorpAppConstants } = ChromeUtils.importESModule(
-      "resource:///modules/FloorpAppConstants.sys.mjs"
-    );
-
-    if (FloorpAppConstants.FLOORP_PRIVATE_COMPONENTS_ENABLED) {
+    if (Services.prefs.getBoolPref("floorp.browser.floorpSearch.enabled")) {
       engines.push({ webExtension: { id: "floorp@search.mozilla.org", locale: "default"}})
     }
 
