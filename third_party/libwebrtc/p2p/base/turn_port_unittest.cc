@@ -878,9 +878,10 @@ TEST_F(TurnPortTest, TestReconstructedServerUrlForUdpIPv6) {
   turn_server_.AddInternalSocket(kTurnUdpIPv6IntAddr, PROTO_UDP);
   CreateTurnPort(kLocalIPv6Addr, kTurnUsername, kTurnPassword,
                  kTurnUdpIPv6ProtoAddr);
+  // Should add [] around the IPv6.
   TestReconstructedServerUrl(
       PROTO_UDP,
-      "turn:2400:4030:1:2c00:be30:abcd:efab:cdef:3478?transport=udp");
+      "turn:[2400:4030:1:2c00:be30:abcd:efab:cdef]:3478?transport=udp");
 }
 
 TEST_F(TurnPortTest, TestReconstructedServerUrlForTcp) {
