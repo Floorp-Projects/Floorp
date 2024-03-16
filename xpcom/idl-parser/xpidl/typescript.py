@@ -48,9 +48,9 @@ def ts_interface(iface):
                 enums.append(ts_enum(m))
             elif isinstance(m, xpidl.ConstMember):
                 consts.append({"name": m.name, "value": m.getValue()})
-            elif isinstance(m, xpidl.Attribute):
+            elif isinstance(m, xpidl.Attribute) and m.isScriptable():
                 members.append(ts_attribute(m))
-            elif isinstance(m, xpidl.Method):
+            elif isinstance(m, xpidl.Method) and m.isScriptable():
                 members.append(ts_method(m))
         except xpidl.TSNoncompat:
             # Omit member if any type is unsupported.
