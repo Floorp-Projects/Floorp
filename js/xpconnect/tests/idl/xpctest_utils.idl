@@ -17,3 +17,26 @@ interface nsIXPCTestFunctionInterface : nsISupports {
 interface nsIXPCTestUtils : nsISupports {
   nsIXPCTestFunctionInterface doubleWrapFunction(in nsIXPCTestFunctionInterface f);
 };
+
+/*
+ * Test that non-[scriptable] interfaces and [noscript] members are not
+ * generated for TypeScript bindings.
+ */
+
+[uuid(ddf64cfb-668a-4571-a900-0fe2babb6249)]
+interface nsIXPCTestNotScriptable : nsISupports {
+  // Empty.
+};
+
+[scriptable, uuid(1bbfe703-c67d-4995-b061-564c8a1c39d7)]
+interface nsIXPCTestNoScriptMembers : nsISupports {
+  [noscript]
+  attribute long noscriptProp;
+
+  attribute long exposedProp;
+
+  [noscript]
+  void noscriptMethod(in long arg);
+
+  void exposedMethod(in long arg);
+};

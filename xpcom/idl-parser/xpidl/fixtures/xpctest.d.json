@@ -1355,6 +1355,32 @@
             "type": "nsIXPCTestFunctionInterface"
           }
         ]
+      },
+      {
+        "base": "nsISupports",
+        "callable": false,
+        "consts": [],
+        "enums": [],
+        "id": "nsIXPCTestNoScriptMembers",
+        "members": [
+          {
+            "name": "exposedProp",
+            "readonly": false,
+            "type": "i32"
+          },
+          {
+            "args": [
+              {
+                "name": "arg",
+                "optional": false,
+                "type": "i32"
+              }
+            ],
+            "iid_is": null,
+            "name": "exposedMethod",
+            "type": "void"
+          }
+        ]
       }
     ],
     "path": "js/xpconnect/tests/idl/xpctest_utils.idl",

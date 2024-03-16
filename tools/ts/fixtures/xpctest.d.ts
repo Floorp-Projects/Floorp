@@ -160,6 +160,11 @@ interface nsIXPCTestUtils extends nsISupports {
   doubleWrapFunction(f: nsIXPCTestFunctionInterface): nsIXPCTestFunctionInterface;
 }
 
+interface nsIXPCTestNoScriptMembers extends nsISupports {
+  exposedProp: i32;
+  exposedMethod(arg: i32): void;
+}
+
 interface nsIXPCComponents_Interfaces {
   nsIXPCTestObjectReadOnly: nsJSIID<nsIXPCTestObjectReadOnly>;
   nsIXPCTestObjectReadWrite: nsJSIID<nsIXPCTestObjectReadWrite>;
@@ -173,6 +178,7 @@ interface nsIXPCComponents_Interfaces {
   nsIXPCTestReturnCodeChild: nsJSIID<nsIXPCTestReturnCodeChild>;
   nsIXPCTestFunctionInterface: nsJSIID<nsIXPCTestFunctionInterface>;
   nsIXPCTestUtils: nsJSIID<nsIXPCTestUtils>;
+  nsIXPCTestNoScriptMembers: nsJSIID<nsIXPCTestNoScriptMembers>;
 }
 
 }  // global
