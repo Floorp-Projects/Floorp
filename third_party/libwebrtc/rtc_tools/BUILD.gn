@@ -258,6 +258,7 @@ if (!is_component_build) {
       "../api:rtp_parameters",
       "../api/environment",
       "../api/environment:environment_factory",
+      "../api/task_queue",
       "../api/test/video:function_video_factory",
       "../api/transport:field_trial_based_config",
       "../api/units:timestamp",

@@ -20,6 +20,7 @@
 #include "api/environment/environment_factory.h"
 #include "api/field_trials.h"
 #include "api/media_types.h"
+#include "api/task_queue/task_queue_base.h"
 #include "api/test/video/function_video_decoder_factory.h"
 #include "api/transport/field_trial_based_config.h"
 #include "api/units/timestamp.h"
@@ -486,9 +487,8 @@ class RtpReplayer final {
             time_sim_ ? time_sim_->GetTaskQueueFactory() : nullptr,
             time_sim_ ? time_sim_->GetClock() : nullptr)),
         rtp_reader_(CreateRtpReader(rtp_dump_path_)) {
-    worker_thread_ = std::make_unique<rtc::TaskQueue>(
-        env_.task_queue_factory().CreateTaskQueue(
-            "worker_thread", TaskQueueFactory::Priority::NORMAL));
+    worker_thread_ = env_.task_queue_factory().CreateTaskQueue(
+        "worker_thread", TaskQueueFactory::Priority::NORMAL);
     rtc::Event event;
     worker_thread_->PostTask([&]() {
       call_ = Call::Create(CallConfig(env_));
@@ -663,7 +663,7 @@ class RtpReplayer final {
   const std::string rtp_dump_path_;
   std::unique_ptr<GlobalSimulatedTimeController> time_sim_;
   Environment env_;
-  std::unique_ptr<rtc::TaskQueue> worker_thread_;
+  std::unique_ptr<TaskQueueBase, TaskQueueDeleter> worker_thread_;
   std::unique_ptr<Call> call_;
   std::unique_ptr<test::RtpFileReader> rtp_reader_;
   std::unique_ptr<StreamState> stream_state_;
