@@ -59,6 +59,7 @@ module.exports = {
     "no-comparison-or-assignment-inside-ok": require("../lib/rules/no-comparison-or-assignment-inside-ok"),
     "no-cu-reportError": require("../lib/rules/no-cu-reportError"),
     "no-define-cc-etc": require("../lib/rules/no-define-cc-etc"),
+    "no-more-globals": require("../lib/rules/no-more-globals"),
     "no-redeclare-with-import-autofix": require("../lib/rules/no-redeclare-with-import-autofix"),
     "no-throw-cr-literal": require("../lib/rules/no-throw-cr-literal"),
     "no-useless-parameters": require("../lib/rules/no-useless-parameters"),
