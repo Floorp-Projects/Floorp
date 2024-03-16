@@ -23,11 +23,13 @@
 #include "api/video/video_bitrate_allocator.h"
 #include "api/video/video_codec_type.h"
 #include "api/video/video_frame.h"
+#include "api/video_codecs/h264_profile_level_id.h"
 #include "api/video_codecs/simulcast_stream.h"
 #include "api/video_codecs/video_decoder.h"
 #include "api/video_codecs/video_encoder.h"
 #include "media/base/media_constants.h"
 #include "modules/video_coding/codecs/av1/av1_svc_config.h"
+#include "modules/video_coding/codecs/h264/include/h264.h"
 #include "modules/video_coding/codecs/vp9/svc_config.h"
 #include "modules/video_coding/include/video_codec_interface.h"
 #include "modules/video_coding/include/video_error_codes.h"
@@ -1448,14 +1450,24 @@ std::map<uint32_t, EncodingSettings> VideoCodecTester::CreateEncodingSettings(
     }
   }
 
+  SdpVideoFormat sdp_video_format = SdpVideoFormat(codec_type);
+  if (codec_type == "H264") {
+    const std::string packetization_mode =
+        "1";  // H264PacketizationMode::SingleNalUnit
+    sdp_video_format.parameters =
+        CreateH264Format(H264Profile::kProfileConstrainedBaseline,
+                         H264Level::kLevel3_1, packetization_mode,
+                         /*add_scalability_modes=*/false)
+            .parameters;
+  }
+
   std::map<uint32_t, EncodingSettings> frames_settings;
   uint32_t timestamp_rtp = first_timestamp_rtp;
   for (int frame_num = 0; frame_num < num_frames; ++frame_num) {
     frames_settings.emplace(
-        timestamp_rtp,
-        EncodingSettings{.sdp_video_format = SdpVideoFormat(codec_type),
-                         .scalability_mode = scalability_mode,
-                         .layers_settings = layers_settings});
+        timestamp_rtp, EncodingSettings{.sdp_video_format = sdp_video_format,
+                                        .scalability_mode = scalability_mode,
+                                        .layers_settings = layers_settings});
 
     timestamp_rtp += k90kHz / Frequency::MilliHertz(1000 * framerate_fps);
   }
