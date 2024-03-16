@@ -1,5 +1,7 @@
 ac_add_options --with-app-name=floorp
 ac_add_options --with-app-basename=Floorp
+ac_add_options --enable-private-components
+
 ac_add_options --disable-crashreporter
 ac_add_options --disable-maintenance-service
 ac_add_options --enable-proxy-bypass-protection
