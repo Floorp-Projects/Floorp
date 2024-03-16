@@ -16,10 +16,10 @@
 
 #include "api/frame_transformer_interface.h"
 #include "api/sequence_checker.h"
+#include "api/task_queue/task_queue_base.h"
 #include "modules/audio_coding/include/audio_coding_module_typedefs.h"
 #include "rtc_base/buffer.h"
 #include "rtc_base/synchronization/mutex.h"
-#include "rtc_base/task_queue.h"
 
 namespace webrtc {
 
@@ -40,7 +40,7 @@ class ChannelSendFrameTransformerDelegate : public TransformedFrameCallback {
   ChannelSendFrameTransformerDelegate(
       SendFrameCallback send_frame_callback,
       rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
-      rtc::TaskQueue* encoder_queue);
+      TaskQueueBase* encoder_queue);
 
   // Registers `this` as callback for `frame_transformer_`, to get the
   // transformed frames.
@@ -79,7 +79,7 @@ class ChannelSendFrameTransformerDelegate : public TransformedFrameCallback {
   mutable Mutex send_lock_;
   SendFrameCallback send_frame_callback_ RTC_GUARDED_BY(send_lock_);
   rtc::scoped_refptr<FrameTransformerInterface> frame_transformer_;
-  rtc::TaskQueue* encoder_queue_ RTC_GUARDED_BY(send_lock_);
+  TaskQueueBase* const encoder_queue_;
   bool short_circuit_ RTC_GUARDED_BY(send_lock_) = false;
 };
 
