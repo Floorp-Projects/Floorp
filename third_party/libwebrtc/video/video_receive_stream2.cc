@@ -187,6 +187,8 @@ VideoReceiveStream2::VideoReceiveStream2(
     NackPeriodicProcessor* nack_periodic_processor,
     DecodeSynchronizer* decode_sync)
     : env_(env),
+      packet_sequence_checker_(SequenceChecker::kDetached),
+      decode_sequence_checker_(SequenceChecker::kDetached),
       transport_adapter_(config.rtcp_send_transport),
       config_(std::move(config)),
       num_cpu_cores_(num_cpu_cores),
@@ -228,7 +230,6 @@ VideoReceiveStream2::VideoReceiveStream2(
   RTC_DCHECK(call_->worker_thread());
   RTC_DCHECK(config_.renderer);
   RTC_DCHECK(call_stats_);
-  packet_sequence_checker_.Detach();
 
   RTC_DCHECK(!config_.decoders.empty());
   RTC_CHECK(config_.decoder_factory);
@@ -379,8 +380,8 @@ void VideoReceiveStream2::Start() {
 
   // Start decoding on task queue.
   stats_proxy_.DecoderThreadStarting();
-  decode_queue_.PostTask([this] {
-    RTC_DCHECK_RUN_ON(&decode_queue_);
+  decode_queue_->PostTask([this] {
+    RTC_DCHECK_RUN_ON(&decode_sequence_checker_);
     decoder_stopped_ = false;
   });
   buffer_->StartNextDecode(true);
@@ -410,8 +411,8 @@ void VideoReceiveStream2::Stop() {
 
   if (decoder_running_) {
     rtc::Event done;
-    decode_queue_.PostTask([this, &done] {
-      RTC_DCHECK_RUN_ON(&decode_queue_);
+    decode_queue_->PostTask([this, &done] {
+      RTC_DCHECK_RUN_ON(&decode_sequence_checker_);
       // Set `decoder_stopped_` before deregistering all decoders. This means
       // that any pending encoded frame will return early without trying to
       // access the decoder database.
@@ -773,10 +774,10 @@ void VideoReceiveStream2::OnEncodedFrame(std::unique_ptr<EncodedFrame> frame) {
   }
   stats_proxy_.OnPreDecode(frame->CodecSpecific()->codecType, qp);
 
-  decode_queue_.PostTask([this, now, keyframe_request_is_due,
-                          received_frame_is_keyframe, frame = std::move(frame),
-                          keyframe_required = keyframe_required_]() mutable {
-    RTC_DCHECK_RUN_ON(&decode_queue_);
+  decode_queue_->PostTask([this, now, keyframe_request_is_due,
+                           received_frame_is_keyframe, frame = std::move(frame),
+                           keyframe_required = keyframe_required_]() mutable {
+    RTC_DCHECK_RUN_ON(&decode_sequence_checker_);
     if (decoder_stopped_)
       return;
     DecodeFrameResult result = HandleEncodedFrameOnDecodeQueue(
@@ -840,7 +841,7 @@ VideoReceiveStream2::HandleEncodedFrameOnDecodeQueue(
     std::unique_ptr<EncodedFrame> frame,
     bool keyframe_request_is_due,
     bool keyframe_required) {
-  RTC_DCHECK_RUN_ON(&decode_queue_);
+  RTC_DCHECK_RUN_ON(&decode_sequence_checker_);
 
   bool force_request_key_frame = false;
   absl::optional<int64_t> decoded_frame_picture_id;
@@ -882,7 +883,7 @@ VideoReceiveStream2::HandleEncodedFrameOnDecodeQueue(
 
 int VideoReceiveStream2::DecodeAndMaybeDispatchEncodedFrame(
     std::unique_ptr<EncodedFrame> frame) {
-  RTC_DCHECK_RUN_ON(&decode_queue_);
+  RTC_DCHECK_RUN_ON(&decode_sequence_checker_);
 
   // If `buffered_encoded_frames_` grows out of control (=60 queued frames),
   // maybe due to a stuck decoder, we just halt the process here and log the
@@ -1065,10 +1066,10 @@ VideoReceiveStream2::SetAndGetRecordingState(RecordingState state,
             : Timestamp::Millis(state.last_keyframe_request_ms.value_or(0));
   }
 
-  decode_queue_.PostTask(
+  decode_queue_->PostTask(
       [this, &event, &old_state, callback = std::move(state.callback),
        last_keyframe_request = std::move(last_keyframe_request)] {
-        RTC_DCHECK_RUN_ON(&decode_queue_);
+        RTC_DCHECK_RUN_ON(&decode_sequence_checker_);
         old_state.callback = std::move(encoded_frame_buffer_function_);
         encoded_frame_buffer_function_ = std::move(callback);
 
