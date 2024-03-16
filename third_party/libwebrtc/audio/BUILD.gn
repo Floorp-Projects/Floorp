@@ -97,7 +97,6 @@ rtc_library("audio") {
     "../rtc_base:refcount",
     "../rtc_base:rtc_event",
     "../rtc_base:rtc_numerics",
-    "../rtc_base:rtc_task_queue",
     "../rtc_base:safe_conversions",
     "../rtc_base:safe_minmax",
     "../rtc_base:stringutils",
