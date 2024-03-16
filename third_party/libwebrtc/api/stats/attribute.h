@@ -74,8 +74,11 @@ class RTC_EXPORT Attribute {
 
   bool is_sequence() const;
   bool is_string() const;
-  std::string ValueToString() const;
-  std::string ValueToJson() const;
+  // Converts the attribute to a string that is parseable as a JSON object.
+  std::string ToString() const;
+  // TODO(https://crbug.com/15164): Use ToString() instead and delete these.
+  std::string ValueToString() const { return ToString(); }
+  std::string ValueToJson() const { return ToString(); }
 
   bool operator==(const Attribute& other) const;
   bool operator!=(const Attribute& other) const;

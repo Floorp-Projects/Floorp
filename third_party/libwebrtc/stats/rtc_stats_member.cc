@@ -17,6 +17,9 @@ namespace webrtc {
 
 namespace {
 
+// TODO(https://crbug.com/webrtc/15164): Delete all stringified functions in
+// favor of Attribute::ToString().
+
 // Produces "[a,b,c]". Works for non-vector `RTCStatsMemberInterface::Type`
 // types.
 template <typename T>

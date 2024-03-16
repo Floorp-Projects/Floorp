@@ -65,13 +65,6 @@ class RTCStatsMemberInterface {
   bool operator!=(const RTCStatsMemberInterface& other) const {
     return !(*this == other);
   }
-  virtual std::string ValueToString() const = 0;
-  // This is the same as ValueToString except for kInt64 and kUint64 types,
-  // where the value is represented as a double instead of as an integer.
-  // Since JSON stores numbers as floating point numbers, very large integers
-  // cannot be accurately represented, so we prefer to display them as doubles
-  // instead.
-  virtual std::string ValueToJson() const = 0;
 
   virtual const RTCStatsMemberInterface* member_ptr() const { return this; }
   template <typename T>
@@ -97,8 +90,10 @@ class RTCStatsMember : public RTCStatsMemberInterface {
   Type type() const override { return StaticType(); }
   bool is_sequence() const override;
   bool is_string() const override;
-  std::string ValueToString() const override;
-  std::string ValueToJson() const override;
+  // TODO(https://crbug.com/webrtc/15164): Delete both in favor of
+  // Attribute::ToString().
+  std::string ValueToString() const;
+  std::string ValueToJson() const;
 
   template <typename U>
   inline T value_or(U default_value) const {

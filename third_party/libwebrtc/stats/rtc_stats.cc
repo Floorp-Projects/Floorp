@@ -54,8 +54,7 @@ std::string RTCStats::ToJson() const {
       if (attribute.holds_alternative<std::string>()) {
         sb << "\"";
       }
-      sb << absl::visit([](const auto* attr) { return attr->ValueToJson(); },
-                        attribute.as_variant());
+      sb << attribute.ToString();
       if (attribute.holds_alternative<std::string>()) {
         sb << "\"";
       }
