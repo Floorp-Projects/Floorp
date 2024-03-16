@@ -1,66 +1,196 @@
-From: Johannes Kron <kron@webrtc.org>
-Date: Thu, 18 Jan 2024 14:00:19 +0100
-Subject: (cherry-pick-branch-heads/6167) [M121] Disable the use of
- CGDisplayStreamCreate() for desktop capture on Sonoma
+From: Daniel Baker <dbaker@mozilla.com>
+Date: Fri, 15 Mar 2024 20:16:27 -0600
+Subject: (tmp-cherry-pick) Revert "Remove FLOW trace events as these are
+ unused and don't work" (192c0628cb)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-CGDisplayStreamCreate is an deprecated API. It was believed that the use
-of it was disabled on Sonoma through the setting allow_iosurface = false
-[1], which causes the thumbnails to be created by the API CGDisplayCreateImage.
-This API is not marked as deprecated at the moment.
+This reverts commit 680025a612b93d91a5a16bb2580352a5ac1d4a9b.
 
-However, although the thumbnails are created through CGDisplayCreateImage,
-CGDisplayStreamCreate() is still called and runs in the background.
-This makes the capture chip appear.
+Reason for revert: Breaks downstream project
 
-No capture chip appears if this CL is landed and the ScreenCaptureKit
-thumbnail capturer is enabled,
---enable-features="ScreenCaptureKitMac,ScreenCaptureKitStreamPickerSonoma,ThumbnailCapturerMac:capture_mode/sc_screenshot_manager"
+Original change's description:
+> Remove FLOW trace events as these are unused and don't work
+>
+> Fixing this would require a new bridge function to the legacy Chrome
+> event system, or preferably migrating to the typed Perfetto SDK.
+>
+> Bug: webrtc:14822
+> Change-Id: I7a39ed177d436429321de2daee569c496604aae3
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/335043
+> Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
+> Commit-Queue: Evan Shrubsole <eshr@google.com>
+> Cr-Commit-Position: refs/heads/main@{#41557}
 
-[1] https://chromium-review.googlesource.com/c/chromium/src/+/4892397
-
-(cherry picked from commit fb99c6ebb57754e4b764a63dfae7f62ec272ba6b)
-
-Bug: chromium:1486851
-No-Try: True
-Change-Id: I3422efffc57dcb3e8965f19a5eca7f2a95d62da1
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/334721
-Reviewed-by: Mark Foltz <mfoltz@chromium.org>
-Commit-Queue: Johannes Kron <kron@webrtc.org>
-Cr-Original-Commit-Position: refs/heads/main@{#41563}
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/335740
+Bug: webrtc:14822
+Change-Id: I1c374e8c22740fda376893613a55e5c018553761
+No-Presubmit: true
+No-Tree-Checks: true
+No-Try: true
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/335100
 Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
-Cr-Commit-Position: refs/branch-heads/6167@{#5}
-Cr-Branched-From: ece5cb83715dea85617114b6d4e981fdee2623ba-refs/heads/main@{#41315}
+Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
+Commit-Queue: Mirko Bonadei <mbonadei@webrtc.org>
+Auto-Submit: Henrik Boström <hbos@webrtc.org>
+Cr-Commit-Position: refs/heads/main@{#41558}
 ---
- modules/desktop_capture/mac/desktop_frame_provider.h | 2 ++
- modules/desktop_capture/mac/screen_capturer_mac.mm   | 4 ++++
- 2 files changed, 6 insertions(+)
+ rtc_base/trace_event.h | 131 +++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 131 insertions(+)
 
-diff --git a/modules/desktop_capture/mac/desktop_frame_provider.h b/modules/desktop_capture/mac/desktop_frame_provider.h
-index aad28d2f30..64ef5750ec 100644
---- a/modules/desktop_capture/mac/desktop_frame_provider.h
-+++ b/modules/desktop_capture/mac/desktop_frame_provider.h
-@@ -46,6 +46,8 @@ class DesktopFrameProvider {
-   // Expected to be called before stopping the CGDisplayStreamRef streams.
-   void Release();
+diff --git a/rtc_base/trace_event.h b/rtc_base/trace_event.h
+index 32ad031385..6689bc0c37 100644
+--- a/rtc_base/trace_event.h
++++ b/rtc_base/trace_event.h
+@@ -430,6 +430,100 @@
+                                    name, id, TRACE_EVENT_FLAG_COPY, arg1_name, \
+                                    arg1_val, arg2_name, arg2_val)
  
-+  bool allow_iosurface() const { return allow_iosurface_; }
++// Records a single FLOW_BEGIN event called "name" immediately, with 0, 1 or 2
++// associated arguments. If the category is not enabled, then this
++// does nothing.
++// - category and name strings must have application lifetime (statics or
++//   literals). They may not include " chars.
++// - `id` is used to match the FLOW_BEGIN event with the FLOW_END event. FLOW
++//   events are considered to match if their category, name and id values all
++//   match. `id` must either be a pointer or an integer value up to 64 bits. If
++//   it's a pointer, the bits will be xored with a hash of the process ID so
++//   that the same pointer on two different processes will not collide.
++// FLOW events are different from ASYNC events in how they are drawn by the
++// tracing UI. A FLOW defines asynchronous data flow, such as posting a task
++// (FLOW_BEGIN) and later executing that task (FLOW_END). Expect FLOWs to be
++// drawn as lines or arrows from FLOW_BEGIN scopes to FLOW_END scopes. Similar
++// to ASYNC, a FLOW can consist of multiple phases. The first phase is defined
++// by the FLOW_BEGIN calls. Additional phases can be defined using the FLOW_STEP
++// macros. When the operation completes, call FLOW_END. An async operation can
++// span threads and processes, but all events in that operation must use the
++// same `name` and `id`. Each event can have its own args.
++#define TRACE_EVENT_FLOW_BEGIN0(category, name, id)                        \
++  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_FLOW_BEGIN, category, \
++                                   name, id, TRACE_EVENT_FLAG_NONE)
++#define TRACE_EVENT_FLOW_BEGIN1(category, name, id, arg1_name, arg1_val)       \
++  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_FLOW_BEGIN, category,     \
++                                   name, id, TRACE_EVENT_FLAG_NONE, arg1_name, \
++                                   arg1_val)
++#define TRACE_EVENT_FLOW_BEGIN2(category, name, id, arg1_name, arg1_val,       \
++                                arg2_name, arg2_val)                           \
++  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_FLOW_BEGIN, category,     \
++                                   name, id, TRACE_EVENT_FLAG_NONE, arg1_name, \
++                                   arg1_val, arg2_name, arg2_val)
++#define TRACE_EVENT_COPY_FLOW_BEGIN0(category, name, id)                   \
++  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_FLOW_BEGIN, category, \
++                                   name, id, TRACE_EVENT_FLAG_COPY)
++#define TRACE_EVENT_COPY_FLOW_BEGIN1(category, name, id, arg1_name, arg1_val)  \
++  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_FLOW_BEGIN, category,     \
++                                   name, id, TRACE_EVENT_FLAG_COPY, arg1_name, \
++                                   arg1_val)
++#define TRACE_EVENT_COPY_FLOW_BEGIN2(category, name, id, arg1_name, arg1_val,  \
++                                     arg2_name, arg2_val)                      \
++  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_FLOW_BEGIN, category,     \
++                                   name, id, TRACE_EVENT_FLAG_COPY, arg1_name, \
++                                   arg1_val, arg2_name, arg2_val)
 +
-  private:
-   SequenceChecker thread_checker_;
-   const bool allow_iosurface_;
-diff --git a/modules/desktop_capture/mac/screen_capturer_mac.mm b/modules/desktop_capture/mac/screen_capturer_mac.mm
-index 28cc410573..60089fd0f2 100644
---- a/modules/desktop_capture/mac/screen_capturer_mac.mm
-+++ b/modules/desktop_capture/mac/screen_capturer_mac.mm
-@@ -439,6 +439,10 @@ void ScreenCapturerMac::ScreenConfigurationChanged() {
++// Records a single FLOW_STEP event for `step` immediately. If the category
++// is not enabled, then this does nothing. The `name` and `id` must match the
++// FLOW_BEGIN event above. The `step` param identifies this step within the
++// async event. This should be called at the beginning of the next phase of an
++// asynchronous operation.
++#define TRACE_EVENT_FLOW_STEP0(category, name, id, step)                    \
++  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_FLOW_STEP, category,   \
++                                   name, id, TRACE_EVENT_FLAG_NONE, "step", \
++                                   step)
++#define TRACE_EVENT_FLOW_STEP1(category, name, id, step, arg1_name, arg1_val) \
++  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_FLOW_STEP, category,     \
++                                   name, id, TRACE_EVENT_FLAG_NONE, "step",   \
++                                   step, arg1_name, arg1_val)
++#define TRACE_EVENT_COPY_FLOW_STEP0(category, name, id, step)               \
++  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_FLOW_STEP, category,   \
++                                   name, id, TRACE_EVENT_FLAG_COPY, "step", \
++                                   step)
++#define TRACE_EVENT_COPY_FLOW_STEP1(category, name, id, step, arg1_name,    \
++                                    arg1_val)                               \
++  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_FLOW_STEP, category,   \
++                                   name, id, TRACE_EVENT_FLAG_COPY, "step", \
++                                   step, arg1_name, arg1_val)
++
++// Records a single FLOW_END event for "name" immediately. If the category
++// is not enabled, then this does nothing.
++#define TRACE_EVENT_FLOW_END0(category, name, id)                              \
++  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_FLOW_END, category, name, \
++                                   id, TRACE_EVENT_FLAG_NONE)
++#define TRACE_EVENT_FLOW_END1(category, name, id, arg1_name, arg1_val)         \
++  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_FLOW_END, category, name, \
++                                   id, TRACE_EVENT_FLAG_NONE, arg1_name,       \
++                                   arg1_val)
++#define TRACE_EVENT_FLOW_END2(category, name, id, arg1_name, arg1_val,         \
++                              arg2_name, arg2_val)                             \
++  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_FLOW_END, category, name, \
++                                   id, TRACE_EVENT_FLAG_NONE, arg1_name,       \
++                                   arg1_val, arg2_name, arg2_val)
++#define TRACE_EVENT_COPY_FLOW_END0(category, name, id)                         \
++  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_FLOW_END, category, name, \
++                                   id, TRACE_EVENT_FLAG_COPY)
++#define TRACE_EVENT_COPY_FLOW_END1(category, name, id, arg1_name, arg1_val)    \
++  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_FLOW_END, category, name, \
++                                   id, TRACE_EVENT_FLAG_COPY, arg1_name,       \
++                                   arg1_val)
++#define TRACE_EVENT_COPY_FLOW_END2(category, name, id, arg1_name, arg1_val,    \
++                                   arg2_name, arg2_val)                        \
++  INTERNAL_TRACE_EVENT_ADD_WITH_ID(TRACE_EVENT_PHASE_FLOW_END, category, name, \
++                                   id, TRACE_EVENT_FLAG_COPY, arg1_name,       \
++                                   arg1_val, arg2_name, arg2_val)
++
+ ////////////////////////////////////////////////////////////////////////////////
+ // Implementation specific tracing API definitions.
  
- bool ScreenCapturerMac::RegisterRefreshAndMoveHandlers() {
-   RTC_DCHECK(thread_checker_.IsCurrent());
-+  if (!desktop_frame_provider_.allow_iosurface()) {
-+    return true;
-+  }
+@@ -536,6 +630,9 @@
+ #define TRACE_EVENT_PHASE_ASYNC_BEGIN ('S')
+ #define TRACE_EVENT_PHASE_ASYNC_STEP ('T')
+ #define TRACE_EVENT_PHASE_ASYNC_END ('F')
++#define TRACE_EVENT_PHASE_FLOW_BEGIN ('s')
++#define TRACE_EVENT_PHASE_FLOW_STEP ('t')
++#define TRACE_EVENT_PHASE_FLOW_END ('f')
+ #define TRACE_EVENT_PHASE_METADATA ('M')
+ #define TRACE_EVENT_PHASE_COUNTER ('C')
+ 
+@@ -912,6 +1009,40 @@ class TraceEndOnScopeClose {
+                                     arg2_name, arg2_val)                     \
+   RTC_NOOP()
+ 
++#define TRACE_EVENT_FLOW_BEGIN0(category, name, id) RTC_NOOP()
++#define TRACE_EVENT_FLOW_BEGIN1(category, name, id, arg1_name, arg1_val) \
++  RTC_NOOP()
++#define TRACE_EVENT_FLOW_BEGIN2(category, name, id, arg1_name, arg1_val, \
++                                arg2_name, arg2_val)                     \
++  RTC_NOOP()
++#define TRACE_EVENT_COPY_FLOW_BEGIN0(category, name, id) RTC_NOOP()
++#define TRACE_EVENT_COPY_FLOW_BEGIN1(category, name, id, arg1_name, arg1_val) \
++  RTC_NOOP()
++#define TRACE_EVENT_COPY_FLOW_BEGIN2(category, name, id, arg1_name, arg1_val, \
++                                     arg2_name, arg2_val)                     \
++  RTC_NOOP()
 +
-   desktop_config_ = desktop_config_monitor_->desktop_configuration();
-   for (const auto& config : desktop_config_.displays) {
-     size_t pixel_width = config.pixel_bounds.width();
++#define TRACE_EVENT_FLOW_STEP0(category, name, id, step) RTC_NOOP()
++#define TRACE_EVENT_FLOW_STEP1(category, name, id, step, arg1_name, arg1_val) \
++  RTC_NOOP()
++#define TRACE_EVENT_COPY_FLOW_STEP0(category, name, id, step) RTC_NOOP()
++#define TRACE_EVENT_COPY_FLOW_STEP1(category, name, id, step, arg1_name, \
++                                    arg1_val)                            \
++  RTC_NOOP()
++
++#define TRACE_EVENT_FLOW_END0(category, name, id) RTC_NOOP()
++#define TRACE_EVENT_FLOW_END1(category, name, id, arg1_name, arg1_val) \
++  RTC_NOOP()
++#define TRACE_EVENT_FLOW_END2(category, name, id, arg1_name, arg1_val, \
++                              arg2_name, arg2_val)                     \
++  RTC_NOOP()
++#define TRACE_EVENT_COPY_FLOW_END0(category, name, id) RTC_NOOP()
++#define TRACE_EVENT_COPY_FLOW_END1(category, name, id, arg1_name, arg1_val) \
++  RTC_NOOP()
++#define TRACE_EVENT_COPY_FLOW_END2(category, name, id, arg1_name, arg1_val, \
++                                   arg2_name, arg2_val)                     \
++  RTC_NOOP()
++
+ #define TRACE_EVENT_API_GET_CATEGORY_ENABLED ""
+ 
+ #define TRACE_EVENT_API_ADD_TRACE_EVENT RTC_NOOP()
