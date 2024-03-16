@@ -115,6 +115,7 @@
           <label class="category-name" flex="1" data-l10n-id="pane-BSB-title"></label>  
           </richlistitem>
 
+#ifdef FLOORP_PRIVATE_COMPONENTS_ENABLED
           <richlistitem id="category-workspaces"
                       class="category"
                       value="paneWorkspaces"
@@ -125,7 +126,7 @@
           <image class="category-icon"/>
           <label class="category-name" flex="1" data-l10n-id="pane-workspaces-title"></label>  
           </richlistitem>
-
+#endif
           <richlistitem id="category-Downloads"
                       class="category"
                       value="paneDownloads"
@@ -146,6 +147,7 @@
           <image class="category-icon"/>
           <label class="category-name" flex="1" data-l10n-id="category-CSK-title"></label>
         </richlistitem>
+#ifdef  FLOORP_PRIVATE_COMPONENTS_ENABLED
         <richlistitem id="category-ssb"
                       class="category"
                       value="paneSsb"
@@ -156,6 +158,7 @@
           <image class="category-icon"/>
           <label class="category-name" flex="1" data-l10n-id="category-ssb-title"></label>
         </richlistitem>
+#endif
         <richlistitem id="category-home"
                       class="category"
                       value="paneHome"
@@ -300,12 +303,15 @@
 #include ../../../floorp/browser/components/preferences/downloads.inc.xhtml
 #include ../../../floorp/browser/components/preferences/notes.inc.xhtml
 #include ../../../floorp/browser/components/preferences/bsb.inc.xhtml
-#include ../../../floorp/browser/components/preferences/workspaces.inc.xhtml
-#include ../../../floorp/browser/components/preferences/ssb.inc.xhtml
 #include ../../../floorp/browser/components/preferences/userjs.inc.xhtml
 #include ../../../floorp/browser/components/preferences/design.inc.xhtml
 #include ../../../floorp/browser/components/preferences/csk.inc.xhtml
 #include ../../../floorp/browser/components/preferences/lepton.inc.xhtml
+
+#ifdef FLOORP_PRIVATE_COMPONENTS_ENABLED
+#include ../../../floorp/browser/components/preferences/workspaces.inc.xhtml
+#include ../../../floorp/browser/components/preferences/ssb.inc.xhtml
+#endif
 
 #include containers.inc.xhtml
 #include sync.inc.xhtml

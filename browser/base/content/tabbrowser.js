@@ -3162,13 +3162,24 @@
           continue;
         }
 
-        let { WorkspacesService } = ChromeUtils.importESModule(
-          "resource:///modules/WorkspacesService.sys.mjs"
+        
+        let floorpWorkspaceId, floorpLastShowWorkspaceId, floorpWorkspace, floorpSSB;
+        let WorkspacesService;
+
+        var { FloorpAppConstants } = ChromeUtils.importESModule(
+          "resource:///modules/FloorpAppConstants.sys.mjs"
         );
-        let floorpWorkspaceId = tabData.floorpWorkspaceId;
-        let floorpLastShowWorkspaceId = tabData.floorpLastShowWorkspaceId;
-        let floorpWorkspace = tabData.floorpWorkspace ? tabData.floorpWorkspace : Services.prefs.getStringPref("floorp.browser.workspace.all").split(",")[0];
-        let floorpSSB = tabData.floorpSSB;
+ 
+        if (FloorpAppConstants.FLOORP_PRIVATE_COMPONENTS_ENABLED) {
+          floorpWorkspaceId = tabData.floorpWorkspaceId;
+          floorpLastShowWorkspaceId = tabData.floorpLastShowWorkspaceId;
+          floorpWorkspace = tabData.floorpWorkspace ? tabData.floorpWorkspace : Services.prefs.getStringPref("floorp.browser.workspace.all").split(",")[0];
+          floorpSSB = tabData.floorpSSB;
+
+          ChromeUtils.importESModule(
+            "resource:///modules/FloorpWorkspacesService.sys.mjs"
+          )
+        }
 
         if (floorpSSB) {
           window.close();

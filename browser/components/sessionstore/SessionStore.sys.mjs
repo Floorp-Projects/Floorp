@@ -4080,12 +4080,18 @@ var SessionStoreInternal = {
     }
 
     // Floorp Injections
-    let windowUuid = aWindow.gWorkspaces._windowId;
-    if (windowUuid) {
-      winData.windowUuid = windowUuid;
-    } else {
-      delete winData.windowUuid;
+    var { FloorpAppConstants } = ChromeUtils.importESModule(
+      "resource:///modules/FloorpAppConstants.sys.mjs"
+    );
+    if (FloorpAppConstants.FLOORP_PRIVATE_COMPONENTS_ENABLED) {
+      let windowUuid = aWindow.gWorkspaces._windowId;
+      if (windowUuid) {
+        winData.windowUuid = windowUuid;
+      } else {
+        delete winData.windowUuid;
+      }
     }
+
 
     let floorpWebPanelWindow = aWindow.floorpWebPanelWindow;
     winData.floorpWebPanelWindow = !!floorpWebPanelWindow;
@@ -5320,15 +5326,21 @@ var SessionStoreInternal = {
         aWindow.SidebarUI.showInitially(aSidebar);
       }
 
-      let { WorkspacesWindowUuidService } = ChromeUtils.importESModule(
-        "resource:///modules/WorkspacesService.sys.mjs"
+      var { FloorpAppConstants } = ChromeUtils.importESModule(
+        "resource:///modules/FloorpAppConstants.sys.mjs"
       );
-
-      // workspaces Window Id
-      if (aWindowId) {
-        aWindow.gWorkspaces._windowId = aWindowId;
-      } else {
-        aWindow.gWorkspaces._windowId = WorkspacesWindowUuidService.getGeneratedUuid();
+  
+      if (FloorpAppConstants.FLOORP_PRIVATE_COMPONENTS_ENABLED) {
+        let { WorkspacesWindowUuidService } = ChromeUtils.importESModule(
+          "resource:///modules/WorkspacesService.sys.mjs"
+        );
+        
+        // workspaces Window Id
+        if (aWindowId) {
+          aWindow.gWorkspaces._windowId = aWindowId;
+        } else {
+          aWindow.gWorkspaces._windowId = WorkspacesWindowUuidService.getGeneratedUuid();
+        }  
       }
 
       // since resizing/moving a window brings it to the foreground,

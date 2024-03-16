@@ -2383,65 +2383,72 @@ var gBrowserInit = {
 
       /*** Floorp Injections *********************************************************************************************/
 
-      if (uri) {
-        try {
-          // If the URI has "?FloorpEnableSSBWindow=true" at the end, The window will be opened as a SSB window.
-          if (uri.endsWith("?FloorpEnableSSBWindow=true")) {
-            let parseSsbArgs = uri.split(",");
-            let id = parseSsbArgs[1];
+      var { FloorpAppConstants } = ChromeUtils.importESModule(
+        "resource:///modules/FloorpAppConstants.sys.mjs"
+      );
 
-            // Replace start uri
-            uri = parseSsbArgs[0];
+      if (FloorpAppConstants.FLOORP_PRIVATE_COMPONENTS_ENABLED) {
+        if (uri) {
+          try {
+            // If the URI has "?FloorpEnableSSBWindow=true" at the end, The window will be opened as a SSB window.
+            if (uri.endsWith("?FloorpEnableSSBWindow=true")) {
+              let parseSsbArgs = uri.split(",");
+              let id = parseSsbArgs[1];
 
-            document.documentElement.setAttribute(
-              "FloorpEnableSSBWindow",
-              "true"
-            );
+              // Replace start uri
+              uri = parseSsbArgs[0];
 
-            document.documentElement.setAttribute(
-              "FloorpSSBId",
-              id
-            );
-
-            // Add SSB Window or Tab Attribute
-            // This attribute is used to make do not restore the window or tab when the browser is restarted.
-            window.floorpSsbWindow = true;
-
-            SessionStore.promiseInitialized.then(() => {
-              // Load SSB Support Script & CSS
-              gBrowser.tabs.forEach(tab => {
-                tab.setAttribute("floorpSSB", "true");
-              });
-              window.gBrowser.floorpSsbWindow = true;
-              Services.scriptloader.loadSubScript(
-                "chrome://browser/content/browser-ssb-support.js",
-               this
+              document.documentElement.setAttribute(
+                "FloorpEnableSSBWindow",
+                "true"
               );
-            });
+
+              document.documentElement.setAttribute(
+                "FloorpSSBId",
+                id
+              );
+
+              // Add SSB Window or Tab Attribute
+              // This attribute is used to make do not restore the window or tab when the browser is restarted.
+              window.floorpSsbWindow = true;
+
+              SessionStore.promiseInitialized.then(() => {
+                // Load SSB Support Script & CSS
+                gBrowser.tabs.forEach(tab => {
+                  tab.setAttribute("floorpSSB", "true");
+                });
+                window.gBrowser.floorpSsbWindow = true;
+                Services.scriptloader.loadSubScript(
+                  "chrome://browser/content/browser-ssb-support.js",
+                  this
+                );
+              });
+            }
+          } catch (e) {
+            console.error(e);
           }
-        } catch (e) {
-          console.error(e);
+        }
+
+        const SsbPrefName = "browser.ssb.startup";
+        let needSsbOpenWindow = Services.prefs.prefHasUserValue(SsbPrefName);
+        if (needSsbOpenWindow) {
+          let id = Services.prefs.getStringPref(SsbPrefName);
+          var { SiteSpecificBrowserIdUtils } = ChromeUtils.import(
+            "resource:///modules/SiteSpecificBrowserIdUtils.jsm"
+          );
+
+          try {
+            window.setTimeout(() => {
+              SiteSpecificBrowserIdUtils.runSsbById(id);
+              Services.prefs.clearUserPref(SsbPrefName);
+              window.minimize();
+            }, 2000);
+          } catch (e) {
+            console.error(e);
+          }
         }
       }
 
-      const SsbPrefName = "browser.ssb.startup";
-      let needSsbOpenWindow = Services.prefs.prefHasUserValue(SsbPrefName);
-      if (needSsbOpenWindow) {
-        let id = Services.prefs.getStringPref(SsbPrefName);
-        var { SiteSpecificBrowserIdUtils } = ChromeUtils.import(
-          "resource:///modules/SiteSpecificBrowserIdUtils.jsm"
-        );
-
-        try {
-          window.setTimeout(() => {
-            SiteSpecificBrowserIdUtils.runSsbById(id);
-            Services.prefs.clearUserPref(SsbPrefName);
-            window.minimize();
-          }, 2000);
-        } catch (e) {
-          console.error(e);
-        }
-      }
 
       /******************************************************************************************************************/
 

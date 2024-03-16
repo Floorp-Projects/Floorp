@@ -224,9 +224,17 @@ function init_all() {
   register_module("paneNotes", gNotesPane);
   register_module("paneBSB", gBSBPane);
   register_module("paneDownloads", gDownloads);
-  register_module("paneWorkspaces", gWorkspacesPane);
-  register_module("paneSsb", gSsbPane);
   register_module("paneUserjs", gUserjsPane);
+
+  var { FloorpAppConstants } = ChromeUtils.importESModule(
+    "resource:///modules/FloorpAppConstants.sys.mjs"
+  );
+
+
+  if (FloorpAppConstants.FLOORP_PRIVATE_COMPONENTS_ENABLED) {
+    register_module("paneWorkspaces", gWorkspacesPane);
+    register_module("paneSsb", gSsbPane);
+  }
 
   if (Services.prefs.getBoolPref("browser.preferences.experimental")) {
     // Set hidden based on previous load's hidden value.
