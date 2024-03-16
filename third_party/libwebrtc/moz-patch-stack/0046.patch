@@ -15,7 +15,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/edac9d01a9ac7594f
  3 files changed, 24 insertions(+)
 
 diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index bcfda6dac4..c4c0694fe5 100644
+index 9694f1d0c1..79ce90794e 100644
 --- a/video/rtp_video_stream_receiver2.cc
 +++ b/video/rtp_video_stream_receiver2.cc
 @@ -1062,6 +1062,16 @@ absl::optional<int64_t> RtpVideoStreamReceiver2::LastReceivedKeyframePacketMs()
@@ -36,10 +36,10 @@ index bcfda6dac4..c4c0694fe5 100644
      std::unique_ptr<RtpFrameObject> frame) {
    RTC_DCHECK_RUN_ON(&packet_sequence_checker_);
 diff --git a/video/rtp_video_stream_receiver2.h b/video/rtp_video_stream_receiver2.h
-index 9a09ec43c3..237e3a9491 100644
+index d436aa38a7..4a93e53356 100644
 --- a/video/rtp_video_stream_receiver2.h
 +++ b/video/rtp_video_stream_receiver2.h
-@@ -207,6 +207,12 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
+@@ -209,6 +209,12 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
    absl::optional<uint32_t> LastReceivedFrameRtpTimestamp() const;
    absl::optional<int64_t> LastReceivedKeyframePacketMs() const;
  
