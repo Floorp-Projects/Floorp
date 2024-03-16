@@ -15,10 +15,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/56555ecee7f36ae73
  1 file changed, 6 insertions(+), 2 deletions(-)
 
 diff --git a/audio/channel_send.cc b/audio/channel_send.cc
-index becb6a2a89..3c48d40345 100644
+index b8aa573a53..ae264a4c77 100644
 --- a/audio/channel_send.cc
 +++ b/audio/channel_send.cc
-@@ -286,12 +286,16 @@ class RtpPacketSenderProxy : public RtpPacketSender {
+@@ -285,12 +285,16 @@ class RtpPacketSenderProxy : public RtpPacketSender {
    void EnqueuePackets(
        std::vector<std::unique_ptr<RtpPacketToSend>> packets) override {
      MutexLock lock(&mutex_);

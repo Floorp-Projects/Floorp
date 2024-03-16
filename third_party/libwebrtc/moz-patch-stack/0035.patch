@@ -27,7 +27,7 @@ index 3701eafd6f..8dc78b18fa 100644
    stats.header_and_padding_bytes_sent =
        call_stats.header_and_padding_bytes_sent;
 diff --git a/audio/channel_send.cc b/audio/channel_send.cc
-index cfc203ca9b..8e9a97441f 100644
+index ab1b72a2f3..db632b3aa8 100644
 --- a/audio/channel_send.cc
 +++ b/audio/channel_send.cc
 @@ -56,6 +56,31 @@ constexpr int64_t kMinRetransmissionWindowMs = 30;
@@ -64,14 +64,14 @@ index cfc203ca9b..8e9a97441f 100644
                                                          // packets from the ACM
 @@ -210,6 +235,8 @@ class ChannelSend : public ChannelSendInterface,
    bool input_mute_ RTC_GUARDED_BY(volume_settings_mutex_) = false;
-   bool previous_frame_muted_ RTC_GUARDED_BY(encoder_queue_) = false;
+   bool previous_frame_muted_ RTC_GUARDED_BY(encoder_queue_checker_) = false;
  
 +  const std::unique_ptr<RtcpCounterObserver> rtcp_counter_observer_;
 +
    PacketRouter* packet_router_ RTC_GUARDED_BY(&worker_thread_checker_) =
        nullptr;
    const std::unique_ptr<RtpPacketSenderProxy> rtp_packet_pacer_proxy_;
-@@ -398,6 +425,7 @@ ChannelSend::ChannelSend(
+@@ -397,6 +424,7 @@ ChannelSend::ChannelSend(
      const FieldTrialsView& field_trials)
      : ssrc_(ssrc),
        event_log_(rtc_event_log),
@@ -88,7 +88,7 @@ index cfc203ca9b..8e9a97441f 100644
    if (field_trials.IsDisabled("WebRTC-DisableRtxRateLimiter")) {
      configuration.retransmission_rate_limiter =
          retransmission_rate_limiter_.get();
-@@ -687,6 +717,7 @@ CallSendStatistics ChannelSend::GetRTCPStatistics() const {
+@@ -691,6 +721,7 @@ CallSendStatistics ChannelSend::GetRTCPStatistics() const {
    RTC_DCHECK_RUN_ON(&worker_thread_checker_);
    CallSendStatistics stats = {0};
    stats.rttMs = GetRTT();
