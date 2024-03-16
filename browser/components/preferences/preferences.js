@@ -230,7 +230,7 @@ function init_all() {
   );
 
 
-  if (FloorpAppConstants.FLOORP_PRIVATE_COMPONENTS_ENABLED) {
+  if (FloorpAppConstants.FLOORP_OFFICIAL_COMPONENTS_ENABLED) {
     register_module("paneCSK", gCSKPane)
     register_module("paneWorkspaces", gWorkspacesPane);
     register_module("paneSsb", gSsbPane);

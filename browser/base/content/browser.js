@@ -2387,7 +2387,7 @@ var gBrowserInit = {
         "resource:///modules/FloorpAppConstants.sys.mjs"
       );
 
-      if (FloorpAppConstants.FLOORP_PRIVATE_COMPONENTS_ENABLED) {
+      if (FloorpAppConstants.FLOORP_OFFICIAL_COMPONENTS_ENABLED) {
         if (uri) {
           try {
             // If the URI has "?FloorpEnableSSBWindow=true" at the end, The window will be opened as a SSB window.

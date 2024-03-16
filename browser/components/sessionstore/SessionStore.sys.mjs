@@ -4083,7 +4083,7 @@ var SessionStoreInternal = {
     var { FloorpAppConstants } = ChromeUtils.importESModule(
       "resource:///modules/FloorpAppConstants.sys.mjs"
     );
-    if (FloorpAppConstants.FLOORP_PRIVATE_COMPONENTS_ENABLED) {
+    if (FloorpAppConstants.FLOORP_OFFICIAL_COMPONENTS_ENABLED) {
       let windowUuid = aWindow.gWorkspaces._windowId;
       if (windowUuid) {
         winData.windowUuid = windowUuid;
@@ -5330,7 +5330,7 @@ var SessionStoreInternal = {
         "resource:///modules/FloorpAppConstants.sys.mjs"
       );
   
-      if (FloorpAppConstants.FLOORP_PRIVATE_COMPONENTS_ENABLED) {
+      if (FloorpAppConstants.FLOORP_OFFICIAL_COMPONENTS_ENABLED) {
         let { WorkspacesWindowUuidService } = ChromeUtils.importESModule(
           "resource:///modules/WorkspacesService.sys.mjs"
         );

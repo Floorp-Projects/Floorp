@@ -111,7 +111,7 @@ var TabStateInternal = {
       "resource:///modules/FloorpAppConstants.sys.mjs"
     );
 
-    if (FloorpAppConstants.FLOORP_PRIVATE_COMPONENTS_ENABLED) {
+    if (FloorpAppConstants.FLOORP_OFFICIAL_COMPONENTS_ENABLED) {
       let { WorkspacesService } = ChromeUtils.importESModule(
         "resource:///modules/WorkspacesService.sys.mjs"
       );

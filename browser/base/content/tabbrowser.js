@@ -3169,7 +3169,7 @@
           "resource:///modules/FloorpAppConstants.sys.mjs"
         );
  
-        if (FloorpAppConstants.FLOORP_PRIVATE_COMPONENTS_ENABLED) {
+        if (FloorpAppConstants.FLOORP_OFFICIAL_COMPONENTS_ENABLED) {
           floorpWorkspaceId = tabData.floorpWorkspaceId;
           floorpLastShowWorkspaceId = tabData.floorpLastShowWorkspaceId;
           floorpWorkspace = tabData.floorpWorkspace ? tabData.floorpWorkspace : Services.prefs.getStringPref("floorp.browser.workspace.all").split(",")[0];
@@ -3191,7 +3191,7 @@
           tab = this.selectedTab;
           tab.setAttribute("floorpWorkspace", floorpWorkspace);
 
-          if (FloorpAppConstants.FLOORP_PRIVATE_COMPONENTS_ENABLED) {
+          if (FloorpAppConstants.FLOORP_OFFICIAL_COMPONENTS_ENABLED) {
             let { WorkspacesService } = ChromeUtils.importESModule(
               "resource:///modules/WorkspacesService.sys.mjs"
             );      
@@ -3260,7 +3260,7 @@
 
           tab.setAttribute("floorpWorkspace", floorpWorkspace);
 
-          if (FloorpAppConstants.FLOORP_PRIVATE_COMPONENTS_ENABLED) {
+          if (FloorpAppConstants.FLOORP_OFFICIAL_COMPONENTS_ENABLED) {
             let { WorkspacesService } = ChromeUtils.importESModule(
               "resource:///modules/WorkspacesService.sys.mjs"
             );      
