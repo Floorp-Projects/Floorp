@@ -105,6 +105,24 @@ class RTC_EXPORT Candidate {
   bool is_prflx() const;
   bool is_relay() const;
 
+  // Returns the type preference, a value between 0-126 inclusive, with 0 being
+  // the lowest preference value, as described in RFC 5245.
+  // https://datatracker.ietf.org/doc/html/rfc5245#section-4.1.2.1
+  int type_preference() const {
+    // From https://datatracker.ietf.org/doc/html/rfc5245#section-4.1.4 :
+    // It is RECOMMENDED that default candidates be chosen based on the
+    // likelihood of those candidates to work with the peer that is being
+    // contacted.
+    // I.e. it is recommended that relayed > reflexive > host.
+    if (is_local())
+      return 1;  // Host.
+    if (is_stun())
+      return 2;  // Reflexive.
+    if (is_relay())
+      return 3;  // Relayed.
+    return 0;    // Unknown, lowest preference.
+  }
+
   const std::string& network_name() const { return network_name_; }
   void set_network_name(absl::string_view network_name) {
     Assign(network_name_, network_name);

@@ -762,29 +762,6 @@ void GetMediaStreamIds(const ContentInfo* content,
   }
 }
 
-// RFC 5245
-// It is RECOMMENDED that default candidates be chosen based on the
-// likelihood of those candidates to work with the peer that is being
-// contacted.  It is RECOMMENDED that relayed > reflexive > host.
-static const int kPreferenceUnknown = 0;
-static const int kPreferenceHost = 1;
-static const int kPreferenceReflexive = 2;
-static const int kPreferenceRelayed = 3;
-
-static int GetCandidatePreferenceFromType(const Candidate& candidate) {
-  int preference = kPreferenceUnknown;
-  if (candidate.is_local()) {
-    preference = kPreferenceHost;
-  } else if (candidate.is_stun()) {
-    preference = kPreferenceReflexive;
-  } else if (candidate.is_relay()) {
-    preference = kPreferenceRelayed;
-  } else {
-    RTC_DCHECK_NOTREACHED();
-  }
-  return preference;
-}
-
 // Get ip and port of the default destination from the `candidates` with the
 // given value of `component_id`. The default candidate should be the one most
 // likely to work, typically IPv4 relay.
@@ -800,7 +777,7 @@ static void GetDefaultDestination(const std::vector<Candidate>& candidates,
   *addr_type = kConnectionIpv4Addrtype;
   *port = kDummyPort;
   *ip = kDummyAddress;
-  int current_preference = kPreferenceUnknown;
+  int current_preference = 0;  // Start with lowest preference
   int current_family = AF_UNSPEC;
   for (const Candidate& candidate : candidates) {
     if (candidate.component() != component_id) {
@@ -810,7 +787,7 @@ static void GetDefaultDestination(const std::vector<Candidate>& candidates,
     if (candidate.protocol() != cricket::UDP_PROTOCOL_NAME) {
       continue;
     }
-    const int preference = GetCandidatePreferenceFromType(candidate);
+    const int preference = candidate.type_preference();
     const int family = candidate.address().ipaddr().family();
     // See if this candidate is more preferable then the current one if it's the
     // same family. Or if the current family is IPv4 already so we could safely
