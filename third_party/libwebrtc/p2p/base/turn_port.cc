@@ -228,6 +228,7 @@ TurnPort::TurnPort(TaskQueueBase* thread,
            password,
            field_trials),
       server_address_(server_address),
+      server_url_(ReconstructServerUrl()),
       tls_alpn_protocols_(tls_alpn_protocols),
       tls_elliptic_curves_(tls_elliptic_curves),
       tls_cert_verifier_(tls_cert_verifier),
@@ -271,6 +272,7 @@ TurnPort::TurnPort(TaskQueueBase* thread,
            password,
            field_trials),
       server_address_(server_address),
+      server_url_(ReconstructServerUrl()),
       tls_alpn_protocols_(tls_alpn_protocols),
       tls_elliptic_curves_(tls_elliptic_curves),
       tls_cert_verifier_(tls_cert_verifier),
@@ -886,7 +888,7 @@ void TurnPort::OnAllocateSuccess(const rtc::SocketAddress& address,
              ProtoToString(server_address_.proto),  // The first hop protocol.
              "",  // TCP candidate type, empty for turn candidates.
              RELAY_PORT_TYPE, GetRelayPreference(server_address_.proto),
-             server_priority_, ReconstructedServerUrl(), true);
+             server_priority_, server_url_, true);
 }
 
 void TurnPort::OnAllocateError(int error_code, absl::string_view reason) {
@@ -902,9 +904,8 @@ void TurnPort::OnAllocateError(int error_code, absl::string_view reason) {
     address.clear();
     port = 0;
   }
-  SignalCandidateError(
-      this, IceCandidateErrorEvent(address, port, ReconstructedServerUrl(),
-                                   error_code, reason));
+  SignalCandidateError(this, IceCandidateErrorEvent(address, port, server_url_,
+                                                    error_code, reason));
 }
 
 void TurnPort::OnRefreshError() {
@@ -1255,15 +1256,13 @@ bool TurnPort::SetEntryChannelId(const rtc::SocketAddress& address,
   return true;
 }
 
-std::string TurnPort::ReconstructedServerUrl() {
-  // draft-petithuguenin-behave-turn-uris-01
-  // turnURI       = scheme ":" turn-host [ ":" turn-port ]
+std::string TurnPort::ReconstructServerUrl() {
+  // https://www.rfc-editor.org/rfc/rfc7065#section-3.1
+  // turnURI       = scheme ":" host [ ":" port ]
   //                 [ "?transport=" transport ]
   // scheme        = "turn" / "turns"
   // transport     = "udp" / "tcp" / transport-ext
   // transport-ext = 1*unreserved
-  // turn-host     = IP-literal / IPv4address / reg-name
-  // turn-port     = *DIGIT
   std::string scheme = "turn";
   std::string transport = "tcp";
   switch (server_address_.proto) {
@@ -1278,7 +1277,7 @@ std::string TurnPort::ReconstructedServerUrl() {
       break;
   }
   rtc::StringBuilder url;
-  url << scheme << ":" << server_address_.address.hostname() << ":"
+  url << scheme << ":" << server_address_.address.HostAsURIString() << ":"
       << server_address_.address.port() << "?transport=" << transport;
   return url.Release();
 }
