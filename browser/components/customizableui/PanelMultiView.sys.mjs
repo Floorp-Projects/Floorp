@@ -412,7 +412,6 @@ export var PanelMultiView = class extends AssociatedToNode {
     this.openViews = [];
 
     this._panel.addEventListener("popupshowing", this);
-    this._panel.addEventListener("popuppositioned", this);
     this._panel.addEventListener("popuphidden", this);
     this._panel.addEventListener("popupshown", this);
 
@@ -434,7 +433,6 @@ export var PanelMultiView = class extends AssociatedToNode {
 
     this._panel.removeEventListener("mousemove", this);
     this._panel.removeEventListener("popupshowing", this);
-    this._panel.removeEventListener("popuppositioned", this);
     this._panel.removeEventListener("popupshown", this);
     this._panel.removeEventListener("popuphidden", this);
     this.document.documentElement.removeEventListener("keydown", this, true);
@@ -1181,47 +1179,6 @@ export var PanelMultiView = class extends AssociatedToNode {
     }
   }
 
-  _calculateMaxHeight(aEvent) {
-    // While opening the panel, we have to limit the maximum height of any
-    // view based on the space that will be available. We cannot just use
-    // window.screen.availTop and availHeight because these may return an
-    // incorrect value when the window spans multiple screens.
-    let anchor = this._panel.anchorNode;
-    let anchorRect = anchor.getBoundingClientRect();
-    let screen = anchor.screen;
-
-    // GetAvailRect returns screen-device pixels, which we can convert to CSS
-    // pixels here.
-    let availTop = {},
-      availHeight = {};
-    screen.GetAvailRect({}, availTop, {}, availHeight);
-    let cssAvailTop = availTop.value / screen.defaultCSSScaleFactor;
-
-    // The distance from the anchor to the available margin of the screen is
-    // based on whether the panel will open towards the top or the bottom.
-    let maxHeight;
-    if (aEvent.alignmentPosition.startsWith("before_")) {
-      maxHeight = anchor.screenY - cssAvailTop;
-    } else {
-      let anchorScreenBottom = anchor.screenY + anchorRect.height;
-      let cssAvailHeight = availHeight.value / screen.defaultCSSScaleFactor;
-      maxHeight = cssAvailTop + cssAvailHeight - anchorScreenBottom;
-    }
-
-    // To go from the maximum height of the panel to the maximum height of
-    // the view stack, we need to subtract the height of the arrow and the
-    // height of the opposite margin, but we cannot get their actual values
-    // because the panel is not visible yet. However, we know that this is
-    // currently 11px on Mac, 13px on Windows, and 13px on Linux. We also
-    // want an extra margin, both for visual reasons and to prevent glitches
-    // due to small rounding errors. So, we just use a value that makes
-    // sense for all platforms. If the arrow visuals change significantly,
-    // this value will be easy to adjust.
-    const EXTRA_MARGIN_PX = 20;
-    maxHeight -= EXTRA_MARGIN_PX;
-    return maxHeight;
-  }
-
   handleEvent(aEvent) {
     // Only process actual popup events from the panel or events we generate
     // ourselves, but not from menus being shown from within the panel.
@@ -1259,14 +1216,6 @@ export var PanelMultiView = class extends AssociatedToNode {
           // so we get the event first.
           this.document.documentElement.addEventListener("keydown", this, true);
           this._panel.addEventListener("mousemove", this);
-        }
-        break;
-      }
-      case "popuppositioned": {
-        if (this._panel.state == "showing") {
-          let maxHeight = this._calculateMaxHeight(aEvent);
-          this._viewStack.style.maxHeight = maxHeight + "px";
-          this._offscreenViewStack.style.maxHeight = maxHeight + "px";
         }
         break;
       }
