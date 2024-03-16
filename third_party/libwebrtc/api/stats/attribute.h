@@ -23,7 +23,7 @@
 namespace webrtc {
 
 // A light-weight wrapper of an RTCStats attribute (an individual metric).
-class RTC_EXPORT Attribute : public RTCStatsMemberInterface {
+class RTC_EXPORT Attribute {
  public:
   // TODO(https://crbug.com/webrtc/15164): Replace uses of RTCStatsMember<T>
   // with absl::optional<T> and update these pointer types.
@@ -46,9 +46,8 @@ class RTC_EXPORT Attribute : public RTCStatsMemberInterface {
       StatVariant;
 
   template <typename T>
-  explicit Attribute(const RTCStatsMember<T>* attribute)
-      : RTCStatsMemberInterface(attribute->name()), attribute_(attribute) {}
-  ~Attribute() override;
+  explicit Attribute(const char* name, const RTCStatsMember<T>* attribute)
+      : name_(name), attribute_(attribute) {}
 
   const char* name() const;
   const StatVariant& as_variant() const;
@@ -59,32 +58,39 @@ class RTC_EXPORT Attribute : public RTCStatsMemberInterface {
     return absl::holds_alternative<const RTCStatsMember<T>*>(attribute_);
   }
   template <typename T>
+  absl::optional<T> as_optional() const {
+    RTC_CHECK(holds_alternative<T>());
+    if (!has_value()) {
+      return absl::nullopt;
+    }
+    return absl::optional<T>(get<T>());
+  }
+  template <typename T>
   const T& get() const {
     RTC_CHECK(holds_alternative<T>());
     RTC_CHECK(has_value());
     return absl::get<const RTCStatsMember<T>*>(attribute_)->value();
   }
 
-  static Attribute FromMemberInterface(const RTCStatsMemberInterface* member);
-  // RTCStatsMemberInterface implementation.
-  // TODO(https://crbug.com/webrtc/15164): Delete RTCStatsMemberInterface in
-  // favor of absl::optional<T>.
-  RTCStatsMemberInterface::Type type() const override;
-  bool is_sequence() const override;
-  bool is_string() const override;
-  bool is_defined() const override;
-  std::string ValueToString() const override;
-  std::string ValueToJson() const override;
+  bool is_sequence() const;
+  bool is_string() const;
+  std::string ValueToString() const;
+  std::string ValueToJson() const;
 
- protected:
-  const RTCStatsMemberInterface* member_ptr() const override;
-  bool IsEqual(const RTCStatsMemberInterface& other) const override;
+  bool operator==(const Attribute& other) const;
+  bool operator!=(const Attribute& other) const;
 
  private:
+  const char* name_;
   StatVariant attribute_;
 };
 
-Attribute MemberToAttribute(const RTCStatsMemberInterface* member);
+struct RTC_EXPORT AttributeInit {
+  AttributeInit(const char* name, const Attribute::StatVariant& variant);
+
+  const char* name;
+  Attribute::StatVariant variant;
+};
 
 }  // namespace webrtc
 
