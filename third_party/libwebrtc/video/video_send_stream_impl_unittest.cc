@@ -175,7 +175,8 @@ class VideoSendStreamImplTest : public ::testing::Test {
   std::unique_ptr<VideoSendStreamImpl> CreateVideoSendStreamImpl(
       int initial_encoder_max_bitrate,
       double initial_encoder_bitrate_priority,
-      VideoEncoderConfig::ContentType content_type) {
+      VideoEncoderConfig::ContentType content_type,
+      absl::optional<std::string> codec = std::nullopt) {
     EXPECT_CALL(bitrate_allocator_, GetStartBitrate(_))
         .WillOnce(Return(123000));
 
@@ -183,6 +184,9 @@ class VideoSendStreamImplTest : public ::testing::Test {
     encoder_config.max_bitrate_bps = initial_encoder_max_bitrate;
     encoder_config.bitrate_priority = initial_encoder_bitrate_priority;
     encoder_config.content_type = content_type;
+    if (codec) {
+      config_.rtp.payload_name = *codec;
+    }
 
     std::map<uint32_t, RtpState> suspended_ssrcs;
     std::map<uint32_t, RtpPayloadState> suspended_payload_states;
@@ -190,6 +194,7 @@ class VideoSendStreamImplTest : public ::testing::Test {
     std::unique_ptr<NiceMock<MockVideoStreamEncoder>> video_stream_encoder =
         std::make_unique<NiceMock<MockVideoStreamEncoder>>();
     video_stream_encoder_ = video_stream_encoder.get();
+
     auto ret = std::make_unique<VideoSendStreamImpl>(
         time_controller_.GetClock(),
         /*num_cpu_cores=*/1, time_controller_.GetTaskQueueFactory(),
@@ -711,6 +716,76 @@ TEST_F(VideoSendStreamImplTest, ForwardsVideoBitrateAllocationAfterTimeout) {
     time_controller_.AdvanceTime(TimeDelta::Zero());
   }
 
+  vss_impl->Stop();
+}
+
+TEST_F(VideoSendStreamImplTest, PriorityBitrateConfigInactiveByDefault) {
+  auto vss_impl = CreateVideoSendStreamImpl(
+      kDefaultInitialBitrateBps, kDefaultBitratePriority,
+      VideoEncoderConfig::ContentType::kRealtimeVideo);
+  EXPECT_CALL(
+      bitrate_allocator_,
+      AddObserver(
+          vss_impl.get(),
+          Field(&MediaStreamAllocationConfig::priority_bitrate_bps, 0)));
+  vss_impl->StartPerRtpStream({true});
+  EXPECT_CALL(bitrate_allocator_, RemoveObserver(vss_impl.get())).Times(1);
+  vss_impl->Stop();
+}
+
+TEST_F(VideoSendStreamImplTest, PriorityBitrateConfigAffectsAV1) {
+  test::ScopedFieldTrials override_priority_bitrate(
+      "WebRTC-AV1-OverridePriorityBitrate/bitrate:20000/");
+  auto vss_impl = CreateVideoSendStreamImpl(
+      kDefaultInitialBitrateBps, kDefaultBitratePriority,
+      VideoEncoderConfig::ContentType::kRealtimeVideo, "AV1");
+  EXPECT_CALL(
+      bitrate_allocator_,
+      AddObserver(
+          vss_impl.get(),
+          Field(&MediaStreamAllocationConfig::priority_bitrate_bps, 20000)));
+  vss_impl->StartPerRtpStream({true});
+  EXPECT_CALL(bitrate_allocator_, RemoveObserver(vss_impl.get())).Times(1);
+  vss_impl->Stop();
+}
+
+TEST_F(VideoSendStreamImplTest,
+       PriorityBitrateConfigSurvivesConfigurationChange) {
+  VideoStream qvga_stream;
+  qvga_stream.width = 320;
+  qvga_stream.height = 180;
+  qvga_stream.max_framerate = 30;
+  qvga_stream.min_bitrate_bps = 30000;
+  qvga_stream.target_bitrate_bps = 150000;
+  qvga_stream.max_bitrate_bps = 200000;
+  qvga_stream.max_qp = 56;
+  qvga_stream.bitrate_priority = 1;
+
+  int min_transmit_bitrate_bps = 30000;
+
+  test::ScopedFieldTrials override_priority_bitrate(
+      "WebRTC-AV1-OverridePriorityBitrate/bitrate:20000/");
+  auto vss_impl = CreateVideoSendStreamImpl(
+      kDefaultInitialBitrateBps, kDefaultBitratePriority,
+      VideoEncoderConfig::ContentType::kRealtimeVideo, "AV1");
+  EXPECT_CALL(
+      bitrate_allocator_,
+      AddObserver(
+          vss_impl.get(),
+          Field(&MediaStreamAllocationConfig::priority_bitrate_bps, 20000)))
+      .Times(2);
+  vss_impl->StartPerRtpStream({true});
+
+  encoder_queue_->PostTask([&] {
+    static_cast<VideoStreamEncoderInterface::EncoderSink*>(vss_impl.get())
+        ->OnEncoderConfigurationChanged(
+            std::vector<VideoStream>{qvga_stream}, false,
+            VideoEncoderConfig::ContentType::kRealtimeVideo,
+            min_transmit_bitrate_bps);
+  });
+  time_controller_.AdvanceTime(TimeDelta::Zero());
+
+  EXPECT_CALL(bitrate_allocator_, RemoveObserver(vss_impl.get())).Times(1);
   vss_impl->Stop();
 }
 
