@@ -26,6 +26,7 @@
 #include "rtc_base/net_helper.h"
 #include "rtc_base/socket_address.h"
 
+using cricket::Candidate;
 using cricket::SessionDescription;
 
 namespace webrtc {
@@ -43,13 +44,13 @@ constexpr int kPreferenceRelayed = 3;
 constexpr char kDummyAddress[] = "0.0.0.0";
 constexpr int kDummyPort = 9;
 
-int GetCandidatePreferenceFromType(const std::string& type) {
+int GetCandidatePreferenceFromType(const Candidate& c) {
   int preference = kPreferenceUnknown;
-  if (type == cricket::LOCAL_PORT_TYPE) {
+  if (c.is_local()) {
     preference = kPreferenceHost;
-  } else if (type == cricket::STUN_PORT_TYPE) {
+  } else if (c.is_stun()) {
     preference = kPreferenceReflexive;
-  } else if (type == cricket::RELAY_PORT_TYPE) {
+  } else if (c.is_relay()) {
     preference = kPreferenceRelayed;
   } else {
     preference = kPreferenceUnknown;
@@ -78,7 +79,7 @@ void UpdateConnectionAddress(
       continue;
     }
     const int preference =
-        GetCandidatePreferenceFromType(jsep_candidate->candidate().type());
+        GetCandidatePreferenceFromType(jsep_candidate->candidate());
     const int family = jsep_candidate->candidate().address().ipaddr().family();
     // See if this candidate is more preferable then the current one if it's the
     // same family. Or if the current family is IPv4 already so we could safely
@@ -253,7 +254,7 @@ bool JsepSessionDescription::AddCandidate(
     return false;
   }
 
-  cricket::Candidate updated_candidate = candidate->candidate();
+  Candidate updated_candidate = candidate->candidate();
   if (updated_candidate.username().empty()) {
     updated_candidate.set_username(transport_info->description.ice_ufrag);
   }
@@ -278,7 +279,7 @@ bool JsepSessionDescription::AddCandidate(
 }
 
 size_t JsepSessionDescription::RemoveCandidates(
-    const std::vector<cricket::Candidate>& candidates) {
+    const std::vector<Candidate>& candidates) {
   size_t num_removed = 0;
   for (auto& candidate : candidates) {
     int mediasection_index = GetMediasectionIndex(candidate);
@@ -352,8 +353,7 @@ bool JsepSessionDescription::GetMediasectionIndex(
   return true;
 }
 
-int JsepSessionDescription::GetMediasectionIndex(
-    const cricket::Candidate& candidate) {
+int JsepSessionDescription::GetMediasectionIndex(const Candidate& candidate) {
   // Find the description with a matching transport name of the candidate.
   const std::string& transport_name = candidate.transport_name();
   for (size_t i = 0; i < description_->contents().size(); ++i) {

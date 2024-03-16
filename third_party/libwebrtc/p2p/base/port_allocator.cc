@@ -312,8 +312,7 @@ Candidate PortAllocator::SanitizeCandidate(const Candidate& c) const {
   // For a local host candidate, we need to conceal its IP address candidate if
   // the mDNS obfuscation is enabled.
   bool use_hostname_address =
-      (c.type() == LOCAL_PORT_TYPE || c.type() == PRFLX_PORT_TYPE) &&
-      MdnsObfuscationEnabled();
+      (c.is_local() || c.is_prflx()) && MdnsObfuscationEnabled();
   // If adapter enumeration is disabled or host candidates are disabled,
   // clear the raddr of STUN candidates to avoid local address leakage.
   bool filter_stun_related_address =
@@ -326,9 +325,9 @@ Candidate PortAllocator::SanitizeCandidate(const Candidate& c) const {
   // Sanitize related_address when using MDNS.
   bool filter_prflx_related_address = MdnsObfuscationEnabled();
   bool filter_related_address =
-      ((c.type() == STUN_PORT_TYPE && filter_stun_related_address) ||
-       (c.type() == RELAY_PORT_TYPE && filter_turn_related_address) ||
-       (c.type() == PRFLX_PORT_TYPE && filter_prflx_related_address));
+      ((c.is_stun() && filter_stun_related_address) ||
+       (c.is_relay() && filter_turn_related_address) ||
+       (c.is_prflx() && filter_prflx_related_address));
   return c.ToSanitizedCopy(use_hostname_address, filter_related_address);
 }
 

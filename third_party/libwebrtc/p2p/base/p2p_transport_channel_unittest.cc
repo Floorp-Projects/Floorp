@@ -5008,7 +5008,7 @@ class P2PTransportChannelMostLikelyToWorkFirstTest
     Connection* conn = FindNextPingableConnectionAndPingIt(channel_.get());
     ASSERT_TRUE(conn != nullptr);
     EXPECT_EQ(conn->local_candidate().type(), local_candidate_type);
-    if (conn->local_candidate().type() == RELAY_PORT_TYPE) {
+    if (conn->local_candidate().is_relay()) {
       EXPECT_EQ(conn->local_candidate().relay_protocol(), relay_protocol_type);
     }
     EXPECT_EQ(conn->remote_candidate().type(), remote_candidate_type);
@@ -5420,7 +5420,7 @@ TEST_F(P2PTransportChannelTest,
 
   for (const auto& candidates_data : GetEndpoint(0)->saved_candidates_) {
     const auto& local_candidate_ep1 = candidates_data.candidate;
-    if (local_candidate_ep1.type() == LOCAL_PORT_TYPE) {
+    if (local_candidate_ep1.is_local()) {
       // This is the underlying private IP address of the same candidate at ep1,
       // and let the mock resolver of ep2 receive the correct resolution.
       rtc::SocketAddress resolved_address_ep1(local_candidate_ep1.address());
@@ -5449,11 +5449,11 @@ TEST_F(P2PTransportChannelTest,
   // Check the stats of ep1 seen by ep1.
   for (const auto& connection_info : ice_transport_stats1.connection_infos) {
     const auto& local_candidate = connection_info.local_candidate;
-    if (local_candidate.type() == LOCAL_PORT_TYPE) {
+    if (local_candidate.is_local()) {
       EXPECT_TRUE(local_candidate.address().IsUnresolvedIP());
-    } else if (local_candidate.type() == STUN_PORT_TYPE) {
+    } else if (local_candidate.is_stun()) {
       EXPECT_TRUE(local_candidate.related_address().IsAnyIP());
-    } else if (local_candidate.type() == RELAY_PORT_TYPE) {
+    } else if (local_candidate.is_relay()) {
       // The related address of the relay candidate should be equal to the
       // srflx address. Note that NAT is not configured, hence the following
       // expectation.
@@ -5466,11 +5466,11 @@ TEST_F(P2PTransportChannelTest,
   // Check the stats of ep1 seen by ep2.
   for (const auto& connection_info : ice_transport_stats2.connection_infos) {
     const auto& remote_candidate = connection_info.remote_candidate;
-    if (remote_candidate.type() == LOCAL_PORT_TYPE) {
+    if (remote_candidate.is_local()) {
       EXPECT_TRUE(remote_candidate.address().IsUnresolvedIP());
-    } else if (remote_candidate.type() == STUN_PORT_TYPE) {
+    } else if (remote_candidate.is_stun()) {
       EXPECT_TRUE(remote_candidate.related_address().IsAnyIP());
-    } else if (remote_candidate.type() == RELAY_PORT_TYPE) {
+    } else if (remote_candidate.is_relay()) {
       EXPECT_EQ(kPublicAddrs[0].ipaddr(),
                 remote_candidate.related_address().ipaddr());
     } else {
@@ -5592,7 +5592,7 @@ TEST_F(P2PTransportChannelTest,
   ASSERT_EQ_WAIT(1u, GetEndpoint(0)->saved_candidates_.size(), kMediumTimeout);
   const auto& candidates_data = GetEndpoint(0)->saved_candidates_[0];
   const auto& local_candidate_ep1 = candidates_data.candidate;
-  ASSERT_TRUE(local_candidate_ep1.type() == LOCAL_PORT_TYPE);
+  ASSERT_TRUE(local_candidate_ep1.is_local());
   // This is the underlying private IP address of the same candidate at ep1,
   // and let the mock resolver of ep2 receive the correct resolution.
   rtc::SocketAddress resolved_address_ep1(local_candidate_ep1.address());
@@ -5608,12 +5608,12 @@ TEST_F(P2PTransportChannelTest,
 
   const auto pair_ep1 = ep1_ch1()->GetSelectedCandidatePair();
   ASSERT_TRUE(pair_ep1.has_value());
-  EXPECT_EQ(LOCAL_PORT_TYPE, pair_ep1->local_candidate().type());
+  EXPECT_TRUE(pair_ep1->local_candidate().is_local());
   EXPECT_TRUE(pair_ep1->local_candidate().address().IsUnresolvedIP());
 
   const auto pair_ep2 = ep2_ch1()->GetSelectedCandidatePair();
   ASSERT_TRUE(pair_ep2.has_value());
-  EXPECT_EQ(LOCAL_PORT_TYPE, pair_ep2->remote_candidate().type());
+  EXPECT_TRUE(pair_ep2->remote_candidate().is_local());
   EXPECT_TRUE(pair_ep2->remote_candidate().address().IsUnresolvedIP());
 
   DestroyChannels();

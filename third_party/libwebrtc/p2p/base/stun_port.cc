@@ -285,7 +285,7 @@ Connection* UDPPort::CreateConnection(const Candidate& address,
   //
   // See also the definition of MdnsNameRegistrationStatus::kNotStarted in
   // port.h.
-  RTC_DCHECK(!SharedSocket() || Candidates()[0].type() == LOCAL_PORT_TYPE ||
+  RTC_DCHECK(!SharedSocket() || Candidates()[0].is_local() ||
              mdns_name_registration_status() !=
                  MdnsNameRegistrationStatus::kNotStarted);
 
@@ -616,7 +616,7 @@ bool UDPPort::HasStunCandidateWithAddress(
   const std::vector<Candidate>& existing_candidates = Candidates();
   std::vector<Candidate>::const_iterator it = existing_candidates.begin();
   for (; it != existing_candidates.end(); ++it) {
-    if (it->type() == STUN_PORT_TYPE && it->address() == addr)
+    if (it->is_stun() && it->address() == addr)
       return true;
   }
   return false;

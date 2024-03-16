@@ -1115,7 +1115,7 @@ class PeerConnectionIntegrationWrapper : public PeerConnectionObserver,
     if (remote_async_dns_resolver_) {
       const auto& local_candidate = candidate->candidate();
       if (local_candidate.address().IsUnresolvedIP()) {
-        RTC_DCHECK(local_candidate.type() == cricket::LOCAL_PORT_TYPE);
+        RTC_DCHECK(local_candidate.is_local());
         const auto resolved_ip = mdns_responder_->GetMappedAddressForName(
             local_candidate.address().hostname());
         RTC_DCHECK(!resolved_ip.IsNil());

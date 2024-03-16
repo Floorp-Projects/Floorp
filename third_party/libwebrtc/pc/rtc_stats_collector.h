@@ -322,11 +322,6 @@ class RTCStatsCollector : public rtc::RefCountInterface {
   InternalRecord internal_record_;
 };
 
-const char* CandidateTypeToRTCIceCandidateTypeForTesting(
-    const std::string& type);
-const char* DataStateToRTCDataChannelStateForTesting(
-    DataChannelInterface::DataState state);
-
 }  // namespace webrtc
 
 #endif  // PC_RTC_STATS_COLLECTOR_H_
