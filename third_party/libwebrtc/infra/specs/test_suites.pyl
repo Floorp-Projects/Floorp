@@ -54,6 +54,9 @@
       'webrtc_nonparallel_tests': {},
     },
     'android_tests_tryserver_specific': {
+      'video_codec_perf_tests': {
+        'mixins': ['shards-2', 'quick-perf-tests'],
+      },
       'webrtc_perf_tests': {
         'mixins': ['quick-perf-tests'],
       }
