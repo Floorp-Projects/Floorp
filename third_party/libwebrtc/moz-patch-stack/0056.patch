@@ -4,13 +4,12 @@ Subject: Bug 1766646 - (fix) breakout Call::Stats and SharedModuleThread into
  seperate files
 
 ---
- call/BUILD.gn             |  6 ++++++
- call/call.cc              | 13 -------------
- call/call.h               | 12 ++----------
- call/call_basic_stats.cc  | 20 ++++++++++++++++++++
- call/call_basic_stats.h   | 21 +++++++++++++++++++++
- video/video_send_stream.h |  1 -
- 6 files changed, 49 insertions(+), 24 deletions(-)
+ call/BUILD.gn            |  6 ++++++
+ call/call.cc             | 13 -------------
+ call/call.h              | 12 ++----------
+ call/call_basic_stats.cc | 20 ++++++++++++++++++++
+ call/call_basic_stats.h  | 21 +++++++++++++++++++++
+ 5 files changed, 49 insertions(+), 23 deletions(-)
  create mode 100644 call/call_basic_stats.cc
  create mode 100644 call/call_basic_stats.h
 
@@ -32,10 +31,10 @@ index 1d1ca1de19..9cde97fad7 100644
    deps = [
      ":audio_sender_interface",
 diff --git a/call/call.cc b/call/call.cc
-index 7b1e3c49bb..267d5981b5 100644
+index c97cb6d743..71511b2559 100644
 --- a/call/call.cc
 +++ b/call/call.cc
-@@ -453,19 +453,6 @@ class Call final : public webrtc::Call,
+@@ -454,19 +454,6 @@ class Call final : public webrtc::Call,
  };
  }  // namespace internal
  
@@ -145,15 +144,3 @@ index 0000000000..98febe9405
 +}  // namespace webrtc
 +
 +#endif  // CALL_CALL_BASIC_STATS_H_
-diff --git a/video/video_send_stream.h b/video/video_send_stream.h
-index ff1bf0c0a1..b254fd08d0 100644
---- a/video/video_send_stream.h
-+++ b/video/video_send_stream.h
-@@ -37,7 +37,6 @@ namespace test {
- class VideoSendStreamPeer;
- }  // namespace test
- 
--class CallStats;
- class IvfFileWriter;
- class RateLimiter;
- class RtpRtcp;

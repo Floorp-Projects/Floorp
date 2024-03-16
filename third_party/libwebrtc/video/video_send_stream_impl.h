@@ -16,21 +16,22 @@
 #include <atomic>
 #include <map>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "absl/types/optional.h"
 #include "api/field_trials_view.h"
+#include "api/metronome/metronome.h"
 #include "api/task_queue/pending_task_safety_flag.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/video/encoded_image.h"
 #include "api/video/video_bitrate_allocation.h"
-#include "api/video/video_bitrate_allocator.h"
 #include "api/video_codecs/video_encoder.h"
 #include "call/bitrate_allocator.h"
 #include "call/rtp_config.h"
 #include "call/rtp_transport_controller_send_interface.h"
 #include "call/rtp_video_sender_interface.h"
-#include "modules/include/module_common_types.h"
+#include "call/video_send_stream.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "modules/video_coding/include/video_codec_interface.h"
 #include "rtc_base/experiments/field_trial_parser.h"
@@ -38,10 +39,17 @@
 #include "rtc_base/task_utils/repeating_task.h"
 #include "rtc_base/thread_annotations.h"
 #include "video/config/video_encoder_config.h"
+#include "video/encoder_rtcp_feedback.h"
+#include "video/send_delay_stats.h"
 #include "video/send_statistics_proxy.h"
 #include "video/video_stream_encoder_interface.h"
 
 namespace webrtc {
+
+namespace test {
+class VideoSendStreamPeer;
+}  // namespace test
+
 namespace internal {
 
 // Pacing buffer config; overridden by ALR config if provided.
@@ -54,32 +62,58 @@ struct PacingConfig {
   FieldTrialParameter<TimeDelta> max_pacing_delay;
 };
 
-// VideoSendStreamImpl implements internal::VideoSendStream.
-// It is created and destroyed on `rtp_transport_queue`. The intent is to
-// decrease the need for locking and to ensure methods are called in sequence.
-// Public methods except `DeliverRtcp` must be called on `rtp_transport_queue`.
-// DeliverRtcp is called on the libjingle worker thread or a network thread.
+// VideoSendStreamImpl implements webrtc::VideoSendStream.
+// It is created and destroyed on `worker queue`. The intent is to
 // An encoder may deliver frames through the EncodedImageCallback on an
 // arbitrary thread.
-class VideoSendStreamImpl : public webrtc::BitrateAllocatorObserver,
+class VideoSendStreamImpl : public webrtc::VideoSendStream,
+                            public webrtc::BitrateAllocatorObserver,
                             public VideoStreamEncoderInterface::EncoderSink {
  public:
+  using RtpStateMap = std::map<uint32_t, RtpState>;
+  using RtpPayloadStateMap = std::map<uint32_t, RtpPayloadState>;
+
   VideoSendStreamImpl(Clock* clock,
-                      SendStatisticsProxy* stats_proxy,
+                      int num_cpu_cores,
+                      TaskQueueFactory* task_queue_factory,
+                      RtcpRttStats* call_stats,
                       RtpTransportControllerSendInterface* transport,
+                      Metronome* metronome,
                       BitrateAllocatorInterface* bitrate_allocator,
-                      VideoStreamEncoderInterface* video_stream_encoder,
-                      const VideoSendStream::Config* config,
-                      int initial_encoder_max_bitrate,
-                      double initial_encoder_bitrate_priority,
-                      VideoEncoderConfig::ContentType content_type,
-                      RtpVideoSenderInterface* rtp_video_sender,
-                      const FieldTrialsView& field_trials);
+                      SendDelayStats* send_delay_stats,
+                      RtcEventLog* event_log,
+                      VideoSendStream::Config config,
+                      VideoEncoderConfig encoder_config,
+                      const RtpStateMap& suspended_ssrcs,
+                      const RtpPayloadStateMap& suspended_payload_states,
+                      std::unique_ptr<FecController> fec_controller,
+                      const FieldTrialsView& field_trials,
+                      std::unique_ptr<VideoStreamEncoderInterface>
+                          video_stream_encoder_for_test = nullptr);
   ~VideoSendStreamImpl() override;
 
   void DeliverRtcp(const uint8_t* packet, size_t length);
-  void StartPerRtpStream(std::vector<bool> active_layers);
-  void Stop();
+
+  // webrtc::VideoSendStream implementation.
+  void Start() override;
+  void StartPerRtpStream(std::vector<bool> active_layers) override;
+  void Stop() override;
+  bool started() override;
+
+  void AddAdaptationResource(rtc::scoped_refptr<Resource> resource) override;
+  std::vector<rtc::scoped_refptr<Resource>> GetAdaptationResources() override;
+
+  void SetSource(rtc::VideoSourceInterface<webrtc::VideoFrame>* source,
+                 const DegradationPreference& degradation_preference) override;
+
+  void ReconfigureVideoEncoder(VideoEncoderConfig config) override;
+  void ReconfigureVideoEncoder(VideoEncoderConfig config,
+                               SetParametersCallback callback) override;
+  Stats GetStats() override;
+
+  void StopPermanentlyAndGetRtpStates(RtpStateMap* rtp_state_map,
+                                      RtpPayloadStateMap* payload_state_map);
+  void GenerateKeyFrame(const std::vector<std::string>& rids) override;
 
   // TODO(holmer): Move these to RtpTransportControllerSend.
   std::map<uint32_t, RtpState> GetRtpStates() const;
@@ -91,6 +125,28 @@ class VideoSendStreamImpl : public webrtc::BitrateAllocatorObserver,
   }
 
  private:
+  friend class test::VideoSendStreamPeer;
+  class OnSendPacketObserver : public SendPacketObserver {
+   public:
+    OnSendPacketObserver(SendStatisticsProxy* stats_proxy,
+                         SendDelayStats* send_delay_stats)
+        : stats_proxy_(*stats_proxy), send_delay_stats_(*send_delay_stats) {}
+
+    void OnSendPacket(absl::optional<uint16_t> packet_id,
+                      Timestamp capture_time,
+                      uint32_t ssrc) override {
+      stats_proxy_.OnSendPacket(ssrc, capture_time);
+      if (packet_id.has_value()) {
+        send_delay_stats_.OnSendPacket(*packet_id, capture_time, ssrc);
+      }
+    }
+
+   private:
+    SendStatisticsProxy& stats_proxy_;
+    SendDelayStats& send_delay_stats_;
+  };
+
+  absl::optional<float> GetPacingFactorOverride() const;
   // Implements BitrateAllocatorObserver.
   uint32_t OnBitrateUpdated(BitrateAllocationUpdate update) override;
 
@@ -130,12 +186,21 @@ class VideoSendStreamImpl : public webrtc::BitrateAllocatorObserver,
       RTC_RUN_ON(thread_checker_);
 
   RTC_NO_UNIQUE_ADDRESS SequenceChecker thread_checker_;
+
+  RtpTransportControllerSendInterface* const transport_;
+
+  SendStatisticsProxy stats_proxy_;
+  OnSendPacketObserver send_packet_observer_;
+  const VideoSendStream::Config config_;
+  const VideoEncoderConfig::ContentType content_type_;
+  std::unique_ptr<VideoStreamEncoderInterface> video_stream_encoder_;
+  EncoderRtcpFeedback encoder_feedback_;
+  RtpVideoSenderInterface* const rtp_video_sender_;
+  bool running_ RTC_GUARDED_BY(thread_checker_) = false;
+
   Clock* const clock_;
   const bool has_alr_probing_;
   const PacingConfig pacing_config_;
-
-  SendStatisticsProxy* const stats_proxy_;
-  const VideoSendStream::Config* const config_;
 
   TaskQueueBase* const worker_queue_;
 
@@ -145,7 +210,6 @@ class VideoSendStreamImpl : public webrtc::BitrateAllocatorObserver,
   std::atomic_bool activity_;
   bool timed_out_ RTC_GUARDED_BY(thread_checker_);
 
-  RtpTransportControllerSendInterface* const transport_;
   BitrateAllocatorInterface* const bitrate_allocator_;
 
   bool disable_padding_ RTC_GUARDED_BY(thread_checker_);
@@ -154,9 +218,6 @@ class VideoSendStreamImpl : public webrtc::BitrateAllocatorObserver,
   uint32_t encoder_max_bitrate_bps_ RTC_GUARDED_BY(thread_checker_);
   uint32_t encoder_target_rate_bps_ RTC_GUARDED_BY(thread_checker_);
   double encoder_bitrate_priority_ RTC_GUARDED_BY(thread_checker_);
-
-  VideoStreamEncoderInterface* const video_stream_encoder_;
-  RtpVideoSenderInterface* const rtp_video_sender_;
 
   ScopedTaskSafety worker_queue_safety_;
 

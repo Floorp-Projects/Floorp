@@ -70,7 +70,7 @@
 #include "video/send_delay_stats.h"
 #include "video/stats_counter.h"
 #include "video/video_receive_stream2.h"
-#include "video/video_send_stream.h"
+#include "video/video_send_stream_impl.h"
 
 namespace webrtc {
 
@@ -388,9 +388,10 @@ class Call final : public webrtc::Call,
   // should be accessed on the network thread.
   std::map<uint32_t, AudioSendStream*> audio_send_ssrcs_
       RTC_GUARDED_BY(worker_thread_);
-  std::map<uint32_t, VideoSendStream*> video_send_ssrcs_
+  std::map<uint32_t, VideoSendStreamImpl*> video_send_ssrcs_
       RTC_GUARDED_BY(worker_thread_);
-  std::set<VideoSendStream*> video_send_streams_ RTC_GUARDED_BY(worker_thread_);
+  std::set<VideoSendStreamImpl*> video_send_streams_
+      RTC_GUARDED_BY(worker_thread_);
   // True if `video_send_streams_` is empty, false if not. The atomic variable
   // is used to decide UMA send statistics behavior and enables avoiding a
   // PostTask().
@@ -873,9 +874,9 @@ webrtc::VideoSendStream* Call::CreateVideoSendStream(
   // Copy ssrcs from `config` since `config` is moved.
   std::vector<uint32_t> ssrcs = config.rtp.ssrcs;
 
-  VideoSendStream* send_stream = new VideoSendStream(
+  VideoSendStreamImpl* send_stream = new VideoSendStreamImpl(
       &env_.clock(), num_cpu_cores_, &env_.task_queue_factory(),
-      network_thread_, call_stats_->AsRtcpRttStats(), transport_send_.get(),
+      call_stats_->AsRtcpRttStats(), transport_send_.get(),
       config_.encode_metronome, bitrate_allocator_.get(),
       video_send_delay_stats_.get(), &env_.event_log(), std::move(config),
       std::move(encoder_config), suspended_video_send_ssrcs_,
@@ -919,12 +920,12 @@ void Call::DestroyVideoSendStream(webrtc::VideoSendStream* send_stream) {
   RTC_DCHECK(send_stream != nullptr);
   RTC_DCHECK_RUN_ON(worker_thread_);
 
-  VideoSendStream* send_stream_impl =
-      static_cast<VideoSendStream*>(send_stream);
+  VideoSendStreamImpl* send_stream_impl =
+      static_cast<VideoSendStreamImpl*>(send_stream);
 
   auto it = video_send_ssrcs_.begin();
   while (it != video_send_ssrcs_.end()) {
-    if (it->second == static_cast<VideoSendStream*>(send_stream)) {
+    if (it->second == static_cast<VideoSendStreamImpl*>(send_stream)) {
       send_stream_impl = it->second;
       video_send_ssrcs_.erase(it++);
     } else {
@@ -940,8 +941,8 @@ void Call::DestroyVideoSendStream(webrtc::VideoSendStream* send_stream) {
   if (video_send_streams_.empty())
     video_send_streams_empty_.store(true, std::memory_order_relaxed);
 
-  VideoSendStream::RtpStateMap rtp_states;
-  VideoSendStream::RtpPayloadStateMap rtp_payload_states;
+  VideoSendStreamImpl::RtpStateMap rtp_states;
+  VideoSendStreamImpl::RtpPayloadStateMap rtp_payload_states;
   send_stream_impl->StopPermanentlyAndGetRtpStates(&rtp_states,
                                                    &rtp_payload_states);
   for (const auto& kv : rtp_states) {
@@ -1321,7 +1322,7 @@ void Call::DeliverRtcpPacket(rtc::CopyOnWriteBuffer packet) {
     rtcp_delivered = true;
   }
 
-  for (VideoSendStream* stream : video_send_streams_) {
+  for (VideoSendStreamImpl* stream : video_send_streams_) {
     stream->DeliverRtcp(packet.cdata(), packet.size());
     rtcp_delivered = true;
   }
