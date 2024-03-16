@@ -80,27 +80,6 @@ class RTC_EXPORT Candidate {
   uint32_t priority() const { return priority_; }
   void set_priority(const uint32_t priority) { priority_ = priority; }
 
-  // TODO(pthatcher): Remove once Chromium's jingle/glue/utils.cc
-  // doesn't use it.
-  // Maps old preference (which was 0.0-1.0) to match priority (which
-  // is 0-2^32-1) to to match RFC 5245, section 4.1.2.1.  Also see
-  // https://docs.google.com/a/google.com/document/d/
-  // 1iNQDiwDKMh0NQOrCqbj3DKKRT0Dn5_5UJYhmZO-t7Uc/edit
-  float preference() const {
-    // The preference value is clamped to two decimal precision.
-    return static_cast<float>(((priority_ >> 24) * 100 / 127) / 100.0);
-  }
-
-  // TODO(pthatcher): Remove once Chromium's jingle/glue/utils.cc
-  // doesn't use it.
-  void set_preference(float preference) {
-    // Limiting priority to UINT_MAX when value exceeds uint32_t max.
-    // This can happen for e.g. when preference = 3.
-    uint64_t prio_val = static_cast<uint64_t>(preference * 127) << 24;
-    priority_ = static_cast<uint32_t>(
-        std::min(prio_val, static_cast<uint64_t>(UINT_MAX)));
-  }
-
   // TODO(honghaiz): Change to usernameFragment or ufrag.
   const std::string& username() const { return username_; }
   void set_username(absl::string_view username) { Assign(username_, username); }
