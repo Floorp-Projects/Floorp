@@ -2304,7 +2304,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRtpStreamStats_Audio_PlayoutId) {
     ASSERT_TRUE(report->Get("ITTransportName1A1"));
     auto stats =
         report->Get("ITTransportName1A1")->cast_to<RTCInboundRtpStreamStats>();
-    ASSERT_FALSE(stats.playout_id.is_defined());
+    ASSERT_FALSE(stats.playout_id.has_value());
   }
   {
     // We do expect a playout id when receiving.
@@ -2315,7 +2315,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCInboundRtpStreamStats_Audio_PlayoutId) {
     ASSERT_TRUE(report->Get("ITTransportName1A1"));
     auto stats =
         report->Get("ITTransportName1A1")->cast_to<RTCInboundRtpStreamStats>();
-    ASSERT_TRUE(stats.playout_id.is_defined());
+    ASSERT_TRUE(stats.playout_id.has_value());
     EXPECT_EQ(*stats.playout_id, "AP");
   }
 }
@@ -2531,7 +2531,7 @@ TEST_F(RTCStatsCollectorTest, CollectGoogTimingFrameInfo) {
   rtc::scoped_refptr<const RTCStatsReport> report = stats_->GetStatsReport();
   auto inbound_rtps = report->GetStatsOfType<RTCInboundRtpStreamStats>();
   ASSERT_EQ(inbound_rtps.size(), 1u);
-  ASSERT_TRUE(inbound_rtps[0]->goog_timing_frame_info.is_defined());
+  ASSERT_TRUE(inbound_rtps[0]->goog_timing_frame_info.has_value());
   EXPECT_EQ(*inbound_rtps[0]->goog_timing_frame_info,
             "1,2,3,4,5,6,7,8,9,10,11,12,13,1,0");
 }
@@ -3140,8 +3140,8 @@ TEST_F(RTCStatsCollectorTest,
   rtc::scoped_refptr<const RTCStatsReport> report = stats_->GetStatsReport();
   ASSERT_TRUE(report->Get("SV42"));
   auto video_stats = report->Get("SV42")->cast_to<RTCVideoSourceStats>();
-  EXPECT_FALSE(video_stats.frames_per_second.is_defined());
-  EXPECT_FALSE(video_stats.frames.is_defined());
+  EXPECT_FALSE(video_stats.frames_per_second.has_value());
+  EXPECT_FALSE(video_stats.frames.has_value());
 }
 
 // The track not having a source is not expected to be true in practise, but
@@ -3170,8 +3170,8 @@ TEST_F(RTCStatsCollectorTest,
   rtc::scoped_refptr<const RTCStatsReport> report = stats_->GetStatsReport();
   ASSERT_TRUE(report->Get("SV42"));
   auto video_stats = report->Get("SV42")->cast_to<RTCVideoSourceStats>();
-  EXPECT_FALSE(video_stats.width.is_defined());
-  EXPECT_FALSE(video_stats.height.is_defined());
+  EXPECT_FALSE(video_stats.width.has_value());
+  EXPECT_FALSE(video_stats.height.has_value());
 }
 
 TEST_F(RTCStatsCollectorTest,
@@ -3372,9 +3372,9 @@ TEST_P(RTCStatsCollectorTestWithParamKind,
   auto& remote_inbound_rtp = report->Get(remote_inbound_rtp_id)
                                  ->cast_to<RTCRemoteInboundRtpStreamStats>();
 
-  EXPECT_TRUE(remote_inbound_rtp.round_trip_time_measurements.is_defined());
+  EXPECT_TRUE(remote_inbound_rtp.round_trip_time_measurements.has_value());
   EXPECT_EQ(0, *remote_inbound_rtp.round_trip_time_measurements);
-  EXPECT_FALSE(remote_inbound_rtp.round_trip_time.is_defined());
+  EXPECT_FALSE(remote_inbound_rtp.round_trip_time.has_value());
 }
 
 TEST_P(RTCStatsCollectorTestWithParamKind,
@@ -3436,10 +3436,10 @@ TEST_P(RTCStatsCollectorTestWithParamKind,
   auto& remote_inbound_rtp = report->Get(remote_inbound_rtp_id)
                                  ->cast_to<RTCRemoteInboundRtpStreamStats>();
 
-  EXPECT_TRUE(remote_inbound_rtp.codec_id.is_defined());
+  EXPECT_TRUE(remote_inbound_rtp.codec_id.has_value());
   EXPECT_TRUE(report->Get(*remote_inbound_rtp.codec_id));
 
-  EXPECT_TRUE(remote_inbound_rtp.jitter.is_defined());
+  EXPECT_TRUE(remote_inbound_rtp.jitter.has_value());
   // The jitter (in seconds) is the report block's jitter divided by the codec's
   // clock rate.
   EXPECT_EQ(5.0, *remote_inbound_rtp.jitter);
@@ -3476,7 +3476,7 @@ TEST_P(RTCStatsCollectorTestWithParamKind,
   auto& remote_inbound_rtp = report->Get(remote_inbound_rtp_id)
                                  ->cast_to<RTCRemoteInboundRtpStreamStats>();
 
-  EXPECT_TRUE(remote_inbound_rtp.transport_id.is_defined());
+  EXPECT_TRUE(remote_inbound_rtp.transport_id.has_value());
   EXPECT_EQ("TTransportName2",  // 2 for RTCP
             *remote_inbound_rtp.transport_id);
   EXPECT_TRUE(report->Get(*remote_inbound_rtp.transport_id));

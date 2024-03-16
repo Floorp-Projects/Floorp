@@ -58,7 +58,7 @@ void VideoQualityMetricsReporter::OnStatsReports(
 
   auto transport_stats = report->GetStatsOfType<RTCTransportStats>();
   if (transport_stats.size() == 0u ||
-      !transport_stats[0]->selected_candidate_pair_id.is_defined()) {
+      !transport_stats[0]->selected_candidate_pair_id.has_value()) {
     return;
   }
   RTC_DCHECK_EQ(transport_stats.size(), 1);
@@ -71,7 +71,7 @@ void VideoQualityMetricsReporter::OnStatsReports(
   auto outbound_rtp_stats = report->GetStatsOfType<RTCOutboundRtpStreamStats>();
   StatsSample sample;
   for (auto& s : outbound_rtp_stats) {
-    if (!s->kind.is_defined()) {
+    if (!s->kind.has_value()) {
       continue;
     }
     if (!(*s->kind == "video")) {
@@ -89,7 +89,7 @@ void VideoQualityMetricsReporter::OnStatsReports(
 
   MutexLock lock(&video_bwe_stats_lock_);
   VideoBweStats& video_bwe_stats = video_bwe_stats_[std::string(pc_label)];
-  if (ice_candidate_pair_stats.available_outgoing_bitrate.is_defined()) {
+  if (ice_candidate_pair_stats.available_outgoing_bitrate.has_value()) {
     video_bwe_stats.available_send_bandwidth.AddSample(
         DataRate::BitsPerSec(
             *ice_candidate_pair_stats.available_outgoing_bitrate)

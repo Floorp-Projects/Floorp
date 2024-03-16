@@ -56,7 +56,7 @@ class RTCStatsMemberInterface {
   virtual Type type() const = 0;
   virtual bool is_sequence() const = 0;
   virtual bool is_string() const = 0;
-  virtual bool is_defined() const = 0;
+  virtual bool has_value() const = 0;
   // Type and value comparator. The names are not compared. These operators are
   // exposed for testing.
   bool operator==(const RTCStatsMemberInterface& other) const {
@@ -97,7 +97,6 @@ class RTCStatsMember : public RTCStatsMemberInterface {
   Type type() const override { return StaticType(); }
   bool is_sequence() const override;
   bool is_string() const override;
-  bool is_defined() const override { return value_.has_value(); }
   std::string ValueToString() const override;
   std::string ValueToJson() const override;
 
@@ -124,7 +123,7 @@ class RTCStatsMember : public RTCStatsMemberInterface {
   // Getter methods that look the same as absl::optional<T>. Please prefer these
   // in order to unblock replacing RTCStatsMember<T> with absl::optional<T> in
   // the future (https://crbug.com/webrtc/15164).
-  bool has_value() const { return value_.has_value(); }
+  bool has_value() const override { return value_.has_value(); }
   const T& value() const { return value_.value(); }
   T& value() { return value_.value(); }
   T& operator*() {

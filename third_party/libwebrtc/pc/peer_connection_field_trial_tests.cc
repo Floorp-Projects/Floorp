@@ -264,7 +264,7 @@ TEST_F(PeerConnectionFieldTrialTest, ApplyFakeNetworkConfig) {
   std::vector<const RTCOutboundRtpStreamStats*> outbound_rtp_stats =
       caller->GetStats()->GetStatsOfType<RTCOutboundRtpStreamStats>();
   ASSERT_GE(outbound_rtp_stats.size(), 1u);
-  ASSERT_TRUE(outbound_rtp_stats[0]->target_bitrate.is_defined());
+  ASSERT_TRUE(outbound_rtp_stats[0]->target_bitrate.has_value());
   // Link capacity is limited to 500k, so BWE is expected to be close to 500k.
   ASSERT_LE(*outbound_rtp_stats[0]->target_bitrate, 500'000 * 1.1);
 }
