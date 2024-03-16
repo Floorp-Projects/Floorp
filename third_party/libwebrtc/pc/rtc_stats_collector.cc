@@ -164,14 +164,14 @@ std::string RTCMediaSourceStatsIDFromKindAndAttachment(
   return sb.str();
 }
 
-const char* CandidateTypeToRTCIceCandidateType(const std::string& type) {
-  if (type == cricket::LOCAL_PORT_TYPE)
+const char* CandidateTypeToRTCIceCandidateType(const cricket::Candidate& c) {
+  if (c.is_local())
     return "host";
-  if (type == cricket::STUN_PORT_TYPE)
+  if (c.is_stun())
     return "srflx";
-  if (type == cricket::PRFLX_PORT_TYPE)
+  if (c.is_prflx())
     return "prflx";
-  if (type == cricket::RELAY_PORT_TYPE)
+  if (c.is_relay())
     return "relay";
   RTC_DCHECK_NOTREACHED();
   return nullptr;
@@ -1001,7 +1001,7 @@ const std::string& ProduceIceCandidateStats(Timestamp timestamp,
     candidate_stats->port = static_cast<int32_t>(candidate.address().port());
     candidate_stats->protocol = candidate.protocol();
     candidate_stats->candidate_type =
-        CandidateTypeToRTCIceCandidateType(candidate.type());
+        CandidateTypeToRTCIceCandidateType(candidate);
     candidate_stats->priority = static_cast<int32_t>(candidate.priority());
     candidate_stats->foundation = candidate.foundation();
     auto related_address = candidate.related_address();
@@ -2192,16 +2192,6 @@ void RTCStatsCollector::OnSctpDataChannelStateChanged(
       ++internal_record_.data_channels_closed;
     }
   }
-}
-
-const char* CandidateTypeToRTCIceCandidateTypeForTesting(
-    const std::string& type) {
-  return CandidateTypeToRTCIceCandidateType(type);
-}
-
-const char* DataStateToRTCDataChannelStateForTesting(
-    DataChannelInterface::DataState state) {
-  return DataStateToRTCDataChannelState(state);
 }
 
 }  // namespace webrtc

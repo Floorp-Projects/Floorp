@@ -2417,7 +2417,7 @@ TEST_F(BasicPortAllocatorTest, HostCandidateAddressIsReplacedByHostname) {
   for (const auto& candidate : candidates_) {
     const auto& raddr = candidate.related_address();
 
-    if (candidate.type() == LOCAL_PORT_TYPE) {
+    if (candidate.is_local()) {
       EXPECT_FALSE(candidate.address().hostname().empty());
       EXPECT_TRUE(raddr.IsNil());
       if (candidate.protocol() == UDP_PROTOCOL_NAME) {
@@ -2425,13 +2425,13 @@ TEST_F(BasicPortAllocatorTest, HostCandidateAddressIsReplacedByHostname) {
       } else {
         ++num_host_tcp_candidates;
       }
-    } else if (candidate.type() == STUN_PORT_TYPE) {
+    } else if (candidate.is_stun()) {
       // For a srflx candidate, the related address should be set to 0.0.0.0 or
       // ::0
       EXPECT_TRUE(IPIsAny(raddr.ipaddr()));
       EXPECT_EQ(raddr.port(), 0);
       ++num_srflx_candidates;
-    } else if (candidate.type() == RELAY_PORT_TYPE) {
+    } else if (candidate.is_relay()) {
       EXPECT_EQ(kNatUdpAddr.ipaddr(), raddr.ipaddr());
       EXPECT_EQ(kNatUdpAddr.family(), raddr.family());
       ++num_relay_candidates;

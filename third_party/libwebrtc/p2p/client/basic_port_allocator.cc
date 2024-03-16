@@ -126,11 +126,15 @@ bool IsAllowedByCandidateFilter(const Candidate& c, uint32_t filter) {
     return false;
   }
 
-  if (c.type() == RELAY_PORT_TYPE) {
+  if (c.is_relay()) {
     return ((filter & CF_RELAY) != 0);
-  } else if (c.type() == STUN_PORT_TYPE) {
+  }
+
+  if (c.is_stun()) {
     return ((filter & CF_REFLEXIVE) != 0);
-  } else if (c.type() == LOCAL_PORT_TYPE) {
+  }
+
+  if (c.is_local()) {
     if ((filter & CF_REFLEXIVE) && !c.address().IsPrivateIP()) {
       // We allow host candidates if the filter allows server-reflexive
       // candidates and the candidate is a public IP. Because we don't generate
@@ -143,6 +147,7 @@ bool IsAllowedByCandidateFilter(const Candidate& c, uint32_t filter) {
 
     return ((filter & CF_HOST) != 0);
   }
+
   return false;
 }
 

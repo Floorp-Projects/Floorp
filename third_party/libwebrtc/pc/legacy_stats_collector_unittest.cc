@@ -1391,7 +1391,7 @@ TEST_F(LegacyStatsCollectorTest, IceCandidateReport) {
       ExtractStatsValue(StatsReport::kStatsReportTypeIceLocalCandidate, reports,
                         StatsReport::kStatsValueNameCandidatePriority));
   EXPECT_EQ(
-      IceCandidateTypeToStatsType(cricket::LOCAL_PORT_TYPE),
+      IceCandidateTypeToStatsType(local),
       ExtractStatsValue(StatsReport::kStatsReportTypeIceLocalCandidate, reports,
                         StatsReport::kStatsValueNameCandidateType));
   EXPECT_EQ(
@@ -1421,7 +1421,7 @@ TEST_F(LegacyStatsCollectorTest, IceCandidateReport) {
                               reports,
                               StatsReport::kStatsValueNameCandidatePriority));
   EXPECT_EQ(
-      IceCandidateTypeToStatsType(cricket::PRFLX_PORT_TYPE),
+      IceCandidateTypeToStatsType(remote),
       ExtractStatsValue(StatsReport::kStatsReportTypeIceRemoteCandidate,
                         reports, StatsReport::kStatsValueNameCandidateType));
   EXPECT_EQ(kNotFound,

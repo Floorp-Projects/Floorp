@@ -26,6 +26,7 @@
 #include <vector>
 
 #include "absl/types/optional.h"
+#include "api/candidate.h"
 #include "api/field_trials_view.h"
 #include "api/legacy_stats_types.h"
 #include "api/media_stream_interface.h"
@@ -45,7 +46,7 @@ namespace webrtc {
 
 // Conversion function to convert candidate type string to the corresponding one
 // from  enum RTCStatsIceCandidateType.
-const char* IceCandidateTypeToStatsType(const std::string& candidate_type);
+const char* IceCandidateTypeToStatsType(const cricket::Candidate& candidate);
 
 // Conversion function to convert adapter type to report string which are more
 // fitting to the general style of http://w3c.github.io/webrtc-stats. This is
