@@ -178,6 +178,9 @@ class ByteBufferReader {
   // Appends next `len` bytes from the buffer to `val`. Returns false
   // if there is less than `len` bytes left.
   bool ReadString(std::string* val, size_t len);
+  // Same as `ReadString` except that the returned string_view will point into
+  // the internal buffer (no additional buffer allocation).
+  bool ReadStringView(absl::string_view* val, size_t len);
 
   // Moves current position `size` bytes forward. Returns false if
   // there is less than `size` bytes left in the buffer. Consume doesn't

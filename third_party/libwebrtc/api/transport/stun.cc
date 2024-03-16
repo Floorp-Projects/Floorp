@@ -603,8 +603,8 @@ bool StunMessage::Read(ByteBufferReader* buf) {
     return false;
   }
 
-  std::string magic_cookie;
-  if (!buf->ReadString(&magic_cookie, kStunMagicCookieLength)) {
+  absl::string_view magic_cookie;
+  if (!buf->ReadStringView(&magic_cookie, kStunMagicCookieLength)) {
     return false;
   }
 
