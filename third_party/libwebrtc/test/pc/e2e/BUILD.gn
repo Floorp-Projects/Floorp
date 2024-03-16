@@ -110,7 +110,6 @@ if (!build_with_chromium) {
         "../../../modules/audio_device:test_audio_device_module",
         "../../../modules/audio_processing/aec_dump",
         "../../../p2p:rtc_p2p",
-        "../../../rtc_base:rtc_task_queue",
         "../../../rtc_base:threading",
         "analyzer/video:quality_analyzing_video_encoder",
         "analyzer/video:video_quality_analyzer_injection_helper",

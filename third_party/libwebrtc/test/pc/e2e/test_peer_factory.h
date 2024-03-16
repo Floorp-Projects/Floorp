@@ -24,7 +24,6 @@
 #include "api/test/pclf/peer_configurer.h"
 #include "api/test/time_controller.h"
 #include "modules/audio_device/include/test_audio_device.h"
-#include "rtc_base/task_queue.h"
 #include "test/pc/e2e/analyzer/video/video_quality_analyzer_injection_helper.h"
 #include "test/pc/e2e/test_peer.h"
 
@@ -61,16 +60,6 @@ class TestPeerFactory {
         time_controller_(time_controller),
         video_analyzer_helper_(video_analyzer_helper),
         task_queue_(task_queue) {}
-
-  [[deprecated]] TestPeerFactory(
-      rtc::Thread* signaling_thread,
-      TimeController& time_controller,
-      VideoQualityAnalyzerInjectionHelper* video_analyzer_helper,
-      rtc::TaskQueue* task_queue)
-      : TestPeerFactory(signaling_thread,
-                        time_controller,
-                        video_analyzer_helper,
-                        task_queue->Get()) {}
 
   // Setups all components, that should be provided to WebRTC
   // PeerConnectionFactory and PeerConnection creation methods,
