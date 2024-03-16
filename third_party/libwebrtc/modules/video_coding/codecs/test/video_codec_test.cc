@@ -178,7 +178,8 @@ std::string TestOutputPath() {
 }  // namespace
 
 std::unique_ptr<VideoCodecStats> RunEncodeDecodeTest(
-    std::string codec_impl,
+    std::string encoder_impl,
+    std::string decoder_impl,
     const VideoInfo& video_info,
     const std::map<uint32_t, EncodingSettings>& encoding_settings) {
   VideoSourceSettings source_settings{
@@ -190,28 +191,32 @@ std::unique_ptr<VideoCodecStats> RunEncodeDecodeTest(
       encoding_settings.begin()->second.sdp_video_format;
 
   std::unique_ptr<VideoEncoderFactory> encoder_factory =
-      CreateEncoderFactory(codec_impl);
+      CreateEncoderFactory(encoder_impl);
   if (!encoder_factory
            ->QueryCodecSupport(sdp_video_format,
                                /*scalability_mode=*/absl::nullopt)
            .is_supported) {
-    RTC_LOG(LS_WARNING) << "No encoder for video format "
+    RTC_LOG(LS_WARNING) << "No " << encoder_impl << " encoder for video format "
                         << sdp_video_format.ToString();
     return nullptr;
   }
 
   std::unique_ptr<VideoDecoderFactory> decoder_factory =
-      CreateDecoderFactory(codec_impl);
+      CreateDecoderFactory(decoder_impl);
   if (!decoder_factory
            ->QueryCodecSupport(sdp_video_format,
                                /*reference_scaling=*/false)
            .is_supported) {
+    RTC_LOG(LS_WARNING) << "No " << decoder_impl << " decoder for video format "
+                        << sdp_video_format.ToString()
+                        << ". Trying built-in decoder.";
     decoder_factory = CreateDecoderFactory("builtin");
     if (!decoder_factory
              ->QueryCodecSupport(sdp_video_format,
                                  /*reference_scaling=*/false)
              .is_supported) {
-      RTC_LOG(LS_WARNING) << "No decoder for video format "
+      RTC_LOG(LS_WARNING) << "No " << decoder_impl
+                          << " decoder for video format "
                           << sdp_video_format.ToString();
       return nullptr;
     }
@@ -221,7 +226,7 @@ std::unique_ptr<VideoCodecStats> RunEncodeDecodeTest(
 
   VideoCodecTester::EncoderSettings encoder_settings;
   encoder_settings.pacing_settings.mode =
-      codec_impl == "builtin" ? PacingMode::kNoPacing : PacingMode::kRealTime;
+      encoder_impl == "builtin" ? PacingMode::kNoPacing : PacingMode::kRealTime;
   if (absl::GetFlag(FLAGS_dump_encoder_input)) {
     encoder_settings.encoder_input_base_path = output_path + "_enc_input";
   }
@@ -231,7 +236,7 @@ std::unique_ptr<VideoCodecStats> RunEncodeDecodeTest(
 
   VideoCodecTester::DecoderSettings decoder_settings;
   decoder_settings.pacing_settings.mode =
-      codec_impl == "builtin" ? PacingMode::kNoPacing : PacingMode::kRealTime;
+      decoder_impl == "builtin" ? PacingMode::kNoPacing : PacingMode::kRealTime;
   if (absl::GetFlag(FLAGS_dump_decoder_input)) {
     decoder_settings.decoder_input_base_path = output_path + "_dec_input";
   }
@@ -318,7 +323,7 @@ TEST_P(SpatialQualityTest, SpatialQuality) {
           {bitrate_kbps}, framerate_fps, num_frames);
 
   std::unique_ptr<VideoCodecStats> stats =
-      RunEncodeDecodeTest(codec_impl, video_info, frames_settings);
+      RunEncodeDecodeTest(codec_impl, codec_impl, video_info, frames_settings);
 
   VideoCodecStats::Stream stream;
   if (stats != nullptr) {
@@ -538,6 +543,7 @@ TEST(VideoCodecTest, DISABLED_EncodeDecode) {
   // Sync with changes in Stream::LogMetrics (see TODOs there).
   std::unique_ptr<VideoCodecStats> stats = RunEncodeDecodeTest(
       CodecNameToCodecImpl(absl::GetFlag(FLAGS_encoder)),
+      CodecNameToCodecImpl(absl::GetFlag(FLAGS_decoder)),
       kRawVideos.at(absl::GetFlag(FLAGS_video_name)), frames_settings);
   ASSERT_NE(nullptr, stats);
 
