@@ -44,7 +44,7 @@ void TraverseAndTakeVisitedStats(RTCStatsReport* report,
 
 void AddIdIfDefined(const RTCStatsMember<std::string>& id,
                     std::vector<const std::string*>* neighbor_ids) {
-  if (id.is_defined())
+  if (id.has_value())
     neighbor_ids->push_back(&(*id));
 }
 

@@ -107,7 +107,7 @@ TEST(RTCStatsTest, RTCStatsAndAttributes) {
   stats.m_sequence_bool = sequence_bool;
   stats.m_sequence_int32 = sequence_int32;
   stats.m_sequence_uint32 = sequence_uint32;
-  EXPECT_FALSE(stats.m_sequence_int64.is_defined());
+  EXPECT_FALSE(stats.m_sequence_int64.has_value());
   stats.m_sequence_int64 = sequence_int64;
   stats.m_sequence_uint64 = sequence_uint64;
   stats.m_sequence_double = sequence_double;
@@ -382,8 +382,8 @@ TEST(RTCStatsTest, RTCStatsPrintsValidJson) {
   // "mUint32" should not be part of the generated JSON object.
   int m_uint32;
   int m_uint64;
-  EXPECT_FALSE(stats.m_uint32.is_defined());
-  EXPECT_FALSE(stats.m_uint64.is_defined());
+  EXPECT_FALSE(stats.m_uint32.has_value());
+  EXPECT_FALSE(stats.m_uint64.has_value());
   EXPECT_FALSE(rtc::GetIntFromJsonObject(json_output, "mUint32", &m_uint32));
   EXPECT_FALSE(rtc::GetIntFromJsonObject(json_output, "mUint64", &m_uint64));
 
@@ -507,7 +507,7 @@ TEST(RTCStatsTest, ValueToString) {
 
 TEST(RTCStatsDeathTest, ValueOfUndefinedMember) {
   RTCTestStats stats("testId", Timestamp::Micros(0));
-  EXPECT_FALSE(stats.m_int32.is_defined());
+  EXPECT_FALSE(stats.m_int32.has_value());
   EXPECT_DEATH(*stats.m_int32, "");
 }
 
