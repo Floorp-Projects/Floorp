@@ -53,11 +53,6 @@
 
 namespace cricket {
 
-RTC_EXPORT extern const char LOCAL_PORT_TYPE[];
-RTC_EXPORT extern const char STUN_PORT_TYPE[];
-RTC_EXPORT extern const char PRFLX_PORT_TYPE[];
-RTC_EXPORT extern const char RELAY_PORT_TYPE[];
-
 // RFC 6544, TCP candidate encoding rules.
 extern const int DISCARD_PORT;
 extern const char TCPTYPE_ACTIVE_STR[];

@@ -26,6 +26,13 @@
 
 namespace cricket {
 
+// TODO(tommi): These are temporarily here, moved from `port.h` and will
+// eventually be removed once we use enums instead of strings for these values.
+RTC_EXPORT extern const char LOCAL_PORT_TYPE[];
+RTC_EXPORT extern const char STUN_PORT_TYPE[];
+RTC_EXPORT extern const char PRFLX_PORT_TYPE[];
+RTC_EXPORT extern const char RELAY_PORT_TYPE[];
+
 // TURN servers are limited to 32 in accordance with
 // https://w3c.github.io/webrtc-pc/#dom-rtcconfiguration-iceservers
 static constexpr size_t kMaxTurnServers = 32;
@@ -110,6 +117,14 @@ class RTC_EXPORT Candidate {
   void set_type(absl::string_view type ABSL_ATTRIBUTE_LIFETIME_BOUND) {
     Assign(type_, type);
   }
+
+  // Provide these simple checkers to abstract away dependency on the port types
+  // that are currently defined outside of Candidate. This will ease the change
+  // from the string type to an enum.
+  bool is_local() const;
+  bool is_stun() const;
+  bool is_prflx() const;
+  bool is_relay() const;
 
   const std::string& network_name() const { return network_name_; }
   void set_network_name(absl::string_view network_name) {
