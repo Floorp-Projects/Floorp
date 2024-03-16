@@ -1670,10 +1670,7 @@ rtc_source_set("gtest_prod") {
 
 rtc_library("gunit_helpers") {
   testonly = true
-  sources = [
-    "gunit.cc",
-    "gunit.h",
-  ]
+  sources = [ "gunit.h" ]
   deps = [
     ":logging",
     ":rtc_base_tests_utils",
