@@ -13,6 +13,7 @@
 
 #include "audio_device_ios.h"
 
+#include <mach/mach_time.h>
 #include <cmath>
 
 #include "api/array_view.h"
@@ -110,6 +111,9 @@ AudioDeviceIOS::AudioDeviceIOS(bool bypass_voice_processing)
   thread_ = rtc::Thread::Current();
 
   audio_session_observer_ = [[RTCNativeAudioSessionDelegateAdapter alloc] initWithObserver:this];
+  mach_timebase_info_data_t tinfo;
+  mach_timebase_info(&tinfo);
+  machTickUnitsToNanoseconds_ = (double)tinfo.numer / tinfo.denom;
 }
 
 AudioDeviceIOS::~AudioDeviceIOS() {
@@ -376,6 +380,11 @@ OSStatus AudioDeviceIOS::OnDeliverRecordedData(AudioUnitRenderActionFlags* flags
   record_audio_buffer_.Clear();
   record_audio_buffer_.SetSize(num_frames);
 
+  // Get audio timestamp for the audio.
+  // The timestamp will not have NTP time epoch, but that will be addressed by
+  // the TimeStampAligner in AudioDeviceBuffer::SetRecordedBuffer().
+  SInt64 capture_timestamp_ns = time_stamp->mHostTime * machTickUnitsToNanoseconds_;
+
   // Allocate AudioBuffers to be used as storage for the received audio.
   // The AudioBufferList structure works as a placeholder for the
   // AudioBuffer structure, which holds a pointer to the actual data buffer
@@ -404,7 +413,8 @@ OSStatus AudioDeviceIOS::OnDeliverRecordedData(AudioUnitRenderActionFlags* flags
   // Get a pointer to the recorded audio and send it to the WebRTC ADB.
   // Use the FineAudioBuffer instance to convert between native buffer size
   // and the 10ms buffer size used by WebRTC.
-  fine_audio_buffer_->DeliverRecordedData(record_audio_buffer_, kFixedRecordDelayEstimate);
+  fine_audio_buffer_->DeliverRecordedData(
+      record_audio_buffer_, kFixedRecordDelayEstimate, capture_timestamp_ns);
   return noErr;
 }
 

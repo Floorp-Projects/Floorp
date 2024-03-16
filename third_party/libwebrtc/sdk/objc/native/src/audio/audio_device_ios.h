@@ -299,6 +299,10 @@ class AudioDeviceIOS : public AudioDeviceGeneric,
   // Avoids running pending task after `this` is Terminated.
   rtc::scoped_refptr<PendingTaskSafetyFlag> safety_ =
       PendingTaskSafetyFlag::Create();
+
+  // Ratio between mach tick units and nanosecond. Used to change mach tick
+  // units to nanoseconds.
+  double machTickUnitsToNanoseconds_;
 };
 }  // namespace ios_adm
 }  // namespace webrtc
