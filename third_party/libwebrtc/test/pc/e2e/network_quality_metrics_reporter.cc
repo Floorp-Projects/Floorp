@@ -79,15 +79,14 @@ void NetworkQualityMetricsReporter::OnStatsReports(
   auto inbound_stats = report->GetStatsOfType<RTCInboundRtpStreamStats>();
   for (const auto& stat : inbound_stats) {
     payload_received +=
-        DataSize::Bytes(stat->bytes_received.ValueOrDefault(0ul) +
-                        stat->header_bytes_received.ValueOrDefault(0ul));
+        DataSize::Bytes(stat->bytes_received.value_or(0ul) +
+                        stat->header_bytes_received.value_or(0ul));
   }
 
   auto outbound_stats = report->GetStatsOfType<RTCOutboundRtpStreamStats>();
   for (const auto& stat : outbound_stats) {
-    payload_sent +=
-        DataSize::Bytes(stat->bytes_sent.ValueOrDefault(0ul) +
-                        stat->header_bytes_sent.ValueOrDefault(0ul));
+    payload_sent += DataSize::Bytes(stat->bytes_sent.value_or(0ul) +
+                                    stat->header_bytes_sent.value_or(0ul));
   }
 
   MutexLock lock(&lock_);

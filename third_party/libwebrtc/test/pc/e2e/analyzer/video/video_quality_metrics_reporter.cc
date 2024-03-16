@@ -81,10 +81,10 @@ void VideoQualityMetricsReporter::OnStatsReports(
       sample.sample_time = s->timestamp();
     }
     sample.retransmitted_bytes_sent +=
-        DataSize::Bytes(s->retransmitted_bytes_sent.ValueOrDefault(0ul));
-    sample.bytes_sent += DataSize::Bytes(s->bytes_sent.ValueOrDefault(0ul));
+        DataSize::Bytes(s->retransmitted_bytes_sent.value_or(0ul));
+    sample.bytes_sent += DataSize::Bytes(s->bytes_sent.value_or(0ul));
     sample.header_bytes_sent +=
-        DataSize::Bytes(s->header_bytes_sent.ValueOrDefault(0ul));
+        DataSize::Bytes(s->header_bytes_sent.value_or(0ul));
   }
 
   MutexLock lock(&video_bwe_stats_lock_);

@@ -102,8 +102,13 @@ class RTCStatsMember : public RTCStatsMemberInterface {
   std::string ValueToJson() const override;
 
   template <typename U>
-  inline T ValueOrDefault(U default_value) const {
+  inline T value_or(U default_value) const {
     return value_.value_or(default_value);
+  }
+  // TODO(https://crbug.com/webrtc/15164): Migrate to value_or() and delete.
+  template <typename U>
+  inline T ValueOrDefault(U default_value) const {
+    return value_or(default_value);
   }
 
   // Assignment operators.
