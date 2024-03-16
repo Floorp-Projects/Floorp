@@ -159,13 +159,6 @@ specific_include_rules = {
     "+modules/audio_processing/include/audio_processing.h",
   ],
 
-  "fake_metronome\.h": [
-    "+rtc_base/synchronization/mutex.h",
-    "+rtc_base/task_queue.h",
-    "+rtc_base/task_utils/repeating_task.h",
-    "+rtc_base/thread_annotations.h",
-  ],
-
   "make_ref_counted\.h": [
     "+rtc_base/ref_counted_object.h",
   ],
