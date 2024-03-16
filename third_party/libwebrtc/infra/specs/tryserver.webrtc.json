@@ -369,6 +369,31 @@
         "test_id_prefix": "ninja://rtc_tools:tools_unittests/"
       },
       {
+        "args": [
+          "--webrtc_quick_perf_test",
+          "--nologs"
+        ],
+        "merge": {
+          "script": "//testing/merge_scripts/standard_gtest_merge.py"
+        },
+        "name": "video_codec_perf_tests",
+        "resultdb": {
+          "enable": true,
+          "has_native_resultdb_integration": true
+        },
+        "swarming": {
+          "dimensions": {
+            "android_devices": "1",
+            "device_type": "walleye",
+            "os": "Android"
+          },
+          "service_account": "chromium-tester@chops-service-accounts.iam.gserviceaccount.com",
+          "shards": 2
+        },
+        "test": "video_codec_perf_tests",
+        "test_id_prefix": "ninja://modules/video_coding:video_codec_perf_tests/"
+      },
+      {
         "merge": {
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
@@ -846,6 +871,31 @@
         "test_id_prefix": "ninja://rtc_tools:tools_unittests/"
       },
       {
+        "args": [
+          "--webrtc_quick_perf_test",
+          "--nologs"
+        ],
+        "merge": {
+          "script": "//testing/merge_scripts/standard_gtest_merge.py"
+        },
+        "name": "video_codec_perf_tests",
+        "resultdb": {
+          "enable": true,
+          "has_native_resultdb_integration": true
+        },
+        "swarming": {
+          "dimensions": {
+            "android_devices": "1",
+            "device_type": "walleye",
+            "os": "Android"
+          },
+          "service_account": "chromium-tester@chops-service-accounts.iam.gserviceaccount.com",
+          "shards": 2
+        },
+        "test": "video_codec_perf_tests",
+        "test_id_prefix": "ninja://modules/video_coding:video_codec_perf_tests/"
+      },
+      {
         "merge": {
           "script": "//testing/merge_scripts/standard_gtest_merge.py"
         },
@@ -1321,6 +1371,31 @@
         },
         "test": "tools_unittests",
         "test_id_prefix": "ninja://rtc_tools:tools_unittests/"
+      },
+      {
+        "args": [
+          "--webrtc_quick_perf_test",
+          "--nologs"
+        ],
+        "merge": {
+          "script": "//testing/merge_scripts/standard_gtest_merge.py"
+        },
+        "name": "video_codec_perf_tests",
+        "resultdb": {
+          "enable": true,
+          "has_native_resultdb_integration": true
+        },
+        "swarming": {
+          "dimensions": {
+            "android_devices": "1",
+            "device_type": "walleye",
+            "os": "Android"
+          },
+          "service_account": "chromium-tester@chops-service-accounts.iam.gserviceaccount.com",
+          "shards": 2
+        },
+        "test": "video_codec_perf_tests",
+        "test_id_prefix": "ninja://modules/video_coding:video_codec_perf_tests/"
       },
       {
         "merge": {
@@ -1823,6 +1898,31 @@
         },
         "test": "tools_unittests",
         "test_id_prefix": "ninja://rtc_tools:tools_unittests/"
+      },
+      {
+        "args": [
+          "--webrtc_quick_perf_test",
+          "--nologs"
+        ],
+        "merge": {
+          "script": "//testing/merge_scripts/standard_gtest_merge.py"
+        },
+        "name": "video_codec_perf_tests",
+        "resultdb": {
+          "enable": true,
+          "has_native_resultdb_integration": true
+        },
+        "swarming": {
+          "dimensions": {
+            "android_devices": "1",
+            "device_type": "walleye",
+            "os": "Android"
+          },
+          "service_account": "chromium-tester@chops-service-accounts.iam.gserviceaccount.com",
+          "shards": 2
+        },
+        "test": "video_codec_perf_tests",
+        "test_id_prefix": "ninja://modules/video_coding:video_codec_perf_tests/"
       },
       {
         "merge": {
