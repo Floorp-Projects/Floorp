@@ -15,10 +15,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/edac9d01a9ac7594f
  3 files changed, 24 insertions(+)
 
 diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index ee10206f8d..e7ef98f603 100644
+index bcfda6dac4..c4c0694fe5 100644
 --- a/video/rtp_video_stream_receiver2.cc
 +++ b/video/rtp_video_stream_receiver2.cc
-@@ -1066,6 +1066,16 @@ absl::optional<int64_t> RtpVideoStreamReceiver2::LastReceivedKeyframePacketMs()
+@@ -1062,6 +1062,16 @@ absl::optional<int64_t> RtpVideoStreamReceiver2::LastReceivedKeyframePacketMs()
    return absl::nullopt;
  }
  
