@@ -933,6 +933,41 @@ TEST(RtpPacketTest, GetUncopyableExtension) {
   EXPECT_TRUE(rtp_packet.GetExtension<UncopyableExtension>(&value2));
 }
 
+struct ParseByReferenceExtension {
+  static constexpr RTPExtensionType kId = kRtpExtensionDependencyDescriptor;
+  static constexpr absl::string_view Uri() { return "uri"; }
+
+  static size_t ValueSize(uint8_t value1, uint8_t value2) { return 2; }
+  static bool Write(rtc::ArrayView<uint8_t> data,
+                    uint8_t value1,
+                    uint8_t value2) {
+    data[0] = value1;
+    data[1] = value2;
+    return true;
+  }
+  static bool Parse(rtc::ArrayView<const uint8_t> data,
+                    uint8_t& value1,
+                    uint8_t& value2) {
+    value1 = data[0];
+    value2 = data[1];
+    return true;
+  }
+};
+
+TEST(RtpPacketTest, GetExtensionByReference) {
+  RtpHeaderExtensionMap extensions;
+  extensions.Register<ParseByReferenceExtension>(1);
+  RtpPacket rtp_packet(&extensions);
+  rtp_packet.SetExtension<ParseByReferenceExtension>(13, 42);
+
+  uint8_t value1 = 1;
+  uint8_t value2 = 1;
+  EXPECT_TRUE(
+      rtp_packet.GetExtension<ParseByReferenceExtension>(value1, value2));
+  EXPECT_EQ(int{value1}, 13);
+  EXPECT_EQ(int{value2}, 42);
+}
+
 TEST(RtpPacketTest, CreateAndParseTimingFrameExtension) {
   // Create a packet with video frame timing extension populated.
   RtpPacketToSend::ExtensionManager send_extensions;
