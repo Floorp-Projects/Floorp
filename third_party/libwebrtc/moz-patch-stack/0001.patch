@@ -1,679 +1,106 @@
-From: Daniel Baker <dbaker@mozilla.com>
-Date: Sat, 16 Mar 2024 08:50:42 -0600
-Subject: (tmp-cherry-pick) Revert "Reland "[Stats] Attribute::ToString(), to
- replace member ValueToString/ToJson."" (4d706a9fd1)
+From: =?UTF-8?q?Erik=20Spr=C3=A5ng?= <sprang@webrtc.org>
+Date: Fri, 19 Jan 2024 16:59:01 +0100
+Subject: (cherry-pick-branch-heads/6167) Tighten som DCHECKs to CHECKs in VP9
+ packetization.
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-This reverts commit 55cdc29b9d7259d17ccc281855dd21adc51ca957.
+(cherry picked from commit 6a992129fb0dede4a8fbdaf5de43abaf43c20299)
 
-Reason for revert: Breaks downstream project.
-
-Original change's description:
-> Reland "[Stats] Attribute::ToString(), to replace member ValueToString/ToJson."
->
-> This is a reland of commit 54be7084e0861a0179a5fccd0b27edf7d7994bbb
->
-> Original change's description:
-> > [Stats] Attribute::ToString(), to replace member ValueToString/ToJson.
-> >
-> > Delete RTCStatsMember<T>::ValueToString() and ValueToJson() in favor of
-> > Attribute::ToString().
-> >
-> > The difference between "ToString" and "ToJson" is that the "ToJson"
-> > version converts 64-bit integers and doubles to floating points with no
-> > more than ~15 digits of precision as to not exceed JSON's precision
-> > limitations. So only in edge cases of really large numbers or numbers
-> > with a silly number of digits will the two methods produce different
-> > results. Also JSON puts '\"' around map key names, e.g. "{\"foo\":123}"
-> > as opposed to "{foo:123}".
-> >
-> > Going forward we see no reason to maintain two different string
-> > converted paths that are this similar, so we only implement one
-> > Attribute::ToString() method which does what "ToJson" did.
-> >
-> > In the next CL we can delete RTCStatsMember<T>.
-> >
-> > Bug: webrtc:15164
-> > Change-Id: Iaa8cf3bf14b40dc44664f75989832469603131c5
-> > Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/334640
-> > Commit-Queue: Henrik Boström <hbos@webrtc.org>
-> > Reviewed-by: Evan Shrubsole <eshr@google.com>
-> > Reviewed-by: Harald Alvestrand <hta@webrtc.org>
-> > Cr-Commit-Position: refs/heads/main@{#41544}
->
-> Bug: webrtc:15164
-> Change-Id: If34509ebf3d7c0291442ae11596e7c2d3978fb64
-> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/335240
-> Reviewed-by: Henrik Boström <hbos@webrtc.org>
-> Commit-Queue: Mirko Bonadei <mbonadei@webrtc.org>
-> Cr-Commit-Position: refs/heads/main@{#41566}
-
-Bug: webrtc:15164
-Change-Id: I5819811237a6dbd85a8c738ca0180039fc705909
-No-Presubmit: true
-No-Tree-Checks: true
-No-Try: true
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/335280
-Reviewed-by: Christoffer Dewerin <jansson@google.com>
-Owners-Override: Mirko Bonadei <mbonadei@webrtc.org>
-Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
-Reviewed-by: Jeremy Leconte <jleconte@google.com>
-Commit-Queue: Mirko Bonadei <mbonadei@webrtc.org>
-Cr-Commit-Position: refs/heads/main@{#41567}
+No-Try: True
+Bug: chromium:1518991, chromium:1518994
+Change-Id: I47f68ba6aaf4874fd952332bf213e3a1e0389268
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/335241
+Auto-Submit: Erik Språng <sprang@webrtc.org>
+Reviewed-by: Danil Chapovalov <danilchap@webrtc.org>
+Commit-Queue: Danil Chapovalov <danilchap@webrtc.org>
+Cr-Original-Commit-Position: refs/heads/main@{#41580}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/338640
+Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
+Commit-Queue: Erik Språng <sprang@webrtc.org>
+Cr-Commit-Position: refs/branch-heads/6167@{#6}
+Cr-Branched-From: ece5cb83715dea85617114b6d4e981fdee2623ba-refs/heads/main@{#41315}
 ---
- api/stats/attribute.h                         |   7 +-
- api/stats/rtc_stats_member.h                  |  13 +
- pc/peer_connection_rampup_tests.cc            |   4 +-
- pc/rtc_stats_integrationtest.cc               |  12 +-
- stats/attribute.cc                            |  94 +------
- stats/rtc_stats.cc                            |   3 +-
- stats/rtc_stats_member.cc                     | 236 +++++++++++++++---
- stats/rtc_stats_unittest.cc                   |  39 ++-
- .../video/video_quality_metrics_reporter.cc   |   4 +-
- 9 files changed, 257 insertions(+), 155 deletions(-)
+ modules/rtp_rtcp/source/rtp_format_vp9.cc | 26 ++++++++++++-----------
+ 1 file changed, 14 insertions(+), 12 deletions(-)
 
-diff --git a/api/stats/attribute.h b/api/stats/attribute.h
-index dd21a985df..fdedc74082 100644
---- a/api/stats/attribute.h
-+++ b/api/stats/attribute.h
-@@ -74,11 +74,8 @@ class RTC_EXPORT Attribute {
+diff --git a/modules/rtp_rtcp/source/rtp_format_vp9.cc b/modules/rtp_rtcp/source/rtp_format_vp9.cc
+index 66b784705b..5e037859ce 100644
+--- a/modules/rtp_rtcp/source/rtp_format_vp9.cc
++++ b/modules/rtp_rtcp/source/rtp_format_vp9.cc
+@@ -94,8 +94,8 @@ size_t RefIndicesLength(const RTPVideoHeaderVP9& hdr) {
+   if (!hdr.inter_pic_predicted || !hdr.flexible_mode)
+     return 0;
  
-   bool is_sequence() const;
-   bool is_string() const;
--  // Converts the attribute to a string that is parseable as a JSON object.
--  std::string ToString() const;
--  // TODO(https://crbug.com/15164): Use ToString() instead and delete these.
--  std::string ValueToString() const { return ToString(); }
--  std::string ValueToJson() const { return ToString(); }
-+  std::string ValueToString() const;
-+  std::string ValueToJson() const;
- 
-   bool operator==(const Attribute& other) const;
-   bool operator!=(const Attribute& other) const;
-diff --git a/api/stats/rtc_stats_member.h b/api/stats/rtc_stats_member.h
-index bf9cc0f400..d2aa539cf5 100644
---- a/api/stats/rtc_stats_member.h
-+++ b/api/stats/rtc_stats_member.h
-@@ -65,6 +65,13 @@ class RTCStatsMemberInterface {
-   bool operator!=(const RTCStatsMemberInterface& other) const {
-     return !(*this == other);
-   }
-+  virtual std::string ValueToString() const = 0;
-+  // This is the same as ValueToString except for kInt64 and kUint64 types,
-+  // where the value is represented as a double instead of as an integer.
-+  // Since JSON stores numbers as floating point numbers, very large integers
-+  // cannot be accurately represented, so we prefer to display them as doubles
-+  // instead.
-+  virtual std::string ValueToJson() const = 0;
- 
-   virtual const RTCStatsMemberInterface* member_ptr() const { return this; }
-   template <typename T>
-@@ -91,6 +98,8 @@ class RTCStatsMember : public RTCStatsMemberInterface {
-   bool is_sequence() const override;
-   bool is_string() const override;
-   bool is_defined() const override { return value_.has_value(); }
-+  std::string ValueToString() const override;
-+  std::string ValueToJson() const override;
- 
-   template <typename U>
-   inline T value_or(U default_value) const {
-@@ -161,6 +170,10 @@ typedef std::map<std::string, double> MapStringDouble;
-   RTC_EXPORT bool RTCStatsMember<T>::is_sequence() const;                   \
-   template <>                                                               \
-   RTC_EXPORT bool RTCStatsMember<T>::is_string() const;                     \
-+  template <>                                                               \
-+  RTC_EXPORT std::string RTCStatsMember<T>::ValueToString() const;          \
-+  template <>                                                               \
-+  RTC_EXPORT std::string RTCStatsMember<T>::ValueToJson() const;            \
-   extern template class RTC_EXPORT_TEMPLATE_DECLARE(RTC_EXPORT)             \
-       RTCStatsMember<T>
- 
-diff --git a/pc/peer_connection_rampup_tests.cc b/pc/peer_connection_rampup_tests.cc
-index e45821b31f..0fd3c27f7d 100644
---- a/pc/peer_connection_rampup_tests.cc
-+++ b/pc/peer_connection_rampup_tests.cc
-@@ -313,9 +313,7 @@ class PeerConnectionRampUpTest : public ::testing::Test {
-       return 0;
-     }
-     std::string selected_ice_id =
--        transport_stats[0]
--            ->GetAttribute(transport_stats[0]->selected_candidate_pair_id)
--            .ToString();
-+        transport_stats[0]->selected_candidate_pair_id.ValueToString();
-     // Use the selected ICE candidate pair ID to get the appropriate ICE stats.
-     const RTCIceCandidatePairStats ice_candidate_pair_stats =
-         stats->Get(selected_ice_id)->cast_to<const RTCIceCandidatePairStats>();
-diff --git a/pc/rtc_stats_integrationtest.cc b/pc/rtc_stats_integrationtest.cc
-index 002f9d34b5..762dad6fcd 100644
---- a/pc/rtc_stats_integrationtest.cc
-+++ b/pc/rtc_stats_integrationtest.cc
-@@ -228,10 +228,9 @@ class RTCStatsVerifier {
- 
-   template <typename T>
-   void TestAttributeIsUndefined(const RTCStatsMember<T>& field) {
--    Attribute attribute = stats_->GetAttribute(field);
-     EXPECT_FALSE(field.has_value())
--        << stats_->type() << "." << attribute.name() << "[" << stats_->id()
--        << "] was defined (" << attribute.ToString() << ").";
-+        << stats_->type() << "." << stats_->GetAttribute(field).name() << "["
-+        << stats_->id() << "] was defined (" << field.ValueToString() << ").";
-     MarkAttributeTested(field, !field.has_value());
-   }
- 
-@@ -247,7 +246,7 @@ class RTCStatsVerifier {
-     bool is_positive = field.value() > T(0);
-     EXPECT_TRUE(is_positive)
-         << stats_->type() << "." << attribute.name() << "[" << stats_->id()
--        << "] was not positive (" << attribute.ToString() << ").";
-+        << "] was not positive (" << attribute.ValueToString() << ").";
-     MarkAttributeTested(field, is_positive);
-   }
- 
-@@ -263,7 +262,7 @@ class RTCStatsVerifier {
-     bool is_non_negative = field.value() >= T(0);
-     EXPECT_TRUE(is_non_negative)
-         << stats_->type() << "." << attribute.name() << "[" << stats_->id()
--        << "] was not non-negative (" << attribute.ToString() << ").";
-+        << "] was not non-negative (" << attribute.ValueToString() << ").";
-     MarkAttributeTested(field, is_non_negative);
-   }
- 
-@@ -324,7 +323,8 @@ class RTCStatsVerifier {
-         << stats_->type() << "." << attribute.name()
-         << " is not a reference to an "
-            "existing dictionary of type "
--        << expected_type << " (value: " << attribute.ToString() << ").";
-+        << expected_type << " (value: "
-+        << (field.has_value() ? attribute.ValueToString() : "null") << ").";
-     MarkAttributeTested(field, valid_reference);
-   }
- 
-diff --git a/stats/attribute.cc b/stats/attribute.cc
-index fab948b1bd..76956e25b8 100644
---- a/stats/attribute.cc
-+++ b/stats/attribute.cc
-@@ -10,13 +10,8 @@
- 
- #include "api/stats/attribute.h"
- 
--#include <string>
--
- #include "absl/types/variant.h"
--#include "rtc_base/arraysize.h"
- #include "rtc_base/checks.h"
--#include "rtc_base/string_encode.h"
--#include "rtc_base/strings/string_builder.h"
- 
- namespace webrtc {
- 
-@@ -35,82 +30,6 @@ struct VisitIsSequence {
-   }
- };
- 
--// Converts the attribute to string in a JSON-compatible way.
--struct VisitToString {
--  template <typename T,
--            typename std::enable_if_t<
--                std::is_same_v<T, int32_t> || std::is_same_v<T, uint32_t> ||
--                    std::is_same_v<T, bool> || std::is_same_v<T, std::string>,
--                bool> = true>
--  std::string ValueToString(const T& value) {
--    return rtc::ToString(value);
--  }
--  // Convert 64-bit integers to doubles before converting to string because JSON
--  // represents all numbers as floating points with ~15 digits of precision.
--  template <typename T,
--            typename std::enable_if_t<std::is_same_v<T, int64_t> ||
--                                          std::is_same_v<T, uint64_t> ||
--                                          std::is_same_v<T, double>,
--                                      bool> = true>
--  std::string ValueToString(const T& value) {
--    char buf[32];
--    const int len = std::snprintf(&buf[0], arraysize(buf), "%.16g",
--                                  static_cast<double>(value));
--    RTC_DCHECK_LE(len, arraysize(buf));
--    return std::string(&buf[0], len);
--  }
--
--  // Vector attributes.
--  template <typename T>
--  std::string operator()(const RTCStatsMember<std::vector<T>>* attribute) {
--    rtc::StringBuilder sb;
--    sb << "[";
--    const char* separator = "";
--    constexpr bool element_is_string = std::is_same<T, std::string>::value;
--    for (const T& element : attribute->value()) {
--      sb << separator;
--      if (element_is_string) {
--        sb << "\"";
--      }
--      sb << ValueToString(element);
--      if (element_is_string) {
--        sb << "\"";
--      }
--      separator = ",";
--    }
--    sb << "]";
--    return sb.Release();
--  }
--  // Map attributes.
--  template <typename T>
--  std::string operator()(
--      const RTCStatsMember<std::map<std::string, T>>* attribute) {
--    rtc::StringBuilder sb;
--    sb << "{";
--    const char* separator = "";
--    constexpr bool element_is_string = std::is_same<T, std::string>::value;
--    for (const auto& pair : attribute->value()) {
--      sb << separator;
--      sb << "\"" << pair.first << "\":";
--      if (element_is_string) {
--        sb << "\"";
--      }
--      sb << ValueToString(pair.second);
--      if (element_is_string) {
--        sb << "\"";
--      }
--      separator = ",";
--    }
--    sb << "}";
--    return sb.Release();
--  }
--  // Simple attributes.
--  template <typename T>
--  std::string operator()(const RTCStatsMember<T>* attribute) {
--    return ValueToString(attribute->value());
--  }
--};
--
- struct VisitIsEqual {
-   template <typename T>
-   bool operator()(const RTCStatsMember<T>* attribute) {
-@@ -150,11 +69,14 @@ bool Attribute::is_string() const {
-       attribute_);
+-  RTC_DCHECK_GT(hdr.num_ref_pics, 0U);
+-  RTC_DCHECK_LE(hdr.num_ref_pics, kMaxVp9RefPics);
++  RTC_CHECK_GT(hdr.num_ref_pics, 0U);
++  RTC_CHECK_LE(hdr.num_ref_pics, kMaxVp9RefPics);
+   return hdr.num_ref_pics;
  }
  
--std::string Attribute::ToString() const {
--  if (!has_value()) {
--    return "null";
--  }
--  return absl::visit(VisitToString(), attribute_);
-+std::string Attribute::ValueToString() const {
-+  return absl::visit([](const auto* attr) { return attr->ValueToString(); },
-+                     attribute_);
-+}
-+
-+std::string Attribute::ValueToJson() const {
-+  return absl::visit([](const auto* attr) { return attr->ValueToJson(); },
-+                     attribute_);
- }
+@@ -123,9 +123,9 @@ size_t SsDataLength(const RTPVideoHeaderVP9& hdr) {
+   if (!hdr.ss_data_available)
+     return 0;
  
- bool Attribute::operator==(const Attribute& other) const {
-diff --git a/stats/rtc_stats.cc b/stats/rtc_stats.cc
-index e7d72ee3a3..ea87379b95 100644
---- a/stats/rtc_stats.cc
-+++ b/stats/rtc_stats.cc
-@@ -54,7 +54,8 @@ std::string RTCStats::ToJson() const {
-       if (attribute.holds_alternative<std::string>()) {
-         sb << "\"";
-       }
--      sb << attribute.ToString();
-+      sb << absl::visit([](const auto* attr) { return attr->ValueToJson(); },
-+                        attribute.as_variant());
-       if (attribute.holds_alternative<std::string>()) {
-         sb << "\"";
-       }
-diff --git a/stats/rtc_stats_member.cc b/stats/rtc_stats_member.cc
-index 3f91988ed0..d7a3f6ccd2 100644
---- a/stats/rtc_stats_member.cc
-+++ b/stats/rtc_stats_member.cc
-@@ -10,53 +10,231 @@
- 
- #include "api/stats/rtc_stats_member.h"
- 
-+#include "rtc_base/arraysize.h"
-+#include "rtc_base/strings/string_builder.h"
-+
- namespace webrtc {
- 
--#define WEBRTC_DEFINE_RTCSTATSMEMBER(T, type, is_seq, is_str)     \
--  template <>                                                     \
--  RTCStatsMemberInterface::Type RTCStatsMember<T>::StaticType() { \
--    return type;                                                  \
--  }                                                               \
--  template <>                                                     \
--  bool RTCStatsMember<T>::is_sequence() const {                   \
--    return is_seq;                                                \
--  }                                                               \
--  template <>                                                     \
--  bool RTCStatsMember<T>::is_string() const {                     \
--    return is_str;                                                \
--  }                                                               \
-+namespace {
-+
-+// Produces "[a,b,c]". Works for non-vector `RTCStatsMemberInterface::Type`
-+// types.
-+template <typename T>
-+std::string VectorToString(const std::vector<T>& vector) {
-+  rtc::StringBuilder sb;
-+  sb << "[";
-+  const char* separator = "";
-+  for (const T& element : vector) {
-+    sb << separator << rtc::ToString(element);
-+    separator = ",";
-+  }
-+  sb << "]";
-+  return sb.Release();
-+}
-+
-+// This overload is required because std::vector<bool> range loops don't
-+// return references but objects, causing -Wrange-loop-analysis diagnostics.
-+std::string VectorToString(const std::vector<bool>& vector) {
-+  rtc::StringBuilder sb;
-+  sb << "[";
-+  const char* separator = "";
-+  for (bool element : vector) {
-+    sb << separator << rtc::ToString(element);
-+    separator = ",";
-+  }
-+  sb << "]";
-+  return sb.Release();
-+}
-+
-+// Produces "[\"a\",\"b\",\"c\"]". Works for vectors of both const char* and
-+// std::string element types.
-+template <typename T>
-+std::string VectorOfStringsToString(const std::vector<T>& strings) {
-+  rtc::StringBuilder sb;
-+  sb << "[";
-+  const char* separator = "";
-+  for (const T& element : strings) {
-+    sb << separator << "\"" << rtc::ToString(element) << "\"";
-+    separator = ",";
-+  }
-+  sb << "]";
-+  return sb.Release();
-+}
-+
-+template <typename T>
-+std::string MapToString(const std::map<std::string, T>& map) {
-+  rtc::StringBuilder sb;
-+  sb << "{";
-+  const char* separator = "";
-+  for (const auto& element : map) {
-+    sb << separator << rtc::ToString(element.first) << ":"
-+       << rtc::ToString(element.second);
-+    separator = ",";
-+  }
-+  sb << "}";
-+  return sb.Release();
-+}
-+
-+template <typename T>
-+std::string ToStringAsDouble(const T value) {
-+  // JSON represents numbers as floating point numbers with about 15 decimal
-+  // digits of precision.
-+  char buf[32];
-+  const int len = std::snprintf(&buf[0], arraysize(buf), "%.16g",
-+                                static_cast<double>(value));
-+  RTC_DCHECK_LE(len, arraysize(buf));
-+  return std::string(&buf[0], len);
-+}
-+
-+template <typename T>
-+std::string VectorToStringAsDouble(const std::vector<T>& vector) {
-+  rtc::StringBuilder sb;
-+  sb << "[";
-+  const char* separator = "";
-+  for (const T& element : vector) {
-+    sb << separator << ToStringAsDouble<T>(element);
-+    separator = ",";
-+  }
-+  sb << "]";
-+  return sb.Release();
-+}
-+
-+template <typename T>
-+std::string MapToStringAsDouble(const std::map<std::string, T>& map) {
-+  rtc::StringBuilder sb;
-+  sb << "{";
-+  const char* separator = "";
-+  for (const auto& element : map) {
-+    sb << separator << "\"" << rtc::ToString(element.first)
-+       << "\":" << ToStringAsDouble(element.second);
-+    separator = ",";
-+  }
-+  sb << "}";
-+  return sb.Release();
-+}
-+
-+}  // namespace
-+
-+#define WEBRTC_DEFINE_RTCSTATSMEMBER(T, type, is_seq, is_str, to_str, to_json) \
-+  template <>                                                                  \
-+  RTCStatsMemberInterface::Type RTCStatsMember<T>::StaticType() {              \
-+    return type;                                                               \
-+  }                                                                            \
-+  template <>                                                                  \
-+  bool RTCStatsMember<T>::is_sequence() const {                                \
-+    return is_seq;                                                             \
-+  }                                                                            \
-+  template <>                                                                  \
-+  bool RTCStatsMember<T>::is_string() const {                                  \
-+    return is_str;                                                             \
-+  }                                                                            \
-+  template <>                                                                  \
-+  std::string RTCStatsMember<T>::ValueToString() const {                       \
-+    RTC_DCHECK(value_.has_value());                                            \
-+    return to_str;                                                             \
-+  }                                                                            \
-+  template <>                                                                  \
-+  std::string RTCStatsMember<T>::ValueToJson() const {                         \
-+    RTC_DCHECK(value_.has_value());                                            \
-+    return to_json;                                                            \
-+  }                                                                            \
-   template class RTC_EXPORT_TEMPLATE_DEFINE(RTC_EXPORT) RTCStatsMember<T>
- 
--WEBRTC_DEFINE_RTCSTATSMEMBER(bool, kBool, false, false);
--WEBRTC_DEFINE_RTCSTATSMEMBER(int32_t, kInt32, false, false);
--WEBRTC_DEFINE_RTCSTATSMEMBER(uint32_t, kUint32, false, false);
--WEBRTC_DEFINE_RTCSTATSMEMBER(int64_t, kInt64, false, false);
--WEBRTC_DEFINE_RTCSTATSMEMBER(uint64_t, kUint64, false, false);
--WEBRTC_DEFINE_RTCSTATSMEMBER(double, kDouble, false, false);
--WEBRTC_DEFINE_RTCSTATSMEMBER(std::string, kString, false, true);
--WEBRTC_DEFINE_RTCSTATSMEMBER(std::vector<bool>, kSequenceBool, true, false);
--WEBRTC_DEFINE_RTCSTATSMEMBER(std::vector<int32_t>, kSequenceInt32, true, false);
-+WEBRTC_DEFINE_RTCSTATSMEMBER(bool,
-+                             kBool,
-+                             false,
-+                             false,
-+                             rtc::ToString(*value_),
-+                             rtc::ToString(*value_));
-+WEBRTC_DEFINE_RTCSTATSMEMBER(int32_t,
-+                             kInt32,
-+                             false,
-+                             false,
-+                             rtc::ToString(*value_),
-+                             rtc::ToString(*value_));
-+WEBRTC_DEFINE_RTCSTATSMEMBER(uint32_t,
-+                             kUint32,
-+                             false,
-+                             false,
-+                             rtc::ToString(*value_),
-+                             rtc::ToString(*value_));
-+WEBRTC_DEFINE_RTCSTATSMEMBER(int64_t,
-+                             kInt64,
-+                             false,
-+                             false,
-+                             rtc::ToString(*value_),
-+                             ToStringAsDouble(*value_));
-+WEBRTC_DEFINE_RTCSTATSMEMBER(uint64_t,
-+                             kUint64,
-+                             false,
-+                             false,
-+                             rtc::ToString(*value_),
-+                             ToStringAsDouble(*value_));
-+WEBRTC_DEFINE_RTCSTATSMEMBER(double,
-+                             kDouble,
-+                             false,
-+                             false,
-+                             rtc::ToString(*value_),
-+                             ToStringAsDouble(*value_));
-+WEBRTC_DEFINE_RTCSTATSMEMBER(std::string,
-+                             kString,
-+                             false,
-+                             true,
-+                             *value_,
-+                             *value_);
-+WEBRTC_DEFINE_RTCSTATSMEMBER(std::vector<bool>,
-+                             kSequenceBool,
-+                             true,
-+                             false,
-+                             VectorToString(*value_),
-+                             VectorToString(*value_));
-+WEBRTC_DEFINE_RTCSTATSMEMBER(std::vector<int32_t>,
-+                             kSequenceInt32,
-+                             true,
-+                             false,
-+                             VectorToString(*value_),
-+                             VectorToString(*value_));
- WEBRTC_DEFINE_RTCSTATSMEMBER(std::vector<uint32_t>,
-                              kSequenceUint32,
-                              true,
--                             false);
--WEBRTC_DEFINE_RTCSTATSMEMBER(std::vector<int64_t>, kSequenceInt64, true, false);
-+                             false,
-+                             VectorToString(*value_),
-+                             VectorToString(*value_));
-+WEBRTC_DEFINE_RTCSTATSMEMBER(std::vector<int64_t>,
-+                             kSequenceInt64,
-+                             true,
-+                             false,
-+                             VectorToString(*value_),
-+                             VectorToStringAsDouble(*value_));
- WEBRTC_DEFINE_RTCSTATSMEMBER(std::vector<uint64_t>,
-                              kSequenceUint64,
-                              true,
--                             false);
--WEBRTC_DEFINE_RTCSTATSMEMBER(std::vector<double>, kSequenceDouble, true, false);
-+                             false,
-+                             VectorToString(*value_),
-+                             VectorToStringAsDouble(*value_));
-+WEBRTC_DEFINE_RTCSTATSMEMBER(std::vector<double>,
-+                             kSequenceDouble,
-+                             true,
-+                             false,
-+                             VectorToString(*value_),
-+                             VectorToStringAsDouble(*value_));
- WEBRTC_DEFINE_RTCSTATSMEMBER(std::vector<std::string>,
-                              kSequenceString,
-                              true,
--                             false);
-+                             false,
-+                             VectorOfStringsToString(*value_),
-+                             VectorOfStringsToString(*value_));
- WEBRTC_DEFINE_RTCSTATSMEMBER(rtc_stats_internal::MapStringUint64,
-                              kMapStringUint64,
-                              false,
--                             false);
-+                             false,
-+                             MapToString(*value_),
-+                             MapToStringAsDouble(*value_));
- WEBRTC_DEFINE_RTCSTATSMEMBER(rtc_stats_internal::MapStringDouble,
-                              kMapStringDouble,
-                              false,
--                             false);
-+                             false,
-+                             MapToString(*value_),
-+                             MapToStringAsDouble(*value_));
- 
- }  // namespace webrtc
-diff --git a/stats/rtc_stats_unittest.cc b/stats/rtc_stats_unittest.cc
-index 40b05d79db..8837da7ce9 100644
---- a/stats/rtc_stats_unittest.cc
-+++ b/stats/rtc_stats_unittest.cc
-@@ -459,50 +459,45 @@ TEST(RTCStatsTest, IsString) {
-   EXPECT_FALSE(stats.m_map_string_double.is_string());
- }
- 
--TEST(RTCStatsTest, AttributeToString) {
-+TEST(RTCStatsTest, ValueToString) {
-   RTCTestStats stats("statsId", Timestamp::Micros(42));
-   stats.m_bool = true;
--  EXPECT_EQ("true", stats.GetAttribute(stats.m_bool).ToString());
-+  EXPECT_EQ("true", stats.m_bool.ValueToString());
- 
-   stats.m_string = "foo";
--  EXPECT_EQ("foo", stats.GetAttribute(stats.m_string).ToString());
-+  EXPECT_EQ("foo", stats.m_string.ValueToString());
-   stats.m_int32 = -32;
--  EXPECT_EQ("-32", stats.GetAttribute(stats.m_int32).ToString());
-+  EXPECT_EQ("-32", stats.m_int32.ValueToString());
-   stats.m_uint32 = 32;
--  EXPECT_EQ("32", stats.GetAttribute(stats.m_uint32).ToString());
-+  EXPECT_EQ("32", stats.m_uint32.ValueToString());
-   stats.m_int64 = -64;
--  EXPECT_EQ("-64", stats.GetAttribute(stats.m_int64).ToString());
-+  EXPECT_EQ("-64", stats.m_int64.ValueToString());
-   stats.m_uint64 = 64;
--  EXPECT_EQ("64", stats.GetAttribute(stats.m_uint64).ToString());
-+  EXPECT_EQ("64", stats.m_uint64.ValueToString());
-   stats.m_double = 0.5;
--  EXPECT_EQ("0.5", stats.GetAttribute(stats.m_double).ToString());
-+  EXPECT_EQ("0.5", stats.m_double.ValueToString());
-   stats.m_sequence_bool = {true, false};
--  EXPECT_EQ("[true,false]",
--            stats.GetAttribute(stats.m_sequence_bool).ToString());
-+  EXPECT_EQ("[true,false]", stats.m_sequence_bool.ValueToString());
-   stats.m_sequence_int32 = {-32, 32};
--  EXPECT_EQ("[-32,32]", stats.GetAttribute(stats.m_sequence_int32).ToString());
-+  EXPECT_EQ("[-32,32]", stats.m_sequence_int32.ValueToString());
-   stats.m_sequence_uint32 = {64, 32};
--  EXPECT_EQ("[64,32]", stats.GetAttribute(stats.m_sequence_uint32).ToString());
-+  EXPECT_EQ("[64,32]", stats.m_sequence_uint32.ValueToString());
-   stats.m_sequence_int64 = {-64, 32};
--  EXPECT_EQ("[-64,32]", stats.GetAttribute(stats.m_sequence_int64).ToString());
-+  EXPECT_EQ("[-64,32]", stats.m_sequence_int64.ValueToString());
-   stats.m_sequence_uint64 = {16, 32};
--  EXPECT_EQ("[16,32]", stats.GetAttribute(stats.m_sequence_uint64).ToString());
-+  EXPECT_EQ("[16,32]", stats.m_sequence_uint64.ValueToString());
-   stats.m_sequence_double = {0.5, 0.25};
--  EXPECT_EQ("[0.5,0.25]",
--            stats.GetAttribute(stats.m_sequence_double).ToString());
-+  EXPECT_EQ("[0.5,0.25]", stats.m_sequence_double.ValueToString());
-   stats.m_sequence_string = {"foo", "bar"};
--  EXPECT_EQ("[\"foo\",\"bar\"]",
--            stats.GetAttribute(stats.m_sequence_string).ToString());
-+  EXPECT_EQ("[\"foo\",\"bar\"]", stats.m_sequence_string.ValueToString());
-   stats.m_map_string_uint64 = std::map<std::string, uint64_t>();
-   stats.m_map_string_uint64->emplace("foo", 32);
-   stats.m_map_string_uint64->emplace("bar", 64);
--  EXPECT_EQ("{\"bar\":64,\"foo\":32}",
--            stats.GetAttribute(stats.m_map_string_uint64).ToString());
-+  EXPECT_EQ("{bar:64,foo:32}", stats.m_map_string_uint64.ValueToString());
-   stats.m_map_string_double = std::map<std::string, double>();
-   stats.m_map_string_double->emplace("foo", 0.5);
-   stats.m_map_string_double->emplace("bar", 0.25);
--  EXPECT_EQ("{\"bar\":0.25,\"foo\":0.5}",
--            stats.GetAttribute(stats.m_map_string_double).ToString());
-+  EXPECT_EQ("{bar:0.25,foo:0.5}", stats.m_map_string_double.ValueToString());
- }
- 
- // Death tests.
-diff --git a/test/pc/e2e/analyzer/video/video_quality_metrics_reporter.cc b/test/pc/e2e/analyzer/video/video_quality_metrics_reporter.cc
-index e66624127d..3ae7fda04b 100644
---- a/test/pc/e2e/analyzer/video/video_quality_metrics_reporter.cc
-+++ b/test/pc/e2e/analyzer/video/video_quality_metrics_reporter.cc
-@@ -63,9 +63,7 @@ void VideoQualityMetricsReporter::OnStatsReports(
+-  RTC_DCHECK_GT(hdr.num_spatial_layers, 0U);
+-  RTC_DCHECK_LE(hdr.num_spatial_layers, kMaxVp9NumberOfSpatialLayers);
+-  RTC_DCHECK_LE(hdr.gof.num_frames_in_gof, kMaxVp9FramesInGof);
++  RTC_CHECK_GT(hdr.num_spatial_layers, 0U);
++  RTC_CHECK_LE(hdr.num_spatial_layers, kMaxVp9NumberOfSpatialLayers);
++  RTC_CHECK_LE(hdr.gof.num_frames_in_gof, kMaxVp9FramesInGof);
+   size_t length = 1;  // V
+   if (hdr.spatial_layer_resolution_present) {
+     length += 4 * hdr.num_spatial_layers;  // Y
+@@ -136,7 +136,7 @@ size_t SsDataLength(const RTPVideoHeaderVP9& hdr) {
+   // N_G
+   length += hdr.gof.num_frames_in_gof;  // T, U, R
+   for (size_t i = 0; i < hdr.gof.num_frames_in_gof; ++i) {
+-    RTC_DCHECK_LE(hdr.gof.num_ref_pics[i], kMaxVp9RefPics);
++    RTC_CHECK_LE(hdr.gof.num_ref_pics[i], kMaxVp9RefPics);
+     length += hdr.gof.num_ref_pics[i];  // R times
    }
-   RTC_DCHECK_EQ(transport_stats.size(), 1);
-   std::string selected_ice_id =
--      transport_stats[0]
--          ->GetAttribute(transport_stats[0]->selected_candidate_pair_id)
--          .ToString();
-+      transport_stats[0]->selected_candidate_pair_id.ValueToString();
-   // Use the selected ICE candidate pair ID to get the appropriate ICE stats.
-   const RTCIceCandidatePairStats ice_candidate_pair_stats =
-       report->Get(selected_ice_id)->cast_to<const RTCIceCandidatePairStats>();
+   return length;
+@@ -248,9 +248,9 @@ bool WriteRefIndices(const RTPVideoHeaderVP9& vp9,
+ //      +-+-+-+-+-+-+-+-+              -|           -|
+ //
+ bool WriteSsData(const RTPVideoHeaderVP9& vp9, rtc::BitBufferWriter* writer) {
+-  RTC_DCHECK_GT(vp9.num_spatial_layers, 0U);
+-  RTC_DCHECK_LE(vp9.num_spatial_layers, kMaxVp9NumberOfSpatialLayers);
+-  RTC_DCHECK_LE(vp9.gof.num_frames_in_gof, kMaxVp9FramesInGof);
++  RTC_CHECK_GT(vp9.num_spatial_layers, 0U);
++  RTC_CHECK_LE(vp9.num_spatial_layers, kMaxVp9NumberOfSpatialLayers);
++  RTC_CHECK_LE(vp9.gof.num_frames_in_gof, kMaxVp9FramesInGof);
+   bool g_bit = vp9.gof.num_frames_in_gof > 0;
+ 
+   RETURN_FALSE_ON_ERROR(writer->WriteBits(vp9.num_spatial_layers - 1, 3));
+@@ -288,6 +288,8 @@ bool WriteSsData(const RTPVideoHeaderVP9& vp9, rtc::BitBufferWriter* writer) {
+ // current API to invoke SVC is not flexible enough.
+ RTPVideoHeaderVP9 RemoveInactiveSpatialLayers(
+     const RTPVideoHeaderVP9& original_header) {
++  RTC_CHECK_LE(original_header.num_spatial_layers,
++               kMaxVp9NumberOfSpatialLayers);
+   RTPVideoHeaderVP9 hdr(original_header);
+   if (original_header.first_active_layer == 0)
+     return hdr;
+@@ -314,7 +316,7 @@ RtpPacketizerVp9::RtpPacketizerVp9(rtc::ArrayView<const uint8_t> payload,
+       header_size_(PayloadDescriptorLengthMinusSsData(hdr_)),
+       first_packet_extra_header_size_(SsDataLength(hdr_)),
+       remaining_payload_(payload) {
+-  RTC_DCHECK_EQ(hdr_.first_active_layer, 0);
++  RTC_CHECK_EQ(hdr_.first_active_layer, 0);
+ 
+   limits.max_payload_len -= header_size_;
+   limits.first_packet_reduction_len += first_packet_extra_header_size_;
+@@ -358,8 +360,8 @@ bool RtpPacketizerVp9::NextPacket(RtpPacketToSend* packet) {
+ 
+   // Ensure end_of_picture is always set on top spatial layer when it is not
+   // dropped.
+-  RTC_DCHECK(hdr_.spatial_idx < hdr_.num_spatial_layers - 1 ||
+-             hdr_.end_of_picture);
++  RTC_CHECK(hdr_.spatial_idx < hdr_.num_spatial_layers - 1 ||
++            hdr_.end_of_picture);
+ 
+   packet->SetMarker(layer_end && hdr_.end_of_picture);
+   return true;
