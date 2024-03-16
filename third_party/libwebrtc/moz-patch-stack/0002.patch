@@ -1,224 +1,1674 @@
 From: Daniel Baker <dbaker@mozilla.com>
-Date: Fri, 15 Mar 2024 19:50:24 -0600
-Subject: (tmp-cherry-pick) Revert "[Stats] Add value_or() and migrate from
- ValueOrDefault()." (111e381822)
+Date: Fri, 15 Mar 2024 19:48:58 -0600
+Subject: (tmp-cherry-pick) Revert "[Stats] Move metric names to Attribute,
+ constructed via AttributeInit." (df3b3bd06f)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-This reverts commit 9e4a97bb02663604b02e219b9d501a8dd91b5614.
+This reverts commit 84c48ae7513bad9c9ca19271569cd0431e780c32.
 
 Reason for revert: Breaks downstream project
 
 Original change's description:
-> [Stats] Add value_or() and migrate from ValueOrDefault().
+> [Stats] Move metric names to Attribute, constructed via AttributeInit.
 >
-> Yet another prerequisite for replacing RTCStatsMember<T> with
-> absl::optional<T>, but this looks like the last one.
+> As of this CL, Attribute no longer implements RTCStatsMemberInterface
+> and a member no longer owns knowing its own name. The attribute knows
+> the name because we pass it down at construction time.
+>
+> To achieve this, the WEBRTC_RTCSTATS_IMPL() macro is updated to take
+> AttributeInits instead of raw member pointers, i.e. (name, ptr) pairs.
+>
+> By constructing RTCStatsMember<T> without a name parameter, it does the
+> same thing as the absl::optional<T> constructor. So RTCStatsMember<T>'s
+> days are numbered!
 >
 > Bug: webrtc:15164
-> Change-Id: I2cde51e8c8c951f71b48ccd45e07146091a99616
-> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/334647
+> Change-Id: I560c0134bae1c2d7218426a1576425ecc1b677a7
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/334203
 > Commit-Queue: Henrik Boström <hbos@webrtc.org>
-> Reviewed-by: Harald Alvestrand <hta@webrtc.org>
-> Cr-Commit-Position: refs/heads/main@{#41541}
+> Reviewed-by: Evan Shrubsole <eshr@google.com>
+> Cr-Commit-Position: refs/heads/main@{#41540}
 
 Bug: webrtc:15164
-Change-Id: I89af6470c82d07981d8d064aa6ff8b50fae42b12
+Change-Id: I9f416838153b26d4560ae98c37fb18a803d0295d
 No-Presubmit: true
 No-Tree-Checks: true
 No-Try: true
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/334801
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/334901
+Commit-Queue: Mirko Bonadei <mbonadei@webrtc.org>
 Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
 Owners-Override: Mirko Bonadei <mbonadei@webrtc.org>
-Commit-Queue: Mirko Bonadei <mbonadei@webrtc.org>
-Cr-Commit-Position: refs/heads/main@{#41548}
+Cr-Commit-Position: refs/heads/main@{#41550}
 ---
- api/stats/rtc_stats_member.h                  |  7 +-----
- ...er_connection_encodings_integrationtest.cc |  2 +-
- pc/rtc_stats_integrationtest.cc               |  2 +-
- .../audio/default_audio_quality_analyzer.cc   | 22 ++++++++++---------
- .../video/video_quality_metrics_reporter.cc   |  6 ++---
- test/pc/e2e/cross_media_metrics_reporter.cc   |  2 +-
- .../e2e/network_quality_metrics_reporter.cc   |  9 ++++----
- ..._based_network_quality_metrics_reporter.cc | 18 ++++++++-------
- 8 files changed, 34 insertions(+), 34 deletions(-)
+ api/stats/attribute.h              |  42 +-
+ api/stats/rtc_stats.h              |  48 +-
+ api/stats/rtc_stats_member.h       |  17 +-
+ api/stats/rtcstats_objects.h       |  36 ++
+ pc/rtc_stats_collector_unittest.cc |   7 +-
+ stats/attribute.cc                 |  91 +++-
+ stats/rtc_stats_report_unittest.cc |  22 +-
+ stats/rtc_stats_unittest.cc        |  11 +-
+ stats/rtcstats_objects.cc          | 732 +++++++++++++++++++----------
+ stats/test/rtc_test_stats.cc       |  70 ++-
+ stats/test/rtc_test_stats.h        |   2 +
+ 11 files changed, 720 insertions(+), 358 deletions(-)
 
+diff --git a/api/stats/attribute.h b/api/stats/attribute.h
+index fdedc74082..bc5bdedde1 100644
+--- a/api/stats/attribute.h
++++ b/api/stats/attribute.h
+@@ -23,7 +23,7 @@
+ namespace webrtc {
+ 
+ // A light-weight wrapper of an RTCStats attribute (an individual metric).
+-class RTC_EXPORT Attribute {
++class RTC_EXPORT Attribute : public RTCStatsMemberInterface {
+  public:
+   // TODO(https://crbug.com/webrtc/15164): Replace uses of RTCStatsMember<T>
+   // with absl::optional<T> and update these pointer types.
+@@ -46,8 +46,9 @@ class RTC_EXPORT Attribute {
+       StatVariant;
+ 
+   template <typename T>
+-  explicit Attribute(const char* name, const RTCStatsMember<T>* attribute)
+-      : name_(name), attribute_(attribute) {}
++  explicit Attribute(const RTCStatsMember<T>* attribute)
++      : RTCStatsMemberInterface(attribute->name()), attribute_(attribute) {}
++  ~Attribute() override;
+ 
+   const char* name() const;
+   const StatVariant& as_variant() const;
+@@ -58,39 +59,32 @@ class RTC_EXPORT Attribute {
+     return absl::holds_alternative<const RTCStatsMember<T>*>(attribute_);
+   }
+   template <typename T>
+-  absl::optional<T> as_optional() const {
+-    RTC_CHECK(holds_alternative<T>());
+-    if (!has_value()) {
+-      return absl::nullopt;
+-    }
+-    return absl::optional<T>(get<T>());
+-  }
+-  template <typename T>
+   const T& get() const {
+     RTC_CHECK(holds_alternative<T>());
+     RTC_CHECK(has_value());
+     return absl::get<const RTCStatsMember<T>*>(attribute_)->value();
+   }
+ 
+-  bool is_sequence() const;
+-  bool is_string() const;
+-  std::string ValueToString() const;
+-  std::string ValueToJson() const;
++  static Attribute FromMemberInterface(const RTCStatsMemberInterface* member);
++  // RTCStatsMemberInterface implementation.
++  // TODO(https://crbug.com/webrtc/15164): Delete RTCStatsMemberInterface in
++  // favor of absl::optional<T>.
++  RTCStatsMemberInterface::Type type() const override;
++  bool is_sequence() const override;
++  bool is_string() const override;
++  bool is_defined() const override;
++  std::string ValueToString() const override;
++  std::string ValueToJson() const override;
+ 
+-  bool operator==(const Attribute& other) const;
+-  bool operator!=(const Attribute& other) const;
++ protected:
++  const RTCStatsMemberInterface* member_ptr() const override;
++  bool IsEqual(const RTCStatsMemberInterface& other) const override;
+ 
+  private:
+-  const char* name_;
+   StatVariant attribute_;
+ };
+ 
+-struct RTC_EXPORT AttributeInit {
+-  AttributeInit(const char* name, const Attribute::StatVariant& variant);
+-
+-  const char* name;
+-  Attribute::StatVariant variant;
+-};
++Attribute MemberToAttribute(const RTCStatsMemberInterface* member);
+ 
+ }  // namespace webrtc
+ 
+diff --git a/api/stats/rtc_stats.h b/api/stats/rtc_stats.h
+index edd293f5c9..636dd375c0 100644
+--- a/api/stats/rtc_stats.h
++++ b/api/stats/rtc_stats.h
+@@ -162,32 +162,28 @@ class RTC_EXPORT RTCStats {
+   std::unique_ptr<webrtc::RTCStats> copy() const override;                  \
+   const char* type() const override
+ 
+-#define WEBRTC_RTCSTATS_IMPL(this_class, parent_class, type_str, ...)         \
+-  const char this_class::kType[] = type_str;                                  \
+-                                                                              \
+-  std::unique_ptr<webrtc::RTCStats> this_class::copy() const {                \
+-    return std::make_unique<this_class>(*this);                               \
+-  }                                                                           \
+-                                                                              \
+-  const char* this_class::type() const {                                      \
+-    return this_class::kType;                                                 \
+-  }                                                                           \
+-                                                                              \
+-  std::vector<webrtc::Attribute> this_class::AttributesImpl(                  \
+-      size_t additional_capacity) const {                                     \
+-    webrtc::AttributeInit attribute_inits[] = {__VA_ARGS__};                  \
+-    size_t attribute_inits_size =                                             \
+-        sizeof(attribute_inits) / sizeof(attribute_inits[0]);                 \
+-    std::vector<webrtc::Attribute> attributes = parent_class::AttributesImpl( \
+-        attribute_inits_size + additional_capacity);                          \
+-    for (size_t i = 0; i < attribute_inits_size; ++i) {                       \
+-      attributes.push_back(absl::visit(                                       \
+-          [&](const auto* field) {                                            \
+-            return Attribute(attribute_inits[i].name, field);                 \
+-          },                                                                  \
+-          attribute_inits[i].variant));                                       \
+-    }                                                                         \
+-    return attributes;                                                        \
++#define WEBRTC_RTCSTATS_IMPL(this_class, parent_class, type_str, ...)          \
++  const char this_class::kType[] = type_str;                                   \
++                                                                               \
++  std::unique_ptr<webrtc::RTCStats> this_class::copy() const {                 \
++    return std::make_unique<this_class>(*this);                                \
++  }                                                                            \
++                                                                               \
++  const char* this_class::type() const {                                       \
++    return this_class::kType;                                                  \
++  }                                                                            \
++                                                                               \
++  std::vector<webrtc::Attribute> this_class::AttributesImpl(                   \
++      size_t additional_capacity) const {                                      \
++    const webrtc::RTCStatsMemberInterface* this_members[] = {__VA_ARGS__};     \
++    size_t this_members_size = sizeof(this_members) / sizeof(this_members[0]); \
++    std::vector<webrtc::Attribute> attributes =                                \
++        parent_class::AttributesImpl(this_members_size + additional_capacity); \
++    for (size_t i = 0; i < this_members_size; ++i) {                           \
++      attributes.push_back(                                                    \
++          webrtc::Attribute::FromMemberInterface(this_members[i]));            \
++    }                                                                          \
++    return attributes;                                                         \
+   }
+ 
+ }  // namespace webrtc
 diff --git a/api/stats/rtc_stats_member.h b/api/stats/rtc_stats_member.h
-index d2aa539cf5..675a23cdbf 100644
+index 675a23cdbf..b39afa2c08 100644
 --- a/api/stats/rtc_stats_member.h
 +++ b/api/stats/rtc_stats_member.h
-@@ -101,14 +101,9 @@ class RTCStatsMember : public RTCStatsMemberInterface {
-   std::string ValueToString() const override;
-   std::string ValueToJson() const override;
+@@ -53,6 +53,7 @@ class RTCStatsMemberInterface {
  
--  template <typename U>
--  inline T value_or(U default_value) const {
--    return value_.value_or(default_value);
--  }
--  // TODO(https://crbug.com/webrtc/15164): Migrate to value_or() and delete.
-   template <typename U>
-   inline T ValueOrDefault(U default_value) const {
--    return value_or(default_value);
-+    return value_.value_or(default_value);
+   virtual ~RTCStatsMemberInterface() {}
+ 
++  const char* name() const { return name_; }
+   virtual Type type() const = 0;
+   virtual bool is_sequence() const = 0;
+   virtual bool is_string() const = 0;
+@@ -81,7 +82,11 @@ class RTCStatsMemberInterface {
    }
  
-   // Assignment operators.
-diff --git a/pc/peer_connection_encodings_integrationtest.cc b/pc/peer_connection_encodings_integrationtest.cc
-index 979032c1fa..5bf29e4b19 100644
---- a/pc/peer_connection_encodings_integrationtest.cc
-+++ b/pc/peer_connection_encodings_integrationtest.cc
-@@ -1191,7 +1191,7 @@ TEST_F(PeerConnectionEncodingsIntegrationTest,
-   ASSERT_EQ(outbound_rtps.size(), 1u);
-   std::string codec_name = GetCurrentCodecMimeType(report, *outbound_rtps[0]);
-   EXPECT_STRCASEEQ(("video/" + vp9->name).c_str(), codec_name.c_str());
--  EXPECT_EQ(outbound_rtps[0]->scalability_mode.value_or(""), "L3T3");
-+  EXPECT_EQ(outbound_rtps[0]->scalability_mode.ValueOrDefault(""), "L3T3");
+  protected:
++  explicit RTCStatsMemberInterface(const char* name) : name_(name) {}
++
+   virtual bool IsEqual(const RTCStatsMemberInterface& other) const = 0;
++
++  const char* const name_;
+ };
+ 
+ // Template implementation of `RTCStatsMemberInterface`.
+@@ -90,8 +95,16 @@ class RTCStatsMemberInterface {
+ template <typename T>
+ class RTCStatsMember : public RTCStatsMemberInterface {
+  public:
+-  RTCStatsMember() {}
+-  explicit RTCStatsMember(const T& value) : value_(value) {}
++  explicit RTCStatsMember(const char* name)
++      : RTCStatsMemberInterface(name), value_() {}
++  RTCStatsMember(const char* name, const T& value)
++      : RTCStatsMemberInterface(name), value_(value) {}
++  RTCStatsMember(const char* name, T&& value)
++      : RTCStatsMemberInterface(name), value_(std::move(value)) {}
++  explicit RTCStatsMember(const RTCStatsMember<T>& other)
++      : RTCStatsMemberInterface(other.name_), value_(other.value_) {}
++  explicit RTCStatsMember(RTCStatsMember<T>&& other)
++      : RTCStatsMemberInterface(other.name_), value_(std::move(other.value_)) {}
+ 
+   static Type StaticType();
+   Type type() const override { return StaticType(); }
+diff --git a/api/stats/rtcstats_objects.h b/api/stats/rtcstats_objects.h
+index 351c2cbefe..c28b635660 100644
+--- a/api/stats/rtcstats_objects.h
++++ b/api/stats/rtcstats_objects.h
+@@ -27,7 +27,9 @@ namespace webrtc {
+ class RTC_EXPORT RTCCertificateStats final : public RTCStats {
+  public:
+   WEBRTC_RTCSTATS_DECL();
++
+   RTCCertificateStats(std::string id, Timestamp timestamp);
++  RTCCertificateStats(const RTCCertificateStats& other);
+   ~RTCCertificateStats() override;
+ 
+   RTCStatsMember<std::string> fingerprint;
+@@ -40,7 +42,9 @@ class RTC_EXPORT RTCCertificateStats final : public RTCStats {
+ class RTC_EXPORT RTCCodecStats final : public RTCStats {
+  public:
+   WEBRTC_RTCSTATS_DECL();
++
+   RTCCodecStats(std::string id, Timestamp timestamp);
++  RTCCodecStats(const RTCCodecStats& other);
+   ~RTCCodecStats() override;
+ 
+   RTCStatsMember<std::string> transport_id;
+@@ -55,7 +59,9 @@ class RTC_EXPORT RTCCodecStats final : public RTCStats {
+ class RTC_EXPORT RTCDataChannelStats final : public RTCStats {
+  public:
+   WEBRTC_RTCSTATS_DECL();
++
+   RTCDataChannelStats(std::string id, Timestamp timestamp);
++  RTCDataChannelStats(const RTCDataChannelStats& other);
+   ~RTCDataChannelStats() override;
+ 
+   RTCStatsMember<std::string> label;
+@@ -72,7 +78,9 @@ class RTC_EXPORT RTCDataChannelStats final : public RTCStats {
+ class RTC_EXPORT RTCIceCandidatePairStats final : public RTCStats {
+  public:
+   WEBRTC_RTCSTATS_DECL();
++
+   RTCIceCandidatePairStats(std::string id, Timestamp timestamp);
++  RTCIceCandidatePairStats(const RTCIceCandidatePairStats& other);
+   ~RTCIceCandidatePairStats() override;
+ 
+   RTCStatsMember<std::string> transport_id;
+@@ -110,6 +118,8 @@ class RTC_EXPORT RTCIceCandidatePairStats final : public RTCStats {
+ class RTC_EXPORT RTCIceCandidateStats : public RTCStats {
+  public:
+   WEBRTC_RTCSTATS_DECL();
++
++  RTCIceCandidateStats(const RTCIceCandidateStats& other);
+   ~RTCIceCandidateStats() override;
+ 
+   RTCStatsMember<std::string> transport_id;
+@@ -165,7 +175,9 @@ class RTC_EXPORT RTCRemoteIceCandidateStats final
+ class RTC_EXPORT RTCPeerConnectionStats final : public RTCStats {
+  public:
+   WEBRTC_RTCSTATS_DECL();
++
+   RTCPeerConnectionStats(std::string id, Timestamp timestamp);
++  RTCPeerConnectionStats(const RTCPeerConnectionStats& other);
+   ~RTCPeerConnectionStats() override;
+ 
+   RTCStatsMember<uint32_t> data_channels_opened;
+@@ -176,6 +188,8 @@ class RTC_EXPORT RTCPeerConnectionStats final : public RTCStats {
+ class RTC_EXPORT RTCRtpStreamStats : public RTCStats {
+  public:
+   WEBRTC_RTCSTATS_DECL();
++
++  RTCRtpStreamStats(const RTCRtpStreamStats& other);
+   ~RTCRtpStreamStats() override;
+ 
+   RTCStatsMember<uint32_t> ssrc;
+@@ -191,6 +205,8 @@ class RTC_EXPORT RTCRtpStreamStats : public RTCStats {
+ class RTC_EXPORT RTCReceivedRtpStreamStats : public RTCRtpStreamStats {
+  public:
+   WEBRTC_RTCSTATS_DECL();
++
++  RTCReceivedRtpStreamStats(const RTCReceivedRtpStreamStats& other);
+   ~RTCReceivedRtpStreamStats() override;
+ 
+   RTCStatsMember<double> jitter;
+@@ -204,6 +220,8 @@ class RTC_EXPORT RTCReceivedRtpStreamStats : public RTCRtpStreamStats {
+ class RTC_EXPORT RTCSentRtpStreamStats : public RTCRtpStreamStats {
+  public:
+   WEBRTC_RTCSTATS_DECL();
++
++  RTCSentRtpStreamStats(const RTCSentRtpStreamStats& other);
+   ~RTCSentRtpStreamStats() override;
+ 
+   RTCStatsMember<uint64_t> packets_sent;
+@@ -218,7 +236,9 @@ class RTC_EXPORT RTCInboundRtpStreamStats final
+     : public RTCReceivedRtpStreamStats {
+  public:
+   WEBRTC_RTCSTATS_DECL();
++
+   RTCInboundRtpStreamStats(std::string id, Timestamp timestamp);
++  RTCInboundRtpStreamStats(const RTCInboundRtpStreamStats& other);
+   ~RTCInboundRtpStreamStats() override;
+ 
+   RTCStatsMember<std::string> playout_id;
+@@ -321,7 +341,9 @@ class RTC_EXPORT RTCOutboundRtpStreamStats final
+     : public RTCSentRtpStreamStats {
+  public:
+   WEBRTC_RTCSTATS_DECL();
++
+   RTCOutboundRtpStreamStats(std::string id, Timestamp timestamp);
++  RTCOutboundRtpStreamStats(const RTCOutboundRtpStreamStats& other);
+   ~RTCOutboundRtpStreamStats() override;
+ 
+   RTCStatsMember<std::string> media_source_id;
+@@ -371,7 +393,9 @@ class RTC_EXPORT RTCRemoteInboundRtpStreamStats final
+     : public RTCReceivedRtpStreamStats {
+  public:
+   WEBRTC_RTCSTATS_DECL();
++
+   RTCRemoteInboundRtpStreamStats(std::string id, Timestamp timestamp);
++  RTCRemoteInboundRtpStreamStats(const RTCRemoteInboundRtpStreamStats& other);
+   ~RTCRemoteInboundRtpStreamStats() override;
+ 
+   RTCStatsMember<std::string> local_id;
+@@ -386,7 +410,9 @@ class RTC_EXPORT RTCRemoteOutboundRtpStreamStats final
+     : public RTCSentRtpStreamStats {
+  public:
+   WEBRTC_RTCSTATS_DECL();
++
+   RTCRemoteOutboundRtpStreamStats(std::string id, Timestamp timestamp);
++  RTCRemoteOutboundRtpStreamStats(const RTCRemoteOutboundRtpStreamStats& other);
+   ~RTCRemoteOutboundRtpStreamStats() override;
+ 
+   RTCStatsMember<std::string> local_id;
+@@ -401,6 +427,8 @@ class RTC_EXPORT RTCRemoteOutboundRtpStreamStats final
+ class RTC_EXPORT RTCMediaSourceStats : public RTCStats {
+  public:
+   WEBRTC_RTCSTATS_DECL();
++
++  RTCMediaSourceStats(const RTCMediaSourceStats& other);
+   ~RTCMediaSourceStats() override;
+ 
+   RTCStatsMember<std::string> track_identifier;
+@@ -414,7 +442,9 @@ class RTC_EXPORT RTCMediaSourceStats : public RTCStats {
+ class RTC_EXPORT RTCAudioSourceStats final : public RTCMediaSourceStats {
+  public:
+   WEBRTC_RTCSTATS_DECL();
++
+   RTCAudioSourceStats(std::string id, Timestamp timestamp);
++  RTCAudioSourceStats(const RTCAudioSourceStats& other);
+   ~RTCAudioSourceStats() override;
+ 
+   RTCStatsMember<double> audio_level;
+@@ -428,7 +458,9 @@ class RTC_EXPORT RTCAudioSourceStats final : public RTCMediaSourceStats {
+ class RTC_EXPORT RTCVideoSourceStats final : public RTCMediaSourceStats {
+  public:
+   WEBRTC_RTCSTATS_DECL();
++
+   RTCVideoSourceStats(std::string id, Timestamp timestamp);
++  RTCVideoSourceStats(const RTCVideoSourceStats& other);
+   ~RTCVideoSourceStats() override;
+ 
+   RTCStatsMember<uint32_t> width;
+@@ -441,7 +473,9 @@ class RTC_EXPORT RTCVideoSourceStats final : public RTCMediaSourceStats {
+ class RTC_EXPORT RTCTransportStats final : public RTCStats {
+  public:
+   WEBRTC_RTCSTATS_DECL();
++
+   RTCTransportStats(std::string id, Timestamp timestamp);
++  RTCTransportStats(const RTCTransportStats& other);
+   ~RTCTransportStats() override;
+ 
+   RTCStatsMember<uint64_t> bytes_sent;
+@@ -467,7 +501,9 @@ class RTC_EXPORT RTCTransportStats final : public RTCStats {
+ class RTC_EXPORT RTCAudioPlayoutStats final : public RTCStats {
+  public:
+   WEBRTC_RTCSTATS_DECL();
++
+   RTCAudioPlayoutStats(const std::string& id, Timestamp timestamp);
++  RTCAudioPlayoutStats(const RTCAudioPlayoutStats& other);
+   ~RTCAudioPlayoutStats() override;
+ 
+   RTCStatsMember<std::string> kind;
+diff --git a/pc/rtc_stats_collector_unittest.cc b/pc/rtc_stats_collector_unittest.cc
+index 839d8d9fdc..4ee0527743 100644
+--- a/pc/rtc_stats_collector_unittest.cc
++++ b/pc/rtc_stats_collector_unittest.cc
+@@ -3721,15 +3721,12 @@ class RTCTestStats : public RTCStats {
+   WEBRTC_RTCSTATS_DECL();
+ 
+   RTCTestStats(const std::string& id, Timestamp timestamp)
+-      : RTCStats(id, timestamp) {}
++      : RTCStats(id, timestamp), dummy_stat("dummyStat") {}
+ 
+   RTCStatsMember<int32_t> dummy_stat;
+ };
+ 
+-WEBRTC_RTCSTATS_IMPL(RTCTestStats,
+-                     RTCStats,
+-                     "test-stats",
+-                     AttributeInit("dummyStat", &dummy_stat))
++WEBRTC_RTCSTATS_IMPL(RTCTestStats, RTCStats, "test-stats", &dummy_stat)
+ 
+ // Overrides the stats collection to verify thread usage and that the resulting
+ // partial reports are merged.
+diff --git a/stats/attribute.cc b/stats/attribute.cc
+index 76956e25b8..b2e2986e50 100644
+--- a/stats/attribute.cc
++++ b/stats/attribute.cc
+@@ -33,22 +33,66 @@ struct VisitIsSequence {
+ struct VisitIsEqual {
+   template <typename T>
+   bool operator()(const RTCStatsMember<T>* attribute) {
+-    if (!other.holds_alternative<T>()) {
+-      return false;
+-    }
+-    absl::optional<T> attribute_as_optional =
+-        attribute->has_value() ? absl::optional<T>(attribute->value())
+-                               : absl::nullopt;
+-    return attribute_as_optional == other.as_optional<T>();
++    return attribute->IsEqual(other);
+   }
+ 
+-  const Attribute& other;
++  const RTCStatsMemberInterface& other;
+ };
+ 
+ }  // namespace
+ 
++Attribute::~Attribute() {}
++
++// static
++Attribute Attribute::FromMemberInterface(
++    const RTCStatsMemberInterface* member) {
++  switch (member->type()) {
++    case RTCStatsMemberInterface::Type::kBool:
++      return Attribute(&member->cast_to<RTCStatsMember<bool>>());
++    case RTCStatsMemberInterface::Type::kInt32:
++      return Attribute(&member->cast_to<RTCStatsMember<int32_t>>());
++    case RTCStatsMemberInterface::Type::kUint32:
++      return Attribute(&member->cast_to<RTCStatsMember<uint32_t>>());
++    case RTCStatsMemberInterface::Type::kInt64:
++      return Attribute(&member->cast_to<RTCStatsMember<int64_t>>());
++    case RTCStatsMemberInterface::Type::kUint64:
++      return Attribute(&member->cast_to<RTCStatsMember<uint64_t>>());
++    case RTCStatsMemberInterface::Type::kDouble:
++      return Attribute(&member->cast_to<RTCStatsMember<double>>());
++    case RTCStatsMemberInterface::Type::kString:
++      return Attribute(&member->cast_to<RTCStatsMember<std::string>>());
++    case RTCStatsMemberInterface::Type::kSequenceBool:
++      return Attribute(&member->cast_to<RTCStatsMember<std::vector<bool>>>());
++    case RTCStatsMemberInterface::Type::kSequenceInt32:
++      return Attribute(
++          &member->cast_to<RTCStatsMember<std::vector<int32_t>>>());
++    case RTCStatsMemberInterface::Type::kSequenceUint32:
++      return Attribute(
++          &member->cast_to<RTCStatsMember<std::vector<uint32_t>>>());
++    case RTCStatsMemberInterface::Type::kSequenceInt64:
++      return Attribute(
++          &member->cast_to<RTCStatsMember<std::vector<int64_t>>>());
++    case RTCStatsMemberInterface::Type::kSequenceUint64:
++      return Attribute(
++          &member->cast_to<RTCStatsMember<std::vector<uint64_t>>>());
++    case RTCStatsMemberInterface::Type::kSequenceDouble:
++      return Attribute(&member->cast_to<RTCStatsMember<std::vector<double>>>());
++    case RTCStatsMemberInterface::Type::kSequenceString:
++      return Attribute(
++          &member->cast_to<RTCStatsMember<std::vector<std::string>>>());
++    case RTCStatsMemberInterface::Type::kMapStringUint64:
++      return Attribute(
++          &member->cast_to<RTCStatsMember<std::map<std::string, uint64_t>>>());
++    case RTCStatsMemberInterface::Type::kMapStringDouble:
++      return Attribute(
++          &member->cast_to<RTCStatsMember<std::map<std::string, double>>>());
++    default:
++      RTC_CHECK_NOTREACHED();
++  }
++}
++
+ const char* Attribute::name() const {
+-  return name_;
++  return absl::visit([](const auto* attr) { return attr->name(); }, attribute_);
  }
  
- TEST_F(PeerConnectionEncodingsIntegrationTest,
-diff --git a/pc/rtc_stats_integrationtest.cc b/pc/rtc_stats_integrationtest.cc
-index 762dad6fcd..d15b617f24 100644
---- a/pc/rtc_stats_integrationtest.cc
-+++ b/pc/rtc_stats_integrationtest.cc
-@@ -638,7 +638,7 @@ class RTCStatsReportVerifier {
-         inbound_stream.header_bytes_received);
-     verifier.TestAttributeIsDefined(
-         inbound_stream.last_packet_received_timestamp);
--    if (inbound_stream.frames_received.value_or(0) > 0) {
-+    if (inbound_stream.frames_received.ValueOrDefault(0) > 0) {
-       verifier.TestAttributeIsNonNegative<uint32_t>(inbound_stream.frame_width);
-       verifier.TestAttributeIsNonNegative<uint32_t>(
-           inbound_stream.frame_height);
-diff --git a/test/pc/e2e/analyzer/audio/default_audio_quality_analyzer.cc b/test/pc/e2e/analyzer/audio/default_audio_quality_analyzer.cc
-index 9797f4fcef..bca52d9bfc 100644
---- a/test/pc/e2e/analyzer/audio/default_audio_quality_analyzer.cc
-+++ b/test/pc/e2e/analyzer/audio/default_audio_quality_analyzer.cc
-@@ -47,22 +47,24 @@ void DefaultAudioQualityAnalyzer::OnStatsReports(
-     }
+ const Attribute::StatVariant& Attribute::as_variant() const {
+@@ -60,6 +104,18 @@ bool Attribute::has_value() const {
+                      attribute_);
+ }
  
-     StatsSample sample;
--    sample.total_samples_received = stat->total_samples_received.value_or(0ul);
--    sample.concealed_samples = stat->concealed_samples.value_or(0ul);
-+    sample.total_samples_received =
-+        stat->total_samples_received.ValueOrDefault(0ul);
-+    sample.concealed_samples = stat->concealed_samples.ValueOrDefault(0ul);
-     sample.removed_samples_for_acceleration =
--        stat->removed_samples_for_acceleration.value_or(0ul);
-+        stat->removed_samples_for_acceleration.ValueOrDefault(0ul);
-     sample.inserted_samples_for_deceleration =
--        stat->inserted_samples_for_deceleration.value_or(0ul);
-+        stat->inserted_samples_for_deceleration.ValueOrDefault(0ul);
-     sample.silent_concealed_samples =
--        stat->silent_concealed_samples.value_or(0ul);
-+        stat->silent_concealed_samples.ValueOrDefault(0ul);
-     sample.jitter_buffer_delay =
--        TimeDelta::Seconds(stat->jitter_buffer_delay.value_or(0.));
-+        TimeDelta::Seconds(stat->jitter_buffer_delay.ValueOrDefault(0.));
-     sample.jitter_buffer_target_delay =
--        TimeDelta::Seconds(stat->jitter_buffer_target_delay.value_or(0.));
-+        TimeDelta::Seconds(stat->jitter_buffer_target_delay.ValueOrDefault(0.));
-     sample.jitter_buffer_emitted_count =
--        stat->jitter_buffer_emitted_count.value_or(0ul);
--    sample.total_samples_duration = stat->total_samples_duration.value_or(0.);
--    sample.total_audio_energy = stat->total_audio_energy.value_or(0.);
-+        stat->jitter_buffer_emitted_count.ValueOrDefault(0ul);
-+    sample.total_samples_duration =
-+        stat->total_samples_duration.ValueOrDefault(0.);
-+    sample.total_audio_energy = stat->total_audio_energy.ValueOrDefault(0.);
++RTCStatsMemberInterface::Type Attribute::type() const {
++  return absl::visit([](const auto* attr) { return attr->type(); }, attribute_);
++}
++
++const RTCStatsMemberInterface* Attribute::member_ptr() const {
++  return absl::visit(
++      [](const auto* attr) {
++        return static_cast<const RTCStatsMemberInterface*>(attr);
++      },
++      attribute_);
++}
++
+ bool Attribute::is_sequence() const {
+   return absl::visit(VisitIsSequence(), attribute_);
+ }
+@@ -69,6 +125,11 @@ bool Attribute::is_string() const {
+       attribute_);
+ }
  
-     TrackIdStreamInfoMap::StreamInfo stream_info =
-         analyzer_helper_->GetStreamInfoFromTrackId(*stat->track_identifier);
-diff --git a/test/pc/e2e/analyzer/video/video_quality_metrics_reporter.cc b/test/pc/e2e/analyzer/video/video_quality_metrics_reporter.cc
-index 3ae7fda04b..817b3caad0 100644
---- a/test/pc/e2e/analyzer/video/video_quality_metrics_reporter.cc
-+++ b/test/pc/e2e/analyzer/video/video_quality_metrics_reporter.cc
-@@ -81,10 +81,10 @@ void VideoQualityMetricsReporter::OnStatsReports(
-       sample.sample_time = s->timestamp();
-     }
-     sample.retransmitted_bytes_sent +=
--        DataSize::Bytes(s->retransmitted_bytes_sent.value_or(0ul));
--    sample.bytes_sent += DataSize::Bytes(s->bytes_sent.value_or(0ul));
-+        DataSize::Bytes(s->retransmitted_bytes_sent.ValueOrDefault(0ul));
-+    sample.bytes_sent += DataSize::Bytes(s->bytes_sent.ValueOrDefault(0ul));
-     sample.header_bytes_sent +=
--        DataSize::Bytes(s->header_bytes_sent.value_or(0ul));
-+        DataSize::Bytes(s->header_bytes_sent.ValueOrDefault(0ul));
-   }
++bool Attribute::is_defined() const {
++  return absl::visit([](const auto* attr) { return attr->is_defined(); },
++                     attribute_);
++}
++
+ std::string Attribute::ValueToString() const {
+   return absl::visit([](const auto* attr) { return attr->ValueToString(); },
+                      attribute_);
+@@ -79,16 +140,8 @@ std::string Attribute::ValueToJson() const {
+                      attribute_);
+ }
  
-   MutexLock lock(&video_bwe_stats_lock_);
-diff --git a/test/pc/e2e/cross_media_metrics_reporter.cc b/test/pc/e2e/cross_media_metrics_reporter.cc
-index ed87f3c73e..aad5946c9f 100644
---- a/test/pc/e2e/cross_media_metrics_reporter.cc
-+++ b/test/pc/e2e/cross_media_metrics_reporter.cc
-@@ -47,7 +47,7 @@ void CrossMediaMetricsReporter::OnStatsReports(
-   std::map<std::string, std::vector<const RTCInboundRtpStreamStats*>>
-       sync_group_stats;
-   for (const auto& stat : inbound_stats) {
--    if (stat->estimated_playout_timestamp.value_or(0.) > 0 &&
-+    if (stat->estimated_playout_timestamp.ValueOrDefault(0.) > 0 &&
-         stat->track_identifier.is_defined()) {
-       sync_group_stats[reporter_helper_
-                            ->GetStreamInfoFromTrackId(*stat->track_identifier)
-diff --git a/test/pc/e2e/network_quality_metrics_reporter.cc b/test/pc/e2e/network_quality_metrics_reporter.cc
-index 257fecf309..2d6aa597ce 100644
---- a/test/pc/e2e/network_quality_metrics_reporter.cc
-+++ b/test/pc/e2e/network_quality_metrics_reporter.cc
-@@ -79,14 +79,15 @@ void NetworkQualityMetricsReporter::OnStatsReports(
-   auto inbound_stats = report->GetStatsOfType<RTCInboundRtpStreamStats>();
-   for (const auto& stat : inbound_stats) {
-     payload_received +=
--        DataSize::Bytes(stat->bytes_received.value_or(0ul) +
--                        stat->header_bytes_received.value_or(0ul));
-+        DataSize::Bytes(stat->bytes_received.ValueOrDefault(0ul) +
-+                        stat->header_bytes_received.ValueOrDefault(0ul));
-   }
+-bool Attribute::operator==(const Attribute& other) const {
+-  return absl::visit(VisitIsEqual{.other = other}, attribute_);
++bool Attribute::IsEqual(const RTCStatsMemberInterface& other) const {
++  return absl::visit(VisitIsEqual{.other = *other.member_ptr()}, attribute_);
+ }
  
-   auto outbound_stats = report->GetStatsOfType<RTCOutboundRtpStreamStats>();
-   for (const auto& stat : outbound_stats) {
--    payload_sent += DataSize::Bytes(stat->bytes_sent.value_or(0ul) +
--                                    stat->header_bytes_sent.value_or(0ul));
-+    payload_sent +=
-+        DataSize::Bytes(stat->bytes_sent.ValueOrDefault(0ul) +
-+                        stat->header_bytes_sent.ValueOrDefault(0ul));
-   }
+-bool Attribute::operator!=(const Attribute& other) const {
+-  return !(*this == other);
+-}
+-
+-AttributeInit::AttributeInit(const char* name,
+-                             const Attribute::StatVariant& variant)
+-    : name(name), variant(variant) {}
+-
+ }  // namespace webrtc
+diff --git a/stats/rtc_stats_report_unittest.cc b/stats/rtc_stats_report_unittest.cc
+index b3ac0a2db4..ded0c27609 100644
+--- a/stats/rtc_stats_report_unittest.cc
++++ b/stats/rtc_stats_report_unittest.cc
+@@ -10,7 +10,6 @@
  
-   MutexLock lock(&lock_);
-diff --git a/test/pc/e2e/stats_based_network_quality_metrics_reporter.cc b/test/pc/e2e/stats_based_network_quality_metrics_reporter.cc
-index b965a7acd8..eb5f29287e 100644
---- a/test/pc/e2e/stats_based_network_quality_metrics_reporter.cc
-+++ b/test/pc/e2e/stats_based_network_quality_metrics_reporter.cc
-@@ -299,23 +299,25 @@ void StatsBasedNetworkQualityMetricsReporter::OnStatsReports(
-   auto inbound_stats = report->GetStatsOfType<RTCInboundRtpStreamStats>();
-   for (const auto& stat : inbound_stats) {
-     cur_stats.payload_received +=
--        DataSize::Bytes(stat->bytes_received.value_or(0ul) +
--                        stat->header_bytes_received.value_or(0ul));
-+        DataSize::Bytes(stat->bytes_received.ValueOrDefault(0ul) +
-+                        stat->header_bytes_received.ValueOrDefault(0ul));
-   }
+ #include "api/stats/rtc_stats_report.h"
  
-   auto outbound_stats = report->GetStatsOfType<RTCOutboundRtpStreamStats>();
-   for (const auto& stat : outbound_stats) {
--    cur_stats.payload_sent += DataSize::Bytes(
--        stat->bytes_sent.value_or(0ul) + stat->header_bytes_sent.value_or(0ul));
-+    cur_stats.payload_sent +=
-+        DataSize::Bytes(stat->bytes_sent.ValueOrDefault(0ul) +
-+                        stat->header_bytes_sent.ValueOrDefault(0ul));
-   }
+-#include "api/stats/attribute.h"
+ #include "api/stats/rtc_stats.h"
+ #include "rtc_base/checks.h"
+ #include "test/gtest.h"
+@@ -22,45 +21,36 @@ class RTCTestStats1 : public RTCStats {
+   WEBRTC_RTCSTATS_DECL();
  
-   auto candidate_pairs_stats = report->GetStatsOfType<RTCTransportStats>();
-   for (const auto& stat : candidate_pairs_stats) {
-     cur_stats.total_received +=
--        DataSize::Bytes(stat->bytes_received.value_or(0ul));
--    cur_stats.total_sent += DataSize::Bytes(stat->bytes_sent.value_or(0ul));
--    cur_stats.packets_received += stat->packets_received.value_or(0ul);
--    cur_stats.packets_sent += stat->packets_sent.value_or(0ul);
-+        DataSize::Bytes(stat->bytes_received.ValueOrDefault(0ul));
-+    cur_stats.total_sent +=
-+        DataSize::Bytes(stat->bytes_sent.ValueOrDefault(0ul));
-+    cur_stats.packets_received += stat->packets_received.ValueOrDefault(0ul);
-+    cur_stats.packets_sent += stat->packets_sent.ValueOrDefault(0ul);
-   }
+   RTCTestStats1(const std::string& id, Timestamp timestamp)
+-      : RTCStats(id, timestamp) {}
++      : RTCStats(id, timestamp), integer("integer") {}
  
-   MutexLock lock(&mutex_);
+   RTCStatsMember<int32_t> integer;
+ };
+ 
+-WEBRTC_RTCSTATS_IMPL(RTCTestStats1,
+-                     RTCStats,
+-                     "test-stats-1",
+-                     AttributeInit("integer", &integer))
++WEBRTC_RTCSTATS_IMPL(RTCTestStats1, RTCStats, "test-stats-1", &integer)
+ 
+ class RTCTestStats2 : public RTCStats {
+  public:
+   WEBRTC_RTCSTATS_DECL();
+ 
+   RTCTestStats2(const std::string& id, Timestamp timestamp)
+-      : RTCStats(id, timestamp) {}
++      : RTCStats(id, timestamp), number("number") {}
+ 
+   RTCStatsMember<double> number;
+ };
+ 
+-WEBRTC_RTCSTATS_IMPL(RTCTestStats2,
+-                     RTCStats,
+-                     "test-stats-2",
+-                     AttributeInit("number", &number))
++WEBRTC_RTCSTATS_IMPL(RTCTestStats2, RTCStats, "test-stats-2", &number)
+ 
+ class RTCTestStats3 : public RTCStats {
+  public:
+   WEBRTC_RTCSTATS_DECL();
+ 
+   RTCTestStats3(const std::string& id, Timestamp timestamp)
+-      : RTCStats(id, timestamp) {}
++      : RTCStats(id, timestamp), string("string") {}
+ 
+   RTCStatsMember<std::string> string;
+ };
+ 
+-WEBRTC_RTCSTATS_IMPL(RTCTestStats3,
+-                     RTCStats,
+-                     "test-stats-3",
+-                     AttributeInit("string", &string))
++WEBRTC_RTCSTATS_IMPL(RTCTestStats3, RTCStats, "test-stats-3", &string)
+ 
+ TEST(RTCStatsReport, AddAndGetStats) {
+   rtc::scoped_refptr<RTCStatsReport> report =
+diff --git a/stats/rtc_stats_unittest.cc b/stats/rtc_stats_unittest.cc
+index 8837da7ce9..b26436f491 100644
+--- a/stats/rtc_stats_unittest.cc
++++ b/stats/rtc_stats_unittest.cc
+@@ -44,22 +44,19 @@ class RTCChildStats : public RTCStats {
+   WEBRTC_RTCSTATS_DECL();
+ 
+   RTCChildStats(const std::string& id, Timestamp timestamp)
+-      : RTCStats(id, timestamp) {}
++      : RTCStats(id, timestamp), child_int("childInt") {}
+ 
+   RTCStatsMember<int32_t> child_int;
+ };
+ 
+-WEBRTC_RTCSTATS_IMPL(RTCChildStats,
+-                     RTCStats,
+-                     "child-stats",
+-                     AttributeInit("childInt", &child_int))
++WEBRTC_RTCSTATS_IMPL(RTCChildStats, RTCStats, "child-stats", &child_int)
+ 
+ class RTCGrandChildStats : public RTCChildStats {
+  public:
+   WEBRTC_RTCSTATS_DECL();
+ 
+   RTCGrandChildStats(const std::string& id, Timestamp timestamp)
+-      : RTCChildStats(id, timestamp) {}
++      : RTCChildStats(id, timestamp), grandchild_int("grandchildInt") {}
+ 
+   RTCStatsMember<int32_t> grandchild_int;
+ };
+@@ -67,7 +64,7 @@ class RTCGrandChildStats : public RTCChildStats {
+ WEBRTC_RTCSTATS_IMPL(RTCGrandChildStats,
+                      RTCChildStats,
+                      "grandchild-stats",
+-                     AttributeInit("grandchildInt", &grandchild_int))
++                     &grandchild_int)
+ 
+ TEST(RTCStatsTest, RTCStatsAndAttributes) {
+   RTCTestStats stats("testId", Timestamp::Micros(42));
+diff --git a/stats/rtcstats_objects.cc b/stats/rtcstats_objects.cc
+index 4c58f45f02..18f3e6f394 100644
+--- a/stats/rtcstats_objects.cc
++++ b/stats/rtcstats_objects.cc
+@@ -20,110 +20,182 @@ namespace webrtc {
+ 
+ // clang-format off
+ WEBRTC_RTCSTATS_IMPL(RTCCertificateStats, RTCStats, "certificate",
+-    AttributeInit("fingerprint", &fingerprint),
+-    AttributeInit("fingerprintAlgorithm", &fingerprint_algorithm),
+-    AttributeInit("base64Certificate", &base64_certificate),
+-    AttributeInit("issuerCertificateId", &issuer_certificate_id))
++    &fingerprint,
++    &fingerprint_algorithm,
++    &base64_certificate,
++    &issuer_certificate_id)
+ // clang-format on
+ 
+ RTCCertificateStats::RTCCertificateStats(std::string id, Timestamp timestamp)
+-    : RTCStats(std::move(id), timestamp) {}
+-
++    : RTCStats(std::move(id), timestamp),
++      fingerprint("fingerprint"),
++      fingerprint_algorithm("fingerprintAlgorithm"),
++      base64_certificate("base64Certificate"),
++      issuer_certificate_id("issuerCertificateId") {}
++
++RTCCertificateStats::RTCCertificateStats(const RTCCertificateStats& other) =
++    default;
+ RTCCertificateStats::~RTCCertificateStats() {}
+ 
+ // clang-format off
+ WEBRTC_RTCSTATS_IMPL(RTCCodecStats, RTCStats, "codec",
+-    AttributeInit("transportId", &transport_id),
+-    AttributeInit("payloadType", &payload_type),
+-    AttributeInit("mimeType", &mime_type),
+-    AttributeInit("clockRate", &clock_rate),
+-    AttributeInit("channels", &channels),
+-    AttributeInit("sdpFmtpLine", &sdp_fmtp_line))
++    &transport_id,
++    &payload_type,
++    &mime_type,
++    &clock_rate,
++    &channels,
++    &sdp_fmtp_line)
+ // clang-format on
+ 
+ RTCCodecStats::RTCCodecStats(std::string id, Timestamp timestamp)
+-    : RTCStats(std::move(id), timestamp) {}
++    : RTCStats(std::move(id), timestamp),
++      transport_id("transportId"),
++      payload_type("payloadType"),
++      mime_type("mimeType"),
++      clock_rate("clockRate"),
++      channels("channels"),
++      sdp_fmtp_line("sdpFmtpLine") {}
++
++RTCCodecStats::RTCCodecStats(const RTCCodecStats& other) = default;
+ 
+ RTCCodecStats::~RTCCodecStats() {}
+ 
+ // clang-format off
+ WEBRTC_RTCSTATS_IMPL(RTCDataChannelStats, RTCStats, "data-channel",
+-    AttributeInit("label", &label),
+-    AttributeInit("protocol", &protocol),
+-    AttributeInit("dataChannelIdentifier", &data_channel_identifier),
+-    AttributeInit("state", &state),
+-    AttributeInit("messagesSent", &messages_sent),
+-    AttributeInit("bytesSent", &bytes_sent),
+-    AttributeInit("messagesReceived", &messages_received),
+-    AttributeInit("bytesReceived", &bytes_received))
++    &label,
++    &protocol,
++    &data_channel_identifier,
++    &state,
++    &messages_sent,
++    &bytes_sent,
++    &messages_received,
++    &bytes_received)
+ // clang-format on
+ 
+ RTCDataChannelStats::RTCDataChannelStats(std::string id, Timestamp timestamp)
+-    : RTCStats(std::move(id), timestamp) {}
++    : RTCStats(std::move(id), timestamp),
++      label("label"),
++      protocol("protocol"),
++      data_channel_identifier("dataChannelIdentifier"),
++      state("state"),
++      messages_sent("messagesSent"),
++      bytes_sent("bytesSent"),
++      messages_received("messagesReceived"),
++      bytes_received("bytesReceived") {}
++
++RTCDataChannelStats::RTCDataChannelStats(const RTCDataChannelStats& other) =
++    default;
+ 
+ RTCDataChannelStats::~RTCDataChannelStats() {}
+ 
+ // clang-format off
+ WEBRTC_RTCSTATS_IMPL(RTCIceCandidatePairStats, RTCStats, "candidate-pair",
+-    AttributeInit("transportId", &transport_id),
+-    AttributeInit("localCandidateId", &local_candidate_id),
+-    AttributeInit("remoteCandidateId", &remote_candidate_id),
+-    AttributeInit("state", &state),
+-    AttributeInit("priority", &priority),
+-    AttributeInit("nominated", &nominated),
+-    AttributeInit("writable", &writable),
+-    AttributeInit("packetsSent", &packets_sent),
+-    AttributeInit("packetsReceived", &packets_received),
+-    AttributeInit("bytesSent", &bytes_sent),
+-    AttributeInit("bytesReceived", &bytes_received),
+-    AttributeInit("totalRoundTripTime", &total_round_trip_time),
+-    AttributeInit("currentRoundTripTime", &current_round_trip_time),
+-    AttributeInit("availableOutgoingBitrate", &available_outgoing_bitrate),
+-    AttributeInit("availableIncomingBitrate", &available_incoming_bitrate),
+-    AttributeInit("requestsReceived", &requests_received),
+-    AttributeInit("requestsSent", &requests_sent),
+-    AttributeInit("responsesReceived", &responses_received),
+-    AttributeInit("responsesSent", &responses_sent),
+-    AttributeInit("consentRequestsSent", &consent_requests_sent),
+-    AttributeInit("packetsDiscardedOnSend", &packets_discarded_on_send),
+-    AttributeInit("bytesDiscardedOnSend", &bytes_discarded_on_send),
+-    AttributeInit("lastPacketReceivedTimestamp",
+-                  &last_packet_received_timestamp),
+-    AttributeInit("lastPacketSentTimestamp", &last_packet_sent_timestamp))
++    &transport_id,
++    &local_candidate_id,
++    &remote_candidate_id,
++    &state,
++    &priority,
++    &nominated,
++    &writable,
++    &packets_sent,
++    &packets_received,
++    &bytes_sent,
++    &bytes_received,
++    &total_round_trip_time,
++    &current_round_trip_time,
++    &available_outgoing_bitrate,
++    &available_incoming_bitrate,
++    &requests_received,
++    &requests_sent,
++    &responses_received,
++    &responses_sent,
++    &consent_requests_sent,
++    &packets_discarded_on_send,
++    &bytes_discarded_on_send,
++    &last_packet_received_timestamp,
++    &last_packet_sent_timestamp)
+ // clang-format on
+ 
+ RTCIceCandidatePairStats::RTCIceCandidatePairStats(std::string id,
+                                                    Timestamp timestamp)
+-    : RTCStats(std::move(id), timestamp) {}
++    : RTCStats(std::move(id), timestamp),
++      transport_id("transportId"),
++      local_candidate_id("localCandidateId"),
++      remote_candidate_id("remoteCandidateId"),
++      state("state"),
++      priority("priority"),
++      nominated("nominated"),
++      writable("writable"),
++      packets_sent("packetsSent"),
++      packets_received("packetsReceived"),
++      bytes_sent("bytesSent"),
++      bytes_received("bytesReceived"),
++      total_round_trip_time("totalRoundTripTime"),
++      current_round_trip_time("currentRoundTripTime"),
++      available_outgoing_bitrate("availableOutgoingBitrate"),
++      available_incoming_bitrate("availableIncomingBitrate"),
++      requests_received("requestsReceived"),
++      requests_sent("requestsSent"),
++      responses_received("responsesReceived"),
++      responses_sent("responsesSent"),
++      consent_requests_sent("consentRequestsSent"),
++      packets_discarded_on_send("packetsDiscardedOnSend"),
++      bytes_discarded_on_send("bytesDiscardedOnSend"),
++      last_packet_received_timestamp("lastPacketReceivedTimestamp"),
++      last_packet_sent_timestamp("lastPacketSentTimestamp") {}
++
++RTCIceCandidatePairStats::RTCIceCandidatePairStats(
++    const RTCIceCandidatePairStats& other) = default;
+ 
+ RTCIceCandidatePairStats::~RTCIceCandidatePairStats() {}
+ 
+ // clang-format off
+ WEBRTC_RTCSTATS_IMPL(RTCIceCandidateStats, RTCStats, "abstract-ice-candidate",
+-    AttributeInit("transportId", &transport_id),
+-    AttributeInit("isRemote", &is_remote),
+-    AttributeInit("networkType", &network_type),
+-    AttributeInit("ip", &ip),
+-    AttributeInit("address", &address),
+-    AttributeInit("port", &port),
+-    AttributeInit("protocol", &protocol),
+-    AttributeInit("relayProtocol", &relay_protocol),
+-    AttributeInit("candidateType", &candidate_type),
+-    AttributeInit("priority", &priority),
+-    AttributeInit("url", &url),
+-    AttributeInit("foundation", &foundation),
+-    AttributeInit("relatedAddress", &related_address),
+-    AttributeInit("relatedPort", &related_port),
+-    AttributeInit("usernameFragment", &username_fragment),
+-    AttributeInit("tcpType", &tcp_type),
+-    AttributeInit("vpn", &vpn),
+-    AttributeInit("networkAdapterType", &network_adapter_type))
++    &transport_id,
++    &is_remote,
++    &network_type,
++    &ip,
++    &address,
++    &port,
++    &protocol,
++    &relay_protocol,
++    &candidate_type,
++    &priority,
++    &url,
++    &foundation,
++    &related_address,
++    &related_port,
++    &username_fragment,
++    &tcp_type,
++    &vpn,
++    &network_adapter_type)
+ // clang-format on
+ 
+ RTCIceCandidateStats::RTCIceCandidateStats(std::string id,
+                                            Timestamp timestamp,
+                                            bool is_remote)
+-    : RTCStats(std::move(id), timestamp), is_remote(is_remote) {}
++    : RTCStats(std::move(id), timestamp),
++      transport_id("transportId"),
++      is_remote("isRemote", is_remote),
++      network_type("networkType"),
++      ip("ip"),
++      address("address"),
++      port("port"),
++      protocol("protocol"),
++      relay_protocol("relayProtocol"),
++      candidate_type("candidateType"),
++      priority("priority"),
++      url("url"),
++      foundation("foundation"),
++      related_address("relatedAddress"),
++      related_port("relatedPort"),
++      username_fragment("usernameFragment"),
++      tcp_type("tcpType"),
++      vpn("vpn"),
++      network_adapter_type("networkAdapterType") {}
++
++RTCIceCandidateStats::RTCIceCandidateStats(const RTCIceCandidateStats& other) =
++    default;
+ 
+ RTCIceCandidateStats::~RTCIceCandidateStats() {}
+ 
+@@ -157,172 +229,286 @@ const char* RTCRemoteIceCandidateStats::type() const {
+ 
+ // clang-format off
+ WEBRTC_RTCSTATS_IMPL(RTCPeerConnectionStats, RTCStats, "peer-connection",
+-    AttributeInit("dataChannelsOpened", &data_channels_opened),
+-    AttributeInit("dataChannelsClosed", &data_channels_closed))
++    &data_channels_opened,
++    &data_channels_closed)
+ // clang-format on
+ 
+ RTCPeerConnectionStats::RTCPeerConnectionStats(std::string id,
+                                                Timestamp timestamp)
+-    : RTCStats(std::move(id), timestamp) {}
++    : RTCStats(std::move(id), timestamp),
++      data_channels_opened("dataChannelsOpened"),
++      data_channels_closed("dataChannelsClosed") {}
++
++RTCPeerConnectionStats::RTCPeerConnectionStats(
++    const RTCPeerConnectionStats& other) = default;
+ 
+ RTCPeerConnectionStats::~RTCPeerConnectionStats() {}
+ 
+ // clang-format off
+ WEBRTC_RTCSTATS_IMPL(RTCRtpStreamStats, RTCStats, "rtp",
+-    AttributeInit("ssrc", &ssrc),
+-    AttributeInit("kind", &kind),
+-    AttributeInit("transportId", &transport_id),
+-    AttributeInit("codecId", &codec_id))
++    &ssrc,
++    &kind,
++    &transport_id,
++    &codec_id)
+ // clang-format on
+ 
+ RTCRtpStreamStats::RTCRtpStreamStats(std::string id, Timestamp timestamp)
+-    : RTCStats(std::move(id), timestamp) {}
++    : RTCStats(std::move(id), timestamp),
++      ssrc("ssrc"),
++      kind("kind"),
++      transport_id("transportId"),
++      codec_id("codecId") {}
++
++RTCRtpStreamStats::RTCRtpStreamStats(const RTCRtpStreamStats& other) = default;
+ 
+ RTCRtpStreamStats::~RTCRtpStreamStats() {}
+ 
+ // clang-format off
+ WEBRTC_RTCSTATS_IMPL(
+     RTCReceivedRtpStreamStats, RTCRtpStreamStats, "received-rtp",
+-    AttributeInit("jitter", &jitter),
+-    AttributeInit("packetsLost", &packets_lost))
++    &jitter,
++    &packets_lost)
+ // clang-format on
+ 
+ RTCReceivedRtpStreamStats::RTCReceivedRtpStreamStats(std::string id,
+                                                      Timestamp timestamp)
+-    : RTCRtpStreamStats(std::move(id), timestamp) {}
++    : RTCRtpStreamStats(std::move(id), timestamp),
++      jitter("jitter"),
++      packets_lost("packetsLost") {}
++
++RTCReceivedRtpStreamStats::RTCReceivedRtpStreamStats(
++    const RTCReceivedRtpStreamStats& other) = default;
+ 
+ RTCReceivedRtpStreamStats::~RTCReceivedRtpStreamStats() {}
+ 
+ // clang-format off
+-WEBRTC_RTCSTATS_IMPL(RTCSentRtpStreamStats, RTCRtpStreamStats, "sent-rtp",
+-    AttributeInit("packetsSent", &packets_sent),
+-    AttributeInit("bytesSent", &bytes_sent))
++WEBRTC_RTCSTATS_IMPL(
++    RTCSentRtpStreamStats, RTCRtpStreamStats, "sent-rtp",
++    &packets_sent,
++    &bytes_sent)
+ // clang-format on
+ 
+ RTCSentRtpStreamStats::RTCSentRtpStreamStats(std::string id,
+                                              Timestamp timestamp)
+-    : RTCRtpStreamStats(std::move(id), timestamp) {}
++    : RTCRtpStreamStats(std::move(id), timestamp),
++      packets_sent("packetsSent"),
++      bytes_sent("bytesSent") {}
++
++RTCSentRtpStreamStats::RTCSentRtpStreamStats(
++    const RTCSentRtpStreamStats& other) = default;
+ 
+ RTCSentRtpStreamStats::~RTCSentRtpStreamStats() {}
+ 
+ // clang-format off
+ WEBRTC_RTCSTATS_IMPL(
+     RTCInboundRtpStreamStats, RTCReceivedRtpStreamStats, "inbound-rtp",
+-    AttributeInit("playoutId", &playout_id),
+-    AttributeInit("trackIdentifier", &track_identifier),
+-    AttributeInit("mid", &mid),
+-    AttributeInit("remoteId", &remote_id),
+-    AttributeInit("packetsReceived", &packets_received),
+-    AttributeInit("packetsDiscarded", &packets_discarded),
+-    AttributeInit("fecPacketsReceived", &fec_packets_received),
+-    AttributeInit("fecBytesReceived", &fec_bytes_received),
+-    AttributeInit("fecPacketsDiscarded", &fec_packets_discarded),
+-    AttributeInit("fecSsrc", &fec_ssrc),
+-    AttributeInit("bytesReceived", &bytes_received),
+-    AttributeInit("headerBytesReceived", &header_bytes_received),
+-    AttributeInit("retransmittedPacketsReceived",
+-                  &retransmitted_packets_received),
+-    AttributeInit("retransmittedBytesReceived", &retransmitted_bytes_received),
+-    AttributeInit("rtxSsrc", &rtx_ssrc),
+-    AttributeInit("lastPacketReceivedTimestamp",
+-                  &last_packet_received_timestamp),
+-    AttributeInit("jitterBufferDelay", &jitter_buffer_delay),
+-    AttributeInit("jitterBufferTargetDelay", &jitter_buffer_target_delay),
+-    AttributeInit("jitterBufferMinimumDelay", &jitter_buffer_minimum_delay),
+-    AttributeInit("jitterBufferEmittedCount", &jitter_buffer_emitted_count),
+-    AttributeInit("totalSamplesReceived", &total_samples_received),
+-    AttributeInit("concealedSamples", &concealed_samples),
+-    AttributeInit("silentConcealedSamples", &silent_concealed_samples),
+-    AttributeInit("concealmentEvents", &concealment_events),
+-    AttributeInit("insertedSamplesForDeceleration",
+-                  &inserted_samples_for_deceleration),
+-    AttributeInit("removedSamplesForAcceleration",
+-                  &removed_samples_for_acceleration),
+-    AttributeInit("audioLevel", &audio_level),
+-    AttributeInit("totalAudioEnergy", &total_audio_energy),
+-    AttributeInit("totalSamplesDuration", &total_samples_duration),
+-    AttributeInit("framesReceived", &frames_received),
+-    AttributeInit("frameWidth", &frame_width),
+-    AttributeInit("frameHeight", &frame_height),
+-    AttributeInit("framesPerSecond", &frames_per_second),
+-    AttributeInit("framesDecoded", &frames_decoded),
+-    AttributeInit("keyFramesDecoded", &key_frames_decoded),
+-    AttributeInit("framesDropped", &frames_dropped),
+-    AttributeInit("totalDecodeTime", &total_decode_time),
+-    AttributeInit("totalProcessingDelay", &total_processing_delay),
+-    AttributeInit("totalAssemblyTime", &total_assembly_time),
+-    AttributeInit("framesAssembledFromMultiplePackets",
+-                  &frames_assembled_from_multiple_packets),
+-    AttributeInit("totalInterFrameDelay", &total_inter_frame_delay),
+-    AttributeInit("totalSquaredInterFrameDelay",
+-                  &total_squared_inter_frame_delay),
+-    AttributeInit("pauseCount", &pause_count),
+-    AttributeInit("totalPausesDuration", &total_pauses_duration),
+-    AttributeInit("freezeCount", &freeze_count),
+-    AttributeInit("totalFreezesDuration", &total_freezes_duration),
+-    AttributeInit("contentType", &content_type),
+-    AttributeInit("estimatedPlayoutTimestamp", &estimated_playout_timestamp),
+-    AttributeInit("decoderImplementation", &decoder_implementation),
+-    AttributeInit("firCount", &fir_count),
+-    AttributeInit("pliCount", &pli_count),
+-    AttributeInit("nackCount", &nack_count),
+-    AttributeInit("qpSum", &qp_sum),
+-    AttributeInit("googTimingFrameInfo", &goog_timing_frame_info),
+-    AttributeInit("powerEfficientDecoder", &power_efficient_decoder),
+-    AttributeInit("jitterBufferFlushes", &jitter_buffer_flushes),
+-    AttributeInit("delayedPacketOutageSamples", &delayed_packet_outage_samples),
+-    AttributeInit("relativePacketArrivalDelay", &relative_packet_arrival_delay),
+-    AttributeInit("interruptionCount", &interruption_count),
+-    AttributeInit("totalInterruptionDuration", &total_interruption_duration),
+-    AttributeInit("minPlayoutDelay", &min_playout_delay))
++    &track_identifier,
++    &mid,
++    &remote_id,
++    &packets_received,
++    &packets_discarded,
++    &fec_packets_received,
++    &fec_bytes_received,
++    &fec_packets_discarded,
++    &fec_ssrc,
++    &bytes_received,
++    &header_bytes_received,
++    &retransmitted_packets_received,
++    &retransmitted_bytes_received,
++    &rtx_ssrc,
++    &last_packet_received_timestamp,
++    &jitter_buffer_delay,
++    &jitter_buffer_target_delay,
++    &jitter_buffer_minimum_delay,
++    &jitter_buffer_emitted_count,
++    &total_samples_received,
++    &concealed_samples,
++    &silent_concealed_samples,
++    &concealment_events,
++    &inserted_samples_for_deceleration,
++    &removed_samples_for_acceleration,
++    &audio_level,
++    &total_audio_energy,
++    &total_samples_duration,
++    &playout_id,
++    &frames_received,
++    &frame_width,
++    &frame_height,
++    &frames_per_second,
++    &frames_decoded,
++    &key_frames_decoded,
++    &frames_dropped,
++    &total_decode_time,
++    &total_processing_delay,
++    &total_assembly_time,
++    &frames_assembled_from_multiple_packets,
++    &total_inter_frame_delay,
++    &total_squared_inter_frame_delay,
++    &pause_count,
++    &total_pauses_duration,
++    &freeze_count,
++    &total_freezes_duration,
++    &content_type,
++    &estimated_playout_timestamp,
++    &decoder_implementation,
++    &fir_count,
++    &pli_count,
++    &nack_count,
++    &qp_sum,
++    &goog_timing_frame_info,
++    &power_efficient_decoder,
++    &jitter_buffer_flushes,
++    &delayed_packet_outage_samples,
++    &relative_packet_arrival_delay,
++    &interruption_count,
++    &total_interruption_duration,
++    &min_playout_delay)
+ // clang-format on
+ 
+ RTCInboundRtpStreamStats::RTCInboundRtpStreamStats(std::string id,
+                                                    Timestamp timestamp)
+-    : RTCReceivedRtpStreamStats(std::move(id), timestamp) {}
+-
++    : RTCReceivedRtpStreamStats(std::move(id), timestamp),
++      playout_id("playoutId"),
++      track_identifier("trackIdentifier"),
++      mid("mid"),
++      remote_id("remoteId"),
++      packets_received("packetsReceived"),
++      packets_discarded("packetsDiscarded"),
++      fec_packets_received("fecPacketsReceived"),
++      fec_bytes_received("fecBytesReceived"),
++      fec_packets_discarded("fecPacketsDiscarded"),
++      fec_ssrc("fecSsrc"),
++      bytes_received("bytesReceived"),
++      header_bytes_received("headerBytesReceived"),
++      retransmitted_packets_received("retransmittedPacketsReceived"),
++      retransmitted_bytes_received("retransmittedBytesReceived"),
++      rtx_ssrc("rtxSsrc"),
++      last_packet_received_timestamp("lastPacketReceivedTimestamp"),
++      jitter_buffer_delay("jitterBufferDelay"),
++      jitter_buffer_target_delay("jitterBufferTargetDelay"),
++      jitter_buffer_minimum_delay("jitterBufferMinimumDelay"),
++      jitter_buffer_emitted_count("jitterBufferEmittedCount"),
++      total_samples_received("totalSamplesReceived"),
++      concealed_samples("concealedSamples"),
++      silent_concealed_samples("silentConcealedSamples"),
++      concealment_events("concealmentEvents"),
++      inserted_samples_for_deceleration("insertedSamplesForDeceleration"),
++      removed_samples_for_acceleration("removedSamplesForAcceleration"),
++      audio_level("audioLevel"),
++      total_audio_energy("totalAudioEnergy"),
++      total_samples_duration("totalSamplesDuration"),
++      frames_received("framesReceived"),
++      frame_width("frameWidth"),
++      frame_height("frameHeight"),
++      frames_per_second("framesPerSecond"),
++      frames_decoded("framesDecoded"),
++      key_frames_decoded("keyFramesDecoded"),
++      frames_dropped("framesDropped"),
++      total_decode_time("totalDecodeTime"),
++      total_processing_delay("totalProcessingDelay"),
++      total_assembly_time("totalAssemblyTime"),
++      frames_assembled_from_multiple_packets(
++          "framesAssembledFromMultiplePackets"),
++      total_inter_frame_delay("totalInterFrameDelay"),
++      total_squared_inter_frame_delay("totalSquaredInterFrameDelay"),
++      pause_count("pauseCount"),
++      total_pauses_duration("totalPausesDuration"),
++      freeze_count("freezeCount"),
++      total_freezes_duration("totalFreezesDuration"),
++      content_type("contentType"),
++      estimated_playout_timestamp("estimatedPlayoutTimestamp"),
++      decoder_implementation("decoderImplementation"),
++      fir_count("firCount"),
++      pli_count("pliCount"),
++      nack_count("nackCount"),
++      qp_sum("qpSum"),
++      goog_timing_frame_info("googTimingFrameInfo"),
++      power_efficient_decoder("powerEfficientDecoder"),
++      jitter_buffer_flushes("jitterBufferFlushes"),
++      delayed_packet_outage_samples("delayedPacketOutageSamples"),
++      relative_packet_arrival_delay("relativePacketArrivalDelay"),
++      interruption_count("interruptionCount"),
++      total_interruption_duration("totalInterruptionDuration"),
++      min_playout_delay("minPlayoutDelay") {}
++
++RTCInboundRtpStreamStats::RTCInboundRtpStreamStats(
++    const RTCInboundRtpStreamStats& other) = default;
+ RTCInboundRtpStreamStats::~RTCInboundRtpStreamStats() {}
+ 
+ // clang-format off
+ WEBRTC_RTCSTATS_IMPL(
+     RTCOutboundRtpStreamStats, RTCSentRtpStreamStats, "outbound-rtp",
+-    AttributeInit("mediaSourceId", &media_source_id),
+-    AttributeInit("remoteId", &remote_id),
+-    AttributeInit("mid", &mid),
+-    AttributeInit("rid", &rid),
+-    AttributeInit("retransmittedPacketsSent", &retransmitted_packets_sent),
+-    AttributeInit("headerBytesSent", &header_bytes_sent),
+-    AttributeInit("retransmittedBytesSent", &retransmitted_bytes_sent),
+-    AttributeInit("targetBitrate", &target_bitrate),
+-    AttributeInit("framesEncoded", &frames_encoded),
+-    AttributeInit("keyFramesEncoded", &key_frames_encoded),
+-    AttributeInit("totalEncodeTime", &total_encode_time),
+-    AttributeInit("totalEncodedBytesTarget", &total_encoded_bytes_target),
+-    AttributeInit("frameWidth", &frame_width),
+-    AttributeInit("frameHeight", &frame_height),
+-    AttributeInit("framesPerSecond", &frames_per_second),
+-    AttributeInit("framesSent", &frames_sent),
+-    AttributeInit("hugeFramesSent", &huge_frames_sent),
+-    AttributeInit("totalPacketSendDelay", &total_packet_send_delay),
+-    AttributeInit("qualityLimitationReason", &quality_limitation_reason),
+-    AttributeInit("qualityLimitationDurations", &quality_limitation_durations),
+-    AttributeInit("qualityLimitationResolutionChanges",
+-                  &quality_limitation_resolution_changes),
+-    AttributeInit("contentType", &content_type),
+-    AttributeInit("encoderImplementation", &encoder_implementation),
+-    AttributeInit("firCount", &fir_count),
+-    AttributeInit("pliCount", &pli_count),
+-    AttributeInit("nackCount", &nack_count),
+-    AttributeInit("qpSum", &qp_sum),
+-    AttributeInit("active", &active),
+-    AttributeInit("powerEfficientEncoder", &power_efficient_encoder),
+-    AttributeInit("scalabilityMode", &scalability_mode),
+-    AttributeInit("rtxSsrc", &rtx_ssrc))
++    &media_source_id,
++    &remote_id,
++    &mid,
++    &rid,
++    &retransmitted_packets_sent,
++    &header_bytes_sent,
++    &retransmitted_bytes_sent,
++    &target_bitrate,
++    &frames_encoded,
++    &key_frames_encoded,
++    &total_encode_time,
++    &total_encoded_bytes_target,
++    &frame_width,
++    &frame_height,
++    &frames_per_second,
++    &frames_sent,
++    &huge_frames_sent,
++    &total_packet_send_delay,
++    &quality_limitation_reason,
++    &quality_limitation_durations,
++    &quality_limitation_resolution_changes,
++    &content_type,
++    &encoder_implementation,
++    &fir_count,
++    &pli_count,
++    &nack_count,
++    &qp_sum,
++    &active,
++    &power_efficient_encoder,
++    &scalability_mode,
++    &rtx_ssrc)
+ // clang-format on
+ 
+ RTCOutboundRtpStreamStats::RTCOutboundRtpStreamStats(std::string id,
+                                                      Timestamp timestamp)
+-    : RTCSentRtpStreamStats(std::move(id), timestamp) {}
++    : RTCSentRtpStreamStats(std::move(id), timestamp),
++      media_source_id("mediaSourceId"),
++      remote_id("remoteId"),
++      mid("mid"),
++      rid("rid"),
++      retransmitted_packets_sent("retransmittedPacketsSent"),
++      header_bytes_sent("headerBytesSent"),
++      retransmitted_bytes_sent("retransmittedBytesSent"),
++      target_bitrate("targetBitrate"),
++      frames_encoded("framesEncoded"),
++      key_frames_encoded("keyFramesEncoded"),
++      total_encode_time("totalEncodeTime"),
++      total_encoded_bytes_target("totalEncodedBytesTarget"),
++      frame_width("frameWidth"),
++      frame_height("frameHeight"),
++      frames_per_second("framesPerSecond"),
++      frames_sent("framesSent"),
++      huge_frames_sent("hugeFramesSent"),
++      total_packet_send_delay("totalPacketSendDelay"),
++      quality_limitation_reason("qualityLimitationReason"),
++      quality_limitation_durations("qualityLimitationDurations"),
++      quality_limitation_resolution_changes(
++          "qualityLimitationResolutionChanges"),
++      content_type("contentType"),
++      encoder_implementation("encoderImplementation"),
++      fir_count("firCount"),
++      pli_count("pliCount"),
++      nack_count("nackCount"),
++      qp_sum("qpSum"),
++      active("active"),
++      power_efficient_encoder("powerEfficientEncoder"),
++      scalability_mode("scalabilityMode"),
++      rtx_ssrc("rtxSsrc") {}
++
++RTCOutboundRtpStreamStats::RTCOutboundRtpStreamStats(
++    const RTCOutboundRtpStreamStats& other) = default;
+ 
+ RTCOutboundRtpStreamStats::~RTCOutboundRtpStreamStats() {}
+ 
+@@ -330,17 +516,25 @@ RTCOutboundRtpStreamStats::~RTCOutboundRtpStreamStats() {}
+ WEBRTC_RTCSTATS_IMPL(
+     RTCRemoteInboundRtpStreamStats, RTCReceivedRtpStreamStats,
+         "remote-inbound-rtp",
+-    AttributeInit("localId", &local_id),
+-    AttributeInit("roundTripTime", &round_trip_time),
+-    AttributeInit("fractionLost", &fraction_lost),
+-    AttributeInit("totalRoundTripTime", &total_round_trip_time),
+-    AttributeInit("roundTripTimeMeasurements", &round_trip_time_measurements))
++    &local_id,
++    &round_trip_time,
++    &fraction_lost,
++    &total_round_trip_time,
++    &round_trip_time_measurements)
+ // clang-format on
+ 
+ RTCRemoteInboundRtpStreamStats::RTCRemoteInboundRtpStreamStats(
+     std::string id,
+     Timestamp timestamp)
+-    : RTCReceivedRtpStreamStats(std::move(id), timestamp) {}
++    : RTCReceivedRtpStreamStats(std::move(id), timestamp),
++      local_id("localId"),
++      round_trip_time("roundTripTime"),
++      fraction_lost("fractionLost"),
++      total_round_trip_time("totalRoundTripTime"),
++      round_trip_time_measurements("roundTripTimeMeasurements") {}
++
++RTCRemoteInboundRtpStreamStats::RTCRemoteInboundRtpStreamStats(
++    const RTCRemoteInboundRtpStreamStats& other) = default;
+ 
+ RTCRemoteInboundRtpStreamStats::~RTCRemoteInboundRtpStreamStats() {}
+ 
+@@ -348,100 +542,156 @@ RTCRemoteInboundRtpStreamStats::~RTCRemoteInboundRtpStreamStats() {}
+ WEBRTC_RTCSTATS_IMPL(
+     RTCRemoteOutboundRtpStreamStats, RTCSentRtpStreamStats,
+     "remote-outbound-rtp",
+-    AttributeInit("localId", &local_id),
+-    AttributeInit("remoteTimestamp", &remote_timestamp),
+-    AttributeInit("reportsSent", &reports_sent),
+-    AttributeInit("roundTripTime", &round_trip_time),
+-    AttributeInit("roundTripTimeMeasurements", &round_trip_time_measurements),
+-    AttributeInit("totalRoundTripTime", &total_round_trip_time))
++    &local_id,
++    &remote_timestamp,
++    &reports_sent,
++    &round_trip_time,
++    &round_trip_time_measurements,
++    &total_round_trip_time)
+ // clang-format on
+ 
+ RTCRemoteOutboundRtpStreamStats::RTCRemoteOutboundRtpStreamStats(
+     std::string id,
+     Timestamp timestamp)
+-    : RTCSentRtpStreamStats(std::move(id), timestamp) {}
++    : RTCSentRtpStreamStats(std::move(id), timestamp),
++      local_id("localId"),
++      remote_timestamp("remoteTimestamp"),
++      reports_sent("reportsSent"),
++      round_trip_time("roundTripTime"),
++      round_trip_time_measurements("roundTripTimeMeasurements"),
++      total_round_trip_time("totalRoundTripTime") {}
++
++RTCRemoteOutboundRtpStreamStats::RTCRemoteOutboundRtpStreamStats(
++    const RTCRemoteOutboundRtpStreamStats& other) = default;
+ 
+ RTCRemoteOutboundRtpStreamStats::~RTCRemoteOutboundRtpStreamStats() {}
+ 
+ // clang-format off
+ WEBRTC_RTCSTATS_IMPL(RTCMediaSourceStats, RTCStats, "parent-media-source",
+-    AttributeInit("trackIdentifier", &track_identifier),
+-    AttributeInit("kind", &kind))
++    &track_identifier,
++    &kind)
+ // clang-format on
+ 
+ RTCMediaSourceStats::RTCMediaSourceStats(std::string id, Timestamp timestamp)
+-    : RTCStats(std::move(id), timestamp) {}
++    : RTCStats(std::move(id), timestamp),
++      track_identifier("trackIdentifier"),
++      kind("kind") {}
++
++RTCMediaSourceStats::RTCMediaSourceStats(const RTCMediaSourceStats& other) =
++    default;
+ 
+ RTCMediaSourceStats::~RTCMediaSourceStats() {}
+ 
+ // clang-format off
+ WEBRTC_RTCSTATS_IMPL(RTCAudioSourceStats, RTCMediaSourceStats, "media-source",
+-    AttributeInit("audioLevel", &audio_level),
+-    AttributeInit("totalAudioEnergy", &total_audio_energy),
+-    AttributeInit("totalSamplesDuration", &total_samples_duration),
+-    AttributeInit("echoReturnLoss", &echo_return_loss),
+-    AttributeInit("echoReturnLossEnhancement", &echo_return_loss_enhancement))
++    &audio_level,
++    &total_audio_energy,
++    &total_samples_duration,
++    &echo_return_loss,
++    &echo_return_loss_enhancement)
+ // clang-format on
+ 
+ RTCAudioSourceStats::RTCAudioSourceStats(std::string id, Timestamp timestamp)
+-    : RTCMediaSourceStats(std::move(id), timestamp) {}
++    : RTCMediaSourceStats(std::move(id), timestamp),
++      audio_level("audioLevel"),
++      total_audio_energy("totalAudioEnergy"),
++      total_samples_duration("totalSamplesDuration"),
++      echo_return_loss("echoReturnLoss"),
++      echo_return_loss_enhancement("echoReturnLossEnhancement") {}
++
++RTCAudioSourceStats::RTCAudioSourceStats(const RTCAudioSourceStats& other) =
++    default;
+ 
+ RTCAudioSourceStats::~RTCAudioSourceStats() {}
+ 
+ // clang-format off
+ WEBRTC_RTCSTATS_IMPL(RTCVideoSourceStats, RTCMediaSourceStats, "media-source",
+-    AttributeInit("width", &width),
+-    AttributeInit("height", &height),
+-    AttributeInit("frames", &frames),
+-    AttributeInit("framesPerSecond", &frames_per_second))
++    &width,
++    &height,
++    &frames,
++    &frames_per_second)
+ // clang-format on
+ 
+ RTCVideoSourceStats::RTCVideoSourceStats(std::string id, Timestamp timestamp)
+-    : RTCMediaSourceStats(std::move(id), timestamp) {}
++    : RTCMediaSourceStats(std::move(id), timestamp),
++      width("width"),
++      height("height"),
++      frames("frames"),
++      frames_per_second("framesPerSecond") {}
++
++RTCVideoSourceStats::RTCVideoSourceStats(const RTCVideoSourceStats& other) =
++    default;
+ 
+ RTCVideoSourceStats::~RTCVideoSourceStats() {}
+ 
+ // clang-format off
+ WEBRTC_RTCSTATS_IMPL(RTCTransportStats, RTCStats, "transport",
+-    AttributeInit("bytesSent", &bytes_sent),
+-    AttributeInit("packetsSent", &packets_sent),
+-    AttributeInit("bytesReceived", &bytes_received),
+-    AttributeInit("packetsReceived", &packets_received),
+-    AttributeInit("rtcpTransportStatsId", &rtcp_transport_stats_id),
+-    AttributeInit("dtlsState", &dtls_state),
+-    AttributeInit("selectedCandidatePairId", &selected_candidate_pair_id),
+-    AttributeInit("localCertificateId", &local_certificate_id),
+-    AttributeInit("remoteCertificateId", &remote_certificate_id),
+-    AttributeInit("tlsVersion", &tls_version),
+-    AttributeInit("dtlsCipher", &dtls_cipher),
+-    AttributeInit("dtlsRole", &dtls_role),
+-    AttributeInit("srtpCipher", &srtp_cipher),
+-    AttributeInit("selectedCandidatePairChanges",
+-                  &selected_candidate_pair_changes),
+-    AttributeInit("iceRole", &ice_role),
+-    AttributeInit("iceLocalUsernameFragment", &ice_local_username_fragment),
+-    AttributeInit("iceState", &ice_state))
++    &bytes_sent,
++    &packets_sent,
++    &bytes_received,
++    &packets_received,
++    &rtcp_transport_stats_id,
++    &dtls_state,
++    &selected_candidate_pair_id,
++    &local_certificate_id,
++    &remote_certificate_id,
++    &tls_version,
++    &dtls_cipher,
++    &dtls_role,
++    &srtp_cipher,
++    &selected_candidate_pair_changes,
++    &ice_role,
++    &ice_local_username_fragment,
++    &ice_state)
+ // clang-format on
+ 
+ RTCTransportStats::RTCTransportStats(std::string id, Timestamp timestamp)
+-    : RTCStats(std::move(id), timestamp) {}
++    : RTCStats(std::move(id), timestamp),
++      bytes_sent("bytesSent"),
++      packets_sent("packetsSent"),
++      bytes_received("bytesReceived"),
++      packets_received("packetsReceived"),
++      rtcp_transport_stats_id("rtcpTransportStatsId"),
++      dtls_state("dtlsState"),
++      selected_candidate_pair_id("selectedCandidatePairId"),
++      local_certificate_id("localCertificateId"),
++      remote_certificate_id("remoteCertificateId"),
++      tls_version("tlsVersion"),
++      dtls_cipher("dtlsCipher"),
++      dtls_role("dtlsRole"),
++      srtp_cipher("srtpCipher"),
++      selected_candidate_pair_changes("selectedCandidatePairChanges"),
++      ice_role("iceRole"),
++      ice_local_username_fragment("iceLocalUsernameFragment"),
++      ice_state("iceState") {}
++
++RTCTransportStats::RTCTransportStats(const RTCTransportStats& other) = default;
+ 
+ RTCTransportStats::~RTCTransportStats() {}
+ 
+-// clang-format off
+-WEBRTC_RTCSTATS_IMPL(RTCAudioPlayoutStats, RTCStats, "media-playout",
+-    AttributeInit("kind", &kind),
+-    AttributeInit("synthesizedSamplesDuration", &synthesized_samples_duration),
+-    AttributeInit("synthesizedSamplesEvents", &synthesized_samples_events),
+-    AttributeInit("totalSamplesDuration", &total_samples_duration),
+-    AttributeInit("totalPlayoutDelay", &total_playout_delay),
+-    AttributeInit("totalSamplesCount", &total_samples_count))
+-// clang-format on
+-
+ RTCAudioPlayoutStats::RTCAudioPlayoutStats(const std::string& id,
+                                            Timestamp timestamp)
+-    : RTCStats(std::move(id), timestamp), kind("audio") {}
++    : RTCStats(std::move(id), timestamp),
++      kind("kind", "audio"),
++      synthesized_samples_duration("synthesizedSamplesDuration"),
++      synthesized_samples_events("synthesizedSamplesEvents"),
++      total_samples_duration("totalSamplesDuration"),
++      total_playout_delay("totalPlayoutDelay"),
++      total_samples_count("totalSamplesCount") {}
++
++RTCAudioPlayoutStats::RTCAudioPlayoutStats(const RTCAudioPlayoutStats& other) =
++    default;
+ 
+ RTCAudioPlayoutStats::~RTCAudioPlayoutStats() {}
+ 
++// clang-format off
++WEBRTC_RTCSTATS_IMPL(RTCAudioPlayoutStats, RTCStats, "media-playout",
++    &kind,
++    &synthesized_samples_duration,
++    &synthesized_samples_events,
++    &total_samples_duration,
++    &total_playout_delay,
++    &total_samples_count)
++// clang-format on
++
+ }  // namespace webrtc
+diff --git a/stats/test/rtc_test_stats.cc b/stats/test/rtc_test_stats.cc
+index 834daeef72..a83fa24178 100644
+--- a/stats/test/rtc_test_stats.cc
++++ b/stats/test/rtc_test_stats.cc
+@@ -10,7 +10,6 @@
+ 
+ #include "stats/test/rtc_test_stats.h"
+ 
+-#include "api/stats/attribute.h"
+ #include "rtc_base/checks.h"
+ 
+ namespace webrtc {
+@@ -18,25 +17,60 @@ namespace webrtc {
+ WEBRTC_RTCSTATS_IMPL(RTCTestStats,
+                      RTCStats,
+                      "test-stats",
+-                     AttributeInit("mBool", &m_bool),
+-                     AttributeInit("mInt32", &m_int32),
+-                     AttributeInit("mUint32", &m_uint32),
+-                     AttributeInit("mInt64", &m_int64),
+-                     AttributeInit("mUint64", &m_uint64),
+-                     AttributeInit("mDouble", &m_double),
+-                     AttributeInit("mString", &m_string),
+-                     AttributeInit("mSequenceBool", &m_sequence_bool),
+-                     AttributeInit("mSequenceInt32", &m_sequence_int32),
+-                     AttributeInit("mSequenceUint32", &m_sequence_uint32),
+-                     AttributeInit("mSequenceInt64", &m_sequence_int64),
+-                     AttributeInit("mSequenceUint64", &m_sequence_uint64),
+-                     AttributeInit("mSequenceDouble", &m_sequence_double),
+-                     AttributeInit("mSequenceString", &m_sequence_string),
+-                     AttributeInit("mMapStringUint64", &m_map_string_uint64),
+-                     AttributeInit("mMapStringDouble", &m_map_string_double))
++                     &m_bool,
++                     &m_int32,
++                     &m_uint32,
++                     &m_int64,
++                     &m_uint64,
++                     &m_double,
++                     &m_string,
++                     &m_sequence_bool,
++                     &m_sequence_int32,
++                     &m_sequence_uint32,
++                     &m_sequence_int64,
++                     &m_sequence_uint64,
++                     &m_sequence_double,
++                     &m_sequence_string,
++                     &m_map_string_uint64,
++                     &m_map_string_double)
+ 
+ RTCTestStats::RTCTestStats(const std::string& id, Timestamp timestamp)
+-    : RTCStats(id, timestamp) {}
++    : RTCStats(id, timestamp),
++      m_bool("mBool"),
++      m_int32("mInt32"),
++      m_uint32("mUint32"),
++      m_int64("mInt64"),
++      m_uint64("mUint64"),
++      m_double("mDouble"),
++      m_string("mString"),
++      m_sequence_bool("mSequenceBool"),
++      m_sequence_int32("mSequenceInt32"),
++      m_sequence_uint32("mSequenceUint32"),
++      m_sequence_int64("mSequenceInt64"),
++      m_sequence_uint64("mSequenceUint64"),
++      m_sequence_double("mSequenceDouble"),
++      m_sequence_string("mSequenceString"),
++      m_map_string_uint64("mMapStringUint64"),
++      m_map_string_double("mMapStringDouble") {}
++
++RTCTestStats::RTCTestStats(const RTCTestStats& other)
++    : RTCStats(other.id(), other.timestamp()),
++      m_bool(other.m_bool),
++      m_int32(other.m_int32),
++      m_uint32(other.m_uint32),
++      m_int64(other.m_int64),
++      m_uint64(other.m_uint64),
++      m_double(other.m_double),
++      m_string(other.m_string),
++      m_sequence_bool(other.m_sequence_bool),
++      m_sequence_int32(other.m_sequence_int32),
++      m_sequence_uint32(other.m_sequence_uint32),
++      m_sequence_int64(other.m_sequence_int64),
++      m_sequence_uint64(other.m_sequence_uint64),
++      m_sequence_double(other.m_sequence_double),
++      m_sequence_string(other.m_sequence_string),
++      m_map_string_uint64(other.m_map_string_uint64),
++      m_map_string_double(other.m_map_string_double) {}
+ 
+ RTCTestStats::~RTCTestStats() {}
+ 
+diff --git a/stats/test/rtc_test_stats.h b/stats/test/rtc_test_stats.h
+index 05c0904c02..0247c0cc01 100644
+--- a/stats/test/rtc_test_stats.h
++++ b/stats/test/rtc_test_stats.h
+@@ -24,7 +24,9 @@ namespace webrtc {
+ class RTC_EXPORT RTCTestStats : public RTCStats {
+  public:
+   WEBRTC_RTCSTATS_DECL();
++
+   RTCTestStats(const std::string& id, Timestamp timestamp);
++  RTCTestStats(const RTCTestStats& other);
+   ~RTCTestStats() override;
+ 
+   RTCStatsMember<bool> m_bool;
