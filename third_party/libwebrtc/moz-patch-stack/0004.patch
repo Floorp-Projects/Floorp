@@ -1,43 +1,34 @@
-From: Nico Grunbaum <na-g@nostrum.com>
-Date: Sat, 13 Feb 2021 04:20:00 -0800
-Subject: Bug 1654112 - Add pid_t to desktop_capture_types.h; r=pehrsons
+From: Michael Froman <mfroman@mozilla.com>
+Date: Fri, 9 Jul 2021 18:14:00 -0500
+Subject: Bug 1654112 - mutex changes to fix tsan errors. r=ng
 
-Upstreaming bug 1697385
-
-Also includes:
-Bug 1654112 - Clarifying prev. rev that moved pid_t into the global namespace; r=dminor
-
-Differential Revision: https://phabricator.services.mozilla.com/D107897
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/539b69f0e21118a1898f1ef689577c7193ff7be7
+Differential Revision: https://phabricator.services.mozilla.com/D119674
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/3d5503acf9a4b22e02c4300f29e4fbfed406ea2c
 ---
- modules/desktop_capture/desktop_capture_types.h | 4 ++++
- modules/video_capture/video_capture.h           | 1 +
- 2 files changed, 5 insertions(+)
+ rtc_base/logging.cc | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/modules/desktop_capture/desktop_capture_types.h b/modules/desktop_capture/desktop_capture_types.h
-index a4e3e897fd..e777a45f92 100644
---- a/modules/desktop_capture/desktop_capture_types.h
-+++ b/modules/desktop_capture/desktop_capture_types.h
-@@ -13,6 +13,10 @@
+diff --git a/rtc_base/logging.cc b/rtc_base/logging.cc
+index ad2303735e..9c2d3b0a39 100644
+--- a/rtc_base/logging.cc
++++ b/rtc_base/logging.cc
+@@ -275,8 +275,8 @@ void LogMessage::LogTimestamps(bool on) {
+ }
  
- #include <stdint.h>
+ void LogMessage::LogToDebug(LoggingSeverity min_sev) {
+-  g_dbg_sev = min_sev;
+   webrtc::MutexLock lock(&GetLoggingLock());
++  g_dbg_sev = min_sev;
+   UpdateMinLogSeverity();
+ }
  
-+#ifdef XP_WIN      // Moving this into the global namespace
-+typedef int pid_t; // matching what used to be in
-+#endif             // video_capture_defines.h
-+
- namespace webrtc {
+@@ -460,6 +460,9 @@ void LogMessage::OutputToDebug(const LogLineRef& log_line) {
  
- enum class CaptureType { kWindow, kScreen, kAnyScreenContent };
-diff --git a/modules/video_capture/video_capture.h b/modules/video_capture/video_capture.h
-index f31b239c71..7279bed476 100644
---- a/modules/video_capture/video_capture.h
-+++ b/modules/video_capture/video_capture.h
-@@ -13,6 +13,7 @@
- 
- #include "api/video/video_rotation.h"
- #include "api/video/video_sink_interface.h"
-+#include "modules/desktop_capture/desktop_capture_types.h"
- #include "modules/video_capture/raw_video_sink_interface.h"
- #include "modules/video_capture/video_capture_defines.h"
- #include <set>
+ // static
+ bool LogMessage::IsNoop(LoggingSeverity severity) {
++  // Added MutexLock to fix tsan warnings on accessing g_dbg_sev. (mjf)
++  // See https://bugs.chromium.org/p/chromium/issues/detail?id=1228729
++  webrtc::MutexLock lock(&GetLoggingLock());
+   if (severity >= g_dbg_sev || severity >= g_min_sev)
+     return false;
+   return streams_empty_.load(std::memory_order_relaxed);
