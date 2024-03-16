@@ -11,7 +11,7 @@
  */
 
 interface mixin ARIAMixin {
-  [CEReactions]
+  [Pref="accessibility.ARIAElementReflection.enabled", CEReactions]
   attribute Element? ariaActiveDescendantElement;
 
   [CEReactions, SetterThrows]
