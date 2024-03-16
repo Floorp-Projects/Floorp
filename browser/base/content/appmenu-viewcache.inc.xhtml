@@ -56,6 +56,7 @@
                      command="Tools:PrivateBrowsing"/>
       <toolbarseparator/>
 <!-- Floorp Injections +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+#ifdef FLOORP_OFFICIAL_COMPONENTS_ENABLED
       <toolbarbutton id="appMenu-ssb-button"
                      class="subviewbutton subviewbutton-nav"
                      data-l10n-id="appmenuitem-webapps"
@@ -89,7 +90,7 @@
                        oncommand=""
                        hidden="true"/>
       </panelview>
-
+#endif
 <!-- Floorp Injections +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
 
       <toolbarbutton id="appMenu-bookmarks-button"
