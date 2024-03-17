@@ -18,7 +18,8 @@ support-files = [
 ]
 prefs = [
   "javascript.options.asyncstack_capture_debuggee_only=false",
-  "dom.element.popover.enabled=true"
+  "dom.element.popover.enabled=true",
+  "accessibility.ARIAElementReflection.enabled=true"
 ]
 
 ["browser_aria_activedescendant.js"]
