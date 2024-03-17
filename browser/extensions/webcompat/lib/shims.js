@@ -60,6 +60,13 @@ class Shim {
     this.runFirst = opts.runFirst;
     this.unblocksOnOptIn = unblocksOnOptIn;
     this.requestStorageAccessForRedirect = opts.requestStorageAccessForRedirect;
+    this.shouldUseScriptingAPI =
+      browser.aboutConfigPrefs.getBoolPrefSync("useScriptingAPI");
+    debug(
+      `WebCompat Shim ${this.id} will be injected using ${
+        this.shouldUseScriptingAPI ? "scripting" : "contentScripts"
+      } API`
+    );
 
     this._hostOptIns = new Set();
 
@@ -76,14 +83,26 @@ class Shim {
 
     this.redirectsRequests = !!this.file && matches?.length;
 
+    // NOTE: _contentScriptRegistrations is an array of string ids when
+    // shouldUseScriptingAPI is true and an array of script handles returned
+    // by contentScripts.register otherwise.
     this._contentScriptRegistrations = [];
+
     this.contentScripts = contentScripts || [];
     for (const script of this.contentScripts) {
       if (typeof script.css === "string") {
-        script.css = [{ file: `/shims/${script.css}` }];
+        script.css = [
+          this.shouldUseScriptingAPI
+            ? `/shims/${script.css}`
+            : { file: `/shims/${script.css}` },
+        ];
       }
       if (typeof script.js === "string") {
-        script.js = [{ file: `/shims/${script.js}` }];
+        script.js = [
+          this.shouldUseScriptingAPI
+            ? `/shims/${script.js}`
+            : { file: `/shims/${script.js}` },
+        ];
       }
     }
 
@@ -244,10 +263,52 @@ class Shim {
       !this._contentScriptRegistrations.length
     ) {
       const matches = [];
+      let idx = 0;
       for (const options of this.contentScripts) {
         matches.push(options.matches);
-        const reg = await browser.contentScripts.register(options);
-        this._contentScriptRegistrations.push(reg);
+        if (this.shouldUseScriptingAPI) {
+          // Some shims includes more than one script (e.g. Blogger one contains
+          // a content script to be run on document_start and one to be run
+          // on document_end.
+          options.id = `shim-${this.id}-${idx++}`;
+          options.persistAcrossSessions = false;
+          // Having to call getRegisteredContentScripts each time we are going to
+          // register a Shim content script is suboptimal, but avoiding that
+          // may require a bit more changes (e.g. rework both Injections, Shim and Shims
+          // classes to more easily register all content scripts with a single
+          // call to the scripting API methods when the background script page is loading
+          // and one per injection or shim being enabled from the AboutCompatBroker).
+          // In the short term we call getRegisteredContentScripts and restrict it to
+          // the script id we are about to register.
+          let isAlreadyRegistered = false;
+          try {
+            const registeredScripts =
+              await browser.scripting.getRegisteredContentScripts({
+                ids: [options.id],
+              });
+            isAlreadyRegistered = !!registeredScripts.length;
+          } catch (ex) {
+            console.error(
+              "Retrieve WebCompat GoFaster registered content scripts failed: ",
+              ex
+            );
+          }
+          try {
+            if (!isAlreadyRegistered) {
+              await browser.scripting.registerContentScripts([options]);
+            }
+            this._contentScriptRegistrations.push(options.id);
+          } catch (ex) {
+            console.error(
+              "Registering WebCompat Shim content scripts failed: ",
+              options,
+              ex
+            );
+          }
+        } else {
+          const reg = await browser.contentScripts.register(options);
+          this._contentScriptRegistrations.push(reg);
+        }
       }
       const urls = Array.from(new Set(matches.flat()));
       debug("Enabling content scripts for these URLs:", urls);
@@ -255,8 +316,13 @@ class Shim {
   }
 
   async _unregisterContentScripts() {
-    for (const registration of this._contentScriptRegistrations) {
-      registration.unregister();
+    if (this.shouldUseScriptingAPI) {
+      const ids = this._contentScriptRegistrations;
+      await browser.scripting.unregisterContentScripts({ ids });
+    } else {
+      for (const registration of this._contentScriptRegistrations) {
+        registration.unregister();
+      }
     }
     this._contentScriptRegistrations = [];
   }

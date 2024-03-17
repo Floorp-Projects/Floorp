@@ -21,20 +21,20 @@
 !endif
 
 # These defines should match application.ini settings
-!define AppName               "Firefox"
+!define AppName               "Floorp"
 !define AppVersion            "@APP_VERSION@"
 !define GREVersion            @MOZILLA_VERSION@
 !define AB_CD                 "@AB_CD@"
 
 !define FileMainEXE           "@MOZ_APP_NAME@.exe"
 !define PrivateBrowsingEXE    "private_browsing.exe"
-!define MainWindowClass       "MozillaWindowClass"
-!define DialogWindowClass     "MozillaDialogClass"
-!define DDEApplication        "Firefox"
-!define AppRegName            "Firefox"
+!define MainWindowClass       "FloorpWindowClass"
+!define DialogWindowClass     "FloorpDialogClass"
+!define DDEApplication        "Floorp"
+!define AppRegName            "Floorp"
 !define ToastAumidPrefix      "@MOZ_TOAST_APP_NAME@Toast-"
 
-!define BrandProductName      "Firefox"
+!define BrandProductName      "Floorp"
 !ifndef DEV_EDITION
 !define BrandShortName        "@MOZ_APP_DISPLAYNAME@"
 !endif
@@ -53,12 +53,12 @@
 ; private_browsing.exe (as opposed to @MOZ_APP_NAME@.exe)
 !define IDI_PBICON_PB_EXE_ZERO_BASED "0"
 
-!define CERTIFICATE_NAME            "Mozilla Corporation"
-!define CERTIFICATE_ISSUER          "DigiCert SHA2 Assured ID Code Signing CA"
+!define CERTIFICATE_NAME            "Open Source Developer, Ryosuke Asano"
+!define CERTIFICATE_ISSUER          "Certum Code Signing 2021 CA"
 ; Changing the name or issuer requires us to have both the old and the new
 ;  in the registry at the same time, temporarily.
-!define CERTIFICATE_NAME_PREVIOUS   "Mozilla Corporation"
-!define CERTIFICATE_ISSUER_PREVIOUS "DigiCert Assured ID Code Signing CA-1"
+!define CERTIFICATE_NAME_PREVIOUS   "Open Source Developer, Ryosuke Asano"
+!define CERTIFICATE_ISSUER_PREVIOUS "Certum Code Signing 2021 CA"
 
 # LSP_CATEGORIES is the permitted LSP categories for the application. Each LSP
 # category value is ANDed together to set multiple permitted categories.
@@ -74,7 +74,7 @@
 
 #ifdef MOZ_LAUNCHER_PROCESS
 !define MOZ_LAUNCHER_PROCESS
-!define MOZ_LAUNCHER_SUBKEY "Software\Mozilla\${AppName}\Launcher"
+!define MOZ_LAUNCHER_SUBKEY "Software\Ablaze\${AppName}\Launcher"
 #endif
 
 #ifdef RELEASE_OR_BETA

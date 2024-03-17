@@ -270,6 +270,12 @@ class QueryPreferenceParameter extends QueryParameter {
  *   An updated parameter string.
  */
 function ParamSubstitution(paramValue, searchTerms, engine) {
+  // Floorp Injections
+  if (!paramValue && engine.name == "Floorp Search") {
+    return "";
+  }
+  // End Floorp Injections
+
   const PARAM_REGEXP = /\{((?:\w+:)?\w+)(\??)\}/g;
   return paramValue.replace(PARAM_REGEXP, function (match, name, optional) {
     // {searchTerms} is by far the most common param so handle it first.
@@ -381,6 +387,7 @@ export class EngineURL {
     }
 
     switch (templateURI.scheme) {
+      case "about":
       case "http":
       case "https":
         this.template = template;
@@ -392,6 +399,10 @@ export class EngineURL {
         );
     }
 
+    if (templateURI.spec == "about:search") {
+      return;
+    }
+    
     this.templateHost = templateURI.host;
   }
 
@@ -1580,6 +1591,14 @@ export class SearchEngine {
     if (this._searchUrlPublicSuffix != null) {
       return this._searchUrlPublicSuffix;
     }
+
+    // Floorp Injections
+    if (this.name == "Floorp Search") {
+      let searchURLPublicSuffix = "";
+      return (this._searchUrlPublicSuffix = searchURLPublicSuffix);
+    }
+    // End Floorp Injections
+
     let searchURLPublicSuffix = Services.eTLD.getKnownPublicSuffix(
       this.searchURLWithNoTerms
     );
@@ -1614,6 +1633,16 @@ export class SearchEngine {
     if (!termsParameterName) {
       return null;
     }
+
+    // Floorp Injections
+    if (this.name == "Floorp Search") {
+      return {
+        mainDomain: "about:search",
+        path: "/",
+        termsParameterName,
+      };
+    }
+    // End Floorp Injections
 
     let templateUrl = Services.io.newURI(url.template);
     return {

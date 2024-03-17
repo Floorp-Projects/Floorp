@@ -148,7 +148,8 @@ function needHomepageOverride(prefb) {
 
   if (buildID != savedBuildID) {
     prefb.setCharPref("browser.startup.homepage_override.buildID", buildID);
-    return OVERRIDE_NEW_BUILD_ID;
+    // Floorp Injections
+    return OVERRIDE_NEW_MSTONE;
   }
 
   return OVERRIDE_NONE;
@@ -698,9 +699,18 @@ nsBrowserContentHandler.prototype = {
             willRestoreSession =
               lazy.SessionStartup.isAutomaticRestoreEnabled();
 
+            // Floorp Injections
+            // If "Services.locale.requestedLocale" is start with "ja" We will show Japanese version of Release Notes
             overridePage = Services.urlFormatter.formatURLPref(
               "startup.homepage_override_url"
             );
+
+            if (Services.locale.requestedLocale.startsWith("ja")) {
+              overridePage = Services.urlFormatter.formatURLPref(
+                "floorp.startup.homepage_override_url.ja"
+              );
+            }
+
             let update = lazy.UpdateManager.readyUpdate;
             if (
               update &&
@@ -912,7 +922,7 @@ nsBrowserContentHandler.prototype = {
       var urlParam = cmdLine.getArgument(urlFlagIdx + 1);
       if (
         cmdLine.length != urlFlagIdx + 2 ||
-        /firefoxurl(-[a-f0-9]+)?:/i.test(urlParam)
+        /floorpurl(-[a-f0-9]+)?:/i.test(urlParam)
       ) {
         throw Components.Exception("", Cr.NS_ERROR_ABORT);
       }
@@ -945,6 +955,25 @@ function handURIToExistingBrowser(
   if (!shouldLoadURI(uri)) {
     return;
   }
+
+  // Floorp Injections
+  if (location == 3 || location == 0) {
+    if (Services.prefs.getBoolPref("floorp.browser.sidebar2.addons.enabled")) {
+      var { FloorpServices } = ChromeUtils.importESModule("resource:///modules/FloorpServices.sys.mjs");
+      let win = FloorpServices.wm.getRecentWindowExcludeFloorpSpecialWindows();
+      if (win) {
+        let browser = win.gBrowser;
+        let tab = browser.addTab(uri.spec, {
+          triggeringPrincipal,
+        });
+        win.gBrowser.selectedTab = tab;
+        win.focus();
+
+        return;
+      }
+    }
+  }
+  // End Floorp Injections
 
   let openInWindow = ({ browserDOMWindow }) => {
     browserDOMWindow.openURI(

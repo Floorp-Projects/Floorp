@@ -3,6 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 <hbox flex="1" id="browser">
+  <!-- Floorp Injection -->
+  <splitter id="verticaltab-splitter" class="chromeclass-extrachrome sidebar-splitter" resizebefore="sibling" resizeafter="none" hidden="true"/>
+  <!-- Finish -->
+
   <vbox id="sidebar-box" hidden="true" class="chromeclass-extrachrome">
     <box id="sidebar-header" align="center">
       <toolbarbutton id="sidebar-switcher-target" class="tabbable">
@@ -17,6 +21,13 @@
     <browser id="sidebar" autoscroll="false" disablehistory="true" disablefullscreen="true" tooltip="aHTMLTooltip"/>
   </vbox>
   <splitter id="sidebar-splitter" class="chromeclass-extrachrome sidebar-splitter" resizebefore="sibling" resizeafter="none" hidden="true"/>
+
+
+  <!-- Floorp Injection -->
+  #include ../../../floorp/browser/base/content/browser-manager-sidebar.inc.xhtml
+  #include ../../../floorp/browser/base/content/browser-webpanel.inc.xhtml
+  <!-- Finish -->
+
   <vbox id="appcontent" flex="1">
     <!-- gNotificationBox will be added here lazily. -->
     <tabbox id="tabbrowser-tabbox"

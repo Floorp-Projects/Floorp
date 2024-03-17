@@ -1,0 +1,19 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * www.axa-assistance.pl - The buttons for picking a date are not working
+ * Bug #1849019 - https://bugzilla.mozilla.org/show_bug.cgi?id=1849019
+ * WebCompat issue #123068 - https://github.com/webcompat/web-bugs/issues/123068
+ *
+ * The site delegates click events to a hidden date input to open its UI,
+ * which doesn't work in Firefox, but works in Chrome
+ * Depends on https://bugzilla.mozilla.org/show_bug.cgi?id=1840668
+ */
+
+.hiddenDate {
+  width: 100%;
+  height: 100%;
+  z-index: auto;
+}

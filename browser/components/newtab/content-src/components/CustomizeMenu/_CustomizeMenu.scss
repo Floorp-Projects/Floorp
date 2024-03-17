@@ -15,12 +15,17 @@
   }
 }
 
+.floorp-backdrop-blur-enable .personalize-button{
+  backdrop-filter: blur(12px);
+}
+
 .personalize-button {
   border: 0;
   border-radius: 4px;
   background-color: transparent;
   padding: 15px;
-
+  background-color: color-mix(in srgb, var(--newtab-background-color) 50%, transparent);
+  border: 1px solid rgba(170, 170, 170, 0.6);
   &:hover {
     background-color: var(--newtab-element-hover-color);
   }

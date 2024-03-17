@@ -98,6 +98,42 @@ var TabStateInternal = {
       tabData.muteReason = tab.muteReason;
     }
 
+
+    /*****Floorp Injections*****/
+
+    // Workspaces
+    tabData.floorpWorkspace = tab.getAttribute("floorpWorkspace");
+    if (!tabData.floorpWorkspace) {
+      tabData.floorpWorkspace = Services.prefs.getStringPref("floorp.browser.workspace.all").split(",")[0];
+    }
+
+    var { FloorpAppConstants } = ChromeUtils.importESModule(
+      "resource:///modules/FloorpAppConstants.sys.mjs"
+    );
+
+    if (FloorpAppConstants.FLOORP_OFFICIAL_COMPONENTS_ENABLED) {
+      let { WorkspacesService } = ChromeUtils.importESModule(
+        "resource:///modules/WorkspacesService.sys.mjs"
+      );
+
+      // Workspaces
+      // WorkspaceId
+      tabData.floorpWorkspaceId = tab.getAttribute(WorkspacesService.workspacesTabAttributionId);
+      // lastShowWorkspaceId
+      tabData.floorpLastShowWorkspaceId = tab.getAttribute(WorkspacesService.workspaceLastShowId);
+    }
+
+    // Private Container
+    tabData.floorpDisableHistory = tab.getAttribute("floorp-disablehistory");
+
+    // Site Specific Browser
+    tabData.floorpSSB = tab.getAttribute("floorpSSB");
+
+    // WebPanel
+    tabData.floorpWebPanel = tab.hasAttribute("BMS-webpanel-tab");
+
+    /*****Floorp Injections*****/
+
     tabData.searchMode = tab.ownerGlobal.gURLBar.getSearchMode(browser, true);
 
     tabData.userContextId = tab.userContextId || 0;
