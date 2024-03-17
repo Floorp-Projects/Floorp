@@ -82,21 +82,22 @@ struct ClipArea {
 };
 
 ClipArea fetch_clip_area(int index) {
-    ClipArea area;
-
+    RenderTaskData task_data;
     if (index >= CLIP_TASK_EMPTY) {
-        area.task_rect = RectWithEndpoint(vec2(0.0), vec2(0.0));
-        area.device_pixel_scale = 0.0;
-        area.screen_origin = vec2(0.0);
+      // We deliberately create a dummy RenderTaskData here then convert to a
+      // ClipArea after this if-else statement, rather than initialize the
+      // ClipArea in separate branches, to avoid a miscompile in some Adreno
+      // drivers. See bug 1884791. Unfortunately the specific details of the bug
+      // are unknown, so please take extra care not to regress this when
+      // refactoring.
+      task_data = RenderTaskData(RectWithEndpoint(vec2(0.0), vec2(0.0)),
+                                 vec4(0.0));
     } else {
-        RenderTaskData task_data = fetch_render_task_data(index);
-
-        area.task_rect = task_data.task_rect;
-        area.device_pixel_scale = task_data.user_data.x;
-        area.screen_origin = task_data.user_data.yz;
+      task_data = fetch_render_task_data(index);
     }
 
-    return area;
+    return ClipArea(task_data.task_rect, task_data.user_data.x,
+                    task_data.user_data.yz);
 }
 
 #endif //WR_VERTEX_SHADER
