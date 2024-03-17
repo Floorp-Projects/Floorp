@@ -173,23 +173,19 @@ nsresult AppendObjCExceptionInfoToAppNotes(void* inException);
 nsresult GetSubmitReports(bool* aSubmitReport);
 nsresult SetSubmitReports(bool aSubmitReport);
 
-// Out-of-process crash reporter API.
-
 #ifdef XP_WIN
 // This data is stored in the parent process, there is one copy for each child
 // process. The mChildPid and mMinidumpFile fields are filled by the WER runtime
 // exception module when the associated child process crashes.
 struct WindowsErrorReportingData {
-  // Points to the WerNotifyProc function.
-  LPTHREAD_START_ROUTINE mWerNotifyProc;
   // PID of the child process that crashed.
   DWORD mChildPid;
   // Filename of the generated minidump; this is not a 0-terminated string
   char mMinidumpFile[40];
-  // OOM allocation size for the crash (ignore if zero)
-  size_t mOOMAllocationSize;
 };
 #endif  // XP_WIN
+
+// Out-of-process crash reporter API.
 
 // Initializes out-of-process crash reporting. This method must be called
 // before the platform-specific notification pipe APIs are called. If called
@@ -318,11 +314,6 @@ void UnregisterInjectorCallback(DWORD processID);
 bool CreateNotificationPipeForChild(int* childCrashFd, int* childCrashRemapFd);
 
 #endif  // XP_WIN
-
-// Windows Error Reporting helper
-#if defined(XP_WIN)
-DWORD WINAPI WerNotifyProc(LPVOID aParameter);
-#endif
 
 // Child-side API
 bool SetRemoteExceptionHandler(

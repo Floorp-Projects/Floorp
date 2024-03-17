@@ -5,7 +5,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         width="600"
         height="600"
-        onload="setTimeout(nextTest,0);"
+        onload="setTimeout(startTests,0);"
         title="bug 514732 test">
 
   <script type="application/javascript"><![CDATA[
@@ -75,7 +75,20 @@
 
       finish();
     }
-    
+
+    function startTests() {
+      // Flush layout in outer and inner documents (in that order), to be sure
+      // our TestWindow's initial about:blank document doesn't have any
+      // pending reflows. (If we leave these pending reflows un-flushed, then
+      // they might happen after we've set up our MozScrolledAreaChanged
+      // event-listener; and that would confuse our test logic and lead to
+      // timeouts and test-failures.)
+      document.documentElement.offsetHeight;
+      TestWindow.getDocument().documentElement.offsetHeight;
+
+      // Kick off the first test via the generator-iterator.
+      nextTest();
+    }
   ]]></script>
 
   <browser type="content" primary="true" flex="1" id="content" src="about:blank"/>

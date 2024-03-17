@@ -393,7 +393,8 @@ nsresult nsHtml5TreeOperation::AddAttributes(nsIContent* aNode,
     --i;
     nsAtom* localName = aAttributes->getLocalNameNoBoundsCheck(i);
     int32_t nsuri = aAttributes->getURINoBoundsCheck(i);
-    if (!node->HasAttr(nsuri, localName)) {
+    if (!node->HasAttr(nsuri, localName) &&
+        !(nsuri == kNameSpaceID_None && localName == nsGkAtoms::nonce)) {
       nsString value;  // Not Auto, because using it to hold nsStringBuffer*
       aAttributes->getValueNoBoundsCheck(i).ToString(value);
       node->SetAttr(nsuri, localName, aAttributes->getPrefixNoBoundsCheck(i),

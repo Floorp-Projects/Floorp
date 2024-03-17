@@ -150,6 +150,38 @@ typedef int mp_sword;
 /* This defines the maximum I/O base (minimum is 2)   */
 #define MP_MAX_RADIX 64
 
+/* Constant Time Macros on mp_digits */
+#define MP_CT_HIGH_TO_LOW(x) ((mp_digit)((mp_digit)(x) >> (MP_DIGIT_BIT - 1)))
+#define MP_CT_TRUE ((mp_digit)1)
+#define MP_CT_FALSE ((mp_digit)0)
+
+/* basic zero and non zero tests */
+#define MP_CT_NOT_ZERO(x) (MP_CT_HIGH_TO_LOW(((x) | (((mp_digit)0) - (x)))))
+#define MP_CT_ZERO(x) (MP_CT_TRUE ^ MP_CT_HIGH_TO_LOW(((x) | (((mp_digit)0) - (x)))))
+
+/* basic constant-time helper macro for equalities and inequalities.
+ * The inequalities will produce incorrect results if
+ * abs(a-b) >= MP_DIGIT_SIZE/2. This can be avoided if unsigned values stay
+ * within the range 0-MP_DIGIT_MAX/2. */
+#define MP_CT_EQ(a, b) MP_CT_ZERO(((a) ^ (b)))
+#define MP_CT_NE(a, b) MP_CT_NOT_ZERO(((a) ^ (b)))
+#define MP_CT_GT(a, b) MP_CT_HIGH_TO_LOW((b) - (a))
+#define MP_CT_LT(a, b) MP_CT_HIGH_TO_LOW((a) - (b))
+#define MP_CT_GE(a, b) (MP_CT_TRUE ^ MP_CT_LT(a, b))
+#define MP_CT_LE(a, b) (MP_CT_TRUE ^ MP_CT_GT(a, b))
+
+/* use constant time result to select a boolean value
+ * or an mp digit depending on the args */
+#define MP_CT_SEL(m, l, r) ((r) ^ ((m) & ((r) ^ (l))))
+#define MP_CT_SELB(m, l, r) MP_CT_SEL(m, l, r)      /* mask, l and r are booleans */
+#define MP_CT_SEL_DIGIT(m, l, r) MP_CT_SEL(m, l, r) /*mask, l, and r are mp_digit */
+
+/* full inequalities that work with full mp_digit values */
+#define MP_CT_OVERFLOW(a, b, c, d)           \
+    MP_CT_SELB(MP_CT_HIGH_TO_LOW((a) ^ (b)), \
+               (MP_CT_HIGH_TO_LOW(d)), c)
+#define MP_CT_LTU(a, b) MP_CT_OVERFLOW(a, b, MP_CT_LT(a, b), b)
+
 typedef struct {
     mp_sign sign;  /* sign of this quantity      */
     mp_size alloc; /* how many digits allocated  */
@@ -190,7 +222,9 @@ mp_err mp_neg(const mp_int *a, mp_int *b);
 /* Full arithmetic         */
 mp_err mp_add(const mp_int *a, const mp_int *b, mp_int *c);
 mp_err mp_sub(const mp_int *a, const mp_int *b, mp_int *c);
+mp_err mp_subCT(const mp_int *a, mp_int *b, mp_int *c, mp_digit *borrow);
 mp_err mp_mul(const mp_int *a, const mp_int *b, mp_int *c);
+mp_err mp_mulCT(mp_int *a, mp_int *b, mp_int *c, mp_size setSize);
 #if MP_SQUARE
 mp_err mp_sqr(const mp_int *a, mp_int *b);
 #else
@@ -217,6 +251,12 @@ mp_err mp_exptmod(const mp_int *a, const mp_int *b, const mp_int *m, mp_int *c);
 mp_err mp_exptmod_d(const mp_int *a, mp_digit d, const mp_int *m, mp_int *c);
 #endif /* MP_MODARITH */
 
+/* montgomery math */
+mp_err mp_to_mont(const mp_int *x, const mp_int *N, mp_int *xMont);
+mp_digit mp_calculate_mont_n0i(const mp_int *N);
+mp_err mp_reduceCT(const mp_int *a, const mp_int *m, mp_digit n0i, mp_int *ct);
+mp_err mp_mulmontmodCT(mp_int *a, mp_int *b, const mp_int *m, mp_digit n0i, mp_int *c);
+
 /* Comparisons             */
 int mp_cmp_z(const mp_int *a);
 int mp_cmp_d(const mp_int *a, mp_digit d);
@@ -224,6 +264,7 @@ int mp_cmp(const mp_int *a, const mp_int *b);
 int mp_cmp_mag(const mp_int *a, const mp_int *b);
 int mp_isodd(const mp_int *a);
 int mp_iseven(const mp_int *a);
+mp_err mp_selectCT(mp_digit cond, const mp_int *a, const mp_int *b, mp_int *ret);
 
 /* Number theoretic        */
 mp_err mp_gcd(mp_int *a, mp_int *b, mp_int *c);

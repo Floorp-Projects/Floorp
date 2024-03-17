@@ -135,6 +135,8 @@ class MediaChangeMonitor final
   Maybe<MediaDataDecoder::ConversionRequired> mConversionRequired;
   bool mDecoderInitialized = false;
   const CreateDecoderParamsForAsync mParams;
+  // Keep any seek threshold set for after decoder creation and initialization.
+  Maybe<media::TimeUnit> mPendingSeekThreshold;
 };
 
 }  // namespace mozilla

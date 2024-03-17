@@ -90,6 +90,7 @@ features = [
     "profileapi",
     "psapi",
     "rpcndr",
+    "securitybaseapi",
     "setupapi",
     "shlobj",
     "std",

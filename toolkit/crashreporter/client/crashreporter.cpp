@@ -753,16 +753,31 @@ int main(int argc, char** argv) {
 
     vector<string> restartArgs;
 
-    ostringstream paramName;
-    int i = 0;
-    paramName << "MOZ_CRASHREPORTER_RESTART_ARG_" << i++;
-    const char* param = getenv(paramName.str().c_str());
-    while (param && *param) {
-      restartArgs.push_back(param);
+    if (!extraData.isMember("WindowsErrorReporting")) {
+      // We relaunch the application associated with the client, but only when
+      // we encountered a crash caught by the exception handler. Crashes handled
+      // by WER are prevented from directly restarting the application.
+      string programPath = GetProgramPath(MOZ_APP_NAME);
+#ifndef XP_WIN
+      const char* moz_app_launcher = getenv("MOZ_APP_LAUNCHER");
+      if (moz_app_launcher) {
+        programPath = moz_app_launcher;
+      }
+#endif  // XP_WIN
 
-      paramName.str("");
+      restartArgs.push_back(programPath);
+
+      ostringstream paramName;
+      int i = 1;
       paramName << "MOZ_CRASHREPORTER_RESTART_ARG_" << i++;
-      param = getenv(paramName.str().c_str());
+      const char* param = getenv(paramName.str().c_str());
+      while (param && *param) {
+        restartArgs.push_back(param);
+
+        paramName.str("");
+        paramName << "MOZ_CRASHREPORTER_RESTART_ARG_" << i++;
+        param = getenv(paramName.str().c_str());
+      }
     }
 
     // allow override of the server url via environment variable

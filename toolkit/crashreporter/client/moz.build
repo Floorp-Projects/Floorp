@@ -85,6 +85,7 @@ if CONFIG["OS_ARCH"] == "Linux" or CONFIG["OS_ARCH"] == "SunOS":
         "Throbber-small.gif",
     ]
 
+DEFINES["MOZ_APP_NAME"] = '"%s"' % CONFIG["MOZ_APP_NAME"]
 DEFINES["BIN_SUFFIX"] = '"%s"' % CONFIG["BIN_SUFFIX"]
 
 RCINCLUDE = "crashreporter.rc"

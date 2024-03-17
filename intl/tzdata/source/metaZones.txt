@@ -89,7 +89,6 @@ metaZones:table(nofallback){
         America_Mountain{
             001{"America/Denver"}
             CA{"America/Edmonton"}
-            MX{"America/Hermosillo"}
         }
         America_Pacific{
             001{"America/Los_Angeles"}
@@ -361,6 +360,9 @@ metaZones:table(nofallback){
         Goose_Bay{
             001{"America/Goose_Bay"}
         }
+        Greenland{
+            001{"America/Godthab"}
+        }
         Greenland_Central{
             001{"America/Scoresbysund"}
         }
@@ -473,9 +475,6 @@ metaZones:table(nofallback){
         Macau{
             001{"Asia/Macau"}
         }
-        Macquarie{
-            001{"Antarctica/Macquarie"}
-        }
         Magadan{
             001{"Asia/Magadan"}
         }
@@ -499,9 +498,6 @@ metaZones:table(nofallback){
         }
         Mawson{
             001{"Antarctica/Mawson"}
-        }
-        Mexico_Northwest{
-            001{"America/Santa_Isabel"}
         }
         Mexico_Pacific{
             001{"America/Mazatlan"}
@@ -773,6 +769,7 @@ metaZones:table(nofallback){
         geor{"Georgia"}
         giis{"Gilbert_Islands"}
         grea{"Greenland_Eastern"}
+        gree{"Greenland"}
         grwe{"Greenland_Western"}
         guam{"Guam"}
         gulf{"Gulf"}
@@ -801,7 +798,6 @@ metaZones:table(nofallback){
         liis{"Line_Islands"}
         loho{"Lord_Howe"}
         maca{"Macau"}
-        macq{"Macquarie"}
         maga{"Magadan"}
         mais{"Marshall_Islands"}
         mala{"Malaysia"}
@@ -809,7 +805,6 @@ metaZones:table(nofallback){
         marq{"Marquesas"}
         maur{"Mauritius"}
         maws{"Mawson"}
-        meno{"Mexico_Northwest"}
         mepa{"Mexico_Pacific"}
         mgmt{"GMT"}
         mong{"Mongolia"}
@@ -1823,6 +1818,13 @@ metaZones:table(nofallback){
         "America:Godthab"{
             {
                 "Greenland_Western",
+                "1970-01-01 00:00",
+                "2024-03-26 01:00",
+            }
+            {
+                "Greenland",
+                "2024-03-26 01:00",
+                "9999-12-31 23:59",
             }
         }
         "America:Goose_Bay"{
@@ -2324,11 +2326,6 @@ metaZones:table(nofallback){
                 "America_Eastern",
             }
         }
-        "America:Nipigon"{
-            {
-                "America_Eastern",
-            }
-        }
         "America:Nome"{
             {
                 "Bering",
@@ -2404,23 +2401,6 @@ metaZones:table(nofallback){
                 "America_Eastern",
             }
         }
-        "America:Pangnirtung"{
-            {
-                "America_Eastern",
-                "1970-01-01 00:00",
-                "1999-10-31 06:00",
-            }
-            {
-                "America_Central",
-                "1999-10-31 06:00",
-                "2000-10-29 07:00",
-            }
-            {
-                "America_Eastern",
-                "2000-10-29 07:00",
-                "9999-12-31 23:59",
-            }
-        }
         "America:Paramaribo"{
             {
                 "Dutch_Guiana",
@@ -2463,11 +2443,6 @@ metaZones:table(nofallback){
                 "Chile",
                 "1970-01-01 00:00",
                 "2016-12-03 23:00",
-            }
-        }
-        "America:Rainy_River"{
-            {
-                "America_Central",
             }
         }
         "America:Rankin_Inlet"{
@@ -2541,11 +2516,6 @@ metaZones:table(nofallback){
                 "9999-12-31 23:59",
             }
         }
-        "America:Santa_Isabel"{
-            {
-                "Mexico_Northwest",
-            }
-        }
         "America:Santarem"{
             {
                 "Amazon",
@@ -2599,6 +2569,11 @@ metaZones:table(nofallback){
             {
                 "Greenland_Eastern",
                 "1981-03-29 02:00",
+                "2024-03-31 01:00",
+            }
+            {
+                "Greenland",
+                "2024-03-31 01:00",
                 "9999-12-31 23:59",
             }
         }
@@ -2666,11 +2641,6 @@ metaZones:table(nofallback){
                 "Atlantic",
             }
         }
-        "America:Thunder_Bay"{
-            {
-                "America_Eastern",
-            }
-        }
         "America:Tijuana"{
             {
                 "America_Pacific",
@@ -2713,11 +2683,6 @@ metaZones:table(nofallback){
                 "Alaska",
                 "1983-11-30 09:00",
                 "9999-12-31 23:59",
-            }
-        }
-        "America:Yellowknife"{
-            {
-                "America_Mountain",
             }
         }
         "Antarctica:Casey"{
@@ -2779,6 +2744,31 @@ metaZones:table(nofallback){
             {
                 "Casey",
                 "2020-10-03 16:01",
+                "2021-03-13 13:00",
+            }
+            {
+                "Australia_Western",
+                "2021-03-13 13:00",
+                "2021-10-02 16:01",
+            }
+            {
+                "Casey",
+                "2021-10-02 16:01",
+                "2022-03-12 13:00",
+            }
+            {
+                "Australia_Western",
+                "2022-03-12 13:00",
+                "2022-10-01 16:01",
+            }
+            {
+                "Casey",
+                "2022-10-01 16:01",
+                "2023-03-08 16:00",
+            }
+            {
+                "Australia_Western",
+                "2023-03-08 16:00",
                 "9999-12-31 23:59",
             }
         }
@@ -2858,6 +2848,11 @@ metaZones:table(nofallback){
             {
                 "Kazakhstan_Eastern",
                 "2004-10-30 20:00",
+                "2024-02-29 18:00",
+            }
+            {
+                "Kazakhstan_Western",
+                "2024-02-29 18:00",
                 "9999-12-31 23:59",
             }
         }
@@ -3373,6 +3368,11 @@ metaZones:table(nofallback){
             {
                 "Kazakhstan_Eastern",
                 "2004-10-30 21:00",
+                "2024-02-29 18:00",
+            }
+            {
+                "Kazakhstan_Western",
+                "2024-02-29 18:00",
                 "9999-12-31 23:59",
             }
         }
@@ -3656,11 +3656,6 @@ metaZones:table(nofallback){
         "Australia:Broken_Hill"{
             {
                 "Australia_Central",
-            }
-        }
-        "Australia:Currie"{
-            {
-                "Australia_Eastern",
             }
         }
         "Australia:Darwin"{
@@ -4158,18 +4153,6 @@ metaZones:table(nofallback){
                 "2016-03-26 23:00",
             }
         }
-        "Europe:Uzhgorod"{
-            {
-                "Moscow",
-                "1970-01-01 00:00",
-                "1990-06-30 22:00",
-            }
-            {
-                "Europe_Eastern",
-                "1990-06-30 22:00",
-                "9999-12-31 23:59",
-            }
-        }
         "Europe:Vaduz"{
             {
                 "Europe_Central",
@@ -4220,18 +4203,6 @@ metaZones:table(nofallback){
         "Europe:Zagreb"{
             {
                 "Europe_Central",
-            }
-        }
-        "Europe:Zaporozhye"{
-            {
-                "Moscow",
-                "1970-01-01 00:00",
-                "1990-06-30 22:00",
-            }
-            {
-                "Europe_Eastern",
-                "1990-06-30 22:00",
-                "9999-12-31 23:59",
             }
         }
         "Europe:Zurich"{
@@ -4391,18 +4362,6 @@ metaZones:table(nofallback){
             }
         }
         "Pacific:Honolulu"{
-            {
-                "Alaska_Hawaii",
-                "1970-01-01 00:00",
-                "1983-10-30 11:00",
-            }
-            {
-                "Hawaii_Aleutian",
-                "1983-10-30 11:00",
-                "9999-12-31 23:59",
-            }
-        }
-        "Pacific:Johnston"{
             {
                 "Alaska_Hawaii",
                 "1970-01-01 00:00",

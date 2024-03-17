@@ -2551,17 +2551,11 @@ nsresult SetRestartArgs(int argc, char** argv) {
   int i;
   nsAutoCString envVar;
   char* env;
-  char* argv0 = getenv("MOZ_APP_LAUNCHER");
-  for (i = 0; i < argc; i++) {
+  for (i = 1; i < argc; i++) {
     envVar = "MOZ_CRASHREPORTER_RESTART_ARG_";
     envVar.AppendInt(i);
     envVar += "=";
-    if (argv0 && i == 0) {
-      // Is there a request to suppress default binary launcher?
-      envVar += argv0;
-    } else {
-      envVar += argv[i];
-    }
+    envVar += argv[i];
 
     // PR_SetEnv() wants the string to be available for the lifetime
     // of the app, so dup it here. This conversion is not lossy.
@@ -3609,9 +3603,19 @@ bool FinalizeOrphanedMinidump(uint32_t aChildPid, GeckoProcessType aType,
 // Function invoked by the WER runtime exception handler running in an
 // external process. This function isn't used anywhere inside Gecko directly
 // but rather invoked via CreateRemoteThread() in the main process.
-DWORD WINAPI WerNotifyProc(LPVOID aParameter) {
+
+// Store this global in a section called mozwerpt where we can find it by just
+// looking at the program headers.
+#  pragma section("mozwerpt", read, executable, shared)
+
+__declspec(allocate("mozwerpt")) MOZ_EXPORT DWORD WINAPI
+    WerNotifyProc(LPVOID aParameter) {
   const WindowsErrorReportingData* werData =
       static_cast<const WindowsErrorReportingData*>(aParameter);
+
+  auto freeParameterOnExit = MakeScopeExit([&aParameter] {
+    VirtualFree(aParameter, sizeof(WindowsErrorReportingData), MEM_RELEASE);
+  });
 
   // Hold the mutex until the current dump request is complete, to
   // prevent UnsetExceptionHandler() from pulling the rug out from
@@ -3639,11 +3643,6 @@ DWORD WINAPI WerNotifyProc(LPVOID aParameter) {
     pd->sequence = ++crashSequence;
     pd->annotations = MakeUnique<AnnotationTable>();
     (*pd->annotations)[Annotation::WindowsErrorReporting] = "1"_ns;
-    if (werData->mOOMAllocationSize > 0) {
-      char buffer[32] = {};
-      XP_STOA(werData->mOOMAllocationSize, buffer);
-      (*pd->annotations)[Annotation::OOMAllocationSize] = buffer;
-    }
 
     PopulateContentProcessAnnotations(*(pd->annotations));
   }

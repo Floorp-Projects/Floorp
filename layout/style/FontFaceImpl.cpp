@@ -351,14 +351,6 @@ void FontFaceImpl::DoLoad() {
   if (!CreateUserFontEntry()) {
     return;
   }
-
-  if (!NS_IsMainThread()) {
-    NS_DispatchToMainThread(NS_NewRunnableFunction(
-        "FontFaceImpl::DoLoad",
-        [entry = RefPtr{mUserFontEntry}]() { entry->Load(); }));
-    return;
-  }
-
   mUserFontEntry->Load();
 }
 

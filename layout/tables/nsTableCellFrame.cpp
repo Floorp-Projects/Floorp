@@ -169,7 +169,11 @@ nsresult nsTableCellFrame::AttributeChanged(int32_t aNameSpaceID,
                                   NS_FRAME_IS_DIRTY);
   }
 
-  if (aAttribute == nsGkAtoms::rowspan || aAttribute == nsGkAtoms::colspan) {
+  const nsAtom* colSpanAttribute =
+      MOZ_UNLIKELY(mContent->AsElement()->IsMathMLElement())
+          ? nsGkAtoms::columnspan_
+          : nsGkAtoms::colspan;
+  if (aAttribute == nsGkAtoms::rowspan || aAttribute == colSpanAttribute) {
     nsLayoutUtils::PostRestyleEvent(mContent->AsElement(), RestyleHint{0},
                                     nsChangeHint_UpdateTableCellSpans);
   }

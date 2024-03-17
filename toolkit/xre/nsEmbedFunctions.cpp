@@ -387,13 +387,6 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
     CrashReporter::FileHandle crashTimeAnnotationFile =
         CrashReporter::kInvalidFileHandle;
 #if defined(XP_WIN)
-    if (aArgc < 1) {
-      return NS_ERROR_FAILURE;
-    }
-    // Pop the first argument, this is used by the WER runtime exception module
-    // which reads it from the command-line so we can just discard it here.
-    --aArgc;
-
     const char* const crashTimeAnnotationArg = aArgv[--aArgc];
     crashTimeAnnotationFile = reinterpret_cast<CrashReporter::FileHandle>(
         std::stoul(std::string(crashTimeAnnotationArg)));

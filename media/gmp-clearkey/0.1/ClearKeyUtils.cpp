@@ -105,10 +105,10 @@ bool ClearKeyUtils::DecryptCbcs(const vector<uint8_t>& aKey,
                                 mozilla::Span<uint8_t> aSubsample,
                                 uint32_t aCryptByteBlock,
                                 uint32_t aSkipByteBlock) {
-  assert(aKey.size() == CENC_KEY_LEN);
-  assert(aIV.size() == CENC_KEY_LEN);
-  assert(aCryptByteBlock <= 0xFF);
-  assert(aSkipByteBlock <= 0xFF);
+  if (aKey.size() != CENC_KEY_LEN || aIV.size() != CENC_KEY_LEN) {
+    CK_LOGE("Key and IV size should be 16!");
+    return false;
+  }
 
   std::unique_ptr<PK11SlotInfo, MaybeDeleteHelper<PK11SlotInfo>> slot(
       PK11_GetInternalKeySlot());
@@ -132,6 +132,14 @@ bool ClearKeyUtils::DecryptCbcs(const vector<uint8_t>& aKey,
 
   std::unique_ptr<PK11Context, MaybeDeleteHelper<PK11Context>> ctx(
       PK11_CreateContextBySymKey(CKM_AES_CBC, CKA_DECRYPT, key.get(), &ivItem));
+
+  if (!ctx) {
+    CK_LOGE("Failed to get PK11Context!");
+    return false;
+  }
+
+  assert(aCryptByteBlock <= 0xFF);
+  assert(aSkipByteBlock <= 0xFF);
 
   uint8_t* encryptedSubsample = &aSubsample[0];
   const uint32_t BLOCK_SIZE = 16;

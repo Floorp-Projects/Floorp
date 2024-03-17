@@ -519,6 +519,10 @@ RefPtr<MediaDataDecoder::InitPromise> MediaChangeMonitor::Init() {
                    mDecoderInitialized = true;
                    mConversionRequired = Some(mDecoder->NeedsConversion());
                    mCanRecycleDecoder = Some(CanRecycleDecoder());
+                   if (mPendingSeekThreshold) {
+                     mDecoder->SetSeekThreshold(*mPendingSeekThreshold);
+                     mPendingSeekThreshold.reset();
+                   }
                  }
                  return mInitPromise.ResolveOrRejectIfExists(std::move(aValue),
                                                              __func__);
@@ -686,11 +690,19 @@ bool MediaChangeMonitor::IsHardwareAccelerated(
 }
 
 void MediaChangeMonitor::SetSeekThreshold(const media::TimeUnit& aTime) {
-  if (mDecoder) {
-    mDecoder->SetSeekThreshold(aTime);
-  } else {
-    MediaDataDecoder::SetSeekThreshold(aTime);
-  }
+  GetCurrentSerialEventTarget()->Dispatch(NS_NewRunnableFunction(
+      "MediaChangeMonitor::SetSeekThreshold",
+      [self = RefPtr<MediaChangeMonitor>(this), time = aTime, this] {
+        // During the shutdown.
+        if (mShutdownPromise) {
+          return;
+        }
+        if (mDecoder && mDecoderInitialized) {
+          mDecoder->SetSeekThreshold(time);
+        } else {
+          mPendingSeekThreshold = Some(time);
+        }
+      }));
 }
 
 RefPtr<MediaChangeMonitor::CreateDecoderPromise>
@@ -743,6 +755,11 @@ MediaResult MediaChangeMonitor::CreateDecoderAndInit(MediaRawData* aSample) {
                       mDecoderInitialized = true;
                       mConversionRequired = Some(mDecoder->NeedsConversion());
                       mCanRecycleDecoder = Some(CanRecycleDecoder());
+
+                      if (mPendingSeekThreshold) {
+                        mDecoder->SetSeekThreshold(*mPendingSeekThreshold);
+                        mPendingSeekThreshold.reset();
+                      }
 
                       if (!mFlushPromise.IsEmpty()) {
                         // A Flush is pending, abort the current operation.

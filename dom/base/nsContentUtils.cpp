@@ -8951,13 +8951,19 @@ class StringBuilder {
       TextFragmentWithEncode,
     };
 
+    struct LiteralSpan {
+      const char16_t* mData;
+      uint32_t mLength;
+
+      Span<const char16_t> AsSpan() { return Span(mData, mLength); }
+    };
+
     union {
       nsAtom* mAtom;
-      const char16_t* mLiteral;
+      LiteralSpan mLiteral;
       nsString mString;
       const nsTextFragment* mTextFragment;
     };
-    uint32_t mLength = 0;
     Type mType = Type::Unknown;
   };
 
@@ -8987,17 +8993,15 @@ class StringBuilder {
     u->mAtom = aAtom;
     u->mType = Unit::Type::Atom;
     uint32_t len = aAtom->GetLength();
-    u->mLength = len;
     mLength += len;
   }
 
   template <int N>
   void Append(const char16_t (&aLiteral)[N]) {
+    constexpr uint32_t len = N - 1;
     Unit* u = AddUnit();
-    u->mLiteral = aLiteral;
+    u->mLiteral = {aLiteral, len};
     u->mType = Unit::Type::Literal;
-    uint32_t len = N - 1;
-    u->mLength = len;
     mLength += len;
   }
 
@@ -9006,15 +9010,14 @@ class StringBuilder {
     uint32_t len = aString.Length();
     new (&u->mString) nsString(std::move(aString));
     u->mType = Unit::Type::String;
-    u->mLength = len;
     mLength += len;
   }
 
-  void AppendWithAttrEncode(nsString&& aString, uint32_t aLen) {
+  // aLen can be !isValid(), which will get propagated into mLength.
+  void AppendWithAttrEncode(nsString&& aString, CheckedInt<uint32_t> aLen) {
     Unit* u = AddUnit();
     new (&u->mString) nsString(std::move(aString));
     u->mType = Unit::Type::StringWithEncode;
-    u->mLength = aLen;
     mLength += aLen;
   }
 
@@ -9023,15 +9026,15 @@ class StringBuilder {
     u->mTextFragment = aTextFragment;
     u->mType = Unit::Type::TextFragment;
     uint32_t len = aTextFragment->GetLength();
-    u->mLength = len;
     mLength += len;
   }
 
-  void AppendWithEncode(const nsTextFragment* aTextFragment, uint32_t aLen) {
+  // aLen can be !isValid(), which will get propagated into mLength.
+  void AppendWithEncode(const nsTextFragment* aTextFragment,
+                        CheckedInt<uint32_t> aLen) {
     Unit* u = AddUnit();
     u->mTextFragment = aTextFragment;
     u->mType = Unit::Type::TextFragmentWithEncode;
-    u->mLength = aLen;
     mLength += aLen;
   }
 
@@ -9062,7 +9065,7 @@ class StringBuilder {
             EncodeAttrString(u.mString, appender);
             break;
           case Unit::Type::Literal:
-            appender.Append(Span(u.mLiteral, u.mLength));
+            appender.Append(u.mLiteral.AsSpan());
             break;
           case Unit::Type::TextFragment:
             if (u.mTextFragment->Is2b()) {
@@ -9187,7 +9190,7 @@ static_assert(sizeof(StringBuilder) <= StringBuilder::TARGET_SIZE,
 
 static void AppendEncodedCharacters(const nsTextFragment* aText,
                                     StringBuilder& aBuilder) {
-  uint32_t extraSpaceNeeded = 0;
+  uint32_t numEncodedChars = 0;
   uint32_t len = aText->GetLength();
   if (aText->Is2b()) {
     const char16_t* data = aText->Get2b();
@@ -9195,16 +9198,10 @@ static void AppendEncodedCharacters(const nsTextFragment* aText,
       const char16_t c = data[i];
       switch (c) {
         case '<':
-          extraSpaceNeeded += ArrayLength("&lt;") - 2;
-          break;
         case '>':
-          extraSpaceNeeded += ArrayLength("&gt;") - 2;
-          break;
         case '&':
-          extraSpaceNeeded += ArrayLength("&amp;") - 2;
-          break;
         case 0x00A0:
-          extraSpaceNeeded += ArrayLength("&nbsp;") - 2;
+          ++numEncodedChars;
           break;
         default:
           break;
@@ -9216,16 +9213,10 @@ static void AppendEncodedCharacters(const nsTextFragment* aText,
       const unsigned char c = data[i];
       switch (c) {
         case '<':
-          extraSpaceNeeded += ArrayLength("&lt;") - 2;
-          break;
         case '>':
-          extraSpaceNeeded += ArrayLength("&gt;") - 2;
-          break;
         case '&':
-          extraSpaceNeeded += ArrayLength("&amp;") - 2;
-          break;
         case 0x00A0:
-          extraSpaceNeeded += ArrayLength("&nbsp;") - 2;
+          ++numEncodedChars;
           break;
         default:
           break;
@@ -9233,28 +9224,37 @@ static void AppendEncodedCharacters(const nsTextFragment* aText,
     }
   }
 
-  if (extraSpaceNeeded) {
-    aBuilder.AppendWithEncode(aText, len + extraSpaceNeeded);
+  if (numEncodedChars) {
+    // For simplicity, conservatively estimate the size of the string after
+    // encoding. This will result in reserving more memory than we actually
+    // need, but that should be fine unless the string has an enormous number of
+    // eg < in it. We subtract 1 for the null terminator, then 1 more for the
+    // existing character that will be replaced.
+    constexpr uint32_t maxCharExtraSpace =
+        std::max({ArrayLength("&lt;"), ArrayLength("&gt;"),
+                  ArrayLength("&amp;"), ArrayLength("&nbsp;")}) -
+        2;
+    static_assert(maxCharExtraSpace < 100, "Possible underflow");
+    CheckedInt<uint32_t> maxExtraSpace =
+        CheckedInt<uint32_t>(numEncodedChars) * maxCharExtraSpace;
+    aBuilder.AppendWithEncode(aText, maxExtraSpace + len);
   } else {
     aBuilder.Append(aText);
   }
 }
 
-static uint32_t ExtraSpaceNeededForAttrEncoding(const nsAString& aValue) {
+static CheckedInt<uint32_t> ExtraSpaceNeededForAttrEncoding(
+    const nsAString& aValue) {
   const char16_t* c = aValue.BeginReading();
   const char16_t* end = aValue.EndReading();
 
-  uint32_t extraSpaceNeeded = 0;
+  uint32_t numEncodedChars = 0;
   while (c < end) {
     switch (*c) {
       case '"':
-        extraSpaceNeeded += ArrayLength("&quot;") - 2;
-        break;
       case '&':
-        extraSpaceNeeded += ArrayLength("&amp;") - 2;
-        break;
       case 0x00A0:
-        extraSpaceNeeded += ArrayLength("&nbsp;") - 2;
+        ++numEncodedChars;
         break;
       default:
         break;
@@ -9262,19 +9262,33 @@ static uint32_t ExtraSpaceNeededForAttrEncoding(const nsAString& aValue) {
     ++c;
   }
 
-  return extraSpaceNeeded;
+  if (!numEncodedChars) {
+    return 0;
+  }
+
+  // For simplicity, conservatively estimate the size of the string after
+  // encoding. This will result in reserving more memory than we actually
+  // need, but that should be fine unless the string has an enormous number of
+  // & in it. We subtract 1 for the null terminator, then 1 more for the
+  // existing character that will be replaced.
+  constexpr uint32_t maxCharExtraSpace =
+      std::max({ArrayLength("&quot;"), ArrayLength("&amp;"),
+                ArrayLength("&nbsp;")}) -
+      2;
+  static_assert(maxCharExtraSpace < 100, "Possible underflow");
+  return CheckedInt<uint32_t>(numEncodedChars) * maxCharExtraSpace;
 }
 
 static void AppendEncodedAttributeValue(const nsAttrValue& aValue,
                                         StringBuilder& aBuilder) {
   if (nsAtom* atom = aValue.GetStoredAtom()) {
     nsDependentAtomString atomStr(atom);
-    uint32_t space = ExtraSpaceNeededForAttrEncoding(atomStr);
-    if (!space) {
+    auto space = ExtraSpaceNeededForAttrEncoding(atomStr);
+    if (space.isValid() && !space.value()) {
       aBuilder.Append(atom);
     } else {
       aBuilder.AppendWithAttrEncode(nsString(atomStr),
-                                    atomStr.Length() + space);
+                                    space + atomStr.Length());
     }
     return;
   }
@@ -9282,9 +9296,9 @@ static void AppendEncodedAttributeValue(const nsAttrValue& aValue,
   // nsStringBuffer.
   nsString str;
   aValue.ToString(str);
-  uint32_t space = ExtraSpaceNeededForAttrEncoding(str);
-  if (space) {
-    aBuilder.AppendWithAttrEncode(std::move(str), str.Length() + space);
+  auto space = ExtraSpaceNeededForAttrEncoding(str);
+  if (!space.isValid() || space.value()) {
+    aBuilder.AppendWithAttrEncode(std::move(str), space + str.Length());
   } else {
     aBuilder.Append(std::move(str));
   }

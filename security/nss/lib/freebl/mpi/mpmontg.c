@@ -129,18 +129,25 @@ CLEANUP:
 }
 #endif
 
-STATIC
 mp_err
-s_mp_to_mont(const mp_int *x, mp_mont_modulus *mmm, mp_int *xMont)
+mp_to_mont(const mp_int *x, const mp_int *N, mp_int *xMont)
 {
     mp_err res;
 
     /* xMont = x * R mod N   where  N is modulus */
-    MP_CHECKOK(mp_copy(x, xMont));
-    MP_CHECKOK(s_mp_lshd(xMont, MP_USED(&mmm->N))); /* xMont = x << b */
-    MP_CHECKOK(mp_div(xMont, &mmm->N, 0, xMont));   /*         mod N */
+    if (x != xMont) {
+        MP_CHECKOK(mp_copy(x, xMont));
+    }
+    MP_CHECKOK(s_mp_lshd(xMont, MP_USED(N))); /* xMont = x << b */
+    MP_CHECKOK(mp_div(xMont, N, 0, xMont));   /*         mod N */
 CLEANUP:
     return res;
+}
+
+mp_digit
+mp_calculate_mont_n0i(const mp_int *N)
+{
+    return 0 - s_mp_invmod_radix(MP_DIGIT(N, 0));
 }
 
 #ifdef MP_USING_MONT_MULF
@@ -198,7 +205,7 @@ mp_exptmod_f(const mp_int *montBase,
     MP_CHECKOK(mp_init_size(&accum1, 3 * nLen + 2));
 
     mp_set(&accum1, 1);
-    MP_CHECKOK(s_mp_to_mont(&accum1, mmm, &accum1));
+    MP_CHECKOK(mp_to_mont(&accum1, &(mmm->N), &accum1));
     MP_CHECKOK(s_mp_pad(&accum1, nLen));
 
     oddPowSize = 2 * nLen + 1;
@@ -478,7 +485,7 @@ mp_exptmod_i(const mp_int *montBase,
 
     /* set accumulator to montgomery residue of 1 */
     mp_set(&accum1, 1);
-    MP_CHECKOK(s_mp_to_mont(&accum1, mmm, &accum1));
+    MP_CHECKOK(mp_to_mont(&accum1, &(mmm->N), &accum1));
     pa1 = &accum1;
     pa2 = &accum2;
 
@@ -867,7 +874,7 @@ mp_exptmod_safe_i(const mp_int *montBase,
         MP_CHECKOK(mp_init_size(&accum[2], 3 * nLen + 2));
         MP_CHECKOK(mp_init_size(&accum[3], 3 * nLen + 2));
         mp_set(&accum[0], 1);
-        MP_CHECKOK(s_mp_to_mont(&accum[0], mmm, &accum[0]));
+        MP_CHECKOK(mp_to_mont(&accum[0], &(mmm->N), &accum[0]));
         MP_CHECKOK(mp_copy(montBase, &accum[1]));
         SQR(montBase, &accum[2]);
         MUL_NOWEAVE(montBase, &accum[2], &accum[3]);
@@ -886,7 +893,7 @@ mp_exptmod_safe_i(const mp_int *montBase,
     } else {
         if (first_window == 0) {
             mp_set(&accum1, 1);
-            MP_CHECKOK(s_mp_to_mont(&accum1, mmm, &accum1));
+            MP_CHECKOK(mp_to_mont(&accum1, &(mmm->N), &accum1));
         } else {
             /* assert first_window == 1? */
             MP_CHECKOK(mp_copy(montBase, &accum1));
@@ -1057,9 +1064,9 @@ mp_exptmod(const mp_int *inBase, const mp_int *exponent,
     /* compute n0', given n0, n0' = -(n0 ** -1) mod MP_RADIX
     **        where n0 = least significant mp_digit of N, the modulus.
     */
-    mmm.n0prime = 0 - s_mp_invmod_radix(MP_DIGIT(modulus, 0));
+    mmm.n0prime = mp_calculate_mont_n0i(modulus);
 
-    MP_CHECKOK(s_mp_to_mont(base, &mmm, &montBase));
+    MP_CHECKOK(mp_to_mont(base, modulus, &montBase));
 
     bits_in_exponent = mpl_significant_bits(exponent);
 #ifdef MP_USING_CACHE_SAFE_MOD_EXP

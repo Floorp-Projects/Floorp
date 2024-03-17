@@ -164,11 +164,19 @@ class ICUReporter final : public nsIMemoryReporter,
   NS_DECL_ISUPPORTS
 
   static void* Alloc(const void*, size_t aSize) {
-    return CountingMalloc(aSize);
+    void* result = CountingMalloc(aSize);
+    if (result == nullptr) {
+      MOZ_CRASH("Ran out of memory while allocating for ICU");
+    }
+    return result;
   }
 
   static void* Realloc(const void*, void* aPtr, size_t aSize) {
-    return CountingRealloc(aPtr, aSize);
+    void* result = CountingRealloc(aPtr, aSize);
+    if (result == nullptr) {
+      MOZ_CRASH("Ran out of memory while reallocating for ICU");
+    }
+    return result;
   }
 
   static void Free(const void*, void* aPtr) { return CountingFree(aPtr); }

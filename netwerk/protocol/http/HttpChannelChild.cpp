@@ -87,7 +87,8 @@ HttpChannelChild::HttpChannelChild()
       mIsLastPartOfMultiPart(false),
       mSuspendForWaitCompleteRedirectSetup(false),
       mRecvOnStartRequestSentCalled(false),
-      mSuspendedByWaitingForPermissionCookie(false) {
+      mSuspendedByWaitingForPermissionCookie(false),
+      mAlreadyReleased(false) {
   LOG(("Creating HttpChannelChild @%p\n", this));
 
   mChannelCreationTime = PR_Now();
@@ -199,11 +200,15 @@ NS_IMETHODIMP_(MozExternalRefCountType) HttpChannelChild::Release() {
     // We don't have a listener when AsyncOpen has failed or when this channel
     // has been sucessfully redirected.
     if (MOZ_LIKELY(LoadOnStartRequestCalled() && LoadOnStopRequestCalled()) ||
-        !mListener) {
+        !mListener || mAlreadyReleased) {
       NS_LOG_RELEASE(this, 0, "HttpChannelChild");
       delete this;
       return 0;
     }
+
+    // This ensures that when the refcount goes to 0 again, we don't dispatch
+    // yet another runnable and get in a loop.
+    mAlreadyReleased = true;
 
     // This makes sure we fulfill the stream listener contract all the time.
     if (NS_SUCCEEDED(mStatus)) {
@@ -223,27 +228,11 @@ NS_IMETHODIMP_(MozExternalRefCountType) HttpChannelChild::Release() {
 
     // 3) Finally, we turn the reference into a regular smart pointer.
     RefPtr<HttpChannelChild> channel = dont_AddRef(this);
-
-    // This runnable will create a strong reference to |this|.
-    NS_DispatchToMainThread(
-        NewRunnableMethod("~HttpChannelChild>DoNotifyListener", channel,
-                          &HttpChannelChild::DoNotifyListener));
-
+    NS_DispatchToMainThread(NS_NewRunnableFunction(
+        "~HttpChannelChild>DoNotifyListener",
+        [chan = std::move(channel)] { chan->DoNotifyListener(false); }));
     // If NS_DispatchToMainThread failed then we're going to leak the runnable,
     // and thus the channel, so there's no need to do anything else.
-
-    // We should have already done any special handling for the refcount = 1
-    // case when the refcount first went from 2 to 1. We don't want it to happen
-    // when |channel| is destroyed.
-    MOZ_ASSERT(!mKeptAlive || !CanSend());
-
-    // XXX If std::move(channel) is allowed, then we don't have to have extra
-    // checks for the refcount going from 2 to 1. See bug 1680217.
-
-    // This will release the stabilization refcount, which is necessary to avoid
-    // a leak.
-    channel = nullptr;
-
     return mRefCnt;
   }
 
@@ -1233,7 +1222,7 @@ void HttpChannelChild::NotifyOrReleaseListeners(nsresult rv) {
   DoNotifyListener();
 }
 
-void HttpChannelChild::DoNotifyListener() {
+void HttpChannelChild::DoNotifyListener(bool aUseEventQueue) {
   LOG(("HttpChannelChild::DoNotifyListener this=%p", this));
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1246,16 +1235,20 @@ void HttpChannelChild::DoNotifyListener() {
 
   if (mListener && !LoadOnStartRequestCalled()) {
     nsCOMPtr<nsIStreamListener> listener = mListener;
-    StoreOnStartRequestCalled(
-        true);  // avoid reentrancy bugs by setting this now
+    // avoid reentrancy bugs by setting this now
+    StoreOnStartRequestCalled(true);
     listener->OnStartRequest(this);
   }
   StoreOnStartRequestCalled(true);
 
-  mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
-      this, [self = UnsafePtr<HttpChannelChild>(this)] {
-        self->ContinueDoNotifyListener();
-      }));
+  if (aUseEventQueue) {
+    mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
+        this, [self = UnsafePtr<HttpChannelChild>(this)] {
+          self->ContinueDoNotifyListener();
+        }));
+  } else {
+    ContinueDoNotifyListener();
+  }
 }
 
 void HttpChannelChild::ContinueDoNotifyListener() {

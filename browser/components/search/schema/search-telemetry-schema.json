@@ -130,17 +130,9 @@
         "type": "object",
         "properties": {
           "type": {
-            "enum": [
-              "ad_carousel",
-              "ad_image_row",
-              "ad_link",
-              "ad_sitelink",
-              "ad_sidebar",
-              "incontent_searchbox",
-              "refined_search_buttons",
-              "shopping_tab"
-            ],
-            "description": "The type of component the anchor or DOM element should belong to."
+            "type": "string",
+            "description": "The type of component the anchor or DOM element should belong to.",
+            "pattern": "^[a-z](?:_?[a-z])*$"
           },
           "included": {
             "type": "object",
@@ -154,6 +146,12 @@
                   "selector": {
                     "description": "If topDown is true for this component, then this will be the value used in querySelectorAll(). Otherwise, it will be the value to in closest() from the context of an anchor.",
                     "type": "string"
+                  },
+                  "eventListeners": {
+                    "$ref": "#/definitions/eventListeners"
+                  },
+                  "skipCount": {
+                    "$ref": "#/definitions/skipCount"
                   }
                 },
                 "required": ["selector"]
@@ -170,21 +168,19 @@
                       "description": "The selector to use querySelectorAll from the context of the parent."
                     },
                     "type": {
-                      "enum": [
-                        "ad_carousel",
-                        "ad_image_row",
-                        "ad_link",
-                        "ad_sitelink",
-                        "ad_sidebar",
-                        "incontent_searchbox",
-                        "refined_search_buttons",
-                        "shopping_tab"
-                      ],
-                      "description": "The component type to use if this child is present."
+                      "type": "string",
+                      "description": "The component type to use if this child is present.",
+                      "pattern": "^[a-z](?:_?[a-z])*$"
                     },
                     "countChildren": {
                       "type": "boolean",
                       "description": "Whether we should count all instances of the child element instead of anchor links found inside of the parent. Defaults to false."
+                    },
+                    "eventListeners": {
+                      "$ref": "#/definitions/eventListeners"
+                    },
+                    "skipCount": {
+                      "$ref": "#/definitions/skipCount"
                     }
                   },
                   "required": ["selector"]
@@ -233,6 +229,15 @@
         }
       }
     },
+    "ignoreLinkRegexps": {
+      "type": "array",
+      "title": "Ignore links matching regular expressions",
+      "description": "Regular expressions matching links that should be ignored by the network observer.",
+      "items": {
+        "type": "string",
+        "description": "The matching regular expression."
+      }
+    },
     "nonAdsLinkRegexps": {
       "type": "array",
       "title": "Non-ads link matching regular expressions",
@@ -270,22 +275,55 @@
           "type": "array",
           "description": "An array of methods for extracting domains from ads.",
           "items": {
-            "$ref": "/schemas/extraction"
+            "$ref": "#/definitions/extraction"
           }
         },
         "nonAds": {
           "type": "array",
           "description": "An array of methods for extracting domains from non-ads.",
           "items": {
-            "$ref": "/schemas/extraction"
+            "$ref": "#/definitions/extraction"
           }
         }
       }
     }
   },
-  "$defs": {
+  "definitions": {
+    "eventListener": {
+      "title": "Event Listener",
+      "type": "object",
+      "description": "Event listeners attached to a component.",
+      "properties": {
+        "eventType": {
+          "title": "Event Type",
+          "description": "The type of event to listen for. Custom events, especially those with special logic like keydownEnter, can be used if the Desktop code has been updated.",
+          "type": "string",
+          "pattern": "^[a-z][A-Za-z]*$"
+        },
+        "target": {
+          "title": "Target",
+          "description": "The component type to report when the event is triggered. Uses the child component type (if exists), otherwise uses the parent component type.",
+          "type": "string",
+          "pattern": "^[a-z](?:_?[a-z])*$"
+        },
+        "action": {
+          "title": "Action",
+          "description": "The action to report when the event is triggered. If the event type is 'click', defaults to clicked. Otherwise, this should be provided.",
+          "type": "string",
+          "pattern": "^[a-z](?:_?[a-z])*$"
+        }
+      },
+      "required": ["eventType"]
+    },
+    "eventListeners": {
+      "title": "Event Listeners",
+      "description": "An array of Event Listeners to apply to elements.",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/eventListener"
+      }
+    },
     "extraction": {
-      "$id": "/schemas/extraction",
       "anyOf": [
         {
           "type": "object",
@@ -337,5 +375,10 @@
         }
       ]
     }
+  },
+  "skipCount": {
+    "title": "Skip Count",
+    "description": "Whether to skip reporting of the count of these elements to ad_impressions. Defaults to false.",
+    "type": "boolean"
   }
 }

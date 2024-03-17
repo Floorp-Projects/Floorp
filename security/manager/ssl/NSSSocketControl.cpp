@@ -382,7 +382,15 @@ void NSSSocketControl::SetCertVerificationResult(PRErrorCode errorCode) {
                           AssertedCast<uint32_t>(mPlaintextBytesRead));
   }
 
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+          ("[%p] SetCertVerificationResult to AfterCertVerification, "
+           "mTlsHandshakeCallback=%p",
+           (void*)mFd, mTlsHandshakeCallback.get()));
+
   mCertVerificationState = AfterCertVerification;
+  if (mTlsHandshakeCallback) {
+    Unused << mTlsHandshakeCallback->CertVerificationDone();
+  }
 }
 
 void NSSSocketControl::ClientAuthCertificateSelected(
@@ -434,6 +442,13 @@ void NSSSocketControl::ClientAuthCertificateSelected(
       mFd, sendingClientAuthCert ? SECSuccess : SECFailure,
       sendingClientAuthCert ? key.release() : nullptr,
       sendingClientAuthCert ? cert.release() : nullptr);
+
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+          ("[%p] ClientAuthCertificateSelected mTlsHandshakeCallback=%p",
+           (void*)mFd, mTlsHandshakeCallback.get()));
+  if (mTlsHandshakeCallback) {
+    Unused << mTlsHandshakeCallback->ClientAuthCertificateSelected();
+  }
 }
 
 SharedSSLState& NSSSocketControl::SharedState() {

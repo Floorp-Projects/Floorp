@@ -6710,7 +6710,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2024-01-24T15:14:29Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2024-03-06T15:14:58Z
 // This list is auto-generated, don't edit it manually.
 // aaa : American Automobile Association, Inc.
 // https://www.iana.org/domains/root/db/aaa.html
@@ -7540,10 +7540,6 @@ college
 // https://www.iana.org/domains/root/db/cologne.html
 cologne
 
-// comcast : Comcast IP Holdings I, LLC
-// https://www.iana.org/domains/root/db/comcast.html
-comcast
-
 // commbank : COMMONWEALTH BANK OF AUSTRALIA
 // https://www.iana.org/domains/root/db/commbank.html
 commbank
@@ -8359,10 +8355,6 @@ grocery
 // group : Binky Moon, LLC
 // https://www.iana.org/domains/root/db/group.html
 group
-
-// guardian : The Guardian Life Insurance Company of America
-// https://www.iana.org/domains/root/db/guardian.html
-guardian
 
 // gucci : Guccio Gucci S.p.a.
 // https://www.iana.org/domains/root/db/gucci.html
@@ -10756,10 +10748,6 @@ xbox
 // https://www.iana.org/domains/root/db/xerox.html
 xerox
 
-// xfinity : Comcast IP Holdings I, LLC
-// https://www.iana.org/domains/root/db/xfinity.html
-xfinity
-
 // xihuan : Beijing Qihu Keji Co., Ltd.
 // https://www.iana.org/domains/root/db/xihuan.html
 xihuan
@@ -11236,6 +11224,10 @@ graphox.us
 // ActiveTrail: https://www.activetrail.biz/
 // Submitted by Ofer Kalaora <postmaster@activetrail.com>
 activetrail.biz
+
+// Adaptable.io : https://adaptable.io
+// Submitted by Mark Terrel <support@adaptable.io>
+adaptable.app
 
 // Adobe : https://www.adobe.com/
 // Submitted by Ian Boston <boston@adobe.com> and Lars Trieloff <trieloff@adobe.com>
@@ -12049,6 +12041,10 @@ appudo.net
 // Submitted by Thomas Orozco <thomas@aptible.com>
 on-aptible.com
 
+// Aquapal : https://aquapal.net/
+// Submitted by Aki Ueno <admin@aquapal.net>
+f5.si
+
 // ASEINet : https://www.aseinet.com/
 // Submitted by Asei SEKIGUCHI <mail@aseinet.com>
 user.aseinet.ne.jp
@@ -12221,7 +12217,9 @@ mycd.eu
 // Canva Pty Ltd : https://canva.com/
 // Submitted by Joel Aquilina <publicsuffixlist@canva.com>
 canva-apps.cn
+*.my.canvasite.cn
 canva-apps.com
+*.my.canva.site
 
 // Carrd : https://carrd.co
 // Submitted by AJ <aj@carrd.co>
@@ -12413,6 +12411,10 @@ co.no
 webhosting.be
 hosting-cluster.nl
 
+// Convex : https://convex.dev/
+// Submitted by James Cowling <security@convex.dev>
+convex.site
+
 // Coordination Center for TLD RU and XN--P1AI : https://cctld.ru/en/domains/domens_ru/reserved/
 // Submitted by George Georgievsky <gug@cctld.ru>
 ac.ru
@@ -12434,9 +12436,17 @@ feste-ip.net
 knx-server.net
 static-access.net
 
+// cPanel L.L.C. : https://www.cpanel.net/
+// Submitted by Dustin Scherer <public.suffix@cpanel.net>
+*.cprapid.com
+
 // Craynic, s.r.o. : http://www.craynic.com/
 // Submitted by Ales Krajnik <ales.krajnik@craynic.com>
 realm.cz
+
+// Crisp IM SAS : https://crisp.chat/
+// Submitted by Baptiste Jamin <hostmaster@crisp.chat>
+on.crisp.email
 
 // Cryptonomic : https://cryptonomic.net/
 // Submitted by Andrew Cady <public-suffix-list@cryptonomic.net>
@@ -12944,6 +12954,10 @@ e4.cz
 // Submitted by Andrei Canta <andrei@easypanel.io>
 easypanel.app
 easypanel.host
+
+// EasyWP : https://www.easywp.com
+// Submitted by <infracloudteam@namecheap.com>
+*.ewp.live
 
 // Elementor : Elementor Ltd.
 // Submitted by Anton Barkan <antonb@elementor.com>
@@ -14163,6 +14177,10 @@ mintere.site
 // Submitted by Grayson Martin <grayson.martin@mobileeducation.us>
 forte.id
 
+// MODX Systems LLC : https://modx.com
+// Submitted by Elizabeth Southwell <elizabeth@modx.com>
+modx.dev
+
 // Mozilla Corporation : https://mozilla.com
 // Submitted by Ben Francis <bfrancis@mozilla.com>
 mozilla-iot.org
@@ -14224,6 +14242,7 @@ jp.ngrok.io
 sa.ngrok.io
 us.ngrok.io
 ngrok.pizza
+ngrok.pro
 
 // Nicolaus Copernicus University in Torun - MSK TORMAN (https://www.man.torun.pl)
 torun.pl
@@ -14639,6 +14658,8 @@ qbuser.com
 // Rad Web Hosting: https://radwebhosting.com
 // Submitted by Scott Claeys <s.claeys@radwebhosting.com>
 cloudsite.builders
+myradweb.net
+servername.us
 
 // Redgate Software: https://red-gate.com
 // Submitted by Andrew Farries <andrew.farries@red-gate.com>
@@ -14705,11 +14726,40 @@ app.render.com
 onrender.com
 
 // Repl.it : https://repl.it
-// Submitted by Lincoln Bergeson <lincoln@replit.com>
+// Submitted by Lincoln Bergeson <psl@repl.it>
+replit.app
+id.replit.app
 firewalledreplit.co
 id.firewalledreplit.co
 repl.co
 id.repl.co
+replit.dev
+archer.replit.dev
+bones.replit.dev
+canary.replit.dev
+global.replit.dev
+hacker.replit.dev
+id.replit.dev
+janeway.replit.dev
+kim.replit.dev
+kira.replit.dev
+kirk.replit.dev
+odo.replit.dev
+paris.replit.dev
+picard.replit.dev
+pike.replit.dev
+prerelease.replit.dev
+reed.replit.dev
+riker.replit.dev
+sisko.replit.dev
+spock.replit.dev
+staging.replit.dev
+sulu.replit.dev
+tarpit.replit.dev
+teams.replit.dev
+tucker.replit.dev
+wesley.replit.dev
+worf.replit.dev
 repl.run
 
 // Resin.io : https://resin.io
@@ -14992,6 +15042,14 @@ srht.site
 // Submitted by Adrien Gillon <adrien+public-suffix-list@stackhero.io>
 stackhero-network.com
 
+// STACKIT : https://www.stackit.de/en/
+// Submitted by STACKIT-DNS Team (Simon Stier) <stackit-dns@mail.schwarz>
+runs.onstackit.cloud
+stackit.gg
+stackit.rocks
+stackit.run
+stackit.zone
+
 // Staclar : https://staclar.com
 // Submitted by Q Misell <q@staclar.com>
 musician.io
@@ -15058,6 +15116,19 @@ myspreadshop.co.uk
 // Submitted by Jacob Lee <jacob@stdlib.com>
 api.stdlib.com
 
+// stereosense GmbH : https://www.involve.me
+// Submitted by Florian Burmann <publicsuffix@involve.me>
+feedback.ac
+forms.ac
+assessments.cx
+calculators.cx
+funnels.cx
+paynow.cx
+quizzes.cx
+researched.cx
+tests.cx
+surveys.so
+
 // Storipress : https://storipress.com
 // Submitted by Benno Liu <benno@storipress.com>
 storipress.app
@@ -15065,6 +15136,12 @@ storipress.app
 // Storj Labs Inc. : https://storj.io/
 // Submitted by Philip Hutchins <hostmaster@storj.io>
 storj.farm
+
+// Streak : https://streak.com
+// Submitted by Blake Kadatz <eng@streak.com>
+streak-link.com
+streaklinks.com
+streakusercontent.com
 
 // Studenten Net Twente : http://www.snt.utwente.nl/
 // Submitted by Silke Hofstra <syscom@snt.utwente.nl>
@@ -15128,6 +15205,7 @@ taifun-dns.de
 // Submitted by David Anderson <danderson@tailscale.com>
 beta.tailscale.net
 ts.net
+*.c.ts.net
 
 // TASK geographical domains (www.task.gda.pl/uslugi/dns)
 gda.pl
@@ -15362,6 +15440,11 @@ v.ua
 // Waffle Computer Inc., Ltd. : https://docs.waffleinfo.com
 // Submitted by Masayuki Note <masa@blade.wafflecell.com>
 wafflecell.com
+
+// Webflow, Inc. : https://www.webflow.com
+// Submitted by Webflow Security Team <security@webflow.com>
+webflow.io
+webflowtest.io
 
 // WebHare bv: https://www.webhare.com/
 // Submitted by Arnold Hendriks <info@webhare.com>
