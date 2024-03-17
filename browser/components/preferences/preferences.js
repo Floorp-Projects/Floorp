@@ -222,6 +222,7 @@ function init_all() {
   register_module("paneLepton", gLeptonPane);
   register_module("paneNotes", gNotesPane);
   register_module("paneBSB", gBSBPane);
+  register_module("paneSsb", gSsbPane);
   register_module("paneDownloads", gDownloads);
   register_module("paneUserjs", gUserjsPane);
 
@@ -233,7 +234,6 @@ function init_all() {
   if (FloorpAppConstants.FLOORP_OFFICIAL_COMPONENTS_ENABLED) {
     register_module("paneCSK", gCSKPane)
     register_module("paneWorkspaces", gWorkspacesPane);
-    register_module("paneSsb", gSsbPane);
   }
 
   if (Services.prefs.getBoolPref("browser.preferences.experimental")) {
