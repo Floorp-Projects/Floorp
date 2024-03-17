@@ -46,6 +46,11 @@ class MovedOriginDirectoryCleanupTestCase(MarionetteTestCase):
                 """
             )
 
+    def read_prefs_file(self):
+        pref_path = Path(self.marionette.profile_path) / "prefs.js"
+        with open(pref_path) as f:
+            return f.read()
+
     def removeAllCookies(self):
         with self.marionette.using_context("chrome"):
             self.marionette.execute_script(
@@ -81,6 +86,12 @@ class MovedOriginDirectoryCleanupTestCase(MarionetteTestCase):
                 "offlineApps" in self.marionette.get_pref("privacy.sanitize.pending"),
             ),
             message="privacy.sanitize.pending must include offlineApps",
+        )
+
+        # Make sure the pref is written to the file
+        Wait(self.marionette).until(
+            lambda _: "offlineApps" in self.read_prefs_file(),
+            message="prefs.js must include offlineApps",
         )
 
         # Cleanup happens via Sanitizer.onStartup after restart
