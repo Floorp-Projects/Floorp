@@ -15,7 +15,7 @@ use windows_sys::Win32::{
     System::{
         Diagnostics::Debug::ReadProcessMemory,
         ProcessStatus::{
-            GetModuleBaseNameW, K32EnumProcessModules, K32GetModuleInformation, MODULEINFO,
+            K32EnumProcessModules, K32GetModuleBaseNameW, K32GetModuleInformation, MODULEINFO,
         },
     },
 };
@@ -30,32 +30,54 @@ impl ProcessReader {
         Ok(ProcessReader { process })
     }
 
-    pub fn find_section(
-        &self,
-        module_name: &str,
-        section_name: &str,
-    ) -> Result<usize, ProcessReaderError> {
+    pub fn find_module(&self, module_name: &str) -> Result<usize, ProcessReaderError> {
         let modules = self.get_module_list()?;
 
-        modules
-            .iter()
-            .filter(|&&module| {
-                let name = self.get_module_name(module);
-                // Crude way of mimicking Windows lower-case comparisons but
-                // sufficient for our use-cases.
-                name.is_some_and(|name| name.eq_ignore_ascii_case(module_name))
-            })
-            .find_map(|&module| {
-                self.get_module_info(module).and_then(|info| {
-                    self.find_section_in_module(
-                        section_name,
-                        info.lpBaseOfDll as usize,
-                        info.SizeOfImage as usize,
-                    )
-                    .ok()
-                })
-            })
-            .ok_or(ProcessReaderError::InvalidAddress)
+        let module = modules.iter().find_map(|&module| {
+            let name = self.get_module_name(module);
+            // Crude way of mimicking Windows lower-case comparisons but
+            // sufficient for our use-cases.
+            if name.is_some_and(|name| name.eq_ignore_ascii_case(module_name)) {
+                self.get_module_info(module)
+                    .map(|module| module.lpBaseOfDll as usize)
+            } else {
+                None
+            }
+        });
+
+        module.ok_or(ProcessReaderError::ModuleNotFound)
+    }
+
+    pub fn find_section(
+        &self,
+        module_address: usize,
+        section_name: &[u8; 8],
+    ) -> Result<usize, ProcessReaderError> {
+        // We read only the first page from the module, this should be more than
+        // enough to read the header and section list. In the future we might do
+        // this incrementally but for now goblin requires an array to parse
+        // so we can't do it just yet.
+        const PAGE_SIZE: usize = 4096;
+        let bytes = self.copy_array(module_address as _, PAGE_SIZE)?;
+        let header = goblin::pe::header::Header::parse(&bytes)?;
+
+        // Skip the PE header so we can parse the sections
+        let optional_header_offset = header.dos_header.pe_pointer as usize
+            + goblin::pe::header::SIZEOF_PE_MAGIC
+            + goblin::pe::header::SIZEOF_COFF_HEADER;
+        let offset =
+            &mut (optional_header_offset + header.coff_header.size_of_optional_header as usize);
+
+        let sections = header.coff_header.sections(&bytes, offset)?;
+
+        for section in sections {
+            if section.name.eq(section_name) {
+                let address = module_address.checked_add(section.virtual_address as usize);
+                return address.ok_or(ProcessReaderError::InvalidAddress);
+            }
+        }
+
+        Err(ProcessReaderError::SectionNotFound)
     }
 
     fn get_module_list(&self) -> Result<Vec<HMODULE>, ProcessReaderError> {
@@ -97,8 +119,9 @@ impl ProcessReader {
 
     fn get_module_name(&self, module: HMODULE) -> Option<String> {
         let mut path: [u16; MAX_PATH as usize] = [0; MAX_PATH as usize];
-        let res =
-            unsafe { GetModuleBaseNameW(self.process, module, (&mut path).as_mut_ptr(), MAX_PATH) };
+        let res = unsafe {
+            K32GetModuleBaseNameW(self.process, module, (&mut path).as_mut_ptr(), MAX_PATH)
+        };
 
         if res == 0 {
             None
@@ -126,46 +149,6 @@ impl ProcessReader {
             let info = unsafe { info.assume_init() };
             Some(info)
         }
-    }
-
-    fn find_section_in_module(
-        &self,
-        section_name: &str,
-        module_address: usize,
-        size: usize,
-    ) -> Result<usize, ProcessReaderError> {
-        // We read only the first page from the module, this should be more than
-        // enough to read the header and section list. In the future we might do
-        // this incrementally but for now goblin requires an array to parse
-        // so we can't do it just yet.
-        let page_size = 4096;
-        if size < page_size {
-            // Don't try to read from the target module if it's too small
-            return Err(ProcessReaderError::ReadFromProcessError(
-                ReadError::ReadProcessMemoryError,
-            ));
-        }
-
-        let bytes = self.copy_array(module_address as _, 4096)?;
-        let header = goblin::pe::header::Header::parse(&bytes)?;
-
-        // Skip the PE header so we can parse the sections
-        let optional_header_offset = header.dos_header.pe_pointer as usize
-            + goblin::pe::header::SIZEOF_PE_MAGIC
-            + goblin::pe::header::SIZEOF_COFF_HEADER;
-        let offset =
-            &mut (optional_header_offset + header.coff_header.size_of_optional_header as usize);
-
-        let sections = header.coff_header.sections(&bytes, offset)?;
-
-        for section in sections {
-            if section.name.eq(section_name.as_bytes()) {
-                let address = module_address.checked_add(section.virtual_address as usize);
-                return address.ok_or(ProcessReaderError::InvalidAddress);
-            }
-        }
-
-        Err(ProcessReaderError::SectionNotFound)
     }
 
     pub fn copy_object_shallow<T>(&self, src: usize) -> Result<MaybeUninit<T>, ReadError> {
