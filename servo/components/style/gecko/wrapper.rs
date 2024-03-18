@@ -889,7 +889,11 @@ impl<'le> GeckoElement<'le> {
             AnimationValue::from_computed_values(property_declaration_id, before_change_style);
         let to = AnimationValue::from_computed_values(property_declaration_id, after_change_style);
 
-        debug_assert_eq!(to.is_some(), from.is_some());
+        // If the declaration contains a custom property and getComputedValue was previously called
+        // before that custom property was defined, `from` will be `None` here.
+        debug_assert!(
+            to.is_some() == from.is_some() || matches!(to, Some(AnimationValue::Custom(..)))
+        );
 
         from != to
     }
@@ -1551,14 +1555,13 @@ impl<'le> TElement for GeckoElement<'le> {
 
         let mut transitions_to_keep = PropertyDeclarationIdSet::default();
         for transition_property in after_change_style.transition_properties() {
-            let physical_longhand = PropertyDeclarationId::Longhand(
-                transition_property
-                    .longhand_id
-                    .to_physical(after_change_style.writing_mode),
-            );
-            transitions_to_keep.insert(physical_longhand);
+            let physical_property = transition_property
+                .property
+                .as_borrowed()
+                .to_physical(after_change_style.writing_mode);
+            transitions_to_keep.insert(physical_property);
             if self.needs_transitions_update_per_property(
-                physical_longhand,
+                physical_property,
                 after_change_ui_style
                     .transition_combined_duration_at(transition_property.index)
                     .seconds(),

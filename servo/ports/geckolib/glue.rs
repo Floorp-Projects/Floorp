@@ -1211,6 +1211,11 @@ fn is_transitionable(prop: PropertyDeclarationId, behavior: computed::Transition
     if !prop.is_animatable() {
         return false;
     }
+    // TODO(bug 1885995): Return `false` in is_discrete_animatable for interpolatable custom
+    // property types.
+    if matches!(prop, PropertyDeclarationId::Custom(..)) {
+        return true;
+    }
 
     match behavior {
         computed::TransitionBehavior::Normal => !prop.is_discrete_animatable(),

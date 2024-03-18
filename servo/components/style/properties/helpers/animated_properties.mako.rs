@@ -737,7 +737,7 @@ impl<'a> TransitionPropertyIterator<'a> {
 /// A single iteration of the TransitionPropertyIterator.
 pub struct TransitionPropertyIteration {
     /// The id of the longhand for this property.
-    pub longhand_id: LonghandId,
+    pub property: OwnedPropertyDeclarationId,
 
     /// The index of this property in the list of transition properties for this
     /// iterator's style.
@@ -753,7 +753,7 @@ impl<'a> Iterator for TransitionPropertyIterator<'a> {
             if let Some(ref mut longhand_iterator) = self.longhand_iterator {
                 if let Some(longhand_id) = longhand_iterator.next() {
                     return Some(TransitionPropertyIteration {
-                        longhand_id,
+                        property: OwnedPropertyDeclarationId::Longhand(longhand_id),
                         index: self.index_range.start - 1,
                     });
                 }
@@ -766,7 +766,7 @@ impl<'a> Iterator for TransitionPropertyIterator<'a> {
                     match id.longhand_or_shorthand() {
                         Ok(longhand_id) => {
                             return Some(TransitionPropertyIteration {
-                                longhand_id,
+                                property: OwnedPropertyDeclarationId::Longhand(longhand_id),
                                 index,
                             });
                         },
@@ -778,7 +778,13 @@ impl<'a> Iterator for TransitionPropertyIterator<'a> {
                         },
                     }
                 }
-                TransitionProperty::Custom(..) | TransitionProperty::Unsupported(..) => {}
+                TransitionProperty::Custom(name) => {
+                    return Some(TransitionPropertyIteration {
+                        property: OwnedPropertyDeclarationId::Custom(name),
+                        index,
+                    })
+                },
+                TransitionProperty::Unsupported(..) => {},
             }
         }
     }

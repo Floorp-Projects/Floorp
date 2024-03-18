@@ -1273,9 +1273,10 @@ pub fn start_transitions_if_applicable(
 ) -> PropertyDeclarationIdSet {
     let mut properties_that_transition = PropertyDeclarationIdSet::default();
     for transition in new_style.transition_properties() {
-        let physical_property = PropertyDeclarationId::Longhand(
-            transition.longhand_id.to_physical(new_style.writing_mode),
-        );
+        let physical_property = transition
+            .property
+            .as_borrowed()
+            .to_physical(new_style.writing_mode);
         if properties_that_transition.contains(physical_property) {
             continue;
         }
