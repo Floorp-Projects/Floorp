@@ -16,15 +16,19 @@ function ok(condition, message) {
   window.arguments[0].SimpleTest.ok(condition, message);
 }
 
+function is(a, b, message) {
+  window.arguments[0].SimpleTest.is(a, b, message);
+}
+
 function doSingleTest(param)
 {
   var exception = null;
   try {
     document.documentElement.removeAttribute("chromemargin");
     document.documentElement.setAttribute("chromemargin", param);
-    ok(document.
+    is(document.
        documentElement.
-       getAttribute("chromemargin") == param, "couldn't set/get chromemargin?");
+       getAttribute("chromemargin"), param, "couldn't set/get chromemargin?");
   } catch (ex) {
     exception = ex;
   }
@@ -44,7 +48,7 @@ function runTests()
 
   // test remove
   doc.removeAttribute("chromemargin");
-  ok(doc.getAttribute("chromemargin") == "", "couldn't remove chromemargin?");
+  is(doc.getAttribute("chromemargin"), null, "couldn't remove chromemargin?");
 
   // we already test these really well in a c++ test in widget
   doSingleTest("1,2,3,4");

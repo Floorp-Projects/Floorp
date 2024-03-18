@@ -269,7 +269,7 @@ add_task(async function test_manifest_without_icons() {
   let items = menu.getElementsByAttribute("label", "first item");
   is(items.length, 1, "Found first item");
   // manifest.json does not declare icons, so the root menu item shouldn't have an icon either.
-  is(items[0].getAttribute("image"), "", "Root menu must not have an icon");
+  is(items[0].getAttribute("image"), null, "Root menu must not have an icon");
 
   await closeExtensionContextMenu(items[0]);
   await extension.awaitMessage("added-second-item");
@@ -281,7 +281,7 @@ add_task(async function test_manifest_without_icons() {
   is(items.length, 1, "Auto-generated root item exists");
   is(
     items[0].getAttribute("image"),
-    "",
+    null,
     "Auto-generated menu root must not have an icon"
   );
 
@@ -464,7 +464,7 @@ add_task(async function test_child_icon_update() {
   contextMenuChild2 = contextMenu.getElementsByAttribute("label", "child2")[0];
   is(
     contextMenuChild2.getAttribute("image"),
-    "",
+    null,
     "Second child should not have an icon"
   );
 

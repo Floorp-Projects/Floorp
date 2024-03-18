@@ -87,7 +87,7 @@ async function backgroundUpdateTest(url, id, checkIconFn) {
   let addonId = addon.id;
 
   ok(addon, "Addon was installed");
-  is(getBadgeStatus(), "", "Should not start out with an addon alert badge");
+  is(getBadgeStatus(), null, "Should not start out with an addon alert badge");
 
   // Trigger an update check and wait for the update for this addon
   // to be downloaded.
@@ -156,7 +156,7 @@ async function backgroundUpdateTest(url, id, checkIconFn) {
   BrowserTestUtils.removeTab(tab);
 
   // Alert badge and hamburger menu items should be gone
-  is(getBadgeStatus(), "", "Addon alert badge should be gone");
+  is(getBadgeStatus(), null, "Addon alert badge should be gone");
 
   await gCUITestUtils.openMainMenu();
   addons = PanelUI.addonNotificationContainer;
@@ -205,7 +205,7 @@ async function backgroundUpdateTest(url, id, checkIconFn) {
 
   BrowserTestUtils.removeTab(tab);
 
-  is(getBadgeStatus(), "", "Addon alert badge should be gone");
+  is(getBadgeStatus(), null, "Addon alert badge should be gone");
 
   await addon.uninstall();
   await SpecialPowers.popPrefEnv();

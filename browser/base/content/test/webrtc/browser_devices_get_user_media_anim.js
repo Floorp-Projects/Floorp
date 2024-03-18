@@ -58,7 +58,7 @@ var gTests = [
         );
         is(
           gBrowser.selectedTab.getAttribute("sharing"),
-          "",
+          null,
           "the new tab doesn't have the 'sharing' attribute"
         );
         is(
@@ -89,7 +89,7 @@ var gTests = [
         await TestUtils.waitForCondition(() => !tab.getAttribute("sharing"));
         is(
           tab.getAttribute("sharing"),
-          "",
+          null,
           "the tab no longer has the 'sharing' attribute after closing the stream"
         );
       }

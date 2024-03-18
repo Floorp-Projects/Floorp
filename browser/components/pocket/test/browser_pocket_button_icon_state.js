@@ -72,7 +72,11 @@ function checkPanelClosed() {
   let pocketButton = document.getElementById("save-to-pocket-button");
   // Something should have closed the Pocket panel, icon should no longer be red.
   is(pocketButton.open, false, "Pocket button is closed");
-  is(pocketButton.getAttribute("pocketed"), "", "Pocket item is not pocketed");
+  is(
+    pocketButton.getAttribute("pocketed"),
+    null,
+    "Pocket item is not pocketed"
+  );
 }
 
 test_runner(async function test_pocketButtonState_changeTabs({ sandbox }) {

@@ -131,14 +131,14 @@ let checkContextMenu = async (cbfunc, optionItems, doc = document) => {
     if (expectedOptionItems.includes("placesContext_open")) {
       Assert.equal(
         doc.getElementById("placesContext_open").getAttribute("default"),
-        loadBookmarksInNewTab ? "" : "true",
+        loadBookmarksInNewTab ? null : "true",
         `placesContext_open has the correct "default" attribute when loadBookmarksInTabs = ${loadBookmarksInNewTab}`
       );
     }
     if (expectedOptionItems.includes("placesContext_open:newtab")) {
       Assert.equal(
         doc.getElementById("placesContext_open:newtab").getAttribute("default"),
-        loadBookmarksInNewTab ? "true" : "",
+        loadBookmarksInNewTab ? "true" : null,
         `placesContext_open:newtab has the correct "default" attribute when loadBookmarksInTabs = ${loadBookmarksInNewTab}`
       );
     }

@@ -1460,13 +1460,7 @@ void Element::GetAttribute(const nsAString& aName, DOMString& aReturn) {
   if (val) {
     val->ToString(aReturn);
   } else {
-    if (IsXULElement()) {
-      // XXX should be SetDOMStringToNull(aReturn);
-      // See bug 232598
-      // aReturn is already empty
-    } else {
-      aReturn.SetNull();
-    }
+    aReturn.SetNull();
   }
 }
 

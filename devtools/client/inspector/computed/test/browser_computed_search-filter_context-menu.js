@@ -88,12 +88,12 @@ add_task(async function () {
   cmdCopy = searchContextMenu.querySelector("#editmenu-copy");
   cmdPaste = searchContextMenu.querySelector("#editmenu-paste");
 
-  is(cmdUndo.getAttribute("disabled"), "", "cmdUndo is enabled");
-  is(cmdDelete.getAttribute("disabled"), "", "cmdDelete is enabled");
-  is(cmdSelectAll.getAttribute("disabled"), "", "cmdSelectAll is enabled");
-  is(cmdCut.getAttribute("disabled"), "", "cmdCut is enabled");
-  is(cmdCopy.getAttribute("disabled"), "", "cmdCopy is enabled");
-  is(cmdPaste.getAttribute("disabled"), "", "cmdPaste is enabled");
+  is(cmdUndo.getAttribute("disabled"), null, "cmdUndo is enabled");
+  is(cmdDelete.getAttribute("disabled"), null, "cmdDelete is enabled");
+  is(cmdSelectAll.getAttribute("disabled"), null, "cmdSelectAll is enabled");
+  is(cmdCut.getAttribute("disabled"), null, "cmdCut is enabled");
+  is(cmdCopy.getAttribute("disabled"), null, "cmdCopy is enabled");
+  is(cmdPaste.getAttribute("disabled"), null, "cmdPaste is enabled");
 
   onContextMenuClose = toolbox.once("menu-close");
   searchContextMenu.hidePopup();

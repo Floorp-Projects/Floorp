@@ -40,7 +40,7 @@ function runTests()
   let checkboxLabel = $("checkbox-label");
   is(checkboxLabel.control, "checkbox", "checkbox control");
   is(checkboxLabel.labeledControlElement, checkbox, "checkbox labeledControlElement");
-  is(checkbox.accessKey, "", "checkbox accessKey not set");
+  is(checkbox.accessKey, null, "checkbox accessKey not set");
   checkboxLabel.accessKey = "C";
   is(checkbox.accessKey, "C", "checkbox accessKey set");
 

@@ -28,7 +28,7 @@ add_task(async () => {
       is(browser.mIconURL, null, "Should have blanked the icon.");
       is(
         gBrowser.getTabForBrowser(browser).getAttribute("image"),
-        "",
+        null,
         "Should have blanked the tab icon."
       );
     }

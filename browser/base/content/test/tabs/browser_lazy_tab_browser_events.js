@@ -93,10 +93,10 @@ add_task(async function test_hidden_muted_lazy_tabs_and_swapping() {
   mutedTab.toggleMuteAudio();
   gBrowser.hideTab(hiddenTab);
 
-  is(lazyTab.linkedPanel, "", "lazyTab is lazy");
-  is(hiddenTab.linkedPanel, "", "hiddenTab is lazy");
-  is(mutedTab.linkedPanel, "", "mutedTab is lazy");
-  is(normalTab.linkedPanel, "", "normalTab is lazy");
+  is(lazyTab.linkedPanel, null, "lazyTab is lazy");
+  is(hiddenTab.linkedPanel, null, "hiddenTab is lazy");
+  is(mutedTab.linkedPanel, null, "mutedTab is lazy");
+  is(normalTab.linkedPanel, null, "normalTab is lazy");
 
   ok(mutedTab.linkedBrowser.audioMuted, "mutedTab is muted");
   ok(hiddenTab.hidden, "hiddenTab is hidden");
@@ -117,7 +117,7 @@ add_task(async function test_hidden_muted_lazy_tabs_and_swapping() {
   });
   gBrowser.swapBrowsersAndCloseOther(lazyTab, mutedTab);
   tabEventTracker.checkExpectations();
-  is(lazyTab.linkedPanel, "", "muted lazyTab is still lazy");
+  is(lazyTab.linkedPanel, null, "muted lazyTab is still lazy");
   ok(lazyTab.linkedBrowser.audioMuted, "muted lazyTab is now muted");
   ok(!lazyTab.hidden, "muted lazyTab is not hidden");
 
@@ -133,7 +133,7 @@ add_task(async function test_hidden_muted_lazy_tabs_and_swapping() {
   });
   gBrowser.swapBrowsersAndCloseOther(lazyTab, hiddenTab);
   tabEventTracker.checkExpectations();
-  is(lazyTab.linkedPanel, "", "hidden lazyTab is still lazy");
+  is(lazyTab.linkedPanel, null, "hidden lazyTab is still lazy");
   ok(!lazyTab.linkedBrowser.audioMuted, "hidden lazyTab is not muted any more");
   ok(lazyTab.hidden, "hidden lazyTab has been hidden");
 
@@ -149,7 +149,7 @@ add_task(async function test_hidden_muted_lazy_tabs_and_swapping() {
   });
   gBrowser.swapBrowsersAndCloseOther(lazyTab, normalTab);
   tabEventTracker.checkExpectations();
-  is(lazyTab.linkedPanel, "", "normal lazyTab is still lazy");
+  is(lazyTab.linkedPanel, null, "normal lazyTab is still lazy");
   ok(!lazyTab.linkedBrowser.audioMuted, "normal lazyTab is not muted any more");
   ok(!lazyTab.hidden, "normal lazyTab is not hidden any more");
 

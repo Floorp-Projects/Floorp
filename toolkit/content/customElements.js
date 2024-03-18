@@ -732,7 +732,7 @@
       }
 
       get label() {
-        return this.getAttribute("label");
+        return this.getAttribute("label") || "";
       }
 
       set image(val) {
@@ -762,9 +762,7 @@
       }
 
       get accessKey() {
-        return this.labelElement
-          ? this.labelElement.accessKey
-          : this.getAttribute("accesskey");
+        return this.labelElement?.accessKey || this.getAttribute("accesskey");
       }
     };
   MozElements.BaseTextMixin = BaseTextMixin;

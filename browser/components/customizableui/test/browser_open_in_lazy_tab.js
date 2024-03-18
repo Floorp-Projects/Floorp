@@ -9,7 +9,7 @@ add_task(async function open_customize_mode_in_lazy_tab() {
   });
   gCustomizeMode.setTab(tab);
 
-  is(tab.linkedPanel, "", "Tab should be lazy");
+  is(tab.linkedPanel, null, "Tab should be lazy");
 
   let title = gNavigatorBundle.getFormattedString("customizeMode.tabTitle", [
     document.getElementById("bundle_brand").getString("brandShortName"),

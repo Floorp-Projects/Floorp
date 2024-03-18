@@ -49,10 +49,10 @@ function runTestSet(suffix)
   var three = $("three" + suffix);
   var four = $("four" + suffix);
 
-  checkAttributes(one, "One", "", "", true, false);
-  checkAttributes(two, "", "", "false", false, false);
+  checkAttributes(one, "One", null, null, true, false);
+  checkAttributes(two, null, null, "false", false, false);
   checkAttributes(three, "Three", "T", "true", false, false);
-  checkAttributes(four, "Four", "F", "", false, false);
+  checkAttributes(four, "Four", "F", null, false, false);
 
   if (isMac && suffix) {
     var utils = window.windowUtils;
@@ -62,8 +62,8 @@ function runTestSet(suffix)
     $("menu" + suffix).open = true;
   }
 
-  checkAttributes(one, "One", "", "", false, true);
-  checkAttributes(two, "Cat", "C", "", false, true);
+  checkAttributes(one, "One", null, null, false, true);
+  checkAttributes(two, "Cat", "C", null, false, true);
   checkAttributes(three, "Dog", "D", "false", true, true);
   checkAttributes(four, "Four", "F", "true", false, true);
 

@@ -144,7 +144,7 @@ declTest("test in-process content events are not processed twice", {
       "content",
       "Should be a content <browser>"
     );
-    is(browser.getAttribute("remotetype"), "", "Should not be remote");
+    is(browser.getAttribute("remotetype"), null, "Should not be remote");
     await testEventProcessedOnce(browser);
   },
 });
@@ -160,8 +160,12 @@ declTest("test in-process chrome events are processed correctly", {
       "chrome://mochitests/content/browser/dom/ipc/tests/JSWindowActor/file_dummyChromePage.html"
     );
     let chromeBrowser = dialog._frame;
-    is(chromeBrowser.getAttribute("type"), "", "Should be a chrome <browser>");
-    is(chromeBrowser.getAttribute("remotetype"), "", "Should not be remote");
+    is(
+      chromeBrowser.getAttribute("type"),
+      null,
+      "Should be a chrome <browser>"
+    );
+    is(chromeBrowser.getAttribute("remotetype"), null, "Should not be remote");
 
     await testEventProcessedOnce(chromeBrowser, "dummyChromePage.html");
 

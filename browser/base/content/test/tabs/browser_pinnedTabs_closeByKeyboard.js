@@ -12,7 +12,7 @@ function test() {
 
     is(
       elemAttr("key_close", "disabled"),
-      "",
+      null,
       "key_closed should always be enabled"
     );
     is(

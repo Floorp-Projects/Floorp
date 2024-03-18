@@ -81,7 +81,7 @@ async function testNoPrompt(origUrl, id) {
   await updatePromise;
 
   // There should be no notifications about the update
-  is(getBadgeStatus(), "", "Should not have addon alert badge");
+  is(getBadgeStatus(), null, "Should not have addon alert badge");
 
   await gCUITestUtils.openMainMenu();
   let addons = PanelUI.addonNotificationContainer;

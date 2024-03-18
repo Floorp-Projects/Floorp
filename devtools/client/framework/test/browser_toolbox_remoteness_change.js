@@ -19,7 +19,7 @@ add_task(async function () {
   );
   is(
     tab.linkedBrowser.getAttribute("remote"),
-    "",
+    null,
     "And running in parent process"
   );
 

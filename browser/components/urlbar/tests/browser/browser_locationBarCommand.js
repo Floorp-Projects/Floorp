@@ -276,7 +276,7 @@ async function typeAndCommand(eventType, details = {}) {
 async function triggerCommand(eventType, details = {}) {
   Assert.equal(
     await UrlbarTestUtils.promiseUserContextId(window),
-    gBrowser.selectedTab.getAttribute("usercontextid"),
+    gBrowser.selectedTab.getAttribute("usercontextid") || "",
     "userContextId must be the same as the originating tab"
   );
 

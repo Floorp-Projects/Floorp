@@ -321,11 +321,7 @@ function testtag_tree_columns(tree, expectedColumns, testid) {
     // check the view's getColumnProperties method
     var properties = tree.view.getColumnProperties(column);
     var expectedProperties = expectedColumn.properties;
-    is(
-      properties,
-      expectedProperties ? expectedProperties : "",
-      adjtestid + "getColumnProperties"
-    );
+    is(properties, expectedProperties || "", adjtestid + "getColumnProperties");
   }
 
   is(columns.getFirstColumn(), columns[0], testid + "getFirstColumn");
@@ -2151,12 +2147,12 @@ function convertDOMtoTreeRowInfo(treechildren, level, rowidx) {
       for (var c = 0; c < treerow.childNodes.length; c++) {
         var cell = treerow.childNodes[c];
         cellInfo.push({
-          label: "" + cell.getAttribute("label"),
-          value: cell.getAttribute("value"),
-          properties: cell.getAttribute("properties"),
+          label: cell.getAttribute("label") || "",
+          value: cell.getAttribute("value") || "",
+          properties: cell.getAttribute("properties") || "",
           editable: cell.getAttribute("editable") != "false",
           selectable: cell.getAttribute("selectable") != "false",
-          image: cell.getAttribute("src"),
+          image: cell.getAttribute("src") || "",
           mode: cell.hasAttribute("mode")
             ? parseInt(cell.getAttribute("mode"))
             : 3,
@@ -2170,7 +2166,7 @@ function convertDOMtoTreeRowInfo(treechildren, level, rowidx) {
           : convertDOMtoTreeRowInfo(descendants, level + 1, rowidx);
       obj.rows.push({
         cells: cellInfo,
-        properties: treerow.getAttribute("properties"),
+        properties: treerow.getAttribute("properties") || "",
         container: treeitem.getAttribute("container") == "true",
         separator: treeitem.localName == "treeseparator",
         children,

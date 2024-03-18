@@ -459,7 +459,7 @@
     }
 
     get value() {
-      return this.getAttribute("value");
+      return this.getAttribute("value") || "";
     }
 
     get control() {
@@ -563,7 +563,7 @@
     }
 
     get value() {
-      return this.getAttribute("value");
+      return this.getAttribute("value") || "";
     }
 
     get tabbox() {
