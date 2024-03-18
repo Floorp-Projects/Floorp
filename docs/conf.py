@@ -55,6 +55,7 @@ extensions = [
 # excluded from valid-jsdoc in the top-level .eslintrc.js.
 js_source_path = [
     "../browser/components/backup",
+    "../browser/components/backup/resources",
     "../browser/components/extensions",
     "../browser/components/migration",
     "../browser/components/migration/content",
