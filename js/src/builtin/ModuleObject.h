@@ -360,6 +360,7 @@ class ModuleObject : public NativeObject {
 
   JSScript* maybeScript() const;
   JSScript* script() const;
+  const char* filename() const;
   ModuleEnvironmentObject& initialEnvironment() const;
   ModuleEnvironmentObject* environment() const;
   ModuleNamespaceObject* namespace_();

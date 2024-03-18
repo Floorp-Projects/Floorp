@@ -1109,6 +1109,17 @@ JSScript* ModuleObject::script() const {
   return ptr;
 }
 
+const char* ModuleObject::filename() const {
+  // The ScriptSlot will be cleared once the module is evaluated, so we try to
+  // get the filename from cyclicModuleFields().
+
+  // TODO: Bug 1885483: Provide filename for JSON modules
+  if (!hasCyclicModuleFields()) {
+    return "(JSON module)";
+  }
+  return cyclicModuleFields()->scriptSourceObject->source()->filename();
+}
+
 static inline void AssertValidModuleStatus(ModuleStatus status) {
   MOZ_ASSERT(status >= ModuleStatus::Unlinked &&
              status <= ModuleStatus::Evaluated_Error);
