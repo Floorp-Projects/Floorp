@@ -84,8 +84,9 @@ add_task(async function check_menu_when_both_existed() {
     JSON.stringify({
       primary: address.organization,
       secondary: FormAutofillUtils.toOneLineAddress(address["street-address"]),
+      status: "Also autofills address, phone"
     })
-  ));
+  ), 2);
 
   await setInput("#street-address", "");
   await notExpectPopup();
@@ -95,8 +96,9 @@ add_task(async function check_menu_when_both_existed() {
     JSON.stringify({
       primary: FormAutofillUtils.toOneLineAddress(address["street-address"]),
       secondary: address.organization,
+      status: "Also autofills organization, phone"
     })
-  ));
+  ), 2);
 
   await setInput("#tel", "");
   await notExpectPopup();
@@ -106,8 +108,9 @@ add_task(async function check_menu_when_both_existed() {
     JSON.stringify({
       primary: address.tel,
       secondary: FormAutofillUtils.toOneLineAddress(address["street-address"]),
+      status: "Also autofills address, organization"
     })
-  ));
+  ), 2);
 
   await setInput("#address-line1", "");
   await notExpectPopup();
@@ -117,8 +120,9 @@ add_task(async function check_menu_when_both_existed() {
     JSON.stringify({
       primary: FormAutofillUtils.toOneLineAddress(address["street-address"]),
       secondary: address.organization,
+      status: "Also autofills organization, phone"
     })
-  ));
+  ), 2);
 });
 
 // Display history search result if no matched data in addresses.
@@ -155,8 +159,9 @@ add_task(async function check_fields_after_form_autofill() {
     JSON.stringify({
       primary: address.organization,
       secondary: FormAutofillUtils.toOneLineAddress(address["street-address"]),
+      status: "Also autofills address, phone"
     })
-  ).slice(1));
+  ).slice(1), 2);
   synthesizeKey("KEY_ArrowDown");
   await triggerAutofillAndCheckProfile(MOCK_STORAGE[1]);
   synthesizeKey("KEY_Escape");
@@ -183,8 +188,9 @@ add_task(async function check_form_autofill_resume() {
     JSON.stringify({
       primary: address.tel,
       secondary: FormAutofillUtils.toOneLineAddress(address["street-address"]),
+      status: "Also autofills address, organization"
     })
-  ));
+  ), 2);
   await triggerAutofillAndCheckProfile(MOCK_STORAGE[0]);
 });
 

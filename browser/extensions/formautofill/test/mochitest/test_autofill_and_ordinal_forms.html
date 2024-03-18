@@ -31,6 +31,8 @@ let MOCK_STORAGE = [{
 
 initPopupListener();
 
+let statusText = '"Also autofills address, name, organization"';
+
 add_task(async function setupStorage() {
   await addAddress(MOCK_STORAGE[0]);
 
@@ -46,9 +48,9 @@ add_task(async function check_switch_autofill_form_popup() {
   await expectPopup();
   checkMenuEntries(
     [
-      `{"primary":"+13453453456","secondary":"123 Sesame Street."}`,
+      `{"primary":"+13453453456","secondary":"123 Sesame Street.","status":${statusText}}`,
+      `{"primary":"","secondary":"","status":${statusText},"style":"status"}`,
     ],
-    true
   );
 
   await testMenuEntry(0, "!(el instanceof MozElements.MozAutocompleteRichlistitem)");
@@ -60,7 +62,7 @@ add_task(async function check_switch_oridnal_form_popup() {
   await setInput("#username", "");
   synthesizeKey("KEY_ArrowDown");
   await expectPopup();
-  checkMenuEntries(["petya"], false);
+  checkMenuEntries(["petya"], 0);
 
   await testMenuEntry(0, "el instanceof MozElements.MozAutocompleteRichlistitem");
 });
@@ -73,9 +75,9 @@ add_task(async function check_switch_autofill_form_popup_back() {
   await expectPopup();
   checkMenuEntries(
     [
-      `{"primary":"+13453453456","secondary":"123 Sesame Street."}`,
+      `{"primary":"+13453453456","secondary":"123 Sesame Street.","status":${statusText}}`,
+      `{"primary":"","secondary":"","status":${statusText},"style":"status"}`,
     ],
-    true
   );
 
   await testMenuEntry(0, "!(el instanceof MozElements.MozAutocompleteRichlistitem)");

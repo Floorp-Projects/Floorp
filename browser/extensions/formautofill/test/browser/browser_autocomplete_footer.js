@@ -70,6 +70,7 @@ add_task(async function test_press_enter_on_footer() {
       } = browser;
 
       await openPopupOn(browser, "#organization");
+
       // Navigate to the footer and press enter.
       const listItemElems = itemsBox.querySelectorAll(
         ".autocomplete-richlistitem"
@@ -80,7 +81,7 @@ add_task(async function test_press_enter_on_footer() {
         true
       );
       for (let i = 0; i < listItemElems.length; i++) {
-        if (!listItemElems[i].collapsed) {
+        if (!listItemElems[i].disabled) {
           await BrowserTestUtils.synthesizeKey("VK_DOWN", {}, browser);
         }
       }
@@ -115,7 +116,6 @@ add_task(async function test_click_on_footer() {
       while (optionButton.collapsed) {
         optionButton = optionButton.previousElementSibling;
       }
-      optionButton = optionButton._optionButton;
 
       const prefTabPromise = BrowserTestUtils.waitForNewTab(
         gBrowser,
@@ -145,15 +145,7 @@ add_task(async function test_phishing_warning_single_category() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: URL },
     async function (browser) {
-      const {
-        autoCompletePopup: { richlistbox: itemsBox },
-      } = browser;
-
       await openPopupOn(browser, "#tel");
-      const warningBox = itemsBox.querySelector(
-        ".autocomplete-richlistitem:last-child"
-      )._warningTextBox;
-      ok(warningBox, "Got phishing warning box");
       await expectWarningText(browser, "Also autofills address");
       await closePopup(browser);
     }

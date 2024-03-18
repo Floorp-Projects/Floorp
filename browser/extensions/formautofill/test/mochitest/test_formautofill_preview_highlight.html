@@ -81,7 +81,7 @@ add_task(async function check_preview() {
 
   // Navigate to the footer
   synthesizeKey("KEY_ArrowDown");
-  await notifySelectedIndex(MOCK_STORAGE.length);
+  await notifySelectedIndex(MOCK_STORAGE.length + 1); // skip over the status row
   await checkFormFieldsStyle(null);
 
   synthesizeKey("KEY_ArrowDown");
