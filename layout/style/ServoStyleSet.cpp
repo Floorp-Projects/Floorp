@@ -41,6 +41,7 @@
 #include "mozilla/dom/CSSNamespaceRule.h"
 #include "mozilla/dom/CSSPageRule.h"
 #include "mozilla/dom/CSSPropertyRule.h"
+#include "mozilla/dom/CSSScopeRule.h"
 #include "mozilla/dom/CSSSupportsRule.h"
 #include "mozilla/dom/FontFaceSet.h"
 #include "mozilla/dom/Element.h"
@@ -1002,6 +1003,7 @@ void ServoStyleSet::RuleChangedInternal(StyleSheet& aSheet, css::Rule& aRule,
     CASE_FOR(LayerBlock, LayerBlock)
     CASE_FOR(LayerStatement, LayerStatement)
     CASE_FOR(Container, Container)
+    CASE_FOR(Scope, Scope)
     // @namespace can only be inserted / removed when there are only other
     // @namespace and @import rules, and can't be mutated.
     case StyleCssRuleType::Namespace:
