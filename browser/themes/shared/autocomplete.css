@@ -126,6 +126,10 @@
       padding-inline-start: 0;
     }
 
+  &[originaltype="action"] > .two-line-wrapper {
+    flex: 1;
+  }
+
   &[originaltype="generatedPassword"] {
     &:not([collapsed="true"]) {
       /* Workaround bug 451997 and/or bug 492645 */
@@ -154,6 +158,10 @@
     /* Separator between logins and generated passwords. This uses --panel-separator-color from default
      * themes since autocomplete doesn't yet switch to dark. */
     border-top: 1px solid hsla(210,4%,10%,.14);
+  }
+
+  &[originaltype="action"] {
+    text-align: center;
   }
 
   /* Insecure field warning */

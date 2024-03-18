@@ -410,8 +410,8 @@
           const UNREUSEABLE_STYLES = [
             "autofill-profile",
             "autofill-footer",
-            "autofill-clear-button",
             "autofill-insecureWarning",
+            "action",
             "generatedPassword",
             "generic",
             "importableLearnMore",
@@ -440,11 +440,11 @@
             case "autofill-footer":
               options = { is: "autocomplete-profile-listitem-footer" };
               break;
-            case "autofill-clear-button":
-              options = { is: "autocomplete-profile-listitem-clear-button" };
-              break;
             case "autofill-insecureWarning":
               options = { is: "autocomplete-creditcard-insecure-field" };
+              break;
+            case "action":
+              options = { is: "autocomplete-action-richlistitem" };
               break;
             case "generic":
               options = { is: "autocomplete-two-line-richlistitem" };

@@ -715,6 +715,21 @@
     }
   }
 
+  // This type has an action that is triggered when activated. The comment
+  // for that result should contain a fillMessageName -- the message to send --
+  // and, optionally a secondary label, for example:
+  //   { "fillMessageName": "Fill:Clear", secondary: "Second Label" }
+  class MozAutocompleteActionRichlistitem extends MozAutocompleteTwoLineRichlistitem {
+    _adjustAcItem() {
+      super._adjustAcItem();
+
+      let comment = JSON.parse(this.getAttribute("ac-label"));
+      this.querySelector(".line2-label").textContent = comment?.secondary || "";
+      this.querySelector(".ac-site-icon").collapsed =
+        this.getAttribute("ac-image") == "";
+    }
+  }
+
   class MozAutocompleteGeneratedPasswordRichlistitem extends MozAutocompleteTwoLineRichlistitem {
     constructor() {
       super();
@@ -842,6 +857,14 @@
   customElements.define(
     "autocomplete-login-richlistitem",
     MozAutocompleteLoginRichlistitem,
+    {
+      extends: "richlistitem",
+    }
+  );
+
+  customElements.define(
+    "autocomplete-action-richlistitem",
+    MozAutocompleteActionRichlistitem,
     {
       extends: "richlistitem",
     }
