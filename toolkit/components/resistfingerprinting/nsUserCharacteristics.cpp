@@ -20,6 +20,7 @@
 #include "mozilla/RelativeLuminanceUtils.h"
 #include "mozilla/ServoStyleConsts.h"
 #include "mozilla/dom/ScreenBinding.h"
+#include "mozilla/intl/OSPreferences.h"
 #include "mozilla/intl/TimeZone.h"
 #include "mozilla/widget/ScreenManager.h"
 
@@ -283,6 +284,10 @@ nsresult nsUserCharacteristics::PopulateData(bool aTesting /* = false */) {
   } else {
     mozilla::glean::characteristics::timezone.Set("<error>"_ns);
   }
+
+  nsAutoCString locale;
+  mozilla::intl::OSPreferences::GetInstance()->GetSystemLocale(locale);
+  mozilla::glean::characteristics::system_locale.Set(locale);
 
   return NS_OK;
 }
