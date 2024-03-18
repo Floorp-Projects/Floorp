@@ -34,6 +34,7 @@
       this.addEventListener("drop", this);
       this.addEventListener("dragend", this);
       this.addEventListener("dragleave", this);
+      this.addEventListener("mouseleave", this);
     }
 
     init() {
@@ -1849,6 +1850,12 @@
         case "mousemove":
           if (document.getElementById("tabContextMenu").state != "open") {
             this._unlockTabSizing();
+          }
+          break;
+        case "mouseleave":
+          if (this._showCardPreviews) {
+            let preview = document.getElementById("tabbrowser-tab-preview");
+            preview.resetDelay();
           }
           break;
         default:
