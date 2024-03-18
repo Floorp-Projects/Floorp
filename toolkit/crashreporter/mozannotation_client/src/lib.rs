@@ -101,6 +101,9 @@ extern "C" {
 #[cfg(target_os = "windows")]
 pub const ANNOTATION_SECTION: &'static [u8; 8] = b"mozannot";
 
+#[cfg(target_os = "macos")]
+pub const ANNOTATION_SECTION: &'static [u8; 16] = b"mozannotation\0\0\0";
+
 // TODO: Use the following constants in the assembly below when constant
 // expressions are stabilized: https://github.com/rust-lang/rust/issues/93332
 #[cfg(any(target_os = "linux", target_os = "android"))]
