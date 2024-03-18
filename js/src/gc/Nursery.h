@@ -706,6 +706,10 @@ class Nursery {
   // no correctness impact, only a performance impact.
   gc::MallocedBlockCache mallocedBlockCache_;
 
+  // Whether the previous collection tenured everything. This may be false if
+  // semispace is in use.
+  bool tenuredEverything;
+
   friend class gc::GCRuntime;
   friend class gc::TenuringTracer;
   friend struct NurseryChunk;

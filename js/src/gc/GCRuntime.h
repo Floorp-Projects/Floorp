@@ -1205,7 +1205,8 @@ class GCRuntime {
    * a background thread.
    */
   HelperThreadLockData<LifoAlloc> lifoBlocksToFree;
-  MainThreadData<LifoAlloc> lifoBlocksToFreeAfterMinorGC;
+  MainThreadData<LifoAlloc> lifoBlocksToFreeAfterFullMinorGC;
+  MainThreadData<LifoAlloc> lifoBlocksToFreeAfterNextMinorGC;
   HelperThreadLockData<Nursery::BufferSet> buffersToFreeAfterMinorGC;
 
   /* Index of current sweep group (for stats). */

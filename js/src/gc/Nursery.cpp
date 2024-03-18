@@ -1254,6 +1254,7 @@ void js::Nursery::collect(JS::GCOptions options, JS::GCReason reason) {
   previousGC.nurseryUsedChunkCount = currentChunk() + 1;
   previousGC.tenuredBytes = 0;
   previousGC.tenuredCells = 0;
+  tenuredEverything = true;
 
   // If it isn't empty, it will call doCollection, and possibly after that
   // isEmpty() will become true, so use another variable to keep track of the
@@ -1285,10 +1286,8 @@ void js::Nursery::collect(JS::GCOptions options, JS::GCReason reason) {
 
   startProfile(ProfileKey::Pretenure);
   size_t sitesPretenured = 0;
-  if (!wasEmpty) {
-    sitesPretenured =
-        doPretenuring(rt, reason, validPromotionRate, promotionRate);
-  }
+  sitesPretenured =
+      doPretenuring(rt, reason, validPromotionRate, promotionRate);
   endProfile(ProfileKey::Pretenure);
 
   previousGC.endTime =
@@ -1488,7 +1487,8 @@ js::Nursery::CollectionResult js::Nursery::doCollection(AutoGCSession& session,
   clearMapAndSetNurseryRanges();
 
   // Move objects pointed to by roots from the nursery to the major heap.
-  TenuringTracer mover(rt, this, shouldTenureEverything(reason));
+  tenuredEverything = shouldTenureEverything(reason);
+  TenuringTracer mover(rt, this, tenuredEverything);
 
   // Trace everything considered as a root by a minor GC.
   traceRoots(session, mover);
