@@ -8,6 +8,7 @@
 #define vm_RealmFuses_h
 
 #include "vm/GuardFuse.h"
+#include "vm/InvalidatingFuse.h"
 
 namespace js {
 
@@ -26,6 +27,18 @@ class RealmFuse : public GuardFuse {
 
  protected:
   virtual void popFuse(JSContext* cx) override { GuardFuse::popFuse(cx); }
+};
+
+class InvalidatingRealmFuse : public InvalidatingFuse {
+ public:
+  virtual void popFuse(JSContext* cx, RealmFuses& realmFuses);
+  virtual bool addFuseDependency(JSContext* cx,
+                                 Handle<JSScript*> script) override;
+
+ protected:
+  virtual void popFuse(JSContext* cx) override {
+    InvalidatingFuse::popFuse(cx);
+  }
 };
 
 struct OptimizeGetIteratorFuse final : public RealmFuse {
@@ -143,6 +156,8 @@ struct RealmFuses {
     }
     MOZ_CRASH("Fuse Not Found");
   }
+
+  DependentScriptGroup fuseDependencies;
 
   static int32_t fuseOffsets[];
   static const char* fuseNames[];
