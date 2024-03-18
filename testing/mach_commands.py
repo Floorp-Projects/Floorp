@@ -1255,7 +1255,11 @@ def manifest(_command_context):
 )
 @CommandArgument("try_url", nargs=1, help="Treeherder URL for try (please use quotes)")
 @CommandArgument(
-    "-b", "--bugzilla", default=None, dest="bugzilla", help="Bugzilla instance"
+    "-b",
+    "--bugzilla",
+    default=None,
+    dest="bugzilla",
+    help="Bugzilla instance (or disable)",
 )
 @CommandArgument(
     "-m", "--meta-bug-id", default=None, dest="meta_bug_id", help="Meta Bug id"

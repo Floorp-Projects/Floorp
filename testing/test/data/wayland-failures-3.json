@@ -2,23 +2,30 @@
   "browser/components/urlbar/tests/browser-updateResults/browser.toml": {
     "label": {
       "test-linux1804-64-qr/opt-mochitest-browser-chrome-spi-nw-7": {
+        "duration_median": 82817,
+        "duration_total": 243314,
         "durations": {
           "UOZUIVAaTZKmRwArq5WkDw": 55841,
           "WVczuxkuSRKZg_jMiGyQsA": 82817,
           "b7_ahjGtQ_-ZMNBG_hUZUw": 104656
         },
-        "median_duration": 82817,
         "opt": false,
         "path": {
           "browser/components/urlbar/tests/browser-updateResults/browser_suggestedIndex_10_url_10_search.js": {
             "classification": "intermittent",
-            "failed_runs": 1,
             "runs": {
-              "UOZUIVAaTZKmRwArq5WkDw": false,
-              "WVczuxkuSRKZg_jMiGyQsA": true,
-              "b7_ahjGtQ_-ZMNBG_hUZUw": true
+              "UOZUIVAaTZKmRwArq5WkDw": {
+                "result": false
+              },
+              "WVczuxkuSRKZg_jMiGyQsA": {
+                "result": true
+              },
+              "b7_ahjGtQ_-ZMNBG_hUZUw": {
+                "result": true
+              }
             },
-            "total_runs": 3
+            "runs_failed": 1,
+            "runs_total": 3
           }
         },
         "sum_by_label": {
@@ -29,9 +36,9 @@
           "secondary": 0,
           "success": 0,
           "unknown": 0
-        },
-        "total_duration": 243314
+        }
       }
-    }
+    },
+    "wpt": false
   }
 }

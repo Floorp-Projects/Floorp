@@ -1,0 +1,48 @@
+{
+  "testing/web-platform/meta/css/mediaqueries": {
+    "label": {
+      "test-linux1804-32-shippable-qr/opt-web-platform-tests-10": {
+        "duration_median": 7359.0,
+        "duration_total": 28063,
+        "durations": {
+          "AKYqxtoWStigj_5yHVqAeg": 7368,
+          "H_sxPcuASXGy2N6MOwvMdg": 7350,
+          "W5uCyxXeQIa2dwJOZtLYgg": 7724,
+          "fyZfG_PJSse7jeiDteDJpQ": 5621
+        },
+        "opt": false,
+        "path": {
+          "testing/web-platform/tests/css/mediaqueries/mq-non-matching-lazy-load.tentative.html": {
+            "classification": "disable_recommended",
+            "runs": {
+              "AKYqxtoWStigj_5yHVqAeg": {
+                "result": true
+              },
+              "H_sxPcuASXGy2N6MOwvMdg": {
+                "result": false
+              },
+              "W5uCyxXeQIa2dwJOZtLYgg": {
+                "result": false
+              },
+              "fyZfG_PJSse7jeiDteDJpQ": {
+                "result": true
+              }
+            },
+            "runs_failed": 2,
+            "runs_total": 4
+          }
+        },
+        "sum_by_label": {
+          "disable_manifest": 0,
+          "disable_recommended": 1,
+          "disable_too_long": 0,
+          "intermittent": 0,
+          "secondary": 0,
+          "success": 0,
+          "unknown": 0
+        }
+      }
+    },
+    "wpt": true
+  }
+}
