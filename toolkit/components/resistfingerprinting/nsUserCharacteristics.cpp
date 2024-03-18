@@ -34,7 +34,9 @@
 #  include "nsMacUtilsImpl.h"
 #endif
 
-static mozilla::LazyLogModule gUserCharacteristicsLog("UserCharacteristics");
+using namespace mozilla;
+
+static LazyLogModule gUserCharacteristicsLog("UserCharacteristics");
 
 // ==================================================================
 namespace testing {
@@ -42,9 +44,9 @@ extern "C" {
 
 int MaxTouchPoints() {
 #if defined(XP_WIN)
-  return mozilla::widget::WinUtils::GetMaxTouchPoints();
+  return widget::WinUtils::GetMaxTouchPoints();
 #elif defined(MOZ_WIDGET_ANDROID)
-  return mozilla::java::GeckoAppShell::GetMaxTouchPoints();
+  return java::GeckoAppShell::GetMaxTouchPoints();
 #else
   return 0;
 #endif
@@ -55,83 +57,78 @@ int MaxTouchPoints() {
 
 // ==================================================================
 void PopulateCSSProperties() {
-  mozilla::glean::characteristics::video_dynamic_range.Set(
-      mozilla::LookAndFeel::GetInt(
-          mozilla::LookAndFeel::IntID::VideoDynamicRange));
-  mozilla::glean::characteristics::prefers_reduced_transparency.Set(
-      mozilla::LookAndFeel::GetInt(
-          mozilla::LookAndFeel::IntID::PrefersReducedTransparency));
-  mozilla::glean::characteristics::prefers_reduced_motion.Set(
-      mozilla::LookAndFeel::GetInt(
-          mozilla::LookAndFeel::IntID::PrefersReducedMotion));
-  mozilla::glean::characteristics::inverted_colors.Set(
-      mozilla::LookAndFeel::GetInt(
-          mozilla::LookAndFeel::IntID::InvertedColors));
-  mozilla::glean::characteristics::color_scheme.Set(
-      (int)mozilla::PreferenceSheet::ContentPrefs().mColorScheme);
+  glean::characteristics::video_dynamic_range.Set(
+      LookAndFeel::GetInt(LookAndFeel::IntID::VideoDynamicRange));
+  glean::characteristics::prefers_reduced_transparency.Set(
+      LookAndFeel::GetInt(LookAndFeel::IntID::PrefersReducedTransparency));
+  glean::characteristics::prefers_reduced_motion.Set(
+      LookAndFeel::GetInt(LookAndFeel::IntID::PrefersReducedMotion));
+  glean::characteristics::inverted_colors.Set(
+      LookAndFeel::GetInt(LookAndFeel::IntID::InvertedColors));
+  glean::characteristics::color_scheme.Set(
+      (int)PreferenceSheet::ContentPrefs().mColorScheme);
 
-  mozilla::StylePrefersContrast prefersContrast = [] {
+  StylePrefersContrast prefersContrast = [] {
     // Replicates Gecko_MediaFeatures_PrefersContrast but without a Document
-    if (!mozilla::PreferenceSheet::ContentPrefs().mUseAccessibilityTheme &&
-        mozilla::PreferenceSheet::ContentPrefs().mUseDocumentColors) {
-      return mozilla::StylePrefersContrast::NoPreference;
+    if (!PreferenceSheet::ContentPrefs().mUseAccessibilityTheme &&
+        PreferenceSheet::ContentPrefs().mUseDocumentColors) {
+      return StylePrefersContrast::NoPreference;
     }
 
-    const auto& colors = mozilla::PreferenceSheet::ContentPrefs().ColorsFor(
-        mozilla::ColorScheme::Light);
-    float ratio = mozilla::RelativeLuminanceUtils::ContrastRatio(
+    const auto& colors =
+        PreferenceSheet::ContentPrefs().ColorsFor(ColorScheme::Light);
+    float ratio = RelativeLuminanceUtils::ContrastRatio(
         colors.mDefaultBackground, colors.mDefault);
     // https://www.w3.org/TR/WCAG21/#contrast-minimum
     if (ratio < 4.5f) {
-      return mozilla::StylePrefersContrast::Less;
+      return StylePrefersContrast::Less;
     }
     // https://www.w3.org/TR/WCAG21/#contrast-enhanced
     if (ratio >= 7.0f) {
-      return mozilla::StylePrefersContrast::More;
+      return StylePrefersContrast::More;
     }
-    return mozilla::StylePrefersContrast::Custom;
+    return StylePrefersContrast::Custom;
   }();
-  mozilla::glean::characteristics::prefers_contrast.Set((int)prefersContrast);
+  glean::characteristics::prefers_contrast.Set((int)prefersContrast);
 }
 
 void PopulateScreenProperties() {
-  auto& screenManager = mozilla::widget::ScreenManager::GetSingleton();
-  RefPtr<mozilla::widget::Screen> screen = screenManager.GetPrimaryScreen();
+  auto& screenManager = widget::ScreenManager::GetSingleton();
+  RefPtr<widget::Screen> screen = screenManager.GetPrimaryScreen();
   MOZ_ASSERT(screen);
 
-  mozilla::dom::ScreenColorGamut colorGamut;
+  dom::ScreenColorGamut colorGamut;
   screen->GetColorGamut(&colorGamut);
-  mozilla::glean::characteristics::color_gamut.Set((int)colorGamut);
+  glean::characteristics::color_gamut.Set((int)colorGamut);
 
   int32_t colorDepth;
   screen->GetColorDepth(&colorDepth);
-  mozilla::glean::characteristics::color_depth.Set(colorDepth);
+  glean::characteristics::color_depth.Set(colorDepth);
 
-  mozilla::glean::characteristics::color_gamut.Set((int)colorGamut);
-  mozilla::glean::characteristics::color_depth.Set(colorDepth);
-  const mozilla::LayoutDeviceIntRect rect = screen->GetRect();
-  mozilla::glean::characteristics::screen_height.Set(rect.Height());
-  mozilla::glean::characteristics::screen_width.Set(rect.Width());
+  glean::characteristics::color_gamut.Set((int)colorGamut);
+  glean::characteristics::color_depth.Set(colorDepth);
+  const LayoutDeviceIntRect rect = screen->GetRect();
+  glean::characteristics::screen_height.Set(rect.Height());
+  glean::characteristics::screen_width.Set(rect.Width());
 }
 
 void PopulateMissingFonts() {
   nsCString aMissingFonts;
   gfxPlatformFontList::PlatformFontList()->GetMissingFonts(aMissingFonts);
 
-  mozilla::glean::characteristics::missing_fonts.Set(aMissingFonts);
+  glean::characteristics::missing_fonts.Set(aMissingFonts);
 }
 
 void PopulatePrefs() {
   nsAutoCString acceptLang;
-  mozilla::Preferences::GetLocalizedCString("intl.accept_languages",
-                                            acceptLang);
-  mozilla::glean::characteristics::prefs_intl_accept_languages.Set(acceptLang);
+  Preferences::GetLocalizedCString("intl.accept_languages", acceptLang);
+  glean::characteristics::prefs_intl_accept_languages.Set(acceptLang);
 
-  mozilla::glean::characteristics::prefs_media_eme_enabled.Set(
-      mozilla::StaticPrefs::media_eme_enabled());
+  glean::characteristics::prefs_media_eme_enabled.Set(
+      StaticPrefs::media_eme_enabled());
 
-  mozilla::glean::characteristics::prefs_zoom_text_only.Set(
-      !mozilla::Preferences::GetBool("browser.zoom.full"));
+  glean::characteristics::prefs_zoom_text_only.Set(
+      !Preferences::GetBool("browser.zoom.full"));
 }
 
 // ==================================================================
@@ -143,8 +140,7 @@ const int kSubmissionSchema = 0;
 
 /* static */
 void nsUserCharacteristics::MaybeSubmitPing() {
-  MOZ_LOG(gUserCharacteristicsLog, mozilla::LogLevel::Debug,
-          ("In MaybeSubmitPing()"));
+  MOZ_LOG(gUserCharacteristicsLog, LogLevel::Debug, ("In MaybeSubmitPing()"));
   MOZ_ASSERT(XRE_IsParentProcess());
 
   /**
@@ -167,9 +163,8 @@ void nsUserCharacteristics::MaybeSubmitPing() {
   const auto* const kCurrentVersionPref =
       "toolkit.telemetry.user_characteristics_ping.current_version";
 
-  auto lastSubmissionVersion =
-      mozilla::Preferences::GetInt(kLastVersionPref, 0);
-  auto currentVersion = mozilla::Preferences::GetInt(kCurrentVersionPref, 0);
+  auto lastSubmissionVersion = Preferences::GetInt(kLastVersionPref, 0);
+  auto currentVersion = Preferences::GetInt(kCurrentVersionPref, 0);
 
   MOZ_ASSERT(currentVersion == -1 || lastSubmissionVersion <= currentVersion,
              "lastSubmissionVersion is somehow greater than currentVersion "
@@ -177,19 +172,19 @@ void nsUserCharacteristics::MaybeSubmitPing() {
 
   if (lastSubmissionVersion < 0) {
     // This is a way for users to opt out of this ping specifically.
-    MOZ_LOG(gUserCharacteristicsLog, mozilla::LogLevel::Debug,
+    MOZ_LOG(gUserCharacteristicsLog, LogLevel::Debug,
             ("Returning, User Opt-out"));
     return;
   }
   if (currentVersion == 0) {
     // Do nothing. We do not want any pings.
-    MOZ_LOG(gUserCharacteristicsLog, mozilla::LogLevel::Debug,
+    MOZ_LOG(gUserCharacteristicsLog, LogLevel::Debug,
             ("Returning, currentVersion == 0"));
     return;
   }
   if (currentVersion == -1) {
     // currentVersion = -1 is a development value to force a ping submission
-    MOZ_LOG(gUserCharacteristicsLog, mozilla::LogLevel::Debug,
+    MOZ_LOG(gUserCharacteristicsLog, LogLevel::Debug,
             ("Force-Submitting Ping"));
     if (NS_SUCCEEDED(PopulateData())) {
       SubmitPing();
@@ -200,21 +195,21 @@ void nsUserCharacteristics::MaybeSubmitPing() {
     // This is an unexpected scneario that indicates something is wrong. We
     // asserted against it (in debug, above) We will try to sanity-correct
     // ourselves by setting it to the current version.
-    mozilla::Preferences::SetInt(kLastVersionPref, currentVersion);
-    MOZ_LOG(gUserCharacteristicsLog, mozilla::LogLevel::Warning,
+    Preferences::SetInt(kLastVersionPref, currentVersion);
+    MOZ_LOG(gUserCharacteristicsLog, LogLevel::Warning,
             ("Returning, lastSubmissionVersion > currentVersion"));
     return;
   }
   if (lastSubmissionVersion == currentVersion) {
     // We are okay, we've already submitted the most recent ping
-    MOZ_LOG(gUserCharacteristicsLog, mozilla::LogLevel::Warning,
+    MOZ_LOG(gUserCharacteristicsLog, LogLevel::Warning,
             ("Returning, lastSubmissionVersion == currentVersion"));
     return;
   }
   if (lastSubmissionVersion < currentVersion) {
     if (NS_SUCCEEDED(PopulateData())) {
       if (NS_SUCCEEDED(SubmitPing())) {
-        mozilla::Preferences::SetInt(kLastVersionPref, currentVersion);
+        Preferences::SetInt(kLastVersionPref, currentVersion);
       }
     }
   } else {
@@ -227,13 +222,12 @@ const auto* const kUUIDPref =
 
 /* static */
 nsresult nsUserCharacteristics::PopulateData(bool aTesting /* = false */) {
-  MOZ_LOG(gUserCharacteristicsLog, mozilla::LogLevel::Warning,
-          ("Populating Data"));
+  MOZ_LOG(gUserCharacteristicsLog, LogLevel::Warning, ("Populating Data"));
   MOZ_ASSERT(XRE_IsParentProcess());
-  mozilla::glean::characteristics::submission_schema.Set(kSubmissionSchema);
+  glean::characteristics::submission_schema.Set(kSubmissionSchema);
 
   nsAutoCString uuidString;
-  nsresult rv = mozilla::Preferences::GetCString(kUUIDPref, uuidString);
+  nsresult rv = Preferences::GetCString(kUUIDPref, uuidString);
   if (NS_FAILED(rv) || uuidString.Length() == 0) {
     nsCOMPtr<nsIUUIDGenerator> uuidgen =
         do_GetService("@mozilla.org/uuid-generator;1", &rv);
@@ -241,12 +235,11 @@ nsresult nsUserCharacteristics::PopulateData(bool aTesting /* = false */) {
 
     nsIDToCString id(nsID::GenerateUUID());
     uuidString = id.get();
-    mozilla::Preferences::SetCString(kUUIDPref, uuidString);
+    Preferences::SetCString(kUUIDPref, uuidString);
   }
-  mozilla::glean::characteristics::client_identifier.Set(uuidString);
+  glean::characteristics::client_identifier.Set(uuidString);
 
-  mozilla::glean::characteristics::max_touch_points.Set(
-      testing::MaxTouchPoints());
+  glean::characteristics::max_touch_points.Set(testing::MaxTouchPoints());
 
   if (aTesting) {
     // Many of the later peices of data do not work in a gtest
@@ -259,8 +252,7 @@ nsresult nsUserCharacteristics::PopulateData(bool aTesting /* = false */) {
   PopulateScreenProperties();
   PopulatePrefs();
 
-  mozilla::glean::characteristics::target_frame_rate.Set(
-      gfxPlatform::TargetFrameRate());
+  glean::characteristics::target_frame_rate.Set(gfxPlatform::TargetFrameRate());
 
   int32_t processorCount = 0;
 #if defined(XP_MACOSX)
@@ -273,30 +265,29 @@ nsresult nsUserCharacteristics::PopulateData(bool aTesting /* = false */) {
   if (processorCount == 0) {
     processorCount = PR_GetNumberOfProcessors();
   }
-  mozilla::glean::characteristics::processor_count.Set(processorCount);
+  glean::characteristics::processor_count.Set(processorCount);
 
   AutoTArray<char16_t, 128> tzBuffer;
-  auto result = mozilla::intl::TimeZone::GetDefaultTimeZone(tzBuffer);
+  auto result = intl::TimeZone::GetDefaultTimeZone(tzBuffer);
   if (result.isOk()) {
     NS_ConvertUTF16toUTF8 timeZone(
         nsDependentString(tzBuffer.Elements(), tzBuffer.Length()));
-    mozilla::glean::characteristics::timezone.Set(timeZone);
+    glean::characteristics::timezone.Set(timeZone);
   } else {
-    mozilla::glean::characteristics::timezone.Set("<error>"_ns);
+    glean::characteristics::timezone.Set("<error>"_ns);
   }
 
   nsAutoCString locale;
-  mozilla::intl::OSPreferences::GetInstance()->GetSystemLocale(locale);
-  mozilla::glean::characteristics::system_locale.Set(locale);
+  intl::OSPreferences::GetInstance()->GetSystemLocale(locale);
+  glean::characteristics::system_locale.Set(locale);
 
   return NS_OK;
 }
 
 /* static */
 nsresult nsUserCharacteristics::SubmitPing() {
-  MOZ_LOG(gUserCharacteristicsLog, mozilla::LogLevel::Warning,
-          ("Submitting Ping"));
-  mozilla::glean_pings::UserCharacteristics.Submit();
+  MOZ_LOG(gUserCharacteristicsLog, LogLevel::Warning, ("Submitting Ping"));
+  glean_pings::UserCharacteristics.Submit();
 
   return NS_OK;
 }
