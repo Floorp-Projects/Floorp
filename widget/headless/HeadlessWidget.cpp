@@ -160,10 +160,9 @@ void HeadlessWidget::GetCompositorWidgetInitData(
 nsIWidget* HeadlessWidget::GetTopLevelWidget() { return mTopLevel; }
 
 void HeadlessWidget::RaiseWindow() {
-  MOZ_ASSERT(mWindowType == WindowType::TopLevel ||
-                 mWindowType == WindowType::Dialog ||
-                 mWindowType == WindowType::Sheet,
-             "Raising a non-toplevel window.");
+  MOZ_ASSERT(
+      mWindowType == WindowType::TopLevel || mWindowType == WindowType::Dialog,
+      "Raising a non-toplevel window.");
 
   // Do nothing if this is the currently active window.
   RefPtr<HeadlessWidget> activeWindow = GetActiveWindow();
@@ -204,7 +203,7 @@ void HeadlessWidget::Show(bool aState) {
   //     so we don't focus them by default.
   if (aState && !mAlwaysOnTop &&
       (mWindowType == WindowType::TopLevel ||
-       mWindowType == WindowType::Dialog || mWindowType == WindowType::Sheet)) {
+       mWindowType == WindowType::Dialog)) {
     RaiseWindow();
   }
 

@@ -399,9 +399,8 @@ static BOOL FrameIsInActiveWindow(nsIFrame* aFrame) {
 
 // Toolbar controls and content controls respond to different window
 // activeness states.
-static BOOL IsActive(nsIFrame* aFrame, BOOL aIsToolbarControl) {
-  if (aIsToolbarControl) return [NativeWindowForFrame(aFrame) isMainWindow];
-  return FrameIsInActiveWindow(aFrame);
+static BOOL IsActiveToolbarControl(nsIFrame* aFrame) {
+  return NativeWindowForFrame(aFrame).isMainWindow;
 }
 
 NS_IMPL_ISUPPORTS_INHERITED(nsNativeThemeCocoa, nsNativeTheme, nsITheme)
@@ -2347,7 +2346,7 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
     }
 
     case StyleAppearance::Statusbar:
-      return Some(WidgetInfo::StatusBar(IsActive(aFrame, YES)));
+      return Some(WidgetInfo::StatusBar(IsActiveToolbarControl(aFrame)));
 
     case StyleAppearance::MenulistButton:
     case StyleAppearance::Menulist: {

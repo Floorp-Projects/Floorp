@@ -1335,8 +1335,6 @@ DWORD nsWindow::WindowExStyle() {
       }
       return extendedStyle;
     }
-    case WindowType::Sheet:
-      MOZ_FALLTHROUGH_ASSERT("Sheets are macOS specific");
     case WindowType::Dialog:
     case WindowType::TopLevel:
     case WindowType::Invisible:

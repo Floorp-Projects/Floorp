@@ -579,26 +579,11 @@ nsresult nsAppShellService::JustCreateTopWindow(
       !!(aChromeMask & nsIWebBrowserChrome::CHROME_ALERT) &&
       widgetInitData.mWindowType == widget::WindowType::Dialog;
 
-#ifdef XP_MACOSX
-  // Mac OS X sheet support
-  // Adding CHROME_OPENAS_CHROME to sheetMask makes modal windows opened from
-  // nsGlobalWindow::ShowModalDialog() be dialogs (not sheets), while modal
-  // windows opened from nsPromptService::DoDialog() still are sheets.  This
-  // fixes bmo bug 395465 (see nsCocoaWindow::StandardCreate() and
-  // nsCocoaWindow::SetModal()).
-  uint32_t sheetMask = nsIWebBrowserChrome::CHROME_OPENAS_DIALOG |
-                       nsIWebBrowserChrome::CHROME_MODAL |
-                       nsIWebBrowserChrome::CHROME_OPENAS_CHROME;
-  if (parent && (parent != mHiddenWindow) &&
-      ((aChromeMask & sheetMask) == sheetMask)) {
-    widgetInitData.mWindowType = widget::WindowType::Sheet;
-  }
-#endif
-
 #if defined(XP_WIN)
   if (widgetInitData.mWindowType == widget::WindowType::TopLevel ||
-      widgetInitData.mWindowType == widget::WindowType::Dialog)
+      widgetInitData.mWindowType == widget::WindowType::Dialog) {
     widgetInitData.mClipChildren = true;
+  }
 #endif
 
   // note default chrome overrides other OS chrome settings, but
