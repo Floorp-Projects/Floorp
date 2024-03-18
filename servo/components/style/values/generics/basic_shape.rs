@@ -891,12 +891,31 @@ pub enum ByTo {
     To,
 }
 
+impl ByTo {
+    /// Return true if it is absolute, i.e. it is To.
+    #[inline]
+    pub fn is_abs(&self) -> bool {
+        matches!(self, ByTo::To)
+    }
+
+    /// Create ByTo based on the flag if it is absolute.
+    #[inline]
+    pub fn new(is_abs: bool) -> Self {
+        if is_abs {
+            Self::To
+        } else {
+            Self::By
+        }
+    }
+}
+
 /// Defines a pair of coordinates, representing a rightward and downward offset, respectively, from
 /// a specified reference point. Percentages are resolved against the width or height,
 /// respectively, of the reference box.
 /// https://drafts.csswg.org/css-shapes-2/#typedef-shape-coordinate-pair
 #[allow(missing_docs)]
 #[derive(
+    AddAssign,
     Animate,
     Clone,
     ComputeSquaredDistance,
@@ -916,8 +935,8 @@ pub enum ByTo {
 )]
 #[repr(C)]
 pub struct CoordinatePair<LengthPercentage> {
-    x: LengthPercentage,
-    y: LengthPercentage,
+    pub x: LengthPercentage,
+    pub y: LengthPercentage,
 }
 
 impl<LengthPercentage> CoordinatePair<LengthPercentage> {
@@ -936,6 +955,7 @@ impl<LengthPercentage> CoordinatePair<LengthPercentage> {
     Copy,
     Debug,
     Deserialize,
+    FromPrimitive,
     MallocSizeOf,
     Parse,
     PartialEq,
@@ -958,11 +978,12 @@ pub enum ArcSweep {
 
 impl Animate for ArcSweep {
     fn animate(&self, other: &Self, procedure: Procedure) -> Result<Self, ()> {
+        use num_traits::FromPrimitive;
         // If an arc command has different <arc-sweep> between its starting and ending list, then
         // the interpolated result uses cw for any progress value between 0 and 1.
         (*self as i32)
             .animate(&(*other as i32), procedure)
-            .map(|v| if v > 0 { ArcSweep::Cw } else { ArcSweep::Ccw })
+            .map(|v| ArcSweep::from_u8((v > 0) as u8).unwrap_or(ArcSweep::Ccw))
     }
 }
 
@@ -980,6 +1001,7 @@ impl ComputeSquaredDistance for ArcSweep {
     Copy,
     Debug,
     Deserialize,
+    FromPrimitive,
     MallocSizeOf,
     Parse,
     PartialEq,
@@ -1002,17 +1024,12 @@ pub enum ArcSize {
 
 impl Animate for ArcSize {
     fn animate(&self, other: &Self, procedure: Procedure) -> Result<Self, ()> {
+        use num_traits::FromPrimitive;
         // If it has different <arc-size> keywords, then the interpolated result uses large for any
         // progress value between 0 and 1.
         (*self as i32)
             .animate(&(*other as i32), procedure)
-            .map(|v| {
-                if v > 0 {
-                    ArcSize::Large
-                } else {
-                    ArcSize::Small
-                }
-            })
+            .map(|v| ArcSize::from_u8((v > 0) as u8).unwrap_or(ArcSize::Small))
     }
 }
 

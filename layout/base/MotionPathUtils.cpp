@@ -434,7 +434,7 @@ Maybe<ResolvedMotionPathData> MotionPathUtils::ResolveMotionPath(
 
 static inline bool IsClosedLoop(const StyleSVGPathData& aPathData) {
   return !aPathData._0.AsSpan().empty() &&
-         aPathData._0.AsSpan().rbegin()->IsClosePath();
+         aPathData._0.AsSpan().rbegin()->IsClose();
 }
 
 // Create a path for "inset(0 round X)", where X is the value of border-radius
@@ -466,8 +466,8 @@ static already_AddRefed<gfx::Path> BuildDefaultPathForURL(
     return nullptr;
   }
 
-  Array<const StylePathCommand, 1> array(StylePathCommand::MoveTo(
-      StyleCoordPair(gfx::Point{0.0, 0.0}), StyleIsAbsolute::No));
+  Array<const StylePathCommand, 1> array(StylePathCommand::Move(
+      StyleByTo::By, StyleCoordinatePair<StyleCSSFloat>{0.0, 0.0}));
   return SVGPathData::BuildPath(array, aBuilder, StyleStrokeLinecap::Butt, 0.0);
 }
 

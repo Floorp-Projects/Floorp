@@ -14,8 +14,8 @@
 #include "nsDebug.h"
 
 namespace mozilla {
-
-struct StylePathCommand;
+template <typename Angle, typename LP>
+struct StyleGenericShapeCommand;
 
 #define NS_SVG_PATH_SEG_MAX_ARGS 7
 #define NS_SVG_PATH_SEG_FIRST_VALID_TYPE \
@@ -264,8 +264,9 @@ class SVGPathSegUtils {
    * Traverse the given path segment and update the SVGPathTraversalState
    * object. This is identical to the above one but accepts StylePathCommand.
    */
-  static void TraversePathSegment(const StylePathCommand& aCommand,
-                                  SVGPathTraversalState& aState);
+  static void TraversePathSegment(
+      const StyleGenericShapeCommand<float, float>& aCommand,
+      SVGPathTraversalState& aState);
 };
 
 /// Detect whether the path represents a rectangle (for both filling AND
@@ -280,7 +281,8 @@ class SVGPathSegUtils {
 /// practice).
 ///
 /// We could implement something similar for polygons.
-Maybe<gfx::Rect> SVGPathToAxisAlignedRect(Span<const StylePathCommand> aPath);
+Maybe<gfx::Rect> SVGPathToAxisAlignedRect(
+    Span<const StyleGenericShapeCommand<float, float>> aPath);
 
 }  // namespace mozilla
 

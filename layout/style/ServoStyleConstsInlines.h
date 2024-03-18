@@ -1201,6 +1201,11 @@ inline nsRect StyleZoom::Unzoom(const nsRect& aValue) const {
                 UnzoomCoord(aValue.Width()), UnzoomCoord(aValue.Height()));
 }
 
+template <>
+inline gfx::Point StyleCoordinatePair<StyleCSSFloat>::ToGfxPoint() const {
+  return gfx::Point(x, y);
+}
+
 }  // namespace mozilla
 
 #endif

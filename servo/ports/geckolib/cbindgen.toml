@@ -757,9 +757,8 @@ renaming_overrides_prefixing = true
   }
 """
 
-"CoordPair" = """
-  explicit StyleCoordPair(const gfx::Point& aPoint): x(aPoint.x), y(aPoint.y) {}
-  gfx::Point ConvertsToGfxPoint() const { return gfx::Point(x, y); }
+"CoordinatePair" = """
+  inline gfx::Point ToGfxPoint() const;
 """
 
 "TextOverflow" = """
@@ -1047,6 +1046,11 @@ renaming_overrides_prefixing = true
   bool IsBasicShapeOrCoordBox() const {
     return IsCoordBox() || (IsOffsetPath() && AsOffsetPath().path->IsShape());
   }
+"""
+
+"GenericShapeCommand" = """
+  bool IsCubicType() const { return IsCubicCurve() || IsSmoothCubic(); }
+  bool IsQuadraticType() const { return IsQuadCurve() || IsSmoothQuad(); }
 """
 
 "GenericContainIntrinsicSize" = """

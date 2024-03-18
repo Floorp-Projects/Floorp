@@ -17,13 +17,13 @@
 #include "mozilla/gfx/Types.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/ServoStyleConsts.h"
 #include "nsTArray.h"
 
 #include <string.h>
 
 namespace mozilla {
 
-struct StylePathCommand;
 struct SVGMark;
 enum class StyleStrokeLinecap : uint8_t;
 
