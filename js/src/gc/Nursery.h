@@ -208,11 +208,11 @@ class Nursery {
   // Mark a malloced buffer as no longer needing to be freed.
   void removeMallocedBuffer(void* buffer, size_t nbytes) {
     MOZ_ASSERT(!JS::RuntimeHeapIsMinorCollecting());
-    MOZ_ASSERT(mallocedBuffers.has(buffer));
+    MOZ_ASSERT(toSpace.mallocedBuffers.has(buffer));
     MOZ_ASSERT(nbytes > 0);
-    MOZ_ASSERT(mallocedBufferBytes >= nbytes);
-    mallocedBuffers.remove(buffer);
-    mallocedBufferBytes -= nbytes;
+    MOZ_ASSERT(toSpace.mallocedBufferBytes >= nbytes);
+    toSpace.mallocedBuffers.remove(buffer);
+    toSpace.mallocedBufferBytes -= nbytes;
   }
 
   // Mark a malloced buffer as no longer needing to be freed during minor
@@ -220,8 +220,8 @@ class Nursery {
   // buffers will soon be freed.
   void removeMallocedBufferDuringMinorGC(void* buffer) {
     MOZ_ASSERT(JS::RuntimeHeapIsMinorCollecting());
-    MOZ_ASSERT(prevMallocedBuffers.has(buffer));
-    prevMallocedBuffers.remove(buffer);
+    MOZ_ASSERT(prevSpace->mallocedBuffers.has(buffer));
+    prevSpace->mallocedBuffers.remove(buffer);
   }
 
   [[nodiscard]] bool addedUniqueIdToCell(gc::Cell* cell) {
@@ -528,6 +528,9 @@ class Nursery {
   mozilla::TimeStamp collectionStartTime() const;
 
  private:
+  using BufferRelocationOverlay = void*;
+  using BufferSet = HashSet<void*, PointerHasher<void*>, SystemAllocPolicy>;
+
   struct Space {
     // Fields used during allocation fast path go first:
 
@@ -552,6 +555,12 @@ class Nursery {
     uint32_t startChunk_ = 0;
     uintptr_t startPosition_ = 0;
 
+    // The set of malloced-allocated buffers owned by nursery objects. Any
+    // buffers that do not belong to a promoted thing at the end of a minor GC
+    // must be freed.
+    BufferSet mallocedBuffers;
+    size_t mallocedBufferBytes = 0;
+
     inline bool isEmpty() const;
     inline bool isInside(const void* p) const;
 
@@ -571,6 +580,7 @@ class Nursery {
 
   Space toSpace;
   Space fromSpace;
+  Space* prevSpace = nullptr;
 
   gc::GCRuntime* const gc;
 
@@ -635,15 +645,6 @@ class Nursery {
 
   bool hasRecentGrowthData;
   double smoothedTargetSize;
-
-  // The set of externally malloced buffers potentially kept live by objects
-  // stored in the nursery. Any external buffers that do not belong to a
-  // tenured thing at the end of a minor GC must be freed.
-  using BufferRelocationOverlay = void*;
-  using BufferSet = HashSet<void*, PointerHasher<void*>, SystemAllocPolicy>;
-  BufferSet mallocedBuffers;
-  BufferSet prevMallocedBuffers;
-  size_t mallocedBufferBytes = 0;
 
   // Wasm "trailer" (C++-heap-allocated) blocks.  See comments above on
   // ::registerTrailer and ::unregisterTrailer.
