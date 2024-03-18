@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<rotate xmlns:android="http://schemas.android.com/apk/res/android"
+    android:fromDegrees="45"
+    android:pivotX="-40%"
+    android:pivotY="87%"
+    android:toDegrees="45">
+    <shape android:shape="rectangle">
+        <stroke
+            android:width="10dp"
+            android:color="#FFFFFF" />
+        <solid android:color="#FFFFFF" />
+    </shape>
+</rotate>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Autofill: Text shown in popup in third-party app if we found a matching account, but no
+    username is saved (e.g. we only have a password). This text will be shown in place where otherwise
+    the username would be displayed. -->
+    <string name="mozac_feature_autofill_popup_no_username">(Niciun nume de utilizator)</string>
+
+    <!-- Autofill: When showing a list of logins to autofill in a third-party app, then this is the
+    last item in the list. When clicking it a new screen opens which allows the user to search for
+    a specific login. %1$s will be replaced with the name of the application (e.g. "Firefox") -->
+    <string name="mozac_feature_autofill_search_suggestions">Caută în %1$s</string>
+
+    </resources>

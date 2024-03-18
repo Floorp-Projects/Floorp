@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Content description (not visible, for screen readers etc.): Description of an image view. -->
+    <string name="mozac_feature_qr_scanner">QR scanner</string>
+
+    </resources>

@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<resources>
+    <!-- Design system color attributes -->
+
+    <!-- Layers -->
+    <!-- Default Screen background, Frontlayer background, App Bar Top, App Bar Bottom, Frontlayer header -->
+    <attr name="layer1" format="reference" />
+    <!-- Card background, Menu background, Dialog, Banner -->
+    <attr name="layer2" format="reference" />
+    <!-- Search -->
+    <attr name="layer3" format="reference" />
+    <attr name="layerSearch" format="reference" />
+    <!-- Selected tab -->
+    <attr name="layerNonOpaque" format="reference" />
+    <attr name="scrim" format="reference" />
+
+    <!-- Action -->
+    <!-- Primary button, Snackbar, Floating action button, Chip selected -->
+    <attr name="actionPrimary" format="reference" />
+
+    <!-- Text -->
+    <!-- Primary text -->
+    <attr name="textPrimary" format="reference" />
+    <!-- Secondary text -->
+    <attr name="textSecondary" format="reference" />
+    <!-- Disabled text -->
+    <attr name="textDisabled" format="reference" />
+    <!-- Warning text -->
+    <attr name="textWarning" format="reference"/>
+    <!-- Small heading, Text link -->
+    <attr name="textAccent" format="reference" />
+    <!-- Text Inverted/On Color -->
+    <attr name="textOnColorPrimary" format="reference" />
+    <!-- Action Primary text -->
+    <attr name="textActionPrimary" format="reference" />
+
+    <!-- Icon -->
+    <!-- Secondary icon -->
+    <attr name="iconSecondary" format="reference" />
+    <!-- Active tab -->
+    <attr name="iconActive" format="reference" />
+    <!-- Icon inverted (on color) -->
+    <attr name="iconOnColor" format="reference" />
+
+    <!-- Border -->
+    <!-- Default, Divider, Dotted -->
+    <attr name="borderPrimary" format="reference" />
+    <!-- Toolbar divider -->
+    <attr name="borderToolbarDivider" format="reference"/>
+
+    <!-- Color palette attributes -->
+    <attr name="accent" format="reference" />
+    <attr name="accentBright" format="reference" />
+    <attr name="accentHighContrast" format="reference" />
+    <attr name="accentUsedOnDarkBackground" format="reference" />
+    <attr name="neutral" format="reference" />
+    <attr name="neutralFaded" format="reference" />
+    <attr name="preferenceSectionHeader" format="reference"/>
+
+    <!-- Color used in DefaultToolbarMenu for buttons placed at the end of menu items -->
+    <attr name="menuItemButtonTintColor" format="reference"/>
+
+    <!-- Misc -->
+    <attr name="homeBackground" format="reference"/>
+    <attr name="bottomBarBackground" format="reference"/>
+    <attr name="bottomBarBackgroundTop" format="reference"/>
+    <attr name="fenixLogo" format="reference" />
+    <attr name="fenixWordmarkText" format="reference" />
+    <attr name="fenixWordmarkLogo" format="reference" />
+    <attr name="toolbarStartGradient" format="reference"/>
+    <attr name="toolbarCenterGradient" format="reference"/>
+    <attr name="toolbarEndGradient" format="reference"/>
+    <attr name="fillLinkFromClipboard" format="reference"/>
+    <attr name="syncDisconnected" format="reference" />
+    <attr name="syncDisconnectedBackground" format="reference" />
+    <attr name="addOnPrivateBrowsingExteriorCircleBackground" format="reference"/>
+    <attr name="awesomeBarIndicatorColor" format="reference|color"/>
+    <attr name="awesomeBarIndicatorBookmarkColor" format="reference|color"/>
+
+    <declare-styleable name="TrackingProtectionCategory">
+        <attr name="categoryItemTitle" format="reference" />
+        <attr name="categoryItemDescription" format="reference" />
+    </declare-styleable>
+
+    <declare-styleable name="SwitchWithDescription">
+        <attr name="switchTitle" format="reference" />
+        <attr name="switchDescriptionOn" format="reference" />
+        <attr name="switchDescriptionOff" format="reference" />
+        <attr name="switchIconOn" format="reference" />
+        <attr name="switchIconOff" format="reference" />
+        <attr name="switchShowIcon" format="boolean" />
+    </declare-styleable>
+
+    <declare-styleable name="DeleteBrowsingDataItem">
+        <attr name="deleteBrowsingDataItemTitle" format="reference" />
+        <attr name="deleteBrowsingDataItemSubtitle" format="reference" />
+        <attr name="deleteBrowsingDataItemIcon" format="reference" />
+    </declare-styleable>
+
+    <attr name="selectPromptHeaderTextColor" format="reference"/>
+
+    <declare-styleable name="TextPercentageSeekBarPreference">
+        <attr format="integer" name="min"/>
+        <attr name="android:max"/>
+        <attr name="android:layout"/>
+        <attr format="integer" name="seekBarIncrement"/>
+        <attr format="boolean" name="adjustable"/>
+        <attr format="boolean" name="showSeekBarValue"/>
+        <attr format="boolean" name="updatesContinuously"/>
+    </declare-styleable>
+
+    <declare-styleable name="RadioButtonPreference">
+        <attr format="string|boolean|integer|reference|float" name="defaultValue"/>
+        <attr name="android:defaultValue"/>
+    </declare-styleable>
+
+    <declare-styleable name="PreferenceBackedRadioButton">
+        <attr format="string" name="preferenceKey"/>
+        <attr format="boolean" name="preferenceKeyDefaultValue"/>
+    </declare-styleable>
+</resources>

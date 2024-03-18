@@ -1,0 +1,18 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+<ShortName>Ecosia</ShortName>
+<InputEncoding>UTF-8</InputEncoding>
+<Image width="16" height="16">data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAMAAABg3Am1AAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAUVBMVEX////z8+7x8evw8Ozw8Orw8Ovw8Ovw8Ovx8evw8Ovw8Ovx8ez///vw8Ozz8+zw8Ozw8Ozw8OuSxJOXx5bf6NsAgAkHgw9vtHLj695grWP///8j4WLWAAAAEXRSTlMCGFuSutvt+2zM9I8HeidRuGeLDAwAAAABYktHRACIBR1IAAAAB3RJTUUH5gkHFxQIpRLiZQAAARFJREFUSMelltmawiAMhQNd2LpFnVHf/0XVLgqFImfmXPbLX0ISkhDtJWRVN61SbVNXUtAXCW04kNE5RlSWI1l3hHQ6YT4jfZeyHwwfygyx/Wg5Izvu7aXirJQO7fX6+RTrvCIBMa7/v/zE+t3O8LwaNv9zANv3zbt3fLIAmy26PZcB3K/5taWAXXJecSnAbnfAV2A+QnM5MCfDIIB5esQIwIJkCrjePAWA9GPkAYdF6KjGgIkaDGiozV36HgEtKQxQKGBxl+BLw2GFE5cujYunAJB48cHljT8g+ImSKwfc39oM3MjwVgk3Y7zdfwbKOSEvBf8YWfhQxMcuPthfOXfQ6jAj2HKyMNJNy/ozucT68wBb1oA/nm9/dAAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAyMi0wOS0wN1QyMzoyMDowOCswMDowMDZRlR8AAAAldEVYdGRhdGU6bW9kaWZ5ADIwMjItMDktMDdUMjM6MjA6MDgrMDA6MDBHDC2jAAAAKHRFWHRkYXRlOnRpbWVzdGFtcAAyMDIyLTA5LTA3VDIzOjIwOjA4KzAwOjAwEBkMfAAAAABJRU5ErkJggg==</Image>
+<Url type="application/x-suggestions+json" method="GET" template="https://ac.ecosia.org/autocomplete">
+  <Param name="q" value="{searchTerms}"/>
+  <Param name="type" value="list"/>
+</Url>
+<Url type="text/html" method="GET" template="https://www.ecosia.org/search">
+  <Param name="tt" value="813cf1dd"/>
+  <Param name="q" value="{searchTerms}"/>
+</Url>
+<SearchForm>https://www.ecosia.org/</SearchForm>
+</SearchPlugin>

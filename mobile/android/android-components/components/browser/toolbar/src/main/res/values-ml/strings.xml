@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Content description (not visible, for screen readers etc.): Description for the overflow menu button in the browser toolbar. -->
+    <string name="mozac_browser_toolbar_menu_button">മെനു</string>
+    <string name="mozac_clear_button_description">മായ്ക്കുക</string>
+    <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection enabled, but none trackers have been blocked or detected. -->
+    <string name="mozac_browser_toolbar_content_description_tracking_protection_on_no_trackers_blocked">ട്രാക്കിങ്ങ് സംരക്ഷണം ഓൺ ആണ്</string>
+    <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection enabled, and trackers have been blocked or detected.-->
+    <string name="mozac_browser_toolbar_content_description_tracking_protection_on_trackers_blocked1">ട്രാക്കിംഗ് സംരക്ഷണം ട്രാക്കറുകളെ തടഞ്ഞു</string>
+    <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection disabled.-->
+    <string name="mozac_browser_toolbar_content_description_tracking_protection_off_for_a_site1">ഈ സൈറ്റിന് ട്രാക്കിംഗ് പരിരക്ഷ ഇപ്പോൾ ഓഫാണ്</string>
+    <!-- Content description: For the site security information icon (the site security icon).-->
+    <string name="mozac_browser_toolbar_content_description_site_info">സൈറ്റ് വിവരങ്ങള്‍</string>
+    <!-- Announcement made by the screen reader when the progress bar is shown and a page is loading -->
+    <string name="mozac_browser_toolbar_progress_loading">ലഭ്യമാക്കുന്നു</string>
+</resources>

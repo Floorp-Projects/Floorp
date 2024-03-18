@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+    <!-- Text for confirmation for a positive action in dialog  -->
+    <string name="mozac_feature_prompts_ok">OK</string>
+    <!-- Text for confirmation for a negative action in dialog.  -->
+    <string name="mozac_feature_prompts_cancel">Annulla</string>
+    <!-- When a page shows many dialogs, this checkbox will appear for letting the user choose to prevent showing more dialogs. -->
+    <string name="mozac_feature_prompts_no_more_dialogs">Impedisci a questa pagina di aprire ulteriori finestre di dialogo</string>
+    <!-- Text for a positive button, when an user selects a date in date/time picker. -->
+    <string name="mozac_feature_prompts_set_date">Imposta</string>
+    <!-- Text for a button that clears the selected input in the date/time picker. -->
+    <string name="mozac_feature_prompts_clear">Annulla</string>
+    <!-- Text for the title of an authentication dialog. -->
+    <string name="mozac_feature_prompt_sign_in">Accedi</string>
+    <!-- Text for username field in an authentication dialog. -->
+    <string name="mozac_feature_prompt_username_hint">Nome utente</string>
+    <!-- Text for password field in an authentication dialog. -->
+    <string name="mozac_feature_prompt_password_hint">Password</string>
+    <!-- Negative confirmation that we should not save the new or updated login -->
+    <string name="mozac_feature_prompt_dont_save">Non salvare</string>
+    <!-- Negative confirmation that we should not save the new or updated login -->
+    <string name="mozac_feature_prompt_dont_save_2" tools:ignore="UnusedResources">Non adesso</string>
+    <!-- Negative confirmation that we should never save a login for this site -->
+    <string name="mozac_feature_prompt_never_save">Non salvare mai</string>
+    <!-- Negative confirmation that we should not save a credit card for this site -->
+    <string name="mozac_feature_prompt_not_now">Non adesso</string>
+    <!-- Positive confirmation that we should save the new or updated login -->
+    <string name="mozac_feature_prompt_save_confirmation">Salva</string>
+    <!-- Negative confirmation that we should not save the updated login -->
+    <string name="mozac_feature_prompt_dont_update">Non aggiornare</string>
+    <!-- Negative confirmation that we should not save the updated login -->
+    <string name="mozac_feature_prompt_dont_update_2" tools:ignore="UnusedResources">Non adesso</string>
+    <!-- Positive confirmation that we should save the updated login -->
+    <string name="mozac_feature_prompt_update_confirmation">Aggiorna</string>
+    <!-- Error text displayed underneath the password field when it is in an error case -->
+    <string name="mozac_feature_prompt_error_empty_password">È necessario inserire una password</string>
+    <!-- Error text displayed underneath the password field when it is in an error case -->
+    <string name="mozac_feature_prompt_error_empty_password_2" tools:ignore="UnusedResources">Inserisci una password</string>
+    <!-- Error text displayed underneath the login field when it is in an error case -->
+    <string name="mozac_feature_prompt_error_unknown_cause">Impossibile salvare le credenziali</string>
+    <!-- Error text displayed underneath the password field when it is in an error case -->
+    <string name="mozac_feature_prompt_error_unknown_cause_2" tools:ignore="UnusedResources">Impossibile salvare la password</string>
+    <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new login. -->
+    <string name="mozac_feature_prompt_login_save_headline">Salvare queste credenziali?</string>
+    <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new password. -->
+    <string name="mozac_feature_prompt_login_save_headline_2" tools:ignore="UnusedResources">Salvare la password?</string>
+    <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the login. -->
+    <string name="mozac_feature_prompt_login_update_headline">Aggiornare queste credenziali?</string>
+    <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the password. -->
+    <string name="mozac_feature_prompt_login_update_headline_2" tools:ignore="UnusedResources">Aggiornare la password?</string>
+    <!-- Prompt message displayed when app detects a user has entered a username for an existing login without a username and user decides if app should update the login. -->
+    <string name="mozac_feature_prompt_login_add_username_headline">Aggiungere il nome utente alle credenziali salvate?</string>
+    <!-- Text for a label for the field when prompt requesting a text is shown. -->
+    <!-- For more info take a look here https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt -->
+    <string name="mozac_feature_prompts_content_description_input_label">Etichetta associata a un campo per l’inserimento di testo</string>
+    <!-- Title of a color picker dialog, this text is shown above a color picker. -->
+    <string name="mozac_feature_prompts_choose_a_color">Scegli un colore</string>
+    <!-- Text of a confirm button in dialog requesting to open a new window. -->
+    <string name="mozac_feature_prompts_allow">Permetti</string>
+    <!-- Text of a negative button in dialog requesting to open a new window. -->
+    <string name="mozac_feature_prompts_deny">Nega</string>
+    <!-- Title of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
+    <string name="mozac_feature_prompt_before_unload_dialog_title">Abbandonare la pagina?</string>
+    <!-- Body text of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
+    <string name="mozac_feature_prompt_before_unload_dialog_body">Vuoi abbandonare questo sito? I dati inseriti potrebbero non essere stati salvati</string>
+    <!-- Stay button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to stay in the website. -->
+    <string name="mozac_feature_prompts_before_unload_stay">Non abbandonare</string>
+    <!-- Leave button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to leave in the website. -->
+    <string name="mozac_feature_prompts_before_unload_leave">Abbandona</string>
+    <!-- Title of the month chooser dialog. -->
+    <string name="mozac_feature_prompts_set_month">Seleziona mese</string>
+    <!-- January (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_jan">Gen</string>
+    <!-- February month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_feb">Feb</string>
+    <!-- March month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_mar">Mar</string>
+    <!-- April month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_apr">Apr</string>
+    <!-- May month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_may">Mag</string>
+    <!-- June month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_jun">Giu</string>
+    <!-- July month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_jul">Lug</string>
+    <!-- August month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_aug">Ago</string>
+    <!-- September month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_sep">Set</string>
+    <!-- October month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_oct">Ott</string>
+    <!-- November month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_nov">Nov</string>
+    <!-- December month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_dec">Dic</string>
+    <!-- Title of the time picker dialog. -->
+    <string name="mozac_feature_prompts_set_time">Imposta ora</string>
+    <!-- Option in expanded select login prompt that links to login settings -->
+    <string name="mozac_feature_prompts_manage_logins">Gestione credenziali</string>
+    <!-- Option in expanded select password prompt that links to password settings -->
+    <string name="mozac_feature_prompts_manage_logins_2" tools:ignore="UnusedResources">Gestisci password</string>
+    <!-- Content description for expanding the saved logins options in the select login prompt -->
+    <string name="mozac_feature_prompts_expand_logins_content_description">Espandi le credenziali suggerite</string>
+    <!-- Content description for expanding the saved passwords options in the select password prompt -->
+    <string name="mozac_feature_prompts_expand_logins_content_description_2" tools:ignore="UnusedResources">Espandi le password salvate</string>
+    <!-- Content description for collapsing the saved logins options in the select login prompt -->
+    <string name="mozac_feature_prompts_collapse_logins_content_description">Comprimi le credenziali suggerite</string>
+    <!-- Content description for collapsing the saved passwords options in the select password prompt -->
+    <string name="mozac_feature_prompts_collapse_logins_content_description_2" tools:ignore="UnusedResources">Comprimi le password salvate</string>
+    <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
+    <string name="mozac_feature_prompts_saved_logins">Credenziali suggerite</string>
+
+    <!-- Header for the select password prompt to allow users to fill a form with a saved password -->
+    <string name="mozac_feature_prompts_saved_logins_2" tools:ignore="UnusedResources">Password salvate</string>
+
+    <!-- Content description for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_content_description">Suggerisci password complessa</string>
+    <!-- Header for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password">Suggerisci password complessa</string>
+    <!-- Title for using the suggest strong password confirmation dialog. %1$s will be replaced with the generated password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_message">Utilizza password complessa: %1$s</string>
+
+    <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
+    <string name="mozac_feature_prompt_repost_title">Inviare nuovamente i dati a questo sito?</string>
+    <string name="mozac_feature_prompt_repost_message">Il ricaricamento può causare la ripetizione di azioni recenti svolte sulla pagina, generando, per esempio, pagamenti o commenti duplicati.</string>
+    <!-- Pressing this will dismiss the dialog and reload the page sending again the previous data -->
+    <string name="mozac_feature_prompt_repost_positive_button_text">Reinvia i dati</string>
+    <!-- Pressing this will dismiss the dialog and not refresh the webpage -->
+    <string name="mozac_feature_prompt_repost_negative_button_text">Annulla</string>
+
+    <!-- Credit Card Autofill -->
+    <!-- Header for the select credit card prompt to allow users to fill a form with a saved credit card. -->
+    <string name="mozac_feature_prompts_select_credit_card">Seleziona carta di credito</string>
+    <!-- Header for the select card prompt to allow users to fill a form with a saved card. -->
+    <string name="mozac_feature_prompts_select_credit_card_2" tools:ignore="UnusedResources">Utilizza carta salvata</string>
+    <!-- Content description for expanding the select credit card options in the select credit card prompt. -->
+    <string name="mozac_feature_prompts_expand_credit_cards_content_description">Espandi l’elenco delle carte di credito suggerite</string>
+    <!-- Content description for expanding the saved card options in the select card prompt. -->
+    <string name="mozac_feature_prompts_expand_credit_cards_content_description_2" tools:ignore="UnusedResources">Espandi le carte salvate</string>
+    <!-- Content description for collapsing the select credit card options in the select credit prompt. -->
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description">Comprimi l’elenco delle carte di credito suggerite</string>
+    <!-- Content description for collapsing the saved card options in the select prompt. -->
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description_2" tools:ignore="UnusedResources">Comprimi le carte salvate</string>
+    <!-- Option in the expanded select credit card prompt that links to credit cards settings. -->
+    <string name="mozac_feature_prompts_manage_credit_cards">Gestisci carte di credito</string>
+    <!-- Option in the expanded select card prompt that links to cards settings. -->
+    <string name="mozac_feature_prompts_manage_credit_cards_2" tools:ignore="UnusedResources">Gestisci carte</string>
+    <!-- Text for the title of a save credit card dialog. -->
+    <string name="mozac_feature_prompts_save_credit_card_prompt_title">Salvare questa carta in modo sicuro?</string>
+    <!-- Text for the title of an update credit card dialog. -->
+    <string name="mozac_feature_prompts_update_credit_card_prompt_title">Aggiornare la data di scadenza della carta?</string>
+    <!-- Subtitle text displayed under the title of the save credit card dialog. -->
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body">Il numero della carta sarà crittato. Il codice di sicurezza non verrà salvato.</string>
+
+    <!-- Subtitle text displayed under the title of the saved card dialog. Parameter will be replaced by app name-->
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body_2" tools:ignore="UnusedResources">%s critta il numero della tua carta. Il codice di sicurezza non verrà salvato.</string>
+
+    <!-- Address Autofill -->
+    <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
+    <string name="mozac_feature_prompts_select_address_2">Seleziona indirizzo</string>
+    <!-- Content description for expanding the select addresses options in the select address prompt. -->
+    <string name="mozac_feature_prompts_expand_address_content_description">Espandi gli indirizzi suggeriti</string>
+    <!-- Content description for expanding the saved addresses options in the select address prompt. -->
+    <string name="mozac_feature_prompts_expand_address_content_description_2" tools:ignore="UnusedResources">Espandi gli indirizzi salvati</string>
+    <!-- Content description for collapsing the select address options in the select address prompt. -->
+    <string name="mozac_feature_prompts_collapse_address_content_description">Comprimi gli indirizzi suggeriti</string>
+    <!-- Content description for collapsing the saved address options in the select address prompt. -->
+    <string name="mozac_feature_prompts_collapse_address_content_description_2" tools:ignore="UnusedResources">Comprimi gli indirizzi salvati</string>
+    <!-- Text for the manage addresses button. -->
+    <string name="mozac_feature_prompts_manage_address">Gestisci indirizzi</string>
+
+    <!-- Federated Credential Management prompts -->
+    <!--Content description for the Account picture in the Select Account FedCM prompt -->
+    <string name="mozac_feature_prompts_account_picture">Immagine per l’account</string>
+    <!-- Title of the Identity Credential provider dialog chooser. -->
+    <string name="mozac_feature_prompts_identity_credentials_choose_provider">Scegli un provider di accesso</string>
+    <!-- Title of an account picker dialog for identity credentials. The %1$s will be replaced with the name of the provider -->
+    <string name="mozac_feature_prompts_identity_credentials_choose_account_for_provider">Accedi con un account %1$s</string>
+    <!-- Title of the Identity Credential privacy policy dialog title. The %1$s will be replaced with the name of the provider. -->
+    <string name="mozac_feature_prompts_identity_credentials_privacy_policy_title">Utilizza %1$s come provider di accesso</string>
+    <!-- Title of the Identity Credential privacy policy dialog description. The %1$s will be replaced with the name of the provider, %2$s will be replaced with the account, %3$s will be replaced with the privacy policy url and  %4$s will be replaced with the terms of service. -->
+    <string name="mozac_feature_prompts_identity_credentials_privacy_policy_description"><![CDATA[L’accesso a %1$s con un account %2$s è soggetto all’<a href="%3$s">Informativa sulla privacy</a> e alle <a href="%4$s">Condizioni di utilizzo del servizio</a> di quest’ultimo.]]></string>
+    <!-- Text for the positive button of the Identity Credential dialogs. -->
+    <string name="mozac_feature_prompts_identity_credentials_continue">Continua</string>
+    <!-- Text for the cancel button of the Identity Credential dialogs. -->
+    <string name="mozac_feature_prompts_identity_credentials_cancel">Annulla</string>
+</resources>

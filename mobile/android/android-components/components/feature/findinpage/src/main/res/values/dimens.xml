@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<resources>
+    <dimen name="mozac_feature_findinpage_query_text_size">16sp</dimen>
+    <dimen name="mozac_feature_findinpage_query_marginStart">16dp</dimen>
+
+    <dimen name="mozac_feature_findinpage_result_count_text_size">12sp</dimen>
+    <dimen name="mozac_feature_findinpage_result_count_margin_end">16dp</dimen>
+    <dimen name="mozac_feature_findinpage_result_count_margin_start">16dp</dimen>
+</resources>

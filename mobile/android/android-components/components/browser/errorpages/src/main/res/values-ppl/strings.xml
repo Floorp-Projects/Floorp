@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">Shikejeku uksenpa</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">Tesu welik muajshitia ne tajtanilis</string>
+
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[
+      <p>Sanuk tesu nemi ukse informacion ipanpa ini uwijkayut u tajtakul.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">Tesu welik muchiwa se musalulis seguruj</string>
+
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
+      <ul>
+        <li>Ne iswat taja tikneki tikita tesu weli muneshtia ika tesu weli tikneltia asu ijkia ne itukey ne datos tikwijtiwit .</li>
+        <li>Shiknutza ne itejtekuyu ne sitioj matapan pal tiknawatilia ini uijkayu.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Tesu welik muchiwa se musalulis seguruj</string>
+
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+      <ul>
+        <li>Ini anka se uijkayu iwan ne iconfiguración ne servidor, u anka se akaj kiejekua tashijshikua mukwepa ne servidor.</li>
+        <li>Asu ikman taja timusalujtuk yek itech ini servidor, ne tatakul yu ishtuna chupi, wan tiweli taejekua nemanha.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Chayawtuk…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Se akaj kiejekua tashijshikua mukwepa ne sitioj wan te nemi pal tipanu.</label>
+        <br><br>
+        <label>Ne tzawalsitioj ina ka yajasan ipanpa certificados. %1$s tesu kineltuka <b>%2$s</b> ika ne kimaka certificados tesu muishmati, ne certificadoj kiwawasu itukey isel, u ne servidor tesu kititania ne yejyek certificados intermedioj.</label>
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Shimukwepa (tanawatilis)</string>
+
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Nikwi ne riesgoj wan nipanu</string>
+
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">Ini tzawalsitioj kineki se tasalulis seguroj.</string>
+
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+      <ul>
+         <li>Ne iswat tikneki tikita tesu weli muneshtia ika ini sitioj matapan kineki se tasalulis seguruj.</li>
+         <li>Ini uijkayu anka iwan ne sitioj matapan, wan tesu tiweli tikchiwa te tatka pal tikishtia.</li>
+         <li>Tiweli tiknawatilia ne administrador pal ini sitioj ini uijkayu.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Chayawtuk…</string>
+
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Shimukwepa</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">Ne tasalulis kutunik</string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">Ne tasalulis tamik</string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">Tesu welik musalua</string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Ne servidor tesu nankilia ken muchiya.</string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">Ne iswat tesu yek tatijtitania senpa.</string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">Modoj kupintuk</string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">Tesu weli kalaki tik ne puertoj ipanpa ne tajpiyalis.</string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">Ne tasalulis mupewaltijtuk senpa.</string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">Ne tipoj archivoj tesajsay</string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">Tatakul kalijtik palantuk</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Ne tay nemi kalijtik kichiwki tajtakul</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Tajtakul pal ne itasenputzulis ne tay nemi kalijtik.</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">Ne dirección tesu muajsik</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Te musalujtuk tech Internet</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Takimiltia senpa</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">Tesu muajsituk ne archivoj</string>
+
+    </resources>

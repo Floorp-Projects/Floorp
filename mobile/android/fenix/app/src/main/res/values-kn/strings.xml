@@ -1,0 +1,1394 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_5">ಖಾಸಗಿ %s</string>
+
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_4">%s (ಖಾಸಗಿ)</string>
+
+    <!-- Home Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">ಮತ್ತಷ್ಟು ಆಯ್ಕೆಗಳು</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_private_browsing_button">ಖಾಸಗಿ ಬ್ರೌಸಿಂಗ್ ಅನ್ನು ಸಕ್ರಿಯಗೊಳಿಸಿ</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_disable_private_browsing_button">ಖಾಸಗಿ ಬ್ರೌಸಿಂಗ್ ಅನ್ನು ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಿ</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="search_hint">ಹುಡುಕಿ ಅಥವಾ ವಿಳಾಸವನ್ನು ನಮೂದಿಸಿ</string>
+    <!-- No Open Tabs Message Description -->
+    <string name="no_open_tabs_description">ನಿಮ್ಮ ತೆರೆದ ಟ್ಯಾಬ್‌ಗಳನ್ನು ಇಲ್ಲಿ ತೋರಿಸಲಾಗುತ್ತದೆ.</string>
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">ನಿಮ್ಮ ಖಾಸಗಿ ಟ್ಯಾಬ್‌ಗಳನ್ನು ಇಲ್ಲಿ ತೋರಿಸಲಾಗುತ್ತದೆ.</string>
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="open_tab_tray_single">1 ತೆರೆದ ಟ್ಯಾಬ್. ಟ್ಯಾಬ್‌ಗಳನ್ನು ಬದಲಾಯಿಸಲು ಟ್ಯಾಪ್ ಮಾಡಿ.</string>
+    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
+    <string name="open_tab_tray_plural">%1$s ತೆರೆದ ಟ್ಯಾಬ್‌ಗಳು. ಟ್ಯಾಬ್‌ಗಳನ್ನು ಬದಲಾಯಿಸಲು ಟ್ಯಾಪ್ ಮಾಡಿ.</string>
+
+    <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
+    <string name="about_content">%1$s ಅನ್ನು ಮೊಜಿಲ್ಲಾ ಉತ್ಪಾದಿಸುತ್ತದೆ.</string>
+
+    <!-- Private Browsing -->
+    <!-- Title for private session option -->
+    <string name="private_browsing_title">ನೀವು ಖಾಸಗಿ ಅಧಿವೇಶನದಲ್ಲಿದ್ದೀರಿ</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder_description_2">%1$s ನಿಮ್ಮ ಹುಡುಕಾಟ ಮತ್ತು ಬ್ರೌಸಿಂಗ್ ಇತಿಹಾಸವನ್ನು ಖಾಸಗಿ ಟ್ಯಾಬ್‌ಗಳಿಂದ ನೀವು ಮುಚ್ಚಿದಾಗ ಅಥವಾ ಅಪ್ಲಿಕೇಶನ್‌ನಿಂದ ನಿರ್ಗಮಿಸಿದಾಗ ಅವುಗಳನ್ನು ತೆರವುಗೊಳಿಸುತ್ತದೆ. ಇದು ನಿಮ್ಮನ್ನು ವೆಬ್‌ಸೈಟ್‌ಗಳಿಗೆ ಅಥವಾ ನಿಮ್ಮ ಇಂಟರ್ನೆಟ್ ಸೇವಾ ಪೂರೈಕೆದಾರರಿಗೆ ಅನಾಮಧೇಯರನ್ನಾಗಿ ಮಾಡದಿದ್ದರೂ, ಈ ಸಾಧನವನ್ನು ಬಳಸುವ ಬೇರೆಯವರಿಂದ ನೀವು ಆನ್‌ಲೈನ್‌ನಲ್ಲಿ ಏನು ಮಾಡುತ್ತೀರಿ ಎಂಬುದನ್ನು ಖಾಸಗಿಯಾಗಿ ಇಡುವುದು ಸುಲಭಗೊಳಿಸುತ್ತದೆ.</string>
+    <string name="private_browsing_common_myths">ಖಾಸಗಿ ಬ್ರೌಸಿಂಗ್ ಬಗ್ಗೆ ಸಾಮಾನ್ಯ ಪುರಾಣಗಳು</string>
+    <!-- Delete session button to erase your history in a private session -->
+    <string name="private_browsing_delete_session">ಅಧಿವೇಶನವನ್ನು ಅಳಿಸಿ</string>
+
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message -->
+    <string name="cfr_message">ನಿಮ್ಮ ಮುಖಪುಟ ಪರದೆಯಿಂದ ಖಾಸಗಿ ಟ್ಯಾಬ್‌ಗಳನ್ನು ತೆರೆಯಲು ಶಾರ್ಟ್‌ಕಟ್ ಸೇರಿಸಿ.</string>
+    <!-- Text for the positive button -->
+    <string name="cfr_pos_button_text">ಶಾರ್ಟ್ಕಟ್ ಸೇರಿಸಿ</string>
+    <!-- Text for the negative button -->
+    <string name="cfr_neg_button_text">ಪರವಾಗಿಲ್ಲ</string>
+
+    <!-- Home screen icons - Long press shortcuts -->
+    <!-- Shortcut action to open new tab -->
+    <string name="home_screen_shortcut_open_new_tab_2">ಹೊಸ ಟ್ಯಾಬ್</string>
+    <!-- Shortcut action to open new private tab -->
+    <string name="home_screen_shortcut_open_new_private_tab_2">ಹೊಸ ಖಾಸಗಿ ಟ್ಯಾಬ್</string>
+    <!-- Heading for the Top Sites block -->
+    <string name="home_screen_top_sites_heading">ಪ್ರಮುಖ ತಾಣಗಳು</string>
+
+    <!-- Browser Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
+    <string name="browser_tabs_button">ತೆರೆದ ಟ್ಯಾಬ್‌ಗಳು</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
+    <string name="browser_menu_back">ಹಿಂದಕ್ಕೆ</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="browser_menu_forward">ಮುಂದೆ</string>
+    <!-- Content description (not visible, for screen readers etc.): Refresh current website -->
+    <string name="browser_menu_refresh">ನವೀಕರಿಸು</string>
+    <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
+    <string name="browser_menu_stop">ನಿಲ್ಲಿಸು</string>
+    <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
+    <string name="browser_menu_bookmark">ಪುಟ ಗುರುತು</string>
+    <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
+    <string name="browser_menu_edit_bookmark">ಪುಟಗುರುತನ್ನು ಸಂಪಾದಿಸಿ</string>
+    <!-- Browser menu button that opens the addon manager -->
+    <string name="browser_menu_add_ons">ಆಡ್-ಆನ್‌ಗಳು</string>
+    <!-- Text displayed when there are no add-ons to be shown -->
+    <string name="no_add_ons">ಇಲ್ಲಿ ಯಾವುದೇ ಆಡ್-ಆನ್‌ಗಳಿಲ್ಲ</string>
+    <!-- Browser menu button that sends a user to help articles -->
+    <string name="browser_menu_help">ಸಹಾಯ</string>
+    <!-- Browser menu button that sends a to a the what's new article -->
+    <string name="browser_menu_whats_new">ಹೊಸತೇನಿದೆ</string>
+    <!-- Browser menu button that opens the settings menu -->
+    <string name="browser_menu_settings">ಸಿದ್ಧತೆಗಳು</string>
+    <!-- Browser menu button that opens a user's library -->
+    <string name="browser_menu_library">ಲೈಬ್ರರಿ</string>
+    <!-- Browser menu toggle that requests a desktop site -->
+    <string name="browser_menu_desktop_site">ಡೆಸ್ಕ್ಟಾಪ್ ಸೈಟ್</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen">ಮುಖಪುಟ ಪರದೆಗೆ ಸೇರಿಸಿ</string>
+    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
+    <string name="browser_menu_install_on_homescreen">ಅನುಸ್ಥಾಪಿಸು</string>
+    <!-- Menu option on the toolbar that takes you to synced tabs page-->
+    <string name="synced_tabs">ಸಿಂಕ್ ಮಾಡಿದ ಹಾಳೆಗಳು</string>
+    <!-- Browser menu button that opens the find in page menu -->
+    <string name="browser_menu_find_in_page">ಪುಟದಲ್ಲಿ ಹುಡುಕು</string>
+    <!-- Browser menu button that creates a private tab -->
+    <string name="browser_menu_private_tab">ಖಾಸಗಿ ಟ್ಯಾಬ್‌</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection_2">ಸಂಗ್ರಹಕ್ಕೆ ಉಳಿಸಿ</string>
+    <!-- Browser menu button that open a share menu to share the current site -->
+    <string name="browser_menu_share">ಹಂಚು</string>
+    <!-- Share menu title, displayed when a user is sharing their current site -->
+    <string name="menu_share_with">ಜೊತೆ ಹಂಚಿಕೊ…</string>
+    <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_open_in_fenix">ಇದರಲ್ಲಿ ತೆರೆ %1$s</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by">%1$s ನಿಂದ ನಡೆಸಲಾಗುತ್ತದೆ</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by2">%1$s ನಿಂದ ನಡೆಸಲ್ಪಡುತ್ತಿದೆ</string>
+    <!-- Browser menu button to put the current page in reader mode -->
+    <string name="browser_menu_read">ಓದುಗರ ನೋಟ</string>
+    <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
+    <string name="browser_menu_read_close">ಓದುಗರ ನೋಟವನ್ನು ಮುಚ್ಚಿ</string>
+    <!-- Browser menu button to open the current page in an external app -->
+    <string name="browser_menu_open_app_link">ಅನ್ವಯಿಕದಲ್ಲಿ ತೆರೆಯಿರಿ</string>
+    <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
+    <string name="browser_menu_read_appearance">ಗೋಚರಿಕೆ</string>
+
+    <!-- Error message to show when the user tries to access a scheme not
+        handled by the app (Ex: blob, tel etc) -->
+    <string name="unknown_scheme_error_message">ಸಂಪರ್ಕಿಸಲು ಸಾಧ್ಯವಿಲ್ಲ. ಗುರುತಿಸಲಾಗದ URL ಯೋಜನೆ.</string>
+
+    <!-- Locale Settings Fragment -->
+    <!-- Content description for tick mark on selected language -->
+    <string name="a11y_selected_locale_content_description">ಆಯ್ದ ಭಾಷೆ</string>
+    <!-- Content description for search icon -->
+    <string name="a11y_search_icon_content_description">ಹುಡುಕು</string>
+    <!-- Text for default locale item -->
+    <string name="default_locale_text">ಸಾಧನ ಭಾಷೆಯನ್ನು ಅನುಸರಿಸಿ</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="locale_search_hint">ಭಾಷೆಗಳನ್ನು ಹುಡುಕು</string>
+
+    <!-- Search Fragment -->
+    <!-- Button in the search view that lets a user search by scanning a QR code -->
+    <string name="search_scan_button">ಸ್ಕ್ಯಾನ್</string>
+    <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
+    <string name="search_shortcuts_engine_settings">ಸರ್ಚ್ ಎಂಜಿನ್ ಸಿದ್ದತೆಗಳು</string>
+    <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
+    <string name="awesomebar_clipboard_title">ಕ್ಲಿಪ್‌ಬೋರ್ಡ್‌ನಿಂದ ಲಿಂಕ್ ಅನ್ನು ಭರ್ತಿ ಮಾಡಿ</string>
+    <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_allow_button">ಅನುಮತಿಸು</string>
+    <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_do_not_allow_button">ಅನುಮತಿಸ ಬೇಡ‍</string>
+    <!-- Search suggestion onboarding hint title text -->
+    <string name="search_suggestions_onboarding_title">ಖಾಸಗಿ ಸೆಷನ್‌ಗಳಲ್ಲಿ ಹುಡುಕಾಟ ಸಲಹೆಗಳನ್ನು ಅನುಮತಿಸುವುದೇ?</string>
+    <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="search_suggestions_onboarding_text">ವಿಳಾಸ ಪಟ್ಟಿಯಲ್ಲಿ ನೀವು ಟೈಪ್ ಮಾಡಿದ ಎಲ್ಲವನ್ನೂ ನಿಮ್ಮ ಡೀಫಾಲ್ಟ್ ಸರ್ಚ್ ಎಂಜಿನ್‌ನೊಂದಿಗೆ %s ಹಂಚಿಕೊಳ್ಳುತ್ತದೆ.</string>
+    <!-- Search suggestion onboarding hint Learn more link text -->
+    <string name="search_suggestions_onboarding_learn_more_link">ಇನ್ನಷ್ಟು ತಿಳಿಯಿರಿ</string>
+
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">ಹುಡುಕು</string>
+    <!-- Text preview for larger sized widgets -->
+    <string name="search_widget_text_long">ಅಂತರ್ಜಾಲವನ್ನು ಹುಡುಕಿ</string>
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">ಧ್ವನಿ ಹುಡುಕಾಟ</string>
+
+    <!-- Preferences -->
+    <!-- Title for the settings page-->
+    <string name="settings">ಸಿದ್ಧತೆಗಳು</string>
+    <!-- Preference category for basic settings -->
+    <string name="preferences_category_basics">ಮೂಲಗಳು</string>
+    <!-- Preference category for general settings -->
+    <string name="preferences_category_general">ಸಾಮಾನ್ಯ</string>
+    <!-- Preference category for all links about Fenix -->
+    <string name="preferences_category_about">ಇದರ ಬಗ್ಗೆ</string>
+    <!-- Preference for settings related to changing the default search engine -->
+    <string name="preferences_default_search_engine">ಪೂರ್ವನಿಯೋಜಿತ ಹುಡುಕು ಎಂಜಿನ್</string>
+    <!-- Preference for settings related to Search -->
+    <string name="preferences_search">ಹುಡುಕು</string>
+    <!-- Preference for settings related to Search address bar -->
+    <string name="preferences_search_address_bar">ವಿಳಾಸ ಪಟ್ಟಿ</string>
+    <!-- Preference linking to help about Fenix -->
+    <string name="preferences_help">ನೆರವು</string>
+    <!-- Preference link to rating Fenix on the Play Store -->
+    <string name="preferences_rate">ಗೂಗಲ್‌ ಪ್ಲೇ ನಲ್ಲಿ ರೇಟ್ ಮಾಡಿ</string>
+    <!-- Preference for giving feedback about Fenix -->
+    <string name="preferences_feedback">ಪ್ರತಿಕ್ರಿಯೆ ನೀಡು</string>
+    <!-- Preference linking to about page for Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="preferences_about">%1$s ನ ಬಗ್ಗೆ</string>
+    <!-- Preference linking to the your rights SUMO page -->
+    <string name="preferences_your_rights">‍ನಿಮ್ಮ ಹಕ್ಕುಗಳು</string>
+    <!-- Preference for settings related to saved passwords -->
+    <string name="preferences_passwords">ಗುಪ್ತಪದಗಳು</string>
+    <!-- Preference for settings related to saved credit cards and addresses -->
+    <string name="preferences_credit_cards_addresses">ಕ್ರೆಡಿಟ್ ಕಾರ್ಡ್‌ಗಳು ಮತ್ತು ವಿಳಾಸಗಳು</string>
+    <!-- Preference for settings related to changing the default browser -->
+    <string name="preferences_set_as_default_browser">ಪೂರ್ವನಿಯೋಜಿತ ಬ್ರೌಸರ್ ಮಾಡಿ</string>
+    <!-- Preference category for advanced settings -->
+    <string name="preferences_category_advanced">ಸುಧಾರಿತ</string>
+    <!-- Preference category for privacy settings -->
+    <string name="preferences_category_privacy">ಗೌಪ್ಯತೆ</string>
+    <!-- Preference category for privacy and security settings -->
+    <string name="preferences_category_privacy_security">ಗೋಪ್ಯತೆ &amp; ಸುರಕ್ಷತೆ</string>
+    <!-- Preference for advanced site permissions -->
+    <string name="preferences_site_permissions">ಸೈಟ್ ಅನುಮತಿಗಳು</string>
+    <!-- Preference for private browsing options -->
+    <string name="preferences_private_browsing_options">ಖಾಸಗಿ ವೀಕ್ಷಣೆ</string>
+    <!-- Preference for opening links in a private tab-->
+    <string name="preferences_open_links_in_a_private_tab">ಕೊಂಡಿಗಳನ್ನು ಖಾಸಗಿ ಹಾಳೆಯಲ್ಲಿ ತೆರೆ</string>
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">ಖಾಸಗಿ ಬ್ರೌಸಿಂಗ್‌ನಲ್ಲಿ ಸ್ಕ್ರೀನ್‌ಶಾಟ್‌ಗಳನ್ನು ಅನುಮತಿಸಿ</string>
+    <!-- Preference for adding private browsing shortcut -->
+    <string name="preferences_add_private_browsing_shortcut">ಖಾಸಗಿ ಬ್ರೌಸಿಂಗ್ ಶಾರ್ಟ್‌ಕಟ್ ಸೇರಿಸಿ</string>
+    <!-- Preference for accessibility -->
+    <string name="preferences_accessibility">ನಿಲುಕಣೆ</string>
+    <!-- Preference to override the Firefox Account server -->
+    <string name="preferences_override_fxa_server">ಕಸ್ಟಮ್ ಫೈರ್‌ಫಾಕ್ಸ್ ಖಾತೆ ಸರ್ವರ್</string>
+    <!-- Preference to override the Sync token server -->
+    <string name="preferences_override_sync_tokenserver">ಕಸ್ಟಮ್ ಸಿಂಕ್ ಸರ್ವರ್</string>
+    <!-- Toast shown after updating the FxA/Sync server override preferences -->
+    <string name="toast_override_fxa_sync_server_done">ಫೈರ್‌ಫಾಕ್ಸ್ ಖಾತೆ/ಸಿಂಕ್ ಸರ್ವರ್ ಅನ್ನು ಮಾರ್ಪಡಿಸಲಾಗಿದೆ. ಬದಲಾವಣೆಗಳನ್ನು ಅನ್ವಯಿಸಲು ಅಪ್ಲಿಕೇಶನ್ ಅನ್ನು ತ್ಯಜಿಸಲಾಗುತ್ತಿದೆ…</string>
+    <!-- Preference category for account information -->
+    <string name="preferences_category_account">ಖಾತೆ</string>
+    <!-- Preference shown on banner to sign into account -->
+    <string name="preferences_sign_in">ಸೈನ್ ಇನ್</string>
+    <!-- Preference for changing where the toolbar is positioned -->
+    <string name="preferences_toolbar">ಪರಿಕರ ಪಟ್ಟಿ</string>
+    <!-- Preference for changing default theme to dark or light mode -->
+    <string name="preferences_theme">ಪರಿಸರ ವಿನ್ಯಾಸ</string>
+    <!-- Preference for settings related to visual options -->
+    <string name="preferences_customize">ಅಗತ್ಯಾನುಗುಣಗೊಳಿಸು</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description">ನಿಮ್ಮ ಫೈರ್‌ಫಾಕ್ಸ್ ಖಾತೆಯೊಂದಿಗೆ ಬುಕ್‌ಮಾರ್ಕ್‌ಗಳು, ಇತಿಹಾಸ ಮತ್ತು ಹೆಚ್ಚಿನದನ್ನು ಸಿಂಕ್ ಮಾಡಿ</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name">ಫೈರ್ಫಾಕ್ಸ್ ಖಾತೆ</string>
+    <!-- Preference text for account title when there was an error syncing FxA -->
+    <string name="preferences_account_sync_error">ಸಿಂಕ್ ಮಾಡುವುದನ್ನು ಪುನರಾರಂಭಿಸಲು ಮರುಸಂಪರ್ಕಿಸಿ</string>
+    <!-- Preference for language -->
+    <string name="preferences_language">ಭಾಷೆ</string>
+    <!-- Preference for data choices -->
+    <string name="preferences_data_choices">ದತ್ತಾಂಶ ಆಯ್ಕೆಗಳು</string>
+    <!-- Preference for data collection -->
+    <string name="preferences_data_collection">ಮಾಹಿತಿ ಸಂಗ್ರಹ</string>
+    <!-- Preference linking to the privacy notice -->
+    <string name="preferences_privacy_link">ಗೌಪ್ಯತೆ ಸೂಚನೆ</string>
+    <!-- Preference category for developer tools -->
+    <string name="developer_tools_category">ವಿಕಸನಾ ಉಪಕರಣಗಳು</string>
+    <!-- Preference for developers -->
+    <string name="preferences_remote_debugging">ರಿಮೋಟ್ ಡೀಬಗ್ಗಿಂಗ್ USB ಮೂಲಕ</string>
+    <!-- Preference title for switch preference to show search suggestions -->
+    <string name="preferences_show_search_suggestions">ಹುಡುಕಲು ಸಲಹೆಗಳನ್ನು ತೋರಿಸು</string>
+    <!-- Preference title for switch preference to show voice search button -->
+    <string name="preferences_show_voice_search">ಧ್ವನಿ ಹುಡುಕಾಟವನ್ನು ತೋರಿಸಿ</string>
+
+    <!-- Preference title for switch preference to show search suggestions also in private mode -->
+    <string name="preferences_show_search_suggestions_in_private">ಖಾಸಗಿ ಅವಧಿಗಳಲ್ಲಿ ತೋರಿಸಿ</string>
+    <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
+    <string name="preferences_show_clipboard_suggestions">ಕ್ಲಿಪ್ಬೋರ್ಡ್ ಸಲಹೆಗಳನ್ನು ತೋರಿಸಿ</string>
+    <!-- Preference title for switch preference to suggest browsing history when searching -->
+    <string name="preferences_search_browsing_history">ವೀಕ್ಷಣೆಯ ಇತಿಹಾಸವನ್ನು ಅಳಿಸಿ</string>
+    <!-- Preference title for switch preference to suggest bookmarks when searching -->
+    <string name="preferences_search_bookmarks">ಬುಕ್‌ಮಾರ್ಕುಗಳನ್ನು ಹುಡುಕು</string>
+    <!-- Preference for account settings -->
+    <string name="preferences_account_settings">ಖಾತೆ ಸೆಟ್ಟಿಂಗ್‌ಗಳು</string>
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">ಅಪ್ಲಿಕೇಶನ್‌ಗಳಲ್ಲಿ ಲಿಂಕ್‌ಗಳನ್ನು ತೆರೆಯಿರಿ</string>
+    <!-- Preference for add_ons -->
+    <string name="preferences_addons">ಆಡ್-ಆನ್‌ಗಳು</string>
+
+    <!-- Account Preferences -->
+    <!-- Preference for triggering sync -->
+    <string name="preferences_sync_now">ಈಗಲೆ ಸಿಂಕ್ ಮಾಡು</string>
+    <!-- Preference category for sync -->
+    <string name="preferences_sync_category">ಏನು ಸಿಂಕ್ ಮಾಡಿಕೊಳ್ಳಬಹುದೆಂದು ಆಯ್ಕೆಮಾಡು</string>
+    <!-- Preference for syncing history -->
+    <string name="preferences_sync_history">ಇತಿಹಾಸ</string>
+    <!-- Preference for syncing bookmarks -->
+    <string name="preferences_sync_bookmarks">ಪುಟಗುರುತುಗಳು</string>
+    <!-- Preference for syncing logins -->
+    <string name="preferences_sync_logins">ಲಾಗಿನ್‌ಗಳು</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs_2">ತೆರೆದ ಟ್ಯಾಬ್‌ಗಳು</string>
+    <!-- Preference for signing out -->
+    <string name="preferences_sign_out">ನಿರ್ಗಮಿಸು‍</string>
+    <!-- Preference displays and allows changing current FxA device name -->
+    <string name="preferences_sync_device_name">ಸಾಧನದ ಹೆಸರು</string>
+    <!-- Text shown when user enters empty device name -->
+    <string name="empty_device_name_error">ಸಾಧನದ ಹೆಸರು ಖಾಲಿಯಾಗಿರಬಾರದು.</string>
+    <!-- Label indicating that sync is in progress -->
+    <string name="sync_syncing_in_progress">ಸಿಂಕ್ ಮಾಡಲಾಗುತ್ತಿದೆ…</string>
+    <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
+    <string name="sync_failed_summary">ಸಿಂಕ್ ವಿಫಲವಾಗಿದೆ. ಕೊನೆಯ ಯಶಸ್ಸು: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_failed_never_synced_summary">ಸಿಂಕ್ ವಿಫಲವಾಗಿದೆ. ಕೊನೆಯದಾಗಿ ಸಿಂಕ್ ಮಾಡಲಾಗಿದೆ: ಎಂದಿಗೂ ಮಾಡಿಲ್ಲ</string>
+    <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
+    <string name="sync_last_synced_summary">ಕೊನೆಯದಾಗಿ ಸಿಂಕ್ ಮಾಡಲಾಗಿದೆ: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_never_synced_summary">ಕೊನೆಗೆ ಸಿಂಕ್‌ಆದದ್ದು: ಎಂದಿಗೂ ಇಲ್ಲ</string>
+    <!-- Text for displaying the default device name.
+        The first parameter is the application name, the second is the device manufacturer name
+        and the third is the device model. -->
+    <string name="default_device_name_2">%2$s %3$s ನಲ್ಲಿ %1$s</string>
+
+    <!-- Send Tab -->
+    <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_name">ಟ್ಯಾಬ್‌ಗಳನ್ನು ಸ್ವೀಕರಿಸಲಾಗಿದೆ</string>
+    <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_description">ಇತರ ಫೈರ್‌ಫಾಕ್ಸ್ ಸಾಧನಗಳಿಂದ ಸ್ವೀಕರಿಸಿದ ಟ್ಯಾಬ್‌ಗಳಿಗಾಗಿ ಅಧಿಸೂಚನೆಗಳು.</string>
+    <!--  The body for these is the URL of the tab received  -->
+    <string name="fxa_tab_received_notification_name">ಪಡೆಯಲಾದ ಟ್ಯಾಬ್</string>
+    <!-- When multiple tabs have been received -->
+    <string name="fxa_tabs_received_notification_name">ಪಡೆಯಲಾದ ಟ್ಯಾಬ್‌ಗಳು</string>
+    <!-- %s is the device name -->
+    <string name="fxa_tab_received_from_notification_name">%s ನಿಂದ ಟ್ಯಾಬ್</string>
+
+    <!-- Advanced Preferences -->
+    <!-- Preference for tracking protection settings -->
+    <string name="preferences_tracking_protection_settings">ಜಾಡು ಇರಿಸುವಿಕೆ ಇಂದ ರಕ್ಷಣೆ</string>
+    <!-- Preference switch for tracking protection -->
+    <string name="preferences_tracking_protection">ಜಾಡು ಇರಿಸುವಿಕೆ ಇಂದ ರಕ್ಷಣೆ</string>
+    <!-- Preference switch description for tracking protection -->
+    <string name="preferences_tracking_protection_description">ನಿಮ್ಮನ್ನು ಆನ್‌ಲೈನ್‌ನಲ್ಲಿ ಟ್ರ್ಯಾಕ್ ಮಾಡುವ ವಿಷಯ ಮತ್ತು ಸ್ಕ್ರಿಪ್ಟ್‌ಗಳನ್ನು ನಿರ್ಬಂಧಿಸಿ</string>
+    <!-- Preference for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions">ವಿನಾಯಿತಿಗಳು</string>
+    <!-- Preference description for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions_description">ಈ ವೆಬ್‌ಸೈಟ್‌ಗಳಿಗೆ ಟ್ರ್ಯಾಕಿಂಗ್ ಪ್ರೊಟೆಕ್ಷನ್ ಆಫ್ ಆಗಿದೆ</string>
+    <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
+    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">ಎಲ್ಲಾ ಸೈಟ್‌ಗಳಿಗೆ ಆನ್ ಮಾಡಿ</string>
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">ಆಯ್ದ ಸೈಟ್‌ಗಳಿಗೆ ಟ್ರ್ಯಾಕಿಂಗ್ ರಕ್ಷಣೆಯನ್ನು ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಲು ವಿನಾಯಿತಿಗಳು ನಿಮಗೆ ಅವಕಾಶ ಮಾಡಿಕೊಡುತ್ತವೆ.</string>
+    <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message_learn_more_link">ಇನ್ನಷ್ಟು ತಿಳಿಯಿರಿ</string>
+
+    <!-- Preference switch for Telemetry -->
+    <string name="preferences_telemetry">ಟೆಲಿಮೆಟ್ರಿ</string>
+    <!-- Preference switch for usage and technical data collection -->
+    <string name="preference_usage_data">ಬಳಕೆ ಮತ್ತು ತಾಂತ್ರಿಕ ಡೇಟಾ</string>
+    <!-- Preference description for usage and technical data collection -->
+    <string name="preferences_usage_data_description">%1$s ಅನ್ನು ಉತ್ತಮಗೊಳಿಸಲು ನಮಗೆ ಸಹಾಯ ಮಾಡಲು ನಿಮ್ಮ ಬ್ರೌಸರ್‌ನ ಕಾರ್ಯಕ್ಷಮತೆ, ಬಳಕೆ, ಯಂತ್ರಾಂಶ ಮತ್ತು ಗ್ರಾಹಕೀಕರಣ ಡೇಟಾವನ್ನು ಮೊಜಿಲ್ಲಾದೊಂದಿಗೆ ಹಂಚಿಕೊಳ್ಳುತ್ತದೆ</string>
+    <!-- Preference switch for marketing data collection -->
+    <string name="preferences_marketing_data">ಮಾರುಕಟ್ಟೆ ದತ್ತಾಂಶ</string>
+    <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
+    <string name="preferences_marketing_data_description">ನಮ್ಮ ಮೊಬೈಲ್ ಮಾರ್ಕೆಟಿಂಗ್ ಮಾರಾಟಗಾರರಾದ ಲೀನ್‌ಪ್ಲಮ್‌ನೊಂದಿಗೆ %1$s ನಲ್ಲಿ ನೀವು ಯಾವ ವೈಶಿಷ್ಟ್ಯಗಳನ್ನು ಬಳಸುತ್ತೀರಿ ಎಂಬುದರ ಕುರಿತು ಡೇಟಾವನ್ನು ಹಂಚಿಕೊಳ್ಳುತ್ತದೆ.</string>
+    <!-- Title for experiments preferences -->
+    <string name="preference_experiments">ಪ್ರಯೋಗಗಳು</string>
+    <!-- Summary for experiments preferences -->
+    <string name="preference_experiments_summary">ಪ್ರಾಯೋಗಿಕ ವೈಶಿಷ್ಟ್ಯಗಳಿಗಾಗಿ ಡೇಟಾವನ್ನು ಸ್ಥಾಪಿಸಲು ಮತ್ತು ಸಂಗ್ರಹಿಸಲು ಮೊಜಿಲ್ಲಾವನ್ನು ಅನುಮತಿಸುತ್ತದೆ</string>
+    <!-- Preference switch for crash reporter -->
+    <string name="preferences_crash_reporter">ಕ್ರಿಯಾವೈಫಲ್ಯ ವರದಿಗಾರ</string>
+    <!-- Preference switch for Mozilla location service -->
+    <string name="preferences_mozilla_location_service">ಮೊಜಿಲ್ಲಾ ಸ್ಥಳ ಸೇವೆ</string>
+    <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preferences_fenix_health_report">%s ಆರೋಗ್ಯ ವರದಿ</string>
+
+    <!-- Turn On Sync Preferences -->
+    <!-- Header of the Turn on Sync preference view -->
+    <string name="preferences_sync">ಸಿಂಕ್ ಆನ್ ಮಾಡಿ</string>
+    <!-- Preference for pairing -->
+    <string name="preferences_sync_pair">ಡೆಸ್ಕ್‌ಟಾಪ್ ಫೈರ್‌ಫಾಕ್ಸ್‌ನಲ್ಲಿ ಜೋಡಿಸುವ ಕೋಡ್ ಅನ್ನು ಸ್ಕ್ಯಾನ್ ಮಾಡಿ</string>
+    <!-- Preference for account login -->
+    <string name="preferences_sync_sign_in">ಸೈನ್ ಇನ್</string>
+    <!-- Preference for reconnecting to FxA sync -->
+    <string name="preferences_sync_sign_in_to_reconnect">ಮರುಸಂಪರ್ಕಿಸಲು ಸೈನ್ ಇನ್ ಮಾಡಿ</string>
+    <!-- Preference for removing FxA account -->
+    <string name="preferences_sync_remove_account">ಖಾತೆಯನ್ನು ತೆಗೆದುಹಾಕಿ</string>
+
+    <!-- Pairing Feature strings -->
+    <!-- Instructions on how to access pairing -->
+    <string name="pair_instructions_2"><![CDATA[<b>firefox.com/pair</b> ನಲ್ಲಿ ತೋರಿಸಿರುವ QR ಕೋಡ್ ಅನ್ನು ಸ್ಕ್ಯಾನ್ ಮಾಡಿ]]></string>
+    <!-- Button to open camera for pairing -->
+    <string name="pair_open_camera">ಕ್ಯಾಮೆರಾ ತೆರೆಯಿರಿ</string>
+    <!-- Button to cancel pairing -->
+    <string name="pair_cancel">ರದ್ದು</string>
+
+    <!-- Toolbar Preferences -->
+    <!-- Preference for using top toolbar -->
+    <string name="preference_top_toolbar">ಮೇಲೆ</string>
+    <!-- Preference for using bottom toolbar -->
+    <string name="preference_bottom_toolbar">ಕೆಳಗೆ</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">ತಿಳಿ</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">ಗಾಢ</string>
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">ಬ್ಯಾಟರಿ ಸೇವರ್‌ನಿಂದ ಹೊಂದಿಸಲಾಗಿದೆ</string>
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">ಸಾಧನದ ಥೀಮ್ ಅನ್ನು ಅನುಸರಿಸಿ</string>
+
+    <!-- Library -->
+    <!-- Option in Library to open Sessions page -->
+    <string name="library_sessions">ಅಧಿವೇಶನಗಳು</string>
+    <!-- Option in Library to open Screenshots page -->
+    <string name="library_screenshots">ತೆರೆಚಿತ್ರಗಳು</string>
+    <!-- Option in Library to open Downloads page -->
+    <string name="library_downloads">ಡೌನ್‌ಲೋಡ್‌ಗಳು</string>
+    <!-- Option in library to open Bookmarks page -->
+    <string name="library_bookmarks">ಪುಟಗುರುತುಗಳು</string>
+    <!-- Option in library to open Desktop Bookmarks root page -->
+    <string name="library_desktop_bookmarks_root">ಡೆಸ್ಕ್ ಟಾಪ್ ಪುಟಗುರುತುಗಳು</string>
+    <!-- Option in library to open Desktop Bookmarks "menu" page -->
+    <string name="library_desktop_bookmarks_menu">ಬುಕ್‌ಮಾರ್ಕುಗಳ ಪರಿವಿಡಿ</string>
+    <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
+    <string name="library_desktop_bookmarks_toolbar">ಪುಟಗುರುತುಗಳ ಉಪಕರಣ ಪಟ್ಟಿ</string>
+    <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
+    <string name="library_desktop_bookmarks_unfiled">ಇತರೆ ಪುಟಗುರುತುಗಳು</string>
+    <!-- Option in Library to open History page -->
+    <string name="library_history">ಇತಿಹಾಸ</string>
+    <!-- Option in Library to open Reading List -->
+    <string name="library_reading_list">ಓದಬೇಕಿರುವ ಪಟ್ಟಿ</string>
+    <!-- Menu Item Label for Search in Library -->
+    <string name="library_search">ಶೋಧಿಸು</string>
+    <!-- Settings Page Title -->
+    <string name="settings_title">ಸಿದ್ಧತೆಗಳು</string>
+    <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
+    <string name="content_description_history_menu">ಇತಿಹಾಸ ಐಟಂ ಮೆನು</string>
+    <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
+    <string name="content_description_close_button">ಮುಚ್ಚು</string>
+
+    <!-- Sessions -->
+    <!-- Title for the list of tabs -->
+    <string name="tab_header_label">ತೆರೆದ ಟ್ಯಾಬ್‌ಗಳು</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_title">ಖಾಸಗಿ ಅಧಿವೇಶನ</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_tabs_title">ಖಾಸಗಿ ಟ್ಯಾಬ್‌</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_tab">ಟ್ಯಾಬ್ ಸೇರಿಸು</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">ಹೊಸ ಖಾಸಗಿ ಟ್ಯಾಬ್</string>
+    <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+    <string name="tab_drawer_fab_content">ಖಾಸಗಿ</string>
+    <!-- Text shown as the title of the open tab tray -->
+    <string name="tab_tray_title">ತೆರೆದ ಟ್ಯಾಬ್‌ಗಳು</string>
+    <!-- Text shown in the menu for saving tabs to a collection -->
+    <string name="tab_tray_menu_item_save">ಸಂಗ್ರಹಕ್ಕೆ ಉಳಿಸಿ</string>
+    <!-- Text shown in the menu for sharing all tabs -->
+    <string name="tab_tray_menu_item_share">ಎಲ್ಲಾ ಟ್ಯಾಬ್‌ಗಳನ್ನು ಹಂಚಿಕೊಳ್ಳಿ</string>
+    <!-- Text shown in the menu for closing all tabs -->
+    <string name="tab_tray_menu_item_close">ಎಲ್ಲ ಹಾಳೆಗಳನ್ನು ಮುಚ್ಚು</string>
+    <!-- Shortcut action to open new tab -->
+    <string name="tab_tray_menu_open_new_tab">ಹೊಸ ಟ್ಯಾಬ್</string>
+    <!-- Shortcut action to open the home screen -->
+    <string name="tab_tray_menu_home">ಮನೆಗೆ ಹೋಗು</string>
+    <!-- Shortcut action to toggle private mode -->
+    <string name="tab_tray_menu_toggle">ಟ್ಯಾಬ್ ಮೋಡ್ ಅನ್ನು ಟಾಗಲ್ ಮಾಡಿ</string>
+    <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
+    <string name="remove_tab_from_collection">ಸಂಗ್ರಹದಿಂದ ಟ್ಯಾಬ್ ತೆಗೆದುಹಾಕಿ</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
+    <string name="close_tab">ಹಾಳೆಯನ್ನು ಮುಚ್ಚು</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
+    <string name="close_tab_title">ಹಾಳೆಗಳನ್ನು ಮುಚ್ಚು %s</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
+    <string name="open_tabs_menu">ಟ್ಯಾಬ್‌ಗಳ ಮೆನು ತೆರೆಯಿರಿ</string>
+    <!-- Open tabs menu item to close all tabs -->
+    <string name="tabs_menu_close_all_tabs">ಎಲ್ಲ ಹಾಳೆಗಳನ್ನು ಮುಚ್ಚು</string>
+    <!-- Open tabs menu item to share all tabs -->
+    <string name="tabs_menu_share_tabs">ಟ್ಯಾಬ್‌ಗಳನ್ನು ಹಂಚಿಕೊಳ್ಳಿ</string>
+    <!-- Open tabs menu item to save tabs to collection -->
+    <string name="tabs_menu_save_to_collection1">ಸಂಗ್ರಹಣೆಗೆ ಟ್ಯಾಬ್‌ಗಳನ್ನು ಉಳಿಸಿ</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
+    <string name="tab_menu">ಟ್ಯಾಬ್ ಮೆನು</string>
+    <!-- Tab menu item to share the tab -->
+    <string name="tab_share">ಟ್ಯಾಬ್‌ಗಳನ್ನು ಹಂಚಿಕೊಳ್ಳಿ</string>
+    <!-- Button in the current session menu. Deletes the session when pressed -->
+    <string name="current_session_delete">ಅಳಿಸು</string>
+    <!-- Button in the current session menu. Saves the session when pressed -->
+    <string name="current_session_save">ಉಳಿಸು</string>
+    <!-- Button in the current session menu. Opens the share menu when pressed -->
+    <string name="current_session_share">ಹಂಚು</string>
+    <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
+    <string name="current_session_image">ಪ್ರಸ್ತುತ ಸೆಷನ್ ಚಿತ್ರ</string>
+    <!-- Button to save the current set of tabs into a collection -->
+    <string name="save_to_collection">ಸಂಗ್ರಹಕ್ಕೆ ಉಳಿಸಿ</string>
+    <!-- Text for the menu button to delete a collection -->
+    <string name="collection_delete">ಸಂಗ್ರಹಣೆಯನ್ನು ಅಳಿಸಿ</string>
+    <!-- Text for the menu button to rename a collection -->
+    <string name="collection_rename">ಸಂಗ್ರಹಣೆಗೆ ಮರುಹೆಸರಿಸಿ</string>
+    <!-- Text for the button to open tabs of the selected collection -->
+    <string name="collection_open_tabs">ತೆರೆದ ಟ್ಯಾಬ್‌ಗಳು</string>
+    <!-- Text for the menu button to remove a top site -->
+	<string name="remove_top_site">ತೆಗೆದು ಹಾಕು</string>
+    <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
+    <string name="pwa_site_controls_title_private">%1$s (ಖಾಸಗಿ ಮೋಡ್)</string>
+
+    <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
+    <string name="tab_tray_save_to_collection">ಉಳಿಸು</string>
+
+    <!-- History -->
+    <!-- Text for the button to clear all history -->
+    <string name="history_delete_all">ಇತಿಹಾಸವನ್ನು ಅಳಿಸಿ</string>
+    <!-- Text for the dialog to confirm clearing all history -->
+    <string name="history_delete_all_dialog">ನೀವು ಇತಿಹಾಸವನ್ನು ಶಾಶ್ವತವಾಗಿ ಅಳಿಸಲು ಬಯಸಿದ್ದು ಖಚಿತವೆ?</string>
+    <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
+    <string name="history_delete_multiple_items_snackbar">ಇತಿಹಾಸವನ್ನು ಅಳಿಸಲಾಗಿದೆ</string>
+    <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
+    <string name="history_delete_single_item_snackbar">%1$s ಅಳಿಸಲಾಗಿದೆ</string>
+    <!-- Text for positive action to delete history in deleting history dialog -->
+    <string name="history_clear_dialog">ಅಳಿಸು</string>
+    <!-- History overflow menu copy button -->
+    <string moz:removedIn="94" name="history_menu_copy_button" tools:ignore="UnusedResources">ಪ್ರತಿ ಮಾಡು</string>
+    <!-- History overflow menu share button -->
+    <string moz:removedIn="94" name="history_menu_share_button" tools:ignore="UnusedResources">ಹಂಚು</string>
+    <!-- History overflow menu open in new tab button -->
+    <string moz:removedIn="94" name="history_menu_open_in_new_tab_button" tools:ignore="UnusedResources">ಹೊಸ ಹಾಳೆಯಲ್ಲಿ ತೆರೆ</string>
+    <!-- History overflow menu open in private tab button -->
+    <string moz:removedIn="94" name="history_menu_open_in_private_tab_button" tools:ignore="UnusedResources">ಹೊಸ ಖಾಸಗಿ ಹಾಳೆಯಲ್ಲ ತೆರೆ</string>
+    <!-- Text for the button to delete a single history item -->
+    <string moz:removedIn="94" name="history_delete_item" tools:ignore="UnusedResources">ಅಳಿಸು</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of bookmarks selected -->
+    <string name="history_multi_select_title">%1$d ಆಯ್ಕೆ ಮಾಡಲಾಗಿದೆ</string>
+    <!-- Text for the button to clear selected history items. The first parameter
+        is a digit showing the number of items you have selected -->
+    <string name="history_delete_some">%1$d ವಸ್ತುಗಳನ್ನು ಅಳಿಸಿ</string>
+    <!-- Text for the header that groups the history for last 24 hours -->
+    <string name="history_24_hours">ಕೊನೆಯ 24 ಗಂಟೆಗಳು</string>
+    <!-- Text for the header that groups the history the past 7 days -->
+    <string name="history_7_days">ಕೊನೆಯ 7 ದಿನಗಳು</string>
+    <!-- Text for the header that groups the history the past 30 days -->
+    <string name="history_30_days">ಕೊನೆಯ 30 ದಿನಗಳು</string>
+
+    <!-- Text for the header that groups the history older than the last month -->
+    <string name="history_older">ಹಳೆಯದು</string>
+    <!-- Text shown when no history exists -->
+    <string name="history_empty_message">ಇಲ್ಲಿ ಇತಿಹಾಸವಿಲ್ಲ</string>
+
+
+    <!-- Crashes -->
+    <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
+    <string name="tab_crash_title_2">ಕ್ಷಮಿಸಿ. %1$s ಆ ಪುಟವನ್ನು ಲೋಡ್ ಮಾಡಲು ಸಾಧ್ಯವಿಲ್ಲ.</string>
+    <!-- Description text displayed on the tab crash page -->
+    <string name="tab_crash_description">ಕೆಳಗಿನ ಈ ಟ್ಯಾಬ್ ಅನ್ನು ಮರುಸ್ಥಾಪಿಸಲು ಅಥವಾ ಮುಚ್ಚಲು ನೀವು ಪ್ರಯತ್ನಿಸಬಹುದು.</string>
+    <!-- Send crash report checkbox text on the tab crash page -->
+    <string name="tab_crash_send_report">ಕ್ರ್ಯಾಶ್ ವರದಿಯನ್ನು ಮೊಜಿಲ್ಲಾಗೆ ಕಳುಹಿಸಿ</string>
+    <!-- Close tab button text on the tab crash page -->
+    <string name="tab_crash_close">ಹಾಳೆಯನ್ನು ಮುಚ್ಚು</string>
+    <!-- Restore tab button text on the tab crash page -->
+    <string name="tab_crash_restore">ಟ್ಯಾಬ್‌ಗಳನ್ನು ಮರುಸ್ಥಾಪಿಸು</string>
+
+    <!-- Content Description for session item menu button -->
+    <string name="content_description_session_menu">ಸೆಷನ್ ಆಯ್ಕೆಗಳು</string>
+
+    <!-- Content Description for session item share button -->
+    <string name="content_description_session_share">ಅಧಿವೇಶನವನ್ನು ಹಂಚಿಕೊಳ್ಳಿ</string>
+
+    <!-- Bookmarks -->
+    <!-- Content description for bookmarks library menu -->
+    <string name="bookmark_menu_content_description">ಬುಕ್ಮಾರ್ಕ್ ಮೆನು</string>
+    <!-- Screen title for editing bookmarks -->
+    <string name="bookmark_edit">ಪುಟಗುರುತನ್ನು ಸಂಪಾದಿಸಿ</string>
+    <!-- Screen title for selecting a bookmarks folder -->
+    <string name="bookmark_select_folder">ಕಡತ ಕೋಶ ಆಯ್ಕೆಮಾಡು</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
+    <string name="bookmark_delete_folder_confirmation_dialog">ಈ ಕಡತಕೋಶವನ್ನು ಅಳಿಸಲು ನೀವು ಖಚಿತವಾಗಿ ಬಯಸುವಿರಾ?</string>
+    <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
+    <string name="bookmark_delete_folder_snackbar">%1$s ಅಳಿಸಲಾಗಿದೆ</string>
+    <!-- Screen title for adding a bookmarks folder -->
+    <string name="bookmark_add_folder">ಫೋಲ್ಡರ್ ಸೇರಿಸು</string>
+    <!-- Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_saved_snackbar">ಪುಟಗುರುತು ಉಳಿಸಲಾಗಿದೆ!</string>
+    <!-- Snackbar edit button shown after a bookmark has been created. -->
+    <string name="edit_bookmark_snackbar_action">ಸಂಪಾದಿಸಿ</string>
+    <!-- Bookmark overflow menu edit button -->
+    <string name="bookmark_menu_edit_button">ಸಂಪಾದನೆ</string>
+    <!-- Bookmark overflow menu select button -->
+    <string name="bookmark_menu_select_button">ಆರಿಸು</string>
+    <!-- Bookmark overflow menu copy button -->
+    <string name="bookmark_menu_copy_button">ಪ್ರತಿ ಮಾಡು</string>
+    <!-- Bookmark overflow menu share button -->
+    <string name="bookmark_menu_share_button">ಹಂಚು</string>
+    <!-- Bookmark overflow menu open in new tab button -->
+    <string name="bookmark_menu_open_in_new_tab_button">ಹೊಸ ಹಾಳೆಯಲ್ಲಿ ತೆರೆ</string>
+    <!-- Bookmark overflow menu open in private tab button -->
+    <string name="bookmark_menu_open_in_private_tab_button">ಹೊಸ ಖಾಸಗಿ ಹಾಳೆಯಲ್ಲ ತೆರೆ</string>
+    <!-- Bookmark overflow menu delete button -->
+    <string name="bookmark_menu_delete_button">ಅಳಿಸು</string>
+    <!--Bookmark overflow menu save button -->
+    <string name="bookmark_menu_save_button">ಉಳಿಸು</string>
+    <!-- Bookmark multi select title in app bar
+     The first parameter is the number of bookmarks selected -->
+    <string name="bookmarks_multi_select_title">%1$d ಆಯ್ಕೆ ಮಾಡಲಾಗಿದೆ</string>
+    <!-- Bookmark editing screen title -->
+    <string name="edit_bookmark_fragment_title">ಪುಟಗುರುತನ್ನು ಸಂಪಾದಿಸಿ</string>
+    <!-- Bookmark folder editing screen title -->
+    <string name="edit_bookmark_folder_fragment_title">ಕಡತಕೋಶ ಸಂಪಾದಿಸಿ</string>
+    <!-- Bookmark sign in button message -->
+    <string name="bookmark_sign_in_button">ಸಿಂಕ್ ಮಾಡಿದ ಬುಕ್‌ಮಾರ್ಕ್‌ಗಳನ್ನು ನೋಡಲು ಸೈನ್ ಇನ್ ಮಾಡಿ</string>
+    <!-- Bookmark URL editing field label -->
+    <string name="bookmark_url_label">URL</string>
+    <!-- Bookmark FOLDER editing field label -->
+    <string name="bookmark_folder_label">ಕಡತಕೋಶ</string>
+    <!-- Bookmark NAME editing field label -->
+    <string name="bookmark_name_label">ಹೆಸರು</string>
+    <!-- Bookmark add folder screen title -->
+    <string name="bookmark_add_folder_fragment_label">ಕಡತಕೋಶ ಸೇರಿಸು</string>
+    <!-- Bookmark select folder screen title -->
+    <string name="bookmark_select_folder_fragment_label">ಕಡತ ಕೋಶ ಆಯ್ಕೆಮಾಡು</string>
+    <!-- Bookmark editing error missing title -->
+    <string name="bookmark_empty_title_error">ಶೀರ್ಷಿಕೆ ಹೊಂದಿರಬೇಕು</string>
+    <!-- Bookmark editing error missing or improper URL -->
+    <string name="bookmark_invalid_url_error">ಅಮಾನ್ಯವಾದ URL</string>
+    <!-- Bookmark screen message for empty bookmarks folder -->
+    <string name="bookmarks_empty_message">ಇಲ್ಲಿ ಪುಟಗುರುತುಗಳಿಲ್ಲ</string>
+    <!-- Bookmark snackbar message on deletion
+     The first parameter is the host part of the URL of the bookmark deleted, if any -->
+    <string name="bookmark_deletion_snackbar_message">%1$s ಅಳಿಸಲಾಗಿದೆ</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_2">ಬುಕ್‌ಮಾರ್ಕ್‌ಗಳನ್ನು ಅಳಿಸಲಾಗಿದೆ</string>
+    <!-- Bookmark undo button for deletion snackbar action -->
+    <string name="bookmark_undo_deletion">ರದ್ದುಗೊಳಿಸಿ</string>
+
+    <!-- Site Permissions -->
+    <!-- Site permissions preferences header -->
+    <string name="permissions_header">ಅನುಮತಿಗಳು</string>
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">ಸಂಯೋಜನೆಗಳಿಗೆ ತೆರಳು</string>
+    <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
+        to give users access to site specific information / settings. For example:
+        Secure settings status and a button to modify site permissions -->
+    <string name="quick_settings_sheet">ತ್ವರಿತ ಸಿಧ್ದತೆಗಳ ಹಾಳೆ</string>
+    <!-- Label that indicates that this option it the recommended one -->
+    <string name="phone_feature_recommended">ಇದನ್ನು ಸಲಹೆ ಮಾಡಲಾಗುತ್ತದೆ</string>
+    <!-- button that allows editing site permissions settings -->
+    <string name="quick_settings_sheet_manage_site_permissions">ಸೈಟ್ ಅನುಮತಿಗಳನ್ನು ನಿರ್ವಹಿಸಿ</string>
+    <!-- Button label for clearing all the information of site permissions-->
+    <string name="clear_permissions">ಅನುಮತಿಗಳನ್ನು ತೆರವುಗೊಳಿಸಿ</string>
+    <!-- Button label for clearing a site permission-->
+    <string name="clear_permission">ಅನುಮತಿಯನ್ನು ತೆರವುಗೊಳಿಸಿ</string>
+    <!-- Button label for clearing all the information on all sites-->
+    <string name="clear_permissions_on_all_sites">ಎಲ್ಲಾ ಸೈಟ್‌ಗಳಲ್ಲಿ ಅನುಮತಿಗಳನ್ನು ತೆರವುಗೊಳಿಸಿ</string>
+    <!-- Preference for altering video and audio autoplay for all websites -->
+    <string name="preference_browser_feature_autoplay">ಸ್ವಚಾಲಿತ</string>
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">ಕ್ಯಾಮೆರಾ</string>
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">ಮೈಕ್ರೋಫೋನ್</string>
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">ಸ್ಥಳ</string>
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">ಅಧಿಸೂಚನೆ</string>
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">ಅನುಮತಿಸಲು ಕೇಳಿ</string>
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ</string>
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">ಅನುಮತಿಸಲಾದ‍</string>
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">Android ನಿಂದ ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ</string>
+    <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
+    <string name="preference_exceptions">ವಿನಾಯಿತಿಗಳು</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="tracking_protection_on">ಆನ್</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="tracking_protection_off">ಆಫ್</string>
+    <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed2">ಆಡಿಯೋ ಮತ್ತು ವೀಡಿಯೊವನ್ನು ಅನುಮತಿಸಿ</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
+    <string name="preference_option_autoplay_allowed_wifi_only2">ಸೆಲ್ಯುಲಾರ್ ಡೇಟಾದಲ್ಲಿ ಮಾತ್ರ ಆಡಿಯೋ ಮತ್ತು ವೀಡಿಯೊವನ್ನು ನಿರ್ಬಂಧಿಸಿ</string>
+    <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
+    <string name="preference_option_autoplay_allowed_wifi_subtext">ಆಡಿಯೋ ಮತ್ತು ವೀಡಿಯೊ ವೈ-ಫೈನಲ್ಲಿ ಪ್ಲೇ ಆಗುತ್ತದೆ</string>
+    <!-- Label for global setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="preference_option_autoplay_block_audio2">ಆಡಿಯೊವನ್ನು ಮಾತ್ರ ನಿರ್ಬಂಧಿಸಿ</string>
+    <!-- Label for global setting that indicates that all video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked3">ಆಡಿಯೋ ಮತ್ತು ವೀಡಿಯೊವನ್ನು ನಿರ್ಬಂಧಿಸಿ</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to on -->
+    <string name="delete_browsing_data_quit_on">ಆನ್</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to off -->
+    <string name="delete_browsing_data_quit_off">ಆಫ್</string>
+
+    <!-- Collections -->
+    <!-- Collections header on home fragment -->
+    <string name="collections_header">ಸಂಗ್ರಹಗಳು</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
+    <string name="collection_menu_button_content_description">ಸಂಗ್ರಹ ಮೆನು</string>
+    <!-- Title for the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_tabs">ಎಲ್ಲವನ್ನೂ ಆರಿಸು</string>
+    <!-- Title for the "select collection" step of the collection creator -->
+    <string name="create_collection_select_collection">ಸಂಗ್ರಹಣೆಯನ್ನು ಅಳಿಸಿ</string>
+    <!-- Title for the "name collection" step of the collection creator -->
+    <string name="create_collection_name_collection">ಸಂಗ್ರಹಣೆಗೆ ಮರುಹೆಸರಿಸಿ</string>
+    <!-- Button to add new collection for the "select collection" step of the collection creator -->
+    <string name="create_collection_add_new_collection">ಸಂಗ್ರಹಣೆಗೆ ಮರುಹೆಸರಿಸಿ</string>
+    <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_all">ಎಲ್ಲವನ್ನೂ ಆರಿಸು</string>
+    <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_deselect_all">ಎಲ್ಲಾ ಆಯ್ಕೆಯನ್ನು ರದ್ದು ಮಾಡು</string>
+    <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
+    <string name="create_collection_save_to_collection_empty">ಉಳಿಸಲು ಟ್ಯಾಬ್‌ಗಳನ್ನು ಆಯ್ಕೆಮಾಡಿ</string>
+    <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
+     %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tabs_selected">%d ಟ್ಯಾಬ್‌ಗಳನ್ನು ಆಯ್ಕೆ ಮಾಡಲಾಗಿದೆ</string>
+    <!-- Text to show users they have one tab selected in the "select tabs" step of the collection creator.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tab_selected">%d ಟ್ಯಾಬ್‌ಗಳನ್ನು ಆಯ್ಕೆ ಮಾಡಲಾಗಿದೆ</string>
+    <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
+    <string name="create_collection_tabs_saved">ಟ್ಯಾಬ್‌ಗಳನ್ನು ಉಳಿಸಲಾಗಿದೆ!</string>
+    <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
+    <string name="create_collection_tabs_saved_new_collection">ಸಂಗ್ರಹವನ್ನು ಉಳಿಸಲಾಗಿದೆ!</string>
+    <!-- Text shown in snackbar when one tab has been saved in a collection -->
+    <string name="create_collection_tab_saved">ಟ್ಯಾಬ್‌ಗಳನ್ನು ಉಳಿಸಲಾಗಿದೆ!</string>
+    <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
+    <string name="create_collection_close">ಮುಚ್ಚು</string>
+    <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
+    <string name="create_collection_save">ಉಳಿಸು</string>
+    <!-- Snackbar action to view the collection the user just created or updated -->
+    <string name="create_collection_view">ನೋಟ</string>
+
+    <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
+    <string name="create_collection_default_name">ಸಂಗ್ರಹಗಳು %d</string>
+
+    <!-- Share -->
+    <!-- Share screen header -->
+    <string name="share_header">ಕಳುಹಿಸಿ ಮತ್ತು ಹಂಚಿಕೊಳ್ಳಿ</string>
+    <!-- Share screen header -->
+    <string name="share_header_2">ಹಂಚು</string>
+    <!-- Content description (not visible, for screen readers etc.):
+        "Share" button. Opens the share menu when pressed. -->
+    <string name="share_button_content_description">ಹಂಚು</string>
+    <!-- Sub-header in the dialog to share a link to another app -->
+    <string name="share_link_subheader">ಕೊಂಡಿಯನ್ನು ಹಂಚಿಕೊಳ್ಳಿ</string>
+    <!-- Sub-header in the dialog to share a link to another sync device -->
+    <string name="share_device_subheader">ಸಾಧನಕ್ಕೆ ಕಳಿಸು</string>
+    <!-- Sub-header in the dialog to share a link to an app from the full list -->
+    <string name="share_link_all_apps_subheader">ಎಲ್ಲಾ ಕ್ರಿಯೆಗಳು</string>
+    <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
+    <string name="share_link_recent_apps_subheader">ಇತ್ತೀಚೆಗೆ ಬಳಸಲಾಗಿದೆ</string>
+
+    <!-- An option from the share dialog to sign into sync -->
+    <string name="sync_sign_in">ಸಿಂಕ್ ಮಾಡಲು ಸೈನ್ ಇನ್ ಆಗಿ</string>
+    <!-- An option from the share dialog to send link to all other sync devices -->
+    <string name="sync_send_to_all">ಎಲ್ಲಾ ಸಾಧನಗಳಿಗೆ ಕಳುಹಿಸು</string>
+    <!-- An option from the share dialog to reconnect to sync -->
+    <string name="sync_reconnect">ಸಿಂಕ್ ಮಾಡಲು ಮರುಸಂಪರ್ಕಿಸಿ</string>
+    <!-- Text displayed when sync is offline and cannot be accessed -->
+    <string name="sync_offline">ಆಫ್‌ಲೈನ್</string>
+    <!-- An option to connect additional devices -->
+    <string name="sync_connect_device">ಮತ್ತೊಂದು ಸಾಧನವನ್ನು ಸಂಪರ್ಕವನ್ನು ಸಾಧಿಸು</string>
+    <!-- The dialog text shown when additional devices are not available -->
+    <string name="sync_connect_device_dialog">ಟ್ಯಾಬ್ ಕಳುಹಿಸಲು, ಕನಿಷ್ಠ ಒಂದು ಸಾಧನದಲ್ಲಿ ಫೈರ್‌ಫಾಕ್ಸ್‌ಗೆ ಸೈನ್ ಇನ್ ಮಾಡಿ.</string>
+    <!-- Confirmation dialog button -->
+    <string name="sync_confirmation_button">ಅರ್ಥವಾಯಿತು</string>
+    <!-- Share error message -->
+    <string name="share_error_snackbar">ಈ ಅಪ್ಲಿಕೇಶನ್‌ಗೆ ಹಂಚಿಕೊಳ್ಳಲು ಸಾಧ್ಯವಿಲ್ಲ</string>
+    <!-- Add new device screen title -->
+    <string name="sync_add_new_device_title">ಸಾಧನಕ್ಕೆ ಕಳಿಸು</string>
+    <!-- Text for the warning message on the Add new device screen -->
+    <string name="sync_add_new_device_message">ಯಾವುದೇ ಸಾಧನಗಳನ್ನು ಜೋಡಿಸಲಾಗಿಲ್ಲ</string>
+    <!-- Text for the button to learn about sending tabs -->
+    <string name="sync_add_new_device_learn_button">ಟ್ಯಾಬ್‌ಗಳನ್ನು ಕಳುಹಿಸುವುದರ ಬಗ್ಗೆ ತಿಳಿದುಕೊಳ್ಳಿ…</string>
+    <!-- Text for the button to connect another device -->
+    <string name="sync_add_new_device_connect_button">ಮತ್ತೊಂದು ಸಾಧನಕ್ಕೆ ಸಂಪರ್ಕವನ್ನು ಸಾಧಿಸು…</string>
+
+    <!-- Notifications -->
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
+    <string name="notification_pbm_channel_name">ಖಾಸಗಿ ಬ್ರೌಸಿಂಗ್ ಸೆಷನ್</string>
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
+    <string name="notification_pbm_delete_text">ಖಾಸಗಿ ಟ್ಯಾಬ್‌ಗಳನ್ನು ಅಳಿಸಿ</string>
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
+    <string name="notification_pbm_delete_text_2">ಖಾಸಗಿ ಹಾಳೆಗಳನ್ನು ಮುಚ್ಚು</string>
+    <!-- Notification action to open Fenix and resume the current browsing session. -->
+    <string name="notification_pbm_action_open">ತೆರೆ</string>
+    <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
+    <string name="notification_pbm_action_delete_and_open">ಅಳಿಸಿ ಮತ್ತು ತೆರೆಯಿರಿ</string>
+    <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_powered_by_channel_name">ಇದರಿಂದ ಸಾಮರ್ಥ್ಯ ಪಡೆದಿದೆ</string>
+
+    <!-- Snackbar -->
+    <!-- Text shown in snackbar when user deletes a collection -->
+    <string name="snackbar_collection_deleted">ಸಂಗ್ರಹವನ್ನು ಅಳಿಸಲಾಗಿದೆ</string>
+    <!-- Text shown in snackbar when user renames a collection -->
+    <string name="snackbar_collection_renamed">ಸಂಗ್ರಹವನ್ನು ಮರುಹೆಸರಿಸಲಾಗಿದೆ</string>
+    <!-- Text shown in snackbar when user deletes a tab -->
+    <string name="snackbar_tab_deleted">ಟ್ಯಾಬ್ ಅಳಿಸಲಾಗಿದೆ</string>
+    <!-- Text shown in snackbar when user deletes all tabs -->
+    <string name="snackbar_tabs_deleted">ಟ್ಯಾಬ್‌ಗಳನ್ನು ಅಳಿಸಲಾಗಿದೆ</string>
+    <!-- Text shown in snackbar when user closes a tab -->
+    <string name="snackbar_tab_closed">ಟ್ಯಾಬ್ ಮುಚ್ಚಲಾಗಿದೆ</string>
+    <!-- Text shown in snackbar when user closes all tabs -->
+    <string name="snackbar_tabs_closed">ಟ್ಯಾಬ್‌ಗಳನ್ನು ಮುಚ್ಚಲಾಗಿದೆ</string>
+    <!-- Text shown in snackbar when user adds a site to top sites -->
+    <string name="snackbar_added_to_top_sites">ಉನ್ನತ ಸೈಟ್‌ಗಳಿಗೆ ಸೇರಿಸಲಾಗಿದೆ!</string>
+    <!-- Text shown in snackbar when user closes a private tab -->
+    <string name="snackbar_private_tab_closed">ಖಾಸಗಿ ಟ್ಯಾಬ್ ಮುಚ್ಚಲಾಗಿದೆ</string>
+    <!-- Text shown in snackbar when user closes all private tabs -->
+    <string name="snackbar_private_tabs_closed">ಖಾಸಗಿ ಟ್ಯಾಬ್‌ಗಳನ್ನು ಮುಚ್ಚಲಾಗಿದೆ</string>
+    <!-- Text shown in snackbar when user deletes all private tabs -->
+    <string name="snackbar_private_tabs_deleted">ಖಾಸಗಿ ಟ್ಯಾಬ್‌ಗಳನ್ನು ಅಳಿಸಲಾಗಿದೆ</string>
+    <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
+    <string name="snackbar_deleted_undo">ರದ್ದುಗೊಳಿಸಿ</string>
+    <!-- Text shown in snackbar when user removes a top site -->
+    <string name="snackbar_top_site_removed">ಸೈಟ್ ತೆಗೆದುಹಾಕಲಾಗಿದೆ</string>
+    <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
+    <string name="a11y_dialog_deleted_undo">ರದ್ದುಗೊಳಿಸಿ</string>
+    <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
+    <string name="a11y_dialog_deleted_confirm">ಖಚಿತಪಡಿಸು</string>
+    <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
+        First parameter is the name of the app, second parameter is the URL or text scanned-->
+    <string name="qr_scanner_confirmation_dialog_message">%2$s ತೆರೆಯಲು %1$s ಅನ್ನು ಅನುಮತಿಸಿ</string>
+    <!-- QR code scanner prompt dialog positive option to allow navigation to scanned link -->
+    <string name="qr_scanner_dialog_positive">ಅನುಮತಿಸು</string>
+    <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
+    <string name="qr_scanner_dialog_negative">ನಿರಾಕರಿಸು</string>
+    <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
+    <string name="tab_collection_dialog_message">%1$s ಅನ್ನು ಅಳಿಸಲು ನೀವು ಖಚಿತವಾಗಿ ಬಯಸುವಿರಾ?</string>
+    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_title">‍%1$s ಅನ್ನು ಅಳಿಸುವುದೇ?</string>
+    <!-- Tab collection deletion prompt dialog option to delete the collection -->
+    <string name="tab_collection_dialog_positive">ಅಳಿಸು</string>
+    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
+    <string moz:removedIn="93" name="tab_collection_dialog_negative" tools:ignore="UnusedResources">ರದ್ದು ಮಾಡು</string>
+    <!-- Text displayed in a notification when the user enters full screen mode -->
+    <string name="full_screen_notification">ಪೂರ್ಣ ಪರದೆ ಮೋಡ್‌ಗೆ ಪ್ರವೇಶಿಸಲಾಗುತ್ತಿದೆ</string>
+    <!-- Message for copying the URL via long press on the toolbar -->
+    <string name="url_copied">URL ನಕಲಿಸಲಾಗಿದೆ</string>
+    <!-- Sample text for accessibility font size -->
+    <string name="accessibility_text_size_sample_text_1">ಇದು ಮಾದರಿ ಪಠ್ಯ. ಈ ಸೆಟ್ಟಿಂಗ್‌ನೊಂದಿಗೆ ನೀವು ಗಾತ್ರವನ್ನು ಹೆಚ್ಚಿಸಿದಾಗ ಅಥವಾ ಕಡಿಮೆಗೊಳಿಸಿದಾಗ ಪಠ್ಯ ಹೇಗೆ ಕಾಣಿಸುತ್ತದೆ ಎಂಬುದನ್ನು ತೋರಿಸಲು ಇಲ್ಲಿದೆ.</string>
+    <!-- Summary for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_text_size_summary">ವೆಬ್‌ಸೈಟ್‌ಗಳಲ್ಲಿ ಪಠ್ಯವನ್ನು ದೊಡ್ಡದಾಗಿ ಅಥವಾ ಚಿಕ್ಕದಾಗಿ ಮಾಡಿ</string>
+    <!-- Title for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_font_size_title">ಅಕ್ಷರ ಗಾತ್ರ</string>
+
+    <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_2">ಸ್ವಯಂಚಾಲಿತ ಫಾಂಟ್ ಗಾತ್ರ</string>
+    <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_summary">ಫಾಂಟ್ ಗಾತ್ರವು ನಿಮ್ಮ Android ಸೆಟ್ಟಿಂಗ್‌ಗಳಿಗೆ ಹೊಂದಿಕೆಯಾಗುತ್ತದೆ. ಫಾಂಟ್ ಗಾತ್ರವನ್ನು ಇಲ್ಲಿ ನಿರ್ವಹಿಸಲು ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಿ.</string>
+
+    <!-- Title for the Delete browsing data preference -->
+    <string name="preferences_delete_browsing_data">ಬ್ರೌಸಿಂಗ್ ಡೇಟಾವನ್ನು ಅಳಿಸಿ</string>
+    <!-- Title for the tabs item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_tabs_title_2">ತೆರೆದ ಟ್ಯಾಬ್‌ಗಳು</string>
+    <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
+    <string name="preferences_delete_browsing_data_tabs_subtitle">%d ಟ್ಯಾಬ್‌ಗಳು</string>
+    <!-- Title for the data and history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_data_title">ಬ್ರೌಸಿಂಗ್ ಇತಿಹಾಸ ಮತ್ತು ಸೈಟ್ ಡೇಟಾ</string>
+    <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
+        number of history items the user has -->
+    <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d ವಿಳಾಸಗಳು</string>
+    <!-- Title for history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">ಇತಿಹಾಸ</string>
+    <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
+        number of history pages the user has -->
+    <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d ಪುಟಗಳು</string>
+    <!-- Title for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies">ಕುಕಿಗಳು</string>
+    <!-- Subtitle for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_subtitle">ನೀವು ಹೆಚ್ಚಿನ ಸೈಟ್‌ಗಳಿಂದ ಹೊರ ಬರುತ್ತೀರಿ</string>
+    <!-- Title for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files">ಸಂಗ್ರಹಿಸಿದ ಚಿತ್ರಗಳು ಮತ್ತು ಫೈಲ್‌ಗಳು</string>
+    <!-- Subtitle for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files_subtitle">ಶೇಖರಣಾ ಸ್ಥಳವನ್ನು ಮುಕ್ತಗೊಳಿಸುತ್ತದೆ</string>
+    <!-- Title for the site permissions item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_site_permissions">ಸೈಟ್ ಅನುಮತಿಗಳು</string>
+    <!-- Text for the button to delete browsing data -->
+    <string name="preferences_delete_browsing_data_button">ಬ್ರೌಸಿಂಗ್ ಡೇಟಾವನ್ನು ಅಳಿಸಿ</string>
+    <!-- Title for the Delete browsing data on quit preference -->
+    <string name="preferences_delete_browsing_data_on_quit">ನಿರ್ಗಮಿಸುವಾಗ ಬ್ರೌಸಿಂಗ್ ಡೇಟಾವನ್ನು ಅಳಿಸಿ</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit">ನೀವು ಮುಖ್ಯ ಮೆನುವಿನಿಂದ &quot;ನಿರ್ಗಮಿಸು&quot; ಆಯ್ಕೆ ಮಾಡಿದಾಗ ಬ್ರೌಸಿಂಗ್ ಡೇಟಾವನ್ನು ಸ್ವಯಂಚಾಲಿತವಾಗಿ ಅಳಿಸುತ್ತದೆ</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit_2">ನೀವು ಮುಖ್ಯ ಮೆನುವಿನಿಂದ \&quot;ನಿರ್ಗಮಿಸು\&quot; ಆಯ್ಕೆ ಮಾಡಿದಾಗ ಬ್ರೌಸಿಂಗ್ ಡೇಟಾವನ್ನು ಸ್ವಯಂಚಾಲಿತವಾಗಿ ಅಳಿಸುತ್ತದೆ</string>
+    <!-- Action item in menu for the Delete browsing data on quit feature -->
+    <string name="delete_browsing_data_on_quit_action">ತೊರೆಯಿರಿ</string>
+
+    <!-- Dialog message to the user asking to delete browsing data. -->
+    <string name="delete_browsing_data_prompt_message">ಇದು ನಿಮ್ಮ ಎಲ್ಲಾ ಬ್ರೌಸಿಂಗ್ ಡೇಟಾವನ್ನು ಅಳಿಸುತ್ತದೆ.</string>
+    <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
+    <string name="delete_browsing_data_prompt_message_3">%s ಆಯ್ದ ಬ್ರೌಸಿಂಗ್ ಡೇಟಾವನ್ನು ಅಳಿಸುತ್ತದೆ.</string>
+    <!-- Text for the cancel button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_cancel">ರದ್ದುಗೊಳಿಸು</string>
+    <!-- Text for the allow button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_allow">ಅಳಿಸು</string>
+    <!-- Text for the snackbar confirmation that the data was deleted -->
+    <string name="preferences_delete_browsing_data_snackbar">ಬ್ರೌಸಿಂಗ್ ಡೇಟಾವನ್ನು ಅಳಿಸಲಾಗಿದೆ</string>
+    <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
+    <string name="deleting_browsing_data_in_progress">ಬ್ರೌಸಿಂಗ್ ಡೇಟಾವನ್ನು ಅಳಿಸಲಾಗುತ್ತಿದೆ…</string>
+
+    <!-- Tips -->
+    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header">ಫೈರ್ಫಾಕ್ಸ್ ಪೂರ್ವವೀಕ್ಷಣೆ ಈಗ ಫೈರ್ಫಾಕ್ಸ್ ನೈಟ್ಲಿ ಆಗಿದೆ</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description">ಫೈರ್ಫಾಕ್ಸ್ ನೈಟ್ಲಿ ಪ್ರತಿ ರಾತ್ರಿಯೂ ನವೀಕರಿಸಲ್ಪಡುತ್ತದೆ ಮತ್ತು ಪ್ರಾಯೋಗಿಕ ಹೊಸ ವೈಶಿಷ್ಟ್ಯಗಳನ್ನು ಹೊಂದಿದೆ.
+        ಆದಾಗ್ಯೂ, ಇದು ಕಡಿಮೆ ಸ್ಥಿರವಾಗಿರಬಹುದು. ಹೆಚ್ಚು ಸ್ಥಿರ ಅನುಭವಕ್ಕಾಗಿ ನಮ್ಮ ಬೀಟಾ ಬ್ರೌಸರ್ ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ.</string>
+    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_button_2">ಆಂಡ್ರಾಯ್ಡ್ ಬೀಟಾಕ್ಕಾಗಿ ಫೈರ್‌ಫಾಕ್ಸ್ ಪಡೆಯಿರಿ</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_installed">ಫೈರ್ಫಾಕ್ಸ್ ನೈಟ್ಲಿ ಸರಿಸಲಾಗಿದೆ</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_installed">ಈ ಅಪ್ಲಿಕೇಶನ್ ಇನ್ನು ಮುಂದೆ ಭದ್ರತಾ ನವೀಕರಣಗಳನ್ನು ಸ್ವೀಕರಿಸುವುದಿಲ್ಲ. ಈ ಅಪ್ಲಿಕೇಶನ್ ಬಳಸುವುದನ್ನು ನಿಲ್ಲಿಸಿ ಮತ್ತು ಹೊಸ ನೈಟ್‌ಲಿಗೆ ಬದಲಾಯಿಸಿ.
+        \n\nನಿಮ್ಮ ಬುಕ್‌ಮಾರ್ಕ್‌ಗಳು, ಲಾಗಿನ್‌ಗಳು ಮತ್ತು ಇತಿಹಾಸವನ್ನು ಮತ್ತೊಂದು ಅಪ್ಲಿಕೇಶನ್‌ಗೆ ವರ್ಗಾಯಿಸಲು, ಫೈರ್‌ಫಾಕ್ಸ್ ಖಾತೆಯನ್ನು ರಚಿಸಿ.</string>
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_installed">ಹೊಸ ನೈಟ್ಲಿಗೆ ಬದಲಿಸಿ</string>
+
+    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
+    <string name="tip_firefox_preview_moved_header_preview_not_installed">ಫೈರ್ಫಾಕ್ಸ್ ನೈಟ್ಲಿ ಸರಿಸಲಾಗಿದೆ</string>
+    <!-- text for firefox preview moving tip description -->
+    <string name="tip_firefox_preview_moved_description_preview_not_installed">ಈ ಅಪ್ಲಿಕೇಶನ್ ಇನ್ನು ಮುಂದೆ ಭದ್ರತಾ ನವೀಕರಣಗಳನ್ನು ಸ್ವೀಕರಿಸುವುದಿಲ್ಲ. ಹೊಸ ನೈಟ್ಲಿ ಪಡೆಯಿರಿ ಮತ್ತು ಈ ಅಪ್ಲಿಕೇಶನ್ ಬಳಸುವುದನ್ನು ನಿಲ್ಲಿಸಿ.
+        \n\n ನಿಮ್ಮ ಬುಕ್‌ಮಾರ್ಕ್‌ಗಳು, ಲಾಗಿನ್‌ಗಳು ಮತ್ತು ಇತಿಹಾಸವನ್ನು ಮತ್ತೊಂದು ಅಪ್ಲಿಕೇಶನ್‌ಗೆ ವರ್ಗಾಯಿಸಲು, ಫೈರ್‌ಫಾಕ್ಸ್ ಖಾತೆಯನ್ನು ರಚಿಸಿ.</string>
+    <!-- text for firefox preview moving tip button  -->
+    <string name="tip_firefox_preview_moved_button_preview_not_installed">ಹೊಸ ನೈಟ್ಲಿ ಪಡೆಯಿರಿ</string>
+
+    <!-- Onboarding -->
+    <!-- Text for onboarding welcome message
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_header">%sಗೆ ಸುಸ್ವಾಗತ!</string>
+    <!-- text for the Firefox Accounts section header -->
+    <string name="onboarding_fxa_section_header">ಈಗಾಗಲೇ ಖಾತೆಯನ್ನು ಹೊಂದಿದ್ದೀರಾ?</string>
+    <!-- text for the "What's New" onboarding card header -->
+    <string moz:removedIn="94" name="onboarding_whats_new_header1" tools:ignore="UnusedResources">ಹೊಸತೇನಿದೆಯೆಂದು ನೋಡಿ</string>
+    <!-- text for the "what's new" onboarding card description
+    The first parameter is the short name of the app (e.g. Firefox) -->
+    <string moz:removedIn="94" name="onboarding_whats_new_description" tools:ignore="UnusedResources">ಮರುವಿನ್ಯಾಸಗೊಳಿಸಲಾದ %s ಬಗ್ಗೆ ಪ್ರಶ್ನೆಗಳಿವೆಯೇ? ಏನನ್ನು ಬದಲಾಯಿಸಲಾಗಿದೆ ಎಂದು ತಿಳಿಯಲು ಬಯಸುವಿರಾ?</string>
+    <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
+    <string moz:removedIn="94" name="onboarding_whats_new_description_linktext" tools:ignore="UnusedResources">ಉತ್ತರಗಳನ್ನು ಇಲ್ಲಿ ಪಡೆಯಿರಿ</string>
+    <!-- text for the button to confirm automatic sign-in -->
+    <string name="onboarding_firefox_account_auto_signin_confirm">ಹೌದು, ನನ್ನನ್ನು ಸೈನ್ ಇನ್ ಮಾಡಿ</string>
+
+    <!-- text for the automatic sign-in button while signing in is in process -->
+    <string name="onboarding_firefox_account_signing_in">ಸೈನ್ ಇನ್ ಮಾಡಲಾಗುತ್ತಿದೆ…</string>
+    <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
+    <string name="onboarding_firefox_account_stay_signed_out">ಸೈನ್ ಔಟ್ ಆಗಿರಿ</string>
+    <!-- text to display in the snackbar once account is signed-in -->
+    <string name="onboarding_firefox_account_sync_is_on">ಸಿಂಕ್ ಆನ್ ಆಗಿದೆ</string>
+    <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
+    <string name="onboarding_firefox_account_automatic_signin_failed">ಸೈನ್-ಇನ್ ಮಾಡಲು ವಿಫಲವಾಗಿದೆ</string>
+    <!-- text for tracking protection radio button option for standard level of blocking -->
+    <string name="onboarding_tracking_protection_standard_button_2">ಪ್ರಮಾಣಿತ (ಡೀಫಾಲ್ಟ್)</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_button">ಕಟ್ಟುನಿಟ್ಟಾದ (ಶಿಫಾರಸು ಮಾಡಲಾಗಿದೆ)</string>
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_option">ಕಡ್ಡಾಯ</string>
+    <!-- text for the private browsing onboarding card header -->
+    <string moz:removedIn="94" name="onboarding_private_browsing_header" tools:ignore="UnusedResources">ಮುಕ್ತವಾಗಿ ಜಾಲಾಡಿ</string>
+    <!-- text for the private browsing onboarding card description
+    The first parameter is an icon that represents private browsing -->
+    <string moz:removedIn="94" name="onboarding_private_browsing_description1" tools:ignore="UnusedResources">ಖಾಸಗಿ ಟ್ಯಾಬ್ ಅನ್ನು ಒಮ್ಮೆ ತೆರೆಯಿರಿ: %s ಐಕಾನ್ ಟ್ಯಾಪ್ ಮಾಡಿ.</string>
+    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
+    <string moz:removedIn="94" name="onboarding_private_browsing_always_description" tools:ignore="UnusedResources">ಪ್ರತಿ ಬಾರಿಯೂ ಖಾಸಗಿ ಟ್ಯಾಬ್‌ಗಳನ್ನು ತೆರೆಯಿರಿ: ನಿಮ್ಮ ಖಾಸಗಿ ಬ್ರೌಸಿಂಗ್ ಸೆಟ್ಟಿಂಗ್‌ಗಳನ್ನು ನವೀಕರಿಸಿ.</string>
+    <!-- text for the private browsing onbording card button, that launches settings -->
+    <string moz:removedIn="94" name="onboarding_private_browsing_button" tools:ignore="UnusedResources">ಸಿದ್ಧತೆಗಳನ್ನು ತೆರೆ</string>
+    <!-- text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header">ನಿಮ್ಮ ಗೌಪ್ಯತೆ</string>
+    <!-- Text for the button to read the privacy notice -->
+    <string name="onboarding_privacy_notice_read_button">ನಮ್ಮ ಗೌಪ್ಯತೆ ಪ್ರಕಟಣೆಯನ್ನು ಓದಿ</string>
+    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
+    <string moz:removedIn="93" name="onboarding_close" tools:ignore="UnusedResources">ಮುಚ್ಚು</string>
+
+    <!-- text for the button to finish onboarding -->
+    <string name="onboarding_finish">ಜಾಲವೀಕ್ಷಣೆಯನ್ನು ಆರಂಭಿಸಿ</string>
+
+    <!-- Onboarding theme -->
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">ನಿಮ್ಮ ಥೀಮ್ ಆಯ್ಕೆಮಾಡಿ</string>
+    <!-- Automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_title">ಸ್ವಯಂಚಾಲಿತ</string>
+    <!-- Summary of automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_summary">ನಿಮ್ಮ ಸಾಧನ ಸೆಟ್ಟಿಂಗ್‌ಗಳಿಗೆ ಹೊಂದಿಕೊಳ್ಳುತ್ತದೆ</string>
+    <!-- Theme setting for dark mode -->
+    <string name="onboarding_theme_dark_title">ಡಾರ್ಕ್ ಥೀಮ್</string>
+    <!-- Theme setting for light mode -->
+    <string name="onboarding_theme_light_title">ತಿಳಿ ಬೆಳಕಿನ ಥೀಮ್</string>
+
+    <!-- Text shown in snackbar when multiple tabs have been sent to device -->
+    <string name="sync_sent_tabs_snackbar">ಟ್ಯಾಬ್‌ಗಳನ್ನು ಕಳುಹಿಸಲಾಗಿದೆ!</string>
+    <!-- Text shown in snackbar when one tab has been sent to device  -->
+    <string name="sync_sent_tab_snackbar">ಟ್ಯಾಬ್‌ಗಳನ್ನು ಕಳುಹಿಸಲಾಗಿದೆ!</string>
+    <!-- Text shown in snackbar when sharing tabs failed  -->
+    <string name="sync_sent_tab_error_snackbar">ಕಳುಹಿಸಲು ಸಾಧ್ಯವಿಲ್ಲ</string>
+    <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
+    <string name="sync_sent_tab_error_snackbar_action">ಮರುಪ್ರಯತ್ನಿಸು</string>
+    <!-- Title of QR Pairing Fragment -->
+    <string name="sync_scan_code">ಕೋಡ್ ಅನ್ನು ಸ್ಕ್ಯಾನ್ ಮಾಡಿ</string>
+    <!-- Instructions on how to access pairing -->
+    <string name="sign_in_instructions"><![CDATA[ನಿಮ್ಮ ಕಂಪ್ಯೂಟರ್‌ನಲ್ಲಿ ಫೈರ್‌ಫಾಕ್ಸ್ ತೆರೆಯಿರಿ ಮತ್ತು <b>https://firefox.com/pair</b> ಗೆ ಹೋಗಿ]]></string>
+    <!-- Text shown for sign in pairing when ready -->
+    <string name="sign_in_ready_for_scan">ಸ್ಕ್ಯಾನ್ ಮಾಡಲು ಸಿದ್ಧವಾಗಿದೆ</string>
+    <!-- Text shown for settings option for sign with pairing -->
+    <string name="sign_in_with_camera">ನಿಮ್ಮ ಕ್ಯಾಮೆರಾದೊಂದಿಗೆ ಸೈನ್ ಇನ್ ಮಾಡಿ</string>
+    <!-- Text shown for settings option for sign with email -->
+    <string name="sign_in_with_email">ಬದಲಿಗೆ ಇಮೇಲ್ ಬಳಸಿ</string>
+    <!-- Text shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_confirmation_message">Firefox ನಿಮ್ಮ ಖಾತೆಯೊಂದಿಗೆ ಸಿಂಕ್ ಮಾಡುವುದನ್ನು ನಿಲ್ಲಿಸುವುದು, ಆದರೆ ಈ ಸಾಧನದಿಂದ ನಿಮ್ಮ ಯಾವುದೇ ಜಾಲಾಟದ ಡೇಟಾವನ್ನು ಅಳಿಸುವುದಿಲ್ಲ.</string>
+    <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="sign_out_confirmation_message_2">%s ನಿಮ್ಮ ಖಾತೆಯೊಂದಿಗೆ ಸಿಂಕ್ ಮಾಡುವುದನ್ನು ನಿಲ್ಲಿಸುವುದು, ಆದರೆ ಈ ಸಾಧನದಿಂದ ನಿಮ್ಮ ಯಾವುದೇ ಜಾಲಾಟದ ಡೇಟಾವನ್ನು ಅಳಿಸುವುದಿಲ್ಲ.</string>
+    <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_disconnect">ಸಂಪರ್ಕ ಕಡಿತಗೊಳಿಸಿ</string>
+    <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_cancel">ರದ್ದು ಮಾಡು</string>
+    <!-- Error message snackbar shown after the user tried to select a default folder which cannot be altered -->
+    <string name="bookmark_cannot_edit_root">ಡೀಫಾಲ್ಟ್ ಫೋಲ್ಡರ್‌ಗಳನ್ನು ಸಂಪಾದಿಸಲು ಸಾಧ್ಯವಿಲ್ಲ</string>
+
+    <!-- Enhanced Tracking Protection -->
+    <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
+    <string name="etp_settings">ರಕ್ಷಣೆ ಸಿದ್ಧತೆಗಳು</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="preference_enhanced_tracking_protection">ವರ್ಧಿತ ಟ್ರ್ಯಾಕಿಂಗ್ ರಕ್ಷಣೆ</string>
+    <!-- Title for the description of enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_title">ಅನುಸರಿಸದೆ ಬ್ರೌಸ್ ಮಾಡಿ</string>
+    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation">ನಿಮ್ಮ ಡೇಟಾವನ್ನು ನೀವೇ ಇಟ್ಟುಕೊಳ್ಳಿ. ನೀವು ಆನ್‌ಲೈನ್‌ನಲ್ಲಿ ಮಾಡುವದನ್ನು ಅನುಸರಿಸುವ ಸಾಮಾನ್ಯ ಟ್ರ್ಯಾಕರ್‌ಗಳಿಂದ %s ನಿಮ್ಮನ್ನು ರಕ್ಷಿಸುತ್ತದೆ.</string>
+    <!-- Text displayed that links to website about enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_learn_more">ಇನ್ನಷ್ಟು ತಿಳಿಯಿರಿ</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_default_1">ಪ್ರಮಾಣಿತ (ಡೀಫಾಲ್ಟ್)</string>
+    <!--  Accessibility text for the Standard protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_standard_info_button">ಸ್ಟ್ಯಾಂಡರ್ಡ್ ಟ್ರ್ಯಾಕಿಂಗ್ ರಕ್ಷಣೆಯಿಂದ ಏನು ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict">ಕಡ್ಡಾಯ</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_strict_info_button">ಕಟ್ಟುನಿಟ್ಟಾದ ಟ್ರ್ಯಾಕಿಂಗ್ ರಕ್ಷಣೆಯಿಂದ ಏನು ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom">ಅಗತ್ಯಾನುಗುಣ</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description_2">ಯಾವ ಟ್ರ್ಯಾಕರ್‌ಗಳು ಮತ್ತು ಸ್ಕ್ರಿಪ್ಟ್‌ಗಳನ್ನು ನಿರ್ಬಂಧಿಸಬೇಕೆಂದು ಆರಿಸಿ.</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_custom_info_button">ಕಸ್ಟಮ್ ಟ್ರ್ಯಾಕಿಂಗ್ ರಕ್ಷಣೆಯಿಂದ ಏನು ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ</string>
+    <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies">ಕುಕಿಗಳು</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_1">ಕ್ರಾಸ್ ಸೈಟ್ ಮತ್ತು ಸಾಮಾಜಿಕ ಮಾಧ್ಯಮ ಟ್ರ್ಯಾಕರ್ಗಳು</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">ಭೇಟಿ ನೀಡದ ಸೈಟ್‌ಗಳಿಂದ ಕುಕೀಗಳು</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">ಎಲ್ಲಾ ಮೂರನೇ ವ್ಯಕ್ತಿಯ ಕುಕೀಗಳು (ವೆಬ್‌ಸೈಟ್‌ಗಳು ಮುರಿಯಲು ಕಾರಣವಾಗಬಹುದು)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">ಎಲ್ಲಾ ಕುಕೀಗಳು (ವೆಬ್‌ಸೈಟ್‌ಗಳು ಮುರಿಯಲು ಕಾರಣವಾಗುತ್ತವೆ)</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content">ಟ್ರ್ಯಾಕಿಂಗ್ ವಿಷಯ</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">ಎಲ್ಲಾ ಟ್ಯಾಬ್‌ಗಳಲ್ಲಿ</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">ಖಾಸಗಿ ಟ್ಯಾಬ್‌ಗಳಲ್ಲಿ ಮಾತ್ರ</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">ಕಸ್ಟಮ್ ಟ್ಯಾಬ್‌ಗಳಲ್ಲಿ ಮಾತ್ರ</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_cryptominers">ಕ್ರಿಪ್ಟೋಗಣಿಗಾರರು</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">ಬೆರಳಚ್ಚುಗಳು</string>
+    <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_blocked">ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ</string>
+    <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_allowed">ಅನುಮತಿಸಲಾದ‍</string>
+    <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_title">ಸಾಮಾಜಿಕ ಮಾಧ್ಯಮ ಟ್ರ್ಯಾಕರ್‌ಗಳು</string>
+    <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_description">ವೆಬ್‌ನಾದ್ಯಂತ ನಿಮ್ಮ ಬ್ರೌಸಿಂಗ್ ಚಟುವಟಿಕೆಯನ್ನು ಟ್ರ್ಯಾಕ್ ಮಾಡಲು ಸಾಮಾಜಿಕ ನೆಟ್‌ವರ್ಕ್‌ಗಳ ಸಾಮರ್ಥ್ಯವನ್ನು ಮಿತಿಗೊಳಿಸುತ್ತದೆ.</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title">ಕ್ರಾಸ್-ಸೈಟ್ ಟ್ರ್ಯಾಕಿಂಗ್ ಕುಕೀಸ್</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description">ನಿಮ್ಮ ಬ್ರೌಸಿಂಗ್ ಡೇಟಾವನ್ನು ಅನೇಕ ಸೈಟ್‌ಗಳಲ್ಲಿ ಕಂಪೈಲ್ ಮಾಡಲು ಜಾಹೀರಾತು ನೆಟ್‌ವರ್ಕ್‌ಗಳು ಮತ್ತು ವಿಶ್ಲೇಷಣಾ ಕಂಪನಿಗಳು ಬಳಸುವ ಕುಕೀಗಳನ್ನು ನಿರ್ಬಂಧಿಸುತ್ತದೆ.</string>
+    <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_title">ಕ್ರಿಪ್ಟೋಗಣಿಗಾರರು</string>
+    <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_description">ಗಣಿ ಡಿಜಿಟಲ್ ಕರೆನ್ಸಿಗೆ ನಿಮ್ಮ ಸಾಧನಕ್ಕೆ ಪ್ರವೇಶ ಪಡೆಯುವುದನ್ನು ದುರುದ್ದೇಶಪೂರಿತ ಸ್ಕ್ರಿಪ್ಟ್‌ಗಳು ತಡೆಯುತ್ತದೆ.</string>
+    <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_title">ಬೆರಳಚ್ಚುಗಳು</string>
+    <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_description">ಟ್ರ್ಯಾಕಿಂಗ್ ಉದ್ದೇಶಗಳಿಗಾಗಿ ಬಳಸಬಹುದಾದ ನಿಮ್ಮ ಸಾಧನದ ಬಗ್ಗೆ ಅನನ್ಯವಾಗಿ ಗುರುತಿಸಬಹುದಾದ ಡೇಟಾವನ್ನು ಸಂಗ್ರಹಿಸುವುದನ್ನು ನಿಲ್ಲಿಸುತ್ತದೆ.</string>
+    <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_title">ಟ್ರ್ಯಾಕಿಂಗ್ ವಿಷಯ</string>
+    <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_description">ಟ್ರ್ಯಾಕಿಂಗ್ ಕೋಡ್ ಹೊಂದಿರುವ ಲೋಡ್ ಮಾಡುವುದರಿಂದ ಜಾಹೀರಾತುಗಳು, ವೀಡಿಯೊಗಳು ಮತ್ತು ಇತರ ವಿಷಯವನ್ನು ಹೊರಗೆ ನಿಲ್ಲಿಸುತ್ತದೆ. ಕೆಲವು ವೆಬ್‌ಸೈಟ್ ಕ್ರಿಯಾತ್ಮಕತೆಯ ಮೇಲೆ ಪರಿಣಾಮ ಬೀರಬಹುದು.</string>
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string moz:removedIn="93" name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">ಗುರಾಣಿ ನೇರಳೆ ಬಣ್ಣದ್ದಾಗಲೆಲ್ಲಾ, %s ಸೈಟ್‌ನಲ್ಲಿ ಟ್ರ್ಯಾಕರ್‌ಗಳನ್ನು ನಿರ್ಬಂಧಿಸುತ್ತದೆ. ಹೆಚ್ಚಿನ ಮಾಹಿತಿಗಾಗಿ ಟ್ಯಾಪ್ ಮಾಡಿ.</string>
+    <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
+    <string name="etp_panel_on">ಈ ಸೈಟ್‌ಗಾಗಿ ರಕ್ಷಣೆಗಳು ಆನ್ ಆಗಿವೆ</string>
+    <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
+    <string name="etp_panel_off">ಈ ಸೈಟ್‌ಗೆ ರಕ್ಷಣೆಗಳು ಆಫ್ ಆಗಿದೆ</string>
+    <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
+    <string name="enhanced_tracking_protection_exceptions">ಈ ವೆಬ್‌ಸೈಟ್‌ಗಳಿಗೆ ವರ್ಧಿತ ಟ್ರ್ಯಾಕಿಂಗ್ ಪ್ರೊಟೆಕ್ಷನ್ ಆಫ್ ಆಗಿದೆ</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate
+    back from ETP details (Ex: Tracking content) -->
+    <string name="etp_back_button_content_description">ಹಿಂದಕ್ಕೆ ನ್ಯಾವಿಗೇಟ್ ಮಾಡಿ</string>
+    <!-- About page Your rights link text -->
+    <string name="about_your_rights">ನಿಮ್ಮ ಹಕ್ಕುಗಳು</string>
+    <!-- About page link text to open open source licenses screen -->
+    <string name="about_open_source_licenses">ನಾವು ಬಳಸುವ ಓಪನ್ ಸೋರ್ಸ್ ಲೈಬ್ರರಿಗಳು</string>
+    <!-- About page link text to open what's new link -->
+    <string name="about_whats_new">%s ನಲ್ಲಿ ಹೊಸತೇನಿದೆ</string>
+    <!-- Open source licenses page title
+    The first parameter is the app name -->
+    <string name="open_source_licenses_title">%s | ಒಎಸ್ಎಸ್ ಗ್ರಂಥಾಲಯಗಳು</string>
+
+    <!-- About page link text to open support link -->
+    <string name="about_support">ಬೆಂಬಲ</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">ಕ್ರ್ಯಾಶ್‌ಗಳು</string>
+    <!-- About page link text to open privacy notice link -->
+    <string name="about_privacy_notice">ಗೌಪ್ಯತೆ ಸೂಚನೆ</string>
+    <!-- About page link text to open know your rights link -->
+    <string name="about_know_your_rights">ನಿಮ್ಮ ಹಕ್ಕುಗಳನ್ನು ತಿಳಿಯಿರಿ</string>
+    <!-- About page link text to open licensing information link -->
+    <string name="about_licensing_information">ಪರವಾನಗಿ ಮಾಹಿತಿ</string>
+    <!-- About page link text to open a screen with libraries that are used -->
+    <string name="about_other_open_source_libraries">ನಾವು ಬಳಸುವ ಗ್ರಂಥಾಲಯಗಳು</string>
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">ಡೀಬಗ್ ಮೆನು: ಸಕ್ರಿಯಗೊಳಿಸಲು %1$d ಕ್ಲಿಕ್ (ಗಳು) ಉಳಿದಿದೆ</string>
+    <string name="about_debug_menu_toast_done">ಡೀಬಗ್ ಮೆನು ಸಕ್ರಿಯಗೊಳಿಸಲಾಗಿದೆ</string>
+
+    <!-- Content description of the tab counter toolbar button when one tab is open -->
+    <string name="tab_counter_content_description_one_tab">1 ಟ್ಯಾಬ್</string>
+    <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
+    <string name="tab_counter_content_description_multi_tab">%d ಟ್ಯಾಬ್‌ಗಳು</string>
+
+    <!-- Browser long press popup menu -->
+    <!-- Copy the current url -->
+    <string name="browser_toolbar_long_press_popup_copy">ಪ್ರತಿ ಮಾಡು</string>
+    <!-- Paste & go the text in the clipboard. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="browser_toolbar_long_press_popup_paste_and_go">ಅಂಟಿಸು ಹಾಗು ಮುಂದುವರೆ</string>
+    <!-- Paste the text in the clipboard -->
+    <string name="browser_toolbar_long_press_popup_paste">ಅಂಟಿಸು</string>
+    <!-- Snackbar message shown after an URL has been copied to clipboard. -->
+    <string name="browser_toolbar_url_copied_to_clipboard_snackbar">URL ಅನ್ನು ಕ್ಲಿಪ್‌ಬೋರ್ಡ್‌ಗೆ ನಕಲಿಸಲಾಗಿದೆ</string>
+
+    <!-- Title text for the Add To Homescreen dialog -->
+    <string name="add_to_homescreen_title">ಮುಖಪುಟ ಪರದೆಗೆ ಸೇರಿಸಿ</string>
+    <!-- Cancel button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_cancel">ರದ್ದು ಮಾಡು</string>
+    <!-- Add button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_add">ಸೇರಿಸು</string>
+    <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
+    <string name="add_to_homescreen_continue">ಜಾಲತಾಣಕ್ಕೆ ಮುಂದುವರೆಯಿರಿ</string>
+
+    <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_text_placeholder">ಶಾರ್ಟ್ಕಟ್ ಹೆಸರು</string>
+
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">ಲಾಗಿನ್‌ಗಳು ಮತ್ತು ಪಾಸ್‌ವರ್ಡ್‌ಗಳು</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins">ಲಾಗಿನ್‌ಗಳು ಮತ್ತು ಪಾಸ್‌ವರ್ಡ್‌ಗಳನ್ನು ಉಳಿಸಿ</string>
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">ಉಳಿಸಲು ಹೇಳಿ</string>
+    <!-- Preference option for never saving passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_never_save">ಎಂದಿಗೂ ಉಳಿಸಬೇಡಿ</string>
+    <!-- Preference for autofilling saved logins in Fenix -->
+    <string moz:removedIn="93" name="preferences_passwords_autofill" tools:ignore="UnusedResources">ಸ್ವಯಂತುಂಬುವಿಕೆ</string>
+
+    <!-- Preference for syncing saved logins in Fenix -->
+    <string name="preferences_passwords_sync_logins">ಲಾಗಿನ್‌ಗಳನ್ನು ಸಿಂಕ್ ಮಾಡಿ</string>
+    <!-- Syncing saved logins in Fenix needs reconnect to sync -->
+    <string name="preferences_passwords_sync_logins_reconnect">ಮರುಸಂಪರ್ಕಿಸು</string>
+    <!-- Syncing saved logins in Fenix needs login -->
+    <string name="preferences_passwords_sync_logins_sign_in">ಸಿಂಕ್ ಮಾಡಲು ಸೈನ್ ಇನ್ ಆಗಿ</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins">ಉಳಿಸಿದ ಲಾಗಿನ್‌ಗಳು</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text">ನೀವು ಉಳಿಸಿದ ಅಥವಾ %s ಗೆ ಸಿಂಕ್ ಮಾಡಿದ ಲಾಗಿನ್‌ಗಳು ಇಲ್ಲಿ ತೋರಿಸಲ್ಪಡುತ್ತವೆ.</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">ಸಿಂಕ್ ಬಗ್ಗೆ ಇನ್ನಷ್ಟು ತಿಳಿಯಿರಿ.</string>
+    <!-- Preference to access list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions">ವಿನಾಯಿತಿಗಳು</string>
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">ಉಳಿಸದ ಲಾಗಿನ್‌ಗಳು ಮತ್ತು ಪಾಸ್‌ವರ್ಡ್‌ಗಳನ್ನು ಇಲ್ಲಿ ತೋರಿಸಲಾಗುತ್ತದೆ.</string>
+    <!-- Description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description">ಈ ಸೈಟ್‌ಗಳಿಗೆ ಲಾಗಿನ್‌ಗಳು ಮತ್ತು ಪಾಸ್‌ವರ್ಡ್‌ಗಳನ್ನು ಉಳಿಸಲಾಗುವುದಿಲ್ಲ.</string>
+    <!-- Text on button to remove all saved login exceptions -->
+    <string name="preferences_passwords_exceptions_remove_all">ಎಲ್ಲಾ ವಿನಾಯಿತಿಗಳನ್ನು ಅಳಿಸಿ</string>
+    <!-- Hint for search box in logins list -->
+    <string name="preferences_passwords_saved_logins_search">ಹುಡುಕು ಎಂಜಿನ್‌ಗಳು</string>
+    <!-- Option to sort logins list A-Z, alphabetically -->
+    <string name="preferences_passwords_saved_logins_alphabetically">ವರ್ಣಾನುಕ್ರಮದಲ್ಲಿ</string>
+    <!-- Option to sort logins list by most recently used -->
+    <string name="preferences_passwords_saved_logins_recently_used">ಇತ್ತೀಚೆಗೆ ಬಳಸಲಾಗಿದೆ</string>
+    <!-- The header for the site that a login is for -->
+    <string name="preferences_passwords_saved_logins_site">ಸೈಟ್</string>
+    <!-- The header for the username for a login -->
+    <string name="preferences_passwords_saved_logins_username">ಬಳಕೆದಾರನ ಹೆಸರು</string>
+    <!-- The header for the password for a login -->
+    <string name="preferences_passwords_saved_logins_password">ಗುಪ್ತಪದ</string>
+    <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin">ನಿಮ್ಮ ಪಿನ್ ಅನ್ನು ಮತ್ತೆ ನಮೂದಿಸಿ</string>
+    <!-- Message displayed in security prompt to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin_description">ನಿಮ್ಮ ಉಳಿಸಿದ ಲಾಗಿನ್‌ಗಳನ್ನು ವೀಕ್ಷಿಸಲು ಅನ್ಲಾಕ್ ಮಾಡಿ</string>
+    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning">ಈ ಸಂಪರ್ಕವು ಸುರಕ್ಷಿತವಾಗಿಲ್ಲ. ಇಲ್ಲಿ ನಮೂದಿಸಿದ ಲಾಗಿನ್‌ಗಳನ್ನು ಹೊಂದಾಣಿಕೆ ಮಾಡಬಹುದು.</string>
+    <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
+    <string name="logins_insecure_connection_warning_learn_more">ಇನ್ನಷ್ಟು ತಿಳಿಯಿರಿ</string>
+    <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
+    <string name="logins_doorhanger_save">ಈ ಲಾಗಿನ್ ಅನ್ನು ಉಳಿಸಲು %s ಬಯಸುತ್ತೀರಾ?</string>
+    <!-- Positive confirmation that Fenix should save the new or updated login -->
+    <string name="logins_doorhanger_save_confirmation">ಉಳಿಸು</string>
+    <!-- Negative confirmation that Fenix should not save the new or updated login -->
+    <string name="logins_doorhanger_save_dont_save">ಉಳಿಸಬೇಡ</string>
+    <!-- Shown in snackbar to tell user that the password has been copied -->
+    <string name="logins_password_copied">‍ಗುಪ್ತಪದವನ್ನು ಕ್ಲಿಪ್ ಬೋರ್ಡ್‌ಗೆ ಪ್ರತಿ ಮಾಡಲಾಗಿದೆ</string>
+    <!-- Shown in snackbar to tell user that the username has been copied -->
+    <string name="logins_username_copied">ಬಳಕೆದಾರರ ಹೆಸರನ್ನು ಕ್ಲಿಪ್‌ಬೋರ್ಡ್‌ಗೆ ನಕಲಿಸಲಾಗಿದೆ</string>
+    <!-- Shown in snackbar to tell user that the site has been copied -->
+    <string name="logins_site_copied">ಸೈಟ್ ಅನ್ನು ಕ್ಲಿಪ್ಬೋರ್ಡ್ಗೆ ನಕಲಿಸಲಾಗಿದೆ</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
+    <string name="saved_logins_copy_password">ಪ್ರವೇಶ ಪದ ನಕಲಿಸು</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
+    <string name="saved_login_copy_username">ಬಳಕೆದಾರನ ಹೆಸರು ನಕಲಿಸು</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
+    <string name="saved_login_copy_site">ಸೈಟ್ ನಕಲಿಸಿ</string>
+    <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
+    <string name="saved_login_reveal_password">ಗುಪ್ತಪದ ತೋರಿಸು</string>
+    <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
+    <string name="saved_login_hide_password">ಗುಪ್ತಪದಗಳನ್ನು ಅಡಗಿಸು</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
+    <string name="logins_biometric_prompt_message">ನಿಮ್ಮ ಉಳಿಸಿದ ಲಾಗಿನ್‌ಗಳನ್ನು ವೀಕ್ಷಿಸಲು ಅನ್ಲಾಕ್ ಮಾಡಿ</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title">ನಿಮ್ಮ ಲಾಗಿನ್‌ಗಳು ಮತ್ತು ಪಾಸ್‌ವರ್ಡ್‌ಗಳನ್ನು ಸುರಕ್ಷಿತಗೊಳಿಸಿ</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message">ನಿಮ್ಮ ಸಾಧನವನ್ನು ಬೇರೊಬ್ಬರು ಹೊಂದಿದ್ದರೆ ನಿಮ್ಮ ಉಳಿಸಿದ ಲಾಗಿನ್‌ಗಳು ಮತ್ತು ಪಾಸ್‌ವರ್ಡ್‌ಗಳನ್ನು ಪ್ರವೇಶಿಸದಂತೆ ರಕ್ಷಿಸಲು ಸಾಧನ ಲಾಕ್ ಮಾದರಿ, ಪಿನ್ ಅಥವಾ ಪಾಸ್‌ವರ್ಡ್ ಅನ್ನು ಹೊಂದಿಸಿ.</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_later">ನಂತರ</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_set_up_now">ಇದೀಗ ಹೊಂದಿಸಿ</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
+    <string name="logins_biometric_prompt_message_pin">ನಿಮ್ಮ ಸಾಧನವನ್ನು ಅನ್ಲಾಕ್ ಮಾಡಿ</string>
+    <!-- Title for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom">ಎಲ್ಲಾ ವೆಬ್‌ಸೈಟ್‌ಗಳಲ್ಲಿ ಜೂಮ್ ಮಾಡಿ</string>
+    <!-- Summary for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom_summary">ಈ ಗೆಸ್ಚರ್ ಅನ್ನು ತಡೆಯುವ ವೆಬ್‌ಸೈಟ್‌ಗಳಲ್ಲಿ ಸಹ ಪಿಂಚ್ ಮತ್ತು om ೂಮ್ ಅನ್ನು ಅನುಮತಿಸಲು ಸಕ್ರಿಯಗೊಳಿಸಿ.</string>
+    <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
+    <string name="saved_logins_sort_strategy_alphabetically">ಹೆಸರು (A-Z)</string>
+    <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
+    <string name="saved_logins_sort_strategy_last_used">ಕೊನೆಯ ಬಳಕೆ</string>
+    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">ಲಾಗಿನ್‌ಗಳ ಮೆನುವನ್ನು ವಿಂಗಡಿಸಿ</string>
+
+    <!-- Credit Cards Autofill -->
+    <!-- Preference and title for managing the settings for credit cards -->
+    <string name="preferences_credit_cards">ಕ್ರೆಡಿಟ್ ಕಾರ್ಡ್‌ಗಳು</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards">ಕಾರ್ಡ್‌ಗಳನ್ನು ಉಳಿಸಿ ಮತ್ತು ಸ್ವಯಂಚಾಲಿತವಾಗಿ ತುಂಬಿಸಿ</string>
+    <!-- Preference summary for saving and autofilling credit card data -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary">ಡೇಟಾವನ್ನು ಎನ್‌ಕ್ರಿಪ್ಟ್ ಮಾಡಲಾಗಿದೆ</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
+    <string name="preferences_credit_cards_sync_cards_across_devices">ಸಾಧನಗಳಲ್ಲಿ ಕಾರ್ಡ್‌ಗಳನ್ನು ಸಿಂಕ್ ಮಾಡಿ</string>
+    <!-- Preference option for adding a credit card -->
+    <string name="preferences_credit_cards_add_credit_card">ಕ್ರೆಡಿಟ್ ಕಾರ್ಡ್ ಸೇರಿಸಿ</string>
+
+    <!-- Title of the Add search engine screen -->
+    <string name="search_engine_add_custom_search_engine_title">ಹುಡುಕು ಸಾಧನವನ್ನು ಸೇರಿಸಿ</string>
+    <!-- Title of the Edit search engine screen -->
+    <string name="search_engine_edit_custom_search_engine_title">ಹುಡುಕು ಎಂಜಿನ್ಅನ್ನು ಸಂಪಾದಿಸಿ</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
+    <string name="search_engine_add_button_content_description">ಸೇರಿಸಿ</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description">ಬದಲಾವಣೆಗಳನ್ನು ಉಳಿಸು</string>
+    <!-- Text for the menu button to edit a search engine -->
+    <string name="search_engine_edit">ಸಂಪಾದಿಸಿ</string>
+    <!-- Text for the menu button to delete a search engine -->
+    <string name="search_engine_delete">ಅಳಿಸು</string>
+
+    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
+    <string name="search_add_custom_engine_label_other">ಇತರೆ</string>
+    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
+    <string name="search_add_custom_engine_name_hint">ಹೆಸರು</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint">ಬಳಸಲು ಸ್ಟ್ರಿಂಗ್ ಹುಡುಕಿ</string>
+    <!-- Description text for the Search String TextField. The %s is part of the string -->
+    <string formatted="false" name="search_add_custom_engine_search_string_example">ಪ್ರಶ್ನೆಯನ್ನು “%s” ನೊಂದಿಗೆ ಬದಲಾಯಿಸಿ. ಉದಾಹರಣೆ: \n https://www.google.com/search?q=%s</string>
+    <!-- Text for the button to learn more about adding a custom search engine -->
+    <string name="search_add_custom_engine_learn_more_label">ಇನ್ನಷ್ಟು ತಿಳಿಯಿರಿ</string>
+    <!-- Accessibility description for the form in which details about the custom search engine are entered -->
+    <string name="search_add_custom_engine_form_description">ಕಸ್ಟಮ್ ಸರ್ಚ್ ಎಂಜಿನ್ ವಿವರಗಳು</string>
+    <!-- Accessibility description for the 'Learn more' link -->
+    <string name="search_add_custom_engine_learn_more_description">ಇನ್ನಷ್ಟು ತಿಳಿಯಲು ಕೊಂಡಿ</string>
+
+    <!-- Text shown when a user leaves the name field empty -->
+    <string name="search_add_custom_engine_error_empty_name">ಸರ್ಚ್ ಎಂಜಿನ್ ಹೆಸರನ್ನು ನಮೂದಿಸಿ</string>
+    <!-- Text shown when a user tries to add a search engine that already exists -->
+    <string name="search_add_custom_engine_error_existing_name">“%s” ಹೆಸರಿನ ಸರ್ಚ್ ಎಂಜಿನ್ ಈಗಾಗಲೇ ಅಸ್ತಿತ್ವದಲ್ಲಿದೆ.</string>
+    <!-- Text shown when a user leaves the search string field empty -->
+    <string name="search_add_custom_engine_error_empty_search_string">ಹುಡುಕಾಟ ಸ್ಟ್ರಿಂಗ್ ಅನ್ನು ನಮೂದಿಸಿ</string>
+    <!-- Text shown when a user leaves out the required template string -->
+    <string name="search_add_custom_engine_error_missing_template">ಹುಡುಕಾಟ ಸ್ಟ್ರಿಂಗ್ ಉದಾಹರಣೆ ಸ್ವರೂಪಕ್ಕೆ ಹೊಂದಿಕೆಯಾಗಿದೆಯೆ ಎಂದು ಪರಿಶೀಲಿಸಿ</string>
+    <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
+    <string name="search_add_custom_engine_error_cannot_reach">“%s” ಗೆ ಸಂಪರ್ಕಿಸುವಲ್ಲಿ ದೋಷ</string>
+    <!-- Text shown when a user creates a new search engine -->
+    <string name="search_add_custom_engine_success_message">%s ರಚಿಸಲಾಗಿದೆ</string>
+    <!-- Text shown when a user successfully edits a custom search engine -->
+    <string name="search_edit_custom_engine_success_message">%s ಉಳಿಸಲಾಗಿದೆ</string>
+    <!-- Text shown when a user successfully deletes a custom search engine -->
+    <string name="search_delete_search_engine_success_message">%s ಅಳಿಸಲಾಗಿದೆ</string>
+
+    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
+    <string name="migration_title">ಹೊಚ್ಚ ಹೊಸ %sಗೆ ಸುಸ್ವಾಗತ</string>
+    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
+    <string name="migration_description">ಆನ್‌ಲೈನ್‌ನಲ್ಲಿ ಹೆಚ್ಚಿನದನ್ನು ಮಾಡಲು ನಿಮಗೆ ಸಹಾಯ ಮಾಡಲು ಸುಧಾರಿತ ಕಾರ್ಯಕ್ಷಮತೆ ಮತ್ತು ವೈಶಿಷ್ಟ್ಯಗಳೊಂದಿಗೆ ಸಂಪೂರ್ಣವಾಗಿ ಮರುವಿನ್ಯಾಸಗೊಳಿಸಲಾದ ಬ್ರೌಸರ್ ಕಾಯುತ್ತಿದೆ. \n\n ನಿಮ್ಮೊಂದಿಗೆ ನಾವು %s ಅನ್ನು ನವೀಕರಿಸುವಾಗ ದಯವಿಟ್ಟು ಕಾಯಿರಿ</string>
+    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
+    <string name="migration_updating_app_button_text">%s ಅನ್ನು ನವೀಕರಿಸಲಾಗುತ್ತಿದೆ…</string>
+    <!-- Text on the enabled button. Placeholder replaced with app name-->
+    <string name="migration_update_app_button">%s ಪ್ರಾರಂಭಿಸಿ</string>
+    <!-- Accessibility description text for a completed migration item -->
+    <string name="migration_icon_description">ಸ್ಥಳಾಂತರ ಪೂರ್ಣಗೊಂಡಿದೆ</string>
+    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
+    <string name="migration_text_passwords">ಗುಪ್ತಪದಗಳು</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">ಅದನ್ನು ಅನುಮತಿಸಲು:</string>
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. Android ಸಿದ್ಧತೆಗಳಿಗೆ ಹೋಗಿ</string>
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. <b>ಅನುಮತಿಗಳನ್ನು</b> ಟ್ಯಾಪ್ ಮಾಡಿ]]></string>
+    <!-- Third step for the allowing a permission (Fore example: Camera) -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. <b>%1$s</b> ಅನ್ನು ಆನ್‌ಗೆ ಟಾಗಲ್ ಮಾಡಿ]]></string>
+
+    <!-- Label that indicates a site is using a secure connection -->
+    <string moz:removedIn="94" name="quick_settings_sheet_secure_connection" tools:ignore="UnusedResources">ಸುರಕ್ಷಿತ ಸಂಪರ್ಕ</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string moz:removedIn="94" name="quick_settings_sheet_insecure_connection" tools:ignore="UnusedResources">ಅಸುರಕ್ಷಿತ ಸಂಪರ್ಕ</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
+    <string name="confirm_clear_permissions_on_all_sites">ಎಲ್ಲಾ ಸೈಟ್‌ಗಳಲ್ಲಿನ ಎಲ್ಲಾ ಅನುಮತಿಗಳನ್ನು ತೆರವುಗೊಳಿಸಲು ನೀವು ಬಯಸುತ್ತೀರಾ?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
+    <string name="confirm_clear_permissions_site">ಎಲ್ಲಾ ಸೈಟ್‌ನ ಎಲ್ಲಾ ಅನುಮತಿಗಳನ್ನು ತೆರವುಗೊಳಿಸಲು ನೀವು ಬಯಸುತ್ತೀರಾ?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
+    <string name="confirm_clear_permission_site">ಈ ಸೈಟ್‌ಗಾಗಿ ಈ ಅನುಮತಿಯನ್ನು ತೆರವುಗೊಳಿಸಲು ನೀವು ಬಯಸುತ್ತೀರಾ?</string>
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">ಸೈಟ್ ವಿನಾಯಿತಿಗಳಿಲ್ಲ</string>
+    <!-- Label for the Pocket default top site -->
+    <string name="pocket_top_articles">ಉನ್ನತ ಲೇಖನಗಳು</string>
+    <!-- Bookmark deletion confirmation -->
+    <string name="bookmark_deletion_confirmation">ಈ ಪುಟಗುರುತನ್ನು ಅಳಿಸಲು ನೀವು ಖಚಿತವಾಗಿ ಬಯಸುವಿರಾ?</string>
+    <!-- Browser menu button that adds a top site to the home fragment -->
+    <string name="browser_menu_add_to_top_sites">ಉನ್ನತ ಸೈಟ್‌ಗಳಿಗೆ ಸೇರಿಸಿ</string>
+    <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
+     the certificate authority that verified the ticket-->
+    <string name="certificate_info_verified_by">ಇವರಿಂದ ಪರಿಶೀಲಿಸಲಾಗಿದೆ: %1$s</string>
+    <!-- Login overflow menu delete button -->
+    <string name="login_menu_delete_button">ಅಳಿಸು</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">ಸಂಪಾದನೆ</string>
+    <!-- Message in delete confirmation dialog for logins -->
+    <string name="login_deletion_confirmation">ಈ ಲಾಗಿನಅನ್ನು ಅಳಿಸಲು ನೀವು ಖಚಿತವಾಗಿ ಬಯಸುವಿರಾ?</string>
+    <!-- Positive action of a dialog asking to delete  -->
+    <string name="dialog_delete_positive">ಅಳಿಸು</string>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">ಲಾಗಿನ್ ಆಯ್ಕೆಗಳು</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">ಲಾಗಿನ್‌ನ ವೆಬ್ ವಿಳಾಸಕ್ಕಾಗಿ ಸಂಪಾದಿಸಬಹುದಾದ ಪಠ್ಯ ಕ್ಷೇತ್ರ.</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">ಲಾಗಿನ್‌ನ ಬಳಕೆದಾರಹೆಸರುಗಾಗಿ ಸಂಪಾದಿಸಬಹುದಾದ ಪಠ್ಯ ಕ್ಷೇತ್ರ.</string>
+
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">ಲಾಗಿನ್‌ನ ಪಾಸ್‌ವರ್ಡ್‌ಗಾಗಿ ಸಂಪಾದಿಸಬಹುದಾದ ಪಠ್ಯ ಕ್ಷೇತ್ರ.</string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">ಲಾಗಿನ್‌ಗೆ ಬದಲಾವಣೆಗಳನ್ನು ಉಳಿಸಿ.</string>
+    <!--  The button description to discard changes to an edited login. -->
+    <string name="discard_changes">ಬದಲಾವಣೆಗಳನ್ನು ತ್ಯಜಿಸಿ</string>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">ಸಂಪಾದಿಸಿ</string>
+    <!--  The error message in add/edit login view when password field is blank. -->
+    <string name="saved_login_password_required">ಗುಪ್ತಪದದ ಅಗತ್ಯವಿದೆ</string>
+    <!-- Voice search button content description  -->
+    <string name="voice_search_content_description">ಧ್ವನಿ ಹುಡುಕಾಟ</string>
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">ಈಗ ಮಾತಾಡು</string>
+
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">ಆ ಬಳಕೆದಾರ ಹೆಸರಿನಲ್ಲಿನ ಲಾಗಿನ್ ಈಗಾಗಲೇ ಅಸ್ತಿತ್ವದಲ್ಲಿದೆ</string>
+
+    <!-- Synced Tabs -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <string name="synced_tabs_connect_another_device">ಮತ್ತೊಂದು ಸಾಧನಕ್ಕೆ ಸಂಪರ್ಕವನ್ನು ಸಾಧಿಸಿ.</string>
+    <!-- Text displayed asking user to re-authenticate -->
+    <string name="synced_tabs_reauth">ದಯವಿಟ್ಟು ಮರು-ಧೃಡೀಕರಿಸಿ.</string>
+    <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
+    <string name="synced_tabs_enable_tab_syncing">ದಯವಿಟ್ಟು ಟ್ಯಾಬ್ ಸಿಂಕ್ ಸಕ್ರಿಯಗೊಳಿಸಿ.</string>
+    <!-- Text displayed when user has no tabs that have been synced -->
+    <string name="synced_tabs_no_tabs">ನಿಮ್ಮ ಇತರ ಸಾಧನಗಳಲ್ಲಿನ ಫೈರ್‌ಫಾಕ್ಸ್‌ನಲ್ಲಿ ಯಾವುದೇ ಟ್ಯಾಬ್‌ಗಳು ತೆರೆದಿಲ್ಲ.</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">ನಿಮ್ಮ ಇತರೆ ಸಾಧನಗಳಲ್ಲಿನ ಟ್ಯಾಬ್‌ಗಳ ಪಟ್ಟಿಯನ್ನು ನೋಡಿ.</string>
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">ಸಿಂಕ್ ಮಾಡಲು ಸೈನ್ ಇನ್ ಆಗಿ</string>
+
+    <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
+    <string name="synced_tabs_no_open_tabs">ಯಾವುದೆ ತೆರೆದ ಟ್ಯಾಬ್‌ಗಳಿಲ್ಲ</string>
+
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_title">ಉನ್ನತ ಸೈಟ್ ಮಿತಿಯನ್ನು ತಲುಪಿದೆ</string>
+    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
+    <string name="top_sites_max_limit_content_2">ಹೊಸ ಉನ್ನತ ಸೈಟ್ ಸೇರಿಸಲು, ಒಂದನ್ನು ತೆಗೆದುಹಾಕಿ. ಸೈಟ್ ಅನ್ನು ಸ್ಪರ್ಶಿಸಿ ಮತ್ತು ಹಿಡಿದುಕೊಳ್ಳಿ ಮತ್ತು ತೆಗೆದುಹಾಕಿ ಆಯ್ಕೆಮಾಡಿ.</string>
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">ಸರಿ, ಗೊತ್ತಾಯಿತು</string>
+
+    <!-- Label for the show most visited sites preference -->
+    <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">ಹೆಚ್ಚು ಭೇಟಿ ನೀಡಿದ ಸೈಟ್‌ಗಳನ್ನು ತೋರಿಸಿ</string>
+	<!-- Title text displayed in the rename top site dialog. -->
+	<string name="top_sites_rename_dialog_title">ಹೆಸರು</string>
+	<!-- Hint for renaming title of a top site -->
+	<string name="top_site_name_hint">ಟಾಪ್ ಸೈಟ್ ಹೆಸರು</string>
+	<!-- Button caption to confirm the renaming of the top site. -->
+	<string name="top_sites_rename_dialog_ok">ಸರಿ</string>
+	<!-- Dialog button text for canceling the rename top site prompt. -->
+	<string name="top_sites_rename_dialog_cancel">ರದ್ದು ಮಾಡಿ</string>
+
+    <!-- Content description for close button in collection placeholder. -->
+    <string name="remove_home_collection_placeholder_content_description">ತೆಗೆದು ಹಾಕಿ</string>
+
+    <!-- Content description radio buttons with a link to more information -->
+    <string name="radio_preference_info_content_description">ಹೆಚ್ಚಿನ ವಿವರಗಳಿಗಾಗಿ ಕ್ಲಿಕ್ ಮಾಡಿ</string>
+
+    </resources>

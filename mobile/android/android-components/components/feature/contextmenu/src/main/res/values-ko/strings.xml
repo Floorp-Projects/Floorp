@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Text for context menu item to open the link in a new tab. -->
+    <string name="mozac_feature_contextmenu_open_link_in_new_tab">링크를 새 탭에서 열기</string>
+    <!-- Text for context menu item to open the link in a private tab. -->
+    <string name="mozac_feature_contextmenu_open_link_in_private_tab">사생활 보호 탭에 링크 열기</string>
+    <!-- Text for context menu item to open the image in a new tab. -->
+    <string name="mozac_feature_contextmenu_open_image_in_new_tab">이미지를 새 탭에서 열기</string>
+    <!-- Text for context menu item to save / download the link. -->
+    <string name="mozac_feature_contextmenu_download_link">다운로드 링크</string>
+    <!-- Text for context menu item to share the link with an other app. -->
+    <string name="mozac_feature_contextmenu_share_link">링크 공유</string>
+    <!-- Text for context menu item to share the image with an other app. -->
+    <string name="mozac_feature_contextmenu_share_image">이미지 공유</string>
+    <!-- Text for context menu item to copy the link to the clipboard. -->
+    <string name="mozac_feature_contextmenu_copy_link">링크 복사</string>
+    <!-- Text for context menu item to copy the URL pointing to the image to the clipboard. -->
+    <string name="mozac_feature_contextmenu_copy_image_location">이미지 주소 복사</string>
+    <!-- Text for context menu item to save / download the image. -->
+    <string name="mozac_feature_contextmenu_save_image">이미지 저장</string>
+    <!-- Text for context menu item to copy the image to the clipboard. -->
+    <string name="mozac_feature_contextmenu_copy_image">이미지 복사</string>
+    <!-- Text for context menu item to save / download the file. -->
+    <string name="mozac_feature_contextmenu_save_file_to_device">파일을 기기에 저장</string>
+    <!-- Text for confirmation "snackbar" shown after opening a link in a new tab.  -->
+    <string name="mozac_feature_contextmenu_snackbar_new_tab_opened">새 탭 열림</string>
+    <!-- Text for confirmation "snackbar" shown after opening a link in a new private tab.  -->
+    <string name="mozac_feature_contextmenu_snackbar_new_private_tab_opened">새 사생활 보호 탭 열림</string>
+    <!-- Text for confirmation "snackbar" shown after copying a link or image URL to the clipboard. -->
+    <string name="mozac_feature_contextmenu_snackbar_link_copied">링크가 클립보드에 복사됨</string>
+    <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
+    <string name="mozac_feature_contextmenu_snackbar_action_switch">전환</string>
+    <!-- Text for context menu item to open the link in an external app. -->
+    <string name="mozac_feature_contextmenu_open_link_in_external_app">외부 앱에서 링크 열기</string>
+    <!-- Text for context menu item to share the email with another app. -->
+    <string name="mozac_feature_contextmenu_share_email_address">이메일 주소 공유</string>
+    <!-- Text for context menu item to copy the email address to the clipboard. -->
+    <string name="mozac_feature_contextmenu_copy_email_address">이메일 주소 복사</string>
+    <!-- Text for confirmation "snackbar" shown after copying a email address to the clipboard. -->
+    <string name="mozac_feature_contextmenu_snackbar_email_address_copied">이메일 주소가 클립보드에 복사됨</string>
+    <!-- Text for context menu item to add to a contact. -->
+    <string name="mozac_feature_contextmenu_add_to_contact">연락처에 추가</string>
+    <!-- Action shown in a text selection context menu. This will prompt a search using the selected text.-->
+    <string name="mozac_selection_context_menu_search_2">검색</string>
+    <!-- Action shown in a text selection context menu. This will prompt a search in a private tab using the selected text-->
+    <string name="mozac_selection_context_menu_search_privately_2">사생활 보호 검색</string>
+    <!-- Action shown in a text selection context menu. This will prompt a share of the selected text. -->
+    <string name="mozac_selection_context_menu_share">공유</string>
+    <!-- Action shown in a text selection context menu. This will prompt a new email from the selected text. -->
+    <string name="mozac_selection_context_menu_email">이메일</string>
+    <!-- Action shown in a text selection context menu. This will prompt a new call from the selected text. -->
+    <string name="mozac_selection_context_menu_call">통화</string>
+</resources>

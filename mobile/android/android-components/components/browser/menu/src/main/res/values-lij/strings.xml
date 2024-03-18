@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Content description (not visible, for screen readers etc.): Indicates the overflow menu has a highlight -->
+    <string name="mozac_browser_menu_highlighted">In evidensa</string>
+    <!-- Label for add-ons submenu section -->
+    <string name="mozac_browser_menu_addons">Conponenti azonti</string>
+    </resources>

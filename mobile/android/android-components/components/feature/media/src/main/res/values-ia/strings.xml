@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+    <!-- Name of the "notification channel" used for displaying media notification. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_media_notification_channel">Medios</string>
+
+    <!-- Title of notification shown when the device's camera is shared with a website (WebRTC) -->
+    <string name="mozac_feature_media_sharing_camera">Le camera es activate</string>
+    <!-- Title of notification shown when the device's microphone is shared with a website (WebRTC) -->
+    <string name="mozac_feature_media_sharing_microphone">Le microphono es activate</string>
+    <!-- Title of notification shown when the device's camera and microphone is shared with a website (WebRTC) -->
+    <string name="mozac_feature_media_sharing_camera_and_microphone">Camera e microphono es activate</string>
+
+    <!-- Text of notification shown when the device's camera is shared with a website (WebRTC) -->
+    <string name="mozac_feature_media_sharing_camera_text">Tocca pro aperir le scheda que usa tu camera.</string>
+    <!-- Text of notification shown when the device's microphone is shared with a website (WebRTC) -->
+    <string name="mozac_feature_media_sharing_microphone_text">Tocca pro aperir le scheda que usa tu microphono.</string>
+
+
+    <!-- Text of notification shown when the device's camera and microphone is shared with a website (WebRTC) -->
+    <string name="mozac_feature_media_sharing_camera_and_microphone_text">Tocca pro aperir le scheda que usa tu microphono e tu camera.</string>
+
+
+    <!-- Text of reminder notification shown when the device's camera is shared with a website (WebRTC). %1$s is a placeholder that will be replaced by the app name-->
+    <string name="mozac_feature_media_sharing_camera_reminder_text">Memento: %1$s ancora usa tu camera. Tocca pro aperir le scheda.</string>
+    <!-- Text of reminder notification shown when the device's microphone is shared with a website (WebRTC) %1$s is a placeholder that will be replaced by the app name-->
+    <string name="mozac_feature_media_sharing_microphone_reminder_text" moz:RemovedIn="124" tools:ignore="UnusedResources">Memento: %1$s ancora usa tu microphono. Tocca pro aperir le scheda.</string>
+
+    <!-- Text of reminder notification shown when the device's microphone is shared with a website (WebRTC) %1$s is a placeholder that will be replaced by the app name-->
+    <string name="mozac_feature_media_sharing_microphone_reminder_text_2">Memento: %1$s ancora usa tu microphono. Tocca pro aperir le scheda.</string>
+    <!-- Text of reminder notification shown when the device's camera and microphone is shared with a website (WebRTC) %1$s is a placeholder that will be replaced by the app name-->
+    <string name="mozac_feature_media_sharing_camera_and_microphone_reminder_text" moz:RemovedIn="124" tools:ignore="UnusedResources">Memento: %1$s ancora usa tu microphono e camera. Tocca pro aperir le scheda.</string>
+
+    <!-- Text of reminder notification shown when the device's camera and microphone is shared with a website (WebRTC) %1$s is a placeholder that will be replaced by the app name-->
+    <string name="mozac_feature_media_sharing_camera_and_microphone_reminder_text_2">Memento: %1$s ancora usa tu microphono e camera. Tocca pro aperir le scheda.</string>
+
+    <!--This is the title of the "play" action media shown in the media notification while web content is playing media. Clicking it will resume playing paused media. On most modern Android system only an icon is visible. But screen readers may read this title. -->
+    <string name="mozac_feature_media_notification_action_play">Reproducer</string>
+
+    <!--This is the title of the "pause" action shown in the media notification while web content is playing media. Clicking it will pause currently playing media. On most modern Android system only an icon is visible. But screen readers may read this title. -->
+    <string name="mozac_feature_media_notification_action_pause">Pausar</string>
+
+    <!-- Neutral title of the media notification for when a website that is open in private mode. -->
+    <string name="mozac_feature_media_notification_private_mode">Un sito reproduce contentos multimedial </string>
+</resources>

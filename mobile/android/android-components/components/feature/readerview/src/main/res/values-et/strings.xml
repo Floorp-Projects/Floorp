@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_sans_serif_font">seriifideta</string>
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_sans_serif_font_desc">seriifideta font</string>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_serif_font">seriifidega</string>
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_serif_font_desc">seriifidega font</string>
+
+    <!-- Accessible description for decreasing the font size -->
+    <string name="mozac_feature_readerview_font_size_decrease_desc">fondi suuruse vähendamine</string>
+
+    <!-- Accessible description for increasing the font size -->
+    <string name="mozac_feature_readerview_font_size_increase_desc">fondi suuruse suurendamine</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_dark">tume</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_dark_color_scheme_desc">tume värviskeem</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_sephia">seepia</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_sepia_color_scheme_desc">seepia värviskeem</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_light">hele</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_light_color_scheme_desc">hele värviskeem</string>
+</resources>

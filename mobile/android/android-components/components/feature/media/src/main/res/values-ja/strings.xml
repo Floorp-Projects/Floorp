@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+    <!-- Name of the "notification channel" used for displaying media notification. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_media_notification_channel">メディア</string>
+
+    <!-- Title of notification shown when the device's camera is shared with a website (WebRTC) -->
+    <string name="mozac_feature_media_sharing_camera">カメラを共有中</string>
+    <!-- Title of notification shown when the device's microphone is shared with a website (WebRTC) -->
+    <string name="mozac_feature_media_sharing_microphone">マイクを共有中</string>
+    <!-- Title of notification shown when the device's camera and microphone is shared with a website (WebRTC) -->
+    <string name="mozac_feature_media_sharing_camera_and_microphone">カメラとマイクを共有中</string>
+
+    <!-- Text of notification shown when the device's camera is shared with a website (WebRTC) -->
+    <string name="mozac_feature_media_sharing_camera_text">タップしてカメラを使用しているタブを開いてください。</string>
+    <!-- Text of notification shown when the device's microphone is shared with a website (WebRTC) -->
+    <string name="mozac_feature_media_sharing_microphone_text">タップしてマイクを使用しているタブを開いてください。</string>
+
+
+    <!-- Text of notification shown when the device's camera and microphone is shared with a website (WebRTC) -->
+    <string name="mozac_feature_media_sharing_camera_and_microphone_text">タップしてマイクとカメラを使用しているタブを開いてください。</string>
+
+
+    <!-- Text of reminder notification shown when the device's camera is shared with a website (WebRTC). %1$s is a placeholder that will be replaced by the app name-->
+    <string name="mozac_feature_media_sharing_camera_reminder_text">通知: %1$s がまだカメラを使用しています。タップしてタブを開いてください。</string>
+    <!-- Text of reminder notification shown when the device's microphone is shared with a website (WebRTC) %1$s is a placeholder that will be replaced by the app name-->
+    <string name="mozac_feature_media_sharing_microphone_reminder_text" moz:RemovedIn="124" tools:ignore="UnusedResources">通知: %1$s がまだマイクを使用しています。タップしてタブを開いてください。</string>
+    <!-- Text of reminder notification shown when the device's microphone is shared with a website (WebRTC) %1$s is a placeholder that will be replaced by the app name-->
+    <string name="mozac_feature_media_sharing_microphone_reminder_text_2">通知: %1$s がまだマイクを使用しています。タップしてタブを開いてください。</string>
+    <!-- Text of reminder notification shown when the device's camera and microphone is shared with a website (WebRTC) %1$s is a placeholder that will be replaced by the app name-->
+    <string name="mozac_feature_media_sharing_camera_and_microphone_reminder_text" moz:RemovedIn="124" tools:ignore="UnusedResources">通知: %1$s がまだマイクとカメラを使用しています。タップしてタブを開いてください。</string>
+
+    <!-- Text of reminder notification shown when the device's camera and microphone is shared with a website (WebRTC) %1$s is a placeholder that will be replaced by the app name-->
+    <string name="mozac_feature_media_sharing_camera_and_microphone_reminder_text_2">通知: %1$s がまだマイクとカメラを使用しています。タップしてタブを開いてください。</string>
+
+    <!--This is the title of the "play" action media shown in the media notification while web content is playing media. Clicking it will resume playing paused media. On most modern Android system only an icon is visible. But screen readers may read this title. -->
+    <string name="mozac_feature_media_notification_action_play">再生</string>
+
+    <!--This is the title of the "pause" action shown in the media notification while web content is playing media. Clicking it will pause currently playing media. On most modern Android system only an icon is visible. But screen readers may read this title. -->
+    <string name="mozac_feature_media_notification_action_pause">一時停止</string>
+
+    <!-- Neutral title of the media notification for when a website that is open in private mode. -->
+    <string name="mozac_feature_media_notification_private_mode">サイトがメディアを再生しています</string>
+</resources>

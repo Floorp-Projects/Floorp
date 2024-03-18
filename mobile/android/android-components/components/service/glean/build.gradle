@@ -1,0 +1,58 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+android {
+    defaultConfig {
+        minSdkVersion config.minSdkVersion
+        compileSdk config.compileSdkVersion
+        targetSdkVersion config.targetSdkVersion
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    namespace 'mozilla.components.service.glean'
+}
+
+// Define library names and version constants.
+String GLEAN_LIBRARY = "org.mozilla.telemetry:glean:${Versions.mozilla_glean}"
+String GLEAN_LIBRARY_FORUNITTESTS = "org.mozilla.telemetry:glean-native-forUnitTests:${Versions.mozilla_glean}"
+
+dependencies {
+    implementation ComponentsDependencies.kotlin_coroutines
+    implementation ComponentsDependencies.androidx_work_runtime
+    
+    api GLEAN_LIBRARY
+
+    // So consumers can set a HTTP client.
+    api project(':concept-fetch')
+
+    implementation project(':support-ktx')
+    implementation project(':support-base')
+    implementation project(':support-utils')
+
+    testImplementation ComponentsDependencies.androidx_test_core
+
+    testImplementation ComponentsDependencies.testing_junit
+    testImplementation ComponentsDependencies.testing_robolectric
+    testImplementation ComponentsDependencies.testing_mockwebserver
+    testImplementation ComponentsDependencies.androidx_work_testing
+
+    testImplementation project(':support-test')
+    testImplementation project(':lib-fetch-httpurlconnection')
+    testImplementation project(':lib-fetch-okhttp')
+
+    testImplementation GLEAN_LIBRARY_FORUNITTESTS
+}
+
+apply from: '../../../android-lint.gradle'
+apply from: '../../../publish.gradle'
+ext.configurePublish(config.componentsGroupId, archivesBaseName, project.ext.description)

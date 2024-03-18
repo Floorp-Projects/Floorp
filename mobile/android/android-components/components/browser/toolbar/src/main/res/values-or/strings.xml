@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Content description (not visible, for screen readers etc.): Description for the overflow menu button in the browser toolbar. -->
+    <string name="mozac_browser_toolbar_menu_button">ମେନୁ</string>
+    <string name="mozac_clear_button_description">ଖାଲି କରନ୍ତୁ</string>
+    <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection enabled, but none trackers have been blocked or detected. -->
+    <string name="mozac_browser_toolbar_content_description_tracking_protection_on_no_trackers_blocked">ଟ୍ରାକିଂ ସୁରକ୍ଷା ଚାଲୁଛି</string>
+    <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection enabled, and trackers have been blocked or detected.-->
+    <string name="mozac_browser_toolbar_content_description_tracking_protection_on_trackers_blocked1">ଟ୍ରାକିଂ ସୁରକ୍ଷା ଟ୍ରାକରଗୁଡ଼ିକୁ ରୋକି ଦେଇଛି</string>
+    <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection disabled.-->
+    <string name="mozac_browser_toolbar_content_description_tracking_protection_off_for_a_site1">ଟ୍ରାକିଂ ସୁରକ୍ଷା ଏହି ସାଇଟ ପାଇଁ ବନ୍ଦ ଅଛି</string>
+    <!-- Content description: For the site security information icon (the site security icon).-->
+    <string name="mozac_browser_toolbar_content_description_site_info">ସାଇଟ ସୂଚନା</string>
+    <!-- Announcement made by the screen reader when the progress bar is shown and a page is loading -->
+    <string name="mozac_browser_toolbar_progress_loading">ଧାରଣ କରୁଅଛି</string>
+    </resources>

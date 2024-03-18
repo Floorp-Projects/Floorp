@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<resources>
+    <!-- Button Colors -->
+    <color name="mozac_grey_button_color">#E0E0E6</color>
+    <color name="mozac_destructive_button_text_color">#C50042</color>
+    <color name="mozac_grey_button_text_color">#312A65</color>
+</resources>

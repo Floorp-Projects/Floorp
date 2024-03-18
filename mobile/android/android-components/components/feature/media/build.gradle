@@ -1,0 +1,62 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+android {
+    defaultConfig {
+        minSdkVersion config.minSdkVersion
+        compileSdk config.compileSdkVersion
+        targetSdkVersion config.targetSdkVersion
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    packagingOptions {
+        resources {
+            excludes += ['META-INF/proguard/androidx-annotations.pro']
+        }
+    }
+
+    namespace 'mozilla.components.feature.media'
+}
+
+tasks.withType(KotlinCompile).configureEach {
+    kotlinOptions.freeCompilerArgs += "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi"
+}
+
+dependencies {
+    implementation project(':concept-engine')
+    implementation project(':browser-state')
+    implementation project(':ui-icons')
+    implementation project(':support-ktx')
+    implementation project(':support-base')
+    implementation project(':support-utils')
+
+    implementation ComponentsDependencies.kotlin_coroutines
+    implementation ComponentsDependencies.androidx_media
+
+    testImplementation project(':support-test')
+    testImplementation project(':support-test-libstate')
+
+    testImplementation ComponentsDependencies.androidx_test_core
+    testImplementation ComponentsDependencies.androidx_test_junit
+    testImplementation ComponentsDependencies.kotlin_reflect
+    testImplementation ComponentsDependencies.testing_junit
+    testImplementation ComponentsDependencies.testing_robolectric
+    testImplementation ComponentsDependencies.testing_coroutines
+}
+
+apply from: '../../../android-lint.gradle'
+apply from: '../../../publish.gradle'
+ext.configurePublish(config.componentsGroupId, archivesBaseName, project.ext.description)

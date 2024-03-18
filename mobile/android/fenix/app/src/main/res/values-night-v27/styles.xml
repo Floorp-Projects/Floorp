@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="NormalTheme" parent="NormalThemeBase" >
+        <!-- We have to pull in the changes from night/styles.xml to make
+            sure we also get them in night-v27+ -->
+        <item name="fenixWordmarkText">@drawable/ic_wordmark_text_private</item>
+        
+        <item name="android:windowLayoutInDisplayCutoutMode">default</item>
+    </style>
+</resources>

@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">다시 시도</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">요청을 완료할 수 없습니다</string>
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[
+	<p>현재 이 문제 또는 오류에 대한 추가적 정보가 없습니다.</p>
+	]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">보안 연결 실패</string>
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul>
+		<li>현재 보시려는 페이지는 수신된 데이터의 진위를 확인할 수 없기 때문에 보여줄 수 없습니다.</li>
+		<li>웹 사이트 소유자에게 이 문제를 알리십시오.</li>
+	</ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">보안 연결 실패</string>
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+	<ul>
+		<li>이는 서버의 설정에 문제가 있거나, 누군가가 서버를 위장하려 할 때 발생할 수 있습니다.</li>
+		<li>이전에는 서버에 연결할 때 아무 문제도 없었다면 일시적인 오류일 수 있으므로 나중에 다시 시도해보십시오.</li>
+	</ul>
+	]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">고급…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>누군가 사이트를 가장하려고 할 수 있으므로 계속해서는 안됩니다.</label>
+        <br><br>
+        <label>웹 사이트는 인증서를 통해 신원을 증명합니다. 인증서 발급자를 알 수 없거나 인증서가 자체 서명되었거나 서버가 올바른 중간 인증서를 보내지 않고 있기 때문에 %1$s이(가) <b>%2$s</b>을(를) 신뢰하지 않습니다.</label>
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">뒤로 (권장)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">위험을 감수하고 계속</string>
+
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">이 웹사이트는 보안 연결이 필요합니다.</string>
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+      <ul>
+         <li>이 웹 사이트는 보안 연결이 필요하므로, 페이지를 표시할 수 없습니다.</li>
+         <li>이러한 문제는 대부분 웹 사이트와 관련이 있고 사용자가 할 수 있는 일은 없습니다.</li>
+         <li>웹 사이트의 관리자에게 문제에 대해 알려주실 수 있습니다.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">고급…</string>
+
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
+        <label> <b>%1$s</b> 사이트는 HTTP Strict Transport Security (HSTS)라는 보안 정책을 가지고 있어서 <b>%2$s</b>가 보안 연결만 할 수 있습니다. 이 사이트를 방문하기 위해 예외를 추가 할 수 없습니다. </label>
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">뒤로</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">연결이 끊어짐</string>
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
+	<p>브라우저가 성공적으로 연결되었지만 정보 전송 중에 연결이 끊어졌습니다. 다시 시도해보십시오.</p>
+	<ul>
+		<li>서버가 일시적으로 사용할 수 없거나 사용자가 너무 많은 상태일 수 있습니다. 잠시 후 다시 시도해보십시오.</li>
+		<li>페이지가 전혀 로딩되지 않는다면 기기의 데이터 또는 와이파이 연결 상태를 확인해보십시오.</li>
+	</ul>
+	]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">연결 시간 초과</string>
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>요청하신 사이트가 연결 요청에 응답하지 않아 브라우저가 응답 대기를 중단했습니다.</p>
+	<ul>
+		<li>서버의 사용량이 많거나, 일시적 가동 중지일 수 있습니다. 나중에 다시 시도해 보십시오.</li>
+		<li>다른 사이트도 열리지 않습니까? 컴퓨터의 네트워크 연결을 점검해 보십시오.</li>
+		<li>사용자의 컴퓨터 또는 네트워크가 방화벽 또는 프록시에 의해 보호되고 있습니까? 설정이 잘못되면 웹 탐색에 방해가 될 수 있습니다.</li>
+		<li>여전히 문제가 있습니까? 네트워크 관리자 또는 인터넷 서비스 제공자에게 지원을 요청하세요.</li>
+	</ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">연결할 수 없음</string>
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
+	<ul>
+		<li>서버가 일시적으로 사용할 수 없거나 사용자가 너무 많은 상태일 수 있습니다. 잠시 후 다시 시도해보십시오.</li>
+		<li>페이지가 전혀 로딩되지 않는다면 기기의 데이터 또는 와이파이 연결 상태를 확인해보십시오.</li>
+	</ul>
+	]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">서버에서 예기치 않은 응답</string>
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
+	<p>네트워크 요청에 대해 사이트가 예기치 않은 방식으로 반응했기 때문에 브라우저가 계속할 수 없습니다.</p>
+	]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">페이지 리다이렉션 오류</string>
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
+	<p>브라우저가 요청하신 항목을 불러오려는 시도를 중단했습니다. 사이트가 해당 요청을 결코 끝날 수 없는 방식으로 리다이렉트하고 있습니다.</p>
+	<ul>
+		<li>이 사이트가 요구하는 쿠키를 비활성화하거나 차단했습니까?</li>
+		<li>사이트의 쿠키를 승인해도 문제가 해결되지 않는다면 컴퓨터의 문제가 아니라 서버 설정 문제일 가능성이 큽니다.</li>
+	</ul>
+	]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">오프라인 모드</string>
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[
+	<p>브라우저가 오프라인 모드로 작동하고 있고 요청하신 항목에 연결할 수 없습니다.</p>
+	<ul>
+		<li>활성화된 상태의 네트워크에 컴퓨터가 연결되어 있습니까?</li>
+		<li>‘다시 시도하기’를 눌러 온라인 모드로 전환한 다음 페이지를 다시 로딩하십시오.</li>
+	</ul>
+	]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">보안상 이유로 제한된 포트</string>
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>요청하신 주소는 일반적으로 웹 탐색 <em>이외</em>의 목적으로 사용되는 포트를 특정하고 있습니다(예: mozilla.org에서 포트 80에 대한 <q>mozilla.org:80</q>). 안전과 보안을 위해 브라우저가 해당 요청을 취소했습니다.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">연결이 초기화되었습니다</string>
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[
+	<p>연결 시도 중에 네트워크 연결이 끊어졌습니다. 다시 시도해보십시오.</p>
+	<ul>
+		<li>서버가 일시적으로 사용할 수 없거나 사용자가 너무 많은 상태일 수 있습니다. 잠시 후 다시 시도해보십시오.</li>
+		<li>어느 페이지도 로딩되지 않는다면 기기의 데이터 또는 와이파이 연결 상태를 확인해보십시오.</li>
+	</ul>
+	]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">안전하지 않은 파일 형식</string>
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[<ul>
+		<li>웹 사이트 소유자에게 이 문제를 알리십시오.</li>
+	</ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">손상된 콘텐츠 오류</string>
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[<p>현재 보시려는 페이지는 데이터 전송 오류가 탐지되었기 때문에 보여줄 수 없습니다.</p>
+	<ul>
+		<li>웹 사이트 소유자에게 이 문제를 알리십시오.</li>
+	</ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">콘텐츠 충돌됨</string>
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[<p>현재 보시려는 페이지는 데이터 전송 오류가 탐지되었기 때문에 보여줄 수 없습니다.</p>
+	<ul>
+		<li>웹 사이트 소유자에게 이 문제를 알리십시오.</li>
+	</ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">콘텐츠 인코딩 오류</string>
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>현재 보시려는 페이지는 유효하지 않거나 지원되지 않는 압축 형식을 사용하고 있기 때문에 보여드릴 수 없습니다.</p>
+	<ul>
+		<li>웹 사이트 소유자에게 이 문제를 알리십시오.</li>
+	</ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">서버를 찾을 수 없음</string>
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
+	<p>브라우저가 제시된 주소에 대한 호스트 서버를 찾지 못했습니다.</p>
+		<ul>
+		<li><strong>www</strong>.example.com이 아니라  <strong>ww</strong>.example.com이라고 쓰는 등의 오타가 있지 않은지 확인해보십시오.</li>
+		<li>어느 페이지도 로딩되지 않는다면 기기의 데이터 또는 와이파이 연결 상태를 확인해보십시오.</li>
+	</ul>
+	]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">인터넷 연결 안 됨</string>
+
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">네트워크 연결을 확인하시거나 잠시 후 페이지를 다시 로드하세요.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">새로 고침</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">잘못된 주소</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>제시된 주소는 인정된 형식이 아닙니다. 주소 표시줄에 오류가 있지 않은지 확인한 다음 다시 시도해보십시오.</p>]]></string>
+    
+	<!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">유효하지 않은 주소입니다</string>
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[
+	<ul>
+		<li>웹 주소는 일반적으로 다음과 같이 씁니다:<strong>http://www.example.com/</strong></li>
+		<li>반드시 슬래시(<strong>/</strong>)를 사용하십시오.</li>
+	</ul>
+	]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">알 수 없는 프로토콜</string>
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
+	<p>이 주소는 브라우저가 인식하지 못하는 프로토콜(예: <q>wxyz://</q>)을 특정하고 있기 때문에 브라우저가 사이트와 연결할 수 없습니다.</p>
+	<ul>
+		<li>멀티미디어 또는 기타 비문자 서비스에 접근하려는 것입니까? 사이트에서 추가적 요건을 확인해보십시오.</li>
+		<li>어떤 프로토콜은 브라우저가 인식할 수 없는 제3자 소프트웨어 또는 플러그인을 요할 수 있습니다.</li>
+	</ul>
+	
+	]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">파일을 찾을 수 없음</string>
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[
+	<ul>
+		<li>해당 항목이 명칭이 바뀌거나, 제거되거나, 이동되지 않았습니까?</li>
+		<li>주소에 철자, 대소문자 구분 또는 기타 오타가 있지 않습니까?</li>
+		<li>요청하신 항목에 대한 충분한 접근권을 가지고 있습니까?</li>
+	</ul>
+	]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">파일 접근이 거부되었습니다</string>
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[
+	<ul>
+		<li>파일이 제거 또는 이동되었거나, 파일 권한 문제로 접근이 금지될 수 있습니다.</li>
+	</ul>
+	]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">프록시 서버가 연결을 거부했습니다</string>
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[
+	<p>브라우저가 프록시 서버를 사용하도록 설정되어 있지만 프록시가 연결을 거부했습니다.</p>
+	<ul>
+		<li>브라우저의 프록시 설정이 올바르게 되어 있습니까? 설정을 확인한 다음 다시 시도해보십시오.</li>
+		<li>프록시 서비스가 이 네트워크를 통한 연결을 허용합니까?</li>
+		<li>여전히 문제가 있습니까? 네트워크 관리자 또는 인터넷 서비스 제공자에게 지원을 요청하십시오.</li>
+	</ul>
+	]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">프록시 서버를 찾을 수 없습니다</string>
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
+	<p>브라우저가 프록시 서버를 사용하도록 설정되어 있지만 프록시를 찾을 수 없습니다.</p>
+	<ul>
+		<li>브라우저의 프록시 설정이 올바르게 되어 있습니까? 설정을 확인한 다음 다시 시도해보십시오.</li>
+		<li>컴퓨터가 활성화된 네트워크에 연결되어 있습니까?</li>
+		<li>여전히 문제가 있습니까? 네트워크 관리자 또는 인터넷 서비스 제공자에게 지원을 요청하십시오.</li>
+	</ul>
+	]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">악성 코드 사이트 문제</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
+	<p>%1$s의 사이트는 공격 사이트로 보고되었으며, 사용자의 보안 설정에 따라 차단되었습니다.</p>
+	]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">원하지 않은 사이트 문제</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
+	<p>%1$s의 사이트는 원하지 않은 소프트웨어를 제공하는 것으로 보고되었으며, 사용자의 보안 설정에 따라 차단되었습니다.</p>
+	]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">유해 사이트 문제</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[
+	<p>%1$s의 사이트는 잠재적 유해 사이트로 보고되었으며, 사용자의 보안 설정에 따라 차단되었습니다.</p>
+	]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">사기 사이트 문제</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
+	<p>%1$s의 이 웹페이지는 사기 사이트로 보고되었으며, 사용자의 보안 설정에 따라 차단되었습니다.</p>
+	]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">보안 사이트를 사용할 수 없음</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[보안 강화를 위해 HTTPS 전용 모드를 사용하도록 설정했으며 <em>%1$s</em>의 HTTPS 버전을 사용할 수 없습니다.]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">HTTP 사이트로 계속</string>
+</resources>

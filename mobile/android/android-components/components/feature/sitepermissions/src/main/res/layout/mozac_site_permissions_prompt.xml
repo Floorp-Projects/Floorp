@@ -1,0 +1,127 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?android:windowBackground"
+    android:orientation="vertical"
+    tools:ignore="Overdraw">
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/icon"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:importantForAccessibility="no"
+        android:scaleType="center"
+        app:tint="?android:attr/textColorPrimary"
+        tools:src="@android:drawable/ic_menu_camera"
+        tools:tint="#000000" />
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@id/icon"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="3dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="11dp"
+        android:layout_toEndOf="@id/icon"
+        android:paddingStart="5dp"
+        android:paddingTop="4dp"
+        android:paddingEnd="5dp"
+        android:textColor="?android:attr/textColorPrimary"
+        android:textSize="16sp"
+        tools:text="Allow wikipedia.org to use your camera?"
+        tools:textColor="#000000" />
+
+    <TextView
+        android:id="@+id/message"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/title"
+        android:layout_alignStart="@id/title"
+        android:layout_marginStart="3dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="11dp"
+        android:layout_toEndOf="@id/icon"
+        android:paddingStart="5dp"
+        android:paddingTop="4dp"
+        android:paddingEnd="5dp"
+        android:textColor="?android:attr/textColorPrimary"
+        android:textSize="16sp"
+        tools:text="This is a message offering more context about the permission."
+        tools:textColor="#000000"
+        android:visibility="gone"
+        tools:visibility="visible"/>
+
+    <TextView
+        android:id="@+id/learn_more"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/message"
+        android:layout_alignStart="@id/title"
+        android:layout_marginStart="3dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="11dp"
+        android:layout_toEndOf="@id/icon"
+        android:paddingStart="5dp"
+        android:paddingTop="4dp"
+        android:paddingEnd="5dp"
+        android:text="@string/mozac_feature_sitepermissions_learn_more_title"
+        android:textColor="?android:attr/textColorLink"
+        android:textSize="16sp"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+    <CheckBox
+        android:id="@+id/do_not_ask_again"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/learn_more"
+        android:layout_alignStart="@id/title"
+        android:layout_marginTop="2dp"
+        android:checked="true"
+        android:paddingStart="0dp"
+        android:paddingTop="18dp"
+        android:paddingBottom="14dp"
+        android:paddingEnd="4dp"
+        android:text="@string/mozac_feature_sitepermissions_do_not_ask_again_on_this_site2"
+        android:textColor="?android:attr/textColorPrimary"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+    <Button
+        android:id="@+id/deny_button"
+        style="?android:attr/borderlessButtonStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/do_not_ask_again"
+        android:layout_marginTop="2dp"
+        android:layout_toStartOf="@id/allow_button"
+        android:text="@string/mozac_feature_sitepermissions_not_allow"
+        android:textAlignment="center"
+        android:textAllCaps="false" />
+
+    <Button
+        android:id="@+id/allow_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/do_not_ask_again"
+        android:layout_alignParentEnd="true"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="2dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:text="@string/mozac_feature_sitepermissions_allow"
+        android:textAlignment="center"
+        android:textAllCaps="false" />
+
+</RelativeLayout>

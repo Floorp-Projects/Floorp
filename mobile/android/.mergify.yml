@@ -1,0 +1,86 @@
+queue_rules:
+  - name: default
+    conditions:
+      - status-success=complete-pr
+      - or:
+        - current-datetime<2024-03-15T00:00:00Z
+        - base!=main
+    allow_checks_interruption: false
+    priority_rules:
+      - name: high priority
+        conditions:
+            - label=urgent
+        priority: high
+pull_request_rules:
+  - name: Resolve conflict
+    conditions:
+      - conflict
+    actions:
+        comment:
+          message: This pull request has conflicts when rebasing. Could you fix it @{{author}}? 🙏
+  - name: MickeyMoz - Auto Merge
+    conditions:
+      - author=MickeyMoz
+      - status-success=complete-pr
+      - files~=^android-components/(Gecko\.kt|components/lib/publicsuffixlist/src/main/assets/publicsuffixes)
+      - -files~=^(?!android-components/(Gecko\.kt|components/lib/publicsuffixlist/src/main/assets/publicsuffixes)).+$
+    actions:
+      review:
+        type: APPROVE
+        message: MickeyMoz 💪
+      queue:
+        method: rebase
+        name: default
+  - name: L10N - Auto Merge
+    conditions:
+      - author=github-actions[bot]
+      - status-success=complete-pr
+      - files~=^(android-components|fenix|focus-android)/(.+/strings\.xml|l10n\.toml)
+      - -files~=^(?!(android-components|fenix|focus-android)/(.+/strings\.xml|l10n\.toml)).+$
+    actions:
+      review:
+        type: APPROVE
+        message: LGTM 😎
+      queue:
+        method: rebase
+        name: default
+  - name: Release automation
+    conditions:
+      - author=github-actions[bot]
+      - status-success=complete-pr
+      - status-success=complete-push
+      - files~=^android-components/(\.buildconfig\.yml|plugins/dependencies/src/main/java/(ApplicationServices|DependenciesPlugin|Gecko)\.kt)
+      - -files~=^(?!android-components/(\.buildconfig\.yml|plugins/dependencies/src/main/java/(ApplicationServices|DependenciesPlugin|Gecko)\.kt)).+$
+    actions:
+      review:
+        type: APPROVE
+        message: 🚢
+      queue:
+        method: rebase
+        name: default
+      delete_head_branch:
+        force: false
+  - name: Needs landing - Rebase
+    conditions:
+      - status-success=complete-pr
+      - label=🛬 needs landing
+      - "#approved-reviews-by>=1"
+      - -draft
+      - label!=work in progress
+      - label!=do not land
+    actions:
+      queue:
+        method: rebase
+        name: default
+  - name: Needs landing - Squash
+    conditions:
+      - status-success=complete-pr
+      - label=🛬 needs landing (squash)
+      - "#approved-reviews-by>=1"
+      - -draft
+      - label!=work in progress
+      - label!=do not land
+    actions:
+      queue:
+        method: squash
+        name: default

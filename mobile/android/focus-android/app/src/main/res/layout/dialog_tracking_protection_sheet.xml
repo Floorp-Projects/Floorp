@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/activity_horizontal_margin"
+        android:paddingTop="@dimen/activity_vertical_margin"
+        android:paddingEnd="@dimen/activity_horizontal_margin"
+        android:paddingBottom="@dimen/activity_vertical_margin">
+
+        <ImageView
+            android:id="@+id/site_favicon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:importantForAccessibility="no"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:src="@drawable/ic_favorite" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/site_title"
+            style="@style/PanelTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            app:layout_constraintBottom_toBottomOf="@id/site_favicon"
+            app:layout_constraintStart_toEndOf="@id/site_favicon"
+            app:layout_constraintTop_toTopOf="@id/site_favicon"
+            tools:text="url.com" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/security_info"
+            style="@style/PanelTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            android:drawablePadding="20dp"
+            android:gravity="center_vertical"
+            app:drawableEndCompat="@drawable/mozac_ic_chevron_right_24"
+            app:drawableStartCompat="@drawable/mozac_ic_lock_24"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/site_title"
+            tools:text="@string/secure_connection" />
+
+        <androidx.compose.ui.platform.ComposeView
+            android:id="@+id/cookie_banner_exception"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/security_info" />
+
+        <org.mozilla.focus.widget.SwitchWithDescription
+            android:id="@+id/enhanced_tracking"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:minHeight="48dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/cookie_banner_exception"
+            app:switchDescription="@string/enhanced_tracking_protection_state_on"
+            app:switchIcon="@drawable/mozac_ic_shield_24"
+            app:switchTitle="@string/enhanced_tracking_protection" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/trackers_and_scripts_heading"
+            style="@style/PanelHeading"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:text="@string/trackers_and_scripts"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/enhanced_tracking" />
+
+        <org.mozilla.focus.settings.privacy.PreferenceSwitch
+            android:id="@+id/advertising"
+            style="@style/TrackerSwitchTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:theme="@style/SwitchTheme"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/trackers_and_scripts_heading"
+            app:preferenceKey="@string/pref_key_privacy_block_ads"
+            app:preferenceKeyTitle="@string/advertising" />
+
+        <org.mozilla.focus.settings.privacy.PreferenceSwitch
+            android:id="@+id/analytics"
+            style="@style/TrackerSwitchTitle"
+            android:layout_width="match_parent"
+
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:theme="@style/SwitchTheme"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/advertising"
+            app:preferenceKey="@string/pref_key_privacy_block_analytics"
+            app:preferenceKeyTitle="@string/analytics" />
+
+        <org.mozilla.focus.settings.privacy.PreferenceSwitch
+            android:id="@+id/social"
+            style="@style/TrackerSwitchTitle"
+            android:layout_width="match_parent"
+
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:theme="@style/SwitchTheme"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/analytics"
+            app:preferenceKey="@string/pref_key_privacy_block_social"
+            app:preferenceKeyTitle="@string/social" />
+
+        <org.mozilla.focus.settings.privacy.PreferenceSwitch
+            android:id="@+id/content"
+            style="@style/TrackerSwitchTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:theme="@style/SwitchTheme"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/social"
+            app:preferenceKey="@string/pref_key_privacy_block_other3"
+            app:preferenceKeyTitle="@string/content" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/trackers_count"
+            style="@style/TrackersCount"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:theme="@style/SwitchTheme"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/content" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/trackers_count_note"
+            style="@style/CaptionText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/trackers_count" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.core.widget.NestedScrollView>

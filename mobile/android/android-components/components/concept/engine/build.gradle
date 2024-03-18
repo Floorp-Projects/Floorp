@@ -1,0 +1,52 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-parcelize'
+
+android {
+    defaultConfig {
+        minSdkVersion config.minSdkVersion
+        compileSdk config.compileSdkVersion
+        targetSdkVersion config.targetSdkVersion
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    namespace 'mozilla.components.concept.engine'
+}
+
+dependencies {
+    implementation project(':support-ktx')
+
+    implementation ComponentsDependencies.kotlin_coroutines
+
+    implementation ComponentsDependencies.androidx_annotation
+    implementation ComponentsDependencies.androidx_paging
+
+    // We expose this as API because we are using Observable in our public API and do not want every
+    // consumer to have to manually import "base".
+    api project(':support-base')
+    api project(':browser-errorpages')
+    api project(':concept-storage')
+    api project(':concept-fetch')
+
+    testImplementation project(':support-utils')
+    testImplementation ComponentsDependencies.androidx_test_core
+    testImplementation ComponentsDependencies.androidx_test_junit
+    testImplementation ComponentsDependencies.testing_robolectric
+    testImplementation ComponentsDependencies.kotlin_reflect
+
+    testImplementation project(':support-test')
+}
+
+apply from: '../../../android-lint.gradle'
+apply from: '../../../publish.gradle'
+ext.configurePublish(config.componentsGroupId, archivesBaseName, project.ext.description)

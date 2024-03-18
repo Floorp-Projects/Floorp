@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Name of the "notification channel" used for displaying download notification. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_downloads_notification_channel">Downloads</string>
+
+    <!-- Alert dialog confirmation before download a file, this is the title. %1$s will be replaced with the name of the file. -->
+    <string name="mozac_feature_downloads_dialog_title2">Download (%1$s)</string>
+
+    <!-- Button that resumes the download when pressed -->
+    <string name="mozac_feature_downloads_button_resume">Padayun</string>
+    <!-- Button that opens the downloaded file when pressed -->
+    <string name="mozac_feature_downloads_button_open">Pagabuksan</string>
+
+    <!-- Content description for close button -->
+    <string name="mozac_feature_downloads_button_close">Sirado</string>
+    </resources>

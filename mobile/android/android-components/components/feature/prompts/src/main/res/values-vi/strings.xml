@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+    <!-- Text for confirmation for a positive action in dialog  -->
+    <string name="mozac_feature_prompts_ok">OK</string>
+    <!-- Text for confirmation for a negative action in dialog.  -->
+    <string name="mozac_feature_prompts_cancel">Hủy bỏ</string>
+    <!-- When a page shows many dialogs, this checkbox will appear for letting the user choose to prevent showing more dialogs. -->
+    <string name="mozac_feature_prompts_no_more_dialogs">Ngăn trang này tạo ra các hộp thoại bổ sung</string>
+    <!-- Text for a positive button, when an user selects a date in date/time picker. -->
+    <string name="mozac_feature_prompts_set_date">Thiết lập</string>
+    <!-- Text for a button that clears the selected input in the date/time picker. -->
+    <string name="mozac_feature_prompts_clear">Xóa</string>
+    <!-- Text for the title of an authentication dialog. -->
+    <string name="mozac_feature_prompt_sign_in">Đăng nhập</string>
+    <!-- Text for username field in an authentication dialog. -->
+    <string name="mozac_feature_prompt_username_hint">Tên đăng nhập</string>
+    <!-- Text for password field in an authentication dialog. -->
+    <string name="mozac_feature_prompt_password_hint">Mật khẩu</string>
+    <!-- Negative confirmation that we should not save the new or updated login -->
+    <string name="mozac_feature_prompt_dont_save">Không lưu</string>
+    <!-- Negative confirmation that we should not save the new or updated login -->
+    <string name="mozac_feature_prompt_dont_save_2" tools:ignore="UnusedResources">Không phải bây giờ</string>
+    <!-- Negative confirmation that we should never save a login for this site -->
+    <string name="mozac_feature_prompt_never_save">Không bao giờ lưu</string>
+    <!-- Negative confirmation that we should not save a credit card for this site -->
+    <string name="mozac_feature_prompt_not_now">Không phải bây giờ</string>
+    <!-- Positive confirmation that we should save the new or updated login -->
+    <string name="mozac_feature_prompt_save_confirmation">Lưu</string>
+    <!-- Negative confirmation that we should not save the updated login -->
+    <string name="mozac_feature_prompt_dont_update">Đừng cập nhật</string>
+    <!-- Negative confirmation that we should not save the updated login -->
+    <string name="mozac_feature_prompt_dont_update_2" tools:ignore="UnusedResources">Không phải bây giờ</string>
+    <!-- Positive confirmation that we should save the updated login -->
+    <string name="mozac_feature_prompt_update_confirmation">Cập nhật</string>
+    <!-- Error text displayed underneath the password field when it is in an error case -->
+    <string name="mozac_feature_prompt_error_empty_password">Trường mật khẩu không được để trống</string>
+    <!-- Error text displayed underneath the password field when it is in an error case -->
+    <string name="mozac_feature_prompt_error_empty_password_2" tools:ignore="UnusedResources">Nhập mật khẩu</string>
+    <!-- Error text displayed underneath the login field when it is in an error case -->
+    <string name="mozac_feature_prompt_error_unknown_cause">Không thể lưu thông tin đăng nhập</string>
+    <!-- Error text displayed underneath the password field when it is in an error case -->
+    <string name="mozac_feature_prompt_error_unknown_cause_2" tools:ignore="UnusedResources">Không thể lưu mật khẩu</string>
+    <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new login. -->
+    <string name="mozac_feature_prompt_login_save_headline">Lưu thông tin đăng nhập này?</string>
+    <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new password. -->
+    <string name="mozac_feature_prompt_login_save_headline_2" tools:ignore="UnusedResources">Lưu mật khẩu?</string>
+    <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the login. -->
+    <string name="mozac_feature_prompt_login_update_headline">Cập nhật thông tin đăng nhập này?</string>
+    <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the password. -->
+    <string name="mozac_feature_prompt_login_update_headline_2" tools:ignore="UnusedResources">Cập nhật lại mật khẩu?</string>
+    <!-- Prompt message displayed when app detects a user has entered a username for an existing login without a username and user decides if app should update the login. -->
+    <string name="mozac_feature_prompt_login_add_username_headline">Thêm tên người dùng vào mật khẩu đã lưu?</string>
+    <!-- Text for a label for the field when prompt requesting a text is shown. -->
+    <!-- For more info take a look here https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt -->
+    <string name="mozac_feature_prompts_content_description_input_label">Nhãn để nhập trường văn bản</string>
+    <!-- Title of a color picker dialog, this text is shown above a color picker. -->
+    <string name="mozac_feature_prompts_choose_a_color">Chọn một màu</string>
+    <!-- Text of a confirm button in dialog requesting to open a new window. -->
+    <string name="mozac_feature_prompts_allow">Cho phép</string>
+    <!-- Text of a negative button in dialog requesting to open a new window. -->
+    <string name="mozac_feature_prompts_deny">Từ chối</string>
+    <!-- Title of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
+    <string name="mozac_feature_prompt_before_unload_dialog_title">Bạn có chắc không?</string>
+    <!-- Body text of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
+    <string name="mozac_feature_prompt_before_unload_dialog_body">Bạn có muốn rời khỏi trang web này? Dữ liệu bạn đã nhập có thể không được lưu</string>
+    <!-- Stay button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to stay in the website. -->
+    <string name="mozac_feature_prompts_before_unload_stay">Ở lại</string>
+    <!-- Leave button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to leave in the website. -->
+    <string name="mozac_feature_prompts_before_unload_leave">Rời khỏi</string>
+    <!-- Title of the month chooser dialog. -->
+    <string name="mozac_feature_prompts_set_month">Chọn tháng</string>
+    <!-- January (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_jan">Thg01</string>
+    <!-- February month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_feb">Thg02</string>
+    <!-- March month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_mar">Thg03</string>
+    <!-- April month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_apr">Thg04</string>
+    <!-- May month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_may">Thg05</string>
+    <!-- June month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_jun">Thg06</string>
+    <!-- July month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_jul">Thg07</string>
+    <!-- August month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_aug">Thg08</string>
+    <!-- September month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_sep">Thg09</string>
+    <!-- October month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_oct">Thg10</string>
+    <!-- November month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_nov">Thg11</string>
+    <!-- December month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_dec">Thg12</string>
+    <!-- Title of the time picker dialog. -->
+    <string name="mozac_feature_prompts_set_time">Cài đặt thời gian</string>
+    <!-- Option in expanded select login prompt that links to login settings -->
+    <string name="mozac_feature_prompts_manage_logins">Quản lý đăng nhập</string>
+    <!-- Option in expanded select password prompt that links to password settings -->
+    <string name="mozac_feature_prompts_manage_logins_2" tools:ignore="UnusedResources">Quản lý mật khẩu</string>
+    <!-- Content description for expanding the saved logins options in the select login prompt -->
+    <string name="mozac_feature_prompts_expand_logins_content_description">Mở rộng thông tin đăng nhập được đề xuất</string>
+    <!-- Content description for expanding the saved passwords options in the select password prompt -->
+    <string name="mozac_feature_prompts_expand_logins_content_description_2" tools:ignore="UnusedResources">Mở rộng mật khẩu đã lưu</string>
+    <!-- Content description for collapsing the saved logins options in the select login prompt -->
+    <string name="mozac_feature_prompts_collapse_logins_content_description">Thu gọn thông tin đăng nhập được đề xuất</string>
+    <!-- Content description for collapsing the saved passwords options in the select password prompt -->
+    <string name="mozac_feature_prompts_collapse_logins_content_description_2" tools:ignore="UnusedResources">Thu gọn mật khẩu đã lưu</string>
+    <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
+    <string name="mozac_feature_prompts_saved_logins">Thông tin đăng nhập được đề xuất</string>
+
+    <!-- Header for the select password prompt to allow users to fill a form with a saved password -->
+    <string name="mozac_feature_prompts_saved_logins_2" tools:ignore="UnusedResources">Mật khẩu đã lưu</string>
+
+    <!-- Content description for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_content_description">Đề xuất mật khẩu mạnh</string>
+    <!-- Header for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password">Đề xuất mật khẩu mạnh</string>
+    <!-- Title for using the suggest strong password confirmation dialog. %1$s will be replaced with the generated password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_message">Sử dụng mật khẩu mạnh: %1$s</string>
+
+    <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
+    <string name="mozac_feature_prompt_repost_title">Gửi lại dữ liệu cho trang web này?</string>
+    <string name="mozac_feature_prompt_repost_message">Việc làm mới trang này có thể trùng lặp với các hành động gần đây, chẳng hạn như gửi thanh toán hoặc đăng nhận xét hai lần.</string>
+    <!-- Pressing this will dismiss the dialog and reload the page sending again the previous data -->
+    <string name="mozac_feature_prompt_repost_positive_button_text">Gửi lại dữ liệu</string>
+    <!-- Pressing this will dismiss the dialog and not refresh the webpage -->
+    <string name="mozac_feature_prompt_repost_negative_button_text">Huỷ bỏ</string>
+
+    <!-- Credit Card Autofill -->
+    <!-- Header for the select credit card prompt to allow users to fill a form with a saved credit card. -->
+    <string name="mozac_feature_prompts_select_credit_card">Chọn thẻ tín dụng</string>
+    <!-- Header for the select card prompt to allow users to fill a form with a saved card. -->
+    <string name="mozac_feature_prompts_select_credit_card_2" tools:ignore="UnusedResources">Sử dụng thẻ đã lưu</string>
+    <!-- Content description for expanding the select credit card options in the select credit card prompt. -->
+    <string name="mozac_feature_prompts_expand_credit_cards_content_description">Mở rộng thẻ tín dụng được đề xuất</string>
+    <!-- Content description for expanding the saved card options in the select card prompt. -->
+    <string name="mozac_feature_prompts_expand_credit_cards_content_description_2" tools:ignore="UnusedResources">Mở rộng thẻ đã lưu</string>
+    <!-- Content description for collapsing the select credit card options in the select credit prompt. -->
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description">Thu gọn thẻ tín dụng được đề xuất</string>
+    <!-- Content description for collapsing the saved card options in the select prompt. -->
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description_2" tools:ignore="UnusedResources">Thu gọn thẻ đã lưu</string>
+    <!-- Option in the expanded select credit card prompt that links to credit cards settings. -->
+    <string name="mozac_feature_prompts_manage_credit_cards">Quản lý thẻ tín dụng</string>
+    <!-- Option in the expanded select card prompt that links to cards settings. -->
+    <string name="mozac_feature_prompts_manage_credit_cards_2" tools:ignore="UnusedResources">Quản lý thẻ tín dụng</string>
+    <!-- Text for the title of a save credit card dialog. -->
+    <string name="mozac_feature_prompts_save_credit_card_prompt_title">Lưu thẻ này một cách an toàn?</string>
+    <!-- Text for the title of an update credit card dialog. -->
+    <string name="mozac_feature_prompts_update_credit_card_prompt_title">Cập nhật ngày hết hạn thẻ?</string>
+    <!-- Subtitle text displayed under the title of the save credit card dialog. -->
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body">Số thẻ sẽ được mã hóa. Mã bảo mật sẽ không được lưu.</string>
+
+    <!-- Subtitle text displayed under the title of the saved card dialog. Parameter will be replaced by app name-->
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body_2" tools:ignore="UnusedResources">%s mã hóa số thẻ của bạn. Mã bảo mật của bạn sẽ không được lưu.</string>
+
+    <!-- Address Autofill -->
+    <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
+    <string name="mozac_feature_prompts_select_address_2">Chọn địa chỉ</string>
+    <!-- Content description for expanding the select addresses options in the select address prompt. -->
+    <string name="mozac_feature_prompts_expand_address_content_description">Mở rộng các địa chỉ được đề xuất</string>
+    <!-- Content description for expanding the saved addresses options in the select address prompt. -->
+    <string name="mozac_feature_prompts_expand_address_content_description_2" tools:ignore="UnusedResources">Mở rộng địa chỉ đã lưu</string>
+    <!-- Content description for collapsing the select address options in the select address prompt. -->
+    <string name="mozac_feature_prompts_collapse_address_content_description">Thu gọn các địa chỉ được đề xuất</string>
+    <!-- Content description for collapsing the saved address options in the select address prompt. -->
+    <string name="mozac_feature_prompts_collapse_address_content_description_2" tools:ignore="UnusedResources">Thu gọn địa chỉ đã lưu</string>
+    <!-- Text for the manage addresses button. -->
+    <string name="mozac_feature_prompts_manage_address">Quản lý địa chỉ</string>
+
+    <!-- Federated Credential Management prompts -->
+    <!--Content description for the Account picture in the Select Account FedCM prompt -->
+    <string name="mozac_feature_prompts_account_picture">Ảnh tài khoản</string>
+    <!-- Title of the Identity Credential provider dialog chooser. -->
+    <string name="mozac_feature_prompts_identity_credentials_choose_provider">Chọn một nhà cung cấp đăng nhập</string>
+    <!-- Title of an account picker dialog for identity credentials. The %1$s will be replaced with the name of the provider -->
+    <string name="mozac_feature_prompts_identity_credentials_choose_account_for_provider">Đăng nhập bằng tài khoản %1$s</string>
+    <!-- Title of the Identity Credential privacy policy dialog title. The %1$s will be replaced with the name of the provider. -->
+    <string name="mozac_feature_prompts_identity_credentials_privacy_policy_title">Sử dụng %1$s làm nhà cung cấp thông tin đăng nhập</string>
+    <!-- Title of the Identity Credential privacy policy dialog description. The %1$s will be replaced with the name of the provider, %2$s will be replaced with the account, %3$s will be replaced with the privacy policy url and  %4$s will be replaced with the terms of service. -->
+    <string name="mozac_feature_prompts_identity_credentials_privacy_policy_description"><![CDATA[ Đăng nhập vào %1$s với tài khoản %2$s phải tuân theo <a href="%3$s">chính sách bảo mật</a> và <a href="%4$s">điều khoản dịch vụ</a> của họ]]></string>
+    <!-- Text for the positive button of the Identity Credential dialogs. -->
+    <string name="mozac_feature_prompts_identity_credentials_continue">Tiếp tục</string>
+    <!-- Text for the cancel button of the Identity Credential dialogs. -->
+    <string name="mozac_feature_prompts_identity_credentials_cancel">Hủy bỏ</string>
+</resources>

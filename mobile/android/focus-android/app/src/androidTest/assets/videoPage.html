@@ -1,0 +1,53 @@
+<html>
+<head>
+    <title>Video_Test_Page</title>
+</head>
+<body>
+<p id="testContent">Page content: video player</p>
+<div class="playbackState">
+</div>
+<div id="video-container" style="text-align:center">
+    <button onclick="play()">Play</button>
+    <button onclick="pause()">Pause</button>
+    <button onclick="fullscreen()">Full Screen</button>
+    <br><br>
+    <video id="video" width="420" autoplay controls loop>
+        <source src="resources/clip.mp4" type="video/mp4">
+        Your browser does not support HTML video.
+    </video>
+</div>
+
+<script>
+    const video = document.getElementById("video");
+
+    function play() {
+        video.play();
+    }
+
+    function pause() {
+        video.pause();
+    }
+
+    function fullscreen() {
+        video.requestFullscreen();
+    }
+
+    var showPlayingAlert=true;
+
+    video.addEventListener('playing', (event) => {
+    <!-- document.querySelector('.playbackState').innerHTML="Media file is playing";-->
+    <!-- Need this hack to verify that the video is playing, -->
+    <!-- the test cannot currently verify the text displayed on the page-->
+          if(showPlayingAlert===true){
+            showPlayingAlert=false;
+            alert("Media file is playing");
+          }
+    });
+
+    video.addEventListener('pause', (event) => {
+    // document.querySelector('.playbackState').innerHTML="Media file is paused";
+          alert("Media file is paused");
+    });
+</script>
+</body>
+</html>

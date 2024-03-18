@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="24dp"
+        android:ellipsize="end"
+        android:text="@string/delete_history_prompt_title"
+        android:textColor="?attr/textPrimary"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/body"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="24dp"
+        android:text="@string/delete_history_prompt_body_2"
+        android:textColor="?attr/textPrimary"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/title" />
+
+    <RadioGroup
+        android:id="@+id/radio_group"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/body">
+
+        <RadioButton
+            android:id="@+id/last_hour_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?android:attr/selectableItemBackground"
+            android:ellipsize="end"
+            android:buttonTint="?attr/textSecondary"
+            android:layout_marginStart="18dp"
+            android:paddingStart="32dp"
+            android:paddingEnd="8dp"
+            android:text="@string/delete_history_prompt_button_last_hour"
+            android:textColor="?attr/textPrimary"
+            android:textSize="16sp" />
+
+        <RadioButton
+            android:id="@+id/today_and_yesterday_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?android:attr/selectableItemBackground"
+            android:ellipsize="end"
+            android:buttonTint="?attr/textSecondary"
+            android:layout_marginStart="18dp"
+            android:paddingStart="32dp"
+            android:paddingEnd="8dp"
+            android:text="@string/delete_history_prompt_button_today_and_yesterday"
+            android:textColor="?attr/textPrimary"
+            android:textSize="16sp" />
+
+        <RadioButton
+            android:id="@+id/everything_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?android:attr/selectableItemBackground"
+            android:ellipsize="end"
+            android:buttonTint="?attr/textSecondary"
+            android:layout_marginStart="18dp"
+            android:paddingStart="32dp"
+            android:paddingEnd="8dp"
+            android:text="@string/delete_history_prompt_button_everything"
+            android:textColor="?attr/textPrimary"
+            android:textSize="16sp" />
+    </RadioGroup>
+</androidx.constraintlayout.widget.ConstraintLayout>

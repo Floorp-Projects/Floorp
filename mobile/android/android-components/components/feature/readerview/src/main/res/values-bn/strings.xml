@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_sans_serif_font">Sans serif</string>
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_sans_serif_font_desc">Sans Serif হরফ</string>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_serif_font">Serif</string>
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_serif_font_desc">Serif হরফ</string>
+
+    <!-- Accessible description for decreasing the font size -->
+    <string name="mozac_feature_readerview_font_size_decrease_desc">হরফের আকার হ্রাস করুন</string>
+
+    <!-- Accessible description for increasing the font size -->
+    <string name="mozac_feature_readerview_font_size_increase_desc">হরফের আকার বৃদ্ধি করুন</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_dark">গাঢ়</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_dark_color_scheme_desc">গাঢ় রঙের নকশা</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_sephia">কালচে-বাদামী রং</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_sepia_color_scheme_desc">কালচে-বাদামী রঙের নকশা</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_light">হালকা</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_light_color_scheme_desc">হালকা রঙের স্কিম</string>
+</resources>

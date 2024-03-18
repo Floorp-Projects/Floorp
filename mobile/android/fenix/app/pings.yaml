@@ -1,0 +1,106 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+$schema: moz://mozilla.org/schemas/glean/pings/2-0-0
+
+activation:
+  description: |
+    This ping is intended to provide a measure of the activation of mobile
+    products. It's generated when Fenix starts, right after Glean is
+    initialized. It doesn't include the client_id, since it might be reporting
+    an hashed version of the Google Advertising ID.
+  include_client_id: false
+  bugs:
+    - https://bugzilla.mozilla.com/1538011/
+    - https://bugzilla.mozilla.com/1501822/
+  data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/1707#issuecomment-486972209
+  notification_emails:
+    - android-probes@mozilla.com
+
+first-session:
+  description: |
+    **THIS IS NOT A GENERIC FIRST USE PING** This ping is intended to capture
+    Adjust attribution. Use of this ping for other analyses will result in
+    undesirable outcomes.
+  include_client_id: true
+  send_if_empty: true
+  bugs:
+    - https://github.com/mozilla-mobile/fenix/issues/7295
+  data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/8074#issuecomment-586512202
+  notification_emails:
+    - android-probes@mozilla.com
+
+topsites-impression:
+  description: |
+    Recorded when a sponsored top site is rendered and visible on the home
+    screen. Visibility is qualified as when the homepage is brought to the
+    front of the Browser, and sponsored tiles are 100% visible on screen.
+  include_client_id: false
+  bugs:
+    - https://github.com/mozilla-mobile/fenix/issues/23893
+  data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/23945
+  notification_emails:
+    - android-probes@mozilla.com
+
+spoc:
+  description: |
+    Contains data identifying with which Pocket sponsored story the user
+    interacted with and the type of interaction: story impression or click.
+  include_client_id: false
+  reasons:
+    impression: |
+      A sponsored story had more than 50% of it's content visible
+      on the screen.
+    click: |
+      A sponsored story was clicked by the user.
+  bugs:
+    - https://github.com/mozilla-mobile/fenix/issues/27549
+    - https://mozilla-hub.atlassian.net/browse/FNXV2-21791
+  data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/27550#issuecomment-1295027631
+  notification_emails:
+    - android-probes@mozilla.com
+
+cookie-banner-report-site:
+  description: |
+    This ping is needed when the cookie banner reducer doesn't work on
+    a website, and the user wants to report the site.
+    This ping doesn't include a client id.
+  include_client_id: false
+  bugs:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1805450
+  data_reviews:
+    - https://github.com/mozilla-mobile/firefox-android/pull/1298#pullrequestreview-1350344223
+  notification_emails:
+    - android-probes@mozilla.com
+
+fx-suggest:
+  description: |
+    A ping representing a single event occurring with or to a Firefox Suggestion.
+    Distinguishable by its `ping_type`.
+    Does not contain a `client_id`, preferring a `context_id` instead.
+  include_client_id: false
+  bugs:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1857092
+  data_reviews:
+    - https://github.com/mozilla-mobile/firefox-android/pull/3958#issuecomment-1758607927
+  notification_emails:
+    - lina@mozilla.com
+    - ttran@mozilla.com
+    - najiang@mozilla.com
+
+font-list:
+  description: |
+      List of fonts installed on the user's device
+  include_client_id: false
+  bugs:
+   - https://bugzilla.mozilla.org/show_bug.cgi?id=1858193
+  data_reviews:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1858193#c2
+  notification_emails:
+    - android-probes@mozilla.com
+    - tom@mozilla.com

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <mozilla.components.browser.tabstray.thumbnail.TabThumbnailView
+        android:id="@+id/previewThumbnail"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="?layer2" />
+
+    <LinearLayout
+        android:id="@+id/fakeToolbar"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/browser_toolbar_height"
+        android:layout_gravity="bottom"
+        android:background="?bottomBarBackground"
+        android:elevation="5dp"
+        android:foregroundGravity="bottom"
+        android:orientation="horizontal">
+
+        <View
+            android:id="@+id/toolbar_wrapper"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_gravity="center"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="0dp"
+            android:layout_weight="1"
+            android:background="@drawable/home_search_background" />
+
+        <mozilla.components.ui.tabcounter.TabCounter
+            android:id="@+id/tab_button"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="center" />
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/menuButton"
+            android:layout_width="36dp"
+            android:layout_height="48dp"
+            android:layout_gravity="center"
+            android:scaleType="center"
+            app:srcCompat="@drawable/ic_menu"
+            app:tint="?attr/textPrimary" />
+    </LinearLayout>
+</merge>

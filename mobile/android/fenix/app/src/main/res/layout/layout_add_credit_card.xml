@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.constraintlayout.widget.ConstraintLayout
+    android:id="@+id/add_credit_card_layout"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true">
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/add_credit_card_icon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/credit_cards_saved_cards_item_margin_start"
+        app:srcCompat="@drawable/ic_new"
+        android:importantForAccessibility="no"
+        app:layout_constraintBottom_toBottomOf="@id/add_credit_card_text"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/add_credit_card_text" />
+
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/add_credit_card_text"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/credit_cards_saved_cards_item_margin_start"
+        android:text="@string/preferences_credit_cards_add_credit_card_2"
+        style="@style/Body16TextStyle"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/add_credit_card_icon"
+        app:layout_constraintTop_toTopOf="parent"
+        android:textAlignment="viewStart" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

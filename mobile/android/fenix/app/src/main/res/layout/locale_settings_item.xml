@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/locale_item_height">
+
+    <ImageView
+        android:id="@+id/locale_selected_icon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/locale_list_margin"
+        android:contentDescription="@string/a11y_selected_locale_content_description"
+        app:srcCompat="@drawable/mozac_ic_checkmark_24"
+        app:tint="?attr/textPrimary"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/locale_title_text"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/locale_item_text_margin_start"
+        android:layout_marginEnd="@dimen/locale_item_text_margin_end"
+        android:textColor="?attr/textPrimary"
+        android:textAlignment="viewStart"
+        app:layout_goneMarginStart="@dimen/locale_item_text_margin_gone_start"
+        android:textSize="@dimen/locale_item_title_size"
+        app:layout_constraintBottom_toTopOf="@id/locale_subtitle_text"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/locale_selected_icon"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed"
+        tools:text="English (United States)" />
+
+    <TextView
+        android:id="@+id/locale_subtitle_text"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/locale_item_text_margin_start"
+        android:layout_marginEnd="@dimen/locale_item_text_margin_end"
+        android:textColor="?attr/textSecondary"
+        android:textAlignment="viewStart"
+        android:textSize="@dimen/locale_item_subtitle_size"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_goneMarginStart="@dimen/locale_item_text_margin_gone_start"
+        app:layout_constraintStart_toEndOf="@id/locale_selected_icon"
+        app:layout_constraintTop_toBottomOf="@id/locale_title_text"
+        app:layout_constraintVertical_chainStyle="packed"
+        tools:text="English (United States)" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

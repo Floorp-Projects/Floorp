@@ -1,0 +1,319 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.mozac-readerview-body {
+  padding: 20px;
+  transition-property: background-color, color;
+  transition-duration: 0.4s;
+  max-width: 35em;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.mozac-readerview-body.light {
+  background-color: #ffffff;
+  color: #222222;
+}
+
+.mozac-readerview-body.sepia {
+  color: #5b4636;
+  background-color: #f4ecd8;
+}
+
+.mozac-readerview-body.dark {
+  background-color: #1c1b22;
+  color: #eeeeee;
+}
+
+.mozac-readerview-body.light * {
+  color: #222222;
+}
+
+.mozac-readerview-body.sepia * {
+  color: #5b4636;
+}
+
+.mozac-readerview-body.dark * {
+  color: #eeeeee;
+}
+
+.mozac-readerview-body.sans-serif * {
+  font-family: sans-serif !important;
+}
+
+.mozac-readerview-body.serif * {
+  font-family: serif !important;
+}
+
+/* Override some controls and content styles based on color scheme */
+
+.mozac-readerview-body.light > .container > .header > .domain {
+  color: #ee7600;
+  border-bottom-color: #d0d0d0;
+}
+
+.mozac-readerview-body.light > .container > .header > h1 {
+  color: #222222;
+}
+
+.mozac-readerview-body.light > .container > .header > .credits {
+  color: #898989;
+}
+
+.mozac-readerview-body.dark > .container > .header > .domain {
+  color: #ff9400;
+  border-bottom-color: #777777;
+}
+
+.mozac-readerview-body.dark > .container > .header > h1 {
+  color: #eeeeee;
+}
+
+.mozac-readerview-body.dark > .container > .header > .credits {
+  color: #aaaaaa;
+}
+
+.mozac-readerview-body.sepia > .container > .header > .domain {
+  border-bottom-color: #5b4636 !important;
+}
+
+.mozac-readerview-body.sepia > .container > .footer {
+  background-color: #dedad4 !important;
+}
+
+.mozac-readerview-body.light > .container > .content .caption,
+.mozac-readerview-body.light > .container > .content .wp-caption-text,
+.mozac-readerview-body.light > .container > .content figcaption {
+  color: #898989;
+}
+
+.mozac-readerview-body.dark > .container > .content .caption,
+.mozac-readerview-body.dark > .container > .content .wp-caption-text,
+.mozac-readerview-body.dark > .container > .content figcaption {
+  color: #aaaaaa;
+}
+
+.mozac-readerview-body.light > .container > .content blockquote {
+  color: #898989 !important;
+  border-left-color: #d0d0d0 !important;
+}
+
+.mozac-readerview-body.sepia blockquote {
+  border-inline-start: 2px solid #5b4636 !important;
+}
+
+.mozac-readerview-body.dark > .container > .content blockquote {
+  color: #aaaaaa !important;
+  border-left-color: #777777 !important;
+}
+
+.mozac-readerview-body > .container > hr {
+  margin: 0px;
+}
+
+.mozac-readerview-body > .container > .header {
+  text-align: start;
+  padding-bottom: 10px;
+}
+
+.mozac-readerview-body > .container > .header > .credits {
+  font-size: 0.9em;
+}
+
+.mozac-readerview-body > .container > .header > .domain {
+  margin-top: 10px;
+  padding-bottom: 10px;
+  color: #00acff !important;
+  text-decoration: none;
+}
+
+.mozac-readerview-body > .container > .header > .domain-border {
+  margin-top: 15px;
+  border-bottom: 1.5px solid #777777;
+  width: 50%;
+}
+
+.mozac-readerview-body > .container > .header > h1 {
+  font-size: 1.33em;
+  font-weight: 700;
+  line-height: 1.1em;
+  width: 100%;
+  margin: 0px;
+  margin-top: 32px;
+  margin-bottom: 16px;
+  padding: 0px;
+}
+
+.mozac-readerview-body > .container > .header > .credits {
+  padding: 0px;
+  margin: 0px;
+  margin-bottom: 32px;
+}
+
+.mozac-readerview-body > .container > .header > .meta-data {
+  font-size: 0.65em;
+  margin: 0 0 15px 0;
+}
+
+.mozac-readerview-body > .container > .content {
+  padding-top: 10px;
+  padding-left: 0px;
+  padding-right: 0px;
+}
+
+/*======= Article content =======*/
+.mozac-readerview-content {
+  font-size: 1em;
+}
+
+.mozac-readerview-content a {
+  text-decoration: underline !important;
+  font-weight: normal;
+}
+
+.mozac-readerview-body.dark :is(
+        .mozac-readerview-content a,
+        .mozac-readerview-content a:hover,
+        .mozac-readerview-content a:active
+    ):not(.mozac-readerview-content a:visited) {
+  color: #45a1ff !important;
+}
+
+.mozac-readerview-content a,
+.mozac-readerview-content a:hover,
+.mozac-readerview-content a:active
+:not(.mozac-readerview-content a:visited) {
+  color: #0060df !important;
+}
+
+.mozac-readerview-content a:visited {
+  color: #b5007f !important;
+}
+
+.mozac-readerview-content h1 {
+  margin-top: 16px;
+  margin-bottom: 16px;
+  font-weight: 700;
+  font-size: 1.6em;
+}
+
+.mozac-readerview-content h2 {
+  margin-top: 16px;
+  margin-bottom: 16px;
+  font-weight: 700;
+  font-size: 1.2em;
+}
+
+.mozac-readerview-content h3 {
+  margin-top: 16px;
+  margin-bottom: 16px;
+  font-weight: 700;
+  font-size: 1em;
+}
+
+.mozac-readerview-content * {
+  max-width: 100% !important;
+  height: auto !important;
+}
+
+.mozac-readerview-content p {
+  font-size: 1em !important;
+  line-height: 1.4em !important;
+  margin: 0px !important;
+  margin-bottom: 20px !important;
+}
+
+/* Covers all images showing edge-to-edge using a
+   an optional caption text */
+.mozac-readerview-content .wp-caption,
+.mozac-readerview-content figure {
+  display: block !important;
+  width: 100% !important;
+  margin: 0px !important;
+  margin-bottom: 32px !important;
+}
+
+/* Images marked to be shown edge-to-edge with an
+   optional captio ntext */
+.mozac-readerview-content p > img:only-child,
+.mozac-readerview-content p > a:only-child > img:only-child,
+.mozac-readerview-content .wp-caption img,
+.mozac-readerview-content figure img {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Account for body padding to make image full width */
+.mozac-readerview-content img[moz-reader-full-width] {
+  width: calc(100% + 40px);
+  margin-left: -20px;
+  margin-right: -20px;
+  max-width: none !important;
+}
+
+/* Image caption text */
+.mozac-readerview-content .caption,
+.mozac-readerview-content .wp-caption-text,
+.mozac-readerview-content figcaption {
+  font-size: 0.9em;
+  font-family: sans-serif;
+  margin: 0px !important;
+  padding-top: 4px !important;
+}
+
+/* Ensure all pre-formatted code inside the reader content
+   are properly wrapped inside content width */
+.mozac-readerview-content code,
+.mozac-readerview-content pre {
+  white-space: pre-wrap !important;
+  margin-bottom: 20px !important;
+}
+
+.mozac-readerview-content blockquote {
+  margin: 0px !important;
+  margin-bottom: 20px !important;
+  padding: 0px !important;
+  padding-inline-start: 16px !important;
+  border: 0px !important;
+  border-left: 2px solid !important;
+}
+
+.mozac-readerview-content ul,
+.mozac-readerview-content ol {
+  margin: 0px !important;
+  margin-bottom: 20px !important;
+  padding: 0px !important;
+  line-height: 1.5em;
+}
+
+.mozac-readerview-content ul {
+  padding-inline-start: 30px !important;
+  list-style: disc !important;
+}
+
+.mozac-readerview-content ol {
+  padding-inline-start: 35px !important;
+  list-style: decimal !important;
+}
+
+/* Hide elements with common "hidden" class names */
+.mozac-readerview-content .visually-hidden,
+.mozac-readerview-content .visuallyhidden,
+.mozac-readerview-content .hidden,
+.mozac-readerview-content .invisible,
+.mozac-readerview-content .sr-only {
+}
+
+/* Enforce wordpress and similar emoji/smileys aren't sized to be full-width,
+ * see bug 1399616 for context. */
+.mozac-readerview-content img.wp-smiley,
+.mozac-readerview-content img.emoji {
+  display: inline-block;
+  border-width: 0;
+  /* height: auto is implied from `.mozac-readerview-content *` rule. */
+  width: 1em;
+  margin: 0 .07em;
+  padding: 0;
+}

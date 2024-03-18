@@ -1,0 +1,511 @@
+---
+about:
+  description: Nimbus Feature Manifest for Fenix (Firefox Android)
+  kotlin:
+    package: org.mozilla.fenix
+    class: .nimbus.FxNimbus
+channels:
+  - release
+  - beta
+  - nightly
+  - developer
+includes:
+  - onboarding.fml.yaml
+  - pbm.fml.yaml
+  - messaging-fenix.fml.yaml
+import:
+  - path: ../../android-components/components/browser/engine-gecko/geckoview.fml.yaml
+    channel: release
+    features:
+      pdfjs:
+        - channel: developer
+          value: {
+          download-button: true,
+          open-in-app-button: true
+        }
+  - path: ../../android-components/components/feature/fxsuggest/fxsuggest.fml.yaml
+    channel: release
+    features:
+      awesomebar-suggestion-provider:
+        - value:
+            available-suggestion-types: {
+              "amp": true,
+              "ampMobile": false,
+              "wikipedia": true,
+            }
+
+features:
+  toolbar:
+    description: The searchbar/awesomebar that user uses to search.
+    variables:
+      toolbar-position-top:
+        description: If true, toolbar appears at top of the screen.
+        type: Boolean
+        default: false
+  homescreen:
+    description: The homescreen that the user goes to when they press home or new tab.
+    variables:
+      sections-enabled:
+        description: "This property provides a lookup table of whether or not the given section should be enabled.
+        If the section is enabled, it should be toggleable in the settings screen, and on by default."
+        type: Map<HomeScreenSection, Boolean>
+        default:
+          {
+            "top-sites": true,
+            "jump-back-in": true,
+            "recently-saved": true,
+            "recent-explorations": true,
+            "pocket": true,
+            "pocket-sponsored-stories": true,
+          }
+    defaults:
+      - channel: nightly
+        value: {
+          "sections-enabled": {
+            "top-sites": true,
+            "jump-back-in": true,
+            "recently-saved": true,
+            "recent-explorations": true,
+            "pocket": true,
+          }
+        }
+  nimbus-validation:
+    description: "A feature that does not correspond to an application feature suitable for showing
+    that Nimbus is working. This should never be used in production."
+    variables:
+      settings-title:
+        description: The title of displayed in the Settings screen and app menu.
+        type: Text
+        default: browser_menu_settings
+      settings-punctuation:
+        description: The emoji displayed in the Settings screen title.
+        type: String
+        default: ""
+      settings-icon:
+        description: The drawable displayed in the app menu for Settings
+        type: String
+        default: mozac_ic_settings
+  search-term-groups:
+    description: A feature allowing the grouping of URLs around the search term that it came from.
+    variables:
+      enabled:
+        description: If true, the feature shows up on the homescreen and on the new tab screen.
+        type: Boolean
+        default: false
+    defaults:
+      - channel: nightly
+        value:
+          enabled: true
+      - channel: developer
+        value:
+          enabled: true
+  mr2022:
+    description: Features for MR 2022.
+    variables:
+      sections-enabled:
+        description: "This property provides a lookup table of whether or not the given section should be enabled."
+        type: Map<MR2022Section, Boolean>
+        default:
+          {
+            "home-onboarding-dialog-existing-users": true,
+            "sync-cfr": true,
+            "wallpapers-selection-tool": true,
+            "jump-back-in-cfr": true,
+            "tcp-cfr": true,
+            "tcp-feature": true,
+          }
+    defaults:
+      - channel: developer
+        value: {
+          "sections-enabled": {
+            "home-onboarding-dialog-existing-users": true,
+            "sync-cfr": true,
+            "wallpapers-selection-tool": true,
+            "jump-back-in-cfr": true,
+          }
+        }
+  query-parameter-stripping:
+    description: Features for query parameter stripping.
+    variables:
+      sections-enabled:
+        description: "This property provides a lookup table of whether or not the given section should be enabled."
+        type: Map<QueryParameterStrippingSection, String>
+        default:
+          {
+            "query-parameter-stripping": "0",
+            "query-parameter-stripping-pmb": "0",
+            "query-parameter-stripping-allow-list": "",
+            "query-parameter-stripping-strip-list": "",
+          }
+    defaults:
+      - channel: developer
+        value: {
+          "sections-enabled": {
+            "query-parameter-stripping": "0",
+            "query-parameter-stripping-pmb": "0",
+            "query-parameter-stripping-allow-list": "",
+            "query-parameter-stripping-strip-list": "",
+          }
+        }
+      - channel: nightly
+        value: {
+          "sections-enabled": {
+            "query-parameter-stripping": "0",
+            "query-parameter-stripping-pmb": "0",
+            "query-parameter-stripping-allow-list": "",
+            "query-parameter-stripping-strip-list": "",
+          }
+        }
+  cookie-banners:
+    description: Features for cookie banner handling.
+    variables:
+      sections-enabled:
+        description: "This property provides a lookup table of whether or not the given section should be enabled."
+        type: Map<CookieBannersSection, Int>
+        default:
+          {
+            "feature-ui": 0,
+            "feature-setting-value": 0,
+            "feature-setting-value-pbm": 0,
+            "feature-setting-detect-only": 0,
+            "feature-setting-global-rules": 1,
+            "feature-setting-global-rules-sub-frames": 1,
+          }
+    defaults:
+      - channel: developer
+        value: {
+          "sections-enabled": {
+            "feature-ui": 1,
+            "feature-setting-value": 0,
+            "feature-setting-value-pbm": 1,
+            "feature-setting-detect-only": 0,
+            "feature-setting-global-rules": 1,
+            "feature-setting-global-rules-sub-frames": 1,
+          }
+        }
+      - channel: nightly
+        value: {
+          "sections-enabled": {
+            "feature-ui": 1,
+            "feature-setting-value": 0,
+            "feature-setting-value-pbm": 1,
+            "feature-setting-detect-only": 0,
+            "feature-setting-global-rules": 1,
+            "feature-setting-global-rules-sub-frames": 1,
+          }
+        }
+      - channel: beta
+        value: {
+          "sections-enabled": {
+            "feature-ui": 1,
+            "feature-setting-value": 0,
+            "feature-setting-value-pbm": 1,
+            "feature-setting-detect-only": 0,
+            "feature-setting-global-rules": 1,
+            "feature-setting-global-rules-sub-frames": 1,
+          }
+        }
+  unified-search:
+    description: A feature allowing user to easily search for specified results directly in the search bar.
+    variables:
+      enabled:
+        description: If true, the feature shows up in the search bar.
+        type: Boolean
+        default: true
+
+  growth-data:
+    description: A feature measuring campaign growth data
+    variables:
+      enabled:
+        description: If true, the feature is active
+        type: Boolean
+        default: false
+    defaults:
+      - channel: release
+        value:
+          enabled: true
+
+  re-engagement-notification:
+    description: A feature that shows the re-engagement notification if the user is inactive.
+    variables:
+      enabled:
+        description: If true, the re-engagement notification is shown to the inactive user.
+        type: Boolean
+        default: false
+      type:
+        description: The type of re-engagement notification that is shown to the inactive user.
+        type: Int
+        default: 0
+
+  onboarding:
+    description: "A feature that configures the new user onboarding page.
+    Note that onboarding is a **first run** feature, and should only be modified by first run experiments."
+    variables:
+      order:
+        description: Determines the order of the onboarding page panels
+        type: List<OnboardingPanel>
+        default: ["themes", "toolbar-placement", "sync", "tcp", "privacy-notice"]
+
+  glean:
+    description: "A feature that provides server-side configurations for Glean metrics (aka Server Knobs)."
+    variables:
+      metrics-enabled:
+        description: "A map of metric base-identifiers to booleans representing the state of the 'enabled' flag for that metric."
+        type: Map<String, Boolean>
+        default: {}
+      enable-event-timestamps:
+        description: "Enables precise event timestamps for Glean events"
+        type: Boolean
+        default: false
+
+  splash-screen:
+    description: "A feature that extends splash screen duration, allowing additional data fetching time for the app's initial run."
+    variables:
+      enabled:
+        description: "If true, the feature is active."
+        type: Boolean
+        default: false
+      maximum_duration_ms:
+        description: The maximum amount of time in milliseconds the splashscreen will be visible while waiting for initialization calls to complete.
+        type: Int
+        default: 0
+
+  shopping-experience:
+    description: A feature that shows product review quality information.
+    variables:
+      enabled:
+        description: if true, the shopping experience feature is shown to the user.
+        type: Boolean
+        default: false
+      product-recommendations:
+        description: if true, recommended products feature is enabled to be shown to the user based on their preference.
+        type: Boolean
+        default: false
+      product-recommendations-exposure:
+        description: if true, we want to record recommended products inventory for opted-in users, even if product recommendations are disabled.
+        type: Boolean
+        default: false
+    defaults:
+      - channel: developer
+        value:
+          enabled: true
+          product-recommendations: true
+          product-recommendations-exposure: true
+
+  print:
+    description: A feature for printing from the share or browser menu.
+    variables:
+      share-print-enabled:
+        description: If true, a print button from the share menu is available.
+        type: Boolean
+        default: true
+      browser-print-enabled:
+        description: If true, a print button from the browser menu is available.
+        type: Boolean
+        default: true
+
+  search-extra-params:
+    description: A feature that provides additional args for search.
+    variables:
+      enabled:
+        description: If true, the feature is active.
+        type: Boolean
+        default: false
+      search-engine:
+        description: The search engine name.
+        type: String
+        default: ""
+      feature-enabler:
+        description: The feature enabler param name with arg, NOTE this map could be empty.
+        type: Map<String, String>
+        default: {}
+      channel-id:
+        description: The channel Id param name with arg.
+        type: Map<String, String>
+        default: {}
+
+  fx-strong-password:
+    description: A feature that provides a generated strong password on sign up.
+    variables:
+      enabled:
+        description: >
+          When the feature is enabled and Firefox receives a Login event with an 
+          empty saved logins list, a suggested strong password prompt will be shown, 
+          allowing the user to use the generated password to fill in the password field 
+          for the new account that will be created. When the feature is disabled, 
+          there won't be any prompt displayed that would allow using a generated password.
+        type: Boolean
+        default: false
+    defaults:
+      - channel: developer
+        value:
+          enabled: true
+      - channel: nightly
+        value:
+          enabled: true
+
+  fx-suggest:
+    description: A feature that provides Firefox Suggest search suggestions.
+    variables:
+      enabled:
+        description: >
+          Whether the feature is enabled. When Firefox Suggest is enabled,
+          Firefox will download and store new search suggestions in the
+          background, and show additional Search settings to control which
+          suggestions appear in the awesomebar. When Firefox Suggest is
+          disabled, Firefox will not download new suggestions, and hide the
+          additional Search settings.
+        type: Boolean
+        default: false
+    defaults:
+      - channel: developer
+        value:
+          enabled: true
+      - channel: nightly
+        value:
+          enabled: true
+
+  nimbus-is-ready:
+    description: >
+      A feature that provides the number of Nimbus is_ready events to send
+      when Nimbus finishes launching.
+    variables:
+      event-count:
+        description: The number of events that should be sent.
+        type: Int
+        default: 1
+
+  translations:
+    description: The feature that allows on-device translations of web content.
+    variables:
+      main-flow-toolbar-enabled:
+        description: >
+          Show the primary toolbar entry point into the translations feature. (Translations icon on URL toolbar.)
+        type: Boolean
+        default: false
+      main-flow-browser-menu-enabled:
+        description: >
+          Show the browser menu entry point into the translations feature. ('Translate Page' on browser menu.)
+        type: Boolean
+        default: false
+      page-settings-enabled:
+        description: >
+          Show the page settings entry point within the translations feature. (Gear icon on the translations main flow page.)
+          'main-flow-toolbar-enabled' or 'main-flow-browser-menu-enabled' must also be enabled for users to access this feature.
+        type: Boolean
+        default: false
+      global-settings-enabled:
+        description: >
+          Show the global settings entry point within the translations feature. ('Translation Settings' on the page settings view.)
+          'page-settings-enabled' must also be enabled for users to access this feature.
+        type: Boolean
+        default: false
+      global-lang-settings-enabled:
+        description: >
+          Show the global language options entry point for automatically translating. ('Automatic Translation' on the global settings view.)
+          'global-settings-enabled' must also be enabled for users to access this feature.
+        type: Boolean
+        default: false
+      global-site-settings-enabled:
+        description: >
+          Show the global never translate this site options entry point for site management. ('Never translate these sites' on the global settings view.)
+          'global-settings-enabled' must also be enabled for users to access this feature.
+        type: Boolean
+        default: false
+      downloads-enabled:
+        description: >
+          Show the global language model download options entry point for translations. ('Download languages' on the global settings view.)
+          'global-settings-enabled' must also be enabled for users to access this feature.
+        type: Boolean
+        default: false
+
+types:
+  objects: {}
+
+  enums:
+    HomeScreenSection:
+      description: The identifiers for the sections of the homescreen.
+      variants:
+        top-sites:
+          description: The frecency and pinned sites.
+        recently-saved:
+          description: The sites the user has bookmarked recently.
+        jump-back-in:
+          description: The tabs the user was looking immediately before being interrupted.
+        recent-explorations:
+          description: The tab groups
+        pocket:
+          description: The pocket section. This should only be available in the US.
+        pocket-sponsored-stories:
+          description: Subsection of the Pocket homescreen section which shows sponsored stories.
+
+    MR2022Section:
+      description: The identifiers for the sections of the MR 2022.
+      variants:
+        home-onboarding-dialog-existing-users:
+          description: Home onboarding dialog for upgraded users.
+        sync-cfr:
+          description: CFR for the first time you see a synced tab on the home screen.
+        wallpapers-selection-tool:
+          description: Wallpapers selection dialog tool for the home screen.
+        jump-back-in-cfr:
+          description: Jump back-in onboarding message.
+        tcp-cfr:
+          description: CFR for the first time you use the browse with Total Cookie Protection on the browser screen.
+        tcp-feature:
+          description: Controls the Total Cookie Protection feature.
+    CookieBannersSection:
+      description: The identifiers for the sections of the MR 2022.
+      variants:
+        feature-ui:
+          description: An integer either 0 or 1 indicating if the UI for cookie banner handling should be visible,
+            0 to hide the UI and 1 to show the UI. The actual UI is composed by cookie banner section
+            in the settings page, the toolbar section and the re-engagement dialog.
+        feature-setting-value:
+          description: An integer either 0 or 1 indicating if cookie banner setting should be enabled or disabled,
+             0 for setting the value to disabled, 1  for enabling the setting with the value reject_all.
+        feature-setting-value-pbm:
+          description: An integer either 0 or 1 indicating if cookie banner setting should be enabled or disabled,
+            0 for setting the value to disabled, 1  for enabling the setting with the value reject_all.
+        feature-setting-detect-only:
+          description: An integer either 0 or 1 indicating if cookie banner detect only mode
+            should be enabled or disabled. 0 for setting to be disabled, and 1 for enabling the setting.
+        feature-setting-global-rules:
+          description: An integer either 0 or 1 indicating if cookie banner global rules
+            should be enabled or disabled. 0 for setting to be disabled, and 1 for enabling the setting.
+        feature-setting-global-rules-sub-frames:
+          description: An integer either 0 or 1 indicating if cookie banner global rules sub-frames
+            should be enabled or disabled. 0 for setting to be disabled, and 1 for enabling the setting.
+
+    QueryParameterStrippingSection:
+      description: The identifiers for the options for the Query Parameter Stripping feature.
+      variants:
+        query-parameter-stripping:
+          description: An integer either 0 or 1 indicating if query parameter stripping
+            should be enabled or disabled in normal mode. 0 for setting to be disabled,
+            and 1 for enabling the setting.
+        query-parameter-stripping-pmb:
+          description: An integer either 0 or 1 indicating if query parameter stripping
+            should be enabled or disabled in private mode. 0 for setting to be disabled,
+            and 1 for enabling the setting.
+        query-parameter-stripping-allow-list:
+          description: An string separated by commas indicating the sites where should
+            from query stripping should be exempted.
+        query-parameter-stripping-strip-list:
+          description: An string separated by commas indicating the list of query params
+            to be stripped from URIs. This list will be merged with records
+            coming from RemoteSettings.
+
+    OnboardingPanel:
+      description: The types of onboarding panels in the onboarding page
+      variants:
+        themes:
+          description: The themes onboarding panel where users pick themes
+        toolbar-placement:
+          description: The onboarding panel where users choose their toolbar placement (bottom or top)
+        sync:
+          description: The onboarding panel where users can sign in to sync
+        tcp:
+          description: The onboarding panel where users can choose their total cookie protection settings
+        privacy-notice:
+          description: The onboarding panel where users can tap to view our privacy notice.

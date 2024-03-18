@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<ScrollView
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingTop="?android:attr/listPreferredItemPaddingLeft"
+            android:paddingStart="?android:attr/listPreferredItemPaddingLeft"
+            android:paddingEnd="?android:attr/listPreferredItemPaddingLeft">
+
+        <TextView
+                android:id="@+id/input_label"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                tools:text="Please enter your name"
+                android:labelFor="@+id/input_value"
+                android:contentDescription="@string/mozac_feature_prompts_content_description_input_label"/>
+
+        <EditText
+                android:id="@+id/input_value"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                tools:ignore="Autofill"
+                android:inputType="text"/>
+
+        <CheckBox
+                android:id="@id/mozac_feature_prompts_no_more_dialogs_check_box"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/mozac_feature_prompts_no_more_dialogs"
+                android:visibility="gone"
+                tools:visibility="visible"
+                android:textColor="#aaa"/>
+
+    </LinearLayout>
+</ScrollView>

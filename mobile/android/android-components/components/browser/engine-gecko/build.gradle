@@ -1,0 +1,113 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+buildscript {
+    repositories {
+        maven {
+            url "https://maven.mozilla.org/maven2"
+        }
+    }
+
+    dependencies {
+        classpath "${ApplicationServicesConfig.groupId}:tooling-nimbus-gradle:${ApplicationServicesConfig.version}"
+        classpath "org.mozilla.telemetry:glean-gradle-plugin:${Versions.mozilla_glean}"
+    }
+}
+
+plugins {
+    id "com.jetbrains.python.envs" version "$python_envs_plugin"
+}
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+android {
+    defaultConfig {
+        minSdkVersion config.minSdkVersion
+        compileSdk config.compileSdkVersion
+        targetSdkVersion config.targetSdkVersion
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    packagingOptions {
+        resources {
+            excludes += ['META-INF/proguard/androidx-annotations.pro']
+        }
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    namespace  'mozilla.components.browser.engine.gecko'
+}
+
+// Set configuration for the Glean parser to extract metrics.yaml
+// file from AAR dependencies of this project rather than look
+// for it into the project directory.
+ext.allowMetricsFromAAR = true
+
+dependencies {
+    implementation project(':concept-engine')
+    implementation project(':concept-fetch')
+    implementation project(':support-ktx')
+    implementation project(':support-utils')
+    implementation(project(':service-nimbus')) {
+        exclude group: 'org.mozilla.telemetry', module: 'glean-native'
+    }
+    implementation ComponentsDependencies.kotlin_coroutines
+
+    api ComponentsDependencies.mozilla_geckoview
+
+    implementation ComponentsDependencies.androidx_paging
+    implementation ComponentsDependencies.androidx_data_store_preferences
+    implementation ComponentsDependencies.androidx_lifecycle_livedata
+
+    testImplementation ComponentsDependencies.androidx_test_core
+    testImplementation ComponentsDependencies.androidx_test_junit
+    testImplementation ComponentsDependencies.testing_robolectric
+    testImplementation ComponentsDependencies.testing_coroutines
+    testImplementation ComponentsDependencies.testing_mockwebserver
+    testImplementation project(':support-test')
+    testImplementation project(':tooling-fetch-tests')
+
+    // We only compile against Glean. It's up to the app to add those dependencies
+    // if it wants to collect GeckoView telemetry through the Glean SDK.
+    compileOnly project(":service-glean")
+    testImplementation project(":service-glean")
+    testImplementation ComponentsDependencies.androidx_work_testing
+
+    androidTestImplementation ComponentsDependencies.androidx_test_core
+    androidTestImplementation ComponentsDependencies.androidx_test_runner
+    androidTestImplementation ComponentsDependencies.androidx_test_rules
+    androidTestImplementation project(':tooling-fetch-tests')
+}
+
+apply plugin: "org.mozilla.telemetry.glean-gradle-plugin"
+apply from: '../../../android-lint.gradle'
+apply from: '../../../publish.gradle'
+apply plugin: "org.mozilla.appservices.nimbus-gradle-plugin"
+nimbus {
+    // The path to the Nimbus feature manifest file
+    manifestFile = "geckoview.fml.yaml"
+
+    channels = [
+            debug: "debug",
+            release: "release",
+    ]
+
+    // This is an optional value, and updates the plugin to use a copy of application
+    // services. The path should be relative to the root project directory.
+    // *NOTE*: This example will not work for all projects, but should work for Fenix, Focus, and Android Components
+    applicationServicesDir = gradle.hasProperty('localProperties.autoPublish.application-services.dir')
+            ? gradle.getProperty('localProperties.autoPublish.application-services.dir') : null
+}
+ext.configurePublish(config.componentsGroupId, archivesBaseName, project.ext.description)

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape
+            android:shape="oval">
+            <solid android:color="@color/default_share_background" />
+            <padding
+                android:left="10dp"
+                android:top="8dp"
+                android:right="6dp"
+                android:bottom="8dp" />
+        </shape>
+    </item>
+    <item>
+        <vector
+            android:width="20dp"
+            android:height="20dp"
+            android:viewportWidth="20"
+            android:viewportHeight="20">
+            <path
+                android:fillColor="@color/device_foreground"
+                android:fillType="nonZero"
+                android:pathData="M10.69,3A3.313,3.313 0,0 1,14 6.31v10.38A3.313,3.313 0,0 1,10.69 20L3.31,20A3.313,3.313 0,0 1,0 16.69L0,6.31A3.313,3.313 0,0 1,3.31 3h7.38zM10.69,5L3.31,5C2.587,5 2,5.587 2,6.31v10.38c0,0.723 0.587,1.31 1.31,1.31h7.38c0.723,0 1.31,-0.587 1.31,-1.31L12,6.31C12,5.587 11.413,5 10.69,5zM10.995,0A6.003,6.003 0,0 1,17 6v0.016l-0.024,8.987a2,2 0,0 1,-2.005 1.994h-0.002l0.03,-10.986L14.999,6c0,-2.21 -1.793,-4 -4.004,-4L3,2a2,2 0,0 1,2 -2h5.995z" />
+        </vector>
+    </item>
+</layer-list>

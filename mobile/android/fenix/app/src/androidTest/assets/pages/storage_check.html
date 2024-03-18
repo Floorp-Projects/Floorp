@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<meta name="viewport" content="width=device-width">
+<body>
+
+<h1>Storage check</h1>
+
+<script type="text/javascript">
+    if (sessionStorage.getItem('sessionTest') == 'session storage') {
+        document.write('<p>Session storage has value</p>');
+    } else {
+        document.write('<p>Session storage empty</p>');
+    }
+
+    if (localStorage.getItem('localTest') == 'local storage') {
+        document.write('<p>Local storage has value</p>');
+    } else {
+        document.write('<p>Local storage empty</p>');
+    }
+</script>
+
+</body>
+</html>

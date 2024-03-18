@@ -1,0 +1,1373 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<issues format="6" by="lint 7.0.0" type="baseline" client="gradle" name="AGP (7.0.0)" variant="all" version="7.0.0">
+
+    <issue
+        id="IidCompatibilityCheckFailure"
+        message="Check failed with exception: java.lang.NoSuchMethodException: com.android.tools.lint.detector.api.LintModelModuleProject.getGradleProjectModel()">
+        <location
+            file="app"/>
+    </issue>
+
+    <issue
+        id="UnusedAttribute"
+        message="Attribute `android:foreground` has no effect on API levels lower than 23 (current min is 21)"
+        errorLine1="    android:foreground=&quot;?android:attr/selectableItemBackground&quot;"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/account_preference.xml"
+            line="8"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="UnusedAttribute"
+        message="Attribute `android:foreground` has no effect on API levels lower than 23 (current min is 21)"
+        errorLine1="        android:foreground=&quot;@drawable/rounded_ripple&quot;"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/component_collection_creation.xml"
+            line="144"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UnusedAttribute"
+        message="Attribute `android:foreground` has no effect on API levels lower than 23 (current min is 21)"
+        errorLine1="        android:foreground=&quot;@drawable/rounded_ripple&quot;"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/onboarding_theme_picker.xml"
+            line="70"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UnusedAttribute"
+        message="Attribute `android:foreground` has no effect on API levels lower than 23 (current min is 21)"
+        errorLine1="        android:foreground=&quot;@drawable/rounded_ripple&quot;"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/onboarding_theme_picker.xml"
+            line="98"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UnusedAttribute"
+        message="Attribute `android:foreground` has no effect on API levels lower than 23 (current min is 21)"
+        errorLine1="        android:foreground=&quot;@drawable/rounded_ripple&quot;"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/onboarding_theme_picker.xml"
+            line="147"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UnusedAttribute"
+        message="Attribute `android:foreground` has no effect on API levels lower than 23 (current min is 21)"
+        errorLine1="        android:foreground=&quot;@drawable/rounded_ripple&quot;"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/onboarding_toolbar_position_picker.xml"
+            line="60"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UnusedAttribute"
+        message="Attribute `android:foreground` has no effect on API levels lower than 23 (current min is 21)"
+        errorLine1="        android:foreground=&quot;@drawable/rounded_ripple&quot;"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/onboarding_toolbar_position_picker.xml"
+            line="114"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UnusedAttribute"
+        message="Attribute `android:foreground` has no effect on API levels lower than 23 (current min is 21)"
+        errorLine1="        android:foreground=&quot;@drawable/rounded_ripple&quot;"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/onboarding_tracking_protection.xml"
+            line="50"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UnusedAttribute"
+        message="Attribute `android:foreground` has no effect on API levels lower than 23 (current min is 21)"
+        errorLine1="        android:foreground=&quot;@drawable/rounded_ripple&quot;"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/onboarding_tracking_protection.xml"
+            line="71"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UnusedAttribute"
+        message="Attribute `shortcutId` is only used in API level 25 and higher (current min is 21)"
+        errorLine1="        android:shortcutId=&quot;open_new_tab&quot;"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/debug/res/xml/shortcuts.xml"
+            line="8"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UnusedAttribute"
+        message="Attribute `shortcutId` is only used in API level 25 and higher (current min is 21)"
+        errorLine1="        android:shortcutId=&quot;open_new_tab&quot;"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/xml/shortcuts.xml"
+            line="8"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UnusedAttribute"
+        message="Attribute `shortcutShortLabel` is only used in API level 25 and higher (current min is 21)"
+        errorLine1="        android:shortcutShortLabel=&quot;@string/home_screen_shortcut_open_new_tab_2&quot;"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/debug/res/xml/shortcuts.xml"
+            line="11"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UnusedAttribute"
+        message="Attribute `shortcutShortLabel` is only used in API level 25 and higher (current min is 21)"
+        errorLine1="        android:shortcutShortLabel=&quot;@string/home_screen_shortcut_open_new_tab_2&quot;"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/xml/shortcuts.xml"
+            line="11"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UnusedAttribute"
+        message="Attribute `shortcutLongLabel` is only used in API level 25 and higher (current min is 21)"
+        errorLine1="        android:shortcutLongLabel=&quot;@string/home_screen_shortcut_open_new_tab_2&quot;>"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/debug/res/xml/shortcuts.xml"
+            line="12"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UnusedAttribute"
+        message="Attribute `shortcutLongLabel` is only used in API level 25 and higher (current min is 21)"
+        errorLine1="        android:shortcutLongLabel=&quot;@string/home_screen_shortcut_open_new_tab_2&quot;>"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/xml/shortcuts.xml"
+            line="12"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UnusedAttribute"
+        message="Attribute `shortcutId` is only used in API level 25 and higher (current min is 21)"
+        errorLine1="        android:shortcutId=&quot;open_new_private_tab&quot;"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/debug/res/xml/shortcuts.xml"
+            line="19"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UnusedAttribute"
+        message="Attribute `shortcutId` is only used in API level 25 and higher (current min is 21)"
+        errorLine1="        android:shortcutId=&quot;open_new_private_tab&quot;"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/xml/shortcuts.xml"
+            line="19"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UnusedAttribute"
+        message="Attribute `shortcutShortLabel` is only used in API level 25 and higher (current min is 21)"
+        errorLine1="        android:shortcutShortLabel=&quot;@string/home_screen_shortcut_open_new_private_tab_2&quot;"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/debug/res/xml/shortcuts.xml"
+            line="22"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UnusedAttribute"
+        message="Attribute `shortcutShortLabel` is only used in API level 25 and higher (current min is 21)"
+        errorLine1="        android:shortcutShortLabel=&quot;@string/home_screen_shortcut_open_new_private_tab_2&quot;"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/xml/shortcuts.xml"
+            line="22"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UnusedAttribute"
+        message="Attribute `shortcutLongLabel` is only used in API level 25 and higher (current min is 21)"
+        errorLine1="        android:shortcutLongLabel=&quot;@string/home_screen_shortcut_open_new_private_tab_2&quot;>"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/debug/res/xml/shortcuts.xml"
+            line="23"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UnusedAttribute"
+        message="Attribute `shortcutLongLabel` is only used in API level 25 and higher (current min is 21)"
+        errorLine1="        android:shortcutLongLabel=&quot;@string/home_screen_shortcut_open_new_private_tab_2&quot;>"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/xml/shortcuts.xml"
+            line="23"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UnusedAttribute"
+        message="Attribute `android:foreground` has no effect on API levels lower than 23 (current min is 21)"
+        errorLine1="    android:foreground=&quot;?android:selectableItemBackground&quot;>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/tab_tray_item.xml"
+            line="13"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="InflateParams"
+        message="Avoid passing `null` as the view root (needed to resolve layout parameters on the inflated layout&apos;s root element)"
+        errorLine1="                    .inflate(R.layout.delete_history_time_range_dialog, null)"
+        errorLine2="                                                                        ~~~~">
+        <location
+            file="src/main/java/org/mozilla/fenix/library/history/HistoryFragment.kt"
+            line="379"
+            column="73"/>
+    </issue>
+
+    <issue
+        id="MissingLicense"
+        message="The file must start with a comment containing the license"
+        errorLine1="package org.mozilla.fenix.ext"
+        errorLine2="~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/mozilla/fenix/ext/Bitmap.kt"
+            line="1"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="VectorRaster"
+        message="Limit vector icons sizes to 200×200 to keep icon drawing fast; see https://developer.android.com/studio/write/vector-asset-studio#when for more"
+        errorLine1="    android:width=&quot;1889dp&quot;"
+        errorLine2="                   ~~~~~~">
+        <location
+            file="src/main/res/drawable/ic_etp_artwork.xml"
+            line="7"
+            column="20"/>
+    </issue>
+
+    <issue
+        id="VectorRaster"
+        message="Limit vector icons sizes to 200×200 to keep icon drawing fast; see https://developer.android.com/studio/write/vector-asset-studio#when for more"
+        errorLine1="&lt;vector xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot; xmlns:aapt=&quot;http://schemas.android.com/aapt&quot; android:width=&quot;235dp&quot; android:height=&quot;298dp&quot; android:viewportWidth=&quot;235&quot; android:viewportHeight=&quot;298&quot;>"
+        errorLine2="                                                                                                                               ~~~~~">
+        <location
+            file="src/main/res/drawable/ic_onboarding_sync.xml"
+            line="1"
+            column="128"/>
+    </issue>
+
+    <issue
+        id="VectorRaster"
+        message="Limit vector icons sizes to 200×200 to keep icon drawing fast; see https://developer.android.com/studio/write/vector-asset-studio#when for more"
+        errorLine1="&lt;vector xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot; xmlns:aapt=&quot;http://schemas.android.com/aapt&quot; android:width=&quot;223dp&quot; android:height=&quot;345dp&quot; android:viewportWidth=&quot;223&quot; android:viewportHeight=&quot;345&quot;>"
+        errorLine2="                                                                                                                               ~~~~~">
+        <location
+            file="src/main/res/drawable/ic_onboarding_welcome.xml"
+            line="1"
+            column="128"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                recentTabs = state.recentTabs.filterOutTab(action.recentTab)"
+        errorLine2="                                              ~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/mozilla/fenix/components/appstate/AppStoreReducer.kt"
+            line="74"
+            column="47"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                isInPrimaryState = { getCurrentTab()?.content?.canGoBack ?: false },"
+        errorLine2="                                     ~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/mozilla/fenix/browser/BrowserFragment.kt"
+            line="97"
+            column="38"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                isInPrimaryState = { getCurrentTab()?.content?.canGoForward ?: false },"
+        errorLine2="                                     ~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/mozilla/fenix/browser/BrowserFragment.kt"
+            line="119"
+            column="38"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                    getCurrentTab()?.content?.loading == false"
+        errorLine2="                    ~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/mozilla/fenix/browser/BrowserFragment.kt"
+            line="142"
+            column="21"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                    if (getCurrentTab()?.content?.loading == true) {"
+        errorLine2="                        ~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/mozilla/fenix/browser/BrowserFragment.kt"
+            line="156"
+            column="25"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                selected = getCurrentTab()?.let {"
+        errorLine2="                           ~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/mozilla/fenix/browser/BrowserFragment.kt"
+            line="184"
+            column="28"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        getCurrentTab()?.let { tab ->"
+        errorLine2="        ~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/mozilla/fenix/browser/BrowserFragment.kt"
+            line="274"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="            } + searchSelectorMenu.menuItems()"
+        errorLine2="                                   ~~~~~~~~~">
+        <location
+            file="src/main/java/org/mozilla/fenix/search/SearchDialogFragment.kt"
+            line="725"
+            column="36"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        tabsAction.updateCount(tabCount)"
+        errorLine2="                   ~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/mozilla/fenix/components/toolbar/ToolbarIntegration.kt"
+            line="148"
+            column="20"/>
+    </issue>
+
+    <issue
+        id="ComposableNaming"
+        message="Composable functions with a return type should start with a lowercase letter"
+        errorLine1="fun EagerFlingBehavior("
+        errorLine2="    ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/mozilla/fenix/compose/LazyListEagerFlingBehavior.kt"
+            line="21"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="ModifierParameter"
+        message="Modifier parameter should be the first optional parameter"
+        errorLine1="    modifier: Modifier = Modifier,"
+        errorLine2="    ~~~~~~~~">
+        <location
+            file="src/main/java/org/mozilla/fenix/compose/ThumbnailCard.kt"
+            line="59"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="UseCompatLoadingForDrawables"
+        message="Use `AppCompatResources.getDrawable()`"
+        errorLine1="                    display.setUrlBackground(getDrawable(R.drawable.search_url_background))"
+        errorLine2="                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/mozilla/fenix/components/toolbar/BrowserToolbarView.kt"
+            line="89"
+            column="46"/>
+    </issue>
+
+    <issue
+        id="Typos"
+        message="&quot;internett&quot; is usually capitalized as &quot;Internett&quot;"
+        errorLine1="    &lt;string name=&quot;private_browsing_placeholder_description_2&quot;>%1$s fjerner søk- og nettleserhistorikken fra private nettlesingsfaner når du lukker dem eller avslutter appen. Selv om dette ikke gjør deg anonym for nettsteder eller internett-leverandøren din, vil det gjøre det lettere"
+        errorLine2="                                                                                                                                                                                                                                      ^">
+        <location
+            file="src/main/res/values-nb-rNO/strings.xml"
+            line="56"
+            column="231"/>
+    </issue>
+
+    <issue
+        id="Typos"
+        message="Repeated word &quot;zaman&quot; in message: possible typo"
+        errorLine1="    &lt;string name=&quot;studies_description_2&quot;>%1$s zaman zaman araştırmalar yükleyip çalıştırabilir.&lt;/string>"
+        errorLine2="                                              ^">
+        <location
+            file="src/main/res/values-tr/strings.xml"
+            line="705"
+            column="47"/>
+    </issue>
+
+    <issue
+        id="MozMultipleConstraintLayouts"
+        message="Flatten the view hierarchy by using one `ConstraintLayout`, if possible. If the alternative is several nested `ViewGroup`, it may not help performance and this may be worth suppressing."
+        errorLine1="    &lt;androidx.constraintlayout.widget.ConstraintLayout"
+        errorLine2="     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/component_collection_creation.xml"
+            line="137"
+            column="6"/>
+    </issue>
+
+    <issue
+        id="MozMultipleConstraintLayouts"
+        message="Flatten the view hierarchy by using one `ConstraintLayout`, if possible. If the alternative is several nested `ViewGroup`, it may not help performance and this may be worth suppressing."
+        errorLine1="    &lt;androidx.constraintlayout.widget.ConstraintLayout"
+        errorLine2="     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/component_collection_creation_name_collection.xml"
+            line="107"
+            column="6"/>
+    </issue>
+
+    <issue
+        id="MozMultipleConstraintLayouts"
+        message="Flatten the view hierarchy by using one `ConstraintLayout`, if possible. If the alternative is several nested `ViewGroup`, it may not help performance and this may be worth suppressing."
+        errorLine1="    &lt;androidx.constraintlayout.widget.ConstraintLayout"
+        errorLine2="     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/component_collection_creation_select_collection.xml"
+            line="111"
+            column="6"/>
+    </issue>
+
+    <issue
+        id="MozMultipleConstraintLayouts"
+        message="Flatten the view hierarchy by using one `ConstraintLayout`, if possible. If the alternative is several nested `ViewGroup`, it may not help performance and this may be worth suppressing."
+        errorLine1="    &lt;androidx.constraintlayout.widget.ConstraintLayout"
+        errorLine2="     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/component_tracking_protection_panel.xml"
+            line="15"
+            column="6"/>
+    </issue>
+
+    <issue
+        id="MozMultipleConstraintLayouts"
+        message="Flatten the view hierarchy by using one `ConstraintLayout`, if possible. If the alternative is several nested `ViewGroup`, it may not help performance and this may be worth suppressing."
+        errorLine1="    &lt;androidx.constraintlayout.widget.ConstraintLayout"
+        errorLine2="     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/component_tracking_protection_panel.xml"
+            line="198"
+            column="6"/>
+    </issue>
+
+    <issue
+        id="MozMultipleConstraintLayouts"
+        message="Flatten the view hierarchy by using one `ConstraintLayout`, if possible. If the alternative is several nested `ViewGroup`, it may not help performance and this may be worth suppressing."
+        errorLine1="        &lt;androidx.constraintlayout.widget.ConstraintLayout"
+        errorLine2="         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/fragment_add_on_details.xml"
+            line="150"
+            column="10"/>
+    </issue>
+
+    <issue
+        id="MozMultipleConstraintLayouts"
+        message="Flatten the view hierarchy by using one `ConstraintLayout`, if possible. If the alternative is several nested `ViewGroup`, it may not help performance and this may be worth suppressing."
+        errorLine1="    &lt;androidx.constraintlayout.widget.ConstraintLayout"
+        errorLine2="     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/fragment_share.xml"
+            line="30"
+            column="6"/>
+    </issue>
+
+    <issue
+        id="NotifyDataSetChanged"
+        message="It will always be more efficient to use more specific change events if you can. Rely on `notifyDataSetChanged` as a last resort."
+        errorLine1="        notifyDataSetChanged()"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/mozilla/fenix/library/downloads/DownloadAdapter.kt"
+            line="43"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NotifyDataSetChanged"
+        message="It will always be more efficient to use more specific change events if you can. Rely on `notifyDataSetChanged` as a last resort."
+        errorLine1="        notifyDataSetChanged()"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/mozilla/fenix/collections/SaveCollectionListAdapter.kt"
+            line="49"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="NotifyDataSetChanged"
+        message="It will always be more efficient to use more specific change events if you can. Rely on `notifyDataSetChanged` as a last resort."
+        errorLine1="            tabsTrayBinding.tabsTray.adapter?.notifyDataSetChanged()"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/mozilla/fenix/tabstray/TabsTrayFragment.kt"
+            line="421"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MozMultipleConstraintLayoutsAndCustomViews"
+        message="Custom views extending `ConstraintLayout` are less efficient because they cannot share other `ConstraintLayout` defined in file."
+        errorLine1="    &lt;org.mozilla.fenix.library.LibrarySiteItemView"
+        errorLine2="     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/component_recently_closed.xml"
+            line="12"
+            column="6"/>
+    </issue>
+
+    <issue
+        id="MozMultipleConstraintLayoutsAndCustomViews"
+        message="Custom views extending `ConstraintLayout` are less efficient because they cannot share other `ConstraintLayout` defined in file."
+        errorLine1="            &lt;mozilla.components.feature.readerview.view.ReaderViewControlsBar"
+        errorLine2="             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/fragment_browser.xml"
+            line="54"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="MozMultipleConstraintLayoutsAndCustomViews"
+        message="Custom views extending `ConstraintLayout` are less efficient because they cannot share other `ConstraintLayout` defined in file."
+        errorLine1="        &lt;mozilla.components.feature.prompts.login.LoginSelectBar"
+        errorLine2="         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/fragment_browser.xml"
+            line="87"
+            column="10"/>
+    </issue>
+
+    <issue
+        id="MozMultipleConstraintLayoutsAndCustomViews"
+        message="Custom views extending `ConstraintLayout` are less efficient because they cannot share other `ConstraintLayout` defined in file."
+        errorLine1="            &lt;org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataItem"
+        errorLine2="             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/fragment_delete_browsing_data.xml"
+            line="32"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="MozMultipleConstraintLayoutsAndCustomViews"
+        message="Custom views extending `ConstraintLayout` are less efficient because they cannot share other `ConstraintLayout` defined in file."
+        errorLine1="            &lt;org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataItem"
+        errorLine2="             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/fragment_delete_browsing_data.xml"
+            line="41"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="MozMultipleConstraintLayoutsAndCustomViews"
+        message="Custom views extending `ConstraintLayout` are less efficient because they cannot share other `ConstraintLayout` defined in file."
+        errorLine1="            &lt;org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataItem"
+        errorLine2="             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/fragment_delete_browsing_data.xml"
+            line="50"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="MozMultipleConstraintLayoutsAndCustomViews"
+        message="Custom views extending `ConstraintLayout` are less efficient because they cannot share other `ConstraintLayout` defined in file."
+        errorLine1="            &lt;org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataItem"
+        errorLine2="             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/fragment_delete_browsing_data.xml"
+            line="60"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="MozMultipleConstraintLayoutsAndCustomViews"
+        message="Custom views extending `ConstraintLayout` are less efficient because they cannot share other `ConstraintLayout` defined in file."
+        errorLine1="            &lt;org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataItem"
+        errorLine2="             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/fragment_delete_browsing_data.xml"
+            line="70"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="MozMultipleConstraintLayoutsAndCustomViews"
+        message="Custom views extending `ConstraintLayout` are less efficient because they cannot share other `ConstraintLayout` defined in file."
+        errorLine1="            &lt;org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataItem"
+        errorLine2="             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/fragment_delete_browsing_data.xml"
+            line="79"
+            column="14"/>
+    </issue>
+
+    <issue
+        id="MozMultipleConstraintLayoutsAndCustomViews"
+        message="Custom views extending `ConstraintLayout` are less efficient because they cannot share other `ConstraintLayout` defined in file."
+        errorLine1="        &lt;org.mozilla.fenix.trackingprotection.TrackingProtectionCategoryItem"
+        errorLine2="         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/fragment_tracking_protection_blocking.xml"
+            line="36"
+            column="10"/>
+    </issue>
+
+    <issue
+        id="MozMultipleConstraintLayoutsAndCustomViews"
+        message="Custom views extending `ConstraintLayout` are less efficient because they cannot share other `ConstraintLayout` defined in file."
+        errorLine1="        &lt;org.mozilla.fenix.trackingprotection.TrackingProtectionCategoryItem"
+        errorLine2="         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/fragment_tracking_protection_blocking.xml"
+            line="46"
+            column="10"/>
+    </issue>
+
+    <issue
+        id="MozMultipleConstraintLayoutsAndCustomViews"
+        message="Custom views extending `ConstraintLayout` are less efficient because they cannot share other `ConstraintLayout` defined in file."
+        errorLine1="        &lt;org.mozilla.fenix.trackingprotection.TrackingProtectionCategoryItem"
+        errorLine2="         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/fragment_tracking_protection_blocking.xml"
+            line="56"
+            column="10"/>
+    </issue>
+
+    <issue
+        id="MozMultipleConstraintLayoutsAndCustomViews"
+        message="Custom views extending `ConstraintLayout` are less efficient because they cannot share other `ConstraintLayout` defined in file."
+        errorLine1="        &lt;org.mozilla.fenix.trackingprotection.TrackingProtectionCategoryItem"
+        errorLine2="         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/fragment_tracking_protection_blocking.xml"
+            line="66"
+            column="10"/>
+    </issue>
+
+    <issue
+        id="MozMultipleConstraintLayoutsAndCustomViews"
+        message="Custom views extending `ConstraintLayout` are less efficient because they cannot share other `ConstraintLayout` defined in file."
+        errorLine1="        &lt;org.mozilla.fenix.trackingprotection.TrackingProtectionCategoryItem"
+        errorLine2="         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/fragment_tracking_protection_blocking.xml"
+            line="76"
+            column="10"/>
+    </issue>
+
+    <issue
+        id="MozMultipleConstraintLayoutsAndCustomViews"
+        message="Custom views extending `ConstraintLayout` are less efficient because they cannot share other `ConstraintLayout` defined in file."
+        errorLine1="    &lt;org.mozilla.fenix.trackingprotection.SwitchWithDescription"
+        errorLine2="     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/quicksettings_tracking_protection.xml"
+            line="12"
+            column="6"/>
+    </issue>
+
+    <issue
+        id="Overdraw"
+        message="Possible overdraw: Root element paints background `@color/sync_error_background_color` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
+        errorLine1="        android:background=&quot;@color/sync_error_background_color&quot;"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/account_auth_error_preference.xml"
+            line="13"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="Overdraw"
+        message="Possible overdraw: Root element paints background `?android:selectableItemBackground` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
+        errorLine1="    android:background=&quot;?android:selectableItemBackground&quot;"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/checkbox_left_preference.xml"
+            line="11"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="Overdraw"
+        message="Possible overdraw: Root element paints background `?android:selectableItemBackground` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
+        errorLine1="    android:background=&quot;?android:selectableItemBackground&quot;"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/checkbox_left_preference_etp.xml"
+            line="12"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="Overdraw"
+        message="Possible overdraw: Root element paints background `?android:selectableItemBackground` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
+        errorLine1="    android:background=&quot;?android:selectableItemBackground&quot;"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/checkbox_left_sub_preference.xml"
+            line="11"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="Overdraw"
+        message="Possible overdraw: Root element paints background `?attr/layer1` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
+        errorLine1="    android:background=&quot;?attr/layer1&quot;>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/component_tracking_protection_panel.xml"
+            line="13"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="Overdraw"
+        message="Possible overdraw: Root element paints background `?attr/layer1` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
+        errorLine1="    android:background=&quot;?attr/layer1&quot;"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/connection_details_website_info.xml"
+            line="13"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="Overdraw"
+        message="Possible overdraw: Root element paints background `?android:selectableItemBackground` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
+        errorLine1="    android:background=&quot;?android:selectableItemBackground&quot;"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/custom_search_engine_radio_button.xml"
+            line="12"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="Overdraw"
+        message="Possible overdraw: Root element paints background `?attr/layer1` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
+        errorLine1="    android:background=&quot;?attr/layer1&quot;"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/download_dialog_layout.xml"
+            line="10"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="Overdraw"
+        message="Possible overdraw: Root element paints background `?attr/scrimBackground` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
+        errorLine1="    android:background=&quot;?attr/scrimBackground&quot;>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/fragment_bookmark_search_dialog.xml"
+            line="13"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="Overdraw"
+        message="Possible overdraw: Root element paints background `?scrim` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
+        errorLine1="    android:background=&quot;?scrim&quot;"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/fragment_create_collection.xml"
+            line="11"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="Overdraw"
+        message="Possible overdraw: Root element paints background `?scrim` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
+        errorLine1="    android:background=&quot;?scrim&quot;"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/fragment_create_shortcut.xml"
+            line="11"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="Overdraw"
+        message="Possible overdraw: Root element paints background `?attr/scrimBackground` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
+        errorLine1="    android:background=&quot;?attr/scrimBackground&quot;>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/fragment_history_search_dialog.xml"
+            line="13"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="Overdraw"
+        message="Possible overdraw: Root element paints background `?homeBackground` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
+        errorLine1="    android:background=&quot;?homeBackground&quot;>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/fragment_home.xml"
+            line="16"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="Overdraw"
+        message="Possible overdraw: Root element paints background `?scrim` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
+        errorLine1="    android:background=&quot;?scrim&quot;"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/fragment_pwa_onboarding.xml"
+            line="11"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="Overdraw"
+        message="Possible overdraw: Root element paints background `?attr/scrimBackground` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
+        errorLine1="    android:background=&quot;?attr/scrimBackground&quot;>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/fragment_search_dialog.xml"
+            line="13"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="Overdraw"
+        message="Possible overdraw: Root element paints background `?attr/layer1` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
+        errorLine1="    android:background=&quot;?attr/layer1&quot;"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/fragment_sign_out.xml"
+            line="10"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="Overdraw"
+        message="Possible overdraw: Root element paints background `?attr/layer1` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
+        errorLine1="    android:background=&quot;?attr/layer1&quot;"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/info_banner.xml"
+            line="11"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="Overdraw"
+        message="Possible overdraw: Root element paints background `?attr/selectableItemBackground` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
+        errorLine1="    android:background=&quot;?attr/selectableItemBackground&quot;"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/layout_add_credit_card.xml"
+            line="11"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="Overdraw"
+        message="Possible overdraw: Root element paints background `?attr/selectableItemBackground` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
+        errorLine1="    android:background=&quot;?attr/selectableItemBackground&quot;"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/layout_add_login.xml"
+            line="11"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="Overdraw"
+        message="Possible overdraw: Root element paints background `?attr/layer1` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
+        errorLine1="    android:background=&quot;?attr/layer1&quot;"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/navigation_toolbar.xml"
+            line="14"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="Overdraw"
+        message="Possible overdraw: Root element paints background `?android:selectableItemBackground` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
+        errorLine1="    android:background=&quot;?android:selectableItemBackground&quot;"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/preference_search_add_engine.xml"
+            line="10"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="Overdraw"
+        message="Possible overdraw: Root element paints background `?android:selectableItemBackground` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
+        errorLine1="    android:background=&quot;?android:selectableItemBackground&quot;"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/search_engine_radio_button.xml"
+            line="11"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="Overdraw"
+        message="Possible overdraw: Root element paints background `?attr/layer1` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
+        errorLine1="    android:background=&quot;?attr/layer1&quot;"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/stub_find_in_page.xml"
+            line="11"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="Overdraw"
+        message="Possible overdraw: Root element paints background `#FF0250BB` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
+        errorLine1="    android:background=&quot;#FF0250BB&quot;>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/tracking_protection_learn_more_preference.xml"
+            line="10"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="Overdraw"
+        message="Possible overdraw: Root element paints background `?attr/layer2` with a theme that also paints a background (inferred theme is `@style/NormalTheme`)"
+        errorLine1="    android:background=&quot;?attr/layer2&quot;>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/view_crash_reporter.xml"
+            line="11"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.resource_scheme` appears to be unused"
+        errorLine1="    &lt;string name=&quot;resource_scheme&quot;>&quot;resource://&quot;&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/arrays.xml"
+            line="39"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.chrome_scheme` appears to be unused"
+        errorLine1="    &lt;string name=&quot;chrome_scheme&quot;>&quot;chrome://&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/arrays.xml"
+            line="40"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.string.about_scheme` appears to be unused"
+        errorLine1="    &lt;string name=&quot;about_scheme&quot;>&quot;about:&quot;&lt;/string>"
+        errorLine2="            ~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/arrays.xml"
+            line="41"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.array.mozac_url_schemes_blocklist` appears to be unused"
+        errorLine1="    &lt;string-array name=&quot;mozac_url_schemes_blocklist&quot; >"
+        errorLine2="                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/arrays.xml"
+            line="42"
+            column="19"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.dimen.mozac_browser_menu_corner_radius` appears to be unused"
+        errorLine1="    &lt;dimen name=&quot;mozac_browser_menu_corner_radius&quot;>8dp&lt;/dimen>"
+        errorLine2="           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/dimens.xml"
+            line="12"
+            column="12"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.dimen.mozac_browser_menu2_corner_radius` appears to be unused"
+        errorLine1="    &lt;dimen name=&quot;mozac_browser_menu2_corner_radius&quot;>8dp&lt;/dimen>"
+        errorLine2="           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/dimens.xml"
+            line="13"
+            column="12"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.drawable.ic_firefox` appears to be unused"
+        errorLine1="&lt;vector android:height=&quot;112.7dp&quot; android:viewportHeight=&quot;54.28&quot;"
+        errorLine2="^">
+        <location
+            file="src/main/res/drawable/ic_firefox.xml"
+            line="1"
+            column="1"/>
+    </issue>
+
+    <issue
+        id="UnusedResources"
+        message="The resource `R.mipmap.ic_launcher_private` appears to be unused"
+        errorLine1="&lt;adaptive-icon xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;>"
+        errorLine2="^">
+        <location
+            file="src/main/res/mipmap-anydpi-v26/ic_launcher_private.xml"
+            line="6"
+            column="1"/>
+    </issue>
+
+    <issue id="UnusedResources"
+        message="The resource R.drawable.ic_onboarding_key_features appears to be unused">
+        <location file="src/main/res/drawable/ic_onboarding_key_features.xml" />
+    </issue>
+
+    <issue id="UnusedResources"
+        message="The resource R.drawable.ic_onboarding_key_features_icons_only appears to be unused">
+        <location file="src/main/res/drawable/ic_onboarding_key_features_icons_only.xml" />
+    </issue>
+
+    <issue
+        id="IconXmlAndPng"
+        message="The following images appear both as density independent `.xml` files and as bitmap files: /Users/oracle/Projects/fenix/app/src/main/res/drawable-hdpi/ic_logo_wordmark_normal.png, /Users/oracle/Projects/fenix/app/src/main/res/drawable-night/ic_logo_wordmark_normal.xml">
+        <location
+            file="src/main/res/drawable-xxxhdpi/ic_logo_wordmark_normal.png"/>
+        <location
+            file="src/main/res/drawable-xxhdpi/ic_logo_wordmark_normal.png"/>
+        <location
+            file="src/main/res/drawable-xhdpi/ic_logo_wordmark_normal.png"/>
+        <location
+            file="src/main/res/drawable-night/ic_logo_wordmark_normal.xml"/>
+        <location
+            file="src/main/res/drawable-mdpi/ic_logo_wordmark_normal.png"/>
+        <location
+            file="src/main/res/drawable-hdpi/ic_logo_wordmark_normal.png"/>
+    </issue>
+
+    <issue
+        id="ConvertToWebp"
+        message="One or more images in this project can be converted to the WebP format which typically results in smaller file sizes, even for lossless conversion">
+        <location
+            file="src/debug/res/mipmap-xxxhdpi/ic_launcher_round.png"/>
+    </issue>
+
+    <issue
+        id="ConvertToWebp"
+        message="One or more images in this project can be converted to the WebP format which typically results in smaller file sizes, even for lossless conversion">
+        <location
+            file="src/main/res/drawable-land-xxhdpi/sunrise.jpg"/>
+    </issue>
+
+    <issue
+        id="IconDuplicatesConfig"
+        message="The `amethyst.png` icon has identical contents in the following configuration folders: drawable-port-xhdpi, drawable-xhdpi">
+        <location
+            file="src/main/res/drawable-xhdpi/amethyst.png"/>
+        <location
+            file="src/main/res/drawable-port-xhdpi/amethyst.png"/>
+    </issue>
+
+    <issue
+        id="IconDuplicatesConfig"
+        message="The `amethyst.png` icon has identical contents in the following configuration folders: drawable-port-xxhdpi, drawable-xxhdpi">
+        <location
+            file="src/main/res/drawable-xxhdpi/amethyst.png"/>
+        <location
+            file="src/main/res/drawable-port-xxhdpi/amethyst.png"/>
+    </issue>
+
+    <issue
+        id="IconLocation"
+        message="Found bitmap drawable `res/drawable/ic_baidu.png` in densityless folder">
+        <location
+            file="src/main/res/drawable/ic_baidu.png"/>
+    </issue>
+
+    <issue
+        id="IconLocation"
+        message="Found bitmap drawable `res/drawable/ic_jd.png` in densityless folder">
+        <location
+            file="src/main/res/drawable/ic_jd.png"/>
+    </issue>
+
+    <issue
+        id="IconLocation"
+        message="Found bitmap drawable `res/drawable/ic_meituan.png` in densityless folder">
+        <location
+            file="src/main/res/drawable/ic_meituan.png"/>
+    </issue>
+
+    <issue
+        id="IconLocation"
+        message="Found bitmap drawable `res/drawable/ic_pdd.png` in densityless folder">
+        <location
+            file="src/main/res/drawable/ic_pdd.png"/>
+    </issue>
+
+    <issue
+        id="IconLocation"
+        message="Found bitmap drawable `res/drawable/ic_tc.png` in densityless folder">
+        <location
+            file="src/main/res/drawable/ic_tc.png"/>
+    </issue>
+
+    <issue
+        id="IconDensities"
+        message="Missing the following drawables in `drawable-mdpi`: amethyst.png, cerulean.png, fenix_search_widget.png, sunrise.jpg">
+        <location
+            file="src/main/res/drawable-mdpi"/>
+    </issue>
+
+    <issue
+        id="IconDensities"
+        message="Missing the following drawables in `drawable-xhdpi`: cerulean.png, fenix_search_widget.png, sunrise.jpg">
+        <location
+            file="src/main/res/drawable-xhdpi"/>
+    </issue>
+
+    <issue
+        id="IconDensities"
+        message="Missing the following drawables in `drawable-xxhdpi`: cerulean.png, fenix_search_widget.png, sunrise.jpg">
+        <location
+            file="src/main/res/drawable-xxhdpi"/>
+    </issue>
+
+    <issue
+        id="SmallSp"
+        message="Avoid using sizes smaller than `11sp`: `10sp`"
+        errorLine1="        android:textSize=&quot;10sp&quot;"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/account_share_list_item.xml"
+            line="39"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="SmallSp"
+        message="Avoid using sizes smaller than `11sp`: `10sp`"
+        errorLine1="        android:textSize=&quot;10sp&quot;"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/app_share_list_item.xml"
+            line="37"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="ClickableViewAccessibility"
+        message="Custom view ``AwesomeBarWrapper`` has `setOnTouchListener` called on it but does not override `performClick`"
+        errorLine1="        binding.awesomeBar.setOnTouchListener { _, _ ->"
+        errorLine2="        ^">
+        <location
+            file="src/main/java/org/mozilla/fenix/search/SearchDialogFragment.kt"
+            line="244"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="ClickableViewAccessibility"
+        message="`onTouch` lambda should call `View#performClick` when a click is detected"
+        errorLine1="        binding.awesomeBar.setOnTouchListener { _, _ ->"
+        errorLine2="                                              ^">
+        <location
+            file="src/main/java/org/mozilla/fenix/search/SearchDialogFragment.kt"
+            line="244"
+            column="47"/>
+    </issue>
+
+    <issue
+        id="ClickableViewAccessibility"
+        message="`onTouch` lambda should call `View#performClick` when a click is detected"
+        errorLine1="                dialog?.window?.decorView?.setOnTouchListener { _, event ->"
+        errorLine2="                                                              ^">
+        <location
+            file="src/main/java/org/mozilla/fenix/search/SearchDialogFragment.kt"
+            line="259"
+            column="63"/>
+    </issue>
+
+    <issue
+        id="ClickableViewAccessibility"
+        message="Custom view ``SearchDialogFragmentConstraintLayout`` has `setOnTouchListener` called on it but does not override `performClick`"
+        errorLine1="                binding.searchWrapper.setOnTouchListener { _, _ ->"
+        errorLine2="                ^">
+        <location
+            file="src/main/java/org/mozilla/fenix/search/SearchDialogFragment.kt"
+            line="306"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="ClickableViewAccessibility"
+        message="`onTouch` lambda should call `View#performClick` when a click is detected"
+        errorLine1="                binding.searchWrapper.setOnTouchListener { _, _ ->"
+        errorLine2="                                                         ^">
+        <location
+            file="src/main/java/org/mozilla/fenix/search/SearchDialogFragment.kt"
+            line="306"
+            column="58"/>
+    </issue>
+
+    <issue
+        id="ClickableViewAccessibility"
+        message="Custom view ``SearchDialogFragmentConstraintLayout`` has `setOnTouchListener` called on it but does not override `performClick`"
+        errorLine1="                binding.searchWrapper.setOnTouchListener { _, _ ->"
+        errorLine2="                ^">
+        <location
+            file="src/main/java/org/mozilla/fenix/search/SearchDialogFragment.kt"
+            line="312"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="ClickableViewAccessibility"
+        message="`onTouch` lambda should call `View#performClick` when a click is detected"
+        errorLine1="                binding.searchWrapper.setOnTouchListener { _, _ ->"
+        errorLine2="                                                         ^">
+        <location
+            file="src/main/java/org/mozilla/fenix/search/SearchDialogFragment.kt"
+            line="312"
+            column="58"/>
+    </issue>
+
+    <issue
+        id="ClickableViewAccessibility"
+        message="Custom view `SwipeGestureLayout` overrides `onTouchEvent` but not `performClick`"
+        errorLine1="    override fun onTouchEvent(event: MotionEvent?): Boolean {"
+        errorLine2="                 ~~~~~~~~~~~~">
+        <location
+            file="src/main/java/org/mozilla/fenix/browser/SwipeGestureLayout.kt"
+            line="120"
+            column="18"/>
+    </issue>
+
+    <issue
+        id="ContentDescription"
+        message="Missing `contentDescription` attribute on image"
+        errorLine1="        &lt;ImageView"
+        errorLine2="         ~~~~~~~~~">
+        <location
+            file="src/main/res/layout/library_site_item.xml"
+            line="30"
+            column="10"/>
+    </issue>
+
+    <issue
+        id="ContentDescription"
+        message="Missing `contentDescription` attribute on image"
+        errorLine1="    &lt;ImageView"
+        errorLine2="     ~~~~~~~~~">
+        <location
+            file="src/main/res/layout/sign_in_preference.xml"
+            line="17"
+            column="6"/>
+    </issue>
+
+    <issue
+        id="RtlSymmetry"
+        message="When you define `paddingStart` you should probably also define `paddingEnd` for right-to-left symmetry"
+        errorLine1="    android:paddingStart=&quot;@dimen/custom_checkbox_alignment_margin&quot;>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/checkbox_left_sub_preference.xml"
+            line="15"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="RtlHardcoded"
+        message="Consider replacing `android:layout_marginLeft` with `android:layout_marginStart=&quot;10dp&quot;` to better support right-to-left layouts"
+        errorLine1="                    android:layout_marginLeft=&quot;10dp&quot;"
+        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/layout/activity_privacy_content_display.xml"
+            line="21"
+            column="21"/>
+    </issue>
+
+</issues>

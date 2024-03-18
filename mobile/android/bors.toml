@@ -1,0 +1,14 @@
+status = [
+  "complete-push"
+]
+block_labels = [
+  "blocked",
+  "work in progress"
+]
+required_approvals = 1
+use_codeowners = true
+delete_merged_branches = true
+cut_body_after = "---"
+[committer]
+name = "MozLando"
+email = "skaspari+mozlando@mozilla.com"

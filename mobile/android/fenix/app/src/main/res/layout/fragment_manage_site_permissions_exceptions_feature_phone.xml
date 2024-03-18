@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="@dimen/radio_button_preference_vertical">
+
+        <RadioGroup
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <RadioButton
+                android:id="@+id/ask_to_allow_radio"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/preference_option_phone_feature_ask_to_allow"
+                android:textAppearance="?android:attr/textAppearanceListItem"
+                android:background="?android:attr/selectableItemBackground"
+                android:button="@null"
+                app:drawableStartCompat="?android:attr/listChoiceIndicatorSingle"
+                android:drawablePadding="@dimen/radio_button_preference_drawable_padding"
+                android:paddingTop="@dimen/radio_button_preference_vertical"
+                android:paddingStart="@dimen/radio_button_preference_horizontal"
+                android:paddingEnd="@dimen/radio_button_preference_horizontal"
+                android:paddingBottom="@dimen/radio_button_preference_vertical" />
+
+            <RadioButton
+                android:id="@+id/block_radio"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/radio_button_preference_height"
+                android:text="@string/preference_option_phone_feature_blocked"
+                android:textAppearance="?android:attr/textAppearanceListItem"
+                android:background="?android:attr/selectableItemBackground"
+                android:button="@null"
+                app:drawableStartCompat="?android:attr/listChoiceIndicatorSingle"
+                android:drawablePadding="@dimen/radio_button_preference_drawable_padding"
+                android:paddingTop="@dimen/radio_button_preference_vertical"
+                android:paddingStart="@dimen/radio_button_preference_horizontal"
+                android:paddingEnd="@dimen/radio_button_preference_horizontal"
+                android:paddingBottom="@dimen/radio_button_preference_vertical" />
+
+            <RadioButton
+                android:id="@+id/optional_radio"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/radio_button_preference_height"
+                android:text="@string/preference_option_phone_feature_blocked"
+                android:textAppearance="?android:attr/textAppearanceListItem"
+                android:background="?android:attr/selectableItemBackground"
+                android:button="@null"
+                android:visibility="gone"
+                app:drawableStartCompat="?android:attr/listChoiceIndicatorSingle"
+                android:drawablePadding="@dimen/radio_button_preference_drawable_padding"
+                android:paddingTop="@dimen/radio_button_preference_vertical"
+                android:paddingStart="@dimen/radio_button_preference_horizontal"
+                android:paddingEnd="@dimen/radio_button_preference_horizontal"
+                android:paddingBottom="@dimen/radio_button_preference_vertical" />
+        </RadioGroup>
+
+        <include layout="@layout/layout_clear_permission_button"/>
+        <include layout="@layout/component_permissions_blocked_by_android"/>
+
+    </LinearLayout>
+</ScrollView>

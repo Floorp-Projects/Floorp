@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Title of the crash reporter dialog. %1$s will be replaced with the name of the app (e.g. Firefox Focus). -->
+    <string name="mozac_lib_crash_dialog_title">نأسف. واجه %1$s مشكلة وانهار.</string>
+
+    <!-- Label of the checkbox for sending crash reports in the crash reporter dialog. %1$s will be replaced with the name of the organization (e.g. Mozilla). -->
+    <string name="mozac_lib_crash_dialog_checkbox">أرسِل تقرير الانهيار إلى %1$s</string>
+
+    <!-- Label of the button closing the crash reporter dialog. -->
+    <string name="mozac_lib_crash_dialog_button_close">أغلِق</string>
+
+    <!-- Label of the button closing the crash reporter dialog and restarting the app. -->
+    <string name="mozac_lib_crash_dialog_button_restart">أعِد تشغيل %1$s</string>
+
+    <!-- Name of the "notification channel" used for displaying a notification when the app crashed and we can't show a prompt. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_lib_crash_channel">الانهيارات</string>
+
+    <!-- Label of a notification action/button that will send the crash report to Mozilla. -->
+    <string name="mozac_lib_crash_notification_action_report">أبلِغ</string>
+
+    <!-- Label of notification showing that the crash report service is running. %1$s will be replaced with the name of the organization (e.g. Mozilla). -->
+    <string name="mozac_lib_send_crash_report_in_progress">يُرسل بلاغ الانهيار إلى %1$s</string>
+
+    <!-- Title of the activity that shows the list of past crashes (similar to about:crashes)-->
+    <string name="mozac_lib_crash_activity_title">بلاغات الانهيار</string>
+
+    <!-- Text shown instead of crash list if no crashes have been submitted yet -->
+    <string name="mozac_lib_crash_no_crashes">لم تُرسل أي بلاغات بانهيار.</string>
+
+    <!-- Text link that will show an app chooser to share a crash report with a third-party app (e.g. gmail) -->
+    <string name="mozac_lib_crash_share">شارك</string>
+</resources>

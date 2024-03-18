@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Label for add-ons submenu section -->
+    <string name="mozac_browser_menu_addons">ilo pi kepeken sin</string>
+    <!-- Label for add-ons sub menu item for add-ons manager -->
+    <string name="mozac_browser_menu_addons_manager">lawa pi kepeken sin</string>
+</resources>

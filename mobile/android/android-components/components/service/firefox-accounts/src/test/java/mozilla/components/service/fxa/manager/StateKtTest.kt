@@ -1,0 +1,134 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+package mozilla.components.service.fxa.manager
+
+import mozilla.components.concept.sync.AuthType
+import mozilla.components.support.test.mock
+import org.junit.Assert.assertEquals
+import org.junit.Test
+
+class StateKtTest {
+    private fun assertNextStateForStateEventPair(state: State, event: Event, nextState: State?) {
+        val expectedNextState = when (state) {
+            is State.Idle -> when (state.accountState) {
+                AccountState.NotAuthenticated -> when (event) {
+                    Event.Account.Start -> State.Active(ProgressState.Initializing)
+                    is Event.Account.BeginEmailFlow -> State.Active(ProgressState.BeginningAuthentication)
+                    is Event.Account.BeginPairingFlow -> State.Active(ProgressState.BeginningAuthentication)
+                    else -> null
+                }
+                is AccountState.Authenticating -> when (event) {
+                    Event.Progress.CancelAuth -> State.Idle(AccountState.NotAuthenticated)
+                    is Event.Progress.AuthData -> State.Active(ProgressState.CompletingAuthentication)
+                    else -> null
+                }
+                AccountState.Authenticated -> when (event) {
+                    is Event.Account.AuthenticationError -> State.Active(ProgressState.RecoveringFromAuthProblem)
+                    Event.Account.AccessTokenKeyError -> State.Idle(AccountState.AuthenticationProblem)
+                    Event.Account.Logout -> State.Active(ProgressState.LoggingOut)
+                    else -> null
+                }
+                AccountState.AuthenticationProblem -> when (event) {
+                    is Event.Account.BeginEmailFlow -> State.Active(ProgressState.BeginningAuthentication)
+                    Event.Account.Logout -> State.Active(ProgressState.LoggingOut)
+                    else -> null
+                }
+            }
+            is State.Active -> when (state.progressState) {
+                ProgressState.Initializing -> when (event) {
+                    Event.Progress.AccountNotFound -> State.Idle(AccountState.NotAuthenticated)
+                    Event.Progress.AccountRestored -> State.Active(ProgressState.CompletingAuthentication)
+                    else -> null
+                }
+                ProgressState.BeginningAuthentication -> when (event) {
+                    Event.Progress.FailedToBeginAuth -> State.Idle(AccountState.NotAuthenticated)
+                    is Event.Progress.StartedOAuthFlow -> State.Idle(AccountState.Authenticating(event.oAuthUrl))
+                    else -> null
+                }
+                ProgressState.CompletingAuthentication -> when (event) {
+                    Event.Progress.FailedToCompleteAuth -> State.Idle(AccountState.NotAuthenticated)
+                    Event.Progress.FailedToCompleteAuthRestore -> State.Idle(AccountState.NotAuthenticated)
+                    is Event.Progress.CompletedAuthentication -> State.Idle(AccountState.Authenticated)
+                    else -> null
+                }
+                ProgressState.RecoveringFromAuthProblem -> when (event) {
+                    Event.Progress.RecoveredFromAuthenticationProblem -> State.Idle(AccountState.Authenticated)
+                    Event.Progress.FailedToRecoverFromAuthenticationProblem -> State.Idle(AccountState.AuthenticationProblem)
+                    else -> null
+                }
+                ProgressState.LoggingOut -> when (event) {
+                    Event.Progress.LoggedOut -> State.Idle(AccountState.NotAuthenticated)
+                    else -> null
+                }
+            }
+        }
+
+        assertEquals(expectedNextState, nextState)
+    }
+
+    private fun instantiateAccountState(simpleName: String): AccountState {
+        return when (simpleName) {
+            "NotAuthenticated" -> AccountState.NotAuthenticated
+            "Authenticating" -> AccountState.Authenticating("https://example.com/oauth-start")
+            "Authenticated" -> AccountState.Authenticated
+            "AuthenticationProblem" -> AccountState.AuthenticationProblem
+            else -> {
+                throw AssertionError("Unknown AccountState: $simpleName")
+            }
+        }
+    }
+
+    private fun instantiateEvent(eventClassSimpleName: String): Event {
+        return when (eventClassSimpleName) {
+            "Start" -> Event.Account.Start
+            "BeginPairingFlow" -> Event.Account.BeginPairingFlow("http://some.pairing.url.com", mock())
+            "BeginEmailFlow" -> Event.Account.BeginEmailFlow(mock())
+            "CancelAuth" -> Event.Progress.CancelAuth
+            "StartedOAuthFlow" -> Event.Progress.StartedOAuthFlow("https://example.com/oauth-start")
+            "AuthenticationError" -> Event.Account.AuthenticationError("fxa op")
+            "AccessTokenKeyError" -> Event.Account.AccessTokenKeyError
+            "Logout" -> Event.Account.Logout
+            "AccountNotFound" -> Event.Progress.AccountNotFound
+            "AccountRestored" -> Event.Progress.AccountRestored
+            "AuthData" -> Event.Progress.AuthData(mock())
+            "LoggedOut" -> Event.Progress.LoggedOut
+            "FailedToRecoverFromAuthenticationProblem" -> Event.Progress.FailedToRecoverFromAuthenticationProblem
+            "RecoveredFromAuthenticationProblem" -> Event.Progress.RecoveredFromAuthenticationProblem
+            "CompletedAuthentication" -> Event.Progress.CompletedAuthentication(mock<AuthType.Existing>())
+            "FailedToBeginAuth" -> Event.Progress.FailedToBeginAuth
+            "FailedToCompleteAuth" -> Event.Progress.FailedToCompleteAuth
+            "FailedToCompleteAuthRestore" -> Event.Progress.FailedToCompleteAuthRestore
+            else -> {
+                throw AssertionError("Unknown event: $eventClassSimpleName")
+            }
+        }
+    }
+
+    @Test
+    fun `state transition matrix`() {
+        // We want to test every combination of state/event. Do that by iterating over entire sets.
+        ProgressState.values().forEach { state ->
+            Event.Progress::class.sealedSubclasses.map { instantiateEvent(it.simpleName!!) }.forEach {
+                val ss = State.Active(state)
+                assertNextStateForStateEventPair(
+                    ss,
+                    it,
+                    ss.next(it),
+                )
+            }
+        }
+
+        AccountState::class.sealedSubclasses.map { instantiateAccountState(it.simpleName!!) }.forEach { state ->
+            Event.Account::class.sealedSubclasses.map { instantiateEvent(it.simpleName!!) }.forEach {
+                val ss = State.Idle(state)
+                assertNextStateForStateEventPair(
+                    ss,
+                    it,
+                    ss.next(it),
+                )
+            }
+        }
+    }
+}

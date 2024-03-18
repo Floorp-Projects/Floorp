@@ -1,0 +1,58 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+android {
+    defaultConfig {
+        minSdkVersion config.minSdkVersion
+        compileSdk config.compileSdkVersion
+        targetSdkVersion config.targetSdkVersion
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt')
+        }
+    }
+
+    lint {
+        // Disabled since this caused issues with Android Gradle Plugin 3.2.1+ (NullPointerException:InvalidPackageDetector)
+        tasks.lint.enabled = false
+
+        lintConfig file("lint.xml")
+    }
+
+    namespace 'mozilla.components.support.test'
+}
+
+dependencies {
+    implementation ComponentsDependencies.kotlin_coroutines
+    implementation ComponentsDependencies.kotlin_reflect
+
+    implementation ComponentsDependencies.androidx_test_junit
+    api ComponentsDependencies.testing_mockito
+    implementation ComponentsDependencies.testing_coroutines
+    implementation ComponentsDependencies.androidx_fragment
+    implementation  (ComponentsDependencies.testing_robolectric) {
+        exclude group: 'org.apache.maven'
+    }
+    implementation project(':support-base')
+    testImplementation ComponentsDependencies.testing_maven_ant_tasks
+
+    implementation ComponentsDependencies.androidx_test_core
+
+    testImplementation ComponentsDependencies.androidx_core
+    testImplementation ComponentsDependencies.androidx_test_junit
+    testImplementation project(':support-ktx')
+}
+
+apply from: '../../../android-lint.gradle'
+apply from: '../../../publish.gradle'
+ext.configurePublish(config.componentsGroupId, archivesBaseName, project.ext.description)
+

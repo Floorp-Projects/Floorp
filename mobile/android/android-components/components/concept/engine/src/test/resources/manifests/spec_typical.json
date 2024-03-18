@@ -1,0 +1,51 @@
+{
+  "lang": "en",
+  "dir": "ltr",
+  "name": "Super Racer 3000",
+  "description": "The ultimate futuristic racing game from the future!",
+  "short_name": "Racer3K",
+  "icons": [{
+    "src": "icon/lowres.webp",
+    "sizes": "64x64",
+    "type": "image/webp"
+  },{
+    "src": "icon/lowres.png",
+    "sizes": "64x64"
+  }, {
+    "src": "icon/hd_hi",
+    "sizes": "128x128"
+  }],
+  "scope": "/racer/",
+  "start_url": "/racer/start.html",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "theme_color": "#f0f8ff",
+  "background_color": "#FF0000",
+  "serviceworker": {
+    "src": "sw.js",
+    "scope": "/racer/",
+    "update_via_cache": "none"
+  },
+  "screenshots": [{
+    "src": "screenshots/in-game-1x.jpg",
+    "sizes": "640x480",
+    "type": "image/jpeg"
+  },{
+    "src": "screenshots/in-game-2x.jpg",
+    "sizes": "1280x920",
+    "type": "image/jpeg"
+  }],
+  "related_applications": [{
+    "platform": "play",
+    "url": "https://play.google.com/store/apps/details?id=com.example.app1",
+    "id": "com.example.app1",
+    "min_version": "2",
+    "fingerprints": [{
+      "type": "sha256_cert",
+      "value": "92:5A:39:05:C5:B9:EA:BC:71:48:5F:F2"
+    }]
+  }, {
+    "platform": "itunes",
+    "url": "https://itunes.apple.com/app/example-app1/id123456789"
+  }]
+}

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Toast displayed when the website URL is copied. -->
+    <string name="mozac_feature_pwa_copy_success">URL କପି କରିନିଆଗଲା।</string>
+</resources>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="80dp"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="#272727"
+    tools:ignore="Overdraw"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingEnd="0dp"
+    android:paddingStart="16dp">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:gravity="center_vertical"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="2dp"
+            android:ellipsize="end"
+            android:text="@string/trackers_blocked"
+            android:textColor="#80FFFFFF"
+            android:textSize="16sp" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/trackers_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#ffffff"
+                android:textSize="24sp"
+                tools:text="42" />
+
+            <ImageButton
+                android:id="@+id/help_trackers"
+                android:contentDescription="@string/help_trackers_description"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:padding="4dp"
+                app:srcCompat="@drawable/mozac_ic_information_fill_24"
+                android:background="?android:attr/selectableItemBackgroundBorderless" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/blocking_switch"
+        android:layout_width="wrap_content"
+        android:layout_height="48dp"
+        android:layout_gravity="center_vertical|end"
+        android:background="?android:attr/selectableItemBackground"
+        android:checked="true"
+        android:clickable="true"
+        android:focusable="true"
+        android:ellipsize="end"
+        android:gravity="center"
+        android:lines="1"
+        android:paddingEnd="16dp"
+        android:paddingStart="16dp"
+        android:textSize="16sp"/>
+
+</LinearLayout>

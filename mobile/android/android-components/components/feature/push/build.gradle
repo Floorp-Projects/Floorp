@@ -1,0 +1,48 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+android {
+    defaultConfig {
+        minSdkVersion config.minSdkVersion
+        compileSdk config.compileSdkVersion
+        targetSdkVersion config.targetSdkVersion
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    namespace 'mozilla.components.feature.push'
+}
+
+
+dependencies {
+    implementation project(':concept-push')
+
+    implementation ComponentsDependencies.mozilla_appservices_push
+
+    // Remove when the MessageBus is implemented somewhere else.
+    implementation project(':support-base')
+
+    implementation ComponentsDependencies.kotlin_coroutines
+    implementation ComponentsDependencies.androidx_work_runtime
+    implementation ComponentsDependencies.androidx_lifecycle_runtime
+
+    testImplementation project(':support-test')
+
+    testImplementation ComponentsDependencies.androidx_test_core
+    testImplementation ComponentsDependencies.androidx_test_junit
+    testImplementation ComponentsDependencies.testing_robolectric
+    testImplementation ComponentsDependencies.testing_coroutines
+}
+
+apply from: '../../../android-lint.gradle'
+apply from: '../../../publish.gradle'
+ext.configurePublish(config.componentsGroupId, archivesBaseName, project.ext.description)

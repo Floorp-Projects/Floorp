@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_sans_serif_font">Sans serif</string>
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_sans_serif_font_desc">Sans Serif font</string>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_serif_font">Serif</string>
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_serif_font_desc">Serif font</string>
+
+    <!-- Accessible description for decreasing the font size -->
+    <string name="mozac_feature_readerview_font_size_decrease_desc">Ridusi dimension de i caratari</string>
+
+    <!-- Accessible description for increasing the font size -->
+    <string name="mozac_feature_readerview_font_size_increase_desc">Aumenta dimension de i caratari</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_dark">Scuro</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_dark_color_scheme_desc">Conbinasion de coƚori scura</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_sephia">Sepa</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_sepia_color_scheme_desc">Conbinasion de coƚori sepa</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_light">Ciaro</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_light_color_scheme_desc">Conbinasion de coƚori ciara</string>
+</resources>

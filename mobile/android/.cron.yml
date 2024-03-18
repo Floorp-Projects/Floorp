@@ -1,0 +1,30 @@
+# Definitions for jobs that run periodically.  For details on the format, see
+# `taskcluster/taskgraph/cron/schema.py`.  For documentation, see
+# `taskcluster/docs/cron.rst`.
+---
+
+jobs:
+    - name: nightly
+      job:
+          type: decision-task
+          treeherder-symbol: nightly-D
+          target-tasks-method: nightly
+      when: []
+    - name: nightly-test
+      job:
+          type: decision-task
+          treeherder-symbol: Nt
+          target-tasks-method: nightly-test
+      when: []
+    - name: screenshots
+      job:
+          type: decision-task
+          treeherder-symbol: screenshots-D
+          target-tasks-method: screenshots
+      when: [] # unscheduled
+    - name: legacy-api-ui-tests
+      job:
+          type: decision-task
+          treeherder-symbol: legacy-api-ui
+          target-tasks-method: legacy_api_ui_tests
+      when: [] # unscheduled

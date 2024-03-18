@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Default shortcut label used if website has no title -->
+    <string name="mozac_feature_pwa_default_shortcut_label">Sito web</string>
+
+    <!-- Name of the "notification channel" used for displaying site controls notification. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_pwa_site_controls_notification_channel">Controlos del sito a plen schermo</string>
+    <!-- Text shown on the second row of the site controls notification. -->
+    <string name="mozac_feature_pwa_site_controls_notification_text">Tocca pro copiar le URL de iste app</string>
+    <!-- Refresh button in site controls notification. -->
+    <string name="mozac_feature_pwa_site_controls_refresh">Actualisar</string>
+    <!-- Toast displayed when the website URL is copied. -->
+    <string name="mozac_feature_pwa_copy_success">URL copiate.</string>
+</resources>

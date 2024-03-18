@@ -1,0 +1,42 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+task-defaults:
+    description: 'Validate strings.xml with compare-locales'
+    run:
+        using: run-task
+        cwd: '{checkout}'
+        command: 'pip install --user "compare-locales>=5.0.2,<6.0" && compare-locales --validate l10n.toml .'
+    treeherder:
+        tier: 2
+
+
+compare-locales-android-components:
+    optimization:
+        skip-unless-changed:
+            - "android-components/**"
+    run:
+        cwd: '{checkout}/android-components'
+    treeherder:
+        symbol: compare-locales(AC)
+
+compare-locales-focus:
+    optimization:
+        skip-unless-changed:
+            - "focus-android/**"
+    run:
+        cwd: '{checkout}/focus-android'
+    treeherder:
+        symbol: compare-locales(focus)
+
+compare-locales-fenix:
+    dependencies:
+        external-gradle-dependencies: external-gradle-dependencies-lint-fenix
+    optimization:
+        skip-unless-changed:
+            - "fenix/**"
+    run:
+        cwd: '{checkout}/fenix'
+    treeherder:
+        symbol: compare-locales(fenix)

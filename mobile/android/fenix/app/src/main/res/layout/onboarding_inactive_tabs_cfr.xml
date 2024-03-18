@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <ImageView
+        android:layout_width="@dimen/cfr_triangle_width"
+        android:layout_height="@dimen/cfr_triangle_height"
+        android:layout_gravity="start"
+        android:layout_marginStart="15dp"
+        android:layout_marginEnd="@dimen/cfr_triangle_margin_edge"
+        android:importantForAccessibility="no"
+        app:srcCompat="@drawable/ic_cfr_triangle"
+        app:tint="@color/fx_mobile_layer_color_gradient_start" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/banner_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/onboarding_popup_shape">
+
+        <TextView
+            android:id="@+id/banner_info_message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="16dp"
+            android:maxWidth="200dp"
+            android:text="@string/tab_tray_inactive_onboarding_message"
+            android:textAppearance="@style/Body16TextStyle"
+            android:textColor="@color/fx_mobile_private_text_color_primary"
+            android:textSize="16sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/close_info_banner"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.0" />
+
+        <ImageButton
+            android:id="@+id/close_info_banner"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:background="?selectableItemBackgroundBorderless"
+            android:contentDescription="@string/content_description_close_button"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/mozac_ic_cross_20"
+            app:tint="@color/fx_mobile_private_text_color_primary" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>

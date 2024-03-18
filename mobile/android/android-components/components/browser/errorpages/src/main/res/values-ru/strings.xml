@@ -1,0 +1,304 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">Попробовать снова</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">Не удалось выполнить запрос</string>
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[
+      <p>Дополнительные сведения об этой проблеме или ошибке сейчас недоступны.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">Не удалось установить безопасное соединение</string>
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[<ul>
+        <li>Страница, которую вы пытаетесь просмотреть, не может быть отображена, так как достоверность полученных данных не может быть проверена.</li>
+        <li>Пожалуйста, свяжитесь с владельцами сайта и сообщите им об этой проблеме.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Не удалось установить безопасное соединение</string>
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+      <ul>
+        <li>Это может быть вызвано неправильной настройкой сервера, или, возможно, кто-то пытается подменить нужный вам сервер другим.</li>
+        <li>Если раньше вы успешно соединялись с этим сервером, то ошибка может быть временной. В таком случае попробуйте снова позже.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Дополнительно…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Возможно, кто-то пытается подменить нужный вам сайт другим, поэтому вам лучше не продолжать.</label>
+        <br><br>
+        <label>Веб-сайты подтверждают свою подлинность с помощью сертификатов. %1$s не может доверять <b>%2$s</b>, потому что издатель его сертификата неизвестен, сертификат подписан самим сайтом или его сервер не отправляет правильные промежуточные сертификаты.</label>
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Назад (желательно)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Принять риск и продолжить</string>
+
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">Этот сайт требует использования безопасного соединения.</string>
+
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+      <ul>
+         <li>Страница, которую вы пытаетесь просмотреть, не может быть отображена, так как этот веб-сайт требует использования безопасного соединения.</li>
+         <li>Скорее всего, проблема связана с веб-сайтом, и вы никак не можете её решить.</li>
+         <li>Вы можете уведомить администратора веб-сайта об этой проблеме.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Дополнительно…</string>
+
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
+        <label> <b>%1$s</b> использует политику безопасности под названием Форсированное безопасное соединение HTTP (HSTS), согласно которой <b>%2$s</b> может соединяться с ним только с помощью безопасного соединения. Вы не можете добавить исключение для посещения этого сайта. </label>
+
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Назад</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">Соединение было прервано</string>
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
+      <p>Браузер успешно установил соединение, но оно было прервано во время передачи информации. Пожалуйста, попробуйте снова.</p>
+      <ul>
+        <li>Возможно, сайт временно недоступен или перегружен запросами. Попробуйте снова через некоторое время.</li>
+        <li>Если вам не удаётся загрузить ни одну страницу, проверьте соединение своего устройства с мобильной или Wi-Fi сетью.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">Время ожидания соединения истекло</string>
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
+      <p>Сайт не отвечал на запрос соединения, и браузер прекратил ожидание.</p>
+      <ul>
+        <li>Возможно, сервер сайта перегружен или временно недоступен. Попробуйте снова позже.</li>
+        <li>Если вам не удаётся открыть и другие сайты, проверьте соединение своего устройства с сетью.</li>
+        <li>Если ваше устройство или локальная сеть защищены межсетевым экраном или прокси-сервером, проверьте их, так как неправильные настройки могут препятствовать просмотру веб-сайтов.</li>
+        <li>Проблема не исчезла? Обратитесь к своему системному администратору или Интернет-провайдеру за помощью.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">Попытка соединения не удалась</string>
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
+      <ul>
+        <li>Возможно, сайт временно недоступен или перегружен запросами. Попробуйте снова через некоторое время.</li>
+        <li>Если вам не удаётся загрузить ни одну страницу, проверьте соединение своего устройства с мобильной или Wi-Fi сетью.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Неизвестный/неопознанный ответ сервера</string>
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
+      <p>Сайт ответил на запрос неожиданным образом и браузер не может обработать его ответ.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">Циклическое перенаправление на странице</string>
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
+      <p>Браузер прекратил попытки загрузки страницы, так как сайт перенаправляет запрос таким образом, что его выполнение никогда не завершится.</p>
+      <ul>
+        <li>Возможно, вы отключили или заблокировали куки, необходимые для работы этого сайта.</li>
+        <li>Если разрешение кук сайта не решило проблему, то, скорее всего, она связана с настройками сервера, а не с вашим устройством.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">Автономный режим</string>
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[
+      <p>Браузер работает в автономном режиме и не может установить соединение с запрашиваемым сайтом.</p>
+      <ul>
+        <li>Проверьте, что устройство подключено к работающей сети.</li>
+        <li>Нажмите «Попробовать снова», чтобы выйти из автономного режима и перезагрузить страницу.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">В целях безопасности обращение к порту было заблокировано</string>
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[
+      <p>Для запрошенного адреса указан порт (например, <q>mozilla.org:80</q> — это порт 80 на mozilla.org), который обычно <em>не используется</em> для работы с веб-сайтами. В целях безопасности браузер отменил этот запрос.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">Соединение было сброшено</string>
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[
+      <p>Связь с сайтом была оборвана на этапе установки соединения. Пожалуйста, попробуйте снова.</p>
+      <ul>
+        <li>Возможно, сайт временно недоступен или перегружен запросами. Попробуйте снова через некоторое время.</li>
+        <li>Если вам не удаётся загрузить ни одну страницу, проверьте соединение своего устройства с мобильной или Wi-Fi сетью.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">Небезопасный тип файла</string>
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[<ul>
+        <li>Пожалуйста, свяжитесь с владельцами веб-сайта и сообщите им об этой проблеме.</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">Загружаемое содержимое повреждено</string>
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
+      <p>Страница, которую вы пытаетесь просмотреть, не может быть отображена, так как при передаче данных была обнаружена ошибка.</p>
+      <ul>
+        <li>Пожалуйста, свяжитесь с владельцами веб-сайта и сообщите им об этой проблеме.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Загружаемое содержимое повреждено</string>
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
+      <p>Страница, которую вы пытаетесь просмотреть, не может быть отображена, так как при передаче данных была обнаружена ошибка.</p>
+      <ul>
+        <li>Пожалуйста, свяжитесь с владельцами веб-сайта и сообщите им об этой проблеме.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Ошибка сжатия содержимого</string>
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
+      <p>Страница, которую вы пытаетесь просмотреть, не может быть отображена, так как использует неправильный или неподдерживаемый способ сжатия данных.</p>
+      <ul>
+        <li>Пожалуйста, свяжитесь с владельцами веб-сайта и сообщите им об этой проблеме.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">Адрес не найден</string>
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
+      <p>Браузеру не удалось найти сервер по указанному адресу.</p>
+      <ul>
+        <li>Проверьте, нет ли в адресе опечаток, например,
+          <strong>ww</strong>.example.com вместо
+          <strong>www</strong>.example.com.</li>
+        <li>Если вам не удаётся загрузить ни одну страницу, проверьте соединение своего устройства с мобильной или Wi-Fi сетью.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Нет соединения с Интернетом</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Проверьте своё соединение с сетью или попробуйте перезагрузить страницу через некоторое время.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Перезагрузить</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">Неправильный формат адреса</string>
+
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
+      <p>Не удаётся распознать формат указанного адреса. Проверьте адрес на наличие ошибок и попробуйте снова.</p>
+    ]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Неправильный формат адреса</string>
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[
+      <ul>
+        <li>Веб-адреса обычно имеют вид <strong>http://www.example.com/</strong></li>
+        <li>Убедитесь, что вы используете обычную косую черту (т.е. <strong>/</strong>).</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">Неизвестный протокол</string>
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
+      <p>Адрес содержит неизвестный браузеру протокол (такой как <q>wxyz://</q>), поэтому браузер не может правильно установить соединение с сайтом.</p>
+      <ul>
+        <li>Если вы пытаетесь открыть мультимедиа или другие нетекстовые сервисы, проверьте сайт на наличие особых требований.</li>
+        <li>Некоторые протоколы могут требовать установки стороннего программного обеспечения или плагинов для того, чтобы браузер мог их распознать.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">Файл не найден</string>
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[
+      <ul>
+        <li>Возможно, файл был переименован, удалён или перемещён.</li>
+        <li>Проверьте, не допустили ли вы ошибку при вводе адреса.</li>
+        <li>Убедитесь, что у вас достаточно прав для просмотра запрашиваемого файла.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">Отказано в доступе к файлу</string>
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[
+      <ul>
+        <li>Возможно, файл был удалён, перемещён или у вас недостаточно прав для его просмотра.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Прокси-сервер отказал в установке соединения</string>
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[
+      <p>В браузере настроено использование прокси-сервера, но прокси-сервер отказал в установке соединения.</p>
+      <ul>
+        <li>Проверьте настройки прокси браузера и попробуйте снова.</li>
+        <li>Проверьте, разрешает ли служба прокси соединения из этой сети.</li>
+        <li>Проблема не исчезла? Обратитесь к своему системному администратору или Интернет-провайдеру за помощью.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Прокси-сервер не найден</string>
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
+      <p>В браузере настроено использование прокси-сервера, но прокси-сервер не удалось найти.</p>
+      <ul>
+        <li>Проверьте настройки прокси браузера и попробуйте снова.</li>
+        <li>Проверьте, подключено ли ваше устройство к активной сети.</li>
+        <li>Проблема не исчезла? Обратитесь к своему системному администратору или Интернет-провайдеру за помощью.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Вредоносный сайт</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
+      <p>Есть информация, что сайт %1$s используется для атак на устройства пользователей, поэтому он был заблокирован в соответствии с вашими настройками защиты.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Нежелательный сайт</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
+      <p>Есть информация о том, что сайт %1$s используется для распространения нежелательного программного обеспечения, поэтому он был заблокирован в соответствии с вашими настройками защиты.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Опасный сайт</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[
+      <p>Есть информация о том, что сайт %1$s потенциально опасен, поэтому он был заблокирован в соответствии с вашими настройками защиты.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Поддельный сайт</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
+      <p>Есть информация о том, что эта веб-страница на %1$s — поддельная, поэтому она была заблокирована в соответствии с вашими настройками защиты.</p>
+    ]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">Безопасная версия сайта недоступна</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[Вы включили режим «Только HTTPS» для повышения безопасности, однако HTTPS-версия сайта <em>%1$s</em> недоступна.]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">Перейти на HTTP-версию</string>
+</resources>

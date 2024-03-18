@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!-- Ignore MergeRootFrame: we need a single container View where we can attach fragments, so
+     we definitely need to keep this FrameLayout (i.e. we can't <merge> here). -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             xmlns:tools="http://schemas.android.com/tools"
+             tools:ignore="MergeRootFrame"
+             android:id="@+id/container"
+             android:layout_width="match_parent"
+             android:layout_height="match_parent"/>

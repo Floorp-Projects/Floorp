@@ -1,0 +1,340 @@
+<?xml version="1.0" ?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<SmellBaseline>
+  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <CurrentIssues>
+    <ID>AbsentOrWrongFileLicense:AutoFitTextureView.kt$mozilla.components.feature.qr.views.AutoFitTextureView.kt</ID>
+    <ID>AbsentOrWrongFileLicense:QrFragment.kt$mozilla.components.feature.qr.QrFragment.kt</ID>
+    <ID>BracesOnIfStatements:WebPush.kt$WebPushSubscription$if</ID>
+    <ID>FunctionParameterNaming:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$_: View</ID>
+    <ID>MaxLineLength:WebExtensionSupport.kt$WebExtensionSupport.&lt;no name provided&gt;$override</ID>
+    <ID>MaxLineLength:WebExtensionSupport.kt$WebExtensionSupport.&lt;no name provided&gt;$val sessionId = openTab(store, onNewTabOverride, onSelectTabOverride, extension, engineSession)</ID>
+    <ID>UndocumentedPublicClass:AutoSave.kt$AutoSave</ID>
+    <ID>UndocumentedPublicClass:AutoSave.kt$AutoSave$Storage</ID>
+    <ID>UndocumentedPublicClass:Base64.kt$Base64</ID>
+    <ID>UndocumentedPublicClass:BrowserMenu.kt$BrowserMenu$Orientation</ID>
+    <ID>UndocumentedPublicClass:BrowserMenuAdapter.kt$BrowserMenuItemViewHolder : ViewHolder</ID>
+    <ID>UndocumentedPublicClass:Choice.kt$Choice$CREATOR : Creator</ID>
+    <ID>UndocumentedPublicClass:ColorUtils.kt$ColorUtils</ID>
+    <ID>UndocumentedPublicClass:Constants.kt$Constants</ID>
+    <ID>UndocumentedPublicClass:ContextMenuUseCases.kt$ContextMenuUseCases$ConsumeHitResultUseCase</ID>
+    <ID>UndocumentedPublicClass:ContextMenuUseCases.kt$ContextMenuUseCases$InjectDownloadUseCase</ID>
+    <ID>UndocumentedPublicClass:CrashActivity.kt$CrashActivity : AppCompatActivityOnClickListener</ID>
+    <ID>UndocumentedPublicClass:CrashApplication.kt$CrashApplication : Application</ID>
+    <ID>UndocumentedPublicClass:CrashReporter.kt$CrashReporter$Prompt</ID>
+    <ID>UndocumentedPublicClass:CustomTabConfig.kt$CustomTabActionButtonConfig</ID>
+    <ID>UndocumentedPublicClass:CustomTabConfig.kt$CustomTabMenuItem</ID>
+    <ID>UndocumentedPublicClass:CustomTabsAction.kt$CustomTabsAction : Action</ID>
+    <ID>UndocumentedPublicClass:CustomTabsService.kt$CustomTabsService : AbstractCustomTabsService</ID>
+    <ID>UndocumentedPublicClass:CustomTabsServiceStore.kt$CustomTabsServiceStore : Store</ID>
+    <ID>UndocumentedPublicClass:DefaultComponents.kt$DefaultComponents</ID>
+    <ID>UndocumentedPublicClass:DeviceRecyclerViewAdapter.kt$DeviceRecyclerViewAdapter$ViewHolder : ViewHolder</ID>
+    <ID>UndocumentedPublicClass:DiskIconLoader.kt$DiskIconLoader$LoaderDiskCache</ID>
+    <ID>UndocumentedPublicClass:DiskIconPreparer.kt$DiskIconPreparer$PreparerDiskCache</ID>
+    <ID>UndocumentedPublicClass:DiskIconProcessor.kt$DiskIconProcessor$ProcessorDiskCache</ID>
+    <ID>UndocumentedPublicClass:DomainAutoCompleteProvider.kt$DomainAutoCompleteProvider$AutocompleteSource</ID>
+    <ID>UndocumentedPublicClass:DomainMatcher.kt$DomainMatch</ID>
+    <ID>UndocumentedPublicClass:DownloadManager.kt$DownloadManager</ID>
+    <ID>UndocumentedPublicClass:DownloadService.kt$DownloadService : AbstractFetchDownloadService</ID>
+    <ID>UndocumentedPublicClass:DownloadUtils.kt$DownloadUtils</ID>
+    <ID>UndocumentedPublicClass:DownloadsUseCases.kt$DownloadsUseCases$ConsumeDownloadUseCase</ID>
+    <ID>UndocumentedPublicClass:DrawableUtils.kt$DrawableUtils</ID>
+    <ID>UndocumentedPublicClass:EngineSession.kt$EngineSession.TrackingProtectionPolicy$TrackingCategory</ID>
+    <ID>UndocumentedPublicClass:ErrorPages.kt$ErrorPages</ID>
+    <ID>UndocumentedPublicClass:FindInPageView.kt$FindInPageView$Listener</ID>
+    <ID>UndocumentedPublicClass:GeckoEngineSessionState.kt$GeckoEngineSessionState : EngineSessionState</ID>
+    <ID>UndocumentedPublicClass:GleanApplication.kt$GleanApplication : Application</ID>
+    <ID>UndocumentedPublicClass:Grammar.kt$GrammarElement</ID>
+    <ID>UndocumentedPublicClass:IconLoader.kt$IconLoader$Result</ID>
+    <ID>UndocumentedPublicClass:IconLoader.kt$IconLoader.Result$BitmapResult : Result</ID>
+    <ID>UndocumentedPublicClass:IconLoader.kt$IconLoader.Result$BytesResult : Result</ID>
+    <ID>UndocumentedPublicClass:IconLoader.kt$IconLoader.Result$NoResult : Result</ID>
+    <ID>UndocumentedPublicClass:IconMemoryCache.kt$IconMemoryCache : ProcessorMemoryCacheLoaderMemoryCachePreparerMemoryCache</ID>
+    <ID>UndocumentedPublicClass:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$AutocompleteResult</ID>
+    <ID>UndocumentedPublicClass:IntentReceiverActivity.kt$IntentReceiverActivity : Activity</ID>
+    <ID>UndocumentedPublicClass:Jexl.kt$Jexl</ID>
+    <ID>UndocumentedPublicClass:LoginFragment.kt$LoginFragment : Fragment</ID>
+    <ID>UndocumentedPublicClass:LoginFragment.kt$LoginFragment$OnLoginCompleteListener</ID>
+    <ID>UndocumentedPublicClass:MainActivity.kt$MainActivity : AppCompatActivity</ID>
+    <ID>UndocumentedPublicClass:MainActivity.kt$MainActivity : AppCompatActivityOnLoginCompleteListenerCoroutineScope</ID>
+    <ID>UndocumentedPublicClass:MainActivity.kt$MainActivity : AppCompatActivityOnLoginCompleteListenerCoroutineScopeSyncStatusObserver</ID>
+    <ID>UndocumentedPublicClass:MainActivity.kt$MainActivity : AppCompatActivityOnLoginCompleteListenerOnDeviceListInteractionListenerCoroutineScope</ID>
+    <ID>UndocumentedPublicClass:MemoryIconLoader.kt$MemoryIconLoader$LoaderMemoryCache</ID>
+    <ID>UndocumentedPublicClass:MemoryIconPreparer.kt$MemoryIconPreparer$PreparerMemoryCache</ID>
+    <ID>UndocumentedPublicClass:MemoryIconProcessor.kt$MemoryIconProcessor$ProcessorMemoryCache</ID>
+    <ID>UndocumentedPublicClass:OAuthAccount.kt$AuthType</ID>
+    <ID>UndocumentedPublicClass:OAuthAccount.kt$Avatar</ID>
+    <ID>UndocumentedPublicClass:OAuthAccount.kt$Profile</ID>
+    <ID>UndocumentedPublicClass:OriginVerifierFeature.kt$OriginVerifierFeature</ID>
+    <ID>UndocumentedPublicClass:Parser.kt$ParserException : Exception</ID>
+    <ID>UndocumentedPublicClass:PreferredColorScheme.kt$PreferredColorScheme$Dark : PreferredColorScheme</ID>
+    <ID>UndocumentedPublicClass:PreferredColorScheme.kt$PreferredColorScheme$Light : PreferredColorScheme</ID>
+    <ID>UndocumentedPublicClass:PreferredColorScheme.kt$PreferredColorScheme$System : PreferredColorScheme</ID>
+    <ID>UndocumentedPublicClass:PromptRequest.kt$PromptRequest$Dismissible</ID>
+    <ID>UndocumentedPublicClass:PromptRequest.kt$PromptRequest.Authentication$Level</ID>
+    <ID>UndocumentedPublicClass:PromptRequest.kt$PromptRequest.Authentication$Method</ID>
+    <ID>UndocumentedPublicClass:PromptRequest.kt$PromptRequest.File$FacingMode</ID>
+    <ID>UndocumentedPublicClass:PromptRequest.kt$PromptRequest.TimeSelection$Type</ID>
+    <ID>UndocumentedPublicClass:ProtectedDataAdapter.kt$ProtectedDataAdapter : Adapter</ID>
+    <ID>UndocumentedPublicClass:ProtectedDataAdapter.kt$ProtectedDataAdapter$Holder : ViewHolder</ID>
+    <ID>UndocumentedPublicClass:Providers.kt$DomainList</ID>
+    <ID>UndocumentedPublicClass:PushProcessor.kt$PushError$MalformedMessage : PushError</ID>
+    <ID>UndocumentedPublicClass:PushProcessor.kt$PushError$Network : PushError</ID>
+    <ID>UndocumentedPublicClass:PushProcessor.kt$PushError$Registration : PushError</ID>
+    <ID>UndocumentedPublicClass:PushProcessor.kt$PushError$ServiceUnavailable : PushError</ID>
+    <ID>UndocumentedPublicClass:ReaderViewControlsView.kt$ReaderViewControlsView$Listener</ID>
+    <ID>UndocumentedPublicClass:ReaderViewFeature.kt$ReaderViewFeature$ColorScheme</ID>
+    <ID>UndocumentedPublicClass:ReaderViewFeature.kt$ReaderViewFeature$FontType</ID>
+    <ID>UndocumentedPublicClass:Request.kt$Request$CookiePolicy</ID>
+    <ID>UndocumentedPublicClass:Request.kt$Request$Redirect</ID>
+    <ID>UndocumentedPublicClass:RequestInterceptor.kt$RequestInterceptor.InterceptionResponse$AppIntent : InterceptionResponse</ID>
+    <ID>UndocumentedPublicClass:RequestInterceptor.kt$RequestInterceptor.InterceptionResponse$Content : InterceptionResponse</ID>
+    <ID>UndocumentedPublicClass:RustLog.kt$RustLog</ID>
+    <ID>UndocumentedPublicClass:SampleApplication.kt$SampleApplication : Application</ID>
+    <ID>UndocumentedPublicClass:SampleToolbarHelpers.kt$ConfigurationAdapter : Adapter</ID>
+    <ID>UndocumentedPublicClass:SampleToolbarHelpers.kt$ConfigurationViewHolder : ViewHolder</ID>
+    <ID>UndocumentedPublicClass:SampleToolbarHelpers.kt$Extra</ID>
+    <ID>UndocumentedPublicClass:SampleToolbarHelpers.kt$ToolbarConfiguration</ID>
+    <ID>UndocumentedPublicClass:SearchSuggestionClient.kt$SearchSuggestionClient$ResponseParserException : Exception</ID>
+    <ID>UndocumentedPublicClass:SearchSuggestionProvider.kt$SearchSuggestionProvider$Mode</ID>
+    <ID>UndocumentedPublicClass:SearchUseCases.kt$SearchUseCases$DefaultSearchUseCase : SearchUseCase</ID>
+    <ID>UndocumentedPublicClass:SearchUseCases.kt$SearchUseCases$NewTabSearchUseCase : SearchUseCase</ID>
+    <ID>UndocumentedPublicClass:SearchUseCases.kt$SearchUseCases$SearchUseCase</ID>
+    <ID>UndocumentedPublicClass:SendCrashReportService.kt$SendCrashReportService : Service</ID>
+    <ID>UndocumentedPublicClass:SendCrashTelemetryService.kt$SendCrashTelemetryService : Service</ID>
+    <ID>UndocumentedPublicClass:SendTabUseCases.kt$SendTabUseCases$SendToAllUseCase</ID>
+    <ID>UndocumentedPublicClass:SendTabUseCases.kt$SendTabUseCases$SendToDeviceUseCase</ID>
+    <ID>UndocumentedPublicClass:SessionUseCases.kt$SessionUseCases$DefaultLoadUrlUseCase : LoadUrlUseCase</ID>
+    <ID>UndocumentedPublicClass:SessionUseCases.kt$SessionUseCases$ExitFullScreenUseCase</ID>
+    <ID>UndocumentedPublicClass:SessionUseCases.kt$SessionUseCases$GoBackUseCase</ID>
+    <ID>UndocumentedPublicClass:SessionUseCases.kt$SessionUseCases$GoForwardUseCase</ID>
+    <ID>UndocumentedPublicClass:SessionUseCases.kt$SessionUseCases$LoadDataUseCase</ID>
+    <ID>UndocumentedPublicClass:SessionUseCases.kt$SessionUseCases$ReloadUrlUseCase</ID>
+    <ID>UndocumentedPublicClass:SessionUseCases.kt$SessionUseCases$RequestDesktopSiteUseCase</ID>
+    <ID>UndocumentedPublicClass:SessionUseCases.kt$SessionUseCases$StopLoadingUseCase</ID>
+    <ID>UndocumentedPublicClass:SettingUpdater.kt$SettingUpdater&lt;T&gt;</ID>
+    <ID>UndocumentedPublicClass:Settings.kt$UnsupportedSetting&lt;T&gt;</ID>
+    <ID>UndocumentedPublicClass:SitePermissions.kt$SitePermissions$Status</ID>
+    <ID>UndocumentedPublicClass:SitePermissionsFeature.kt$SitePermissionsFeature$PromptsStyling</ID>
+    <ID>UndocumentedPublicClass:SitePermissionsRules.kt$SitePermissionsRules$Action</ID>
+    <ID>UndocumentedPublicClass:SitePermissionsStorage.kt$SitePermissionsStorage$Permission</ID>
+    <ID>UndocumentedPublicClass:StatusBarUtils.kt$StatusBarUtils</ID>
+    <ID>UndocumentedPublicClass:StorageUtils.kt$StorageUtils</ID>
+    <ID>UndocumentedPublicClass:Store.kt$Store.Subscription$Binding</ID>
+    <ID>UndocumentedPublicClass:SystemEngineSession.kt$SystemEngineSession$WebSetting&lt;T&gt;</ID>
+    <ID>UndocumentedPublicClass:SystemEngineSessionState.kt$SystemEngineSessionState : EngineSessionState</ID>
+    <ID>UndocumentedPublicClass:SystemEngineView.kt$SystemEngineView$ImageHandler : Handler</ID>
+    <ID>UndocumentedPublicClass:TabCounter.kt$TabCounter : RelativeLayout</ID>
+    <ID>UndocumentedPublicClass:TabThumbnailView.kt$TabThumbnailView : AppCompatImageView</ID>
+    <ID>UndocumentedPublicClass:TabsUseCases.kt$TabsUseCases$AddNewTabUseCase : LoadUrlUseCase</ID>
+    <ID>UndocumentedPublicClass:TabsUseCases.kt$TabsUseCases$DefaultSelectTabUseCase : SelectTabUseCase</ID>
+    <ID>UndocumentedPublicClass:TabsUseCases.kt$TabsUseCases$RemoveAllTabsUseCase</ID>
+    <ID>UndocumentedPublicClass:ThreadUtils.kt$ThreadUtils</ID>
+    <ID>UndocumentedPublicClass:Token.kt$Token$Type</ID>
+    <ID>UndocumentedPublicClass:Toolbar.kt$Toolbar$SiteSecurity</ID>
+    <ID>UndocumentedPublicClass:ToolbarFeature.kt$ToolbarFeature.RenderStyle$ColoredUrl : RenderStyle</ID>
+    <ID>UndocumentedPublicClass:ToolbarFeature.kt$ToolbarFeature.RenderStyle$RegistrableDomain : RenderStyle</ID>
+    <ID>UndocumentedPublicClass:ToolbarFeature.kt$ToolbarFeature.RenderStyle$UncoloredUrl : RenderStyle</ID>
+    <ID>UndocumentedPublicClass:URLStringUtils.kt$URLStringUtils</ID>
+    <ID>UndocumentedPublicClass:WebAppManifest.kt$WebAppManifest.Icon$Purpose</ID>
+    <ID>UndocumentedPublicFunction:AppLinksUseCases.kt$AppLinksUseCases.GetAppLinkRedirect$operator fun invoke(url: String): AppLinkRedirect</ID>
+    <ID>UndocumentedPublicFunction:Base64.kt$Base64$fun encodeToUriString(data: String)</ID>
+    <ID>UndocumentedPublicFunction:BrowserFragment.kt$BrowserFragment.Companion$fun create(sessionId: String? = null)</ID>
+    <ID>UndocumentedPublicFunction:BrowserMenu.kt$BrowserMenu$fun dismiss()</ID>
+    <ID>UndocumentedPublicFunction:BrowserMenu.kt$BrowserMenu$fun invalidate()</ID>
+    <ID>UndocumentedPublicFunction:ByteArray.kt$@Suppress("MagicNumber") fun ByteArray.toHexString(hexLength: Int): String</ID>
+    <ID>UndocumentedPublicFunction:ByteArray.kt$fun ByteArray.toBitmap( offset: Int, length: Int, opts: BitmapFactory.Options? = null, ): Bitmap?</ID>
+    <ID>UndocumentedPublicFunction:ByteArray.kt$fun ByteArray.toBitmap(opts: BitmapFactory.Options? = null): Bitmap?</ID>
+    <ID>UndocumentedPublicFunction:ByteArray.kt$fun ByteArray.toHexString(): String</ID>
+    <ID>UndocumentedPublicFunction:ByteArray.kt$fun ByteArray.toSha256Digest(): ByteArray</ID>
+    <ID>UndocumentedPublicFunction:Clock.kt$Clock$@VisibleForTesting fun reset()</ID>
+    <ID>UndocumentedPublicFunction:Context.kt$fun Context.isPermissionGranted(vararg permission: String): Boolean</ID>
+    <ID>UndocumentedPublicFunction:Crash.kt$Crash.Companion$fun fromIntent(intent: Intent): Crash</ID>
+    <ID>UndocumentedPublicFunction:Crash.kt$Crash.Companion$fun isCrashIntent(intent: Intent)</ID>
+    <ID>UndocumentedPublicFunction:DeviceFragment.kt$DeviceFragment.OnDeviceListInteractionListener$fun onDeviceInteraction(item: Device)</ID>
+    <ID>UndocumentedPublicFunction:Devices.kt$DeviceConstellationObserver$fun onDevicesUpdate(constellation: ConstellationState)</ID>
+    <ID>UndocumentedPublicFunction:DiskIconLoader.kt$DiskIconLoader.LoaderDiskCache$fun getIconData(context: Context, resource: IconRequest.Resource): ByteArray?</ID>
+    <ID>UndocumentedPublicFunction:DiskIconPreparer.kt$DiskIconPreparer.PreparerDiskCache$fun getResources(context: Context, request: IconRequest): List&lt;IconRequest.Resource&gt;</ID>
+    <ID>UndocumentedPublicFunction:Domain.kt$Domain.Companion$fun create(url: String): Domain</ID>
+    <ID>UndocumentedPublicFunction:DomainMatcher.kt$fun segmentAwareDomainMatch(query: String, urls: Iterable&lt;String&gt;): DomainMatch?</ID>
+    <ID>UndocumentedPublicFunction:DownloadManager.kt$DownloadManager$fun unregisterListeners()</ID>
+    <ID>UndocumentedPublicFunction:DownloadManager.kt$fun DownloadManager.validatePermissionGranted(context: Context)</ID>
+    <ID>UndocumentedPublicFunction:DownloadUtils.kt$DownloadUtils$fun sanitizeMimeType(mimeType: String?): String?</ID>
+    <ID>UndocumentedPublicFunction:Engine.kt$Engine.BrowsingData$fun contains(type: Int)</ID>
+    <ID>UndocumentedPublicFunction:Engine.kt$Engine.BrowsingData.Companion$fun all()</ID>
+    <ID>UndocumentedPublicFunction:Engine.kt$Engine.BrowsingData.Companion$fun allCaches()</ID>
+    <ID>UndocumentedPublicFunction:Engine.kt$Engine.BrowsingData.Companion$fun allSiteData()</ID>
+    <ID>UndocumentedPublicFunction:Engine.kt$Engine.BrowsingData.Companion$fun allSiteSettings()</ID>
+    <ID>UndocumentedPublicFunction:Engine.kt$Engine.BrowsingData.Companion$fun select(vararg types: Int)</ID>
+    <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.LoadUrlFlags$fun contains(flag: Int)</ID>
+    <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.LoadUrlFlags.Companion$fun all()</ID>
+    <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.LoadUrlFlags.Companion$fun external()</ID>
+    <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.LoadUrlFlags.Companion$fun none()</ID>
+    <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.LoadUrlFlags.Companion$fun select(vararg types: Int)</ID>
+    <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onAppPermissionRequest(permissionRequest: PermissionRequest)</ID>
+    <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onCancelContentPermissionRequest(permissionRequest: PermissionRequest)</ID>
+    <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onContentPermissionRequest(permissionRequest: PermissionRequest)</ID>
+    <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onCrash()</ID>
+    <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onDesktopModeChange(enabled: Boolean)</ID>
+    <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onFind(text: String)</ID>
+    <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onFindResult(activeMatchOrdinal: Int, numberOfMatches: Int, isDoneCounting: Boolean)</ID>
+    <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onFullScreenChange(enabled: Boolean)</ID>
+    <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onLoadingStateChange(loading: Boolean)</ID>
+    <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onLocationChange(url: String, hasUserGesture: Boolean)</ID>
+    <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onLongPress(hitResult: HitResult)</ID>
+    <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onNavigateBack()</ID>
+    <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onNavigationStateChange(canGoBack: Boolean? = null, canGoForward: Boolean? = null)</ID>
+    <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onProcessKilled()</ID>
+    <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onProgress(progress: Int)</ID>
+    <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onPromptRequest(promptRequest: PromptRequest)</ID>
+    <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onRecordingStateChanged(devices: List&lt;RecordingDevice&gt;)</ID>
+    <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onSecurityChange(secure: Boolean, host: String? = null, issuer: String? = null)</ID>
+    <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onTitleChange(title: String)</ID>
+    <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onTrackerBlocked(tracker: Tracker)</ID>
+    <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onTrackerBlockingEnabledChange(enabled: Boolean)</ID>
+    <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onTrackerLoaded(tracker: Tracker)</ID>
+    <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.Observer$fun onWebAppManifestLoaded(manifest: WebAppManifest)</ID>
+    <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.TrackingProtectionPolicy$fun contains(category: TrackingCategory)</ID>
+    <ID>UndocumentedPublicFunction:EngineSession.kt$EngineSession.TrackingProtectionPolicy.Companion$fun none()</ID>
+    <ID>UndocumentedPublicFunction:EngineVersion.kt$EngineVersion$operator fun compareTo(other: EngineVersion): Int</ID>
+    <ID>UndocumentedPublicFunction:Extensions.kt$fun String.toLocale(): Locale</ID>
+    <ID>UndocumentedPublicFunction:ExternalAppBrowserFragment.kt$ExternalAppBrowserFragment.Companion$fun create( sessionId: String, manifest: WebAppManifest?, )</ID>
+    <ID>UndocumentedPublicFunction:Facts.kt$Facts$@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE) fun clearProcessors()</ID>
+    <ID>UndocumentedPublicFunction:FindInPageView.kt$FindInPageView.Listener$fun onClearMatches()</ID>
+    <ID>UndocumentedPublicFunction:FindInPageView.kt$FindInPageView.Listener$fun onClose()</ID>
+    <ID>UndocumentedPublicFunction:FindInPageView.kt$FindInPageView.Listener$fun onFindAll(query: String)</ID>
+    <ID>UndocumentedPublicFunction:FindInPageView.kt$FindInPageView.Listener$fun onNextResult()</ID>
+    <ID>UndocumentedPublicFunction:FindInPageView.kt$FindInPageView.Listener$fun onPreviousResult()</ID>
+    <ID>UndocumentedPublicFunction:GeckoEngineSession.kt$GeckoEngineSession$@Suppress("ComplexMethod") fun handleLongClick(elementSrc: String?, elementType: Int, uri: String? = null, title: String? = null): HitResult?</ID>
+    <ID>UndocumentedPublicFunction:GeckoEngineSessionState.kt$GeckoEngineSessionState.Companion$fun fromJSON(json: JSONObject): GeckoEngineSessionState</ID>
+    <ID>UndocumentedPublicFunction:GeckoPermissionRequest.kt$GeckoPermissionRequest.Media.Companion$fun mapPermission(mediaSource: MediaSource): Permission</ID>
+    <ID>UndocumentedPublicFunction:Headers.kt$fun List&lt;Header&gt;.toMutableHeaders()</ID>
+    <ID>UndocumentedPublicFunction:HttpURLConnectionClient.kt$HttpURLConnectionClient.Companion$fun getOrCreateCookieManager(): CookieManager</ID>
+    <ID>UndocumentedPublicFunction:IconGenerator.kt$IconGenerator$fun generate(context: Context, request: IconRequest): Icon</ID>
+    <ID>UndocumentedPublicFunction:IconPreprarer.kt$IconPreprarer$fun prepare(context: Context, request: IconRequest): IconRequest</ID>
+    <ID>UndocumentedPublicFunction:IconProcessor.kt$IconProcessor$fun process( context: Context, request: IconRequest, resource: IconRequest.Resource?, icon: Icon, desiredSize: DesiredSize, ): Icon?</ID>
+    <ID>UndocumentedPublicFunction:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$fun refreshAutocompleteSuggestions()</ID>
+    <ID>UndocumentedPublicFunction:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$fun setOnCommitListener(l: OnCommitListener)</ID>
+    <ID>UndocumentedPublicFunction:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$fun setOnDispatchKeyEventPreImeListener(l: OnDispatchKeyEventPreImeListener?)</ID>
+    <ID>UndocumentedPublicFunction:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$fun setOnFilterListener(l: OnFilterListener)</ID>
+    <ID>UndocumentedPublicFunction:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$fun setOnKeyPreImeListener(l: OnKeyPreImeListener)</ID>
+    <ID>UndocumentedPublicFunction:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$fun setOnSearchStateChangeListener(l: OnSearchStateChangeListener)</ID>
+    <ID>UndocumentedPublicFunction:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$fun setOnSelectionChangedListener(l: OnSelectionChangedListener)</ID>
+    <ID>UndocumentedPublicFunction:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$fun setOnTextChangeListener(l: OnTextChangeListener)</ID>
+    <ID>UndocumentedPublicFunction:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$fun setOnWindowsFocusChangeListener(l: OnWindowsFocusChangeListener)</ID>
+    <ID>UndocumentedPublicFunction:InlineAutocompleteEditText.kt$InlineAutocompleteEditText.AutocompleteResult$fun startsWith(text: String): Boolean</ID>
+    <ID>UndocumentedPublicFunction:JSONArray.kt$fun Iterable&lt;Any&gt;.toJSONArray()</ID>
+    <ID>UndocumentedPublicFunction:JSONArray.kt$fun JSONArray.asSequence(): Sequence&lt;Any&gt;</ID>
+    <ID>UndocumentedPublicFunction:JexlContext.kt$JexlContext$fun get(key: String): JexlValue</ID>
+    <ID>UndocumentedPublicFunction:JexlContext.kt$JexlContext$fun set(key: String, value: JexlValue)</ID>
+    <ID>UndocumentedPublicFunction:JexlExtensions.kt$fun Boolean.toJexl(): JexlBoolean</ID>
+    <ID>UndocumentedPublicFunction:JexlExtensions.kt$fun Double.toJexl(): JexlDouble</ID>
+    <ID>UndocumentedPublicFunction:JexlExtensions.kt$fun Float.toJexl(): JexlDouble</ID>
+    <ID>UndocumentedPublicFunction:JexlExtensions.kt$fun Int.toJexl(): JexlInteger</ID>
+    <ID>UndocumentedPublicFunction:JexlExtensions.kt$fun String.toJexl(): JexlString</ID>
+    <ID>UndocumentedPublicFunction:JexlExtensions.kt$inline fun &lt;reified T&gt; List&lt;T&gt;.toJexlArray(): JexlArray</ID>
+    <ID>UndocumentedPublicFunction:JexlValue.kt$JexlBoolean$fun toInt(): Int</ID>
+    <ID>UndocumentedPublicFunction:JexlValue.kt$JexlValue$abstract fun toBoolean(): Boolean</ID>
+    <ID>UndocumentedPublicFunction:JexlValue.kt$JexlValue$abstract operator fun compareTo(other: JexlValue): Int</ID>
+    <ID>UndocumentedPublicFunction:JexlValue.kt$JexlValue$abstract operator fun div(other: JexlValue): JexlValue</ID>
+    <ID>UndocumentedPublicFunction:JexlValue.kt$JexlValue$abstract operator fun plus(other: JexlValue): JexlValue</ID>
+    <ID>UndocumentedPublicFunction:JexlValue.kt$JexlValue$abstract operator fun times(other: JexlValue): JexlValue</ID>
+    <ID>UndocumentedPublicFunction:Log.kt$Log$@VisibleForTesting fun reset()</ID>
+    <ID>UndocumentedPublicFunction:LoginFragment.kt$LoginFragment.Companion$fun create(authUrl: String, redirectUrl: String): LoginFragment</ID>
+    <ID>UndocumentedPublicFunction:LoginFragment.kt$LoginFragment.OnLoginCompleteListener$fun onLoginComplete(code: String, state: String, action: String, fragment: LoginFragment)</ID>
+    <ID>UndocumentedPublicFunction:LoginFragment.kt$LoginFragment.OnLoginCompleteListener$fun onLoginComplete(code: String, state: String, fragment: LoginFragment)</ID>
+    <ID>UndocumentedPublicFunction:MemoryIconLoader.kt$MemoryIconLoader.LoaderMemoryCache$fun getBitmap(request: IconRequest, resource: IconRequest.Resource): Bitmap?</ID>
+    <ID>UndocumentedPublicFunction:MemoryIconPreparer.kt$MemoryIconPreparer.PreparerMemoryCache$fun getResources(request: IconRequest): List&lt;IconRequest.Resource&gt;</ID>
+    <ID>UndocumentedPublicFunction:MemoryIconProcessor.kt$MemoryIconProcessor.ProcessorMemoryCache$fun put(request: IconRequest, resource: IconRequest.Resource, icon: Icon)</ID>
+    <ID>UndocumentedPublicFunction:OkHttpClient.kt$OkHttpClient.Companion$fun getOrCreateCookieManager(): CookieManager</ID>
+    <ID>UndocumentedPublicFunction:OriginVerifierFeature.kt$OriginVerifierFeature$suspend fun verify( state: CustomTabState, token: CustomTabsSessionToken, @Relation relation: Int, origin: Uri, ): Boolean</ID>
+    <ID>UndocumentedPublicFunction:PermissionRequest.kt$PermissionRequest$fun containsVideoAndAudioSources()</ID>
+    <ID>UndocumentedPublicFunction:PictureInPictureFeature.kt$PictureInPictureFeature$fun onHomePressed(): Boolean</ID>
+    <ID>UndocumentedPublicFunction:Providers.kt$BaseDomainAutocompleteProvider$fun initialize(context: Context)</ID>
+    <ID>UndocumentedPublicFunction:ReaderViewControlsView.kt$ReaderViewControlsView.Listener$fun onColorSchemeChanged(scheme: ColorScheme)</ID>
+    <ID>UndocumentedPublicFunction:ReaderViewControlsView.kt$ReaderViewControlsView.Listener$fun onFontChanged(font: FontType)</ID>
+    <ID>UndocumentedPublicFunction:ReaderViewControlsView.kt$ReaderViewControlsView.Listener$fun onFontSizeDecreased(): Int</ID>
+    <ID>UndocumentedPublicFunction:ReaderViewControlsView.kt$ReaderViewControlsView.Listener$fun onFontSizeIncreased(): Int</ID>
+    <ID>UndocumentedPublicFunction:ReversibleString.kt$ReversibleString$abstract fun charAt(position: Int): Char</ID>
+    <ID>UndocumentedPublicFunction:ReversibleString.kt$ReversibleString$abstract fun substring(startIndex: Int): ReversibleString</ID>
+    <ID>UndocumentedPublicFunction:ReversibleString.kt$fun String.reverse(): ReversibleString</ID>
+    <ID>UndocumentedPublicFunction:ReversibleString.kt$fun String.reversible(): ReversibleString</ID>
+    <ID>UndocumentedPublicFunction:SafeBundle.kt$SafeBundle$fun getInt(name: String, defaultValue: Int = 0): Int</ID>
+    <ID>UndocumentedPublicFunction:SafeBundle.kt$SafeBundle$fun getString(name: String): String?</ID>
+    <ID>UndocumentedPublicFunction:SafeBundle.kt$SafeBundle$fun keySet(): Set&lt;String&gt;?</ID>
+    <ID>UndocumentedPublicFunction:SafeIntent.kt$SafeIntent$fun getBooleanExtra(name: String, defaultValue: Boolean): Boolean</ID>
+    <ID>UndocumentedPublicFunction:SafeIntent.kt$SafeIntent$fun getBundleExtra(name: String): SafeBundle?</ID>
+    <ID>UndocumentedPublicFunction:SafeIntent.kt$SafeIntent$fun getCharSequenceExtra(name: String): CharSequence?</ID>
+    <ID>UndocumentedPublicFunction:SafeIntent.kt$SafeIntent$fun getIntExtra(name: String, defaultValue: Int): Int</ID>
+    <ID>UndocumentedPublicFunction:SafeIntent.kt$SafeIntent$fun getStringArrayListExtra(name: String): ArrayList&lt;String&gt;?</ID>
+    <ID>UndocumentedPublicFunction:SafeIntent.kt$SafeIntent$fun getStringExtra(name: String): String?</ID>
+    <ID>UndocumentedPublicFunction:SafeIntent.kt$SafeIntent$fun hasExtra(name: String): Boolean</ID>
+    <ID>UndocumentedPublicFunction:SampleToolbarHelpers.kt$fun getToolbarConfiguration(intent: Intent): ToolbarConfiguration</ID>
+    <ID>UndocumentedPublicFunction:SendCrashReportService.kt$SendCrashReportService.Companion$fun createReportIntent( context: Context, crash: Crash, notificationTag: String? = null, notificationId: Int = 0, ): Intent</ID>
+    <ID>UndocumentedPublicFunction:SendCrashTelemetryService.kt$SendCrashTelemetryService.Companion$fun createReportIntent(context: Context, crash: Crash): Intent</ID>
+    <ID>UndocumentedPublicFunction:Settings.kt$UnsupportedSetting$operator fun getValue(thisRef: Any?, prop: KProperty&lt;*&gt;): T</ID>
+    <ID>UndocumentedPublicFunction:Settings.kt$UnsupportedSetting$operator fun setValue(thisRef: Any?, prop: KProperty&lt;*&gt;, value: T)</ID>
+    <ID>UndocumentedPublicFunction:SitePermissions.kt$SitePermissions.Status$fun doNotAskAgain()</ID>
+    <ID>UndocumentedPublicFunction:SitePermissions.kt$SitePermissions.Status$fun isAllowed()</ID>
+    <ID>UndocumentedPublicFunction:SitePermissions.kt$SitePermissions.Status$fun toggle(): Status</ID>
+    <ID>UndocumentedPublicFunction:SitePermissionsRules.kt$SitePermissionsRules.Action$fun toStatus(): SitePermissions.Status</ID>
+    <ID>UndocumentedPublicFunction:StorageUtils.kt$StorageUtils$fun levenshteinDistance(a: String, b: String): Int</ID>
+    <ID>UndocumentedPublicFunction:Store.kt$Store.Subscription.Binding$fun unbind()</ID>
+    <ID>UndocumentedPublicFunction:String.kt$fun String.isEmail()</ID>
+    <ID>UndocumentedPublicFunction:String.kt$fun String.isGeoLocation()</ID>
+    <ID>UndocumentedPublicFunction:String.kt$fun String.isPhone()</ID>
+    <ID>UndocumentedPublicFunction:SyncAuthInfoCache.kt$SyncAuthInfoCache$fun expired(): Boolean</ID>
+    <ID>UndocumentedPublicFunction:SystemEngineSession.kt$SystemEngineSession.WebSetting$operator fun getValue(thisRef: Any?, property: KProperty&lt;*&gt;): T</ID>
+    <ID>UndocumentedPublicFunction:SystemEngineSession.kt$SystemEngineSession.WebSetting$operator fun setValue(thisRef: Any?, property: KProperty&lt;*&gt;, value: T)</ID>
+    <ID>UndocumentedPublicFunction:SystemEngineSessionState.kt$SystemEngineSessionState.Companion$fun fromJSON(json: JSONObject): SystemEngineSessionState</ID>
+    <ID>UndocumentedPublicFunction:TabCounter.kt$TabCounter$fun setCount(count: Int)</ID>
+    <ID>UndocumentedPublicFunction:TabCounter.kt$TabCounter$fun setCountWithAnimation(count: Int)</ID>
+    <ID>UndocumentedPublicFunction:TabsTrayPresenter.kt$TabsTrayPresenter$fun start()</ID>
+    <ID>UndocumentedPublicFunction:TabsTrayPresenter.kt$TabsTrayPresenter$fun stop()</ID>
+    <ID>UndocumentedPublicFunction:ThreadUtils.kt$ThreadUtils$fun assertOnUiThread()</ID>
+    <ID>UndocumentedPublicFunction:ThreadUtils.kt$ThreadUtils$fun postToBackgroundThread(runnable: () -&gt; Unit)</ID>
+    <ID>UndocumentedPublicFunction:ThreadUtils.kt$ThreadUtils$fun postToBackgroundThread(runnable: Runnable)</ID>
+    <ID>UndocumentedPublicFunction:ThreadUtils.kt$ThreadUtils$fun postToMainThread(runnable: Runnable)</ID>
+    <ID>UndocumentedPublicFunction:ThreadUtils.kt$ThreadUtils$fun postToMainThreadDelayed(runnable: Runnable, delayMillis: Long)</ID>
+    <ID>UndocumentedPublicFunction:ThreadUtils.kt$ThreadUtils$fun setHandlerForTest(handler: Handler)</ID>
+    <ID>UndocumentedPublicFunction:Toolbar.kt$Toolbar.Action$fun bind(view: View)</ID>
+    <ID>UndocumentedPublicFunction:Toolbar.kt$Toolbar.Action$fun createView(parent: ViewGroup): View</ID>
+    <ID>UndocumentedPublicFunction:ToolbarPresenter.kt$ToolbarPresenter$fun stop()</ID>
+    <ID>UndocumentedPublicFunction:Types.kt$fun AccessTokenInfo.into(): mozilla.components.concept.sync.AccessTokenInfo</ID>
+    <ID>UndocumentedPublicFunction:Types.kt$fun AccountEvent.into(): mozilla.components.concept.sync.AccountEvent</ID>
+    <ID>UndocumentedPublicFunction:Types.kt$fun Device.into(): mozilla.components.concept.sync.Device</ID>
+    <ID>UndocumentedPublicFunction:Types.kt$fun IncomingDeviceCommand.TabReceived.into(): mozilla.components.concept.sync.DeviceCommandIncoming.TabReceived</ID>
+    <ID>UndocumentedPublicFunction:Types.kt$fun IncomingDeviceCommand.into(): mozilla.components.concept.sync.DeviceCommandIncoming</ID>
+    <ID>UndocumentedPublicFunction:Types.kt$fun Profile.into(): mozilla.components.concept.sync.Profile</ID>
+    <ID>UndocumentedPublicFunction:Types.kt$fun ScopedKey.into(): OAuthScopedKey</ID>
+    <ID>UndocumentedPublicFunction:Types.kt$fun TabHistoryEntry.into(): mozilla.components.concept.sync.TabData</ID>
+    <ID>UndocumentedPublicFunction:Types.kt$fun mozilla.components.concept.sync.Device.into(): Device</ID>
+    <ID>UndocumentedPublicFunction:Types.kt$fun mozilla.components.concept.sync.TabData.into(): TabHistoryEntry</ID>
+    <ID>UndocumentedPublicFunction:WebAppManifestParser.kt$WebAppManifestParser$fun serialize(manifest: WebAppManifest)</ID>
+    <ID>UndocumentedPublicFunction:WorkManagerSyncManager.kt$fun getLastSynced(context: Context): Long</ID>
+    <ID>UndocumentedPublicFunction:nodes.kt$AstNode$open fun toString(level: Int, isTopLevel: Boolean = true): String</ID>
+    <ID>UnusedParameter:InlineAutocompleteEditText.kt$InlineAutocompleteEditText$_: View</ID>
+    <ID>UseRequire:AutoFitTextureView.kt$AutoFitTextureView$throw IllegalArgumentException("Size cannot be negative.")</ID>
+    <ID>UseRequire:BrowserStore.kt$BrowserStore$throw IllegalArgumentException("Duplicate tabs found")</ID>
+    <ID>UseRequire:BrowserStore.kt$BrowserStore$throw IllegalArgumentException("Selected tab does not exist")</ID>
+    <ID>UseRequire:CrashReporter.kt$CrashReporter$throw IllegalArgumentException("No crash reporter services defined")</ID>
+    <ID>UseRequire:CustomTabIntentProcessor.kt$CustomTabIntentProcessor$throw IllegalArgumentException("getAdditionalHeaders() intent bundle contains wrong key value pair")</ID>
+    <ID>UseRequire:DeviceFragment.kt$DeviceFragment$throw IllegalArgumentException("$context must implement OnDeviceListInteractionListener")</ID>
+    <ID>UseRequire:FxaAccountManager.kt$FxaAccountManager$throw IllegalArgumentException("Set of supported engines can't be empty")</ID>
+    <ID>UseRequire:Headers.kt$Header$throw IllegalArgumentException("Header name cannot be empty")</ID>
+    <ID>UseRequire:HttpURLConnectionClient.kt$HttpURLConnectionClient$throw IllegalArgumentException("Client doesn't support private request")</ID>
+    <ID>UseRequire:LinkingMiddleware.kt$LinkingMiddleware$throw IllegalArgumentException("AddMultipleTabsAction does not support tabs with engine sessions")</ID>
+    <ID>UseRequire:OkHttpClient.kt$OkHttpClient$throw IllegalArgumentException("Client doesn't support private request")</ID>
+    <ID>UseRequire:SearchEngine.kt$throw IllegalArgumentException("URL does not contain search terms placeholder")</ID>
+    <ID>UseRequire:StoreExtensions.kt$throw IllegalArgumentException("Lifecycle is already DESTROYED")</ID>
+    <ID>UseRequire:SystemEngineSession.kt$SystemEngineSession$throw IllegalArgumentException("Can only restore from SystemEngineSessionState")</ID>
+    <ID>UseRequire:TabGroupReducer.kt$throw IllegalArgumentException("Tab group with same ID already exists")</ID>
+    <ID>UseRequire:TabListReducer.kt$TabListReducer$throw IllegalArgumentException("The parent does not exist")</ID>
+    <ID>UseRequire:UrlMatcher.kt$UrlMatcher$throw IllegalArgumentException("$key categoryMap contains undeclared category")</ID>
+    <ID>UseRequire:WebURLFinder.kt$WebURLFinder$throw IllegalArgumentException("string must not be null")</ID>
+    <ID>UseRequire:WebURLFinder.kt$WebURLFinder$throw IllegalArgumentException("strings must not be null")</ID>
+  </CurrentIssues>
+</SmellBaseline>

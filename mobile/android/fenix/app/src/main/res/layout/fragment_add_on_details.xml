@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="6dp"
+    android:layout_marginBottom="6dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="?android:attr/listPreferredItemPaddingStart"
+        android:paddingEnd="?android:attr/listPreferredItemPaddingEnd">
+
+        <TextView
+            android:id="@+id/details"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="?attr/textPrimary"
+            android:textColorLink="?textAccent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="@tools:sample/lorem/random" />
+
+        <TextView
+            android:id="@+id/author_label"
+            style="@style/AboutHeaderContentText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:minHeight="48dp"
+            android:layout_marginTop="10dp"
+            android:text="@string/mozac_feature_addons_author"
+            app:layout_constraintEnd_toStartOf="@+id/author_text"
+            app:layout_constraintHorizontal_chainStyle="spread_inside"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/details" />
+
+        <TextView
+            android:id="@+id/author_text"
+            style="@style/AboutHeaderContentText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:minHeight="48dp"
+            android:layout_alignParentEnd="true"
+            android:layout_marginTop="10dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/author_label"
+            app:layout_constraintTop_toBottomOf="@+id/details"
+            android:importantForAccessibility="no"
+            tools:text="@tools:sample/full_names" />
+
+        <View
+            android:id="@+id/author_divider"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="?android:attr/listDivider"
+            android:importantForAccessibility="no"
+            app:layout_constraintTop_toBottomOf="@id/author_text"
+            tools:layout_editor_absoluteX="16dp" />
+
+        <TextView
+            android:id="@+id/version_label"
+            style="@style/AboutHeaderContentText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:minHeight="48dp"
+            android:text="@string/mozac_feature_addons_version"
+            app:layout_constraintEnd_toStartOf="@+id/version_text"
+            app:layout_constraintHorizontal_chainStyle="spread_inside"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/author_divider"
+            tools:layout_editor_absoluteY="52dp" />
+
+        <TextView
+            android:id="@+id/version_text"
+            style="@style/AboutHeaderContentText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="48dp"
+            android:minHeight="48dp"
+            android:gravity="center"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/version_label"
+            app:layout_constraintTop_toBottomOf="@+id/author_divider"
+            android:importantForAccessibility="no"
+            tools:text="1.2.3" />
+
+        <View
+            android:id="@+id/version_divider"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="?android:attr/listDivider"
+            android:importantForAccessibility="no"
+            app:layout_constraintTop_toBottomOf="@+id/version_text" />
+
+        <TextView
+            android:id="@+id/last_updated_label"
+            style="@style/AboutHeaderContentText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:minHeight="48dp"
+            android:text="@string/mozac_feature_addons_last_updated"
+            app:layout_constraintEnd_toStartOf="@+id/last_updated_text"
+            app:layout_constraintHorizontal_chainStyle="spread_inside"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/version_divider" />
+
+        <TextView
+            android:id="@+id/last_updated_text"
+            style="@style/AboutHeaderContentText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:minHeight="48dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/last_updated_label"
+            app:layout_constraintTop_toBottomOf="@+id/version_divider"
+            android:importantForAccessibility="no"
+            tools:text="Oct 16, 2019" />
+
+        <View
+            android:id="@+id/last_updated_divider"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="?android:attr/listDivider"
+            android:importantForAccessibility="no"
+            app:layout_constraintTop_toBottomOf="@+id/last_updated_text" />
+
+        <TextView
+            android:id="@+id/home_page_label"
+            style="@style/AboutHeaderContentText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:minHeight="48dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:text="@string/mozac_feature_addons_home_page"
+            android:textColor="?textAccent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/last_updated_divider" />
+
+        <View
+            android:id="@+id/home_page_divider"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="?android:attr/listDivider"
+            android:importantForAccessibility="no"
+            app:layout_constraintTop_toBottomOf="@+id/home_page_label" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/rating"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@+id/home_page_divider">
+
+            <TextView
+                android:id="@+id/rating_label"
+                style="@style/AboutHeaderContentText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:minHeight="48dp"
+                android:text="@string/mozac_feature_addons_rating"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <RatingBar
+                android:id="@+id/rating_view"
+                style="@style/Widget.AppCompat.RatingBar.Small"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/addon_details_rating_view_margin_start"
+                android:layout_marginEnd="@dimen/addon_details_rating_view_margin_end"
+                android:isIndicator="true"
+                android:numStars="5"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/review_count"
+                app:layout_constraintHorizontal_bias="1"
+                app:layout_constraintHorizontal_chainStyle="packed"
+                app:layout_constraintStart_toEndOf="@+id/rating_label"
+                android:importantForAccessibility="no"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/review_count"
+                style="@style/AboutHeaderContentText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:minWidth="48dp"
+                android:minHeight="48dp"
+                app:layout_constrainedWidth="true"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/rating_view"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="591,642" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <View
+            android:id="@+id/detail_url_divider"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="?android:attr/listDivider"
+            android:importantForAccessibility="no"
+            app:layout_constraintTop_toBottomOf="@+id/rating" />
+
+        <TextView
+            android:id="@+id/detail_url"
+            style="@style/AboutHeaderContentText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:minHeight="48dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:text="@string/mozac_feature_addons_more_info_link"
+            android:textColor="?textAccent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/detail_url_divider" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

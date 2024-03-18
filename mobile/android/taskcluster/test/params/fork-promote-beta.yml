@@ -1,0 +1,62 @@
+base_ref: main
+base_repository: https://github.com/mozilla-releng/staging-firefox-android
+base_rev: 4326117596992acd5dc3a310eaf04f5616677291
+build_date: 1670424217
+build_number: 1
+do_not_optimize: []
+enable_always_target: true
+existing_tasks:
+  build-apk-focus-android-test-beta: C3X7hnxTQSO9d8FQmRcY8w
+  build-apk-focus-android-test-debug: c0A_NI2lR7m3aaH7bAllPg
+  build-apk-focus-android-test-nightly: MIBWbQgUQeiseL6kymhvSA
+  build-apk-focus-beta-firebase: Jf2e_jicT8qKM5EXHp3HMA
+  build-apk-focus-debug: Y63u3dPmT2iXHEw4nvYR8g
+  build-apk-focus-nightly-firebase: f_Ykkjy-SGC2NHAn2ErQGA
+  build-apk-klar-debug: dMhnBP_sQV6NYsewvCGSkw
+  build-docker-image-android-build: GVO5tDLDT6Kfb_-S9tks4g
+  build-docker-image-base: Jbx1ZoQPS_2B9SBcGG_YrA
+  build-docker-image-ui-tests: UPCmdgBfQn6v8JwXkqwzTg
+  build-samples-browser-gecko: G60BzATSQC6TMKJYCYU84w
+  build-samples-browser-system: YsIfoYvUS4Slne5HPstrCA
+  complete-push: QorKpoq9RZO4Xwo1eb8x5w
+  complete-push-1: RMXzg94SS8yf_ea9nOMrtA
+  complete-push-2: UHBX_XHCTJe4c3ofw-TLRw
+  fetch-android-sdk-3859397: Q4zGfGHFSpGEoyoSfBwhHA
+  lint-compare-locales-focus: bqPAhlchQrW_MNdczlmJ1A
+  lint-detekt-focus: L7MTq-EFQpaXhtv0vHa4wA
+  lint-ktlint-focus: eVCmmUf4SMaivWvKk0HAPg
+  lint-lint-focus: Hv-z5OoVQAa_ccSjT3GkhQ
+  signing-apk-focus-android-test-beta: KdQC6XDgRKWLqDiLdOZiRg
+  signing-apk-focus-android-test-debug: U_I7qpb-RrG6KUbQ1qphOQ
+  signing-apk-focus-android-test-nightly: KcYcGG8nTfW0nRyuZOMB0A
+  signing-apk-focus-beta-firebase: fLRa951KR_u4367wq4Qgtg
+  signing-apk-focus-debug: B0ya_-_NRK-TQB_W-sdWlA
+  signing-apk-focus-nightly-firebase: RQnCbbRjSDqS7Ix678JAjQ
+  test-focus-debug: XRFv9_XkQW2No6sfUv50Lg
+  toolchain-linux64-android-gradle-dependencies: F9Z-fH7zTmCM0-_CQvczZw
+  toolchain-linux64-android-sdk-linux-repack: Yuj1DS-KSaGAuHPt1mUtsg
+  ui-test-focus-arm-beta: HP54WbjPSSKSfp4cQI_Bog
+  ui-test-focus-arm-debug: ILh_1BffTRi6paEM_-EeMw
+  ui-test-focus-arm-nightly: PDTsWpzFQuSVWfPm8OnvwQ
+filters:
+- target_tasks_method
+head_ref: main
+head_repository: https://github.com/mozilla-releng/staging-firefox-android
+head_rev: 8159feeb3c547c41b93521aea7e390dbbb14c8f1
+head_tag: v109.0b1
+level: '1'
+moz_build_date: '20221207144337'
+next_version: 109.0b2
+optimize_strategies: null
+optimize_target_tasks: true
+owner: jlorenzo@mozilla.com
+project: staging-firefox-android
+pull_request_number: null
+pushdate: 0
+pushlog_id: '0'
+release_type: beta
+repository_type: git
+shipping_phase: promote
+target_tasks_method: promote
+tasks_for: action
+version: 109.0b1

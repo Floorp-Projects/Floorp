@@ -1,0 +1,49 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <application android:supportsRtl="true">
+        <activity android:name=".prompt.CrashReporterActivity"
+            android:process=":mozilla.components.lib.crash.CrashReporter"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:theme="@style/Theme.Mozac.CrashReporter" />
+
+        <service android:name=".handler.CrashHandlerService"
+            android:process=":mozilla.components.lib.crash.CrashHandler"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="This foreground service allows users to report crashes" />
+        </service>
+
+        <!-- Separate process to avoid starting the application when starting this service -->
+        <service android:name=".service.SendCrashReportService"
+            android:process=":crashReportingProcess"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="This foreground service allows users to report crashes" />
+        </service>
+
+        <!-- Separate process to avoid starting the application when starting this service -->
+        <service android:name=".service.SendCrashTelemetryService"
+            android:process=":crashReportingProcess"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="This foreground service allows users to report crashes" />
+        </service>
+    </application>
+
+</manifest>

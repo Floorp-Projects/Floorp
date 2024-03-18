@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Content description (not visible, for screen readers etc.): Description for the overflow menu button in the browser toolbar. -->
+    <string name="mozac_browser_toolbar_menu_button">ಪರಿವಿಡಿ</string>
+    <string name="mozac_clear_button_description">ಅಳಿಸು</string>
+    <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection enabled, but none trackers have been blocked or detected. -->
+    <string name="mozac_browser_toolbar_content_description_tracking_protection_on_no_trackers_blocked">ಜಾಡು ಇರಿಸುವಿಕೆ ಇಂದ ರಕ್ಷಣೆ ಶುರುವಾಗಿದೆ</string>
+    <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection enabled, and trackers have been blocked or detected.-->
+    <string name="mozac_browser_toolbar_content_description_tracking_protection_on_trackers_blocked1">ಟ್ರ್ಯಾಕಿಂಗ್ ಪ್ರೊಟೆಕ್ಷನ್ ಟ್ರ್ಯಾಕರ್‌ಗಳನ್ನು ನಿರ್ಬಂಧಿಸಿದೆ</string>
+    <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection disabled.-->
+    <string name="mozac_browser_toolbar_content_description_tracking_protection_off_for_a_site1">ಈ ಸೈಟ್‌ಗಾಗಿ ಟ್ರ್ಯಾಕಿಂಗ್ ಪ್ರೊಟೆಕ್ಷನ್ ಆಫ್ ಆಗಿದೆ</string>
+    <!-- Content description: For the site security information icon (the site security icon).-->
+    <string name="mozac_browser_toolbar_content_description_site_info">ತಾಣದ ಮಾಹಿತಿ</string>
+    <!-- Announcement made by the screen reader when the progress bar is shown and a page is loading -->
+    <string name="mozac_browser_toolbar_progress_loading">ಲೋಡ್ ಆಗುತ್ತಿದೆ</string>
+</resources>

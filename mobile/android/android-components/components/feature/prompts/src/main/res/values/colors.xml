@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <array name="mozac_feature_prompts_default_colors">
+        <item>#D73920</item>
+        <item>#FF8605</item>
+        <item>#FFCB13</item>
+        <item>#5FAD47</item>
+        <item>#21A1DE</item>
+        <item>#102457</item>
+        <item>#5B2067</item>
+        <item>#D4DDE4</item>
+        <item>#FFFFFF</item>
+    </array>
+    <color name="mozacBoxStrokeColor">#828282</color>
+    <color tools:override="true" tools:ignore="UnusedResources"
+        name="mtrl_textinput_default_box_stroke_color">@color/mozacBoxStrokeColor</color>
+</resources>

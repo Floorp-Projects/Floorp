@@ -1,0 +1,307 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">重试</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">无法完成请求</string>
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[
+      <p>暂无此问题或错误的详细解释信息。</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">安全连接失败</string>
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
+      <ul>
+        <li>您尝试查看的网页无法显示，因为接收到的数据的真实性无法验证。</li>
+        <li>建议联系向这个网站的拥有者反馈此问题。</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">安全连接失败</string>
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+      <ul>
+        <li>这可能是服务器配置的问题，或是有人尝试冒充该服务器所致。</li>
+        <li>如果您之前曾成功连接该服务器，错误可能是暂时的，您可以稍后再尝试。</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">高级…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>可能有人试图冒充该网站，您不应该继续访问。</label>
+        <br><br>
+        <label>网站通过证书证明其身份。%1$s 不信任 <b>%2$s</b>，其证书颁发者未知，属于自签名证书，或服务器未妥善发送中间证书。</label>
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">返回上一页（推荐）</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">接受风险并继续</string>
+
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">此网站要求使用安全连接。</string>
+
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+      <ul>
+         <li>由于此网站要求使用安全连接，您尝试查看的页面无法显示。</li>
+         <li>这个问题大多与网站有关，无法通过您的操作解决。</li>
+         <li>您可以向此网站的管理者反馈该问题。</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">高级…</string>
+
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
+        <label> <b>%1$s</b> 启用了被称为 HTTP 严格传输安全（HSTS）的安全策略，<b>%2$s</b> 只能与其建立安全连接。您无法为此网站添加例外，以访问此网站。</label>
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">返回</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">连接被中断</string>
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
+      <p>浏览器连接成功，但连接在传输数据时中断了。请稍后重试。</p>
+      <ul>
+        <li>该网站可能暂时无法使用或太忙。请稍后再试一次。</li>
+        <li>如果您无法加载任何页面，请检查设备的数据或 Wi-Fi 连接。</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">连接超时</string>
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
+      <p>指定的网站一直没有回应，浏览器停止了等待。</p>
+      <ul>
+        <li>该网站可能目前访问人数过多？请稍后重试。</li>
+        <li>您是否也无法浏览其他网站？请检查您网络连接。</li>
+        <li>设备或网络是否受防火墙或代理保护？请确定这些设置是否正确。</li>
+        <li>仍然不行？请联系您的网络管理员或者电信运营商以寻求协助。</li>
+      </ul>
+    
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">无法连接</string>
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
+      <ul>
+        <li>该网站可能暂时无法使用或太忙。请稍后再试一次。</li>
+        <li>如果您无法加载任何页面，请检查设备的数据或 Wi-Fi 连接。</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">意外的服务器响应</string>
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
+      <p>该网站响应网络请求的方式与预期不符，浏览器无法继续。</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">页面未正确重定向</string>
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
+      <p>浏览器已停止尝试获取请求的项。网站正在将请求无限循环重定向。</p>
+      <ul>
+        <li>您是否禁用或拦截了该网站必须的 Cookie？</li>
+        <li>如果接受该网站的 Cookie 仍然不能解决问题，则很可能是该网站服务器配置的问题而不是您计算机的问题。</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">脱机模式</string>
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[
+      <p>浏览器当前处于脱机模式，无法连接请求的项。</p>
+      <ul>
+        <li>计算机是否连接了可用的网络？</li>
+        <li>按“重试”切换到联机模式并重新加载此页面。</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">安全原因导致访问端口受限</string>
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[
+      <p>请求的网址指定的端口（例如 <q>mozilla.org:80</q> 表示使用 mozilla.org 的 80 端口）通常<em>不是</em>用于网络浏览。为了保护您的安全，浏览器已取消请求。</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">连接被重置</string>
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[
+      <p>协商连接时网络链路中断。请重试。</p>
+      <ul>
+        <li>该网站可能暂时无法使用或太忙。请稍后再试一次。</li>
+        <li>如果您无法加载任何页面，请检查设备的数据或 Wi-Fi 连接。</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">不安全的文件类型</string>
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[
+      <ul>
+        <li>请联系网站所有者，向其通报这一问题。</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">内容损坏错误</string>
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
+      <p>您尝试查看的页面无法显示，因为检测到传输的数据含有错误。</p>
+      <ul>
+        <li>请联系网站所有者，向其通报这一问题。</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">内容已崩溃</string>
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
+      <p>您尝试查看的页面无法显示，因为检测到传输的数据含有错误。</p>
+      <ul>
+        <li>请联系网站所有者，向其通报这一问题。</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">内容编码错误</string>
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
+      <p>您尝试查看的页面无法显示，因为它使用了无效的或者不支持的压缩格式。</p>
+      <ul>
+        <li>请联系网站所有者，向其通报这一问题。</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">找不到网址</string>
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
+      <p>浏览器无法找到该网址对应的服务器。</p>
+      <ul>
+        <li>检查网址有没有输入错误，比如把
+			<strong>www</strong>.example.com 输入成了
+			<strong>ww</strong>.example.com。</li>
+        <li>如果您无法加载任何页面，请检查设备的数据或 Wi-Fi 连接。</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">无互联网连接</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">请检查您的网络连接，或在稍后尝试重新加载页面。</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">重新加载</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">不正确的网址</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
+      <p>无法识别这种格式的网址。请检查网址是否有误并重试。</p>
+    ]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">网址无效</string>
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[
+      <ul>
+        <li>网址的格式通常是：<strong>http://www.example.com/</strong>。</li>
+        <li>请确保您使用的是正斜杠（即 <strong>/</strong>）。</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">未知协议</string>
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
+      <p>浏览器无法识别该网址的协议（例如 <q>wxyz://</q>），因此浏览器无法连接至该网站。</p>
+      <ul>
+        <li>您是否在尝试访问多媒体或其他非文字服务？请检查该站点是否有其他要求。</li>
+        <li>某些协议可能需要安装第三方软件或插件后浏览器才能识别。</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">未找到文件</string>
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[
+      <ul>
+        <li>或许该项目已经被改名、移除或者移走？</li>
+        <li>网址是否有拼写错误、大小写错误或其他笔误？</li>
+        <li>您是否有访问该项目的权限？</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">访问该文件被拒绝</string>
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[
+      <ul>
+        <li>文件可能已被移走、移除，或者没有访问该文件的权限。</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">代理服务器拒绝连接</string>
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[
+      <p>浏览器被设置为使用代理服务器，但是该代理服务器拒绝了该连接。</p>
+      <ul>
+        <li>浏览器的代理服务器设置是否正确？请检查并重试。</li>
+        <li>该代理服务是否允许来自此网络的连接？</li>
+        <li>仍然不行？请联系您的网络管理员或者电信运营商以寻求协助。</li>
+	  </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">无法找到代理服务器</string>
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
+      <p>浏览器被设置为使用代理服务器，但是无法找到该代理服务器。</p>
+      <ul>
+        <li>浏览器的代理服务器设置是否正确？请检查并重试。</li>
+        <li>计算机是否连接了可用的网络？</li>
+        <li>仍然不行？请联系您的网络管理员或者互联网服务提供商以寻求协助。</li>
+	  </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">有恶意软件网站问题</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
+      <p>根据举报，位于 %1$s 的此网站有攻击行为。现已根据您的安全选项予以拦截。</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">有流氓软件网站问题</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
+      <p>根据举报，位于 %1$s 的此网站提供流氓软件。现已根据您的安全选项予以拦截。</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">有恶意网站问题</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[
+      <p>根据举报，位于 %1$s 的此网站可能有攻击行为。现已根据您的安全选项予以拦截。</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">有欺诈网站问题</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
+      <p>根据举报，位于 %1$s 的此网站为欺诈网站。现已根据您的安全选项予以拦截。</p>
+    ]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">安全网站不可用</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[为增强安全性，您已启用 HTTPS-Only 模式，但 <em>%1$s</em> 的 HTTPS 版本不可用。]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">继续前往 HTTP 网站</string>
+</resources>

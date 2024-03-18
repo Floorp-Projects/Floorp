@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <!-- random words that should not end up on disk -->
+    <title>gigantic experience</title>
+</head>
+<body>
+<h1>focus test page</h1>
+<!-- More random words that should not end up on disk -->
+<p>groovy rabbits</p>
+<p>This test page installs a service worker and saves a cookie.</p>
+
+<h2 id="cookieHeading">Cookie</h2>
+<p>Initial: <script type="text/javascript">document.write(document.cookie);</script></p>
+<p>
+    <!-- Setting a cookie -->
+    <script type="text/javascript">
+       document.cookie = "birthday=armchair; expires=Tue, 18 Dec 2035 12:00:00 UTC; path=/";
+       document.write("Cookie saved");
+     </script>
+</p>
+<p>Afterwards: <script type="text/javascript">document.write(document.cookie);</script></p>
+
+<h2>Service worker</h2>
+<p id="status"></p>
+
+<script type="text/javascript">
+        // Add a key value pair to local storage. This is required by WebViewDataTest which asserts
+        // that the local storage directory should exist
+        var script = document.createElement('script');
+        script.src = "service-worker.js";
+
+        document.head.appendChild(script); //or something of the likes
+    </script>
+
+</body>
+</html>

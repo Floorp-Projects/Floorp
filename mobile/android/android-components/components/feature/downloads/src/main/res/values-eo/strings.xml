@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Name of the "notification channel" used for displaying download notification. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_downloads_notification_channel">Elŝutoj</string>
+
+    <!-- Text shown on the second row of a paused download notification. -->
+    <string name="mozac_feature_downloads_paused_notification_text">Elŝuto paŭzinta</string>
+    <!-- Text shown on the second row of an completed download notification. The filename is shown on the first row. -->
+    <string name="mozac_feature_downloads_completed_notification_text2">Elŝuto kompleta</string>
+    <!-- Text shown on the second row of an failed download notification. The filename is shown on the first row. -->
+    <string name="mozac_feature_downloads_failed_notification_text2">Elŝuto malsukcesa</string>
+
+    <!-- Alert dialog confirmation before download a file, this is the title. %1$s will be replaced with the name of the file. -->
+    <string name="mozac_feature_downloads_dialog_title2">Elŝuto (%1$s)</string>
+    <!-- Alert dialog confirmation before download a file, this is the positive action. -->
+    <string name="mozac_feature_downloads_dialog_download">Elŝuti</string>
+    <!-- Alert dialog confirmation before download a file, this is the negative action. -->
+    <string name="mozac_feature_downloads_dialog_cancel">Nuligi</string>
+    <!-- Error shown when the user is trying to download a invalid file. %1$s will be replaced with the name of the app. -->
+    <string name="mozac_feature_downloads_file_not_supported2">%1$s ne povas elŝuti tiun ĉi tipon de dosiero</string>
+
+    <!-- Message that appears when the downloaded file could not be opened-->
+    <string name="mozac_feature_downloads_could_not_open_file">Ne eblis malfermi la dosieron</string>
+
+    <!-- Message that appears when the downloaded file is a specific type that Android doesn't support opening-->
+    <string name="mozac_feature_downloads_open_not_supported1">Neniu programo trovita por malfermi dosierojn %1$s</string>
+
+    <!-- Button that pauses the download when pressed -->
+    <string name="mozac_feature_downloads_button_pause">Paŭzigi</string>
+    <!-- Button that resumes the download when pressed -->
+    <string name="mozac_feature_downloads_button_resume">Daŭrigi</string>
+    <!-- Button that cancels the download when pressed -->
+    <string name="mozac_feature_downloads_button_cancel">Nuligi</string>
+
+    <!-- Button that opens the downloaded file when pressed -->
+    <string name="mozac_feature_downloads_button_open">Malfermi</string>
+
+    <!-- Button that restarts the download after a failed attempt -->
+    <string name="mozac_feature_downloads_button_try_again">Klopodi denove</string>
+
+    <!-- Content description for close button -->
+    <string name="mozac_feature_downloads_button_close">Fermi</string>
+    <!-- Title for the third party download app chooser dialog -->
+    <string name="mozac_feature_downloads_third_party_app_chooser_dialog_title">Kompletigi agon per</string>
+    <!-- Message that appears when trying to download with an external app fails. %1$s will be replaced with the name the external app. -->--&gt;
+    <string name="mozac_feature_downloads_unable_to_open_third_party_app">Ne eblis malfermi %1$s</string>
+    <!-- Text for the info dialog when write to storage permissions have been denied but user tries to download a file. -->
+    <string name="mozac_feature_downloads_write_external_storage_permissions_needed_message">La permeso aliri la konservejon de dosieroj kaj aŭdvidaĵojn estas bezonata por elŝuti dosierojn. Iru al la agordoj de Android, tuŝetu Permesoj kaj poste Permesi.</string>
+
+    <!-- Alert dialog confirmation before cancelling downloads, this is the title   -->
+    <string name="mozac_feature_downloads_cancel_active_downloads_warning_content_title">Ĉu nuligi privatajn elŝutojn?</string>
+    <!-- Alert dialog confirmation before cancelling private downloads, this is the body. %1$s will be replaced with the name of the file. -->
+    <string name="mozac_feature_downloads_cancel_active_private_downloads_warning_content_body">Se vi fermas ĉiujn viajn langetojn de privata retumo nun, %1$s elŝutoj estos nuligitaj. Ĉu vi certe volas forlasi la privatan retumon?</string>
+    <!-- Alert dialog confirmation before cancelling downloads, this is the positive action. -->
+    <string name="mozac_feature_downloads_cancel_active_downloads_accept">Nuligi elŝutojn</string>
+    <!-- Alert dialog confirmation before cancelling downloads, this is the negative action. Leaves user in Private browsing -->
+    <string name="mozac_feature_downloads_cancel_active_private_downloads_deny">Resti en privata retumo</string>
+</resources>

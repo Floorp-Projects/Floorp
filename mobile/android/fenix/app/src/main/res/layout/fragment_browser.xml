@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<org.mozilla.fenix.browser.SwipeGestureLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/gestureLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/browserWindow"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        
+        <androidx.compose.ui.platform.ComposeView
+            android:id="@+id/tabStripView"
+            app:layout_constraintBottom_toTopOf="@+id/browserLayout"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_width="match_parent"
+            android:visibility="gone"
+            android:layout_height="@dimen/tab_strip_height" />
+
+        <androidx.coordinatorlayout.widget.CoordinatorLayout
+            android:id="@+id/browserLayout"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            app:layout_constraintHeight_min="1dp"
+            app:layout_constraintBottom_toTopOf="@+id/addressSelectBar"
+            app:layout_constraintTop_toBottomOf="@+id/tabStripView"
+            tools:context="browser.BrowserFragment">
+
+            <mozilla.components.ui.widgets.VerticalSwipeRefreshLayout
+                android:id="@+id/swipeRefresh"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <mozilla.components.concept.engine.EngineView
+                    tools:ignore="Instantiatable"
+                    android:id="@+id/engineView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:visibility="gone" />
+            </mozilla.components.ui.widgets.VerticalSwipeRefreshLayout>
+
+            <mozilla.components.feature.findinpage.view.FindInPageBar
+                android:id="@+id/findInPageView"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_gravity="bottom"
+                android:background="?attr/layer1"
+                android:clickable="true"
+                android:focusable="true"
+                android:visibility="gone"
+                app:findInPageNoMatchesTextColor="?attr/textWarning"
+                app:findInPageButtonsTint="?attr/textPrimary"
+                app:findInPageResultCountTextColor="?attr/textPrimary" />
+
+            <include
+                android:id="@+id/viewDynamicDownloadDialog"
+                layout="@layout/download_dialog_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:visibility="gone" />
+
+            <mozilla.components.feature.readerview.view.ReaderViewControlsBar
+                android:id="@+id/readerViewControlsBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:background="?attr/layer1"
+                android:elevation="24dp"
+                android:visibility="gone" />
+
+            <org.mozilla.fenix.crashes.CrashContentView
+                android:id="@+id/crash_reporter_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone" />
+
+            <FrameLayout
+                android:id="@+id/startDownloadDialogContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:visibility="gone"
+                android:elevation="@dimen/browser_fragment_toolbar_elevation"/>
+
+            <FrameLayout
+                android:id="@+id/dynamicSnackbarContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:elevation="@dimen/browser_fragment_toolbar_elevation"/>
+
+        </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+        <mozilla.components.feature.prompts.address.AddressSelectBar
+            android:visibility="gone"
+            android:id="@+id/addressSelectBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toTopOf="@id/creditCardSelectBar"
+            app:layout_constraintTop_toBottomOf="@id/browserLayout" />
+
+        <mozilla.components.feature.prompts.creditcard.CreditCardSelectBar
+            android:visibility="gone"
+            android:id="@+id/creditCardSelectBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toTopOf="@id/loginSelectBar"
+            app:layout_constraintTop_toBottomOf="@id/addressSelectBar" />
+
+        <mozilla.components.feature.prompts.login.LoginSelectBar
+            android:visibility="gone"
+            android:id="@+id/loginSelectBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/creditCardSelectBar" />
+
+        <mozilla.components.feature.prompts.login.SuggestStrongPasswordBar
+            android:visibility="gone"
+            android:id="@+id/suggestStrongPasswordBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/loginSelectBar" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <org.mozilla.fenix.browser.TabPreview
+        android:id="@+id/tabPreview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clickable="false"
+        android:focusable="false"
+        android:visibility="gone" />
+</org.mozilla.fenix.browser.SwipeGestureLayout>

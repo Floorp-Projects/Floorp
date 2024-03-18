@@ -1,0 +1,24 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+#  License, v. 2.0. If a copy of the MPL was not distributed with this
+#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+about:
+  description: GeckoView features configurable via Nimbus
+  android:
+    package: mozilla.components.browser.engine.gecko
+    class: .GeckoNimbus
+channels:
+  - debug
+  - release
+features:
+  pdfjs:
+    description: "PDF.js features"
+    variables:
+      download-button:
+        description: "Download button"
+        type: Boolean
+        default: true
+
+      open-in-app-button:
+        description: "Open in app button"
+        type: Boolean
+        default: true

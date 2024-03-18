@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?android:attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true"
+    android:minHeight="?android:attr/listPreferredItemHeight">
+
+    <ImageView
+        android:id="@+id/favicon_image"
+        style="@style/Mozac.Widgets.Favicon"
+        android:layout_marginStart="16dp"
+        android:importantForAccessibility="no"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+    <TextView
+        android:id="@+id/webAddressView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/saved_logins_item_margin_start"
+        android:layout_marginEnd="@dimen/saved_logins_item_margin_end"
+        android:ellipsize="middle"
+        android:singleLine="true"
+        android:textAppearance="?android:attr/textAppearanceListItem"
+        android:textColor="?attr/textPrimary"
+        app:layout_constraintBottom_toTopOf="@id/usernameView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/favicon_image"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed"
+        tools:text="mozilla.org" />
+
+    <TextView
+        android:id="@+id/usernameView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/saved_logins_item_margin_start"
+        android:layout_marginEnd="@dimen/saved_logins_item_margin_end"
+        android:ellipsize="middle"
+        android:singleLine="true"
+        android:textColor="?attr/textSecondary"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/favicon_image"
+        app:layout_constraintTop_toBottomOf="@id/webAddressView"
+        app:layout_constraintVertical_chainStyle="packed"
+        tools:text="mozilla.org" />
+</androidx.constraintlayout.widget.ConstraintLayout>

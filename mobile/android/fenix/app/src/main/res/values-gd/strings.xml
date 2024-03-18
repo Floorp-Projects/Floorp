@@ -1,0 +1,2120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_5">%s prìobhaideach</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_4">%s (Prìobhaideach)</string>
+
+    <!-- Home Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">Barrachd roghainnean</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_private_browsing_button">Cuir am brabhsadh prìobhaideach an comas</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_disable_private_browsing_button">Cuir am brabhsadh prìobhaideach à comas</string>
+    <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
+    <string name="search_hint">Lorg no cuir seòladh ann</string>
+    <!-- Placeholder text shown in the search bar before a user enters text for a general engine -->
+    <string name="search_hint_general_engine">Lorg air an lìon</string>
+    <!-- Placeholder text shown in search bar when using history search -->
+    <string name="history_search_hint">Eachdraidh nan lorg</string>
+    <!-- Placeholder text shown in search bar when using bookmarks search -->
+    <string name="bookmark_search_hint">Lorg sna comharran-lìn</string>
+    <!-- Placeholder text shown in search bar when using tabs search -->
+    <string name="tab_search_hint">Lorg sna tabaichean</string>
+    <!-- Placeholder text shown in the search bar when using application search engines -->
+    <string name="application_search_hint">Cuir a-steach briathran-luirg</string>
+    <!-- No Open Tabs Message Description -->
+    <string name="no_open_tabs_description">Nochdaidh na tabaichean fosgailte agad an-seo.</string>
+
+    <!-- No Private Tabs Message Description -->
+    <string name="no_private_tabs_description">Nochdaidh na tabaichean prìobhaideach agad an-seo.</string>
+    <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
+    <string name="tab_tray_multi_select_title">%1$d air an taghadh</string>
+    <!-- Label of button in create collection dialog for creating a new collection  -->
+    <string name="tab_tray_add_new_collection">Cuir cruinneachadh ùr ris</string>
+    <!-- Label of editable text in create collection dialog for naming a new collection  -->
+    <string name="tab_tray_add_new_collection_name">Ainm</string>
+    <!-- Label of button in save to collection dialog for selecting a current collection  -->
+    <string name="tab_tray_select_collection">Tagh cruinneachadh</string>
+    <!-- Content description for close button while in multiselect mode in tab tray -->
+    <string name="tab_tray_close_multiselect_content_description">Fàg am modh ioma-thaghaidh</string>
+    <!-- Content description for save to collection button while in multiselect mode in tab tray -->
+    <string name="tab_tray_collection_button_multiselect_content_description">Sàbhail na tabaichean a thagh thu sa chruinneachadh</string>
+    <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
+    <string name="tab_tray_multiselect_selected_content_description">Air an taghadh</string>
+
+    <!-- Home - Recently saved bookmarks -->
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_title">Air a shàbhaladh o chionn goirid</string>
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all_content_description_2">Seall a h-uile comharra-lìn a chaidh a shàbhaladh</string>
+    <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
+    <string name="recently_saved_menu_item_remove">Thoir air falbh</string>
+
+    <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
+    <string name="about_content">Chaidh %1$s a dhèanamh le Mozilla.</string>
+
+    <!-- Private Browsing -->
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder_description_2">
+        Falamhaichidh %1$s eachdraidh nan lorg is a’ bhrabhsaidh aig tabaichean prìobhaideachd  nuair a dhùineas tu iad no nuair a dh’fhàgas tu an aplacaid. Fhad ’s nach cuir seo am falach cò thusa mu choinneamh làraichean-lìn no solaraiche nan seirbheisean-lìn agad, cumaidh e na nì thu air loidhne am falach o dhaoine eile a chleachdas an t-uidheam seo.</string>
+    <string name="private_browsing_common_myths">Faoin-sgeulan cumanta mun bhrabhsadh phrìobhaideach</string>
+
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message_2">Cuir an ath-thaba prìobhaideach gu dol le aon ghnogag.</string>
+    <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
+    <string name="private_mode_cfr_pos_button_text">Cuir ris an sgrìn mhòr</string>
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
+    <string name="cfr_neg_button_text">Cha chuir, mòran taing</string>
+
+    <!-- Open in App "contextual feature recommendation" (CFR) -->
+    <!-- Text for the info message. The first parameter is the name of the application.-->
+    <string name="open_in_app_cfr_info_message_2">’S urrainn dhut iarraidh air %1$s ceanglaichean fhosgladh ann an aplacaidean gu fèin-obrachail.</string>
+    <!-- Text for the positive action button -->
+    <string name="open_in_app_cfr_positive_button_text">Tadhail air na roghainnean</string>
+    <!-- Text for the negative action button -->
+    <string name="open_in_app_cfr_negative_button_text">Leig seachad</string>
+
+    <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
+    <string name="tcp_cfr_message">Tha an gleus prìobhaideachd as cumhachdaiche againn a-riamh a’ cur balla mun cuairt air gleusan a thracaicheas tu air feadh làraichean.</string>
+
+    <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
+    <string name="tcp_cfr_learn_more">Barrachd fiosrachaidh mu làn-dìon o bhriosgaidean</string>
+
+    <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
+    <string name="camera_permissions_needed_message">Tha feum air inntrigeadh dhan chamara. Tadhail air roghainnean Android, thoir gnogag air na ceadan is an uairsin air “Ceadaich”.</string>
+    <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
+    <string name="camera_permissions_needed_positive_button_text">Tadhail air na roghainnean</string>
+    <!-- Text for the negative action button to dismiss the dialog. -->
+    <string name="camera_permissions_needed_negative_button_text">Leig seachad</string>
+
+    <!-- Text for the banner message to tell users about our auto close feature. -->
+    <string name="tab_tray_close_tabs_banner_message">’S urrainn dhut suidheachadh gun tèid tabaichean a dhùnadh gu fèin-obrachail mur an deach coimhead orra an-dè, an t-seachdain seo chaidh no am mìos seo chaidh.</string>
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_close_tabs_banner_positive_button_text">Seall na roghainnean</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_close_tabs_banner_negative_button_text">Leig seachad</string>
+
+    <!-- Text for the banner message to tell users about our inactive tabs feature. -->
+    <string name="tab_tray_inactive_onboarding_message">Thèid tabaichean nach dug thu sùil orra fad cola-deug a ghluasad an-seo. </string>
+    <!-- Text for the action link to go to Settings for inactive tabs. -->
+    <string name="tab_tray_inactive_onboarding_button_text">Cuir dheth sna roghainnean</string>
+
+    <!-- Text for title for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_title">A bheil thu airson an dùnadh an dèidh mìos?</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs.
+        The first parameter is the name of the application.-->
+    <string name="tab_tray_inactive_auto_close_body_2">Dùnaidh %1$s tabaichean nach tug thu sùil orra thairis air a’ mhìos seo chaidh.</string>
+    <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_button_content_description">Dùin</string>
+
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_turn_on_auto_close_button_2">Cuir gleus an fhèin-dùnaidh air</string>
+
+
+    <!-- Home screen icons - Long press shortcuts -->
+    <!-- Shortcut action to open new tab -->
+    <string name="home_screen_shortcut_open_new_tab_2">Taba ùr</string>
+    <!-- Shortcut action to open new private tab -->
+    <string name="home_screen_shortcut_open_new_private_tab_2">Taba prìobhaideach ùr</string>
+
+    <!-- Shortcut action to open Passwords screens -->
+    <string name="home_screen_shortcut_open_password_screen">Ath-ghoirid nam faclan-faire</string>
+
+    <!-- Recent Tabs -->
+    <!-- Header text for jumping back into the recent tab in the home screen -->
+    <string name="recent_tabs_header">Till gu far an robh thu</string>
+    <!-- Button text for showing all the tabs in the tabs tray -->
+    <string name="recent_tabs_show_all">Seall na h-uile</string>
+
+    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
+    <string name="recent_tabs_show_all_content_description_2">Am putan airson gach taba a bha fosgailte o chionn goirid a shealltainn</string>
+
+    <!-- Text for button in synced tab card that opens synced tabs tray -->
+    <string name="recent_tabs_see_all_synced_tabs_button_text">Seall gach taba sioncronaichte</string>
+    <!-- Accessibility description for device icon used for recent synced tab -->
+    <string name="recent_tabs_synced_device_icon_content_description">Uidheam sioncronaichte</string>
+    <!-- Text for the dropdown menu to remove a recent synced tab from the homescreen -->
+    <string name="recent_synced_tab_menu_item_remove">Thoir air falbh</string>
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recent_tab_menu_item_remove">Thoir air falbh</string>
+
+    <!-- History Metadata -->
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header_2">Air tadhal orra o chionn goirid</string>
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recently_visited_menu_item_remove">Thoir air falbh</string>
+
+    <!-- Content description for the button which navigates the user to show all of their history. -->
+    <string name="past_explorations_show_all_content_description_2">Seall na rùraich thu roimhe air fad</string>
+
+    <!-- Browser Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
+    <string name="browser_menu_back">Air ais</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="browser_menu_forward">Air adhart</string>
+    <!-- Content description (not visible, for screen readers etc.): Refresh current website -->
+    <string name="browser_menu_refresh">Ath-nuadhaich</string>
+    <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
+    <string name="browser_menu_stop">Sguir dheth</string>
+    <!-- Browser menu button that opens the addon manager -->
+    <string name="browser_menu_add_ons">Tuilleadain</string>
+    <!-- Browser menu button that opens account settings -->
+    <string name="browser_menu_account_settings">Fiosrachadh mun chunntas</string>
+    <!-- Text displayed when there are no add-ons to be shown -->
+    <string name="no_add_ons">Chan eil tuilleadan sam bith an-seo</string>
+    <!-- Browser menu button that sends a user to help articles -->
+    <string name="browser_menu_help">Cobhair</string>
+    <!-- Browser menu button that sends a to a the what's new article -->
+    <string name="browser_menu_whats_new">Na tha ùr</string>
+    <!-- Browser menu button that opens the settings menu -->
+    <string name="browser_menu_settings">Roghainnean</string>
+    <!-- Browser menu button that opens a user's library -->
+    <string name="browser_menu_library">An leabhar-lann</string>
+    <!-- Browser menu toggle that requests a desktop site -->
+    <string name="browser_menu_desktop_site">An tionndadh desktop</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen">Cuir ris an sgrìn mhòr</string>
+    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
+    <string name="browser_menu_install_on_homescreen">Stàlaich</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">Ath-shiocronaich</string>
+    <!-- Browser menu button that opens the find in page menu -->
+    <string name="browser_menu_find_in_page">Lorg air an duilleag</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection_2">Sàbhail ann an cruinneachadh</string>
+    <!-- Browser menu button that open a share menu to share the current site -->
+    <string name="browser_menu_share">Co-roinn</string>
+    <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_open_in_fenix">Fosgail ann am %1$s</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by">LE CUMHACHD %1$s</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by2">Le cumhachd %1$s</string>
+    <!-- Browser menu button to put the current page in reader mode -->
+    <string name="browser_menu_read">An sealladh leughaidh</string>
+    <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
+    <string name="browser_menu_read_close">Dùin sealladh an leughadair</string>
+    <!-- Browser menu button to open the current page in an external app -->
+    <string name="browser_menu_open_app_link">Fosgail ann an aplacaid</string>
+
+    <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
+    <string name="browser_menu_customize_reader_view">Gnàthaich sealladh an leughadair</string>
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">Cuir ris</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">Deasaich</string>
+
+    <!-- Button shown on the home page that opens the Customize home settings -->
+    <string name="browser_menu_customize_home_1">Gnàthaich an duilleag-dhachaigh</string>
+    <!-- Browser Toolbar -->
+    <!-- Content description for the Home screen button on the browser toolbar -->
+    <string name="browser_toolbar_home">Sgrìn dachaigh</string>
+
+    <!-- Locale Settings Fragment -->
+    <!-- Content description for tick mark on selected language -->
+    <string name="a11y_selected_locale_content_description">An cànan a thagh thu</string>
+    <!-- Text for default locale item -->
+    <string name="default_locale_text">A-rèir cànan an uidheim</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="locale_search_hint">Lorg cànan</string>
+
+    <!-- Search Fragment -->
+    <!-- Button in the search view that lets a user search by scanning a QR code -->
+    <string name="search_scan_button">Sganaich</string>
+    <!-- Button in the search view that lets a user change their search engine -->
+    <string name="search_engine_button">Einnseanan-luirg</string>
+    <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
+    <string name="search_shortcuts_engine_settings">Roghainnean an einnsein-luirg</string>
+    <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
+    <string name="awesomebar_clipboard_title">Cuir a-steach an ceangal on stòr-bhòrd</string>
+    <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_allow_button">Ceadaich</string>
+    <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_do_not_allow_button">Na ceadaich</string>
+    <!-- Search suggestion onboarding hint title text -->
+    <string name="search_suggestions_onboarding_title">A bheil thu airson molaidhean luirg a cheadachadh ann an seiseanan prìobhaideach?</string>
+    <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="search_suggestions_onboarding_text">Co-roinnidh %s gach rud a sgrìobhas tu ann am bàr an t-seòlaidh leis an einnsean-luirg bhunaiteach agad.</string>
+
+    <!-- Search engine suggestion title text. The first parameter is the name of the suggested engine-->
+    <string name="search_engine_suggestions_title">Lorg le %s</string>
+    <!-- Search engine suggestion description text -->
+    <string name="search_engine_suggestions_description">Lorg sa bhad on bhàr-sheòlaidh</string>
+
+    <!-- Menu option in the search selector menu to open the search settings -->
+    <string name="search_settings_menu_item">Roghainnean luirg</string>
+
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">Dèan lorg an-seo an turas seo:</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Search engine icon. The first parameter is the search engine name (for example: DuckDuckGo). -->
+    <string name="search_engine_icon_content_description" tools:ignore="UnusedResources">An t-einnsean-luirg %s</string>
+
+    <!-- Home onboarding -->
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">Seo dhut an duilleag-dhachaigh phearsantaichte agad. Nochdaidh tabaichean a bh’ agad o chionn goirid is toraidhean luirg an-seo.</string>
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title_2">Fàilte gu eadar-lìon nas pearsanta</string>
+    <!-- Home onboarding dialog welcome screen description text. -->
+    <string name="onboarding_home_welcome_description">Barrachd dhathan. Prìobhaideachd nas fheàrr. An dealas dhaoine seach prothaid fhathast.</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title_3">Tha e nas fhasa leum a ghearradh eadar sgrìnichean na bha e a-riamh roimhe</string>
+    <!-- Home onboarding dialog sign into sync screen description text. -->
+    <string name="onboarding_home_sync_description">Cùm a’ dol far an do stad thu ’s tu a’ faighinn cothrom air tabaichean a th’ agad air uidheaman eile air an duilleag-dhachaigh agad.</string>
+    <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_get_started_button">Dèan toiseach-tòiseachaidh</string>
+    <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
+    <string name="onboarding_home_sign_in_button">Clàraich a-steach</string>
+    <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_skip_button">Leum seachad</string>
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">Tha na tabaichean agad ri shioncronachadh! Lean ort far an do stad thu air an uidheam eie agad.</string>
+    <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
+    <string name="onboarding_home_content_description_close_button">Dùin</string>
+
+    <!-- Notification pre-permission dialog -->
+    <!-- Enable notification pre permission dialog title
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="onboarding_home_enable_notifications_title">’S urrainn dhut barrachd a dhèanamh le %s ma bhios na brathan an comas agad</string>
+    <!-- Enable notification pre permission dialog description with rationale
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="onboarding_home_enable_notifications_description">Sioncronaich na tabaichean agad eadar uidheaman, stiùirich na luchdaich thu a-nuas is faigh gliocasan leis an cuir thu an dìon prìobhaideachd a bheir %s dhut gu làn-fheum is mòran a bharrachd.</string>
+    <!-- Text for the button to request notification permission on the device -->
+    <string name="onboarding_home_enable_notifications_positive_button">Lean air adhart</string>
+    <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
+    <string name="onboarding_home_enable_notifications_negative_button">Chan ann an-dràsta</string>
+
+    <!-- Juno first user onboarding flow experiment -->
+    <!-- Title for set firefox as default browser screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_default_browser_title">Cleachd %s mar am brabhsair bunaiteach agad</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Cleachd Firefox mar am brabhsair bunaiteach agad</string>
+    <!-- Description for set firefox as default browser screen.
+        The first parameter is the Firefox brand name.
+        The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
+    <string name="juno_onboarding_default_browser_description">Tha daoine nas cudromaiche dha %1$s na prothaid agus dìonaidh e do phrìobhaideachd le bhith a’ bacadh gleusan a thracaicheadh tu air feadh làraichean.\n\nGheibh thu barrachd fiosrachaidh ann an %2$s againn.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Tha daoine nas cudromaiche dha Firefox na prothaid agus dìonaidh e do phrìobhaideachd le bhith a’ bacadh gleusan a thracaicheadh tu air feadh làraichean.\n\nGheibh thu barrachd fiosrachaidh ann an aithris na prìobhaideachd againn.</string>
+    <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
+    This is part of the string with the key "juno_onboarding_default_browser_description". -->
+    <string name="juno_onboarding_default_browser_description_link_text">aithris na prìobhaideachd</string>
+    <!-- Text for the button to set firefox as default browser on the device -->
+    <string name="juno_onboarding_default_browser_positive_button">Suidhich mar am brabhsair bunaiteach</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_default_browser_negative_button">Chan ann an-dràsta</string>
+    <!-- Title for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_title">Leum eadar am fòn is an laptop agad</string>
+
+    <!-- Description for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_description">Faigh greim air na tabaichean is faclan-faire a th’ agad air uidheaman eile is lean ort far an do stad thu.</string>
+    <!-- Text for the button to sign in to sync on the device -->
+    <string name="juno_onboarding_sign_in_positive_button">Clàraich a-steach</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_sign_in_negative_button">Chan ann an-dràsta</string>
+    <!-- Title for enable notification permission screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_enable_notifications_title">’S urrainn dhut barrachd a dhèanamh le %s ma bhios na brathan an comas agad</string>
+    <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">’S urrainn dhut barrachd a dhèanamh le Firefox ma bhios na brathan an comas agad</string>
+    <!-- Description for enable notification permission screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_enable_notifications_description">Cuir tabaichean eadar uidheaman, stiùirich na luchdaich thu a-nuas is faigh gliocasan airson %s a chur gu làn-fheum.</string>
+    <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+       Note: The word "Firefox" should NOT be translated   -->
+    <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Cuir tabaichean eadar uidheaman, stiùirich na luchdaich thu a-nuas is faigh gliocasan airson Firefox a chur gu làn-fheum.</string>
+    <!-- Text for the button to request notification permission on the device -->
+    <string name="juno_onboarding_enable_notifications_positive_button">Cuir na brathan air</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_enable_notifications_negative_button">Chan ann an-dràsta</string>
+
+    <!-- Search Widget -->
+    <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
+    <string name="search_widget_content_description_2">Fosgail taba %1$s ùr</string>
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">Lorg</string>
+    <!-- Text preview for larger sized widgets -->
+    <string name="search_widget_text_long">Lorg air an lìon</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">Lorg-gutha</string>
+
+    <!-- Preferences -->
+    <!-- Title for the settings page-->
+    <string name="settings">Roghainnean</string>
+    <!-- Preference category for general settings -->
+    <string name="preferences_category_general">Coitcheann</string>
+    <!-- Preference category for all links about Fenix -->
+    <string name="preferences_category_about">Mu dhèidhinn</string>
+    <!-- Preference category for settings related to changing the default search engine -->
+    <string name="preferences_category_select_default_search_engine" tools:ignore="UnusedResources">Tagh aonan</string>
+    <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts" tools:ignore="UnusedResources">Stiùrich na h-ath-ghoiridean luirg</string>
+    <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts_summary" tools:ignore="UnusedResources">Deasaich na h-einnseanan a tha ri fhaicinn ann an clàr-taice an luirg</string>
+    <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_category_engines_in_search_menu" tools:ignore="UnusedResources">Na h-einnseanan a tha ri fhaicinn ann an clàr-taice an luirg</string>
+    <!-- Preference for settings related to changing the default search engine -->
+    <string name="preferences_default_search_engine">An t-einnsean-luirg bunaiteach</string>
+    <!-- Preference for settings related to Search -->
+    <string name="preferences_search">Lorg</string>
+    <!-- Preference for settings related to Search address bar -->
+    <string name="preferences_search_address_bar">Bàr an t-seòlaidh</string>
+    <!-- Preference link to rating Fenix on the Play Store -->
+    <string name="preferences_rate">Rangaich e air Google Play</string>
+    <!-- Preference linking to about page for Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="preferences_about">Mu dhèidhinn %1$s</string>
+    <!-- Preference for settings related to changing the default browser -->
+    <string name="preferences_set_as_default_browser">Suidhich mar am brabhsair bunaiteach</string>
+    <!-- Preference category for advanced settings -->
+    <string name="preferences_category_advanced">Adhartach</string>
+    <!-- Preference category for privacy and security settings -->
+    <string name="preferences_category_privacy_security">Prìobhaideachd is tèarainteachd</string>
+    <!-- Preference for advanced site permissions -->
+    <string name="preferences_site_permissions">Ceadan na làraich</string>
+    <!-- Preference for private browsing options -->
+    <string name="preferences_private_browsing_options">Brabhsadh prìobhaideach</string>
+
+    <!-- Preference for opening links in a private tab-->
+    <string name="preferences_open_links_in_a_private_tab">Fosgail na ceanglaichean ann an taba prìobhaideach</string>
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">Ceadaich glacaidhean-sgrìn sa bhrabhsadh phrìobhaideach</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">Ma cheadaicheas tu seo, chithear na tabaichean prìobhaideach cuideachd nuair a bhios iomadh aplacaid fosgailte</string>
+    <!-- Preference for adding private browsing shortcut -->
+    <string name="preferences_add_private_browsing_shortcut">Cuir ath-ghoirid brabhsaidh prìobhaideach ris</string>
+    <!-- Preference for enabling "HTTPS-Only" mode -->
+    <string name="preferences_https_only_title">Modh HTTPS a-mhàin</string>
+
+    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction">Nas lugha de bhrataichean bhriosgaidean</string>
+    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
+    <string name="reduce_cookie_banner_option">Faic nas lugha de bhrataichean bhriosgaidean</string>
+    <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
+    <string name="reduce_cookie_banner_option_off">Dheth</string>
+    <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
+    <string name="reduce_cookie_banner_option_on">Air</string>
+    <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_summary_1">Feuchaidh %1$s ri iarrtasan bhriosgaidean air brataichean bhriosgaidean a dhiùltadh gu fèin-obrachail.</string>
+    <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_off_for_site">Dheth air an làrach seo</string>
+    <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">Sguir dheth</string>
+    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button" moz:RemovedIn="115" tools:ignore="UnusedResources">Iarr taic</string>
+    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button_2">Cuir an t-iarrtas</string>
+    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_title" moz:RemovedIn="114" tools:ignore="UnusedResources">Nas lugha de bhrataichean bhriosgaidean</string>
+    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_title_2">A bheil thu airson taic ris an làrach seo iarraidh?</string>
+    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_handling_report_site_snack_bar_text" moz:RemovedIn="114" tools:ignore="UnusedResources">Chaidh an t-iarrtas airson taic ris an làrach a chur.</string>
+    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_handling_report_site_snack_bar_text_2">Chaidh an t-iarrtas a chur</string>
+    <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_on_for_site">Air air an làrach seo</string>
+    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site_request_submitted" moz:RemovedIn="114" tools:ignore="UnusedResources">Chaidh an t-iarrtas airson taic ris an làrach a chur</string>
+    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site_request_submitted_2">Chaidh an t-iarrtas airson taic a chur</string>
+    <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site">Chan eil taic ris an làrach seo an-dràsta fhèin</string>
+
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site">A bheil thu airson gleus lùghdachadh brataichean nam briosgaidean a chur air airson %1$s?</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site">A bheil thu airson gleus lùghdachadh brataichean nam briosgaidean a chur dheth airson %1$s?</string>
+    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar.-->
+    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request" moz:RemovedIn="114" tools:ignore="UnusedResources">Chan eil gleus lùghdachadh brataichean nam briosgaidean a’ cur taic ris an làrach seo aig an àm seo. A bheil thu airson ’s gun toir an sgioba againn sùil air, feuch an cuir sinn taic ris san àm ri teachd?</string>
+    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
+    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">Chan urrainn dha %1$s iarrtasan airson bhriosgaidean air an làrach seo a dhiùltadh gu fèin-obrachail. ’S urrainn dhut iarrtas a chur gun tèid taic a chur ris an làrach seo san àm ri teachd.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site">Falamhaichidh %1$s briosgaidean na làraich seo ’s ath-nuadhaichidh e an duilleag. Ma dh’fhalamhaicheas tu na briosgaidean air fad, dh’fhaoidte gun tèid do chlàradh a-mach ’s gum fàgaidh na cairtean seopadaireachd agad falamh.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">Feuchaidh %1$s ri gach iarrtas airson briosgaidean a dhiùltadh air làraichean ris a bheil taic.</string>
+    <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_dialog_title">A bheil thu airson cead a thoirt dha %1$s brataichean bhriosgaidean a dhiùltadh?</string>
+
+    <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_dialog_body">’S urrainn dha %1$s iomadh iarrtas airson briosgaidean a dhiùltadh gu fèin-obrachail.</string>
+    <!-- Remind me later text button for the onboarding dialog -->
+    <string name="reduce_cookie_banner_dialog_not_now_button">Chan ann an-dràsta</string>
+    <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
+    <string name="reduce_cookie_banner_dialog_snackbar_text">Chì thu nas lugha de dh’iarrtasan airson briosgaidean</string>
+
+    <!-- Change setting text button, for the cookie banner re-engagement dialog -->
+    <string name="reduce_cookie_banner_dialog_change_setting_button">Ceadaich</string>
+
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preferences_https_only_summary">Nì seo oidhirp leis fhèin ceangal a dhèanamh ri làraichean le pròtacal crioptachadh HTTPS airson tèarainteachd a bharrachd.</string>
+    <!-- Summary of https only preference if https only is set to off -->
+    <string name="preferences_https_only_off">Dheth</string>
+    <!-- Summary of https only preference if https only is set to on in all tabs -->
+    <string name="preferences_https_only_on_all">Anns gach taba</string>
+    <!-- Summary of https only preference if https only is set to on in private tabs only -->
+    <string name="preferences_https_only_on_private">Ann an tabaichean prìobhaideach</string>
+    <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
+    <string name="preferences_http_only_learn_more">Barrachd fiosrachaidh</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_all_tabs">Cuir an comas air gach taba</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_private_tabs">Na cuir an comas ach ann an tabaichean prìobhaideach</string>
+    <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
+    <string name="errorpage_httpsonly_title">Chan eil tionndadh tèarainte dhen làrach ri fhaighinn</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
+    <string name="errorpage_httpsonly_message_title">Tha sinn an dùil nach cuir an làrach taic ri HTTPS.</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
+    <string name="errorpage_httpsonly_message_summary">Ge-tà, dh’fhaoidte gu bheil neach-ionnsaigh na lùib ann. Ma leanas tu air adhart gun làrach-lìn, na cuir a-steach fiosrachadh dìomhair sam bith. Ma leanas tu air adhart, thèid am modh HTTPS a-mhàin a chur dheth gu sealach air an làrach ud.</string>
+    <!-- Preference for accessibility -->
+    <string name="preferences_accessibility">So-ruigsinneachd</string>
+    <!-- Preference to override the Firefox Account server -->
+    <string name="preferences_override_fxa_server">Frithealaiche chunntasan Firefox gnàthaichte</string>
+    <!-- Preference to override the Sync token server -->
+    <string name="preferences_override_sync_tokenserver">Frithealaiche sioncronachaidh gnàthaichte</string>
+    <!-- Toast shown after updating the FxA/Sync server override preferences -->
+    <string name="toast_override_fxa_sync_server_done">Chaidh frithealaichte nan cunntasan Firefox no an t-sioncronachaidh atharrachadh. Fàg an aplacaid gus na h-atharraichean a chur an gnìomh…</string>
+    <!-- Preference category for account information -->
+    <string name="preferences_category_account">Cunntas</string>
+    <!-- Preference for changing where the toolbar is positioned -->
+    <string name="preferences_toolbar">Bàr-inneal</string>
+    <!-- Preference for changing default theme to dark or light mode -->
+    <string name="preferences_theme">An t-ùrlar</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home_2">An duilleag-dhachaigh</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Gluasadan</string>
+    <!-- Preference for settings related to visual options -->
+    <string name="preferences_customize">Gnàthaich</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description_2">Clàraich a-steach gus na tabaichean, comharran-lìn, faclan-faire is mòran a bharrachd a shioncronachadh.</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name">Cunntas Firefox</string>
+    <!-- Preference text for account title when there was an error syncing FxA -->
+    <string name="preferences_account_sync_error">Ceangail ris às ùr airson leantainn air an t-sioncronachadh</string>
+    <!-- Preference for language -->
+    <string name="preferences_language">Cànan</string>
+    <!-- Preference for data choices -->
+    <string name="preferences_data_choices">Roghainnean dàta</string>
+    <!-- Preference for data collection -->
+    <string name="preferences_data_collection">Cruinneachadh dàta</string>
+    <!-- Preference for developers -->
+    <string name="preferences_remote_debugging">Dì-bhugachadh cèin slighe USB</string>
+    <!-- Preference title for switch preference to show search engines -->
+    <string name="preferences_show_search_engines">Seall na h-einnseanan-luirg</string>
+    <!-- Preference title for switch preference to show search suggestions -->
+    <string name="preferences_show_search_suggestions">Seall molaidhean luirg</string>
+    <!-- Preference title for switch preference to show voice search button -->
+    <string name="preferences_show_voice_search">Seall an lorg-gutha</string>
+    <!-- Preference title for switch preference to show search suggestions also in private mode -->
+    <string name="preferences_show_search_suggestions_in_private">Seall ann an seiseanan prìobhaideach</string>
+    <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
+    <string name="preferences_show_clipboard_suggestions">Seall molaidhean on stòr-bhòrd</string>
+    <!-- Preference title for switch preference to suggest browsing history when searching -->
+    <string name="preferences_search_browsing_history">Lorg san eachdraidh bhrabhsaidh</string>
+    <!-- Preference title for switch preference to suggest bookmarks when searching -->
+    <string name="preferences_search_bookmarks">Lorg sna comharran-lìn</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">Lorg am measg nan tabaichean sioncronaichte</string>
+    <!-- Preference for account settings -->
+    <string name="preferences_account_settings">Roghainnean a’ chunntais</string>
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">URLaichean fèin-choileanaidh</string>
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">Fosgail ceanglaichean ann an aplacaidean</string>
+    <!-- Preference for open links in third party apps always open in apps option -->
+    <string name="preferences_open_links_in_apps_always">An-còmhnaidh</string>
+    <!-- Preference for open links in third party apps ask before opening option -->
+    <string name="preferences_open_links_in_apps_ask">Faighnich dhìom mus tèid fhosgladh</string>
+    <!-- Preference for open links in third party apps never open in apps option -->
+    <string name="preferences_open_links_in_apps_never">Chan ann idir</string>
+    <!-- Preference for open download with an external download manager app -->
+    <string name="preferences_external_download_manager">Manaidsear nan luchdadh a-nuas on taobh a-muigh</string>
+    <!-- Preference for add_ons -->
+    <string name="preferences_addons">Tuilleadain</string>
+
+    <!-- Preference for notifications -->
+    <string name="preferences_notifications">Brathan</string>
+
+    <!-- Summary for notification preference indicating notifications are allowed -->
+    <string name="notifications_allowed_summary">Ceadaichte</string>
+    <!-- Summary for notification preference indicating notifications are not allowed -->
+    <string name="notifications_not_allowed_summary">Gun chead</string>
+
+    <!-- Add-on Preferences -->
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_amo_collection">Cruinneachadh de thuilleadain ghnàthaichte</string>
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">Ceart ma-thà</string>
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">Sguir dheth</string>
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">Ainm a’ chruinneachaidh</string>
+    <!-- Hint displayed on input field for custom collection user ID-->
+    <string name="customize_addon_collection_user_hint">Sealbhadair a’ chruinneachaidh (ID a’ chleachdaiche)</string>
+
+    <!-- Toast shown after confirming the custom add-on collection configuration -->
+    <string name="toast_customize_addon_collection_done">Chaidh cruinneachadh nan tuilleadan atharrachadh. Fàg an aplacaid gus na h-atharraichean a chur an gnìomh…</string>
+
+    <!-- Customize Home -->
+    <!-- Header text for jumping back into the recent tab in customize the home screen -->
+    <string name="customize_toggle_jump_back_in">Till gu far an robh thu</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recent_bookmarks">Comharran-lìn ùra</string>
+    <!-- Title for the customize home screen section with recently visited. Recently visited is
+    a section where users see a list of tabs that they have visited in the past few days -->
+    <string name="customize_toggle_recently_visited">Air tadhal orra o chionn goirid</string>
+
+    <!-- Title for the customize home screen section with Pocket. -->
+    <string name="customize_toggle_pocket_2">Sgeulachdan smuainteachail</string>
+    <!-- Summary for the customize home screen section with Pocket. The first parameter is product name Pocket -->
+    <string name="customize_toggle_pocket_summary">Artaigealan le cumhachd %s</string>
+    <!-- Title for the customize home screen section with sponsored Pocket stories. -->
+    <string name="customize_toggle_pocket_sponsored">Sgeulachdan sponsairichte</string>
+    <!-- Title for the opening wallpaper settings screen -->
+    <string name="customize_wallpapers">Pàipearan-balla</string>
+    <!-- Title for the customize home screen section with sponsored shortcuts. -->
+    <string name="customize_toggle_contile">Ath-ghoiridean sponsairichte</string>
+
+    <!-- Wallpapers -->
+    <!-- Content description for various wallpapers. The first parameter is the name of the wallpaper -->
+    <string name="wallpapers_item_name_content_description">Nì pàipeir-bhalla: %1$s</string>
+    <!-- Snackbar message for when wallpaper is selected -->
+    <string name="wallpaper_updated_snackbar_message">Chaidh am pàipear-balla ùrachadh!</string>
+    <!-- Snackbar label for action to view selected wallpaper -->
+    <string name="wallpaper_updated_snackbar_action">Seall</string>
+
+    <!-- Snackbar message for when wallpaper couldn't be downloaded -->
+    <string name="wallpaper_download_error_snackbar_message">Cha b’ urrainn dhuinn am pàipear-balla a luchdadh a-nuas</string>
+    <!-- Snackbar label for action to retry downloading the wallpaper -->
+    <string name="wallpaper_download_error_snackbar_action">Feuch ris a-rithist</string>
+    <!-- Snackbar message for when wallpaper couldn't be selected because of the disk error -->
+    <string name="wallpaper_select_error_snackbar_message">Cha b’ urrainn dhuinn am pàipear-balla atharrachadh</string>
+    <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
+    <string name="wallpaper_learn_more">Barrachd fiosrachaidh</string>
+    <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
+    <string name="wallpaper_classic_title">%s clasaigeach</string>
+    <!-- Text for limited edition wallpapers title. -->
+    <string name="wallpaper_limited_edition_title">Tionndadh cuingichte</string>
+    <!-- Description text for the limited edition wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more-->
+    <string name="wallpaper_limited_edition_description_with_learn_more">Cruinneachadh ùr nan guthan neo-eisimeileach. %s</string>
+    <!-- Description text for the limited edition wallpapers. -->
+    <string name="wallpaper_limited_edition_description">Cruinneachadh ùr nan guthan neo-eisimeileach.</string>
+    <!-- Wallpaper onboarding dialog header text. -->
+    <string name="wallpapers_onboarding_dialog_title_text">Feuch steall dhathan air</string>
+    <!-- Wallpaper onboarding dialog body text. -->
+    <string name="wallpapers_onboarding_dialog_body_text">Tagh pàipear-balla a tha a’ còrdadh riut-sa.</string>
+    <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
+    <string name="wallpapers_onboarding_dialog_explore_more_button_text">Rùraich pàipearan-balla eile</string>
+
+    <!-- Add-on Installation from AMO-->
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
+    <string name="addon_not_supported_error">Chan eil taic ris an tuilleadan seo</string>
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
+    <string name="addon_already_installed">Chaidh an tuilleadan seo a stàladh mu thràth</string>
+
+    <!-- Account Preferences -->
+    <!-- Preference for triggering sync -->
+    <string name="preferences_sync_now">Sioncronaich an-dràsta</string>
+    <!-- Preference category for sync -->
+    <string name="preferences_sync_category">Tagh na tha thu airson sioncronachadh</string>
+    <!-- Preference for syncing history -->
+    <string name="preferences_sync_history">An eachdraidh</string>
+    <!-- Preference for syncing bookmarks -->
+    <string name="preferences_sync_bookmarks">Comharran-lìn</string>
+    <!-- Preference for syncing logins -->
+    <string name="preferences_sync_logins">Clàraidhean a-steach</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs_2">Tabaichean fosgailte</string>
+    <!-- Preference for signing out -->
+    <string name="preferences_sign_out">Clàraich a-mach</string>
+    <!-- Preference displays and allows changing current FxA device name -->
+    <string name="preferences_sync_device_name">Ainm an uidheim</string>
+    <!-- Text shown when user enters empty device name -->
+    <string name="empty_device_name_error">Chan fhaod ainm an uidheim a bhith bàn.</string>
+    <!-- Label indicating that sync is in progress -->
+    <string name="sync_syncing_in_progress">Ga shioncronachadh…</string>
+    <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
+    <string name="sync_failed_summary">Dh’fhàillig an sioncronachadh. Soirbheas mu dheireadh: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_failed_never_synced_summary">Dh’fhàillig an sioncronachadh ’s cha do shoirbhich leis a-riamh gu ruige seo.</string>
+    <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
+    <string name="sync_last_synced_summary">An sioncronachadh mu dheireadh: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_never_synced_summary">Cha deach a shioncronachadh a-riamh</string>
+
+    <!-- Text for displaying the default device name.
+        The first parameter is the application name, the second is the device manufacturer name
+        and the third is the device model. -->
+    <string name="default_device_name_2">%1$s air %2$s %3$s</string>
+
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">Cairtean-creideis</string>
+    <!-- Preference for syncing addresses -->
+    <string name="preferences_sync_address">Seòlaidhean</string>
+
+    <!-- Send Tab -->
+    <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_name">Tabaichean a fhuaras</string>
+    <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_description">Brathan airson tabaichean a fhuaras o uidheaman Firefox eile.</string>
+    <!--  The body for these is the URL of the tab received  -->
+    <string name="fxa_tab_received_notification_name">Fhuaras taba</string>
+    <!-- %s is the device name -->
+    <string name="fxa_tab_received_from_notification_name">Taba o %s</string>
+
+    <!-- Advanced Preferences -->
+    <!-- Preference for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions">Eisgeachdan</string>
+    <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
+    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Cuir air airson gach làrach</string>
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">Bheir eisgeachdan comas dhut an dìon o thracadh a chur à comas air làraichean àraidh.</string>
+    <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message_learn_more_link">Barrachd fiosrachaidh</string>
+
+    <!-- Preference switch for usage and technical data collection -->
+    <string name="preference_usage_data">Cleachdadh is dàta teicnigeach</string>
+    <!-- Preference description for usage and technical data collection -->
+    <string name="preferences_usage_data_description">Cuiridh seo dàta air dèanadas, cleachdadh, bathar-cruaidh agus gnàthachadh a’ bhrabhsair agad dha Mozilla ach an urrainn dhuinn %1$s a dhèanamh nas fheàrr fhathast</string>
+    <!-- Preference switch for marketing data collection -->
+    <string name="preferences_marketing_data">Dàta margaideachd</string>
+    <!-- Preference description for marketing data collection -->
+    <string name="preferences_marketing_data_description2">Co-roinnidh seo dàta bunasach a’ cleachdaidh le Adjust, an reiceadair margaideachd mobile againn</string>
+    <!-- Title for studies preferences -->
+    <string name="preference_experiments_2">Rannsachadh</string>
+    <!-- Summary for studies preferences -->
+    <string name="preference_experiments_summary_2">Leig le Mozilla rannsachadh a stàladh is a ruith an-còmhnaidh</string>
+
+    <!-- Turn On Sync Preferences -->
+    <!-- Header of the Sync and save your data preference view -->
+    <string name="preferences_sync_2">Sioncronaich is sàbhail an dàta agad</string>
+    <!-- Preference for reconnecting to FxA sync -->
+    <string name="preferences_sync_sign_in_to_reconnect">Clàraich a-steach airson ceangal ris às ùr</string>
+    <!-- Preference for removing FxA account -->
+    <string name="preferences_sync_remove_account">Thoir an cunntas air falbh</string>
+
+    <!-- Pairing Feature strings -->
+    <!-- Instructions on how to access pairing -->
+    <string name="pair_instructions_2"><![CDATA[Sganaich an còd QR a chì thu aig <b>firefox.com/pair</b>]]></string>
+
+    <!-- Toolbar Preferences -->
+    <!-- Preference for using top toolbar -->
+    <string name="preference_top_toolbar">Bàrr</string>
+    <!-- Preference for using bottom toolbar -->
+    <string name="preference_bottom_toolbar">Bonn</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">Soilleir</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">Dorcha</string>
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">Air a shuidheachadh le caomhnaiche a’ bhataraidh</string>
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">A-rèir ùrlar an uidheim</string>
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Tarraing airson ath-nuadhachadh</string>
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Dèan sgroladh airson am bàr-inneal a chur am falach</string>
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Grad-shlaighd am bàr-inneal gun taobh airson leum a ghearradh gu taba eile</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Grad-shlaighd am bàr-inneal suas airson tabaichean fhosgladh</string>
+
+    <!-- Library -->
+    <!-- Option in Library to open Downloads page -->
+    <string name="library_downloads">Luchdaidhean a-nuas</string>
+    <!-- Option in library to open Bookmarks page -->
+    <string name="library_bookmarks">Comharran-lìn</string>
+    <!-- Option in library to open Desktop Bookmarks root page -->
+    <string name="library_desktop_bookmarks_root">Comharran-lìn an desktop</string>
+    <!-- Option in library to open Desktop Bookmarks "menu" page -->
+    <string name="library_desktop_bookmarks_menu">Clàr-taice nan comharra-lìn</string>
+    <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
+    <string name="library_desktop_bookmarks_toolbar">Bàr nan comharra-lìn</string>
+    <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
+    <string name="library_desktop_bookmarks_unfiled">Comharran-lìn eile</string>
+    <!-- Option in Library to open History page -->
+    <string name="library_history">An eachdraidh</string>
+    <!-- Option in Library to open a new tab -->
+    <string name="library_new_tab">Taba ùr</string>
+    <!-- Settings Page Title -->
+    <string name="settings_title">Roghainnean</string>
+    <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
+    <string name="content_description_close_button">Dùin</string>
+
+    <!-- Title to show in alert when a lot of tabs are to be opened
+    %d is a placeholder for the number of tabs that will be opened -->
+    <string name="open_all_warning_title">A bheil thu airson na duilleagan, %d dhiubh, fhosgladh?</string>
+    <!-- Message to warn users that a large number of tabs will be opened
+    %s will be replaced by app name. -->
+    <string name="open_all_warning_message">Ma dh’fhosglas tu uiread a thabaichean, dh’fhaoidte gun cuir seo maille air %s fhad ’s a bhios na duilleagan gan luchdadh.  A bheil thu cinnteach gu bheil thu airson leantainn ort?</string>
+    <!-- Dialog button text for confirming open all tabs -->
+    <string name="open_all_warning_confirm">Tabaichean fosgailte</string>
+    <!-- Dialog button text for canceling open all tabs -->
+    <string name="open_all_warning_cancel">Sguir dheth</string>
+
+    <!-- Text to show users they have one page in the history group section of the History fragment.
+    %d is a placeholder for the number of pages in the group. -->
+    <string name="history_search_group_site_1">Duilleagan, %d dhiubh</string>
+    <!-- Text to show users they have multiple pages in the history group section of the History fragment.
+    %d is a placeholder for the number of pages in the group. -->
+    <string name="history_search_group_sites_1">Duilleagan, %d dhiubh</string>
+
+    <!-- Option in library for Recently Closed Tabs -->
+    <string name="library_recently_closed_tabs">Tabaichean a dhùin thu o chionn goirid</string>
+    <!-- Option in library to open Recently Closed Tabs page -->
+    <string name="recently_closed_show_full_history">Seall an eachdraidh gu lèir</string>
+    <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tabs">Tabaichean (%d)</string>
+    <!-- Text to show users they have one tab saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tab">%d taba</string>
+    <!-- Recently closed tabs screen message when there are no recently closed tabs -->
+    <string name="recently_closed_empty_message">Chan eil taba sam bith an-seo a dhùin thu o chionn goirid</string>
+
+    <!-- Tab Management -->
+    <!-- Title of preference for tabs management -->
+    <string name="preferences_tabs">Tabaichean</string>
+    <!-- Title of preference that allows a user to specify the tab view -->
+    <string name="preferences_tab_view">Sealladh nan taba</string>
+    <!-- Option for a list tab view -->
+    <string name="tab_view_list">Liosta</string>
+    <!-- Option for a grid tab view -->
+    <string name="tab_view_grid">Griod</string>
+    <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
+    <string name="preferences_close_tabs">Dùin na tabaichean</string>
+    <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
+    <string name="close_tabs_manually">De làimh</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one day -->
+    <string name="close_tabs_after_one_day">An dèidh latha</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one week -->
+    <string name="close_tabs_after_one_week">An dèidh seachdaine</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one month -->
+    <string name="close_tabs_after_one_month">An dèidh mìos</string>
+
+    <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
+    <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">Dùin tabaichean fosgailte gu fèin-obrachail</string>
+
+    <!-- Opening screen -->
+    <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
+    <string name="preferences_opening_screen">An sgrìn fosglaidh</string>
+    <!-- Option for always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage">An duilleag-dhachaigh</string>
+    <!-- Option for always opening the user's last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab">An taba mu dheireadh</string>
+    <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity">An duilleag-dhachaigh an dèidh ceithir uairean a thìde gun ghnìomhachd</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
+    <string name="close_tabs_manually_summary">Dùin de làimh</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
+    <string name="close_tabs_after_one_day_summary">Dùin an dèidh latha</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
+    <string name="close_tabs_after_one_week_summary">Dùin an dèidh seachdain</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
+    <string name="close_tabs_after_one_month_summary">Dùin an dèidh mìos</string>
+
+    <!-- Summary for homepage preference indicating always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage_summary">Fosgail air an duilleag-dhachaigh</string>
+    <!-- Summary for homepage preference indicating always opening the last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab_summary">Fosgail san taba mu dheireadh</string>
+    <!-- Summary for homepage preference indicating opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity_summary">Fosgail air an duilleag-dhachaigh an dèidh ceithir uairean a thìde</string>
+
+    <!-- Inactive tabs -->
+    <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
+    <string name="preferences_inactive_tabs">Gluais seann-tabaichean gun earrann neo-ghnìomhach</string>
+    <!-- Title of inactive tabs preference -->
+    <string name="preferences_inactive_tabs_title">Thèid tabaichean nach tug thu sùil orra fad cola-deug a ghluasad gun earrann neo-ghnìomhach.</string>
+
+    <!-- Studies -->
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Thoir air falbh</string>
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Gnìomhach</string>
+    <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
+    <string name="studies_description_2">Faodaidh %1$s rannsachadh a stàladh is a ruith o àm gu àm.</string>
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Barrachd fiosrachaidh</string>
+    <!-- Dialog message shown after removing a study -->
+    <string name="studies_restart_app">Dùinidh an aplacaid e fhèin gus na h-atharraichean a chur an sàs</string>
+    <!-- Dialog button to confirm the removing a study. -->
+    <string name="studies_restart_dialog_ok">Ceart ma-thà</string>
+    <!-- Dialog button text for canceling removing a study. -->
+    <string name="studies_restart_dialog_cancel">Sguir dheth</string>
+
+    <!-- Toast shown after turning on/off studies preferences -->
+    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">A’ dùnadh na h-aplacaid gus na h-atharraichean a chur an sàs…</string>
+
+    <!-- Sessions -->
+    <!-- Title for the list of tabs -->
+    <string name="tab_header_label">Tabaichean fosgailte</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_tabs_title">Tabaichean prìobhaideach</string>
+    <!-- Title for the list of tabs in the synced tabs -->
+    <string name="tabs_header_synced_tabs_title">Tabaichean sioncronaichte</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_tab">Cuir taba ris</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">Cuir taba prìobhaideach ris</string>
+    <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+    <string name="tab_drawer_fab_content">Prìobhaideach</string>
+    <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
+    <string name="tab_drawer_fab_sync">Sioncronaich</string>
+    <!-- Text shown in the menu for sharing all tabs -->
+    <string name="tab_tray_menu_item_share">Co-roinn a h-uile taga</string>
+    <!-- Text shown in the menu to view recently closed tabs -->
+    <string name="tab_tray_menu_recently_closed">Tabaichean a dhùin thu o chionn goirid</string>
+    <!-- Text shown in the tabs tray inactive tabs section -->
+    <string name="tab_tray_inactive_recently_closed" tools:ignore="UnusedResources">Air a dhùnadh o chionn goirid</string>
+    <!-- Text shown in the menu to view account settings -->
+    <string name="tab_tray_menu_account_settings">Roghainnean a’ chunntais</string>
+    <!-- Text shown in the menu to view tab settings -->
+    <string name="tab_tray_menu_tab_settings">Roghainnean nan tabaichean</string>
+    <!-- Text shown in the menu for closing all tabs -->
+    <string name="tab_tray_menu_item_close">Dùin a h-uile taba</string>
+    <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_bookmark">Comharra-lìn</string>
+    <!-- Text shown in the multiselect menu for closing selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_close">Dùin</string>
+    <!-- Content description for tabs tray multiselect share button -->
+    <string name="tab_tray_multiselect_share_content_description">Co-roinn na tabaichean a thagh thu</string>
+    <!-- Content description for tabs tray multiselect menu -->
+    <string name="tab_tray_multiselect_menu_content_description">Clàr-taice nan tabaichean a thagh thu</string>
+    <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
+    <string name="remove_tab_from_collection">Thoir an taba air falbh on chruinneachadh</string>
+    <!-- Text for button to enter multiselect mode in tabs tray -->
+    <string name="tabs_tray_select_tabs">Tagh tabaichean</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
+    <string name="close_tab">Dùin an taba</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
+    <string name="close_tab_title">Dùin an taba %s</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
+    <string name="open_tabs_menu">Fosgail clàr-taice nan tabaichean</string>
+
+    <!-- Open tabs menu item to save tabs to collection -->
+    <string name="tabs_menu_save_to_collection1">Sàbhail na tabaichean ann an cruinneachadh</string>
+    <!-- Text for the menu button to delete a collection -->
+    <string name="collection_delete">Sguab an cruinneachadh às</string>
+    <!-- Text for the menu button to rename a collection -->
+    <string name="collection_rename">Thoir ainm ùr air a’ chruinneachadh</string>
+    <!-- Text for the button to open tabs of the selected collection -->
+    <string name="collection_open_tabs">Fosgail na tabaichean</string>
+    <!-- Hint for adding name of a collection -->
+    <string name="collection_name_hint">Ainm a’ chruinneachaidh</string>
+	<!-- Text for the menu button to rename a top site -->
+	<string name="rename_top_site">Thoir ainm ùr air</string>
+	<!-- Text for the menu button to remove a top site -->
+	<string name="remove_top_site">Thoir air falbh</string>
+
+    <!-- Text for the menu button to delete a top site from history -->
+    <string name="delete_from_history">Sguab às an eachdraidh</string>
+    <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
+    <string name="pwa_site_controls_title_private">%1$s (Am modh prìobhaideach)</string>
+
+    <!-- History -->
+    <!-- Text for the button to search all history -->
+    <string name="history_search_1">Cuir a-steach briathran-luirg</string>
+    <!-- Text for the button to clear all history -->
+    <string name="history_delete_all">Sguab an eachdraidh às</string>
+    <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
+    <string name="history_delete_multiple_items_snackbar">Chaidh an eachdraidh a sguabadh às</string>
+    <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
+    <string name="history_delete_single_item_snackbar">Chaidh %1$s a sguabadh às</string>
+    <!-- Context description text for the button to delete a single history item -->
+    <string name="history_delete_item">Sguab às</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of bookmarks selected -->
+    <string name="history_multi_select_title">%1$d air an taghadh</string>
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">An-diugh</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">An-dè</string>
+    <!-- Text for the header that groups the history the past 7 days -->
+    <string name="history_7_days">Na 7 làithean seo chaidh</string>
+    <!-- Text for the header that groups the history the past 30 days -->
+    <string name="history_30_days">Na 30 latha seo chaidh</string>
+    <!-- Text for the header that groups the history older than the last month -->
+    <string name="history_older">Nas sine</string>
+    <!-- Text shown when no history exists -->
+    <string name="history_empty_message">Chan eil eachdraidh an-seo</string>
+
+    <!-- Downloads -->
+    <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
+    <string name="download_delete_multiple_items_snackbar_1">Chaidh na luchdaich thu a-nuas a thoirt air falbh</string>
+    <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
+    <string name="download_delete_single_item_snackbar">Chaidh %1$s a thoirt air falbh</string>
+    <!-- Text shown when no download exists -->
+    <string name="download_empty_message_1">Cha deach dad a luchdadh a-nuas</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of downloads selected -->
+    <string name="download_multi_select_title">%1$d air an taghadh</string>
+
+
+    <!-- Text for the button to remove a single download item -->
+    <string name="download_delete_item_1">Thoir air falbh</string>
+
+
+    <!-- Crashes -->
+    <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
+    <string name="tab_crash_title_2">Tha sinn duilich ach chan urrainn dha %1$s an duilleag a luchdadh.</string>
+    <!-- Send crash report checkbox text on the tab crash page -->
+    <string name="tab_crash_send_report">Cuir aithisg tuislidh gu Mozilla</string>
+    <!-- Close tab button text on the tab crash page -->
+    <string name="tab_crash_close">Dùin an taba</string>
+    <!-- Restore tab button text on the tab crash page -->
+    <string name="tab_crash_restore">Aisig an taba</string>
+
+    <!-- Bookmarks -->
+    <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
+    <string name="bookmark_delete_folder_confirmation_dialog">A bheil thu cinnteach gu bheil thu airson am pasgan seo a sguabadh às?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
+    <string name="bookmark_delete_multiple_folders_confirmation_dialog">Sguabaidh %s na nithean a thagh thu às.</string>
+    <!-- Text for the cancel button on delete bookmark dialog -->
+    <string name="bookmark_delete_negative">Sguir dheth</string>
+    <!-- Screen title for adding a bookmarks folder -->
+    <string name="bookmark_add_folder">Cuir pasgan ris</string>
+    <!-- Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_saved_snackbar">Chaidh an comharra-lìn a shàbhaladh!</string>
+    <!-- Snackbar edit button shown after a bookmark has been created. -->
+    <string name="edit_bookmark_snackbar_action">DEASAICH</string>
+    <!-- Bookmark overflow menu edit button -->
+    <string name="bookmark_menu_edit_button">Deasaich</string>
+    <!-- Bookmark overflow menu copy button -->
+    <string name="bookmark_menu_copy_button">Lethbhreac</string>
+    <!-- Bookmark overflow menu share button -->
+    <string name="bookmark_menu_share_button">Co-roinn</string>
+    <!-- Bookmark overflow menu open in new tab button -->
+    <string name="bookmark_menu_open_in_new_tab_button">Fosgail ann an taba ùr</string>
+    <!-- Bookmark overflow menu open in private tab button -->
+    <string name="bookmark_menu_open_in_private_tab_button">Fosgail ann an taba prìobhaideach</string>
+    <!-- Bookmark overflow menu open all in tabs button -->
+    <string name="bookmark_menu_open_all_in_tabs_button">Fosgail anns gach taba ùr</string>
+    <!-- Bookmark overflow menu open all in private tabs button -->
+    <string name="bookmark_menu_open_all_in_private_tabs_button">Fosgail anns gach taba prìobhaideach</string>
+    <!-- Bookmark overflow menu delete button -->
+    <string name="bookmark_menu_delete_button">Sguab às</string>
+    <!--Bookmark overflow menu save button -->
+    <string name="bookmark_menu_save_button">Sàbhail</string>
+    <!-- Bookmark multi select title in app bar
+     The first parameter is the number of bookmarks selected -->
+    <string name="bookmarks_multi_select_title">%1$d air an taghadh</string>
+    <!-- Bookmark editing screen title -->
+    <string name="edit_bookmark_fragment_title">Deasaich an comharra-lìn</string>
+    <!-- Bookmark folder editing screen title -->
+    <string name="edit_bookmark_folder_fragment_title">Deasaich am pasgan</string>
+    <!-- Bookmark sign in button message -->
+    <string name="bookmark_sign_in_button">Clàraich a-steach a dh’fhaicinn nan comharran-lìn sioncronaichte</string>
+    <!-- Bookmark URL editing field label -->
+    <string name="bookmark_url_label">URL</string>
+    <!-- Bookmark FOLDER editing field label -->
+    <string name="bookmark_folder_label">PASGAN</string>
+    <!-- Bookmark NAME editing field label -->
+    <string name="bookmark_name_label">AINM</string>
+    <!-- Bookmark add folder screen title -->
+    <string name="bookmark_add_folder_fragment_label">Cuir pasgan ris</string>
+    <!-- Bookmark select folder screen title -->
+    <string name="bookmark_select_folder_fragment_label">Tagh pasgan</string>
+    <!-- Bookmark editing error missing title -->
+    <string name="bookmark_empty_title_error">Feumaidh tiotal a bhith aige</string>
+    <!-- Bookmark editing error missing or improper URL -->
+    <string name="bookmark_invalid_url_error">URL mì-dhligheach</string>
+    <!-- Bookmark screen message for empty bookmarks folder -->
+    <string name="bookmarks_empty_message">Chan eil comharra-lìn sam bith an-seo</string>
+    <!-- Bookmark snackbar message on deletion
+     The first parameter is the host part of the URL of the bookmark deleted, if any -->
+    <string name="bookmark_deletion_snackbar_message">Chaidh %1$s a sguabadh às</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_2">Chaidh na comharran-lìn a sguabadh às</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_3">A’ sguabadh às nam pasganan a thagh thu</string>
+    <!-- Bookmark undo button for deletion snackbar action -->
+    <string name="bookmark_undo_deletion">NEO-DHÈAN</string>
+
+    <!-- Text for the button to search all bookmarks -->
+    <string name="bookmark_search">Cuir a-steach briathran-luirg</string>
+
+    <!-- Site Permissions -->
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">Tadhail air na roghainnean</string>
+    <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
+        to give users access to site specific information / settings. For example:
+        Secure settings status and a button to modify site permissions -->
+    <string name="quick_settings_sheet">Siota nan grad-roghainnean</string>
+    <!-- Label that indicates that this option it the recommended one -->
+    <string name="phone_feature_recommended">Molta</string>
+    <!-- Button label for clearing all the information of site permissions-->
+    <string name="clear_permissions">Falamhaich na ceadan</string>
+    <!-- Text for the OK button on Clear permissions dialog -->
+    <string name="clear_permissions_positive">Ceart ma-thà</string>
+    <!-- Text for the cancel button on Clear permissions dialog -->
+    <string name="clear_permissions_negative">Sguir dheth</string>
+    <!-- Button label for clearing a site permission-->
+    <string name="clear_permission">Falamhaich an cead</string>
+    <!-- Text for the OK button on Clear permission dialog -->
+    <string name="clear_permission_positive">Ceart ma-thà</string>
+    <!-- Text for the cancel button on Clear permission dialog -->
+    <string name="clear_permission_negative">Sguir dheth</string>
+    <!-- Button label for clearing all the information on all sites-->
+    <string name="clear_permissions_on_all_sites">Falamhaich na ceadan air gach làrach</string>
+    <!-- Preference for altering video and audio autoplay for all websites -->
+    <string name="preference_browser_feature_autoplay">Fèin-chluich</string>
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">Camara</string>
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">Micreofon</string>
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">Ionad</string>
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">Brath</string>
+    <!-- Preference for altering the persistent storage access for all websites -->
+    <string name="preference_phone_feature_persistent_storage">Stòras buan</string>
+    <!-- Preference for altering the storage access setting for all websites -->
+    <string name="preference_phone_feature_cross_origin_storage_access">Briosgaidean thar-làraich</string>
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">Susbaint fo smachd DRM</string>
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">Iarr cead</string>
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">Bacte</string>
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">Ceadaichte</string>
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">Bacte le Android</string>
+    <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
+    <string name="preference_exceptions">Eisgeachdan</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="tracking_protection_off">Dheth</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to standard -->
+    <string name="tracking_protection_standard">Stannardach</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to strict -->
+    <string name="tracking_protection_strict">Teann</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to custom -->
+    <string name="tracking_protection_custom">Gnàthaichte</string>
+    <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed2">Ceadaich fuaim is video</string>
+    <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->
+    <string name="quick_setting_option_autoplay_allowed">Ceadaich fuaim is video</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
+    <string name="preference_option_autoplay_allowed_wifi_only2">Bac an fhuaim agus video air ceangal dàta mobile a-mhàin</string>
+    <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
+    <string name="preference_option_autoplay_allowed_wifi_subtext">Gabhaidh fuaim agus video a chluich air WiFi</string>
+    <!-- Label for global setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="preference_option_autoplay_block_audio2">Na bac ach an fhuaim</string>
+    <!-- Label for site specific setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="quick_setting_option_autoplay_block_audio">Na bac ach an fhuaim</string>
+    <!-- Label for global setting that indicates that all video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked3">Bach an fhuaim agus a’ video</string>
+    <!-- Label for site specific setting that indicates that all video and audio autoplay is blocked -->
+    <string name="quick_setting_option_autoplay_blocked">Bach an fhuaim agus a’ video</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to on -->
+    <string name="delete_browsing_data_quit_on">Air</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to off -->
+    <string name="delete_browsing_data_quit_off">Dheth</string>
+
+    <!-- Summary of studies preference if it is set to on -->
+    <string name="studies_on">Air</string>
+    <!-- Summary of studies data on quit preference if it is set to off -->
+    <string name="studies_off">Dheth</string>
+
+    <!-- Collections -->
+    <!-- Collections header on home fragment -->
+    <string name="collections_header">Na cruinneachaidhean</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
+    <string name="collection_menu_button_content_description">Clàr-taice nan cruinneachadh</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description2">Cruinnich na rudan a tha cudromach dhut.\nBuidhnich luirg, làraichean is tabaichean a tha coltach ri chèile airson greim fhaighinn orra a-rithist gu luath.</string>
+    <!-- Title for the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_tabs">Tagh tabaichean</string>
+    <!-- Title for the "select collection" step of the collection creator -->
+    <string name="create_collection_select_collection">Tagh cruinneachadh</string>
+    <!-- Title for the "name collection" step of the collection creator -->
+    <string name="create_collection_name_collection">Thoir ainm air a’ cruinneachadh</string>
+    <!-- Button to add new collection for the "select collection" step of the collection creator -->
+    <string name="create_collection_add_new_collection">Cuir cruinneachadh ùr ris</string>
+    <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_all">Tagh na h-uile</string>
+    <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_deselect_all">Dì-thagh na h-uile</string>
+    <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
+    <string name="create_collection_save_to_collection_empty">Tagh tabaichean airson an sàbhaladh</string>
+    <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
+     %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tabs_selected">Tabaichean air an taghadh: %d</string>
+    <!-- Text to show users they have one tab selected in the "select tabs" step of the collection creator.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tab_selected">%d taba air a thaghadh</string>
+    <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
+    <string name="create_collection_tabs_saved">Chaidh na tabaichean a shàbhaladh!</string>
+    <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
+    <string name="create_collection_tabs_saved_new_collection">Chaidh an cruinneachadh a shàbhaladh!</string>
+    <!-- Text shown in snackbar when one tab has been saved in a collection -->
+    <string name="create_collection_tab_saved">Chaidh an taba a shàbhaladh!</string>
+    <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
+    <string name="create_collection_close">Dùin</string>
+    <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
+    <string name="create_collection_save">Sàbhail</string>
+
+    <!-- Snackbar action to view the collection the user just created or updated -->
+    <string name="create_collection_view">Sealladh</string>
+
+    <!-- Text for the OK button from collection dialogs -->
+    <string name="create_collection_positive">Ceart ma-thà</string>
+    <!-- Text for the cancel button from collection dialogs -->
+    <string name="create_collection_negative">Sguir dheth</string>
+
+    <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
+    <string name="create_collection_default_name">Cruinneachadh %d</string>
+
+    <!-- Share -->
+    <!-- Share screen header -->
+    <string name="share_header_2">Co-roinn</string>
+    <!-- Content description (not visible, for screen readers etc.):
+        "Share" button. Opens the share menu when pressed. -->
+    <string name="share_button_content_description">Co-roinn</string>
+    <!-- Text for the Save to PDF feature in the share menu -->
+    <string name="share_save_to_pdf">Sàbhail mar PDF</string>
+    <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
+    <string name="unable_to_save_to_pdf_error">Chan urrainn dhuinn am PDF a ghintinn</string>
+    <!-- Sub-header in the dialog to share a link to another sync device -->
+    <string name="share_device_subheader">Cuir gu uidheam</string>
+    <!-- Sub-header in the dialog to share a link to an app from the full list -->
+    <string name="share_link_all_apps_subheader">A h-uile gnìomh</string>
+    <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
+    <string name="share_link_recent_apps_subheader">Air a chleachdadh o chionn goirid</string>
+    <!-- Text for the copy link action in the share screen. -->
+    <string name="share_copy_link_to_clipboard">Cuir lethbhreac air an stòr-bhòrd</string>
+    <!-- Toast shown after copying link to clipboard -->
+    <string name="toast_copy_link_to_clipboard">Air lethbhreac a chur air an stòr-bhòrd</string>
+    <!-- An option from the share dialog to sign into sync -->
+    <string name="sync_sign_in">Clàraich a-steach a shioncronachadh</string>
+     <!-- An option from the three dot menu to sync and save data -->
+    <string name="sync_menu_sync_and_save_data">Sioncronaich is sàbhail an dàta</string>
+    <!-- An option from the share dialog to send link to all other sync devices -->
+    <string name="sync_send_to_all">Cuir gun a h-uile uidheam</string>
+    <!-- An option from the share dialog to reconnect to sync -->
+    <string name="sync_reconnect">Ceangail ris an t-sioncronachadh às ùr</string>
+    <!-- Text displayed when sync is offline and cannot be accessed -->
+    <string name="sync_offline">Far loidhne</string>
+    <!-- An option to connect additional devices -->
+    <string name="sync_connect_device">Ceangail uidheam eile ris</string>
+    <!-- The dialog text shown when additional devices are not available -->
+    <string name="sync_connect_device_dialog">Airson taba a chur, clàraich a-steach gu Firefox air co-dhiù aon uidheam eile.</string>
+    <!-- Confirmation dialog button -->
+    <string name="sync_confirmation_button">Tha mi agaibh</string>
+    <!-- Share error message -->
+    <string name="share_error_snackbar">Cha ghabh rudan cho-roinneadh ris an aplacaid seo</string>
+    <!-- Add new device screen title -->
+    <string name="sync_add_new_device_title">Cuir gu uidheam</string>
+    <!-- Text for the warning message on the Add new device screen -->
+    <string name="sync_add_new_device_message">Chan eil uidheam sam bith ceangailte ris</string>
+    <!-- Text for the button to learn about sending tabs -->
+    <string name="sync_add_new_device_learn_button">Fiosrachadh mu chur nan taba…</string>
+    <!-- Text for the button to connect another device -->
+    <string name="sync_add_new_device_connect_button">Ceangail uidheam eile ris…</string>
+
+    <!-- Notifications -->
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
+    <string name="notification_pbm_delete_text_2">Dùin na tabaichean prìobhaideach</string>
+    <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_marketing_channel_name">Margaideachd</string>
+
+    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_notification_default_browser_title" tools:ignore="UnusedResources">Tha Firefox luath ’s prìobhaideach</string>
+    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_notification_default_browser_text" tools:ignore="UnusedResources">Cleachd Firefox mar am brabhsair bunaiteach agad</string>
+    <!-- Title shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_title">Feuch am brabhsadh prìobhaideach</string>
+    <!-- Text shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_text">Dèan brabhsadh gun bhriosgaid no eachdraidh sam bith a shàbhaladh ann am %1$s</string>
+    <!-- Title A shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_A_title">Dèan brabhsadh gun lorg fhàgail</string>
+    <!-- Text A shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_A_text">Ma nì thu brabhsadh prìobhaideach, cha sàbhail %1$s am fiosrachadh agad.</string>
+    <!-- Title B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_title">Tòisich air rudan a lorg</string>
+    <!-- Text B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_text">Lorg rud-eigin am fagas. No faigh lorg air rud-eigin spòrsail. </string>
+
+    <!-- Survey -->
+    <!-- Text shown in the fullscreen message that pops up to ask user to take a short survey.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_survey_message_text">Nach coilean thu suirbhidh ghoirid airson Firefox a dhèanamh nas fheàrr?</string>
+    <!-- Preference for taking the short survey. -->
+    <string name="preferences_take_survey">Gabh an t-suirbhidh</string>
+    <!-- Preference for not taking the short survey. -->
+    <string name="preferences_not_take_survey">Chan eil, mòran taing</string>
+
+    <!-- Snackbar -->
+    <!-- Text shown in snackbar when user deletes a collection -->
+    <string name="snackbar_collection_deleted">Chaidh an cruinneachadh a sguabadh às</string>
+    <!-- Text shown in snackbar when user renames a collection -->
+    <string name="snackbar_collection_renamed">Chaidh ainm ùr a thoirt air a’ chruinneachadh</string>
+    <!-- Text shown in snackbar when user closes a tab -->
+    <string name="snackbar_tab_closed">Chaidh an taba a dhùnadh</string>
+    <!-- Text shown in snackbar when user closes all tabs -->
+    <string name="snackbar_tabs_closed">Chaidh na tabaichean a dhùnadh</string>
+    <!-- Text shown in snackbar when user bookmarks a list of tabs -->
+    <string name="snackbar_message_bookmarks_saved">Chaidh na comharran-lìn a shàbhaladh!</string>
+    <!-- Text shown in snackbar when user adds a site to shortcuts -->
+    <string name="snackbar_added_to_shortcuts">Chaidh a chur ris na h-ath-ghoiridean!</string>
+    <!-- Text shown in snackbar when user closes a private tab -->
+    <string name="snackbar_private_tab_closed">Chaidh an taba prìobhaideach a dhùnadh</string>
+    <!-- Text shown in snackbar when user closes all private tabs -->
+    <string name="snackbar_private_tabs_closed">Chaidh na tabaichean prìobhaideach a dhùnadh</string>
+    <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
+    <string name="snackbar_deleted_undo">NEO-DHÈAN</string>
+    <!-- Text shown in snackbar when user removes a top site -->
+    <string name="snackbar_top_site_removed">Chaidh an làrach a thoirt air falbh</string>
+    <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
+        First parameter is the name of the app, second parameter is the URL or text scanned-->
+    <string name="qr_scanner_confirmation_dialog_message">Leig le %1$s %2$s fosgladh</string>
+    <!-- QR code scanner prompt dialog positive option to allow navigation to scanned link -->
+    <string name="qr_scanner_dialog_positive">CEADAICH</string>
+    <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
+    <string name="qr_scanner_dialog_negative">DIÙLT</string>
+    <!-- QR code scanner prompt dialog error message shown when a hostname does not contain http or https. -->
+    <string name="qr_scanner_dialog_invalid">Chan e seòladh dligheach a th’ ann.</string>
+    <!-- QR code scanner prompt dialog positive option when there is an error -->
+    <string name="qr_scanner_dialog_invalid_ok">Ceart ma-thà</string>
+    <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
+    <string name="tab_collection_dialog_message">A bheil thu cinnteach gu bheil thu airson %1$s a sguabadh às?</string>
+    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_message">Ma sguabas tu an taba seo às, thèid an cruinneachadh air fad a sguabadh às. ’S urrainn dhut cruinneachadh ùr a chruthachadh uair sam bith.</string>
+    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_title">A bheil thu airson %1$s a sguabadh às?</string>
+    <!-- Tab collection deletion prompt dialog option to delete the collection -->
+    <string name="tab_collection_dialog_positive">Sguab às</string>
+    <!-- Text displayed in a notification when the user enters full screen mode -->
+    <string name="full_screen_notification">A’ fosgladh modh na làn-sgrìn</string>
+    <!-- Message for copying the URL via long press on the toolbar -->
+    <string name="url_copied">Lethbhreac dhen URL air a dhèanamh</string>
+    <!-- Sample text for accessibility font size -->
+    <string name="accessibility_text_size_sample_text_1">Seo ball-eisimpleir de theacsa. Tha e an-seo airson ’s gum faic thu cò ris a bhios an teacsa coltach ’s tu ga lùghdachadh no meudachadh leis an roghainn seo.</string>
+    <!-- Summary for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_text_size_summary">Dèan an teacsa air làraichean-lìn nas motha no nas lugha</string>
+    <!-- Title for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_font_size_title">Meud a’ chrutha-chlò</string>
+
+    <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_2">Ath-mheudachadh fèin-obrachail a’ chrutha-chlò</string>
+    <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_summary">Thèid meud a’ chrutha-chlò atharrachadh a-rèir nan roghainnean Android agad. Cuir à comas e airson a mheud a shuidheachadh an-seo.</string>
+
+    <!-- Title for the Delete browsing data preference -->
+    <string name="preferences_delete_browsing_data">Sguab an dàta brabhsaidh às</string>
+    <!-- Title for the tabs item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_tabs_title_2">Tabaichean fosgailte</string>
+    <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
+    <string name="preferences_delete_browsing_data_tabs_subtitle">Tabaichean (%d)</string>
+    <!-- Title for the data and history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_data_title">An eachdraidh brabhsaidh agus dàta nan làrach</string>
+    <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
+        number of history items the user has -->
+    <string name="preferences_delete_browsing_data_browsing_data_subtitle">Seòlaidhean (%d)</string>
+    <!-- Title for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies">Briosgaidean</string>
+    <!-- Subtitle for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_subtitle">Thèid do chlàradh a-mach às a’ mhòrchuid de làraichean</string>
+    <!-- Title for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files">Dealbhan is faidhlichean san tasgadan</string>
+    <!-- Subtitle for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files_subtitle">Saoraidh seo stòras</string>
+    <!-- Title for the site permissions item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_site_permissions">Ceadan nan làrach</string>
+    <!-- Title for the downloads item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_downloads">Luchdaidhean a-nuas</string>
+    <!-- Text for the button to delete browsing data -->
+    <string name="preferences_delete_browsing_data_button">Sguab an dàta brabhsaidh às</string>
+    <!-- Title for the Delete browsing data on quit preference -->
+    <string name="preferences_delete_browsing_data_on_quit">Sguab an dàta brabhsaidh às nuair a dhùineas mi an aplacaid</string>
+
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit_2">Sguabaidh seo an dàta brabhsaidh às gu fèin-obrachail nuair a thaghas tu “Fàg an-seo” on phrìomh chlàr-taice.</string>
+    <!-- Action item in menu for the Delete browsing data on quit feature -->
+    <string name="delete_browsing_data_on_quit_action">Fàg an-seo</string>
+
+    <!-- Title text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_title">An rainse-ama a tha ri sguabadh às </string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body" moz:RemovedIn="130" tools:ignore="UnusedResources">Bheir seo air falbh an eachdraidh (a’ gabhail a-staigh eachdraidh a chaidh a shioncronachadh o uidheaman eile), briosgaidean is dàta brabhsaidh eile.</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body_2">Bheir seo air falbh an eachdraidh (a’ gabhail a-staigh eachdraidh a chaidh a shioncronachadh o uidheaman eile)</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
+    <string name="delete_history_prompt_button_last_hour">An uair a thìde seo chaidh</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
+    <string name="delete_history_prompt_button_today_and_yesterday">An-diugh ’s an-dè</string>
+    <!-- Radio button in the delete browsing data dialog to delete all history. -->
+    <string name="delete_history_prompt_button_everything">A h-uile rud</string>
+
+    <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
+    <string name="delete_browsing_data_prompt_message_3">Sguabaidh %s an dàta brabhsaidh a thagh thu às.</string>
+    <!-- Text for the cancel button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_cancel">Sguir dheth</string>
+    <!-- Text for the allow button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_allow">Sguab às</string>
+    <!-- Text for the snackbar confirmation that the data was deleted -->
+    <string name="preferences_delete_browsing_data_snackbar">Chaidh an dàta brabhsaidh a sguabadh às</string>
+    <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
+    <string name="deleting_browsing_data_in_progress">A’ sguabadh an dàta bhrabhsaidh às…</string>
+
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. Parameter will be replaced by a history group name. -->
+    <string name="delete_all_history_group_prompt_message">Sguab às gach làrach ann an “%s”</string>
+    <!-- Text for the cancel button for the history group deletion dialog -->
+    <string name="delete_history_group_prompt_cancel">Sguir dheth</string>
+    <!-- Text for the allow button for the history group dialog -->
+    <string name="delete_history_group_prompt_allow">Sguab às</string>
+    <!-- Text for the snackbar confirmation that the history group was deleted -->
+    <string name="delete_history_group_snackbar">Chaidh am buidheann a sguabadh às</string>
+
+    <!-- Onboarding -->
+    <!-- Text for onboarding welcome header. -->
+    <string name="onboarding_header_2">Fàilte gu eadar-lìon ùr</string>
+    <!-- Text for the onboarding welcome message. -->
+    <string name="onboarding_message">Brabhsair a chaidh a dhealbhadh do dhaoine ’s chan ann airson prothaid.</string>
+    <!-- Text for the Firefox account onboarding sign in card header. -->
+    <string name="onboarding_account_sign_in_header">Lean ort far an do stad thu roimhe</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account. -->
+    <string name="onboarding_manual_sign_in_description">Sioncronaich tabaichean is faclan-faire air feadh uidheaman airson leumadh eadar sgrìnichean gun chnap-starra.</string>
+    <!-- Text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in">Clàraich a-steach</string>
+    <!-- text to display in the snackbar once account is signed-in -->
+    <string name="onboarding_firefox_account_sync_is_on">Tha an sioncronachadh air</string>
+    <!-- Text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header">Brabhsair a dhìonas do phrìobhaideachd a ghnàth</string>
+    <!-- Text for the tracking protection card description. The first parameter is the name of the application.-->
+    <string name="onboarding_tracking_protection_description_old">Cuiridh %1$s casg gu fèin-obrachail air companaidhean o leantainn ort gu dìomhair air feadh an lìn.</string>
+    <!-- Text for the tracking protection card description. -->
+    <string name="onboarding_tracking_protection_description">Le làn-dìon o bhriosgaidean a chuireas stad air tracaichean a chleachdas briosgaidean gus do leantainn air feadh an lìn gu dìomhair.</string>
+    <!-- text for tracking protection radio button option for standard level of blocking -->
+    <string name="onboarding_tracking_protection_standard_button_2">Stannardach (bun-roghainn)</string>
+    <!-- text for standard blocking option button description -->
+    <string name="onboarding_tracking_protection_standard_button_description_3">Cothromaichte do phrìobhaideachd is dèanadas. Thèid duilleagan a luchdadh gu h-àbhaisteach.</string>
+
+    <!-- text for tracking protection radio button option for strict level of blocking -->
+    <string name="onboarding_tracking_protection_strict_option">Teann</string>
+    <!-- text for strict blocking option button description -->
+    <string name="onboarding_tracking_protection_strict_button_description_3">Bacaidh seo barrachd dhe na tracaichean ach an dèid duilleagan a luchdadh nas luaithe ach dh’fhaoidte gum bris cuid a ghleusan air duilleagan.</string>
+    <!-- text for the toolbar position card header  -->
+    <string name="onboarding_toolbar_placement_header_1">Tagh na thèid a chur an àite a’ bhàr-inneal</string>
+    <!-- Text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description">Cùm aig a’ bhonn e no gluais gun bhàrr e.</string>
+    <!-- Text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header_1">Cùm smachd air an dàta agad</string>
+    <!-- Text for the privacy notice onboarding card description. -->
+    <string name="onboarding_privacy_notice_description">Bheir Firefox smachd dhut air na cho-roinneas tu air loidhne agus na cho-roinneas tu leinn.</string>
+    <!-- Text for the button to read the privacy notice -->
+    <string name="onboarding_privacy_notice_read_button">Leugh sanas na prìobhaideachd againn</string>
+
+    <!-- Text for the conclusion onboarding message -->
+    <string name="onboarding_conclusion_header">A bheil thu deiseil airson eadar-lìon mìorbhaileach?</string>
+    <!-- text for the button to finish onboarding -->
+    <string name="onboarding_finish">Tòisich air brabhsadh</string>
+
+    <!-- Onboarding theme -->
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">Tagh ùrlar dhut</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description_2">Caomhain am bataraidh is do shùilean leis a’ mhodh dorcha.</string>
+    <!-- Automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_title">Gu fèin-obrachail</string>
+    <!-- Summary of automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_summary">Leanaidh e roghainnean an uidheim agad</string>
+    <!-- Theme setting for dark mode -->
+    <string name="onboarding_theme_dark_title">An t-ùrlar dorcha</string>
+    <!-- Theme setting for light mode -->
+    <string name="onboarding_theme_light_title">An t-ùrlar soilleir</string>
+
+    <!-- Text shown in snackbar when multiple tabs have been sent to device -->
+    <string name="sync_sent_tabs_snackbar">Chaidh na tabaichean a chur!</string>
+    <!-- Text shown in snackbar when one tab has been sent to device  -->
+    <string name="sync_sent_tab_snackbar">Chaidh an taba a chur!</string>
+    <!-- Text shown in snackbar when sharing tabs failed  -->
+    <string name="sync_sent_tab_error_snackbar">Cha ghabh a chur</string>
+    <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
+    <string name="sync_sent_tab_error_snackbar_action">FEUCH RIS A-RITHIST</string>
+    <!-- Title of QR Pairing Fragment -->
+    <string name="sync_scan_code">Sganaich an còd</string>
+    <!-- Instructions on how to access pairing -->
+    <string name="sign_in_instructions"><![CDATA[Fosgail Firefox air a’ choimpiutair agad is tadhail air <b>https://firefox.com/pair</b>]]></string>
+    <!-- Text shown for sign in pairing when ready -->
+    <string name="sign_in_ready_for_scan">Deiseil airson sganadh</string>
+    <!-- Text shown for settings option for sign with pairing -->
+    <string name="sign_in_with_camera">Clàraich a-steach leis a’ chamara agad</string>
+    <!-- Text shown for settings option for sign with email -->
+    <string name="sign_in_with_email">Cleachd post-d na àite</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[Nach eil cunntas agad? <u>Cruthaich fear</u> airson Firefox a shioncronachadh eadar uidheaman.]]></string>
+    <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="sign_out_confirmation_message_2">Sguiridh %s de shioncronachadh a’ chunntais agad ach cha sguab e às gin dhen dàta brabhsaidh agad air an uidheam seo.</string>
+    <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_disconnect">Dì-cheangail</string>
+    <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_cancel">Sguir dheth</string>
+
+    <!-- Error message snackbar shown after the user tried to select a default folder which cannot be altered -->
+    <string name="bookmark_cannot_edit_root">Chan urrainn dhut na pasganan bunaiteach a dheasachadh</string>
+
+    <!-- Enhanced Tracking Protection -->
+    <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
+    <string name="etp_settings">Roghainnean an dìon</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="preference_enhanced_tracking_protection">Dìon adhartach o thracadh</string>
+    <!-- Title for the description of enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">Dèan brabhsadh gun daoine a’ cumail sùil ort</string>
+    <!-- Preference summary for enhanced tracking protection settings on/off switch -->
+    <string name="preference_enhanced_tracking_protection_summary">Le làn-dìon o bhriosgaidean a-nis, am balla-bacaidh as treasa againn fhathast an aghaidh gleusan a thracaicheas tu air feadh làraichean.</string>
+    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">Cùm an dàta agad agad fhèin. Dìonaidh %s thu o mhòran dhe na tracaichean as cumanta a leanas mun cuairt thu air an lìon.</string>
+    <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation_2">Dìonaidh %s thu o mhòran dhe na tracaichean as cumanta a leanas mun cuairt thu air an lìon.</string>
+    <!-- Text displayed that links to website about enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_learn_more">Barrachd fiosrachaidh</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_default_1">Stannardach (bun-roghainn)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">Cothromaichte do phrìobhaideachd is dèanadas. Thèid duilleagan a luchdadh gu h-àbhaisteach.</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_5">Thèid duilleagan a luchdadh mar bu chòir ach bacaidh e nas lugha de thracaichean.</string>
+    <!--  Accessibility text for the Standard protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_standard_info_button">Na thèid a bhacadh leis an dìon stannardach on tracadh</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict">Teann</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">Bacaidh seo barrachd dhe na tracaichean ach an dèid duilleagan a luchdadh nas luaithe ach dh’fhaoidte gum bris cuid a ghleusan air duilleagan.</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description_4">Dìon o thracadh agus dèanadas nas fheàrr ach bidh làraichean ann nach obraich buileach mar bu chòir.</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_strict_info_button">Na thèid a bhacadh leis an dìon teann on tracadh</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom">Gnàthaichte</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description_2">Tagh na tracaichean is sgriobtaichean a thèid a bhacadh.</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_custom_info_button">Na thèid a bhacadh leis an dìon ghnàthaichte on tracadh</string>
+    <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies">Briosgaidean</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_1">Tracaichean thar làraichean is tracaichean nam meadhanan sòisealta</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">Briosgaidean o làraichean air nach deach tadhal</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">Gach briosgaid le treas-phàrtaidh (dh’fhaoidte nach obraich cuid a làraichean ri linn)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">Briosgaid sam bith (chan obraich cuid a làraichean ri linn)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_5">Cuir balla mu bhriosgaidean a leanas riut air feadh làraichean</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content">Susbaint tracaidh</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">Anns gach taba</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Ann an tabaichean prìobhaideach a-mhàin</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_cryptominers">Criopto-mhèinneadairean</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Lorgaichean-meur</string>
+    <!-- Button label for navigating to the Enhanced Tracking Protection details -->
+    <string name="enhanced_tracking_protection_details">Mion-fhiosrachadh</string>
+    <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_blocked">Bacte</string>
+    <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_allowed">Ceadaichte</string>
+    <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_title">Tracaichean nam meadhanan sòisealta</string>
+    <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_description">Cuingichidh seo an comas aig lìonraidhean sòisealta a thaobh tracadh a’ bhrabhsaidh agad.</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title">Briosgaidean tracaidh thar làraichean</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title_2">Briosgaidean thar-làraich</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description">Bacaidh seo briosgaidean a chleachdas lìonraidhean sanasachd agus companaidhean anailise airson an dàta brabhsaidh agad a chruinneachadh air feadh iomadh làrach.</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description_2">Cuiridh gleus làn-dìon nam briosgaidean balla mu bhriosgaidean na làraich air a bheil thu airson ’s nach fhaigh tracaichean cothrom orra gus do leantainn o làrach gu làrach.</string>
+    <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_title">Criopto-mhèinneadairean</string>
+    <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_description">Cumaidh seo sgriobtaichean droch-rùnach air falbh on uidheam agad is iad airson airgead digiteach a mhèinnearachd.</string>
+    <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_title">Lorgaichean-meur</string>
+    <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_description">Cuiridh seo bacadh air cruinneachadh de dhàta àraidh mun uidheam agad leis am b’ urrainnear do thracadh.</string>
+    <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_title">Susbaint tracaidh</string>
+    <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_description">Cuiridh seo stad air luchdadh de shanasachd, videothan is susbaint eile on taobh a-muigh anns a bheil còd tracaidh. Dh’fhaoidte gum bi droch-bhuaidh aige seo air obrachadh de chuid a làraichean-lìn.</string>
+    <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
+    <string name="etp_panel_on">Tha an dìon AIR air an làrach seo</string>
+    <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
+    <string name="etp_panel_off">Tha an dìon DHETH air an làrach seo</string>
+    <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
+    <string name="enhanced_tracking_protection_exceptions">Tha an dìon adhartach o thracadh dheth air na làraichean seo</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate
+    back from ETP details (Ex: Tracking content) -->
+    <string name="etp_back_button_content_description">Air ais</string>
+
+    <!-- About page link text to open what's new link -->
+    <string name="about_whats_new">Na tha ùr ann an %s</string>
+    <!-- Open source licenses page title
+    The first parameter is the app name -->
+    <string name="open_source_licenses_title">%s | Leabhar-lannan OSS</string>
+
+    <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_title">Ath-stiùirich tracaichean</string>
+    <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_description">Falamhaich briosgaidean a chaidh a shuidheachadh an cois ath-stiùiridh gu làraichean-lìn a tha nan tracaichean aithnichte.</string>
+
+    <!-- Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
+         as we use it on the UI to indicate which trackers have been partially unblocked.  -->
+    <string name="preference_etp_smartblock_description">Chaidh pàirt dhe na tracaichean comharraichte gu h-ìosal a dhì-bhacadh air an duilleag seo on a ghabh thu eadar-ghnìomh leotha *.</string>
+    <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
+    <string name="preference_etp_smartblock_learn_more">Barrachd fiosrachaidh</string>
+
+    <!-- Content description (not visible, for screen readers etc.):
+    Enhanced tracking protection exception preference icon for ETP settings. -->
+    <string name="preference_etp_exceptions_icon_description">Ìomhaigheag roghainn na h-eisgeachd o dhìon tracaidh leasaichte</string>
+
+    <!-- About page link text to open support link -->
+    <string name="about_support">Taic</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">Tuislidhean</string>
+    <!-- About page link text to open privacy notice link -->
+    <string name="about_privacy_notice">Aithris na prìobhaideachd</string>
+    <!-- About page link text to open know your rights link -->
+    <string name="about_know_your_rights">Bi eòlach air do chòraichean</string>
+    <!-- About page link text to open licensing information link -->
+    <string name="about_licensing_information">Fiosrachadh a’ cheadachais</string>
+    <!-- About page link text to open a screen with libraries that are used -->
+    <string name="about_other_open_source_libraries">Leabhar-lannan a chleachdas sinn</string>
+
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">Clàr-taice dì-bhugachaidh: %1$d briogaidhean air fhàgail gus a chur an comas</string>
+    <string name="about_debug_menu_toast_done">Tha an clàr-taice dì-bhugachaidh an comas a-nis</string>
+
+    <!-- Browser long press popup menu -->
+    <!-- Copy the current url -->
+    <string name="browser_toolbar_long_press_popup_copy">Lethbhreac</string>
+    <!-- Paste & go the text in the clipboard. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="browser_toolbar_long_press_popup_paste_and_go">Cuir ann ⁊ tadhail air</string>
+    <!-- Paste the text in the clipboard -->
+    <string name="browser_toolbar_long_press_popup_paste">Cuir ann</string>
+    <!-- Snackbar message shown after an URL has been copied to clipboard. -->
+    <string name="browser_toolbar_url_copied_to_clipboard_snackbar">Chaidh lethbhreac dhen URL a chur air an stòr-bhòrd</string>
+
+    <!-- Title text for the Add To Homescreen dialog -->
+    <string name="add_to_homescreen_title">Cuir ris an sgrìn mhòr</string>
+    <!-- Cancel button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_cancel">Sguir dheth</string>
+    <!-- Add button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_add">Cuir ris</string>
+    <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
+    <string name="add_to_homescreen_continue">Lean air adhart gun làrach-lìn</string>
+    <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_text_placeholder">Ainm na h-ath-ghoirid</string>
+
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description_2">Tha e furasta an duilleag seo a chur ri duilleag-dhachaigh an uidheim agad airson greim fhaighinn air gu luath.</string>
+
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">Clàraidhean a-steach is faclan-faire</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins">Sàbhail clàraidhean a-steach is faclan-faire</string>
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">Faighnich mus tèid a shàbhaladh</string>
+    <!-- Preference option for never saving passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_never_save">Na sàbhail idir</string>
+
+    <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill2">Lìon gu fèin-obrachail ann am %1$s</string>
+    <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill_description">Lìon is sàbhail ainmean-chleachdaichean is faclan-faire air làraichean-lìn ’s tu a’ cleachdadh %1$s.</string>
+    <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill">Fèin-lìon ann an aplacaidean eile</string>
+    <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill_description">Fèin-lìon ainmean-chleachdaichean is faclan-faire ann an aplacaidean eile air an uidheam agad.</string>
+    <!-- Preference option for adding a login -->
+    <string name="preferences_logins_add_login">Cuir clàradh a-steach ris</string>
+
+    <!-- Preference for syncing saved logins in Fenix -->
+    <string name="preferences_passwords_sync_logins">Sioncronaich na clàraidhean a-steach</string>
+    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices">Sioncronaich clàraidhean a-steach thar nan uidheaman</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins">Clàraidhean a-steach a chaidh a shàbhaladh</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text">Nochdaidh na clàraidhean a-steach a shàbhaileas no a shioncronaicheas tu ri %s an-seo.</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Faigh barrachd fiosrachaidh mun t-sioncronachadh.</string>
+    <!-- Preference to access list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions">Eisgeachdan</string>
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">Nochdaidh clàraidhean a-steach is faclan-faire nach eil gan sàbhaladh an-seo.</string>
+    <!-- Description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description">Cha tèid clàraidhean a-steach agus faclan-faire a shàbhaladh airson nan làraichean seo.</string>
+    <!-- Text on button to remove all saved login exceptions -->
+    <string name="preferences_passwords_exceptions_remove_all">Sguab gach eisgeachd às</string>
+    <!-- Hint for search box in logins list -->
+    <string name="preferences_passwords_saved_logins_search">Lorg sna clàraidhean a-steach</string>
+    <!-- The header for the site that a login is for -->
+    <string name="preferences_passwords_saved_logins_site">Làrach</string>
+    <!-- The header for the username for a login -->
+    <string name="preferences_passwords_saved_logins_username">Ainm-cleachdaiche</string>
+    <!-- The header for the password for a login -->
+    <string name="preferences_passwords_saved_logins_password">Facal-faire</string>
+
+    <!-- Shown in snackbar to tell user that the password has been copied -->
+    <string name="logins_password_copied">Chaidh lethbhreac an fhacail-fhaire a chur air an stòr-bhòrd</string>
+    <!-- Shown in snackbar to tell user that the username has been copied -->
+    <string name="logins_username_copied">Chaidh lethbhreac dhen ainm-chleachdaiche a chur air an stòr-bhòrd</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
+    <string name="saved_logins_copy_password">Dèan lethbhreac dhen fhacal-fhaire</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">Falamhaich am facal-faire</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
+    <string name="saved_login_copy_username">Dèan lethbhreac dhen ainm-chleachdaiche</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">Falamhaich an t-ainm-cleachdaiche</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
+    <string name="saved_login_clear_hostname">Falamhaich ainm an òstair</string>
+    <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
+    <string name="saved_login_open_site">Fosgail an làrach sa bhrabhsair</string>
+    <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
+    <string name="saved_login_reveal_password">Seall am facal-faire</string>
+    <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
+    <string name="saved_login_hide_password">Falaich am facal-faire</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
+    <string name="logins_biometric_prompt_message">Thoir a’ ghlas dheth a dh’fhaicinn nan clàradh a-steach a shàbhail thu</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title">Cùm na clàraidhean a-steach is faclan-faire agad tèarainte</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message">Suidhich pàtran glasadh an uidheim, PIN no facal-faire airson na clàraidhean a-steach is faclan-faire agad a chumail dìomhair fiù ma gheibh cuideigin eile greim air an uidheam agad.</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_later">Uaireigin eile</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_set_up_now">Suidhich e an-dràsta</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
+    <string name="logins_biometric_prompt_message_pin">Thoir a’ ghlas far a uidheim agad</string>
+    <!-- Title for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom">An sùm air gach làrach-lìn</string>
+
+    <!-- Summary for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom_summary">Cuir greimeachadh is sùmadh an comas, fiù air làraichean-lìn a bhacas an gluasad seo.</string>
+
+    <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
+    <string name="saved_logins_sort_strategy_alphabetically">Ainm (A-Z)</string>
+    <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
+    <string name="saved_logins_sort_strategy_last_used">Cleachdadh mu dheireadh</string>
+    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Seòrsaich clàr-taice nan clàradh a-steach</string>
+
+    <!-- Autofill -->
+    <!-- Preference and title for managing the autofill settings -->
+    <string name="preferences_autofill">Fèin-lìonadh</string>
+    <!-- Preference and title for managing the settings for addresses -->
+    <string name="preferences_addresses">Seòlaidhean</string>
+    <!-- Preference and title for managing the settings for credit cards -->
+    <string name="preferences_credit_cards">Cairtean-creideis</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards">Sàbhail is fèin-lìon cairtean</string>
+    <!-- Preference summary for saving and autofilling credit card data -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary">Tha an dàta crioptaichte</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
+    <string name="preferences_credit_cards_sync_cards_across_devices">Sioncronaich cairtean thar nan uidheaman</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
+    <string name="preferences_credit_cards_sync_cards">Sioncronaich cairtean</string>
+    <!-- Preference option for adding a credit card -->
+    <string name="preferences_credit_cards_add_credit_card">Cuir cairt-chreideis ris</string>
+    <!-- Preference option for managing saved credit cards -->
+    <string name="preferences_credit_cards_manage_saved_cards">Stiùirich na cairtean a shabhail thu</string>
+
+    <!-- Preference option for adding an address -->
+    <string name="preferences_addresses_add_address">Cuir seòladh ris</string>
+    <!-- Preference option for managing saved addresses -->
+    <string name="preferences_addresses_manage_addresses">Stiùirich na seòlaidhean</string>
+    <!-- Preference for saving and autofilling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses">Sàbhail is fèin-lìon seòlaidhean</string>
+
+    <!-- Preference summary for saving and autofilling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary">Gabh a-staigh fiosrachadh mar àireamhan, puist-d is seòlaidhean lìbhrigidh</string>
+
+    <!-- Title of the "Add card" screen -->
+    <string name="credit_cards_add_card">Cuir cairt ris</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">Deasaich a’ chairt</string>
+    <!-- The header for the card number of a credit card -->
+    <string name="credit_cards_card_number">Àireamh na cairte</string>
+    <!-- The header for the expiration date of a credit card -->
+    <string name="credit_cards_expiration_date">Falbhaidh an ùine oirre</string>
+    <!-- The label for the expiration date month of a credit card to be used by a11y services-->
+    <string name="credit_cards_expiration_date_month">Am mìos a dh’fhalbhas an ùine oirre</string>
+
+    <!-- The label for the expiration date year of a credit card to be used by a11y services-->
+    <string name="credit_cards_expiration_date_year">Am bliadhna a dh’fhalbhas an ùine oirre</string>
+    <!-- The header for the name on the credit card -->
+    <string name="credit_cards_name_on_card">An t-ainm air a’ chairt</string>
+    <!-- The text for the "Delete card" menu item for deleting a credit card -->
+    <string name="credit_cards_menu_delete_card">Sguab às a’ chairt</string>
+    <!-- The text for the "Delete card" button for deleting a credit card -->
+    <string name="credit_cards_delete_card_button">Sguab às a’ chairt</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation">A bheil thu cinnteach gu bheil thu airson a’ chairt-chreideis seo a sguabadh às?</string>
+    <!-- The text for the positive button on "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_button">Sguab às</string>
+    <!-- The title for the "Save" menu item for saving a credit card -->
+    <string name="credit_cards_menu_save">Sàbhail</string>
+    <!-- The text for the "Save" button for saving a credit card -->
+    <string name="credit_cards_save_button">Sàbhail</string>
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting a credit card -->
+    <string name="credit_cards_cancel_button">Sguir dheth</string>
+    <!-- Title of the "Saved cards" screen -->
+    <string name="credit_cards_saved_cards">Na cairtean air an sàbhaladh</string>
+    <!-- Error message for credit card number validation -->
+    <string name="credit_cards_number_validation_error_message">Cuir a-steach àireamh cairt-chreideis dhligheach</string>
+    <!-- Error message for credit card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message">Lìon an raon seo</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
+    <string name="credit_cards_biometric_prompt_message">Thoir a’ ghlas dheth a shealltainn nan cairtean a shàbhail thu</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title">Dìon na cairtean-creideis agad</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message">Suidhich pàtran glasadh an uidheim, PIN no facal-faire airson na cairtean-creideis a shàbhail thu a chumail dìomhair fiù ma gheibh cuideigin eile grèim air an uidheam agad.</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_set_up_now">Suidhich e an-dràsta</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">Uaireigin eile</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+    <string name="credit_cards_biometric_prompt_message_pin">Thoir a’ ghlas far a uidheim agad</string>
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
+    <string name="credit_cards_biometric_prompt_unlock_message">Thoir a’ ghlas dheth a chleachdadh fiosrachadh nan cairtean-creideis air an stòradh</string>
+
+    <!-- Title of the "Add address" screen -->
+    <string name="addresses_add_address">Cuir seòladh ris</string>
+    <!-- Title of the "Edit address" screen -->
+    <string name="addresses_edit_address">Deasaich an seòladh</string>
+    <!-- Title of the "Manage addresses" screen -->
+    <string name="addresses_manage_addresses">Stiùirich na seòlaidhean</string>
+    <!-- The header for the first name of an address -->
+    <string name="addresses_first_name">Ainm</string>
+    <!-- The header for the middle name of an address -->
+    <string name="addresses_middle_name">Ainm meadhanach</string>
+    <!-- The header for the last name of an address -->
+    <string name="addresses_last_name">Sloinneadh</string>
+    <!-- The header for the street address of an address -->
+    <string name="addresses_street_address">Seòladh sràide</string>
+    <!-- The header for the city of an address -->
+    <string name="addresses_city">Baile</string>
+    <!-- The header for the subregion of an address when "state" should be used -->
+    <string name="addresses_state">Stàit</string>
+    <!-- The header for the subregion of an address when "province" should be used -->
+    <string name="addresses_province">Siorrachd/Còigeamh</string>
+    <!-- The header for the zip code of an address -->
+    <string name="addresses_zip">Còd-puist</string>
+    <!-- The header for the country or region of an address -->
+    <string name="addresses_country">Dùthaich no roinn-dùthcha</string>
+    <!-- The header for the phone number of an address -->
+    <string name="addresses_phone">Fòn</string>
+    <!-- The header for the email of an address -->
+    <string name="addresses_email">Post-d</string>
+    <!-- The text for the "Save" button for saving an address -->
+    <string name="addresses_save_button">Sàbhail</string>
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting an address -->
+    <string name="addresses_cancel_button">Sguir dheth</string>
+    <!-- The text for the "Delete address" button for deleting an address -->
+    <string name="addressess_delete_address_button">Sguab an seòladh às</string>
+    <!-- The title for the "Delete address" confirmation dialog -->
+    <string name="addressess_confirm_dialog_message">A bheil thu cinnteach gu bheil thu airson an seòladh seo a sguabadh às?</string>
+    <!-- The text for the positive button on "Delete address" dialog -->
+    <string name="addressess_confirm_dialog_ok_button">Sguab às</string>
+    <!-- The text for the negative button on "Delete address" dialog -->
+    <string name="addressess_confirm_dialog_cancel_button">Sguir dheth</string>
+    <!-- The text for the "Save address" menu item for saving an address -->
+    <string name="address_menu_save_address">Sàbhail an seòladh</string>
+    <!-- The text for the "Delete address" menu item for deleting an address -->
+    <string name="address_menu_delete_address">Sguab an seòladh às</string>
+
+    <!-- Title of the Add search engine screen -->
+    <string name="search_engine_add_custom_search_engine_title">Cuir einnsean-luirg ris</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button that navigates to add new engine screen -->
+    <string name="search_engine_add_custom_search_engine_button_content_description" tools:ignore="UnusedResources">Cuir einnsean-luirg ùr ris</string>
+    <!-- Title of the Edit search engine screen -->
+    <string name="search_engine_edit_custom_search_engine_title">Deasaich an t-einnsean-luirg</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
+    <string name="search_engine_add_button_content_description">Cuir ris</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Sàbhail</string>
+    <!-- Text for the menu button to edit a search engine -->
+    <string name="search_engine_edit">Deasaich</string>
+    <!-- Text for the menu button to delete a search engine -->
+    <string name="search_engine_delete">Sguab às</string>
+
+    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
+    <string name="search_add_custom_engine_label_other">Eile</string>
+    <!-- Label for the TextField in which user enters custom search engine name -->
+    <string name="search_add_custom_engine_name_label" tools:ignore="UnusedResources">Ainm</string>
+    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
+    <string name="search_add_custom_engine_name_hint">Ainm</string>
+    <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
+    <string name="search_add_custom_engine_name_hint_2" tools:ignore="UnusedResources">Ainm an einnsein-luirg</string>
+    <!-- Label for the TextField in which user enters custom search engine URL -->
+    <string name="search_add_custom_engine_url_label" tools:ignore="UnusedResources">URL sreang an luirg</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint">An t-sreang luirg a thèid a chleachdadh</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint_2" tools:ignore="UnusedResources">An URL a thèid a chleachdadh airson lorg</string>
+    <!-- Description text for the Search String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_search_string_example" formatted="false">Cuir “%s” an àite na ceist. Ball-eisimpleir:\nhttps://www.google.com/search?q=%s</string>
+    <!-- Accessibility description for the form in which details about the custom search engine are entered -->
+    <string name="search_add_custom_engine_form_description">Mion-fhiosrachadh an einnsein-luirg ghnàthaichte</string>
+
+    <!-- The text for the "Save" button for saving a custom search engine -->
+    <string name="search_custom_engine_save_button" tools:ignore="UnusedResources">Sàbhail</string>
+
+    <!-- Text shown when a user leaves the name field empty -->
+    <string name="search_add_custom_engine_error_empty_name">Cuir a-steach ainm an einnsein-luirg</string>
+    <!-- Text shown when a user leaves the search string field empty -->
+    <string name="search_add_custom_engine_error_empty_search_string">Cuir a-steach sreang-luirg</string>
+    <!-- Text shown when a user leaves out the required template string -->
+    <string name="search_add_custom_engine_error_missing_template">Dèan cinnteach gu bheil an t-sreang luirg a’ leantainn fòrmat a’ bhuill-eisimpleir</string>
+    <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
+    <string name="search_add_custom_engine_error_cannot_reach">Mearachd a’ ceangal ri “%s”</string>
+    <!-- Text shown when a user creates a new search engine -->
+    <string name="search_add_custom_engine_success_message">Chaidh %s a chruthachadh</string>
+    <!-- Text shown when a user successfully edits a custom search engine -->
+    <string name="search_edit_custom_engine_success_message">Chaidh %s a shàbhaladh</string>
+    <!-- Text shown when a user successfully deletes a custom search engine -->
+    <string name="search_delete_search_engine_success_message">Chaidh %s a sguabadh às</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">Airson a cheadachadh:</string>
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. Tadhail air roghainnean Android</string>
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. Thoir gnogag air <b>Ceadan</b>]]></string>
+    <!-- Third step for the allowing a permission (Fore example: Camera) -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. Cuir <b>%1$s</b> AIR]]></string>
+
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="quick_settings_sheet_secure_connection_2">Tha an ceangal tèarainte</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="quick_settings_sheet_insecure_connection_2">Chan eil an ceangal tèarainte</string>
+    <!-- Label to clear site data -->
+    <string name="clear_site_data">Falamhaich na briosgaidean is dàta na làraich</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all data for current site -->
+    <string name="confirm_clear_site_data"><![CDATA[A bheil thu cinnteach gu bheil thu airson brisgaidean is dàta na làraich <b>%s</b> fhalamhachadh?]]></string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
+    <string name="confirm_clear_permissions_on_all_sites">A bheil thu cinnteach gu bheil thu airson na ceadan air gach làrach fhalamhachadh?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
+    <string name="confirm_clear_permissions_site">A bheil thu cinnteach gu bheil thu airson ceadan na làraich seo fhalamhachadh?</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
+    <string name="confirm_clear_permission_site">A bheil thu cinnteach gu bheil thu airson an cead seo airson na làraich seo fhalamhachadh?</string>
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">Chan eil eisgeachd làraich ann</string>
+    <!-- Bookmark deletion confirmation -->
+    <string name="bookmark_deletion_confirmation">A bheil thu cinnteach gu bheil thu airson an comharra-lìn seo a sguabadh às?</string>
+    <!-- Browser menu button that adds a shortcut to the home fragment -->
+    <string name="browser_menu_add_to_shortcuts">Cuir ris na h-ath-ghoiridean</string>
+    <!-- Browser menu button that removes a shortcut from the home fragment -->
+    <string name="browser_menu_remove_from_shortcuts">Thoir air falbh on na h-ath-ghoiridean</string>
+    <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
+     the certificate authority that verified the ticket-->
+    <string name="certificate_info_verified_by">Air a dhearbhadh le: %1$s</string>
+    <!-- Login overflow menu delete button -->
+    <string name="login_menu_delete_button">Sguab às</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">Deasaich</string>
+    <!-- Message in delete confirmation dialog for logins -->
+    <string name="login_deletion_confirmation">A bheil thu cinnteach gu bheil thu airson an clàradh a-steach seo a sguabadh às?</string>
+    <!-- Positive action of a dialog asking to delete  -->
+    <string name="dialog_delete_positive">Sguab às</string>
+
+    <!-- Negative action of a dialog asking to delete login -->
+    <string name="dialog_delete_negative">Sguir dheth</string>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">Roghainnean clàraidh a-steach</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">An raon teacsa so-dheasaichte airson seòladh-lìn a’ chlàraidh a-steach.</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">An raon teacsa so-dheasaichte airson ainm-cleachdaiche a’ chlàraidh a-steach.</string>
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">An raon teacsa so-dheasaichte airson facal-faire a’ chlàraidh a-steach.</string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">Sàbhail na h-atharraichean a rinneadh air a’ chlàradh a-steach.</string>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">Deasaich</string>
+    <!--  The page title for adding new login. -->
+    <string name="add_login">Cuir clàradh a-steach ùr ris</string>
+    <!--  The error message in add/edit login view when password field is blank. -->
+    <string name="saved_login_password_required">Tha feum air facal-faire</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required">Tha feum air ainm-cleachdaiche</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Tha feum air ainm òstair</string>
+    <!-- Voice search button content description  -->
+    <string name="voice_search_content_description">Lorg-gutha</string>
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">Bruidhinn an-dràsta</string>
+
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">Tha clàradh a-steach ann mu thràth aig a bheil an t-ainm-cleachdaiche seo</string>
+
+    <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
+    <string name="add_login_hostname_hint_text">https://www.example.com</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
+    <string name="add_login_hostname_invalid_text_3">Feumaidh “https://” no “http://” a bhith ann an seòlaidhean-lìn</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname is invalid. -->
+    <string name="add_login_hostname_invalid_text_2">Tha feum air ainm òstair dligheach</string>
+
+    <!-- Synced Tabs -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <string name="synced_tabs_connect_another_device">Ceangail uidheam eile ris.</string>
+    <!-- Text displayed asking user to re-authenticate -->
+    <string name="synced_tabs_reauth">Dèan dearbhadh às ùr.</string>
+    <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
+    <string name="synced_tabs_enable_tab_syncing">Cuir an comas sioncronachadh nan tabaichean.</string>
+    <!-- Text displayed when user has no tabs that have been synced -->
+    <string name="synced_tabs_no_tabs">Chan eil taba sam bith fosgailte agad ann am Firefox air uidheaman eile.</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">Seall liosta nan tabaichean a tha agad air uidheaman eile.</string>
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">Clàraich a-steach a shioncronachadh</string>
+    <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
+    <string name="synced_tabs_no_open_tabs">Chan eil taba fosgailte</string>
+
+    <!-- Content description for expanding a group of synced tabs. -->
+    <string name="synced_tabs_expand_group">Leudaich buidheann nan tabaichean sioncronaichte</string>
+    <!-- Content description for collapsing a group of synced tabs. -->
+    <string name="synced_tabs_collapse_group">Co-theannaich buidheann nan tabaichean sioncronaichte</string>
+
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
+    <string name="shortcut_max_limit_title">Tha uiread a dh’ath-ghoiridean agad ’s a tha ceadaichte</string>
+    <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
+    <string name="shortcut_max_limit_content">Airson ath-ghoirid ùr a chur ris, thoir tè eile air falbh an toiseach. Suath ris an làrach, cùm e is tagh “Thoir air falbh”.</string>
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">Ceart, tha mi agaibh</string>
+
+    <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
+    <string name="top_sites_toggle_top_recent_sites_4">Ath-ghoiridean</string>
+	<!-- Title text displayed in the rename top site dialog. -->
+	<string name="top_sites_rename_dialog_title">Ainm</string>
+    <!-- Hint for renaming title of a shortcut -->
+    <string name="shortcut_name_hint">Ainm na h-ath-ghoirid</string>
+	<!-- Button caption to confirm the renaming of the top site. -->
+	<string name="top_sites_rename_dialog_ok">Ceart ma-thà</string>
+	<!-- Dialog button text for canceling the rename top site prompt. -->
+	<string name="top_sites_rename_dialog_cancel">Sguir dheth</string>
+
+    <!-- Text for the menu button to open the homepage settings. -->
+    <string name="top_sites_menu_settings">Roghainnean</string>
+    <!-- Text for the menu button to navigate to sponsors and privacy support articles. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="top_sites_menu_sponsor_privacy">Na sponsairean againn ⁊ do phrìobhaideachd</string>
+    <!-- Label text displayed for a sponsored top site. -->
+    <string name="top_sites_sponsored_label">Sponsairichte</string>
+
+    <!-- Inactive tabs in the tabs tray -->
+    <!-- Title text displayed in the tabs tray when a tab has been unused for 14 days. -->
+    <string name="inactive_tabs_title">Tabaichean neo-ghnìomhach</string>
+    <!-- Content description for closing all inactive tabs -->
+    <string name="inactive_tabs_delete_all">Dùin gach taba neo-ghnìomhach</string>
+
+    <!-- Content description for expanding the inactive tabs section. -->
+    <string name="inactive_tabs_expand_content_description">Leudaich na tabaichean neo-ghnìomhach</string>
+    <!-- Content description for collapsing the inactive tabs section. -->
+    <string name="inactive_tabs_collapse_content_description">Co-theannaich na tabaichean neo-ghnìomhach</string>
+
+    <!-- Inactive tabs auto-close message in the tabs tray -->
+    <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
+    <string name="inactive_tabs_auto_close_message_header" tools:ignore="UnusedResources">A bheil thu airson an dùnadh an dèidh mìos?</string>
+    <!-- A description below the header to notify the user what the inactive tabs auto-close feature is. -->
+    <string name="inactive_tabs_auto_close_message_description" tools:ignore="UnusedResources">Dùnaidh Firefox tabaichean nach tug thu sùil orra thairis air a’ mhìos seo chaidh.</string>
+    <!-- A call to action below the description to allow the user to turn on the auto closing of inactive tabs. -->
+    <string name="inactive_tabs_auto_close_message_action" tools:ignore="UnusedResources">CUIR GLEUS AN FHÈIN-DÙNAIDH AIR</string>
+
+    <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
+    <string name="inactive_tabs_auto_close_message_snackbar">Tha an dùnadh fèin-obrachail an comas</string>
+
+    <!-- Awesome bar suggestion's headers -->
+    <!-- Search suggestions title for Firefox Suggest. -->
+    <string name="firefox_suggest_header">Firefox Suggest</string>
+
+    <!-- Title for search suggestions when Google is the default search suggestion engine. -->
+    <string name="google_search_engine_suggestion_header">Lorg le Google</string>
+    <!-- Title for search suggestions when the default search suggestion engine is anything other than Google. The first parameter is default search engine name. -->
+    <string name="other_default_search_engine_suggestion_header">Lorg le %s</string>
+
+    <!-- Default browser experiment -->
+    <string name="default_browser_experiment_card_text">Suidhich ceanglaichean o làraichean-lìn, puist-d agus teachdaireachdan airson ’s gun tèid am fosgladh gu fèin-obrachail ann am Firefox.</string>
+
+    <!-- Content description for close button in collection placeholder. -->
+    <string name="remove_home_collection_placeholder_content_description">Thoir air falbh</string>
+
+    <!-- Content description radio buttons with a link to more information -->
+    <string name="radio_preference_info_content_description">Briog an-seo airson mion-fhiosrachadh</string>
+
+    <!-- Content description for the action bar "up" button -->
+    <string name="action_bar_up_description">Seòl suas</string>
+
+    <!-- Content description for privacy content close button -->
+    <string name="privacy_content_close_button_content_description">Dùin</string>
+
+    <!-- Pocket recommended stories -->
+    <!-- Header text for a section on the home screen. -->
+    <string name="pocket_stories_header_1">Sgeulachdan smuainteachail</string>
+    <!-- Header text for a section on the home screen. -->
+    <string name="pocket_stories_categories_header">Sgeulachdan a-rèir cuspair</string>
+    <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
+    <string name="pocket_stories_placeholder_text">Fidir barrachd</string>
+
+    <!-- Title of an app feature. Smaller than a heading. The first parameter is product name Pocket -->
+    <string name="pocket_stories_feature_title_2">Le cumhachd %s.</string>
+    <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->
+    <string name="pocket_stories_feature_caption">Na phàirt de theaghladh Firefox. %s</string>
+    <!-- Clickable text for opening an external link for more information about Pocket. -->
+    <string name="pocket_stories_feature_learn_more">Barrachd fiosrachaidh</string>
+    <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
+    <string name="pocket_stories_sponsor_indication">Sponsairichte</string>
+
+    <!-- Snackbar message for enrolling in a Nimbus experiment from the secret settings when Studies preference is Off.-->
+    <string name="experiments_snackbar">Cuir an telemeatraidh an comas airson an dàta a chur.</string>
+    <!-- Snackbar button text to navigate to telemetry settings.-->
+    <string name="experiments_snackbar_button">Tadhail air na roghainnean</string>
+
+    <!-- Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback. -->
+    <!-- Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse". -->
+    <string name="a11y_action_label_collapse">co-theannaich</string>
+    <!-- Action label for elements that can be expanded if interacting with them. Talkback will append this to say "Double tap to expand". -->
+    <string name="a11y_action_label_expand">leudaich</string>
+    <!-- Action label for links to a website containing documentation about a wallpaper collection. Talkback will append this to say "Double tap to open link to learn more about this collection". -->
+    <string name="a11y_action_label_wallpaper_collection_learn_more">fosgail an ceangal airson barrachd fiosrachaidh mun chruinneachadh seo</string>
+    <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->
+    <string name="a11y_action_label_read_article">leugh an t-artaigeal</string>
+    <!-- Action label for links to the Firefox Pocket website. Talkback will append this to say "Double tap to open link to learn more". -->
+    <string name="a11y_action_label_pocket_learn_more">fosgail an ceangal airson barrachd fiosrachaidh</string>
+</resources>

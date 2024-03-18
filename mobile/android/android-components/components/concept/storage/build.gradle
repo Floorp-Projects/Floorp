@@ -1,0 +1,41 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-parcelize'
+
+android {
+    defaultConfig {
+        minSdkVersion config.minSdkVersion
+        compileSdk config.compileSdkVersion
+        targetSdkVersion config.targetSdkVersion
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    namespace 'mozilla.components.concept.storage'
+}
+
+dependencies {
+    // Necessary because we use 'suspend'. Fun fact: this module will compile just fine without this
+    // dependency, but it will crash at runtime.
+    // Included via 'api' because this module is unusable without coroutines.
+    api ComponentsDependencies.kotlin_coroutines
+
+    implementation project(':support-ktx')
+    implementation ComponentsDependencies.androidx_annotation
+
+    testImplementation project(':support-test')
+    testImplementation ComponentsDependencies.testing_junit
+}
+
+apply from: '../../../android-lint.gradle'
+apply from: '../../../publish.gradle'
+ext.configurePublish(config.componentsGroupId, archivesBaseName, project.ext.description)

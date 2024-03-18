@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Name of the "notification channel" used for displaying download notification. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_downloads_notification_channel">Luchdaidhean a-nuas</string>
+
+    <!-- Text shown on the second row of a paused download notification. -->
+    <string name="mozac_feature_downloads_paused_notification_text">Tha an luchdadh a-nuas na stad</string>
+    <!-- Text shown on the second row of an completed download notification. The filename is shown on the first row. -->
+    <string name="mozac_feature_downloads_completed_notification_text2">Chaidh a luchdadh a-nuas</string>
+    <!-- Text shown on the second row of an failed download notification. The filename is shown on the first row. -->
+    <string name="mozac_feature_downloads_failed_notification_text2">Dh’fhàillig an luchdadh a-nuas</string>
+
+    <!-- Alert dialog confirmation before download a file, this is the title. %1$s will be replaced with the name of the file. -->
+    <string name="mozac_feature_downloads_dialog_title2">Luchdadh a-nuas (%1$s)</string>
+    <!-- Alert dialog confirmation before download a file, this is the positive action. -->
+    <string name="mozac_feature_downloads_dialog_download">Luchdaich a-nuas</string>
+    <!-- Alert dialog confirmation before download a file, this is the negative action. -->
+    <string name="mozac_feature_downloads_dialog_cancel">Sguir dheth</string>
+    <!-- Error shown when the user is trying to download a invalid file. %1$s will be replaced with the name of the app. -->
+    <string name="mozac_feature_downloads_file_not_supported2">Chan urrainn dha %1$s a leithid seo a dh’fhaidhle a luchdadh a-nuas</string>
+
+    <!-- Message that appears when the downloaded file could not be opened-->
+    <string name="mozac_feature_downloads_could_not_open_file">Cha b’ urrainn dhuinn am faidhle fhosgladh</string>
+
+    <!-- Message that appears when the downloaded file is a specific type that Android doesn't support opening-->
+    <string name="mozac_feature_downloads_open_not_supported1">Cha deach aplacaid a lorg a dh‘fhosgladh faidhlichean %1$s</string>
+
+    <!-- Button that pauses the download when pressed -->
+    <string name="mozac_feature_downloads_button_pause">Cuir na stad</string>
+    <!-- Button that resumes the download when pressed -->
+    <string name="mozac_feature_downloads_button_resume">Lean air</string>
+    <!-- Button that cancels the download when pressed -->
+    <string name="mozac_feature_downloads_button_cancel">Sguir dheth</string>
+    <!-- Button that opens the downloaded file when pressed -->
+    <string name="mozac_feature_downloads_button_open">Fosgail</string>
+    <!-- Button that restarts the download after a failed attempt -->
+    <string name="mozac_feature_downloads_button_try_again">Feuch ris a-rithist</string>
+
+    <!-- Content description for close button -->
+    <string name="mozac_feature_downloads_button_close">Dùin</string>
+    <!-- Title for the third party download app chooser dialog -->
+    <string name="mozac_feature_downloads_third_party_app_chooser_dialog_title">Coilean seo le</string>
+    <!-- Message that appears when trying to download with an external app fails. %1$s will be replaced with the name the external app. -->--&gt;
+    <string name="mozac_feature_downloads_unable_to_open_third_party_app">Cha ghabh %1$s fhosgladh</string>
+    <!-- Text for the info dialog when write to storage permissions have been denied but user tries to download a file. -->
+    <string name="mozac_feature_downloads_write_external_storage_permissions_needed_message">Tha feum air cead inntrigidh do dh’fhaidhlichean is meadhanan mus luchdaich thu a-nuas faidhle. Tadhail air roghainnean Android is thoir gnogag air a’ chead.</string>
+
+    <!-- Alert dialog confirmation before cancelling downloads, this is the title   -->
+    <string name="mozac_feature_downloads_cancel_active_downloads_warning_content_title">A bheil thu airson sgur de gach luchdadh a-nuas prìobhaideach?</string>
+    <!-- Alert dialog confirmation before cancelling private downloads, this is the body. %1$s will be replaced with the name of the file. -->
+    <string name="mozac_feature_downloads_cancel_active_private_downloads_warning_content_body">Ma dhùineas tu gach taba brabhsaidh prìobhaideach an-dràsta, thèid crìoch a chur air luchdadh a-nuas an fhaidhle “%1$s”. A bheil thu cinnteach gu bheil thu airson am brabhsadh prìobhaideach fhàgail?</string>
+    <!-- Alert dialog confirmation before cancelling downloads, this is the positive action. -->
+    <string name="mozac_feature_downloads_cancel_active_downloads_accept">Sguir de gach luchdadh a-nuas</string>
+    <!-- Alert dialog confirmation before cancelling downloads, this is the negative action. Leaves user in Private browsing -->
+    <string name="mozac_feature_downloads_cancel_active_private_downloads_deny">Fuirich sa bhrabhsadh phrìobhaideach</string>
+</resources>

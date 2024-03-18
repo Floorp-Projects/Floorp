@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">دوبارہ کوشش کریں</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">درخواست مکمل نہیں کی جا سکتی</string>
+
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[
+      <p>اس مسئلے کے متعلق اضافی معلومات فی الحال دستیاب نہیں ہے۔</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">قابل بھروسا کنکشن ناکام ہو گیا ہے</string>
+
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
+      <ul>
+        <li>جو صفحہ آپ دیکھنا چاہ رہے ہیں، دکھایا نہیں جا سکتا کیونکہ موصول قوائف کی اصلیت کی تصدیق نہیں ہو سکی۔</li> 
+        <li>ویب سائٹ کے مالک کو اس مسلے کا بتانے کے لیے ان سے رابطہ کریں۔</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">قابل بھروسا کنکشن ناکام ہو گیا ہے</string>
+
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[<ul>
+        <li>یہ سرور کانفیگوریشن کا کوئی مسلہ ہو سکتا ہے یا ہو سکتا ہے کی کوئی سرور کی نکل کرنے کی کوشش کر رہا ہو۔</li>
+        <li>اگر آپ ماضی میں اس سرور سے جڑیں ہیں تو ہو سکتا ہے خرابی کچھ وقت کے لئے ہو اور آپ کچھ دیر میں پھر سے کوشش کر سکتے ہیں۔</li>
+      </ul>]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">اعلٰی…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>ہو سکتا ہے کی کوئی سائٹ کی نقل بنا رہا ہو اور آپ کو آگے نہیں بڑھنی چاہیے۔</label>
+        <br><br>
+        <label>ویب سائٹس سرٹیفکیٹ کے ذریعہ اپنی سناخت ثابت کرتی ہیں۔ %1$s، اس <b>%2$s</b> پر بھروسہ نہیں کرتا کیونکہ سرٹیفکیٹ جاری کرنے والا نامعلوم ہے، سرٹیفکیٹ پر خود کے دستخط کی ہوئی ہے یا سرور صحیح درمیانی سرٹیفیکیٹ نہیں بھیج رہا ہے۔</label>]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">واپس جائیں (تجویز شدہ)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">خطرے کو قبول کریں اور جاری رکھیں</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">کنکشن خراب ہو گیا</string>
+
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[<p>براؤزر کامیابی کے ساتھ جڑ چکا ہے، لیکن معلومات کی منتقلی کے دوران کنکشن میں رکاوٹ پیدا ہوئی۔ براہ کرمپھر سے کوشش کریں۔</p>
+      <ul>
+        <li>سائٹ عارضی طور پر غیر دستیاب یا کافی مصروف ہو سکتی ہے۔ کچھ دیر بعد پھر سے کوشش کریں۔</li>
+        <li>اگر آپ کوئی بھی صفحات لوڈ نہیں کر پا رہے ہیں، تو اپنے آلے کی ڈیٹا یا وائی-فائی کنیکشن کی جانچ کریں۔ </li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">کنکشن ٹائم آوٹ ہو گیا ہے</string>
+
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>درخواست کی گئی سائٹ نے کنکشن کی التجا کا جواب نہیں دیا اور براؤزر  نے جواب کا انتظار کرنا بند کر دیا ہے۔</p>
+      <ul>
+        <li>ہو سکتا ہے کی سرور زیادہ مانگ یا  عارضی وقفے کا سامنا کر رہا ہو؟ بعد میں پھر سے کوشش کریں۔</li>
+        <li> کیا آپ دوسرے سائٹ بھی براؤز نہیں کر پا رہے ہیں؟ آلے کی نیٹ ورک کنکشن کی جانچ کریں۔</li>
+        <li>کیا آپ کا آلہ یا نیٹ ورک کسی فائروال یا پراکسی کے ذریعے محفوظ ہے؟غلط سیٹنگ ویب براؤز کرنے میں مداخلت کر سکتی ہے۔</li>
+        <li>ابھی بھی مسئلہ درپیش ہے؟ مدد کے لئے اپنے نیٹ ورک کے نگراں یا انٹرنیٹ مہیا کار سے رابطہ کریں۔</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">جڑنے میں ناکام رہا</string>
+
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[<ul>
+        <li>سائٹ عارضی طور پر غیر دستیاب یا کافی مصروف ہو سکتی ہے۔ کچھ دیر بعد پھر سے کوشش کریں۔</li>
+        <li>اگر آپ کوئی بھی صفحات لوڈ نہیں کر پا رہے ہیں، تو اپنے آلے کی ڈیٹا یا وائی-فائی کنکشن کی جانچ کریں۔</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">سرور کی طرف سے غیر متوقع جواب</string>
+
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
+      <p>سائٹ نے نیٹ ورک فرمائش کا ایک غیر متوقع طریقے سے جواب دیا اور براؤزر جاری نہیں رہ سکتا۔</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">صفحہ ٹھیک طرح ری ڈائریکٹ نہیں ہو رہا</string>
+
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[<p>براؤزر  نے درخواست کی گئی چیز کو پانے کی کوشش روک کر دی ہے۔ سائٹ اس درخواست کو اس طرح سے دوسری سمت بھیج رہا ہے جو کبھی مکمل نہیں ہوگی۔</p>
+      <ul>
+        <li>کیا اپ نے سائٹ کے لئے ضروری کوکیز کو معزور یا نا اہل کی ہے؟</li>
+        <li>اگر سائٹ کی کوکیز کو قبول کرنے سے بھی مسئلہ ٹھیک نہیں ہوتا، تو ممکن ہے کہ یہ سرور کنفگریشن کا کوئی مسئلہ ہو نا کہ آپکے آلے کا۔</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">آف لائن موڈ</string>
+
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>براؤزر اپنے آف لائن موڈ میں عمل کاری ہے اور درخواست کی گئی چیز سے نہیں جڑ سکتا۔
+</p>
+      <ul>
+        <li>کیا آلہ ایک زیر عمل نیٹ ورک سے جڑا ہوا ہے؟</li>
+        <li>آن لائن موڈ میں لانے کے لئے “دوبارہ کوشش کریں” دبایں اور صفہ کو فر سے لوڈ کریں۔</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">سلامتی وجوہات کے لیے دہانہ محدود کر دیا گیا</string>
+
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[<p>درخواست کیا گیا پتا ایک خاص پورٹ (مثلاً، mozilla.org پر پورٹ 80 کے لئے <q>mozilla.org:80</q>)  
+ کو مخصوص کرتا ہے جو عام طور پر ویب براؤز کرنے کے علاوہ <em>کچھ اور</em> مقاصد کے لئے استعمال ہوتا ہے۔ آپ کی حفاظت اور سلامتی کے لئے براؤزر  نے درخواست کو منسوخ کر دی ہے۔</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">کنکشن ریسٹ ہو گیا</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[<p>کنکشن کو قائم کرنے کے دوران نیٹ ورک لنک میں رکاوٹ پیدا ہوئی۔ براہ کرم دوبارہ کوشش کریں۔</p>
+      <ul>
+        <li>سائٹ عارضی طور پر غیر دستیاب یا کافی مصروف ہو سکتی ہے۔ کچھ دیر بعد دوبارہ کوشش کریں۔</li>
+        <li>اگر آپ کوئی بھی صفحات لوڈ نہیں کر پا رہے ہیں، تو اپنے آلے کی ڈیٹا یا وائی-فائی کنکشن کی جانچ کریں۔</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">غیر محفوظ فائل قسم</string>
+
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[<ul>
+        <li>ویب سائٹ کے مالکین کو اس مسلے کا بتانے کے لیے رابطہ کریں۔</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">خراب مواد نقص</string>
+
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[<p>آپ جس صفہ کو دیکھنا چاہتے ہیں اسے دکھایا نہیں جا سکتا کیونکہ ڈیٹا ترسیل میں ایک خرابی کی جانکاری ملی ہے۔</p>
+      <ul>
+        <li>براہ کرم ویب سائٹ کے مالکان کو اس مسلے کا بتانے کے لیے ان سے رابطہ کریں۔</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">مواد تباہ ہو گیا</string>
+
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[<p>آپ جس صفہ کو دیکھنا چاہتے ہیں اسے دکھایا نہیں جا سکتا کیونکہ ڈیٹا ترسیل میں ایک خرابی کی جانکاری ملی ہے۔</p>
+      <ul>
+        <li>براہ کرم ویب سائٹ کے مالکان کو اس مسلے کا بتانے کے لیے ان سے رابطہ کریں۔</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">مواد انکوڈنگ نقص</string>
+
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[<p>آپ جس صفہ کو دیکھنا چاہتے ہیں اسے دکھایا نہیں جا سکتا کیونکہ یہ ایک غیر موثر یا غیر معاون قسم کی کمپریشن کا استعمال کرتا ہے۔</p>
+      <ul>
+        <li>براہ کرم ویب سائٹ کے مالکان کو اس مسلے کا بتانے کے لیے ان سے رابطہ کریں۔</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">پتہ نہیں ملا</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">کوئی انٹرنیٹ کنکشن نہیں</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">اپنے نیٹ ورک کنکشن کی پڑتال کریں یا چند لمحات بعد دوبارہ لوڈ کرنے کی کوشش کریں۔</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">پھر لوڈ کریں</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">ناجائز پتہ</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>مہیا کیا گیا پتہ ایک پہچان کردہ وضع میں نہیں ہے۔ برائے مہربانى غلطیوں کے لئے محل وقوع بار کی پڑتال کریں اور دوبارہ کوشش کریں۔</p>]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">پتہ جائز نہیں ہے</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[<ul>
+        <li>ویب پتے عمومی طور پر ایسے ہی <strong>http://www.example.com/</strong> لکھے جاتے ہیں </li>
+        <li>یقینی بنائیں کہ آپ فارورڈ سلیشیز (جیسے <strong>/</strong>) کا استعمال کر رہے ہیں۔</li>
+      </ul>]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">نامعلوم پروٹوکول</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">مسل نہیں ملی</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">فائل تک رسائی مسترد کردی گئی ہے</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">پراکسی سرور نے کنکشن سے انکار کردیا</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">پراکسی سرور نہیں ملا</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">میلویئر سائٹ مسئلہ</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">ناپسندیدہ سائٹ مسئلہ</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">نقصان دہ سائٹ کا مسئلہ</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">فریب دہ سائٹ کا مسئلہ</string>
+    </resources>

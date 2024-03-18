@@ -1,0 +1,3 @@
+  MozillaBannedPropertyAccess:
+    active: true
+    bannedProperties: "Sample.Banned"

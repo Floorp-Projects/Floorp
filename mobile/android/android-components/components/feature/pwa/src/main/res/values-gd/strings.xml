@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Default shortcut label used if website has no title -->
+    <string name="mozac_feature_pwa_default_shortcut_label">Làrach-lìn</string>
+
+    <!-- Name of the "notification channel" used for displaying site controls notification. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_pwa_site_controls_notification_channel">Uidheaman-smachd na làraich airson na làn-sgrìn</string>
+    <!-- Text shown on the second row of the site controls notification. -->
+    <string name="mozac_feature_pwa_site_controls_notification_text">Thoir gnogag airson lethbhreac a dhèanamh de URL na h-aplacaid seo</string>
+    <!-- Refresh button in site controls notification. -->
+    <string name="mozac_feature_pwa_site_controls_refresh">Ath-nuadhaich</string>
+    <!-- Toast displayed when the website URL is copied. -->
+    <string name="mozac_feature_pwa_copy_success">Chaidh lethbhreac dhen URL a dhèanamh.</string>
+</resources>

@@ -1,0 +1,165 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  --moz-vertical-spacing: 10px;
+  --moz-background-height: 32px;
+}
+
+body {
+  background-size: 64px var(--moz-background-height);
+  /* background-size: 64px 32px; */
+  background-repeat: repeat-x;
+
+  background-color: #363B40;
+  color: #FFFFFF;
+  padding: 0 20px;
+
+  font-weight: 300;
+  font-size: 13px;
+  -moz-text-size-adjust: none;
+  font-family: sans-serif;
+}
+
+ul {
+  /* Shove the list indicator so that its left aligned, but use outside so that text
+   * doesn't don't wrap the text around it */
+  padding: 0 1em;
+  margin: 0;
+  list-style: round outside none;
+}
+
+#errorShortDesc,
+li:not(:last-of-type) {
+  /* Margins between the li and buttons below it won't be collapsed. Remove the bottom margin here. */
+  margin: var(--moz-vertical-spacing) 0;
+}
+
+h1 {
+  margin: 0;
+  /* Since this has an underline, use padding for vertical spacing rather than margin */
+  padding: var(--moz-vertical-spacing) 0;
+  font-weight: 300;
+  border-bottom: 1px solid #e0e2e5;
+}
+
+h2 {
+  font-size: small;
+  padding: 0;
+  margin: var(--moz-vertical-spacing) 0;
+}
+
+p {
+  margin: var(--moz-vertical-spacing) 0;
+}
+
+button {
+  /* Force buttons to display: block here to try and enfoce collapsing margins */
+  display: block;
+  width: 100%;
+  border: none;
+  padding: 1rem;
+  font-family: sans-serif;
+  background-color: #00A4DC;
+  color: #FFFFFF;
+  font-weight: 300;
+  border-radius: 2px;
+  background-image: none;
+  margin: var(--moz-vertical-spacing) 0 0;
+}
+
+.buttonSecondary{
+  /* Force buttons to display: block here to try and enforce collapsing margins */
+  display: block;
+  width: 100%;
+  border: none;
+  padding: 1rem;
+  font-family: sans-serif;
+  background-color: rgba(249, 249, 250, 0.1);
+  color: #FFFFFF;
+  font-weight: 300;
+  border-radius: 2px;
+  background-image: none;
+  margin: var(--moz-vertical-spacing) 0 0;
+}
+
+#errorPageContainer {
+  /* If the page is greater than 550px center the content.
+   * This number should be kept in sync with the media query for tablets below */
+  max-width: 550px;
+  margin: 0 auto;
+  transform: translateY(var(--moz-background-height));
+  padding-bottom: var(--moz-vertical-spacing);
+
+  min-height: calc(100% - var(--moz-background-height) - var(--moz-vertical-spacing));
+  display: flex;
+  flex-direction: column;
+}
+
+/* On large screen devices (hopefully a 7+ inch tablet, we already center content (see #errorPageContainer above).
+   Apply tablet specific styles here */
+@media (min-width: 550px) {
+  button {
+    min-width: 160px;
+    width: auto;
+  }
+
+  /* If the tablet is tall as well, add some padding to make content feel a bit more centered */
+  @media (min-height: 550px) {
+    #errorPageContainer {
+      padding-top: 64px;
+      min-height: calc(100% - 64px);
+    }
+  }
+}
+
+.advancedPanelButtonContainer {
+  background-color: rgba(128, 128, 147, 0.1);
+  display: flex;
+  justify-content: center;
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+  padding-bottom: 0.5em;
+}
+
+#advancedPanelBackButtonContainer {
+  padding-bottom: 0;
+}
+
+#advancedPanelContainer {
+  width: 100%;
+  left: 0;
+}
+
+.advanced-panel {
+  display: none;
+  background-color: #202023;
+  border: 1px solid rgba(249, 249, 250, 0.2);
+  margin: 48px auto;
+  min-width: 13em;
+  max-width: 52em;
+}
+
+.button-container {
+  display: flex;
+  flex-flow: row;
+}
+
+#badCertTechnicalInfo {
+  margin: 0em 1em 1em;
+  overflow: auto;
+  white-space: pre-line;
+}
+
+#advancedButton {
+  display: none;
+}
+
+#badCertAdvancedPanel {
+  display: none;
+}

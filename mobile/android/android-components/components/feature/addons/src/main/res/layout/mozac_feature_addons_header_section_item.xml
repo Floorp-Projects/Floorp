@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="16dp"
+    android:orientation="vertical"
+    tools:ignore="RtlSymmetry">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical">
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/warning_icon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:scaleType="center"
+            app:srcCompat="@drawable/mozac_ic_warning_fill_24"
+            app:tint="?android:attr/textColorLink"/>
+        <TextView
+            android:text="@string/mozac_feature_addons_manager_notification_title_text"
+            android:textSize="16sp"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textStyle="bold"
+            android:paddingStart="12dp"
+            android:paddingEnd="0dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
+    <TextView
+        android:text="@string/mozac_feature_addons_manager_notification_content_text"
+        android:textColor="?android:attr/textColorPrimary"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingVertical="16dp"
+        android:paddingStart="36dp"/>
+    <Button
+        android:id="@+id/restart_button"
+        style="@style/Widget.AppCompat.Button.Borderless.Colored"
+        android:text="@string/mozac_feature_addons_manager_notification_restart_button"
+        android:textColor="?android:attr/textColorLink"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:paddingVertical="8dp"/>
+</LinearLayout>

@@ -1,0 +1,34 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* eslint-env mozilla/process-script */
+
+"use strict";
+
+// Note: This script is used only when a static registration for our
+// component is not already present in the libxul binary.
+
+const Cm = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+
+const classID = Components.ID("{97bf9550-2a7b-11e9-b56e-0800200c9a66}");
+
+if (!Cm.isCIDRegistered(classID)) {
+  const { ComponentUtils } = ChromeUtils.importESModule(
+    "resource://gre/modules/ComponentUtils.sys.mjs"
+  );
+
+  const factory = ComponentUtils.generateSingletonFactory(function () {
+    const { AboutCompat } = ChromeUtils.importESModule(
+      "resource://webcompat/AboutCompat.sys.mjs"
+    );
+    return new AboutCompat();
+  });
+
+  Cm.registerFactory(
+    classID,
+    "about:compat",
+    "@mozilla.org/network/protocol/about;1?what=compat",
+    factory
+  );
+}

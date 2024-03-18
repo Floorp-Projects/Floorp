@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Name of the "notification channel" used for displaying download notification. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_downloads_notification_channel">Ześěgnjenja</string>
+
+    <!-- Text shown on the second row of a paused download notification. -->
+    <string name="mozac_feature_downloads_paused_notification_text">Ześěgnjenje jo se zastajiło</string>
+    <!-- Text shown on the second row of an completed download notification. The filename is shown on the first row. -->
+    <string name="mozac_feature_downloads_completed_notification_text2">Ześěgnjenje jo se dokóńcyło</string>
+    <!-- Text shown on the second row of an failed download notification. The filename is shown on the first row. -->
+    <string name="mozac_feature_downloads_failed_notification_text2">Ześěgnjenje njejo se raźiło</string>
+
+    <!-- Alert dialog confirmation before download a file, this is the title. %1$s will be replaced with the name of the file. -->
+    <string name="mozac_feature_downloads_dialog_title2">Ześěgnuś (%1$s)</string>
+    <!-- Alert dialog confirmation before download a file, this is the positive action. -->
+    <string name="mozac_feature_downloads_dialog_download">Ześěgnuś</string>
+    <!-- Alert dialog confirmation before download a file, this is the negative action. -->
+    <string name="mozac_feature_downloads_dialog_cancel">Pśetergnuś</string>
+
+    <!-- Error shown when the user is trying to download a invalid file. %1$s will be replaced with the name of the app. -->
+    <string name="mozac_feature_downloads_file_not_supported2">%1$s njamóžo toś ten datajowy typ ześěgnuś</string>
+
+    <!-- Message that appears when the downloaded file could not be opened-->
+    <string name="mozac_feature_downloads_could_not_open_file">Dataja njedajo se wócyniś</string>
+
+    <!-- Message that appears when the downloaded file is a specific type that Android doesn't support opening-->
+    <string name="mozac_feature_downloads_open_not_supported1">Žedno nałoženje za wócynjanje datajow typa %1$s namakane</string>
+
+    <!-- Button that pauses the download when pressed -->
+    <string name="mozac_feature_downloads_button_pause">Zastajiś</string>
+    <!-- Button that resumes the download when pressed -->
+    <string name="mozac_feature_downloads_button_resume">Pókšacowaś</string>
+    <!-- Button that cancels the download when pressed -->
+    <string name="mozac_feature_downloads_button_cancel">Pśetergnuś</string>
+    <!-- Button that opens the downloaded file when pressed -->
+    <string name="mozac_feature_downloads_button_open">Wócyniś</string>
+    <!-- Button that restarts the download after a failed attempt -->
+    <string name="mozac_feature_downloads_button_try_again">Hyšći raz wopytaś</string>
+
+    <!-- Content description for close button -->
+    <string name="mozac_feature_downloads_button_close">Zacyniś</string>
+    <!-- Title for the third party download app chooser dialog -->
+    <string name="mozac_feature_downloads_third_party_app_chooser_dialog_title">Akciju skóńcyś z pomocu</string>
+    <!-- Message that appears when trying to download with an external app fails. %1$s will be replaced with the name the external app. -->--&gt;
+    <string name="mozac_feature_downloads_unable_to_open_third_party_app">%1$s njedajo se wócyniś</string>
+    <!-- Text for the info dialog when write to storage permissions have been denied but user tries to download a file. -->
+    <string name="mozac_feature_downloads_write_external_storage_permissions_needed_message">Pśistup k datajam a medijam jo trjebny, aby dataje ześěgnuł. Pśejźćo k nastajenjam Android, pótusniśo pšawa a pón Dowóliś.</string>
+
+    <!-- Alert dialog confirmation before cancelling downloads, this is the title   -->
+    <string name="mozac_feature_downloads_cancel_active_downloads_warning_content_title">Priwatne ześěgnjenja pśetergnuś?</string>
+    <!-- Alert dialog confirmation before cancelling private downloads, this is the body. %1$s will be replaced with the name of the file. -->
+    <string name="mozac_feature_downloads_cancel_active_private_downloads_warning_content_body">Jolic zacynijośo něnto wšykne priwatne rejtariki, se %1$s ześěgnjenje pśetergnjo. Cośo priwatny modus napšawdu spušćiś?</string>
+    <!-- Alert dialog confirmation before cancelling downloads, this is the positive action. -->
+    <string name="mozac_feature_downloads_cancel_active_downloads_accept">Ześěgnjenja pśetergnuś</string>
+    <!-- Alert dialog confirmation before cancelling downloads, this is the negative action. Leaves user in Private browsing -->
+    <string name="mozac_feature_downloads_cancel_active_private_downloads_deny">W priwatnem modusu wóstaś</string>
+</resources>

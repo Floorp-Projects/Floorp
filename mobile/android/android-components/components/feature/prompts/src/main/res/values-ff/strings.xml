@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+    <!-- Text for confirmation for a positive action in dialog  -->
+    <string name="mozac_feature_prompts_ok">Moƴƴii</string>
+    <!-- Text for confirmation for a negative action in dialog.  -->
+    <string name="mozac_feature_prompts_cancel">Haaytu</string>
+    <!-- When a page shows many dialogs, this checkbox will appear for letting the user choose to prevent showing more dialogs. -->
+    <string name="mozac_feature_prompts_no_more_dialogs">Haɗ ngoo hello sosde kaalde goɗɗe</string>
+    <!-- Text for a positive button, when an user selects a date in date/time picker. -->
+    <string name="mozac_feature_prompts_set_date">Teelto</string>
+    <!-- Text for a button that clears the selected input in the date/time picker. -->
+    <string name="mozac_feature_prompts_clear">Momtu</string>
+    <!-- Text for the title of an authentication dialog. -->
+    <string name="mozac_feature_prompt_sign_in">Seŋo</string>
+    <!-- Text for username field in an authentication dialog. -->
+    <string name="mozac_feature_prompt_username_hint">Innde kuutoro</string>
+    <!-- Text for password field in an authentication dialog. -->
+    <string name="mozac_feature_prompt_password_hint">Finnde</string>
+    <!-- Negative confirmation that we should not save the new or updated login -->
+    <string name="mozac_feature_prompt_dont_save">Hoto danndu</string>
+    <!-- Negative confirmation that we should never save a login for this site -->
+    <string name="mozac_feature_prompt_never_save">Hoto danndu abada</string>
+    <!-- Positive confirmation that we should save the new or updated login -->
+    <string name="mozac_feature_prompt_save_confirmation">Danndu</string>
+    <!-- Positive confirmation that we should save the updated login -->
+    <string name="mozac_feature_prompt_update_confirmation">Hesɗitin</string>
+    <!-- Error text displayed underneath the password field when it is in an error case -->
+    <string name="mozac_feature_prompt_error_empty_password">Gallol finnde fotaani wonde mehol</string>
+    <!-- Error text displayed underneath the password field when it is in an error case -->
+    <string name="mozac_feature_prompt_error_unknown_cause">Horiima danndude seŋorde</string>
+    <!-- Prompt message displayed when app detects a user has entered a username for an existing login without a username and user decides if app should update the login. -->
+    <string name="mozac_feature_prompt_login_add_username_headline">Ɓeydu innde kuutoro e finnde danndaade?</string>
+    <!-- Text of a confirm button in dialog requesting to open a new window. -->
+    <string name="mozac_feature_prompts_allow">Yamir</string>
+    <!-- Text of a negative button in dialog requesting to open a new window. -->
+    <string name="mozac_feature_prompts_deny">Haɗ</string>
+    <!-- Title of the month chooser dialog. -->
+    <string name="mozac_feature_prompts_set_month">Suɓo lewru</string>
+    <!-- January (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_jan">Siilo</string>
+    <!-- February month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_feb">Colte</string>
+    <!-- March month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_mar">Mbooy</string>
+    <!-- April month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_apr">Duujal</string>
+    <!-- May month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_may">Seeɗto</string>
+    <!-- June month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_jun">Korse</string>
+    <!-- July month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_jul">Morso</string>
+    <!-- August month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_aug">Juko</string>
+    <!-- September month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_sep">Siilto</string>
+    <!-- October month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_oct">Yarkomaa</string>
+    <!-- November month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_nov">Jolal</string>
+    <!-- December month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_dec">Bowte</string>
+
+    <!-- Credit Card Autofill -->
+    <!-- Header for the select credit card prompt to allow users to fill a form with a saved credit card. -->
+    <string name="mozac_feature_prompts_select_credit_card">Laɓo kartal banke</string>
+
+    <!-- Content description for expanding the select credit card options in the select credit card prompt. -->
+    <string name="mozac_feature_prompts_expand_credit_cards_content_description">Uddit karte banke basiyaaɗe</string>
+    <!-- Content description for collapsing the select credit card options in the select credit prompt. -->
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description">Uddu karte banke basiyaaɗe</string>
+    <!-- Option in the expanded select credit card prompt that links to credit cards settings. -->
+    <string name="mozac_feature_prompts_manage_credit_cards">Toppito karte banke</string>
+    <!-- Text for the title of a save credit card dialog. -->
+    <string name="mozac_feature_prompts_save_credit_card_prompt_title">Danndu ngal kartal e kisnal?</string>
+    <!-- Text for the title of an update credit card dialog. -->
+    <string name="mozac_feature_prompts_update_credit_card_prompt_title">Hesɗitin ñalngu kiiɗtugol kartal?</string>
+
+    </resources>

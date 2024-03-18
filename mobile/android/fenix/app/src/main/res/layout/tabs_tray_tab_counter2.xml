@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:mozac="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/counter_root"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_centerHorizontal="true"
+    android:layout_centerVertical="true">
+
+    <mozilla.components.ui.tabcounter.TabCounter
+        android:id="@+id/tab_counter"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        mozac:tabCounterTintColor="@color/tab_icon" />
+
+</FrameLayout>

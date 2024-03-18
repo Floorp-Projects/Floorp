@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Content description for the clear URL text button. -->
+    <string name="mozac_clear_button_description">Počisti</string>
+</resources>

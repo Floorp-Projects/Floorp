@@ -1,0 +1,81 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+
+// This comment contains the central documentation for how we configured Jetpack Benchmark. Currently:
+// - microbenchmark: configured differently than recommended (see inline notes below)
+// - macrobenchmark: not configured
+//
+// To run our benchmarks, you need to set the "benchmark" gradle property. You can:
+// - (preferred) Run via the command line (change the class you run on):
+// ./gradlew -Pbenchmark app:connectedCheck -Pandroid.testInstrumentationRunnerArguments.class=org.mozilla.fenix.perf.SampleBenchmark
+// - Use the IDE. Temporarily set the "benchmark" property in app/build.gradle with "ext.benchmark=true"
+// near the top of the file. DO NOT COMMIT THIS.
+// - (note: I was unable to get IDE run configurations working)
+//
+// To get the results, look at this file (we recommend using the median; results are in nanoseconds):
+// app/build/outputs/connected_android_test_additional_output/nightlyAndroidTest/connected/<device>/org.mozilla.fenix-benchmarkData.json
+//
+// I was unable to get the results to print directly in Android Studio (perhaps it's my device).
+//
+// The official documentation suggests configuring microbenchmark in a separate module. This would
+// require any benchmarked code to be in a library module, not the :app module (see below). To avoid
+// this requirement, we created the "benchmark" gradle property.
+//
+// For the most accurate results, the documentation recommends running tests on rooted devices with
+// the CPU clock locked.
+//
+// See https://developer.android.com/studio/profile/benchmark#what-to-benchmark for when writing a
+// jetpack microbenchmark is a good fit.
+
+// I think `android` represents this object:
+// https://google.github.io/android-gradle-dsl/3.3/com.android.build.gradle.AppExtension.html
+ext.maybeConfigForJetpackBenchmark = { android ->
+    if (!project.hasProperty("benchmark")) {
+        return
+    }
+
+    // The official documentation https://developer.android.com/studio/profile/benchmark#full-setup
+    // recommends setting up the Microbenchmark library in a separate module from your app: AFAICT,
+    // the reason for this is to prevent the benchmarks from being configured against debug
+    // builds. We chose not to do this because it's a lot of work to pull code out into a
+    // separate module just to benchmark it. We were able to replicate the outcome by setting
+    // this testBuildType property.
+    android.testBuildType "nightly"
+
+    // WARNING: our proguard configuration for androidTest is not set up correctly so the tests
+    // fail if we don't disable minification. DISABLING MINIFICATION PRODUCES BENCHMARKS THAT ARE
+    // LESS REPRESENTATIVE TO THE USER EXPERIENCE, however, so we made this tradeoff to reduce
+    // implementation time.
+    project.ext.disableOptimization = true
+
+    android.defaultConfig {
+        // WARNING: the benchmark framework warns you if you're running the test in a configuration
+        // that will compromise the accuracy of the results. Unfortunately, I couldn't get everything
+        // working so I had to suppress some things.
+        testInstrumentationRunnerArguments = [
+
+                // - ACTIVITY-MISSING: we're supposed to use the test instrumentation runner,
+                // "androidx.benchmark.junit4.AndroidBenchmarkRunner". However, when I do so, I get an error
+                // that we're unable to launch the activity. My understanding is that this runner will use an
+                // "IsolationActivity" to reduce the impact of other work on the device from affecting the benchmark
+                // and to opt into a lower-max CPU frequency on unrooted devices that support it
+                // - UNLOCKED: ./gradlew lockClocks, which locks the CPU frequency, fails on my device. See
+                // https://issuetracker.google.com/issues/176836267 for potential workarounds.
+                'androidx.benchmark.suppressErrors' : 'ACTIVITY-MISSING,UNLOCKED',
+
+                // The tests don't always output a JSON file with the data. To make sure it does, we have to
+                // set androidx.benchmark.output.enable to true.
+                'androidx.benchmark.output.enable' : 'true',
+
+                // We set the the output directory simply for simplicity since the benchmark_runner.py script
+                // can't know the name of the phone in the /build/outputs/ directory. The system defaults to
+                // {phone_name} which can be troublesome finding in some case.
+                //
+                // NOTE: Jetpack Benchmark outputs to Logcat too. However, the output in the logcat is
+                // the min of the several repeats, for more statistics. Therefore, to get more stats,
+                // we refer to the JSON file.
+                additionalTestOutputDir : '/storage/emulated/0/benchmark'
+        ]
+    }
+}

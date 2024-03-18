@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/background"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/background_gradient"
+    android:orientation="vertical"
+    android:paddingTop="25dp">
+
+    <Button
+        android:id="@+id/skip"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:text="@string/firstrun_skip_button"
+        android:textColor="@color/primaryText" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <androidx.viewpager.widget.ViewPager
+            android:id="@+id/pager"
+            android:layout_marginTop="24dp"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/tabs"
+            android:layout_width="match_parent"
+            android:layout_height="16dp"
+            android:layout_gravity="bottom"
+            android:layout_marginBottom="16dp"
+            android:importantForAccessibility="noHideDescendants"
+            app:tabBackground="@drawable/indicator_onboarding"
+            app:tabGravity="center"
+            app:tabIndicatorHeight="0dp"
+            app:tabPadding="10dp" />
+
+    </LinearLayout>
+
+</FrameLayout>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="@dimen/home_item_horizontal_margin"
+    android:layout_marginTop="8dp"
+    android:orientation="vertical">
+
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/top_sites_pager"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <org.mozilla.fenix.home.topsites.PagerIndicator
+        android:id="@+id/page_indicator"
+        android:layout_width="wrap_content"
+        android:layout_height="6dp"
+        android:layout_gravity="center_horizontal"
+        android:orientation="horizontal" />
+
+</LinearLayout>

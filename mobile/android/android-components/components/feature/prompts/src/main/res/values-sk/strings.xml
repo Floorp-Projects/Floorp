@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+    <!-- Text for confirmation for a positive action in dialog  -->
+    <string name="mozac_feature_prompts_ok">OK</string>
+    <!-- Text for confirmation for a negative action in dialog.  -->
+    <string name="mozac_feature_prompts_cancel">Zrušiť</string>
+    <!-- When a page shows many dialogs, this checkbox will appear for letting the user choose to prevent showing more dialogs. -->
+    <string name="mozac_feature_prompts_no_more_dialogs">Zabrániť tejto stránke otvárať ďalšie okná</string>
+    <!-- Text for a positive button, when an user selects a date in date/time picker. -->
+    <string name="mozac_feature_prompts_set_date">Nastaviť</string>
+    <!-- Text for a button that clears the selected input in the date/time picker. -->
+    <string name="mozac_feature_prompts_clear">Vymazať</string>
+    <!-- Text for the title of an authentication dialog. -->
+    <string name="mozac_feature_prompt_sign_in">Prihlásiť sa</string>
+    <!-- Text for username field in an authentication dialog. -->
+    <string name="mozac_feature_prompt_username_hint">Používateľské meno</string>
+    <!-- Text for password field in an authentication dialog. -->
+    <string name="mozac_feature_prompt_password_hint">Heslo</string>
+    <!-- Negative confirmation that we should not save the new or updated login -->
+    <string name="mozac_feature_prompt_dont_save">Neuložiť</string>
+    <!-- Negative confirmation that we should not save the new or updated login -->
+    <string name="mozac_feature_prompt_dont_save_2" tools:ignore="UnusedResources">Teraz nie</string>
+    <!-- Negative confirmation that we should never save a login for this site -->
+    <string name="mozac_feature_prompt_never_save">Nikdy neukladať</string>
+    <!-- Negative confirmation that we should not save a credit card for this site -->
+    <string name="mozac_feature_prompt_not_now">Teraz nie</string>
+    <!-- Positive confirmation that we should save the new or updated login -->
+    <string name="mozac_feature_prompt_save_confirmation">Uložiť</string>
+    <!-- Negative confirmation that we should not save the updated login -->
+    <string name="mozac_feature_prompt_dont_update">Neaktualizovať</string>
+    <!-- Negative confirmation that we should not save the updated login -->
+    <string name="mozac_feature_prompt_dont_update_2" tools:ignore="UnusedResources">Teraz nie</string>
+    <!-- Positive confirmation that we should save the updated login -->
+    <string name="mozac_feature_prompt_update_confirmation">Aktualizovať</string>
+    <!-- Error text displayed underneath the password field when it is in an error case -->
+    <string name="mozac_feature_prompt_error_empty_password">Pole s heslom nesmie byť prázdne</string>
+    <!-- Error text displayed underneath the password field when it is in an error case -->
+    <string name="mozac_feature_prompt_error_empty_password_2" tools:ignore="UnusedResources">Zadajte heslo</string>
+    <!-- Error text displayed underneath the login field when it is in an error case -->
+    <string name="mozac_feature_prompt_error_unknown_cause">Prihlasovacie údaje sa nepodarilo uložiť</string>
+    <!-- Error text displayed underneath the password field when it is in an error case -->
+    <string name="mozac_feature_prompt_error_unknown_cause_2" tools:ignore="UnusedResources">Heslo nie je možné uložiť</string>
+    <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new login. -->
+    <string name="mozac_feature_prompt_login_save_headline">Chcete uložiť tieto prihlasovacie údaje?</string>
+    <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new password. -->
+    <string name="mozac_feature_prompt_login_save_headline_2" tools:ignore="UnusedResources">Uložiť heslo?</string>
+    <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the login. -->
+    <string name="mozac_feature_prompt_login_update_headline">Chcete aktualizovať tieto prihlasovacie údaje?</string>
+    <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the password. -->
+    <string name="mozac_feature_prompt_login_update_headline_2" tools:ignore="UnusedResources">Aktualizovať heslo?</string>
+    <!-- Prompt message displayed when app detects a user has entered a username for an existing login without a username and user decides if app should update the login. -->
+    <string name="mozac_feature_prompt_login_add_username_headline">Chcete k uloženému heslu pridať používateľské meno?</string>
+    <!-- Text for a label for the field when prompt requesting a text is shown. -->
+    <!-- For more info take a look here https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt -->
+    <string name="mozac_feature_prompts_content_description_input_label">Štítok na zadanie poľa pre zadávanie textu</string>
+    <!-- Title of a color picker dialog, this text is shown above a color picker. -->
+    <string name="mozac_feature_prompts_choose_a_color">Vyberte farbu</string>
+    <!-- Text of a confirm button in dialog requesting to open a new window. -->
+    <string name="mozac_feature_prompts_allow">Povoliť</string>
+    <!-- Text of a negative button in dialog requesting to open a new window. -->
+    <string name="mozac_feature_prompts_deny">Zakázať</string>
+    <!-- Title of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
+    <string name="mozac_feature_prompt_before_unload_dialog_title">Naozaj?</string>
+    <!-- Body text of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
+    <string name="mozac_feature_prompt_before_unload_dialog_body">Chcete zostať na tejto stránke? Zadané údaje nemusia byť uložené</string>
+    <!-- Stay button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to stay in the website. -->
+    <string name="mozac_feature_prompts_before_unload_stay">Zostať</string>
+    <!-- Leave button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to leave in the website. -->
+    <string name="mozac_feature_prompts_before_unload_leave">Odísť</string>
+    <!-- Title of the month chooser dialog. -->
+    <string name="mozac_feature_prompts_set_month">Výber mesiaca</string>
+    <!-- January (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_jan">Jan</string>
+    <!-- February month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_feb">Feb</string>
+    <!-- March month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_mar">Mar</string>
+    <!-- April month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_apr">Apr</string>
+    <!-- May month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_may">Máj</string>
+    <!-- June month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_jun">Jún</string>
+    <!-- July month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_jul">Júl</string>
+    <!-- August month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_aug">Aug</string>
+    <!-- September month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_sep">Sep</string>
+    <!-- October month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_oct">Okt</string>
+    <!-- November month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_nov">Nov</string>
+    <!-- December month of the year (short description), used on the month chooser dialog. -->
+    <string name="mozac_feature_prompts_dec">Dec</string>
+    <!-- Title of the time picker dialog. -->
+    <string name="mozac_feature_prompts_set_time">Nastaviť čas</string>
+    <!-- Option in expanded select login prompt that links to login settings -->
+    <string name="mozac_feature_prompts_manage_logins">Spravovať prihlasovacie údaje</string>
+    <!-- Option in expanded select password prompt that links to password settings -->
+    <string name="mozac_feature_prompts_manage_logins_2" tools:ignore="UnusedResources">Spravovať heslá</string>
+    <!-- Content description for expanding the saved logins options in the select login prompt -->
+    <string name="mozac_feature_prompts_expand_logins_content_description">Rozbaliť navrhované prihlasovacie údaje</string>
+    <!-- Content description for expanding the saved passwords options in the select password prompt -->
+    <string name="mozac_feature_prompts_expand_logins_content_description_2" tools:ignore="UnusedResources">Rozbaliť uložené heslá</string>
+    <!-- Content description for collapsing the saved logins options in the select login prompt -->
+    <string name="mozac_feature_prompts_collapse_logins_content_description">Zbaliť navrhované prihlasovacie údaje</string>
+    <!-- Content description for collapsing the saved passwords options in the select password prompt -->
+    <string name="mozac_feature_prompts_collapse_logins_content_description_2" tools:ignore="UnusedResources">Zbaliť uložené heslá</string>
+    <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
+    <string name="mozac_feature_prompts_saved_logins">Navrhované prihlasovacie údaje</string>
+
+    <!-- Header for the select password prompt to allow users to fill a form with a saved password -->
+    <string name="mozac_feature_prompts_saved_logins_2" tools:ignore="UnusedResources">Uložené heslá</string>
+
+    <!-- Content description for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_content_description">Navrhnúť silné heslo</string>
+    <!-- Header for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
+    <string name="mozac_feature_prompts_suggest_strong_password">Navrhnúť silné heslo</string>
+    <!-- Title for using the suggest strong password confirmation dialog. %1$s will be replaced with the generated password -->
+    <string name="mozac_feature_prompts_suggest_strong_password_message">Použiť silné heslo: %1$s</string>
+
+    <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
+    <string name="mozac_feature_prompt_repost_title">Znova odoslať údaje tejto stránke?</string>
+    <string name="mozac_feature_prompt_repost_message">Obnovením tejto stránky môžete zopakovať posledné akcie, ako je odosielanie platby alebo opätovné uverejnenie komentára.</string>
+    <!-- Pressing this will dismiss the dialog and reload the page sending again the previous data -->
+    <string name="mozac_feature_prompt_repost_positive_button_text">Znova odoslať údaje</string>
+    <!-- Pressing this will dismiss the dialog and not refresh the webpage -->
+    <string name="mozac_feature_prompt_repost_negative_button_text">Zrušiť</string>
+
+    <!-- Credit Card Autofill -->
+    <!-- Header for the select credit card prompt to allow users to fill a form with a saved credit card. -->
+    <string name="mozac_feature_prompts_select_credit_card">Vyberte platobnú kartu</string>
+    <!-- Header for the select card prompt to allow users to fill a form with a saved card. -->
+    <string name="mozac_feature_prompts_select_credit_card_2" tools:ignore="UnusedResources">Použiť uloženú kartu</string>
+    <!-- Content description for expanding the select credit card options in the select credit card prompt. -->
+    <string name="mozac_feature_prompts_expand_credit_cards_content_description">Rozbaliť navrhované platobné karty</string>
+    <!-- Content description for expanding the saved card options in the select card prompt. -->
+    <string name="mozac_feature_prompts_expand_credit_cards_content_description_2" tools:ignore="UnusedResources">Rozbaliť uložené karty</string>
+    <!-- Content description for collapsing the select credit card options in the select credit prompt. -->
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description">Zbaliť navrhované platobné karty</string>
+    <!-- Content description for collapsing the saved card options in the select prompt. -->
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description_2" tools:ignore="UnusedResources">Zbaliť uložené karty</string>
+    <!-- Option in the expanded select credit card prompt that links to credit cards settings. -->
+    <string name="mozac_feature_prompts_manage_credit_cards">Spravovať platobné karty</string>
+    <!-- Option in the expanded select card prompt that links to cards settings. -->
+    <string name="mozac_feature_prompts_manage_credit_cards_2" tools:ignore="UnusedResources">Spravovať karty</string>
+    <!-- Text for the title of a save credit card dialog. -->
+    <string name="mozac_feature_prompts_save_credit_card_prompt_title">Bezpečne uložiť túto kartu?</string>
+    <!-- Text for the title of an update credit card dialog. -->
+    <string name="mozac_feature_prompts_update_credit_card_prompt_title">Aktualizovať dátum vypršania platnosti karty?</string>
+    <!-- Subtitle text displayed under the title of the save credit card dialog. -->
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body">Číslo karty bude zašifrované. Bezpečnostný kód sa neuloží.</string>
+
+    <!-- Subtitle text displayed under the title of the saved card dialog. Parameter will be replaced by app name-->
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body_2" tools:ignore="UnusedResources">%s zašifruje číslo vašej karty. Váš bezpečnostný kód sa neuloží.</string>
+
+    <!-- Address Autofill -->
+    <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
+    <string name="mozac_feature_prompts_select_address_2">Vyberte adresu</string>
+    <!-- Content description for expanding the select addresses options in the select address prompt. -->
+    <string name="mozac_feature_prompts_expand_address_content_description">Rozbaliť navrhované adresy</string>
+    <!-- Content description for expanding the saved addresses options in the select address prompt. -->
+    <string name="mozac_feature_prompts_expand_address_content_description_2" tools:ignore="UnusedResources">Rozbaliť uložené adresy</string>
+    <!-- Content description for collapsing the select address options in the select address prompt. -->
+    <string name="mozac_feature_prompts_collapse_address_content_description">Zbaliť navrhované adresy</string>
+    <!-- Content description for collapsing the saved address options in the select address prompt. -->
+    <string name="mozac_feature_prompts_collapse_address_content_description_2" tools:ignore="UnusedResources">Zbaliť uložené adresy</string>
+    <!-- Text for the manage addresses button. -->
+    <string name="mozac_feature_prompts_manage_address">Spravovať adresy</string>
+
+    <!-- Federated Credential Management prompts -->
+    <!--Content description for the Account picture in the Select Account FedCM prompt -->
+    <string name="mozac_feature_prompts_account_picture">Obrázok účtu</string>
+    <!-- Title of the Identity Credential provider dialog chooser. -->
+    <string name="mozac_feature_prompts_identity_credentials_choose_provider">Vyberte poskytovateľa prihlásenia</string>
+    <!-- Title of an account picker dialog for identity credentials. The %1$s will be replaced with the name of the provider -->
+    <string name="mozac_feature_prompts_identity_credentials_choose_account_for_provider">Prihláste sa pomocou účtu %1$s</string>
+    <!-- Title of the Identity Credential privacy policy dialog title. The %1$s will be replaced with the name of the provider. -->
+    <string name="mozac_feature_prompts_identity_credentials_privacy_policy_title">Použite %1$s ako poskytovateľa prihlásenia</string>
+    <!-- Title of the Identity Credential privacy policy dialog description. The %1$s will be replaced with the name of the provider, %2$s will be replaced with the account, %3$s will be replaced with the privacy policy url and  %4$s will be replaced with the terms of service. -->
+    <string name="mozac_feature_prompts_identity_credentials_privacy_policy_description"><![CDATA[ Na prihlásenie do %1$s pomocou účtu %2$s sa vzťahujú <a href="%3$s">Pravidlá ochrany osobných údajov</a> a <a href="%4$s">Zmluvné podmienky</a> daného účtu]]></string>
+    <!-- Text for the positive button of the Identity Credential dialogs. -->
+    <string name="mozac_feature_prompts_identity_credentials_continue">Pokračovať</string>
+    <!-- Text for the cancel button of the Identity Credential dialogs. -->
+    <string name="mozac_feature_prompts_identity_credentials_cancel">Zrušiť</string>
+</resources>

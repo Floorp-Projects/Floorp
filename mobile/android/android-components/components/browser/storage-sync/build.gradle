@@ -1,0 +1,64 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+android {
+    defaultConfig {
+        minSdkVersion config.minSdkVersion
+        compileSdk config.compileSdkVersion
+        targetSdkVersion config.targetSdkVersion
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    namespace 'mozilla.components.browser.storage.sync'
+}
+
+dependencies {
+    // These dependencies are part of this module's public API.
+    api (ComponentsDependencies.mozilla_appservices_places) {
+        // Use our own version of the Glean dependency,
+        // which might be different from the version declared by A-S.
+        exclude group: 'org.mozilla.components', module: 'service-glean'
+    }
+
+    api ComponentsDependencies.mozilla_appservices_tabs
+    api project(':concept-storage')
+    api project(':concept-sync')
+
+    implementation project(':concept-toolbar')
+    implementation project(':support-utils')
+
+    implementation ComponentsDependencies.androidx_work_runtime
+    implementation ComponentsDependencies.mozilla_appservices_syncmanager
+
+    testImplementation project(':support-test')
+
+    testImplementation ComponentsDependencies.androidx_test_core
+    testImplementation ComponentsDependencies.androidx_test_junit
+    testImplementation ComponentsDependencies.testing_robolectric
+    testImplementation ComponentsDependencies.testing_coroutines
+    testImplementation ComponentsDependencies.androidx_work_testing
+    testImplementation ComponentsDependencies.kotlin_reflect
+
+    testImplementation ComponentsDependencies.mozilla_appservices_places
+    testImplementation ComponentsDependencies.mozilla_appservices_tabs
+    testImplementation ComponentsDependencies.testing_mockwebserver
+
+    testImplementation ComponentsDependencies.mozilla_appservices_full_megazord_forUnitTests
+    testImplementation ComponentsDependencies.mozilla_glean_forUnitTests
+}
+
+apply from: '../../../android-lint.gradle'
+apply from: '../../../publish.gradle'
+ext.configurePublish(config.componentsGroupId, archivesBaseName, project.ext.description)

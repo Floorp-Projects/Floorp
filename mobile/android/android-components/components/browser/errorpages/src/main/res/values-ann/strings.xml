@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">Kpọk Sa</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">Kpekọt Ìrọ Mbeek Ìsan̄a</string>
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[
+      <p>Kpunu ofifi etip òfolek ufialek mè ìre ǹlilọ yi.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">Ìkakọt ìtibi ìnin̄ me utelelek</string>
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
+      <ul>
+        <li>Akpọk okisa lek ijeen̄The page you are trying to view cannot be shown because the authenticity of the received data could not be verified.</li>
+        <li>Please contact the website owners to inform them of this problem.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+      <ul>
+        <li>Eyi môkọt ire ufialek mèlek onineen̄ òbeme-etip. Môkọt si ire enw okisa lek ifafiaan̄ irọ kubọk ọmọ ore achubọk òbeme-etip ya.</li>
+        <li>Ire owuulek irak itibi itet me lek òbeme-etip yi me mgbọ òraraka, ufialek yi ìbokup mgbidim mgbọ gaalek; owu môkọt igwu ikom inisa me mgbidim mgbọ.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Òdọdọk…</string>
+
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Gwu kom (Mîrọ inye)</string>
+
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Chieek Unan ya mè Fo isi</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">Mîkput ntibi-ntet ya</string>
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
+      <p>Òwọlọ-etip îtibi itet inwọn, ire, mîgbugbana ntibi-ntet ya mgbọ îkiria etip.Soso kpọk sa.</p>
+      <ul>
+        <li>Môkọt ire akpatan̄ yaìkakup mgbọ keyi mè ìre ìkirọ owuwa ikwaan̄. Kpọk sa me mgbidim mgbọ.</li>
+        <li>Ire òkakọt ìchili akpọk geege, kpọ data okup me okwukwut kwun̄ mè ìyaka ire ntibi-ntet Wi-Fi kwun̄.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">Okike mgbọ esun̄be inyi ntibi-ntet yi îraka</string>
+
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
+      <p>Ere akpatan̄ ya edobe ìkanyi ifọọk ntibi-ntet eweekbe, òwọlọ-etip si îta ikukup iban ifọọk.</p>
+      <ul>
+        <li>Ìre môkọt ire owuwa iweweek okisi lek òbeme-etip? Kpọk sa ofifi mgbọ.</li>
+        <li>Ìre òkakọt ìwọlọ ere akpatan̄ yi? Kpọ ntibi-ntet eyi okwukwut kwun̄.</li>
+        <li>Ìre firewall sà ìre proxy okibem okwukwut kwun̄? Onineen̄ eyi ìkatatge môkọt igbugbana iwọwọlọ olik etip.</li>
+        <li>Owu gwa okikpọk ikaan̄ ufialek? Chichini ogwu àdìmin njin-etip kwun̄.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">Ìkakọt ìtibi ìtet</string>
+
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
+      <ul>
+        <li>Môkọt ire ere akpatan̄ ìkakup me mgbidim mgbọ mè ìyaka ire ìkirọ owuwa ikwaan̄. Kpọk sa lek me mgbidim mgbọ.</li>
+        <li>Ire òkakọt ìchili akpọk geege, kpọ data òkup me okwukwut kwun̄ mè ìyaka ire Wi-Fi kwun̄.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Ifọọk eyi kpekpọ chieen̄ ònan̄a me òbeme-etip</string>
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
+      <p>Ere akpatan̄ ya ìfọọk me oniin̄ kpekpọ chieen̄, eya orọ òwọlọ-etip ìkayaka ìkọt ìje ìfo isi.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">Akpọk ya ìkagwu ìsi ìtat</string>
+
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
+      <p>Òwọlọ-etip îtele isasa lek me ibọbọkọ inu ya edobe. Ere akpatan̄ ya ìkigwu mbeek ya me otu oniin̄ kporọbe isan̄a.</p>
+      <ul>
+        <li>Ìre oniin̄ sà ìre ogban cookies eyi akpatan̄ yi okidobe?</li>
+        <li>Ire ichechieek cookies ìkarọ ufialek yi ita, môkọt ire onineen̄ òbeme-etip, ìkare okwukwut kwun̄.</li>
+      </ul>
+    ]]></string>
+
+    </resources>

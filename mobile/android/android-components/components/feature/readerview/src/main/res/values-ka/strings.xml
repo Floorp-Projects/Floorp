@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_sans_serif_font">უნაჭდევო</string>
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_sans_serif_font_desc">უნაჭდევო შრიფტი</string>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_serif_font">ნაჭდევებით</string>
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_serif_font_desc">ნაჭდევებიანი შრიფტი</string>
+
+    <!-- Accessible description for decreasing the font size -->
+    <string name="mozac_feature_readerview_font_size_decrease_desc">შრიფტის ზომის შემცირება</string>
+
+    <!-- Accessible description for increasing the font size -->
+    <string name="mozac_feature_readerview_font_size_increase_desc">შრიფტის ზომის მომატება</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_dark">მუქი</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_dark_color_scheme_desc">მუქი ფერები</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_sephia">სეპია</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_sepia_color_scheme_desc">მოყავისფრო ფერები</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_light">ნათელი</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_light_color_scheme_desc">ნათელი ფერები</string>
+</resources>

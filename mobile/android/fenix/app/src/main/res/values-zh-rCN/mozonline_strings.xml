@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+    <!-- Privacy Notice-->
+    <!-- Privacy Notice title-->
+    <string name="privacy_notice_title">关于您的权利</string>
+    <!-- Privacy Notice content-->
+    <string name="privacy_notice_content">Mozilla Firefox 是一款自由开源软件，由来自世界各地成千上万的社区志愿者共同完成。以下几点您应该了解：
+    \n\n•Firefox 提供给您时依照的条款为 Mozilla 公共许可证（MPL）。这表示您可以使用、复制和向他人分发 Firefox。我们也非常欢迎您按自己的需要修改 Firefox 的源代码。Mozilla 公共许可证还授予您分发您自己修改过的软件版本的权利。
+    \n•您没有获得 Mozilla 基金会或其他任何一方的商标权利或许可，这包括但不限于 Firefox 的名称或标志。有关商标的其他信息在：这里。
+    \n•Firefox 的一些功能（例如崩溃报告器）使您可以向 Mozilla 提供反馈。提交反馈的同时，您授权 Mozilla 使用反馈信息改进产品、在其网站上发布反馈信息，以及分发反馈内容。
+    \n•关于我们如何使用您通过 Firefox 提交给 Mozilla 的个人信息和反馈，请参见 Firefox 隐私权政策。</string>
+    <!-- Privacy Notice clickable-->
+    <string name="privacy_notice_clickable1">Mozilla 公共许可证（MPL）</string>
+    <!-- Privacy Notice clickable-->
+    <string name="privacy_notice_clickable2">这里</string>
+    <!-- Privacy Notice clickable-->
+    <string name="privacy_notice_clickable3">Firefox 隐私权政策</string>
+    <!-- Privacy Notice positive button-->
+    <string name="privacy_notice_positive_button">同意并继续</string>
+    <!-- Privacy Notice neutral button-->
+    <string name="privacy_notice_neutral_button" moz:removedIn="96" tools:ignore="UnusedResources">退出应用</string>
+    <string name="privacy_notice_neutral_button_2">不同意</string>
+
+    <!-- Topsites-->
+    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
+    <string name="default_top_site_baidu">百度</string>
+    <!-- Default title for pinned JD top site that links to JD home page  -->
+    <string name="default_top_site_jd">京东</string>
+    <!-- Default title for pinned JD top site that links to PDD home page  -->
+    <string name="default_top_site_pdd">拼多多</string>
+    <!-- Default title for pinned 58 top site that links to 58 home page  -->
+    <string name="default_top_site_tc">58同城</string>
+    <!-- Default title for pinned meituan top site that links to 58 home page  -->
+    <string name="default_top_site_meituan">美团</string>
+
+    <!-- FxA server switch-->
+    <!-- Switch Preference for domestic China/global fxa server -->
+    <string name="preferences_allow_domestic_china_fxa_server">使用本地服务</string>
+    <!-- Instructions on how to access pairing -->
+    <string name="pair_instructions_2_cn"><![CDATA[打开 <b>firefox.com.cn/pair</b> 并扫描网站上的二维码]]></string>
+    <!-- Instructions on how to access pairing -->
+    <string name="sign_in_instructions_cn"><![CDATA[在计算机上使用 Firefox 打开 <b>https://firefox.com.cn/pair</b>]]></string>
+
+    <!-- Homescreen menu button -->
+    <!-- Browser menu button that opens the account setting page -->
+    <string name="browser_menu_manage_account_and_devices">管理账户和设备</string>
+
+    <string name="preferences_site_permissions_description">此页面为所有网站的默认权限设置；如您曾对特定网站进行权限调整，则此网站会出现在“例外网站”中。</string>
+</resources>
+

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<FrameLayout>
+    <LinearLayout>
+        <View idEntry="action_mode_bar_stub" idPackage="android" idType="id" />
+        <FrameLayout>
+            <FrameLayout idEntry="action_bar_root" idPackage="com.twitter.android" idType="id">
+                <FrameLayout idEntry="content" idPackage="android" idType="id">
+                    <LinearLayout>
+                        <LinearLayout idEntry="toolbar_container" idPackage="com.twitter.android" idType="id">
+                            <FrameLayout idEntry="status_message_container" idPackage="com.twitter.android" idType="id" />
+                            <ViewGroup idEntry="toolbar" idPackage="com.twitter.android" idType="id">
+                                <ViewGroup>
+                                    <ImageView />
+                                </ViewGroup>
+                                <TextView />
+                                <RelativeLayout>
+                                    <ImageView />
+                                    <Button idEntry="signup" idPackage="com.twitter.android" idType="id" />
+                                </RelativeLayout>
+                            </ViewGroup>
+                        </LinearLayout>
+                        <ScrollView>
+                            <LinearLayout>
+                                <LinearLayout idEntry="signup_header" idPackage="com.twitter.android" idType="id">
+                                    <TextView idEntry="header_title" idPackage="com.twitter.android" idType="id" />
+                                    <TextView idEntry="header_subtitle" idPackage="com.twitter.android" idType="id" />
+                                </LinearLayout>
+                                <LinearLayout idEntry="login_form" idPackage="com.twitter.android" idType="id">
+                                    <EditText idEntry="login_identifier" idPackage="com.twitter.android" idType="id" autofillValue="" autofillId="autofillId-username" />
+                                    <EditText idEntry="login_password" idPackage="com.twitter.android" idType="id" />
+                                    <TextView idEntry="password_reset" idPackage="com.twitter.android" idType="id" />
+                                </LinearLayout>
+                            </LinearLayout>
+                        </ScrollView>
+                        <FrameLayout>
+                            <View />
+                            <Button idEntry="login_login" idPackage="com.twitter.android" idType="id" />
+                        </FrameLayout>
+                        <WebView idEntry="js_inst" idPackage="com.twitter.android" idType="id" />
+                    </LinearLayout>
+                </FrameLayout>
+                <View idEntry="action_mode_bar_stub" idPackage="com.twitter.android" idType="id" />
+            </FrameLayout>
+        </FrameLayout>
+    </LinearLayout>
+    <View idEntry="navigationBarBackground" idPackage="android" idType="id" />
+    <View idEntry="statusBarBackground" idPackage="android" idType="id" />
+</FrameLayout>

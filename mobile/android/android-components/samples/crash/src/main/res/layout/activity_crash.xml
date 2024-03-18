@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <Button
+        android:id="@+id/crashButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/crash_nonfatal"
+        android:textAlignment="center" />
+
+    <Button
+        android:id="@+id/fatalCrashButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/crash_fatal"
+        android:textAlignment="center" />
+
+    <Button
+        android:id="@+id/fatalServiceCrashButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/crash_fatal_service"
+        android:textAlignment="center" />
+
+    <Button
+        android:id="@+id/crashList"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/list_of_crashes"
+        android:textAlignment="center" />
+
+</LinearLayout>

@@ -1,0 +1,224 @@
+{
+  "page_size": 50,
+  "page_count": 1,
+  "count": 1,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "addon": {
+        "id": 607454,
+        "authors": [
+          {
+            "id": 11423598,
+            "name": "Raymond Hill",
+            "url": "https://addons.mozilla.org/en-US/firefox/user/11423598/",
+            "username": "gorhill",
+            "picture_url": null
+          }
+        ],
+        "average_daily_users": 5060298,
+        "categories": {
+          "android": [
+            "security-privacy"
+          ],
+          "firefox": [
+            "privacy-security"
+          ]
+        },
+        "contributions_url": "",
+        "created": "2015-04-25T07:26:22Z",
+        "current_version": {
+          "id": 5174693,
+          "compatibility": {
+            "firefox": {
+              "min": "57.0",
+              "max": "*"
+            },
+            "android": {
+              "min": "57.0",
+              "max": "*"
+            }
+          },
+          "edit_url": "https://addons.mozilla.org/en-US/developers/addon/ublock-origin/versions/5174693",
+          "files": [
+            {
+              "id": 3719054,
+              "created": "2021-02-01T14:04:16Z",
+              "hash": "sha256:5c3a5ef6f5b5475895053238026360020d6793b05541d20032ea9dd1c9cae451",
+              "is_restart_required": false,
+              "is_webextension": true,
+              "is_mozilla_signed_extension": false,
+              "platform": "all",
+              "size": 2742973,
+              "status": "public",
+              "url": "https://addons.mozilla.org/firefox/downloads/file/3719054/ublock_origin-1.33.2-an+fx.xpi",
+              "permissions": [
+                "dns",
+                "menus",
+                "privacy",
+                "storage",
+                "tabs",
+                "unlimitedStorage",
+                "webNavigation",
+                "webRequest",
+                "webRequestBlocking",
+                "<all_urls>",
+                "http://*/*",
+                "https://*/*",
+                "file://*/*",
+                "https://easylist.to/*",
+                "https://*.fanboy.co.nz/*",
+                "https://filterlists.com/*",
+                "https://forums.lanik.us/*",
+                "https://github.com/*",
+                "https://*.github.io/*"
+              ],
+              "optional_permissions": []
+            }
+          ],
+          "is_strict_compatibility_enabled": false,
+          "license": {
+            "id": 6,
+            "is_custom": false,
+            "name": "GNU General Public License, version 3.0",
+            "url": "http://www.gnu.org/licenses/gpl-3.0.html"
+          },
+          "release_notes": "<a href=\"https://outgoing.prod.mozaws.net/v1/a24fd1d9a1598d49cdc2cdc6d3ecd435971254320856ac32db39b0c4d9f5e126/https%3A//github.com/gorhill/uBlock/releases/tag/1.33.2\" rel=\"nofollow\">Complete release notes</a>.\n\n<b>Closed as fixed:</b>\n\n<ul><li><a href=\"https://outgoing.prod.mozaws.net/v1/0e94bcfacc284b39a3164377711e52b9ded21cda0d40494a43fd0052d8816860/https%3A//github.com/uBlockOrigin/uBlock-issues/issues/1480\" rel=\"nofollow\">After downgrading to 1.32.4, uBO is broken</a></li><li><a href=\"https://outgoing.prod.mozaws.net/v1/88ab9531e629dc0a259dbe61b357b13316fa1a9c2f5c93f9208de5937b84a497/https%3A//github.com/uBlockOrigin/uBlock-issues/issues/1478\" rel=\"nofollow\">Whitelisting a site on Chromium Edge still blocks resources fetched by service worker</a></li></ul>\n<a href=\"https://outgoing.prod.mozaws.net/v1/35c6fcff904629a7392564335b09eb1fe5f661f9cd3a6a30534b2c49612c1b5e/https%3A//github.com/gorhill/uBlock/compare/1.33.0...1.33.2\" rel=\"nofollow\">Commits history since 1.33.0</a>.",
+          "reviewed": null,
+          "version": "1.33.2"
+        },
+        "default_locale": "en-US",
+        "description": "uBlock Origin is <b>not</b> an \"ad blocker\", it's a wide-spectrum content blocker with CPU and memory efficiency as a primary feature.\n\n***\n\nOut of the box, these lists of filters are loaded and enforced:\n\n- EasyList (ads)\n- Peter Lowe’s Ad server list (ads and tracking)\n- EasyPrivacy (tracking)\n- Malware domains\n\nMore lists are available for you to select if you wish:\n\n- Fanboy’s Enhanced Tracking List\n- Dan Pollock’s hosts file\n- MVPS HOSTS\n- Spam404\n- And many others\n\nAdditionally, you can point-and-click to block JavaScript locally or globally, create your own global or local rules to override entries from filter lists, and many more advanced features.\n\n***\n\nFree.\nOpen source with public license (GPLv3)\nFor users by users.\n\nIf ever you really do want to contribute something, think about the people working hard to maintain the filter lists you are using, which were made available to use by all for free.\n\n***\n\n<ul><li><a href=\"https://outgoing.prod.mozaws.net/v1/788d66e7299bdfb1da05832994551640d0ad441e148a3e29afe8dd0a5a90800c/https%3A//github.com/gorhill/uBlock%23ublock-origin\" rel=\"nofollow\">Documentation</a></li><li><a href=\"https://outgoing.prod.mozaws.net/v1/de148deb19b52874eb4c5726859834f3294a6057ed44e873c958acee4c920062/https%3A//github.com/gorhill/uBlock/releases\" rel=\"nofollow\">Release notes</a></li><li><a href=\"https://outgoing.prod.mozaws.net/v1/32c3d6819f5263e56c265042e8d34e2da4d974e73a7ad55a81786d8995cf65a9/https%3A//www.reddit.com/r/uBlockOrigin/\" rel=\"nofollow\">Community support @ Reddit</a></li><li><a href=\"https://outgoing.prod.mozaws.net/v1/9bfaba4f3fe3310ae0a3189187f5fbab185097d85398752765e086889775079e/https%3A//github.com/gorhill/uBlock/graphs/contributors\" rel=\"nofollow\">Contributors @ GitHub</a></li><li><a href=\"https://outgoing.prod.mozaws.net/v1/6a44868e1580018df8d4d87adf8e97cc74b71b962a73dd5a64604f99db767287/https%3A//crowdin.net/project/ublock\" rel=\"nofollow\">Contributors @ Crowdin</a></li></ul>",
+        "developer_comments": null,
+        "edit_url": "https://addons.mozilla.org/en-US/developers/addon/ublock-origin/edit",
+        "guid": "uBlock0@raymondhill.net",
+        "has_eula": false,
+        "has_privacy_policy": true,
+        "homepage": "https://github.com/gorhill/uBlock#ublock-origin",
+        "icon_url": "https://addons.cdn.mozilla.net/user-media/addon_icons/607/607454-64.png?modified=mcrushed",
+        "icons": {
+          "32": "https://addons.cdn.mozilla.net/user-media/addon_icons/607/607454-32.png?modified=mcrushed",
+          "64": "https://addons.cdn.mozilla.net/user-media/addon_icons/607/607454-64.png?modified=mcrushed",
+          "128": "https://addons.cdn.mozilla.net/user-media/addon_icons/607/607454-128.png?modified=mcrushed"
+        },
+        "is_disabled": false,
+        "is_experimental": false,
+        "last_updated": "2021-02-04T12:05:14Z",
+        "name": "uBlock Origin",
+        "previews": [
+          {
+            "id": 238546,
+            "caption": "The popup panel: default mode",
+            "image_size": [
+              1011,
+              758
+            ],
+            "image_url": "https://addons.cdn.mozilla.net/user-media/previews/full/238/238546.png?modified=1590420038",
+            "thumbnail_size": [
+              640,
+              480
+            ],
+            "thumbnail_url": "https://addons.cdn.mozilla.net/user-media/previews/thumbs/238/238546.png?modified=1590420038"
+          },
+          {
+            "id": 238548,
+            "caption": "The dashboard: stock filter lists",
+            "image_size": [
+              1011,
+              758
+            ],
+            "image_url": "https://addons.cdn.mozilla.net/user-media/previews/full/238/238548.png?modified=1590420038",
+            "thumbnail_size": [
+              640,
+              480
+            ],
+            "thumbnail_url": "https://addons.cdn.mozilla.net/user-media/previews/thumbs/238/238548.png?modified=1590420038"
+          },
+          {
+            "id": 238547,
+            "caption": "The popup panel: default-deny mode",
+            "image_size": [
+              1011,
+              758
+            ],
+            "image_url": "https://addons.cdn.mozilla.net/user-media/previews/full/238/238547.png?modified=1590420038",
+            "thumbnail_size": [
+              640,
+              480
+            ],
+            "thumbnail_url": "https://addons.cdn.mozilla.net/user-media/previews/thumbs/238/238547.png?modified=1590420038"
+          },
+          {
+            "id": 238549,
+            "caption": "The dashboard: settings",
+            "image_size": [
+              1011,
+              758
+            ],
+            "image_url": "https://addons.cdn.mozilla.net/user-media/previews/full/238/238549.png?modified=1590420038",
+            "thumbnail_size": [
+              640,
+              480
+            ],
+            "thumbnail_url": "https://addons.cdn.mozilla.net/user-media/previews/thumbs/238/238549.png?modified=1590420038"
+          },
+          {
+            "id": 238552,
+            "caption": "The popup panel in Firefox Preview: default mode with more blocking options revealed",
+            "image_size": [
+              970,
+              1800
+            ],
+            "image_url": "https://addons.cdn.mozilla.net/user-media/previews/full/238/238552.png?modified=1590420044",
+            "thumbnail_size": [
+              259,
+              480
+            ],
+            "thumbnail_url": "https://addons.cdn.mozilla.net/user-media/previews/thumbs/238/238552.png?modified=1590420044"
+          },
+          {
+            "id": 230370,
+            "caption": "The unified logger tells you all that uBO is seeing and doing",
+            "image_size": [
+              800,
+              600
+            ],
+            "image_url": "https://addons.cdn.mozilla.net/user-media/previews/full/230/230370.png?modified=1590420038",
+            "thumbnail_size": [
+              640,
+              480
+            ],
+            "thumbnail_url": "https://addons.cdn.mozilla.net/user-media/previews/thumbs/230/230370.png?modified=1590420038"
+          }
+        ],
+        "promoted": {
+          "apps": [
+            "firefox",
+            "android"
+          ],
+          "category": "recommended"
+        },
+        "ratings": {
+          "average": 4.7336,
+          "bayesian_average": 4.7331695325641405,
+          "count": 13324,
+          "text_count": 4433
+        },
+        "ratings_url": "https://addons.mozilla.org/en-US/firefox/addon/ublock-origin/reviews/",
+        "requires_payment": false,
+        "review_url": "https://addons.mozilla.org/en-US/reviewers/review/607454",
+        "slug": "ublock-origin",
+        "status": "public",
+        "summary": "Finally, an efficient wide-spectrum content blocker. Easy on CPU and memory.",
+        "support_email": null,
+        "support_url": "https://old.reddit.com/r/uBlockOrigin/",
+        "tags": [],
+        "type": "extension",
+        "url": "https://addons.mozilla.org/en-US/firefox/addon/ublock-origin/",
+        "weekly_downloads": 125955
+      },
+      "notes": null
+    }
+  ]
+}
