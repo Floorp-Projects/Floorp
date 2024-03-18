@@ -12,6 +12,7 @@
 // stable.
 
 gczeal(0); // Need to control when tenuring happens
+gcparam('semispaceNurseryEnabled', 0);
 
 // Hack to skip this test if strings are not allocated in the nursery.
 {
