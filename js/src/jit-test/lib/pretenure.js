@@ -71,8 +71,14 @@ function allocateArrays(count, longLived) {
 }
 
 function gcCounts() {
-  return { minor: gcparam("minorGCNumber"),
-           major: gcparam("majorGCNumber") };
+  let major = gcparam("majorGCNumber")
+  let minor = gcparam("minorGCNumber");
+
+  // Only report minor collections that didn't happen as part of a major GC.
+  assertEq(minor >= major, true);
+  minor -= major;
+
+  return { minor, major };
 }
 
 function runTestAndCountCollections(thunk) {

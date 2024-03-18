@@ -441,6 +441,12 @@ void GCRuntime::waitBackgroundSweepEnd() {
 
 void GCRuntime::startBackgroundFree() {
   AutoLockHelperThreadState lock;
+
+  if (lifoBlocksToFree.ref().isEmpty() &&
+      buffersToFreeAfterMinorGC.ref().empty()) {
+    return;
+  }
+
   freeTask.startOrRunIfIdle(lock);
 }
 
