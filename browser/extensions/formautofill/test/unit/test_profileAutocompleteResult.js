@@ -416,7 +416,7 @@ add_task(async function test_all_patterns() {
       let expectedItemLength = expectedValue.items.length;
       // If the last item shows up as a footer, we expect one more item
       // than expected.
-      if (actual.getStyleAt(actual.matchCount - 1) == "autofill-footer") {
+      if (actual.getStyleAt(actual.matchCount - 1) == "action") {
         expectedItemLength++;
       }
 
