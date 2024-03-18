@@ -439,7 +439,6 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   // be mapped to an actual fuse by validateAndRegisterFuseDependencies.
   enum class FuseDependencyKind {
     HasSeenObjectEmulateUndefinedFuse,
-    OptimizeGetIteratorFuse,
   };
 
   // The set of fuses this code generation depends on.
@@ -448,10 +447,6 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   // Register a dependency on the HasSeenObjectEmulateUndefined fuse.
   void addHasSeenObjectEmulateUndefinedFuseDependency() {
     fuseDependencies += FuseDependencyKind::HasSeenObjectEmulateUndefinedFuse;
-  }
-
-  void addOptimizeGetIteratorFuseDependency() {
-    fuseDependencies += FuseDependencyKind::OptimizeGetIteratorFuse;
   }
 
   // Called during linking on main-thread: Ensures that the fuses are still

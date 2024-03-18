@@ -22,8 +22,7 @@ js::DependentScriptSet::DependentScriptSet(JSContext* cx,
 bool js::InvalidatingRuntimeFuse::addFuseDependency(JSContext* cx,
                                                     Handle<JSScript*> script) {
   auto* zone = script->zone();
-  DependentScriptSet* dss =
-      zone->fuseDependencies.getOrCreateDependentScriptSet(cx, this);
+  DependentScriptSet* dss = zone->getOrCreateDependentScriptSet(cx, this);
   if (!dss) {
     return false;
   }
@@ -80,21 +79,4 @@ bool js::DependentScriptSet::addScriptForFuse(InvalidatingFuse* fuse,
 
   // Script is already in the set, no need to re-add.
   return true;
-}
-
-js::DependentScriptSet* DependentScriptGroup::getOrCreateDependentScriptSet(
-    JSContext* cx, js::InvalidatingFuse* fuse) {
-  for (auto& dss : dependencies) {
-    if (dss.associatedFuse == fuse) {
-      return &dss;
-    }
-  }
-
-  if (!dependencies.emplaceBack(cx, fuse)) {
-    return nullptr;
-  }
-
-  auto& dss = dependencies.back();
-  MOZ_ASSERT(dss.associatedFuse == fuse);
-  return &dss;
 }

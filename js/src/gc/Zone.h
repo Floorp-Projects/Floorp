@@ -677,7 +677,18 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
 #endif
 
   // Support for invalidating fuses
-  js::DependentScriptGroup fuseDependencies;
+
+  // A dependent script set pairs a fuse with a set of scripts which depend
+  // on said fuse; this is a vector of script sets because the expectation for
+  // now is that the number of runtime wide invalidating fuses will be small.
+  // This will need to be revisited (convert to HashMap?) should that no
+  // longer be the case
+  //
+  // Note: This isn't  traced through the zone, but rather through the use
+  // of JS::WeakCache.
+  js::Vector<js::DependentScriptSet, 1, js::SystemAllocPolicy> fuseDependencies;
+  js::DependentScriptSet* getOrCreateDependentScriptSet(
+      JSContext* cx, js::InvalidatingFuse* fuse);
 
  private:
   js::jit::JitZone* createJitZone(JSContext* cx);
