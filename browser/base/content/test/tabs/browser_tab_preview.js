@@ -4,6 +4,10 @@
 
 "use strict";
 
+const { sinon } = ChromeUtils.importESModule(
+  "resource://testing-common/Sinon.sys.mjs"
+);
+
 async function openPreview(tab) {
   const previewShown = BrowserTestUtils.waitForEvent(
     document.getElementById("tabbrowser-tab-preview"),
@@ -141,6 +145,54 @@ add_task(async function thumbnailTests() {
   EventUtils.synthesizeMouseAtCenter(document.documentElement, {
     type: "mouseover",
   });
+});
+
+/**
+ * make sure delay is applied when mouse leaves tabstrip
+ * but not when moving between tabs on the tabstrip
+ */
+add_task(async function delayTests() {
+  const tabUrl1 =
+    "data:text/html,<html><head><title>First New Tab</title></head><body>Hello</body></html>";
+  const tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, tabUrl1);
+  const tabUrl2 =
+    "data:text/html,<html><head><title>Second New Tab</title></head><body>Hello</body></html>";
+  const tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, tabUrl2);
+  const previewContainer = document.getElementById("tabbrowser-tab-preview");
+
+  const resetDelayMock = sinon.replace(
+    previewContainer,
+    "resetDelay",
+    sinon.fake()
+  );
+
+  await openPreview(tab1);
+
+  await openPreview(tab2);
+
+  const previewHidden = BrowserTestUtils.waitForEvent(
+    previewContainer,
+    "previewhidden"
+  );
+  Assert.ok(
+    !resetDelayMock.called,
+    "Delay is not reset when moving between tabs"
+  );
+
+  EventUtils.synthesizeMouseAtCenter(document.getElementById("reload-button"), {
+    type: "mousemove",
+  });
+
+  await previewHidden;
+
+  Assert.ok(
+    resetDelayMock.called,
+    "Delay is reset when cursor leaves tabstrip"
+  );
+
+  BrowserTestUtils.removeTab(tab1);
+  BrowserTestUtils.removeTab(tab2);
+  sinon.restore();
 });
 
 /**

@@ -26,6 +26,7 @@ export default class TabPreview extends MozLitElement {
 
     _previewIsActive: { type: Boolean, state: true },
     _previewDelayTimeout: { type: Number, state: true },
+    _previewDelayTimeoutActive: { type: Boolean, state: true },
     _displayTitle: { type: String, state: true },
     _displayURI: { type: String, state: true },
     _displayImg: { type: Object, state: true },
@@ -44,6 +45,7 @@ export default class TabPreview extends MozLitElement {
       TAB_PREVIEW_USE_THUMBNAILS_PREF,
       false
     );
+    this._previewDelayTimeoutActive = true;
   }
 
   // render this inside a <panel>
@@ -126,6 +128,10 @@ export default class TabPreview extends MozLitElement {
     this.dispatchEvent(new CustomEvent("previewhidden"));
   }
 
+  resetDelay() {
+    this._previewDelayTimeoutActive = true;
+  }
+
   // compute values derived from tab element
   willUpdate(changedProperties) {
     if (!changedProperties.has("tab")) {
@@ -153,18 +159,17 @@ export default class TabPreview extends MozLitElement {
   updated(changedProperties) {
     if (changedProperties.has("tab")) {
       // handle preview delay
+      clearTimeout(this._previewDelayTimeout);
       if (!this.tab) {
-        clearTimeout(this._previewDelayTimeout);
         this._previewIsActive = false;
       } else {
-        let lastTabVal = changedProperties.get("tab");
-        if (!lastTabVal) {
-          // tab was set from an empty state,
-          // so wait for the delay duration before showing
-          this._previewDelayTimeout = setTimeout(() => {
+        this._previewDelayTimeout = setTimeout(
+          () => {
             this._previewIsActive = true;
-          }, this._prefPreviewDelay);
-        }
+            this._previewDelayTimeoutActive = false;
+          },
+          this._previewDelayTimeoutActive ? this._prefPreviewDelay : 0
+        );
       }
     }
     if (changedProperties.has("_previewIsActive")) {
