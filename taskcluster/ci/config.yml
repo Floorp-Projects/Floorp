@@ -683,6 +683,11 @@ taskgraph:
 
 workers:
     aliases:
+        b-linux-gcp-aarch64:
+            provisioner: '{trust-domain}-{level}'
+            implementation: generic-worker
+            os: linux
+            worker-type: '{alias}'
         b-linux.*:
             provisioner: '{trust-domain}-{level}'
             implementation: docker-worker
