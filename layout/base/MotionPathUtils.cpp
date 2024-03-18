@@ -731,6 +731,9 @@ already_AddRefed<gfx::Path> MotionPathUtils::BuildPath(
       // building its gfx::Path directly by its SVGPathData without other
       // reference. https://github.com/w3c/fxtf-drafts/issues/504
       return BuildSVGPath(aBasicShape.AsPath().path, aPathBuilder);
+    case StyleBasicShape::Tag::Shape:
+      // TODO: Bug 1884424. Suport shape() for offset-path.
+      return nullptr;
   }
 
   return nullptr;

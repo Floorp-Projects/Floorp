@@ -181,8 +181,13 @@ pub use self::GenericShapeOutside as ShapeOutside;
     ToShmem,
 )]
 #[repr(C, u8)]
-pub enum GenericBasicShape<Position, LengthPercentage, NonNegativeLengthPercentage, BasicShapeRect>
-{
+pub enum GenericBasicShape<
+    Angle,
+    Position,
+    LengthPercentage,
+    NonNegativeLengthPercentage,
+    BasicShapeRect,
+> {
     /// The <basic-shape-rect>.
     Rect(BasicShapeRect),
     /// Defines a circle with a center and a radius.
@@ -201,8 +206,8 @@ pub enum GenericBasicShape<Position, LengthPercentage, NonNegativeLengthPercenta
     Polygon(GenericPolygon<LengthPercentage>),
     /// Defines a path with SVG path syntax.
     Path(Path),
-    // TODO: Bug 1823463. Add shape().
-    // https://drafts.csswg.org/css-shapes-2/#shape-function
+    /// Defines a shape function, which is identical to path(() but it uses the CSS syntax.
+    Shape(#[css(field_bound)] Shape<Angle, LengthPercentage>),
 }
 
 pub use self::GenericBasicShape as BasicShape;
@@ -397,9 +402,9 @@ pub enum FillRule {
     Evenodd,
 }
 
-/// The path function defined in css-shape-2.
+/// The path function.
 ///
-/// https://drafts.csswg.org/css-shapes-2/#funcdef-path
+/// https://drafts.csswg.org/css-shapes-1/#funcdef-basic-shape-path
 #[derive(
     Animate,
     Clone,
@@ -564,4 +569,455 @@ impl Default for FillRule {
 #[inline]
 fn is_default<T: Default + PartialEq>(fill: &T) -> bool {
     *fill == Default::default()
+}
+
+/// The shape function defined in css-shape-2.
+/// shape() = shape(<fill-rule>? from <coordinate-pair>, <shape-command>#)
+///
+/// https://drafts.csswg.org/css-shapes-2/#shape-function
+#[derive(
+    Clone,
+    Debug,
+    Deserialize,
+    MallocSizeOf,
+    PartialEq,
+    Serialize,
+    SpecifiedValueInfo,
+    ToAnimatedValue,
+    ToComputedValue,
+    ToResolvedValue,
+    ToShmem,
+)]
+#[repr(C)]
+pub struct Shape<Angle, LengthPercentage> {
+    /// The filling rule for this shape.
+    pub fill: FillRule,
+    /// The shape command data. Note that the starting point will be the first command in this
+    /// slice.
+    // Note: The first command is always GenericShapeCommand::Move.
+    pub commands: crate::OwnedSlice<GenericShapeCommand<Angle, LengthPercentage>>,
+}
+
+impl<Angle, LengthPercentage> Animate for Shape<Angle, LengthPercentage>
+where
+    Angle: Animate,
+    LengthPercentage: Animate,
+{
+    fn animate(&self, other: &Self, procedure: Procedure) -> Result<Self, ()> {
+        if self.fill != other.fill {
+            return Err(());
+        }
+        let commands =
+            lists::by_computed_value::animate(&self.commands, &other.commands, procedure)?;
+        Ok(Self {
+            fill: self.fill,
+            commands,
+        })
+    }
+}
+
+impl<Angle, LengthPercentage> ComputeSquaredDistance for Shape<Angle, LengthPercentage>
+where
+    Angle: ComputeSquaredDistance,
+    LengthPercentage: ComputeSquaredDistance,
+{
+    fn compute_squared_distance(&self, other: &Self) -> Result<SquaredDistance, ()> {
+        if self.fill != other.fill {
+            return Err(());
+        }
+        lists::by_computed_value::squared_distance(&self.commands, &other.commands)
+    }
+}
+
+impl<Angle, LengthPercentage> ToCss for Shape<Angle, LengthPercentage>
+where
+    Angle: ToCss + Zero,
+    LengthPercentage: PartialEq + ToCss,
+{
+    fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
+    where
+        W: Write,
+    {
+        use style_traits::values::SequenceWriter;
+
+        // Per spec, we must have the first move command and at least one following command.
+        debug_assert!(self.commands.len() > 1);
+
+        dest.write_str("shape(")?;
+        if !is_default(&self.fill) {
+            self.fill.to_css(dest)?;
+            dest.write_char(' ')?;
+        }
+        dest.write_str("from ")?;
+        match self.commands[0] {
+            ShapeCommand::Move {
+                by_to: _,
+                ref point,
+            } => point.to_css(dest)?,
+            _ => unreachable!("The first command must be move"),
+        }
+        dest.write_str(", ")?;
+        {
+            let mut writer = SequenceWriter::new(dest, ", ");
+            for command in self.commands.iter().skip(1) {
+                writer.item(command)?;
+            }
+        }
+        dest.write_char(')')
+    }
+}
+
+/// This is a more general shape(path) command type, for both shape() and path().
+///
+/// https://www.w3.org/TR/SVG11/paths.html#PathData
+/// https://drafts.csswg.org/css-shapes-2/#shape-function
+#[derive(
+    Animate,
+    Clone,
+    ComputeSquaredDistance,
+    Copy,
+    Debug,
+    Deserialize,
+    MallocSizeOf,
+    PartialEq,
+    Serialize,
+    SpecifiedValueInfo,
+    ToAnimatedValue,
+    ToAnimatedZero,
+    ToComputedValue,
+    ToResolvedValue,
+    ToShmem,
+)]
+#[allow(missing_docs)]
+#[repr(C, u8)]
+pub enum GenericShapeCommand<Angle, LengthPercentage> {
+    /// The move command.
+    Move {
+        by_to: ByTo,
+        point: CoordinatePair<LengthPercentage>,
+    },
+    /// The line command.
+    Line {
+        by_to: ByTo,
+        point: CoordinatePair<LengthPercentage>,
+    },
+    /// The hline command.
+    HLine { by_to: ByTo, x: LengthPercentage },
+    /// The vline command.
+    VLine { by_to: ByTo, y: LengthPercentage },
+    /// The cubic Bézier curve command.
+    CubicCurve {
+        by_to: ByTo,
+        point: CoordinatePair<LengthPercentage>,
+        control1: CoordinatePair<LengthPercentage>,
+        control2: CoordinatePair<LengthPercentage>,
+    },
+    /// The quadratic Bézier curve command.
+    QuadCurve {
+        by_to: ByTo,
+        point: CoordinatePair<LengthPercentage>,
+        control1: CoordinatePair<LengthPercentage>,
+    },
+    /// The smooth command.
+    SmoothCubic {
+        by_to: ByTo,
+        point: CoordinatePair<LengthPercentage>,
+        control2: CoordinatePair<LengthPercentage>,
+    },
+    /// The smooth quadratic Bézier curve command.
+    SmoothQuad {
+        by_to: ByTo,
+        point: CoordinatePair<LengthPercentage>,
+    },
+    /// The arc command.
+    Arc {
+        by_to: ByTo,
+        point: CoordinatePair<LengthPercentage>,
+        radii: CoordinatePair<LengthPercentage>,
+        arc_sweep: ArcSweep,
+        arc_size: ArcSize,
+        rotate: Angle,
+    },
+    /// The closepath command.
+    Close,
+}
+
+pub use self::GenericShapeCommand as ShapeCommand;
+
+impl<Angle, LengthPercentage> ToCss for ShapeCommand<Angle, LengthPercentage>
+where
+    Angle: ToCss + Zero,
+    LengthPercentage: PartialEq + ToCss,
+{
+    fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
+    where
+        W: fmt::Write,
+    {
+        use self::ShapeCommand::*;
+        match *self {
+            Move { by_to, ref point } => {
+                dest.write_str("move ")?;
+                by_to.to_css(dest)?;
+                dest.write_char(' ')?;
+                point.to_css(dest)
+            },
+            Line { by_to, ref point } => {
+                dest.write_str("line ")?;
+                by_to.to_css(dest)?;
+                dest.write_char(' ')?;
+                point.to_css(dest)
+            },
+            HLine { by_to, ref x } => {
+                dest.write_str("hline ")?;
+                by_to.to_css(dest)?;
+                dest.write_char(' ')?;
+                x.to_css(dest)
+            },
+            VLine { by_to, ref y } => {
+                dest.write_str("vline ")?;
+                by_to.to_css(dest)?;
+                dest.write_char(' ')?;
+                y.to_css(dest)
+            },
+            CubicCurve {
+                by_to,
+                ref point,
+                ref control1,
+                ref control2,
+            } => {
+                dest.write_str("curve ")?;
+                by_to.to_css(dest)?;
+                dest.write_char(' ')?;
+                point.to_css(dest)?;
+                dest.write_str(" via ")?;
+                control1.to_css(dest)?;
+                dest.write_char(' ')?;
+                control2.to_css(dest)
+            },
+            QuadCurve {
+                by_to,
+                ref point,
+                ref control1,
+            } => {
+                dest.write_str("curve ")?;
+                by_to.to_css(dest)?;
+                dest.write_char(' ')?;
+                point.to_css(dest)?;
+                dest.write_str(" via ")?;
+                control1.to_css(dest)
+            },
+            SmoothCubic {
+                by_to,
+                ref point,
+                ref control2,
+            } => {
+                dest.write_str("smooth ")?;
+                by_to.to_css(dest)?;
+                dest.write_char(' ')?;
+                point.to_css(dest)?;
+                dest.write_str(" via ")?;
+                control2.to_css(dest)
+            },
+            SmoothQuad { by_to, ref point } => {
+                dest.write_str("smooth ")?;
+                by_to.to_css(dest)?;
+                dest.write_char(' ')?;
+                point.to_css(dest)
+            },
+            Arc {
+                by_to,
+                ref point,
+                ref radii,
+                arc_sweep,
+                arc_size,
+                ref rotate,
+            } => {
+                dest.write_str("arc ")?;
+                by_to.to_css(dest)?;
+                dest.write_char(' ')?;
+                point.to_css(dest)?;
+                dest.write_str(" of ")?;
+                radii.x.to_css(dest)?;
+                if radii.x != radii.y {
+                    dest.write_char(' ')?;
+                    radii.y.to_css(dest)?;
+                }
+
+                if matches!(arc_sweep, ArcSweep::Cw) {
+                    dest.write_str(" cw")?;
+                }
+
+                if matches!(arc_size, ArcSize::Large) {
+                    dest.write_str(" large")?;
+                }
+
+                if !rotate.is_zero() {
+                    dest.write_str(" rotate ")?;
+                    rotate.to_css(dest)?;
+                }
+                Ok(())
+            },
+            Close => dest.write_str("close"),
+        }
+    }
+}
+
+/// This indicates the command is absolute or relative.
+/// https://drafts.csswg.org/css-shapes-2/#typedef-shape-by-to
+#[derive(
+    Animate,
+    Clone,
+    ComputeSquaredDistance,
+    Copy,
+    Debug,
+    Deserialize,
+    MallocSizeOf,
+    Parse,
+    PartialEq,
+    Serialize,
+    SpecifiedValueInfo,
+    ToAnimatedValue,
+    ToAnimatedZero,
+    ToComputedValue,
+    ToCss,
+    ToResolvedValue,
+    ToShmem,
+)]
+#[repr(u8)]
+pub enum ByTo {
+    /// This indicates that the <coordinate-pair>s are relative to the command’s starting point.
+    By,
+    /// This relative to the top-left corner of the reference box.
+    To,
+}
+
+/// Defines a pair of coordinates, representing a rightward and downward offset, respectively, from
+/// a specified reference point. Percentages are resolved against the width or height,
+/// respectively, of the reference box.
+/// https://drafts.csswg.org/css-shapes-2/#typedef-shape-coordinate-pair
+#[allow(missing_docs)]
+#[derive(
+    Animate,
+    Clone,
+    ComputeSquaredDistance,
+    Copy,
+    Debug,
+    Deserialize,
+    MallocSizeOf,
+    PartialEq,
+    Serialize,
+    SpecifiedValueInfo,
+    ToAnimatedValue,
+    ToAnimatedZero,
+    ToComputedValue,
+    ToCss,
+    ToResolvedValue,
+    ToShmem,
+)]
+#[repr(C)]
+pub struct CoordinatePair<LengthPercentage> {
+    x: LengthPercentage,
+    y: LengthPercentage,
+}
+
+impl<LengthPercentage> CoordinatePair<LengthPercentage> {
+    /// Create a CoordinatePair.
+    #[inline]
+    pub fn new(x: LengthPercentage, y: LengthPercentage) -> Self {
+        Self { x, y }
+    }
+}
+
+/// This indicates that the arc that is traced around the ellipse clockwise or counter-clockwise
+/// from the center.
+/// https://drafts.csswg.org/css-shapes-2/#typedef-shape-arc-sweep
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    Deserialize,
+    MallocSizeOf,
+    Parse,
+    PartialEq,
+    Serialize,
+    SpecifiedValueInfo,
+    ToAnimatedValue,
+    ToAnimatedZero,
+    ToComputedValue,
+    ToCss,
+    ToResolvedValue,
+    ToShmem,
+)]
+#[repr(u8)]
+pub enum ArcSweep {
+    /// Counter-clockwise. The default value. (This also represents 0 in the svg path.)
+    Ccw = 0,
+    /// Clockwise. (This also represents 1 in the svg path.)
+    Cw = 1,
+}
+
+impl Animate for ArcSweep {
+    fn animate(&self, other: &Self, procedure: Procedure) -> Result<Self, ()> {
+        // If an arc command has different <arc-sweep> between its starting and ending list, then
+        // the interpolated result uses cw for any progress value between 0 and 1.
+        (*self as i32)
+            .animate(&(*other as i32), procedure)
+            .map(|v| if v > 0 { ArcSweep::Cw } else { ArcSweep::Ccw })
+    }
+}
+
+impl ComputeSquaredDistance for ArcSweep {
+    fn compute_squared_distance(&self, other: &Self) -> Result<SquaredDistance, ()> {
+        (*self as i32).compute_squared_distance(&(*other as i32))
+    }
+}
+
+/// This indicates that the larger or smaller, respectively, of the two possible arcs must be
+/// chosen.
+/// https://drafts.csswg.org/css-shapes-2/#typedef-shape-arc-size
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    Deserialize,
+    MallocSizeOf,
+    Parse,
+    PartialEq,
+    Serialize,
+    SpecifiedValueInfo,
+    ToAnimatedValue,
+    ToAnimatedZero,
+    ToComputedValue,
+    ToCss,
+    ToResolvedValue,
+    ToShmem,
+)]
+#[repr(u8)]
+pub enum ArcSize {
+    /// Choose the small one. The default value. (This also represents 0 in the svg path.)
+    Small = 0,
+    /// Choose the large one. (This also represents 1 in the svg path.)
+    Large = 1,
+}
+
+impl Animate for ArcSize {
+    fn animate(&self, other: &Self, procedure: Procedure) -> Result<Self, ()> {
+        // If it has different <arc-size> keywords, then the interpolated result uses large for any
+        // progress value between 0 and 1.
+        (*self as i32)
+            .animate(&(*other as i32), procedure)
+            .map(|v| {
+                if v > 0 {
+                    ArcSize::Large
+                } else {
+                    ArcSize::Small
+                }
+            })
+    }
+}
+
+impl ComputeSquaredDistance for ArcSize {
+    fn compute_squared_distance(&self, other: &Self) -> Result<SquaredDistance, ()> {
+        (*self as i32).compute_squared_distance(&(*other as i32))
+    }
 }

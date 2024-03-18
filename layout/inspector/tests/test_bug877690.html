@@ -217,10 +217,13 @@ function do_test() {
   ok(testValues(values, expected), "property box-shadow's values");
 
   // Regression test for bug 1255379.
+  var shapeFunction = [ "close", "evenodd", "nonzero", "by", "to", "cw", "ccw",
+                        "small", "large" ];
   var expected = [ "inherit", "initial", "unset", "revert", "revert-layer",
                    "none", "url", "polygon", "circle", "ellipse", "inset",
-                   "path", "rect", "xywh", "fill-box", "stroke-box", "view-box",
-                   "margin-box", "border-box", "padding-box", "content-box" ];
+                   "path", "rect", "xywh", "fill-box", "stroke-box",
+                   "view-box", "margin-box", "border-box", "padding-box",
+                   "content-box", ...shapeFunction ];
   var values = InspectorUtils.getCSSValuesForProperty("clip-path");
   ok(testValues(values, expected), "property clip-path's values");
 

@@ -8477,6 +8477,13 @@
   mirror: always
   rust: true
 
+# Is support for shape() enabled?
+- name: layout.css.basic-shape-shape.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+  rust: true
+
 # Is support for xywh() enabled?
 - name: layout.css.basic-shape-xywh.enabled
   type: RelaxedAtomicBool
