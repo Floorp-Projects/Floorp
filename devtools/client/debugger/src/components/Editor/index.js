@@ -68,7 +68,11 @@ import {
   endOperation,
 } from "../../utils/editor/index";
 
-import { resizeToggleButton, resizeBreakpointGutter } from "../../utils/ui";
+import {
+  resizeToggleButton,
+  getLineNumberWidth,
+  resizeBreakpointGutter,
+} from "../../utils/ui";
 
 const { debounce } = require("resource://devtools/shared/debounce.js");
 const classnames = require("resource://devtools/client/shared/classnames.js");
@@ -169,7 +173,7 @@ class Editor extends PureComponent {
       if (this.props.selectedSource != nextProps.selectedSource) {
         this.props.updateViewport();
         resizeBreakpointGutter(editor.codeMirror);
-        resizeToggleButton(editor.codeMirror);
+        resizeToggleButton(getLineNumberWidth(editor.codeMirror));
       }
     } else {
       // For codemirror 6
@@ -177,6 +181,12 @@ class Editor extends PureComponent {
       if (shouldUpdateText) {
         this.setText(nextProps, editor);
       }
+    }
+  }
+
+  onEditorUpdated(v) {
+    if (v.docChanged || v.geometryChanged) {
+      resizeToggleButton(v.view.dom.querySelector(".cm-gutters").clientWidth);
     }
   }
 
@@ -242,6 +252,8 @@ class Editor extends PureComponent {
 
       codeMirror.on("scroll", this.onEditorScroll);
       this.onEditorScroll();
+    } else {
+      editor.setUpdateListener(this.onEditorUpdated);
     }
     this.setState({ editor });
     return editor;

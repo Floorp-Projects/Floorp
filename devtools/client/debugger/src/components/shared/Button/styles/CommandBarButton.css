@@ -14,6 +14,7 @@
   min-width: 30px;
   /* Adjust outline so it's not clipped */
   outline-offset: -3px;
+  flex-shrink: 0;
 }
 
 .command-bar-button:disabled {
