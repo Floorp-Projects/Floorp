@@ -13,7 +13,7 @@ button {
   background-color: var(--page-nav-button-background-color);
   border: 1px solid var(--page-nav-border-color);
   -moz-context-properties: fill, fill-opacity;
-  fill: currentColor;
+  fill: var(--icon-color);
   display: grid;
   grid-template-columns: min-content 1fr;
   gap: 12px;
@@ -34,9 +34,25 @@ button:hover {
 
 @media not (prefers-contrast) {
   button {
-    border-inline-start: 2px solid transparent;
-    border-inline-end: none;
-    border-block: none;
+    position: relative;
+  }
+
+  button::before {
+    content: "";
+    display: block;
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    width: 2px;
+    background-color: transparent;
+  }
+
+  button[selected]::before {
+    background-color: var(--color-accent-primary);
+  }
+
+  button[selected]:hover::before {
+    background-color: var(--icon-color);
   }
 
   button:hover,
@@ -44,24 +60,9 @@ button:hover {
     background-color: var(--page-nav-button-background-color-hover);
   }
 
-  button[selected]:hover {
-    border-inline-start-color: inherit;
-  }
-
-  button[selected],
-  button[selected]:hover {
-    border-inline-start: 2px solid;
-  }
-
-  button[selected]:not(:focus-visible) {
-    border-start-start-radius: 0;
-    border-end-start-radius: 0;
-  }
-
   button[selected]:not(:hover) {
     color: var(--color-accent-primary);
     background-color: color-mix(in srgb, var(--page-nav-button-background-color-selected) 5%, transparent);
-    border-inline-start-color: var(--color-accent-primary);
   }
 }
 
@@ -74,7 +75,7 @@ button:hover {
 button:focus-visible,
 button[selected]:focus-visible {
   outline: var(--focus-outline);
-  outline-offset: var(--focus-outline-offset);
+  outline-offset: 0;
   border-radius: var(--border-radius-small);
 }
 
