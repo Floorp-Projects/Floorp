@@ -542,6 +542,14 @@ class Nursery {
 
     inline bool isEmpty() const;
     inline bool isInside(const void* p) const;
+
+    void clear(Nursery* nursery);
+    void moveToStartOfChunk(Nursery* nursery, unsigned chunkno);
+    void setCurrentEnd(Nursery* nursery);
+    void setStartToCurrentPosition();
+    bool commitSubChunkRegion(size_t oldCapacity, size_t newCapacity);
+    void decommitSubChunkRegion(Nursery* nursery, size_t oldCapacity,
+                                size_t newCapacity);
   };
 
   Space toSpace;
@@ -668,7 +676,8 @@ class Nursery {
 };
 
 MOZ_ALWAYS_INLINE bool Nursery::isInside(const void* p) const {
-  return toSpace.isInside(p);
+  // TODO: Split this into separate methods.
+  return toSpace.isInside(p) || fromSpace.isInside(p);
 }
 
 MOZ_ALWAYS_INLINE bool Nursery::Space::isInside(const void* p) const {
