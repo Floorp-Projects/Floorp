@@ -584,7 +584,7 @@ class BCP47Parser (object):
 						self.grandfathered.add (subtag.lower ())
 				elif line.startswith ('Description: '):
 					description = line.split (' ', 1)[1].replace (' (individual language)', '')
-					description = re.sub (' (\(family\)|\((individual |macro)language\)|languages)$', '',
+					description = re.sub (r' (\(family\)|\((individual |macro)language\)|languages)$', '',
 							description)
 					if subtag in self.names:
 						self.names[subtag] += '\n' + description

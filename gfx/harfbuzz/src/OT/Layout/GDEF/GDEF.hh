@@ -189,7 +189,7 @@ struct CaretValueFormat3
   friend struct CaretValue;
 
   hb_position_t get_caret_value (hb_font_t *font, hb_direction_t direction,
-				 const VariationStore &var_store) const
+				 const ItemVariationStore &var_store) const
   {
     return HB_DIRECTION_IS_HORIZONTAL (direction) ?
 	   font->em_scale_x (coordinate) + (this+deviceTable).get_x_delta (font, var_store) :
@@ -251,7 +251,7 @@ struct CaretValue
   hb_position_t get_caret_value (hb_font_t *font,
 				 hb_direction_t direction,
 				 hb_codepoint_t glyph_id,
-				 const VariationStore &var_store) const
+				 const ItemVariationStore &var_store) const
   {
     switch (u.format) {
     case 1: return u.format1.get_caret_value (font, direction);
@@ -316,7 +316,7 @@ struct LigGlyph
   unsigned get_lig_carets (hb_font_t            *font,
 			   hb_direction_t        direction,
 			   hb_codepoint_t        glyph_id,
-			   const VariationStore &var_store,
+			   const ItemVariationStore &var_store,
 			   unsigned              start_offset,
 			   unsigned             *caret_count /* IN/OUT */,
 			   hb_position_t        *caret_array /* OUT */) const
@@ -372,7 +372,7 @@ struct LigCaretList
   unsigned int get_lig_carets (hb_font_t *font,
 			       hb_direction_t direction,
 			       hb_codepoint_t glyph_id,
-			       const VariationStore &var_store,
+			       const ItemVariationStore &var_store,
 			       unsigned int start_offset,
 			       unsigned int *caret_count /* IN/OUT */,
 			       hb_position_t *caret_array /* OUT */) const
@@ -609,7 +609,7 @@ struct GDEFVersion1_2
 					 * definitions--from beginning of GDEF
 					 * header (may be NULL).  Introduced
 					 * in version 0x00010002. */
-  Offset32To<VariationStore>
+  Offset32To<ItemVariationStore>
 		varStore;		/* Offset to the table of Item Variation
 					 * Store--from beginning of GDEF
 					 * header (may be NULL).  Introduced
@@ -884,14 +884,14 @@ struct GDEF
     default: return false;
     }
   }
-  const VariationStore &get_var_store () const
+  const ItemVariationStore &get_var_store () const
   {
     switch (u.version.major) {
-    case 1: return u.version.to_int () >= 0x00010003u ? this+u.version1.varStore : Null(VariationStore);
+    case 1: return u.version.to_int () >= 0x00010003u ? this+u.version1.varStore : Null(ItemVariationStore);
 #ifndef HB_NO_BEYOND_64K
     case 2: return this+u.version2.varStore;
 #endif
-    default: return Null(VariationStore);
+    default: return Null(ItemVariationStore);
     }
   }
 
@@ -1011,7 +1011,7 @@ struct GDEF
 				       hb_hashmap_t<unsigned, hb_pair_t<unsigned, int>> *layout_variation_idx_delta_map /* OUT */) const
   {
     if (!has_var_store ()) return;
-    const VariationStore &var_store = get_var_store ();
+    const ItemVariationStore &var_store = get_var_store ();
     float *store_cache = var_store.create_cache ();
     
     unsigned new_major = 0, new_minor = 0;

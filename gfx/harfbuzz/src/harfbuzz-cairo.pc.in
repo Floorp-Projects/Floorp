@@ -8,5 +8,6 @@ Description: HarfBuzz cairo integration
 Version: %VERSION%
 
 Requires: harfbuzz = %VERSION%
+Requires.private: cairo
 Libs: -L${libdir} -lharfbuzz-cairo
 Cflags: -I${includedir}/harfbuzz

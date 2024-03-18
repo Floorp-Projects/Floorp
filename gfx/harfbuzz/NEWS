@@ -1,3 +1,25 @@
+Overview of changes leading to 8.3.1
+Saturday, March 16, 2024
+====================================
+- hb_blob_create_from_file_or_fail() on Windows will now try to interpret the
+  file name as UTF-8 first, and as system code page if it is not valid UTF-8.
+- Fix hb_style_get_value() in fonts with “STAT” table.
+- Properly handle negative offsets in CFF table.
+- Update IANA Language Subtag Registry to 2024-03-07.
+- Subsetter now supports subsetting “BASE” table.
+- Subsetter will update “hhea” font metrics in sync with “OS/2” ones.
+- “--variations” option of “hb-subset” now supports leaving out values that
+  should be unchanged, e.g. “wght=:500:” will change the default and keep max
+  and min unchanged. It also supports “*=drop” to to pin all axes to default
+  location.
+- Fix hb_ot_math_get_glyph_kerning() to match updated “MATH” table spec.
+- Support legacy MacRoman encoding in “cmap” table.
+- Various build fixes.
+- Various subsetting and instancing fixes.
+
+- New API:
+hb_subset_input_pin_all_axes_to_default()
+
 Overview of changes leading to 8.3.0
 Saturday, November 11, 2023
 ====================================
@@ -191,7 +213,7 @@ Saturday, February 11, 2023
 ====================================
 - New hb-paint API that is designed mainly to paint “COLRv1” glyphs, but can be
   also used as a unified API to paint any of the glyph representations
-  supported by HarfBuzz (B/W outlines, color layers, or color bitmaps). 
+  supported by HarfBuzz (B/W outlines, color layers, or color bitmaps).
   (Behdad Esfahbod, Matthias Clasen)
 - New hb-cairo API for integrating with cairo graphics library. This is provided
   as a separate harfbuzz-cairo library. (Behdad Esfahbod, Matthias Clasen)
@@ -202,7 +224,7 @@ Saturday, February 11, 2023
   https://github.com/harfbuzz/boring-expansion-spec/blob/main/glyf1-cubicOutlines.md
   for spec. (Behdad Esfahbod)
 - Various subsetter improvements. (Garret Rieger, Qunxin Liu, Behdad Esfahbod)
-- Various documentation improvements. 
+- Various documentation improvements.
   (Behdad Esfahbod, Matthias Clasen, Khaled Hosny)
 - Significantly reduced memory use during shaping. (Behdad Esfahbod)
 - Greatly reduced memory use during subsetting “CFF” table. (Behdad Esfahbod)
@@ -946,7 +968,7 @@ Tuesday, March 16, 2021
   Previously these were shaped using the generalized Arabic shaper. (David Corbett)
 - Fix regression in shaping of U+0B55 ORIYA SIGN OVERLINE. (David Corbett)
 - Update language tags. (David Corbett)
-- Variations: reduce error: do not round each interpolated delta. (Just van Rossum) 
+- Variations: reduce error: do not round each interpolated delta. (Just van Rossum)
 - Documentation improvements. (Khaled Hosny, Nathan Willis)
 - Subsetter improvements: subsets most, if not all, lookup types now. (Garret Rieger, Qunxin Liu)
 - Fuzzer-found fixes and other improvements when memory failures happen. (Behdad)

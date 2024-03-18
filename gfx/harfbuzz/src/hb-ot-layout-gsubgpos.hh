@@ -708,8 +708,8 @@ struct hb_ot_apply_context_t :
   recurse_func_t recurse_func = nullptr;
   const GDEF &gdef;
   const GDEF::accelerator_t &gdef_accel;
-  const VariationStore &var_store;
-  VariationStore::cache_t *var_store_cache;
+  const ItemVariationStore &var_store;
+  ItemVariationStore::cache_t *var_store_cache;
   hb_set_digest_t digest;
 
   hb_direction_t direction;
@@ -766,7 +766,7 @@ struct hb_ot_apply_context_t :
   ~hb_ot_apply_context_t ()
   {
 #ifndef HB_NO_VAR
-    VariationStore::destroy_cache (var_store_cache);
+    ItemVariationStore::destroy_cache (var_store_cache);
 #endif
   }
 

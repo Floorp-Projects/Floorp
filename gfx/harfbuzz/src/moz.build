@@ -86,6 +86,7 @@ UNIFIED_SOURCES += [
     'hb-shaper.cc',
     'hb-static.cc',
     'hb-style.cc',
+    'hb-subset-instancer-iup.cc',
     'hb-unicode.cc',
     'hb-wasm-api.cc',
     'hb-wasm-shape.cc',
