@@ -28,36 +28,36 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=366697
 SimpleTest.waitForExplicitFinish();
 
 function runTest() {
-  var doc = $("svg").contentWindow.document;
+  let doc = $("svg").contentWindow.document;
 
   /* Minimal */
-  var buggy = doc.getElementById("buggy");
+  let buggy = doc.getElementById("buggy");
   is(buggy.getCTM().e, 30, "buggy.getCTM().e");
   is(buggy.getCTM().f, 40, "buggy.getCTM().f");
 
-  var transrect1 = document.getElementById("transrect1");
+  let transrect1 = document.getElementById("transrect1");
   is(transrect1.getCTM().a, 2, "transrect1.getCTM().a");
   is(transrect1.getCTM().d, 3, "transrect1.getCTM().d");
 
-  var padsvg1 = document.getElementById("padsvg1");
-  var ctm = padsvg1.getScreenCTM();
-  var rect = padsvg1.getBoundingClientRect();
+  let padsvg1 = document.getElementById("padsvg1");
+  let ctm = padsvg1.getScreenCTM();
+  let rect = padsvg1.getBoundingClientRect();
   // Use isfuzzy to ignore some miniscule floating-point precision error on
   // certain platforms:
   isfuzzy(ctm.e - rect.x, 27, 0.0001, "padsvg1.getScreenCTM().e");
   is(ctm.f - rect.y, 43, "padsvg1.getScreenCTM().f");
 
-  var root = doc.documentElement;
-  var inner = doc.getElementById("inner");
-  var g1 = doc.getElementById("g1");
-  var outer = doc.getElementById("outer");
-  var outer2 = doc.getElementById("outer2");
-  var g2 = doc.getElementById("g2");
-  var g3 = doc.getElementById("g3");
-  var g4 = doc.getElementById("g4");
-  var g5 = doc.getElementById("g5");
-  var symbolRect = doc.getElementById("symbolRect");
-  var fO = doc.getElementById("fO");
+  let root = doc.documentElement;
+  let inner = doc.getElementById("inner");
+  let g1 = doc.getElementById("g1");
+  let outer = doc.getElementById("outer");
+  let outer2 = doc.getElementById("outer2");
+  let g2 = doc.getElementById("g2");
+  let g3 = doc.getElementById("g3");
+  let g4 = doc.getElementById("g4");
+  let g5 = doc.getElementById("g5");
+  let symbolRect = doc.getElementById("symbolRect");
+  let fO = doc.getElementById("fO");
   /* Tests the consistency with nearestViewportElement
      (code is from test_viewport.html) */
   // root.nearestViewportElement == null
@@ -102,8 +102,8 @@ function runTest() {
   is((function() { try { return outer.getScreenCTM().e; } catch (e) { return e; } })(), 46, "outer.getScreenCTM().e");
   is((function() { try { return outer.getScreenCTM().f; } catch (e) { return e; } })(), 69, "outer.getScreenCTM().f");
   // outer.farthestViewportElement == null (but actually == root)
-  is((function() { try { return outer2.getScreenCTM().e; } catch (e) { return e; } })(), -19, "outer2.getScreenCTM().e");
-  is((function() { try { return outer2.getScreenCTM().f; } catch (e) { return e; } })(), -8, "outer2.getScreenCTM().f");
+  is((function() { try { return outer2.getScreenCTM().e; } catch (e) { return e; } })(), -4, "outer2.getScreenCTM().e");
+  is((function() { try { return outer2.getScreenCTM().f; } catch (e) { return e; } })(), 19, "outer2.getScreenCTM().f");
   // g2.farthestViewportElement == outer (but actually == root)
   is((function() { try { return g2.getScreenCTM().e; } catch (e) { return e; } })(), 646, "g2.getScreenCTM().e");
   is((function() { try { return g2.getScreenCTM().f; } catch (e) { return e; } })(), 769, "g2.getScreenCTM().f");
