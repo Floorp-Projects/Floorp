@@ -1035,6 +1035,32 @@ if (IsCSSPropertyPrefEnabled("layout.css.basic-shape-rect.enabled")) {
   );
 }
 
+var basicShapeShapeValues = [];
+if (IsCSSPropertyPrefEnabled("layout.css.basic-shape-shape.enabled")) {
+  basicShapeShapeValues.push(
+    "shape(evenodd from 0px 0px, line to 10px 10px)",
+    "shape(nonzero from 0px 0px, line to 10px 10px)",
+    "shape(from 0px 0%, line to 10px 10%)",
+    "shape(from 10px 10px, move by 10px 5px, line by 20px 40%, close)",
+    "shape(from 10px 10px, hline by 10px, vline to 5rem)",
+    "shape(from 10px 10px, vline by 5%, hline to 1vw)",
+    "shape(from 10px 10px, curve to 50px 20px via 10rem 1%)",
+    "shape(from 10px 10px, smooth to 50px 20px via 10rem 1%)",
+    "shape(from 10% 1rem, arc to 50px 1pt of 20% cw large rotate 25deg)"
+  );
+
+  // It's fine to include this for properties which don't support shape(),
+  // e.g. shape-outside, because they must reject these values.
+  basicShapeInvalidValues.push(
+    "shape()",
+    "shape(evenodd, from 0px 0px)",
+    "shape(from 0px 0px line to 10px 10px)",
+    "shape(from 0px 0px)",
+    "shape(close)",
+    "shape(nonzero, close)"
+  );
+}
+
 if (/* mozGradientsEnabled */ true) {
   // Maybe one day :(
   // Extend gradient lists with valid/invalid moz-prefixed expressions:
@@ -8827,7 +8853,8 @@ var gCSSProperties = {
       .concat(basicShapeSVGBoxValues)
       .concat(basicShapeOtherValues)
       .concat(basicShapeOtherValuesWithFillRule)
-      .concat(basicShapeXywhRectValues),
+      .concat(basicShapeXywhRectValues)
+      .concat(basicShapeShapeValues),
     invalid_values: [
       "path(nonzero)",
       "path(abs, 'M 10 10 L 10 10 z')",

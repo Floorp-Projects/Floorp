@@ -7,6 +7,7 @@
 //!
 //! [basic-shape]: https://drafts.csswg.org/css-shapes/#typedef-basic-shape
 
+use crate::values::computed::angle::Angle;
 use crate::values::computed::url::ComputedUrl;
 use crate::values::computed::{Image, LengthPercentage, NonNegativeLengthPercentage, Position};
 use crate::values::generics::basic_shape as generic;
@@ -21,8 +22,13 @@ pub type ClipPath = generic::GenericClipPath<BasicShape, ComputedUrl>;
 pub type ShapeOutside = generic::GenericShapeOutside<BasicShape, Image>;
 
 /// A computed basic shape.
-pub type BasicShape =
-    generic::GenericBasicShape<Position, LengthPercentage, NonNegativeLengthPercentage, InsetRect>;
+pub type BasicShape = generic::GenericBasicShape<
+    Angle,
+    Position,
+    LengthPercentage,
+    NonNegativeLengthPercentage,
+    InsetRect,
+>;
 
 /// The computed value of `inset()`.
 pub type InsetRect = generic::GenericInsetRect<LengthPercentage, NonNegativeLengthPercentage>;
@@ -35,3 +41,9 @@ pub type Ellipse = generic::Ellipse<Position, NonNegativeLengthPercentage>;
 
 /// The computed value of `ShapeRadius`.
 pub type ShapeRadius = generic::GenericShapeRadius<NonNegativeLengthPercentage>;
+
+/// The computed value of `shape()`.
+pub type Shape = generic::Shape<Angle, LengthPercentage>;
+
+/// The computed value of `ShapeCommand`.
+pub type ShapeCommand = generic::GenericShapeCommand<Angle, LengthPercentage>;

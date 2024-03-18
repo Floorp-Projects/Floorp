@@ -123,6 +123,9 @@ already_AddRefed<Path> CSSClipPathInstance::CreateClipPath(
       return CreateClipPathInset(aDrawTarget, r);
     case StyleBasicShape::Tag::Path:
       return CreateClipPathPath(aDrawTarget, r);
+    case StyleBasicShape::Tag::Shape:
+      // TODO: Support shape() in this patch series.
+      return nullptr;
     default:
       MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unexpected shape type");
   }
