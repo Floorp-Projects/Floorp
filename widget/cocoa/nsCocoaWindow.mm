@@ -66,15 +66,6 @@ using namespace mozilla::layers;
 using namespace mozilla::widget;
 using namespace mozilla;
 
-int32_t gXULModalLevel = 0;
-
-// In principle there should be only one app-modal window at any given time.
-// But sometimes, despite our best efforts, another window appears above the
-// current app-modal window.  So we need to keep a linked list of app-modal
-// windows.  (A non-sheet window that appears above an app-modal window is
-// also made app-modal.)  See nsCocoaWindow::SetModal().
-nsCocoaWindowList* gGeckoAppModalWindowList = NULL;
-
 BOOL sTouchBarIsInitialized = NO;
 
 // defined in nsMenuBarX.mm
@@ -82,6 +73,8 @@ extern NSMenu* sApplicationMenu;  // Application menu shared by all menubars
 
 // defined in nsChildView.mm
 extern BOOL gSomeMenuBarPainted;
+
+static uint32_t sModalWindowCount = 0;
 
 extern "C" {
 // CGSPrivate.h
@@ -143,20 +136,10 @@ nsCocoaWindow::nsCocoaWindow()
       mInNativeFullScreenMode(false),
       mIgnoreOcclusionCount(0),
       mHasStartedNativeFullscreen(false),
-      mModal(false),
-      mFakeModal(false),
-      mIsAnimationSuppressed(false),
-      mInReportMoveEvent(false),
-      mInResize(false),
-      mWindowTransformIsIdentity(true),
-      mAlwaysOnTop(false),
-      mAspectRatioLocked(false),
-      mNumModalDescendents(0),
-      mWindowAnimationBehavior(NSWindowAnimationBehaviorDefault),
-      mWasShown(false) {
+      mWindowAnimationBehavior(NSWindowAnimationBehaviorDefault) {
   // Disable automatic tabbing. We need to do this before we
   // orderFront any of our windows.
-  [NSWindow setAllowsAutomaticWindowTabbing:NO];
+  NSWindow.allowsAutomaticWindowTabbing = NO;
 }
 
 void nsCocoaWindow::DestroyNativeWindow() {
@@ -214,14 +197,6 @@ nsCocoaWindow::~nsCocoaWindow() {
   }
 
   NS_IF_RELEASE(mPopupContentView);
-
-  // Deal with the possiblity that we're being destroyed while running modal.
-  if (mModal) {
-    NS_WARNING("Widget destroyed while running modal!");
-    --gXULModalLevel;
-    NS_ASSERTION(gXULModalLevel >= 0, "Weirdness setting modality!");
-  }
-
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
@@ -589,14 +564,14 @@ nsresult nsCocoaWindow::CreatePopupContentView(const LayoutDeviceIntRect& aRect,
 }
 
 void nsCocoaWindow::Destroy() {
-  if (mOnDestroyCalled) return;
+  if (mOnDestroyCalled) {
+    return;
+  }
   mOnDestroyCalled = true;
 
-  // SetFakeModal(true) is called for non-modal window opened by modal window.
-  // On Cocoa, it needs corresponding SetFakeModal(false) on destroy to restore
-  // ancestor windows' state.
-  if (mFakeModal) {
-    SetFakeModal(false);
+  // Deal with the possiblity that we're being destroyed while running modal.
+  if (mModal) {
+    SetModal(false);
   }
 
   // If we don't hide here we run into problems with panels, this is not ideal.
@@ -687,8 +662,12 @@ bool nsCocoaWindow::IsVisible() const {
   NS_OBJC_END_TRY_BLOCK_RETURN(false);
 }
 
-void nsCocoaWindow::SetModal(bool aState) {
+void nsCocoaWindow::SetModal(bool aModal) {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
+
+  if (mModal == aModal) {
+    return;
+  }
 
   // Unlike many functions here, we explicitly *do not check* for the
   // existence of mWindow. This is to ensure that calls to SetModal have
@@ -706,73 +685,45 @@ void nsCocoaWindow::SetModal(bool aState) {
   // objects leaking.
   nsAutoreleasePool localPool;
 
-  mModal = aState;
-  auto* ancestor = static_cast<nsCocoaWindow*>(mAncestorLink);
-  if (aState) {
-    ++gXULModalLevel;
-    // When a non-sheet window gets "set modal", make the window(s) that it
-    // appears over behave as they should.  We can't rely on native methods to
-    // do this, for the following reason:  The OS runs modal non-sheet windows
-    // in an event loop (using [NSApplication runModalForWindow:] or similar
-    // methods) that's incompatible with the modal event loop in AppWindow::
-    // ShowModal() (each of these event loops is "exclusive", and can't run at
-    // the same time as other (similar) event loops).
-    while (ancestor) {
-      if (ancestor->mNumModalDescendents++ == 0) {
-        NSWindow* aWindow = ancestor->GetCocoaWindow();
-        if (ancestor->mWindowType != WindowType::Invisible) {
-          [[aWindow standardWindowButton:NSWindowCloseButton] setEnabled:NO];
-          [[aWindow standardWindowButton:NSWindowMiniaturizeButton]
-              setEnabled:NO];
-          [[aWindow standardWindowButton:NSWindowZoomButton] setEnabled:NO];
-        }
-      }
-      ancestor = static_cast<nsCocoaWindow*>(ancestor->mParent);
-    }
-    [mWindow setLevel:NSModalPanelWindowLevel];
-    nsCocoaWindowList* windowList = new nsCocoaWindowList;
-    windowList->window = this;  // Don't ADDREF
-    windowList->prev = gGeckoAppModalWindowList;
-    gGeckoAppModalWindowList = windowList;
+  mModal = aModal;
+
+  if (aModal) {
+    sModalWindowCount++;
   } else {
-    --gXULModalLevel;
-    NS_ASSERTION(gXULModalLevel >= 0,
-                 "Mismatched call to nsCocoaWindow::SetModal(false)!");
-    while (ancestor) {
-      if (--ancestor->mNumModalDescendents == 0) {
-        NSWindow* aWindow = ancestor->GetCocoaWindow();
-        if (ancestor->mWindowType != WindowType::Invisible) {
-          [[aWindow standardWindowButton:NSWindowCloseButton] setEnabled:YES];
-          [[aWindow standardWindowButton:NSWindowMiniaturizeButton]
-              setEnabled:YES];
-          [[aWindow standardWindowButton:NSWindowZoomButton] setEnabled:YES];
-        }
-      }
-      NS_ASSERTION(ancestor->mNumModalDescendents >= 0,
-                   "Widget hierarchy changed while modal!");
-      ancestor = static_cast<nsCocoaWindow*>(ancestor->mParent);
+    MOZ_ASSERT(sModalWindowCount);
+    sModalWindowCount--;
+  }
+
+  // When a window gets "set modal", make the window(s) that it appears over
+  // behave as they should.  We can't rely on native methods to do this, for the
+  // following reason:  The OS runs modal non-sheet windows in an event loop
+  // (using [NSApplication runModalForWindow:] or similar methods) that's
+  // incompatible with the modal event loop in AppWindow::ShowModal() (each of
+  // these event loops is "exclusive", and can't run at the same time as other
+  // (similar) event loops).
+  for (auto* ancestor = static_cast<nsCocoaWindow*>(mAncestorLink); ancestor;
+       ancestor = static_cast<nsCocoaWindow*>(ancestor->mParent)) {
+    const bool changed = aModal ? ancestor->mNumModalDescendants++ == 0
+                                : --ancestor->mNumModalDescendants == 0;
+    NS_ASSERTION(ancestor->mNumModalDescendants >= 0,
+                 "Widget hierarchy changed while modal!");
+    if (!changed || ancestor->mWindowType == WindowType::Invisible) {
+      continue;
     }
-    NS_ASSERTION(gGeckoAppModalWindowList, "No modal window list?");
-    if (gGeckoAppModalWindowList) {
-      NS_ASSERTION(gGeckoAppModalWindowList->window == this,
-                   "Widget hierarchy changed while modal!");
-      nsCocoaWindowList* saved = gGeckoAppModalWindowList;
-      gGeckoAppModalWindowList = gGeckoAppModalWindowList->prev;
-      delete saved;  // "window" not ADDREFed
-    }
-    if (mWindowType == WindowType::Popup) {
-      SetPopupWindowLevel();
-    } else {
-      mWindow.level = NSNormalWindowLevel;
-    }
+    NSWindow* win = ancestor->GetCocoaWindow();
+    [[win standardWindowButton:NSWindowCloseButton] setEnabled:!aModal];
+    [[win standardWindowButton:NSWindowMiniaturizeButton] setEnabled:!aModal];
+    [[win standardWindowButton:NSWindowZoomButton] setEnabled:!aModal];
+  }
+  if (aModal) {
+    mWindow.level = NSModalPanelWindowLevel;
+  } else if (mWindowType == WindowType::Popup) {
+    SetPopupWindowLevel();
+  } else {
+    mWindow.level = NSNormalWindowLevel;
   }
 
   NS_OBJC_END_TRY_IGNORE_BLOCK;
-}
-
-void nsCocoaWindow::SetFakeModal(bool aState) {
-  mFakeModal = aState;
-  SetModal(aState);
 }
 
 bool nsCocoaWindow::IsRunningAppModal() { return [NSApp _isRunningAppModal]; }
@@ -3615,6 +3566,42 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
 }
 @end
 
+// Drop all mouse events if a modal window has appeared above us.
+// This helps make us behave as if the OS were running a "real" modal event
+// loop.
+static bool MaybeDropEventForModalWindow(NSEvent* aEvent, id aDelegate) {
+  if (!sModalWindowCount) {
+    return false;
+  }
+
+  NSEventType type = [aEvent type];
+  switch (type) {
+    case NSEventTypeScrollWheel:
+    case NSEventTypeLeftMouseDown:
+    case NSEventTypeLeftMouseUp:
+    case NSEventTypeRightMouseDown:
+    case NSEventTypeRightMouseUp:
+    case NSEventTypeOtherMouseDown:
+    case NSEventTypeOtherMouseUp:
+    case NSEventTypeMouseMoved:
+    case NSEventTypeLeftMouseDragged:
+    case NSEventTypeRightMouseDragged:
+    case NSEventTypeOtherMouseDragged:
+      break;
+    default:
+      return false;
+  }
+
+  if (aDelegate && [aDelegate isKindOfClass:[WindowDelegate class]]) {
+    if (nsCocoaWindow* widget = [(WindowDelegate*)aDelegate geckoWidget]) {
+      if (!widget->IsModal() || widget->HasModalDescendants()) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 // This class allows us to exercise control over the window's title bar. It is
 // used for all windows with titlebars.
 //
@@ -3971,42 +3958,9 @@ static bool ShouldShiftByMenubarHeightInFullscreen(nsCocoaWindow* aWindow) {
 }
 
 - (void)sendEvent:(NSEvent*)anEvent {
-  NSEventType type = [anEvent type];
-
-  switch (type) {
-    case NSEventTypeScrollWheel:
-    case NSEventTypeLeftMouseDown:
-    case NSEventTypeLeftMouseUp:
-    case NSEventTypeRightMouseDown:
-    case NSEventTypeRightMouseUp:
-    case NSEventTypeOtherMouseDown:
-    case NSEventTypeOtherMouseUp:
-    case NSEventTypeMouseMoved:
-    case NSEventTypeLeftMouseDragged:
-    case NSEventTypeRightMouseDragged:
-    case NSEventTypeOtherMouseDragged: {
-      // Drop all mouse events if a modal window has appeared above us.
-      // This helps make us behave as if the OS were running a "real" modal
-      // event loop.
-      id delegate = self.delegate;
-      if (delegate && [delegate isKindOfClass:[WindowDelegate class]]) {
-        nsCocoaWindow* widget = [(WindowDelegate*)delegate geckoWidget];
-        if (widget) {
-          if (gGeckoAppModalWindowList &&
-              widget != gGeckoAppModalWindowList->window) {
-            return;
-          }
-          if (widget->HasModalDescendents()) {
-            return;
-          }
-        }
-      }
-      break;
-    }
-    default:
-      break;
+  if (MaybeDropEventForModalWindow(anEvent, self.delegate)) {
+    return;
   }
-
   [super sendEvent:anEvent];
 }
 
@@ -4106,40 +4060,8 @@ static const NSUInteger kWindowShadowOptionsTooltip = 4;
 }
 
 - (void)sendEvent:(NSEvent*)anEvent {
-  NSEventType type = [anEvent type];
-
-  switch (type) {
-    case NSEventTypeScrollWheel:
-    case NSEventTypeLeftMouseDown:
-    case NSEventTypeLeftMouseUp:
-    case NSEventTypeRightMouseDown:
-    case NSEventTypeRightMouseUp:
-    case NSEventTypeOtherMouseDown:
-    case NSEventTypeOtherMouseUp:
-    case NSEventTypeMouseMoved:
-    case NSEventTypeLeftMouseDragged:
-    case NSEventTypeRightMouseDragged:
-    case NSEventTypeOtherMouseDragged: {
-      // Drop all mouse events if a modal window has appeared above us.
-      // This helps make us behave as if the OS were running a "real" modal
-      // event loop.
-      id delegate = self.delegate;
-      if (delegate && [delegate isKindOfClass:[WindowDelegate class]]) {
-        nsCocoaWindow* widget = [(WindowDelegate*)delegate geckoWidget];
-        if (widget) {
-          if (gGeckoAppModalWindowList &&
-              widget != gGeckoAppModalWindowList->window) {
-            return;
-          }
-          if (widget->HasModalDescendents()) {
-            return;
-          }
-        }
-      }
-      break;
-    }
-    default:
-      break;
+  if (MaybeDropEventForModalWindow(anEvent, self.delegate)) {
+    return;
   }
 
   [super sendEvent:anEvent];

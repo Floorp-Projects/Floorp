@@ -668,12 +668,6 @@ class nsIWidget : public nsISupports {
   virtual void SetModal(bool aModal) = 0;
 
   /**
-   * Make the non-modal window opened by modal window fake-modal, that will
-   * call SetFakeModal(false) on destroy on Cocoa.
-   */
-  virtual void SetFakeModal(bool aModal) { SetModal(aModal); }
-
-  /**
    * Are we app modal. Currently only implemented on Cocoa.
    */
   virtual bool IsRunningAppModal() { return false; }

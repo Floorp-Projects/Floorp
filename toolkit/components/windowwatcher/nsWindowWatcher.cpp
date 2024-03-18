@@ -1431,7 +1431,7 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     }
     if (parentWidget &&
         ((!newWindowShouldBeModal && parentIsModal) || isAppModal)) {
-      parentWidget->SetFakeModal(true);
+      parentWidget->SetModal(true);
     } else {
       // Reset popup state while opening a modal dialog, and firing
       // events about the dialog, to prevent the current state from
