@@ -938,7 +938,7 @@ impl VertexUsageHint {
 }
 
 #[derive(Copy, Clone, Debug)]
-pub struct UniformLocation(gl::GLint);
+pub struct UniformLocation(#[allow(dead_code)] gl::GLint);
 
 impl UniformLocation {
     pub const INVALID: Self = UniformLocation(-1);

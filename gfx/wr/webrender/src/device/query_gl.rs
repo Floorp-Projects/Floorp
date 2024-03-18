@@ -313,6 +313,6 @@ impl Drop for GpuMarker {
 }
 
 #[must_use]
-pub struct GpuTimeQuery(GpuMarker);
+pub struct GpuTimeQuery(#[allow(dead_code)] GpuMarker);
 #[must_use]
 pub struct GpuSampleQuery;
