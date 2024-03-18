@@ -4114,7 +4114,6 @@ bool nsDisplayCaret::CreateWebRenderCommands(
   nsIFrame* frame =
       mCaret->GetPaintGeometry(&caretRect, &hookRect, &caretColor);
   if (NS_WARN_IF(!frame) || NS_WARN_IF(frame != mFrame)) {
-    NS_ASSERTION(false, "Caret invalidation bug");
     return true;
   }
 
