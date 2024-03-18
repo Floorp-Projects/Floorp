@@ -344,12 +344,14 @@ void js::Nursery::enable() {
 
 bool js::Nursery::initFirstChunk(AutoLockGCBgAlloc& lock) {
   MOZ_ASSERT(!isEnabled());
+  MOZ_ASSERT(toSpace.chunks_.length() == 0);
+  MOZ_ASSERT(fromSpace.chunks_.length() == 0);
 
   setCapacity(minSpaceSize());
 
   size_t nchunks = toSpace.maxChunkCount_ + fromSpace.maxChunkCount_;
   if (!decommitTask->reserveSpaceForChunks(nchunks) ||
-      !allocateNextChunk(0, lock)) {
+      !allocateNextChunk(lock)) {
     setCapacity(0);
     return false;
   }
@@ -642,7 +644,7 @@ bool Nursery::moveToNextChunk() {
     TimeStamp start = TimeStamp::Now();
     {
       AutoLockGCBgAlloc lock(gc);
-      if (!allocateNextChunk(chunkno, lock)) {
+      if (!allocateNextChunk(lock)) {
         return false;
       }
     }
@@ -1838,28 +1840,38 @@ MOZ_ALWAYS_INLINE void js::Nursery::setCurrentEnd() {
   MOZ_ASSERT(currentEnd() != chunk(currentChunk()).start());
 }
 
-bool js::Nursery::allocateNextChunk(const unsigned chunkno,
-                                    AutoLockGCBgAlloc& lock) {
-  const unsigned priorCount = allocatedChunkCount();
+bool js::Nursery::allocateNextChunk(AutoLockGCBgAlloc& lock) {
+  // Allocate a new nursery chunk. If semispace collection is enabled, we have
+  // to allocate one for both spaces.
+
+  const unsigned priorCount = toSpace.chunks_.length();
   const unsigned newCount = priorCount + 1;
 
-  MOZ_ASSERT((chunkno == currentChunk() + 1) ||
-             (chunkno == 0 && allocatedChunkCount() == 0));
-  MOZ_ASSERT(chunkno == allocatedChunkCount());
-  MOZ_ASSERT(chunkno < HowMany(capacity(), ChunkSize));
+  MOZ_ASSERT(newCount <= maxChunkCount());
+  MOZ_ASSERT(fromSpace.chunks_.length() ==
+             (semispaceEnabled_ ? priorCount : 0));
 
-  if (!toSpace.chunks_.resize(newCount)) {
+  if (!toSpace.chunks_.reserve(newCount) ||
+      (semispaceEnabled_ && !fromSpace.chunks_.reserve(newCount))) {
     return false;
   }
 
-  TenuredChunk* newChunk;
-  newChunk = gc->getOrAllocChunk(lock);
-  if (!newChunk) {
-    toSpace.chunks_.shrinkTo(priorCount);
+  TenuredChunk* toSpaceChunk = gc->getOrAllocChunk(lock);
+  if (!toSpaceChunk) {
     return false;
   }
 
-  toSpace.chunks_[chunkno] = NurseryChunk::fromChunk(newChunk);
+  TenuredChunk* fromSpaceChunk = nullptr;
+  if (semispaceEnabled_ && !(fromSpaceChunk = gc->getOrAllocChunk(lock))) {
+    gc->recycleChunk(toSpaceChunk, lock);
+    return false;
+  }
+
+  toSpace.chunks_.infallibleAppend(NurseryChunk::fromChunk(toSpaceChunk));
+  if (semispaceEnabled_) {
+    fromSpace.chunks_.infallibleAppend(NurseryChunk::fromChunk(fromSpaceChunk));
+  }
+
   return true;
 }
 
