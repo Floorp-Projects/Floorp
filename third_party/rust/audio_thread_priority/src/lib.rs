@@ -647,6 +647,15 @@ mod tests {
             // automatically deallocated, but not demoted until the thread exits.
         }
     }
+
+    #[test]
+    fn it_works_in_different_threads() {
+        let handles: Vec<_> = (0..32).map(|_| std::thread::spawn(it_works)).collect();
+        for handle in handles {
+            handle.join().unwrap()
+        }
+    }
+
     cfg_if! {
         if #[cfg(target_os = "linux")] {
             use nix::unistd::*;

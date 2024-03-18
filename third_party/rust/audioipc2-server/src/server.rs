@@ -16,7 +16,7 @@ use audioipc::{ipccore, rpccore, sys, PlatformHandle};
 use cubeb::InputProcessingParams;
 use cubeb_core as cubeb;
 use cubeb_core::ffi;
-use std::convert::{From, TryInto};
+use std::convert::TryInto;
 use std::ffi::CStr;
 use std::mem::size_of;
 use std::os::raw::{c_long, c_void};

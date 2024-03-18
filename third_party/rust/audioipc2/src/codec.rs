@@ -10,7 +10,7 @@
 // This should be fixed in Rust 1.68, after which the following `allow` can be deleted.
 #![allow(clippy::uninlined_format_args)]
 
-use bincode::{self, Options};
+use bincode::Options;
 use byteorder::{ByteOrder, LittleEndian};
 use bytes::{Buf, BufMut, BytesMut};
 use serde::de::DeserializeOwned;

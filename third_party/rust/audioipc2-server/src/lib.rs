@@ -35,8 +35,8 @@ static G_CUBEB_CONTEXT_PARAMS: Lazy<Mutex<CubebContextParams>> = Lazy::new(|| {
 });
 
 #[allow(deprecated)]
+#[allow(clippy::upper_case_acronyms)]
 pub mod errors {
-    #![allow(clippy::upper_case_acronyms)]
     error_chain! {
         links {
             AudioIPC(::audioipc::errors::Error, ::audioipc::errors::ErrorKind);
@@ -159,7 +159,7 @@ pub unsafe extern "C" fn audioipc2_server_start(
     assert!(!init_params.is_null());
     let mut params = G_CUBEB_CONTEXT_PARAMS.lock().unwrap();
     if !context_name.is_null() {
-        params.context_name = CStr::from_ptr(context_name).to_owned();
+        CStr::from_ptr(context_name).clone_into(&mut params.context_name);
     }
     if !backend_name.is_null() {
         let backend_string = CStr::from_ptr(backend_name).to_owned();
