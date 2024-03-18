@@ -11,12 +11,6 @@ with Files("**"):
 with Files("*TextInput*"):
     BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
 
-XPIDL_SOURCES += [
-    "nsPIWidgetCocoa.idl",
-]
-
-XPIDL_MODULE = "widget_cocoa"
-
 EXPORTS += [
     "DesktopBackgroundImage.h",
     "MediaHardwareKeysEventSourceMac.h",

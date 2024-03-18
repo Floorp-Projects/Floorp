@@ -11708,8 +11708,7 @@ static bool IsTopLevelWidget(nsIWidget* aWidget) {
 
   auto windowType = aWidget->GetWindowType();
   return windowType == WindowType::TopLevel ||
-         windowType == WindowType::Dialog || windowType == WindowType::Popup ||
-         windowType == WindowType::Sheet;
+         windowType == WindowType::Dialog || windowType == WindowType::Popup;
 }
 
 PresShell::WindowSizeConstraints PresShell::GetWindowSizeConstraints() {

@@ -1730,19 +1730,21 @@ static LayoutDeviceIntRect FindFirstRectOfType(
 
 void nsChildView::UpdateThemeGeometries(
     const nsTArray<ThemeGeometry>& aThemeGeometries) {
-  if (![mView window]) return;
+  if (!mView.window) {
+    return;
+  }
 
   UpdateVibrancy(aThemeGeometries);
 
-  if (![[mView window] isKindOfClass:[ToolbarWindow class]]) return;
+  if (![mView.window isKindOfClass:[ToolbarWindow class]]) {
+    return;
+  }
 
   // Update unified toolbar height and sheet attachment position.
   int32_t windowWidth = mBounds.width;
   int32_t titlebarBottom = FindTitlebarBottom(aThemeGeometries, windowWidth);
   int32_t unifiedToolbarBottom =
       FindUnifiedToolbarBottom(aThemeGeometries, windowWidth, titlebarBottom);
-  int32_t toolboxBottom =
-      FindFirstRectOfType(aThemeGeometries, eThemeGeometryTypeToolbox).YMost();
 
   ToolbarWindow* win = (ToolbarWindow*)[mView window];
   int32_t titlebarHeight = [win drawsContentsIntoWindowFrame]
@@ -1750,12 +1752,6 @@ void nsChildView::UpdateThemeGeometries(
                                : CocoaPointsToDevPixels([win titlebarHeight]);
   int32_t devUnifiedHeight = titlebarHeight + unifiedToolbarBottom;
   [win setUnifiedToolbarHeight:DevPixelsToCocoaPoints(devUnifiedHeight)];
-
-  int32_t sheetPositionDevPx = std::max(toolboxBottom, unifiedToolbarBottom);
-  NSPoint sheetPositionView = {0, DevPixelsToCocoaPoints(sheetPositionDevPx)};
-  NSPoint sheetPositionWindow = [mView convertPoint:sheetPositionView
-                                             toView:nil];
-  [win setSheetAttachmentPosition:sheetPositionWindow.y];
 
   // Update titlebar control offsets.
   LayoutDeviceIntRect windowButtonRect =
@@ -5129,18 +5125,12 @@ BOOL ChildViewMouseTracker::WindowAcceptsEvent(NSWindow* aWindow,
 
     case WindowType::TopLevel:
     case WindowType::Dialog:
-      if ([aWindow attachedSheet]) return NO;
+      if (aWindow.attachedSheet) {
+        return NO;
+      }
 
       topLevelWindow = aWindow;
       break;
-    case WindowType::Sheet: {
-      nsIWidget* parentWidget = windowWidget->GetSheetWindowParent();
-      if (!parentWidget) return YES;
-
-      topLevelWindow = (NSWindow*)parentWidget->GetNativeData(NS_NATIVE_WINDOW);
-      break;
-    }
-
     default:
       return YES;
   }
