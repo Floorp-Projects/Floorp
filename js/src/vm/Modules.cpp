@@ -364,7 +364,8 @@ static bool ModuleResolveExport(JSContext* cx, Handle<ModuleObject*> module,
 static bool SyntheticModuleResolveExport(JSContext* cx,
                                          Handle<ModuleObject*> module,
                                          Handle<JSAtom*> exportName,
-                                         MutableHandle<Value> result);
+                                         MutableHandle<Value> result,
+                                         ModuleErrorInfo* errorInfoOut);
 static ModuleNamespaceObject* ModuleNamespaceCreate(
     JSContext* cx, Handle<ModuleObject*> module,
     MutableHandle<UniquePtr<ExportNameVector>> exports);
@@ -581,7 +582,8 @@ bool js::ModuleResolveExport(JSContext* cx, Handle<ModuleObject*> module,
                              MutableHandle<Value> result,
                              ModuleErrorInfo* errorInfoOut = nullptr) {
   if (module->hasSyntheticModuleFields()) {
-    return ::SyntheticModuleResolveExport(cx, module, exportName, result);
+    return ::SyntheticModuleResolveExport(cx, module, exportName, result,
+                                          errorInfoOut);
   }
 
   // Step 1. If resolveSet is not present, set resolveSet to a new empty List.
@@ -778,10 +780,14 @@ static bool ModuleResolveExport(JSContext* cx, Handle<ModuleObject*> module,
 static bool SyntheticModuleResolveExport(JSContext* cx,
                                          Handle<ModuleObject*> module,
                                          Handle<JSAtom*> exportName,
-                                         MutableHandle<Value> result) {
+                                         MutableHandle<Value> result,
+                                         ModuleErrorInfo* errorInfoOut) {
   // Step 2. If module.[[ExportNames]] does not contain exportName, return null.
   if (!ContainsElement(module->syntheticExportNames(), exportName)) {
     result.setNull();
+    if (errorInfoOut) {
+      errorInfoOut->setImportedModule(cx, module);
+    }
     return true;
   }
 
