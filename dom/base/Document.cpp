@@ -12537,14 +12537,6 @@ void Document::UpdateDocumentStates(DocumentState aMaybeChangedStates,
     }
   }
 
-  if (aMaybeChangedStates.HasAtLeastOneOfStates(DocumentState::LWTHEME)) {
-    if (ComputeDocumentLWTheme()) {
-      mState |= DocumentState::LWTHEME;
-    } else {
-      mState &= ~DocumentState::LWTHEME;
-    }
-  }
-
   if (aMaybeChangedStates.HasState(DocumentState::WINDOW_INACTIVE)) {
     BrowsingContext* bc = GetBrowsingContext();
     if (!bc || !bc->GetIsActiveBrowserWindow()) {
@@ -16556,16 +16548,6 @@ void Document::SetStateObject(nsIStructuredCloneContainer* scContainer) {
   mStateObjectContainer = scContainer;
   mCachedStateObject = JS::UndefinedValue();
   mCachedStateObjectValid = false;
-}
-
-bool Document::ComputeDocumentLWTheme() const {
-  if (!NodePrincipal()->IsSystemPrincipal()) {
-    return false;
-  }
-
-  Element* element = GetRootElement();
-  return element && element->AttrValueIs(kNameSpaceID_None, nsGkAtoms::lwtheme,
-                                         nsGkAtoms::_true, eCaseMatters);
 }
 
 already_AddRefed<Element> Document::CreateHTMLElement(nsAtom* aTag) {

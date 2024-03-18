@@ -8,12 +8,13 @@
   --download-progress-fill-color: AccentColor;
   --download-progress-paused-color: GrayText;
   --download-progress-flare-color: rgba(255,255,255,0.75);
-}
-
-/* download progress bar is used in contexts which are not LightweightThemeConsumers and
-   do not get the lwt- theme variables. So we duplicate the fallbacks here. */
-:root:-moz-lwtheme {
-  --download-progress-fill-color: var(--lwt-toolbarbutton-icon-fill-attention, light-dark(rgb(0, 97, 224), rgb(0, 221, 255)));
+  &[lwtheme] {
+    /* download progress bar is used in contexts which are not LightweightThemeConsumers and
+       do not get the lwt- theme variables. So we duplicate the fallbacks here.
+       FIXME(emilio): But then how do we get the lwtheme attribute? I think the
+       above makes no sense */
+    --download-progress-fill-color: var(--lwt-toolbarbutton-icon-fill-attention, light-dark(rgb(0, 97, 224), rgb(0, 221, 255)));
+  }
 }
 
 @media (prefers-color-scheme: dark) {

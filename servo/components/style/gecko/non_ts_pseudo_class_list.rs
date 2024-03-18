@@ -98,7 +98,6 @@ macro_rules! apply_non_ts_list {
                 // media query results are more expensive than document state changes. So for now
                 // making them pseudo-classes is probably the right trade-off.
                 ("-moz-is-html", MozIsHTML, _, PSEUDO_CLASS_ENABLED_IN_UA_SHEETS),
-                ("-moz-lwtheme", MozLWTheme, _, PSEUDO_CLASS_ENABLED_IN_UA_SHEETS_AND_CHROME),
                 ("-moz-window-inactive", MozWindowInactive, _, _),
             ]
         }

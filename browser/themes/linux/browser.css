@@ -16,7 +16,7 @@
  * disabling the toolbar field border and backgrounds.
  */
 @media not (prefers-contrast) {
-  :root:not(:-moz-lwtheme) {
+  :root:not([lwtheme]) {
     --toolbar-field-border-color: transparent;
 
     /* These colors don't exactly match the default dark color that buttons and
@@ -237,7 +237,7 @@
   @media (-moz-bool-pref: "widget.gtk.non-native-titlebar-buttons.enabled") {
     /* When using lightweight themes, use our own buttons since native ones might
      * assume a native background in order to be visible. */
-    &:-moz-lwtheme {
+    :root[lwtheme] & {
       padding-inline: 3px;
 
       > .toolbarbutton-icon {

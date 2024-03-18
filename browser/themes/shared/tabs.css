@@ -19,7 +19,7 @@
   --tab-block-margin: 4px;
 
   --tab-attention-icon-color: AccentColor;
-  &:-moz-lwtheme {
+  &[lwtheme] {
     --tab-attention-icon-color: light-dark(rgb(42, 195, 162), rgb(84, 255, 189));
   }
 
@@ -474,8 +474,8 @@
 }
 
 @media not (prefers-contrast) {
-  #TabsToolbar #firefox-view-button[open]:not(:focus-visible) > .toolbarbutton-icon:-moz-lwtheme,
-  .tab-background[selected]:not([multiselected]):-moz-lwtheme {
+  :root[lwtheme] #TabsToolbar #firefox-view-button[open]:not(:focus-visible) > .toolbarbutton-icon,
+  :root[lwtheme] .tab-background[selected]:not([multiselected]) {
     outline: 1px solid var(--lwt-tab-line-color, var(--lwt-tabs-border-color, currentColor));
     outline-offset: -1px;
   }

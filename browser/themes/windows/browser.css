@@ -35,7 +35,7 @@
       --toolbox-non-lwt-bgcolor-inactive: InactiveCaption;
       --toolbox-non-lwt-textcolor-inactive: InactiveCaptionText;
 
-      #TabsToolbar:not(:-moz-lwtheme) {
+      &:not([lwtheme]) #TabsToolbar {
         /* These colors match the Linux/HCM default button colors. We need to
          * override these on the tabs toolbar because the accent color is
          * arbitrary, so the hardcoded colors from browser-custom-colors might
@@ -309,10 +309,12 @@
     --urlbar-box-hover-text-color: SelectedItemText;
   }
 
-  #urlbar:not(:-moz-lwtheme, [focused="true"]) > #urlbar-background,
-  #searchbar:not(:-moz-lwtheme, :focus-within),
-  .findbar-textbox:not(:-moz-lwtheme, :focus) {
-    border-color: ThreeDShadow;
+  :root:not([lwtheme]) {
+    #urlbar:not([focused="true"]) > #urlbar-background,
+    #searchbar:not(:focus-within),
+    .findbar-textbox:not(:focus) {
+      border-color: ThreeDShadow;
+    }
   }
 }
 

@@ -6,14 +6,13 @@
   --toolbarbutton-icon-fill-attention: AccentColor;
   --toolbarbutton-icon-fill-attention-text: AccentColorText;
   --warning-icon-bgcolor: light-dark(#FFA436, #FFBD4F);
-}
-
-:root:-moz-lwtheme {
-  --toolbarbutton-icon-fill-attention: var(--lwt-toolbarbutton-icon-fill-attention, light-dark(rgb(0, 97, 224), rgb(0, 221, 255)));
-  /* FIXME(emilio): This could have poor contrast on some themes, maybe use
-   * contrast-color() once that's available, or compute a new variable in
-   * LightWeightThemeConsumer */
-  --toolbarbutton-icon-fill-attention-text: var(--toolbar-field-background-color);
+  &[lwtheme] {
+    --toolbarbutton-icon-fill-attention: var(--lwt-toolbarbutton-icon-fill-attention, light-dark(rgb(0, 97, 224), rgb(0, 221, 255)));
+    /* FIXME(emilio): This could have poor contrast on some themes, maybe use
+     * contrast-color() once that's available, or compute a new variable in
+     * LightWeightThemeConsumer */
+    --toolbarbutton-icon-fill-attention-text: var(--toolbar-field-background-color);
+  }
 }
 
 .toolbarbutton-animatable-box,

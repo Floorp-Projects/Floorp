@@ -2,10 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
 
-findbar {
+xul|findbar {
   border-top: 1px solid ThreeDShadow;
   min-width: 1px;
   transition-property: margin-bottom, visibility;
@@ -14,29 +14,31 @@ findbar {
   padding-block: 6px;
   background-color: -moz-dialog;
   color: -moz-dialogtext;
-}
 
-findbar[hidden] {
-  /* Override display:none to make the transition work. */
-  display: flex;
-  margin-bottom: calc(-1 * (28px + 12px + 1px)); /* findbar-container's height + padding-block + top border */
-  visibility: collapse;
-  transition-delay: 0s, 150ms;
-}
+  &:where([hidden]) {
+    /* Override display:none to make the transition work. */
+    display: flex;
+    margin-bottom: calc(-1 * (28px + 12px + 1px)); /* findbar-container's height + padding-block + top border */
+    visibility: collapse;
+    transition-delay: 0s, 150ms;
 
-@media (prefers-reduced-motion: reduce) {
-  findbar,
-  findbar[hidden] {
+    > .findbar-container,
+    > .findbar-closebutton {
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion) {
     transition-duration: 0s;
     transition-delay: 0s;
   }
-}
 
-findbar[noanim],
-findbar[noanim] > .findbar-container,
-findbar[noanim] > .findbar-closebutton {
-  transition-duration: 0s;
-  transition-delay: 0s;
+  &[noanim],
+  &[noanim] > .findbar-container,
+  &[noanim] > .findbar-closebutton {
+    transition-duration: 0s;
+    transition-delay: 0s;
+  }
 }
 
 .findbar-container {
@@ -46,10 +48,6 @@ findbar[noanim] > .findbar-closebutton {
   transition: opacity 150ms ease-in-out;
 }
 
-findbar[hidden] > .findbar-container {
-  opacity: 0;
-}
-
 /* Remove start margin when close button is on the left side (on macOS) */
 .findbar-closebutton + .findbar-container {
   margin-inline-start: 0;
@@ -57,7 +55,7 @@ findbar[hidden] > .findbar-container {
 
 /* Search field */
 
-html|input.findbar-textbox {
+.findbar-textbox {
   appearance: none;
   background-color: var(--input-bgcolor, var(--toolbar-field-background-color));
   color: var(--input-color, var(--toolbar-field-color));
@@ -69,39 +67,39 @@ html|input.findbar-textbox {
   padding-inline-start: 8px;
   width: 18em;
   box-sizing: border-box;
-}
 
-html|input.findbar-textbox::placeholder {
-  opacity: 0.69;
-}
+  &::placeholder {
+    opacity: 0.69;
+  }
 
-html|input.findbar-textbox:focus {
-  background-color: var(--toolbar-field-focus-background-color);
-  color: var(--toolbar-field-focus-color);
-  border-color: transparent;
-  outline: var(--focus-outline);
-  outline-offset: var(--focus-outline-inset);
-  outline-color: var(--toolbar-field-focus-border-color);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.23);
-}
+  &:focus {
+    background-color: var(--toolbar-field-focus-background-color);
+    color: var(--toolbar-field-focus-color);
+    border-color: transparent;
+    outline: var(--focus-outline);
+    outline-offset: var(--focus-outline-inset);
+    outline-color: var(--toolbar-field-focus-border-color);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.23);
+  }
 
-html|input.findbar-textbox:-moz-lwtheme::selection {
-  background-color: var(--lwt-toolbar-field-highlight, Highlight);
-  color: var(--lwt-toolbar-field-highlight-text, HighlightText);
-}
+  :root[lwtheme] &::selection {
+    background-color: var(--lwt-toolbar-field-highlight, Highlight);
+    color: var(--lwt-toolbar-field-highlight-text, HighlightText);
+  }
 
-html|input.findbar-textbox:not(:focus):-moz-lwtheme::selection {
-  background-color: var(--lwt-toolbar-field-highlight, text-select-background-disabled);
-}
+  :root[lwtheme] &:not(:focus)::selection {
+    background-color: var(--lwt-toolbar-field-highlight, text-select-background-disabled);
+  }
 
-html|input.findbar-textbox[status="notfound"] {
-  background-color: rgba(226,40,80,.3);
-  color: inherit;
-}
+  &[status="notfound"] {
+    background-color: rgba(226,40,80,.3);
+    color: inherit;
+  }
 
-html|input.findbar-textbox[flash="true"] {
-  background-color: rgba(255,233,0,.3);
-  color: inherit;
+  &[flash="true"] {
+    background-color: rgba(255,233,0,.3);
+    color: inherit;
+  }
 }
 
 /* Previous/next buttons */
@@ -119,16 +117,18 @@ html|input.findbar-textbox[flash="true"] {
     outline: var(--focus-outline);
     outline-offset: var(--focus-outline-inset);
   }
-}
 
-.findbar-find-previous:not([disabled]):hover,
-.findbar-find-next:not([disabled]):hover {
-  background-color: var(--toolbarbutton-hover-background, rgba(190,190,190,.2));
-}
+  &:not([disabled]):hover {
+    background-color: var(--toolbarbutton-hover-background, rgba(190,190,190,.2));
+  }
 
-.findbar-find-previous:not([disabled]):hover:active,
-.findbar-find-next:not([disabled]):hover:active {
-  background-color: var(--toolbarbutton-active-background, rgba(190,190,190,.4));
+  &:not([disabled]):hover:active {
+    background-color: var(--toolbarbutton-active-background, rgba(190,190,190,.4));
+  }
+
+  &[disabled="true"] > .toolbarbutton-icon {
+    opacity: var(--toolbarbutton-disabled-opacity);
+  }
 }
 
 .findbar-find-previous {
@@ -139,11 +139,6 @@ html|input.findbar-textbox[flash="true"] {
 .findbar-find-next {
   list-style-image: url(chrome://global/skin/icons/arrow-down.svg);
   margin-inline: 0 8px;
-}
-
-.findbar-find-previous[disabled="true"] > .toolbarbutton-icon,
-.findbar-find-next[disabled="true"] > .toolbarbutton-icon {
-  opacity: var(--toolbarbutton-disabled-opacity);
 }
 
 /* Checkboxes & Labels */
@@ -175,17 +170,13 @@ html|input.findbar-textbox[flash="true"] {
   width: 24px;
   fill: var(--toolbarbutton-icon-fill);
   transition: opacity 150ms ease-in-out;
-}
 
-findbar[hidden] > .findbar-closebutton {
-  opacity: 0;
-}
+  &:hover {
+    background-color: var(--toolbarbutton-hover-background, rgba(190,190,190,.2));
+    outline: none;
+  }
 
-.close-icon.findbar-closebutton:hover {
-  background-color: var(--toolbarbutton-hover-background, rgba(190,190,190,.2));
-  outline: none;
-}
-
-.close-icon.findbar-closebutton:hover:active {
-  background-color: var(--toolbarbutton-active-background, rgba(190,190,190,.4));
+  &:hover:active {
+    background-color: var(--toolbarbutton-active-background, rgba(190,190,190,.4));
+  }
 }

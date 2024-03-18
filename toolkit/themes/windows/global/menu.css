@@ -51,20 +51,22 @@ menubar > menu[_moz-menuactive="true"]:not([disabled="true"]) {
   color: -moz-menubarhovertext;
 }
 
-menubar > menu:-moz-lwtheme {
-  appearance: none;
-  border-color: transparent;
+*|*:root[lwtheme] {
+  menubar > menu {
+    appearance: none;
+    border-color: transparent;
+
+    &:not([disabled="true"]) {
+      color: inherit;
+    }
+    &[_moz-menuactive="true"]:not([disabled="true"]) {
+      background-color: SelectedItem;
+      color: SelectedItemText;
+      text-shadow: none;
+    }
+  }
 }
 
-menubar > menu:-moz-lwtheme:not([disabled="true"]) {
-  color: inherit;
-}
-
-menubar > menu:-moz-lwtheme[_moz-menuactive="true"]:not([disabled="true"]) {
-  background-color: SelectedItem;
-  color: SelectedItemText;
-  text-shadow: none;
-}
 
 /* ..... internal content .... */
 

@@ -24,9 +24,11 @@ toolbar:first-child {
   min-width: 1px;
 }
 
-toolbox:-moz-lwtheme,
-toolbar:-moz-lwtheme {
-  appearance: none;
+*|*:root[lwtheme] {
+  toolbox,
+  toolbar {
+    appearance: none;
+  }
 }
 
 toolbarseparator {

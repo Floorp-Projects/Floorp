@@ -137,10 +137,6 @@ void ChromeObserver::AttributeChanged(dom::Element* aElement,
       // if the localedir changed on the root element, reset the document
       // direction
       mDocument->ResetDocumentDirection();
-    } else if (aName == nsGkAtoms::lwtheme) {
-      // if the lwtheme changed, make sure to reset the document lwtheme
-      // cache
-      mDocument->ResetDocumentLWTheme();
     }
   } else {
     if (aName == nsGkAtoms::hidechrome) {
@@ -151,9 +147,6 @@ void ChromeObserver::AttributeChanged(dom::Element* aElement,
       // if the localedir changed on the root element, reset the document
       // direction
       mDocument->ResetDocumentDirection();
-    } else if (aName == nsGkAtoms::lwtheme) {
-      // if the lwtheme changed, make sure to restyle appropriately
-      mDocument->ResetDocumentLWTheme();
     } else if (aName == nsGkAtoms::drawtitle) {
       SetDrawsTitle(false);
     }

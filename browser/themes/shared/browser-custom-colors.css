@@ -5,7 +5,7 @@
 @namespace html url("http://www.w3.org/1999/xhtml");
 
 @media not (prefers-contrast) {
-  :root:not(:-moz-lwtheme) {
+  :root:not([lwtheme]) {
     --button-primary-bgcolor: light-dark(rgb(0, 97, 224), rgb(0, 221, 255));
     --button-primary-hover-bgcolor: light-dark(rgb(2, 80, 187), rgb(128, 235, 255));
     --button-primary-active-bgcolor: light-dark(rgb(5, 62, 148), rgb(170, 242, 255));
