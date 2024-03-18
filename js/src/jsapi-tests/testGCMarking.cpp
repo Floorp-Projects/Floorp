@@ -344,6 +344,7 @@ BEGIN_TEST(testIncrementalRoots) {
 
   // Tenure everything so intentionally unrooted objects don't move before we
   // can use them.
+  AutoGCParameter disableSemispace(cx, JSGC_SEMISPACE_NURSERY_ENABLED, 0);
   cx->runtime()->gc.minorGC(JS::GCReason::API);
 
   // Release all roots except for the RootedObjectVector.
