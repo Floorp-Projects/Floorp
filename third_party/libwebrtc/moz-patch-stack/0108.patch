@@ -1,36 +1,27 @@
-From: Dan Baker <dbaker@mozilla.com>
-Date: Thu, 14 Mar 2024 10:51:00 -0600
-Subject: Bug 1883116 - (fix-e79e722834) add enviroment_factory to libwebrtc
- build and change to use GetRealTimeClockRaw.
+From: Jan Grulich <jgrulich@redhat.com>
+Date: Tue, 5 Mar 2024 08:38:00 +0000
+Subject: Bug 1615282 - WebRTC backport: PipeWire capturer - set capturer as
+ failed when session is closed r=pehrsons,webrtc-reviewers
 
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2185cab977988fd4ab03b38dc67f9b06162444da
+This is a simple backport of an WebRTC upstream change.
+
+Upstream commit: 058bfe3ae37a7a245f9c8c6c03f4f7ac48fe179d
+
+Differential Revision: https://phabricator.services.mozilla.com/D202788
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/633149c5da9337f67b6659e5d5bead2233027460
 ---
- BUILD.gn                               | 1 +
- api/environment/environment_factory.cc | 2 +-
- 2 files changed, 2 insertions(+), 1 deletion(-)
+ modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/BUILD.gn b/BUILD.gn
-index 7feca08e60..85ead4162f 100644
---- a/BUILD.gn
-+++ b/BUILD.gn
-@@ -580,6 +580,7 @@ if (!build_with_chromium) {
+diff --git a/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc b/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc
+index 40764de7ae..81caa9bd2d 100644
+--- a/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc
++++ b/modules/desktop_capture/linux/wayland/base_capturer_pipewire.cc
+@@ -112,6 +112,7 @@ void BaseCapturerPipeWire::OnScreenCastSessionClosed() {
+   if (!capturer_failed_) {
+     options_.screencast_stream()->StopScreenCastStream();
+   }
++  capturer_failed_ = true;
+ }
  
-     if (build_with_mozilla) {
-       deps += [
-+        "api/environment:environment_factory",
-         "api/video:video_frame",
-         "api/video:video_rtp_headers",
-         "test:rtp_test_utils",
-diff --git a/api/environment/environment_factory.cc b/api/environment/environment_factory.cc
-index c0b681aa08..c55cecd1ab 100644
---- a/api/environment/environment_factory.cc
-+++ b/api/environment/environment_factory.cc
-@@ -98,7 +98,7 @@ Environment EnvironmentFactory::CreateWithDefaults() && {
-     Set(std::make_unique<FieldTrialBasedConfig>());
-   }
-   if (clock_ == nullptr) {
--    Set(Clock::GetRealTimeClock());
-+    Set(Clock::GetRealTimeClockRaw());
-   }
-   if (task_queue_factory_ == nullptr) {
-     Set(CreateDefaultTaskQueueFactory(field_trials_));
+ void BaseCapturerPipeWire::UpdateResolution(uint32_t width, uint32_t height) {
