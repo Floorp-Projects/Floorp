@@ -5,7 +5,6 @@
   XUL Widget Test for listbox direction
   -->
 <window title="Listbox direction test"
-        onload="test_richlistbox()"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
@@ -26,8 +25,7 @@ function getScrollIndexAmount(aDirection) {
   return (4 * aDirection + richListBox.currentIndex);
 }
 
-function test_richlistbox()
-{
+add_task(function test_richlistbox() {
   var height = richListBox.clientHeight;
   var item;
   do {
@@ -93,9 +91,22 @@ function test_richlistbox()
   richListBox.selectedItem = richListBox.firstChild;
   richListBox.firstChild.nextSibling.setAttribute("disabled", true);
   richListBox.focus();
+
   synthesizeKey("KEY_ArrowDown", {}, window);
   is(richListBox.selectedItems.length, 1, "one item selected");
-  is(richListBox.selectedItems[0], richListBox.firstChild, "first item selected");
+  is(richListBox.selectedItems[0], richListBox.getItemAtIndex(2), "skipped over disabled item on keydown");
+
+  synthesizeKey("KEY_ArrowUp", {}, window);
+  is(richListBox.selectedItems.length, 1, "one item selected");
+  is(richListBox.selectedItems[0], richListBox.firstChild, "skipped over disabled item on keyup");
+
+  synthesizeMouseAtCenter(richListBox.getItemAtIndex(1), {});
+  is(richListBox.selectedItems.length, 1, "one item selected");
+  is(richListBox.selectedItems[0], richListBox.firstChild, "cannot select disabled item");
+
+  synthesizeMouseAtCenter(richListBox.getItemAtIndex(2), {});
+  is(richListBox.selectedItems.length, 1, "one item selected");
+  is(richListBox.selectedItems[0], richListBox.getItemAtIndex(2), "can select enabled item");
 
   // Selected item re-insertion should keep the item selected.
   richListBox.clearSelection();
@@ -107,9 +118,7 @@ function test_richlistbox()
   richListBox.append(item);
   is(richListBox.selectedItems.length, 1, "one item selected");
   is(richListBox.selectedItems[0], item, "last (previosly first) item selected");
-
-  SimpleTest.finish();
-}
+});
 
 ]]>
 </script>
