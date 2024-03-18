@@ -10,7 +10,7 @@
 #include "mozilla/Assertions.h"
 #include <cfloat>
 #include <cmath>
-#include <vector>
+#include "mozilla/Vector.h"
 
 namespace skia {
 
@@ -81,11 +81,11 @@ class SkConvolutionFilter1D {
 
   // Returns the number of filters in this filter. This is the dimension of the
   // output image.
-  int numValues() const { return static_cast<int>(fFilters.size()); }
+  int numValues() const { return static_cast<int>(fFilters.length()); }
 
-  void reserveAdditional(int filterCount, int filterValueCount) {
-    fFilters.reserve(fFilters.size() + filterCount);
-    fFilterValues.reserve(fFilterValues.size() + filterValueCount);
+  bool reserveAdditional(int filterCount, int filterValueCount) {
+    return fFilters.reserve(fFilters.length() + filterCount) &&
+           fFilterValues.reserve(fFilterValues.length() + filterValueCount);
   }
 
   // Appends the given list of scaling values for generating a given output
@@ -98,7 +98,7 @@ class SkConvolutionFilter1D {
   // brighness of the image.
   //
   // The filterLength must be > 0.
-  void AddFilter(int filterOffset, const ConvolutionFixed* filterValues,
+  bool AddFilter(int filterOffset, const ConvolutionFixed* filterValues,
                  int filterLength);
 
   // Retrieves a filter for the given |valueOffset|, a position in the output
@@ -139,12 +139,12 @@ class SkConvolutionFilter1D {
   };
 
   // Stores the information for each filter added to this class.
-  std::vector<FilterInstance> fFilters;
+  mozilla::Vector<FilterInstance> fFilters;
 
   // We store all the filter values in this flat list, indexed by
   // |FilterInstance.data_location| to avoid the mallocs required for storing
   // each one separately.
-  std::vector<ConvolutionFixed> fFilterValues;
+  mozilla::Vector<ConvolutionFixed> fFilterValues;
 
   // The maximum size of any filter we've added.
   int fMaxFilter;
