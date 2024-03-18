@@ -49,6 +49,7 @@
 #include "mozilla/dom/XULMenuElement.h"
 #include "mozilla/dom/XULMenuBarElement.h"
 #include "mozilla/dom/XULPopupElement.h"
+#include "mozilla/AutoRestore.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/LookAndFeel.h"
