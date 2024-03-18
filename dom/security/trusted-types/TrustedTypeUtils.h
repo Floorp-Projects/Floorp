@@ -10,20 +10,26 @@
 #include "mozilla/dom/DOMString.h"
 #include "mozilla/dom/NonRefcountedDOMObject.h"
 #include "mozilla/dom/TrustedTypesBinding.h"
-#include "nsStringFwd.h"
+#include "nsString.h"
 
 #define DECL_TRUSTED_TYPE_CLASS(_class)                                \
   class _class : public mozilla::dom::NonRefcountedDOMObject {         \
    public:                                                             \
+    explicit _class(const nsAString& aData) : mData{aData} {}          \
+                                                                       \
     /* Required for Web IDL binding. */                                \
     bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto, \
                     JS::MutableHandle<JSObject*> aObject);             \
                                                                        \
-    void Stringify(nsAString& aResult) const { /* TODO: impl. */       \
+    void Stringify(DOMString& aResult) const {                         \
+      aResult.SetKnownLiveString(mData);                               \
     }                                                                  \
                                                                        \
-    void ToJSON(DOMString& aResult) const { /* TODO: impl. */          \
+    void ToJSON(DOMString& aResult) const {                            \
+      aResult.SetKnownLiveString(mData);                               \
     }                                                                  \
+                                                                       \
+    const nsString mData;                                              \
   };
 
 #define IMPL_TRUSTED_TYPE_CLASS(_class)                                      \

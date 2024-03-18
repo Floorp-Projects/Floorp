@@ -61,14 +61,14 @@ UniquePtr<TrustedHTML> TrustedTypePolicyFactory::EmptyHTML() {
   // multiple emptyHML objects. Both, the JS- and the C++-objects.
   dom::PreserveWrapper(this);
 
-  return MakeUnique<TrustedHTML>();
+  return MakeUnique<TrustedHTML>(EmptyString());
 }
 
 UniquePtr<TrustedScript> TrustedTypePolicyFactory::EmptyScript() {
   // See the explanation in `EmptyHTML()`.
   dom::PreserveWrapper(this);
 
-  return MakeUnique<TrustedScript>();
+  return MakeUnique<TrustedScript>(EmptyString());
 }
 
 }  // namespace mozilla::dom
