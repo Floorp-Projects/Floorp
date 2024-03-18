@@ -382,7 +382,7 @@ toolbarpaletteitem {
   toolbar[brighttext] & {
     list-style-image: var(--webextension-toolbar-image-light, inherit);
   }
-  :root[lwtheme] toolbar:not([brighttext]) {
+  :root[lwtheme] toolbar:not([brighttext]) & {
     list-style-image: var(--webextension-toolbar-image-dark, inherit);
   }
   toolbaritem:is([overflowedItem="true"], [cui-areatype="panel"]) > & {
