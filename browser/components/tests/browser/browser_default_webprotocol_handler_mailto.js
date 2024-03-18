@@ -11,10 +11,41 @@ add_setup(function add_setup() {
   Services.prefs.setBoolPref("browser.mailto.dualPrompt", true);
 });
 
+/* helper function to delete site specific settings needed to clean up
+ * the testing setup after some of these tests.
+ *
+ * @see: nsIContentPrefService2.idl
+ */
+function _deleteSiteSpecificSetting(domain, setting, context = null) {
+  const contentPrefs = Cc["@mozilla.org/content-pref/service;1"].getService(
+    Ci.nsIContentPrefService2
+  );
+
+  return contentPrefs.removeByDomainAndName(domain, setting, context, {
+    handleResult(_) {},
+    handleCompletion() {
+      Assert.ok(true, "setting successfully deleted.");
+    },
+    handleError(_) {
+      Assert.ok(false, "could not delete site specific setting.");
+    },
+  });
+}
+
 // site specific settings
 const protocol = "mailto";
-const sss_domain = "test.example.com";
+const subdomain = (Math.random() + 1).toString(36).substring(7);
+const sss_domain = subdomain + ".example.com";
 const ss_setting = "system.under.test";
+
+add_task(async function check_null_value() {
+  Assert.ok(
+    /[a-z0-9].+\.[a-z]+\.[a-z]+/.test(sss_domain),
+    "test the validity of this random domain name before using it for tests: '" +
+      sss_domain +
+      "'"
+  );
+});
 
 add_task(async function check_null_value() {
   Assert.equal(
@@ -46,13 +77,31 @@ add_task(async function check_save_value() {
     ss_setting,
     ss_setting
   );
+
+  let fetchedSiteSpecificSetting;
+  try {
+    fetchedSiteSpecificSetting =
+      await WebProtocolHandlerRegistrar._getSiteSpecificSetting(
+        sss_domain,
+        ss_setting
+      );
+  } finally {
+    // make sure the cleanup happens, no matter what
+    _deleteSiteSpecificSetting(sss_domain, ss_setting);
+  }
   Assert.equal(
     ss_setting,
+    fetchedSiteSpecificSetting,
+    "site specific setting save and retrieve test."
+  );
+
+  Assert.equal(
+    null,
     await WebProtocolHandlerRegistrar._getSiteSpecificSetting(
       sss_domain,
       ss_setting
     ),
-    "site specific setting save and retrieve test."
+    "site specific setting should not exist after delete."
   );
 });
 
