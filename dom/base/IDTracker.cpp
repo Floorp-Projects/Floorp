@@ -132,13 +132,19 @@ void IDTracker::ResetWithLocalRef(Element& aFrom, const nsAString& aLocalRef,
                                   bool aWatch) {
   MOZ_ASSERT(nsContentUtils::IsLocalRefURL(aLocalRef));
 
-  nsAutoCString ref;
-  if (!AppendUTF16toUTF8(Substring(aLocalRef, 1), ref, mozilla::fallible)) {
+  auto ref = Substring(aLocalRef, 1);
+  if (ref.IsEmpty()) {
     Unlink();
     return;
   }
-  NS_UnescapeURL(ref);
-  RefPtr<nsAtom> idAtom = NS_Atomize(ref);
+
+  nsAutoCString utf8Ref;
+  if (!AppendUTF16toUTF8(ref, utf8Ref, mozilla::fallible)) {
+    Unlink();
+    return;
+  }
+  NS_UnescapeURL(utf8Ref);
+  RefPtr<nsAtom> idAtom = NS_Atomize(utf8Ref);
   ResetWithID(aFrom, idAtom, aWatch);
 }
 
