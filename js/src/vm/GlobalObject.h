@@ -1056,9 +1056,7 @@ class GlobalObject : public NativeObject {
   void setSourceURLsHolder(ArrayObject* holder) {
     data().sourceURLsHolder = holder;
   }
-  void clearSourceURLSHolder() {
-    setSourceURLsHolder(nullptr);
-  }
+  void clearSourceURLSHolder() { setSourceURLsHolder(nullptr); }
 
   SharedShape* maybeArrayShapeWithDefaultProto() const {
     return data().arrayShapeWithDefaultProto;

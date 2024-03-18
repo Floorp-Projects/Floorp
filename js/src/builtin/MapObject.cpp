@@ -1254,7 +1254,8 @@ size_t SetIteratorObject::objectMoved(JSObject* obj, JSObject* old) {
     nursery.removeMallocedBufferDuringMinorGC(range);
   }
 
-  size_t size = RoundUp(sizeof(ValueSet::Range), gc::CellAlignBytes);;
+  size_t size = RoundUp(sizeof(ValueSet::Range), gc::CellAlignBytes);
+  ;
   AutoEnterOOMUnsafeRegion oomUnsafe;
   void* buffer = nursery.allocateBufferSameLocation(obj, size, js::MallocArena);
   if (!buffer) {
