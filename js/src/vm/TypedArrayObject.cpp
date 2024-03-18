@@ -232,13 +232,13 @@ size_t FixedLengthTypedArrayObject::objectMoved(JSObject* obj, JSObject* old) {
 
   constexpr size_t headerSize = dataOffset() + sizeof(HeapSlot);
 
-  // See AllocKindForLazyBuffer.
-  gc::AllocKind newAllocKind = obj->asTenured().getAllocKind();
+  gc::AllocKind allocKind = oldObj->allocKindForTenure();
+  MOZ_ASSERT_IF(obj->isTenured(), obj->asTenured().getAllocKind() == allocKind);
   MOZ_ASSERT_IF(nbytes == 0,
-                headerSize + sizeof(uint8_t) <= GetGCKindBytes(newAllocKind));
+                headerSize + sizeof(uint8_t) <= GetGCKindBytes(allocKind));
 
   if (nursery.isInside(buf) &&
-      headerSize + nbytes <= GetGCKindBytes(newAllocKind)) {
+      headerSize + nbytes <= GetGCKindBytes(allocKind)) {
     MOZ_ASSERT(oldObj->hasInlineElements());
 #ifdef DEBUG
     if (nbytes == 0) {
