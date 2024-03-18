@@ -1353,6 +1353,11 @@ namespace gc {
 extern JS_PUBLIC_API JSObject* NewMemoryInfoObject(JSContext* cx);
 
 /*
+ * Return whether |obj| is a dead nursery object during a minor GC.
+ */
+JS_PUBLIC_API bool IsDeadNurseryObject(JSObject* obj);
+
+/*
  * Run the finalizer of a nursery-allocated JSObject that is known to be dead.
  *
  * This is a dangerous operation - only use this if you know what you're doing!

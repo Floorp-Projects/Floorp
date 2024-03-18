@@ -12,6 +12,7 @@
 #include "mozilla/ServoUtils.h"
 #include "mozilla/RustCell.h"
 #include "js/HeapAPI.h"
+#include "js/RootingAPI.h"
 #include "js/TracingAPI.h"
 #include "js/TypeDecls.h"
 #include "nsISupports.h"
@@ -196,6 +197,11 @@ class JS_HAZ_ROOTED nsWrapperCache {
     if (mWrapper) {
       MOZ_ASSERT(mWrapper == aOldObject);
       mWrapper = aNewObject;
+      if (PreservingWrapper() && !JS::ObjectIsTenured(mWrapper)) {
+        // Can pass prevp as null here since a previous store buffer entry has
+        // been cleared by the current nursery collection.
+        JS::HeapObjectPostWriteBarrier(&mWrapper, nullptr, mWrapper);
+      }
     }
   }
 

@@ -1563,17 +1563,27 @@ void CycleCollectedJSRuntime::GarbageCollect(JS::GCOptions aOptions,
 
 void CycleCollectedJSRuntime::JSObjectsTenured() {
   JSContext* cx = CycleCollectedJSContext::Get()->Context();
-  for (auto iter = mNurseryObjects.Iter(); !iter.Done(); iter.Next()) {
+
+  NurseryObjectsVector objects;
+  std::swap(objects, mNurseryObjects);
+
+  for (auto iter = objects.Iter(); !iter.Done(); iter.Next()) {
     nsWrapperCache* cache = iter.Get();
     JSObject* wrapper = cache->GetWrapperMaybeDead();
     MOZ_DIAGNOSTIC_ASSERT(wrapper);
-    if (!JS::ObjectIsTenured(wrapper)) {
+
+    if (!js::gc::IsInsideNursery(wrapper)) {
+      continue;
+    }
+
+    if (js::gc::IsDeadNurseryObject(wrapper)) {
       MOZ_ASSERT(!cache->PreservingWrapper());
       js::gc::FinalizeDeadNurseryObject(cx, wrapper);
+      continue;
     }
-  }
 
-  mNurseryObjects.Clear();
+    mNurseryObjects.InfallibleAppend(cache);
+  }
 }
 
 void CycleCollectedJSRuntime::NurseryWrapperAdded(nsWrapperCache* aCache) {

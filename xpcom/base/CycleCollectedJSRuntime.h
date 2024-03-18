@@ -473,8 +473,9 @@ class CycleCollectedJSRuntime {
   OOMState mLargeAllocationFailureState;
 
   static const size_t kSegmentSize = 512;
-  SegmentedVector<nsWrapperCache*, kSegmentSize, InfallibleAllocPolicy>
-      mNurseryObjects;
+  using NurseryObjectsVector =
+      SegmentedVector<nsWrapperCache*, kSegmentSize, InfallibleAllocPolicy>;
+  NurseryObjectsVector mNurseryObjects;
 
   nsTHashSet<JS::Zone*> mZonesWaitingForGC;
 
