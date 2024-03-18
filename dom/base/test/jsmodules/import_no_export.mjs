@@ -1,1 +1,1 @@
-import x from "./no_export.mjs";
+import { x } from "./no_export.mjs";

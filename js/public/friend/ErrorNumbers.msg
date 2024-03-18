@@ -714,10 +714,9 @@ MSG_DEF(JSMSG_CANT_DELETE_SUPER, 0, JSEXN_REFERENCEERR, "invalid delete involvin
 MSG_DEF(JSMSG_REINIT_THIS,       0, JSEXN_REFERENCEERR, "super() called twice in derived class constructor")
 
 // Modules
-MSG_DEF(JSMSG_MISSING_INDIRECT_EXPORT,      0, JSEXN_SYNTAXERR, "indirect export not found")
-MSG_DEF(JSMSG_AMBIGUOUS_INDIRECT_EXPORT,    0, JSEXN_SYNTAXERR, "ambiguous indirect export")
-MSG_DEF(JSMSG_MISSING_IMPORT,               0, JSEXN_SYNTAXERR, "import not found")
-MSG_DEF(JSMSG_AMBIGUOUS_IMPORT,             0, JSEXN_SYNTAXERR, "ambiguous import")
+MSG_DEF(JSMSG_MODULE_NO_EXPORT,             2, JSEXN_SYNTAXERR, "The requested module '{0}' doesn't provide an export named: '{1}'")
+MSG_DEF(JSMSG_MODULE_CIRCULAR_IMPORT,       2, JSEXN_SYNTAXERR, "The requested module '{0}' contains circular import: '{1}'")
+MSG_DEF(JSMSG_MODULE_AMBIGUOUS,             4, JSEXN_SYNTAXERR, "The requested module '{0}' contains ambiguous star export: '{1}' from '{2}' and '{3}'")
 MSG_DEF(JSMSG_MISSING_EXPORT,               1, JSEXN_SYNTAXERR, "local binding for export '{0}' not found")
 MSG_DEF(JSMSG_BAD_MODULE_STATUS,            1, JSEXN_INTERNALERR, "module record has unexpected status: {0}")
 MSG_DEF(JSMSG_DYNAMIC_IMPORT_FAILED,        1, JSEXN_TYPEERR, "error loading dynamically imported module: {0}")
