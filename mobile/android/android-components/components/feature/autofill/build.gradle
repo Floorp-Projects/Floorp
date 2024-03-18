@@ -1,0 +1,60 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-parcelize'
+
+android {
+    defaultConfig {
+        minSdkVersion config.minSdkVersion
+        compileSdk config.compileSdkVersion
+        targetSdkVersion config.targetSdkVersion
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    namespace 'mozilla.components.feature.autofill'
+}
+
+dependencies {
+    implementation platform(ComponentsDependencies.androidx_compose_bom)
+    implementation project(':concept-fetch')
+    implementation project(':concept-storage')
+    implementation project(':lib-publicsuffixlist')
+    implementation project(':service-digitalassetlinks')
+    implementation project(':support-base')
+    implementation project(':support-ktx')
+    implementation project(":support-utils")
+    implementation project(':ui-widgets')
+
+    implementation ComponentsDependencies.androidx_annotation
+    implementation ComponentsDependencies.androidx_autofill
+    implementation ComponentsDependencies.androidx_biometric
+    implementation ComponentsDependencies.androidx_fragment
+    implementation ComponentsDependencies.androidx_lifecycle_runtime
+    implementation ComponentsDependencies.androidx_recyclerview
+    implementation ComponentsDependencies.androidx_core_ktx
+    implementation ComponentsDependencies.androidx_preferences
+
+    implementation ComponentsDependencies.kotlin_coroutines
+
+    testImplementation project(':support-test')
+    testImplementation project(':lib-fetch-okhttp')
+
+    testImplementation ComponentsDependencies.androidx_test_core
+    testImplementation ComponentsDependencies.androidx_test_junit
+    testImplementation ComponentsDependencies.testing_robolectric
+    testImplementation ComponentsDependencies.testing_coroutines
+    testImplementation ComponentsDependencies.testing_mockwebserver
+}
+
+apply from: '../../../android-lint.gradle'
+apply from: '../../../publish.gradle'
+ext.configurePublish(config.componentsGroupId, archivesBaseName, project.ext.description)

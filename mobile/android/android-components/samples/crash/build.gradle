@@ -1,0 +1,47 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+
+android {
+    defaultConfig {
+        applicationId "org.mozilla.samples.crash"
+        minSdkVersion config.minSdkVersion
+        compileSdk config.compileSdkVersion
+        targetSdkVersion config.targetSdkVersion
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    buildFeatures {
+        viewBinding true
+    }
+
+    namespace 'org.mozilla.samples.crash'
+}
+
+
+dependencies {
+    implementation project(':lib-crash')
+    implementation project(':lib-fetch-httpurlconnection')
+    implementation project(':service-glean')
+    implementation project(':support-base')
+    implementation project(':support-utils')
+
+    implementation ComponentsDependencies.kotlin_coroutines
+
+    implementation ComponentsDependencies.androidx_appcompat
+    implementation ComponentsDependencies.google_material
+    implementation ComponentsDependencies.androidx_recyclerview
+}

@@ -1,0 +1,799 @@
+plugins {
+    id "com.jetbrains.python.envs" version "$python_envs_plugin"
+}
+
+if (findProject(":geckoview") != null) {
+    buildDir "${topobjdir}/gradle/build/mobile/android/focus-android"
+}
+
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-parcelize'
+apply plugin: 'jacoco'
+apply plugin: 'com.google.android.gms.oss-licenses-plugin'
+
+def versionCodeGradle = "$project.rootDir/tools/gradle/versionCode.gradle"
+if (findProject(":geckoview") != null) {
+    versionCodeGradle = "$project.rootDir/mobile/android/focus-android/tools/gradle/versionCode.gradle"
+}
+apply from: versionCodeGradle
+
+if (findProject(":geckoview") != null) {
+    apply from: "${topsrcdir}/mobile/android/gradle/product_flavors.gradle"
+}
+
+import com.android.build.api.variant.FilterConfiguration
+import groovy.json.JsonOutput
+import org.gradle.internal.logging.text.StyledTextOutput.Style
+import org.gradle.internal.logging.text.StyledTextOutputFactory
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
+import static org.gradle.api.tasks.testing.TestResult.ResultType
+
+android {
+    if (project.hasProperty("testBuildType")) {
+        // Allowing to configure the test build type via command line flag (./gradlew -PtestBuildType=beta ..)
+        // in order to run UI tests against other build variants than debug in automation.
+        testBuildType project.property("testBuildType")
+    }
+
+    defaultConfig {
+        applicationId "org.mozilla"
+        minSdkVersion config.minSdkVersion
+        compileSdk config.compileSdkVersion
+        targetSdkVersion config.targetSdkVersion
+        versionCode 11 // This versionCode is "frozen" for local builds. For "release" builds we
+                       // override this with a generated versionCode at build time.
+        // The versionName is dynamically overridden for all the build variants at build time.
+        versionName Config.generateDebugVersionName()
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunnerArguments clearPackageData: 'true'
+        // See override in release builds for why it's blank.
+        buildConfigField "String", "VCS_HASH", "\"\""
+
+        vectorDrawables.useSupportLibrary = true
+    }
+
+    bundle {
+        language {
+            // Because we have runtime language selection we will keep all strings and languages
+            // in the base APKs.
+            enableSplit = false
+        }
+    }
+
+    lint {
+        lintConfig file("lint.xml")
+        baseline file("lint-baseline.xml")
+    }
+
+    // We have a three dimensional build configuration:
+    // BUILD TYPE (debug, release) X PRODUCT FLAVOR (focus, klar)
+
+    buildTypes {
+        release {
+            // We allow disabling optimization by passing `-PdisableOptimization` to gradle. This is used
+            // in automation for UI testing non-debug builds.
+            shrinkResources !project.hasProperty("disableOptimization")
+            minifyEnabled !project.hasProperty("disableOptimization")
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            matchingFallbacks = ['release']
+            buildConfigField "String", "VCS_HASH", "\"${Config.getVcsHash()}\""
+
+            if (gradle.hasProperty("localProperties.autosignReleaseWithDebugKey")) {
+                println ("All builds will be automatically signed with the debug key")
+                signingConfig signingConfigs.debug
+            }
+
+            if (gradle.hasProperty("localProperties.debuggable")) {
+                println ("All builds will be debuggable")
+                debuggable true
+            }
+        }
+        debug {
+            applicationIdSuffix ".debug"
+            matchingFallbacks = ['debug']
+        }
+        beta {
+            initWith release
+            applicationIdSuffix ".beta"
+            // This is used when the user selects text in other third-party apps. See https://github.com/mozilla-mobile/focus-android/issues/6478
+            manifestPlaceholders = [textSelectionSearchAction: "@string/text_selection_search_action_focus_beta"]
+        }
+        nightly {
+            initWith release
+            applicationIdSuffix ".nightly"
+            // This is used when the user selects text in other third-party apps. See https://github.com/mozilla-mobile/focus-android/issues/6478
+            manifestPlaceholders = [textSelectionSearchAction: "@string/text_selection_search_action_focus_nightly"]
+        }
+    }
+    testOptions {
+        execution 'ANDROIDX_TEST_ORCHESTRATOR'
+        animationsDisabled = true
+        unitTests {
+            includeAndroidResources = true
+        }
+    }
+
+    buildFeatures {
+        compose true
+        viewBinding true
+        buildConfig true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = Versions.compose_compiler
+    }
+
+    if (findProject(":geckoview") != null) {
+        project.configureProductFlavors.delegate = it
+        project.configureProductFlavors()
+    }
+
+    flavorDimensions.add("product")
+
+    productFlavors {
+        // In most countries we are Firefox Focus - but in some we need to be Firefox Klar
+        focus {
+            dimension "product"
+
+            applicationIdSuffix ".focus"
+
+            // This is used when the user selects text in other third-party apps. See https://github.com/mozilla-mobile/focus-android/issues/6478
+            manifestPlaceholders = [textSelectionSearchAction: "@string/text_selection_search_action_focus"]
+        }
+        klar {
+            dimension "product"
+
+            applicationIdSuffix ".klar"
+
+            // This is used when the user selects text in other third-party apps. See https://github.com/mozilla-mobile/focus-android/issues/6478
+            manifestPlaceholders = [textSelectionSearchAction: "@string/text_selection_search_action_klar"]
+        }
+    }
+
+    splits {
+        abi {
+            enable true
+
+            reset()
+
+            include "x86", "armeabi-v7a", "arm64-v8a", "x86_64"
+        }
+    }
+
+    sourceSets {
+        test {
+            resources {
+                // Make the default asset folder available as test resource folder. Robolectric seems
+                // to fail to read assets for our setup. With this we can just read the files directly
+                // and do not need to rely on Robolectric.
+                srcDir "${projectDir}/src/main/assets/"
+            }
+        }
+
+        if (findProject(":geckoview") != null) {
+            // Release
+            withGeckoBinariesFocusRelease.root = 'src/focusRelease'
+            withGeckoBinariesKlarRelease.root = 'src/klarRelease'
+            withoutGeckoBinariesFocusRelease.root = 'src/focusRelease'
+            withoutGeckoBinariesKlarRelease.root = 'src/klarRelease'
+
+            // Debug
+            withGeckoBinariesFocusDebug.root = 'src/focusDebug'
+            withGeckoBinariesKlarDebug.root = 'src/klarDebug'
+            withoutGeckoBinariesFocusDebug.root = 'src/focusDebug'
+            withoutGeckoBinariesKlarDebug.root = 'src/klarDebug'
+
+            // Nightly
+            withGeckoBinariesFocusNightly.root = 'src/focusNightly'
+            withGeckoBinariesKlarNightly.root = 'src/klarNightly'
+            withoutGeckoBinariesFocusNightly.root = 'src/focusNightly'
+            withoutGeckoBinariesKlarNightly.root = 'src/klarNightly'
+        } else {
+            // Release
+            focusRelease.root = 'src/focusRelease'
+            klarRelease.root = 'src/klarRelease'
+
+            // Debug
+            focusDebug.root = 'src/focusDebug'
+            klarDebug.root = 'src/klarDebug'
+
+            // Nightly
+            focusNightly.root = 'src/focusNightly'
+            klarNightly.root = 'src/klarNightly'
+        }
+    }
+    packagingOptions {
+        resources {
+            pickFirsts += ['META-INF/atomicfu.kotlin_module', 'META-INF/proguard/coroutines.pro']
+        }
+        jniLibs {
+            useLegacyPackaging true
+        }
+    }
+
+    namespace 'org.mozilla.focus'
+}
+
+tasks.withType(KotlinCompile).configureEach {
+    kotlinOptions.allWarningsAsErrors = true
+    kotlinOptions.freeCompilerArgs += [
+            "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
+            "-opt-in=kotlin.RequiresOptIn",
+            "-Xjvm-default=all"
+    ]
+}
+
+// -------------------------------------------------------------------------------------------------
+// Generate Kotlin code for the Focus Glean metrics.
+// -------------------------------------------------------------------------------------------------
+apply plugin: "org.mozilla.telemetry.glean-gradle-plugin"
+apply plugin: "org.mozilla.appservices.nimbus-gradle-plugin"
+
+nimbus {
+    // The path to the Nimbus feature manifest file
+    manifestFile = "nimbus.fml.yaml"
+    // Map from the variant name to the channel as experimenter and nimbus understand it.
+    // If nimbus's channels were accurately set up well for this project, then this
+    // shouldn't be needed.
+    channels = [
+            focusDebug: "debug",
+            focusNightly: "nightly",
+            focusBeta: "beta",
+            focusRelease: "release",
+            klarDebug: "debug",
+            klarNightly: "nightly",
+            klarBeta: "beta",
+            klarRelease: "release",
+            withGeckoBinariesFocusDebug: "debug",
+            withGeckoBinariesFocusNightly: "nightly",
+            withGeckoBinariesFocusBeta: "beta",
+            withGeckoBinariesFocusRelease: "release",
+            withGeckoBinariesKlarDebug: "debug",
+            withGeckoBinariesKlarNightly: "nightly",
+            withGeckoBinariesKlarBeta: "beta",
+            withGeckoBinariesKlarRelease: "release",
+            withoutGeckoBinariesFocusDebug: "debug",
+            withoutGeckoBinariesFocusNightly: "nightly",
+            withoutGeckoBinariesFocusBeta: "beta",
+            withoutGeckoBinariesFocusRelease: "release",
+            withoutGeckoBinariesKlarDebug: "debug",
+            withoutGeckoBinariesKlarNightly: "nightly",
+            withoutGeckoBinariesKlarBeta: "beta",
+            withoutGeckoBinariesKlarRelease: "release",
+    ]
+    // This is generated by the FML and should be checked into git.
+    // It will be fetched by Experimenter (the Nimbus experiment website)
+    // and used to inform experiment configuration.
+    experimenterManifest = ".experimenter.yaml"
+}
+
+dependencies {
+    implementation platform(ComponentsDependencies.androidx_compose_bom)
+    androidTestImplementation platform(ComponentsDependencies.androidx_compose_bom)
+
+    implementation ComponentsDependencies.androidx_appcompat
+    implementation ComponentsDependencies.androidx_browser
+    implementation ComponentsDependencies.androidx_cardview
+    implementation ComponentsDependencies.androidx_compose_ui
+    implementation ComponentsDependencies.androidx_compose_ui_tooling
+    implementation ComponentsDependencies.androidx_compose_foundation
+    implementation ComponentsDependencies.androidx_compose_material
+    implementation ComponentsDependencies.androidx_compose_runtime_livedata
+    implementation ComponentsDependencies.androidx_constraintlayout
+    implementation FocusDependencies.androidx_constraint_layout_compose
+    implementation ComponentsDependencies.androidx_core_ktx
+    implementation ComponentsDependencies.androidx_fragment
+    implementation ComponentsDependencies.androidx_lifecycle_process
+    implementation ComponentsDependencies.androidx_lifecycle_viewmodel
+    implementation ComponentsDependencies.androidx_palette
+    implementation ComponentsDependencies.androidx_preferences
+    implementation ComponentsDependencies.androidx_recyclerview
+    implementation ComponentsDependencies.androidx_savedstate
+    implementation FocusDependencies.androidx_splashscreen
+    implementation FocusDependencies.androidx_transition
+    implementation ComponentsDependencies.androidx_work_runtime
+    implementation ComponentsDependencies.androidx_data_store_preferences
+
+    implementation FocusDependencies.google_play
+
+    implementation ComponentsDependencies.google_material
+
+    implementation ComponentsDependencies.thirdparty_sentry
+
+    implementation project(':browser-engine-gecko')
+    implementation project(':browser-domains')
+    implementation project(':browser-errorpages')
+    implementation project(':browser-icons')
+    implementation project(':browser-menu')
+    implementation project(':browser-state')
+    implementation project(':browser-toolbar')
+
+    implementation project(':concept-awesomebar')
+    implementation project(':concept-engine')
+    implementation project(':concept-fetch')
+    implementation project(':concept-menu')
+
+    implementation project(':compose-awesomebar')
+
+    implementation project(':feature-awesomebar')
+    implementation project(':feature-app-links')
+    implementation project(':feature-customtabs')
+    implementation project(':feature-contextmenu')
+    implementation project(':feature-downloads')
+    implementation project(':feature-findinpage')
+    implementation project(':feature-intent')
+    implementation project(':feature-prompts')
+    implementation project(':feature-session')
+    implementation project(':feature-search')
+    implementation project(':feature-tabs')
+    implementation project(':feature-toolbar')
+    implementation project(':feature-top-sites')
+    implementation project(':feature-sitepermissions')
+    implementation project(':lib-crash')
+    implementation project(':lib-crash-sentry')
+    implementation project(':lib-state')
+    implementation project(':feature-media')
+    implementation project(':lib-auth')
+    implementation project(':lib-publicsuffixlist')
+
+    implementation project(':service-glean'), {
+        exclude group: 'org.mozilla.telemetry', module: 'glean-native'
+    }
+    implementation project(':service-location')
+    implementation project(':service-nimbus')
+
+    implementation project(':support-ktx')
+    implementation project(':support-utils')
+    implementation project(':support-rusthttp')
+    implementation project(':support-rustlog')
+    implementation project(':support-license')
+
+    implementation project(':ui-autocomplete')
+    implementation project(':ui-colors')
+    implementation project(':ui-icons')
+    implementation project(':ui-tabcounter')
+    implementation project(':ui-widgets')
+    implementation project(':feature-webcompat')
+    implementation project(':feature-webcompat-reporter')
+    implementation project(':support-webextensions')
+    implementation project(':support-locale')
+    implementation project(':compose-cfr')
+
+    implementation ComponentsDependencies.kotlin_coroutines
+    debugImplementation ComponentsDependencies.leakcanary
+
+    focusImplementation FocusDependencies.adjust
+    focusImplementation FocusDependencies.install_referrer // Required by Adjust
+
+    testImplementation "org.mozilla.telemetry:glean-native-forUnitTests:${project.ext.glean_version}"
+
+    testImplementation FocusDependencies.testing_junit_api
+    testRuntimeOnly FocusDependencies.testing_junit_engine
+    testImplementation FocusDependencies.testing_junit_params
+    testImplementation ComponentsDependencies.testing_robolectric
+    testImplementation ComponentsDependencies.testing_mockito
+    testImplementation ComponentsDependencies.testing_coroutines
+    testImplementation ComponentsDependencies.androidx_work_testing
+    testImplementation ComponentsDependencies.androidx_arch_core_testing
+    testImplementation project(':support-test')
+    testImplementation project(':support-test-libstate')
+    androidTestImplementation ComponentsDependencies.androidx_espresso_core, {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    }
+    androidTestImplementation FocusDependencies.espresso_idling_resource
+    androidTestImplementation FocusDependencies.espresso_web, {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    }
+    androidTestImplementation FocusDependencies.espresso_intents
+
+
+    androidTestImplementation ComponentsDependencies.testing_mockwebserver
+    testImplementation ComponentsDependencies.testing_mockwebserver
+    testImplementation project(':lib-fetch-okhttp')
+
+    androidTestImplementation FocusDependencies.fastlane
+    androidTestImplementation FocusDependencies.falcon // Required by fastlane
+
+    androidTestImplementation FocusDependencies.espresso_contrib, {
+        exclude module: 'appcompat-v7'
+        exclude module: 'support-v4'
+        exclude module: 'support-annotations'
+        exclude module: 'recyclerview-v7'
+        exclude module: 'design'
+        exclude module: 'espresso-core'
+    }
+    testImplementation ComponentsDependencies.androidx_test_core
+    testImplementation ComponentsDependencies.androidx_test_runner
+    testImplementation ComponentsDependencies.androidx_test_rules
+
+    androidTestImplementation ComponentsDependencies.androidx_test_core
+    androidTestImplementation ComponentsDependencies.androidx_test_junit
+    androidTestImplementation ComponentsDependencies.androidx_test_uiautomator
+    androidTestImplementation ComponentsDependencies.androidx_test_runner
+    androidTestUtil FocusDependencies.androidx_orchestrator
+
+    lintChecks project(':tooling-lint')
+}
+// -------------------------------------------------------------------------------------------------
+//  Dynamically set versionCode (See tools/build/versionCode.gradle
+// -------------------------------------------------------------------------------------------------
+
+// Mimic Python: open(os.path.join(buildconfig.topobjdir, 'buildid.h')).readline().split()[2]
+def getBuildId() {
+    if (System.env.MOZ_BUILD_DATE) {
+        if (System.env.MOZ_BUILD_DATE.length() == 14) {
+            return System.env.MOZ_BUILD_DATE
+        }
+        logger.warn("Ignoring invalid MOZ_BUILD_DATE: ${System.env.MOZ_BUILD_DATE}")
+    }
+    return file("${gradle.mozconfig.topobjdir}/buildid.h").getText('utf-8').split()[2]
+}
+
+android.applicationVariants.configureEach { variant ->
+    def buildType = variant.buildType.name
+
+    println("----------------------------------------------")
+    println("Variant name:      " + variant.name)
+    println("Application ID:    " + [variant.applicationId, variant.buildType.applicationIdSuffix].findAll().join())
+    println("Build type:        " + variant.buildType.name)
+    println("Flavor:            " + variant.flavorName)
+
+    if (buildType == "release" || buildType == "nightly" || buildType == "beta") {
+        def baseVersionCode = generatedVersionCode
+        def versionName = buildType == "nightly" ?
+                "${Config.nightlyVersionName(project)}-${getBuildId()}" :
+                "${Config.releaseVersionName(project)}-${getBuildId()}"
+        println("versionName override: $versionName")
+
+        // The Google Play Store does not allow multiple APKs for the same app that all have the
+        // same version code. Therefore we need to have different version codes for our ARM and x86
+        // builds. See https://developer.android.com/studio/publish/versioning
+
+        // Our generated version code now has a length of 9 (See tools/gradle/versionCode.gradle).
+        // Our x86 builds need a higher version code to avoid installing ARM builds on an x86 device
+        // with ARM compatibility mode.
+
+        // AAB builds need a version code that is distinct from any APK builds. Since AAB and APK
+        // builds may run in parallel, AAB and APK version codes might be based on the same
+        // (minute granularity) time of day. To avoid conflicts, we ensure the minute portion
+        // of the version code is even for APKs and odd for AABs.
+
+        variant.outputs.each { output ->
+            def abi = output.getFilter(FilterConfiguration.FilterType.ABI.name())
+            def aab = project.hasProperty("aab")
+            // We use the same version code generator, that we inherited from Fennec, across all channels - even on
+            // channels that never shipped a Fennec build.
+
+            // ensure baseVersionCode is an even number
+            if (baseVersionCode % 2) {
+                baseVersionCode = baseVersionCode + 1
+            }
+
+            def versionCodeOverride = baseVersionCode
+
+            if (aab) {
+                // AAB version code is odd
+                versionCodeOverride = versionCodeOverride + 1
+                println("versionCode for AAB = $versionCodeOverride")
+            } else {
+                if (abi == "x86_64") {
+                    versionCodeOverride = versionCodeOverride + 6
+                } else if (abi == "x86") {
+                    versionCodeOverride = versionCodeOverride + 4
+                } else if (abi == "arm64-v8a") {
+                    versionCodeOverride = versionCodeOverride + 2
+                } else if (abi == "armeabi-v7a") {
+                    versionCodeOverride = versionCodeOverride + 0
+                } else {
+                    throw new RuntimeException("Unknown ABI: " + abi)
+                }
+                println("versionCode for $abi = $versionCodeOverride")
+            }
+
+            if (versionName != null) {
+                output.versionNameOverride = versionName
+            }
+            output.versionCodeOverride = versionCodeOverride
+
+        }
+
+    }
+}
+
+// -------------------------------------------------------------------------------------------------
+// MLS: Read token from local file if it exists (Only release builds)
+// -------------------------------------------------------------------------------------------------
+
+android.applicationVariants.configureEach {
+    print("MLS token: ")
+    try {
+        def token = new File("${rootDir}/.mls_token").text.trim()
+        buildConfigField 'String', 'MLS_TOKEN', '"' + token + '"'
+        println "(Added from .mls_token file)"
+    } catch (FileNotFoundException ignored) {
+        buildConfigField 'String', 'MLS_TOKEN', '""'
+        println("X_X")
+    }
+}
+
+// -------------------------------------------------------------------------------------------------
+// Adjust: Read token from local file if it exists (Only release builds)
+// -------------------------------------------------------------------------------------------------
+
+android.applicationVariants.configureEach { variant ->
+    def variantName = variant.getName()
+
+    print("Adjust token: ")
+
+    if (variantName.contains("Release") && variantName.contains("focus")) {
+        try {
+            def token = new File("${rootDir}/.adjust_token").text.trim()
+            buildConfigField 'String', 'ADJUST_TOKEN', '"' + token + '"'
+            println "(Added from .adjust_token file)"
+        } catch (FileNotFoundException ignored) {
+            if (gradle.hasProperty("localProperties.autosignReleaseWithDebugKey")) {
+                buildConfigField 'String', 'ADJUST_TOKEN', '"fake"'
+                println("fake - only for local development")
+            } else {
+                buildConfigField 'String', 'ADJUST_TOKEN', 'null'
+                println("X_X")
+            }
+        }
+    } else {
+        buildConfigField 'String', 'ADJUST_TOKEN', 'null'
+        println("--")
+    }
+}
+
+// -------------------------------------------------------------------------------------------------
+// Sentry: Read token from local file if it exists (Only release builds)
+// -------------------------------------------------------------------------------------------------
+
+android.applicationVariants.configureEach {
+    print("Sentry token: ")
+    try {
+        def token = new File("${rootDir}/.sentry_token").text.trim()
+        buildConfigField 'String', 'SENTRY_TOKEN', '"' + token + '"'
+        println "(Added from .sentry_token file)"
+    } catch (FileNotFoundException ignored) {
+        buildConfigField 'String', 'SENTRY_TOKEN', '""'
+        println("X_X")
+    }
+}
+
+// -------------------------------------------------------------------------------------------------
+// L10N: Generate list of locales
+// Focus provides its own (Android independent) locale switcher. That switcher requires a list
+// of locale codes. We generate that list here to avoid having to manually maintain a list of locales:
+// -------------------------------------------------------------------------------------------------
+
+def getEnabledLocales() {
+    def resDir = file('src/main/res')
+
+    def potentialLanguageDirs = resDir.listFiles(new FilenameFilter() {
+        @Override
+        boolean accept(File dir, String name) {
+            return name.startsWith("values-")
+        }
+    })
+
+    def langs = potentialLanguageDirs.findAll {
+        // Only select locales where strings.xml exists
+        // Some locales might only contain e.g. sumo URLS in urls.xml, and should be skipped (see es vs es-ES/es-MX/etc)
+        return  file(new File(it, "strings.xml")).exists()
+    } .collect {
+        // And reduce down to actual values-* names
+        return it.name
+    } .collect {
+        return it.substring("values-".length())
+    } .collect {
+        if (it.length() > 3 && it.contains("-r")) {
+            // Android resource dirs add an "r" prefix to the region - we need to strip that for java usage
+            // Add 1 to have the index of the r, without the dash
+            def regionPrefixPosition = it.indexOf("-r") + 1
+
+            return it.substring(0, regionPrefixPosition) + it.substring(regionPrefixPosition + 1)
+        } else {
+            return it
+        }
+    }.collect {
+        return '"' + it + '"'
+    }
+
+    // en-US is the default language (in "values") and therefore needs to be added separately
+    langs << "\"en-US\""
+
+    return langs.sort { it }
+}
+
+// -------------------------------------------------------------------------------------------------
+// Nimbus: Read endpoint from local.properties of a local file if it exists
+// -------------------------------------------------------------------------------------------------
+
+print("Nimbus endpoint: ")
+android.applicationVariants.configureEach { variant ->
+    def variantName = variant.getName()
+
+    if (!variantName.contains("Debug")) {
+        try {
+            def url = new File("${rootDir}/.nimbus").text.trim()
+            buildConfigField 'String', 'NIMBUS_ENDPOINT', '"' + url + '"'
+            println "(Added from .nimbus file)"
+        } catch (FileNotFoundException ignored) {
+            buildConfigField 'String', 'NIMBUS_ENDPOINT', 'null'
+            println("X_X")
+        }
+    } else if (gradle.hasProperty("localProperties.nimbus.remote-settings.url")) {
+        def url = gradle.getProperty("localProperties.nimbus.remote-settings.url")
+        buildConfigField 'String', 'NIMBUS_ENDPOINT', '"' + url + '"'
+        println "(Added from local.properties file)"
+    } else {
+        buildConfigField 'String', 'NIMBUS_ENDPOINT', 'null'
+        println("--")
+    }
+}
+
+def generatedLocaleListDir = 'src/main/java/org/mozilla/focus/generated'
+def generatedLocaleListFilename = 'LocalesList.kt'
+
+tasks.register('generateLocaleList') {
+    doLast {
+        def dir = file(generatedLocaleListDir)
+        dir.mkdir()
+        def localeList = file(new File(dir, generatedLocaleListFilename))
+
+        localeList.delete()
+        localeList.createNewFile()
+        localeList << "package org.mozilla.focus.generated" << "\n" << "\n"
+        localeList << "import java.util.Collections" << "\n"
+        localeList << "\n"
+        localeList << "/**"
+        localeList << "\n"
+        localeList << " * Provides a list of bundled locales based on the language files in the res folder."
+        localeList << "\n"
+        localeList << " */"
+        localeList << "\n"
+        localeList << "object LocalesList {" << "\n"
+        localeList << "    " << "val BUNDLED_LOCALES: List<String> = Collections.unmodifiableList("
+        localeList << "\n"
+        localeList << "        " << "listOf("
+        localeList << "\n"
+        localeList << "            "
+        localeList << getEnabledLocales().join(",\n" + "            ")
+        localeList << ",\n"
+        localeList << "        )," << "\n"
+        localeList << "    )" << "\n"
+        localeList << "}" << "\n"
+    }
+}
+
+tasks.configureEach { task ->
+    if (name.contains("compile")) {
+        task.dependsOn generateLocaleList
+    }
+}
+
+clean.doLast {
+    file(generatedLocaleListDir).deleteDir()
+}
+
+if (project.hasProperty("coverage")) {
+    tasks.withType(Test).configureEach {
+        jacoco.includeNoLocationClasses = true
+        jacoco.excludes = ['jdk.internal.*']
+    }
+
+    android.applicationVariants.configureEach { variant ->
+        tasks.register("jacoco${variant.name.capitalize()}TestReport", JacocoReport) {
+
+            dependsOn(["test${variant.name.capitalize()}UnitTest"])
+            reports {
+                html.required = true
+                xml.required = true
+            }
+
+            def fileFilter = ['**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*',
+                              '**/*Test*.*', 'android/**/*.*', '**/*$[0-9].*']
+            def kotlinTree = fileTree(dir: "$project.layout.buildDirectory/tmp/kotlin-classes/${variant.name}", excludes: fileFilter)
+            def javaTree = fileTree(dir: "$project.layout.buildDirectory/intermediates/classes/${variant.flavorName}/${variant.buildType.name}",
+                    excludes: fileFilter)
+            def mainSrc = "$project.projectDir/src/main/java"
+            sourceDirectories.setFrom(files([mainSrc]))
+            classDirectories.setFrom(files([kotlinTree, javaTree]))
+            executionData.setFrom(fileTree(dir: project.layout.buildDirectory, includes: [
+                    "jacoco/test${variant.name.capitalize()}UnitTest.exec", 'outputs/code-coverage/connected/*coverage.ec'
+            ]))
+        }
+    }
+
+    android {
+        buildTypes {
+            debug {
+                testCoverageEnabled true
+                applicationIdSuffix ".coverage"
+            }
+        }
+    }
+}
+
+if (gradle.hasProperty('localProperties.autoPublish.glean.dir')) {
+    ext.gleanSrcDir = gradle."localProperties.autoPublish.glean.dir"
+    apply from: "../${gleanSrcDir}/build-scripts/substitute-local-glean.gradle"
+}
+
+// -------------------------------------------------------------------------------------------------
+// Task for printing APK information for the requested variant
+// Taskgraph Usage: "./gradlew printVariants
+// -------------------------------------------------------------------------------------------------
+tasks.register('printVariants') {
+    doLast {
+        def variants = android.applicationVariants.collect { variant -> [
+            apks: variant.outputs.collect { output -> [
+                abi: output.getFilter(FilterConfiguration.FilterType.ABI.name()),
+                fileName: output.outputFile.name
+            ]},
+            build_type: variant.buildType.name,
+            name: variant.name,
+        ]}
+        // AndroidTest is a special case not included above
+        variants.add([
+            apks: [[
+                abi: 'noarch',
+                fileName: 'app-debug-androidTest.apk',
+            ]],
+            build_type: 'androidTest',
+            name: 'androidTest',
+        ])
+        println 'variants: ' + JsonOutput.toJson(variants)
+    }
+}
+
+// Enable expiration by major version.
+ext.gleanExpireByVersion = 1
+
+afterEvaluate {
+
+    // Format test output. Copied from Fenix, which was ported from AC #2401
+    tasks.withType(Test).configureEach {
+        systemProperty "robolectric.logging", "stdout"
+        systemProperty "logging.test-mode", "true"
+
+        testLogging.events = []
+
+        def out = services.get(StyledTextOutputFactory).create("tests")
+
+        beforeSuite { descriptor ->
+            if (descriptor.getClassName() != null) {
+                out.style(Style.Header).println("\nSUITE: " + descriptor.getClassName())
+            }
+        }
+
+        beforeTest { descriptor ->
+            out.style(Style.Description).println("  TEST: " + descriptor.getName())
+        }
+
+        onOutput { descriptor, event ->
+            logger.lifecycle("    " + event.message.trim())
+        }
+
+        afterTest { descriptor, result ->
+            switch (result.getResultType()) {
+                case ResultType.SUCCESS:
+                    out.style(Style.Success).println("  SUCCESS")
+                    break
+
+                case ResultType.FAILURE:
+                    def testId = descriptor.getClassName() + "." + descriptor.getName()
+                    out.style(Style.Failure).println("  TEST-UNEXPECTED-FAIL | " + testId + " | " + result.getException())
+                    break
+
+                case ResultType.SKIPPED:
+                    out.style(Style.Info).println("  SKIPPED")
+                    break
+            }
+            logger.lifecycle("")
+        }
+    }
+}

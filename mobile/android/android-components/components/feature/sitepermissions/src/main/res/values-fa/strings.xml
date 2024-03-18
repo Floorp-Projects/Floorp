@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Title of a dialog for a notification permission request. -->
+    <string name="mozac_feature_sitepermissions_notification_title">به %1$s اجازه می‌دهید آگاهی بفرستد؟</string>
+    <!-- Title of a dialog for a camera permission request. -->
+    <string name="mozac_feature_sitepermissions_camera_title">به %1$s اجازه می‌دهید از دوربین شما استفاده کند؟</string>
+    <!-- Title of a dialog for a microphone permission request. -->
+    <string name="mozac_feature_sitepermissions_microfone_title">آیا %1$s اجازهٔ استفاده از صدابَر شما را دارد؟</string>
+    <!-- Title of a dialog for a location permission request. -->
+    <string name="mozac_feature_sitepermissions_location_title">به %1$s اجازه می‌دهید از مکان شما استفاده کند؟</string>
+    <!-- Title of a dialog for a camera and microphone permission request. -->
+    <string name="mozac_feature_sitepermissions_camera_and_microphone">آیا %1$s اجازهٔ استفاده از دوربین و صدابَر شما را دارد؟</string>
+    <!-- Option in a dialog for requesting a microphone permission, this option will give access to
+         the first microphone-->
+    <string name="mozac_feature_sitepermissions_option_microphone_one">صدابَر 1</string>
+    <!-- Option in a dialog for requesting a camera permission, this option will give access to
+         back facing camera-->
+    <string name="mozac_feature_sitepermissions_back_facing_camera2">دوربین عقب</string>
+    <!-- Option in a dialog for requesting a camera permission, this option will give access to
+     front facing camera-->
+    <string name="mozac_feature_sitepermissions_selfie_camera2">دوربین جلو</string>
+    <!-- Text for a positive button in a permission request dialog, this button will give
+        access to this permission-->
+    <string name="mozac_feature_sitepermissions_allow">اجازه دادن</string>
+    <!-- Text for a negative button in a permission request dialog, this button will do not give
+    access to this permission-->
+    <string name="mozac_feature_sitepermissions_not_allow">اجازه ندادن</string>
+    <!-- Text for a checkbox in a permission request dialog, this will allow to not show again the prompt-->
+    <string name="mozac_feature_sitepermissions_do_not_ask_again_on_this_site2">تصمیم را برای این پایگاه به خاطر بسپار</string>
+    <!-- Text for a positive button in a permission request dialog. This will always allow and remember the decision of the user, this is the special case of the notification permission, that is only ask one time-->
+    <string name="mozac_feature_sitepermissions_always_allow">همیشه</string>
+    <!-- Text for a negative button in a permission request dialog. This will never allow and remember the decision of the user, this is the special case of the notification permission, that is only ask one time-->
+    <string name="mozac_feature_sitepermissions_never_allow">هرگز</string>
+    <!-- Title of a dialog to require to save data in persistent storage. %1$s will be replaced with the URL of the current page -->
+    <string name="mozac_feature_sitepermissions_persistent_storage_title">به %1$s اجازه‌ می‌دهید داده‌ها را در ذخیره‌گاه دائمی ذخیره کند؟</string>
+    <!-- Title of a dialog to use EME. %1$s will be replaced with the URL of the current page -->
+    <string name="mozac_feature_sitepermissions_media_key_system_access_title">به %1$s اجازه می‌دهید محتوای واپایش شده با DRM را پخش کند؟</string>
+    <!-- Title of a dialog to use cross origin storage permission. %1$s is the name of the site URL (www.site1.example) trying to track the user's activity.
+     %2$s is the name of the site URL (www.site2.example) that the user is visiting.  This is the same domain name displayed in the address bar -->
+    <string name="mozac_feature_sitepermissions_storage_access_title">به %1$s اجازهٔ استفاده از کلوچک‌های خود در %2$s را می‌دهید؟</string>
+    <!-- Message of a dialog offering more context about the cross origin storage permission.
+    %s is the name of the site URL (www.site1.example) trying to track the user's activity. -->
+    <string name="mozac_feature_sitepermissions_storage_access_message">اگر مشخص نیست چرا %s به این داده‌ها نیاز دارد، ممکن است بخواهید دسترسی‌اش را مسدود کنید.</string>
+    <!-- Text for a negative button in the storage access permission request dialog. This button will not give access to this permission. -->
+    <string name="mozac_feature_sitepermissions_storage_access_not_allow">مسدود کردن</string>
+    <!-- Clickable text that will open a new tab navigating the user to online documentation about specific features. -->
+    <string name="mozac_feature_sitepermissions_learn_more_title">بیشتر بدانید</string>
+</resources>

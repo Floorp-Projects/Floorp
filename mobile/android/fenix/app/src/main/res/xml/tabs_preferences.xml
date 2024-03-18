@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <androidx.preference.PreferenceCategory
+        android:layout="@layout/preference_cat_style"
+        android:title="@string/preferences_tab_view"
+        app:allowDividerAbove="false"
+        app:iconSpaceReserved="false">
+        <org.mozilla.fenix.settings.RadioButtonPreference
+            android:defaultValue="false"
+            android:key="@string/pref_key_tab_view_list_do_not_use"
+            android:title="@string/tab_view_list" />
+
+        <org.mozilla.fenix.settings.RadioButtonPreference
+            android:defaultValue="true"
+            android:key="@string/pref_key_tab_view_grid"
+            android:title="@string/tab_view_grid" />
+    </androidx.preference.PreferenceCategory>
+
+    <androidx.preference.PreferenceCategory
+        android:layout="@layout/preference_cat_style"
+        android:title="@string/preferences_close_tabs"
+        app:allowDividerAbove="true"
+        app:iconSpaceReserved="false">
+        <org.mozilla.fenix.settings.RadioButtonPreference
+            android:defaultValue="true"
+            android:key="@string/pref_key_close_tabs_manually"
+            android:title="@string/close_tabs_manually" />
+
+        <org.mozilla.fenix.settings.RadioButtonPreference
+            android:defaultValue="false"
+            android:key="@string/pref_key_close_tabs_after_one_day"
+            android:title="@string/close_tabs_after_one_day" />
+
+        <org.mozilla.fenix.settings.RadioButtonPreference
+            android:defaultValue="false"
+            android:key="@string/pref_key_close_tabs_after_one_week"
+            android:title="@string/close_tabs_after_one_week" />
+
+        <org.mozilla.fenix.settings.RadioButtonPreference
+            android:defaultValue="false"
+            android:key="@string/pref_key_close_tabs_after_one_month"
+            android:title="@string/close_tabs_after_one_month" />
+    </androidx.preference.PreferenceCategory>
+
+    <androidx.preference.PreferenceCategory
+        android:layout="@layout/preference_cat_style"
+        android:title="@string/preferences_inactive_tabs"
+        android:key="@string/pref_key_inactive_tabs_category"
+        app:allowDividerAbove="true"
+        app:iconSpaceReserved="false">
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="@string/pref_key_inactive_tabs"
+            android:title="@string/preferences_inactive_tabs_title"/>
+    </androidx.preference.PreferenceCategory>
+</androidx.preference.PreferenceScreen>

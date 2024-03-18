@@ -213,6 +213,7 @@ jobs:
         fetches:
             toolchain:
                 - android-gradle-dependencies
+                - android-gradle-python-envs
                 - android-ndk-linux
                 - android-sdk-linux
                 - linux64-jdk
@@ -267,6 +268,7 @@ jobs:
         fetches:
             toolchain:
                 - android-gradle-dependencies
+                - android-gradle-python-envs
                 - android-ndk-linux
                 - android-sdk-linux
                 - linux64-jdk
@@ -321,6 +323,7 @@ jobs:
         fetches:
             toolchain:
                 - android-gradle-dependencies
+                - android-gradle-python-envs
                 - android-ndk-linux
                 - android-sdk-linux
                 - linux64-jdk

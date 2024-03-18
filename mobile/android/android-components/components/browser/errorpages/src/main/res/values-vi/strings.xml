@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">Thử lại</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">Không thể hoàn tất yêu cầu</string>
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p>Hiện không có thông tin bổ sung về sự cố hay lỗi này.</p>]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">Kết nối bảo mật đã thất bại</string>
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[      <ul>
+        <li>Trang bạn đang cố gắng truy cập không thể hiển thị vì không thể xác minh tính xác thực của dữ liệu nhận được.</li>
+        <li>Bạn hãy liên hệ với chủ sở hữu trang web để thông báo về sự cố này nếu có thể.</li>
+      </ul>
+      ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Kết nối bảo mật đã thất bại</string>
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+      <ul>
+        <li>Đây có thể là một vấn đề với cấu hình máy chủ, hoặc có thể ai đó đang cố gắng mạo danh máy chủ này.</li>
+        <li>Nếu trước đây bạn đã kết nối với máy chủ này thành công thì có khả năng lỗi này chỉ là tạm thời và bạn có thể thử lại sau.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Nâng cao…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Ai đó có thể đang cố gắng mạo danh trang web và bạn không nên tiếp tục.</label>
+        <br><br>
+        <label>Trang web chứng minh danh tính của họ thông qua các chứng chỉ. %1$s không tin tưởng <b>%2$s</b> vì tổ chức phát hành chứng chỉ không xác định, chứng chỉ tự ký, hoặc máy chủ không gửi chứng chỉ trung gian chính xác.</label>
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Quay lại (Khuyến nghị)</string>
+    <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Chấp nhận rủi ro và tiếp tục</string>
+
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">Trang web này yêu cầu kết nối an toàn.</string>
+    <!-- The error message shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
+      <ul>
+         <li>Không thể hiển thị trang web bạn đang cố gắng truy cập vì nó yêu cầu kết nối an toàn.</li>
+         <li>Rất có thể đã xảy ra sự cố với trang web và bạn không thể làm gì để giải quyết nó.</li>
+         <li>Bạn có thể thông báo cho quản trị viên của trang web về sự cố.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Nâng cao…</string>
+
+    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
+        <label> <b>%1$s</b> có chính sách bảo mật được gọi là Bảo mật truyền tải nghiêm ngặt HTTP (HSTS), có nghĩa là <b>%2$s</b> chỉ có thể kết nối với nó một cách an toàn. Bạn không thể thêm ngoại lệ để truy cập trang web này. </label>
+    ]]></string>
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">Quay lại</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">Kết nối đã bị gián đoạn</string>
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
+      <p>Trình duyệt đã kết nối thành công, nhưng kết nối bị gián đoạn trong khi truyền thông tin. Vui lòng thử lại.</p>
+      <ul>
+        <li>Trang web có thể tạm thời không có hoặc quá bận rộn. Hãy thử lại trong một vài giây.</li>
+        <li>Nếu bạn không thể tải bất kỳ trang nào, hãy kiểm tra kết nối dữ liệu hoặc kết nối Wi-Fi trên thiết bị của bạn.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">Kết nối đã quá hạn</string>
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
+      <p>Trang web được yêu cầu không phản hồi yêu cầu kết nối và trình duyệt đã dừng chờ trả lời.</p>
+      <ul>
+        <li>Máy chủ có thể gặp phải nhu cầu cao hoặc ngừng hoạt động tạm thời? Thử lại sau.</li>
+        <li>Bạn không thể duyệt các trang web khác? Kiểm tra kết nối mạng máy tính.</li>
+        <li>Máy tính hoặc mạng của bạn được bảo vệ bởi tường lửa hoặc proxy? Cài đặt không chính xác có thể can thiệp vào trình duyệt Web.</li>
+        <li>Vẫn gặp sự cố? Tham khảo ý kiến ​​quản trị viên mạng hoặc nhà cung cấp Internet của bạn để được hỗ trợ.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">Không thể kết nối</string>
+
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
+      <ul>
+        <li>Trang web có thể tạm thời không có hoặc quá tải. Hãy thử lại sau.</li>
+        <li>Nếu bạn không thể tải bất kỳ trang nào, hãy kiểm tra kết nối dữ liệu hoặc kết nối Wi-Fi trên thiết bị của bạn.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Phản hồi không mong muốn từ máy chủ</string>
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[      <p>Trang web đã phản hồi yêu cầu mạng theo cách không mong muốn và trình duyệt không thể tiếp tục.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">Trang này chuyển hướng không đúng cách</string>
+
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
+      <p>Trình duyệt đã ngừng cố gắng truy xuất mục được yêu cầu. Trang web đang chuyển hướng yêu cầu theo cách không bao giờ hoàn thành.</p>
+      <ul>
+        <li>Có phải bạn đã vô hiệu hóa hoặc chặn cookie theo yêu cầu của trang web này?</li>
+        <li>Nếu chấp nhận cookie của trang web không giải quyết được vấn đề, có thể cấu hình máy chủ và máy tính của bạn có vấn đề .</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">Chế độ ngoại tuyến</string>
+
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[
+      <p>Trình duyệt đang hoạt động ở chế độ ngoại tuyến và không thể kết nối với mục được yêu cầu.</p>
+      <ul>
+        <li>Máy tính có được kết nối với mạng đang hoạt động không?</li>
+        <li>Nhấp “Thử lại” để chuyển sang chế độ trực tuyến và tải lại trang.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">Port bị hạn chế vì lý do an ninh</string>
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[
+      <p>Địa chỉ được yêu cầu chỉ định một cổng (ví dụ:  <q>mozilla.org:80</q> cho port 80 trên mozilla.org) thường được sử dụng cho những mục đích <em>khác</em> hơn là duyệt Web. Trình duyệt đã hủy yêu cầu vì lý do bảo vệ và bảo mật của bạn.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">Kết nối đã được thiết lập lại</string>
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[
+      <p>Liên kết mạng đã bị gián đoạn trong khi đàm phán kết nối. Vui lòng thử lại.</p>
+      <ul>
+        <li>Trang web có thể tạm thời không có hoặc quá bận rộn. Hãy thử lại sau.</li>
+        <li>Nếu bạn không thể tải bất kỳ trang nào, hãy kiểm tra kết nối dữ liệu hoặc kết nối Wi-Fi trên thiết bị của bạn.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">Loại tập tin không an toàn</string>
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[
+      <ul>
+        <li>Vui lòng liên hệ với các chủ sở hữu trang web để thông báo cho họ về vấn đề này.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">Lỗi nội dung bị hỏng</string>
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
+      <p>Trang bạn đang cố truy cập không thể được hiển thị vì đã phát hiện lỗi trong quá trình truyền dữ liệu.</p>
+      <ul>
+        <li>Vui lòng liên hệ với các chủ sở hữu trang web để thông báo cho họ về vấn đề này.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Nội dung bị lỗi</string>
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
+      <p>Trang bạn đang cố truy cập không thể hiển thị vì đã phát hiện lỗi trong quá trình truyền dữ liệu.</p>
+      <ul>
+        <li>Vui lòng liên hệ với các chủ sở hữu trang web để thông báo cho họ về vấn đề này.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Lỗi mã hóa nội dung</string>
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[      <p>Trang bạn đang cố truy cập không thể hiển thị vì nó sử dụng hình thức nén không hợp lệ hoặc không được hỗ trợ.</p>
+      <ul>
+        <li> Vui lòng liên hệ với các chủ sở hữu trang web để thông báo cho họ về vấn đề này.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">Không tìm thấy địa chỉ</string>
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
+      <p>Trình duyệt không thể tìm thấy máy chủ lưu trữ cho địa chỉ được cung cấp.</p>
+      <ul>
+        <li>Kiểm tra địa chỉ cho các lỗi đánh máy như
+          <strong>ww</strong>.example.com thay cho
+          <strong>www</strong>.example.com.</li>
+        <li>Nếu bạn không thể tải bất kỳ trang nào, hãy kiểm tra kết nối dữ liệu hoặc kết nối Wi-Fi trên thiết bị của bạn.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">Không có kết nối mạng</string>
+    <!-- The main body text of this error page. It will be shown beneath the title -->
+    <string name="mozac_browser_errorpages_no_internet_message">Kiểm tra kết nối mạng của bạn hoặc thử tải lại trang trong giây lát.</string>
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">Tải lại</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">Địa chỉ không hợp lệ</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
+      <p>Địa chỉ được cung cấp không ở định dạng được công nhận. Vui lòng kiểm tra thanh vị trí cho các lỗi và thử lại.</p>
+    ]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Địa chỉ không hợp lệ</string>
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[
+      <ul>
+        <li>Địa chỉ web thường được viết như <strong>http://www.example.com/</strong></li>
+        <li>Đảm bảo rằng bạn sử dụng dấu gạch chéo về phía trước (như <strong>/</strong>).</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">Giao thức không xác định</string>
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
+      <p>Địa chỉ chỉ định một giao thức (e.g., <q>wxyz://</q>) trình duyệt không nhận ra, vì vậy trình duyệt không thể kết nối đúng với trang web.</p>
+      <ul>
+        <li>Bạn đang cố gắng truy cập đa phương tiện hoặc các dịch vụ phi văn bản khác? Kiểm tra các trang web cho các yêu cầu thêm.</li>
+        <li>Một số giao thức có thể yêu cầu phần mềm hoặc plugin của bên thứ ba trước khi trình duyệt có thể nhận ra chúng.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">Không tìm thấy tập tin</string>
+
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[
+      <ul>
+        <li>Mục này đã được đổi tên, loại bỏ hoặc di chuyển không?</li>
+        <li>Có lỗi chính tả, viết hoa hoặc lỗi đánh máy khác trong địa chỉ không?</li>
+        <li>Bạn có đủ quyền truy cập vào mục được yêu cầu không?</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">Quyền truy cập tập tin đã bị từ chối</string>
+
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[
+      <ul>
+        <li>Nó có thể đã được gỡ bỏ, di chuyển, hoặc quyền truy cập tập tin có thể đã bị từ chối.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Máy chủ proxy từ chối kết nối</string>
+
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[
+      <p>Trình duyệt được cấu hình để sử dụng máy chủ proxy, nhưng proxy đã từ chối kết nối.</p>
+      <ul>
+        <li>Cấu hình proxy của trình duyệt có đúng không? Kiểm tra cài đặt và thử lại.</li>
+        <li>Dịch vụ proxy có cho phép kết nối từ mạng này không?</li>
+        <li>Vẫn gặp sự cố? Tham khảo ý kiến ​​quản trị viên mạng hoặc nhà cung cấp dịch vụ Internet của bạn để được hỗ trợ.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Không tìm thấy máy chủ proxy</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
+      <p>Trình duyệt được cấu hình để sử dụng máy chủ proxy, nhưng không thể tìm thấy proxy.</p>
+      <ul>
+        <li>Cấu hình proxy của trình duyệt có đúng không? Kiểm tra cài đặt và thử lại.</li>
+        <li>Máy tính có được kết nối với mạng đang hoạt động không?</li>
+        <li>Vẫn gặp sự cố? Tham khảo ý kiến ​​quản trị viên mạng hoặc nhà cung cấp dịch vụ Internet của bạn để được hỗ trợ.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Sự cố với trang web có mã độc</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
+      <p>Trang web tại %1$s đã được báo cáo là một trang web tấn công và đã bị chặn dựa trên tùy chọn bảo mật của bạn.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Sự cố trang web không mong muốn</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
+      <p>Trang web tại %1$s đã được báo cáo là cung cấp phần mềm không mong muốn và đã bị chặn dựa trên tùy chọn bảo mật của bạn.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Sự cố trang web gây hại</string>
+
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[
+      <p>Trang web tại %1$s đã được báo cáo là một trang web có khả năng gây hại và đã bị chặn dựa trên các tùy chọn bảo mật của bạn.</p>
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Vấn đề trang web lừa đảo</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
+      <p>Trang web này tại %1$s đã được báo cáo là trang lừa đảo và đã bị chặn dựa trên tùy chọn bảo mật của bạn.</p>
+    ]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">Trang web an toàn không khả dụng</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[Bạn đã bật Chế độ chỉ HTTPS để tăng cường bảo mật, và phiên bản HTTPS của <em>%1$s</em> không khả dụng.]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">Tiếp tục đến trang web HTTP</string>
+</resources>

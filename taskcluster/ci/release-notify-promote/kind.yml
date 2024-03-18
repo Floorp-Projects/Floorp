@@ -13,6 +13,8 @@ kind-dependencies:
     - post-beetmover-dummy
     - release-generate-checksums-beetmover
     - release-bouncer-sub
+    - signing-apk
+    - signing-bundle
 
 job-defaults:
     name: notify-release-drivers-promote
@@ -34,3 +36,5 @@ jobs:
         shipping-product: firefox
     devedition:
         shipping-product: devedition
+    firefox-android:
+        shipping-product: firefox-android

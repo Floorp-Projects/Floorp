@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_height="@dimen/search_engine_radio_button_height"
+    android:layout_width="match_parent"
+    android:minHeight="@dimen/radio_button_preference_height"
+    android:background="?android:selectableItemBackground"
+    android:clickable="true"
+    android:labelFor="@+id/radio_button"
+    android:focusable="true">
+    <RadioButton
+        android:id="@+id/radio_button"
+        android:layout_width="@dimen/search_engine_radio_button_height"
+        android:layout_height="@dimen/search_engine_radio_button_height"
+        android:textAppearance="?android:attr/textAppearanceListItem"
+        android:layout_marginStart="@dimen/search_bar_search_engine_icon_padding"
+        android:layout_gravity="center" />
+    <ImageView
+        android:id="@+id/engine_icon"
+        android:importantForAccessibility="no"
+        android:layout_width="@dimen/search_engine_engine_icon_height"
+        android:layout_height="@dimen/search_engine_engine_icon_height"
+        android:layout_marginStart="@dimen/search_engine_engine_icon_margin"
+        android:layout_gravity="center" />
+    <TextView
+        android:id="@+id/engine_text"
+        android:textColor="?attr/textPrimary"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/radio_button_padding_horizontal"
+        android:layout_marginEnd="@dimen/radio_button_padding_horizontal"
+        android:textSize="16sp"
+        tools:text="Google"
+        android:layout_weight="1"
+        android:layout_gravity="center" />
+    <ImageButton
+        android:id="@+id/overflow_menu"
+        android:layout_width="@dimen/glyph_button_width"
+        android:layout_height="@dimen/glyph_button_height"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/content_description_menu"
+        app:srcCompat="@drawable/ic_menu" />
+</LinearLayout>

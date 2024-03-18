@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Text for a positive button in a permission request dialog, this button will give
+        access to this permission-->
+    <string name="mozac_feature_sitepermissions_allow">Pahanugtan</string>
+    </resources>

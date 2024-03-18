@@ -1,0 +1,29 @@
+[
+  {
+    "namespace": "matchPatterns",
+    "description": "experimental API extension to expose MatchPattern functionality",
+    "functions": [
+      {
+        "name": "getMatcher",
+        "type": "function",
+        "description": "get a MatchPatternSet",
+        "parameters": [
+          {
+            "name": "patterns",
+            "description": "Array of string URL patterns to match",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        ],
+        "returns": {
+          "type": "object",
+          "properties": {
+            "matches": { "type": "function" }
+          }
+        }
+      }
+    ]
+  }
+]

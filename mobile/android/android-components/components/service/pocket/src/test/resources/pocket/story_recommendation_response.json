@@ -1,0 +1,12 @@
+{
+    "recommendations": [
+        {
+            "category": "science",
+            "url": "https://getpocket.com/explore/item/you-think-you-know-what-blue-is-but-you-have-no-idea",
+            "title": "You Think You Know What Blue Is, But You Have No Idea",
+            "imageUrl": "https://img-getpocket.cdn.mozilla.net/{wh}/filters:format(jpeg):quality(60):no_upscale():strip_exif()/https%3A%2F%2Fpocket-image-cache.com%2F1200x%2Ffilters%3Aformat(jpg)%3Aextract_focal()%2Fhttps%253A%252F%252Fpocket-syndicated-images.s3.amazonaws.com%252Farticles%252F3713%252F1584373694_GettyImages-83522858.jpg",
+            "publisher": "Pocket",
+            "timeToRead": 3
+        }
+    ]
+}

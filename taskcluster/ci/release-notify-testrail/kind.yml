@@ -1,0 +1,78 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+transforms:
+    - gecko_taskgraph.transforms.job:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    - ui-test-apk
+
+job-defaults:
+    description: Sends Slack message to release testers that Testrail Milestone was created.
+    treeherder:
+        kind: other
+        tier: 2
+        symbol: testrail
+    worker-type: b-linux-gcp
+    worker:
+        docker-image: {in-tree: android-ui-tests}
+        max-run-time: 120
+    run:
+        use-caches: false
+        using: run-commands
+        secrets:
+            - name: project/mobile/ci/testrail
+              key: testrailCredentials
+              path: .testrail_credentials.json
+              json: true
+    run-on-projects: [mozilla-beta, mozilla-release]
+    routes:
+        - notify.slack-channel.G016BC5FUHJ.on-failed
+    scopes:
+        - queue:route:notify.slack-channel.G016BC5FUHJ  # notify mobile-alerts-sandbox on failure
+        - notify:slack-channel:G016BC5FUHJ
+        - queue:route:notify.slack-channel.C02KDDS9QM9  # notify mobile-testeng on success
+        - notify:slack-channel:C02KDDS9QM9
+
+jobs:
+    create-milestone-focus:
+        dependencies:
+            ui-test-apk: ui-test-apk-focus-arm-beta
+        description: Create Testrail Milestone for Focus
+        treeherder:
+            platform: focus-android-all/opt
+        run:
+            pre-commands:
+                # get-secrets is called from '..' directory so we need to cd into any directory to make it work
+                - ["cd", "mobile/android/focus-android"]
+            commands:
+                - [python3, "../../../taskcluster/scripts/testrail_main.py"]
+        worker:
+            env:
+                SHIPPING_PRODUCT: focus
+                TESTRAIL_PRODUCT_TYPE: Focus
+                TESTRAIL_PROJECT_ID: '48'  # Focus Browser
+                TESTRAIL_TEST_SUITE_ID: '49386'  # Test Automation Release Milestone - Focus
+
+    create-milestone-fenix:
+        dependencies:
+            ui-test-apk: ui-test-apk-fenix-arm-beta
+        treeherder:
+            platform: fenix-android-all/opt
+        description: Create Testrail Milestone for Fenix
+        run:
+            pre-commands:
+                # get-secrets is called from '..' directory so we need to cd into any directory to make it work
+                - ["cd", "mobile/android/fenix"]
+            commands:
+                - [python3, "../../../taskcluster/scripts/testrail_main.py"]
+        worker:
+            env:
+                SHIPPING_PRODUCT: fenix
+                TESTRAIL_PRODUCT_TYPE: Firefox
+                TESTRAIL_PROJECT_ID: '59'  # Fenix Browser
+                TESTRAIL_TEST_SUITE_ID: '49319'  # Test Automation Release Milestone - Fenix

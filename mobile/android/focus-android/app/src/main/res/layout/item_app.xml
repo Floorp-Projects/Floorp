@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!-- ignore=Overdraw: we're using a (most-of-the-time) transparent background for the touch-ripple
+     effect. That background is item specific (this layout is used as a RecyclerView item), so
+     we can't move the background up to the next layer, hence we need to ignore that lint warning. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:ignore="Overdraw"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="48dp"
+    android:background="@drawable/background_open_in_item"
+    android:focusable="true"
+    android:clickable="true"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp">
+
+    <ImageView
+        android:id="@+id/icon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:importantForAccessibility="no"
+        android:layout_gravity="center_vertical"/>
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_weight="1"
+        android:layout_marginStart="32dp"
+        android:textColor="@color/primaryText"
+        android:textSize="16sp"
+        android:lines="1"
+        android:ellipsize="end"
+        android:gravity="center_vertical" />
+
+</LinearLayout>

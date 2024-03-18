@@ -1,0 +1,84 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+buildscript {
+    repositories {
+        gradle.mozconfig.substs.GRADLE_MAVEN_REPOSITORIES.each { repository ->
+            maven {
+                url repository
+                if (gradle.mozconfig.substs.ALLOW_INSECURE_GRADLE_REPOSITORIES) {
+                    allowInsecureProtocol = true
+                }
+            }
+        }
+
+        dependencies {
+            classpath "org.mozilla.telemetry:glean-gradle-plugin:${Versions.mozilla_glean}"
+        }
+    }
+}
+
+plugins {
+    id "com.jetbrains.python.envs" version "$python_envs_plugin"
+}
+
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+
+android {
+    defaultConfig {
+        applicationId "org.mozilla.samples.glean"
+        minSdkVersion config.minSdkVersion
+        compileSdk config.compileSdkVersion
+        targetSdkVersion config.targetSdkVersion
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            applicationIdSuffix ".debug"
+        }
+    }
+
+    buildFeatures {
+        viewBinding true
+        buildConfig true
+    }
+
+    namespace 'org.mozilla.samples.glean'
+}
+
+dependencies {
+    implementation project(':service-glean')
+    implementation project(':service-nimbus')
+    implementation project(':support-base')
+    implementation project(':support-rusthttp')
+    implementation project(':support-rustlog')
+    implementation project(':lib-fetch-httpurlconnection')
+
+    implementation ComponentsDependencies.kotlin_coroutines
+
+    implementation ComponentsDependencies.androidx_appcompat
+    implementation ComponentsDependencies.androidx_browser
+
+    implementation project(':samples-glean-library')
+
+    androidTestImplementation ComponentsDependencies.androidx_test_core
+    androidTestImplementation ComponentsDependencies.androidx_test_runner
+    androidTestImplementation ComponentsDependencies.androidx_test_rules
+    androidTestImplementation ComponentsDependencies.androidx_test_junit
+    androidTestImplementation ComponentsDependencies.androidx_test_uiautomator
+    androidTestImplementation ComponentsDependencies.androidx_espresso_core
+    androidTestImplementation ComponentsDependencies.androidx_work_testing
+    androidTestImplementation ComponentsDependencies.testing_mockwebserver
+}
+
+apply plugin: "org.mozilla.telemetry.glean-gradle-plugin"

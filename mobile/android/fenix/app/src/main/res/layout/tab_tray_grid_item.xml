@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!--
+A FrameLayout here is an efficient way of having a views stack while allowing:
+    - a sufficient enough canvas for the play button to be outside translated
+    without it getting clipped by the GridLayoutManager.
+    - enough padding for the primary view that needs to be displayed with a border around it.
+-->
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/tab_tray_grid_item"
+    android:layout_width="match_parent"
+    android:layout_height="202dp"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:padding="8dp">
+
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:importantForAccessibility="yes"
+        app:cardBackgroundColor="@color/fx_mobile_layer_color_2"
+        app:cardCornerRadius="@dimen/tab_tray_grid_item_border_radius"
+        app:cardElevation="0dp"
+        app:strokeColor="@color/fx_mobile_border_color_primary"
+        app:strokeWidth="1dp">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/tab_item"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipChildren="false"
+            android:clipToPadding="false">
+
+            <ImageView
+                android:id="@+id/mozac_browser_tabstray_favicon_icon"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_marginStart="8dp"
+                android:importantForAccessibility="no"
+                app:layout_constraintBottom_toTopOf="@id/horizonatal_divider"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/mozac_browser_tabstray_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:ellipsize="none"
+                android:fadingEdgeLength="25dp"
+                android:minHeight="30dp"
+                android:paddingHorizontal="7dp"
+                android:paddingVertical="5dp"
+                android:requiresFadingEdge="horizontal"
+                android:singleLine="true"
+                android:textColor="@color/fx_mobile_text_color_primary"
+                android:textSize="14sp"
+                android:visibility="visible"
+                app:layout_constraintEnd_toStartOf="@id/mozac_browser_tabstray_close"
+                app:layout_constraintStart_toEndOf="@id/mozac_browser_tabstray_favicon_icon"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="Example Domain" />
+
+            <androidx.appcompat.widget.AppCompatImageButton
+                android:id="@+id/mozac_browser_tabstray_close"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/close_tab"
+                app:layout_constraintBottom_toTopOf="@+id/horizonatal_divider"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:srcCompat="@drawable/mozac_ic_cross_20"
+                app:tint="@color/fx_mobile_text_color_primary" />
+
+            <View
+                android:id="@+id/horizonatal_divider"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/fx_mobile_border_color_primary"
+                app:layout_constraintTop_toBottomOf="@+id/mozac_browser_tabstray_title" />
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/mozac_browser_tabstray_card"
+                style="@style/Widget.MaterialComponents.CardView"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/tab_tray_grid_item_thumbnail_height"
+                app:cardBackgroundColor="?layer2"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/horizonatal_divider">
+
+                <mozilla.components.browser.tabstray.thumbnail.TabThumbnailView
+                    android:id="@+id/mozac_browser_tabstray_thumbnail"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:contentDescription="@string/mozac_browser_tabstray_open_tab" />
+
+                <include
+                    android:id="@+id/checkbox_include"
+                    layout="@layout/checkbox_item" />
+
+            </androidx.cardview.widget.CardView>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <ImageButton
+        android:id="@+id/play_pause_button"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_gravity="top|start"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/mozac_feature_media_notification_action_pause"
+        android:elevation="10dp"
+        android:importantForAccessibility="yes"
+        android:translationX="-8dp"
+        android:translationY="-8dp"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/media_state_play" />
+</FrameLayout>

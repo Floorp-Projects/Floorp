@@ -1,0 +1,32 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+apply plugin: 'java-library'
+apply plugin: 'kotlin'
+
+repositories {
+        gradle.mozconfig.substs.GRADLE_MAVEN_REPOSITORIES.each { repository ->
+            maven {
+                url repository
+                if (gradle.mozconfig.substs.ALLOW_INSECURE_GRADLE_REPOSITORIES) {
+                    allowInsecureProtocol = true
+                }
+            }
+        }
+}
+
+dependencies {
+    compileOnly "com.android.tools.lint:lint-api:${Versions.lint}"
+    compileOnly "com.android.tools.lint:lint-checks:${Versions.lint}"
+
+    testImplementation "junit:junit:4.13.2"
+    testImplementation "com.android.tools.lint:lint:${Versions.lint}"
+    testImplementation "com.android.tools.lint:lint-tests:${Versions.lint}"
+}
+
+jar {
+    manifest {
+        attributes('Lint-Registry-v2': 'org.mozilla.fenix.lintrules.LintIssueRegistry')
+    }
+}

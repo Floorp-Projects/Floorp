@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
+  -  License, v. 2.0. If a copy of the MPL was not distributed with this
+  -  file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.appcompat.widget.SwitchCompat xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/switch_widget"
+    style="@style/Mozac.Browser.Menu.Item.Text"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/mozac_browser_menu_item_container_layout_height"
+    android:drawablePadding="@dimen/mozac_browser_menu_item_image_text_icon_padding"
+    android:paddingStart="@dimen/mozac_browser_menu_item_container_padding_start"
+    android:paddingEnd="@dimen/mozac_browser_menu_item_container_padding_end"
+    android:textAlignment="viewStart"
+    app:drawableStartCompat="@android:drawable/screen_background_dark" />
+

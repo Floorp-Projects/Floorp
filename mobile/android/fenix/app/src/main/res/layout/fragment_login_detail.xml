@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/loginDetailLayout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="20dp"
+    android:layout_marginEnd="20dp"
+    android:layout_marginTop="16dp">
+
+    <TextView
+        android:id="@+id/webAddressHeader"
+        style="@style/CaptionTextStyle"
+        android:layout_width="0dp"
+        android:layout_height="24dp"
+        android:gravity="center_vertical"
+        android:letterSpacing="0.05"
+        android:paddingBottom="5dp"
+        android:text="@string/preferences_passwords_saved_logins_site"
+        android:textColor="?attr/textPrimary"
+        app:layout_constraintBottom_toTopOf="@id/webAddressText"
+        app:layout_constraintEnd_toStartOf="@id/openWebAddress"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed" />
+
+    <TextView
+        android:id="@+id/webAddressText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:paddingTop="@dimen/saved_logins_detail_menu_vertical_padding"
+        android:paddingBottom="@dimen/saved_logins_detail_menu_vertical_padding"
+        android:textColor="?attr/textPrimary"
+        android:textSize="16sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@id/webAddressHeader"
+        app:layout_constraintTop_toBottomOf="@id/webAddressHeader"
+        app:layout_constraintVertical_chainStyle="packed"
+        tools:text="Info" />
+
+    <ImageButton
+        android:id="@+id/openWebAddress"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/saved_login_open_site"
+        app:layout_constraintBottom_toBottomOf="@id/webAddressText"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/webAddressText"
+        app:srcCompat="@drawable/ic_open_in_new"
+        app:tint="?android:colorAccent" />
+
+    <TextView
+        android:id="@+id/usernameHeader"
+        style="@style/CaptionTextStyle"
+        android:layout_width="0dp"
+        android:layout_height="24dp"
+        android:layout_marginTop="16dp"
+        android:gravity="center_vertical"
+        android:letterSpacing="0.05"
+        android:text="@string/preferences_passwords_saved_logins_username"
+        android:textColor="?attr/textPrimary"
+        app:layout_constraintBottom_toTopOf="@id/usernameText"
+        app:layout_constraintEnd_toStartOf="@id/copyUsername"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/webAddressText"
+        app:layout_constraintVertical_chainStyle="packed" />
+
+    <TextView
+        android:id="@+id/usernameText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="1dp"
+        android:gravity="center_vertical"
+        android:paddingTop="@dimen/saved_logins_detail_menu_vertical_padding"
+        android:paddingBottom="@dimen/saved_logins_detail_menu_vertical_padding"
+        android:textColor="?attr/textPrimary"
+        android:textSize="16sp"
+        app:layout_constraintEnd_toEndOf="@id/usernameHeader"
+        app:layout_constraintStart_toStartOf="@id/usernameHeader"
+        app:layout_constraintTop_toBottomOf="@id/usernameHeader"
+        app:layout_constraintVertical_chainStyle="packed"
+        tools:text="Info" />
+
+    <ImageButton
+        android:id="@+id/copyUsername"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/saved_login_copy_username"
+        app:layout_constraintBottom_toBottomOf="@id/usernameText"
+        app:layout_constraintEnd_toEndOf="@id/openWebAddress"
+        app:layout_constraintStart_toStartOf="@id/openWebAddress"
+        app:layout_constraintTop_toTopOf="@id/usernameText"
+        app:srcCompat="@drawable/ic_copy"
+        app:tint="?android:colorAccent" />
+
+    <TextView
+        android:id="@+id/passwordHeader"
+        style="@style/CaptionTextStyle"
+        android:layout_width="0dp"
+        android:layout_height="24dp"
+        android:layout_marginTop="12dp"
+        android:gravity="center_vertical"
+        android:letterSpacing="0.05"
+        android:text="@string/preferences_passwords_saved_logins_password"
+        android:textColor="?attr/textPrimary"
+        app:layout_constraintBottom_toTopOf="@id/passwordText"
+        app:layout_constraintEnd_toStartOf="@id/revealPasswordButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/usernameText"
+        app:layout_constraintVertical_chainStyle="packed" />
+
+    <TextView
+        android:id="@+id/passwordText"
+        android:layout_width="0dp"
+        android:layout_height="30dp"
+        android:layout_marginTop="2dp"
+        android:gravity="center_vertical"
+        android:letterSpacing="0.01"
+        android:lineSpacingExtra="8sp"
+        android:textColor="?attr/textPrimary"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/revealPasswordButton"
+        app:layout_constraintStart_toStartOf="@id/passwordHeader"
+        app:layout_constraintTop_toBottomOf="@id/passwordHeader"
+        app:layout_constraintVertical_chainStyle="packed"
+        tools:text="Info" />
+
+    <ImageButton
+        android:id="@+id/revealPasswordButton"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="@null"
+        android:contentDescription="@string/saved_login_reveal_password"
+        app:layout_constraintBottom_toBottomOf="@id/passwordText"
+        app:layout_constraintEnd_toStartOf="@id/copyPassword"
+        app:layout_constraintTop_toTopOf="@id/passwordText"
+        app:srcCompat="@drawable/mozac_ic_eye_24"
+        app:tint="?android:colorAccent" />
+
+    <ImageButton
+        android:id="@+id/copyPassword"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/saved_logins_copy_password"
+        app:layout_constraintBottom_toBottomOf="@id/passwordText"
+        app:layout_constraintEnd_toEndOf="@id/openWebAddress"
+        app:layout_constraintStart_toStartOf="@id/openWebAddress"
+        app:layout_constraintTop_toTopOf="@id/passwordText"
+        app:srcCompat="@drawable/ic_copy"
+        app:tint="?android:colorAccent" />
+</androidx.constraintlayout.widget.ConstraintLayout>

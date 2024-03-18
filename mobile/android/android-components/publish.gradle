@@ -1,0 +1,97 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+import groovy.transform.Memoized
+
+def libRepoName = properties.libRepositoryName
+def libUrl = properties.libUrl
+def libVcsUrl = properties.libVcsUrl
+def libLicense = properties.libLicense
+def libLicenseUrl = properties.libLicenseUrl
+
+static def getLocalPublicationTimestamp() {
+    def date = new Date()
+    return date.format('yyyyMMddHHmmss')
+}
+
+// This vcsHash functionality is duplicated in :support-base build.gradle.
+@Memoized
+static def getVcsHash() {
+    String[] cmd = ['git', 'rev-parse', '--verify', 'HEAD'] // via https://stackoverflow.com/a/949391/2219998
+    def process = Runtime.getRuntime().exec(cmd)
+    process.waitFor()
+    if (process.exitValue() == 0) {
+        return process.inputStream.getText().trim()
+    }
+    cmd = ['hg', 'id', '--id']
+    ProcessBuilder pb = new ProcessBuilder(cmd)
+    pb.environment().put("HGPLAIN", "1")
+    process = pb.start(cmd)
+    process.waitFor()
+    return process.inputStream.getText().trim()
+}
+
+
+
+ext.configurePublish = { groupIdArg, artifactIdArg, descriptionArg ->
+    apply plugin: 'maven-publish'
+
+    tasks.register('sourcesJar', Jar) {
+        from android.sourceSets.main.java.srcDirs
+        archiveClassifier = 'sources'
+    }
+
+    android {
+        publishing {
+            singleVariant("release") {
+                withSourcesJar()
+            }
+        }
+    }
+
+    afterEvaluate {
+        publishing {
+            publications {
+                release(MavenPublication) {
+                    from components.release
+
+                    groupId = groupIdArg
+                    artifactId = artifactIdArg
+                    // 'local' is for streamlining local publication workflow.
+                    version = config.componentsVersion + (project.hasProperty('local') ? '-local' + project.property('local') : '')
+
+                    pom {
+                        description = descriptionArg
+
+                        licenses {
+                            license {
+                                name = libLicense
+                                url = libLicenseUrl
+                            }
+                        }
+
+                        developers {
+                            developer {
+                                name = 'Mozilla Android Components Team'
+                                email = 'android-components@lists.mozilla.org'
+                            }
+                        }
+
+                        scm {
+                            connection = libVcsUrl
+                            developerConnection = libVcsUrl
+                            url = libUrl
+                            tag = getVcsHash()
+                        }
+                    }
+                }
+            }
+            repositories {
+                maven {
+                    url = "$buildDir/maven"
+                }
+            }
+        }
+    }
+}

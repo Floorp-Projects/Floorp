@@ -44,6 +44,17 @@ def add_dependencies(config, jobs):
                     != job["attributes"]["build_platform"]
                 ):
                     continue
+
+            # TODO get rid of the release-type match
+            if product == "firefox-android":
+                # exclude beta tasks from release graph and vice versa
+                from android_taskgraph.release_type import does_task_match_release_type
+
+                if not does_task_match_release_type(
+                    dep_task, config.params["release_type"]
+                ):
+                    continue
+
             # Add matching product tasks to deps
             if (
                 dep_task.task.get("shipping-product") == product

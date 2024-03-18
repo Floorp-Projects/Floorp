@@ -1,0 +1,82 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-parcelize'
+
+android {
+
+    defaultConfig {
+        minSdkVersion config.minSdkVersion
+        compileSdk config.compileSdkVersion
+        targetSdkVersion config.targetSdkVersion
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    buildFeatures {
+        compose true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = Versions.compose_compiler
+    }
+
+    packagingOptions {
+        resources {
+            excludes += ['META-INF/proguard/androidx-annotations.pro']
+        }
+    }
+
+    namespace 'mozilla.components.browser.state'
+
+}
+
+tasks.withType(KotlinCompile).configureEach {
+    kotlinOptions.freeCompilerArgs += "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi"
+}
+
+dependencies {
+    api project(':lib-state')
+
+    implementation platform(ComponentsDependencies.androidx_compose_bom)
+    implementation project(':concept-awesomebar')
+    implementation project(':concept-engine')
+    implementation project(':concept-storage')
+    implementation project(':support-utils')
+    implementation project(':support-ktx')
+
+    // We expose this as API because we are using Response in our public API and do not want every
+    // consumer to have to manually import "concept-fetch".
+    api project(':concept-fetch')
+
+    implementation ComponentsDependencies.androidx_browser
+    implementation ComponentsDependencies.androidx_compose_ui
+    implementation ComponentsDependencies.kotlin_coroutines
+
+    testImplementation project(':support-test')
+    testImplementation project(':support-test-libstate')
+    testImplementation ComponentsDependencies.androidx_test_junit
+    testImplementation ComponentsDependencies.testing_junit
+    testImplementation ComponentsDependencies.testing_robolectric
+    testImplementation ComponentsDependencies.testing_coroutines
+
+    androidTestImplementation ComponentsDependencies.androidx_test_junit
+    androidTestImplementation ComponentsDependencies.androidx_compose_ui_test_manifest
+    androidTestImplementation ComponentsDependencies.androidx_compose_ui_test
+}
+
+apply from: '../../../android-lint.gradle'
+apply from: '../../../publish.gradle'
+ext.configurePublish(config.componentsGroupId, archivesBaseName, project.ext.description)

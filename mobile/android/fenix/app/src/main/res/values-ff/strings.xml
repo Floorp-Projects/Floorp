@@ -1,0 +1,1245 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_5">Cuuriɗum %s</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_4">%s (Cuuriɗum)</string>
+
+    <!-- Home Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">Cuɓe Goɗɗe</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_private_browsing_button">Hurmin banngogol suturo</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_disable_private_browsing_button">Ñif banngagol suturo</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="search_hint">Yiilo walla naatnu ñiiɓirde</string>
+    <!-- Placeholder text shown in search bar when using history search -->
+    <string name="history_search_hint">Aslol njiilaw</string>
+    <!-- Placeholder text shown in search bar when using bookmarks search -->
+    <string name="bookmark_search_hint">Yiylo maantore</string>
+    <!-- Placeholder text shown in search bar when using tabs search -->
+    <string name="tab_search_hint">Tabbe njiilaw</string>
+    <!-- Placeholder text shown in the search bar when using application search engines -->
+    <string name="application_search_hint">Naatnu kelme jiyleteeɗe</string>
+    <!-- No Open Tabs Message Description -->
+    <string name="no_open_tabs_description">Tabbe maa udditiiɗe maa kollire ɗoo.</string>
+
+    <!-- Label of button in create collection dialog for creating a new collection  -->
+    <string name="tab_tray_add_new_collection">Ɓeydu leemannde hesere</string>
+    <!-- Label of editable text in create collection dialog for naming a new collection  -->
+    <string name="tab_tray_add_new_collection_name">Innde</string>
+    <!-- Label of button in save to collection dialog for selecting a current collection  -->
+    <string name="tab_tray_select_collection">Danndu to leemannde</string>
+    <!-- Content description for save to collection button while in multiselect mode in tab tray -->
+    <string name="tab_tray_collection_button_multiselect_content_description">Danndu tabbe labaaɗe to leemannde</string>
+
+    <!-- Home - Recently saved bookmarks -->
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_title">Danndaaɗi sakket</string>
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all_content_description_2">Hollu maantore danndaaɗe fof</string>
+    <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
+    <string name="recently_saved_menu_item_remove">Ittu</string>
+
+    <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
+    <string name="about_content">Ko Mozilla jibini %1$s</string>
+
+    <string name="private_browsing_common_myths">Tinndi goowaaɗi baɗte banngogol suturo</string>
+
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
+    <!-- Text for the main message -->
+    <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">Ɓeydu sodorde ngam udditde tabbe e Jaɓɓorgo maa.</string>
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message">Hurminir tabre aroore fiyannde wootere.</string>
+    <!-- Text for the positive button -->
+    <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">Ɓeydu sodorde</string>
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
+    <string name="cfr_neg_button_text">Alaa, mi yaafiima</string>
+
+
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_close_tabs_banner_positive_button_text">Juɓtorɗe jiytol</string>
+    <!-- Text for the banner message to tell users about our inactive tabs feature. -->
+    <string name="tab_tray_inactive_onboarding_message">Tabbe ɗe a ƴeewaani e nder jonte ɗiɗi maa ndirtine gaay.</string>
+    <!-- Text for title for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_title">Uddu e jaajol caggal lewru?</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs.
+        The first parameter is the name of the application.-->
+    <string name="tab_tray_inactive_auto_close_body_2">%1$s ena waawi uddude tabbe ɗe a yillaaki e lewru ɓennundu nduu.</string>
+
+
+    <!-- Home screen icons - Long press shortcuts -->
+    <!-- Shortcut action to open new tab -->
+    <string name="home_screen_shortcut_open_new_tab_2">Tabbere hesere</string>
+    <!-- Shortcut action to open new private tab -->
+    <string name="home_screen_shortcut_open_new_private_tab_2">Tabbere suuriinde hesere</string>
+
+    <!-- Recent Tabs -->
+    <!-- Header text for jumping back into the recent tab in the home screen -->
+    <string name="recent_tabs_header">Artu ɗo ngonno-ɗaa</string>
+
+    <!-- Button text for showing all the tabs in the tabs tray -->
+    <string name="recent_tabs_show_all">Hollu fof</string>
+    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
+    <string name="recent_tabs_show_all_content_description_2">Hollu tabbe cakkitiiɗe fof</string>
+    <!-- Text for button in synced tab card that opens synced tabs tray -->
+    <string name="recent_tabs_see_all_synced_tabs_button_text">Yiy tabbe ceŋondiraaɗe</string>
+    <!-- Accessibility description for device icon used for recent synced tab -->
+    <string name="recent_tabs_synced_device_icon_content_description">Kaɓirgol ceŋondirangol</string>
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recent_tab_menu_item_remove">Ittu</string>
+
+    <!-- History Metadata -->
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header_2">Jillaaɗe sakket</string>
+
+    <!-- Content description for the button which navigates the user to show all of their history. -->
+    <string name="past_explorations_show_all_content_description_2">Hollu jillanɗe ɓennuɗe fof</string>
+
+    <!-- Browser Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
+    <string name="browser_menu_back">Caggal</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="browser_menu_forward">Yeeso</string>
+    <!-- Content description (not visible, for screen readers etc.): Refresh current website -->
+    <string name="browser_menu_refresh">Hesɗitin</string>
+    <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
+    <string name="browser_menu_stop">Dartin</string>
+    <!-- Browser menu button that opens the addon manager -->
+    <string name="browser_menu_add_ons">Ɓeyditte</string>
+    <!-- Text displayed when there are no add-ons to be shown -->
+    <string name="no_add_ons">Ɗoo alaa ɓeyditte</string>
+    <!-- Browser menu button that sends a user to help articles -->
+    <string name="browser_menu_help">Ballal</string>
+    <!-- Browser menu button that sends a to a the what's new article -->
+    <string name="browser_menu_whats_new">Ko Hesɗi</string>
+    <!-- Browser menu button that opens the settings menu -->
+    <string name="browser_menu_settings">Teelte</string>
+    <!-- Browser menu button that opens a user's library -->
+    <string name="browser_menu_library">Deftordu</string>
+    <!-- Browser menu toggle that requests a desktop site -->
+    <string name="browser_menu_desktop_site">Lowre ordinateer</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen">Ɓeydu to hello jaɓɓorgo</string>
+    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
+    <string name="browser_menu_install_on_homescreen">Aaf</string>
+    <!-- Browser menu button that opens the find in page menu -->
+    <string name="browser_menu_find_in_page">Yiytu e Hello</string>
+    <!-- Browser menu button that saves the current tab to a collection -->
+    <string name="browser_menu_save_to_collection_2">Danndu to leemannde</string>
+    <!-- Browser menu button that open a share menu to share the current site -->
+    <string name="browser_menu_share">Lollin</string>
+    <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_open_in_fenix">Uddit e %1$s</string>
+    <!-- Browser menu button to put the current page in reader mode -->
+    <string name="browser_menu_read">Jiytol tarorde</string>
+    <!-- Browser menu button to open the current page in an external app -->
+    <string name="browser_menu_open_app_link">Uddit e jaaɓnirgal</string>
+
+    <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
+    <string name="browser_menu_customize_reader_view">Heertin jiytol taroowo</string>
+    <!-- Button shown on the home page that opens the Customize home settings -->
+    <string name="browser_menu_customize_home_1">Heertin jaɓɓorgo</string>
+
+    <!-- Locale Settings Fragment -->
+    <!-- Content description for tick mark on selected language -->
+    <string name="a11y_selected_locale_content_description">Ɗemngal cuɓangal</string>
+    <!-- Text for default locale item -->
+    <string name="default_locale_text">Rew e ɗemngal kaɓirgal ngal</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="locale_search_hint">Yiylo ɗemngal</string>
+
+    <!-- Search Fragment -->
+    <!-- Button in the search view that lets a user search by scanning a QR code -->
+    <string name="search_scan_button">Niiwto</string>
+    <!-- Button in the search view that lets a user change their search engine -->
+    <string name="search_engine_button">Yiylorde</string>
+    <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
+    <string name="search_shortcuts_engine_settings">Teelte yiylorde</string>
+    <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_allow_button">Yamir</string>
+    <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
+    <string name="search_suggestions_onboarding_do_not_allow_button">Hoto Yamir</string>
+    <!-- Search suggestion onboarding hint title text -->
+    <string name="search_suggestions_onboarding_title">Yamir basiye njiilaw nder doge cuuriiɗe?</string>
+    <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="search_suggestions_onboarding_text">%s maa lollin kala ko tappuɗaa e palal ñiiɓirde maa e yiylorde maa woowaande ndee.</string>
+
+    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <string name="search_engine_suggestions_title">Yiylo %s</string>
+    <!-- Search engine suggestion description text -->
+    <string name="search_engine_suggestions_description">Yiylo beƴ e palal ñiiɓirɗe ngal</string>
+
+    <!-- Home onboarding -->
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">Yiy ɗoo tabbe maa keertinaaɗe. Tabbe cakkitiiɗe, maantore, e njaltudi njiylaw ɗoo njiyetee.</string>
+    <!-- Home onboarding dialog sign into sync screen description text. -->
+    <string name="onboarding_home_sync_description">Ɓamtu ɗo dartino-ɗaa e tabbe iwɗe e kaɓirɗi goɗɗi gonɗi jooni e jaɓɓorgo maa.</string>
+
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">Tabbe maa ko canngoɗinaaɗe! Fuɗɗo ɗoon ɗo darnunu-ɗaa e kaɓirgol maa goɗngol.</string>
+
+    <!-- Search Widget -->
+    <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
+    <string name="search_widget_content_description_2">Uddit tabbere hesre %1$s</string>
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">Yiylo</string>
+    <!-- Text preview for larger sized widgets -->
+    <string name="search_widget_text_long">Yiylo geese ɗee</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">Njiilaw sawto</string>
+
+    <!-- Preferences -->
+    <!-- Title for the settings page-->
+    <string name="settings">Teelte</string>
+    <!-- Preference category for general settings -->
+    <string name="preferences_category_general">Kuuɓal</string>
+    <!-- Preference category for all links about Fenix -->
+    <string name="preferences_category_about">Baɗte</string>
+    <!-- Preference for settings related to changing the default search engine -->
+    <string name="preferences_default_search_engine">Yiylorde woowaande</string>
+    <!-- Preference for settings related to Search -->
+    <string name="preferences_search">Yiylo</string>
+    <!-- Preference for settings related to Search address bar -->
+    <string name="preferences_search_address_bar">Palal ñiiɓirɗe</string>
+    <!-- Preference link to rating Fenix on the Play Store -->
+    <string name="preferences_rate">Ɓetto to Google Play</string>
+    <!-- Preference linking to about page for Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="preferences_about">Baɗte %1$s</string>
+
+    <!-- Preference for settings related to changing the default browser -->
+    <string name="preferences_set_as_default_browser">Waɗtu wanngorde woowaande</string>
+    <!-- Preference category for advanced settings -->
+    <string name="preferences_category_advanced">Ceeɓtore</string>
+    <!-- Preference category for privacy and security settings -->
+    <string name="preferences_category_privacy_security">Suturo e kisal</string>
+    <!-- Preference for advanced site permissions -->
+    <string name="preferences_site_permissions">Jamirooje lowre</string>
+    <!-- Preference for private browsing options -->
+    <string name="preferences_private_browsing_options">Banngagol suturo</string>
+    <!-- Preference for opening links in a private tab-->
+    <string name="preferences_open_links_in_a_private_tab">Uddit jokke e tabbere suuriinde</string>
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">Yamir nokitte yaynirde e banngogol suturo</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">So yamiraama, tabbe cuuriiɗe ne maa njiyo so tabbe keewɗe ena udditii</string>
+    <!-- Preference for adding private browsing shortcut -->
+    <string name="preferences_add_private_browsing_shortcut">Ɓeydu sodorde banngogol suturo</string>
+
+    <!-- Summary of https only preference if https only is set to off -->
+    <string name="preferences_https_only_off">Ñifol</string>
+    <!-- Preference for accessibility -->
+    <string name="preferences_accessibility">Keɓogol</string>
+    <!-- Preference to override the Firefox Account server -->
+    <string name="preferences_override_fxa_server">Heertin sarworde konte Firefox</string>
+    <!-- Preference to override the Sync token server -->
+    <string name="preferences_override_sync_tokenserver">Heertin sarworde Sync</string>
+    <!-- Toast shown after updating the FxA/Sync server override preferences -->
+    <string name="toast_override_fxa_sync_server_done">Konte Firefox/ sarworde Sync waylaama. Uddugol jaaɓnirgal ngal ngam jamminde bayle…</string>
+    <!-- Preference category for account information -->
+    <string name="preferences_category_account">Konte</string>
+    <!-- Preference for changing where the toolbar is positioned -->
+    <string name="preferences_toolbar">Palal kuutorɗe</string>
+    <!-- Preference for changing default theme to dark or light mode -->
+    <string name="preferences_theme">Siŋkoore</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home_2">Hello jaɓɓorgo</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">Beese junngo</string>
+    <!-- Preference for settings related to visual options -->
+    <string name="preferences_customize">Heertin</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name">Konte Firefox</string>
+    <!-- Preference text for account title when there was an error syncing FxA -->
+    <string name="preferences_account_sync_error">Seŋo kadi ngam fuɗɗitaade jahdingol</string>
+    <!-- Preference for language -->
+    <string name="preferences_language">Ɗemngal</string>
+    <!-- Preference for data choices -->
+    <string name="preferences_data_choices">Cuɓe keɓe</string>
+    <!-- Preference for data collection -->
+    <string name="preferences_data_collection">Ƴettugol keɓe</string>
+
+    <!-- Preference for developers -->
+    <string name="preferences_remote_debugging">Buggitagol goɗɗungol rewde e USB</string>
+    <!-- Preference title for switch preference to show search engines -->
+    <string name="preferences_show_search_engines">Hollu jiylorɗe</string>
+    <!-- Preference title for switch preference to show search suggestions -->
+    <string name="preferences_show_search_suggestions">Hollu wasiyaaji njiilaw</string>
+
+    <!-- Preference title for switch preference to show voice search button -->
+    <string name="preferences_show_voice_search">Hollu jiilaw sawto</string>
+    <!-- Preference title for switch preference to show search suggestions also in private mode -->
+    <string name="preferences_show_search_suggestions_in_private">Hoolu e doge keeriiɗe</string>
+    <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
+    <string name="preferences_show_clipboard_suggestions">Hollu wasiyaaji ɗakkitorde</string>
+    <!-- Preference title for switch preference to suggest browsing history when searching -->
+    <string name="preferences_search_browsing_history">Yiylo aslol banngogol</string>
+    <!-- Preference title for switch preference to suggest bookmarks when searching -->
+    <string name="preferences_search_bookmarks">Yiylo maantore</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">Yiylo tabbe ceŋondiraaɗe</string>
+    <!-- Preference for account settings -->
+    <string name="preferences_account_settings">Teelte konte</string>
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">Timmin binndi URL e jaajol</string>
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">Uddit jokke e nder jaaɓnirɗe</string>
+    <!-- Preference for open download with an external download manager app -->
+    <string name="preferences_external_download_manager">Toppitorde gaawte yaasiire</string>
+    <!-- Preference for add_ons -->
+    <string name="preferences_addons">Ɓeyditte</string>
+
+    <!-- Summary for notification preference indicating notifications are allowed -->
+    <string name="notifications_allowed_summary">Yamiraama</string>
+    <!-- Summary for notification preference indicating notifications are not allowed -->
+    <string name="notifications_not_allowed_summary">Yamiraaka</string>
+
+    <!-- Customize Home -->
+    <!-- Header text for jumping back into the recent tab in customize the home screen -->
+    <string name="customize_toggle_jump_back_in">Artu ɗo ngonno-ɗaa</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recent_bookmarks">Maantore sakket</string>
+    <!-- Title for the customize home screen section with recently visited. Recently visited is
+    a section where users see a list of tabs that they have visited in the past few days -->
+    <string name="customize_toggle_recently_visited">Jillaaɗe sakket</string>
+    <!-- Title for the customize home screen section with sponsored Pocket stories. -->
+    <string name="customize_toggle_pocket_sponsored">Daarti barjinaaɗe</string>
+    <!-- Title for the opening wallpaper settings screen -->
+    <string name="customize_wallpapers">Ɗeeri ɓalal</string>
+    <!-- Title for the customize home screen section with sponsored shortcuts. -->
+    <string name="customize_toggle_contile">Codorɗe barjinaaɗi</string>
+
+    <!-- Wallpapers -->
+    <!-- Content description for various wallpapers. The first parameter is the name of the wallpaper -->
+    <string name="wallpapers_item_name_content_description">Temre ɗeerol ɓalal: %1$s</string>
+    <!-- Snackbar message for when wallpaper is selected -->
+    <string name="wallpaper_updated_snackbar_message">Deɗol ɓalal hesɗitinaama!</string>
+    <!-- Snackbar label for action to view selected wallpaper -->
+    <string name="wallpaper_updated_snackbar_action">Hollir</string>
+    <!-- Snackbar message for when wallpaper couldn't be downloaded -->
+    <string name="wallpaper_download_error_snackbar_message">Horiima aawtaade wallpaper</string>
+    <!-- Snackbar label for action to retry downloading the wallpaper -->
+    <string name="wallpaper_download_error_snackbar_action">Fuɗɗito</string>
+    <!-- Snackbar message for when wallpaper couldn't be selected because of the disk error -->
+    <string name="wallpaper_select_error_snackbar_message">Horiima waylude ɗerol ɓalal</string>
+    <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
+    <string name="wallpaper_learn_more">Ɓeydu humpito</string>
+    <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
+    <string name="wallpaper_classic_title">Gaadanteejo %s</string>
+
+    <!-- Account Preferences -->
+    <!-- Preference for triggering sync -->
+    <string name="preferences_sync_now">Sanngoɗin jooni</string>
+    <!-- Preference category for sync -->
+    <string name="preferences_sync_category">Suɓo ko njahdintaa</string>
+    <!-- Preference for syncing history -->
+    <string name="preferences_sync_history">Aslol</string>
+    <!-- Preference for syncing bookmarks -->
+    <string name="preferences_sync_bookmarks">Maantore</string>
+    <!-- Preference for syncing logins -->
+    <string name="preferences_sync_logins">Ceŋorɗe</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs_2">Uddit tabbe</string>
+    <!-- Preference for signing out -->
+    <string name="preferences_sign_out">Seŋto</string>
+    <!-- Preference displays and allows changing current FxA device name -->
+    <string name="preferences_sync_device_name">Innde kaɓirgal</string>
+    <!-- Text shown when user enters empty device name -->
+    <string name="empty_device_name_error">Innde kaɓirgal wonataa mehre.</string>
+    <!-- Label indicating that sync is in progress -->
+    <string name="sync_syncing_in_progress">Nana yahdina…</string>
+
+    <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
+    <string name="sync_failed_summary">Jahdingol jaccii. Sakkitii moƴƴude: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_failed_never_synced_summary">Jahdingol jaccii. Sakkitii yahdineedee: abadaa</string>
+    <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
+    <string name="sync_last_synced_summary">Sakkitii yahdineede: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_never_synced_summary">Sakkitii yahdineede: abadaa</string>
+    <!-- Text for displaying the default device name.
+        The first parameter is the application name, the second is the device manufacturer name
+        and the third is the device model. -->
+    <string name="default_device_name_2">%1$s dow %2$s%3$s</string>
+
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">Karte banke</string>
+
+    <!-- Send Tab -->
+    <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_name">Heɓii tabbe</string>
+    <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_description">Tintine ngam tabbe keɓaaɗe e kaɓirɗe Firefox goɗɗe.</string>
+    <!--  The body for these is the URL of the tab received  -->
+    <string name="fxa_tab_received_notification_name">Tabbere heɓaama</string>
+    <!-- %s is the device name -->
+    <string name="fxa_tab_received_from_notification_name">Tabbere e %s</string>
+
+    <!-- Advanced Preferences -->
+    <!-- Preference for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions">Paltooje</string>
+
+    <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
+    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Hurmin ngam lowe ɗee fof</string>
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">Paltooje ina mbaawnuma daaƴde ndeenka dewindol e lowe cuɓaaɗe ɗee.</string>
+    <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message_learn_more_link">Ɓeydu humpito</string>
+
+    <!-- Preference switch for usage and technical data collection -->
+    <string name="preference_usage_data">Kuutorogol e keɓe karalle</string>
+
+    <!-- Turn On Sync Preferences -->
+    <!-- Header of the Sync and save your data preference view -->
+    <string name="preferences_sync_2">Sanngoɗin ngam daɗnude keɓe maa</string>
+    <!-- Preference for reconnecting to FxA sync -->
+    <string name="preferences_sync_sign_in_to_reconnect">Seŋo ngam seŋaade kadi</string>
+    <!-- Preference for removing FxA account -->
+    <string name="preferences_sync_remove_account">Momtu konte</string>
+
+    <!-- Toolbar Preferences -->
+    <!-- Preference for using top toolbar -->
+    <string name="preference_top_toolbar">Dow</string>
+    <!-- Preference for using bottom toolbar -->
+    <string name="preference_bottom_toolbar">Les</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">Leerɗo</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">Niɓɓo</string>
+
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">Rew e siŋkoore kaɓirgal ngal</string>
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Fooɗ ngam hesɗitinde</string>
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Woro ngam suuɗde palal</string>
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Fittu palal kuutorɗe faya bannge ngam addude tabbe goɗɗe</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Fittu palal kuutorɗe ngam udditde tabbe</string>
+
+    <!-- Library -->
+    <!-- Option in Library to open Downloads page -->
+    <string name="library_downloads">Gaawte</string>
+    <!-- Option in library to open Bookmarks page -->
+    <string name="library_bookmarks">Maantore</string>
+    <!-- Option in library to open Desktop Bookmarks root page -->
+    <string name="library_desktop_bookmarks_root">Maantore ordinateer</string>
+    <!-- Option in library to open Desktop Bookmarks "menu" page -->
+    <string name="library_desktop_bookmarks_menu">Dosol Maantore</string>
+    <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
+    <string name="library_desktop_bookmarks_toolbar">Palal Maantore</string>
+    <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
+    <string name="library_desktop_bookmarks_unfiled">Maantore Goɗɗe</string>
+    <!-- Option in Library to open History page -->
+    <string name="library_history">Aslol</string>
+    <!-- Option in Library to open a new tab -->
+    <string name="library_new_tab">Tabbere hesere</string>
+    <!-- Settings Page Title -->
+    <string name="settings_title">Teelte</string>
+    <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
+    <string name="content_description_close_button">Uddu</string>
+
+    <!-- Title to show in alert when a lot of tabs are to be opened
+    %d is a placeholder for the number of tabs that will be opened -->
+    <string name="open_all_warning_title">Uddit tabbe %d?</string>
+    <!-- Dialog button text for confirming open all tabs -->
+    <string name="open_all_warning_confirm">Uddit tabbe</string>
+    <!-- Dialog button text for canceling open all tabs -->
+    <string name="open_all_warning_cancel">Haaytu</string>
+
+    <!-- Text to show users they have one site in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_site">lowre %d</string>
+
+    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_sites">Lowe %d</string>
+
+    <!-- Option in library for Recently Closed Tabs -->
+    <string name="library_recently_closed_tabs">Tabbe uddaaɗe sakket</string>
+    <!-- Option in library to open Recently Closed Tabs page -->
+    <string name="recently_closed_show_full_history">Hollu aslol fof</string>
+    <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tabs">%d tabbe</string>
+    <!-- Text to show users they have one tab saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tab">%d tabbere</string>
+    <!-- Recently closed tabs screen message when there are no recently closed tabs -->
+    <string name="recently_closed_empty_message">Alaa tabbe uddaaɗe sakket njiytaa</string>
+
+    <!-- Tab Management -->
+    <!-- Title of preference for tabs management -->
+    <string name="preferences_tabs">Tabbe</string>
+    <!-- Title of preference that allows a user to specify the tab view -->
+    <string name="preferences_tab_view">Jiytol tabbe</string>
+    <!-- Option for a list tab view -->
+    <string name="tab_view_list">Doggol</string>
+    <!-- Option for a grid tab view -->
+    <string name="tab_view_grid">Tigilde</string>
+    <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
+    <string name="preferences_close_tabs">Uddu tabbe</string>
+    <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
+    <string name="close_tabs_manually">Hay sahaa</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one day -->
+    <string name="close_tabs_after_one_day">Caggal ñalawma gooto</string>
+
+    <!-- Option for auto closing tabs that will auto close tabs after one week -->
+    <string name="close_tabs_after_one_week">Caggal yontere wootere</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one month -->
+    <string name="close_tabs_after_one_month">Caggal lewru wooturu</string>
+
+    <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
+    <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">Uddu tabbe udditiiɗe e jaajol</string>
+
+    <!-- Opening screen -->
+    <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
+    <string name="preferences_opening_screen">Yaynirde udditorde</string>
+    <!-- Option for always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage">Hello jaɓɓorgo</string>
+    <!-- Option for always opening the user's last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab">Tabbere sakkitiinde</string>
+    <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity">Jaɓɓorgo ɓaawo waktuuji nayi ɗe ndilaaka</string>
+
+    <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
+    <string name="close_tabs_manually_summary">Uddir junngol</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
+    <string name="close_tabs_after_one_day_summary">Uddu caggal ñalawma gooto</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
+    <string name="close_tabs_after_one_week_summary">Uddu caggal yontere wootere</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
+    <string name="close_tabs_after_one_month_summary">Uddu caggal lewru wooturu</string>
+    <!-- Summary for homepage preference indicating always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage_summary">Uddit e hello jaɓɓorgo</string>
+    <!-- Summary for homepage preference indicating always opening the last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab_summary">Uddit e hello sakkitiingo</string>
+    <!-- Summary for homepage preference indicating opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity_summary">Uddit e hello jaɓɓorgo caggal waktuuji nayi</string>
+
+    <!-- Inactive tabs -->
+    <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
+    <string name="preferences_inactive_tabs">Dirtin tabbe ɓooyɗe to dooyiiɗe</string>
+    <!-- Title of inactive tabs preference -->
+    <string name="preferences_inactive_tabs_title">Tabbe ɗe a yillaaki e nder jonte ɗiɗi maa ndirtine to lowre dooyorde toh.</string>
+
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Ena hurmi</string>
+
+    <!-- Sessions -->
+    <!-- Title for the list of tabs -->
+    <string name="tab_header_label">Uddit tabbe</string>
+
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_tabs_title">Tabbe cuuriiɗe</string>
+    <!-- Title for the list of tabs in the synced tabs -->
+    <string name="tabs_header_synced_tabs_title">Tabbe synckaaɗe</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_tab">Ɓeydu tabbere</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">Ɓeydu tabbere hesere</string>
+    <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+    <string name="tab_drawer_fab_content">Cuuriɗum</string>
+    <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
+    <string name="tab_drawer_fab_sync">Sanngoɗin</string>
+    <!-- Text shown in the menu for sharing all tabs -->
+    <string name="tab_tray_menu_item_share">Lollin tabbe fof</string>
+    <!-- Text shown in the menu to view recently closed tabs -->
+    <string name="tab_tray_menu_recently_closed">Tabbe uddaaɗe sakket</string>
+    <!-- Text shown in the tabs tray inactive tabs section -->
+    <string name="tab_tray_inactive_recently_closed" tools:ignore="UnusedResources">Uddaaɗe sakket</string>
+    <!-- Text shown in the menu to view account settings -->
+    <string name="tab_tray_menu_account_settings">Teelte konte</string>
+    <!-- Text shown in the menu to view tab settings -->
+    <string name="tab_tray_menu_tab_settings">Teelte tabbere</string>
+    <!-- Text shown in the menu for closing all tabs -->
+    <string name="tab_tray_menu_item_close">Uddu tabbe fof</string>
+    <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_bookmark">Maantorol</string>
+    <!-- Text shown in the multiselect menu for closing selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_close">Uddu</string>
+    <!-- Content description for tabs tray multiselect share button -->
+    <string name="tab_tray_multiselect_share_content_description">Danndu tabbe labaaɗe</string>
+    <!-- Content description for tabs tray multiselect menu -->
+    <string name="tab_tray_multiselect_menu_content_description">Dosol tabbe labaaɗe</string>
+    <!-- Text for button to enter multiselect mode in tabs tray -->
+    <string name="tabs_tray_select_tabs">Suɓo tabbe</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
+    <string name="close_tab">Uddu tabbere</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
+    <string name="close_tab_title">Uddu tabbe %s</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
+    <string name="open_tabs_menu">Uddit dosol tabbe</string>
+    <!-- Open tabs menu item to save tabs to collection -->
+    <string name="tabs_menu_save_to_collection1">Danndu tabbe to leemannde</string>
+    <!-- Text for the button to open tabs of the selected collection -->
+    <string name="collection_open_tabs">Uddit tabbe</string>
+    <!-- Text for the menu button to remove a top site -->
+	<string name="remove_top_site">Momtu</string>
+
+    <!-- Text for the button to clear all history -->
+    <string name="history_delete_all">Momtu aslol</string>
+    <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
+    <string name="history_delete_multiple_items_snackbar">Aslol momtaama</string>
+    <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
+    <string name="history_delete_single_item_snackbar">Momtaama %1$s</string>
+    <!-- Context description text for the button to delete a single history item -->
+    <string name="history_delete_item">Momtu</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of bookmarks selected -->
+    <string name="history_multi_select_title">suɓaama %1$d</string>
+    <!-- Text for the header that groups the history the past 7 days -->
+    <string name="history_7_days">Balɗe 7 ɓennuɗe ɗee</string>
+    <!-- Text for the header that groups the history the past 30 days -->
+    <string name="history_30_days">Balɗe 30 ɓennuɗe ɗee</string>
+    <!-- Text for the header that groups the history older than the last month -->
+    <string name="history_older">Ɓooyɗo</string>
+    <!-- Text shown when no history exists -->
+    <string name="history_empty_message">Ɗoo alaa aslol</string>
+
+
+    <!-- Downloads -->
+    <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
+    <string name="download_delete_multiple_items_snackbar_1">Gaawte Momtaama</string>
+    <!-- Text shown when no download exists -->
+    <string name="download_empty_message_1">Alaa piille gaawtaaɗe</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of downloads selected -->
+    <string name="download_multi_select_title">%1$d labaama</string>
+
+
+    <!-- Crashes -->
+    <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
+    <string name="tab_crash_title_2">Njaafoɗaa. %1$s waawaa loowde ngoo hello.</string>
+    <!-- Send crash report checkbox text on the tab crash page -->
+    <string name="tab_crash_send_report">Neldu jaŋte kooki to Mozilla</string>
+    <!-- Close tab button text on the tab crash page -->
+    <string name="tab_crash_close">Uddu tabbere</string>
+    <!-- Restore tab button text on the tab crash page -->
+    <string name="tab_crash_restore">Artir tabbe</string>
+
+    <!-- Bookmarks -->
+    <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
+    <string name="bookmark_delete_folder_confirmation_dialog">Aɗa yenanaa yiɗde momtude ndee runngere?</string>
+    <!-- Screen title for adding a bookmarks folder -->
+    <string name="bookmark_add_folder">Ɓeydu runngere</string>
+    <!-- Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_saved_snackbar">Maantorol danndaama!</string>
+    <!-- Snackbar edit button shown after a bookmark has been created. -->
+    <string name="edit_bookmark_snackbar_action">YAƳTO</string>
+    <!-- Bookmark overflow menu edit button -->
+    <string name="bookmark_menu_edit_button">Taƴto</string>
+    <!-- Bookmark overflow menu copy button -->
+    <string name="bookmark_menu_copy_button">Natto</string>
+    <!-- Bookmark overflow menu share button -->
+    <string name="bookmark_menu_share_button">Lollin</string>
+    <!-- Bookmark overflow menu open in new tab button -->
+    <string name="bookmark_menu_open_in_new_tab_button">Uddit nder tabbere hesere</string>
+    <!-- Bookmark overflow menu open in private tab button -->
+    <string name="bookmark_menu_open_in_private_tab_button">Uddit nder tabbere suuriinde</string>
+    <!-- Bookmark overflow menu open all in tabs button -->
+    <string name="bookmark_menu_open_all_in_tabs_button">Uddit fof e tabbe kese</string>
+    <!-- Bookmark overflow menu delete button -->
+    <string name="bookmark_menu_delete_button">Momtu</string>
+    <!--Bookmark overflow menu save button -->
+    <string name="bookmark_menu_save_button">Danndu</string>
+    <!-- Bookmark multi select title in app bar
+     The first parameter is the number of bookmarks selected -->
+    <string name="bookmarks_multi_select_title">suɓaama %1$d</string>
+    <!-- Bookmark editing screen title -->
+    <string name="edit_bookmark_fragment_title">Taƴto Maantorol</string>
+    <!-- Bookmark folder editing screen title -->
+    <string name="edit_bookmark_folder_fragment_title">Taƴto runngere</string>
+    <!-- Bookmark sign in button message -->
+    <string name="bookmark_sign_in_button">Seŋo ngam yiyde maantore jahdinaaɗe</string>
+    <!-- Bookmark URL editing field label -->
+    <string name="bookmark_url_label">URL</string>
+    <!-- Bookmark FOLDER editing field label -->
+    <string name="bookmark_folder_label">RUNNGERE</string>
+    <!-- Bookmark NAME editing field label -->
+    <string name="bookmark_name_label">INNDE</string>
+    <!-- Bookmark add folder screen title -->
+    <string name="bookmark_add_folder_fragment_label">Ɓeydu runngere</string>
+    <!-- Bookmark select folder screen title -->
+    <string name="bookmark_select_folder_fragment_label">Suɓo runngere</string>
+    <!-- Bookmark editing error missing title -->
+    <string name="bookmark_empty_title_error">Ina foti jogaade tiitoonde</string>
+    <!-- Bookmark editing error missing or improper URL -->
+    <string name="bookmark_invalid_url_error">URL o moƴƴaani</string>
+    <!-- Bookmark screen message for empty bookmarks folder -->
+    <string name="bookmarks_empty_message">Ɗoo alaa maantore</string>
+    <!-- Bookmark snackbar message on deletion
+     The first parameter is the host part of the URL of the bookmark deleted, if any -->
+    <string name="bookmark_deletion_snackbar_message">Momtaama %1$s</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_2">Maantore momtaama</string>
+    <!-- Bookmark undo button for deletion snackbar action -->
+    <string name="bookmark_undo_deletion">FIRTU</string>
+
+    <!-- Site Permissions -->
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">Yah to Teelte</string>
+    <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
+        to give users access to site specific information / settings. For example:
+        Secure settings status and a button to modify site permissions -->
+    <string name="quick_settings_sheet">Ɗerewol teelte jaawɗe</string>
+    <!-- Label that indicates that this option it the recommended one -->
+    <string name="phone_feature_recommended">Basiyaaɗi</string>
+    <!-- Button label for clearing all the information of site permissions-->
+    <string name="clear_permissions">Momtu jamirooje</string>
+
+    <!-- Button label for clearing a site permission-->
+    <string name="clear_permission">Momtu yamiroore</string>
+    <!-- Button label for clearing all the information on all sites-->
+    <string name="clear_permissions_on_all_sites">Momtu jamirroje e lowe ɗee fof</string>
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">Kameraa</string>
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">Mikkoroo</string>
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">Nokku</string>
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">Tintinol</string>
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">Naamno yamirde</string>
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">Faddaama</string>
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">Yamiraama</string>
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">Ko Android daaƴi ɗum</string>
+    <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
+    <string name="preference_exceptions">Paltooje</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to on -->
+    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">Kuɓɓol</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="tracking_protection_off">Ñifol</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to standard -->
+    <string name="tracking_protection_standard">Gaadanteejo</string>
+    <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed2">Yamir ojoo e widewoo</string>
+    <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->
+    <string name="quick_setting_option_autoplay_allowed">Yamir ojoo e widewoo</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
+    <string name="preference_option_autoplay_allowed_wifi_only2">Daaƴ ojoo e widewoo e keɓe cinndel tan</string>
+    <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
+    <string name="preference_option_autoplay_allowed_wifi_subtext">Ojoo e widewoo maa taroy e WI-FI</string>
+    <!-- Label for global setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="preference_option_autoplay_block_audio2">Daaƴ ojoo tan</string>
+    <!-- Label for site specific setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="quick_setting_option_autoplay_block_audio">Daaƴ ojoo tan</string>
+    <!-- Label for global setting that indicates that all video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked3">Daaƴ ojoo e widewoo</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to on -->
+    <string name="delete_browsing_data_quit_on">Kuɓɓol</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to off -->
+    <string name="delete_browsing_data_quit_off">Ñifol</string>
+
+    <!-- Title for the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_tabs">Suɓo tabbe</string>
+    <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_all">Labo Fof</string>
+    <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_deselect_all">Labto fof</string>
+    <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
+    <string name="create_collection_save_to_collection_empty">Suɓo tabbe danndateeɗe</string>
+    <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
+     %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tabs_selected">%d tabbe cuɓaa</string>
+    <!-- Text to show users they have one tab selected in the "select tabs" step of the collection creator.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tab_selected">%d tabbere suɓaa</string>
+    <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
+    <string name="create_collection_tabs_saved">Tabbe ndanndaama!</string>
+    <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
+    <string name="create_collection_tabs_saved_new_collection">Leemannde danndaama!</string>
+    <!-- Text shown in snackbar when one tab has been saved in a collection -->
+    <string name="create_collection_tab_saved">Tabbere danndaama!</string>
+    <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
+    <string name="create_collection_close">Uddu</string>
+    <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
+    <string name="create_collection_save">Danndu</string>
+
+    <!-- Share -->
+    <!-- Share screen header -->
+    <string name="share_header_2">Lollin</string>
+    <!-- Content description (not visible, for screen readers etc.):
+        "Share" button. Opens the share menu when pressed. -->
+    <string name="share_button_content_description">Lollin</string>
+    <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
+    <string name="unable_to_save_to_pdf_error">Horiima ɓestinde PDF</string>
+    <!-- Sub-header in the dialog to share a link to another sync device -->
+    <string name="share_device_subheader">Neldu to Kaɓirgol</string>
+    <!-- Sub-header in the dialog to share a link to an app from the full list -->
+    <string name="share_link_all_apps_subheader">Golle fof</string>
+    <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
+    <string name="share_link_recent_apps_subheader">Huutoraama ko ɓooyaani</string>
+    <!-- Toast shown after copying link to clipboard -->
+    <string name="toast_copy_link_to_clipboard">Natto faade ɗakkitorde</string>
+    <!-- An option from the share dialog to sign into sync -->
+    <string name="sync_sign_in">Seŋo ngam yahdinde</string>
+     <!-- An option from the three dot menu to sync and save data -->
+    <string name="sync_menu_sync_and_save_data">Sanngoɗin ngam daɗnude keɓe</string>
+    <!-- An option from the share dialog to send link to all other sync devices -->
+    <string name="sync_send_to_all">Neldu to masiŋon kon fof</string>
+    <!-- An option from the share dialog to reconnect to sync -->
+    <string name="sync_reconnect">Seŋ kadi ngam yahdinde</string>
+    <!-- An option to connect additional devices -->
+    <string name="sync_connect_device">Seŋ kaɓirgol goɗngol</string>
+    <!-- The dialog text shown when additional devices are not available -->
+    <string name="sync_connect_device_dialog">Ngam neldude tabbere, seŋo e Firefox ko famɗi fof e kaɓirgal gootal goɗngal.</string>
+    <!-- Confirmation dialog button -->
+    <string name="sync_confirmation_button">Mi faamii</string>
+    <!-- Share error message -->
+    <string name="share_error_snackbar">Waawaa lollinde e ngal jaaɓnirgal</string>
+    <!-- Add new device screen title -->
+    <string name="sync_add_new_device_title">Neldu to Kaɓirgol</string>
+    <!-- Text for the warning message on the Add new device screen -->
+    <string name="sync_add_new_device_message">Alaa kaɓirgel seŋii</string>
+    <!-- Text for the button to learn about sending tabs -->
+    <string name="sync_add_new_device_learn_button">Ɓeydu humpito baɗte neldugol tabbe…</string>
+    <!-- Text for the button to connect another device -->
+    <string name="sync_add_new_device_connect_button">Seŋ Masiŋ Goɗɗo…</string>
+
+    <!-- Notifications -->
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
+    <string name="notification_pbm_delete_text_2">Uddu tabbe cuuriiɗe</string>
+
+    <!-- Text shown in snackbar when user closes a tab -->
+    <string name="snackbar_tab_closed">Tabbere uddaama</string>
+    <!-- Text shown in snackbar when user closes all tabs -->
+    <string name="snackbar_tabs_closed">Tabbe uddaama</string>
+    <!-- Text shown in snackbar when user bookmarks a list of tabs -->
+    <string name="snackbar_message_bookmarks_saved">Maantore ndanndaama!</string>
+    <!-- Text shown in snackbar when user closes a private tab -->
+    <string name="snackbar_private_tab_closed">Tabbere suuriinde uddaama</string>
+    <!-- Text shown in snackbar when user closes all private tabs -->
+    <string name="snackbar_private_tabs_closed">Tabbe cuuriinde uddaama</string>
+    <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
+    <string name="snackbar_deleted_undo">FIRTU</string>
+    <!-- Text shown in snackbar when user removes a top site -->
+    <string name="snackbar_top_site_removed">Lowre momtaama</string>
+    <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
+        First parameter is the name of the app, second parameter is the URL or text scanned-->
+    <string name="qr_scanner_confirmation_dialog_message">Yamir %1$s uddita %2$s</string>
+    <!-- QR code scanner prompt dialog positive option to allow navigation to scanned link -->
+    <string name="qr_scanner_dialog_positive">YAMIR</string>
+    <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
+    <string name="qr_scanner_dialog_negative">HAƊ</string>
+    <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
+    <string name="tab_collection_dialog_message">Aɗa yenanaa yiɗde momtude %1$s?</string>
+    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_message">Momtude ndee tabbere maa momtor leemannde ndee fof. Aɗa waawi sosde leemanɗe kese nde katonjinɗaa kala.</string>
+    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_title">Momtu %1$s?</string>
+    <!-- Tab collection deletion prompt dialog option to delete the collection -->
+    <string name="tab_collection_dialog_positive">Momtu</string>
+
+    <!-- Message for copying the URL via long press on the toolbar -->
+    <string name="url_copied">Ñiiɓirde geese nattaama</string>
+
+    <!-- Sample text for accessibility font size -->
+    <string name="accessibility_text_size_sample_text_1">Ɗum ko jubbannde binndi. Waɗiraa ko ngam hollirde no binndi ɗii mbayata so a ɓeydii walla a ustii darnde alkule ɗee e ngol teeltol.</string>
+    <!-- Summary for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_text_size_summary">Mawnin walla famɗin binndol e lowe geese</string>
+
+    <!-- Title for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_font_size_title">Darnde alkule</string>
+
+    <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_2">Darnde alkule jaajre</string>
+    <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_summary">Darnde alkule maa yahdu e teelte Android maa. Daaƴ ngam waylude darnde alkule les ɗoo.</string>
+
+    <!-- Title for the Delete browsing data preference -->
+    <string name="preferences_delete_browsing_data">Momtu keɓe banngogol</string>
+    <!-- Title for the tabs item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_tabs_title_2">Tabbe udditiiɗe</string>
+    <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
+    <string name="preferences_delete_browsing_data_tabs_subtitle">%d tabbe</string>
+    <!-- Title for the data and history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_data_title">Aslol banngogol e keɓe lowre</string>
+    <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
+        number of history items the user has -->
+    <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d ñiiɓirɗe</string>
+    <!-- Title for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies">Kuukiije</string>
+    <!-- Subtitle for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_subtitle">Maa seŋtoye e ko heewi e lowe</string>
+
+    <!-- Title for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files">Nate e piile mogginaaɗe</string>
+    <!-- Title for the site permissions item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_site_permissions">Jamirooje lowre</string>
+    <!-- Title for the downloads item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_downloads">Gaawte</string>
+    <!-- Text for the button to delete browsing data -->
+    <string name="preferences_delete_browsing_data_button">Momtu keɓe banngogol</string>
+    <!-- Title for the Delete browsing data on quit preference -->
+    <string name="preferences_delete_browsing_data_on_quit">Momtu keɓe banngogol nde nguddataa</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit_2">Ina momta keɓe banngogol ɗoon e ɗoon  so a suɓiima \&quot;Uddu\&quot; e dosol dowrowol ngol</string>
+    <!-- Action item in menu for the Delete browsing data on quit feature -->
+    <string name="delete_browsing_data_on_quit_action">Uddu</string>
+
+    <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
+    <string name="delete_browsing_data_prompt_message_3">%s momtoytu keɓe banngogol cuɓaaɗe ɗee.</string>
+    <!-- Text for the cancel button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_cancel">Haaytu</string>
+    <!-- Text for the allow button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_allow">Momtu</string>
+    <!-- Text for the snackbar confirmation that the data was deleted -->
+    <string name="preferences_delete_browsing_data_snackbar">Keɓe banngogol momtaama</string>
+    <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
+    <string name="deleting_browsing_data_in_progress">Momtugol keɓe banngogol…</string>
+
+    <!-- Text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in">Seŋo e Firefox</string>
+    <!-- Text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header">Reen hoore maa</string>
+
+    <!-- text for tracking protection radio button option for standard level of blocking -->
+    <string name="onboarding_tracking_protection_standard_button_2">Gaadanteejo (goowaaɗo)</string>
+    <!-- Text for the button to read the privacy notice -->
+    <string name="onboarding_privacy_notice_read_button">Tar tintinol suturo amen</string>
+
+    <!-- text for the button to finish onboarding -->
+    <string name="onboarding_finish">Fuɗɗo wanngaade</string>
+
+    <!-- Onboarding theme -->
+    <!-- text for the theme picker onboarding card header -->
+    <string name="onboarding_theme_picker_header">Suɓo siŋkoore maa</string>
+    <!-- Summary of automatic theme setting (will follow device setting) -->
+    <string name="onboarding_theme_automatic_summary">Ina fonnda e teelte kaɓirgal maa</string>
+    <!-- Theme setting for dark mode -->
+    <string name="onboarding_theme_dark_title">Siŋkoore niɓɓiɗnde</string>
+    <!-- Theme setting for light mode -->
+    <string name="onboarding_theme_light_title">Siŋkoore jalbunde</string>
+
+    <!-- Text shown in snackbar when multiple tabs have been sent to device -->
+    <string name="sync_sent_tabs_snackbar">Tabbe neldaama!</string>
+    <!-- Text shown in snackbar when one tab has been sent to device  -->
+    <string name="sync_sent_tab_snackbar">Tabbere neldaama!</string>
+    <!-- Text shown in snackbar when sharing tabs failed  -->
+    <string name="sync_sent_tab_error_snackbar">Horiima neldude</string>
+    <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
+    <string name="sync_sent_tab_error_snackbar_action">ETO KADI</string>
+    <!-- Title of QR Pairing Fragment -->
+    <string name="sync_scan_code">Niiwto kod oo</string>
+
+    <!-- Instructions on how to access pairing -->
+    <string name="sign_in_instructions"><![CDATA[E ordinateer maa, uddit Firefox e yah to <b>https://firefox.com/pair</b>]]></string>
+    <!-- Text shown for sign in pairing when ready -->
+    <string name="sign_in_ready_for_scan">Hebiima niiwtaade</string>
+    <!-- Text shown for settings option for sign with pairing -->
+    <string name="sign_in_with_camera">Seŋoro kameraa maa</string>
+    <!-- Text shown for settings option for sign with email -->
+    <string name="sign_in_with_email">Huutoro ɗoo iimeel</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[A alaa konte? <u>Sos konte</u> ngam sanngoɗinde Firefox hakkunde kaɓirɗi.]]></string>
+    <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="sign_out_confirmation_message_2">Maa %s dartin jahdingol e konte maa, kono momtataa hay wootere e keɓe banngogol maa e ngal kaɓirgal gal.</string>
+    <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_disconnect">Seŋtondir</string>
+    <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_cancel">Haaytu</string>
+
+    <!-- Error message snackbar shown after the user tried to select a default folder which cannot be altered -->
+    <string name="bookmark_cannot_edit_root">Ronkii taƴtaade dunnge goowaaɗe</string>
+
+    <!-- Enhanced Tracking Protection -->
+    <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
+    <string name="etp_settings">Reen teelte</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="preference_enhanced_tracking_protection">Ndeenka Dewindol Ƴellitiika</string>
+    <!-- Title for the description of enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_title">Wanngo tawo a rewindaaka</string>
+    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation">Mooftan hoore maa keɓe maa. %s ina reen maa e ko heewi e rewindotooɓe ɓurɓe wooweede rewooɓe e maa e ceŋogol.</string>
+    <!-- Text displayed that links to website about enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_learn_more">Ɓeydu humpito</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_default_1">Gaadanteejo (goowaaɗo)</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict">Ƴagguɗo</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_strict_info_button">Ko ndeenka dewindol ƴagguka daaƴi</string>
+    <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies">Kuukiije</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">Kuukiije iwɗe e geese ɗe njillaaka</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">Kuukiiji goɗɗi ɗii kala (ina mbaawi saabaade taƴondiral e lowe geese)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">Kuukiiji ɗii kala (ina mbaawi saabaade taƴondiral e lowe geese)</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content">Dewindagol loowdi</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">Nder tabbe ɗee fof</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">E tabbe cuuriiɗe tan</string>
+    <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_blocked">Faddaama</string>
+    <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_allowed">Yamiraama</string>
+    <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_title">Dewindagol loowdi</string>
+    <!-- About page link text to open what's new link -->
+    <string name="about_whats_new">Ko hesɗi e %s</string>
+
+    <!-- About page link text to open support link -->
+    <string name="about_support">Wallitorde</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">Kooki</string>
+    <!-- About page link text to open privacy notice link -->
+    <string name="about_privacy_notice">Tintinol suturo</string>
+    <!-- About page link text to open know your rights link -->
+    <string name="about_know_your_rights">Anndu hakkeeji maa</string>
+    <!-- About page link text to open a screen with libraries that are used -->
+    <string name="about_other_open_source_libraries">Deftorɗi ɗi min kuutortoo</string>
+
+    <!-- Browser long press popup menu -->
+    <!-- Copy the current url -->
+    <string name="browser_toolbar_long_press_popup_copy">Natto</string>
+    <!-- Paste the text in the clipboard -->
+    <string name="browser_toolbar_long_press_popup_paste">Ɗakku</string>
+
+    <!-- Title text for the Add To Homescreen dialog -->
+    <string name="add_to_homescreen_title">Ɓeydu to hello jaɓɓorgo</string>
+    <!-- Cancel button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_cancel">Haaytu</string>
+    <!-- Add button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_add">Ɓeydu</string>
+    <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
+    <string name="add_to_homescreen_continue">Jooku to Lowre geese</string>
+    <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_text_placeholder">Innde sodorde</string>
+
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">Ceŋorɗe e pinle</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins">Danndu ceŋorɗe e pinle</string>
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">Naamno danndude</string>
+    <!-- Preference option for never saving passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_never_save">Hoto danndu abada</string>
+
+    <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill2">Humpit e jaajol e %1$s</string>
+    <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill">Humpit e jaajol e jaaɓɗe goɗɗe</string>
+
+    <!-- Preference option for adding a login -->
+    <string name="preferences_logins_add_login">Ɓeydu innde kuutoro</string>
+
+    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices">Sanngoɗin inɗe kuutoro e kaɓirɗi goɗɗi</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins">Ceŋorɗe danndaaɗe</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Ɓeydu humpito baɗte Sync.</string>
+    <!-- Preference to access list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions">Paltooje</string>
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">Ceŋorɗe e pinle ɗe ndanndaaka maa kollire ɗoo.</string>
+    <!-- Description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description">Ceŋorɗe e pinle ndanndetaake ngam ɗee lowe.</string>
+    <!-- Hint for search box in logins list -->
+    <string name="preferences_passwords_saved_logins_search">Yiylo Ceŋorɗe</string>
+    <!-- The header for the site that a login is for -->
+    <string name="preferences_passwords_saved_logins_site">Lowre</string>
+    <!-- The header for the username for a login -->
+    <string name="preferences_passwords_saved_logins_username">Innde kuutoro</string>
+    <!-- The header for the password for a login -->
+    <string name="preferences_passwords_saved_logins_password">Finnde</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
+    <string name="saved_logins_copy_password">Natto finnde</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
+    <string name="saved_login_copy_username">Natto innde kuutoro</string>
+    <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
+    <string name="saved_login_reveal_password">Hollu finnde</string>
+    <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
+    <string name="saved_login_hide_password">Suuɗ finnde</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
+    <string name="logins_biometric_prompt_message">Soktu ngam yiyde ceŋorɗe maa danndaaɗe</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title">Hisnu ceŋorɗe maa e pinle maa</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_later">So ɓooyii</string>
+    <!-- Title for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom">Lonngo lowre geese fof ɓadoo</string>
+    <!-- Summary for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom_summary">Hurmin ngam yamirde ɓottugol e lonngo, haa e lowe kaɗooje ndee weesre.</string>
+    <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
+    <string name="saved_logins_sort_strategy_alphabetically">Innde (A-Z)</string>
+    <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
+    <string name="saved_logins_sort_strategy_last_used">Sakkitii huutoreede</string>
+
+    <!-- Autofill -->
+    <!-- Preference and title for managing the autofill settings -->
+    <string name="preferences_autofill">Humpit e jaajol</string>
+    <!-- Preference and title for managing the settings for credit cards -->
+    <string name="preferences_credit_cards">Karte banke</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards">Danndekarte  kadi kebbina e jaajol</string>
+    <!-- Preference summary for saving and autofilling credit card data -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary">Keɓe e gannaaɗe</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
+    <string name="preferences_credit_cards_sync_cards_across_devices">Sanngoɗin karte e kaɓiri goɗɗi</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
+    <string name="preferences_credit_cards_sync_cards">Sanngoɗin karte</string>
+    <!-- Preference option for adding a credit card -->
+    <string name="preferences_credit_cards_add_credit_card">Ɓeydu karte banke</string>
+    <!-- Preference option for managing saved credit cards -->
+    <string name="preferences_credit_cards_manage_saved_cards">Toppito karte danndaaɗe</string>
+
+    <!-- Preference for saving and autofilling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses">Dannde kadi kumpitaa ñiiɓirɗe e jaajol</string>
+
+    <!-- Title of the "Add card" screen -->
+    <string name="credit_cards_add_card">Ɓeydu kartal</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">Taƴto kartal</string>
+    <!-- The header for the card number of a credit card -->
+    <string name="credit_cards_card_number">Tonngoode Kartal</string>
+    <!-- The header for the expiration date of a credit card -->
+    <string name="credit_cards_expiration_date">Ña,gu Kiiɗtugol</string>
+    <!-- The label for the expiration date month of a credit card to be used by a11y services-->
+    <string name="credit_cards_expiration_date_month">Lewru Ñalngu Kiiɗtugol</string>
+    <!-- The label for the expiration date year of a credit card to be used by a11y services-->
+    <string name="credit_cards_expiration_date_year">Hitaande Ñalngu Kiiɗtugol</string>
+    <!-- The header for the name on the credit card -->
+    <string name="credit_cards_name_on_card">Innde wonnde e Karte</string>
+    <!-- The text for the "Delete card" menu item for deleting a credit card -->
+    <string name="credit_cards_menu_delete_card">Momtu kartal</string>
+    <!-- The text for the "Delete card" button for deleting a credit card -->
+    <string name="credit_cards_delete_card_button">Momtu kartal</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation">Aɗa yenanaa yiɗde momtude ngal kartal banke?</string>
+    <!-- The text for the positive button on "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_button">Momtu</string>
+    <!-- The title for the "Save" menu item for saving a credit card -->
+    <string name="credit_cards_menu_save">Danndu</string>
+    <!-- The text for the "Save" button for saving a credit card -->
+    <string name="credit_cards_save_button">Danndu</string>
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting a credit card -->
+    <string name="credit_cards_cancel_button">Haaytu</string>
+    <!-- Title of the "Saved cards" screen -->
+    <string name="credit_cards_saved_cards">Karte danndaaɗe</string>
+    <!-- Error message for credit card number validation -->
+    <string name="credit_cards_number_validation_error_message">Tiiɗno naatnu tonngoode kartal banke moƴƴere</string>
+    <!-- Error message for credit card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message">Tiiɗno humpit ngol gallol</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
+    <string name="credit_cards_biometric_prompt_message">Soktu ngam yiyde karte maa danndaaɗe</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title">Hisnu karte maa banke</string>
+
+    <!-- Title of the Add search engine screen -->
+    <string name="search_engine_add_custom_search_engine_title">Ɓeydu yiylorde</string>
+    <!-- Title of the Edit search engine screen -->
+    <string name="search_engine_edit_custom_search_engine_title">Taƴto yiylorde</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
+    <string name="search_engine_add_button_content_description">Ɓeydu</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Danndu</string>
+    <!-- Text for the menu button to edit a search engine -->
+    <string name="search_engine_edit">Taƴto</string>
+    <!-- Text for the menu button to delete a search engine -->
+    <string name="search_engine_delete">Momtu</string>
+
+    <!-- Text for the button to create a custom search engine on the Add search engine screen -->
+    <string name="search_add_custom_engine_label_other">Goɗɗo</string>
+    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
+    <string name="search_add_custom_engine_name_hint">Innde</string>
+
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint">Binndi njiylaw kuutorteeɗi</string>
+
+    <!-- Text shown when a user leaves the name field empty -->
+    <string name="search_add_custom_engine_error_empty_name">Naatnu innde yiylorde</string>
+    <!-- Text shown when a user creates a new search engine -->
+    <string name="search_add_custom_engine_success_message">%s Sosaa</string>
+    <!-- Text shown when a user successfully edits a custom search engine -->
+    <string name="search_edit_custom_engine_success_message">%s danndaa</string>
+    <!-- Text shown when a user successfully deletes a custom search engine -->
+    <string name="search_delete_search_engine_success_message">Momtaama %s</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">Yamirde ɗum:</string>
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. Yah to teelte Android</string>
+
+    <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
+    <string name="confirm_clear_permission_site">Aɗa yananaa yiɗde momtude ɗee jamirooje e ɗee lowe?</string>
+    <!-- Login overflow menu delete button -->
+    <string name="login_menu_delete_button">Momtu</string>
+    <!-- Message in delete confirmation dialog for logins -->
+    <string name="login_deletion_confirmation">Aɗa yenanaa yiɗde momtude ndee seŋorde?</string>
+    <!-- Positive action of a dialog asking to delete  -->
+    <string name="dialog_delete_positive">Momtu</string>
+
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">Gallol binndi taƴtottoongal wonande ñiiɓirde geese innde ndee.</string>
+    <!--  The page title for adding new login. -->
+    <string name="add_login">Ɓeydu innde kuutoro hesere</string>
+    <!--  The error message in add/edit login view when password field is blank. -->
+    <string name="saved_login_password_required">Finnde ena waɗɗii</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required">Innde kuutoro ena waɗɗii</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Innde lowre ena waɗɗii</string>
+    <!-- Voice search button content description  -->
+    <string name="voice_search_content_description">Njiilaw sawto</string>
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">Haal jooni</string>
+
+    <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
+    <string name="add_login_hostname_hint_text">https://www.yeru.com</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
+    <string name="add_login_hostname_invalid_text_3">Ñiiɓirde geese ena foti waɗde &quot;https://&quot; or &quot;http://&quot;</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname is invalid. -->
+    <string name="add_login_hostname_invalid_text_2">Innde lowre jaalɗunde ena waɗɗii</string>
+
+    <!-- Synced Tabs -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <string name="synced_tabs_connect_another_device">Seŋ kaɓirgol goɗngol.</string>
+
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">Yiy doggol tabbe iwɗe e kaɓirɗi maa goɗɗi.</string>
+
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">Seŋo nga sanngoɗine</string>
+    <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
+    <string name="synced_tabs_no_open_tabs">Alaa tabbe udditiiɗe</string>
+
+    <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
+    <string name="top_sites_toggle_top_recent_sites_4">Codorɗe</string>
+    <!-- Text for the menu button to open the homepage settings. -->
+    <string name="top_sites_menu_settings">Teelte</string>
+
+    <!-- Label text displayed for a sponsored top site. -->
+    <string name="top_sites_sponsored_label">Barjinaaɗi</string>
+
+    <!-- Inactive tabs auto-close message in the tabs tray -->
+    <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
+    <string name="inactive_tabs_auto_close_message_header" tools:ignore="UnusedResources">Uddu e jaajol caggal lewru?</string>
+    <!-- A description below the header to notify the user what the inactive tabs auto-close feature is. -->
+    <string name="inactive_tabs_auto_close_message_description" tools:ignore="UnusedResources">Firefox ena waawi uddude tabbe ɗe a yillaaki e lewru ɓennundu nduu.</string>
+
+    <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->
+    <string name="pocket_stories_sponsor_indication">Barjinaaɗi</string>
+
+    </resources>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<resources>
+    <item name="add_to_shortcuts" type="id" />
+    <item name="remove_from_shortcuts" type="id" />
+    <item name="share" type="id" />
+    <item name="settings" type="id" />
+    <item name="open_default" type="id" />
+    <item name="find_in_page" type="id" />
+    <item name="open_select_browser" type="id" />
+    <item name="custom_tab_menu_item" type="id" />
+    <item name="finish" type="id" />
+    <item name="next" type="id" />
+    <item name="add_to_homescreen" type="id" />
+    <item name="help" type="id" />
+    <item name="whats_new" type="id" />
+    <item name="open_in_firefox_focus" type="id" />
+    <item name="report_site_issue" type="id"/>
+</resources>

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/layer1"
+    android:paddingBottom="12dp">
+
+    <ImageView
+        android:id="@+id/download_dialog_icon"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:importantForAccessibility="no"
+        android:scaleType="center"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/mozac_feature_download_ic_download_complete"
+        app:tint="?attr/textPrimary" />
+
+    <TextView
+        android:id="@+id/download_dialog_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="3dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="11dp"
+        android:paddingStart="5dp"
+        android:paddingTop="4dp"
+        android:paddingEnd="5dp"
+        android:textColor="?attr/textPrimary"
+        android:textSize="16sp"
+        app:layout_constraintEnd_toStartOf="@id/download_dialog_close_button"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toEndOf="@id/download_dialog_icon"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Download (85.7 MB)" />
+
+    <ImageButton
+        android:id="@+id/download_dialog_close_button"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:background="@null"
+        android:contentDescription="@string/mozac_feature_downloads_button_close"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/mozac_ic_cross_20"
+        app:tint="?attr/textPrimary" />
+
+    <TextView
+        android:id="@+id/download_dialog_filename"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:maxHeight="160dp"
+        android:layout_marginStart="3dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="8dp"
+        android:paddingStart="5dp"
+        android:paddingTop="4dp"
+        android:paddingEnd="5dp"
+        android:textColor="?attr/textPrimary"
+        android:scrollbars="vertical"
+        app:layout_constraintStart_toEndOf="@id/download_dialog_icon"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/download_dialog_title"
+        tools:text="@tools:sample/lorem/random" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/download_dialog_action_button"
+        style="@style/PositiveButton"
+        android:layout_width="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
+        android:text="@string/mozac_feature_downloads_button_open"
+        android:textAllCaps="false"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/download_dialog_filename" />
+</androidx.constraintlayout.widget.ConstraintLayout>

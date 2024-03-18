@@ -1,0 +1,62 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+transforms:
+    - taskgraph.transforms.from_deps
+    - android_taskgraph.transforms.upstream_artifacts
+    - android_taskgraph.transforms.beetmover
+    - android_taskgraph.transforms.treeherder
+    - gecko_taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    - signing
+    - build-components
+    - post-signing
+
+jobs:
+    push-to-maven:
+        description: Publish component
+        from-deps:
+            with-attributes:
+                build-type:
+                    - release
+                    - beta
+                    - nightly
+            group-by: component
+            copy-attributes: true
+        maven-destination: 'maven2/org/mozilla/components/{component}/{version}/{artifact_file_name}'
+        shipping-phase: ship
+        treeherder:
+            symbol:
+                by-build-type:
+                    release: BM-R
+                    beta: BM-B
+                    nightly: BM-N
+                    default: BM-B
+            kind: build
+        worker:
+            action: push-to-maven
+            bucket:
+                by-build-type:
+                    release:
+                        by-level:
+                            '3': maven-production
+                            default: maven-staging
+                    beta:
+                        by-level:
+                            '3': maven-production
+                            default: maven-staging
+                    nightly:
+                        by-level:
+                            '3': maven-nightly-production
+                            default: maven-nightly-staging
+            beetmover-application-name:
+                by-build-type:
+                    release: components
+                    beta: components
+                    nightly: nightly_components
+                    default: UNDEFINED
+        worker-type: beetmover-android

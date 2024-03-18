@@ -1,0 +1,42 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+transforms:
+    - taskgraph.transforms.from_deps
+    - android_taskgraph.transforms.upstream_artifacts
+    - android_taskgraph.transforms.signing
+    - android_taskgraph.transforms.treeherder
+    - gecko_taskgraph.transforms.task
+
+kind-dependencies:
+    - build-components
+
+jobs:
+    sign-build:
+        description: Sign component
+        from-deps:
+            with-attributes:
+                build-type:
+                    - release
+                    - beta
+                    - nightly
+            group-by: component
+            copy-attributes: true
+        run-on-projects: []
+        treeherder:
+            symbol:
+                by-build-type:
+                    release: BRs
+                    beta: BBs
+                    nightly: BNs
+                    default: Bs
+            kind: build
+        worker-type:
+            by-level:
+                '3': linux-signing
+                default: linux-depsigning
+        worker:
+            implementation: scriptworker-signing

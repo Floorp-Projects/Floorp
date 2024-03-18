@@ -189,6 +189,34 @@ mobile/android/app/geckoview-prefs.js
 mobile/android/installer/
 mobile/android/locales/
 
+# TODO - Bug 1881094: temporarily ignored for firefox-android migration
+mobile/android/android-components/components/browser/engine-system/src/main/res/raw/domain_blocklist.json
+mobile/android/android-components/components/browser/engine-system/src/main/res/raw/domain_safelist.json
+mobile/android/android-components/components/browser/errorpages/src/main/assets/errorPageScripts.js
+mobile/android/android-components/components/browser/errorpages/src/main/assets/error_page_js.html
+mobile/android/android-components/components/browser/icons/src/main/assets/extensions/browser-icons/icons.js
+mobile/android/android-components/components/browser/session-storage/src/androidTest/assets/index.html
+mobile/android/android-components/components/concept/engine/src/test/resources/manifests/example_mdn.json
+mobile/android/android-components/components/concept/engine/src/test/resources/manifests/invalid_json.json
+mobile/android/android-components/components/concept/engine/src/test/resources/manifests/spec_typical.json
+mobile/android/android-components/components/concept/engine/src/test/resources/manifests/twitter_mobile.json
+mobile/android/android-components/components/feature/accounts/src/main/assets/extensions/fxawebchannel/background.js
+mobile/android/android-components/components/feature/accounts/src/main/assets/extensions/fxawebchannel/fxawebchannel.js
+mobile/android/android-components/components/feature/addons/src/test/resources/collection.json
+mobile/android/android-components/components/feature/addons/src/test/resources/collection_with_empty_values.json
+mobile/android/android-components/components/feature/addons/src/test/resources/localized_collection.json
+mobile/android/android-components/components/feature/readerview/src/main/assets/extensions/readerview/
+mobile/android/android-components/components/feature/search/src/main/assets/extensions/ads/adsTelemetry.js
+mobile/android/android-components/components/feature/search/src/main/assets/extensions/search/searchTelemetry.js
+mobile/android/android-components/components/feature/webcompat-reporter/src/main/assets/
+mobile/android/android-components/components/feature/webcompat/src/main/assets/extensions/webcompat/
+mobile/android/android-components/samples/browser/src/main/assets/extensions/test/background.js
+mobile/android/fenix/app/src/androidTest/assets/
+mobile/android/fenix/app/src/androidTest/java/org/mozilla/fenix/syncintegration/
+mobile/android/fenix/app/src/main/assets/
+mobile/android/focus-android/app/src/androidTest/assets/
+mobile/android/android-components/docs/assets/js/icon-js.js
+
 # Pre-processed/pref files
 modules/libpref/greprefs.js
 modules/libpref/init/all.js

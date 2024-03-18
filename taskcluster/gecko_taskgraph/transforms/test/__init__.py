@@ -265,11 +265,14 @@ test_description_schema = Schema(
                 str,
                 None,
                 {Required("index"): str, Required("name"): str},
+                {Required("upstream-task"): str, Required("name"): str},
             ),
         ),
         # A list of artifacts to install from 'fetch' tasks. Validation deferred
         # to 'job' transforms.
         Optional("fetches"): object,
+        # A list of extra dependencies
+        Optional("dependencies"): object,
         # Raptor / browsertime specific keys, defer validation to 'raptor.py'
         # transform.
         Optional("raptor"): object,
@@ -483,6 +486,9 @@ def make_job_description(config, tasks):
 
         if task["mozharness"]["requires-signed-builds"] is True:
             jobdesc["dependencies"]["build-signing"] = task["build-signing-label"]
+
+        if "dependencies" in task:
+            jobdesc["dependencies"].update(task["dependencies"])
 
         if "expires-after" in task:
             jobdesc["expires-after"] = task["expires-after"]

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Content description (not visible, for screen readers etc.): Description for the overflow menu button in the browser toolbar. -->
+    <string name="mozac_browser_toolbar_menu_button">Clàr-taice</string>
+    <string name="mozac_clear_button_description">Falamhaich</string>
+    <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection enabled, but none trackers have been blocked or detected. -->
+    <string name="mozac_browser_toolbar_content_description_tracking_protection_on_no_trackers_blocked">Tha an dìon o thracadh air</string>
+    <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection enabled, and trackers have been blocked or detected.-->
+    <string name="mozac_browser_toolbar_content_description_tracking_protection_on_trackers_blocked1">Bhac gleus an dìon o thracadh tracaichean</string>
+    <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection disabled.-->
+    <string name="mozac_browser_toolbar_content_description_tracking_protection_off_for_a_site1">Tha an dìon o thracadh dheth air an làrach seo</string>
+    <!-- Content description: For the site security information icon (the site security icon).-->
+    <string name="mozac_browser_toolbar_content_description_site_info">Fiosrachadh mun làrach</string>
+    <!-- Announcement made by the screen reader when the progress bar is shown and a page is loading -->
+    <string name="mozac_browser_toolbar_progress_loading">Ga luchdadh</string>
+    <!-- Content description: For the autoplay toolbar icon, it is set when the auto play permission is blocking content playing.-->
+    <string name="mozac_browser_toolbar_content_description_autoplay_blocked">Chaidh cuid dhen t-susbaint a bhacadh an cois roghainn na fèin-chluich</string>
+</resources>

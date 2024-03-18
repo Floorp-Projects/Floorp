@@ -1,0 +1,231 @@
+{
+  "page_size": 25,
+  "page_count": 1,
+  "count": 1,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "id": 607454,
+      "authors": [
+        {
+          "id": 11423598,
+          "name": "Raymond Hill",
+          "url": "https://addons.mozilla.org/ca/firefox/user/11423598/",
+          "username": "gorhill"
+        }
+      ],
+      "average_daily_users": 6229783,
+      "categories": {
+        "android": [
+          "security-privacy"
+        ],
+        "firefox": [
+          "privacy-security"
+        ]
+      },
+      "contributions_url": "",
+      "created": "2015-04-25T07:26:22Z",
+      "current_version": {
+        "id": 5596914,
+        "compatibility": {
+          "firefox": {
+            "min": "78.0",
+            "max": "*"
+          },
+          "android": {
+            "min": "79.0",
+            "max": "*"
+          }
+        },
+        "edit_url": "https://addons.mozilla.org/ca/developers/addon/ublock-origin/versions/5596914",
+        "is_strict_compatibility_enabled": false,
+        "license": {
+          "id": 6,
+          "is_custom": false,
+          "name": "GNU General Public License v3.0",
+          "url": "http://www.gnu.org/licenses/gpl-3.0.html"
+        },
+        "release_notes": "See complete release notes for <a href=\"https://prod.outgoing.prod.webservices.mozgcp.net/v1/57eadd553bcb629be4f7576c9aa9a808cc5e918a6ea1413dff063281d4896978/https%3A//github.com/gorhill/uBlock/releases/tag/1.51.0\" rel=\"nofollow\">1.51.0</a>.\n\n<b>Fixes / changes</b>\n\n<ul><li><a href=\"https://prod.outgoing.prod.webservices.mozgcp.net/v1/a578674b791ed67b926b31004613b0631d0cc73efc2d263385eb842dc0dff09f/https%3A//github.com/gorhill/uBlock/commit/ee0649329c59\" rel=\"nofollow\">Remove obsolete web<em>accessible</em>resources</a></li><li><a href=\"https://prod.outgoing.prod.webservices.mozgcp.net/v1/7071379ad6c88fec4e40b3ff8165d4fd3ecdaae2fbf0ea145fcf21eb0ea86e43/https%3A//github.com/gorhill/uBlock/commit/cdf385f5f46e\" rel=\"nofollow\">Add missing (deprecated) method to google ima</a></li><li><a href=\"https://prod.outgoing.prod.webservices.mozgcp.net/v1/bf46690e10ed8a086d9d50080177c67380aeb5cc7945d96acdbde3fdf7aa9466/https%3A//github.com/gorhill/uBlock/commit/aa6baf9a29db\" rel=\"nofollow\">Fix regression in handling of experimental <code>header=</code> filter option</a></li><li><a href=\"https://prod.outgoing.prod.webservices.mozgcp.net/v1/f2328063ec5c7512d5899f4b7db7324d42864cea3678aff50af908219b976094/https%3A//github.com/gorhill/uBlock/commit/0da7e12ea4a0\" rel=\"nofollow\">Only already normalized CSS selectors can be fast path-compiled</a></li><li><a href=\"https://prod.outgoing.prod.webservices.mozgcp.net/v1/e271cd306c9578e0ed17c785486d183abc8eed2408c7f3fb22eca3afff3ab478/https%3A//github.com/gorhill/uBlock/commit/ec0698196563\" rel=\"nofollow\">Improve compatibility with AdGuard's scriptlets</a></li><li><a href=\"https://prod.outgoing.prod.webservices.mozgcp.net/v1/f42373a2522c9739807b48d956a9437aa9c7e6b6b4a613a24d412d309ac8c037/https%3A//github.com/gorhill/uBlock/commit/5ebdbf3e2439\" rel=\"nofollow\">Add static network filter option: <code>permissions</code></a></li><li><a href=\"https://prod.outgoing.prod.webservices.mozgcp.net/v1/f502abdb178413a344a43d8d0e57463d6c9a7ef3c01a437097ec6a2fd97e1350/https%3A//github.com/gorhill/uBlock/commit/786d9b2212e9\" rel=\"nofollow\">Add <code>set-attr</code> scriptlet</a></li><li><a href=\"https://prod.outgoing.prod.webservices.mozgcp.net/v1/46449872121aa9a39f8fe5f1499dccec24fc094eb72848f37974606abd562997/https%3A//github.com/gorhill/uBlock/commit/fea6f7f311a5\" rel=\"nofollow\">Do not bail too early when trapping properties in <code>acs</code> scriptlet</a></li><li><a href=\"https://prod.outgoing.prod.webservices.mozgcp.net/v1/76b28688717445a36e5ee48387a0e7392370e22d5e3a2fbb53d2b965f54f1eee/https%3A//github.com/gorhill/uBlock/commit/80b3f3c3c020\" rel=\"nofollow\">Fix regression in cloud storage import of \"Filter lists\" pane</a></li><li><a href=\"https://prod.outgoing.prod.webservices.mozgcp.net/v1/eb0f0fdfbd50904d7cd8e260b62d0ca4b233c8f9d8a18f9abb31472026e07b23/https%3A//github.com/gorhill/uBlock/commit/083a318090e3\" rel=\"nofollow\">Add <code>set-session-storage-item</code> scriptlet</a></li><li><a href=\"https://prod.outgoing.prod.webservices.mozgcp.net/v1/f125a8290e220a02336532a360ea37a7a4ff1c4402a5f518785b7354a7a491d8/https%3A//github.com/gorhill/uBlock/commit/60b21b142268\" rel=\"nofollow\">Prevent negative position when widget size is greater than viewport size</a><ul><li><a href=\"https://prod.outgoing.prod.webservices.mozgcp.net/v1/e49ec519e35ce90b1ce42475f48affc9a34e97640a60ca13a6ff3d23b58b0ade/https%3A//github.com/gorhill/uBlock/commit/b44815f0c8f0\" rel=\"nofollow\">Ensure no negative value for <code>top</code> property of floating widget in logger</a></li></ul></li><li><a href=\"https://prod.outgoing.prod.webservices.mozgcp.net/v1/2398a39690c82a85f3fb23710721b490fedd503cf3003fdad3b23a8193fb257d/https%3A//github.com/gorhill/uBlock/commit/622cda2cdf91\" rel=\"nofollow\">Add visual hint when not all sublists are enabled</a></li><li><a href=\"https://prod.outgoing.prod.webservices.mozgcp.net/v1/f549cc526fa10665161c86930eccf00650b123e9c5f0b9ddc11038d7349600cd/https%3A//github.com/gorhill/uBlock/commit/33b409dd5bae\" rel=\"nofollow\">Add support for AdGuard's noop (<code>_</code>) network filter option</a></li><li><a href=\"https://prod.outgoing.prod.webservices.mozgcp.net/v1/c649c1ddb8b1d7f280a0687edeae15b9c7b65d4101901337eff3cb8acb6370f0/https%3A//github.com/gorhill/uBlock/commit/5d6e10318662\" rel=\"nofollow\">Add \"tabless\" filter expression for logger output</a></li><li><a href=\"https://prod.outgoing.prod.webservices.mozgcp.net/v1/3f7e7d0a06e918e4c8b3f8bb91d33e700a99ff9c2988069b609f614228e6ccf4/https%3A//github.com/gorhill/uBlock/commit/194354cd5d77\" rel=\"nofollow\">Add support for logical expressions to <code>!#if</code> directive</a><ul><li>Also added support for <code>!#else</code></li></ul></li><li><a href=\"https://prod.outgoing.prod.webservices.mozgcp.net/v1/f1e827e5c4e256a0c832f985f6a21bb39743a5dfecd5d4014ae3aa9b09d9e116/https%3A//github.com/gorhill/uBlock/commit/7867c2512807\" rel=\"nofollow\">Add resource aliases for increased compatibility with AdGuard lists</a></li><li><a href=\"https://prod.outgoing.prod.webservices.mozgcp.net/v1/6f42d070e087002ada8f37b36176d8d40d40dafcc5f5e9a1050c689ea079017f/https%3A//github.com/gorhill/uBlock/commit/fd036a51ee20\" rel=\"nofollow\">Add compatibility with AdGuard's <code>#%#//scriptlet(...)</code> syntax</a><ul><li>Also added support for quoted parameters in <code>##+js(...)</code> syntax</li></ul></li><li><a href=\"https://prod.outgoing.prod.webservices.mozgcp.net/v1/50632bd7b34e7e7185c7642640111d9f2ba5493bea1e3ed1c517702302fd4938/https%3A//github.com/gorhill/uBlock/commit/8b7a5264deb4\" rel=\"nofollow\">Fix syntax highlighter throwing with invalid patterns</a></li><li>...</li></ul>\n<a href=\"https://prod.outgoing.prod.webservices.mozgcp.net/v1/7c755863346ab5ff9e77aeee9ffcd4ef47f343f5c7d2f2f143dcd474b8558641/https%3A//github.com/gorhill/uBlock/compare/1.50.0...1.51.0\" rel=\"nofollow\">Commits history since last version</a>.",
+        "reviewed": "2023-07-25T09:58:22Z",
+        "version": "1.51.0",
+        "files": [
+          {
+            "id": 4141256,
+            "created": "2023-07-19T23:09:25Z",
+            "hash": "sha256:8b73468bc233a11dd2895219466381783d19123857dd0b6fd16a01820fca4834",
+            "is_restart_required": false,
+            "is_webextension": true,
+            "is_mozilla_signed_extension": false,
+            "platform": "all",
+            "size": 3538418,
+            "status": "public",
+            "url": "https://addons.mozilla.org/firefox/downloads/file/4141256/ublock_origin-1.51.0.xpi",
+            "permissions": [
+              "dns",
+              "menus",
+              "privacy",
+              "storage",
+              "tabs",
+              "unlimitedStorage",
+              "webNavigation",
+              "webRequest",
+              "webRequestBlocking",
+              "<all_urls>",
+              "http://*/*",
+              "https://*/*",
+              "file://*/*",
+              "https://easylist.to/*",
+              "https://*.fanboy.co.nz/*",
+              "https://filterlists.com/*",
+              "https://forums.lanik.us/*",
+              "https://github.com/*",
+              "https://*.github.io/*",
+              "https://*.letsblock.it/*"
+            ],
+            "optional_permissions": [],
+            "host_permissions": []
+          }
+        ]
+      },
+      "default_locale": "en-US",
+      "description": "Un bloquejador eficient: el consum de memòria i de processador és baix però, no obstant això, pot carregar i aplicar milers de filtres més que altres bloquejadors coneguts.\n\nGràfic de l'eficiència: <a href=\"https://prod.outgoing.prod.webservices.mozgcp.net/v1/407a22e7e017297705e927653caa7e67ad67aabb741f33b91851c56c0544a0d9/https%3A//github.com/gorhill/uBlock/wiki/uBlock-vs.-ABP%3A-efficiency-compared\" rel=\"nofollow\">https://github.com/gorhill/uBlock/wiki/uBlock-vs.-ABP:-efficiency-compared</a>\n\nÚs: El gran botó d'engegada de la finestra emergent serveix per a desactivar/activar permanentment el uBlock per al lloc web actual. No és un botó d'engegada general de l'extensió.\n\n***\n\nFlexible, és més que un \"bloquejador d'anuncis\": també pot llegir i crear filtres a partir de fitxers hosts.\n\nPer defecte, es carreguen i s'apliquen aquestes llistes de filtres:\n\n- EasyList\n- Peter Lowe’s Ad server list\n- EasyPrivacy\n- Dominis de malware\n\nSi voleu, podeu seleccionar altres llistes disponibles:\n\n- Fanboy’s Enhanced Tracking List\n- Dan Pollock’s hosts file\n- hpHosts’s Ad and tracking servers\n- MVPS HOSTS\n- Spam404\n- I altres\n\nÒbviament, com més filtres activeu, més gran serà el consum de memòria. Però fins i tot després d'afegir dues llistes extra de Fanboy, hpHosts’s Ad and tracking servers, el uBlock₀ encara té un consum de memòria inferior al d'altres bloquejadors coneguts.\n\nTambé heu de ser conscient que seleccionant algunes d'aquestes llistes extra és més probable trobar-se amb llocs webs inservibles -- especialment aquelles llistes que s'utilitzen normalment com a fitxer de hosts.\n\n***\n\nSense les llistes predefinides de filtres, aquesta extensió no és res. Així que, si en cap moment voleu fer una aportació, penseu en les persones que treballen durament per a mantenir les llistes de filtres que utilitzeu, a disposició de tothom de manera gratuïta.\n\n***\n\nLliure.\nCodi obert amb llicència pública (GPLv3)\nPer usuaris per a usuaris.\n\nCol·laboradors a Github: <a href=\"https://prod.outgoing.prod.webservices.mozgcp.net/v1/9bfaba4f3fe3310ae0a3189187f5fbab185097d85398752765e086889775079e/https%3A//github.com/gorhill/uBlock/graphs/contributors\" rel=\"nofollow\">https://github.com/gorhill/uBlock/graphs/contributors</a>\nCol·laboradors a Crowdin: <a href=\"https://prod.outgoing.prod.webservices.mozgcp.net/v1/6a44868e1580018df8d4d87adf8e97cc74b71b962a73dd5a64604f99db767287/https%3A//crowdin.net/project/ublock\" rel=\"nofollow\">https://crowdin.net/project/ublock</a>\n\n***\n\nAquesta és, en certa manera, una versió primitiva. Tingueu-ho en compte quan en doneu la vostra opinió.\n\nRegistre de canvis del projecte:\n<a href=\"https://prod.outgoing.prod.webservices.mozgcp.net/v1/de148deb19b52874eb4c5726859834f3294a6057ed44e873c958acee4c920062/https%3A//github.com/gorhill/uBlock/releases\" rel=\"nofollow\">https://github.com/gorhill/uBlock/releases</a>",
+      "developer_comments": null,
+      "edit_url": "https://addons.mozilla.org/ca/developers/addon/ublock-origin/edit",
+      "guid": "uBlock0@raymondhill.net",
+      "has_eula": false,
+      "has_privacy_policy": true,
+      "homepage": "https://github.com/gorhill/uBlock#ublock-origin",
+      "icon_url": "https://addons.mozilla.org/user-media/addon_icons/607/607454-64.png?modified=mcrushed",
+      "icons": {
+        "32": "https://addons.mozilla.org/user-media/addon_icons/607/607454-32.png?modified=mcrushed",
+        "64": "https://addons.mozilla.org/user-media/addon_icons/607/607454-64.png?modified=mcrushed",
+        "128": "https://addons.mozilla.org/user-media/addon_icons/607/607454-128.png?modified=mcrushed"
+      },
+      "is_disabled": false,
+      "is_experimental": false,
+      "last_updated": "2023-08-07T17:15:41Z",
+      "name": "uBlock Origin",
+      "previews": [
+        {
+          "id": 238546,
+          "caption": "The popup panel: default mode",
+          "image_size": [
+            1011,
+            758
+          ],
+          "image_url": "https://addons.mozilla.org/user-media/previews/full/238/238546.png?modified=1622132421",
+          "thumbnail_size": [
+            533,
+            400
+          ],
+          "thumbnail_url": "https://addons.mozilla.org/user-media/previews/thumbs/238/238546.jpg?modified=1622132421"
+        },
+        {
+          "id": 238548,
+          "caption": "The dashboard: stock filter lists",
+          "image_size": [
+            1011,
+            758
+          ],
+          "image_url": "https://addons.mozilla.org/user-media/previews/full/238/238548.png?modified=1622132423",
+          "thumbnail_size": [
+            533,
+            400
+          ],
+          "thumbnail_url": "https://addons.mozilla.org/user-media/previews/thumbs/238/238548.jpg?modified=1622132423"
+        },
+        {
+          "id": 238547,
+          "caption": "The popup panel: default-deny mode",
+          "image_size": [
+            1011,
+            758
+          ],
+          "image_url": "https://addons.mozilla.org/user-media/previews/full/238/238547.png?modified=1622132425",
+          "thumbnail_size": [
+            533,
+            400
+          ],
+          "thumbnail_url": "https://addons.mozilla.org/user-media/previews/thumbs/238/238547.jpg?modified=1622132425"
+        },
+        {
+          "id": 238549,
+          "caption": "The dashboard: settings",
+          "image_size": [
+            1011,
+            758
+          ],
+          "image_url": "https://addons.mozilla.org/user-media/previews/full/238/238549.png?modified=1622132426",
+          "thumbnail_size": [
+            533,
+            400
+          ],
+          "thumbnail_url": "https://addons.mozilla.org/user-media/previews/thumbs/238/238549.jpg?modified=1622132426"
+        },
+        {
+          "id": 238552,
+          "caption": "The popup panel in Firefox Preview: default mode with more blocking options revealed",
+          "image_size": [
+            970,
+            1800
+          ],
+          "image_url": "https://addons.mozilla.org/user-media/previews/full/238/238552.png?modified=1622132430",
+          "thumbnail_size": [
+            216,
+            400
+          ],
+          "thumbnail_url": "https://addons.mozilla.org/user-media/previews/thumbs/238/238552.jpg?modified=1622132430"
+        },
+        {
+          "id": 230370,
+          "caption": "The unified logger tells you all that uBO is seeing and doing",
+          "image_size": [
+            800,
+            600
+          ],
+          "image_url": "https://addons.mozilla.org/user-media/previews/full/230/230370.png?modified=1622132432",
+          "thumbnail_size": [
+            533,
+            400
+          ],
+          "thumbnail_url": "https://addons.mozilla.org/user-media/previews/thumbs/230/230370.jpg?modified=1622132432"
+        }
+      ],
+      "promoted": {
+        "apps": [
+          "firefox",
+          "android"
+        ],
+        "category": "recommended"
+      },
+      "ratings": {
+        "average": 4.7825,
+        "bayesian_average": 4.782204826721061,
+        "count": 15799,
+        "text_count": 4101
+      },
+      "ratings_url": "https://addons.mozilla.org/ca/firefox/addon/ublock-origin/reviews/",
+      "requires_payment": false,
+      "review_url": "https://addons.mozilla.org/ca/reviewers/review/607454",
+      "slug": "ublock-origin",
+      "status": "public",
+      "summary": "Finalment, un blocador eficient que utilitza pocs recursos de memòria i processador.",
+      "support_email": null,
+      "support_url": "https://old.reddit.com/r/uBlockOrigin/",
+      "tags": [
+        "ad blocker",
+        "anti malware",
+        "anti tracker",
+        "content blocker",
+        "privacy",
+        "security"
+      ],
+      "type": "extension",
+      "url": "https://addons.mozilla.org/ca/firefox/addon/ublock-origin/",
+      "versions_url": "https://addons.mozilla.org/ca/firefox/addon/ublock-origin/versions/",
+      "weekly_downloads": 143905,
+      "_score": null
+    }
+  ]
+}

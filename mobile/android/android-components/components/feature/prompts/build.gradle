@@ -1,0 +1,79 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+android {
+    defaultConfig {
+        minSdkVersion config.minSdkVersion
+        compileSdk config.compileSdkVersion
+        targetSdkVersion config.targetSdkVersion
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = Versions.compose_compiler
+    }
+
+    buildFeatures {
+        compose true
+    }
+
+    namespace 'mozilla.components.feature.prompts'
+}
+
+tasks.withType(KotlinCompile).configureEach {
+    kotlinOptions.freeCompilerArgs += "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi"
+}
+
+dependencies {
+    implementation project(':browser-state')
+    implementation project(':concept-engine')
+    implementation project(':feature-session')
+    implementation project(':feature-tabs')
+    implementation project(':lib-state')
+    implementation project(':support-ktx')
+    implementation project(':support-utils')
+    implementation project(':ui-icons')
+    implementation project(':ui-widgets')
+    implementation project(':ui-colors')
+
+    implementation ComponentsDependencies.androidx_constraintlayout
+    implementation ComponentsDependencies.androidx_core_ktx
+    implementation ComponentsDependencies.google_material
+
+    implementation ComponentsDependencies.androidx_core_ktx
+    implementation ComponentsDependencies.androidx_compose_ui
+    implementation ComponentsDependencies.androidx_compose_ui_tooling_preview
+    implementation ComponentsDependencies.androidx_compose_foundation
+    implementation ComponentsDependencies.androidx_compose_material
+
+    debugImplementation ComponentsDependencies.androidx_compose_ui_tooling
+
+    testImplementation ComponentsDependencies.androidx_test_core
+    testImplementation ComponentsDependencies.androidx_test_junit
+    testImplementation ComponentsDependencies.testing_coroutines
+    testImplementation ComponentsDependencies.testing_robolectric
+    testImplementation project(':feature-session')
+    testImplementation project(':support-test')
+    testImplementation project(':support-test-libstate')
+
+    androidTestImplementation project(':support-android-test')
+    androidTestImplementation ComponentsDependencies.androidx_test_core
+    androidTestImplementation ComponentsDependencies.androidx_test_runner
+}
+
+apply from: '../../../android-lint.gradle'
+apply from: '../../../publish.gradle'
+ext.configurePublish(config.componentsGroupId, archivesBaseName, project.ext.description)

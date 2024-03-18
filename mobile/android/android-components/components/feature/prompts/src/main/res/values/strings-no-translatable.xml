@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<resources>
+    <!-- Months of the years, used on the month chooser dialog. -->
+    <string-array name="mozac_feature_prompts_months">
+        <item>@string/mozac_feature_prompts_jan</item>
+        <item>@string/mozac_feature_prompts_feb</item>
+        <item>@string/mozac_feature_prompts_mar</item>
+        <item>@string/mozac_feature_prompts_apr</item>
+        <item>@string/mozac_feature_prompts_may</item>
+        <item>@string/mozac_feature_prompts_jun</item>
+        <item>@string/mozac_feature_prompts_jul</item>
+        <item>@string/mozac_feature_prompts_aug</item>
+        <item>@string/mozac_feature_prompts_sep</item>
+        <item>@string/mozac_feature_prompts_oct</item>
+        <item>@string/mozac_feature_prompts_nov</item>
+        <item>@string/mozac_feature_prompts_dec</item>
+    </string-array>
+    <!-- Text used for the millisecond separator in the time picker. -->
+    <string name="mozac_feature_prompts_millisecond_separator">.</string>
+    <!-- Text used for the second separator in the time picker. -->
+    <string name="mozac_feature_prompts_second_separator">:</string>
+</resources>

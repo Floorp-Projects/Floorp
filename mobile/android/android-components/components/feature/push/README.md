@@ -1,0 +1,154 @@
+# [Android Components](../../../README.md) > Feature > Push
+
+A component that implements push notifications with a supported push service.
+
+## Usage
+
+Add a supported push service for providing the encrypted messages (for example, Firebase Cloud Messaging via `lib-push-firebase`):
+```kotlin
+class FirebasePush : AbstractFirebasePushService()
+```
+
+Create a push configuration with the project info and also place the required service's API keys in the project directory:
+
+```kotlin
+PushConfig(
+  senderId = "push-test-f408f",
+  serverHost = "updates.push.services.mozilla.com",
+  serviceType = ServiceType.FCM,
+  protocol = Protocol.HTTPS
+)
+```
+
+We can then start the AutoPushFeature to get the subscription info and decrypted push message:
+```kotlin
+val service = FirebasePush()
+
+val feature = AutoPushFeature(
+  context = context,
+  service = pushService,
+  config = pushConfig
+)
+
+// To start the feature and the service.
+feature.initialize()
+
+// To stop the feature and the service.
+feature.shutdown()
+
+// To receive the subscription info for all the subscription changes.
+feature.register(object : AutoPushFeature.Observer {
+  override fun onSubscriptionChanged(scope: PushScope) {
+    // Handle subscription info here.
+  }
+})
+
+// Subscribe for a unique scope (identifier).
+feature.subscribe("push_subscription_scope_id")
+
+// To receive messages:
+feature.register(object : AutoPushFeature.Observer {
+  override fun onMessageReceived(scope: String, message: ByteArray?) {
+    // Handle decrypted message here.
+  }
+})
+```
+
+### Setting up the dependency
+
+Use Gradle to download the library from [maven.mozilla.org](https://maven.mozilla.org/) ([Setup repository](../../../README.md#maven-repository)):
+
+```Groovy
+implementation "org.mozilla.components:feature-push:{latest-version}"
+```
+
+## Implementation Notes
+
+The features of WebPush/AutoPush are to:
+1. Implement the WebPush specification for Mozilla services/products.
+2. Provide a bridge between a mobile or desktop client and server app without the server needing to know about ecosystem-specific push providers (FCM/APN/ADM).
+3. End-to-end encryption between client app and server app.
+
+### Key actors & processes
+Below is a sequence diagram for the four main processes that take place for push messaging:
+1. (First-install) initialization
+2. Creating a WebPush subscription
+3. Sending WebPush message
+4. Un-subscribing (e.g. account log-out)
+
+* **Client App**: this is your Android device that includes the `AutoPushFeature` that contains the AutoPush rust component to create/delete subscriptions and encrypt/decrypt messages. As well as the`lib-push-firebase` which is the push service bridge.
+* **Server App** - the application server that has a web push server implementation.
+* **AutoPush** - the server bridge between app servers and their clients.
+* **Push Provider** - the platform push service that does the "last-mile" message delivered.
+
+![generated sequence diagram](assets/autopush-sequence-diagram.png)
+
+<details>
+
+<summary>Sequence diagram source code</summary>
+
+<!-- Github Markdown has support for rendering mermaid graphs; use mermaid.js.org to generate output for the diagram alternatively -->
+
+```mermaid
+sequenceDiagram
+    participant Device as Client App
+    participant AutoPush
+    participant Provider as Push Provider (FCM/APN)
+    participant Server as Server App
+    rect rgb(191, 223, 255)
+    Note over Device,Server: Initialization
+    Note right of Device: Generate pub-priv keys
+    Device->>Provider: Request device registration token
+    Provider-->>Device: Receive device registration token
+    Device->>AutoPush: Send token
+    end
+    rect rgb(191, 223, 255)
+    Note over Device,Server: Creating a push subscription
+    Device->>AutoPush: Request subscription endpoint
+    AutoPush-->>Device: Receive subscription
+    Device->>Server: Send subscription endpoint + public key
+    end
+    rect rgb(191, 223, 255)
+    Note over Device,Server: Sending WebPush message
+    Note left of Server: Encrypt message
+    Server->>AutoPush: Send encrypted message
+    AutoPush->>Provider: Forward encrypted message
+    Provider->>Device: Deliver encrypted message
+    Note right of Device: Decrypt message
+    end
+    rect rgb(191, 223, 255)
+    Note over Device,Server: Un-subscribing (e.g. account log-out)
+    Device->>AutoPush: Unsubscribe
+    Device->>Server: Unsubscribe (notify server that the subscription is dead)
+    end
+```
+
+</details>
+
+### Miscellaneous
+
+Q. Why do we need to verify connections, and what happens when we do?
+- Various services may need to communicate with us via push messages. Examples: FxA events (send tab, etc), WebPush (a web app receives a push message from its server).
+- To send these push messages, services (FxA, random internet servers talking to their web apps) post an HTTP request to a "push endpoint" maintained by [Mozilla's Autopush service][0]. This push endpoint is specific to its recipient - so one instance of an app may have many endpoints associated with it: one for the current FxA device, a few for web apps, etc.
+- Important point here: servers (FxA, services behind web apps, etc.) need to be told about subscription info we get from Autopush.
+- Here is where things start to get complicated: client (us) and server (Autopush) may disagree on which channels are associated with the current UAID (remember: our subscriptions are per-channel). Channels may expire (TTL'd) or may be deleted by some server's Cron job if they're unused. For example, if this happens, services that use this subscription info (e.g. FxA servers) to communication with their clients (FxA devices) will fail to deliver push messages.
+- So the client needs to be able to find out that this is the case, re-create channel subscriptions on Autopush, and update any dependent services with new subscription info (e.g. update the FxA device record for `PushType.Services`, or notify the JS code with a `pushsubscriptionchanged` event for WebPush).
+- The Autopush side of this is `verify_connection` API - we're expected to call this periodically, and that library will compare channel registrations that the server knows about vs those that the client knows about.
+- If those are misaligned, we need to re-register affected (or, all?) channels, and notify related services so that they may update their own server-side records.
+- For FxA, this means that we need to have an instance of the rust FirefoxAccount object around in order to call `setDevicePushSubscriptionAsync` once we re-generate our push subscription.
+- For consumers such as Fenix, easiest way to access that method is via an `account manager`.
+- However, neither account object itself, nor the account manager, aren't available from within a Worker. It's possible to "re-hydrate" (instantiate rust object from the locally persisted state) a FirefoxAccount instance, but that's a separate can of worms, and needs to be carefully considered.
+- Similarly for WebPush (in the future), we will need to have Gecko around in order to fire `pushsubscriptionchanged` javascript events.
+
+Q. Where do we find more details about AutoPush?
+- The Cloud Services team have [an architecture doc][0] for in-depth details on how the AutoPush server works with clients.
+
+[0]: https://autopush.readthedocs.io/en/latest/architecture.html
+
+## License
+
+    This Source Code Form is subject to the terms of the Mozilla Public
+    License, v. 2.0. If a copy of the MPL was not distributed with this
+    file, You can obtain one at http://mozilla.org/MPL/2.0/
+
+[0]: https://github.com/mozilla-services/autopush

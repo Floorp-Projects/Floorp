@@ -1,0 +1,110 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# This file defines the metrics that are recorded by glean telemetry. They are
+# automatically converted to Kotlin code at build time using the `glean_parser`
+# PyPI package.
+---
+
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+
+messaging:
+  message_shown:
+    type: event
+    description: |
+      A message was shown to the user.
+    extra_keys:
+      message_key:
+        description: The id of the message
+        type: string
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/24224
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/24426
+      - https://github.com/mozilla-mobile/firefox-android/pull/1101
+    notification_emails:
+      - android-probes@mozilla.com
+      - cgordon@mozilla.com
+    data_sensitivity:
+      - interaction
+    expires: never
+  message_dismissed:
+    type: event
+    description: |
+      A message was dismissed by the user.
+    extra_keys:
+      message_key:
+        description: The id of the message
+        type: string
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/24224
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/issues/24224
+      - https://github.com/mozilla-mobile/firefox-android/pull/1101
+    notification_emails:
+      - android-probes@mozilla.com
+      - cgordon@mozilla.com
+    data_sensitivity:
+      - interaction
+    expires: never
+  message_clicked:
+    type: event
+    description: |
+      A message was clicked by the user.
+    extra_keys:
+      message_key:
+        description: The id of the message
+        type: string
+      action_uuid:
+        description: The uuid of the action
+        type: string
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/24224
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/issues/24224
+      - https://github.com/mozilla-mobile/firefox-android/pull/1101
+    notification_emails:
+      - android-probes@mozilla.com
+      - cgordon@mozilla.com
+    data_sensitivity:
+      - interaction
+    expires: never
+  message_expired:
+    type: event
+    description: |
+      A message maxDisplayCount has been surpassed.
+    extra_keys:
+      message_key:
+        description: The id of the message
+        type: string
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/24224
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/issues/24224
+      - https://github.com/mozilla-mobile/firefox-android/pull/1101
+    notification_emails:
+      - android-probes@mozilla.com
+      - cgordon@mozilla.com
+    data_sensitivity:
+      - interaction
+    expires: never
+  malformed:
+    type: event
+    description: |
+      A message was malformed.
+    extra_keys:
+      message_key:
+        description: The id of the message
+        type: string
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/24224
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/issues/24224
+      - https://github.com/mozilla-mobile/firefox-android/pull/1101
+    notification_emails:
+      - android-probes@mozilla.com
+      - cgordon@mozilla.com
+    data_sensitivity:
+      - interaction
+    expires: never

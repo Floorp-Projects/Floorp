@@ -1,0 +1,55 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+transforms:
+    - gecko_taskgraph.transforms.task:transforms
+
+job-defaults:
+    run-on-projects: []
+    treeherder:
+        kind: build
+        platform: fenix-android-all/opt
+        tier: 1
+    worker-type: tree
+    worker:
+        implementation: treescript
+        tags: []
+        bump: false
+        dontbuild: false
+        ignore-closed-tree: true
+        push: true
+
+jobs:
+    import:
+        name: android_l10n_import
+        description: Import strings from android-l10n repo
+        treeherder:
+            symbol: android-l10n(I)
+        worker:
+            source-repo: https://hg.mozilla.org/projects/oak
+            android-l10n-import-info:
+                from-repo-url: https://github.com/mozilla-l10n/android-l10n
+                toml-info:
+                    - toml-path: mozilla-mobile/fenix/l10n.toml
+                      dest-path: mobile/android/fenix
+                    - toml-path: mozilla-mobile/focus-android/l10n.toml
+                      dest-path: mobile/android/focus-android
+                    - toml-path: mozilla-mobile/android-components/l10n.toml
+                      dest-path: mobile/android/android-components
+
+    sync:
+        name: android_l10n_sync
+        description: Sync android-l10n strings from central to beta
+        treeherder:
+            symbol: android-l10n(S)
+        worker:
+            source-repo: https://hg.mozilla.org/releases/mozilla-beta
+            android-l10n-sync-info:
+                from-repo-url: https://hg.mozilla.org/mozilla-central
+                toml-info:
+                    - toml-path: mobile/android/fenix/l10n.toml
+                    - toml-path: mobile/android/focus-android/l10n.toml
+                    - toml-path: mobile/android/android-components/l10n.toml

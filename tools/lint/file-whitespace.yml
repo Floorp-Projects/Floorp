@@ -146,6 +146,68 @@ file-whitespace:
         - python/mozperftest/perfdocs/running.rst
         - python/mozperftest/perfdocs/vision.rst
         - python/mozperftest/perfdocs/writing.rst
+        # TODO - Bug 1881094: temporarily ignored for firefox-android migration
+        - mobile/android/android-components/automation/taskcluster/androidTest/flank-x86.yml
+        - mobile/android/android-components/components/browser/errorpages/README.md
+        - mobile/android/android-components/components/browser/engine-gecko/geckoview.fml.yaml
+        - mobile/android/android-components/components/browser/engine-system/src/main/res/raw/domain_blocklist.json
+        - mobile/android/android-components/components/browser/engine-system/src/main/res/raw/domain_safelist.json
+        - mobile/android/android-components/components/concept/engine/src/test/resources/manifests/invalid_json.json
+        - mobile/android/android-components/components/concept/engine/src/test/resources/manifests/twitter_mobile.json
+        - mobile/android/android-components/components/feature/addons/schemas/mozilla.components.feature.addons.update.db.UpdateAttemptsDatabase/1.json
+        - mobile/android/android-components/components/feature/addons/src/test/resources/localized_collection.json
+        - mobile/android/android-components/components/feature/containers/schemas/mozilla.components.feature.containers.db.ContainerDatabase/1.json
+        - mobile/android/android-components/components/feature/downloads/README.md
+        - mobile/android/android-components/components/feature/downloads/schemas/mozilla.components.feature.downloads.db.DownloadsDatabase/1.json
+        - mobile/android/android-components/components/feature/downloads/schemas/mozilla.components.feature.downloads.db.DownloadsDatabase/2.json
+        - mobile/android/android-components/components/feature/downloads/schemas/mozilla.components.feature.downloads.db.DownloadsDatabase/3.json
+        - mobile/android/android-components/components/feature/downloads/schemas/mozilla.components.feature.downloads.db.DownloadsDatabase/4.json
+        - mobile/android/android-components/components/feature/logins/schemas/mozilla.components.feature.logins.exceptions.db.LoginExceptionDatabase/1.json
+        - mobile/android/android-components/components/feature/pwa/schemas/mozilla.components.feature.pwa.db.ManifestDatabase/0.json
+        - mobile/android/android-components/components/feature/pwa/schemas/mozilla.components.feature.pwa.db.ManifestDatabase/1.json
+        - mobile/android/android-components/components/feature/pwa/schemas/mozilla.components.feature.pwa.db.ManifestDatabase/2.json
+        - mobile/android/android-components/components/feature/pwa/schemas/mozilla.components.feature.pwa.db.ManifestDatabase/3.json
+        - mobile/android/android-components/components/feature/recentlyclosed/schemas/mozilla.components.feature.recentlyclosed.db.RecentlyClosedTabsDatabase/1.json
+        - mobile/android/android-components/components/feature/search/src/main/assets/search/search_telemetry_v2.json
+        - mobile/android/android-components/components/feature/share/schemas/mozilla.components.feature.share.db.RecentAppsDatabase/1.json
+        - mobile/android/android-components/components/feature/share/schemas/mozilla.components.feature.share.db.RecentAppsDatabase/2.json
+        - mobile/android/android-components/components/feature/sitepermissions/schemas/mozilla.components.feature.sitepermissions.db.SitePermissionsDatabase/1.json
+        - mobile/android/android-components/components/feature/sitepermissions/schemas/mozilla.components.feature.sitepermissions.db.SitePermissionsDatabase/2.json
+        - mobile/android/android-components/components/feature/sitepermissions/schemas/mozilla.components.feature.sitepermissions.db.SitePermissionsDatabase/3.json
+        - mobile/android/android-components/components/feature/sitepermissions/schemas/mozilla.components.feature.sitepermissions.db.SitePermissionsDatabase/4.json
+        - mobile/android/android-components/components/feature/sitepermissions/schemas/mozilla.components.feature.sitepermissions.db.SitePermissionsDatabase/5.json
+        - mobile/android/android-components/components/feature/sitepermissions/schemas/mozilla.components.feature.sitepermissions.db.SitePermissionsDatabase/6.json
+        - mobile/android/android-components/components/feature/sitepermissions/schemas/mozilla.components.feature.sitepermissions.db.SitePermissionsDatabase/7.json
+        - mobile/android/android-components/components/feature/sitepermissions/schemas/mozilla.components.feature.sitepermissions.db.SitePermissionsDatabase/8.json
+        - mobile/android/android-components/components/feature/tab-collections/schemas/mozilla.components.feature.tab.collections.db.TabCollectionDatabase/1.json
+        - mobile/android/android-components/components/feature/top-sites/schemas/mozilla.components.feature.top.sites.db.TopSiteDatabase/1.json
+        - mobile/android/android-components/components/feature/top-sites/schemas/mozilla.components.feature.top.sites.db.TopSiteDatabase/3.json
+        - mobile/android/android-components/components/lib/crash/schemas/mozilla.components.lib.crash.db.CrashDatabase/1.json
+        - mobile/android/android-components/components/service/nimbus/messaging.fml.yaml
+        - mobile/android/android-components/components/service/pocket/schemas/mozilla.components.service.pocket.stories.db.PocketRecommendationsDatabase/1.json
+        - mobile/android/android-components/components/service/pocket/schemas/mozilla.components.service.pocket.stories.db.PocketRecommendationsDatabase/2.json
+        - mobile/android/android-components/components/service/pocket/schemas/mozilla.components.service.pocket.stories.db.PocketRecommendationsDatabase/3.json
+        - mobile/android/android-components/components/service/pocket/schemas/mozilla.components.service.pocket.stories.db.PocketRecommendationsDatabase/4.json
+        - mobile/android/android-components/components/support/license/src/test/resources/robolectric.properties
+        - mobile/android/android-components/components/support/remotesettings/src/test/java/mozilla/components/support/remotesettings/RemoteSettingsClientTest.kt
+        - mobile/android/android-components/docs/contribute/merge_day.md
+        - mobile/android/android-components/docs/rfcs/0004-top-sites-feature.md
+        - mobile/android/android-components/docs/rfcs/0011-decouple-home-activity-and-external-app-browser-activity.md
+        - mobile/android/android-components/samples/browser/src/androidTest/assets/index.html
+        - mobile/android/fenix/app/src/androidTest/assets/pages/passwordsubmit.html
+        - mobile/android/fenix/docs/Acronym-dictionary.md
+        - mobile/android/fenix/docs/Guide-to-merging-contributor-PRs.md
+        - mobile/android/fenix/docs/Test-telemetry-pings.md
+        - mobile/android/fenix/docs/release-checklist.md
+        - mobile/android/fenix/docs/substituting-local-gv.md
+        - mobile/android/fenix/app/metrics.yaml
+        - mobile/android/fenix/app/nimbus.fml.yaml
+        - mobile/android/fenix/app/src/androidTest/java/org/mozilla/fenix/experimentintegration/variables.yaml
+        - mobile/android/fenix/automation/taskcluster/androidTest/flank-arm-beta.yml
+        - mobile/android/fenix/docs/Firebase-Cloud-Messaging-for-WebPush.md
+        - mobile/android/fenix/mozilla-detekt-rules/src/main/resources/config.yml
+        - mobile/android/focus-android/automation/taskcluster/androidTest/flank-arm-beta.yml
+
     extensions:
         - .c
         - .cc

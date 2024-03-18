@@ -1,0 +1,945 @@
+import com.android.build.api.variant.FilterConfiguration
+import org.apache.tools.ant.util.StringUtils
+
+plugins {
+    id "com.jetbrains.python.envs" version "$python_envs_plugin"
+    id "com.google.protobuf" version "$protobuf_plugin"
+}
+
+if (findProject(":geckoview") != null) {
+    buildDir "${topobjdir}/gradle/build/mobile/android/fenix"
+}
+
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-parcelize'
+apply plugin: 'jacoco'
+apply plugin: 'androidx.navigation.safeargs.kotlin'
+apply plugin: 'com.google.android.gms.oss-licenses-plugin'
+
+if (findProject(":geckoview") != null) {
+    apply from: "${topsrcdir}/mobile/android/gradle/product_flavors.gradle"
+}
+
+import groovy.json.JsonOutput
+import org.gradle.internal.logging.text.StyledTextOutput.Style
+import org.gradle.internal.logging.text.StyledTextOutputFactory
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
+import static org.gradle.api.tasks.testing.TestResult.ResultType
+
+apply from: 'benchmark.gradle'
+
+android {
+    project.maybeConfigForJetpackBenchmark(it)
+    if (project.hasProperty("testBuildType")) {
+        // Allowing to configure the test build type via command line flag (./gradlew -PtestBuildType=beta ..)
+        // in order to run UI tests against other build variants than debug in automation.
+        testBuildType project.property("testBuildType")
+    }
+
+    defaultConfig {
+        applicationId "org.mozilla"
+        minSdkVersion config.minSdkVersion
+        compileSdk config.compileSdkVersion
+        targetSdkVersion config.targetSdkVersion
+        versionCode 1
+        versionName Config.generateDebugVersionName()
+        vectorDrawables.useSupportLibrary = true
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunnerArguments clearPackageData: 'true'
+        resValue "bool", "IS_DEBUG", "false"
+        buildConfigField "boolean", "USE_RELEASE_VERSIONING", "false"
+        buildConfigField "String", "VCS_HASH", "\"\"" // see override in release builds for why it's blank.
+        // This should be the "public" base URL of AMO.
+        buildConfigField "String", "AMO_BASE_URL", "\"https://addons.mozilla.org\""
+        buildConfigField "String", "AMO_COLLECTION_NAME", "\"Extensions-for-Android\""
+        buildConfigField "String", "AMO_COLLECTION_USER", "\"mozilla\""
+        // These add-ons should be excluded for Mozilla Online builds.
+        buildConfigField "String[]", "MOZILLA_ONLINE_ADDON_EXCLUSIONS",
+                "{" +
+                        "\"uBlock0@raymondhill.net\"," +
+                        "\"firefox@ghostery.com\"," +
+                        "\"jid1-MnnxcxisBPnSXQ@jetpack\"," +
+                        "\"adguardadblocker@adguard.com\"," +
+                        "\"foxyproxy@eric.h.jung\"," +
+                        "\"{73a6fe31-595d-460b-a920-fcc0f8843232}\"," +
+                        "\"jid1-BoFifL9Vbdl2zQ@jetpack\"," +
+                        "\"woop-NoopscooPsnSXQ@jetpack\"," +
+                        "\"adnauseam@rednoise.org\"" +
+                "}"
+        // This should be the base URL used to call the AMO API.
+        buildConfigField "String", "AMO_SERVER_URL", "\"https://services.addons.mozilla.org\""
+
+        def deepLinkSchemeValue = "fenix-dev"
+        buildConfigField "String", "DEEP_LINK_SCHEME", "\"$deepLinkSchemeValue\""
+
+        // This allows overriding the target activity for MozillaOnline builds, which happens
+        // as part of the defaultConfig below.
+        def targetActivity = "HomeActivity"
+
+        // Build flag for "Mozilla Online" variants. See `Config.isMozillaOnline`.
+        if (project.hasProperty("mozillaOnline") || gradle.hasProperty("localProperties.mozillaOnline")) {
+            buildConfigField "boolean", "MOZILLA_ONLINE", "true"
+            targetActivity = "MozillaOnlineHomeActivity"
+        } else {
+            buildConfigField "boolean", "MOZILLA_ONLINE", "false"
+        }
+
+        manifestPlaceholders = [
+                "targetActivity": targetActivity,
+                "deepLinkScheme": deepLinkSchemeValue
+        ]
+
+        buildConfigField "String[]", "SUPPORTED_LOCALE_ARRAY", getSupportedLocales()
+    }
+
+    def releaseTemplate = {
+        // We allow disabling optimization by passing `-PdisableOptimization` to gradle. This is used
+        // in automation for UI testing non-debug builds.
+        shrinkResources !project.hasProperty("disableOptimization")
+        minifyEnabled !project.hasProperty("disableOptimization")
+        proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        matchingFallbacks = ['release'] // Use on the "release" build type in dependencies (AARs)
+
+        // Changing the build config can cause files that depend on BuildConfig.java to recompile
+        // so we only set the vcs hash in release builds to avoid possible recompilation in debug builds.
+        buildConfigField "String", "VCS_HASH", "\"${Config.getVcsHash()}\""
+
+        if (gradle.hasProperty("localProperties.autosignReleaseWithDebugKey")) {
+            signingConfig signingConfigs.debug
+        }
+
+        if (gradle.hasProperty("localProperties.debuggable")) {
+            debuggable true
+        }
+    }
+
+    buildTypes {
+        debug {
+            shrinkResources false
+            minifyEnabled false
+            applicationIdSuffix ".fenix.debug"
+            resValue "bool", "IS_DEBUG", "true"
+            pseudoLocalesEnabled true
+        }
+        nightly releaseTemplate >> {
+            applicationIdSuffix ".fenix"
+            buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
+            def deepLinkSchemeValue = "fenix-nightly"
+            buildConfigField "String", "DEEP_LINK_SCHEME", "\"$deepLinkSchemeValue\""
+            manifestPlaceholders.putAll([
+                    "deepLinkScheme": deepLinkSchemeValue
+            ])
+        }
+        beta releaseTemplate >> {
+            buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
+            applicationIdSuffix ".firefox_beta"
+            def deepLinkSchemeValue = "fenix-beta"
+            buildConfigField "String", "DEEP_LINK_SCHEME", "\"$deepLinkSchemeValue\""
+            manifestPlaceholders.putAll([
+                    // This release type is meant to replace Firefox (Beta channel) and therefore needs to inherit
+                    // its sharedUserId for all eternity. See:
+                    // https://searchfox.org/mozilla-esr68/search?q=moz_android_shared_id&case=false&regexp=false&path=
+                    // Shipping an app update without sharedUserId can have
+                    // fatal consequences. For example see:
+                    //  - https://issuetracker.google.com/issues/36924841
+                    //  - https://issuetracker.google.com/issues/36905922
+                    "sharedUserId": "org.mozilla.firefox.sharedID",
+                    "deepLinkScheme": deepLinkSchemeValue,
+            ])
+        }
+        release releaseTemplate >> {
+            buildConfigField "boolean", "USE_RELEASE_VERSIONING", "true"
+            applicationIdSuffix ".firefox"
+            def deepLinkSchemeValue = "fenix"
+            buildConfigField "String", "DEEP_LINK_SCHEME", "\"$deepLinkSchemeValue\""
+            manifestPlaceholders.putAll([
+                    // This release type is meant to replace Firefox (Release channel) and therefore needs to inherit
+                    // its sharedUserId for all eternity. See:
+                    // https://searchfox.org/mozilla-esr68/search?q=moz_android_shared_id&case=false&regexp=false&path=
+                    // Shipping an app update without sharedUserId can have
+                    // fatal consequences. For example see:
+                    //  - https://issuetracker.google.com/issues/36924841
+                    //  - https://issuetracker.google.com/issues/36905922
+                    "sharedUserId": "org.mozilla.firefox.sharedID",
+                    "deepLinkScheme": deepLinkSchemeValue,
+            ])
+        }
+        benchmark releaseTemplate >> {
+            initWith buildTypes.nightly
+            applicationIdSuffix ".fenix"
+            debuggable false
+        }
+    }
+
+    buildFeatures {
+        viewBinding true
+        buildConfig true
+    }
+
+    androidResources {
+        // All JavaScript code used internally by GeckoView is packaged in a
+        // file called omni.ja. If this file is compressed in the APK,
+        // GeckoView must uncompress it before it can do anything else which
+        // causes a significant delay on startup.
+        noCompress 'ja'
+
+        // manifest.template.json is converted to manifest.json at build time.
+        // No need to package the template in the APK.
+        ignoreAssetsPattern "manifest.template.json"
+    }
+
+    testOptions {
+        execution 'ANDROIDX_TEST_ORCHESTRATOR'
+        unitTests.includeAndroidResources = true
+        animationsDisabled = true
+    }
+
+    if (findProject(":geckoview") != null) {
+        project.configureProductFlavors.delegate = it
+        project.configureProductFlavors()
+    }
+
+    flavorDimensions.add("product")
+
+    productFlavors {
+        fenix {
+            dimension "product"
+        }
+    }
+
+    sourceSets {
+        androidTest {
+            resources.srcDirs += ['src/androidTest/resources']
+        }
+    }
+
+    splits {
+        abi {
+            enable true
+
+            reset()
+
+            // As gradle is unable to pick the right apk to install when multiple apks are generated
+            // while running benchmark tests or generating baseline profiles. To circumvent this,
+            // this flag is passed to make sure only one apk is generated so gradle can pick that one.
+            if (project.hasProperty("benchmarkTest")) {
+                include "arm64-v8a"
+            } else {
+                include "x86", "armeabi-v7a", "arm64-v8a", "x86_64"
+            }
+        }
+    }
+
+    bundle {
+        // Profiler issues require us to temporarily package native code compressed to
+        // match the previous APK packaging.
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=1865634
+        packagingOptions {
+            jniLibs {
+                it.useLegacyPackaging = true
+            }
+        }
+
+        language {
+            // Because we have runtime language selection we will keep all strings and languages
+            // in the base APKs.
+            enableSplit = false
+        }
+    }
+
+    lint {
+        lintConfig file("lint.xml")
+        baseline file("lint-baseline.xml")
+    }
+    packagingOptions {
+        resources {
+            excludes += ['META-INF/atomicfu.kotlin_module', 'META-INF/AL2.0', 'META-INF/LGPL2.1',
+                         'META-INF/LICENSE.md', 'META-INF/LICENSE-notice.md']
+        }
+        jniLibs {
+            useLegacyPackaging true
+        }
+    }
+
+
+    testOptions {
+        unitTests.returnDefaultValues = true
+
+        unitTests.all {
+            // We keep running into memory issues when running our tests. With this config we
+            // reserve more memory and also create a new process after every 80 test classes. This
+            // is a band-aid solution and eventually we should try to find and fix the leaks
+            // instead. :)
+            forkEvery = 80
+            maxHeapSize = "3072m"
+            minHeapSize = "1024m"
+        }
+    }
+
+    buildFeatures {
+        compose true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = Versions.compose_compiler
+    }
+
+    namespace 'org.mozilla.fenix'
+}
+
+// Mimic Python: open(os.path.join(buildconfig.topobjdir, 'buildid.h')).readline().split()[2]
+def getBuildId() {
+    if (System.env.MOZ_BUILD_DATE) {
+        if (System.env.MOZ_BUILD_DATE.length() == 14) {
+            return System.env.MOZ_BUILD_DATE
+        }
+        logger.warn("Ignoring invalid MOZ_BUILD_DATE: ${System.env.MOZ_BUILD_DATE}")
+    }
+    return file("${gradle.mozconfig.topobjdir}/buildid.h").getText('utf-8').split()[2]
+}
+
+android.applicationVariants.configureEach { variant ->
+
+// -------------------------------------------------------------------------------------------------
+// Generate version codes for builds
+// -------------------------------------------------------------------------------------------------
+
+    def isDebug = variant.buildType.resValues['bool/IS_DEBUG']?.value ?: false
+    def useReleaseVersioning = variant.buildType.buildConfigFields['USE_RELEASE_VERSIONING']?.value ?: false
+
+    println("----------------------------------------------")
+    println("Variant name:      " + variant.name)
+    println("Application ID:    " + [variant.applicationId, variant.buildType.applicationIdSuffix].findAll().join())
+    println("Build type:        " + variant.buildType.name)
+    println("Flavor:            " + variant.flavorName)
+    println("Telemetry enabled: " + !isDebug)
+
+    if (useReleaseVersioning) {
+        // The Google Play Store does not allow multiple APKs for the same app that all have the
+        // same version code. Therefore we need to have different version codes for our ARM and x86
+        // builds.
+
+        def versionName = variant.buildType.name == 'nightly' ?
+                "${Config.nightlyVersionName(project)}-${getBuildId()}" :
+                "${Config.releaseVersionName(project)}-${getBuildId()}"
+        println("versionName override: $versionName")
+
+        variant.outputs.each { output ->
+            def isMozillaOnline = project.hasProperty("mozillaOnline") || gradle.hasProperty("localProperties.mozillaOnline")
+            def abi = output.getFilter(FilterConfiguration.FilterType.ABI.name())
+            // If it is a Mozilla Online build, use a unified version code of armeabi-v7a
+            def arch = (isMozillaOnline) ? "armeabi-v7a" : abi
+            def aab = project.hasProperty("aab")
+            // We use the same version code generator, that we inherited from Fennec, across all channels - even on
+            // channels that never shipped a Fennec build.
+            def versionCodeOverride = Config.generateFennecVersionCode(arch, aab)
+
+            println("versionCode for $abi = $versionCodeOverride, isMozillaOnline = $isMozillaOnline")
+
+            if (versionName != null) {
+                output.versionNameOverride = versionName
+            }
+            output.versionCodeOverride = versionCodeOverride
+        }
+    } else if (gradle.hasProperty("localProperties.branchBuild.fenix.version")) {
+        def versionName = gradle.getProperty("localProperties.branchBuild.fenix.version")
+        println("versionName override: $versionName")
+        variant.outputs.each { output ->
+            output.versionNameOverride = versionName
+        }
+    }
+
+// -------------------------------------------------------------------------------------------------
+// BuildConfig: Set variables for Sentry, Crash Reporting, and Telemetry
+// -------------------------------------------------------------------------------------------------
+
+    buildConfigField 'String', 'SENTRY_TOKEN', 'null'
+    if (!isDebug) {
+        buildConfigField 'boolean', 'CRASH_REPORTING', 'true'
+        // Reading sentry token from local file (if it exists). In a release task on taskcluster it will be available.
+        try {
+            def token = new File("${rootDir}/.sentry_token").text.trim()
+            buildConfigField 'String', 'SENTRY_TOKEN', '"' + token + '"'
+        } catch (FileNotFoundException ignored) {}
+    } else {
+        buildConfigField 'boolean', 'CRASH_REPORTING', 'false'
+    }
+
+    if (!isDebug) {
+        buildConfigField 'boolean', 'TELEMETRY', 'true'
+    } else {
+        buildConfigField 'boolean', 'TELEMETRY', 'false'
+    }
+
+    def buildDate = Config.generateBuildDate()
+    // Setting buildDate with every build changes the generated BuildConfig, which slows down the
+    // build. Only do this for non-debug builds, to speed-up builds produced during local development.
+    if (isDebug) {
+        buildConfigField 'String', 'BUILD_DATE', '"debug build"'
+    } else {
+        buildConfigField 'String', 'BUILD_DATE', '"' + buildDate + '"'
+    }
+
+// -------------------------------------------------------------------------------------------------
+// Adjust: Read token from local file if it exists (Only release builds)
+// -------------------------------------------------------------------------------------------------
+
+    print("Adjust token: ")
+
+    if (!isDebug) {
+        try {
+            def token = new File("${rootDir}/.adjust_token").text.trim()
+            buildConfigField 'String', 'ADJUST_TOKEN', '"' + token + '"'
+            println "(Added from .adjust_token file)"
+        } catch (FileNotFoundException ignored) {
+            buildConfigField 'String', 'ADJUST_TOKEN', 'null'
+            println("X_X")
+        }
+    } else {
+        buildConfigField 'String', 'ADJUST_TOKEN', 'null'
+        println("--")
+    }
+
+// -------------------------------------------------------------------------------------------------
+// MLS: Read token from local file if it exists
+// -------------------------------------------------------------------------------------------------
+
+    print("MLS token: ")
+
+    try {
+        def token = new File("${rootDir}/.mls_token").text.trim()
+        buildConfigField 'String', 'MLS_TOKEN', '"' + token + '"'
+        println "(Added from .mls_token file)"
+    } catch (FileNotFoundException ignored) {
+        buildConfigField 'String', 'MLS_TOKEN', '""'
+        println("X_X")
+    }
+
+// -------------------------------------------------------------------------------------------------
+// Nimbus: Read endpoint from local.properties of a local file if it exists
+// -------------------------------------------------------------------------------------------------
+
+    print("Nimbus endpoint: ")
+
+    if (!isDebug) {
+        try {
+            def url = new File("${rootDir}/.nimbus").text.trim()
+            buildConfigField 'String', 'NIMBUS_ENDPOINT', '"' + url + '"'
+            println "(Added from .nimbus file)"
+        } catch (FileNotFoundException ignored) {
+            buildConfigField 'String', 'NIMBUS_ENDPOINT', 'null'
+            println("X_X")
+        }
+    } else if (gradle.hasProperty("localProperties.nimbus.remote-settings.url")) {
+        def url=gradle.getProperty("localProperties.nimbus.remote-settings.url")
+        buildConfigField 'String', 'NIMBUS_ENDPOINT', '"' + url + '"'
+        println "(Added from local.properties file)"
+    } else {
+        buildConfigField 'String', 'NIMBUS_ENDPOINT', 'null'
+        println("--")
+    }
+
+// -------------------------------------------------------------------------------------------------
+// Glean: Read custom server URL from local.properties of a local file if it exists
+// -------------------------------------------------------------------------------------------------
+
+    print("Glean custom server URL: ")
+
+    if (gradle.hasProperty("localProperties.glean.custom.server.url")) {
+        def url=gradle.getProperty("localProperties.glean.custom.server.url")
+        buildConfigField 'String', 'GLEAN_CUSTOM_URL', url
+        println "(Added from local.properties file)"
+    } else {
+        buildConfigField 'String', 'GLEAN_CUSTOM_URL', 'null'
+        println("--")
+    }
+
+// -------------------------------------------------------------------------------------------------
+// BuildConfig: Set flag for official builds; similar to MOZILLA_OFFICIAL in mozilla-central.
+// -------------------------------------------------------------------------------------------------
+
+    if (project.hasProperty("official") || gradle.hasProperty("localProperties.official")) {
+        buildConfigField 'Boolean', 'MOZILLA_OFFICIAL', 'true'
+    } else {
+        buildConfigField 'Boolean', 'MOZILLA_OFFICIAL', 'false'
+    }
+
+// -------------------------------------------------------------------------------------------------
+// BuildConfig: Set remote wallpaper URL using local file if it exists
+// -------------------------------------------------------------------------------------------------
+
+    print("Wallpaper URL: ")
+
+    try {
+        def token = new File("${rootDir}/.wallpaper_url").text.trim()
+        buildConfigField 'String', 'WALLPAPER_URL', '"' + token + '"'
+        println "(Added from .wallpaper_url file)"
+    } catch (FileNotFoundException ignored) {
+        buildConfigField 'String', 'WALLPAPER_URL', '""'
+        println("--")
+    }
+
+// -------------------------------------------------------------------------------------------------
+// BuildConfig: Set the Pocket consumer key from a local file if it exists
+// -------------------------------------------------------------------------------------------------
+
+    print("Pocket consumer key: ")
+
+    try {
+        def token = new File("${rootDir}/.pocket_consumer_key").text.trim()
+        buildConfigField 'String', 'POCKET_CONSUMER_KEY', '"' + token + '"'
+        println "(Added from .pocket_consumer_key file)"
+    } catch (FileNotFoundException ignored) {
+        buildConfigField 'String', 'POCKET_CONSUMER_KEY', '""'
+        println("--")
+    }
+
+// -------------------------------------------------------------------------------------------------
+// BuildConfig: Set flag to disable LeakCanary in debug (on CI builds)
+// -------------------------------------------------------------------------------------------------
+
+    if (isDebug) {
+        if (project.hasProperty("disableLeakCanary") || gradle.hasProperty("localProperties.disableLeakCanary")) {
+            buildConfigField "boolean", "LEAKCANARY", "false"
+            println("LeakCanary enabled in debug: false")
+        } else {
+            buildConfigField "boolean", "LEAKCANARY", "true"
+            println("LeakCanary enabled in debug: true")
+        }
+    } else {
+        buildConfigField "boolean", "LEAKCANARY", "false"
+    }
+}
+
+// Generate Kotlin code for the Fenix Glean metrics.
+apply plugin: "org.mozilla.telemetry.glean-gradle-plugin"
+apply plugin: "org.mozilla.appservices.nimbus-gradle-plugin"
+
+nimbus {
+    // The path to the Nimbus feature manifest file
+    manifestFile = "nimbus.fml.yaml"
+    // The fully qualified class name for the generated features.
+    // Map from the variant name to the channel as experimenter and nimbus understand it.
+    // If nimbus's channels were accurately set up well for this project, then this
+    // shouldn't be needed.
+    channels = [
+            fenixDebug: "developer",
+            fenixNightly: "nightly",
+            fenixBeta: "beta",
+            fenixRelease: "release",
+            fenixBenchmark: "developer",
+            withGeckoBinariesFenixDebug: "developer",
+            withGeckoBinariesFenixNightly: "nightly",
+            withGeckoBinariesFenixBeta: "beta",
+            withGeckoBinariesFenixRelease: "release",
+            withGeckoBinariesFenixBenchmark: "developer",
+            withoutGeckoBinariesFenixDebug: "developer",
+            withoutGeckoBinariesFenixNightly: "nightly",
+            withoutGeckoBinariesFenixBeta: "beta",
+            withoutGeckoBinariesFenixRelease: "release",
+            withoutGeckoBinariesFenixBenchmark: "developer",
+    ]
+    // This is generated by the FML and should be checked into git.
+    // It will be fetched by Experimenter (the Nimbus experiment website)
+    // and used to inform experiment configuration.
+    experimenterManifest = ".experimenter.yaml"
+    applicationServicesDir = gradle.hasProperty('localProperties.autoPublish.application-services.dir')
+            ? gradle.getProperty('localProperties.autoPublish.application-services.dir') : null
+}
+
+tasks.withType(KotlinCompile).configureEach {
+    kotlinOptions.freeCompilerArgs += "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi"
+}
+
+dependencies {
+    implementation platform(ComponentsDependencies.androidx_compose_bom)
+    androidTestImplementation platform(ComponentsDependencies.androidx_compose_bom)
+
+    implementation project(':browser-engine-gecko')
+
+    implementation ComponentsDependencies.kotlin_coroutines
+    testImplementation ComponentsDependencies.testing_coroutines
+    implementation ComponentsDependencies.androidx_appcompat
+    implementation ComponentsDependencies.androidx_constraintlayout
+    implementation ComponentsDependencies.androidx_coordinatorlayout
+    implementation FenixDependencies.google_accompanist_drawablepainter
+
+    implementation ComponentsDependencies.thirdparty_sentry
+
+    implementation project(':compose-awesomebar')
+    implementation project(':compose-cfr')
+
+    implementation project(':concept-awesomebar')
+    implementation project(':concept-base')
+    implementation project(':concept-engine')
+    implementation project(':concept-menu')
+    implementation project(':concept-push')
+    implementation project(':concept-storage')
+    implementation project(':concept-sync')
+    implementation project(':concept-toolbar')
+    implementation project(':concept-tabstray')
+
+    implementation project(':browser-domains')
+    implementation project(':browser-icons')
+    implementation project(':browser-menu')
+    implementation project(':browser-menu2')
+    implementation project(':browser-session-storage')
+    implementation project(':browser-state')
+    implementation project(':browser-storage-sync')
+    implementation project(':browser-tabstray')
+    implementation project(':browser-thumbnails')
+    implementation project(':browser-toolbar')
+
+    implementation project(':feature-addons')
+    implementation project(':feature-accounts')
+    implementation project(':feature-app-links')
+    implementation project(':feature-autofill')
+    implementation project(':feature-awesomebar')
+    implementation project(':feature-contextmenu')
+    implementation project(':feature-customtabs')
+    implementation project(':feature-downloads')
+    implementation project(':feature-fxsuggest')
+    implementation project(':feature-intent')
+    implementation project(':feature-media')
+    implementation project(':feature-prompts')
+    implementation project(':feature-push')
+    implementation project(':feature-privatemode')
+    implementation project(':feature-pwa')
+    implementation project(':feature-qr')
+    implementation project(':feature-search')
+    implementation project(':feature-session')
+    implementation project(':feature-syncedtabs')
+    implementation project(':feature-toolbar')
+    implementation project(':feature-tabs')
+    implementation project(':feature-findinpage')
+    implementation project(':feature-logins')
+    implementation project(':feature-sitepermissions')
+    implementation project(':feature-readerview')
+    implementation project(':feature-tab-collections')
+    implementation project(':feature-recentlyclosed')
+    implementation project(':feature-top-sites')
+    implementation project(':feature-share')
+    implementation project(':feature-accounts-push')
+    implementation project(':feature-webauthn')
+    implementation project(':feature-webcompat')
+    implementation project(':feature-webnotifications')
+    implementation project(':feature-webcompat-reporter')
+
+    implementation project(':service-pocket')
+    implementation project(':service-contile')
+    implementation project(':service-digitalassetlinks')
+    implementation project(':service-sync-autofill')
+    implementation project(':service-sync-logins')
+    implementation project(':service-firefox-accounts')
+    implementation project(':service-glean')
+    implementation project(':service-location')
+    implementation project(':service-nimbus')
+
+    implementation project(':support-webextensions')
+    implementation project(':support-base')
+    implementation project(':support-rusterrors')
+    implementation project(':support-images')
+    implementation project(':support-ktx')
+    implementation project(':support-rustlog')
+    implementation project(':support-utils')
+    implementation project(':support-locale')
+
+    implementation project(':ui-colors')
+    implementation project(':ui-icons')
+    implementation project(':lib-publicsuffixlist')
+    implementation project(':ui-widgets')
+    implementation project(':ui-tabcounter')
+
+    implementation project(':lib-crash')
+    implementation project(':lib-crash-sentry')
+    implementation project(':lib-push-firebase')
+    implementation project(':lib-state')
+    implementation project(':lib-dataprotect')
+    testImplementation project(':support-test-fakes')
+
+    debugImplementation ComponentsDependencies.leakcanary
+    debugImplementation ComponentsDependencies.androidx_compose_ui_tooling
+
+    implementation ComponentsDependencies.androidx_activity_compose
+    implementation FenixDependencies.androidx_activity_ktx
+    implementation ComponentsDependencies.androidx_annotation
+    implementation ComponentsDependencies.androidx_compose_ui
+    implementation ComponentsDependencies.androidx_compose_ui_tooling_preview
+    implementation ComponentsDependencies.androidx_compose_animation
+    implementation ComponentsDependencies.androidx_compose_foundation
+    implementation ComponentsDependencies.androidx_compose_material
+    implementation FenixDependencies.androidx_legacy
+    implementation ComponentsDependencies.androidx_biometric
+    implementation ComponentsDependencies.androidx_paging
+    implementation ComponentsDependencies.androidx_preferences
+    implementation ComponentsDependencies.androidx_fragment
+    implementation ComponentsDependencies.androidx_navigation_fragment
+    implementation ComponentsDependencies.androidx_navigation_ui
+    implementation ComponentsDependencies.androidx_compose_navigation
+    implementation ComponentsDependencies.androidx_recyclerview
+
+    implementation ComponentsDependencies.androidx_lifecycle_common
+    implementation ComponentsDependencies.androidx_lifecycle_livedata
+    implementation ComponentsDependencies.androidx_lifecycle_process
+    implementation ComponentsDependencies.androidx_lifecycle_runtime
+    implementation ComponentsDependencies.androidx_lifecycle_viewmodel
+    implementation ComponentsDependencies.androidx_lifecycle_service
+
+    implementation ComponentsDependencies.androidx_core
+    implementation ComponentsDependencies.androidx_core_ktx
+    implementation FenixDependencies.androidx_core_splashscreen
+    implementation FenixDependencies.androidx_transition
+    implementation ComponentsDependencies.androidx_work_runtime
+    implementation FenixDependencies.androidx_datastore
+    implementation ComponentsDependencies.androidx_data_store_preferences
+    implementation FenixDependencies.protobuf_javalite
+    implementation ComponentsDependencies.google_material
+
+    implementation FenixDependencies.adjust
+    implementation FenixDependencies.installreferrer // Required by Adjust
+
+    implementation FenixDependencies.google_ads_id // Required for the Google Advertising ID
+
+    // Required for in-app reviews
+    implementation FenixDependencies.google_play_review
+    implementation FenixDependencies.google_play_review_ktx
+
+    implementation FenixDependencies.androidx_profileinstaller
+
+    androidTestImplementation ComponentsDependencies.androidx_test_uiautomator
+    androidTestImplementation FenixDependencies.fastlane
+    // This Falcon version is added to maven central now required for Screengrab
+    androidTestImplementation FenixDependencies.falcon
+
+    androidTestImplementation ComponentsDependencies.androidx_compose_ui_test
+
+    androidTestImplementation ComponentsDependencies.androidx_espresso_core, {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    }
+
+    androidTestImplementation(FenixDependencies.espresso_contrib) {
+        exclude module: 'appcompat-v7'
+        exclude module: 'support-v4'
+        exclude module: 'support-annotations'
+        exclude module: 'recyclerview-v7'
+        exclude module: 'design'
+        exclude module: 'espresso-core'
+        exclude module: 'protobuf-lite'
+    }
+
+    androidTestImplementation ComponentsDependencies.androidx_test_core
+    androidTestImplementation FenixDependencies.espresso_idling_resources
+    androidTestImplementation FenixDependencies.espresso_intents
+
+    androidTestImplementation ComponentsDependencies.androidx_test_runner
+    androidTestImplementation ComponentsDependencies.androidx_test_rules
+    androidTestUtil FenixDependencies.orchestrator
+    androidTestImplementation ComponentsDependencies.androidx_espresso_core, {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    }
+
+    androidTestImplementation ComponentsDependencies.androidx_test_junit
+    androidTestImplementation ComponentsDependencies.androidx_work_testing
+    androidTestImplementation FenixDependencies.androidx_benchmark_junit4
+    androidTestImplementation ComponentsDependencies.testing_mockwebserver
+    testImplementation project(':support-test')
+    testImplementation project(':support-test-libstate')
+    testImplementation ComponentsDependencies.androidx_test_junit
+    testImplementation ComponentsDependencies.androidx_work_testing
+    testImplementation (ComponentsDependencies.testing_robolectric) {
+        exclude group: 'org.apache.maven'
+    }
+
+    testImplementation ComponentsDependencies.testing_maven_ant_tasks
+    implementation project(':support-rusthttp')
+
+    androidTestImplementation FenixDependencies.mockk_android
+    testImplementation FenixDependencies.mockk
+
+    // For the initial release of Glean 19, we require consumer applications to
+    // depend on a separate library for unit tests. This will be removed in future releases.
+    testImplementation "org.mozilla.telemetry:glean-native-forUnitTests:${project.ext.glean_version}"
+
+    lintChecks project(":mozilla-lint-rules")
+    lintChecks project(':tooling-lint')
+}
+
+protobuf {
+    protoc {
+        artifact = FenixDependencies.protobuf_compiler
+    }
+
+    // Generates the java Protobuf-lite code for the Protobufs in this project. See
+    // https://github.com/google/protobuf-gradle-plugin#customizing-protobuf-compilation
+    // for more information.
+    generateProtoTasks {
+        all().each { task ->
+            task.builtins {
+                java {
+                    option 'lite'
+                }
+            }
+        }
+    }
+}
+
+if (project.hasProperty("coverage")) {
+    tasks.withType(Test).configureEach {
+        jacoco.includeNoLocationClasses = true
+        jacoco.excludes = ['jdk.internal.*']
+    }
+
+    jacoco {
+        toolVersion = Versions.jacoco
+    }
+
+    android.applicationVariants.configureEach { variant ->
+        tasks.register("jacoco${variant.name.capitalize()}TestReport", JacocoReport) {
+            dependsOn "test${variant.name.capitalize()}UnitTest"
+
+            reports {
+                xml.required = true
+                html.required = true
+            }
+
+            def fileFilter = ['**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*',
+                              '**/*Test*.*', 'android/**/*.*', '**/*$[0-9].*']
+            def kotlinDebugTree = fileTree(dir: "$project.layout.buildDirectory/tmp/kotlin-classes/${variant.name}", excludes: fileFilter)
+            def javaDebugTree = fileTree(dir: "$project.layout.buildDirectory/intermediates/classes/${variant.flavorName}/${variant.buildType.name}",
+                    excludes: fileFilter)
+            def mainSrc = "$project.projectDir/src/main/java"
+
+            sourceDirectories.setFrom(files([mainSrc]))
+            classDirectories.setFrom(files([kotlinDebugTree, javaDebugTree]))
+            executionData.setFrom(fileTree(dir: project.layout.buildDirectory, includes: [
+                "jacoco/test${variant.name.capitalize()}UnitTest.exec",
+                'outputs/code-coverage/connected/*coverage.ec'
+            ]))
+        }
+    }
+
+    android {
+        buildTypes {
+            debug {
+                testCoverageEnabled true
+            }
+        }
+    }
+}
+
+// -------------------------------------------------------------------------------------------------
+// Task for printing APK information for the requested variant
+// Usage: "./gradlew printVariants
+// -------------------------------------------------------------------------------------------------
+tasks.register('printVariants') {
+    doLast {
+        def variants = android.applicationVariants.collect { variant -> [
+            apks: variant.outputs.collect { output -> [
+                abi: output.getFilter(FilterConfiguration.FilterType.ABI.name()),
+                fileName: output.outputFile.name
+            ]},
+            build_type: variant.buildType.name,
+            name: variant.name,
+        ]}
+        // AndroidTest is a special case not included above
+        variants.add([
+            apks: [[
+                abi: 'noarch',
+                fileName: 'app-debug-androidTest.apk',
+            ]],
+            build_type: 'androidTest',
+            name: 'androidTest',
+        ])
+        println 'variants: ' + JsonOutput.toJson(variants)
+    }
+}
+
+afterEvaluate {
+
+    // Format test output. Ported from AC #2401
+    tasks.withType(Test).configureEach {
+        systemProperty "robolectric.logging", "stdout"
+        systemProperty "logging.test-mode", "true"
+
+        testLogging.events = []
+
+        def out = services.get(StyledTextOutputFactory).create("tests")
+
+        beforeSuite { descriptor ->
+            if (descriptor.getClassName() != null) {
+                out.style(Style.Header).println("\nSUITE: " + descriptor.getClassName())
+            }
+        }
+
+        beforeTest { descriptor ->
+            out.style(Style.Description).println("  TEST: " + descriptor.getName())
+        }
+
+        onOutput { descriptor, event ->
+            logger.lifecycle("    " + event.message.trim())
+        }
+
+        afterTest { descriptor, result ->
+            switch (result.getResultType()) {
+                case ResultType.SUCCESS:
+                    out.style(Style.Success).println("  SUCCESS")
+                    break
+
+                case ResultType.FAILURE:
+                    def testId = descriptor.getClassName() + "." + descriptor.getName()
+                    out.style(Style.Failure).println("  TEST-UNEXPECTED-FAIL | " + testId + " | " + result.getException())
+                    break
+
+                case ResultType.SKIPPED:
+                    out.style(Style.Info).println("  SKIPPED")
+                    break
+            }
+            logger.lifecycle("")
+        }
+    }
+}
+
+if (gradle.hasProperty('localProperties.dependencySubstitutions.geckoviewTopsrcdir')) {
+    if (gradle.hasProperty('localProperties.dependencySubstitutions.geckoviewTopobjdir')) {
+        ext.topobjdir = gradle."localProperties.dependencySubstitutions.geckoviewTopobjdir"
+    }
+    ext.topsrcdir = StringUtils.removeSuffix(gradle."localProperties.dependencySubstitutions.geckoviewTopsrcdir", File.separator)
+    apply from: "${topsrcdir}/substitute-local-geckoview.gradle"
+}
+
+if (gradle.hasProperty('localProperties.autoPublish.glean.dir')) {
+    ext.gleanSrcDir = gradle."localProperties.autoPublish.glean.dir"
+    apply from: "../${gleanSrcDir}/build-scripts/substitute-local-glean.gradle"
+}
+
+android.applicationVariants.configureEach { variant ->
+    tasks.register("apkSize${variant.name.capitalize()}", ApkSizeTask) {
+        variantName = variant.name
+        apks = variant.outputs.collect { output -> output.outputFile.name }
+        dependsOn "package${variant.name.capitalize()}"
+    }
+}
+
+def getSupportedLocales() {
+    // This isn't running as a task, instead the array is build when the gradle file is parsed.
+    // https://github.com/mozilla-mobile/fenix/issues/14175
+    def foundLocales = new StringBuilder()
+    foundLocales.append("new String[]{")
+
+    fileTree("src/main/res").visit { FileVisitDetails details ->
+        if (details.file.path.endsWith("${File.separator}strings.xml")) {
+            def languageCode = details.file.parent.tokenize(File.separator).last().replaceAll('values-', '').replaceAll('-r', '-')
+            languageCode = (languageCode == "values") ? "en-US" : languageCode
+            foundLocales.append("\"").append(languageCode).append("\"").append(",")
+        }
+    }
+
+    foundLocales.append("}")
+    def foundLocalesString = foundLocales.toString().replaceAll(',}', '}')
+    return foundLocalesString
+}
+
+// Enable expiration by major version.
+ext.gleanExpireByVersion = Config.majorVersion(project)

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<resources>
+    <!-- These strings are used for referencing in the code. -->
+    <string name="yes">yes</string>
+    <string name="third_party_only">third_party_only</string>
+    <string name="third_party_tracker">third_party_tracker</string>
+    <string name="cross_site">cross_site</string>
+    <string name="no">no</string>
+
+    <!-- This array contains the actual value stored in preferences. Not translatable. -->
+    <string-array name="cookies_options_entry_values">
+        <item>@string/yes</item>
+        <item>@string/third_party_only</item>
+        <item>@string/third_party_tracker</item>
+        <!-- Block cross site is the default value. -->
+        <item>@string/cross_site</item>
+        <item>@string/no</item>
+    </string-array>
+
+    <!-- This array contains the cookie value for display purposes. -->
+    <string-array name="cookies_options_entries">
+        <item>@string/preference_privacy_should_block_cookies_yes_option2</item>
+        <item>@string/preference_privacy_should_block_cookies_third_party_only_option</item>
+        <item>@string/preference_privacy_should_block_cookies_third_party_tracker_cookies_option</item>
+        <item>@string/preference_privacy_should_block_cookies_cross_site_option</item>
+        <item>@string/preference_privacy_should_block_cookies_no_option2</item>
+    </string-array>
+
+</resources>
+
+
+

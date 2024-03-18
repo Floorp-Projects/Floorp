@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<HorizontalScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center_horizontal">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/apps_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="76dp"
+            android:layout_height="37dp"
+            android:layout_marginTop="@dimen/share_progress_bar_margin"
+            android:layout_marginBottom="@dimen/share_progress_bar_margin"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/apps_link_header" />
+
+        <LinearLayout
+            android:id="@+id/recentAppsContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/share_recent_apps_margin"
+            android:layout_marginTop="@dimen/share_recent_apps_margin"
+            android:layout_marginBottom="@dimen/share_recent_apps_margin"
+            android:background="@drawable/recent_apps_background"
+            android:orientation="vertical"
+            android:paddingTop="@dimen/share_recent_apps_padding"
+            android:visibility="gone"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <TextView
+                android:id="@+id/recent_apps_link_header"
+                style="@style/ShareHeaderTextStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingStart="@dimen/share_recent_apps_padding"
+                android:paddingEnd="@dimen/share_recent_apps_padding"
+                android:text="@string/share_link_recent_apps_subheader" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recentAppsList"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:clipToPadding="false"
+                android:minHeight="@dimen/share_list_min_height"
+                android:orientation="horizontal"
+                app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+                app:spanCount="2" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/apps_link_header"
+            style="@style/ShareHeaderTextStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/share_all_apps_header_margin"
+            android:layout_marginTop="@dimen/share_all_apps_header_margin"
+            android:text="@string/share_link_all_apps_subheader"
+            app:layout_constraintStart_toEndOf="@+id/recentAppsContainer"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Having the RecyclerView inside a RelativeLayout means
+             the RecyclerView will load all items at once and never recycle.
+             This is a conscious choice since we use HorizontalScrollView to scroll all
+             children horizontally and so prevent scrolling in the RecyclerViews. -->
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/recentAppsContainer"
+            app:layout_constraintTop_toBottomOf="@id/apps_link_header">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/appsList"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/share_all_apps_list_margin"
+                android:clipToPadding="false"
+                android:minHeight="@dimen/share_list_min_height"
+                android:orientation="horizontal"
+                android:visibility="gone"
+                app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:spanCount="2" />
+        </RelativeLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</HorizontalScrollView>

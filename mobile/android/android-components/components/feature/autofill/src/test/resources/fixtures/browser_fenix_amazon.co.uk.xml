@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<FrameLayout>
+    <LinearLayout idEntry="action_bar_root" idPackage="org.mozilla.firefox" idType="id">
+        <View idEntry="action_mode_bar_stub" idPackage="org.mozilla.firefox" idType="id"/>
+        <FrameLayout idEntry="container" idPackage="org.mozilla.firefox" idType="id">
+            <ViewGroup idEntry="browserLayout" idPackage="org.mozilla.firefox" idType="id">
+                <ViewGroup idEntry="swipeRefresh" idPackage="org.mozilla.firefox" idType="id">
+                    <FrameLayout idEntry="engineView" idPackage="org.mozilla.firefox" idType="id">
+                        <form webDomain="www.amazon.co.uk" data-enable-mobile-account-js="true" action="https://www.amazon.co.uk/ap/register" method="post" data-fwcim-id="369de96d" novalidate="" id="ap_register_form" name="register" class="ap_ango_default fwcim-form auth-validate-form auth-clearable-form">
+                            <input webDomain="www.amazon.co.uk" name="appActionToken" type="hidden"/>
+                            <input webDomain="www.amazon.co.uk" name="appAction" type="hidden"/>
+                            <input webDomain="www.amazon.co.uk" name="openid.return_to" type="hidden"/>
+                            <input webDomain="www.amazon.co.uk" name="prevRID" type="hidden"/>
+                            <input webDomain="www.amazon.co.uk" name="workflowState" type="hidden"/>
+                            <input webDomain="www.amazon.co.uk" id="auth-country-picker" name="countryCode" type="hidden" class="auth-country-picker" disabled="disabled"/>
+                            <input webDomain="www.amazon.co.uk" autofillHints="emailAddress" inputType="21" autocorrect="off" id="ap_email" name="email" type="email" maxlength="64" placeholder="Mobile number or email" autocapitalize="off"/>
+                            <input webDomain="www.amazon.co.uk" autofillHints="password" inputType="e1" autocorrect="off" autocomplete="off" id="ap_password" name="password" type="password" maxlength="1024" placeholder="Create a password" autocapitalize="off"/>
+                            <input webDomain="www.amazon.co.uk" id="ap_show_password_checked" name="showPasswordChecked" type="hidden"/>
+                            <input webDomain="www.amazon.co.uk" id="auth-register-show-password-checkbox" name="" type="checkbox" checked=""/>
+                            <input webDomain="www.amazon.co.uk" id="continue" type="submit" class="a-button-input" aria-labelledby="auth-continue-announce"/>
+                        </form>
+                        <form webDomain="www.amazon.co.uk" action="https://www.amazon.co.uk/ap/signin" method="post" data-fwcim-id="4a0d320d" novalidate="" id="ap_login_form" name="signIn" class="auth-validate-form fwcim-form auth-clearable-form">
+                            <input webDomain="www.amazon.co.uk" name="appActionToken" type="hidden"/>
+                            <input webDomain="www.amazon.co.uk" name="appAction" type="hidden"/>
+                            <input webDomain="www.amazon.co.uk" name="openid.return_to" type="hidden"/>
+                            <input webDomain="www.amazon.co.uk" name="prevRID" type="hidden"/>
+                            <input webDomain="www.amazon.co.uk" name="workflowState" type="hidden"/>
+                            <input webDomain="www.amazon.co.uk" autofillHints="emailAddress" inputType="21" autocorrect="off" id="ap_email_login" name="email" type="email" maxlength="128" placeholder="Email (phone for mobile accounts)" autocapitalize="off" focus="true" autofillId="autofillId-username"/>
+                            <input webDomain="www.amazon.co.uk" autofillHints="password" inputType="e1" id="ap-credential-autofill-hint" name="password" type="password" maxlength="1024" autofillId="autofillId-password"/>
+                            <input webDomain="www.amazon.co.uk" id="continue" type="submit" class="a-button-input" aria-labelledby="continue-announce"/>
+                        </form>
+                    </FrameLayout>
+                </ViewGroup>
+                <FrameLayout idEntry="nestedScrollQuickAction" idPackage="org.mozilla.firefox" idType="id">
+                    <ViewGroup idEntry="quick_action_sheet" idPackage="org.mozilla.firefox" idType="id">
+                        <ViewGroup idEntry="quick_action_sheet" idPackage="org.mozilla.firefox" idType="id">
+                            <View idEntry="quick_action_sheet_faded_handle" idPackage="org.mozilla.firefox" idType="id"/>
+                            <LinearLayout idEntry="quick_action_buttons_layout" idPackage="org.mozilla.firefox" idType="id">
+                                <Button idEntry="quick_action_share" idPackage="org.mozilla.firefox" idType="id"/>
+                                <Button idEntry="quick_action_downloads" idPackage="org.mozilla.firefox" idType="id"/>
+                                <Button idEntry="quick_action_bookmark" idPackage="org.mozilla.firefox" idType="id"/>
+                                <Button idEntry="quick_action_appearance" idPackage="org.mozilla.firefox" idType="id"/>
+                                <Button idEntry="quick_action_open_app_link" idPackage="org.mozilla.firefox" idType="id"/>
+                                <Button idEntry="quick_action_read" idPackage="org.mozilla.firefox" idType="id"/>
+                            </LinearLayout>
+                            <View idEntry="quick_action_overlay" idPackage="org.mozilla.firefox" idType="id"/>
+                        </ViewGroup>
+                    </ViewGroup>
+                </FrameLayout>
+                <View idEntry="stubFindInPage" idPackage="org.mozilla.firefox" idType="id"/>
+                <ViewGroup idEntry="toolbar" idPackage="org.mozilla.firefox" idType="id">
+                    <TextView idEntry="mozac_browser_toolbar_title_view" idPackage="org.mozilla.firefox" idType="id"/>
+                    <TextView idEntry="mozac_browser_toolbar_url_view" idPackage="org.mozilla.firefox" idType="id" hint="Search or enter address"/>
+                    <FrameLayout idEntry="counter_root" idPackage="org.mozilla.firefox" idType="id">
+                        <TextView idEntry="counter_text" idPackage="org.mozilla.firefox" idType="id"/>
+                    </FrameLayout>
+                    <EditText idEntry="mozac_browser_toolbar_edit_url_view" idPackage="org.mozilla.firefox" idType="id" hint="Search or enter address" inputType="11"/>
+                    <ImageView idEntry="mozac_browser_toolbar_clear_view" idPackage="org.mozilla.firefox" idType="id"/>
+                </ViewGroup>
+                <ViewGroup idEntry="readerViewControlsBar" idPackage="org.mozilla.firefox" idType="id"/>
+            </ViewGroup>
+        </FrameLayout>
+        <ViewGroup idEntry="navigationToolbar" idPackage="org.mozilla.firefox" idType="id"/>
+    </LinearLayout>
+</FrameLayout>

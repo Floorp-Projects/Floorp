@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <androidx.preference.PreferenceCategory
+        android:layout="@layout/preference_section_header_layout"
+        android:title="@string/preference_advanced_summary">
+        <androidx.preference.SwitchPreferenceCompat
+            android:defaultValue="false"
+            android:key="@string/pref_key_remote_debugging"
+            android:layout="@layout/focus_preference_no_icon"
+            android:title="@string/preference_remote_debugging" />
+
+        <androidx.preference.SwitchPreferenceCompat
+            android:defaultValue="false"
+            android:key="@string/pref_key_open_links_in_external_app"
+            android:layout="@layout/focus_preference_no_icon"
+            android:title="@string/preferences_open_links_in_apps" />
+
+        <androidx.preference.SwitchPreferenceCompat
+            android:defaultValue="true"
+            android:key="@string/pref_key_leakcanary"
+            android:title="@string/preference_leakcanary"
+            app:iconSpaceReserved="false" />
+
+        <androidx.preference.Preference
+            android:key="@string/pref_key_secret_settings"
+            android:layout="@layout/focus_preference_no_icon"
+            android:title="@string/preference_secret_settings"
+            app:isPreferenceVisible="false" />
+    </androidx.preference.PreferenceCategory>
+</androidx.preference.PreferenceScreen>

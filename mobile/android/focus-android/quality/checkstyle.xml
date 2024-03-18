@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE module PUBLIC
+    "-//Puppy Crawl//DTD Check Configuration 1.2//EN"
+    "http://www.puppycrawl.com/dtds/configuration_1_2.dtd">
+<module name="Checker">
+    <property name="charset" value="UTF-8"/>
+
+    <module name="FileTabCharacter">
+        <property name="eachLine" value="true"/>
+    </module>
+
+    <module name="RegexpSingleline">
+        <property name="format" value="\s+$"/>
+        <property name="message" value="Trailing whitespace"/>
+    </module>
+
+    <module name="TreeWalker">
+        <module name="GenericWhitespace"/>
+        <module name="NoLineWrap">
+            <property name="tokens" value="IMPORT,PACKAGE_DEF"/>
+        </module>
+        <module name="OuterTypeFilename"/>
+        <module name="WhitespaceAfter" />
+        <module name="WhitespaceAround">
+            <property name="allowEmptyConstructors" value="true"/>
+            <property name="allowEmptyMethods" value="true"/>
+            <property name="allowEmptyTypes" value="true"/>
+        </module>
+        <module name="NeedBraces" />
+        <module name="LeftCurly" />
+        <module name="RightCurly" />
+        <module name="OneStatementPerLine" />
+        <module name="FallThrough" />
+
+        <!-- Imports -->
+        <module name="AvoidStarImport" />
+        <module name="IllegalImport" />
+        <module name="RedundantImport" />
+        <module name="UnusedImports" />
+    </module>
+
+</module>

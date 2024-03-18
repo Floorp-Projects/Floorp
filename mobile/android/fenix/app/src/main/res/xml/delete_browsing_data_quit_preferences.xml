@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="@string/pref_key_delete_browsing_data_on_quit"
+        android:summary="@string/preference_summary_delete_browsing_data_on_quit_2"
+        android:title="@string/preferences_delete_browsing_data_on_quit" />
+    <PreferenceCategory
+        android:dependency="@string/pref_key_delete_browsing_data_on_quit"
+        android:key="@string/pref_key_delete_browsing_data_on_quit_categories"
+        app:allowDividerAbove="false"
+        app:iconSpaceReserved="false"
+        android:layout="@layout/preference_category_empty">
+        <CheckBoxPreference
+            android:key="@string/pref_key_delete_open_tabs_on_quit"
+            android:layout="@layout/checkbox_left_preference"
+            android:title="@string/preferences_delete_browsing_data_tabs_title_2" />
+        <CheckBoxPreference
+            android:key="@string/pref_key_delete_browsing_history_on_quit"
+            android:layout="@layout/checkbox_left_preference"
+            android:title="@string/preferences_delete_browsing_data_browsing_history_title" />
+        <CheckBoxPreference
+            android:key="@string/pref_key_delete_cookies_and_site_data_on_quit"
+            android:layout="@layout/checkbox_left_preference"
+            android:summary="@string/preferences_delete_browsing_data_cookies_subtitle"
+            android:title="@string/preferences_delete_browsing_data_cookies_and_site_data" />
+        <CheckBoxPreference
+            android:key="@string/pref_key_delete_caches_on_quit"
+            android:layout="@layout/checkbox_left_preference"
+            android:summary="@string/preferences_delete_browsing_data_cached_files_subtitle"
+            android:title="@string/preferences_delete_browsing_data_cached_files" />
+        <CheckBoxPreference
+        android:key="@string/pref_key_delete_permissions_on_quit"
+        android:layout="@layout/checkbox_left_preference"
+        android:title="@string/preferences_delete_browsing_data_site_permissions" />
+
+        <CheckBoxPreference
+            android:key="@string/pref_key_delete_downloads_on_quit"
+            android:layout="@layout/checkbox_left_preference"
+            android:title="@string/preferences_delete_browsing_data_downloads" />
+    </PreferenceCategory>
+</androidx.preference.PreferenceScreen>

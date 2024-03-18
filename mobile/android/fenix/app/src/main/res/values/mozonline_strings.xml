@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+    <!-- Privacy Notice-->
+    <!-- Privacy Notice title-->
+    <string name="privacy_notice_title">About your rights</string>
+    <!-- Privacy Notice content-->
+    <string name="privacy_notice_content">Mozilla Firefox is free and open source software, built by a community of thousands from all over the world. There are a few things you should know:
+    \n\n•Firefox is made available to you under the terms of the Mozilla Public License. This means you may use, copy and distribute Firefox to others. You are also welcome to modify the source code of Firefox as you want to meet your needs. The Mozilla Public License also gives you the right to distribute your modified versions.
+    \n•You are not granted any trademark rights or licenses to the trademarks of the Mozilla Foundation or any party, including without limitation the Firefox name or logo. Additional information on trademarks may be found here.
+    \n•Some features in Firefox, such as the Crash Reporter, give you the option to provide feedback to Mozilla. By choosing to submit feedback, you give Mozilla permission to use the feedback to improve its products, to publish the feedback on its websites, and to distribute the feedback.
+    \n•How we use your personal information and feedback submitted to Mozilla through Firefox is described in the Firefox Privacy Policy.</string>
+    <!-- Privacy Notice clickable-->
+    <string name="privacy_notice_clickable1">Mozilla Public License</string>
+    <!-- Privacy Notice clickable-->
+    <string name="privacy_notice_clickable2">found here</string>
+    <!-- Privacy Notice clickable-->
+    <string name="privacy_notice_clickable3">Firefox Privacy Policy</string>
+    <!-- Privacy Notice positive button-->
+    <string name="privacy_notice_positive_button">Agree and Continue</string>
+    <!-- Privacy Notice neutral button-->
+    <string name="privacy_notice_neutral_button_2">Disagree</string>
+
+    <!-- Topsites-->
+    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
+    <string name="default_top_site_baidu">Baidu</string>
+    <!-- Default title for pinned JD top site that links to JD home page  -->
+    <string name="default_top_site_jd">JD</string>
+    <!-- Default title for pinned JD top site that links to PDD home page  -->
+    <string name="default_top_site_pdd">PDD</string>
+    <!-- Default title for pinned 58 top site that links to 58 home page  -->
+    <string name="default_top_site_tc">58</string>
+    <!-- Default title for pinned meituan top site that links to 58 home page  -->
+    <string name="default_top_site_meituan">meituan</string>
+
+    <!-- FxA server switch-->
+    <!-- Switch Preference for domestic China/global fxa server -->
+    <string name="preferences_allow_domestic_china_fxa_server">Use domestic China service</string>
+    <!-- Instructions on how to access pairing -->
+    <string name="pair_instructions_2_cn"><![CDATA[Scan the QR code shown at <b>firefox.com.cn/pair</b>]]></string>
+    <!-- Instructions on how to access pairing -->
+    <string name="sign_in_instructions_cn"><![CDATA[On your computer open Firefox and go to <b>https://firefox.com.cn/pair</b>]]></string>
+
+    <!-- Homescreen menu button -->
+    <!-- Browser menu button that opens the account setting page -->
+    <string name="browser_menu_manage_account_and_devices">Manage Account and Devices</string>
+
+    <string name="preferences_site_permissions_description">This page shows the default permission settings to all sites; If the permissions of any specific site have been modified, this site will be shown in "Exceptions".</string>
+</resources>

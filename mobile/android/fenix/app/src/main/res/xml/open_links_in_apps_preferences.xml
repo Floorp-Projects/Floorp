@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.preference.PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <org.mozilla.fenix.settings.RadioButtonPreference
+        android:key="@string/pref_key_open_links_in_apps_always"
+        android:title="@string/preferences_open_links_in_apps_always" />
+
+    <org.mozilla.fenix.settings.RadioButtonPreference
+        android:key="@string/pref_key_open_links_in_apps_ask"
+        android:title="@string/preferences_open_links_in_apps_ask" />
+
+    <org.mozilla.fenix.settings.RadioButtonPreference
+        android:key="@string/pref_key_open_links_in_apps_never"
+        android:title="@string/preferences_open_links_in_apps_never" />
+
+</androidx.preference.PreferenceScreen>

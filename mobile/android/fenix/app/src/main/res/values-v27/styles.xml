@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<resources>
+    <style name="NormalTheme" parent="NormalThemeBase">
+        <!-- Style the status bar -->
+        <!-- We have to pull in the changes from v23/styles.xml to make
+            sure we also get them in 27+ -->
+        <item name="android:windowLightStatusBar">@bool/theme_is_light</item>
+
+        <!-- Style the navigation bar -->
+        <item name="android:navigationBarDividerColor">@android:color/transparent</item>
+        <item name="android:windowLightNavigationBar">@bool/theme_is_light</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">default</item>
+    </style>
+
+    <style name="PrivateTheme" parent="PrivateThemeBase">
+        <!-- Style the status bar -->
+        <!-- We have to pull in the changes from v23/styles.xml to make
+            sure we also get them in 27+ -->
+        <item name="android:windowLightStatusBar">false</item>
+
+        <!-- Style the navigation bar -->
+        <item name="android:navigationBarDividerColor">@android:color/transparent</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">default</item>
+    </style>
+
+    <style name="SplashScreen" parent="SplashScreenThemeBase">
+        <item name="windowSplashScreenAnimatedIcon">@drawable/animated_splash_screen</item>
+        <!-- Splash screen is animated to maximum 12 seconds -->
+        <item name="windowSplashScreenAnimationDuration">12000</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">default</item>
+    </style>
+
+    <style name="BottomSheetPrivate" parent="BottomSheetBasePrivate">
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">?attr/layer1</item>
+        <item name="android:colorBackground">?attr/layer1</item>
+        <!-- Style the navigation bar -->
+        <item name="android:navigationBarDividerColor">@android:color/transparent</item>
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
+
+    <style name="BottomSheet" parent="BottomSheetBase">
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">?attr/layer1</item>
+        <item name="android:colorBackground">?attr/layer1</item>
+        <!-- Style the navigation bar -->
+        <item name="android:windowLightNavigationBar">@bool/theme_is_light</item>
+        <item name="android:navigationBarDividerColor">@android:color/transparent</item>
+    </style>
+
+    <style name="TabTrayDialogStyle" parent="TabTrayDialogStyleBase">
+        <item name="android:navigationBarDividerColor">@android:color/transparent</item>
+        <item name="android:windowLightNavigationBar">@bool/theme_is_light</item>
+        <item name="android:navigationBarColor">@color/fx_mobile_layer_color_1</item>
+    </style>
+</resources>

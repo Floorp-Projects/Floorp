@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@drawable/media_state_background" />
+    <item>
+        <vector
+            android:width="24dp"
+            android:height="24dp"
+            android:viewportWidth="24"
+            android:viewportHeight="24">
+            <!-- Background color of the circle -->
+            <path
+                android:fillColor="@color/photonWhite"
+                android:pathData="M10.5,16.125c0,0.1 0,0.195 -0.1,0.265c-0,0 -0.166,0.1 -0.265,0.1l-2.25,0c-0,0 -0.195,0 -0.265,-0.1c-0,-0 -0.1,-0.166 -0.1,-0.265l0,-8.25c0,-0 0,-0.195 0.1,-0.265c0,0 0.166,-0.1 0.265,-0.1l2.25,0c0,0 0.195,0 0.265,0.11c0,0 0.1,0.166 0.1,0.265l0,8.25Zm6,0c0,0 0,0.195 -0.1,0.265c0,0 -0.166,0.1 -0.265,0.1l-2.25,0c0,0 -0.195,0 -0.265,-0.1c0,0 -0.1,-0.166 -0.1,-0.265l0,-8.25c0,-0.099 0,-0.195 0.1,-0.265c0,0 0.166,-0.1 0.265,-0.1l2.25,0c0,0 0.195,0 0.265,0.11c0,0 0.1,0.166 0.1,0.265l0,8.25Z"/>
+        </vector>
+    </item>
+</layer-list>

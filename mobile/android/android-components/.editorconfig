@@ -1,0 +1,15 @@
+# This is an .editorconfig that ktlint will "stop" at.
+
+# If an .editorconfig file exists in any parent directory of the checkout
+# directory, ktlint will fail because it uses those settings to determine what
+# the indentation should be.
+
+root = True
+
+[*.kt]
+indent_size = 4
+indent_style = space
+
+ij_kotlin_allow_trailing_comma_on_call_site=true
+ij_kotlin_allow_trailing_comma=true
+

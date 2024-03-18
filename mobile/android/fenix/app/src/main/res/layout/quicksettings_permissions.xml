@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/permissions_view"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp">
+
+    <TextView
+        android:id="@+id/cameraLabel"
+        style="@style/QuickSettingsText.Icon"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/quicksettings_item_height"
+        app:drawableStartCompat="@drawable/ic_camera"
+        android:text="@string/preference_phone_feature_camera"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/microphoneLabel"
+        app:layout_constraintEnd_toStartOf="@id/cameraStatus"
+        app:layout_constraintStart_toStartOf="parent"
+        android:textColor="?attr/textPrimary"
+        tools:visibility="visible" />
+
+    <TextView
+        android:id="@+id/cameraStatus"
+        style="@style/QuickSettingsText.PermissionItemEnd"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/quicksettings_item_height"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/microphoneStatus"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/cameraLabel"
+        tools:text="Allowed"
+        tools:visibility="visible" />
+
+    <TextView
+        android:id="@+id/microphoneLabel"
+        style="@style/QuickSettingsText.Icon"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/quicksettings_item_height"
+        app:drawableStartCompat="@drawable/ic_microphone"
+        android:text="@string/preference_phone_feature_microphone"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/notificationLabel"
+        app:layout_constraintEnd_toStartOf="@id/microphoneStatus"
+        app:layout_constraintStart_toStartOf="parent"
+        android:textColor="?attr/textPrimary"
+        tools:visibility="visible" />
+
+    <TextView
+        android:id="@+id/microphoneStatus"
+        style="@style/QuickSettingsText.PermissionItemEnd"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/quicksettings_item_height"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/notificationStatus"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/microphoneLabel"
+        tools:text="@string/phone_feature_blocked_by_android"
+        tools:visibility="visible" />
+
+    <TextView
+        android:id="@+id/notificationLabel"
+        style="@style/QuickSettingsText.Icon"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/quicksettings_item_height"
+        app:drawableStartCompat="@drawable/ic_notifications"
+        android:text="@string/preference_phone_feature_notification"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/locationLabel"
+        app:layout_constraintEnd_toStartOf="@id/notificationStatus"
+        app:layout_constraintStart_toStartOf="parent"
+        android:textColor="?attr/textPrimary"
+        tools:visibility="visible" />
+
+    <TextView
+        android:id="@+id/notificationStatus"
+        style="@style/QuickSettingsText.PermissionItemEnd"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/quicksettings_item_height"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/locationStatus"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/notificationLabel"
+        tools:text="@string/preference_option_phone_feature_blocked"
+        tools:visibility="visible" />
+
+    <TextView
+        android:id="@+id/locationLabel"
+        style="@style/QuickSettingsText.Icon"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/quicksettings_item_height"
+        app:drawableStartCompat="@drawable/ic_location"
+        android:text="@string/preference_phone_feature_location"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/persistentStorageLabel"
+        app:layout_constraintEnd_toStartOf="@id/locationStatus"
+        app:layout_constraintStart_toStartOf="parent"
+        android:textColor="?attr/textPrimary"
+        tools:visibility="visible" />
+
+    <TextView
+        android:id="@+id/locationStatus"
+        style="@style/QuickSettingsText.PermissionItemEnd"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/quicksettings_item_height"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/persistentStorageStatus"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/locationLabel"
+        tools:text="@string/preference_option_phone_feature_blocked"
+        tools:visibility="visible" />
+
+    <TextView
+        android:id="@+id/persistentStorageLabel"
+        style="@style/QuickSettingsText.Icon"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/quicksettings_item_height"
+        app:drawableStartCompat="@drawable/ic_storage"
+        android:text="@string/preference_phone_feature_persistent_storage"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/crossOriginStorageAccessLabel"
+        app:layout_constraintEnd_toStartOf="@id/persistentStorageStatus"
+        app:layout_constraintStart_toStartOf="parent"
+        android:textColor="?attr/textPrimary"
+        tools:visibility="visible" />
+
+    <TextView
+        android:id="@+id/persistentStorageStatus"
+        style="@style/QuickSettingsText.PermissionItemEnd"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/quicksettings_item_height"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/crossOriginStorageAccessStatus"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/persistentStorageLabel"
+        tools:text="@string/preference_option_phone_feature_blocked"
+        tools:visibility="visible" />
+
+    <TextView
+        android:id="@+id/crossOriginStorageAccessLabel"
+        style="@style/QuickSettingsText.Icon"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/quicksettings_item_height"
+        app:drawableStartCompat="@drawable/ic_cookies"
+        android:text="@string/preference_phone_feature_cross_origin_storage_access"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/mediaKeySystemAccessLabel"
+        app:layout_constraintEnd_toStartOf="@id/crossOriginStorageAccessStatus"
+        app:layout_constraintStart_toStartOf="parent"
+        android:textColor="?attr/textPrimary"
+        tools:visibility="visible" />
+
+    <TextView
+        android:id="@+id/crossOriginStorageAccessStatus"
+        style="@style/QuickSettingsText.PermissionItemEnd"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/quicksettings_item_height"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/mediaKeySystemAccessStatus"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/crossOriginStorageAccessLabel"
+        tools:text="@string/preference_option_phone_feature_blocked"
+        tools:visibility="visible" />
+
+    <TextView
+        android:id="@+id/mediaKeySystemAccessLabel"
+        style="@style/QuickSettingsText.Icon"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/quicksettings_item_height"
+        app:drawableStartCompat="@drawable/ic_link"
+        android:text="@string/preference_phone_feature_media_key_system_access"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/autoplayLabel"
+        app:layout_constraintEnd_toStartOf="@id/mediaKeySystemAccessStatus"
+        app:layout_constraintStart_toStartOf="parent"
+        android:textColor="?attr/textPrimary"
+        tools:visibility="visible" />
+
+    <TextView
+        android:id="@+id/mediaKeySystemAccessStatus"
+        style="@style/QuickSettingsText.PermissionItemEnd"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/quicksettings_item_height"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/autoplayStatus"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/mediaKeySystemAccessLabel"
+        tools:text="@string/preference_option_phone_feature_blocked"
+        tools:visibility="visible" />
+
+
+    <TextView
+        android:id="@+id/autoplayLabel"
+        style="@style/QuickSettingsText.Icon"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/quicksettings_item_height"
+        app:drawableStartCompat="@drawable/ic_autoplay"
+        android:text="@string/preference_browser_feature_autoplay"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/mediaKeySystemAccessLabel"
+        app:layout_constraintEnd_toStartOf="@id/autoplayStatus"
+        app:layout_constraintStart_toStartOf="parent"
+        android:textColor="?attr/textPrimary"
+        tools:visibility="visible" />
+
+    <androidx.appcompat.widget.AppCompatSpinner
+        android:id="@+id/autoplayStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/quicksettings_item_height"
+        android:visibility="gone"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:gravity="end|center_vertical"
+        android:backgroundTint="?accentUsedOnDarkBackground"
+        app:layout_constraintBottom_toTopOf="@id/mediaKeySystemAccessStatus"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/autoplayLabel"
+        tools:listitem="@android:layout/simple_list_item_1"
+        tools:visibility="visible" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

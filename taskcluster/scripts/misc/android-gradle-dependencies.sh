@@ -17,5 +17,18 @@ export MOZCONFIG=mobile/android/config/mozconfigs/android-arm-gradle-dependencie
 ./mach build
 ./mach gradle downloadDependencies
 ./mach android gradle-dependencies
+pushd mobile/android/fenix
+./gradlew detekt lint assembleDebug mozilla-lint-rules:test
+popd
+pushd mobile/android/focus-android
+./gradlew lint
+popd
+pushd mobile/android/android-components
+# Before building anything we explicitly build one component that contains Glean and initializes
+# the Miniconda Python environment and doesn't have (almost) any other transitive dependencies.
+# If that happens concurrently with other tasks then this seems to fail quite often.
+./gradlew service-nimbus:build
+./gradlew -Pcoverage detekt lint service-nimbus:assembleAndroidTest samples-browser:testGeckoDebugUnitTest tooling-lint:test
+popd
 
 . taskcluster/scripts/misc/android-gradle-dependencies/after.sh

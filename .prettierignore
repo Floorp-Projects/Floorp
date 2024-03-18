@@ -1150,6 +1150,14 @@ mobile/android/docs/geckoview/assets/js/search-data.json
 # Uses `#filter substitution`
 mobile/android/app/geckoview-prefs.js
 
+# TODO - Bug 1881094: temporarily ignored for firefox-android migration
+mobile/android/android-components/
+mobile/android/fenix/
+mobile/android/focus-android/
+mobile/android/docs/_includes/
+mobile/android/docs/_layouts/
+mobile/android/docs/assets/js/icon-js.js
+
 # Not much JS to lint and non-standard at that
 mobile/android/installer/
 mobile/android/locales/

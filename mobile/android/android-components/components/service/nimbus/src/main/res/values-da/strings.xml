@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Text displayed when there are no experiments to be shown -->
+    <string name="mozac_service_nimbus_no_experiments">Ingen eksperimenter her</string>
+</resources>

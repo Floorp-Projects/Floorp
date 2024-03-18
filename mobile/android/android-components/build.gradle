@@ -1,0 +1,384 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+import io.gitlab.arturbosch.detekt.Detekt
+import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
+import org.gradle.internal.logging.text.StyledTextOutput.Style
+import org.gradle.internal.logging.text.StyledTextOutputFactory
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import static org.gradle.api.tasks.testing.TestResult.ResultType
+
+buildscript {
+    repositories {
+        gradle.mozconfig.substs.GRADLE_MAVEN_REPOSITORIES.each { repository ->
+            maven {
+                url repository
+                if (gradle.mozconfig.substs.ALLOW_INSECURE_GRADLE_REPOSITORIES) {
+                    allowInsecureProtocol = true
+                }
+            }
+        }
+    }
+
+    dependencies {
+        classpath ComponentsDependencies.tools_androidgradle
+        classpath ComponentsDependencies.tools_kotlingradle
+    }
+
+    // Variables in plugins {} aren't directly supported. Hack around it by setting an
+    // intermediate variable which can pull from FenixDependencies.kt and be used later.
+    ext {
+        detekt_plugin = Versions.detekt
+        python_envs_plugin = Versions.python_envs_plugin
+        ksp_plugin = Versions.ksp_plugin
+    }
+}
+
+plugins {
+    id("io.gitlab.arturbosch.detekt").version("$detekt_plugin")
+    id("com.google.devtools.ksp").version("$ksp_plugin")
+}
+
+allprojects {
+    repositories {
+        gradle.mozconfig.substs.GRADLE_MAVEN_REPOSITORIES.each { repository ->
+            maven {
+                url repository
+                if (gradle.mozconfig.substs.ALLOW_INSECURE_GRADLE_REPOSITORIES) {
+                    allowInsecureProtocol = true
+                }
+            }
+        }
+
+        maven {
+            url "${gradle.mozconfig.topobjdir}/gradle/maven"
+        }
+    }
+}
+
+subprojects {
+    apply plugin: 'jacoco'
+
+    // Enable Kotlin warnings as errors for all modules
+    tasks.withType(KotlinCompile).configureEach {
+        kotlinOptions.allWarningsAsErrors = true
+    }
+
+    project.configurations.configureEach {
+        // Dependencies can't depend on a different major version of Glean than A-C itself.
+        resolutionStrategy.eachDependency { details ->
+            if (details.requested.group == 'org.mozilla.telemetry'
+                    && details.requested.name.contains('glean') ) {
+                def requested = details.requested.version.tokenize(".")
+                def defined = Versions.mozilla_glean.tokenize(".")
+                // Check the major version
+                if (requested[0] != defined[0]) {
+                    throw new AssertionError("Cannot resolve to a single Glean version. Requested: ${details.requested.version}, A-C uses: ${Versions.mozilla_glean}")
+                } else {
+                    // Enforce that all (transitive) dependencies are using the defined Glean version
+                    details.useVersion Versions.mozilla_glean
+                }
+            }
+        }
+
+        resolutionStrategy.capabilitiesResolution.withCapability("org.mozilla.telemetry:glean-native") {
+            def toBeSelected = candidates.find { it.id instanceof ModuleComponentIdentifier && it.id.module.contains('geckoview') }
+            if (toBeSelected != null) {
+                select(toBeSelected)
+            }
+            because 'use GeckoView Glean instead of standalone Glean'
+        }
+    }
+
+
+    // Allow local appservices substitution in each subproject.
+    def appServicesSrcDir = null
+    if (gradle.hasProperty('localProperties.autoPublish.application-services.dir')) {
+        appServicesSrcDir = gradle.getProperty('localProperties.autoPublish.application-services.dir')
+    } else if (gradle.hasProperty('localProperties.branchBuild.application-services.dir')) {
+        appServicesSrcDir = gradle.getProperty('localProperties.branchBuild.application-services.dir')
+    }
+    if (appServicesSrcDir) {
+        if (appServicesSrcDir.startsWith("/")) {
+            apply from: "${appServicesSrcDir}/build-scripts/substitute-local-appservices.gradle"
+        } else {
+            apply from: "${rootProject.projectDir}/${appServicesSrcDir}/build-scripts/substitute-local-appservices.gradle"
+        }
+    }
+
+    // Allow local Glean substitution in each subproject.
+    if (gradle.hasProperty('localProperties.autoPublish.glean.dir')) {
+        ext.gleanSrcDir = gradle."localProperties.autoPublish.glean.dir"
+        apply from: "${rootProject.projectDir}/${gleanSrcDir}/build-scripts/substitute-local-glean.gradle"
+    }
+
+    if (gradle.hasProperty('localProperties.dependencySubstitutions.geckoviewTopsrcdir')) {
+        if (gradle.hasProperty('localProperties.dependencySubstitutions.geckoviewTopobjdir')) {
+            ext.topobjdir = gradle."localProperties.dependencySubstitutions.geckoviewTopobjdir"
+        }
+        ext.topsrcdir = gradle."localProperties.dependencySubstitutions.geckoviewTopsrcdir"
+        apply from: "${topsrcdir}/substitute-local-geckoview.gradle"
+    }
+
+    afterEvaluate {
+        if (it.hasProperty('android')) {
+            jacoco {
+                toolVersion = Versions.jacoco
+            }
+
+            // Format test output
+            tasks.matching {it instanceof Test}.configureEach() {
+                systemProperty "robolectric.logging", "stdout"
+                systemProperty "logging.test-mode", "true"
+                systemProperty "javax.net.ssl.trustStoreType", "JKS"
+
+                testLogging.events = []
+
+                def out = services.get(StyledTextOutputFactory).create("an-ouput")
+
+                beforeSuite { descriptor ->
+                    if (descriptor.getClassName() != null) {
+                        out.style(Style.Header).println("\nSUITE: " + descriptor.getClassName())
+                    }
+                }
+
+                beforeTest { descriptor ->
+                    out.style(Style.Description).println("  TEST: " + descriptor.getName())
+                }
+
+                onOutput { descriptor, event ->
+                    logger.lifecycle("    " + event.message.trim())
+                }
+
+                afterTest { descriptor, result ->
+                    switch (result.getResultType()) {
+                        case ResultType.SUCCESS:
+                            out.style(Style.Success).println("  SUCCESS")
+                            break
+
+                        case ResultType.FAILURE:
+                            def testId = descriptor.getClassName() + "." + descriptor.getName()
+                            out.style(Style.Failure).println("  TEST-UNEXPECTED-FAIL | " + testId + " | " + result.getException())
+                            break
+
+                        case ResultType.SKIPPED:
+                            out.style(Style.Info).println("  SKIPPED")
+                            break
+                    }
+                    logger.lifecycle("")
+                }
+            }
+
+            dependencies {
+                lintChecks project(':tooling-lint')
+            }
+
+            kotlin {
+                jvmToolchain(config.jvmTargetCompatibility)
+            }
+
+            android {
+                testOptions {
+                    unitTests {
+                        includeAndroidResources = true
+                    }
+                }
+
+                packagingOptions {
+                    resources {
+                        excludes += ['META-INF/atomicfu.kotlin_module', 'META-INF/AL2.0', 'META-INF/LGPL2.1']
+                        // Required dependencies using byte-buddy; remove after this is
+                        // fixed by: https://issuetracker.google.com/issues/170131605
+                        excludes.add("META-INF/licenses/ASM")
+
+                        pickFirsts += ['win32-x86-64/attach_hotspot_windows.dll', 'win32-x86/attach_hotspot_windows.dll']
+                    }
+                }
+
+                androidResources {
+                    ignoreAssetsPattern "manifest.template.json"
+                }
+
+                tasks.withType(KotlinCompile).configureEach {
+                    kotlinOptions.freeCompilerArgs += ["-opt-in=kotlin.RequiresOptIn"]
+                }
+            }
+
+            if (project.hasProperty("coverage") && project.name != "support-test") {
+                android.buildTypes.all { buildType ->
+                    tasks.withType(Test).configureEach() {
+                        jacoco {
+                            includeNoLocationClasses = true
+                            excludes = ['jdk.internal.*']
+                        }
+
+                        finalizedBy { "jacoco${buildType.name.capitalize()}TestReport" }
+                    }
+
+                    tasks.register("jacoco${buildType.name.capitalize()}TestReport", JacocoReport) {
+                        reports {
+                            xml.required = true
+                            html.required = true
+                        }
+
+                        def fileFilter = ['**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*',
+                                          '**/*Test*.*', 'android/**/*.*', '**/*$[0-9].*']
+                        def kotlinDebugTree = fileTree(dir: "$project.layout.buildDirectory/tmp/kotlin-classes/${buildType.name}", excludes: fileFilter)
+                        def javaDebugTree = fileTree(dir: "$project.layout.buildDirectory/intermediates/classes/${buildType.name}", excludes: fileFilter)
+                        def mainSrc = "$project.projectDir/src/main/java"
+
+                        sourceDirectories.setFrom(files([mainSrc]))
+                        classDirectories.setFrom(files([kotlinDebugTree, javaDebugTree]))
+                        getExecutionData().setFrom(fileTree(project.layout.buildDirectory).include([
+                                "jacoco/test${buildType.name.capitalize()}UnitTest.exec"
+                        ]))
+                    }
+                }
+
+                android {
+                    buildTypes {
+                        debug {
+                            testCoverageEnabled true
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    tasks.withType(KotlinCompile).configureEach {
+        // Translate Kotlin messages like "w: ..." and "e: ..." into
+        // "...: warning: ..." and "...: error: ...", to make Treeherder understand.
+        def listener = {
+            if (it.startsWith("e: warnings found")) {
+                return
+            }
+
+            if (it.startsWith('w: ') || it.startsWith('e: ')) {
+                def matches = (it =~ /([ew]): (.+):(\d+):(\d+) (.*)/)
+                if (!matches) {
+                    logger.quiet "kotlinc message format has changed!"
+                    if (it.startsWith('w: ')) {
+                        // For warnings, don't continue because we don't want to throw an
+                        // exception. For errors, we want the exception so that the new error
+                        // message format gets translated properly.
+                        return
+                    }
+                }
+                def (_, type, file, line, column, message) = matches[0]
+                type = (type == 'w') ? 'warning' : 'error'
+                // Use logger.lifecycle, which does not go through stderr again.
+                logger.lifecycle "$file:$line:$column: $type: $message"
+            }
+        } as StandardOutputListener
+
+        doFirst {
+            logging.addStandardErrorListener(listener)
+        }
+        doLast {
+            logging.removeStandardErrorListener(listener)
+        }
+    }
+}
+
+if (findProject(":geckoview") == null) {
+    // Avoid adding this task if it already exists in a different root project.
+    tasks.register("clean", Delete) {
+        delete rootProject.layout.buildDirectory
+    }
+}
+
+detekt {
+    input = files("$projectDir/components", "$projectDir/buildSrc", "$projectDir/samples")
+    config = files("$projectDir/config/detekt.yml")
+    baseline = file("$projectDir/config/detekt-baseline.xml")
+
+    reports {
+        html {
+            enabled = true
+            destination = file("$projectDir/build/reports/detekt.html")
+        }
+        xml {
+            enabled = false
+        }
+        txt {
+            enabled = false
+        }
+    }
+}
+
+tasks.withType(Detekt).configureEach() {
+    // Custom detekt rules should be build before
+    // See https://arturbosch.github.io/detekt/extensions.html#pitfalls
+    dependsOn(":tooling-detekt:assemble")
+
+    autoCorrect = true
+
+    exclude "**/build.gradle.kts"
+    exclude "**/src/androidTest/**"
+    exclude "**/src/iosTest/**"
+    exclude "**/src/test/**"
+    exclude "**/test/src/**"
+    exclude "**/build/**"
+    exclude "**/resources/**"
+    exclude "**/tmp/**"
+    exclude "**/tooling/fetch/tests/**"
+    exclude "**/tooling/fetch-tests/**"
+    exclude "**/src/main/assets/extensions/**"
+    exclude "**/docs/**"
+}
+
+// Apply same path exclusions as for the main task
+tasks.withType(DetektCreateBaselineTask).configureEach() {
+    exclude "**/src/androidTest/**"
+    exclude "**/src/test/**"
+    exclude "**/test/src/**"
+    exclude "**/build/**"
+    exclude "**/resources/**"
+    exclude "**/tmp/**"
+    exclude "**/tooling/fetch/tests/**"
+    exclude "**/tooling/fetch-tests/**"
+}
+
+configurations {
+    ktlint
+}
+
+dependencies {
+    ktlint("com.pinterest:ktlint:${Versions.ktlint}") {
+        attributes {
+            attribute(Bundling.BUNDLING_ATTRIBUTE, getObjects().named(Bundling, Bundling.EXTERNAL))
+        }
+    }
+    detektPlugins project(":tooling-detekt")
+}
+
+tasks.register("ktlint", JavaExec) {
+    group = "verification"
+    description = "Check Kotlin code style."
+    classpath = configurations.ktlint
+    mainClass.set("com.pinterest.ktlint.Main")
+    args "components/**/*.kt" , "samples/**/*.kt", "!**/build/**/*.kt", "buildSrc/**/*.kt", "--baseline=ktlint-baseline.xml"
+}
+
+tasks.register("ktlintFormat", JavaExec) {
+    group = "formatting"
+    description = "Fix Kotlin code style deviations."
+    classpath = configurations.ktlint
+    mainClass.set("com.pinterest.ktlint.Main")
+    args "-F", "components/**/*.kt" , "samples/**/*.kt", "!**/build/**/*.kt", "buildSrc/**/*.kt", "--baseline=ktlint-baseline.xml"
+    jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED")
+}
+
+tasks.register("listRepositories") {
+    doLast {
+        println "Repositories:"
+        project.repositories.each { println "Name: " + it.name + "; url: " + it.url }
+   }
+}
+
+tasks.register("testToolsDir", Exec) {
+    group = "verification"
+    description = "Run tests in the tools/ directory."
+    workingDir = "tools"
+    commandLine = ["python3", "test_list_compatible_dependency_versions.py"]
+}

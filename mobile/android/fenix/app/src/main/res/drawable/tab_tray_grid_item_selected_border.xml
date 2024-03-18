@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<layer-list
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:bottom="4dp"
+        android:left="4dp"
+        android:right="4dp"
+        android:top="4dp">
+
+        <shape
+            android:shape="rectangle">
+
+            <stroke
+                android:width="4dp"
+                android:color="@color/fx_mobile_border_color_accent" />
+
+            <corners android:radius="@dimen/tab_tray_grid_item_outer_border_radius" />
+        </shape>
+
+    </item>
+
+</layer-list>

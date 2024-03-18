@@ -1,0 +1,66 @@
+/* -*- Mode: Groovy; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+import groovy.json.JsonSlurper
+
+// Loads the mach environment configurations into a gradle extension property.
+
+apply from: file('./mach_env.gradle')
+
+logger.lifecycle("mozconfig.gradle> Loading mach environment into a gradle extension property")
+
+if (!ext.hasProperty("topsrcdir")) {
+    ext.topsrcdir = file(buildscript.getSourceFile()).getParentFile().getParentFile().getParentFile().getParentFile().absolutePath
+}
+
+def commandLine = ["${topsrcdir}/mach", "environment", "--format", "json", "--verbose"]
+if (System.env.GRADLE_MACH_PYTHON) {
+    commandLine.addAll(0, [System.env.GRADLE_MACH_PYTHON])
+} else if (System.properties["os.name"].contains("Windows")) {
+    commandLine.addAll(0, ["python"])
+}
+
+def proc = commandLine.execute(machEnv(topsrcdir), new File(topsrcdir))
+def standardOutput = new ByteArrayOutputStream()
+def standardError = new ByteArrayOutputStream()
+proc.consumeProcessOutput(standardOutput, standardError)
+proc.waitFor()
+
+// Only show the output if something went wrong.
+if (proc.exitValue() != 0) {
+    logger.info("mozconfig.gradle> Error running ./mach environment: \n\n"
+            + "Process '${commandLine}' finished with non-zero exit value ${proc.exitValue()}:\n\n"
+            + "stdout:\n"
+            + "${standardOutput.toString()}\n\n"
+            + "stderr:\n"
+            + "${standardError.toString()}")
+    throw new StopExecutionException(
+            "Could not run ./mach environment. Try running ./mach build first.")
+}
+
+def slurper = new JsonSlurper()
+def json = slurper.parseText(standardOutput.toString())
+
+if (json.substs.MOZ_BUILD_APP != 'mobile/android') {
+    throw new GradleException("Building with Gradle is only supported for Firefox for Android, i.e., MOZ_BUILD_APP == 'mobile/android'.")
+}
+
+// The Gradle instance is shared between settings.gradle and all the
+// other build.gradle files (see
+// http://forums.gradle.org/gradle/topics/define_extension_properties_from_settings_xml).
+// We use this ext property to pass the per-object-directory mozconfig
+// between scripts.  This lets us execute set-up code before we gradle
+// tries to configure the project even once, and as a side benefit
+// saves invoking |mach environment| multiple times.
+gradle.ext.mozconfig = json
+
+// Produced by `mach build`.  Bug 1543982: the mozconfig determined by `mach
+// environment` above can be different because `mach build` itself sets certain
+// critical environment variables including MOZ_OBJDIR, CC, and CXX.  We use
+// this record to patch up the environment when we recursively invoke `mach
+// build ...` commands from within Gradle.  This avoids invalidating configure
+// based on the changed environment variables.
+def orig = slurper.parse(new File(json.topobjdir, '.mozconfig.json'))
+gradle.ext.mozconfig.orig_mozconfig = orig.mozconfig

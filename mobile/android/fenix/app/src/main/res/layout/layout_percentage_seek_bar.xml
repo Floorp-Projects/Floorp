@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:baselineAligned="false"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:paddingTop="@dimen/preference_seek_bar_padding"
+    android:paddingBottom="@dimen/preference_seek_bar_padding">
+
+    <TextView
+        android:id="@android:id/title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/top_bar_alignment_margin_start"
+        android:paddingEnd="@dimen/radio_button_preference_horizontal"
+        android:textAppearance="?android:attr/textAppearanceListItem"
+        android:textAlignment="viewStart"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Font size" />
+
+    <TextView
+        android:id="@android:id/summary"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/top_bar_alignment_margin_start"
+        android:paddingEnd="@dimen/radio_button_preference_horizontal"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:textAlignment="viewStart"
+        android:textColor="?android:attr/textColorSecondary"
+        app:layout_constraintTop_toBottomOf="@android:id/title"
+        tools:text="Make text on websites larger or smaller" />
+
+    <SeekBar
+        android:id="@+id/seekbar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/top_bar_alignment_margin_start"
+        android:paddingEnd="80dp"
+        app:layout_constraintBottom_toBottomOf="@+id/seekbar_value"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/seekbar_value" />
+
+    <TextView
+        android:id="@+id/seekbar_value"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:layout_marginBottom="30dp"
+        android:gravity="end|center_vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="@dimen/radio_button_preference_horizontal"
+        android:textColor="?attr/textPrimary"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toTopOf="@+id/sampleText"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@android:id/summary"
+        tools:text="200%" />
+
+    <View
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@color/photonViolet05"
+        app:layout_constraintBottom_toBottomOf="@+id/sampleText"
+        app:layout_constraintEnd_toEndOf="@+id/sampleText"
+        app:layout_constraintStart_toStartOf="@+id/sampleText"
+        app:layout_constraintTop_toTopOf="@+id/sampleText" />
+
+    <TextView
+        android:id="@+id/sampleText"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="33dp"
+        android:layout_marginStart="@dimen/top_bar_alignment_margin_start"
+        android:layout_marginEnd="@dimen/radio_button_preference_horizontal"
+        android:padding="16dp"
+        android:textAlignment="viewStart"
+        android:text="@string/accessibility_text_size_sample_text_1"
+        android:textColor="@color/text_scale_example_text_color"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+</androidx.constraintlayout.widget.ConstraintLayout>

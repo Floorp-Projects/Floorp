@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <Preference
+        android:key="@string/pref_key_save_logins_settings"
+        android:summary="@string/preferences_passwords_save_logins_ask_to_save"
+        android:title="@string/preferences_passwords_save_logins_2" />
+    <SwitchPreference
+        android:defaultValue="true"
+        android:key="@string/pref_key_autofill_logins"
+        android:title="@string/preferences_passwords_autofill2"
+        android:summary="@string/preferences_passwords_autofill_description" />
+    <mozilla.components.feature.autofill.preference.AutofillPreference
+        android:key="@string/pref_key_android_autofill"
+        android:title="@string/preferences_android_autofill"
+        android:summary="@string/preferences_android_autofill_description" />
+    <org.mozilla.fenix.settings.SyncPreference
+        android:key="@string/pref_key_sync_logins"
+        android:title="@string/preferences_passwords_sync_logins_2" />
+    <Preference
+        android:key="@string/pref_key_saved_logins"
+        android:title="@string/preferences_passwords_saved_logins_2" />
+    <androidx.preference.Preference
+        android:key="@string/pref_key_login_exceptions"
+        android:title="@string/preferences_passwords_exceptions"
+        app:icon="@drawable/ic_internet" />
+</PreferenceScreen>

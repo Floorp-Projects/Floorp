@@ -242,6 +242,161 @@ treeherder:
         'wc': 'webcompat'
         'Boot': 'Bootstrap'
         'Attr-L10n': 'Build Attribution'
+        'android-l10n': 'Import strings from android-l10n repo'
+
+        # The below symbols are from firefox-android (fenix/focus/android-components)
+        'buildconfig': 'Make sure the content of .buildconfig.yml matches what gradle knows about its projects'
+        'compare-locales': 'Validate strings.xml with compare-locales'
+        'detekt': 'detekt linter'
+        'ktlint': 'ktlint linter'
+        'lint': 'gradle lint linter'
+
+        'focus': 'Focus general tasks no matter the variant'
+        'focus-beta': 'Focus beta-related tasks'
+        'focus-debug': 'Focus builds made for testing'
+        'focus-nightly': 'Focus nightly-related tasks'
+        'focus-release': 'Focus production-related tasks'
+
+        'fenix': 'Fenix general tasks no matter the variant'
+        'fenix-beta': 'Fenix beta-related tasks'
+        'fenix-debug': 'Fenix builds made for testing'
+        'fenix-nightly': 'Fenix nightly-related tasks'
+        'fenix-nightlySim': 'Nightly-related tasks that run on each github push'
+        'fenix-release': 'Fenix production-related tasks'
+
+        # This list is based on mobile/android/android-components/.buildconfig.yml except the exceptions down below
+        'browser-domains': 'browser-domains'
+        'browser-engine-gecko': 'browser-engine-gecko'
+        'browser-engine-system': 'browser-engine-system'
+        'browser-errorpages': 'browser-errorpages'
+        'browser-icons': 'browser-icons'
+        'browser-menu': 'browser-menu'
+        'browser-menu2': 'browser-menu2'
+        'browser-session-storage': 'browser-session-storage'
+        'browser-state': 'browser-state'
+        'browser-storage-sync': 'browser-storage-sync'
+        'browser-tabstray': 'browser-tabstray'
+        'browser-thumbnails': 'browser-thumbnails'
+        'browser-toolbar': 'browser-toolbar'
+        'compose-awesomebar': 'compose-engine'
+        'compose-browser-toolbar': 'awesomebar-browser-toolbar'
+        'compose-engine': 'compose-engine'
+        'compose-tabstray': 'compose-tabstray'
+        'concept-awesomebar': 'concept-awesomebar'
+        'concept-base': 'concept-base'
+        'compose-cfr': 'compose-cfr'
+        'concept-engine': 'concept-engine'
+        'concept-fetch': 'concept-fetch'
+        'concept-menu': 'concept-menu'
+        'concept-push': 'concept-push'
+        'concept-storage': 'concept-storage'
+        'concept-sync': 'concept-sync'
+        'concept-tabstray': 'concept-tabstray'
+        'concept-toolbar': 'concept-toolbar'
+        'feature-accounts-push': 'feature-accounts-push'
+        'feature-accounts': 'feature-accounts'
+        'feature-addons': 'feature-addons'
+        'feature-app-links': 'feature-app-links'
+        'feature-autofill': 'feature-autofill'
+        'feature-awesomebar': 'feature-awesomebar'
+        'feature-containers': 'feature-containers'
+        'feature-contextmenu': 'feature-contextmenu'
+        'feature-customtabs': 'feature-customtabs'
+        'feature-downloads': 'feature-downloads'
+        'feature-findinpage': 'feature-findinpage'
+        'feature-fxsuggest': 'feature-fxsuggest'
+        'feature-intent': 'feature-intent'
+        'feature-logins': 'feature-logins'
+        'feature-media': 'feature-media'
+        'feature-privatemode': 'feature-privatemode'
+        'feature-prompts': 'feature-prompts'
+        'feature-push': 'feature-push'
+        'feature-pwa': 'feature-pwa'
+        'feature-qr': 'feature-qr'
+        'feature-readerview': 'feature-readerview'
+        'feature-recentlyclosed': 'feature-recentlyclosed'
+        'feature-search': 'feature-search'
+        'feature-serviceworker': 'feature-serviceworker'
+        'feature-session': 'feature-session'
+        'feature-share': 'feature-share'
+        'feature-sitepermissions': 'feature-sitepermissions'
+        'feature-syncedtabs': 'feature-syncedtabs'
+        'feature-tab-collections': 'feature-tab-collections'
+        'feature-tabs': 'feature-tabs'
+        'feature-toolbar': 'feature-toolbar'
+        'feature-top-sites': 'feature-top-sites'
+        'feature-webauthn': 'feature-webauthn'
+        'feature-webcompat': 'feature-webcompat'
+        'feature-webnotifications': 'feature-webnotifications'
+        'lib-crash': 'lib-crash'
+        'lib-auth': 'lib-auth'
+        'lib-crash-sentry': 'lib-crash-sentry'
+        'lib-crash-sentry-legacy': 'lib-crash-sentry-legacy'
+        'lib-dataprotect': 'lib-dataprotect'
+        'lib-fetch-okhttp': 'lib-fetch-okhttp'
+        'lib-jexl': 'lib-jexl'
+        'lib-publicsuffixlist': 'lib-publicsuffixlist'
+        'lib-push-firebase': 'lib-push-firebase'
+        'lib-state': 'lib-state'
+        'samples-compose-browser': 'samples-compose-browser'
+        'samples-crash': 'samples-crash'
+        'samples-dataprotect': 'samples-dataprotect'
+        'samples-firefox-accounts': 'samples-firefox-accounts'
+        'samples-glean-library': 'samples-glean-library'
+        'samples-glean': 'samples-glean'
+        'samples-sync-logins': 'samples-sync-logins'
+        'samples-sync': 'samples-sync'
+        'samples-toolbar': 'samples-toolbar'
+        'service-contile': 'service-contile'
+        'service-digitalassetlinks': 'service-digitalassetlinks'
+        'service-experiments': 'service-experiments'
+        'service-firefox-accounts': 'service-firefox-accounts'
+        'service-fretboard': 'service-fretboard'
+        'service-glean': 'service-glean'
+        'service-location': 'service-location'
+        'service-nimbus': 'service-nimbus'
+        'service-pocket': 'service-pocket'
+        'service-sync-autofill': 'service-sync-autofill'
+        'service-sync-logins': 'service-sync-logins'
+        'support-android-test': 'support-android-test'
+        'support-base': 'support-base'
+        'support-images': 'support-images'
+        'support-ktx': 'support-ktx'
+        'support-license': 'support-license'
+        'support-locale': 'support-locale'
+        'support-migration': 'support-migration'
+        'support-remotesettings': 'support-remotesettings'
+        'support-rusthttp': 'support-rusthttp'
+        'support-rusterrors': 'support-rusterrors'
+        'support-rustlog': 'support-rustlog'
+        'support-sync-telemetry': 'support-sync-telemetry'
+        'support-test-appservices': 'support-test-appservices'
+        'support-test-fakes': 'support-test-fakes'
+        'support-test-libstate': 'support-test-libstate'
+        'support-test': 'support-test'
+        'support-utils': 'support-utils'
+        'support-webextensions': 'support-webextensions'
+        'tooling-detekt': 'tooling-detekt'
+        'tooling-fetch-tests': 'tooling-fetch-tests'
+        'tooling-lint': 'tooling-lint'
+        'ui-autocomplete': 'ui-autocomplete'
+        'ui-colors': 'ui-colors'
+        'ui-fonts': 'ui-fonts'
+        'ui-icons': 'ui-icons'
+        'ui-tabcounter': 'ui-tabcounter'
+        'ui-widgets': 'ui-widgets'
+
+        # These ones are too long to fit in 25 chars
+        'lib-fetch-httpurlconnecti': 'lib-fetch-httpurlconnection'
+        'feature-webcompat-reporte': 'feature-webcompat-reporter'
+
+        # Groups aren't generated off buildconfig.yml:
+        'samples-browser': 'samples-browser'
+        'samples-browser-gecko': 'samples-browser-gecko'
+        'samples-browser-system': 'samples-browser-system'
+
+        # forPerformanceTest: Builds made for Raptor and other performance tests
+        'Rap-P': 'Raptor power tests'
 
 index:
     products:
@@ -285,6 +440,7 @@ release-promotion:
         - 'devedition'
         - 'fennec'
         - 'firefox'
+        - 'firefox-android'
     rebuild-kinds:
         - docker-image
         - fetch
@@ -345,6 +501,15 @@ release-promotion:
             is-rc: true
             target-tasks-method: ship_desktop
             partial-updates: true
+        promote_android:
+            product: firefox-android
+            target-tasks-method: promote_android
+        push_android:
+            product: firefox-android
+            target-tasks-method: push_android
+        ship_android:
+            product: firefox-android
+            target-tasks-method: ship_android
 
 
 merge-automation:
@@ -357,6 +522,8 @@ merge-automation:
                 - filename: "browser/config/version.txt"
                   new-suffix: ''
                 - filename: "browser/config/version_display.txt"
+                  new-suffix: 'b1'
+                - filename: "mobile/android/version.txt"
                   new-suffix: 'b1'
             replacements:
                 - - browser/config/mozconfigs/linux32/l10n-mozconfig
@@ -399,6 +566,8 @@ merge-automation:
             version-files:
                 - filename: "browser/config/version_display.txt"
                   new-suffix: ''
+                - filename: "mobile/android/version.txt"
+                  new-suffix: ''
             replacements: []
             merge-old-head: true
             base-tag: 'FIREFOX_RELEASE_{major_version}_BASE'
@@ -427,6 +596,9 @@ merge-automation:
                   version-bump: "major"
                   new-suffix: 'a1'
                 - filename: "browser/config/version_display.txt"
+                  version-bump: "major"
+                  new-suffix: 'a1'
+                - filename: "mobile/android/version.txt"
                   version-bump: "major"
                   new-suffix: 'a1'
             replacements:
@@ -575,6 +747,14 @@ workers:
                 by-release-level:
                     production: '{trust-domain}-3-beetmover'
                     staging: '{trust-domain}-1-beetmover'
+        beetmover-android:
+            provisioner: scriptworker-k8s
+            implementation: scriptworker-beetmover
+            os: scriptworker
+            worker-type:
+                by-release-level:
+                    production: '{trust-domain}-3-beetmover'
+                    staging: '{trust-domain}-1-beetmover'
         shipit:
             provisioner: scriptworker-k8s
             implementation: shipit
@@ -609,6 +789,11 @@ workers:
                 by-release-level:
                     production: signing-mac-v1
                     staging: depsigning-mac-v1
+        push-apk:
+            provisioner: scriptworker-k8s
+            implementation: scriptworker-pushapk
+            os: scriptworker
+            worker-type: '{trust-domain}-{level}-pushapk'
         tree:
             provisioner: scriptworker-k8s
             implementation: treescript
