@@ -883,13 +883,15 @@ nsresult CacheStorageService::ClearOriginInternal(
           NS_ERROR("aEntry->HashingKey() failed?");
           return rv;
         }
-
+        MOZ_ASSERT_IF(info->IsPrivate(), !entry->IsUsingDisk());
         RemoveExactEntry(table, entryKey, entry, false /* don't overwrite */);
       }
     }
   }
 
-  rv = CacheFileIOManager::EvictByContext(info, false /* pinned */, aOrigin);
+  if (!info->IsPrivate()) {
+    rv = CacheFileIOManager::EvictByContext(info, false /* pinned */, aOrigin);
+  }
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
