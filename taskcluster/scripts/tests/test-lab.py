@@ -150,30 +150,35 @@ def process_results(flank_config: str, test_type: str = "instrumentation") -> No
     os.chmod(parse_ui_test_fromfile_script, 0o755)
 
     # Run parsing scripts and check for errors
-    run_command(
-        [
-            parse_ui_test_script,
-            "--exit-code",
-            str(0),
-            "--log",
-            "flank.log",
-            "--results",
-            Worker.RESULTS_DIR.value,
-            "--output-md",
-            os.path.join(github_dir, "customCheckRunText.md"),
-            "--device-type",
-            flank_config,
-        ],
-        "flank.log",
-    )
 
     # Process the results differently based on the test type: robo or instrumentation
     # Currently, robo test does not have a test file artifact to parse
+    exit_code = 0
     if test_type == "instrumentation":
-        run_command(
+        exit_code = run_command(
             [parse_ui_test_fromfile_script, "--results", Worker.RESULTS_DIR.value],
             "flank.log",
         )
+
+    command = [
+        parse_ui_test_script,
+        "--exit-code",
+        str(0),
+        "--log",
+        "flank.log",
+        "--results",
+        Worker.RESULTS_DIR.value,
+        "--output-md",
+        os.path.join(github_dir, "customCheckRunText.md"),
+        "--device-type",
+        flank_config,
+    ]
+    if exit_code == 0:
+        command.append("--report-treeherder-failures")
+    run_command(
+        command,
+        "flank.log",
+    )
 
 
 def main():

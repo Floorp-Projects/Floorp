@@ -32,6 +32,7 @@ def parse_print_failure_results(results):
     table.columns.alignment = BeautifulTable.ALIGN_LEFT
     table.set_style(BeautifulTable.STYLE_GRID)
 
+    failure_count = 0
     for suite in results:
         cur_suite = test_suite.fromelem(suite)
         if cur_suite.flakes != "0":
@@ -50,15 +51,20 @@ def parse_print_failure_results(results):
             for case in suite:
                 for entry in case.result:
                     if isinstance(entry, Failure):
+                        test_id = "%s#%s" % (case.classname, case.name)
+                        details = entry.text.replace("\t", " ")
                         table.rows.append(
                             [
-                                "%s#%s" % (case.classname, case.name),
+                                test_id,
                                 "Failure",
-                                entry.text.replace("\t", " "),
+                                details,
                             ]
                         )
+                        print(f"TEST-UNEXPECTED-FAIL | {test_id} | {details}")
+                        failure_count += 1
                         break
     print(table)
+    return failure_count
 
 
 def load_results_file(filename):
@@ -80,10 +86,12 @@ def load_results_file(filename):
 def main():
     args = parse_args(sys.argv[1:])
 
+    failure_count = 0
     junitxml = load_results_file(args.results.joinpath("FullJUnitReport.xml"))
     if junitxml:
-        parse_print_failure_results(junitxml)
+        failure_count = parse_print_failure_results(junitxml)
+    return failure_count
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
