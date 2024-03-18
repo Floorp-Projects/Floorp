@@ -222,27 +222,17 @@ bool AccessibleCaretManager::IsCaretDisplayableInCursorMode(
   if (!caret || !caret->IsVisible()) {
     return false;
   }
-
-  int32_t offset = 0;
-  nsIFrame* frame =
-      nsCaret::GetFrameAndOffset(GetSelection(), nullptr, 0, &offset);
-
-  if (!frame) {
+  auto frameData =
+      nsCaret::GetFrameAndOffset(nsCaret::CaretPositionFor(GetSelection()));
+  if (!GetEditingHostForFrame(frameData.mFrame)) {
     return false;
   }
-
-  if (!GetEditingHostForFrame(frame)) {
-    return false;
-  }
-
   if (aOutFrame) {
-    *aOutFrame = frame;
+    *aOutFrame = frameData.mFrame;
   }
-
   if (aOutOffset) {
-    *aOutOffset = offset;
+    *aOutOffset = frameData.mOffsetInFrameContent;
   }
-
   return true;
 }
 
@@ -1333,10 +1323,9 @@ nsPoint AccessibleCaretManager::AdjustDragBoundary(
     const nsPoint& aPoint) const {
   nsPoint adjustedPoint = aPoint;
 
-  int32_t focusOffset = 0;
-  nsIFrame* focusFrame =
-      nsCaret::GetFrameAndOffset(GetSelection(), nullptr, 0, &focusOffset);
-  Element* editingHost = GetEditingHostForFrame(focusFrame);
+  auto frameData =
+      nsCaret::GetFrameAndOffset(nsCaret::CaretPositionFor(GetSelection()));
+  Element* editingHost = GetEditingHostForFrame(frameData.mFrame);
 
   if (editingHost) {
     nsIFrame* editingHostFrame = editingHost->GetPrimaryFrame();
@@ -1471,8 +1460,7 @@ void AccessibleCaretManager::DispatchCaretStateChangedEvent(
 
   // Send isEditable info w/ event detail. This info can help determine
   // whether to show cut command on selection dialog or not.
-  init.mSelectionEditable =
-      commonAncestorFrame && GetEditingHostForFrame(commonAncestorFrame);
+  init.mSelectionEditable = GetEditingHostForFrame(commonAncestorFrame);
 
   init.mBoundingClientRect = domRect;
   init.mReason = aReason;
