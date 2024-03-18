@@ -21,6 +21,7 @@
 #include "js/AllocPolicy.h"
 #include "js/Class.h"
 #include "js/GCAPI.h"
+#include "js/GCVector.h"
 #include "js/HeapAPI.h"
 #include "js/TypeDecls.h"
 #include "js/UniquePtr.h"
@@ -488,6 +489,7 @@ class Nursery {
   // the nursery on debug & nightly builds.
   void clear();
 
+  void clearMapAndSetNurseryRanges();
   void sweepMapAndSetObjects();
 
   // Allocate a buffer for a given zone, using the nursery if possible.
@@ -683,13 +685,15 @@ class Nursery {
   // Note: we store the pointers as Cell* here, resulting in an ugly cast in
   //       sweep. This is because this structure is used to help implement
   //       stable object hashing and we have to break the cycle somehow.
-  using CellsWithUniqueIdVector = Vector<gc::Cell*, 8, SystemAllocPolicy>;
+  using CellsWithUniqueIdVector = JS::GCVector<gc::Cell*, 8, SystemAllocPolicy>;
   CellsWithUniqueIdVector cellsWithUid_;
 
   // Lists of map and set objects allocated in the nursery or with iterators
   // allocated there. Such objects need to be swept after minor GC.
-  Vector<MapObject*, 0, SystemAllocPolicy> mapsWithNurseryMemory_;
-  Vector<SetObject*, 0, SystemAllocPolicy> setsWithNurseryMemory_;
+  using MapObjectVector = Vector<MapObject*, 0, SystemAllocPolicy>;
+  MapObjectVector mapsWithNurseryMemory_;
+  using SetObjectVector = Vector<SetObject*, 0, SystemAllocPolicy>;
+  SetObjectVector setsWithNurseryMemory_;
 
   UniquePtr<NurseryDecommitTask> decommitTask;
 
