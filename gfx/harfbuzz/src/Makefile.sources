@@ -368,6 +368,8 @@ HB_SUBSET_sources = \
 	hb-subset-cff2.cc \
 	hb-subset-input.cc \
 	hb-subset-input.hh \
+	hb-subset-instancer-iup.hh \
+	hb-subset-instancer-iup.cc \
 	hb-subset-instancer-solver.hh \
 	hb-subset-instancer-solver.cc \
 	hb-subset-accelerator.hh \
