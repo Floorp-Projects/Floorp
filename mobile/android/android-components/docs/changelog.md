@@ -4,11 +4,13 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 125.0 (In Development)
-* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v124..main)
-* [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
-* [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/Gecko.kt)
-* [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/.config.yml)
+# 126.0 (In Development)
+
+# 125.0
+* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v124..releases_v125)
+* [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/releases_v125/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
+* [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/releases_v125/android-components/plugins/dependencies/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/releases_v125/android-components/.config.yml)
 
 * **concept-toolabar**:
   * Added a new method for `ActionButton` to update the contentDescription and the iconTint, see [Bug 1875817](https://bugzilla.mozilla.org/show_bug.cgi?id=1875817).
