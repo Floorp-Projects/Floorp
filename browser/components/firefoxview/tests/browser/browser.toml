@@ -55,6 +55,9 @@ skip-if = [
 
 ["browser_opentabs_firefoxview.js"]
 
+["browser_opentabs_more.js"]
+fail-if = ["a11y_checks"] # Bugs 1858041, 1854625, and 1872174 clicked Show all link is not accessible because it is "hidden" when clicked
+
 ["browser_opentabs_pinned_tabs.js"]
 
 ["browser_opentabs_recency.js"]
@@ -63,6 +66,9 @@ skip-if = [
   "os == 'mac' && verify",
   "os == 'linux'"
 ] # macos times out, see bug 1857293, skipped for windows, see bug 1858460, Bug 1875877 - frequent fails on linux.
+
+["browser_opentabs_search.js"]
+fail-if = ["a11y_checks"] # Bug 1850591 clicked moz-page-nav-button button is not focusable
 
 ["browser_opentabs_tab_indicators.js"]
 
