@@ -28,3 +28,37 @@ browser.backup:
       - mconley@mozilla.com
     expires: never
     telemetry_mirror: BROWSER_BACKUP_PROF_D_DISK_SPACE
+
+  places_size:
+    type: quantity
+    unit: kilobyte
+    description: >
+      The total file size of the places.sqlite db located in the current profile
+      directory, in kilobytes.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1883642
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1883642
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - mconley@mozilla.com
+    expires: never
+    telemetry_mirror: BROWSER_BACKUP_PLACES_SIZE
+
+  favicons_size:
+    type: quantity
+    unit: kilobyte
+    description: >
+      The total file size of the favicons.sqlite db located in the current profile
+      directory, in kilobytes.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1883642
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1883642
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - mconley@mozilla.com
+    expires: never
+    telemetry_mirror: BROWSER_BACKUP_FAVICONS_SIZE

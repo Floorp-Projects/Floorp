@@ -172,6 +172,36 @@ browser.backup:
       - 'firefox'
     record_in_processes:
       - 'main'
+  places_size:
+    bug_numbers:
+      - 1883642
+    description: >
+      The total file size of the places.sqlite db located in the current profile
+      directory, in kilobytes.
+    expires: never
+    kind: uint
+    notification_emails:
+      - mconley@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+  favicons_size:
+    bug_numbers:
+      - 1883642
+    description: >
+      The total file size of the favicons.sqlite db located in the current profile
+      directory, in kilobytes.
+    expires: never
+    kind: uint
+    notification_emails:
+      - mconley@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
 
 # The following section contains the browser engagement scalars.
 browser.engagement:
