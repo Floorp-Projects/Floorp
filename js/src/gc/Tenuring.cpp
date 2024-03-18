@@ -53,13 +53,13 @@ TenuringTracer::TenuringTracer(JSRuntime* rt, Nursery* nursery,
   stringDeDupSet.emplace();
 }
 
-size_t TenuringTracer::getTenuredSize() const {
-  return tenuredSize + tenuredCells * sizeof(NurseryCellHeader);
+size_t TenuringTracer::getPromotedSize() const {
+  return promotedSize + promotedCells * sizeof(NurseryCellHeader);
 }
 
-size_t TenuringTracer::getTenuredCells() const { return tenuredCells; }
+size_t TenuringTracer::getPromotedCells() const { return promotedCells; }
 
-static inline void UpdateAllocSiteOnTenure(Cell* cell) {
+static inline void UpdateAllocSiteOnPromotion(Cell* cell) {
   AllocSite* site = NurseryCellHeader::from(cell)->allocSite();
   site->incTenuredCount();
 }
@@ -94,15 +94,15 @@ JSObject* TenuringTracer::onNonForwardedNurseryObject(JSObject* obj) {
   MOZ_ASSERT(IsInsideNursery(obj));
   MOZ_ASSERT(!obj->isForwarded());
 
-  UpdateAllocSiteOnTenure(obj);
+  UpdateAllocSiteOnPromotion(obj);
 
-  // Take a fast path for tenuring a plain object which is by far the most
+  // Take a fast path for promoting a plain object as this is by far the most
   // common case.
   if (obj->is<PlainObject>()) {
-    return movePlainObjectToTenured(&obj->as<PlainObject>());
+    return promotePlainObject(&obj->as<PlainObject>());
   }
 
-  return moveToTenuredSlow(obj);
+  return promoteObjectSlow(obj);
 }
 
 void TenuringTracer::onStringEdge(JSString** strp, const char* name) {
@@ -133,9 +133,9 @@ JSString* TenuringTracer::onNonForwardedNurseryString(JSString* str) {
   MOZ_ASSERT(IsInsideNursery(str));
   MOZ_ASSERT(!str->isForwarded());
 
-  UpdateAllocSiteOnTenure(str);
+  UpdateAllocSiteOnPromotion(str);
 
-  return moveToTenured(str);
+  return promoteString(str);
 }
 
 void TenuringTracer::onBigIntEdge(JS::BigInt** bip, const char* name) {
@@ -166,9 +166,9 @@ JS::BigInt* TenuringTracer::onNonForwardedNurseryBigInt(JS::BigInt* bi) {
   MOZ_ASSERT(IsInsideNursery(bi));
   MOZ_ASSERT(!bi->isForwarded());
 
-  UpdateAllocSiteOnTenure(bi);
+  UpdateAllocSiteOnPromotion(bi);
 
-  return moveToTenured(bi);
+  return promoteBigInt(bi);
 }
 
 void TenuringTracer::onSymbolEdge(JS::Symbol** symp, const char* name) {}
@@ -686,8 +686,8 @@ void* js::gc::TenuringTracer::allocCell(Zone* zone, AllocKind allocKind,
 JSString* js::gc::TenuringTracer::allocString(JSString* src, Zone* zone,
                                               AllocKind dstKind) {
   JSString* dst = alloc<JSString>(zone, dstKind, src);
-  tenuredSize += moveStringToTenured(dst, src, dstKind);
-  tenuredCells++;
+  promotedSize += moveString(dst, src, dstKind);
+  promotedCells++;
 
   return dst;
 }
@@ -698,7 +698,7 @@ bool js::gc::TenuringTracer::shouldTenure(Zone* zone, JS::TraceKind traceKind,
          nursery_.shouldTenure(cell);
 }
 
-JSObject* js::gc::TenuringTracer::moveToTenuredSlow(JSObject* src) {
+JSObject* js::gc::TenuringTracer::promoteObjectSlow(JSObject* src) {
   MOZ_ASSERT(IsInsideNursery(src));
   MOZ_ASSERT(!src->is<PlainObject>());
 
@@ -711,8 +711,8 @@ JSObject* js::gc::TenuringTracer::moveToTenuredSlow(JSObject* src) {
   // and dst. We deal with this by copying elements manually, possibly
   // re-inlining them if there is adequate room inline in dst.
   //
-  // For Arrays and Tuples we're reducing tenuredSize to the smaller srcSize
-  // because moveElementsToTenured() accounts for all Array or Tuple elements,
+  // For Arrays and Tuples we're reducing promotedSize to the smaller srcSize
+  // because moveElements() accounts for all Array or Tuple elements,
   // even if they are inlined.
   if (src->is<FixedLengthTypedArrayObject>()) {
     auto* tarray = &src->as<FixedLengthTypedArrayObject>();
@@ -734,8 +734,8 @@ JSObject* js::gc::TenuringTracer::moveToTenuredSlow(JSObject* src) {
     srcSize = sizeof(NativeObject);
   }
 
-  tenuredSize += srcSize;
-  tenuredCells++;
+  promotedSize += srcSize;
+  promotedCells++;
 
   // Copy the Cell contents.
   MOZ_ASSERT(OffsetFromChunkStart(src) >= sizeof(ChunkBase));
@@ -746,8 +746,8 @@ JSObject* js::gc::TenuringTracer::moveToTenuredSlow(JSObject* src) {
   if (src->is<NativeObject>()) {
     NativeObject* ndst = &dst->as<NativeObject>();
     NativeObject* nsrc = &src->as<NativeObject>();
-    tenuredSize += moveSlotsToTenured(ndst, nsrc);
-    tenuredSize += moveElementsToTenured(ndst, nsrc, dstKind);
+    promotedSize += moveSlots(ndst, nsrc);
+    promotedSize += moveElements(ndst, nsrc, dstKind);
   }
 
   JSObjectMovedOp op = dst->getClass()->extObjectMovedOp();
@@ -755,7 +755,7 @@ JSObject* js::gc::TenuringTracer::moveToTenuredSlow(JSObject* src) {
   if (op) {
     // Tell the hazard analysis that the object moved hook can't GC.
     JS::AutoSuppressGCAnalysis nogc;
-    tenuredSize += op(dst, src);
+    promotedSize += op(dst, src);
   } else {
     MOZ_ASSERT_IF(src->getClass()->hasFinalize(),
                   CanNurseryAllocateFinalizedClass(src->getClass()));
@@ -768,9 +768,8 @@ JSObject* js::gc::TenuringTracer::moveToTenuredSlow(JSObject* src) {
   return dst;
 }
 
-inline JSObject* js::gc::TenuringTracer::movePlainObjectToTenured(
-    PlainObject* src) {
-  // Fast path version of moveToTenuredSlow() for specialized for PlainObject.
+inline JSObject* js::gc::TenuringTracer::promotePlainObject(PlainObject* src) {
+  // Fast path version of promoteObjectSlow() for specialized for PlainObject.
 
   MOZ_ASSERT(IsInsideNursery(src));
 
@@ -778,8 +777,8 @@ inline JSObject* js::gc::TenuringTracer::movePlainObjectToTenured(
   auto* dst = alloc<PlainObject>(src->nurseryZone(), dstKind, src);
 
   size_t srcSize = Arena::thingSize(dstKind);
-  tenuredSize += srcSize;
-  tenuredCells++;
+  promotedSize += srcSize;
+  promotedCells++;
 
   // Copy the Cell contents.
   MOZ_ASSERT(OffsetFromChunkStart(src) >= sizeof(ChunkBase));
@@ -787,8 +786,8 @@ inline JSObject* js::gc::TenuringTracer::movePlainObjectToTenured(
   js_memcpy(dst, src, srcSize);
 
   // Move the slots and elements.
-  tenuredSize += moveSlotsToTenured(dst, src);
-  tenuredSize += moveElementsToTenured(dst, src, dstKind);
+  promotedSize += moveSlots(dst, src);
+  promotedSize += moveElements(dst, src, dstKind);
 
   MOZ_ASSERT(!dst->getClass()->extObjectMovedOp());
 
@@ -799,8 +798,7 @@ inline JSObject* js::gc::TenuringTracer::movePlainObjectToTenured(
   return dst;
 }
 
-size_t js::gc::TenuringTracer::moveSlotsToTenured(NativeObject* dst,
-                                                  NativeObject* src) {
+size_t js::gc::TenuringTracer::moveSlots(NativeObject* dst, NativeObject* src) {
   /* Fixed slots have already been copied over. */
   if (!src->hasDynamicSlots()) {
     return 0;
@@ -823,9 +821,9 @@ size_t js::gc::TenuringTracer::moveSlotsToTenured(NativeObject* dst,
   return allocSize;
 }
 
-size_t js::gc::TenuringTracer::moveElementsToTenured(NativeObject* dst,
-                                                     NativeObject* src,
-                                                     AllocKind dstKind) {
+size_t js::gc::TenuringTracer::moveElements(NativeObject* dst,
+                                            NativeObject* src,
+                                            AllocKind dstKind) {
   if (src->hasEmptyElements()) {
     return 0;
   }
@@ -872,7 +870,7 @@ inline void js::gc::TenuringTracer::insertIntoStringFixupList(
   stringHead = entry;
 }
 
-JSString* js::gc::TenuringTracer::moveToTenured(JSString* src) {
+JSString* js::gc::TenuringTracer::promoteString(JSString* src) {
   MOZ_ASSERT(IsInsideNursery(src));
   MOZ_ASSERT(!src->isExternal());
 
@@ -1034,15 +1032,15 @@ void js::gc::TenuringTracer::relocateDependentStringChars(
   }
 }
 
-JS::BigInt* js::gc::TenuringTracer::moveToTenured(JS::BigInt* src) {
+JS::BigInt* js::gc::TenuringTracer::promoteBigInt(JS::BigInt* src) {
   MOZ_ASSERT(IsInsideNursery(src));
 
   AllocKind dstKind = src->getAllocKind();
   Zone* zone = src->nurseryZone();
 
   JS::BigInt* dst = alloc<JS::BigInt>(zone, dstKind, src);
-  tenuredSize += moveBigIntToTenured(dst, src, dstKind);
-  tenuredCells++;
+  promotedSize += moveBigInt(dst, src, dstKind);
+  promotedCells++;
 
   RelocationOverlay::forwardCell(src, dst);
 
@@ -1133,8 +1131,8 @@ void js::gc::TenuringTracer::collectToStringFixedPoint() {
   }
 }
 
-size_t js::gc::TenuringTracer::moveStringToTenured(JSString* dst, JSString* src,
-                                                   AllocKind dstKind) {
+size_t js::gc::TenuringTracer::moveString(JSString* dst, JSString* src,
+                                          AllocKind dstKind) {
   size_t size = Arena::thingSize(dstKind);
 
   MOZ_ASSERT_IF(dst->isTenured(),
@@ -1169,9 +1167,8 @@ size_t js::gc::TenuringTracer::moveStringToTenured(JSString* dst, JSString* src,
   return size;
 }
 
-size_t js::gc::TenuringTracer::moveBigIntToTenured(JS::BigInt* dst,
-                                                   JS::BigInt* src,
-                                                   AllocKind dstKind) {
+size_t js::gc::TenuringTracer::moveBigInt(JS::BigInt* dst, JS::BigInt* src,
+                                          AllocKind dstKind) {
   size_t size = Arena::thingSize(dstKind);
 
   MOZ_ASSERT_IF(dst->isTenured(),
