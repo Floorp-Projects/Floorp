@@ -133,7 +133,11 @@ class WaterfallBackground {
 
     // Flush the image data and cache the waterfall background.
     pixelArray.set(view8bit);
-    this.ctx.putImageData(imageData, 0, 0);
+    try {
+      this.ctx.putImageData(imageData, 0, 0);
+    } catch (e) {
+      console.error("WaterfallBackground crash error", e);
+    }
 
     this.setImageElement("waterfall-background", this.canvas);
   }
