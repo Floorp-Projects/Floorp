@@ -19,6 +19,13 @@ const { MLEngineParent } = ChromeUtils.importESModule(
   "resource://gre/actors/MLEngineParent.sys.mjs"
 );
 
+const { ModelHub } = ChromeUtils.importESModule(
+  "chrome://global/content/ml/ModelHub.sys.mjs"
+);
+
+const { IndexedDBCache } = ChromeUtils.importESModule(
+  "chrome://global/content/ml/ModelHub.sys.mjs"
+);
 // This test suite shares some utility functions with translations as they work in a very
 // similar fashion. Eventually, the plan is to unify these two components.
 Services.scriptloader.loadSubScript(

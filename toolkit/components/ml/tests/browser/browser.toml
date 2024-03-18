@@ -2,4 +2,7 @@
 support-files = [
   "head.js",
 ]
+
+["browser_ml_cache.js"]
+
 ["browser_ml_engine.js"]
