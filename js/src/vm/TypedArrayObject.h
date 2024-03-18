@@ -149,6 +149,7 @@ class FixedLengthTypedArrayObject : public TypedArrayObject {
   static constexpr uint32_t INLINE_BUFFER_LIMIT =
       (NativeObject::MAX_FIXED_SLOTS - FIXED_DATA_START) * sizeof(Value);
 
+  inline gc::AllocKind allocKindForTenure() const;
   static inline gc::AllocKind AllocKindForLazyBuffer(size_t nbytes);
 
   size_t byteOffset() const {

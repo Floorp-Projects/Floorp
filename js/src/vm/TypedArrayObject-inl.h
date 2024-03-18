@@ -760,6 +760,26 @@ class ElementSpecific {
   }
 };
 
+inline gc::AllocKind js::FixedLengthTypedArrayObject::allocKindForTenure()
+    const {
+  // Fixed length typed arrays in the nursery may have a lazily allocated
+  // buffer. Make sure there is room for the array's fixed data when moving the
+  // array.
+
+  if (hasBuffer()) {
+    return NativeObject::allocKindForTenure();
+  }
+
+  gc::AllocKind allocKind;
+  if (hasInlineElements()) {
+    allocKind = AllocKindForLazyBuffer(byteLength());
+  } else {
+    allocKind = gc::GetGCObjectKind(getClass());
+  }
+
+  return gc::ForegroundToBackgroundAllocKind(allocKind);
+}
+
 /* static */ gc::AllocKind
 js::FixedLengthTypedArrayObject::AllocKindForLazyBuffer(size_t nbytes) {
   MOZ_ASSERT(nbytes <= INLINE_BUFFER_LIMIT);
