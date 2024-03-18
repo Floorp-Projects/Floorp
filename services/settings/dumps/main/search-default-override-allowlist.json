@@ -3,6 +3,56 @@
     {
       "urls": [
         {
+          "search_url": "https://www.qwant.com?q={searchTerms}&client=opensearch"
+        }
+      ],
+      "schema": 1710167605850,
+      "engineName": "Qwant",
+      "overridesId": "qwant@search.mozilla.org",
+      "thirdPartyId": "opensearch@search.mozilla.org",
+      "id": "fc297e76-6e20-48ba-8474-919e3e4380bf",
+      "last_modified": 1710168995103
+    },
+    {
+      "urls": [
+        {
+          "search_url": "https://www.ecosia.org/search?q={searchTerms}&addon=opensearch"
+        }
+      ],
+      "schema": 1710167605249,
+      "engineName": "Ecosia",
+      "overridesId": "ecosia@search.mozilla.org",
+      "thirdPartyId": "opensearch@search.mozilla.org",
+      "id": "a5f64364-3fdf-426e-94cf-b499460a58c9",
+      "last_modified": 1710168995099
+    },
+    {
+      "urls": [
+        {
+          "search_url": "https://www.qwant.com/?q={searchTerms}&client=ext-firefox-sb"
+        }
+      ],
+      "schema": 1710167604639,
+      "overridesId": "qwant@search.mozilla.org",
+      "thirdPartyId": "qwantcomforfirefox@jetpack",
+      "id": "b5b71917-3375-40d2-a538-3d07bfb989ac",
+      "last_modified": 1710168995095
+    },
+    {
+      "urls": [
+        {
+          "search_url": "https://www.qwant.com/?q={searchTerms}&client=ext-firefox-sb"
+        }
+      ],
+      "schema": 1710115218582,
+      "overridesId": "qwant@search.mozilla.org",
+      "thirdPartyId": "qwant-search-firefox@qwant.com",
+      "id": "c5de2b3f-da15-4bc5-b36f-9555043b5ef4",
+      "last_modified": 1710168995091
+    },
+    {
+      "urls": [
+        {
           "search_url": "https://duckduckgo.com/?q={searchTerms}&t=newext"
         }
       ],
@@ -13,5 +63,5 @@
       "last_modified": 1595254618540
     }
   ],
-  "timestamp": 1595254618540
+  "timestamp": 1710168995103
 }
