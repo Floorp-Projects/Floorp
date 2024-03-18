@@ -389,6 +389,10 @@ tooltip {
   pointer-events: none;
 }
 
+tooltip:not([position]) {
+  margin-top: 21px;
+}
+
 /**
  * It's important that these styles are in a UA sheet, because the default
  * tooltip is native anonymous content
