@@ -29,7 +29,7 @@ jobs:
         treeherder:
             symbol: android-l10n(I)
         worker:
-            source-repo: https://hg.mozilla.org/projects/oak
+            source-repo: https://hg.mozilla.org/integration/autoland
             android-l10n-import-info:
                 from-repo-url: https://github.com/mozilla-l10n/android-l10n
                 toml-info:
