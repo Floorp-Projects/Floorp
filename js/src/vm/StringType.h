@@ -659,6 +659,7 @@ class JSString : public js::gc::CellWithLengthAndFlags {
 
   inline bool canOwnDependentChars() const;
 
+  // Only called by the GC during nursery collection.
   inline void setBase(JSLinearString* newBase);
 
   void traceBase(JSTracer* trc);

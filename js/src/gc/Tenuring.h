@@ -59,13 +59,20 @@ class TenuringTracer final : public JSTracer {
   // collection when out of memory to insert new entries.
   mozilla::Maybe<StringDeDupSet> stringDeDupSet;
 
+  bool tenureEverything;
+
+  // A flag set when a GC thing is promoted to the next nursery generation (as
+  // opposed to the tenured heap). This is used to check when we need to add an
+  // edge to the remembered set during nursery collection.
+  bool promotedToNursery = false;
+
 #define DEFINE_ON_EDGE_METHOD(name, type, _1, _2) \
   void on##name##Edge(type** thingp, const char* name) override;
   JS_FOR_EACH_TRACEKIND(DEFINE_ON_EDGE_METHOD)
 #undef DEFINE_ON_EDGE_METHOD
 
  public:
-  TenuringTracer(JSRuntime* rt, Nursery* nursery);
+  TenuringTracer(JSRuntime* rt, Nursery* nursery, bool tenureEverything);
 
   Nursery& nursery() { return nursery_; }
 
@@ -87,14 +94,25 @@ class TenuringTracer final : public JSTracer {
   // The store buffers need to be able to call these directly.
   void traceObject(JSObject* obj);
   void traceObjectSlots(NativeObject* nobj, uint32_t start, uint32_t end);
-  void traceSlots(JS::Value* vp, uint32_t nslots);
+  void traceObjectElements(JS::Value* vp, uint32_t count);
   void traceString(JSString* str);
   void traceBigInt(JS::BigInt* bi);
 
+  // Methods to promote a live cell or get the pointer to its new location if
+  // that has already happened. The store buffers call these.
+  JSObject* promoteOrForward(JSObject* obj);
+  JSString* promoteOrForward(JSString* str);
+  JS::BigInt* promoteOrForward(JS::BigInt* bip);
+
+  template <typename T>
+  void traceBufferedCells(Arena* arena, ArenaCellSet* cells);
+
+  class AutoPromotedAnyToNursery;
+
  private:
-  MOZ_ALWAYS_INLINE void onNonForwardedNurseryObjectEdge(JSObject** objp);
-  MOZ_ALWAYS_INLINE void onNonForwardedNurseryStringEdge(JSString** strp);
-  MOZ_ALWAYS_INLINE void onNonForwardedNurseryBigIntEdge(JS::BigInt** bip);
+  MOZ_ALWAYS_INLINE JSObject* onNonForwardedNurseryObject(JSObject* obj);
+  MOZ_ALWAYS_INLINE JSString* onNonForwardedNurseryString(JSString* str);
+  MOZ_ALWAYS_INLINE JS::BigInt* onNonForwardedNurseryBigInt(JS::BigInt* bi);
 
   // The dependent string chars needs to be relocated if the base which it's
   // using chars from has been deduplicated.
@@ -109,9 +127,12 @@ class TenuringTracer final : public JSTracer {
   inline void insertIntoStringFixupList(gc::StringRelocationOverlay* entry);
 
   template <typename T>
-  inline T* allocTenured(JS::Zone* zone, gc::AllocKind kind);
-  JSString* allocTenuredString(JSString* src, JS::Zone* zone,
-                               gc::AllocKind dstKind);
+  T* alloc(JS::Zone* zone, gc::AllocKind kind, gc::Cell* src);
+  template <JS::TraceKind traceKind>
+  void* allocCell(JS::Zone* zone, gc::AllocKind allocKind, gc::Cell* src);
+  JSString* allocString(JSString* src, JS::Zone* zone, gc::AllocKind dstKind);
+
+  bool shouldTenure(Zone* zone, JS::TraceKind traceKind, Cell* cell);
 
   inline JSObject* movePlainObjectToTenured(PlainObject* src);
   JSObject* moveToTenuredSlow(JSObject* src);

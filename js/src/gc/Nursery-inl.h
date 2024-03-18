@@ -16,11 +16,77 @@
 #include "vm/JSContext.h"
 #include "vm/NativeObject.h"
 
+namespace js {
+namespace gc {
+struct Cell;
+}  // namespace gc
+}  // namespace js
+
 inline JSRuntime* js::Nursery::runtime() const { return gc->rt; }
 
 template <typename T>
 bool js::Nursery::isInside(const SharedMem<T>& p) const {
   return isInside(p.unwrap(/*safe - used for value in comparison above*/));
+}
+
+inline bool js::Nursery::shouldTenure(gc::Cell* cell) {
+  MOZ_ASSERT(semispaceEnabled());
+  MOZ_ASSERT(inCollectedRegion(cell));
+
+  size_t offset = fromSpace.offsetFromAddress(uintptr_t(cell));
+  MOZ_ASSERT(offset >=
+             fromSpace.offsetFromExclusiveAddress(fromSpace.startPosition_));
+  return offset <= tenureThreshold_;
+}
+
+inline bool js::Nursery::inCollectedRegion(gc::Cell* cell) const {
+  if (!IsInsideNursery(cell)) {
+    return false;
+  }
+
+  if (!semispaceEnabled()) {
+    return true;
+  }
+
+  return fromSpace.isInside(cell);
+}
+
+inline bool js::Nursery::inCollectedRegion(void* ptr) const {
+  if (!semispaceEnabled()) {
+    return toSpace.isInside(ptr);
+  }
+
+  return fromSpace.isInside(ptr);
+}
+
+inline size_t js::Nursery::Space::offsetFromExclusiveAddress(
+    uintptr_t addr) const {
+  if ((addr & gc::ChunkMask) == 0) {
+    // |addr| points one past the end of the previous chunk.
+    return offsetFromAddress(addr - 1) + 1;
+  }
+
+  return offsetFromAddress(addr);
+}
+
+inline size_t js::Nursery::Space::offsetFromAddress(uintptr_t addr) const {
+  uintptr_t chunkAddr = addr & ~gc::ChunkMask;
+
+  uint32_t chunkIndex = INT32_MAX;
+  for (size_t i = 0; i < chunks_.length(); i++) {
+    if (uintptr_t(chunks_[i]) == chunkAddr) {
+      chunkIndex = i;
+      break;
+    }
+  }
+  MOZ_ASSERT(chunkIndex < chunks_.length(),
+             "Nursery chunk containing |addr| not found");
+
+  uint32_t offset = addr & gc::ChunkMask;
+  MOZ_ASSERT(offset >= sizeof(gc::ChunkBase));
+  MOZ_ASSERT(offset < gc::ChunkSize);
+
+  return (chunkIndex << gc::ChunkShift) | offset;
 }
 
 MOZ_ALWAYS_INLINE /* static */ bool js::Nursery::getForwardedPointer(
@@ -80,7 +146,7 @@ inline void js::Nursery::setForwardingPointer(void* oldData, void* newData,
 inline void js::Nursery::setDirectForwardingPointer(void* oldData,
                                                     void* newData) {
   MOZ_ASSERT(isInside(oldData));
-  MOZ_ASSERT(!isInside(newData));
+  MOZ_ASSERT_IF(isInside(newData), !inCollectedRegion(newData));
 
   new (oldData) BufferRelocationOverlay{newData};
 }
@@ -123,7 +189,7 @@ inline void* js::Nursery::tryAllocateCell(gc::AllocSite* site, size_t size,
 
 inline void* js::Nursery::tryAllocate(size_t size) {
   MOZ_ASSERT(isEnabled());
-  MOZ_ASSERT(!JS::RuntimeHeapIsBusy());
+  MOZ_ASSERT_IF(JS::RuntimeHeapIsBusy(), JS::RuntimeHeapIsMinorCollecting());
   MOZ_ASSERT_IF(currentChunk() == startChunk(), position() >= startPosition());
   MOZ_ASSERT(size % gc::CellAlignBytes == 0);
   MOZ_ASSERT(position() % gc::CellAlignBytes == 0);

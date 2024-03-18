@@ -110,7 +110,7 @@ bool JSJitFrameIter::isFunctionFrame() const {
 
 JSScript* JSJitFrameIter::script() const {
   MOZ_ASSERT(isScripted());
-  JSScript* script = ScriptFromCalleeToken(calleeToken());
+  JSScript* script = MaybeForwardedScriptFromCalleeToken(calleeToken());
   MOZ_ASSERT(script);
   return script;
 }

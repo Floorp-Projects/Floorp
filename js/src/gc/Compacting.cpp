@@ -215,7 +215,7 @@ static void RelocateCell(Zone* zone, TenuredCell* src, AllocKind thingKind,
   // Allocate a new cell.
   MOZ_ASSERT(zone == src->zone());
   TenuredCell* dst =
-      reinterpret_cast<TenuredCell*>(AllocateCellInGC(zone, thingKind));
+      reinterpret_cast<TenuredCell*>(AllocateTenuredCellInGC(zone, thingKind));
 
   // Copy source cell contents to destination.
   memcpy(dst, src, thingSize);

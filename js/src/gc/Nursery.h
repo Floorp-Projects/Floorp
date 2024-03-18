@@ -207,6 +207,7 @@ class Nursery {
 
   // Mark a malloced buffer as no longer needing to be freed.
   void removeMallocedBuffer(void* buffer, size_t nbytes) {
+    MOZ_ASSERT(!JS::RuntimeHeapIsMinorCollecting());
     MOZ_ASSERT(mallocedBuffers.has(buffer));
     MOZ_ASSERT(nbytes > 0);
     MOZ_ASSERT(mallocedBufferBytes >= nbytes);
@@ -219,8 +220,8 @@ class Nursery {
   // buffers will soon be freed.
   void removeMallocedBufferDuringMinorGC(void* buffer) {
     MOZ_ASSERT(JS::RuntimeHeapIsMinorCollecting());
-    MOZ_ASSERT(mallocedBuffers.has(buffer));
-    mallocedBuffers.remove(buffer);
+    MOZ_ASSERT(prevMallocedBuffers.has(buffer));
+    prevMallocedBuffers.remove(buffer);
   }
 
   [[nodiscard]] bool addedUniqueIdToCell(gc::Cell* cell) {
@@ -329,6 +330,14 @@ class Nursery {
 
   void setAllocFlagsForZone(JS::Zone* zone);
 
+  bool shouldTenureEverything(JS::GCReason reason);
+
+  inline bool inCollectedRegion(gc::Cell* cell) const;
+  inline bool inCollectedRegion(void* ptr) const;
+
+  void trackMallocedBufferOnPromotion(void* buffer, gc::Cell* owner,
+                                      size_t nbytes, MemoryUse use);
+
   // Round a size in bytes to the nearest valid nursery size.
   static size_t roundSize(size_t size);
 
@@ -406,9 +415,7 @@ class Nursery {
   bool initFirstChunk(AutoLockGCBgAlloc& lock);
   void setCapacity(size_t newCapacity);
 
-  // extent is advisory, it will be ignored in sub-chunk and generational zeal
-  // modes. It will be clamped to Min(NurseryChunkUsableSize, capacity_).
-  void poisonAndInitCurrentChunk(size_t extent = gc::ChunkSize);
+  void poisonAndInitCurrentChunk();
 
   void setCurrentEnd();
   void setStartToCurrentPosition();
@@ -467,14 +474,17 @@ class Nursery {
                                            uint32_t capacity);
 
 #ifdef DEBUG
-  bool checkForwardingPointerLocation(void* ptr, bool expectedInside);
+  bool checkForwardingPointerInsideNursery(void* ptr);
 #endif
 
   // Updates pointers to nursery objects that have been tenured and discards
   // pointers to objects that have been freed.
   void sweep();
 
-  // Reset the current chunk and position after a minor collection. Also poison
+  // In a minor GC, resets the start and end positions, the current chunk and
+  // current position.
+  void setNewExtentAndPosition();
+
   // the nursery on debug & nightly builds.
   void clear();
 
@@ -498,6 +508,8 @@ class Nursery {
   // Free the chunks starting at firstFreeChunk until the end of the chunks
   // vector. Shrinks the vector but does not update maxChunkCount().
   void freeChunksFrom(Space& space, unsigned firstFreeChunk);
+
+  inline bool shouldTenure(gc::Cell* cell);
 
   void sendTelemetry(JS::GCReason reason, mozilla::TimeDuration totalTime,
                      bool wasEmpty, double promotionRate,
@@ -543,6 +555,11 @@ class Nursery {
     inline bool isEmpty() const;
     inline bool isInside(const void* p) const;
 
+    // Return the logical offset within the nursery of an address in a nursery
+    // chunk (chunks are discontiguous in memory).
+    inline size_t offsetFromAddress(uintptr_t addr) const;
+    inline size_t offsetFromExclusiveAddress(uintptr_t addr) const;
+
     void clear(Nursery* nursery);
     void moveToStartOfChunk(Nursery* nursery, unsigned chunkno);
     void setCurrentEnd(Nursery* nursery);
@@ -561,6 +578,8 @@ class Nursery {
   // value without a collection, allocating chunks on demand. This limit may be
   // changed by maybeResizeNursery() each collection. It includes chunk headers.
   size_t capacity_;
+
+  uintptr_t tenureThreshold_ = 0;
 
   gc::PretenuringNursery pretenuringNursery;
 
@@ -623,6 +642,7 @@ class Nursery {
   using BufferRelocationOverlay = void*;
   using BufferSet = HashSet<void*, PointerHasher<void*>, SystemAllocPolicy>;
   BufferSet mallocedBuffers;
+  BufferSet prevMallocedBuffers;
   size_t mallocedBufferBytes = 0;
 
   // Wasm "trailer" (C++-heap-allocated) blocks.  See comments above on

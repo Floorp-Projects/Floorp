@@ -329,7 +329,7 @@ inline bool IsOOMReason(JS::GCReason reason) {
          reason == JS::GCReason::MEM_PRESSURE;
 }
 
-void* AllocateCellInGC(JS::Zone* zone, AllocKind thingKind);
+void* AllocateTenuredCellInGC(JS::Zone* zone, AllocKind thingKind);
 
 void ReadProfileEnv(const char* envName, const char* helpText, bool* enableOut,
                     bool* workersOut, mozilla::TimeDuration* thresholdOut);

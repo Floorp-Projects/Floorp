@@ -199,7 +199,6 @@ size_t FixedLengthTypedArrayObject::objectMoved(JSObject* obj, JSObject* old) {
   auto* newObj = &obj->as<FixedLengthTypedArrayObject>();
   const auto* oldObj = &old->as<FixedLengthTypedArrayObject>();
   MOZ_ASSERT(newObj->elementsRaw() == oldObj->elementsRaw());
-  MOZ_ASSERT(obj->isTenured());
 
   // Typed arrays with a buffer object do not need an update.
   if (oldObj->hasBuffer()) {
