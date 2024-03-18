@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Removed proxying objects - Bug 1878638: Remove handle duplication rules for Windows process sandboxes
+Merge day clobber 2024-03-18
