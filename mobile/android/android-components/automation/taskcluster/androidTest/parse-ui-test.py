@@ -31,6 +31,12 @@ def parse_args(cmdln_args):
         "--exit-code", type=int, help="Exit code of flank.", required=True
     )
     parser.add_argument("--device-type", help="Type of device ", required=True)
+    parser.add_argument(
+        "--report-treeherder-failures",
+        help="Report failures in treeherder format.",
+        required=False,
+    )
+
     return parser.parse_args(args=cmdln_args)
 
 
@@ -62,7 +68,11 @@ def main():
                 **matrix_result
             )
         )
-        if matrix_result["outcome"] != "success":
+        if (
+            args.report_treeherder_failures
+            and matrix_result["outcome"] != "success"
+            and matrix_result["outcome"] != "flaky"
+        ):
             # write failures to test log in format known to treeherder logviewer
             sys.stdout.write(
                 f"TEST-UNEXPECTED-FAIL | {matrix_result['outcome']} | {matrix_result['webLink']} | {matrix_result['axes'][0]['details']}\n"
