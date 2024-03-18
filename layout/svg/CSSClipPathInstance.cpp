@@ -66,7 +66,7 @@ bool CSSClipPathInstance::HitTestBasicShapeOrPathClip(nsIFrame* aFrame,
   RefPtr<Path> path = instance.CreateClipPath(
       drawTarget, SVGUtils::GetCSSPxToDevPxMatrix(aFrame));
   float pixelRatio = float(AppUnitsPerCSSPixel()) /
-                     aFrame->PresContext()->AppUnitsPerDevPixel();
+                     float(aFrame->PresContext()->AppUnitsPerDevPixel());
   return path && path->ContainsPoint(ToPoint(aPoint) * pixelRatio, Matrix());
 }
 
@@ -124,8 +124,7 @@ already_AddRefed<Path> CSSClipPathInstance::CreateClipPath(
     case StyleBasicShape::Tag::Path:
       return CreateClipPathPath(aDrawTarget, r);
     case StyleBasicShape::Tag::Shape:
-      // TODO: Support shape() in this patch series.
-      return nullptr;
+      return CreateClipPathShape(aDrawTarget, r);
     default:
       MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unexpected shape type");
   }
@@ -183,13 +182,36 @@ already_AddRefed<Path> CSSClipPathInstance::CreateClipPathPath(
   RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder(
       path.fill == StyleFillRule::Nonzero ? FillRule::FILL_WINDING
                                           : FillRule::FILL_EVEN_ODD);
-  nscoord appUnitsPerDevPixel =
+  const nscoord appUnitsPerDevPixel =
       mTargetFrame->PresContext()->AppUnitsPerDevPixel();
-  float scale = float(AppUnitsPerCSSPixel()) / appUnitsPerDevPixel;
-  Point offset = Point(aRefBox.x, aRefBox.y) / appUnitsPerDevPixel;
+  const Point offset =
+      LayoutDevicePoint::FromAppUnits(aRefBox.TopLeft(), appUnitsPerDevPixel)
+          .ToUnknownPoint();
+  const float scale = float(AppUnitsPerCSSPixel()) / float(appUnitsPerDevPixel);
 
   return SVGPathData::BuildPath(path.path._0.AsSpan(), builder,
-                                StyleStrokeLinecap::Butt, 0.0, offset, scale);
+                                StyleStrokeLinecap::Butt, 0.0, {}, offset,
+                                scale);
+}
+
+already_AddRefed<Path> CSSClipPathInstance::CreateClipPathShape(
+    DrawTarget* aDrawTarget, const nsRect& aRefBox) {
+  const auto& shape = mClipPathStyle.AsShape()._0->AsShape();
+
+  RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder(
+      shape.fill == StyleFillRule::Nonzero ? FillRule::FILL_WINDING
+                                           : FillRule::FILL_EVEN_ODD);
+  const nscoord appUnitsPerDevPixel =
+      mTargetFrame->PresContext()->AppUnitsPerDevPixel();
+  const CSSSize basis = CSSSize::FromAppUnits(aRefBox.Size());
+  const Point offset =
+      LayoutDevicePoint::FromAppUnits(aRefBox.TopLeft(), appUnitsPerDevPixel)
+          .ToUnknownPoint();
+  const float scale = float(AppUnitsPerCSSPixel()) / float(appUnitsPerDevPixel);
+
+  return SVGPathData::BuildPath(shape.commands.AsSpan(), builder,
+                                StyleStrokeLinecap::Butt, 0.0, basis, offset,
+                                scale);
 }
 
 }  // namespace mozilla
