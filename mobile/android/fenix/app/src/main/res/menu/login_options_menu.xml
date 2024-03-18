@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/loginOptionsEditDelete"
+    android:contentDescription="@string/login_options_menu_2"
+    android:title="@string/login_options_menu_2"
+    app:showAsAction="never" >
+
+    <item
+        android:id="@+id/edit_login_button"
+        android:contentDescription="@string/login_menu_edit_button"
+        android:icon="@drawable/ic_edit"
+        android:minWidth="82dp"
+        android:padding="20dp"
+        android:paddingStart="20dp"
+        android:title="@string/login_menu_edit_button"
+        app:iconTint="?attr/textPrimary"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/delete_login_button"
+        android:contentDescription="@string/login_menu_delete_button"
+        android:icon="@drawable/ic_delete"
+        android:minWidth="82dp"
+        android:padding="20dp"
+        android:paddingStart="20dp"
+        android:title="@string/login_menu_delete_button"
+        app:iconTint="?attr/textPrimary"
+        app:showAsAction="never" />
+</menu>

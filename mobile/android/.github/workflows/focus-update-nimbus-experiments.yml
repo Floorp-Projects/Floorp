@@ -1,0 +1,40 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/
+
+name: "Focus - Update Nimbus Experiments"
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  focus-update-nimbus-experiments:
+    name: "Update Nimbus Experiments"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout Main Branch"
+        uses: actions/checkout@v3
+        with:
+          path: focus-android
+          ref: main
+          fetch-depth: 0
+      - name: "Update Experiments JSON"
+        id: update-experiments-json
+        uses: mozilla-mobile/update-experiments@v3
+        with:
+          repo-path: focus-android
+          output-path: focus-android/app/src/main/res/raw/initial_experiments.json
+          experimenter-url: https://experimenter.services.mozilla.com/api/v6/experiments-first-run/
+          app-name: focus_android
+          branch: automation/update-focus-nimbus-experiments
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v4
+        if: steps.update-experiments-json.outputs.changed == 1 && steps.update-experiments-json.outputs.changed-branch >= 1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: focus-android
+          branch: automation/update-focus-nimbus-experiments
+          commit-message: "Update Focus initial_experiments.json based on the current first-run experiments in experimenter"
+          title: "Update Focus initial experiments JSON for Nimbus"
+          body: "This (automated) PR updates the initial_experiments.json on the `main` branch"
+          delete-branch: true

@@ -1,0 +1,52 @@
+base_ref: releases_v109
+base_repository: https://github.com/mozilla-mobile/firefox-android
+base_rev: 9091c35b063e78f7718cfabc4e5027bb24476933
+build_date: 1670958313
+build_number: 3
+do_not_optimize: []
+enable_always_target: true
+existing_tasks:
+  build-apk-focus-android-test-beta: GulO8hgwR06jcUkpZzRepw
+  build-apk-focus-android-test-debug: eTW_HhAuR8SscG_1fpMCoQ
+  build-apk-focus-beta-firebase: c1aE9qDrRiG1mNiT6IWEnQ
+  build-apk-focus-debug: NHDODD5lTqmvEAX0tnEk-A
+  build-docker-image-android-build: FV4s6mdvSN-Oar7m-q1FXQ
+  build-docker-image-base: ESJNzsUUQuqpCRy9V07EwQ
+  build-docker-image-ui-tests: dmeBJHAqQ4KM_-pig0vSOw
+  build-samples-browser-gecko: FSKj2itwS3y0IYPqVuqrlg
+  build-samples-browser-system: QYI_ywAhS0mmfRcI6BwFNA
+  complete-push: Hec-pdMqRbi9HGMXxtNWpA
+  complete-push-1: bEcFsUmWRJic_gqfwwTMZw
+  complete-push-2: NORkIkoEQNWodLdH_TKcvA
+  fetch-android-sdk-3859397: cO7NDIrPRsidIL_1e0vtHg
+  signing-apk-focus-android-test-beta: fKuuYDv6SZ6EJttH_WydKA
+  signing-apk-focus-android-test-debug: OTAvF1wDRhmwXvIudH3K7A
+  signing-apk-focus-beta-firebase: MrGnD5O0Qjaf0TSKwJrAcQ
+  signing-apk-focus-debug: EH9LAwLCTxCikF-bCvzSKA
+  test-focus-debug: bd2ua6_ITsazB5vFp1Mq1g
+  toolchain-linux64-android-gradle-dependencies: JIgBEJMNRDSPlgDcoTXyqg
+  toolchain-linux64-android-sdk-linux-repack: DosXH3FyTFGjz9vH9bKVJg
+  ui-test-focus-arm-beta: RguHFzRrST6nHjL8wMihBw
+  ui-test-focus-arm-debug: A0R9EF61RqWmEGfjCXN-Rg
+filters:
+- target_tasks_method
+head_ref: releases_v109
+head_repository: https://github.com/mozilla-mobile/firefox-android
+head_rev: 643bd70bbb9a1850cfa2cc1e8b20ea2ed39d596f
+head_tag: v109.0b1
+level: '3'
+moz_build_date: '20221213190513'
+next_version: 109.0b2
+optimize_strategies: null
+optimize_target_tasks: true
+owner: ryanvm@gmail.com
+project: firefox-android
+pull_request_number: null
+pushdate: 0
+pushlog_id: '0'
+release_type: beta
+repository_type: git
+shipping_phase: push
+target_tasks_method: push
+tasks_for: action
+version: 109.0b1

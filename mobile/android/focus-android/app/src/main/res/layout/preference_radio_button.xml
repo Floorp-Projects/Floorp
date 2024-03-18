@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/constraintLayout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:baselineAligned="false">
+
+    <RadioButton
+        android:id="@+id/radio_button"
+        android:layout_width="@dimen/radio_button_preference_height"
+        android:layout_height="@dimen/radio_button_preference_width"
+        android:background="@android:color/transparent"
+        android:layout_gravity="start"
+        android:button="@null"
+        android:clickable="false"
+        android:focusable="false"
+        android:layout_marginStart="@dimen/radio_button_preference_start_margin"
+        tools:drawableStart="?android:attr/listChoiceIndicatorSingle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="0dp"
+        android:layout_marginStart="@dimen/radio_button_preference_title_margins"
+        android:layout_height="wrap_content"
+        android:gravity="center|start"
+        android:layout_marginEnd="@dimen/radio_button_preference_title_margins"
+        tools:text="@tools:sample/lorem"
+        android:textAlignment="viewStart"
+        android:textAppearance="?android:attr/textAppearanceListItem"
+        app:layout_constraintTop_toTopOf="@id/radio_button"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/radio_button"
+        app:layout_constraintBottom_toBottomOf="@id/radio_button"/>
+
+    <TextView
+        android:id="@+id/widget_summary"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textAlignment="viewStart"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:textColor="?android:attr/textColorSecondary"
+        tools:text="@tools:sample/lorem"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/title"
+        app:layout_constraintTop_toBottomOf="@id/title"
+        app:layout_constraintStart_toStartOf="@id/title" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

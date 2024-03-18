@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="UnusedResources">
+
+    <!-- Designers specify the Roboto fontFamily as "Roboto Medium" but they appear in Android as
+         "sans-serif-medium": this file aliases the Android definitions to those used by the designers.
+
+         This solution is adapted from SO: https://stackoverflow.com/a/26545517 and https://stackoverflow.com/a/42927799 -->
+    <string name="font_roboto_regular">sans-serif</string>
+    <string name="font_roboto_light">sans-serif-light</string>
+    <string name="font_roboto_condensed">sans-serif-condensed</string>
+    <string name="font_roboto_black">sans-serif-black</string>
+    <string name="font_roboto_thin">sans-serif-thin</string> <!-- API 17+ -->
+    <string name="font_roboto_medium">sans-serif-medium</string> <!-- API 21+ -->
+
+</resources>

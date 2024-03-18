@@ -1,0 +1,13 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * veniceincoming.com - site is not usable
+ * Bug #1765947 - https://bugzilla.mozilla.org/show_bug.cgi?id=1765947
+ * WebCompat issue #102133 - https://webcompat.com/issues/102133
+ */
+
+.tour-list .single-tour .mobile-link {
+  left: 0;
+}

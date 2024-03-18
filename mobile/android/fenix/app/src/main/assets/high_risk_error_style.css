@@ -1,0 +1,29 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:root {
+  --background-color: #c50042;
+  --text-color: #ffffff;
+  --primary-button-color: #e6e6eb;
+  --primary-button-text-color: #2f2c61;
+  --header-color: #ffffff;
+}
+
+p {
+  line-height: 20px;
+  margin: var(--moz-vertical-spacing) 0;
+  color: #ffffff;
+}
+
+/* On large width devices, apply specific styles here. Often triggered by landscape mode or tablets */
+@media (min-width: 550px) {
+  /* If the device is tall as well, add some padding to make content feel a bit more centered */
+  @media (min-height: 550px) {
+    #errorPageContainer {
+      -webkit-box-sizing: border-box;
+      -moz-box-sizing: border-box;
+      box-sizing: border-box;
+    }
+  }
+}

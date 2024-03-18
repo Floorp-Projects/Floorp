@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width; user-scalable=false;" />
+    <meta http-equiv="Content-Security-Policy" content="default-src resource:; object-src 'none'" />
+    <link rel="stylesheet" type="text/css" href="shared_error_style.css" />
+    <link rel="stylesheet" type="text/css" href="high_risk_error_style.css" />
+  </head>
+
+  <body id="errorPage" dir="auto">
+    <!-- PAGE CONTAINER (for styling purposes only) -->
+    <div id="errorPageContainer">
+      <!-- Error Image -->
+      <iframe id="errorImage" src="" frameborder="0"></iframe>
+
+      <!-- Error Title -->
+      <div id="errorTitle">
+        <h1 id="errorTitleText"></h1>
+      </div>
+
+      <!-- LONG CONTENT (the section most likely to require scrolling) -->
+      <div id="errorLongContent">
+        <div id="errorShortDesc"></div>
+      </div>
+
+      <!-- Back Button -->
+      <button id="backButton">Go back</button>
+    </div>
+  </body>
+
+  <script src="./highRiskErrorPages.js"></script>
+</html>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<resources>
+    <attr name="mozac_font_semibold" format="reference" />
+    <attr name="mozac_accent" format="reference" />
+    <attr name="mozac_contrast_text" format="reference" />
+
+    <!-- Background color for favicon widget box -->
+    <attr name="mozac_widget_favicon_background_color" format="reference" />
+    <!-- Border color for favicon widget box -->
+    <attr name="mozac_widget_favicon_border_color" format="reference" />
+
+    <!-- Label color and icon button tint for site item widget -->
+    <attr name="mozac_primary_text_color" format="reference" />
+    <!-- Caption color for site item widget -->
+    <attr name="mozac_caption_text_color" format="reference" />
+</resources>

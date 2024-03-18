@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Message announced to the user when tab tray is selected with 1 tab -->
+    <string name="mozac_tab_counter_open_tab_tray_single">1 nā\'nïn rakïj ñanj. Gūru\'man ra\'a da\' nādūnāt rakïj ñanj.</string>
+    <!-- Message announced to the user when tab tray is selected with multiple tabs -->
+    <string name="mozac_tab_counter_open_tab_tray_plural">%1$s nā\'nïn nej rakïj ñanj. Gūru\'man ra\'a da\' nādūnāt nej rakïj ñanj.</string>
+    <!-- Browser menu button that creates a new tab -->
+    <string name="mozac_browser_menu_new_tab">Rakïj ñanj nākàa</string>
+    <!-- Browser menu button that creates a private tab -->
+    <string name="mozac_browser_menu_new_private_tab">Rakïj ñaj nākà gārasun \'ngō rïn\'</string>
+    <!-- Browser menu button to close tab. Closes the current session when pressed. -->
+    <string name="mozac_close_tab">Narán rakïj ñanj</string>
+    <!-- Menu option to duplicate the current tab -->
+    <string name="mozac_ui_tabcounter_duplicate_tab">Rakïj ñanj nata’a</string>
+    <!-- Content description of the tab counter toolbar button -->
+    <string name="mozac_tab_counter_content_description">Butûn riña ‘na’ nej dukuán ahia nej si rāsun nej rakïj ñanj.</string>
+</resources>

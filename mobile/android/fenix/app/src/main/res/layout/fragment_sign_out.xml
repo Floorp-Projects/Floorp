@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/sign_out_fragment"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/layer1"
+    android:padding="8dp">
+
+    <TextView
+        android:id="@+id/sign_out_message"
+        style="@style/QuickSettingsText.Icon"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="@string/sign_out_confirmation_message_2"
+        android:textSize="16sp"
+        app:drawableStartCompat="@drawable/ic_info"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/signOutCancel"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:letterSpacing="0"
+        android:padding="10dp"
+        android:scrollbars="none"
+        android:text="@string/sign_out_cancel"
+        android:textAlignment="center"
+        android:textAllCaps="false"
+        android:textColor="?attr/textPrimary"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/signOutDisconnect"
+        app:layout_constraintTop_toBottomOf="@id/sign_out_message" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/signOutDisconnect"
+        style="@style/PositiveButton"
+        android:layout_width="wrap_content"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:text="@string/sign_out_disconnect"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/sign_out_message" />
+</androidx.constraintlayout.widget.ConstraintLayout>

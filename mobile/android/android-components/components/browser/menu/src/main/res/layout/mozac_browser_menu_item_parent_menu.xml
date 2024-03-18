@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    style="@style/Mozac.Browser.Menu.Item.Container"
+    android:layout_width="match_parent"
+    android:orientation="horizontal"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center_vertical"
+    tools:ignore="UseCompoundDrawables">
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/image"
+        style="@style/Mozac.Browser.Menu.Item.ImageText.Icon"
+        android:clickable="false"
+        android:background="@android:color/transparent"
+        android:importantForAccessibility="no"
+        tools:src="@android:drawable/screen_background_dark"/>
+
+    <TextView
+        android:id="@+id/text"
+        style="@style/Mozac.Browser.Menu.Item.ImageText.Label"
+        android:clickable="false"
+        android:focusable="false"
+        android:background="@android:color/transparent"
+        android:gravity="center_vertical"
+        tools:text="Item"
+        android:importantForAccessibility="no"/>
+
+    <View
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:layout_weight="1"/>
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/overflowImage"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:clickable="false"
+        android:visibility="gone"
+        android:background="@android:color/transparent"
+        android:importantForAccessibility="no"
+        app:srcCompat="@drawable/mozac_ic_chevron_right_24"/>
+</LinearLayout>

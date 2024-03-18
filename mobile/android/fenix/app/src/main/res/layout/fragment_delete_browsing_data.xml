@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent">
+    <ProgressBar
+        android:id="@+id/progress_bar"
+        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+        android:indeterminate="true"
+        android:layout_width="match_parent"
+        android:layout_height="8dp"
+        android:translationY="-3dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+    <ScrollView
+        android:id="@+id/delete_browsing_data_wrapper"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
+        <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+            <org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataItem
+                android:id="@+id/open_tabs_item"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?android:attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                app:deleteBrowsingDataItemTitle="@string/preferences_delete_browsing_data_tabs_title_2"
+                app:deleteBrowsingDataItemSubtitle="@string/preferences_delete_browsing_data_tabs_subtitle" />
+            <org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataItem
+                android:id="@+id/browsing_history_item"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?android:attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                app:deleteBrowsingDataItemTitle="@string/preferences_delete_browsing_data_browsing_history_title"
+                app:deleteBrowsingDataItemSubtitle="@string/preferences_delete_browsing_data_browsing_data_subtitle" />
+            <org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataItem
+                android:id="@+id/cookies_and_site_data_item"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?android:attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:visibility="gone"
+                app:deleteBrowsingDataItemTitle="@string/preferences_delete_browsing_data_cookies_and_site_data"
+                app:deleteBrowsingDataItemSubtitle="@string/preferences_delete_browsing_data_cookies_subtitle" />
+            <org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataItem
+                android:id="@+id/cached_files_item"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?android:attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:visibility="gone"
+                app:deleteBrowsingDataItemTitle="@string/preferences_delete_browsing_data_cached_files"
+                app:deleteBrowsingDataItemSubtitle="@string/preferences_delete_browsing_data_cached_files_subtitle" />
+            <org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataItem
+                android:id="@+id/site_permissions_item"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?android:attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:visibility="gone"
+                app:deleteBrowsingDataItemTitle="@string/preferences_delete_browsing_data_site_permissions" />
+            <org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataItem
+                android:id="@+id/downloads_item"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?android:attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:visibility="gone"
+                app:deleteBrowsingDataItemTitle="@string/preferences_delete_browsing_data_downloads" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/delete_data"
+                style="@style/DestructiveButton"
+                android:layout_marginHorizontal="16dp"
+                android:text="@string/preferences_delete_browsing_data_button" />
+        </LinearLayout>
+    </ScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>

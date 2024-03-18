@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <androidx.preference.Preference
+        android:key="@string/pref_key_etp_learn_more"
+        android:layout="@layout/tracking_protection_learn_more_preference"
+        android:summary="@string/preference_enhanced_tracking_protection_explanation_2"
+        app:allowDividerBelow="false" />
+    <org.mozilla.fenix.settings.FenixSwitchPreference
+        android:defaultValue="true"
+        android:key="@string/pref_key_tracking_protection"
+        android:summary="@string/preference_enhanced_tracking_protection_summary"
+        android:title="@string/preference_enhanced_tracking_protection"
+        app:iconSpaceReserved="false" />
+    <org.mozilla.fenix.settings.RadioButtonInfoPreference
+        android:defaultValue="true"
+        android:dependency="@string/pref_key_tracking_protection"
+        android:key="@string/pref_key_tracking_protection_standard_option"
+        android:summary="@string/preference_enhanced_tracking_protection_standard_description_5"
+        android:title="@string/preference_enhanced_tracking_protection_standard_default_1" />
+    <org.mozilla.fenix.settings.RadioButtonInfoPreference
+        android:defaultValue="false"
+        android:dependency="@string/pref_key_tracking_protection"
+        android:key="@string/pref_key_tracking_protection_strict_default"
+        android:summary="@string/preference_enhanced_tracking_protection_strict_description_4"
+        android:title="@string/preference_enhanced_tracking_protection_strict" />
+    <org.mozilla.fenix.settings.RadioButtonInfoPreference
+        android:defaultValue="false"
+        android:dependency="@string/pref_key_tracking_protection"
+        android:key="@string/pref_key_tracking_protection_custom_option"
+        android:summary="@string/preference_enhanced_tracking_protection_custom_description_2"
+        android:title="@string/preference_enhanced_tracking_protection_custom" />
+    <CheckBoxPreference
+        android:defaultValue="true"
+        android:dependency="@string/pref_key_tracking_protection_custom_option"
+        android:key="@string/pref_key_tracking_protection_custom_cookies"
+        android:layout="@layout/checkbox_left_preference_etp"
+        android:title="@string/preference_enhanced_tracking_protection_custom_cookies" />
+    <org.mozilla.fenix.settings.CustomEtpCookiesOptionsDropDownListPreference
+        android:defaultValue="@string/social"
+        android:dependency="@string/pref_key_tracking_protection_custom_cookies"
+        android:entries="@array/cookies_options_entries"
+        android:entryValues="@array/cookies_options_entry_values"
+        android:key="@string/pref_key_tracking_protection_custom_cookies_select"
+        app:useSimpleSummaryProvider="true" />
+    <CheckBoxPreference
+        android:defaultValue="true"
+        android:dependency="@string/pref_key_tracking_protection_custom_option"
+        android:key="@string/pref_key_tracking_protection_custom_tracking_content"
+        android:layout="@layout/checkbox_left_preference_etp"
+        android:title="@string/preference_enhanced_tracking_protection_custom_tracking_content" />
+    <org.mozilla.fenix.settings.DropDownListPreference
+        android:defaultValue="@string/all"
+        android:dependency="@string/pref_key_tracking_protection_custom_tracking_content"
+        android:entries="@array/tracking_content_options_entries"
+        android:entryValues="@array/tracking_content_options_entry_values"
+        android:key="@string/pref_key_tracking_protection_custom_tracking_content_select"
+        app:useSimpleSummaryProvider="true" />
+    <CheckBoxPreference
+        android:defaultValue="true"
+        android:dependency="@string/pref_key_tracking_protection_custom_option"
+        android:key="@string/pref_key_tracking_protection_custom_cryptominers"
+        android:layout="@layout/checkbox_left_preference_etp"
+        android:title="@string/preference_enhanced_tracking_protection_custom_cryptominers" />
+    <CheckBoxPreference
+        android:defaultValue="true"
+        android:dependency="@string/pref_key_tracking_protection_custom_option"
+        android:key="@string/pref_key_tracking_protection_custom_fingerprinters"
+        android:layout="@layout/checkbox_left_preference_etp"
+        android:title="@string/preference_enhanced_tracking_protection_custom_fingerprinters" />
+    <CheckBoxPreference
+        android:defaultValue="true"
+        android:dependency="@string/pref_key_tracking_protection_custom_option"
+        android:key="@string/pref_key_tracking_protection_redirect_trackers"
+        android:layout="@layout/checkbox_left_preference_etp"
+        android:title="@string/etp_redirect_trackers_title" />
+    <androidx.preference.SwitchPreference
+        android:defaultValue="false"
+        android:key="@string/pref_key_privacy_enable_global_privacy_control"
+        android:title="@string/preference_enhanced_tracking_protection_custom_global_privacy_control" />
+    <Preference android:layout="@layout/preference_divider" />
+    <Preference
+        android:icon="@drawable/ic_internet"
+        android:key="@string/pref_key_tracking_protection_exceptions"
+        android:layout="@layout/preference_no_widget"
+        android:title="@string/preferences_tracking_protection_exceptions" />
+</androidx.preference.PreferenceScreen>

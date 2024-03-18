@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Html_Control_Form</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+</head>
+
+<p>Calendar Form</p>
+<section>
+    <input type="date" id="calendar">
+    <button onclick="printDate()" id="submitDate"> Submit date </button>
+    <div id="displayDate"></div>
+</section>
+
+<p>Clock Form</p>
+<section>
+    <input type="time" id="clock">
+    <button onclick="printTime()" id="submitTime"> Submit time </button>
+    <div id="displayTime"></div>
+</section>
+
+<p>Color Form</p>
+<section>
+    <input type="color" id="colorPicker">
+    <button onclick="printColor()" id="submitColor"> Submit color </button>
+    <div id="displayColor"></div>
+</section>
+
+<p>Drop-down Form</p>
+<select id="dropDown">
+    <option type="text" text="The Only Ones">The Only Ones</option>
+    <option type="text" text="The National">The National</option>
+</select>
+<button onclick="printOption()" id="submitOption"> Submit drop down option </button>
+<div id="displayOption"></div>
+
+</br>
+<form method="post" enctype="multipart/form-data">
+    <div>
+        <label>Choose file to upload</label>
+        </br>
+        <input type="file" id="upload_file"/>
+    </div>
+</form>
+
+<script>
+    function printOption() {
+      let dropDown = document.querySelector("#dropDown");
+      let displayOption = document.querySelector("#displayOption");
+
+      displayOption.innerHTML = "Selected option is: " + dropDown.value;
+    }
+  </script>
+
+<script>
+    function printDate() {
+      let calendar = document.querySelector("#calendar");
+      let displayDate = document.querySelector("#displayDate");
+
+      displayDate.innerHTML = "Selected date is: " + calendar.value;
+    }
+  </script>
+
+
+<script>
+    function printTime() {
+      let time = document.querySelector("#clock");
+      let displayTime = document.querySelector("#displayTime");
+
+      displayTime.innerHTML = "Selected time is: " + time.value;
+    }
+  </script>
+
+<script>
+    function printColor() {
+      let colorPicker = document.querySelector("#colorPicker");
+      let displayColor = document.querySelector("#displayColor");
+
+      displayColor.innerHTML = "Selected color is: " + colorPicker.value;
+    }
+  </script>
+</html>

@@ -1,0 +1,77 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+package org.mozilla.fenix.customtabs
+
+import android.app.assist.AssistContent
+import android.net.Uri
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.annotation.VisibleForTesting
+import mozilla.components.browser.state.selector.findCustomTab
+import mozilla.components.browser.state.state.SessionState
+import mozilla.components.support.utils.SafeIntent
+import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.getIntentSessionId
+
+const val EXTRA_IS_SANDBOX_CUSTOM_TAB = "org.mozilla.fenix.customtabs.EXTRA_IS_SANDBOX_CUSTOM_TAB"
+
+/**
+ * Activity that holds the [ExternalAppBrowserFragment] that is launched within an external app,
+ * such as custom tabs and progressive web apps.
+ */
+@Suppress("TooManyFunctions")
+open class ExternalAppBrowserActivity : HomeActivity() {
+    override fun onResume() {
+        super.onResume()
+
+        if (!hasExternalTab()) {
+            // An ExternalAppBrowserActivity is always bound to a specific tab. If this tab doesn't
+            // exist anymore on resume then this activity has nothing to display anymore. Let's just
+            // finish it AND remove this task to avoid it hanging around in the recent apps screen.
+            // Without this the parent HomeActivity class may decide to show the browser UI and we
+            // end up with multiple browsers (causing "display already acquired" crashes).
+            finishAndRemoveTask()
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        if (isFinishing) {
+            // When this activity finishes, the process is staying around and the session still
+            // exists then remove it now to free all its resources. Once this activity is finished
+            // then there's no way to get back to it other than relaunching it.
+            val tabId = getExternalTabId()
+            val customTab = tabId?.let { components.core.store.state.findCustomTab(it) }
+            if (tabId != null && customTab != null) {
+                components.useCases.customTabsUseCases.remove(tabId)
+            }
+        }
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun hasExternalTab(): Boolean {
+        return getExternalTab() != null
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun getExternalTab(): SessionState? {
+        val id = getExternalTabId() ?: return null
+        return components.core.store.state.findCustomTab(id)
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun getExternalTabId(): String? {
+        return getIntentSessionId(SafeIntent(intent))
+    }
+
+    @RequiresApi(Build.VERSION_CODES.M)
+    override fun onProvideAssistContent(outContent: AssistContent?) {
+        super.onProvideAssistContent(outContent)
+        val currentTabUrl = getExternalTab()?.content?.url
+        outContent?.webUri = currentTabUrl?.let { Uri.parse(it) }
+    }
+}

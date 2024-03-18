@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<meta name="viewport" content="width=device-width">
+<body>
+
+<h1>Storage Start</h1>
+
+<p id="cookies"></p>
+<button id="setCookies">Set cookies</button>
+
+<script type="text/javascript">
+    (function() {
+       document.getElementById("cookies").textContent = document.cookie?document.cookie:"No cookies set";
+    })();
+
+    document.getElementById("setCookies").addEventListener("click", function() {
+        document.cookie = "user=android";
+        document.getElementById("cookies").textContent = document.cookie;
+    });
+
+    sessionStorage.setItem('focusSessionTest', 'caterpillar');
+    localStorage.setItem('focusLocalTest', 'butterfly');
+
+    document.write('<p>Values written to storage</p>');
+</script>
+
+</body>
+</html>

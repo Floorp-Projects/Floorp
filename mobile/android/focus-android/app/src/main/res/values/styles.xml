@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<resources>
+    <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar.Bridge">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <!-- This is the default color for activated controls(buttons) -->
+        <item name="colorAccent">@color/accentBright</item>
+
+        <item name="android:windowAnimationStyle">@style/WindowAnimationTransition</item>
+        <item name="android:windowContentTransitions">true</item>
+        <item name="popupMenuStyle">@style/PopupMenu</item>
+        <item name="bottomSheetDialogTheme">@style/AppBottomSheetDialogTheme</item>
+        <item name="disabled">@color/disabled</item>
+        <item name="destructive">@color/destructive</item>
+
+        <!-- Use the same colors for both themes until light theme it will be implemented -->
+        <item name="primaryText">@color/primaryText</item>
+        <item name="secondaryText">@color/secondaryText</item>
+        <item name="colorControlNormal">@color/primaryText</item>
+        <item name="android:textColorSecondary">@color/secondaryText</item>
+
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="preferenceTheme">@style/PreferenceTheme</item>
+        <item name="alertDialogStyle">@style/DialogStyle</item>
+        <item name="alertDialogTheme">@style/DialogStyle</item>
+        <item name="android:progressBarStyleHorizontal">@style/progressBarStyleHorizontal</item>
+        <item name="android:itemBackground">@color/menuBackground</item>
+        <item name="android:itemTextAppearance">@style/ItemTextAppearance</item>
+        <item name="tabCounterTintColor">?primaryText</item>
+    </style>
+
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_screen_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_screen</item>
+        <item name="postSplashScreenTheme">@style/AppTheme</item>
+    </style>
+
+    <!-- Fade animation for theme switching -->
+    <style name="WindowAnimationTransition">
+        <item name="android:windowEnterAnimation">@anim/fade_in</item>
+        <item name="android:windowExitAnimation">@anim/fade_out</item>
+    </style>
+
+    <style name="Theme.AppCompat.Translucent" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:colorBackgroundCacheHint">@null</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowAnimationStyle">@android:style/Animation</item>
+    </style>
+
+    <style name="ItemTextAppearance" parent="TextAppearance.AppCompat.Widget.DropDownItem">
+        <item name="android:textColor">@color/primaryText</item>
+        <item name="android:textSize">@dimen/mozac_browser_menu_item_text_size</item>
+    </style>
+
+    <style name="PreferenceTheme" parent="PreferenceThemeOverlay.v14.Material">
+        <item name="android:layout">@layout/fragment_settings</item>
+        <item name="android:listPreferredItemPaddingLeft">@dimen/activity_horizontal_margin</item>
+        <item name="android:listPreferredItemPaddingRight">@dimen/activity_horizontal_margin</item>
+
+        <!-- Use the same colors for both themes until light theme it will be implemented -->
+        <item name="android:textColor">@color/primaryText</item>
+        <item name="titleTextColor">@color/primaryText</item>
+    </style>
+
+    <style name="DialogTitleStyle" parent="TextAppearance.AppCompat.Title">
+        <item name="android:textColor">@color/primaryText</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:fontFamily">@string/font_roboto_medium</item>
+    </style>
+
+    <style name="AddToHomeScreenSiteTitle" parent="Widget.AppCompat.EditText">
+        <item name="android:textSize">20sp</item>
+        <item name="android:inputType">text</item>
+        <item name="android:textColor">@color/primaryText</item>
+        <item name="android:textCursorDrawable">@null</item>
+    </style>
+
+    <!-- Setting this via alertDialogStyle in AppTheme results in crashes. You need to
+         explicitly select this via "new AlertDialog.Builder(activity, R.style.DialogStyle)"
+         We need this style because the accent colour for the MainActivity is purple,
+         but we want different accents in the dialog. -->
+    <style name="DialogStyle" parent="Theme.AppCompat.Dialog.Alert">
+        <item name="android:windowTitleStyle">@style/DialogTitleStyle</item>
+        <item name="android:textColorPrimary">@color/primaryText</item>
+        <item name="dialogPreferredPadding">24dp</item>
+        <item name="android:windowBackground">@drawable/dialog_background</item>
+        <item name="android:windowMinWidthMajor">@dimen/dialog_min_width_major</item>
+        <item name="android:windowMinWidthMinor">@dimen/dialog_min_width_minor</item>
+
+        <!-- This is the default color for activated controls(buttons) -->
+        <item name="android:colorAccent">@color/accentBright</item>
+        <item name="textColorAlertDialogListItem">@color/primaryText</item>
+        <item name="colorControlActivated">@color/accentBright</item>
+        <item name="colorControlNormal">@color/accentBright</item>
+        <item name="buttonBarNegativeButtonStyle">@style/DialogButtonStyle</item>
+        <item name="buttonBarPositiveButtonStyle">@style/DialogButtonStyle</item>
+    </style>
+
+    <style name="DialogButtonStyle" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+        <item name="android:textColor">@color/accentBright</item>
+    </style>
+
+    <style name="ButtonStyle" parent="Base.Widget.AppCompat.ButtonBar.AlertDialog">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">@color/accentBright</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:fontFamily">@font/metropolis_semibold</item>
+    </style>
+
+    <style name="SettingsTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar.Bridge">
+        <item name="android:textColorSecondary">@color/preference_summary_text</item>
+        <item name="colorAccent">@color/accentBright</item>
+        <item name="android:windowTitleStyle">@style/DialogTitleStyle</item>
+        <item name="dialogPreferredPadding">24dp</item>
+        <item name="actionButtonStyle">@style/SettingsActionButtonStyle</item>
+        <item name="android:dialogTheme">@style/DialogStyle</item>
+        <item name="alertDialogTheme">@style/DialogStyle</item>
+        <item name="android:alertDialogStyle">@style/DialogStyle</item>
+        <item name="android:alertDialogTheme">@style/DialogStyle</item>
+        <item name="android:dialogPreferenceStyle">@style/DialogStyle</item>
+    </style>
+
+    <style name="SettingsActionButtonStyle" parent="@style/Widget.AppCompat.ActionButton">
+        <!-- We want 16dp of padding between (i) and "SAVE" on the "Add search engine" Toolbar.
+             Unfortunately, this Toolbar is shared across all of settings. Solutions:
+             1) (Current solution) Change the toolbar styles for all of settings
+             2) Dynamically change the styles for the Toolbar, in code, for this one Settings screen
+             3) Provide a unique toolbar for this one Settings screen
+
+             I opted for 1) because it's simple (we're pressed for time!) and no other screens have more
+             than one action button and are affected. This isn't very future proof, however.
+
+             We set paddingEnd=12dp to preserve the existing padding of the right-most action menu item to
+             the edge of the device (12dp) and set paddingStart=4dp to complete the 16dp between views.
+             We then set minWidth=0dp to avoid it's calculations affecting visible padding.
+
+             One concern I have is that paddingStart=4dp will cause the title to get too close to the
+             action menu items, but testing with German, that doesn't seem to be the case. -->
+        <item name="android:minWidth">0dp</item>
+        <item name="android:paddingStart">4dp</item>
+        <item name="android:paddingEnd">12dp</item>
+    </style>
+
+    <style name="InfoTheme" parent="SettingsTheme">
+        <item name="android:colorBackground">?attr/colorPrimary</item>
+    </style>
+
+    <style name="PopupMenu" parent="@style/Widget.AppCompat.Light.PopupMenu">
+        <item name="overlapAnchor">true</item>
+    </style>
+
+    <style name="Mozac.Browser.Menu" parent="">
+        <item name="cardBackgroundColor">@color/menuBackground</item>
+    </style>
+
+    <!-- Add new style to be able to use the same menu item style for both themes until light theme it will be implemented -->
+    <style name="Mozac.Browser.Menu.Item.Text" parent="@android:style/TextAppearance.Material.Menu">
+        <item name="android:background">?android:attr/selectableItemBackground</item>
+        <item name="android:textSize">@dimen/mozac_browser_menu_item_text_size</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:lines">1</item>
+        <item name="android:focusable">true</item>
+        <item name="android:clickable">true</item>
+        <item name="android:textColor">@color/primaryText</item>
+    </style>
+
+    <style name="AppTheme.ContextMenuItem">
+
+        <!-- All these attributes bellow need to be defined in a theme using android:theme
+            otherwise they will have no effect... -->
+        <item name="android:listPreferredItemHeightSmall">48dp</item>
+
+        <!-- Set the padding to the children (menu item) of the NavigationView
+             (instead of the NavigationView itself) allowing the hit targets
+              to span the full width of the view. For more info, see
+              https://github.com/mozilla-mobile/focus-android/pull/1466#discussion_r144679954.
+
+              Note: listPreferredItemPaddingStart and listPreferredItemPaddingEnd
+              don't work in this context because in the design_navigation_item.xml (layout for NavigationMenuItem)
+              only listPreferredItemPaddingLeft and listPreferredItemPaddingRight attribute
+              are used for paddingLeft and paddingRight properties.
+              Check design_navigation_item.xml source here :
+              https://android.googlesource.com/platform/frameworks/support.git/+/master/design/res/layout/design_navigation_item.xml
+            -->
+        <item name="listPreferredItemPaddingLeft">@dimen/dialogHorizontalPadding</item>
+        <item name="listPreferredItemPaddingRight">@dimen/dialogHorizontalPadding</item>
+    </style>
+
+    <style name="ContextMenuTextAppearence">
+        <item name="android:textSize">16sp</item>
+        <item name="android:fontFamily">@string/font_roboto_medium</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:textColor">@color/primaryText</item>
+    </style>
+
+
+    <style name="DoorHanger">
+        <item name="android:textColor">@color/primaryText</item>
+        <item name="android:textColorLink">@color/doorhanger_link</item>
+    </style>
+
+    <style name="DoorHanger.Medium">
+        <item name="android:textSize">16sp</item>
+    </style>
+
+    <style name="DoorHanger.Medium.Bold">
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <style name="DoorHanger.Medium.Light">
+        <item name="android:fontFamily">sans-serif-light</item>
+    </style>
+
+    <style name="HintTextAppearance">
+        <item name="android:textColor">@color/secondaryText</item>
+        <item name="android:textSize">9sp</item>
+    </style>
+
+    <style name="ColorHandleTheme">
+        <item name="android:colorControlActivated">@color/photonBlue50</item>
+    </style>
+
+    <style name="progressBarStyleHorizontal" parent="@style/Widget.AppCompat.ProgressBar.Horizontal">
+        <item name="android:progressDrawable">@drawable/photon_progressbar</item>
+    </style>
+
+    <style name="PanelTitle" parent="Widget.MaterialComponents.TextView">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/primaryText</item>
+    </style>
+
+    <style name="PanelHeading" parent="Widget.MaterialComponents.TextView">
+        <item name="fontFamily">@font/metropolis</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/primaryText</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.03</item>
+        <item name="android:lineSpacingExtra">1sp</item>
+    </style>
+
+    <style name="TrackerSwitchTitle" parent="Widget.MaterialComponents.TextView">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/primaryText</item>
+    </style>
+
+    <style name="TrackersCount" parent="Widget.MaterialComponents.TextView">
+        <item name="fontFamily">@font/metropolis</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/primaryText</item>
+        <item name="android:lineSpacingExtra">1sp</item>
+
+    </style>
+
+    <style name="CaptionText" parent="Widget.MaterialComponents.TextView">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/disabled</item>
+    </style>
+
+    <style name="SwitchTitle" parent="Widget.MaterialComponents.TextView">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/primaryText</item>
+    </style>
+
+    <style name="SwitchDescription" parent="Widget.MaterialComponents.TextView">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/disabled</item>
+    </style>
+
+    <style name="AppBottomSheetDialogTheme" parent="Theme.Design.Light.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/AppModalStyle</item>
+    </style>
+
+    <style name="AppModalStyle" parent="Widget.Design.BottomSheet.Modal">
+        <item name="android:background">@color/modal_background</item>
+    </style>
+
+    <style name="SwitchTheme" parent="Theme.AppCompat.Light">
+        <item name="colorControlActivated">@color/accentBright</item>
+    </style>
+
+    <style name="Preference.Title" parent="Widget.MaterialComponents.TextView">
+        <item name="android:textColor">@color/preference_title_text</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:lineSpacingExtra">5sp</item>
+    </style>
+
+    <style name="Preference.Summary" parent="Widget.MaterialComponents.TextView">
+        <item name="android:textColor">@color/preference_summary_text</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:letterSpacing">0.03</item>
+    </style>
+
+    <style name="PreferenceScreenHeader">
+        <item name="android:textColor">@color/preference_summary_text</item>
+        <item name="android:textSize">16sp</item>
+        <item name="fontFamily">@font/metropolis</item>
+        <item name="android:lineSpacingExtra">1sp</item>
+        <item name="android:letterSpacing">0.03</item>
+    </style>
+
+    <style name="PreferenceSectionHeader">
+        <item name="android:textColor">@color/preference_title_text</item>
+        <item name="android:textSize">14sp</item>
+        <item name="fontFamily">@font/metropolis</item>
+        <item name="android:letterSpacing">0.04</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="MetropolisButton">
+        <item name="fontFamily">@font/metropolis_semibold</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:letterSpacing">0.04</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:minWidth">48dp</item>
+        <item name="android:background">?android:attr/selectableItemBackgroundBorderless</item>
+    </style>
+
+</resources>

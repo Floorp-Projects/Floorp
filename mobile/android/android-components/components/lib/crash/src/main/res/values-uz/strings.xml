@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Title of the crash reporter dialog. %1$s will be replaced with the name of the app (e.g. Firefox Focus). -->
+    <string name="mozac_lib_crash_dialog_title">Kechirasiz, %1$s ilovasida muammo yuz berdi.</string>
+
+    <!-- Label of the checkbox for sending crash reports in the crash reporter dialog. %1$s will be replaced with the name of the organization (e.g. Mozilla). -->
+    <string name="mozac_lib_crash_dialog_checkbox">Nosozlik maʼlumotini %1$sga yuborish</string>
+
+    <!-- Label of the button closing the crash reporter dialog. -->
+    <string name="mozac_lib_crash_dialog_button_close">Yopish</string>
+
+    <!-- Label of the button closing the crash reporter dialog and restarting the app. -->
+    <string name="mozac_lib_crash_dialog_button_restart">%1$sni qayta ishga tushirish</string>
+
+    <!-- Name of the "notification channel" used for displaying a notification when the app crashed and we can't show a prompt. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_lib_crash_channel">Nosozliklar</string>
+
+    <!-- Title of the crash reporter notification for background process crashes. %1$s will be replaced with the name of the app (e.g. Firefox Focus). -->
+    <string name="mozac_lib_crash_background_process_notification_title">Kechirasiz. %1$s da muammo yuz berdi.</string>
+
+    <!-- Label of a notification action/button that will send the crash report to Mozilla. -->
+    <string name="mozac_lib_crash_notification_action_report">Hisobot berish</string>
+
+    <!-- Label of notification showing that the crash report service is running. %1$s will be replaced with the name of the organization (e.g. Mozilla). -->
+    <string name="mozac_lib_send_crash_report_in_progress">%1$sga nosozlik hisobotini yuborlmoqda</string>
+
+    <!-- Label of notification showing that the crash handling service is gathering the crash data. -->
+    <string name="mozac_lib_gathering_crash_data_in_progress">Nosozlik maʼlumotlari yigʻilmoqda</string>
+
+    <!-- Label of notification showing that the telemetry service is gathering the crash data. -->
+    <string name="mozac_lib_gathering_crash_telemetry_in_progress">Nosozlik telemetriya maʼlumotlari yigʻilmoqda</string>
+
+    <!-- Title of the activity that shows the list of past crashes (similar to about:crashes)-->
+    <string name="mozac_lib_crash_activity_title">Nosozlik hisobotlari</string>
+
+    <!-- Text shown instead of crash list if no crashes have been submitted yet -->
+    <string name="mozac_lib_crash_no_crashes">Hech qanday nosozlik hisobotlari yuborilmadi.</string>
+
+    <!-- Text link that will show an app chooser to share a crash report with a third-party app (e.g. gmail) -->
+    <string name="mozac_lib_crash_share">Ulashish</string>
+</resources>

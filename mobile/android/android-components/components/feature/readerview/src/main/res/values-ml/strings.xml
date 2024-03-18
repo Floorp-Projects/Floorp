@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_sans_serif_font">സാൻസ് സെരിഫ്</string>
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_sans_serif_font_desc">സാൻസ് സെരിഫ് ഫോണ്ട്</string>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_serif_font">സെരിഫ്</string>
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_serif_font_desc">സെരിഫ് ഫോണ്ട്</string>
+
+    <!-- Accessible description for decreasing the font size -->
+    <string name="mozac_feature_readerview_font_size_decrease_desc">ഫോണ്ട് വലുപ്പം കുറയ്ക്കുക</string>
+
+    <!-- Accessible description for increasing the font size -->
+    <string name="mozac_feature_readerview_font_size_increase_desc">ഫോണ്ട് വലുപ്പം കൂട്ടുക</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_dark">കടും</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_dark_color_scheme_desc">ഡാർക്ക് കളർ സ്കീം</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_sephia">സെപിയ</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_sepia_color_scheme_desc">സെപിയ കളർ സ്കീം</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_light">ലൈറ്റ്</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_light_color_scheme_desc">ലൈറ്റ് കളർ സ്കീം</string>
+</resources>

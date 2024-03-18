@@ -1,0 +1,90 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-parcelize'
+
+apply plugin: 'com.google.devtools.ksp'
+
+android {
+    defaultConfig {
+        minSdkVersion config.minSdkVersion
+        compileSdk config.compileSdkVersion
+        targetSdkVersion config.targetSdkVersion
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        ksp {
+            arg("room.schemaLocation", "$projectDir/schemas".toString())
+            arg("room.generateKotlin", "true")
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    sourceSets {
+        androidTest.assets.srcDirs += files("$projectDir/schemas".toString())
+    }
+
+    buildFeatures {
+        viewBinding true
+    }
+
+    namespace 'mozilla.components.feature.downloads'
+}
+
+tasks.withType(KotlinCompile).configureEach {
+    kotlinOptions.freeCompilerArgs += "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi"
+}
+
+dependencies {
+    implementation project(':browser-state')
+    implementation project(':concept-fetch')
+    implementation project(':support-ktx')
+    implementation project(':support-base')
+    implementation project(':support-utils')
+    implementation project(':ui-icons')
+    implementation project(':ui-widgets')
+
+    implementation ComponentsDependencies.androidx_constraintlayout
+    implementation ComponentsDependencies.androidx_core_ktx
+    implementation ComponentsDependencies.androidx_lifecycle_livedata
+    implementation ComponentsDependencies.androidx_localbroadcastmanager
+    implementation ComponentsDependencies.androidx_paging
+    implementation ComponentsDependencies.androidx_recyclerview
+
+    implementation ComponentsDependencies.kotlin_coroutines
+
+    implementation ComponentsDependencies.androidx_room_runtime
+    ksp ComponentsDependencies.androidx_room_compiler
+
+    testImplementation ComponentsDependencies.androidx_test_core
+    testImplementation ComponentsDependencies.androidx_test_junit
+    testImplementation ComponentsDependencies.testing_coroutines
+    testImplementation ComponentsDependencies.testing_robolectric
+    testImplementation project(':concept-engine')
+    testImplementation project(':support-test')
+    testImplementation project(':support-test-libstate')
+
+    androidTestImplementation project(':support-android-test')
+
+    androidTestImplementation ComponentsDependencies.androidx_room_testing
+    androidTestImplementation ComponentsDependencies.androidx_arch_core_testing
+    androidTestImplementation ComponentsDependencies.androidx_test_core
+    androidTestImplementation ComponentsDependencies.androidx_test_runner
+    androidTestImplementation ComponentsDependencies.androidx_test_rules
+    androidTestImplementation ComponentsDependencies.testing_coroutines
+
+}
+
+apply from: '../../../android-lint.gradle'
+apply from: '../../../publish.gradle'
+ext.configurePublish(config.componentsGroupId, archivesBaseName, project.ext.description)

@@ -1,0 +1,53 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+android {
+    defaultConfig {
+        minSdkVersion config.minSdkVersion
+        compileSdk config.compileSdkVersion
+        targetSdkVersion config.targetSdkVersion
+    }
+
+    lint {
+        warningsAsErrors true
+        abortOnError true
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            consumerProguardFiles 'proguard-rules-consumer.pro'
+        }
+    }
+
+    namespace 'mozilla.components.browser.storage.sync.logins'
+}
+
+dependencies {
+    // Parts of this dependency are typealiase'd or are otherwise part of this module's public API.
+    api (ComponentsDependencies.mozilla_appservices_logins) {
+      // Use our own version of the Glean dependency,
+      // which might be different from the version declared by A-S.
+      exclude group: 'org.mozilla.components', module: 'service-glean'
+    }
+    api ComponentsDependencies.mozilla_appservices_sync15
+
+    // Types defined in concept-sync are part of this module's public API.
+    api project(':concept-sync')
+    api project(':lib-dataprotect')
+
+    implementation project(':concept-storage')
+    implementation project(':support-utils')
+    implementation project(':service-glean')
+
+    implementation ComponentsDependencies.kotlin_coroutines
+}
+
+apply from: '../../../android-lint.gradle'
+apply from: '../../../publish.gradle'
+ext.configurePublish(config.componentsGroupId, archivesBaseName, project.ext.description)

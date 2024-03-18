@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<resources>
+    <!-- Secret Settings Strings -->
+    <!-- Label for the secret settings preference -->
+    <string name="preference_secret_settings" translatable="false">Secret Settings</string>
+
+    <!-- Label for using the nimbus collections preview -->
+    <string name="preference_use_nimbus_preview" translatable="false">Use Nimbus Preview Collection (requires restart)</string>
+
+    <!-- Toast shown to the user when they are activating the secret dev menu
+    The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress" translatable="false">Debug menu: %1$d click(s) left to enable</string>
+    <string name="about_debug_menu_toast_done" translatable="false">Debug menu enabled</string>
+
+    <!-- Label for LeakCanary Toggle. It's used in Advanced Settings. -->
+    <string name="preference_leakcanary" translatable="false">LeakCanary</string>
+
+    <!-- Application Services abbreviation used in AboutFragment -->
+    <string name="services_abbreviation" translatable="false">AS</string>
+
+    <!-- Label for using remote settings server url -->
+    <string name="preferences_debug_settings_remote_settings_server" translatable="false">Use Remote Settings Production server \n(Staging will be used when disabled) \n(requires restart)</string>
+</resources>

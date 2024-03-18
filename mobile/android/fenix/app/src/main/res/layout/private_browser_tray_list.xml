@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <org.mozilla.fenix.tabstray.browser.PrivateBrowserTrayList
+        android:id="@+id/tray_list_item"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingBottom="@dimen/tab_tray_list_bottom_padding"
+        android:visibility="gone"/>
+
+    <TextView
+        android:id="@+id/tab_tray_empty_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:paddingTop="80dp"
+        android:text="@string/no_open_tabs_description"
+        android:textAlignment="center"
+        android:textColor="?attr/textSecondary"
+        android:textSize="16sp"
+        android:visibility="visible" />
+</FrameLayout>

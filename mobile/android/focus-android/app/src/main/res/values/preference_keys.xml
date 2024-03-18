@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="pref_key_search_engine" translatable="false"><xliff:g id="preference_key">pref_search_engine</xliff:g></string>
+    <string name="pref_key_show_search_suggestions" translatable="false"><xliff:g id="preference_key">pref_show_search_suggestions</xliff:g></string>
+    <string name="pref_key_manual_add_search_engine" translatable="false"><xliff:g id="preference_key">pref_manual_add_search_engine</xliff:g></string>
+    <string name="pref_key_radio_search_engine_list" translatable="false">pref_radio_search_engine_list</string>
+    <string name="pref_key_multiselect_search_engine_list" translatable="false">pref_multiselect_search_engine_list</string>
+
+    <string name="pref_key_remote_server_prod" translatable="false">pref_key_remote_server_prod</string>
+
+    <string name="pref_key_privacy_block_ads" translatable="false"><xliff:g id="preference_key">pref_privacy_block_ads</xliff:g></string>
+    <string name="pref_key_privacy_block_analytics" translatable="false"><xliff:g id="preference_key">pref_privacy_block_analytics</xliff:g></string>
+    <string name="pref_key_privacy_block_social" translatable="false"><xliff:g id="preference_key">pref_privacy_block_social</xliff:g></string>
+    <string name="pref_key_privacy_block_cryptomining" translatable="false"><xliff:g id="preference_key">pref_privacy_block_cryptomining</xliff:g></string>
+    <string name="pref_key_privacy_block_fingerprinting" translatable="false"><xliff:g id="preference_key">pref_privacy_block_fingerprinting</xliff:g></string>
+    <string name="pref_key_privacy_block_other3" translatable="false"><xliff:g id="preference_key">pref_privacy_block_other3</xliff:g></string>
+    <string name="pref_key_privacy_total_trackers_blocked_count" translatable="false"><xliff:g id="preference_key">pref_key_privacy_total_trackers_blocked_count</xliff:g></string>
+    <string name="pref_key_privacy_ever_changed_etp" translatable="false"><xliff:g id="preference_key">pref_key_privacy_ever_changed_etp</xliff:g></string>
+
+    <string name="pref_key_tool_tip" translatable="false"><xliff:g id="preference_key">pref_key_tool_tip</xliff:g></string>
+
+    <string name="pref_key_performance_block_webfonts" translatable="false"><xliff:g id="preference_key">pref_performance_block_webfonts</xliff:g></string>
+    <string name="pref_key_performance_block_javascript" translatable="false"><xliff:g id="preference_key">pref_performance_block_javascript</xliff:g></string>
+    <string name="pref_key_performance_enable_cookies" translatable="false"><xliff:g id="preference_key">pref_performance_enable_cookies</xliff:g></string>
+    <string name="pref_key_performance_block_images" translatable="false"><xliff:g id="preference_key">pref_performance_block_images</xliff:g></string>
+
+    <string name="pref_key_default_browser" translatable="false"><xliff:g id="preference_key">pref_default_browser</xliff:g></string>
+    <string name="pref_key_leakcanary" translatable="false"><xliff:g id="preference_key">pref_key_leakcanary</xliff:g></string>
+
+    <string name="pref_key_telemetry" translatable="false"><xliff:g id="preference_key">pref_telemetry</xliff:g></string>
+
+    <string name="pref_key_secure" translatable="false"><xliff:g id="preference_key">pref_secure</xliff:g></string>
+
+    <string name="pref_key_safe_browsing" translatable="false"><xliff:g id="preference_key">pref_safe_browsing</xliff:g></string>
+
+    <string name="pref_key_https_only" translatable="false"><xliff:g id="preference_key">pref_https_only</xliff:g></string>
+
+    <string name="pref_key_biometric" translatable="false"><xliff:g id="preference_key">pref_biometric</xliff:g></string>
+    <string name="pref_key_about" translatable="false"><xliff:g id="preference_key">pref_about</xliff:g></string>
+    <string name="pref_key_help" translatable="false"><xliff:g id="preference_key">pref_help</xliff:g></string>
+    <string name="pref_key_rights" translatable="false"><xliff:g id="preference_key">pref_rights</xliff:g></string>
+    <string name="pref_key_privacy_notice" translatable="false"><xliff:g id="preference_key">pref_privacy_notice</xliff:g></string>
+    <string name="pref_key_licensing_info" translatable="false"><xliff:g id="preference_key">pref_licensing_info</xliff:g></string>
+    <string name="pref_key_libraries_we_use" translatable="false"><xliff:g id="preference_key">pref_libraries_we_use</xliff:g></string>
+
+    <string name="pref_key_locale" translatable="false"><xliff:g id="preference_key">pref_locale</xliff:g></string>
+    <string name="pref_in_app_review_openings" translatable="false"><xliff:g id="preference_key">pref_in_app_review_openings</xliff:g></string>
+    <string name="pref_in_app_review_step" translatable="false"><xliff:g id="preference_key">pref_in_app_review_step</xliff:g></string>
+    <string name="pref_in_app_review_time" translatable="false"><xliff:g id="preference_key">pref_in_app_review_time</xliff:g></string>
+
+    <string name="pref_key_screen_autocomplete" translatable="false"><xliff:g id="preference_key">pref_screen_autocomplete</xliff:g></string>
+    <string name="pref_key_autocomplete_preinstalled" translatable="false"><xliff:g id="preference_key">pref_autocomplete_preinstalled</xliff:g></string>
+    <string name="pref_key_autocomplete_custom" translatable="false"><xliff:g id="preference_key">pref_autocomplete_custom</xliff:g></string>
+    <string name="pref_key_screen_custom_domains" translatable="false"><xliff:g id="preference_key">pref_screen_custom_domains</xliff:g></string>
+
+    <string name="pref_key_privacy_security_screen" translatable="false"><xliff:g id="preference_key">pref_screen_privacy_security</xliff:g></string>
+    <string name="pref_key_advanced_screen" translatable="false"><xliff:g id="preference_key">pref_advanced_screen</xliff:g></string>
+    <string name="pref_key_general_screen" translatable="false"><xliff:g id="preference_key">pref_general_screen</xliff:g></string>
+
+    <string name="pref_key_mozilla_screen" translatable="false"><xliff:g id="preference_key">pref_screen_mozilla</xliff:g></string>
+    <string name="pref_key_search_screen" translatable="false"><xliff:g id="preference_key">pref_screen_search</xliff:g></string>
+    <string name="pref_key_remote_debugging" translatable="false"><xliff:g id="preference_key">pref_remote_debugging</xliff:g></string>
+    <string name="pref_key_open_links_in_external_app" translatable="false"><xliff:g id="preference_key">pref_key_open_links_in_external_app</xliff:g></string>
+    <string name="pref_key_studies" translatable="false"><xliff:g id="preference_key">pref_key_studies</xliff:g></string>
+    <string name="pref_key_secret_settings" translatable="false"><xliff:g id="preference_key">pref_key_secret_settings</xliff:g></string>
+    <string name="pref_key_use_nimbus_preview" translatable="false"><xliff:g id="preference_key">pref_key_use_nimbus_preview</xliff:g></string>
+
+    <string name="has_opened_new_tab" translatable="false"><xliff:g id="preference_key">has_opened_new_tab</xliff:g></string>
+    <string name="has_added_to_home_screen" translatable="false"><xliff:g id="preference_key">has_added_to_home_screen</xliff:g></string>
+    <string name="has_requested_desktop" translatable="false"><xliff:g id="preference_key">has_requested_desktop</xliff:g></string>
+    <string name="app_launch_count" translatable="false"><xliff:g id="preference_key">app_launch_count</xliff:g></string>
+    <string name="pref_key_category_safe_browsing" translatable="false"><xliff:g id="preference_key">safe_browsing_category</xliff:g></string>
+
+    <string name="pref_key_category_security" translatable="false"><xliff:g id="preference_key">security_category</xliff:g></string>
+
+    <string name="pref_key_search_widget_installed" translatable="false"><xliff:g id="preference_key">pref_key_search_widget_installed</xliff:g></string>
+    <string name="pref_key_clear_browsing_sessions" translatable="false"><xliff:g id="preference_key">pref_key_clear_browsing_sessions</xliff:g></string>
+
+    <string name="pref_key_screen_exceptions" translatable="false">
+        <xliff:g id="preference_key">pref_screen_exceptions</xliff:g>
+    </string>
+    <string name="pref_cfr_visibility_for_tracking_protection" translatable="false"><xliff:g id="preference_key">pref_cfr_visibility_for_tracking_protection</xliff:g></string>
+    <string name="pref_cfr_visibility_for_start_browsing" translatable="false"><xliff:g id="preference_key">pref_cfr_visibility_for_start_browsing</xliff:g></string>
+
+    <string name="pref_tool_tip_privacy_security_settings" translatable="false"><xliff:g id="preference_key">pref_tool_tip_privacy_security_settings</xliff:g></string>
+    <!-- Theme Settings -->
+    <string name="pref_key_light_theme" translatable="false">pref_key_light_theme</string>
+    <string name="pref_key_dark_theme" translatable="false">pref_key_dark_theme</string>
+    <string name="pref_key_default_theme" translatable="false">pref_key_default_theme</string>
+
+    <!-- Site Permissions Settings -->
+    <string name="pref_key_allow_autoplay_audio_video" translatable="false"><xliff:g id="preference_key">pref_key_allow_autoplay_audio_video</xliff:g></string>
+    <string name="pref_key_block_autoplay_audio_only" translatable="false"><xliff:g id="preference_key">pref_key_block_autoplay_audio_only</xliff:g></string>
+    <string name="pref_key_block_autoplay_audio_video" translatable="false"><xliff:g id="preference_key">pref_key_block_autoplay_audio_video</xliff:g></string>
+    <string name="pref_key_ask_to_allow" translatable="false"><xliff:g id="preference_key">pref_key_ask_to_allow</xliff:g></string>
+    <string name="pref_key_blocked" translatable="false"><xliff:g id="preference_key">pref_key_blocked</xliff:g></string>
+    <string name="pref_key_allowed" translatable="false"><xliff:g id="preference_key">pref_key_allowed</xliff:g></string>
+
+    <string name="pref_key_site_permissions" translatable="false"><xliff:g id="preference_key">pref_key_privacy_site_permissions</xliff:g></string>
+    <string name="pref_key_autoplay" translatable="false"><xliff:g id="preference_key">pref_key_autoplay</xliff:g></string>
+    <string name="pref_key_browser_feature_media_key_system_access" translatable="false"><xliff:g id="preference_key">pref_key_browser_feature_media_key_system_access</xliff:g></string>
+    <string name="pref_key_phone_feature_camera" translatable="false"><xliff:g id="preference_key">pref_key_phone_feature_camera</xliff:g></string>
+    <string name="pref_key_phone_feature_location" translatable="false"><xliff:g id="preference_key">pref_key_phone_feature_location</xliff:g></string>
+    <string name="pref_key_phone_feature_microphone" translatable="false"><xliff:g id="preference_key">pref_key_phone_feature_microphone</xliff:g></string>
+    <string name="pref_key_phone_feature_notification" translatable="false"><xliff:g id="preference_key">pref_key_phone_feature_notification</xliff:g></string>
+
+    <!-- OnBoarding Step -->
+    <string name="pref_key_onboarding_step" translatable="false"><xliff:g id="preference_key">pref_key_onboarding_step</xliff:g></string>
+    <string name="pref_key_first_screen" translatable="false"><xliff:g id="preference_key">pref_key_first_screen</xliff:g></string>
+    <string name="pref_key_second_screen" translatable="false"><xliff:g id="preference_key">pref_key_second_screen</xliff:g></string>
+    <string name="firstrun_shown" translatable="false"><xliff:g id="preference_key">firstrun_shown</xliff:g></string>
+    <string name="new_onboarding_enabled" translatable="false"><xliff:g id="preference_key">new_onboarding_enabled</xliff:g></string>
+
+    <!-- Cookie Banner Reduction Settings-->
+    <string name="pref_key_cookie_banner_enabled" translatable="false"><xliff:g id="preference_key">pref_key_cookie_banner_enabled</xliff:g></string>
+    <string name="pref_key_cookie_banner_settings" translatable="false">pref_key_cookie_banner_settings</string>
+    <string name="pref_key_cookie_banner_reject_all" translatable="false">pref_key_cookie_banner_reject_all</string>
+    <string name="pref_key_cookie_banner_disabled" translatable="false">pref_key_cookie_banner_disabled</string>
+    <string name="pref_cfr_visibility_for_cookie_banner" translatable="false"><xliff:g id="preference_key">pref_cfr_visibility_for_cookie_banner</xliff:g></string>
+
+</resources>

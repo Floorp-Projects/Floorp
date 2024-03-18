@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ This Source Code Form is subject to the terms of the Mozilla Public
+  ~  License, v. 2.0. If a copy of the MPL was not distributed with this
+  ~  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+  -->
+
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_checked="true">
+        <shape>
+            <gradient android:angle="270" />
+            <stroke android:width="2dp" android:color="@color/mozac_feature_readerview_selected"/>
+            <corners android:radius="4dp" />
+            <solid android:color="@color/mozac_feature_readerview_dark_background"/>
+        </shape>
+    </item>
+    <item android:state_checked="false">
+        <shape>
+            <gradient android:angle="270" />
+            <corners android:radius="4dp" />
+            <solid android:color="@color/mozac_feature_readerview_dark_background"/>
+        </shape>
+    </item>
+</selector>

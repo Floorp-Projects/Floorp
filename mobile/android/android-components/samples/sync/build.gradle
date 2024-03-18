@@ -1,0 +1,58 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+
+android {
+    defaultConfig {
+        applicationId "org.mozilla.samples.sync"
+        minSdkVersion config.minSdkVersion
+        compileSdk config.compileSdkVersion
+        targetSdkVersion config.targetSdkVersion
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    splits {
+        abi {
+            enable true
+            reset()
+            include 'x86', 'arm64-v8a', 'armeabi-v7a'
+        }
+    }
+
+    buildFeatures {
+        viewBinding true
+        buildConfig true
+    }
+
+    namespace 'org.mozilla.samples.sync'
+}
+
+dependencies {
+    implementation project(':concept-storage')
+    implementation project(':concept-toolbar')
+    implementation project(':browser-storage-sync')
+    implementation project(':service-firefox-accounts')
+    implementation project(':service-sync-logins')
+    implementation project(':service-sync-autofill')
+    implementation project(':support-rustlog')
+    implementation project(':support-rusthttp')
+    implementation project(':lib-fetch-httpurlconnection')
+    implementation project(':lib-dataprotect')
+
+    implementation ComponentsDependencies.kotlin_reflect
+    implementation ComponentsDependencies.androidx_fragment
+    implementation ComponentsDependencies.androidx_recyclerview
+}

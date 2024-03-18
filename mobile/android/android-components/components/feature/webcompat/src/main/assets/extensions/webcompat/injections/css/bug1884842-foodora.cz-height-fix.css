@@ -1,0 +1,25 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * foodora.cz - Unable to pick an address
+ * Bug #1884842 - https://bugzilla.mozilla.org/show_bug.cgi?id=1884842
+ * WebCompat issue #130975 - https://github.com/webcompat/web-bugs/issues/130975
+ *
+ * Unable to confirm an adress on the delivery site due to button being outside
+ * the viewport and parent container unscrollable.
+ * Depends on https://bugzilla.mozilla.org/show_bug.cgi?id=1481876
+ */
+
+@media (max-width: 527.98px) {
+  .bds-c-modal--is-mobile-bottom-sheet .bds-c-modal__content-window {
+    height: 100%;
+  }
+}
+
+@media (min-height: 528px) {
+  .map-modal__map.map-box {
+    height: 362px;
+  }
+}

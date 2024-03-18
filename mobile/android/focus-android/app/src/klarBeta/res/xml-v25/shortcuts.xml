@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="erase"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_erase"
+        android:shortcutShortLabel="@string/shortcut_erase_short_label"
+        android:shortcutLongLabel="@string/shortcut_erase_long_label">
+        <intent
+            android:action="erase"
+            android:targetPackage="org.mozilla.klar.beta"
+            android:targetClass="org.mozilla.focus.activity.EraseShortcutActivity">
+                <extra android:name="shortcut" android:value="true" />
+        </intent>
+    </shortcut>
+  <shortcut
+      android:shortcutId="erase_and_open"
+      android:enabled="true"
+      android:icon="@drawable/ic_shortcut_erase"
+      android:shortcutShortLabel="@string/shortcut_erase_and_open_short_label">
+    <intent
+        android:action="erase"
+        android:targetPackage="org.mozilla.klar.beta"
+        android:targetClass="org.mozilla.focus.activity.EraseAndOpenShortcutActivity">
+      <extra android:name="shortcut" android:value="true" />
+    </intent>
+  </shortcut>
+</shortcuts>

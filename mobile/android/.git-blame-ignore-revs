@@ -1,0 +1,12 @@
+# [components] Issue mozilla-mobile/android-components#12939: Address all ktlint issues
+a7eb0fe9d057982cb5eb1ad670e8195afe7fba1a
+# [components] For mozilla-mobile/android-components#12930 - Fix old but now blocking ktlint issues
+44988dca372d00d8e523176b23d22348558dd5ab
+# [components] For  mozilla-mobile/android-components#12500: Fix ktlint issues.
+2998899e7929ce99f920d4dd6bc13f86c426003b
+# [components] For mozilla-mobile/android-components#12151 - Fix ktlint issues for GeckoPromptDelegate.kt
+5d28c56cfa19c65c48bd50e3f622130a7f5435e4
+# [fenix] For mozilla-mobile/fenix#27667 - Remove import-ordering from the list of disabled ktlint rules
+e3b88788dbe03cf41ac015a848fa1ee0b40d39e2
+# [fenix] For mozilla-mobile/fenix#26844: Fix ktlint issues and remove them from baseline.
+1a2ecb6374198c2bc5266a70a19700de0b294b6f

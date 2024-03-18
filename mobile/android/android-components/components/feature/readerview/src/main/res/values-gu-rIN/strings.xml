@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_sans_serif_font">સેન્સ-શેરીફ</string>
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_sans_serif_font_desc">સેન્સ શેરીફ ફોન્ટ</string>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_serif_font">શેરીફ</string>
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_serif_font_desc">શેરીફ ફોન્ટ</string>
+
+    <!-- Accessible description for decreasing the font size -->
+    <string name="mozac_feature_readerview_font_size_decrease_desc">ફોન્ટના કદ ઘટાડો</string>
+
+    <!-- Accessible description for increasing the font size -->
+    <string name="mozac_feature_readerview_font_size_increase_desc">ફોન્ટના કદ વધારો</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_dark">ઘટ્ટ</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_dark_color_scheme_desc">ઘાટા રંગ યોજના</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_sephia">સેપિયા</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_sepia_color_scheme_desc">સેપિયા રંગ યોજના</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_light">આછો</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_light_color_scheme_desc">આછા રંગ યોજના</string>
+</resources>

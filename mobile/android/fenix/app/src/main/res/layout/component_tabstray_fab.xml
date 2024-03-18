@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/new_tab_button"
+    style="@style/TabTrayFab"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="bottom|end"
+    android:scrollbars="none"
+    android:layout_margin="16dp"
+    android:backgroundTint="@color/fx_mobile_action_color_primary"
+    android:contentDescription="@string/add_tab"
+    android:elevation="99dp"
+    android:text="@string/tab_drawer_fab_content"
+    android:textColor="@color/photonWhite"
+    android:visibility="gone"
+    app:elevation="99dp"
+    app:borderWidth="0dp"
+    app:icon="@drawable/ic_new"
+    app:iconTint="@color/photonWhite" />

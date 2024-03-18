@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout">
+
+    <ImageButton
+        android:id="@+id/collect_multi_select"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/tab_tray_collection_button_multiselect_content_description"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/topBar"
+        app:layout_constraintEnd_toStartOf="@id/share_multi_select"
+        app:layout_constraintTop_toTopOf="@id/topBar"
+        app:srcCompat="@drawable/ic_tab_collection"
+        app:tint="@color/fx_mobile_icon_color_oncolor" />
+
+    <ImageButton
+        android:id="@+id/share_multi_select"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/tab_tray_multiselect_share_content_description"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/topBar"
+        app:layout_constraintEnd_toStartOf="@id/menu_multi_select"
+        app:layout_constraintTop_toTopOf="@id/topBar"
+        app:srcCompat="@drawable/ic_share"
+        app:tint="@color/fx_mobile_icon_color_oncolor" />
+
+    <ImageButton
+        android:id="@+id/menu_multi_select"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/tab_tray_multiselect_menu_content_description"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/topBar"
+        app:layout_constraintEnd_toEndOf="@id/topBar"
+        app:layout_constraintTop_toTopOf="@id/topBar"
+        app:srcCompat="@drawable/ic_menu"
+        app:tint="@color/fx_mobile_icon_color_oncolor" />
+</merge>

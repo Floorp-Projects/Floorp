@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout">
+
+    <TextView
+        android:id="@+id/trackingProtectionCategoryTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/top_bar_alignment_margin_start"
+        android:layout_marginTop="@dimen/about_list_margin_top"
+        android:layout_marginEnd="@dimen/library_item_icon_margin_horizontal"
+        android:clickable="false"
+        android:textAppearance="@style/ListItemTextStyle"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toTopOf="@+id/trackingProtectionCategoryItemDescription"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/trackingProtectionCategoryItemDescription"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/top_bar_alignment_margin_start"
+        android:layout_marginEnd="@dimen/library_item_icon_margin_horizontal"
+        android:layout_marginBottom="@dimen/tracking_protection_item_margin_bottom"
+        android:clickable="false"
+        android:textColor="?attr/textSecondary"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/trackingProtectionCategoryTitle" />
+</merge>

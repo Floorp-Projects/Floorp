@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/buttonList"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_alignParentStart="true"
+    android:layout_alignParentTop="true"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="10dp"
+    tools:context="org.mozilla.samples.glean.MainActivity">
+
+    <!-- This is a dummy linear layout to capture focus and prevent the keyboard from popping
+        when the app first launches.  This is a known issue of linear layouts and a common
+        workaround. -->
+    <LinearLayout android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:layout_width="0px"
+        android:layout_height="0px" >
+        <requestFocus />
+    </LinearLayout>
+
+    <EditText
+        android:id="@+id/etStringListInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:hint="@string/string_list_input_hint"
+        android:inputType="textPersonName"
+        android:autofillHints=""
+        tools:ignore="UnusedAttribute" />
+
+    <Button
+        android:id="@+id/buttonGenerateData"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:text="@string/generate_data"
+        android:textAlignment="center" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:text="@string/counter_metric_info" />
+
+    <Button
+        android:id="@+id/buttonCheckExperiments"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/check_experiments"
+        android:textAlignment="center" />
+
+    <TextView
+        android:id="@+id/textViewExperimentStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/white"
+        android:text="@string/experiment_not_active"
+        android:textStyle="italic" />
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/check_experiments_btn_description" />
+
+</LinearLayout>

@@ -1,0 +1,89 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-parcelize'
+
+apply plugin: 'com.google.devtools.ksp'
+
+android {
+    defaultConfig {
+        minSdkVersion config.minSdkVersion
+        compileSdk config.compileSdkVersion
+        targetSdkVersion config.targetSdkVersion
+
+        ksp {
+            arg("room.schemaLocation", "$projectDir/schemas".toString())
+            arg("room.generateKotlin", "true")
+        }
+
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments += ["room.incremental": "true"]
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt')
+        }
+    }
+
+    lint {
+        warningsAsErrors true
+        abortOnError true
+    }
+
+    buildFeatures {
+        viewBinding true
+    }
+
+    namespace 'mozilla.components.feature.addons'
+}
+
+tasks.withType(KotlinCompile).configureEach {
+    kotlinOptions.freeCompilerArgs += "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi"
+}
+
+dependencies {
+    implementation ComponentsDependencies.kotlin_coroutines
+
+    implementation ComponentsDependencies.androidx_appcompat
+    implementation ComponentsDependencies.androidx_cardview
+    implementation ComponentsDependencies.androidx_core_ktx
+    implementation ComponentsDependencies.androidx_recyclerview
+    implementation ComponentsDependencies.androidx_work_runtime
+
+    implementation ComponentsDependencies.androidx_room_runtime
+    ksp ComponentsDependencies.androidx_room_compiler
+
+    implementation project(':ui-colors')
+    implementation project(':ui-icons')
+    implementation project(':ui-widgets')
+    implementation project(':browser-state')
+    implementation project(':concept-engine')
+    implementation project(':concept-fetch')
+    implementation project(':concept-menu')
+    implementation project(':support-base')
+    implementation project(':support-ktx')
+    implementation project(':support-webextensions')
+    implementation project(':support-utils')
+
+    testImplementation project(':support-test')
+    testImplementation project(':support-test-libstate')
+    testImplementation ComponentsDependencies.androidx_test_core
+    testImplementation ComponentsDependencies.androidx_test_junit
+    testImplementation ComponentsDependencies.testing_robolectric
+    testImplementation ComponentsDependencies.androidx_work_testing
+    testImplementation ComponentsDependencies.testing_coroutines
+}
+
+apply from: '../../../android-lint.gradle'
+apply from: '../../../publish.gradle'
+ext.configurePublish(config.componentsGroupId, archivesBaseName, project.ext.description)

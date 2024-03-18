@@ -1,0 +1,44 @@
+{
+    "recommendations": [
+        {
+            "category": "general",
+            "url": "https://getpocket.com/explore/item/how-to-remember-anything-you-really-want-to-remember-backed-by-science",
+            "title": "How to Remember Anything You Really Want to Remember, Backed by Science",
+            "imageUrl": "https://img-getpocket.cdn.mozilla.net/{wh}/filters:format(jpeg):quality(60):no_upscale():strip_exif()/https%3A%2F%2Fpocket-image-cache.com%2F1200x%2Ffilters%3Aformat(jpg)%3Aextract_focal()%2Fhttps%253A%252F%252Fwww.incimages.com%252Fuploaded_files%252Fimage%252F1920x1080%252Fgetty-862457080_394628.jpg",
+            "publisher": "Pocket",
+            "timeToRead": 3
+        },
+        {
+            "category": "general",
+            "url": "https://www.thecut.com/article/i-dont-want-to-be-like-a-family-with-my-co-workers.html",
+            "title": "‘I Don’t Want to Be Like a Family With My Co-Workers’",
+            "imageUrl": "https://img-getpocket.cdn.mozilla.net/{wh}/filters:format(jpeg):quality(60):no_upscale():strip_exif()/https%3A%2F%2Fpyxis.nymag.com%2Fv1%2Fimgs%2Fac8%2Fd22%2F315cd0cf1e3a43edfe0e0548f2edbcb1a1-ask-a-boss.1x.rsocial.w1200.jpg",
+            "publisher": "The Cut",
+            "timeToRead": 5
+        },
+        {
+            "category": "general",
+            "url": "https://www.newyorker.com/news/q-and-a/how-america-failed-in-afghanistan",
+            "title": "How America Failed in Afghanistan",
+            "imageUrl": "https://img-getpocket.cdn.mozilla.net/{wh}/filters:format(jpeg):quality(60):no_upscale():strip_exif()/https%3A%2F%2Fmedia.newyorker.com%2Fphotos%2F6119484157b611aec9c99b43%2F16%3A9%2Fw_1280%2Cc_limit%2FChotiner-Afghanistan01.jpg",
+            "publisher": "The New Yorker",
+            "timeToRead": 14
+        },
+        {
+            "category": "general",
+            "url": "https://www.technologyreview.com/2021/08/15/1031804/digital-beauty-filters-photoshop-photo-editing-colorism-racism/",
+            "title": "How digital beauty filters perpetuate colorism",
+            "imageUrl": "https://img-getpocket.cdn.mozilla.net/{wh}/filters:format(jpeg):quality(60):no_upscale():strip_exif()/https%3A%2F%2Fwp.technologyreview.com%2Fwp-content%2Fuploads%2F2021%2F08%2FBeautyScoreColorism.jpg%3Fresize%3D1200%2C600",
+            "publisher": "MIT Technology Review",
+            "timeToRead": 11
+        },
+        {
+            "category": "general",
+            "url": "https://getpocket.com/explore/item/how-to-get-rid-of-black-mold-naturally",
+            "title": "How to Get Rid of Black Mold Naturally",
+            "imageUrl": "https://img-getpocket.cdn.mozilla.net/{wh}/filters:format(jpeg):quality(60):no_upscale():strip_exif()/https%3A%2F%2Fpocket-image-cache.com%2F1200x%2Ffilters%3Aformat(jpg)%3Aextract_focal()%2Fhttps%253A%252F%252Fpocket-syndicated-images.s3.amazonaws.com%252Farticles%252F6757%252F1628024495_6109ae86db6cc.png",
+            "publisher": "Pocket",
+            "timeToRead": 4
+        }
+     ]
+}

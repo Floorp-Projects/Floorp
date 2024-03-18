@@ -1,0 +1,1122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
+    <!-- ####################################################################################### -->
+    <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
+    <!-- ## into a separate file like strings_references.xml                                  ## -->
+    <!-- ####################################################################################### -->
+
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_cancel">Diddymu</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_ok">Iawn</string>
+
+    <string name="action_save">Cadw</string>
+
+    <!-- This text is shown in the URL bar when it's empty -->
+    <string name="urlbar_hint">Chwilio neu gyfeiriad gwe</string>
+
+    <string name="teaser">Pori preifat awtomatig.\nPori. Dileu. Eto.</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
+    <string name="feedback_erase">Mae eich hanes pori wedi cael ei ddileu.</string>
+    <string name="feedback_erase2">Hanes pori wedi’i glirio</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
+    <string name="feedback_erase_custom_tab">Mae hanes pori\'r Tab wedi cael ei ddileu.</string>
+
+    <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
+    <string name="search_hint">Chwilio am %1$s</string>
+
+    <!-- Menu item: Share the currently visible page -->
+    <string name="menu_share">Rhannu…</string>
+
+    <!-- Menu item: Report an issue on the current site -->
+    <string name="menu_report_site_issue">Adrodd ar Fater Gwefan</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. %1$s will be
+      replaced with the name of the browser like: "Open in Firefox" or "Open in Chrome". Some
+      links can be opened by native apps that aren't a browser, e.g. "Open in YouTube" -->
+    <string name="menu_open_with_default_browser2">Agor yn %1$s</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. This menu item
+      will be shown if there are multiple browsers and we do not know which one is the default
+      browser or in case Focus is actually the default browser. Clicking this menu item will show
+      a screen with multiple browsers (or other apps that can open the current URL) to choose from. -->
+    <string name="menu_open_with_a_browser2">Agor yn…</string>
+
+    <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
+    <string name="menu_add_to_home_screen">Ychwanegu i’r sgrin Cartref</string>
+
+    <!-- Menu item: Add the current site as a shortcut on the Home screen -->
+    <string name="menu_add_to_shortcuts">Ychwanegu at y Llwybrau Byr</string>
+    <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
+    <string name="menu_remove_from_shortcuts">Tynnu o’r Llwybrau Byr</string>
+
+    <!-- Menu item: Shows information about features and changes that are new to this version -->
+    <string name="menu_settings">Gosodiadau</string>
+    <string name="menu_about">Ynghylch</string>
+    <string name="menu_help">Cymorth</string>
+    <string name="menu_rights">Eich Hawliau</string>
+
+    <!-- Menu item: This is the label for a menu entry that shows how many trackers have been blocked
+         for the currently loaded website. The number of blocked trackers is shown below this label.
+         Next to this label is a switch that allows the user to temporarily enable / disable the
+         blocking of trackers for the current browsing session - for example if the current website
+         doesn't work correctly with blocked content. -->
+    <string name="menu_trackers_blocked_title">Rhwystro tracwyr</string>
+
+    <!-- Menu item: This is the subtitle for the Trackers blocked menu entry that shows how many
+    trackers have been blocked for the currently loaded website.  -->
+    <string name="menu_trackers_blocked_subtitle">Gall ddiffodd hwn atal rhai problemau ar y wefan</string>
+
+    <!-- Menu item: This is the label for turning off content blocking for the current website. -->
+    <string name="menu_content_blocking">Rhwystro Cynnwys</string>
+    <!-- This is the subtitle content blocking toggle -->
+    <string name="menu_content_blocking_subtitle">Diffodd i drwsio rhai gwefannau</string>
+
+    <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
+     See https://github.com/mozilla-mobile/focus-android/issues/2106
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="menu_custom_tab_branding">Grym %1$s</string>
+
+    <!-- This is the title of a dialog that shows all the share targets (apps or contacts) when
+         sharing an URL. -->
+    <string name="share_dialog_title">Rhannu drwy</string>
+
+    <string name="notification_erase_title_android_14">Dileu hanes pori?</string>
+    <string name="notification_erase_text_android_14" moz:RemovedIn="124" tools:ignore="UnusedResources">Tapio neu gau\'r hysbysiad hwn i ddileu eich hanes pori yn ddiogel.</string>
+
+    <!-- Text shown in the notification description that pops up to remind the user that a browsing session is active
+    for Android 14+. -->
+    <string name="notification_erase_text_android_14_1">Tapio neu lusgo\'r hysbysiad hwn i ddileu eich hanes pori yn ddiogel.</string>
+
+    <string name="notification_erase_text">Dileu hanes pori</string>
+
+    <!-- Notification action to open Focus and resume the current browsing session. -->
+    <string name="notification_action_open">Agor</string>
+
+    <!-- Notification action to erase the current browsing session AND switch to Focus (bring it
+         to the foreground) -->
+    <string name="notification_action_erase_and_open">Dileu ac Agor</string>
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_short_label">Dileu</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters. -->
+    <string name="shortcut_erase_long_label">Dileu hanes pori</string>
+
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_and_open_short_label">Dileu ac agor</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters.
+         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="shortcut_erase_and_open_long_label">Dileu ac agor %1$s</string>
+
+
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+         Focus is hard coded since we can't use variables in this context.
+         Do not translate or transliterate Focus.-->
+    <string name="text_selection_search_action_focus">Chwilio o fewn Focus</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+             Klar is hard coded since we can't use variables in this context.
+             Do not translate or transliterate Klar.-->
+    <string name="text_selection_search_action_klar">Chwilio o fewn Klar</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+            Focus Beta is hard coded since we can't use variables in this context.
+            Do not translate or transliterate Focus Beta.-->
+    <string name="text_selection_search_action_focus_beta">Chwilio o fewn Focus Beta</string>
+
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+          Focus Nightly is hard coded since we can't use variables in this context.
+          Do not translate or transliterate Focus Nightly.-->
+    <string name="text_selection_search_action_focus_nightly">Chwilio o fewn Focus Nightly</string>
+
+    <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+         Argument 2 is the url for the learn-more link. -->
+    <string name="about_content"><![CDATA[<p>Gyda %1$s chi sy’n rheoli.</p>
+<p>Defnyddiwch ef fel porwr preifat:
+  <ul>
+  <li>Chwilio a phori o fewn yr ap</li>
+  <li>Rhwystro tracwyr (neu ddiweddaru’ch gosodiadau i ganiatáu tracwyr)</li>
+  <li>Dileu er mwyn dileu cwcis yn ogystal â hanes chwilio a phori</li>
+  </ul>
+</p>
+<p>Mae %1$s yn cael ei gynhyrchu gan Mozilla. Ein cenhadaeth yw meithrin Rhyngrwyd iach ac agored.<br/>
+<a href="%2$s">Dysgu rhagor</a></p>]]></string>
+
+    <!-- Header for the Privacy and Security settings menu -->
+    <string name="preference_privacy_and_security_header">Preifatrwydd a Diogelwch</string>
+
+    <!-- Preference summary for settings related to privacy and security -->
+    <string name="preference_privacy_and_security_summary">Tracio, mewngofnodion, dewisiadau data</string>
+
+    <!-- Preference category description for settings related to search, set default
+    and autocomplete are settings a user can find and change inside the "search" settings screen -->
+    <string name="preference_search_summary">Gosod y rhagosodiad, awtogwblhau</string>
+
+    <!-- Preference category description for settings screen for settings related to Mozilla -->
+    <!-- About the app and help are links that are inside this menu -->
+    <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_summary">Ynghylch %1$s, cymorth</string>
+
+    <!-- Preference category for ad blocking and enhanced tracking protection settings -->
+    <string name="preference_category_tracking_protection3">Diogelwch Uwch Rhag Tracio</string>
+
+    <!-- Preference category for settings related to controlling web content -->
+    <string name="preference_category_web_content">Cynnwys Gwe</string>
+
+    <!-- Preference category: stealth settings for while switching apps -->
+    <string name="preference_category_switching_apps">Newid Apiau</string>
+
+    <!-- Preference category for General Settings -->
+    <string name="preference_category_general">Cyffredinol</string>
+
+    <!-- Preference summary for General Settings category; the two things users can find in this category -->
+    <string name="preference_general_summary2">Porwr rhagosodedig, iaith</string>
+
+    <!-- Preference category for settings about sending usage data -->
+    <string name="preference_category_data_collection_use">Casglu a Defnydd Data</string>
+
+    <string name="preference_category_search">Chwilio</string>
+
+    <!-- Title of "switch" preference that enables/disables search suggestions -->
+    <string name="preference_show_search_suggestions">Derbyn awgrymiadau chwilio</string>
+    <!-- Description of the preference that enables/disables search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_show_search_suggestions_summary">Bydd %1$s yn anfon yr hyn rydych yn ei deipio yn y bar cyfeiriad i\'ch peiriant chwilio</string>
+
+    <!-- This label is shown below the name of the default search engine in settings -->
+    <string name="preference_search_engine_default">Rhagosodiad</string>
+
+    <!-- This label is shown above the currently selected search engine in settings -->
+    <string name="preference_search_engine_label">Peiriant chwilio</string>
+
+    <!-- Text that is shown below a "switch" preference that is enabled. -->
+    <string name="preference_state_on">Ymlaen</string>
+
+    <!-- Text that is shown below a "switch" preference that is disabled. -->
+    <string name="preference_state_off">Diffodd</string>
+
+    <!-- Item in settings that will open a new preference screen for configuring the URL autocomplete behavior. -->
+    <string name="preference_subitem_autocomplete">AwtoGwblhau URL</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
+    <string name="preference_switch_autocomplete_topsites">Am Hoff Wefannau</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the topsites list
+    %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_topsite_summary2">Galluogi i %s awtogwblhau dros 450 URL poblogaidd yn y bar cyfeiriad.</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
+    <string name="preference_switch_autocomplete_user_list">Eich Gwefannau Chi</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the user-defined list
+     %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_user_list_summary2">Galluogi i %s awtogwblhau eich hoff URLau.</string>
+
+    <!-- Preference category: Manage (user-defined) sites -->
+    <string name="preference_category_autocomplete_manage_sites">Rheoli gwefannau</string>
+
+    <!-- Item in autocomplete settings that will open a new preference screen for adding and removing URLs to the user-defined list-->
+    <string name="preference_autocomplete_subitem_manage_sites">Rheoli gwefannau</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add">+ Ychwanegu URL cyfaddas</string>
+
+    <!-- Explanation text above the list of custom autocomplete URLs. -->
+    <string name="preference_autocomplete_explanation_text">Eich rhestr awtogwblhau:</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add2">Ychwanegu URL</string>
+
+    <!-- Title of the screen for adding custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_add">Ychwanegu URL cyfaddas</string>
+
+    <!-- Label for the button to quick add custom autocomplete URLs. -->
+    <string name="custom_autocomplete_quick_add">Ychwanegu URL cyfaddas</string>
+
+    <!-- Label for the button to quick add the current URL to the custom autocomplete list -->
+    <string name="add_custom_autocomplete_label">Ychwanegu dolen i awtogwblhau</string>
+
+    <!-- Preference category for settings about cookies and site data -->
+    <string name="preference_category_cookies">Cwcis a Data Gwefan</string>
+
+    <!-- Preference category for settings about data choices -->
+    <string name="preference_category_data_choices">Dewisiadau Data</string>
+
+    <!-- Title of the screen for removing custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_remove">Tynnu URLau cyfaddas</string>
+
+    <!-- A link to SUMO at autocomplete settings. -->
+    <string name="preference_autocomplete_learn_more">Darllen rhagor</string>
+
+    <!-- Preference summary: Custom (user-defined) autocomplete URLs. -->
+    <string name="preference_autocomplete_custom_summary">Ychwanegu a rheoli URLs awtogwblhau cyfaddas.</string>
+
+    <!-- Label for the "custom autocomplete URL" input field -->
+    <string name="preference_autocomplete_add_title">URLau i\'w hychwanegu</string>
+
+    <!-- "Hint" text for the "custom autocomplete URL" input field. Shown when the field is empty. -->
+    <string name="preference_autocomplete_add_hint">Gludo neu rhoi URL</string>
+
+    <!-- Example how a custom domain autocomplete URL be added (e.g. without http://) -->
+    <string name="preference_autocomplete_add_example2">Esiampl: mozilla.org</string>
+
+    <!-- To be removed once the new hint has been translated -->
+    <string name="preference_autocomplete_add_example">Esiampl: example.com</string>
+
+    <!-- Confirmation "snackbar" shown after a new custom autocomplete URL has been added. -->
+    <string name="preference_autocomplete_add_confirmation">URL cyfaddas newydd wedi ei ychwanegu.</string>
+
+    <!-- Menu item to remove existing autocomplete URLs. -->
+    <string name="preference_autocomplete_menu_remove">Tynnu</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Button that will delete all selected custom autocomplete URLs. -->
+    <string name="preference_autocomplete_action_remove_content_description">Tynnu</string>
+
+    <!-- Error message shown if the entered custom autocomplete URL is not valid or empty. -->
+    <string name="preference_autocomplete_add_error">Gwiriwch yr URL rydych wedi ei roi.</string>
+
+    <string name="preference_language">Iaith</string>
+    <!-- This is shown when the user hasn't set a focus specific language, i.e. when Focus
+         is using the system default language. -->
+    <string name="preference_language_systemdefault">Rhagosodiad y system</string>
+
+    <string name="preference_category_privacy">Preifatrwydd</string>
+    <string name="preference_privacy_block_ads">Rhwystro tracwyr hysbysebion</string>
+    <string name="preference_privacy_block_ads_summary">Mae rhai hysbysebion yn tracio ymweliadau â gwefannau, hyd yn oed heb i chi eu clicio</string>
+    <string name="preference_privacy_block_analytics">Rhwystro tracwyr dadansoddi</string>
+    <string name="preference_privacy_block_analytics_summary">Yn cael eu defnyddio i gasglu, dadansoddi a mesur gweithgareddau fel tapio a sgrolio</string>
+    <string name="preference_privacy_block_social">Rhwystro tracwyr cymdeithasol</string>
+    <string name="preference_privacy_block_social_summary">Wedi eu mewnblannu ar wefannau er mwyn tracio eich ymweliadau ac i ddangos swyddogaethau fel botymau rhannu</string>
+    <string name="preference_privacy_block_content">Rhwystro tracwyr cynnwys eraill</string>
+    <string name="preference_privacy_block_content_summary2">Gall ei alluogi achosi i rai tudalennau i ymddwyn yn rhyfedd</string>
+    <string name="preference_privacy_category_cookies">Rhwystro cwcis</string>
+
+    <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
+    only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
+    <string name="preference_privacy_should_block_cookies_no_option2">Dim diolch</string>
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Rhwystro cwcis trydydd parti\'n unig</string>
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">Rhwystro cwcis trydydd parti\'n unig</string>
+
+    <string name="preference_privacy_should_block_cookies_cross_site_option">Rhwystro cwcis traws-gwefan</string>
+    <string name="preference_privacy_should_block_cookies_yes_option2">Iawn!</string>
+
+    <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
+    <string name="preference_security_biometric">Defnyddio ôl bys i ddatgloi ap</string>
+
+    <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
+        open when the app was last run to ensure that only the phone's owner can view a previous session.
+        %s will be replaced by the app name (e.g. Firefox Focus)
+        Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
+    <string name="preference_security_biometric_summary2">Datglowch gan ddefnyddio bysbrint os ydych wedi ychwanegu Llwybrau Byr neu pan fo gwefan eisoes ar agor yn %s.</string>
+
+    <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
+         and prevents the user from taking screenshots or casting the app to other displays. -->
+    <string name="preference_privacy_secure_mode">Dirgel</string>
+    <!-- Preference Summary: Stealth mode (previously "Secure mode") is a setting that prevents the
+     app's content (in our case especially the content of webpages) to show up in the "recent apps"
+     screen. Additionally Android will prevent the user from taking screenshots or casting the app
+     to other displays. -->
+    <string name="preference_privacy_stealth_summary">Cuddio tudalennau gwe wrth newid apiau a rhwystro cymryd lluniau sgrin.</string>
+
+    <string name="preference_category_security">Diogelwch</string>
+
+    <string name="preference_category_performance">Perfformiad</string>
+    <string name="preference_performance_block_webfonts">Rhwystro ffontiau Gwe</string>
+    <!-- This text is shown below the setting for disabling web fonts. Some websites use icons/images from a font and those do not show up if fonts are blocked.-->
+    <string name="preference_performance_block_webfonts_summary">Gall olygu colli eiconau neu ddelweddau</string>
+
+    <string name="preference_performance_block_javascript">Rhwystro JavaScript</string>
+    <!-- This text is shown below setting for disabling JavaScript. Some websites may not work correctly when JavaScript is disabled -->
+    <string name="preference_performance_block_javascript_summary">Gall tudalennau lwytho\'n gynt, ond o bosib ymddwyn yn annisgwyl</string>
+
+    <!-- This preference does not set Focus as the default browser but instead links to Android's
+     "default apps" settings screen or if not supported by this Android version to a SUMO page describing
+     how to set Focus as a default browser.
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_default_browser2">Gwneud %1$s yn borwr rhagosodedig</string>
+
+    <string name="preference_category_mozilla">Mozilla</string>
+    <string name="preference_mozilla_telemetry2">Anfon data defnydd</string>
+
+    <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
+    <string name="preference_mozilla_telemetry_summary">Darllen rhagor</string>
+
+    <!-- %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_telemetry_summary2">Mae Mozilla\'n ceisio casglu dim ond yr hyn sydd ei angen arnom i ddarparu a gwella %1$s ar gyfer pawb.</string>
+
+    <!-- In-app link (in settings) to Focus privacy notice. -->
+    <string name="preference_privacy_notice">Hysbysiad Preifatrwydd</string>
+
+    <!-- In-app link (in settings) to Focus licensing information. -->
+    <string name="preference_licensing_info">Manylion trwyddedu</string>
+
+    <!-- Link to Focus licensing information from other libraries that we use. -->
+    <string name="preference_libraries_we_use">Llyfrgelloedd rydym yn eu defnyddio</string>
+
+    <!-- Open Source Licenses page title. The first parameter is the app name -->
+    <string name="open_source_licenses_title">%s| Llyfrgelloedd OSS</string>
+
+    <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
+    <string name="preference_about">Ynghylch %1$s</string>
+
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_search_installed_search_engines">Peiriannau chwilio wedi eu gosod</string>
+
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_choose_search_engine">Dewis peiriant chwilio</string>
+
+    <!-- Action for restoring the default list of search engines -->
+    <string name="preference_search_restore">Adfer peiriannau chwilio rhagosodedig</string>
+
+    <!-- Action for adding an additional search engine to the list.
+    The "+" is used to emphasize that this is an "add" action -->
+    <string name="preference_search_add2">+ Ychwanegu peiriannau chwilio arall</string>
+    <string name="preference_search_remove_title">Tynnu peiriannau chwilio</string>
+    <string name="preference_search_remove">Tynnu</string>
+
+    <!-- Action for dding an additional search engine to the list -->
+    <string name="preference_search_add3">Ychwanegu peiriannau chwilio arall</string>
+    <!-- Explanation text above the list of search engines-->
+    <string name="preference_select_preferred_engine">Dewis eich hoff beiriant:</string>
+
+    <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
+    <string name="action_option_add_search_engine">Ychwanegu peiriant chwilio</string>
+
+    <string name="search_add_manually_name_hint">Enw peiriant chwilio</string>
+    <string name="search_add_manually_string">Llinyn chwilio i’w ddefnyddio</string>
+    <string name="search_add_manually_save">Cadw</string>
+
+    <!-- Example of search engine url -->
+    <string name="search_add_manually_example">Esampl: example.com/search/?q=%s</string>
+
+    <string name="search_add_confirmation">Wedi ychwanegu peiriant chwilio.</string>
+
+    <string name="search_add_error_empty_name">Rhowch enw peiriant chwilio</string>
+    <string name="search_add_error_duplicate_name">Mae peiriant chwilio sydd wedi ei osod eisoes yn defnyddio\'r enw yna.</string>
+
+    <string name="search_add_error_empty_search">Rhowch linyn chwilio</string>
+
+    <string name="search_add_error_format">Gwiriwch fod y llinyn chwilio yn cyfateb i fformat Enghraifft</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clear text in URL bar -->
+    <string name="content_description_clear_input">Clirio\'r mewnbwn</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clicking on the website overlay
+     while in typing mode will dismiss and go back to the browser. This text will be read when the
+     overlay if focused. See https://github.com/mozilla-mobile/focus-android/issues/50 -->
+    <string name="content_description_dismiss_input">Cau</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+     history and go back to the home screen. -->
+    <string name="content_description_erase">Dileu hanes pori</string>
+
+    <!-- If the user has multiple tabs open we will show an addition "floating action button" showing how many tabs are open.
+     This string is not displayed and read only by screenreaders. %1$s will be replaced with the number of open tabs. This
+      button will only be visible when there is more than one tab open (>= 2). -->
+    <string name="content_description_tab_counter">Tabiau agored: %1$s</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Lock icon showed in the URL bar for
+     https pages.. -->
+    <string name="content_description_lock">Cysylltiadau diogel</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we start
+     loading a website -->
+    <string name="accessibility_announcement_loading">Llwytho</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we
+     finished loading a website -->
+    <string name="accessibility_announcement_loading_finished">Gwefan wedi ei lwytho</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">Rhagor o ddewisiadau</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button used
+    on home screen-->
+    <string name="indicator_content_description_menu">Rhagor o fotymau dewis</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="content_description_forward">Symud ymlaen</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Reload current website -->
+    <string name="content_description_reload">Ail-lwytho\'r wefan</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back (browsing history) -->
+    <string name="content_description_back">Symud nôl</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Stop loading the current website. This button will turn into the refresh button once loading has been completed (see content_description_reload) -->
+    <string name="content_description_stop">Atal llwytho\'r wefan</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Custom Tab exit button - closes the custom tab and returns to the previous app. -->
+    <string name="content_description_customtab_exit">Nôl i’r ap blaenorol</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the ImageView in the menu that displays
+         the number of trackers blocked for the current session -->
+    <string name="content_description_trackers_blocked">Nifer o dracwyr wedi eu rhwystro</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the switch in the menu that temporarily disables/enables
+         content blocking for the current session -->
+    <string name="content_description_blocking_switch">Rhwystro tracwyr</string>
+
+    <string name="your_rights">Eich Hawliau</string>
+
+    <string name="external_app_prompt_title">Agor dolen mewn ap arall</string>
+    <!-- This string is shown when the user has clicked a link that needs to be opened in a different app.
+         Argument 2 is the external app name, argument 1 is our name (i.e. Firefox Focus, or Firefox Klar). -->
+    <string name="external_app_prompt">Gallwch adael i %1$s agor y ddolen yn %2$s.</string>
+    <!-- This text is the title of a dialog shown if no app could be found for a custom link protocol. -->
+    <string name="external_app_prompt_no_app_title">Canfod ap sy\'n gallu agor dolen</string>
+    <!-- This text is shown in a dialog if no app could be found for a custom link protocol. %1$s is the name of the app (i.e. Firefox Focus) and %2$s is the name of
+         the app store installed on the device (usually that's Google Play). -->
+    <string name="external_app_prompt_no_app">0oes dim o\'r apiau ar eich dyfais yn gallu i agor y ddolen. Mae modd gofyn i %1$s chwilio %2$s am ap sy\' n gallu gwneud.</string>
+    <!-- This label is shown above a list of apps that can be used to open a given link -->
+    <string name="external_multiple_apps_matched_exit">Gadael Pori Preifat?</string>
+
+    <!-- Snackbar that will be displayed after a download has completed. %1$s will be replaced with the file name. -->
+    <string name="download_snackbar_finished">%1$s wedi gorffen</string>
+
+    <!-- Snackbar action to immediately open the successfully downloaded file. -->
+    <string name="download_snackbar_open">Agor</string>
+
+
+
+
+
+
+
+
+
+  <!-- Snackbar that will be displayed after a website has been added to shortcuts. -->
+    <string name="snackbar_added_to_shortcuts">Ychwanegwyd at y llwybrau byr!</string>
+
+    <string name="error_hostLookup_title">Heb ganfod gweinydd</string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+    <string name="onboarding_close_button_content_description">Cau</string>
+
+    <!-- New Onboarding flow first screen title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_first_screen_title">Croeso i %1$s</string>
+
+    <!-- New Onboarding flow first screen subtitle the one that appears under title -->
+    <string name="onboarding_first_screen_subtitle">Cyflym. Preifat. Dim tarfu.</string>
+
+    <!-- New Onboarding flow first screen button label-->
+    <string name="onboarding_first_screen_button_text">Cychwyn arni</string>
+
+    <!-- Onboarding second screen: Title -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_title">Nid yw %1$s yn debyg i borwyr eraill</string>
+
+
+    <!-- New Onboarding flow second screen subtitle the one that appears under title -->
+    <string name="onboarding_second_screen_subtitle_one">Rydyn ni’n dileu eich hanes pan fyddwch chi’n cau’r ap er mwyn preifatrwydd ychwanegol.</string>
+
+    <!-- New Onboarding flow second screen subtitle two the one that appears under subtitle one -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_subtitle_two">Gwnewch %1$s eich porwr rhagosodedig i ddiogelu eich data gyda phob dolen rydych yn eu hagor.</string>
+
+    <!-- New Onboarding flow second screen make Focus default browser button label-->
+    <string name="onboarding_second_screen_default_browser_button_text">Gosod fel y porwr ragosodedig</string>
+
+    <!-- New Onboarding flow second screen skip onboarding button label-->
+    <string name="onboarding_second_screen_skip_button_text">Hepgor</string>
+
+
+    <!-- First run tour (Default browser): Title -->
+    <string name="firstrun_defaultbrowser_title">Cryfhewch eich preifatrwydd</string>
+    <!-- First run tour (Default browser): Text. -->
+    <string name="firstrun_defaultbrowser_text2">Cymrwch bori preifat i\'r lefel nesaf. Rhwystrwch hysbysebion a chynnwys arall sy\'n gallu\'ch tracio ar draws wefannau ac arafu amserau llwytho tudalennau.</string>
+
+    <!-- First run tour (Search): Title -->
+    <string name="firstrun_search_title">Chwilio, cynhwysfawr</string>
+    <!-- First run tour (Search): Text -->
+    <string name="firstrun_search_text">Chwilio am rywbeth gwahanol? Dewiswch beiriant chwilio arall yn y Gosodiadau.</string>
+
+    <!-- First run tour (Shortcut): Title -->
+    <string name="firstrun_shortcut_title">Ychwanegu llwybrau byr i\'ch sgrin cartref</string>
+    <!-- First run tour (Shortcut): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_shortcut_text">Ewch i\'ch hoff wefannau yn %1$s yn gyflym. Dewiswch \&quot;Ychwanegu i\'r Sgrin Cartref\&quot; o ddewislen %1$s.</string>
+
+    <!-- First run tour (Privacy): Title -->
+    <string name="firstrun_privacy_title">Arfer preifatrwydd</string>
+    <!-- First run tour (Privacy): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_privacy_text">Gosodwch %1$s fel eich porwr ragosodedig a derbyn buddiannau pori preifat wrth agor tudalennau gwe mewn apiau eraill.</string>
+
+    <string name="firstrun_close_button">Iawn!</string>
+    <string name="firstrun_skip_button">Hepgor</string>
+    <string name="firstrun_next_button">Nesaf</string>
+
+    <!-- Indicator that no trackers are being blocked because content blocking is disabled; normally shows the number of blocked trackers -->
+    <string name="content_blocking_disabled">-</string>
+
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_add">Ychwanegu</string>
+
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_yes">IAWN</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_cancel">Diddymu</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_no">NA</string>
+
+    <!-- When enhanced tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with enhanced tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection2">Bydd y Llwybr Byr yn agor gyda Diogelwch rhag Tracio wedi ei analluogi</string>
+
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 40 characters; the value may be truncated if it is too long.
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_name">Sesiwn pori preifat</string>
+
+    <!-- The user visible description of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 300 characters; the value may be truncated if it is too long. %1$s will be replaced with the name of the app (e.g. Firefox Focus).
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_description">Mae hysbysiadau\'n caniatáu i chi ddileu eich sesiwn %1$s gyda thap. Does dim angen agor yr ap na gweld beth sy\'n rhedeg yn eich porwr.</string>
+
+    <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
+    <string name="tabs_tray_action_erase">Dileu hanes pori</string>
+
+    <!-- If the user decides to open the current page in another browser and if Firefox is not installed then we show this
+      item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play). -->
+    <string name="download_firefox">Llwytho Firefox i Lawr</string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)-->
+    <string name="your_rights_content1"><![CDATA[Mae %1$s yn feddalwedd cod agored a rhydd gan Mozilla a chyfranwyr eraill.]]></string>
+
+
+
+
+  <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
+    <string name="your_rights_content2"><![CDATA[Mae %1$s ar gael i chi o dan amodau <a href="%2$s">Trwydded Gyhoeddus Mozilla</a> a thrwyddedau cod agored eraill.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
+    <string name="your_rights_content3"><![CDATA[Nid ydych yn derbyn unrhyw hawliau na thrwyddedau i nod masnach y Mozilla Foundation neu unrhyw barti arall, gan gynnwys enwau a logos Mozilla, Firefox n %1$s. Mae gwybodaeth bellach i’w gael <a href="%2$s">yma</a>.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
+    <string name="your_rights_content4"><![CDATA[Mae cod ffynhonnell ychwanegol ar gyfer %1$s ar gael o dan amrywiol <a href="%2$s">drwyddedau</a> rhydd a chod agored.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the GPL
+    %3$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists) -->
+    <string name="your_rights_content5"><![CDATA[Mae %1$s hefyd yn defnyddio rhestrau rhwystro sy’n cael eu darparu gan Disconnect, Inc. fel gweithiau ar wahân ac annibynnol o dan <a href="%2$s">Trwydded Gyhoeddus Gyffredinol GNU v3</a>, ac sydd ar gael <a href = "%3$s">yma</a>.]]></string>
+
+    <!-- Text shown in prompts for GeckoView -->
+    <string name="gv_prompt_username_hint">Enw Defnyddiwr</string>
+    <string name="gv_prompt_password_hint">Cyfrinair</string>
+    <string name="gv_prompt_clear">Clirio</string>
+
+    <!-- Text shown in Security Information Popup -->
+    <!-- Text to denote secure or insecure connection -->
+    <string name="security_popup_secure_connection">Mae’r Cysylltiad yn Ddiogel</string>
+    <string name="security_popup_insecure_connection">Cysylltiad Anniogel</string>
+    <!-- %1$s will be replaced with organization that granted the SSL certificate -->
+    <string name="security_popup_security_verified">Dilyswyd gan: %1$s</string>
+
+    <!-- Content Description of Security Icon in toolbar -->
+    <string name="site_security_icon_content_description">Diogelwch Gwefan</string>
+    <string name="preference_autocomplete_duplicate_url_error">URL eisoes yn bod</string>
+
+    <!-- Label for the Find in page button -->
+    <string name="find_in_page">Canfod ar y Dudalen</string>
+
+    <!-- Watermark/Hint for the find in page input field -->
+    <string name="find_in_page_input">Canfod ar y dudalen</string>
+
+    <!-- String to show the number of results found in the page and the
+        position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="find_in_page_result">%1$d/%2$d</string>
+    <!-- String to be read by the accessibility service presenting the number of results found in the page
+        and the position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="accessibility_find_in_page_result">%1$d o %2$d</string>
+
+    <!-- String to be read by the accessibility service when focusing the next result button -->
+    <string name="accessibility_next_result">Canfod y canlyniad nesaf</string>
+    <!-- String to be read by the accessibility service when focusing the previous result button -->
+    <string name="accessibility_previous_result">Canfod y canlyniad blaenorol</string>
+    <!-- String to be read by the accessibility service when focusing the dismiss button in the "find in page" UI -->
+    <string name="accessibility_dismiss_find_in_page">Cau’r canfod ar y dudalen</string>
+
+
+
+  <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site">Gwefan bwrdd gwaith</string>
+
+    <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site2">Gwefan bwrdd gwaith</string>
+
+    <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
+    <string name="custom_tab_copy_url_action">URL wedi’i gopïo</string>
+
+    <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
+    <string name="preference_advanced_summary">Offer datblygwyr</string>
+
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">Agor dolenni mewn apiau</string>
+
+    <!-- Title of Advanced Setting category -->
+    <string name="preference_category_advanced">Uwch</string>
+
+    <!-- Preference for site permissions -->
+    <string name="preference_site_permissions">Caniatâd gwefan</string>
+
+    <!--  Preference for cookie banner. The name of the item from settings screen and the title of the cookie banner screen. -->
+    <string name="preferences_cookie_banner">Cyfyngu Baneri Cwcis</string>
+
+    <!--  Preference summary for the cookie banner. If the cookie banner option is not disabled. -->
+    <string name="preferences_cookie_banner_summary_on">Ymlaen</string>
+
+    <!--  Preference summary for the cookie banner. If the cookie banner option is disabled. -->
+    <string name="preferences_cookie_banner_summary_off">Diffodd</string>
+
+    <!--  Title preference inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
+    <string name="cookie_banner_reject_all_option_title">Cyfyngu Baneri Cwcis</string>
+
+    <!--  Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
+    <string name="cookie_banner_reject_all_option_summary">Gweld llai o faneri trwy wrthod ceisiadau cwcis yn awtomatig, pan fo modd.</string>
+
+    <!-- Preference for removing cookie/consent banners from sites automatically, this is shown as part of the protections panel with the tracking protection toggle. -->--&gt;
+    <string name="cookie_banner_exception_item_title">Cyfyngu Baneri Cwcis</string>
+
+    <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle. -->
+    <string name="cookie_banner_exception_item_description_state_on">YMLAEN ar gyfer y wefan hon</string>
+
+    <!-- Text for indicating cookie reducer is not supported on the current site, this is shown as part of the protections panel with the tracking protection toggle. -->
+    <string name="cookie_banner_exception_site_not_supported">Nid yw’r wefan yn cael ei chefnogi ar hyn o bryd</string>
+
+    <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle. -->
+    <string name="cookie_banner_exception_item_description_state_off">DIFFODD ar gyfer y wefan hon</string>
+
+    <!-- Preference for removing cookie/consent banners from sites automatically, this is shown when the user enters in details after he clicks on the item from protection panel. -->
+    <string name="cookie_banner_exception_panel_switch_title">Cyfyngu Baneri Cwcis</string>
+
+    <!-- Text for indicating cookie banner handling is off this site, this is shown when the user enters in details after he clicks on the item from protection panel. -->
+    <string name="cookie_banner_exception_panel_switch_state_off">DIFFODD ar gyfer y wefan hon</string>
+
+    <!-- Text for indicating cookie banner handling is on this site, this is shown when the user enters in details after he clicks on the item from protection panel. -->
+    <string name="cookie_banner_exception_panel_switch_state_on">YMLAEN ar gyfer y wefan hon</string>
+
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site. -->
+    <string name="cookie_banner_exception_panel_title_state_on_for_site">Troi Llai o Faneri Cwcis ymlaen ar %1$s?</string>
+
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site. -->
+    <string name="cookie_banner_exception_panel_title_state_off_for_site">Diffodd Llai o Faneri Cwcis ar %1$s?</string>
+
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
+    <string name="cookie_banner_exception_panel_description_state_on_for_site">Bydd %1$s yn clirio cwcis y wefan hon ac yn adnewyddu’r dudalen. Gall clirio pob cwci eich allgofnodi neu wagio eich certiau siopa.</string>
+
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
+    <string name="cookie_banner_exception_panel_description_state_off_for_site2">Gall %1$s geisio gwrthod ceisiadau cwcis yn awtomatig.</string>
+
+    <!-- Long text for a detail explanation indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner panel in the toolbar. -->
+    <string name="cookie_banner_exception_panel_description_site_is_not_supported">Nid yw’r wefan hon yn cael ei chefnogi ar hyn o bryd gan Llai o Faneri Cwcis. Hoffech chi ofyn i’n tîm adolygu’r wefan hon ac ychwanegu cefnogaeth yn y dyfodol?</string>
+
+    <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner panel in the toolbar. -->
+    <string name="cookie_banner_exception_panel_site_is_not_supported_cancel_button">Diddymu</string>
+
+    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner panel in the toolbar. -->
+    <string name="cookie_banner_exception_panel_site_is_not_supported_request_support_button">Gofyn am gymorth</string>
+
+    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_report_a_site_snackbar_label">Cais i’r wefan cymorth wedi’i gyflwyno.</string>
+
+    <!-- Label for cookie banner item from tracking protection, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_the_site_was_reported">Cais i’r wefan cymorth wedi’i gyflwyno.</string>
+
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Cookie Banner (Banner Info Message). %1$s will be replaced by the app name, %2$s will be an active link using the string cfr_cookie_banner_link as text. -->
+    <string name="cfr_cookie_banner">Mae %1$s yn ceisio gwrthod ceisiadau cwci i gau baneri cwci annifyr.\n\nRheolwch ddewisiadau baneri cwci yn y %2$s.</string>
+
+    <!-- CFR for Cookie Banner (Banner Info Message). This string is used as text for a link in cfr_cookie_banner and takes the user to the app settings. -->
+    <string name="cfr_cookie_banner_link">gosodiadau</string>
+
+    <!-- Preference for autoplay -->
+    <string name="preference_autoplay">Awtochwarae</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">I’w ganiatáu:</string>
+
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. Ewch i Gosodiadau Android</string>
+
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. Tapiwch <b>Caniatâd</b>]]></string>
+
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">Mynd i’r gosodiadau</string>
+
+    <!-- Third step for allowing a permission. The placeholder will be updated by, for example, "Camera" -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. Toglo <b>%1$s</b> i YMLAEN]]></string>
+
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">Camera</string>
+
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">Meicroffon</string>
+
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">Lleoliad</string>
+
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">Hysbysiad</string>
+
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">Cynnwys wedi’i reoli gan DRM</string>
+
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">Gofyn i ganiatáu</string>
+
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">Rhwystrwyd</string>
+
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">Caniatawyd</string>
+
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">Rhwystrwyd gan Android</string>
+
+    <!-- Preference for allow autoplay audio and video-->
+    <string name="preference_allow_audio_video_autoplay">Caniatáu sain a fideo</string>
+
+    <!-- Preference for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only">Rhwystro sain yn unig</string>
+
+    <!-- Preference summary for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only_summary">Cymeradwy</string>
+
+    <!-- Preference for block autoplay audio and video-->
+    <string name="preference_block_autoplay_audio_video">Rhwystro sain a fideo</string>
+
+    <!-- Preference for studies -->
+    <string name="preference_studies">Astudiaethau</string>
+
+    <!-- Preference for studies summary-->
+    <string name="preference_studies_summary">Efallai y bydd Firefox yn gosod a rhedeg astudiaethau o bryd i’w gilydd.</string>
+
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Darllen rhagor</string>
+
+    <!-- Dialog message shown when some changes are made on studies -->
+    <string name="studies_restart_app">Bydd yr ap yn cau er mwyn gosod y newidiadau</string>
+
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Tynnu</string>
+
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Gweithredol</string>
+
+    <!-- Title of the completed section on the studies list -->
+    <string name="studies_completed">Cwblhawyd</string>
+
+    <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
+    <string name="preference_remote_debugging">Dadfygio pell drwy\'r USB/Diwifr</string>
+
+    <!-- Text Button for show biometric prompt -->
+    <string name="show_biometric_button_text">Datgloi</string>
+
+    <!-- Title text for biometric prompt pop-up -->
+    <string name="biometric_prompt_title">Cadarnhau Defnyddio Eich Bysbrint</string>
+
+    <!-- Subtitle text for biometric prompt pop-up -->
+    <string name="biometric_prompt_subtitle">Gallwch ddefnyddio’ch bysbrint i barhau â’ch sesiwn ap gyfredol.</string>
+
+    <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
+    while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
+    <string name="biometric_auth_open_link_new_session">Agor Dolen mewn Sesiwn Newydd</string>
+
+    <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
+    <string name="biometric_auth_image_description">Eicon ôl bys</string>
+
+    <!-- Error text displayed when the user's fingerprint cannot be recognized upon re-entering the app.
+     This is displayed during the authentication flow as the app launches. -->
+    <string name="biometric_auth_not_recognized_error">Ôl bys heb ei adnabod. Ceisiwch eto.</string>
+
+    <!-- Error text displayed when the user's fingerprint moved too quickly upon re-entering the app
+    This is displayed during the authentication flow as the app launches.-->
+    <string name="biometric_auth_moved_too_quickly">Symudodd y bys yn rhy gyflym. Ceisiwch eto.</string>
+
+    <!-- Title for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestion_title2">Dangos awgrymiadau chwilio?</string>
+
+    <!-- Description for the prompt to enable search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="enable_search_suggestion_description">I dderbyn awgrymiadau, mae %1$s angen anfon yr hyn rydych chi’n ei deipio yn y bar cyfeiriad i’r peiriant chwilio.</string>
+
+    <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_no">Na</string>
+
+    <!-- Label used for the "YES button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_yes">Iawn</string>
+
+    <!-- Message displayed when using a search engine that doesn't provide suggestions -->
+    <string name="no_suggestions_message">Nid yw rhai peiriannau chwilio\'n gallu dangos awgrymiadau.</string>
+
+    <!-- Button to dismiss the message displayed  when using a search engine that doesn't provide suggestions-->
+    <string name="dismiss_no_suggestions_prompt_button">Cau</string>
+
+    <!-- Tips displayed on the home view -->
+
+    <!-- Tip displayed on home view explaining how to disable tracking protection
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection">Gwefan yn ymddwyn yn anisgwyl?\n Ceisiwch ddiffodd Diogelwch rhag Tracio</string>
+
+    <!-- Tip displayed on home view explaining how to add sites to homescreen
+    Argument 1 will be replaced with a line break in the application.-->
+    <string name="tip_add_to_homescreen"><![CDATA[Mynediad un tap i\'r gwefannau rydych yn eu defnyddio amlaf%1$s Dewislen > Ychwanegu i\'r Dudalen Cartref]]></string>
+
+    <!-- Tip displayed on home view explaining how to make Focus the default browser
+    Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_set_default_browser">Agor pob dolen yn %1$s\n Gosod %1$s fel y porwr rhagosodedig</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_autocomplete_url">Gosod URLau awtogwblhau i\'ch gwefannau gorau\n Pwyso\'n hir unrhyw URL yn y bar cyfeiriad</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_open_in_new_tab">Agor dolen mewn tab newydd\n Pwyso\'n hir ar unrhyw ddolen ar dudalen</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
+    <string name="tip_disable_tips2">Diffodd awgrymiadau ar y sgrin cychwyn</string>
+
+    <!-- Label for the snackbar when a user opens a new tab -->
+    <string name="new_tab_opened_snackbar">Tab newydd wedi ei agor</string>
+
+    <!-- Label for the button in the snackbar that switches to the newly opened tab -->
+    <string name="open_new_tab_snackbar">Newid</string>
+
+    <!-- Text displayed in a notification when the user enters full screen mode -->
+    <string name="full_screen_notification">Mynd i’r sgrin lawn</string>
+
+    <!-- Preference for switching to a new tab immediately after opening -->
+    <string name="preference_open_new_tab">Newid i ddolen mewn tab newydd ar unwaith</string>
+
+    <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_title">Rhwystro gwefannau peryglus a thwyllodrus posib</string>
+    <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_summary">Rhwystro gwefannau twyllodrys ac ymosodol, rhai drwgwar, a meddalwedd diangen hysbys.</string>
+
+    <!-- Title of the preference to enable "HTTPS-Only" mode -->
+    <string name="preference_https_only_title">Modd HTTPS-yn-Unig</string>
+
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preference_https_only_summary3">Yn ceisio cysylltu’n awtomatig â gwefannau gan ddefnyddio’r protocol amgryptio HTTPS am fwy o ddiogelwch.</string>
+
+    <!-- Preference for exceptions tracking protection -->
+    <string name="preference_exceptions">Eithriadau</string>
+    <!-- Description for the exceptions preference screen-->
+    <string name="preference_exceptions_description">Rydych chi wedi analluogi Rhwystro Cynnwys y gwefannau hyn.</string>
+    <!-- Menu item to remove existing exceptions. -->
+    <string name="preference_exceptions_menu_remove">Tynnu</string>
+    <!-- Button to remove all websites from the exception list -->
+    <string name="preference_exceptions_remove_all_button_label">Tynnu pob gwefan</string>
+
+    <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_block_cookies_title">Rhwystro Cwcis</string>
+
+    <!-- Message for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_category_block_cookies">Hoffech chi rwystro cwcis?</string>
+
+    <!-- Title for the tab crash report screen-->
+    <string name="tab_crash_report_title">Tab wedi Chwalu</string>
+    <!-- Headline for the tab crash report screen -->
+    <string name="tab_crash_report_headline">Ymddiheuriadau. Rydym yn cael anhawster gyda\'r tab hwn.</string>
+    <!-- Subtitle for the tab crash report screen -->
+    <string name="tab_crash_report_description">Fel porwr preifat, fyddwn ni byth yn cadw ac felly\'n methu adfer y tab hwn.</string>
+    <!-- Label for button to close the tab-->
+    <string name="tab_crash_report_close_tab_button_label">Cau Tab</string>
+
+
+
+
+  <!-- Label for the checkbox to send the tab crash report to Mozilla -->
+    <string name="crash_report_send_crash_label">Anfon adroddiad chwalu at Mozilla</string>
+
+    <!-- Tracking protection bottom sheet -->
+
+    <!-- Label for the total number of trackers blocked. %s represents the app install date -->
+    <string name="trackers_count_note">Tracwyr wedi’u rhwystro ers %s</string>
+    <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="content">Cynnwys</string>
+    <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
+    <string name="advertising">Hysbysebu</string>
+    <!-- Category of trackers (social media) that can be blocked by Enhanced Tracking Protection -->
+    <string name="social">Cymdeithasol</string>
+    <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection -->
+    <string name="analytics">Dadansoddeg</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="enhanced_tracking_protection">Diogelwch Uwch Rhag Tracio</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is disabled for this site-->
+    <string name="enhanced_tracking_protection_state_off">Mae diogelu I FFWRDD ar gyfer y wefan hon</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is enabled for this site-->
+    <string name="enhanced_tracking_protection_state_on">Mae diogelu YMLAEN ar gyfer y wefan hon</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="secure_connection">Cysylltiad yn ddiogel</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="insecure_connection">Nid yw’r cysylltiad yn ddiogel</string>
+    <!-- Title for the list of trackers enhanced tracking ptotection can block-->
+    <string name="trackers_and_scripts">Tracwyr a Sriptiau i’w Rhwystro</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
+    <string name="go_back">Mynd nôl</string>
+
+    <!-- Top Sites -->
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Tynnu</string>
+
+    <!-- Text for the menu item to remove a top site -->
+    <string name="rename_top_site_item">Ailenwi</string>
+    <!-- Text for the dialog title for renaming a top site -->
+    <string name="rename_top_site">Ailenwi</string>
+
+    <!-- Placeholder text for the input field of rename top site-->
+    <string name="placeholder_rename_top_site">Enw llwybr byr</string>
+
+    <!-- Text for context menu additional note.
+    %1$s is a placeholder for the app name. -->
+    <string name="contextmenu_erased_images_note2">Fydd delweddau sydd wedi eu cadw a’u rhannu &lt;b&gt;ddim yn cael eu dileu&lt;/b&gt; pan fyddwch yn dileu hanes %1$s.</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference category for changing default theme to dark or light mode -->
+    <string name="preferences_theme">Thema</string>
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">Golau</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">Tywyll</string>
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">Gosodwyd gan yr Arbedwr Batri</string>
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">Dilyn thema’r ddyfais</string>
+
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title2">Nid yw’r wefan hon yn cefnogi HTTPS</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[Mae %1$s yn ceisio defnyddio cysylltiad HTTPS pryd bynnag y bo modd i fod yn fwy diogel.
+     <a href="%2$s">Dysgu rhagor</a> <br/><br/>
+     Newidiwch y gosodiad hwn yn Gosodiadau > Preifatrwydd a Diogelwch > Diogelwch.]]></string>
+
+    <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Nid yw’r cysylltiad yn ddiogel</string>
+
+    <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+    Gall hyn fod yn broblem gyda ffurfweddiad y gweinydd, neu gall fod yn rhywun sy’n ceisio dynwared y gweinydd. <br/><br/>
+    Os ydych wedi cysylltu â’r gweinydd hwn yn llwyddiannus yn y gorffennol, gall y gwall fod yn un dros dro.
+    ]]></string>
+
+    <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>Gall rhywun fod yn ceisio dynwared y wefan a gall mynd ymlaen fod yn beryglus.</label>
+        <br><br>
+        <label> Nid yw %1$s yn ymddiried yn <b>%2$s</b> oherwydd bod cyhoeddwr ei dystysgrif yn anhysbys, maer dystysgrif wedi’i hunan-lofnodi, neu nid yw’r gweinydd yn anfon y tystysgrifau canolradd cywir.</label>
+    ]]></string>
+
+     <!-- Sessions List -->
+    <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
+    <string name="close_tab">Cau tab</string>
+
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_shield_icon2">Wedi’u dal! Rydym wedi rhwystro’r wefan hon rhag ysbïo arnoch chi. Tapiwch y darian i gael gwybodaeth am yr hyn rydyn ni’n eu rhwystro.</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
+    <string name="cfr_close_button_description">Cau’r llamlen</string>
+
+    <!-- Tool Tip for: Privacy and Security Settings Screen  task : https://github.com/mozilla-mobile/focus-android/issues/6211 -->
+    <!-- Tool Tip Title -->
+    <string name="tool_tip_title">Rydych wedi’ch diogelu!</string>
+    <!-- Tool Tip Message -->
+    <string name="tool_tip_message">Mae’r gosodiadau rhagosodedig hyn yn cynnig diogelwch cryf. Ond mae’n hawdd newid y gosodiadau i ddiwallu’ch anghenion penodol.</string>
+    <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
+    <string name="tool_tip_dismiss_button_content_description">Cau</string>
+
+    <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_delete_icon2">Tapiwch yma i roi’r cyfan yn y bin sbwriel - hanes, cwcis, popeth - a dechrau’n ffres ar dab newydd.</string>
+
+    <!-- Promote SearchWidget Dialog -->
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. --&gt;
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the
+    close button from promote search widget dialog. -->
+    <string name="promote_search_widget_dialog_content_description">Cau</string>
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. --&gt;
+    <!-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. -->
+    <string name="promote_search_widget_dialog_picture_content_description">Chwilio teclyn</string>
+
+    !-- This is the title of promote search widget dialog. --&gt;
+    <!-- This is the title of promote search widget dialog. -->
+    <string name="promote_search_widget_dialog_title">Hanes pori wedi’i glirio! 🎉</string>
+
+    !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. &quot;Focus&quot;) --&gt;
+    <!-- Banner Info Message than will appear when user first enters in the app. The location is at the toolbar. -->
+    <string name="cfr_for_start_browsing">Cychwynnwch eich sesiwn bori breifat, a byddwn yn rhwystro tracwyr a phethau drwg eraill wrth i chi fynd ymlaen.</string>
+
+    !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. &quot;Focus&quot;) --&gt;
+    <!-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. "Focus") -->
+    <string name="promote_search_widget_dialog_subtitle">Byddwn yn eich gadael i’ch pori preifat, ond yn cael cychwyn cyflymach y tro nesaf gyda’r teclyn %1$s ar eich sgrin Cartref.</string>
+
+    !-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. --&gt;
+    <!-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. -->
+    <string name="promote_search_widget_button_text">Ychwanegu teclyn i’r sgrin cartref</string>
+
+    !-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. --&gt;
+    <!-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. -->
+    <string name="promote_search_widget_snackbar_message">Teclyn wedi’i ychwanegu i’r sgrin cartref</string>
+</resources>

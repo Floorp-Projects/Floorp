@@ -1,0 +1,59 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+android {
+    defaultConfig {
+        minSdkVersion config.minSdkVersion
+        compileSdk config.compileSdkVersion
+        targetSdkVersion config.targetSdkVersion
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    namespace 'mozilla.components.feature.awesomebar'
+}
+
+dependencies {
+    implementation project(':concept-awesomebar')
+    implementation project(':concept-fetch')
+    implementation project(':concept-engine')
+    implementation project(':concept-toolbar')
+    implementation project(':concept-storage')
+
+    implementation project(':browser-state')
+    implementation project(':browser-storage-sync')
+    implementation project(':browser-icons')
+
+    implementation project(':feature-tabs')
+    implementation project(':feature-session')
+    implementation project(':feature-search')
+
+    implementation project(':support-ktx')
+    implementation project(':support-utils')
+
+    implementation project(':ui-icons')
+
+    implementation ComponentsDependencies.androidx_core_ktx
+
+    testImplementation project(':support-test')
+    testImplementation project(':lib-fetch-httpurlconnection')
+
+    testImplementation ComponentsDependencies.androidx_test_core
+    testImplementation ComponentsDependencies.androidx_test_junit
+    testImplementation ComponentsDependencies.testing_robolectric
+    testImplementation ComponentsDependencies.testing_mockwebserver
+    testImplementation ComponentsDependencies.testing_coroutines
+}
+
+apply from: '../../../android-lint.gradle'
+apply from: '../../../publish.gradle'
+ext.configurePublish(config.componentsGroupId, archivesBaseName, project.ext.description)

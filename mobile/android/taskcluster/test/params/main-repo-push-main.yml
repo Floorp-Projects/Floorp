@@ -1,0 +1,27 @@
+base_ref: main
+base_repository: https://github.com/mozilla-mobile/firefox-android
+base_rev: bf059967cd9d242e24450ced8f293cc477dbed4e
+build_date: 1667486035
+build_number: 1
+do_not_optimize: []
+existing_tasks: {}
+filters:
+- target_tasks_method
+head_ref: main
+head_repository: https://github.com/mozilla-mobile/firefox-android
+head_rev: 5cc49c003700c5b75b7889ce72a7acdddae18a47
+head_tag: ''
+level: '3'
+moz_build_date: '20221103143355'
+next_version: null
+optimize_target_tasks: true
+owner: ryanvm@gmail.com
+project: firefox-android
+pull_request_number: null
+pushdate: 0
+pushlog_id: '0'
+release_type: ''
+repository_type: git
+target_tasks_method: default
+tasks_for: github-push
+version: 113.0a1

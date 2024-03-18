@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_sans_serif_font">सॅन्स सेरिफ</string>
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_sans_serif_font_desc">सॅन्स सेरिफ टंक</string>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_serif_font">सेरिफ</string>
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_serif_font_desc">सेरिफ टंक</string>
+
+    <!-- Accessible description for decreasing the font size -->
+    <string name="mozac_feature_readerview_font_size_decrease_desc">टंकाचा आकार कमी करा</string>
+
+    <!-- Accessible description for increasing the font size -->
+    <string name="mozac_feature_readerview_font_size_increase_desc">टंकाचा आकार वाढावा</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_dark">गडद</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_dark_color_scheme_desc">गडद रंग योजना</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_sephia">दाट तपकिरी</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_sepia_color_scheme_desc">दाट तपकिरी रंग योजना</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_light">फिकट</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_light_color_scheme_desc">फिकट रंग योजना</string>
+</resources>

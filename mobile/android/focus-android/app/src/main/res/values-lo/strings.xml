@@ -1,0 +1,1117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
+    <!-- ####################################################################################### -->
+    <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
+    <!-- ## into a separate file like strings_references.xml                                  ## -->
+    <!-- ####################################################################################### -->
+
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_cancel">ຍົກເລີກ</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_ok">ຕົກລົງ</string>
+
+    <string name="action_save">ບັນທຶກ</string>
+
+    <!-- This text is shown in the URL bar when it's empty -->
+    <string name="urlbar_hint">ຄົ້ນຫາ ຫລື ປ້ອນທີ່ຢູ່ໃສ່ນີ້</string>
+
+    <string name="teaser">ການທ່ອງເວັບສ່ວນຕົວແບບອັດຕະໂນມັດ.\nທ່ອງເວັບ ແລະ ລົບລ້າງປະຫວັດການໃຊ້ງານອອກ.</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
+    <string name="feedback_erase">ປະຫວັດການທ່ອງເວັບຂອງທ່ານໄດ້ຖືກລຶບອອກແລ້ວ.</string>
+    <string name="feedback_erase2">ລຶບລ້າງປະຫວັດການທ່ອງເວັບແລ້ວ</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
+    <string name="feedback_erase_custom_tab">ແທັບຂອງປະຫວັດການທ່ອງເວັບໄດ້ຖືກລຶບອອກແລ້ວ.</string>
+
+    <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
+    <string name="search_hint">ຄົ້ນຫາສຳລັບ %1$s</string>
+
+    <!-- Menu item: Share the currently visible page -->
+    <string name="menu_share">ແບ່ງປັນ…</string>
+
+    <!-- Menu item: Report an issue on the current site -->
+    <string name="menu_report_site_issue">ລາຍງານບັນຫາໄຊ</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. %1$s will be
+      replaced with the name of the browser like: "Open in Firefox" or "Open in Chrome". Some
+      links can be opened by native apps that aren't a browser, e.g. "Open in YouTube" -->
+    <string name="menu_open_with_default_browser2">ເປີດໃນ %1$s</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. This menu item
+      will be shown if there are multiple browsers and we do not know which one is the default
+      browser or in case Focus is actually the default browser. Clicking this menu item will show
+      a screen with multiple browsers (or other apps that can open the current URL) to choose from. -->
+    <string name="menu_open_with_a_browser2">ເປີດໃນ…</string>
+
+    <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
+    <string name="menu_add_to_home_screen">ເພີ່ມເຂົ້າໄປຫນ້າຈໍຫລັກ</string>
+
+    <!-- Menu item: Add the current site as a shortcut on the Home screen -->
+    <string name="menu_add_to_shortcuts">ເພີ່ມທາງລັດ</string>
+    <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
+    <string name="menu_remove_from_shortcuts">ລຶບອອກຈາກທາງລັດ</string>
+
+    <!-- Menu item: Shows information about features and changes that are new to this version -->
+    <string name="menu_settings">ການຕັ້ງຄ່າ</string>
+    <string name="menu_about">ກ່ຽວກັບ</string>
+    <string name="menu_help">ວິທີໃຊ້</string>
+    <string name="menu_rights">ສິດທິຂອງທ່ານ</string>
+
+    <!-- Menu item: This is the label for a menu entry that shows how many trackers have been blocked
+         for the currently loaded website. The number of blocked trackers is shown below this label.
+         Next to this label is a switch that allows the user to temporarily enable / disable the
+         blocking of trackers for the current browsing session - for example if the current website
+         doesn't work correctly with blocked content. -->
+    <string name="menu_trackers_blocked_title">ຕົວຕິດຕາມໄດ້ຖືກບັອກ</string>
+
+    <!-- Menu item: This is the subtitle for the Trackers blocked menu entry that shows how many
+    trackers have been blocked for the currently loaded website.  -->
+    <string name="menu_trackers_blocked_subtitle">ການປິດສິງນີ້ອາດຈະຊ່ວຍແກ້ໄຂບັນຫາບາງຢ່າງຂອງເວັບໄຊທໄດ້</string>
+
+    <!-- Menu item: This is the label for turning off content blocking for the current website. -->
+    <string name="menu_content_blocking">ການບັອກເນື້ອຫາ</string>
+    <!-- This is the subtitle content blocking toggle -->
+    <string name="menu_content_blocking_subtitle">ປິດເພື່ອແກ້ໄຂບາງບັນຫາຂອງເວັບໄຊທ</string>
+
+    <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
+     See https://github.com/mozilla-mobile/focus-android/issues/2106
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="menu_custom_tab_branding">ຂັບເຄື່ອນໂດຍ %1$s</string>
+
+    <!-- This is the title of a dialog that shows all the share targets (apps or contacts) when
+         sharing an URL. -->
+    <string name="share_dialog_title">ແບ່ງປັນຜ່ານທາງ</string>
+
+    <string name="notification_erase_title_android_14">ລຶບປະຫວັດການທ່ອງເວັບ</string>
+    <string name="notification_erase_text_android_14">ແຕະ ຫຼື ລຶບການແຈ້ງເຕືອນນີ້ເພື່ອລຶບປະຫວັດການທ່ອງເວັບຂອງທ່ານຢ່າງປອດໄພ.</string>
+
+    <string name="notification_erase_text">ລຶບປະຫວັດການທ່ອງເວັບ</string>
+
+    <!-- Notification action to open Focus and resume the current browsing session. -->
+    <string name="notification_action_open">ເປີດ</string>
+
+    <!-- Notification action to erase the current browsing session AND switch to Focus (bring it
+         to the foreground) -->
+    <string name="notification_action_erase_and_open">ລຶບ ແລະ ເປີດ</string>
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_short_label">ລຶບ</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters. -->
+    <string name="shortcut_erase_long_label">ລຶບປະຫວັດການທ່ອງເວັບ</string>
+
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_and_open_short_label">ລຶບແລ້ວເປີດ</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters.
+         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="shortcut_erase_and_open_long_label">ລຶບ ແລະ ເປີດ %1$s</string>
+
+
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+         Focus is hard coded since we can't use variables in this context.
+         Do not translate or transliterate Focus.-->
+    <string name="text_selection_search_action_focus">ຊອກຫາຢູ່ໃນຈຸດສຸມ</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+             Klar is hard coded since we can't use variables in this context.
+             Do not translate or transliterate Klar.-->
+    <string name="text_selection_search_action_klar">ຊອກຫາຢູ່ໃນ Klar</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+            Focus Beta is hard coded since we can't use variables in this context.
+            Do not translate or transliterate Focus Beta.-->
+    <string name="text_selection_search_action_focus_beta">ຊອກຫາໃນ Focus Beta</string>
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+          Focus Nightly is hard coded since we can't use variables in this context.
+          Do not translate or transliterate Focus Nightly.-->
+    <string name="text_selection_search_action_focus_nightly">ຊອກຫາໃນ Focus Nightly</string>
+
+    <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+         Argument 2 is the url for the learn-more link. -->
+    <string name="about_content"><![CDATA[<p>%1$s ເຮັດໃຫ້ທ່ານສາມາດຄວບຄູມໄດ້.</p>
+<p>ໃຊ້ເປັນແບບບຣາວເຊີສ່ວນຕົວ:
+  <ul>
+    <li>ຄົ້ນຫາ ແລະ ທ່ອງເວັບພາຍໃນແອັບ</li>
+    <li>ບັອກຕົວຕິດຕາມ (ຫລື ອັບເດດການຕັ້ງຄ່າເພື່ອອະນຸຍາດຕົວຕິດຕາມ)</li>
+    <li>ລຶບຄຸກກີ້ລວມທັງປະຫວັດການຄົ້ນຫາ ແລະ ການທ່ອງເວັບອອກ</li>
+  </ul>
+</p>
+<p>%1$s ໄດ້ຮັບການສ້າງຂື້ນມາຈາກ Mozilla. ພາລະກິດຂອງພວກເຮົາແມ່ນສົ່ງເສີມການນຳໃຊ້ອິນເຕີເນັດທີ່ສົມບູນ ແລະ ເປີດກ້ວາງ<br/>
+<a href="%2$s">ຮຽນຮູ້ເພີ່ມເຕີ່ມ</a></p>]]></string>
+
+    <!-- Header for the Privacy and Security settings menu -->
+    <string name="preference_privacy_and_security_header">ຄວາມເປັນສ່ວນຕົວ ແລະ ຄວາມປອດໄພ</string>
+
+    <!-- Preference summary for settings related to privacy and security -->
+    <string name="preference_privacy_and_security_summary">ການຕິດຕາມ, ຄຸກກີ້, ທາງເລືອກຂໍ້ມູນ</string>
+
+    <!-- Preference category description for settings related to search, set default
+    and autocomplete are settings a user can find and change inside the "search" settings screen -->
+    <string name="preference_search_summary">ຕັ້ງຄ່າເລີ່ມຕົ້ນ. ການຕື່ມຄຳອັດຕະໂນມັດ</string>
+
+    <!-- Preference category description for settings screen for settings related to Mozilla -->
+    <!-- About the app and help are links that are inside this menu -->
+    <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_summary">ກ່ຽວກັບ %1$s, ຊ່ວຍເຫຼືອ</string>
+
+    <!-- Preference category for ad blocking and enhanced tracking protection settings -->
+    <string name="preference_category_tracking_protection3">ເພີ່ມການປ້ອງກັນການຕິດຕາມ</string>
+
+    <!-- Preference category for settings related to controlling web content -->
+    <string name="preference_category_web_content">ເນື້ອຫາເວັບ</string>
+
+    <!-- Preference category: stealth settings for while switching apps -->
+    <string name="preference_category_switching_apps">ສະລັບແອັບ</string>
+
+    <!-- Preference category for General Settings -->
+    <string name="preference_category_general">ທົ່ວໄປ</string>
+
+    <!-- Preference summary for General Settings category; the two things users can find in this category -->
+    <string name="preference_general_summary2">ບຣາວເຊີຫລັກ, ພາສາ</string>
+
+    <!-- Preference category for settings about sending usage data -->
+    <string name="preference_category_data_collection_use">ການເກັບຮວບຮວມ ແລະ ໃຊ້ຂໍ້ມູນ</string>
+
+    <string name="preference_category_search">ຊອກຫາ</string>
+
+    <!-- Title of "switch" preference that enables/disables search suggestions -->
+    <string name="preference_show_search_suggestions">ຮັບຂໍສະເໜີແນະການຄົ້ນຫາ</string>
+    <!-- Description of the preference that enables/disables search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_show_search_suggestions_summary">%1$s ຈະສົ່ງສິ່ງທີ່ທ່ານພີມໃນແຖບທີ່ຢູ່ໄປຍັງເຄື່ອງມືຄົ້ນຫາຂອງທ່ານ</string>
+
+    <!-- This label is shown below the name of the default search engine in settings -->
+    <string name="preference_search_engine_default">ຄ່າພື້ນຖານ</string>
+
+    <!-- This label is shown above the currently selected search engine in settings -->
+    <string name="preference_search_engine_label">ເຄື່ອງມືການຄົ້ນຫາ</string>
+
+    <!-- Text that is shown below a "switch" preference that is enabled. -->
+    <string name="preference_state_on">ເປີດ</string>
+
+    <!-- Text that is shown below a "switch" preference that is disabled. -->
+    <string name="preference_state_off">ປິດ</string>
+
+    <!-- Item in settings that will open a new preference screen for configuring the URL autocomplete behavior. -->
+    <string name="preference_subitem_autocomplete">ການເຕີມ URL ແບບອັດຕະໂນມັດ</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
+    <string name="preference_switch_autocomplete_topsites">ສໍາລັບເວັບໄຊທຍອດນິຍົມ</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the topsites list
+    %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_topsite_summary2">ເປີດໃຊ້ງານເພື່ອໃຫ້ມີການເຕິມອັດຕະໂນມັດຂອງ %s ຜ່ານ 450 URLs ຍອດນິຍົມໃນແຖບທີ່ຢູ່</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
+    <string name="preference_switch_autocomplete_user_list">ສຳລັບເວັບໄຊທທີ່ທ່ານເພີ່ມ</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the user-defined list
+     %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_user_list_summary2">ເປີດໃຊ້ເພື່ອໃຫ້ %s ຕື່ມຂໍ້ມູນ URLs ທີ່ທ່ານມັກໂດຍອັດຕະໂນມັດ.</string>
+
+    <!-- Preference category: Manage (user-defined) sites -->
+    <string name="preference_category_autocomplete_manage_sites">ຄຸ້ມຄອງເວັບໄຊທ</string>
+
+    <!-- Item in autocomplete settings that will open a new preference screen for adding and removing URLs to the user-defined list-->
+    <string name="preference_autocomplete_subitem_manage_sites">ຄຸ້ມຄອງເວັບໄຊທ</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add">+ ເພີ່ມ URL ທີ່ກຳນົດເອງ</string>
+
+    <!-- Explanation text above the list of custom autocomplete URLs. -->
+    <string name="preference_autocomplete_explanation_text">ລາຍຊື່ການຕື່ມຂໍ້ມູນອັດຕະໂນມັດຂອງທ່ານ:</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add2">ເພີ່ມ URL</string>
+
+    <!-- Title of the screen for adding custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_add">ເພີ່ມ URL ທີ່ກຳນົດເອງ</string>
+
+    <!-- Label for the button to quick add custom autocomplete URLs. -->
+    <string name="custom_autocomplete_quick_add">ເພີ່ມ URL ທີ່ກຳນົດເອງ</string>
+
+    <!-- Label for the button to quick add the current URL to the custom autocomplete list -->
+    <string name="add_custom_autocomplete_label">ເພີ່ມລີ້ງເຂົ້າໄປ autocomplete</string>
+
+    <!-- Preference category for settings about cookies and site data -->
+    <string name="preference_category_cookies">ຄຸກກີ້ ແລະ ຂໍ້ມູນໄຊ</string>
+
+    <!-- Preference category for settings about data choices -->
+    <string name="preference_category_data_choices">ທາງເລືອກຂໍ້ມູນ</string>
+
+    <!-- Title of the screen for removing custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_remove">ເອົາ URLs ທີ່ກຳນົດເອງອອກ</string>
+
+    <!-- A link to SUMO at autocomplete settings. -->
+    <string name="preference_autocomplete_learn_more">ຮຽນຮູ້ເພີ່ມເຕີມ</string>
+
+    <!-- Preference summary: Custom (user-defined) autocomplete URLs. -->
+    <string name="preference_autocomplete_custom_summary">ເພີ່ມ ແລະ ຈັດການ URLs ທີ່ເຕີມແບບອັດຕະໂນມັດທີ່ກຳໜົດເອງ.</string>
+
+    <!-- Label for the "custom autocomplete URL" input field -->
+    <string name="preference_autocomplete_add_title">URL ທີ່ຈະເພີ່ມ</string>
+
+    <!-- "Hint" text for the "custom autocomplete URL" input field. Shown when the field is empty. -->
+    <string name="preference_autocomplete_add_hint">ວາງ ຫລື ປ້ອນ URL</string>
+
+    <!-- Example how a custom domain autocomplete URL be added (e.g. without http://) -->
+    <string name="preference_autocomplete_add_example2">ຕົວຢ່າງ: mozilla.org</string>
+
+    <!-- To be removed once the new hint has been translated -->
+    <string name="preference_autocomplete_add_example">ຕົວຢ່າງ: example.com</string>
+
+    <!-- Confirmation "snackbar" shown after a new custom autocomplete URL has been added. -->
+    <string name="preference_autocomplete_add_confirmation">ເພີ່ມ URL ທີ່ກຳນົດເອງໃຫມ່ແລ້ວ.</string>
+
+    <!-- Menu item to remove existing autocomplete URLs. -->
+    <string name="preference_autocomplete_menu_remove">ລຶບ</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Button that will delete all selected custom autocomplete URLs. -->
+    <string name="preference_autocomplete_action_remove_content_description">ລຶບ</string>
+
+    <!-- Error message shown if the entered custom autocomplete URL is not valid or empty. -->
+    <string name="preference_autocomplete_add_error">ກວດສອບ URL ທີ່ທ່ານໄດ້ປ້ອນເຂົ້າໄປ.</string>
+
+    <string name="preference_language">ພາສາ</string>
+    <!-- This is shown when the user hasn't set a focus specific language, i.e. when Focus
+         is using the system default language. -->
+    <string name="preference_language_systemdefault">ຄ່າເລີ່ມຕົ້ນຂອງລະບົບ</string>
+
+    <string name="preference_category_privacy">ຄວາມເປັນສ່ວນຕົວ</string>
+    <string name="preference_privacy_block_ads">ບັອກຕົວຕິດຕາມຂອງການໂຄສະນາ</string>
+    <string name="preference_privacy_block_ads_summary">ມີໂຄສະນາບາງໂຕສາມາດຕິດຕາມການເຂົ້າໄປເວັບຕ່າງໆ ເຖິງແມ່ນວ່າທ່ານຈະບໍ່ໄດ້ຄິກໃສ່ໂຄສະນານັ້ນເລີຍ</string>
+    <string name="preference_privacy_block_analytics">ບັອກຕົວຕິດຕາມຂອງການວິເຄາະ</string>
+    <string name="preference_privacy_block_analytics_summary">ໃຊ້ເພື່ອເກັບກຳຮວບຮ່ວມ, ວິເຄາະ ແລະ ວັດແທກກິດຈະກຳເຊັນວ່າການແຕະ ແລະ ການເລື່ອນ</string>
+    <string name="preference_privacy_block_social">ບັອກຕົວຕິດຕາມຂອງສືສັງຄົມອອນໄລນ໌</string>
+    <string name="preference_privacy_block_social_summary">ຝັງໄວ້ຢູ່ໃນເວັບໄຊທ໌ເພື່ອຕິດຕາມເບິງການເຂົ້າມາເບິງຂອງທ່ານ ແລະ ເພື່ອສະແດງຟັງຊັນເຊັ່ນວ່າປຸ່ມແບ່ງປັນ</string>
+    <string name="preference_privacy_block_content">ບັອກຕົວຕິດຕາມຂອງເນື້ອຫາຕ່າງໆ</string>
+    <string name="preference_privacy_block_content_summary2">ການເປີດໃຊ້ງານອາດຈະເຮັດໃຫ້ບາງຫນ້າເຮັດວຽກຜຶດປົກກະຕິ</string>
+    <string name="preference_privacy_category_cookies">ລະງັບຄຸກກີ້</string>
+
+    <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
+    only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
+    <string name="preference_privacy_should_block_cookies_no_option2">ບໍ່, ຂອບໃຈ</string>
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">ບັອກຕົວຕິດຕາມຄຸກກີ້ຈາກບຸກຄົນທີ່ສາມເທົ່ານັ້ນ</string>
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">ລະງັບຄຸກກີ້ພາຍນອກເທົ່ານັ້ນ</string>
+
+    <string name="preference_privacy_should_block_cookies_cross_site_option">ບລັອກຄຸກກີຂ້າມເວັບໄຊ</string>
+    <string name="preference_privacy_should_block_cookies_yes_option2">ໂດຍ, ແມ່ນແລ້ວ</string>
+
+    <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
+    <string name="preference_security_biometric">ນຳໃຊ້ລາຍນິ້ວມືເພື່ອປົດລ໋ອກແອັບ</string>
+
+    <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
+        open when the app was last run to ensure that only the phone's owner can view a previous session.
+        %s will be replaced by the app name (e.g. Firefox Focus)
+        Shortcuts is a feature that allows the user to pin his favorite websites to Focus home screen so he can quickly access them-->
+    <string name="preference_security_biometric_summary2">ປົດລັອກໂດຍໃຊ້ລາຍນິ້ວມືຖ້າທ່ານໄດ້ເພີ່ມທາງລັດ ຫຼືເມື່ອເວັບໄຊທ໌ເປີດຢູ່ໃນ %s ແລ້ວ.</string>
+
+    <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
+         and prevents the user from taking screenshots or casting the app to other displays. -->
+    <string name="preference_privacy_secure_mode">ອຳພາງຕົວຕົນ</string>
+    <!-- Preference Summary: Stealth mode (previously "Secure mode") is a setting that prevents the
+     app's content (in our case especially the content of webpages) to show up in the "recent apps"
+     screen. Additionally Android will prevent the user from taking screenshots or casting the app
+     to other displays. -->
+    <string name="preference_privacy_stealth_summary">ເຊື່ອງຫນ້າເວັບເມື່ອສະລັບແອັບ ແລະ ລະງັບການຖ່າຍຮູບໜ້າຈໍ.</string>
+
+    <string name="preference_category_security">ຄວາມປອດໄພ</string>
+
+    <string name="preference_category_performance">ປະສິດທິພາບ</string>
+    <string name="preference_performance_block_webfonts">ບັອກຕົວອັກສອນເວັບ</string>
+    <!-- This text is shown below the setting for disabling web fonts. Some websites use icons/images from a font and those do not show up if fonts are blocked.-->
+    <string name="preference_performance_block_webfonts_summary">ອາດຈະສົ່ງຜົນເຮັດໃຫ້ໄອຄອນ ຫລື ຮູບພາບຂາດຫາຍໄປ</string>
+
+    <string name="preference_performance_block_javascript">ລະງັບ JavaScript</string>
+    <!-- This text is shown below setting for disabling JavaScript. Some websites may not work correctly when JavaScript is disabled -->
+    <string name="preference_performance_block_javascript_summary">ໜ້າອາດໂຫຼດໄວຂື້ນ ແຕ່ອາດເຮັດວຽກຢ່າງບໍ່ຄາດຄິດ</string>
+
+    <!-- This preference does not set Focus as the default browser but instead links to Android's
+     "default apps" settings screen or if not supported by this Android version to a SUMO page describing
+     how to set Focus as a default browser.
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_default_browser2">ຕັ້ງ %1$s ໃຫ້ເປັນບຣາວເຊີຫລັກ</string>
+
+    <string name="preference_category_mozilla">Mozilla</string>
+    <string name="preference_mozilla_telemetry2">ສົ່ງຂໍ້ມູນການນຳໃຊ້</string>
+
+    <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
+    <string name="preference_mozilla_telemetry_summary">ຮຽນຮູ້ເພີ່ມເຕີມ</string>
+
+    <!-- %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_telemetry_summary2">Mozilla ພະຍາຍາມທີ່ຈະເກັບຮວບຮ່ວມສະເພາະສິ່ງທີ່ຈຳເປັນຕໍ່ການປັບປູງ %1$s ສຳລັບທຸກໆຄົນ.</string>
+
+    <!-- In-app link (in settings) to Focus privacy notice. -->
+    <string name="preference_privacy_notice">ນະໂຍບາຍຄວາມເປັນສ່ວນຕົວ</string>
+
+    <!-- In-app link (in settings) to Focus licensing information. -->
+    <string name="preference_licensing_info">ຂໍ້ມູນກ່ຽວກັບລາຍເຊັນ</string>
+
+    <!-- Link to Focus licensing information from other libraries that we use. -->
+    <string name="preference_libraries_we_use">ໄລແບຣລີທີ່ພວກເຮົານຳໃຊ້</string>
+
+    <!-- Open Source Licenses page title. The first parameter is the app name -->
+    <string name="open_source_licenses_title">%s | ໄລບຣາລີ OSS</string>
+
+    <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
+    <string name="preference_about">ກ່ຽວກັບ %1$s</string>
+
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_search_installed_search_engines">ໄດ້ທຳການຕິດຕັ້ງເຄື່ອງມືການຄົ້ນຫາແລ້ວ</string>
+
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_choose_search_engine">ເລືອກເຄື່ອງມືການຄົ້ນຫາ</string>
+
+    <!-- Action for restoring the default list of search engines -->
+    <string name="preference_search_restore">ກູ້ຄືນເຄື່ອງມືພື້ນຖານຂອງການຄົ້ນຫາ</string>
+
+    <!-- Action for adding an additional search engine to the list.
+    The "+" is used to emphasize that this is an "add" action -->
+    <string name="preference_search_add2">+ ເພີ່ມລະບົບການຊອກຫາຕົວອື່ນ</string>
+    <string name="preference_search_remove_title">ລຶບເຄື່ອງມືການຄົ້ນຫາ</string>
+    <string name="preference_search_remove">ລຶບ</string>
+
+    <!-- Action for dding an additional search engine to the list -->
+    <string name="preference_search_add3">+ ເພີ່ມລະບົບການຊອກຫາຕົວອື່ນ</string>
+    <!-- Explanation text above the list of search engines-->
+    <string name="preference_select_preferred_engine">ເລືອກລະບົບທີ່ທ່ານຕ້ອງການ:</string>
+
+    <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
+    <string name="action_option_add_search_engine">ເພີ່ມເຄື່ອງມືການຄົ້ນຫາ</string>
+
+    <string name="search_add_manually_name_hint">ຊື່ເຄື່ອງມືການຄົ້ນຫາ</string>
+    <string name="search_add_manually_string">ສະຕຣິງການຊອກຫາທີ່ຈະໃຊ້</string>
+    <string name="search_add_manually_save">ບັນທຶກ</string>
+
+    <!-- Example of search engine url -->
+    <string name="search_add_manually_example">ຕົວຢ່າງ: example.com/search/?q=%s</string>
+
+    <string name="search_add_confirmation">ໄດ້ເພີ່ມເຄືອງມີການຊອກຫາຕົວໃຫມ່ແລ້ວ</string>
+
+    <string name="search_add_error_empty_name">ປ້ອນຊື່ເຄື່ອງມືການຊອກຫາ</string>
+    <string name="search_add_error_duplicate_name">ເຄື່ອງມືຄົ້ນຫາທີ່ຕິດຕັ້ງໄວ້ກຳລັງໃຊ້ຊື່ນັ້ນຢູ່ແລ້ວ.</string>
+
+    <string name="search_add_error_empty_search">ປ້ອນສະຕຣິງການຊອກຫາ</string>
+
+    <string name="search_add_error_format">ກວດສອບວ່າສະຕິງການຄົ້ນຫາກົງກັບຮູບແບບຕົວຢ່າງ</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clear text in URL bar -->
+    <string name="content_description_clear_input">ລົບລ້າງຂໍ້ມູນທີ່ປ້ອນເຂົ້າ</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clicking on the website overlay
+     while in typing mode will dismiss and go back to the browser. This text will be read when the
+     overlay if focused. See https://github.com/mozilla-mobile/focus-android/issues/50 -->
+    <string name="content_description_dismiss_input">ຍົກເລີກ</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+     history and go back to the home screen. -->
+    <string name="content_description_erase">ລຶບປະຫວັດການທ່ອງເວັບ</string>
+
+    <!-- If the user has multiple tabs open we will show an addition "floating action button" showing how many tabs are open.
+     This string is not displayed and read only by screenreaders. %1$s will be replaced with the number of open tabs. This
+      button will only be visible when there is more than one tab open (>= 2). -->
+    <string name="content_description_tab_counter">ແທັບທີ່ເປີດ: %1$s</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Lock icon showed in the URL bar for
+     https pages.. -->
+    <string name="content_description_lock">ການເຊື່ອມຕໍ່ທີ່ປອດໄພ</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we start
+     loading a website -->
+    <string name="accessibility_announcement_loading">ກຳລັງໂຫລດ</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we
+     finished loading a website -->
+    <string name="accessibility_announcement_loading_finished">ໂຫລດເວັບໄຊທ໌ນີ້ແລ້ວ</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">ຕົວເລືອກເພີ່ມເຕີມ</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button used
+    on home screen-->
+    <string name="indicator_content_description_menu">ປຸ່ມຕົວເລືອກເພີ່ມເຕີມ</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="content_description_forward">ນຳທາງໄປທາງຫນ້າ</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Reload current website -->
+    <string name="content_description_reload">ໂຫລດເວັບໄຊທ໌ຄືນໃຫມ່</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back (browsing history) -->
+    <string name="content_description_back">ນຳທາງຍ້ອນກັບ</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Stop loading the current website. This button will turn into the refresh button once loading has been completed (see content_description_reload) -->
+    <string name="content_description_stop">ຢຸດການໂຫລດເວັບໄຊທ໌</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Custom Tab exit button - closes the custom tab and returns to the previous app. -->
+    <string name="content_description_customtab_exit">ກັບໄປຫາແອັບກ່ອນຫນ້ານີ້</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the ImageView in the menu that displays
+         the number of trackers blocked for the current session -->
+    <string name="content_description_trackers_blocked">ຈຳນວນຕົວຕິດຕາມທີ່ຖືກລະງັບ</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the switch in the menu that temporarily disables/enables
+         content blocking for the current session -->
+    <string name="content_description_blocking_switch">ບັອກຕົວຕິດຕາມ</string>
+
+    <string name="your_rights">ສິດທິຂອງທ່ານ</string>
+
+    <string name="external_app_prompt_title">ເປີດລີ້ງນີ້ໃນແອັບອື່ນ</string>
+    <!-- This string is shown when the user has clicked a link that needs to be opened in a different app.
+         Argument 2 is the external app name, argument 1 is our name (i.e. Firefox Focus, or Firefox Klar). -->
+    <string name="external_app_prompt">ທ່ານສາມາດອອກຈາກ %1$s ເພື່ອເປີດລີ້ງນີ້ໃນ %2$s.</string>
+    <!-- This text is the title of a dialog shown if no app could be found for a custom link protocol. -->
+    <string name="external_app_prompt_no_app_title">ຊອກຫາແອັບທີ່ສາມາດເປີດລີ້ງນີ້</string>
+    <!-- This text is shown in a dialog if no app could be found for a custom link protocol. %1$s is the name of the app (i.e. Firefox Focus) and %2$s is the name of
+         the app store installed on the device (usually that's Google Play). -->
+    <string name="external_app_prompt_no_app">ບໍ່ມີແອັບໃດເລີຍໃນອຸປະກອນຂອງທ່ານທີ່ຈະສາມາດເປີດລີ້ງນີ້ໄດ້. ທ່ານສາມາດອອກຈາກ %1$s ເພື່ອຄົ້ນຫາ %2$s ແອັບທີ່ສາມາດເປີດລີ້ງນີ້ໄດ້.</string>
+    <!-- This label is shown above a list of apps that can be used to open a given link -->
+    <string name="external_multiple_apps_matched_exit">ຕ້ອງການອອກຈາກການທອງເວັບແບບສ່ວນຕົວບໍ່?</string>
+
+    <!-- Snackbar that will be displayed after a download has completed. %1$s will be replaced with the file name. -->
+    <string name="download_snackbar_finished">ສຳເລັດແລ້ວ %1$s</string>
+
+    <!-- Snackbar action to immediately open the successfully downloaded file. -->
+    <string name="download_snackbar_open">ເປີດ</string>
+
+
+
+
+
+
+
+
+
+  <!-- Snackbar that will be displayed after a website has been added to shortcuts. -->
+    <string name="snackbar_added_to_shortcuts">ເພີ່ມໃສ່ທາງລັດແລ້ວ!</string>
+
+    <string name="error_hostLookup_title">ບໍ່ພົບເຊີເວີ</string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <!-- Content description (not visible, for screen readers etc.): This is the description for the close button from the new onboarding flow screen one and two -->
+    <string name="onboarding_close_button_content_description">ປິດ</string>
+
+    <!-- New Onboarding flow first screen title -->
+    <!-- %1$s will be replaced by the app name and build variant(e.g. Firefox Focus, Firefox Klar Nightly) -->
+    <string name="onboarding_first_screen_title">ຍິນດີຕ້ອນຮັບສູ່ %1$s</string>
+
+    <!-- New Onboarding flow first screen subtitle the one that appears under title -->
+    <string name="onboarding_first_screen_subtitle">ໄວ. ສ່ວນຕົວ. ບໍ່ມີສິ່ງລົບກວນ.</string>
+
+    <!-- New Onboarding flow first screen button label-->
+    <string name="onboarding_first_screen_button_text">ເລີ່ມຕົ້ນໃຊ້ງານ</string>
+
+    <!-- Onboarding second screen: Title -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_title">%1$s ບໍ່ຄືກັບຕົວທ່ອງເວັບອື່ນໆ</string>
+
+    <!-- New Onboarding flow second screen subtitle the one that appears under title -->
+    <string name="onboarding_second_screen_subtitle_one">ພວກເຮົາລຶບລ້າງປະຫວັດຂອງທ່ານເມື່ອທ່ານປິດແອັບເພື່ອຄວາມເປັນສ່ວນຕົວເພີ່ມເຕີມ.</string>
+
+    <!-- New Onboarding flow second screen subtitle two the one that appears under subtitle one -->
+    <!-- %1$s will be replaced by the app short name(Focus) -->
+    <string name="onboarding_second_screen_subtitle_two">ເຮັດໃຫ້ %1$s ເປັນຄ່າເລີ່ມຕົ້ນຂອງທ່ານເພື່ອປົກປ້ອງຂໍ້ມູນຂອງທ່ານດ້ວຍທຸກລິ້ງທີ່ທ່ານເປີດ.</string>
+
+    <!-- New Onboarding flow second screen make Focus default browser button label-->
+    <string name="onboarding_second_screen_default_browser_button_text">ຕັ້ງເປັນຕົວທ່ອງເວັບເລີ່ມຕົ້ນ</string>
+
+    <!-- New Onboarding flow second screen skip onboarding button label-->
+    <string name="onboarding_second_screen_skip_button_text">ຂ້າມ</string>
+
+
+    <!-- First run tour (Default browser): Title -->
+    <string name="firstrun_defaultbrowser_title">ເພີ່ມຄວາມເປັນສ່ວນໂຕຂອງທ່ານ</string>
+    <!-- First run tour (Default browser): Text. -->
+    <string name="firstrun_defaultbrowser_text2">ນຳການທ່ອງເວັບແບບສ່ວນຕົວໄປສູ້ລະດັບຖັດໄປ. ປິດກັ້ນໂຄສະນາແລະເນື້ອຫາອື່ນໆ ທີ່ສາມາດຕິດຕາມທ່ານລະຫວ່າງເວັບໄຊທ໌ແລະຫລຸດເວລາໃນການໂຫລດຫນ້າ,</string>
+
+    <!-- First run tour (Search): Title -->
+    <string name="firstrun_search_title">ການຄົ້ນຫາໃນແບບຂອງທ່ານເອງ</string>
+    <!-- First run tour (Search): Text -->
+    <string name="firstrun_search_text">ກຳລັງຊອກຫາບາງສິ່ງບາງຢ່າງທີ່ແຕກຕ່າງບໍ່? ເລືອກເອົາຕົວຄົ້ນຫາພື້ນຖານອື່ນໆໃນການຕັ້ງຄ່າ.</string>
+
+    <!-- First run tour (Shortcut): Title -->
+    <string name="firstrun_shortcut_title">ເພີ່ມທາງລັດໃນໜ້າຈໍຫຼັກຂອງທ່ານ</string>
+    <!-- First run tour (Shortcut): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_shortcut_text">ກັບໄປທີ່ໄຊທີ່ທ່ານມັກໃນ %1$s ໄດ້ຢ່າງວ່ອງໄວ. ພຽງເລືອກ \&quot;ເພີ່ມໄປໜ້າຈໍຫຼັກ\&quot; ຈາກ %1$s ເມນູ.</string>
+
+    <!-- First run tour (Privacy): Title -->
+    <string name="firstrun_privacy_title">ສ້າງນິໄສຄວາມເປັນສ່ວນຕົວ</string>
+    <!-- First run tour (Privacy): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_privacy_text">ຕັ້ງ %1$s ເປັນບຣາວເຊີຫລັກຂອງທ່ານ ແລະ ຮັບປະໂຫຍດຈາກການທ່ອງເວັບແບບສ່ວນຕົວເມື່ອທ່ານເປີດຫນ້າເວັບຈາກແອັບອື່ນໆ.</string>
+
+    <string name="firstrun_close_button">ຕົກລົງ, ເຂົ້າໃຈແລ້ວ!</string>
+    <string name="firstrun_skip_button">ຂ້າມໄປ</string>
+    <string name="firstrun_next_button">ຕໍ່ໄປ</string>
+
+    <!-- Indicator that no trackers are being blocked because content blocking is disabled; normally shows the number of blocked trackers -->
+    <string name="content_blocking_disabled">-</string>
+
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_add">ເພີ່ມ</string>
+
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_yes">ແມ່ນແລ້ວ</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_cancel">ຍົກເລີກ</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_no">ບໍ່</string>
+
+    <!-- When enhanced tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with enhanced tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection2">ທາງລັດຈະເປີດພ້ອມປິດການໃຊ້ງານການປ້ອງກັນການຕິດຕາມ</string>
+
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 40 characters; the value may be truncated if it is too long.
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_name">&quot;ເຊສຊັນການທ່ອງເວັບແບບສ່ວນຕົວ &quot;</string>
+
+    <!-- The user visible description of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 300 characters; the value may be truncated if it is too long. %1$s will be replaced with the name of the app (e.g. Firefox Focus).
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_description">ການແຈ້ງເຕືອນຊ່ວຍໃຫ້ທ່ານລ້າງວາລະ %1$s ຂອງທ່ານດ້ວຍການແຕະ. ທ່ານບໍ່ຈຳເປັນຕ້ອງເປີດແອັບ ຫຼື ເບິ່ງສິ່ງທີ່ກຳລັງເຮັດວຽກໃນບາວເຊີຂອງທ່ານ.</string>
+
+    <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
+    <string name="tabs_tray_action_erase">ລຶບປະຫວັດການທ່ອງເວັບ</string>
+
+    <!-- If the user decides to open the current page in another browser and if Firefox is not installed then we show this
+      item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play). -->
+    <string name="download_firefox">ດາວໂຫລດ Firefox</string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)-->
+    <string name="your_rights_content1"><![CDATA[%1$s ເປັນຊອບແວເສລີ ແລະ ເປີດຕົ້ນສະບັບທີ່ສ້າງຂຶ້ນໂດຍ Mozilla ແລະ ຜູ່ມີສ່ວນຮ່ວມອື່ນໆ.]]></string>
+
+
+
+
+  <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
+    <string name="your_rights_content2"><![CDATA[%1$s ໃຫ້ທ່ານໃຊ້ພາຍໃຕ້ເງື່ອນໄຂຂອງ <a href="%2$s"> Mozilla Public License</a> ແລະ ສັນຍາອະນຸຍາດໂອເພ່ນຊອດອື່ນໆ.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
+    <string name="your_rights_content3"><![CDATA[ທ່ານບໍ່ໄດ້ຮັບສິດ ຫຼື ສັນຍາອະນຸຍາດໃດໆ ໃນເຄື່ອງໝາຍການຄ້າຂອງມູລະນີທິ Mozilla ຫຼື ບຸກຄົນໃດໆ ລວມທັງຊື່ ຫຼື ໂລໂກ້ Mozilla, Firefox ຫຼື %1$s. ຂໍ້ມູນເພີ່ມຕື່ມສາມາດພົບໄດ້ທີ່<a href="%2$s">ນີ້</a>.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
+    <string name="your_rights_content4"><![CDATA[ໂຄດຕົ້ນສະບັບເພີມຕື່ມສຳລັບ %1$s ໃຊ້ໄດ້ພາຍໃຕ້<a href="%2$s">ສັນຍາອະນຸຍາດ</a>ເສລີ ແລະ ໂອເພ່ນຊອດອື່ນໆ.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the GPL
+    %3$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists) -->
+    <string name="your_rights_content5"><![CDATA[%1$s ຍັງໃຊ້ລາຍການລະງັບທີ່ໃຫ້ບໍລິການໂດຍ Disconect, Inc. ເຊີ່ງເປັນງານແຍກ ແລະ ເປັນອິດສະຫຼະພາຍໃຕ້<a href="%2$s">GNU General Public License v3</a>, ແລະ ໃຊ້ໄດ້<a href="%3$s">ນີ້</a>.]]></string>
+
+    <!-- Text shown in prompts for GeckoView -->
+    <string name="gv_prompt_username_hint">ຊື່ຜູ້ໃຊ້</string>
+    <string name="gv_prompt_password_hint">ລະຫັດຜ່ານ</string>
+    <string name="gv_prompt_clear">ລ້າງ</string>
+
+    <!-- Text shown in Security Information Popup -->
+    <!-- Text to denote secure or insecure connection -->
+    <string name="security_popup_secure_connection">ການເຊື່ອມຕໍ່ທີປອດໄພ</string>
+    <string name="security_popup_insecure_connection">ການເຊື່ອມຕໍ່ທີບໍ່ປອດໄພ</string>
+    <!-- %1$s will be replaced with organization that granted the SSL certificate -->
+    <string name="security_popup_security_verified">ກວດສອບໂດຍ: %1$s</string>
+
+    <!-- Content Description of Security Icon in toolbar -->
+    <string name="site_security_icon_content_description">ຄວາມປອດໄພຂອງເວັບໄຊທ໌</string>
+    <string name="preference_autocomplete_duplicate_url_error">URL ນີ້ມີຢູ່ແລ້ວ</string>
+
+    <!-- Label for the Find in page button -->
+    <string name="find_in_page">ຄົ້ນຫາໃນເພຈ</string>
+
+    <!-- Watermark/Hint for the find in page input field -->
+    <string name="find_in_page_input">ຄົ້ນຫາໃນເພຈ</string>
+
+    <!-- String to show the number of results found in the page and the
+        position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="find_in_page_result">%1$d/%2$d</string>
+    <!-- String to be read by the accessibility service presenting the number of results found in the page
+        and the position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="accessibility_find_in_page_result">%1$d ຈາກ %2$d</string>
+
+    <!-- String to be read by the accessibility service when focusing the next result button -->
+    <string name="accessibility_next_result">ຄົ້ນຫາຜົນລັບຕໍ່ໄປ</string>
+    <!-- String to be read by the accessibility service when focusing the previous result button -->
+    <string name="accessibility_previous_result">ຄົ້ນຫາຜົນລັບກ່ອນໜ້ານີ້</string>
+    <!-- String to be read by the accessibility service when focusing the dismiss button in the "find in page" UI -->
+    <string name="accessibility_dismiss_find_in_page">ຍົກເລີກການຄົ້ນຫາໃນໜ້າ</string>
+
+
+
+  <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site">ຂໍໄຊສຳລັບເດສທອບ</string>
+
+    <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site2">ໂຫມດເດັກສທັອບ</string>
+
+    <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
+    <string name="custom_tab_copy_url_action">URL ສຳເນົາແລ້ວ</string>
+
+    <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
+    <string name="preference_advanced_summary">ເຄື່ອງມືນັກພັດທະນາ</string>
+
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">ເປີດລີ້ງໃນແອັບ</string>
+
+    <!-- Title of Advanced Setting category -->
+    <string name="preference_category_advanced">ຂັ້ນສູງ</string>
+
+    <!-- Preference for site permissions -->
+    <string name="preference_site_permissions">ສິດທິໃນເວັບໄຊທ</string>
+
+    <!--  Preference for cookie banner. The name of the item from settings screen and the title of the cookie banner screen. -->
+    <string name="preferences_cookie_banner">ການຫຼຸດປ້າຍໂຄສະນາຄຸກກີ</string>
+
+    <!--  Preference summary for the cookie banner. If the cookie banner option is not disabled. -->
+    <string name="preferences_cookie_banner_summary_on">ເປີດ</string>
+
+    <!--  Preference summary for the cookie banner. If the cookie banner option is disabled. -->
+    <string name="preferences_cookie_banner_summary_off">ປິດ</string>
+
+    <!--  Title preference inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
+    <string name="cookie_banner_reject_all_option_title">ການຫຼຸດປ້າຍໂຄສະນາຄຸກກີ</string>
+
+    <!--  Preference summary inside Cookie banner reduction screen. Here you can set the cookie banner option to disabled or reject_all. -->
+    <string name="cookie_banner_reject_all_option_summary">ເບິ່ງປ້າຍໂຄສະນາຫນ້ອຍລົງໂດຍການປະຕິເສດຄໍາຮ້ອງຂໍຄຸກກີໂດຍອັດຕະໂນມັດ, ເມື່ອເປັນໄປໄດ້.</string>
+
+    <!-- Preference for removing cookie/consent banners from sites automatically, this is shown as part of the protections panel with the tracking protection toggle. -->--&gt;
+    <string name="cookie_banner_exception_item_title">ການຫຼຸດປ້າຍໂຄສະນາຄຸກກີ</string>
+
+    <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle. -->
+    <string name="cookie_banner_exception_item_description_state_on">ເປີດສໍາລັບເວັບໄຊທ໌ນີ້</string>
+
+    <!-- Text for indicating cookie reducer is not supported on the current site, this is shown as part of the protections panel with the tracking protection toggle. -->
+    <string name="cookie_banner_exception_site_not_supported">ຕອນນີ້ບໍ່ຮອງຮັບເວັບໄຊ</string>
+
+    <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle. -->
+    <string name="cookie_banner_exception_item_description_state_off">ປິດສຳລັບເວັບໄຊນີ້</string>
+
+    <!-- Preference for removing cookie/consent banners from sites automatically, this is shown when the user enters in details after he clicks on the item from protection panel. -->
+    <string name="cookie_banner_exception_panel_switch_title">ການຫຼຸດປ້າຍໂຄສະນາຄຸກກີ</string>
+
+    <!-- Text for indicating cookie banner handling is off this site, this is shown when the user enters in details after he clicks on the item from protection panel. -->
+    <string name="cookie_banner_exception_panel_switch_state_off">ປິດສຳລັບເວັບໄຊນີ້</string>
+
+    <!-- Text for indicating cookie banner handling is on this site, this is shown when the user enters in details after he clicks on the item from protection panel. -->
+    <string name="cookie_banner_exception_panel_switch_state_on">ເປີດສໍາລັບເວັບໄຊທ໌ນີ້</string>
+
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site. -->
+    <string name="cookie_banner_exception_panel_title_state_on_for_site">ເປີດໃຊ້ການຫຼຸດປ້າຍໂຄສະນາຄຸກກີສຳລັບ %1$s ບໍ?</string>
+
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site. -->
+    <string name="cookie_banner_exception_panel_title_state_off_for_site">ປິດການຫຼຸດປ້າຍໂຄສະນາຄຸກກີສຳລັບ %1$s ບໍ?</string>
+
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
+    <string name="cookie_banner_exception_panel_description_state_on_for_site">%1$s ຈະລຶບລ້າງຄຸກກີ້ຂອງເວັບໄຊນີ້ ແລະໂຫຼດໜ້ານີ້ຄືນໃໝ່. ການລຶບລ້າງຄຸກກີ້ທັງໝົດອາດເຮັດໃຫ້ເຈົ້າອອກຈາກລະບົບ ຫຼືກະຕ່າຊື້ເຄື່ອງຫວ່າງເປົ່າ.</string>
+
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The placeholder will be updated with the app name. -->
+    <string name="cookie_banner_exception_panel_description_state_off_for_site2">%1$s ສາມາດພະຍາຍາມປະຕິເສດການຮ້ອງຂໍຄຸກກີໂດຍອັດຕະໂນມັດ.</string>
+
+    <!-- Long text for a detail explanation indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner panel in the toolbar. -->
+    <string name="cookie_banner_exception_panel_description_site_is_not_supported">ຕອນນີ້ເວັບໄຊນີ້ບໍ່ຮອງຮັບການຫຼຸດປ້າຍໂຄສະນາຄຸກກີ. ທ່ານຕ້ອງການຂໍໃຫ້ທີມງານຂອງພວກເຮົາທົບທວນຄືນເວັບໄຊທ໌ນີ້ແລະເພີ່ມການສະຫນັບສະຫນູນໃນອະນາຄົດບໍ?</string>
+
+    <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner panel in the toolbar. -->
+    <string name="cookie_banner_exception_panel_site_is_not_supported_cancel_button">ຍົກເລີກ</string>
+
+    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner panel in the toolbar. -->
+    <string name="cookie_banner_exception_panel_site_is_not_supported_request_support_button">ຮ້ອງຂໍການຊ່ວຍເຫຼືອ</string>
+
+    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_report_a_site_snackbar_label">ຮ້ອງຂໍໃຫ້ສະຫນັບສະຫນູນເວັບໄຊທີ່ສົ່ງ.</string>
+
+    <!-- Label for cookie banner item from tracking protection, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_the_site_was_reported">ຮ້ອງຂໍໃຫ້ສະຫນັບສະຫນູນເວັບໄຊທີ່ສົ່ງ.</string>
+
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Cookie Banner (Banner Info Message). %1$s will be replaced by the app name, %2$s will be an active link using the string cfr_cookie_banner_link as text. -->
+    <string name="cfr_cookie_banner">%1$s ພະຍາຍາມປະຕິເສດການຮ້ອງຂໍຄຸກກີເພື່ອປິດປ້າຍໂຄສະນາຄຸກກີທີ່ໜ້າລຳຄານ.\n\nຈັດການການຕັ້ງຄ່າປ້າຍໂຄສະນາຄຸກກີໃນ %2$s.</string>
+
+    <!-- CFR for Cookie Banner (Banner Info Message). This string is used as text for a link in cfr_cookie_banner and takes the user to the app settings. -->
+    <string name="cfr_cookie_banner_link">ການຕັ້ງຄ່າ</string>
+
+    <!-- Preference for autoplay -->
+    <string name="preference_autoplay">ຫຼິ້ນອັດຕະໂນມັດ</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">ເພື່ອຕ້ອງການອະນຸຍາດ:</string>
+
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. ໄປທີ່ການຕັ້ງຄ່າ Android</string>
+
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. ແຕະທີ່ <b>ສິດ</b>]]></string>
+
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">ໄປທີ່ການຕັ້ງຄ່າ</string>
+
+    <!-- Third step for allowing a permission. The placeholder will be updated by, for example, "Camera" -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. ສະລັບ <b>%1$s</b> ເປັນເປີດ]]></string>
+
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">ກ້ອງຖ່າຍຮູບ</string>
+
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">ໄມໂຄຣໂຟນ</string>
+
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">ຕຳແຫນ່ງທີ່ຕັ້ງ</string>
+
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">ການແຈ້ງເຕືອນ</string>
+
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">ເນື້ອຫາທີ່ຄວບຄຸມໂດຍ DRM</string>
+
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">ຖາມເພື່ອອະນຸຍາດ</string>
+
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">ບັອກ</string>
+
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">ອະນຸຍາດ</string>
+
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">ຖືກບລັອກໂດຍ Android</string>
+
+    <!-- Preference for allow autoplay audio and video-->
+    <string name="preference_allow_audio_video_autoplay">ອະນຸຍາດສຽງ ແລະ ວິດີໂອ</string>
+
+    <!-- Preference for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only">ບັອກສຽງຢ່າງດ່ຽວ</string>
+
+    <!-- Preference summary for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only_summary">ແນະນຳ</string>
+
+    <!-- Preference for block autoplay audio and video-->
+    <string name="preference_block_autoplay_audio_video">ບັອກສຽງ ແລະ ວິດີໂອ</string>
+
+    <!-- Preference for studies -->
+    <string name="preference_studies">ການສຶກສາ</string>
+
+    <!-- Preference for studies summary-->
+    <string name="preference_studies_summary">Firefox ອາດຈະຕິດຕັ້ງແລະດໍາເນີນການສຶກສາເປັນບາງເວລາ.</string>
+
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">ຮຽນຮູ້ເພີ່ມເຕີມ</string>
+
+    <!-- Dialog message shown when some changes are made on studies -->
+    <string name="studies_restart_app">ແອັບພລິເຄຊັນຈະປິດເພື່ອນຳໃຊ້ການປ່ຽນແປງ</string>
+
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">ລຶບ</string>
+
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">ໃຊ້ງານຢູ່</string>
+
+    <!-- Title of the completed section on the studies list -->
+    <string name="studies_completed">ສຳເລັດແລ້ວ</string>
+
+    <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
+    <string name="preference_remote_debugging">ການດີບັກໄລຍະໄກຜ່ານ USB/Wi-Fi</string>
+
+    <!-- Text Button for show biometric prompt -->
+    <string name="show_biometric_button_text">ປົດລັອກ</string>
+
+    <!-- Title text for biometric prompt pop-up -->
+    <string name="biometric_prompt_title">ຢືນຢັນການໃຊ້ລາຍນິ້ວມືຂອງທ່ານ</string>
+
+    <!-- Subtitle text for biometric prompt pop-up -->
+    <string name="biometric_prompt_subtitle">ທ່ານສາມາດໃຊ້ລາຍນິ້ວມືຂອງທ່ານເພື່ອສືບຕໍ່ເຊດຊັນແອັບປັດຈຸບັນຂອງທ່ານໄດ້.</string>
+
+    <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
+    while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
+    <string name="biometric_auth_open_link_new_session">ເປີດລິ້ງໃນເຊດຊັນໃໝ່</string>
+
+    <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
+    <string name="biometric_auth_image_description">ໄອຄອນລາຍນິ້ວມື</string>
+
+    <!-- Error text displayed when the user's fingerprint cannot be recognized upon re-entering the app.
+     This is displayed during the authentication flow as the app launches. -->
+    <string name="biometric_auth_not_recognized_error">ບໍ່ຮູ້ຈັກລາຍນິ້ວມືນີ້. ລອງໃໝ່.</string>
+
+    <!-- Error text displayed when the user's fingerprint moved too quickly upon re-entering the app
+    This is displayed during the authentication flow as the app launches.-->
+    <string name="biometric_auth_moved_too_quickly">ຍັບນິ້ວໄວເກີນໄປ. ລອງອີກຄັ້ງ.</string>
+
+    <!-- Title for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestion_title2">ສະແດງຄຳແນະນຳໃນການຄົ້ນຫາບໍ?</string>
+
+    <!-- Description for the prompt to enable search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="enable_search_suggestion_description"> ເພື່ອຮັບເອົາຄຳແນະນຳ, %1$s ຕ້ອງການສົ່ງສິ່ງທີ່ທ່ານພິມໃນແຖບທີ່ຢູ່ໄປຫາເຄື່ອງມືຊອກຫາ.</string>
+
+    <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_no">ບໍ່</string>
+
+    <!-- Label used for the "YES button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_yes">ຕົກລົງ</string>
+
+    <!-- Message displayed when using a search engine that doesn't provide suggestions -->
+    <string name="no_suggestions_message">ເຄື່ອງມືຄົ້ນຫາບາງໂຕບໍ່ສາມາດສະແດງຂໍ້ສະເໜີແນະໄດ້.</string>
+
+    <!-- Button to dismiss the message displayed  when using a search engine that doesn't provide suggestions-->
+    <string name="dismiss_no_suggestions_prompt_button">ຍົກເລີກ</string>
+
+    <!-- Tips displayed on the home view -->
+
+    <!-- Tip displayed on home view explaining how to disable tracking protection
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection">ໄຊເຮັດວຽກຢ່າງບໍ່ຄາດຄິດ?\n ລອງປິດການປົກປ້ອງການຕິດຕາມ</string>
+
+    <!-- Tip displayed on home view explaining how to add sites to homescreen
+    Argument 1 will be replaced with a line break in the application.-->
+    <string name="tip_add_to_homescreen"><![CDATA["ຮັບການເຂົ້າເຖິງດ້ວຍການແຕະຄັ້ງດຽວໄປຍັງໄຊທີ່ທ່ານໃຊ້ຫຼາຍທີ່ສຸດ %1$s ເມນູ > ເພີ່ມໄປສູ່ໜ້າຈໍຫຼັກ "]]></string>
+
+    <!-- Tip displayed on home view explaining how to make Focus the default browser
+    Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_set_default_browser">ເປີດທຸກລີ້ງໃນ%1$s\n ຕັ້ງ %1$s ເປັນບ່າວເຊີເລີ່ມຕົ້ນ</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_autocomplete_url">ເຕີມ URLs ໂດຍອັດຕະໂນມັດສຳລັບເວັບໄຊທີ່ທ່ານໃຊ້ຫຼາຍທີ່ສຸດ\n ແຕະຄ້າງທີ່ URL ໃດໆ ໃນແທບທີ່ຢູ່</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_open_in_new_tab">ເປີດລີ້ງໃນແທບໃໝ່\n ແຕະຄ້າງທີ່ລີ້ງໃດໆໃນໜ້າ</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
+    <string name="tip_disable_tips2">ປິດເຄັດລັບໃນໜ້າຈໍເລີ່ມຕົ້ນ</string>
+
+    <!-- Label for the snackbar when a user opens a new tab -->
+    <string name="new_tab_opened_snackbar">ເປີດແທັບໃຫມ່ແລ້ວ</string>
+
+    <!-- Label for the button in the snackbar that switches to the newly opened tab -->
+    <string name="open_new_tab_snackbar">ສະລັບ</string>
+
+    <!-- Text displayed in a notification when the user enters full screen mode -->
+    <string name="full_screen_notification">ເຂົ້າສູ່ໂມດເຕັມຫນ້າຈໍ</string>
+
+    <!-- Preference for switching to a new tab immediately after opening -->
+    <string name="preference_open_new_tab">ສະລັບໄປຫາແທັບໃຫມ່ທັນທີ</string>
+
+    <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_title">ບັອກເວັບໄຊທທີ່ເປັນອັນຕະລາຍ ແລະ ຕົ້ມຕຸນ</string>
+    <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_summary">ບັອກເວັບໄຊທຕົ້ມຕຸນ ແລະ ຈູ່ໂຈມ, ເວັບໄຊທີ່ມີມອລແວ ແລະ ເວັບໄຊທທີ່ມີຊັອບແວທີ່ບໍ່ຕ້ອງການຕາມທີ່ໄດ້ຮັບການລາຍງານ.</string>
+
+    <!-- Title of the preference to enable "HTTPS-Only" mode -->
+    <string name="preference_https_only_title">ໂໝດ HTTPS ເທົ່ານັ້ນ</string>
+
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string name="preference_https_only_summary3">ພະຍາຍາມເຊື່ອມຕໍ່ຫາເວັບໄຊໂດຍອັດຕະໂນມັດໂດຍໃຊ້ໂປຣໂຕຄໍການເຂົ້າລະຫັດ HTTPS ເພື່ອຄວາມປອດໄພທີ່ເພີ່ມຂຶ້ນ.</string>
+
+    <!-- Preference for exceptions tracking protection -->
+    <string name="preference_exceptions">ຍົກເວັ້ນ</string>
+    <!-- Description for the exceptions preference screen-->
+    <string name="preference_exceptions_description">ທ່ານໄດ້ປິດຕົວບັອກເນື້ອຫາສຳລັບເວັບໄຊທເຫລົ່ານີ້.</string>
+    <!-- Menu item to remove existing exceptions. -->
+    <string name="preference_exceptions_menu_remove">ລຶບ</string>
+    <!-- Button to remove all websites from the exception list -->
+    <string name="preference_exceptions_remove_all_button_label">ລຶບເວັບໄຊທທັງຫມົດ</string>
+
+    <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_block_cookies_title">ບລັອກຄຸກກີ້</string>
+
+    <!-- Message for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_category_block_cookies">ທ່ານຕ້ອງການບລັອກຄຸກກີບໍ?</string>
+
+    <!-- Title for the tab crash report screen-->
+    <string name="tab_crash_report_title">ແທັບຂັດຂ້ອງ</string>
+    <!-- Headline for the tab crash report screen -->
+    <string name="tab_crash_report_headline">ຂໍອະໄພ ພວກເຮົາກຳລັງບັນຫາກັບແທັບນີ້</string>
+    <!-- Subtitle for the tab crash report screen -->
+    <string name="tab_crash_report_description">ໃນເວັບບຣາວເຊີແບບສ່ວນຕົວ ພວກເຮົາບໍ່ໄດ້ບັນທຶກ ແລະ ບໍ່ສາມາດກູ້ຄືນແທັບນີ້ໄດ້.</string>
+    <!-- Label for button to close the tab-->
+    <string name="tab_crash_report_close_tab_button_label">ປິດແທັບ</string>
+
+
+
+
+  <!-- Label for the checkbox to send the tab crash report to Mozilla -->
+    <string name="crash_report_send_crash_label">ສົ່ງລາຍງານການຂັດຂ້ອງໄປຫາ Mozilla</string>
+
+    <!-- Tracking protection bottom sheet -->
+
+    <!-- Label for the total number of trackers blocked. %s represents the app install date -->
+    <string name="trackers_count_note">ບລັອກຕົວຕິດຕາມຕັ້ງແຕ່ %s</string>
+    <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="content">ເນື້ອຫາ</string>
+    <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
+    <string name="advertising">ການໂຄສະນາ</string>
+    <!-- Category of trackers (social media) that can be blocked by Enhanced Tracking Protection -->
+    <string name="social">ສັງຄົມ</string>
+
+    <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection -->
+    <string name="analytics">ການວິເຄາະ</string>
+
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="enhanced_tracking_protection">ເພີ່ມການປ້ອງກັນການຕິດຕາມ</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is disabled for this site-->
+    <string name="enhanced_tracking_protection_state_off">ການປົກປ້ອງຖືກປິດໄວ້ສຳລັບເວັບໄຊນີ້</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is enabled for this site-->
+    <string name="enhanced_tracking_protection_state_on">ການປົກປ້ອງແມ່ນເປີດຢູ່ສຳລັບເວັບໄຊນີ້</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="secure_connection">ການເຊື່ອມຕໍ່ແມ່ນປອດໄພ</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="insecure_connection">ການເຊື່ອມຕໍ່ບໍ່ປອດໄພ</string>
+
+    <!-- Title for the list of trackers enhanced tracking ptotection can block-->
+    <string name="trackers_and_scripts"> ຕົວຕິດຕາມແລະສະຄິບຈະຖືກບ໋ອກ</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
+    <string name="go_back">ກັບຄືນ</string>
+
+    <!-- Top Sites -->
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">ລຶບ</string>
+    <!-- Text for the menu item to remove a top site -->
+    <string name="rename_top_site_item">ປ່ຽນ​ຊື່</string>
+    <!-- Text for the dialog title for renaming a top site -->
+    <string name="rename_top_site">ປ່ຽນ​ຊື່</string>
+    <!-- Placeholder text for the input field of rename top site-->
+    <string name="placeholder_rename_top_site">ຊື່ທາງລັດ</string>
+
+    <!-- Text for context menu additional note.
+    %1$s is a placeholder for the app name. -->
+    <string name="contextmenu_erased_images_note2">&lt;b&gt;ຈະບໍ່ລຶບ&lt;/b&gt;ພາບທີບັນທືກໄວ້ ແລະ ແບ່ງປັນເມືອທ່ານລ້າງປະຫວັດຂອງ  %1$s</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference category for changing default theme to dark or light mode -->
+    <string name="preferences_theme">ຊຸດປັບແຕ່ງ</string>
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">ແຈ້ງ</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">ມືດ</string>
+
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">ຕັ້ງໂດຍຕົວປະຢັດແບດເຕີລີ່</string>
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">ຕາມຊຸດຕົກແຕ່ງອຸປະກອນ</string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title2">ເວັບໄຊນີ້ບໍ່ຮອງຮັບ HTTPS</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus").
+        Contains a button that will redirect the user to Privacy & Security Screen-->
+    <string name="errorpage_httpsonly_message2"><![CDATA[%1$s ພະຍາຍາມໃຊ້ການເຊື່ອມຕໍ່ HTTPS ທຸກຄັ້ງທີ່ເປັນໄປໄດ້ເພື່ອຄວາມປອດໄພຫຼາຍຂຶ້ນ.
+     <a href="%2$s">ສຶກສາເພີ່ມເຕີມ</a> <br/><br/>
+     ປ່ຽນການຕັ້ງຄ່ານີ້ໃນການຕັ້ງຄ່າ > ຄວາມເປັນສ່ວນຕົວ & amp; ຄວາມປອດໄພ > ຄວາມປອດໄພ.]]></string>
+
+    <!-- The document title and heading of the error page shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">ການເຊື່ອມຕໍ່ບໍ່ປອດໄພ</string>
+
+    <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+ສິງນີ້ອາດຈະເປັນບັນຫາທີ່ເກີດມາຈາກການຄອນຟິກເຊີເວີຜິດ ຫລື ມັນອາດຈະເກີດມາຈາກການທີ່ມີບາງຄົນພະຍາຍາມປອມແປງເຊີເວີ.<br/><br/>
+ຖ້າຫາກວ່າທ່ານເຄີຍເຊື່ອມຕໍ່ກັບເຊີເວີນີ້ໄດ້ສຳເລັດມາກ່ອນ ຂໍ້ຜິດພາດນີ້ອາດຈະເກີດຂື້ນພຽງຊົ່ວຄາວ ແລະ ທ່ານສາມາດລອງເຂົ້າໃຫມ່ໃນພາຍຫລັງ.
+]]></string>
+
+    <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>ມີບາງຄົນອາດຈະກຳລັງປອມແປງເວັບໄຊທ ແລະ ທ່ານບໍ່ຄວນຈະເຂົ້າໄປ.</label>
+        <br><br>
+        <label>ເວັບໄຊທຈະຢັ້ງຢືນຕົວຕົນຜ່ານທາງໃບຮັບຮອງ. %1$s ບໍ່ຫນ້າເຊື່ອຖື <b>%2$s</b> ເພາະວ່າຜູ້ອອກໃບຮັບຮອງຂອງພວກເຂົາແມ່ນບໍເປັນທີ່ຮູ້ຈັກ, ໃບຮັບຮອງແມ່ນສ້າງຂື້ນມາເອງ ຫລື ເຊີເວີບໍ່ໄດ້ສົ່ງໃບຮັບຮອງທີ່ຖືກຕ້ອງມາໃຫ້.</label>
+    ]]></string>
+
+     <!-- Sessions List -->
+    <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
+    <string name="close_tab">ປິດແທັບ</string>
+
+    <!-- Contextual Feature Recommendation Popups -->
+    <!-- CFR for Toolbar Shield Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_shield_icon2">ໄດ້​ແລ້ວ! ພວກ​ເຮົາ​ໄດ້​ຢຸດ​ເຊົາ​ເວັບ​ໄຊ​ນີ້​ຈາກການລັກຕິດຕາມກ່ຽວ​ກັບ​ທ່ານ. ແຕະໃສ່ໄສ້ໄດ້ທຸກເວລາເພື່ອເບິ່ງສິ່ງທີ່ພວກເຮົາຂັດຂວາງ.</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Button that closes the CFR popup -->
+    <string name="cfr_close_button_description">ປິດປັອບອັບ</string>
+
+    <!-- Tool Tip for: Privacy and Security Settings Screen  task : https://github.com/mozilla-mobile/focus-android/issues/6211 -->
+    <!-- Tool Tip Title -->
+    <string name="tool_tip_title">ເຈົ້າໄດ້ຮັບການປົກປ້ອງ!</string>
+    <!-- Tool Tip Message -->
+    <string name="tool_tip_message">ການຕັ້ງຄ່າເລີ່ມຕົ້ນເຫຼົ່ານີ້ໃຫ້ການປົກປ້ອງທີ່ເຂັ້ມແຂງ. ແຕ່ມັນງ່າຍທີ່ຈະປັບການຕັ້ງຄ່າເພື່ອຕອບສະໜອງຄວາມຕ້ອງການສະເພາະຂອງເຈົ້າ.</string>
+    <!-- Tool Tip "X" button Content description (not visible, for screen readers etc.) :Button that closes the tool tip -->
+    <string name="tool_tip_dismiss_button_content_description">ປິດ</string>
+
+    <!-- CFR for Toolbar Delete Icon (Banner Info Message) -->
+    <string name="cfr_for_toolbar_delete_icon2">ແຕະບ່ອນນີ້ເພື່ອຖິ້ມມັນທັງໝົດ — ປະຫວັດ, ຄຸກກີ້, ທຸກຢ່າງ — ແລະເລີ່ມໃໝ່ໃນແຖບໃໝ່.</string>
+
+    <!-- Promote SearchWidget Dialog -->
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. --&gt;
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the
+    close button from promote search widget dialog. -->
+    <string name="promote_search_widget_dialog_content_description">ປິດ</string>
+
+    !-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. --&gt;
+    <!-- Content description (not visible, for screen readers etc.): This is the description for
+    picture of search widget from promote search widget dialog. -->
+    <string name="promote_search_widget_dialog_picture_content_description">ຊອກຫາ widget</string>
+
+    !-- This is the title of promote search widget dialog. --&gt;
+    <!-- This is the title of promote search widget dialog. -->
+    <string name="promote_search_widget_dialog_title">ລຶບລ້າງປະຫວັດການທ່ອງເວັບແລ້ວ! 🎉</string>
+
+    !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. &quot;Focus&quot;) --&gt;
+    <!-- Banner Info Message than will appear when user first enters in the app. The location is at the toolbar. -->
+    <string name="cfr_for_start_browsing">ເລີ່ມເຊດຊັນການທ່ອງເວັບສ່ວນຕົວຂອງເຈົ້າ, ແລະພວກເຮົາຈະບລັອກຕົວຕິດຕາມ ແລະສິ່ງບໍ່ດີອື່ນໆຕາມທີ່ເຈົ້າໄປ.</string>
+
+    !-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. &quot;Focus&quot;) --&gt;
+    <!-- This is the subtitle of promote search widget dialog. %1$s will get replaced with the name
+    of the app (e.g. "Focus") -->
+    <string name="promote_search_widget_dialog_subtitle">ພວກເຮົາຈະປ່ອຍໃຫ້ທ່ານຊອກຫາແບບສ່ວນຕົວຂອງທ່ານ, ແຕ່ເລີ່ມຕົ້ນໄວຂຶ້ນໃນຄັ້ງຕໍ່ໄປດ້ວຍວິດເຈັດ %1$s ໃນໜ້າຈໍຫຼັກຂອງທ່ານ.</string>
+
+    !-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. --&gt;
+    <!-- This is te text from add search widget to home screen button .The button is located on
+    promote search widget dialog. -->
+    <string name="promote_search_widget_button_text">ເພີ່ມ widget ໃສ່ຫນ້າຈໍຫຼັກ</string>
+
+    !-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. --&gt;
+    <!-- This is te text of the snackbar that appears after the search widget was added successfully
+    to the home screen. -->
+    <string name="promote_search_widget_snackbar_message">ເພີ່ມວິດເຈັດໃສ່ໜ້າຈໍຫຼັກແລ້ວ</string>
+</resources>

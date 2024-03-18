@@ -1,0 +1,407 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28"
+        tools:ignore="ScopedStorage"
+        />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- This is needed because the android.permission.CAMERA above automatically
+    adds a requirements for camera hardware and we don't want add those restrictions -->
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.camera.autofocus"
+        android:required="false" />
+
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+
+    <!-- Needed for Google Play policy https://support.google.com/googleplay/android-developer/answer/6048248 -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID"/>
+
+    <!-- Needed to prompt the user to give permission to install a downloaded apk -->
+    <uses-permission-sdk-23 android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
+    <!-- Needed to interact with all apps installed on a device -->
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
+        tools:ignore="QueryAllPackagesPermission" />
+
+    <!-- Needed to post notifications on devices with Android 13 and later-->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- Needed for uploading media files on devices with Android 13 and later. -->
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+
+    <application
+        android:name=".FenixApplication"
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/NormalTheme"
+        android:usesCleartextTraffic="true"
+        tools:ignore="UnusedAttribute">
+
+        <profileable
+            android:shell="true"
+            tools:targetApi="29" />
+
+        <!--
+          We inherited this entry (${applicationId}.App) from Fennec. We need to keep this as our
+          main launcher to avoid launcher icons on the home screen disappearing for all our users.
+
+          Note that `fennec*` build types override the targetActivity property in the Manifest
+          inside their source set.
+        -->
+        <activity-alias
+            android:name="${applicationId}.App"
+            android:exported="true"
+            android:targetActivity=".${targetActivity}">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
+        </activity-alias>
+
+        <!--
+          Fennec declared entry for homescreen pinned shortcuts.
+        -->
+        <activity-alias
+            android:name="org.mozilla.gecko.BrowserApp"
+            android:targetActivity=".IntentReceiverActivity"
+            android:exported="true">
+        </activity-alias>
+
+        <!-- Activity alias from Fennec used by PWA launchers on the home screen -->
+        <activity-alias
+            android:name="org.mozilla.gecko.LauncherActivity"
+            android:exported="true"
+            android:targetActivity=".IntentReceiverActivity">
+            <intent-filter>
+                <action android:name="org.mozilla.gecko.WEBAPP" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity
+            android:name=".HomeActivity"
+            android:theme="@style/SplashScreen"
+            android:exported="true"
+            android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|layoutDirection|smallestScreenSize|screenLayout"
+            android:launchMode="singleTask"
+            android:resizeableActivity="true"
+            android:supportsPictureInPicture="true"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="${deepLinkScheme}"
+                    android:host="enable_private_browsing"/>
+                <data android:scheme="${deepLinkScheme}"
+                    android:host="home"/>
+                <data android:scheme="${deepLinkScheme}"
+                    android:host="home_collections"/>
+                <data android:scheme="${deepLinkScheme}"
+                    android:host="install_search_widget"/>
+                <data android:scheme="${deepLinkScheme}"
+                    android:host="make_default_browser"/>
+                <data android:scheme="${deepLinkScheme}"
+                    android:host="open"/>
+                <data android:scheme="${deepLinkScheme}"
+                    android:host="settings"/>
+                <data android:scheme="${deepLinkScheme}"
+                    android:host="settings_accessibility"/>
+                <data android:scheme="${deepLinkScheme}"
+                    android:host="settings_addon_manager"/>
+                <data android:scheme="${deepLinkScheme}"
+                    android:host="settings_delete_browsing_data"/>
+                <data android:scheme="${deepLinkScheme}"
+                    android:host="settings_logins"/>
+                <data android:scheme="${deepLinkScheme}"
+                    android:host="settings_notifications"/>
+                <data android:scheme="${deepLinkScheme}"
+                    android:host="settings_privacy"/>
+                <data android:scheme="${deepLinkScheme}"
+                    android:host="settings_search_engine"/>
+                <data android:scheme="${deepLinkScheme}"
+                    android:host="settings_tracking_protection"/>
+                <data android:scheme="${deepLinkScheme}"
+                    android:host="turn_on_sync"/>
+                <data android:scheme="${deepLinkScheme}"
+                    android:host="urls_bookmarks"/>
+                <data android:scheme="${deepLinkScheme}"
+                    android:host="urls_history"/>
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".MozillaOnlineHomeActivity"
+                android:exported="false"/>
+
+        <activity android:name=".home.mozonline.PrivacyContentDisplayActivity"
+                android:exported="false"/>
+
+        <activity
+            android:name=".customtabs.ExternalAppBrowserActivity"
+            android:autoRemoveFromRecents="false"
+            android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|layoutDirection|smallestScreenSize|screenLayout"
+            android:exported="false"
+            android:label="@string/app_name"
+            android:persistableMode="persistNever"
+            android:taskAffinity=""
+            android:resizeableActivity="true"
+            android:supportsPictureInPicture="true"
+            android:windowSoftInputMode="adjustResize|stateAlwaysHidden" />
+
+        <activity
+            android:name=".IntentReceiverActivity"
+            android:theme="@style/Theme.Transparent"
+            android:relinquishTaskIdentity="true"
+            android:taskAffinity=""
+            android:exported="true"
+            android:excludeFromRecents="true" >
+
+            <!--
+              Respond to `Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_BROWSER)`
+            -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.APP_BROWSER"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="mozilla.components.pwa.category.SHORTCUT" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+            </intent-filter>
+
+            <!--Exposed specific deep links for third-party apps to open wallpaper settings.-->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="${deepLinkScheme}"
+                    android:host="settings_wallpapers"/>
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+                <data android:mimeType="text/html" />
+                <data android:mimeType="text/plain" />
+                <data android:mimeType="application/xhtml+xml" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <meta-data android:name="android.app.searchable"
+                android:resource="@xml/searchable"/>
+
+            <intent-filter>
+                <action android:name="android.intent.action.WEB_SEARCH" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="mozilla.components.feature.pwa.VIEW_PWA" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="https" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.ASSIST" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.nfc.action.NDEF_DISCOVERED"/>
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/pdf" />
+                <data android:scheme="content" />
+            </intent-filter>
+
+            <meta-data
+                android:name="com.android.systemui.action_assist_icon"
+                android:resource="@mipmap/ic_launcher" />
+
+        </activity>
+
+        <activity
+            android:name=".crashes.CrashListActivity"
+            android:exported="false" />
+
+        <activity android:name=".widget.VoiceSearchActivity"
+            android:theme="@style/Theme.AppCompat.Translucent"
+            android:taskAffinity=""
+            android:excludeFromRecents="true"
+            />
+
+        <activity
+            android:name=".settings.account.AuthCustomTabActivity"
+            android:autoRemoveFromRecents="false"
+            android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|layoutDirection|smallestScreenSize|screenLayout"
+            android:exported="false"
+            android:taskAffinity=""
+            android:windowSoftInputMode="adjustResize|stateAlwaysHidden" />
+
+        <activity android:name=".settings.account.AuthIntentReceiverActivity"
+            android:exported="false" />
+
+        <activity android:name=".autofill.AutofillUnlockActivity"
+            android:exported="false"
+            android:theme="@style/Theme.AppCompat.Translucent" />
+
+        <activity android:name=".autofill.AutofillConfirmActivity"
+            android:exported="false"
+            android:theme="@style/Theme.AppCompat.Translucent" />
+
+        <activity android:name=".autofill.AutofillSearchActivity"
+            android:exported="false"
+            android:theme="@style/DialogActivityTheme" />
+
+        <activity
+            android:name=".messaging.NotificationClickedReceiverActivity"
+            android:exported="false" />
+
+        <service
+            android:name=".autofill.AutofillService"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_AUTOFILL_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.autofill.AutofillService"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.autofill"
+                android:resource="@xml/autofill_configuration" />
+        </service>
+
+        <service android:name=".media.MediaSessionService"
+            android:foregroundServiceType="mediaPlayback"
+            android:exported="false" />
+
+        <service
+            android:name=".customtabs.CustomTabsService"
+            android:exported="true"
+            tools:ignore="ExportedService">
+            <intent-filter>
+                <action android:name="android.support.customtabs.action.CustomTabsService" />
+            </intent-filter>
+        </service>
+
+        <service
+            android:name=".downloads.DownloadService"
+            android:foregroundServiceType="dataSync"
+            android:exported="false" />
+
+        <receiver
+            android:name="org.mozilla.gecko.search.SearchWidgetProvider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/search_widget_info" />
+        </receiver>
+
+        <receiver android:name=".onboarding.WidgetPinnedReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="org.mozilla.fenix.onboarding.WidgetPinnedReceiver.widgetPinned"/>
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".session.PrivateNotificationService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="This foreground service allows users to easily remove private tabs from the notification" />
+        </service>
+
+        <service
+            android:name=".messaging.NotificationDismissedService"
+            android:exported="false" />
+
+        <service
+            android:name=".push.FirebasePushService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <meta-data
+            android:name="firebase_messaging_auto_init_enabled"
+            android:value="true" />
+        <meta-data
+            android:name="firebase_analytics_collection_enabled"
+            android:value="false" />
+        <meta-data
+            android:name="firebase_analytics_collection_deactivated"
+            android:value="true" />
+        <!-- Removes the default Workmanager  initialization so that we can use on-demand initializer. -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge" >
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+        </provider>
+    </application>
+
+</manifest>

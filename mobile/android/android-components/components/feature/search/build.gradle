@@ -1,0 +1,80 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+android {
+    defaultConfig {
+        minSdkVersion config.minSdkVersion
+        compileSdk config.compileSdkVersion
+        targetSdkVersion config.targetSdkVersion
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    sourceSets {
+        test {
+            resources {
+                // We want to access the assets from unit tests. With this configuration we can just
+                // read the files directly and do not need to rely on Robolectric.
+                srcDir "${projectDir}/src/main/assets/"
+            }
+        }
+    }
+
+    namespace 'mozilla.components.feature.search'
+}
+
+tasks.withType(KotlinCompile).configureEach {
+    kotlinOptions.freeCompilerArgs += [
+        "-opt-in=kotlinx.coroutines.FlowPreview",
+        "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi"
+    ]
+}
+
+dependencies {
+    implementation project(":feature-tabs")
+    implementation project(':browser-state')
+    implementation project(':concept-engine')
+    implementation project(':service-location')
+    implementation project(':support-utils')
+    implementation project(':support-ktx')
+    implementation project(':ui-colors')
+    implementation project(':support-base')
+    implementation project(':support-remotesettings')
+
+    implementation ComponentsDependencies.androidx_core_ktx
+    implementation ComponentsDependencies.mozilla_remote_settings
+
+    testImplementation project(':support-test')
+    testImplementation project(':support-test-fakes')
+    testImplementation project(':support-test-libstate')
+    testImplementation ComponentsDependencies.androidx_test_core
+    testImplementation ComponentsDependencies.androidx_test_junit
+    testImplementation ComponentsDependencies.testing_robolectric
+    testImplementation ComponentsDependencies.testing_coroutines
+}
+
+tasks.register("updateAdsExtensionVersion", Copy) { task ->
+    updateExtensionVersion(task, 'src/main/assets/extensions/ads')
+}
+
+tasks.register("updateCookiesExtensionVersion", Copy) { task ->
+    updateExtensionVersion(task, 'src/main/assets/extensions/search')
+}
+
+preBuild.dependsOn "updateAdsExtensionVersion"
+preBuild.dependsOn "updateCookiesExtensionVersion"
+
+apply from: '../../../android-lint.gradle'
+apply from: '../../../publish.gradle'
+ext.configurePublish(config.componentsGroupId, archivesBaseName, project.ext.description)

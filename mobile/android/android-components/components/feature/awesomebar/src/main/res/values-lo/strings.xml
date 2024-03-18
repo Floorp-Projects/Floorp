@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The description for a suggestion that represents an opened tab.
+    Used to distinguish between History search suggestions from your
+    browsing history and your open tabs -->
+    <string name="switch_to_tab_description">ປ່ຽນໄປຫາແທັບ</string>
+</resources>

@@ -1,0 +1,896 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:moz="http://mozac.org/tools" xmlns:tools="http://schemas.android.com/tools">
+    <!-- ####################################################################################### -->
+    <!-- ## Put only strings into this file that should be translated. Move all other strings ## -->
+    <!-- ## into a separate file like strings_references.xml                                  ## -->
+    <!-- ####################################################################################### -->
+
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_cancel">ألغِ</string>
+    <!-- Label used for buttons, e.g. in dialogs -->
+    <string name="action_ok">حسنا</string>
+
+    <string name="action_save">احفظ</string>
+
+    <!-- This text is shown in the URL bar when it's empty -->
+    <string name="urlbar_hint">ابحث أو أدخل عنوانا</string>
+
+    <string name="teaser">تصفح خاص تلقائي.\nتصفح. امسح. كرر.</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
+    <string name="feedback_erase">لقد مسح تأريخ تصفحك.</string>
+    <string name="feedback_erase2">مُسح تأريخ التصفح</string>
+
+    <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
+    <string name="feedback_erase_custom_tab">مُسح تأريخ التصفّح للسان.</string>
+
+    <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
+    <string name="search_hint">ابحث عن %1$s</string>
+
+    <!-- Menu item: Share the currently visible page -->
+    <string name="menu_share">شارك…</string>
+
+    <!-- Menu item: Report an issue on the current site -->
+    <string name="menu_report_site_issue">أبلِغ عن مشكلة بالموقع</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. %1$s will be
+      replaced with the name of the browser like: "Open in Firefox" or "Open in Chrome". Some
+      links can be opened by native apps that aren't a browser, e.g. "Open in YouTube" -->
+    <string name="menu_open_with_default_browser2">افتح في %1$s</string>
+
+    <!-- Menu item: Switch to another browser to open the currently visible page. This menu item
+      will be shown if there are multiple browsers and we do not know which one is the default
+      browser or in case Focus is actually the default browser. Clicking this menu item will show
+      a screen with multiple browsers (or other apps that can open the current URL) to choose from. -->
+    <string name="menu_open_with_a_browser2">افتح في…</string>
+
+    <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
+    <string name="menu_add_to_home_screen">أضِف إلى شاشة البداية</string>
+
+    <!-- Menu item: Add the current site as a shortcut on the Home screen -->
+    <string name="menu_add_to_shortcuts">أضِف إلى الاختصارات</string>
+    <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
+    <string name="menu_remove_from_shortcuts">أزِل من الاختصارات</string>
+
+    <!-- Menu item: Shows information about features and changes that are new to this version -->
+    <string name="menu_whats_new">ما الجديد</string>
+    <string name="menu_settings">الإعدادات</string>
+    <string name="menu_about">عن</string>
+    <string name="menu_help">مساعدة</string>
+    <string name="menu_rights">حقوقك</string>
+
+    <!-- Menu item: This is the label for a menu entry that shows how many trackers have been blocked
+         for the currently loaded website. The number of blocked trackers is shown below this label.
+         Next to this label is a switch that allows the user to temporarily enable / disable the
+         blocking of trackers for the current browsing session - for example if the current website
+         doesn't work correctly with blocked content. -->
+    <string name="menu_trackers_blocked_title">المتعقبات المحجوبة</string>
+
+    <!-- Menu item: This is the subtitle for the Trackers blocked menu entry that shows how many
+    trackers have been blocked for the currently loaded website.  -->
+    <string name="menu_trackers_blocked_subtitle">يمكن بتعطيل هذا إصلاح مشاكل بعض المواقع</string>
+
+    <!-- Menu item: This is the label for turning off content blocking for the current website. -->
+    <string name="menu_content_blocking">حجب المحتوى</string>
+    <!-- This is the subtitle content blocking toggle -->
+    <string name="menu_content_blocking_subtitle">عطّله لإصلاح علل بعض المواقع</string>
+
+    <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
+     See https://github.com/mozilla-mobile/focus-android/issues/2106
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="menu_custom_tab_branding">تدعمها %1$s</string>
+
+    <!-- This is the title of a dialog that shows all the share targets (apps or contacts) when
+         sharing an URL. -->
+    <string name="share_dialog_title">شارك عبر</string>
+
+    <!-- While a browsing session is active (in the foreground or background) we will show a notification
+         so that the user doesn't forget about the website still being open. This text is shown in
+         the notification. Clicking the notification will have the same effect as clicking the "erase"
+         button in the application. -->
+    <string name="notification_erase_text">امسح تأريخ التصفح</string>
+
+    <!-- Notification action to open Focus and resume the current browsing session. -->
+    <string name="notification_action_open">افتح</string>
+
+    <!-- Notification action to erase the current browsing session AND switch to Focus (bring it
+         to the foreground) -->
+    <string name="notification_action_erase_and_open">امسح و افتح</string>
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_short_label">امسح</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters. -->
+    <string name="shortcut_erase_long_label">امسح تأريخ التصفح</string>
+
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_and_open_short_label">امسح وافتح</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters.
+         %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="shortcut_erase_and_open_long_label">امسح وافتح %1$s</string>
+
+
+    <!-- This is the label of an action we offer when the user selects text in other third-party apps.
+         Clicking this action will launch Focus and perform a search in the default search engine. -->
+    <string name="text_selection_search_action">ابحث مع الحفاظ على الخصوصية</string>
+
+    <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+         Argument 2 is the url for the learn-more link. -->
+    <string name="about_content"><![CDATA[<p>يعطيك %1$s الدفّة.</p>
+<p>استعمله كمتصفّح خاص:
+  <ul>
+    <li>ابحث وتصفّح مباشرة في التطبيق</li>
+    <li>احجب المتعقّبات (أو حدّث الإعدادات للسماح بها)</li>
+    <li>امسح الكعكات بالإضافة إلى حذف تأريخ البحث والتصفّح</li>
+  </ul>
+</p>
+<p>%1$s منتج من Mozilla. مهمتنا تكمن في التشجيع نحو إنترنت مفتوح وصحّي.<br/>
+<a href="%2$s">اطّلع على المزيد</a></p>]]></string>
+
+    <!-- Header for the Privacy and Security settings menu -->
+    <string name="preference_privacy_and_security_header">الخصوصية والسريّة</string>
+
+    <!-- Preference summary for settings related to privacy and security -->
+    <string name="preference_privacy_and_security_summary">التّعقّب، و الكعكات، و اختيار البيانات</string>
+
+    <!-- Preference category description for settings related to search, set default
+    and autocomplete are settings a user can find and change inside the "search" settings screen -->
+    <string name="preference_search_summary">الضبط كمبدئي والإكمال التلقائي</string>
+
+    <!-- Preference category description for settings screen for settings related to Mozilla -->
+    <!-- About the app and help are links that are inside this menu -->
+    <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_summary">عن %1$s والمساعدة</string>
+
+    <!-- Preference category for ad blocking and enhanced tracking protection settings -->
+    <string name="preference_category_tracking_protection3">الحماية الموسّعة من التعقب</string>
+
+    <!-- Preference category for settings related to controlling web content -->
+    <string name="preference_category_web_content">محتوى الوب</string>
+
+    <!-- Preference category: stealth settings for while switching apps -->
+    <string name="preference_category_switching_apps">التبديل بين التطبيقات</string>
+
+    <!-- Preference category for General Settings -->
+    <string name="preference_category_general">عام</string>
+
+    <!-- Preference summary for General Settings category; the two things users can find in this category -->
+    <string name="preference_general_summary2">المتصفّح المبدئي، اللغة</string>
+
+    <!-- Preference category for settings about sending usage data -->
+    <string name="preference_category_data_collection_use">تجميل البيانات واستخدامها</string>
+
+    <string name="preference_category_search">البحث</string>
+
+    <!-- Title of "switch" preference that enables/disables search suggestions -->
+    <string name="preference_show_search_suggestions">اجلب اقتراحات البحث</string>
+    <!-- Description of the preference that enables/disables search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_show_search_suggestions_summary">سيُرسل %1$s ما تكتبه في شريط العنوان إلى محرك البحث الذي فضّله</string>
+
+    <!-- This label is shown below the name of the default search engine in settings -->
+    <string name="preference_search_engine_default">المبدئي</string>
+
+    <!-- This label is shown above the currently selected search engine in settings -->
+    <string name="preference_search_engine_label">محرك البحث</string>
+
+    <!-- Text that is shown below a "switch" preference that is enabled. -->
+    <string name="preference_state_on">مفعّل</string>
+
+    <!-- Text that is shown below a "switch" preference that is disabled. -->
+    <string name="preference_state_off">معطّل</string>
+
+    <!-- Item in settings that will open a new preference screen for configuring the URL autocomplete behavior. -->
+    <string name="preference_subitem_autocomplete">إكمال المسارات تلقائيا</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
+    <string name="preference_switch_autocomplete_topsites">لأكثر المواقع زيارة</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the topsites list
+    %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_topsite_summary2">فعّله ليُكمل %s تلقائيا أكثر من ٤٥٠ عنوان وِب في شريط العناوين.</string>
+
+    <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
+    <string name="preference_switch_autocomplete_user_list">للمواقع التي تُضيفها</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the user-defined list
+     %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_user_list_summary2">فعّله ليُكمل %s تلقائيا المسارات في المفضّلة.</string>
+
+    <!-- Preference category: Manage (user-defined) sites -->
+    <string name="preference_category_autocomplete_manage_sites">أدِر المواقع</string>
+
+    <!-- Item in autocomplete settings that will open a new preference screen for adding and removing URLs to the user-defined list-->
+    <string name="preference_autocomplete_subitem_manage_sites">أدِر المواقع</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add">+ أضِف مسارا مخصصا</string>
+
+    <!-- Explanation text above the list of custom autocomplete URLs. -->
+    <string name="preference_autocomplete_explanation_text">قائمة مخصّصة من الإكمال التلقائي:</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add2">أضِف مسارًا</string>
+
+    <!-- Title of the screen for adding custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_add">أضِف مسارا مخصصا</string>
+
+    <!-- Label for the button to quick add custom autocomplete URLs. -->
+    <string name="custom_autocomplete_quick_add">أضِف مسارا مخصصا</string>
+
+    <!-- Label for the button to quick add the current URL to the custom autocomplete list -->
+    <string name="add_custom_autocomplete_label">أضِف رابطا لإكماله تلقائيا</string>
+
+    <!-- Preference category for settings about cookies and site data -->
+    <string name="preference_category_cookies">الكعكات و بيانات المواقع</string>
+
+    <!-- Preference category for settings about data choices -->
+    <string name="preference_category_data_choices">اختيارات البيانات</string>
+
+    <!-- Title of the screen for removing custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_remove">أزِل المسارات المخصصة</string>
+
+    <!-- A link to SUMO at autocomplete settings. -->
+    <string name="preference_autocomplete_learn_more">اطّلع على المزيد</string>
+
+    <!-- Preference summary: Custom (user-defined) autocomplete URLs. -->
+    <string name="preference_autocomplete_custom_summary">أضِف وأدِر إكمال المسارات المخصصة تلقائيا.</string>
+
+    <!-- Label for the "custom autocomplete URL" input field -->
+    <string name="preference_autocomplete_add_title">المسار لإضافته</string>
+
+    <!-- "Hint" text for the "custom autocomplete URL" input field. Shown when the field is empty. -->
+    <string name="preference_autocomplete_add_hint">ألصِق مسارا أو أدخِله</string>
+
+    <!-- Example how a custom domain autocomplete URL be added (e.g. without http://) -->
+    <string name="preference_autocomplete_add_example2">مثال: mozilla.org</string>
+
+    <!-- To be removed once the new hint has been translated -->
+    <string name="preference_autocomplete_add_example">مثال: example.com</string>
+
+    <!-- Confirmation "snackbar" shown after a new custom autocomplete URL has been added. -->
+    <string name="preference_autocomplete_add_confirmation">أُضيف مسار مخصص جديد.</string>
+
+    <!-- Menu item to remove existing autocomplete URLs. -->
+    <string name="preference_autocomplete_menu_remove">أزِل</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Button that will delete all selected custom autocomplete URLs. -->
+    <string name="preference_autocomplete_action_remove_content_description">أزِل</string>
+
+    <!-- Error message shown if the entered custom autocomplete URL is not valid or empty. -->
+    <string name="preference_autocomplete_add_error">تحقق من المسار الذي أدخلته.</string>
+
+    <string name="preference_language">اللغة</string>
+    <!-- This is shown when the user hasn't set a focus specific language, i.e. when Focus
+         is using the system default language. -->
+    <string name="preference_language_systemdefault">المبدئية للنظام</string>
+
+    <string name="preference_category_privacy">الخصوصية</string>
+    <string name="preference_privacy_block_ads">احجب متعقبات الإعلانات</string>
+    <string name="preference_privacy_block_ads_summary">تتعقّب بعض الإعلانات زياراتك إلى المواقع، حتى إن لم تنقرها</string>
+    <string name="preference_privacy_block_analytics">احجب متعقبات التحليلات</string>
+    <string name="preference_privacy_block_analytics_summary">تُستخدم لجمع نشاطاتك وتحليلها وقياسها، مثل النقر وتمرير الصفحات</string>
+    <string name="preference_privacy_block_social">احجب المتعقبات الاجتماعية</string>
+    <string name="preference_privacy_block_social_summary">تُضمّن في المواقع لتتعقب زياراتك ولعرض بعض الخصائص مثل أزرار المشاركة</string>
+    <string name="preference_privacy_block_content">احجب متعقبات المحتوى الأخرى</string>
+    <string name="preference_privacy_block_content_summary2">تفعيل الخيار قد يتسبب بألا تعمل بعض الصفحات كما يجب</string>
+    <string name="preference_privacy_category_cookies">احجب الكعكات</string>
+
+    <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
+    only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
+    <string name="preference_privacy_should_block_cookies_no_option2">لا، شكرًا</string>
+    <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">احجب كعكات المتعقّبات من الأطراف الثالثة فحسب</string>
+    <string name="preference_privacy_should_block_cookies_third_party_only_option">احجب الكعكات من الأطراف الثالثة فحسب</string>
+    <string name="preference_privacy_should_block_cookies_cross_site_option">احجب الكعكات بين المواقع</string>
+    <string name="preference_privacy_should_block_cookies_yes_option2">نعم، أودّ ذلك</string>
+
+    <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
+    <string name="preference_security_biometric">استخدم البصمة لإلغاء قفل التطبيق</string>
+    <!-- Preference Summary: Biometrics (iris scan, fingerprint, or facial scan) can be used to unlock Focus if the app had a URL
+        open when the app was last run to ensure that only the phone's owner can view a previous session.
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_security_biometric_summary">يمكن للبصمة إلغاء قفل %1$s إن كان مفتوحًا في التطبيق أحد العناوين. سيُفعّل وضع التخفّي.</string>
+
+    <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
+         and prevents the user from taking screenshots or casting the app to other displays. -->
+    <string name="preference_privacy_secure_mode">التخفّي</string>
+    <!-- Preference Summary: Stealth mode (previously "Secure mode") is a setting that prevents the
+     app's content (in our case especially the content of webpages) to show up in the "recent apps"
+     screen. Additionally Android will prevent the user from taking screenshots or casting the app
+     to other displays. -->
+    <string name="preference_privacy_stealth_summary">أخفِ صفحات الوب عند الانتقال بين التطبيقات وامنع التقاط الشاشة.</string>
+
+    <string name="preference_category_security">الأمان</string>
+
+    <string name="preference_category_performance">الأداء</string>
+    <string name="preference_performance_block_webfonts">احجب خطوط الوب</string>
+    <!-- This text is shown below the setting for disabling web fonts. Some websites use icons/images from a font and those do not show up if fonts are blocked.-->
+    <string name="preference_performance_block_webfonts_summary">قد يسبب اختفاء بعض الأيقونات أو الصور</string>
+
+    <string name="preference_performance_block_javascript">احجب جافاسكرِبت</string>
+    <!-- This text is shown below setting for disabling JavaScript. Some websites may not work correctly when JavaScript is disabled -->
+    <string name="preference_performance_block_javascript_summary">قد تتحمّل الصفحات بشكل أسرع، ولكنها قد لا تعمل كما ينبغي أيضا</string>
+
+    <!-- This preference does not set Focus as the default browser but instead links to Android's
+     "default apps" settings screen or if not supported by this Android version to a SUMO page describing
+     how to set Focus as a default browser.
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="preference_default_browser2">اجعل %1$s متصفّحك المبدئي</string>
+
+    <string name="preference_category_mozilla">موزيلا</string>
+    <string name="preference_mozilla_telemetry2">أرسل بيانات الاستخدام</string>
+
+    <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
+    <string name="preference_mozilla_telemetry_summary">اطّلع على المزيد</string>
+
+    <!-- %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="preference_mozilla_telemetry_summary2">تحاول موزيلا ألا تجمع أكثر مما تحتاجه لإتاحة %1$s و تحسينه للجميع.</string>
+
+    <!-- In-app link (in settings) to Focus privacy notice. -->
+    <string name="preference_privacy_notice">تنويه الخصوصية</string>
+
+    <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
+    <string name="preference_about">عن %1$s</string>
+
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_search_installed_search_engines">محركات البحث المثبتة</string>
+
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_choose_search_engine">اختر محرك البحث</string>
+
+    <!-- Action for restoring the default list of search engines -->
+    <string name="preference_search_restore">استعد محركات البحث المبدئية</string>
+
+    <!-- Action for adding an additional search engine to the list.
+    The "+" is used to emphasize that this is an "add" action -->
+    <string name="preference_search_add2">+ أضف محرك بحث آخر</string>
+    <string name="preference_search_remove_title">أزِل محركات البحث</string>
+    <string name="preference_search_remove">أزِل</string>
+    <!-- Action for dding an additional search engine to the list -->
+    <string name="preference_search_add3">أضِف محرك بحث آخر</string>
+    <!-- Explanation text above the list of search engines-->
+    <string name="preference_select_preferred_engine">اختر محرك البحث المفضل لك:</string>
+
+    <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
+     a user first launches the app. -->
+    <string name="preference_homescreen_tips">اعرض الفوائد في شاشة البداية</string>
+
+    <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
+    <string name="action_option_add_search_engine">أضف محرك بحث</string>
+
+    <string name="search_add_manually_name_hint">اسم محرك البحث</string>
+    <string name="search_add_manually_string">نص البحث المستخدم</string>
+    <string name="search_add_manually_save">احفظ</string>
+
+    <!-- Example of search engine url -->
+    <string name="search_add_manually_example">مثال: example.com/search/?q=%s</string>
+
+    <string name="search_add_confirmation">أُضيف محرك البحث الجديد.</string>
+
+    <string name="search_add_error_empty_name">أدخِل اسم محرك البحث</string>
+    <string name="search_add_error_duplicate_name">هناك محرك بحث مثبّت يحمل نفس الاسم بالفعل.</string>
+
+    <string name="search_add_error_empty_search">أدخِل نص البحث</string>
+
+    <string name="search_add_error_format">تحقق من أن نص البحث يطابق تنسيق المثال</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clear text in URL bar -->
+    <string name="content_description_clear_input">امسح الإدخال</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clicking on the website overlay
+     while in typing mode will dismiss and go back to the browser. This text will be read when the
+     overlay if focused. See https://github.com/mozilla-mobile/focus-android/issues/50 -->
+    <string name="content_description_dismiss_input">غادِر</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+     history and go back to the home screen. -->
+    <string name="content_description_erase">امسح تأريخ التصفح</string>
+
+    <!-- If the user has multiple tabs open we will show an addition "floating action button" showing how many tabs are open.
+     This string is not displayed and read only by screenreaders. %1$s will be replaced with the number of open tabs. This
+      button will only be visible when there is more than one tab open (>= 2). -->
+    <string name="content_description_tab_counter">الألسنة المفتوحة: %1$s</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Lock icon showed in the URL bar for
+     https pages.. -->
+    <string name="content_description_lock">اتصال آمن</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we start
+     loading a website -->
+    <string name="accessibility_announcement_loading">يُحمّل</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we
+     finished loading a website -->
+    <string name="accessibility_announcement_loading_finished">تم تحميل الموقع</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">المزيد من الخيارات</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button used
+    on home screen-->
+    <string name="indicator_content_description_menu">زر ”خيارات أخرى“</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="content_description_forward">تصفّح للأمام</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Reload current website -->
+    <string name="content_description_reload">أعِد تحميل الموقع</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back (browsing history) -->
+    <string name="content_description_back">تصفّح للوراء</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Stop loading the current website. This button will turn into the refresh button once loading has been completed (see content_description_reload) -->
+    <string name="content_description_stop">أوقف تحميل الموقع</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Custom Tab exit button - closes the custom tab and returns to the previous app. -->
+    <string name="content_description_customtab_exit">ارجع للتطبيق السابق</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the ImageView in the menu that displays
+         the number of trackers blocked for the current session -->
+    <string name="content_description_trackers_blocked">عدد المتعقّبات المحجوبة</string>
+
+    <!-- Content description (not visible, for screen readers etc.): This is the description for the switch in the menu that temporarily disables/enables
+         content blocking for the current session -->
+    <string name="content_description_blocking_switch">احجب المتعقّبات</string>
+
+    <string name="your_rights">حقوقك</string>
+
+    <string name="external_app_prompt_title">افتح الرابط في تطبيق آخر</string>
+    <!-- This string is shown when the user has clicked a link that needs to be opened in a different app.
+         Argument 2 is the external app name, argument 1 is our name (i.e. Firefox Focus, or Firefox Klar). -->
+    <string name="external_app_prompt">يمكنك مغادرة %1$s لفتح هذا الرابط في %2$s.</string>
+    <!-- This text is the title of a dialog shown if no app could be found for a custom link protocol. -->
+    <string name="external_app_prompt_no_app_title">ابحث عن تطبيق يدعم فتح الرابط</string>
+    <!-- This text is shown in a dialog if no app could be found for a custom link protocol. %1$s is the name of the app (i.e. Firefox Focus) and %2$s is the name of
+         the app store installed on the device (usually that's Google Play). -->
+    <string name="external_app_prompt_no_app">لا يوجد أي تطبيق على جهازك يدعم فتح هذا الرابط. يمكنك مغادرة %1$s للبحث في %2$s عن تطبيق يدعم الرابط.</string>
+    <!-- This label is shown above a list of apps that can be used to open a given link -->
+    <string name="external_multiple_apps_matched_exit">أتريد مغادرة التصفح الخاص؟</string>
+
+    <!-- Snackbar that will be displayed after a download has completed. %1$s will be replaced with the file name. -->
+    <string name="download_snackbar_finished">اكتمل %1$s</string>
+
+    <!-- Snackbar action to immediately open the successfully downloaded file. -->
+    <string name="download_snackbar_open">افتح</string>
+
+
+
+
+
+
+
+
+
+  <string name="error_hostLookup_title">الخادوم غير موجود</string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <!-- First run tour (Default browser): Title -->
+    <string name="firstrun_defaultbrowser_title">حسّن خصوصيتك</string>
+    <!-- First run tour (Default browser): Text. -->
+    <string name="firstrun_defaultbrowser_text2">انتقل بالتصفّح الخاص إلى المستوى التالي. احجب الإعلانات وغيرها من المحتويات التي تتعقبك أثناء التصفح وتأخذ من وقت تحميل الصفحات.</string>
+
+    <!-- First run tour (Search): Title -->
+    <string name="firstrun_search_title">تبحثُ بأسلوبك أنت</string>
+    <!-- First run tour (Search): Text -->
+    <string name="firstrun_search_text">أتبحث عن شيء مختلف؟ اختر محرّك بحث آخر ليكون المبدئي من الإعدادات.</string>
+
+    <!-- First run tour (Shortcut): Title -->
+    <string name="firstrun_shortcut_title">أضف اختصارات إلى شاشة البداية</string>
+    <!-- First run tour (Shortcut): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_shortcut_text">عُد إلى مواقعك المفضلة في %1$s بسرعة. اختر ”أضف إلى شاشة البداية“ من قائمة %1$s.</string>
+
+    <!-- First run tour (Privacy): Title -->
+    <string name="firstrun_privacy_title">اجعل من الخصوصية عادة</string>
+    <!-- First run tour (Privacy): Text. %1$s will be replaced with the name of the app (e.g. Firefox Focus) -->
+    <string name="firstrun_privacy_text">اضبط %1$s ليكون المتصفّح المبدئي وتمتع بفوائد التصفح الخاص عندما تفتح موقعا من تطبيق آخر.</string>
+
+    <string name="firstrun_close_button">حسنًا، فهمت</string>
+    <string name="firstrun_skip_button">تخطّ</string>
+    <string name="firstrun_next_button">التالي</string>
+
+    <!-- Indicator that no trackers are being blocked because content blocking is disabled; normally shows the number of blocked trackers -->
+    <string name="content_blocking_disabled">-</string>
+
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_add">أضِف</string>
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_yes">نعم</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_cancel">ألغِ</string>
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_no">لا</string>
+
+    <!-- When enhanced tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with enhanced tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection2">سيُفتح الاختصار مع تعطيل الحماية الموسّعة من التعقب</string>
+
+    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 40 characters; the value may be truncated if it is too long.
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_name">جلسة تصفح الخاص</string>
+
+    <!-- The user visible description of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
+    The recommended maximum length is 300 characters; the value may be truncated if it is too long. %1$s will be replaced with the name of the app (e.g. Firefox Focus).
+
+    * To understand what notification channels are, see: https://www.androidcentral.com/notification-channels
+    * To see how this string will look like in Android's UI, see: https://github.com/mozilla-mobile/focus-android/issues/863#issuecomment-324105723
+    -->
+    <string name="notification_browsing_session_channel_description">تتيح لك التنبيهات مسح جلسة %1$s بضغطة واحدة. لا تحتاج إلى فتح التطبيق أو رؤية ما المعروض فيه.</string>
+
+    <!-- Label for a button in the "tabs tray" to erase the browsing history (closes all tabs and removes associated data). -->
+    <string name="tabs_tray_action_erase">امسح تأريخ التصفح</string>
+
+    <!-- If the user decides to open the current page in another browser and if Firefox is not installed then we show this
+      item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play). -->
+    <string name="download_firefox">نزّل فَيرفُكُس</string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)-->
+    <string name="your_rights_content1"><![CDATA[%1$s برمجية حرة مفتوحة المصدر صنعتها موزيلا ومساهمين آخرين.]]></string>
+
+
+
+
+  <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
+    <string name="your_rights_content2"><![CDATA[إن %1$s مُتاح لك وفق بنود <a href="%2$s">رخصة موزيلا العامة</a> وترخيصات المصادر المفتوحة الأخرى.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
+    <string name="your_rights_content3"><![CDATA[لا يعطيك هذا أي حقوق أو تراخيص للعلامات التجارية لمؤسسة موزيلا أو أي طرف آخر، متضمنًا على سبيل المثال لا الحصر الأسماء والشعارات الآتية: Mozilla، وFirefox و%1$s. يمكنك الاطلاع على مزيد من المعلومات <a href="%2$s">من هنا</a>.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
+    <string name="your_rights_content4"><![CDATA[تُتاح النصوص المصدرية الإضافية المستعملة في %1$s وفق مختلف <a href="%2$s">الرخص</a> الحرة والمفتوحة المصدر.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the GPL
+    %3$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists) -->
+    <string name="your_rights_content5"><![CDATA[كما يستعمل %1$s قوائم الحجب التي توفّرها شركة Disconnect, Inc كأعمال منفصلة ومستقلّة برخصة <a href="%2$s">غنو العمومية الإصدارة الثالثة</a>، وهي متاحة <a href="%3$s">هنا</a>.]]></string>
+
+    <!-- Text shown in prompts for GeckoView -->
+    <string name="gv_prompt_username_hint">اسم المستخدم</string>
+    <string name="gv_prompt_password_hint">كلمة السر</string>
+    <string name="gv_prompt_clear">امسح</string>
+
+    <!-- Text shown in Security Information Popup -->
+    <!-- Text to denote secure or insecure connection -->
+    <string name="security_popup_secure_connection">اتّصال آمن</string>
+    <string name="security_popup_insecure_connection">اتّصال غير آمن</string>
+    <!-- %1$s will be replaced with organization that granted the SSL certificate -->
+    <string name="security_popup_security_verified">تثبّت منها: %1$s</string>
+
+    <!-- Content Description of Security Icon in toolbar -->
+    <string name="site_security_icon_content_description">أمن الموقع</string>
+    <string name="preference_autocomplete_duplicate_url_error">المسار موجود بالفعل</string>
+
+    <!-- Label for the Find in page button -->
+    <string name="find_in_page">ابحث في الصفحة</string>
+
+    <!-- Watermark/Hint for the find in page input field -->
+    <string name="find_in_page_input">ابحث في الصفحة</string>
+
+    <!-- String to show the number of results found in the page and the
+        position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="find_in_page_result">‏%1$d/‏%2$d</string>
+    <!-- String to be read by the accessibility service presenting the number of results found in the page
+        and the position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="accessibility_find_in_page_result">%1$d من أصل %2$d</string>
+
+    <!-- String to be read by the accessibility service when focusing the next result button -->
+    <string name="accessibility_next_result">ابحث عن النتيجة التالية</string>
+    <!-- String to be read by the accessibility service when focusing the previous result button -->
+    <string name="accessibility_previous_result">ابحث عن النتيجة السابقة</string>
+    <!-- String to be read by the accessibility service when focusing the dismiss button in the "find in page" UI -->
+    <string name="accessibility_dismiss_find_in_page">أخفِ لوحة البحث في الصفحة</string>
+
+
+
+  <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site">اطلب موقع سطح المكتب</string>
+
+    <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site2">نسخة سطح مكتب</string>
+
+    <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
+    <string name="custom_tab_copy_url_action">نُسِخَ المسار</string>
+
+    <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
+    <string name="preference_advanced_summary">أدوات المطوّرين</string>
+
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">افتح الروابط في التطبيقات</string>
+
+    <!-- Title of Advanced Setting category -->
+    <string name="preference_category_advanced">متقدم</string>
+
+    <!-- Preference for site permissions -->
+    <string name="preference_site_permissions">تصاريح المواقع</string>
+
+    <!-- Preference for autoplay -->
+    <string name="preference_autoplay">التشغيل التلقائي</string>
+
+    <!-- Preference for allow autoplay audio and video-->
+    <string name="preference_allow_audio_video_autoplay">اسمح بالصوت والڤِديو</string>
+
+    <!-- Preference for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only">احجب الصوت فقط</string>
+
+    <!-- Preference summary for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only_summary">يُنصح به</string>
+
+    <!-- Preference for block autoplay audio and video-->
+    <string name="preference_block_autoplay_audio_video">احجب الصوت والڤِديو</string>
+
+    <!-- Preference for studies -->
+    <string name="preference_studies">الدراسات</string>
+
+    <!-- Preference for studies summary-->
+    <string name="preference_studies_summary">قد يثبّت Firefox بعض الدراسات ويشغّلها من وقت لآخر.</string>
+
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">اعرف المزيد</string>
+
+    <!-- Dialog message shown when some changes are made on studies -->
+    <string name="studies_restart_app">سيُغلق التطبيق لتطبيق التغييرات</string>
+
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">أزِل</string>
+
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">مفعّلة</string>
+
+    <!-- Title of the completed section on the studies list -->
+    <string name="studies_completed">مكتملة</string>
+
+    <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
+    <string name="preference_remote_debugging">التنقيح عن بعد عبر واي-فاي/USB</string>
+
+    <!-- Title for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     %1$s is replaced with the app name -->
+    <string name="biometric_auth_title">ألغِ قفل %1$s</string>
+
+    <!-- Description for the fingerprint authentication dialog box that is shown to the user when opening the app -->
+    <string name="biometric_auth_description">المس مجسّ البصمة للمتابعة.</string>
+
+    <!-- New session button for the fingerprint authentication dialog box that is shown to the user when opening the app.
+     When pressed, the user's previous session is cleared, and authentication is not required. -->
+    <string name="biometric_auth_new_session">جلسة جديدة</string>
+
+    <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
+    while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
+    <string name="biometric_auth_open_link_new_session">افتح الرابط في جلسة جديدة</string>
+
+    <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
+    <string name="biometric_auth_image_description">أيقونة البصمة</string>
+
+    <!-- Error text displayed when the user's fingerprint cannot be recognized upon re-entering the app.
+     This is displayed during the authentication flow as the app launches. -->
+    <string name="biometric_auth_not_recognized_error">فشل التعرف على البصمة. أعِد المحاولة.</string>
+
+    <!-- Error text displayed when the user's fingerprint moved too quickly upon re-entering the app
+    This is displayed during the authentication flow as the app launches.-->
+    <string name="biometric_auth_moved_too_quickly">حرّكت إصبعك بسرعة. أعِد المحاولة.</string>
+
+    <!-- Title for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestion_title2">أتريد عرض اقتراحات البحث؟</string>
+
+    <!-- Description for the prompt to enable search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="enable_search_suggestion_description">لتستلم الاقتراحات، يحتاج %1$s إلى إرسال ما تكتبه في شريط العنوان إلى محرك البحث.</string>
+
+    <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_no">لا</string>
+
+    <!-- Label used for the "YES button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_yes">نعم</string>
+
+    <!-- Message displayed when using a search engine that doesn't provide suggestions -->
+    <string name="no_suggestions_message">لا تعرض بعض محركات البحث أية اقتراحات.</string>
+
+    <!-- Button to dismiss the message displayed  when using a search engine that doesn't provide suggestions-->
+    <string name="dismiss_no_suggestions_prompt_button">أهمِل</string>
+
+    <!-- Tips displayed on the home view -->
+
+    <!-- Tip displayed on home view explaining how to disable tracking protection
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection">أترى أن سلوك الموقع غريب؟\nجرّب تعطيل الحماية من التعقّب</string>
+
+    <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
+The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection3">أتظنّ أن محتوى الموقع ناقص أو أنه غريب؟\n
+    جرّب تعطيل الحماية الموسّعة من التعقّب</string>
+
+    <!-- Tip displayed on home view explaining how to add sites to homescreen
+    Argument 1 will be replaced with a line break in the application.-->
+    <string name="tip_add_to_homescreen"><![CDATA[اصنع زرًا لتفتح المواقع التي تزورها باستمرار بسرعة%1$s القائمة > أضِف إلى شاشة البداية]]></string>
+
+    <!-- Tip displayed on home view explaining how to make Focus the default browser
+    Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_set_default_browser">افتح كل الروابط في %1$s\nاضبط %1$s ليكون المتصفح المبدئي</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_autocomplete_url">أكمِل تلقائيًا عناوين المواقع التي تزورها باستمرار\nاضغط مطوّلًا على أي عنوان في شريط العنوان</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL
+    The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_open_in_new_tab">افتح الرابط في لسان جديد\nانقر مطوّلًا على أي رابط في الصفحة</string>
+
+    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
+      %1$s is a placeholder for the app name. -->
+    <string name="tip_request_desktop2">أتريد الاطلاع على النسخة الكاملة من الموقع؟\n
+        بدّل إلى وضع سطح المكتب من قائمة %1$s</string>
+
+    <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
+    <string name="tip_disable_tips2">عطّل النصائح في شاشة البداية</string>
+
+    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
+     "Allowlist" is a replacement for the word whitelist. -->
+    <string name="tip_explain_allowlist3">أتريد تعطيل الحماية الموسّعة من التعقب في المواقع التي تثق بها؟\n
+        أضِفها إلى قائمة السماح من الإعدادات
+    </string>
+
+    <!-- Tip displayed on the home view about the changes in the new release.
+    %1$s is a placeholder for the app name -->
+    <string name="tip_fresh_look">تسأل عن الشكل؟ طبعًا لدينا مظهر جديد كليًا!\n اقرأ المزيد عنه وعن التحديثات الأخرى على %1$s.</string>
+
+    <!-- Tip displayed on the home view about shortcuts
+    %1$s is a placeholder for the app name -->
+    <string name="tip_about_shortcuts">احفظ اختصارات المواقع التي تزورها بكثرة:\n
+    اختر ”أضِف إلى الاختصارات“ من قائمة %1$s</string>
+
+    <!-- Label for the snackbar when a user opens a new tab -->
+    <string name="new_tab_opened_snackbar">فُتِح لسان جديد</string>
+
+    <!-- Label for the button in the snackbar that switches to the newly opened tab -->
+    <string name="open_new_tab_snackbar">انتقل</string>
+
+    <!-- Preference for switching to a new tab immediately after opening -->
+    <string name="preference_open_new_tab">انتقل إلى الرابط في اللسان حالا</string>
+
+    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string moz:removedIn="97" name="preference_category_safe_browsing">التصفّح الآمن</string>
+    <!-- Preference title for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_title">احجب المواقع التي قد تكون ضارة وخدّاعة</string>
+    <!-- Preference summary for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_safe_browsing_summary">احجب المواقع التي لها بلاغ بأنها ضارة أو هجومية، أو فيها ما هو ضار أو ما هو غير مرغوب من برمجيات.</string>
+
+    <!-- Title of the preference to enable "HTTPS-Only" mode -->
+    <string name="preference_https_only_title">وضع HTTPS فقط</string>
+    <!-- Description of the preference to enable "HTTPS-Only" mode. -->
+    <string moz:removedIn="98" name="preference_https_only_summary2" tools:ignore="UnusedResources">سيُحاول التطبيق الاتصال تلقائيا بالمواقع مستعملًا ميفاق HTTPS لرفع الأمان. توفّر لك اتصالات HTTPS اتصالًا آمنًا ومعمّى بالمواقع التي تزورها.</string>
+
+    <string name="preference_https_only_summary3">يحاول الاتصال بالمواقع تلقائيا باستعمال بروتوكول التعمية HTTPS لمزيد من الأمان.</string>
+
+    <!-- Preference for exceptions tracking protection -->
+    <string name="preference_exceptions">الاستثناءات</string>
+    <!-- Description for the exceptions preference screen-->
+    <string name="preference_exceptions_description">عطّلت حجب المحتوى في هذه المواقع.</string>
+    <!-- Menu item to remove existing exceptions. -->
+    <string name="preference_exceptions_menu_remove">أزِل</string>
+    <!-- Button to remove all websites from the exception list -->
+    <string name="preference_exceptions_remove_all_button_label">أزِل كل مواقع الوِب</string>
+
+    <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_block_cookies_title">احجب الكعكات</string>
+
+    <!-- Message for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_category_block_cookies">أتريد حجب الكعكات؟</string>
+
+    <!-- Title for the tab crash report screen-->
+    <string name="tab_crash_report_title">انهار اللسان</string>
+    <!-- Headline for the tab crash report screen -->
+    <string name="tab_crash_report_headline">نأسف. نُواجه مشكلة مع هذا اللسان.</string>
+    <!-- Subtitle for the tab crash report screen -->
+    <string name="tab_crash_report_description">باعتبار هذا متصفح خاص، لن نحفظ هذا اللسان ولا نقدر على استعادته.</string>
+    <!-- Label for button to close the tab-->
+    <string name="tab_crash_report_close_tab_button_label">أغلِق اللسان</string>
+
+
+
+
+  <!-- Label for the checkbox to send the tab crash report to Mozilla -->
+    <string name="crash_report_send_crash_label">أرسِل تقرير الانهيار إلى موزيلا</string>
+
+    <!-- Tracking protection bottom sheet -->
+
+    <!-- Label for the total number of trackers blocked. %s represents the app install date -->
+    <string name="trackers_count_note">المتعقّبات المحجوبة منذ %s</string>
+    <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="content">المحتوى</string>
+    <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
+    <string name="advertising">الإعلانات</string>
+    <!-- Category of trackers (social media) that can be blocked by Enhanced Tracking Protection -->
+    <string name="social">التواصل الاجتماعي</string>
+    <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection -->
+    <string name="analytics">التحليلات</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="enhanced_tracking_protection">الحماية الموسّعة من التعقب</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is disabled for this site-->
+    <string name="enhanced_tracking_protection_state_off">عُطّلت الحماية في هذا الموقع</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is enabled for this site-->
+    <string name="enhanced_tracking_protection_state_on">فُعّلت الحماية في هذا الموقع</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="secure_connection">الاتصال آمن</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="insecure_connection">الاتصال غير آمن</string>
+
+    <!-- Title for the list of trackers enhanced tracking ptotection can block-->
+    <string name="trackers_and_scripts">المتعقّبات والسكربتات التي تريد حجبها</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
+    <string name="go_back">انتقل للخلف</string>
+
+    <!-- Top Sites -->
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">أزِل</string>
+
+    <!-- Text for the menu item to remove a top site -->
+    <string name="rename_top_site_item">غيّر الاسم</string>
+    <!-- Text for the dialog title for renaming a top site -->
+    <string name="rename_top_site">غيّر الاسم</string>
+    <!-- Placeholder text for the input field of rename top site-->
+    <string name="placeholder_rename_top_site">اسم الاختصار</string>
+
+    <!-- Text for context menu additional note.
+    %1$s is a placeholder for the app name. -->
+    <string name="contextmenu_erased_images_note2">الصور المحفوظة و المُشاركة &lt;b&gt;لن تُحذف&lt;/b&gt; عندما تمسح تأريخ %1$s</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference category for changing default theme to dark or light mode -->
+    <string name="preferences_theme">السمة</string>
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">فاتحة</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">داكنة</string>
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">حسب وضع توفير الطاقة</string>
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">اتبع سمة الجهاز</string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on  -->
+    <string name="errorpage_httpsonly_title">لا يدعم الموقع الذي طلبته ميفاق HTTPS</string>
+
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will get replaced with the name of the app (e.g. "Firefox Focus") -->
+    <string name="errorpage_httpsonly_message">يحاول %1$s مبدئيا الاتصال باستعمال HTTPS لرفع مستوى الأمان. لتغيير هذا الإعداد أو للاطلاع على المزيد، انتقل إلى الإعدادات ← الخصوصية والأمان ← الأمان.</string>
+
+    <!-- Sessions List -->
+    <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
+    <string name="close_tab">أغلِق اللسان</string>
+</resources>

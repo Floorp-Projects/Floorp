@@ -1,0 +1,17 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * www.tvmovie.de - Can't scroll tv program on tvmovie.de
+ * Bug #1868345 - https://bugzilla.mozilla.org/show_bug.cgi?id=1868345
+ * Bug #1840166 - https://bugzilla.mozilla.org/show_bug.cgi?id=1840166
+ * WebCompat issue #123254 - https://github.com/webcompat/web-bugs/issues/123254
+ *
+ * Due to an unfortunate combination of table layout issues and schroll
+ * anchoring issues, the page keeps scrolling down forever, with no ability
+ * to scroll back up.
+ */
+:root {
+  overflow-anchor: none;
+}

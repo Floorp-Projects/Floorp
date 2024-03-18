@@ -1,0 +1,42 @@
+---
+layout: post
+title:  "🐼 Release: Android Components 0.25"
+date:   2018-09-26 20:33:00 +0200
+categories: releases
+author: arturo
+---
+
+# 0.25.1 (2018-09-27)
+
+* **browser-engine-system**: Fixed a `NullPointerException` in `SystemEngineSession.captureThumbnail()`.
+
+# 0.25 (2018-09-26)
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.24...v0.25),
+[Milestone](https://github.com/mozilla-mobile/android-components/milestone/25?closed=1),
+[API reference](https://mozilla-mobile.github.io/android-components/api/0.25/index)
+
+* Compiled against:
+  * Android
+    * SDK: 27
+    * Support Libraries: 27.1.1
+  * Kotlin
+    * Standard library: 1.2.61
+    * Coroutines: 0.23.4
+  * GeckoView
+    * Nightly: 64.0.20180905100117
+    * Beta: 63.0b3 (0269319281578bff4e01d77a21350bf91ba08620)
+    * Release: 62.0 (9cbae12a3fff404ed2c12070ad475424d0ae869f)
+
+* ⚠️ **This is the last release compiled against Android SDK 27. Upcoming releases of the components will require Android SDK 28**.
+* **service-fretboard**:
+  * Fixed a bug in `FlatFileExperimentStorage` that caused updated experiment configurations not being saved to disk.
+  * Added [WorkManager](https://developer.android.com/reference/kotlin/androidx/work/WorkManager) implementation for updating experiment configurations in the background (See ``WorkManagerSyncScheduler``).
+  * `Experiment.id` is not accessible by component consumers anymore.
+* **browser-engine-system**:
+  * URL changes are now reported earlier; when the URL of the main frame changes.
+  * Fixed an issue where fullscreen mode would only take up part of the screen.
+  * Fixed a crash that could happen when loading invalid URLs.
+  * `RequestInterceptor.onErrorRequest()` can return custom error page content to be displayed now (the original URL that caused the error will be preserved).
+* **feature-intent**: New component providing intent processing functionality (Code moved from *feature-session*).
+* **support-utils**: `DownloadUtils.guessFileName()` will replace extension in the URL with the MIME type file extension if needed (`http://example.com/file.aspx` + `image/jpeg` -> `file.jpg`).

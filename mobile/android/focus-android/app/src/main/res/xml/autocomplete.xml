@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <androidx.preference.PreferenceCategory>
+
+        <org.mozilla.focus.autocomplete.AutocompleteDefaultDomainsPreference
+            android:defaultValue="true"
+            android:key="@string/pref_key_autocomplete_preinstalled"
+            android:summary="@string/preference_autocomplete_topsite_summary2"
+            android:title="@string/preference_switch_autocomplete_topsites" />
+
+    </androidx.preference.PreferenceCategory>
+
+    <androidx.preference.PreferenceCategory>
+
+        <org.mozilla.focus.autocomplete.AutocompleteCustomDomainsPreference
+            android:defaultValue="true"
+            android:key="@string/pref_key_autocomplete_custom"
+            android:summary="@string/preference_autocomplete_user_list_summary2"
+            android:title="@string/preference_switch_autocomplete_user_list" />
+
+        <androidx.preference.Preference
+            android:layout="@layout/focus_preference_no_icon"
+            android:dependency="@string/pref_key_autocomplete_custom"
+            android:key="@string/pref_key_screen_custom_domains"
+            android:title="@string/preference_autocomplete_subitem_manage_sites" />
+
+    </androidx.preference.PreferenceCategory>
+
+</androidx.preference.PreferenceScreen>

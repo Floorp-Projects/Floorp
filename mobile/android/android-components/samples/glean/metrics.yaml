@@ -1,0 +1,116 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# This file defines the metrics that are recorded by glean telemetry. They are
+# automatically converted to Kotlin code at build time using the `glean_parser`
+# PyPI package.
+---
+
+$schema: moz://mozilla.org/schemas/glean/metrics/1-0-0
+
+browser.engagement:
+  click:
+    type: event
+    description: >
+      Just testing events
+    bugs:
+      - https://bugzilla.mozilla.org/123456789
+    data_reviews:
+      - N/A
+    notification_emails:
+      - CHANGE-ME@example.com
+    extra_keys:
+      key1:
+        type: string
+        description: "This is key one"
+      key2:
+        type: string
+        description: "This is key two"
+    expires: 2100-01-01
+
+  event_no_keys:
+    type: event
+    description: >
+      Just testing events without keys
+    bugs:
+      - https://bugzilla.mozilla.org/123456789
+    data_reviews:
+      - N/A
+    notification_emails:
+      - CHANGE-ME@example.com
+    expires: 2100-01-01
+
+basic:
+  os:
+    type: string
+    description: >
+      The name of the os
+    bugs:
+      - https://bugzilla.mozilla.org/123456789
+    data_reviews:
+      - N/A
+    notification_emails:
+      - CHANGE-ME@example.com
+    expires: 2100-01-01
+
+test:
+  string_list:
+    type: string_list
+    description: >
+      Testing StringList ping
+    send_in_pings:
+      - test-string-list
+    lifetime: user
+    bugs:
+      - https://bugzilla.mozilla.org/123456789
+    data_reviews:
+      - N/A
+    notification_emails:
+      - CHANGE-ME@example.com
+    expires: 2100-01-01
+
+  counter:
+    type: counter
+    description: >
+      Testing counter
+    send_in_pings:
+      - test-string-list
+    lifetime: user
+    bugs:
+      - https://bugzilla.mozilla.org/123456789
+    data_reviews:
+      - N/A
+    notification_emails:
+      - CHANGE-ME@example.com
+    expires: 2100-01-01
+
+  timespan:
+    type: timespan
+    description: >
+      Testing a timespan
+    time_unit: microsecond
+    lifetime: application
+    bugs:
+      - https://bugzilla.mozilla.org/1508948
+    data_reviews:
+      - N/A
+    notification_emails:
+      - CHANGE-ME@example.com
+    expires: 2100-01-01
+
+custom:
+  counter:
+    type: counter
+    description: >
+      A custom counter that goes on a custom ping
+    lifetime: ping
+    send_in_pings:
+      - sample
+    bugs:
+      - https://bugzilla.mozilla.org/1547330
+    data_reviews:
+      - N/A
+    notification_emails:
+      - CHANGE-ME@test-only.com
+    expires: 2100-01-01

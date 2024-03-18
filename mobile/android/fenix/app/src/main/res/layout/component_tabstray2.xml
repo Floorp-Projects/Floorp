@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/tab_wrapper"
+    style="@style/BottomSheetModal"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:backgroundTint="@color/fx_mobile_layer_color_1"
+    app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
+    tools:ignore="MozMultipleConstraintLayouts">
+
+    <View
+        android:id="@+id/handle"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/bottom_sheet_handle_height"
+        android:layout_marginTop="@dimen/bottom_sheet_handle_top_margin"
+        android:background="@color/fx_mobile_text_color_secondary"
+        android:contentDescription="@string/a11y_action_label_collapse"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintWidth_percent="0.1" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/info_banner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/fx_mobile_layer_color_1"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@+id/topBar" />
+
+    <View
+        android:id="@+id/topBar"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:background="@color/fx_mobile_layer_color_1"
+        android:importantForAccessibility="no"
+        app:layout_constraintTop_toBottomOf="@+id/handle" />
+
+    <ImageButton
+        android:id="@+id/exit_multi_select"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="0dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/tab_tray_close_multiselect_content_description"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/multiselect_title"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/multiselect_title"
+        app:srcCompat="@drawable/ic_close"
+        app:tint="@color/fx_mobile_icon_color_oncolor" />
+
+    <TextView
+        android:id="@+id/multiselect_title"
+        style="Header20TextStyle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:focusableInTouchMode="true"
+        android:textColor="@color/fx_mobile_text_color_oncolor_primary"
+        android:importantForAccessibility="no"
+        app:layout_constraintBottom_toBottomOf="@id/topBar"
+        app:layout_constraintEnd_toStartOf="@id/collect_multi_select"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintStart_toEndOf="@+id/exit_multi_select"
+        app:layout_constraintTop_toTopOf="@id/topBar"
+        tools:text="3 selected" />
+
+    <include layout="@layout/tabstray_multiselect_items" />
+
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tab_layout"
+        android:layout_width="0dp"
+        android:layout_height="80dp"
+        android:background="@color/fx_mobile_layer_color_1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/handle"
+        app:layout_constraintWidth_percent="0.5"
+        app:tabGravity="fill"
+        app:tabIconTint="@color/tab_icon"
+        app:tabIndicatorColor="@color/fx_mobile_icon_color_active"
+        app:tabMaxWidth="0dp"
+        app:tabRippleColor="@android:color/transparent">
+
+        <com.google.android.material.tabs.TabItem
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:contentDescription="@string/tab_header_label"
+            android:layout="@layout/tabs_tray_tab_counter2" />
+
+        <com.google.android.material.tabs.TabItem
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:contentDescription="@string/tabs_header_private_tabs_title"
+            android:icon="@drawable/ic_private_browsing" />
+
+        <com.google.android.material.tabs.TabItem
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:contentDescription="@string/tabs_header_synced_tabs_title"
+            android:foregroundTint="@color/photonWhite"
+            android:icon="@drawable/ic_synced_tabs" />
+
+    </com.google.android.material.tabs.TabLayout>
+
+    <ImageButton
+        android:id="@+id/tab_tray_overflow"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginEnd="0dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/open_tabs_menu"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="@id/tab_layout"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/topBar"
+        app:srcCompat="@drawable/ic_menu"
+        app:tint="@color/fx_mobile_icon_color_primary" />
+
+    <View
+        android:id="@+id/divider"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:background="@color/fx_mobile_border_color_primary"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/info_banner" />
+
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/tabsTray"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:scrollbarStyle="outsideOverlay"
+        android:scrollbars="vertical"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/divider" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

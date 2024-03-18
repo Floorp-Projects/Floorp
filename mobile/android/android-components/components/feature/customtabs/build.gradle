@@ -1,0 +1,64 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+android {
+    defaultConfig {
+        minSdkVersion config.minSdkVersion
+        compileSdk config.compileSdkVersion
+        targetSdkVersion config.targetSdkVersion
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    namespace 'mozilla.components.feature.customtabs'
+}
+
+tasks.withType(KotlinCompile).configureEach {
+    kotlinOptions.freeCompilerArgs += "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi"
+}
+
+dependencies {
+    implementation project(':browser-menu')
+    implementation project(':browser-state')
+    implementation project(':browser-toolbar')
+    implementation project(':concept-engine')
+    implementation project(':concept-fetch')
+    implementation project(':concept-menu')
+    implementation project(':feature-session')
+    implementation project(':feature-intent')
+    implementation project(':feature-tabs')
+    implementation project(':service-digitalassetlinks')
+    implementation project(':support-base')
+    implementation project(':support-ktx')
+    implementation project(':support-utils')
+    implementation project(':ui-icons')
+
+    implementation ComponentsDependencies.androidx_core_ktx
+
+    implementation ComponentsDependencies.kotlin_coroutines
+
+    api ComponentsDependencies.androidx_browser
+
+    testImplementation project(':support-test')
+    testImplementation project(':support-test-libstate')
+    testImplementation ComponentsDependencies.androidx_test_core
+    testImplementation ComponentsDependencies.androidx_test_junit
+    testImplementation ComponentsDependencies.testing_coroutines
+    testImplementation ComponentsDependencies.testing_robolectric
+}
+
+apply from: '../../../android-lint.gradle'
+apply from: '../../../publish.gradle'
+ext.configurePublish(config.componentsGroupId, archivesBaseName, project.ext.description)

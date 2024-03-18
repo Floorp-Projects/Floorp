@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/createShortcutWrapper"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?scrim"
+    android:fitsSystemWindows="true"
+    tools:context="org.mozilla.fenix.shortcut.CreateShortcutFragment">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="32dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/dialog_background"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp">
+
+        <TextView
+            android:id="@+id/dialog_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="32dp"
+            android:paddingEnd="32dp"
+            android:text="@string/add_to_homescreen_title"
+            android:textAlignment="viewStart"
+            android:textAppearance="@style/HeaderTextStyle"
+            android:textSize="20sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/favicon_image"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="32dp"
+            android:importantForAccessibility="no"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/dialog_title"
+            tools:src="@drawable/ic_pocket" />
+
+        <EditText
+            android:id="@+id/shortcut_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="32dp"
+            android:backgroundTint="?borderPrimary"
+            android:hint="@string/add_to_homescreen_text_placeholder"
+            android:importantForAutofill="no"
+            android:inputType="text"
+            android:textAlignment="viewStart"
+            app:layout_constraintBottom_toBottomOf="@id/favicon_image"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/favicon_image"
+            app:layout_constraintTop_toTopOf="@id/favicon_image" />
+
+        <Button
+            android:id="@+id/add_button"
+            style="@style/CreateShortcutDialogButton"
+            android:layout_marginTop="32dp"
+            android:layout_marginEnd="16dp"
+            android:background="?selectableItemBackground"
+            android:text="@string/add_to_homescreen_add"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/shortcut_text" />
+
+        <Button
+            android:id="@+id/cancel_button"
+            style="@style/CreateShortcutDialogButton"
+            android:background="?selectableItemBackground"
+            android:text="@string/add_to_homescreen_cancel"
+            app:layout_constraintBottom_toBottomOf="@id/add_button"
+            app:layout_constraintEnd_toStartOf="@id/add_button" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</FrameLayout>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Search Widget -->
+    <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
+    <string name="search_widget_content_description">Nowy rejtarik %1$s wócyniś</string>
+    <!-- Text preview for smaller sized widgets -->
+    <string name="search_widget_text_short">Pytaś</string>
+    <!-- Text preview for larger sized widgets -->
+    <string name="search_widget_text_long">Web pśepytaś</string>
+    <!-- Content description (not visible, for screen readers etc.): Voice search -->
+    <string name="search_widget_voice">Głosowe pytanje</string>
+</resources>

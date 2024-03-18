@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_sans_serif_font">சான்ஸ் செரிஃப்</string>
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_sans_serif_font_desc">சான்ஸ் செரிஃப் எழுத்துரு</string>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_serif_font">ஷெரிஃப்</string>
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_serif_font_desc">செரிஃப் எழுத்துரு</string>
+
+    <!-- Accessible description for decreasing the font size -->
+    <string name="mozac_feature_readerview_font_size_decrease_desc">எழுத்துரு அளவு குறைகிறது</string>
+
+    <!-- Accessible description for increasing the font size -->
+    <string name="mozac_feature_readerview_font_size_increase_desc">எழுத்துரு அளவு அதிகரிக்கும்</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_dark">கருமை</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_dark_color_scheme_desc">இருண்ட வண்ண திட்டம்</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_sephia">செபியா</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_sepia_color_scheme_desc">செபியா வண்ணத் திட்டம்</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_light">வெளிர்</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_light_color_scheme_desc">வெளிர் வண்ணத் திட்டம்</string>
+</resources>

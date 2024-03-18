@@ -1,0 +1,56 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+android {
+    defaultConfig {
+        minSdkVersion config.minSdkVersion
+        compileSdk config.compileSdkVersion
+        targetSdkVersion config.targetSdkVersion
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    namespace 'mozilla.components.browser.toolbar'
+}
+
+dependencies {
+    api project(':concept-toolbar')
+    api project(':ui-autocomplete')
+    api project(':support-base')
+
+    implementation project(':concept-engine')
+    implementation project(':concept-menu')
+    implementation project(':browser-menu')
+    implementation project(':browser-menu2')
+    implementation project(':ui-icons')
+    implementation project(':ui-colors')
+    implementation project(':ui-widgets')
+    implementation project(':support-ktx')
+
+    implementation ComponentsDependencies.androidx_appcompat
+    implementation ComponentsDependencies.androidx_constraintlayout
+    implementation ComponentsDependencies.androidx_core_ktx
+    implementation ComponentsDependencies.google_material
+
+    implementation ComponentsDependencies.kotlin_coroutines
+
+    testImplementation project(':support-test')
+
+    testImplementation ComponentsDependencies.androidx_test_core
+    testImplementation ComponentsDependencies.androidx_test_junit
+    testImplementation ComponentsDependencies.testing_robolectric
+    testImplementation ComponentsDependencies.testing_coroutines
+}
+
+apply from: '../../../android-lint.gradle'
+apply from: '../../../publish.gradle'
+ext.configurePublish(config.componentsGroupId, archivesBaseName, project.ext.description)

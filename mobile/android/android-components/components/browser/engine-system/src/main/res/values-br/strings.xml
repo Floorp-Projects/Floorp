@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Text for the title of an alert dialog displayed by a web page. %1$s will be replaced with the URL of the current page (displaying the dialog). -->
+    <string name="mozac_browser_engine_system_alert_title">Ar bajenn war %1$s a lâr:</string>
+    <!-- Text for the message of an auth dialog displayed by a web page.
+    %1$s will be replaced by the hostname or a description of the protected area/site, %2$s will be replaced with the URL of the current page (displaying the dialog). -->
+    <string name="mozac_browser_engine_system_auth_message">Emañ ar proksi %2$s ocʼh azgoulenn un anv arveriad hag ur ger-tremen. Emañ al lecʼhienn o lavarout: “%1$s”</string>
+    <!-- Text for the message of an auth dialog displayed by a web page. %1$s will be replaced with the URL of the current page (displaying the dialog). -->
+    <string name="mozac_browser_engine_system_auth_no_realm_message">Emañ ar proksi %1$s ocʼh azgoulenn un anv arveriad hag ur ger-tremen.</string>
+</resources>

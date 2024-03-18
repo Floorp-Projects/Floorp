@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Text for the title of an alert dialog displayed by a web page. %1$s will be replaced with the URL of the current page (displaying the dialog). -->
+    <string name="mozac_browser_engine_system_alert_title">%1$s পাতায় বলা হয়েছে:</string>
+    <!-- Text for the message of an auth dialog displayed by a web page.
+    %1$s will be replaced by the realm, %2$s will be replaced with the URL of the current page (displaying the dialog). -->
+    <string name="mozac_browser_engine_system_auth_message">%2$s আপনার ব্যবহারকারী নাম এবং পাসওয়ার্ডের জন্য অনুরোধ করছে। সাইটটি বলছে: “%1$s”</string>
+    <!-- Text for the message of an auth dialog displayed by a web page. %1$s will be replaced with the URL of the current page (displaying the dialog). -->
+    <string name="mozac_browser_engine_system_auth_no_realm_message">%1$s আপনার ব্যবহারকারী নাম এবং পাসওয়ার্ড অনুরোধ করছে।</string>
+</resources>

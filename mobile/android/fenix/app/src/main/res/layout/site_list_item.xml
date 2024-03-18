@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<mozilla.components.ui.widgets.WidgetSiteItemView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/site_list_item"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="@dimen/home_item_horizontal_margin"
+    android:minHeight="@dimen/mozac_widget_site_item_height" />

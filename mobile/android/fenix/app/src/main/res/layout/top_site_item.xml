@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/top_site_item"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/top_sites_item_margin_bottom"
+    android:orientation="vertical"
+    android:focusable="true">
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/favicon_card"
+        style="@style/TopSite.FaviconCard"
+        android:importantForAccessibility="noHideDescendants"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/favicon_image"
+            style="@style/topSiteFavicon" />
+    </com.google.android.material.card.MaterialCardView>
+
+    <TextView
+        android:id="@+id/top_site_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:maxWidth="84dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="@dimen/top_sites_text_margin_top"
+        android:drawablePadding="2dp"
+        android:gravity="center"
+        android:textAlignment="center"
+        android:singleLine="true"
+        android:textColor="@color/fx_mobile_text_color_primary"
+        android:textSize="12sp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/favicon_card"
+        tools:ignore="RtlCompat,SmallSp"
+        tools:text="Mozilla"/>
+
+    <TextView
+        android:id="@+id/top_site_subtitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:maxWidth="84dp"
+        android:layout_gravity="center_horizontal"
+        android:gravity="center"
+        android:textAlignment="center"
+        android:singleLine="true"
+        android:text="@string/top_sites_sponsored_label"
+        android:textColor="@color/fx_mobile_text_color_secondary"
+        android:textSize="10sp"
+        android:visibility="invisible"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/top_site_title"
+        tools:ignore="RtlCompat,SmallSp"
+        tools:visibility="visible"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

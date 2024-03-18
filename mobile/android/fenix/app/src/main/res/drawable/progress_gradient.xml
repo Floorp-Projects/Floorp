@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@android:id/background">
+        <shape>
+            <solid android:color="?attr/layer2" />
+        </shape>
+    </item>
+
+    <item android:id="@android:id/progress">
+        <scale android:scaleWidth="100%">
+            <shape>
+                <corners
+                    android:bottomLeftRadius="0dp"
+                    android:bottomRightRadius="8dp"
+                    android:topLeftRadius="0dp"
+                    android:topRightRadius="8dp"/>
+                <gradient
+                    android:angle="45"
+                    android:centerColor="#F10366"
+                    android:endColor="#FF9100"
+                    android:startColor="#6173FF" />
+            </shape>
+        </scale>
+    </item>
+</layer-list>

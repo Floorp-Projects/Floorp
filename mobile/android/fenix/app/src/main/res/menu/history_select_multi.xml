@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/share_history_multi_select"
+        android:icon="@drawable/ic_share"
+        app:iconTint="@color/fx_mobile_icon_color_oncolor"
+        android:title="@string/browser_menu_share"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/open_history_in_new_tabs_multi_select"
+        android:title="@string/bookmark_menu_open_in_new_tab_button"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/open_history_in_private_tabs_multi_select"
+        android:title="@string/bookmark_menu_open_in_private_tab_button"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/delete_history_multi_select"
+        android:title="@string/bookmark_menu_delete_button"
+        app:showAsAction="never" />
+</menu>

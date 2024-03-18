@@ -1,0 +1,173 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+  <string name="action_cancel">Չեղարկել</string>
+  <string name="action_ok">Լավ</string>
+  <string name="action_save">Պահպանել</string>
+  <string name="urlbar_hint">Որոնեք կամ մուտքագրեք հասցեն</string>
+  <string name="teaser">Ինքնաշխատ գաղտնի դիտարկում: \nԴիտարկել: Ջնջել: Կրկնել:</string>
+  <string name="feedback_erase">Դիտարկումների պատմությունը ջնջվել է:</string>
+  <string name="search_hint">Որոնել %1$s-ի համար</string>
+  <string name="menu_share">Համօգտագործել</string>
+  <string name="menu_open_with_default_browser2">Բացել %1$s-ում</string>
+  <string name="menu_open_with_a_browser2">Բացել հետևյալում՝</string>
+  <string name="menu_add_to_home_screen">Ավելացնել Տուն էկրանին</string>
+  <string name="menu_whats_new">Ինչն է նոր</string>
+  <string name="menu_settings">Կարգավորումներ</string>
+  <string name="menu_about">Մասին</string>
+  <string name="menu_help">Օգնություն</string>
+  <string name="menu_rights">Ձեր իրավունքները</string>
+  <string name="menu_trackers_blocked_title">Արգել. հետագծումներ</string>
+  <string name="menu_custom_tab_branding">%1$s-ի կողմից</string>
+  <string name="share_dialog_title">Համօգտագործել՝</string>
+  <string name="notification_erase_text">Ջնջել դիտարկումների պատմությունը</string>
+  <string name="notification_action_open">Բացել</string>
+  <string name="notification_action_erase_and_open">Ջնջել ու Բացել</string>
+  <string name="shortcut_erase_short_label">Ջնջել</string>
+  <string name="shortcut_erase_long_label">Ջնջել դիտարկման պատմությունը</string>
+  <string name="text_selection_search_action">Գաղտնի որոնում</string>
+
+  <string name="preference_category_search">Որոնում</string>
+  <string name="preference_search_engine_default">Լռելյայն</string>
+  <string name="preference_state_on">Միաց.</string>
+  <string name="preference_state_off">Անջ.</string>
+  <string name="preference_subitem_autocomplete">URL ինքնալրացում</string>
+  <string name="preference_autocomplete_action_add">+ Հավելել հարմարեցված URL</string>
+  <string name="preference_autocomplete_title_add">Հավելել հարմարեցված URL</string>
+  <string name="custom_autocomplete_quick_add">Ավելացնել հարմարեցված URL</string>
+  <string name="preference_autocomplete_title_remove">ՀԵռացնել հարմարեցված URL-ները</string>
+  <string name="preference_autocomplete_learn_more">Իմանալ ավելին</string>
+  <string name="preference_autocomplete_custom_summary">Ավելացնել և կառավարել հարմարեցված ինքնալրացվող URL-ները:</string>
+  <string name="preference_autocomplete_add_title">URL՝ ավելացնելու համար</string>
+  <string name="preference_autocomplete_add_hint">Տեղադրեք կամ մուտքագրեք URL-ն</string>
+  <string name="preference_autocomplete_add_example">Օրինակ՝ example.com</string>
+  <string name="preference_autocomplete_add_confirmation">Նոր հարմարեցված URL է ավելացվել:</string>
+  <string name="preference_autocomplete_menu_remove">Հեռացնել</string>
+  <string name="preference_autocomplete_action_remove_content_description">Հեռացնել</string>
+  <string name="preference_autocomplete_add_error">Ստուգեք մուտքագրված URL-ն:</string>
+  <string name="preference_language">Լեզուն</string>
+  <string name="preference_language_systemdefault">Համակարգայինը</string>
+  <string name="preference_category_privacy">Գաղտնիություն</string>
+  <string name="preference_privacy_block_ads">Արգելափակել գովազդային հետագծումները</string>
+  <string name="preference_privacy_block_ads_summary">Որոշ գովազդներ հետևում են կայքի այցելուներին, եթե անգամ չեք սեղմում գովազդին</string>
+  <string name="preference_privacy_block_analytics">Արգելափակել վերլուծական հետագծումները</string>
+  <string name="preference_privacy_block_analytics_summary">Օգտագործվում է հավաքելու, վերլուծելու և ակտիվությունը չափելու համար, ինչպես օրինակ՝ հպումը և գլորումը:</string>
+  <string name="preference_privacy_block_social">Արգելափակել սոցիալական հետագծումները</string>
+  <string name="preference_privacy_block_social_summary">Ներկառուցված կայքերում՝ հետևելուհ ամար ձեր այցելուներին և ցուցադրելու համար գործառությունը, ինչպես օրինակ՝ կոճակների համօգտագործում</string>
+  <string name="preference_privacy_block_content">Արգելափակել այլ բովանդակության հետագծումները</string>
+  <string name="preference_privacy_block_content_summary2">Միացնելու դեպքում որոշ էջեր կարող են անսպասելի վարք ցուցադրել</string>
+  <string name="preference_privacy_category_cookies">"Արգելափակել cookie-ները "</string>
+  <string name="preference_privacy_should_block_cookies_no_option">Ոչ</string>
+  <string name="preference_privacy_should_block_cookies_third_party_only_option">Արգելափակել 3-րդ կողմի cookie-ները հիմա</string>
+  <string name="preference_privacy_should_block_cookies_yes_option">Այո</string>
+  <string name="preference_privacy_secure_mode">Թաքնված</string>
+  <string name="preference_privacy_stealth_summary">Թաքցնել վեբ էջերը հավելվածները փոխանջատելիս</string>
+  <string name="preference_category_performance">Արդյունավետություն</string>
+  <string name="preference_performance_block_webfonts">Արգելափակել վեբ տառատեսակները</string>
+  <string name="preference_performance_block_webfonts_summary">Կարող է հանգեցնել պատկերակների և պատկերների բացակայության</string>
+  <string name="preference_performance_block_javascript">Արգելափակել JavaScript-ը</string>
+  <string name="preference_performance_block_javascript_summary">Էջերը կարող են ավելի արագ բեռնվել, բայց նաև կարող են իրենց անսպասելի պահել:</string>
+  <string name="preference_default_browser2">Դարձնել %1$s-ը հիմնական դիտարկիչ</string>
+  <string name="preference_category_mozilla">Mozilla</string>
+  <string name="preference_mozilla_telemetry2">Ուղարկել օգտագործման տվյալները</string>
+  <string name="preference_mozilla_telemetry_summary">Իմանալ ավելին</string>
+  <string name="preference_mozilla_telemetry_summary2">Mozilla-ն ձգտում է հավաքել միայն այն, ինչ պետք է՝ %1$s-ը լավարկելու համար:</string>
+  <string name="preference_privacy_notice">Գաղտնիության ծանուցում</string>
+  <string name="preference_about">%1$s-ի մասին</string>
+  <string name="preference_search_installed_search_engines">Տեղադրված որոնիչներ</string>
+  <string name="preference_search_restore">Վերականգնել լռելյայն որոնիչները</string>
+  <string name="preference_search_add2">+ Ավելացնել այլ որոնիչ</string>
+  <string name="preference_search_remove_title">Հեռացնել որոնիչները</string>
+  <string name="preference_search_remove">Հեռացնել</string>
+  <string name="action_option_add_search_engine">Ավելացնել որոնիչ</string>
+  <string name="search_add_manually_name_hint">Որոնել որոնիչ</string>
+  <string name="search_add_manually_string">Որոնել տողը՝ օգտագործելու համար</string>
+  <string name="search_add_manually_save">Պահպանել</string>
+  <string name="search_add_manually_example">Օրինակ՝ example.com/search/?q=%s</string>
+  <string name="search_add_confirmation">Նոր որոնիչը ավելացվել է:</string>
+  <string name="search_add_error_empty_name">Մուտքագրեք որոնիչի անունը</string>
+  <string name="search_add_error_duplicate_name">Տեղադրված որոնիչը արդեն օգտագործում է այդ անունը:</string>
+  <string name="search_add_error_empty_search">Մուտքագրել որոնման տողը</string>
+  <string name="search_add_error_format">Ստուգեք, որոնման տողը համապատասխանում է օրինակի ձևաչափին</string>
+  <string name="content_description_clear_input">Մաքրել ներածումը</string>
+  <string name="content_description_dismiss_input">Բաց թողնել</string>
+  <string name="content_description_erase">Ջնջել դիտարկման պատմությունը</string>
+  <string name="content_description_tab_counter">Բաց ներդիրներ. %1$s</string>
+  <string name="content_description_lock">Անվտանգ կապակցում</string>
+  <string name="accessibility_announcement_loading">Բեռնում</string>
+  <string name="accessibility_announcement_loading_finished">Կայքը բեռնվել է</string>
+  <string name="content_description_menu">Լր. ընտրանքներ</string>
+  <string name="content_description_forward">Ուղղորդել առաջ</string>
+  <string name="content_description_reload">Կրկին բեռնել կայքը</string>
+  <string name="content_description_back">Ուղղորդել հետ</string>
+  <string name="content_description_stop">Կանգնեցնել էջի բեռնումը</string>
+  <string name="content_description_customtab_exit">Վերադառնալ նախորդ հավելվածին</string>
+  <string name="content_description_blocking_switch">Արգելափակել հետագծումները</string>
+  <string name="your_rights">Ձեր իրավունքները</string>
+  <string name="external_app_prompt_title">Բացել հղումը այլ հավելվածով</string>
+  <string name="external_app_prompt">Կարող եք բաց պահել %1$s-ը և բացել այս հղումը %2$s-ում:</string>
+  <string name="external_app_prompt_no_app_title">Գտեք հավելված, որը կարող է բացել հղումը</string>
+  <string name="external_app_prompt_no_app">Ձեր սարքի ոչ մի հավելված չի կարողանում բացել այս հղումը: Դուք կարող եք թողնել %1$s-ը՝ որոնելու համար %2$s-ում այն հավելվածը, որը կարող է այն բացել:</string>
+  <string name="external_multiple_apps_matched_exit">Փակե՞լ Գաղտնի դիտարկումը</string>
+  <string name="download_snackbar_finished">%1$s ավարտվել է</string>
+  <string name="download_snackbar_open">Բացել</string>
+
+
+
+
+
+
+
+
+
+  <string name="error_hostLookup_title">Սպասարկիչը չի գտնվել</string>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <string name="firstrun_defaultbrowser_title">Հզորացրեք ձեր գաղտնիությունը</string>
+  <string name="firstrun_defaultbrowser_text2">Տարեք գաղտնի դիտարկումը հաջորդ մակարդակ: Արգելափակեք գովազդները և այլ բովանդակություն, որը կարող է հետագծել ձեզ կայքերում և արագացրեք էջի բեռնումը:</string>
+  <string name="firstrun_search_title">Ձեր որոնումը, ձեր ընտրությունը</string>
+  <string name="firstrun_search_text">Այլ բա՞ն եք փնտրում: Ընտրեք այլ որոնիչ Կարգավորումներում:</string>
+  <string name="firstrun_shortcut_title">Հավելել դյուրանցումները տուն էկրանին:</string>
+  <string name="firstrun_shortcut_text">Արագորեն վերադարձեք ձեր ընտրյալ կայքերին %1$s-ում: Պարզապես ընտեք\"Հավելել Տուն էկրանին\" %1$s ցանկից:</string>
+  <string name="firstrun_privacy_title">Գայղտնիությունը դարձրեք սովորույթ</string>
+  <string name="firstrun_privacy_text">Կայեք %1$s-ը որպես հիմնական դիտարկիչ և ստացեք գաղտնի դիտարկման բոլոր առավելությունները՝ այլ հավելվածներից վեբ էջեր բացելիս:</string>
+  <string name="firstrun_close_button">Լավ, հասկացա:</string>
+  <string name="firstrun_skip_button">Բաց թողնել</string>
+  <string name="firstrun_next_button">Հաջորդը</string>
+  <string name="content_blocking_disabled">-</string>
+  <string name="dialog_addtohomescreen_action_add">Ավելացնել</string>
+  <string name="dialog_addtohomescreen_action_cancel">Չեղարկել</string>
+  <string name="dialog_addtohomescreen_tracking_protection">Դյուրանցումը կբացվի Հետագծման պաշտպանությունը անջատած</string>
+  <string name="notification_browsing_session_channel_name">Գանղտնի դիտարկման աշխատաշրջան</string>
+  <string name="notification_browsing_session_channel_description">Ծանուցումները հնարավորություն են տալիս ջնջել ձեր %1$s աշխատարջանը մեկ հպումով: Կարիք չկա բացել հավելվածը կամ տեսնել, թե ինչ է աշխատեցվում դիտարկիչում:</string>
+  <string name="tabs_tray_action_erase">Ջնջել դիտարկման պատմությունը</string>
+  <string name="download_firefox">Ներբեռնել Firefox-ը</string>
+  <string name="your_rights_content1">%1$s-ը անվճար և բաց կոդով ծրագիր է Mozilla-ի և այլ մասնակիցների կողմից:</string>
+
+
+
+
+  <string name="gv_prompt_username_hint">Օգտվողի անուն</string>
+  <string name="gv_prompt_password_hint">Գաղտնաբառ</string>
+  <string name="gv_prompt_clear">Մաքրել</string>
+  <string name="security_popup_secure_connection">Անվտանգ կապակցում</string>
+  <string name="security_popup_insecure_connection">Ոչ անվտանգ կապակցում</string>
+  <string name="security_popup_security_verified">Ստուգված է՝ %1$s</string>
+  <string name="site_security_icon_content_description">Կայքի անվտանգությունը</string>
+  <string name="preference_autocomplete_duplicate_url_error">URL-ն արդեն գոյություն ունի</string>
+</resources>

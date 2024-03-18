@@ -1,0 +1,57 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+
+android {
+    defaultConfig {
+        applicationId "org.mozilla.samples.toolbar"
+        minSdkVersion config.minSdkVersion
+        compileSdk config.compileSdkVersion
+        targetSdkVersion config.targetSdkVersion
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    buildFeatures {
+        viewBinding true
+    }
+
+    namespace 'org.mozilla.samples.toolbar'
+}
+
+
+dependencies {
+    implementation project(':concept-engine')
+    implementation project(':concept-menu')
+    implementation project(':browser-toolbar')
+    implementation project(':browser-menu')
+    implementation project(':browser-menu2')
+    implementation project(':browser-domains')
+
+    implementation project(':ui-colors')
+    implementation project(':ui-tabcounter')
+    implementation project(':ui-icons')
+
+    implementation project(':feature-toolbar')
+
+    implementation project(':support-ktx')
+
+    implementation project(':support-utils')
+
+    implementation ComponentsDependencies.kotlin_coroutines
+
+    implementation ComponentsDependencies.androidx_appcompat
+    implementation ComponentsDependencies.androidx_recyclerview
+}

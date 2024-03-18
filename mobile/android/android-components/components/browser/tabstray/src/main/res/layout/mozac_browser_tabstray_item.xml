@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="150dp"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_margin="4dp"
+    android:clickable="true"
+    android:focusable="true">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ImageView
+            android:id="@+id/mozac_browser_tabstray_icon"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:importantForAccessibility="no"
+            android:padding="4dp" />
+
+        <TextView
+            android:id="@+id/mozac_browser_tabstray_title"
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            android:layout_alignParentTop="true"
+            android:layout_marginStart="42dp"
+            android:layout_toStartOf="@id/mozac_browser_tabstray_close"
+            android:ellipsize="end"
+            android:lines="1"
+            android:padding="8dp"
+            tools:text="Mozilla" />
+
+        <TextView
+            android:id="@+id/mozac_browser_tabstray_url"
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            android:layout_alignParentTop="true"
+            android:layout_marginStart="42dp"
+            android:layout_toStartOf="@id/mozac_browser_tabstray_close"
+            android:ellipsize="end"
+            android:lines="1"
+            android:padding="8dp"
+            android:visibility="gone"
+            tools:text="www.mozilla.org" />
+
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/mozac_browser_tabstray_close"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentTop="true"
+            android:contentDescription="@string/mozac_browser_tabstray_close_tab"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            app:srcCompat="@drawable/mozac_ic_cross_20" />
+
+        <mozilla.components.browser.tabstray.thumbnail.TabThumbnailView
+            android:id="@+id/mozac_browser_tabstray_thumbnail"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@id/mozac_browser_tabstray_title"
+            android:contentDescription="@string/mozac_browser_tabstray_open_tab" />
+
+    </RelativeLayout>
+</androidx.cardview.widget.CardView>

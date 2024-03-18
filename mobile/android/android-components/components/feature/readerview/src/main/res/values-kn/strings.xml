@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_sans_serif_font">ಸಾನ್ಸ್ ಸೆರಿಫ್</string>
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_sans_serif_font_desc">ಸಾನ್ಸ್ ಸೆರಿಫ್ ಫಾಂಟ್</string>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_serif_font">ಸೆರಿಫ್</string>
+
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_serif_font_desc">ಸೆರಿಫ್ ಫಾಂಟ್</string>
+
+    <!-- Accessible description for decreasing the font size -->
+    <string name="mozac_feature_readerview_font_size_decrease_desc">ಫಾಂಟ್ ಗಾತ್ರ ಕಡಿಮೆಯಾಗುತ್ತದೆ</string>
+
+    <!-- Accessible description for increasing the font size -->
+    <string name="mozac_feature_readerview_font_size_increase_desc">ಫಾಂಟ್ ಗಾತ್ರ ಹೆಚ್ಚಳ</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_dark">ಗಾಢ</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_dark_color_scheme_desc">ಗಾಢ ಬಣ್ಣದ ಯೋಜನೆ</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_sephia">ಸೆಪಿಯ</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_sepia_color_scheme_desc">ಸೆಪಿಯಾ ಬಣ್ಣದ ಯೋಜನೆ</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_light">ತಿಳಿ</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_light_color_scheme_desc">ತಿಳಿ ಬಣ್ಣದ ಯೋಜನೆ</string>
+</resources>

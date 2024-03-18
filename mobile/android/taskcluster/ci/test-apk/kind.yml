@@ -1,0 +1,158 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: taskgraph.loader.transform:loader
+
+transforms:
+    - android_taskgraph.transforms.gradle_optimization:transforms
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    - toolchain
+    - external-gradle-dependencies
+
+task-defaults:
+    attributes:
+        retrigger: true
+    fetches:
+        toolchain:
+            - android-sdk-linux
+        external-gradle-dependencies:
+            - external-gradle-dependencies.tar.xz
+    optimization:
+        skip-unless-changed: []  # Paths are dynamically added by transforms
+    run-on-tasks-for:
+        - github-pull-request
+        - github-pull-request-untrusted
+        - github-push
+    run:
+        using: gradlew
+        use-caches: false
+    treeherder:
+        kind: test
+    worker-type: b-android-large
+    worker:
+        docker-image: {in-tree: base}
+        max-run-time: 7200
+
+tasks:
+    focus-debug:
+        dependencies:
+            external-gradle-dependencies: external-gradle-dependencies-focus
+        description: Focus unit tests
+        attributes:
+            code-review: true
+            shipping-product: focus
+        run:
+            pre-gradlew:
+                - ["cd", "focus-android"]
+            gradlew: ['clean', 'test', 'githubTestDetails']
+            dummy-secrets:
+                - content: "faketoken"
+                  path: .adjust_token
+        treeherder:
+            platform: 'focus-android-all/opt'
+            symbol: focus-debug(T)
+            tier: 1
+        worker:
+            artifacts:
+                - name: public/reports/index.html
+                  path: /builds/worker/checkouts/vcs/focus-android/app/build/reports/tests/testFocusDebugUnitTest/index.html
+                  type: file
+                - name: public/reports/test
+                  path: /builds/worker/checkouts/vcs/focus-android/app/build/reports/tests
+                  type: directory
+                - name: public/github
+                  path: /builds/worker/github
+                  type: directory
+
+    fenix-debug:
+        dependencies:
+            external-gradle-dependencies: external-gradle-dependencies-fenix
+        description: Fenix unit tests
+        attributes:
+            build-type: debug
+            code-review: true
+            shipping-product: fenix
+        run:
+            pre-gradlew:
+                - ["cd", "fenix"]
+                - ['java', '-version']
+            gradlew: ['clean', 'testFenixDebugUnitTest', 'githubTestDetails']
+        treeherder:
+            platform: 'fenix-android-all/opt'
+            symbol: fenix-debug(T)
+            tier: 1
+        worker:
+            artifacts:
+                - name: public/reports/index.html
+                  path: /builds/worker/checkouts/vcs/fenix/app/build/reports/tests/testFenixDebugUnitTest/index.html
+                  type: file
+                - name: public/reports/test
+                  path: /builds/worker/checkouts/vcs/fenix/app/build/reports/tests
+                  type: directory
+                - name: public/github
+                  path: /builds/worker/github
+                  type: directory
+        routes:
+            - notify.slack-channel.G016BC5FUHJ.on-failed
+        scopes:
+            - queue:route:notify.slack-channel.G016BC5FUHJ.on-failed
+            - notify:slack-channel:G016BC5FUHJ
+        extra:
+            notify:
+                slackBlocks: |
+                    [
+                      {
+                        "type": "header",
+                        "text": {
+                          "type": "plain_text",
+                          "text": "firefox-android :firefox: ${task.metadata.name} :x:\n "
+                        }
+                      },
+                      {
+                        "type": "divider"
+                      },
+                      {
+                         "type": "section",
+                         "text": {
+                             "type": "mrkdwn",
+                             "text": "*Task*: <https://firefox-ci-tc.services.mozilla.com/tasks/${status.taskId}|Taskcluster>"
+                        }
+                      },
+                      {
+                        "type": "section",
+                        "text": {
+                          "type": "mrkdwn",
+                          "text": "*Owner*: ${task.metadata.owner}"
+                        }
+                      },
+                      {
+                        "type": "section",
+                        "text": {
+                          "type": "mrkdwn",
+                          "text": "*Source*: <${task.payload.env.MOBILE_BASE_REPOSITORY}/commit/${task.payload.env.MOBILE_HEAD_REV}|Commit> :github:"
+                        }
+                      },
+                      {
+                        "type": "section",
+                        "text": {
+                          "type": "mrkdwn",
+                          "text": "*Test Summary*: <https://firefoxci.taskcluster-artifacts.net/${status.taskId}/0/public/reports/index.html|Results> :debug:"
+                        }
+                      },
+                      {
+                        "type": "divider"
+                      },
+                      {
+                        "type": "context",
+                        "elements": [
+                            {
+                                "type": "mrkdwn",
+                                "text": ":testops-notify: created by <https://mozilla-hub.atlassian.net/wiki/spaces/MTE/overview|Mobile Test Engineering>"
+                            }
+                        ]
+                      }
+                    ]

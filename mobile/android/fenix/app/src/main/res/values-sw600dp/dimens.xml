@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<resources>
+    <!-- Also used as toolbar top margin when tab strip is enabled to accommodate the tab strip-->
+    <dimen name="tab_strip_height">48dp</dimen>
+</resources>

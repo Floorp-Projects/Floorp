@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<resources>
+  <declare-styleable name="BrowserToolbar">
+    <attr name="browserToolbarHintColor" format="color"/>
+    <attr name="browserToolbarTextColor" format="color"/>
+    <attr name="browserToolbarTextSize" format="dimension"/>
+    <attr name="browserToolbarSecurityIcon" format="reference"/>
+    <attr name="browserToolbarInsecureColor" format="color"/>
+    <attr name="browserToolbarSecureColor" format="color"/>
+    <attr name="browserToolbarMenuColor" format="color"/>
+    <attr name="browserToolbarSuggestionBackgroundColor" format="color" />
+    <attr name="browserToolbarSuggestionForegroundColor" format="color" />
+    <attr name="browserToolbarClearColor" format="color"/>
+    <attr name="browserToolbarTrackingProtectionAndSecurityIndicatorSeparatorColor" format="color"/>
+    <attr name="browserToolbarFadingEdgeSize" format="dimension" />
+    <attr name="browserToolbarProgressBarGravity">
+      <enum name="bottom" value="0" />
+      <enum name="top" value="1" />
+    </attr>
+  </declare-styleable>
+
+  <declare-styleable name="BrowserToolbarSiteSecurityState">
+    <attr name="state_site_secure" format="boolean"/>
+  </declare-styleable>
+
+  <declare-styleable name="ActionContainer">
+    <attr name="actionContainerItemSize" format="dimension" />
+  </declare-styleable>
+</resources>

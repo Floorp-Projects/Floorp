@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/exceptions_wrapper"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/exceptions_empty_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/exceptions_description_margin">
+
+        <TextView
+            android:id="@+id/exceptions_empty_message"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="4dp"
+            android:text="@string/exceptions_empty_message_description"
+            android:textAlignment="viewStart"
+            android:textColor="?attr/textSecondary"
+            android:textSize="16sp"
+            android:visibility="visible"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <org.mozilla.fenix.utils.LinkTextView
+            android:id="@+id/exceptions_learn_more"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/component_exceptions_learn_more_height"
+            android:padding="4dp"
+            android:text="@string/exceptions_empty_message_learn_more_link"
+            android:textAlignment="viewStart"
+            android:textColor="?attr/textSecondary"
+            android:textSize="16sp"
+            android:visibility="visible"
+            app:layout_constraintTop_toBottomOf="@id/exceptions_empty_message" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/exceptions_list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        tools:listheader="@layout/exceptions_description"
+        tools:listitem="@layout/exception_item"
+        tools:listfooter="@layout/delete_exceptions_button" />
+</FrameLayout>

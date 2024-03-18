@@ -1,0 +1,23 @@
+---
+cookie-banner:
+  description: Nimbus feature name intended to control the cookie banner handling  in the app.
+  hasExposure: true
+  exposureDescription: ""
+  variables:
+    is-cookie-handling-enabled:
+      type: boolean
+      description: "If 'true' , the app will show the settings part for cookie banner handling"
+onboarding:
+  description: Nimbus feature name intended to control the onboarding plus all CFRs in the app.
+  hasExposure: true
+  exposureDescription: ""
+  variables:
+    is-cfr-enabled:
+      type: boolean
+      description: "If `true`, the app will show the cfrs"
+    is-enabled:
+      type: boolean
+      description: "If `true`, the app will show the new onboarding screen"
+    is-promote-search-widget-dialog-enabled:
+      type: boolean
+      description: "If `true`, the app will show the new dialog for promote search widget"

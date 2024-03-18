@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/Mozac.Browser.Menu.Item.Container"
+    android:layout_width="match_parent"
+    android:orientation="horizontal"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center_vertical"
+    tools:ignore="UseCompoundDrawables">
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/image"
+        style="@style/Mozac.Browser.Menu.Item.ImageText.Icon"
+        android:clickable="false"
+        android:background="@android:color/transparent"
+        android:importantForAccessibility="no"
+        tools:src="@android:drawable/screen_background_dark"/>
+
+    <TextView
+        android:id="@+id/text"
+        style="@style/Mozac.Browser.Menu.Item.ImageText.Label"
+        android:clickable="false"
+        android:focusable="false"
+        android:background="@android:color/transparent"
+        android:gravity="center_vertical"
+        tools:text="Item"
+        android:importantForAccessibility="no"/>
+</LinearLayout>

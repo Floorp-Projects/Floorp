@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/panel_wrapper"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/layer1">
+
+    <ImageView
+        android:id="@+id/navigate_back"
+        android:layout_width="@dimen/tracking_protection_item_height"
+        android:layout_height="@dimen/tracking_protection_item_height"
+        android:contentDescription="@string/etp_back_button_content_description"
+        android:scaleType="center"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/mozac_ic_back_24"
+        app:tint="?attr/textPrimary" />
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:clickable="false"
+        android:focusable="false"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="16dp"
+        android:textColor="?attr/textPrimary"
+        android:textSize="16sp"
+        app:layout_constraintStart_toEndOf="@+id/navigate_back"
+        app:layout_constraintEnd_toStartOf="@id/cookieBannerSwitch"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Turn off Cookie Banner Blocker for [domain.com]?" />
+
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/cookieBannerSwitch"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:minHeight="@dimen/tracking_protection_item_height"
+        android:visibility="gone"
+        app:layout_constraintStart_toEndOf="@id/title"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:paddingHorizontal="16dp"
+        app:layout_constraintBottom_toTopOf="@id/details"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <TextView
+        android:id="@+id/details"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="16dp"
+        android:layout_marginBottom="8dp"
+        android:textColor="?attr/textSecondary"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/navigate_back"
+        app:layout_constraintTop_toBottomOf="@id/title"
+        tools:text="Firefox will clear this site’s cookies and refresh the page. Clearing all cookies may sign you out or empty shopping carts." />
+
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/cancel_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:layout_marginTop="16dp"
+        android:background="@android:color/transparent"
+        android:gravity="center"
+        android:minHeight="48dp"
+        android:text="@string/cookie_banner_handling_details_site_is_not_supported_cancel_button"
+        android:layout_marginEnd="16dp"
+        android:textAllCaps="true"
+        android:textColor="@color/fx_mobile_text_color_accent"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/details" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/request_support"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:layout_marginTop="16dp"
+        android:background="@android:color/transparent"
+        android:gravity="center"
+        android:minHeight="48dp"
+        android:layout_marginEnd="16dp"
+        android:text="@string/cookie_banner_handling_details_site_is_not_supported_request_support_button_2"
+        android:textAllCaps="true"
+        android:textColor="@color/fx_mobile_text_color_accent"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/cancel_button"
+        app:layout_constraintTop_toBottomOf="@id/details" />
+</androidx.constraintlayout.widget.ConstraintLayout>

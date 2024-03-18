@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Name of the "notification channel" used for displaying download notification. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_downloads_notification_channel">Àwọn ìgbàsílẹ̀</string>
+
+    <!-- Text shown on the second row of a paused download notification. -->
+    <string name="mozac_feature_downloads_paused_notification_text">Ìdádúró ráńpẹ́ fún ìgbàsílẹ̀</string>
+    <!-- Text shown on the second row of an completed download notification. The filename is shown on the first row. -->
+    <string name="mozac_feature_downloads_completed_notification_text2">Ìgbàsílẹ̀ ti parí</string>
+    <!-- Text shown on the second row of an failed download notification. The filename is shown on the first row. -->
+    <string name="mozac_feature_downloads_failed_notification_text2">Ìgbàsílẹ̀ kùnà</string>
+
+    <!-- Alert dialog confirmation before download a file, this is the title. %1$s will be replaced with the name of the file. -->
+    <string name="mozac_feature_downloads_dialog_title2">Ìgbàsílẹ̀ (%1$s)</string>
+    <!-- Alert dialog confirmation before download a file, this is the positive action. -->
+    <string name="mozac_feature_downloads_dialog_download">Ṣe ìgbàsílẹ̀</string>
+    <!-- Alert dialog confirmation before download a file, this is the negative action. -->
+    <string name="mozac_feature_downloads_dialog_cancel">Parẹ́</string>
+    <!-- Error shown when the user is trying to download a invalid file. %1$s will be replaced with the name of the app. -->
+    <string name="mozac_feature_downloads_file_not_supported2">%1$s kò le ṣe ìgbàsílẹ̀ fún irúfẹ́́ fáìlì yí</string>
+
+    <!-- Message that appears when the downloaded file could not be opened-->
+    <string name="mozac_feature_downloads_could_not_open_file">Kò le ṣí fáìlì</string>
+
+    <!-- Message that appears when the downloaded file is a specific type that Android doesn't support opening-->
+    <string name="mozac_feature_downloads_open_not_supported1">Kò ṣàwárí áàpù tí a lè fi ṣí %1$s fáìlì</string>
+
+    <!-- Button that pauses the download when pressed -->
+    <string name="mozac_feature_downloads_button_pause">Ìdádúró ráńpẹ́</string>
+    <!-- Button that resumes the download when pressed -->
+    <string name="mozac_feature_downloads_button_resume">Tún bẹ̀rẹ̀</string>
+    <!-- Button that cancels the download when pressed -->
+    <string name="mozac_feature_downloads_button_cancel">Parẹ́</string>
+    <!-- Button that opens the downloaded file when pressed -->
+    <string name="mozac_feature_downloads_button_open">Ṣí</string>
+    <!-- Button that restarts the download after a failed attempt -->
+    <string name="mozac_feature_downloads_button_try_again">Gbìyànjú Si                </string>
+
+    <!-- Content description for close button -->
+    <string name="mozac_feature_downloads_button_close">Padé</string>
+    <!-- Title for the third party download app chooser dialog -->
+    <string name="mozac_feature_downloads_third_party_app_chooser_dialog_title">Parí ìgbésẹ̀ pẹ̀lú lílo</string>
+    <!-- Message that appears when trying to download with an external app fails. %1$s will be replaced with the name the external app. -->--&gt;
+    <string name="mozac_feature_downloads_unable_to_open_third_party_app">Kò ṣe é sí %1$s</string>
+    <!-- Text for the info dialog when write to storage permissions have been denied but user tries to download a file. -->
+    <string name="mozac_feature_downloads_write_external_storage_permissions_needed_message">Ó nílò ìgbàláàyè fáìlì àti ìkànnì láti ṣe ìgbàsílẹ̀ àwọn fáìlì. Lọ sí orí àwọn ètò Áńdíróìdì, tẹ àwọn ìgbàláàyè, ko sì tẹ gbà láàyè.</string>
+
+    <!-- Alert dialog confirmation before cancelling downloads, this is the title   -->
+    <string name="mozac_feature_downloads_cancel_active_downloads_warning_content_title">Pa àwọn ìgbàsílẹ̀ ìkọ̀kọ̀ rẹ́?</string>
+    <!-- Alert dialog confirmation before cancelling private downloads, this is the body. %1$s will be replaced with the name of the file. -->
+    <string name="mozac_feature_downloads_cancel_active_private_downloads_warning_content_body">Tí o bá pa gbogbo àwọn táàbù ìkọ̀kọ̀ báyìí, %1$s ìgbàsílẹ̀ yóó paarẹ́. Ṣe ó dá ọ lójú pé o fẹ́ fi àyẹ̀wò ìkọ̀kọ̀ re kalẹ̀?</string>
+    <!-- Alert dialog confirmation before cancelling downloads, this is the positive action. -->
+    <string name="mozac_feature_downloads_cancel_active_downloads_accept">Pa àwọn ìgbàsílẹ̀ rẹ́</string>
+    <!-- Alert dialog confirmation before cancelling downloads, this is the negative action. Leaves user in Private browsing -->
+    <string name="mozac_feature_downloads_cancel_active_private_downloads_deny">Dúró sí àyẹ̀wò ìkọ̀kọ̀</string>
+</resources>

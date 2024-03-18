@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/addLoginLayout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="20dp"
+    android:layout_marginEnd="20dp"
+    android:layout_marginTop="16dp"
+    android:clickable="true"
+    android:focusable="true" >
+
+    <TextView
+        android:id="@+id/hostnameHeaderText"
+        style="@style/CaptionTextStyle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:paddingStart="3dp"
+        android:paddingEnd="0dp"
+        android:gravity="center_vertical"
+        android:text="@string/preferences_passwords_saved_logins_site"
+        android:textColor="?attr/textPrimary"
+        android:letterSpacing="0.05"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/inputLayoutHostname"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:colorControlHighlight="?attr/textPrimary"
+        android:colorControlActivated="?attr/textPrimary"
+        android:textColor="?attr/textPrimary"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/hostnameHeaderText"
+        app:helperTextEnabled="true"
+        app:helperText="@string/add_login_hostname_invalid_text_3"
+        app:hintEnabled="false" >
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/hostnameText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:textSize="16sp"
+            android:fontFamily="sans-serif"
+            android:textStyle="normal"
+            android:colorControlHighlight="?attr/textPrimary"
+            android:colorControlActivated="?attr/textPrimary"
+            android:textColor="?attr/textPrimary"
+            android:letterSpacing="0.01"
+            android:lineSpacingExtra="8sp"
+            android:hint="@string/add_login_hostname_hint_text"
+            android:inputType="textNoSuggestions"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:singleLine="true"
+            android:clickable="true"
+            android:focusable="true"
+            android:cursorVisible="true"
+            android:textCursorDrawable="@null"
+            app:backgroundTint="?attr/textPrimary"
+            tools:ignore="Autofill"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <ImageButton
+        android:id="@+id/clearHostnameTextButton"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="3dp"
+        android:layout_marginBottom="10dp"
+        android:background="@null"
+        android:contentDescription="@string/saved_login_clear_hostname"
+        android:visibility="invisible"
+        app:tint="@color/saved_login_clear_edit_text_tint"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/inputLayoutHostname"
+        app:srcCompat="@drawable/mozac_ic_cross_circle_fill_24" />
+
+    <TextView
+        android:id="@+id/usernameHeader"
+        style="@style/CaptionTextStyle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:paddingStart="3dp"
+        android:paddingEnd="0dp"
+        android:layout_marginTop="20dp"
+        android:text="@string/preferences_passwords_saved_logins_username"
+        android:textColor="?attr/textPrimary"
+        android:letterSpacing="0.05"
+        app:layout_constraintBottom_toTopOf="@id/inputLayoutUsername"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/inputLayoutHostname"
+        app:layout_constraintVertical_chainStyle="packed" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/inputLayoutUsername"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:colorControlHighlight="?attr/textPrimary"
+        android:colorControlActivated="?attr/textPrimary"
+        android:textColor="?attr/textPrimary"
+        android:contentDescription="@string/saved_login_username_description_3"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/usernameHeader"
+        app:layout_constraintVertical_chainStyle="packed"
+        app:hintEnabled="false">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/usernameText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:textSize="16sp"
+            android:fontFamily="sans-serif"
+            android:textStyle="normal"
+            android:colorControlHighlight="?attr/textPrimary"
+            android:colorControlActivated="?attr/textPrimary"
+            android:textColor="?attr/textPrimary"
+            android:letterSpacing="0.01"
+            android:lineSpacingExtra="8sp"
+            android:inputType="textNoSuggestions"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:singleLine="true"
+            android:clickable="true"
+            android:focusable="true"
+            android:cursorVisible="true"
+            android:textCursorDrawable="@null"
+            app:backgroundTint="?attr/textPrimary"
+            tools:ignore="Autofill"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <ImageButton
+        android:id="@+id/clearUsernameTextButton"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="@null"
+        android:contentDescription="@string/saved_login_clear_username"
+        android:visibility="invisible"
+        app:tint="@color/saved_login_clear_edit_text_tint"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/inputLayoutUsername"
+        app:layout_constraintBottom_toBottomOf="@+id/inputLayoutUsername"
+        app:srcCompat="@drawable/mozac_ic_cross_circle_fill_24" />
+
+    <TextView
+        android:id="@+id/passwordHeader"
+        style="@style/CaptionTextStyle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:gravity="center_vertical"
+        android:letterSpacing="0.05"
+        android:paddingStart="3dp"
+        android:paddingEnd="0dp"
+        android:text="@string/preferences_passwords_saved_logins_password"
+        android:textColor="?attr/textPrimary"
+        app:layout_constraintBottom_toTopOf="@id/inputLayoutPassword"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/inputLayoutUsername"
+        app:layout_constraintVertical_chainStyle="packed" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/inputLayoutPassword"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:colorControlActivated="?attr/textPrimary"
+        android:colorControlHighlight="?attr/textPrimary"
+        android:contentDescription="@string/saved_login_password_description_2"
+        android:paddingBottom="11dp"
+        android:textColor="?attr/textPrimary"
+        app:hintEnabled="false"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/passwordHeader"
+        app:layout_constraintVertical_chainStyle="packed">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/passwordText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:clickable="true"
+            android:colorControlActivated="?attr/textPrimary"
+            android:colorControlHighlight="?attr/textPrimary"
+            android:cursorVisible="true"
+            android:ellipsize="end"
+            android:focusable="true"
+            android:fontFamily="sans-serif"
+            android:inputType="textNoSuggestions"
+            android:letterSpacing="0.01"
+            android:lineSpacingExtra="8sp"
+            android:maxLines="1"
+            android:singleLine="true"
+            android:textColor="?attr/textPrimary"
+            android:textCursorDrawable="@null"
+            android:textSize="16sp"
+            android:textStyle="normal"
+            app:backgroundTint="?attr/textPrimary"
+            tools:ignore="Autofill" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <ImageButton
+        android:id="@+id/clearPasswordTextButton"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="@null"
+        android:contentDescription="@string/saved_logins_clear_password"
+        android:visibility="invisible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/inputLayoutPassword"
+        app:srcCompat="@drawable/mozac_ic_cross_circle_fill_24"
+        app:tint="@color/saved_login_clear_edit_text_tint" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

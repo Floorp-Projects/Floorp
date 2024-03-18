@@ -1,0 +1,67 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+
+android {
+    defaultConfig {
+        minSdkVersion config.minSdkVersion
+        compileSdk config.compileSdkVersion
+        targetSdkVersion config.targetSdkVersion
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    namespace 'mozilla.components.feature.tabs'
+}
+
+tasks.withType(KotlinCompile).configureEach {
+    kotlinOptions.freeCompilerArgs += [
+            "-opt-in=kotlinx.coroutines.FlowPreview",
+            "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi"
+    ]
+}
+
+dependencies {
+    implementation project(':browser-state')
+    implementation project(':browser-session-storage')
+    implementation project(':browser-thumbnails')
+    implementation project(':browser-tabstray')
+    api project(':feature-session')
+    implementation project(':concept-engine')
+    implementation project(':concept-tabstray')
+    implementation project(':concept-toolbar')
+    implementation project(':concept-menu')
+    implementation project(':ui-icons')
+    implementation project(':ui-tabcounter')
+    implementation project(':support-ktx')
+
+    implementation ComponentsDependencies.androidx_fragment
+    implementation ComponentsDependencies.androidx_recyclerview
+
+    implementation ComponentsDependencies.kotlin_coroutines
+
+    // In tests we are constructing our own SessionManager instance which needs to know about an "engine".
+    testImplementation project(':concept-engine')
+
+    testImplementation project(':support-test')
+
+    testImplementation ComponentsDependencies.androidx_test_junit
+    testImplementation ComponentsDependencies.testing_coroutines
+    testImplementation ComponentsDependencies.testing_robolectric
+    testImplementation project(":support-test-libstate")
+}
+
+apply from: '../../../android-lint.gradle'
+apply from: '../../../publish.gradle'
+ext.configurePublish(config.componentsGroupId, archivesBaseName, project.ext.description)

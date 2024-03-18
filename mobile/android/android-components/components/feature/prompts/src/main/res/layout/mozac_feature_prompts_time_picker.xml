@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    tools:parentTag="android.widget.ScrollView">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <android.widget.NumberPicker
+            android:id="@+id/hour_picker"
+            android:layout_width="60dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="1dp"
+            android:focusable="true"
+            android:focusableInTouchMode="true" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/mozac_feature_prompts_second_separator" />
+
+        <android.widget.NumberPicker
+            android:id="@+id/minute_picker"
+            android:layout_width="75dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="1dp"
+            android:focusable="true"
+            android:focusableInTouchMode="true" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/mozac_feature_prompts_second_separator" />
+
+        <android.widget.NumberPicker
+            android:id="@+id/second_picker"
+            android:layout_width="75dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="1dp"
+            android:focusable="true"
+            android:focusableInTouchMode="true" />
+
+        <TextView
+            android:id="@+id/millisecond_separator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/mozac_feature_prompts_millisecond_separator" />
+
+        <android.widget.NumberPicker
+            android:id="@+id/millisecond_picker"
+            android:layout_width="75dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="1dp"
+            android:focusable="true"
+            android:focusableInTouchMode="true" />
+
+    </LinearLayout>
+</merge>

@@ -1,0 +1,28 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+app_package_name('org.mozilla.fenix.debug')
+use_tests_in_packages(['org.mozilla.fenix.screenshots'])
+
+app_apk_path('app/build/outputs/apk/geckoBeta/debug/app-geckoBeta-x86-debug.apk')
+tests_apk_path('app/build/outputs/apk/androidTest/geckoBeta/debug/app-geckoBeta-debug-androidTest.apk')
+test_instrumentation_runner 'androidx.test.runner.AndroidJUnitRunner'
+
+locales(['en-US', 'fr-FR', 'it-IT', 'de-DE', 'ja', 'ru', 'zh-CN', 'zh-TW', 'ko'])
+
+# clear all previously generated screenshots in your local output directory before creating new ones
+clear_previous_screenshots(true)
+
+# Clear all previous screenshots locally. Technically not needed in automation.
+# But it's easier to debug this on a local device if there are no old screenshots
+# hanging around.
+clear_previous_screenshots true
+
+exit_on_test_failure false
+
+skip_open_summary false
+reinstall_app true
+
+# For more information about all available options run
+#   fastlane screengrab --help

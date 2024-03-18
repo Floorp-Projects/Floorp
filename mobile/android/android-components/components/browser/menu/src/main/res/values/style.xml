@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<resources>
+
+    <style name="Mozac.Browser.Menu" parent="">
+        <item name="cardBackgroundColor">@color/mozac_browser_menu_background</item>
+    </style>
+
+    <!-- Item Divider -->
+    <style name="Mozac.Browser.Menu.Item.Divider" parent="">
+        <item name="android:background">?android:attr/listDivider</item>
+    </style>
+
+    <style name="Mozac.Browser.Menu.Item.Divider.Horizontal">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">@dimen/mozac_browser_menu_item_divider_height</item>
+    </style>
+    <!-- Item Divider -->
+
+    <style name="Mozac.Browser.Menu.Item.Container" parent="">
+        <item name="android:layout_height">@dimen/mozac_browser_menu_item_container_layout_height</item>
+        <item name="android:paddingStart">@dimen/mozac_browser_menu_item_container_padding_start</item>
+        <item name="android:paddingEnd">@dimen/mozac_browser_menu_item_container_padding_end</item>
+        <item name="android:background">?android:attr/selectableItemBackground</item>
+    </style>
+
+    <style name="Mozac.Browser.Menu.Item.CandidateContainer" parent="Mozac.Browser.Menu.Item.Container">
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+    </style>
+
+    <style name="Mozac.Browser.Menu.Item.Text" parent="@android:style/TextAppearance.Material.Menu">
+        <item name="android:background">?android:attr/selectableItemBackground</item>
+        <item name="android:textSize">@dimen/mozac_browser_menu_item_text_size</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:lines">1</item>
+        <item name="android:focusable">true</item>
+        <item name="android:clickable">true</item>
+    </style>
+
+    <!-- BrowserMenuCategory -->
+    <style name="Mozac.Browser.Menu.Item.Category" parent="">
+        <item name="android:layout_height">@dimen/mozac_browser_menu_category_layout_height</item>
+        <item name="android:textSize">@dimen/mozac_browser_menu_category_text_size</item>
+        <item name="android:paddingStart">@dimen/mozac_browser_menu_category_padding_start</item>
+        <item name="android:paddingEnd">@dimen/mozac_browser_menu_category_padding_end</item>
+        <item name="android:background">?android:attr/selectableItemBackground</item>
+    </style>
+    <!-- BrowserMenuCategory -->
+
+    <!-- BrowserMenuImageText -->
+    <style name="Mozac.Browser.Menu.Item.ImageText.Icon" parent="">
+        <item name="android:layout_width">@dimen/mozac_browser_menu_item_image_text_icon_width</item>
+        <item name="android:layout_height">@dimen/mozac_browser_menu_item_image_text_icon_height</item>
+    </style>
+
+    <style name="Mozac.Browser.Menu.Item.CandidateIcon" parent="Mozac.Browser.Menu.Item.ImageText.Icon">
+        <item name="android:layout_width">24dp</item>
+        <item name="android:layout_height">24dp</item>
+    </style>
+
+    <style name="Mozac.Browser.Menu.Item.ImageText.Label" parent="Mozac.Browser.Menu.Item.Text">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:paddingStart">@dimen/mozac_browser_menu_item_image_text_label_padding_start</item>
+        <item name="android:paddingEnd">@dimen/mozac_browser_menu_item_image_text_label_padding_start</item>
+    </style>
+
+    <style name="Mozac.Browser.Menu.Item.Checkbox.Label" parent="Mozac.Browser.Menu.Item.ImageText.Label">
+        <item name="android:paddingStart">@dimen/mozac_browser_menu_item_checkbox_text_label_padding_start</item>
+        <item name="android:paddingEnd">@dimen/mozac_browser_menu_item_checkbox_text_label_padding_end</item>
+    </style>
+
+    <style name="Mozac.Browser.Menu.Item.Checkbox.Text" parent="Mozac.Browser.Menu.Item.Text">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">0dp</item>
+        <item name="android:paddingStart">@dimen/mozac_browser_menu_item_image_checkbox_padding_start</item>
+        <item name="android:paddingEnd">@dimen/mozac_browser_menu_item_image_checkbox_padding_end</item>
+    </style>
+
+    <style name="Mozac.Browser.Menu.Item.Checkbox.Container" parent="Mozac.Browser.Menu.Item.Container">
+        <item name="android:layout_height">@dimen/mozac_browser_menu_item_checkbox_container_layout_height</item>
+        <item name="android:paddingStart">@dimen/mozac_browser_menu_item_checkbox_container_padding_start</item>
+        <item name="android:paddingEnd">@dimen/mozac_browser_menu_item_checkbox_container_padding_end</item>
+    </style>
+
+    <style name="Mozac.Browser.Menu.Item.CandidateLabel" parent="Mozac.Browser.Menu.Item.Text">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+    <!-- BrowserMenuImageText -->
+
+    <!-- Animation -->
+    <style name="Mozac.Browser.Menu.Animation.OverflowMenuTop" parent="">
+        <item name="android:windowEnterAnimation">@anim/menu_enter_top</item>
+        <item name="android:windowExitAnimation">@anim/menu_exit</item>
+    </style>
+
+    <style name="Mozac.Browser.Menu.Animation.OverflowMenuBottom" parent="">
+        <item name="android:windowEnterAnimation">@anim/menu_enter_bottom</item>
+        <item name="android:windowExitAnimation">@anim/menu_exit</item>
+    </style>
+    <!-- Animation -->
+</resources>

@@ -1,0 +1,16 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="@color/mozac_ui_icons_fill"
+        android:fillType="evenOdd"
+        android:pathData="M5.793,3.875c0,-0.483 0.392,-0.875 0.875,-0.875h10.664c0.483,0 0.875,0.392 0.875,0.875v2.123h2.918c0.483,0 0.875,0.392 0.875,0.875v3.146c0,2.53 -2.022,4.59 -4.539,4.65a6.211,6.211 0,0 1,-4.586 3.193v2.388h4.143L17.018,22L6.982,22v-1.75h4.143v-2.388a6.211,6.211 0,0 1,-4.586 -3.193A4.652,4.652 0,0 1,2 10.019L2,6.873c0,-0.483 0.392,-0.875 0.875,-0.875h2.918L5.793,3.875zM18.109,12.819a2.903,2.903 0,0 0,2.141 -2.8L20.25,7.748h-2.043v3.968c0,0.377 -0.034,0.745 -0.098,1.103zM5.793,11.716c0,0.377 0.034,0.745 0.098,1.103a2.903,2.903 0,0 1,-2.141 -2.8L3.75,7.748h2.043v3.968zM7.543,4.75v6.966a4.457,4.457 0,1 0,8.914 0L16.457,4.75L7.543,4.75z"
+        tools:ignore="VectorRaster"
+        tools:targetApi="n" />
+</vector>

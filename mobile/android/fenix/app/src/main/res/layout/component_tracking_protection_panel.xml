@@ -1,0 +1,317 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/panel_wrapper"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/layer1">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/normal_mode"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/navigate_back"
+            android:layout_width="@dimen/tracking_protection_item_height"
+            android:layout_height="@dimen/tracking_protection_item_height"
+            android:scaleType="center"
+            android:contentDescription="@string/etp_back_button_content_description"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/mozac_ic_back_24"
+            app:tint="?attr/textPrimary" />
+
+        <TextView
+            android:id="@+id/details"
+            style="@style/QuickSettingsLargeText"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/tracking_protection_item_height"
+            android:paddingStart="0dp"
+            android:paddingEnd="0dp"
+            android:textColor="?attr/textPrimary"
+            app:layout_constraintStart_toEndOf="@+id/navigate_back"
+            app:layout_constraintTop_toTopOf="parent"
+            android:text="@string/enhanced_tracking_protection_details" />
+
+        <TextView
+            android:id="@+id/blocking_header"
+            style="@style/QuickSettingsText"
+            android:accessibilityHeading="true"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/tracking_protection_item_height"
+            android:text="@string/enhanced_tracking_protection_blocked"
+            android:textColor="?attr/textPrimary"
+            android:textStyle="bold"
+            android:visibility="gone"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/details"
+            tools:targetApi="p" />
+
+        <TextView
+            android:id="@+id/cross_site_tracking"
+            style="@style/QuickSettingsLargeText.Icon"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/tracking_protection_item_height"
+            android:text="@string/etp_cookies_title"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/blocking_header" />
+
+        <TextView
+            android:id="@+id/fingerprinters"
+            style="@style/QuickSettingsLargeText.Icon"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/tracking_protection_item_height"
+            android:text="@string/etp_fingerprinters_title"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/cross_site_tracking" />
+
+        <TextView
+            android:id="@+id/cryptominers"
+            style="@style/QuickSettingsLargeText.Icon"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/tracking_protection_item_height"
+            android:text="@string/etp_cryptominers_title"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/fingerprinters" />
+
+        <TextView
+            android:id="@+id/social_media_trackers"
+            style="@style/QuickSettingsLargeText.Icon"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/tracking_protection_item_height"
+            android:text="@string/etp_social_media_trackers_title"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/cryptominers" />
+
+        <TextView
+            android:id="@+id/tracking_content"
+            style="@style/QuickSettingsLargeText.Icon"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/tracking_protection_item_height"
+            android:text="@string/etp_tracking_content_title"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/social_media_trackers" />
+
+        <TextView
+            android:id="@+id/redirect_trackers"
+            style="@style/QuickSettingsLargeText.Icon"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/tracking_protection_item_height"
+            android:text="@string/etp_redirect_trackers_title"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/tracking_content" />
+
+        <TextView
+            android:id="@+id/not_blocking_header"
+            style="@style/QuickSettingsText"
+            android:layout_width="wrap_content"
+            android:accessibilityHeading="true"
+            android:layout_height="@dimen/tracking_protection_item_height"
+            android:text="@string/enhanced_tracking_protection_allowed"
+            android:textStyle="bold"
+            android:visibility="gone"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tracking_content"
+            tools:targetApi="p" />
+
+        <TextView
+            android:id="@+id/cross_site_tracking_loaded"
+            style="@style/QuickSettingsLargeText.Icon"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/tracking_protection_item_height"
+            android:text="@string/etp_cookies_title"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/not_blocking_header" />
+
+        <TextView
+            android:id="@+id/fingerprinters_loaded"
+            style="@style/QuickSettingsLargeText.Icon"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/tracking_protection_item_height"
+            android:text="@string/etp_fingerprinters_title"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/cross_site_tracking_loaded" />
+
+        <TextView
+            android:id="@+id/cryptominers_loaded"
+            style="@style/QuickSettingsLargeText.Icon"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/tracking_protection_item_height"
+            android:text="@string/etp_cryptominers_title"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/fingerprinters_loaded" />
+
+        <TextView
+            android:id="@+id/social_media_trackers_loaded"
+            style="@style/QuickSettingsLargeText.Icon"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/tracking_protection_item_height"
+            android:text="@string/etp_social_media_trackers_title"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/cryptominers_loaded" />
+
+        <TextView
+            android:id="@+id/tracking_content_loaded"
+            style="@style/QuickSettingsLargeText.Icon"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/tracking_protection_item_height"
+            android:text="@string/etp_tracking_content_title"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/social_media_trackers_loaded" />
+
+        <TextView
+            android:id="@+id/redirect_trackers_loaded"
+            style="@style/QuickSettingsLargeText.Icon"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/tracking_protection_item_height"
+            android:text="@string/etp_redirect_trackers_title"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/tracking_content_loaded" />
+
+        <View
+            android:id="@+id/line_divider"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="?borderPrimary"
+            app:layout_constraintTop_toBottomOf="@id/tracking_content_loaded" />
+
+        <TextView
+            android:id="@+id/protection_settings"
+            style="@style/QuickSettingsLargeText.Icon"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/tracking_protection_item_height"
+            android:text="@string/etp_settings"
+            app:drawableStartCompat="@drawable/mozac_ic_settings_24"
+            app:drawableTint="?attr/textPrimary"
+            app:layout_constraintTop_toBottomOf="@id/line_divider" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/details_mode"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/details_back"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            app:tint="?attr/textPrimary"
+            android:contentDescription="@string/etp_back_button_content_description"
+            app:layout_constraintBottom_toBottomOf="@+id/category_description"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@id/category_title"
+            app:layout_constraintVertical_bias="0.0"
+            app:srcCompat="@drawable/mozac_ic_back_24" />
+
+        <TextView
+            android:id="@+id/category_title"
+            style="@style/Header16TextStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="52dp"
+            android:layout_marginTop="11dp"
+            android:layout_marginEnd="19dp"
+            android:textColor="?attr/textPrimary"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="@tools:sample/lorem" />
+
+        <TextView
+            android:id="@+id/category_description"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="52dp"
+            android:layout_marginEnd="19dp"
+            android:textColor="?attr/textSecondary"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/category_title"
+            tools:text="@tools:sample/lorem" />
+
+        <TextView
+            android:id="@+id/smartblock_description"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="52dp"
+            android:layout_marginEnd="19dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:textColor="?attr/textSecondary"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/category_description"
+            android:text="@string/preference_etp_smartblock_description" />
+
+        <org.mozilla.fenix.utils.LinkTextView
+            android:id="@+id/smartblock_learn_more"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/preference_etp_smartblock_learn_more"
+            android:textColor="?textAccent"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@id/smartblock_description"
+            app:layout_constraintTop_toBottomOf="@id/smartblock_description" />
+
+        <View
+            android:id="@+id/line_divider_details"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="8dp"
+            android:background="?borderPrimary"
+            app:layout_constraintTop_toBottomOf="@id/smartblock_learn_more" />
+
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:id="@+id/blocking_scrollview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fillViewport="true"
+            android:scrollbars="vertical"
+            android:orientation="vertical"
+            android:isScrollContainer="true"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/line_divider_details">
+
+            <TextView
+                android:id="@+id/details_blocking_header"
+                android:accessibilityHeading="true"
+                style="@style/QuickSettingsText"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/tracking_protection_item_height"
+                android:layout_marginStart="52dp"
+                android:layout_marginEnd="26dp"
+                android:paddingStart="0dp"
+                android:paddingEnd="0dp"
+                android:text="@string/enhanced_tracking_protection_blocked"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/blocking_scrollview"
+                tools:targetApi="p" />
+
+            <TextView
+                android:id="@+id/blocking_text_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="52dp"
+                android:layout_marginEnd="26dp"
+                android:lineSpacingMultiplier="1.2"
+                android:layout_marginBottom="12dp"
+                tools:text="@tools:sample/lorem/random" />
+        </androidx.appcompat.widget.LinearLayoutCompat>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

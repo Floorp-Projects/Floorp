@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!-- using an AppBarLayout to replace MotionLayout was done in order to improve Fenix
+     start up performance. The use of a MotionLayout was worsening our layout measures, especially
+      with the recycler view -->
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/homeLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?homeBackground">
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/wallpaperImageView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"/>
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/homeAppBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@null"
+        app:elevation="0dp"
+        android:fitsSystemWindows="false">
+
+        <com.google.android.material.appbar.CollapsingToolbarLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_scrollFlags="scroll">
+
+            <ImageButton
+                android:id="@+id/privateBrowsingButton"
+                android:layout_width="@dimen/glyph_button_height"
+                android:layout_height="@dimen/glyph_button_height"
+                android:layout_marginTop="14dp"
+                android:layout_marginEnd="12dp"
+                android:layout_gravity="end"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/content_description_private_browsing_button"
+                app:srcCompat="@drawable/mozac_ic_private_mode_circle_fill_48"
+                app:layout_collapseMode="parallax"
+                app:layout_collapseParallaxMultiplier=".167"/>
+            <!-- This value needs to be 1.67 * the wordmark parallax value as its 24dp vs 40 -->
+
+            <LinearLayout
+                android:id="@+id/wordmark"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="18dp"
+                android:layout_marginBottom="32dp"
+                android:clickable="false"
+                android:focusable="false"
+                android:importantForAccessibility="no"
+                android:orientation="horizontal"
+                app:layout_collapseMode="parallax"
+                app:layout_collapseParallaxMultiplier=".1">
+
+                <ImageView
+                    android:id="@+id/wordmarkLogo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_marginEnd="10.dp"
+                    android:adjustViewBounds="true"
+                    android:contentDescription="@null"
+                    app:srcCompat="?fenixWordmarkLogo"
+                    tools:ignore="ImageContrastCheck" />
+
+                <ImageView
+                    android:id="@+id/wordmarkText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="@dimen/wordmark_text_height"
+                    android:adjustViewBounds="true"
+                    android:contentDescription="@null"
+                    android:layout_marginTop="@dimen/wordmark_text_margin_top"
+                    app:srcCompat="?fenixWordmarkText" />
+            </LinearLayout>
+
+        </com.google.android.material.appbar.CollapsingToolbarLayout>
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/sessionControlRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:paddingVertical="16dp"
+        android:scrollbars="none"
+        android:transitionGroup="false"
+        android:importantForAccessibility="yes"
+        android:overScrollMode="never"
+        tools:listitem="@layout/collection_home_list_row"
+        tools:itemCount="3"
+        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"/>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/toolbarLayout"
+        android:elevation="5dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        tools:context=".home.HomeFragment">
+
+        <androidx.compose.ui.platform.ComposeView
+            android:id="@+id/tabStripView"
+            android:layout_width="match_parent"
+            app:layout_constraintBottom_toTopOf="@id/bottom_bar"
+            app:layout_constraintTop_toTopOf="parent"
+            android:visibility="gone"
+            android:layout_height="@dimen/tab_strip_height" />
+
+        <View
+            android:id="@+id/bottom_bar"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:background="?bottomBarBackground"
+            android:foregroundGravity="bottom"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <LinearLayout
+            android:id="@+id/toolbar_wrapper"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="0dp"
+            android:background="@drawable/home_search_background"
+            android:clickable="true"
+            android:contentDescription="@string/search_hint"
+            android:focusable="true"
+            app:layout_constraintBottom_toBottomOf="@id/bottom_bar"
+            app:layout_constraintEnd_toStartOf="@+id/accessory_button_barrier"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@id/bottom_bar">
+
+            <org.mozilla.fenix.search.toolbar.SearchSelector
+                android:id="@+id/search_selector_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start|center_vertical"
+                android:background="?selectableItemBackgroundBorderless" />
+
+            <TextView
+                android:id="@+id/toolbar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start|center_vertical"
+                android:clickable="false"
+                android:ellipsize="end"
+                android:focusable="false"
+                android:importantForAccessibility="no"
+                android:lines="1"
+                android:text="@string/search_hint"
+                android:textColor="?attr/textPrimary"
+                android:textSize="15sp" />
+        </LinearLayout>
+
+        <androidx.constraintlayout.widget.Barrier
+            android:id="@+id/accessory_button_barrier"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:barrierDirection="start"
+            app:constraint_referenced_ids="tab_button" />
+
+        <mozilla.components.ui.tabcounter.TabCounter
+            android:id="@+id/tab_button"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:clipChildren="false"
+            app:layout_constraintTop_toTopOf="@id/bottom_bar"
+            app:layout_constraintBottom_toBottomOf="@id/bottom_bar"
+            app:layout_constraintEnd_toStartOf="@+id/menuButton"
+            app:layout_constraintStart_toEndOf="@id/toolbar_wrapper"/>
+
+        <mozilla.components.browser.menu.view.MenuButton
+            android:id="@+id/menuButton"
+            android:layout_width="36dp"
+            android:layout_height="48dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/bottom_bar"
+            app:layout_constraintBottom_toBottomOf="@id/bottom_bar"/>
+
+        <View
+            android:id="@+id/bottomBarShadow"
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:background="@color/bottom_bar_shadow"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/bottom_bar" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

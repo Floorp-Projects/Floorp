@@ -1,0 +1,131 @@
+---
+features:
+
+  juno-onboarding:
+    description: A feature that shows the onboarding flow.
+
+    variables:
+      conditions:
+        description: >
+          A collection of out the box conditional expressions to be
+          used in determining whether a card should show or not.
+          Each entry maps to a valid JEXL expression.
+        type: Map<ConditionName, String>
+        string-alias: ConditionName
+        default: {
+          ALWAYS: "true",
+          NEVER: "false"
+        }
+      cards:
+        description: Collection of user facing onboarding cards.
+        type: Map<OnboardingCardKey, OnboardingCardData>
+        string-alias: OnboardingCardKey
+        default:
+            default-browser:
+              card-type: default-browser
+              title: juno_onboarding_default_browser_title_nimbus_2
+              ordering: 10
+              body: juno_onboarding_default_browser_description_nimbus_3
+              image-res: ic_onboarding_welcome
+              primary-button-label: juno_onboarding_default_browser_positive_button
+              secondary-button-label: juno_onboarding_default_browser_negative_button
+
+            add-search-widget:
+              card-type: add-search-widget
+              title: juno_onboarding_add_search_widget_title
+              body: juno_onboarding_add_search_widget_description
+              image-res: ic_onboarding_search_widget
+              ordering: 15
+              primary-button-label: juno_onboarding_add_search_widget_positive_button
+              secondary-button-label: juno_onboarding_add_search_widget_negative_button
+
+            sync-sign-in:
+              card-type: sync-sign-in
+              title: juno_onboarding_sign_in_title_2
+              body: juno_onboarding_sign_in_description_2
+              image-res: ic_onboarding_sync
+              ordering: 20
+              primary-button-label: juno_onboarding_sign_in_positive_button
+              secondary-button-label: juno_onboarding_sign_in_negative_button
+
+            notification-permission:
+              card-type: notification-permission
+              title: juno_onboarding_enable_notifications_title_nimbus_2
+              body: juno_onboarding_enable_notifications_description_nimbus_2
+              image-res: ic_notification_permission
+              ordering: 30
+              primary-button-label: juno_onboarding_enable_notifications_positive_button
+              secondary-button-label: juno_onboarding_enable_notifications_negative_button
+
+objects:
+
+  OnboardingCardData:
+    description: An object to describe a user facing onboarding card.
+    fields:
+      card-type:
+        type: OnboardingCardType
+        description: The type of the card.
+        # This should never be defaulted.
+        default: default-browser
+      enabled:
+        type: Boolean
+        description: If true, this card is shown to the user.
+        default: true
+      title:
+        type: Text
+        description: The title text displayed to the user.
+        # This should never be defaulted.
+        default: ""
+      body:
+        type: Text
+        description: The message text displayed to the user. May contain linkable text.
+        # This should never be defaulted.
+        default: ""
+      image-res:
+        type: Image
+        description: The resource id of the image to be displayed.
+        # This should never be defaulted.
+        default: ic_onboarding_welcome
+      ordering:
+        type: Int
+        description: Used to sequence the cards.
+        # This should never be defaulted.
+        default: 0
+      primary-button-label:
+        type: Text
+        description: The text to display on the primary button.
+        # This should never be defaulted.
+        default: ""
+      secondary-button-label:
+        type: Text
+        description: The text to display on the secondary button.
+        # This should never be defaulted.
+        default: ""
+      prerequisites:
+        type: List<ConditionName>
+        description: >
+          A list of strings corresponding to targeting expressions.
+          The card will be shown if all expressions are `true` and if
+          no expressions in the `disqualifiers` table are true, or
+          if the `disqualifiers` table is empty.
+        default: [ ALWAYS ]
+      disqualifiers:
+        type: List<ConditionName>
+        description: >
+          A list of strings corresponding to targeting expressions.
+          The card will not be shown if any expression is `true`.
+        default: [ NEVER ]
+
+enums:
+
+  OnboardingCardType:
+    description: An enum to describe a type of card.
+    variants:
+      default-browser:
+        description: Allows user to set Firefox as the default browser.
+      sync-sign-in:
+        description: Allows user to sync with a Firefox account.
+      notification-permission:
+        description: Allows user to enable notification permission.
+      add-search-widget:
+        description: Allows user to add search widget to homescreen.

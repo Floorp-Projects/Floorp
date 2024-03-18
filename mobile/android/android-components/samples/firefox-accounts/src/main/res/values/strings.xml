@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<resources>
+    <string name="app_name">FxA Android Demo</string>
+    <string name="sign_in_webview">FxA sign in: webview</string>
+    <string name="sign_in_customtabs">FxA sign in: custom tab</string>
+    <string name="sign_in_pair">FxA sign in: pair</string>
+    <string name="signed_in">Signed in: %1$s</string>
+    <string name="log_out">FxA Log Out</string>
+    <string name="logged_out">Logged out!</string>
+    <string name="wants_keys">Request sync scope?</string>
+    <string name="pair_instructions_message"><![CDATA[Scan the QR code shown at <b>firefox.com/pair</b>]]></string>
+</resources>

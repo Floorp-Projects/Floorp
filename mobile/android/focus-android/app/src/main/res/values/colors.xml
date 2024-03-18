@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<resources>
+    <color name="colorPrimary">@color/photonViolet05</color>
+    <color name="colorSecondary">@color/photonLightGrey05</color>
+    <color name="primaryText">@color/photonInk50</color>
+    <color name="secondaryText">@color/photonDarkGrey05</color>
+
+    <color name="contrastColor">@color/photonBlack</color>
+
+    <color name="error">@color/photonRed70</color>
+    <color name="focusContrastPink">#e452B9</color>
+
+    <color name="disabled">#66312A65</color>
+    <color name="background">@color/colorPrimary</color>
+    <color name="splash_screen_background">@color/photonViolet05</color>
+
+    <color name="colorTextInactive">#80FFFFFF</color>
+    <color name="urlBarHintText">@color/photonDarkGrey05</color>
+    <color name="statusBarBackground">@color/background</color>
+
+    <color name="colorCursor">#ccffffff</color>
+    <color name="colorOverlay">#cc000000</color>
+
+    <color name="toolbarUrlBackground">@color/photonLightGrey05</color>
+
+    <color name="divider">@color/photonLightGrey30</color>
+    <color name="accentBright">@color/photonPink70</color>
+    <color name="accent">@color/photonPink70</color>
+    <color name="destructive">#FF6A75</color>
+
+    <!-- Logo and Splash -->
+    <color name="headerGradientStart">#D4D5FA</color>
+    <color name="headerGradientMiddle">#D3D5FB</color>
+    <color name="headerGradientEnd">#D5D7FA</color>
+
+    <color name="homeGradient1">#D3D4FA</color>
+    <color name="homeGradient2">#D7D6F9</color>
+    <color name="homeGradient3">#ECEAFA</color>
+    <color name="homeGradient4">#F5F4FE</color>
+    <color name="homeGradient5">#D9D3F5</color>
+    <color name="homeGradient6">#D6C9EB</color>
+
+    <!-- Progress Bar -->
+    <color name="colorProgressGradientStart">#FFFF1AD9</color>
+    <color name="colorProgressGradientCenter">#FFFF1AD9</color>
+    <color name="colorProgressGradientEnd">#FFFF1AD9</color>
+
+    <color name="colorErase">@color/photonMagenta70</color>
+    <color name="colorErasePressed">@color/photonMagenta80</color>
+
+    <color name="colorDotHighlight">@color/photonBlue40</color>
+    <color name="colorCrashAccent">@color/photonBlue40</color>
+
+    <!-- Toolbar -->
+    <color name="toolbar_color">@color/colorPrimary</color>
+
+    <color name="images_removal_warning_background_color">#353852</color>
+    <color name="colorPoweredBy">@color/photonLightGrey05</color>
+    <color name="menuBackground">@color/colorSecondary</color>
+
+    <!-- Snackbar-->
+    <color name="snackbarBackground">@color/colorSecondary</color>
+    <color name="snackbarTextColor">@color/primaryText</color>
+    <color name="snackbarActionText">@color/accentBright</color>
+
+    <!-- Search Suggestions -->
+    <color name="searchSuggestionsBackground">@color/photonLightGrey05</color>
+    <color name="searchSuggestionPromptBackground">@color/photonViolet05</color>
+    <color name="searchSuggestionPromptTitleColor">@color/photonInk80</color>
+    <color name="searchSuggestionPromptSubtitleColor">@color/photonInk80</color>
+    <color name="searchSuggestionPromptBorderColor">@color/colorSecondary</color>
+    <color name="searchSuggestionPromptButtonTextColor">@color/accentBright</color>
+
+    <color name="searchHintTextColor">#ffffffff</color>
+    <color name="searchHintBackgroundColor">@color/photonLightGrey05</color>
+    <color name="urlBarInactiveBackgroundColor">#480f1126</color>
+    <color name="autocompleteBackgroundColor">#ffbaa8e6</color>
+
+    <!-- Onboarding -->
+    <color name="onboarding_indicator_default">#7FFFFFFF</color>
+    <color name="onboarding_indicator_selected">#FFFFFFFF</color>
+    <color name="onboardingButtonOneColor">#312A64</color>
+    <color name="onboardingButtonTwoColor">#E0E0E6</color>
+    <color name="onboardingCloseButtonColor">#F2F2F7</color>
+
+    <!-- Session -->
+    <color name="colorSession">@color/photonLightGrey05</color>
+    <color name="colorActiveSession">@color/photonViolet05</color>
+
+    <!-- Launcher Icon Background-->
+    <color name="add_to_homescreen_icon_background">@color/photonInk60</color>
+
+    <color name="firefoxInstallHint">@color/focusContrastPink</color>
+
+    <color name="scrollbarThumb">#b2b2b2b2</color>
+    <color name="doorhanger_link">#FF2AA1FE</color>
+
+    <!-- Preferences -->
+    <color name="preference_summary_text">@color/secondaryText</color>
+    <color name="settings_background">@color/photonLightGrey05</color>
+    <color name="preference_learn_more_link">@color/accentBright</color>
+    <color name="selected_search_engine">@color/accentBright</color>
+
+    <color name="colorSettingsTint">@color/photonGrey10</color>
+    <color name="colorAccentSettings">@color/accentBright</color>
+
+    <color name="preference_row_selected">#353852</color>
+    <color name="preference_row_disabled">#B3313131</color>
+
+    <color name="trackingProtectionSheetBackground">@color/background</color>
+
+    <color name="enabled_button_tint">@color/photonBlack</color>
+
+    <!--Onboarding fragment colors -->
+    <color name="onboarding_text">@color/photonDarkGrey05</color>
+    <color name="onboarding_title">@color/photonLightGrey05</color>
+
+    <!--Modals colors -->
+    <color name="modal_background">@color/colorSecondary</color>
+
+    <!-- Override AC colors -->
+    <color name="mozac_ui_icons_fill">@color/primaryText</color>
+    <color name="mozac_additional_note_background">@color/colorPrimary</color>
+    <color name="mozac_additional_note_text_color">@color/secondaryText</color>
+
+    <!-- CFR colors -->
+    <color name="cfr_text_color">#FBFBFE</color>
+    <color name="cfr_pop_up_shape_end_color">#AB71FF</color>
+    <color name="cfr_pop_up_shape_start_color">#592ACB</color>
+    <color name="cfr_triangle_color">#FFFFFF</color>
+
+    <!-- Biometric screen colors -->
+    <color name="biometric_show_button_background">#312A64</color>
+
+    <!-- HomeScreen background colors -->
+    <color name="home_screen_modal_gradient_one">#D3D4FA</color>
+    <color name="home_screen_modal_gradient_two">#D7D6F9</color>
+    <color name="home_screen_modal_gradient_three">#ECEAFA</color>
+    <color name="home_screen_modal_gradient_four">#F0EFFA</color>
+    <color name="home_screen_modal_gradient_five">#D9D3F5</color>
+    <color name="home_screen_modal_gradient_six">#D6C9EB</color>
+
+    <!-- Promote SearchWidget Dialog colors -->
+    <color name="promote_search_widget_dialog_background">#FFFFFF</color>
+    <color name="promote_search_widget_dialog_close_button_background">#F2F2F7</color>
+    <color name="promote_search_widget_dialog_add_widget_button_background">#312A64</color>
+
+    <!---Cookie banner details panel colors-->
+    <color name="cookie_banner_details_panel_report_a_site_text_color">@color/photonViolet70</color>
+</resources>

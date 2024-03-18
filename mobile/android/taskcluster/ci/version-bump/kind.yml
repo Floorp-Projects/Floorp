@@ -1,0 +1,50 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: taskgraph.loader.transform:loader
+
+transforms:
+    - taskgraph.transforms.from_deps
+    - android_taskgraph.transforms.treeherder
+    - android_taskgraph.transforms.version_bump
+    - taskgraph.transforms.task
+
+kind-dependencies:
+    - post-beetmover
+    # TODO: Make it depend on push-bundle too. At the moment, it's okay to wait solely
+    # on post-beetmover because they're part of the ship graph while push-bundle is in the
+    # promote one
+
+tasks:
+    version-bump:
+        description: Firefox-android version bump
+        from-deps:
+            with-attributes:
+                build-type:
+                    - beta
+                    - release
+            group-by: build-type
+            copy-attributes: true
+            unique-kinds: false
+        attributes:
+            component: all
+        run-on-tasks-for: []
+        shipping-phase: ship
+        worker-type: tree
+        worker:
+            bump: true
+            bump-files: ["version.txt"]
+            push:
+                by-level:
+                    "3": true
+                    # If you set the following line to true, you need to grant write access
+                    # to https://github.com/moz-releng-automation-stage on your fork.
+                    default: false
+
+        treeherder:
+            job-symbol:
+                by-build-type:
+                    release: vb
+                    beta: vbB
+            kind: build

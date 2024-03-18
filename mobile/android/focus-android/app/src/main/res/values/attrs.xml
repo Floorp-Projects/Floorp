@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<resources>
+    <attr name="primaryText" format="reference" />
+    <attr name="secondaryText" format="reference" />
+    <attr name="disabled" format="reference" />
+    <attr name="destructive" format="reference" />
+
+   <declare-styleable name="ResizableKeyboardViewDelegate">
+       <attr name="viewsToHideWhenActivated" format="reference" />
+       <attr name="animate" format="boolean" />
+   </declare-styleable>
+
+    <declare-styleable name="AnimatedProgressBar">
+        <attr name="wrapShiftDrawable" format="boolean" />
+        <attr name="shiftDuration" format="reference" />
+        <attr name="shiftInterpolator" format="reference" />
+    </declare-styleable>
+
+    <declare-styleable name="PreferenceSwitch">
+        <attr name="preferenceKey" format="reference" />
+        <attr name="preferenceKeyTitle" format="reference" />
+        <attr name="preferenceKeyDescription" format="reference" />
+    </declare-styleable>
+
+    <declare-styleable name="SwitchWithDescription">
+        <attr name="switchTitle" format="reference" />
+        <attr name="switchDescription" format="reference" />
+        <attr name="switchIcon" format="reference" />
+    </declare-styleable>
+
+    <declare-styleable name="RadioButtonPreference">
+        <attr format="string|boolean|integer|reference|float" name="defaultValue"/>
+        <attr name="android:defaultValue"/>
+    </declare-styleable>
+
+</resources>

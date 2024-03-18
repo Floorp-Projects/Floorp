@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Content description (not visible, for screen readers etc.): Description of an image view. -->
+    <string name="mozac_feature_qr_scanner">扫码器</string>
+
+    <!-- Text shown if no camera is available on the device and the QR scanner cannot be displayed. -->
+    <string name="mozac_feature_qr_scanner_no_camera">设备上没有可用的相机</string>
+
+</resources>

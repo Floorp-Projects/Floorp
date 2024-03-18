@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_5">Pribado %s</string>
+    <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="app_name_private_4">%s (Pribado)</string>
+
+    <!-- Home Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">Madamo nga pilian</string>
+    <!-- Label of editable text in create collection dialog for naming a new collection  -->
+    <string name="tab_tray_add_new_collection_name">Ngalan</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
+    <string name="browser_menu_back">Balikan</string>
+
+    <!-- Browser menu button that opens the addon manager -->
+    <string name="browser_menu_add_ons">Mga add-on</string>
+    <!-- Browser menu button that opens the addon extensions manager -->
+    <string name="browser_menu_extensions">Mga extension</string>
+    <!-- Browser menu button that sends a user to help articles -->
+    <string name="browser_menu_help">Bulig</string>
+    <!-- Browser menu button that sends a to a the what's new article -->
+    <string name="browser_menu_whats_new">Anu ang Bag-o</string>
+    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
+    <string name="browser_menu_install_on_homescreen">Mag-install</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">Mag-resync</string>
+
+    <!-- Search Fragment -->
+    <!-- Button in the search view that lets a user search by scanning a QR code -->
+    <string name="search_scan_button">Mag-scan</string>
+
+    <!-- Preference linking to about page for Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="preferences_about">Tuhoy sa %1$s</string>
+    <!-- Preference category for advanced settings -->
+    <string name="preferences_category_advanced">Abanse</string>
+    <!-- Preference for accessibility -->
+    <string name="preferences_accessibility">Kasayuran</string>
+    <!-- Preference for changing where the toolbar is positioned -->
+    <string name="preferences_toolbar">Toolbar</string>
+    <!-- Preference for changing default theme to dark or light mode -->
+    <string name="preferences_theme">Tema</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home">Home</string>
+    <!-- Preference for settings related to visual options -->
+    <string name="preferences_customize">Mag-customize</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name">Firefox Account</string>
+    <!-- Preference for language -->
+    <string name="preferences_language">Lenggwahe</string>
+
+    <!-- Preference for syncing logins -->
+    <string name="preferences_sync_logins">Mga login</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs_2">Buksan ang mga tab</string>
+    <!-- Preference for signing out -->
+    <string name="preferences_sign_out">Mag sign out</string>
+
+    <!-- Preference for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions">Pagkatuhay</string>
+    <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message_learn_more_link">Magtuon sang madamo pa</string>
+
+    <!-- Preference switch for Telemetry -->
+    <string name="preferences_telemetry">Telemetry</string>
+
+    <!-- Button to cancel pairing -->
+    <string name="pair_cancel">Kanselahon</string>
+
+    <!-- Toolbar Preferences -->
+    <!-- Preference for using top toolbar -->
+    <string name="preference_top_toolbar">Ibabaw</string>
+    <!-- Preference for using bottom toolbar -->
+    <string name="preference_bottom_toolbar">Idalum</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">Light</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">Dark</string>
+
+    <!-- Menu Item Label for Search in Library -->
+    <string name="library_search">Pangitaon</string>
+    <!-- Settings Page Title -->
+    <string name="settings_title">Halamtangan</string>
+    <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
+    <string name="content_description_close_button">Sirado</string>
+
+    <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tabs">%d mga tab</string>
+    <!-- Text to show users they have one tab saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tab">%d tab</string>
+
+    <!-- Tab Management -->
+    <!-- Title of preference for tabs management -->
+    <string name="preferences_tabs">Mga tab</string>
+    <!-- Option for a list tab view -->
+    <string name="tab_view_list">Listahan</string>
+    <!-- Option for a grid tab view -->
+    <string name="tab_view_grid">Grid</string>
+    <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
+    <string name="preferences_close_tabs">Isarado ang mga tab</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one day -->
+    <string name="close_tabs_after_one_day">Pagkatapos sang isa ka adlaw</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one week -->
+    <string name="close_tabs_after_one_week">Pagkatapos sang isa ka semana</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one month -->
+    <string name="close_tabs_after_one_month">Pagkatapos sang isa ka bulan</string>
+
+    <!-- Option for always starting on the home screen -->
+    <string name="start_on_home_always">Permi</string>
+    <!-- Option for never starting on the home screen -->
+    <string name="start_on_home_never">Indi guid</string>
+
+    <!-- Dialog button to confirm the removing a study. -->
+    <string name="studies_restart_dialog_ok">Sige</string>
+    <!-- Dialog button text for canceling removing a study. -->
+    <string name="studies_restart_dialog_cancel">Kanselahon</string>
+
+    <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+    <string name="tab_drawer_fab_content">Pribado</string>
+    <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
+    <string name="tab_drawer_fab_sync">Mag sync</string>
+    <!-- Text shown in the menu for the collection selector -->
+    <string name="tab_tray_menu_select">Pagpili</string>
+    <!-- Button in the current session menu. Opens the share menu when pressed -->
+    <string name="current_session_share">Ambit</string>
+    <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
+    <string name="pwa_site_controls_title_private">%1$s (Private Mode)</string>
+
+
+    <!-- History overflow menu open in new tab button -->
+    <string name="download_menu_open">Pagabuksan</string>
+    <!-- Text for the button to remove a single download item -->
+    <string name="download_delete_item_1">Ginkuha</string>
+
+
+    <!-- Bookmark overflow menu share button -->
+    <string name="bookmark_menu_share_button">Ambit</string>
+    <!--Bookmark overflow menu save button -->
+    <string name="bookmark_menu_save_button">Mag save</string>
+
+    <!-- Site Permissions -->
+    <!-- Site permissions preferences header -->
+    <string name="permissions_header">Pahanugot</string>
+
+    </resources>

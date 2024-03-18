@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Name of the "notification channel" used for displaying download notification. See https://developer.android.com/training/notify-user/channels -->
+    <string name="mozac_feature_downloads_notification_channel">ဆွဲချချက်များ</string>
+
+    <!-- Text shown on the second row of a paused download notification. -->
+    <string name="mozac_feature_downloads_paused_notification_text">ဒေါင်းလုပ်ခေတ္တရပ်နားသည်</string>
+    <!-- Text shown on the second row of an completed download notification. The filename is shown on the first row. -->
+    <string name="mozac_feature_downloads_completed_notification_text2">ဆွဲချချက်များ ပြီးသွားပြီ</string>
+    <!-- Text shown on the second row of an failed download notification. The filename is shown on the first row. -->
+    <string name="mozac_feature_downloads_failed_notification_text2">ဆွဲယူမှု မအောင်မြင်ပါ</string>
+
+    <!-- Alert dialog confirmation before download a file, this is the title. %1$s will be replaced with the name of the file. -->
+    <string name="mozac_feature_downloads_dialog_title2">ဆွဲယူပါ (%1$s)</string>
+    <!-- Alert dialog confirmation before download a file, this is the positive action. -->
+    <string name="mozac_feature_downloads_dialog_download">ဆွဲယူပါ</string>
+    <!-- Alert dialog confirmation before download a file, this is the negative action. -->
+    <string name="mozac_feature_downloads_dialog_cancel">ပယ်​ဖျက်ပါ</string>
+
+    <!-- Error shown when the user is trying to download a invalid file. %1$s will be replaced with the name of the app. -->
+    <string name="mozac_feature_downloads_file_not_supported2">%1$s သည်ဒီဖိုင်အမျိုးအစားကို မဆွဲယူနိုင်ပါ။</string>
+
+    <!-- Message that appears when the downloaded file could not be opened-->
+    <string name="mozac_feature_downloads_could_not_open_file">ဖိုင်ဖွင့်၍ မရပါ</string>
+
+    <!-- Message that appears when the downloaded file is a specific type that Android doesn't support opening-->
+    <string name="mozac_feature_downloads_open_not_supported1"> %1$s ဖိုင် ဖွင့်ရန် အက်ပ် မရှိပါ။</string>
+
+    <!-- Button that pauses the download when pressed -->
+    <string name="mozac_feature_downloads_button_pause">ခေတ္တရပ်တန့်ပါ</string>
+    <!-- Button that resumes the download when pressed -->
+    <string name="mozac_feature_downloads_button_resume">ဆက်လက်ဆောင်ရွက်ပါ</string>
+    <!-- Button that cancels the download when pressed -->
+    <string name="mozac_feature_downloads_button_cancel">ပယ်​ဖျက်ပါ</string>
+    <!-- Button that opens the downloaded file when pressed -->
+    <string name="mozac_feature_downloads_button_open">ဖွင့်ပါ</string>
+    <!-- Button that restarts the download after a failed attempt -->
+    <string name="mozac_feature_downloads_button_try_again">ထပ်ကြိုးစားပါ</string>
+
+    <!-- Content description for close button -->
+    <string name="mozac_feature_downloads_button_close">ပိတ်ပါ</string>
+    <!-- Title for the third party download app chooser dialog -->
+    <string name="mozac_feature_downloads_third_party_app_chooser_dialog_title">ယခုတာဝန်အား</string>
+    <!-- Message that appears when trying to download with an external app fails. %1$s will be replaced with the name the external app. -->--&gt;
+    <string name="mozac_feature_downloads_unable_to_open_third_party_app">%1$s အားဖွင့်လို့မရပါ</string>
+    <!-- Text for the info dialog when write to storage permissions have been denied but user tries to download a file. -->
+    <string name="mozac_feature_downloads_write_external_storage_permissions_needed_message">ဖိုင်များကို ဆွဲချက်ချရန် ဖိုင်များနှင့် မီဒီယာ တို့၏ ခွင့်ပြုချက် လိုအပ်သည်။ Android ဆက်တင်များ သို့သွားပါ။ ခွင့်ပြုချက်များကို နှိပ်ပါ။ ပြီးနောက် ခွင့်ပြုပါ ကိုနှိပ်ပါ။</string>
+</resources>
