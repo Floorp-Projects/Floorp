@@ -15,6 +15,7 @@
 #include "nsIGlobalObject.h"
 #include "nsISupportsImpl.h"
 #include "nsStringFwd.h"
+#include "nsTArray.h"
 #include "nsWrapperCache.h"
 
 template <typename T>
@@ -98,6 +99,8 @@ class TrustedTypePolicyFactory : public nsWrapperCache {
   virtual ~TrustedTypePolicyFactory() = default;
 
   RefPtr<nsIGlobalObject> mGlobalObject;
+
+  nsTArray<nsString> mCreatedPolicyNames;
 };
 
 }  // namespace mozilla::dom

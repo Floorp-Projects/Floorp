@@ -7,16 +7,32 @@
 #include "mozilla/dom/TrustedTypePolicy.h"
 
 #include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/dom/DOMString.h"
 #include "mozilla/dom/TrustedTypePolicyFactory.h"
 #include "mozilla/dom/TrustedTypesBinding.h"
 
+#include <utility>
+
 namespace mozilla::dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(TrustedTypePolicy, mParentObject)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(TrustedTypePolicy, mParentObject,
+                                      mOptions.mCreateHTMLCallback,
+                                      mOptions.mCreateScriptCallback,
+                                      mOptions.mCreateScriptURLCallback)
+
+TrustedTypePolicy::TrustedTypePolicy(TrustedTypePolicyFactory* aParentObject,
+                                     const nsAString& aName, Options&& aOptions)
+    : mParentObject{aParentObject},
+      mName{aName},
+      mOptions{std::move(aOptions)} {}
 
 JSObject* TrustedTypePolicy::WrapObject(JSContext* aCx,
                                         JS::Handle<JSObject*> aGivenProto) {
   return TrustedTypePolicy_Binding::Wrap(aCx, this, aGivenProto);
+}
+
+void TrustedTypePolicy::GetName(DOMString& aResult) const {
+  aResult.SetKnownLiveString(mName);
 }
 
 UniquePtr<TrustedHTML> TrustedTypePolicy::CreateHTML(
