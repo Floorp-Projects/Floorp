@@ -261,10 +261,8 @@ class Nursery {
   inline void unregisterTrailer(void* block);
   size_t sizeOfTrailerBlockSets(mozilla::MallocSizeOf mallocSizeOf) const;
 
-  size_t capacity() const { return capacity_; }
-  size_t committed() const {
-    return std::min(capacity_, allocatedChunkCount() * gc::ChunkSize);
-  }
+  size_t totalCapacity() const;
+  size_t totalCommitted() const;
 
 #ifdef JS_GC_ZEAL
   void enterZealMode();
@@ -357,6 +355,8 @@ class Nursery {
   using ProfileDurations =
       mozilla::EnumeratedArray<ProfileKey, mozilla::TimeDuration,
                                size_t(ProfileKey::KeyCount)>;
+
+  size_t capacity() const { return capacity_; }
 
   // Total number of chunks and the capacity of the current nursery
   // space. Chunks will be lazily allocated and added to the chunks array up to
@@ -485,6 +485,10 @@ class Nursery {
   // Allocate a buffer for a given zone, using the nursery if possible.
   void* allocateBuffer(JS::Zone* zone, size_t nbytes);
 
+  // Get per-space size limits.
+  size_t maxSpaceSize() const;
+  size_t minSpaceSize() const;
+
   // Change the allocable space provided by the nursery.
   void maybeResizeNursery(JS::GCOptions options, JS::GCReason reason);
   size_t targetSize(JS::GCOptions options, JS::GCReason reason);
@@ -543,6 +547,7 @@ class Nursery {
   };
 
   Space toSpace;
+  Space fromSpace;
 
   gc::GCRuntime* const gc;
 

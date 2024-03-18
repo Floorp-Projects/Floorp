@@ -1,6 +1,7 @@
 // Test nursery string allocation and pretenuring.
 
 gczeal(0);
+gcparam("semispaceNurseryEnabled", 0);
 
 gcparam("minNurseryBytes", 4096 * 1024);
 gcparam("maxNurseryBytes", 4096 * 1024);

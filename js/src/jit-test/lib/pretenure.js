@@ -21,6 +21,9 @@ function setupPretenureTest() {
   // Disable zeal modes that will interfere with this test.
   gczeal(0);
 
+  // Disable semispace as this will affect the size of the nursery.
+  gcparam("semispaceNurseryEnabled", 0);
+
   // Restrict nursery size so we can fill it quicker, and ensure it is resized.
   gcparam("minNurseryBytes", 1024 * 1024);
   gcparam("maxNurseryBytes", 1024 * 1024);

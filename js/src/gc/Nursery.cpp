@@ -345,9 +345,9 @@ void js::Nursery::enable() {
 bool js::Nursery::initFirstChunk(AutoLockGCBgAlloc& lock) {
   MOZ_ASSERT(!isEnabled());
 
-  setCapacity(tunables().gcMinNurseryBytes());
+  setCapacity(minSpaceSize());
 
-  size_t nchunks = toSpace.maxChunkCount_;
+  size_t nchunks = toSpace.maxChunkCount_ + fromSpace.maxChunkCount_;
   if (!decommitTask->reserveSpaceForChunks(nchunks) ||
       !allocateNextChunk(0, lock)) {
     setCapacity(0);
@@ -371,8 +371,11 @@ size_t RequiredChunkCount(size_t nbytes) {
 void js::Nursery::setCapacity(size_t newCapacity) {
   MOZ_ASSERT(newCapacity == roundSize(newCapacity));
   capacity_ = newCapacity;
-  toSpace.maxChunkCount_ = RequiredChunkCount(newCapacity);
-  // TODO: Configure from space if semispace collection enabled.
+  size_t count = RequiredChunkCount(newCapacity);
+  toSpace.maxChunkCount_ = count;
+  if (semispaceEnabled_) {
+    fromSpace.maxChunkCount_ = count;
+  }
 }
 
 void js::Nursery::disable() {
@@ -384,6 +387,7 @@ void js::Nursery::disable() {
   // Free all chunks.
   decommitTask->join();
   freeChunksFrom(toSpace, 0);
+  freeChunksFrom(fromSpace, 0);
   decommitTask->runFromMainThread();
 
   setCapacity(0);
@@ -392,6 +396,9 @@ void js::Nursery::disable() {
   // nursery. JIT'd code uses this even if the nursery is disabled.
   toSpace.currentEnd_ = 0;
   toSpace.position_ = 0;
+  fromSpace.currentEnd_ = 0;
+  fromSpace.position_ = 0;
+
   gc->storeBuffer().disable();
 
   if (gc->wasInitialized()) {
@@ -491,6 +498,8 @@ void js::Nursery::setSemispaceEnabled(bool enabled) {
 }
 
 bool js::Nursery::isEmpty() const {
+  MOZ_ASSERT(fromSpace.isEmpty());
+
   if (!isEnabled()) {
     return true;
   }
@@ -504,6 +513,25 @@ bool js::Nursery::isEmpty() const {
 }
 
 bool js::Nursery::Space::isEmpty() const { return position_ == startPosition_; }
+
+static size_t AdjustSizeForSemispace(size_t size, bool semispaceEnabled) {
+  // TODO: should probably store unrounded size and round as needed.
+  if (!semispaceEnabled) {
+    return size;
+  }
+
+  return Nursery::roundSize(size / 2);
+}
+
+size_t js::Nursery::maxSpaceSize() const {
+  return AdjustSizeForSemispace(tunables().gcMaxNurseryBytes(),
+                                semispaceEnabled_);
+}
+
+size_t js::Nursery::minSpaceSize() const {
+  return AdjustSizeForSemispace(tunables().gcMinNurseryBytes(),
+                                semispaceEnabled_);
+}
 
 #ifdef JS_GC_ZEAL
 void js::Nursery::enterZealMode() {
@@ -530,9 +558,9 @@ void js::Nursery::enterZealMode() {
                          MemCheckKind::MakeUndefined);
   }
 
-  setCapacity(tunables().gcMaxNurseryBytes());
+  setCapacity(maxSpaceSize());
 
-  size_t nchunks = toSpace.maxChunkCount_;
+  size_t nchunks = toSpace.maxChunkCount_ + fromSpace.maxChunkCount_;
   if (!decommitTask->reserveSpaceForChunks(nchunks)) {
     oomUnsafe.crash("Nursery::enterZealMode");
   }
@@ -1093,7 +1121,7 @@ bool js::Nursery::wantEagerCollection() const {
     return false;
   }
 
-  if (isEmpty() && capacity() == tunables().gcMinNurseryBytes()) {
+  if (isEmpty() && capacity() == minSpaceSize()) {
     return false;
   }
 
@@ -1138,7 +1166,7 @@ inline bool js::Nursery::isUnderused() const {
     return false;
   }
 
-  if (capacity() == tunables().gcMinNurseryBytes()) {
+  if (capacity() == minSpaceSize()) {
     return false;
   }
 
@@ -1192,7 +1220,7 @@ void js::Nursery::collect(JS::GCOptions options, JS::GCReason reason) {
   previousGC.reason = JS::GCReason::NO_REASON;
   previousGC.nurseryUsedBytes = usedSpace();
   previousGC.nurseryCapacity = capacity();
-  previousGC.nurseryCommitted = committed();
+  previousGC.nurseryCommitted = totalCommitted();
   previousGC.nurseryUsedChunkCount = currentChunk() + 1;
   previousGC.tenuredBytes = 0;
   previousGC.tenuredCells = 0;
@@ -1298,7 +1326,7 @@ void js::Nursery::sendTelemetry(JS::GCReason reason, TimeDuration totalTime,
     rt->metrics().GC_MINOR_REASON_LONG(uint32_t(reason));
   }
   rt->metrics().GC_MINOR_US(totalTime);
-  rt->metrics().GC_NURSERY_BYTES_2(committed());
+  rt->metrics().GC_NURSERY_BYTES_2(totalCommitted());
 
   if (!wasEmpty) {
     rt->metrics().GC_PRETENURE_COUNT_2(sitesPretenured);
@@ -1690,6 +1718,19 @@ void Nursery::requestMinorGC(JS::GCReason reason) {
       InterruptReason::MinorGC);
 }
 
+size_t SemispaceSizeFactor(bool semispaceEnabled) {
+  return semispaceEnabled ? 2 : 1;
+}
+
+size_t js::Nursery::totalCapacity() const {
+  return capacity() * SemispaceSizeFactor(semispaceEnabled_);
+}
+
+size_t js::Nursery::totalCommitted() const {
+  size_t size = std::min(capacity_, allocatedChunkCount() * gc::ChunkSize);
+  return size * SemispaceSizeFactor(semispaceEnabled_);
+}
+
 size_t Nursery::sizeOfMallocedBuffers(
     mozilla::MallocSizeOf mallocSizeOf) const {
   size_t total = 0;
@@ -1839,8 +1880,7 @@ void js::Nursery::maybeResizeNursery(JS::GCOptions options,
   decommitTask->join();
 
   size_t newCapacity = mozilla::Clamp(targetSize(options, reason),
-                                      tunables().gcMinNurseryBytes(),
-                                      tunables().gcMaxNurseryBytes());
+                                      minSpaceSize(), maxSpaceSize());
 
   MOZ_ASSERT(roundSize(newCapacity) == newCapacity);
   MOZ_ASSERT(newCapacity >= SystemPageSize());
@@ -1892,7 +1932,7 @@ size_t js::Nursery::targetSize(JS::GCOptions options, JS::GCReason reason) {
   TimeStamp now = TimeStamp::Now();
 
   if (reason == JS::GCReason::PREPARE_FOR_PAGELOAD) {
-    return roundSize(tunables().gcMaxNurseryBytes());
+    return roundSize(maxSpaceSize());
   }
 
   // If the nursery is completely unused then minimise it.
@@ -1991,10 +2031,12 @@ size_t js::Nursery::roundSize(size_t size) {
 
 void js::Nursery::growAllocableSpace(size_t newCapacity) {
   MOZ_ASSERT_IF(!isSubChunkMode(), newCapacity > currentChunk() * ChunkSize);
-  MOZ_ASSERT(newCapacity <= tunables().gcMaxNurseryBytes());
+  MOZ_ASSERT(newCapacity <= maxSpaceSize());
   MOZ_ASSERT(newCapacity > capacity());
 
-  if (!decommitTask->reserveSpaceForChunks(RequiredChunkCount(newCapacity))) {
+  size_t nchunks =
+      RequiredChunkCount(newCapacity) * SemispaceSizeFactor(semispaceEnabled_);
+  if (!decommitTask->reserveSpaceForChunks(nchunks)) {
     return;
   }
 
@@ -2020,7 +2062,9 @@ void js::Nursery::growAllocableSpace(size_t newCapacity) {
 }
 
 void js::Nursery::freeChunksFrom(Space& space, const unsigned firstFreeChunk) {
-  MOZ_ASSERT(firstFreeChunk < space.chunks_.length());
+  if (firstFreeChunk >= space.chunks_.length()) {
+    return;
+  }
 
   // The loop below may need to skip the first chunk, so we may use this so we
   // can modify it.
@@ -2067,6 +2111,7 @@ void js::Nursery::shrinkAllocableSpace(size_t newCapacity) {
   unsigned newCount = HowMany(newCapacity, ChunkSize);
   if (newCount < allocatedChunkCount()) {
     freeChunksFrom(toSpace, newCount);
+    freeChunksFrom(fromSpace, newCount);
   }
 
   size_t oldCapacity = capacity_;
