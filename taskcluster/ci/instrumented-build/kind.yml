@@ -100,6 +100,39 @@ jobs:
                 - sysroot-x86_64-linux-gnu
                 - sysroot-wasm32-wasi
 
+    linux-aarch64-shippable/opt:
+        description: "Linux AArch64 (a.k.a. ARM64) Instrumented"
+        index:
+            product: firefox
+            job-name: instrumented-linux-aarch64
+        shipping-product: firefox
+        treeherder:
+            platform: linux-aarch64-shippable/opt
+        worker-type: b-linux-gcp
+        run:
+            config:
+                - builds/releng_base_firefox.py
+                - builds/releng_base_linux_64_builds.py
+            mozconfig-variant: profile-generate
+            extra-config:
+                extra_mozconfig_content:
+                    - ac_add_options --target=aarch64
+                    - unset MOZ_STDCXX_COMPAT
+            tooltool-downloads: public
+        fetches:
+            toolchain:
+                - linux64-clang
+                - linux64-rust
+                - linux64-rust-size
+                - linux64-cbindgen
+                - linux64-dump_syms
+                - linux64-nasm
+                - linux64-node
+                - linux64-pkgconf
+                - sysroot-aarch64-linux-gnu
+                - sysroot-x86_64-linux-gnu
+                - sysroot-wasm32-wasi
+
     macosx64-shippable/opt:
         description: "MacOS X x64 Cross-compile Instrumented"
         shipping-phase: build
