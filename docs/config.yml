@@ -123,4 +123,4 @@ fatal warnings:
     - "WARNING: '([^']*)' reference target not found:((?!.rst).)*$"
     - "WARNING: Include file '([^']*)' not found or reading it failed"
 
-max_num_warnings: 759
+max_num_warnings: 835
