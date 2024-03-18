@@ -4,7 +4,11 @@
 
 import { isWasm, getWasmLineNumberFormatter, renderWasmText } from "../wasm";
 import { isMinified } from "../isMinified";
-import { resizeBreakpointGutter, resizeToggleButton } from "../ui";
+import {
+  resizeBreakpointGutter,
+  resizeToggleButton,
+  getLineNumberWidth,
+} from "../ui";
 import { javascriptLikeExtensions } from "../source";
 
 const sourceDocs = new Map();
@@ -39,7 +43,7 @@ export function resetLineNumberFormat(editor) {
   const cm = editor.codeMirror;
   cm.setOption("lineNumberFormatter", number => number);
   resizeBreakpointGutter(cm);
-  resizeToggleButton(cm);
+  resizeToggleButton(getLineNumberWidth(cm));
 }
 
 function updateLineNumberFormat(editor, sourceId) {
@@ -51,7 +55,7 @@ function updateLineNumberFormat(editor, sourceId) {
   const lineNumberFormatter = getWasmLineNumberFormatter(sourceId);
   cm.setOption("lineNumberFormatter", lineNumberFormatter);
   resizeBreakpointGutter(cm);
-  resizeToggleButton(cm);
+  resizeToggleButton(getLineNumberWidth(cm));
 }
 
 const contentTypeModeMap = new Map([

@@ -38,11 +38,11 @@ export function resizeBreakpointGutter(editor) {
  * Forces the left toggle button in source header to be the same size
  * as the line numbers gutter.
  */
-export function resizeToggleButton(editor) {
+export function resizeToggleButton(newSize) {
   const toggleButton = document.querySelector(
-    ".source-header .toggle-button-start"
+    ".source-header .toggle-button.start"
   );
   if (toggleButton) {
-    toggleButton.style.width = `${getLineNumberWidth(editor)}px`;
+    toggleButton.style.width = `${newSize}px`;
   }
 }

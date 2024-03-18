@@ -167,6 +167,8 @@ class Editor extends EventEmitter {
   #prefObserver;
   #win;
 
+  #updateListener = null;
+
   constructor(config) {
     super();
 
@@ -412,6 +414,12 @@ class Editor extends EventEmitter {
     }
   }
 
+  // This update listener allows listening to the changes
+  // to the codemiror editor.
+  setUpdateListener(listener = null) {
+    this.#updateListener = listener;
+  }
+
   /**
    * Do the actual appending and configuring of the CodeMirror instance. This is
    * used by both append functions above, and does all the hard work to
@@ -645,6 +653,11 @@ class Editor extends EventEmitter {
         },
       }),
       codemirrorLanguage.syntaxHighlighting(lezerHighlight.classHighlighter),
+      EditorView.updateListener.of(v => {
+        if (typeof this.#updateListener == "function") {
+          this.#updateListener(v);
+        }
+      }),
       // keep last so other extension take precedence
       codemirror.minimalSetup,
     ];
@@ -1658,6 +1671,7 @@ class Editor extends EventEmitter {
     this.config = null;
     this.version = null;
     this.#ownerDoc = null;
+    this.#updateListener = null;
 
     if (this.#prefObserver) {
       this.#prefObserver.off(KEYMAP_PREF, this.setKeyMap);
