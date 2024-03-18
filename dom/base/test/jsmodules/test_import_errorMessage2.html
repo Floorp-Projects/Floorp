@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test to get the filename of the requested module after it has been evaluated</title>
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script>
+  SimpleTest.waitForExplicitFinish();
+
+  let count = 0;
+
+  window.onerror = function (event, src, lineno, colno, error) {
+    info("window.onerror: message: " + error.message);
+    info("window.onerror: src: " + src);
+    ok(error instanceof SyntaxError, "Should be a SyntaxError.");
+
+    if (src.match("module_e.mjs")) {
+      ok(error.message.match("contains ambiguous star export"));
+    } else {
+      ok(false, "unknown src " + src);
+    }
+    count++;
+  };
+
+  function testLoaded() {
+    ok(count === 1, "Should have 1 SynaxError thrown.");
+    SimpleTest.finish();
+  }
+
+</script>
+
+<!--module_c.mjs will be evaluated here-->
+<script type="module" src="module_d.mjs"></script>
+
+<!--module_c.mjs will be linked again here-->
+<script type="module" src="module_e.mjs"></script>
+<body onload='testLoaded()'></body>

@@ -3,11 +3,21 @@ support-files = [
   "ambiguous_export.mjs",
   "import_ambiguous.mjs",
   "import_ambiguous_indirect_export.mjs",
+  "import_ambiguous_export.mjs",
+  "import_ambiguous_export_star.mjs",
+  "import_circular.mjs",
+  "import_circular_1.mjs",
   "import_no_export.mjs",
   "import_no_indirect_export.mjs",
   "exportA1.mjs",
   "exportA2.mjs",
   "export_ambiguous.mjs",
+  "export_star_ambiguous.mjs",
+  "module_a.mjs",
+  "module_b.mjs",
+  "module_c.mjs",
+  "module_d.mjs",
+  "module_e.mjs",
   "module_setRan.mjs",
   "module_testSyntax.mjs",
   "module_badSyntax.mjs",
@@ -46,6 +56,8 @@ support-files = [
 ["test_importResolveFailed.html"]
 
 ["test_import_errorMessage.html"]
+
+["test_import_errorMessage2.html"]
 
 ["test_import_meta_resolve.html"]
 

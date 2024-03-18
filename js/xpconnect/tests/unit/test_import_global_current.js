@@ -204,7 +204,7 @@ ChromeUtils.importESModule("resource://test/es6module_import_error.js", {
 `, sb);
   } catch (e) {
     caught = true;
-    Assert.stringMatches(e.message, /import not found/);
+    Assert.stringMatches(e.message, /doesn't provide an export named/);
   }
   Assert.ok(caught);
 });
