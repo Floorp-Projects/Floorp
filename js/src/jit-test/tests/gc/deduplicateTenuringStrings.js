@@ -13,6 +13,7 @@
 // We require predictable GC timing to make sure the correct
 // strings are tenured together.
 gczeal(0);
+gcparam('semispaceNurseryEnabled', 0);
 
 var helperCode = `
 function makeInlineStr(isLatin1) {

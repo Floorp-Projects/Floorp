@@ -1,4 +1,4 @@
-// Check that we switch to allocating in the tenure heap after the first
+// Check that we switch to allocating in the tenured heap after the first
 // nursery collection.
 
 function buildObjectTree(depth) {
@@ -82,6 +82,7 @@ function countHeapLocations(tree, objectTree, counts) {
 gczeal(0);
 gcparam('minNurseryBytes', 1024 * 1024);
 gcparam('maxNurseryBytes', 1024 * 1024);
+gcparam('semispaceNurseryEnabled', 0);
 gc();
 
 testRoundTrip(1, true, true);
