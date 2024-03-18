@@ -21,6 +21,7 @@
 #include "js/AllocPolicy.h"
 #include "js/Class.h"
 #include "js/GCAPI.h"
+#include "js/HeapAPI.h"
 #include "js/TypeDecls.h"
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
@@ -69,6 +70,7 @@ namespace gc {
 class AutoGCSession;
 struct Cell;
 class GCSchedulingTunables;
+class StoreBuffer;
 class TenuringTracer;
 }  // namespace gc
 
@@ -220,8 +222,8 @@ class Nursery {
   // buffers will soon be freed.
   void removeMallocedBufferDuringMinorGC(void* buffer) {
     MOZ_ASSERT(JS::RuntimeHeapIsMinorCollecting());
-    MOZ_ASSERT(prevSpace->mallocedBuffers.has(buffer));
-    prevSpace->mallocedBuffers.remove(buffer);
+    MOZ_ASSERT(fromSpace.mallocedBuffers.has(buffer));
+    fromSpace.mallocedBuffers.remove(buffer);
   }
 
   [[nodiscard]] bool addedUniqueIdToCell(gc::Cell* cell) {
@@ -311,10 +313,6 @@ class Nursery {
     return setsWithNurseryMemory_.append(obj);
   }
 
-  // The amount of space in the mapped nursery available to allocations.
-  static const size_t NurseryChunkUsableSize =
-      gc::ChunkSize - sizeof(gc::ChunkBase);
-
   void joinDecommitTask();
 
   mozilla::TimeStamp collectionStartTime() {
@@ -392,7 +390,6 @@ class Nursery {
   }
   MOZ_ALWAYS_INLINE size_t freeSpace() const {
     MOZ_ASSERT(isEnabled());
-    MOZ_ASSERT(currentEnd() - position() <= NurseryChunkUsableSize);
     MOZ_ASSERT(currentChunk() < maxChunkCount());
     return (currentEnd() - position()) +
            (maxChunkCount() - currentChunk() - 1) * gc::ChunkSize;
@@ -458,6 +455,7 @@ class Nursery {
   };
   CollectionResult doCollection(gc::AutoGCSession& session,
                                 JS::GCOptions options, JS::GCReason reason);
+  void swapSpaces();
   void traceRoots(gc::AutoGCSession& session, gc::TenuringTracer& mover);
 
   size_t doPretenuring(JSRuntime* rt, JS::GCReason reason,
@@ -570,6 +568,10 @@ class Nursery {
     size_t trailersRemovedUsed_ = 0;
     size_t trailerBytes_ = 0;
 
+    gc::ChunkKind kind;
+
+    explicit Space(gc::ChunkKind kind);
+
     inline bool isEmpty() const;
     inline bool isInside(const void* p) const;
 
@@ -577,6 +579,8 @@ class Nursery {
     // chunk (chunks are discontiguous in memory).
     inline size_t offsetFromAddress(uintptr_t addr) const;
     inline size_t offsetFromExclusiveAddress(uintptr_t addr) const;
+
+    void setKind(gc::ChunkKind newKind);
 
     void clear(Nursery* nursery);
     void moveToStartOfChunk(Nursery* nursery, unsigned chunkno);
@@ -586,11 +590,15 @@ class Nursery {
     void decommitSubChunkRegion(Nursery* nursery, size_t oldCapacity,
                                 size_t newCapacity);
     void freeTrailerBlocks(gc::MallocedBlockCache& mallocedBlockCache);
+
+#ifdef DEBUG
+    void checkKind(gc::ChunkKind expected) const;
+    size_t findChunkIndex(uintptr_t chunkAddr) const;
+#endif
   };
 
   Space toSpace;
   Space fromSpace;
-  Space* prevSpace = nullptr;
 
   gc::GCRuntime* const gc;
 
@@ -701,6 +709,7 @@ class Nursery {
 
 MOZ_ALWAYS_INLINE bool Nursery::isInside(const void* p) const {
   // TODO: Split this into separate methods.
+  // TODO: Do we ever need to check both?
   return toSpace.isInside(p) || fromSpace.isInside(p);
 }
 

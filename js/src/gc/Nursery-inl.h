@@ -40,15 +40,8 @@ inline bool js::Nursery::shouldTenure(gc::Cell* cell) {
 }
 
 inline bool js::Nursery::inCollectedRegion(gc::Cell* cell) const {
-  if (!IsInsideNursery(cell)) {
-    return false;
-  }
-
-  if (!semispaceEnabled()) {
-    return true;
-  }
-
-  return fromSpace.isInside(cell);
+  gc::ChunkBase* chunk = gc::detail::GetCellChunkBase(cell);
+  return chunk->getKind() == gc::ChunkKind::NurseryFromSpace;
 }
 
 inline bool js::Nursery::inCollectedRegion(void* ptr) const {
@@ -70,23 +63,14 @@ inline size_t js::Nursery::Space::offsetFromExclusiveAddress(
 }
 
 inline size_t js::Nursery::Space::offsetFromAddress(uintptr_t addr) const {
-  uintptr_t chunkAddr = addr & ~gc::ChunkMask;
-
-  uint32_t chunkIndex = INT32_MAX;
-  for (size_t i = 0; i < chunks_.length(); i++) {
-    if (uintptr_t(chunks_[i]) == chunkAddr) {
-      chunkIndex = i;
-      break;
-    }
-  }
-  MOZ_ASSERT(chunkIndex < chunks_.length(),
-             "Nursery chunk containing |addr| not found");
+  gc::ChunkBase* chunk =
+      gc::detail::GetCellChunkBase(reinterpret_cast<gc::Cell*>(addr));
+  MOZ_ASSERT(chunk->getKind() == kind);
+  MOZ_ASSERT(findChunkIndex(addr & ~gc::ChunkMask) == chunk->nurseryChunkIndex);
 
   uint32_t offset = addr & gc::ChunkMask;
   MOZ_ASSERT(offset >= sizeof(gc::ChunkBase));
-  MOZ_ASSERT(offset < gc::ChunkSize);
-
-  return (chunkIndex << gc::ChunkShift) | offset;
+  return (chunk->nurseryChunkIndex << gc::ChunkShift) | offset;
 }
 
 MOZ_ALWAYS_INLINE /* static */ bool js::Nursery::getForwardedPointer(
@@ -237,10 +221,10 @@ inline bool js::Nursery::registerTrailer(PointerAndUint7 blockAndListID,
 
 inline void js::Nursery::unregisterTrailer(void* block) {
   // Unlike removeMallocedBuffer this is only called during minor GC.
-  MOZ_ASSERT(prevSpace->trailersRemovedUsed_ <
-             prevSpace->trailersRemoved_.length());
-  prevSpace->trailersRemoved_[prevSpace->trailersRemovedUsed_] = block;
-  prevSpace->trailersRemovedUsed_++;
+  MOZ_ASSERT(fromSpace.trailersRemovedUsed_ <
+             fromSpace.trailersRemoved_.length());
+  fromSpace.trailersRemoved_[fromSpace.trailersRemovedUsed_] = block;
+  fromSpace.trailersRemovedUsed_++;
 }
 
 namespace js {
