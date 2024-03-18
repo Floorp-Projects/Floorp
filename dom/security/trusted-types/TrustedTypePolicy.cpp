@@ -21,21 +21,21 @@ JSObject* TrustedTypePolicy::WrapObject(JSContext* aCx,
 
 UniquePtr<TrustedHTML> TrustedTypePolicy::CreateHTML(
     JSContext* aJSContext, const nsAString& aInput,
-    const Sequence<JS::Value>& aArguments) const {
+    const Sequence<JS::Value>& aArguments, ErrorResult& aErrorResult) const {
   // TODO: implement the spec.
   return MakeUnique<TrustedHTML>();
 }
 
 UniquePtr<TrustedScript> TrustedTypePolicy::CreateScript(
     JSContext* aJSContext, const nsAString& aInput,
-    const Sequence<JS::Value>& aArguments) const {
+    const Sequence<JS::Value>& aArguments, ErrorResult& aErrorResult) const {
   // TODO: implement the spec.
   return MakeUnique<TrustedScript>();
 }
 
 UniquePtr<TrustedScriptURL> TrustedTypePolicy::CreateScriptURL(
     JSContext* aJSContext, const nsAString& aInput,
-    const Sequence<JS::Value>& aArguments) const {
+    const Sequence<JS::Value>& aArguments, ErrorResult& aErrorResult) const {
   // TODO: implement the spec.
   return MakeUnique<TrustedScriptURL>();
 }
