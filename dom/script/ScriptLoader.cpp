@@ -3297,21 +3297,7 @@ nsresult ScriptLoader::OnStreamComplete(
     // hash in case we are going to save the bytecode of this script in the
     // cache.
     if (aRequest->IsSource()) {
-      uint32_t sriLength = 0;
-      rv = SaveSRIHash(aRequest, aSRIDataVerifier, &sriLength);
-      JS::TranscodeBuffer& bytecode = aRequest->SRIAndBytecode();
-      MOZ_ASSERT_IF(NS_SUCCEEDED(rv), bytecode.length() == sriLength);
-
-      // TODO: (Bug 1800896) This code should be moved into SaveSRIHash, and the
-      // SRI out-param can be removed.
-      aRequest->SetSRILength(sriLength);
-      if (aRequest->GetSRILength() != sriLength) {
-        // The bytecode is aligned in the bytecode buffer, and space might be
-        // reserved for padding after the SRI hash.
-        if (!bytecode.resize(aRequest->GetSRILength())) {
-          return NS_ERROR_OUT_OF_MEMORY;
-        }
-      }
+      rv = SaveSRIHash(aRequest, aSRIDataVerifier);
     }
 
     if (NS_SUCCEEDED(rv)) {
@@ -3373,14 +3359,13 @@ nsresult ScriptLoader::VerifySRI(ScriptLoadRequest* aRequest,
   return rv;
 }
 
-nsresult ScriptLoader::SaveSRIHash(ScriptLoadRequest* aRequest,
-                                   SRICheckDataVerifier* aSRIDataVerifier,
-                                   uint32_t* sriLength) const {
+nsresult ScriptLoader::SaveSRIHash(
+    ScriptLoadRequest* aRequest, SRICheckDataVerifier* aSRIDataVerifier) const {
   MOZ_ASSERT(aRequest->IsSource());
   JS::TranscodeBuffer& bytecode = aRequest->SRIAndBytecode();
   MOZ_ASSERT(bytecode.empty());
 
-  uint32_t len;
+  uint32_t len = 0;
 
   // If the integrity metadata does not correspond to a valid hash function,
   // IsComplete would be false.
@@ -3418,7 +3403,16 @@ nsresult ScriptLoader::SaveSRIHash(ScriptLoadRequest* aRequest,
       SRICheckDataVerifier::DataSummaryLength(len, bytecode.begin(), &srilen)));
   MOZ_ASSERT(srilen == len);
 
-  *sriLength = len;
+  MOZ_ASSERT(bytecode.length() == len);
+  aRequest->SetSRILength(len);
+
+  if (aRequest->GetSRILength() != len) {
+    // The bytecode is aligned in the bytecode buffer, and space might be
+    // reserved for padding after the SRI hash.
+    if (!bytecode.resize(aRequest->GetSRILength())) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
 
   return NS_OK;
 }

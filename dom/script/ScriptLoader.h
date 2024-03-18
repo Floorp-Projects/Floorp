@@ -566,8 +566,7 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
                      SRICheckDataVerifier* aSRIDataVerifier) const;
 
   nsresult SaveSRIHash(ScriptLoadRequest* aRequest,
-                       SRICheckDataVerifier* aSRIDataVerifier,
-                       uint32_t* sriLength) const;
+                       SRICheckDataVerifier* aSRIDataVerifier) const;
 
   void ReportErrorToConsole(ScriptLoadRequest* aRequest,
                             nsresult aResult) const override;
