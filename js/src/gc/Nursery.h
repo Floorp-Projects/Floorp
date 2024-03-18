@@ -337,6 +337,8 @@ class Nursery {
 
   void trackMallocedBufferOnPromotion(void* buffer, gc::Cell* owner,
                                       size_t nbytes, MemoryUse use);
+  void trackTrailerOnPromotion(void* buffer, gc::Cell* owner, size_t nbytes,
+                               size_t overhead, MemoryUse use);
 
   // Round a size in bytes to the nearest valid nursery size.
   static size_t roundSize(size_t size);
@@ -404,7 +406,7 @@ class Nursery {
   // Must only be called if the previousGC data is initialised.
   double calcPromotionRate(bool* validForTenuring) const;
 
-  void freeTrailerBlocks();
+  void freeTrailerBlocks(JS::GCOptions options, JS::GCReason reason);
 
   NurseryChunk& chunk(unsigned index) const { return *toSpace.chunks_[index]; }
 
@@ -561,6 +563,13 @@ class Nursery {
     BufferSet mallocedBuffers;
     size_t mallocedBufferBytes = 0;
 
+    // Wasm "trailer" (C++-heap-allocated) blocks.  See comments above on
+    // ::registerTrailer and ::unregisterTrailer.
+    Vector<PointerAndUint7, 0, SystemAllocPolicy> trailersAdded_;
+    Vector<void*, 0, SystemAllocPolicy> trailersRemoved_;
+    size_t trailersRemovedUsed_ = 0;
+    size_t trailerBytes_ = 0;
+
     inline bool isEmpty() const;
     inline bool isInside(const void* p) const;
 
@@ -576,6 +585,7 @@ class Nursery {
     bool commitSubChunkRegion(size_t oldCapacity, size_t newCapacity);
     void decommitSubChunkRegion(Nursery* nursery, size_t oldCapacity,
                                 size_t newCapacity);
+    void freeTrailerBlocks(gc::MallocedBlockCache& mallocedBlockCache);
   };
 
   Space toSpace;
@@ -645,13 +655,6 @@ class Nursery {
 
   bool hasRecentGrowthData;
   double smoothedTargetSize;
-
-  // Wasm "trailer" (C++-heap-allocated) blocks.  See comments above on
-  // ::registerTrailer and ::unregisterTrailer.
-  Vector<PointerAndUint7, 0, SystemAllocPolicy> trailersAdded_;
-  Vector<void*, 0, SystemAllocPolicy> trailersRemoved_;
-  size_t trailersRemovedUsed_ = 0;
-  size_t trailerBytes_ = 0;
 
   // During a collection most hoisted slot and element buffers indicate their
   // new location with a forwarding pointer at the base. This does not work
