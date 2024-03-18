@@ -405,5 +405,6 @@ jobs:
           type: decision-task
           treeherder-symbol: android-l10n-import
           target-tasks-method: android-l10n-import
-      run-on-projects: [oak]
-      when: []  # hook only
+      run-on-projects: [autoland]
+      when:
+          - {hour: 0, minute: 0}
