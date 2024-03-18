@@ -1,0 +1,28 @@
+schema: 1
+
+bugzilla:
+  product: Firefox
+  component: Data Loss Prevention
+
+origin:
+  name: Content Analysis SDK
+  description: SDK that DLP agents may use to interoperate with web browsers
+  url: https://github.com/chromium/content_analysis_sdk
+  release: 93f5b9cfe9509a6b58eb0414f1bd610c4859ed1d (2023-07-31T13:35:40Z).
+  revision: 93f5b9cfe9509a6b58eb0414f1bd610c4859ed1d
+  license: BSD-3-Clause
+
+vendoring:
+  url: https://github.com/chromium/content_analysis_sdk
+  source-hosting: github
+  exclude:
+    - .gitattributes
+
+updatebot:
+    maintainer-phab: "#dlp-reviewers"
+    maintainer-bz: davidp99@gmail.com
+    tasks:
+      - type: vendoring
+        enabled: True
+        frequency: every
+        blocking: 1885485
