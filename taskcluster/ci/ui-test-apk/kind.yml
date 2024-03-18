@@ -183,7 +183,7 @@ jobs:
             commands:
                 - [wget, {artifact-reference: '<signed-apk-debug-apk/public/build/target.arm64-v8a.apk>'}, '-O', app.apk]
                 - [wget, {artifact-reference: '<signed-apk-android-test/public/build/target.noarch.apk>'}, '-O', android-test.apk]
-                - [python3, ../../../taskcluster/scripts/tests/test-lab.py, arm-beta-tests, app.apk, --apk_test, android-test.apk]
+                - [python3, ../../../taskcluster/scripts/tests/test-lab.py, arm-beta, app.apk, --apk_test, android-test.apk]
         treeherder:
             platform: 'focus-ui-test/opt'
             symbol: focus-beta(ui-test-arm-beta)
@@ -264,7 +264,7 @@ jobs:
             commands:
                 - [wget, {artifact-reference: '<signed-apk-debug-apk/public/build/target.arm64-v8a.apk>'}, '-O', app.apk]
                 - [wget, {artifact-reference: '<signed-apk-android-test/public/build/target.noarch.apk>'}, '-O', android-test.apk]
-                - [python3, ../../../taskcluster/scripts/tests/test-lab.py, arm-beta-tests, app.apk, --apk_test, android-test.apk]
+                - [python3, ../../../taskcluster/scripts/tests/test-lab.py, arm-beta, app.apk, --apk_test, android-test.apk]
         treeherder:
             platform: 'fenix-ui-test/opt'
             symbol: fenix-beta(ui-test-arm-beta)
