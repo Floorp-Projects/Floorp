@@ -126,7 +126,6 @@ reserved = set(
         "class",
         "from",
         "include",
-        "intr",
         "manager",
         "manages",
         "namespace",
@@ -552,15 +551,12 @@ def p_AttributeValue(p):
 
 def p_SendSemantics(p):
     """SendSemantics : ASYNC
-    | SYNC
-    | INTR"""
+    | SYNC"""
     if p[1] == "async":
         p[0] = ASYNC
-    elif p[1] == "sync":
-        p[0] = SYNC
     else:
-        assert p[1] == "intr"
-        p[0] = INTR
+        assert p[1] == "sync"
+        p[0] = SYNC
 
 
 def p_OptionalSendSemantics(p):
