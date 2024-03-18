@@ -256,7 +256,7 @@ var DefaultNameResolver = /** @class */ (function () {
         return "$elem".concat(index);
     };
     DefaultNameResolver.prototype.getTagName = function (index, isRef) {
-        return "$event".concat(index);
+        return "$tag".concat(index);
     };
     DefaultNameResolver.prototype.getFunctionName = function (index, isImport, isRef) {
         return (isImport ? "$import" : "$func") + index;
@@ -476,6 +476,8 @@ var WasmDisassembler = /** @class */ (function () {
                 return "eq";
             case -20 /* TypeKind.i31ref */:
                 return "i31";
+            case -23 /* TypeKind.exnref */:
+                return "exnref";
             case -21 /* TypeKind.structref */:
                 return "struct";
             case -22 /* TypeKind.arrayref */:
@@ -486,7 +488,12 @@ var WasmDisassembler = /** @class */ (function () {
                 return "noextern";
             case -15 /* TypeKind.nullref */:
                 return "none";
+            case -12 /* TypeKind.nullexnref */:
+                return "noexnref";
         }
+    };
+    WasmDisassembler.prototype.refTypeToString = function (typeIndex, nullable) {
+        return this.typeToString(new WasmParser_js_1.RefType(nullable ? -29 /* TypeKind.ref_null */ : -28 /* TypeKind.ref */, typeIndex));
     };
     WasmDisassembler.prototype.typeToString = function (type) {
         switch (type.kind) {
@@ -508,6 +515,8 @@ var WasmDisassembler = /** @class */ (function () {
                 return "funcref";
             case -17 /* TypeKind.externref */:
                 return "externref";
+            case -23 /* TypeKind.exnref */:
+                return "exnref";
             case -18 /* TypeKind.anyref */:
                 return "anyref";
             case -19 /* TypeKind.eqref */:
@@ -522,6 +531,8 @@ var WasmDisassembler = /** @class */ (function () {
                 return "nullfuncref";
             case -14 /* TypeKind.nullexternref */:
                 return "nullexternref";
+            case -12 /* TypeKind.nullexnref */:
+                return "nullexnref";
             case -15 /* TypeKind.nullref */:
                 return "nullref";
             case -28 /* TypeKind.ref */:
@@ -647,6 +658,7 @@ var WasmDisassembler = /** @class */ (function () {
             case 3 /* OperatorCode.loop */:
             case 4 /* OperatorCode.if */:
             case 6 /* OperatorCode.try */:
+            case 31 /* OperatorCode.try_table */:
                 if (this._labelMode !== LabelMode.Depth) {
                     var backrefLabel_1 = {
                         line: this._lines.length,
@@ -665,6 +677,31 @@ var WasmDisassembler = /** @class */ (function () {
                     this._backrefLabels.push(backrefLabel_1);
                 }
                 this.printBlockType(operator.blockType);
+                if (operator.tryTable) {
+                    for (var i = 0; i < operator.tryTable.length; i++) {
+                        this.appendBuffer(" (");
+                        switch (operator.tryTable[i].kind) {
+                            case WasmParser_js_1.CatchHandlerKind.Catch:
+                                this.appendBuffer("catch ");
+                                break;
+                            case WasmParser_js_1.CatchHandlerKind.CatchRef:
+                                this.appendBuffer("catch_ref ");
+                                break;
+                            case WasmParser_js_1.CatchHandlerKind.CatchAll:
+                                this.appendBuffer("catch_all ");
+                                break;
+                            case WasmParser_js_1.CatchHandlerKind.CatchAllRef:
+                                this.appendBuffer("catch_all_ref ");
+                                break;
+                        }
+                        if (operator.tryTable[i].tagIndex != null) {
+                            var tagName = this._nameResolver.getTagName(operator.tryTable[i].tagIndex, true);
+                            this.appendBuffer("".concat(tagName, " "));
+                        }
+                        this.appendBuffer(this.useLabel(operator.tryTable[i].depth + 1));
+                        this.appendBuffer(")");
+                    }
+                }
                 break;
             case 11 /* OperatorCode.end */:
                 if (this._labelMode === LabelMode.Depth) {
@@ -947,9 +984,17 @@ var WasmDisassembler = /** @class */ (function () {
                 break;
             }
             case 64278 /* OperatorCode.ref_cast */:
+            case 64276 /* OperatorCode.ref_test */: {
+                var refType = this.refTypeToString(operator.refType, false);
+                this.appendBuffer(" ".concat(refType));
+                break;
+            }
             case 64279 /* OperatorCode.ref_cast_null */:
-            case 64276 /* OperatorCode.ref_test */:
-            case 64277 /* OperatorCode.ref_test_null */:
+            case 64277 /* OperatorCode.ref_test_null */: {
+                var refType = this.refTypeToString(operator.refType, true);
+                this.appendBuffer(" ".concat(refType));
+                break;
+            }
             case 64257 /* OperatorCode.struct_new_default */:
             case 64256 /* OperatorCode.struct_new */:
             case 64263 /* OperatorCode.array_new_default */:
@@ -1496,7 +1541,6 @@ var WasmDisassembler = /** @class */ (function () {
                         case 5 /* OperatorCode.else */:
                         case 7 /* OperatorCode.catch */:
                         case 25 /* OperatorCode.catch_all */:
-                        case 10 /* OperatorCode.unwind */:
                         case 24 /* OperatorCode.delegate */:
                             this.decreaseIndent();
                             break;
@@ -1510,9 +1554,9 @@ var WasmDisassembler = /** @class */ (function () {
                         case 3 /* OperatorCode.loop */:
                         case 5 /* OperatorCode.else */:
                         case 6 /* OperatorCode.try */:
+                        case 31 /* OperatorCode.try_table */:
                         case 7 /* OperatorCode.catch */:
                         case 25 /* OperatorCode.catch_all */:
-                        case 10 /* OperatorCode.unwind */:
                             this.increaseIndent();
                             break;
                     }
