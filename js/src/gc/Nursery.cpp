@@ -50,15 +50,22 @@ using mozilla::TimeStamp;
 
 namespace js {
 
+static constexpr size_t NurseryChunkHeaderSize =
+    RoundUp(sizeof(ChunkBase), CellAlignBytes);
+
+// The amount of space in a nursery chunk available to allocations.
+static constexpr size_t NurseryChunkUsableSize =
+    ChunkSize - NurseryChunkHeaderSize;
+
 struct NurseryChunk : public ChunkBase {
-  char data[Nursery::NurseryChunkUsableSize];
+  alignas(CellAlignBytes) uint8_t data[NurseryChunkUsableSize];
 
-  static NurseryChunk* fromChunk(gc::TenuredChunk* chunk);
+  static NurseryChunk* fromChunk(TenuredChunk* chunk, ChunkKind kind,
+                                 uint8_t index);
 
-  explicit NurseryChunk(JSRuntime* runtime)
-      : ChunkBase(runtime, &runtime->gc.storeBuffer()) {}
+  explicit NurseryChunk(JSRuntime* runtime, ChunkKind kind, uint8_t chunkIndex)
+      : ChunkBase(runtime, &runtime->gc.storeBuffer(), kind, chunkIndex) {}
 
-  void init(JSRuntime* rt);
   void poisonRange(size_t start, size_t end, uint8_t value,
                    MemCheckKind checkKind);
   void poisonAfterEvict(size_t extent = ChunkSize);
@@ -75,8 +82,9 @@ struct NurseryChunk : public ChunkBase {
   uintptr_t start() const { return uintptr_t(&data); }
   uintptr_t end() const { return uintptr_t(this) + ChunkSize; }
 };
-static_assert(sizeof(js::NurseryChunk) == gc::ChunkSize,
-              "Nursery chunk size must match gc::Chunk size.");
+static_assert(sizeof(NurseryChunk) == ChunkSize,
+              "Nursery chunk size must match Chunk size.");
+static_assert(offsetof(NurseryChunk, data) == NurseryChunkHeaderSize);
 
 class NurseryDecommitTask : public GCParallelTask {
  public:
@@ -115,14 +123,10 @@ class NurseryDecommitTask : public GCParallelTask {
 
 }  // namespace js
 
-inline void js::NurseryChunk::init(JSRuntime* rt) {
-  new (this) NurseryChunk(rt);
-}
-
 inline void js::NurseryChunk::poisonRange(size_t start, size_t end,
                                           uint8_t value,
                                           MemCheckKind checkKind) {
-  MOZ_ASSERT(start >= sizeof(ChunkBase));
+  MOZ_ASSERT(start >= NurseryChunkHeaderSize);
   MOZ_ASSERT((start % gc::CellAlignBytes) == 0);
   MOZ_ASSERT((end % gc::CellAlignBytes) == 0);
   MOZ_ASSERT(end >= start);
@@ -138,12 +142,12 @@ inline void js::NurseryChunk::poisonRange(size_t start, size_t end,
 }
 
 inline void js::NurseryChunk::poisonAfterEvict(size_t extent) {
-  poisonRange(sizeof(ChunkBase), extent, JS_SWEPT_NURSERY_PATTERN,
+  poisonRange(NurseryChunkHeaderSize, extent, JS_SWEPT_NURSERY_PATTERN,
               MemCheckKind::MakeNoAccess);
 }
 
 inline void js::NurseryChunk::markPagesUnusedHard(size_t startOffset) {
-  MOZ_ASSERT(startOffset >= sizeof(ChunkBase));  // Don't touch the header.
+  MOZ_ASSERT(startOffset >= NurseryChunkHeaderSize);  // Don't touch the header.
   MOZ_ASSERT(startOffset >= SystemPageSize());
   MOZ_ASSERT(startOffset <= ChunkSize);
   uintptr_t start = uintptr_t(this) + startOffset;
@@ -152,7 +156,7 @@ inline void js::NurseryChunk::markPagesUnusedHard(size_t startOffset) {
 }
 
 inline bool js::NurseryChunk::markPagesInUseHard(size_t endOffset) {
-  MOZ_ASSERT(endOffset >= sizeof(ChunkBase));
+  MOZ_ASSERT(endOffset >= NurseryChunkHeaderSize);
   MOZ_ASSERT(endOffset >= SystemPageSize());
   MOZ_ASSERT(endOffset <= ChunkSize);
   uintptr_t start = uintptr_t(this) + SystemPageSize();
@@ -161,8 +165,10 @@ inline bool js::NurseryChunk::markPagesInUseHard(size_t endOffset) {
 }
 
 // static
-inline js::NurseryChunk* js::NurseryChunk::fromChunk(TenuredChunk* chunk) {
-  return reinterpret_cast<NurseryChunk*>(chunk);
+inline js::NurseryChunk* js::NurseryChunk::fromChunk(TenuredChunk* chunk,
+                                                     ChunkKind kind,
+                                                     uint8_t index) {
+  return new (chunk) NurseryChunk(chunk->runtime, kind, index);
 }
 
 js::NurseryDecommitTask::NurseryDecommitTask(gc::GCRuntime* gc)
@@ -217,7 +223,9 @@ void js::NurseryDecommitTask::run(AutoLockHelperThreadState& lock) {
 }
 
 js::Nursery::Nursery(GCRuntime* gc)
-    : gc(gc),
+    : toSpace(ChunkKind::NurseryToSpace),
+      fromSpace(ChunkKind::NurseryFromSpace),
+      gc(gc),
       capacity_(0),
       enableProfiling_(false),
       semispaceEnabled_(gc::TuningDefaults::SemispaceNurseryEnabled),
@@ -372,14 +380,17 @@ bool js::Nursery::initFirstChunk(AutoLockGCBgAlloc& lock) {
   MOZ_ASSERT(toSpace.isEmpty());
   MOZ_ASSERT(fromSpace.isEmpty());
 
-  prevSpace = semispaceEnabled_ ? &fromSpace : &toSpace;
-
   poisonAndInitCurrentChunk();
 
   // Clear any information about previous collections.
   clearRecentGrowthData();
 
   tenureThreshold_ = 0;
+
+#ifdef DEBUG
+  toSpace.checkKind(ChunkKind::NurseryToSpace);
+  fromSpace.checkKind(ChunkKind::NurseryFromSpace);
+#endif
 
   return true;
 }
@@ -414,8 +425,8 @@ void js::Nursery::disable() {
 
   // We must reset currentEnd_ so that there is no space for anything in the
   // nursery. JIT'd code uses this even if the nursery is disabled.
-  toSpace = Space();
-  fromSpace = Space();
+  toSpace = Space(ChunkKind::NurseryToSpace);
+  fromSpace = Space(ChunkKind::NurseryFromSpace);
   MOZ_ASSERT(toSpace.isEmpty());
   MOZ_ASSERT(fromSpace.isEmpty());
 
@@ -1254,7 +1265,7 @@ void js::Nursery::collect(JS::GCOptions options, JS::GCReason reason) {
     // space does not represent data that can be tenured
     MOZ_ASSERT(result.tenuredBytes <=
                (previousGC.nurseryUsedBytes -
-                (sizeof(ChunkBase) * previousGC.nurseryUsedChunkCount)));
+                (NurseryChunkHeaderSize * previousGC.nurseryUsedChunkCount)));
 
     previousGC.reason = reason;
     previousGC.tenuredBytes = result.tenuredBytes;
@@ -1351,7 +1362,7 @@ void js::Nursery::printDeduplicationData(js::StringStats& prev,
 
 void js::Nursery::freeTrailerBlocks(JS::GCOptions options,
                                     JS::GCReason reason) {
-  prevSpace->freeTrailerBlocks(mallocedBlockCache_);
+  fromSpace.freeTrailerBlocks(mallocedBlockCache_);
 
   if (options == JS::GCOptions::Shrink || gc::IsOOMReason(reason)) {
     mallocedBlockCache_.clear();
@@ -1467,11 +1478,10 @@ js::Nursery::CollectionResult js::Nursery::doCollection(AutoGCSession& session,
   mozilla::DebugOnly<AutoEnterOOMUnsafeRegion> oomUnsafeRegion;
 
   // Swap nursery spaces.
+  swapSpaces();
+  MOZ_ASSERT(toSpace.isEmpty());
+  MOZ_ASSERT(toSpace.mallocedBuffers.empty());
   if (semispaceEnabled_) {
-    std::swap(toSpace, fromSpace);
-
-    MOZ_ASSERT(toSpace.isEmpty());
-    MOZ_ASSERT(toSpace.mallocedBuffers.empty());
     poisonAndInitCurrentChunk();
   }
 
@@ -1515,8 +1525,8 @@ js::Nursery::CollectionResult js::Nursery::doCollection(AutoGCSession& session,
 
   // Sweep.
   startProfile(ProfileKey::FreeMallocedBuffers);
-  gc->queueBuffersForFreeAfterMinorGC(prevSpace->mallocedBuffers);
-  prevSpace->mallocedBufferBytes = 0;
+  gc->queueBuffersForFreeAfterMinorGC(fromSpace.mallocedBuffers);
+  fromSpace.mallocedBufferBytes = 0;
   endProfile(ProfileKey::FreeMallocedBuffers);
 
   // Give trailer blocks associated with non-tenured Wasm{Struct,Array}Objects
@@ -1548,9 +1558,25 @@ js::Nursery::CollectionResult js::Nursery::doCollection(AutoGCSession& session,
   if (semispaceEnabled_) {
     // On the next collection, tenure everything before |tenureThreshold_|.
     tenureThreshold_ = toSpace.offsetFromExclusiveAddress(position());
+  } else {
+    // Swap nursery spaces back because we only use one.
+    swapSpaces();
+    MOZ_ASSERT(toSpace.isEmpty());
+  }
+
+  MOZ_ASSERT(fromSpace.isEmpty());
+
+  if (semispaceEnabled_) {
+    poisonAndInitCurrentChunk();
   }
 
   return {mover.getPromotedSize(), mover.getPromotedCells()};
+}
+
+void js::Nursery::swapSpaces() {
+  std::swap(toSpace, fromSpace);
+  toSpace.setKind(ChunkKind::NurseryToSpace);
+  fromSpace.setKind(ChunkKind::NurseryFromSpace);
 }
 
 void js::Nursery::traceRoots(AutoGCSession& session, TenuringTracer& mover) {
@@ -1850,9 +1876,8 @@ void js::Nursery::sweep() {
 }
 
 void js::Nursery::clear() {
-  Space& usedSpace = semispaceEnabled_ ? fromSpace : toSpace;
-  usedSpace.clear(this);
-  MOZ_ASSERT(usedSpace.isEmpty());
+  fromSpace.clear(this);
+  MOZ_ASSERT(fromSpace.isEmpty());
 }
 
 void js::Nursery::Space::clear(Nursery* nursery) {
@@ -1913,7 +1938,8 @@ void js::Nursery::poisonAndInitCurrentChunk() {
   size_t end = isSubChunkMode() ? capacity_ : ChunkSize;
   chunk.poisonRange(start, end, JS_FRESH_NURSERY_PATTERN,
                     MemCheckKind::MakeUndefined);
-  chunk.init(runtime());
+  new (&chunk)
+      NurseryChunk(runtime(), ChunkKind::NurseryToSpace, currentChunk());
 }
 
 void js::Nursery::setCurrentEnd() { toSpace.setCurrentEnd(this); }
@@ -1950,9 +1976,16 @@ bool js::Nursery::allocateNextChunk(AutoLockGCBgAlloc& lock) {
     return false;
   }
 
-  toSpace.chunks_.infallibleAppend(NurseryChunk::fromChunk(toSpaceChunk));
+  uint8_t index = toSpace.chunks_.length();
+  NurseryChunk* nurseryChunk =
+      NurseryChunk::fromChunk(toSpaceChunk, ChunkKind::NurseryToSpace, index);
+  toSpace.chunks_.infallibleAppend(nurseryChunk);
+
   if (semispaceEnabled_) {
-    fromSpace.chunks_.infallibleAppend(NurseryChunk::fromChunk(fromSpaceChunk));
+    MOZ_ASSERT(index == fromSpace.chunks_.length());
+    nurseryChunk = NurseryChunk::fromChunk(fromSpaceChunk,
+                                           ChunkKind::NurseryFromSpace, index);
+    fromSpace.chunks_.infallibleAppend(nurseryChunk);
   }
 
   return true;
@@ -2253,6 +2286,49 @@ void js::Nursery::Space::decommitSubChunkRegion(Nursery* nursery,
   AutoLockHelperThreadState lock;
   nursery->decommitTask->queueRange(newCapacity, chunks_[0], lock);
 }
+
+js::Nursery::Space::Space(gc::ChunkKind kind) : kind(kind) {
+  MOZ_ASSERT(kind == ChunkKind::NurseryFromSpace ||
+             kind == ChunkKind::NurseryToSpace);
+}
+
+void js::Nursery::Space::setKind(ChunkKind newKind) {
+#ifdef DEBUG
+  MOZ_ASSERT(newKind == ChunkKind::NurseryFromSpace ||
+             newKind == ChunkKind::NurseryToSpace);
+  checkKind(kind);
+#endif
+
+  kind = newKind;
+  for (NurseryChunk* chunk : chunks_) {
+    chunk->kind = newKind;
+  }
+
+#ifdef DEBUG
+  checkKind(newKind);
+#endif
+}
+
+#ifdef DEBUG
+void js::Nursery::Space::checkKind(ChunkKind expected) const {
+  MOZ_ASSERT(kind == expected);
+  for (NurseryChunk* chunk : chunks_) {
+    MOZ_ASSERT(chunk->getKind() == expected);
+  }
+}
+#endif
+
+#ifdef DEBUG
+size_t js::Nursery::Space::findChunkIndex(uintptr_t chunkAddr) const {
+  for (size_t i = 0; i < chunks_.length(); i++) {
+    if (uintptr_t(chunks_[i]) == chunkAddr) {
+      return i;
+    }
+  }
+
+  MOZ_CRASH("Nursery chunk not found");
+}
+#endif
 
 gcstats::Statistics& js::Nursery::stats() const { return gc->stats(); }
 

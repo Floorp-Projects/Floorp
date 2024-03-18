@@ -82,28 +82,61 @@ const size_t ArenaBitmapBits = ArenaSize / CellBytesPerMarkBit;
 const size_t ArenaBitmapBytes = HowMany(ArenaBitmapBits, 8);
 const size_t ArenaBitmapWords = HowMany(ArenaBitmapBits, JS_BITS_PER_WORD);
 
+enum class ChunkKind : uint8_t {
+  Invalid = 0,
+  TenuredHeap,
+  NurseryToSpace,
+  NurseryFromSpace
+};
+
 // The base class for all GC chunks, either in the nursery or in the tenured
 // heap memory. This structure is locatable from any GC pointer by aligning to
 // the chunk size.
-class alignas(CellAlignBytes) ChunkBase {
+class ChunkBase {
  protected:
-  ChunkBase(JSRuntime* rt, StoreBuffer* sb) {
+  // Initialize a tenured heap chunk.
+  explicit ChunkBase(JSRuntime* rt) {
     MOZ_ASSERT((uintptr_t(this) & ChunkMask) == 0);
-    initBase(rt, sb);
+    initBaseForTenuredChunk(rt);
   }
 
-  void initBase(JSRuntime* rt, StoreBuffer* sb) {
+  void initBaseForTenuredChunk(JSRuntime* rt) {
     runtime = rt;
-    storeBuffer = sb;
+    storeBuffer = nullptr;
+    kind = ChunkKind::TenuredHeap;
+    nurseryChunkIndex = UINT8_MAX;
+  }
+
+  // Initialize a nursery chunk.
+  ChunkBase(JSRuntime* rt, StoreBuffer* sb, ChunkKind kind, uint8_t chunkIndex)
+      : storeBuffer(sb),
+        runtime(rt),
+        kind(kind),
+        nurseryChunkIndex(chunkIndex) {
+    MOZ_ASSERT(kind == ChunkKind::NurseryFromSpace ||
+               kind == ChunkKind::NurseryToSpace);
+    MOZ_ASSERT((uintptr_t(this) & ChunkMask) == 0);
+    MOZ_ASSERT(storeBuffer);
   }
 
  public:
+  ChunkKind getKind() const {
+    MOZ_ASSERT_IF(storeBuffer, kind == ChunkKind::NurseryToSpace ||
+                                   kind == ChunkKind::NurseryFromSpace);
+    MOZ_ASSERT_IF(!storeBuffer, kind == ChunkKind::TenuredHeap);
+    return kind;
+  }
+
   // The store buffer for pointers from tenured things to things in this
   // chunk. Will be non-null if and only if this is a nursery chunk.
   StoreBuffer* storeBuffer;
 
   // Provide quick access to the runtime from absolutely anywhere.
   JSRuntime* runtime;
+
+  ChunkKind kind;
+
+  uint8_t nurseryChunkIndex;
 };
 
 // Information about tenured heap chunks.
@@ -234,7 +267,7 @@ class TenuredChunkBase : public ChunkBase {
   ChunkPageBitmap decommittedPages;
 
  protected:
-  explicit TenuredChunkBase(JSRuntime* runtime) : ChunkBase(runtime, nullptr) {
+  explicit TenuredChunkBase(JSRuntime* runtime) : ChunkBase(runtime) {
     info.numArenasFree = ArenasPerChunk;
   }
 
@@ -523,6 +556,7 @@ static MOZ_ALWAYS_INLINE ChunkBase* GetCellChunkBase(const Cell* cell) {
   MOZ_ASSERT(cell);
   auto* chunk = reinterpret_cast<ChunkBase*>(uintptr_t(cell) & ~ChunkMask);
   MOZ_ASSERT(chunk->runtime);
+  MOZ_ASSERT(chunk->kind != ChunkKind::Invalid);
   return chunk;
 }
 
@@ -532,6 +566,7 @@ static MOZ_ALWAYS_INLINE TenuredChunkBase* GetCellChunkBase(
   auto* chunk =
       reinterpret_cast<TenuredChunkBase*>(uintptr_t(cell) & ~ChunkMask);
   MOZ_ASSERT(chunk->runtime);
+  MOZ_ASSERT(chunk->kind == ChunkKind::TenuredHeap);
   return chunk;
 }
 
