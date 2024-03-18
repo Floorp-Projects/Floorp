@@ -7846,6 +7846,11 @@ static GdkCursor* get_gtk_cursor_from_type(uint8_t aCursorType) {
   GdkDisplay* defaultDisplay = gdk_display_get_default();
   GdkCursor* gdkcursor = nullptr;
 
+  // GtkCursors are defined at nsGtkCursors.h
+  if (aCursorType > MOZ_CURSOR_NONE) {
+    return nullptr;
+  }
+
   // If by now we don't have a xcursor, this means we have to make a custom
   // one. First, we try creating a named cursor based on the hash of our
   // custom bitmap, as libXcursor has some magic to convert bitmapped cursors
@@ -7899,7 +7904,7 @@ static GdkCursor* get_gtk_cursor_from_type(uint8_t aCursorType) {
 
 static GdkCursor* get_gtk_cursor_legacy(nsCursor aCursor) {
   GdkCursor* gdkcursor = nullptr;
-  uint8_t newType = 0xff;
+  Maybe<uint8_t> fallbackType;
 
   GdkDisplay* defaultDisplay = gdk_display_get_default();
 
@@ -7959,15 +7964,15 @@ static GdkCursor* get_gtk_cursor_legacy(nsCursor aCursor) {
       break;
     case eCursor_copy:  // CSS3
       gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "copy");
-      if (!gdkcursor) newType = MOZ_CURSOR_COPY;
+      if (!gdkcursor) fallbackType.emplace(MOZ_CURSOR_COPY);
       break;
     case eCursor_alias:
       gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "alias");
-      if (!gdkcursor) newType = MOZ_CURSOR_ALIAS;
+      if (!gdkcursor) fallbackType.emplace(MOZ_CURSOR_ALIAS);
       break;
     case eCursor_context_menu:
       gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "context-menu");
-      if (!gdkcursor) newType = MOZ_CURSOR_CONTEXT_MENU;
+      if (!gdkcursor) fallbackType.emplace(MOZ_CURSOR_CONTEXT_MENU);
       break;
     case eCursor_cell:
       gdkcursor = gdk_cursor_new_for_display(defaultDisplay, GDK_PLUS);
@@ -7975,33 +7980,33 @@ static GdkCursor* get_gtk_cursor_legacy(nsCursor aCursor) {
     // Those two aren’t standardized. Trying both KDE’s and GNOME’s names
     case eCursor_grab:
       gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "openhand");
-      if (!gdkcursor) newType = MOZ_CURSOR_HAND_GRAB;
+      if (!gdkcursor) fallbackType.emplace(MOZ_CURSOR_HAND_GRAB);
       break;
     case eCursor_grabbing:
       gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "closedhand");
       if (!gdkcursor) {
         gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "grabbing");
       }
-      if (!gdkcursor) newType = MOZ_CURSOR_HAND_GRABBING;
+      if (!gdkcursor) fallbackType.emplace(MOZ_CURSOR_HAND_GRABBING);
       break;
     case eCursor_spinning:
       gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "progress");
-      if (!gdkcursor) newType = MOZ_CURSOR_SPINNING;
+      if (!gdkcursor) fallbackType.emplace(MOZ_CURSOR_SPINNING);
       break;
     case eCursor_zoom_in:
       gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "zoom-in");
-      if (!gdkcursor) newType = MOZ_CURSOR_ZOOM_IN;
+      if (!gdkcursor) fallbackType.emplace(MOZ_CURSOR_ZOOM_IN);
       break;
     case eCursor_zoom_out:
       gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "zoom-out");
-      if (!gdkcursor) newType = MOZ_CURSOR_ZOOM_OUT;
+      if (!gdkcursor) fallbackType.emplace(MOZ_CURSOR_ZOOM_OUT);
       break;
     case eCursor_not_allowed:
       gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "not-allowed");
       if (!gdkcursor) {  // nonstandard, yet common
         gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "crossed_circle");
       }
-      if (!gdkcursor) newType = MOZ_CURSOR_NOT_ALLOWED;
+      if (!gdkcursor) fallbackType.emplace(MOZ_CURSOR_NOT_ALLOWED);
       break;
     case eCursor_no_drop:
       gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "no-drop");
@@ -8012,12 +8017,12 @@ static GdkCursor* get_gtk_cursor_legacy(nsCursor aCursor) {
       if (!gdkcursor) {
         gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "circle");
       }
-      if (!gdkcursor) newType = MOZ_CURSOR_NOT_ALLOWED;
+      if (!gdkcursor) fallbackType.emplace(MOZ_CURSOR_NOT_ALLOWED);
       break;
     case eCursor_vertical_text:
       gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "vertical-text");
       if (!gdkcursor) {
-        newType = MOZ_CURSOR_VERTICAL_TEXT;
+        fallbackType.emplace(MOZ_CURSOR_VERTICAL_TEXT);
       }
       break;
     case eCursor_all_scroll:
@@ -8025,11 +8030,11 @@ static GdkCursor* get_gtk_cursor_legacy(nsCursor aCursor) {
       break;
     case eCursor_nesw_resize:
       gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "size_bdiag");
-      if (!gdkcursor) newType = MOZ_CURSOR_NESW_RESIZE;
+      if (!gdkcursor) fallbackType.emplace(MOZ_CURSOR_NESW_RESIZE);
       break;
     case eCursor_nwse_resize:
       gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "size_fdiag");
-      if (!gdkcursor) newType = MOZ_CURSOR_NWSE_RESIZE;
+      if (!gdkcursor) fallbackType.emplace(MOZ_CURSOR_NWSE_RESIZE);
       break;
     case eCursor_ns_resize:
       gdkcursor =
@@ -8056,7 +8061,7 @@ static GdkCursor* get_gtk_cursor_legacy(nsCursor aCursor) {
       }
       break;
     case eCursor_none:
-      newType = MOZ_CURSOR_NONE;
+      fallbackType.emplace(MOZ_CURSOR_NONE);
       break;
     default:
       NS_ASSERTION(aCursor, "Invalid cursor type");
@@ -8064,10 +8069,10 @@ static GdkCursor* get_gtk_cursor_legacy(nsCursor aCursor) {
       break;
   }
 
-  if (!gdkcursor) {
+  if (!gdkcursor && fallbackType.isSome()) {
     LOGW("get_gtk_cursor_legacy(): Failed to get cursor %d, try fallback",
          aCursor);
-    gdkcursor = get_gtk_cursor_from_type(newType);
+    gdkcursor = get_gtk_cursor_from_type(*fallbackType);
   }
 
   return gdkcursor;
@@ -8075,7 +8080,7 @@ static GdkCursor* get_gtk_cursor_legacy(nsCursor aCursor) {
 
 static GdkCursor* get_gtk_cursor_from_name(nsCursor aCursor) {
   GdkCursor* gdkcursor = nullptr;
-  uint8_t newType = 0xff;
+  Maybe<uint8_t> fallbackType;
 
   GdkDisplay* defaultDisplay = gdk_display_get_default();
 
@@ -8127,42 +8132,42 @@ static GdkCursor* get_gtk_cursor_from_name(nsCursor aCursor) {
       break;
     case eCursor_copy:
       gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "copy");
-      if (!gdkcursor) newType = MOZ_CURSOR_COPY;
+      if (!gdkcursor) fallbackType.emplace(MOZ_CURSOR_COPY);
       break;
     case eCursor_alias:
       gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "alias");
-      if (!gdkcursor) newType = MOZ_CURSOR_ALIAS;
+      if (!gdkcursor) fallbackType.emplace(MOZ_CURSOR_ALIAS);
       break;
     case eCursor_context_menu:
       gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "context-menu");
-      if (!gdkcursor) newType = MOZ_CURSOR_CONTEXT_MENU;
+      if (!gdkcursor) fallbackType.emplace(MOZ_CURSOR_CONTEXT_MENU);
       break;
     case eCursor_cell:
       gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "cell");
       break;
     case eCursor_grab:
       gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "grab");
-      if (!gdkcursor) newType = MOZ_CURSOR_HAND_GRAB;
+      if (!gdkcursor) fallbackType.emplace(MOZ_CURSOR_HAND_GRAB);
       break;
     case eCursor_grabbing:
       gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "grabbing");
-      if (!gdkcursor) newType = MOZ_CURSOR_HAND_GRABBING;
+      if (!gdkcursor) fallbackType.emplace(MOZ_CURSOR_HAND_GRABBING);
       break;
     case eCursor_spinning:
       gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "progress");
-      if (!gdkcursor) newType = MOZ_CURSOR_SPINNING;
+      if (!gdkcursor) fallbackType.emplace(MOZ_CURSOR_SPINNING);
       break;
     case eCursor_zoom_in:
       gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "zoom-in");
-      if (!gdkcursor) newType = MOZ_CURSOR_ZOOM_IN;
+      if (!gdkcursor) fallbackType.emplace(MOZ_CURSOR_ZOOM_IN);
       break;
     case eCursor_zoom_out:
       gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "zoom-out");
-      if (!gdkcursor) newType = MOZ_CURSOR_ZOOM_OUT;
+      if (!gdkcursor) fallbackType.emplace(MOZ_CURSOR_ZOOM_OUT);
       break;
     case eCursor_not_allowed:
       gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "not-allowed");
-      if (!gdkcursor) newType = MOZ_CURSOR_NOT_ALLOWED;
+      if (!gdkcursor) fallbackType.emplace(MOZ_CURSOR_NOT_ALLOWED);
       break;
     case eCursor_no_drop:
       gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "no-drop");
@@ -8173,12 +8178,12 @@ static GdkCursor* get_gtk_cursor_from_name(nsCursor aCursor) {
       if (!gdkcursor) {
         gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "circle");
       }
-      if (!gdkcursor) newType = MOZ_CURSOR_NOT_ALLOWED;
+      if (!gdkcursor) fallbackType.emplace(MOZ_CURSOR_NOT_ALLOWED);
       break;
     case eCursor_vertical_text:
       gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "vertical-text");
       if (!gdkcursor) {
-        newType = MOZ_CURSOR_VERTICAL_TEXT;
+        fallbackType.emplace(MOZ_CURSOR_VERTICAL_TEXT);
       }
       break;
     case eCursor_all_scroll:
@@ -8186,11 +8191,11 @@ static GdkCursor* get_gtk_cursor_from_name(nsCursor aCursor) {
       break;
     case eCursor_nesw_resize:
       gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "nesw-resize");
-      if (!gdkcursor) newType = MOZ_CURSOR_NESW_RESIZE;
+      if (!gdkcursor) fallbackType.emplace(MOZ_CURSOR_NESW_RESIZE);
       break;
     case eCursor_nwse_resize:
       gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "nwse-resize");
-      if (!gdkcursor) newType = MOZ_CURSOR_NWSE_RESIZE;
+      if (!gdkcursor) fallbackType.emplace(MOZ_CURSOR_NWSE_RESIZE);
       break;
     case eCursor_ns_resize:
       gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "ns-resize");
@@ -8206,7 +8211,7 @@ static GdkCursor* get_gtk_cursor_from_name(nsCursor aCursor) {
       break;
     case eCursor_none:
       gdkcursor = gdk_cursor_new_from_name(defaultDisplay, "none");
-      if (!gdkcursor) newType = MOZ_CURSOR_NONE;
+      if (!gdkcursor) fallbackType.emplace(MOZ_CURSOR_NONE);
       break;
     default:
       NS_ASSERTION(aCursor, "Invalid cursor type");
@@ -8214,10 +8219,10 @@ static GdkCursor* get_gtk_cursor_from_name(nsCursor aCursor) {
       break;
   }
 
-  if (!gdkcursor) {
+  if (!gdkcursor && fallbackType.isSome()) {
     LOGW("get_gtk_cursor_from_name(): Failed to get cursor %d, try fallback",
          aCursor);
-    gdkcursor = get_gtk_cursor_from_type(newType);
+    gdkcursor = get_gtk_cursor_from_type(*fallbackType);
   }
 
   return gdkcursor;
