@@ -167,9 +167,6 @@ bool nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
   ElementState elementState = GetContentState(aFrame, aAppearance);
   if (aState) {
     memset(aState, 0, sizeof(GtkWidgetState));
-
-    // For XUL checkboxes and radio buttons, the state of the parent
-    // determines our state.
     if (aWidgetFlags) {
       if (elementState.HasState(ElementState::CHECKED)) {
         *aWidgetFlags |= MOZ_GTK_WIDGET_CHECKED;
@@ -241,7 +238,8 @@ bool nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
         aAppearance == StyleAppearance::MozWindowButtonMinimize ||
         aAppearance == StyleAppearance::MozWindowButtonMaximize ||
         aAppearance == StyleAppearance::MozWindowButtonRestore) {
-      aState->backdrop = !nsWindow::GetTopLevelWindowActiveState(aFrame);
+      aState->backdrop = !aFrame->PresContext()->Document()->State().HasState(
+          dom::DocumentState::WINDOW_INACTIVE);
     }
   }
 
