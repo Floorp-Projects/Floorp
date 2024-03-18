@@ -556,11 +556,30 @@ already_AddRefed<Path> SVGPathData::BuildPathForMeasuring(
   return BuildPath(aPath, builder, StyleStrokeLinecap::Butt, 0);
 }
 
+static inline StyleCSSFloat GetRotate(const StyleCSSFloat& aAngle) {
+  return aAngle;
+}
+
+static inline StyleCSSFloat GetRotate(const StyleAngle& aAngle) {
+  return aAngle.ToDegrees();
+}
+
+static inline StyleCSSFloat Resolve(const StyleCSSFloat& aValue,
+                                    CSSCoord aBasis) {
+  return aValue;
+}
+
+static inline StyleCSSFloat Resolve(const LengthPercentage& aValue,
+                                    CSSCoord aBasis) {
+  return aValue.ResolveToCSSPixels(aBasis);
+}
+
 template <typename Angle, typename LP>
 static already_AddRefed<Path> BuildPathInternal(
     Span<const StyleGenericShapeCommand<Angle, LP>> aPath,
     PathBuilder* aBuilder, StyleStrokeLinecap aStrokeLineCap,
-    Float aStrokeWidth, const Point& aOffset, float aZoomFactor) {
+    Float aStrokeWidth, const CSSSize& aPercentageBasis, const Point& aOffset,
+    float aZoomFactor) {
   using Command = StyleGenericShapeCommand<Angle, LP>;
 
   if (aPath.IsEmpty() || !aPath[0].IsMove()) {
@@ -609,14 +628,14 @@ static already_AddRefed<Path> BuildPathInternal(
         break;
       case Command::Tag::Move: {
         maybeApproximateZeroLengthSubpathSquareCaps(prevSeg, seg);
-        const Point& p = cmd.move.point.ToGfxPoint();
+        const Point& p = cmd.move.point.ToGfxPoint(aPercentageBasis);
         pathStart = segEnd = cmd.move.by_to == StyleByTo::To ? p : segStart + p;
         aBuilder->MoveTo(scale(segEnd));
         subpathHasLength = false;
         break;
       }
       case Command::Tag::Line: {
-        const Point& p = cmd.line.point.ToGfxPoint();
+        const Point& p = cmd.line.point.ToGfxPoint(aPercentageBasis);
         segEnd = cmd.line.by_to == StyleByTo::To ? p : segStart + p;
         if (segEnd != segStart) {
           subpathHasLength = true;
@@ -625,9 +644,9 @@ static already_AddRefed<Path> BuildPathInternal(
         break;
       }
       case Command::Tag::CubicCurve:
-        cp1 = cmd.cubic_curve.control1.ToGfxPoint();
-        cp2 = cmd.cubic_curve.control2.ToGfxPoint();
-        segEnd = cmd.cubic_curve.point.ToGfxPoint();
+        cp1 = cmd.cubic_curve.control1.ToGfxPoint(aPercentageBasis);
+        cp2 = cmd.cubic_curve.control2.ToGfxPoint(aPercentageBasis);
+        segEnd = cmd.cubic_curve.point.ToGfxPoint(aPercentageBasis);
 
         if (cmd.cubic_curve.by_to == StyleByTo::By) {
           cp1 += segStart;
@@ -642,8 +661,8 @@ static already_AddRefed<Path> BuildPathInternal(
         break;
 
       case Command::Tag::QuadCurve:
-        cp1 = cmd.quad_curve.control1.ToGfxPoint();
-        segEnd = cmd.quad_curve.point.ToGfxPoint();
+        cp1 = cmd.quad_curve.control1.ToGfxPoint(aPercentageBasis);
+        segEnd = cmd.quad_curve.point.ToGfxPoint(aPercentageBasis);
 
         if (cmd.quad_curve.by_to == StyleByTo::By) {
           cp1 += segStart;
@@ -662,8 +681,8 @@ static already_AddRefed<Path> BuildPathInternal(
 
       case Command::Tag::Arc: {
         const auto& arc = cmd.arc;
-        const Point& radii = arc.radii.ToGfxPoint();
-        segEnd = arc.point.ToGfxPoint();
+        const Point& radii = arc.radii.ToGfxPoint(aPercentageBasis);
+        segEnd = arc.point.ToGfxPoint(aPercentageBasis);
         if (arc.by_to == StyleByTo::By) {
           segEnd += segStart;
         }
@@ -674,8 +693,9 @@ static already_AddRefed<Path> BuildPathInternal(
           } else {
             const bool arc_is_large = arc.arc_size == StyleArcSize::Large;
             const bool arc_is_cw = arc.arc_sweep == StyleArcSweep::Cw;
-            SVGArcConverter converter(segStart, segEnd, radii, arc.rotate,
-                                      arc_is_large, arc_is_cw);
+            SVGArcConverter converter(segStart, segEnd, radii,
+                                      GetRotate(arc.rotate), arc_is_large,
+                                      arc_is_cw);
             while (converter.GetNextSegment(&cp1, &cp2, &segEnd)) {
               aBuilder->BezierTo(scale(cp1), scale(cp2), scale(segEnd));
             }
@@ -683,11 +703,12 @@ static already_AddRefed<Path> BuildPathInternal(
         }
         break;
       }
-      case Command::Tag::HLine:
+      case Command::Tag::HLine: {
+        const float x = Resolve(cmd.h_line.x, aPercentageBasis.width);
         if (cmd.h_line.by_to == StyleByTo::To) {
-          segEnd = Point(cmd.h_line.x, segStart.y);
+          segEnd = Point(x, segStart.y);
         } else {
-          segEnd = segStart + Point(cmd.h_line.x, 0.0f);
+          segEnd = segStart + Point(x, 0.0f);
         }
 
         if (segEnd != segStart) {
@@ -695,12 +716,13 @@ static already_AddRefed<Path> BuildPathInternal(
           aBuilder->LineTo(scale(segEnd));
         }
         break;
-
-      case Command::Tag::VLine:
+      }
+      case Command::Tag::VLine: {
+        const float y = Resolve(cmd.v_line.y, aPercentageBasis.height);
         if (cmd.v_line.by_to == StyleByTo::To) {
-          segEnd = Point(segStart.x, cmd.v_line.y);
+          segEnd = Point(segStart.x, y);
         } else {
-          segEnd = segStart + Point(0.0f, cmd.v_line.y);
+          segEnd = segStart + Point(0.0f, y);
         }
 
         if (segEnd != segStart) {
@@ -708,11 +730,11 @@ static already_AddRefed<Path> BuildPathInternal(
           aBuilder->LineTo(scale(segEnd));
         }
         break;
-
+      }
       case Command::Tag::SmoothCubic:
         cp1 = prevSeg && prevSeg->IsCubicType() ? segStart * 2 - cp2 : segStart;
-        cp2 = cmd.smooth_cubic.control2.ToGfxPoint();
-        segEnd = cmd.smooth_cubic.point.ToGfxPoint();
+        cp2 = cmd.smooth_cubic.control2.ToGfxPoint(aPercentageBasis);
+        segEnd = cmd.smooth_cubic.point.ToGfxPoint(aPercentageBasis);
 
         if (cmd.smooth_cubic.by_to == StyleByTo::By) {
           cp2 += segStart;
@@ -731,7 +753,7 @@ static already_AddRefed<Path> BuildPathInternal(
         // Convert quadratic curve to cubic curve:
         tcp1 = segStart + (cp1 - segStart) * 2 / 3;
 
-        const Point& p = cmd.smooth_quad.point.ToGfxPoint();
+        const Point& p = cmd.smooth_quad.point.ToGfxPoint(aPercentageBasis);
         // set before setting tcp2!
         segEnd = cmd.smooth_quad.by_to == StyleByTo::To ? p : segStart + p;
         tcp2 = cp1 + (segEnd - cp1) / 3;
@@ -756,16 +778,22 @@ static already_AddRefed<Path> BuildPathInternal(
   return aBuilder->Finish();
 }
 
-// We could simplify this function because this is only used by CSS motion path
-// and clip-path, which don't render the SVG Path. i.e. The returned path is
-// used as a reference.
 /* static */
 already_AddRefed<Path> SVGPathData::BuildPath(
     Span<const StylePathCommand> aPath, PathBuilder* aBuilder,
     StyleStrokeLinecap aStrokeLineCap, Float aStrokeWidth,
-    const gfx::Point& aOffset, float aZoomFactor) {
+    const CSSSize& aBasis, const gfx::Point& aOffset, float aZoomFactor) {
   return BuildPathInternal(aPath, aBuilder, aStrokeLineCap, aStrokeWidth,
-                           aOffset, aZoomFactor);
+                           aBasis, aOffset, aZoomFactor);
+}
+
+/* static */
+already_AddRefed<Path> SVGPathData::BuildPath(
+    Span<const StyleShapeCommand> aShape, PathBuilder* aBuilder,
+    StyleStrokeLinecap aStrokeLineCap, Float aStrokeWidth,
+    const CSSSize& aBasis, const gfx::Point& aOffset, float aZoomFactor) {
+  return BuildPathInternal(aShape, aBuilder, aStrokeLineCap, aStrokeWidth,
+                           aBasis, aOffset, aZoomFactor);
 }
 
 static double AngleOfVector(const Point& aVector) {

@@ -1202,8 +1202,17 @@ inline nsRect StyleZoom::Unzoom(const nsRect& aValue) const {
 }
 
 template <>
-inline gfx::Point StyleCoordinatePair<StyleCSSFloat>::ToGfxPoint() const {
+inline gfx::Point StyleCoordinatePair<StyleCSSFloat>::ToGfxPoint(
+    const CSSSize* aBasis) const {
   return gfx::Point(x, y);
+}
+
+template <>
+inline gfx::Point StyleCoordinatePair<LengthPercentage>::ToGfxPoint(
+    const CSSSize* aBasis) const {
+  MOZ_ASSERT(aBasis);
+  return gfx::Point(x.ResolveToCSSPixels(aBasis->Width()),
+                    y.ResolveToCSSPixels(aBasis->Height()));
 }
 
 }  // namespace mozilla

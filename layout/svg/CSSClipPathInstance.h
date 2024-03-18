@@ -58,6 +58,9 @@ class MOZ_STACK_CLASS CSSClipPathInstance {
   already_AddRefed<Path> CreateClipPathPath(DrawTarget* aDrawTarget,
                                             const nsRect& aRefBox);
 
+  already_AddRefed<Path> CreateClipPathShape(DrawTarget* aDrawTarget,
+                                             const nsRect& aRefBox);
+
   /**
    * The frame for the element that is currently being clipped.
    */

@@ -214,6 +214,7 @@ include = [
   "BasicShape",
   "InsetRect",
   "ShapeRadius",
+  "ShapeCommand",
   "ArcSlice",
   "ForgottenArcSlicePtr",
   "HeaderWithLength",
@@ -758,7 +759,10 @@ renaming_overrides_prefixing = true
 """
 
 "CoordinatePair" = """
-  inline gfx::Point ToGfxPoint() const;
+  inline gfx::Point ToGfxPoint(const CSSSize* aBasis = nullptr) const;
+  gfx::Point ToGfxPoint(const CSSSize& aBasis) const {
+    return ToGfxPoint(&aBasis);
+  };
 """
 
 "TextOverflow" = """
