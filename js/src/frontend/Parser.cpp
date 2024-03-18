@@ -845,7 +845,7 @@ bool GeneralParser<ParseHandler, Unit>::noteDeclaredPrivateName(
       kind = PrivateNameKind::Setter;
       break;
     default:
-      kind = PrivateNameKind::None;
+      MOZ_CRASH("Invalid Property Type for noteDeclarePrivateName");
   }
 
   if (p) {
