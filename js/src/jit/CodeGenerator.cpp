@@ -4205,13 +4205,23 @@ void CodeGenerator::visitGuardShape(LGuardShape* guard) {
 }
 
 void CodeGenerator::visitGuardFuse(LGuardFuse* guard) {
+  auto fuseIndex = guard->mir()->fuseIndex();
+  switch (fuseIndex) {
+    case RealmFuses::FuseIndex::OptimizeGetIteratorFuse:
+      addOptimizeGetIteratorFuseDependency();
+      return;
+    default:
+      // validateAndRegisterFuseDependencies doesn't have
+      // handling for this yet, actively check fuse instead.
+      break;
+  }
+
   Register temp = ToRegister(guard->temp0());
   Label bail;
 
   // Bake specific fuse address for Ion code, because we won't share this code
   // across realms.
-  GuardFuse* fuse =
-      mirGen().realm->realmFuses().getFuseByIndex(guard->mir()->fuseIndex());
+  GuardFuse* fuse = mirGen().realm->realmFuses().getFuseByIndex(fuseIndex);
   masm.loadPtr(AbsoluteAddress(fuse->fuseRef()), temp);
   masm.branchPtr(Assembler::NotEqual, temp, ImmPtr(nullptr), &bail);
 
@@ -15447,15 +15457,37 @@ void CodeGenerator::validateAndRegisterFuseDependencies(JSContext* cx,
 
         if (!hasSeenObjectEmulateUndefinedFuse.intact()) {
           JitSpew(JitSpew_Codegen,
-                  "tossing compilation; fuse dependency no longer valid\n");
+                  "tossing compilation; hasSeenObjectEmulateUndefinedFuse fuse "
+                  "dependency no longer valid\n");
           *isValid = false;
           return;
         }
 
         if (!hasSeenObjectEmulateUndefinedFuse.addFuseDependency(cx, script)) {
-          JitSpew(
-              JitSpew_Codegen,
-              "tossing compilation; failed to register script dependency\n");
+          JitSpew(JitSpew_Codegen,
+                  "tossing compilation; failed to register "
+                  "hasSeenObjectEmulateUndefinedFuse script dependency\n");
+          *isValid = false;
+          return;
+        }
+        break;
+      }
+
+      case FuseDependencyKind::OptimizeGetIteratorFuse: {
+        auto& optimizeGetIteratorFuse =
+            cx->realm()->realmFuses.optimizeGetIteratorFuse;
+        if (!optimizeGetIteratorFuse.intact()) {
+          JitSpew(JitSpew_Codegen,
+                  "tossing compilation; optimizeGetIteratorFuse fuse "
+                  "dependency no longer valid\n");
+          *isValid = false;
+          return;
+        }
+
+        if (!optimizeGetIteratorFuse.addFuseDependency(cx, script)) {
+          JitSpew(JitSpew_Codegen,
+                  "tossing compilation; failed to register "
+                  "optimizeGetIteratorFuse script dependency\n");
           *isValid = false;
           return;
         }
