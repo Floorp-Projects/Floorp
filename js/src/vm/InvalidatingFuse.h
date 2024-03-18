@@ -10,7 +10,7 @@
 #include "gc/Barrier.h"
 #include "gc/SweepingAPI.h"
 #include "vm/GuardFuse.h"
-class JSScript;
+#include "vm/JSScript.h"
 
 namespace js {
 
@@ -40,6 +40,10 @@ class InvalidatingRuntimeFuse : public InvalidatingFuse {
 
 // A (weak) set of scripts which are dependent on an associated fuse.
 //
+// These are typically stored in a vector at the moment, due to the low number
+// of invalidating fuses, and so the associated fuse is stored along with the
+// set.
+//
 // Because it uses JS::WeakCache, GC tracing is taken care of without any need
 // for tracing in this class.
 class DependentScriptSet {
@@ -55,24 +59,6 @@ class DependentScriptSet {
                                   StableCellHasher<WeakHeapPtr<JSScript*>>,
                                   js::SystemAllocPolicy>;
   js::WeakCache<WeakScriptSet> weakScripts;
-};
-
-class DependentScriptGroup {
-  // A dependent script set pairs a fuse with a set of scripts which depend
-  // on said fuse; this is a vector of script sets because the expectation for
-  // now is that the number of runtime wide invalidating fuses will be small.
-  // This will need to be revisited (convert to HashMap?) should that no
-  // longer be the case
-  //
-  // Note: This isn't  traced through the zone, but rather through the use
-  // of JS::WeakCache.
-  Vector<DependentScriptSet, 1, SystemAllocPolicy> dependencies;
-
- public:
-  DependentScriptSet* getOrCreateDependentScriptSet(JSContext* cx,
-                                                    InvalidatingFuse* fuse);
-  DependentScriptSet* begin() { return dependencies.begin(); }
-  DependentScriptSet* end() { return dependencies.end(); }
 };
 
 }  // namespace js

@@ -11,27 +11,6 @@
 #include "vm/Realm.h"
 #include "vm/SelfHosting.h"
 
-void js::InvalidatingRealmFuse::popFuse(JSContext* cx, RealmFuses& realmFuses) {
-  InvalidatingFuse::popFuse(cx);
-
-  for (auto& fd : realmFuses.fuseDependencies) {
-    fd.invalidateForFuse(cx, this);
-  }
-}
-
-bool js::InvalidatingRealmFuse::addFuseDependency(JSContext* cx,
-                                                  Handle<JSScript*> script) {
-  MOZ_ASSERT(script->realm() == cx->realm());
-  auto* dss =
-      cx->realm()->realmFuses.fuseDependencies.getOrCreateDependentScriptSet(
-          cx, this);
-  if (!dss) {
-    return false;
-  }
-
-  return dss->addScriptForFuse(this, script);
-}
-
 void js::PopsOptimizedGetIteratorFuse::popFuse(JSContext* cx,
                                                RealmFuses& realmFuses) {
   // Pop Self.

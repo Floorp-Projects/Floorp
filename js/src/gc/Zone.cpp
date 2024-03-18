@@ -981,3 +981,20 @@ bool Zone::registerObjectWithWeakPointers(JSObject* obj) {
   MOZ_ASSERT(!IsInsideNursery(obj));
   return objectsWithWeakPointers.ref().append(obj);
 }
+
+js::DependentScriptSet* Zone::getOrCreateDependentScriptSet(
+    JSContext* cx, js::InvalidatingFuse* fuse) {
+  for (auto& dss : fuseDependencies) {
+    if (dss.associatedFuse == fuse) {
+      return &dss;
+    }
+  }
+
+  if (!fuseDependencies.emplaceBack(cx, fuse)) {
+    return nullptr;
+  }
+
+  auto& dss = fuseDependencies.back();
+  MOZ_ASSERT(dss.associatedFuse == fuse);
+  return &dss;
+}
