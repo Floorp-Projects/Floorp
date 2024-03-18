@@ -99,15 +99,8 @@ class Nursery {
 
   // Check whether an arbitrary pointer is within the nursery. This is
   // slower than IsInsideNursery(Cell*), but works on all types of pointers.
-  MOZ_ALWAYS_INLINE bool isInside(gc::Cell* cellp) const = delete;
-  MOZ_ALWAYS_INLINE bool isInside(const void* p) const {
-    for (auto* chunk : chunks_) {
-      if (uintptr_t(p) - uintptr_t(chunk) < gc::ChunkSize) {
-        return true;
-      }
-    }
-    return false;
-  }
+  bool isInside(gc::Cell* cellp) const = delete;
+  inline bool isInside(const void* p) const;
 
   template <typename T>
   inline bool isInside(const SharedMem<T>& p) const;
@@ -273,22 +266,6 @@ class Nursery {
     return std::min(capacity_, allocatedChunkCount() * gc::ChunkSize);
   }
 
-  // Used and free space both include chunk headers for that part of the
-  // nursery.
-  //
-  // usedSpace() + freeSpace() == capacity()
-  //
-  MOZ_ALWAYS_INLINE size_t usedSpace() const {
-    return capacity() - freeSpace();
-  }
-  MOZ_ALWAYS_INLINE size_t freeSpace() const {
-    MOZ_ASSERT(isEnabled());
-    MOZ_ASSERT(currentEnd_ - position_ <= NurseryChunkUsableSize);
-    MOZ_ASSERT(currentChunk_ < maxChunkCount());
-    return (currentEnd_ - position_) +
-           (maxChunkCount() - currentChunk_ - 1) * gc::ChunkSize;
-  }
-
 #ifdef JS_GC_ZEAL
   void enterZealMode();
   void leaveZealMode();
@@ -303,9 +280,10 @@ class Nursery {
   // Print total profile times on shutdown.
   void printTotalProfileTimes();
 
-  void* addressOfPosition() const { return (void**)&position_; }
+  void* addressOfPosition() const { return (void**)&toSpace.position_; }
   static constexpr int32_t offsetOfCurrentEndFromPosition() {
-    return offsetof(Nursery, currentEnd_) - offsetof(Nursery, position_);
+    return offsetof(Nursery, toSpace.currentEnd_) -
+           offsetof(Nursery, toSpace.position_);
   }
 
   void* addressOfNurseryAllocatedSites() {
@@ -365,6 +343,8 @@ class Nursery {
   mozilla::TimeStamp lastCollectionEndTime() const;
 
  private:
+  struct Space;
+
   enum class ProfileKey {
 #define DEFINE_TIME_KEY(name, text) name,
     FOR_EACH_NURSERY_PROFILE_TIME(DEFINE_TIME_KEY)
@@ -378,16 +358,33 @@ class Nursery {
       mozilla::EnumeratedArray<ProfileKey, mozilla::TimeDuration,
                                size_t(ProfileKey::KeyCount)>;
 
-  // Number of allocated (ready to use) chunks.
-  unsigned allocatedChunkCount() const { return chunks_.length(); }
-
-  // Total number of chunks and the capacity of the nursery. Chunks will be
-  // lazilly allocated and added to the chunks array up to this limit, after
-  // that the nursery must be collected, this limit may be raised during
-  // collection.
+  // Total number of chunks and the capacity of the current nursery
+  // space. Chunks will be lazily allocated and added to the chunks array up to
+  // this limit. After that the nursery must be collected. This limit may be
+  // changed at the end of collection by maybeResizeNursery.
   uint32_t maxChunkCount() const {
-    MOZ_ASSERT(maxChunkCount_);
-    return maxChunkCount_;
+    MOZ_ASSERT(toSpace.maxChunkCount_);
+    return toSpace.maxChunkCount_;
+  }
+
+  // Number of allocated (ready to use) chunks.
+  unsigned allocatedChunkCount() const { return toSpace.chunks_.length(); }
+
+  uint32_t currentChunk() const { return toSpace.currentChunk_; }
+  uint32_t startChunk() const { return toSpace.startChunk_; }
+  uintptr_t startPosition() const { return toSpace.startPosition_; }
+
+  // Used and free space both include chunk headers for that part of the
+  // nursery.
+  MOZ_ALWAYS_INLINE size_t usedSpace() const {
+    return capacity() - freeSpace();
+  }
+  MOZ_ALWAYS_INLINE size_t freeSpace() const {
+    MOZ_ASSERT(isEnabled());
+    MOZ_ASSERT(currentEnd() - position() <= NurseryChunkUsableSize);
+    MOZ_ASSERT(currentChunk() < maxChunkCount());
+    return (currentEnd() - position()) +
+           (maxChunkCount() - currentChunk() - 1) * gc::ChunkSize;
   }
 
   // Calculate the promotion rate of the most recent minor GC.
@@ -400,7 +397,7 @@ class Nursery {
 
   void freeTrailerBlocks();
 
-  NurseryChunk& chunk(unsigned index) const { return *chunks_[index]; }
+  NurseryChunk& chunk(unsigned index) const { return *toSpace.chunks_[index]; }
 
   // Set the allocation position to the start of a chunk. This sets
   // currentChunk_, position_ and currentEnd_ values as appropriate.
@@ -421,9 +418,8 @@ class Nursery {
   [[nodiscard]] bool allocateNextChunk(unsigned chunkno,
                                        AutoLockGCBgAlloc& lock);
 
-  uintptr_t currentEnd() const { return currentEnd_; }
-
-  uintptr_t position() const { return position_; }
+  uintptr_t position() const { return toSpace.position_; }
+  uintptr_t currentEnd() const { return toSpace.currentEnd_; }
 
   MOZ_ALWAYS_INLINE bool isSubChunkMode() const;
 
@@ -499,7 +495,7 @@ class Nursery {
 
   // Free the chunks starting at firstFreeChunk until the end of the chunks
   // vector. Shrinks the vector but does not update maxChunkCount().
-  void freeChunksFrom(unsigned firstFreeChunk);
+  void freeChunksFrom(Space& space, unsigned firstFreeChunk);
 
   void sendTelemetry(JS::GCReason reason, mozilla::TimeDuration totalTime,
                      bool wasEmpty, double promotionRate,
@@ -518,32 +514,37 @@ class Nursery {
   mozilla::TimeStamp collectionStartTime() const;
 
  private:
-  // Fields used during allocation fast path are grouped first:
+  struct Space {
+    // Fields used during allocation fast path go first:
 
-  // Pointer to the first unallocated byte in the nursery.
-  uintptr_t position_;
+    // Pointer to the first unallocated byte in the nursery.
+    uintptr_t position_ = 0;
 
-  // Pointer to the last byte of space in the current chunk.
-  uintptr_t currentEnd_;
+    // Pointer to the last byte of space in the current chunk.
+    uintptr_t currentEnd_ = 0;
 
-  // Other fields not necessarily used during allocation follow:
+    // Vector of allocated chunks to allocate from.
+    Vector<NurseryChunk*, 0, SystemAllocPolicy> chunks_;
+
+    // The index of the chunk that is currently being allocated from.
+    uint32_t currentChunk_ = 0;
+
+    // The maximum number of chunks to allocate based on capacity_.
+    uint32_t maxChunkCount_ = 0;
+
+    // These fields refer to the beginning of the nursery. They're normally 0
+    // and chunk(0).start() respectively. Except when a generational GC zeal
+    // mode is active, then they may be arbitrary (see Nursery::clear()).
+    uint32_t startChunk_ = 0;
+    uintptr_t startPosition_ = 0;
+
+    inline bool isEmpty() const;
+    inline bool isInside(const void* p) const;
+  };
+
+  Space toSpace;
 
   gc::GCRuntime* const gc;
-
-  // Vector of allocated chunks to allocate from.
-  Vector<NurseryChunk*, 0, SystemAllocPolicy> chunks_;
-
-  // The index of the chunk that is currently being allocated from.
-  uint32_t currentChunk_;
-
-  // The maximum number of chunks to allocate based on capacity_.
-  uint32_t maxChunkCount_;
-
-  // These fields refer to the beginning of the nursery. They're normally 0
-  // and chunk(0).start() respectively. Except when a generational GC zeal
-  // mode is active, then they may be arbitrary (see Nursery::clear()).
-  uint32_t startChunk_;
-  uintptr_t startPosition_;
 
   // The current nursery capacity measured in bytes. It may grow up to this
   // value without a collection, allocating chunks on demand. This limit may be
@@ -662,6 +663,19 @@ class Nursery {
   friend class gc::TenuringTracer;
   friend struct NurseryChunk;
 };
+
+MOZ_ALWAYS_INLINE bool Nursery::isInside(const void* p) const {
+  return toSpace.isInside(p);
+}
+
+MOZ_ALWAYS_INLINE bool Nursery::Space::isInside(const void* p) const {
+  for (auto* chunk : chunks_) {
+    if (uintptr_t(p) - uintptr_t(chunk) < gc::ChunkSize) {
+      return true;
+    }
+  }
+  return false;
+}
 
 }  // namespace js
 

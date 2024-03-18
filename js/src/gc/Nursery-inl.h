@@ -124,7 +124,7 @@ inline void* js::Nursery::tryAllocateCell(gc::AllocSite* site, size_t size,
 inline void* js::Nursery::tryAllocate(size_t size) {
   MOZ_ASSERT(isEnabled());
   MOZ_ASSERT(!JS::RuntimeHeapIsBusy());
-  MOZ_ASSERT_IF(currentChunk_ == startChunk_, position() >= startPosition_);
+  MOZ_ASSERT_IF(currentChunk() == startChunk(), position() >= startPosition());
   MOZ_ASSERT(size % gc::CellAlignBytes == 0);
   MOZ_ASSERT(position() % gc::CellAlignBytes == 0);
 
@@ -138,7 +138,7 @@ inline void* js::Nursery::tryAllocate(size_t size) {
         "Successful allocation cannot result in nullptr");
   }
 
-  position_ = position() + size;
+  toSpace.position_ = position() + size;
 
   DebugOnlyPoison(ptr, JS_ALLOCATED_NURSERY_PATTERN, size,
                   MemCheckKind::MakeUndefined);
