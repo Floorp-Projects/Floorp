@@ -122,6 +122,7 @@
 #include "mozilla/dom/quota/CheckedUnsafePtr.h"
 #include "mozilla/dom/quota/Client.h"
 #include "mozilla/dom/quota/ClientImpl.h"
+#include "mozilla/dom/quota/DebugOnlyMacro.h"
 #include "mozilla/dom/quota/DirectoryLock.h"
 #include "mozilla/dom/quota/DecryptingInputStream_impl.h"
 #include "mozilla/dom/quota/EncryptingOutputStream_impl.h"
@@ -4866,6 +4867,9 @@ class DeleteFilesRunnable final : public Runnable {
   RefPtr<DirectoryLock> mDirectoryLock;
   nsTArray<int64_t> mFileIds;
   State mState;
+  DEBUGONLY(bool mDEBUGCountsAsPending = false);
+
+  static uint64_t sPendingRunnables;
 
  public:
   DeleteFilesRunnable(SafeRefPtr<DatabaseFileManager> aFileManager,
@@ -4873,8 +4877,14 @@ class DeleteFilesRunnable final : public Runnable {
 
   void RunImmediately();
 
+  static bool IsDeletionPending() { return sPendingRunnables > 0; }
+
  private:
+#ifdef DEBUG
+  ~DeleteFilesRunnable();
+#else
   ~DeleteFilesRunnable() = default;
+#endif
 
   void Open();
 
@@ -12488,6 +12498,17 @@ void QuotaClient::StopIdleMaintenance() {
 
 void QuotaClient::InitiateShutdown() {
   AssertIsOnBackgroundThread();
+  MOZ_ASSERT(IsShuttingDownOnBackgroundThread());
+
+  if (mDeleteTimer) {
+    // QuotaClient::AsyncDeleteFile will not schedule new timers beyond
+    // shutdown. And we expect all critical (PBM) deletions to have been
+    // triggered before this point via ClearPrivateRepository (w/out using
+    // DeleteFilesRunnable at all).
+    mDeleteTimer->Cancel();
+    mDeleteTimer = nullptr;
+    mPendingDeleteInfos.Clear();
+  }
 
   AbortAllOperations();
 }
@@ -12495,7 +12516,7 @@ void QuotaClient::InitiateShutdown() {
 bool QuotaClient::IsShutdownCompleted() const {
   return (!gFactoryOps || gFactoryOps->IsEmpty()) &&
          (!gLiveDatabaseHashtable || !gLiveDatabaseHashtable->Count()) &&
-         !mCurrentMaintenance;
+         !mCurrentMaintenance && !DeleteFilesRunnable::IsDeletionPending();
 }
 
 void QuotaClient::ForceKillActors() {
@@ -12575,16 +12596,19 @@ void QuotaClient::FinalizeShutdown() {
     mMaintenanceThreadPool->Shutdown();
     mMaintenanceThreadPool = nullptr;
   }
-
-  if (mDeleteTimer) {
-    MOZ_ALWAYS_SUCCEEDS(mDeleteTimer->Cancel());
-    mDeleteTimer = nullptr;
-  }
 }
 
 void QuotaClient::DeleteTimerCallback(nsITimer* aTimer, void* aClosure) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aTimer);
+
+  // Even though we do not schedule new timers after shutdown has started,
+  // an already existing one might fire afterwards (actually we think it
+  // shouldn't, but there is no reason to enforce this invariant). We can
+  // just ignore it, the cleanup work is done in InitiateShutdown.
+  if (NS_WARN_IF(IsShuttingDownOnBackgroundThread())) {
+    return;
+  }
 
   auto* const self = static_cast<QuotaClient*>(aClosure);
   MOZ_ASSERT(self);
@@ -12728,6 +12752,8 @@ void QuotaClient::ProcessMaintenanceQueue() {
  * DeleteFilesRunnable
  ******************************************************************************/
 
+uint64_t DeleteFilesRunnable::sPendingRunnables = 0;
+
 DeleteFilesRunnable::DeleteFilesRunnable(
     SafeRefPtr<DatabaseFileManager> aFileManager, nsTArray<int64_t>&& aFileIds)
     : Runnable("dom::indexeddb::DeleteFilesRunnable"),
@@ -12735,6 +12761,12 @@ DeleteFilesRunnable::DeleteFilesRunnable(
       mFileManager(std::move(aFileManager)),
       mFileIds(std::move(aFileIds)),
       mState(State_Initial) {}
+
+#ifdef DEBUG
+DeleteFilesRunnable::~DeleteFilesRunnable() {
+  MOZ_ASSERT(!mDEBUGCountsAsPending);
+}
+#endif
 
 void DeleteFilesRunnable::RunImmediately() {
   AssertIsOnBackgroundThread();
@@ -12746,6 +12778,10 @@ void DeleteFilesRunnable::RunImmediately() {
 void DeleteFilesRunnable::Open() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mState == State_Initial);
+
+  MOZ_ASSERT(!mDEBUGCountsAsPending);
+  sPendingRunnables++;
+  DEBUGONLY(mDEBUGCountsAsPending = true);
 
   QuotaManager* const quotaManager = QuotaManager::Get();
   if (NS_WARN_IF(!quotaManager)) {
@@ -12800,6 +12836,9 @@ void DeleteFilesRunnable::UnblockOpen() {
   MOZ_ASSERT(mState == State_UnblockingOpen);
 
   mDirectoryLock = nullptr;
+  MOZ_ASSERT(mDEBUGCountsAsPending);
+  sPendingRunnables--;
+  DEBUGONLY(mDEBUGCountsAsPending = false);
 
   mState = State_Completed;
 }
