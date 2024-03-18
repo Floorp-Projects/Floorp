@@ -37,8 +37,11 @@
   }
 
   /* Ensure WithCommonStyles can grow to fit the page */
+  html,
+  body,
+  #root,
   #root-inner {
-    height: 100vh;
+    height: 100%;
   }
 
   /* Docs stories are being given unnecessary height, possibly because we
