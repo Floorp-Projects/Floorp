@@ -1,6 +1,87 @@
 {
   "data": [
     {
+      "name": "WebView Android",
+      "schema": 1710547503853,
+      "status": "beta",
+      "version": "124",
+      "browserid": "webview_android",
+      "id": "2dd2f70c-7c64-4aee-a05e-a0eb05d29ed5",
+      "last_modified": 1710742064656
+    },
+    {
+      "name": "Chrome",
+      "schema": 1710547503371,
+      "status": "beta",
+      "version": "124",
+      "browserid": "chrome",
+      "id": "f26cb7b0-cf29-4c33-8fb7-a2cc466a7e3c",
+      "last_modified": 1710742064653
+    },
+    {
+      "name": "Chrome",
+      "schema": 1710547503307,
+      "status": "current",
+      "version": "123",
+      "browserid": "chrome",
+      "id": "66e79095-2721-4a9e-9139-1a5f1afe1311",
+      "last_modified": 1710742064649
+    },
+    {
+      "name": "WebView Android",
+      "schema": 1710547503750,
+      "status": "current",
+      "version": "123",
+      "browserid": "webview_android",
+      "id": "97f38fec-64b0-4f0f-addc-03ac1b11d512",
+      "last_modified": 1710742064638
+    },
+    {
+      "name": "Chrome Android",
+      "schema": 1710547503606,
+      "status": "beta",
+      "version": "124",
+      "browserid": "chrome_android",
+      "id": "6946fbe1-bfff-4b64-aead-f001f0e486de",
+      "last_modified": 1710742064634
+    },
+    {
+      "name": "Chrome Android",
+      "schema": 1710547503508,
+      "status": "current",
+      "version": "123",
+      "browserid": "chrome_android",
+      "id": "a0ce8ad2-5c66-4e9e-987a-8a66c30e13f5",
+      "last_modified": 1710742064631
+    },
+    {
+      "name": "Edge",
+      "schema": 1710374703056,
+      "status": "planned",
+      "version": "125",
+      "browserid": "edge",
+      "id": "f1147d5f-d690-43d0-879d-117c6ca24a16",
+      "last_modified": 1710422368047
+    },
+    {
+      "name": "Edge",
+      "schema": 1710174339301,
+      "status": "beta",
+      "version": "123",
+      "browserid": "edge",
+      "id": "d0c3d84f-8d27-455b-8746-7e25607e5b78",
+      "last_modified": 1710422368043
+    },
+    {
+      "name": "Edge",
+      "schema": 1710374702983,
+      "status": "nightly",
+      "version": "124",
+      "browserid": "edge",
+      "id": "3837dc37-38b7-483b-82b3-c5593e7a4c91",
+      "last_modified": 1710422368040
+    },
+    {
       "name": "Safari",
       "schema": 1709769903331,
       "status": "current",
@@ -100,33 +181,6 @@
       "last_modified": 1709113112583
     },
     {
-      "name": "Chrome Android",
-      "schema": 1708473903758,
-      "status": "beta",
-      "version": "123",
-      "browserid": "chrome_android",
-      "id": "a0ce8ad2-5c66-4e9e-987a-8a66c30e13f5",
-      "last_modified": 1708507560615
-    },
-    {
-      "name": "Chrome Android",
-      "schema": 1708473903823,
-      "status": "nightly",
-      "version": "124",
-      "browserid": "chrome_android",
-      "id": "6946fbe1-bfff-4b64-aead-f001f0e486de",
-      "last_modified": 1708507560612
-    },
-    {
-      "name": "Edge",
-      "schema": 1708473904019,
-      "status": "planned",
-      "version": "124",
-      "browserid": "edge",
-      "id": "3837dc37-38b7-483b-82b3-c5593e7a4c91",
-      "last_modified": 1708507560609
-    },
-    {
       "name": "Opera",
       "schema": 1708473904223,
       "status": "beta",
@@ -136,51 +190,6 @@
       "last_modified": 1708507560606
     },
     {
-      "name": "WebView Android",
-      "schema": 1708473904412,
-      "status": "beta",
-      "version": "123",
-      "browserid": "webview_android",
-      "id": "97f38fec-64b0-4f0f-addc-03ac1b11d512",
-      "last_modified": 1708507560603
-    },
-    {
-      "name": "Edge",
-      "schema": 1708473903953,
-      "status": "nightly",
-      "version": "123",
-      "browserid": "edge",
-      "id": "d0c3d84f-8d27-455b-8746-7e25607e5b78",
-      "last_modified": 1708507560593
-    },
-    {
-      "name": "Chrome",
-      "schema": 1708473903484,
-      "status": "current",
-      "version": "122",
-      "browserid": "chrome",
-      "id": "e7c93856-0896-474c-b772-06edfae76234",
-      "last_modified": 1708507560582
-    },
-    {
-      "name": "Chrome Android",
-      "schema": 1708473903685,
-      "status": "current",
-      "version": "122",
-      "browserid": "chrome_android",
-      "id": "62f0c9c3-37c5-4b86-a63b-5be819cc9ff3",
-      "last_modified": 1708507560579
-    },
-    {
-      "name": "WebView Android",
-      "schema": 1708473904351,
-      "status": "current",
-      "version": "122",
-      "browserid": "webview_android",
-      "id": "62230e68-ea11-4915-a2f8-bab6c2f5cb8d",
-      "last_modified": 1708507560576
-    },
-    {
       "name": "Opera",
       "schema": 1708473904160,
       "status": "current",
@@ -188,24 +197,6 @@
       "browserid": "opera",
       "id": "8d9d78bb-ebc3-4931-a98b-bdefc339061d",
       "last_modified": 1708507560573
-    },
-    {
-      "name": "Chrome",
-      "schema": 1708473903555,
-      "status": "beta",
-      "version": "123",
-      "browserid": "chrome",
-      "id": "66e79095-2721-4a9e-9139-1a5f1afe1311",
-      "last_modified": 1708507560570
-    },
-    {
-      "name": "Chrome",
-      "schema": 1707523507640,
-      "status": "planned",
-      "version": "124",
-      "browserid": "chrome",
-      "id": "f26cb7b0-cf29-4c33-8fb7-a2cc466a7e3c",
-      "last_modified": 1707754922001
     },
     {
       "name": "Deno",
@@ -289,5 +280,5 @@
       "last_modified": 1665656484764
     }
   ],
-  "timestamp": 1709801394006
+  "timestamp": 1710742064656
 }
