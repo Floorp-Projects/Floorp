@@ -2121,6 +2121,13 @@ void nsJSContext::EnsureStatics() {
                                        "javascript.options.mem.gc_compacting",
                                        (void*)JSGC_COMPACTING_ENABLED);
 
+#ifdef NIGHTLY_BUILD
+  Preferences::RegisterCallbackAndCall(
+      SetMemoryPrefChangedCallbackBool,
+      "javascript.options.mem.gc_experimental_semispace_nursery",
+      (void*)JSGC_SEMISPACE_NURSERY_ENABLED);
+#endif
+
   Preferences::RegisterCallbackAndCall(
       SetMemoryPrefChangedCallbackBool,
       "javascript.options.mem.gc_parallel_marking",

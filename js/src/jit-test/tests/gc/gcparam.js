@@ -60,3 +60,4 @@ testChangeParam("mallocThresholdBase");
 testChangeParam("urgentThreshold");
 testChangeParam("helperThreadRatio");
 testChangeParam("maxHelperThreads");
+testChangeParam("semispaceNurseryEnabled");

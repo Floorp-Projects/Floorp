@@ -372,6 +372,9 @@ void LoadJSGCMemoryOptions(const char* aPrefName, void* /* aClosure */) {
       PREF("gc_parallel_marking", JSGC_PARALLEL_MARKING_ENABLED),
       PREF("gc_parallel_marking_threshold_mb",
            JSGC_PARALLEL_MARKING_THRESHOLD_MB),
+#ifdef NIGHTLY_BUILD
+      PREF("gc_experimental_semispace_nursery", JSGC_SEMISPACE_NURSERY_ENABLED),
+#endif
       // Note: Workers do not currently trigger eager minor GC, but if that is
       // desired the following parameters should be added:
       // javascript.options.mem.nursery_eager_collection_threshold_kb
@@ -426,6 +429,9 @@ void LoadJSGCMemoryOptions(const char* aPrefName, void* /* aClosure */) {
       }
       case JSGC_COMPACTING_ENABLED:
       case JSGC_PARALLEL_MARKING_ENABLED:
+#ifdef NIGHTLY_BUILD
+      case JSGC_SEMISPACE_NURSERY_ENABLED:
+#endif
       case JSGC_BALANCED_HEAP_LIMITS_ENABLED: {
         bool present;
         bool prefValue = GetPref(pref->fullName, false, &present);

@@ -83,7 +83,8 @@ class TenuredChunk;
   _("maxHelperThreads", JSGC_MAX_HELPER_THREADS, true)                      \
   _("helperThreadCount", JSGC_HELPER_THREAD_COUNT, false)                   \
   _("markingThreadCount", JSGC_MARKING_THREAD_COUNT, true)                  \
-  _("systemPageSizeKB", JSGC_SYSTEM_PAGE_SIZE_KB, false)
+  _("systemPageSizeKB", JSGC_SYSTEM_PAGE_SIZE_KB, false)                    \
+  _("semispaceNurseryEnabled", JSGC_SEMISPACE_NURSERY_ENABLED, true)
 
 // Get the key and writability give a GC parameter name.
 extern bool GetGCParameterInfo(const char* name, JSGCParamKey* keyOut,
