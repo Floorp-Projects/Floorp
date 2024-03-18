@@ -2618,17 +2618,17 @@ void WebRenderBridgeParent::ScheduleGenerateFrame(wr::RenderReasons aReasons) {
 }
 
 void WebRenderBridgeParent::FlushRendering(wr::RenderReasons aReasons,
-                                           bool aBlocking) {
+                                           bool aWaitForPresent) {
   if (mDestroyed) {
     return;
   }
 
-  if (aBlocking) {
-    FlushSceneBuilds();
-    FlushFrameGeneration(aReasons);
+  // This gets called during e.g. window resizes, so we need to flush the
+  // scene (which has the display list at the new window size).
+  FlushSceneBuilds();
+  FlushFrameGeneration(aReasons);
+  if (aWaitForPresent) {
     FlushFramePresentation();
-  } else {
-    ScheduleGenerateFrame(aReasons);
   }
 }
 
