@@ -79,18 +79,6 @@ class Nursery {
 
   [[nodiscard]] bool init(AutoLockGCBgAlloc& lock);
 
-  // Number of allocated (ready to use) chunks.
-  unsigned allocatedChunkCount() const { return chunks_.length(); }
-
-  // Total number of chunks and the capacity of the nursery. Chunks will be
-  // lazilly allocated and added to the chunks array up to this limit, after
-  // that the nursery must be collected, this limit may be raised during
-  // collection.
-  unsigned maxChunkCount() const {
-    MOZ_ASSERT(capacity());
-    return HowMany(capacity(), gc::ChunkSize);
-  }
-
   void enable();
   void disable();
   bool isEnabled() const { return capacity() != 0; }
@@ -390,6 +378,18 @@ class Nursery {
       mozilla::EnumeratedArray<ProfileKey, mozilla::TimeDuration,
                                size_t(ProfileKey::KeyCount)>;
 
+  // Number of allocated (ready to use) chunks.
+  unsigned allocatedChunkCount() const { return chunks_.length(); }
+
+  // Total number of chunks and the capacity of the nursery. Chunks will be
+  // lazilly allocated and added to the chunks array up to this limit, after
+  // that the nursery must be collected, this limit may be raised during
+  // collection.
+  uint32_t maxChunkCount() const {
+    MOZ_ASSERT(maxChunkCount_);
+    return maxChunkCount_;
+  }
+
   // Calculate the promotion rate of the most recent minor GC.
   // The valid_for_tenuring parameter is used to return whether this
   // promotion rate is accurate enough (the nursery was full enough) to be
@@ -407,6 +407,7 @@ class Nursery {
   void moveToStartOfChunk(unsigned chunkno);
 
   bool initFirstChunk(AutoLockGCBgAlloc& lock);
+  void setCapacity(size_t newCapacity);
 
   // extent is advisory, it will be ignored in sub-chunk and generational zeal
   // modes. It will be clamped to Min(NurseryChunkUsableSize, capacity_).
@@ -534,6 +535,9 @@ class Nursery {
 
   // The index of the chunk that is currently being allocated from.
   uint32_t currentChunk_;
+
+  // The maximum number of chunks to allocate based on capacity_.
+  uint32_t maxChunkCount_;
 
   // These fields refer to the beginning of the nursery. They're normally 0
   // and chunk(0).start() respectively. Except when a generational GC zeal

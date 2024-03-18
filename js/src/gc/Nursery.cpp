@@ -81,7 +81,7 @@ static_assert(sizeof(js::NurseryChunk) == gc::ChunkSize,
 class NurseryDecommitTask : public GCParallelTask {
  public:
   explicit NurseryDecommitTask(gc::GCRuntime* gc);
-  bool reserveSpaceForBytes(size_t nbytes);
+  bool reserveSpaceForChunks(size_t nchunks);
 
   bool isEmpty(const AutoLockHelperThreadState& lock) const;
 
@@ -169,9 +169,8 @@ bool js::NurseryDecommitTask::isEmpty(
   return chunksToDecommit().empty() && !partialChunk;
 }
 
-bool js::NurseryDecommitTask::reserveSpaceForBytes(size_t nbytes) {
+bool js::NurseryDecommitTask::reserveSpaceForChunks(size_t nchunks) {
   MOZ_ASSERT(isIdle());
-  size_t nchunks = HowMany(nbytes, ChunkSize);
   return chunksToDecommit().reserve(nchunks);
 }
 
@@ -219,6 +218,7 @@ js::Nursery::Nursery(GCRuntime* gc)
       currentEnd_(0),
       gc(gc),
       currentChunk_(0),
+      maxChunkCount_(0),
       startChunk_(0),
       startPosition_(0),
       capacity_(0),
@@ -346,11 +346,11 @@ void js::Nursery::enable() {
 bool js::Nursery::initFirstChunk(AutoLockGCBgAlloc& lock) {
   MOZ_ASSERT(!isEnabled());
 
-  capacity_ = tunables().gcMinNurseryBytes();
+  setCapacity(tunables().gcMinNurseryBytes());
 
-  if (!decommitTask->reserveSpaceForBytes(capacity_) ||
+  if (!decommitTask->reserveSpaceForChunks(maxChunkCount_) ||
       !allocateNextChunk(0, lock)) {
-    capacity_ = 0;
+    setCapacity(0);
     return false;
   }
 
@@ -364,6 +364,16 @@ bool js::Nursery::initFirstChunk(AutoLockGCBgAlloc& lock) {
   return true;
 }
 
+size_t RequiredChunkCount(size_t nbytes) {
+  return nbytes <= ChunkSize ? 1 : nbytes / ChunkSize;
+}
+
+void js::Nursery::setCapacity(size_t newCapacity) {
+  MOZ_ASSERT(newCapacity == roundSize(newCapacity));
+  capacity_ = newCapacity;
+  maxChunkCount_ = RequiredChunkCount(newCapacity);
+}
+
 void js::Nursery::disable() {
   MOZ_ASSERT(isEmpty());
   if (!isEnabled()) {
@@ -375,7 +385,7 @@ void js::Nursery::disable() {
   freeChunksFrom(0);
   decommitTask->runFromMainThread();
 
-  capacity_ = 0;
+  setCapacity(0);
 
   // We must reset currentEnd_ so that there is no space for anything in the
   // nursery. JIT'd code uses this even if the nursery is disabled.
@@ -516,9 +526,9 @@ void js::Nursery::enterZealMode() {
                          MemCheckKind::MakeUndefined);
   }
 
-  capacity_ = RoundUp(tunables().gcMaxNurseryBytes(), ChunkSize);
+  setCapacity(tunables().gcMaxNurseryBytes());
 
-  if (!decommitTask->reserveSpaceForBytes(capacity_)) {
+  if (!decommitTask->reserveSpaceForChunks(maxChunkCount_)) {
     oomUnsafe.crash("Nursery::enterZealMode");
   }
 
@@ -1979,7 +1989,7 @@ void js::Nursery::growAllocableSpace(size_t newCapacity) {
   MOZ_ASSERT(newCapacity <= tunables().gcMaxNurseryBytes());
   MOZ_ASSERT(newCapacity > capacity());
 
-  if (!decommitTask->reserveSpaceForBytes(newCapacity)) {
+  if (!decommitTask->reserveSpaceForChunks(RequiredChunkCount(newCapacity))) {
     return;
   }
 
@@ -2000,8 +2010,7 @@ void js::Nursery::growAllocableSpace(size_t newCapacity) {
                          MemCheckKind::MakeUndefined);
   }
 
-  capacity_ = newCapacity;
-
+  setCapacity(newCapacity);
   setCurrentEnd();
 }
 
@@ -2056,8 +2065,8 @@ void js::Nursery::shrinkAllocableSpace(size_t newCapacity) {
   }
 
   size_t oldCapacity = capacity_;
-  capacity_ = newCapacity;
 
+  setCapacity(newCapacity);
   setCurrentEnd();
 
   if (isSubChunkMode()) {
