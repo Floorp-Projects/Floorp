@@ -881,25 +881,27 @@ JSString* js::gc::TenuringTracer::promoteString(JSString* src) {
       src->isDeduplicatable() && !src->hasBase()) {
     JSLinearString* linear = &src->asLinear();
     JSAtom* atom = runtime()->caches().stringToAtomCache.lookupInMap(linear);
-    MOZ_ASSERT(atom, "Why was the cache purged before minor GC?");
+    // The string will not be present in the cache if it was previously promoted
+    // to the second nursery generation.
+    if (atom) {
+      // Only deduplicate if both strings have the same encoding, to not confuse
+      // dependent strings.
+      if (src->hasTwoByteChars() == atom->hasTwoByteChars()) {
+        // The StringToAtomCache isn't used for inline strings (due to the
+        // minimum length) so canOwnDependentChars must be true for both src and
+        // atom. This means if there are dependent strings floating around using
+        // str's chars, they will be able to use the chars from the atom.
+        static_assert(StringToAtomCache::MinStringLength >
+                      JSFatInlineString::MAX_LENGTH_LATIN1);
+        static_assert(StringToAtomCache::MinStringLength >
+                      JSFatInlineString::MAX_LENGTH_TWO_BYTE);
+        MOZ_ASSERT(src->canOwnDependentChars());
+        MOZ_ASSERT(atom->canOwnDependentChars());
 
-    // Only deduplicate if both strings have the same encoding, to not confuse
-    // dependent strings.
-    if (src->hasTwoByteChars() == atom->hasTwoByteChars()) {
-      // The StringToAtomCache isn't used for inline strings (due to the minimum
-      // length) so canOwnDependentChars must be true for both src and atom.
-      // This means if there are dependent strings floating around using str's
-      // chars, they will be able to use the chars from the atom.
-      static_assert(StringToAtomCache::MinStringLength >
-                    JSFatInlineString::MAX_LENGTH_LATIN1);
-      static_assert(StringToAtomCache::MinStringLength >
-                    JSFatInlineString::MAX_LENGTH_TWO_BYTE);
-      MOZ_ASSERT(src->canOwnDependentChars());
-      MOZ_ASSERT(atom->canOwnDependentChars());
-
-      StringRelocationOverlay::forwardCell(src, atom);
-      gcprobes::PromoteToTenured(src, atom);
-      return atom;
+        StringRelocationOverlay::forwardCell(src, atom);
+        gcprobes::PromoteToTenured(src, atom);
+        return atom;
+      }
     }
   }
 
