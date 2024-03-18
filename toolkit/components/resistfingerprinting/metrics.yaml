@@ -337,6 +337,23 @@ characteristics:
     data_sensitivity:
       - interaction
 
+  system_locale:
+    type: string
+    description: >
+      The locale used by the host OS for localization.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1881744
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1881744#c7
+    expires: never
+    data_sensitivity:
+      - technical
+
   target_frame_rate:
     type: quantity
     unit: int
