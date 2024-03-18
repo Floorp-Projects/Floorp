@@ -381,7 +381,8 @@ interface nsIHttpChannelInternal : nsISupports
      */
     [noscript, notxpcom, nostdcall]
     void setCorsPreflightParameters(in CStringArrayRef unsafeHeaders,
-                                    in boolean shouldStripRequestBodyHeader);
+                                    in boolean shouldStripRequestBodyHeader,
+                                    in boolean shouldStripAuthHeader);
 
     [noscript, notxpcom, nostdcall]
     void setAltDataForChild(in boolean aIsForChild);

@@ -4973,7 +4973,7 @@ nsresult HttpBaseChannel::SetupReplacementChannel(nsIURI* newURI,
     httpInternal->SetLastRedirectFlags(redirectFlags);
 
     if (LoadRequireCORSPreflight()) {
-      httpInternal->SetCorsPreflightParameters(mUnsafeHeaders, false);
+      httpInternal->SetCorsPreflightParameters(mUnsafeHeaders, false, false);
     }
   }
 
@@ -5847,17 +5847,20 @@ void HttpBaseChannel::EnsureBrowserId() {
 
 void HttpBaseChannel::SetCorsPreflightParameters(
     const nsTArray<nsCString>& aUnsafeHeaders,
-    bool aShouldStripRequestBodyHeader) {
+    bool aShouldStripRequestBodyHeader, bool aShouldStripAuthHeader) {
   MOZ_RELEASE_ASSERT(!LoadRequestObserversCalled());
 
   StoreRequireCORSPreflight(true);
   mUnsafeHeaders = aUnsafeHeaders.Clone();
-  if (aShouldStripRequestBodyHeader) {
+  if (aShouldStripRequestBodyHeader || aShouldStripAuthHeader) {
     mUnsafeHeaders.RemoveElementsBy([&](const nsCString& aHeader) {
-      return aHeader.LowerCaseEqualsASCII("content-type") ||
-             aHeader.LowerCaseEqualsASCII("content-encoding") ||
-             aHeader.LowerCaseEqualsASCII("content-language") ||
-             aHeader.LowerCaseEqualsASCII("content-location");
+      return (aShouldStripRequestBodyHeader &&
+              (aHeader.LowerCaseEqualsASCII("content-type") ||
+               aHeader.LowerCaseEqualsASCII("content-encoding") ||
+               aHeader.LowerCaseEqualsASCII("content-language") ||
+               aHeader.LowerCaseEqualsASCII("content-location"))) ||
+             (aShouldStripAuthHeader &&
+              aHeader.LowerCaseEqualsASCII("authorization"));
     });
   }
 }

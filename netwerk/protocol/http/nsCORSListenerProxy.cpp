@@ -441,7 +441,8 @@ nsresult nsCORSListenerProxy::Init(nsIChannel* aChannel,
       getter_AddRefs(mOuterNotificationCallbacks));
   aChannel->SetNotificationCallbacks(this);
 
-  nsresult rv = UpdateChannel(aChannel, aAllowDataURI, UpdateType::Default);
+  nsresult rv =
+      UpdateChannel(aChannel, aAllowDataURI, UpdateType::Default, false);
   if (NS_FAILED(rv)) {
     {
       MutexAutoLock lock(mMutex);
@@ -765,7 +766,7 @@ nsCORSListenerProxy::AsyncOnChannelRedirect(
     // data URIs should have been blocked before we got to the internal
     // redirect.
     rv = UpdateChannel(aNewChannel, DataURIHandling::Allow,
-                       UpdateType::InternalOrHSTSRedirect);
+                       UpdateType::InternalOrHSTSRedirect, false);
     if (NS_FAILED(rv)) {
       NS_WARNING(
           "nsCORSListenerProxy::AsyncOnChannelRedirect: "
@@ -835,6 +836,13 @@ nsCORSListenerProxy::AsyncOnChannelRedirect(
     }
 
     bool rewriteToGET = false;
+    // We need to strip auth header from preflight request for
+    // cross-origin redirects.
+    // See Bug 1874132
+    bool stripAuthHeader =
+        StaticPrefs::network_fetch_redirect_stripAuthHeader() &&
+        NS_ShouldRemoveAuthHeaderOnRedirect(aOldChannel, aNewChannel, aFlags);
+
     nsCOMPtr<nsIHttpChannel> oldHttpChannel = do_QueryInterface(aOldChannel);
     if (oldHttpChannel) {
       nsAutoCString method;
@@ -843,9 +851,10 @@ nsCORSListenerProxy::AsyncOnChannelRedirect(
                                                              &rewriteToGET);
     }
 
-    rv = UpdateChannel(aNewChannel, DataURIHandling::Disallow,
-                       rewriteToGET ? UpdateType::StripRequestBodyHeader
-                                    : UpdateType::Default);
+    rv = UpdateChannel(
+        aNewChannel, DataURIHandling::Disallow,
+        rewriteToGET ? UpdateType::StripRequestBodyHeader : UpdateType::Default,
+        stripAuthHeader);
     if (NS_FAILED(rv)) {
       NS_WARNING(
           "nsCORSListenerProxy::AsyncOnChannelRedirect: "
@@ -930,7 +939,10 @@ bool CheckInsecureUpgradePreventsCORS(nsIPrincipal* aRequestingPrincipal,
 
 nsresult nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel,
                                             DataURIHandling aAllowDataURI,
-                                            UpdateType aUpdateType) {
+                                            UpdateType aUpdateType,
+                                            bool aStripAuthHeader) {
+  MOZ_ASSERT_IF(aUpdateType == UpdateType::InternalOrHSTSRedirect,
+                !aStripAuthHeader);
   nsCOMPtr<nsIURI> uri, originalURI;
   nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1020,7 +1032,7 @@ nsresult nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel,
 
   // Check if we need to do a preflight, and if so set one up. This must be
   // called once we know that the request is going, or has gone, cross-origin.
-  rv = CheckPreflightNeeded(aChannel, aUpdateType);
+  rv = CheckPreflightNeeded(aChannel, aUpdateType, aStripAuthHeader);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // It's a cross site load
@@ -1087,7 +1099,8 @@ nsresult nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel,
 }
 
 nsresult nsCORSListenerProxy::CheckPreflightNeeded(nsIChannel* aChannel,
-                                                   UpdateType aUpdateType) {
+                                                   UpdateType aUpdateType,
+                                                   bool aStripAuthHeader) {
   // If this caller isn't using AsyncOpen, or if this *is* a preflight channel,
   // then we shouldn't initiate preflight for this channel.
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
@@ -1154,7 +1167,7 @@ nsresult nsCORSListenerProxy::CheckPreflightNeeded(nsIChannel* aChannel,
 
   internal->SetCorsPreflightParameters(
       headers.IsEmpty() ? loadInfoHeaders : headers,
-      aUpdateType == UpdateType::StripRequestBodyHeader);
+      aUpdateType == UpdateType::StripRequestBodyHeader, aStripAuthHeader);
 
   return NS_OK;
 }

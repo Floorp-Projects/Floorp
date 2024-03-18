@@ -319,7 +319,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
   NS_IMETHOD GetProxyURI(nsIURI** proxyURI) override;
   virtual void SetCorsPreflightParameters(
       const nsTArray<nsCString>& unsafeHeaders,
-      bool aShouldStripRequestBodyHeader) override;
+      bool aShouldStripRequestBodyHeader, bool aShouldStripAuthHeader) override;
   virtual void SetAltDataForChild(bool aIsForChild) override;
   virtual void DisableAltDataCache() override {
     StoreDisableAltDataCache(true);

@@ -419,10 +419,10 @@ void ObliviousHttpChannel::SetAltDataForChild(bool aIsForChild) {
 
 void ObliviousHttpChannel::SetCorsPreflightParameters(
     nsTArray<nsTString<char>> const& aUnsafeHeaders,
-    bool aShouldStripRequestBodyHeader) {
+    bool aShouldStripRequestBodyHeader, bool aShouldStripAuthHeader) {
   if (mInnerChannelInternal) {
     mInnerChannelInternal->SetCorsPreflightParameters(
-        aUnsafeHeaders, aShouldStripRequestBodyHeader);
+        aUnsafeHeaders, aShouldStripRequestBodyHeader, aShouldStripAuthHeader);
   }
 }
 
