@@ -1541,7 +1541,7 @@ js::Nursery::CollectionResult js::Nursery::doCollection(AutoGCSession& session,
     tenureThreshold_ = toSpace.offsetFromExclusiveAddress(position());
   }
 
-  return {mover.getTenuredSize(), mover.getTenuredCells()};
+  return {mover.getPromotedSize(), mover.getPromotedCells()};
 }
 
 void js::Nursery::traceRoots(AutoGCSession& session, TenuringTracer& mover) {

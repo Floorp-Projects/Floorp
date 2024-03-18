@@ -39,10 +39,10 @@ struct DeduplicationStringHasher {
 class TenuringTracer final : public JSTracer {
   Nursery& nursery_;
 
-  // Amount of data moved to the tenured generation during collection.
-  size_t tenuredSize = 0;
-  // Number of cells moved to the tenured generation.
-  size_t tenuredCells = 0;
+  // Size of data promoted during collection.
+  size_t promotedSize = 0;
+  // Number of cells promoted during collection.
+  size_t promotedCells = 0;
 
   // These lists are threaded through the Nursery using the space from
   // already moved things. The lists are used to fix up the moved things and
@@ -76,17 +76,17 @@ class TenuringTracer final : public JSTracer {
 
   Nursery& nursery() { return nursery_; }
 
-  // Move all objects and everything they can reach to the tenured heap. Called
-  // after all roots have been traced.
+  // Promote all live objects and everything they can reach. Called after all
+  // roots have been traced.
   void collectToObjectFixedPoint();
 
-  // Move all strings and all strings they can reach to the tenured heap, and
-  // additionally do any fixups for when strings are pointing into memory that
-  // was deduplicated. Called after collectToObjectFixedPoint().
+  // Promote all live strings and all strings they can reach, and additionally
+  // do any fixups for when strings are pointing into memory that was
+  // deduplicated. Called after collectToObjectFixedPoint().
   void collectToStringFixedPoint();
 
-  size_t getTenuredSize() const;
-  size_t getTenuredCells() const;
+  size_t getPromotedSize() const;
+  size_t getPromotedCells() const;
 
   void traverse(JS::Value* thingp);
   void traverse(wasm::AnyRef* thingp);
@@ -134,18 +134,16 @@ class TenuringTracer final : public JSTracer {
 
   bool shouldTenure(Zone* zone, JS::TraceKind traceKind, Cell* cell);
 
-  inline JSObject* movePlainObjectToTenured(PlainObject* src);
-  JSObject* moveToTenuredSlow(JSObject* src);
-  JSString* moveToTenured(JSString* src);
-  JS::BigInt* moveToTenured(JS::BigInt* src);
+  inline JSObject* promotePlainObject(PlainObject* src);
+  JSObject* promoteObjectSlow(JSObject* src);
+  JSString* promoteString(JSString* src);
+  JS::BigInt* promoteBigInt(JS::BigInt* src);
 
-  size_t moveElementsToTenured(NativeObject* dst, NativeObject* src,
-                               gc::AllocKind dstKind);
-  size_t moveSlotsToTenured(NativeObject* dst, NativeObject* src);
-  size_t moveStringToTenured(JSString* dst, JSString* src,
-                             gc::AllocKind dstKind);
-  size_t moveBigIntToTenured(JS::BigInt* dst, JS::BigInt* src,
-                             gc::AllocKind dstKind);
+  size_t moveElements(NativeObject* dst, NativeObject* src,
+                      gc::AllocKind dstKind);
+  size_t moveSlots(NativeObject* dst, NativeObject* src);
+  size_t moveString(JSString* dst, JSString* src, gc::AllocKind dstKind);
+  size_t moveBigInt(JS::BigInt* dst, JS::BigInt* src, gc::AllocKind dstKind);
 
   void traceSlots(JS::Value* vp, JS::Value* end);
 };
