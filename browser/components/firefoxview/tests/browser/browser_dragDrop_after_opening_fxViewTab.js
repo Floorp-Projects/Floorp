@@ -15,6 +15,7 @@ add_task(async function () {
   // window.RTL_UI doesn't update in existing windows when this pref is changed,
   // so we need to test in a new window.
   let win = await BrowserTestUtils.openNewBrowserWindow();
+  await switchToWindow(win);
 
   const TEST_ROOT = getRootDirectory(gTestPath).replace(
     "chrome://mochitests/content",

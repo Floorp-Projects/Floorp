@@ -155,12 +155,12 @@ function getOpenTabsComponent(browser) {
 
 async function checkTabList(browser, expected) {
   const tabsView = getOpenTabsComponent(browser);
-  const openTabsCard = tabsView.shadowRoot.querySelector("view-opentabs-card");
-  await tabsView.getUpdateComplete();
-  const tabList = openTabsCard.shadowRoot.querySelector("fxview-tab-list");
-  Assert.ok(tabList, "Found the tab list element");
-  await TestUtils.waitForCondition(() => tabList.rowEls.length);
-  let actual = Array.from(tabList.rowEls).map(row => row.url);
+  const [openTabsCard] = getOpenTabsCards(tabsView);
+  await openTabsCard.updateComplete;
+
+  const tabListRows = await getTabRowsForCard(openTabsCard);
+  Assert.ok(tabListRows, "Found the tab list element");
+  let actual = Array.from(tabListRows).map(row => row.url);
   Assert.deepEqual(
     actual,
     expected,
@@ -252,7 +252,7 @@ add_task(async function test_multiple_window_tabs() {
     NonPrivateTabs,
     "TabRecencyChange"
   );
-  await SimpleTest.promiseFocus(win1);
+  await switchToWindow(win1);
   await tabChangeRaised;
   Assert.equal(
     tabUrl(win1.gBrowser.selectedTab),
@@ -305,17 +305,20 @@ add_task(async function test_windows_activation() {
   await openFirefoxViewTab(win1).then(tab => (fxViewTab = tab));
 
   const win2 = await BrowserTestUtils.openNewBrowserWindow();
+  await switchToWindow(win2);
   await prepareOpenTabs([tabURL2], win2);
 
   const win3 = await BrowserTestUtils.openNewBrowserWindow();
+  await switchToWindow(win3);
   await prepareOpenTabs([tabURL3], win3);
-  await tabChangeRaised;
 
   tabChangeRaised = BrowserTestUtils.waitForEvent(
     NonPrivateTabs,
     "TabRecencyChange"
   );
-  await SimpleTest.promiseFocus(win1);
+  info("Switching back to win 1");
+  await switchToWindow(win1);
+  info("Waiting for tabChangeRaised to resolve");
   await tabChangeRaised;
 
   const browser = fxViewTab.linkedBrowser;
@@ -326,7 +329,7 @@ add_task(async function test_windows_activation() {
     NonPrivateTabs,
     "TabRecencyChange"
   );
-  await SimpleTest.promiseFocus(win2);
+  await switchToWindow(win2);
   await tabChangeRaised;
   await checkTabList(browser, [tabURL2, tabURL3, tabURL1]);
   await cleanup(win2, win3);
@@ -338,6 +341,7 @@ add_task(async function test_minimize_restore_windows() {
   await prepareOpenTabs([tabURL1, tabURL2]);
   const win2 = await BrowserTestUtils.openNewBrowserWindow();
   await prepareOpenTabs([tabURL3, tabURL4], win2);
+  await NonPrivateTabs.readyWindowsPromise;
 
   // to avoid confusing the results by activating different windows,
   // check fxview in the current window - which is win2
@@ -371,7 +375,7 @@ add_task(async function test_minimize_restore_windows() {
   );
   await minimizeWindow(win2);
   info("Focusing win1, where tab2 is selected - making it most recent");
-  await SimpleTest.promiseFocus(win1);
+  await switchToWindow(win1);
   await tabChangeRaised;
 
   Assert.equal(
@@ -392,7 +396,7 @@ add_task(async function test_minimize_restore_windows() {
       "TabRecencyChange"
     );
     await restoreWindow(win2);
-    await SimpleTest.promiseFocus(win2);
+    await switchToWindow(win2);
     await tabChangeRaised;
 
     info(

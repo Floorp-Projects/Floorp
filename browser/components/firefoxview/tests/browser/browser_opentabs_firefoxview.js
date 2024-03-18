@@ -1,6 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+// Test regularly times out - especially with verify
+requestLongerTimeout(2);
+
 const TEST_URL1 = "about:robots";
 const TEST_URL2 = "https://example.org/";
 const TEST_URL3 = "about:mozilla";
