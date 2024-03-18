@@ -760,15 +760,19 @@ class InnerViewTable {
                 StableCellHasher<JSObject*>, ZoneAllocPolicy>;
   ArrayBufferViewMap map;
 
-  // List of keys from innerViews where either the source or at least one
-  // target is in the nursery. The raw pointer to a JSObject is allowed here
-  // because this vector is cleared after every minor collection. Users in
-  // sweepAfterMinorCollection must be careful to use MaybeForwarded before
-  // touching these pointers.
-  Vector<ArrayBufferObject*, 0, SystemAllocPolicy> nurseryKeys;
+  // List of keys from map where either the source or at least one target is in
+  // the nursery. The raw pointer to a JSObject is allowed here because this
+  // vector is cleared after every minor collection. Users in sweepAfterMinorGC
+  // must be careful to use MaybeForwarded before touching these pointers.
+  using NurseryKeysVector =
+      GCVector<UnsafeBarePtr<ArrayBufferObject*>, 0, SystemAllocPolicy>;
+  NurseryKeysVector nurseryKeys;
 
   // Whether nurseryKeys is a complete list.
   bool nurseryKeysValid = true;
+
+  bool sweepMapEntryAfterMinorGC(UnsafeBarePtr<JSObject*>& buffer,
+                                 ViewVector& views);
 
  public:
   explicit InnerViewTable(Zone* zone) : map(zone) {}
@@ -793,6 +797,9 @@ class InnerViewTable {
                ArrayBufferViewObject* view);
   ViewVector* maybeViewsUnbarriered(ArrayBufferObject* buffer);
   void removeViews(ArrayBufferObject* buffer);
+
+  bool sweepViewsAfterMinorGC(JSTracer* trc, ArrayBufferObject* buffer,
+                              Views& views);
 };
 
 template <typename Wrapper>
