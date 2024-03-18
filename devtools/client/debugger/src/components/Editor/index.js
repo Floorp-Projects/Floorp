@@ -234,6 +234,10 @@ class Editor extends PureComponent {
       this.onEditorScroll();
     } else {
       editor.setUpdateListener(this.onEditorUpdated);
+      editor.setGutterEventListeners({
+        click: (event, cm, line) => this.onGutterClick(cm, line, null, event),
+        contextmenu: (event, cm, line) => this.openMenu(event, line, true),
+      });
     }
     this.setState({ editor });
     return editor;
@@ -388,8 +392,9 @@ class Editor extends PureComponent {
       e.preventDefault();
     }
   };
-
-  openMenu(event) {
+  // Note: The line is optional, if not passed (as is likely for codemirror 6)
+  // it fallsback to lineAtHeight.
+  openMenu(event, line) {
     event.stopPropagation();
     event.preventDefault();
 
@@ -413,13 +418,19 @@ class Editor extends PureComponent {
 
     const target = event.target;
     const { id: sourceId } = selectedSource;
-    const line = lineAtHeight(editor, sourceId, event);
+    line = line ?? lineAtHeight(editor, sourceId, event);
 
     if (typeof line != "number") {
       return;
     }
 
-    if (target.classList.contains("CodeMirror-linenumber")) {
+    if (
+      // handles codemirror 6
+      (target.classList.contains("cm-gutterElement") &&
+        target.closest(".cm-gutter.cm-lineNumbers")) ||
+      // handles codemirror 5
+      target.classList.contains("CodeMirror-linenumber")
+    ) {
       const location = createLocation({
         line,
         column: undefined,
@@ -432,7 +443,14 @@ class Editor extends PureComponent {
         line
       ).trim();
 
-      this.props.showEditorGutterContextMenu(event, editor, location, lineText);
+      const lineObject = { from: { line }, to: { line } };
+
+      this.props.showEditorGutterContextMenu(
+        event,
+        lineObject,
+        location,
+        lineText
+      );
       return;
     }
 
@@ -532,10 +550,6 @@ class Editor extends PureComponent {
           isSourceOnIgnoreList
         )
     );
-  };
-
-  onGutterContextMenu = event => {
-    this.openMenu(event);
   };
 
   onClick(e) {

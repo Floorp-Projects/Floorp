@@ -73,7 +73,7 @@ export function showEditorContextMenu(event, editor, location) {
   };
 }
 
-export function showEditorGutterContextMenu(event, editor, location, lineText) {
+export function showEditorGutterContextMenu(event, line, location, lineText) {
   return async ({ dispatch, getState }) => {
     const { source } = location;
     const state = getState();
@@ -90,7 +90,7 @@ export function showEditorGutterContextMenu(event, editor, location, lineText) {
       { type: "separator" },
       blackBoxLineMenuItem(
         source,
-        editor,
+        line,
         blackboxedRanges,
         isSourceOnIgnoreList,
         location.line,
@@ -178,7 +178,7 @@ const blackBoxMenuItem = (
 
 const blackBoxLineMenuItem = (
   selectedSource,
-  editor,
+  { from, to },
   blackboxedRanges,
   isSourceOnIgnoreList,
   // the clickedLine is passed when the context menu
@@ -187,10 +187,6 @@ const blackBoxLineMenuItem = (
   clickedLine = null,
   dispatch
 ) => {
-  const { codeMirror } = editor;
-  const from = codeMirror.getCursor("from");
-  const to = codeMirror.getCursor("to");
-
   const startLine = clickedLine ?? toSourceLine(selectedSource.id, from.line);
   const endLine = clickedLine ?? toSourceLine(selectedSource.id, to.line);
 
@@ -251,16 +247,12 @@ const blackBoxLineMenuItem = (
 
 const blackBoxLinesMenuItem = (
   selectedSource,
-  editor,
+  { from, to },
   blackboxedRanges,
   isSourceOnIgnoreList,
   clickedLine,
   dispatch
 ) => {
-  const { codeMirror } = editor;
-  const from = codeMirror.getCursor("from");
-  const to = codeMirror.getCursor("to");
-
   const startLine = toSourceLine(selectedSource.id, from.line);
   const endLine = toSourceLine(selectedSource.id, to.line);
 
@@ -408,7 +400,10 @@ function editorMenuItems({
     items.push(
       blackBoxSourceLinesMenuItem(
         source,
-        editor,
+        {
+          from: editor.codeMirror.getCursor("from"),
+          to: editor.codeMirror.getCursor("to"),
+        },
         blackboxedRanges,
         isSourceOnIgnoreList,
         null,

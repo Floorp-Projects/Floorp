@@ -622,11 +622,13 @@ class Editor extends EventEmitter {
     const tabSizeCompartment = new Compartment();
     const indentCompartment = new Compartment();
     const lineWrapCompartment = new Compartment();
+    const lineNumberCompartment = new Compartment();
 
     this.#compartments = {
       tabSizeCompartment,
       indentCompartment,
       lineWrapCompartment,
+      lineNumberCompartment,
     };
 
     const indentStr = (this.config.indentWithTabs ? "\t" : " ").repeat(
@@ -640,6 +642,7 @@ class Editor extends EventEmitter {
         this.config.lineWrapping ? EditorView.lineWrapping : []
       ),
       EditorState.readOnly.of(this.config.readOnly),
+      lineNumberCompartment.of(this.config.lineNumbers ? lineNumbers() : []),
       codemirrorLanguage.codeFolding({
         placeholderText: "↔",
       }),
@@ -666,16 +669,40 @@ class Editor extends EventEmitter {
       extensions.push(codemirrorLangJavascript.javascript());
     }
 
-    if (this.config.lineNumbers) {
-      extensions.push(lineNumbers());
-    }
-
     const cm = new EditorView({
       parent: el,
       extensions,
     });
 
     editors.set(this, cm);
+  }
+
+  /**
+   * Set event listeners for the line gutter
+   * @param {Object} domEventHandlers
+   *
+   * example usage:
+   *  const domEventHandlers = { click(event) { console.log(event);} }
+   */
+  setGutterEventListeners(domEventHandlers) {
+    const cm = editors.get(this);
+    const {
+      codemirrorView: { lineNumbers },
+    } = this.#CodeMirror6;
+
+    for (const eventName in domEventHandlers) {
+      const handler = domEventHandlers[eventName];
+      domEventHandlers[eventName] = (view, line, event) => {
+        line = view.state.doc.lineAt(line.from);
+        handler(event, view, line.number);
+      };
+    }
+
+    cm.dispatch({
+      effects: this.#compartments.lineWrapCompartment.reconfigure(
+        lineNumbers({ domEventHandlers })
+      ),
+    });
   }
 
   /**
