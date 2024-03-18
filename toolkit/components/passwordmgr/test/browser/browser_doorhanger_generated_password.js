@@ -481,7 +481,7 @@ add_task(async function autocomplete_generated_password_saved_empty_username() {
       info("Waiting to openAndVerifyDoorhanger");
       await openAndVerifyDoorhanger(browser, "password-change", {
         dismissed: true,
-        anchorExtraAttr: "",
+        anchorExtraAttr: null,
         usernameValue: "",
         passwordLength: LoginTestUtils.generation.LENGTH,
       });
@@ -493,7 +493,7 @@ add_task(async function autocomplete_generated_password_saved_empty_username() {
       await submitForm(browser);
       let notif = await openAndVerifyDoorhanger(browser, "password-change", {
         dismissed: false,
-        anchorExtraAttr: "",
+        anchorExtraAttr: null,
         usernameValue: "",
         passwordLength: LoginTestUtils.generation.LENGTH,
       });
@@ -648,7 +648,7 @@ add_task(async function ac_gen_pw_saved_empty_un_stored_non_empty_un_in_form() {
       info("Waiting to openAndVerifyDoorhanger");
       await openAndVerifyDoorhanger(browser, "password-save", {
         dismissed: true,
-        anchorExtraAttr: "",
+        anchorExtraAttr: null,
         usernameValue: "myusername",
         passwordLength: LoginTestUtils.generation.LENGTH,
       });
@@ -660,7 +660,7 @@ add_task(async function ac_gen_pw_saved_empty_un_stored_non_empty_un_in_form() {
       await submitForm(browser);
       let notif = await openAndVerifyDoorhanger(browser, "password-save", {
         dismissed: false,
-        anchorExtraAttr: "",
+        anchorExtraAttr: null,
         usernameValue: "myusername",
         passwordLength: LoginTestUtils.generation.LENGTH,
       });
@@ -719,7 +719,7 @@ add_task(async function contextfill_generated_password_saved_empty_username() {
       info("Waiting to openAndVerifyDoorhanger");
       await openAndVerifyDoorhanger(browser, "password-change", {
         dismissed: true,
-        anchorExtraAttr: "",
+        anchorExtraAttr: null,
         usernameValue: "",
         passwordLength: LoginTestUtils.generation.LENGTH,
       });
@@ -731,7 +731,7 @@ add_task(async function contextfill_generated_password_saved_empty_username() {
       await submitForm(browser);
       let notif = await openAndVerifyDoorhanger(browser, "password-change", {
         dismissed: false,
-        anchorExtraAttr: "",
+        anchorExtraAttr: null,
         usernameValue: "",
         passwordLength: LoginTestUtils.generation.LENGTH,
       });
@@ -789,7 +789,7 @@ async function autocomplete_generated_password_edited_no_auto_save(
       info("Waiting to openAndVerifyDoorhanger");
       let notif = await openAndVerifyDoorhanger(browser, "password-change", {
         dismissed: true,
-        anchorExtraAttr: "",
+        anchorExtraAttr: null,
         usernameValue: "",
         passwordLength: LoginTestUtils.generation.LENGTH,
       });
@@ -812,7 +812,7 @@ async function autocomplete_generated_password_edited_no_auto_save(
       info("Waiting to openAndVerifyDoorhanger");
       notif = await openAndVerifyDoorhanger(browser, "password-change", {
         dismissed: true,
-        anchorExtraAttr: "",
+        anchorExtraAttr: null,
         usernameValue: "",
         passwordLength: LoginTestUtils.generation.LENGTH + 2,
       });
@@ -836,7 +836,7 @@ async function autocomplete_generated_password_edited_no_auto_save(
       await submitForm(browser);
       notif = await openAndVerifyDoorhanger(browser, "password-change", {
         dismissed: false,
-        anchorExtraAttr: "",
+        anchorExtraAttr: null,
         usernameValue: "",
         passwordLength: LoginTestUtils.generation.LENGTH + 2,
       });
@@ -957,7 +957,7 @@ add_task(async function contextmenu_fill_generated_password_and_set_username() {
       await submitForm(browser);
       let notif = await openAndVerifyDoorhanger(browser, "password-change", {
         dismissed: false,
-        anchorExtraAttr: "",
+        anchorExtraAttr: null,
         usernameValue: "differentuser",
         passwordLength: LoginTestUtils.generation.LENGTH,
       });
@@ -1386,7 +1386,7 @@ add_task(async function autosaved_login_updated_to_existing_login_onsubmit() {
       await waitForDoorhanger(browser, "password-change");
       notif = await openAndVerifyDoorhanger(browser, "password-change", {
         dismissed: false,
-        anchorExtraAttr: "",
+        anchorExtraAttr: null,
         usernameValue: "user1",
         password: autoSavedLogin.password,
       });
@@ -1611,7 +1611,7 @@ add_task(async function form_change_from_autosaved_login_to_existing_login() {
       // the previous doorhanger would have old values, verify it was updated/replaced with new values from the form
       notif = await openAndVerifyDoorhanger(browser, "password-change", {
         dismissed: true,
-        anchorExtraAttr: "",
+        anchorExtraAttr: null,
         usernameValue: user1LoginSnapshot.username,
         passwordLength: user1LoginSnapshot.password.length,
       });
@@ -1835,7 +1835,7 @@ add_task(async function form_edit_username_and_password_of_generated_login() {
       await passwordChangeDoorhangerPromise;
       notif = await openAndVerifyDoorhanger(browser, "password-change", {
         dismissed: false,
-        anchorExtraAttr: "",
+        anchorExtraAttr: null,
         usernameValue: "someuser",
         passwordLength: LoginTestUtils.generation.LENGTH + 2,
       });
