@@ -248,8 +248,9 @@ fn handle_main_process_crash(
 fn handle_child_process_crash(crash_report: CrashReport, child_process: HANDLE) -> Result<()> {
     let parent_process = get_parent_process(child_process)?;
     let process_reader = ProcessReader::new(parent_process).map_err(|_e| ())?;
+    let libxul_address = process_reader.find_module("xul.dll").map_err(|_e| ())?;
     let wer_notify_proc = process_reader
-        .find_section("xul.dll", "mozwerpt")
+        .find_section(libxul_address, b"mozwerpt")
         .map_err(|_e| ())?;
     let wer_notify_proc = unsafe { transmute::<_, LPTHREAD_START_ROUTINE>(wer_notify_proc) };
 

@@ -4,3 +4,9 @@
 
 #[cfg(target_os = "windows")]
 mod windows;
+
+#[cfg(any(target_os = "android", target_os = "linux"))]
+mod linux;
+
+#[cfg(target_os = "macos")]
+mod macos;
