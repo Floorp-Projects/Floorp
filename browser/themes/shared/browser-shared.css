@@ -104,7 +104,7 @@
     --toolbox-non-lwt-textcolor-inactive: InactiveCaptionText;
   }
 
-  &:-moz-lwtheme {
+  &[lwtheme] {
     color: var(--lwt-text-color);
 
     --link-color: light-dark(rgb(0, 97, 224), rgb(0, 221, 255));
@@ -170,7 +170,7 @@
     border-bottom-style: none;
   }
 
-  &:-moz-lwtheme {
+  :root[lwtheme] & {
     background-image: var(--lwt-additional-images);
     background-repeat: var(--lwt-background-tiling);
     background-position: var(--lwt-background-alignment);
@@ -218,7 +218,7 @@
   padding-inline-start: var(--toolbar-start-end-padding);
 }
 
-:root[sessionrestored] #nav-bar:-moz-lwtheme {
+:root[sessionrestored][lwtheme] #nav-bar {
   transition: var(--ext-theme-background-transition);
 }
 
@@ -480,22 +480,22 @@ menupopup::part(drop-indicator) {
   color-scheme: var(--toolbar-color-scheme);
   border-top-color: var(--chrome-content-separator-color, ThreeDShadow);
 
-  &:-moz-lwtheme {
+  :root[lwtheme] & {
     background-color: var(--lwt-accent-color);
     background-image: linear-gradient(var(--toolbar-bgcolor), var(--toolbar-bgcolor)), var(--lwt-additional-images);
     background-repeat: no-repeat, var(--lwt-background-tiling);
     background-position: right bottom, var(--lwt-background-alignment);
     background-position-y: bottom !important;
+  }
 
-    :root:not([lwtheme-image]) &:-moz-window-inactive {
-      background-color: var(--lwt-accent-color-inactive, var(--lwt-accent-color));
-    }
+  :root[lwtheme]:not([lwtheme-image]) &:-moz-window-inactive {
+    background-color: var(--lwt-accent-color-inactive, var(--lwt-accent-color));
+  }
 
-    :root[lwtheme-image] & {
-      background-image: linear-gradient(var(--toolbar-bgcolor), var(--toolbar-bgcolor)), var(--lwt-header-image), var(--lwt-additional-images);
-      background-repeat: no-repeat, no-repeat, var(--lwt-background-tiling);
-      background-position: center, right bottom, var(--lwt-background-alignment);
-    }
+  :root[lwtheme-image] & {
+    background-image: linear-gradient(var(--toolbar-bgcolor), var(--toolbar-bgcolor)), var(--lwt-header-image), var(--lwt-additional-images);
+    background-repeat: no-repeat, no-repeat, var(--lwt-background-tiling);
+    background-position: center, right bottom, var(--lwt-background-alignment);
   }
 }
 

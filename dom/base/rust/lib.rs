@@ -156,8 +156,6 @@ bitflags! {
         const RTL_LOCALE = 1 << 1;
         /// LTR locale: specific to the XUL localedir attribute
         const LTR_LOCALE = 1 << 2;
-        /// LWTheme status
-        const LWTHEME = 1 << 3;
 
         const ALL_LOCALEDIR_BITS = Self::LTR_LOCALE.bits() | Self::RTL_LOCALE.bits();
     }

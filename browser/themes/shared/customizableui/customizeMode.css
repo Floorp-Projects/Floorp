@@ -24,18 +24,18 @@
   background-color: var(--toolbar-non-lwt-bgcolor);
   color: var(--toolbar-color);
   color-scheme: var(--toolbar-color-scheme);
-}
 
-#customization-container:-moz-lwtheme {
-  /* Ensure this displays on top of the non-lwt bgcolor, to make sure it's not
-   * semi-transparent */
-  background-image: linear-gradient(var(--toolbar-bgcolor), var(--toolbar-bgcolor));
-}
+  :root[lwtheme] & {
+    /* Ensure this displays on top of the non-lwt bgcolor, to make sure it's not
+     * semi-transparent */
+    background-image: linear-gradient(var(--toolbar-bgcolor), var(--toolbar-bgcolor));
+  }
 
-:root[lwtheme-image] #customization-container {
-  background-image: none;
-  color: var(--toolbar-non-lwt-textcolor);
-  text-shadow: none;
+  :root[lwtheme-image] & {
+    background-image: none;
+    color: var(--toolbar-non-lwt-textcolor);
+    text-shadow: none;
+  }
 }
 
 :root[lwtheme-image] #customization-palette .toolbarbutton-1 {

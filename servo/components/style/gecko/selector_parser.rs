@@ -196,7 +196,6 @@ impl NonTSPseudoClass {
                 None => DocumentState::empty(),
             },
             NonTSPseudoClass::MozWindowInactive => DocumentState::WINDOW_INACTIVE,
-            NonTSPseudoClass::MozLWTheme => DocumentState::LWTHEME,
             _ => DocumentState::empty(),
         }
     }
@@ -214,11 +213,10 @@ impl NonTSPseudoClass {
                       NonTSPseudoClass::MozNativeAnonymous |
                       // :-moz-placeholder is parsed but never matches.
                       NonTSPseudoClass::MozPlaceholder |
-                      // :-moz-is-html, :-moz-lwtheme, :-moz-locale-dir and :-moz-window-inactive
+                      // :-moz-is-html, :-moz-locale-dir and :-moz-window-inactive
                       // depend only on the state of the document, which is invariant across all
                       // elements involved in a given style cache.
                       NonTSPseudoClass::MozIsHTML |
-                      NonTSPseudoClass::MozLWTheme |
                       NonTSPseudoClass::MozLocaleDir(_) |
                       NonTSPseudoClass::MozWindowInactive
             )

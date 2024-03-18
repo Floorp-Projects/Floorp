@@ -56,7 +56,7 @@
     --urlbarView-action-slide-in-distance: -200px;
   }
 
-  &:-moz-lwtheme {
+  &[lwtheme] {
     --urlbarView-action-color: light-dark(rgb(91, 91, 102), rgb(191, 191, 201));
     --urlbarView-highlight-background: light-dark(rgb(0, 99, 255), rgb(0, 99, 225));
     --urlbarView-highlight-color: white;

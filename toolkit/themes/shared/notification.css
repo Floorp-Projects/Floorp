@@ -41,15 +41,15 @@ notification {
 }
 
 @media (prefers-color-scheme: dark) {
-  notification[type="info"]:-moz-lwtheme {
-    --notification-background: #38383d;
-    --notification-text: rgb(249, 249, 250);
-  }
-
   notification[type="info"] {
     --notification-button-background: rgba(249,249,250,.1);
     --notification-button-background-hover: rgba(249,249,250,.2);
     --notification-button-background-active: rgba(249,249,250,.3);
+
+    *|*:root[lwtheme] & {
+      --notification-background: #38383d;
+      --notification-text: rgb(249, 249, 250);
+    }
   }
 }
 

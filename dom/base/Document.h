@@ -2992,15 +2992,6 @@ class Document : public nsINode,
     SetStateObject(aDocument->mStateObjectContainer);
   }
 
-  /**
-   * Returns true if there is a lightweight theme specified. This is used to
-   * determine the state of the :-moz-lwtheme pseudo-class.
-   */
-  bool ComputeDocumentLWTheme() const;
-  void ResetDocumentLWTheme() {
-    UpdateDocumentStates(DocumentState::LWTHEME, true);
-  }
-
   // Whether we're a media document or not.
   enum class MediaDocumentKind {
     NotMedia,

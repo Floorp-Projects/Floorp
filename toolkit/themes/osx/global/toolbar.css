@@ -18,7 +18,7 @@ toolbar {
   -moz-default-appearance: toolbar;
 }
 
-toolbar:-moz-lwtheme {
+*|*:root[lwtheme] toolbar {
   appearance: none;
 }
 

@@ -48,7 +48,7 @@
   --toolbar-bgcolor: var(--toolbar-non-lwt-bgcolor);
   --toolbar-color: var(--toolbar-non-lwt-textcolor);
 
-  &:-moz-lwtheme {
+  &[lwtheme] {
     --toolbar-bgcolor: rgba(255,255,255,.4);
     --toolbar-color: var(--lwt-text-color, inherit);
   }
@@ -72,7 +72,7 @@
     --panel-separator-color: currentColor;
     --toolbar-field-focus-border-color: var(--focus-outline-color);
 
-    &:not(:-moz-lwtheme) {
+    &:not([lwtheme]) {
       --panel-disabled-color: GrayText;
     }
   }
@@ -96,7 +96,7 @@
 
 /* Lightweight theme roots */
 
-:root:-moz-lwtheme {
+:root[lwtheme] {
   toolbar,
   &[lwt-popup="light"] panel {
     color-scheme: light;
