@@ -537,7 +537,7 @@ add_task(async function test_cumulative_searches_history_telemetry() {
       () =>
         history.fullyUpdated &&
         history?.lists[0].rowEls?.length === 1 &&
-        history?.searchQuery,
+        history?.controller?.searchQuery,
       "Expected search results are not shown yet."
     );
 
