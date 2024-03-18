@@ -223,6 +223,7 @@ js::Nursery::Nursery(GCRuntime* gc)
       startPosition_(0),
       capacity_(0),
       enableProfiling_(false),
+      semispaceEnabled_(gc::TuningDefaults::SemispaceNurseryEnabled),
       canAllocateStrings_(true),
       canAllocateBigInts_(true),
       reportDeduplications_(false),
@@ -462,6 +463,20 @@ void js::Nursery::discardCodeAndSetJitFlagsForZone(JS::Zone* zone) {
     jitZone->discardStubs();
     jitZone->setStringsCanBeInNursery(zone->allocNurseryStrings());
   }
+}
+
+void js::Nursery::setSemispaceEnabled(bool enabled) {
+  if (semispaceEnabled() == enabled) {
+    return;
+  }
+
+  if (!isEmpty()) {
+    gc->minorGC(JS::GCReason::EVICT_NURSERY);
+  }
+
+  disable();
+  semispaceEnabled_ = enabled;
+  enable();
 }
 
 bool js::Nursery::isEmpty() const {

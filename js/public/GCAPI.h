@@ -459,6 +459,15 @@ typedef enum JSGCParamKey {
    * Default: ParallelMarkingThresholdMB
    */
   JSGC_PARALLEL_MARKING_THRESHOLD_MB = 50,
+
+  /**
+   * Whether the semispace nursery is enabled.
+   *
+   * Pref: javascript.options.mem.gc_experimental_semispace_nursery
+   * Default: SemispaceNurseryEnabled
+   */
+  JSGC_SEMISPACE_NURSERY_ENABLED = 51,
+
 } JSGCParamKey;
 
 /*

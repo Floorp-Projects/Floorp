@@ -1073,6 +1073,11 @@ bool GCRuntime::setParameter(JSGCParamKey key, uint32_t value,
         marker->incrementalWeakMapMarkingEnabled = value != 0;
       }
       break;
+    case JSGC_SEMISPACE_NURSERY_ENABLED: {
+      AutoUnlockGC unlock(lock);
+      nursery().setSemispaceEnabled(value);
+      break;
+    }
     case JSGC_MIN_EMPTY_CHUNK_COUNT:
       setMinEmptyChunkCount(value, lock);
       break;
@@ -1160,6 +1165,11 @@ void GCRuntime::resetParameter(JSGCParamKey key, AutoLockGC& lock) {
             TuningDefaults::IncrementalWeakMapMarkingEnabled;
       }
       break;
+    case JSGC_SEMISPACE_NURSERY_ENABLED: {
+      AutoUnlockGC unlock(lock);
+      nursery().setSemispaceEnabled(TuningDefaults::SemispaceNurseryEnabled);
+      break;
+    }
     case JSGC_MIN_EMPTY_CHUNK_COUNT:
       setMinEmptyChunkCount(TuningDefaults::MinEmptyChunkCount, lock);
       break;
@@ -1241,6 +1251,8 @@ uint32_t GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock) {
       return parallelMarkingEnabled;
     case JSGC_INCREMENTAL_WEAKMAP_ENABLED:
       return marker().incrementalWeakMapMarkingEnabled;
+    case JSGC_SEMISPACE_NURSERY_ENABLED:
+      return nursery().semispaceEnabled();
     case JSGC_CHUNK_BYTES:
       return ChunkSize;
     case JSGC_HELPER_THREAD_RATIO:

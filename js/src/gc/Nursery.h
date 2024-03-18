@@ -103,6 +103,9 @@ class Nursery {
   void disableBigInts();
   bool canAllocateBigInts() const { return canAllocateBigInts_; }
 
+  void setSemispaceEnabled(bool enabled);
+  bool semispaceEnabled() const { return semispaceEnabled_; }
+
   // Return true if no allocations have been made since the last collection.
   bool isEmpty() const;
 
@@ -552,6 +555,9 @@ class Nursery {
   bool profileWorkers_ = false;
 
   mozilla::TimeDuration profileThreshold_;
+
+  // Whether to use semispace collection.
+  bool semispaceEnabled_;
 
   // Whether we will nursery-allocate strings.
   bool canAllocateStrings_;
