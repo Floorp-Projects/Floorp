@@ -95,6 +95,7 @@ elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
     ]
 elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
     UNIFIED_SOURCES += [
+        "win/nsLocalHandlerAppWin.cpp",
         "win/nsMIMEInfoWin.cpp",
     ]
 
