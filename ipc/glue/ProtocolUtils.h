@@ -110,9 +110,6 @@ struct ActorHandle {
   int mId;
 };
 
-// What happens if Interrupt calls race?
-enum RacyInterruptPolicy { RIPError, RIPChildWins, RIPParentWins };
-
 enum class LinkStatus : uint8_t {
   // The actor has not established a link yet, or the actor is no longer in use
   // by IPC, and its 'Dealloc' method has been called or is being called.
@@ -128,7 +125,7 @@ enum class LinkStatus : uint8_t {
   Connected,
 
   // The link has begun being destroyed. Messages may still be received, but
-  // cannot be sent. (exception: sync/intr replies may be sent while Doomed).
+  // cannot be sent. (exception: sync replies may be sent while Doomed).
   Doomed,
 
   // The link has been destroyed, and messages will no longer be sent or
@@ -223,8 +220,6 @@ class IProtocol : public HasResultCodes {
   virtual Result OnMessageReceived(const Message& aMessage) = 0;
   virtual Result OnMessageReceived(const Message& aMessage,
                                    UniquePtr<Message>& aReply) = 0;
-  virtual Result OnCallReceived(const Message& aMessage,
-                                UniquePtr<Message>& aReply) = 0;
   bool AllocShmem(size_t aSize, Shmem* aOutMem);
   bool AllocUnsafeShmem(size_t aSize, Shmem* aOutMem);
   bool DeallocShmem(Shmem& aMem);
@@ -461,8 +456,7 @@ class IToplevelProtocol : public IRefCountedProtocol {
   // the same thread. This method should be called on the thread to perform
   // the link.
   //
-  // WARNING: Attempting to send a sync or intr message on the same thread
-  // will crash.
+  // WARNING: Attempting to send a sync message on the same thread will crash.
   bool OpenOnSameThread(IToplevelProtocol* aTarget,
                         mozilla::ipc::Side aSide = mozilla::ipc::UnknownSide);
 

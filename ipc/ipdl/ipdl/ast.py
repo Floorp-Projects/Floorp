@@ -266,10 +266,6 @@ class ASYNC(metaclass=PrettyPrinted):
     pretty = "async"
 
 
-class INTR(metaclass=PrettyPrinted):
-    pretty = "intr"
-
-
 class SYNC(metaclass=PrettyPrinted):
     pretty = "sync"
 
