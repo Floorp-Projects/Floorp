@@ -50,7 +50,7 @@ function testWindows(windowsToOpen, expectedResults) {
     is(
       numNormal,
       oResults.normal,
-      "There were " + oResults.normal + " normal windows to repoen"
+      "There were " + oResults.normal + " normal windows to reopen"
     );
   })();
 }
@@ -63,14 +63,15 @@ add_task(async function test_closed_window_states() {
 
   let windowsToOpen = [
     { isPopup: false },
-    { isPopup: false },
+    { isPopup: true },
+    { isPopup: true },
     { isPopup: true },
     { isPopup: true },
     { isPopup: true },
   ];
   let expectedResults = {
-    mac: { popup: 3, normal: 0 },
-    other: { popup: 3, normal: 1 },
+    mac: { popup: 5, normal: 0 },
+    other: { popup: 5, normal: 1 },
   };
 
   await testWindows(windowsToOpen, expectedResults);
@@ -81,10 +82,11 @@ add_task(async function test_closed_window_states() {
     { isPopup: false },
     { isPopup: false },
     { isPopup: false },
+    { isPopup: false },
   ];
   let expectedResults2 = {
-    mac: { popup: 0, normal: 3 },
-    other: { popup: 0, normal: 3 },
+    mac: { popup: 0, normal: 5 },
+    other: { popup: 0, normal: 5 },
   };
 
   await testWindows(windowsToOpen2, expectedResults2);
