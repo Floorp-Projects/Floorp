@@ -63,6 +63,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/136b3fc0377be6dca
 Bug 1876843 - (fix-b29ff000da) remove mozilla dependency on api:enable_media
 
 Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7f403ee038e9797a1aff6161fc70a2d92769851f
+
+Bug 1883116 - (fix-3d9c3687a4) Supporting change of call_factory.cc to create_call.cc.
+
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b86cb7278bc4e557104cec0313d83511b9c8f40d
 ---
  .gn                                           |  2 +
  BUILD.gn                                      | 46 ++++++++++++++++++-
@@ -466,7 +470,7 @@ index 84a0968ee9..c0209bf0d0 100644
  if (rtc_include_tests) {
    rtc_source_set("test_feedback_generator_interface") {
 diff --git a/call/BUILD.gn b/call/BUILD.gn
-index 41ed587950..1d1ca1de19 100644
+index 41ed587950..cca88ea7bb 100644
 --- a/call/BUILD.gn
 +++ b/call/BUILD.gn
 @@ -44,7 +44,7 @@ rtc_library("call_interfaces") {
@@ -484,7 +488,7 @@ index 41ed587950..1d1ca1de19 100644
    ]
 +  if (build_with_mozilla) { # See Bug 1820869.
 +    sources -= [
-+      "call_factory.cc",
++      "create_call.cc",
 +      "degraded_call.cc",
 +    ]
 +    deps -= [
