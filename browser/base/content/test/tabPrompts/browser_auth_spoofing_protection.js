@@ -119,7 +119,7 @@ async function waitForDialog(doConfirmPrompt, crossDomain, prefEnabled) {
     } else {
       Assert.equal(
         dialog._overlay.getAttribute("hideContent"),
-        "",
+        null,
         "Dialog overlay does not hide the current sites content"
       );
       Assert.equal(
@@ -137,7 +137,7 @@ async function waitForDialog(doConfirmPrompt, crossDomain, prefEnabled) {
   } else {
     Assert.equal(
       dialog._overlay.getAttribute("hideContent"),
-      "",
+      null,
       "Dialog overlay does not hide the current sites content"
     );
     Assert.equal(

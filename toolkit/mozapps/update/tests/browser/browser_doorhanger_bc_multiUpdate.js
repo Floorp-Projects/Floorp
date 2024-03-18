@@ -64,7 +64,7 @@ add_task(async function doorhanger_bc_multiUpdate() {
 
       is(
         PanelUI.menuButton.getAttribute("badge-status"),
-        "",
+        null,
         "Should not have restart badge during staging"
       );
 

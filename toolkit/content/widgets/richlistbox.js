@@ -116,7 +116,7 @@
           var searchText =
             "searchLabel" in listitem
               ? listitem.searchLabel
-              : listitem.getAttribute("label"); // (see also bug 250123)
+              : listitem.getAttribute("label") || ""; // (see also bug 250123)
           searchText = searchText.substring(0, length).toLowerCase();
           if (searchText == incrementalString) {
             this.ensureIndexIsVisible(k);
@@ -227,7 +227,7 @@
       this.setAttribute("seltype", val);
     }
     get selType() {
-      return this.getAttribute("seltype");
+      return this.getAttribute("seltype") || "";
     }
 
     // nsIDOMXULSelectControlElement
@@ -977,7 +977,7 @@
     }
 
     get value() {
-      return this.getAttribute("value");
+      return this.getAttribute("value") || "";
     }
 
     /**

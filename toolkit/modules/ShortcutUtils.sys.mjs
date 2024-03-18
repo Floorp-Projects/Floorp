@@ -56,9 +56,12 @@ export var ShortcutUtils = {
   },
 
   getModifierString(elemMod) {
+    if (!elemMod) {
+      return "";
+    }
+
     let elemString = "";
     let haveCloverLeaf = false;
-
     if (elemMod.match("accel")) {
       if (Services.appinfo.OS == "Darwin") {
         haveCloverLeaf = true;

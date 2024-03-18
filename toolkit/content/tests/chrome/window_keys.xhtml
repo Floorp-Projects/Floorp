@@ -82,7 +82,7 @@ function runTest()
   document.documentElement.appendChild(keyset);
   iterateKeys(true, "appended");
 
-  var accelText = menuitem => menuitem.getAttribute("acceltext").toLowerCase();
+  var accelText = menuitem => (menuitem.getAttribute("acceltext") || "").toLowerCase();
 
   $("menubutton").open = true;
 

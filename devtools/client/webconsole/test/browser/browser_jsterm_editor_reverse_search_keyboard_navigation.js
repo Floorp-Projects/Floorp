@@ -42,7 +42,7 @@ add_task(async function () {
   await wait(1000);
   is(
     readerModeButtonEl.getAttribute("readeractive"),
-    "",
+    null,
     "reader mode wasn't activated"
   );
 
@@ -72,7 +72,7 @@ add_task(async function () {
   await wait(1000);
   is(
     readerModeButtonEl.getAttribute("readeractive"),
-    "",
+    null,
     "reader mode still wasn't activated"
   );
 

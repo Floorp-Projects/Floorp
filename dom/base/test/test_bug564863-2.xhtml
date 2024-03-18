@@ -55,11 +55,11 @@ SimpleTest.waitForExplicitFinish();
     // not when run as a Mochitest plain.
     //is(xul_cs.color, "rgb(0, 0, 0)", "xul color " + test);
 
-    attrValue = removed ? null : "";
+    let attrValue = removed ? null : "";
 
     is(xul.id, "", "xul id " + test);
 
-    is(xul.getAttribute("id"), "",        "xul getAttribute " + test);
+    is(xul.getAttribute("id"), attrValue, "xul getAttribute " + test);
 
     is($("xul_id"), null, "xul getElementById " + test);
   }
@@ -149,7 +149,7 @@ SimpleTest.waitForExplicitFinish();
   await new Promise(SimpleTest.executeSoon);
   if (mutation) {
     is(mutation.target, xul, "target is xul");
-    is(xul.getAttribute("id"), "", "xul no longer has id attr");
+    is(xul.getAttribute("id"), null, "xul no longer has id attr");
     is(xul.id, "", "xul no longer has id");
     xul.id = "other_xul_id";
   } else {

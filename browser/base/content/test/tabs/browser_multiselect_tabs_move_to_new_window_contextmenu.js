@@ -61,9 +61,9 @@ add_task(async function testLazyTabs() {
     await triggerClickOn(oldTabs[i], { ctrlKey: true });
   }
 
-  isnot(oldTabs[0].linkedPanel, "", `Old tab 0 shouldn't be lazy`);
+  isnot(oldTabs[0].linkedPanel, null, `Old tab 0 shouldn't be lazy`);
   for (let i = 1; i < numTabs; ++i) {
-    is(oldTabs[i].linkedPanel, "", `Old tab ${i} should be lazy`);
+    is(oldTabs[i].linkedPanel, null, `Old tab ${i} should be lazy`);
   }
 
   is(gBrowser.multiSelectedTabsCount, numTabs, `${numTabs} multiselected tabs`);
@@ -79,11 +79,11 @@ add_task(async function testLazyTabs() {
       if (i == 0) {
         isnot(
           oldTab.linkedPanel,
-          "",
+          null,
           `Old tab ${i} should continue not being lazy`
         );
       } else if (i > 0) {
-        is(oldTab.linkedPanel, "", `Old tab ${i} should continue being lazy`);
+        is(oldTab.linkedPanel, null, `Old tab ${i} should continue being lazy`);
       } else {
         return;
       }
@@ -101,9 +101,13 @@ add_task(async function testLazyTabs() {
   await tabsMoved;
   let newTabs = newWindow.gBrowser.tabs;
 
-  isnot(newTabs[0].linkedPanel, "", `New tab 0 should continue not being lazy`);
+  isnot(
+    newTabs[0].linkedPanel,
+    null,
+    `New tab 0 should continue not being lazy`
+  );
   for (let i = 1; i < numTabs; ++i) {
-    is(newTabs[i].linkedPanel, "", `New tab ${i} should continue being lazy`);
+    is(newTabs[i].linkedPanel, null, `New tab ${i} should continue being lazy`);
   }
 
   is(

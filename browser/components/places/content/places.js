@@ -1168,7 +1168,7 @@ var ViewMenu = {
         menuitem.setAttribute("type", "radio");
         menuitem.setAttribute("name", "columns");
         // This column is the sort key. Its item is checked.
-        if (column.getAttribute("sortDirection") != "") {
+        if (column.hasAttribute("sortDirection")) {
           menuitem.setAttribute("checked", "true");
         }
       } else if (type == "checkbox") {

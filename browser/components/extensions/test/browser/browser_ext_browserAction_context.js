@@ -184,7 +184,11 @@ async function runTests(options) {
     is(getListStyleImage(button), details.icon, "icon URL is correct");
     is(button.getAttribute("tooltiptext"), title, "image title is correct");
     is(button.getAttribute("label"), title, "image label is correct");
-    is(button.getAttribute("badge"), details.badge, "badge text is correct");
+    is(
+      button.getAttribute("badge") || "",
+      details.badge,
+      "badge text is correct"
+    );
     is(
       button.getAttribute("disabled") == "true",
       !details.enabled,

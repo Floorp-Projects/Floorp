@@ -57,7 +57,7 @@ add_task(async function () {
   );
   is(
     tooltip.getAttribute("position"),
-    "",
+    null,
     "tooltip position attribute for tab"
   );
 

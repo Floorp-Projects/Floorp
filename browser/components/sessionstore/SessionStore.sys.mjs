@@ -3635,7 +3635,7 @@ var SessionStoreInternal = {
     }
 
     // Create a new tab.
-    let userContextId = aTab.getAttribute("usercontextid");
+    let userContextId = aTab.getAttribute("usercontextid") || "";
 
     let tabOptions = {
       userContextId,

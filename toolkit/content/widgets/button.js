@@ -84,7 +84,7 @@
         ).toLowerCase();
 
         // If the accesskey of the current button is pressed, just activate it
-        if (this.accessKey.toLowerCase() == charPressedLower) {
+        if (this.accessKey?.toLowerCase() == charPressedLower) {
           this.click();
           return;
         }
@@ -201,7 +201,7 @@
       while (iterator.nextNode()) {
         var test = iterator.currentNode;
         if (
-          test.accessKey.toLowerCase() == aAccessKeyLower &&
+          test.accessKey?.toLowerCase() == aAccessKeyLower &&
           !test.disabled &&
           !test.collapsed &&
           !test.hidden

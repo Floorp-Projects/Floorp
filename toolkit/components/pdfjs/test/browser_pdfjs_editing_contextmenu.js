@@ -130,7 +130,7 @@ function assertMenuitems(menuitems, expected) {
         elmt =>
           !elmt.id.includes("-sep-") &&
           !elmt.hidden &&
-          ["", "false"].includes(elmt.getAttribute("disabled"))
+          [null, "false"].includes(elmt.getAttribute("disabled"))
       )
       .map(elmt => elmt.id),
     expected

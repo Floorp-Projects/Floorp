@@ -173,7 +173,7 @@ async function close_subdialog_and_test_generic_end_state(
       );
       Assert.equal(
         frame.getAttribute("style"),
-        "",
+        null,
         "inline styles should be cleared"
       );
       Assert.equal(

@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-async function testVal(aExpected, overflowSide = "") {
+async function testVal(aExpected, overflowSide = null) {
   info(`Testing ${aExpected}`);
   try {
     gURLBar.setURI(makeURI(aExpected));

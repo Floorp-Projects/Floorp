@@ -1021,7 +1021,7 @@ add_task(async function testDisableTPCheckBoxDisablesEmailTP() {
   // Verify the checkbox is unchecked after clicking.
   is(
     tpCheckbox.getAttribute("checked"),
-    "",
+    null,
     "Tracking protection checkbox is unchecked"
   );
 

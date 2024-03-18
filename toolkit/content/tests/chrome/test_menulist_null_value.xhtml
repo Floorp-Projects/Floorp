@@ -34,7 +34,7 @@ function runTests()
 
   list.selectedItem = null;
   is(list.value, "", "Check list value after setting selectedItem to null");
-  is(list.getAttribute("label"), "", "Check list label after setting selectedItem to null");
+  is(list.getAttribute("label"), null, "Check list label after setting selectedItem to null");
 
   // select something again to make sure the label is not already empty
   list.selectedIndex = 1;
@@ -61,14 +61,14 @@ function runTests()
   // set the value to null and test it (bug 408940)
   list.value = null;
   is(list.value, "", "Check list value after setting value to null");
-  is(list.getAttribute("label"), "", "Check list label after setting value to null");
+  is(list.getAttribute("label"), null, "Check list label after setting value to null");
 
   // select something again to make sure the label is not already empty
   list.selectedIndex = 1;
   // set the value to undefined and test it (bug 408940)
   list.value = undefined;
   is(list.value, "", "Check list value after setting value to undefined");
-  is(list.getAttribute("label"), "", "Check list label after setting value to undefined");
+  is(list.getAttribute("label"), null, "Check list label after setting value to undefined");
 
   // select something again to make sure the label is not already empty
   list.selectedIndex = 1;
@@ -76,7 +76,7 @@ function runTests()
   // and make sure the previous label is removed
   list.value = "this does not exist";
   is(list.value, "this does not exist", "Check the list value after setting it to something not associated witn an existing menuitem");
-  is(list.getAttribute("label"), "", "Check that the list label is empty after selecting a nonexistent item");
+  is(list.getAttribute("label"), null, "Check that the list label is empty after selecting a nonexistent item");
 
   SimpleTest.finish();
 }

@@ -153,7 +153,7 @@ XULStore.prototype = {
     }
 
     const uri = node.ownerDocument.documentURI;
-    const value = node.getAttribute(attr);
+    const value = node.getAttribute(attr) || "";
 
     if (node.localName == "window") {
       this.log("Persisting attributes to windows is handled by AppWindow.");

@@ -244,12 +244,12 @@ async function assertMixedContentBlockingState(tabbrowser, states = {}) {
   );
   gIdentityHandler._identityIconBox.click();
   await promisePanelOpen;
-  let popupAttr = doc
-    .getElementById("identity-popup")
-    .getAttribute("mixedcontent");
-  let bodyAttr = doc
-    .getElementById("identity-popup-securityView-extended-info")
-    .getAttribute("mixedcontent");
+  let popupAttr =
+    doc.getElementById("identity-popup").getAttribute("mixedcontent") || "";
+  let bodyAttr =
+    doc
+      .getElementById("identity-popup-securityView-extended-info")
+      .getAttribute("mixedcontent") || "";
 
   is(
     popupAttr.includes("active-loaded"),

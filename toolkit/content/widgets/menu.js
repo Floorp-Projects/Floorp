@@ -19,7 +19,7 @@
         this.setAttribute("value", val);
       }
       get value() {
-        return this.getAttribute("value");
+        return this.getAttribute("value") || "";
       }
 
       // nsIDOMXULSelectControlItemElement

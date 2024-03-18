@@ -1078,7 +1078,7 @@
     }
 
     get selType() {
-      return this.getAttribute("seltype");
+      return this.getAttribute("seltype") || "";
     }
 
     set currentIndex(val) {

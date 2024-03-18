@@ -153,7 +153,7 @@
 
     // nsIDOMXULSelectControlElement
     get value() {
-      return this.getAttribute("value");
+      return this.getAttribute("value") || "";
     }
 
     // nsIDOMXULMenuListElement
@@ -163,12 +163,12 @@
 
     // nsIDOMXULMenuListElement
     get image() {
-      return this.getAttribute("image");
+      return this.getAttribute("image") || "";
     }
 
     // nsIDOMXULMenuListElement
     get label() {
-      return this.getAttribute("label");
+      return this.getAttribute("label") || "";
     }
 
     set description(val) {
@@ -176,7 +176,7 @@
     }
 
     get description() {
-      return this.getAttribute("description");
+      return this.getAttribute("description") || "";
     }
 
     // nsIDOMXULMenuListElement

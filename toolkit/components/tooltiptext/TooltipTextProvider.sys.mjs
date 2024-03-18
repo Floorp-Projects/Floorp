@@ -69,11 +69,7 @@ TooltipTextProvider.prototype = {
       }
       if (tipElement.namespaceURI == XUL_NS) {
         lookingForSVGTitle = false;
-        // NOTE: getAttribute behaves differently for XUL so we can't rely on
-        // it returning null, see bug 232598.
-        titleText = tipElement.hasAttribute("tooltiptext")
-          ? tipElement.getAttribute("tooltiptext")
-          : null;
+        titleText = tipElement.getAttribute("tooltiptext");
       } else if (!defView.SVGElement.isInstance(tipElement)) {
         lookingForSVGTitle = false;
         titleText = tipElement.getAttribute("title");

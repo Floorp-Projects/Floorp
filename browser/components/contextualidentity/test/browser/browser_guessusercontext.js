@@ -93,7 +93,7 @@ add_task(async function test() {
   openURIFromExternal(HOST_EXAMPLE.spec + "?new");
   is(
     gBrowser.selectedTab.getAttribute("usercontextid"),
-    "",
+    null,
     "opener flow with default user context ID forced by pref"
   );
 });

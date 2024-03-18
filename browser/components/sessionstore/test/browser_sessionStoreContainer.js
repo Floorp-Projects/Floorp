@@ -14,7 +14,7 @@ add_task(async function () {
     await promiseBrowserLoaded(browser);
 
     let tab2 = gBrowser.duplicateTab(tab);
-    Assert.equal(tab2.getAttribute("usercontextid"), i);
+    Assert.equal(tab2.getAttribute("usercontextid") || "", i);
     let browser2 = tab2.linkedBrowser;
     await promiseTabRestored(tab2);
 

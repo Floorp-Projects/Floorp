@@ -11,7 +11,7 @@ var gItemsToTest = {
 };
 
 function expectedAttributeValueFromPrefs(prefs) {
-  return prefs.every(pref => Services.prefs.getBoolPref(pref)) ? "" : "true";
+  return prefs.every(pref => Services.prefs.getBoolPref(pref)) ? null : "true";
 }
 
 function checkItem(el, prefs) {

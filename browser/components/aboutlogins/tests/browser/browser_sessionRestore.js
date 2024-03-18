@@ -35,7 +35,7 @@ add_task(async function () {
     createLazyBrowser: true,
   });
 
-  Assert.equal(lazyTab.linkedPanel, "", "Tab is lazy");
+  Assert.equal(lazyTab.linkedPanel, null, "Tab is lazy");
   let tabLoaded = new Promise(resolve => {
     gBrowser.addTabsProgressListener({
       async onLocationChange(aBrowser) {

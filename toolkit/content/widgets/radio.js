@@ -214,7 +214,7 @@
     }
 
     get value() {
-      return this.getAttribute("value");
+      return this.getAttribute("value") || "";
     }
 
     set disabled(val) {
@@ -526,7 +526,7 @@
     }
 
     get value() {
-      return this.getAttribute("value");
+      return this.getAttribute("value") || "";
     }
 
     get selected() {

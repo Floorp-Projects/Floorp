@@ -290,7 +290,7 @@ async function testModuleNameHelper(moduleName, acceptButtonShouldBeDisabled) {
   let dialogNode = win.document.querySelector("dialog");
   Assert.equal(
     dialogNode.getAttribute("buttondisabledaccept"),
-    acceptButtonShouldBeDisabled ? "true" : "", // it's a string
+    acceptButtonShouldBeDisabled ? "true" : null,
     `dialog accept button should ${
       acceptButtonShouldBeDisabled ? "" : "not "
     }be disabled`
