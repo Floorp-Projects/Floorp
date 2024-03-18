@@ -9,6 +9,7 @@
 
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/Unused.h"
 
 #include "nsHttp.h"
@@ -22,6 +23,7 @@
 #include "nsCRT.h"
 #include "nsICryptoHash.h"
 #include "nsComponentManagerUtils.h"
+#include "pk11pub.h"
 
 constexpr uint16_t DigestLength(uint16_t aAlgorithm) {
   if (aAlgorithm & (ALGO_SHA256 | ALGO_SHA256_SESS)) {
@@ -321,9 +323,13 @@ nsHttpDigestAuth::GenerateCredentials(
   // returned Authentication-Info header). also used for session info.
   //
   nsAutoCString cnonce;
-  static const char hexChar[] = "0123456789abcdef";
-  for (int i = 0; i < 16; ++i) {
-    cnonce.Append(hexChar[(int)(15.0 * rand() / (RAND_MAX + 1.0))]);
+  nsTArray<uint8_t> cnonceBuf;
+  cnonceBuf.SetLength(StaticPrefs::network_http_digest_auth_cnonce_length() /
+                      2);
+  PK11_GenerateRandom(reinterpret_cast<unsigned char*>(cnonceBuf.Elements()),
+                      cnonceBuf.Length());
+  for (auto byte : cnonceBuf) {
+    cnonce.AppendPrintf("%02x", byte);
   }
   LOG(("   cnonce=%s\n", cnonce.get()));
 

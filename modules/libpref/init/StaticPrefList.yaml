@@ -13187,6 +13187,12 @@
   value: true
   mirror: always
 
+  # The length of cnonce string used in HTTP digest auth.
+- name: network.http.digest_auth_cnonce_length
+  type: uint32_t
+  value: 64
+  mirror: always
+
   # If true, HTTP response content-type headers will be parsed using the standards-compliant MimeType parser
 - name: network.standard_content_type_parsing.response_headers
   type: RelaxedAtomicBool
