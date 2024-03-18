@@ -20,6 +20,8 @@ namespace JS::loader {
 // LoadedScript
 //////////////////////////////////////////////////////////////
 
+MOZ_DEFINE_MALLOC_SIZE_OF(LoadedScriptMallocSizeOf)
+
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(LoadedScript)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
@@ -52,7 +54,60 @@ LoadedScript::LoadedScript(ScriptKind aKind,
   MOZ_ASSERT(mURI);
 }
 
-LoadedScript::~LoadedScript() { mozilla::DropJSObjects(this); }
+LoadedScript::~LoadedScript() {
+  mozilla::UnregisterWeakMemoryReporter(this);
+  mozilla::DropJSObjects(this);
+}
+
+void LoadedScript::RegisterMemoryReport() {
+  mozilla::RegisterWeakMemoryReporter(this);
+}
+
+NS_IMETHODIMP
+LoadedScript::CollectReports(nsIHandleReportCallback* aHandleReport,
+                             nsISupports* aData, bool aAnonymize) {
+#define COLLECT_REPORT(path, kind) \
+    MOZ_COLLECT_REPORT(path, KIND_HEAP, UNITS_BYTES, \
+                       SizeOfIncludingThis(LoadedScriptMallocSizeOf), \
+                       "Memory used for LoadedScript to hold on " kind \
+                       " across documents")
+
+  switch (mKind) {
+  case ScriptKind::eClassic:
+    COLLECT_REPORT("explicit/js/script/loaded-script/classic", "scripts");
+    break;
+  case ScriptKind::eImportMap:
+    COLLECT_REPORT("explicit/js/script/loaded-script/import-map",
+                   "import-maps");
+    break;
+  case ScriptKind::eModule:
+    COLLECT_REPORT("explicit/js/script/loaded-script/module", "modules");
+    break;
+  case ScriptKind::eEvent:
+    COLLECT_REPORT("explicit/js/script/loaded-script/event",
+                   "event scripts");
+    break;
+  }
+
+#undef COLLECT_REPORT
+  return NS_OK;
+}
+
+size_t LoadedScript::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
+  size_t bytes = aMallocSizeOf(this);
+
+  if (IsTextSource()) {
+    if (IsUTF16Text()) {
+      bytes += ScriptText<char16_t>().sizeOfExcludingThis(aMallocSizeOf);
+    } else {
+      bytes += ScriptText<Utf8Unit>().sizeOfExcludingThis(aMallocSizeOf);
+    }
+  }
+
+  bytes += mScriptBytecode.sizeOfExcludingThis(aMallocSizeOf);
+  return bytes;
+}
+
 
 void LoadedScript::AssociateWithScript(JSScript* aScript) {
   // Verify that the rewritten URL is available when manipulating LoadedScript.

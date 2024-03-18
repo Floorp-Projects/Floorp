@@ -12,12 +12,14 @@
 
 #include "mozilla/Maybe.h"
 #include "mozilla/MaybeOneOf.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 #include "mozilla/Variant.h"
 #include "mozilla/Vector.h"
 
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsIMemoryReporter.h"
 
 #include "jsapi.h"
 #include "ScriptKind.h"
@@ -39,7 +41,17 @@ class ModuleScript;
 class EventScript;
 class LoadContextBase;
 
-class LoadedScript : public nsISupports {
+// A LoadedScript is a place where the Script is stored once it is loaded. It is
+// not unique to a load, and can be shared across loads as long as it is
+// properly ref-counted by each load instance.
+//
+// When the load is not performed, the URI represents the resource to be loaded,
+// and it is replaced by the absolute resource location once loaded.
+//
+// As the LoadedScript can be shared, using the SharedSubResourceCache, it is
+// exposed to the memory reporter such that sharing might be accounted for
+// properly.
+class LoadedScript : public nsIMemoryReporter {
   ScriptKind mKind;
   const mozilla::dom::ReferrerPolicy mReferrerPolicy;
   RefPtr<ScriptFetchOptions> mFetchOptions;
@@ -53,7 +65,17 @@ class LoadedScript : public nsISupports {
   virtual ~LoadedScript();
 
  public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  // When the memory should be reported, register it using RegisterMemoryReport,
+  // and make sure to call SizeOfIncludingThis in the enclosing container.
+  //
+  // Each reported script would be listed under
+  // `explicit/js/script/loaded-script/<kind>`.
+  void RegisterMemoryReport();
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+
+ public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS;
+  NS_DECL_NSIMEMORYREPORTER;
   NS_DECL_CYCLE_COLLECTION_CLASS(LoadedScript)
 
   bool IsClassicScript() const { return mKind == ScriptKind::eClassic; }
