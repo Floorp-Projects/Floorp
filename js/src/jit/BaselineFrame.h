@@ -109,7 +109,9 @@ class BaselineFrame {
   bool isConstructing() const {
     return CalleeTokenIsConstructing(calleeToken());
   }
-  JSScript* script() const { return ScriptFromCalleeToken(calleeToken()); }
+  JSScript* script() const {
+    return MaybeForwardedScriptFromCalleeToken(calleeToken());
+  }
   JSFunction* callee() const { return CalleeTokenToFunction(calleeToken()); }
   Value calleev() const { return ObjectValue(*callee()); }
 

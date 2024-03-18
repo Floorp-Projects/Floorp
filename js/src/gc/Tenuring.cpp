@@ -44,10 +44,12 @@ using mozilla::PodCopy;
 
 constexpr size_t MAX_DEDUPLICATABLE_STRING_LENGTH = 500;
 
-TenuringTracer::TenuringTracer(JSRuntime* rt, Nursery* nursery)
+TenuringTracer::TenuringTracer(JSRuntime* rt, Nursery* nursery,
+                               bool tenureEverything)
     : JSTracer(rt, JS::TracerKind::Tenuring,
                JS::WeakMapTraceAction::TraceKeysAndValues),
-      nursery_(*nursery) {
+      nursery_(*nursery),
+      tenureEverything(tenureEverything) {
   stringDeDupSet.emplace();
 }
 
@@ -64,21 +66,31 @@ static inline void UpdateAllocSiteOnTenure(Cell* cell) {
 
 void TenuringTracer::onObjectEdge(JSObject** objp, const char* name) {
   JSObject* obj = *objp;
-  if (!IsInsideNursery(obj)) {
+  if (!nursery_.inCollectedRegion(obj)) {
+    MOZ_ASSERT(!obj->isForwarded());
     return;
   }
+
+  *objp = promoteOrForward(obj);
+  MOZ_ASSERT(!(*objp)->isForwarded());
+}
+
+JSObject* TenuringTracer::promoteOrForward(JSObject* obj) {
+  MOZ_ASSERT(nursery_.inCollectedRegion(obj));
 
   if (obj->isForwarded()) {
     const gc::RelocationOverlay* overlay = gc::RelocationOverlay::fromCell(obj);
-    *objp = static_cast<JSObject*>(overlay->forwardingAddress());
-    return;
+    obj = static_cast<JSObject*>(overlay->forwardingAddress());
+    if (IsInsideNursery(obj)) {
+      promotedToNursery = true;
+    }
+    return obj;
   }
 
-  onNonForwardedNurseryObjectEdge(objp);
+  return onNonForwardedNurseryObject(obj);
 }
 
-void TenuringTracer::onNonForwardedNurseryObjectEdge(JSObject** objp) {
-  JSObject* obj = *objp;
+JSObject* TenuringTracer::onNonForwardedNurseryObject(JSObject* obj) {
   MOZ_ASSERT(IsInsideNursery(obj));
   MOZ_ASSERT(!obj->isForwarded());
 
@@ -87,61 +99,76 @@ void TenuringTracer::onNonForwardedNurseryObjectEdge(JSObject** objp) {
   // Take a fast path for tenuring a plain object which is by far the most
   // common case.
   if (obj->is<PlainObject>()) {
-    *objp = movePlainObjectToTenured(&obj->as<PlainObject>());
-    return;
+    return movePlainObjectToTenured(&obj->as<PlainObject>());
   }
 
-  *objp = moveToTenuredSlow(obj);
+  return moveToTenuredSlow(obj);
 }
 
 void TenuringTracer::onStringEdge(JSString** strp, const char* name) {
   JSString* str = *strp;
-  if (!IsInsideNursery(str)) {
+  if (!nursery_.inCollectedRegion(str)) {
     return;
   }
+
+  *strp = promoteOrForward(str);
+}
+
+JSString* TenuringTracer::promoteOrForward(JSString* str) {
+  MOZ_ASSERT(nursery_.inCollectedRegion(str));
 
   if (str->isForwarded()) {
     const gc::RelocationOverlay* overlay = gc::RelocationOverlay::fromCell(str);
-    *strp = static_cast<JSString*>(overlay->forwardingAddress());
-    return;
+    str = static_cast<JSString*>(overlay->forwardingAddress());
+    if (IsInsideNursery(str)) {
+      promotedToNursery = true;
+    }
+    return str;
   }
 
-  onNonForwardedNurseryStringEdge(strp);
+  return onNonForwardedNurseryString(str);
 }
 
-void TenuringTracer::onNonForwardedNurseryStringEdge(JSString** strp) {
-  JSString* str = *strp;
+JSString* TenuringTracer::onNonForwardedNurseryString(JSString* str) {
   MOZ_ASSERT(IsInsideNursery(str));
   MOZ_ASSERT(!str->isForwarded());
 
   UpdateAllocSiteOnTenure(str);
 
-  *strp = moveToTenured(str);
+  return moveToTenured(str);
 }
 
 void TenuringTracer::onBigIntEdge(JS::BigInt** bip, const char* name) {
   JS::BigInt* bi = *bip;
-  if (!IsInsideNursery(bi)) {
+  if (!nursery_.inCollectedRegion(bi)) {
     return;
   }
+
+  *bip = promoteOrForward(bi);
+}
+
+JS::BigInt* TenuringTracer::promoteOrForward(JS::BigInt* bi) {
+  MOZ_ASSERT(nursery_.inCollectedRegion(bi));
 
   if (bi->isForwarded()) {
     const gc::RelocationOverlay* overlay = gc::RelocationOverlay::fromCell(bi);
-    *bip = static_cast<JS::BigInt*>(overlay->forwardingAddress());
-    return;
+    bi = static_cast<JS::BigInt*>(overlay->forwardingAddress());
+    if (IsInsideNursery(bi)) {
+      promotedToNursery = true;
+    }
+    return bi;
   }
 
-  onNonForwardedNurseryBigIntEdge(bip);
+  return onNonForwardedNurseryBigInt(bi);
 }
 
-void TenuringTracer::onNonForwardedNurseryBigIntEdge(JS::BigInt** bip) {
-  JS::BigInt* bi = *bip;
+JS::BigInt* TenuringTracer::onNonForwardedNurseryBigInt(JS::BigInt* bi) {
   MOZ_ASSERT(IsInsideNursery(bi));
   MOZ_ASSERT(!bi->isForwarded());
 
   UpdateAllocSiteOnTenure(bi);
 
-  *bip = moveToTenured(bi);
+  return moveToTenured(bi);
 }
 
 void TenuringTracer::onSymbolEdge(JS::Symbol** symp, const char* name) {}
@@ -156,7 +183,7 @@ void TenuringTracer::onJitCodeEdge(jit::JitCode** codep, const char* name) {}
 void TenuringTracer::onScopeEdge(Scope** scopep, const char* name) {}
 
 void TenuringTracer::traverse(JS::Value* thingp) {
-  MOZ_ASSERT(!nursery().isInside(thingp));
+  MOZ_ASSERT(!nursery().inCollectedRegion(thingp));
 
   Value value = *thingp;
   CheckTracedThing(this, value);
@@ -166,66 +193,71 @@ void TenuringTracer::traverse(JS::Value* thingp) {
   }
 
   Cell* cell = value.toGCThing();
-  if (!IsInsideNursery(cell)) {
+  if (!nursery_.inCollectedRegion(cell)) {
     return;
   }
 
   if (cell->isForwarded()) {
     const gc::RelocationOverlay* overlay =
         gc::RelocationOverlay::fromCell(cell);
-    thingp->changeGCThingPayload(overlay->forwardingAddress());
+    Cell* target = overlay->forwardingAddress();
+    thingp->changeGCThingPayload(target);
+    if (IsInsideNursery(target)) {
+      promotedToNursery = true;
+    }
     return;
   }
 
   // We only care about a few kinds of GC thing here and this generates much
   // tighter code than using MapGCThingTyped.
   if (value.isObject()) {
-    JSObject* obj = &value.toObject();
-    onNonForwardedNurseryObjectEdge(&obj);
+    JSObject* obj = onNonForwardedNurseryObject(&value.toObject());
     MOZ_ASSERT(obj != &value.toObject());
     *thingp = JS::ObjectValue(*obj);
     return;
   }
 #ifdef ENABLE_RECORD_TUPLE
   if (value.isExtendedPrimitive()) {
-    JSObject* obj = &value.toExtendedPrimitive();
-    onNonForwardedNurseryObjectEdge(&obj);
+    JSObject* obj = onNonForwardedNurseryObject(&value.toExtendedPrimitive());
     MOZ_ASSERT(obj != &value.toExtendedPrimitive());
     *thingp = JS::ExtendedPrimitiveValue(*obj);
     return;
   }
 #endif
   if (value.isString()) {
-    JSString* str = value.toString();
-    onNonForwardedNurseryStringEdge(&str);
+    JSString* str = onNonForwardedNurseryString(value.toString());
     MOZ_ASSERT(str != value.toString());
     *thingp = JS::StringValue(str);
     return;
   }
   MOZ_ASSERT(value.isBigInt());
-  JS::BigInt* bi = value.toBigInt();
-  onNonForwardedNurseryBigIntEdge(&bi);
+  JS::BigInt* bi = onNonForwardedNurseryBigInt(value.toBigInt());
   MOZ_ASSERT(bi != value.toBigInt());
   *thingp = JS::BigIntValue(bi);
 }
 
 void TenuringTracer::traverse(wasm::AnyRef* thingp) {
-  MOZ_ASSERT(!nursery().isInside(thingp));
+  MOZ_ASSERT(!nursery().inCollectedRegion(thingp));
 
   wasm::AnyRef value = *thingp;
   CheckTracedThing(this, value);
 
+  Cell* cell = value.toGCThing();
+  if (!nursery_.inCollectedRegion(cell)) {
+    return;
+  }
+
   wasm::AnyRef post = wasm::AnyRef::invalid();
   switch (value.kind()) {
     case wasm::AnyRefKind::Object: {
-      JSObject* obj = &value.toJSObject();
-      onObjectEdge(&obj, "value");
+      JSObject* obj = promoteOrForward(&value.toJSObject());
+      MOZ_ASSERT(obj != &value.toJSObject());
       post = wasm::AnyRef::fromJSObject(*obj);
       break;
     }
     case wasm::AnyRefKind::String: {
-      JSString* str = value.toJSString();
-      onStringEdge(&str, "string");
+      JSString* str = promoteOrForward(value.toJSString());
+      MOZ_ASSERT(str != value.toJSString());
       post = wasm::AnyRef::fromJSString(str);
       break;
     }
@@ -236,10 +268,19 @@ void TenuringTracer::traverse(wasm::AnyRef* thingp) {
     }
   }
 
-  if (post != value) {
-    *thingp = post;
-  }
+  *thingp = post;
 }
+
+class MOZ_RAII TenuringTracer::AutoPromotedAnyToNursery {
+ public:
+  explicit AutoPromotedAnyToNursery(TenuringTracer& trc) : trc_(trc) {
+    trc.promotedToNursery = false;
+  }
+  explicit operator bool() const { return trc_.promotedToNursery; }
+
+ private:
+  TenuringTracer& trc_;
+};
 
 template <typename T>
 void js::gc::StoreBuffer::MonoTypeBuffer<T>::trace(TenuringTracer& mover,
@@ -279,6 +320,8 @@ void js::gc::StoreBuffer::SlotsEdge::trace(TenuringTracer& mover) const {
 
   MOZ_ASSERT(!IsInsideNursery(obj), "obj shouldn't live in nursery.");
 
+  TenuringTracer::AutoPromotedAnyToNursery promotedToNursery(mover);
+
   if (kind() == ElementKind) {
     uint32_t initLen = obj->getDenseInitializedLength();
     uint32_t numShifted = obj->getElementsHeader()->numShiftedElements();
@@ -289,22 +332,20 @@ void js::gc::StoreBuffer::SlotsEdge::trace(TenuringTracer& mover) const {
     clampedEnd = numShifted < clampedEnd ? clampedEnd - numShifted : 0;
     clampedEnd = std::min(clampedEnd, initLen);
     MOZ_ASSERT(clampedStart <= clampedEnd);
-    mover.traceSlots(
-        static_cast<HeapSlot*>(obj->getDenseElements() + clampedStart)
-            ->unbarrieredAddress(),
-        clampedEnd - clampedStart);
+    auto* slotStart =
+        static_cast<HeapSlot*>(obj->getDenseElements() + clampedStart);
+    uint32_t nslots = clampedEnd - clampedStart;
+    mover.traceObjectElements(slotStart->unbarrieredAddress(), nslots);
   } else {
     uint32_t start = std::min(start_, obj->slotSpan());
     uint32_t end = std::min(start_ + count_, obj->slotSpan());
     MOZ_ASSERT(start <= end);
     mover.traceObjectSlots(obj, start, end);
   }
-}
 
-static inline void TraceWholeCell(TenuringTracer& mover, JSObject* object) {
-  MOZ_ASSERT_IF(object->storeBuffer(),
-                !object->storeBuffer()->markingNondeduplicatable);
-  mover.traceObject(object);
+  if (promotedToNursery) {
+    mover.runtime()->gc.storeBuffer().putSlot(obj, kind(), start_, count_);
+  }
 }
 
 // Non-deduplicatable marking is necessary because of the following 2 reasons:
@@ -370,6 +411,13 @@ static inline void PreventDeduplicationOfReachableStrings(JSString* str) {
   }
 }
 
+static inline void TraceWholeCell(TenuringTracer& mover, JSObject* object) {
+  MOZ_ASSERT_IF(object->storeBuffer(),
+                !object->storeBuffer()->markingNondeduplicatable);
+
+  mover.traceObject(object);
+}
+
 static inline void TraceWholeCell(TenuringTracer& mover, JSString* str) {
   MOZ_ASSERT_IF(str->storeBuffer(),
                 str->storeBuffer()->markingNondeduplicatable);
@@ -394,16 +442,23 @@ static inline void TraceWholeCell(TenuringTracer& mover,
 }
 
 template <typename T>
-static void TraceBufferedCells(TenuringTracer& mover, Arena* arena,
-                               ArenaCellSet* cells) {
+void TenuringTracer::traceBufferedCells(Arena* arena, ArenaCellSet* cells) {
   for (size_t i = 0; i < MaxArenaCellIndex; i += cells->BitsPerWord) {
     ArenaCellSet::WordT bitset = cells->getWord(i / cells->BitsPerWord);
     while (bitset) {
       size_t bit = i + js::detail::CountTrailingZeroes(bitset);
+      bitset &= bitset - 1;  // Clear the low bit.
+
       auto cell =
           reinterpret_cast<T*>(uintptr_t(arena) + ArenaCellIndexBytes * bit);
-      TraceWholeCell(mover, cell);
-      bitset &= bitset - 1;  // Clear the low bit.
+
+      TenuringTracer::AutoPromotedAnyToNursery promotedToNursery(*this);
+
+      TraceWholeCell(*this, cell);
+
+      if (promotedToNursery) {
+        runtime()->gc.storeBuffer().putWholeCell(cell);
+      }
     }
   }
 }
@@ -418,16 +473,16 @@ void ArenaCellSet::trace(TenuringTracer& mover) {
     JS::TraceKind kind = MapAllocToTraceKind(arena->getAllocKind());
     switch (kind) {
       case JS::TraceKind::Object:
-        TraceBufferedCells<JSObject>(mover, arena, cells);
+        mover.traceBufferedCells<JSObject>(arena, cells);
         break;
       case JS::TraceKind::String:
-        TraceBufferedCells<JSString>(mover, arena, cells);
+        mover.traceBufferedCells<JSString>(arena, cells);
         break;
       case JS::TraceKind::Script:
-        TraceBufferedCells<BaseScript>(mover, arena, cells);
+        mover.traceBufferedCells<BaseScript>(arena, cells);
         break;
       case JS::TraceKind::JitCode:
-        TraceBufferedCells<jit::JitCode>(mover, arena, cells);
+        mover.traceBufferedCells<jit::JitCode>(arena, cells);
         break;
       default:
         MOZ_CRASH("Unexpected trace kind");
@@ -481,18 +536,42 @@ void js::gc::StoreBuffer::CellPtrEdge<T>::trace(TenuringTracer& mover) const {
         edge, JS::TraceKind::String));
   }
 
-  DispatchToOnEdge(&mover, edge, "CellPtrEdge");
+  if (!mover.nursery().inCollectedRegion(thing)) {
+    return;
+  }
+
+  *edge = mover.promoteOrForward(thing);
+
+  if (IsInsideNursery(*edge)) {
+    mover.runtime()->gc.storeBuffer().putCell(edge);
+  }
 }
 
 void js::gc::StoreBuffer::ValueEdge::trace(TenuringTracer& mover) const {
-  if (deref()) {
-    mover.traverse(edge);
+  if (!isGCThing()) {
+    return;
+  }
+
+  TenuringTracer::AutoPromotedAnyToNursery promotedToNursery(mover);
+
+  mover.traverse(edge);
+
+  if (promotedToNursery) {
+    mover.runtime()->gc.storeBuffer().putValue(edge);
   }
 }
 
 void js::gc::StoreBuffer::WasmAnyRefEdge::trace(TenuringTracer& mover) const {
-  if (deref()) {
-    mover.traverse(edge);
+  if (!isGCThing()) {
+    return;
+  }
+
+  TenuringTracer::AutoPromotedAnyToNursery promotedToNursery(mover);
+
+  mover.traverse(edge);
+
+  if (promotedToNursery) {
+    mover.runtime()->gc.storeBuffer().putWasmAnyRef(edge);
   }
 }
 
@@ -513,7 +592,7 @@ void js::gc::TenuringTracer::traceObject(JSObject* obj) {
   if (!nobj->hasEmptyElements()) {
     HeapSlotArray elements = nobj->getDenseElements();
     Value* elems = elements.begin()->unbarrieredAddress();
-    traceSlots(elems, elems + nobj->getDenseInitializedLength());
+    traceObjectElements(elems, nobj->getDenseInitializedLength());
   }
 
   traceObjectSlots(nobj, 0, nobj->slotSpan());
@@ -527,14 +606,15 @@ void js::gc::TenuringTracer::traceObjectSlots(NativeObject* nobj,
   nobj->forEachSlotRange(start, end, traceRange);
 }
 
+void js::gc::TenuringTracer::traceObjectElements(JS::Value* vp,
+                                                 uint32_t count) {
+  traceSlots(vp, vp + count);
+}
+
 void js::gc::TenuringTracer::traceSlots(Value* vp, Value* end) {
   for (; vp != end; ++vp) {
     traverse(vp);
   }
-}
-
-inline void js::gc::TenuringTracer::traceSlots(JS::Value* vp, uint32_t nslots) {
-  traceSlots(vp, vp + nslots);
 }
 
 void js::gc::TenuringTracer::traceString(JSString* str) {
@@ -564,17 +644,58 @@ inline void js::gc::TenuringTracer::insertIntoObjectFixupList(
 }
 
 template <typename T>
-inline T* js::gc::TenuringTracer::allocTenured(Zone* zone, AllocKind kind) {
-  return static_cast<T*>(static_cast<Cell*>(AllocateCellInGC(zone, kind)));
+inline T* js::gc::TenuringTracer::alloc(Zone* zone, AllocKind kind, Cell* src) {
+  void* ptr = allocCell<T::TraceKind>(zone, kind, src);
+  auto* cell = reinterpret_cast<T*>(ptr);
+  if (IsInsideNursery(cell)) {
+    MOZ_ASSERT(!nursery().inCollectedRegion(cell));
+    promotedToNursery = true;
+  }
+  return cell;
 }
 
-JSString* js::gc::TenuringTracer::allocTenuredString(JSString* src, Zone* zone,
-                                                     AllocKind dstKind) {
-  JSString* dst = allocTenured<JSString>(zone, dstKind);
+template <JS::TraceKind traceKind>
+void* js::gc::TenuringTracer::allocCell(Zone* zone, AllocKind allocKind,
+                                        Cell* src) {
+  MOZ_ASSERT(zone == src->zone());
+
+  if (!shouldTenure(zone, traceKind, src)) {
+    // TODO: Should use the same site as |src|
+    AllocSite* site = zone->unknownAllocSite(traceKind);
+
+    size_t thingSize = Arena::thingSize(allocKind);
+    void* ptr = nursery_.tryAllocateCell(site, thingSize, traceKind);
+    if (MOZ_LIKELY(ptr)) {
+      return ptr;
+    }
+
+    JSContext* cx = runtime()->mainContextFromOwnThread();
+    ptr = CellAllocator::RetryNurseryAlloc<NoGC>(cx, traceKind, allocKind,
+                                                 thingSize, site);
+    if (MOZ_LIKELY(ptr)) {
+      return ptr;
+    }
+
+    // The nursery is full. This is unlikely but can happen. Fall through to
+    // the tenured allocation path.
+  }
+
+  return AllocateTenuredCellInGC(zone, allocKind);
+}
+
+JSString* js::gc::TenuringTracer::allocString(JSString* src, Zone* zone,
+                                              AllocKind dstKind) {
+  JSString* dst = alloc<JSString>(zone, dstKind, src);
   tenuredSize += moveStringToTenured(dst, src, dstKind);
   tenuredCells++;
 
   return dst;
+}
+
+bool js::gc::TenuringTracer::shouldTenure(Zone* zone, JS::TraceKind traceKind,
+                                          Cell* cell) {
+  return tenureEverything || !zone->allocKindInNursery(traceKind) ||
+         nursery_.shouldTenure(cell);
 }
 
 JSObject* js::gc::TenuringTracer::moveToTenuredSlow(JSObject* src) {
@@ -582,7 +703,7 @@ JSObject* js::gc::TenuringTracer::moveToTenuredSlow(JSObject* src) {
   MOZ_ASSERT(!src->is<PlainObject>());
 
   AllocKind dstKind = src->allocKindForTenure(nursery());
-  auto* dst = allocTenured<JSObject>(src->nurseryZone(), dstKind);
+  auto* dst = alloc<JSObject>(src->nurseryZone(), dstKind, src);
 
   size_t srcSize = Arena::thingSize(dstKind);
 
@@ -654,7 +775,7 @@ inline JSObject* js::gc::TenuringTracer::movePlainObjectToTenured(
   MOZ_ASSERT(IsInsideNursery(src));
 
   AllocKind dstKind = src->allocKindForTenure();
-  auto* dst = allocTenured<PlainObject>(src->nurseryZone(), dstKind);
+  auto* dst = alloc<PlainObject>(src->nurseryZone(), dstKind, src);
 
   size_t srcSize = Arena::thingSize(dstKind);
   tenuredSize += srcSize;
@@ -798,8 +919,10 @@ JSString* js::gc::TenuringTracer::moveToTenured(JSString* src) {
   // 3. It is deduplicatable:
   //    The JSString NON_DEDUP_BIT flag is unset.
   // 4. It matches an entry in stringDeDupSet.
+  // 5. It is moved to the tenured heap.
 
-  if (src->length() < MAX_DEDUPLICATABLE_STRING_LENGTH && src->isLinear() &&
+  if (shouldTenure(zone, JS::TraceKind::String, src) &&
+      src->length() < MAX_DEDUPLICATABLE_STRING_LENGTH && src->isLinear() &&
       src->isDeduplicatable() && stringDeDupSet.isSome()) {
     auto p = stringDeDupSet->lookupForAdd(src);
     if (p) {
@@ -811,7 +934,7 @@ JSString* js::gc::TenuringTracer::moveToTenured(JSString* src) {
       return dst;
     }
 
-    dst = allocTenuredString(src, zone, dstKind);
+    dst = allocString(src, zone, dstKind);
 
     using DedupHasher [[maybe_unused]] = DeduplicationStringHasher<JSString*>;
     MOZ_ASSERT(DedupHasher::hash(src) == DedupHasher::hash(dst),
@@ -823,14 +946,16 @@ JSString* js::gc::TenuringTracer::moveToTenured(JSString* src) {
       stringDeDupSet.reset();
     }
   } else {
-    dst = allocTenuredString(src, zone, dstKind);
-    dst->clearNonDeduplicatable();
+    dst = allocString(src, zone, dstKind);
+    if (dst->isTenured()) {
+      dst->clearNonDeduplicatable();
+    }
   }
 
   zone->stringStats.ref().noteTenured(src->allocSize());
 
   auto* overlay = StringRelocationOverlay::forwardCell(src, dst);
-  MOZ_ASSERT(dst->isDeduplicatable());
+  MOZ_ASSERT_IF(dst->isTenured(), dst->isDeduplicatable());
 
   if (dst->hasBase() || dst->isRope()) {
     // dst or one of its leaves might have a base that will be deduplicated.
@@ -874,6 +999,9 @@ void js::gc::TenuringTracer::relocateDependentStringChars(
         tenuredDependentStr->relocateNonInlineChars<const CharT*>(
             tenuredRootBase->nonInlineChars<CharT>(nogc), *offset);
         tenuredDependentStr->setBase(tenuredRootBase);
+        if (tenuredDependentStr->isTenured() && !tenuredRootBase->isTenured()) {
+          runtime()->gc.storeBuffer().putWholeCell(tenuredDependentStr);
+        }
         return;
       }
 
@@ -889,7 +1017,7 @@ void js::gc::TenuringTracer::relocateDependentStringChars(
         // The root base can be in either the nursery or the tenured heap.
         // dependentStr chars needs to be relocated after traceString if the
         // root base is in the nursery.
-        if (!(*rootBase)->isTenured()) {
+        if (nursery().inCollectedRegion(*rootBase)) {
           *rootBaseNotYetForwarded = true;
           const CharT* rootBaseChars = (*rootBase)->nonInlineChars<CharT>(nogc);
           *offset = dependentStrChars - rootBaseChars;
@@ -912,7 +1040,7 @@ JS::BigInt* js::gc::TenuringTracer::moveToTenured(JS::BigInt* src) {
   AllocKind dstKind = src->getAllocKind();
   Zone* zone = src->nurseryZone();
 
-  JS::BigInt* dst = allocTenured<JS::BigInt>(zone, dstKind);
+  JS::BigInt* dst = alloc<JS::BigInt>(zone, dstKind, src);
   tenuredSize += moveBigIntToTenured(dst, src, dstKind);
   tenuredCells++;
 
@@ -924,41 +1052,56 @@ JS::BigInt* js::gc::TenuringTracer::moveToTenured(JS::BigInt* src) {
 
 void js::gc::TenuringTracer::collectToObjectFixedPoint() {
   while (RelocationOverlay* p = objHead) {
+    MOZ_ASSERT(nursery().inCollectedRegion(p));
     objHead = objHead->next();
     auto* obj = static_cast<JSObject*>(p->forwardingAddress());
+
+    MOZ_ASSERT_IF(IsInsideNursery(obj), !nursery().inCollectedRegion(obj));
+
+    AutoPromotedAnyToNursery promotedAnyToNursery(*this);
     traceObject(obj);
+    if (obj->isTenured() && promotedAnyToNursery) {
+      runtime()->gc.storeBuffer().putWholeCell(obj);
+    }
   }
 }
 
 void js::gc::TenuringTracer::collectToStringFixedPoint() {
   while (StringRelocationOverlay* p = stringHead) {
+    MOZ_ASSERT(nursery().inCollectedRegion(p));
     stringHead = stringHead->next();
 
-    auto* tenuredStr = static_cast<JSString*>(p->forwardingAddress());
+    auto* str = static_cast<JSString*>(p->forwardingAddress());
+    MOZ_ASSERT_IF(IsInsideNursery(str), !nursery().inCollectedRegion(str));
+
     // To ensure the NON_DEDUP_BIT was reset properly.
-    MOZ_ASSERT(tenuredStr->isDeduplicatable());
+    MOZ_ASSERT_IF(str->isTenured(), str->isDeduplicatable());
 
     // The nursery root base might not be forwarded before
-    // traceString(tenuredStr). traceString(tenuredStr) will forward the root
+    // traceString(str). traceString(str) will forward the root
     // base if that's the case. Dependent string chars needs to be relocated
     // after traceString if root base was not forwarded.
     size_t offset = 0;
     bool rootBaseNotYetForwarded = false;
     JSLinearString* rootBase = nullptr;
 
-    if (tenuredStr->isDependent()) {
-      if (tenuredStr->hasTwoByteChars()) {
+    if (str->isDependent()) {
+      if (str->hasTwoByteChars()) {
         relocateDependentStringChars<char16_t>(
-            &tenuredStr->asDependent(), p->savedNurseryBaseOrRelocOverlay(),
-            &offset, &rootBaseNotYetForwarded, &rootBase);
+            &str->asDependent(), p->savedNurseryBaseOrRelocOverlay(), &offset,
+            &rootBaseNotYetForwarded, &rootBase);
       } else {
         relocateDependentStringChars<JS::Latin1Char>(
-            &tenuredStr->asDependent(), p->savedNurseryBaseOrRelocOverlay(),
-            &offset, &rootBaseNotYetForwarded, &rootBase);
+            &str->asDependent(), p->savedNurseryBaseOrRelocOverlay(), &offset,
+            &rootBaseNotYetForwarded, &rootBase);
       }
     }
 
-    traceString(tenuredStr);
+    AutoPromotedAnyToNursery promotedAnyToNursery(*this);
+    traceString(str);
+    if (str->isTenured() && promotedAnyToNursery) {
+      runtime()->gc.storeBuffer().putWholeCell(str);
+    }
 
     if (rootBaseNotYetForwarded) {
       MOZ_ASSERT(rootBase->isForwarded(),
@@ -968,14 +1111,24 @@ void js::gc::TenuringTracer::collectToStringFixedPoint() {
       JSLinearString* tenuredRootBase = Forwarded(rootBase);
       MOZ_ASSERT(offset < tenuredRootBase->length());
 
-      if (tenuredStr->hasTwoByteChars()) {
-        tenuredStr->asDependent().relocateNonInlineChars<const char16_t*>(
+      if (str->hasTwoByteChars()) {
+        str->asDependent().relocateNonInlineChars<const char16_t*>(
             tenuredRootBase->twoByteChars(nogc), offset);
       } else {
-        tenuredStr->asDependent().relocateNonInlineChars<const JS::Latin1Char*>(
+        str->asDependent().relocateNonInlineChars<const JS::Latin1Char*>(
             tenuredRootBase->latin1Chars(nogc), offset);
       }
-      tenuredStr->setBase(tenuredRootBase);
+
+      str->setBase(tenuredRootBase);
+      if (str->isTenured() && !tenuredRootBase->isTenured()) {
+        runtime()->gc.storeBuffer().putWholeCell(str);
+      }
+    }
+
+    if (str->hasBase()) {
+      MOZ_ASSERT(!str->base()->isForwarded());
+      MOZ_ASSERT_IF(!str->base()->isTenured(),
+                    !nursery().inCollectedRegion(str->base()));
     }
   }
 }
@@ -984,9 +1137,8 @@ size_t js::gc::TenuringTracer::moveStringToTenured(JSString* dst, JSString* src,
                                                    AllocKind dstKind) {
   size_t size = Arena::thingSize(dstKind);
 
-  // At the moment, strings always have the same AllocKind between src and
-  // dst. This may change in the future.
-  MOZ_ASSERT(dst->asTenured().getAllocKind() == src->getAllocKind());
+  MOZ_ASSERT_IF(dst->isTenured(),
+                dst->asTenured().getAllocKind() == src->getAllocKind());
 
   // Copy the Cell contents.
   MOZ_ASSERT(OffsetToChunkEnd(src) >= size);
@@ -999,7 +1151,8 @@ size_t js::gc::TenuringTracer::moveStringToTenured(JSString* dst, JSString* src,
   if (src->ownsMallocedChars()) {
     void* chars = src->asLinear().nonInlineCharsRaw();
     nursery().removeMallocedBufferDuringMinorGC(chars);
-    AddCellMemory(dst, dst->asLinear().allocSize(), MemoryUse::StringContents);
+    nursery().trackMallocedBufferOnPromotion(
+        chars, dst, dst->asLinear().allocSize(), MemoryUse::StringContents);
     return size;
   }
 
@@ -1021,9 +1174,8 @@ size_t js::gc::TenuringTracer::moveBigIntToTenured(JS::BigInt* dst,
                                                    AllocKind dstKind) {
   size_t size = Arena::thingSize(dstKind);
 
-  // At the moment, BigInts always have the same AllocKind between src and
-  // dst. This may change in the future.
-  MOZ_ASSERT(dst->asTenured().getAllocKind() == src->getAllocKind());
+  MOZ_ASSERT_IF(dst->isTenured(),
+                dst->asTenured().getAllocKind() == src->getAllocKind());
 
   // Copy the Cell contents.
   MOZ_ASSERT(OffsetToChunkEnd(src) >= size);

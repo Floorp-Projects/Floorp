@@ -422,7 +422,7 @@ size_t WasmArrayObject::obj_moved(JSObject* obj, JSObject* old) {
   }
   MOZ_ASSERT(arrayObj.isDataInline() == oldArrayObj.isDataInline());
 
-  if (IsInsideNursery(old)) {
+  if (IsInsideNursery(old) && !IsInsideNursery(obj)) {
     // It's been tenured.
     MOZ_ASSERT(obj->isTenured());
     if (!arrayObj.isDataInline()) {
@@ -563,10 +563,8 @@ void WasmStructObject::obj_finalize(JS::GCContext* gcx, JSObject* object) {
 /* static */
 size_t WasmStructObject::obj_moved(JSObject* obj, JSObject* old) {
   // See also, corresponding comments in WasmArrayObject::obj_moved.
-  MOZ_ASSERT(!IsInsideNursery(obj));
-  if (IsInsideNursery(old)) {
+  if (!IsInsideNursery(obj) && IsInsideNursery(old)) {
     // It's been tenured.
-    MOZ_ASSERT(obj->isTenured());
     WasmStructObject& structObj = obj->as<WasmStructObject>();
     // WasmStructObject::classForTypeDef ensures we only get called for
     // structs with OOL data.  Hence:

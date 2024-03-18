@@ -77,9 +77,10 @@ MOZ_NEVER_INLINE void* CellAllocator::RetryNurseryAlloc(JSContext* cx,
                                                         size_t thingSize,
                                                         AllocSite* site) {
   MOZ_ASSERT(cx->isNurseryAllocAllowed());
-  MOZ_ASSERT(cx->zone() == site->zone());
-  MOZ_ASSERT(!cx->zone()->isAtomsZone());
-  MOZ_ASSERT(cx->zone()->allocKindInNursery(traceKind));
+
+  Zone* zone = site->zone();
+  MOZ_ASSERT(!zone->isAtomsZone());
+  MOZ_ASSERT(zone->allocKindInNursery(traceKind));
 
   Nursery& nursery = cx->nursery();
   JS::GCReason reason = nursery.handleAllocationFailure();
@@ -102,7 +103,7 @@ MOZ_NEVER_INLINE void* CellAllocator::RetryNurseryAlloc(JSContext* cx,
     cx->runtime()->gc.minorGC(reason);
 
     // Exceeding gcMaxBytes while tenuring can disable the Nursery.
-    if (cx->zone()->allocKindInNursery(traceKind)) {
+    if (zone->allocKindInNursery(traceKind)) {
       void* ptr = cx->nursery().allocateCell(site, thingSize, traceKind);
       if (ptr) {
         return ptr;
@@ -291,7 +292,7 @@ void CellAllocator::CheckIncrementalZoneState(JSContext* cx, void* ptr) {
 }
 #endif
 
-void* js::gc::AllocateCellInGC(Zone* zone, AllocKind thingKind) {
+void* js::gc::AllocateTenuredCellInGC(Zone* zone, AllocKind thingKind) {
   void* ptr = zone->arenas.allocateFromFreeList(thingKind);
   if (!ptr) {
     AutoEnterOOMUnsafeRegion oomUnsafe;

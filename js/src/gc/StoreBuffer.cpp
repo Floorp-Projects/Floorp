@@ -20,7 +20,8 @@ void StoreBuffer::checkAccess() const {
   // The GC runs tasks that may access the storebuffer in parallel and so must
   // take a lock. The mutator may only access the storebuffer from the main
   // thread.
-  if (runtime_->heapState() != JS::HeapState::Idle) {
+  if (runtime_->heapState() != JS::HeapState::Idle &&
+      runtime_->heapState() != JS::HeapState::MinorCollecting) {
     MOZ_ASSERT(!CurrentThreadIsGCMarking());
     runtime_->gc.assertCurrentThreadHasLockedStoreBuffer();
   } else {

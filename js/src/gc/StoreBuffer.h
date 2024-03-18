@@ -339,9 +339,10 @@ class StoreBuffer {
     bool operator==(const ValueEdge& other) const { return edge == other.edge; }
     bool operator!=(const ValueEdge& other) const { return edge != other.edge; }
 
+    bool isGCThing() const { return edge->isGCThing(); }
+
     Cell* deref() const {
-      return edge->isGCThing() ? static_cast<Cell*>(edge->toGCThing())
-                               : nullptr;
+      return isGCThing() ? static_cast<Cell*>(edge->toGCThing()) : nullptr;
     }
 
     bool maybeInRememberedSet(const Nursery& nursery) const {
@@ -449,10 +450,10 @@ class StoreBuffer {
       return edge != other.edge;
     }
 
+    bool isGCThing() const { return edge->isGCThing(); }
+
     Cell* deref() const {
-      return edge->isGCThing() ? static_cast<Cell*>(edge->toGCThing())
-                               : nullptr;
-      return nullptr;
+      return isGCThing() ? static_cast<Cell*>(edge->toGCThing()) : nullptr;
     }
 
     bool maybeInRememberedSet(const Nursery& nursery) const {

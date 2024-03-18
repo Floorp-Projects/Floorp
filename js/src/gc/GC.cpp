@@ -658,7 +658,7 @@ void GCRuntime::setZeal(uint8_t zeal, uint32_t frequency) {
 
   if (zeal == 0) {
     if (hasZealMode(ZealMode::GenerationalGC)) {
-      evictNursery(JS::GCReason::DEBUG_GC);
+      evictNursery();
       nursery().leaveZealMode();
     }
 
@@ -669,7 +669,7 @@ void GCRuntime::setZeal(uint8_t zeal, uint32_t frequency) {
 
   ZealMode zealMode = ZealMode(zeal);
   if (zealMode == ZealMode::GenerationalGC) {
-    evictNursery(JS::GCReason::DEBUG_GC);
+    evictNursery(JS::GCReason::EVICT_NURSERY);
     nursery().enterZealMode();
   }
 
@@ -704,7 +704,7 @@ void GCRuntime::unsetZeal(uint8_t zeal) {
   }
 
   if (zealMode == ZealMode::GenerationalGC) {
-    evictNursery(JS::GCReason::DEBUG_GC);
+    evictNursery();
     nursery().leaveZealMode();
   }
 
@@ -3890,8 +3890,11 @@ void GCRuntime::incrementalSlice(SliceBudget& budget, JS::GCReason reason,
 }
 
 void GCRuntime::collectNurseryFromMajorGC(JS::GCReason reason) {
-  collectNursery(gcOptions(), reason,
+  collectNursery(gcOptions(), JS::GCReason::EVICT_NURSERY,
                  gcstats::PhaseKind::EVICT_NURSERY_FOR_MAJOR_GC);
+
+  MOZ_ASSERT(nursery().isEmpty());
+  MOZ_ASSERT(storeBuffer().isEmpty());
 }
 
 bool GCRuntime::hasForegroundWork() const {
@@ -4745,9 +4748,22 @@ void GCRuntime::collectNursery(JS::GCOptions options, JS::GCReason reason,
   gcstats::AutoPhase ap(stats(), phase);
 
   nursery().collect(options, reason);
-  MOZ_ASSERT(nursery().isEmpty());
 
-  startBackgroundFreeAfterMinorGC();
+  if (nursery().isEmpty()) {
+    startBackgroundFreeAfterMinorGC();
+  }
+
+  // We ignore gcMaxBytes when allocating for minor collection. However, if we
+  // overflowed, we disable the nursery. The next time we allocate, we'll fail
+  // because bytes >= gcMaxBytes.
+  if (heapSize.bytes() >= tunables.gcMaxBytes()) {
+    if (!nursery().isEmpty()) {
+      nursery().collect(options, JS::GCReason::DISABLE_GENERATIONAL_GC);
+      MOZ_ASSERT(nursery().isEmpty());
+      startBackgroundFreeAfterMinorGC();
+    }
+    nursery().disable();
+  }
 }
 
 void GCRuntime::startBackgroundFreeAfterMinorGC() {
