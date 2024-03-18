@@ -4,6 +4,9 @@
 let gInitialTab;
 let gInitialTabURL;
 
+// This test opens many tabs and regularly times out - especially with verify
+requestLongerTimeout(2);
+
 add_setup(function () {
   gInitialTab = gBrowser.selectedTab;
   gInitialTabURL = gBrowser.selectedBrowser.currentURI.spec;
@@ -49,7 +52,12 @@ add_task(async function toggle_show_more_link() {
     browserState.windows.push(winData);
   }
   // use Session restore to batch-open windows and tabs
+  info(`Restoring to browserState: ${JSON.stringify(browserState, null, 2)}`);
   await SessionStoreTestUtils.promiseBrowserState(browserState);
+  info("Windows and tabs opened, waiting for readyWindowsPromise");
+  await NonPrivateTabs.readyWindowsPromise;
+  info("readyWindowsPromise resolved");
+
   // restoring this state requires an update to the initial tab globals
   // so cleanup expects the right thing
   gInitialTab = gBrowser.selectedTab;
@@ -70,24 +78,21 @@ add_task(async function toggle_show_more_link() {
 
   let lastCard;
 
-  SimpleTest.promiseFocus(window);
   await openFirefoxViewTab(window).then(async viewTab => {
     const browser = viewTab.linkedBrowser;
     await navigateToOpenTabs(browser);
     const openTabs = getOpenTabsComponent(browser);
-    await openTabs.openTabsTarget.readyWindowsPromise;
     await openTabs.updateComplete;
 
-    const cards = getOpenTabsCards(openTabs);
+    let cards;
+    info(`Waiting for ${NUMBER_OF_WINDOWS} of window cards`);
+    await BrowserTestUtils.waitForCondition(() => {
+      cards = getOpenTabsCards(openTabs);
+      return cards.length == NUMBER_OF_WINDOWS;
+    });
     is(cards.length, NUMBER_OF_WINDOWS, "There are four windows.");
     lastCard = cards[NUMBER_OF_WINDOWS - 1];
-  });
 
-  await openFirefoxViewTab(window).then(async viewTab => {
-    const browser = viewTab.linkedBrowser;
-    const openTabs = getOpenTabsComponent(browser);
-    await openTabs.openTabsTarget.readyWindowsPromise;
-    await openTabs.updateComplete;
     Assert.less(
       (await getTabRowsForCard(lastCard)).length,
       NUMBER_OF_TABS,
