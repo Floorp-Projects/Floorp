@@ -11,11 +11,6 @@ xul|richlistitem[originaltype="autofill-profile"][selected="true"] > .autofill-i
   color: SelectedItemText;
 }
 
-xul|richlistitem[originaltype="autofill-footer"][selected="true"] > .autofill-item-box > .autofill-button,
-xul|richlistitem[originaltype="autofill-clear-button"][selected="true"] > .autofill-item-box > .autofill-button {
-  background-color: ButtonHighlight;
-}
-
 xul|richlistitem[originaltype="autofill-insecureWarning"] {
   border-bottom: 1px solid var(--panel-separator-color);
   background-color: var(--arrowpanel-dimmed);
@@ -27,14 +22,10 @@ xul|richlistitem[originaltype="autofill-insecureWarning"] {
   --col-spacer: 7px;
   --item-width: calc(50% - (var(--col-spacer) / 2));
   --comment-text-color: GreyText;
-  --warning-text-color: GreyText;
-  --warning-background-color: rgba(248, 232, 28, .2);
 
   --default-font-size: 12;
   --label-font-size: 12;
   --comment-font-size: 10;
-  --warning-font-size: 10;
-  --btn-font-size: 11;
 }
 
 .autofill-item-box[size="small"] {
@@ -47,13 +38,6 @@ xul|richlistitem[originaltype="autofill-insecureWarning"] {
 .autofill-item-box:not([ac-image=""]) {
   --item-padding-vertical: 6.5px;
   --comment-font-size: 11;
-}
-
-.autofill-footer,
-.autofill-footer[size="small"] {
-  --item-width: 100%;
-  --item-padding-vertical: 0;
-  --item-padding-horizontal: 0;
 }
 
 .autofill-item-box {
@@ -123,41 +107,6 @@ xul|richlistitem[originaltype="autofill-insecureWarning"] {
 .autofill-item-box[size="small"] > .profile-comment-col {
   margin-top: var(--row-spacer);
   text-align: start;
-}
-
-.autofill-footer {
-  padding: 0;
-  flex-direction: column;
-}
-
-.autofill-footer > .autofill-footer-row {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: var(--item-width);
-}
-
-.autofill-footer > .autofill-warning {
-  padding: 2.5px 0;
-  color: var(--warning-text-color);
-  text-align: center;
-  background-color: var(--warning-background-color);
-  border-bottom: 1px solid rgba(38,38,38,.15);
-  font-size: calc(var(--warning-font-size) / var(--default-font-size) * 1em);
-}
-
-.autofill-footer > .autofill-button {
-  box-sizing: border-box;
-  padding: 0 10px;
-  min-height: 40px;
-  background-color: ButtonFace;
-  font-size: calc(var(--btn-font-size) / var(--default-font-size) * 1em);
-  color: ButtonText;
-  text-align: center;
-}
-
-.autofill-footer[no-warning="true"] > .autofill-warning {
-  display: none;
 }
 
 .autofill-insecure-item {
