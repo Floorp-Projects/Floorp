@@ -119,8 +119,7 @@ fn parse_scope<'a>(
                 for_supports_rule: false,
             };
             let parse_relative = if for_end {
-                // TODO(dshin): scope-end can be a relative selector, with the anchor being `:scope`.
-                ParseRelative::No
+                ParseRelative::ForScope
             } else if in_style_rule {
                 ParseRelative::ForNesting
             } else {
