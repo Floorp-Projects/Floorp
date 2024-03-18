@@ -12,7 +12,7 @@
 [package]
 edition = "2018"
 name = "audio_thread_priority"
-version = "0.31.0"
+version = "0.32.0"
 authors = ["Paul Adenot <paul@paul.cx>"]
 description = "Bump a thread to real-time priority, for audio work, on Linux, Windows and macOS"
 readme = "README.md"
@@ -61,5 +61,5 @@ version = "0.3"
 version = "0.52"
 features = [
     "Win32_Foundation",
-    "Win32_System_Threading",
+    "Win32_System_LibraryLoader",
 ]

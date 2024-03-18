@@ -25,8 +25,8 @@ webrender_bindings = { path = "../../../../gfx/webrender_bindings" }
 cubeb-coreaudio = { git = "https://github.com/mozilla/cubeb-coreaudio-rs", rev = "d23ab55eab684b46f46e1da177c8814f6103a009", optional = true }
 cubeb-pulse = { git = "https://github.com/mozilla/cubeb-pulse-rs", rev="8ff972c8e2ec1782ff262ac4071c0415e69b1367", optional = true, features=["pulse-dlopen"] }
 cubeb-sys = { version = "0.12.0", optional = true, features=["gecko-in-tree"] }
-audioipc2-client = { git = "https://github.com/mozilla/audioipc", rev = "596bdb7fbb5745ea415726e16bd497e6c850a540", optional = true }
-audioipc2-server = { git = "https://github.com/mozilla/audioipc", rev = "596bdb7fbb5745ea415726e16bd497e6c850a540", optional = true }
+audioipc2-client = { git = "https://github.com/mozilla/audioipc", rev = "409e11f8de6288e9ddfe269654523735302e59e6", optional = true }
+audioipc2-server = { git = "https://github.com/mozilla/audioipc", rev = "409e11f8de6288e9ddfe269654523735302e59e6", optional = true }
 encoding_glue = { path = "../../../../intl/encoding_glue" }
 authrs_bridge = { path = "../../../../dom/webauthn/authrs_bridge" }
 gkrust_utils = { path = "../../../../xpcom/rust/gkrust_utils" }
@@ -44,7 +44,7 @@ bitsdownload = { path = "../../../components/bitsdownload", optional = true }
 storage = { path = "../../../../storage/rust" }
 bookmark_sync = { path = "../../../components/places/bookmark_sync", optional = true }
 chardetng_c = "0.1.1"
-audio_thread_priority = { version = "0.31", default_features = false }
+audio_thread_priority = { version = "0.32", default_features = false }
 mdns_service = { path="../../../../dom/media/webrtc/transport/mdns_service", optional = true }
 neqo_glue = { path = "../../../../netwerk/socket/neqo_glue" }
 wgpu_bindings = { path = "../../../../gfx/wgpu_bindings" }

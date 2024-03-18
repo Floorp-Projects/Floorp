@@ -5,7 +5,7 @@
 
 use crate::sys::HANDLE_QUEUE_LIMIT;
 use bytes::{BufMut, BytesMut};
-use libc::{self, cmsghdr};
+use libc::cmsghdr;
 use std::convert::TryInto;
 use std::os::unix::io::RawFd;
 use std::{mem, slice};

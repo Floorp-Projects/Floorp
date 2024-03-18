@@ -8,7 +8,7 @@ use crate::PlatformHandleType;
 use crate::INVALID_HANDLE_VALUE;
 #[cfg(target_os = "linux")]
 use audio_thread_priority::RtPriorityThreadInfo;
-use cubeb::{self, ffi};
+use cubeb::ffi;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
 use std::ffi::{CStr, CString};

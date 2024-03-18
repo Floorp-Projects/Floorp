@@ -25,7 +25,7 @@ cubeb-backend = "0.12"
 log = "0.4"
 
 [dependencies.audio_thread_priority]
-version = "0.31"
+version = "0.32"
 default-features = false
 
 [dependencies.audioipc]
