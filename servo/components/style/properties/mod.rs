@@ -1040,7 +1040,7 @@ impl<'a> PropertyDeclarationId<'a> {
     pub fn is_discrete_animatable(&self) -> bool {
         match self {
             Self::Longhand(longhand) => longhand.is_discrete_animatable(),
-            // TODO(bug 1846516): Refine this?
+            // TODO(bug 1885995): Refine this.
             Self::Custom(_) => true,
         }
     }
