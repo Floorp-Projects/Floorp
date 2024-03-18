@@ -59,11 +59,6 @@ size_t TenuringTracer::getPromotedSize() const {
 
 size_t TenuringTracer::getPromotedCells() const { return promotedCells; }
 
-static inline void UpdateAllocSiteOnPromotion(Cell* cell) {
-  AllocSite* site = NurseryCellHeader::from(cell)->allocSite();
-  site->incTenuredCount();
-}
-
 void TenuringTracer::onObjectEdge(JSObject** objp, const char* name) {
   JSObject* obj = *objp;
   if (!nursery_.inCollectedRegion(obj)) {
@@ -93,8 +88,6 @@ JSObject* TenuringTracer::promoteOrForward(JSObject* obj) {
 JSObject* TenuringTracer::onNonForwardedNurseryObject(JSObject* obj) {
   MOZ_ASSERT(IsInsideNursery(obj));
   MOZ_ASSERT(!obj->isForwarded());
-
-  UpdateAllocSiteOnPromotion(obj);
 
   // Take a fast path for promoting a plain object as this is by far the most
   // common case.
@@ -133,8 +126,6 @@ JSString* TenuringTracer::onNonForwardedNurseryString(JSString* str) {
   MOZ_ASSERT(IsInsideNursery(str));
   MOZ_ASSERT(!str->isForwarded());
 
-  UpdateAllocSiteOnPromotion(str);
-
   return promoteString(str);
 }
 
@@ -165,8 +156,6 @@ JS::BigInt* TenuringTracer::promoteOrForward(JS::BigInt* bi) {
 JS::BigInt* TenuringTracer::onNonForwardedNurseryBigInt(JS::BigInt* bi) {
   MOZ_ASSERT(IsInsideNursery(bi));
   MOZ_ASSERT(!bi->isForwarded());
-
-  UpdateAllocSiteOnPromotion(bi);
 
   return promoteBigInt(bi);
 }
@@ -645,23 +634,30 @@ inline void js::gc::TenuringTracer::insertIntoObjectFixupList(
 
 template <typename T>
 inline T* js::gc::TenuringTracer::alloc(Zone* zone, AllocKind kind, Cell* src) {
-  void* ptr = allocCell<T::TraceKind>(zone, kind, src);
+  AllocSite* site = NurseryCellHeader::from(src)->allocSite();
+  site->incPromotedCount();
+
+  void* ptr = allocCell<T::TraceKind>(zone, kind, site, src);
   auto* cell = reinterpret_cast<T*>(ptr);
   if (IsInsideNursery(cell)) {
     MOZ_ASSERT(!nursery().inCollectedRegion(cell));
     promotedToNursery = true;
   }
+
   return cell;
 }
 
 template <JS::TraceKind traceKind>
 void* js::gc::TenuringTracer::allocCell(Zone* zone, AllocKind allocKind,
-                                        Cell* src) {
+                                        AllocSite* site, Cell* src) {
   MOZ_ASSERT(zone == src->zone());
 
   if (!shouldTenure(zone, traceKind, src)) {
-    // TODO: Should use the same site as |src|
-    AllocSite* site = zone->unknownAllocSite(traceKind);
+    // Allocations from the optimized alloc site continue to use that site,
+    // otherwise a special promoted alloc site it used.
+    if (site->kind() != AllocSite::Kind::Optimized) {
+      site = &zone->pretenuring.promotedAllocSite(traceKind);
+    }
 
     size_t thingSize = Arena::thingSize(allocKind);
     void* ptr = nursery_.tryAllocateCell(site, thingSize, traceKind);
