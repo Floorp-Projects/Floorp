@@ -196,10 +196,6 @@ html[dir="rtl"] .editor-mount {
   border-left: none;
 }
 
-.editor-wrapper .CodeMirror-foldgutter .CodeMirror-guttermarker-subtle {
-  visibility: visible;
-}
-
 .editor-wrapper .CodeMirror-foldgutter .CodeMirror-linenumber {
   text-align: left;
   padding: 0 0 0 2px;

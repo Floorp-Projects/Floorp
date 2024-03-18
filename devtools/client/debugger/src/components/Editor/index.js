@@ -226,26 +226,6 @@ class Editor extends PureComponent {
       codeMirrorWrapper.addEventListener("keydown", e => this.onKeyDown(e));
       codeMirrorWrapper.addEventListener("click", e => this.onClick(e));
       codeMirrorWrapper.addEventListener("mouseover", onMouseOver(codeMirror));
-
-      const toggleFoldMarkerVisibility = () => {
-        if (node instanceof HTMLElement) {
-          node
-            .querySelectorAll(".CodeMirror-guttermarker-subtle")
-            .forEach(elem => {
-              elem.classList.toggle("visible");
-            });
-        }
-      };
-
-      const codeMirrorGutter = codeMirror.getGutterElement();
-      codeMirrorGutter.addEventListener(
-        "mouseleave",
-        toggleFoldMarkerVisibility
-      );
-      codeMirrorGutter.addEventListener(
-        "mouseenter",
-        toggleFoldMarkerVisibility
-      );
       codeMirrorWrapper.addEventListener("contextmenu", event =>
         this.openMenu(event)
       );
