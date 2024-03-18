@@ -132,7 +132,6 @@ inline bool HasUniqueId(Cell* cell) {
 
 inline void TransferUniqueId(Cell* tgt, Cell* src) {
   MOZ_ASSERT(src != tgt);
-  MOZ_ASSERT(!IsInsideNursery(tgt));
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(tgt->runtimeFromAnyThread()));
   MOZ_ASSERT(src->zone() == tgt->zone());
 
