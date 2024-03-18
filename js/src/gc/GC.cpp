@@ -2903,9 +2903,9 @@ void GCRuntime::beginMarkPhase(AutoGCSession& session) {
 #endif
 
   for (GCZonesIter zone(this); !zone.done(); zone.next()) {
-    // In an incremental GC, clear the arena free lists to ensure that subsequent
-    // allocations refill them and end up marking new cells black. See
-    // arenaAllocatedDuringGC().
+    // In an incremental GC, clear the arena free lists to ensure that
+    // subsequent allocations refill them and end up marking new cells black.
+    // See arenaAllocatedDuringGC().
     zone->arenas.clearFreeLists();
 
 #ifdef JS_GC_ZEAL
