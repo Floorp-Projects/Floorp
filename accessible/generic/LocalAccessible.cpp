@@ -744,22 +744,8 @@ LayoutDeviceIntRect LocalAccessible::Bounds() const {
 void LocalAccessible::SetSelected(bool aSelect) {
   if (!HasOwnContent()) return;
 
-  LocalAccessible* select = nsAccUtils::GetSelectableContainer(this, State());
-  if (select) {
-    if (select->State() & states::MULTISELECTABLE) {
-      if (mContent->IsElement() && ARIARoleMap()) {
-        if (aSelect) {
-          mContent->AsElement()->SetAttr(
-              kNameSpaceID_None, nsGkAtoms::aria_selected, u"true"_ns, true);
-        } else {
-          mContent->AsElement()->UnsetAttr(kNameSpaceID_None,
-                                           nsGkAtoms::aria_selected, true);
-        }
-      }
-      return;
-    }
-
-    if (aSelect) TakeFocus();
+  if (nsAccUtils::GetSelectableContainer(this, State()) && aSelect) {
+    TakeFocus();
   }
 }
 
@@ -1819,27 +1805,7 @@ double LocalAccessible::CurValue() const {
   return checkValue;
 }
 
-bool LocalAccessible::SetCurValue(double aValue) {
-  const nsRoleMapEntry* roleMapEntry = ARIARoleMap();
-  if (!roleMapEntry || roleMapEntry->valueRule == eNoValue) return false;
-
-  const uint32_t kValueCannotChange = states::READONLY | states::UNAVAILABLE;
-  if (State() & kValueCannotChange) return false;
-
-  double checkValue = MinValue();
-  if (!std::isnan(checkValue) && aValue < checkValue) return false;
-
-  checkValue = MaxValue();
-  if (!std::isnan(checkValue) && aValue > checkValue) return false;
-
-  nsAutoString strValue;
-  strValue.AppendFloat(aValue);
-
-  if (!mContent->IsElement()) return true;
-
-  return NS_SUCCEEDED(mContent->AsElement()->SetAttr(
-      kNameSpaceID_None, nsGkAtoms::aria_valuenow, strValue, true));
-}
+bool LocalAccessible::SetCurValue(double aValue) { return false; }
 
 role LocalAccessible::FindNextValidARIARole(
     std::initializer_list<nsStaticAtom*> aRolesToSkip) const {
@@ -3069,15 +3035,7 @@ LocalAccessible* LocalAccessible::CurrentItem() const {
   return nullptr;
 }
 
-void LocalAccessible::SetCurrentItem(const LocalAccessible* aItem) {
-  nsAtom* id = aItem->GetContent()->GetID();
-  if (id) {
-    nsAutoString idStr;
-    id->ToString(idStr);
-    mContent->AsElement()->SetAttr(
-        kNameSpaceID_None, nsGkAtoms::aria_activedescendant, idStr, true);
-  }
-}
+void LocalAccessible::SetCurrentItem(const LocalAccessible* aItem) {}
 
 LocalAccessible* LocalAccessible::ContainerWidget() const {
   if (HasARIARole() && mContent->HasID()) {
