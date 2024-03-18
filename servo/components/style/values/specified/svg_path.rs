@@ -5,10 +5,13 @@
 //! Specified types for SVG Path.
 
 use crate::parser::{Parse, ParserContext};
-use crate::values::animated::{lists, Animate, Procedure, ToAnimatedZero};
+use crate::values::animated::{lists, Animate, Procedure};
 use crate::values::distance::{ComputeSquaredDistance, SquaredDistance};
+use crate::values::generics::basic_shape::GenericShapeCommand;
+use crate::values::generics::basic_shape::{ArcSize, ArcSweep, ByTo, CoordinatePair};
 use crate::values::CSSFloat;
 use cssparser::Parser;
+use num_traits::FromPrimitive;
 use std::fmt::{self, Write};
 use std::iter::{Cloned, Peekable};
 use std::slice;
@@ -70,6 +73,7 @@ impl SVGPathData {
     #[cfg(feature = "gecko")]
     pub fn decode_from_f32_array(path: &[f32]) -> Result<Self, ()> {
         use crate::gecko_bindings::structs::dom::SVGPathSeg_Binding::*;
+        use crate::values::generics::basic_shape::GenericShapeCommand::*;
 
         let mut result: Vec<PathCommand> = Vec::new();
         let mut i: usize = 0;
@@ -80,85 +84,84 @@ impl SVGPathData {
             let seg_type = path[i].to_bits() as u16;
             i = i + 1;
             match seg_type {
-                PATHSEG_CLOSEPATH => result.push(PathCommand::ClosePath),
+                PATHSEG_CLOSEPATH => result.push(Close),
                 PATHSEG_MOVETO_ABS | PATHSEG_MOVETO_REL => {
                     debug_assert!(i + 1 < path.len());
-                    result.push(PathCommand::MoveTo {
+                    result.push(Move {
                         point: CoordPair::new(path[i], path[i + 1]),
-                        absolute: IsAbsolute::new(seg_type == PATHSEG_MOVETO_ABS),
+                        by_to: ByTo::new(seg_type == PATHSEG_MOVETO_ABS),
                     });
                     i = i + 2;
                 },
                 PATHSEG_LINETO_ABS | PATHSEG_LINETO_REL => {
                     debug_assert!(i + 1 < path.len());
-                    result.push(PathCommand::LineTo {
+                    result.push(Line {
                         point: CoordPair::new(path[i], path[i + 1]),
-                        absolute: IsAbsolute::new(seg_type == PATHSEG_LINETO_ABS),
+                        by_to: ByTo::new(seg_type == PATHSEG_LINETO_ABS),
                     });
                     i = i + 2;
                 },
                 PATHSEG_CURVETO_CUBIC_ABS | PATHSEG_CURVETO_CUBIC_REL => {
                     debug_assert!(i + 5 < path.len());
-                    result.push(PathCommand::CurveTo {
+                    result.push(CubicCurve {
                         control1: CoordPair::new(path[i], path[i + 1]),
                         control2: CoordPair::new(path[i + 2], path[i + 3]),
                         point: CoordPair::new(path[i + 4], path[i + 5]),
-                        absolute: IsAbsolute::new(seg_type == PATHSEG_CURVETO_CUBIC_ABS),
+                        by_to: ByTo::new(seg_type == PATHSEG_CURVETO_CUBIC_ABS),
                     });
                     i = i + 6;
                 },
                 PATHSEG_CURVETO_QUADRATIC_ABS | PATHSEG_CURVETO_QUADRATIC_REL => {
                     debug_assert!(i + 3 < path.len());
-                    result.push(PathCommand::QuadBezierCurveTo {
+                    result.push(QuadCurve {
                         control1: CoordPair::new(path[i], path[i + 1]),
                         point: CoordPair::new(path[i + 2], path[i + 3]),
-                        absolute: IsAbsolute::new(seg_type == PATHSEG_CURVETO_QUADRATIC_ABS),
+                        by_to: ByTo::new(seg_type == PATHSEG_CURVETO_QUADRATIC_ABS),
                     });
                     i = i + 4;
                 },
                 PATHSEG_ARC_ABS | PATHSEG_ARC_REL => {
                     debug_assert!(i + 6 < path.len());
-                    result.push(PathCommand::EllipticalArc {
-                        rx: path[i],
-                        ry: path[i + 1],
-                        angle: path[i + 2],
-                        large_arc_flag: ArcFlag(path[i + 3] != 0.0f32),
-                        sweep_flag: ArcFlag(path[i + 4] != 0.0f32),
+                    result.push(Arc {
+                        radii: CoordPair::new(path[i], path[i + 1]),
+                        rotate: path[i + 2],
+                        arc_size: ArcSize::from_u8((path[i + 3] != 0.0f32) as u8).unwrap(),
+                        arc_sweep: ArcSweep::from_u8((path[i + 4] != 0.0f32) as u8).unwrap(),
                         point: CoordPair::new(path[i + 5], path[i + 6]),
-                        absolute: IsAbsolute::new(seg_type == PATHSEG_ARC_ABS),
+                        by_to: ByTo::new(seg_type == PATHSEG_ARC_ABS),
                     });
                     i = i + 7;
                 },
                 PATHSEG_LINETO_HORIZONTAL_ABS | PATHSEG_LINETO_HORIZONTAL_REL => {
                     debug_assert!(i < path.len());
-                    result.push(PathCommand::HorizontalLineTo {
+                    result.push(HLine {
                         x: path[i],
-                        absolute: IsAbsolute::new(seg_type == PATHSEG_LINETO_HORIZONTAL_ABS),
+                        by_to: ByTo::new(seg_type == PATHSEG_LINETO_HORIZONTAL_ABS),
                     });
                     i = i + 1;
                 },
                 PATHSEG_LINETO_VERTICAL_ABS | PATHSEG_LINETO_VERTICAL_REL => {
                     debug_assert!(i < path.len());
-                    result.push(PathCommand::VerticalLineTo {
+                    result.push(VLine {
                         y: path[i],
-                        absolute: IsAbsolute::new(seg_type == PATHSEG_LINETO_VERTICAL_ABS),
+                        by_to: ByTo::new(seg_type == PATHSEG_LINETO_VERTICAL_ABS),
                     });
                     i = i + 1;
                 },
                 PATHSEG_CURVETO_CUBIC_SMOOTH_ABS | PATHSEG_CURVETO_CUBIC_SMOOTH_REL => {
                     debug_assert!(i + 3 < path.len());
-                    result.push(PathCommand::SmoothCurveTo {
+                    result.push(SmoothCubic {
                         control2: CoordPair::new(path[i], path[i + 1]),
                         point: CoordPair::new(path[i + 2], path[i + 3]),
-                        absolute: IsAbsolute::new(seg_type == PATHSEG_CURVETO_CUBIC_SMOOTH_ABS),
+                        by_to: ByTo::new(seg_type == PATHSEG_CURVETO_CUBIC_SMOOTH_ABS),
                     });
                     i = i + 4;
                 },
                 PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS | PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL => {
                     debug_assert!(i + 1 < path.len());
-                    result.push(PathCommand::SmoothQuadBezierCurveTo {
+                    result.push(SmoothQuad {
                         point: CoordPair::new(path[i], path[i + 1]),
-                        absolute: IsAbsolute::new(seg_type == PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS),
+                        by_to: ByTo::new(seg_type == PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS),
                     });
                     i = i + 2;
                 },
@@ -215,7 +218,7 @@ impl ToCss for SVGPathData {
         {
             let mut writer = SequenceWriter::new(dest, " ");
             for command in self.commands() {
-                writer.item(command)?;
+                writer.write_item(|inner| command.to_css_for_svg(inner))?;
             }
         }
         dest.write_char('"')
@@ -268,79 +271,7 @@ impl ComputeSquaredDistance for SVGPathData {
 /// points of the Bézier curve in the spec.
 ///
 /// https://www.w3.org/TR/SVG11/paths.html#PathData
-#[derive(
-    Animate,
-    Clone,
-    ComputeSquaredDistance,
-    Copy,
-    Debug,
-    Deserialize,
-    MallocSizeOf,
-    PartialEq,
-    Serialize,
-    SpecifiedValueInfo,
-    ToAnimatedZero,
-    ToComputedValue,
-    ToResolvedValue,
-    ToShmem,
-)]
-#[allow(missing_docs)]
-#[repr(C, u8)]
-pub enum PathCommand {
-    /// The unknown type.
-    /// https://www.w3.org/TR/SVG/paths.html#__svg__SVGPathSeg__PATHSEG_UNKNOWN
-    Unknown,
-    /// The "moveto" command.
-    MoveTo {
-        point: CoordPair,
-        absolute: IsAbsolute,
-    },
-    /// The "lineto" command.
-    LineTo {
-        point: CoordPair,
-        absolute: IsAbsolute,
-    },
-    /// The horizontal "lineto" command.
-    HorizontalLineTo { x: CSSFloat, absolute: IsAbsolute },
-    /// The vertical "lineto" command.
-    VerticalLineTo { y: CSSFloat, absolute: IsAbsolute },
-    /// The cubic Bézier curve command.
-    CurveTo {
-        control1: CoordPair,
-        control2: CoordPair,
-        point: CoordPair,
-        absolute: IsAbsolute,
-    },
-    /// The smooth curve command.
-    SmoothCurveTo {
-        control2: CoordPair,
-        point: CoordPair,
-        absolute: IsAbsolute,
-    },
-    /// The quadratic Bézier curve command.
-    QuadBezierCurveTo {
-        control1: CoordPair,
-        point: CoordPair,
-        absolute: IsAbsolute,
-    },
-    /// The smooth quadratic Bézier curve command.
-    SmoothQuadBezierCurveTo {
-        point: CoordPair,
-        absolute: IsAbsolute,
-    },
-    /// The elliptical arc curve command.
-    EllipticalArc {
-        rx: CSSFloat,
-        ry: CSSFloat,
-        angle: CSSFloat,
-        large_arc_flag: ArcFlag,
-        sweep_flag: ArcFlag,
-        point: CoordPair,
-        absolute: IsAbsolute,
-    },
-    /// The "closepath" command.
-    ClosePath,
-}
+pub type PathCommand = GenericShapeCommand<CSSFloat, CSSFloat>;
 
 /// For internal SVGPath normalization.
 #[allow(missing_docs)]
@@ -355,177 +286,157 @@ impl PathCommand {
     ///
     /// See discussion: https://github.com/w3c/svgwg/issues/321
     fn normalize(&self, state: &mut PathTraversalState) -> Self {
-        use self::PathCommand::*;
+        use crate::values::generics::basic_shape::GenericShapeCommand::*;
         match *self {
-            Unknown => Unknown,
-            ClosePath => {
+            Close => {
                 state.pos = state.subpath_start;
-                ClosePath
+                Close
             },
-            MoveTo {
-                mut point,
-                absolute,
-            } => {
-                if !absolute.is_yes() {
+            Move { by_to, mut point } => {
+                if !by_to.is_abs() {
                     point += state.pos;
                 }
                 state.pos = point;
                 state.subpath_start = point;
-                MoveTo {
+                Move {
+                    by_to: ByTo::To,
                     point,
-                    absolute: IsAbsolute::Yes,
                 }
             },
-            LineTo {
-                mut point,
-                absolute,
-            } => {
-                if !absolute.is_yes() {
+            Line { by_to, mut point } => {
+                if !by_to.is_abs() {
                     point += state.pos;
                 }
                 state.pos = point;
-                LineTo {
+                Line {
+                    by_to: ByTo::To,
                     point,
-                    absolute: IsAbsolute::Yes,
                 }
             },
-            HorizontalLineTo { mut x, absolute } => {
-                if !absolute.is_yes() {
+            HLine { by_to, mut x } => {
+                if !by_to.is_abs() {
                     x += state.pos.x;
                 }
                 state.pos.x = x;
-                HorizontalLineTo {
-                    x,
-                    absolute: IsAbsolute::Yes,
-                }
+                HLine { by_to: ByTo::To, x }
             },
-            VerticalLineTo { mut y, absolute } => {
-                if !absolute.is_yes() {
+            VLine { by_to, mut y } => {
+                if !by_to.is_abs() {
                     y += state.pos.y;
                 }
                 state.pos.y = y;
-                VerticalLineTo {
-                    y,
-                    absolute: IsAbsolute::Yes,
-                }
+                VLine { by_to: ByTo::To, y }
             },
-            CurveTo {
+            CubicCurve {
+                by_to,
+                mut point,
                 mut control1,
                 mut control2,
-                mut point,
-                absolute,
             } => {
-                if !absolute.is_yes() {
+                if !by_to.is_abs() {
+                    point += state.pos;
                     control1 += state.pos;
                     control2 += state.pos;
-                    point += state.pos;
                 }
                 state.pos = point;
-                CurveTo {
+                CubicCurve {
+                    by_to: ByTo::To,
+                    point,
                     control1,
                     control2,
-                    point,
-                    absolute: IsAbsolute::Yes,
                 }
             },
-            SmoothCurveTo {
-                mut control2,
+            QuadCurve {
+                by_to,
                 mut point,
-                absolute,
-            } => {
-                if !absolute.is_yes() {
-                    control2 += state.pos;
-                    point += state.pos;
-                }
-                state.pos = point;
-                SmoothCurveTo {
-                    control2,
-                    point,
-                    absolute: IsAbsolute::Yes,
-                }
-            },
-            QuadBezierCurveTo {
                 mut control1,
-                mut point,
-                absolute,
             } => {
-                if !absolute.is_yes() {
+                if !by_to.is_abs() {
+                    point += state.pos;
                     control1 += state.pos;
-                    point += state.pos;
                 }
                 state.pos = point;
-                QuadBezierCurveTo {
+                QuadCurve {
+                    by_to: ByTo::To,
+                    point,
                     control1,
-                    point,
-                    absolute: IsAbsolute::Yes,
                 }
             },
-            SmoothQuadBezierCurveTo {
+            SmoothCubic {
+                by_to,
                 mut point,
-                absolute,
+                mut control2,
             } => {
-                if !absolute.is_yes() {
+                if !by_to.is_abs() {
+                    point += state.pos;
+                    control2 += state.pos;
+                }
+                state.pos = point;
+                SmoothCubic {
+                    by_to: ByTo::To,
+                    point,
+                    control2,
+                }
+            },
+            SmoothQuad { by_to, mut point } => {
+                if !by_to.is_abs() {
                     point += state.pos;
                 }
                 state.pos = point;
-                SmoothQuadBezierCurveTo {
+                SmoothQuad {
+                    by_to: ByTo::To,
                     point,
-                    absolute: IsAbsolute::Yes,
                 }
             },
-            EllipticalArc {
-                rx,
-                ry,
-                angle,
-                large_arc_flag,
-                sweep_flag,
+            Arc {
+                by_to,
                 mut point,
-                absolute,
+                radii,
+                arc_sweep,
+                arc_size,
+                rotate,
             } => {
-                if !absolute.is_yes() {
+                if !by_to.is_abs() {
                     point += state.pos;
                 }
                 state.pos = point;
-                EllipticalArc {
-                    rx,
-                    ry,
-                    angle,
-                    large_arc_flag,
-                    sweep_flag,
+                Arc {
+                    by_to: ByTo::To,
                     point,
-                    absolute: IsAbsolute::Yes,
+                    radii,
+                    arc_sweep,
+                    arc_size,
+                    rotate,
                 }
             },
         }
     }
-}
 
-impl ToCss for PathCommand {
-    fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
+    /// The serialization of the svg path.
+    fn to_css_for_svg<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
     where
         W: fmt::Write,
     {
-        use self::PathCommand::*;
+        use crate::values::generics::basic_shape::GenericShapeCommand::*;
         match *self {
-            Unknown => dest.write_char('X'),
-            ClosePath => dest.write_char('Z'),
-            MoveTo { point, absolute } => {
-                dest.write_char(if absolute.is_yes() { 'M' } else { 'm' })?;
+            Close => dest.write_char('Z'),
+            Move { by_to, point } => {
+                dest.write_char(if by_to.is_abs() { 'M' } else { 'm' })?;
                 dest.write_char(' ')?;
                 point.to_css(dest)
             },
-            LineTo { point, absolute } => {
-                dest.write_char(if absolute.is_yes() { 'L' } else { 'l' })?;
+            Line { by_to, point } => {
+                dest.write_char(if by_to.is_abs() { 'L' } else { 'l' })?;
                 dest.write_char(' ')?;
                 point.to_css(dest)
             },
-            CurveTo {
+            CubicCurve {
+                by_to,
+                point,
                 control1,
                 control2,
-                point,
-                absolute,
             } => {
-                dest.write_char(if absolute.is_yes() { 'C' } else { 'c' })?;
+                dest.write_char(if by_to.is_abs() { 'C' } else { 'c' })?;
                 dest.write_char(' ')?;
                 control1.to_css(dest)?;
                 dest.write_char(' ')?;
@@ -533,199 +444,69 @@ impl ToCss for PathCommand {
                 dest.write_char(' ')?;
                 point.to_css(dest)
             },
-            QuadBezierCurveTo {
-                control1,
+            QuadCurve {
+                by_to,
                 point,
-                absolute,
+                control1,
             } => {
-                dest.write_char(if absolute.is_yes() { 'Q' } else { 'q' })?;
+                dest.write_char(if by_to.is_abs() { 'Q' } else { 'q' })?;
                 dest.write_char(' ')?;
                 control1.to_css(dest)?;
                 dest.write_char(' ')?;
                 point.to_css(dest)
             },
-            EllipticalArc {
-                rx,
-                ry,
-                angle,
-                large_arc_flag,
-                sweep_flag,
+            Arc {
+                by_to,
                 point,
-                absolute,
+                radii,
+                arc_sweep,
+                arc_size,
+                rotate,
             } => {
-                dest.write_char(if absolute.is_yes() { 'A' } else { 'a' })?;
+                dest.write_char(if by_to.is_abs() { 'A' } else { 'a' })?;
                 dest.write_char(' ')?;
-                rx.to_css(dest)?;
+                radii.to_css(dest)?;
                 dest.write_char(' ')?;
-                ry.to_css(dest)?;
+                rotate.to_css(dest)?;
                 dest.write_char(' ')?;
-                angle.to_css(dest)?;
+                (arc_size as i32).to_css(dest)?;
                 dest.write_char(' ')?;
-                large_arc_flag.to_css(dest)?;
-                dest.write_char(' ')?;
-                sweep_flag.to_css(dest)?;
+                (arc_sweep as i32).to_css(dest)?;
                 dest.write_char(' ')?;
                 point.to_css(dest)
             },
-            HorizontalLineTo { x, absolute } => {
-                dest.write_char(if absolute.is_yes() { 'H' } else { 'h' })?;
+            HLine { by_to, x } => {
+                dest.write_char(if by_to.is_abs() { 'H' } else { 'h' })?;
                 dest.write_char(' ')?;
                 x.to_css(dest)
             },
-            VerticalLineTo { y, absolute } => {
-                dest.write_char(if absolute.is_yes() { 'V' } else { 'v' })?;
+            VLine { by_to, y } => {
+                dest.write_char(if by_to.is_abs() { 'V' } else { 'v' })?;
                 dest.write_char(' ')?;
                 y.to_css(dest)
             },
-            SmoothCurveTo {
-                control2,
+            SmoothCubic {
+                by_to,
                 point,
-                absolute,
+                control2,
             } => {
-                dest.write_char(if absolute.is_yes() { 'S' } else { 's' })?;
+                dest.write_char(if by_to.is_abs() { 'S' } else { 's' })?;
                 dest.write_char(' ')?;
                 control2.to_css(dest)?;
                 dest.write_char(' ')?;
                 point.to_css(dest)
             },
-            SmoothQuadBezierCurveTo { point, absolute } => {
-                dest.write_char(if absolute.is_yes() { 'T' } else { 't' })?;
+            SmoothQuad { by_to, point } => {
+                dest.write_char(if by_to.is_abs() { 'T' } else { 't' })?;
                 dest.write_char(' ')?;
                 point.to_css(dest)
             },
-        }
-    }
-}
-
-/// The path command absolute type.
-#[allow(missing_docs)]
-#[derive(
-    Animate,
-    Clone,
-    ComputeSquaredDistance,
-    Copy,
-    Debug,
-    Deserialize,
-    MallocSizeOf,
-    PartialEq,
-    Serialize,
-    SpecifiedValueInfo,
-    ToAnimatedZero,
-    ToComputedValue,
-    ToResolvedValue,
-    ToShmem,
-)]
-#[repr(u8)]
-pub enum IsAbsolute {
-    Yes,
-    No,
-}
-
-impl IsAbsolute {
-    /// Return true if this is IsAbsolute::Yes.
-    #[inline]
-    pub fn is_yes(&self) -> bool {
-        *self == IsAbsolute::Yes
-    }
-
-    /// Return Yes if value is true. Otherwise, return No.
-    #[inline]
-    fn new(value: bool) -> Self {
-        if value {
-            IsAbsolute::Yes
-        } else {
-            IsAbsolute::No
         }
     }
 }
 
 /// The path coord type.
-#[allow(missing_docs)]
-#[derive(
-    AddAssign,
-    Animate,
-    Clone,
-    ComputeSquaredDistance,
-    Copy,
-    Debug,
-    Deserialize,
-    MallocSizeOf,
-    PartialEq,
-    Serialize,
-    SpecifiedValueInfo,
-    ToAnimatedZero,
-    ToComputedValue,
-    ToCss,
-    ToResolvedValue,
-    ToShmem,
-)]
-#[repr(C)]
-pub struct CoordPair {
-    x: CSSFloat,
-    y: CSSFloat,
-}
-
-impl CoordPair {
-    /// Create a CoordPair.
-    #[inline]
-    pub fn new(x: CSSFloat, y: CSSFloat) -> Self {
-        CoordPair { x, y }
-    }
-}
-
-/// The EllipticalArc flag type.
-#[derive(
-    Clone,
-    Copy,
-    Debug,
-    Deserialize,
-    MallocSizeOf,
-    PartialEq,
-    Serialize,
-    SpecifiedValueInfo,
-    ToComputedValue,
-    ToResolvedValue,
-    ToShmem,
-)]
-#[repr(C)]
-pub struct ArcFlag(bool);
-
-impl ToCss for ArcFlag {
-    #[inline]
-    fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
-    where
-        W: fmt::Write,
-    {
-        (self.0 as i32).to_css(dest)
-    }
-}
-
-impl Animate for ArcFlag {
-    #[inline]
-    fn animate(&self, other: &Self, procedure: Procedure) -> Result<Self, ()> {
-        (self.0 as i32)
-            .animate(&(other.0 as i32), procedure)
-            .map(|v| ArcFlag(v > 0))
-    }
-}
-
-impl ComputeSquaredDistance for ArcFlag {
-    #[inline]
-    fn compute_squared_distance(&self, other: &Self) -> Result<SquaredDistance, ()> {
-        (self.0 as i32).compute_squared_distance(&(other.0 as i32))
-    }
-}
-
-impl ToAnimatedZero for ArcFlag {
-    #[inline]
-    fn to_animated_zero(&self) -> Result<Self, ()> {
-        // The 2 ArcFlags in EllipticalArc determine which one of the 4 different arcs will be
-        // used. (i.e. From 4 combinations). In other words, if we change the flag, we get a
-        // different arc. Therefore, we return *self.
-        // https://svgwg.org/svg2-draft/paths.html#PathDataEllipticalArcCommands
-        Ok(*self)
-    }
-}
+pub type CoordPair = CoordinatePair<CSSFloat>;
 
 /// SVG Path parser.
 struct PathParser<'a> {
@@ -736,7 +517,7 @@ struct PathParser<'a> {
 macro_rules! parse_arguments {
     (
         $parser:ident,
-        $abs:ident,
+        $by_to:ident,
         $enum:ident,
         [ $para:ident => $func:ident $(, $other_para:ident => $other_func:ident)* ]
     ) => {
@@ -747,7 +528,9 @@ macro_rules! parse_arguments {
                     skip_comma_wsp(&mut $parser.chars);
                     let $other_para = $other_func(&mut $parser.chars)?;
                 )*
-                $parser.path.push(PathCommand::$enum { $para $(, $other_para)*, $abs });
+                $parser.path.push(
+                    PathCommand::$enum { $by_to, $para $(, $other_para)* }
+                );
 
                 // End of string or the next character is a possible new command.
                 if !skip_wsp(&mut $parser.chars) ||
@@ -785,23 +568,23 @@ impl<'a> PathParser<'a> {
             }
 
             let command = self.chars.next().unwrap();
-            let abs = if command.is_ascii_uppercase() {
-                IsAbsolute::Yes
+            let by_to = if command.is_ascii_uppercase() {
+                ByTo::To
             } else {
-                IsAbsolute::No
+                ByTo::By
             };
 
             skip_wsp(&mut self.chars);
             match command {
                 b'Z' | b'z' => self.parse_closepath(),
-                b'L' | b'l' => self.parse_lineto(abs),
-                b'H' | b'h' => self.parse_h_lineto(abs),
-                b'V' | b'v' => self.parse_v_lineto(abs),
-                b'C' | b'c' => self.parse_curveto(abs),
-                b'S' | b's' => self.parse_smooth_curveto(abs),
-                b'Q' | b'q' => self.parse_quadratic_bezier_curveto(abs),
-                b'T' | b't' => self.parse_smooth_quadratic_bezier_curveto(abs),
-                b'A' | b'a' => self.parse_elliptical_arc(abs),
+                b'L' | b'l' => self.parse_lineto(by_to),
+                b'H' | b'h' => self.parse_h_lineto(by_to),
+                b'V' | b'v' => self.parse_v_lineto(by_to),
+                b'C' | b'c' => self.parse_curveto(by_to),
+                b'S' | b's' => self.parse_smooth_curveto(by_to),
+                b'Q' | b'q' => self.parse_quadratic_bezier_curveto(by_to),
+                b'T' | b't' => self.parse_smooth_quadratic_bezier_curveto(by_to),
+                b'A' | b'a' => self.parse_elliptical_arc(by_to),
                 _ => return Err(()),
             }?;
         }
@@ -817,12 +600,8 @@ impl<'a> PathParser<'a> {
 
         skip_wsp(&mut self.chars);
         let point = parse_coord(&mut self.chars)?;
-        let absolute = if command == b'M' {
-            IsAbsolute::Yes
-        } else {
-            IsAbsolute::No
-        };
-        self.path.push(PathCommand::MoveTo { point, absolute });
+        let by_to = if command == b'M' { ByTo::To } else { ByTo::By };
+        self.path.push(PathCommand::Move { by_to, point });
 
         // End of string or the next character is a possible new command.
         if !skip_wsp(&mut self.chars) || self.chars.peek().map_or(true, |c| c.is_ascii_alphabetic())
@@ -833,69 +612,74 @@ impl<'a> PathParser<'a> {
 
         // If a moveto is followed by multiple pairs of coordinates, the subsequent
         // pairs are treated as implicit lineto commands.
-        self.parse_lineto(absolute)
+        self.parse_lineto(by_to)
     }
 
     /// Parse "closepath" command.
     fn parse_closepath(&mut self) -> Result<(), ()> {
-        self.path.push(PathCommand::ClosePath);
+        self.path.push(PathCommand::Close);
         Ok(())
     }
 
     /// Parse "lineto" command.
-    fn parse_lineto(&mut self, absolute: IsAbsolute) -> Result<(), ()> {
-        parse_arguments!(self, absolute, LineTo, [ point => parse_coord ])
+    fn parse_lineto(&mut self, by_to: ByTo) -> Result<(), ()> {
+        parse_arguments!(self, by_to, Line, [ point => parse_coord ])
     }
 
     /// Parse horizontal "lineto" command.
-    fn parse_h_lineto(&mut self, absolute: IsAbsolute) -> Result<(), ()> {
-        parse_arguments!(self, absolute, HorizontalLineTo, [ x => parse_number ])
+    fn parse_h_lineto(&mut self, by_to: ByTo) -> Result<(), ()> {
+        parse_arguments!(self, by_to, HLine, [ x => parse_number ])
     }
 
     /// Parse vertical "lineto" command.
-    fn parse_v_lineto(&mut self, absolute: IsAbsolute) -> Result<(), ()> {
-        parse_arguments!(self, absolute, VerticalLineTo, [ y => parse_number ])
+    fn parse_v_lineto(&mut self, by_to: ByTo) -> Result<(), ()> {
+        parse_arguments!(self, by_to, VLine, [ y => parse_number ])
     }
 
     /// Parse cubic Bézier curve command.
-    fn parse_curveto(&mut self, absolute: IsAbsolute) -> Result<(), ()> {
-        parse_arguments!(self, absolute, CurveTo, [
+    fn parse_curveto(&mut self, by_to: ByTo) -> Result<(), ()> {
+        parse_arguments!(self, by_to, CubicCurve, [
             control1 => parse_coord, control2 => parse_coord, point => parse_coord
         ])
     }
 
     /// Parse smooth "curveto" command.
-    fn parse_smooth_curveto(&mut self, absolute: IsAbsolute) -> Result<(), ()> {
-        parse_arguments!(self, absolute, SmoothCurveTo, [
+    fn parse_smooth_curveto(&mut self, by_to: ByTo) -> Result<(), ()> {
+        parse_arguments!(self, by_to, SmoothCubic, [
             control2 => parse_coord, point => parse_coord
         ])
     }
 
     /// Parse quadratic Bézier curve command.
-    fn parse_quadratic_bezier_curveto(&mut self, absolute: IsAbsolute) -> Result<(), ()> {
-        parse_arguments!(self, absolute, QuadBezierCurveTo, [
+    fn parse_quadratic_bezier_curveto(&mut self, by_to: ByTo) -> Result<(), ()> {
+        parse_arguments!(self, by_to, QuadCurve, [
             control1 => parse_coord, point => parse_coord
         ])
     }
 
     /// Parse smooth quadratic Bézier curveto command.
-    fn parse_smooth_quadratic_bezier_curveto(&mut self, absolute: IsAbsolute) -> Result<(), ()> {
-        parse_arguments!(self, absolute, SmoothQuadBezierCurveTo, [ point => parse_coord ])
+    fn parse_smooth_quadratic_bezier_curveto(&mut self, by_to: ByTo) -> Result<(), ()> {
+        parse_arguments!(self, by_to, SmoothQuad, [ point => parse_coord ])
     }
 
     /// Parse elliptical arc curve command.
-    fn parse_elliptical_arc(&mut self, absolute: IsAbsolute) -> Result<(), ()> {
+    fn parse_elliptical_arc(&mut self, by_to: ByTo) -> Result<(), ()> {
         // Parse a flag whose value is '0' or '1'; otherwise, return Err(()).
-        let parse_flag = |iter: &mut Peekable<Cloned<slice::Iter<u8>>>| match iter.next() {
-            Some(c) if c == b'0' || c == b'1' => Ok(ArcFlag(c == b'1')),
+        let parse_arc_size = |iter: &mut Peekable<Cloned<slice::Iter<u8>>>| match iter.next() {
+            Some(c) if c == b'1' => Ok(ArcSize::Large),
+            Some(c) if c == b'0' => Ok(ArcSize::Small),
             _ => Err(()),
         };
-        parse_arguments!(self, absolute, EllipticalArc, [
-            rx => parse_number,
-            ry => parse_number,
-            angle => parse_number,
-            large_arc_flag => parse_flag,
-            sweep_flag => parse_flag,
+        let parse_arc_sweep = |iter: &mut Peekable<Cloned<slice::Iter<u8>>>| match iter.next() {
+            Some(c) if c == b'1' => Ok(ArcSweep::Cw),
+            Some(c) if c == b'0' => Ok(ArcSweep::Ccw),
+            _ => Err(()),
+        };
+        parse_arguments!(self, by_to, Arc, [
+            radii => parse_coord,
+            rotate => parse_number,
+            arc_size => parse_arc_size,
+            arc_sweep => parse_arc_sweep,
             point => parse_coord
         ])
     }

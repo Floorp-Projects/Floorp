@@ -417,14 +417,13 @@ void SVGPathSegUtils::TraversePathSegment(const float* aData,
 void SVGPathSegUtils::TraversePathSegment(const StylePathCommand& aCommand,
                                           SVGPathTraversalState& aState) {
   switch (aCommand.tag) {
-    case StylePathCommand::Tag::ClosePath:
+    case StylePathCommand::Tag::Close:
       TraverseClosePath(nullptr, aState);
       break;
-    case StylePathCommand::Tag::MoveTo: {
-      const Point& p = aCommand.move_to.point.ConvertsToGfxPoint();
+    case StylePathCommand::Tag::Move: {
+      const Point& p = aCommand.move.point.ToGfxPoint();
       aState.start = aState.pos =
-          aCommand.move_to.absolute == StyleIsAbsolute::Yes ? p
-                                                            : aState.pos + p;
+          aCommand.move.by_to == StyleByTo::To ? p : aState.pos + p;
       if (aState.ShouldUpdateLengthAndControlPoints()) {
         // aState.length is unchanged, since move commands don't affect path=
         // length.
@@ -432,10 +431,10 @@ void SVGPathSegUtils::TraversePathSegment(const StylePathCommand& aCommand,
       }
       break;
     }
-    case StylePathCommand::Tag::LineTo: {
-      Point to = aCommand.line_to.absolute == StyleIsAbsolute::Yes
-                     ? aCommand.line_to.point.ConvertsToGfxPoint()
-                     : aState.pos + aCommand.line_to.point.ConvertsToGfxPoint();
+    case StylePathCommand::Tag::Line: {
+      Point to = aCommand.line.by_to == StyleByTo::To
+                     ? aCommand.line.point.ToGfxPoint()
+                     : aState.pos + aCommand.line.point.ToGfxPoint();
       if (aState.ShouldUpdateLengthAndControlPoints()) {
         aState.length += CalcDistanceBetweenPoints(aState.pos, to);
         aState.cp1 = aState.cp2 = to;
@@ -443,14 +442,14 @@ void SVGPathSegUtils::TraversePathSegment(const StylePathCommand& aCommand,
       aState.pos = to;
       break;
     }
-    case StylePathCommand::Tag::CurveTo: {
-      const bool isRelative = aCommand.curve_to.absolute == StyleIsAbsolute::No;
+    case StylePathCommand::Tag::CubicCurve: {
+      const bool isRelative = aCommand.cubic_curve.by_to == StyleByTo::By;
       Point to = isRelative
-                     ? aState.pos + aCommand.curve_to.point.ConvertsToGfxPoint()
-                     : aCommand.curve_to.point.ConvertsToGfxPoint();
+                     ? aState.pos + aCommand.cubic_curve.point.ToGfxPoint()
+                     : aCommand.cubic_curve.point.ToGfxPoint();
       if (aState.ShouldUpdateLengthAndControlPoints()) {
-        Point cp1 = aCommand.curve_to.control1.ConvertsToGfxPoint();
-        Point cp2 = aCommand.curve_to.control2.ConvertsToGfxPoint();
+        Point cp1 = aCommand.cubic_curve.control1.ToGfxPoint();
+        Point cp2 = aCommand.cubic_curve.control2.ToGfxPoint();
         if (isRelative) {
           cp1 += aState.pos;
           cp2 += aState.pos;
@@ -463,20 +462,15 @@ void SVGPathSegUtils::TraversePathSegment(const StylePathCommand& aCommand,
       aState.pos = to;
       break;
     }
-    case StylePathCommand::Tag::QuadBezierCurveTo: {
-      const bool isRelative =
-          aCommand.quad_bezier_curve_to.absolute == StyleIsAbsolute::No;
-      Point to =
-          isRelative
-              ? aState.pos +
-                    aCommand.quad_bezier_curve_to.point.ConvertsToGfxPoint()
-              : aCommand.quad_bezier_curve_to.point.ConvertsToGfxPoint();
+    case StylePathCommand::Tag::QuadCurve: {
+      const bool isRelative = aCommand.quad_curve.by_to == StyleByTo::By;
+      Point to = isRelative
+                     ? aState.pos + aCommand.quad_curve.point.ToGfxPoint()
+                     : aCommand.quad_curve.point.ToGfxPoint();
       if (aState.ShouldUpdateLengthAndControlPoints()) {
-        Point cp =
-            isRelative
-                ? aState.pos + aCommand.quad_bezier_curve_to.control1
-                                   .ConvertsToGfxPoint()
-                : aCommand.quad_bezier_curve_to.control1.ConvertsToGfxPoint();
+        Point cp = isRelative
+                       ? aState.pos + aCommand.quad_curve.control1.ToGfxPoint()
+                       : aCommand.quad_curve.control1.ToGfxPoint();
         aState.length += (float)CalcLengthOfQuadraticBezier(aState.pos, cp, to);
         aState.cp1 = cp;
         aState.cp2 = to;
@@ -484,21 +478,22 @@ void SVGPathSegUtils::TraversePathSegment(const StylePathCommand& aCommand,
       aState.pos = to;
       break;
     }
-    case StylePathCommand::Tag::EllipticalArc: {
-      Point to =
-          aCommand.elliptical_arc.absolute == StyleIsAbsolute::Yes
-              ? aCommand.elliptical_arc.point.ConvertsToGfxPoint()
-              : aState.pos + aCommand.elliptical_arc.point.ConvertsToGfxPoint();
+    case StylePathCommand::Tag::Arc: {
+      const auto& arc = aCommand.arc;
+      Point to = arc.by_to == StyleByTo::To
+                     ? arc.point.ToGfxPoint()
+                     : aState.pos + arc.point.ToGfxPoint();
       if (aState.ShouldUpdateLengthAndControlPoints()) {
-        const auto& arc = aCommand.elliptical_arc;
         float dist = 0;
-        Point radii(arc.rx, arc.ry);
+        Point radii = arc.radii.ToGfxPoint();
         if (radii.x == 0.0f || radii.y == 0.0f) {
           dist = CalcDistanceBetweenPoints(aState.pos, to);
         } else {
           Point bez[4] = {aState.pos, Point(0, 0), Point(0, 0), Point(0, 0)};
-          SVGArcConverter converter(aState.pos, to, radii, arc.angle,
-                                    arc.large_arc_flag._0, arc.sweep_flag._0);
+          const bool largeArcFlag = arc.arc_size == StyleArcSize::Large;
+          const bool sweepFlag = arc.arc_sweep == StyleArcSweep::Cw;
+          SVGArcConverter converter(aState.pos, to, radii, arc.rotate,
+                                    largeArcFlag, sweepFlag);
           while (converter.GetNextSegment(&bez[1], &bez[2], &bez[3])) {
             dist += CalcBezLengthHelper(bez, 4, 0, SplitCubicBezier);
             bez[0] = bez[3];
@@ -510,10 +505,10 @@ void SVGPathSegUtils::TraversePathSegment(const StylePathCommand& aCommand,
       aState.pos = to;
       break;
     }
-    case StylePathCommand::Tag::HorizontalLineTo: {
-      Point to(aCommand.horizontal_line_to.absolute == StyleIsAbsolute::Yes
-                   ? aCommand.horizontal_line_to.x
-                   : aState.pos.x + aCommand.horizontal_line_to.x,
+    case StylePathCommand::Tag::HLine: {
+      Point to(aCommand.h_line.by_to == StyleByTo::To
+                   ? aCommand.h_line.x
+                   : aState.pos.x + aCommand.h_line.x,
                aState.pos.y);
       if (aState.ShouldUpdateLengthAndControlPoints()) {
         aState.length += std::fabs(to.x - aState.pos.x);
@@ -522,11 +517,10 @@ void SVGPathSegUtils::TraversePathSegment(const StylePathCommand& aCommand,
       aState.pos = to;
       break;
     }
-    case StylePathCommand::Tag::VerticalLineTo: {
-      Point to(aState.pos.x,
-               aCommand.vertical_line_to.absolute == StyleIsAbsolute::Yes
-                   ? aCommand.vertical_line_to.y
-                   : aState.pos.y + aCommand.vertical_line_to.y);
+    case StylePathCommand::Tag::VLine: {
+      Point to(aState.pos.x, aCommand.v_line.by_to == StyleByTo::To
+                                 ? aCommand.v_line.y
+                                 : aState.pos.y + aCommand.v_line.y);
       if (aState.ShouldUpdateLengthAndControlPoints()) {
         aState.length += std::fabs(to.y - aState.pos.y);
         aState.cp1 = aState.cp2 = to;
@@ -534,20 +528,16 @@ void SVGPathSegUtils::TraversePathSegment(const StylePathCommand& aCommand,
       aState.pos = to;
       break;
     }
-    case StylePathCommand::Tag::SmoothCurveTo: {
-      const bool isRelative =
-          aCommand.smooth_curve_to.absolute == StyleIsAbsolute::No;
-      Point to =
-          isRelative
-              ? aState.pos + aCommand.smooth_curve_to.point.ConvertsToGfxPoint()
-              : aCommand.smooth_curve_to.point.ConvertsToGfxPoint();
+    case StylePathCommand::Tag::SmoothCubic: {
+      const bool isRelative = aCommand.smooth_cubic.by_to == StyleByTo::By;
+      Point to = isRelative
+                     ? aState.pos + aCommand.smooth_cubic.point.ToGfxPoint()
+                     : aCommand.smooth_cubic.point.ToGfxPoint();
       if (aState.ShouldUpdateLengthAndControlPoints()) {
         Point cp1 = aState.pos - (aState.cp2 - aState.pos);
-        Point cp2 =
-            isRelative
-                ? aState.pos +
-                      aCommand.smooth_curve_to.control2.ConvertsToGfxPoint()
-                : aCommand.smooth_curve_to.control2.ConvertsToGfxPoint();
+        Point cp2 = isRelative ? aState.pos +
+                                     aCommand.smooth_cubic.control2.ToGfxPoint()
+                               : aCommand.smooth_cubic.control2.ToGfxPoint();
         aState.length +=
             (float)CalcLengthOfCubicBezier(aState.pos, cp1, cp2, to);
         aState.cp2 = cp2;
@@ -556,12 +546,10 @@ void SVGPathSegUtils::TraversePathSegment(const StylePathCommand& aCommand,
       aState.pos = to;
       break;
     }
-    case StylePathCommand::Tag::SmoothQuadBezierCurveTo: {
-      Point to =
-          aCommand.smooth_quad_bezier_curve_to.absolute == StyleIsAbsolute::Yes
-              ? aCommand.smooth_quad_bezier_curve_to.point.ConvertsToGfxPoint()
-              : aState.pos + aCommand.smooth_quad_bezier_curve_to.point
-                                 .ConvertsToGfxPoint();
+    case StylePathCommand::Tag::SmoothQuad: {
+      Point to = aCommand.smooth_quad.by_to == StyleByTo::To
+                     ? aCommand.smooth_quad.point.ToGfxPoint()
+                     : aState.pos + aCommand.smooth_quad.point.ToGfxPoint();
       if (aState.ShouldUpdateLengthAndControlPoints()) {
         Point cp = aState.pos - (aState.cp1 - aState.pos);
         aState.length += (float)CalcLengthOfQuadraticBezier(aState.pos, cp, to);
@@ -571,8 +559,6 @@ void SVGPathSegUtils::TraversePathSegment(const StylePathCommand& aCommand,
       aState.pos = to;
       break;
     }
-    case StylePathCommand::Tag::Unknown:
-      MOZ_ASSERT_UNREACHABLE("Unacceptable path segment type");
   }
 }
 
@@ -704,8 +690,8 @@ Maybe<gfx::Rect> SVGPathToAxisAlignedRect(Span<const StylePathCommand> aPath) {
 
   for (const StylePathCommand& cmd : aPath) {
     switch (cmd.tag) {
-      case StylePathCommand::Tag::MoveTo: {
-        Point to = cmd.move_to.point.ConvertsToGfxPoint();
+      case StylePathCommand::Tag::Move: {
+        Point to = cmd.move.point.ToGfxPoint();
         if (helper.idx != 0) {
           // This is overly strict since empty moveto sequences such as "M 10 12
           // M 3 2 M 0 0" render nothing, but I expect it won't make us miss a
@@ -731,7 +717,7 @@ Maybe<gfx::Rect> SVGPathToAxisAlignedRect(Span<const StylePathCommand> aPath) {
           return Nothing();
         }
 
-        if (cmd.move_to.absolute == StyleIsAbsolute::No) {
+        if (cmd.move.by_to == StyleByTo::By) {
           to = segStart + to;
         }
 
@@ -744,7 +730,7 @@ Maybe<gfx::Rect> SVGPathToAxisAlignedRect(Span<const StylePathCommand> aPath) {
 
         break;
       }
-      case StylePathCommand::Tag::ClosePath: {
+      case StylePathCommand::Tag::Close: {
         if (!helper.Edge(segStart, pathStart)) {
           return Nothing();
         }
@@ -754,9 +740,9 @@ Maybe<gfx::Rect> SVGPathToAxisAlignedRect(Span<const StylePathCommand> aPath) {
         pathStart = segStart;
         break;
       }
-      case StylePathCommand::Tag::LineTo: {
-        Point to = cmd.line_to.point.ConvertsToGfxPoint();
-        if (cmd.line_to.absolute == StyleIsAbsolute::No) {
+      case StylePathCommand::Tag::Line: {
+        Point to = cmd.line.point.ToGfxPoint();
+        if (cmd.line.by_to == StyleByTo::By) {
           to = segStart + to;
         }
 
@@ -766,9 +752,9 @@ Maybe<gfx::Rect> SVGPathToAxisAlignedRect(Span<const StylePathCommand> aPath) {
         segStart = to;
         break;
       }
-      case StylePathCommand::Tag::HorizontalLineTo: {
-        Point to = gfx::Point(cmd.horizontal_line_to.x, segStart.y);
-        if (cmd.horizontal_line_to.absolute == StyleIsAbsolute::No) {
+      case StylePathCommand::Tag::HLine: {
+        Point to = gfx::Point(cmd.h_line.x, segStart.y);
+        if (cmd.h_line.by_to == StyleByTo::By) {
           to.x += segStart.x;
         }
 
@@ -778,9 +764,9 @@ Maybe<gfx::Rect> SVGPathToAxisAlignedRect(Span<const StylePathCommand> aPath) {
         segStart = to;
         break;
       }
-      case StylePathCommand::Tag::VerticalLineTo: {
-        Point to = gfx::Point(segStart.x, cmd.vertical_line_to.y);
-        if (cmd.horizontal_line_to.absolute == StyleIsAbsolute::No) {
+      case StylePathCommand::Tag::VLine: {
+        Point to = gfx::Point(segStart.x, cmd.v_line.y);
+        if (cmd.h_line.by_to == StyleByTo::By) {
           to.y += segStart.y;
         }
 

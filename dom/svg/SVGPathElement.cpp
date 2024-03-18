@@ -351,7 +351,7 @@ bool SVGPathElement::IsClosedLoop() const {
     const nsStyleSVGReset* styleSVGReset = s->StyleSVGReset();
     if (styleSVGReset->mD.IsPath()) {
       isClosed = !styleSVGReset->mD.AsPath()._0.IsEmpty() &&
-                 styleSVGReset->mD.AsPath()._0.AsSpan().rbegin()->IsClosePath();
+                 styleSVGReset->mD.AsPath()._0.AsSpan().rbegin()->IsClose();
     }
   };
 
