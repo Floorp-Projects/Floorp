@@ -141,7 +141,7 @@ parser/html/java/translator.jar
 .settings/
 
 # Ignore the files and directory that JetBrains IDEs create.
-/.idea/
+**/.idea/
 *.iml
 
 # Android Monitor in Android Studio creates a captures/ directory.
@@ -212,6 +212,19 @@ testing/web-platform/products/
 
 # Android Gradle artifacts.
 mobile/android/gradle/.gradle
+
+# Android build cache
+mobile/android/**/.build-cache
+mobile/android/**/.gradle
+mobile/android/**/build
+mobile/android/**/bin
+mobile/android/**/generated
+
+# Android local.properties
+mobile/android/**\/local.properties
+
+# Android - Web extensions: manifest.json files are generated
+mobile/android/**\/manifest.json
 
 # XCode project cruft
 /*.xcodeproj/
