@@ -194,7 +194,7 @@ function promiseSetToolbarVisibility(aToolbar, aVisible) {
 function isToolbarVisible(aToolbar) {
   let hidingAttribute =
     aToolbar.getAttribute("type") == "menubar" ? "autohide" : "collapsed";
-  let hidingValue = aToolbar.getAttribute(hidingAttribute).toLowerCase();
+  let hidingValue = aToolbar.getAttribute(hidingAttribute)?.toLowerCase();
   // Check for both collapsed="true" and collapsed="collapsed"
   return hidingValue !== "true" && hidingValue !== hidingAttribute;
 }

@@ -670,8 +670,9 @@ export var SelectParentHelper = {
       if (!currentItem.hiddenByContent) {
         // Get label and tooltip (title) from option and change to
         // lower case for comparison
-        let itemLabel = currentItem.getAttribute("label").toLowerCase();
-        let itemTooltip = currentItem.getAttribute("title").toLowerCase();
+        let itemLabel = currentItem.getAttribute("label")?.toLowerCase() || "";
+        let itemTooltip =
+          currentItem.getAttribute("title")?.toLowerCase() || "";
 
         // If search input is empty, all options should be shown
         if (!input) {
