@@ -26,6 +26,7 @@ class AnyRef;
 
 namespace gc {
 
+class AllocSite;
 class ArenaCellSet;
 class RelocationOverlay;
 class StringRelocationOverlay;
@@ -130,7 +131,8 @@ class TenuringTracer final : public JSTracer {
   template <typename T>
   T* alloc(JS::Zone* zone, gc::AllocKind kind, gc::Cell* src);
   template <JS::TraceKind traceKind>
-  void* allocCell(JS::Zone* zone, gc::AllocKind allocKind, gc::Cell* src);
+  void* allocCell(JS::Zone* zone, gc::AllocKind allocKind, gc::AllocSite* site,
+                  gc::Cell* src);
   JSString* allocString(JSString* src, JS::Zone* zone, gc::AllocKind dstKind);
 
   bool shouldTenure(Zone* zone, JS::TraceKind traceKind, Cell* cell);
