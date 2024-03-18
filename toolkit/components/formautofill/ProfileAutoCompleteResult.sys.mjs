@@ -131,6 +131,12 @@ class ProfileAutoCompleteResult {
     if (typeof label == "string") {
       return label;
     }
+
+    let type = this.getTypeOfIndex(index);
+    if (type == "clear") {
+      return label.primary;
+    }
+
     return JSON.stringify(label);
   }
 
@@ -141,6 +147,11 @@ class ProfileAutoCompleteResult {
    * @returns {string} The comment at the specified index
    */
   getCommentAt(index) {
+    let type = this.getTypeOfIndex(index);
+    if (type == "clear") {
+      return '{"fillMessageName": "FormAutofill:ClearForm"}';
+    }
+
     const item = this.getAt(index);
     return item.comment ?? JSON.stringify(this._matchingProfiles[index]);
   }
@@ -157,14 +168,16 @@ class ProfileAutoCompleteResult {
       return itemStyle;
     }
 
-    if (index == this._popupLabels.length - 1) {
-      return "autofill-footer";
+    switch (this.getTypeOfIndex(index)) {
+      case "manage":
+        return "autofill-footer";
+      case "clear":
+        return "action";
+      case "insecure":
+        return "autofill-insecureWarning";
+      default:
+        return "autofill-profile";
     }
-    if (this._isInputAutofilled) {
-      return "autofill-clear-button";
-    }
-
-    return "autofill-profile";
   }
 
   /**
@@ -204,6 +217,24 @@ class ProfileAutoCompleteResult {
    */
   removeValueAt(_index) {
     // There is no plan to support removing profiles via autocomplete.
+  }
+
+  /**
+   * Returns a type string that identifies te type of row at the given index.
+   *
+   * @param   {number} index The index of the result requested
+   * @returns {string} The type at the specified index
+   */
+  getTypeOfIndex(index) {
+    if (this._isInputAutofilled && index == 0) {
+      return "clear";
+    }
+
+    if (index == this._popupLabels.length - 1) {
+      return "manage";
+    }
+
+    return "item";
   }
 }
 
@@ -282,8 +313,10 @@ export class AddressResult extends ProfileAutoCompleteResult {
     );
 
     if (this._isInputAutofilled) {
+      const clearLabel = lazy.l10n.formatValueSync("autofill-clear-form-label");
+
       return [
-        { primary: "", secondary: "" }, // Clear button
+        { primary: clearLabel, secondary: "" }, // Clear button
         // Footer
         {
           primary: "",
@@ -402,8 +435,10 @@ export class CreditCardResult extends ProfileAutoCompleteResult {
     );
 
     if (this._isInputAutofilled) {
+      const clearLabel = lazy.l10n.formatValueSync("autofill-clear-form-label");
+
       return [
-        { primary: "", secondary: "" }, // Clear button
+        { primary: clearLabel, secondary: "" }, // Clear button
         // Footer
         {
           primary: "",
@@ -467,16 +502,11 @@ export class CreditCardResult extends ProfileAutoCompleteResult {
     return labels;
   }
 
-  getStyleAt(index) {
-    const itemStyle = this.getAt(index).style;
-    if (itemStyle) {
-      return itemStyle;
-    }
-
+  getTypeOfIndex(index) {
     if (!this._isSecure) {
-      return "autofill-insecureWarning";
+      return "insecure";
     }
 
-    return super.getStyleAt(index);
+    return super.getTypeOfIndex(index);
   }
 }
