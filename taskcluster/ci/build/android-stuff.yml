@@ -43,6 +43,7 @@ android-geckoview-docs/opt:
     fetches:
         toolchain:
             - android-gradle-dependencies
+            - android-gradle-python-envs
             - android-sdk-linux
             - linux64-jdk
             - linux64-node
