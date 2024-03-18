@@ -1,83 +1,73 @@
+pluginManagement {
+    apply from: file('mobile/android/gradle/mozconfig.gradle')
+
+    repositories {
+        gradle.mozconfig.substs.GRADLE_MAVEN_REPOSITORIES.each { repository ->
+            maven {
+                url repository
+                if (gradle.mozconfig.substs.ALLOW_INSECURE_GRADLE_REPOSITORIES) {
+                    allowInsecureProtocol = true
+                }
+            }
+        }
+    }
+
+    includeBuild("${rootProject.projectDir.absolutePath}/mobile/android/android-components/plugins/config")
+    includeBuild("${rootProject.projectDir.absolutePath}/mobile/android/android-components/plugins/dependencies")
+    includeBuild("${rootProject.projectDir.absolutePath}/mobile/android/android-components/plugins/publicsuffixlist")
+    includeBuild("${rootProject.projectDir.absolutePath}/mobile/android/fenix/plugins/apksize")
+    includeBuild("${rootProject.projectDir.absolutePath}/mobile/android/fenix/plugins/fenixdependencies")
+    includeBuild("${rootProject.projectDir.absolutePath}/mobile/android/focus-android/plugins/focusdependencies")
+}
+
+plugins {
+    id "mozac.ConfigPlugin"
+    id 'mozac.DependenciesPlugin'
+    id 'ApkSizePlugin'
+    id 'FenixDependenciesPlugin'
+    id 'FocusDependenciesPlugin'
+}
+
 // You might think topsrcdir is '.', but that's not true when the Gradle build
 // is launched from within IntelliJ.
-def topsrcdir = rootProject.projectDir.absolutePath
+ext.topsrcdir = rootProject.projectDir.absolutePath
 
-apply from: "${topsrcdir}/mobile/android/gradle/mach_env.gradle"
-
-def commandLine = ["${topsrcdir}/mach", "environment", "--format", "json", "--verbose"]
-if (System.env.GRADLE_MACH_PYTHON) {
-    commandLine.addAll(0, [System.env.GRADLE_MACH_PYTHON])
-} else if (System.properties["os.name"].contains("Windows")) {
-    commandLine.addAll(0, ["python"])
-}
-
-def proc = commandLine.execute(machEnv(topsrcdir), new File(topsrcdir))
-def standardOutput = new ByteArrayOutputStream()
-def standardError = new ByteArrayOutputStream()
-proc.consumeProcessOutput(standardOutput, standardError)
-proc.waitFor()
-
-// Only show the output if something went wrong.
-if (proc.exitValue() != 0) {
-    logger.info("Error running ./mach environment: \n\n"
-        + "Process '${commandLine}' finished with non-zero exit value ${proc.exitValue()}:\n\n"
-        + "stdout:\n"
-        + "${standardOutput.toString()}\n\n"
-        + "stderr:\n"
-        + "${standardError.toString()}")
-    throw new StopExecutionException(
-            "Could not run ./mach environment. Try running ./mach build first.")
-}
-
-import groovy.json.JsonSlurper
-
-def slurper = new JsonSlurper()
-def json = slurper.parseText(standardOutput.toString())
-
-if (json.substs.MOZ_BUILD_APP != 'mobile/android') {
-    throw new GradleException("Building with Gradle is only supported for Fennec, i.e., MOZ_BUILD_APP == 'mobile/android'.")
-}
+apply from: "${topsrcdir}/mobile/android/shared-settings.gradle"
 
 // Set the Android SDK location.  This is the *least specific* mechanism, which
 // is unfortunate: we'd prefer to use the *most specific* mechanism.  That is,
 // local.properties (first 'sdk.dir', then 'android.dir') and then the
 // environment variable ANDROID_HOME will override this.  That's unfortunate,
 // but it's hard to automatically arrange better.
-System.setProperty('android.home', json.substs.ANDROID_SDK_ROOT)
+System.setProperty('android.home', gradle.mozconfig.substs.ANDROID_SDK_ROOT)
 
 include ':annotations', ':messaging_example', ':port_messaging_example'
 include ':geckoview'
 include ':geckoview_example'
 include ':test_runner'
 include ':exoplayer2'
+include ':android-components'
+include ':samples-browser'
+include ':fenix'
+include ':mozilla-lint-rules'
+include ':focus-android'
+include ':service-telemetry'
 
-project(':annotations').projectDir = new File("${json.topsrcdir}/mobile/android/annotations")
-project(':geckoview').projectDir = new File("${json.topsrcdir}/mobile/android/geckoview")
-project(':geckoview_example').projectDir = new File("${json.topsrcdir}/mobile/android/geckoview_example")
-project(':test_runner').projectDir = new File("${json.topsrcdir}/mobile/android/test_runner")
-project(':exoplayer2').projectDir = new File("${json.topsrcdir}/mobile/android/exoplayer2")
+project(':annotations').projectDir = new File("${gradle.mozconfig.topsrcdir}/mobile/android/annotations")
+project(':geckoview').projectDir = new File("${gradle.mozconfig.topsrcdir}/mobile/android/geckoview")
+project(':geckoview_example').projectDir = new File("${gradle.mozconfig.topsrcdir}/mobile/android/geckoview_example")
+project(':test_runner').projectDir = new File("${gradle.mozconfig.topsrcdir}/mobile/android/test_runner")
+project(':exoplayer2').projectDir = new File("${gradle.mozconfig.topsrcdir}/mobile/android/exoplayer2")
+project(':android-components').projectDir = new File("${gradle.mozconfig.topsrcdir}/mobile/android/android-components")
+project(':samples-browser').projectDir = new File("${gradle.mozconfig.topsrcdir}/mobile/android/android-components/samples/browser")
+project(':fenix').projectDir = new File("${gradle.mozconfig.topsrcdir}/mobile/android/fenix/app")
+project(':service-telemetry').projectDir = new File("${gradle.mozconfig.topsrcdir}/mobile/android/focus-android/service-telemetry")
+project(':focus-android').projectDir = new File("${gradle.mozconfig.topsrcdir}/mobile/android/focus-android/app")
 
 if (hasProperty("androidFormatLintTest")) {
     include ':androidFormatLintTest'
-    project(':androidFormatLintTest').projectDir = new File("${json.topsrcdir}/tools/lint/test/files/android-format")
+    project(':androidFormatLintTest').projectDir = new File("${gradle.mozconfig.topsrcdir}/tools/lint/test/files/android-format")
 }
 
-// The Gradle instance is shared between settings.gradle and all the
-// other build.gradle files (see
-// http://forums.gradle.org/gradle/topics/define_extension_properties_from_settings_xml).
-// We use this ext property to pass the per-object-directory mozconfig
-// between scripts.  This lets us execute set-up code before we gradle
-// tries to configure the project even once, and as a side benefit
-// saves invoking |mach environment| multiple times.
-gradle.ext.mozconfig = json
-
-// Produced by `mach build`.  Bug 1543982: the mozconfig determined by `mach
-// environment` above can be different because `mach build` itself sets certain
-// critical environment variables including MOZ_OBJDIR, CC, and CXX.  We use
-// this record to patch up the environment when we recursively invoke `mach
-// build ...` commands from within Gradle.  This avoids invalidating configure
-// based on the changed environment variables.
-def orig = slurper.parse(new File(json.topobjdir, '.mozconfig.json'))
-gradle.ext.mozconfig.orig_mozconfig = orig.mozconfig
 project(':messaging_example').projectDir = new File('mobile/android/examples/messaging_example/app')
 project(':port_messaging_example').projectDir = new File('mobile/android/examples/port_messaging_example/app')

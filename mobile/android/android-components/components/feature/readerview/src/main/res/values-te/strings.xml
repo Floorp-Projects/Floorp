@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_sans_serif_font">సాన్స్ సెరీఫ్</string>
+
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_sans_serif_font_desc">సాన్స్ సెరిఫ్ ఫాంటు</string>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_serif_font">సెరిఫ్</string>
+
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_serif_font_desc">సెరిఫ్ ఫాంటు</string>
+
+    <!-- Accessible description for decreasing the font size -->
+    <string name="mozac_feature_readerview_font_size_decrease_desc">ఫాంటు పరిమాణం తగ్గించు</string>
+
+    <!-- Accessible description for increasing the font size -->
+    <string name="mozac_feature_readerview_font_size_increase_desc">ఫాంటు పరిమాణం పెంచు</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_dark">నల్లని</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_dark_color_scheme_desc">నల్లని రంగు స్కీము</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_sephia">సేపియా</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_sepia_color_scheme_desc">సేపియా రంగు స్కీము</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_light">లేత</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_light_color_scheme_desc">లేత రంగు</string>
+</resources>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ This Source Code Form is subject to the terms of the Mozilla Public
+  ~  License, v. 2.0. If a copy of the MPL was not distributed with this
+  ~  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+  -->
+
+<resources>
+    <color name="mozac_feature_readerview_selected">#592ACB</color>
+    <color name="mozac_feature_readerview_text_color">#220033</color>
+    <color name="mozac_feature_readerview_text_color_disabled">#B1B1B3</color>
+    <color name="mozac_feature_readerview_dark_background">#32313B</color>
+    <color name="mozac_feature_readerview_light_background">#EFEFF2</color>
+    <color name="mozac_feature_readerview_sepia_background">#FDF4E0</color>
+</resources>

@@ -25,6 +25,8 @@ categories:
         - toolkit
         - js
         - mobile/android/geckoview
+        - mobile/android/fenix
+        - mobile/android/focus-android
         - dom/bindings/webidl
         - modules/libpref
         - networking

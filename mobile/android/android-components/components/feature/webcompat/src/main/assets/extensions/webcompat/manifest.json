@@ -1,0 +1,160 @@
+{
+  "manifest_version": 2,
+  "name": "Mozilla Android Components - Web Compatibility Interventions",
+  "description": "Urgent post-release fixes for web compatibility.",
+  "version": "125.0.0",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "webcompat@mozilla.org",
+      "strict_min_version": "102.0"
+    }
+  },
+
+  "experiment_apis": {
+    "aboutConfigPrefs": {
+      "schema": "experiment-apis/aboutConfigPrefs.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "experiment-apis/aboutConfigPrefs.js",
+        "paths": [["aboutConfigPrefs"]]
+      },
+      "child": {
+        "scopes": ["addon_child"],
+        "script": "experiment-apis/aboutConfigPrefsChild.js",
+        "paths": [["aboutConfigPrefs"]]
+      }
+    },
+    "appConstants": {
+      "schema": "experiment-apis/appConstants.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "experiment-apis/appConstants.js",
+        "paths": [["appConstants"]]
+      }
+    },
+    "aboutPage": {
+      "schema": "about-compat/aboutPage.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "about-compat/aboutPage.js",
+        "events": ["startup"]
+      }
+    },
+    "matchPatterns": {
+      "schema": "experiment-apis/matchPatterns.json",
+      "child": {
+        "scopes": ["addon_child"],
+        "script": "experiment-apis/matchPatterns.js",
+        "paths": [["matchPatterns"]]
+      }
+    },
+    "systemManufacturer": {
+      "schema": "experiment-apis/systemManufacturer.json",
+      "child": {
+        "scopes": ["addon_child"],
+        "script": "experiment-apis/systemManufacturer.js",
+        "paths": [["systemManufacturer"]]
+      }
+    },
+    "trackingProtection": {
+      "schema": "experiment-apis/trackingProtection.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "experiment-apis/trackingProtection.js",
+        "paths": [["trackingProtection"]]
+      }
+    }
+  },
+
+  "content_security_policy": "script-src 'self' 'sha256-PeZc2H1vv7M8NXqlFyNbN4y4oM6wXmYEbf73m+Aqpak='; default-src 'self'; base-uri moz-extension://*; object-src 'none'",
+
+  "permissions": [
+    "mozillaAddons",
+    "scripting",
+    "tabs",
+    "webNavigation",
+    "webRequest",
+    "webRequestBlocking",
+    "<all_urls>"
+  ],
+
+  "background": {
+    "scripts": [
+      "lib/module_shim.js",
+      "lib/messaging_helper.js",
+      "lib/intervention_helpers.js",
+      "lib/requestStorageAccess_helper.js",
+      "lib/ua_helpers.js",
+      "data/injections.js",
+      "data/shims.js",
+      "data/ua_overrides.js",
+      "lib/about_compat_broker.js",
+      "lib/custom_functions.js",
+      "lib/injections.js",
+      "lib/shims.js",
+      "lib/ua_overrides.js",
+      "run.js"
+    ]
+  },
+
+  "web_accessible_resources": [
+    "shims/addthis-angular.js",
+    "shims/adform.js",
+    "shims/adnexus-ast.js",
+    "shims/adnexus-prebid.js",
+    "shims/adsafeprotected-ima.js",
+    "shims/apstag.js",
+    "shims/blogger.js",
+    "shims/bloggerAccount.js",
+    "shims/bmauth.js",
+    "shims/branch.js",
+    "shims/chartbeat.js",
+    "shims/crave-ca.js",
+    "shims/criteo.js",
+    "shims/cxense.js",
+    "shims/doubleverify.js",
+    "shims/eluminate.js",
+    "shims/empty-script.js",
+    "shims/empty-shim.txt",
+    "shims/everest.js",
+    "shims/facebook-sdk.js",
+    "shims/facebook.svg",
+    "shims/fastclick.js",
+    "shims/firebase.js",
+    "shims/google-ads.js",
+    "shims/google-analytics-and-tag-manager.js",
+    "shims/google-analytics-ecommerce-plugin.js",
+    "shims/google-analytics-legacy.js",
+    "shims/google-ima.js",
+    "shims/google-page-ad.js",
+    "shims/google-publisher-tags.js",
+    "shims/google-safeframe.html",
+    "shims/history.js",
+    "shims/iam.js",
+    "shims/iaspet.js",
+    "shims/instagram.js",
+    "shims/kinja.js",
+    "shims/live-test-shim.js",
+    "shims/maxmind-geoip.js",
+    "shims/microsoftLogin.js",
+    "shims/microsoftVirtualAssistant.js",
+    "shims/moat.js",
+    "shims/mochitest-shim-1.js",
+    "shims/mochitest-shim-2.js",
+    "shims/mochitest-shim-3.js",
+    "shims/nielsen.js",
+    "shims/optimizely.js",
+    "shims/play.svg",
+    "shims/rambler-authenticator.js",
+    "shims/rich-relevance.js",
+    "shims/salesforce.js",
+    "shims/spotify-embed.js",
+    "shims/tracking-pixel.png",
+    "shims/tsn-ca.js",
+    "shims/vast2.xml",
+    "shims/vast3.xml",
+    "shims/vidible.js",
+    "shims/vmad.xml",
+    "shims/webtrends.js"
+  ]
+}

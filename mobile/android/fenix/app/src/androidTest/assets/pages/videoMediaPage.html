@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<html>
+<head>
+    <title>Video_Test_Page</title>
+</head>
+<body>
+<p id="testContent">Page content: video player</p>
+<div class="playbackState">
+    <p>Media file not playing</p>
+</div>
+<div id="video-container" style="text-align:center">
+    <button onclick="play()">Play</button>
+    <button onclick="pause()">Pause</button>
+    <button onclick="fullscreen()">Full Screen</button>
+    <br><br>
+    <video id="video" width="420" autoplay controls loop>
+        <source src="../resources/clip.mp4" type="video/mp4">
+        Your browser does not support HTML video.
+    </video>
+</div>
+
+<script>
+    const video = document.getElementById("video");
+
+    function play() {
+        video.play();
+    }
+
+    function pause() {
+        video.pause();
+    }
+
+    function fullscreen() {
+        video.requestFullscreen();
+    }
+
+    video.addEventListener('playing', (event) => {
+        document.querySelector('.playbackState').innerHTML="Media file is playing";
+    });
+
+    video.addEventListener('pause', (event) => {
+         document.querySelector('.playbackState').innerHTML="Media file is paused";
+    });
+</script>
+</body>
+</html>

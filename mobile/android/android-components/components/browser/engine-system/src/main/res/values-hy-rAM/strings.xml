@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Text for the title of an alert dialog displayed by a web page. %1$s will be replaced with the URL of the current page (displaying the dialog). -->
+    <string name="mozac_browser_engine_system_alert_title">   %1$s հասցեից էջը հաղորդում է`</string>
+    <!-- Text for the message of an auth dialog displayed by a web page.
+    %1$s will be replaced by the hostname or a description of the protected area/site, %2$s will be replaced with the URL of the current page (displaying the dialog). -->
+    <string name="mozac_browser_engine_system_auth_message">%2$s-ը պահանջում է օգտագործողի անուն և գաղտնաբառ: Կայքը հաղորդում է` &quot;%1$s&quot;</string>
+    <!-- Text for the message of an auth dialog displayed by a web page. %1$s will be replaced with the URL of the current page (displaying the dialog). -->
+    <string name="mozac_browser_engine_system_auth_no_realm_message">%1$s-ը հարցնում է օգտվողի ձեր անունը և գաղտնաբառը</string>
+</resources>

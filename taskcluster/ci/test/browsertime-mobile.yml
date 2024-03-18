@@ -15,11 +15,11 @@ job-defaults:
             fenix:
                 by-test-platform:
                     android-hw.*-aarch64.*/.*:
-                        index: mobile.v3.firefox-android.apks.fenix-nightly.latest.arm64-v8a
-                        name: build/target.arm64-v8a.apk
+                        upstream-task: signing-apk
+                        name: public/build/target.arm64-v8a.apk
                     default:
-                        index: mobile.v3.firefox-android.apks.fenix-nightly.latest.armeabi-v7a
-                        name: build/target.armeabi-v7a.apk
+                        upstream-task: signing-apk
+                        name: public/build/target.armeabi-v7a.apk
             refbrow:
                 by-test-platform:
                     android-hw.*-aarch64.*/.*:
@@ -69,6 +69,11 @@ job-defaults:
                 default:
                     - linux64-minidump-stackwalk
                     - linux64-fix-stacks
+    dependencies:
+        by-app:
+            fenix:
+                signing-apk: signing-apk-fenix-nightly-simulation
+            default: {}
 
 browsertime-tp6m:
     <<: &tp6m-defaults

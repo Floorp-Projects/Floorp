@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <LinearLayout
+        android:id="@+id/browser_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <View
+            android:id="@+id/status_bar_background"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:background="@drawable/background_gradient" />
+
+        <org.mozilla.focus.widget.ResizableKeyboardCoordinatorLayout
+            android:layout_marginTop="0dp"
+            android:id="@+id/main_content"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:clipChildren="false">
+
+            <mozilla.components.concept.engine.EngineView
+                tools:ignore="Instantiatable"
+                android:id="@+id/engineView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:scrollbarThumbVertical="@drawable/scrollbar_thumb" />
+
+            <FrameLayout
+                android:id="@+id/crash_container"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/destructive"
+                android:visibility="gone"/>
+
+            <mozilla.components.browser.toolbar.BrowserToolbar
+                android:id="@+id/browserToolbar"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/browser_toolbar_height"
+                android:layout_gravity="top"
+                android:background="@drawable/background_gradient"
+                android:clickable="true"
+                android:elevation="4dp"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                app:browserToolbarClearColor="?primaryText"
+                app:browserToolbarInsecureColor="?primaryText"
+                app:browserToolbarMenuColor="?primaryText"
+                app:browserToolbarProgressBarGravity="bottom"
+                app:browserToolbarSecureColor="?primaryText" />
+
+            <mozilla.components.feature.findinpage.view.FindInPageBar
+                android:id="@+id/find_in_page"
+                android:layout_width="match_parent"
+                android:elevation="10dp"
+                android:layout_height="56dp"
+                android:padding="4dp"
+                android:background="@color/colorPrimary"
+                app:findInPageQueryHintTextColor="@color/secondaryText"
+                app:findInPageNoMatchesTextColor="@color/error"
+                app:findInPageButtonsTint="@color/primaryText"
+                app:findInPageResultCountTextColor="@color/primaryText"
+                android:visibility="gone" />
+
+        </org.mozilla.focus.widget.ResizableKeyboardCoordinatorLayout>
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/popup_tint"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:alpha=".5"
+        android:background="@color/colorPrimary"
+        android:visibility="gone" />
+
+    <FrameLayout
+        android:id="@+id/video_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/colorPrimary"
+        android:visibility="gone" />
+</FrameLayout>

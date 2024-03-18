@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<FrameLayout>
+    <LinearLayout idEntry="action_bar_root" idPackage="org.me.mobiexpensifyg" idType="id">
+        <View idEntry="action_mode_bar_stub" idPackage="org.me.mobiexpensifyg" idType="id"/>
+        <RelativeLayout idEntry="content" idPackage="org.me.mobiexpensifyg" idType="id">
+            <ImageSwitcher idEntry="background_image_view" idPackage="org.me.mobiexpensifyg" idType="id"/>
+            <FrameLayout idEntry="form_container" idPackage="org.me.mobiexpensifyg" idType="id">
+                <LinearLayout idEntry="text_input_layout" idPackage="org.me.mobiexpensifyg" idType="id">
+                    <EditText idEntry="edit_text" idPackage="org.me.mobiexpensifyg" idType="id" hint="Email" inputType="21"/>
+                </LinearLayout>
+                <View idEntry="underline_view" idPackage="org.me.mobiexpensifyg" idType="id"/>
+                <TextView idEntry="error_text" idPackage="org.me.mobiexpensifyg" idType="id"/>
+                <TextView idEntry="cancel_text" idPackage="org.me.mobiexpensifyg" idType="id"/>
+                <FrameLayout idEntry="submit_button" idPackage="org.me.mobiexpensifyg" idType="id">
+                    <FrameLayout idEntry="container" idPackage="org.me.mobiexpensifyg" idType="id">
+                        <TextView idEntry="title_text" idPackage="org.me.mobiexpensifyg" idType="id"/>
+                        <ProgressBar idEntry="progress_bar" idPackage="org.me.mobiexpensifyg" idType="id"/>
+                    </FrameLayout>
+                </FrameLayout>
+            </FrameLayout>
+            <LinearLayout idEntry="navigation_element_container" idPackage="org.me.mobiexpensifyg" idType="id">
+                <TextSwitcher idEntry="navigation_element_switcher" idPackage="org.me.mobiexpensifyg" idType="id">
+                    <TextView idEntry="navigation_element_text1" idPackage="org.me.mobiexpensifyg" idType="id"/>
+                    <TextView idEntry="navigation_element_text2" idPackage="org.me.mobiexpensifyg" idType="id"/>
+                </TextSwitcher>
+            </LinearLayout>
+            <TextSwitcher idEntry="expensify_motto_switcher" idPackage="org.me.mobiexpensifyg" idType="id">
+                <TextView/>
+                <TextView/>
+            </TextSwitcher>
+            <View idEntry="footer_separator" idPackage="org.me.mobiexpensifyg" idType="id"/>
+            <TextSwitcher idEntry="expensify_ambassador_name_switcher" idPackage="org.me.mobiexpensifyg" idType="id">
+                <TextView/>
+                <TextView/>
+            </TextSwitcher>
+            <TextSwitcher idEntry="expensify_customer_since_switcher" idPackage="org.me.mobiexpensifyg" idType="id">
+                <TextView/>
+                <TextView/>
+            </TextSwitcher>
+            <TextView idEntry="privacy_policy_text" idPackage="org.me.mobiexpensifyg" idType="id"/>
+        </RelativeLayout>
+    </LinearLayout>
+</FrameLayout>

@@ -1,0 +1,26 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+syntax = "proto3";
+
+package proto;
+
+option java_package = "org.mozilla.fenix.datastore";
+option java_multiple_files = true;
+
+// List of currently selected Pocket recommended stories categories.
+message SelectedPocketStoriesCategories {
+
+  // Details about a selected Pocket recommended stories category.
+  // See [org.mozilla.fenix.home.pocket.PocketRecommendedStoriesSelectedCategory]
+  message SelectedPocketStoriesCategory {
+    // Name of this category.
+    string name = 1;
+    // Timestamp for when this category was selected.
+    int64 selectionTimestamp = 2;
+  }
+
+  // Currently selected Pocket stories categories.
+  repeated SelectedPocketStoriesCategory values = 1;
+}

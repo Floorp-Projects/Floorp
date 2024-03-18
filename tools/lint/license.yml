@@ -30,6 +30,9 @@ license:
         - gradle.properties
         # might not work with license
         - gradle/wrapper/gradle-wrapper.properties
+        - mobile/android/android-components/gradle/wrapper/gradle-wrapper.properties
+        - mobile/android/fenix/gradle/wrapper/gradle-wrapper.properties
+        - mobile/android/focus-android/gradle/wrapper/gradle-wrapper.properties
         # ICU4X data
         - intl/icu_segmenter_data
         # Imported code that is dual Apache2 / MIT licensed
@@ -41,6 +44,48 @@ license:
         - mobile/android/geckoview_example/src/main
         - testing/webcompat/interventions/
         - testing/webcompat/shims/
+        # TODO - Bug 1881094: temporarily ignored for firefox-android migration
+        - mobile/android/android-components/components/browser/engine-system/src/main/res/
+        - mobile/android/android-components/components/browser/errorpages/src/main/res/
+        - mobile/android/android-components/components/browser/menu/src/main/res/
+        - mobile/android/android-components/components/browser/menu2/src/main/res/
+        - mobile/android/android-components/components/browser/toolbar/src/main/res/
+        - mobile/android/android-components/components/compose/awesomebar/src/main/res/
+        - mobile/android/android-components/components/compose/browser-toolbar/src/main/res/
+        - mobile/android/android-components/components/compose/cfr/src/main/res/
+        - mobile/android/android-components/components/compose/tabstray/src/main/res/
+        - mobile/android/android-components/components/feature/addons/src/main/res/
+        - mobile/android/android-components/components/feature/app-links/src/main/res/
+        - mobile/android/android-components/components/feature/autofill/src/main/res/
+        - mobile/android/android-components/components/feature/awesomebar/src/main/res/
+        - mobile/android/android-components/components/feature/contextmenu/src/main/res/
+        - mobile/android/android-components/components/feature/customtabs/src/main/res/
+        - mobile/android/android-components/components/feature/downloads/src/main/res/
+        - mobile/android/android-components/components/feature/findinpage/src/main/res/
+        - mobile/android/android-components/components/feature/fxsuggest/src/main/res/
+        - mobile/android/android-components/components/feature/media/src/main/res/
+        - mobile/android/android-components/components/feature/privatemode/src/main/res/
+        - mobile/android/android-components/components/feature/prompts/src/main/res/
+        - mobile/android/android-components/components/feature/pwa/src/main/res/
+        - mobile/android/android-components/components/feature/qr/src/main/res/
+        - mobile/android/android-components/components/feature/readerview/src/main/res/
+        - mobile/android/android-components/components/feature/search/src/main/res/
+        - mobile/android/android-components/components/feature/sitepermissions/
+        - mobile/android/android-components/components/feature/tabs/src/main/res/
+        - mobile/android/android-components/components/feature/webcompat/src/main/assets/extensions/webcompat/injections/
+        - mobile/android/android-components/components/feature/webnotifications/src/main/res/
+        - mobile/android/android-components/components/lib/crash/src/main/res/
+        - mobile/android/android-components/components/service/nimbus/src/main/res/
+        - mobile/android/android-components/components/support/base/src/main/res/
+        - mobile/android/android-components/components/support/ktx/src/main/res/
+        - mobile/android/android-components/components/support/utils/src/main/res/
+        - mobile/android/android-components/components/ui/tabcounter/src/main/res/
+        - mobile/android/android-components/components/ui/widgets/src/main/res/
+        - mobile/android/android-components/docs/
+        - mobile/android/fenix/app/src/main/res/
+        - mobile/android/fenix/benchmark/src/main/AndroidManifest.xml
+        - mobile/android/focus-android/app/lint-baseline.xml
+        - mobile/android/focus-android/app/src/main/res/
         # might not work with license
         - mobile/android/gradle/dotgradle-offline/gradle.properties
         # might not work with license

@@ -11,6 +11,15 @@ with Files("**"):
 with Files("geckoview_example/**"):
     BUG_COMPONENT = ("GeckoView", "GeckoViewExample")
 
+with Files("fenix/**"):
+    BUG_COMPONENT = ("Fenix", "General")
+
+with Files("focus-android/**"):
+    BUG_COMPONENT = ("Focus", "General")
+
+with Files("android-components/**"):
+    BUG_COMPONENT = ("Fenix", "General")
+
 # The recursive make backend treats the first output specially: it's passed as
 # an open FileAvoidWrite to the invoked script.  That doesn't work well with
 # the Gradle task that generates all of the outputs, so we add a dummy first
@@ -85,6 +94,8 @@ TEST_HARNESS_FILES.testing.mochitest.tests.junit += [
 ]
 
 SPHINX_TREES["/mobile/android"] = "docs"
+SPHINX_TREES["/mobile/android/fenix"] = "fenix/docs"
+SPHINX_TREES["/mobile/android/focus-android"] = "focus-android/docs"
 
 with Files("docs/**"):
     SCHEDULES.exclusive = ["docs"]

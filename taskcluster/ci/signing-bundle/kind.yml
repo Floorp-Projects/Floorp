@@ -1,0 +1,41 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+transforms:
+    - taskgraph.transforms.from_deps
+    - android_taskgraph.transforms.upstream_artifacts
+    - android_taskgraph.transforms.treeherder:transforms
+    - android_taskgraph.transforms.signing_android_app:transforms
+    - android_taskgraph.transforms.notify:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    - build-bundle
+
+jobs:
+    sign-bundle:
+        description: Sign Android AABs
+        from-deps:
+            copy-attributes: true
+        worker:
+            implementation: scriptworker-signing
+        signing-format:
+            by-build-type:
+                (focus-.*|klar-.*): autograph_focus
+                default: autograph_apk
+        run-on-projects: []
+        treeherder:
+            symbol:
+                by-build-type:
+                    focus-(debug|nightly|beta|release)$: AABfs
+                    klar-.*: AABkls
+                    default: AABs
+            kind: build
+            platform:
+                by-build-type:
+                    (fenix.*): fenix-android-all/opt
+                    default: focus-android-all/opt
+            tier: 1

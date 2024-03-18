@@ -58,6 +58,9 @@ job-defaults:
             - name: public/build/geckoview_example.aab
               path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/geckoview_example/outputs/bundle/withGeckoBinariesDebug/geckoview_example-withGeckoBinaries-debug.aab
               type: file
+            - name: public/build/mozconfig
+              path: /builds/worker/workspace/obj-build/.mozconfig
+              type: file
     run:
         using: mozharness
         script: "mozharness/scripts/fx_desktop_build.py"
@@ -83,6 +86,7 @@ job-defaults:
                 default: null
     fetches:
         toolchain:
+            - android-gradle-python-envs
             - android-ndk-linux
             - android-sdk-linux
             - linux64-clang

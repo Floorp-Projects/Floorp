@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:layout_height="wrap_content"
+    tools:layout_width="wrap_content">
+
+    <FrameLayout
+        android:id="@+id/counter_root"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:clipChildren="false">
+
+        <ImageView
+            android:id="@+id/counter_box"
+            android:layout_width="@dimen/mozac_tab_counter_box_width_height"
+            android:layout_height="@dimen/mozac_tab_counter_box_width_height"
+            android:contentDescription="@string/mozac_tab_counter_content_description"
+            android:importantForAccessibility="no"
+            android:layout_gravity="center"
+            app:srcCompat="@drawable/mozac_ui_tabcounter_box" />
+
+        <TextView
+            android:id="@+id/counter_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:textAlignment="center"
+            android:textColor="@color/mozac_ui_tabcounter_default_tint"
+            android:layout_marginBottom="0.5dp"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            tools:text="16" />
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/counter_mask"
+            app:srcCompat="@drawable/mozac_ic_private_mode_circle_fill_20"
+            android:translationX="8dp"
+            android:translationY="-8dp"
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_gravity="top|end"
+            android:visibility="gone" />
+    </FrameLayout>
+</merge>

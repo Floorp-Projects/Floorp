@@ -14,7 +14,15 @@ buildscript {
         }
     }
 
-    ext.kotlin_version = '1.9.22'
+    ext {
+        kotlin_version = Versions.kotlin
+        detekt_plugin = Versions.detekt
+        python_envs_plugin = Versions.python_envs_plugin
+        ksp_plugin = Versions.ksp_plugin
+
+        // Used in mobile/android/fenix/app/build.gradle
+        protobuf_plugin = FenixVersions.protobuf_plugin
+    }
 
     dependencies {
         classpath 'org.mozilla.apilint:apilint:0.5.2'
@@ -23,7 +31,19 @@ buildscript {
         classpath 'com.diffplug.spotless:spotless-plugin-gradle:6.25.0'
         classpath 'org.tomlj:tomlj:1.1.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+
+        // Used in mobile/android/fenix/app/build.gradle
+        classpath FenixDependencies.androidx_safeargs
+        classpath FenixDependencies.osslicenses_plugin
+        classpath FenixDependencies.tools_benchmarkgradle
+        classpath "org.mozilla.telemetry:glean-gradle-plugin:${Versions.mozilla_glean}"
+        classpath "${ApplicationServicesConfig.groupId}:tooling-nimbus-gradle:${ApplicationServicesConfig.version}"
     }
+}
+
+plugins {
+    id("io.gitlab.arturbosch.detekt").version("$detekt_plugin")
+    id("com.google.devtools.ksp").version("$ksp_plugin")
 }
 
 def tryInt = { string ->
@@ -347,11 +367,24 @@ afterEvaluate {
                 "-Xlint:-serial",
                 // Classfile, because javac has a bug with MethodParameters attributes
                 // with Java 7. https://bugs.openjdk.java.net/browse/JDK-8190452
-                "-Xlint:-classfile",
-                // Turn all remaining warnings into errors,
-                // unless marked by @SuppressWarnings.
-                "-Werror"]
+                "-Xlint:-classfile"]
+
+            // In GeckoView java projects only, turn all remaining warnings
+            // into errors unless marked by @SuppressWarnings.
+            def projectName = project.getName()
+            if (projectName.startsWith('geckoview')
+                || projectName == 'annotations'
+                || projectName == 'exoplayer2'
+                || projectName == 'messaging_example'
+                || projectName == 'port_messaging_example'
+                || projectName == 'test_runner'
+            ) {
+                options.compilerArgs += [
+                        "-Werror"
+                ]
+            }
         }
+
     }
 }
 
@@ -385,23 +418,57 @@ idea {
     }
 }
 
-subprojects {
-    apply plugin: "com.diffplug.spotless"
+subprojects { project ->
+    // Perform spotless lint in GeckoView projects only.
+    def projectName = project.getName()
+    if (projectName.startsWith('geckoview')
+            || projectName == 'annotations'
+            || projectName == 'exoplayer2'
+            || projectName == 'messaging_example'
+            || projectName == 'port_messaging_example'
+            || projectName == 'test_runner'
+    ) {
+        apply plugin: "com.diffplug.spotless"
 
-    spotless {
-        java {
-            target project.fileTree(project.projectDir) {
-                include '**/*.java'
-                exclude '**/thirdparty/**'
+        spotless {
+            java {
+                target project.fileTree(project.projectDir) {
+                    include '**/*.java'
+                    exclude '**/thirdparty/**'
+                }
+                googleJavaFormat('1.17.0')
             }
-            googleJavaFormat('1.17.0')
+            kotlin {
+                target project.fileTree(project.projectDir) {
+                    include '**/*.kt'
+                    exclude '**/thirdparty/**'
+                }
+                ktlint('0.49.1')
+            }
         }
-        kotlin {
-            target project.fileTree(project.projectDir) {
-                include '**/*.kt'
-                exclude '**/thirdparty/**'
+    } else {
+        afterEvaluate {
+            // Set the source and target compatibility for non-GeckoView projects only.
+            if (it.hasProperty('android')) {
+                android {
+                    compileOptions {
+                        sourceCompatibility JavaVersion.VERSION_17
+                        targetCompatibility JavaVersion.VERSION_17
+                    }
+                }
             }
-            ktlint('0.49.1')
+        }
+    }
+
+    project.configurations.configureEach {
+        resolutionStrategy.capabilitiesResolution.withCapability("org.mozilla.telemetry:glean-native") {
+            def toBeSelected = candidates.find {
+                it.id instanceof ProjectComponentIdentifier && it.id.projectName.contains('geckoview')
+            }
+            if (toBeSelected != null) {
+                select(toBeSelected)
+            }
+            because 'use GeckoView Glean instead of standalone Glean'
         }
     }
 }

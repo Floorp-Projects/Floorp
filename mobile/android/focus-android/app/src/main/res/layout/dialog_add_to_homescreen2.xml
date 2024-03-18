@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/dialog_title"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="21dp"
+        android:layout_marginEnd="24dp"
+        android:fontFamily="@font/metropolis_semibold"
+        android:letterSpacing="0.05"
+        android:text="@string/menu_add_to_home_screen"
+        android:textColor="@color/primaryText"
+        android:textSize="20sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Add to home screen" />
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/homescreen_icon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginTop="31dp"
+        app:layout_constraintStart_toStartOf="@id/dialog_title"
+        app:layout_constraintTop_toBottomOf="@id/dialog_title"
+        tools:src="@drawable/ic_favorite" />
+
+    <androidx.appcompat.widget.AppCompatEditText
+        android:id="@+id/edit_title"
+        style="@style/AddToHomeScreenSiteTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="19dp"
+        android:layout_marginEnd="24dp"
+        android:importantForAutofill="no"
+        app:layout_constraintBottom_toBottomOf="@id/homescreen_icon"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/homescreen_icon"
+        app:layout_constraintTop_toTopOf="@id/homescreen_icon" />
+
+    <Button
+        android:id="@+id/addtohomescreen_dialog_add"
+        style="@style/ButtonStyle"
+        android:layout_marginTop="36dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:text="@string/dialog_addtohomescreen_action_add"
+        app:layout_constraintBottom_toTopOf="@id/homescreen_dialog_warning_layout"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/edit_title" />
+
+    <Button
+        android:id="@+id/addtohomescreen_dialog_cancel"
+        style="@style/ButtonStyle"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:text="@string/dialog_addtohomescreen_action_cancel"
+        app:layout_constraintEnd_toStartOf="@id/addtohomescreen_dialog_add"
+        app:layout_constraintTop_toTopOf="@id/addtohomescreen_dialog_add"
+        app:layout_constraintBottom_toBottomOf="@id/addtohomescreen_dialog_add"/>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/homescreen_dialog_warning_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="80dp"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/dialog_warning_background"
+        android:visibility="invisible"
+        tools:visibility="visible"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/addtohomescreen_dialog_add">
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/homescreen_dialog_block_icon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="26dp"
+            android:layout_marginBottom="32dp"
+            android:tint="@color/photonWhite"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/homescreen_dialog_warning"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:fontFamily="@string/font_roboto_regular"
+            android:text="@string/dialog_addtohomescreen_tracking_protection2"
+            android:textColor="@color/photonWhite"
+            android:textSize="14sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/homescreen_dialog_block_icon"
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

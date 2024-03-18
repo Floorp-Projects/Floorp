@@ -1,0 +1,172 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+import org.yaml.snakeyaml.Yaml
+
+buildscript {
+    apply from: file('./gradle/mozconfig.gradle')
+
+    repositories {
+        gradle.mozconfig.substs.GRADLE_MAVEN_REPOSITORIES.each { repository ->
+            maven {
+                url repository
+                if (gradle.mozconfig.substs.ALLOW_INSECURE_GRADLE_REPOSITORIES) {
+                    allowInsecureProtocol = true
+                }
+            }
+        }
+    }
+
+    dependencies {
+        classpath 'org.yaml:snakeyaml:2.2'
+    }
+}
+
+apply from: file('./gradle/mozconfig.gradle')
+
+// Synchronized library configuration for all modules
+// This "componentsVersion" number is defined in "version.txt" and should follow
+// semantic versioning (MAJOR.MINOR.PATCH). See https://semver.org/
+class Config {
+
+    public final String componentsVersion
+    public final String componentsGroupId
+    public final Integer jvmTargetCompatibility
+    public final Integer compileSdkVersion
+    public final Integer minSdkVersion
+    public final Integer targetSdkVersion
+
+    Config(
+            String componentsVersion,
+            String componentsGroupId,
+            Integer jvmTargetCompatibility,
+            Integer compileSdkVersion,
+            Integer minSdkVersion,
+            Integer targetSdkVersion
+    ) {
+        this.componentsVersion = componentsVersion
+        this.componentsGroupId = componentsGroupId
+        this.jvmTargetCompatibility = jvmTargetCompatibility
+        this.compileSdkVersion = compileSdkVersion
+        this.minSdkVersion = minSdkVersion
+        this.targetSdkVersion = targetSdkVersion
+    }
+}
+
+def setupProject(name, path, description) {
+    settings.include(":$name")
+
+    def projectPath = "/mobile/android/android-components/${path}"
+    if (rootDir.toString().endsWith("android-components") ||
+            rootDir.toString().endsWith("focus-android") ||
+            rootDir.toString().endsWith("fenix")
+    ) {
+        projectPath = "../android-components/${path}"
+    }
+
+    project(":$name").projectDir = new File(rootDir, projectPath)
+
+    // project(...) gives us a skeleton project that we can't set ext.* on
+    gradle.beforeProject { project ->
+        // However, the "afterProject" listener iterates over every project and gives us the actual project
+        // So, once we filter for the project we care about, we can set whatever we want
+        if (project.name == name) {
+            project.ext.description = description
+        }
+    }
+}
+
+// Return a manifest version string that respects the Firefox version format,
+// see: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/version#version_format
+def getManifestVersionString(componentsVersion) {
+    // We assume that the `version.txt` file will always contain a version
+    // string with at least two parts separated with a dot. Below, we extract
+    // each part, and we make sure that there is no letter, e.g. `"0a2"` would
+    // become `"0"`.
+    String[] parts = componentsVersion.split("\\.").collect {
+        part -> part.split("a|b")[0]
+    };
+    // Note the single `H` to avoid leading zeros, which are not allowed.
+    String dateAndTime = new Date().format("YYYYMMdd.Hmmss");
+
+    return "${parts[0]}.${parts[1]}.${dateAndTime}";
+}
+
+def buildConfigPath = '/mobile/android/android-components/.buildconfig.yml'
+if (rootDir.toString().endsWith("android-components") ||
+        rootDir.toString().endsWith("focus-android") ||
+        rootDir.toString().endsWith("fenix")
+) {
+    buildConfigPath = '../android-components/.buildconfig.yml'
+}
+
+def yaml = new Yaml()
+def buildconfig = yaml.load(new File(rootDir, buildConfigPath).newInputStream())
+
+buildconfig.projects.each { project ->
+    // If we're building A-C, set up all projects, otherwise exclude samples e.g., if we're building Fenix or Focus.
+    // The samples are not relevant for the Fenix and Focus builds.
+    if (rootDir.toString().contains("android-components") || !project.key.startsWith("samples")) {
+        setupProject(project.key, project.value.path, project.value.description)
+    }
+}
+
+gradle.projectsLoaded { ->
+    def versionPath = '/mobile/android/version.txt'
+    def configPath = '/mobile/android/android-components/.config.yml'
+
+    if (rootDir.toString().endsWith("android-components") ||
+            rootDir.toString().endsWith("focus-android") ||
+            rootDir.toString().endsWith("fenix")
+    ) {
+        versionPath = '../version.txt'
+        configPath = '../android-components/.config.yml'
+    }
+
+    def componentsVersion = new File(rootDir, versionPath).text.stripTrailing()
+    def configData = yaml.load(new File(rootDir, configPath).newInputStream())
+    String version = componentsVersion
+
+    if (gradle.rootProject.hasProperty("nightlyVersion")) {
+        version = gradle.rootProject.nightlyVersion
+    } else if (gradle.rootProject.hasProperty("local")) {
+        // To support local auto-publication workflow, we use a version prefix we wouldn't normally encounter.
+        version = "0.0.1"
+    } else if (gradle.hasProperty("localProperties.branchBuild.android-components.version")) {
+        version = gradle.getProperty("localProperties.branchBuild.android-components.version")
+    }
+
+    // Wait until root project is "loaded" before we set "config"
+    // Note that since this is set on "rootProject.ext", it will be "in scope" during the evaluation of all projects'
+    // gradle files. This means that they can just access "config.<value>", and it'll function properly
+    gradle.rootProject.ext.config = new Config(
+            version,
+            configData.componentsGroupId,
+            configData.jvmTargetCompatibility,
+            configData.compileSdkVersion,
+            configData.minSdkVersion,
+            configData.targetSdkVersion
+    )
+
+    gradle.rootProject.ext.buildConfig = buildconfig
+
+    // Define a reusable task for updating the version in manifest.json for modules that package
+    // a web extension. We automate this to make sure we never forget to update the version, either
+    // in local development or for releases. In both cases, we want to make sure the latest version
+    // of all extensions (including their latest changes) are installed on first start-up.
+    gradle.rootProject.allprojects {
+        ext.updateExtensionVersion = { task, extDir ->
+            configure(task) {
+                from extDir
+                include 'manifest.template.json'
+                rename { 'manifest.json' }
+                into extDir
+
+                def values = ['version': getManifestVersionString(rootProject.ext.config.componentsVersion)]
+                inputs.properties(values)
+                expand(values)
+            }
+        }
+    }
+}

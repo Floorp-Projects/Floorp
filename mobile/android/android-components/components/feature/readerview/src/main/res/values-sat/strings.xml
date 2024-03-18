@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_sans_serif_font">ᱥᱮᱱᱥ ᱥᱮᱨᱤᱯᱷ</string>
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_sans_serif_font_desc">ᱥᱮᱱᱥ ᱥᱮᱨᱤᱯᱷ ᱪᱤᱠᱤ</string>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_serif_font">ᱥᱮᱨᱤᱯᱷ</string>
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_serif_font_desc">ᱥᱮᱨᱤᱯᱷ ᱪᱤᱠᱤ</string>
+
+    <!-- Accessible description for decreasing the font size -->
+    <string name="mozac_feature_readerview_font_size_decrease_desc">ᱪᱤᱠᱤ ᱢᱟᱯ ᱠᱚᱢ ᱢᱮ</string>
+
+    <!-- Accessible description for increasing the font size -->
+    <string name="mozac_feature_readerview_font_size_increase_desc">ᱪᱤᱠᱤ ᱢᱟᱯ ᱢᱟᱨᱟᱝ ᱢᱮ</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_dark">ᱧᱩᱛ</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_dark_color_scheme_desc">ᱧᱩᱛ ᱨᱚᱝ ᱯᱚᱱᱛᱷᱟ</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_sephia">ᱥᱮᱯᱤᱭᱟ</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_sepia_color_scheme_desc">ᱥᱮᱯᱤᱭᱟ ᱨᱚᱝ ᱯᱚᱱᱛᱷᱟ</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_light">ᱢᱟᱨᱥᱟᱞ</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_light_color_scheme_desc">ᱢᱟᱨᱥᱟᱞ ᱨᱚᱝ ᱯᱚᱱᱛᱷᱟ</string>
+</resources>

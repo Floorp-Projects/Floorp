@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <PreferenceCategory
+        android:title="@string/preferences_category_select_default_search_engine"
+        android:selectable="false"
+        app:iconSpaceReserved="false"
+        android:layout="@layout/preference_category_no_icon_style">
+        <org.mozilla.fenix.settings.search.RadioSearchEngineListPreference
+            android:key="@string/pref_key_search_engine_list"
+            android:selectable="false"/>
+        <Preference
+            android:key="@string/pref_key_add_search_engine"
+            android:title="@string/search_engine_add_custom_search_engine_title"
+            android:layout="@layout/preference_search_add_engine"/>
+    </PreferenceCategory>
+</PreferenceScreen>

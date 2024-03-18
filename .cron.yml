@@ -388,3 +388,22 @@ jobs:
           - mozilla-central
       when:
           - {hour: 0, minute: 0}
+
+    - name: nightly-android
+      job:
+          type: decision-task
+          treeherder-symbol: Na
+          target-tasks-method: nightly-android
+          include-push-tasks: true
+      run-on-projects:
+          - mozilla-central
+          - oak
+      when: []  # hook only
+
+    - name: android-l10n-import
+      job:
+          type: decision-task
+          treeherder-symbol: android-l10n-import
+          target-tasks-method: android-l10n-import
+      run-on-projects: [oak]
+      when: []  # hook only

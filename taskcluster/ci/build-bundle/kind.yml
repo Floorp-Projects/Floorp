@@ -1,0 +1,215 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+transforms:
+    - android_taskgraph.transforms.build_android_app:transforms
+    - gecko_taskgraph.transforms.job:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    - toolchain
+    - build-fat-aar
+
+job-defaults:
+    aab-artifact-template:
+        type: file
+        name: 'public/build/target.aab'
+        path: '/builds/worker/checkouts/gecko/mobile/android/{source_project_name}/app/build/outputs/bundle/{variant_name}/app-{gradle_build}-{gradle_build_type}.aab'
+    run:
+        gradle-package-command: bundle
+        gradle-extra-options:
+            - -Paab
+
+
+jobs:
+    focus-debug:
+        attributes:
+            code-review: true
+            shipping-product: focus
+        dependencies:
+            build-fat-aar: build-fat-aar-android-geckoview-fat-aar/opt
+        description: 'Focus debug AAB build from source code'
+        run:
+            gradle-build-type: debug
+            gradle-build-name: focusDebug
+            gradle-build: focus
+        source-project-name: "focus-android"
+        treeherder:
+            platform: focus-android-all/opt
+            symbol: focus-debug(AABf)
+
+    klar-debug:
+        attributes:
+            code-review: true
+            shipping-product: focus
+        dependencies:
+            build-fat-aar: build-fat-aar-android-geckoview-fat-aar/opt
+        description: 'Klar debug AAB build from source code'
+        run:
+            gradle-build-type: debug
+            gradle-build-name: klarDebug
+            gradle-build: klar
+        source-project-name: "focus-android"
+        treeherder:
+            platform: focus-android-all/opt
+            symbol: focus-debug(AABkl)
+
+    fenix-debug:
+        attributes:
+            code-review: true
+            shipping-product: fenix
+        dependencies:
+            build-fat-aar: build-fat-aar-android-geckoview-fat-aar/opt
+        description: 'Fenix debug AAB build from source code'
+        run:
+            gradle-build-type: debug
+            gradle-build-name: fenixDebug
+            gradle-build: fenix
+        source-project-name: "fenix"
+        treeherder:
+            platform: fenix-android-all/opt
+            symbol: fenix-debug(AAB)
+
+    focus-release:
+        attributes:
+            release-type: release
+            shipping-product: focus
+        shipping-product: firefox-android
+        dependencies:
+            build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
+        description: 'Focus release AAB build from source code'
+        include-shippable-secrets: true
+        include-release-version: true
+        run-on-projects: ["mozilla-release"]
+        run:
+            gradle-build-type: release
+            gradle-build-name: focusRelease
+            gradle-build: focus
+        shipping-phase: promote
+        source-project-name: "focus-android"
+        treeherder:
+            platform: focus-android-all/opt
+            symbol: focus-release(AABf)
+
+    klar-release:
+        attributes:
+            release-type: release
+            shipping-product: focus
+        shipping-product: firefox-android
+        dependencies:
+            build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
+        description: 'Klar release AAB build from source code'
+        include-shippable-secrets: true
+        include-release-version: true
+        run-on-projects: ["mozilla-release"]
+        run:
+            gradle-build-type: release
+            gradle-build-name: klarRelease
+            gradle-build: klar
+        shipping-phase: promote
+        source-project-name: "focus-android"
+        treeherder:
+            platform: focus-android-all/opt
+            symbol: focus-release(AABkl)
+
+    fenix-release:
+        attributes:
+            release-type: release
+            shipping-product: fenix
+        shipping-product: firefox-android
+        dependencies:
+            build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
+        description: 'Fenix release AAB build from source code'
+        include-shippable-secrets: true
+        include-release-version: true
+        run-on-projects: ["mozilla-release"]
+        run:
+            gradle-build-type: release
+            gradle-build-name: fenixRelease
+            gradle-build: fenix
+        shipping-phase: promote
+        source-project-name: "fenix"
+        treeherder:
+            platform: fenix-android-all/opt
+            symbol: fenix-release(AAB)
+
+    focus-nightly:
+        attributes:
+            shipping-product: focus
+        dependencies:
+            build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
+        description: 'Focus nightly AAB build from source code'
+        include-shippable-secrets: true
+        include-nightly-version: true
+        run-on-projects: ["mozilla-central"]
+        run:
+            gradle-build-type: nightly
+            gradle-build-name: focusNightly
+            gradle-build: focus
+        source-project-name: "focus-android"
+        treeherder:
+            platform: focus-android-all/opt
+            symbol: focus-nightly(AABf)
+
+    fenix-nightly:
+        attributes:
+            shipping-product: fenix
+        dependencies:
+            build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
+        description: 'Fenix nightly AAB build from source code'
+        include-shippable-secrets: true
+        include-nightly-version: true
+        run-on-projects: ["mozilla-central"]
+        run:
+            gradle-build-type: nightly
+            gradle-build-name: fenixNightly
+            gradle-build: fenix
+        source-project-name: "fenix"
+        treeherder:
+            platform: fenix-android-all/opt
+            symbol: fenix-nightly(AAB)
+
+    focus-beta:
+        attributes:
+            release-type: beta
+            shipping-product: focus
+        shipping-product: firefox-android
+        dependencies:
+            build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
+        description: 'Focus beta AAB build from source code'
+        include-shippable-secrets: true
+        include-release-version: true
+        run-on-projects: ["mozilla-beta"]
+        run:
+            gradle-build-type: beta
+            gradle-build-name: focusBeta
+            gradle-build: focus
+        shipping-phase: promote
+        source-project-name: "focus-android"
+        treeherder:
+            platform: focus-android-all/opt
+            symbol: focus-beta(AABf)
+
+    fenix-beta:
+        attributes:
+            release-type: beta
+            shipping-product: fenix
+        shipping-product: firefox-android
+        dependencies:
+            build-fat-aar: build-fat-aar-android-geckoview-fat-aar-shippable/opt
+        description: 'Fenix beta AAB build from source code'
+        include-shippable-secrets: true
+        include-release-version: true
+        run-on-projects: ["mozilla-beta"]
+        run:
+            gradle-build-type: beta
+            gradle-build-name: fenixBeta
+            gradle-build: fenix
+        shipping-phase: promote
+        source-project-name: "fenix"
+        treeherder:
+            platform: fenix-android-all/opt
+            symbol: fenix-beta(AAB)

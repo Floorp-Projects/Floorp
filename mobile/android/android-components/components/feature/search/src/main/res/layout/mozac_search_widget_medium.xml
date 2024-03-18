@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="50dp"
+    android:layout_gravity="center"
+    android:background="@drawable/mozac_rounded_search_widget_background">
+
+    <ImageView
+        android:id="@+id/mozac_button_search_widget_new_tab_icon"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_alignParentStart="true"
+        android:contentDescription="@string/search_widget_content_description"
+        android:scaleType="centerInside" />
+
+    <TextView
+        android:id="@+id/mozac_button_search_widget_new_tab"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignEnd="@id/mozac_button_search_widget_voice"
+        android:layout_marginStart="9dp"
+        android:layout_toEndOf="@id/mozac_button_search_widget_new_tab_icon"
+        android:gravity="start|center_vertical"
+        android:letterSpacing="-0.025"
+        android:textAlignment="viewStart"
+        android:textColor="@color/mozac_feature_search_widget_text_color"
+        android:textSize="15sp"
+        tools:text="Search" />
+
+    <ImageButton
+        android:id="@+id/mozac_button_search_widget_voice"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
+        android:padding="8dp"
+        android:background="@android:color/transparent"
+        android:layout_marginEnd="1dp"
+        android:contentDescription="@string/search_widget_voice" />
+
+</RelativeLayout>

@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <!--- <Preference
+        android:layout="@layout/focus_preference"
+        android:summary="@string/preference_privacy_and_security_description"/> -->
+
+    <org.mozilla.focus.settings.privacy.PreferenceToolTipCompose
+        android:key="@string/pref_key_tool_tip"
+        android:layout="@layout/focus_preference_compose_layout"
+        app:allowDividerBelow="false"
+        android:selectable="false"/>
+
+    <androidx.preference.PreferenceCategory
+        android:layout="@layout/preference_section_header_layout"
+        android:title="@string/preference_category_tracking_protection3">
+
+        <androidx.preference.SwitchPreferenceCompat
+            android:defaultValue="true"
+            android:key="@string/pref_key_privacy_block_ads"
+            android:layout="@layout/focus_preference_no_icon"
+            android:summary="@string/preference_privacy_block_ads_summary"
+            android:title="@string/preference_privacy_block_ads" />
+
+        <androidx.preference.SwitchPreferenceCompat
+            android:defaultValue="true"
+            android:key="@string/pref_key_privacy_block_analytics"
+            android:layout="@layout/focus_preference_no_icon"
+            android:summary="@string/preference_privacy_block_analytics_summary"
+            android:title="@string/preference_privacy_block_analytics" />
+
+        <androidx.preference.SwitchPreferenceCompat
+            android:defaultValue="true"
+            android:key="@string/pref_key_privacy_block_social"
+            android:layout="@layout/focus_preference_no_icon"
+            android:summary="@string/preference_privacy_block_social_summary"
+            android:title="@string/preference_privacy_block_social" />
+
+        <androidx.preference.SwitchPreferenceCompat
+            android:defaultValue="false"
+            android:key="@string/pref_key_privacy_block_other3"
+            android:layout="@layout/focus_preference_no_icon"
+            android:summary="@string/preference_privacy_block_content_summary2"
+            android:title="@string/preference_privacy_block_content" />
+
+    </androidx.preference.PreferenceCategory>
+
+    <androidx.preference.PreferenceCategory
+        android:layout="@layout/preference_section_header_layout"
+        android:title="@string/preference_category_web_content">
+
+        <androidx.preference.SwitchPreferenceCompat
+            android:defaultValue="false"
+            android:key="@string/pref_key_performance_block_webfonts"
+            android:layout="@layout/focus_preference_no_icon"
+            android:summary="@string/preference_performance_block_webfonts_summary"
+            android:title="@string/preference_performance_block_webfonts" />
+
+        <androidx.preference.SwitchPreferenceCompat
+            android:defaultValue="false"
+            android:key="@string/pref_key_performance_block_javascript"
+            android:layout="@layout/focus_preference_no_icon"
+            android:summary="@string/preference_performance_block_javascript_summary"
+            android:title="@string/preference_performance_block_javascript" />
+
+        <!-- // Not shipping in v1 (#188)
+        <SwitchPreference
+            android:title="@string/preference_performance_block_images"
+            android:key="@string/pref_key_performance_block_images"
+            android:defaultValue="@string/preference_performance_block_images" />
+        -->
+
+    </androidx.preference.PreferenceCategory>
+
+    <androidx.preference.PreferenceCategory
+        android:layout="@layout/preference_section_header_layout"
+        android:title="@string/preference_category_cookies">
+        <androidx.preference.Preference
+            android:key="@string/pref_key_cookie_banner_settings"
+            android:layout="@layout/focus_preference_no_icon"
+            android:title="@string/preferences_cookie_banner" />
+        <org.mozilla.focus.widget.CookiesPreference
+            android:entries="@array/cookies_options_entries"
+            android:entryValues="@array/cookies_options_entry_values"
+            android:key="@string/pref_key_performance_enable_cookies"
+            android:defaultValue="@string/preference_privacy_should_block_cookies_cross_site_option"
+            android:layout="@layout/cookies_preference"
+            android:title="@string/preference_privacy_category_cookies"
+            android:negativeButtonText="@string/action_cancel"/>
+        <androidx.preference.Preference
+            android:key="@string/pref_key_site_permissions"
+            android:layout="@layout/focus_preference_no_icon"
+            android:title="@string/preference_site_permissions" />
+    </androidx.preference.PreferenceCategory>
+
+    <androidx.preference.PreferenceCategory
+        android:layout="@layout/focus_preference_category_no_title">
+        <androidx.preference.Preference
+            android:key="@string/pref_key_screen_exceptions"
+            android:layout="@layout/focus_preference_no_icon"
+            android:title="@string/preference_exceptions" />
+    </androidx.preference.PreferenceCategory>
+
+    <androidx.preference.PreferenceCategory
+        android:layout="@layout/preference_section_header_layout"
+        android:title="@string/preference_category_switching_apps">
+        <androidx.preference.SwitchPreferenceCompat
+            android:defaultValue="false"
+            android:key="@string/pref_key_biometric"
+            android:layout="@layout/focus_preference_no_icon"
+            android:summary="@string/preference_security_biometric_summary2"
+            android:title="@string/preference_security_biometric" />
+        <androidx.preference.SwitchPreferenceCompat
+            android:defaultValue="false"
+            android:key="@string/pref_key_secure"
+            android:layout="@layout/focus_preference_no_icon"
+            android:summary="@string/preference_privacy_stealth_summary"
+            android:title="@string/preference_privacy_secure_mode" />
+    </androidx.preference.PreferenceCategory>
+
+    <androidx.preference.PreferenceCategory
+        android:key="@string/pref_key_category_security"
+        android:layout="@layout/preference_section_header_layout"
+        android:title="@string/preference_category_security">
+        <org.mozilla.focus.settings.SafeBrowsingSwitchPreference
+            android:defaultValue="true"
+            android:key="@string/pref_key_safe_browsing"
+            android:layout="@layout/focus_preference_no_icon"
+            android:summary="@string/preference_safe_browsing_summary"
+            android:title="@string/preference_safe_browsing_title" />
+        <org.mozilla.focus.settings.HttpsOnlyModePreference
+            android:defaultValue="true"
+            android:key="@string/pref_key_https_only"
+            android:layout="@layout/focus_preference_no_icon"
+            android:summary="@string/preference_https_only_summary3"
+            android:title="@string/preference_https_only_title" />
+    </androidx.preference.PreferenceCategory>
+
+    <androidx.preference.PreferenceCategory
+        android:layout="@layout/preference_section_header_layout"
+        android:title="@string/preference_category_data_choices">
+
+        <org.mozilla.focus.widget.TelemetrySwitchPreference
+            android:layout="@layout/focus_preference"
+            android:key="@string/pref_key_telemetry"
+            android:summary="@string/preference_mozilla_telemetry_summary2"
+            android:title="@string/preference_mozilla_telemetry2" />
+
+        <org.mozilla.focus.settings.StatePreference
+            android:key="@string/pref_key_studies"
+            android:layout="@layout/focus_preference_no_icon"
+            android:summary="@string/preference_state_off"
+            android:title="@string/preference_studies" />
+    </androidx.preference.PreferenceCategory>
+
+</androidx.preference.PreferenceScreen>

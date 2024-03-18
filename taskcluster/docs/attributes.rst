@@ -474,3 +474,55 @@ snap_test_type
 For Snap tests tasks, used to disambiguate task label
 
 .. _primary one: https://taskcluster-taskgraph.readthedocs.io/en/latest/reference/transforms/from_deps.html#primary-kind
+
+build-type
+==========
+For android builds, the type of build: typically debug, nightly, beta, release.
+
+component
+=========
+For android-components builds, the name of the component.
+
+apks
+====
+For android apk build tasks, the list of apk artifact names.
+
+aab
+===
+For android aab build tasks, the aab artifact names.
+
+release-type
+============
+For android builds, the type of release: typically debug, nightly, beta, release.
+
+shipping-product
+================
+For android tasks, the shipping product: Fenix, Focus, or an android-component name.
+
+artifacts
+=========
+For android-components tasks, a dictionary mapping extensions to artifact names.
+
+is_final_chunked_task
+=====================
+Used by taskcluster.android_taskgraph.transforms.chunk to mark the last task in a chunk group.
+
+legacy
+======
+Used by Fenix UI tests to select UI tests on legacy Android devices and API levels.
+
+nightly-test
+============
+Used by Fenix browsertime tests to mark the task as part of the nightly-test graph.
+
+screenshots
+===========
+Used by Fenix UI tests to mark the task as part of the screenshots graph.
+
+abi
+===
+Used by android browsertime tasks to track the abi of the product under test.
+
+apk
+===
+Used by android browsertime tasks to track the path to the apk of the product under test.

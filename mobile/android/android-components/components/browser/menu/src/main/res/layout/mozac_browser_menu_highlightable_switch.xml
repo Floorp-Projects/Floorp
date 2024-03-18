@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/Mozac.Browser.Menu.Item.Container"
+    tools:ignore="UnusedAttribute"
+    android:foreground="?android:attr/selectableItemBackground"
+    android:layout_width="match_parent"
+    android:orientation="horizontal"
+    android:clickable="true"
+    android:focusable="true">
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/image"
+        style="@style/Mozac.Browser.Menu.Item.ImageText.Icon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_gravity="center"
+        android:background="@android:color/transparent"
+        android:importantForAccessibility="no"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:src="@android:drawable/screen_background_dark" />
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/notification_dot"
+        style="@style/Mozac.Browser.Menu.Item.ImageText.Icon"
+        android:layout_width="8dp"
+        android:layout_height="8dp"
+        android:translationX="@dimen/mozac_browser_menu_highlightable_notification_translate_x"
+        android:translationY="@dimen/mozac_browser_menu_highlightable_notification_translate_y"
+        android:background="@android:color/transparent"
+        android:importantForAccessibility="no"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="@id/image"
+        app:layout_constraintEnd_toEndOf="@id/image"
+        app:srcCompat="@drawable/mozac_browser_menu_notification_icon"
+        tools:visibility="visible" />
+
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/switch_widget"
+        style="@style/Mozac.Browser.Menu.Item.Text"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/mozac_browser_menu_item_container_layout_height"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:orientation="vertical"
+        android:paddingStart="@dimen/mozac_browser_menu_item_image_text_label_padding_start"
+        android:paddingEnd="0dp"
+        android:textAlignment="viewStart"
+        tools:text="Item"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/image"
+        app:layout_constraintTop_toTopOf="parent" />
+</androidx.constraintlayout.widget.ConstraintLayout>

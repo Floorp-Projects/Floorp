@@ -76,6 +76,12 @@ layout/style/test/gtest/example.css
 layout/style/test/mapped2.css
 layout/style/test/unstyled-frame.css
 
+# TODO - Bug 1881094: temporarily ignored for firefox-android migration
+mobile/android/android-components/components/feature/readerview/src/main/assets/extensions/readerview/readerview.css
+mobile/android/android-components/components/feature/webcompat/src/main/assets/extensions/webcompat/about-compat/aboutCompat.css
+mobile/android/android-components/docs/assets/main.scss
+mobile/android/fenix/app/src/main/assets/shared_error_style.css
+
 # Empty test files:
 netwerk/test/mochitests/test1.css
 netwerk/test/mochitests/test2.css

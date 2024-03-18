@@ -1,0 +1,77 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+transforms:
+    - taskgraph.transforms.from_deps
+    - android_taskgraph.transforms.upstream_artifacts
+    - android_taskgraph.transforms.treeherder
+    - android_taskgraph.transforms.push_android_app
+    - gecko_taskgraph.transforms.task
+
+kind-dependencies:
+    - signing-bundle
+    - android-startup-test
+
+jobs:
+    push-bundle:
+        description: Publish Fenix and Focus AABs
+        from-deps:
+            with-attributes:
+                build-type:
+                    - fenix-nightly
+                    - fenix-beta
+                    - fenix-release
+                    - focus-nightly
+                    - focus-beta
+                    - focus-release
+                    - klar-release
+            group-by:
+                attribute: build-type
+            copy-attributes: true
+        worker-type: push-apk
+        worker:
+            certificate-alias:
+                by-build-type:
+                    fenix-nightly: fenix-nightly
+                    fenix-beta: fenix-beta
+                    fenix-release: fenix-release
+                    default: focus
+            commit: true
+            channel:
+                by-build-type:
+                    fenix-nightly: fenix-nightly
+                    fenix-beta: fenix-beta
+                    fenix-release: fenix-release
+                    focus-nightly: focus-nightly
+                    focus-beta: focus-beta
+                    focus-release: focus-release
+                    klar-release: klar-release
+            dep:
+                by-level:
+                    '3': false
+                    default: true
+            product:
+                by-build-type:
+                    (fenix-nightly|fenix-release|fenix-beta): fenix
+                    default: focus-android
+            google-play-track:
+                by-build-type:
+                    .*-nightly: internal
+                    default: null
+        shipping-phase: push
+        shipping-product: firefox-android
+        treeherder:
+            symbol:
+                by-build-type:
+                    default: gp-aab
+                    focus-release: gpf-aab
+                    klar-release: gpkl-aab
+            kind: build
+        routes:
+            by-level:
+                '3':
+                    - "notify.email.release-mgmt@mozilla.com.on-failed"
+                'default': []

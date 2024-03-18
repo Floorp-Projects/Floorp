@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<html dir="ltr" xml:lang="en-US" lang="en-US">
+<meta name="viewport" content="width=device-width">
+<head>
+    <meta charset="UTF-8">
+    <title>otherTrackers</title>
+</head>
+<body>
+<!--Level 1 Tracker blocking with separate lists (social-track-digest256,ads-track-digest256,analytics-track-digest256).-->
+<!--using the https://senglehardt.com/test/trackingprotection/test_pages/tracking_protection.html test page-->
+<h3>Level 2 (Strict List) Tracker Blocking</h3>
+<p>other content trackers</p>
+<p>if you can read this, then: </p>
+<p>other content trackers not blocked</p>
+<img
+     src="https://content-track-digest256.dummytracker.org/test_not_blocked.png"
+     onerror="this.onerror=null;this.src='https://not-a-tracker.dummytracker.org/test_blocked.png';alert('other content trackers blocked')">
+</body>
+</html>

@@ -1,0 +1,68 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    description: Make sure the content of .buildconfig.yml matches what gradle knows about its projects
+    run:
+        using: run-task
+        cwd: '{checkout}'
+    worker-type: t-linux-xlarge-source
+    worker:
+        artifacts:
+            - type: directory
+              name: public
+              path: '/builds/worker/artifacts'
+        docker-image: {in-tree: lint}
+        max-run-time: 1800
+        env:
+            JAVA_HOME: "/builds/worker/fetches/jdk/jdk-17.0.6+10"
+            GRADLE_USER_HOME: "/builds/worker/checkouts/gecko/mobile/android/gradle/dotgradle-online"
+            MOZCONFIG: "/builds/worker/checkouts/gecko/mobile/android/config/mozconfigs/android-arm/nightly-android-lints"
+            ANDROID_SDK_ROOT: "/builds/worker/fetches/android-sdk-linux"
+    platform: lint/opt
+    treeherder:
+        kind: other
+        tier: 2
+    fetches:
+        toolchain:
+            - linux64-jdk-repack
+            - android-gradle-dependencies
+            - android-gradle-python-envs
+            - android-sdk-linux
+    use-system-python: true
+
+
+buildconfig-android-components:
+    optimization:
+        skip-unless-changed:
+            - "mobile/android/android-components/**/build.gradle"
+            - "mobile/android/android-components/.buildconfig.yml"
+    run:
+        command: 'pip install --break-system-packages --user --require-hashes --requirement taskcluster/scripts/lint/requirements.txt && ./mach --log-no-times build pre-export export && taskcluster/scripts/lint/is_buildconfig_yml_up_to_date.py mobile/android/android-components'
+    treeherder:
+        symbol: buildconfig(AC)
+
+buildconfig-focus:
+    optimization:
+        skip-unless-changed:
+            - "mobile/android/android-components/**/build.gradle"   # A change in A-C may be reflected in focus
+            - "mobile/android/android-components/.buildconfig.yml"
+            - "mobile/android/focus-android/**/build.gradle"
+            - "mobile/android/focus-android/.buildconfig.yml"
+    run:
+        command: 'pip install --break-system-packages --user --require-hashes --requirement taskcluster/scripts/lint/requirements.txt && ./mach --log-no-times build pre-export export && taskcluster/scripts/lint/is_buildconfig_yml_up_to_date.py mobile/android/focus-android'
+    treeherder:
+        symbol: buildconfig(focus)
+
+buildconfig-fenix:
+    optimization:
+        skip-unless-changed:
+            - "mobile/android/android-components/**/build.gradle"   # A change in A-C may be reflected in fenix
+            - "mobile/android/android-components/.buildconfig.yml"
+            - "mobile/android/fenix/**/build.gradle"
+            - "mobile/android/fenix/.buildconfig.yml"
+    run:
+        command: 'pip install --break-system-packages --user --require-hashes --requirement taskcluster/scripts/lint/requirements.txt && ./mach --log-no-times build pre-export export && taskcluster/scripts/lint/is_buildconfig_yml_up_to_date.py mobile/android/fenix'
+    treeherder:
+        symbol: buildconfig(fenix)

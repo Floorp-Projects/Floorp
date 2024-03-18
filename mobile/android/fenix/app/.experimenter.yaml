@@ -1,0 +1,242 @@
+---
+cookie-banners:
+  description: Features for cookie banner handling.
+  hasExposure: true
+  exposureDescription: ""
+  variables:
+    sections-enabled:
+      type: json
+      description: This property provides a lookup table of whether or not the given section should be enabled.
+extensions-process:
+  description: A feature to rollout the extensions process.
+  hasExposure: true
+  exposureDescription: ""
+  variables:
+    enabled:
+      type: boolean
+      description: "If true, the extensions process is enabled."
+fx-suggest:
+  description: A feature that provides Firefox Suggest search suggestions.
+  hasExposure: true
+  exposureDescription: ""
+  variables:
+    enabled:
+      type: boolean
+      description: "Whether the feature is enabled. When Firefox Suggest is enabled, Firefox will download and store new search suggestions in the background, and show additional Search settings to control which suggestions appear in the awesomebar. When Firefox Suggest is disabled, Firefox will not download new suggestions, and hide the additional Search settings.\n"
+glean:
+  description: A feature that provides server-side configurations for Glean metrics (aka Server Knobs).
+  hasExposure: true
+  exposureDescription: ""
+  variables:
+    enable-event-timestamps:
+      type: boolean
+      description: Enables precise event timestamps for Glean events
+    metrics-enabled:
+      type: json
+      description: "A map of metric base-identifiers to booleans representing the state of the 'enabled' flag for that metric."
+growth-data:
+  description: A feature measuring campaign growth data
+  hasExposure: true
+  exposureDescription: ""
+  variables:
+    enabled:
+      type: boolean
+      description: "If true, the feature is active"
+homescreen:
+  description: The homescreen that the user goes to when they press home or new tab.
+  hasExposure: true
+  exposureDescription: ""
+  variables:
+    sections-enabled:
+      type: json
+      description: "This property provides a lookup table of whether or not the given section should be enabled. If the section is enabled, it should be toggleable in the settings screen, and on by default."
+juno-onboarding:
+  description: A feature that shows juno onboarding flow.
+  hasExposure: true
+  exposureDescription: ""
+  variables:
+    cards:
+      type: json
+      description: Collection of user facing onboarding cards.
+    conditions:
+      type: json
+      description: "A collection of out the box conditional expressions to be used in determining whether a card should show or not. Each entry maps to a valid JEXL expression.\n"
+messaging:
+  description: "The in-app messaging system.\n"
+  hasExposure: true
+  exposureDescription: ""
+  variables:
+    actions:
+      type: json
+      description: A growable map of action URLs.
+    message-under-experiment:
+      type: string
+      description: "Deprecated in favor of `MessageData#experiment`. This will be removed in future releases."
+    messages:
+      type: json
+      description: A growable collection of messages
+    notification-config:
+      type: json
+      description: Configuration of the notification worker for all notification messages.
+    on-control:
+      type: string
+      description: What should be displayed when a control message is selected.
+      enum:
+        - show-next-message
+        - show-none
+    styles:
+      type: json
+      description: "A map of styles to configure message appearance.\n"
+    triggers:
+      type: json
+      description: "A collection of out the box trigger expressions. Each entry maps to a valid JEXL expression.\n"
+mr2022:
+  description: Features for MR 2022.
+  hasExposure: true
+  exposureDescription: ""
+  variables:
+    sections-enabled:
+      type: json
+      description: This property provides a lookup table of whether or not the given section should be enabled.
+nimbus-system:
+  description: "Configuration of the Nimbus System in Android.\n"
+  hasExposure: true
+  exposureDescription: ""
+  variables:
+    refresh-interval-foreground:
+      type: int
+      description: "The minimum interval in minutes between fetching experiment \nrecipes in the foreground.\n"
+nimbus-validation:
+  description: A feature that does not correspond to an application feature suitable for showing that Nimbus is working. This should never be used in production.
+  hasExposure: true
+  exposureDescription: ""
+  variables:
+    settings-icon:
+      type: string
+      description: The drawable displayed in the app menu for Settings
+    settings-punctuation:
+      type: string
+      description: The emoji displayed in the Settings screen title.
+    settings-title:
+      type: string
+      description: The title of displayed in the Settings screen and app menu.
+onboarding:
+  description: "A feature that configures the new user onboarding page. Note that onboarding is a **first run** feature, and should only be modified by first run experiments."
+  hasExposure: true
+  exposureDescription: ""
+  variables:
+    order:
+      type: json
+      description: Determines the order of the onboarding page panels
+pdfjs:
+  description: PDF.js features
+  hasExposure: true
+  exposureDescription: ""
+  variables:
+    download-button:
+      type: boolean
+      description: Download button
+    open-in-app-button:
+      type: boolean
+      description: Open in app button
+pre-permission-notification-prompt:
+  description: A feature that shows the pre-permission notification prompt.
+  hasExposure: true
+  exposureDescription: ""
+  variables:
+    enabled:
+      type: boolean
+      description: "if true, the pre-permission notification prompt is shown to the user."
+print:
+  description: A feature for printing from the share or browser menu.
+  hasExposure: true
+  exposureDescription: ""
+  variables:
+    browser-print-enabled:
+      type: boolean
+      description: "If true, a print button from the browser menu is available."
+    share-print-enabled:
+      type: boolean
+      description: "If true, a print button from the share menu is available."
+private-browsing:
+  description: Private Browsing Mode
+  hasExposure: true
+  exposureDescription: ""
+  variables:
+    felt-privacy-enabled:
+      type: boolean
+      description: "if true, enable felt privacy related UI"
+re-engagement-notification:
+  description: A feature that shows the re-engagement notification if the user is inactive.
+  hasExposure: true
+  exposureDescription: ""
+  variables:
+    enabled:
+      type: boolean
+      description: "If true, the re-engagement notification is shown to the inactive user."
+    type:
+      type: int
+      description: The type of re-engagement notification that is shown to the inactive user.
+search-extra-params:
+  description: A feature that provides additional args for search.
+  hasExposure: true
+  exposureDescription: ""
+  variables:
+    channel-id:
+      type: json
+      description: The channel Id param name with arg.
+    enabled:
+      type: boolean
+      description: "If true, the feature is active."
+    feature-enabler:
+      type: json
+      description: "The feature enabler param name with arg, NOTE this map could be empty."
+    search-engine:
+      type: string
+      description: The search engine name.
+search-term-groups:
+  description: A feature allowing the grouping of URLs around the search term that it came from.
+  hasExposure: true
+  exposureDescription: ""
+  variables:
+    enabled:
+      type: boolean
+      description: "If true, the feature shows up on the homescreen and on the new tab screen."
+shopping-experience:
+  description: A feature that shows product review quality information.
+  hasExposure: true
+  exposureDescription: ""
+  variables:
+    enabled:
+      type: boolean
+      description: "if true, the shopping experience feature is shown to the user."
+    product-recommendations:
+      type: boolean
+      description: "if true, recommended products feature is enabled to be shown to the user based on their preference."
+splash-screen:
+  description: "A feature that extends splash screen duration, allowing additional data fetching time for the app's initial run."
+  hasExposure: true
+  exposureDescription: ""
+  variables:
+    enabled:
+      type: boolean
+      description: "If true, the feature is active."
+    maximum_duration_ms:
+      type: int
+      description: The maximum amount of time in milliseconds the splashscreen will be visible while waiting for initialization calls to complete.
+toolbar:
+  description: The searchbar/awesomebar that user uses to search.
+  hasExposure: true
+  exposureDescription: ""
+  variables:
+    toolbar-position-top:
+      type: boolean
+      description: "If true, toolbar appears at top of the screen."
+unified-search:
+  description: A feature allowing user to easily search for specified results directly in the search bar.
+  hasExposure: true
+  exposureDescription: ""
+  variables:
+    enabled:
+      type: boolean
+      description: "If true, the feature shows up in the search bar."

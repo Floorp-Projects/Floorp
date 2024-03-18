@@ -1,0 +1,165 @@
+projects:
+  app:
+    upstream_dependencies:
+    - browser-domains
+    - browser-engine-gecko
+    - browser-errorpages
+    - browser-icons
+    - browser-menu
+    - browser-menu2
+    - browser-session-storage
+    - browser-state
+    - browser-storage-sync
+    - browser-tabstray
+    - browser-thumbnails
+    - browser-toolbar
+    - compose-awesomebar
+    - compose-cfr
+    - concept-awesomebar
+    - concept-base
+    - concept-engine
+    - concept-fetch
+    - concept-menu
+    - concept-storage
+    - concept-sync
+    - concept-tabstray
+    - concept-toolbar
+    - feature-app-links
+    - feature-awesomebar
+    - feature-contextmenu
+    - feature-customtabs
+    - feature-downloads
+    - feature-findinpage
+    - feature-intent
+    - feature-media
+    - feature-prompts
+    - feature-search
+    - feature-session
+    - feature-sitepermissions
+    - feature-tabs
+    - feature-toolbar
+    - feature-top-sites
+    - feature-webcompat
+    - feature-webcompat-reporter
+    - lib-auth
+    - lib-crash
+    - lib-crash-sentry
+    - lib-fetch-okhttp
+    - lib-publicsuffixlist
+    - lib-state
+    - service-digitalassetlinks
+    - service-glean
+    - service-location
+    - service-nimbus
+    - support-base
+    - support-images
+    - support-ktx
+    - support-license
+    - support-locale
+    - support-remotesettings
+    - support-rusthttp
+    - support-rustlog
+    - support-test
+    - support-test-libstate
+    - support-utils
+    - support-webextensions
+    - tooling-lint
+    - ui-autocomplete
+    - ui-colors
+    - ui-icons
+    - ui-tabcounter
+    - ui-widgets
+variants:
+- apks:
+  - abi: arm64-v8a
+    fileName: app-focus-arm64-v8a-debug.apk
+  - abi: armeabi-v7a
+    fileName: app-focus-armeabi-v7a-debug.apk
+  - abi: x86
+    fileName: app-focus-x86-debug.apk
+  - abi: x86_64
+    fileName: app-focus-x86_64-debug.apk
+  build_type: debug
+  name: focusDebug
+- apks:
+  - abi: arm64-v8a
+    fileName: app-klar-arm64-v8a-debug.apk
+  - abi: armeabi-v7a
+    fileName: app-klar-armeabi-v7a-debug.apk
+  - abi: x86
+    fileName: app-klar-x86-debug.apk
+  - abi: x86_64
+    fileName: app-klar-x86_64-debug.apk
+  build_type: debug
+  name: klarDebug
+- apks:
+  - abi: arm64-v8a
+    fileName: app-focus-arm64-v8a-release-unsigned.apk
+  - abi: armeabi-v7a
+    fileName: app-focus-armeabi-v7a-release-unsigned.apk
+  - abi: x86
+    fileName: app-focus-x86-release-unsigned.apk
+  - abi: x86_64
+    fileName: app-focus-x86_64-release-unsigned.apk
+  build_type: release
+  name: focusRelease
+- apks:
+  - abi: arm64-v8a
+    fileName: app-klar-arm64-v8a-release-unsigned.apk
+  - abi: armeabi-v7a
+    fileName: app-klar-armeabi-v7a-release-unsigned.apk
+  - abi: x86
+    fileName: app-klar-x86-release-unsigned.apk
+  - abi: x86_64
+    fileName: app-klar-x86_64-release-unsigned.apk
+  build_type: release
+  name: klarRelease
+- apks:
+  - abi: arm64-v8a
+    fileName: app-focus-arm64-v8a-beta-unsigned.apk
+  - abi: armeabi-v7a
+    fileName: app-focus-armeabi-v7a-beta-unsigned.apk
+  - abi: x86
+    fileName: app-focus-x86-beta-unsigned.apk
+  - abi: x86_64
+    fileName: app-focus-x86_64-beta-unsigned.apk
+  build_type: beta
+  name: focusBeta
+- apks:
+  - abi: arm64-v8a
+    fileName: app-klar-arm64-v8a-beta-unsigned.apk
+  - abi: armeabi-v7a
+    fileName: app-klar-armeabi-v7a-beta-unsigned.apk
+  - abi: x86
+    fileName: app-klar-x86-beta-unsigned.apk
+  - abi: x86_64
+    fileName: app-klar-x86_64-beta-unsigned.apk
+  build_type: beta
+  name: klarBeta
+- apks:
+  - abi: arm64-v8a
+    fileName: app-focus-arm64-v8a-nightly-unsigned.apk
+  - abi: armeabi-v7a
+    fileName: app-focus-armeabi-v7a-nightly-unsigned.apk
+  - abi: x86
+    fileName: app-focus-x86-nightly-unsigned.apk
+  - abi: x86_64
+    fileName: app-focus-x86_64-nightly-unsigned.apk
+  build_type: nightly
+  name: focusNightly
+- apks:
+  - abi: arm64-v8a
+    fileName: app-klar-arm64-v8a-nightly-unsigned.apk
+  - abi: armeabi-v7a
+    fileName: app-klar-armeabi-v7a-nightly-unsigned.apk
+  - abi: x86
+    fileName: app-klar-x86-nightly-unsigned.apk
+  - abi: x86_64
+    fileName: app-klar-x86_64-nightly-unsigned.apk
+  build_type: nightly
+  name: klarNightly
+- apks:
+  - abi: noarch
+    fileName: app-debug-androidTest.apk
+  build_type: androidTest
+  name: androidTest

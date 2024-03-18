@@ -1,0 +1,47 @@
+# This source code form is subject to the terms of the mozilla public
+# license, v. 2.0. if a copy of the mpl was not distributed with this
+# file, you can obtain one at http://mozilla.org/mpl/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+transforms:
+    - taskgraph.transforms.from_deps
+    - android_taskgraph.transforms.upstream_artifacts
+    - android_taskgraph.transforms.treeherder
+    - android_taskgraph.transforms.beetmover_android_app
+    - gecko_taskgraph.transforms.task
+
+kind-dependencies:
+    - signing-apk
+    - signing-bundle
+
+jobs:
+    beetmover:
+        from-deps:
+            with-attributes:
+                build-type:
+                    - fenix-release
+                    - fenix-beta
+                    - fenix-nightly
+                    - focus-release
+                    - klar-release
+                    - focus-beta
+                    - focus-nightly
+            group-by:
+                attribute: build-type
+            copy-attributes: true
+        attributes:
+            artifact_map: taskcluster/android_taskgraph/manifests/apk_releases.yml
+            shipping_phase: ship
+        treeherder:
+            symbol:
+                by-build-type:
+                    klar.*: BM-klar
+                    default: BM
+        bucket-scope:
+            by-level:
+                '3':
+                    by-build-type:
+                        .*-nightly: "project:releng:beetmover:bucket:nightly"
+                        .*-(release|beta): "project:releng:beetmover:bucket:release"
+                default: "project:releng:beetmover:bucket:dep"

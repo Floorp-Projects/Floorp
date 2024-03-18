@@ -11,6 +11,8 @@ transforms:
 
 kind-dependencies:
     - release-beetmover-push-to-release
+    - post-beetmover-components-dummy
+    - push-bundle
 
 job-defaults:
     description: Release Promotion version bump/tag
@@ -22,10 +24,19 @@ job-defaults:
         dontbuild: true
         tags: ['release']
         bump: true
+        # We're bumping both desktop and mobile version regardless of which product is getting
+        # released, to avoid confusion from them getting out of sync.
         bump-files:
             by-project:
-                default: ["browser/config/version_display.txt"]
-                mozilla-(release|esr.*):
+                default:
+                    - "browser/config/version_display.txt"
+                    - "mobile/android/version.txt"
+                mozilla-release:
+                    - "browser/config/version.txt"
+                    - "browser/config/version_display.txt"
+                    - "config/milestone.txt"
+                    - "mobile/android/version.txt"
+                mozilla-esr.*:
                     - "browser/config/version.txt"
                     - "browser/config/version_display.txt"
                     - "config/milestone.txt"
@@ -54,6 +65,15 @@ jobs:
         shipping-product: devedition
         treeherder:
             platform: devedition-release/opt
+            symbol: Rel(VerBump)
+            tier: 1
+            kind: build
+
+    firefox-android:
+        name: firefox-android-version-bump
+        shipping-product: firefox-android
+        treeherder:
+            platform: fenix-android-all/opt
             symbol: Rel(VerBump)
             tier: 1
             kind: build

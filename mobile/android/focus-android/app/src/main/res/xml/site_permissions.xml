@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <androidx.preference.Preference
+        android:icon="@drawable/ic_autoplay_enabled"
+        android:key="@string/pref_key_autoplay"
+        android:layout="@layout/focus_preference_new_tab"
+        android:summary="@string/preference_block_autoplay_audio_video"
+        android:title="@string/preference_autoplay" />
+
+    <androidx.preference.Preference
+        android:icon="@drawable/ic_camera_enabled"
+        android:key="@string/pref_key_phone_feature_camera"
+        android:layout="@layout/focus_preference_new_tab"
+        android:summary="@string/preference_option_phone_feature_ask_to_allow"
+        android:title="@string/preference_phone_feature_camera" />
+
+    <androidx.preference.Preference
+        android:icon="@drawable/mozac_ic_location_24"
+        android:layout="@layout/focus_preference_new_tab"
+        android:key="@string/pref_key_phone_feature_location"
+        android:summary="@string/preference_option_phone_feature_ask_to_allow"
+        android:title="@string/preference_phone_feature_location" />
+
+    <androidx.preference.Preference
+        android:icon="@drawable/mozac_ic_microphone_24"
+        android:key="@string/pref_key_phone_feature_microphone"
+        android:layout="@layout/focus_preference_new_tab"
+        android:summary="@string/preference_option_phone_feature_ask_to_allow"
+        android:title="@string/preference_phone_feature_microphone" />
+
+    <androidx.preference.Preference
+        android:icon="@drawable/mozac_ic_notification_24"
+        android:key="@string/pref_key_phone_feature_notification"
+        android:layout="@layout/focus_preference_new_tab"
+        android:summary="@string/preference_option_phone_feature_ask_to_allow"
+        android:title="@string/preference_phone_feature_notification"
+        app:allowDividerBelow="true" />
+
+    <androidx.preference.Preference
+        android:icon="@drawable/ic_link"
+        android:layout="@layout/focus_preference_new_tab"
+        android:key="@string/pref_key_browser_feature_media_key_system_access"
+        android:summary="@string/preference_option_phone_feature_ask_to_allow"
+        android:title="@string/preference_phone_feature_media_key_system_access"
+        app:allowDividerBelow="true" />
+
+</androidx.preference.PreferenceScreen>

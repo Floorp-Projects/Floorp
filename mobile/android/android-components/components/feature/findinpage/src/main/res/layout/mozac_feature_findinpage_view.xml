@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<merge
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:clickable="false"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        tools:background="#ffffffff"
+        tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout">
+
+    <EditText
+            android:id="@+id/find_in_page_query_text"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="@dimen/mozac_feature_findinpage_query_marginStart"
+            android:background="#00000000"
+            android:ems="10"
+            android:gravity="center_vertical"
+            android:hint="@string/mozac_feature_findindpage_input"
+            android:accessibilityHeading="true"
+            android:importantForAccessibility="yes"
+            android:clickable="true"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:inputType="textNoSuggestions"
+            android:lines="1"
+            android:maxLines="1"
+            android:textSize="@dimen/mozac_feature_findinpage_query_text_size"
+            app:layout_constraintEnd_toStartOf="@id/find_in_page_result_text"
+            app:layout_constraintStart_toStartOf="parent"
+            android:importantForAutofill="no"
+            tools:ignore="UnusedAttribute"/>
+
+    <TextView
+            android:id="@+id/find_in_page_result_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/mozac_feature_findinpage_result_count_margin_end"
+            android:layout_marginStart="@dimen/mozac_feature_findinpage_result_count_margin_start"
+            android:textSize="@dimen/mozac_feature_findinpage_result_count_text_size"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/find_in_page_prev_btn"
+            app:layout_constraintStart_toEndOf="@+id/find_in_page_query_text"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="10/20"/>
+
+    <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/find_in_page_prev_btn"
+            style="@style/Mozac.Feature.FindInPage.Buttons"
+            android:contentDescription="@string/mozac_feature_findindpage_previous_result"
+            app:srcCompat="@drawable/mozac_ic_chevron_up_24"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/find_in_page_next_btn"
+            app:layout_constraintStart_toEndOf="@+id/find_in_page_result_text"
+            app:layout_constraintTop_toTopOf="parent"/>
+
+    <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/find_in_page_next_btn"
+            style="@style/Mozac.Feature.FindInPage.Buttons"
+            android:contentDescription="@string/mozac_feature_findindpage_next_result"
+            app:srcCompat="@drawable/mozac_ic_chevron_down_24"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/find_in_page_close_btn"
+            app:layout_constraintStart_toEndOf="@+id/find_in_page_prev_btn"
+            app:layout_constraintTop_toTopOf="parent"/>
+
+    <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/find_in_page_close_btn"
+            style="@style/Mozac.Feature.FindInPage.Buttons"
+            android:contentDescription="@string/mozac_feature_findindpage_dismiss"
+            app:srcCompat="@drawable/mozac_ic_cross_24"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/find_in_page_next_btn"
+            app:layout_constraintTop_toTopOf="parent"/>
+</merge>

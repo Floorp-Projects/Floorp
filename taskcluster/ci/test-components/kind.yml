@@ -1,0 +1,88 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+transforms:
+    - android_taskgraph.transforms.ui_tests:transforms
+    - gecko_taskgraph.transforms.job:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    - toolchain
+    - build-fat-aar
+
+
+job-defaults:
+    attributes:
+        build-type: debug
+        code-review: true
+        retrigger: true
+    dependencies:
+        build-fat-aar: build-fat-aar-android-geckoview-fat-aar/opt
+    fetches:
+        toolchain:
+            - android-sdk-linux
+            - android-gradle-dependencies
+            - android-gradle-python-envs
+            - linux64-jdk
+        build-fat-aar:
+            - target.maven.tar.xz
+    run:
+        # TODO Generate APKs in a build task instead
+        gradlew: ['clean', 'assembleGecko', 'assembleAndroidTest', 'assembleDebug']
+        pre-gradlew:
+            - ["cd", "mobile/android/android-components"]
+        secrets:
+            - name: project/mobile/firefox-android/android-components/firebase
+              key: firebaseToken
+              path: .firebase_token.json
+              json: true
+        using: gradlew
+        use-caches: false
+    treeherder:
+        kind: test
+        platform: 'AC-ui-test/opt'
+        tier: 2
+    worker-type: b-linux-large-gcp
+    worker:
+        artifacts:
+            - name: public
+              path: /builds/worker/artifacts
+              type: directory
+        docker-image: {in-tree: android-ui-tests}
+        env:
+            GOOGLE_APPLICATION_CREDENTIALS: '.firebase_token.json'
+            GOOGLE_PROJECT: moz-android-components-230120
+        max-run-time: 2400
+    optimization:
+        skip-unless-backstop: null
+
+
+jobs:
+    unit-browser-engine-gecko-nightly:
+        component: browser
+        description: 'Run unit tests on device for browser component'
+        treeherder:
+            symbol: 'ui-components'
+    ui-browser:
+        component: samples-browser
+        description: 'Run ui tests for browser sample'
+        treeherder:
+            symbol: 'ui-samples-browser'
+    ui-glean:
+        component: samples-glean
+        description: 'Run ui tests for glean sample'
+        treeherder:
+            symbol: 'ui-samples-glean'
+    android-feature-containers: {}
+    android-feature-pwa: {}
+    android-feature-share: {}
+    android-feature-sitepermissions: {}
+    android-feature-top-sites: {}
+    android-feature-logins: {}
+    android-feature-prompts: {}
+    android-support-ktx: {}
+    android-feature-downloads: {}
+    android-feature-recentlyclosed: {}

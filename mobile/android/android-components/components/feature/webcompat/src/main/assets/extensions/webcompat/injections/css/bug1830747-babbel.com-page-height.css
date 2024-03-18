@@ -1,0 +1,17 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * my.babbel.com - "Next" button is not visible
+ * Bug #1830747 - https://bugzilla.mozilla.org/show_bug.cgi?id=1830747
+ * WebCompat issue #119212 - https://github.com/webcompat/web-bugs/issues/119212
+ *
+ * The next button on the bottom of the page is not visible in Firefox,
+ * but visible in Chrome since the site is using -webkit-fill-available rule.
+ * Adding height: 100% to the page wrapper allows to see the button.
+ */
+
+[data-main] {
+  height: 100%;
+}

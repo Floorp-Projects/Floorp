@@ -1,0 +1,36 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+transforms:
+    - taskgraph.transforms.from_deps
+    - android_taskgraph.transforms.post_dummy
+    - android_taskgraph.transforms.chunk
+    - gecko_taskgraph.transforms.task
+
+kind-dependencies:
+    - signing
+
+jobs:
+    post-signing:
+        description: Dummy task to wait on all builds before publishing them
+        from-deps:
+            group-by: build-type
+            unique-kinds: false
+            copy-attributes: true
+        attributes:
+            component: all
+        worker-type: succeed
+        worker: {}
+        treeherder:
+            kind: build
+            platform: AC-android-all/opt
+            symbol:
+                by-build-type:
+                    release: post-signing-release
+                    beta: post-signing-beta
+                    nightly: post-signing-nightly
+                    default: post-signing
+            tier: 1

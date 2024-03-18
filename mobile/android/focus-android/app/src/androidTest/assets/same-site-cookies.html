@@ -1,0 +1,125 @@
+<!DOCTYPE HTML>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<html lang="en-US" dir="ltr">
+<head>
+      <meta name="viewport" content="width=device-width">
+      <script src="https://cdn.jsdelivr.net/npm/idb-keyval@3/dist/idb-keyval-iife.min.js"></script>
+</head>
+<body>
+<button onclick="setAllStorageLocations();">Rerun Tests</button>
+<br>
+<h4>cookies</h4>
+<pre id="cookie_message"></pre>
+
+<h4>localStorage</h4>
+<pre id="ls_message"></pre>
+
+<!--
+<h4>sessionStorage</h4>
+<pre id="ss_message"></pre>
+<h4>Indexed DB</h4>
+<pre id="idb_message"></pre>
+-->
+
+<!-- Storage access API -->
+<br />
+<h4>Storage Access API</h4>
+<button onclick='requestSA()'>requestStorageAccess()</button><br />
+<p>Return value of requestStorageAccess():</p><pre id='request_storage_access'>not yet called</pre><br />
+<button onclick='hasSA()'>hasStorageAccess()</button><br />
+<p>Return value of hasStorageAccess():</p><pre id='has_storage_access'>not yet called</pre><br />
+
+
+<script>
+        var newRandVal = Math.random();
+
+        function outputResult(value, output_id) {
+          var msg = document.getElementById(output_id);
+          document.hasStorageAccess().then(
+            (hasStorageAccess) => {
+              if (hasStorageAccess === false) {
+                msg.innerHTML = "BLOCKED";
+              } else if (value === "" & hasStorageAccess === true) {
+                msg.innerHTML = "UNEXPECTED. We have storage access but value is empty...";
+              } else if (hasStorageAccess === true) {
+                msg.innerHTML = "UNRESTRICTED";
+              }
+            },
+            (reason) => {msg.innerHTML = 'promise rejected for reason' + reason}
+          );
+        }
+
+        function setCookies() {
+          var cookies = document.cookie;
+          if (cookies === "") {
+            document.cookie = 'foo='+newRandVal+'; SameSite=None; Secure';
+            cookies = document.cookie;
+          }
+          outputResult(cookies, 'cookie_message');
+        }
+        function setLocalStorage() {
+          try {
+            var foo = window.localStorage.getItem('foo');
+            if (foo === null) {
+              window.localStorage.setItem('foo', newRandVal);
+              foo = window.localStorage.getItem('foo');
+            }
+          } catch (error) {
+            foo = "";
+          }
+          outputResult(foo, 'ls_message');
+        }
+        function setSessionStorage() {
+          try {
+            var foo = window.sessionStorage.getItem('foo');
+            if (foo === null) {
+              window.sessionStorage.setItem('foo', newRandVal);
+              foo = window.sessionStorage.getItem('foo');
+            }
+          } catch (error) {
+            foo = "";
+          }
+          outputResult(foo, 'ss_message');
+        }
+        async function setIndexedDB() {
+          try {
+            var foo = await idbKeyval.get('foo');
+            if (foo === undefined) {
+              await idbKeyval.set('foo', newRandVal);
+              foo = await idbKeyval.get('foo');
+            }
+          } catch (error) {
+            foo = "";
+          }
+          outputResult(foo, 'idb_message');
+        }
+        function setAllStorageLocations() {
+          setCookies();
+          setLocalStorage();
+          //setSessionStorage();
+          //setIndexedDB();
+        }
+        setAllStorageLocations();
+
+        // Storage Access API
+        function requestSA() {
+          var result = document.getElementById('request_storage_access');
+          document.requestStorageAccess().then(
+            () => {result.innerHTML = 'access granted'},
+            () => {result.innerHTML = 'access denied'}
+          );
+        }
+
+        function hasSA() {
+          var result = document.getElementById('has_storage_access');
+          document.hasStorageAccess().then(
+            (hasAccess) => {result.innerHTML = hasAccess},
+            (reason) => {result.innerHTML = 'promise rejected for reason' + reason}
+          );
+        }
+        hasSA();
+      </script>
+</body>
+</html>

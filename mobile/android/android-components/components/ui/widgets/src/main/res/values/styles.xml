@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+    <style name="Mozac.Widgets.TestTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="mozac_widget_favicon_background_color">@color/photonWhite</item>
+        <item name="mozac_widget_favicon_border_color">@color/photonLightGrey30</item>
+        <item name="mozac_primary_text_color">@color/photonInk90</item>
+        <item name="mozac_caption_text_color">@color/photonInk50</item>
+    </style>
+
+    <!-- Button styling -->
+    <style name="Mozac.Widgets.NeutralButton" parent="Widget.MaterialComponents.Button.TextButton">
+        <item name="iconTint">@color/mozac_grey_button_text_color</item>
+        <item name="iconPadding">8dp</item>
+        <item name="iconGravity">textStart</item>
+        <item name="android:textAlignment">center</item>
+        <item name="android:background">@drawable/rounded_button_background</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">48dp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="backgroundTint">@color/mozac_grey_button_color</item>
+        <item name="android:textColor">@color/mozac_grey_button_text_color</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="fontFamily">?mozac_font_semibold</item>
+    </style>
+
+    <style name="Mozac.Widgets.DestructiveButton" parent="Mozac.Widgets.NeutralButton">
+        <item name="iconTint">@color/mozac_destructive_button_text_color</item>
+        <item name="android:textColor">@color/mozac_destructive_button_text_color</item>
+    </style>
+
+    <style name="Mozac.Widgets.PositiveButton" parent="Mozac.Widgets.NeutralButton">
+        <item name="backgroundTint">?mozac_accent</item>
+        <item name="iconTint">?mozac_contrast_text</item>
+        <item name="android:textColor">?mozac_contrast_text</item>
+    </style>
+
+    <!-- Favicon styling -->
+    <style name="Mozac.Widgets.Favicon" parent="">
+        <item name="android:layout_width">@dimen/mozac_widget_favicon_size</item>
+        <item name="android:layout_height">@dimen/mozac_widget_favicon_size</item>
+        <item name="android:scaleType">fitCenter</item>
+        <item name="android:padding">@dimen/mozac_widget_favicon_padding</item>
+        <item name="android:background">@drawable/mozac_widget_favicon_background</item>
+    </style>
+
+    <style name="Mozac.Widgets.SiteItem.Label" parent="">
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:textAlignment">viewStart</item>
+        <item name="android:textSize">@dimen/mozac_widget_site_item_label_text_size</item>
+        <item name="android:textColor">?attr/mozac_primary_text_color</item>
+    </style>
+    <style name="Mozac.Widgets.SiteItem.Caption" parent="Mozac.Widgets.SiteItem.Label">
+        <item name="android:textSize">@dimen/mozac_widget_site_item_caption_text_size</item>
+        <item name="android:textColor">?attr/mozac_caption_text_color</item>
+    </style>
+</resources>

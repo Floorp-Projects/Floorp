@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_sans_serif_font">सानस्-सेरिफ</string>
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_sans_serif_font_desc">सानस्-सेरिफ फन्ट</string>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_serif_font">सेरिफ</string>
+
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_serif_font_desc">सेरिफ फन्ट</string>
+
+    <!-- Accessible description for decreasing the font size -->
+    <string name="mozac_feature_readerview_font_size_decrease_desc">फन्टको आकार घटाउनुहोस्</string>
+
+    <!-- Accessible description for increasing the font size -->
+    <string name="mozac_feature_readerview_font_size_increase_desc">फन्टको आकार बढाउनुहोस्</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_dark">अँध्यारो</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_dark_color_scheme_desc">अँध्यारो रङ्ग योजना</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_sephia">सेपिया</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_sepia_color_scheme_desc">सेपिया रंग योजना</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_light">उज्यालो</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_light_color_scheme_desc">उज्यालो रङ्ग योजना</string>
+</resources>

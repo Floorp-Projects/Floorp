@@ -1,0 +1,325 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+package mozilla.components.concept.engine
+
+import mozilla.components.concept.engine.EngineSession.CookieBannerHandlingMode
+import mozilla.components.concept.engine.EngineSession.SafeBrowsingPolicy
+import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
+import mozilla.components.concept.engine.history.HistoryTrackingDelegate
+import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
+import mozilla.components.concept.engine.request.RequestInterceptor
+import kotlin.reflect.KProperty
+
+/**
+ * Holds settings of an engine or session. Concrete engine
+ * implementations define how these settings are applied i.e.
+ * whether a setting is applied on an engine or session instance.
+ */
+@Suppress("UnnecessaryAbstractClass")
+abstract class Settings {
+    /**
+     * Setting to control whether or not JavaScript is enabled.
+     */
+    open var javascriptEnabled: Boolean by UnsupportedSetting()
+
+    /**
+     * Setting to control whether or not DOM Storage is enabled.
+     */
+    open var domStorageEnabled: Boolean by UnsupportedSetting()
+
+    /**
+     * Setting to control whether or not Web fonts are enabled.
+     */
+    open var webFontsEnabled: Boolean by UnsupportedSetting()
+
+    /**
+     * Setting to control whether the fonts adjust size with the system accessibility settings.
+     */
+    open var automaticFontSizeAdjustment: Boolean by UnsupportedSetting()
+
+    /**
+     * Setting to control whether the [Accept-Language] headers are altered with system locale
+     * settings.
+     */
+    open var automaticLanguageAdjustment: Boolean by UnsupportedSetting()
+
+    /**
+     * Setting to control tracking protection.
+     */
+    open var trackingProtectionPolicy: TrackingProtectionPolicy? by UnsupportedSetting()
+
+    /**
+     * Setting to control the cookie banner handling feature.
+     */
+    open var cookieBannerHandlingMode: CookieBannerHandlingMode by UnsupportedSetting()
+
+    /**
+     * Setting to control the cookie banner handling feature in the private browsing mode.
+     */
+    open var cookieBannerHandlingModePrivateBrowsing: CookieBannerHandlingMode by UnsupportedSetting()
+
+    /**
+     * Setting to control tracking protection.
+     */
+    open var safeBrowsingPolicy: Array<SafeBrowsingPolicy> by UnsupportedSetting()
+
+    /**
+     * Setting to control the cookie banner handling feature detect only mode.
+     */
+    open var cookieBannerHandlingDetectOnlyMode: Boolean by UnsupportedSetting()
+
+    /**
+     * Setting to control the cookie banner handling global rules feature.
+     */
+    open var cookieBannerHandlingGlobalRules: Boolean by UnsupportedSetting()
+
+    /**
+     * Setting to control the cookie banner handling global rules subFrames feature.
+     */
+    open var cookieBannerHandlingGlobalRulesSubFrames: Boolean by UnsupportedSetting()
+
+    /**
+     * Setting to control the cookie banner enables / disables the URL query string
+     * stripping in normal browsing mode which strips query parameters from loading
+     * URIs to prevent bounce (redirect) tracking.
+     */
+    open var queryParameterStripping: Boolean by UnsupportedSetting()
+
+    /**
+     * Setting to control the cookie banner enables / disables the URL query string
+     * stripping in private browsing mode which strips query parameters from loading
+     * URIs to prevent bounce (redirect) tracking.
+     */
+    open var queryParameterStrippingPrivateBrowsing: Boolean by UnsupportedSetting()
+
+    /**
+     * Setting to control the list that contains sites where should
+     * exempt from query stripping.
+     */
+    open var queryParameterStrippingAllowList: String by UnsupportedSetting()
+
+    /**
+     * Setting to control the list which contains query parameters that are needed to be stripped
+     * from  URIs. The query parameters are separated by a space.
+     */
+    open var queryParameterStrippingStripList: String by UnsupportedSetting()
+
+    /**
+     * Setting to intercept and override requests.
+     */
+    open var requestInterceptor: RequestInterceptor? by UnsupportedSetting()
+
+    /**
+     * Setting to provide a history delegate to the engine.
+     */
+    open var historyTrackingDelegate: HistoryTrackingDelegate? by UnsupportedSetting()
+
+    /**
+     * Setting to control the user agent string.
+     */
+    open var userAgentString: String? by UnsupportedSetting()
+
+    /**
+     * Setting to control whether or not a user gesture is required to play media.
+     */
+    open var mediaPlaybackRequiresUserGesture: Boolean by UnsupportedSetting()
+
+    /**
+     * Setting to control whether or not window.open can be called from JavaScript.
+     */
+    open var javaScriptCanOpenWindowsAutomatically: Boolean by UnsupportedSetting()
+
+    /**
+     * Setting to control whether or not zoom controls should be displayed.
+     */
+    open var displayZoomControls: Boolean by UnsupportedSetting()
+
+    /**
+     * Setting to control whether or not the engine zooms out the content to fit on screen by width.
+     */
+    open var loadWithOverviewMode: Boolean by UnsupportedSetting()
+
+    /**
+     * Setting to control whether to support the viewport HTML meta tag or if a wide viewport
+     * should be used. If not null, this value overrides useWideViePort webSettings in
+     * [EngineSession.toggleDesktopMode].
+     */
+    open var useWideViewPort: Boolean? by UnsupportedSetting()
+
+    /**
+     * Setting to control whether or not file access is allowed.
+     */
+    open var allowFileAccess: Boolean by UnsupportedSetting()
+
+    /**
+     * Setting to control whether or not JavaScript running in the context of a file scheme URL
+     * should be allowed to access content from other file scheme URLs.
+     */
+    open var allowFileAccessFromFileURLs: Boolean by UnsupportedSetting()
+
+    /**
+     * Setting to control whether or not JavaScript running in the context of a file scheme URL
+     * should be allowed to access content from any origin.
+     */
+    open var allowUniversalAccessFromFileURLs: Boolean by UnsupportedSetting()
+
+    /**
+     * Setting to control whether or not the engine is allowed to load content from a content
+     * provider installed in the system.
+     */
+    open var allowContentAccess: Boolean by UnsupportedSetting()
+
+    /**
+     * Setting to control whether or not vertical scrolling is enabled.
+     */
+    open var verticalScrollBarEnabled: Boolean by UnsupportedSetting()
+
+    /**
+     * Setting to control whether or not horizontal scrolling is enabled.
+     */
+    open var horizontalScrollBarEnabled: Boolean by UnsupportedSetting()
+
+    /**
+     * Setting to control whether or not remote debugging is enabled.
+     */
+    open var remoteDebuggingEnabled: Boolean by UnsupportedSetting()
+
+    /**
+     * Setting to control whether or not multiple windows are supported.
+     */
+    open var supportMultipleWindows: Boolean by UnsupportedSetting()
+
+    /**
+     * Setting to control whether or not testing mode is enabled.
+     */
+    open var testingModeEnabled: Boolean by UnsupportedSetting()
+
+    /**
+     * Setting to alert the content that the user prefers a particular theme. This affects the
+     * [@media(prefers-color-scheme)] query.
+     */
+    open var preferredColorScheme: PreferredColorScheme by UnsupportedSetting()
+
+    /**
+     * Setting to control whether media should be suspended when the session is inactive.
+     */
+    open var suspendMediaWhenInactive: Boolean by UnsupportedSetting()
+
+    /**
+     * Setting to control whether font inflation is enabled.
+     */
+    open var fontInflationEnabled: Boolean? by UnsupportedSetting()
+
+    /**
+     * Setting to control the font size factor. All font sizes will be multiplied by this factor.
+     */
+    open var fontSizeFactor: Float? by UnsupportedSetting()
+
+    /**
+     * Setting to control login autofill.
+     */
+    open var loginAutofillEnabled: Boolean by UnsupportedSetting()
+
+    /**
+     * Setting to force the ability to scale the content
+     */
+    open var forceUserScalableContent: Boolean by UnsupportedSetting()
+
+    /**
+     * Setting to control the clear color while drawing.
+     */
+    open var clearColor: Int? by UnsupportedSetting()
+
+    /**
+     * Setting to control whether enterprise root certs are enabled.
+     */
+    open var enterpriseRootsEnabled: Boolean by UnsupportedSetting()
+
+    /**
+     * Setting the HTTPS-Only mode for upgrading connections to HTTPS.
+     */
+    open var httpsOnlyMode: Engine.HttpsOnlyMode by UnsupportedSetting()
+
+    /**
+     * Setting to control whether Global Privacy Control isenabled.
+     */
+    open var globalPrivacyControlEnabled: Boolean by UnsupportedSetting()
+
+    /**
+     * Setting to control the email tracker blocking feature in the private browsing mode.
+     */
+    open var emailTrackerBlockingPrivateBrowsing: Boolean by UnsupportedSetting()
+}
+
+/**
+ * [Settings] implementation used to set defaults for [Engine] and [EngineSession].
+ */
+data class DefaultSettings(
+    override var javascriptEnabled: Boolean = true,
+    override var domStorageEnabled: Boolean = true,
+    override var webFontsEnabled: Boolean = true,
+    override var automaticFontSizeAdjustment: Boolean = true,
+    override var automaticLanguageAdjustment: Boolean = true,
+    override var mediaPlaybackRequiresUserGesture: Boolean = true,
+    override var trackingProtectionPolicy: TrackingProtectionPolicy? = null,
+    override var requestInterceptor: RequestInterceptor? = null,
+    override var historyTrackingDelegate: HistoryTrackingDelegate? = null,
+    override var userAgentString: String? = null,
+    override var javaScriptCanOpenWindowsAutomatically: Boolean = false,
+    override var displayZoomControls: Boolean = true,
+    override var loadWithOverviewMode: Boolean = false,
+    override var useWideViewPort: Boolean? = null,
+    override var allowFileAccess: Boolean = true,
+    override var allowFileAccessFromFileURLs: Boolean = false,
+    override var allowUniversalAccessFromFileURLs: Boolean = false,
+    override var allowContentAccess: Boolean = true,
+    override var verticalScrollBarEnabled: Boolean = true,
+    override var horizontalScrollBarEnabled: Boolean = true,
+    override var remoteDebuggingEnabled: Boolean = false,
+    override var supportMultipleWindows: Boolean = false,
+    override var preferredColorScheme: PreferredColorScheme = PreferredColorScheme.System,
+    override var testingModeEnabled: Boolean = false,
+    override var suspendMediaWhenInactive: Boolean = false,
+    override var fontInflationEnabled: Boolean? = null,
+    override var fontSizeFactor: Float? = null,
+    override var forceUserScalableContent: Boolean = false,
+    override var loginAutofillEnabled: Boolean = false,
+    override var clearColor: Int? = null,
+    override var enterpriseRootsEnabled: Boolean = false,
+    override var httpsOnlyMode: Engine.HttpsOnlyMode = Engine.HttpsOnlyMode.DISABLED,
+    override var globalPrivacyControlEnabled: Boolean = false,
+    override var cookieBannerHandlingMode: CookieBannerHandlingMode = CookieBannerHandlingMode.DISABLED,
+    override var cookieBannerHandlingModePrivateBrowsing: CookieBannerHandlingMode =
+        CookieBannerHandlingMode.DISABLED,
+    override var cookieBannerHandlingDetectOnlyMode: Boolean = false,
+    override var cookieBannerHandlingGlobalRules: Boolean = false,
+    override var cookieBannerHandlingGlobalRulesSubFrames: Boolean = false,
+    override var queryParameterStripping: Boolean = false,
+    override var queryParameterStrippingPrivateBrowsing: Boolean = false,
+    override var queryParameterStrippingAllowList: String = "",
+    override var queryParameterStrippingStripList: String = "",
+    override var emailTrackerBlockingPrivateBrowsing: Boolean = false,
+) : Settings()
+
+class UnsupportedSetting<T> {
+    operator fun getValue(thisRef: Any?, prop: KProperty<*>): T {
+        throw UnsupportedSettingException(
+            "The setting ${prop.name} is not supported by this engine or session. " +
+                "Check both the engine and engine session implementation.",
+        )
+    }
+
+    operator fun setValue(thisRef: Any?, prop: KProperty<*>, value: T) {
+        throw UnsupportedSettingException(
+            "The setting ${prop.name} is not supported by this engine or session. " +
+                "Check both the engine and engine session implementation.",
+        )
+    }
+}
+
+/**
+ * Exception thrown by default if a setting is not supported by an engine or session.
+ */
+class UnsupportedSettingException(message: String = "Setting not supported by this engine") : RuntimeException(message)

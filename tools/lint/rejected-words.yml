@@ -303,6 +303,16 @@ avoid-blacklist-and-whitelist:
         - widget/windows/WinUtils.h
         - xpcom/io/FilePreferences.cpp
         - xpcom/tests/gtest/TestFilePreferencesUnix.cpp
+        # TODO - Bug 1881094: temporarily ignored for firefox-android migration
+        - mobile/android/android-components/components/feature/webcompat/src/main/assets/extensions/webcompat/shims/nielsen.js
+        - mobile/android/android-components/docs/changelog.md
+        - mobile/android/fenix/app/src/main/java/org/mozilla/fenix/ext/Bitmap.kt
+        - mobile/android/fenix/app/src/main/java/org/mozilla/fenix/perf/StrictModeManager.kt
+        - mobile/android/fenix/app/src/main/java/org/mozilla/fenix/translations/preferences/downloadlanguages/DownloadLanguagesFeature.kt
+        - mobile/android/fenix/app/src/test/java/org/mozilla/fenix/translations/preferences/downloadlanguages/DownloadLanguagesFeatureTest.kt
+        - mobile/android/focus-android/app/src/main/res/values-ar/strings.xml
+        - mobile/android/focus-android/app/src/main/res/values-et/strings.xml
+        - mobile/android/focus-android/app/src/main/res/values-lt/strings.xml
 
 # ---
 # Disable for now. Needs some dev to handle this

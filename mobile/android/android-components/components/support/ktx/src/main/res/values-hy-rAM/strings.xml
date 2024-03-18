@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Text displayed when choosing which app to call with after selecting a phone number-->
+    <string name="mozac_support_ktx_menu_call_with">Զանգահարել՝</string>
+    <!-- Text displayed when choosing which app to email with after selecting an email address-->
+    <string name="mozac_support_ktx_menu_email_with">Էլ. նամակ ուղարկել՝</string>
+    <string name="mozac_support_ktx_menu_share_with">Կիսվել հետևյալի հետ՝</string>
+    <string name="mozac_support_ktx_share_dialog_title">Համօգտագործել հետևյալի միջոցով՝</string>
+</resources>

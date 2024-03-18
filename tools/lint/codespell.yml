@@ -66,6 +66,11 @@ codespell:
         - xpcom/docs/
     exclude:
         - devtools/docs/contributor/tools/storage/
+        # TODO - Bug 1881094: temporarily ignored for firefox-android migration
+        - mobile/android/android-components/docs/Gemfile.lock
+        - mobile/android/android-components/docs/_config.yml
+        - mobile/android/android-components/docs/changelog_archive.md
+        - mobile/android/docs/shared/uplift_guide.md
         - tools/lint/cpp/mingw-headers.txt
         - tools/lint/test/test_codespell.py
         - "**/package-lock.json"

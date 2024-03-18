@@ -190,6 +190,8 @@ linux64-android-gradle-dependencies:
     worker:
         env:
             GRADLE_USER_HOME: "/builds/worker/workspace/build/src/mobile/android/gradle/dotgradle-online"
+            ANDROID_SDK_ROOT: "/builds/worker/fetches/android-sdk-linux"
+        max-run-time: 2700
     run:
         script: android-gradle-dependencies.sh
         sparse-profile: null
@@ -200,6 +202,10 @@ linux64-android-gradle-dependencies:
             - 'mobile/android/config/mozconfigs/android-arm-gradle-dependencies/**'
             - 'mobile/android/config/mozconfigs/common*'
             - 'mobile/android/gradle.configure'
+            - 'mobile/android/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt'
+            - 'mobile/android/android-components/plugins/dependencies/src/main/java/ApplicationServices.kt'
+            - 'mobile/android/fenix/plugins/fenixdependencies/src/main/java/FenixDependenciesPlugin.kt'
+            - 'mobile/android/focus-android/plugins/focusdependencies/src/main/java/FocusDependenciesPlugin.kt'
         toolchain-artifact: public/build/android-gradle-dependencies.tar.zst
         toolchain-alias: android-gradle-dependencies
     fetches:
@@ -212,6 +218,7 @@ linux64-android-gradle-dependencies:
             - linux64-android-sdk-linux-repack
             - linux64-jdk-repack
             - linux64-node
+            - android-gradle-python-envs
 
 linux64-android-gradle-dependencies-lite:
     description: "Android Lite Gradle dependencies toolchain task"
@@ -230,6 +237,8 @@ linux64-android-gradle-dependencies-lite:
             - 'mobile/android/config/mozconfigs/android-arm-gradle-dependencies/**'
             - 'mobile/android/config/mozconfigs/common*'
             - 'mobile/android/gradle.configure'
+            - 'mobile/android/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt'
+            - 'mobile/android/android-components/plugins/dependencies/src/main/java/ApplicationServices.kt'
         toolchain-artifact: public/build/android-gradle-dependencies.tar.zst
         toolchain-alias: android-gradle-dependencies-lite
     fetches:
@@ -242,3 +251,14 @@ linux64-android-gradle-dependencies-lite:
             - linux64-android-sdk-linux-repack
             - linux64-jdk-repack
             - linux64-node
+            - android-gradle-python-envs
+
+android-gradle-python-envs:
+    description: "gradle-python-envs plugin toolchain task"
+    treeherder:
+        symbol: TL(gradle-python-envs)
+    run:
+        script: gradle-python-envs.sh
+        arguments: ['0.0.31']
+        sparse-profile: null
+        toolchain-artifact: public/build/gradle-python-envs-0.0.31.tar.zst

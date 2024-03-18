@@ -1,0 +1,50 @@
+{
+  "manifest_version": 2,
+  "name": "Mozilla Android Components - WebCompat Reporter",
+  "description": "Report site compatibility issues on webcompat.com",
+  "author": "Thomas Wisniewski <twisniewski@mozilla.com>",
+  "version": "2.1.0",
+  "homepage_url": "https://github.com/mozilla/webcompat-reporter",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "webcompat-reporter@mozilla.org"
+    }
+  },
+  "experiment_apis": {
+    "tabExtras": {
+      "schema": "experimentalAPIs/tabExtras.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "script": "experimentalAPIs/tabExtras.js",
+        "paths": [["tabExtras"]]
+      }
+    }
+  },
+  "icons": {
+    "16": "icons/lightbulb.svg",
+    "32": "icons/lightbulb.svg",
+    "48": "icons/lightbulb.svg",
+    "96": "icons/lightbulb.svg",
+    "128": "icons/lightbulb.svg"
+  },
+  "permissions": [
+    "geckoViewAddons",
+    "nativeMessaging",
+    "tabs",
+    "<all_urls>"
+  ],
+  "background": {
+    "persistent": false,
+    "type": "module",
+    "scripts": [
+      "background.js"
+    ]
+  },
+  "page_action": {
+    "browser_style": true,
+    "default_icon": "icons/lightbulb.svg",
+    "default_title": "Report Site Issue…",
+    "pinned": false,
+    "show_matches": ["http://*/*", "https://*/*"]
+  }
+}

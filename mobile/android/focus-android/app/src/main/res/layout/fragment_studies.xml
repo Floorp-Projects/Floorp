@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/settings_background">
+
+    <TextView
+        android:id="@+id/studiesTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="72dp"
+        android:clickable="false"
+        android:focusable="false"
+        android:textAppearance="@style/Preference.Title"
+        android:textSize="16sp"
+        app:layout_constraintEnd_toStartOf="@id/studies_switch"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/studiesDescription"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/preference_studies_summary"
+        android:textColor="?attr/secondaryText"
+        android:textColorLink="@color/accent"
+        app:layout_constraintEnd_toEndOf="@id/studiesTitle"
+        app:layout_constraintStart_toStartOf="@id/studiesTitle"
+        app:layout_constraintTop_toBottomOf="@id/studiesTitle" />
+
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/studies_switch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:minHeight="48dp"
+        android:textOff="@string/preference_state_off"
+        android:textOn="@string/preference_state_on"
+        app:layout_constraintBottom_toBottomOf="@id/studiesDescription"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/studiesTitle" />
+
+    <org.mozilla.focus.settings.privacy.studies.StudiesRecyclerView
+        android:id="@+id/studies_list"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/studiesDescription" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

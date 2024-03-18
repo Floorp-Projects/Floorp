@@ -1,0 +1,86 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/
+
+name: Import l10n translations
+
+permissions:
+  contents: write
+  pull-requests: write
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+jobs:
+  copy:
+    name: Import strings
+    runs-on: ubuntu-latest
+    steps:
+      - name: Discover A-C beta version
+        id: discover-beta-version
+        uses: mozilla-mobile/fenix-beta-version@4.2.3
+      - name: Checkout Beta Branch
+        uses: actions/checkout@v3
+        with:
+          path: "source"
+          ref: releases_v${{ steps.discover-beta-version.outputs.beta_version }}
+      - name: Clone android-l10n repository
+        uses: actions/checkout@v3
+        with:
+          repository: "mozilla-l10n/android-l10n"
+          path: "l10n"
+      - name: Set up Python 3
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+      - name: Install Python dependencies
+        run: |
+          pip install -r l10n/.github/requirements.txt
+      - name: Copy translated files for android-components
+        run: >
+          python l10n/.github/scripts/import_strings.py l10n
+          --toml l10n/mozilla-mobile/android-components/l10n.toml
+          --dest source/android-components
+      - name: Copy translated files for fenix
+        run: >
+          python l10n/.github/scripts/import_strings.py l10n
+          --toml l10n/mozilla-mobile/fenix/l10n.toml
+          --dest source/fenix
+      - name: Copy translated files for focus-android
+        run: >
+          python l10n/.github/scripts/import_strings.py l10n
+          --toml l10n/mozilla-mobile/focus-android/l10n.toml
+          --dest source/focus-android
+      - name: Commit changes and open pull request
+        run: |
+          # Only try to commit if there are pending changes
+          cd source
+          if [[ $(git diff --exit-code) || $(git ls-files --other --exclude-standard) ]]
+          then
+            branch="automation/import-l10n"
+            git config user.name "github-actions"
+            git config user.email "github-actions@users.noreply.github.com"
+
+            git checkout -B "$branch"
+            git add .
+            git commit -m "Import translations from android-l10n"
+            git push -f origin "$branch"
+
+            # Create pull request if there isn't one open yet, use the last
+            # commit message as title.
+            open_prs=$(gh pr list --repo "$GITHUB_REPOSITORY" --json headRefName | jq --arg BRANCH "$branch" 'map(select(.headRefName==$BRANCH)) | length')
+            if (( $open_prs > 0 )); then
+                echo "Existing pull request updated."
+                pr_link=$(gh pr list --repo "$GITHUB_REPOSITORY" --json headRefName,url | jq -r --arg BRANCH "$branch" 'map(select(.headRefName==$BRANCH)) | .[].url')
+                echo "Link: $pr_link"
+            else
+                echo "Opening new pull request."
+                gh pr create --fill --base releases_v${{ steps.discover-beta-version.outputs.beta_version }}
+            fi
+          else
+            echo "No changes found."
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

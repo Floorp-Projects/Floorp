@@ -1,0 +1,126 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+def generatedSrcDir = new File(layout.buildDirectory.get().asFile, "generated/components/src/main/java")
+
+// This vcsHash functionality is duplicated in publish.gradle.
+def getVcsHash = { ->
+    def stdout = new ByteArrayOutputStream()
+    def stderr = new ByteArrayOutputStream()
+    try {
+        exec {
+            commandLine 'git', 'rev-parse', '--short', 'HEAD'
+            standardOutput = stdout
+            errorOutput = stderr
+        }
+    } catch (Exception e) {
+        exec {
+            commandLine 'hg', 'id', '--id'
+            environment 'HGPLAIN', '1'
+            standardOutput = stdout
+        }
+    }
+    return stdout.toString().trim()
+}
+
+android {
+    defaultConfig {
+        minSdkVersion config.minSdkVersion
+        compileSdk config.compileSdkVersion
+        targetSdkVersion config.targetSdkVersion
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        def appServicesVersion = ApplicationServicesConfig.version
+        if (gradle.hasProperty("localProperties.branchBuild.application-services.version")) {
+            appServicesVersion = gradle["localProperties.branchBuild.application-services.version"]
+        }
+
+        buildConfigField("String", "LIBRARY_VERSION", "\"" + config.componentsVersion + "\"")
+        buildConfigField("String", "APPLICATION_SERVICES_VERSION", "\"" + appServicesVersion + "\"")
+        buildConfigField("String", "GLEAN_SDK_VERSION", "\"" + Versions.mozilla_glean + "\"")
+        buildConfigField("String", "VCS_HASH", "\"dev build\"")
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+
+            buildConfigField("String", "VCS_HASH", "\"" + getVcsHash() + "\"")
+        }
+    }
+
+    sourceSets {
+        main {
+            java {
+                srcDirs += generatedSrcDir
+            }
+        }
+    }
+
+    buildFeatures {
+        viewBinding true
+        buildConfig true
+    }
+
+    namespace 'mozilla.components.support.base'
+
+}
+
+dependencies {
+    implementation ComponentsDependencies.kotlin_coroutines
+    implementation ComponentsDependencies.androidx_lifecycle_viewmodel
+
+    api project(":concept-base")
+    // We expose the app-compat as API so that consumers get access to the Lifecycle classes automatically
+    api ComponentsDependencies.androidx_appcompat
+
+    testImplementation project(':support-test')
+
+    testImplementation ComponentsDependencies.testing_coroutines
+    testImplementation ComponentsDependencies.androidx_test_core
+    testImplementation ComponentsDependencies.androidx_test_junit
+    testImplementation ComponentsDependencies.testing_robolectric
+}
+
+
+preBuild.finalizedBy("generateComponentEnum")
+
+
+/**
+ * Generates a "Components" enum listing all published components.
+ */
+tasks.register("generateComponentEnum") {
+    doLast {
+        generatedSrcDir.mkdirs()
+
+        def file = new File(generatedSrcDir, "Component.kt")
+        file.delete()
+        file.createNewFile()
+
+        file << "package mozilla.components.support.base" << "\n"
+        file << "\n"
+        file << "// Automatically generated file. DO NOT MODIFY" << "\n"
+        file << "\n"
+        file << "enum class Component {" << "\n"
+
+        file << buildConfig.projects.findAll { project ->
+            project.value.publish
+        }.collect { project ->
+            "    " + project.key.replace("-", "_").toUpperCase(Locale.US)
+        }.join(", \n")
+
+        file << "\n"
+        file << "}\n"
+        file << "\n"
+    }
+}
+
+apply from: '../../../android-lint.gradle'
+apply from: '../../../publish.gradle'
+ext.configurePublish(config.componentsGroupId, archivesBaseName, project.ext.description)

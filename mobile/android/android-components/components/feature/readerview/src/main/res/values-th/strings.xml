@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_sans_serif_font">ไม่มีเชิง</string>
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_sans_serif_font_desc">แบบอักษรไม่มีเชิง</string>
+    <!-- Name for one of the font options available to use -->
+    <string name="mozac_feature_readerview_serif_font">มีเชิง</string>
+    <!-- Accessible description for the font option -->
+    <string name="mozac_feature_readerview_serif_font_desc">แบบอักษรมีเชิง</string>
+
+    <!-- Accessible description for decreasing the font size -->
+    <string name="mozac_feature_readerview_font_size_decrease_desc">ลดขนาดแบบอักษร</string>
+
+    <!-- Accessible description for increasing the font size -->
+    <string name="mozac_feature_readerview_font_size_increase_desc">เพิ่มขนาดแบบอักษร</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_dark">มืด</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_dark_color_scheme_desc">แบบแผนสีมืด</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_sephia">ซีเปีย</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_sepia_color_scheme_desc">แบบแผนสีซีเปีย</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_light">สว่าง</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_light_color_scheme_desc">แบบแผนสีสว่าง</string>
+</resources>

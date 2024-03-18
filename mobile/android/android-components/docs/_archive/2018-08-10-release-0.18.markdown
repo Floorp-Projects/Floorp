@@ -1,0 +1,27 @@
+---
+layout: post
+title:  "🎉 Release: Android Components 0.18"
+date:   2018-08-10 17:30:00 +0200
+categories: releases
+author: sebastian
+---
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.17...v0.18),
+[Milestone](https://github.com/mozilla-mobile/android-components/milestone/16?closed=1),
+[API reference](https://mozilla-mobile.github.io/android-components/api/0.18/index)
+
+* Compiled against:
+  * Android support libraries 27.1.1
+  * Kotlin Standard library 1.2.60
+  * Kotlin coroutines 0.23.4
+  * GeckoView
+    * Nightly: **63.0.20180810100129** (2018.08.10, d999fb858fb2c007c5be4af72bce419c63c69b8e) 🔺
+    * Beta: **62.0b15** (7ce198bb7ce027d450af3f69a609896671adfab8) 🔺
+    * Release: 61.0 (785d242a5b01d5f1094882aa2144d8e5e2791e06)
+
+* **engine-gecko-beta**: Since the [Load Progress Tracking API](https://bugzilla.mozilla.org/show_bug.cgi?id=1437988) was uplifted to GeckoView Beta  _engine-gecko-beta_ now reports progress via `EngineSession.Observer.onProgress()`.
+* **service-fretboard**: KintoExperimentSource can now validate the signature of the downloaded experiments configuration (`validateSignature` flag). This ensures that the configuration was signed by Mozilla and was not modified by a bad actor. For now the `validateSignature` flag is off by default until this has been tested in production. Various bugfixes and refactorings.
+* **service-firefox-accounts**: JNA native libraries are no longer part of the AAR and instead referenced as a dependency. This avoids duplication when multiple libraries depend on JNA.
+* API references for every release are now generated and hosted online: [https://mozilla-mobile.github.io/android-components/reference/](https://mozilla-mobile.github.io/android-components/reference/)
+* Documentation and more is now hosted at: [https://mozilla-mobile.github.io/android-components/](https://mozilla-mobile.github.io/android-components/). More content coming soon.
+* **tooling-lint**: New (internal-only) component containing custom lint rules.

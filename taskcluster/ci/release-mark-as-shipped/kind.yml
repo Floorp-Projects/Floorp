@@ -38,3 +38,7 @@ jobs:
     devedition:
         name: release-devedition_mark_as_shipped
         shipping-product: devedition
+
+    firefox-android:
+        name: release-firefox-android_mark_as_shipped
+        shipping-product: firefox-android

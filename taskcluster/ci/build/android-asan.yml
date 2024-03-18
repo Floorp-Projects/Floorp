@@ -71,5 +71,6 @@ android-x86_64-asan-fuzzing/opt:
             - linux64-clang
             - linux64-sccache
             - android-gradle-dependencies
+            - android-gradle-python-envs
     optimization:
         skip-unless-expanded: null

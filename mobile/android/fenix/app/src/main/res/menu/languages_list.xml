@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/search"
+        android:icon="@drawable/ic_search"
+        android:title="@string/locale_search_hint"
+        app:iconTint="?attr/textPrimary"
+        app:actionViewClass="androidx.appcompat.widget.SearchView"
+        android:contentDescription="@string/locale_search_hint"
+        app:showAsAction="ifRoom|collapseActionView" />
+</menu>

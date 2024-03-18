@@ -1,0 +1,42 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
+apply plugin: 'java-library'
+apply plugin: 'kotlin'
+
+dependencies {
+  compileOnly ComponentsDependencies.tools_lintapi
+  compileOnly ComponentsDependencies.tools_lintchecks
+
+  compileOnly ComponentsDependencies.kotlin_reflect
+  testImplementation ComponentsDependencies.kotlin_reflect
+
+  testImplementation ComponentsDependencies.tools_lint
+  testImplementation ComponentsDependencies.tools_linttests
+  testImplementation ComponentsDependencies.testing_junit
+  testImplementation ComponentsDependencies.testing_mockito
+}
+
+jar {
+  manifest {
+    attributes('Lint-Registry-v2': 'mozilla.components.tooling.lint.LintIssueRegistry')
+  }
+}
+
+tasks.register("lint") {
+  doLast {
+    // Do nothing. We execute the same set of tasks for all our modules in parallel on taskcluster.
+    // This project doesn't have a lint task. To avoid special casing our automation I just added
+    // an empty lint task here.
+  }
+}
+
+tasks.register("assembleAndroidTest") {
+  doLast {
+    // Do nothing. Like the `lint` task above this is just a dummy task so that this module
+    // behaves like our others and we do not need to special case it in automation.
+  }
+}

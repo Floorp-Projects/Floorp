@@ -1,0 +1,86 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-parcelize'
+
+android {
+    defaultConfig {
+        applicationId "org.mozilla.samples.compose.browser"
+        minSdkVersion config.minSdkVersion
+        compileSdk config.compileSdkVersion
+        targetSdkVersion config.targetSdkVersion
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunnerArgument "clearPackageData", "true"
+        testInstrumentationRunnerArgument "listener", "leakcanary.FailTestOnLeakRunListener"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    buildFeatures {
+        compose true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = Versions.compose_compiler
+    }
+
+    namespace 'org.mozilla.samples.compose.browser'
+}
+
+tasks.register("updateBorderifyExtensionVersion", Copy) { task ->
+    updateExtensionVersion(task, 'src/main/assets/extensions/borderify')
+}
+
+tasks.register("updateTestExtensionVersion", Copy) { task ->
+    updateExtensionVersion(task, 'src/main/assets/extensions/test')
+}
+
+dependencies {
+    implementation platform(ComponentsDependencies.androidx_compose_bom)
+    implementation project(':concept-engine')
+    implementation project(':concept-awesomebar')
+    implementation project(':concept-tabstray')
+
+    implementation project(':browser-engine-gecko')
+    implementation project(':browser-state')
+    implementation project(':browser-icons')
+
+    implementation project(':compose-awesomebar')
+    implementation project(':compose-browser-toolbar')
+    implementation project(':compose-engine')
+    implementation project(':compose-tabstray')
+
+    implementation project(':feature-awesomebar')
+    implementation project(':feature-fxsuggest')
+    implementation project(':feature-search')
+    implementation project(':feature-session')
+    implementation project(':feature-tabs')
+
+    implementation project(':service-location')
+    implementation project(':support-rusthttp')
+
+    implementation project(':ui-icons')
+
+    implementation ComponentsDependencies.androidx_activity_compose
+    implementation ComponentsDependencies.androidx_appcompat
+    implementation ComponentsDependencies.androidx_core_ktx
+    implementation ComponentsDependencies.androidx_compose_ui
+    implementation ComponentsDependencies.androidx_compose_ui_tooling
+    implementation ComponentsDependencies.androidx_compose_foundation
+    implementation ComponentsDependencies.androidx_compose_material
+    implementation ComponentsDependencies.androidx_compose_navigation
+}
+
+preBuild.dependsOn updateBorderifyExtensionVersion
+preBuild.dependsOn updateTestExtensionVersion

@@ -1,0 +1,28 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+apply plugin: 'java-library'
+apply plugin: 'kotlin'
+
+dependencies {
+    implementation ComponentsDependencies.tools_detekt_api
+
+    testImplementation ComponentsDependencies.testing_junit
+    testImplementation ComponentsDependencies.tools_detekt_api
+    testImplementation ComponentsDependencies.tools_detekt_test
+}
+
+tasks.register("lintRelease") {
+    doLast {
+        // Do nothing. We execute the same set of tasks for all our modules in parallel on taskcluster.
+        // This project doesn't have a lint task.
+    }
+}
+
+tasks.register("assembleAndroidTest") {
+    doLast {
+        // Do nothing. Like the `lint` task above this is just a dummy task so that this module
+        // behaves like our others and we do not need to special case it in automation.
+    }
+}

@@ -1,0 +1,86 @@
+{
+  "data": [{
+          "slug": "feature-text-variables-validation-android",
+          "appId": "org.mozilla.fenix",
+          "appName": "fenix",
+          "channel": "nightly",
+          "branches": [
+              {
+                  "slug": "no-mr2",
+                  "ratio": 0,
+                  "feature": {
+                      "value": {
+                           "sections-enabled": {
+                               "topSites": true,
+                               "recentExplorations": true,
+                               "recentlySaved": false,
+                               "jumpBackIn": false,
+                               "pocket": false
+                          }
+                      },
+                      "enabled": true,
+                      "featureId": "homescreen"
+                  }
+              },
+              {
+                  "slug": "full-mr2",
+                  "ratio": 100,
+                  "feature": {
+                      "value": {
+                          "sections-enabled": {
+                              "topSites": true,
+                              "recentExplorations": true,
+                              "recentlySaved": true,
+                              "jumpBackIn": true,
+                              "pocket": true
+                          }
+                      },
+                      "enabled": true,
+                      "featureId": "homescreen"
+                  }
+              },
+              {
+                  "slug": "distraction-free",
+                  "ratio": 0,
+                  "feature": {
+                      "value": {
+                          "sections-enabled": {
+                              "topSites": true,
+                              "recentExplorations": false,
+                              "recentlySaved": false,
+                              "jumpBackIn": false,
+                              "pocket": false
+                          }
+                      },
+                      "enabled": true,
+                      "featureId": "homescreen"
+                  }
+              }
+          ],
+          "outcomes": [],
+          "arguments": {},
+          "probeSets": [],
+          "startDate": null,
+          "targeting": "true",
+          "featureIds": [
+              "homescreen"
+          ],
+          "application": "org.mozilla.firefox_beta",
+          "bucketConfig": {
+              "count": 0,
+              "start": 0,
+              "total": 10000,
+              "namespace": "nimbus-validation-2",
+              "randomizationUnit": "nimbus_id"
+          },
+          "schemaVersion": "1.5.0",
+          "userFacingName": "Home screen sections test",
+          "referenceBranch": "control",
+          "proposedDuration": 14,
+          "isEnrollmentPaused": false,
+          "proposedEnrollment": 7,
+          "userFacingDescription": "Experiment to test the home screen configurations",
+          "last_modified": 1621443780172
+      }
+  ]
+}

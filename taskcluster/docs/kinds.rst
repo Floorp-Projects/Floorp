@@ -351,6 +351,10 @@ release-notify-started
 ----------------------
 Notify when a release has been started.
 
+release-notify-testrail
+-----------------------
+Create milestones in testrail for the next fenix/focus releases, and send a slack notification.
+
 release-bouncer-sub
 -------------------
 Submits bouncer information for releases.
@@ -654,6 +658,10 @@ post-beetmover-checksums-dummy
 ------------------------------
 Dummy tasks to consolidate beetmover-checksums dependencies to avoid taskcluster limits on number of dependencies per task.
 
+post-beetmover-components-dummy
+-------------------------------
+Dummy tasks to consolidate beetmover-components dependencies to avoid taskcluster limits on number of dependencies per task.
+
 post-langpack-dummy
 -------------------
 Dummy tasks to consolidate language pack beetmover dependencies to avoid taskcluster limits on number of dependencies per task.
@@ -807,3 +815,75 @@ trigger-comm-central
 --------------------
 Trigger a CI decision task on comm-central when conditions are met. Currently
 used for verifying third party Rust code is consistent.
+
+build-components
+----------------
+Build android-components.
+
+build-bundle
+------------
+Build Focus, Klar, and Fenix android app bundles.
+
+build-apk
+---------
+Build Focus, Klar, and Fenix apks.
+
+build-samples-browser
+---------------------
+Build android samples browser.
+
+signing
+-------
+Sign android-components.
+
+signing-bundle
+--------------
+Sign Focus, Klar, and Fenix android app bundles.
+
+signing-apk
+-----------
+Sign Focus, Klar, and Fenix apks.
+
+test-components
+---------------
+Test android-components
+
+test-apk
+--------
+Test Focus, Klar, and Fenix apks.
+
+ui-test-apk
+-----------
+User interface tests for Focus, Klar, and Fenix apks.
+
+android-browsertime
+-------------------
+Browsertime tests for android.
+
+android-startup-test
+--------------------
+Startup test for android.
+
+post-signing
+------------
+Gating kind to wait for all android signing tasks.
+
+beetmover-components
+--------------------
+A beetmover task for android components.
+
+beetmover-android-app
+---------------------
+A beetmover task for android APKs and AABs.
+
+push-bundle
+-----------
+Push Focus and Fenix AABs to Google Play.
+
+push-bundle
+-----------
+Push Focus and Fenix AABs to Google Play.
+
+android-l10n
+------------
+Update android string resources from android-l10n repo.

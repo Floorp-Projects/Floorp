@@ -1,0 +1,181 @@
+import io.gitlab.arturbosch.detekt.Detekt
+import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
+
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+buildscript {
+    repositories {
+        gradle.mozconfig.substs.GRADLE_MAVEN_REPOSITORIES.each { repository ->
+            maven {
+                url repository
+                if (gradle.mozconfig.substs.ALLOW_INSECURE_GRADLE_REPOSITORIES) {
+                    allowInsecureProtocol = true
+                }
+            }
+        }
+    }
+
+    dependencies {
+        classpath ComponentsDependencies.tools_androidgradle
+        classpath ComponentsDependencies.tools_kotlingradle
+        classpath FocusDependencies.osslicenses_plugin
+        classpath "org.mozilla.telemetry:glean-gradle-plugin:${Versions.mozilla_glean}"
+        classpath "${ApplicationServicesConfig.groupId}:tooling-nimbus-gradle:${ApplicationServicesConfig.version}"
+
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+
+    // Variables in plugins {} aren't directly supported. Hack around it by setting an
+    // intermediate variable which can pull from FocusDependenciesPlugin.kt and be used later.
+    ext {
+        detekt_plugin = Versions.detekt
+        python_envs_plugin = Versions.python_envs_plugin
+        ksp_plugin = Versions.ksp_plugin
+    }
+}
+
+plugins {
+    id "io.gitlab.arturbosch.detekt" version "$detekt_plugin"
+    id("com.google.devtools.ksp").version("$ksp_plugin")
+}
+
+detekt {
+    input = files("$projectDir/app")
+    config = files("$projectDir/quality/detekt.yml")
+    baseline = file("$projectDir/quality/detekt-baseline.xml")
+
+    reports {
+        html {
+            enabled = true
+            destination = file("$projectDir/build/reports/detekt.html")
+        }
+        xml {
+            enabled = false
+        }
+        txt {
+            enabled = false
+        }
+    }
+}
+
+tasks.withType(Detekt).configureEach() {
+    autoCorrect = true
+
+    exclude "**/test/**"
+    exclude "**/androidTest/**"
+    exclude "**/build/**"
+    exclude "**/resources/**"
+    exclude "**/tmp/**"
+}
+
+// Apply same path exclusions as for the main task
+tasks.withType(DetektCreateBaselineTask).configureEach() {
+    exclude "**/test/**"
+    exclude "**/androidTest/**"
+    exclude "**/build/**"
+    exclude "**/resources/**"
+    exclude "**/tmp/**"
+}
+
+allprojects {
+    repositories {
+        gradle.mozconfig.substs.GRADLE_MAVEN_REPOSITORIES.each { repository ->
+            maven {
+                url repository
+                if (gradle.mozconfig.substs.ALLOW_INSECURE_GRADLE_REPOSITORIES) {
+                    allowInsecureProtocol = true
+                }
+            }
+        }
+
+        maven {
+            url "${gradle.mozconfig.topobjdir}/gradle/maven"
+        }
+    }
+}
+
+subprojects {
+    afterEvaluate {
+        kotlin {
+            jvmToolchain(config.jvmTargetCompatibility)
+        }
+    }
+
+    tasks.withType(KotlinCompile).configureEach { task ->
+        // Translate Kotlin messages like "w: ..." and "e: ..." into
+        // "...: warning: ..." and "...: error: ...", to make Treeherder understand.
+        def listener = {
+
+            if (it.startsWith("e: warnings found")) {
+                return
+            }
+
+            if (it.startsWith('w: ') || it.startsWith('e: ')) {
+                def matches = (it =~ /([ew]): (.+):(\d+):(\d+) (.*)/)
+                if (!matches) {
+                    logger.quiet "kotlinc message format has changed!"
+                    if (it.startsWith('w: ')) {
+                        // For warnings, don't continue because we don't want to throw an
+                        // exception. For errors, we want the exception so that the new error
+                        // message format gets translated properly.
+                        return
+                    }
+                }
+                def (_, type, file, line, column, message) = matches[0]
+                type = (type == 'w') ? 'warning' : 'error'
+                // Use logger.lifecycle, which does not go through stderr again.
+                logger.lifecycle "$file:$line:$column: $type: $message"
+            }
+        } as StandardOutputListener
+
+        doFirst {
+            logging.addStandardErrorListener(listener)
+        }
+        doLast {
+            logging.removeStandardErrorListener(listener)
+        }
+    }
+}
+
+tasks.register('clean', Delete) {
+    delete rootProject.layout.buildDirectory
+}
+
+
+configurations {
+    ktlint
+}
+
+dependencies {
+    ktlint("com.pinterest:ktlint:${Versions.ktlint}") {
+        attributes {
+            attribute(Bundling.BUNDLING_ATTRIBUTE, getObjects().named(Bundling, Bundling.EXTERNAL))
+        }
+    }
+}
+
+tasks.register('ktlint', JavaExec) {
+    description = "Check Kotlin code style."
+    classpath = configurations.ktlint
+    mainClass.set("com.pinterest.ktlint.Main")
+    args "app/**/*.kt", "!**/build/**/*.kt", "buildSrc/**/*.kt"
+}
+
+
+tasks.register('ktlintFormat', JavaExec) {
+    description = "Fix Kotlin code style deviations."
+    classpath = configurations.ktlint
+    mainClass.set("com.pinterest.ktlint.Main")
+    args "-F", "app/**/*.kt", "!**/build/**/*.kt", "buildSrc/**/*.kt"
+    jvmArgs("--add-opens", "java.base/java.lang=ALL-UNNAMED")
+}
+
+tasks.register("listRepositories") {
+    doLast {
+        println "Repositories:"
+        project.repositories.each { println "Name: " + it.name + "; url: " + it.url }
+   }
+}

@@ -1,0 +1,157 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: gecko_taskgraph.loader.transform:loader
+
+transforms:
+    - gecko_taskgraph.transforms.test_apk:transforms
+    - gecko_taskgraph.transforms.job:transforms
+    - gecko_taskgraph.transforms.task:transforms
+
+kind-dependencies:
+    - toolchain
+    - build-fat-aar
+
+job-defaults:
+    attributes:
+        retrigger: true
+    dependencies:
+        build-fat-aar: build-fat-aar-android-geckoview-fat-aar/opt
+    fetches:
+        toolchain:
+            - android-sdk-linux
+            - android-gradle-dependencies
+            - android-gradle-python-envs
+            - linux64-jdk
+        build-fat-aar:
+            - target.maven.tar.xz
+    run:
+        using: gradlew
+        use-caches: false
+    treeherder:
+        kind: test
+    worker-type: b-linux-large-gcp
+    worker:
+        docker-image: {in-tree: android-components}
+        max-run-time: 7200
+
+jobs:
+    focus-debug:
+        description: Focus unit tests
+        attributes:
+            build-type: focus-debug
+            code-review: true
+            shipping-product: focus
+        run:
+            pre-gradlew:
+                - ["cd", "mobile/android/focus-android"]
+            gradlew: ['clean', 'test']
+            dummy-secrets:
+                - content: "faketoken"
+                  path: .adjust_token
+        treeherder:
+            platform: 'focus-android-all/opt'
+            symbol: focus-debug(T)
+            tier: 1
+        worker:
+            artifacts:
+                - name: public/reports/index.html
+                  path: /builds/worker/checkouts/gecko/mobile/android/focus-android/app/build/reports/tests/testFocusDebugUnitTest/index.html
+                  type: file
+                - name: public/reports/test
+                  path: /builds/worker/checkouts/gecko/mobile/android/focus-android/app/build/reports/tests
+                  type: directory
+
+    fenix-debug:
+        description: Fenix unit tests
+        attributes:
+            build-type: fenix-debug
+            code-review: true
+            shipping-product: fenix
+        run:
+            pre-gradlew:
+                - ["cd", "mobile/android/fenix"]
+                - ['java', '-version']
+            gradlew: ['clean', 'testFenixDebugUnitTest']
+        treeherder:
+            platform: 'fenix-android-all/opt'
+            symbol: fenix-debug(T)
+            tier: 1
+        worker:
+            artifacts:
+                - name: public/reports/index.html
+                  path: /builds/worker/checkouts/gecko/mobile/android/fenix/app/build/reports/tests/testFenixDebugUnitTest/index.html
+                  type: file
+                - name: public/reports/test
+                  path: /builds/worker/checkouts/gecko/mobile/android/fenix/app/build/reports/tests
+                  type: directory
+        routes:
+            by-level:
+                '3':
+                    - notify.slack-channel.G016BC5FUHJ.on-failed
+                'default': []
+        scopes:
+            by-level:
+                '3':
+                    - queue:route:notify.slack-channel.G016BC5FUHJ.on-failed
+                    - notify:slack-channel:G016BC5FUHJ
+                'default': []
+        extra:
+            notify:
+                by-level:
+                    '3':
+                        slackBlocks: |
+                            [
+                              {
+                                "type": "header",
+                                "text": {
+                                  "type": "plain_text",
+                                  "text": "firefox-android :firefox: ${task.metadata.name} :x:\n "
+                                }
+                              },
+                              {
+                                "type": "divider"
+                              },
+                              {
+                                 "type": "section",
+                                 "text": {
+                                     "type": "mrkdwn",
+                                     "text": "*Task*: <https://firefox-ci-tc.services.mozilla.com/tasks/${status.taskId}|Taskcluster>"
+                                }
+                              },
+                              {
+                                "type": "section",
+                                "text": {
+                                  "type": "mrkdwn",
+                                  "text": "*Owner*: ${task.metadata.owner}"
+                                }
+                              },
+                              {
+                                "type": "section",
+                                "text": {
+                                  "type": "mrkdwn",
+                                  "text": "*Source*: <${task.payload.env.GECKO_HEAD_REPOSITORY}/rev/${task.payload.env.GECKO_HEAD_REV}|Commit> :hg:"
+                                }
+                              },
+                              {
+                                "type": "section",
+                                "text": {
+                                  "type": "mrkdwn",
+                                  "text": "*Test Summary*: <https://firefoxci.taskcluster-artifacts.net/${status.taskId}/0/public/reports/index.html|Results> :debug:"
+                                }
+                              },
+                              {
+                                "type": "divider"
+                              },
+                              {
+                                "type": "context",
+                                "elements": [
+                                    {
+                                        "type": "mrkdwn",
+                                        "text": ":testops-notify: created by <https://mozilla-hub.atlassian.net/wiki/spaces/MTE/overview|Mobile Test Engineering>"
+                                    }
+                                ]
+                              }
+                            ]
+                    'default': {}
