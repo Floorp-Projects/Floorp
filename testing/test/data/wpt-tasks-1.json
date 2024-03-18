@@ -1,0 +1,164 @@
+[
+  {
+    "duration": 1988052,
+    "errors": null,
+    "extra": {
+      "arch": "32",
+      "bits": "32",
+      "build_types": ["opt", "shippable"],
+      "debug": false,
+      "display": null,
+      "opt": true,
+      "os": "linux",
+      "os_version": "18.04",
+      "runtimes": []
+    },
+    "failure_types": {
+      "/css/mediaqueries": [
+        [
+          "/css/mediaqueries/mq-non-matching-lazy-load.tentative.html",
+          "generic"
+        ]
+      ]
+    },
+    "id": "W5uCyxXeQIa2dwJOZtLYgg",
+    "label": "test-linux1804-32-shippable-qr/opt-web-platform-tests-10",
+    "result": "failed",
+    "results": [
+      {
+        "duration": 7724,
+        "group": "testing/web-platform/tests/css/mediaqueries",
+        "ok": true
+      }
+    ],
+    "state": "completed",
+    "tags": {
+      "createdForUser": "ci@mozilla.com",
+      "kind": "test",
+      "label": "test-linux1804-32-shippable-qr/opt-web-platform-tests-10",
+      "os": "linux",
+      "retrigger": "true",
+      "tests_grouped": "1",
+      "worker-implementation": "docker-worker"
+    },
+    "tier": 2
+  },
+  {
+    "duration": 1918629,
+    "errors": null,
+    "extra": {
+      "arch": "32",
+      "bits": "32",
+      "build_types": ["opt", "shippable"],
+      "debug": false,
+      "display": null,
+      "opt": true,
+      "os": "linux",
+      "os_version": "18.04",
+      "runtimes": []
+    },
+    "failure_types": {},
+    "id": "AKYqxtoWStigj_5yHVqAeg",
+    "label": "test-linux1804-32-shippable-qr/opt-web-platform-tests-10",
+    "result": "failed",
+    "results": [
+      {
+        "duration": 7368,
+        "group": "testing/web-platform/tests/css/mediaqueries",
+        "ok": true
+      }
+    ],
+    "state": "completed",
+    "tags": {
+      "createdForUser": "ci@mozilla.com",
+      "kind": "test",
+      "label": "test-linux1804-32-shippable-qr/opt-web-platform-tests-10",
+      "os": "linux",
+      "retrigger": "true",
+      "tests_grouped": "1",
+      "worker-implementation": "docker-worker"
+    },
+    "tier": 2
+  },
+  {
+    "duration": 1875924,
+    "errors": null,
+    "extra": {
+      "arch": "32",
+      "bits": "32",
+      "build_types": ["opt", "shippable"],
+      "debug": false,
+      "display": null,
+      "opt": true,
+      "os": "linux",
+      "os_version": "18.04",
+      "runtimes": []
+    },
+    "failure_types": {
+      "/css/mediaqueries": [
+        [
+          "/css/mediaqueries/mq-non-matching-lazy-load.tentative.html",
+          "generic"
+        ]
+      ]
+    },
+    "id": "H_sxPcuASXGy2N6MOwvMdg",
+    "label": "test-linux1804-32-shippable-qr/opt-web-platform-tests-10",
+    "result": "failed",
+    "results": [
+      {
+        "duration": 7350,
+        "group": "testing/web-platform/tests/css/mediaqueries",
+        "ok": true
+      }
+    ],
+    "state": "completed",
+    "tags": {
+      "createdForUser": "ci@mozilla.com",
+      "kind": "test",
+      "label": "test-linux1804-32-shippable-qr/opt-web-platform-tests-10",
+      "os": "linux",
+      "retrigger": "true",
+      "tests_grouped": "1",
+      "worker-implementation": "docker-worker"
+    },
+    "tier": 2
+  },
+  {
+    "duration": 1560033,
+    "errors": null,
+    "extra": {
+      "arch": "32",
+      "bits": "32",
+      "build_types": ["opt", "shippable"],
+      "debug": false,
+      "display": null,
+      "opt": true,
+      "os": "linux",
+      "os_version": "18.04",
+      "runtimes": []
+    },
+    "failure_types": {},
+    "id": "fyZfG_PJSse7jeiDteDJpQ",
+    "label": "test-linux1804-32-shippable-qr/opt-web-platform-tests-10",
+    "result": "failed",
+    "results": [
+      {
+        "duration": 5621,
+        "group": "testing/web-platform/tests/css/mediaqueries",
+        "ok": true
+      }
+    ],
+    "state": "completed",
+    "tags": {
+      "createdForUser": "ci@mozilla.com",
+      "kind": "test",
+      "label": "test-linux1804-32-shippable-qr/opt-web-platform-tests-10",
+      "os": "linux",
+      "retrigger": "true",
+      "tests_grouped": "1",
+      "worker-implementation": "docker-worker"
+    },
+    "tier": 2
+  }
+]

@@ -2,23 +2,30 @@
   "toolkit/components/pdfjs/test/browser.toml": {
     "label": {
       "test-linux2204-64-wayland/debug-mochitest-browser-chrome-swr-1": {
+        "duration_median": 390469,
+        "duration_total": 1171407,
         "durations": {
           "EDql3NKPR3W6OEU3mLeKbg": 390469,
           "FDql3NKPR3W6OEU3mLeKbg": 390469,
           "bxMVPbPMTru_bfAivc1sPA": 390469
         },
-        "median_duration": 390469,
         "opt": false,
         "path": {
           "DEFAULT": {
             "classification": "disable_manifest",
-            "failed_runs": 3,
             "runs": {
-              "EDql3NKPR3W6OEU3mLeKbg": false,
-              "FDql3NKPR3W6OEU3mLeKbg": false,
-              "bxMVPbPMTru_bfAivc1sPA": false
+              "EDql3NKPR3W6OEU3mLeKbg": {
+                "result": false
+              },
+              "FDql3NKPR3W6OEU3mLeKbg": {
+                "result": false
+              },
+              "bxMVPbPMTru_bfAivc1sPA": {
+                "result": false
+              }
             },
-            "total_runs": 3
+            "runs_failed": 3,
+            "runs_total": 3
           }
         },
         "sum_by_label": {
@@ -29,9 +36,9 @@
           "secondary": 0,
           "success": 0,
           "unknown": 0
-        },
-        "total_duration": 1171407
+        }
       }
-    }
+    },
+    "wpt": false
   }
 }

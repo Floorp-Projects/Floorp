@@ -2,33 +2,46 @@
   "browser/components/sessionstore/test/browser.toml": {
     "label": {
       "test-linux1804-64-qr/opt-mochitest-browser-chrome-spi-nw-5": {
+        "duration_median": 1778154,
+        "duration_total": 5334462,
         "durations": {
           "X7r1q2xWSu-2bRAofEfeBw": 1778154,
           "Y7r1q2xWSu-2bRAofEfeBw": 1778154,
           "Z7r1q2xWSu-2bRAofEfeBw": 1778154
         },
-        "median_duration": 1778154,
         "opt": false,
         "path": {
           "browser/components/sessionstore/test/browser_closed_tabs_windows.js": {
             "classification": "disable_recommended",
-            "failed_runs": 3,
             "runs": {
-              "X7r1q2xWSu-2bRAofEfeBw": false,
-              "Y7r1q2xWSu-2bRAofEfeBw": false,
-              "Z7r1q2xWSu-2bRAofEfeBw": false
+              "X7r1q2xWSu-2bRAofEfeBw": {
+                "result": false
+              },
+              "Y7r1q2xWSu-2bRAofEfeBw": {
+                "result": false
+              },
+              "Z7r1q2xWSu-2bRAofEfeBw": {
+                "result": false
+              }
             },
-            "total_runs": 3
+            "runs_failed": 3,
+            "runs_total": 3
           },
           "browser/components/sessionstore/test/browser_firefoxView_selected_restore.js": {
             "classification": "secondary",
-            "failed_runs": 3,
             "runs": {
-              "X7r1q2xWSu-2bRAofEfeBw": false,
-              "Y7r1q2xWSu-2bRAofEfeBw": false,
-              "Z7r1q2xWSu-2bRAofEfeBw": false
+              "X7r1q2xWSu-2bRAofEfeBw": {
+                "result": false
+              },
+              "Y7r1q2xWSu-2bRAofEfeBw": {
+                "result": false
+              },
+              "Z7r1q2xWSu-2bRAofEfeBw": {
+                "result": false
+              }
             },
-            "total_runs": 3
+            "runs_failed": 3,
+            "runs_total": 3
           }
         },
         "sum_by_label": {
@@ -39,9 +52,9 @@
           "secondary": 1,
           "success": 0,
           "unknown": 0
-        },
-        "total_duration": 5334462
+        }
       }
-    }
+    },
+    "wpt": false
   }
 }
