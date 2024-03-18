@@ -89,10 +89,6 @@ support-files = [
 ["test_chromeWorkerJSM.xhtml"]
 
 ["test_file.xhtml"]
-skip-if = [
-  "os == 'linux' && bits == 64 && debug", # Bug 1765445
-  "apple_catalina && !debug", # Bug 1765445
-]
 
 ["test_fileBlobPosting.xhtml"]
 
