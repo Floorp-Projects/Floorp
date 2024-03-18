@@ -413,10 +413,8 @@ class Nursery {
   void setCurrentEnd();
   void setStartToCurrentPosition();
 
-  // Allocate the next chunk, or the first chunk for initialization.
-  // Callers will probably want to call moveToStartOfChunk(0) next.
-  [[nodiscard]] bool allocateNextChunk(unsigned chunkno,
-                                       AutoLockGCBgAlloc& lock);
+  // Allocate another chunk.
+  [[nodiscard]] bool allocateNextChunk(AutoLockGCBgAlloc& lock);
 
   uintptr_t position() const { return toSpace.position_; }
   uintptr_t currentEnd() const { return toSpace.currentEnd_; }
