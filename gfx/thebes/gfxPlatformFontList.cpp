@@ -435,12 +435,6 @@ void gfxPlatformFontList::ApplyWhitelist() {
   AutoTArray<RefPtr<gfxFontFamily>, 128> accepted;
   bool whitelistedFontFound = false;
   for (const auto& entry : mFontFamilies) {
-    if (entry.GetData()->IsHidden()) {
-      // Hidden system fonts are exempt from whitelisting, but don't count
-      // towards determining whether we "kept" any (user-visible) fonts
-      accepted.AppendElement(entry.GetData());
-      continue;
-    }
     nsAutoCString fontFamilyName(entry.GetKey());
     ToLowerCase(fontFamilyName);
     if (familyNamesWhitelist.Contains(fontFamilyName)) {
@@ -476,8 +470,7 @@ void gfxPlatformFontList::ApplyWhitelist(
   AutoTArray<fontlist::Family::InitData, 128> accepted;
   bool keptNonHidden = false;
   for (auto& f : aFamilies) {
-    if (f.mVisibility == FontVisibility::Hidden ||
-        familyNamesWhitelist.Contains(f.mKey)) {
+    if (familyNamesWhitelist.Contains(f.mKey)) {
       accepted.AppendElement(f);
       if (f.mVisibility != FontVisibility::Hidden) {
         keptNonHidden = true;
