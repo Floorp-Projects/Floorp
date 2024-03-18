@@ -214,30 +214,33 @@ inline void* js::Nursery::tryAllocate(size_t size) {
 
 inline bool js::Nursery::registerTrailer(PointerAndUint7 blockAndListID,
                                          size_t nBytes) {
-  MOZ_ASSERT(trailersAdded_.length() == trailersRemoved_.length());
+  MOZ_ASSERT(toSpace.trailersAdded_.length() ==
+             toSpace.trailersRemoved_.length());
   MOZ_ASSERT(nBytes > 0);
-  if (MOZ_UNLIKELY(!trailersAdded_.append(blockAndListID))) {
+  if (MOZ_UNLIKELY(!toSpace.trailersAdded_.append(blockAndListID))) {
     return false;
   }
-  if (MOZ_UNLIKELY(!trailersRemoved_.append(nullptr))) {
-    trailersAdded_.popBack();
+  if (MOZ_UNLIKELY(!toSpace.trailersRemoved_.append(nullptr))) {
+    toSpace.trailersAdded_.popBack();
     return false;
   }
 
   // This is a clone of the logic in ::registerMallocedBuffer.  It may be
   // that some other heuristic is better, once we know more about the
   // typical behaviour of wasm-GC applications.
-  trailerBytes_ += nBytes;
-  if (MOZ_UNLIKELY(trailerBytes_ > capacity() * 8)) {
+  toSpace.trailerBytes_ += nBytes;
+  if (MOZ_UNLIKELY(toSpace.trailerBytes_ > capacity() * 8)) {
     requestMinorGC(JS::GCReason::NURSERY_TRAILERS);
   }
   return true;
 }
 
 inline void js::Nursery::unregisterTrailer(void* block) {
-  MOZ_ASSERT(trailersRemovedUsed_ < trailersRemoved_.length());
-  trailersRemoved_[trailersRemovedUsed_] = block;
-  trailersRemovedUsed_++;
+  // Unlike removeMallocedBuffer this is only called during minor GC.
+  MOZ_ASSERT(prevSpace->trailersRemovedUsed_ <
+             prevSpace->trailersRemoved_.length());
+  prevSpace->trailersRemoved_[prevSpace->trailersRemovedUsed_] = block;
+  prevSpace->trailersRemovedUsed_++;
 }
 
 namespace js {
