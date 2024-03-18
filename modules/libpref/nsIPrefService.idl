@@ -79,6 +79,24 @@ interface nsIPrefService : nsISupports
   void savePrefFile(in nsIFile aFile);
 
   /**
+   * Called to write current preferences state to a file off of the main thread.
+   * This differs from savePrefFile in that null is not accepted for the aFile
+   * parameter, and aFile cannot be pointing at the current preferences file.
+   *
+   * The backup will be written to disk off of the main thread, unless the
+   * preferences service is not configured to write to disk off of the main
+   * thread.
+   *
+   * @param aFile The file to be written.
+   * @returns A DOM promise that resolves when the backup is complete.
+   *
+   * @see readUserPrefsFromFile
+   * @see nsIFile
+   */
+  [implicit_jscontext]
+  Promise backupPrefFile(in nsIFile aFile);
+
+  /**
    * Call to get a Preferences "Branch" which accesses user preference data.
    * Using a Set method on this object will always create or set a user
    * preference value. When using a Get method a user set value will be

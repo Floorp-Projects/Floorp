@@ -15,6 +15,7 @@
 
 #include "mozilla/Atomics.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/MozPromise.h"
 #include "mozilla/StaticPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
@@ -97,6 +98,8 @@ class Preferences final : public nsIPrefService,
   friend class ::nsPrefBranch;
 
  public:
+  using WritePrefFilePromise = MozPromise<bool, nsresult, false>;
+
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIPREFSERVICE
   NS_FORWARD_NSIPREFBRANCH(mRootBranch->)
@@ -454,7 +457,9 @@ class Preferences final : public nsIPrefService,
 
   // Off main thread is only respected for the default aFile value (nullptr).
   nsresult SavePrefFileInternal(nsIFile* aFile, SaveMethod aSaveMethod);
-  nsresult WritePrefFile(nsIFile* aFile, SaveMethod aSaveMethod);
+  nsresult WritePrefFile(
+      nsIFile* aFile, SaveMethod aSaveMethod,
+      UniquePtr<MozPromiseHolder<WritePrefFilePromise>> aPromise = nullptr);
 
   nsresult ResetUserPrefs();
 
