@@ -731,11 +731,9 @@ void nsCocoaWindow::SetModal(bool aState) {
     }
     [mWindow setLevel:NSModalPanelWindowLevel];
     nsCocoaWindowList* windowList = new nsCocoaWindowList;
-    if (windowList) {
-      windowList->window = this;  // Don't ADDREF
-      windowList->prev = gGeckoAppModalWindowList;
-      gGeckoAppModalWindowList = windowList;
-    }
+    windowList->window = this;  // Don't ADDREF
+    windowList->prev = gGeckoAppModalWindowList;
+    gGeckoAppModalWindowList = windowList;
   } else {
     --gXULModalLevel;
     NS_ASSERTION(gXULModalLevel >= 0,
@@ -754,6 +752,7 @@ void nsCocoaWindow::SetModal(bool aState) {
                    "Widget hierarchy changed while modal!");
       ancestor = static_cast<nsCocoaWindow*>(ancestor->mParent);
     }
+    NS_ASSERTION(gGeckoAppModalWindowList, "No modal window list?");
     if (gGeckoAppModalWindowList) {
       NS_ASSERTION(gGeckoAppModalWindowList->window == this,
                    "Widget hierarchy changed while modal!");
