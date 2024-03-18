@@ -514,6 +514,10 @@ AntiTrackingUtils::GetStoragePermissionStateInParent(nsIChannel* aChannel) {
     return nsILoadInfo::NoStoragePermission;
   }
 
+  if (targetPrincipal->IsSystemPrincipal()) {
+    return nsILoadInfo::HasStoragePermission;
+  }
+
   nsCOMPtr<nsIURI> trackingURI;
   rv = aChannel->GetURI(getter_AddRefs(trackingURI));
   if (NS_WARN_IF(NS_FAILED(rv))) {
