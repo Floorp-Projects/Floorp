@@ -58,6 +58,9 @@ struct SharedSubResourceCacheLoadingValueBase {
   virtual void SetLoadCompleted() = 0;
   virtual void Cancel() = 0;
 
+  // Return the next sub-resource which has the same key.
+  Derived* GetNextSubResource() { return mNext; }
+
   ~SharedSubResourceCacheLoadingValueBase() {
     // Do this iteratively to avoid blowing up the stack.
     RefPtr<Derived> next = std::move(mNext);
