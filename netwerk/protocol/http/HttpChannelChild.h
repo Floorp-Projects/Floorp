@@ -33,7 +33,7 @@
 #include "nsIThreadRetargetableRequest.h"
 #include "mozilla/net/DNS.h"
 
-using mozilla::Telemetry::LABELS_HTTP_CHILD_OMT_STATS;
+using mozilla::Telemetry::LABELS_HTTP_CHILD_OMT_STATS_2;
 
 class nsIEventTarget;
 class nsIInterceptedBodyCallback;
@@ -271,6 +271,9 @@ class HttpChannelChild final : public PHttpChannelChild,
 
   nsresult MaybeLogCOEPError(nsresult aStatus);
 
+  void RetargetDeliveryToImpl(nsISerialEventTarget* aNewTarget,
+                              MutexAutoLock& aLockRef);
+
  private:
   // this section is for main-thread-only object
   // all the references need to be proxy released on main thread.
@@ -312,8 +315,8 @@ class HttpChannelChild final : public PHttpChannelChild,
 
   // The result of RetargetDeliveryTo for this channel.
   // |notRequested| represents OMT is not requested by the channel owner.
-  Atomic<LABELS_HTTP_CHILD_OMT_STATS, mozilla::Relaxed> mOMTResult{
-      LABELS_HTTP_CHILD_OMT_STATS::notRequested};
+  Atomic<LABELS_HTTP_CHILD_OMT_STATS_2, mozilla::Relaxed> mOMTResult{
+      LABELS_HTTP_CHILD_OMT_STATS_2::notRequested};
 
   uint32_t mCacheKey{0};
   int32_t mCacheFetchCount{0};

@@ -92,6 +92,7 @@ class nsHTTPCompressConv : public nsIStreamConverter,
   bool mStreamInitialized{false};
   bool mDummyStreamInitialised{false};
   bool mFailUncleanStops;
+  bool mDispatchToMainThread{false};
 
   z_stream d_stream{};
   unsigned mLen{0}, hMode{0}, mSkipCount{0}, mFlags{0};
