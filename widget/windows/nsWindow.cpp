@@ -2041,6 +2041,13 @@ void nsWindow::Resize(double aX, double aY, double aWidth, double aHeight,
   if (aRepaint) Invalidate();
 }
 
+mozilla::Maybe<bool> nsWindow::IsResizingNativeWidget() {
+  if (mResizeState == RESIZING) {
+    return Some(true);
+  }
+  return Some(false);
+}
+
 /**************************************************************
  *
  * SECTION: Window Z-order and state.
