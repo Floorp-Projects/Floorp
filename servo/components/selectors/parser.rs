@@ -469,6 +469,23 @@ impl<Impl: SelectorImpl> SelectorList<Impl> {
         )
     }
 
+    pub fn parse_forgiving<'i, 't, P>(
+        parser: &P,
+        input: &mut CssParser<'i, 't>,
+        parse_relative: ParseRelative,
+    ) -> Result<Self, ParseError<'i, P::Error>>
+    where
+        P: Parser<'i, Impl = Impl>,
+    {
+        Self::parse_with_state(
+            parser,
+            input,
+            SelectorParsingState::empty(),
+            ForgivingParsing::Yes,
+            parse_relative,
+        )
+    }
+
     #[inline]
     fn parse_with_state<'i, 't, P>(
         parser: &P,

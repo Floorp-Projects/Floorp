@@ -8740,6 +8740,13 @@
   mirror: always
   rust: true
 
+# Whether @scope rule is enabled
+- name: layout.css.at-scope.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Dictates whether or not the prefers contrast media query will be
 # usable.
 #   true: prefers-contrast will toggle based on OS and browser settings.

@@ -139,7 +139,7 @@ use style::stylesheets::{
     FontPaletteValuesRule, ImportRule, KeyframesRule, LayerBlockRule, LayerStatementRule,
     MediaRule, NamespaceRule, Origin, OriginSet, PagePseudoClassFlags, PageRule, PropertyRule,
     SanitizationData, SanitizationKind, StyleRule, StylesheetContents,
-    StylesheetLoader as StyleStylesheetLoader, SupportsRule, UrlExtraData,
+    StylesheetLoader as StyleStylesheetLoader, SupportsRule, UrlExtraData, ScopeRule,
 };
 use style::stylist::{add_size_of_ua_cache, AuthorStylesEnabled, RuleInclusion, Stylist};
 use style::thread_state;
@@ -2476,6 +2476,14 @@ impl_basic_rule_funcs! { (CounterStyle, CounterStyleRule, Locked<CounterStyleRul
     debug: Servo_CounterStyleRule_Debug,
     to_css: Servo_CounterStyleRule_GetCssText,
     changed: Servo_StyleSet_CounterStyleRuleChanged,
+}
+
+impl_group_rule_funcs! { (Scope, ScopeRule, ScopeRule),
+    get_rules: Servo_ScopeRule_GetRules,
+    getter: Servo_CssRules_GetScopeRuleAt,
+    debug: Servo_ScopeRule_Debug,
+    to_css: Servo_ScopeRule_GetCssText,
+    changed: Servo_StyleSet_ScopeRuleChanged,
 }
 
 #[no_mangle]
@@ -8643,6 +8651,24 @@ pub extern "C" fn Servo_ColorScheme_Parse(input: &nsACString, out: &mut u8) -> b
 pub extern "C" fn Servo_LayerBlockRule_GetName(rule: &LayerBlockRule, result: &mut nsACString) {
     if let Some(ref name) = rule.name {
         name.to_css(&mut CssWriter::new(result)).unwrap()
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_ScopeRule_GetStart(rule: &ScopeRule, result: &mut nsACString) {
+    if let Some(v) = rule.bounds.start.as_ref() {
+        v.to_css(&mut CssWriter::new(result)).unwrap();
+    } else {
+        result.set_is_void(true);
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_ScopeRule_GetEnd(rule: &ScopeRule, result: &mut nsACString) {
+    if let Some(v) = rule.bounds.end.as_ref() {
+        v.to_css(&mut CssWriter::new(result)).unwrap();
+    } else {
+        result.set_is_void(true);
     }
 }
 

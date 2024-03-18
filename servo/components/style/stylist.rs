@@ -3234,7 +3234,8 @@ impl CascadeData {
                 CssRule::LayerBlock(..) |
                 CssRule::LayerStatement(..) |
                 CssRule::FontPaletteValues(..) |
-                CssRule::FontFeatureValues(..) => {
+                CssRule::FontFeatureValues(..) |
+                CssRule::Scope(..) => {
                     // Not affected by device changes.
                     continue;
                 },
