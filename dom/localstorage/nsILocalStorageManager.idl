@@ -20,7 +20,7 @@ interface nsILocalStorageManager : nsISupports
 
   /**
    * Trigger preload of LocalStorage for the given principal.  For use by
-   * ContentParent::AboutToLoadHttpFtpDocumentForChild to maximize the
+   * ContentParent::AboutToLoadHttpDocumentForChild to maximize the
    * amount of time we have to load the data off disk before the page might
    * attempt to touch LocalStorage.
    *
