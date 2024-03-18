@@ -169,6 +169,7 @@ static void MakeGray(const JS::ArrayBufferOrView& view) {
 //  - WeakHeapPtr
 BEGIN_TEST(testGCHeapPostBarriers) {
   AutoLeaveZeal nozeal(cx);
+  AutoGCParameter disableSemispace(cx, JSGC_SEMISPACE_NURSERY_ENABLED, 0);
 
   /* Sanity check - objects start in the nursery and then become tenured. */
   JS_GC(cx);

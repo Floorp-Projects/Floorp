@@ -33,6 +33,8 @@ static bool SameChars(JSContext* cx, JSString* str1, JSString* str2,
 }
 
 BEGIN_TEST(testDeduplication_ASSC) {
+  AutoGCParameter disableSemispace(cx, JSGC_SEMISPACE_NURSERY_ENABLED, 0);
+
   // Test with a long enough string to avoid inline chars allocation.
   const char text[] =
       "Andthebeastshallcomeforthsurroundedbyaroilingcloudofvengeance."

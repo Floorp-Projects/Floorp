@@ -9,6 +9,8 @@
 
 #include "vm/JSContext-inl.h"
 
+using namespace js;
+
 BEGIN_TEST(testIsInsideNursery) {
   /* Non-GC things are never inside the nursery. */
   CHECK(!cx->nursery().isInside(cx));
@@ -30,9 +32,9 @@ BEGIN_TEST(testIsInsideNursery) {
   JS::Rooted<JSString*> string(cx, JS_NewStringCopyZ(cx, oolstr));
 
   /* Objects are initially allocated in the nursery. */
-  CHECK(js::gc::IsInsideNursery(object));
+  CHECK(gc::IsInsideNursery(object));
   /* As are strings. */
-  CHECK(js::gc::IsInsideNursery(string));
+  CHECK(gc::IsInsideNursery(string));
   /* And their contents. */
   {
     JS::AutoCheckCannotGC nogc;
@@ -44,8 +46,8 @@ BEGIN_TEST(testIsInsideNursery) {
   JS_GC(cx);
 
   /* And are tenured if still live after a GC. */
-  CHECK(!js::gc::IsInsideNursery(object));
-  CHECK(!js::gc::IsInsideNursery(string));
+  CHECK(!gc::IsInsideNursery(object));
+  CHECK(!gc::IsInsideNursery(string));
   {
     JS::AutoCheckCannotGC nogc;
     const JS::Latin1Char* strdata =
@@ -56,3 +58,76 @@ BEGIN_TEST(testIsInsideNursery) {
   return true;
 }
 END_TEST(testIsInsideNursery)
+
+BEGIN_TEST(testSemispaceNursery) {
+  AutoGCParameter enableSemispace(cx, JSGC_SEMISPACE_NURSERY_ENABLED, 1);
+
+  JS_GC(cx);
+
+  /* Objects are initially allocated in the nursery. */
+  RootedObject object(cx, JS_NewPlainObject(cx));
+  CHECK(gc::IsInsideNursery(object));
+
+  /* Minor GC with the evict reason tenures them. */
+  cx->minorGC(JS::GCReason::EVICT_NURSERY);
+  CHECK(!gc::IsInsideNursery(object));
+
+  /* Minor GC with other reasons gives them a second chance. */
+  object = JS_NewPlainObject(cx);
+  void* ptr = object;
+  CHECK(gc::IsInsideNursery(object));
+  cx->minorGC(JS::GCReason::API);
+  CHECK(ptr != object);
+  CHECK(gc::IsInsideNursery(object));
+  ptr = object;
+  cx->minorGC(JS::GCReason::API);
+  CHECK(!gc::IsInsideNursery(object));
+  CHECK(ptr != object);
+
+  CHECK(testReferencesBetweenGenerations(0));
+  CHECK(testReferencesBetweenGenerations(1));
+  CHECK(testReferencesBetweenGenerations(2));
+
+  return true;
+}
+
+bool testReferencesBetweenGenerations(size_t referrerGeneration) {
+  MOZ_ASSERT(referrerGeneration <= 2);
+
+  RootedObject referrer(cx, JS_NewPlainObject(cx));
+  CHECK(referrer);
+  CHECK(gc::IsInsideNursery(referrer));
+
+  for (size_t i = 0; i < referrerGeneration; i++) {
+    cx->minorGC(JS::GCReason::API);
+  }
+  MOZ_ASSERT(IsInsideNursery(referrer) == (referrerGeneration < 2));
+
+  RootedObject object(cx, JS_NewPlainObject(cx));
+  CHECK(gc::IsInsideNursery(object));
+  RootedValue value(cx, JS::ObjectValue(*object));
+  CHECK(JS_DefineProperty(cx, referrer, "prop", value, 0));
+  CHECK(JS_GetProperty(cx, referrer, "prop", &value));
+  CHECK(&value.toObject() == object);
+  CHECK(JS_SetElement(cx, referrer, 0, value));
+  CHECK(JS_GetElement(cx, referrer, 0, &value));
+  CHECK(&value.toObject() == object);
+
+  cx->minorGC(JS::GCReason::API);
+  CHECK(gc::IsInsideNursery(object));
+  CHECK(JS_GetProperty(cx, referrer, "prop", &value));
+  CHECK(&value.toObject() == object);
+  CHECK(JS_GetElement(cx, referrer, 0, &value));
+  CHECK(&value.toObject() == object);
+
+  cx->minorGC(JS::GCReason::API);
+  CHECK(!gc::IsInsideNursery(object));
+  CHECK(JS_GetProperty(cx, referrer, "prop", &value));
+  CHECK(&value.toObject() == object);
+  CHECK(JS_GetElement(cx, referrer, 0, &value));
+  CHECK(&value.toObject() == object);
+
+  return true;
+}
+
+END_TEST(testSemispaceNursery)
