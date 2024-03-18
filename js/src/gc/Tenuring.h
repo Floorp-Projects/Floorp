@@ -26,6 +26,7 @@ class AnyRef;
 
 namespace gc {
 
+class ArenaCellSet;
 class RelocationOverlay;
 class StringRelocationOverlay;
 
