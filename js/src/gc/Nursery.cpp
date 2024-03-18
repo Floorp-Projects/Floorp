@@ -214,13 +214,7 @@ void js::NurseryDecommitTask::run(AutoLockHelperThreadState& lock) {
 }
 
 js::Nursery::Nursery(GCRuntime* gc)
-    : position_(0),
-      currentEnd_(0),
-      gc(gc),
-      currentChunk_(0),
-      maxChunkCount_(0),
-      startChunk_(0),
-      startPosition_(0),
+    : gc(gc),
       capacity_(0),
       enableProfiling_(false),
       semispaceEnabled_(gc::TuningDefaults::SemispaceNurseryEnabled),
@@ -233,6 +227,11 @@ js::Nursery::Nursery(GCRuntime* gc)
       prevPosition_(0),
       hasRecentGrowthData(false),
       smoothedTargetSize(0.0) {
+  // Try to keep fields used by allocation fast path together at the start of
+  // the nursery.
+  static_assert(offsetof(Nursery, toSpace.position_) < TypicalCacheLineSize);
+  static_assert(offsetof(Nursery, toSpace.currentEnd_) < TypicalCacheLineSize);
+
   const char* env = getenv("MOZ_NURSERY_STRINGS");
   if (env && *env) {
     canAllocateStrings_ = (*env == '1');
@@ -348,7 +347,8 @@ bool js::Nursery::initFirstChunk(AutoLockGCBgAlloc& lock) {
 
   setCapacity(tunables().gcMinNurseryBytes());
 
-  if (!decommitTask->reserveSpaceForChunks(maxChunkCount_) ||
+  size_t nchunks = toSpace.maxChunkCount_;
+  if (!decommitTask->reserveSpaceForChunks(nchunks) ||
       !allocateNextChunk(0, lock)) {
     setCapacity(0);
     return false;
@@ -371,7 +371,8 @@ size_t RequiredChunkCount(size_t nbytes) {
 void js::Nursery::setCapacity(size_t newCapacity) {
   MOZ_ASSERT(newCapacity == roundSize(newCapacity));
   capacity_ = newCapacity;
-  maxChunkCount_ = RequiredChunkCount(newCapacity);
+  toSpace.maxChunkCount_ = RequiredChunkCount(newCapacity);
+  // TODO: Configure from space if semispace collection enabled.
 }
 
 void js::Nursery::disable() {
@@ -382,15 +383,15 @@ void js::Nursery::disable() {
 
   // Free all chunks.
   decommitTask->join();
-  freeChunksFrom(0);
+  freeChunksFrom(toSpace, 0);
   decommitTask->runFromMainThread();
 
   setCapacity(0);
 
   // We must reset currentEnd_ so that there is no space for anything in the
   // nursery. JIT'd code uses this even if the nursery is disabled.
-  currentEnd_ = 0;
-  position_ = 0;
+  toSpace.currentEnd_ = 0;
+  toSpace.position_ = 0;
   gc->storeBuffer().disable();
 
   if (gc->wasInitialized()) {
@@ -495,11 +496,14 @@ bool js::Nursery::isEmpty() const {
   }
 
   if (!gc->hasZealMode(ZealMode::GenerationalGC)) {
-    MOZ_ASSERT(startChunk_ == 0);
-    MOZ_ASSERT(startPosition_ == chunk(0).start());
+    MOZ_ASSERT(startChunk() == 0);
+    MOZ_ASSERT(startPosition() == chunk(0).start());
   }
-  return position() == startPosition_;
+
+  return toSpace.isEmpty();
 }
+
+bool js::Nursery::Space::isEmpty() const { return position_ == startPosition_; }
 
 #ifdef JS_GC_ZEAL
 void js::Nursery::enterZealMode() {
@@ -528,7 +532,8 @@ void js::Nursery::enterZealMode() {
 
   setCapacity(tunables().gcMaxNurseryBytes());
 
-  if (!decommitTask->reserveSpaceForChunks(maxChunkCount_)) {
+  size_t nchunks = toSpace.maxChunkCount_;
+  if (!decommitTask->reserveSpaceForChunks(nchunks)) {
     oomUnsafe.crash("Nursery::enterZealMode");
   }
 
@@ -598,7 +603,7 @@ MOZ_NEVER_INLINE JS::GCReason Nursery::handleAllocationFailure() {
 }
 
 bool Nursery::moveToNextChunk() {
-  unsigned chunkno = currentChunk_ + 1;
+  unsigned chunkno = currentChunk() + 1;
   MOZ_ASSERT(chunkno <= maxChunkCount());
   MOZ_ASSERT(chunkno <= allocatedChunkCount());
   if (chunkno == maxChunkCount()) {
@@ -1151,8 +1156,8 @@ void js::Nursery::collect(JS::GCOptions options, JS::GCReason reason) {
   MOZ_ASSERT(!rt->mainContextFromOwnThread()->suppressGC);
 
   if (minorGCRequested()) {
-    MOZ_ASSERT(position_ == chunk(currentChunk_).end());
-    position_ = prevPosition_;
+    MOZ_ASSERT(position() == chunk(currentChunk()).end());
+    toSpace.position_ = prevPosition_;
     prevPosition_ = 0;
     minorGCTriggerReason_ = JS::GCReason::NO_REASON;
     rt->mainContextFromOwnThread()->clearPendingInterrupt(
@@ -1188,7 +1193,7 @@ void js::Nursery::collect(JS::GCOptions options, JS::GCReason reason) {
   previousGC.nurseryUsedBytes = usedSpace();
   previousGC.nurseryCapacity = capacity();
   previousGC.nurseryCommitted = committed();
-  previousGC.nurseryUsedChunkCount = currentChunk_ + 1;
+  previousGC.nurseryUsedChunkCount = currentChunk() + 1;
   previousGC.tenuredBytes = 0;
   previousGC.tenuredCells = 0;
 
@@ -1207,7 +1212,7 @@ void js::Nursery::collect(JS::GCOptions options, JS::GCReason reason) {
     previousGC.reason = reason;
     previousGC.tenuredBytes = result.tenuredBytes;
     previousGC.tenuredCells = result.tenuredCells;
-    previousGC.nurseryUsedChunkCount = currentChunk_ + 1;
+    previousGC.nurseryUsedChunkCount = currentChunk() + 1;
   }
 
   // Resize the nursery.
@@ -1677,8 +1682,8 @@ void Nursery::requestMinorGC(JS::GCReason reason) {
 
   // Set position to end of chunk to block further allocation.
   MOZ_ASSERT(prevPosition_ == 0);
-  prevPosition_ = position_;
-  position_ = chunk(currentChunk_).end();
+  prevPosition_ = position();
+  toSpace.position_ = chunk(currentChunk()).end();
 
   minorGCTriggerReason_ = reason;
   runtime()->mainContextFromOwnThread()->requestInterrupt(
@@ -1732,21 +1737,21 @@ void js::Nursery::clear() {
     // Poison all the chunks used in this cycle. The new start chunk is
     // reposioned in Nursery::collect() but there's no point optimising that in
     // this case.
-    firstClearChunk = startChunk_;
+    firstClearChunk = startChunk();
   } else {
     // In normal mode we start at the second chunk, the first one will be used
     // in the next cycle and poisoned in Nusery::collect();
-    MOZ_ASSERT(startChunk_ == 0);
+    MOZ_ASSERT(startChunk() == 0);
     firstClearChunk = 1;
   }
-  for (unsigned i = firstClearChunk; i < currentChunk_; ++i) {
+  for (unsigned i = firstClearChunk; i < currentChunk(); ++i) {
     chunk(i).poisonAfterEvict();
   }
   // Clear only the used part of the chunk because that's the part we touched,
   // but only if it's not going to be re-used immediately (>= firstClearChunk).
-  if (currentChunk_ >= firstClearChunk) {
-    chunk(currentChunk_)
-        .poisonAfterEvict(position() - chunk(currentChunk_).start());
+  if (currentChunk() >= firstClearChunk) {
+    chunk(currentChunk())
+        .poisonAfterEvict(position() - chunk(currentChunk()).start());
   }
 
   // Reset the start chunk & position if we're not in this zeal mode, or we're
@@ -1754,7 +1759,7 @@ void js::Nursery::clear() {
   MOZ_ASSERT(maxChunkCount() > 0);
   if (!gc->hasZealMode(ZealMode::GenerationalGC) ||
       (gc->hasZealMode(ZealMode::GenerationalGC) &&
-       currentChunk_ + 1 == maxChunkCount())) {
+       currentChunk() + 1 == maxChunkCount())) {
     moveToStartOfChunk(0);
   }
 
@@ -1765,31 +1770,31 @@ void js::Nursery::clear() {
 MOZ_ALWAYS_INLINE void js::Nursery::moveToStartOfChunk(unsigned chunkno) {
   MOZ_ASSERT(chunkno < allocatedChunkCount());
 
-  currentChunk_ = chunkno;
-  position_ = chunk(chunkno).start();
+  toSpace.currentChunk_ = chunkno;
+  toSpace.position_ = chunk(chunkno).start();
   setCurrentEnd();
 
-  MOZ_ASSERT(position_ != 0);
-  MOZ_ASSERT(currentEnd_ > position_);  // Check this cannot wrap.
+  MOZ_ASSERT(position() != 0);
+  MOZ_ASSERT(currentEnd() > position());  // Check this cannot wrap.
 }
 
 void js::Nursery::poisonAndInitCurrentChunk(size_t extent) {
   if (gc->hasZealMode(ZealMode::GenerationalGC) || !isSubChunkMode()) {
-    chunk(currentChunk_).poisonAndInit(runtime());
+    chunk(currentChunk()).poisonAndInit(runtime());
   } else {
     extent = std::min(capacity_, extent);
-    chunk(currentChunk_).poisonAndInit(runtime(), extent);
+    chunk(currentChunk()).poisonAndInit(runtime(), extent);
   }
 }
 
 MOZ_ALWAYS_INLINE void js::Nursery::setCurrentEnd() {
   MOZ_ASSERT_IF(isSubChunkMode(),
-                currentChunk_ == 0 && currentEnd_ <= chunk(0).end());
-  currentEnd_ =
-      uintptr_t(&chunk(currentChunk_)) + std::min(capacity_, ChunkSize);
+                currentChunk() == 0 && currentEnd() <= chunk(0).end());
+  toSpace.currentEnd_ =
+      uintptr_t(&chunk(currentChunk())) + std::min(capacity(), ChunkSize);
 
-  MOZ_ASSERT_IF(!isSubChunkMode(), currentEnd_ == chunk(currentChunk_).end());
-  MOZ_ASSERT(currentEnd_ != chunk(currentChunk_).start());
+  MOZ_ASSERT_IF(!isSubChunkMode(), currentEnd() == chunk(currentChunk()).end());
+  MOZ_ASSERT(currentEnd() != chunk(currentChunk()).start());
 }
 
 bool js::Nursery::allocateNextChunk(const unsigned chunkno,
@@ -1797,29 +1802,29 @@ bool js::Nursery::allocateNextChunk(const unsigned chunkno,
   const unsigned priorCount = allocatedChunkCount();
   const unsigned newCount = priorCount + 1;
 
-  MOZ_ASSERT((chunkno == currentChunk_ + 1) ||
+  MOZ_ASSERT((chunkno == currentChunk() + 1) ||
              (chunkno == 0 && allocatedChunkCount() == 0));
   MOZ_ASSERT(chunkno == allocatedChunkCount());
   MOZ_ASSERT(chunkno < HowMany(capacity(), ChunkSize));
 
-  if (!chunks_.resize(newCount)) {
+  if (!toSpace.chunks_.resize(newCount)) {
     return false;
   }
 
   TenuredChunk* newChunk;
   newChunk = gc->getOrAllocChunk(lock);
   if (!newChunk) {
-    chunks_.shrinkTo(priorCount);
+    toSpace.chunks_.shrinkTo(priorCount);
     return false;
   }
 
-  chunks_[chunkno] = NurseryChunk::fromChunk(newChunk);
+  toSpace.chunks_[chunkno] = NurseryChunk::fromChunk(newChunk);
   return true;
 }
 
 MOZ_ALWAYS_INLINE void js::Nursery::setStartToCurrentPosition() {
-  startChunk_ = currentChunk_;
-  startPosition_ = position();
+  toSpace.startChunk_ = currentChunk();
+  toSpace.startPosition_ = position();
 }
 
 void js::Nursery::maybeResizeNursery(JS::GCOptions options,
@@ -1985,7 +1990,7 @@ size_t js::Nursery::roundSize(size_t size) {
 }
 
 void js::Nursery::growAllocableSpace(size_t newCapacity) {
-  MOZ_ASSERT_IF(!isSubChunkMode(), newCapacity > currentChunk_ * ChunkSize);
+  MOZ_ASSERT_IF(!isSubChunkMode(), newCapacity > currentChunk() * ChunkSize);
   MOZ_ASSERT(newCapacity <= tunables().gcMaxNurseryBytes());
   MOZ_ASSERT(newCapacity > capacity());
 
@@ -1994,7 +1999,7 @@ void js::Nursery::growAllocableSpace(size_t newCapacity) {
   }
 
   if (isSubChunkMode()) {
-    MOZ_ASSERT(currentChunk_ == 0);
+    MOZ_ASSERT(currentChunk() == 0);
 
     // The remainder of the chunk may have been decommitted.
     if (!chunk(0).markPagesInUseHard(std::min(newCapacity, ChunkSize))) {
@@ -2014,8 +2019,8 @@ void js::Nursery::growAllocableSpace(size_t newCapacity) {
   setCurrentEnd();
 }
 
-void js::Nursery::freeChunksFrom(const unsigned firstFreeChunk) {
-  MOZ_ASSERT(firstFreeChunk < chunks_.length());
+void js::Nursery::freeChunksFrom(Space& space, const unsigned firstFreeChunk) {
+  MOZ_ASSERT(firstFreeChunk < space.chunks_.length());
 
   // The loop below may need to skip the first chunk, so we may use this so we
   // can modify it.
@@ -2024,22 +2029,22 @@ void js::Nursery::freeChunksFrom(const unsigned firstFreeChunk) {
   if ((firstChunkToDecommit == 0) && isSubChunkMode()) {
     // Part of the first chunk may be hard-decommitted, un-decommit it so that
     // the GC's normal chunk-handling doesn't segfault.
-    MOZ_ASSERT(currentChunk_ == 0);
-    if (!chunk(0).markPagesInUseHard(ChunkSize)) {
+    MOZ_ASSERT(space.currentChunk_ == 0);
+    if (!space.chunks_[0]->markPagesInUseHard(ChunkSize)) {
       // Free the chunk if we can't allocate its pages.
-      UnmapPages(static_cast<void*>(&chunk(0)), ChunkSize);
+      UnmapPages(space.chunks_[0], ChunkSize);
       firstChunkToDecommit = 1;
     }
   }
 
   {
     AutoLockHelperThreadState lock;
-    for (size_t i = firstChunkToDecommit; i < chunks_.length(); i++) {
-      decommitTask->queueChunk(chunks_[i], lock);
+    for (size_t i = firstChunkToDecommit; i < space.chunks_.length(); i++) {
+      decommitTask->queueChunk(space.chunks_[i], lock);
     }
   }
 
-  chunks_.shrinkTo(firstFreeChunk);
+  space.chunks_.shrinkTo(firstFreeChunk);
 }
 
 void js::Nursery::shrinkAllocableSpace(size_t newCapacity) {
@@ -2061,7 +2066,7 @@ void js::Nursery::shrinkAllocableSpace(size_t newCapacity) {
 
   unsigned newCount = HowMany(newCapacity, ChunkSize);
   if (newCount < allocatedChunkCount()) {
-    freeChunksFrom(newCount);
+    freeChunksFrom(toSpace, newCount);
   }
 
   size_t oldCapacity = capacity_;
@@ -2070,7 +2075,7 @@ void js::Nursery::shrinkAllocableSpace(size_t newCapacity) {
   setCurrentEnd();
 
   if (isSubChunkMode()) {
-    MOZ_ASSERT(currentChunk_ == 0);
+    MOZ_ASSERT(currentChunk() == 0);
     size_t end = std::min(oldCapacity, ChunkSize);
     chunk(0).poisonRange(newCapacity, end, JS_SWEPT_NURSERY_PATTERN,
                          MemCheckKind::MakeNoAccess);
