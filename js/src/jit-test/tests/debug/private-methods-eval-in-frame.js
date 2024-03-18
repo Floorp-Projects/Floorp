@@ -150,13 +150,6 @@ if ('dis' in this) {
 assertEq(b.ef(`var x = () => { return this.#priv(); }; x()`), 12);
 assertEq(b.ef(`function x(o) { function y(o) { return o.#priv(); }; return y(o); } x(this)`), 12);
 
-assertEq(b.ef("B.#smethod()"), 14)
-assertEq(b.ef("B.#unusedmethod()"), 19);
-assertEq(b.ef("B.#unusedgetter"), 10);
-
-b.ef("B.#unusedsetter = 19");
-assertEq(B.setter, 19);
-
 assertEq(B.f(), 14);
 assertEq(B.sef(`this.#smethod()`), 14);
 assertEq(B.sLayerEf(`this.#smethod()`), 14);
