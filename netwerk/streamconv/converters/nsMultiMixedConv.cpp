@@ -442,6 +442,11 @@ nsMultiMixedConv::GetConvertedType(const nsACString& aFromType,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsMultiMixedConv::MaybeRetarget(nsIRequest* request) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 // nsIRequestObserver implementation
 NS_IMETHODIMP
 nsMultiMixedConv::OnStartRequest(nsIRequest* request) {
