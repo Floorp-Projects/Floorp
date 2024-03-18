@@ -50,6 +50,22 @@ already_AddRefed<TrustedTypePolicy> TrustedTypePolicyFactory::CreatePolicy(
   return policy.forget();
 }
 
+#define IS_TRUSTED_TYPE_IMPL(_trustedTypeSuffix)                                                                                                                         \
+  bool TrustedTypePolicyFactory::Is##_trustedTypeSuffix(                                                                                                                 \
+      JSContext*, const JS::Handle<JS::Value>& aValue) const {                                                                                                           \
+    /**                                                                                                                                                                  \
+     * No need to check the internal slot.                                                                                                                               \
+     * Ensured by the corresponding test:                                                                                                                                \
+     * <https://searchfox.org/mozilla-central/rev/b60cb73160843adb5a5a3ec8058e75a69b46acf7/testing/web-platform/tests/trusted-types/TrustedTypePolicyFactory-isXXX.html> \
+     */                                                                                                                                                                  \
+    return aValue.isObject() &&                                                                                                                                          \
+           IS_INSTANCE_OF(Trusted##_trustedTypeSuffix, &aValue.toObject());                                                                                              \
+  }
+
+IS_TRUSTED_TYPE_IMPL(HTML);
+IS_TRUSTED_TYPE_IMPL(Script);
+IS_TRUSTED_TYPE_IMPL(ScriptURL);
+
 UniquePtr<TrustedHTML> TrustedTypePolicyFactory::EmptyHTML() {
   // Preserving the wrapper ensures:
   // ```

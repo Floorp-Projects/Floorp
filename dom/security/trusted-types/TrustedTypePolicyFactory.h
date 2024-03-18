@@ -51,25 +51,15 @@ class TrustedTypePolicyFactory : public nsWrapperCache {
       const TrustedTypePolicyOptions& aPolicyOptions);
 
   // https://w3c.github.io/trusted-types/dist/spec/#dom-trustedtypepolicyfactory-ishtml
-  bool IsHTML(JSContext* aJSContext,
-              const JS::Handle<JS::Value>& aValue) const {
-    // TODO: impl.
-    return false;
-  }
+  bool IsHTML(JSContext* aJSContext, const JS::Handle<JS::Value>& aValue) const;
 
   // https://w3c.github.io/trusted-types/dist/spec/#dom-trustedtypepolicyfactory-isscript
   bool IsScript(JSContext* aJSContext,
-                const JS::Handle<JS::Value>& aValue) const {
-    // TODO: impl.
-    return false;
-  }
+                const JS::Handle<JS::Value>& aValue) const;
 
   // https://w3c.github.io/trusted-types/dist/spec/#dom-trustedtypepolicyfactory-isscripturl
   bool IsScriptURL(JSContext* aJSContext,
-                   const JS::Handle<JS::Value>& aValue) const {
-    // TODO: impl.
-    return false;
-  }
+                   const JS::Handle<JS::Value>& aValue) const;
 
   // https://w3c.github.io/trusted-types/dist/spec/#dom-trustedtypepolicyfactory-emptyhtml
   UniquePtr<TrustedHTML> EmptyHTML();
