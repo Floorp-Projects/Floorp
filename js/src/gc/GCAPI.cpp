@@ -793,6 +793,15 @@ const char* CellColorName(CellColor color) {
 } /* namespace gc */
 } /* namespace js */
 
+JS_PUBLIC_API bool js::gc::IsDeadNurseryObject(JSObject* obj) {
+  MOZ_ASSERT(JS::RuntimeHeapIsMinorCollecting());
+  MOZ_ASSERT(obj);
+  MOZ_ASSERT(IsInsideNursery(obj));
+  MOZ_ASSERT(!IsForwarded(obj));
+
+  return obj->runtimeFromMainThread()->gc.nursery().inCollectedRegion(obj);
+}
+
 JS_PUBLIC_API void js::gc::FinalizeDeadNurseryObject(JSContext* cx,
                                                      JSObject* obj) {
   CHECK_THREAD(cx);
