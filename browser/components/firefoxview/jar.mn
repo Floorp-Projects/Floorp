@@ -9,6 +9,7 @@ browser.jar:
     content/browser/firefoxview/firefoxview.mjs
     content/browser/firefoxview/history.css
     content/browser/firefoxview/history.mjs
+    content/browser/firefoxview/HistoryController.mjs
     content/browser/firefoxview/opentabs.mjs
     content/browser/firefoxview/view-opentabs.css
     content/browser/firefoxview/syncedtabs.mjs

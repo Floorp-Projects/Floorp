@@ -58,14 +58,14 @@ function isElInViewport(element) {
 async function historyComponentReady(historyComponent, expectedHistoryItems) {
   await TestUtils.waitForCondition(
     () =>
-      [...historyComponent.allHistoryItems.values()].reduce(
+      [...historyComponent.controller.allHistoryItems.values()].reduce(
         (acc, { length }) => acc + length,
         0
       ) === expectedHistoryItems,
     "History component ready"
   );
 
-  let expected = historyComponent.historyMapByDate.length;
+  let expected = historyComponent.controller.historyMapByDate.length;
   let actual = historyComponent.cards.length;
 
   is(expected, actual, `Total number of cards should be ${expected}`);
@@ -242,7 +242,8 @@ add_task(async function test_list_ordering() {
     await TestUtils.waitForCondition(() => historyComponent.fullyUpdated);
     await sortHistoryTelemetry(sortHistoryEvent);
 
-    let expectedNumOfCards = historyComponent.historyMapBySite.length;
+    let expectedNumOfCards =
+      historyComponent.controller.historyMapBySite.length;
 
     info(`Total number of cards should be ${expectedNumOfCards}`);
     await BrowserTestUtils.waitForMutationCondition(
@@ -484,7 +485,7 @@ add_task(async function test_search_history() {
       { childList: true, subtree: true },
       () =>
         historyComponent.cards.length ===
-        historyComponent.historyMapByDate.length
+        historyComponent.controller.historyMapByDate.length
     );
     searchTextbox.blur();
 
@@ -513,7 +514,7 @@ add_task(async function test_search_history() {
       { childList: true, subtree: true },
       () =>
         historyComponent.cards.length ===
-        historyComponent.historyMapByDate.length
+        historyComponent.controller.historyMapByDate.length
     );
   });
 });
@@ -528,7 +529,7 @@ add_task(async function test_persist_collapse_card_after_view_change() {
     historyComponent.profileAge = 8;
     await TestUtils.waitForCondition(
       () =>
-        [...historyComponent.allHistoryItems.values()].reduce(
+        [...historyComponent.controller.allHistoryItems.values()].reduce(
           (acc, { length }) => acc + length,
           0
         ) === 4

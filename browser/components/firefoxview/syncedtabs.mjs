@@ -4,7 +4,6 @@
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
-  BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
   SyncedTabs: "resource://services-sync/SyncedTabs.sys.mjs",
 });
 
@@ -26,6 +25,7 @@ import {
   isSearchEnabled,
   searchTabList,
   MAX_TABS_FOR_RECENT_BROWSING,
+  navigateToLink,
 } from "./helpers.mjs";
 
 const SYNCED_TABS_CHANGED = "services.sync.tabs.changed";
@@ -307,27 +307,18 @@ class SyncedTabsInView extends ViewPage {
   }
 
   onOpenLink(event) {
-    let currentWindow = this.getWindow();
-    if (currentWindow.openTrustedLinkIn) {
-      let where = lazy.BrowserUtils.whereToOpenLink(
-        event.detail.originalEvent,
-        false,
-        true
-      );
-      if (where == "current") {
-        where = "tab";
+    navigateToLink(event);
+
+    Services.telemetry.recordEvent(
+      "firefoxview_next",
+      "synced_tabs",
+      "tabs",
+      null,
+      {
+        page: this.recentBrowsing ? "recentbrowsing" : "syncedtabs",
       }
-      currentWindow.openTrustedLinkIn(event.originalTarget.url, where);
-      Services.telemetry.recordEvent(
-        "firefoxview_next",
-        "synced_tabs",
-        "tabs",
-        null,
-        {
-          page: this.recentBrowsing ? "recentbrowsing" : "syncedtabs",
-        }
-      );
-    }
+    );
+
     if (this.searchQuery) {
       const searchesHistogram = Services.telemetry.getKeyedHistogramById(
         "FIREFOX_VIEW_CUMULATIVE_SEARCHES"

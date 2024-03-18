@@ -173,3 +173,20 @@ export function escapeHtmlEntities(text) {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 }
+
+export function navigateToLink(e) {
+  let currentWindow =
+    e.target.ownerGlobal.browsingContext.embedderWindowGlobal.browsingContext
+      .window;
+  if (currentWindow.openTrustedLinkIn) {
+    let where = lazy.BrowserUtils.whereToOpenLink(
+      e.detail.originalEvent,
+      false,
+      true
+    );
+    if (where == "current") {
+      where = "tab";
+    }
+    currentWindow.openTrustedLinkIn(e.originalTarget.url, where);
+  }
+}
