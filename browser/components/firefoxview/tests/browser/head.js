@@ -3,6 +3,7 @@
 
 const {
   getFirefoxViewURL,
+  switchToWindow,
   withFirefoxView,
   assertFirefoxViewTab,
   assertFirefoxViewTabSelected,
@@ -34,6 +35,8 @@ const { TelemetryTestUtils } = ChromeUtils.importESModule(
 const { NonPrivateTabs } = ChromeUtils.importESModule(
   "resource:///modules/OpenTabs.sys.mjs"
 );
+// shut down the open tabs module after each test so we don't get debounced events bleeding into the next
+registerCleanupFunction(() => NonPrivateTabs.stop());
 
 const triggeringPrincipal_base64 = E10SUtils.SERIALIZED_SYSTEMPRINCIPAL;
 const { SessionStoreTestUtils } = ChromeUtils.importESModule(
@@ -588,6 +591,7 @@ async function navigateToViewAndWait(document, view) {
  *   The tab switched to.
  */
 async function switchToFxViewTab(win = window) {
+  await switchToWindow(win);
   return BrowserTestUtils.switchTab(win.gBrowser, win.FirefoxViewHandler.tab);
 }
 
@@ -667,7 +671,10 @@ function getOpenTabsComponent(browser) {
 }
 
 async function getTabRowsForCard(card) {
-  await TestUtils.waitForCondition(() => card.tabList.rowEls.length);
+  await TestUtils.waitForCondition(
+    () => card.tabList.rowEls.length,
+    "Wait for the card's tab list to have rows"
+  );
   return card.tabList.rowEls;
 }
 
