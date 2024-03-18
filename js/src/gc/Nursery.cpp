@@ -372,6 +372,8 @@ bool js::Nursery::initFirstChunk(AutoLockGCBgAlloc& lock) {
   MOZ_ASSERT(toSpace.isEmpty());
   MOZ_ASSERT(fromSpace.isEmpty());
 
+  prevSpace = semispaceEnabled_ ? &fromSpace : &toSpace;
+
   poisonAndInitCurrentChunk();
 
   // Clear any information about previous collections.
@@ -769,16 +771,16 @@ void* js::Nursery::reallocateBuffer(Zone* zone, Cell* cell, void* oldBuffer,
   }
 
   if (!isInside(oldBuffer)) {
-    MOZ_ASSERT(mallocedBufferBytes >= oldBytes);
+    MOZ_ASSERT(toSpace.mallocedBufferBytes >= oldBytes);
     void* newBuffer =
         zone->pod_realloc<uint8_t>((uint8_t*)oldBuffer, oldBytes, newBytes);
     if (newBuffer) {
       if (oldBuffer != newBuffer) {
         MOZ_ALWAYS_TRUE(
-            mallocedBuffers.rekeyAs(oldBuffer, newBuffer, newBuffer));
+            toSpace.mallocedBuffers.rekeyAs(oldBuffer, newBuffer, newBuffer));
       }
-      mallocedBufferBytes -= oldBytes;
-      mallocedBufferBytes += newBytes;
+      toSpace.mallocedBufferBytes -= oldBytes;
+      toSpace.mallocedBufferBytes += newBytes;
     }
     return newBuffer;
   }
@@ -1454,15 +1456,11 @@ js::Nursery::CollectionResult js::Nursery::doCollection(AutoGCSession& session,
   // Swap nursery spaces.
   if (semispaceEnabled_) {
     std::swap(toSpace, fromSpace);
-    MOZ_ASSERT(toSpace.isEmpty());
 
+    MOZ_ASSERT(toSpace.isEmpty());
+    MOZ_ASSERT(toSpace.mallocedBuffers.empty());
     poisonAndInitCurrentChunk();
   }
-
-  // Extract malloced buffer set for later free.
-  MOZ_ASSERT(prevMallocedBuffers.empty());
-  std::swap(mallocedBuffers, prevMallocedBuffers);
-  mallocedBufferBytes = 0;
 
   // Move objects pointed to by roots from the nursery to the major heap.
   TenuringTracer mover(rt, this, shouldTenureEverything(reason));
@@ -1504,7 +1502,8 @@ js::Nursery::CollectionResult js::Nursery::doCollection(AutoGCSession& session,
 
   // Sweep.
   startProfile(ProfileKey::FreeMallocedBuffers);
-  gc->queueBuffersForFreeAfterMinorGC(prevMallocedBuffers);
+  gc->queueBuffersForFreeAfterMinorGC(prevSpace->mallocedBuffers);
+  prevSpace->mallocedBufferBytes = 0;
   endProfile(ProfileKey::FreeMallocedBuffers);
 
   // Give trailer blocks associated with non-tenured Wasm{Struct,Array}Objects
@@ -1673,12 +1672,12 @@ bool js::Nursery::registerMallocedBuffer(void* buffer, size_t nbytes) {
   MOZ_ASSERT(nbytes > 0);
   MOZ_ASSERT(!isInside(buffer));
 
-  if (!mallocedBuffers.putNew(buffer)) {
+  if (!toSpace.mallocedBuffers.putNew(buffer)) {
     return false;
   }
 
-  mallocedBufferBytes += nbytes;
-  if (MOZ_UNLIKELY(mallocedBufferBytes > capacity() * 8)) {
+  toSpace.mallocedBufferBytes += nbytes;
+  if (MOZ_UNLIKELY(toSpace.mallocedBufferBytes > capacity() * 8)) {
     requestMinorGC(JS::GCReason::NURSERY_MALLOC_BUFFERS);
   }
 
@@ -1778,11 +1777,14 @@ size_t js::Nursery::totalCommitted() const {
 
 size_t Nursery::sizeOfMallocedBuffers(
     mozilla::MallocSizeOf mallocSizeOf) const {
+  MOZ_ASSERT(fromSpace.mallocedBuffers.empty());
+
   size_t total = 0;
-  for (BufferSet::Range r = mallocedBuffers.all(); !r.empty(); r.popFront()) {
+  for (BufferSet::Range r = toSpace.mallocedBuffers.all(); !r.empty();
+       r.popFront()) {
     total += mallocSizeOf(r.front());
   }
-  total += mallocedBuffers.shallowSizeOfExcludingThis(mallocSizeOf);
+  total += toSpace.mallocedBuffers.shallowSizeOfExcludingThis(mallocSizeOf);
   return total;
 }
 
