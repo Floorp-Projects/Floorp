@@ -1048,9 +1048,9 @@ NS_IMETHODIMP nsViewSourceChannel::GetDocumentCharacterSet(
 // Have to manually forward SetCorsPreflightParameters since it's [notxpcom]
 void nsViewSourceChannel::SetCorsPreflightParameters(
     const nsTArray<nsCString>& aUnsafeHeaders,
-    bool aShouldStripRequestBodyHeader) {
+    bool aShouldStripRequestBodyHeader, bool aShouldStripAuthHeader) {
   mHttpChannelInternal->SetCorsPreflightParameters(
-      aUnsafeHeaders, aShouldStripRequestBodyHeader);
+      aUnsafeHeaders, aShouldStripRequestBodyHeader, aShouldStripAuthHeader);
 }
 
 void nsViewSourceChannel::SetAltDataForChild(bool aIsForChild) {

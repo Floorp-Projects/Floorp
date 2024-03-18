@@ -92,10 +92,12 @@ class nsCORSListenerProxy final : public nsIInterfaceRequestor,
 
   [[nodiscard]] nsresult UpdateChannel(nsIChannel* aChannel,
                                        DataURIHandling aAllowDataURI,
-                                       UpdateType aUpdateType);
+                                       UpdateType aUpdateType,
+                                       bool aStripAuthHeader);
   [[nodiscard]] nsresult CheckRequestApproved(nsIRequest* aRequest);
   [[nodiscard]] nsresult CheckPreflightNeeded(nsIChannel* aChannel,
-                                              UpdateType aUpdateType);
+                                              UpdateType aUpdateType,
+                                              bool aStripAuthHeader);
 
   nsCOMPtr<nsIStreamListener> mOuterListener;
   // The principal that originally kicked off the request
