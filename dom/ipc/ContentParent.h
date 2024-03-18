@@ -551,12 +551,12 @@ class ContentParent final : public PContentParent,
   void SetMainThreadQoSPriority(nsIThread::QoSPriority aQoSPriority);
 
   // This function is called when we are about to load a document from an
-  // HTTP(S) or FTP channel for a content process.  It is a useful place
+  // HTTP(S) channel for a content process.  It is a useful place
   // to start to kick off work as early as possible in response to such
   // document loads.
   // aShouldWaitForPermissionCookieUpdate is set to true if main thread IPCs for
   // updating permissions/cookies are sent.
-  nsresult AboutToLoadHttpFtpDocumentForChild(
+  nsresult AboutToLoadHttpDocumentForChild(
       nsIChannel* aChannel,
       bool* aShouldWaitForPermissionCookieUpdate = nullptr);
 

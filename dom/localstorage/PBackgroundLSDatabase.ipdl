@@ -89,7 +89,7 @@ struct LSSnapshotInitInfo
  * calls to PBackground are the only viable mechanism because blocking
  * PBackground is not acceptable.  (Note that an attempt is made to minimize any
  * I/O latency by triggering preloading from
- * ContentParent::AboutToLoadHttpFtpDocumentForChild, the central place
+ * ContentParent::AboutToLoadHttpDocumentForChild, the central place
  * for pre-loading.)
  */
 [ChildImpl=virtual, ParentImpl=virtual]

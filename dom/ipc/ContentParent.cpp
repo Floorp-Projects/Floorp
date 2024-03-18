@@ -3273,7 +3273,7 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
       // because content scripts mean that a moz-extension can live in any
       // process. Same thing for system principal Blob URLs. Content Blob
       // URL's are sent for content principals on-demand by
-      // AboutToLoadHttpFtpDocumentForChild and RemoteWorkerManager.
+      // AboutToLoadHttpDocumentForChild and RemoteWorkerManager.
       if (!BlobURLProtocolHandler::IsBlobURLBroadcastPrincipal(aPrincipal)) {
         return true;
       }
@@ -6365,7 +6365,7 @@ void ContentParent::UpdateCookieStatus(nsIChannel* aChannel) {
   }
 }
 
-nsresult ContentParent::AboutToLoadHttpFtpDocumentForChild(
+nsresult ContentParent::AboutToLoadHttpDocumentForChild(
     nsIChannel* aChannel, bool* aShouldWaitForPermissionCookieUpdate) {
   MOZ_ASSERT(aChannel);
 
