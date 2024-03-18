@@ -26,12 +26,6 @@ namespace mozilla {
 enum class NativeKeyBindingsType : uint8_t;
 }  // namespace mozilla
 
-typedef struct _nsCocoaWindowList {
-  _nsCocoaWindowList() : prev(nullptr), window(nullptr) {}
-  struct _nsCocoaWindowList* prev;
-  nsCocoaWindow* window;  // Weak
-} nsCocoaWindowList;
-
 // NSWindow subclass that is the base class for all of our own window classes.
 // Among other things, this class handles the storage of those settings that
 // need to be persisted across window destruction and reconstruction, i.e. when
@@ -231,7 +225,6 @@ class nsCocoaWindow final : public nsBaseWidget {
   void Enable(bool aState) override;
   bool IsEnabled() const override;
   void SetModal(bool aState) override;
-  void SetFakeModal(bool aState) override;
   bool IsRunningAppModal() override;
   bool IsVisible() const override;
   void SetFocus(Raise, mozilla::dom::CallerType aCallerType) override;
@@ -329,7 +322,9 @@ class nsCocoaWindow final : public nsBaseWidget {
   bool DragEvent(unsigned int aMessage, mozilla::gfx::Point aMouseGlobal,
                  UInt16 aKeyModifiers);
 
-  bool HasModalDescendents() { return mNumModalDescendents > 0; }
+  bool HasModalDescendants() const { return mNumModalDescendants > 0; }
+  bool IsModal() const { return mModal; }
+
   NSWindow* GetCocoaWindow() { return mWindow; }
 
   void SetMenuBar(RefPtr<nsMenuBarX>&& aMenuBar);
@@ -468,19 +463,18 @@ class nsCocoaWindow final : public nsBaseWidget {
   // unnecessary OcclusionStateChanged events.
   bool mHasStartedNativeFullscreen;
 
-  bool mModal;
-  bool mFakeModal;
+  bool mModal = false;
+  bool mIsAnimationSuppressed = false;
 
-  bool mIsAnimationSuppressed;
-
-  bool mInReportMoveEvent;  // true if in a call to ReportMoveEvent().
-  bool mInResize;           // true if in a call to DoResize().
-  bool mWindowTransformIsIdentity;
-  bool mAlwaysOnTop;
-  bool mAspectRatioLocked;
+  bool mInReportMoveEvent = false;  // true if in a call to ReportMoveEvent().
+  bool mInResize = false;           // true if in a call to DoResize().
+  bool mWindowTransformIsIdentity = true;
+  bool mAlwaysOnTop = false;
+  bool mAspectRatioLocked = false;
   bool mIsAlert = false;  // True if this is an non-native alert window.
+  bool mWasShown = false;
 
-  int32_t mNumModalDescendents;
+  int32_t mNumModalDescendants = 0;
   InputContext mInputContext;
   NSWindowAnimationBehavior mWindowAnimationBehavior;
 
@@ -494,9 +488,6 @@ class nsCocoaWindow final : public nsBaseWidget {
   // to EndOurNativeTransition() when the native transition is complete.
   bool CanStartNativeTransition();
   void EndOurNativeTransition();
-
-  // true if Show() has been called.
-  bool mWasShown;
 };
 
 #endif  // nsCocoaWindow_h_
