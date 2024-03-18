@@ -580,6 +580,7 @@ if (!build_with_chromium) {
 
     if (build_with_mozilla) {
       deps += [
+        "api/environment:environment_factory",
         "api/video:video_frame",
         "api/video:video_rtp_headers",
         "test:rtp_test_utils",
