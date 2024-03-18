@@ -48,17 +48,17 @@ class TrustedTypePolicy : public nsWrapperCache {
   // https://w3c.github.io/trusted-types/dist/spec/#dom-trustedtypepolicy-createhtml
   UniquePtr<TrustedHTML> CreateHTML(
       JSContext* aJSContext, const nsAString& aInput,
-      const Sequence<JS::Value>& aArguments) const;
+      const Sequence<JS::Value>& aArguments, ErrorResult& aErrorResult) const;
 
   // https://w3c.github.io/trusted-types/dist/spec/#dom-trustedtypepolicy-createscript
   UniquePtr<TrustedScript> CreateScript(
       JSContext* aJSContext, const nsAString& aInput,
-      const Sequence<JS::Value>& aArguments) const;
+      const Sequence<JS::Value>& aArguments, ErrorResult& aErrorResult) const;
 
   // https://w3c.github.io/trusted-types/dist/spec/#dom-trustedtypepolicy-createscripturl
   UniquePtr<TrustedScriptURL> CreateScriptURL(
       JSContext* aJSContext, const nsAString& aInput,
-      const Sequence<JS::Value>& aArguments) const;
+      const Sequence<JS::Value>& aArguments, ErrorResult& aErrorResult) const;
 
  private:
   // Required because this class is ref-counted.

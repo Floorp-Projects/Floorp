@@ -5,6 +5,7 @@
  *
  * The origin of this IDL file is
  * <https://w3c.github.io/trusted-types/dist/spec/>.
+ * It is augmented with Gecko-specific annotations.
  */
 
 [Exposed=(Window,Worker), Pref="dom.security.trusted_types.enabled"]
@@ -28,9 +29,9 @@ interface TrustedScriptURL {
 [Exposed=(Window,Worker), Pref="dom.security.trusted_types.enabled"]
 interface TrustedTypePolicy {
   readonly attribute DOMString name;
-  [NewObject] TrustedHTML createHTML(DOMString input, any... arguments);
-  [NewObject] TrustedScript createScript(DOMString input, any... arguments);
-  [NewObject] TrustedScriptURL createScriptURL(DOMString input, any... arguments);
+  [NewObject, Throws] TrustedHTML createHTML(DOMString input, any... arguments);
+  [NewObject, Throws] TrustedScript createScript(DOMString input, any... arguments);
+  [NewObject, Throws] TrustedScriptURL createScriptURL(DOMString input, any... arguments);
 };
 
 dictionary TrustedTypePolicyOptions {
