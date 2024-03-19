@@ -30,7 +30,7 @@ this.sitehelper = (function () {
 
   registerListener(
     "delete-everything",
-    catcher.watchFunction(event => {
+    catcher.watchFunction(() => {
       // FIXME: reset some data in the add-on
     }, false)
   );

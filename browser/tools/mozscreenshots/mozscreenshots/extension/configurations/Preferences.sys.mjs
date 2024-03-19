@@ -8,7 +8,7 @@
 import { TestUtils } from "resource://testing-common/TestUtils.sys.mjs";
 
 export var Preferences = {
-  init(libDir) {
+  init() {
     let panes = [
       ["paneGeneral"],
       ["paneGeneral", browsingGroup],

@@ -21,7 +21,7 @@ add_task(async function () {
   let newWindow = null;
 
   let observerWindowOpened = {
-    observe(aSubject, aTopic, aData) {
+    observe(aSubject, aTopic) {
       if (aTopic == "domwindowopened") {
         newWindow = aSubject;
         newWindow.addEventListener(

@@ -116,7 +116,7 @@ function checkUserPref(prefName, prefValue) {
   );
 }
 
-function checkClearPref(prefName, prefValue) {
+function checkClearPref(prefName) {
   equal(
     Services.prefs.prefHasUserValue(prefName),
     false,

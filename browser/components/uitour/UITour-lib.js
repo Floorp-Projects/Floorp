@@ -9,7 +9,7 @@ if (typeof Mozilla == "undefined") {
   var Mozilla = {};
 }
 
-(function ($) {
+(function () {
   "use strict";
 
   // create namespace

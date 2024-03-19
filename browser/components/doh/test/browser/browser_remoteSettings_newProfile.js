@@ -13,7 +13,7 @@ async function setPrefAndWaitForConfigFlush(pref, value) {
   await configFlushedPromise;
 }
 
-async function clearPrefAndWaitForConfigFlush(pref, value) {
+async function clearPrefAndWaitForConfigFlush(pref) {
   let configFlushedPromise = DoHTestUtils.waitForConfigFlush();
   Preferences.reset(pref);
   await configFlushedPromise;

@@ -700,7 +700,7 @@ class SyncedTabsInView extends ViewPage {
     this.toggleVisibilityInCardContainer();
   }
 
-  sendTabTelemetry(numTabs) {
+  sendTabTelemetry() {
     /*
     Services.telemetry.recordEvent(
       "firefoxview_next",

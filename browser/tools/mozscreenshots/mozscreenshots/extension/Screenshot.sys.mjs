@@ -95,7 +95,7 @@ export var Screenshot = {
   },
 
   async _screenshotOSX(filename) {
-    let screencapture = (windowID = null) => {
+    let screencapture = () => {
       return new Promise((resolve, reject) => {
         // Get the screencapture executable
         let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
@@ -175,7 +175,7 @@ export var Screenshot = {
 
   _processObserver(resolve, reject) {
     return {
-      observe(subject, topic, data) {
+      observe(subject, topic) {
         switch (topic) {
           case "process-finished":
             try {

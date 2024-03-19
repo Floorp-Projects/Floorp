@@ -594,7 +594,7 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
     const expectedBrowser = tabbrowser.getBrowserForTab(tab);
     return new Promise(resolve => {
       const listener = {
-        onLocationChange(browser, webProgress, request, uri, flags) {
+        onLocationChange(browser, webProgress, request, uri) {
           if (
             browser == expectedBrowser &&
             uri.spec == url &&

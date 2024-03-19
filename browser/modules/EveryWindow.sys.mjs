@@ -64,7 +64,7 @@ export const EveryWindow = {
 
     if (!initialized) {
       let addUnloadListener = win => {
-        function observer(subject, topic, data) {
+        function observer(subject, topic) {
           if (topic == "domwindowclosed" && subject === win) {
             Services.ww.unregisterNotification(observer);
             for (let c of callbacks.values()) {

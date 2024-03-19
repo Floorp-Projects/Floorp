@@ -57,7 +57,7 @@ function getResult() {
   return credentialQueue.shift();
 }
 
-async function doInit(aMode) {
+async function doInit() {
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.partition.network_state", false]],
   });

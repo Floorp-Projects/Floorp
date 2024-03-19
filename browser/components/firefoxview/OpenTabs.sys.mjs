@@ -143,7 +143,7 @@ class OpenTabsTarget extends EventTarget {
       windowList.map(win => win.delayedStartupPromise)
     ).then(() => {
       // re-filter the list as properties might have changed in the interim
-      return windowList.filter(win => this.includeWindowFilter);
+      return windowList.filter(() => this.includeWindowFilter);
     });
   }
 
@@ -377,7 +377,7 @@ const gExclusiveWindows = new (class {
   constructor() {
     Services.obs.addObserver(this, "domwindowclosed");
   }
-  observe(subject, topic, data) {
+  observe(subject) {
     let win = subject;
     let winTarget = this.perWindowInstances.get(win);
     if (winTarget) {

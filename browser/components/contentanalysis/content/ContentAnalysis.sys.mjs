@@ -236,7 +236,7 @@ export const ContentAnalysis = {
   },
 
   // nsIObserver
-  async observe(aSubj, aTopic, aData) {
+  async observe(aSubj, aTopic) {
     switch (aTopic) {
       case "quit-application-requested": {
         let pendingRequests =

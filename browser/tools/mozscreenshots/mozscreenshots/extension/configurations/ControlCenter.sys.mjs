@@ -26,7 +26,7 @@ const MIXED_PASSIVE_CONTENT_URL = `https://example.com/${RESOURCE_PATH}/mixed_pa
 const TRACKING_PAGE = `http://tracking.example.org/${RESOURCE_PATH}/tracking.html`;
 
 export var ControlCenter = {
-  init(libDir) {},
+  init() {},
 
   configurations: {
     about: {

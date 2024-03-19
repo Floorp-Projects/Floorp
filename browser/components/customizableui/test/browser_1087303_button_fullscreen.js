@@ -44,7 +44,7 @@ function promiseFullscreenChange() {
       reject("Fullscreen change did not happen within " + 20000 + "ms");
     }, 20000);
 
-    function onFullscreenChange(event) {
+    function onFullscreenChange() {
       clearTimeout(timeoutId);
       window.removeEventListener("fullscreen", onFullscreenChange, true);
       info("Fullscreen event received");

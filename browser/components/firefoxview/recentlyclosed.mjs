@@ -65,7 +65,7 @@ class RecentlyClosedTabsInView extends ViewPage {
     tabList: "fxview-tab-list",
   };
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     if (
       topic == SS_NOTIFY_CLOSED_OBJECTS_CHANGED ||
       (topic == SS_NOTIFY_BROWSER_SHUTDOWN_FLUSH &&

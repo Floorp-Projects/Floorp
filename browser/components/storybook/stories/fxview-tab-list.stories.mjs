@@ -84,7 +84,7 @@ let secondaryAction = e => {
   e.target.querySelector("panel-list").toggle(e.detail.originalEvent);
 };
 
-let primaryAction = e => {
+let primaryAction = () => {
   // Open in new tab
 };
 

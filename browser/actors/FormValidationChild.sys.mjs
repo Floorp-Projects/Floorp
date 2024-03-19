@@ -138,7 +138,7 @@ export class FormValidationChild extends JSWindowActorChild {
    * Blur event handler in which we disconnect from the form element and
    * hide the popup.
    */
-  _onBlur(aEvent) {
+  _onBlur() {
     if (this._element) {
       this._element.removeEventListener("input", this);
       this._element.removeEventListener("blur", this);

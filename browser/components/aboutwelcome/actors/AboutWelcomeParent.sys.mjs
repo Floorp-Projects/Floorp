@@ -70,7 +70,7 @@ class AboutWelcomeObserver {
     this.win.addEventListener("unload", this.onWindowClose, { once: true });
   }
 
-  observe(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic) {
     switch (aTopic) {
       case "quit-application":
         this.terminateReason = AWTerminate.APP_SHUT_DOWN;

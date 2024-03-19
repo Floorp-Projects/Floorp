@@ -25,7 +25,7 @@
           store.createIndex("userContext", "userContext", { unique: false });
         };
 
-        request.onsuccess = event => {
+        request.onsuccess = () => {
           let db = request.result;
           let transaction = db.transaction(["obj"], "readwrite");
           let store = transaction.objectStore("obj");

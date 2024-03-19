@@ -32,7 +32,7 @@ function clearAllPlacesFavicons() {
 
   return new Promise(resolve => {
     let observer = {
-      observe(aSubject, aTopic, aData) {
+      observe(aSubject, aTopic) {
         if (aTopic === "places-favicons-expired") {
           resolve();
           Services.obs.removeObserver(observer, "places-favicons-expired");
@@ -59,7 +59,7 @@ function observeFavicon(aIsPrivate, aExpectedCookie, aPageURI) {
 
   return new Promise(resolve => {
     let observer = {
-      observe(aSubject, aTopic, aData) {
+      observe(aSubject, aTopic) {
         // Make sure that the topic is 'http-on-modify-request'.
         if (aTopic === "http-on-modify-request") {
           // We check the privateBrowsingId for the originAttributes of the loading
@@ -121,7 +121,7 @@ function observeFavicon(aIsPrivate, aExpectedCookie, aPageURI) {
 function waitOnFaviconResponse(aFaviconURL) {
   return new Promise(resolve => {
     let observer = {
-      observe(aSubject, aTopic, aData) {
+      observe(aSubject, aTopic) {
         if (
           aTopic === "http-on-examine-response" ||
           aTopic === "http-on-examine-cached-response"

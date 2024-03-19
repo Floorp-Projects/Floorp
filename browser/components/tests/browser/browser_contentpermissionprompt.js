@@ -151,7 +151,7 @@ add_task(async function test_working_request() {
     },
   };
 
-  let integration = base => ({
+  let integration = () => ({
     createPermissionPrompt(type, request) {
       Assert.equal(type, "test-permission-type");
       Assert.ok(

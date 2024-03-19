@@ -12,26 +12,23 @@ add_common_setup();
 add_task(async function testBackButtonsAreAdded() {
   ensureReportBrokenSitePreffedOn();
 
-  await BrowserTestUtils.withNewTab(
-    REPORTABLE_PAGE_URL,
-    async function (browser) {
-      let rbs = await AppMenu().openReportBrokenSite();
-      rbs.isBackButtonEnabled();
-      await rbs.clickBack();
-      await rbs.close();
+  await BrowserTestUtils.withNewTab(REPORTABLE_PAGE_URL, async function () {
+    let rbs = await AppMenu().openReportBrokenSite();
+    rbs.isBackButtonEnabled();
+    await rbs.clickBack();
+    await rbs.close();
 
-      rbs = await HelpMenu().openReportBrokenSite();
-      ok(!rbs.backButton, "Back button is not shown for Help Menu");
-      await rbs.close();
+    rbs = await HelpMenu().openReportBrokenSite();
+    ok(!rbs.backButton, "Back button is not shown for Help Menu");
+    await rbs.close();
 
-      rbs = await ProtectionsPanel().openReportBrokenSite();
-      rbs.isBackButtonEnabled();
-      await rbs.clickBack();
-      await rbs.close();
+    rbs = await ProtectionsPanel().openReportBrokenSite();
+    rbs.isBackButtonEnabled();
+    await rbs.clickBack();
+    await rbs.close();
 
-      rbs = await HelpMenu().openReportBrokenSite();
-      ok(!rbs.backButton, "Back button is not shown for Help Menu");
-      await rbs.close();
-    }
-  );
+    rbs = await HelpMenu().openReportBrokenSite();
+    ok(!rbs.backButton, "Back button is not shown for Help Menu");
+    await rbs.close();
+  });
 });

@@ -24,22 +24,19 @@ requestLongerTimeout(2);
 add_task(async function testSendMoreInfoPref() {
   ensureReportBrokenSitePreffedOn();
 
-  await BrowserTestUtils.withNewTab(
-    REPORTABLE_PAGE_URL,
-    async function (browser) {
-      await changeTab(gBrowser.selectedTab, REPORTABLE_PAGE_URL);
+  await BrowserTestUtils.withNewTab(REPORTABLE_PAGE_URL, async function () {
+    await changeTab(gBrowser.selectedTab, REPORTABLE_PAGE_URL);
 
-      ensureSendMoreInfoDisabled();
-      let rbs = await AppMenu().openReportBrokenSite();
-      await rbs.isSendMoreInfoHidden();
-      await rbs.close();
+    ensureSendMoreInfoDisabled();
+    let rbs = await AppMenu().openReportBrokenSite();
+    await rbs.isSendMoreInfoHidden();
+    await rbs.close();
 
-      ensureSendMoreInfoEnabled();
-      rbs = await AppMenu().openReportBrokenSite();
-      await rbs.isSendMoreInfoShown();
-      await rbs.close();
-    }
-  );
+    ensureSendMoreInfoEnabled();
+    rbs = await AppMenu().openReportBrokenSite();
+    await rbs.isSendMoreInfoShown();
+    await rbs.close();
+  });
 });
 
 add_task(async function testSendingMoreInfo() {

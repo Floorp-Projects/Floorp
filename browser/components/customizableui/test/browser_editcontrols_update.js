@@ -29,7 +29,7 @@ function expectCommandUpdate(count, testWindow = window) {
       supportsCommand(cmd) {
         return cmd == "cmd_delete";
       },
-      isCommandEnabled(cmd) {
+      isCommandEnabled() {
         if (!count) {
           ok(false, "unexpected update");
           reject();

@@ -5,7 +5,7 @@
 import { BrowserTestUtils } from "resource://testing-common/BrowserTestUtils.sys.mjs";
 
 export var AppMenu = {
-  init(libDir) {},
+  init() {},
 
   configurations: {
     appMenuMainView: {

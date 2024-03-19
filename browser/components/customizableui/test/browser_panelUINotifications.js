@@ -14,7 +14,7 @@ add_task(async function testMainActionCalled() {
     url: "about:blank",
   };
 
-  await BrowserTestUtils.withNewTab(options, function (browser) {
+  await BrowserTestUtils.withNewTab(options, function () {
     is(
       PanelUI.notificationPanel.state,
       "closed",
@@ -77,7 +77,7 @@ add_task(async function testSecondaryActionWorkflow() {
     url: "about:blank",
   };
 
-  await BrowserTestUtils.withNewTab(options, async function (browser) {
+  await BrowserTestUtils.withNewTab(options, async function () {
     is(
       PanelUI.notificationPanel.state,
       "closed",
@@ -167,7 +167,7 @@ add_task(async function testDownloadingBadge() {
     url: "about:blank",
   };
 
-  await BrowserTestUtils.withNewTab(options, async function (browser) {
+  await BrowserTestUtils.withNewTab(options, async function () {
     let mainActionCalled = false;
     let mainAction = {
       callback: () => {
@@ -225,7 +225,7 @@ add_task(async function testDownloadingBadge() {
  *   then we display any other badges that are remaining.
  */
 add_task(async function testInteractionWithBadges() {
-  await BrowserTestUtils.withNewTab("about:blank", async function (browser) {
+  await BrowserTestUtils.withNewTab("about:blank", async function () {
     // Remove the fxa toolbar button from the navbar to ensure the notification
     // is displayed on the app menu button.
     let { CustomizableUI } = ChromeUtils.importESModule(
@@ -328,7 +328,7 @@ add_task(async function testInteractionWithBadges() {
  * This tests that adding a badge will not dismiss any existing doorhangers.
  */
 add_task(async function testAddingBadgeWhileDoorhangerIsShowing() {
-  await BrowserTestUtils.withNewTab("about:blank", function (browser) {
+  await BrowserTestUtils.withNewTab("about:blank", function () {
     is(
       PanelUI.notificationPanel.state,
       "closed",
@@ -468,7 +468,7 @@ add_task(async function testMultipleBadges() {
  * Tests that non-badges also operate like a stack.
  */
 add_task(async function testMultipleNonBadges() {
-  await BrowserTestUtils.withNewTab("about:blank", async function (browser) {
+  await BrowserTestUtils.withNewTab("about:blank", async function () {
     is(
       PanelUI.notificationPanel.state,
       "closed",

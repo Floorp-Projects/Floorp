@@ -12,7 +12,7 @@ const REQ_LOC_CHANGE_EVENT = "intl:requested-locales-changed";
 function promiseLocaleChanged(requestedLocale) {
   return new Promise(resolve => {
     let localeObserver = {
-      observe(aSubject, aTopic, aData) {
+      observe(aSubject, aTopic) {
         switch (aTopic) {
           case REQ_LOC_CHANGE_EVENT:
             let reqLocs = Services.locale.requestedLocales;
@@ -26,10 +26,10 @@ function promiseLocaleChanged(requestedLocale) {
   });
 }
 
-function promiseLocaleNotChanged(requestedLocale) {
+function promiseLocaleNotChanged() {
   return new Promise(resolve => {
     let localeObserver = {
-      observe(aSubject, aTopic, aData) {
+      observe(aSubject, aTopic) {
         switch (aTopic) {
           case REQ_LOC_CHANGE_EVENT:
             ok(false, "Locale should not change.");

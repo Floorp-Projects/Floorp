@@ -10,7 +10,7 @@ import { setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 import { TestUtils } from "resource://testing-common/TestUtils.sys.mjs";
 
 export var Tabs = {
-  init(libDir) {},
+  init() {},
 
   configurations: {
     fiveTabs: {
@@ -20,7 +20,7 @@ export var Tabs = {
         let browserWindow =
           Services.wm.getMostRecentWindow("navigator:browser");
         hoverTab(browserWindow.gBrowser.tabs[3]);
-        await new Promise((resolve, reject) => {
+        await new Promise(resolve => {
           setTimeout(resolve, 3000);
         });
         await allTabTitlesDisplayed(browserWindow);
@@ -59,7 +59,7 @@ export var Tabs = {
         let newTabButton = browserWindow.gBrowser.tabContainer.newTabButton;
         hoverTab(newTabButton);
 
-        await new Promise((resolve, reject) => {
+        await new Promise(resolve => {
           setTimeout(resolve, 3000);
         });
         await allTabTitlesDisplayed(browserWindow);
@@ -117,7 +117,7 @@ export var Tabs = {
         browserWindow.gBrowser.selectTabAtIndex(3);
         hoverTab(browserWindow.gBrowser.tabs[5]);
 
-        await new Promise((resolve, reject) => {
+        await new Promise(resolve => {
           setTimeout(resolve, 3000);
         });
 

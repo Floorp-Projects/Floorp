@@ -95,7 +95,7 @@ function makeMockPermissionRequest(browser) {
     allow() {
       this._allowed = true;
     },
-    getDelegatePrincipal(aType) {
+    getDelegatePrincipal() {
       return principal;
     },
     QueryInterface: ChromeUtils.generateQI(["nsIContentPermissionRequest"]),

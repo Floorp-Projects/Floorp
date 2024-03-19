@@ -16,7 +16,7 @@ add_task(async function test_shopping_settings_fakespot_learn_more() {
       await SpecialPowers.spawn(
         browser,
         [MOCK_ANALYZED_PRODUCT_RESPONSE],
-        async mockData => {
+        async () => {
           let shoppingContainer =
             content.document.querySelector(
               "shopping-container"
@@ -55,7 +55,7 @@ add_task(async function test_shopping_settings_ads_learn_more() {
       await SpecialPowers.spawn(
         browser,
         [MOCK_ANALYZED_PRODUCT_RESPONSE],
-        async mockData => {
+        async () => {
           let shoppingContainer =
             content.document.querySelector(
               "shopping-container"
@@ -404,7 +404,7 @@ add_task(
         await SpecialPowers.spawn(
           sidebar.querySelector("browser"),
           [MOCK_ANALYZED_PRODUCT_RESPONSE],
-          async mockData => {
+          async () => {
             let shoppingContainer =
               content.document.querySelector(
                 "shopping-container"
@@ -490,7 +490,7 @@ add_task(
         await SpecialPowers.spawn(
           sidebar.querySelector("browser"),
           [MOCK_ANALYZED_PRODUCT_RESPONSE],
-          async mockData => {
+          async () => {
             let shoppingContainer =
               content.document.querySelector(
                 "shopping-container"
