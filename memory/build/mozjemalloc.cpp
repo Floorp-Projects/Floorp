@@ -2694,16 +2694,6 @@ bool arena_t::SplitRun(arena_run_t* aRun, size_t aSize, bool aLarge,
 
 void arena_t::InitChunk(arena_chunk_t* aChunk) {
   size_t i;
-  // WARNING: The following relies on !aZeroed meaning "used to be an arena
-  // chunk".
-  // When the chunk we're initializating as an arena chunk is zeroed, we
-  // mark all runs are decommitted and zeroed.
-  // When it is not, which we can assume means it's a recycled arena chunk,
-  // all it can contain is an arena chunk header (which we're overwriting),
-  // and zeroed or poisoned memory (because a recycled arena chunk will
-  // have been emptied before being recycled). In that case, we can get
-  // away with reusing the chunk as-is, marking all runs as madvised.
-
   size_t flags = CHUNK_MAP_DECOMMITTED | CHUNK_MAP_ZEROED;
 
   mStats.mapped += kChunkSize;
