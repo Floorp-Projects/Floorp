@@ -29,7 +29,6 @@ namespace xsimd
     {
         static constexpr bool supported() noexcept { return XSIMD_WITH_I8MM_NEON64; }
         static constexpr bool available() noexcept { return true; }
-        static constexpr unsigned version() noexcept { return generic::version(8, 2, 0); }
         static constexpr char const* name() noexcept { return "i8mm+neon64"; }
     };
 
@@ -39,6 +38,11 @@ namespace xsimd
 
         XSIMD_DECLARE_SIMD_REGISTER_ALIAS(i8mm<neon64>, neon64);
 
+        template <class T>
+        struct get_bool_simd_register<T, i8mm<neon64>>
+            : detail::neon_bool_simd_register<T, i8mm<neon64>>
+        {
+        };
     }
 #endif
 
