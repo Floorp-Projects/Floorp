@@ -15,7 +15,7 @@ FINAL_TARGET_FILES.actors += [
 ]
 
 EXTRA_JS_MODULES.asrouter += [
-    "modules/ActorConstants.sys.mjs",
+    "modules/ActorConstants.mjs",
     "modules/ASRouter.sys.mjs",
     "modules/ASRouterDefaultConfig.sys.mjs",
     "modules/ASRouterNewTabHook.sys.mjs",

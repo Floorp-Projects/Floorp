@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { ASRouterPreferences } from "resource:///modules/asrouter/ASRouterPreferences.sys.mjs";
-import { MESSAGE_TYPE_HASH as msg } from "resource:///modules/asrouter/ActorConstants.sys.mjs";
+import { MESSAGE_TYPE_HASH as msg } from "resource:///modules/asrouter/ActorConstants.mjs";
 
 export class ASRouterParentProcessMessageHandler {
   constructor({

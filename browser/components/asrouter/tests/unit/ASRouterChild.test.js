@@ -1,6 +1,6 @@
 /*eslint max-nested-callbacks: ["error", 10]*/
 import { ASRouterChild } from "actors/ASRouterChild.sys.mjs";
-import { MESSAGE_TYPE_HASH as msg } from "modules/ActorConstants.sys.mjs";
+import { MESSAGE_TYPE_HASH as msg } from "modules/ActorConstants.mjs";
 
 describe("ASRouterChild", () => {
   let asRouterChild = null;
