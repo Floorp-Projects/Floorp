@@ -156,16 +156,16 @@
   }
 
   /* For dialogs, use a different background colour. We don't do
-   * this in High Contrast mode, as we should be using system colours then.
+   * this in forced colors mode, as we should be using system colours then.
    */
-  @media not (prefers-contrast) {
+  @media not (forced-colors) {
     :root[dialogroot] {
       --in-content-page-background: #42414d;
     }
   }
 }
 
-@media (prefers-contrast) {
+@media (forced-colors) {
   :host(:is(.anonymous-content-host, notification-message)),
   :root {
     --in-content-page-color: CanvasText;
@@ -304,7 +304,7 @@ xul|tab[selected]:hover:active {
   background-color: var(--in-content-button-background-active);
 }
 
-@media (prefers-contrast) {
+@media (forced-colors) {
   xul|tab:hover,
   xul|tab:hover:active {
     border-bottom-color: currentColor;
@@ -483,7 +483,7 @@ xul|button.primary:not([disabled="true"]):hover:active {
   border-color: var(--in-content-primary-button-border-active);
 }
 
-@media not (prefers-contrast) {
+@media not (forced-colors) {
   html|button.semi-transparent:not(.ghost-button, .primary):enabled {
     background-color: color-mix(in srgb, currentColor 10%, transparent);
   }
@@ -504,7 +504,7 @@ xul|button.primary:not([disabled="true"]):hover:active {
   --in-content-focus-outline-color: var(--in-content-danger-button-background);
 }
 
-@media not (prefers-contrast) {
+@media not (forced-colors) {
   html|button.ghost-button {
     background-color: transparent;
   }
@@ -798,7 +798,7 @@ html|*#categories > html|*.category:dir(rtl) {
   border-color: var(--in-content-button-border-color-active);
 }
 
-@media not (prefers-contrast) {
+@media not (forced-colors) {
   #categories > .category[selected],
   #categories > .category.selected {
     color: var(--in-content-accent-color);
@@ -815,7 +815,7 @@ html|*#categories > html|*.category:dir(rtl) {
   }
 }
 
-@media (prefers-contrast) {
+@media (forced-colors) {
   #categories > .category {
     /* The transition causes issues with the text getting a background while
      * transitioning and it looks weird. */
@@ -963,7 +963,7 @@ xul|treechildren::-moz-tree-row(selected) {
   color: var(--in-content-item-selected-text);
 }
 
-@media not (prefers-contrast) {
+@media not (forced-colors) {
   xul|richlistbox:not(#categories) > xul|richlistitem[selected] {
     /* Ensure buttons/menulists inside richlistitems (containers, applications) look OK */
     --in-content-button-background: color-mix(in srgb, currentColor 15%, transparent);
@@ -981,8 +981,8 @@ xul|richlistitem[selected] xul|menulist:focus-visible {
 }
 
 /* Use a 2px border so that selected row highlight is still visible behind
-    an existing high-contrast border that uses the background color */
-@media (prefers-contrast) {
+    an existing forced colors border that uses the background color */
+@media (forced-colors) {
   xul|treechildren::-moz-tree-row(selected) {
      border: 2px solid currentColor;
      border-radius: 4px;
@@ -1046,7 +1046,7 @@ xul|treecol:not([hideheader="true"], :first-child),
   border-image: linear-gradient(transparent 0%, transparent 20%, var(--in-content-box-border-color) 20%, var(--in-content-box-border-color) 80%, transparent 80%, transparent 100%) 1 1;
 }
 
-@media (prefers-contrast) {
+@media (forced-colors) {
   xul|treecol:not([hideheader="true"], :first-child),
   xul|treecolpicker {
     --in-content-box-border-color: var(--in-content-button-border-color);
@@ -1191,7 +1191,7 @@ input[type="text"][warning]:enabled:not(:focus) {
   align-items: center;
 }
 
-@media (prefers-contrast) {
+@media (forced-colors) {
   .sidebar-footer-link {
     /* We need a true transparent but in HCM this would compute to an actual color,
      * so select the page's background color instead: */
