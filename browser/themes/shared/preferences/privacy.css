@@ -187,13 +187,13 @@
   border-color: var(--in-content-accent-color);
 }
 
-@media (prefers-contrast) {
+@media (forced-colors) {
   .privacy-detailedoption.selected {
     outline: 2px solid var(--in-content-accent-color);
   }
 }
 
-@media not (prefers-contrast) {
+@media not (forced-colors) {
   .privacy-detailedoption {
     background-color: rgba(215, 215, 219, 0.1);
   }
