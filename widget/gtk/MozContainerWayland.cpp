@@ -419,6 +419,21 @@ gboolean moz_container_wayland_map_event(GtkWidget* widget,
   return FALSE;
 }
 
+void moz_container_wayland_map(GtkWidget* widget) {
+  LOGCONTAINER("%s [%p]\n", __FUNCTION__,
+               (void*)moz_container_get_nsWindow(MOZ_CONTAINER(widget)));
+
+  g_return_if_fail(IS_MOZ_CONTAINER(widget));
+
+  // We need to mark MozContainer as mapped to make sure
+  // moz_container_wayland_unmap() is called on hide/withdraw.
+  gtk_widget_set_mapped(widget, TRUE);
+
+  if (gtk_widget_get_has_window(widget)) {
+    gdk_window_show(gtk_widget_get_window(widget));
+  }
+}
+
 void moz_container_wayland_size_allocate(GtkWidget* widget,
                                          GtkAllocation* allocation) {
   GtkAllocation tmp_allocation;

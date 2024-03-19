@@ -87,18 +87,19 @@ void moz_container_class_init(MozContainerClass* klass) {
     GtkObjectClass *object_class = GTK_OBJECT_CLASS (klass); */
   GtkWidgetClass* widget_class = GTK_WIDGET_CLASS(klass);
 
-  widget_class->map = moz_container_map;
   widget_class->realize = moz_container_realize;
   widget_class->unrealize = moz_container_unrealize;
   widget_class->destroy = moz_container_destroy;
 
 #ifdef MOZ_WAYLAND
   if (mozilla::widget::GdkIsWaylandDisplay()) {
+    widget_class->map = moz_container_wayland_map;
     widget_class->size_allocate = moz_container_wayland_size_allocate;
     widget_class->map_event = moz_container_wayland_map_event;
     widget_class->unmap = moz_container_wayland_unmap;
   } else {
 #endif
+    widget_class->map = moz_container_map;
     widget_class->size_allocate = moz_container_size_allocate;
     widget_class->unmap = moz_container_unmap;
 #ifdef MOZ_WAYLAND
@@ -129,10 +130,6 @@ void moz_container_map(GtkWidget* widget) {
   if (gtk_widget_get_has_window(widget)) {
     gdk_window_show(gtk_widget_get_window(widget));
   }
-
-  // Enable rendering to nsWindow/MozContainer
-  nsWindow* window = moz_container_get_nsWindow(MOZ_CONTAINER(widget));
-  window->OnMap();
 }
 
 void moz_container_unmap(GtkWidget* widget) {
@@ -141,9 +138,9 @@ void moz_container_unmap(GtkWidget* widget) {
   LOGCONTAINER(("moz_container_unmap() [%p]",
                 (void*)moz_container_get_nsWindow(MOZ_CONTAINER(widget))));
 
-  // Disable rendering to nsWindow/MozContainer before we really unmap it.
+  // Disable rendering to MozContainer before we unmap it.
   nsWindow* window = moz_container_get_nsWindow(MOZ_CONTAINER(widget));
-  window->OnUnmap();
+  window->DisableRendering();
 
   gtk_widget_set_mapped(widget, FALSE);
 

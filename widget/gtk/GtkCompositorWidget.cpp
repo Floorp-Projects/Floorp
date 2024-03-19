@@ -40,22 +40,25 @@ GtkCompositorWidget::GtkCompositorWidget(
 #if defined(MOZ_X11)
   if (GdkIsX11Display()) {
     ConfigureX11Backend((Window)aInitData.XWindow(), aInitData.Shaped());
-    LOG("GtkCompositorWidget::GtkCompositorWidget() [%p] mXWindow %p\n",
-        (void*)mWidget.get(), (void*)aInitData.XWindow());
+    LOG("GtkCompositorWidget::GtkCompositorWidget() [%p] mXWindow %p "
+        "mIsRenderingSuspended %d\n",
+        (void*)mWidget.get(), (void*)aInitData.XWindow(),
+        !!mIsRenderingSuspended);
   }
 #endif
 #if defined(MOZ_WAYLAND)
   if (GdkIsWaylandDisplay()) {
     ConfigureWaylandBackend();
-    LOG("GtkCompositorWidget::GtkCompositorWidget() [%p] mWidget %p\n",
-        (void*)mWidget.get(), (void*)mWidget);
+    LOG("GtkCompositorWidget::GtkCompositorWidget() [%p] mWidget %p "
+        "mIsRenderingSuspended %d\n",
+        (void*)mWidget.get(), (void*)mWidget, !!mIsRenderingSuspended);
   }
 #endif
 }
 
 GtkCompositorWidget::~GtkCompositorWidget() {
   LOG("GtkCompositorWidget::~GtkCompositorWidget [%p]\n", (void*)mWidget.get());
-  CleanupResources();
+  DisableRendering();
   RefPtr<nsIWidget> widget = mWidget.forget();
   NS_ReleaseOnMainThread("GtkCompositorWidget::mWidget", widget.forget());
 }
@@ -166,47 +169,57 @@ GtkCompositorWidget::GetNativeLayerRoot() {
 }
 #endif
 
-void GtkCompositorWidget::CleanupResources() {
-  LOG("GtkCompositorWidget::CleanupResources [%p]\n", (void*)mWidget.get());
+void GtkCompositorWidget::DisableRendering() {
+  LOG("GtkCompositorWidget::DisableRendering [%p]\n", (void*)mWidget.get());
+  mIsRenderingSuspended = true;
   mProvider.CleanupResources();
 }
 
 #if defined(MOZ_WAYLAND)
-void GtkCompositorWidget::ConfigureWaylandBackend() {
+bool GtkCompositorWidget::ConfigureWaylandBackend() {
   mProvider.Initialize(this);
+  return true;
 }
 #endif
 
 #if defined(MOZ_X11)
-void GtkCompositorWidget::ConfigureX11Backend(Window aXWindow, bool aShaped) {
+bool GtkCompositorWidget::ConfigureX11Backend(Window aXWindow, bool aShaped) {
   // We don't have X window yet.
   if (!aXWindow) {
-    mProvider.CleanupResources();
-    return;
+    mIsRenderingSuspended = true;
+    return false;
   }
   // Initialize the window surface provider
-  mProvider.Initialize(aXWindow, aShaped);
+  return mProvider.Initialize(aXWindow, aShaped);
 }
 #endif
 
-void GtkCompositorWidget::SetRenderingSurface(const uintptr_t aXWindow,
-                                              const bool aShaped) {
-  LOG("GtkCompositorWidget::SetRenderingSurface() [%p]\n", mWidget.get());
+void GtkCompositorWidget::EnableRendering(const uintptr_t aXWindow,
+                                          const bool aShaped) {
+  LOG("GtkCompositorWidget::EnableRendering() [%p]\n", mWidget.get());
 
+  if (!mIsRenderingSuspended) {
+    LOG("  quit, mIsRenderingSuspended = false\n");
+    return;
+  }
 #if defined(MOZ_WAYLAND)
   if (GdkIsWaylandDisplay()) {
     LOG("  configure widget %p\n", mWidget.get());
-    ConfigureWaylandBackend();
+    if (!ConfigureWaylandBackend()) {
+      return;
+    }
   }
 #endif
 #if defined(MOZ_X11)
   if (GdkIsX11Display()) {
     LOG("  configure XWindow %p shaped %d\n", (void*)aXWindow, aShaped);
-    ConfigureX11Backend((Window)aXWindow, aShaped);
+    if (!ConfigureX11Backend((Window)aXWindow, aShaped)) {
+      return;
+    }
   }
 #endif
+  mIsRenderingSuspended = false;
 }
-
 #ifdef MOZ_LOGGING
 bool GtkCompositorWidget::IsPopup() {
   return mWidget ? mWidget->IsPopup() : false;

@@ -460,6 +460,8 @@ class nsWindow final : public nsBaseWidget {
   // rendering queue blocking (see Bug 1782948).
   void ClearRenderingQueue();
 
+  void DisableRendering();
+
   bool ApplyEnterLeaveMutterWorkaround();
 
   void NotifyOcclusionState(mozilla::widget::OcclusionState aState) override;
@@ -630,12 +632,8 @@ class nsWindow final : public nsBaseWidget {
   mozilla::Mutex mTitlebarRectMutex;
   LayoutDeviceIntRect mTitlebarRect MOZ_GUARDED_BY(mTitlebarRectMutex);
 
-  // This mutex protect window visibility changes.
-  mozilla::Mutex mWindowVisibilityMutex;
+  mozilla::Mutex mDestroyMutex;
 
-  // This track real window visibility from OS perspective.
-  // It's set by OnMap/OnUnmap which is based on Gtk events.
-  mozilla::Atomic<bool, mozilla::Relaxed> mIsMapped;
   // Has this widget been destroyed yet?
   bool mIsDestroyed : 1;
   // mIsShown tracks requested visible status from browser perspective, i.e.
@@ -647,6 +645,9 @@ class nsWindow final : public nsBaseWidget {
   // that the window is not actually visible but we report to browser that
   // it is visible (mIsShown == true).
   bool mNeedsShow : 1;
+  // This track real window visibility from OS perspective.
+  // It's set by OnMap/OnUnmap which is based on Gtk events.
+  bool mIsMapped : 1;
   // is this widget enabled?
   bool mEnabled : 1;
   // has the native window for this been created yet?
