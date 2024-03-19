@@ -1,9 +1,0 @@
-//error: protocol `IntrSyncManagee' requires more powerful send semantics than its manager `IntrSyncManager' provides
-
-include protocol IntrSyncManager;
-
-intr protocol IntrSyncManagee {
-    manager IntrSyncManager;
-child:
-    async __delete__();
-};
