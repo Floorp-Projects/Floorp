@@ -6,6 +6,8 @@ import logging
 import os
 
 import pytest
+from gecko_taskgraph import GECKO
+from gecko_taskgraph.files_changed import get_locally_changed_files
 from gecko_taskgraph.util.bugbug import BUGBUG_BASE_URL
 from gecko_taskgraph.util.hg import PUSHLOG_PUSHES_TMPL
 from responses import RequestsMock
@@ -31,6 +33,11 @@ def datadir():
 @pytest.fixture(scope="session")
 def create_tgg(responses, datadir):
     def inner(parameters=None, overrides=None):
+        overrides = overrides or {}
+
+        # Compute files_changed from local VCS.
+        overrides["files_changed"] = sorted(get_locally_changed_files(GECKO))
+
         params = parameters_loader(parameters, strict=False, overrides=overrides)
         tgg = TaskGraphGenerator(None, params)
 
