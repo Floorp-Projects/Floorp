@@ -21,8 +21,6 @@ gecko = ["nsstring", "serde", "style_traits/gecko", "bindgen", "regex", "toml", 
 servo = ["serde", "style_traits/servo", "servo_atoms", "servo_config", "html5ever",
          "cssparser/serde", "encoding_rs", "malloc_size_of/servo", "arrayvec/use_union",
          "servo_url", "string_cache", "to_shmem/servo", "servo_arc/servo"]
-servo-layout-2013 = []
-servo-layout-2020 = []
 gecko_debug = []
 gecko_refcount_logging = []
 

@@ -18,7 +18,7 @@ macro_rules! try_parse_one {
 }
 
 <%helpers:shorthand name="transition"
-                    engines="gecko servo-2013 servo-2020"
+                    engines="gecko servo"
                     extra_prefixes="moz:layout.css.prefixes.transitions webkit"
                     sub_properties="transition-property transition-duration
                                     transition-timing-function
@@ -204,7 +204,7 @@ macro_rules! try_parse_one {
 </%helpers:shorthand>
 
 <%helpers:shorthand name="animation"
-                    engines="gecko servo-2013 servo-2020"
+                    engines="gecko servo"
                     extra_prefixes="moz:layout.css.prefixes.animations webkit"
                     sub_properties="animation-name animation-duration
                                     animation-timing-function animation-delay

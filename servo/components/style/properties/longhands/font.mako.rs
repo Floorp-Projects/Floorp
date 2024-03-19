@@ -10,7 +10,7 @@
 ${helpers.predefined_type(
     "font-family",
     "FontFamily",
-    engines="gecko servo-2013 servo-2020",
+    engines="gecko servo",
     initial_value="computed::FontFamily::serif()",
     animation_value_type="discrete",
     spec="https://drafts.csswg.org/css-fonts/#propdef-font-family",
@@ -21,7 +21,7 @@ ${helpers.predefined_type(
 ${helpers.predefined_type(
     "font-style",
     "FontStyle",
-    engines="gecko servo-2013 servo-2020",
+    engines="gecko servo",
     initial_value="computed::FontStyle::normal()",
     initial_specified_value="specified::FontStyle::normal()",
     animation_value_type="FontStyle",
@@ -39,7 +39,7 @@ ${helpers.predefined_type(
 ${helpers.single_keyword(
     "font-variant-caps",
     "normal small-caps",
-    engines="gecko servo-2013 servo-2020",
+    engines="gecko servo",
     extra_gecko_values="all-small-caps petite-caps all-petite-caps unicase titling-caps",
     gecko_constant_prefix="NS_FONT_VARIANT_CAPS",
     gecko_ffi_name="mFont.variantCaps",
@@ -53,7 +53,7 @@ ${helpers.single_keyword(
 ${helpers.predefined_type(
     "font-weight",
     "FontWeight",
-    engines="gecko servo-2013 servo-2020",
+    engines="gecko servo",
     initial_value="computed::FontWeight::normal()",
     initial_specified_value="specified::FontWeight::normal()",
     animation_value_type="Number",
@@ -65,7 +65,7 @@ ${helpers.predefined_type(
 ${helpers.predefined_type(
     "font-size",
     "FontSize",
-    engines="gecko servo-2013 servo-2020",
+    engines="gecko servo",
     initial_value="computed::FontSize::medium()",
     initial_specified_value="specified::FontSize::medium()",
     animation_value_type="NonNegativeLength",
@@ -137,7 +137,7 @@ ${helpers.predefined_type(
 ${helpers.predefined_type(
     "font-stretch",
     "FontStretch",
-    engines="gecko servo-2013 servo-2020",
+    engines="gecko servo",
     initial_value="computed::FontStretch::hundred()",
     initial_specified_value="specified::FontStretch::normal()",
     animation_value_type="Percentage",
@@ -354,7 +354,7 @@ ${helpers.predefined_type(
     "line-height",
     "LineHeight",
     "computed::LineHeight::normal()",
-    engines="gecko servo-2013 servo-2020",
+    engines="gecko servo",
     animation_value_type="LineHeight",
     spec="https://drafts.csswg.org/css2/visudet.html#propdef-line-height",
     servo_restyle_damage="reflow",

@@ -41,7 +41,7 @@ pub enum GenericImage<G, ImageUrl, Color, Percentage, Resolution> {
 
     /// A paint worklet image.
     /// <https://drafts.css-houdini.org/css-paint-api/>
-    #[cfg(feature = "servo-layout-2013")]
+    #[cfg(feature = "servo")]
     PaintWorklet(PaintWorklet),
 
     /// A `<cross-fade()>` image. Storing this directly inside of
@@ -416,7 +416,7 @@ where
             Image::None => dest.write_str("none"),
             Image::Url(ref url) => url.to_css(dest),
             Image::Gradient(ref gradient) => gradient.to_css(dest),
-            #[cfg(feature = "servo-layout-2013")]
+            #[cfg(feature = "servo")]
             Image::PaintWorklet(ref paint_worklet) => paint_worklet.to_css(dest),
             #[cfg(feature = "gecko")]
             Image::Element(ref selector) => {
