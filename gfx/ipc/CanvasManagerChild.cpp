@@ -10,7 +10,6 @@
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/gfx/CanvasShutdownManager.h"
 #include "mozilla/gfx/Swizzle.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/layers/ActiveResource.h"
@@ -31,10 +30,7 @@ MOZ_THREAD_LOCAL(CanvasManagerChild*) CanvasManagerChild::sLocalManager;
 
 Atomic<uint32_t> CanvasManagerChild::sNextId(1);
 
-CanvasManagerChild::CanvasManagerChild(ThreadSafeWorkerRef* aWorkerRef,
-                                       uint32_t aId)
-    : mWorkerRef(aWorkerRef), mId(aId) {}
-
+CanvasManagerChild::CanvasManagerChild(uint32_t aId) : mId(aId) {}
 CanvasManagerChild::~CanvasManagerChild() = default;
 
 void CanvasManagerChild::ActorDestroy(ActorDestroyReason aReason) {
@@ -46,6 +42,11 @@ void CanvasManagerChild::ActorDestroy(ActorDestroyReason aReason) {
 }
 
 void CanvasManagerChild::DestroyInternal() {
+  std::set<CanvasRenderingContext2D*> activeCanvas = std::move(mActiveCanvas);
+  for (const auto& i : activeCanvas) {
+    i->OnShutdown();
+  }
+
   if (mActiveResourceTracker) {
     mActiveResourceTracker->AgeAllGenerations();
     mActiveResourceTracker.reset();
@@ -66,6 +67,12 @@ void CanvasManagerChild::Destroy() {
 }
 
 /* static */ void CanvasManagerChild::Shutdown() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // The worker threads should destroy their own CanvasManagerChild instances
+  // during their shutdown sequence. We just need to take care of the main
+  // thread. We need to init here because we may have never created a
+  // CanvasManagerChild for the main thread in the first place.
   if (sLocalManager.init()) {
     RefPtr<CanvasManagerChild> manager = sLocalManager.get();
     if (manager) {
@@ -96,11 +103,6 @@ void CanvasManagerChild::Destroy() {
     return managerWeak;
   }
 
-  auto* shutdownManager = CanvasShutdownManager::Get();
-  if (NS_WARN_IF(!shutdownManager)) {
-    return nullptr;
-  }
-
   // We are only used on the main thread, or on worker threads.
   WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT_IF(!worker, NS_IsMainThread());
@@ -119,8 +121,29 @@ void CanvasManagerChild::Destroy() {
     return nullptr;
   }
 
-  auto manager = MakeRefPtr<CanvasManagerChild>(shutdownManager->GetWorkerRef(),
-                                                sNextId++);
+  auto manager = MakeRefPtr<CanvasManagerChild>(sNextId++);
+
+  if (worker) {
+    // The ThreadSafeWorkerRef will let us know when the worker is shutting
+    // down. This will let us clear our threadlocal reference and close the
+    // actor. We rely upon an explicit shutdown for the main thread.
+    RefPtr<StrongWorkerRef> workerRef = StrongWorkerRef::Create(
+        worker, "CanvasManager", [manager]() { manager->Destroy(); });
+    if (NS_WARN_IF(!workerRef)) {
+      return nullptr;
+    }
+
+    manager->mWorkerRef = new ThreadSafeWorkerRef(workerRef);
+  } else if (NS_IsMainThread()) {
+    if (NS_WARN_IF(
+            AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed))) {
+      return nullptr;
+    }
+  } else {
+    MOZ_ASSERT_UNREACHABLE("Can only be used on main or DOM worker threads!");
+    return nullptr;
+  }
+
   if (NS_WARN_IF(!childEndpoint.Bind(manager))) {
     return nullptr;
   }
@@ -150,6 +173,16 @@ void CanvasManagerChild::Destroy() {
   }
 
   return sLocalManager.get();
+}
+
+void CanvasManagerChild::AddShutdownObserver(
+    dom::CanvasRenderingContext2D* aCanvas) {
+  mActiveCanvas.insert(aCanvas);
+}
+
+void CanvasManagerChild::RemoveShutdownObserver(
+    dom::CanvasRenderingContext2D* aCanvas) {
+  mActiveCanvas.erase(aCanvas);
 }
 
 void CanvasManagerChild::EndCanvasTransaction() {
