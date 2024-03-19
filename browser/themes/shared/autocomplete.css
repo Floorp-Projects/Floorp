@@ -126,10 +126,6 @@
       padding-inline-start: 0;
     }
 
-  &[originaltype="action"] > .two-line-wrapper {
-    flex: 1;
-  }
-
   &[originaltype="generatedPassword"] {
     &:not([collapsed="true"]) {
       /* Workaround bug 451997 and/or bug 492645 */
@@ -158,24 +154,6 @@
     /* Separator between logins and generated passwords. This uses --panel-separator-color from default
      * themes since autocomplete doesn't yet switch to dark. */
     border-top: 1px solid hsla(210,4%,10%,.14);
-  }
-
-  &[originaltype="action"] {
-    text-align: center;
-  }
-
-  /* status items */
-  > .ac-status {
-    padding: var(--space-xsmall) var(--space-small);
-    text-align: center;
-    background-color: var(--color-background-information);
-    width: 100%;
-    border-bottom: 1px solid rgba(38,38,38,.15);
-    font-size: calc(10 / 12 * 1em);
-  }
-
-  &:has(> .ac-status) {
-    opacity: 1;
   }
 
   /* Insecure field warning */

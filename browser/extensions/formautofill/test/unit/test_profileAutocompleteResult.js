@@ -70,7 +70,6 @@ let addressTestCases = [
           label: JSON.stringify({
             primary: "Sesame Street",
             secondary: "123 Sesame Street.",
-            status: "Also autofills address, name, phone",
           }),
           image: "",
         },
@@ -81,7 +80,6 @@ let addressTestCases = [
           label: JSON.stringify({
             primary: "Mozilla",
             secondary: "331 E. Evelyn Avenue",
-            status: "Also autofills address, name, phone",
           }),
           image: "",
         },
@@ -106,7 +104,6 @@ let addressTestCases = [
           label: JSON.stringify({
             primary: "1-345-345-3456.",
             secondary: "123 Sesame Street.",
-            status: "Also autofills address, name, organization",
           }),
           image: "",
         },
@@ -117,7 +114,6 @@ let addressTestCases = [
           label: JSON.stringify({
             primary: "1-650-903-0800",
             secondary: "331 E. Evelyn Avenue",
-            status: "Also autofills address, name, organization",
           }),
           image: "",
         },
@@ -128,7 +124,6 @@ let addressTestCases = [
           label: JSON.stringify({
             primary: "1-000-000-0000",
             secondary: "321, No Name St. 2nd line 3rd line",
-            status: "Also autofills address",
           }),
           image: "",
         },
@@ -153,7 +148,6 @@ let addressTestCases = [
           label: JSON.stringify({
             primary: "123 Sesame Street.",
             secondary: "Timothy Berners-Lee",
-            status: "Also autofills name, organization, phone",
           }),
           image: "",
         },
@@ -164,7 +158,6 @@ let addressTestCases = [
           label: JSON.stringify({
             primary: "331 E. Evelyn Avenue",
             secondary: "John Doe",
-            status: "Also autofills name, organization, phone",
           }),
           image: "",
         },
@@ -175,7 +168,6 @@ let addressTestCases = [
           label: JSON.stringify({
             primary: "321, No Name St. 2nd line 3rd line",
             secondary: "1-000-000-0000",
-            status: "Also autofills phone",
           }),
           image: "",
         },
@@ -200,7 +192,6 @@ let addressTestCases = [
           label: JSON.stringify({
             primary: "123 Sesame Street.",
             secondary: "Timothy Berners-Lee",
-            status: "Also autofills name, organization, phone",
           }),
           image: "",
         },
@@ -211,7 +202,6 @@ let addressTestCases = [
           label: JSON.stringify({
             primary: "331 E. Evelyn Avenue",
             secondary: "John Doe",
-            status: "Also autofills name, organization, phone",
           }),
           image: "",
         },
@@ -222,7 +212,6 @@ let addressTestCases = [
           label: JSON.stringify({
             primary: "321, No Name St.",
             secondary: "1-000-000-0000",
-            status: "Also autofills phone",
           }),
           image: "",
         },
@@ -427,14 +416,7 @@ add_task(async function test_all_patterns() {
       let expectedItemLength = expectedValue.items.length;
       // If the last item shows up as a footer, we expect one more item
       // than expected.
-      if (actual.getStyleAt(actual.matchCount - 1) == "action") {
-        expectedItemLength++;
-      }
-      // Add one row for the status.
-      if (
-        actual.matchCount > 2 &&
-        actual.getStyleAt(actual.matchCount - 2) == "status"
-      ) {
+      if (actual.getStyleAt(actual.matchCount - 1) == "autofill-footer") {
         expectedItemLength++;
       }
 

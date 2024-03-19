@@ -56,21 +56,21 @@ add_task(async function test_insecure_form() {
       protocol: "https",
       focusInput: "#organization",
       expectedType: "autofill-profile",
-      expectedResultLength: 3, // add one for the status row
+      expectedResultLength: 2,
     },
     {
       urlPath: TEST_URL_PATH,
       protocol: "http",
       focusInput: "#organization",
       expectedType: "autofill-profile",
-      expectedResultLength: 3, // add one for the status row
+      expectedResultLength: 2,
     },
     {
       urlPath: TEST_URL_PATH_CC,
       protocol: "https",
       focusInput: "#cc-name",
       expectedType: "autofill-profile",
-      expectedResultLength: 3, // no status row here
+      expectedResultLength: 3,
     },
     {
       urlPath: TEST_URL_PATH_CC,
