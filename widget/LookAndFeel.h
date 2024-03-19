@@ -299,6 +299,7 @@ class LookAndFeel {
      * 1: High
      */
     DynamicRange,
+    VideoDynamicRange,
 
     /** Whether XUL panel animations are enabled. */
     PanelAnimations,

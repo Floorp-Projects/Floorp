@@ -74,14 +74,8 @@ static void GetDisplayInfo(const char16ptr_t aName,
   }
 }
 
-struct CollectMonitorsParam {
-  nsTArray<RefPtr<Screen>> screens;
-  nsTArray<DXGI_OUTPUT_DESC1> outputs;
-};
-
 BOOL CALLBACK CollectMonitors(HMONITOR aMon, HDC, LPRECT, LPARAM ioParam) {
-  CollectMonitorsParam* cmParam =
-      reinterpret_cast<CollectMonitorsParam*>(ioParam);
+  auto screens = reinterpret_cast<nsTArray<RefPtr<Screen>>*>(ioParam);
   BOOL success = FALSE;
   MONITORINFOEX info;
   info.cbSize = sizeof(MONITORINFOEX);
@@ -129,37 +123,6 @@ BOOL CALLBACK CollectMonitors(HMONITOR aMon, HDC, LPRECT, LPARAM ioParam) {
   GetDisplayInfo(info.szDevice, orientation, angle, isPseudoDisplay,
                  refreshRate);
 
-  // Is this an HDR screen? Determine this by enumerating the DeviceManager
-  // outputs (adapters) and correlating the monitor associated with the
-  // the output with aMon, the monitor we are considering here.
-  bool isHDR = false;
-  for (auto& output : cmParam->outputs) {
-    if (output.Monitor == aMon) {
-      // Set isHDR to true if the output has a BT2020 colorspace with EOTF2084
-      // gamma curve, this indicates the system is sending an HDR format to
-      // this monitor.  The colorspace returned by DXGI is very vague - we only
-      // see DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020 for HDR and
-      // DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709 for SDR modes, even if the
-      // monitor is using something like YCbCr444 according to Settings
-      // (System -> Display Settings -> Advanced Display).  To get more specific
-      // info we would need to query the DISPLAYCONFIG values in WinGDI.
-      //
-      // Note that we don't check bit depth here, since as of Windows 11 22H2,
-      // HDR is supported with 8bpc for lower bandwidth, where DWM converts to
-      // dithered RGB8 rather than RGB10, which doesn't really matter here.
-      //
-      // Since RefreshScreens(), the caller of this function, is triggered
-      // by WM_DISPLAYCHANGE, this will pick up changes to the monitors in
-      // all the important cases (resolution/color changes by the user).
-      //
-      // Further reading:
-      // https://learn.microsoft.com/en-us/windows/win32/direct3darticles/high-dynamic-range
-      // https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-displayconfig_sdr_white_level
-      isHDR = (output.ColorSpace == DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020);
-      break;
-    }
-  }
-
   MOZ_LOG(sScreenLog, LogLevel::Debug,
           ("New screen [%s (%s) %d %u %f %f %f %d %d %d]",
            ToString(rect).c_str(), ToString(availRect).c_str(), pixelDepth,
@@ -168,12 +131,12 @@ BOOL CALLBACK CollectMonitors(HMONITOR aMon, HDC, LPRECT, LPARAM ioParam) {
   auto screen = MakeRefPtr<Screen>(
       rect, availRect, pixelDepth, pixelDepth, refreshRate, contentsScaleFactor,
       defaultCssScaleFactor, dpi, Screen::IsPseudoDisplay(isPseudoDisplay),
-      Screen::IsHDR(isHDR), orientation, angle);
+      orientation, angle);
   if (info.dwFlags & MONITORINFOF_PRIMARY) {
     // The primary monitor must be the first element of the screen list.
-    cmParam->screens.InsertElementAt(0, std::move(screen));
+    screens->InsertElementAt(0, std::move(screen));
   } else {
-    cmParam->screens.AppendElement(std::move(screen));
+    screens->AppendElement(std::move(screen));
   }
   return TRUE;
 }
@@ -181,17 +144,13 @@ BOOL CALLBACK CollectMonitors(HMONITOR aMon, HDC, LPRECT, LPARAM ioParam) {
 void ScreenHelperWin::RefreshScreens() {
   MOZ_LOG(sScreenLog, LogLevel::Debug, ("Refreshing screens"));
 
-  CollectMonitorsParam cmParam;
-  if (DeviceManagerDx* dx = DeviceManagerDx::Get()) {
-    // Get the adapters to pass as an arg to our monitor enumeration callback.
-    cmParam.outputs = dx->EnumerateOutputs();
-  }
+  AutoTArray<RefPtr<Screen>, 4> screens;
   BOOL result = ::EnumDisplayMonitors(
-      nullptr, nullptr, (MONITORENUMPROC)CollectMonitors, (LPARAM)&cmParam);
+      nullptr, nullptr, (MONITORENUMPROC)CollectMonitors, (LPARAM)&screens);
   if (!result) {
     NS_WARNING("Unable to EnumDisplayMonitors");
   }
-  ScreenManager::Refresh(std::move(cmParam.screens));
+  ScreenManager::Refresh(std::move(screens));
 }
 
 }  // namespace widget

@@ -76,6 +76,8 @@ class gfxPlatformMac : public gfxPlatform {
 
   static bool CheckVariationFontSupport();
 
+  bool SupportsHDR() override;
+
  protected:
   bool AccelerateLayersByDefault() override;
 

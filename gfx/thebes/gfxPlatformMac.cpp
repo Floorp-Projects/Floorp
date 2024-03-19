@@ -965,6 +965,27 @@ gfxPlatformMac::CreateGlobalHardwareVsyncSource() {
 #endif
 }
 
+bool gfxPlatformMac::SupportsHDR() {
+  // HDR has 3 requirements:
+  // 1) high peak brightness
+  // 2) high contrast ratio
+  // 3) color depth > 24
+  if (GetScreenDepth() <= 24) {
+    return false;
+  }
+
+#ifdef MOZ_WIDGET_UIKIT
+  return false;
+#elif defined(EARLY_BETA_OR_EARLIER)
+  // Screen is capable. Is the OS capable?
+  // More-or-less supported in Catalina.
+  return true;
+#else
+  // Definitely supported in Big Sur.
+  return nsCocoaFeatures::OnBigSurOrLater();
+#endif
+}
+
 nsTArray<uint8_t> gfxPlatformMac::GetPlatformCMSOutputProfileData() {
   nsTArray<uint8_t> prefProfileData = GetPrefCMSOutputProfileData();
   if (!prefProfileData.IsEmpty()) {

@@ -38,15 +38,14 @@ static already_AddRefed<Screen> MakePrimaryScreen() {
   uint32_t depth = java::GeckoAppShell::GetScreenDepth();
   float density = java::GeckoAppShell::GetDensity();
   float dpi = java::GeckoAppShell::GetDpi();
-  bool isHDR = false;  // Bug 1884960: report this accurately
   auto orientation =
       hal::ScreenOrientation(java::GeckoAppShell::GetScreenOrientation());
   uint16_t angle = java::GeckoAppShell::GetScreenAngle();
   float refreshRate = java::GeckoAppShell::GetScreenRefreshRate();
-  return MakeAndAddRef<Screen>(
-      bounds, bounds, depth, depth, refreshRate,
-      DesktopToLayoutDeviceScale(density), CSSToLayoutDeviceScale(1.0f), dpi,
-      Screen::IsPseudoDisplay::No, Screen::IsHDR(isHDR), orientation, angle);
+  return MakeAndAddRef<Screen>(bounds, bounds, depth, depth, refreshRate,
+                               DesktopToLayoutDeviceScale(density),
+                               CSSToLayoutDeviceScale(1.0f), dpi,
+                               Screen::IsPseudoDisplay::No, orientation, angle);
 }
 
 ScreenHelperAndroid::ScreenHelperAndroid() {

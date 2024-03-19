@@ -108,13 +108,6 @@ static already_AddRefed<Screen> MakeScreen(NSScreen* aScreen) {
   if (pixelDepth > MAX_REPORTED_PIXEL_DEPTH) {
     pixelDepth = MAX_REPORTED_PIXEL_DEPTH;
   }
-  // Should we treat this as HDR? Based on spec at
-  // https://drafts.csswg.org/mediaqueries-5/#dynamic-range, we'll consider it
-  // HDR if it has pixel depth greater than 24.
-  bool isHDR = pixelDepth > 24;
-
-  // Double-check HDR against the platform capabilities.
-  isHDR &= nsCocoaFeatures::OnBigSurOrLater();
 
   float dpi = 96.0f;
   CGDirectDisplayID displayID =
@@ -132,10 +125,9 @@ static already_AddRefed<Screen> MakeScreen(NSScreen* aScreen) {
   // Getting the refresh rate is a little hard on OS X. We could use
   // CVDisplayLinkGetNominalOutputVideoRefreshPeriod, but that's a little
   // involved. Ideally we could query it from vsync. For now, we leave it out.
-  RefPtr<Screen> screen =
-      new Screen(rect, availRect, pixelDepth, pixelDepth, 0,
-                 contentsScaleFactor, defaultCssScaleFactor, dpi,
-                 Screen::IsPseudoDisplay::No, Screen::IsHDR(isHDR));
+  RefPtr<Screen> screen = new Screen(rect, availRect, pixelDepth, pixelDepth, 0,
+                                     contentsScaleFactor, defaultCssScaleFactor,
+                                     dpi, Screen::IsPseudoDisplay::No);
   return screen.forget();
 
   NS_OBJC_END_TRY_BLOCK_RETURN(nullptr);
