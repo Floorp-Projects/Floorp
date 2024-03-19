@@ -1919,6 +1919,10 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvClearCachedResources() {
       wr::AsUint64(mPipelineId), wr::AsUint64(mApi->GetId()),
       IsRootWebRenderBridgeParent());
 
+  if (!IsRootWebRenderBridgeParent()) {
+    mApi->FlushPendingWrTransactionEventsWithoutWait();
+  }
+
   // Clear resources
   wr::TransactionBuilder txn(mApi);
   txn.SetLowPriority(true);
