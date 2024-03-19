@@ -42,8 +42,8 @@ window.__defineGetter__("_EU_ChromeUtils", function () {
 window.__defineGetter__("_EU_OS", function () {
   delete this._EU_OS;
   try {
-    this._EU_OS = _EU_ChromeUtils.import(
-      "resource://gre/modules/AppConstants.jsm"
+    this._EU_OS = _EU_ChromeUtils.importESModule(
+      "resource://gre/modules/AppConstants.sys.mjs"
     ).platform;
   } catch (ex) {
     this._EU_OS = null;

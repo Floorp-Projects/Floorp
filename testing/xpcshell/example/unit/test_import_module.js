@@ -6,7 +6,7 @@
 
 /**
  * Ensures that tests can import a module in the same folder through:
- * ChromeUtils.importESModule("resource://test/module.jsm");
+ * ChromeUtils.importESModule("resource://test/module.sys.mjs");
  */
 
 function run_test() {
