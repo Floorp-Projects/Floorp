@@ -46,6 +46,16 @@ const valueTests = [
     expected: ["5", 5, 0, 7, 0],
   },
   {
+    desc: "Value should change when currentValue is called",
+    id: "slider",
+    async action(browser, acc) {
+      acc.QueryInterface(nsIAccessibleValue);
+      acc.currentValue = 4;
+    },
+    waitFor: EVENT_VALUE_CHANGE,
+    expected: ["4", 4, 0, 7, 0],
+  },
+  {
     desc: "Value should change when @aria-valuenow is updated",
     id: "slider",
     attrs: [
