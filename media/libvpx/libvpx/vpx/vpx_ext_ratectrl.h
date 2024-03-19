@@ -26,7 +26,7 @@ extern "C" {
  * types, removing or reassigning enums, adding/removing/rearranging
  * fields to structures.
  */
-#define VPX_EXT_RATECTRL_ABI_VERSION (7)
+#define VPX_EXT_RATECTRL_ABI_VERSION (5 + VPX_TPL_ABI_VERSION)
 
 /*!\brief The control type of the inference API.
  * In VPX_RC_QP mode, the external rate control model determines the
@@ -81,17 +81,10 @@ typedef void *vpx_rc_model_t;
  *
  * The encoder will receive the decision from the external rate control model
  * through get_encodeframe_decision() defined in vpx_rc_funcs_t.
- *
- * If q_index = VPX_DEFAULT_Q, the encoder will use libvpx's default q.
- *
- * If max_frame_size = 0, the encoding ignores max frame size limit.
- * If max_frame_size = -1, the encoding uses VP9's max frame size as the limit.
- * If the encoded frame size is larger than max_frame_size, the frame is
- * recoded to meet the size limit, following VP9's recoding principles.
  */
 typedef struct vpx_rc_encodeframe_decision {
-  int q_index;        /**< Quantizer step index [0..255]*/
-  int max_frame_size; /**< Maximal frame size allowed to encode a frame*/
+  int q_index; /**< Quantizer step index [0..255]*/
+  int rdmult;  /**< Frame level Lagrangian multiplier*/
 } vpx_rc_encodeframe_decision_t;
 
 /*!\brief Information for the frame to be encoded.
@@ -322,6 +315,7 @@ typedef struct vpx_rc_config {
   vpx_ext_rc_mode_t rc_mode; /**< Q mode or VBR mode */
   int overshoot_percent;     /**< for VBR mode only */
   int undershoot_percent;    /**< for VBR mode only */
+  int base_qp;               /**< base QP for leaf frames, 0-255 */
 } vpx_rc_config_t;
 
 /*!\brief Information passed to the external rate control model to
@@ -400,6 +394,7 @@ typedef struct vpx_rc_gop_info {
 typedef struct vpx_rc_gop_decision {
   int gop_coding_frames; /**< The number of frames of this GOP */
   int use_alt_ref;       /**< Whether to use alt ref for this GOP */
+  int use_key_frame;     /**< Whether to set key frame for this GOP */
 } vpx_rc_gop_decision_t;
 
 /*!\brief Create an external rate control model callback prototype
@@ -446,12 +441,11 @@ typedef vpx_rc_status_t (*vpx_rc_send_tpl_gop_stats_cb_fn_t)(
  * the external rate control model.
  *
  * \param[in]  rate_ctrl_model    rate control model
- * \param[in]  encode_frame_info  information of the coding frame
+ * \param[in]  frame_gop_index    index of the frame in current gop
  * \param[out] frame_decision     encode decision of the coding frame
  */
 typedef vpx_rc_status_t (*vpx_rc_get_encodeframe_decision_cb_fn_t)(
-    vpx_rc_model_t rate_ctrl_model,
-    const vpx_rc_encodeframe_info_t *encode_frame_info,
+    vpx_rc_model_t rate_ctrl_model, const int frame_gop_index,
     vpx_rc_encodeframe_decision_t *frame_decision);
 
 /*!\brief Update encode frame result callback prototype
@@ -472,12 +466,10 @@ typedef vpx_rc_status_t (*vpx_rc_update_encodeframe_result_cb_fn_t)(
  * the external rate control model.
  *
  * \param[in]  rate_ctrl_model  rate control model
- * \param[in]  gop_info         information collected from the encoder
  * \param[out] gop_decision     GOP decision from the model
  */
 typedef vpx_rc_status_t (*vpx_rc_get_gop_decision_cb_fn_t)(
-    vpx_rc_model_t rate_ctrl_model, const vpx_rc_gop_info_t *gop_info,
-    vpx_rc_gop_decision_t *gop_decision);
+    vpx_rc_model_t rate_ctrl_model, vpx_rc_gop_decision_t *gop_decision);
 
 /*!\brief Get the frame rdmult from the external rate control model.
  *

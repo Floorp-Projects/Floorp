@@ -8,10 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include <math.h>
-#include <new>
-#include "vp8/common/common.h"
 #include "vp8/vp8_ratectrl_rtc.h"
+
+#include <math.h>
+
+#include <new>
+
+#include "vp8/common/common.h"
 #include "vp8/encoder/onyx_int.h"
 #include "vp8/encoder/ratectrl.h"
 #include "vpx_ports/system_state.h"
@@ -310,6 +313,14 @@ FrameDropDecision VP8RateControlRTC::ComputeQP(
 }
 
 int VP8RateControlRTC::GetQP() const { return q_; }
+
+UVDeltaQP VP8RateControlRTC::GetUVDeltaQP() const {
+  VP8_COMMON *cm = &cpi_->common;
+  UVDeltaQP uv_delta_q;
+  uv_delta_q.uvdc_delta_q = cm->uvdc_delta_q;
+  uv_delta_q.uvac_delta_q = cm->uvac_delta_q;
+  return uv_delta_q;
+}
 
 int VP8RateControlRTC::GetLoopfilterLevel() const {
   VP8_COMMON *cm = &cpi_->common;

@@ -10,6 +10,7 @@
 
 #include <assert.h>
 
+#include "vpx_util/vpx_pthread.h"
 #include "vp9/encoder/vp9_encoder.h"
 #include "vp9/encoder/vp9_ethread.h"
 #include "vp9/encoder/vp9_multi_thread.h"

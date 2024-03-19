@@ -27,6 +27,8 @@ static vpx_image_t *img_alloc_helper(vpx_image_t *img, vpx_img_fmt_t fmt,
 
   if (img != NULL) memset(img, 0, sizeof(vpx_image_t));
 
+  if (fmt == VPX_IMG_FMT_NONE) goto fail;
+
   /* Treat align==0 like align==1 */
   if (!buf_align) buf_align = 1;
 
@@ -56,7 +58,7 @@ static vpx_image_t *img_alloc_helper(vpx_image_t *img, vpx_img_fmt_t fmt,
 
   /* Get chroma shift values for this format */
   // For VPX_IMG_FMT_NV12, xcs needs to be 0 such that UV data is all read at
-  // one time.
+  // once.
   switch (fmt) {
     case VPX_IMG_FMT_I420:
     case VPX_IMG_FMT_YV12:

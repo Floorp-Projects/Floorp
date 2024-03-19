@@ -12,10 +12,12 @@
 #include <new>
 
 #include "vp9/common/vp9_common.h"
+#include "vp9/encoder/vp9_aq_cyclicrefresh.h"
 #include "vp9/encoder/vp9_encoder.h"
 #include "vp9/encoder/vp9_picklpf.h"
 #include "vpx/vp8cx.h"
 #include "vpx/vpx_codec.h"
+#include "vpx_mem/vpx_mem.h"
 
 namespace libvpx {
 

@@ -9,6 +9,7 @@
  */
 #include "vp9/ratectrl_rtc.h"
 
+#include <climits>
 #include <fstream>  // NOLINT
 #include <string>
 
@@ -19,6 +20,8 @@
 #include "test/i420_video_source.h"
 #include "test/util.h"
 #include "test/video_source.h"
+#include "vp9/encoder/vp9_encoder.h"
+#include "vp9/encoder/vp9_svc_layercontext.h"
 #include "vpx/vpx_codec.h"
 #include "vpx_ports/bitops.h"
 

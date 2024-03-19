@@ -8,8 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include <memory>
 #include <vector>
+
 #include "./ivfenc.h"
 #include "vp9/common/vp9_entropymode.h"
 #include "vp9/common/vp9_enums.h"
@@ -888,6 +892,10 @@ void SimpleEncode::ComputeFirstPassStats() {
   use_highbitdepth = impl_ptr_->cpi->common.use_highbitdepth;
 #endif
   vpx_image_t img;
+  if (impl_ptr_->img_fmt == VPX_IMG_FMT_NV12) {
+    fprintf(stderr, "VPX_IMG_FMT_NV12 is not supported\n");
+    abort();
+  }
   vpx_img_alloc(&img, impl_ptr_->img_fmt, frame_width_, frame_height_, 1);
   rewind(in_file_);
   impl_ptr_->first_pass_stats.clear();
@@ -1053,6 +1061,10 @@ void SimpleEncode::StartEncode() {
   vp9_set_first_pass_stats(&oxcf, &stats);
   assert(impl_ptr_->cpi == nullptr);
   impl_ptr_->cpi = init_encoder(&oxcf, impl_ptr_->img_fmt);
+  if (impl_ptr_->img_fmt == VPX_IMG_FMT_NV12) {
+    fprintf(stderr, "VPX_IMG_FMT_NV12 is not supported\n");
+    abort();
+  }
   vpx_img_alloc(&impl_ptr_->tmp_img, impl_ptr_->img_fmt, frame_width_,
                 frame_height_, 1);
 

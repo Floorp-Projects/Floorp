@@ -1834,7 +1834,7 @@ static int check_best_zero_mv(const VP9_COMP *cpi,
   return 1;
 }
 
-static INLINE int skip_iters(const int_mv iter_mvs[][2], int ite, int id) {
+static INLINE int skip_iters(int_mv iter_mvs[][2], int ite, int id) {
   if (ite >= 2 && iter_mvs[ite - 2][!id].as_int == iter_mvs[ite][!id].as_int) {
     int_mv cur_fullpel_mv, prev_fullpel_mv;
     cur_fullpel_mv.as_mv.row = iter_mvs[ite][id].as_mv.row >> 3;

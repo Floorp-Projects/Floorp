@@ -164,7 +164,9 @@ const libvpx_test::VP8CodecFactory kVP8;
               &libvpx_test::kVP8)),                                         \
           __VA_ARGS__))
 #else
-#define VP8_INSTANTIATE_TEST_SUITE(test, ...)
+// static_assert() is used to avoid warnings about an extra ';' outside of a
+// function.
+#define VP8_INSTANTIATE_TEST_SUITE(test, ...) static_assert(CONFIG_VP8 == 0, "")
 #endif  // CONFIG_VP8
 
 /*
@@ -259,7 +261,9 @@ const libvpx_test::VP9CodecFactory kVP9;
               &libvpx_test::kVP9)),                                         \
           __VA_ARGS__))
 #else
-#define VP9_INSTANTIATE_TEST_SUITE(test, ...)
+// static_assert() is used to avoid warnings about an extra ';' outside of a
+// function.
+#define VP9_INSTANTIATE_TEST_SUITE(test, ...) static_assert(CONFIG_VP9 == 0, "")
 #endif  // CONFIG_VP9
 
 }  // namespace libvpx_test

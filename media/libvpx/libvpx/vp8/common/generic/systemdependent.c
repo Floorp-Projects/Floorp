@@ -25,23 +25,19 @@
 #include "vp8/common/systemdependent.h"
 
 #if CONFIG_MULTITHREAD
-#if HAVE_UNISTD_H && !defined(__OS2__)
+#if HAVE_UNISTD_H
 #include <unistd.h>
 #elif defined(_WIN32)
 #include <windows.h>
 typedef void(WINAPI *PGNSI)(LPSYSTEM_INFO);
-#elif defined(__OS2__)
-#define INCL_DOS
-#define INCL_DOSSPINLOCK
-#include <os2.h>
 #endif
 #endif
 
 #if CONFIG_MULTITHREAD
-static int get_cpu_count() {
+static int get_cpu_count(void) {
   int core_count = 16;
 
-#if HAVE_UNISTD_H && !defined(__OS2__)
+#if HAVE_UNISTD_H
 #if defined(_SC_NPROCESSORS_ONLN)
   core_count = (int)sysconf(_SC_NPROCESSORS_ONLN);
 #elif defined(_SC_NPROC_ONLN)
@@ -49,37 +45,12 @@ static int get_cpu_count() {
 #endif
 #elif defined(_WIN32)
   {
-#if _WIN32_WINNT >= 0x0501
+#if _WIN32_WINNT < 0x0501
+#error _WIN32_WINNT must target Windows XP or newer.
+#endif
     SYSTEM_INFO sysinfo;
     GetNativeSystemInfo(&sysinfo);
-#else
-    PGNSI pGNSI;
-    SYSTEM_INFO sysinfo;
-
-    /* Call GetNativeSystemInfo if supported or
-     * GetSystemInfo otherwise. */
-
-    pGNSI = (PGNSI)GetProcAddress(GetModuleHandle(TEXT("kernel32.dll")),
-                                  "GetNativeSystemInfo");
-    if (pGNSI != NULL)
-      pGNSI(&sysinfo);
-    else
-      GetSystemInfo(&sysinfo);
-#endif
-
     core_count = (int)sysinfo.dwNumberOfProcessors;
-  }
-#elif defined(__OS2__)
-  {
-    ULONG proc_id;
-    ULONG status;
-
-    core_count = 0;
-    for (proc_id = 1;; ++proc_id) {
-      if (DosGetProcessorStatus(proc_id, &status)) break;
-
-      if (status == PROC_ONLINE) core_count++;
-    }
   }
 #else
 /* other platforms */

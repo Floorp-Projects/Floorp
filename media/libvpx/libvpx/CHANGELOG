@@ -1,7 +1,79 @@
-20yy-mm-dd v1.14.0 "V Duck"
+2024-01-02 v1.14.0 "Venetian Duck"
   This release drops support for old C compilers, such as Visual Studio 2012
   and older, that disallow mixing variable declarations and statements (a C99
-  feature).
+  feature). It adds support for run-time CPU feature detection for Arm
+  platforms, as well as support for darwin23 (macOS 14).
+
+  - Upgrading:
+    This release is ABI incompatible with the previous release.
+
+    Various new features for rate control library for real-time: SVC parallel
+    encoding, loopfilter level, support for frame dropping, and screen content.
+
+    New callback function send_tpl_gop_stats for vp9 external rate control
+    library, which can be used to transmit TPL stats for a group of pictures. A
+    public header vpx_tpl.h is added for the definition of TPL stats used in
+    this callback.
+
+    libwebm is upgraded to libwebm-1.0.0.29-9-g1930e3c.
+
+  - Enhancement:
+    Improvements on Neon optimizations: VoD: 12-35% speed up for bitdepth 8,
+    68%-151% speed up for high bitdepth.
+
+    Improvements on AVX2 and SSE optimizations.
+    Improvements on LSX optimizations for LoongArch.
+    42-49% speedup on speed 0 VoD encoding.
+    Android API level predicates.
+
+  - Bug fixes:
+    Fix to missing prototypes from the rtcd header.
+    Fix to segfault when total size is enlarged but width is smaller.
+    Fix to the build for arm64ec using MSVC.
+    Fix to copy BLOCK_8X8's mi to PICK_MODE_CONTEXT::mic.
+    Fix to -Wshadow warnings.
+    Fix to heap overflow in vpx_get4x4sse_cs_neon.
+    Fix to buffer overrun in highbd Neon subpel variance filters.
+    Added bitexact encode test script.
+    Fix to -Wl,-z,defs with Clang's sanitizers.
+    Fix to decoder stability after error & continued decoding.
+    Fix to mismatch of VP9 encode with NEON intrinsics with C only version.
+    Fix to Arm64 MSVC compile vpx_highbd_fdct4x4_neon.
+    Fix to fragments count before use.
+    Fix to a case where target bandwidth is 0 for SVC.
+    Fix mask in vp9_quantize_avx2,highbd_get_max_lane_eob.
+    Fix to int overflow in vp9_calc_pframe_target_size_one_pass_cbr.
+    Fix to integer overflow in vp8,ratectrl.c.
+    Fix to integer overflow in vp9 svc.
+    Fix to avg_frame_bandwidth overflow.
+    Fix to per frame qp for temporal layers.
+    Fix to unsigned integer overflow in sse computation.
+    Fix to uninitialized mesh feature for BEST mode.
+    Fix to overflow in highbd temporal_filter.
+    Fix to unaligned loads w/w==4 in vpx_convolve_copy_neon.
+    Skip arm64_neon.h workaround w/VS >= 2019.
+    Fix to c vs avx mismatch of diamond_search_sad().
+    Fix to c vs intrinsic mismatch of vpx_hadamard_32x32() function.
+    Fix to a bug in vpx_hadamard_32x32_neon().
+    Fix to Clang -Wunreachable-code-aggressive warnings.
+    Fix to a bug in vpx_highbd_hadamard_32x32_neon().
+    Fix to -Wunreachable-code in mfqe_partition.
+    Force mode search on 64x64 if no mode is selected.
+    Fix to ubsan failure caused by left shift of negative.
+    Fix to integer overflow in calc_pframe_target_size.
+    Fix to float-cast-overflow in vp8_change_config().
+    Fix to a null ptr before use.
+    Conditionally skip using inter frames in speed features.
+    Remove invalid reference frames.
+    Disable intra mode search speed features conditionally.
+    Set nonrd keyframe under dynamic change of deadline for rtc.
+    Fix to scaled reference offsets.
+    Set skip_recode=0 in nonrd_pick_sb_modes.
+    Fix to an edge case when downsizing to one.
+    Fix to a bug in frame scaling.
+    Fix to pred buffer stride.
+    Fix to a bug in simple motion search.
+    Update frame size in actual encoding.
 
 2023-09-29 v1.13.1 "Ugly Duckling"
   This release contains two security related fixes. One each for VP8 and VP9.
