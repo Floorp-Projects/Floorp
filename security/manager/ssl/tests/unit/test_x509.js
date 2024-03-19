@@ -3,7 +3,7 @@
 
 "use strict";
 
-// Tests X509.jsm functionality.
+// Tests X509.sys.mjs functionality.
 
 function stringToArray(s) {
   let b = [];

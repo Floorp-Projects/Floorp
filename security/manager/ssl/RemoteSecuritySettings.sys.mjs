@@ -450,7 +450,7 @@ class IntermediatePreloads {
     try {
       // split off the header and footer
       certBase64 = dataAsString.split("-----")[2].replace(/\s/g, "");
-      // get an array of bytes so we can use X509.jsm
+      // get an array of bytes so we can use X509.sys.mjs
       let certBytes = stringToBytes(atob(certBase64));
       let cert = new X509.Certificate();
       cert.parse(certBytes);

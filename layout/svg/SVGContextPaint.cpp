@@ -80,7 +80,7 @@ bool SVGContextPaint::IsAllowedForImageFromURI(nsIURI* aURI) {
     // Only allowed for extensions that have the
     // internal:svgContextPropertiesAllowed permission (added internally from
     // to Mozilla-owned extensions, see `isMozillaExtension` function
-    // defined in Extension.jsm for the exact criteria).
+    // defined in Extension.sys.mjs for the exact criteria).
     return addonPolicy->HasPermission(
         nsGkAtoms::svgContextPropertiesAllowedPermission);
   }
