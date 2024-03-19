@@ -5,24 +5,22 @@
 use api::{units::*, PremultipliedColorF, ClipMode};
 use euclid::point2;
 
-use crate::{
-    batch::{BatchKey, BatchKind, BatchTextures},
-    clip::{ClipChainInstance, ClipIntern, ClipItemKind, ClipStore},
-    command_buffer::{CommandBufferIndex, PrimitiveCommand, QuadFlags},
-    frame_builder::{FrameBuildingContext, FrameBuildingState, PictureContext, PictureState},
-    gpu_types::{PrimitiveInstanceData, QuadInstance, QuadSegment, TransformPaletteId, ZBufferId},
-    intern::DataStore,
-    internal_types::TextureSource,
-    pattern::{Pattern, PatternKind, PatternShaderInput},
-    prim_store::{PrimitiveInstanceIndex, PrimitiveScratchBuffer},
-    render_task::{MaskSubPass, RenderTask, RenderTaskAddress, RenderTaskKind, SubPass},
-    render_task_graph::{RenderTaskGraph, RenderTaskId},
-    renderer::{BlendMode, GpuBufferAddress, GpuBufferBuilder, GpuBufferBuilderF},
-    segment::EdgeAaSegmentMask,
-    space::SpaceMapper,
-    spatial_tree::{SpatialNodeIndex, SpatialTree},
-    util::MaxRect
-};
+use crate::batch::{BatchKey, BatchKind, BatchTextures};
+use crate::clip::{ClipChainInstance, ClipIntern, ClipItemKind, ClipStore};
+use crate::command_buffer::{CommandBufferIndex, PrimitiveCommand, QuadFlags};
+use crate::frame_builder::{FrameBuildingContext, FrameBuildingState, PictureContext, PictureState};
+use crate::gpu_types::{PrimitiveInstanceData, QuadInstance, QuadSegment, TransformPaletteId, ZBufferId};
+use crate::intern::DataStore;
+use crate::internal_types::TextureSource;
+use crate::pattern::{Pattern, PatternKind, PatternShaderInput};
+use crate::prim_store::{PrimitiveInstanceIndex, PrimitiveScratchBuffer};
+use crate::render_task::{MaskSubPass, RenderTask, RenderTaskAddress, RenderTaskKind, SubPass};
+use crate::render_task_graph::{RenderTaskGraph, RenderTaskId};
+use crate::renderer::{BlendMode, GpuBufferAddress, GpuBufferBuilder, GpuBufferBuilderF};
+use crate::segment::EdgeAaSegmentMask;
+use crate::space::SpaceMapper;
+use crate::spatial_tree::{SpatialNodeIndex, SpatialTree};
+use crate::util::MaxRect;
 
 const MIN_AA_SEGMENTS_SIZE: f32 = 4.0;
 const MIN_QUAD_SPLIT_SIZE: f32 = 256.0;
