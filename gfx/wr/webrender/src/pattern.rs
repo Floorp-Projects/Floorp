@@ -24,9 +24,18 @@ impl PatternKind {
     }
 }
 
+/// A 32bit payload used as input for the pattern-specific logic in the shader.
+///
+/// Patterns typically use it as a GpuBuffer offset to fetch their data.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+pub struct PatternShaderInput(pub i32);
+
 #[derive(Copy, Clone, Debug)]
 pub struct Pattern {
     pub kind: PatternKind,
+    pub shader_input: PatternShaderInput,
     pub base_color: PremultipliedColorF,
     pub is_opaque: bool,
 }
@@ -35,6 +44,7 @@ impl Pattern {
     pub fn color(color: ColorF) -> Self {
         Pattern {
             kind: PatternKind::ColorOrTexture,
+            shader_input: PatternShaderInput(0),
             base_color: color.premultiplied(),
             is_opaque: color.a >= 1.0,
         }
@@ -44,6 +54,7 @@ impl Pattern {
         // Opaque black with operator dest out
         Pattern {
             kind: PatternKind::ColorOrTexture,
+            shader_input: PatternShaderInput(0),
             base_color: PremultipliedColorF::BLACK,
             is_opaque: false,
         }
