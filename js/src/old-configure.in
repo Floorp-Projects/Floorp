@@ -54,6 +54,9 @@ dnl ========================================================
 
 if test "$COMPILE_ENVIRONMENT"; then
 
+# Run some logic to figure out exe extensions (mostly for mingw's sake)
+AC_EXEEXT
+
 # Note:
 #   In Mozilla, we use the names $target, $host and $build incorrectly, but are
 #   too far gone to back out now. See Bug 475488:
