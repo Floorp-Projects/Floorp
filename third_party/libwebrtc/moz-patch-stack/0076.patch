@@ -9,10 +9,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/108046c7cbb21c6cf
  1 file changed, 1 insertion(+)
 
 diff --git a/modules/audio_processing/audio_processing_impl.cc b/modules/audio_processing/audio_processing_impl.cc
-index c80cc76a3d..c304453388 100644
+index 0104e0c486..4ac074526c 100644
 --- a/modules/audio_processing/audio_processing_impl.cc
 +++ b/modules/audio_processing/audio_processing_impl.cc
-@@ -450,6 +450,7 @@ AudioProcessingImpl::GetGainController2ExperimentParams() {
+@@ -452,6 +452,7 @@ AudioProcessingImpl::GetGainController2ExperimentParams() {
                    },
                .adaptive_digital_controller =
                    {

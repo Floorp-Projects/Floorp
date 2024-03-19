@@ -17,6 +17,11 @@
 
 namespace cricket {
 
+const char LOCAL_PORT_TYPE[] = "local";
+const char STUN_PORT_TYPE[] = "stun";
+const char PRFLX_PORT_TYPE[] = "prflx";
+const char RELAY_PORT_TYPE[] = "relay";
+
 Candidate::Candidate()
     : id_(rtc::CreateRandomString(8)),
       component_(0),
@@ -56,6 +61,19 @@ Candidate::Candidate(int component,
 Candidate::Candidate(const Candidate&) = default;
 
 Candidate::~Candidate() = default;
+
+bool Candidate::is_local() const {
+  return type_ == LOCAL_PORT_TYPE;
+}
+bool Candidate::is_stun() const {
+  return type_ == STUN_PORT_TYPE;
+}
+bool Candidate::is_prflx() const {
+  return type_ == PRFLX_PORT_TYPE;
+}
+bool Candidate::is_relay() const {
+  return type_ == RELAY_PORT_TYPE;
+}
 
 bool Candidate::IsEquivalent(const Candidate& c) const {
   // We ignore the network name, since that is just debug information, and

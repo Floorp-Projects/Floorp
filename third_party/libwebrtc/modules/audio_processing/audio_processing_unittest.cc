@@ -1485,8 +1485,8 @@ void ApmTest::ProcessDebugDump(absl::string_view in_filename,
       if (first_init) {
         // AttachAecDump() writes an additional init message. Don't start
         // recording until after the first init to avoid the extra message.
-        auto aec_dump =
-            AecDumpFactory::Create(out_filename, max_size_bytes, &worker_queue);
+        auto aec_dump = AecDumpFactory::Create(out_filename, max_size_bytes,
+                                               worker_queue.Get());
         EXPECT_TRUE(aec_dump);
         apm_->AttachAecDump(std::move(aec_dump));
         first_init = false;
@@ -1632,7 +1632,7 @@ TEST_F(ApmTest, DebugDump) {
   const std::string filename =
       test::TempFilename(test::OutputPath(), "debug_aec");
   {
-    auto aec_dump = AecDumpFactory::Create("", -1, &worker_queue);
+    auto aec_dump = AecDumpFactory::Create("", -1, worker_queue.Get());
     EXPECT_FALSE(aec_dump);
   }
 
@@ -1640,7 +1640,7 @@ TEST_F(ApmTest, DebugDump) {
   // Stopping without having started should be OK.
   apm_->DetachAecDump();
 
-  auto aec_dump = AecDumpFactory::Create(filename, -1, &worker_queue);
+  auto aec_dump = AecDumpFactory::Create(filename, -1, worker_queue.Get());
   EXPECT_TRUE(aec_dump);
   apm_->AttachAecDump(std::move(aec_dump));
   EXPECT_EQ(apm_->kNoError,
@@ -1683,7 +1683,7 @@ TEST_F(ApmTest, DebugDumpFromFileHandle) {
   // Stopping without having started should be OK.
   apm_->DetachAecDump();
 
-  auto aec_dump = AecDumpFactory::Create(std::move(f), -1, &worker_queue);
+  auto aec_dump = AecDumpFactory::Create(std::move(f), -1, worker_queue.Get());
   EXPECT_TRUE(aec_dump);
   apm_->AttachAecDump(std::move(aec_dump));
   EXPECT_EQ(apm_->kNoError,

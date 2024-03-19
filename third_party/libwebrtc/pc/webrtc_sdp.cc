@@ -722,7 +722,7 @@ void CreateTracksFromSsrcInfos(const SsrcInfoVec& ssrc_infos,
       // This is the case with Plan B SDP msid signaling.
       stream_ids.push_back(ssrc_info.stream_id);
       track_id = ssrc_info.track_id;
-    } else {
+    } else if (msid_signaling == cricket::kMsidSignalingNotUsed) {
       // Since no media streams isn't supported with older SDP signaling, we
       // use a default stream id.
       stream_ids.push_back(kDefaultMsid);
@@ -762,29 +762,6 @@ void GetMediaStreamIds(const ContentInfo* content,
   }
 }
 
-// RFC 5245
-// It is RECOMMENDED that default candidates be chosen based on the
-// likelihood of those candidates to work with the peer that is being
-// contacted.  It is RECOMMENDED that relayed > reflexive > host.
-static const int kPreferenceUnknown = 0;
-static const int kPreferenceHost = 1;
-static const int kPreferenceReflexive = 2;
-static const int kPreferenceRelayed = 3;
-
-static int GetCandidatePreferenceFromType(absl::string_view type) {
-  int preference = kPreferenceUnknown;
-  if (type == cricket::LOCAL_PORT_TYPE) {
-    preference = kPreferenceHost;
-  } else if (type == cricket::STUN_PORT_TYPE) {
-    preference = kPreferenceReflexive;
-  } else if (type == cricket::RELAY_PORT_TYPE) {
-    preference = kPreferenceRelayed;
-  } else {
-    RTC_DCHECK_NOTREACHED();
-  }
-  return preference;
-}
-
 // Get ip and port of the default destination from the `candidates` with the
 // given value of `component_id`. The default candidate should be the one most
 // likely to work, typically IPv4 relay.
@@ -800,7 +777,7 @@ static void GetDefaultDestination(const std::vector<Candidate>& candidates,
   *addr_type = kConnectionIpv4Addrtype;
   *port = kDummyPort;
   *ip = kDummyAddress;
-  int current_preference = kPreferenceUnknown;
+  int current_preference = 0;  // Start with lowest preference
   int current_family = AF_UNSPEC;
   for (const Candidate& candidate : candidates) {
     if (candidate.component() != component_id) {
@@ -810,7 +787,7 @@ static void GetDefaultDestination(const std::vector<Candidate>& candidates,
     if (candidate.protocol() != cricket::UDP_PROTOCOL_NAME) {
       continue;
     }
-    const int preference = GetCandidatePreferenceFromType(candidate.type());
+    const int preference = candidate.type_preference();
     const int family = candidate.address().ipaddr().family();
     // See if this candidate is more preferable then the current one if it's the
     // same family. Or if the current family is IPv4 already so we could safely
@@ -920,23 +897,31 @@ std::string SdpSerialize(const JsepSessionDescription& jdesc) {
     AddLine(os.str(), &message);
   }
 
-  // MediaStream semantics
-  InitAttrLine(kAttributeMsidSemantics, &os);
-  os << kSdpDelimiterColon << " " << kMediaStreamSemantic;
+  // MediaStream semantics.
+  // TODO(bugs.webrtc.org/10421): Change to & cricket::kMsidSignalingSemantic
+  // when we think it's safe to do so, so that we gradually fade out this old
+  // line that was removed from the specification.
+  if (desc->msid_signaling() != cricket::kMsidSignalingNotUsed) {
+    InitAttrLine(kAttributeMsidSemantics, &os);
+    os << kSdpDelimiterColon << " " << kMediaStreamSemantic;
 
-  std::set<std::string> media_stream_ids;
-  const ContentInfo* audio_content = GetFirstAudioContent(desc);
-  if (audio_content)
-    GetMediaStreamIds(audio_content, &media_stream_ids);
+    // TODO(bugs.webrtc.org/10421): this code only looks at the first
+    // audio/video content. Fixing that might result in much larger SDP and the
+    // msid-semantic line should eventually go away so this is not worth fixing.
+    std::set<std::string> media_stream_ids;
+    const ContentInfo* audio_content = GetFirstAudioContent(desc);
+    if (audio_content)
+      GetMediaStreamIds(audio_content, &media_stream_ids);
 
-  const ContentInfo* video_content = GetFirstVideoContent(desc);
-  if (video_content)
-    GetMediaStreamIds(video_content, &media_stream_ids);
+    const ContentInfo* video_content = GetFirstVideoContent(desc);
+    if (video_content)
+      GetMediaStreamIds(video_content, &media_stream_ids);
 
-  for (const std::string& id : media_stream_ids) {
-    os << " " << id;
+    for (const std::string& id : media_stream_ids) {
+      os << " " << id;
+    }
+    AddLine(os.str(), &message);
   }
-  AddLine(os.str(), &message);
 
   // a=ice-lite
   //
@@ -1839,7 +1824,7 @@ bool IsFmtpParam(absl::string_view name) {
   return name != kCodecParamPTime && name != kCodecParamMaxPTime;
 }
 
-bool WriteFmtpParameters(const cricket::CodecParameterMap& parameters,
+bool WriteFmtpParameters(const webrtc::CodecParameterMap& parameters,
                          rtc::StringBuilder* os) {
   bool empty = true;
   const char* delimiter = "";  // No delimiter before first parameter.
@@ -1902,7 +1887,7 @@ bool GetMinValue(const std::vector<int>& values, int* value) {
 }
 
 bool GetParameter(const std::string& name,
-                  const cricket::CodecParameterMap& params,
+                  const webrtc::CodecParameterMap& params,
                   int* value) {
   std::map<std::string, std::string>::const_iterator found = params.find(name);
   if (found == params.end()) {
@@ -1997,13 +1982,13 @@ void BuildCandidate(const std::vector<Candidate>& candidates,
     // *(SP extension-att-name SP extension-att-value)
     std::string type;
     // Map the cricket candidate type to "host" / "srflx" / "prflx" / "relay"
-    if (candidate.type() == cricket::LOCAL_PORT_TYPE) {
+    if (candidate.is_local()) {
       type = kCandidateHost;
-    } else if (candidate.type() == cricket::STUN_PORT_TYPE) {
+    } else if (candidate.is_stun()) {
       type = kCandidateSrflx;
-    } else if (candidate.type() == cricket::RELAY_PORT_TYPE) {
+    } else if (candidate.is_relay()) {
       type = kCandidateRelay;
-    } else if (candidate.type() == cricket::PRFLX_PORT_TYPE) {
+    } else if (candidate.is_prflx()) {
       type = kCandidatePrflx;
       // Peer reflexive candidate may be signaled for being removed.
     } else {
@@ -2131,7 +2116,7 @@ bool ParseSessionDescription(absl::string_view message,
                              SdpParseError* error) {
   absl::optional<absl::string_view> line;
 
-  desc->set_msid_supported(false);
+  desc->set_msid_signaling(cricket::kMsidSignalingNotUsed);
   desc->set_extmap_allow_mixed(false);
   // RFC 4566
   // v=  (protocol version)
@@ -2273,8 +2258,9 @@ bool ParseSessionDescription(absl::string_view message,
       if (!GetValue(*aline, kAttributeMsidSemantics, &semantics, error)) {
         return false;
       }
-      desc->set_msid_supported(
-          CaseInsensitiveFind(semantics, kMediaStreamSemantic));
+      if (CaseInsensitiveFind(semantics, kMediaStreamSemantic)) {
+        desc->set_msid_signaling(cricket::kMsidSignalingSemantic);
+      }
     } else if (HasAttribute(*aline, kAttributeExtmapAllowMixed)) {
       desc->set_extmap_allow_mixed(true);
     } else if (HasAttribute(*aline, kAttributeExtmap)) {
@@ -2614,6 +2600,25 @@ void MaybeCreateStaticPayloadAudioCodecs(const std::vector<int>& fmts,
   }
 }
 
+static void BackfillCodecParameters(std::vector<cricket::Codec>& codecs) {
+  for (auto& codec : codecs) {
+    std::string unused_value;
+    if (absl::EqualsIgnoreCase(cricket::kVp9CodecName, codec.name)) {
+      // https://datatracker.ietf.org/doc/html/draft-ietf-payload-vp9#section-6
+      // profile-id defaults to "0"
+      if (!codec.GetParam(cricket::kVP9ProfileId, &unused_value)) {
+        codec.SetParam(cricket::kVP9ProfileId, "0");
+      }
+    } else if (absl::EqualsIgnoreCase(cricket::kH264CodecName, codec.name)) {
+      // https://www.rfc-editor.org/rfc/rfc6184#section-6.2
+      // packetization-mode defaults to "0"
+      if (!codec.GetParam(cricket::kH264FmtpPacketizationMode, &unused_value)) {
+        codec.SetParam(cricket::kH264FmtpPacketizationMode, "0");
+      }
+    }
+  }
+}
+
 static std::unique_ptr<MediaContentDescription> ParseContentDescription(
     absl::string_view message,
     const cricket::MediaType media_type,
@@ -2657,6 +2662,9 @@ static std::unique_ptr<MediaContentDescription> ParseContentDescription(
                                                    const cricket::Codec& b) {
     return payload_type_preferences[a.id] > payload_type_preferences[b.id];
   });
+  // Backfill any default parameters.
+  BackfillCodecParameters(codecs);
+
   media_desc->set_codecs(codecs);
   return media_desc;
 }
@@ -2672,7 +2680,7 @@ bool ParseMediaDescription(
     SdpParseError* error) {
   RTC_DCHECK(desc != NULL);
   int mline_index = -1;
-  int msid_signaling = 0;
+  int msid_signaling = desc->msid_signaling();
 
   // Zero or more media descriptions
   // RFC 4566
@@ -2724,7 +2732,7 @@ bool ParseMediaDescription(
     std::unique_ptr<MediaContentDescription> content;
     std::string content_name;
     bool bundle_only = false;
-    int section_msid_signaling = 0;
+    int section_msid_signaling = cricket::kMsidSignalingNotUsed;
     absl::string_view media_type = fields[0];
     if ((media_type == kMediaTypeVideo || media_type == kMediaTypeAudio) &&
         !cricket::IsRtpProtocol(protocol)) {
@@ -2854,7 +2862,7 @@ bool ParseMediaDescription(
   return true;
 }
 
-void AddParameters(const cricket::CodecParameterMap& parameters,
+void AddParameters(const webrtc::CodecParameterMap& parameters,
                    cricket::Codec* codec) {
   for (const auto& entry : parameters) {
     const std::string& key = entry.first;
@@ -2917,7 +2925,7 @@ void AddOrReplaceCodec(MediaContentDescription* content_desc,
 // to `parameters`.
 void UpdateCodec(MediaContentDescription* content_desc,
                  int payload_type,
-                 const cricket::CodecParameterMap& parameters) {
+                 const webrtc::CodecParameterMap& parameters) {
   // Codec might already have been populated (from rtpmap).
   cricket::Codec new_codec = GetCodecWithPayloadType(
       content_desc->type(), content_desc->codecs(), payload_type);
@@ -3740,7 +3748,7 @@ bool ParseFmtpAttributes(absl::string_view line,
   }
 
   // Parse out format specific parameters.
-  cricket::CodecParameterMap codec_params;
+  webrtc::CodecParameterMap codec_params;
   for (absl::string_view param :
        rtc::split(line_params, kSdpDelimiterSemicolonChar)) {
     std::string name;

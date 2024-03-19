@@ -50,6 +50,9 @@ ACTIVE_FIELD_TRIALS: FrozenSet[FieldTrial] = frozenset([
     FieldTrial('WebRTC-Audio-OpusSetSignalVoiceWithDtx',
                'webrtc:4559',
                date(2024, 4, 1)),
+    FieldTrial('WebRTC-AV1-OverridePriorityBitrate',
+               'webrtc:15763',
+               date(2024, 4, 1)),
     FieldTrial('WebRTC-Av1-GetEncoderInfoOverride',
                'webrtc:14931',
                date(2024, 4, 1)),
@@ -125,6 +128,9 @@ ACTIVE_FIELD_TRIALS: FrozenSet[FieldTrial] = frozenset([
     FieldTrial('WebRTC-VideoEncoderSettings',
                'chromium:1406331',
                date(2024, 4, 1)),
+    FieldTrial('WebRTC-ZeroHertzQueueOverload',
+               'webrtc:332381',
+               date(2024, 7, 1)),
     # keep-sorted end
 ])  # yapf: disable
 
@@ -564,9 +570,6 @@ POLICY_EXEMPT_FIELD_TRIALS: FrozenSet[FieldTrial] = frozenset([
                date(2024, 4, 1)),
     FieldTrial('WebRTC-DependencyDescriptorAdvertised',
                'webrtc:10342',
-               date(2024, 4, 1)),
-    FieldTrial('WebRTC-DisablePacerEmergencyStop',
-               '',
                date(2024, 4, 1)),
     FieldTrial('WebRTC-DisableUlpFecExperiment',
                '',

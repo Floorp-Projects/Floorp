@@ -69,13 +69,6 @@ const int kPortTimeoutDelay = cricket::STUN_TOTAL_TIMEOUT + 5000;
 
 }  // namespace
 
-// TODO(ronghuawu): Use "local", "srflx", "prflx" and "relay". But this requires
-// the signaling part be updated correspondingly as well.
-const char LOCAL_PORT_TYPE[] = "local";
-const char STUN_PORT_TYPE[] = "stun";
-const char PRFLX_PORT_TYPE[] = "prflx";
-const char RELAY_PORT_TYPE[] = "relay";
-
 static const char* const PROTO_NAMES[] = {UDP_PROTOCOL_NAME, TCP_PROTOCOL_NAME,
                                           SSLTCP_PROTOCOL_NAME,
                                           TLS_PROTOCOL_NAME};

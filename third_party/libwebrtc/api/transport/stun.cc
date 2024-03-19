@@ -587,7 +587,7 @@ bool StunMessage::AddFingerprint() {
 
 bool StunMessage::Read(ByteBufferReader* buf) {
   // Keep a copy of the buffer data around for later verification.
-  buffer_.assign(buf->Data(), buf->Length());
+  buffer_.assign(reinterpret_cast<const char*>(buf->Data()), buf->Length());
 
   if (!buf->ReadUInt16(&type_)) {
     return false;
@@ -603,8 +603,8 @@ bool StunMessage::Read(ByteBufferReader* buf) {
     return false;
   }
 
-  std::string magic_cookie;
-  if (!buf->ReadString(&magic_cookie, kStunMagicCookieLength)) {
+  absl::string_view magic_cookie;
+  if (!buf->ReadStringView(&magic_cookie, kStunMagicCookieLength)) {
     return false;
   }
 
@@ -814,7 +814,7 @@ void StunAttribute::ConsumePadding(ByteBufferReader* buf) const {
 void StunAttribute::WritePadding(ByteBufferWriter* buf) const {
   int remainder = length_ % 4;
   if (remainder > 0) {
-    char zeroes[4] = {0};
+    uint8_t zeroes[4] = {0};
     buf->WriteBytes(zeroes, 4 - remainder);
   }
 }
@@ -949,12 +949,12 @@ bool StunAddressAttribute::Write(ByteBufferWriter* buf) const {
   switch (address_.family()) {
     case AF_INET: {
       in_addr v4addr = address_.ipaddr().ipv4_address();
-      buf->WriteBytes(reinterpret_cast<char*>(&v4addr), sizeof(v4addr));
+      buf->WriteBytes(reinterpret_cast<uint8_t*>(&v4addr), sizeof(v4addr));
       break;
     }
     case AF_INET6: {
       in6_addr v6addr = address_.ipaddr().ipv6_address();
-      buf->WriteBytes(reinterpret_cast<char*>(&v6addr), sizeof(v6addr));
+      buf->WriteBytes(reinterpret_cast<uint8_t*>(&v6addr), sizeof(v6addr));
       break;
     }
   }
@@ -1039,12 +1039,14 @@ bool StunXorAddressAttribute::Write(ByteBufferWriter* buf) const {
   switch (xored_ip.family()) {
     case AF_INET: {
       in_addr v4addr = xored_ip.ipv4_address();
-      buf->WriteBytes(reinterpret_cast<const char*>(&v4addr), sizeof(v4addr));
+      buf->WriteBytes(reinterpret_cast<const uint8_t*>(&v4addr),
+                      sizeof(v4addr));
       break;
     }
     case AF_INET6: {
       in6_addr v6addr = xored_ip.ipv6_address();
-      buf->WriteBytes(reinterpret_cast<const char*>(&v6addr), sizeof(v6addr));
+      buf->WriteBytes(reinterpret_cast<const uint8_t*>(&v6addr),
+                      sizeof(v6addr));
       break;
     }
   }
@@ -1170,7 +1172,7 @@ bool StunByteStringAttribute::Write(ByteBufferWriter* buf) const {
   if (!LengthValid(type(), length())) {
     return false;
   }
-  buf->WriteBytes(reinterpret_cast<const char*>(bytes_), length());
+  buf->WriteBytes(bytes_, length());
   WritePadding(buf);
   return true;
 }

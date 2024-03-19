@@ -55,6 +55,7 @@
 #include "rtc_base/rtc_certificate_generator.h"
 #include "rtc_base/ssl_fingerprint.h"
 #include "rtc_base/thread.h"
+#include "test/gmock.h"
 #include "test/gtest.h"
 #include "test/scoped_key_value_config.h"
 #ifdef WEBRTC_ANDROID
@@ -70,6 +71,7 @@ namespace webrtc {
 using RTCConfiguration = PeerConnectionInterface::RTCConfiguration;
 using RTCOfferAnswerOptions = PeerConnectionInterface::RTCOfferAnswerOptions;
 using ::testing::Combine;
+using ::testing::HasSubstr;
 using ::testing::Values;
 
 constexpr int kGenerateCertTimeout = 1000;
@@ -789,16 +791,13 @@ TEST_P(PeerConnectionCryptoTest, SessionErrorIfFingerprintInvalid) {
   // Set the invalid answer and expect a fingerprint error.
   std::string error;
   ASSERT_FALSE(callee->SetLocalDescription(std::move(invalid_answer), &error));
-  EXPECT_PRED_FORMAT2(AssertStringContains, error,
-                      "Local fingerprint does not match identity.");
+  EXPECT_THAT(error, HasSubstr("Local fingerprint does not match identity."));
 
   // Make sure that setting a valid remote offer or local answer also fails now.
   ASSERT_FALSE(callee->SetRemoteDescription(caller->CreateOffer(), &error));
-  EXPECT_PRED_FORMAT2(AssertStringContains, error,
-                      "Session error code: ERROR_CONTENT.");
+  EXPECT_THAT(error, HasSubstr("Session error code: ERROR_CONTENT."));
   ASSERT_FALSE(callee->SetLocalDescription(std::move(valid_answer), &error));
-  EXPECT_PRED_FORMAT2(AssertStringContains, error,
-                      "Session error code: ERROR_CONTENT.");
+  EXPECT_THAT(error, HasSubstr("Session error code: ERROR_CONTENT."));
 }
 
 INSTANTIATE_TEST_SUITE_P(PeerConnectionCryptoTest,

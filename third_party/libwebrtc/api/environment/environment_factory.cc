@@ -97,12 +97,22 @@ Environment EnvironmentFactory::CreateWithDefaults() && {
   if (field_trials_ == nullptr) {
     Set(std::make_unique<FieldTrialBasedConfig>());
   }
+#if defined(WEBRTC_MOZILLA_BUILD)
+  // We want to use our clock, not GetRealTimeClockRaw, and we avoid
+  // building the code under third_party/libwebrtc/task_queue.  To
+  // ensure we're setting up things correctly, namely providing an
+  // Environment object with a preset task_queue_factory and clock,
+  // we'll do a release assert here.
+  RTC_CHECK(clock_);
+  RTC_CHECK(task_queue_factory_);
+#else
   if (clock_ == nullptr) {
     Set(Clock::GetRealTimeClock());
   }
   if (task_queue_factory_ == nullptr) {
     Set(CreateDefaultTaskQueueFactory(field_trials_));
   }
+#endif
   if (event_log_ == nullptr) {
     Set(std::make_unique<RtcEventLogNull>());
   }

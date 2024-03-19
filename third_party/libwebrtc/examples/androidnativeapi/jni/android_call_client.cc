@@ -154,8 +154,7 @@ void AndroidCallClient::CreatePeerConnectionFactory() {
   pcf_deps.worker_thread = worker_thread_.get();
   pcf_deps.signaling_thread = signaling_thread_.get();
   pcf_deps.task_queue_factory = webrtc::CreateDefaultTaskQueueFactory();
-  pcf_deps.event_log_factory = std::make_unique<webrtc::RtcEventLogFactory>(
-      pcf_deps.task_queue_factory.get());
+  pcf_deps.event_log_factory = std::make_unique<webrtc::RtcEventLogFactory>();
 
   pcf_deps.video_encoder_factory =
       std::make_unique<webrtc::InternalEncoderFactory>();

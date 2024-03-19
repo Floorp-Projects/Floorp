@@ -102,6 +102,7 @@ class NATSocketServer : public SocketServer, public NATInternalSocketFactory {
     Translator(NATSocketServer* server,
                NATType type,
                const SocketAddress& int_addr,
+               Thread& external_socket_thread,
                SocketFactory* ext_factory,
                const SocketAddress& ext_addr);
     ~Translator();

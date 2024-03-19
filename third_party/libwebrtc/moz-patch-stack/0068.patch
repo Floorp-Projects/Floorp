@@ -215,7 +215,7 @@ index 8e4941f961..7bcfc7c057 100644
                                     int current_delay_ms,
                                     int target_delay_ms,
 diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index 47c31812f3..0954327f1c 100644
+index 029e7a7405..26bd60057d 100644
 --- a/video/rtp_video_stream_receiver2.cc
 +++ b/video/rtp_video_stream_receiver2.cc
 @@ -244,6 +244,7 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
@@ -234,7 +234,7 @@ index 47c31812f3..0954327f1c 100644
        packet_buffer_(kPacketBufferStartSize,
                       PacketBufferMaxSize(field_trials_)),
        reference_finder_(std::make_unique<RtpFrameReferenceFinder>()),
-@@ -1219,7 +1221,8 @@ void RtpVideoStreamReceiver2::FrameDecoded(int64_t picture_id) {
+@@ -1250,7 +1252,8 @@ void RtpVideoStreamReceiver2::FrameDecoded(int64_t picture_id) {
      int64_t unwrapped_rtp_seq_num = rtp_seq_num_unwrapper_.Unwrap(seq_num);
      packet_infos_.erase(packet_infos_.begin(),
                          packet_infos_.upper_bound(unwrapped_rtp_seq_num));
@@ -245,7 +245,7 @@ index 47c31812f3..0954327f1c 100644
    }
  }
 diff --git a/video/rtp_video_stream_receiver2.h b/video/rtp_video_stream_receiver2.h
-index 0e96d7f2cd..10329005ba 100644
+index 00b17a77bd..b942cb97a6 100644
 --- a/video/rtp_video_stream_receiver2.h
 +++ b/video/rtp_video_stream_receiver2.h
 @@ -49,6 +49,7 @@
@@ -264,7 +264,7 @@ index 0e96d7f2cd..10329005ba 100644
        // The KeyFrameRequestSender is optional; if not provided, key frame
        // requests are sent via the internal RtpRtcp module.
        OnCompleteFrameCallback* complete_frame_callback,
-@@ -362,6 +364,7 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
+@@ -365,6 +367,7 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
    std::unique_ptr<LossNotificationController> loss_notification_controller_
        RTC_GUARDED_BY(packet_sequence_checker_);
  
@@ -273,10 +273,10 @@ index 0e96d7f2cd..10329005ba 100644
        RTC_GUARDED_BY(packet_sequence_checker_);
    UniqueTimestampCounter frame_counter_
 diff --git a/video/video_receive_stream2.cc b/video/video_receive_stream2.cc
-index c04b43a1d1..33e2f39ced 100644
+index f135f42f3b..8675ab9979 100644
 --- a/video/video_receive_stream2.cc
 +++ b/video/video_receive_stream2.cc
-@@ -210,6 +210,7 @@ VideoReceiveStream2::VideoReceiveStream2(
+@@ -209,6 +209,7 @@ VideoReceiveStream2::VideoReceiveStream2(
                                   &stats_proxy_,
                                   &stats_proxy_,
                                   nack_periodic_processor,

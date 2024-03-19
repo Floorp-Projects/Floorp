@@ -15,11 +15,11 @@
 #include <string>
 #include <vector>
 
+#include "api/task_queue/task_queue_base.h"
 #include "modules/audio_processing/aec_dump/capture_stream_info.h"
 #include "modules/audio_processing/include/aec_dump.h"
 #include "rtc_base/race_checker.h"
 #include "rtc_base/system/file_wrapper.h"
-#include "rtc_base/task_queue.h"
 #include "rtc_base/thread_annotations.h"
 
 // Files generated at build-time by the protobuf compiler.
@@ -39,7 +39,7 @@ class AecDumpImpl : public AecDump {
   // `max_log_size_bytes == -1` means the log size will be unlimited.
   AecDumpImpl(FileWrapper debug_file,
               int64_t max_log_size_bytes,
-              rtc::TaskQueue* worker_queue);
+              absl::Nonnull<TaskQueueBase*> worker_queue);
   AecDumpImpl(const AecDumpImpl&) = delete;
   AecDumpImpl& operator=(const AecDumpImpl&) = delete;
   ~AecDumpImpl() override;
@@ -74,7 +74,7 @@ class AecDumpImpl : public AecDump {
   FileWrapper debug_file_;
   int64_t num_bytes_left_for_log_ = 0;
   rtc::RaceChecker race_checker_;
-  rtc::TaskQueue* worker_queue_;
+  absl::Nonnull<TaskQueueBase*> worker_queue_;
   CaptureStreamInfo capture_stream_info_;
 };
 }  // namespace webrtc

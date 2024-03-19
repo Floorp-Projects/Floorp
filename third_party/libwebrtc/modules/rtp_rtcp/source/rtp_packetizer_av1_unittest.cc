@@ -99,6 +99,12 @@ Av1Frame ReassembleFrame(rtc::ArrayView<const RtpPayload> rtp_payloads) {
   return Av1Frame(VideoRtpDepacketizerAv1().AssembleFrame(payloads));
 }
 
+TEST(RtpPacketizerAv1Test, EmptyPayload) {
+  RtpPacketizer::PayloadSizeLimits limits;
+  RtpPacketizerAv1 packetizer({}, limits, VideoFrameType::kVideoFrameKey, true);
+  EXPECT_EQ(packetizer.NumPackets(), 0u);
+}
+
 TEST(RtpPacketizerAv1Test, PacketizeOneObuWithoutSizeAndExtension) {
   auto kFrame = BuildAv1Frame({Av1Obu(kAv1ObuTypeFrame)
                                    .WithoutSize()

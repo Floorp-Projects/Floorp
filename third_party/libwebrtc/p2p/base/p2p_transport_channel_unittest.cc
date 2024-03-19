@@ -1478,93 +1478,7 @@ TEST_F(P2PTransportChannelTest, GetStatsSwitchConnection) {
   DestroyChannels();
 }
 
-// Tests that UMAs are recorded when ICE restarts while the channel
-// is disconnected.
-TEST_F(P2PTransportChannelTest, TestUMAIceRestartWhileDisconnected) {
-  rtc::ScopedFakeClock clock;
-  ConfigureEndpoints(OPEN, OPEN, kOnlyLocalPorts, kOnlyLocalPorts);
-
-  CreateChannels();
-  EXPECT_TRUE_SIMULATED_WAIT(CheckConnected(ep1_ch1(), ep2_ch1()),
-                             kDefaultTimeout, clock);
-
-  // Drop all packets so that both channels become not writable.
-  fw()->AddRule(false, rtc::FP_ANY, rtc::FD_ANY, kPublicAddrs[0]);
-  const int kWriteTimeoutDelay = 8000;
-  EXPECT_TRUE_SIMULATED_WAIT(!ep1_ch1()->writable() && !ep2_ch1()->writable(),
-                             kWriteTimeoutDelay, clock);
-
-  ep1_ch1()->SetIceParameters(kIceParams[2]);
-  ep1_ch1()->SetRemoteIceParameters(kIceParams[3]);
-  ep1_ch1()->MaybeStartGathering();
-  EXPECT_METRIC_EQ(1, webrtc::metrics::NumEvents(
-                          "WebRTC.PeerConnection.IceRestartState",
-                          static_cast<int>(IceRestartState::DISCONNECTED)));
-
-  ep2_ch1()->SetIceParameters(kIceParams[3]);
-  ep2_ch1()->SetRemoteIceParameters(kIceParams[2]);
-  ep2_ch1()->MaybeStartGathering();
-  EXPECT_METRIC_EQ(2, webrtc::metrics::NumEvents(
-                          "WebRTC.PeerConnection.IceRestartState",
-                          static_cast<int>(IceRestartState::DISCONNECTED)));
-
-  DestroyChannels();
-}
-
-// Tests that UMAs are recorded when ICE restarts while the channel
-// is connected.
-TEST_F(P2PTransportChannelTest, TestUMAIceRestartWhileConnected) {
-  rtc::ScopedFakeClock clock;
-  ConfigureEndpoints(OPEN, OPEN, kOnlyLocalPorts, kOnlyLocalPorts);
-
-  CreateChannels();
-  EXPECT_TRUE_SIMULATED_WAIT(CheckConnected(ep1_ch1(), ep2_ch1()),
-                             kDefaultTimeout, clock);
-
-  ep1_ch1()->SetIceParameters(kIceParams[2]);
-  ep1_ch1()->SetRemoteIceParameters(kIceParams[3]);
-  ep1_ch1()->MaybeStartGathering();
-  EXPECT_METRIC_EQ(1, webrtc::metrics::NumEvents(
-                          "WebRTC.PeerConnection.IceRestartState",
-                          static_cast<int>(IceRestartState::CONNECTED)));
-
-  ep2_ch1()->SetIceParameters(kIceParams[3]);
-  ep2_ch1()->SetRemoteIceParameters(kIceParams[2]);
-  ep2_ch1()->MaybeStartGathering();
-  EXPECT_METRIC_EQ(2, webrtc::metrics::NumEvents(
-                          "WebRTC.PeerConnection.IceRestartState",
-                          static_cast<int>(IceRestartState::CONNECTED)));
-
-  DestroyChannels();
-}
-
-// Tests that UMAs are recorded when ICE restarts while the channel
-// is connecting.
-TEST_F(P2PTransportChannelTest, TestUMAIceRestartWhileConnecting) {
-  rtc::ScopedFakeClock clock;
-  ConfigureEndpoints(OPEN, OPEN, kOnlyLocalPorts, kOnlyLocalPorts);
-
-  // Create the channels without waiting for them to become connected.
-  CreateChannels();
-
-  ep1_ch1()->SetIceParameters(kIceParams[2]);
-  ep1_ch1()->SetRemoteIceParameters(kIceParams[3]);
-  ep1_ch1()->MaybeStartGathering();
-  EXPECT_METRIC_EQ(1, webrtc::metrics::NumEvents(
-                          "WebRTC.PeerConnection.IceRestartState",
-                          static_cast<int>(IceRestartState::CONNECTING)));
-
-  ep2_ch1()->SetIceParameters(kIceParams[3]);
-  ep2_ch1()->SetRemoteIceParameters(kIceParams[2]);
-  ep2_ch1()->MaybeStartGathering();
-  EXPECT_METRIC_EQ(2, webrtc::metrics::NumEvents(
-                          "WebRTC.PeerConnection.IceRestartState",
-                          static_cast<int>(IceRestartState::CONNECTING)));
-
-  DestroyChannels();
-}
-
-// Tests that a UMA on ICE regathering is recorded when there is a network
+// Tests that an ICE regathering reason is recorded when there is a network
 // change if and only if continual gathering is enabled.
 TEST_F(P2PTransportChannelTest,
        TestIceRegatheringReasonContinualGatheringByNetworkChange) {
@@ -1600,7 +1514,7 @@ TEST_F(P2PTransportChannelTest,
   DestroyChannels();
 }
 
-// Tests that a UMA on ICE regathering is recorded when there is a network
+// Tests that an ICE regathering reason is recorded when there is a network
 // failure if and only if continual gathering is enabled.
 TEST_F(P2PTransportChannelTest,
        TestIceRegatheringReasonContinualGatheringByNetworkFailure) {
@@ -1623,10 +1537,6 @@ TEST_F(P2PTransportChannelTest,
   SIMULATED_WAIT(false, kNetworkFailureTimeout, clock);
   EXPECT_LE(1, GetEndpoint(0)->GetIceRegatheringCountForReason(
                    IceRegatheringReason::NETWORK_FAILURE));
-  EXPECT_METRIC_LE(
-      1, webrtc::metrics::NumEvents(
-             "WebRTC.PeerConnection.IceRegatheringReason",
-             static_cast<int>(IceRegatheringReason::NETWORK_FAILURE)));
   EXPECT_EQ(0, GetEndpoint(1)->GetIceRegatheringCountForReason(
                    IceRegatheringReason::NETWORK_FAILURE));
 
@@ -3601,7 +3511,8 @@ class P2PTransportChannelPingTest : public ::testing::Test,
     rtc::ByteBufferWriter buf;
     msg.Write(&buf);
     conn->OnReadPacket(rtc::ReceivedPacket::CreateFromLegacy(
-        buf.Data(), buf.Length(), rtc::TimeMicros()));
+        reinterpret_cast<const char*>(buf.Data()), buf.Length(),
+        rtc::TimeMicros()));
   }
 
   void ReceivePingOnConnection(Connection* conn,
@@ -5097,7 +5008,7 @@ class P2PTransportChannelMostLikelyToWorkFirstTest
     Connection* conn = FindNextPingableConnectionAndPingIt(channel_.get());
     ASSERT_TRUE(conn != nullptr);
     EXPECT_EQ(conn->local_candidate().type(), local_candidate_type);
-    if (conn->local_candidate().type() == RELAY_PORT_TYPE) {
+    if (conn->local_candidate().is_relay()) {
       EXPECT_EQ(conn->local_candidate().relay_protocol(), relay_protocol_type);
     }
     EXPECT_EQ(conn->remote_candidate().type(), remote_candidate_type);
@@ -5509,7 +5420,7 @@ TEST_F(P2PTransportChannelTest,
 
   for (const auto& candidates_data : GetEndpoint(0)->saved_candidates_) {
     const auto& local_candidate_ep1 = candidates_data.candidate;
-    if (local_candidate_ep1.type() == LOCAL_PORT_TYPE) {
+    if (local_candidate_ep1.is_local()) {
       // This is the underlying private IP address of the same candidate at ep1,
       // and let the mock resolver of ep2 receive the correct resolution.
       rtc::SocketAddress resolved_address_ep1(local_candidate_ep1.address());
@@ -5538,11 +5449,11 @@ TEST_F(P2PTransportChannelTest,
   // Check the stats of ep1 seen by ep1.
   for (const auto& connection_info : ice_transport_stats1.connection_infos) {
     const auto& local_candidate = connection_info.local_candidate;
-    if (local_candidate.type() == LOCAL_PORT_TYPE) {
+    if (local_candidate.is_local()) {
       EXPECT_TRUE(local_candidate.address().IsUnresolvedIP());
-    } else if (local_candidate.type() == STUN_PORT_TYPE) {
+    } else if (local_candidate.is_stun()) {
       EXPECT_TRUE(local_candidate.related_address().IsAnyIP());
-    } else if (local_candidate.type() == RELAY_PORT_TYPE) {
+    } else if (local_candidate.is_relay()) {
       // The related address of the relay candidate should be equal to the
       // srflx address. Note that NAT is not configured, hence the following
       // expectation.
@@ -5555,11 +5466,11 @@ TEST_F(P2PTransportChannelTest,
   // Check the stats of ep1 seen by ep2.
   for (const auto& connection_info : ice_transport_stats2.connection_infos) {
     const auto& remote_candidate = connection_info.remote_candidate;
-    if (remote_candidate.type() == LOCAL_PORT_TYPE) {
+    if (remote_candidate.is_local()) {
       EXPECT_TRUE(remote_candidate.address().IsUnresolvedIP());
-    } else if (remote_candidate.type() == STUN_PORT_TYPE) {
+    } else if (remote_candidate.is_stun()) {
       EXPECT_TRUE(remote_candidate.related_address().IsAnyIP());
-    } else if (remote_candidate.type() == RELAY_PORT_TYPE) {
+    } else if (remote_candidate.is_relay()) {
       EXPECT_EQ(kPublicAddrs[0].ipaddr(),
                 remote_candidate.related_address().ipaddr());
     } else {
@@ -5681,7 +5592,7 @@ TEST_F(P2PTransportChannelTest,
   ASSERT_EQ_WAIT(1u, GetEndpoint(0)->saved_candidates_.size(), kMediumTimeout);
   const auto& candidates_data = GetEndpoint(0)->saved_candidates_[0];
   const auto& local_candidate_ep1 = candidates_data.candidate;
-  ASSERT_TRUE(local_candidate_ep1.type() == LOCAL_PORT_TYPE);
+  ASSERT_TRUE(local_candidate_ep1.is_local());
   // This is the underlying private IP address of the same candidate at ep1,
   // and let the mock resolver of ep2 receive the correct resolution.
   rtc::SocketAddress resolved_address_ep1(local_candidate_ep1.address());
@@ -5697,12 +5608,12 @@ TEST_F(P2PTransportChannelTest,
 
   const auto pair_ep1 = ep1_ch1()->GetSelectedCandidatePair();
   ASSERT_TRUE(pair_ep1.has_value());
-  EXPECT_EQ(LOCAL_PORT_TYPE, pair_ep1->local_candidate().type());
+  EXPECT_TRUE(pair_ep1->local_candidate().is_local());
   EXPECT_TRUE(pair_ep1->local_candidate().address().IsUnresolvedIP());
 
   const auto pair_ep2 = ep2_ch1()->GetSelectedCandidatePair();
   ASSERT_TRUE(pair_ep2.has_value());
-  EXPECT_EQ(LOCAL_PORT_TYPE, pair_ep2->remote_candidate().type());
+  EXPECT_TRUE(pair_ep2->remote_candidate().is_local());
   EXPECT_TRUE(pair_ep2->remote_candidate().address().IsUnresolvedIP());
 
   DestroyChannels();

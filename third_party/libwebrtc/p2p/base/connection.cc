@@ -590,10 +590,8 @@ void Connection::HandleStunBindingOrGoogPingRequest(IceMessage* msg) {
   // This connection should now be receiving.
   ReceivedPing(msg->transaction_id());
   if (field_trials_->extra_ice_ping && last_ping_response_received_ == 0) {
-    if (local_candidate().type() == RELAY_PORT_TYPE ||
-        local_candidate().type() == PRFLX_PORT_TYPE ||
-        remote_candidate().type() == RELAY_PORT_TYPE ||
-        remote_candidate().type() == PRFLX_PORT_TYPE) {
+    if (local_candidate().is_relay() || local_candidate().is_prflx() ||
+        remote_candidate().is_relay() || remote_candidate().is_prflx()) {
       const int64_t now = rtc::TimeMillis();
       if (last_ping_sent_ + kMinExtraPingDelayMs <= now) {
         RTC_LOG(LS_INFO) << ToString()
@@ -1579,8 +1577,7 @@ void Connection::MaybeSetRemoteIceParametersAndGeneration(
 
 void Connection::MaybeUpdatePeerReflexiveCandidate(
     const Candidate& new_candidate) {
-  if (remote_candidate_.type() == PRFLX_PORT_TYPE &&
-      new_candidate.type() != PRFLX_PORT_TYPE &&
+  if (remote_candidate_.is_prflx() && !new_candidate.is_prflx() &&
       remote_candidate_.protocol() == new_candidate.protocol() &&
       remote_candidate_.address() == new_candidate.address() &&
       remote_candidate_.username() == new_candidate.username() &&

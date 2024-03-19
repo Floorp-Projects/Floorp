@@ -629,7 +629,7 @@ void AsyncSocksProxySocket::SendAuth() {
   size_t len = pass_.GetLength() + 1;
   char* sensitive = new char[len];
   pass_.CopyTo(sensitive, true);
-  request.WriteBytes(sensitive, pass_.GetLength());  // Password
+  request.WriteString(std::string(sensitive, pass_.GetLength()));  // Password
   ExplicitZeroMemory(sensitive, len);
   delete[] sensitive;
   DirectSend(request.Data(), request.Length());

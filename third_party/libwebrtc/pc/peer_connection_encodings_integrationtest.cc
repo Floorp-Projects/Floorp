@@ -74,19 +74,10 @@ struct StringParamToString {
   }
 };
 
-// RTX, RED and FEC are reliability mechanisms used in combinations with other
-// codecs, but are not themselves a specific codec. Typically you don't want to
-// filter these out of the list of codec preferences.
-bool IsReliabilityMechanism(const RtpCodecCapability& codec) {
-  return absl::EqualsIgnoreCase(codec.name, cricket::kRtxCodecName) ||
-         absl::EqualsIgnoreCase(codec.name, cricket::kRedCodecName) ||
-         absl::EqualsIgnoreCase(codec.name, cricket::kUlpfecCodecName);
-}
-
 std::string GetCurrentCodecMimeType(
     rtc::scoped_refptr<const RTCStatsReport> report,
     const RTCOutboundRtpStreamStats& outbound_rtp) {
-  return outbound_rtp.codec_id.is_defined()
+  return outbound_rtp.codec_id.has_value()
              ? *report->GetAs<RTCCodecStats>(*outbound_rtp.codec_id)->mime_type
              : "";
 }
@@ -101,7 +92,7 @@ const RTCOutboundRtpStreamStats* FindOutboundRtpByRid(
     const std::vector<const RTCOutboundRtpStreamStats*>& outbound_rtps,
     const absl::string_view& rid) {
   for (const auto* outbound_rtp : outbound_rtps) {
-    if (outbound_rtp->rid.is_defined() && *outbound_rtp->rid == rid) {
+    if (outbound_rtp->rid.has_value() && *outbound_rtp->rid == rid) {
       return outbound_rtp;
     }
   }
@@ -163,7 +154,7 @@ class PeerConnectionEncodingsIntegrationTest : public ::testing::Test {
             .codecs;
     codecs.erase(std::remove_if(codecs.begin(), codecs.end(),
                                 [&codec_name](const RtpCodecCapability& codec) {
-                                  return !IsReliabilityMechanism(codec) &&
+                                  return !codec.IsResiliencyCodec() &&
                                          !absl::EqualsIgnoreCase(codec.name,
                                                                  codec_name);
                                 }),
@@ -270,7 +261,7 @@ class PeerConnectionEncodingsIntegrationTest : public ::testing::Test {
     }
     size_t num_sending_layers = 0;
     for (const auto* outbound_rtp : outbound_rtps) {
-      if (outbound_rtp->bytes_sent.is_defined() &&
+      if (outbound_rtp->bytes_sent.has_value() &&
           *outbound_rtp->bytes_sent > 0u) {
         ++num_sending_layers;
       }
@@ -287,11 +278,11 @@ class PeerConnectionEncodingsIntegrationTest : public ::testing::Test {
     std::vector<const RTCOutboundRtpStreamStats*> outbound_rtps =
         report->GetStatsOfType<RTCOutboundRtpStreamStats>();
     auto* outbound_rtp = FindOutboundRtpByRid(outbound_rtps, rid);
-    if (!outbound_rtp || !outbound_rtp->scalability_mode.is_defined() ||
+    if (!outbound_rtp || !outbound_rtp->scalability_mode.has_value() ||
         *outbound_rtp->scalability_mode != expected_scalability_mode) {
       return false;
     }
-    if (outbound_rtp->frame_height.is_defined()) {
+    if (outbound_rtp->frame_height.has_value()) {
       RTC_LOG(LS_INFO) << "Waiting for target resolution (" << frame_height
                        << "p). Currently at " << *outbound_rtp->frame_height
                        << "p...";
@@ -299,7 +290,7 @@ class PeerConnectionEncodingsIntegrationTest : public ::testing::Test {
       RTC_LOG(LS_INFO)
           << "Waiting for target resolution. No frames encoded yet...";
     }
-    if (!outbound_rtp->frame_height.is_defined() ||
+    if (!outbound_rtp->frame_height.has_value() ||
         *outbound_rtp->frame_height != frame_height) {
       // Sleep to avoid log spam when this is used in ASSERT_TRUE_WAIT().
       rtc::Thread::Current()->SleepMs(1000);
@@ -321,8 +312,8 @@ class PeerConnectionEncodingsIntegrationTest : public ::testing::Test {
       } else if (outbound_rtps.size() == 1u) {
         outbound_rtp = outbound_rtps[0];
       }
-      if (!outbound_rtp || !outbound_rtp->frame_width.is_defined() ||
-          !outbound_rtp->frame_height.is_defined()) {
+      if (!outbound_rtp || !outbound_rtp->frame_width.has_value() ||
+          !outbound_rtp->frame_height.has_value()) {
         // RTP not found by rid or has not encoded a frame yet.
         RTC_LOG(LS_ERROR) << "rid=" << resolution.rid << " does not have "
                           << "resolution metrics";
@@ -1200,7 +1191,7 @@ TEST_F(PeerConnectionEncodingsIntegrationTest,
   ASSERT_EQ(outbound_rtps.size(), 1u);
   std::string codec_name = GetCurrentCodecMimeType(report, *outbound_rtps[0]);
   EXPECT_STRCASEEQ(("video/" + vp9->name).c_str(), codec_name.c_str());
-  EXPECT_EQ(outbound_rtps[0]->scalability_mode.ValueOrDefault(""), "L3T3");
+  EXPECT_EQ(outbound_rtps[0]->scalability_mode.value_or(""), "L3T3");
 }
 
 TEST_F(PeerConnectionEncodingsIntegrationTest,

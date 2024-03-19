@@ -182,7 +182,7 @@ std::string H265LevelToString(H265Level level) {
 }
 
 absl::optional<H265ProfileTierLevel> ParseSdpForH265ProfileTierLevel(
-    const SdpVideoFormat::Parameters& params) {
+    const CodecParameterMap& params) {
   static const H265ProfileTierLevel kDefaultProfileTierLevel(
       H265Profile::kProfileMain, H265Tier::kTier0, H265Level::kLevel3_1);
   bool profile_tier_level_specified = false;
@@ -235,8 +235,8 @@ absl::optional<H265ProfileTierLevel> ParseSdpForH265ProfileTierLevel(
                                     level.value());
 }
 
-bool H265IsSameProfileTierLevel(const SdpVideoFormat::Parameters& params1,
-                                const SdpVideoFormat::Parameters& params2) {
+bool H265IsSameProfileTierLevel(const CodecParameterMap& params1,
+                                const CodecParameterMap& params2) {
   const absl::optional<H265ProfileTierLevel> ptl1 =
       ParseSdpForH265ProfileTierLevel(params1);
   const absl::optional<H265ProfileTierLevel> ptl2 =

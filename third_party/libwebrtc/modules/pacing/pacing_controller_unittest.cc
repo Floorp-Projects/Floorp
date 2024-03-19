@@ -2348,5 +2348,43 @@ TEST_F(PacingControllerTest, FlushesPacketsOnKeyFrames) {
   pacer->ProcessPackets();
 }
 
+TEST_F(PacingControllerTest, CanControlQueueSizeUsingTtl) {
+  const uint32_t kSsrc = 12345;
+  const uint32_t kAudioSsrc = 2345;
+  uint16_t sequence_number = 1234;
+
+  PacingController::Configuration config;
+  config.drain_large_queues = false;
+  config.packet_queue_ttl.video = TimeDelta::Millis(500);
+  auto pacer =
+      std::make_unique<PacingController>(&clock_, &callback_, trials_, config);
+  pacer->SetPacingRates(DataRate::BitsPerSec(100'000), DataRate::Zero());
+
+  Timestamp send_time = Timestamp::Zero();
+  for (int i = 0; i < 100; ++i) {
+    // Enqueue a new audio and video frame every 33ms.
+    if (clock_.CurrentTime() - send_time > TimeDelta::Millis(33)) {
+      for (int j = 0; j < 3; ++j) {
+        auto packet = BuildPacket(RtpPacketMediaType::kVideo, kSsrc,
+                                  /*sequence_number=*/++sequence_number,
+                                  /*capture_time_ms=*/2,
+                                  /*size_bytes=*/1000);
+        pacer->EnqueuePacket(std::move(packet));
+      }
+      auto packet = BuildPacket(RtpPacketMediaType::kAudio, kAudioSsrc,
+                                /*sequence_number=*/++sequence_number,
+                                /*capture_time_ms=*/2,
+                                /*size_bytes=*/100);
+      pacer->EnqueuePacket(std::move(packet));
+      send_time = clock_.CurrentTime();
+    }
+
+    EXPECT_LE(clock_.CurrentTime() - pacer->OldestPacketEnqueueTime(),
+              TimeDelta::Millis(500));
+    clock_.AdvanceTime(pacer->NextSendTime() - clock_.CurrentTime());
+    pacer->ProcessPackets();
+  }
+}
+
 }  // namespace
 }  // namespace webrtc

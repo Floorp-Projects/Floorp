@@ -281,7 +281,8 @@ void SendSideBandwidthEstimation::OnRouteChange() {
   uma_update_state_ = kNoUpdate;
   uma_rtt_state_ = kNoUpdate;
   last_rtc_event_log_ = Timestamp::MinusInfinity();
-  if (loss_based_bandwidth_estimator_v2_->UseInStartPhase()) {
+  if (LossBasedBandwidthEstimatorV2Enabled() &&
+      loss_based_bandwidth_estimator_v2_->UseInStartPhase()) {
     loss_based_bandwidth_estimator_v2_.reset(
         new LossBasedBweV2(key_value_config_));
   }

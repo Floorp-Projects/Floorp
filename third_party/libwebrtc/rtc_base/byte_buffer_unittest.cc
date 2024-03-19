@@ -16,9 +16,25 @@
 
 #include "rtc_base/arraysize.h"
 #include "rtc_base/byte_order.h"
+#include "test/gmock.h"
 #include "test/gtest.h"
 
 namespace rtc {
+
+using ::testing::ElementsAre;
+
+TEST(ByteBufferTest, WriterAccessors) {
+  // To be changed into ByteBufferWriter when base type is converted.
+  ByteBufferWriterT<BufferT<uint8_t>> buffer;
+  buffer.WriteString("abc");
+  EXPECT_EQ(buffer.Length(), 3U);
+  EXPECT_THAT(buffer.DataView(), ElementsAre('a', 'b', 'c'));
+  EXPECT_EQ(absl::string_view("abc"), buffer.DataAsStringView());
+
+  buffer.WriteUInt8(0);
+  EXPECT_STREQ(buffer.DataAsCharPointer(), "abc");
+  EXPECT_STREQ(reinterpret_cast<const char*>(buffer.Data()), "abc");
+}
 
 TEST(ByteBufferTest, TestByteOrder) {
   uint16_t n16 = 1;
@@ -150,7 +166,7 @@ TEST(ByteBufferTest, TestReadWriteBuffer) {
   buffer.Clear();
 
   // Write and read bytes
-  char write_bytes[] = "foo";
+  uint8_t write_bytes[] = "foo";
   buffer.WriteBytes(write_bytes, 3);
   ByteBufferReader read_buf7(buffer);
   uint8_t read_bytes[3];
@@ -162,7 +178,7 @@ TEST(ByteBufferTest, TestReadWriteBuffer) {
   buffer.Clear();
 
   // Write and read reserved buffer space
-  char* write_dst = buffer.ReserveWriteBuffer(3);
+  uint8_t* write_dst = buffer.ReserveWriteBuffer(3);
   memcpy(write_dst, write_bytes, 3);
   ByteBufferReader read_buf8(buffer);
   memset(read_bytes, 0, 3);
@@ -192,6 +208,27 @@ TEST(ByteBufferTest, TestReadWriteBuffer) {
   EXPECT_EQ(wu64, ru64);
   EXPECT_EQ(0U, read_buf9.Length());
   buffer.Clear();
+}
+
+TEST(ByteBufferTest, TestReadStringView) {
+  const absl::string_view tests[] = {"hello", " ", "string_view"};
+  std::string buffer;
+  for (const auto& test : tests)
+    buffer += test;
+
+  rtc::ArrayView<const uint8_t> bytes(
+      reinterpret_cast<const uint8_t*>(&buffer[0]), buffer.size());
+
+  ByteBufferReader read_buf(bytes);
+  size_t consumed = 0;
+  for (const auto& test : tests) {
+    absl::string_view sv;
+    EXPECT_TRUE(read_buf.ReadStringView(&sv, test.length()));
+    EXPECT_EQ(sv.compare(test), 0);
+    // The returned string view should point directly into the original string.
+    EXPECT_EQ(&sv[0], &buffer[0 + consumed]);
+    consumed += sv.size();
+  }
 }
 
 TEST(ByteBufferTest, TestReadWriteUVarint) {

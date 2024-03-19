@@ -89,7 +89,7 @@ SendAudioStream::SendAudioStream(
   AudioSendStream::Config send_config(send_transport);
   ssrc_ = sender->GetNextAudioSsrc();
   send_config.rtp.ssrc = ssrc_;
-  SdpAudioFormat::Parameters sdp_params;
+  CodecParameterMap sdp_params;
   if (config.source.channels == 2)
     sdp_params["stereo"] = "1";
   if (config.encoder.initial_frame_length != TimeDelta::Millis(20))

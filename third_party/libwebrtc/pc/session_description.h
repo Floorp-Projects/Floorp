@@ -468,13 +468,23 @@ const ContentInfo* FindContentInfoByName(const ContentInfos& contents,
 const ContentInfo* FindContentInfoByType(const ContentInfos& contents,
                                          const std::string& type);
 
-// Determines how the MSID will be signaled in the SDP. These can be used as
-// flags to indicate both or none.
+// Determines how the MSID will be signaled in the SDP.
+// These can be used as bit flags to indicate both or the special value none.
 enum MsidSignaling {
-  // Signal MSID with one a=msid line in the media section.
+  // MSID is not signaled. This is not a bit flag and must be compared for
+  // equality.
+  kMsidSignalingNotUsed = 0x0,
+  // Signal MSID with at least one a=msid line in the media section.
+  // This requires unified plan.
   kMsidSignalingMediaSection = 0x1,
   // Signal MSID with a=ssrc: msid lines in the media section.
-  kMsidSignalingSsrcAttribute = 0x2
+  // This should only be used with plan-b but is signalled in
+  // offers for backward compability reasons.
+  kMsidSignalingSsrcAttribute = 0x2,
+  // Signal MSID with a=msid-semantic: WMS in the session section.
+  // This is deprecated but signalled for backward compability reasons.
+  // It is typically combined with 0x1 or 0x2.
+  kMsidSignalingSemantic = 0x4
 };
 
 // Describes a collection of contents, each with its own name and
@@ -548,9 +558,6 @@ class SessionDescription {
   void RemoveGroupByName(const std::string& name);
 
   // Global attributes.
-  void set_msid_supported(bool supported) { msid_supported_ = supported; }
-  bool msid_supported() const { return msid_supported_; }
-
   // Determines how the MSIDs were/will be signaled. Flag value composed of
   // MsidSignaling bits (see enum above).
   void set_msid_signaling(int msid_signaling) {
@@ -582,10 +589,7 @@ class SessionDescription {
   ContentInfos contents_;
   TransportInfos transport_infos_;
   ContentGroups content_groups_;
-  bool msid_supported_ = true;
-  // Default to what Plan B would do.
-  // TODO(bugs.webrtc.org/8530): Change default to kMsidSignalingMediaSection.
-  int msid_signaling_ = kMsidSignalingSsrcAttribute;
+  int msid_signaling_ = kMsidSignalingMediaSection | kMsidSignalingSemantic;
   bool extmap_allow_mixed_ = true;
 };
 

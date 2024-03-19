@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "absl/strings/string_view.h"
+#include "api/environment/environment.h"
 #include "api/network_state_predictor.h"
 #include "api/sequence_checker.h"
 #include "api/task_queue/task_queue_base.h"
@@ -41,7 +42,6 @@
 #include "rtc_base/task_utils/repeating_task.h"
 
 namespace webrtc {
-class Clock;
 class FrameEncryptorInterface;
 class RtcEventLog;
 
@@ -51,7 +51,7 @@ class RtpTransportControllerSend final
       public TransportFeedbackObserver,
       public NetworkStateEstimateObserver {
  public:
-  RtpTransportControllerSend(Clock* clock, const RtpTransportConfig& config);
+  explicit RtpTransportControllerSend(const RtpTransportConfig& config);
   ~RtpTransportControllerSend() override;
 
   RtpTransportControllerSend(const RtpTransportControllerSend&) = delete;
@@ -146,9 +146,7 @@ class RtpTransportControllerSend final
   void ProcessSentPacketUpdates(NetworkControlUpdate updates)
       RTC_RUN_ON(sequence_checker_);
 
-  Clock* const clock_;
-  RtcEventLog* const event_log_;
-  TaskQueueFactory* const task_queue_factory_;
+  const Environment env_;
   SequenceChecker sequence_checker_;
   TaskQueueBase* task_queue_;
   PacketRouter packet_router_;
@@ -207,8 +205,6 @@ class RtpTransportControllerSend final
   RateLimiter retransmission_rate_limiter_;
 
   ScopedTaskSafety safety_;
-
-  const FieldTrialsView& field_trials_;
 };
 
 }  // namespace webrtc

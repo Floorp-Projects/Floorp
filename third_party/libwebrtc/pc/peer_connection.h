@@ -417,9 +417,6 @@ class PeerConnection : public PeerConnectionInternal,
       const RtpTransceiverInit& init,
       bool fire_callback = true) override;
 
-  // Returns rtp transport, result can not be nullptr.
-  RtpTransportInternal* GetRtpTransport(const std::string& mid);
-
   // Returns true if SRTP (either using DTLS-SRTP or SDES) is required by
   // this session.
   bool SrtpRequired() const override;

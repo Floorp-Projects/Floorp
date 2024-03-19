@@ -12,8 +12,6 @@ Differential Revision: https://phabricator.services.mozilla.com/D127714
 Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0744d68b8c944e69945de4ac5c4ca71332e78ad8
 ---
  audio/channel_send.cc                       | 2 +-
- call/call.cc                                | 2 ++
- call/call_factory.cc                        | 4 ++++
  call/degraded_call.cc                       | 2 ++
  modules/audio_coding/acm2/acm_receiver.cc   | 2 +-
  modules/rtp_rtcp/include/flexfec_receiver.h | 2 ++
@@ -21,10 +19,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0744d68b8c944e699
  rtc_base/task_utils/repeating_task.h        | 4 ++--
  system_wrappers/include/clock.h             | 2 +-
  system_wrappers/source/clock.cc             | 2 +-
- 10 files changed, 18 insertions(+), 6 deletions(-)
+ 8 files changed, 12 insertions(+), 6 deletions(-)
 
 diff --git a/audio/channel_send.cc b/audio/channel_send.cc
-index 549e65a59c..8080f4a3b8 100644
+index db632b3aa8..c8251b4b52 100644
 --- a/audio/channel_send.cc
 +++ b/audio/channel_send.cc
 @@ -443,7 +443,7 @@ ChannelSend::ChannelSend(
@@ -36,48 +34,6 @@ index 549e65a59c..8080f4a3b8 100644
    configuration.audio = true;
    configuration.outgoing_transport = rtp_transport;
  
-diff --git a/call/call.cc b/call/call.cc
-index 42b3b988ea..d2ac705274 100644
---- a/call/call.cc
-+++ b/call/call.cc
-@@ -473,6 +473,7 @@ std::string Call::Stats::ToString(int64_t time_ms) const {
-   return ss.str();
- }
- 
-+/* Mozilla: Avoid this since it could use GetRealTimeClock().
- std::unique_ptr<Call> Call::Create(const CallConfig& config) {
-   Clock* clock =
-       config.env.has_value() ? &config.env->clock() : Clock::GetRealTimeClock();
-@@ -480,6 +481,7 @@ std::unique_ptr<Call> Call::Create(const CallConfig& config) {
-                 RtpTransportControllerSendFactory().Create(
-                     config.ExtractTransportConfig(), clock));
- }
-+ */
- 
- std::unique_ptr<Call> Call::Create(
-     const CallConfig& config,
-diff --git a/call/call_factory.cc b/call/call_factory.cc
-index 043b11da37..78a4f1635f 100644
---- a/call/call_factory.cc
-+++ b/call/call_factory.cc
-@@ -94,6 +94,9 @@ std::unique_ptr<Call> CallFactory::CreateCall(const CallConfig& config) {
- 
-   RtpTransportConfig transportConfig = config.ExtractTransportConfig();
- 
-+  RTC_CHECK(false);
-+  return nullptr;
-+  /* Mozilla: Avoid this since it could use GetRealTimeClock().
-   std::unique_ptr<Call> call =
-       Call::Create(config, Clock::GetRealTimeClock(),
-                    config.rtp_transport_controller_send_factory->Create(
-@@ -106,6 +109,7 @@ std::unique_ptr<Call> CallFactory::CreateCall(const CallConfig& config) {
-   }
- 
-   return call;
-+   */
- }
- 
- std::unique_ptr<CallFactoryInterface> CreateCallFactory() {
 diff --git a/call/degraded_call.cc b/call/degraded_call.cc
 index a511eda7bd..75a4a1cac0 100644
 --- a/call/degraded_call.cc

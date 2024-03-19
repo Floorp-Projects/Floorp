@@ -22,9 +22,14 @@
 #include "api/test/mock_video_encoder.h"
 #include "api/test/mock_video_encoder_factory.h"
 #include "api/units/data_rate.h"
+#include "api/units/data_size.h"
+#include "api/units/frequency.h"
 #include "api/units/time_delta.h"
 #include "api/video/i420_buffer.h"
 #include "api/video/video_frame.h"
+#include "api/video_codecs/scalability_mode.h"
+#include "api/video_codecs/video_decoder.h"
+#include "api/video_codecs/video_encoder.h"
 #include "modules/video_coding/include/video_codec_interface.h"
 #include "modules/video_coding/svc/scalability_mode_util.h"
 #include "test/gmock.h"
@@ -44,6 +49,8 @@ using ::testing::InvokeWithoutArgs;
 using ::testing::NiceMock;
 using ::testing::Return;
 using ::testing::SizeIs;
+using ::testing::UnorderedElementsAreArray;
+using ::testing::Values;
 
 using VideoCodecStats = VideoCodecTester::VideoCodecStats;
 using VideoSourceSettings = VideoCodecTester::VideoSourceSettings;
@@ -77,14 +84,19 @@ rtc::scoped_refptr<I420Buffer> CreateYuvBuffer(uint8_t y = 0,
   return buffer;
 }
 
+// TODO(ssilkin): Wrap this into a class that removes file in dtor.
 std::string CreateYuvFile(int width, int height, int num_frames) {
   std::string path = webrtc::test::TempFilename(webrtc::test::OutputPath(),
                                                 "video_codec_tester_unittest");
   FILE* file = fopen(path.c_str(), "wb");
   for (int frame_num = 0; frame_num < num_frames; ++frame_num) {
-    uint8_t y = (frame_num + 0) & 255;
-    uint8_t u = (frame_num + 1) & 255;
-    uint8_t v = (frame_num + 2) & 255;
+    // For purposes of testing quality estimation, we need Y, U, V values in
+    // source and decoded video to be unique and deterministic. In source video
+    // we make them functions of frame number. The test decoder makes them
+    // functions of encoded frame size in decoded video.
+    uint8_t y = (frame_num * 3 + 0) & 255;
+    uint8_t u = (frame_num * 3 + 1) & 255;
+    uint8_t v = (frame_num * 3 + 2) & 255;
     rtc::scoped_refptr<I420Buffer> buffer = CreateYuvBuffer(y, u, v);
     fwrite(buffer->DataY(), 1, width * height, file);
     int chroma_size_bytes = (width + 1) / 2 * (height + 1) / 2;
@@ -95,115 +107,161 @@ std::string CreateYuvFile(int width, int height, int num_frames) {
   return path;
 }
 
-std::unique_ptr<VideoCodecStats> RunTest(std::vector<std::vector<Frame>> frames,
-                                         ScalabilityMode scalability_mode) {
-  int num_frames = static_cast<int>(frames.size());
-  std::string source_yuv_path = CreateYuvFile(kWidth, kHeight, num_frames);
-  VideoSourceSettings source_settings{
-      .file_path = source_yuv_path,
-      .resolution = {.width = kWidth, .height = kHeight},
-      .framerate = kTargetFramerate};
-
-  int num_encoded_frames = 0;
-  EncodedImageCallback* encoded_frame_callback;
-  NiceMock<MockVideoEncoderFactory> encoder_factory;
-  ON_CALL(encoder_factory, CreateVideoEncoder)
-      .WillByDefault([&](const SdpVideoFormat&) {
-        auto encoder = std::make_unique<NiceMock<MockVideoEncoder>>();
-        ON_CALL(*encoder, RegisterEncodeCompleteCallback)
-            .WillByDefault([&](EncodedImageCallback* callback) {
-              encoded_frame_callback = callback;
-              return WEBRTC_VIDEO_CODEC_OK;
-            });
-        ON_CALL(*encoder, Encode)
-            .WillByDefault([&](const VideoFrame& input_frame,
-                               const std::vector<VideoFrameType>*) {
-              for (const Frame& frame : frames[num_encoded_frames]) {
-                EncodedImage encoded_frame;
-                encoded_frame._encodedWidth = frame.width;
-                encoded_frame._encodedHeight = frame.height;
-                encoded_frame.SetFrameType(
-                    frame.keyframe ? VideoFrameType::kVideoFrameKey
-                                   : VideoFrameType::kVideoFrameDelta);
-                encoded_frame.SetRtpTimestamp(input_frame.timestamp());
-                encoded_frame.SetSpatialIndex(frame.layer_id.spatial_idx);
-                encoded_frame.SetTemporalIndex(frame.layer_id.temporal_idx);
-                encoded_frame.SetEncodedData(
-                    EncodedImageBuffer::Create(frame.frame_size.bytes()));
-                encoded_frame_callback->OnEncodedImage(
-                    encoded_frame,
-                    /*codec_specific_info=*/nullptr);
-              }
-              ++num_encoded_frames;
-              return WEBRTC_VIDEO_CODEC_OK;
-            });
-        return encoder;
-      });
-
-  int num_decoded_frames = 0;
-  DecodedImageCallback* decode_callback;
-  NiceMock<MockVideoDecoderFactory> decoder_factory;
-  ON_CALL(decoder_factory, CreateVideoDecoder)
-      .WillByDefault([&](const SdpVideoFormat&) {
-        auto decoder = std::make_unique<NiceMock<MockVideoDecoder>>();
-        ON_CALL(*decoder, RegisterDecodeCompleteCallback)
-            .WillByDefault([&](DecodedImageCallback* callback) {
-              decode_callback = callback;
-              return WEBRTC_VIDEO_CODEC_OK;
-            });
-        ON_CALL(*decoder, Decode(_, _))
-            .WillByDefault([&](const EncodedImage& encoded_frame, int64_t) {
-              // Make values to be different from source YUV generated in
-              // `CreateYuvFile`.
-              uint8_t y = ((num_decoded_frames + 1) * 2) & 255;
-              uint8_t u = ((num_decoded_frames + 2) * 2) & 255;
-              uint8_t v = ((num_decoded_frames + 3) * 2) & 255;
-              rtc::scoped_refptr<I420Buffer> frame_buffer =
-                  CreateYuvBuffer(y, u, v);
-              VideoFrame decoded_frame =
-                  VideoFrame::Builder()
-                      .set_video_frame_buffer(frame_buffer)
-                      .set_timestamp_rtp(encoded_frame.RtpTimestamp())
-                      .build();
-              decode_callback->Decoded(decoded_frame);
-              ++num_decoded_frames;
-              return WEBRTC_VIDEO_CODEC_OK;
-            });
-        return decoder;
-      });
-
-  int num_spatial_layers = ScalabilityModeToNumSpatialLayers(scalability_mode);
-  int num_temporal_layers =
-      ScalabilityModeToNumTemporalLayers(scalability_mode);
-
-  std::map<uint32_t, EncodingSettings> encoding_settings;
-  for (int frame_num = 0; frame_num < num_frames; ++frame_num) {
-    std::map<LayerId, LayerSettings> layers_settings;
-    for (int sidx = 0; sidx < num_spatial_layers; ++sidx) {
-      for (int tidx = 0; tidx < num_temporal_layers; ++tidx) {
-        layers_settings.emplace(
-            LayerId{.spatial_idx = sidx, .temporal_idx = tidx},
-            LayerSettings{.resolution = {.width = kWidth, .height = kHeight},
-                          .framerate = kTargetFramerate /
-                                       (1 << (num_temporal_layers - 1 - tidx)),
-                          .bitrate = kTargetLayerBitrate});
+class TestVideoEncoder : public MockVideoEncoder {
+ public:
+  TestVideoEncoder(ScalabilityMode scalability_mode,
+                   std::vector<std::vector<Frame>> encoded_frames)
+      : scalability_mode_(scalability_mode), encoded_frames_(encoded_frames) {}
+  int32_t Encode(const VideoFrame& input_frame,
+                 const std::vector<VideoFrameType>*) override {
+    for (const Frame& frame : encoded_frames_[num_encoded_frames_]) {
+      if (frame.frame_size.IsZero()) {
+        continue;  // Frame drop.
       }
+      EncodedImage encoded_frame;
+      encoded_frame._encodedWidth = frame.width;
+      encoded_frame._encodedHeight = frame.height;
+      encoded_frame.SetFrameType(frame.keyframe
+                                     ? VideoFrameType::kVideoFrameKey
+                                     : VideoFrameType::kVideoFrameDelta);
+      encoded_frame.SetRtpTimestamp(input_frame.timestamp());
+      encoded_frame.SetSpatialIndex(frame.layer_id.spatial_idx);
+      encoded_frame.SetTemporalIndex(frame.layer_id.temporal_idx);
+      encoded_frame.SetEncodedData(
+          EncodedImageBuffer::Create(frame.frame_size.bytes()));
+      CodecSpecificInfo codec_specific_info;
+      codec_specific_info.scalability_mode = scalability_mode_;
+      callback_->OnEncodedImage(encoded_frame, &codec_specific_info);
     }
-    encoding_settings.emplace(
-        frames[frame_num][0].timestamp_rtp,
-        EncodingSettings{.scalability_mode = scalability_mode,
-                         .layers_settings = layers_settings});
+    ++num_encoded_frames_;
+    return WEBRTC_VIDEO_CODEC_OK;
   }
 
-  EncoderSettings encoder_settings;
-  DecoderSettings decoder_settings;
-  std::unique_ptr<VideoCodecStats> stats =
-      VideoCodecTester::RunEncodeDecodeTest(
-          source_settings, &encoder_factory, &decoder_factory, encoder_settings,
-          decoder_settings, encoding_settings);
-  remove(source_yuv_path.c_str());
-  return stats;
-}
+  int32_t RegisterEncodeCompleteCallback(
+      EncodedImageCallback* callback) override {
+    callback_ = callback;
+    return WEBRTC_VIDEO_CODEC_OK;
+  }
+
+ private:
+  ScalabilityMode scalability_mode_;
+  std::vector<std::vector<Frame>> encoded_frames_;
+  int num_encoded_frames_ = 0;
+  EncodedImageCallback* callback_;
+};
+
+class TestVideoDecoder : public MockVideoDecoder {
+ public:
+  int32_t Decode(const EncodedImage& encoded_frame, int64_t) {
+    uint8_t y = (encoded_frame.size() + 0) & 255;
+    uint8_t u = (encoded_frame.size() + 2) & 255;
+    uint8_t v = (encoded_frame.size() + 4) & 255;
+    rtc::scoped_refptr<I420Buffer> frame_buffer = CreateYuvBuffer(y, u, v);
+    VideoFrame decoded_frame =
+        VideoFrame::Builder()
+            .set_video_frame_buffer(frame_buffer)
+            .set_timestamp_rtp(encoded_frame.RtpTimestamp())
+            .build();
+    callback_->Decoded(decoded_frame);
+    frame_sizes_.push_back(DataSize::Bytes(encoded_frame.size()));
+    return WEBRTC_VIDEO_CODEC_OK;
+  }
+
+  int32_t RegisterDecodeCompleteCallback(DecodedImageCallback* callback) {
+    callback_ = callback;
+    return WEBRTC_VIDEO_CODEC_OK;
+  }
+
+  const std::vector<DataSize>& frame_sizes() const { return frame_sizes_; }
+
+ private:
+  DecodedImageCallback* callback_;
+  std::vector<DataSize> frame_sizes_;
+};
+
+class VideoCodecTesterTest : public ::testing::Test {
+ public:
+  std::unique_ptr<VideoCodecStats> RunEncodeDecodeTest(
+      std::string codec_type,
+      ScalabilityMode scalability_mode,
+      std::vector<std::vector<Frame>> encoded_frames) {
+    int num_frames = encoded_frames.size();
+    std::string yuv_path = CreateYuvFile(kWidth, kHeight, num_frames);
+    VideoSourceSettings video_source_settings{
+        .file_path = yuv_path,
+        .resolution = {.width = kWidth, .height = kHeight},
+        .framerate = kTargetFramerate};
+
+    NiceMock<MockVideoEncoderFactory> encoder_factory;
+    ON_CALL(encoder_factory, CreateVideoEncoder)
+        .WillByDefault([&](const SdpVideoFormat&) {
+          return std::make_unique<NiceMock<TestVideoEncoder>>(scalability_mode,
+                                                              encoded_frames);
+        });
+
+    NiceMock<MockVideoDecoderFactory> decoder_factory;
+    ON_CALL(decoder_factory, CreateVideoDecoder)
+        .WillByDefault([&](const SdpVideoFormat&) {
+          // Video codec tester destroyes decoder at the end of test. Test
+          // decoder collects stats which we need to access after test. To keep
+          // the decode alive we wrap it into a wrapper and pass the wrapper to
+          // the tester.
+          class DecoderWrapper : public TestVideoDecoder {
+           public:
+            explicit DecoderWrapper(TestVideoDecoder* decoder)
+                : decoder_(decoder) {}
+            int32_t Decode(const EncodedImage& encoded_frame,
+                           int64_t render_time_ms) {
+              return decoder_->Decode(encoded_frame, render_time_ms);
+            }
+            int32_t RegisterDecodeCompleteCallback(
+                DecodedImageCallback* callback) {
+              return decoder_->RegisterDecodeCompleteCallback(callback);
+            }
+            TestVideoDecoder* decoder_;
+          };
+          decoders_.push_back(std::make_unique<NiceMock<TestVideoDecoder>>());
+          return std::make_unique<NiceMock<DecoderWrapper>>(
+              decoders_.back().get());
+        });
+
+    int num_spatial_layers =
+        ScalabilityModeToNumSpatialLayers(scalability_mode);
+    int num_temporal_layers =
+        ScalabilityModeToNumTemporalLayers(scalability_mode);
+    std::map<uint32_t, EncodingSettings> encoding_settings;
+    for (int frame_num = 0; frame_num < num_frames; ++frame_num) {
+      std::map<LayerId, LayerSettings> layers_settings;
+      for (int sidx = 0; sidx < num_spatial_layers; ++sidx) {
+        for (int tidx = 0; tidx < num_temporal_layers; ++tidx) {
+          layers_settings.emplace(
+              LayerId{.spatial_idx = sidx, .temporal_idx = tidx},
+              LayerSettings{
+                  .resolution = {.width = kWidth, .height = kHeight},
+                  .framerate = kTargetFramerate /
+                               (1 << (num_temporal_layers - 1 - tidx)),
+                  .bitrate = kTargetLayerBitrate});
+        }
+      }
+      encoding_settings.emplace(
+          encoded_frames[frame_num].front().timestamp_rtp,
+          EncodingSettings{.sdp_video_format = SdpVideoFormat(codec_type),
+                           .scalability_mode = scalability_mode,
+                           .layers_settings = layers_settings});
+    }
+
+    std::unique_ptr<VideoCodecStats> stats =
+        VideoCodecTester::RunEncodeDecodeTest(
+            video_source_settings, &encoder_factory, &decoder_factory,
+            EncoderSettings{}, DecoderSettings{}, encoding_settings);
+
+    remove(yuv_path.c_str());
+    return stats;
+  }
+
+ protected:
+  std::vector<std::unique_ptr<TestVideoDecoder>> decoders_;
+};
 
 EncodedImage CreateEncodedImage(uint32_t timestamp_rtp) {
   EncodedImage encoded_image;
@@ -233,52 +291,63 @@ class MockCodedVideoSource : public CodedVideoSource {
 
 }  // namespace
 
-TEST(VideoCodecTester, Slice) {
-  std::unique_ptr<VideoCodecStats> stats = RunTest(
-      {{{.timestamp_rtp = 0, .layer_id = {.spatial_idx = 0, .temporal_idx = 0}},
-        {.timestamp_rtp = 0,
-         .layer_id = {.spatial_idx = 1, .temporal_idx = 0}}},
-       {{.timestamp_rtp = 1,
-         .layer_id = {.spatial_idx = 0, .temporal_idx = 1}}}},
-      ScalabilityMode::kL2T2);
+TEST_F(VideoCodecTesterTest, Slice) {
+  std::unique_ptr<VideoCodecStats> stats =
+      RunEncodeDecodeTest("VP9", ScalabilityMode::kL2T2,
+                          {{{.timestamp_rtp = 0,
+                             .layer_id = {.spatial_idx = 0, .temporal_idx = 0},
+                             .frame_size = DataSize::Bytes(1)},
+                            {.timestamp_rtp = 0,
+                             .layer_id = {.spatial_idx = 1, .temporal_idx = 0},
+                             .frame_size = DataSize::Bytes(2)}},
+                           {{.timestamp_rtp = 1,
+                             .layer_id = {.spatial_idx = 0, .temporal_idx = 1},
+                             .frame_size = DataSize::Bytes(3)}}});
   std::vector<Frame> slice = stats->Slice(Filter{}, /*merge=*/false);
-  EXPECT_THAT(slice, ElementsAre(Field(&Frame::timestamp_rtp, 0),
-                                 Field(&Frame::timestamp_rtp, 0),
-                                 Field(&Frame::timestamp_rtp, 1)));
+  EXPECT_THAT(slice,
+              ElementsAre(Field(&Frame::frame_size, DataSize::Bytes(1)),
+                          Field(&Frame::frame_size, DataSize::Bytes(2)),
+                          Field(&Frame::frame_size, DataSize::Bytes(3)),
+                          Field(&Frame::frame_size, DataSize::Bytes(0))));
 
   slice = stats->Slice({.min_timestamp_rtp = 1}, /*merge=*/false);
-  EXPECT_THAT(slice, ElementsAre(Field(&Frame::timestamp_rtp, 1)));
+  EXPECT_THAT(slice,
+              ElementsAre(Field(&Frame::frame_size, DataSize::Bytes(3)),
+                          Field(&Frame::frame_size, DataSize::Bytes(0))));
 
   slice = stats->Slice({.max_timestamp_rtp = 0}, /*merge=*/false);
-  EXPECT_THAT(slice, ElementsAre(Field(&Frame::timestamp_rtp, 0),
-                                 Field(&Frame::timestamp_rtp, 0)));
+  EXPECT_THAT(slice,
+              ElementsAre(Field(&Frame::frame_size, DataSize::Bytes(1)),
+                          Field(&Frame::frame_size, DataSize::Bytes(2))));
 
   slice = stats->Slice({.layer_id = {{.spatial_idx = 0, .temporal_idx = 0}}},
                        /*merge=*/false);
-  EXPECT_THAT(slice, ElementsAre(Field(&Frame::timestamp_rtp, 0)));
+  EXPECT_THAT(slice,
+              ElementsAre(Field(&Frame::frame_size, DataSize::Bytes(1))));
 
   slice = stats->Slice({.layer_id = {{.spatial_idx = 0, .temporal_idx = 1}}},
                        /*merge=*/false);
-  EXPECT_THAT(slice, ElementsAre(Field(&Frame::timestamp_rtp, 0),
-                                 Field(&Frame::timestamp_rtp, 1)));
+  EXPECT_THAT(slice,
+              ElementsAre(Field(&Frame::frame_size, DataSize::Bytes(1)),
+                          Field(&Frame::frame_size, DataSize::Bytes(3))));
 }
 
-TEST(VideoCodecTester, Merge) {
+TEST_F(VideoCodecTesterTest, Merge) {
   std::unique_ptr<VideoCodecStats> stats =
-      RunTest({{{.timestamp_rtp = 0,
-                 .layer_id = {.spatial_idx = 0, .temporal_idx = 0},
-                 .frame_size = DataSize::Bytes(1),
-                 .keyframe = true},
-                {.timestamp_rtp = 0,
-                 .layer_id = {.spatial_idx = 1, .temporal_idx = 0},
-                 .frame_size = DataSize::Bytes(2)}},
-               {{.timestamp_rtp = 1,
-                 .layer_id = {.spatial_idx = 0, .temporal_idx = 1},
-                 .frame_size = DataSize::Bytes(4)},
-                {.timestamp_rtp = 1,
-                 .layer_id = {.spatial_idx = 1, .temporal_idx = 1},
-                 .frame_size = DataSize::Bytes(8)}}},
-              ScalabilityMode::kL2T2_KEY);
+      RunEncodeDecodeTest("VP8", ScalabilityMode::kL2T2_KEY,
+                          {{{.timestamp_rtp = 0,
+                             .layer_id = {.spatial_idx = 0, .temporal_idx = 0},
+                             .frame_size = DataSize::Bytes(1),
+                             .keyframe = true},
+                            {.timestamp_rtp = 0,
+                             .layer_id = {.spatial_idx = 1, .temporal_idx = 0},
+                             .frame_size = DataSize::Bytes(2)}},
+                           {{.timestamp_rtp = 1,
+                             .layer_id = {.spatial_idx = 0, .temporal_idx = 1},
+                             .frame_size = DataSize::Bytes(4)},
+                            {.timestamp_rtp = 1,
+                             .layer_id = {.spatial_idx = 1, .temporal_idx = 1},
+                             .frame_size = DataSize::Bytes(8)}}});
 
   std::vector<Frame> slice = stats->Slice(Filter{}, /*merge=*/true);
   EXPECT_THAT(
@@ -300,33 +369,34 @@ struct AggregationTestParameters {
 };
 
 class VideoCodecTesterTestAggregation
-    : public ::testing::TestWithParam<AggregationTestParameters> {};
+    : public VideoCodecTesterTest,
+      public ::testing::WithParamInterface<AggregationTestParameters> {};
 
 TEST_P(VideoCodecTesterTestAggregation, Aggregate) {
   AggregationTestParameters test_params = GetParam();
   std::unique_ptr<VideoCodecStats> stats =
-      RunTest({{// L0T0
-                {.timestamp_rtp = 0,
-                 .layer_id = {.spatial_idx = 0, .temporal_idx = 0},
-                 .frame_size = DataSize::Bytes(1),
-                 .keyframe = true},
-                // L1T0
-                {.timestamp_rtp = 0,
-                 .layer_id = {.spatial_idx = 1, .temporal_idx = 0},
-                 .frame_size = DataSize::Bytes(2)}},
-               // Emulate frame drop (frame_size = 0).
-               {{.timestamp_rtp = 3000,
-                 .layer_id = {.spatial_idx = 0, .temporal_idx = 0},
-                 .frame_size = DataSize::Zero()}},
-               {// L0T1
-                {.timestamp_rtp = 87000,
-                 .layer_id = {.spatial_idx = 0, .temporal_idx = 1},
-                 .frame_size = DataSize::Bytes(4)},
-                // L1T1
-                {.timestamp_rtp = 87000,
-                 .layer_id = {.spatial_idx = 1, .temporal_idx = 1},
-                 .frame_size = DataSize::Bytes(8)}}},
-              ScalabilityMode::kL2T2_KEY);
+      RunEncodeDecodeTest("VP8", ScalabilityMode::kL2T2_KEY,
+                          {{// L0T0
+                            {.timestamp_rtp = 0,
+                             .layer_id = {.spatial_idx = 0, .temporal_idx = 0},
+                             .frame_size = DataSize::Bytes(1),
+                             .keyframe = true},
+                            // L1T0
+                            {.timestamp_rtp = 0,
+                             .layer_id = {.spatial_idx = 1, .temporal_idx = 0},
+                             .frame_size = DataSize::Bytes(2)}},
+                           // Emulate frame drop (frame_size = 0).
+                           {{.timestamp_rtp = 3000,
+                             .layer_id = {.spatial_idx = 0, .temporal_idx = 0},
+                             .frame_size = DataSize::Zero()}},
+                           {// L0T1
+                            {.timestamp_rtp = 87000,
+                             .layer_id = {.spatial_idx = 0, .temporal_idx = 1},
+                             .frame_size = DataSize::Bytes(4)},
+                            // L1T1
+                            {.timestamp_rtp = 87000,
+                             .layer_id = {.spatial_idx = 1, .temporal_idx = 1},
+                             .frame_size = DataSize::Bytes(8)}}});
 
   Stream stream = stats->Aggregate(test_params.filter);
   EXPECT_EQ(stream.keyframe.GetSum(), test_params.expected_keyframe_sum);
@@ -343,7 +413,7 @@ TEST_P(VideoCodecTesterTestAggregation, Aggregate) {
 INSTANTIATE_TEST_SUITE_P(
     All,
     VideoCodecTesterTestAggregation,
-    ::testing::Values(
+    Values(
         // No filtering.
         AggregationTestParameters{
             .filter = {},
@@ -400,11 +470,11 @@ INSTANTIATE_TEST_SUITE_P(
             .expected_framerate_mismatch_pct =
                 100 * (2.0 / kTargetFramerate.hertz() - 1)}));
 
-TEST(VideoCodecTester, Psnr) {
-  std::unique_ptr<VideoCodecStats> stats =
-      RunTest({{{.timestamp_rtp = 0, .frame_size = DataSize::Bytes(1)}},
-               {{.timestamp_rtp = 3000, .frame_size = DataSize::Bytes(1)}}},
-              ScalabilityMode::kL1T1);
+TEST_F(VideoCodecTesterTest, Psnr) {
+  std::unique_ptr<VideoCodecStats> stats = RunEncodeDecodeTest(
+      "VP8", ScalabilityMode::kL1T1,
+      {{{.timestamp_rtp = 0, .frame_size = DataSize::Bytes(2)}},
+       {{.timestamp_rtp = 3000, .frame_size = DataSize::Bytes(6)}}});
 
   std::vector<Frame> slice = stats->Slice(Filter{}, /*merge=*/false);
   ASSERT_THAT(slice, SizeIs(2));
@@ -418,6 +488,107 @@ TEST(VideoCodecTester, Psnr) {
   EXPECT_NEAR(slice[1].psnr->v, 34, 1);
 }
 
+struct ScalabilityTestParameters {
+  std::string codec_type;
+  ScalabilityMode scalability_mode;
+  // Temporal unit -> spatial layer -> frame size.
+  std::vector<std::map<int, DataSize>> encoded_frame_sizes;
+  std::vector<DataSize> expected_decode_frame_sizes;
+};
+
+class VideoCodecTesterTestScalability
+    : public VideoCodecTesterTest,
+      public ::testing::WithParamInterface<ScalabilityTestParameters> {};
+
+TEST_P(VideoCodecTesterTestScalability, EncodeDecode) {
+  ScalabilityTestParameters test_params = GetParam();
+  std::vector<std::vector<Frame>> frames;
+  for (size_t frame_num = 0; frame_num < test_params.encoded_frame_sizes.size();
+       ++frame_num) {
+    std::vector<Frame> temporal_unit;
+    for (auto [sidx, frame_size] : test_params.encoded_frame_sizes[frame_num]) {
+      temporal_unit.push_back(
+          Frame{.timestamp_rtp = static_cast<uint32_t>(3000 * frame_num),
+                .layer_id = {.spatial_idx = sidx, .temporal_idx = 0},
+                .frame_size = frame_size,
+                .keyframe = (frame_num == 0 && sidx == 0)});
+    }
+    frames.push_back(temporal_unit);
+  }
+  RunEncodeDecodeTest(test_params.codec_type, test_params.scalability_mode,
+                      frames);
+
+  size_t num_spatial_layers =
+      ScalabilityModeToNumSpatialLayers(test_params.scalability_mode);
+  EXPECT_EQ(num_spatial_layers, decoders_.size());
+
+  // Collect input frame sizes from all decoders.
+  std::vector<DataSize> decode_frame_sizes;
+  for (const auto& decoder : decoders_) {
+    const auto& frame_sizes = decoder->frame_sizes();
+    decode_frame_sizes.insert(decode_frame_sizes.end(), frame_sizes.begin(),
+                              frame_sizes.end());
+  }
+  EXPECT_THAT(decode_frame_sizes, UnorderedElementsAreArray(
+                                      test_params.expected_decode_frame_sizes));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    All,
+    VideoCodecTesterTestScalability,
+    Values(
+        ScalabilityTestParameters{
+            .codec_type = "VP8",
+            .scalability_mode = ScalabilityMode::kS2T1,
+            .encoded_frame_sizes = {{{0, DataSize::Bytes(1)},
+                                     {1, DataSize::Bytes(2)}},
+                                    {{0, DataSize::Bytes(4)},
+                                     // Emulate frame drop.
+                                     {1, DataSize::Bytes(0)}}},
+            .expected_decode_frame_sizes = {DataSize::Bytes(1),
+                                            DataSize::Bytes(2),
+                                            DataSize::Bytes(4)},
+        },
+        ScalabilityTestParameters{
+            .codec_type = "VP9",
+            .scalability_mode = ScalabilityMode::kL2T1,
+            .encoded_frame_sizes =
+                {{{0, DataSize::Bytes(1)}, {1, DataSize::Bytes(2)}},
+                 {{0, DataSize::Bytes(4)}, {1, DataSize::Bytes(8)}},
+                 {{0, DataSize::Bytes(16)},
+                  // Emulate frame drop.
+                  {1, DataSize::Bytes(0)}}},
+            .expected_decode_frame_sizes =
+                {DataSize::Bytes(1), DataSize::Bytes(3), DataSize::Bytes(4),
+                 DataSize::Bytes(12), DataSize::Bytes(16), DataSize::Bytes(16)},
+        },
+        ScalabilityTestParameters{
+            .codec_type = "VP9",
+            .scalability_mode = ScalabilityMode::kL2T1_KEY,
+            .encoded_frame_sizes =
+                {{{0, DataSize::Bytes(1)}, {1, DataSize::Bytes(2)}},
+                 {{0, DataSize::Bytes(4)}, {1, DataSize::Bytes(8)}},
+                 {{0, DataSize::Bytes(16)},
+                  // Emulate frame drop.
+                  {1, DataSize::Bytes(0)}}},
+            .expected_decode_frame_sizes =
+                {DataSize::Bytes(1), DataSize::Bytes(3), DataSize::Bytes(4),
+                 DataSize::Bytes(8), DataSize::Bytes(16)},
+        },
+        ScalabilityTestParameters{
+            .codec_type = "VP9",
+            .scalability_mode = ScalabilityMode::kS2T1,
+            .encoded_frame_sizes =
+                {{{0, DataSize::Bytes(1)}, {1, DataSize::Bytes(2)}},
+                 {{0, DataSize::Bytes(4)}, {1, DataSize::Bytes(8)}},
+                 {{0, DataSize::Bytes(16)},
+                  // Emulate frame drop.
+                  {1, DataSize::Bytes(0)}}},
+            .expected_decode_frame_sizes =
+                {DataSize::Bytes(1), DataSize::Bytes(2), DataSize::Bytes(4),
+                 DataSize::Bytes(8), DataSize::Bytes(16)},
+        }));
+
 class VideoCodecTesterTestPacing
     : public ::testing::TestWithParam<std::tuple<PacingSettings, int>> {
  public:
@@ -428,14 +599,10 @@ class VideoCodecTesterTestPacing
   const Frequency kTargetFramerate = Frequency::Hertz(10);
 
   void SetUp() override {
-    source_yuv_file_path_ = webrtc::test::TempFilename(
-        webrtc::test::OutputPath(), "video_codec_tester_impl_unittest");
-    FILE* file = fopen(source_yuv_file_path_.c_str(), "wb");
-    for (int i = 0; i < 3 * kSourceWidth * kSourceHeight / 2; ++i) {
-      fwrite("x", 1, 1, file);
-    }
-    fclose(file);
+    source_yuv_file_path_ = CreateYuvFile(kSourceWidth, kSourceHeight, 1);
   }
+
+  void TearDown() override { remove(source_yuv_file_path_.c_str()); }
 
  protected:
   std::string source_yuv_file_path_;
@@ -498,7 +665,7 @@ TEST_P(VideoCodecTesterTestPacing, PaceDecode) {
 INSTANTIATE_TEST_SUITE_P(
     DISABLED_All,
     VideoCodecTesterTestPacing,
-    ::testing::Values(
+    Values(
         // No pacing.
         std::make_tuple(PacingSettings{.mode = PacingMode::kNoPacing},
                         /*expected_delta_ms=*/0),

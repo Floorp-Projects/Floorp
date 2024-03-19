@@ -641,8 +641,7 @@ class PeerConnectionFactoryForTest : public PeerConnectionFactory {
     // level, and using a real one could make tests flaky when run in parallel.
     dependencies.adm = FakeAudioCaptureModule::Create();
     EnableMediaWithDefaults(dependencies);
-    dependencies.event_log_factory = std::make_unique<RtcEventLogFactory>(
-        dependencies.task_queue_factory.get());
+    dependencies.event_log_factory = std::make_unique<RtcEventLogFactory>();
 
     return rtc::make_ref_counted<PeerConnectionFactoryForTest>(
         std::move(dependencies));
@@ -2815,7 +2814,7 @@ TEST_F(PeerConnectionInterfaceTestPlanB,
 // This tests that a default MediaStream is not created if a remote session
 // description is updated to not have any MediaStreams.
 // Don't run under Unified Plan since this behavior is Plan B specific.
-TEST_F(PeerConnectionInterfaceTestPlanB, VerifyDefaultStreamIsNotCreated) {
+TEST_F(PeerConnectionInterfaceTestPlanB, VerifyDefaultStreamIsNotRecreated) {
   RTCConfiguration config;
   CreatePeerConnection(config);
   CreateAndSetRemoteOffer(GetSdpStringWithStream1());
@@ -2823,7 +2822,7 @@ TEST_F(PeerConnectionInterfaceTestPlanB, VerifyDefaultStreamIsNotCreated) {
   EXPECT_TRUE(
       CompareStreamCollections(observer_.remote_streams(), reference.get()));
 
-  CreateAndSetRemoteOffer(kSdpStringWithoutStreams);
+  CreateAndSetRemoteOffer(kSdpStringWithMsidWithoutStreams);
   EXPECT_EQ(0u, observer_.remote_streams()->count());
 }
 

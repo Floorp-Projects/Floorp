@@ -45,13 +45,11 @@ void AsyncPacketSocket::RegisterReceivedPacketCallback(
         received_packet_callback) {
   RTC_DCHECK_RUN_ON(&network_checker_);
   RTC_CHECK(!received_packet_callback_);
-  SignalReadPacket.connect(this, &AsyncPacketSocket::NotifyPacketReceived);
   received_packet_callback_ = std::move(received_packet_callback);
 }
 
 void AsyncPacketSocket::DeregisterReceivedPacketCallback() {
   RTC_DCHECK_RUN_ON(&network_checker_);
-  SignalReadPacket.disconnect(this);
   received_packet_callback_ = nullptr;
 }
 
@@ -62,17 +60,6 @@ void AsyncPacketSocket::NotifyPacketReceived(
     received_packet_callback_(this, packet);
     return;
   }
-  if (SignalReadPacket.is_empty()) {
-    RTC_DCHECK_NOTREACHED() << " No listener registered";
-    return;
-  }
-  // TODO(bugs.webrtc.org:15368): Remove. This code path is only used if
-  // SignalReadyPacket is used  by clients to get notification of received
-  // packets but actual socket implementation use NotifyPacketReceived to
-  // trigger the notification.
-  SignalReadPacket(this, reinterpret_cast<const char*>(packet.payload().data()),
-                   packet.payload().size(), packet.source_address(),
-                   packet.arrival_time() ? packet.arrival_time()->us() : -1);
 }
 
 void CopySocketInformationToPacketInfo(size_t packet_size_bytes,

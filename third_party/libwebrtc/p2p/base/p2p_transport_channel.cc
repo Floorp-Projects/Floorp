@@ -872,20 +872,6 @@ void P2PTransportChannel::MaybeStartGathering() {
       SendGatheringStateEvent();
     }
 
-    if (!allocator_sessions_.empty()) {
-      IceRestartState state;
-      if (writable()) {
-        state = IceRestartState::CONNECTED;
-      } else if (IsGettingPorts()) {
-        state = IceRestartState::CONNECTING;
-      } else {
-        state = IceRestartState::DISCONNECTED;
-      }
-      RTC_HISTOGRAM_ENUMERATION("WebRTC.PeerConnection.IceRestartState",
-                                static_cast<int>(state),
-                                static_cast<int>(IceRestartState::MAX_VALUE));
-    }
-
     for (const auto& session : allocator_sessions_) {
       if (session->IsStopped()) {
         continue;
@@ -1430,8 +1416,7 @@ bool P2PTransportChannel::CreateConnection(PortInterface* port,
 
   if (ice_field_trials_.skip_relay_to_non_relay_connections) {
     if ((port->Type() != remote_candidate.type()) &&
-        (port->Type() == RELAY_PORT_TYPE ||
-         remote_candidate.type() == RELAY_PORT_TYPE)) {
+        (port->Type() == RELAY_PORT_TYPE || remote_candidate.is_relay())) {
       RTC_LOG(LS_INFO) << ToString() << ": skip creating connection "
                        << port->Type() << " to " << remote_candidate.type();
       return false;
@@ -1722,9 +1707,9 @@ bool P2PTransportChannel::PresumedWritable(const Connection* conn) const {
   RTC_DCHECK_RUN_ON(network_thread_);
   return (conn->write_state() == Connection::STATE_WRITE_INIT &&
           config_.presume_writable_when_fully_relayed &&
-          conn->local_candidate().type() == RELAY_PORT_TYPE &&
-          (conn->remote_candidate().type() == RELAY_PORT_TYPE ||
-           conn->remote_candidate().type() == PRFLX_PORT_TYPE));
+          conn->local_candidate().is_relay() &&
+          (conn->remote_candidate().is_relay() ||
+           conn->remote_candidate().is_prflx()));
 }
 
 void P2PTransportChannel::UpdateState() {
@@ -1771,19 +1756,18 @@ bool P2PTransportChannel::PruneConnections(
 rtc::NetworkRoute P2PTransportChannel::ConfigureNetworkRoute(
     const Connection* conn) {
   RTC_DCHECK_RUN_ON(network_thread_);
-  return {
-      .connected = ReadyToSend(conn),
-      .local = CreateRouteEndpointFromCandidate(
-          /* local= */ true, conn->local_candidate(),
-          /* uses_turn= */
-          conn->port()->Type() == RELAY_PORT_TYPE),
-      .remote = CreateRouteEndpointFromCandidate(
-          /* local= */ false, conn->remote_candidate(),
-          /* uses_turn= */ conn->remote_candidate().type() == RELAY_PORT_TYPE),
-      .last_sent_packet_id = last_sent_packet_id_,
-      .packet_overhead =
-          conn->local_candidate().address().ipaddr().overhead() +
-          GetProtocolOverhead(conn->local_candidate().protocol())};
+  return {.connected = ReadyToSend(conn),
+          .local = CreateRouteEndpointFromCandidate(
+              /* local= */ true, conn->local_candidate(),
+              /* uses_turn= */
+              conn->port()->Type() == RELAY_PORT_TYPE),
+          .remote = CreateRouteEndpointFromCandidate(
+              /* local= */ false, conn->remote_candidate(),
+              /* uses_turn= */ conn->remote_candidate().is_relay()),
+          .last_sent_packet_id = last_sent_packet_id_,
+          .packet_overhead =
+              conn->local_candidate().address().ipaddr().overhead() +
+              GetProtocolOverhead(conn->local_candidate().protocol())};
 }
 
 void P2PTransportChannel::SwitchSelectedConnection(
@@ -2294,7 +2278,7 @@ Candidate P2PTransportChannel::SanitizeRemoteCandidate(
   bool use_hostname_address = absl::EndsWith(c.address().hostname(), LOCAL_TLD);
   // Remove the address for prflx remote candidates. See
   // https://w3c.github.io/webrtc-stats/#dom-rtcicecandidatestats.
-  use_hostname_address |= c.type() == PRFLX_PORT_TYPE;
+  use_hostname_address |= c.is_prflx();
   return c.ToSanitizedCopy(use_hostname_address,
                            false /* filter_related_address */);
 }

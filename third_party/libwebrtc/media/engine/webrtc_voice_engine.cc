@@ -377,9 +377,8 @@ void WebRtcVoiceEngine::Init() {
 
   // TaskQueue expects to be created/destroyed on the same thread.
   RTC_DCHECK(!low_priority_worker_queue_);
-  low_priority_worker_queue_.reset(
-      new rtc::TaskQueue(task_queue_factory_->CreateTaskQueue(
-          "rtc-low-prio", webrtc::TaskQueueFactory::Priority::LOW)));
+  low_priority_worker_queue_ = task_queue_factory_->CreateTaskQueue(
+      "rtc-low-prio", webrtc::TaskQueueFactory::Priority::LOW);
 
   // Load our audio codec lists.
   RTC_LOG(LS_VERBOSE) << "Supported send codecs in order of preference:";
@@ -761,9 +760,9 @@ std::vector<AudioCodec> WebRtcVoiceEngine::CollectCodecs(
       out.push_back(codec);
 
       if (codec.name == kOpusCodecName) {
-        std::string redFmtp =
+        std::string red_fmtp =
             rtc::ToString(codec.id) + "/" + rtc::ToString(codec.id);
-        map_format({kRedCodecName, 48000, 2, {{"", redFmtp}}}, &out);
+        map_format({kRedCodecName, 48000, 2, {{"", red_fmtp}}}, &out);
       }
     }
   }
@@ -1318,7 +1317,7 @@ bool WebRtcVoiceSendChannel::SetSenderParameters(
     }
   }
 
-  if (!SetMaxSendBitrate(params.max_bandwidth_bps)) {
+  if (send_codec_spec_ && !SetMaxSendBitrate(params.max_bandwidth_bps)) {
     return false;
   }
   return SetOptions(params.options);
@@ -1402,7 +1401,8 @@ bool WebRtcVoiceSendChannel::SetSendCodecs(
   }
 
   if (!send_codec_spec) {
-    return false;
+    // No codecs in common, bail out early.
+    return true;
   }
 
   RTC_DCHECK(voice_codec_info);

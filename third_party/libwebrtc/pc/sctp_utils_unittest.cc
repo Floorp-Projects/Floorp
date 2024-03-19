@@ -72,11 +72,11 @@ class SctpUtilsTest : public ::testing::Test {
     EXPECT_EQ(label.size(), label_length);
     EXPECT_EQ(config.protocol.size(), protocol_length);
 
-    std::string label_output;
-    ASSERT_TRUE(buffer.ReadString(&label_output, label_length));
+    absl::string_view label_output;
+    ASSERT_TRUE(buffer.ReadStringView(&label_output, label_length));
     EXPECT_EQ(label, label_output);
-    std::string protocol_output;
-    ASSERT_TRUE(buffer.ReadString(&protocol_output, protocol_length));
+    absl::string_view protocol_output;
+    ASSERT_TRUE(buffer.ReadStringView(&protocol_output, protocol_length));
     EXPECT_EQ(config.protocol, protocol_output);
   }
 };

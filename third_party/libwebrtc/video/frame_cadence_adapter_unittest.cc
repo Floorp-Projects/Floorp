@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "absl/functional/any_invocable.h"
+#include "api/metronome/test/fake_metronome.h"
 #include "api/task_queue/default_task_queue_factory.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/task_queue/task_queue_factory.h"
@@ -38,9 +39,11 @@ namespace {
 
 using ::testing::_;
 using ::testing::ElementsAre;
+using ::testing::InSequence;
 using ::testing::Invoke;
 using ::testing::InvokeWithoutArgs;
 using ::testing::Mock;
+using ::testing::NiceMock;
 using ::testing::Pair;
 using ::testing::Values;
 
@@ -64,8 +67,9 @@ VideoFrame CreateFrameWithTimestamps(
 std::unique_ptr<FrameCadenceAdapterInterface> CreateAdapter(
     const FieldTrialsView& field_trials,
     Clock* clock) {
-  return FrameCadenceAdapterInterface::Create(clock, TaskQueueBase::Current(),
-                                              field_trials);
+  return FrameCadenceAdapterInterface::Create(
+      clock, TaskQueueBase::Current(), /*metronome=*/nullptr,
+      /*worker_queue=*/nullptr, field_trials);
 }
 
 class MockCallback : public FrameCadenceAdapterInterface::Callback {
@@ -308,6 +312,7 @@ TEST(FrameCadenceAdapterTest, DelayedProcessingUnderHeavyContention) {
   }));
   adapter->OnFrame(CreateFrame());
   time_controller.SkipForwardBy(time_skipped);
+  time_controller.AdvanceTime(TimeDelta::Zero());
 }
 
 TEST(FrameCadenceAdapterTest, RepeatsFramesDelayed) {
@@ -593,7 +598,8 @@ TEST(FrameCadenceAdapterTest, IgnoresDropInducedCallbacksPostDestruction) {
   auto queue = time_controller.GetTaskQueueFactory()->CreateTaskQueue(
       "queue", TaskQueueFactory::Priority::NORMAL);
   auto adapter = FrameCadenceAdapterInterface::Create(
-      time_controller.GetClock(), queue.get(), enabler);
+      time_controller.GetClock(), queue.get(), /*metronome=*/nullptr,
+      /*worker_queue=*/nullptr, enabler);
   queue->PostTask([&adapter, &callback] {
     adapter->Initialize(callback.get());
     adapter->SetZeroHertzModeEnabled(
@@ -607,6 +613,82 @@ TEST(FrameCadenceAdapterTest, IgnoresDropInducedCallbacksPostDestruction) {
   callback = nullptr;
   queue->PostTask([adapter = std::move(adapter)]() mutable {});
   time_controller.AdvanceTime(3 * TimeDelta::Seconds(1) / kMaxFps);
+}
+
+TEST(FrameCadenceAdapterTest, EncodeFramesAreAlignedWithMetronomeTick) {
+  ZeroHertzFieldTrialEnabler enabler;
+  GlobalSimulatedTimeController time_controller(Timestamp::Zero());
+  // Here the metronome interval is 33ms, because the metronome is not
+  // infrequent then the encode tasks are aligned with the tick period.
+  static constexpr TimeDelta kTickPeriod = TimeDelta::Millis(33);
+  auto queue = time_controller.GetTaskQueueFactory()->CreateTaskQueue(
+      "queue", TaskQueueFactory::Priority::NORMAL);
+  auto worker_queue = time_controller.GetTaskQueueFactory()->CreateTaskQueue(
+      "work_queue", TaskQueueFactory::Priority::NORMAL);
+  static test::FakeMetronome metronome(kTickPeriod);
+  auto adapter = FrameCadenceAdapterInterface::Create(
+      time_controller.GetClock(), queue.get(), &metronome, worker_queue.get(),
+      enabler);
+  MockCallback callback;
+  adapter->Initialize(&callback);
+  auto frame = CreateFrame();
+
+  // `callback->OnFrame()` would not be called if only 32ms went by after
+  // `adapter->OnFrame()`.
+  EXPECT_CALL(callback, OnFrame(_, false, _)).Times(0);
+  adapter->OnFrame(frame);
+  time_controller.AdvanceTime(TimeDelta::Millis(32));
+  Mock::VerifyAndClearExpectations(&callback);
+
+  // `callback->OnFrame()` should be called if 33ms went by after
+  // `adapter->OnFrame()`.
+  EXPECT_CALL(callback, OnFrame(_, false, _)).Times(1);
+  time_controller.AdvanceTime(TimeDelta::Millis(1));
+  Mock::VerifyAndClearExpectations(&callback);
+
+  // `callback->OnFrame()` would not be called if only 32ms went by after
+  // `adapter->OnFrame()`.
+  EXPECT_CALL(callback, OnFrame(_, false, _)).Times(0);
+  // Send two frame before next tick.
+  adapter->OnFrame(frame);
+  adapter->OnFrame(frame);
+  time_controller.AdvanceTime(TimeDelta::Millis(32));
+  Mock::VerifyAndClearExpectations(&callback);
+
+  // `callback->OnFrame()` should be called if 33ms went by after
+  // `adapter->OnFrame()`.
+  EXPECT_CALL(callback, OnFrame(_, false, _)).Times(2);
+  time_controller.AdvanceTime(TimeDelta::Millis(1));
+  Mock::VerifyAndClearExpectations(&callback);
+
+  // Change the metronome tick period to 67ms (15Hz).
+  metronome.SetTickPeriod(TimeDelta::Millis(67));
+  // Expect the encode would happen immediately.
+  EXPECT_CALL(callback, OnFrame(_, false, _)).Times(1);
+  adapter->OnFrame(frame);
+  time_controller.AdvanceTime(TimeDelta::Zero());
+  Mock::VerifyAndClearExpectations(&callback);
+
+  // Change the metronome tick period to 16ms (60Hz).
+  metronome.SetTickPeriod(TimeDelta::Millis(16));
+  // Expect the encode would not happen if only 15ms went by after
+  // `adapter->OnFrame()`.
+  EXPECT_CALL(callback, OnFrame(_, false, _)).Times(0);
+  adapter->OnFrame(frame);
+  time_controller.AdvanceTime(TimeDelta::Millis(15));
+  Mock::VerifyAndClearExpectations(&callback);
+  // `callback->OnFrame()` should be called if 16ms went by after
+  // `adapter->OnFrame()`.
+  EXPECT_CALL(callback, OnFrame(_, false, _)).Times(1);
+  time_controller.AdvanceTime(TimeDelta::Millis(1));
+  Mock::VerifyAndClearExpectations(&callback);
+
+  rtc::Event finalized;
+  queue->PostTask([&] {
+    adapter = nullptr;
+    finalized.Set();
+  });
+  finalized.Wait(rtc::Event::kForever);
 }
 
 class FrameCadenceAdapterSimulcastLayersParamTest
@@ -1074,6 +1156,167 @@ TEST(FrameCadenceAdapterRealTimeTest,
     finalized.Set();
   });
   finalized.Wait(rtc::Event::kForever);
+}
+
+class ZeroHertzQueueOverloadTest : public ::testing::Test {
+ public:
+  static constexpr int kMaxFps = 10;
+
+  ZeroHertzQueueOverloadTest() {
+    Initialize();
+    metrics::Reset();
+  }
+
+  void Initialize() {
+    adapter_->Initialize(&callback_);
+    adapter_->SetZeroHertzModeEnabled(
+        FrameCadenceAdapterInterface::ZeroHertzModeParams{
+            /*num_simulcast_layers=*/1});
+    adapter_->OnConstraintsChanged(
+        VideoTrackSourceConstraints{/*min_fps=*/0, kMaxFps});
+    time_controller_.AdvanceTime(TimeDelta::Zero());
+  }
+
+  void ScheduleDelayed(TimeDelta delay, absl::AnyInvocable<void() &&> task) {
+    TaskQueueBase::Current()->PostDelayedTask(std::move(task), delay);
+  }
+
+  void PassFrame() { adapter_->OnFrame(CreateFrame()); }
+
+  void AdvanceTime(TimeDelta duration) {
+    time_controller_.AdvanceTime(duration);
+  }
+
+  void SkipForwardBy(TimeDelta duration) {
+    time_controller_.SkipForwardBy(duration);
+  }
+
+  Timestamp CurrentTime() { return time_controller_.GetClock()->CurrentTime(); }
+
+ protected:
+  test::ScopedKeyValueConfig field_trials_;
+  NiceMock<MockCallback> callback_;
+  GlobalSimulatedTimeController time_controller_{Timestamp::Zero()};
+  std::unique_ptr<FrameCadenceAdapterInterface> adapter_{
+      CreateAdapter(field_trials_, time_controller_.GetClock())};
+};
+
+TEST_F(ZeroHertzQueueOverloadTest,
+       ForwardedFramesDuringTooLongEncodeTimeAreFlaggedWithQueueOverload) {
+  InSequence s;
+  PassFrame();
+  EXPECT_CALL(callback_, OnFrame(_, false, _)).WillOnce(InvokeWithoutArgs([&] {
+    PassFrame();
+    PassFrame();
+    PassFrame();
+    SkipForwardBy(TimeDelta::Millis(301));
+  }));
+  EXPECT_CALL(callback_, OnFrame(_, true, _)).Times(3);
+  AdvanceTime(TimeDelta::Millis(100));
+  EXPECT_THAT(metrics::Samples("WebRTC.Screenshare.ZeroHz.QueueOverload"),
+              ElementsAre(Pair(false, 1), Pair(true, 3)));
+}
+
+TEST_F(ZeroHertzQueueOverloadTest,
+       ForwardedFramesAfterOverloadBurstAreNotFlaggedWithQueueOverload) {
+  InSequence s;
+  PassFrame();
+  EXPECT_CALL(callback_, OnFrame(_, false, _)).WillOnce(InvokeWithoutArgs([&] {
+    PassFrame();
+    PassFrame();
+    PassFrame();
+    SkipForwardBy(TimeDelta::Millis(301));
+  }));
+  EXPECT_CALL(callback_, OnFrame(_, true, _)).Times(3);
+  AdvanceTime(TimeDelta::Millis(100));
+  EXPECT_CALL(callback_, OnFrame(_, false, _)).Times(2);
+  PassFrame();
+  PassFrame();
+  AdvanceTime(TimeDelta::Millis(100));
+  EXPECT_THAT(metrics::Samples("WebRTC.Screenshare.ZeroHz.QueueOverload"),
+              ElementsAre(Pair(false, 3), Pair(true, 3)));
+}
+
+TEST_F(ZeroHertzQueueOverloadTest,
+       ForwardedFramesDuringNormalEncodeTimeAreNotFlaggedWithQueueOverload) {
+  InSequence s;
+  PassFrame();
+  EXPECT_CALL(callback_, OnFrame(_, false, _)).WillOnce(InvokeWithoutArgs([&] {
+    PassFrame();
+    PassFrame();
+    PassFrame();
+    // Long but not too long encode time.
+    SkipForwardBy(TimeDelta::Millis(99));
+  }));
+  EXPECT_CALL(callback_, OnFrame(_, false, _)).Times(3);
+  AdvanceTime(TimeDelta::Millis(199));
+  EXPECT_THAT(metrics::Samples("WebRTC.Screenshare.ZeroHz.QueueOverload"),
+              ElementsAre(Pair(false, 4)));
+}
+
+TEST_F(
+    ZeroHertzQueueOverloadTest,
+    AvoidSettingQueueOverloadAndSendRepeatWhenNoNewPacketsWhileTooLongEncode) {
+  // Receive one frame only and let OnFrame take such a long time that an
+  // overload normally is warranted. But the fact that no new frames arrive
+  // while being blocked should trigger a non-idle repeat to ensure that the
+  // video stream does not freeze and queue overload should be false.
+  PassFrame();
+  EXPECT_CALL(callback_, OnFrame(_, false, _))
+      .WillOnce(
+          InvokeWithoutArgs([&] { SkipForwardBy(TimeDelta::Millis(101)); }))
+      .WillOnce(InvokeWithoutArgs([&] {
+        // Non-idle repeat.
+        EXPECT_EQ(CurrentTime(), Timestamp::Zero() + TimeDelta::Millis(201));
+      }));
+  AdvanceTime(TimeDelta::Millis(100));
+  EXPECT_THAT(metrics::Samples("WebRTC.Screenshare.ZeroHz.QueueOverload"),
+              ElementsAre(Pair(false, 2)));
+}
+
+TEST_F(ZeroHertzQueueOverloadTest,
+       EnterFastRepeatAfterQueueOverloadWhenReceivedOnlyOneFrameDuringEncode) {
+  InSequence s;
+  // - Forward one frame frame during high load which triggers queue overload.
+  // - Receive only one new frame while being blocked and verify that the
+  //   cancelled repeat was for the first frame and not the second.
+  // - Fast repeat mode should happen after second frame.
+  PassFrame();
+  EXPECT_CALL(callback_, OnFrame(_, false, _)).WillOnce(InvokeWithoutArgs([&] {
+    PassFrame();
+    SkipForwardBy(TimeDelta::Millis(101));
+  }));
+  EXPECT_CALL(callback_, OnFrame(_, true, _));
+  AdvanceTime(TimeDelta::Millis(100));
+
+  // Fast repeats should take place from here on.
+  EXPECT_CALL(callback_, OnFrame(_, false, _)).Times(5);
+  AdvanceTime(TimeDelta::Millis(500));
+  EXPECT_THAT(metrics::Samples("WebRTC.Screenshare.ZeroHz.QueueOverload"),
+              ElementsAre(Pair(false, 6), Pair(true, 1)));
+}
+
+TEST_F(ZeroHertzQueueOverloadTest,
+       QueueOverloadIsDisabledForZeroHerzWhenKillSwitchIsEnabled) {
+  webrtc::test::ScopedKeyValueConfig field_trials(
+      field_trials_, "WebRTC-ZeroHertzQueueOverload/Disabled/");
+  adapter_.reset();
+  adapter_ = CreateAdapter(field_trials, time_controller_.GetClock());
+  Initialize();
+
+  // Same as ForwardedFramesDuringTooLongEncodeTimeAreFlaggedWithQueueOverload
+  // but this time the queue overload mechanism is disabled.
+  InSequence s;
+  PassFrame();
+  EXPECT_CALL(callback_, OnFrame(_, false, _)).WillOnce(InvokeWithoutArgs([&] {
+    PassFrame();
+    PassFrame();
+    PassFrame();
+    SkipForwardBy(TimeDelta::Millis(301));
+  }));
+  EXPECT_CALL(callback_, OnFrame(_, false, _)).Times(3);
+  AdvanceTime(TimeDelta::Millis(100));
+  EXPECT_EQ(metrics::NumSamples("WebRTC.Screenshare.ZeroHz.QueueOverload"), 0);
 }
 
 }  // namespace

@@ -31,12 +31,7 @@ absl::Nonnull<std::unique_ptr<RtcEventLog>> RtcEventLogFactory::Create(
   if (env.field_trials().IsEnabled("WebRTC-RtcEventLogKillSwitch")) {
     return std::make_unique<RtcEventLogNull>();
   }
-  RtcEventLog::EncodingType encoding_type =
-      env.field_trials().IsDisabled("WebRTC-RtcEventLogNewFormat")
-          ? RtcEventLog::EncodingType::Legacy
-          : RtcEventLog::EncodingType::NewFormat;
-  return std::make_unique<RtcEventLogImpl>(
-      RtcEventLogImpl::CreateEncoder(encoding_type), &env.task_queue_factory());
+  return std::make_unique<RtcEventLogImpl>(env);
 #endif
 }
 
