@@ -78,30 +78,14 @@ A protocol Foo in the namespace bar will cause the sources
   cppdir/FooParent.cpp, cppdir/FooChild.cpp
 to be generated""",
 )
-op.add_option(
-    "-F",
-    "--file-list",
-    dest="file_list_file",
-    default=None,
-    help="""A file containing IPDL files to parse. This will be
-merged with files provided on the commandline.""",
-)
 
-options, cmdline_files = op.parse_args()
+options, files = op.parse_args()
 _verbosity = options.verbosity
 syncMsgList = options.syncMsgList
 msgMetadata = options.msgMetadata
 headersdir = options.headersdir
 cppdir = options.cppdir
 includedirs = [os.path.abspath(incdir) for incdir in options.includedirs]
-
-files = []
-
-if options.file_list_file is not None:
-    with open(options.file_list_file) as f:
-        files.extend(f.read().splitlines())
-
-files.extend(cmdline_files)
 
 if not len(files):
     op.error("No IPDL files specified")
