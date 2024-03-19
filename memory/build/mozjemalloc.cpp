@@ -375,18 +375,16 @@ struct arena_chunk_map_t {
 // or MADV_FREE).  This is only valid if MALLOC_DECOMMIT is not defined.  When
 // set, it must be the only bit set.
 //
-// CHUNK_MAP_DECOMMITTED is used if either CHUNK_MAP_DECOMMITTED or
-// MALLOC_DOUBLE_PURGE is defined (but only one may be defined at a time).  For
-// MALLOC_DECOMMIT then unused dirty pages may be decommitted and marked as
-// CHUNK_MAP_DECOMMITTED.  They must be re-committed with pages_commit() before
-// they can be touched.  If MALLOC_DOUBLE_PURGE is defined instead then
-// CHUNK_MAP_DECOMMITTED marks pages that have been "double purged" meaning that
-// they were madvised and later were unmapped and remapped to force them out of
-// the program's resident set (used on MacOS).  They may be used without calling
-// pages_commit().
+// CHUNK_MAP_DECOMMITTED is used if CHUNK_MAP_DECOMMITTED is defined.  Unused
+// dirty pages may be decommitted and marked as CHUNK_MAP_DECOMMITTED.  They
+// must be re-committed with pages_commit() before they can be touched.
 //
 // CHUNK_MAP_FRESH is set on pages that have never been used before (the chunk
 // is newly allocated or they were decommitted and have now been recommitted.
+// CHUNK_MAP_FRESH is also used for "double purged" pages meaning that they were
+// madvised and later were unmapped and remapped to force them out of the
+// program's resident set.  This is enabled when MALLOC_DOUBLE_PURGE is defined
+// (eg on MacOS).
 //
 // CHUNK_MAP_ZEROED is set on pages that are known to contain zeros.
 //
@@ -2728,17 +2726,9 @@ bool arena_t::SplitRun(arena_run_t* aRun, size_t aSize, bool aLarge,
       mStats.committed++;
       mNumFresh--;
     }
-#ifdef MALLOC_DOUBLE_PURGE
-    // If we're using double purge then this page will be committed when it is
-    // touched, similar to madvise.
-    else if (chunk->map[run_ind + i].bits & CHUNK_MAP_DECOMMITTED) {
-      mStats.committed++;
-      mNumFresh--;
-    }
-#else
-    // Otherwise this bit has already been cleared
+
+    // This bit has already been cleared
     MOZ_ASSERT(!(chunk->map[run_ind + i].bits & CHUNK_MAP_DECOMMITTED));
-#endif
 
     // Initialize the chunk map.  This clears the dirty, zeroed and madvised
     // bits, decommitted is cleared above.
@@ -2852,14 +2842,9 @@ arena_chunk_t* arena_t::DeallocChunk(arena_chunk_t* aChunk) {
       MOZ_ASSERT(mSpare->map[i].bits &
                  (CHUNK_MAP_FRESH_MADVISED_OR_DECOMMITTED | CHUNK_MAP_DIRTY));
 
-#ifdef MALLOC_DOUBLE_PURGE
-      size_t fresh_test_bits = CHUNK_MAP_FRESH | CHUNK_MAP_DECOMMITTED;
-#else
-      size_t fresh_test_bits = CHUNK_MAP_FRESH;
-#endif
       if (mSpare->map[i].bits & CHUNK_MAP_MADVISED) {
         madvised++;
-      } else if (mSpare->map[i].bits & fresh_test_bits) {
+      } else if (mSpare->map[i].bits & CHUNK_MAP_FRESH) {
         fresh++;
       }
     }
@@ -5042,11 +5027,11 @@ static size_t hard_purge_chunk(arena_chunk_t* aChunk) {
     for (npages = 0; aChunk->map[i + npages].bits & CHUNK_MAP_MADVISED &&
                      i + npages < gChunkNumPages;
          npages++) {
-      // Turn off the chunk's MADV_FREED bit and turn on its
-      // DECOMMITTED bit.
+      // Turn off the page's CHUNK_MAP_MADVISED bit and turn on its
+      // CHUNK_MAP_FRESH bit.
       MOZ_DIAGNOSTIC_ASSERT(!(aChunk->map[i + npages].bits &
                               (CHUNK_MAP_FRESH | CHUNK_MAP_DECOMMITTED)));
-      aChunk->map[i + npages].bits ^= CHUNK_MAP_MADVISED_OR_DECOMMITTED;
+      aChunk->map[i + npages].bits ^= (CHUNK_MAP_MADVISED | CHUNK_MAP_FRESH);
     }
 
     // We could use mincore to find out which pages are actually
