@@ -98,7 +98,7 @@ add_task(async function test_frametree_dynamic() {
   is(await enumerateIndexes(browser), "0,1", "correct indexes 0 and 1");
 
   // Remopve a non-dynamic iframe.
-  await SpecialPowers.spawn(browser, [URL], async ([url]) => {
+  await SpecialPowers.spawn(browser, [URL], async () => {
     // Remove the first iframe, which should be a non-dynamic iframe.
     content.document.body.removeChild(
       content.document.getElementsByTagName("iframe")[0]

@@ -29,11 +29,11 @@ function test_duplicateTab() {
   // We'll look to make sure this value is on the duplicated tab
   ss.setCustomTabValue(tab, "foo", "bar");
 
-  function onSSWindowStateBusy(aEvent) {
+  function onSSWindowStateBusy() {
     busyEventCount++;
   }
 
-  function onSSWindowStateReady(aEvent) {
+  function onSSWindowStateReady() {
     newTab = gBrowser.tabs[2];
     readyEventCount++;
     is(ss.getCustomTabValue(newTab, "foo"), "bar");

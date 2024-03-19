@@ -46,7 +46,7 @@ function runNextTest() {
 }
 
 function test_setup() {
-  function onSSTabRestored(aEvent) {
+  function onSSTabRestored() {
     gBrowser.tabContainer.removeEventListener("SSTabRestored", onSSTabRestored);
     runNextTest();
   }

@@ -144,7 +144,7 @@ function waitForTopic(aTopic, aTimeout, aCallback) {
     aCallback(false);
   }, aTimeout);
 
-  function observer(subject, topic, data) {
+  function observer() {
     removeObserver();
     timeout = clearTimeout(timeout);
     executeSoon(() => aCallback(true));
@@ -268,7 +268,7 @@ var gWebProgressListener = {
     }
   },
 
-  onStateChange(aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
+  onStateChange(aBrowser, aWebProgress, aRequest, aStateFlags, _aStatus) {
     if (
       aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
       aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK &&
@@ -298,7 +298,7 @@ var gProgressListener = {
     }
   },
 
-  observe(browser, topic, data) {
+  observe(browser) {
     gProgressListener.onRestored(browser);
   },
 
@@ -451,7 +451,7 @@ function modifySessionStorage(browser, storageData, storageOptions = {}) {
   return SpecialPowers.spawn(
     browsingContext,
     [[storageData, storageOptions]],
-    async function ([data, options]) {
+    async function ([data]) {
       let frame = content;
       let keys = new Set(Object.keys(data));
       let isClearing = !keys.size;

@@ -417,7 +417,7 @@ ProgressListener.prototype = {
     this.webProgress.removeProgressListener(this);
   },
 
-  onStateChange(webProgress, request, stateFlags, status) {
+  onStateChange(webProgress, request, stateFlags, _status) {
     let { STATE_IS_WINDOW, STATE_STOP, STATE_START } =
       Ci.nsIWebProgressListener;
     if (!webProgress.isTopLevel || !(stateFlags & STATE_IS_WINDOW)) {
