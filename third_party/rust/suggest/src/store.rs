@@ -4,7 +4,7 @@
  */
 
 use std::{
-    collections::BTreeMap,
+    collections::{BTreeMap, BTreeSet},
     path::{Path, PathBuf},
     sync::Arc,
 };
@@ -24,13 +24,15 @@ use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use crate::{
     config::{SuggestGlobalConfig, SuggestProviderConfig},
     db::{
-        ConnectionType, SuggestDao, SuggestDb, LAST_INGEST_META_KEY, UNPARSABLE_RECORDS_META_KEY,
+        ConnectionType, SuggestDao, SuggestDb, LAST_INGEST_META_UNPARSABLE,
+        UNPARSABLE_RECORDS_META_KEY,
     },
     error::Error,
     provider::SuggestionProvider,
     rs::{
-        SuggestAttachment, SuggestRecord, SuggestRecordId, SuggestRemoteSettingsClient,
-        REMOTE_SETTINGS_COLLECTION, SUGGESTIONS_PER_ATTACHMENT,
+        SuggestAttachment, SuggestRecord, SuggestRecordId, SuggestRecordType,
+        SuggestRemoteSettingsClient, DEFAULT_RECORDS_TYPES, REMOTE_SETTINGS_COLLECTION,
+        SUGGESTIONS_PER_ATTACHMENT,
     },
     schema::VERSION,
     Result, SuggestApiResult, Suggestion, SuggestionQuery,
@@ -48,7 +50,6 @@ pub struct SuggestStoreBuilder(Mutex<SuggestStoreBuilderInner>);
 #[derive(Default)]
 struct SuggestStoreBuilderInner {
     data_path: Option<String>,
-    cache_path: Option<String>,
     remote_settings_config: Option<RemoteSettingsConfig>,
 }
 
@@ -68,8 +69,8 @@ impl SuggestStoreBuilder {
         self
     }
 
-    pub fn cache_path(self: Arc<Self>, path: String) -> Arc<Self> {
-        self.0.lock().cache_path = Some(path);
+    pub fn cache_path(self: Arc<Self>, _path: String) -> Arc<Self> {
+        // We used to use this, but we're not using it anymore, just ignore the call
         self
     }
 
@@ -85,10 +86,6 @@ impl SuggestStoreBuilder {
             .data_path
             .clone()
             .ok_or_else(|| Error::SuggestStoreBuilder("data_path not specified".to_owned()))?;
-        let cache_path = inner
-            .cache_path
-            .clone()
-            .ok_or_else(|| Error::SuggestStoreBuilder("cache_path not specified".to_owned()))?;
         let settings_client =
             remote_settings::Client::new(inner.remote_settings_config.clone().unwrap_or_else(
                 || RemoteSettingsConfig {
@@ -98,7 +95,7 @@ impl SuggestStoreBuilder {
                 },
             ))?;
         Ok(Arc::new(SuggestStore {
-            inner: SuggestStoreInner::new(data_path, cache_path, settings_client),
+            inner: SuggestStoreInner::new(data_path, settings_client),
         }))
     }
 }
@@ -182,7 +179,7 @@ impl SuggestStore {
             )?)
         }()?;
         Ok(Self {
-            inner: SuggestStoreInner::new("".to_owned(), path.to_owned(), settings_client),
+            inner: SuggestStoreInner::new(path.to_owned(), settings_client),
         })
     }
 
@@ -238,6 +235,7 @@ pub struct SuggestIngestionConstraints {
     /// Because of how suggestions are partitioned in Remote Settings, this is a
     /// soft limit, and the store might ingest more than requested.
     pub max_suggestions: Option<u64>,
+    pub providers: Option<Vec<SuggestionProvider>>,
 }
 
 /// The implementation of the store. This is generic over the Remote Settings
@@ -250,23 +248,14 @@ pub(crate) struct SuggestStoreInner<S> {
     /// It's not currently used because not all consumers pass this in yet.
     #[allow(unused)]
     data_path: PathBuf,
-    /// Path to the temporary SQL database.
-    ///
-    /// This stores things that should be deleted when the user clears their cache.
-    cache_path: PathBuf,
     dbs: OnceCell<SuggestStoreDbs>,
     settings_client: S,
 }
 
 impl<S> SuggestStoreInner<S> {
-    fn new(
-        data_path: impl Into<PathBuf>,
-        cache_path: impl Into<PathBuf>,
-        settings_client: S,
-    ) -> Self {
+    fn new(data_path: impl Into<PathBuf>, settings_client: S) -> Self {
         Self {
             data_path: data_path.into(),
-            cache_path: cache_path.into(),
             dbs: OnceCell::new(),
             settings_client,
         }
@@ -276,7 +265,7 @@ impl<S> SuggestStoreInner<S> {
     /// they're not already open.
     fn dbs(&self) -> Result<&SuggestStoreDbs> {
         self.dbs
-            .get_or_try_init(|| SuggestStoreDbs::open(&self.cache_path))
+            .get_or_try_init(|| SuggestStoreDbs::open(&self.data_path))
     }
 
     fn query(&self, query: SuggestionQuery) -> Result<Vec<Suggestion>> {
@@ -337,16 +326,48 @@ where
                     .get_records_with_options(&options)?
                     .records;
 
-                self.ingest_records(writer, &records_chunk)?;
+                self.ingest_records(LAST_INGEST_META_UNPARSABLE, writer, &records_chunk)?;
             }
         }
 
+        // use std::collections::BTreeSet;
+        let ingest_record_types = if let Some(rt) = &constraints.providers {
+            rt.iter()
+                .flat_map(|x| x.records_for_provider())
+                .collect::<BTreeSet<_>>()
+                .into_iter()
+                .collect()
+        } else {
+            DEFAULT_RECORDS_TYPES.to_vec()
+        };
+
+        for ingest_record_type in ingest_record_types {
+            self.ingest_records_by_type(ingest_record_type, writer, &constraints)?;
+        }
+
+        Ok(())
+    }
+
+    fn ingest_records_by_type(
+        &self,
+        ingest_record_type: SuggestRecordType,
+        writer: &SuggestDb,
+        constraints: &SuggestIngestionConstraints,
+    ) -> Result<()> {
         let mut options = GetItemsOptions::new();
+
         // Remote Settings returns records in descending modification order
         // (newest first), but we want them in ascending order (oldest first),
         // so that we can eventually resume downloading where we left off.
         options.sort("last_modified", SortOrder::Ascending);
-        if let Some(last_ingest) = writer.read(|dao| dao.get_meta::<u64>(LAST_INGEST_META_KEY))? {
+
+        options.eq("type", ingest_record_type.to_string());
+
+        // Get the last ingest value. This is the max of the last_ingest_keys
+        // that are in the database.
+        if let Some(last_ingest) = writer
+            .read(|dao| dao.get_meta::<u64>(ingest_record_type.last_ingest_meta_key().as_str()))?
+        {
             // Only download changes since our last ingest. If our last ingest
             // was interrupted, we'll pick up where we left off.
             options.gt("last_modified", last_ingest.to_string());
@@ -363,39 +384,56 @@ where
             .settings_client
             .get_records_with_options(&options)?
             .records;
-        self.ingest_records(writer, &records)?;
-
+        self.ingest_records(&ingest_record_type.last_ingest_meta_key(), writer, &records)?;
         Ok(())
     }
 
-    fn ingest_records(&self, writer: &SuggestDb, records: &[RemoteSettingsRecord]) -> Result<()> {
+    fn ingest_records(
+        &self,
+        last_ingest_key: &str,
+        writer: &SuggestDb,
+        records: &[RemoteSettingsRecord],
+    ) -> Result<()> {
         for record in records {
             let record_id = SuggestRecordId::from(&record.id);
             if record.deleted {
                 // If the entire record was deleted, drop all its suggestions
                 // and advance the last ingest time.
-                writer.write(|dao| dao.handle_deleted_record(record))?;
+                writer.write(|dao| dao.handle_deleted_record(last_ingest_key, record))?;
                 continue;
             }
             let Ok(fields) =
                 serde_json::from_value(serde_json::Value::Object(record.fields.clone()))
             else {
                 // We don't recognize this record's type, so we don't know how
-                // to ingest its suggestions. Record this in the meta table.
+                // to ingest its suggestions. Skip processing this record.
                 writer.write(|dao| dao.handle_unparsable_record(record))?;
                 continue;
             };
 
             match fields {
                 SuggestRecord::AmpWikipedia => {
-                    self.ingest_attachment(writer, record, |dao, record_id, suggestions| {
-                        dao.insert_amp_wikipedia_suggestions(record_id, suggestions)
-                    })?;
+                    self.ingest_attachment(
+                        // TODO: Currently re-creating the last_ingest_key because using last_ingest_meta
+                        // breaks the tests (particularly the unparsable functionality). So, keeping
+                        // a direct reference until we remove the "unparsable" functionality.
+                        &SuggestRecordType::AmpWikipedia.last_ingest_meta_key(),
+                        writer,
+                        record,
+                        |dao, record_id, suggestions| {
+                            dao.insert_amp_wikipedia_suggestions(record_id, suggestions)
+                        },
+                    )?;
                 }
                 SuggestRecord::AmpMobile => {
-                    self.ingest_attachment(writer, record, |dao, record_id, suggestions| {
-                        dao.insert_amp_mobile_suggestions(record_id, suggestions)
-                    })?;
+                    self.ingest_attachment(
+                        &SuggestRecordType::AmpMobile.last_ingest_meta_key(),
+                        writer,
+                        record,
+                        |dao, record_id, suggestions| {
+                            dao.insert_amp_mobile_suggestions(record_id, suggestions)
+                        },
+                    )?;
                 }
                 SuggestRecord::Icon => {
                     let (Some(icon_id), Some(attachment)) =
@@ -404,47 +442,79 @@ where
                         // An icon record should have an icon ID and an
                         // attachment. Icons that don't have these are
                         // malformed, so skip to the next record.
-                        writer.write(|dao| dao.put_last_ingest_if_newer(record.last_modified))?;
+                        writer.write(|dao| {
+                            dao.put_last_ingest_if_newer(
+                                &SuggestRecordType::Icon.last_ingest_meta_key(),
+                                record.last_modified,
+                            )
+                        })?;
                         continue;
                     };
                     let data = self.settings_client.get_attachment(&attachment.location)?;
                     writer.write(|dao| {
-                        dao.put_icon(icon_id, &data)?;
-                        dao.handle_ingested_record(record)
+                        dao.put_icon(icon_id, &data, &attachment.mimetype)?;
+                        dao.handle_ingested_record(
+                            &SuggestRecordType::Icon.last_ingest_meta_key(),
+                            record,
+                        )
                     })?;
                 }
                 SuggestRecord::Amo => {
-                    self.ingest_attachment(writer, record, |dao, record_id, suggestions| {
-                        dao.insert_amo_suggestions(record_id, suggestions)
-                    })?;
+                    self.ingest_attachment(
+                        &SuggestRecordType::Amo.last_ingest_meta_key(),
+                        writer,
+                        record,
+                        |dao, record_id, suggestions| {
+                            dao.insert_amo_suggestions(record_id, suggestions)
+                        },
+                    )?;
                 }
                 SuggestRecord::Pocket => {
-                    self.ingest_attachment(writer, record, |dao, record_id, suggestions| {
-                        dao.insert_pocket_suggestions(record_id, suggestions)
-                    })?;
+                    self.ingest_attachment(
+                        &SuggestRecordType::Pocket.last_ingest_meta_key(),
+                        writer,
+                        record,
+                        |dao, record_id, suggestions| {
+                            dao.insert_pocket_suggestions(record_id, suggestions)
+                        },
+                    )?;
                 }
                 SuggestRecord::Yelp => {
-                    self.ingest_attachment(writer, record, |dao, record_id, suggestions| {
-                        match suggestions.first() {
+                    self.ingest_attachment(
+                        &SuggestRecordType::Yelp.last_ingest_meta_key(),
+                        writer,
+                        record,
+                        |dao, record_id, suggestions| match suggestions.first() {
                             Some(suggestion) => dao.insert_yelp_suggestions(record_id, suggestion),
                             None => Ok(()),
-                        }
-                    })?;
+                        },
+                    )?;
                 }
                 SuggestRecord::Mdn => {
-                    self.ingest_attachment(writer, record, |dao, record_id, suggestions| {
-                        dao.insert_mdn_suggestions(record_id, suggestions)
-                    })?;
+                    self.ingest_attachment(
+                        &SuggestRecordType::Mdn.last_ingest_meta_key(),
+                        writer,
+                        record,
+                        |dao, record_id, suggestions| {
+                            dao.insert_mdn_suggestions(record_id, suggestions)
+                        },
+                    )?;
                 }
                 SuggestRecord::Weather(data) => {
-                    self.ingest_record(writer, record, |dao, record_id| {
-                        dao.insert_weather_data(record_id, &data)
-                    })?;
+                    self.ingest_record(
+                        &SuggestRecordType::Weather.last_ingest_meta_key(),
+                        writer,
+                        record,
+                        |dao, record_id| dao.insert_weather_data(record_id, &data),
+                    )?;
                 }
                 SuggestRecord::GlobalConfig(config) => {
-                    self.ingest_record(writer, record, |dao, _| {
-                        dao.put_global_config(&SuggestGlobalConfig::from(&config))
-                    })?;
+                    self.ingest_record(
+                        &SuggestRecordType::GlobalConfig.last_ingest_meta_key(),
+                        writer,
+                        record,
+                        |dao, _| dao.put_global_config(&SuggestGlobalConfig::from(&config)),
+                    )?;
                 }
             }
         }
@@ -453,6 +523,7 @@ where
 
     fn ingest_record(
         &self,
+        last_ingest_key: &str,
         writer: &SuggestDb,
         record: &RemoteSettingsRecord,
         ingestion_handler: impl FnOnce(&mut SuggestDao<'_>, &SuggestRecordId) -> Result<()>,
@@ -469,12 +540,13 @@ where
             // Ingest (or re-ingest) all data in the record.
             ingestion_handler(dao, &record_id)?;
 
-            dao.handle_ingested_record(record)
+            dao.handle_ingested_record(last_ingest_key, record)
         })
     }
 
     fn ingest_attachment<T>(
         &self,
+        last_ingest_key: &str,
         writer: &SuggestDb,
         record: &RemoteSettingsRecord,
         ingestion_handler: impl FnOnce(&mut SuggestDao<'_>, &SuggestRecordId, &[T]) -> Result<()>,
@@ -486,15 +558,18 @@ where
             // This method should be called only when a record is expected to
             // have an attachment. If it doesn't have one, it's malformed, so
             // skip to the next record.
-            writer.write(|dao| dao.put_last_ingest_if_newer(record.last_modified))?;
+            writer
+                .write(|dao| dao.put_last_ingest_if_newer(last_ingest_key, record.last_modified))?;
             return Ok(());
         };
 
         let attachment_data = self.settings_client.get_attachment(&attachment.location)?;
         match serde_json::from_slice::<SuggestAttachment<T>>(&attachment_data) {
-            Ok(attachment) => self.ingest_record(writer, record, |dao, record_id| {
-                ingestion_handler(dao, record_id, attachment.suggestions())
-            }),
+            Ok(attachment) => {
+                self.ingest_record(last_ingest_key, writer, record, |dao, record_id| {
+                    ingestion_handler(dao, record_id, attachment.suggestions())
+                })
+            }
             Err(_) => writer.write(|dao| dao.handle_unparsable_record(record)),
         }
     }
@@ -547,10 +622,6 @@ mod tests {
         SuggestStoreInner::new(
             format!(
                 "file:test_store_data_{}?mode=memory&cache=shared",
-                hex::encode(unique_suffix),
-            ),
-            format!(
-                "file:test_store_cache_{}?mode=memory&cache=shared",
                 hex::encode(unique_suffix),
             ),
             settings_client,
@@ -721,7 +792,14 @@ mod tests {
         store.ingest(SuggestIngestionConstraints::default())?;
 
         store.dbs()?.reader.read(|dao| {
-            assert_eq!(dao.get_meta::<u64>(LAST_INGEST_META_KEY)?, Some(15));
+            assert_eq!(
+                dao.get_meta::<u64>(
+                    SuggestRecordType::AmpWikipedia
+                        .last_ingest_meta_key()
+                        .as_str()
+                )?,
+                Some(15)
+            );
             expect![[r#"
                 [
                     Amp {
@@ -729,6 +807,7 @@ mod tests {
                         url: "https://www.lph-nm.biz",
                         raw_url: "https://www.lph-nm.biz",
                         icon: None,
+                        icon_mimetype: None,
                         full_keyword: "los",
                         block_id: 0,
                         advertiser: "Los Pollos Hermanos",
@@ -834,6 +913,9 @@ mod tests {
                                 110,
                             ],
                         ),
+                        icon_mimetype: Some(
+                            "image/png",
+                        ),
                         full_keyword: "lasagna",
                         block_id: 0,
                         advertiser: "Good Place Eats",
@@ -872,6 +954,9 @@ mod tests {
                                 110,
                             ],
                         ),
+                        icon_mimetype: Some(
+                            "image/png",
+                        ),
                         full_keyword: "penne",
                         block_id: 0,
                         advertiser: "Good Place Eats",
@@ -886,6 +971,267 @@ mod tests {
             .assert_debug_eq(&dao.fetch_suggestions(&SuggestionQuery {
                 keyword: "pe".into(),
                 providers: vec![SuggestionProvider::Amp],
+                limit: None,
+            })?);
+
+            Ok(())
+        })?;
+
+        Ok(())
+    }
+
+    #[test]
+    fn ingest_full_keywords() -> anyhow::Result<()> {
+        before_each();
+
+        let snapshot = Snapshot::with_records(json!([{
+            "id": "1",
+            "type": "data",
+            "last_modified": 15,
+            "attachment": {
+                "filename": "data-1.json",
+                "mimetype": "application/json",
+                "location": "data-1.json",
+                "hash": "",
+                "size": 0,
+            },
+        }, {
+            "id": "2",
+            "type": "data",
+            "last_modified": 15,
+            "attachment": {
+                "filename": "data-2.json",
+                "mimetype": "application/json",
+                "location": "data-2.json",
+                "hash": "",
+                "size": 0,
+            },
+        }, {
+            "id": "3",
+            "type": "data",
+            "last_modified": 15,
+            "attachment": {
+                "filename": "data-3.json",
+                "mimetype": "application/json",
+                "location": "data-3.json",
+                "hash": "",
+                "size": 0,
+            },
+        }, {
+            "id": "4",
+            "type": "amp-mobile-suggestions",
+            "last_modified": 15,
+            "attachment": {
+                "filename": "data-4.json",
+                "mimetype": "application/json",
+                "location": "data-4.json",
+                "hash": "",
+                "size": 0,
+            },
+        }]))?
+        // AMP attachment with full keyword data
+        .with_data(
+            "data-1.json",
+            json!([{
+                "id": 0,
+                "advertiser": "Los Pollos Hermanos",
+                "iab_category": "8 - Food & Drink",
+                "keywords": ["lo", "los", "los p", "los pollos", "los pollos h", "los pollos hermanos"],
+                "full_keywords": [
+                    // Full keyword for the first 4 keywords
+                    ("los pollos", 4),
+                    // Full keyword for the next 2 keywords
+                    ("los pollos hermanos (restaurant)", 2),
+                ],
+                "title": "Los Pollos Hermanos - Albuquerque - 1",
+                "url": "https://www.lph-nm.biz",
+                "icon": "5678",
+                "impression_url": "https://example.com/impression_url",
+                "click_url": "https://example.com/click_url",
+                "score": 0.3
+            }]),
+        )?
+        // AMP attachment without a full keyword
+        .with_data(
+            "data-2.json",
+            json!([{
+                "id": 1,
+                "advertiser": "Los Pollos Hermanos",
+                "iab_category": "8 - Food & Drink",
+                "keywords": ["lo", "los", "los p", "los pollos", "los pollos h", "los pollos hermanos"],
+                "title": "Los Pollos Hermanos - Albuquerque - 2",
+                "url": "https://www.lph-nm.biz",
+                "icon": "5678",
+                "impression_url": "https://example.com/impression_url",
+                "click_url": "https://example.com/click_url",
+                "score": 0.3
+            }]),
+        )?
+        // Wikipedia attachment with full keyword data.  We should ignore the full
+        // keyword data for Wikipedia suggestions
+        .with_data(
+            "data-3.json",
+            json!([{
+                "id": 2,
+                "advertiser": "Wikipedia",
+                "keywords": ["lo", "los", "los p", "los pollos", "los pollos h", "los pollos hermanos"],
+                "title": "Los Pollos Hermanos - Albuquerque - Wiki",
+                "full_keywords": [
+                    ("Los Pollos Hermanos - Albuquerque", 6),
+                ],
+                "url": "https://www.lph-nm.biz",
+                "icon": "5678",
+                "score": 0.3,
+            }]),
+        )?
+        // Amp mobile suggestion, this is essentially the same as 1, except for the SuggestionProvider
+        .with_data(
+            "data-4.json",
+            json!([{
+                "id": 0,
+                "advertiser": "Los Pollos Hermanos",
+                "iab_category": "8 - Food & Drink",
+                "keywords": ["lo", "los", "los p", "los pollos", "los pollos h", "los pollos hermanos"],
+                "full_keywords": [
+                    // Full keyword for the first 4 keywords
+                    ("los pollos", 4),
+                    // Full keyword for the next 2 keywords
+                    ("los pollos hermanos (restaurant)", 2),
+                ],
+                "title": "Los Pollos Hermanos - Albuquerque - 4",
+                "url": "https://www.lph-nm.biz",
+                "icon": "5678",
+                "impression_url": "https://example.com/impression_url",
+                "click_url": "https://example.com/click_url",
+                "score": 0.3
+            }]),
+        )?;
+
+        let store = unique_test_store(SnapshotSettingsClient::with_snapshot(snapshot));
+
+        store.ingest(SuggestIngestionConstraints::default())?;
+
+        store.dbs()?.reader.read(|dao| {
+            // This one should match the first full keyword for the first AMP item.
+            expect![[r#"
+                [
+                    Amp {
+                        title: "Los Pollos Hermanos - Albuquerque - 1",
+                        url: "https://www.lph-nm.biz",
+                        raw_url: "https://www.lph-nm.biz",
+                        icon: None,
+                        icon_mimetype: None,
+                        full_keyword: "los pollos",
+                        block_id: 0,
+                        advertiser: "Los Pollos Hermanos",
+                        iab_category: "8 - Food & Drink",
+                        impression_url: "https://example.com/impression_url",
+                        click_url: "https://example.com/click_url",
+                        raw_click_url: "https://example.com/click_url",
+                        score: 0.3,
+                    },
+                    Amp {
+                        title: "Los Pollos Hermanos - Albuquerque - 2",
+                        url: "https://www.lph-nm.biz",
+                        raw_url: "https://www.lph-nm.biz",
+                        icon: None,
+                        icon_mimetype: None,
+                        full_keyword: "los",
+                        block_id: 1,
+                        advertiser: "Los Pollos Hermanos",
+                        iab_category: "8 - Food & Drink",
+                        impression_url: "https://example.com/impression_url",
+                        click_url: "https://example.com/click_url",
+                        raw_click_url: "https://example.com/click_url",
+                        score: 0.3,
+                    },
+                ]
+            "#]]
+            .assert_debug_eq(&dao.fetch_suggestions(&SuggestionQuery {
+                keyword: "lo".into(),
+                providers: vec![SuggestionProvider::Amp],
+                limit: None,
+            })?);
+            // This one should match the second full keyword for the first AMP item.
+            expect![[r#"
+                [
+                    Amp {
+                        title: "Los Pollos Hermanos - Albuquerque - 1",
+                        url: "https://www.lph-nm.biz",
+                        raw_url: "https://www.lph-nm.biz",
+                        icon: None,
+                        icon_mimetype: None,
+                        full_keyword: "los pollos hermanos (restaurant)",
+                        block_id: 0,
+                        advertiser: "Los Pollos Hermanos",
+                        iab_category: "8 - Food & Drink",
+                        impression_url: "https://example.com/impression_url",
+                        click_url: "https://example.com/click_url",
+                        raw_click_url: "https://example.com/click_url",
+                        score: 0.3,
+                    },
+                    Amp {
+                        title: "Los Pollos Hermanos - Albuquerque - 2",
+                        url: "https://www.lph-nm.biz",
+                        raw_url: "https://www.lph-nm.biz",
+                        icon: None,
+                        icon_mimetype: None,
+                        full_keyword: "los pollos hermanos",
+                        block_id: 1,
+                        advertiser: "Los Pollos Hermanos",
+                        iab_category: "8 - Food & Drink",
+                        impression_url: "https://example.com/impression_url",
+                        click_url: "https://example.com/click_url",
+                        raw_click_url: "https://example.com/click_url",
+                        score: 0.3,
+                    },
+                ]
+            "#]]
+            .assert_debug_eq(&dao.fetch_suggestions(&SuggestionQuery {
+                keyword: "los pollos h".into(),
+                providers: vec![SuggestionProvider::Amp],
+                limit: None,
+            })?);
+            // This one matches a Wikipedia suggestion, so the full keyword should be ignored
+            expect![[r#"
+                [
+                    Wikipedia {
+                        title: "Los Pollos Hermanos - Albuquerque - Wiki",
+                        url: "https://www.lph-nm.biz",
+                        icon: None,
+                        icon_mimetype: None,
+                        full_keyword: "los",
+                    },
+                ]
+            "#]]
+            .assert_debug_eq(&dao.fetch_suggestions(&SuggestionQuery {
+                keyword: "los".into(),
+                providers: vec![SuggestionProvider::Wikipedia],
+                limit: None,
+            })?);
+            // This one matches a Wikipedia suggestion, so the full keyword should be ignored
+            expect![[r#"
+                [
+                    Amp {
+                        title: "Los Pollos Hermanos - Albuquerque - 4",
+                        url: "https://www.lph-nm.biz",
+                        raw_url: "https://www.lph-nm.biz",
+                        icon: None,
+                        icon_mimetype: None,
+                        full_keyword: "los pollos hermanos (restaurant)",
+                        block_id: 0,
+                        advertiser: "Los Pollos Hermanos",
+                        iab_category: "8 - Food & Drink",
+                        impression_url: "https://example.com/impression_url",
+                        click_url: "https://example.com/click_url",
+                        raw_click_url: "https://example.com/click_url",
+                        score: 0.3,
+                    },
+                ]
+            "#]]
+            .assert_debug_eq(&dao.fetch_suggestions(&SuggestionQuery {
+                keyword: "los pollos h".into(),
+                providers: vec![SuggestionProvider::AmpMobile],
                 limit: None,
             })?);
 
@@ -941,6 +1287,7 @@ mod tests {
                         url: "https://www.lasagna.restaurant",
                         raw_url: "https://www.lasagna.restaurant",
                         icon: None,
+                        icon_mimetype: None,
                         full_keyword: "lasagna",
                         block_id: 0,
                         advertiser: "Good Place Eats",
@@ -1014,7 +1361,14 @@ mod tests {
         store.ingest(SuggestIngestionConstraints::default())?;
 
         store.dbs()?.reader.read(|dao| {
-            assert_eq!(dao.get_meta(LAST_INGEST_META_KEY)?, Some(15u64));
+            assert_eq!(
+                dao.get_meta(
+                    SuggestRecordType::AmpWikipedia
+                        .last_ingest_meta_key()
+                        .as_str()
+                )?,
+                Some(15u64)
+            );
             expect![[r#"
                 [
                     Amp {
@@ -1022,6 +1376,7 @@ mod tests {
                         url: "https://www.lasagna.restaurant",
                         raw_url: "https://www.lasagna.restaurant",
                         icon: None,
+                        icon_mimetype: None,
                         full_keyword: "lasagna",
                         block_id: 0,
                         advertiser: "Good Place Eats",
@@ -1084,8 +1439,15 @@ mod tests {
 
         store.ingest(SuggestIngestionConstraints::default())?;
 
-        store.dbs()?.reader.read(|dao| {
-            assert_eq!(dao.get_meta(LAST_INGEST_META_KEY)?, Some(30u64));
+        store.dbs()?.reader.read(|dao: &SuggestDao<'_>| {
+            assert_eq!(
+                dao.get_meta(
+                    SuggestRecordType::AmpWikipedia
+                        .last_ingest_meta_key()
+                        .as_str()
+                )?,
+                Some(30u64)
+            );
             assert!(dao
                 .fetch_suggestions(&SuggestionQuery {
                     keyword: "la".into(),
@@ -1100,6 +1462,7 @@ mod tests {
                         url: "https://www.lph-nm.biz",
                         raw_url: "https://www.lph-nm.biz",
                         icon: None,
+                        icon_mimetype: None,
                         full_keyword: "los pollos",
                         block_id: 0,
                         advertiser: "Los Pollos Hermanos",
@@ -1123,6 +1486,7 @@ mod tests {
                         url: "https://penne.biz",
                         raw_url: "https://penne.biz",
                         icon: None,
+                        icon_mimetype: None,
                         full_keyword: "penne",
                         block_id: 0,
                         advertiser: "Good Place Eats",
@@ -1219,7 +1583,10 @@ mod tests {
         store.ingest(SuggestIngestionConstraints::default())?;
 
         store.dbs()?.reader.read(|dao| {
-            assert_eq!(dao.get_meta(LAST_INGEST_META_KEY)?, Some(25u64));
+            assert_eq!(
+                dao.get_meta(SuggestRecordType::Icon.last_ingest_meta_key().as_str())?,
+                Some(25u64)
+            );
             assert_eq!(
                 dao.conn
                     .query_one::<i64>("SELECT count(*) FROM suggestions")?,
@@ -1259,7 +1626,10 @@ mod tests {
         store.ingest(SuggestIngestionConstraints::default())?;
 
         store.dbs()?.reader.read(|dao| {
-            assert_eq!(dao.get_meta(LAST_INGEST_META_KEY)?, Some(35u64));
+            assert_eq!(
+                dao.get_meta(SuggestRecordType::Icon.last_ingest_meta_key().as_str())?,
+                Some(35u64)
+            );
             expect![[r#"
                 [
                     Amp {
@@ -1285,6 +1655,9 @@ mod tests {
                                 111,
                                 110,
                             ],
+                        ),
+                        icon_mimetype: Some(
+                            "image/png",
                         ),
                         full_keyword: "lasagna",
                         block_id: 0,
@@ -1326,6 +1699,9 @@ mod tests {
                                 111,
                                 110,
                             ],
+                        ),
+                        icon_mimetype: Some(
+                            "image/png",
                         ),
                         full_keyword: "los",
                         block_id: 0,
@@ -1422,7 +1798,10 @@ mod tests {
         store.ingest(SuggestIngestionConstraints::default())?;
 
         store.dbs()?.reader.read(|dao| {
-            assert_eq!(dao.get_meta(LAST_INGEST_META_KEY)?, Some(15u64));
+            assert_eq!(
+                dao.get_meta(SuggestRecordType::Amo.last_ingest_meta_key().as_str())?,
+                Some(15u64)
+            );
 
             expect![[r#"
                 [
@@ -1513,7 +1892,10 @@ mod tests {
         store.ingest(SuggestIngestionConstraints::default())?;
 
         store.dbs()?.reader.read(|dao| {
-            assert_eq!(dao.get_meta(LAST_INGEST_META_KEY)?, Some(30u64));
+            assert_eq!(
+                dao.get_meta(SuggestRecordType::Amo.last_ingest_meta_key().as_str())?,
+                Some(30u64)
+            );
 
             expect![[r#"
                 [
@@ -1648,13 +2030,24 @@ mod tests {
         store.ingest(SuggestIngestionConstraints::default())?;
 
         store.dbs()?.reader.read(|dao| {
-            assert_eq!(dao.get_meta::<u64>(LAST_INGEST_META_KEY)?, Some(20));
             assert_eq!(
                 dao.conn
                     .query_one::<i64>("SELECT count(*) FROM suggestions")?,
                 1
             );
             assert_eq!(dao.conn.query_one::<i64>("SELECT count(*) FROM icons")?, 1);
+            assert_eq!(
+                dao.get_meta(
+                    SuggestRecordType::AmpWikipedia
+                        .last_ingest_meta_key()
+                        .as_str()
+                )?,
+                Some(15)
+            );
+            assert_eq!(
+                dao.get_meta(SuggestRecordType::Icon.last_ingest_meta_key().as_str())?,
+                Some(20)
+            );
 
             Ok(())
         })?;
@@ -1674,14 +2067,16 @@ mod tests {
         store.ingest(SuggestIngestionConstraints::default())?;
 
         store.dbs()?.reader.read(|dao| {
-            assert_eq!(dao.get_meta::<u64>(LAST_INGEST_META_KEY)?, Some(30));
             assert_eq!(
                 dao.conn
                     .query_one::<i64>("SELECT count(*) FROM suggestions")?,
                 0
             );
             assert_eq!(dao.conn.query_one::<i64>("SELECT count(*) FROM icons")?, 0);
-
+            assert_eq!(
+                dao.get_meta(SuggestRecordType::Icon.last_ingest_meta_key().as_str())?,
+                Some(30)
+            );
             Ok(())
         })?;
 
@@ -1717,6 +2112,7 @@ mod tests {
         for (max_suggestions, expected_limit) in table {
             store.ingest(SuggestIngestionConstraints {
                 max_suggestions: Some(max_suggestions),
+                providers: Some(vec![SuggestionProvider::Amp]),
             })?;
             let actual_limit = store
                 .settings_client
@@ -1772,7 +2168,14 @@ mod tests {
         store.ingest(SuggestIngestionConstraints::default())?;
 
         store.dbs()?.reader.read(|dao| {
-            assert_eq!(dao.get_meta::<u64>(LAST_INGEST_META_KEY)?, Some(15));
+            assert_eq!(
+                dao.get_meta::<u64>(
+                    SuggestRecordType::AmpWikipedia
+                        .last_ingest_meta_key()
+                        .as_str()
+                )?,
+                Some(15)
+            );
             assert_eq!(
                 dao.conn
                     .query_one::<i64>("SELECT count(*) FROM suggestions")?,
@@ -1789,7 +2192,14 @@ mod tests {
         store.clear()?;
 
         store.dbs()?.reader.read(|dao| {
-            assert_eq!(dao.get_meta::<u64>(LAST_INGEST_META_KEY)?, None);
+            assert_eq!(
+                dao.get_meta::<u64>(
+                    SuggestRecordType::AmpWikipedia
+                        .last_ingest_meta_key()
+                        .as_str()
+                )?,
+                None
+            );
             assert_eq!(
                 dao.conn
                     .query_one::<i64>("SELECT count(*) FROM suggestions")?,
@@ -2080,6 +2490,9 @@ mod tests {
                                     110,
                                 ],
                             ),
+                            icon_mimetype: Some(
+                                "image/png",
+                            ),
                             full_keyword: "lasagna",
                             block_id: 0,
                             advertiser: "Good Place Eats",
@@ -2143,6 +2556,9 @@ mod tests {
                                     110,
                                 ],
                             ),
+                            icon_mimetype: Some(
+                                "image/png",
+                            ),
                             full_keyword: "multimatch",
                         },
                     ]
@@ -2198,6 +2614,9 @@ mod tests {
                                     111,
                                     110,
                                 ],
+                            ),
+                            icon_mimetype: Some(
+                                "image/png",
                             ),
                             full_keyword: "multimatch",
                         },
@@ -2267,6 +2686,9 @@ mod tests {
                                     111,
                                     110,
                                 ],
+                            ),
+                            icon_mimetype: Some(
+                                "image/png",
                             ),
                             full_keyword: "lasagna",
                             block_id: 0,
@@ -2349,6 +2771,9 @@ mod tests {
                                     110,
                                 ],
                             ),
+                            icon_mimetype: Some(
+                                "image/png",
+                            ),
                             full_keyword: "california",
                         },
                         Wikipedia {
@@ -2369,6 +2794,9 @@ mod tests {
                                     111,
                                     110,
                                 ],
+                            ),
+                            icon_mimetype: Some(
+                                "image/png",
                             ),
                             full_keyword: "california",
                         },
@@ -2402,6 +2830,9 @@ mod tests {
                                     111,
                                     110,
                                 ],
+                            ),
+                            icon_mimetype: Some(
+                                "image/png",
                             ),
                             full_keyword: "california",
                         },
@@ -2614,6 +3045,9 @@ mod tests {
                                     110,
                                 ],
                             ),
+                            icon_mimetype: Some(
+                                "image/svg+xml",
+                            ),
                             score: 0.5,
                             has_location_sign: true,
                             subject_exact_match: true,
@@ -2647,6 +3081,9 @@ mod tests {
                                     110,
                                 ],
                             ),
+                            icon_mimetype: Some(
+                                "image/svg+xml",
+                            ),
                             score: 0.5,
                             has_location_sign: true,
                             subject_exact_match: true,
@@ -2679,6 +3116,9 @@ mod tests {
                                     111,
                                     110,
                                 ],
+                            ),
+                            icon_mimetype: Some(
+                                "image/svg+xml",
                             ),
                             score: 0.5,
                             has_location_sign: true,
@@ -2735,6 +3175,9 @@ mod tests {
                                     110,
                                 ],
                             ),
+                            icon_mimetype: Some(
+                                "image/svg+xml",
+                            ),
                             score: 0.5,
                             has_location_sign: true,
                             subject_exact_match: true,
@@ -2779,6 +3222,9 @@ mod tests {
                                     110,
                                 ],
                             ),
+                            icon_mimetype: Some(
+                                "image/svg+xml",
+                            ),
                             score: 0.5,
                             has_location_sign: true,
                             subject_exact_match: true,
@@ -2811,6 +3257,9 @@ mod tests {
                                     111,
                                     110,
                                 ],
+                            ),
+                            icon_mimetype: Some(
+                                "image/svg+xml",
                             ),
                             score: 0.5,
                             has_location_sign: true,
@@ -2856,6 +3305,9 @@ mod tests {
                                     110,
                                 ],
                             ),
+                            icon_mimetype: Some(
+                                "image/svg+xml",
+                            ),
                             score: 0.5,
                             has_location_sign: true,
                             subject_exact_match: true,
@@ -2888,6 +3340,9 @@ mod tests {
                                     111,
                                     110,
                                 ],
+                            ),
+                            icon_mimetype: Some(
+                                "image/svg+xml",
                             ),
                             score: 0.5,
                             has_location_sign: true,
@@ -2933,6 +3388,9 @@ mod tests {
                                     110,
                                 ],
                             ),
+                            icon_mimetype: Some(
+                                "image/svg+xml",
+                            ),
                             score: 0.5,
                             has_location_sign: true,
                             subject_exact_match: true,
@@ -2965,6 +3423,9 @@ mod tests {
                                     111,
                                     110,
                                 ],
+                            ),
+                            icon_mimetype: Some(
+                                "image/svg+xml",
                             ),
                             score: 0.5,
                             has_location_sign: true,
@@ -2999,6 +3460,9 @@ mod tests {
                                     110,
                                 ],
                             ),
+                            icon_mimetype: Some(
+                                "image/svg+xml",
+                            ),
                             score: 0.5,
                             has_location_sign: false,
                             subject_exact_match: true,
@@ -3031,6 +3495,9 @@ mod tests {
                                     111,
                                     110,
                                 ],
+                            ),
+                            icon_mimetype: Some(
+                                "image/svg+xml",
                             ),
                             score: 0.5,
                             has_location_sign: false,
@@ -3076,6 +3543,9 @@ mod tests {
                                     110,
                                 ],
                             ),
+                            icon_mimetype: Some(
+                                "image/svg+xml",
+                            ),
                             score: 0.5,
                             has_location_sign: false,
                             subject_exact_match: true,
@@ -3108,6 +3578,9 @@ mod tests {
                                     111,
                                     110,
                                 ],
+                            ),
+                            icon_mimetype: Some(
+                                "image/svg+xml",
                             ),
                             score: 0.5,
                             has_location_sign: false,
@@ -3186,6 +3659,9 @@ mod tests {
                                     110,
                                 ],
                             ),
+                            icon_mimetype: Some(
+                                "image/svg+xml",
+                            ),
                             score: 0.5,
                             has_location_sign: false,
                             subject_exact_match: true,
@@ -3218,6 +3694,9 @@ mod tests {
                                     111,
                                     110,
                                 ],
+                            ),
+                            icon_mimetype: Some(
+                                "image/svg+xml",
                             ),
                             score: 0.5,
                             has_location_sign: false,
@@ -3252,6 +3731,9 @@ mod tests {
                                     110,
                                 ],
                             ),
+                            icon_mimetype: Some(
+                                "image/svg+xml",
+                            ),
                             score: 0.5,
                             has_location_sign: true,
                             subject_exact_match: true,
@@ -3285,6 +3767,9 @@ mod tests {
                                     110,
                                 ],
                             ),
+                            icon_mimetype: Some(
+                                "image/svg+xml",
+                            ),
                             score: 0.5,
                             has_location_sign: true,
                             subject_exact_match: true,
@@ -3317,6 +3802,9 @@ mod tests {
                                     111,
                                     110,
                                 ],
+                            ),
+                            icon_mimetype: Some(
+                                "image/svg+xml",
                             ),
                             score: 0.5,
                             has_location_sign: false,
@@ -3362,6 +3850,9 @@ mod tests {
                                     110,
                                 ],
                             ),
+                            icon_mimetype: Some(
+                                "image/svg+xml",
+                            ),
                             score: 0.5,
                             has_location_sign: false,
                             subject_exact_match: false,
@@ -3395,6 +3886,9 @@ mod tests {
                                     110,
                                 ],
                             ),
+                            icon_mimetype: Some(
+                                "image/svg+xml",
+                            ),
                             score: 0.5,
                             has_location_sign: false,
                             subject_exact_match: true,
@@ -3427,6 +3921,9 @@ mod tests {
                                     111,
                                     110,
                                 ],
+                            ),
+                            icon_mimetype: Some(
+                                "image/svg+xml",
                             ),
                             score: 0.5,
                             has_location_sign: false,
@@ -3483,6 +3980,9 @@ mod tests {
                                 110,
                             ],
                         ),
+                        icon_mimetype: Some(
+                            "image/svg+xml",
+                        ),
                         score: 0.5,
                         has_location_sign: false,
                         subject_exact_match: false,
@@ -3516,6 +4016,9 @@ mod tests {
                                 110,
                             ],
                         ),
+                        icon_mimetype: Some(
+                            "image/svg+xml",
+                        ),
                         score: 0.5,
                         has_location_sign: false,
                         subject_exact_match: false,
@@ -3548,6 +4051,9 @@ mod tests {
                                 111,
                                 110,
                             ],
+                        ),
+                        icon_mimetype: Some(
+                            "image/svg+xml",
                         ),
                         score: 0.5,
                         has_location_sign: false,
@@ -3592,6 +4098,9 @@ mod tests {
                                 111,
                                 110,
                             ],
+                        ),
+                        icon_mimetype: Some(
+                            "image/svg+xml",
                         ),
                         score: 0.5,
                         has_location_sign: false,
@@ -3734,6 +4243,7 @@ mod tests {
                             url: "https://www.lasagna.restaurant",
                             raw_url: "https://www.lasagna.restaurant",
                             icon: None,
+                            icon_mimetype: None,
                             full_keyword: "amp wiki match",
                             block_id: 0,
                             advertiser: "Good Place Eats",
@@ -3762,6 +4272,9 @@ mod tests {
                                     110,
                                 ],
                             ),
+                            icon_mimetype: Some(
+                                "image/png",
+                            ),
                             full_keyword: "amp wiki match",
                         },
                         Amp {
@@ -3769,6 +4282,7 @@ mod tests {
                             url: "https://penne.biz",
                             raw_url: "https://penne.biz",
                             icon: None,
+                            icon_mimetype: None,
                             full_keyword: "amp wiki match",
                             block_id: 0,
                             advertiser: "Good Place Eats",
@@ -3801,6 +4315,7 @@ mod tests {
                             url: "https://www.lasagna.restaurant",
                             raw_url: "https://www.lasagna.restaurant",
                             icon: None,
+                            icon_mimetype: None,
                             full_keyword: "amp wiki match",
                             block_id: 0,
                             advertiser: "Good Place Eats",
@@ -3828,6 +4343,9 @@ mod tests {
                                     111,
                                     110,
                                 ],
+                            ),
+                            icon_mimetype: Some(
+                                "image/png",
                             ),
                             full_keyword: "amp wiki match",
                         },
@@ -3872,6 +4390,9 @@ mod tests {
                                     111,
                                     110,
                                 ],
+                            ),
+                            icon_mimetype: Some(
+                                "image/png",
                             ),
                             full_keyword: "pocket wiki match",
                         },
@@ -4193,6 +4714,9 @@ mod tests {
                                 110,
                             ],
                         ),
+                        icon_mimetype: Some(
+                            "image/png",
+                        ),
                         full_keyword: "lasagna",
                         block_id: 0,
                         advertiser: "Good Place Eats",
@@ -4233,6 +4757,9 @@ mod tests {
                                 111,
                                 110,
                             ],
+                        ),
+                        icon_mimetype: Some(
+                            "image/png",
                         ),
                         full_keyword: "lasagna",
                         block_id: 0,
@@ -4275,6 +4802,9 @@ mod tests {
                                 110,
                             ],
                         ),
+                        icon_mimetype: Some(
+                            "image/png",
+                        ),
                         full_keyword: "lasagna",
                         block_id: 0,
                         advertiser: "Good Place Eats",
@@ -4303,6 +4833,9 @@ mod tests {
                                 111,
                                 110,
                             ],
+                        ),
+                        icon_mimetype: Some(
+                            "image/png",
                         ),
                         full_keyword: "lasagna",
                         block_id: 0,
@@ -4365,7 +4898,10 @@ mod tests {
         store.ingest(SuggestIngestionConstraints::default())?;
 
         store.dbs()?.reader.read(|dao| {
-            assert_eq!(dao.get_meta::<u64>(LAST_INGEST_META_KEY)?, Some(45));
+            assert_eq!(
+                dao.get_meta::<u64>(SuggestRecordType::Icon.last_ingest_meta_key().as_str())?,
+                Some(45)
+            );
             assert_eq!(
                 dao.conn
                     .query_one::<i64>("SELECT count(*) FROM suggestions")?,
@@ -4400,16 +4936,19 @@ mod tests {
         store.ingest(SuggestIngestionConstraints::default())?;
 
         store.dbs()?.reader.read(|dao| {
-            assert_eq!(dao.get_meta::<u64>(LAST_INGEST_META_KEY)?, Some(30));
+            assert_eq!(
+                dao.get_meta("last_quicksuggest_ingest_unparsable")?,
+                Some(30)
+            );
             expect![[r#"
                 Some(
                     UnparsableRecords(
                         {
                             "clippy-2": UnparsableRecord {
-                                schema_version: 14,
+                                schema_version: 17,
                             },
                             "fancy-new-suggestions-1": UnparsableRecord {
-                                schema_version: 14,
+                                schema_version: 17,
                             },
                         },
                     ),
@@ -4469,16 +5008,19 @@ mod tests {
         store.ingest(SuggestIngestionConstraints::default())?;
 
         store.dbs()?.reader.read(|dao| {
-            assert_eq!(dao.get_meta::<u64>(LAST_INGEST_META_KEY)?, Some(30));
+            assert_eq!(
+                dao.get_meta("last_quicksuggest_ingest_unparsable")?,
+                Some(30)
+            );
             expect![[r#"
                 Some(
                     UnparsableRecords(
                         {
                             "clippy-2": UnparsableRecord {
-                                schema_version: 14,
+                                schema_version: 17,
                             },
                             "fancy-new-suggestions-1": UnparsableRecord {
-                                schema_version: 14,
+                                schema_version: 17,
                             },
                         },
                     ),
@@ -4505,13 +5047,105 @@ mod tests {
 
         let store = unique_test_store(SnapshotSettingsClient::with_snapshot(snapshot));
         store.dbs()?.writer.write(|dao| {
-            dao.put_meta(LAST_INGEST_META_KEY, 30)?;
+            dao.put_meta(
+                SuggestRecordType::AmpWikipedia
+                    .last_ingest_meta_key()
+                    .as_str(),
+                30,
+            )?;
             Ok(())
         })?;
         store.ingest(SuggestIngestionConstraints::default())?;
 
         store.dbs()?.reader.read(|dao| {
-            assert_eq!(dao.get_meta::<u64>(LAST_INGEST_META_KEY)?, Some(30));
+            assert_eq!(
+                dao.get_meta::<u64>(
+                    SuggestRecordType::AmpWikipedia
+                        .last_ingest_meta_key()
+                        .as_str()
+                )?,
+                Some(30)
+            );
+            Ok(())
+        })?;
+
+        Ok(())
+    }
+
+    /// Tests that we only ingest providers that we're concerned with.
+    #[test]
+    fn ingest_constraints_provider() -> anyhow::Result<()> {
+        before_each();
+
+        let snapshot = Snapshot::with_records(json!([{
+            "id": "data-1",
+            "type": "data",
+            "last_modified": 15,
+        }, {
+            "id": "icon-1",
+            "type": "icon",
+            "last_modified": 30,
+        }]))?;
+
+        let store = unique_test_store(SnapshotSettingsClient::with_snapshot(snapshot));
+        store.dbs()?.writer.write(|dao| {
+            // Check that existing data is updated properly.
+            dao.put_meta(
+                SuggestRecordType::AmpWikipedia
+                    .last_ingest_meta_key()
+                    .as_str(),
+                10,
+            )?;
+            Ok(())
+        })?;
+
+        let constraints = SuggestIngestionConstraints {
+            max_suggestions: Some(100),
+            providers: Some(vec![SuggestionProvider::Amp, SuggestionProvider::Pocket]),
+        };
+        store.ingest(constraints)?;
+
+        store.dbs()?.reader.read(|dao| {
+            assert_eq!(
+                dao.get_meta::<u64>(
+                    SuggestRecordType::AmpWikipedia
+                        .last_ingest_meta_key()
+                        .as_str()
+                )?,
+                Some(15)
+            );
+            assert_eq!(
+                dao.get_meta::<u64>(SuggestRecordType::Icon.last_ingest_meta_key().as_str())?,
+                Some(30)
+            );
+            assert_eq!(
+                dao.get_meta::<u64>(SuggestRecordType::Pocket.last_ingest_meta_key().as_str())?,
+                None
+            );
+            assert_eq!(
+                dao.get_meta::<u64>(SuggestRecordType::Amo.last_ingest_meta_key().as_str())?,
+                None
+            );
+            assert_eq!(
+                dao.get_meta::<u64>(SuggestRecordType::Yelp.last_ingest_meta_key().as_str())?,
+                None
+            );
+            assert_eq!(
+                dao.get_meta::<u64>(SuggestRecordType::Mdn.last_ingest_meta_key().as_str())?,
+                None
+            );
+            assert_eq!(
+                dao.get_meta::<u64>(SuggestRecordType::AmpMobile.last_ingest_meta_key().as_str())?,
+                None
+            );
+            assert_eq!(
+                dao.get_meta::<u64>(
+                    SuggestRecordType::GlobalConfig
+                        .last_ingest_meta_key()
+                        .as_str()
+                )?,
+                None
+            );
             Ok(())
         })?;
 
@@ -4582,10 +5216,10 @@ mod tests {
                     UnparsableRecords(
                         {
                             "clippy-2": UnparsableRecord {
-                                schema_version: 14,
+                                schema_version: 17,
                             },
                             "fancy-new-suggestions-1": UnparsableRecord {
-                                schema_version: 14,
+                                schema_version: 17,
                             },
                         },
                     ),
@@ -4671,7 +5305,7 @@ mod tests {
                     UnparsableRecords(
                         {
                             "invalid-attachment": UnparsableRecord {
-                                schema_version: 14,
+                                schema_version: 17,
                             },
                         },
                     ),
@@ -4683,7 +5317,14 @@ mod tests {
 
         // Test that the valid record was read
         store.dbs()?.reader.read(|dao| {
-            assert_eq!(dao.get_meta::<u64>(LAST_INGEST_META_KEY)?, Some(15));
+            assert_eq!(
+                dao.get_meta(
+                    SuggestRecordType::AmpWikipedia
+                        .last_ingest_meta_key()
+                        .as_str()
+                )?,
+                Some(15)
+            );
             expect![[r#"
                 [
                     Amp {
@@ -4691,6 +5332,7 @@ mod tests {
                         url: "https://www.lph-nm.biz",
                         raw_url: "https://www.lph-nm.biz",
                         icon: None,
+                        icon_mimetype: None,
                         full_keyword: "los",
                         block_id: 0,
                         advertiser: "Los Pollos Hermanos",
@@ -4899,6 +5541,7 @@ mod tests {
                         url: "https://www.yelp.com/search?find_desc=ramen",
                         title: "ramen",
                         icon: None,
+                        icon_mimetype: None,
                         score: 0.5,
                         has_location_sign: false,
                         subject_exact_match: true,

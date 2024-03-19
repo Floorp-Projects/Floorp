@@ -278,6 +278,9 @@ pub mod test_utils {
             }
         }
 
+        /// Attempt to run all upgrades up to a specific version.
+        ///
+        /// This will result in a panic if an upgrade fails to run.
         pub fn upgrade_to(&self, version: u32) {
             let mut conn = self.open();
             let tx = conn.transaction().unwrap();
@@ -293,6 +296,9 @@ pub mod test_utils {
             tx.commit().unwrap();
         }
 
+        /// Attempt to run all upgrades
+        ///
+        /// This will result in a panic if an upgrade fails to run.
         pub fn run_all_upgrades(&self) {
             let current_version = get_schema_version(&self.open()).unwrap();
             for version in current_version..CI::END_VERSION {

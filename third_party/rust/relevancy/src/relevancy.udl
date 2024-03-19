@@ -1,0 +1,106 @@
+namespace relevancy { };
+
+[Error]
+interface RelevancyApiError {
+    Unexpected(string reason);
+};
+
+// Top-level class for the Relevancy component
+interface RelevancyStore {
+    // Construct a new RelevancyStore
+    [Throws=RelevancyApiError]
+    constructor(string dbpath);
+
+    // Ingest the top URLs by frequency to build up the user's interest vector
+    [Throws=RelevancyApiError]
+    void ingest(sequence<string> top_urls);
+
+    // Calculate metrics for the user's interest vector in order to measure how strongly we're
+    // identifying interests.  See the `InterestMetrics` struct for details.
+    [Throws=RelevancyApiError]
+    InterestMetrics calculate_metrics();
+
+    // Get the interest vector for the user.
+    //
+    // This is intended to be show to the user in an `about:` page so that users can judge if it
+    // feels correct.
+    [Throws=RelevancyApiError]
+    InterestVector user_interest_vector();
+};
+
+enum Interest {
+    "Animals",
+    "Arts",
+    "Autos",
+    "Business",
+    "Career",
+    "Education",
+    "Fashion",
+    "Finance",
+    "Food",
+    "Government",
+    "Health",
+    "Hobbies",
+    "Home",
+    "News",
+    "RealEstate",
+    "Society",
+    "Sports",
+    "Tech",
+    "Travel",
+    "Inconclusive",
+};
+
+// Interest metrics that we want to send to Glean as part of the validation process.  These contain
+// the cosine similarity when comparing the user's interest against various interest vectors that
+// consumers may use.
+//
+// Cosine similary was chosen because it seems easy to calculate.  This was then matched against
+// some semi-plausible real-world interest vectors that consumers might use.  This is all up for
+// debate and we may decide to switch to some other metrics.
+//
+// Similarity values are transformed to integers by multiplying the floating point value by 1000 and
+// rounding.  This is to make them compatible with Glean's distribution metrics.
+dictionary InterestMetrics {
+    // Similarity between the user's interest vector and an interest vector where the element for
+    // the user's top interest is copied, but all other interests are set to zero.  This measures
+    // the highest possible similarity with consumers that used interest vectors with a single
+    // interest set.
+    u32 top_single_interest_similarity;
+
+    // The same as before, but the top 2 interests are copied. This measures the highest possible
+    // similarity with consumers that used interest vectors with a two interests (note: this means
+    // they would need to choose the user's top two interests and have the exact same proportion
+    // between them as the user).
+    u32 top_2interest_similarity;
+
+    // The same as before, but the top 3 interests are copied.
+    u32 top_3interest_similarity;
+};
+
+// Vector storing a count value for each interest
+//
+// Here "vector" refers to the mathematical object, not a Rust `Vec`.  It always has a fixed
+// number of elements.
+dictionary InterestVector {
+    u32 animals;
+    u32 arts;
+    u32 autos;
+    u32 business;
+    u32 career;
+    u32 education;
+    u32 fashion;
+    u32 finance;
+    u32 food;
+    u32 government;
+    u32 health;
+    u32 hobbies;
+    u32 home;
+    u32 news;
+    u32 real_estate;
+    u32 society;
+    u32 sports;
+    u32 tech;
+    u32 travel;
+    u32 inconclusive;
+};

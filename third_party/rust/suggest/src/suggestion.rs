@@ -29,6 +29,7 @@ pub enum Suggestion {
         url: String,
         raw_url: String,
         icon: Option<Vec<u8>>,
+        icon_mimetype: Option<String>,
         full_keyword: String,
         block_id: i64,
         advertiser: String,
@@ -48,6 +49,7 @@ pub enum Suggestion {
         title: String,
         url: String,
         icon: Option<Vec<u8>>,
+        icon_mimetype: Option<String>,
         full_keyword: String,
     },
     Amo {
@@ -64,6 +66,7 @@ pub enum Suggestion {
         url: String,
         title: String,
         icon: Option<Vec<u8>>,
+        icon_mimetype: Option<String>,
         score: f64,
         has_location_sign: bool,
         subject_exact_match: bool,
