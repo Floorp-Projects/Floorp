@@ -90,7 +90,7 @@ export class _TopSites extends React.PureComponent {
     // We hide 2 sites per row when not in the wide layout.
     let sitesPerRow = TOP_SITES_MAX_SITES_PER_ROW;
     // $break-point-widest = 1072px (from _variables.scss)
-    if (!global.matchMedia(`(min-width: 1072px)`).matches) {
+    if (!globalThis.matchMedia(`(min-width: 1072px)`).matches) {
       sitesPerRow -= 2;
     }
     return this.props.TopSites.rows.slice(

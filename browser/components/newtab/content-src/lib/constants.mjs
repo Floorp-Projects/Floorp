@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 export const IS_NEWTAB =
-  global.document && global.document.documentURI === "about:newtab";
+  globalThis.document && globalThis.document.documentURI === "about:newtab";
 export const NEWTAB_DARK_THEME = {
   ntp_background: {
     r: 42,

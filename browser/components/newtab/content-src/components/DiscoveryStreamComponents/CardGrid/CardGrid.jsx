@@ -28,7 +28,7 @@ export function DSSubHeader({ children }) {
   );
 }
 
-export function OnboardingExperience({ dispatch, windowObj = global }) {
+export function OnboardingExperience({ dispatch, windowObj = globalThis }) {
   const [dismissed, setDismissed] = useState(false);
   const [maxHeight, setMaxHeight] = useState(null);
   const heightElement = useRef(null);

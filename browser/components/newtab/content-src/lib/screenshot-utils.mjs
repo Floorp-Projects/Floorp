@@ -30,7 +30,7 @@ export const ScreenshotUtils = {
     }
     if (this.isBlob(false, remoteImage)) {
       return {
-        url: global.URL.createObjectURL(remoteImage.data),
+        url: globalThis.URL.createObjectURL(remoteImage.data),
         path: remoteImage.path,
       };
     }
@@ -41,7 +41,7 @@ export const ScreenshotUtils = {
   // This should always be called with a local image and not a remote image.
   maybeRevokeBlobObjectURL(localImage) {
     if (this.isBlob(true, localImage)) {
-      global.URL.revokeObjectURL(localImage.url);
+      globalThis.URL.revokeObjectURL(localImage.url);
     }
   },
 

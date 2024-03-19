@@ -142,8 +142,8 @@ export class TopSiteImpressionWrapper extends React.PureComponent {
 }
 
 TopSiteImpressionWrapper.defaultProps = {
-  IntersectionObserver: global.IntersectionObserver,
-  document: global.document,
+  IntersectionObserver: globalThis.IntersectionObserver,
+  document: globalThis.document,
   actionType: null,
   tile: null,
 };
