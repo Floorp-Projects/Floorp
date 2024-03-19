@@ -21,7 +21,7 @@ function clear_state() {
 add_setup(async function () {
   // Set this env vars in order to test the code path where the
   // server URL can only be overridden from Dev Tools.
-  // See `isRunningTests` in `services/settings/Utils.jsm`.
+  // See `isRunningTests` in `services/settings/Utils.sys.mjs`.
   const before = Services.env.get("MOZ_DISABLE_NONLOCAL_CONNECTIONS");
   Services.env.set("MOZ_DISABLE_NONLOCAL_CONNECTIONS", "0");
 

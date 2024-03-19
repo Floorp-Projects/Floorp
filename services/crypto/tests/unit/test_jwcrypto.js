@@ -7,7 +7,7 @@ ChromeUtils.defineESModuleGetters(this, {
   jwcrypto: "resource://services-crypto/jwcrypto.sys.mjs",
 });
 
-// Enable logging from jwcrypto.jsm.
+// Enable logging from jwcrypto.sys.mjs.
 Services.prefs.setStringPref("services.crypto.jwcrypto.log.level", "Debug");
 
 add_task(async function test_jwe_roundtrip_ecdh_es_encryption() {
