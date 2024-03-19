@@ -111,7 +111,7 @@ function isTopLevel(path) {
   return path.parent.node.type === "Program";
 }
 
-function convertToExport(jscodeshift, path, name) {
+function convertToExport(jscodeshift, path) {
   const e = jscodeshift.exportNamedDeclaration(path.node);
   e.comments = [];
   e.comments = path.node.comments;

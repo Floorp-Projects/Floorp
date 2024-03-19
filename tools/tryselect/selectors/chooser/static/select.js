@@ -39,7 +39,7 @@ labels.click(function (e) {
 
 function selectAll(btn) {
   let checked = !!btn.value;
-  $("div.active label.filter-label").each(function (index) {
+  $("div.active label.filter-label").each(function () {
     $(this).find("input:checkbox")[0].checked = checked;
   });
   apply();

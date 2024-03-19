@@ -138,7 +138,7 @@ function getUnicharInputStream(filename, encoding) {
   return new CIS(fis, encoding, 8192, 0x0);
 }
 
-function getBinaryInputStream(filename, encoding) {
+function getBinaryInputStream(filename) {
   var file = dataDir.clone();
   file.append(filename);
 

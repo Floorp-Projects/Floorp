@@ -10,7 +10,7 @@ const pluralize = (count, noun, suffix = "s") =>
 var selected = [];
 
 var updateLabels = () => {
-  $(".tab-pane.active > .filter-label").each(function (index) {
+  $(".tab-pane.active > .filter-label").each(function () {
     let box = $("#" + this.htmlFor)[0];
     let method = box.checked ? "add" : "remove";
     $(this)[method + "Class"]("is-checked");
@@ -21,7 +21,7 @@ var apply = () => {
   let filters = {};
   let kinds = [];
 
-  $(".filter:checked").each(function (index) {
+  $(".filter:checked").each(function () {
     for (let kind of this.name.split(",")) {
       if (!kinds.includes(kind)) {
         kinds.push(kind);
@@ -76,7 +76,7 @@ var apply = () => {
 var applyChunks = () => {
   // For tasks that have a chunk filter applied, we handle that here.
   let filters = {};
-  $(".filter:text").each(function (index) {
+  $(".filter:text").each(function () {
     let value = $(this).val();
     if (value === "") {
       return;
