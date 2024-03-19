@@ -333,10 +333,7 @@ impl SanitizationKind {
             // TODO(emilio): Perhaps Layer should not be always sanitized? But
             // we sanitize @media and co, so this seems safer for now.
             CssRule::LayerStatement(..) |
-            CssRule::LayerBlock(..) |
-            // TODO(dshin): Same comment as Layer applies - shouldn't give away
-            // something like display size - erring on the side of "safe" for now.
-            CssRule::Scope(..) => false,
+            CssRule::LayerBlock(..) => false,
 
             CssRule::FontFace(..) | CssRule::Namespace(..) | CssRule::Style(..) => true,
 

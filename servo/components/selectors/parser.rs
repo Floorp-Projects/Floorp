@@ -438,9 +438,6 @@ pub enum ParseRelative {
     /// Allow selectors to start with a combinator, prepending a parent selector if so. Do nothing
     /// otherwise
     ForNesting,
-    /// Allow selectors to start with a combinator, prepending a scope selector if so. Do nothing
-    /// otherwise
-    ForScope,
     /// Treat as parse error if any selector begins with a combinator.
     No,
 }
@@ -468,23 +465,6 @@ impl<Impl: SelectorImpl> SelectorList<Impl> {
             input,
             SelectorParsingState::empty(),
             ForgivingParsing::No,
-            parse_relative,
-        )
-    }
-
-    pub fn parse_forgiving<'i, 't, P>(
-        parser: &P,
-        input: &mut CssParser<'i, 't>,
-        parse_relative: ParseRelative,
-    ) -> Result<Self, ParseError<'i, P::Error>>
-    where
-        P: Parser<'i, Impl = Impl>,
-    {
-        Self::parse_with_state(
-            parser,
-            input,
-            SelectorParsingState::empty(),
-            ForgivingParsing::Yes,
             parse_relative,
         )
     }
@@ -2622,14 +2602,9 @@ where
                 // combinator.
                 builder.push_combinator(combinator.unwrap_or(Combinator::Descendant));
             },
-            ParseRelative::ForNesting | ParseRelative::ForScope => {
+            ParseRelative::ForNesting => {
                 if let Ok(combinator) = combinator {
-                    let selector = match parse_relative {
-                        ParseRelative::ForHas | ParseRelative::No => unreachable!(),
-                        ParseRelative::ForNesting => Component::ParentSelector,
-                        ParseRelative::ForScope => Component::Scope,
-                    };
-                    builder.push_simple_selector(selector);
+                    builder.push_simple_selector(Component::ParentSelector);
                     builder.push_combinator(combinator);
                 }
             },
