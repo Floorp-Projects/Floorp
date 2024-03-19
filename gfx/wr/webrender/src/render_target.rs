@@ -19,7 +19,7 @@ use crate::gpu_types::{TransformPalette, ZBufferIdGenerator, MaskInstance, ClipS
 use crate::gpu_types::{ZBufferId, QuadSegment, PrimitiveInstanceData, TransformPaletteId};
 use crate::internal_types::{FastHashMap, TextureSource, CacheTextureId};
 use crate::picture::{SliceId, SurfaceInfo, ResolvedSurfaceTexture, TileCacheInstance};
-use crate::prepare::write_prim_blocks;
+use crate::quad;
 use crate::prim_store::{PrimitiveInstance, PrimitiveStore, PrimitiveScratchBuffer};
 use crate::prim_store::gradient::{
     FastLinearGradientInstance, LinearGradientInstance, RadialGradientInstance,
@@ -1050,7 +1050,7 @@ fn build_mask_tasks(
                 }
 
                 for tile in clip_store.visible_mask_tiles(&clip_instance) {
-                    let clip_prim_address = write_prim_blocks(
+                    let clip_prim_address = quad::write_prim_blocks(
                         &mut gpu_buffer_builder.f32,
                         rect,
                         rect,
@@ -1117,7 +1117,7 @@ fn build_mask_tasks(
                 spatial_tree,
             );
 
-            let main_prim_address = write_prim_blocks(
+            let main_prim_address = quad::write_prim_blocks(
                 &mut gpu_buffer_builder.f32,
                 task_world_rect.cast_unit(),
                 task_world_rect.cast_unit(),
