@@ -222,6 +222,16 @@ interface GleanCustomDistribution : GleanMetric {
   undefined accumulateSamples(sequence<long long> aSamples);
 
   /**
+   * Accumulates the provided single signed sample in the metric.
+   *
+   * @param aSample - The sample to be recorded by the metric.
+   *
+   * Notes: Discards any negative value of `sample` and reports an
+   * `ErrorType::InvalidValue`.
+   */
+  undefined accumulateSingleSample(long long aSample);
+
+  /**
    * **Test-only API**
    *
    * Gets the currently stored value as a DistributionData.
