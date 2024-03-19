@@ -445,8 +445,7 @@ gfxPlatform::gfxPlatform()
       mDisplayInfoCollector(this, &gfxPlatform::GetDisplayInfo),
       mOverlayInfoCollector(this, &gfxPlatform::GetOverlayInfo),
       mSwapChainInfoCollector(this, &gfxPlatform::GetSwapChainInfo),
-      mCompositorBackend(layers::LayersBackend::LAYERS_NONE),
-      mScreenDepth(0) {
+      mCompositorBackend(layers::LayersBackend::LAYERS_NONE) {
   mAllowDownloadableFonts = UNINITIALIZED_VALUE;
 
   InitBackendPrefs(GetBackendPrefs());
@@ -912,7 +911,6 @@ void gfxPlatform::Init() {
 #else
 #  error "No gfxPlatform implementation available"
 #endif
-  gPlatform->PopulateScreenInfo();
   gPlatform->InitAcceleration();
   gPlatform->InitWebRenderConfig();
 
@@ -1607,27 +1605,6 @@ already_AddRefed<DataSourceSurface> gfxPlatform::GetWrappedDataSourceSurface(
   result->AddUserData(&kThebesSurface, srcSurfUD, SourceSurfaceDestroyed);
 
   return result.forget();
-}
-
-void gfxPlatform::PopulateScreenInfo() {
-  nsCOMPtr<nsIScreenManager> manager =
-      do_GetService("@mozilla.org/gfx/screenmanager;1");
-  MOZ_ASSERT(manager, "failed to get nsIScreenManager");
-
-  nsCOMPtr<nsIScreen> screen;
-  manager->GetPrimaryScreen(getter_AddRefs(screen));
-  if (!screen) {
-    // This can happen in xpcshell, for instance
-    return;
-  }
-
-  screen->GetColorDepth(&mScreenDepth);
-  if (XRE_IsParentProcess()) {
-    gfxVars::SetScreenDepth(mScreenDepth);
-  }
-
-  int left, top;
-  screen->GetRect(&left, &top, &mScreenSize.width, &mScreenSize.height);
 }
 
 bool gfxPlatform::SupportsAzureContentForDrawTarget(DrawTarget* aTarget) {

@@ -57,8 +57,6 @@ int MaxTouchPoints() {
 
 // ==================================================================
 void PopulateCSSProperties() {
-  glean::characteristics::video_dynamic_range.Set(
-      LookAndFeel::GetInt(LookAndFeel::IntID::VideoDynamicRange));
   glean::characteristics::prefers_reduced_transparency.Set(
       LookAndFeel::GetInt(LookAndFeel::IntID::PrefersReducedTransparency));
   glean::characteristics::prefers_reduced_motion.Set(
@@ -110,6 +108,8 @@ void PopulateScreenProperties() {
   const LayoutDeviceIntRect rect = screen->GetRect();
   glean::characteristics::screen_height.Set(rect.Height());
   glean::characteristics::screen_width.Set(rect.Width());
+
+  glean::characteristics::video_dynamic_range.Set(screen->GetIsHDR());
 }
 
 void PopulateMissingFonts() {
