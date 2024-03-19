@@ -5,7 +5,7 @@
 #include "nsISupports.idl"
 
 interface nsIAutoCompleteResult;
-interface nsIFormAutoCompleteObserver;
+interface nsIFormFillCompleteObserver;
 
 webidl HTMLInputElement;
 
@@ -22,7 +22,7 @@ interface nsILoginAutoCompleteSearch : nsISupports {
   void startSearch(in AString aSearchString,
                    in nsIAutoCompleteResult aPreviousResult,
                    in HTMLInputElement aElement,
-                   in nsIFormAutoCompleteObserver aListener);
+                   in nsIFormFillCompleteObserver aListener);
 
   /**
    * Stop a previously-started search.

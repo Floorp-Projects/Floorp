@@ -33,10 +33,10 @@ function isAutocompleteDisabled(aField) {
  * figuring out the most appropriate message manager to use,
  * and what things to send.
  *
- * It is assumed that nsFormAutoComplete will only ever use
+ * It is assumed that FormHistoryAutoComplete will only ever use
  * one instance at a time, and will not attempt to perform more
  * than one search request with the same instance at a time.
- * However, nsFormAutoComplete might call remove() any number of
+ * However, FormHistoryAutoComplete might call remove() any number of
  * times with the same instance of the client.
  *
  * @param {object} clientInfo
@@ -193,7 +193,7 @@ export class FormHistoryClient {
  *
  * @implements {nsIAutoCompleteResult}
  */
-export class FormAutoCompleteResult {
+export class FormHistoryAutoCompleteResult {
   constructor(client, entries, fieldName, searchString) {
     this.client = client;
     this.entries = entries;
@@ -395,7 +395,7 @@ export class FormAutoCompleteResult {
   }
 }
 
-export class FormAutoComplete {
+export class FormHistoryAutoComplete {
   constructor() {
     // Preferences. Add observer so we get notified of changes.
     this._prefBranch = Services.prefs.getBranch("browser.formfill.");
@@ -407,9 +407,9 @@ export class FormAutoComplete {
     Services.obs.addObserver(this, "autocomplete-will-enter-text");
   }
 
-  classID = Components.ID("{c11c21b2-71c9-4f87-a0f8-5e13f50495fd}");
+  classID = Components.ID("{23530265-31d1-4ee9-864c-c081975fb7bc}");
   QueryInterface = ChromeUtils.generateQI([
-    "nsIFormAutoComplete",
+    "nsIFormHistoryAutoComplete",
     "nsISupportsWeakReference",
   ]);
 
@@ -465,8 +465,7 @@ export class FormAutoComplete {
     if (!this._debug) {
       return;
     }
-    dump("FormAutoComplete: " + message + "\n");
-    Services.console.logStringMessage("FormAutoComplete: " + message);
+    Services.console.logStringMessage("FormHistoryAutoComplete: " + message);
   }
 
   /*
@@ -478,7 +477,7 @@ export class FormAutoComplete {
    * aField -- HTMLInputElement being autocompleted (may be null if from chrome)
    * aPreviousResult -- previous search result, if any.
    * aAddDataList -- add results from list=datalist for aField.
-   * aListener -- nsIFormAutoCompleteObserver that listens for the nsIAutoCompleteResult
+   * aListener -- nsIFormHistoryAutoCompleteObserver that listens for the nsIAutoCompleteResult
    *              that may be returned asynchronously.
    */
   autoCompleteSearchAsync(
@@ -507,7 +506,7 @@ export class FormAutoComplete {
     }
 
     // If we have datalist results, they become our "empty" result.
-    const result = new FormAutoCompleteResult(
+    const result = new FormHistoryAutoCompleteResult(
       client,
       [],
       aInputName,

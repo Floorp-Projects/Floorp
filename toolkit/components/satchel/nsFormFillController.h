@@ -13,7 +13,7 @@
 #include "nsIAutoCompleteController.h"
 #include "nsIAutoCompletePopup.h"
 #include "nsIDOMEventListener.h"
-#include "nsIFormAutoComplete.h"
+#include "nsIFormHistoryAutoComplete.h"
 #include "nsCOMPtr.h"
 #include "nsStubMutationObserver.h"
 #include "nsTHashMap.h"
@@ -37,7 +37,7 @@ class HTMLInputElement;
 class nsFormFillController final : public nsIFormFillController,
                                    public nsIAutoCompleteInput,
                                    public nsIAutoCompleteSearch,
-                                   public nsIFormAutoCompleteObserver,
+                                   public nsIFormFillCompleteObserver,
                                    public nsIDOMEventListener,
                                    public nsIObserver,
                                    public nsMultiMutationObserver {
@@ -46,7 +46,7 @@ class nsFormFillController final : public nsIFormFillController,
   NS_DECL_NSIFORMFILLCONTROLLER
   NS_DECL_NSIAUTOCOMPLETESEARCH
   NS_DECL_NSIAUTOCOMPLETEINPUT
-  NS_DECL_NSIFORMAUTOCOMPLETEOBSERVER
+  NS_DECL_NSIFORMFILLCOMPLETEOBSERVER
   NS_DECL_NSIDOMEVENTLISTENER
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIMUTATIONOBSERVER
@@ -122,7 +122,7 @@ class nsFormFillController final : public nsIFormFillController,
   nsCOMPtr<nsIAutoCompleteObserver> mLastListener;
 
   // This is cleared by StopSearch().
-  nsCOMPtr<nsIFormAutoComplete> mLastFormAutoComplete;
+  nsCOMPtr<nsIFormHistoryAutoComplete> mLastFormHistoryAutoComplete;
   nsString mLastSearchString;
 
   nsTHashMap<nsPtrHashKey<const nsINode>, bool> mPwmgrInputs;

@@ -23,7 +23,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_ui.h"
 #include "nsCRT.h"
-#include "nsIFormAutoComplete.h"
+#include "nsIFormHistoryAutoComplete.h"
 #include "nsString.h"
 #include "nsPIDOMWindow.h"
 #include "nsIAutoCompleteResult.h"
@@ -47,12 +47,13 @@ using mozilla::LogLevel;
 
 static mozilla::LazyLogModule sLogger("satchel");
 
-static nsIFormAutoComplete* GetFormAutoComplete() {
-  static nsCOMPtr<nsIFormAutoComplete> sInstance;
+static nsIFormHistoryAutoComplete* GetFormHistoryAutoComplete() {
+  static nsCOMPtr<nsIFormHistoryAutoComplete> sInstance;
   static bool sInitialized = false;
   if (!sInitialized) {
     nsresult rv;
-    sInstance = do_GetService("@mozilla.org/satchel/form-autocomplete;1", &rv);
+    sInstance =
+        do_GetService("@mozilla.org/satchel/form-history-autocomplete;1", &rv);
 
     if (NS_SUCCEEDED(rv)) {
       ClearOnShutdown(&sInstance);
@@ -64,14 +65,14 @@ static nsIFormAutoComplete* GetFormAutoComplete() {
 
 NS_IMPL_CYCLE_COLLECTION(nsFormFillController, mController, mLoginManagerAC,
                          mFocusedPopup, mPopups, mLastListener,
-                         mLastFormAutoComplete)
+                         mLastFormHistoryAutoComplete)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFormFillController)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIFormFillController)
   NS_INTERFACE_MAP_ENTRY(nsIFormFillController)
   NS_INTERFACE_MAP_ENTRY(nsIAutoCompleteInput)
   NS_INTERFACE_MAP_ENTRY(nsIAutoCompleteSearch)
-  NS_INTERFACE_MAP_ENTRY(nsIFormAutoCompleteObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIFormFillCompleteObserver)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
@@ -705,13 +706,13 @@ nsFormFillController::StartSearch(const nsAString& aSearchString,
       MaybeObserveDataListMutations();
     }
 
-    auto formAutoComplete = GetFormAutoComplete();
-    NS_ENSURE_TRUE(formAutoComplete, NS_ERROR_FAILURE);
+    auto* formHistoryAutoComplete = GetFormHistoryAutoComplete();
+    NS_ENSURE_TRUE(formHistoryAutoComplete, NS_ERROR_FAILURE);
 
-    formAutoComplete->AutoCompleteSearchAsync(aSearchParam, aSearchString,
-                                              mFocusedInput, aPreviousResult,
-                                              addDataList, this);
-    mLastFormAutoComplete = formAutoComplete;
+    formHistoryAutoComplete->AutoCompleteSearchAsync(
+        aSearchParam, aSearchString, mFocusedInput, aPreviousResult,
+        addDataList, this);
+    mLastFormHistoryAutoComplete = formHistoryAutoComplete;
   }
 
   return NS_OK;
@@ -760,10 +761,10 @@ void nsFormFillController::RevalidateDataList() {
 NS_IMETHODIMP
 nsFormFillController::StopSearch() {
   // Make sure to stop and clear this, otherwise the controller will prevent
-  // mLastFormAutoComplete from being deleted.
-  if (mLastFormAutoComplete) {
-    mLastFormAutoComplete->StopAutoCompleteSearch();
-    mLastFormAutoComplete = nullptr;
+  // mLastFormHistoryAutoComplete from being deleted.
+  if (mLastFormHistoryAutoComplete) {
+    mLastFormHistoryAutoComplete->StopAutoCompleteSearch();
+    mLastFormHistoryAutoComplete = nullptr;
   }
 
   if (mLoginManagerAC) {
@@ -773,7 +774,7 @@ nsFormFillController::StopSearch() {
 }
 
 ////////////////////////////////////////////////////////////////////////
-//// nsIFormAutoCompleteObserver
+//// nsIFormFillCompleteObserver
 
 NS_IMETHODIMP
 nsFormFillController::OnSearchCompletion(nsIAutoCompleteResult* aResult) {
