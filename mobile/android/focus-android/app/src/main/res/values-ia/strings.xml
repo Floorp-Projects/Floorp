@@ -85,7 +85,11 @@
 
     <string name="notification_erase_title_android_14">Eliminar le chronologia de navigation?</string>
 
-    <string name="notification_erase_text_android_14">Tocca o clara iste aviso pro cancellar con securitate tu chronologia de navigation.</string>
+    <string name="notification_erase_text_android_14" moz:RemovedIn="124" tools:ignore="UnusedResources">Tocca o clara iste aviso pro cancellar con securitate tu chronologia de navigation.</string>
+
+    <!-- Text shown in the notification description that pops up to remind the user that a browsing session is active
+    for Android 14+. -->
+    <string name="notification_erase_text_android_14_1">Tocca o glissa iste aviso pro cancellar con securitate tu chronologia de navigation.</string>
 
     <string name="notification_erase_text">Eliminar le chronologia de navigation</string>
 
