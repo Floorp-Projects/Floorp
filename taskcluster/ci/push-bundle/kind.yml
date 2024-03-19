@@ -57,10 +57,6 @@ jobs:
                 by-build-type:
                     (fenix-nightly|fenix-release|fenix-beta): fenix
                     default: focus-android
-            google-play-track:
-                by-build-type:
-                    .*-nightly: internal
-                    default: null
         shipping-phase: push
         shipping-product: firefox-android
         treeherder:
