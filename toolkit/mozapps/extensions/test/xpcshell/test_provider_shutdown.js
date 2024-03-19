@@ -31,7 +31,7 @@ function mockAddonProvider(aName) {
     mockProvider.doneResolve = resolve;
     mockProvider.doneReject = reject;
   });
-  mockProvider.shutdownPromise = new Promise((resolve, reject) => {
+  mockProvider.shutdownPromise = new Promise(resolve => {
     mockProvider.shutdownResolve = resolve;
   });
   return mockProvider;

@@ -25,7 +25,7 @@ add_task(async function test_systems_update_uninstall_check() {
   await setupSystemAddonConditions(initialSetup, distroDir);
 
   const testserver = createHttpServer({ hosts: ["example.com"] });
-  testserver.registerPathHandler("/update.json", (request, response) => {
+  testserver.registerPathHandler("/update.json", request => {
     Assert.ok(
       !request._queryString.includes("system2@tests.mozilla.org"),
       "System addon should not request update from normal update process"

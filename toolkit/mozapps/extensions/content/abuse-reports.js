@@ -185,7 +185,7 @@ async function openAbuseReport({ addonId, reportEntryPoint }) {
 // to be async, but it is so that both the implementations will be providing
 // the same type signatures (returning a promise) to the callers, independently
 // from which abuse reporting feature is enabled.
-async function openAbuseReportAMOForm({ addonId, reportEntryPoint }) {
+async function openAbuseReportAMOForm({ addonId }) {
   const amoUrl = AbuseReporter.getAMOFormURL({ addonId });
   windowRoot.ownerGlobal.openTrustedLinkIn(amoUrl, "tab", {
     // Make sure the newly open tab is going to be focused, independently

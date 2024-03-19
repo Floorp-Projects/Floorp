@@ -214,7 +214,7 @@ export class WebAPI extends APIObject {
 
     super.init(window, broker, {});
 
-    window.addEventListener("unload", event => {
+    window.addEventListener("unload", () => {
       this.broker.sendCleanup(this.allInstalls);
     });
   }
@@ -263,7 +263,7 @@ export class WebAPI extends APIObject {
     return lazy.AMO_ABUSEREPORT;
   }
 
-  eventListenerAdded(type) {
+  eventListenerAdded() {
     if (this.listenerCount == 0) {
       this.broker.setAddonListener(data => {
         let event = new this.window.AddonEvent(data.event, data);
@@ -273,7 +273,7 @@ export class WebAPI extends APIObject {
     this.listenerCount++;
   }
 
-  eventListenerRemoved(type) {
+  eventListenerRemoved() {
     this.listenerCount--;
     if (this.listenerCount == 0) {
       this.broker.setAddonListener(null);

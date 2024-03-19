@@ -18,7 +18,7 @@ function installLocale() {
   return new Promise(resolve => {
     gInstall = gProvider.createInstalls(gInstallProperties)[0];
     gInstall.addTestListener({
-      onInstallEnded(aInstall) {
+      onInstallEnded() {
         gInstall.removeTestListener(this);
         resolve();
       },

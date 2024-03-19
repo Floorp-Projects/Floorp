@@ -512,7 +512,7 @@ var Harness = {
 
   // nsIObserver
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     var installInfo = subject.wrappedJSObject;
     switch (topic) {
       case "addon-install-started":

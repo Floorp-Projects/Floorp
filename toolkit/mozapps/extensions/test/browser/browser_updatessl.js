@@ -25,14 +25,7 @@ var gStart = 0;
 var gLast = 0;
 
 var HTTPObserver = {
-  observeActivity(
-    aChannel,
-    aType,
-    aSubtype,
-    aTimestamp,
-    aSizeData,
-    aStringData
-  ) {
+  observeActivity(aChannel, aType, aSubtype) {
     aChannel.QueryInterface(Ci.nsIChannel);
 
     dump(

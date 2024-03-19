@@ -52,7 +52,7 @@ async function waitForProgressNotification(
   let topic = getObserverTopic(notificationId);
 
   let observerPromise = new Promise(resolve => {
-    Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
+    Services.obs.addObserver(function observer(aSubject, aTopic) {
       // Ignore the progress notification unless that is the notification we want
       if (
         notificationId != PROGRESS_NOTIFICATION &&
@@ -208,7 +208,7 @@ async function waitForNotification(
   let observerPromise;
   if (aId !== "addon-webext-permissions") {
     observerPromise = new Promise(resolve => {
-      Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
+      Services.obs.addObserver(function observer(aSubject, aTopic) {
         // Ignore the progress notification unless that is the notification we want
         if (
           aId != PROGRESS_NOTIFICATION &&
@@ -298,7 +298,7 @@ function acceptInstallDialog(installDialog) {
   installDialog.button.click();
 }
 
-async function waitForSingleNotification(aCallback) {
+async function waitForSingleNotification() {
   while (PopupNotifications.panel.childNodes.length != 1) {
     await new Promise(resolve => executeSoon(resolve));
 
@@ -1477,7 +1477,7 @@ var TESTS = [
 var gTestStart = null;
 
 var XPInstallObserver = {
-  observe(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic) {
     var installInfo = aSubject.wrappedJSObject;
     info(
       "Observed " + aTopic + " for " + installInfo.installs.length + " installs"

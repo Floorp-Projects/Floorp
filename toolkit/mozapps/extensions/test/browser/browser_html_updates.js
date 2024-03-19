@@ -53,7 +53,7 @@ add_task(async function testChangeAutoUpdates() {
   let win = await loadInitialView("extension");
   let doc = win.document;
 
-  let getInputs = updateRow => ({
+  let getInputs = () => ({
     default: updatesRow.querySelector('input[value="1"]'),
     on: updatesRow.querySelector('input[value="2"]'),
     off: updatesRow.querySelector('input[value="0"]'),

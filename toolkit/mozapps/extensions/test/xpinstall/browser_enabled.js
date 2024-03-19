@@ -51,17 +51,17 @@ add_task(async function test_disabled() {
 add_task(async function test_disabled2() {
   let installDisabledCalled = false;
 
-  Harness.installDisabledCallback = installInfo => {
+  Harness.installDisabledCallback = () => {
     installDisabledCalled = true;
     ok(true, "Saw installation disabled");
   };
 
-  Harness.installBlockedCallback = installInfo => {
+  Harness.installBlockedCallback = () => {
     ok(false, "Should never see the blocked install notification");
     return false;
   };
 
-  Harness.installConfirmCallback = panel => {
+  Harness.installConfirmCallback = () => {
     ok(false, "Should never see an install confirmation dialog");
     return false;
   };

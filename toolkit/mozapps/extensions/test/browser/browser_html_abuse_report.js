@@ -603,7 +603,7 @@ add_task(async function test_abusereport_messagebars() {
         await AbuseReportTestUtils.promiseReportRendered();
         AbuseReportTestUtils.triggerSubmit("fake-reason", "fake-message");
       },
-      ([submittingDetails, submittedDetails]) => {
+      ([, submittedDetails]) => {
         const buttonsL10nId = Array.from(
           submittedDetails.messagebar.querySelectorAll("button")
         ).map(el => el.getAttribute("data-l10n-id"));
@@ -634,10 +634,8 @@ add_task(async function test_abusereport_messagebars() {
       await addon.uninstall(true);
       AbuseReportTestUtils.triggerSubmit("fake-reason", "fake-message");
     };
-    const assertMessageBarDetails = async ([
-      submittingDetails,
-      submittedDetails,
-    ]) => AbuseReportTestUtils.assertFluentStrings(submittedDetails.messagebar);
+    const assertMessageBarDetails = async ([, submittedDetails]) =>
+      AbuseReportTestUtils.assertFluentStrings(submittedDetails.messagebar);
     await assertMessageBars(
       ["submitting", "submitted-and-removed"],
       testFn,
@@ -657,7 +655,7 @@ add_task(async function test_abusereport_messagebars() {
       await AbuseReportTestUtils.promiseReportRendered();
       AbuseReportTestUtils.triggerSubmit("fake-reason", "fake-message");
     },
-    ([submittingDetails, submittedDetails]) =>
+    ([, submittedDetails]) =>
       AbuseReportTestUtils.assertFluentStrings(submittedDetails.messagebar)
   );
 

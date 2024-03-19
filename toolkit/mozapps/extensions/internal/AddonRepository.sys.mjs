@@ -466,13 +466,13 @@ export var AddonRepository = {
         request.open("GET", url, true);
         request.responseType = "json";
 
-        request.addEventListener("error", aEvent => {
+        request.addEventListener("error", () => {
           reject(new Error(`GET ${url} failed`));
         });
-        request.addEventListener("timeout", aEvent => {
+        request.addEventListener("timeout", () => {
           reject(new Error(`GET ${url} timed out`));
         });
-        request.addEventListener("load", aEvent => {
+        request.addEventListener("load", () => {
           let response = request.response;
           if (!response || (request.status != 200 && request.status != 0)) {
             reject(new Error(`GET ${url} failed (status ${request.status})`));

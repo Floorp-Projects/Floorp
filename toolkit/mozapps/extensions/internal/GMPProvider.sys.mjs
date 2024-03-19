@@ -340,7 +340,7 @@ GMPWrapper.prototype = {
     return { source: "gmp-plugin" };
   },
 
-  isCompatibleWith(aAppVersion, aPlatformVersion) {
+  isCompatibleWith() {
     return true;
   },
 
@@ -377,7 +377,7 @@ GMPWrapper.prototype = {
    * Widevine is not yet installed, or if the user toggles prefs to enable EME.
    * For the function used in those cases see `checkForUpdates`.
    */
-  findUpdates(aListener, aReason, aAppVersion, aPlatformVersion) {
+  findUpdates(aListener, aReason) {
     this._log.trace(
       "findUpdates() - " + this._plugin.id + " - reason=" + aReason
     );
@@ -895,7 +895,7 @@ var GMPProvider = {
     }
   },
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     if (topic == FIRST_CONTENT_PROCESS_TOPIC) {
       lazy.AddonManagerPrivate.registerProvider(GMPProvider, ["plugin"]);
       Services.obs.notifyObservers(null, "gmp-provider-registered");

@@ -595,25 +595,22 @@ add_task(async function test_params() {
   let resultsPromise = new Promise(resolve => {
     let results = new Map();
 
-    testserver.registerPathHandler(
-      "/data/param_test.json",
-      function (request, response) {
-        let params = new URLSearchParams(request.queryString);
-        let itemId = params.get("item_id");
-        ok(
-          !results.has(itemId),
-          `Should not see a duplicate request for item ${itemId}`
-        );
+    testserver.registerPathHandler("/data/param_test.json", function (request) {
+      let params = new URLSearchParams(request.queryString);
+      let itemId = params.get("item_id");
+      ok(
+        !results.has(itemId),
+        `Should not see a duplicate request for item ${itemId}`
+      );
 
-        results.set(itemId, params);
+      results.set(itemId, params);
 
-        if (results.size === PARAM_IDS.length) {
-          resolve(results);
-        }
-
-        request.setStatusLine(null, 500, "Server Error");
+      if (results.size === PARAM_IDS.length) {
+        resolve(results);
       }
-    );
+
+      request.setStatusLine(null, 500, "Server Error");
+    });
   });
 
   let addons = await getAddons(PARAM_IDS);
@@ -746,11 +743,11 @@ add_task(async function test_no_auto_update() {
         equal(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
       },
 
-      onDownloadFailed(aInstall) {
+      onDownloadFailed() {
         ok(false, "Should not have seen onDownloadFailed event");
       },
 
-      onDownloadCancelled(aInstall) {
+      onDownloadCancelled() {
         ok(false, "Should not have seen onDownloadCancelled event");
       },
 
@@ -764,11 +761,11 @@ add_task(async function test_no_auto_update() {
         resolve();
       },
 
-      onInstallFailed(aInstall) {
+      onInstallFailed() {
         ok(false, "Should not have seen onInstallFailed event");
       },
 
-      onInstallCancelled(aInstall) {
+      onInstallCancelled() {
         ok(false, "Should not have seen onInstallCancelled event");
       },
     };

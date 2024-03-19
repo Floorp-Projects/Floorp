@@ -22,7 +22,7 @@ AddonManager.addExternalExtensionLoader({
     Object.assign(addon, manifest);
     return addon;
   },
-  loadScope(addon, file) {
+  loadScope() {
     return {
       install() {},
       uninstall() {},

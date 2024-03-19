@@ -20,7 +20,7 @@ const systemDefaults = FileUtils.getDir("ProfD", [
 systemDefaults.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
 registerDirectory("XREAppFeat", systemDefaults);
 
-AddonTestUtils.usePrivilegedSignatures = id => "system";
+AddonTestUtils.usePrivilegedSignatures = () => "system";
 
 const ADDON_ID = "updates@test";
 

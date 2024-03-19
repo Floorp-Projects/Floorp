@@ -27,7 +27,7 @@ function makeCancelListener() {
   });
 
   return {
-    onUpdateAvailable(addon, install) {
+    onUpdateAvailable() {
       reject("Should not have seen onUpdateAvailable notification");
     },
 

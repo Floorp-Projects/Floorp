@@ -36,7 +36,7 @@ function test() {
   );
 }
 
-function confirm_install(panel) {
+function confirm_install() {
   ok(false, "Should not see the install dialog");
   return false;
 }

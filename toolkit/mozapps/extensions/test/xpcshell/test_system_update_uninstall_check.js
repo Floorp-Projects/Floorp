@@ -35,7 +35,7 @@ add_task(async function test_systems_update_uninstall_check() {
     },
   ]);
 
-  const listener = (msg, { method, params, reason }) => {
+  const listener = (msg, { method, params }) => {
     if (params.id === "system2@tests.mozilla.org" && method === "uninstall") {
       Assert.ok(
         false,

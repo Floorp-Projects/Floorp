@@ -99,11 +99,11 @@ add_task(async function test_can_reload_permanent_addon() {
   let disabledCalled = false;
   let enabledCalled = false;
   AddonManager.addAddonListener({
-    onDisabled: aAddon => {
+    onDisabled: () => {
       Assert.ok(!enabledCalled);
       disabledCalled = true;
     },
-    onEnabled: aAddon => {
+    onEnabled: () => {
       Assert.ok(disabledCalled);
       enabledCalled = true;
     },

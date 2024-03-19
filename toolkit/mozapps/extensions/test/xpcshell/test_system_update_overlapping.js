@@ -7,7 +7,7 @@ distroDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
 registerDirectory("XREAppFeat", distroDir);
 add_task(() => initSystemAddonDirs());
 
-AddonTestUtils.usePrivilegedSignatures = id => "system";
+AddonTestUtils.usePrivilegedSignatures = () => "system";
 
 /**
  * Defines the set of initial conditions to run each test against. Each should

@@ -322,12 +322,12 @@ function checkForUpdate(addon) {
             onDownloadFailed: failed,
             onInstallCancelled: failed,
             onInstallFailed: failed,
-            onInstallEnded: (...args) => {
+            onInstallEnded: () => {
               detachUpdateHandler(install);
               install.removeListener(updateListener);
               resolve({ installed: true, pending: false, found: true });
             },
-            onInstallPostponed: (...args) => {
+            onInstallPostponed: () => {
               detachUpdateHandler(install);
               install.removeListener(updateListener);
               resolve({ installed: false, pending: true, found: true });
@@ -375,7 +375,7 @@ const OPTIONS_TYPE_MAP = {
 
 // Check if an add-on has the provided options type, accounting for the pref
 // to disable inline options.
-function getOptionsType(addon, type) {
+function getOptionsType(addon) {
   return OPTIONS_TYPE_MAP[addon.optionsType];
 }
 
@@ -1064,7 +1064,7 @@ class AddonPageOptions extends HTMLElement {
     }
   }
 
-  async checkForUpdates(e) {
+  async checkForUpdates() {
     let message = document.getElementById("updates-message");
     message.state = "updating";
     message.hidden = false;
@@ -2096,11 +2096,11 @@ class AddonDetails extends HTMLElement {
     }
   }
 
-  onDisabled(addon) {
+  onDisabled() {
     this.extensionShutdown();
   }
 
-  onEnabled(addon) {
+  onEnabled() {
     this.extensionStartup();
   }
 
@@ -2968,18 +2968,18 @@ class AddonCard extends HTMLElement {
     this.sendEvent("update-postponed");
   }
 
-  onDisabled(addon) {
+  onDisabled() {
     if (!this.reloading) {
       this.update();
     }
   }
 
-  onEnabled(addon) {
+  onEnabled() {
     this.reloading = false;
     this.update();
   }
 
-  onInstalled(addon) {
+  onInstalled() {
     // When a temporary addon is reloaded, onInstalled is triggered instead of
     // onEnabled.
     this.reloading = false;

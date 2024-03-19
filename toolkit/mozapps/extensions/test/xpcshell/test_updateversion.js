@@ -65,7 +65,7 @@ add_task(async function test_update_version_mismatch() {
 
   await Assert.rejects(
     install.install(),
-    err => install.error == AddonManager.ERROR_UNEXPECTED_ADDON_VERSION,
+    () => install.error == AddonManager.ERROR_UNEXPECTED_ADDON_VERSION,
     "Should refuse installation when downloaded version does not match"
   );
 

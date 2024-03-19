@@ -29,7 +29,7 @@ add_task(async function test_app_addons() {
     `http://localhost:${gServer.identity.primaryPort}/get?%IDS%`
   );
 
-  gServer.registerPathHandler("/get", (request, response) => {
+  gServer.registerPathHandler("/get", () => {
     do_throw("Unexpected request to server.");
   });
 

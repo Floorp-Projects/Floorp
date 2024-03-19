@@ -26,7 +26,7 @@ registerCleanupFunction(() => {
   distroDir.remove(true);
 });
 
-AddonTestUtils.usePrivilegedSignatures = id => "system";
+AddonTestUtils.usePrivilegedSignatures = () => "system";
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 

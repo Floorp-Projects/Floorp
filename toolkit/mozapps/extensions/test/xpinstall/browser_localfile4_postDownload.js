@@ -39,7 +39,7 @@ function test() {
   );
 }
 
-function allow_blocked(installInfo) {
+function allow_blocked() {
   ok(true, "Seen blocked");
   return false;
 }

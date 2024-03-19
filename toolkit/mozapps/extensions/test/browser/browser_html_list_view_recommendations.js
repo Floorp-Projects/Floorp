@@ -119,7 +119,7 @@ async function installAddon({ card, recommendedList, manifestExtra = {} }) {
   return extension;
 }
 
-async function testListRecommendations({ type, manifestExtra = {} }) {
+async function testListRecommendations({ type }) {
   let win = await loadInitialView(type);
   let doc = win.document;
 

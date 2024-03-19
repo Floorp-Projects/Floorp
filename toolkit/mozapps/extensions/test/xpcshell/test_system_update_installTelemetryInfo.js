@@ -7,7 +7,7 @@ let distroDir = FileUtils.getDir("ProfD", ["sysfeatures", "empty"]);
 distroDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
 registerDirectory("XREAppFeat", distroDir);
 
-AddonTestUtils.usePrivilegedSignatures = id => "system";
+AddonTestUtils.usePrivilegedSignatures = () => "system";
 
 add_task(() => initSystemAddonDirs());
 

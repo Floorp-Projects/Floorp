@@ -80,7 +80,7 @@ add_task(async function test_new_temporary() {
       Assert.equal(aInstall.version, "1.0");
       installedCalled = true;
     },
-    onInstallStarted: aInstall => {
+    onInstallStarted: () => {
       do_throw("onInstallStarted called unexpectedly");
     },
   });
@@ -416,7 +416,7 @@ add_task(async function test_replace_permanent() {
       }
       installedCalled = true;
     },
-    onInstallStarted: aInstall => {
+    onInstallStarted: () => {
       do_throw("onInstallStarted called unexpectedly");
     },
   });

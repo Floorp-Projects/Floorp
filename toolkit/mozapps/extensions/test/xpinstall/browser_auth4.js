@@ -45,7 +45,7 @@ function get_auth_info() {
   return ["testuser", "testpass"];
 }
 
-function download_failed(install) {
+function download_failed() {
   ok(false, "Install should not have failed");
 }
 

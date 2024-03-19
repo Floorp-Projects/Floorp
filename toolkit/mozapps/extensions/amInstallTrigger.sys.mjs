@@ -62,7 +62,7 @@ RemoteMediator.prototype = {
     }
   },
 
-  enabled(url) {
+  enabled() {
     let params = {
       mimetype: XPINSTALL_MIMETYPE,
     };
@@ -237,14 +237,14 @@ InstallTrigger.prototype = {
     );
   },
 
-  startSoftwareUpdate(url, flags) {
+  startSoftwareUpdate(url) {
     let filename = Services.io.newURI(url).QueryInterface(Ci.nsIURL).filename;
     let args = {};
     args[filename] = { URL: url };
     return this.install(args);
   },
 
-  installChrome(type, url, skin) {
+  installChrome(type, url) {
     return this.startSoftwareUpdate(url);
   },
 

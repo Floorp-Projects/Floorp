@@ -10,7 +10,7 @@ MockFilePicker.init(window.browsingContext);
 async function checkInstallConfirmation(...names) {
   let notificationCount = 0;
   let observer = {
-    observe(aSubject, aTopic, aData) {
+    observe(aSubject) {
       var installInfo = aSubject.wrappedJSObject;
       isnot(
         installInfo.browser,

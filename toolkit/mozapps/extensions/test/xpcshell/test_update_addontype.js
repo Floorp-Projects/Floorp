@@ -67,7 +67,7 @@ add_task(async function test_update_theme_to_extension() {
 
   await Assert.rejects(
     install.install(),
-    err => install.error == AddonManager.ERROR_UNEXPECTED_ADDON_TYPE,
+    () => install.error == AddonManager.ERROR_UNEXPECTED_ADDON_TYPE,
     "Refusing to change addon type from theme to extension"
   );
 

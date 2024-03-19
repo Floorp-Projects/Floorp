@@ -283,7 +283,7 @@ ChromeUtils.defineESModuleGetters(this, {
     }
 
     return Object.entries(modifierMap)
-      .filter(([key, isDown]) => isDown)
+      .filter(([, isDown]) => isDown)
       .map(([key]) => key)
       .concat(getStringForEvent(e))
       .join("+");

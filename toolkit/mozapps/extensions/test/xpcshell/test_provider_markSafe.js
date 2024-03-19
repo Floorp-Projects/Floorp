@@ -12,7 +12,7 @@ function mockAddonProvider(name) {
 
       AddonManager.isInstallEnabled("made-up-mimetype");
     },
-    supportsMimetype(mimetype) {
+    supportsMimetype() {
       this.apiAccessed = true;
       return false;
     },

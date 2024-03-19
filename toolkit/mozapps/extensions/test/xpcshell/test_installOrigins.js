@@ -179,7 +179,7 @@ function testInstallEvent(expectTelemetry) {
 
   let events = snapshot.parent
     .filter(
-      ([timestamp, category, method, object, value, extra]) =>
+      ([, category, method, , , extra]) =>
         category === "addonsManager" &&
         method == "install" &&
         extra.step == expectTelemetry.step
@@ -229,15 +229,13 @@ function promiseCompleteWebInstall(
         installInfo.install();
       });
 
-      TestUtils.topicObserved("addon-install-confirmation").then(
-        (subject, data) => {
-          info(`==== test got addon-install-confirmation`);
-          let installInfo = subject.wrappedJSObject;
-          for (let installer of installInfo.installs) {
-            installer.install();
-          }
+      TestUtils.topicObserved("addon-install-confirmation").then(subject => {
+        info(`==== test got addon-install-confirmation`);
+        let installInfo = subject.wrappedJSObject;
+        for (let installer of installInfo.installs) {
+          installer.install();
         }
-      );
+      });
       TestUtils.topicObserved("webextension-permission-prompt").then(
         ([subject]) => {
           const { info } = subject.wrappedJSObject || {};

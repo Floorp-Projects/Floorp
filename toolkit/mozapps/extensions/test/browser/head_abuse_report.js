@@ -66,7 +66,7 @@ function waitForNewWindow() {
 }
 
 function waitClosedWindow(win) {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     function onWindowClosed() {
       if (win && !win.closed) {
         // If a specific window reference has been passed, then check
@@ -215,7 +215,7 @@ const AbuseReportTestUtils = {
     return abuseReportEl.ownerGlobal.ABUSE_REPORT_REASONS[reason];
   },
 
-  async promiseReportOpened({ addonId, reportEntryPoint, managerWindow }) {
+  async promiseReportOpened({ addonId, reportEntryPoint }) {
     let abuseReportEl;
 
     if (!this.getReportDialog()) {
