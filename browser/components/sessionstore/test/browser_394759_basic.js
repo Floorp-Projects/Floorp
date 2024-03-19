@@ -74,7 +74,7 @@ function test() {
         let expectedTabs = data[0].tabs.length;
         newWin2.addEventListener(
           "SSTabRestored",
-          function sstabrestoredListener(aEvent) {
+          function sstabrestoredListener() {
             ++restoredTabs;
             info("Restored tab " + restoredTabs + "/" + expectedTabs);
             if (restoredTabs < expectedTabs) {

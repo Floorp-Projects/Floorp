@@ -325,31 +325,31 @@ var treeView = {
   setTree(treeBox) {
     this.treeBox = treeBox;
   },
-  getCellText(idx, column) {
+  getCellText(idx) {
     return gTreeData[idx].label;
   },
   isContainer(idx) {
     return "open" in gTreeData[idx];
   },
-  getCellValue(idx, column) {
+  getCellValue(idx) {
     return gTreeData[idx].checked;
   },
   isContainerOpen(idx) {
     return gTreeData[idx].open;
   },
-  isContainerEmpty(idx) {
+  isContainerEmpty() {
     return false;
   },
-  isSeparator(idx) {
+  isSeparator() {
     return false;
   },
   isSorted() {
     return false;
   },
-  isEditable(idx, column) {
+  isEditable() {
     return false;
   },
-  canDrop(idx, orientation, dt) {
+  canDrop() {
     return false;
   },
   getLevel(idx) {
@@ -438,10 +438,10 @@ var treeView = {
     return null;
   },
 
-  cycleHeader(column) {},
-  cycleCell(idx, column) {},
+  cycleHeader() {},
+  cycleCell() {},
   selectionChanged() {},
-  getColumnProperties(column) {
+  getColumnProperties() {
     return "";
   },
 };

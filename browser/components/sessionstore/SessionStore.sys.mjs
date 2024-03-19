@@ -1789,7 +1789,7 @@ var SessionStoreInternal = {
 
         break;
       case "SessionStore:restoreHistoryComplete":
-        this._restoreHistoryComplete(browser, data);
+        this._restoreHistoryComplete(browser);
         break;
       case "SessionStore:restoreTabContentStarted":
         this._restoreTabContentStarted(browser, data);
@@ -7039,7 +7039,7 @@ var SessionStoreInternal = {
         } catch {} // May have already gotten rid of the browser's webProgress.
       },
 
-      onStateChange(webProgress, request, stateFlags, status) {
+      onStateChange(webProgress, request, stateFlags) {
         if (
           webProgress.isTopLevel &&
           stateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW &&
@@ -7100,7 +7100,7 @@ var SessionStoreInternal = {
       OnHistoryPurge() {},
       OnHistoryReplaceEntry() {},
 
-      onStateChange(webProgress, request, stateFlags, status) {
+      onStateChange(webProgress, request, stateFlags) {
         if (
           webProgress.isTopLevel &&
           stateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW &&
@@ -7181,7 +7181,7 @@ var SessionStoreInternal = {
 
       this._tabStateRestorePromises.delete(browser.permanentKey);
 
-      this._restoreHistoryComplete(browser, data);
+      this._restoreHistoryComplete(browser);
     };
 
     promise.then(onResolve).catch(() => {});
@@ -7267,7 +7267,7 @@ var SessionStoreInternal = {
     }
   },
 
-  _restoreHistoryComplete(browser, data) {
+  _restoreHistoryComplete(browser) {
     let win = browser.ownerGlobal;
     let tab = win?.gBrowser.getTabForBrowser(browser);
     if (!tab) {
@@ -7680,7 +7680,7 @@ var DirtyWindows = {
     this._data.delete(window);
   },
 
-  clear(window) {
+  clear(_window) {
     this._data = new WeakMap();
   },
 };

@@ -210,7 +210,7 @@ var SessionSaverInternal = {
   /**
    * Observe idle/ active notifications.
    */
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     switch (topic) {
       case "idle":
         this._isIdle = true;

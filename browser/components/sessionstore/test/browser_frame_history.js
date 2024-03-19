@@ -206,7 +206,7 @@ function waitForLoadsInBrowser(aBrowser, aLoadCount) {
     let loadCount = 0;
     aBrowser.addEventListener(
       "load",
-      function listener(aEvent) {
+      function listener() {
         if (++loadCount < aLoadCount) {
           info(
             "Got " + loadCount + " loads, waiting until we have " + aLoadCount

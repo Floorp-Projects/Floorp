@@ -129,7 +129,7 @@ var TabsProgressListener = {
     delete this.callback;
   },
 
-  observe(browser, topic, data) {
+  observe(browser) {
     TabsProgressListener.onRestored(browser);
   },
 

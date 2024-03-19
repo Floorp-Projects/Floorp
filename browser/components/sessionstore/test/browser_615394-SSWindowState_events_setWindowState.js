@@ -29,17 +29,17 @@ function test() {
     readyEventCount = 0,
     tabRestoredCount = 0;
 
-  function onSSWindowStateBusy(aEvent) {
+  function onSSWindowStateBusy() {
     busyEventCount++;
   }
 
-  function onSSWindowStateReady(aEvent) {
+  function onSSWindowStateReady() {
     readyEventCount++;
     is(ss.getCustomTabValue(gBrowser.tabs[0], "foo"), "bar");
     is(ss.getCustomTabValue(gBrowser.tabs[1], "baz"), "qux");
   }
 
-  function onSSTabRestored(aEvent) {
+  function onSSTabRestored() {
     if (++tabRestoredCount < 2) {
       return;
     }

@@ -153,7 +153,7 @@ export var StartupPerformance = {
     }, COLLECT_RESULTS_AFTER_MS);
   },
 
-  observe(subject, topic, details) {
+  observe(subject, topic) {
     try {
       switch (topic) {
         case "sessionstore-restoring-on-startup":

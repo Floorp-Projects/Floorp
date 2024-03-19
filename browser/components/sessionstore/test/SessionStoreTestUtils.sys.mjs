@@ -100,7 +100,7 @@ export var SessionStoreTestUtils = {
       expectedTabsRestored = aState.windows.length;
     }
 
-    function onSSTabRestored(aEvent) {
+    function onSSTabRestored() {
       if (++tabsRestored == expectedTabsRestored) {
         // Remove the event listener from each window
         windows.forEach(function (win) {
@@ -118,7 +118,7 @@ export var SessionStoreTestUtils = {
 
     // Used to add our listener to further windows so we can catch SSTabRestored
     // coming from them when creating a multi-window state.
-    function windowObserver(aSubject, aTopic, aData) {
+    function windowObserver(aSubject, aTopic) {
       if (aTopic == "domwindowopened") {
         let newWindow = aSubject;
         newWindow.addEventListener(

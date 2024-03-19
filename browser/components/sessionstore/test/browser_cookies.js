@@ -14,7 +14,7 @@ function promiseSetCookie(cookie) {
 
 function waitForCookieChanged() {
   return new Promise(resolve => {
-    Services.obs.addObserver(function observer(subj, topic, data) {
+    Services.obs.addObserver(function observer(subj, topic) {
       Services.obs.removeObserver(observer, topic);
       resolve();
     }, "session-cookie-changed");

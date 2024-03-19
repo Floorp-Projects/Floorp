@@ -11,7 +11,7 @@ add_setup(async function () {
 function promiseTabsRestored(win, nExpected) {
   return new Promise(resolve => {
     let nReceived = 0;
-    function handler(event) {
+    function handler() {
       if (++nReceived === nExpected) {
         win.gBrowser.tabContainer.removeEventListener(
           "SSTabRestored",

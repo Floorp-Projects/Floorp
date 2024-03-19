@@ -88,7 +88,7 @@ function openWinWithCb(cb, argURIs, expectedURIs) {
       var expectedLoads = expectedURIs.length;
 
       win.gBrowser.addTabsProgressListener({
-        onStateChange(aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
+        onStateChange(aBrowser, aWebProgress, aRequest, aStateFlags, _aStatus) {
           if (
             aRequest &&
             aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&

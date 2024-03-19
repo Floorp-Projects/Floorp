@@ -69,12 +69,7 @@ add_task(async function test() {
 
   let loadCount = 0;
   let promiseRestoringTabs = new Promise(resolve => {
-    gProgressListener.setCallback(function (
-      aBrowser,
-      aNeedRestore,
-      aRestoring,
-      aRestored
-    ) {
+    gProgressListener.setCallback(function (aBrowser) {
       loadCount++;
 
       // We'll make sure that the loads we get come from pinned tabs or the

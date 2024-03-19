@@ -84,7 +84,7 @@ function test() {
   // waitForBrowserState does it's own observing for windows, but doesn't attach
   // the listeners we want here, so do it ourselves.
   let newWindow;
-  function windowObserver(aSubject, aTopic, aData) {
+  function windowObserver(aSubject, aTopic) {
     if (aTopic == "domwindowopened") {
       Services.ww.unregisterNotification(windowObserver);
 
