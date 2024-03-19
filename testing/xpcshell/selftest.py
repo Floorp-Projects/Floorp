@@ -1139,7 +1139,6 @@ add_test({
         self.assertInLog("this_test_will_fail")
         self.assertInLog("run_next_test")
         self.assertInLog("run_test")
-        self.assertNotInLog("Task.jsm")
 
     def testAddTaskSkip(self):
         self.writeFile("test_tasks_skip.js", ADD_TASK_SKIP)

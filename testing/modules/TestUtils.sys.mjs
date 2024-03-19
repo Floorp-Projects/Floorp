@@ -13,7 +13,7 @@
  * work with browser windows and tabs.
  *
  * Individual components also offer testing functions to other components, for
- * example LoginTestUtils.jsm.
+ * example LoginTestUtils.sys.mjs.
  */
 
 import { clearTimeout, setTimeout } from "resource://gre/modules/Timer.sys.mjs";

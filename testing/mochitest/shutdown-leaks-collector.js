@@ -4,7 +4,7 @@
 
 /* eslint-env mozilla/frame-script */
 
-// We run this code in a .jsm rather than here to avoid keeping the current
+// We run this code in a sys.mjs rather than here to avoid keeping the current
 // compartment alive.
 ChromeUtils.importESModule(
   "chrome://mochikit/content/ShutdownLeaksCollector.sys.mjs"

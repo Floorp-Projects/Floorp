@@ -131,7 +131,7 @@ Test case registration and execution
 ``add_task([condition, ]testFunc)``
    Add an asynchronous function or to the list of tests that are to be
    run asynchronously. Whenever the function ``await``\ s a
-   `Promise </en-US/docs/Mozilla/JavaScript_code_modules/Promise.jsm>`__,
+   `Promise <https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise>`__,
    the test runner waits until the promise is resolved or rejected
    before proceeding. Rejected promises are converted into exceptions,
    and resolved promises are converted into values.
@@ -377,7 +377,7 @@ well, and they will be made available by their filename.
 
    path/to/tests
    ├──head.js
-   ├──module.jsm
+   ├──module.mjs
    ├──moz.build
    ├──test_example.js
    └──xpcshell.ini
@@ -388,7 +388,7 @@ well, and they will be made available by their filename.
    [DEFAULT]
    head = head.js
    support-files =
-     ./module.jsm
+     ./module.mjs
      ../../some/other/file.js
    [test_component_state.js]
 
@@ -398,8 +398,8 @@ well, and they will be made available by their filename.
    var globalValue = "A global value.";
 
    // Import support-files.
-   const { foo } = ChromeUtils.import("resource://test/module.jsm");
-   const { bar } = ChromeUtils.import("resource://test/file.jsm");
+   const { foo } = ChromeUtils.import("resource://test/module.mjs");
+   const { bar } = ChromeUtils.import("resource://test/file.mjs");
 
 .. code:: js
 
@@ -533,12 +533,13 @@ Runtime detection
 
 Some tests will want to only execute certain portions on specific
 platforms. Use
-`AppConstants.jsm <https://searchfox.org/mozilla-central/rev/a0333927deabfe980094a14d0549b589f34cbe49/toolkit/modules/AppConstants.jsm#148>`__
+`AppConstants.sys.mjs <https://searchfox.org/mozilla-central/rev/5f0a7ca8968ac5cef8846e1d970ef178b8b76dcc/toolkit/modules/AppConstants.sys.mjs#158>`__
 for determining the platform, for example:
 
 .. code:: js
 
-   ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+   let { AppConstants } =
+     ChromeUtils.importESModule("resource://gre/modules/AppConstants.mjs");
 
    let isMac = AppConstants.platform == "macosx";
 
@@ -565,7 +566,8 @@ this:
 
 .. code:: js
 
-   ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+   let { AppConstants } =
+     ChromeUtils.importESModule("resource://gre/modules/AppConstants.sys.mjs");
 
    add_task({
      skip_if: () => AppConstants.platform != "mac"
