@@ -8,7 +8,7 @@ import sys
 
 from ipdl.ast import CxxInclude, Decl, Loc, QualifiedId, StructDecl
 from ipdl.ast import UnionDecl, UsingStmt, Visitor, StringLiteral
-from ipdl.ast import ASYNC, SYNC
+from ipdl.ast import ASYNC, SYNC, INTR
 from ipdl.ast import IN, OUT, INOUT
 from ipdl.ast import NOT_NESTED, INSIDE_SYNC_NESTED, INSIDE_CPOW_NESTED
 from ipdl.ast import priorityList
@@ -300,6 +300,9 @@ class SendSemanticsType(IPDLType):
     def isSync(self):
         return self.sendSemantics == SYNC
 
+    def isInterrupt(self):
+        return self.sendSemantics is INTR
+
     def sendSemanticsSatisfiedBy(self, greater):
         def _unwrap(nr):
             if isinstance(nr, dict):
@@ -319,9 +322,16 @@ class SendSemanticsType(IPDLType):
         if lnr0 < gnr0 or lnr1 > gnr1:
             return False
 
+        # Protocols that use intr semantics are not allowed to use
+        # message nesting.
+        if greater.isInterrupt() and lesser.nestedRange != (NOT_NESTED, NOT_NESTED):
+            return False
+
         if lesser.isAsync():
             return True
         elif lesser.isSync() and not greater.isAsync():
+            return True
+        elif greater.isInterrupt():
             return True
 
         return False
@@ -381,7 +391,7 @@ class MessageType(SendSemanticsType):
         return self.direction is INOUT
 
     def hasReply(self):
-        return len(self.returns) or self.isSync()
+        return len(self.returns) or self.isSync() or self.isInterrupt()
 
     def hasImplicitActorParam(self):
         return self.isCtor()
@@ -1362,10 +1372,24 @@ class GatherDecls(TcheckVisitor):
                 "Priority": priorityList,
                 "ReplyPriority": priorityList,
                 "Nested": ("not", "inside_sync", "inside_cpow"),
+                "LegacyIntr": None,
                 "VirtualSendImpl": None,
                 "LazySend": None,
             },
         )
+
+        if md.sendSemantics is INTR and "LegacyIntr" not in md.attributes:
+            self.error(
+                loc,
+                "intr message `%s' allowed only with [LegacyIntr]; DO NOT USE IN SHIPPING CODE",
+                msgname,
+            )
+
+        if md.sendSemantics is INTR and "Priority" in md.attributes:
+            self.error(loc, "intr message `%s' cannot specify [Priority]", msgname)
+
+        if md.sendSemantics is INTR and "Nested" in md.attributes:
+            self.error(loc, "intr message `%s' cannot specify [Nested]", msgname)
 
         if md.sendSemantics is not ASYNC and "LazySend" in md.attributes:
             self.error(loc, "non-async message `%s' cannot specify [LazySend]", msgname)
@@ -1606,6 +1630,11 @@ class CheckTypes(TcheckVisitor):
                     pname,
                     mgrtype.name(),
                 )
+
+        if ptype.isInterrupt() and ptype.nestedRange != (NOT_NESTED, NOT_NESTED):
+            self.error(
+                p.decl.loc, "intr protocol `%s' cannot specify [NestedUpTo]", p.name
+            )
 
         if ptype.isToplevel():
             cycles = checkcycles(p.decl.type)
