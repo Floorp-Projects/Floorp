@@ -8,6 +8,8 @@ use thiserror::Error;
 pub enum ProcessReaderError {
     #[error("Could not convert address {0}")]
     ConvertAddressError(#[from] std::num::TryFromIntError),
+    #[error("Could not parse address {0}")]
+    ParseAddressError(#[from] std::num::ParseIntError),
     #[cfg(target_os = "windows")]
     #[error("Cannot enumerate the target process's modules")]
     EnumProcessModulesError,
@@ -17,14 +19,52 @@ pub enum ProcessReaderError {
     InvalidAddress,
     #[error("Could not read from the target process address space")]
     ReadFromProcessError(#[from] ReadError),
-    #[cfg(target_os = "windows")]
+    #[cfg(any(target_os = "windows", target_os = "macos"))]
     #[error("Section was not found")]
     SectionNotFound,
+    #[cfg(any(target_os = "linux", target_os = "android"))]
+    #[error("Could not attach to the target process")]
+    AttachError(#[from] PtraceError),
+    #[cfg(any(target_os = "linux", target_os = "android"))]
+    #[error("Note not found")]
+    NoteNotFound,
+    #[cfg(any(target_os = "linux", target_os = "android"))]
+    #[error("waitpid() failed when attaching to the process")]
+    WaitPidError,
+    #[cfg(any(target_os = "linux", target_os = "android"))]
+    #[error("Could not parse a line in /proc/<pid>/maps")]
+    ProcMapsParseError,
+    #[error("Module not found")]
+    ModuleNotFound,
+    #[cfg(any(target_os = "linux", target_os = "android"))]
+    #[error("IO error for file {0}")]
+    IOError(#[from] std::io::Error),
+    #[cfg(target_os = "macos")]
+    #[error("Failure when requesting the task information")]
+    TaskInfoError,
+    #[cfg(target_os = "macos")]
+    #[error("The task dyld information format is unknown or invalid")]
+    ImageFormatError,
 }
 
 #[derive(Debug, Error)]
 pub enum ReadError {
+    #[cfg(target_os = "macos")]
+    #[error("mach call failed")]
+    MachError,
+    #[cfg(any(target_os = "linux", target_os = "android"))]
+    #[error("ptrace-specific error")]
+    PtraceError(#[from] PtraceError),
     #[cfg(target_os = "windows")]
     #[error("ReadProcessMemory failed")]
     ReadProcessMemoryError,
+}
+
+#[cfg(any(target_os = "linux", target_os = "android"))]
+#[derive(Debug, Error)]
+pub enum PtraceError {
+    #[error("Could not read from the target process address space")]
+    ReadError(#[source] std::io::Error),
+    #[error("Could not trace the process")]
+    TraceError(#[source] std::io::Error),
 }
