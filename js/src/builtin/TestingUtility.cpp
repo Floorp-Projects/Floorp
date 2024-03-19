@@ -308,3 +308,18 @@ bool js::ValidateLazinessOfStencilAndGlobal(
 
   return true;
 }
+
+bool js::ValidateModuleCompileOptions(JSContext* cx,
+                                      JS::CompileOptions& options) {
+  if (options.lineno == 0) {
+    JS_ReportErrorASCII(cx, "Module cannot be compiled with lineNumber == 0");
+    return false;
+  }
+
+  if (!options.filename()) {
+    JS_ReportErrorASCII(cx, "Module should have filename");
+    return false;
+  }
+
+  return true;
+}
