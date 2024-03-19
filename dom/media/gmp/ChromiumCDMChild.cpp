@@ -450,7 +450,7 @@ mozilla::ipc::IPCResult ChromiumCDMChild::RecvCreateSessionAndGenerateRequest(
       "pid=%" PRIu32 ", sessionType=%" PRIu32 ", initDataType=%" PRIu32
       ") initDataLen=%zu",
       aPromiseId, aSessionType, aInitDataType, aInitData.Length());
-  MOZ_ASSERT(aSessionType <= cdm::SessionType::kPersistentUsageRecord);
+  MOZ_ASSERT(aSessionType <= cdm::SessionType::kPersistentLicense);
   MOZ_ASSERT(aInitDataType <= cdm::InitDataType::kWebM);
   if (mCDM) {
     mCDM->CreateSessionAndGenerateRequest(
