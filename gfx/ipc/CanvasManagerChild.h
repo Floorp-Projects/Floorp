@@ -10,7 +10,6 @@
 #include "mozilla/gfx/PCanvasManagerChild.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/ThreadLocal.h"
-#include <set>
 
 namespace mozilla {
 namespace dom {
@@ -35,7 +34,8 @@ class CanvasManagerChild final : public PCanvasManagerChild {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CanvasManagerChild, override);
 
-  explicit CanvasManagerChild(uint32_t aId);
+  explicit CanvasManagerChild(dom::ThreadSafeWorkerRef* aWorkerRef,
+                              uint32_t aId);
   uint32_t Id() const { return mId; }
   already_AddRefed<DataSourceSurface> GetSnapshot(
       uint32_t aManagerId, int32_t aProtocolId,
@@ -48,9 +48,6 @@ class CanvasManagerChild final : public PCanvasManagerChild {
   static void Shutdown();
   static bool CreateParent(
       mozilla::ipc::Endpoint<PCanvasManagerParent>&& aEndpoint);
-
-  void AddShutdownObserver(dom::CanvasRenderingContext2D* aCanvas);
-  void RemoveShutdownObserver(dom::CanvasRenderingContext2D* aCanvas);
 
   bool IsCanvasActive() { return mActive; }
   void EndCanvasTransaction();
@@ -73,7 +70,6 @@ class CanvasManagerChild final : public PCanvasManagerChild {
   RefPtr<layers::CanvasChild> mCanvasChild;
   RefPtr<webgpu::WebGPUChild> mWebGPUChild;
   UniquePtr<layers::ActiveResourceTracker> mActiveResourceTracker;
-  std::set<dom::CanvasRenderingContext2D*> mActiveCanvas;
   const uint32_t mId;
   bool mActive = true;
   bool mBlocked = false;
