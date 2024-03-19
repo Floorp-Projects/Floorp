@@ -28,9 +28,9 @@ class PlatformCompositorWidgetDelegate : public CompositorWidgetDelegate {
       const LayoutDeviceIntSize& aClientSize) = 0;
   virtual GtkCompositorWidget* AsGtkCompositorWidget() { return nullptr; };
 
-  virtual void DisableRendering() = 0;
-  virtual void EnableRendering(const uintptr_t aXWindow,
-                               const bool aShaped) = 0;
+  virtual void CleanupResources() = 0;
+  virtual void SetRenderingSurface(const uintptr_t aXWindow,
+                                   const bool aShaped) = 0;
 
   // CompositorWidgetDelegate Overrides
 
@@ -74,10 +74,11 @@ class GtkCompositorWidget : public CompositorWidget,
 
   // Suspend rendering of this remote widget and clear all resources.
   // Can be used when underlying window is hidden/unmapped.
-  void DisableRendering() override;
+  void CleanupResources() override;
 
   // Resume rendering with to given aXWindow (X11) or nsWindow (Wayland).
-  void EnableRendering(const uintptr_t aXWindow, const bool aShaped) override;
+  void SetRenderingSurface(const uintptr_t aXWindow,
+                           const bool aShaped) override;
 
   // If we fail to set window size (due to different screen scale or so)
   // we can't paint the frame by compositor.
