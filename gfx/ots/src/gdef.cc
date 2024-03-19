@@ -176,8 +176,8 @@ bool OpenTypeGDEF::ParseLigCaretListTable(const uint8_t *data, size_t length) {
           return Error("Can't read device offset for caret value %d "
                        "in glyph %d", j, i);
         }
-        uint16_t absolute_offset = lig_glyphs[i] + caret_value_offsets[j]
-                                   + offset_device;
+        size_t absolute_offset = lig_glyphs[i] + caret_value_offsets[j]
+                                 + offset_device;
         if (offset_device == 0 || absolute_offset >= length) {
           return Error("Bad device offset for caret value %d in glyph %d: %d",
                        j, i, offset_device);
