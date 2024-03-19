@@ -892,7 +892,6 @@ void InternalJobQueue::runJobs(JSContext* cx) {
     draining_ = false;
 
     if (interrupted_) {
-      interrupted_ = false;
       break;
     }
 
