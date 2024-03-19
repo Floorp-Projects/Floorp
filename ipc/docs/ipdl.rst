@@ -73,8 +73,8 @@ order is well defined since the related actor can only send from one thread.
 
 .. warning::
     There are a few (rare) exceptions to the message order guarantee.  They
-    include  `synchronous nested`_  messages and messages with a ``[Priority]``
-    or ``[Compress]`` annotation.
+    include  `synchronous nested`_  messages, `interrupt`_ messages, and
+    messages with a ``[Priority]`` or ``[Compress]`` annotation.
 
 An IPDL protocol file specifies the messages that may be sent between parent
 and child actors, as well as the direction and payload of those messages.
@@ -85,10 +85,13 @@ running in the actor's thread's ``MessageLoop``.
 
 .. note::
     Not all IPDL messages are asynchronous.  Again, we run into exceptions for
-    messages that are synchronous or `synchronous nested`_.  Use of synchronous
-    and nested messages is strongly discouraged but may not always be avoidable.
-    They will be defined later, along with superior alternatives to both that
-    should work in nearly all cases.
+    messages that are synchronous, `synchronous nested`_ or `interrupt`_.  Use
+    of synchronous and nested messages is strongly discouraged but may not
+    always be avoidable.  They will be defined later, along with superior
+    alternatives to both that should work in nearly all cases.  Interrupt
+    messages were prone to misuse and are deprecated, with removal expected in
+    the near future
+    (`Bug 1729044 <https://bugzilla.mozilla.org/show_bug.cgi?id=1729044>`_).
 
 Protocol files are compiled by the *IPDL compiler* in an early stage of the
 build process.  The compiler generates C++ code that reflects the protocol.
@@ -117,6 +120,7 @@ and `here
     ``chromium-config.mozbuild`` in its ``moz.build`` file.  See `Using The
     IPDL compiler`_ for a complete list of required build changes.
 
+.. _interrupt: `The Old Ways`_
 .. _synchronous nested: `The Rest`_
 
 The Steps To Making A New Actor
@@ -382,6 +386,10 @@ the options for the actor-blocking policy of messages:
 ``sync``                Actor has ``async`` capabilities and adds  ``sync``
                         messages.  ``sync`` messages
                         can only be sent from the child actor to the parent.
+``intr`` (deprecated)   Actor has ``sync`` capabilities and adds ``intr``
+                        messages.  Some messages can be received while an actor
+                        waits for an ``intr`` response.  This type will be
+                        removed soon.
 ======================= =======================================================
 
 Beyond these protocol blocking strategies, IPDL supports annotations that
@@ -530,6 +538,8 @@ resembles the list in `Defining Actors`_:
 ``sync``               Actor has ``async`` capabilities and adds  ``sync``
                        messages.  ``sync`` messages can only be sent from the
                        child actor to the parent.
+``intr`` (deprecated)  Actor has ``sync`` capabilities and adds ``intr``
+                       messages.  This type will be removed soon.
 ====================== ========================================================
 
 The policy defines whether an actor will wait for a response when it sends a
@@ -643,13 +653,18 @@ for use in IPDL files:
 ``sync/async``                These are used in two cases: (1) to indicate
                               whether a message blocks as it waits for a result
                               and (2) because an actor that contains ``sync``
-                              messages must itself be labeled ``sync``.
+                              messages must itself be labeled ``sync`` or
+                              ``intr``.
 ``[NestedUpTo=inside_sync]``  Indicates that an actor contains
                               [Nested=inside_sync] messages, in addition to
                               normal messages.
 ``[NestedUpTo=inside_cpow]``  Indicates that an actor contains
                               [Nested=inside_cpow] messages, in addition to
                               normal messages.
+``intr``                      Used to indicate either that (1) an actor
+                              contains ``sync``, ``async`` and (deprecated)
+                              ``intr`` messages, or (2) a message is ``intr``
+                              type.
 ``[Nested=inside_sync]``      Indicates that the message can be handled while
                               waiting for lower-priority, or in-message-thread,
                               sync responses.
