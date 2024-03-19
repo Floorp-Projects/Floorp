@@ -13,7 +13,7 @@ add_task(async function test_file_opening() {
   // the default - because files from disk should always use pdfjs, unless
   // it is forcibly disabled.
   let openedWindow = false;
-  let windowOpenedPromise = new Promise((resolve, reject) => {
+  let windowOpenedPromise = new Promise(resolve => {
     addWindowListener(
       "chrome://mozapps/content/downloads/unknownContentType.xhtml",
       () => {
@@ -82,7 +82,7 @@ function addWindowListener(aURL, aCallback) {
         aCallback();
       }, domwindow);
     },
-    onCloseWindow(aXULWindow) {},
+    onCloseWindow() {},
   };
   Services.wm.addListener(listener);
   listenerCleanup = () => Services.wm.removeListener(listener);

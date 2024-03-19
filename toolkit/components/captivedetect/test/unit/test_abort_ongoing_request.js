@@ -22,7 +22,7 @@ function xhr_handler(metadata, response) {
 }
 
 function fakeUIResponse() {
-  Services.obs.addObserver(function observe(subject, topic, data) {
+  Services.obs.addObserver(function observe(subject, topic) {
     if (topic === "captive-portal-login") {
       let xhr = new XMLHttpRequest();
       xhr.open("GET", gServerURL + kCanonicalSitePath, true);
@@ -42,7 +42,7 @@ function test_multiple_requests_abort() {
       Assert.equal(++step, 1);
       gCaptivePortalDetector.finishPreparation(kInterfaceName);
     },
-    complete: function complete(success) {
+    complete: function complete() {
       do_throw("should not execute |complete| callback for " + kInterfaceName);
     },
   };

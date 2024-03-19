@@ -35,7 +35,7 @@
     frame.height = 300;
     frame.src = "about:memory?file=" + makePathname(aFilename);
     document.documentElement.appendChild(frame);
-    frame.addEventListener("load", function onFrameLoad(e) {
+    frame.addEventListener("load", function onFrameLoad() {
       frame.focus();
 
       // Initialize the clipboard contents.

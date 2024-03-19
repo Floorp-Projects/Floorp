@@ -13,7 +13,7 @@ const OS_PDF_URL = TESTROOT + "file_pdfjs_object_stream.pdf";
 const TEST_PDF_URL = TESTROOT + "file_pdfjs_test.pdf";
 
 add_task(async function test_find_octet_stream_pdf() {
-  await BrowserTestUtils.withNewTab(OS_PDF_URL, async browser => {
+  await BrowserTestUtils.withNewTab(OS_PDF_URL, async () => {
     let findEls = ["cmd_find", "cmd_findAgain", "cmd_findPrevious"].map(id =>
       document.getElementById(id)
     );

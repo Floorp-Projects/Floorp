@@ -3470,7 +3470,7 @@ function run_string_tests(library) {
   Assert.equal(ptrValue(test_ansi_echo(null)), 0);
 }
 
-function run_readstring_tests(library) {
+function run_readstring_tests() {
   // ASCII decode test, "hello world"
   let ascii_string = ctypes.unsigned_char.array(12)();
   ascii_string[0] = 0x68;

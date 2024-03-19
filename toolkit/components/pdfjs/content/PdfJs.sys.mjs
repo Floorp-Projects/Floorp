@@ -242,7 +242,7 @@ export var PdfJs = {
   },
 
   // nsIObserver
-  observe(aSubject, aTopic, aData) {
+  observe() {
     this.checkIsDefault();
   },
 };

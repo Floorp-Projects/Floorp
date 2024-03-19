@@ -55,7 +55,7 @@ function downloadJSON(uri) {
   return new Promise((resolve, reject) => {
     let xmlHttp = new lazy.ServiceRequest({ mozAnon: true });
 
-    xmlHttp.onload = function (aResponse) {
+    xmlHttp.onload = function () {
       resolve(JSON.parse(this.responseText));
     };
 

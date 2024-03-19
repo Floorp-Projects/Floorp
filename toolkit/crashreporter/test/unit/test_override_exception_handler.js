@@ -5,7 +5,7 @@ add_task(async function run_test() {
     function () {
       CrashTestUtils.TryOverrideExceptionHandler();
     },
-    function (mdump, extra) {},
+    function () {},
     true
   );
 });

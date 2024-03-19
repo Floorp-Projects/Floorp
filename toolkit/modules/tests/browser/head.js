@@ -87,7 +87,7 @@ function promiseTestHighlighterOutput(
     browser,
     [{ word, expectedResult, extraTest: extraTest.toSource() }],
     async function ({ word, expectedResult, extraTest }) {
-      return new Promise((resolve, reject) => {
+      return new Promise(resolve => {
         let stubbed = {};
         let callCounts = {
           insertCalls: [],

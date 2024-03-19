@@ -45,7 +45,7 @@ function test() {
         win2.close();
 
         // Leave the page the second time.
-        waitForOnBeforeUnloadDialog(browser, (btnLeave, btnStay) => {
+        waitForOnBeforeUnloadDialog(browser, btnLeave => {
           btnLeave.click();
         });
 

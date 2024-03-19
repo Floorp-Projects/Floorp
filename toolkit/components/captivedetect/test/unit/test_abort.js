@@ -21,7 +21,7 @@ function xhr_handler(metadata, response) {
 }
 
 function fakeUIResponse() {
-  Services.obs.addObserver(function observe(subject, topic, data) {
+  Services.obs.addObserver(function observe(subject, topic) {
     if (topic === "captive-portal-login") {
       do_throw("should not receive captive-portal-login event");
     }
@@ -37,7 +37,7 @@ function test_abort() {
       Assert.equal(++step, 1);
       gCaptivePortalDetector.finishPreparation(kInterfaceName);
     },
-    complete: function complete(success) {
+    complete: function complete() {
       do_throw("should not execute |complete| callback");
     },
   };

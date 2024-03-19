@@ -20,7 +20,7 @@ const EXCLUDED_NAMES = [
  * Return 0 (success) if all targeting getters succeed, 11 (failure)
  * otherwise.
  */
-export async function runBackgroundTask(commandLine) {
+export async function runBackgroundTask() {
   let exitCode = EXIT_CODE.SUCCESS;
 
   // Can't use `ASRouterTargeting.getEnvironmentSnapshot`, since that

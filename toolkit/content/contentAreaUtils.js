@@ -1180,10 +1180,10 @@ function openURL(aURL) {
     var appstartup = Services.startup;
 
     var loadListener = {
-      onStartRequest: function ll_start(aRequest) {
+      onStartRequest: function ll_start() {
         appstartup.enterLastWindowClosingSurvivalArea();
       },
-      onStopRequest: function ll_stop(aRequest, aStatusCode) {
+      onStopRequest: function ll_stop() {
         appstartup.exitLastWindowClosingSurvivalArea();
       },
       QueryInterface: ChromeUtils.generateQI([
@@ -1194,13 +1194,13 @@ function openURL(aURL) {
     loadgroup.groupObserver = loadListener;
 
     var uriListener = {
-      doContent(ctype, preferred, request, handler) {
+      doContent() {
         return false;
       },
-      isPreferred(ctype, desired) {
+      isPreferred() {
         return false;
       },
-      canHandleContent(ctype, preferred, desired) {
+      canHandleContent() {
         return false;
       },
       loadCookie: null,

@@ -10,7 +10,7 @@ import {
   pemToDER,
 } from "chrome://global/content/certviewer/certDecoder.mjs";
 
-document.addEventListener("DOMContentLoaded", async e => {
+document.addEventListener("DOMContentLoaded", async () => {
   let url = new URL(document.URL);
   let certInfo = url.searchParams.getAll("cert");
   if (certInfo.length === 0) {
@@ -469,7 +469,7 @@ const buildChain = async chain => {
       let adjustedCerts = certs.map(cert => adjustCertInformation(cert));
       return render(adjustedCerts, false);
     })
-    .catch(err => {
+    .catch(() => {
       render(null, true);
     });
 };

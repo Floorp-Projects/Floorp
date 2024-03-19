@@ -30,7 +30,7 @@
   const BYTES = Ci.nsIMemoryReporter.UNITS_BYTES;
 
   let fakeReporters = [
-    { collectReports(aCbObj, aClosure, aAnonymize) {
+    { collectReports(aCbObj, aClosure) {
         function f(aP, aK, aA) {
           aCbObj.callback("Main Process", aP, aK, BYTES, aA, "Desc.", aClosure);
         }

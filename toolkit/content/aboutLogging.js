@@ -234,7 +234,7 @@ function populatePresets() {
   $("#log-modules").value = gLoggingPresets[dropdown.value].modules;
   setPresetAndDescription(dropdown.value);
   // When changing the list switch to custom.
-  $("#log-modules").oninput = e => {
+  $("#log-modules").oninput = () => {
     dropdown.value = "custom";
   };
 }
@@ -534,7 +534,7 @@ function updateLogFile(file) {
 
     if (file.exists()) {
       openLogFileButton.disabled = false;
-      openLogFileButton.onclick = function (e) {
+      openLogFileButton.onclick = function () {
         file.reveal();
       };
     }

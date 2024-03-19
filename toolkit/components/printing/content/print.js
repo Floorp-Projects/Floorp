@@ -46,7 +46,7 @@ var logger = (function () {
   return _logger;
 })();
 
-function serializeSettings(settings, logPrefix) {
+function serializeSettings(settings) {
   let re = /^(k[A-Z]|resolution)/; // accessing settings.resolution throws an exception?
   let types = new Set(["string", "boolean", "number", "undefined"]);
   let nameValues = {};
@@ -80,7 +80,7 @@ function cancelDeferredTasks() {
 
 document.addEventListener(
   "DOMContentLoaded",
-  e => {
+  () => {
     window._initialized = PrintEventHandler.init().catch(e => console.error(e));
     ourBrowser.setAttribute("flex", "0");
     ourBrowser.setAttribute("constrainpopups", "false");
@@ -96,7 +96,7 @@ window.addEventListener("dialogclosing", () => {
 
 window.addEventListener(
   "unload",
-  e => {
+  () => {
     document.textContent = "";
   },
   { once: true }
@@ -1608,7 +1608,7 @@ function PrintUIControlMixin(superClass) {
 
     render() {}
 
-    update(settings) {}
+    update() {}
 
     dispatchSettingsChange(changedSettings) {
       this.dispatchEvent(
@@ -1628,7 +1628,7 @@ function PrintUIControlMixin(superClass) {
       );
     }
 
-    handleEvent(event) {}
+    handleEvent() {}
   };
 }
 
@@ -1863,7 +1863,7 @@ class PrintSettingCheckbox extends PrintUIControlMixin(HTMLInputElement) {
     this.checked = settings[this.settingName];
   }
 
-  handleEvent(e) {
+  handleEvent() {
     this.dispatchSettingsChange({
       [this.settingName]: this.checked,
     });
@@ -1884,7 +1884,7 @@ class PrintSettingRadio extends PrintUIControlMixin(HTMLInputElement) {
     this.checked = settings[this.settingName] == this.value;
   }
 
-  handleEvent(e) {
+  handleEvent() {
     this.dispatchSettingsChange({
       [this.settingName]: this.value,
     });
@@ -2020,7 +2020,7 @@ class CopiesInput extends PrintUIControlMixin(HTMLElement) {
     this._copiesError.hidden = true;
   }
 
-  handleEvent(e) {
+  handleEvent() {
     this._copiesError.hidden = this._copiesInput.checkValidity();
   }
 }
@@ -2679,7 +2679,7 @@ class TwistySummary extends PrintUIControlMixin(HTMLElement) {
     this.updateSummary(shouldOpen);
   }
 
-  handleEvent(e) {
+  handleEvent() {
     let willOpen = !this.isOpen;
     Services.prefs.setBoolPref("print.more-settings.open", willOpen);
     this.updateSummary(willOpen);

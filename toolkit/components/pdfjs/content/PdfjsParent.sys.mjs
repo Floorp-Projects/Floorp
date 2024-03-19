@@ -187,7 +187,7 @@ export class PdfjsParent extends JSWindowActorParent {
       let newBrowser = aEvent.detail;
       newBrowser.addEventListener(
         "EndSwapDocShells",
-        evt => {
+        () => {
           this._hookupEventListeners(newBrowser);
         },
         { once: true }

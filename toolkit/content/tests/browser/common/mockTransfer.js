@@ -51,8 +51,7 @@ MockTransfer.prototype = {
   onStatusChange: function MTFC_onStatusChange(
     aWebProgress,
     aRequest,
-    aStatus,
-    aMessage
+    aStatus
   ) {
     // If at least one notification reported an error, the download failed.
     if (!Components.isSuccessCode(aStatus)) {

@@ -17,7 +17,7 @@ async function runTest() {
   let menulist = document.getElementById("menulist");
   let menulistPopup = document.getElementById("menulistpopup");
 
-  menulistPopup.addEventListener("popupshown", function(e) {
+  menulistPopup.addEventListener("popupshown", function() {
     ok(false, "Menulist popup shown");
   });
 

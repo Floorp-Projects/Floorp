@@ -83,7 +83,7 @@ FileFaker.prototype = {
   },
 };
 
-function do_get_file(path, allowNonexistent) {
+function do_get_file(path) {
   if (!_WORKINGDIR_) {
     do_throw("No way to fake files if working directory is unknown!");
   }

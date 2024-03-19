@@ -201,7 +201,7 @@ add_task(async function testURLParameters() {
       url: PAGE + "?invalid-param",
     },
     async browser => {
-      await SpecialPowers.spawn(browser, [profilerPresetInURL], async inURL => {
+      await SpecialPowers.spawn(browser, [profilerPresetInURL], async () => {
         let $ = content.document.querySelector.bind(content.document);
         Assert.ok(
           !$("#error").hidden,
@@ -368,7 +368,7 @@ add_task(async function testProfilerOpens() {
       "https://example.com/",
       false
     );
-    SpecialPowers.spawn(browser, [], async savedLogModules => {
+    SpecialPowers.spawn(browser, [], async () => {
       let $ = content.document.querySelector.bind(content.document);
       // Override the URL the profiler uses to avoid hitting external
       // resources (and crash).

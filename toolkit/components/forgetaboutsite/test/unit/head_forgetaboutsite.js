@@ -21,7 +21,7 @@ async function cleanUp() {
   await new Promise(resolve => {
     Services.clearData.deleteData(
       Ci.nsIClearDataService.CLEAR_PERMISSIONS,
-      value => resolve()
+      () => resolve()
     );
   });
 }

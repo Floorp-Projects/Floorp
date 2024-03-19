@@ -269,7 +269,7 @@ export var UpdateUtils = {
           initialConfig[prefName] = initialValue;
         } catch (e) {}
 
-        Services.prefs.addObserver(prefName, async (subject, topic, data) => {
+        Services.prefs.addObserver(prefName, async () => {
           let config = { ...gUpdateConfigCache };
           config[prefName] = await UpdateUtils.readUpdateConfigSetting(
             prefName

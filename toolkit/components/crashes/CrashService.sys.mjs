@@ -66,7 +66,7 @@ function runMinidumpAnalyzer(minidumpPath, allThreads) {
         args.unshift("--full");
       }
 
-      process.runAsync(args, args.length, (subject, topic, data) => {
+      process.runAsync(args, args.length, (subject, topic) => {
         switch (topic) {
           case "process-finished":
             gRunningProcesses.delete(process);
@@ -211,7 +211,7 @@ CrashService.prototype = Object.freeze({
     await blocker;
   },
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     switch (topic) {
       case "profile-after-change":
         // Side-effect is the singleton is instantiated.

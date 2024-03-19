@@ -22,7 +22,7 @@ function xhr_handler(metadata, response) {
 }
 
 function fakeUIResponse() {
-  Services.obs.addObserver(function observe(subject, topic, data) {
+  Services.obs.addObserver(function observe(subject, topic) {
     if (topic === "captive-portal-login") {
       let xhr = new XMLHttpRequest();
       xhr.open("GET", gServerURL + kCanonicalSitePath, true);
@@ -56,7 +56,7 @@ function test_abort() {
         "should not execute |prepare| callback for " + kOtherInterfaceName
       );
     },
-    complete: function complete(success) {
+    complete: function complete() {
       do_throw("should not execute |complete| callback for " + kInterfaceName);
     },
   };

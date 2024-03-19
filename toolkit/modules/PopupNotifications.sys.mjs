@@ -689,7 +689,7 @@ PopupNotifications.prototype = {
    */
   suppressWhileOpen(panel) {
     this._hidePanel().catch(console.error);
-    panel.addEventListener("popuphidden", aEvent => {
+    panel.addEventListener("popuphidden", () => {
       this._update();
     });
   },
@@ -1369,7 +1369,7 @@ PopupNotifications.prototype = {
           true
         );
       }
-      this._popupshownListener = function (e) {
+      this._popupshownListener = function () {
         target.removeEventListener(
           "popupshown",
           this._popupshownListener,

@@ -189,7 +189,7 @@ export var CrashMonitor = {
    *
    * Update checkpoint file for every new notification received.
    */
-  observe(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic) {
     this.writeCheckpoint(aTopic);
 
     if (

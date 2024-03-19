@@ -88,7 +88,7 @@ add_task(async function test_principal_permissions() {
   await new Promise(aResolve => {
     Services.clearData.deleteData(
       Ci.nsIClearDataService.CLEAR_PERMISSIONS,
-      value => aResolve()
+      () => aResolve()
     );
   });
 });
@@ -465,7 +465,7 @@ add_task(async function test_3rdpartystorage_permissions() {
   await new Promise(aResolve => {
     Services.clearData.deleteData(
       Ci.nsIClearDataService.CLEAR_PERMISSIONS,
-      value => aResolve()
+      () => aResolve()
     );
   });
 });

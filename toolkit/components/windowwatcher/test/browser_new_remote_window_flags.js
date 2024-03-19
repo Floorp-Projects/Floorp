@@ -61,7 +61,7 @@ add_task(async function test_new_remote_window_flags_window_open() {
       gBrowser,
       url: SCRIPT_PAGE,
     },
-    async function (browser) {
+    async function () {
       let win = await newWinPromise;
       assertFlags(win);
       await BrowserTestUtils.closeWindow(win);

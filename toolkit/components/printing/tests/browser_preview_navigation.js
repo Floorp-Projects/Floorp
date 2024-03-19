@@ -23,7 +23,7 @@ async function waitForPageStatusUpdate(elem, expected, message) {
   );
 }
 
-async function waitUntilVisible(elem, visible = true) {
+async function waitUntilVisible(elem) {
   await TestUtils.waitForCondition(
     () =>
       BrowserTestUtils.isVisible(elem) && getComputedStyle(elem).opacity == "1",

@@ -259,7 +259,7 @@ Submitter.prototype = {
     let manager = Services.crashmanager;
     let submissionID = manager.generateSubmissionID();
 
-    xhr.addEventListener("readystatechange", evt => {
+    xhr.addEventListener("readystatechange", () => {
       if (xhr.readyState == 4) {
         let ret =
           xhr.status === 200 ? this.parseResponse(xhr.responseText) : {};

@@ -125,7 +125,7 @@ export class ViewSourcePageChild extends JSWindowActorChild {
    * @param event
    *        The pageshow event being handled.
    */
-  onPageShow(event) {
+  onPageShow() {
     // If we need to draw the selection, wait until an actual view source page
     // has loaded, instead of about:blank.
     if (

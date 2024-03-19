@@ -103,7 +103,7 @@ export var AsyncPrefs = {
     return AsyncPrefsParent.set(pref, value);
   },
 
-  reset(pref, value) {
+  reset(pref) {
     if (kInChildProcess) {
       return ChromeUtils.domProcessChild.getActor("AsyncPrefs").reset(pref);
     }

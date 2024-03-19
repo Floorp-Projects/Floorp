@@ -1143,7 +1143,7 @@ AboutReader.prototype = {
   /*
    * If the ReaderView banner font-dropdown is closed, open it.
    */
-  _openDropdown(dropdown, window) {
+  _openDropdown(dropdown) {
     if (dropdown.classList.contains("open")) {
       return;
     }

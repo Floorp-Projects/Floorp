@@ -59,7 +59,7 @@ function test() {
     var file = destDir.clone();
     file.append("no_default_file_name");
     MockFilePicker.setFiles([file]);
-    MockFilePicker.showCallback = function (fp) {
+    MockFilePicker.showCallback = function () {
       MockFilePicker.filterIndex = 1; // kSaveAsType_URL
     };
 

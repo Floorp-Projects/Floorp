@@ -53,7 +53,7 @@ class Renderer {
 // adding elements more readable, e.g. elemRenderer.elem_h4(...) instead of
 // elemRenderer.elem("h4", ...).
 const elemRenderer = new Proxy(new Renderer(), {
-  get(target, prop, receiver) {
+  get(target, prop) {
     // Function prefixes to proxy.
     const proxied = {
       elem_: (...args) => target.elem(...args),
@@ -502,7 +502,7 @@ async function renderPeerConnectionSection() {
       return body;
     },
     // Creates the filling for the disclosure
-    updateFn: async section => {
+    updateFn: async () => {
       let statsReports = await getStats(needsFullUpdate);
       needsFullUpdate = REQUEST_UPDATE_ONLY_REFRESH;
 
@@ -1828,7 +1828,7 @@ class PrimarySection {
     disclosureHideL10nId,
     autoRefreshPref,
     renderFn = async () => {}, // Creates the filling for the disclosure
-    updateFn = async section => {}, // Updates the contents.
+    updateFn = async () => {}, // Updates the contents.
     headerElementsFn = async () => [], // Accessory elements for the heading
   }) {
     const newSect = new PrimarySection();
@@ -1937,7 +1937,7 @@ async function renderMediaCtx(rndr) {
   hasH264Hardware.dataset.value = ctx.hasH264Hardware;
   const renderFn = async () =>
     rndr.elems_div({}, [hasH264Hardware, rndr.elem_hr(), confList.view()]);
-  const updateFn = async section => {
+  const updateFn = async () => {
     const newCtx = WGI.getMediaContext();
     if (hasH264Hardware.dataset.value != newCtx.hasH264Hardware) {
       hasH264Hardware.dataset.value = newCtx.hasH264Hardware;

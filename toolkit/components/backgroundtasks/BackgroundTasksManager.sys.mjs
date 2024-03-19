@@ -172,7 +172,7 @@ export class BackgroundTasksManager {
     const waitFlag =
       commandLine.findFlag("wait-for-jsdebugger", CASE_INSENSITIVE) != -1;
     if (waitFlag) {
-      function onDevtoolsThreadReady(subject, topic, data) {
+      function onDevtoolsThreadReady(subject, topic) {
         lazy.log.info(
           `${Services.appinfo.processID}: Setting breakpoints for background task named '${name}'` +
             ` (with ${commandLine.length} arguments)`

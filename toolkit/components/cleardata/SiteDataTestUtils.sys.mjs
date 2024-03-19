@@ -244,10 +244,10 @@ export var SiteDataTestUtils = {
     return new Promise(resolve => {
       let data = true;
       let request = indexedDB.openForPrincipal(principal, "TestDatabase", 1);
-      request.onupgradeneeded = function (e) {
+      request.onupgradeneeded = function () {
         data = false;
       };
-      request.onsuccess = function (e) {
+      request.onsuccess = function () {
         resolve(data);
       };
     });
@@ -276,11 +276,11 @@ export var SiteDataTestUtils = {
       CacheListener.prototype = {
         QueryInterface: ChromeUtils.generateQI(["nsICacheEntryOpenCallback"]),
 
-        onCacheEntryCheck(entry) {
+        onCacheEntryCheck() {
           return Ci.nsICacheEntryOpenCallback.ENTRY_WANTED;
         },
 
-        onCacheEntryAvailable(entry, isnew, status) {
+        onCacheEntryAvailable() {
           resolve();
         },
       };

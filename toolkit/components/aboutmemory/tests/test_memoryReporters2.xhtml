@@ -55,7 +55,7 @@
   {
     let residents = {};
 
-    let handleReport = function(aProcess, aPath, aKind, aUnits, aAmount, aDesc) {
+    let handleReport = function(aProcess, aPath, aKind, aUnits, aAmount) {
       if (aProcess.startsWith(`Utility `)) {
         // The Utility process that runs the ORB JavaScript validator starts on first
         // idle in the parent process. This makes it notoriously hard to know _if_ it

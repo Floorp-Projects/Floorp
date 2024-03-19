@@ -14,7 +14,7 @@ CrashMonitor.prototype = {
 
   QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 
-  observe(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic) {
     switch (aTopic) {
       case "profile-after-change":
         MonitorAPI.init();

@@ -163,7 +163,7 @@ add_task(async function thumbnails_captureAndStore_error_response() {
       gBrowser,
       url: URL,
     },
-    async browser => {
+    async () => {
       await captureAndCheckColor(0, 255, 0, "we have a green thumbnail");
     }
   );
@@ -176,7 +176,7 @@ add_task(async function thumbnails_captureAndStore_error_response() {
       gBrowser,
       url: URL,
     },
-    async browser => {
+    async () => {
       await captureAndCheckColor(0, 255, 0, "we still have a green thumbnail");
     }
   );
@@ -195,7 +195,7 @@ add_task(async function thumbnails_captureAndStore_ok_response() {
       gBrowser,
       url: URL,
     },
-    async browser => {
+    async () => {
       await captureAndCheckColor(0, 255, 0, "we have a green thumbnail");
     }
   );
@@ -208,7 +208,7 @@ add_task(async function thumbnails_captureAndStore_ok_response() {
       gBrowser,
       url: URL,
     },
-    async browser => {
+    async () => {
       await captureAndCheckColor(255, 0, 0, "we now have a red thumbnail");
     }
   );

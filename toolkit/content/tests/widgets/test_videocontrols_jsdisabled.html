@@ -45,7 +45,7 @@ SpecialPowers.pushPrefEnv({"set": [["javascript.enabled", false]]}, startTest);
 var testnum = 1;
 
 var video;
-function loadevent(event) {
+function loadevent() {
   is(win.testExpando, undefined, "expando shouldn't exist because js is disabled");
   video = win.document.querySelector("video");
   // Other events expected by the test.

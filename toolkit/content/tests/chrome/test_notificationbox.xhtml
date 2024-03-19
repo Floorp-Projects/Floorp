@@ -89,8 +89,8 @@ function testtag_notificationbox_buttonpressed(notification, button)
 }
 
 let buttonsPressedLog = "";
-function testtag_notificationbox_button1pressed(notification, button) { buttonsPressedLog += "button1"; return true; }
-function testtag_notificationbox_button2pressed(notification, button) { buttonsPressedLog += "button2"; return true; }
+function testtag_notificationbox_button1pressed() { buttonsPressedLog += "button1"; return true; }
+function testtag_notificationbox_button2pressed() { buttonsPressedLog += "button2"; return true; }
 
 function testtag_notificationbox(nb)
 {
@@ -227,7 +227,7 @@ var tests =
       nb.removeNotification(ntf);
       return ntf;
     },
-    result(nb, ntf) {
+    result(nb) {
       testtag_notificationbox_State(nb, "removeNotification", null, 0);
     }
   },
@@ -394,7 +394,7 @@ var tests =
       nb.removeCurrentNotification();
       return ntf;
     },
-    result(nb, ntf) {
+    result(nb) {
       testtag_notificationbox_State(nb, "removeCurrentNotification", null, 0);
     }
   },
@@ -451,7 +451,7 @@ var tests =
         }, testtag_notificationbox_buttons_nopopup);
       return ntf;
     },
-    result(nb, ntf) {
+    result(nb) {
       let buttons = nb.currentNotification.buttonContainer.querySelectorAll("* button");
 
       buttons[0].focus();
@@ -510,7 +510,7 @@ var tests =
     }
   },
   {
-    async test(nb, unused) {
+    async test(nb) {
       // add a number of notifications and check that they are added in order
       await nb.appendNotification("4", { label: "Four", priority: nb.PRIORITY_INFO_HIGH },
                             testtag_notificationbox_buttons);
@@ -537,11 +537,11 @@ var tests =
   {
     // test closing notifications to make sure that the current notification is still set properly
     repeat: true,
-    test(nb, testidx) {
+    test() {
       this.repeat = false;
       return undefined;
     },
-    result(nb, arr) {
+    result(nb) {
         let notificationOrder = [4, 7, 2, 8, 5, 6, 1, 9, 10, 3];
         let allNotificationValues = [...nb.stack.children].map(n => n.getAttribute("value"));
         is(allNotificationValues.length, notificationOrder.length, "Expected number of notifications");
@@ -556,7 +556,7 @@ var tests =
     }
   },
   {
-    async test(nb, ntf) {
+    async test(nb) {
       var exh = false;
       try {
         await nb.appendNotification("no", { label: "no", priority: -1 });

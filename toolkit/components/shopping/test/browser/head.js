@@ -46,7 +46,7 @@ async function promiseSidebarUpdated(sidebar, expectedProduct) {
         return !!e.detail.data && isProductCurrent();
       },
       true
-    ).then(e => true);
+    ).then(() => true);
   });
 }
 
@@ -65,7 +65,7 @@ async function promiseSidebarAdsUpdated(sidebar, expectedProduct) {
       true,
       null,
       true
-    ).then(e => true);
+    ).then(() => true);
   });
 }
 

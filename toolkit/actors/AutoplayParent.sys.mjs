@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 export class AutoplayParent extends JSWindowActorParent {
-  receiveMessage(aMessage) {
+  receiveMessage() {
     let topBrowsingContext = this.manager.browsingContext.top;
     let browser = topBrowsingContext.embedderElement;
     let document = browser.ownerDocument;

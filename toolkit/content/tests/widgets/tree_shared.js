@@ -570,10 +570,10 @@ function testtag_tree_TreeSelection_UI(tree, testid, multiple) {
 
   var keydownFired = 0;
   var keypressFired = 0;
-  function keydownListener(event) {
+  function keydownListener() {
     keydownFired++;
   }
-  function keypressListener(event) {
+  function keypressListener() {
     keypressFired++;
   }
 
@@ -1303,7 +1303,7 @@ function testtag_tree_TreeView_rows(tree, testid, rowInfo, startRow) {
     isContainer(row) {
       return row.container;
     },
-    isContainerOpen(row) {
+    isContainerOpen() {
       return false;
     },
     isContainerEmpty(row) {
@@ -1321,7 +1321,7 @@ function testtag_tree_TreeView_rows(tree, testid, rowInfo, startRow) {
     getParentIndex(row) {
       return row.parent;
     },
-    hasNextSibling(row) {
+    hasNextSibling() {
       return r < startRow + length - 1;
     },
   };
@@ -1429,7 +1429,7 @@ function testtag_tree_TreeView_rows(tree, testid, rowInfo, startRow) {
   }
 }
 
-function testtag_tree_TreeView_rows_sort(tree, testid, rowInfo) {
+function testtag_tree_TreeView_rows_sort(tree) {
   // check if cycleHeader sorts the columns
   var columnIndex = 0;
   var view = tree.view;
@@ -1730,7 +1730,7 @@ function testtag_tree_wheel(aTree) {
 
   var defaultPrevented = 0;
 
-  function wheelListener(event) {
+  function wheelListener() {
     defaultPrevented++;
   }
   window.addEventListener("wheel", wheelListener);
@@ -2105,7 +2105,7 @@ function mouseClickOnColumnHeader(
   }
 }
 
-function mouseDblClickOnCell(tree, row, column, testname) {
+function mouseDblClickOnCell(tree, row, column) {
   // select the row we will edit
   var selection = tree.view.selection;
   selection.select(row);

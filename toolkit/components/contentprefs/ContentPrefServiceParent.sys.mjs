@@ -92,7 +92,7 @@ export class ContentPrefsParent extends JSProcessActorParent {
         let actor = this;
         let args = data.args;
 
-        return new Promise(resolve => {
+        return new Promise(() => {
           let listener = {
             handleResult(pref) {
               actor.sendAsyncMessage("ContentPrefs:HandleResult", {

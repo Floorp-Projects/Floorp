@@ -6,7 +6,7 @@
 add_task(async function test() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
-    function (browser) {
+    function () {
       ok(
         true,
         "Browser should start even with potentially pathologically long PATH."

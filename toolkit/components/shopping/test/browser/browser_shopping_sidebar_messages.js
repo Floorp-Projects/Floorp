@@ -33,7 +33,7 @@ add_task(async function test_sidebar_error() {
     await SpecialPowers.spawn(
       sidebar.querySelector("browser"),
       [],
-      async prodInfo => {
+      async () => {
         let doc = content.document;
         let shoppingContainer =
           doc.querySelector("shopping-container").wrappedJSObject;
@@ -79,7 +79,7 @@ add_task(async function test_sidebar_analysis_status_page_not_supported() {
     await SpecialPowers.spawn(
       sidebar.querySelector("browser"),
       [],
-      async prodInfo => {
+      async () => {
         let doc = content.document;
         let shoppingContainer =
           doc.querySelector("shopping-container").wrappedJSObject;
@@ -125,7 +125,7 @@ add_task(async function test_sidebar_analysis_status_unprocessable() {
     await SpecialPowers.spawn(
       sidebar.querySelector("browser"),
       [],
-      async prodInfo => {
+      async () => {
         let doc = content.document;
         let shoppingContainer =
           doc.querySelector("shopping-container").wrappedJSObject;
@@ -174,7 +174,7 @@ add_task(async function test_sidebar_analysis_status_not_enough_reviews() {
       await SpecialPowers.spawn(
         sidebar.querySelector("browser"),
         [],
-        async prodInfo => {
+        async () => {
           let doc = content.document;
           let shoppingContainer =
             doc.querySelector("shopping-container").wrappedJSObject;

@@ -51,7 +51,7 @@ function test_abort() {
       Assert.equal(++step, 1);
       gCaptivePortalDetector.finishPreparation(kInterfaceName);
     },
-    complete: function complete(success) {
+    complete: function complete() {
       do_throw("should not execute |complete| callback");
     },
   };

@@ -602,12 +602,12 @@ var PlacesProvider = {
         }
       },
 
-      handleError(aError) {
+      handleError() {
         // Should we somehow handle this error?
         aCallback([]);
       },
 
-      handleCompletion(aReason) {
+      handleCompletion() {
         // The Places query breaks ties in frecency by place ID descending, but
         // that's different from how Links.compareLinks breaks ties, because
         // compareLinks doesn't have access to place IDs.  It's very important
@@ -2101,7 +2101,7 @@ var Links = {
    * Implements the nsIObserver interface to get notified about browser history
    * sanitization.
    */
-  observe: function Links_observe(aSubject, aTopic, aData) {
+  observe: function Links_observe() {
     // Make sure to update open about:newtab instances. If there are no opened
     // pages we can just wait for the next new tab to populate the cache again.
     if (AllPages.length && AllPages.enabled) {
@@ -2182,7 +2182,7 @@ var Telemetry = {
   /**
    * Listens for gather telemetry topic.
    */
-  observe: function Telemetry_observe(aSubject, aTopic, aData) {
+  observe: function Telemetry_observe() {
     this._collect();
   },
 };

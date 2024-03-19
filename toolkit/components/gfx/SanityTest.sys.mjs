@@ -397,7 +397,7 @@ SanityTest.prototype = {
     return true;
   },
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     if (topic != "profile-after-change") {
       return;
     }

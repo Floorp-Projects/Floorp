@@ -106,7 +106,7 @@ function waitForDownloadWindow() {
         var domwindow = aXULWindow.docShell.domWindow;
         domwindow.addEventListener("load", downloadOnLoad, true);
       },
-      onCloseWindow: aXULWindow => {},
+      onCloseWindow: () => {},
     };
 
     Services.wm.addListener(listener);

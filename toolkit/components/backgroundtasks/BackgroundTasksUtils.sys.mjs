@@ -193,7 +193,7 @@ export var BackgroundTasksUtils = {
     lazy.log.info(`readPreferences: profile is locked`);
 
     let prefs = {};
-    let addPref = (kind, name, value, sticky, locked) => {
+    let addPref = (kind, name, value) => {
       if (predicate && !predicate(name)) {
         return;
       }

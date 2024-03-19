@@ -91,7 +91,7 @@ export class MLEngineParent extends JSWindowActorParent {
   }
 
   // eslint-disable-next-line consistent-return
-  async receiveMessage({ name, data }) {
+  async receiveMessage({ name }) {
     switch (name) {
       case "MLEngine:Ready":
         if (lazy.EngineProcess.resolveMLEngineParent) {

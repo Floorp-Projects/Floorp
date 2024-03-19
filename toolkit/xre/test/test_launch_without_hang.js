@@ -100,7 +100,7 @@ function terminateFirefox(completion) {
   process.init(file);
 
   let processObserver = {
-    observe: function PO_observe(aSubject, aTopic, aData) {
+    observe: function PO_observe(aSubject, aTopic) {
       info("topic: " + aTopic + ", process exitValue: " + process.exitValue);
 
       Assert.equal(
@@ -135,7 +135,7 @@ function launchProcess(file, args, env, timeoutMS, handler, attemptCount) {
   state.attempt = attemptCount;
 
   state.processObserver = {
-    observe: function PO_observe(aSubject, aTopic, aData) {
+    observe: function PO_observe(aSubject, aTopic) {
       if (!state.appTimer) {
         // the app timer has been canceled; this process has timed out already so don't process further.
         handler(false);
@@ -170,7 +170,7 @@ function launchProcess(file, args, env, timeoutMS, handler, attemptCount) {
 
   // The timer callback to kill the process if it takes too long.
   state.appTimerCallback = {
-    notify: function TC_notify(aTimer) {
+    notify: function TC_notify() {
       state.appTimer = null;
 
       info("Restoring environment variables");

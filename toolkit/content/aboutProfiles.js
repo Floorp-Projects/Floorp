@@ -139,7 +139,7 @@ function display(profileData) {
 
         td.appendChild(button);
 
-        button.addEventListener("click", function (e) {
+        button.addEventListener("click", function () {
           value.reveal();
         });
       }

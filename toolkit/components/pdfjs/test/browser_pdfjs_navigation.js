@@ -229,7 +229,7 @@ async function contentSetUp() {
     return new Promise(resolve => {
       document.addEventListener(
         "pagerendered",
-        function (e) {
+        function () {
           document.querySelector("#viewer").click();
           resolve();
         },

@@ -42,7 +42,7 @@ async function onViewSourceWindowOpen(aWindow) {
   gCopyEmailMenuItem = aWindow.document.getElementById("context-copyemail");
 
   let browser = gBrowser.selectedBrowser;
-  await SpecialPowers.spawn(browser, [], async function (arg) {
+  await SpecialPowers.spawn(browser, [], async function () {
     let tags = content.document.querySelectorAll("a[href]");
     Assert.equal(
       tags[0].href,

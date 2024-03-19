@@ -56,7 +56,7 @@ function URLFetcher(url, timeout) {
   xhr.onerror = function () {
     self.onerror();
   };
-  xhr.onreadystatechange = function (oEvent) {
+  xhr.onreadystatechange = function () {
     if (xhr.readyState === 4) {
       if (self._isAborted) {
         return;
@@ -181,10 +181,7 @@ function LoginObserver(captivePortalDetector) {
     observeActivity: function observeActivity(
       aHttpChannel,
       aActivityType,
-      aActivitySubtype,
-      aTimestamp,
-      aExtraSizeData,
-      aExtraStringData
+      aActivitySubtype
     ) {
       if (
         aActivityType ===
@@ -541,5 +538,5 @@ if (DEBUG) {
   };
 } else {
   // eslint-disable-next-line no-global-assign
-  debug = function (s) {};
+  debug = function () {};
 }

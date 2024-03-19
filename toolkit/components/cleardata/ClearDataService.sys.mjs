@@ -193,7 +193,7 @@ const CookieCleaner = {
       });
   },
 
-  deleteByRange(aFrom, aTo) {
+  deleteByRange(aFrom) {
     return Services.cookies.removeAllSince(aFrom);
   },
 
@@ -584,7 +584,7 @@ const DownloadsCleaner = {
 };
 
 const PasswordsCleaner = {
-  deleteByHost(aHost, aOriginAttributes) {
+  deleteByHost(aHost) {
     // Clearing by host also clears associated subdomains.
     return this._deleteInternal(aLogin =>
       Services.eTLD.hasRootDomain(aLogin.hostname, aHost)
@@ -630,7 +630,7 @@ const PasswordsCleaner = {
 };
 
 const MediaDevicesCleaner = {
-  async deleteByRange(aFrom, aTo) {
+  async deleteByRange(aFrom) {
     let mediaMgr = Cc["@mozilla.org/mediaManagerService;1"].getService(
       Ci.nsIMediaManagerService
     );
@@ -799,7 +799,7 @@ const QuotaCleaner = {
     }
   },
 
-  async deleteByHost(aHost, aOriginAttributes) {
+  async deleteByHost(aHost) {
     // XXX: The aOriginAttributes is expected to always be empty({}). Maybe have
     // a debug assertion here to ensure that?
 
@@ -872,7 +872,7 @@ const QuotaCleaner = {
         _ => /* exceptionThrown = */ false,
         _ => /* exceptionThrown = */ true
       )
-      .then(exceptionThrown => {
+      .then(() => {
         // QuotaManager: In the event of a failure, we call reject to propagate
         // the error upwards.
         return new Promise((aResolve, aReject) => {
@@ -1002,7 +1002,7 @@ const PushNotificationsCleaner = {
     });
   },
 
-  deleteByHost(aHost, aOriginAttributes) {
+  deleteByHost(aHost) {
     // Will also clear entries for subdomains of aHost. Data is cleared across
     // all origin attributes.
     return this._deleteByRootDomain(aHost);
@@ -1078,7 +1078,7 @@ const StorageAccessCleaner = {
       });
   },
 
-  async deleteByHost(aHost, aOriginAttributes) {
+  async deleteByHost(aHost) {
     // Clearing by host also clears associated subdomains.
     this._deleteInternal(({ principal }) => {
       let toBeRemoved = false;
@@ -1095,7 +1095,7 @@ const StorageAccessCleaner = {
     );
   },
 
-  async deleteByRange(aFrom, aTo) {
+  async deleteByRange(aFrom) {
     Services.perms.removeByTypeSince("storageAccessAPI", aFrom / 1000);
   },
 
@@ -1105,7 +1105,7 @@ const StorageAccessCleaner = {
 };
 
 const HistoryCleaner = {
-  deleteByHost(aHost, aOriginAttributes) {
+  deleteByHost(aHost) {
     if (!AppConstants.MOZ_PLACES) {
       return Promise.resolve();
     }
@@ -1142,7 +1142,7 @@ const HistoryCleaner = {
 };
 
 const SessionHistoryCleaner = {
-  async deleteByHost(aHost, aOriginAttributes) {
+  async deleteByHost(aHost) {
     // Session storage and history also clear subdomains of aHost.
     Services.obs.notifyObservers(null, "browser:purge-sessionStorage", aHost);
     Services.obs.notifyObservers(
@@ -1160,7 +1160,7 @@ const SessionHistoryCleaner = {
     return this.deleteByHost(aBaseDomain, {});
   },
 
-  async deleteByRange(aFrom, aTo) {
+  async deleteByRange(aFrom) {
     Services.obs.notifyObservers(
       null,
       "browser:purge-session-history",
@@ -1275,7 +1275,7 @@ const PermissionsCleaner = {
     }
   },
 
-  deleteByHost(aHost, aOriginAttributes) {
+  deleteByHost(aHost) {
     return this._deleteInternal({ host: aHost });
   },
 
@@ -1287,7 +1287,7 @@ const PermissionsCleaner = {
     return this._deleteInternal({ baseDomain: aBaseDomain });
   },
 
-  async deleteByRange(aFrom, aTo) {
+  async deleteByRange(aFrom) {
     Services.perms.removeAllSince(aFrom / 1000);
   },
 
@@ -1301,7 +1301,7 @@ const PermissionsCleaner = {
 };
 
 const PreferencesCleaner = {
-  deleteByHost(aHost, aOriginAttributes) {
+  deleteByHost(aHost) {
     // Also clears subdomains of aHost.
     return new Promise((aResolve, aReject) => {
       let cps2 = Cc["@mozilla.org/content-pref/service;1"].getService(
@@ -1328,7 +1328,7 @@ const PreferencesCleaner = {
     return this.deleteByHost(aBaseDomain, {});
   },
 
-  async deleteByRange(aFrom, aTo) {
+  async deleteByRange(aFrom) {
     let cps2 = Cc["@mozilla.org/content-pref/service;1"].getService(
       Ci.nsIContentPrefService2
     );
@@ -1477,7 +1477,7 @@ const EMECleaner = {
 };
 
 const ReportsCleaner = {
-  deleteByHost(aHost, aOriginAttributes) {
+  deleteByHost(aHost) {
     // Also clears subdomains of aHost.
     return new Promise(aResolve => {
       Services.obs.notifyObservers(null, "reporting:purge-host", aHost);
@@ -1520,7 +1520,7 @@ const ContentBlockingCleaner = {
     await this.deleteAll();
   },
 
-  deleteByRange(aFrom, aTo) {
+  deleteByRange(aFrom) {
     return lazy.TrackingDBService.clearSince(aFrom);
   },
 };
@@ -1616,7 +1616,7 @@ const IdentityCredentialStorageCleaner = {
     }
   },
 
-  async deleteByPrincipal(aPrincipal, aIsUserRequest) {
+  async deleteByPrincipal(aPrincipal) {
     if (
       Services.prefs.getBoolPref(
         "dom.security.credentialmanagement.identity.enabled",
@@ -1698,7 +1698,7 @@ const BounceTrackingProtectionStateCleaner = {
     await lazy.bounceTrackingProtection.clearAll();
   },
 
-  async deleteByPrincipal(aPrincipal, aIsUserRequest) {
+  async deleteByPrincipal(aPrincipal) {
     if (!lazy.isBounceTrackingProtectionEnabled) {
       return;
     }
@@ -1709,7 +1709,7 @@ const BounceTrackingProtectionStateCleaner = {
     );
   },
 
-  async deleteByBaseDomain(aBaseDomain, aIsUserRequest) {
+  async deleteByBaseDomain(aBaseDomain) {
     if (!lazy.isBounceTrackingProtectionEnabled) {
       return;
     }
@@ -1723,7 +1723,7 @@ const BounceTrackingProtectionStateCleaner = {
     await lazy.bounceTrackingProtection.clearByTimeRange(aFrom, aTo);
   },
 
-  async deleteByHost(aHost, aOriginAttributes) {
+  async deleteByHost(aHost) {
     if (!lazy.isBounceTrackingProtectionEnabled) {
       return;
     }

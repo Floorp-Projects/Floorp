@@ -170,7 +170,7 @@ add_task(async function test_override_super_multiple() {
  * ensures that this does not block other functions from being registered.
  */
 add_task(async function test_override_error() {
-  let errorOverrideFn = base => {
+  let errorOverrideFn = () => {
     throw new Error("Expected error.");
   };
 

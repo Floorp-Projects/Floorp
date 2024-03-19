@@ -236,7 +236,7 @@ export class ReportBrokenSiteChild extends JSWindowActorChild {
     });
   }
 
-  async #getConsoleLogs(docShell) {
+  async #getConsoleLogs() {
     return this.#getLoggedMessages()
       .flat()
       .sort((a, b) => a.timeStamp - b.timeStamp)

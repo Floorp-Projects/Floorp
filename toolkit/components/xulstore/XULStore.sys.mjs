@@ -89,7 +89,7 @@ XULStore.prototype = {
     this.readFile();
   },
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     this.writeFile();
     if (topic == "profile-before-change") {
       this._saveAllowed = false;

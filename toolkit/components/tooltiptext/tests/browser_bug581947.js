@@ -55,7 +55,7 @@ function todo_check(aBrowser, aElementName, aBarred) {
   return SpecialPowers.spawn(
     aBrowser,
     [[aElementName, aBarred]],
-    async function ([aElementName, aBarred]) {
+    async function ([aElementName]) {
       let e = content.document.createElement(aElementName);
       let contentElement = content.document.getElementById("content");
       contentElement.appendChild(e);

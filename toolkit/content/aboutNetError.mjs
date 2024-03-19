@@ -498,7 +498,7 @@ function initPage() {
       trrExceptionButton.addEventListener("click", () => {
         RPMSendQuery("Browser:AddTRRExcludedDomain", {
           hostname: HOST_NAME,
-        }).then(msg => {
+        }).then(() => {
           retryThis(trrExceptionButton);
         });
       });
@@ -1061,15 +1061,15 @@ function addCertException() {
     () => {
       location.reload();
     },
-    err => {}
+    () => {}
   );
 }
 
-function onReturnButtonClick(e) {
+function onReturnButtonClick() {
   RPMSendAsyncMessage("Browser:SSLErrorGoBack");
 }
 
-function copyPEMToClipboard(e) {
+function copyPEMToClipboard() {
   const errorText = document.getElementById("certificateErrorText");
   navigator.clipboard.writeText(errorText.textContent);
 }

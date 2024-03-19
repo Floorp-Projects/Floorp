@@ -170,7 +170,7 @@ add_task(async function test_addCrash_quitting() {
   await setup(firstCrashId);
 
   let minidumpAnalyzerKilledPromise = new Promise((resolve, reject) => {
-    Services.obs.addObserver((subject, topic, data) => {
+    Services.obs.addObserver((subject, topic) => {
       if (topic === "test-minidump-analyzer-killed") {
         resolve();
       }

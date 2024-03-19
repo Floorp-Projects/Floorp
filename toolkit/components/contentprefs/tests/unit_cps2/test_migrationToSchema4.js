@@ -25,7 +25,7 @@ BEGIN TRANSACTION;
   CREATE INDEX prefs_idx ON prefs(groupID, settingID);
 COMMIT;`;
 
-function prepareVersion3Schema(callback) {
+function prepareVersion3Schema() {
   var dbFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
   dbFile.append("content-prefs.sqlite");
 

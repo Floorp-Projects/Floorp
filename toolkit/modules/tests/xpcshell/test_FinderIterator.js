@@ -7,7 +7,7 @@ let finderIterator = new FinderIterator();
 var gFindResults = [];
 // Stub the method that instantiates nsIFind and does all the interaction with
 // the docShell to be searched through.
-finderIterator._iterateDocument = function* (word, window, finder) {
+finderIterator._iterateDocument = function* () {
   for (let range of gFindResults) {
     yield range;
   }
@@ -117,7 +117,7 @@ add_task(async function test_valid_arguments() {
     entireWord: false,
     finder: gMockFinder,
     listener: {
-      onIteratorRangeFound(range) {
+      onIteratorRangeFound() {
         ++count;
       },
     },
@@ -136,7 +136,7 @@ add_task(async function test_valid_arguments() {
       finderIterator.start({
         entireWord: false,
         listener: {
-          onIteratorRangeFound(range) {
+          onIteratorRangeFound() {
             ++count;
           },
         },
@@ -154,7 +154,7 @@ add_task(async function test_valid_arguments() {
         caseSensitive: false,
         entireWord: false,
         listener: {
-          onIteratorRangeFound(range) {
+          onIteratorRangeFound() {
             ++count;
           },
         },
@@ -170,7 +170,7 @@ add_task(async function test_valid_arguments() {
       finderIterator.start({
         caseSensitive: false,
         listener: {
-          onIteratorRangeFound(range) {
+          onIteratorRangeFound() {
             ++count;
           },
         },
@@ -188,7 +188,7 @@ add_task(async function test_valid_arguments() {
         caseSensitive: false,
         entireWord: false,
         listener: {
-          onIteratorRangeFound(range) {
+          onIteratorRangeFound() {
             ++count;
           },
         },
@@ -221,7 +221,7 @@ add_task(async function test_valid_arguments() {
         entireWord: true,
         finder: gMockFinder,
         listener: {
-          onIteratorRangeFound(range) {
+          onIteratorRangeFound() {
             ++count;
           },
         },
@@ -246,7 +246,7 @@ add_task(async function test_stop() {
     entireWord: false,
     finder: gMockFinder,
     listener: {
-      onIteratorRangeFound(range) {
+      onIteratorRangeFound() {
         ++count;
       },
     },
@@ -274,7 +274,7 @@ add_task(async function test_reset() {
     entireWord: false,
     finder: gMockFinder,
     listener: {
-      onIteratorRangeFound(range) {
+      onIteratorRangeFound() {
         ++count;
       },
     },
@@ -317,7 +317,7 @@ add_task(async function test_parallel_starts() {
     entireWord: false,
     finder: gMockFinder,
     listener: {
-      onIteratorRangeFound(range) {
+      onIteratorRangeFound() {
         ++count;
       },
     },
@@ -334,7 +334,7 @@ add_task(async function test_parallel_starts() {
     entireWord: false,
     finder: gMockFinder,
     listener: {
-      onIteratorRangeFound(range) {
+      onIteratorRangeFound() {
         ++count2;
       },
     },
@@ -385,7 +385,7 @@ add_task(async function test_allowDistance() {
     entireWord: false,
     finder: gMockFinder,
     listener: {
-      onIteratorRangeFound(range) {
+      onIteratorRangeFound() {
         ++count;
       },
     },
@@ -399,7 +399,7 @@ add_task(async function test_allowDistance() {
     entireWord: false,
     finder: gMockFinder,
     listener: {
-      onIteratorRangeFound(range) {
+      onIteratorRangeFound() {
         ++count2;
       },
     },
@@ -414,7 +414,7 @@ add_task(async function test_allowDistance() {
     entireWord: false,
     finder: gMockFinder,
     listener: {
-      onIteratorRangeFound(range) {
+      onIteratorRangeFound() {
         ++count3;
       },
     },

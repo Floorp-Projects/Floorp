@@ -58,7 +58,7 @@ add_task(async function test_proc_info() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: DUMMY_URL },
-    async function (browser) {
+    async function () {
       // We test `SAMPLE_SIZE` times to increase a tad the chance of encountering race conditions.
       for (let z = 0; z < SAMPLE_SIZE; z++) {
         let parentProc = await ChromeUtils.requestProcInfo();

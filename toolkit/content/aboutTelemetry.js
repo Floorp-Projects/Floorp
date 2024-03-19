@@ -257,7 +257,7 @@ var PingPicker = {
       "mouseleave",
       () => (pingPickerNeedHide = true)
     );
-    document.addEventListener("click", ev => {
+    document.addEventListener("click", () => {
       if (pingPickerNeedHide) {
         pingPicker.classList.add("hidden");
       }
@@ -966,7 +966,7 @@ var RawPayloadData = {
   attachObservers() {
     document
       .getElementById("payload-json-viewer")
-      .addEventListener("click", e => {
+      .addEventListener("click", () => {
         openJsonInFirefoxJsonViewer(JSON.stringify(gPingData.payload, null, 2));
       });
   },
@@ -1121,7 +1121,7 @@ var Histogram = {
     return outerDiv;
   },
 
-  processHistogram(aHgram, aName) {
+  processHistogram(aHgram) {
     const values = Object.keys(aHgram.values).map(k => aHgram.values[k]);
     if (!values.length) {
       // If we have no values collected for this histogram, just return

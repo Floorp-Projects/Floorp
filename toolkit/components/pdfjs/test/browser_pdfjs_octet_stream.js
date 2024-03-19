@@ -88,7 +88,7 @@ add_task(async function test_octet_stream_in_frame() {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: `data:text/html,<iframe src='${PDF_URL}'>` },
-    async function (newTabBrowser) {
+    async function () {
       // wait until downloadsPanel opens before continuing with test
       info("Waiting for download panel to open");
       await downloadsPanelPromise;

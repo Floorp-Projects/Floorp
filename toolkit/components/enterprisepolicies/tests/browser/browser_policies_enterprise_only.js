@@ -14,13 +14,13 @@ add_task(async function test_enterprise_only_policies() {
     enterprisePolicyRan = false;
 
   Policies.NormalPolicy = {
-    onProfileAfterChange(manager, param) {
+    onProfileAfterChange() {
       normalPolicyRan = true;
     },
   };
 
   Policies.EnterpriseOnlyPolicy = {
-    onProfileAfterChange(manager, param) {
+    onProfileAfterChange() {
       enterprisePolicyRan = true;
     },
   };

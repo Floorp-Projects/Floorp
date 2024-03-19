@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-export async function runBackgroundTask(commandLine) {
+export async function runBackgroundTask() {
   const get = Services.env.get("MOZ_TEST_PROCESS_UPDATES");
   let exitCode = 81;
   if (get == "ShouldNotProcessUpdates(): OtherInstanceRunning") {

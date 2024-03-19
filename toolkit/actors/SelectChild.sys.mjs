@@ -70,7 +70,7 @@ SelectContentHelper.prototype = {
       mozSystemGroup: true,
     });
     let MutationObserver = this.element.ownerGlobal.MutationObserver;
-    this.mut = new MutationObserver(mutations => {
+    this.mut = new MutationObserver(() => {
       // Something changed the <select> while it was open, so
       // we'll poke a DeferredTask to update the parent sometime
       // in the very near future.

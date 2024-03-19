@@ -21,7 +21,7 @@ add_task(async function thumbnails_bg_bug727765() {
       gBrowser,
       url: URL,
     },
-    async browser => {
+    async () => {
       await captureAndCheckColor(255, 0, 0, "we have a red thumbnail");
 
       // Check the thumbnail color of the bottom right pixel.

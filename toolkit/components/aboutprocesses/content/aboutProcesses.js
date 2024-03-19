@@ -787,7 +787,7 @@ var View = {
     return isOpen;
   },
 
-  displayDOMWindowRow(data, parent) {
+  displayDOMWindowRow(data) {
     const cellCount = 2;
     let rowId = "w:" + data.outerWindowId;
     let row = this._getOrCreateRow(rowId, cellCount);
@@ -1124,7 +1124,7 @@ var Control = {
     // Visibility change:
     // - stop updating while the user isn't looking;
     // - resume updating when the user returns.
-    window.addEventListener("visibilitychange", event => {
+    window.addEventListener("visibilitychange", () => {
       if (!document.hidden) {
         this._updateDisplay(true);
       }

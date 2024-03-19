@@ -60,7 +60,7 @@ function AutoCompleteSearch(aName) {
 AutoCompleteSearch.prototype = {
   constructor: AutoCompleteSearch,
   stopSearchInvoked: true,
-  startSearch(aSearchString, aSearchParam, aPreviousResult, aListener) {
+  startSearch() {
     info("Check stop search has been called");
     Assert.ok(this.stopSearchInvoked);
     this.stopSearchInvoked = false;

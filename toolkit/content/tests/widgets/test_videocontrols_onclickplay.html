@@ -26,7 +26,7 @@ function startMediaLoad() {
   video.addEventListener("canplaythrough", runTest);
 }
 
-function loadevent(event) {
+function loadevent() {
   SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]}, startMediaLoad);
 }
 

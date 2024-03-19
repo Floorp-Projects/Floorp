@@ -546,7 +546,7 @@ function sidebar_set_disabled(disabled) {
   });
 }
 
-function check_pin_repeat_is_correct(button) {
+function check_pin_repeat_is_correct() {
   let pin = document.getElementById("new-pin");
   let pin_repeat = document.getElementById("new-pin-repeat");
   let has_current_pin = !document.getElementById("current-pin-div").hidden;
@@ -853,7 +853,7 @@ try {
     Ci.nsIWebAuthnService
   );
   document.addEventListener("DOMContentLoaded", onLoad);
-  window.addEventListener("beforeunload", event => {
+  window.addEventListener("beforeunload", () => {
     AboutWebauthnManagerJS.uninit();
     if (AboutWebauthnService) {
       AboutWebauthnService.cancel(0);

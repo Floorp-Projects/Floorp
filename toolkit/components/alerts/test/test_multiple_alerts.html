@@ -26,7 +26,7 @@ const chromeScript = SpecialPowers.loadChromeScript(_ => {
       sendAsyncMessage("waitedForPosition", null);
     }, 2000);
 
-    var windowObserver = function(win, aTopic, aData) {
+    var windowObserver = function(win, aTopic) {
       if (aTopic != "domwindowopened") {
         return;
       }

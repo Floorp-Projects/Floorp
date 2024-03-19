@@ -39,7 +39,7 @@ export function ContentPrefService2() {
 }
 
 const cache = new ContentPrefStore();
-cache.set = function CPS_cache_set(group, name, val) {
+cache.set = function CPS_cache_set() {
   Object.getPrototypeOf(this).set.apply(this, arguments);
   let groupCount = this._groups.size;
   if (groupCount >= CACHE_MAX_GROUP_ENTRIES) {
@@ -211,7 +211,7 @@ ContentPrefService2.prototype = {
           cbHandleResult(callback, new ContentPref(grp, name, val));
         }
       },
-      onDone: (reason, ok, gotRow) => {
+      onDone: (reason, ok) => {
         if (ok) {
           for (let [pbGroup, pbName, pbVal] of pbPrefs) {
             cbHandleResult(callback, new ContentPref(pbGroup, pbName, pbVal));
@@ -1088,9 +1088,8 @@ ContentPrefService2.prototype = {
    *
    * @param subj   This value depends on topic.
    * @param topic  The backchannel "method" name.
-   * @param data   This value depends on topic.
    */
-  observe: function CPS2_observe(subj, topic, data) {
+  observe: function CPS2_observe(subj, topic) {
     switch (topic) {
       case "profile-before-change":
         this._destroy();

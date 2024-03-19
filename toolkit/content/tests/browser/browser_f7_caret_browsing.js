@@ -37,7 +37,7 @@ registerCleanupFunction(function () {
 let gCaretPromptOpeningObserver;
 function promiseCaretPromptOpened() {
   return new Promise(resolve => {
-    function observer(subject, topic, data) {
+    function observer(subject) {
       info("Dialog opened.");
       resolve(subject);
       gCaretPromptOpeningObserver();

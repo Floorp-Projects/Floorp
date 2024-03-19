@@ -20,7 +20,7 @@ export class FindBarContent {
     this.addedEventListener = false;
   }
 
-  start(event) {
+  start() {
     this.inPassThrough = true;
   }
 
@@ -100,7 +100,7 @@ export class FindBarContent {
     this.actor.sendAsyncMessage("Findbar:Keypress", fakeEvent);
   }
 
-  onMouseup(event) {
+  onMouseup() {
     if (this.findMode != FIND_NORMAL) {
       this.actor.sendAsyncMessage("Findbar:Mouseup", {});
     }

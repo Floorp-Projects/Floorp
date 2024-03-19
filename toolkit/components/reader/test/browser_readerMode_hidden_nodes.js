@@ -18,7 +18,7 @@ var readerButton = document.getElementById("reader-mode-button");
 add_task(async function test_reader_button() {
   registerCleanupFunction(function () {
     // Reset test prefs.
-    TEST_PREFS.forEach(([name, value]) => {
+    TEST_PREFS.forEach(([name]) => {
       Services.prefs.clearUserPref(name);
     });
     while (gBrowser.tabs.length > 1) {

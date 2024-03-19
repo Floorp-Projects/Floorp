@@ -146,7 +146,7 @@ function mockAnonymousContentNode(domNode) {
         duration
       );
     },
-    setCutoutRectsForElement(id, rects) {
+    setCutoutRectsForElement() {
       // no-op for now.
     },
   };
@@ -217,7 +217,7 @@ FinderHighlighter.prototype = {
    * @param  {nsIDOMWindow} window
    * @return {Object}
    */
-  getForWindow(window, propName = null) {
+  getForWindow(window) {
     if (!gWindows.has(window)) {
       gWindows.set(window, {
         detectedGeometryChange: false,
@@ -661,7 +661,7 @@ FinderHighlighter.prototype = {
       this.setScrollMarks(window, Array.from(marks), onHorizontalScrollbar);
 
       if (!this._marksListener) {
-        this._marksListener = event => {
+        this._marksListener = () => {
           this.updateScrollMarks();
         };
 
@@ -1966,7 +1966,7 @@ FinderHighlighter.prototype = {
 
   // Start of nsIEditActionListener implementations
 
-  WillDeleteText(textNode, offset, length) {
+  WillDeleteText(textNode, offset) {
     let editor = this._getEditableNode(textNode).editor;
     let controller = editor.selectionController;
     let fSelection = controller.getSelection(
@@ -2131,7 +2131,7 @@ FinderHighlighter.prototype = {
       },
 
       // Unimplemented
-      notifyDocumentStateChanged(aDirty) {},
+      notifyDocumentStateChanged() {},
     };
   },
 };

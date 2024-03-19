@@ -101,7 +101,7 @@ AutoCompleteResultBase.prototype = {
     return this._styles[aIndex];
   },
 
-  getImageAt(aIndex) {
+  getImageAt() {
     return "";
   },
 
@@ -109,11 +109,11 @@ AutoCompleteResultBase.prototype = {
     return this._finalCompleteValues[aIndex] || this._values[aIndex];
   },
 
-  isRemovableAt(aRowIndex) {
+  isRemovableAt() {
     return true;
   },
 
-  removeValueAt(aRowIndex) {},
+  removeValueAt() {},
 
   // nsISupports implementation
   QueryInterface: ChromeUtils.generateQI(["nsIAutoCompleteResult"]),
@@ -161,7 +161,7 @@ function AutocompletePopupBase(input) {
 AutocompletePopupBase.prototype = {
   selectedIndex: 0,
   invalidate() {},
-  selectBy(reverse, page) {
+  selectBy(reverse) {
     let numRows = this.input.controller.matchCount;
     if (numRows > 0) {
       let delta = reverse ? -1 : 1;

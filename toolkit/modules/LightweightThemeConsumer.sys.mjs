@@ -30,7 +30,7 @@ const toolkitVariableMap = [
     "--lwt-accent-color",
     {
       lwtProperty: "accentcolor",
-      processColor(rgbaChannels, element) {
+      processColor(rgbaChannels) {
         if (!rgbaChannels || rgbaChannels.a == 0) {
           return "white";
         }
@@ -44,7 +44,7 @@ const toolkitVariableMap = [
     "--lwt-text-color",
     {
       lwtProperty: "textcolor",
-      processColor(rgbaChannels, element) {
+      processColor(rgbaChannels) {
         if (!rgbaChannels) {
           rgbaChannels = { r: 0, g: 0, b: 0 };
         }
@@ -147,7 +147,7 @@ const toolkitVariableMap = [
     "--lwt-toolbar-field-highlight",
     {
       lwtProperty: "toolbar_field_highlight",
-      processColor(rgbaChannels, element) {
+      processColor(rgbaChannels) {
         if (!rgbaChannels) {
           return null;
         }
@@ -207,7 +207,7 @@ export function LightweightThemeConsumer(aDocument) {
 LightweightThemeConsumer.prototype = {
   _lastData: null,
 
-  observe(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic) {
     if (aTopic != "lightweight-theme-styling-update") {
       return;
     }
