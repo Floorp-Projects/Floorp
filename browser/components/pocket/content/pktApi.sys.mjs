@@ -317,7 +317,7 @@ export var pktApi = (function () {
       request.open("GET", url, true);
     }
 
-    request.onreadystatechange = function (e) {
+    request.onreadystatechange = function () {
       if (request.readyState == 4) {
         // "done" is a completed XHR regardless of success/error:
         if (options.done) {
@@ -487,7 +487,7 @@ export var pktApi = (function () {
         access_token: getAccessToken(),
         url,
       },
-      success(data) {
+      success() {
         if (options.success) {
           options.success.apply(options, Array.apply(null, arguments));
         }
@@ -508,7 +508,7 @@ export var pktApi = (function () {
       data: {
         access_token: getAccessToken(),
       },
-      success(data) {
+      success() {
         if (options.success) {
           options.success.apply(options, Array.apply(null, arguments));
         }

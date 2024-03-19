@@ -101,7 +101,7 @@ export var SaveToPocket = {
     );
   },
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     if (topic == "browser-delayed-startup-finished") {
       // We only get here if pocket is disabled; the observer is removed when
       // we're enabled.

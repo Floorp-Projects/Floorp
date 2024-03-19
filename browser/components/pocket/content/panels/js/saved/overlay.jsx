@@ -7,7 +7,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import Saved from "../components/Saved/Saved.jsx";
 
-var SavedOverlay = function (options) {
+var SavedOverlay = function () {
   this.inited = false;
   this.active = false;
 };
