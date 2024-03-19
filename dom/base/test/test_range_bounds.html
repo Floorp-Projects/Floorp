@@ -38,6 +38,22 @@ function isEmptyRect(rect, name) {
   is(rect.height, 0, name+'empty rect should have height = 0');
 }
 
+function getTextBoundingClientRect(node) {
+  const quads = node.getBoxQuads()[0];
+  return DOMRect.fromRect({
+    x: quads.p1.x,
+    y: quads.p1.y,
+    width: quads.p2.x - quads.p1.x,
+    height: quads.p3.y - quads.p2.y
+  });
+}
+
+function sortRectList(rectlist) {
+  return Array.prototype.slice.call(rectlist, 0).sort(function(a, b) {
+    return a.top - b.top || a.left - b.left;
+  });
+}
+
 function isEmptyRectList(rectlist, name) {
   name = annotateName(name);
   is(rectlist.length, 0, name + 'empty rectlist should have zero rects');
@@ -90,6 +106,9 @@ function runATest(obj) {
         //convert RectList to a real array
         obj.rectList=Array.prototype.slice.call(obj.rectList, 0);
       }
+      if (obj.mustSortBeforeComparing) {
+        rectlist = sortRectList(rectlist);
+      }
       obj.rectList.forEach(function(r,i) {
         is(_getRect(rectlist[i]),_getRect(r),
            annotateName(testname+": item at "+i));
@@ -109,11 +128,16 @@ function doTest(){
     thirdDiv = root.childNodes[5];
   var firstPRect = firstP.getBoundingClientRect(),
     spanInFirstPRect = spanInFirstP.getBoundingClientRect(),
+    textInFirstPRect = getTextBoundingClientRect(firstP.firstChild),
+    textInSpanInFirstPRect = getTextBoundingClientRect(spanInFirstP.firstChild),
     firstDivRect = firstDiv.getBoundingClientRect(),
+    textInFirstDivRect = getTextBoundingClientRect(firstDiv.firstChild),
     spanInFirstDivRect = spanInFirstDiv.getBoundingClientRect(),
+    textInSpanInFirstDivRect = getTextBoundingClientRect(spanInFirstDiv.firstChild),
     secondPRect = secondP.getBoundingClientRect(),
     secondDivRect = secondDiv.getBoundingClientRect(),
     spanInSecondPRect = spanInSecondP.getBoundingClientRect(),
+    textInSpanInSecondPRect = getTextBoundingClientRect(spanInSecondP.firstChild),
     spanInSecondDivRect = spanInSecondDiv.getBoundingClientRect(),
     spanInSecondDivRectList = spanInSecondDiv.getClientRects();
   var widthPerchar = spanInSecondPRect.width / spanInSecondP.firstChild.length;
@@ -132,12 +156,14 @@ function doTest(){
     {name:'collapsedAtEndOfTextNode', range:[firstP.firstChild, 6],
       rect:[spanInFirstPRect.left, spanInFirstPRect.left,
         spanInFirstPRect.top, spanInFirstPRect.bottom, 0, spanInFirstPRect.height]},
-    {name:'singleBlockNode', range:[root, 1, root, 2], rect:firstPRect},
+    {name:'singleBlockNode', range:[root, 1, root, 2], rect:firstPRect,
+        rectList:[firstPRect, textInFirstPRect, spanInFirstPRect]},
     {name:'twoBlockNodes', range:[root, 1, root, 3],
       rect:[firstPRect.left, firstPRect.right, firstPRect.top,
         firstDivRect.bottom, firstPRect.width,
         firstDivRect.bottom - firstPRect.top],
-      rectList:[firstPRect, firstDivRect]},
+      rectList:[firstPRect, textInFirstPRect, textInSpanInFirstPRect,
+        firstDivRect, textInFirstDivRect, textInSpanInFirstDivRect]},
     {name:'endOfTextNodeToEndOfAnotherTextNodeInAnotherBlock',
       range:[spanInFirstP.firstChild, 1, firstDiv.firstChild, 5],
       rect:[spanInFirstDivRect.left - 5*widthPerchar, spanInFirstDivRect.left,
@@ -163,7 +189,7 @@ function doTest(){
       rectList:[[spanInSecondPRect.left - 3*widthPerchar, spanInSecondPRect.left,
         spanInSecondPRect.top, spanInSecondPRect.bottom, 3 * widthPerchar,
         spanInSecondPRect.height],
-	spanInSecondPRect,
+	spanInSecondPRect, textInSpanInSecondPRect,
 	[spanInSecondPRect.right, spanInSecondPRect.right + widthPerchar,
           spanInSecondPRect.top, spanInSecondPRect.bottom, widthPerchar,
           spanInSecondPRect.height]]}
@@ -228,10 +254,17 @@ function doTest(){
 }
 function testMixedDir(){
   var root = document.getElementById('mixeddir');
+  var bdo = document.getElementById('bdo');
   var firstSpan = root.firstElementChild, firstSpanRect=firstSpan.getBoundingClientRect(),
-      firstSpanRectList = firstSpan.getClientRects();
+      firstSpanWithInnerTextRectList = Array.from(firstSpan.getClientRects());
+      firstSpanWithInnerTextRectList.push(...bdo.getClientRects());
+
+  // Depending on the font rendering, the order of the rects composing the bdo
+  // element may vary. We need to sort the list of rects before comparing it to
+  // the expected list.
+      firstSpanWithInnerTextRectList = sortRectList(firstSpanWithInnerTextRectList);
   runATest({name:'mixeddir',range:[firstSpan.firstChild,0,firstSpan.lastChild,firstSpan.lastChild.length],
-             rect: firstSpanRect, rectList:firstSpanRectList});
+             rect: firstSpanRect, rectList:firstSpanWithInnerTextRectList, mustSortBeforeComparing: true});
 
   root = document.getElementById('mixeddir2');
   firstSpan = root.firstElementChild;
