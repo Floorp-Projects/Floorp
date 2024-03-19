@@ -3682,11 +3682,14 @@ dependencies = [
 name = "mozannotation_server"
 version = "0.1.0"
 dependencies = [
+ "goblin 0.7.1",
+ "libc",
+ "mach2",
  "memoffset 0.8.999",
  "mozannotation_client",
- "process_reader",
  "thin-vec",
  "thiserror",
+ "winapi",
 ]
 
 [[package]]
@@ -4502,8 +4505,6 @@ name = "process_reader"
 version = "0.1.0"
 dependencies = [
  "goblin 0.7.1",
- "libc",
- "mach2",
  "memoffset 0.9.0",
  "mozilla-central-workspace-hack",
  "thiserror",

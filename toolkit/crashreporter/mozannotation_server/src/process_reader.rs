@@ -2,12 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-#[cfg(target_os = "windows")]
-type ProcessHandle = windows_sys::Win32::Foundation::HANDLE;
+use crate::ProcessHandle;
 
 pub struct ProcessReader {
     process: ProcessHandle,
 }
 
-mod error;
-mod process_reader;
+#[cfg(target_os = "windows")]
+mod windows;
+
+#[cfg(any(target_os = "android", target_os = "linux"))]
+mod linux;
+
+#[cfg(target_os = "macos")]
+mod macos;

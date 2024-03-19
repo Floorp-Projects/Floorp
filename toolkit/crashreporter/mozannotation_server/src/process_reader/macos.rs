@@ -15,9 +15,11 @@ use mach2::{
 use std::mem::{size_of, MaybeUninit};
 
 use crate::{
-    error::{ProcessReaderError, ReadError},
-    ProcessHandle, ProcessReader,
+    errors::{FindAnnotationsAddressError, ReadError, RetrievalError},
+    ProcessHandle,
 };
+
+use super::ProcessReader;
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
@@ -53,22 +55,23 @@ struct ImageInfo {
 }
 
 const DATA_SEGMENT: &[u8; 16] = b"__DATA\0\0\0\0\0\0\0\0\0\0";
+const MOZANNOTATION_SECTION: &[u8; 16] = b"mozannotation\0\0\0";
 
 impl ProcessReader {
-    pub fn new(process: ProcessHandle) -> Result<ProcessReader, ProcessReaderError> {
+    pub fn new(process: ProcessHandle) -> Result<ProcessReader, RetrievalError> {
         Ok(ProcessReader { process })
     }
 
-    pub fn find_module(&self, module_name: &str) -> Result<usize, ProcessReaderError> {
+    pub fn find_annotations(&self) -> Result<usize, FindAnnotationsAddressError> {
         let dyld_info = self.task_info()?;
         if (dyld_info.all_image_info_format as u32) != TASK_DYLD_ALL_IMAGE_INFO_64 {
-            return Err(ProcessReaderError::ImageFormatError);
+            return Err(FindAnnotationsAddressError::ImageFormatError);
         }
 
         let all_image_info_size = dyld_info.all_image_info_size;
         let all_image_info_addr = dyld_info.all_image_info_addr;
         if (all_image_info_size as usize) < size_of::<AllImagesInfo>() {
-            return Err(ProcessReaderError::ImageFormatError);
+            return Err(FindAnnotationsAddressError::ImageFormatError);
         }
 
         let all_images_info = self.copy_object::<AllImagesInfo>(all_image_info_addr as _)?;
@@ -81,76 +84,11 @@ impl ProcessReader {
 
         images
             .iter()
-            .find(|&image| {
-                let image_path = self.copy_null_terminated_string(image.file_path as usize);
-
-                if let Ok(image_path) = image_path {
-                    if let Some(image_name) = image_path.into_bytes().rsplit(|&b| b == b'/').next()
-                    {
-                        image_name.eq(module_name.as_bytes())
-                    } else {
-                        false
-                    }
-                } else {
-                    false
-                }
-            })
-            .map(|image| image.load_address as usize)
-            .ok_or(ProcessReaderError::ModuleNotFound)
+            .find_map(|image| self.find_annotations_in_image(image))
+            .ok_or(FindAnnotationsAddressError::NotFound)
     }
 
-    pub fn find_section(
-        &self,
-        module_address: usize,
-        section_name: &[u8; 16],
-    ) -> Result<usize, ProcessReaderError> {
-        let header = self.copy_object::<Header64>(module_address)?;
-        let mut address = module_address + size_of::<Header64>();
-
-        if header.magic == MH_MAGIC_64
-            && (header.filetype == MH_EXECUTE || header.filetype == MH_DYLIB)
-        {
-            let end_of_commands = address + (header.sizeofcmds as usize);
-
-            while address < end_of_commands {
-                let command = self.copy_object::<LoadCommandHeader>(address)?;
-
-                if command.cmd == LC_SEGMENT_64 {
-                    if let Ok(offset) = self.find_section_in_segment(address, section_name) {
-                        return module_address
-                            .checked_add(offset)
-                            .ok_or(ProcessReaderError::InvalidAddress);
-                    }
-                }
-
-                address += command.cmdsize as usize;
-            }
-        }
-
-        Err(ProcessReaderError::SectionNotFound)
-    }
-
-    fn find_section_in_segment(
-        &self,
-        segment_address: usize,
-        section_name: &[u8; 16],
-    ) -> Result<usize, ProcessReaderError> {
-        let segment = self.copy_object::<SegmentCommand64>(segment_address)?;
-
-        if segment.segname.eq(DATA_SEGMENT) {
-            let sections_addr = segment_address + size_of::<SegmentCommand64>();
-            let sections = self.copy_array::<Section64>(sections_addr, segment.nsects as usize)?;
-            for section in &sections {
-                if section.sectname.eq(section_name) {
-                    return Ok(section.offset as usize);
-                }
-            }
-        }
-
-        Err(ProcessReaderError::SectionNotFound)
-    }
-
-    fn task_info(&self) -> Result<task_dyld_info, ProcessReaderError> {
+    fn task_info(&self) -> Result<task_dyld_info, FindAnnotationsAddressError> {
         let mut info = std::mem::MaybeUninit::<task_dyld_info>::uninit();
         let mut count = (std::mem::size_of::<task_dyld_info>() / std::mem::size_of::<u32>()) as u32;
 
@@ -167,8 +105,59 @@ impl ProcessReader {
             // SAFETY: this will be initialized if the call succeeded
             unsafe { Ok(info.assume_init()) }
         } else {
-            Err(ProcessReaderError::TaskInfoError)
+            Err(FindAnnotationsAddressError::TaskInfoError)
         }
+    }
+
+    fn find_annotations_in_image(&self, image: &ImageInfo) -> Option<usize> {
+        self.copy_object::<Header64>(image.load_address as _)
+            .map_err(FindAnnotationsAddressError::from)
+            .and_then(|header| {
+                let image_address = image.load_address as usize;
+                let mut address = image_address + size_of::<Header64>();
+
+                if header.magic == MH_MAGIC_64
+                    && (header.filetype == MH_EXECUTE || header.filetype == MH_DYLIB)
+                {
+                    let end_of_commands = address + (header.sizeofcmds as usize);
+
+                    while address < end_of_commands {
+                        let command = self.copy_object::<LoadCommandHeader>(address)?;
+
+                        if command.cmd == LC_SEGMENT_64 {
+                            if let Ok(offset) = self.find_annotations_in_segment(address) {
+                                return image_address
+                                    .checked_add(offset)
+                                    .ok_or(FindAnnotationsAddressError::InvalidAddress);
+                            }
+                        }
+
+                        address += command.cmdsize as usize;
+                    }
+                }
+
+                Err(FindAnnotationsAddressError::NotFound)
+            })
+            .ok()
+    }
+
+    fn find_annotations_in_segment(
+        &self,
+        segment_address: usize,
+    ) -> Result<usize, FindAnnotationsAddressError> {
+        let segment = self.copy_object::<SegmentCommand64>(segment_address)?;
+
+        if segment.segname.eq(DATA_SEGMENT) {
+            let sections_addr = segment_address + size_of::<SegmentCommand64>();
+            let sections = self.copy_array::<Section64>(sections_addr, segment.nsects as usize)?;
+            for section in &sections {
+                if section.sectname.eq(MOZANNOTATION_SECTION) {
+                    return Ok(section.offset as usize);
+                }
+            }
+        }
+
+        Err(FindAnnotationsAddressError::InvalidAddress)
     }
 
     pub fn copy_object_shallow<T>(&self, src: usize) -> Result<MaybeUninit<T>, ReadError> {

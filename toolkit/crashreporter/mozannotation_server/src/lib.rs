@@ -3,18 +3,12 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 mod errors;
+mod process_reader;
 
 use crate::errors::*;
-#[cfg(any(target_os = "linux", target_os = "android"))]
-use memoffset::offset_of;
-use process_reader::error::ProcessReaderError;
 use process_reader::ProcessReader;
 
-#[cfg(any(target_os = "windows", target_os = "macos"))]
-use mozannotation_client::ANNOTATION_SECTION;
 use mozannotation_client::{Annotation, AnnotationContents, AnnotationMutex};
-#[cfg(any(target_os = "linux", target_os = "android"))]
-use mozannotation_client::{MozAnnotationNote, ANNOTATION_TYPE};
 use std::cmp::min;
 use std::iter::FromIterator;
 use std::mem::{size_of, ManuallyDrop};
@@ -35,7 +29,12 @@ pub struct CAnnotation {
     data: AnnotationData,
 }
 
-pub type ProcessHandle = process_reader::ProcessHandle;
+#[cfg(target_os = "windows")]
+type ProcessHandle = winapi::shared::ntdef::HANDLE;
+#[cfg(any(target_os = "linux", target_os = "android"))]
+type ProcessHandle = libc::pid_t;
+#[cfg(any(target_os = "macos"))]
+type ProcessHandle = mach2::mach_types::task_t;
 
 /// Return the annotations of a given process.
 ///
@@ -69,23 +68,19 @@ pub unsafe extern "C" fn mozannotation_free(ptr: *mut ThinVec<CAnnotation>) {
 pub fn retrieve_annotations(
     process: ProcessHandle,
     max_annotations: usize,
-) -> Result<Box<ThinVec<CAnnotation>>, AnnotationsRetrievalError> {
+) -> Result<Box<ThinVec<CAnnotation>>, RetrievalError> {
     let reader = ProcessReader::new(process)?;
-    let address = find_annotations(&reader)?;
+    let address = reader.find_annotations()?;
 
-    let mut mutex = reader
-        .copy_object_shallow::<AnnotationMutex>(address)
-        .map_err(ProcessReaderError::from)?;
+    let mut mutex = reader.copy_object_shallow::<AnnotationMutex>(address)?;
     let mutex = unsafe { mutex.assume_init_mut() };
 
     // TODO: we should clear the poison value here before getting the mutex
     // contents. Right now we have to fail if the mutex was poisoned.
-    let annotation_table = mutex
-        .get_mut()
-        .map_err(|_e| AnnotationsRetrievalError::InvalidData)?;
+    let annotation_table = mutex.get_mut().map_err(|_e| RetrievalError::InvalidData)?;
 
     if !annotation_table.verify() {
-        return Err(AnnotationsRetrievalError::InvalidAnnotationTable);
+        return Err(RetrievalError::InvalidAnnotationTable);
     }
 
     let vec_pointer = annotation_table.get_ptr();
@@ -102,47 +97,8 @@ pub fn retrieve_annotations(
     Ok(Box::new(annotations))
 }
 
-fn find_annotations(reader: &ProcessReader) -> Result<usize, AnnotationsRetrievalError> {
-    #[cfg(any(target_os = "linux", target_os = "android"))]
-    {
-        let libxul_address = reader.find_module("libxul.so")?;
-        let note_address = reader.find_program_note(
-            libxul_address,
-            ANNOTATION_TYPE,
-            size_of::<MozAnnotationNote>(),
-        )?;
-
-        let note = reader
-            .copy_object::<MozAnnotationNote>(note_address)
-            .map_err(ProcessReaderError::from)?;
-        let desc = note.desc;
-        let ehdr = (-note.ehdr) as usize;
-        let offset = desc + ehdr
-            - (offset_of!(MozAnnotationNote, ehdr) - offset_of!(MozAnnotationNote, desc));
-
-        usize::checked_add(libxul_address, offset).ok_or(AnnotationsRetrievalError::InvalidAddress)
-    }
-    #[cfg(any(target_os = "macos"))]
-    {
-        let libxul_address = reader.find_module("XUL")?;
-        reader
-            .find_section(libxul_address, ANNOTATION_SECTION)
-            .map_err(AnnotationsRetrievalError::from)
-    }
-    #[cfg(any(target_os = "windows"))]
-    {
-        let libxul_address = reader.find_module("xul.dll")?;
-        reader
-            .find_section(libxul_address, ANNOTATION_SECTION)
-            .map_err(AnnotationsRetrievalError::from)
-    }
-}
-
 // Read an annotation from the given address
-fn read_annotation(
-    reader: &ProcessReader,
-    address: usize,
-) -> Result<CAnnotation, process_reader::error::ReadError> {
+fn read_annotation(reader: &ProcessReader, address: usize) -> Result<CAnnotation, ReadError> {
     let raw_annotation = ManuallyDrop::new(reader.copy_object::<Annotation>(address)?);
     let mut annotation = CAnnotation {
         id: raw_annotation.id,
@@ -160,16 +116,16 @@ fn read_annotation(
             annotation.data = AnnotationData::ByteBuffer(string);
         }
         AnnotationContents::CStringPointer => {
-            let string = copy_null_terminated_string_pointer(reader, raw_annotation.address)?;
-            annotation.data = AnnotationData::ByteBuffer(string);
+            let buffer = copy_null_terminated_string_pointer(reader, raw_annotation.address)?;
+            annotation.data = AnnotationData::ByteBuffer(buffer);
         }
         AnnotationContents::CString => {
-            let string = copy_null_terminated_string(reader, raw_annotation.address)?;
-            annotation.data = AnnotationData::ByteBuffer(string);
+            let buffer = copy_null_terminated_string(reader, raw_annotation.address)?;
+            annotation.data = AnnotationData::ByteBuffer(buffer);
         }
         AnnotationContents::ByteBuffer(size) | AnnotationContents::OwnedByteBuffer(size) => {
-            let string = copy_bytebuffer(reader, raw_annotation.address, size)?;
-            annotation.data = AnnotationData::ByteBuffer(string);
+            let buffer = copy_bytebuffer(reader, raw_annotation.address, size)?;
+            annotation.data = AnnotationData::ByteBuffer(buffer);
         }
     };
 
@@ -179,7 +135,7 @@ fn read_annotation(
 fn copy_null_terminated_string_pointer(
     reader: &ProcessReader,
     address: usize,
-) -> Result<ThinVec<u8>, process_reader::error::ReadError> {
+) -> Result<ThinVec<u8>, ReadError> {
     let buffer_address = reader.copy_object::<usize>(address)?;
     copy_null_terminated_string(reader, buffer_address)
 }
@@ -187,15 +143,56 @@ fn copy_null_terminated_string_pointer(
 fn copy_null_terminated_string(
     reader: &ProcessReader,
     address: usize,
-) -> Result<ThinVec<u8>, process_reader::error::ReadError> {
-    let string = reader.copy_null_terminated_string(address)?;
-    Ok(ThinVec::<u8>::from(string.as_bytes()))
+) -> Result<ThinVec<u8>, ReadError> {
+    // Try copying the string word-by-word first, this is considerably faster
+    // than one byte at a time.
+    if let Ok(string) = copy_null_terminated_string_word_by_word(reader, address) {
+        return Ok(string);
+    }
+
+    // Reading the string one word at a time failed, let's try again one byte
+    // at a time. It's slow but it might work in situations where the string
+    // alignment causes word-by-word access to straddle page boundaries.
+    let mut length = 0;
+    let mut string = ThinVec::<u8>::new();
+
+    loop {
+        let char = reader.copy_object::<u8>(address + length)?;
+        length += 1;
+        string.push(char);
+
+        if char == 0 {
+            break;
+        }
+    }
+
+    Ok(string)
 }
 
-fn copy_nscstring(
+fn copy_null_terminated_string_word_by_word(
     reader: &ProcessReader,
     address: usize,
-) -> Result<ThinVec<u8>, process_reader::error::ReadError> {
+) -> Result<ThinVec<u8>, ReadError> {
+    const WORD_SIZE: usize = size_of::<usize>();
+    let mut length = 0;
+    let mut string = ThinVec::<u8>::new();
+
+    loop {
+        let array = reader.copy_array::<u8>(address + length, WORD_SIZE)?;
+        let null_terminator = array.iter().position(|&e| e == 0);
+        length += null_terminator.unwrap_or(WORD_SIZE);
+        string.extend(array.into_iter());
+
+        if null_terminator.is_some() {
+            string.truncate(length);
+            break;
+        }
+    }
+
+    Ok(string)
+}
+
+fn copy_nscstring(reader: &ProcessReader, address: usize) -> Result<ThinVec<u8>, ReadError> {
     // HACK: This assumes the layout of the nsCString object
     let length_address = address + size_of::<usize>();
     let length = reader.copy_object::<u32>(length_address)?;
@@ -214,7 +211,7 @@ fn copy_bytebuffer(
     reader: &ProcessReader,
     address: usize,
     size: u32,
-) -> Result<ThinVec<u8>, process_reader::error::ReadError> {
+) -> Result<ThinVec<u8>, ReadError> {
     let value = reader.copy_array::<u8>(address, size as _)?;
     Ok(ThinVec::<u8>::from_iter(value.into_iter()))
 }
