@@ -25,6 +25,11 @@
 /// +-----------------------------+   | device pixel scale |  +-----------+--------------+-+-+
 ///                                   | content origin     |
 ///                                   +--------------------+
+///
+/// To use the quad infrastructure, a shader must define the following entry
+/// points in the corresponding shader stages:
+/// - void pattern_vertex(PrimitiveInfo prim)
+/// - vec4 pattern_fragment(vec4 base_color)
 ///```
 
 #define WR_FEATURE_TEXTURE_2D
@@ -38,6 +43,10 @@ flat varying mediump vec4 v_uv_sample_bounds;
 // z: (in ps_quad_textured) sample as mask
 flat varying lowp ivec4 v_flags;
 varying highp vec2 v_uv;
+
+#ifndef SWGL_ANTIALIAS
+varying highp vec2 vLocalPos;
+#endif
 
 #ifdef WR_VERTEX_SHADER
 
@@ -204,7 +213,11 @@ float edge_aa_offset(int edge, int flags) {
     return ((flags & edge) != 0) ? AA_PIXEL_RADIUS : 0.0;
 }
 
-PrimitiveInfo ps_quad_main(void) {
+#ifdef WR_VERTEX_SHADER
+void pattern_vertex(PrimitiveInfo prim);
+#endif
+
+PrimitiveInfo quad_primive_info(void) {
     QuadInstance qi = decode_instance();
 
     QuadHeader qh = fetch_header(qi.prim_address_i);
@@ -342,4 +355,50 @@ PrimitiveInfo ps_quad_main(void) {
         qi.quad_flags
     );
 }
+
+void antialiasing_vertex(PrimitiveInfo prim) {
+#ifndef SWGL_ANTIALIAS
+    // This does the setup that is required for init_tranform_vs.
+    RectWithEndpoint xf_bounds = RectWithEndpoint(
+        max(prim.local_prim_rect.p0, prim.local_clip_rect.p0),
+        min(prim.local_prim_rect.p1, prim.local_clip_rect.p1)
+    );
+    vTransformBounds = vec4(xf_bounds.p0, xf_bounds.p1);
+
+    vLocalPos = prim.local_pos;
+
+    if (prim.edge_flags == 0) {
+        v_flags.x = 0;
+    } else {
+        v_flags.x = 1;
+    }
+#endif
+}
+
+void main() {
+    PrimitiveInfo prim = quad_primive_info();
+    antialiasing_vertex(prim);
+    pattern_vertex(prim);
+}
+#endif
+
+#ifdef WR_FRAGMENT_SHADER
+vec4 pattern_fragment(vec4 base_color);
+
+float antialiasing_fragment() {
+    float alpha = 1.0;
+#ifndef SWGL_ANTIALIAS
+    if (v_flags.x != 0) {
+        alpha = init_transform_fs(vLocalPos);
+    }
+#endif
+    return alpha;
+}
+
+void main() {
+    vec4 base_color = v_color;
+    base_color *= antialiasing_fragment();
+    oFragColor = pattern_fragment(base_color);
+}
+
 #endif
