@@ -72,7 +72,10 @@ elif CONFIG['TARGET_CPU'] == 'arm':
         ]
 elif CONFIG['TARGET_CPU'] == 'aarch64' and CONFIG['OS_TARGET'] == 'WINNT':
     EXPORTS.vpx += files['ARM64_EXPORTS']
-    SOURCES += files['ARM64_SOURCES']
+    # Bug 1885585: clang on win/aarch64 cannot compile SVInt8_t type for now.
+    SOURCES += [
+            f for f in files['ARM64_SOURCES'] if not f.endswith('_sve.c')
+        ]
     ASFLAGS += [ '-I%s/media/libvpx/config/win/aarch64/' % TOPSRCDIR ]
     LOCAL_INCLUDES += [ '/media/libvpx/config/win/aarch64/' ]
     SOURCES += [ '/media/libvpx/config/win/aarch64/vpx_config.c' ]
