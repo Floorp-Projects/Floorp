@@ -82,7 +82,7 @@ function setWithDate(group, name, val, timestamp, context) {
   });
 }
 
-async function getDate(group, name, context) {
+async function getDate(group, name) {
   let conn = await sendMessage("db");
   let [result] = await conn.execute(
     `
@@ -158,7 +158,7 @@ async function getGlobalOK(args, expectedVal) {
   await getOKEx("getGlobal", args, expectedPrefs);
 }
 
-async function getOKEx(methodName, args, expectedPrefs, strict, context) {
+async function getOKEx(methodName, args, expectedPrefs, strict) {
   let actualPrefs = [];
   await new Promise(resolve => {
     args.push(

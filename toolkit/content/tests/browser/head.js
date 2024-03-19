@@ -177,7 +177,7 @@ function leave_icon(icon) {
  * Used to listen events if you just need it once
  */
 function once(target, name) {
-  var p = new Promise(function (resolve, reject) {
+  var p = new Promise(function (resolve) {
     target.addEventListener(
       name,
       function () {

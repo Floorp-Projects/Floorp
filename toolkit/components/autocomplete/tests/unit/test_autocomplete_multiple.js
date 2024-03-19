@@ -40,7 +40,7 @@ AutoCompleteInput.prototype = {
   popupOpen: false,
 
   popup: {
-    setSelectedIndex(aIndex) {},
+    setSelectedIndex() {},
     invalidate() {},
 
     // nsISupports implementation
@@ -92,7 +92,7 @@ AutoCompleteResult.prototype = {
     return this._styles[aIndex];
   },
 
-  getImageAt(aIndex) {
+  getImageAt() {
     return "";
   },
 
@@ -100,11 +100,11 @@ AutoCompleteResult.prototype = {
     return this.getValueAt(aIndex);
   },
 
-  isRemovableAt(aRowIndex) {
+  isRemovableAt() {
     return true;
   },
 
-  removeValueAt(aRowIndex) {},
+  removeValueAt() {},
 
   // nsISupports implementation
   QueryInterface: ChromeUtils.generateQI(["nsIAutoCompleteResult"]),

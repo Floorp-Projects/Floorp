@@ -437,7 +437,7 @@ add_task(async function click_and_hold_slider() {
  * Bug 1402877: Don't let click event dispatch through media controls to video element.
  */
 add_task(async function click_event_dispatch() {
-  const clientScriptClickHandler = (e) => {
+  const clientScriptClickHandler = () => {
     ok(false, "Should not receive the event");
   };
   video.addEventListener("click", clientScriptClickHandler);

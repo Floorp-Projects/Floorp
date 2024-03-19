@@ -82,10 +82,7 @@ outputInfo = (sentinel, info) => {
   dump(`${sentinel}${JSON.stringify(info)}${sentinel}\n`);
 };
 
-function monkeyPatchRemoteSettingsClient({
-  last_modified = new Date().getTime(),
-  data = [],
-}) {
+function monkeyPatchRemoteSettingsClient({ data = [] }) {
   lazy.RemoteSettingsClient.prototype.get = async (options = {}) => {
     outputInfo({ "RemoteSettingsClient.get": { options, response: { data } } });
     return data;

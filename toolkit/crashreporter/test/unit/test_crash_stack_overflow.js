@@ -12,7 +12,7 @@ add_task(async function run_test() {
       crashType = CrashTestUtils.CRASH_STACK_OVERFLOW;
       crashReporter.annotateCrashReport("TestKey", "TestValue");
     },
-    async function (mdump, extra, extraFile) {
+    async function (mdump, extra) {
       Assert.equal(extra.TestKey, "TestValue");
     },
     // process will exit with a zero exit status

@@ -37,7 +37,7 @@ let gLastFirstMenuActiveValue = null;
 
 function waitForEvent(target, eventName) {
   return new Promise(resolve => {
-    target.addEventListener(eventName, function eventOccurred(event) {
+    target.addEventListener(eventName, function eventOccurred() {
       resolve();
     }, { once: true});
   });

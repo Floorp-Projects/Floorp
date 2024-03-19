@@ -21,7 +21,7 @@ add_task(async function thumbnails_redirect() {
       gBrowser,
       url: URL,
     },
-    browser => {}
+    () => {}
   );
 
   // Create a tab, redirecting to a page with a red background.
@@ -30,7 +30,7 @@ add_task(async function thumbnails_redirect() {
       gBrowser,
       url: URL,
     },
-    async browser => {
+    async () => {
       await captureAndCheckColor(255, 0, 0, "we have a red thumbnail");
 
       // Wait until the referrer's thumbnail's file has been written.

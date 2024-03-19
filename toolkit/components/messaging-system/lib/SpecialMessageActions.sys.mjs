@@ -291,7 +291,7 @@ export const SpecialMessageActions = {
           Ci.nsISupportsWeakReference,
         ]),
 
-        observe(aSubject, aTopic, aData) {
+        observe() {
           let state = lazy.UIState.get();
           if (state.status === lazy.UIState.STATUS_SIGNED_IN) {
             // We completed sign-in, so tear down our listener / observer and resolve

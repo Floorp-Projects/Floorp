@@ -36,7 +36,7 @@
   let jk2Path = "explicit/j/k2";
 
   let fakeReporters = [
-    { collectReports(aCbObj, aClosure, aAnonymize) {
+    { collectReports(aCbObj, aClosure) {
         function f(aP, aK, aA) {
           aCbObj.callback("Main Process ABC", aP, aK, BYTES, aA, "Desc.", aClosure);
         }

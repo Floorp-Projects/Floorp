@@ -201,7 +201,7 @@ function* nextTest()
 
   // Test that a transition occurs when opening or closing the popup.
   if (matchMedia("(-moz-panel-animations").matches) {
-    function transitionEnded(event) {
+    function transitionEnded() {
       if ($("animatepanel").state != "open") {
         is($("animatepanel").state, "showing", "state is showing during transitionend");
         ok(!animatedPopupShown, "popupshown not fired yet")

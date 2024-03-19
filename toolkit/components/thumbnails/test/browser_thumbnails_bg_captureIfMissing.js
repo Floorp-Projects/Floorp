@@ -3,7 +3,7 @@
 
 add_task(async function thumbnails_bg_captureIfMissing() {
   let numNotifications = 0;
-  function observe(subject, topic, data) {
+  function observe(subject, topic) {
     is(topic, "page-thumbnail:create", "got expected topic");
     numNotifications += 1;
   }

@@ -56,7 +56,7 @@ export const AsanReporter = {
     processDirectory();
   },
 
-  observe(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic) {
     if (aTopic == "ipc:content-shutdown") {
       aSubject.QueryInterface(Ci.nsIPropertyBag2);
       if (!aSubject.get("abnormal")) {

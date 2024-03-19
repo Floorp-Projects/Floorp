@@ -38,7 +38,7 @@ const chromeScript = SpecialPowers.loadChromeScript(_ => {
 function notify(alertName, principal) {
   return new Promise((resolve, reject) => {
     var source;
-    async function observe(subject, topic, data) {
+    async function observe(subject, topic) {
       if (topic == "alertclickcallback") {
         reject(new Error("Alerts should not be clicked during test"));
       } else if (topic == "alertshow") {

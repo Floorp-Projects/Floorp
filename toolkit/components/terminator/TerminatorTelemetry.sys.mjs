@@ -57,7 +57,7 @@ nsTerminatorTelemetry.prototype = {
 
   // nsIObserver
 
-  observe: function DS_observe(aSubject, aTopic, aData) {
+  observe: function DS_observe() {
     this._wasNotified = true;
 
     (async () => {

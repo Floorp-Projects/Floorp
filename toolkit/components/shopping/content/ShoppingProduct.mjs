@@ -552,7 +552,7 @@ export class ShoppingProduct extends EventEmitter {
         false
       );
     }
-    let abortHandler = e => {
+    let abortHandler = () => {
       Glean?.shoppingProduct?.requestAborted.record();
       obliviousHttpChannel.cancel(Cr.NS_BINDING_ABORTED);
     };

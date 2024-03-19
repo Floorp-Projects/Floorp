@@ -10,7 +10,7 @@ MainProcessSingleton.prototype = {
     "nsISupportsWeakReference",
   ]),
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     switch (topic) {
       case "app-startup": {
         // Imported for side-effects.

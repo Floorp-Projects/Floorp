@@ -50,7 +50,7 @@ add_task(async function () {
 
       let awaitFindResult2 = new Promise(resolve => {
         let listener = {
-          onFindResult(aData) {
+          onFindResult() {
             info("got find result #2");
             browser.finder.removeResultListener(listener);
             resolve();

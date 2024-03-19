@@ -94,7 +94,7 @@ export class PrintingChild extends JSWindowActorChild {
       // will wait for MozAfterPaint event to be fired.
       let actor = thisWindow.windowGlobalChild.getActor("Printing");
       let webProgressListener = {
-        onStateChange(webProgress, req, flags, status) {
+        onStateChange(webProgress, req, flags) {
           if (flags & Ci.nsIWebProgressListener.STATE_STOP) {
             webProgress.removeProgressListener(webProgressListener);
             let domUtils = contentWindow.windowUtils;

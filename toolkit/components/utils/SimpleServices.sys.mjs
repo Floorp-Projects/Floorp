@@ -103,7 +103,7 @@ AddonLocalizationConverter.prototype = {
     this.listener = aListener;
   },
 
-  onStartRequest(aRequest) {
+  onStartRequest() {
     this.parts = [];
     this.decoder = new TextDecoder();
   },

@@ -824,7 +824,7 @@ add_task(async function test_glean_crash_ping() {
 
   // Test with additional fields
   submitted = false;
-  GleanPings.crash.testBeforeNextSubmit(reason => {
+  GleanPings.crash.testBeforeNextSubmit(() => {
     submitted = true;
     const MINUTES = new Date(DUMMY_DATE_2);
     MINUTES.setSeconds(0);

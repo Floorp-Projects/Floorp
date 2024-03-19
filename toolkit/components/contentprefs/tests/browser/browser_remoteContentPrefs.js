@@ -173,7 +173,7 @@ async function runTestsForFrame(browser, isPrivate) {
         onContentPrefSet(group, name, value, isPrivate) {
           resolve({ group, name, value, isPrivate });
         },
-        onContentPrefRemoved(group, name, isPrivate) {
+        onContentPrefRemoved() {
           reject("got unexpected notification");
         },
       };
@@ -202,7 +202,7 @@ async function runTestsForFrame(browser, isPrivate) {
           info("received handleResult");
           results.push(pref);
         },
-        handleCompletion(reason) {
+        handleCompletion() {
           resolve();
         },
         handleError(rv) {

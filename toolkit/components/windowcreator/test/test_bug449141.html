@@ -35,7 +35,7 @@ var progressListener = {
   onProgressChange() {
     /* Ignore progress callback */
   },
-  onStateChange(aProgress, aRequest, aStateFlag, aStatus) {
+  onStateChange(aProgress, aRequest, aStateFlag) {
     if (aStateFlag & STATE_STOP) {
       var dirExists = false;
       var videoExists = false;

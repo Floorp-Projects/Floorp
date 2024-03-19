@@ -176,7 +176,7 @@
       const matches = JSON.parse(gFindBar._foundMatches.dataset.l10nArgs);
       is(matches.total, 2, "Found correct amount of matches")
 
-      await SpecialPowers.spawn(gBrowser, [], async function(args) {
+      await SpecialPowers.spawn(gBrowser, [], async function() {
         function getSelection(docShell) {
           let controller = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                                      .getInterface(Ci.nsISelectionDisplay)

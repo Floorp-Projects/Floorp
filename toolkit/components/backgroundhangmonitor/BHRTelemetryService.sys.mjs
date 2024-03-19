@@ -142,7 +142,7 @@ BHRTelemetryService.prototype = Object.freeze({
     this.submit();
   },
 
-  observe(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic) {
     switch (aTopic) {
       case "profile-after-change":
         this.resetPayload();

@@ -11,7 +11,7 @@ LocationChangeListener.prototype = {
     this.browser.removeProgressListener(this);
   },
 
-  onLocationChange(webProgress, request, location, flags) {
+  onLocationChange() {
     this.wasSynthetic = this.browser.isSyntheticDocument;
   },
 

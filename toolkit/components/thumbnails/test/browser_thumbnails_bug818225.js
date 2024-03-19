@@ -17,7 +17,7 @@ add_task(async function thumbnails_bg_bug818225() {
       gBrowser,
       url: URL,
     },
-    async browser => {
+    async () => {
       gBrowserThumbnails.clearTopSiteURLCache();
       await whenFileExists(URL);
     }

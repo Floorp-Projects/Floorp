@@ -24,7 +24,7 @@ registerCleanupFunction(async function () {
 function send_credential_list(credlist) {
   let num_of_creds = 0;
   credlist.forEach(domain => {
-    domain.credentials.forEach(c => {
+    domain.credentials.forEach(() => {
       num_of_creds += 1;
     });
   });

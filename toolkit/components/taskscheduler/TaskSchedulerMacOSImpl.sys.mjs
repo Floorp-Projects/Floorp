@@ -292,12 +292,12 @@ export var MacOSImpl = {
     return serializer.serializeToString(doc);
   },
 
-  _formatLabelForThisApp(id, options) {
+  _formatLabelForThisApp(id) {
     let installHash = lazy.XreDirProvider.getInstallHash();
     return `${AppConstants.MOZ_MACBUNDLE_ID}.${installHash}.${id}`;
   },
 
-  _labelMatchesThisApp(label, options) {
+  _labelMatchesThisApp(label) {
     let installHash = lazy.XreDirProvider.getInstallHash();
     return (
       label &&

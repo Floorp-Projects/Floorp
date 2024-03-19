@@ -30,7 +30,7 @@ export var AppMenuNotifications = {
     Services.obs.removeObserver(this, "appMenu-notifications-request");
   },
 
-  observe(subject, topic, status) {
+  observe(subject, topic) {
     switch (topic) {
       case "xpcom-shutdown":
         this.uninit();

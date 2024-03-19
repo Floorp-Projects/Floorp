@@ -18,7 +18,7 @@
 <script>
 
   const video = document.getElementById("video");
-  function loadedmetadata(event) {
+  function loadedmetadata() {
     SimpleTest.executeSoon(function() {
       const controlBar = SpecialPowers.wrap(video).openOrClosedShadowRoot.querySelector(".controlBar");
       is(controlBar.getAttribute("fullscreen-unavailable"), "true", "Fullscreen button is hidden");

@@ -334,12 +334,9 @@ add_task(async function test_execute_invalid_statement() {
   await new Promise(resolve => {
     Assert.equal(c._connectionData._anonymousStatements.size, 0);
 
-    c.execute("SELECT invalid FROM unknown").then(
-      do_throw,
-      function onError(error) {
-        resolve();
-      }
-    );
+    c.execute("SELECT invalid FROM unknown").then(do_throw, function onError() {
+      resolve();
+    });
   });
 
   // Ensure we don't leak the statement instance.
@@ -366,15 +363,11 @@ add_task(async function test_on_row_exception_ignored() {
   }
 
   let i = 0;
-  let hasResult = await c.execute(
-    "SELECT * FROM DIRS",
-    null,
-    function onRow(row) {
-      i++;
+  let hasResult = await c.execute("SELECT * FROM DIRS", null, function onRow() {
+    i++;
 
-      throw new Error("Some silly error.");
-    }
-  );
+    throw new Error("Some silly error.");
+  });
 
   Assert.equal(hasResult, true);
   Assert.equal(i, 10);
@@ -418,7 +411,7 @@ add_task(async function test_on_row_stop_iteration() {
   let hasResult = await c.execute(
     `SELECT * FROM dirs WHERE path="nonexistent"`,
     null,
-    function onRow(row) {
+    function onRow() {
       i++;
     }
   );
@@ -473,7 +466,7 @@ add_task(async function test_execute_transaction_rollback() {
 
     // We should never get here.
     do_throw();
-  }).then(do_throw, function onError(error) {
+  }).then(do_throw, function onError() {
     deferred.resolve();
   });
 
@@ -490,7 +483,7 @@ add_task(async function test_close_during_transaction() {
 
   await c.execute("INSERT INTO dirs (path) VALUES ('foo')");
 
-  let promise = c.executeTransaction(async function transaction(conn) {
+  let promise = c.executeTransaction(async function transaction() {
     await c.execute("INSERT INTO dirs (path) VALUES ('bar')");
   });
   await c.close();
@@ -801,7 +794,7 @@ add_task(async function test_discard_while_active() {
   let discarded = -1;
   let first = true;
   let sql = "SELECT * FROM dirs";
-  await c.executeCached(sql, null, function onRow(row) {
+  await c.executeCached(sql, null, function onRow() {
     if (!first) {
       return;
     }
@@ -1010,7 +1003,7 @@ add_task(async function test_direct() {
 
   let deferred = Promise.withResolvers();
   begin.executeAsync({
-    handleCompletion(reason) {
+    handleCompletion() {
       deferred.resolve();
     },
   });
@@ -1021,7 +1014,7 @@ add_task(async function test_direct() {
   deferred = Promise.withResolvers();
   print("Executing async.");
   statement.executeAsync({
-    handleResult(resultSet) {},
+    handleResult() {},
 
     handleError(error) {
       print(
@@ -1031,7 +1024,7 @@ add_task(async function test_direct() {
       deferred.reject();
     },
 
-    handleCompletion(reason) {
+    handleCompletion() {
       print("Completed.");
       deferred.resolve();
     },
@@ -1041,7 +1034,7 @@ add_task(async function test_direct() {
 
   deferred = Promise.withResolvers();
   end.executeAsync({
-    handleCompletion(reason) {
+    handleCompletion() {
       deferred.resolve();
     },
   });

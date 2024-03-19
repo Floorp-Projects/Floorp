@@ -56,7 +56,6 @@ async function checkWakelockWhenChangeTabVisibility({
   description,
   additionalParams,
   needLock,
-  elementIdForEnteringPIPMode,
 }) {
   const originalTab = gBrowser.selectedTab;
   info(`start a new tab for '${description}'`);

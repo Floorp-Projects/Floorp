@@ -509,7 +509,7 @@ function loadPrefs() {
     });
   });
 
-  showAll.addEventListener("click", event => {
+  showAll.addEventListener("click", () => {
     search.focus();
     search.value = "";
     gFilterPrefsTask.disarm();

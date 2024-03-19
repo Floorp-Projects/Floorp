@@ -24,7 +24,7 @@ add_task(async function test_main_process_crash() {
         crashType = CrashTestUtils.CRASH_MOZ_CRASH;
         crashReporter.annotateCrashReport("ShutdownProgress", "event-test");
       },
-      (minidump, extra) => {
+      minidump => {
         basename = minidump.leafName;
         Object.defineProperty(cm, "_eventsDirs", { value: [getEventDir()] });
         cm.aggregateEventsFiles().then(resolve, reject);

@@ -296,7 +296,7 @@ EnterprisePoliciesManager.prototype = {
   },
 
   // nsIObserver implementation
-  observe: function BG_observe(subject, topic, data) {
+  observe: function BG_observe(subject, topic) {
     switch (topic) {
       case "policies-startup":
         // Before the first set of policy callbacks runs, we must

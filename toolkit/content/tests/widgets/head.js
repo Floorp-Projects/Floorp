@@ -51,7 +51,7 @@ function executeTests() {
 }
 
 function once(target, name, cb) {
-  let p = new Promise(function (resolve, reject) {
+  let p = new Promise(function (resolve) {
     target.addEventListener(
       name,
       function () {

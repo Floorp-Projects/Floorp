@@ -160,7 +160,7 @@ function onloadPromiseFor(id) {
   return new Promise(resolve => {
     iframe.addEventListener(
       "load",
-      function (e) {
+      function () {
         resolve(true);
       },
       { once: true }
@@ -366,7 +366,7 @@ function PrompterProxy(chromeScript) {
   return new Proxy(
     {},
     {
-      get(target, prop, receiver) {
+      get(target, prop) {
         return (...args) => {
           // Array of indices of out/inout params to copy from the parent back to the caller.
           let outParams = [];

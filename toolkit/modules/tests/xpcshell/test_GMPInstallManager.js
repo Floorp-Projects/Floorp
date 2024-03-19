@@ -1175,7 +1175,7 @@ add_test(function test_installAddon_noServer() {
       GMPInstallManager.overrideLeaveDownloadedZip = true;
       let installPromise = installManager.installAddon(gmpAddon);
       installPromise.then(
-        extractedPaths => {
+        () => {
           do_throw("No server for install should reject");
         },
         err => {
@@ -1324,8 +1324,8 @@ function mockRequest(inputStatus, inputResponse, options) {
   this._options = options || {};
 }
 mockRequest.prototype = {
-  overrideMimeType(aMimetype) {},
-  setRequestHeader(aHeader, aValue) {},
+  overrideMimeType() {},
+  setRequestHeader() {},
   status: null,
   channel: { set notificationCallbacks(aVal) {} },
   open(aMethod, aUrl) {
@@ -1339,7 +1339,7 @@ mockRequest.prototype = {
   },
   responseXML: null,
   responseText: null,
-  send(aBody) {
+  send() {
     executeSoon(() => {
       try {
         if (this._options.dropRequest) {
@@ -1427,9 +1427,8 @@ mockRequest.prototype = {
       }
     }
   },
-  addEventListener(aEvent, aValue, aCapturing) {
-    // eslint-disable-next-line no-eval
-    eval("this._on" + aEvent + " = aValue");
+  addEventListener(aEvent, aValue) {
+    this[`_on${aEvent}`] = aValue;
   },
   get wrappedJSObject() {
     return this;

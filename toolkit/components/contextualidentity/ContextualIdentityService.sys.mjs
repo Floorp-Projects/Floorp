@@ -41,7 +41,7 @@ _TabRemovalObserver.prototype = {
 
   QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 
-  observe(subject, topic, data) {
+  observe(subject) {
     let remoteTab = subject.QueryInterface(Ci.nsIRemoteTab);
     if (this._remoteTabIds.has(remoteTab.tabId)) {
       this._remoteTabIds.delete(remoteTab.tabId);

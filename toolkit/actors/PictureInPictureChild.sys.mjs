@@ -947,11 +947,8 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
    * tear out or in. If we happened to be tracking videos before the tear
    * occurred, we re-add the mouse event listeners so that they're attached to
    * the right WindowRoot.
-   *
-   * @param {Event} event The pageshow event fired when completing a tab tear
-   * out or in.
    */
-  onPageShow(event) {
+  onPageShow() {
     let state = this.docState;
     if (state.isTrackingVideos) {
       this.addMouseButtonListeners();
@@ -963,11 +960,8 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
    * tear out or in. If we happened to be tracking videos before the tear
    * occurred, we remove the mouse event listeners. We'll re-add them when the
    * pageshow event fires.
-   *
-   * @param {Event} event The pagehide event fired when starting a tab tear
-   * out or in.
    */
-  onPageHide(event) {
+  onPageHide() {
     let state = this.docState;
     if (state.isTrackingVideos) {
       this.removeMouseButtonListeners();
@@ -1049,7 +1043,7 @@ export class PictureInPictureToggleChild extends JSWindowActorChild {
     }
   }
 
-  startPictureInPicture(event, video, toggle) {
+  startPictureInPicture(event, video) {
     Services.telemetry.keyedScalarAdd(
       "pictureinpicture.opened_method",
       "toggle",
@@ -2445,7 +2439,7 @@ export class PictureInPictureChild extends JSWindowActorChild {
     }
   }
 
-  onCueChange(e) {
+  onCueChange() {
     if (!lazy.DISPLAY_TEXT_TRACKS_PREF) {
       this.updateWebVTTTextTracksDisplay(null);
     } else {
@@ -3110,10 +3104,10 @@ class PictureInPictureChildVideoWrapper {
    * a cue change is triggered {@see updatePiPTextTracks()}.
    * @param {HTMLVideoElement} video
    *  The originating video source element
-   * @param {Function} callback
+   * @param {Function} _callback
    *  The callback function to be executed when cue changes are detected
    */
-  setCaptionContainerObserver(video, callback) {
+  setCaptionContainerObserver(video, _callback) {
     return this.#callWrapperMethod({
       name: "setCaptionContainerObserver",
       args: [

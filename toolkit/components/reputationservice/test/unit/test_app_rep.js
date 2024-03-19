@@ -115,7 +115,7 @@ add_task(async function test_setup() {
 
   gHttpServ = new HttpServer();
   gHttpServ.registerDirectory("/", do_get_cwd());
-  gHttpServ.registerPathHandler("/download", function (request, response) {
+  gHttpServ.registerPathHandler("/download", function (request) {
     if (gExpectedRemote) {
       let body = NetUtil.readInputStreamToString(
         request.bodyInputStream,

@@ -143,7 +143,7 @@ FinderParent.prototype = {
       let actor = windowGlobal.getActor("Finder");
       return actor.sendQuery(aMessageName, aArgs).then(
         result => result,
-        r => {}
+        () => {}
       );
     }
 

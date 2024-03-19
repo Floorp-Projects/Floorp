@@ -3,7 +3,7 @@
 <script>
 let count = 0;
 onload = function() {
-  window.addEventListener('beforeprint', (event) => {
+  window.addEventListener('beforeprint', () => {
     document.getElementById("before-print-count").innerText = ++count;
     print()
   });

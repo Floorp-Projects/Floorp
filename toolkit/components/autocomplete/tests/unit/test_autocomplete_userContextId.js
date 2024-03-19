@@ -21,12 +21,7 @@ function doSearch(aString, aUserContextId) {
   return new Promise(resolve => {
     let search = new AutoCompleteSearch("test");
 
-    search.startSearch = function (
-      aSearchString,
-      aSearchParam,
-      aPreviousResult,
-      aListener
-    ) {
+    search.startSearch = function (aSearchString, aSearchParam) {
       unregisterAutoCompleteSearch(search);
       resolve(aSearchParam);
     };

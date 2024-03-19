@@ -48,6 +48,6 @@ function addWindowListener(aURL, aCallback) {
         aCallback();
       }, domwindow);
     },
-    onCloseWindow(aXULWindow) {},
+    onCloseWindow() {},
   });
 }

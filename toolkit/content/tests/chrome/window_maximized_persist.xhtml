@@ -8,7 +8,7 @@
         id="window"
         persist="height width sizemode">
 <script type="application/javascript"><![CDATA[
-  window.addEventListener("sizemodechange", evt => {
+  window.addEventListener("sizemodechange", () => {
     window.arguments[0].postMessage("sizemodechange", "*");
   });
 ]]></script>

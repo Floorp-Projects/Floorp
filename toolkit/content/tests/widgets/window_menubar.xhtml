@@ -426,7 +426,7 @@ var popupTests = [
   test() {
     synthesizeKey("KEY_Escape");
   },
-  result(testname) {
+  result() {
   },
 },
 {
@@ -504,14 +504,14 @@ var popupTests = [
   testname: "cursor up wrap",
   events: [ "DOMMenuItemInactive contents", "DOMMenuItemActive about" ],
   test() { synthesizeKey("KEY_ArrowUp"); },
-  result(testname) { }
+  result() { }
 },
 {
   // check that pressing cursor down skips non menuitems
   testname: "cursor down wrap",
   events: [ "DOMMenuItemInactive about", "DOMMenuItemActive contents" ],
   test() { synthesizeKey("KEY_ArrowDown"); },
-  result(testname) { }
+  result() { }
 },
 {
   // check that pressing a menuitem's accelerator selects it
@@ -617,7 +617,7 @@ var popupTests = [
   condition() { return kIsWindows; },
   events: [ "DOMMenuItemInactive only", "DOMMenuItemActive other" ],
   test() { sendChar("o"); },
-  result(testname) { }
+  result() { }
 },
 {
   // when only one menuitem starting with that letter exists, it should be

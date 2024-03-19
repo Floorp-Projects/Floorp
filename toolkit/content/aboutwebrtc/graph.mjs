@@ -35,14 +35,14 @@ class GraphImpl {
   // The color to use for average graph lines and text
   averageLineColor = () => "green";
   // The color to use for the max value
-  maxColor = ({ time, value }) => "grey";
+  maxColor = () => "grey";
   // The color to use for the min value
-  minColor = ({ time, value }) => "grey";
+  minColor = () => "grey";
   // Title color
-  titleColor = title => compStyle("--in-content-page-color");
+  titleColor = () => compStyle("--in-content-page-color");
   // The color to use for a data point at a time.
   // The destination x coordinate and graph width are also provided.
-  datumColor = ({ time, value, x, width }) => "red";
+  datumColor = () => "red";
 
   // Returns an SVG element that needs to be inserted into the DOM for display
   drawSparseValues = (dataSet, title, config) => {

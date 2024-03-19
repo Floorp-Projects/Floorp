@@ -5,7 +5,7 @@
 add_task(async function test() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:blank" },
-    function (browser) {
+    function () {
       ok(
         Services.appinfo.windowsDLLBlocklistStatus,
         "Windows dll blocklist status should be true, indicating it is " +

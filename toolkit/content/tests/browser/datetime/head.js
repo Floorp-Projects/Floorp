@@ -69,7 +69,7 @@ class DateTimeTestHelper {
       [selector],
       async selector => {
         let input = content.document.querySelector(selector);
-        await ContentTaskUtils.waitForEvent(input, "change", false, e => {
+        await ContentTaskUtils.waitForEvent(input, "change", false, () => {
           ok(
             content.window.windowUtils.isHandlingUserInput,
             "isHandlingUserInput should be true"

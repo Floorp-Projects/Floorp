@@ -135,7 +135,7 @@ add_task(async () => {
       "after system info was collected."
   );
 
-  await BrowserTestUtils.withNewTab("about:third-party", async browser => {
+  await BrowserTestUtils.withNewTab("about:third-party", async () => {
     if (!content.fetchDataDone) {
       const mainDiv = content.document.getElementById("main");
       await BrowserTestUtils.waitForMutationCondition(

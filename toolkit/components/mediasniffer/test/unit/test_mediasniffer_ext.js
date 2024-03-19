@@ -61,7 +61,7 @@ var listener = {
     );
   },
 
-  onDataAvailable(request, stream, offset, count) {
+  onDataAvailable(request, stream) {
     try {
       var bis = Cc["@mozilla.org/binaryinputstream;1"].createInstance(
         Ci.nsIBinaryInputStream
@@ -73,7 +73,7 @@ var listener = {
     }
   },
 
-  onStopRequest(request, status) {
+  onStopRequest() {
     testRan++;
     runNext();
   },

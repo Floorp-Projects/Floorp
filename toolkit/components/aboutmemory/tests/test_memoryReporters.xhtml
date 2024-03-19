@@ -77,8 +77,7 @@
   let mySandbox = Cu.Sandbox(document.nodePrincipal,
                     { sandboxName: "this-is-a-sandbox-name" });
 
-  function handleReportNormal(aProcess, aPath, aKind, aUnits, aAmount,
-                              aDescription)
+  function handleReportNormal(aProcess, aPath, aKind, aUnits, aAmount)
   {
     if (aProcess.startsWith(`Utility `)) {
       // The Utility process that runs the ORB JavaScript validator starts on first
@@ -128,8 +127,7 @@
     }
   }
 
-  function handleReportAnonymized(aProcess, aPath, aKind, aUnits, aAmount,
-                                  aDescription)
+  function handleReportAnonymized(aProcess, aPath)
   {
     // Path might include an xmlns using http, which is safe to ignore.
     let reducedPath = aPath.replace(XUL_NS, "");
@@ -331,7 +329,7 @@
       }
     },
     // nsIMemoryReporter
-    collectReports(callback, data, anonymize) {
+    collectReports(callback, data) {
       for (let path of Object.keys(this.tests)) {
         try {
           let test = this.tests[path];
@@ -350,7 +348,7 @@
       }
     },
     // nsIHandleReportCallback
-    callback(process, path, kind, units, amount, data) {
+    callback(process, path, kind, units, amount) {
       if (path in this.tests) {
         this.seen++;
         let test = this.tests[path];

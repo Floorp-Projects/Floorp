@@ -37,7 +37,7 @@ var MockWebChannelBroker = {
  * Test channel listening with originOrPermission being an nsIURI.
  */
 add_task(function test_web_channel_listen() {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     let channel = new WebChannel(
       VALID_WEB_CHANNEL_ID,
       VALID_WEB_CHANNEL_ORIGIN,
@@ -94,7 +94,7 @@ add_task(function test_web_channel_listen() {
  * Test channel listening with originOrPermission being a permission string.
  */
 add_task(function test_web_channel_listen_permission() {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     // add a new permission
     PermissionTestUtils.add(
       VALID_WEB_CHANNEL_ORIGIN,

@@ -18,7 +18,7 @@
       let promise = new Promise((res, rej) => {resolve = res; reject = rej});
 
       let success = false;
-      function observe(aSubject, aTopic, aData) {
+      function observe(aSubject, aTopic) {
         if (aTopic == "alertshow") {
           success = true;
           notifier.closeAlert(alertName);

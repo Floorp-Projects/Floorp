@@ -89,7 +89,7 @@ HiddenFrame.prototype = {
         "nsISupportsWeakReference",
       ]),
     };
-    this._listener.onStateChange = (wbp, request, stateFlags, status) => {
+    this._listener.onStateChange = (wbp, request, stateFlags) => {
       if (!request) {
         return;
       }

@@ -1720,15 +1720,7 @@ class ModalPrompter {
     return result;
   }
 
-  asyncPromptAuth(
-    channel,
-    callback,
-    context,
-    level,
-    authInfo,
-    checkLabel,
-    checkValue
-  ) {
+  asyncPromptAuth() {
     // Nothing calls this directly; netwerk ends up going through
     // nsIPromptService::GetPrompt, which delegates to login manager.
     // Login manger handles the async bits itself, and only calls out
@@ -1786,7 +1778,7 @@ AuthPromptAdapter.prototype = {
 
   /* ----------  nsIAuthPrompt2 ---------- */
 
-  promptAuth(channel, level, authInfo, checkLabel, checkValue) {
+  promptAuth(channel, level, authInfo) {
     let message = InternalPromptUtils.makeAuthMessage(
       this.oldPrompter,
       channel,
@@ -1833,15 +1825,7 @@ AuthPromptAdapter.prototype = {
     return ok;
   },
 
-  asyncPromptAuth(
-    channel,
-    callback,
-    context,
-    level,
-    authInfo,
-    checkLabel,
-    checkValue
-  ) {
+  asyncPromptAuth() {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
 };

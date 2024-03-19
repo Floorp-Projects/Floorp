@@ -16,7 +16,7 @@ function recommendedAdsEventListener(eventName, sidebar) {
         content.document.querySelector("shopping-container").wrappedJSObject;
       let adEl = shoppingContainer.recommendedAdEl;
       return ContentTaskUtils.waitForEvent(adEl, name, false, null, true).then(
-        ev => null
+        () => null
       );
     }
   );

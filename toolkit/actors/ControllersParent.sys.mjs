@@ -47,7 +47,7 @@ export class ControllersParent extends JSWindowActorParent {
     this.sendAsyncMessage("ControllerCommands:Do", aCommand);
   }
 
-  getCommandStateWithParams(aCommand, aCommandParams) {
+  getCommandStateWithParams() {
     throw Components.Exception("Not implemented", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
 

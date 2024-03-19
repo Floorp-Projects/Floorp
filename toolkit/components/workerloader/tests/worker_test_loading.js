@@ -152,7 +152,7 @@ add_test(function test_load() {
   is(J.foo, "foo", "Module J exported value foo");
 });
 
-self.onmessage = function (message) {
+self.onmessage = function () {
   for (let test of tests) {
     info("Entering " + test.name);
     try {

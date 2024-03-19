@@ -29,7 +29,7 @@ add_task(async () => {
   });
   await BrowserTestUtils.withNewTab(
     { gBrowser: originalBrowser, url: "about:windows-messages" },
-    async browser => {
+    async () => {
       let messagesList = content.document.getElementById("windows-div");
       // This is tricky because the test framework has its own windows
       Assert.greaterOrEqual(

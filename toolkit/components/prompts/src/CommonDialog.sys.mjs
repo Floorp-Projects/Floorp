@@ -193,7 +193,7 @@ CommonDialog.prototype = {
     // set the icon
     let icon = this.ui.infoIcon;
     if (icon) {
-      this.iconClass.forEach((el, idx, arr) => icon.classList.add(el));
+      this.iconClass.forEach(el => icon.classList.add(el));
     }
 
     // set default result to cancelled

@@ -4,7 +4,7 @@
 "use strict";
 
 add_task(async function test_OPEN_PROTECTION_PANEL() {
-  await BrowserTestUtils.withNewTab(EXAMPLE_URL, async browser => {
+  await BrowserTestUtils.withNewTab(EXAMPLE_URL, async () => {
     const popupshown = BrowserTestUtils.waitForEvent(
       window,
       "popupshown",

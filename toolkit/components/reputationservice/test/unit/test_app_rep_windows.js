@@ -212,7 +212,7 @@ add_task(async function test_setup() {
     return blob;
   }
 
-  gHttpServer.registerPathHandler("/throw", function (request, response) {
+  gHttpServer.registerPathHandler("/throw", function () {
     do_throw("We shouldn't be getting here");
   });
 

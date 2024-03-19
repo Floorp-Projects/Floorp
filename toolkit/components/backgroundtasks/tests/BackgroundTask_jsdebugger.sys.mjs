@@ -11,7 +11,7 @@
  * code to exit code 0.
  */
 
-export function runBackgroundTask(commandLine) {
+export function runBackgroundTask() {
   // In the future, will be modifed by the JS debugger (to 0, success).
   var exposedExitCode = 0;
 

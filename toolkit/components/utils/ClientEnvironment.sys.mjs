@@ -76,7 +76,7 @@ export class ClientEnvironmentBase {
     }
 
     return new Proxy(target, {
-      get(target, prop, receiver) {
+      get(target, prop) {
         if (prop == "main") {
           return target.main;
         }

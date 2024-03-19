@@ -13,7 +13,7 @@ add_task(async function test_about_translations_dropdowns() {
   await openAboutTranslations({
     languagePairs,
     dataForContent: languagePairs,
-    runInPage: async ({ dataForContent: languagePairs, selectors }) => {
+    runInPage: async ({ selectors }) => {
       const { document } = content;
 
       await ContentTaskUtils.waitForCondition(

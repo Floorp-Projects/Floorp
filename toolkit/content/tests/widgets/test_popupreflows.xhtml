@@ -20,7 +20,7 @@ let panel, anchor;
 // done by the panel.
 let observer = {
   reflows: [],
-  reflow (start, end) {
+  reflow () {
     // Ignore reflows triggered by native code
     // (Reflows from native code only have an empty stack after the first frame)
     var path = (new Error().stack).split("\n").slice(1).join("");
@@ -31,7 +31,7 @@ let observer = {
     this.reflows.push(new Error().stack);
   },
 
-  reflowInterruptible (start, end) {
+  reflowInterruptible () {
     // We're not interested in interruptible reflows.  Why, you ask?  Because
     // we've simply cargo-culted this test from browser_tabopen_reflows.js!
   },

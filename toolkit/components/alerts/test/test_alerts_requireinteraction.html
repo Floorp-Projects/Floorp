@@ -23,7 +23,7 @@ const chromeScript = SpecialPowers.loadChromeScript(_ => {
       sendAsyncMessage("waitForXULAlert", false);
     }, 2000);
 
-    var windowObserver = function(win, aTopic, aData) {
+    var windowObserver = function(win, aTopic) {
       if (aTopic != "domwindowopened") {
         return;
       }
@@ -95,7 +95,7 @@ add_task(async function test_require_interaction() {
   var actualSequence = [];
 
   function createAlertListener(name, showCallback, finishCallback) {
-    return (subject, topic, data) => {
+    return (subject, topic) => {
       if (topic == "alertshow") {
         actualSequence.push(name + " show");
         if (showCallback) {

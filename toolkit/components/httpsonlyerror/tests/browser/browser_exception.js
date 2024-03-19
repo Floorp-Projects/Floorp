@@ -139,7 +139,7 @@ function setupFileServer() {
       "GET",
       `${SECURE_ROOT_PATH}file_upgrade_insecure_server.sjs?queryresult=${INSECURE_ROOT_PATH}`
     );
-    xhrRequest.onload = function (e) {
+    xhrRequest.onload = function () {
       var results = xhrRequest.responseText.split(",");
       resolve(results);
     };

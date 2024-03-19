@@ -32,7 +32,7 @@ function test_crash() {
   var menupopup = document.getElementById("menupopup");
   var menuitem = document.getElementById("menuitem");
   menupopup.addEventListener("popupshown", function () {
-    menuitem.addEventListener("mouseup", function (e) {
+    menuitem.addEventListener("mouseup", function () {
       const observer = new MutationObserver((aMutationList, aObserver) => {
         for (const mutation of aMutationList) {
           if (mutation.attributeName != "_moz-menuactive") {

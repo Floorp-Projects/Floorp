@@ -186,7 +186,7 @@ class _RFPHelper {
     );
   }
 
-  _handleHttpOnModifyRequest(subject, data) {
+  _handleHttpOnModifyRequest(subject) {
     // If we are loading an HTTP page from content, show the
     // "request English language web pages?" prompt.
     let httpChannel = subject.QueryInterface(Ci.nsIHttpChannel);

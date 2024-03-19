@@ -262,7 +262,7 @@ export var PageThumbs = {
           aBrowser.browsingContext.currentWindowGlobal.getActor("Thumbnails");
         return thumbnailsActor
           .sendQuery("Browser:Thumbnail:CheckState")
-          .catch(err => {
+          .catch(() => {
             return false;
           });
       }
@@ -835,7 +835,7 @@ export var PageThumbsExpiration = {
     }
   },
 
-  notify: function Expiration_notify(aTimer) {
+  notify: function Expiration_notify() {
     let urls = [];
     let filtersToWaitFor = this._filters.length;
 

@@ -58,7 +58,7 @@
 
     }
 
-    function assertAccordionCardProperties(card, expectedValues) {
+    function assertAccordionCardProperties(card) {
       ok(card.detailsEl, "The details element should exist");
       ok(card.detailsEl.querySelector("summary"), "There should be a summary element within the details element");
       ok(card.detailsEl.querySelector("summary").querySelector(".chevron-icon"), "There should be a chevron icon div within the summary element");

@@ -232,11 +232,7 @@ class PrintHelper {
     });
 
     // Mock PrintEventHandler with our Promises.
-    this.win.PrintEventHandler._showPrintDialog = (
-      window,
-      haveSelection,
-      settings
-    ) => {
+    this.win.PrintEventHandler._showPrintDialog = (window, haveSelection) => {
       this.systemDialogOpenedWithSelection = haveSelection;
       return showSystemDialogPromise;
     };

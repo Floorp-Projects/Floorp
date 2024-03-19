@@ -26,7 +26,7 @@ RemoteCanvas.prototype.load = function (callback) {
     var m = iframe.contentDocument.getElementById("av");
     m.addEventListener(
       "suspend",
-      function (aEvent) {
+      function () {
         setTimeout(function () {
           let mediaElement =
             iframe.contentDocument.querySelector("audio, video");

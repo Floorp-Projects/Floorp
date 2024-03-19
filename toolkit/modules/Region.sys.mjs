@@ -843,7 +843,7 @@ class RegionDetector {
     }
   }
 
-  observe(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic) {
     log.info(`Observed ${aTopic}`);
     switch (aTopic) {
       case GEOLOCATION_TOPIC:

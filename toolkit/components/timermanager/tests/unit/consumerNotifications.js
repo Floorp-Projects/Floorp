@@ -142,7 +142,7 @@ ChromeUtils.defineLazyGetter(this, "gCompReg", function () {
 });
 
 const gTest0TimerCallback = {
-  notify: function T0CB_notify(aTimer) {
+  notify: function T0CB_notify() {
     // This can happen when another notification fails and this timer having
     // time to fire so check other timers are successful.
     do_throw("gTest0TimerCallback notify method should not have been called");
@@ -157,7 +157,7 @@ const gTest0Factory = {
 };
 
 const gTest1TimerCallback = {
-  notify: function T1CB_notify(aTimer) {
+  notify: function T1CB_notify() {
     // This can happen when another notification fails and this timer having
     // time to fire so check other timers are successful.
     do_throw("gTest1TimerCallback notify method should not have been called");
@@ -172,7 +172,7 @@ const gTest1Factory = {
 };
 
 const gTest2TimerCallback = {
-  notify: function T2CB_notify(aTimer) {
+  notify: function T2CB_notify() {
     // This can happen when another notification fails and this timer having
     // time to fire so check other timers are successful.
     do_throw("gTest2TimerCallback notify method should not have been called");
@@ -197,7 +197,7 @@ const gTest3Factory = {
 };
 
 const gTest4TimerCallback = {
-  notify: function T4CB_notify(aTimer) {
+  notify: function T4CB_notify() {
     Services.catMan.deleteCategoryEntry(
       CATEGORY_UPDATE_TIMER,
       TESTS[4].desc,
@@ -216,7 +216,7 @@ const gTest4Factory = {
 };
 
 const gTest5TimerCallback = {
-  notify: function T5CB_notify(aTimer) {
+  notify: function T5CB_notify() {
     Services.catMan.deleteCategoryEntry(
       CATEGORY_UPDATE_TIMER,
       TESTS[5].desc,
@@ -235,7 +235,7 @@ const gTest5Factory = {
 };
 
 const gTest6TimerCallback = {
-  notify: function T6CB_notify(aTimer) {
+  notify: function T6CB_notify() {
     Services.catMan.deleteCategoryEntry(
       CATEGORY_UPDATE_TIMER,
       TESTS[6].desc,
@@ -254,7 +254,7 @@ const gTest6Factory = {
 };
 
 const gTest7TimerCallback = {
-  notify: function T7CB_notify(aTimer) {
+  notify: function T7CB_notify() {
     Services.catMan.deleteCategoryEntry(
       CATEGORY_UPDATE_TIMER,
       TESTS[7].desc,
@@ -273,7 +273,7 @@ const gTest7Factory = {
 };
 
 const gTest8TimerCallback = {
-  notify: function T8CB_notify(aTimer) {
+  notify: function T8CB_notify() {
     TESTS[8].notified = true;
     TESTS[8].notifyTime = Date.now();
     executeSoon(function () {
@@ -290,7 +290,7 @@ const gTest8Factory = {
 };
 
 const gTest9TimerCallback = {
-  notify: function T9CB_notify(aTimer) {
+  notify: function T9CB_notify() {
     TESTS[9].notified = true;
     TESTS[9].notifyTime = Date.now();
     executeSoon(function () {
@@ -301,7 +301,7 @@ const gTest9TimerCallback = {
 };
 
 const gTest10TimerCallback = {
-  notify: function T9CB_notify(aTimer) {
+  notify: function T9CB_notify() {
     // The timer should have been unregistered before this could
     // be called.
     do_throw("gTest10TimerCallback notify method should not have been called");

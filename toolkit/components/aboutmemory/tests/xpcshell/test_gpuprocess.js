@@ -17,14 +17,7 @@ function run_test() {
   };
 
   let foundGPUProcess = false;
-  let onHandleReport = function (
-    aProcess,
-    aPath,
-    aKind,
-    aUnits,
-    aAmount,
-    aDescription
-  ) {
+  let onHandleReport = function (aProcess) {
     if (/GPU \(pid \d+\)/.test(aProcess)) {
       foundGPUProcess = true;
     }
