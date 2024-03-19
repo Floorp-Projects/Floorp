@@ -19,6 +19,19 @@ jobs:
                   - {weekday: 'Wednesday', hour: 13, minute: 0}
                   - {weekday: 'Friday', hour: 13, minute: 0}
 
+    - name: nightly-all
+      job:
+          type: decision-task
+          treeherder-symbol: N
+          target-tasks-method: nightly_all
+          include-push-tasks: true
+      run-on-projects:
+          - mozilla-central
+      when:
+          by-project:
+              mozilla-central: [{hour: 10, minute: 0}, {hour: 22, minute: 0}]
+              # No default
+
     - name: nightly-desktop
       job:
           type: decision-task
@@ -27,10 +40,7 @@ jobs:
           include-push-tasks: true
       run-on-projects:
           - mozilla-central
-      when:
-          by-project:
-              mozilla-central: [{hour: 10, minute: 0}, {hour: 22, minute: 0}]
-              # No default
+      when: []  # never (hook only)
 
     - name: nightly-desktop-linux
       job:
@@ -81,6 +91,17 @@ jobs:
       run-on-projects:
           - mozilla-central
       when: []  # never (hook only)
+
+    - name: nightly-android
+      job:
+          type: decision-task
+          treeherder-symbol: Na
+          target-tasks-method: nightly-android
+          include-push-tasks: true
+      run-on-projects:
+          - mozilla-central
+          - oak
+      when: []  # hook only
 
     - name: ship-geckoview
       job:
@@ -388,17 +409,6 @@ jobs:
           - mozilla-central
       when:
           - {hour: 0, minute: 0}
-
-    - name: nightly-android
-      job:
-          type: decision-task
-          treeherder-symbol: Na
-          target-tasks-method: nightly-android
-          include-push-tasks: true
-      run-on-projects:
-          - mozilla-central
-          - oak
-      when: []  # hook only
 
     - name: android-l10n-import
       job:

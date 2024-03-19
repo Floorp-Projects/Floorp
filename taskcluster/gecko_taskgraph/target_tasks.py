@@ -1079,6 +1079,18 @@ def target_tasks_nightly_desktop(full_task_graph, parameters, graph_config):
     )
 
 
+@_target_task("nightly_all")
+def target_tasks_nightly_all(full_task_graph, parameters, graph_config):
+    from android_taskgraph.target_tasks import (
+        target_tasks_nightly as target_tasks_nightly_android,
+    )
+
+    return list(
+        set(target_tasks_nightly_desktop(full_task_graph, parameters, graph_config))
+        | set(target_tasks_nightly_android(full_task_graph, parameters, graph_config))
+    )
+
+
 # Run Searchfox analysis once daily.
 @_target_task("searchfox_index")
 def target_tasks_searchfox(full_task_graph, parameters, graph_config):
