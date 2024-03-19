@@ -117,7 +117,7 @@ async function setupLocalCrashReportServer() {
   // reports.  This test needs them enabled.  The test also needs a mock
   // report server, and fortunately one is already set up by toolkit/
   // crashreporter/test/Makefile.in.  Assign its URL to MOZ_CRASHREPORTER_URL,
-  // which CrashSubmit.jsm uses as a server override.
+  // which CrashSubmit.sys.mjs uses as a server override.
   let noReport = Services.env.get("MOZ_CRASHREPORTER_NO_REPORT");
   let serverUrl = Services.env.get("MOZ_CRASHREPORTER_URL");
   Services.env.set("MOZ_CRASHREPORTER_NO_REPORT", "");

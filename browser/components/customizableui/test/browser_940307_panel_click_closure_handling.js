@@ -124,18 +124,17 @@ add_task(async function disabled_button_in_panel() {
   button.remove();
 });
 
-registerCleanupFunction(function () {
+registerCleanupFunction(async function () {
   if (button && button.parentNode) {
     button.remove();
   }
   if (menuButton && menuButton.parentNode) {
     menuButton.remove();
   }
-  // Sadly this isn't task.jsm-enabled, so we can't wait for this to happen. But we should
-  // definitely close it here and hope it won't interfere with other tests.
-  // Of course, all the tests are meant to do this themselves, but if they fail...
   if (isOverflowOpen()) {
+    let panelHiddenPromise = promiseOverflowHidden(window);
     PanelUI.overflowPanel.hidePopup();
+    await panelHiddenPromise;
   }
   CustomizableUI.reset();
 });

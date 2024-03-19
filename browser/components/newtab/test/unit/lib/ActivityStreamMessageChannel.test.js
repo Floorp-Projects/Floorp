@@ -13,7 +13,7 @@ const OPTIONS = [
 ];
 
 // Create an object containing details about a tab as expected within
-// the loaded tabs map in ActivityStreamMessageChannel.jsm.
+// the loaded tabs map in ActivityStreamMessageChannel.sys.mjs.
 function getTabDetails(portID, url = "about:newtab", extraArgs = {}) {
   let actor = {
     portID,

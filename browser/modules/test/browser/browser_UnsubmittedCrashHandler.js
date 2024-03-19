@@ -98,7 +98,7 @@ function createPendingCrashReports(howMany, accessDate) {
   };
 
   let uuidGenerator = Services.uuid;
-  // Some annotations are always present in the .extra file and CrashSubmit.jsm
+  // Some annotations are always present in the .extra file and CrashSubmit.sys.mjs
   // expects there to be a ServerURL entry, so we'll add them here.
   let extraFileContents = JSON.stringify({
     ServerURL: SERVER_URL,

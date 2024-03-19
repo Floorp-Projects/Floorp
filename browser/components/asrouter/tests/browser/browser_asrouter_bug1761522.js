@@ -20,7 +20,7 @@ const { RemoteSettings } = ChromeUtils.importESModule(
 );
 
 // This pref is used to override the Remote Settings server URL in tests.
-// See SERVER_URL in services/settings/Utils.jsm for more details.
+// See SERVER_URL in services/settings/Utils.sys.mjs for more details.
 const RS_SERVER_PREF = "services.settings.server";
 
 const FLUENT_CONTENT = "asrouter-test-string = Test Test Test\n";

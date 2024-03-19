@@ -8,11 +8,11 @@ const TEST_PATH =
     "https://example.com"
   ) + "meta_tags.html";
 /**
- * This tests that with the page meta_tags.html, ContentMetaHandler.jsm parses
- * out the meta tags avilable and only stores the best one for description and
- * one for preview image url. In the case of this test, the best defined meta
+ * This tests that with the page meta_tags.html, ContentMetaHandler.sys.mjs
+ * parses out the meta tags avilable and only stores the best one for description
+ * and one for preview image url. In the case of this test, the best defined meta
  * tags are "og:description" and "og:image:secure_url". The list of meta tags
- * and order of preference is found in ContentMetaHandler.jsm.
+ * and order of preference is found in ContentMetaHandler.sys.mjs.
  */
 add_task(async function test_metadata() {
   const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PATH);
