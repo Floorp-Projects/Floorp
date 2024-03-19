@@ -96,6 +96,12 @@ interface nsIStreamConverter : nsIThreadRetargetableStreamListener {
                           in nsISupports aCtxt);
 
     /**
+     * This is called after the request has installed the stream converter as its listener
+     * giving the stream converter the option to request retargetting of onDataAvailable.
+     */
+    void maybeRetarget(in nsIRequest request);
+
+    /**
      * Returns the content type that the stream listener passed to asyncConvertData will
      * see on the channel if the conversion is being done from aFromType to * /*.
      *

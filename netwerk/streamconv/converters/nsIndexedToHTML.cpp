@@ -98,6 +98,11 @@ nsIndexedToHTML::GetConvertedType(const nsACString& aFromType,
 }
 
 NS_IMETHODIMP
+nsIndexedToHTML::MaybeRetarget(nsIRequest* request) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsIndexedToHTML::OnStartRequest(nsIRequest* request) {
   nsCString buffer;
   nsresult rv = DoOnStartRequest(request, buffer);
