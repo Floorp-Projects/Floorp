@@ -744,6 +744,26 @@
   fuzzy_test_computed_color(`oklch(from color(srgb 0.25 0.5 0.75) l c h)`, `oklch(0.585502 0.118254 250.546)`, 0.02); // Larger values means larger epsilon.
   fuzzy_test_computed_color(`color(from oklch(72.322% 0.12403 247.996) srgb r g b)`, `color(srgb 0.382631 0.672756 0.938904)`, 0.001);
 
+  // Test that conversion are relatively lossless.
+  for (const colorSpace of ["xyz-d50", "xyz-d65"]) {
+    fuzzy_test_computed_color(`color(from rgb(from color(${colorSpace} 0.99 0.88 0.77) r g b) ${colorSpace} x y z)`, `color(${colorSpace} 0.99 0.88 0.77)`, 0.0001);
+    fuzzy_test_computed_color(`color(from hsl(from color(${colorSpace} 0.99 0.88 0.77) h s l) ${colorSpace} x y z)`, `color(${colorSpace} 0.99 0.88 0.77)`, 0.0001);
+    fuzzy_test_computed_color(`color(from hwb(from color(${colorSpace} 0.99 0.88 0.77) h w b) ${colorSpace} x y z)`, `color(${colorSpace} 0.99 0.88 0.77)`, 0.0001);
+    fuzzy_test_computed_color(`color(from lab(from color(${colorSpace} 0.99 0.88 0.77) l a b) ${colorSpace} x y z)`, `color(${colorSpace} 0.99 0.88 0.77)`, 0.0001);
+    fuzzy_test_computed_color(`color(from lch(from color(${colorSpace} 0.99 0.88 0.77) l c h) ${colorSpace} x y z)`, `color(${colorSpace} 0.99 0.88 0.77)`, 0.0001);
+    fuzzy_test_computed_color(`color(from oklab(from color(${colorSpace} 0.99 0.88 0.77) l a b) ${colorSpace} x y z)`, `color(${colorSpace} 0.99 0.88 0.77)`, 0.0001);
+    fuzzy_test_computed_color(`color(from oklch(from color(${colorSpace} 0.99 0.88 0.77) l c h) ${colorSpace} x y z)`, `color(${colorSpace} 0.99 0.88 0.77)`, 0.0001);
+    fuzzy_test_computed_color(`color(from color(from color(${colorSpace} 0.99 0.88 0.77) srgb r g b) ${colorSpace} x y z)`, `color(${colorSpace} 0.99 0.88 0.77)`, 0.0001);
+    fuzzy_test_computed_color(`color(from color(from color(${colorSpace} 0.99 0.88 0.77) srgb-linear r g b) ${colorSpace} x y z)`, `color(${colorSpace} 0.99 0.88 0.77)`, 0.0001);
+    fuzzy_test_computed_color(`color(from color(from color(${colorSpace} 0.99 0.88 0.77) display-p3 r g b) ${colorSpace} x y z)`, `color(${colorSpace} 0.99 0.88 0.77)`, 0.0001);
+    fuzzy_test_computed_color(`color(from color(from color(${colorSpace} 0.99 0.88 0.77) a98-rgb r g b) ${colorSpace} x y z)`, `color(${colorSpace} 0.99 0.88 0.77)`, 0.0001);
+    fuzzy_test_computed_color(`color(from color(from color(${colorSpace} 0.99 0.88 0.77) prophoto-rgb r g b) ${colorSpace} x y z)`, `color(${colorSpace} 0.99 0.88 0.77)`, 0.0001);
+    fuzzy_test_computed_color(`color(from color(from color(${colorSpace} 0.99 0.88 0.77) rec2020 r g b) ${colorSpace} x y z)`, `color(${colorSpace} 0.99 0.88 0.77)`, 0.0001);
+    fuzzy_test_computed_color(`color(from color(from color(${colorSpace} 0.99 0.88 0.77) xyz x y z) ${colorSpace} x y z)`, `color(${colorSpace} 0.99 0.88 0.77)`, 0.0001);
+    fuzzy_test_computed_color(`color(from color(from color(${colorSpace} 0.99 0.88 0.77) xyz-d50 x y z) ${colorSpace} x y z)`, `color(${colorSpace} 0.99 0.88 0.77)`, 0.0001);
+    fuzzy_test_computed_color(`color(from color(from color(${colorSpace} 0.99 0.88 0.77) xyz-d65 x y z) ${colorSpace} x y z)`, `color(${colorSpace} 0.99 0.88 0.77)`, 0.0001);
+  }
+
   // Spec Examples: https://www.w3.org/TR/css-color-5/#relative-colors
   // All examples here have multiple stages of calculations so minor disagreements in the values of keyword colors and other constants can compound.
   // These tests require a wider epsilon of 0.02.
