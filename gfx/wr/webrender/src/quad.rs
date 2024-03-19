@@ -6,20 +6,22 @@ use api::{units::*, PremultipliedColorF, ClipMode};
 use euclid::point2;
 
 use crate::{
+    batch::{BatchKey, BatchKind, BatchTextures},
     clip::{ClipChainInstance, ClipIntern, ClipItemKind, ClipStore},
     command_buffer::{CommandBufferIndex, PrimitiveCommand, QuadFlags},
     frame_builder::{FrameBuildingContext, FrameBuildingState, PictureContext, PictureState},
-    gpu_types::{QuadSegment, TransformPaletteId},
+    gpu_types::{PrimitiveInstanceData, QuadInstance, QuadSegment, TransformPaletteId, ZBufferId},
     intern::DataStore,
-    pattern::Pattern,
+    internal_types::TextureSource,
+    pattern::{Pattern, PatternKind, PatternShaderInput},
     prim_store::{PrimitiveInstanceIndex, PrimitiveScratchBuffer},
-    render_task::{MaskSubPass, RenderTask, RenderTaskKind, SubPass},
-    render_task_graph::RenderTaskId,
-    renderer::{GpuBufferAddress, GpuBufferBuilderF},
+    render_task::{MaskSubPass, RenderTask, RenderTaskAddress, RenderTaskKind, SubPass},
+    render_task_graph::{RenderTaskGraph, RenderTaskId},
+    renderer::{BlendMode, GpuBufferAddress, GpuBufferBuilder, GpuBufferBuilderF},
     segment::EdgeAaSegmentMask,
     space::SpaceMapper,
     spatial_tree::{SpatialNodeIndex, SpatialTree},
-    util::MaxRect,
+    util::MaxRect
 };
 
 const MIN_AA_SEGMENTS_SIZE: f32 = 4.0;
@@ -557,5 +559,155 @@ pub fn write_prim_blocks(
     }
 
     writer.finish()
+}
+
+pub fn add_to_batch<F>(
+    kind: PatternKind,
+    pattern_input: PatternShaderInput,
+    render_task_address: RenderTaskAddress,
+    transform_id: TransformPaletteId,
+    prim_address_f: GpuBufferAddress,
+    quad_flags: QuadFlags,
+    edge_flags: EdgeAaSegmentMask,
+    segment_index: u8,
+    task_id: RenderTaskId,
+    z_id: ZBufferId,
+    render_tasks: &RenderTaskGraph,
+    gpu_buffer_builder: &mut GpuBufferBuilder,
+    mut f: F,
+) where F: FnMut(BatchKey, PrimitiveInstanceData) {
+
+    #[repr(u8)]
+    enum PartIndex {
+        Center = 0,
+        Left = 1,
+        Top = 2,
+        Right = 3,
+        Bottom = 4,
+        All = 5,
+    }
+
+    let mut writer = gpu_buffer_builder.i32.write_blocks(1);
+    writer.push_one([
+        transform_id.0 as i32,
+        z_id.0,
+        pattern_input.0,
+        0,
+    ]);
+    let prim_address_i = writer.finish();
+
+    let texture = match task_id {
+        RenderTaskId::INVALID => {
+            TextureSource::Invalid
+        }
+        _ => {
+            let texture = render_tasks
+                .resolve_texture(task_id)
+                .expect("bug: valid task id must be resolvable");
+
+            texture
+        }
+    };
+
+    let textures = BatchTextures::prim_textured(
+        texture,
+        TextureSource::Invalid,
+    );
+
+    let default_blend_mode = if quad_flags.contains(QuadFlags::IS_OPAQUE) && task_id == RenderTaskId::INVALID {
+        BlendMode::None
+    } else {
+        BlendMode::PremultipliedAlpha
+    };
+
+    let edge_flags_bits = edge_flags.bits();
+
+    let prim_batch_key = BatchKey {
+        blend_mode: default_blend_mode,
+        kind: BatchKind::Quad(kind),
+        textures,
+    };
+
+    let edge_batch_key = BatchKey {
+        blend_mode: BlendMode::PremultipliedAlpha,
+        kind: BatchKind::Quad(kind),
+        textures,
+    };
+
+    if edge_flags.is_empty() {
+        let instance = QuadInstance {
+            render_task_address,
+            prim_address_i,
+            prim_address_f,
+            z_id,
+            transform_id,
+            edge_flags: edge_flags_bits,
+            quad_flags: quad_flags.bits(),
+            part_index: PartIndex::All as u8,
+            segment_index,
+        };
+
+        f(prim_batch_key, instance.into());
+    } else if quad_flags.contains(QuadFlags::USE_AA_SEGMENTS) {
+        let main_instance = QuadInstance {
+            render_task_address,
+            prim_address_i,
+            prim_address_f,
+            z_id,
+            transform_id,
+            edge_flags: edge_flags_bits,
+            quad_flags: quad_flags.bits(),
+            part_index: PartIndex::Center as u8,
+            segment_index,
+        };
+
+        if edge_flags.contains(EdgeAaSegmentMask::LEFT) {
+            let instance = QuadInstance {
+                part_index: PartIndex::Left as u8,
+                ..main_instance
+            };
+            f(edge_batch_key, instance.into());
+        }
+        if edge_flags.contains(EdgeAaSegmentMask::RIGHT) {
+            let instance = QuadInstance {
+                part_index: PartIndex::Top as u8,
+                ..main_instance
+            };
+            f(edge_batch_key, instance.into());
+        }
+        if edge_flags.contains(EdgeAaSegmentMask::TOP) {
+            let instance = QuadInstance {
+                part_index: PartIndex::Right as u8,
+                ..main_instance
+            };
+            f(edge_batch_key, instance.into());
+        }
+        if edge_flags.contains(EdgeAaSegmentMask::BOTTOM) {
+            let instance = QuadInstance {
+                part_index: PartIndex::Bottom as u8,
+                ..main_instance
+            };
+            f(edge_batch_key, instance.into());
+        }
+
+        let instance = QuadInstance {
+            ..main_instance
+        };
+        f(prim_batch_key, instance.into());
+    } else {
+        let instance = QuadInstance {
+            render_task_address,
+            prim_address_i,
+            prim_address_f,
+            z_id,
+            transform_id,
+            edge_flags: edge_flags_bits,
+            quad_flags: quad_flags.bits(),
+            part_index: PartIndex::All as u8,
+            segment_index,
+        };
+
+        f(edge_batch_key, instance.into());
+    }
 }
 
