@@ -312,7 +312,7 @@ export class FormAutofillParent extends JSWindowActorParent {
           scenarioName: data.scenarioName,
           hasInput: !!data.searchString?.length,
         });
-        const recordsPromise = FormAutofillParent.getRecords(data);
+        const recordsPromise = FormAutofillParent._getRecords(data);
         const [records, externalEntries] = await Promise.all([
           recordsPromise,
           relayPromise,
@@ -448,42 +448,42 @@ export class FormAutofillParent extends JSWindowActorParent {
    *
    * This is static as a unit test calls this.
    *
+   * @private
    * @param  {object} data
-   * @param  {string} data.searchString
-   *         The typed string for filtering out the matched records.
    * @param  {string} data.collectionName
    *         The name used to specify which collection to retrieve records.
-   * @param  {string} data.fieldName
-   *         The field name to search. If not specified, return all records in
-   *         the collection
+   * @param  {string} data.searchString
+   *         The typed string for filtering out the matched records.
+   * @param  {string} data.info
+   *         The input autocomplete property's information.
    */
-  static async getRecords({ searchString, collectionName, fieldName }) {
-    // Derive the collection name from field name if it doesn't exist
-    collectionName ||=
-      FormAutofillUtils.getCollectionNameFromFieldName(fieldName);
-
-    const collection = lazy.gFormAutofillStorage[collectionName];
+  static async _getRecords({ collectionName, searchString, info }) {
+    let collection = lazy.gFormAutofillStorage[collectionName];
     if (!collection) {
       return [];
     }
 
-    const records = await collection.getAll();
-    if (!fieldName || !records.length) {
-      return records;
+    let recordsInCollection = await collection.getAll();
+    if (!info || !info.fieldName || !recordsInCollection.length) {
+      return recordsInCollection;
     }
 
+    let isCC = collectionName == CREDITCARDS_COLLECTION_NAME;
     // We don't filter "cc-number"
-    if (collectionName == CREDITCARDS_COLLECTION_NAME) {
-      if (fieldName == "cc-number") {
-        return records.filter(record => !!record["cc-number"]);
-      }
+    if (isCC && info.fieldName == "cc-number") {
+      recordsInCollection = recordsInCollection.filter(
+        record => !!record["cc-number"]
+      );
+      return recordsInCollection;
     }
 
-    const lcSearchString = searchString.toLowerCase();
-    return records.filter(record => {
-      const fieldValue = record[fieldName];
+    let records = [];
+    let lcSearchString = searchString.toLowerCase();
+
+    for (let record of recordsInCollection) {
+      let fieldValue = record[info.fieldName];
       if (!fieldValue) {
-        return false;
+        continue;
       }
 
       if (
@@ -493,14 +493,19 @@ export class FormAutofillParent extends JSWindowActorParent {
       ) {
         // Address autofill isn't supported for the record's country so we don't
         // want to attempt to potentially incorrectly fill the address fields.
-        return false;
+        continue;
       }
 
-      return (
-        !lcSearchString ||
-        String(fieldValue).toLowerCase().startsWith(lcSearchString)
-      );
-    });
+      if (
+        lcSearchString &&
+        !String(fieldValue).toLowerCase().startsWith(lcSearchString)
+      ) {
+        continue;
+      }
+      records.push(record);
+    }
+
+    return records;
   }
 
   async _onAddressSubmit(address, browser) {
