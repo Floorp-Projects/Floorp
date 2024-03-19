@@ -6968,18 +6968,15 @@ fn inherit_relative_selector_search_direction(
 ) -> ElementSelectorFlags {
     let mut inherited = ElementSelectorFlags::empty();
     if let Some(parent) = parent {
-        if let Some(direction) = parent.relative_selector_search_direction() {
-            inherited |= direction
-                .intersection(ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_ANCESTOR);
-        }
+        inherited |= parent
+            .relative_selector_search_direction()
+            .intersection(ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_ANCESTOR);
     }
     if let Some(sibling) = prev_sibling {
-        if let Some(direction) = sibling.relative_selector_search_direction() {
-            // Inherit both, for e.g. a sibling with `:has(~.sibling .descendant)`
-            inherited |= direction.intersection(
-                ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_ANCESTOR_SIBLING,
-            );
-        }
+        // Inherit both, for e.g. a sibling with `:has(~.sibling .descendant)`
+        inherited |= sibling.relative_selector_search_direction().intersection(
+            ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_ANCESTOR_SIBLING,
+        );
     }
     inherited
 }
@@ -7309,13 +7306,9 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorForInsertion(
     ) {
         (Some(prev_sibling), Some(next_sibling)) => 'sibling: {
             // If the prev sibling is not on the sibling search path, skip.
-            if prev_sibling
+            if !prev_sibling
                 .relative_selector_search_direction()
-                .map_or(true, |direction| {
-                    !direction.intersects(
-                        ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_SIBLING,
-                    )
-                })
+                .intersects(ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_SIBLING)
             {
                 break 'sibling;
             }
@@ -7434,7 +7427,7 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorForRemoval(
     // This element was in-tree, so we can safely say that if it was not on
     // the relative selector search path, its removal will not invalidate any
     // relative selector.
-    if element.relative_selector_search_direction().is_none() {
+    if element.relative_selector_search_direction().is_empty() {
         return;
     }
     let following_node = following_node.map(GeckoNode);
