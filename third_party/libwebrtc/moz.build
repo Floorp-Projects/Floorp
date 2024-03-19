@@ -38,7 +38,6 @@ DIRS += [
     "/third_party/libwebrtc/api/audio_options_api_gn",
     "/third_party/libwebrtc/api/bitrate_allocation_gn",
     "/third_party/libwebrtc/api/call_api_gn",
-    "/third_party/libwebrtc/api/callfactory_api_gn",
     "/third_party/libwebrtc/api/crypto/frame_decryptor_interface_gn",
     "/third_party/libwebrtc/api/crypto/frame_encryptor_interface_gn",
     "/third_party/libwebrtc/api/crypto/options_gn",
