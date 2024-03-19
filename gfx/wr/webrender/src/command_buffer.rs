@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::units::PictureRect;
+use crate::pattern::PatternKind;
 use crate::{spatial_tree::SpatialNodeIndex, render_task_graph::RenderTaskId, surface::SurfaceTileDescriptor, picture::TileKey, renderer::GpuBufferAddress, FastHashMap, prim_store::PrimitiveInstanceIndex, gpu_cache::GpuCacheAddress};
 use crate::gpu_types::{QuadSegment, TransformPaletteId};
 use crate::segment::EdgeAaSegmentMask;
@@ -115,6 +116,7 @@ pub enum PrimitiveCommand {
         gpu_buffer_address: GpuBufferAddress,
     },
     Quad {
+        pattern: PatternKind,
         // TODO(gw): Used for bounding rect only, could possibly remove
         prim_instance_index: PrimitiveInstanceIndex,
         gpu_buffer_address: GpuBufferAddress,
@@ -144,6 +146,7 @@ impl PrimitiveCommand {
     }
 
     pub fn quad(
+        pattern: PatternKind,
         prim_instance_index: PrimitiveInstanceIndex,
         gpu_buffer_address: GpuBufferAddress,
         transform_id: TransformPaletteId,
@@ -151,6 +154,7 @@ impl PrimitiveCommand {
         edge_flags: EdgeAaSegmentMask,
     ) -> Self {
         PrimitiveCommand::Quad {
+            pattern,
             prim_instance_index,
             gpu_buffer_address,
             transform_id,
@@ -232,8 +236,9 @@ impl CommandBuffer {
                 self.commands.push(Command::draw_instance(prim_instance_index));
                 self.commands.push(Command::data((gpu_buffer_address.u as u32) << 16 | gpu_buffer_address.v as u32));
             }
-            PrimitiveCommand::Quad { prim_instance_index, gpu_buffer_address, transform_id, quad_flags, edge_flags } => {
+            PrimitiveCommand::Quad { pattern, prim_instance_index, gpu_buffer_address, transform_id, quad_flags, edge_flags } => {
                 self.commands.push(Command::draw_quad(prim_instance_index));
+                self.commands.push(Command::data(pattern as u32));
                 self.commands.push(Command::data((gpu_buffer_address.u as u32) << 16 | gpu_buffer_address.v as u32));
                 self.commands.push(Command::data(transform_id.0));
                 self.commands.push(Command::data((quad_flags.bits() as u32) << 16 | edge_flags.bits() as u32));
@@ -279,6 +284,7 @@ impl CommandBuffer {
                 }
                 Command::CMD_DRAW_QUAD => {
                     let prim_instance_index = PrimitiveInstanceIndex(param);
+                    let pattern = PatternKind::from_u32(cmd_iter.next().unwrap().0);
                     let data = cmd_iter.next().unwrap();
                     let transform_id = TransformPaletteId(cmd_iter.next().unwrap().0);
                     let bits = cmd_iter.next().unwrap().0;
@@ -289,6 +295,7 @@ impl CommandBuffer {
                         v: (data.0 & 0xffff) as u16,
                     };
                     let cmd = PrimitiveCommand::quad(
+                        pattern,
                         prim_instance_index,
                         gpu_buffer_address,
                         transform_id,

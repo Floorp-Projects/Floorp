@@ -48,6 +48,7 @@ use api::channel::{Sender, Receiver};
 pub use api::DebugFlags;
 use core::time::Duration;
 
+use crate::pattern::PatternKind;
 use crate::render_api::{DebugCommand, ApiMsg, MemoryReport};
 use crate::batch::{AlphaBatchContainer, BatchKind, BatchFeatures, BatchTextures, BrushBatchKind, ClipBatchList};
 use crate::batch::{ClipMaskInstanceList};
@@ -286,7 +287,8 @@ impl BatchKind {
                 }
             }
             BatchKind::TextRun(_) => GPU_TAG_PRIM_TEXT_RUN,
-            BatchKind::Primitive => GPU_TAG_PRIMITIVE,
+            BatchKind::Quad(PatternKind::ColorOrTexture) => GPU_TAG_PRIMITIVE,
+            BatchKind::Quad(PatternKind::Mask) => GPU_TAG_INDIRECT_MASK,
         }
     }
 }
