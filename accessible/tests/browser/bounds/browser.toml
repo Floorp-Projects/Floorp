@@ -3,7 +3,6 @@ subsuite = "a11y"
 support-files = [
   "head.js",
   "!/accessible/tests/browser/shared-head.js",
-  "!/accessible/tests/browser/*.jsm",
   "!/accessible/tests/mochitest/*.js",
   "!/accessible/tests/mochitest/letters.gif",
 ]

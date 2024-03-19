@@ -9,7 +9,6 @@ support-files = [
   "doc_menulist.xhtml",
   "doc_tree.xhtml",
   "!/accessible/tests/browser/shared-head.js",
-  "!/accessible/tests/browser/*.jsm",
   "!/accessible/tests/mochitest/*.js",
   "!/accessible/tests/mochitest/letters.gif",
   "!/accessible/tests/mochitest/moz.png",

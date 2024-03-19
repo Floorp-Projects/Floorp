@@ -4,7 +4,6 @@ support-files = [
   "head.js",
   "!/accessible/tests/browser/shared-head.js",
   "!/accessible/tests/mochitest/*.js",
-  "!/accessible/tests/browser/*.jsm",
 ]
 prefs = ["javascript.options.asyncstack_capture_debuggee_only=false"]
 
