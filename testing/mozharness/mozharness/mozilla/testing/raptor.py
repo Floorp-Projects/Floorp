@@ -1023,7 +1023,8 @@ class Raptor(
         if os.getenv("PERF_FLAGS"):
             for option in os.getenv("PERF_FLAGS").split():
                 if "=" in option:
-                    kw_option, value = option.split("=")
+                    eq_index = option.find("=")
+                    kw_option, value = option[:eq_index], option[eq_index + 1 :]
                     kw_options[kw_option] = value
                 else:
                     options.extend(["--" + option])
