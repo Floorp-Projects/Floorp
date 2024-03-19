@@ -28,11 +28,11 @@ object Versions {
     const val okio = "3.8.0"
     const val androidsvg = "1.4"
 
-    const val android_gradle_plugin = "8.2.2"
+    const val android_gradle_plugin = "8.3.0"
 
     // This has to be synced to the gradlew plugin version. See
     // http://googlesamples.github.io/android-custom-lint-rules/api-guide/example.md.html#example:samplelintcheckgithubproject/lintversion?
-    const val lint = "31.2.2"
+    const val lint = "31.3.0"
     const val detekt = "1.23.5"
     const val ktlint = "0.49.1"
 
