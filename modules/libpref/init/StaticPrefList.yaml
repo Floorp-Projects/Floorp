@@ -13805,7 +13805,7 @@
 # Enable the heuristic to allow storage access for windows opened using window.open()
 - name: privacy.restrict3rdpartystorage.heuristic.redirect
   type: bool
-  value: true
+  value: @IS_NOT_NIGHTLY_BUILD@
   mirror: always
 
 # Anti-tracking permission expiration.
