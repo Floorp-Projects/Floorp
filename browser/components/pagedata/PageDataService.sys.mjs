@@ -573,8 +573,6 @@ export const PageDataService = new (class PageDataService extends EventEmitter {
    *   The notification's subject.
    * @param {string} topic
    *   The notification topic.
-   * @param {string} data
-   *   The data associated with the notification.
    */
   observe(subject, topic) {
     switch (topic) {
