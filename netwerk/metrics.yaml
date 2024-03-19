@@ -452,11 +452,43 @@ networking:
       - rjesup@mozilla.com
     expires: 130
 
+  http_content_ondatafinished_to_onstop_delay_negative:
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      The time between processing OnStopRequest and processing OnDataFinished (if OnStopRequest comes first)
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1857615
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1857615#c
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - rjesup@mozilla.com
+    expires: 130
+
   http_content_html5parser_ondatafinished_to_onstop_delay:
     type: timing_distribution
     time_unit: millisecond
     description: >
       The time between processing OnDataFinished and processing OnStopRequest (if OnDataFinished comes first)
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1857926
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1857926
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - rjesup@mozilla.com
+    expires: 130
+
+  http_content_html5parser_ondatafinished_to_onstop_delay_negative:
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      The time between processing OnStopRequest and processing OnDataFinished (if OnStopRequest comes first)
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1857926
     data_reviews:
