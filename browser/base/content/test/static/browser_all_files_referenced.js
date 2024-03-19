@@ -283,6 +283,12 @@ var allowlist = [
   // Bug 1875361
   { file: "chrome://global/content/ml/SummarizerModel.sys.mjs" },
 
+  // Bug 1886130
+  {
+    file: "chrome://global/content/ml/tests/acme/bert/resolve/main/config.json",
+  },
+  { file: "chrome://global/content/ml/ModelHub.sys.mjs" },
+
   // toolkit/xre/MacRunFromDmgUtils.mm
   { file: "resource://gre/localization/en-US/toolkit/global/run-from-dmg.ftl" },
 
