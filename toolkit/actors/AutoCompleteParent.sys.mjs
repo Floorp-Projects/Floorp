@@ -41,21 +41,18 @@ function compareContext(message) {
 // The browsingContext within the message data is either the one that has
 // the active autocomplete popup or the top-level of the one that has
 // the active autocomplete popup.
-Services.ppmm.addMessageListener(
-  "FormAutoComplete:GetSelectedIndex",
-  message => {
-    if (compareContext(message)) {
-      let actor = currentActor;
-      if (actor && actor.openedPopup) {
-        return actor.openedPopup.selectedIndex;
-      }
+Services.ppmm.addMessageListener("AutoComplete:GetSelectedIndex", message => {
+  if (compareContext(message)) {
+    let actor = currentActor;
+    if (actor && actor.openedPopup) {
+      return actor.openedPopup.selectedIndex;
     }
-
-    return -1;
   }
-);
 
-Services.ppmm.addMessageListener("FormAutoComplete:SelectBy", message => {
+  return -1;
+});
+
+Services.ppmm.addMessageListener("AutoComplete:SelectBy", message => {
   if (compareContext(message)) {
     let actor = currentActor;
     if (actor && actor.openedPopup) {
@@ -174,7 +171,7 @@ export class AutoCompleteParent extends JSWindowActorParent {
   handleEvent(evt) {
     switch (evt.type) {
       case "popupshowing": {
-        this.sendAsyncMessage("FormAutoComplete:PopupOpened", {});
+        this.sendAsyncMessage("AutoComplete:PopupOpened", {});
         break;
       }
 
@@ -188,7 +185,7 @@ export class AutoCompleteParent extends JSWindowActorParent {
           selectedIndex != -1
             ? AutoCompleteResultView.getStyleAt(selectedIndex)
             : "";
-        this.sendAsyncMessage("FormAutoComplete:PopupClosed", {
+        this.sendAsyncMessage("AutoComplete:PopupClosed", {
           selectedRowComment,
           selectedRowStyle,
         });
@@ -397,7 +394,7 @@ export class AutoCompleteParent extends JSWindowActorParent {
     }
 
     switch (message.name) {
-      case "FormAutoComplete:SetSelectedIndex": {
+      case "AutoComplete:SetSelectedIndex": {
         let { index } = message.data;
         if (this.openedPopup) {
           this.openedPopup.selectedIndex = index;
@@ -405,7 +402,7 @@ export class AutoCompleteParent extends JSWindowActorParent {
         break;
       }
 
-      case "FormAutoComplete:MaybeOpenPopup": {
+      case "AutoComplete:MaybeOpenPopup": {
         let { results, rect, dir, inputElementIdentifier, formOrigin } =
           message.data;
         if (lazy.DELEGATE_AUTOCOMPLETE) {
@@ -422,13 +419,13 @@ export class AutoCompleteParent extends JSWindowActorParent {
         break;
       }
 
-      case "FormAutoComplete:Invalidate": {
+      case "AutoComplete:Invalidate": {
         let { results } = message.data;
         this.invalidate(results);
         break;
       }
 
-      case "FormAutoComplete:ClosePopup": {
+      case "AutoComplete:ClosePopup": {
         if (lazy.DELEGATE_AUTOCOMPLETE) {
           lazy.GeckoViewAutocomplete.delegateDismiss();
           break;
@@ -489,7 +486,7 @@ export class AutoCompleteParent extends JSWindowActorParent {
    */
   handleEnter(aIsPopupSelection) {
     if (this.openedPopup) {
-      this.sendAsyncMessage("FormAutoComplete:HandleEnter", {
+      this.sendAsyncMessage("AutoComplete:HandleEnter", {
         selectedIndex: this.openedPopup.selectedIndex,
         isPopupSelection: aIsPopupSelection,
       });
@@ -507,7 +504,7 @@ export class AutoCompleteParent extends JSWindowActorParent {
     // disabled.
     /*
     if (this.openedPopup) {
-      this.sendAsyncMessage("FormAutoComplete:Focus");
+      this.sendAsyncMessage("AutoComplete:Focus");
     }
     */
   }

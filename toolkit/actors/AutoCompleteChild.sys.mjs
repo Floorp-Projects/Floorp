@@ -33,7 +33,7 @@ export class AutoCompleteChild extends JSWindowActorChild {
 
   receiveMessage(message) {
     switch (message.name) {
-      case "FormAutoComplete:HandleEnter": {
+      case "AutoComplete:HandleEnter": {
         this.selectedIndex = message.data.selectedIndex;
 
         let controller = Cc[
@@ -43,22 +43,22 @@ export class AutoCompleteChild extends JSWindowActorChild {
         break;
       }
 
-      case "FormAutoComplete:PopupClosed": {
+      case "AutoComplete:PopupClosed": {
         this._popupOpen = false;
         this.notifyListeners(message.name, message.data);
         break;
       }
 
-      case "FormAutoComplete:PopupOpened": {
+      case "AutoComplete:PopupOpened": {
         this._popupOpen = true;
         this.notifyListeners(message.name, message.data);
         break;
       }
 
-      case "FormAutoComplete:Focus": {
+      case "AutoComplete:Focus": {
         // XXX See bug 1582722
         // Before bug 1573836, the messages here didn't match
-        // ("FormAutoComplete:Focus" versus "FormAutoComplete:RequestFocus")
+        // ("AutoComplete:Focus" versus "AutoComplete:RequestFocus")
         // so this was never called. However this._input is actually a
         // nsIAutoCompleteInput, which doesn't have a focus() method, so it
         // wouldn't have worked anyway. So for now, I have just disabled this.
@@ -87,7 +87,7 @@ export class AutoCompleteChild extends JSWindowActorChild {
   }
 
   set selectedIndex(index) {
-    this.sendAsyncMessage("FormAutoComplete:SetSelectedIndex", { index });
+    this.sendAsyncMessage("AutoComplete:SetSelectedIndex", { index });
   }
 
   get selectedIndex() {
@@ -98,7 +98,7 @@ export class AutoCompleteChild extends JSWindowActorChild {
     // selectedIndex is trivial to catch (e.g. moving the mouse over the
     // list).
     let selectedIndexResult = Services.cpmm.sendSyncMessage(
-      "FormAutoComplete:GetSelectedIndex",
+      "AutoComplete:GetSelectedIndex",
       {
         browsingContext: this.browsingContext,
       }
@@ -131,7 +131,7 @@ export class AutoCompleteChild extends JSWindowActorChild {
     );
     let inputElementIdentifier = lazy.ContentDOMReference.get(element);
 
-    this.sendAsyncMessage("FormAutoComplete:MaybeOpenPopup", {
+    this.sendAsyncMessage("AutoComplete:MaybeOpenPopup", {
       results,
       rect,
       dir,
@@ -148,18 +148,18 @@ export class AutoCompleteChild extends JSWindowActorChild {
     // up in a state where the content thinks that a popup
     // is open when it isn't (or soon won't be).
     this._popupOpen = false;
-    this.sendAsyncMessage("FormAutoComplete:ClosePopup", {});
+    this.sendAsyncMessage("AutoComplete:ClosePopup", {});
   }
 
   invalidate() {
     if (this._popupOpen) {
       let results = this.getResultsFromController(this._input);
-      this.sendAsyncMessage("FormAutoComplete:Invalidate", { results });
+      this.sendAsyncMessage("AutoComplete:Invalidate", { results });
     }
   }
 
   selectBy(reverse, page) {
-    Services.cpmm.sendSyncMessage("FormAutoComplete:SelectBy", {
+    Services.cpmm.sendSyncMessage("AutoComplete:SelectBy", {
       browsingContext: this.browsingContext,
       reverse,
       page,
