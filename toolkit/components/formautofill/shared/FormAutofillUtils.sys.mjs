@@ -176,6 +176,12 @@ FormAutofillUtils = {
     return Array.from(categories);
   },
 
+  getCollectionNameFromFieldName(fieldName) {
+    return this.isCreditCardField(fieldName)
+      ? CREDITCARDS_COLLECTION_NAME
+      : ADDRESSES_COLLECTION_NAME;
+  },
+
   getAddressSeparator() {
     // The separator should be based on the L10N address format, and using a
     // white space is a temporary solution.
