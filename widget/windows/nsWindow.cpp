@@ -78,6 +78,7 @@
 #include <limits>
 
 #include "mozilla/widget/WinMessages.h"
+#include "nsLookAndFeel.h"
 #include "nsWindow.h"
 #include "nsWindowTaskbarConcealer.h"
 #include "nsAppRunner.h"
@@ -4939,10 +4940,12 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
     case WM_SETTINGCHANGE: {
       if (wParam == SPI_SETCLIENTAREAANIMATION ||
-          wParam == SPI_SETKEYBOARDDELAY || wParam == SPI_SETMOUSEVANISH) {
+          wParam == SPI_SETKEYBOARDDELAY || wParam == SPI_SETMOUSEVANISH ||
+          wParam == MOZ_SPI_SETCURSORSIZE) {
         // These need to update LookAndFeel cached values.
         // They affect reduced motion settings / caret blink count / show
-        // pointer while typing, so no need to invalidate style / layout.
+        // pointer while typing / tooltip offset, so no need to invalidate style
+        // / layout.
         NotifyThemeChanged(widget::ThemeChangeKind::MediaQueriesOnly);
         break;
       }

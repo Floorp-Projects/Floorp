@@ -30,6 +30,8 @@ var gOriginalWidth = -1;
 var gOriginalHeight = -1;
 var gButton = null;
 
+const kTooltipOffsetVertical = 10;
+
 function runTest()
 {
   startPopupTests(popupTests);
@@ -112,7 +114,7 @@ var popupTests = [
        Math.round(buttonrect.left + parseFloat(popupstyle.marginLeft) + 6),
        testname + " left position of tooltip");
     is(Math.round(rect.top),
-       Math.round(buttonrect.top + parseFloat(popupstyle.marginTop) + 6),
+       Math.round(buttonrect.top + parseFloat(popupstyle.marginTop) + 6 + kTooltipOffsetVertical),
        testname + " top position of tooltip");
 
     var labelrect = document.getElementById("label").getBoundingClientRect();
@@ -159,7 +161,7 @@ var popupTests = [
        Math.round(buttonrect.left + parseFloat(popupstyle.marginLeft) + 4),
        testname + " left position of tooltip");
     is(Math.round(rect.top),
-       Math.round(buttonrect.top + parseFloat(popupstyle.marginTop) + 4),
+       Math.round(buttonrect.top + parseFloat(popupstyle.marginTop) + 4 + kTooltipOffsetVertical),
        testname + " top position of tooltip");
 
     var labelrect = document.getElementById("label").getBoundingClientRect();
@@ -204,7 +206,7 @@ var popupTests = [
        Math.round(buttonrect.left + parseFloat(popupstyle.marginLeft) + 6),
        testname + " left position of tooltip");
     is(Math.round(rect.top),
-       Math.round(buttonrect.top + parseFloat(popupstyle.marginTop) + 6),
+       Math.round(buttonrect.top + parseFloat(popupstyle.marginTop) + 6 + kTooltipOffsetVertical),
        testname + " top position of tooltip");
 
     var labelrect = document.getElementById("label").getBoundingClientRect();
@@ -359,7 +361,14 @@ function moveWindowTo(x, y, callback, arg)
   }
 }
 
-window.arguments[0].SimpleTest.waitForFocus(runTest, window);
+(async function() {
+  let parent = window.arguments[0];
+  await Promise.all([
+    parent.SimpleTest.promiseFocus(window),
+    parent.SpecialPowers.pushPrefEnv({set: [["ui.tooltipOffsetVertical", kTooltipOffsetVertical]]}),
+  ]);
+  runTest();
+})();
 ]]>
 </script>
 

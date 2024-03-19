@@ -36,6 +36,17 @@ static int32_t GetSystemParam(long flag, int32_t def) {
   return ::SystemParametersInfo(flag, 0, &value, 0) ? value : def;
 }
 
+static int32_t GetTooltipOffsetVertical() {
+  static constexpr DWORD kDefaultCursorSize = 32;
+  const DWORD cursorSize =
+      GetSystemParam(MOZ_SPI_CURSORSIZE, kDefaultCursorSize);
+  if (cursorSize == kDefaultCursorSize) {
+    return LookAndFeel::kDefaultTooltipOffset;
+  }
+  return std::ceilf(float(LookAndFeel::kDefaultTooltipOffset) *
+                    float(cursorSize) / float(kDefaultCursorSize));
+}
+
 static bool SystemWantsDarkTheme() {
   if (nsUXThemeData::IsHighContrastOn()) {
     return LookAndFeel::IsDarkColor(
@@ -522,6 +533,9 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
     case IntID::ContextMenuOffsetVertical:
     case IntID::ContextMenuOffsetHorizontal:
       aResult = 2;
+      break;
+    case IntID::TooltipOffsetVertical:
+      aResult = GetTooltipOffsetVertical();
       break;
     case IntID::SystemUsesDarkTheme:
       aResult = SystemWantsDarkTheme();

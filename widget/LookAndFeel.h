@@ -186,6 +186,7 @@ class LookAndFeel {
      */
     ContextMenuOffsetVertical,
     ContextMenuOffsetHorizontal,
+    TooltipOffsetVertical,
 
     /*
      * A boolean value indicating whether client-side decorations are
@@ -319,6 +320,11 @@ class LookAndFeel {
   // This is a common enough integer that seems worth the shortcut.
   static bool UseOverlayScrollbars() {
     return GetInt(IntID::UseOverlayScrollbars);
+  }
+
+  static constexpr int32_t kDefaultTooltipOffset = 21;
+  static int32_t TooltipOffsetVertical() {
+    return GetInt(IntID::TooltipOffsetVertical, kDefaultTooltipOffset);
   }
 
   // Returns keyCode value of a modifier key which is used for accesskey.
