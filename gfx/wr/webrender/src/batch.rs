@@ -6,9 +6,9 @@ use api::{AlphaType, ClipMode, ImageBufferKind};
 use api::{FontInstanceFlags, YuvColorSpace, YuvFormat, ColorDepth, ColorRange, PremultipliedColorF};
 use api::units::*;
 use crate::clip::{ClipNodeFlags, ClipNodeRange, ClipItemKind, ClipStore};
-use crate::command_buffer::{PrimitiveCommand, QuadFlags};
+use crate::command_buffer::PrimitiveCommand;
 use crate::composite::CompositorSurfaceKind;
-use crate::pattern::{PatternKind, PatternShaderInput};
+use crate::pattern::PatternKind;
 use crate::spatial_tree::{SpatialTree, SpatialNodeIndex, CoordinateSystemId};
 use glyph_rasterizer::{GlyphFormat, SubpixelDirection};
 use crate::gpu_cache::{GpuBlockData, GpuCache, GpuCacheAddress};
@@ -23,13 +23,13 @@ use crate::picture::{Picture3DContext, PictureCompositeMode, calculate_screen_uv
 use crate::prim_store::{PrimitiveInstanceKind, ClipData};
 use crate::prim_store::{PrimitiveInstance, PrimitiveOpacity, SegmentInstanceIndex};
 use crate::prim_store::{BrushSegment, ClipMaskKind, ClipTaskIndex};
-use crate::prim_store::{VECS_PER_SEGMENT, PrimitiveInstanceIndex};
+use crate::prim_store::VECS_PER_SEGMENT;
 use crate::quad;
 use crate::render_target::RenderTargetContext;
 use crate::render_task_graph::{RenderTaskId, RenderTaskGraph};
 use crate::render_task::{RenderTaskAddress, RenderTaskKind, SubPass};
 use crate::renderer::{BlendMode, GpuBufferBuilder, ShaderColorMode};
-use crate::renderer::{MAX_VERTEX_TEXTURE_WIDTH, GpuBufferAddress};
+use crate::renderer::MAX_VERTEX_TEXTURE_WIDTH;
 use crate::resource_cache::{GlyphFetchResult, ImageProperties};
 use crate::space::SpaceMapper;
 use crate::visibility::{PrimitiveVisibilityFlags, VisibilityState};
@@ -796,55 +796,6 @@ impl BatchBuilder {
         self.batcher.clear();
     }
 
-    /// Add a quad primitive to the batch list, appllying edge AA and tiling
-    /// segments as required.
-    fn add_quad_to_batch(
-        &mut self,
-        kind: PatternKind,
-        pattern_input: PatternShaderInput,
-        prim_instance_index: PrimitiveInstanceIndex,
-        transform_id: TransformPaletteId,
-        prim_address_f: GpuBufferAddress,
-        quad_flags: QuadFlags,
-        edge_flags: EdgeAaSegmentMask,
-        segment_index: u8,
-        task_id: RenderTaskId,
-        z_generator: &mut ZBufferIdGenerator,
-        prim_instances: &[PrimitiveInstance],
-        render_tasks: &RenderTaskGraph,
-        gpu_buffer_builder: &mut GpuBufferBuilder,
-    ) {
-        let prim_instance = &prim_instances[prim_instance_index.0 as usize];
-        let prim_info = &prim_instance.vis;
-        let bounding_rect = &prim_info.clip_chain.pic_coverage_rect;
-        let z_id = z_generator.next();
-
-        quad::add_to_batch(
-            kind,
-            pattern_input,
-            self.batcher.render_task_address,
-            transform_id,
-            prim_address_f,
-            quad_flags,
-            edge_flags,
-            segment_index,
-            task_id,
-            z_id,
-            render_tasks,
-            gpu_buffer_builder,
-            |key, instance| {
-                let batch = self.batcher.set_params_and_get_batch(
-                    key,
-                    BatchFeatures::empty(),
-                    bounding_rect,
-                    z_id,
-                );
-
-                batch.push(instance);
-            }
-        );
-    }
-
     // Adds a primitive to a batch.
     // It can recursively call itself in some situations, for
     // example if it encounters a picture where the items
@@ -876,41 +827,70 @@ impl BatchBuilder {
                 (prim_instance_index, Some(gpu_buffer_address.as_int()))
             }
             PrimitiveCommand::Quad { pattern, pattern_input, prim_instance_index, gpu_buffer_address, quad_flags, edge_flags, transform_id } => {
+                let prim_instance = &prim_instances[prim_instance_index.0 as usize];
+                let prim_info = &prim_instance.vis;
+                let bounding_rect = &prim_info.clip_chain.pic_coverage_rect;
+                let render_task_address = self.batcher.render_task_address;
+
                 if segments.is_empty() {
-                    self.add_quad_to_batch(
+                    let z_id = z_generator.next();
+                    // TODO: Some pattern types will sample from render tasks.
+                    // At the moment quads only use a render task as source for
+                    // segments which have been pre-rendered and masked.
+                    let src_color_task_id = RenderTaskId::INVALID;
+
+                    quad::add_to_batch(
                         *pattern,
                         *pattern_input,
-                        *prim_instance_index,
+                        render_task_address,
                         *transform_id,
                         *gpu_buffer_address,
                         *quad_flags,
                         *edge_flags,
                         INVALID_SEGMENT_INDEX as u8,
-                        RenderTaskId::INVALID,
-                        z_generator,
-                        prim_instances,
+                        src_color_task_id,
+                        z_id,
                         render_tasks,
                         gpu_buffer_builder,
+                        |key, instance| {
+                            let batch = self.batcher.set_params_and_get_batch(
+                                key,
+                                BatchFeatures::empty(),
+                                bounding_rect,
+                                z_id,
+                            );
+                            batch.push(instance);
+                        },
                     );
                 } else {
                     for (i, task_id) in segments.iter().enumerate() {
                         // TODO(gw): edge_flags should be per-segment, when used for more than composites
                         debug_assert!(edge_flags.is_empty());
 
-                        self.add_quad_to_batch(
+                        let z_id = z_generator.next();
+
+                        quad::add_to_batch(
                             *pattern,
                             *pattern_input,
-                            *prim_instance_index,
+                            render_task_address,
                             *transform_id,
                             *gpu_buffer_address,
                             *quad_flags,
                             *edge_flags,
                             i as u8,
                             *task_id,
-                            z_generator,
-                            prim_instances,
+                            z_id,
                             render_tasks,
                             gpu_buffer_builder,
+                            |key, instance| {
+                                let batch = self.batcher.set_params_and_get_batch(
+                                    key,
+                                    BatchFeatures::empty(),
+                                    bounding_rect,
+                                    z_id,
+                                );
+                                batch.push(instance);
+                            },
                         );
                     }
                 }
