@@ -55,17 +55,17 @@ mozilla::LazyLogModule ModuleLoaderBase::gModuleLoaderBaseLog(
   MOZ_LOG_TEST(ModuleLoaderBase::gModuleLoaderBaseLog, mozilla::LogLevel::Debug)
 
 //////////////////////////////////////////////////////////////
-// ModuleLoaderBase::WaitingRequests
+// ModuleLoaderBase::LoadingRequest
 //////////////////////////////////////////////////////////////
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ModuleLoaderBase::WaitingRequests)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ModuleLoaderBase::LoadingRequest)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION(ModuleLoaderBase::WaitingRequests, mWaiting)
+NS_IMPL_CYCLE_COLLECTION(ModuleLoaderBase::LoadingRequest, mRequest, mWaiting)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(ModuleLoaderBase::WaitingRequests)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(ModuleLoaderBase::WaitingRequests)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(ModuleLoaderBase::LoadingRequest)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(ModuleLoaderBase::LoadingRequest)
 
 //////////////////////////////////////////////////////////////
 // ModuleLoaderBase
@@ -509,7 +509,9 @@ void ModuleLoaderBase::SetModuleFetchStarted(ModuleLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest->IsFetching() || aRequest->IsPendingFetchingError());
   MOZ_ASSERT(!ModuleMapContainsURL(aRequest->mURI));
 
-  mFetchingModules.InsertOrUpdate(aRequest->mURI, nullptr);
+  RefPtr<LoadingRequest> loadingRequest = new LoadingRequest();
+  loadingRequest->mRequest = aRequest;
+  mFetchingModules.InsertOrUpdate(aRequest->mURI, loadingRequest);
 }
 
 void ModuleLoaderBase::SetModuleFetchFinishedAndResumeWaitingRequests(
@@ -526,9 +528,9 @@ void ModuleLoaderBase::SetModuleFetchFinishedAndResumeWaitingRequests(
        "%u)",
        aRequest, aRequest->mModuleScript.get(), unsigned(aResult)));
 
-  RefPtr<WaitingRequests> waitingRequests;
+  RefPtr<LoadingRequest> loadingRequest;
   if (!mFetchingModules.Remove(aRequest->mURI,
-                               getter_AddRefs(waitingRequests))) {
+                               getter_AddRefs(loadingRequest))) {
     LOG(
         ("ScriptLoadRequest (%p): Key not found in mFetchingModules, "
          "assuming we have an inline module or have finished fetching already",
@@ -541,15 +543,14 @@ void ModuleLoaderBase::SetModuleFetchFinishedAndResumeWaitingRequests(
 
   mFetchedModules.InsertOrUpdate(aRequest->mURI, RefPtr{moduleScript});
 
-  if (waitingRequests) {
-    LOG(("ScriptLoadRequest (%p): Resuming waiting requests", aRequest));
-    ResumeWaitingRequests(waitingRequests, bool(moduleScript));
-  }
+  LOG(("ScriptLoadRequest (%p): Resuming waiting requests", aRequest));
+  MOZ_ASSERT(loadingRequest->mRequest == aRequest);
+  ResumeWaitingRequests(loadingRequest, bool(moduleScript));
 }
 
-void ModuleLoaderBase::ResumeWaitingRequests(WaitingRequests* aWaitingRequests,
+void ModuleLoaderBase::ResumeWaitingRequests(LoadingRequest* aLoadingRequest,
                                              bool aSuccess) {
-  for (ModuleLoadRequest* request : aWaitingRequests->mWaiting) {
+  for (ModuleLoadRequest* request : aLoadingRequest->mWaiting) {
     ResumeWaitingRequest(request, aSuccess);
   }
 }
@@ -568,13 +569,8 @@ void ModuleLoaderBase::WaitForModuleFetch(ModuleLoadRequest* aRequest) {
   MOZ_ASSERT(ModuleMapContainsURL(uri));
 
   if (auto entry = mFetchingModules.Lookup(uri)) {
-    RefPtr<WaitingRequests> waitingRequests = entry.Data();
-    if (!waitingRequests) {
-      waitingRequests = new WaitingRequests();
-      mFetchingModules.InsertOrUpdate(uri, waitingRequests);
-    }
-
-    waitingRequests->mWaiting.AppendElement(aRequest);
+    RefPtr<LoadingRequest> loadingRequest = entry.Data();
+    loadingRequest->mWaiting.AppendElement(aRequest);
     return;
   }
 
@@ -1038,9 +1034,9 @@ void ModuleLoaderBase::Shutdown() {
   CancelAndClearDynamicImports();
 
   for (const auto& entry : mFetchingModules) {
-    RefPtr<WaitingRequests> waitingRequests(entry.GetData());
-    if (waitingRequests) {
-      ResumeWaitingRequests(waitingRequests, false);
+    RefPtr<LoadingRequest> loadingRequest(entry.GetData());
+    if (loadingRequest) {
+      ResumeWaitingRequests(loadingRequest, false);
     }
   }
 
