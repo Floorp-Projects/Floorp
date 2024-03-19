@@ -5741,6 +5741,11 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
       return false;
     }
 
+    if (goal == frontend::ParseGoal::Module && options.lineno == 0) {
+      JS_ReportErrorASCII(cx, "Module cannot be compiled with lineNumber == 0");
+      return false;
+    }
+
 #ifdef JS_ENABLE_SMOOSH
     bool found = false;
     if (!JS_HasProperty(cx, objOptions, "rustFrontend", &found)) {
