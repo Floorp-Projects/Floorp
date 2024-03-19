@@ -187,6 +187,8 @@ static GdkCursor* get_gtk_cursor(nsCursor aCursor);
 /* callbacks from widgets */
 static gboolean expose_event_cb(GtkWidget* widget, cairo_t* cr);
 static gboolean configure_event_cb(GtkWidget* widget, GdkEventConfigure* event);
+static void widget_map_cb(GtkWidget* widget);
+static void widget_unmap_cb(GtkWidget* widget);
 static void size_allocate_cb(GtkWidget* widget, GtkAllocation* allocation);
 static void toplevel_window_size_allocate_cb(GtkWidget* widget,
                                              GtkAllocation* allocation);
@@ -390,11 +392,11 @@ static void GtkWindowSetTransientFor(GtkWindow* aWindow, GtkWindow* aParent) {
 
 nsWindow::nsWindow()
     : mTitlebarRectMutex("nsWindow::mTitlebarRectMutex"),
-      mWindowVisibilityMutex("nsWindow::mWindowVisibilityMutex"),
-      mIsMapped(false),
+      mDestroyMutex("nsWindow::mDestroyMutex"),
       mIsDestroyed(false),
       mIsShown(false),
       mNeedsShow(false),
+      mIsMapped(false),
       mEnabled(true),
       mCreated(false),
       mHandleTouchEvent(false),
@@ -579,6 +581,7 @@ void nsWindow::Destroy() {
 
   LOG("nsWindow::Destroy\n");
 
+  MutexAutoLock lock(mDestroyMutex);
   mIsDestroyed = true;
   mCreated = false;
 
@@ -608,9 +611,6 @@ void nsWindow::Destroy() {
   }
 
   NativeShow(false);
-
-  MOZ_ASSERT(!gtk_widget_get_mapped(mShell));
-  MOZ_ASSERT(!gtk_widget_get_mapped(GTK_WIDGET(mContainer)));
 
   ClearTransparencyBitmap();
 
@@ -3397,12 +3397,17 @@ void* nsWindow::GetNativeData(uint32_t aDataType) {
     case NS_NATIVE_EGL_WINDOW: {
       void* eglWindow = nullptr;
 
-      // We're called from OnMap() / OnUnmap() handlers,
-      // disable rendering to missing native widget then.
-      if (mWindowVisibilityMutex.TryLock()) {
-        // We don't have native window to render to,
-        // GL backend will create offscreen buffer for it.
-        if (mIsMapped) {
+      // We can't block on mutex here as it leads to a deadlock:
+      // 1) mutex is taken at nsWindow::Destroy()
+      // 2) NS_NATIVE_EGL_WINDOW is called from compositor/rendering thread,
+      //    blocking on mutex.
+      // 3) DestroyCompositor() is called by nsWindow::Destroy(). As a sync
+      //    call it waits to compositor/rendering threads,
+      //    but they're blocked at 2).
+      //    It's fine if we return null EGL window during DestroyCompositor(),
+      //    in such case compositor painting is skipped.
+      if (mDestroyMutex.TryLock()) {
+        if (mGdkWindow && !mIsDestroyed) {
 #ifdef MOZ_X11
           if (GdkIsX11Display()) {
             eglWindow = (void*)GDK_WINDOW_XID(mGdkWindow);
@@ -3410,13 +3415,20 @@ void* nsWindow::GetNativeData(uint32_t aDataType) {
 #endif
 #ifdef MOZ_WAYLAND
           if (GdkIsWaylandDisplay()) {
-            eglWindow = moz_container_wayland_get_egl_window(
-                mContainer, FractionalScaleFactor());
+            bool hiddenWindow =
+                mCompositorWidgetDelegate &&
+                mCompositorWidgetDelegate->AsGtkCompositorWidget() &&
+                mCompositorWidgetDelegate->AsGtkCompositorWidget()->IsHidden();
+            if (!hiddenWindow) {
+              eglWindow = moz_container_wayland_get_egl_window(
+                  mContainer, FractionalScaleFactor());
+            }
           }
 #endif
         }
-        mWindowVisibilityMutex.Unlock();
+        mDestroyMutex.Unlock();
       }
+
       LOG("Get NS_NATIVE_EGL_WINDOW mGdkWindow %p returned eglWindow %p",
           mGdkWindow, eglWindow);
       return eglWindow;
@@ -4089,6 +4101,41 @@ gboolean nsWindow::OnConfigureEvent(GtkWidget* aWidget,
   NotifyWindowMoved(mBounds.x, mBounds.y);
 
   return FALSE;
+}
+
+void nsWindow::OnMap() {
+  LOG("nsWindow::OnMap");
+  // Gtk mapped widget to screen. Configure underlying GdkWindow properly
+  // as our rendering target.
+  // This call means we have X11 (or Wayland) window we can render to by GL
+  // so we need to notify compositor about it.
+  mIsMapped = true;
+  ConfigureGdkWindow();
+}
+
+void nsWindow::OnUnmap() {
+  LOG("nsWindow::OnUnmap");
+
+  mIsMapped = false;
+
+  if (mSourceDragContext) {
+    static auto sGtkDragCancel =
+        (void (*)(GdkDragContext*))dlsym(RTLD_DEFAULT, "gtk_drag_cancel");
+    if (sGtkDragCancel) {
+      sGtkDragCancel(mSourceDragContext);
+      mSourceDragContext = nullptr;
+    }
+  }
+
+  // We don't have valid XWindow any more,
+  // so clear stored ones at GtkCompositorWidget() for OMTC rendering
+  // and mSurfaceProvider for legacy rendering.
+  if (GdkIsX11Display()) {
+    mSurfaceProvider.CleanupResources();
+    if (mCompositorWidgetDelegate) {
+      mCompositorWidgetDelegate->DisableRendering();
+    }
+  }
 }
 
 void nsWindow::OnSizeAllocate(GtkAllocation* aAllocation) {
@@ -5778,8 +5825,8 @@ bool nsWindow::GetShapedState() {
 }
 
 void nsWindow::ConfigureCompositor() {
-  MOZ_DIAGNOSTIC_ASSERT(mIsMapped);
   MOZ_DIAGNOSTIC_ASSERT(mCompositorState == COMPOSITOR_ENABLED);
+  MOZ_DIAGNOSTIC_ASSERT(mIsMapped);
 
   LOG("nsWindow::ConfigureCompositor()");
   auto startCompositing = [self = RefPtr{this}, this]() -> void {
@@ -5788,8 +5835,8 @@ void nsWindow::ConfigureCompositor() {
 
     // too late
     if (mIsDestroyed || !mIsMapped) {
-      LOG("  quit, mIsDestroyed = %d mIsMapped = %d", mIsDestroyed,
-          !!mIsMapped);
+      LOG("  quit, mIsDestroyed = %d mIsMapped = %d", !!mIsDestroyed,
+          mIsMapped);
       return;
     }
     // Compositor will be resumed later by ResumeCompositorFlickering().
@@ -6311,6 +6358,8 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
                          G_CALLBACK(settings_xft_dpi_changed_cb), this);
 
   // Widget signals
+  g_signal_connect(mContainer, "map", G_CALLBACK(widget_map_cb), nullptr);
+  g_signal_connect(mContainer, "unmap", G_CALLBACK(widget_unmap_cb), nullptr);
   g_signal_connect_after(mContainer, "size_allocate",
                          G_CALLBACK(size_allocate_cb), nullptr);
   g_signal_connect(mContainer, "hierarchy-changed",
@@ -6657,8 +6706,7 @@ void nsWindow::ResumeCompositorImpl() {
   LOG("nsWindow::ResumeCompositorImpl()\n");
 
   MOZ_DIAGNOSTIC_ASSERT(mCompositorWidgetDelegate);
-  mCompositorWidgetDelegate->SetRenderingSurface(GetX11Window(),
-                                                 GetShapedState());
+  mCompositorWidgetDelegate->EnableRendering(GetX11Window(), GetShapedState());
 
   // As WaylandStartVsync needs mCompositorWidgetDelegate this is the right
   // time to start it.
@@ -8242,6 +8290,25 @@ static gboolean configure_event_cb(GtkWidget* widget,
   return window->OnConfigureEvent(widget, event);
 }
 
+// Some Gtk widget code may call gtk_widget_unrealize() which destroys
+// mGdkWindow. We need to listen on this signal and re-create
+// mGdkWindow when we're already mapped.
+static void widget_map_cb(GtkWidget* widget) {
+  RefPtr<nsWindow> window = get_window_for_gtk_widget(widget);
+  if (!window) {
+    return;
+  }
+  window->OnMap();
+}
+
+static void widget_unmap_cb(GtkWidget* widget) {
+  RefPtr<nsWindow> window = get_window_for_gtk_widget(widget);
+  if (!window) {
+    return;
+  }
+  window->OnUnmap();
+}
+
 static void size_allocate_cb(GtkWidget* widget, GtkAllocation* allocation) {
   RefPtr<nsWindow> window = get_window_for_gtk_widget(widget);
   if (!window) {
@@ -9060,7 +9127,7 @@ void nsWindow::DidGetNonBlankPaint() {
 void nsWindow::SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate) {
   LOG("nsWindow::SetCompositorWidgetDelegate %p mIsMapped %d "
       "mCompositorWidgetDelegate %p\n",
-      delegate, !!mIsMapped, mCompositorWidgetDelegate);
+      delegate, mIsMapped, mCompositorWidgetDelegate);
 
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   if (delegate) {
@@ -9977,28 +10044,41 @@ nsWindow* nsWindow::GetFocusedWindow() { return gFocusWindow; }
 #ifdef MOZ_WAYLAND
 bool nsWindow::SetEGLNativeWindowSize(
     const LayoutDeviceIntSize& aEGLWindowSize) {
-  if (!GdkIsWaylandDisplay() || !mIsMapped) {
+  if (!GdkIsWaylandDisplay()) {
     return true;
   }
 
-  gint scale = GdkCeiledScaleFactor();
+  // SetEGLNativeWindowSize() is called from renderer/compositor thread,
+  // make sure nsWindow is not destroyed.
+  bool paint = false;
+
+  // See NS_NATIVE_EGL_WINDOW why we can't block here.
+  if (mDestroyMutex.TryLock()) {
+    if (!mIsDestroyed) {
+      gint scale = GdkCeiledScaleFactor();
 #  ifdef MOZ_LOGGING
-  if (LOG_ENABLED()) {
-    static uintptr_t lastSizeLog = 0;
-    uintptr_t sizeLog =
-        uintptr_t(this) + aEGLWindowSize.width + aEGLWindowSize.height + scale +
-        aEGLWindowSize.width / scale + aEGLWindowSize.height / scale;
-    if (lastSizeLog != sizeLog) {
-      lastSizeLog = sizeLog;
-      LOG("nsWindow::SetEGLNativeWindowSize() %d x %d scale %d (unscaled "
-          "%d x %d)",
-          aEGLWindowSize.width, aEGLWindowSize.height, scale,
-          aEGLWindowSize.width / scale, aEGLWindowSize.height / scale);
-    }
-  }
+      if (LOG_ENABLED()) {
+        static uintptr_t lastSizeLog = 0;
+        uintptr_t sizeLog = uintptr_t(this) + aEGLWindowSize.width +
+                            aEGLWindowSize.height + scale +
+                            aEGLWindowSize.width / scale +
+                            aEGLWindowSize.height / scale;
+        if (lastSizeLog != sizeLog) {
+          lastSizeLog = sizeLog;
+          LOG("nsWindow::SetEGLNativeWindowSize() %d x %d scale %d (unscaled "
+              "%d x "
+              "%d)",
+              aEGLWindowSize.width, aEGLWindowSize.height, scale,
+              aEGLWindowSize.width / scale, aEGLWindowSize.height / scale);
+        }
+      }
 #  endif
-  return moz_container_wayland_egl_window_set_size(
-      mContainer, aEGLWindowSize.ToUnknownSize(), scale);
+      paint = moz_container_wayland_egl_window_set_size(
+          mContainer, aEGLWindowSize.ToUnknownSize(), scale);
+    }
+    mDestroyMutex.Unlock();
+  }
+  return paint;
 }
 #endif
 
@@ -10015,34 +10095,8 @@ void nsWindow::ClearRenderingQueue() {
   DestroyLayerManager();
 }
 
-// nsWindow::OnMap() / nsWindow::OnUnmap() is called from map/unmap mContainer
-// handlers directly as we paint to mContainer.
-void nsWindow::OnMap() {
-  LOG("nsWindow::OnMap");
-  // Gtk mapped widget to screen. Configure underlying GdkWindow properly
-  // as our rendering target.
-  // This call means we have X11 (or Wayland) window we can render to by GL
-  // so we need to notify compositor about it.
-  MutexAutoLock lock(mWindowVisibilityMutex);
-  mIsMapped = true;
-
-  ConfigureGdkWindow();
-}
-
-void nsWindow::OnUnmap() {
-  LOG("nsWindow::OnUnmap");
-
-  MutexAutoLock lock(mWindowVisibilityMutex);
-  mIsMapped = false;
-
-  if (mSourceDragContext) {
-    static auto sGtkDragCancel =
-        (void (*)(GdkDragContext*))dlsym(RTLD_DEFAULT, "gtk_drag_cancel");
-    if (sGtkDragCancel) {
-      sGtkDragCancel(mSourceDragContext);
-      mSourceDragContext = nullptr;
-    }
-  }
+void nsWindow::DisableRendering() {
+  LOG("nsWindow::DisableRendering()");
 
   if (mGdkWindow) {
     if (mIMContext) {
@@ -10052,42 +10106,37 @@ void nsWindow::OnUnmap() {
     mGdkWindow = nullptr;
   }
 
-  // Clear resources (mainly XWindow) stored at GtkCompositorWidget.
-  // It makes sure we don't paint to it when nsWindow becomes hiden/deleted
-  // and XWindow is released.
-  if (mCompositorWidgetDelegate) {
-    mCompositorWidgetDelegate->CleanupResources();
-  }
-
-  // Clear nsWindow resources used for old (in-thread) rendering.
-  mSurfaceProvider.CleanupResources();
-
   // Until Bug 1654938 is fixed we delete layer manager for hidden popups,
   // otherwise it can easily hold 1GB+ memory for long time.
   if (mWindowType == WindowType::Popup) {
     DestroyLayerManager();
+    mSurfaceProvider.CleanupResources();
   } else {
-    // Widget is backed by OpenGL EGLSurface created over wl_surface/XWindow.
-    //
-    // RenderCompositorEGL::Resume() deletes recent EGLSurface,
-    // calls nsWindow::GetNativeData(NS_NATIVE_EGL_WINDOW) from compositor
-    // thread to get new native rendering surface.
-    //
-    // For hidden/unmapped windows we return nullptr NS_NATIVE_EGL_WINDOW at
-    // nsWindow::GetNativeData() so RenderCompositorEGL::Resume() creates
-    // offscreen fallback EGLSurface to avoid compositor pause.
-    //
+#ifdef MOZ_WAYLAND
+    // Widget is backed by OpenGL EGLSurface created over wl_surface
+    // owned by mContainer.
+    // RenderCompositorEGL::Resume() deletes recent EGLSurface based on
+    // wl_surface owned by mContainer and creates a new fallback EGLSurface.
+    // Then we can delete wl_surface in moz_container_wayland_unmap().
     // We don't want to pause compositor as it may lead to whole
     // browser freeze (Bug 1777664).
-    //
-    // If RenderCompositorSWGL compositor is used (SW fallback)
-    // RenderCompositorSWGL::Resume() only requests full render for next paint
-    // as wl_surface/XWindow is managed by WindowSurfaceProvider owned
-    // directly by GtkCompositorWidget and that's covered by
-    // mCompositorWidgetDelegate->CleanupResources() call above.
-    if (CompositorBridgeChild* remoteRenderer = GetRemoteRenderer()) {
-      remoteRenderer->SendResume();
+    ///
+    // We don't need to do such operation for SW backend as
+    // WindowSurfaceWaylandMB::Commit() gets wl_surface from
+    // MozContainer every commit.
+    if (moz_container_wayland_has_egl_window(mContainer) &&
+        mCompositorWidgetDelegate) {
+      if (CompositorBridgeChild* remoteRenderer = GetRemoteRenderer()) {
+        // Call DisableRendering() to make GtkCompositorWidget hidden.
+        // Then SendResume() will create fallback EGLSurface, see
+        // GLContextEGL::CreateEGLSurfaceForCompositorWidget().
+        mCompositorWidgetDelegate->DisableRendering();
+        remoteRenderer->SendResume();
+        mCompositorWidgetDelegate->EnableRendering(GetX11Window(),
+                                                   GetShapedState());
+      }
     }
+#endif
   }
 }
 

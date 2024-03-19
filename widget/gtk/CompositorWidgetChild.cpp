@@ -38,13 +38,13 @@ void CompositorWidgetChild::NotifyClientSizeChanged(
   Unused << SendNotifyClientSizeChanged(aClientSize);
 }
 
-void CompositorWidgetChild::CleanupResources() {
-  Unused << SendCleanupResources();
+void CompositorWidgetChild::DisableRendering() {
+  Unused << SendDisableRendering();
 }
 
-void CompositorWidgetChild::SetRenderingSurface(const uintptr_t aXWindow,
-                                                const bool aShaped) {
-  Unused << SendSetRenderingSurface(aXWindow, aShaped);
+void CompositorWidgetChild::EnableRendering(const uintptr_t aXWindow,
+                                            const bool aShaped) {
+  Unused << SendEnableRendering(aXWindow, aShaped);
 }
 
 }  // namespace widget
