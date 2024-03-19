@@ -935,7 +935,7 @@ class EventChecker {
     return this.checkAddonEvent("onInstalled", addon);
   }
 
-  onUninstalling(addon, requiresRestart) {
+  onUninstalling(addon) {
     return this.checkAddonEvent("onUninstalling", addon);
   }
 
@@ -1033,7 +1033,7 @@ class EventChecker {
     });
   }
 
-  onInstallEnded(install, newAddon) {
+  onInstallEnded(install) {
     return this.checkInstall("onInstallEnded", install, {
       state: "STATE_INSTALLED",
       error: 0,

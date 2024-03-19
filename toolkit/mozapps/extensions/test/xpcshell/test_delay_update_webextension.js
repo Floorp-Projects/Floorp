@@ -206,7 +206,7 @@ add_task(async function delay_updates_complete() {
       },
     },
     background() {
-      browser.runtime.onUpdateAvailable.addListener(details => {
+      browser.runtime.onUpdateAvailable.addListener(() => {
         browser.test.notifyPass("reload");
         browser.runtime.reload();
       });
@@ -273,7 +273,7 @@ add_task(async function delay_updates_defer() {
       },
     },
     background() {
-      browser.runtime.onUpdateAvailable.addListener(details => {
+      browser.runtime.onUpdateAvailable.addListener(() => {
         // Upgrade will only proceed when "allow" message received.
         browser.test.onMessage.addListener(msg => {
           if (msg == "allow") {
@@ -371,7 +371,7 @@ add_task(async function delay_updates_staged() {
       },
     },
     background() {
-      browser.runtime.onUpdateAvailable.addListener(details => {
+      browser.runtime.onUpdateAvailable.addListener(() => {
         browser.test.sendMessage("denied");
       });
       browser.test.sendMessage("ready");
@@ -443,7 +443,7 @@ add_task(async function delay_updates_staged_no_update_url() {
       },
     },
     background() {
-      browser.runtime.onUpdateAvailable.addListener(details => {
+      browser.runtime.onUpdateAvailable.addListener(() => {
         browser.test.sendMessage("denied");
       });
       browser.test.sendMessage("ready");

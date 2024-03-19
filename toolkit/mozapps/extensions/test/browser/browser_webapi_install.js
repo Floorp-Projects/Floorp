@@ -95,7 +95,7 @@ async function testInstall(browser, args, steps, description) {
       let receivedEvents = [];
       let prevEvent = null;
       events.forEach(event => {
-        install.addEventListener(event, e => {
+        install.addEventListener(event, () => {
           receivedEvents.push({
             event,
             state: install.state,

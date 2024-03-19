@@ -40,7 +40,7 @@ function getTelemetryEvents(includeMethods = EVENT_METHODS) {
   );
 
   return snapshot.parent
-    .filter(([timestamp, category, method]) => {
+    .filter(([, category, method]) => {
       const includeMethod = includeMethods
         ? includeMethods.includes(method)
         : true;
@@ -68,11 +68,9 @@ function assertNoTelemetryEvents() {
     return;
   }
 
-  let filteredEvents = snapshot.parent.filter(
-    ([timestamp, category, method]) => {
-      return category === EVENT_CATEGORY;
-    }
-  );
+  let filteredEvents = snapshot.parent.filter(([_timestamp, category]) => {
+    return category === EVENT_CATEGORY;
+  });
 
   Assert.deepEqual(filteredEvents, [], "Got no AMTelemetry events as expected");
 }

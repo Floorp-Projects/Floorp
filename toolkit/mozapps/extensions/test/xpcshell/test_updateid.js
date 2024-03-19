@@ -74,7 +74,7 @@ add_task(async function test_update_new_id() {
 
   await Assert.rejects(
     install.install(),
-    err => install.error == AddonManager.ERROR_INCORRECT_ID,
+    () => install.error == AddonManager.ERROR_INCORRECT_ID,
     "Upgrade to a different ID fails"
   );
 

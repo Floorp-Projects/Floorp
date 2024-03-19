@@ -800,11 +800,7 @@ add_task(async function test_report_recommended() {
 });
 
 add_task(async function test_query_amo_details() {
-  async function assertReportOnAMODetails({
-    addonId,
-    addonType = "extension",
-    expectedReport,
-  } = {}) {
+  async function assertReportOnAMODetails({ addonId, expectedReport } = {}) {
     // Clear last report timestamp and any telemetry event recorded so far.
     clearAbuseReportState();
     Services.telemetry.clearEvents();

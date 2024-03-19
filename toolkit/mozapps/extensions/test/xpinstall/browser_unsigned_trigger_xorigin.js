@@ -40,7 +40,7 @@ function test() {
   );
 }
 
-function install_blocked(installInfo) {
+function install_blocked() {
   wasOriginBlocked = true;
 }
 

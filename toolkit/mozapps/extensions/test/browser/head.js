@@ -204,7 +204,7 @@ function run_next_test() {
   executeSoon(() => log_exceptions(test));
 }
 
-var get_tooltip_info = async function (addonEl, managerWindow) {
+var get_tooltip_info = async function (addonEl) {
   // Extract from title attribute.
   const { addon } = addonEl;
   const name = addon.name;
@@ -324,7 +324,7 @@ function open_manager(
   aLongerTimeout,
   aWin = window
 ) {
-  let p = new Promise((resolve, reject) => {
+  let p = new Promise(resolve => {
     async function setup_manager(aManagerWindow) {
       if (aLoadCallback) {
         log_exceptions(aLoadCallback, aManagerWindow);
@@ -354,7 +354,7 @@ function open_manager(
     }
 
     info("Loading manager window in tab");
-    Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
+    Services.obs.addObserver(function observer(aSubject, aTopic) {
       Services.obs.removeObserver(observer, aTopic);
       if (aSubject.location.href != MANAGER_URI) {
         info("Ignoring load event for " + aSubject.location.href);
@@ -434,7 +434,7 @@ function wait_for_window_open(aCallback) {
         );
       },
 
-      onCloseWindow(aWindow) {},
+      onCloseWindow() {},
     });
   });
 
@@ -487,7 +487,7 @@ function promiseAddonsByIDs(aIDs) {
  */
 async function install_addon(path, cb, pathPrefix = TESTROOT) {
   let install = await AddonManager.getInstallForURL(pathPrefix + path);
-  let p = new Promise((resolve, reject) => {
+  let p = new Promise(resolve => {
     install.addListener({
       onInstallEnded: () => resolve(install.addon),
     });
@@ -946,7 +946,7 @@ MockProvider.prototype = {
    *         true if the newly enabled add-on will only become enabled after a
    *         restart
    */
-  addonChanged: function MP_addonChanged(aId, aType, aPendingRestart) {
+  addonChanged: function MP_addonChanged() {
     // Not implemented
   },
 
@@ -965,7 +965,7 @@ MockProvider.prototype = {
    * @param  {object} aOptions
    *         Options for the install
    */
-  getInstallForURL: function MP_getInstallForURL(aUrl, aOptions) {
+  getInstallForURL: function MP_getInstallForURL() {
     // Not yet implemented
   },
 
@@ -975,7 +975,7 @@ MockProvider.prototype = {
    * @param  aFile
    *         The file to be installed
    */
-  getInstallForFile: function MP_getInstallForFile(aFile) {
+  getInstallForFile: function MP_getInstallForFile() {
     // Not yet implemented
   },
 
@@ -996,7 +996,7 @@ MockProvider.prototype = {
    *         The mimetype to check for
    * @return true if the mimetype is supported
    */
-  supportsMimetype: function MP_supportsMimetype(aMimetype) {
+  supportsMimetype: function MP_supportsMimetype() {
     return false;
   },
 
@@ -1007,7 +1007,7 @@ MockProvider.prototype = {
    *         The URI being installed from
    * @return true if installing is allowed
    */
-  isInstallAllowed: function MP_isInstallAllowed(aUri) {
+  isInstallAllowed: function MP_isInstallAllowed() {
     return false;
   },
 };
@@ -1143,11 +1143,11 @@ MockAddon.prototype = {
     ]);
   },
 
-  isCompatibleWith(aAppVersion, aPlatformVersion) {
+  isCompatibleWith() {
     return true;
   },
 
-  findUpdates(aListener, aReason, aAppVersion, aPlatformVersion) {
+  findUpdates() {
     // Tests can implement this if they need to
   },
 

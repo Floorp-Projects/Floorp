@@ -422,7 +422,7 @@ function downloadFile(url, options = { httpsOnlyNoUpgrade: false }) {
   return new Promise((resolve, reject) => {
     let sr = new lazy.ServiceRequest();
 
-    sr.onload = function (response) {
+    sr.onload = function () {
       logger.info("downloadFile File download. status=" + sr.status);
       if (sr.status != 200 && sr.status != 206) {
         reject(Components.Exception("File download failed", sr.status));

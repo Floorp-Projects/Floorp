@@ -28,7 +28,7 @@ function test() {
   );
 }
 
-function download_progress(addon, value, maxValue) {
+function download_progress() {
   try {
     // Tests always connect to localhost, and per bug 87717, localhost is now
     // reachable in offline mode.  To avoid this, disable any proxy.

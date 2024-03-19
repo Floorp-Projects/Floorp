@@ -89,7 +89,7 @@ var gViewController = {
     }
   },
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     if (topic == "EM-ping") {
       this.readyForLoadView = true;
       Services.obs.notifyObservers(window, "EM-pong");

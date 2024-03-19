@@ -465,7 +465,7 @@ function check_cache(aExpectedToFind, aExpectedImmediately) {
 
   for (let i = 0; i < REPOSITORY_ADDONS.length; i++) {
     lookups.push(
-      new Promise((resolve, reject) => {
+      new Promise(resolve => {
         let immediatelyFound = true;
         let expected = aExpectedToFind[i] ? REPOSITORY_ADDONS[i] : null;
         // can't Promise-wrap this because we're also testing whether the callback is

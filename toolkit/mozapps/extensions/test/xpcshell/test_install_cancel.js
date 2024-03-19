@@ -35,7 +35,7 @@ class TestListener {
 
 function startListener(listener) {
   let observer = {
-    observe(subject, topic, data) {
+    observe(subject) {
       let channel = subject.QueryInterface(Ci.nsIHttpChannel);
       if (channel.URI.spec === "http://example.com/addons/test.xpi") {
         let channelListener = new TestListener(listener);

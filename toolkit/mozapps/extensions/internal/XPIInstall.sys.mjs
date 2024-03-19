@@ -287,7 +287,7 @@ DirPackage = class DirPackage extends Package {
     return IOUtils.read(PathUtils.join(this.filePath, ...path));
   }
 
-  async verifySignedStateForRoot(addonId, root) {
+  async verifySignedStateForRoot() {
     return { signedState: AddonManager.SIGNEDSTATE_UNKNOWN, cert: null };
   }
 };
@@ -2321,7 +2321,7 @@ var DownloadAddonInstall = class extends AddonInstall {
     }
   }
 
-  observe(aSubject, aTopic, aData) {
+  observe() {
     // Network is going offline
     this.cancel();
   }
@@ -2592,7 +2592,7 @@ var DownloadAddonInstall = class extends AddonInstall {
               new UpdateChecker(
                 this.addon,
                 {
-                  onUpdateFinished: aAddon => this.downloadCompleted(),
+                  onUpdateFinished: () => this.downloadCompleted(),
                 },
                 AddonManager.UPDATE_WHEN_ADDON_INSTALLED
               );
@@ -3880,7 +3880,7 @@ class SystemAddonInstaller extends DirectoryInstaller {
   }
 
   // old system add-on upgrade dirs get automatically removed
-  uninstallAddon(aAddon) {}
+  uninstallAddon() {}
 }
 
 var AppUpdate = {

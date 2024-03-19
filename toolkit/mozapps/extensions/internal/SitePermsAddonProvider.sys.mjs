@@ -190,7 +190,7 @@ class SitePermsAddonWrapper {
     return 0;
   }
 
-  async updateBlocklistState(options = {}) {}
+  async updateBlocklistState() {}
 
   get blocklistState() {
     return Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
@@ -277,7 +277,7 @@ class SitePermsAddonWrapper {
     return { source: "siteperm-addon-provider", method: "synthetic-install" };
   }
 
-  isCompatibleWith(aAppVersion, aPlatformVersion) {
+  isCompatibleWith() {
     return true;
   }
 }

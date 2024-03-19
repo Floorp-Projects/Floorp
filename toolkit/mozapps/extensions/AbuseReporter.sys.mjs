@@ -102,7 +102,7 @@ export class AbuseReportError extends Error {
 async function responseToErrorInfo(response) {
   return JSON.stringify({
     status: response.status,
-    responseText: await response.text().catch(err => ""),
+    responseText: await response.text().catch(() => ""),
   });
 }
 
@@ -244,7 +244,7 @@ export const AbuseReporter = {
         }
 
         let errorInfo = await responseToErrorInfo(response).catch(
-          err => undefined
+          () => undefined
         );
 
         if (response.status === 404) {
@@ -550,7 +550,7 @@ export const AbuseReporter = {
  *        A string that identify how the report has been triggered.
  */
 class AbuseReport {
-  constructor({ addon, createErrorType, reportData, reportEntryPoint }) {
+  constructor({ addon, reportData, reportEntryPoint }) {
     this[PRIVATE_REPORT_PROPS] = {
       aborted: false,
       abortController: new AbortController(),
@@ -599,7 +599,7 @@ class AbuseReport {
       // Leave errorInfo empty if there is no response or fails to
       // be converted into an error info object.
       const errorInfo = response
-        ? await responseToErrorInfo(response).catch(err => undefined)
+        ? await responseToErrorInfo(response).catch(() => undefined)
         : undefined;
 
       throw new AbuseReportError(errorType, errorInfo);

@@ -16,7 +16,7 @@ const dragService = Cc["@mozilla.org/widget/dragservice;1"].getService(
 async function checkInstallConfirmation(...names) {
   let notificationCount = 0;
   let observer = {
-    observe(aSubject, aTopic, aData) {
+    observe(aSubject) {
       let installInfo = aSubject.wrappedJSObject;
       isnot(
         installInfo.browser,

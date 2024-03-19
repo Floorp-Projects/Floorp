@@ -67,7 +67,7 @@ export function amManager() {
 }
 
 amManager.prototype = {
-  observe(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic) {
     switch (aTopic) {
       case "addons-startup":
         AddonManagerPrivate.startup();
@@ -129,7 +129,7 @@ amManager.prototype = {
 
       if (aCallback) {
         aInstall.addListener({
-          onDownloadCancelled(aInstall) {
+          onDownloadCancelled() {
             callCallback(USER_CANCELLED);
           },
 
@@ -141,11 +141,11 @@ amManager.prototype = {
             }
           },
 
-          onInstallFailed(aInstall) {
+          onInstallFailed() {
             callCallback(EXECUTION_ERROR);
           },
 
-          onInstallEnded(aInstall, aStatus) {
+          onInstallEnded() {
             callCallback(SUCCESS);
           },
         });
@@ -165,7 +165,7 @@ amManager.prototype = {
     return retval;
   },
 
-  notify(aTimer) {
+  notify() {
     AddonManagerPrivate.backgroundUpdateTimerHandler();
   },
 

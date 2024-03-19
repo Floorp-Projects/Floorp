@@ -2175,7 +2175,7 @@ export const XPIDatabase = {
    */
   async verifySignatures() {
     try {
-      let addons = await this.getAddonList(a => true);
+      let addons = await this.getAddonList(() => true);
 
       let changes = {
         enabled: [],
@@ -2426,7 +2426,7 @@ export const XPIDatabase = {
     if (!this.addonDB) {
       return [];
     }
-    return _filterDB(this.addonDB, aAddon => true);
+    return _filterDB(this.addonDB, () => true);
   },
 
   /**
@@ -3084,24 +3084,11 @@ export const XPIDatabaseReconcile = {
    *        The new state of the add-on
    * @param {AddonInternal?} [aNewAddon]
    *        The manifest for the new add-on if it has already been loaded
-   * @param {string?} [aOldAppVersion]
-   *        The version of the application last run with this profile or null
-   *        if it is a new profile or the version is unknown
-   * @param {string?} [aOldPlatformVersion]
-   *        The version of the platform last run with this profile or null
-   *        if it is a new profile or the version is unknown
    * @returns {boolean}
    *        A boolean indicating if flushing caches is required to complete
    *        changing this add-on
    */
-  addMetadata(
-    aLocation,
-    aId,
-    aAddonState,
-    aNewAddon,
-    aOldAppVersion,
-    aOldPlatformVersion
-  ) {
+  addMetadata(aLocation, aId, aAddonState, aNewAddon) {
     logger.debug(`New add-on ${aId} installed in ${aLocation.name}`);
 
     // We treat this is a new install if,

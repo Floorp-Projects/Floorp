@@ -76,7 +76,7 @@ class DiscoveryAPIHandler {
     });
   }
 
-  unblockResponses(responseText) {
+  unblockResponses() {
     throw new Error("You need to call blockNextResponses first!");
   }
 

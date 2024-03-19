@@ -25,7 +25,7 @@ add_task(async function collapse_multiple_pending_update_requests() {
   // Add a spy to the RemoteSettings client, so we can verify that the number
   // of RemoteSettings accesses matches with what we expect.
   const originalClientGet = ExtensionBlocklistMLBF._client.get;
-  const spyClientGet = (tag, returnValue) => {
+  const spyClientGet = tag => {
     ExtensionBlocklistMLBF._client.get = async function () {
       // Record the method call.
       observed.push(tag);

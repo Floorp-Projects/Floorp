@@ -227,7 +227,7 @@ function createAddon(addon) {
  * If a lastTest is provided checks that the notification dialog got passed
  * the newly blocked items compared to the previous test.
  */
-async function checkState(test, lastTest, callback) {
+async function checkState(test) {
   let addons = await AddonManager.getAddonsByIDs(ADDONS.map(a => a.id));
 
   const bls = Ci.nsIBlocklistService;

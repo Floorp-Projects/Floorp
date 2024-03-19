@@ -43,7 +43,7 @@ add_task(async function test_no_change() {
   await manuallyInstall(do_get_file(`${DATA}/signed2.xpi`), profileDir, ID);
 
   let listener = {
-    onPropetyChanged(_addon, properties) {
+    onPropetyChanged(_addon) {
       Assert.ok(false, `Got unexpected onPropertyChanged for ${_addon.id}`);
     },
   };

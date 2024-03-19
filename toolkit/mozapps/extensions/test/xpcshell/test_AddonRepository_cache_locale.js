@@ -152,7 +152,7 @@ function promiseLocaleChanged(requestedLocale) {
   }
   return new Promise(resolve => {
     let localeObserver = {
-      observe(aSubject, aTopic, aData) {
+      observe(aSubject, aTopic) {
         switch (aTopic) {
           case REQ_LOC_CHANGE_EVENT:
             let reqLocs = Services.locale.requestedLocales;
@@ -169,7 +169,7 @@ function promiseLocaleChanged(requestedLocale) {
 
 function promiseMetaDataUpdate() {
   return new Promise(resolve => {
-    let listener = args => {
+    let listener = () => {
       Services.prefs.removeObserver(PREF_METADATA_LASTUPDATE, listener);
       resolve();
     };

@@ -160,7 +160,7 @@ var PrefObserver = {
     this.observe(null, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, PREF_LOGGING_ENABLED);
   },
 
-  observe(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic) {
     if (aTopic == "xpcom-shutdown") {
       Services.prefs.removeObserver(PREF_LOGGING_ENABLED, this);
       Services.obs.removeObserver(this, "xpcom-shutdown");
@@ -339,7 +339,7 @@ BrowserListener.prototype = {
     }
   },
 
-  observe(subject, topic, data) {
+  observe(subject) {
     if (subject != this.messageManager) {
       return;
     }
@@ -349,7 +349,7 @@ BrowserListener.prototype = {
     this.cancelInstall();
   },
 
-  onLocationChange(webProgress, request, location) {
+  onLocationChange() {
     if (
       this.browser.contentPrincipal &&
       this.principal.subsumes(this.browser.contentPrincipal)
@@ -361,19 +361,19 @@ BrowserListener.prototype = {
     this.cancelInstall();
   },
 
-  onDownloadCancelled(install) {
+  onDownloadCancelled() {
     this.unregister();
   },
 
-  onDownloadFailed(install) {
+  onDownloadFailed() {
     this.unregister();
   },
 
-  onInstallFailed(install) {
+  onInstallFailed() {
     this.unregister();
   },
 
-  onInstallEnded(install) {
+  onInstallEnded() {
     this.unregister();
   },
 
@@ -553,7 +553,7 @@ var AddonManagerInternal = {
           this.pendingProviders.add(aProvider);
         }
 
-        return new Promise((resolve, reject) => {
+        return new Promise(resolve => {
           logger.debug("Calling shutdown blocker for " + name);
           resolve(aProvider.shutdown());
         }).catch(err => {
@@ -1311,7 +1311,7 @@ var AddonManagerInternal = {
           }
 
           updates.push(
-            new Promise((resolve, reject) => {
+            new Promise(resolve => {
               addon.findUpdates(
                 {
                   onUpdateAvailable(aAddon, aInstall) {
@@ -3892,7 +3892,7 @@ export var AddonManagerPrivate = {
    * This can be used as an implementation for Addon.findUpdates() when
    * no update mechanism is available.
    */
-  callNoUpdateListeners(addon, listener, reason, appVersion, platformVersion) {
+  callNoUpdateListeners(addon, listener) {
     if ("onNoCompatibilityUpdateAvailable" in listener) {
       safeCall(listener.onNoCompatibilityUpdateAvailable.bind(listener), addon);
     }
@@ -4739,7 +4739,7 @@ AMTelemetry = {
 
   // Observer Service notification callback.
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     switch (topic) {
       case "addon-install-blocked": {
         const { installs } = subject.wrappedJSObject;

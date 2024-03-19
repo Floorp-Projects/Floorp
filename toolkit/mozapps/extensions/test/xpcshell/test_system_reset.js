@@ -3,7 +3,7 @@
 
 const updatesDir = FileUtils.getDir("ProfD", ["features"]);
 
-AddonTestUtils.usePrivilegedSignatures = id => "system";
+AddonTestUtils.usePrivilegedSignatures = () => "system";
 
 add_task(async function setup() {
   // Build the test sets
@@ -489,7 +489,7 @@ add_task(async function test_bad_app_cert() {
 
   await promiseShutdownManager();
 
-  AddonTestUtils.usePrivilegedSignatures = id => "system";
+  AddonTestUtils.usePrivilegedSignatures = () => "system";
 });
 
 // A failed upgrade should revert to the default set.

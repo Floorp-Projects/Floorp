@@ -235,7 +235,7 @@ add_task(async function testDuplicateShortcutOnMacOSCtrlKey() {
     );
   };
 
-  const clearWarning = async inputEl => {
+  const clearWarning = async () => {
     anotherCommandInput.blur();
     await TestUtils.waitForCondition(
       () => BrowserTestUtils.isHidden(errorEl),
