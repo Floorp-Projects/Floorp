@@ -878,7 +878,7 @@ export class FfiConverterTypeClientRemoteTabs extends FfiConverterArrayBuffer {
     static checkType(value) {
         super.checkType(value);
         if (!(value instanceof ClientRemoteTabs)) {
-            throw new TypeError(`Expected 'ClientRemoteTabs', found '${typeof value}'`);
+            throw new UniFFITypeError(`Expected 'ClientRemoteTabs', found '${typeof value}'`);
         }
         try {
             FfiConverterString.checkType(value.clientId);
@@ -1014,7 +1014,7 @@ export class FfiConverterTypeRemoteTabRecord extends FfiConverterArrayBuffer {
     static checkType(value) {
         super.checkType(value);
         if (!(value instanceof RemoteTabRecord)) {
-            throw new TypeError(`Expected 'RemoteTabRecord', found '${typeof value}'`);
+            throw new UniFFITypeError(`Expected 'RemoteTabRecord', found '${typeof value}'`);
         }
         try {
             FfiConverterString.checkType(value.title);

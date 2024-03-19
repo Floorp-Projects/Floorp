@@ -6,10 +6,10 @@ const ExternalTypes = ChromeUtils.importESModule(
 );
 
 add_task(async function () {
-  const line = new ExternalTypes.Line(
-    new ExternalTypes.Point(0, 0, "p1"),
-    new ExternalTypes.Point(2, 1, "p2")
-  );
+  const line = new ExternalTypes.Line({
+    start: await new ExternalTypes.Point({ coordX: 0, coordY: 0 }),
+    end: await new ExternalTypes.Point({ coordX: 2, coordY: 1 }),
+  });
   Assert.equal(await ExternalTypes.gradient(line), 0.5);
 
   Assert.equal(await ExternalTypes.gradient(null), 0.0);

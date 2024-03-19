@@ -331,7 +331,7 @@ export class FfiConverterTypeCustomTypesDemo extends FfiConverterArrayBuffer {
     static checkType(value) {
         super.checkType(value);
         if (!(value instanceof CustomTypesDemo)) {
-            throw new TypeError(`Expected 'CustomTypesDemo', found '${typeof value}'`);
+            throw new UniFFITypeError(`Expected 'CustomTypesDemo', found '${typeof value}'`);
         }
         try {
             FfiConverterTypeUrl.checkType(value.url);

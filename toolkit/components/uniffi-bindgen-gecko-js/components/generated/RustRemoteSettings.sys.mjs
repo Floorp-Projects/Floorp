@@ -555,7 +555,7 @@ export class FfiConverterTypeAttachment extends FfiConverterArrayBuffer {
     static checkType(value) {
         super.checkType(value);
         if (!(value instanceof Attachment)) {
-            throw new TypeError(`Expected 'Attachment', found '${typeof value}'`);
+            throw new UniFFITypeError(`Expected 'Attachment', found '${typeof value}'`);
         }
         try {
             FfiConverterString.checkType(value.filename);
@@ -665,7 +665,7 @@ export class FfiConverterTypeRemoteSettingsConfig extends FfiConverterArrayBuffe
     static checkType(value) {
         super.checkType(value);
         if (!(value instanceof RemoteSettingsConfig)) {
-            throw new TypeError(`Expected 'RemoteSettingsConfig', found '${typeof value}'`);
+            throw new UniFFITypeError(`Expected 'RemoteSettingsConfig', found '${typeof value}'`);
         }
         try {
             FfiConverterString.checkType(value.collectionName);
@@ -785,7 +785,7 @@ export class FfiConverterTypeRemoteSettingsRecord extends FfiConverterArrayBuffe
     static checkType(value) {
         super.checkType(value);
         if (!(value instanceof RemoteSettingsRecord)) {
-            throw new TypeError(`Expected 'RemoteSettingsRecord', found '${typeof value}'`);
+            throw new UniFFITypeError(`Expected 'RemoteSettingsRecord', found '${typeof value}'`);
         }
         try {
             FfiConverterString.checkType(value.id);
@@ -882,7 +882,7 @@ export class FfiConverterTypeRemoteSettingsResponse extends FfiConverterArrayBuf
     static checkType(value) {
         super.checkType(value);
         if (!(value instanceof RemoteSettingsResponse)) {
-            throw new TypeError(`Expected 'RemoteSettingsResponse', found '${typeof value}'`);
+            throw new UniFFITypeError(`Expected 'RemoteSettingsResponse', found '${typeof value}'`);
         }
         try {
             FfiConverterSequenceTypeRemoteSettingsRecord.checkType(value.records);
