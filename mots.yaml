@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2024-03-14T15:35:01.373042'
+updated_at: '2024-03-18T19:16:15.260926'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -3254,6 +3254,7 @@ modules:
         meta:
           peers_emeritus:
             - Tim Nguyen
+            - *amy
           components:
             - Firefox::Theme
             - Toolkit::Themes
@@ -3262,7 +3263,6 @@ modules:
         peers:
           - *itielyn8
           - *sfoster
-          - *amy
           - *emilio
           - *jules
           - *cmkm
@@ -4216,5 +4216,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: cec20e47a95bf2ea38346eeb20e43a6eb6833db5
-  export: 7c6ef1934e027eccd9c43ea3968f29427b9459f9
+  config: e8e4c1a07737bcac3d03fc829d3ff3ce0c6e68de
+  export: 0147bd5d6e4ceccf0a1d46eb05e3a4c7c8a2eeba
