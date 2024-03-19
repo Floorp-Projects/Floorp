@@ -3973,8 +3973,10 @@ static inline void arena_dalloc(void* aPtr, size_t aOffset, arena_t* aArena) {
   {
     MaybeMutexAutoLock lock(arena->mLock);
     arena_chunk_map_t* mapelm = &chunk->map[pageind];
-    MOZ_RELEASE_ASSERT((mapelm->bits & CHUNK_MAP_DECOMMITTED) == 0,
-                       "Freeing in decommitted page.");
+    MOZ_RELEASE_ASSERT(
+        (mapelm->bits &
+         (CHUNK_MAP_FRESH_MADVISED_OR_DECOMMITTED | CHUNK_MAP_ZEROED)) == 0,
+        "Freeing in a page with bad bits.");
     MOZ_RELEASE_ASSERT((mapelm->bits & CHUNK_MAP_ALLOCATED) != 0,
                        "Double-free?");
     if ((mapelm->bits & CHUNK_MAP_LARGE) == 0) {
