@@ -8092,6 +8092,8 @@ IPCResult ContentParent::RecvRawMessage(
     stack.emplace();
     stack->BorrowFromClonedMessageData(*aStack);
   }
+  MMPrinter::Print("ContentParent::RecvRawMessage", aMeta.actorName(),
+                   aMeta.messageName(), *aData);
   ReceiveRawMessage(aMeta, std::move(data), std::move(stack));
   return IPC_OK();
 }

@@ -21,6 +21,16 @@ class MMPrinter {
     }
   }
 
+  static void Print(char const* aLocation, const nsACString& aActorName,
+                    const nsAString& aMessageName,
+                    ClonedMessageData const& aData) {
+    if (MOZ_UNLIKELY(MOZ_LOG_TEST(MMPrinter::sMMLog, LogLevel::Debug))) {
+      MMPrinter::PrintImpl(
+          aLocation,
+          NS_ConvertUTF8toUTF16(aActorName + " - "_ns) + aMessageName, aData);
+    }
+  }
+
  private:
   static LazyLogModule sMMLog;
   static void PrintImpl(char const* aLocation, const nsAString& aMsg,
