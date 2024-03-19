@@ -8,15 +8,15 @@ MozReview-Commit-ID: BxDCnJe0mzs
 diff --git a/vp8/vp8_cx_iface.c b/vp8/vp8_cx_iface.c
 --- a/vp8/vp8_cx_iface.c
 +++ b/vp8/vp8_cx_iface.c
-@@ -921,20 +921,29 @@ static vpx_codec_err_t vp8e_encode(vpx_c
-     dst_time_stamp =
-         pts_val * ctx->timestamp_ratio.num / ctx->timestamp_ratio.den;
-     dst_end_time_stamp = (pts_val + (int64_t)duration) *
-                          ctx->timestamp_ratio.num / ctx->timestamp_ratio.den;
+@@ -989,20 +989,29 @@ static vpx_codec_err_t vp8e_encode(vpx_codec_alg_priv_t *ctx,
+             &ctx->cpi->common.error, VPX_CODEC_INVALID_PARAM,
+             "conversion of relative pts + duration to ticks would overflow");
+       }
+       dst_end_time_stamp =
+           pts_end * ctx->timestamp_ratio.num / ctx->timestamp_ratio.den;
 
-     if (img != NULL) {
        res = image2yuvconfig(img, &sd);
- 
+
 -      if (vp8_receive_raw_frame(ctx->cpi, ctx->next_frame_flag | lib_flags, &sd,
 -                                dst_time_stamp, dst_end_time_stamp)) {
 -        VP8_COMP *cpi = (VP8_COMP *)ctx->cpi;
