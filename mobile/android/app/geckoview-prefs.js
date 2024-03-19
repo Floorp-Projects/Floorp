@@ -28,8 +28,8 @@ pref("app.support.baseURL", "https://support.mozilla.org/1/mobile/%VERSION%/%OS%
 pref("app.update.timerFirstInterval", 30000); // milliseconds
 pref("app.update.timerMinimumDelay", 30); // seconds
 
-// Use a breakout angle of 45° (bug 1226655)
-pref("apz.axis_lock.breakout_angle", "0.7853982");
+// Use a breakout angle of 30° (bug 1885506)
+pref("apz.axis_lock.breakout_angle", "0.5235988");
 
 // APZ content response timeout (bug 1247280)
 pref("apz.content_response_timeout", 600);
