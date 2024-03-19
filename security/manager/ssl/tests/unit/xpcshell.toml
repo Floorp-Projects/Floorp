@@ -336,7 +336,7 @@ skip-if = ["condprof"]  # Bug 1769154 - as designed
 ["test_sss_sanitizeOnShutdown.js"]
 firefox-appdir = "browser"
 # Sanitization works differently on Android - this doesn't apply.
-# browser/modules/Sanitizer.jsm used by the test isn't available in Thunderbird.
+# browser/modules/Sanitizer.sys.mjs used by the test isn't available in Thunderbird.
 skip-if = [
   "os == 'android'",
   "appname == 'thunderbird'"
