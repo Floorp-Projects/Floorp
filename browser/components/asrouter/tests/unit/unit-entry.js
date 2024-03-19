@@ -14,7 +14,7 @@ import FxMSCommonSchema from "../../content-src/schemas/FxMSCommon.schema.json";
 import {
   MESSAGE_TYPE_LIST,
   MESSAGE_TYPE_HASH,
-} from "modules/ActorConstants.sys.mjs";
+} from "modules/ActorConstants.mjs";
 
 enzyme.configure({ adapter: new Adapter() });
 

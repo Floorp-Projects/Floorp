@@ -11,9 +11,7 @@
 
 // eslint-disable-next-line mozilla/use-static-import
 const { MESSAGE_TYPE_LIST, MESSAGE_TYPE_HASH: msg } =
-  ChromeUtils.importESModule(
-    "resource:///modules/asrouter/ActorConstants.sys.mjs"
-  );
+  ChromeUtils.importESModule("resource:///modules/asrouter/ActorConstants.mjs");
 
 const VALID_TYPES = new Set(MESSAGE_TYPE_LIST);
 

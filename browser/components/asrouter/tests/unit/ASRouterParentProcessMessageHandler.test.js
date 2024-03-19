@@ -1,6 +1,6 @@
 import { ASRouterParentProcessMessageHandler } from "modules/ASRouterParentProcessMessageHandler.sys.mjs";
 import { _ASRouter } from "modules/ASRouter.sys.mjs";
-import { MESSAGE_TYPE_HASH as msg } from "modules/ActorConstants.sys.mjs";
+import { MESSAGE_TYPE_HASH as msg } from "modules/ActorConstants.mjs";
 
 describe("ASRouterParentProcessMessageHandler", () => {
   let handler = null;

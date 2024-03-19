@@ -16,13 +16,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   ASRouterUtils: () => (/* binding */ ASRouterUtils)
 /* harmony export */ });
-/* harmony import */ var _modules_ActorConstants_sys_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2);
+/* harmony import */ var _modules_ActorConstants_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2);
 /* harmony import */ var _newtab_common_Actions_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// eslint-disable-next-line mozilla/reject-import-system-module-from-non-system
 
 
 
@@ -45,49 +44,49 @@ const ASRouterUtils = {
   },
   blockById(id, options) {
     return ASRouterUtils.sendMessage({
-      type: _modules_ActorConstants_sys_mjs__WEBPACK_IMPORTED_MODULE_0__.MESSAGE_TYPE_HASH.BLOCK_MESSAGE_BY_ID,
+      type: _modules_ActorConstants_mjs__WEBPACK_IMPORTED_MODULE_0__.MESSAGE_TYPE_HASH.BLOCK_MESSAGE_BY_ID,
       data: { id, ...options },
     });
   },
   modifyMessageJson(content) {
     return ASRouterUtils.sendMessage({
-      type: _modules_ActorConstants_sys_mjs__WEBPACK_IMPORTED_MODULE_0__.MESSAGE_TYPE_HASH.MODIFY_MESSAGE_JSON,
+      type: _modules_ActorConstants_mjs__WEBPACK_IMPORTED_MODULE_0__.MESSAGE_TYPE_HASH.MODIFY_MESSAGE_JSON,
       data: { content },
     });
   },
   executeAction(button_action) {
     return ASRouterUtils.sendMessage({
-      type: _modules_ActorConstants_sys_mjs__WEBPACK_IMPORTED_MODULE_0__.MESSAGE_TYPE_HASH.USER_ACTION,
+      type: _modules_ActorConstants_mjs__WEBPACK_IMPORTED_MODULE_0__.MESSAGE_TYPE_HASH.USER_ACTION,
       data: button_action,
     });
   },
   unblockById(id) {
     return ASRouterUtils.sendMessage({
-      type: _modules_ActorConstants_sys_mjs__WEBPACK_IMPORTED_MODULE_0__.MESSAGE_TYPE_HASH.UNBLOCK_MESSAGE_BY_ID,
+      type: _modules_ActorConstants_mjs__WEBPACK_IMPORTED_MODULE_0__.MESSAGE_TYPE_HASH.UNBLOCK_MESSAGE_BY_ID,
       data: { id },
     });
   },
   blockBundle(bundle) {
     return ASRouterUtils.sendMessage({
-      type: _modules_ActorConstants_sys_mjs__WEBPACK_IMPORTED_MODULE_0__.MESSAGE_TYPE_HASH.BLOCK_BUNDLE,
+      type: _modules_ActorConstants_mjs__WEBPACK_IMPORTED_MODULE_0__.MESSAGE_TYPE_HASH.BLOCK_BUNDLE,
       data: { bundle },
     });
   },
   unblockBundle(bundle) {
     return ASRouterUtils.sendMessage({
-      type: _modules_ActorConstants_sys_mjs__WEBPACK_IMPORTED_MODULE_0__.MESSAGE_TYPE_HASH.UNBLOCK_BUNDLE,
+      type: _modules_ActorConstants_mjs__WEBPACK_IMPORTED_MODULE_0__.MESSAGE_TYPE_HASH.UNBLOCK_BUNDLE,
       data: { bundle },
     });
   },
   overrideMessage(id) {
     return ASRouterUtils.sendMessage({
-      type: _modules_ActorConstants_sys_mjs__WEBPACK_IMPORTED_MODULE_0__.MESSAGE_TYPE_HASH.OVERRIDE_MESSAGE,
+      type: _modules_ActorConstants_mjs__WEBPACK_IMPORTED_MODULE_0__.MESSAGE_TYPE_HASH.OVERRIDE_MESSAGE,
       data: { id },
     });
   },
   editState(key, value) {
     return ASRouterUtils.sendMessage({
-      type: _modules_ActorConstants_sys_mjs__WEBPACK_IMPORTED_MODULE_0__.MESSAGE_TYPE_HASH.EDIT_STATE,
+      type: _modules_ActorConstants_mjs__WEBPACK_IMPORTED_MODULE_0__.MESSAGE_TYPE_HASH.EDIT_STATE,
       data: { [key]: value },
     });
   },
