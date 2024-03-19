@@ -1067,7 +1067,7 @@ fn build_mask_tasks(
 
                     quad::add_to_batch(
                         PatternKind::ColorOrTexture,
-                        PatternShaderInput(0),
+                        PatternShaderInput::default(),
                         render_task_address,
                         clip_transform_id,
                         clip_prim_address,
@@ -1165,7 +1165,7 @@ fn build_mask_tasks(
 
         quad::add_to_batch(
             PatternKind::Mask,
-            PatternShaderInput(0),
+            PatternShaderInput::default(),
             render_task_address,
             prim_transform_id,
             main_prim_address,

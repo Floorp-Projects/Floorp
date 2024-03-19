@@ -30,7 +30,13 @@ impl PatternKind {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
-pub struct PatternShaderInput(pub i32);
+pub struct PatternShaderInput(pub i32, pub i32);
+
+impl Default for PatternShaderInput {
+    fn default() -> Self {
+        PatternShaderInput(0, 0)
+    }
+}
 
 #[derive(Copy, Clone, Debug)]
 pub struct Pattern {
@@ -44,7 +50,7 @@ impl Pattern {
     pub fn color(color: ColorF) -> Self {
         Pattern {
             kind: PatternKind::ColorOrTexture,
-            shader_input: PatternShaderInput(0),
+            shader_input: PatternShaderInput::default(),
             base_color: color.premultiplied(),
             is_opaque: color.a >= 1.0,
         }
@@ -54,7 +60,7 @@ impl Pattern {
         // Opaque black with operator dest out
         Pattern {
             kind: PatternKind::ColorOrTexture,
-            shader_input: PatternShaderInput(0),
+            shader_input: PatternShaderInput::default(),
             base_color: PremultipliedColorF::BLACK,
             is_opaque: false,
         }

@@ -592,7 +592,7 @@ pub fn add_to_batch<F>(
         transform_id.0 as i32,
         z_id.0,
         pattern_input.0,
-        0,
+        pattern_input.1,
     ]);
     let prim_address_i = writer.finish();
 

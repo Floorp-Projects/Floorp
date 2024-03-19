@@ -243,6 +243,7 @@ impl CommandBuffer {
                 self.commands.push(Command::draw_quad(prim_instance_index));
                 self.commands.push(Command::data(pattern as u32));
                 self.commands.push(Command::data(pattern_input.0 as u32));
+                self.commands.push(Command::data(pattern_input.1 as u32));
                 self.commands.push(Command::data((gpu_buffer_address.u as u32) << 16 | gpu_buffer_address.v as u32));
                 self.commands.push(Command::data(transform_id.0));
                 self.commands.push(Command::data((quad_flags.bits() as u32) << 16 | edge_flags.bits() as u32));
@@ -289,7 +290,10 @@ impl CommandBuffer {
                 Command::CMD_DRAW_QUAD => {
                     let prim_instance_index = PrimitiveInstanceIndex(param);
                     let pattern = PatternKind::from_u32(cmd_iter.next().unwrap().0);
-                    let pattern_input = PatternShaderInput(cmd_iter.next().unwrap().0 as i32);
+                    let pattern_input = PatternShaderInput(
+                        cmd_iter.next().unwrap().0 as i32,
+                        cmd_iter.next().unwrap().0 as i32,
+                    );
                     let data = cmd_iter.next().unwrap();
                     let transform_id = TransformPaletteId(cmd_iter.next().unwrap().0);
                     let bits = cmd_iter.next().unwrap().0;
