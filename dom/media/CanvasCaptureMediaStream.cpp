@@ -88,7 +88,7 @@ class TimerDriver : public OutputStreamDriver {
       str.AppendPrintf(
           "TimerDriver %staking frame (%sexplicitly requested; after %.2fms; "
           "interval cap %.2fms)",
-          FrameCaptureRequested(aTime) ? "" : "NOT ",
+          sinceLast >= mFrameInterval ? "" : "NOT ",
           mExplicitCaptureRequested ? "" : "NOT ", sinceLast.ToMilliseconds(),
           mFrameInterval.ToMilliseconds());
     }
