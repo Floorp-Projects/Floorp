@@ -97,6 +97,7 @@ browsertime-tp6m:
         tier:
             by-app:
                 geckoview: 1
+                fenix: 2
                 refbrow: 2
                 default: 3
         treeherder-symbol: Btime(tp6m)
@@ -147,6 +148,13 @@ browsertime-tp6m:
                                 by-test-platform:
                                     android-hw-a51.*shippable-qr.*: []
                                     default: []
+            fenix:
+                by-variant:
+                    geckoview-no-fission:
+                        by-test-platform:
+                            android-hw-a51.*shippable-qr.*: [trunk-only]
+                            default: []
+                    default: []
             default: []
 
 browsertime-tp6m-essential:
@@ -177,6 +185,10 @@ browsertime-tp6m-essential:
                         by-test-platform:
                             android-hw-a51.*shippable.*: [trunk-only]
                             default: []
+            fenix:
+                by-test-platform:
+                    android-hw-a51.*shippable.*: [trunk-only]
+                    default: []
             default: []
     tier:
         by-app:
@@ -221,13 +233,24 @@ browsertime-youtube-playback-mobile:
     raptor:
         apps: [fenix, geckoview, refbrow]
         subtests:
-            by-test-platform:
-                android-hw-a51.*:
-                    - [youtube-playback-h264-sfr, ytp-h264-sfr]
-                    - [youtube-playback-hfr, ytp-hfr]
-                    # Bug 1699469 - Disabled until a crash is fixed.
-                    # - [youtube-playback-widevine-h264-sfr, ytp-widevine-h264-sfr]
-                    # - [youtube-playback-widevine-hfr, ytp-widevine-hfr]
+            by-app:
+                fenix:
+                    by-test-platform:
+                        android-hw-a51.*:
+                            - [youtube-playback-av1-sfr, ytp-av1-sfr]
+                            - [youtube-playback-hfr, ytp-hfr]
+                            - [youtube-playback-vp9-sfr, ytp-vp9-sfr]
+                            # Bug 1699469 - Disabled until a crash is fixed.
+                            # - [youtube-playback-widevine-h264-sfr, ytp-widevine-h264-sfr]
+                            # - [youtube-playback-widevine-hfr, ytp-widevine-hfr]
+                default:
+                    by-test-platform:
+                        android-hw-a51.*:
+                            - [youtube-playback-h264-sfr, ytp-h264-sfr]
+                            - [youtube-playback-hfr, ytp-hfr]
+                            # Bug 1699469 - Disabled until a crash is fixed.
+                            # - [youtube-playback-widevine-h264-sfr, ytp-widevine-h264-sfr]
+                            # - [youtube-playback-widevine-hfr, ytp-widevine-hfr]
         test-url-param:
             by-subtest:
                 youtube-playback-h264-sfr:  # remove high resolution tests
@@ -249,6 +272,10 @@ browsertime-youtube-playback-mobile:
                 default: ""
     run-on-projects:
         by-app:
+            fenix:
+                by-test-platform:
+                    android-hw-a51.*shippable.*: [mozilla-central]
+                    default: []
             geckoview:
                 by-test-platform:
                     android-hw-a51.*shippable.*: [mozilla-central]
@@ -352,7 +379,10 @@ browsertime-benchmark-speedometer-mobile:
             default: 3
     run-on-projects:
         by-app:
-            refbrow: []
+            fenix:
+                by-test-platform:
+                    android-hw-a51.*shippable-qr.*: [trunk]
+                    default: []
             geckoview:
                 by-test-platform:
                     android-hw-a51.*shippable-qr.*: [trunk]
@@ -380,7 +410,12 @@ browsertime-benchmark-speedometer3-mobile:
             default: 3
     run-on-projects:
         by-app:
-            refbrow: []
+            fenix:
+                by-test-platform:
+                    android-hw-a51.*shippable-qr.*: [trunk-only]
+                    android-hw-p6.*shippable-qr.*: [mozilla-central]
+                    android-hw-s21.*shippable-qr.*: [mozilla-central]
+                    default: []
             geckoview:
                 by-test-platform:
                     android-hw-a51.*shippable-qr.*: [trunk-only]

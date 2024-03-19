@@ -921,6 +921,8 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
                 # Don't run android CaR sp tests as we already have a cron for this.
                 if "m-car" in try_name:
                     return False
+                if "fenix" in try_name:
+                    return False
                 if "speedometer" in try_name:
                     return True
         return False
@@ -1469,7 +1471,6 @@ def target_tasks_raptor_tp6m(full_task_graph, parameters, graph_config):
                 "browsertime" in try_name
                 and "amazon" in try_name
                 and "search" not in try_name
-                and "fenix" in try_name
             ):
                 return True
 
