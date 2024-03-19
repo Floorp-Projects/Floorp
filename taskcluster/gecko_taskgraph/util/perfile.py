@@ -12,15 +12,12 @@ import taskgraph
 from mozbuild.util import memoize
 from mozpack.path import match as mozpackmatch
 
-from gecko_taskgraph import files_changed
-
-from .. import GECKO
-
 logger = logging.getLogger(__name__)
 
 
 @memoize
-def perfile_number_of_chunks(is_try, try_task_config, head_repository, head_rev, type):
+def perfile_number_of_chunks(is_try, try_task_config, files_changed, type):
+    changed_files = set(files_changed)
     if taskgraph.fast and not is_try:
         # When iterating on taskgraph changes, the exact number of chunks that
         # test-verify runs usually isn't important, so skip it when going fast.
@@ -55,16 +52,10 @@ def perfile_number_of_chunks(is_try, try_task_config, head_repository, head_rev,
         # Returning 0 means no tests to run, this captures non test-verify tasks
         return 1
 
-    changed_files = set()
     if try_task_config:
         suite_to_paths = json.loads(try_task_config)
         specified_files = itertools.chain.from_iterable(suite_to_paths.values())
         changed_files.update(specified_files)
-
-    if is_try:
-        changed_files.update(files_changed.get_locally_changed_files(GECKO))
-    else:
-        changed_files.update(files_changed.get_changed_files(head_repository, head_rev))
 
     test_count = 0
     for pattern in file_patterns:

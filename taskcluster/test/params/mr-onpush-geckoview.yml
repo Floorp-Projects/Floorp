@@ -5,8 +5,11 @@ build_date: 1539294145
 build_number: 1
 do_not_optimize: []
 existing_tasks: {}
+files_changed:
+  - dom/html/HTMLDetailsElement.cpp
+  - gfx/thebes/gfxUserFontSet.cpp
 filters:
-    - target_tasks_method
+  - target_tasks_method
 head_ref: d66bd740b59ffdcb800dc225cf29fc383d5e1a2b
 head_repository: https://hg.mozilla.org/releases/mozilla-release
 head_rev: d66bd740b59ffdcb800dc225cf29fc383d5e1a2b

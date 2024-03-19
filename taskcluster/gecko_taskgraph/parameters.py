@@ -9,6 +9,7 @@ from taskgraph.parameters import extend_parameters_schema
 from voluptuous import Any, Optional, Required
 
 from gecko_taskgraph import GECKO
+from gecko_taskgraph.files_changed import get_locally_changed_files
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +19,7 @@ gecko_parameters_schema = {
     Required("backstop"): bool,
     Required("build_number"): int,
     Required("enable_always_target"): Any(bool, [str]),
+    Required("files_changed"): [str],
     Required("hg_branch"): str,
     Required("message"): str,
     Required("next_version"): Any(None, str),
@@ -107,6 +109,7 @@ def get_defaults(repo_root=None):
         "base_repository": "https://hg.mozilla.org/mozilla-unified",
         "build_number": 1,
         "enable_always_target": ["docker-image"],
+        "files_changed": sorted(get_locally_changed_files(repo_root)),
         "head_repository": "https://hg.mozilla.org/mozilla-central",
         "hg_branch": "default",
         "message": "",

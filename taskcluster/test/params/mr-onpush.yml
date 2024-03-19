@@ -9,6 +9,9 @@ do_not_optimize: []
 enable_always_target:
   - docker-image
 existing_tasks: {}
+files_changed:
+  - dom/html/HTMLDetailsElement.cpp
+  - gfx/thebes/gfxUserFontSet.cpp
 filters:
   - target_tasks_method
 head_ref: 5ae4969c2b0450edbe68bd94b613f1f30f8a3fcb
