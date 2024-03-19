@@ -622,7 +622,7 @@ void Zone::fixupAfterMovingGC() {
 }
 
 void Zone::purgeAtomCache() {
-  atomCache().clearAndCompact();
+  atomCache_.ref().reset();
 
   // Also purge the dtoa caches so that subsequent lookups populate atom
   // cache too.

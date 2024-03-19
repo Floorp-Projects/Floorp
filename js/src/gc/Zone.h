@@ -15,6 +15,8 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/TimeStamp.h"
 
+#include <array>
+
 #include "jstypes.h"
 
 #include "ds/Bitmap.h"
@@ -137,6 +139,148 @@ class MOZ_NON_TEMPORARY_CLASS FunctionToStringCache {
 
   MOZ_ALWAYS_INLINE JSString* lookup(BaseScript* script) const;
   MOZ_ALWAYS_INLINE void put(BaseScript* script, JSString* string);
+};
+
+// HashAndLength is a simple class encapsulating the combination of a HashNumber
+// and a (string) length into a single 64-bit value. Having them bundled
+// together like this enables us to compare pairs of hashes and lengths with a
+// single 64-bit comparison.
+class HashAndLength {
+ public:
+  MOZ_ALWAYS_INLINE explicit HashAndLength(uint64_t initialValue = unsetValue())
+      : mHashAndLength(initialValue) {}
+  MOZ_ALWAYS_INLINE HashAndLength(HashNumber hash, uint32_t length)
+      : mHashAndLength(uint64FromHashAndLength(hash, length)) {}
+
+  void MOZ_ALWAYS_INLINE set(HashNumber hash, uint32_t length) {
+    mHashAndLength = uint64FromHashAndLength(hash, length);
+  }
+
+  constexpr MOZ_ALWAYS_INLINE HashNumber hash() const {
+    return hashFromUint64(mHashAndLength);
+  }
+  constexpr MOZ_ALWAYS_INLINE uint32_t length() const {
+    return lengthFromUint64(mHashAndLength);
+  }
+
+  constexpr MOZ_ALWAYS_INLINE bool isEqual(HashNumber hash,
+                                           uint32_t length) const {
+    return mHashAndLength == uint64FromHashAndLength(hash, length);
+  }
+
+  // This function is used at compile-time to verify and that we pack and unpack
+  // hash and length values consistently.
+  static constexpr bool staticChecks() {
+    std::array<HashNumber, 5> hashes{0x00000000, 0xffffffff, 0xf0f0f0f0,
+                                     0x0f0f0f0f, 0x73737373};
+    std::array<uint32_t, 6> lengths{0, 1, 2, 3, 11, 56};
+
+    for (const HashNumber hash : hashes) {
+      for (const uint32_t length : lengths) {
+        const uint64_t lengthAndHash = uint64FromHashAndLength(hash, length);
+        if (hashFromUint64(lengthAndHash) != hash) {
+          return false;
+        }
+        if (lengthFromUint64(lengthAndHash) != length) {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
+
+  static constexpr MOZ_ALWAYS_INLINE uint64_t unsetValue() {
+    // This needs to be a combination of hash and length that would never occur
+    // together. There is only one string of length zero, and its hash is zero,
+    // so the hash here can be anything except zero.
+    return uint64FromHashAndLength(0xffffffff, 0);
+  }
+
+ private:
+  uint64_t mHashAndLength;
+
+  static constexpr MOZ_ALWAYS_INLINE uint64_t
+  uint64FromHashAndLength(HashNumber hash, uint32_t length) {
+    return (static_cast<uint64_t>(length) << 32) | hash;
+  }
+
+  static constexpr MOZ_ALWAYS_INLINE uint32_t
+  lengthFromUint64(uint64_t hashAndLength) {
+    return static_cast<uint32_t>(hashAndLength >> 32);
+  }
+
+  static constexpr MOZ_ALWAYS_INLINE HashNumber
+  hashFromUint64(uint64_t hashAndLength) {
+    return hashAndLength & 0xffffffff;
+  }
+};
+
+static_assert(HashAndLength::staticChecks());
+
+class AtomCacheHashTable {
+ public:
+  MOZ_ALWAYS_INLINE AtomCacheHashTable() { clear(); }
+
+  MOZ_ALWAYS_INLINE void clear() {
+    mEntries.fill({HashAndLength{HashAndLength::unsetValue()}, nullptr});
+  }
+
+  static MOZ_ALWAYS_INLINE constexpr uint32_t computeIndexFromHash(
+      const HashNumber hash) {
+    // Simply use the low bits of the hash value as the cache index.
+    return hash & (sSize - 1);
+  }
+
+  MOZ_ALWAYS_INLINE JSAtom* lookupForAdd(
+      const AtomHasher::Lookup& lookup) const {
+    MOZ_ASSERT(lookup.atom == nullptr, "Lookup by atom is not supported");
+
+    const uint32_t index = computeIndexFromHash(lookup.hash);
+
+    JSAtom* const atom = mEntries[index].mAtom;
+
+    if (!mEntries[index].mHashAndLength.isEqual(lookup.hash, lookup.length)) {
+      return nullptr;
+    }
+
+    // This is annotated with MOZ_UNLIKELY because it virtually never happens
+    // that, after matching the hash and the length, the string isn't a match.
+    if (MOZ_UNLIKELY(!lookup.StringsMatch(*atom))) {
+      return nullptr;
+    }
+
+    return atom;
+  }
+
+  MOZ_ALWAYS_INLINE void add(const HashNumber hash, JSAtom* atom) {
+    const uint32_t index = computeIndexFromHash(hash);
+
+    mEntries[index].set(hash, atom->length(), atom);
+  }
+
+ private:
+  struct Entry {
+    MOZ_ALWAYS_INLINE void set(const HashNumber hash, const uint32_t length,
+                               JSAtom* const atom) {
+      mHashAndLength.set(hash, length);
+      mAtom = atom;
+    }
+
+    // Hash and length are also available, from JSAtom and JSString
+    // respectively, but are cached here to avoid likely cache misses in the
+    // frequent case of a missed lookup.
+    HashAndLength mHashAndLength;
+    // No read barrier is required here because the table is cleared at the
+    // start of GC.
+    JSAtom* mAtom;
+  };
+
+  // This value was picked empirically based on performance testing using SP2
+  // and SP3. 4k was better than 2k but 8k was not much better than 4k.
+  static constexpr uint32_t sSize = 4 * 1024;
+  static_assert(mozilla::IsPowerOfTwo(sSize));
+  std::array<Entry, sSize> mEntries;
 };
 
 }  // namespace js
@@ -281,7 +425,7 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   js::MainThreadOrGCTaskData<js::SparseBitmap> markedAtoms_;
 
   // Set of atoms recently used by this Zone. Purged on GC.
-  js::MainThreadOrGCTaskData<js::AtomSet> atomCache_;
+  js::MainThreadOrGCTaskData<js::UniquePtr<js::AtomCacheHashTable>> atomCache_;
 
   // Cache storing allocated external strings. Purged on GC.
   js::MainThreadOrGCTaskData<js::ExternalStringCache> externalStringCache_;
@@ -613,7 +757,16 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
 
   js::SparseBitmap& markedAtoms() { return markedAtoms_.ref(); }
 
-  js::AtomSet& atomCache() { return atomCache_.ref(); }
+  // The atom cache is "allocate-on-demand". This function can return nullptr if
+  // the allocation failed.
+  js::AtomCacheHashTable* atomCache() {
+    if (atomCache_.ref()) {
+      return atomCache_.ref().get();
+    }
+
+    atomCache_ = js::MakeUnique<js::AtomCacheHashTable>();
+    return atomCache_.ref().get();
+  }
 
   void purgeAtomCache();
 
