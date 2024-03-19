@@ -269,7 +269,7 @@ static already_AddRefed<Screen> MakeScreenGtk(GdkScreen* aScreen,
       contentsScale.scale, defaultCssScale.scale, dpi, refreshRate);
   return MakeAndAddRef<Screen>(rect, availRect, pixelDepth, pixelDepth,
                                refreshRate, contentsScale, defaultCssScale, dpi,
-                               Screen::IsPseudoDisplay::No);
+                               Screen::IsPseudoDisplay::No, Screen::IsHDR::No);
 }
 
 void ScreenGetterGtk::RefreshScreens() {

@@ -26,12 +26,13 @@ class Screen final : public nsIScreen {
 
   using OrientationAngle = uint16_t;
   enum class IsPseudoDisplay : bool { No, Yes };
+  enum class IsHDR : bool { No, Yes };
 
   Screen(LayoutDeviceIntRect aRect, LayoutDeviceIntRect aAvailRect,
          uint32_t aPixelDepth, uint32_t aColorDepth, uint32_t aRefreshRate,
          DesktopToLayoutDeviceScale aContentsScale,
          CSSToLayoutDeviceScale aDefaultCssScale, float aDpi, IsPseudoDisplay,
-         hal::ScreenOrientation = hal::ScreenOrientation::None,
+         IsHDR, hal::ScreenOrientation = hal::ScreenOrientation::None,
          OrientationAngle = 0);
   explicit Screen(const dom::ScreenDetails& aScreenDetails);
   Screen(const Screen& aOther);
@@ -60,6 +61,8 @@ class Screen final : public nsIScreen {
   enum class IncludeOSZoom : bool { No, Yes };
   CSSToLayoutDeviceScale GetCSSToLayoutDeviceScale(IncludeOSZoom) const;
 
+  bool GetIsHDR() const { return mIsHDR; }
+
  private:
   virtual ~Screen() = default;
 
@@ -76,6 +79,7 @@ class Screen final : public nsIScreen {
   const hal::ScreenOrientation mScreenOrientation;
   const OrientationAngle mOrientationAngle;
   const bool mIsPseudoDisplay;
+  const bool mIsHDR;
 };
 
 }  // namespace widget
