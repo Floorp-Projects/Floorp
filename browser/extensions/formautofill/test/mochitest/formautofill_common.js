@@ -270,9 +270,12 @@ async function onStorageChanged(type) {
   });
 }
 
-function checkMenuEntries(expectedValues, extraRows = 1) {
+function checkMenuEntries(expectedValues, isFormAutofillResult = true) {
   let actualValues = getMenuEntries();
-  let expectedLength = expectedValues.length + extraRows;
+  // Expect one more item would appear at the bottom as the footer if the result is from form autofill.
+  let expectedLength = isFormAutofillResult
+    ? expectedValues.length + 1
+    : expectedValues.length;
 
   is(actualValues.length, expectedLength, " Checking length of expected menu");
   for (let i = 0; i < expectedValues.length; i++) {
