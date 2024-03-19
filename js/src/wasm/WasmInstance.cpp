@@ -2938,7 +2938,8 @@ static bool EnsureEntryStubs(const Instance& instance, uint32_t funcIndex,
 }
 
 static bool GetInterpEntryAndEnsureStubs(JSContext* cx, Instance& instance,
-                                         uint32_t funcIndex, CallArgs args,
+                                         uint32_t funcIndex,
+                                         const CallArgs& args,
                                          void** interpEntry,
                                          const FuncType** funcType) {
   const FuncExport* funcExport;
@@ -3100,8 +3101,8 @@ class MOZ_RAII ReturnToJSResultCollector {
   }
 };
 
-bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args,
-                          CoercionLevel level) {
+bool Instance::callExport(JSContext* cx, uint32_t funcIndex,
+                          const CallArgs& args, CoercionLevel level) {
   if (memory0Base_) {
     // If there has been a moving grow, this Instance should have been notified.
     MOZ_RELEASE_ASSERT(memoryBase(0).unwrap() == memory0Base_);
