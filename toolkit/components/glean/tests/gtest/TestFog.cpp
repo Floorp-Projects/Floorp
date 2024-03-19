@@ -284,7 +284,8 @@ TEST_F(FOGFixture, TestCppTimingDistNegativeDuration) {
   auto negDuration = TimeDuration::FromSeconds(-1);
   test_only::what_time_is_it.AccumulateRawDuration(negDuration);
 
-  ASSERT_EQ(mozilla::Nothing(), test_only::what_time_is_it.TestGetValue().unwrap());
+  ASSERT_EQ(mozilla::Nothing(),
+            test_only::what_time_is_it.TestGetValue().unwrap());
 }
 
 TEST_F(FOGFixture, TestLabeledBooleanWorks) {
