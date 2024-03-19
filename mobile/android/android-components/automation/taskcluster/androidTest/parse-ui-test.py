@@ -35,6 +35,7 @@ def parse_args(cmdln_args):
         "--report-treeherder-failures",
         help="Report failures in treeherder format.",
         required=False,
+        action="store_true",
     )
 
     return parser.parse_args(args=cmdln_args)
