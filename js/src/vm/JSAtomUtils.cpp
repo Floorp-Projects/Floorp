@@ -62,78 +62,37 @@ extern bool GetUTF8AtomizationData(JSContext* cx, const JS::UTF8Chars& utf8,
                                    JS::SmallestEncoding* encoding,
                                    HashNumber* hashNum);
 
-struct js::AtomHasher::Lookup {
-  union {
-    const JS::Latin1Char* latin1Chars;
-    const char16_t* twoByteChars;
-    const char* utf8Bytes;
-  };
-  enum { TwoByteChar, Latin1, UTF8 } type;
-  size_t length;
-  size_t byteLength;
-  const JSAtom* atom; /* Optional. */
-  JS::AutoCheckCannotGC nogc;
-
-  HashNumber hash;
-
-  MOZ_ALWAYS_INLINE Lookup(const char* utf8Bytes, size_t byteLen, size_t length,
-                           HashNumber hash)
-      : utf8Bytes(utf8Bytes),
-        type(UTF8),
-        length(length),
-        byteLength(byteLen),
-        atom(nullptr),
-        hash(hash) {}
-
-  MOZ_ALWAYS_INLINE Lookup(const char16_t* chars, size_t length)
-      : twoByteChars(chars),
-        type(TwoByteChar),
-        length(length),
-        atom(nullptr),
-        hash(mozilla::HashString(chars, length)) {}
-
-  MOZ_ALWAYS_INLINE Lookup(const JS::Latin1Char* chars, size_t length)
-      : latin1Chars(chars),
-        type(Latin1),
-        length(length),
-        atom(nullptr),
-        hash(mozilla::HashString(chars, length)) {}
-
-  MOZ_ALWAYS_INLINE Lookup(HashNumber hash, const char16_t* chars,
-                           size_t length)
-      : twoByteChars(chars),
-        type(TwoByteChar),
-        length(length),
-        atom(nullptr),
-        hash(hash) {
-    MOZ_ASSERT(hash == mozilla::HashString(chars, length));
-  }
-
-  MOZ_ALWAYS_INLINE Lookup(HashNumber hash, const JS::Latin1Char* chars,
-                           size_t length)
-      : latin1Chars(chars),
-        type(Latin1),
-        length(length),
-        atom(nullptr),
-        hash(hash) {
-    MOZ_ASSERT(hash == mozilla::HashString(chars, length));
-  }
-
-  inline explicit Lookup(const JSAtom* atom)
-      : type(atom->hasLatin1Chars() ? Latin1 : TwoByteChar),
-        length(atom->length()),
-        atom(atom),
-        hash(atom->hash()) {
-    if (type == Latin1) {
-      latin1Chars = atom->latin1Chars(nogc);
-      MOZ_ASSERT(mozilla::HashString(latin1Chars, length) == hash);
-    } else {
-      MOZ_ASSERT(type == TwoByteChar);
-      twoByteChars = atom->twoByteChars(nogc);
-      MOZ_ASSERT(mozilla::HashString(twoByteChars, length) == hash);
+MOZ_ALWAYS_INLINE bool js::AtomHasher::Lookup::StringsMatch(
+    const JSAtom& atom) const {
+  if (atom.hasLatin1Chars()) {
+    const Latin1Char* keyChars = atom.latin1Chars(nogc);
+    switch (type) {
+      case Lookup::Latin1:
+        return EqualChars(keyChars, latin1Chars, length);
+      case Lookup::TwoByteChar:
+        return EqualChars(keyChars, twoByteChars, length);
+      case Lookup::UTF8: {
+        JS::UTF8Chars utf8(utf8Bytes, byteLength);
+        return UTF8EqualsChars(utf8, keyChars);
+      }
     }
   }
-};
+
+  const char16_t* keyChars = atom.twoByteChars(nogc);
+  switch (type) {
+    case Lookup::Latin1:
+      return EqualChars(latin1Chars, keyChars, length);
+    case Lookup::TwoByteChar:
+      return EqualChars(keyChars, twoByteChars, length);
+    case Lookup::UTF8: {
+      JS::UTF8Chars utf8(utf8Bytes, byteLength);
+      return UTF8EqualsChars(utf8, keyChars);
+    }
+  }
+
+  MOZ_ASSERT_UNREACHABLE("AtomHasher::match unknown type");
+  return false;
+}
 
 inline HashNumber js::AtomHasher::hash(const Lookup& l) { return l.hash; }
 
@@ -147,34 +106,7 @@ MOZ_ALWAYS_INLINE bool js::AtomHasher::match(const WeakHeapPtr<JSAtom*>& entry,
     return false;
   }
 
-  if (key->hasLatin1Chars()) {
-    const Latin1Char* keyChars = key->latin1Chars(lookup.nogc);
-    switch (lookup.type) {
-      case Lookup::Latin1:
-        return EqualChars(keyChars, lookup.latin1Chars, lookup.length);
-      case Lookup::TwoByteChar:
-        return EqualChars(keyChars, lookup.twoByteChars, lookup.length);
-      case Lookup::UTF8: {
-        JS::UTF8Chars utf8(lookup.utf8Bytes, lookup.byteLength);
-        return UTF8EqualsChars(utf8, keyChars);
-      }
-    }
-  }
-
-  const char16_t* keyChars = key->twoByteChars(lookup.nogc);
-  switch (lookup.type) {
-    case Lookup::Latin1:
-      return EqualChars(lookup.latin1Chars, keyChars, lookup.length);
-    case Lookup::TwoByteChar:
-      return EqualChars(keyChars, lookup.twoByteChars, lookup.length);
-    case Lookup::UTF8: {
-      JS::UTF8Chars utf8(lookup.utf8Bytes, lookup.byteLength);
-      return UTF8EqualsChars(utf8, keyChars);
-    }
-  }
-
-  MOZ_ASSERT_UNREACHABLE("AtomHasher::match unknown type");
-  return false;
+  return lookup.StringsMatch(*key);
 }
 
 UniqueChars js::AtomToPrintableString(JSContext* cx, JSAtom* atom) {
@@ -450,18 +382,21 @@ static MOZ_ALWAYS_INLINE JSAtom*
 AtomizeAndCopyCharsNonStaticValidLengthFromLookup(
     JSContext* cx, const CharT* chars, size_t length,
     const AtomHasher::Lookup& lookup, const Maybe<uint32_t>& indexValue) {
-  // Try the per-Zone cache first. If we find the atom there we can avoid the
-  // markAtom call, and the multiple HashSet lookups below.
   Zone* zone = cx->zone();
   MOZ_ASSERT(zone);
-  AtomSet::AddPtr zonePtr = zone->atomCache().lookupForAdd(lookup);
-  if (zonePtr) {
-    // The cache is purged on GC so if we're in the middle of an
-    // incremental GC we should have barriered the atom when we put
-    // it in the cache.
-    JSAtom* atom = zonePtr->unbarrieredGet();
-    MOZ_ASSERT(AtomIsMarked(zone, atom));
-    return atom;
+
+  AtomCacheHashTable* atomCache = zone->atomCache();
+
+  // Try the per-Zone cache first. If we find the atom there we can avoid the
+  // markAtom call, and the multiple HashSet lookups below.
+  if (MOZ_LIKELY(atomCache)) {
+    JSAtom* const cachedAtom = atomCache->lookupForAdd(lookup);
+    if (cachedAtom) {
+      // The cache is purged on GC so if we're in the middle of an incremental
+      // GC we should have barriered the atom when we put it in the cache.
+      MOZ_ASSERT(AtomIsMarked(zone, cachedAtom));
+      return cachedAtom;
+    }
   }
 
   MOZ_ASSERT(cx->permanentAtomsPopulated());
@@ -469,11 +404,9 @@ AtomizeAndCopyCharsNonStaticValidLengthFromLookup(
   AtomSet::Ptr pp = cx->permanentAtoms().readonlyThreadsafeLookup(lookup);
   if (pp) {
     JSAtom* atom = pp->get();
-    if (MOZ_UNLIKELY(!zone->atomCache().add(zonePtr, atom))) {
-      ReportOutOfMemory(cx);
-      return nullptr;
+    if (MOZ_LIKELY(atomCache)) {
+      atomCache->add(lookup.hash, atom);
     }
-
     return atom;
   }
 
@@ -488,11 +421,9 @@ AtomizeAndCopyCharsNonStaticValidLengthFromLookup(
     return nullptr;
   }
 
-  if (MOZ_UNLIKELY(!zone->atomCache().add(zonePtr, atom))) {
-    ReportOutOfMemory(cx);
-    return nullptr;
+  if (MOZ_LIKELY(atomCache)) {
+    atomCache->add(lookup.hash, atom);
   }
-
   return atom;
 }
 
