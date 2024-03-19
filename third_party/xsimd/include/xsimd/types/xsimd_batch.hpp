@@ -1347,8 +1347,8 @@ namespace xsimd
     template <class T, class A>
     inline batch<std::complex<T>, A>& batch<std::complex<T>, A>::operator*=(batch const& other) noexcept
     {
-        real_batch new_real = real() * other.real() - imag() * other.imag();
-        real_batch new_imag = real() * other.imag() + imag() * other.real();
+        real_batch new_real = fms(real(), other.real(), imag() * other.imag());
+        real_batch new_imag = fma(real(), other.imag(), imag() * other.real());
         m_real = new_real;
         m_imag = new_imag;
         return *this;

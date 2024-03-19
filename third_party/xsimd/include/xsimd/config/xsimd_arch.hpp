@@ -33,7 +33,6 @@ namespace xsimd
     {
         static constexpr bool supported() noexcept { return false; }
         static constexpr bool available() noexcept { return false; }
-        static constexpr unsigned version() noexcept { return 0; }
         static constexpr std::size_t alignment() noexcept { return 0; }
         static constexpr bool requires_alignment() noexcept { return false; }
         static constexpr char const* name() noexcept { return "<none>"; }
@@ -54,26 +53,6 @@ namespace xsimd
         struct contains<T, Ty, Tys...>
             : std::conditional<std::is_same<Ty, T>::value, std::true_type,
                                contains<T, Tys...>>::type
-        {
-        };
-
-        template <unsigned... Vals>
-        struct is_sorted;
-
-        template <>
-        struct is_sorted<> : std::true_type
-        {
-        };
-
-        template <unsigned Val>
-        struct is_sorted<Val> : std::true_type
-        {
-        };
-
-        template <unsigned V0, unsigned V1, unsigned... Vals>
-        struct is_sorted<V0, V1, Vals...>
-            : std::conditional<(V0 >= V1), is_sorted<V1, Vals...>,
-                               std::false_type>::type
         {
         };
 
@@ -106,15 +85,10 @@ namespace xsimd
 
     } // namespace detail
 
-    // An arch_list is a list of architectures, sorted by version number.
+    // An arch_list is a list of architectures.
     template <class... Archs>
     struct arch_list
     {
-#ifndef NDEBUG
-        static_assert(detail::is_sorted<Archs::version()...>::value,
-                      "architecture list must be sorted by version");
-#endif
-
         using best = typename detail::head<Archs...>::type;
 
         template <class Arch>
