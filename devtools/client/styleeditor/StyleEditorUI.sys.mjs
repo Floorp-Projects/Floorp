@@ -1549,6 +1549,7 @@ export class StyleEditorUI extends EventEmitter {
 
     this.#loadingStyleSheets = null;
     this.#root.classList.remove("loading");
+    this.emit("reloaded");
   }
 
   async #handleStyleSheetResource(resource) {
