@@ -44,7 +44,7 @@ add_task(async function () {
   let expectations = {
     expectedReflows: EXPECTED_REFLOWS,
     frames: {
-      filter(rects, frame, previousFrame) {
+      filter(rects, frame) {
         // The first screenshot we get in OSX / Windows shows an unfocused browser
         // window for some reason. See bug 1445161.
         if (!alreadyFocused && isLikelyFocusChange(rects, frame)) {

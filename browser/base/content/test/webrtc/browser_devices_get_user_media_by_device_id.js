@@ -49,7 +49,7 @@ add_task(async function test_get_user_media_by_device_id() {
     .filter(d => d.kind == "videoinput")
     .map(d => d.deviceId)[0];
 
-  await BrowserTestUtils.withNewTab(TEST_PAGE, async browser => {
+  await BrowserTestUtils.withNewTab(TEST_PAGE, async () => {
     let promise = promisePopupNotificationShown("webRTC-shareDevices");
     let observerPromise = expectObserverCalled("getUserMedia:request");
     await promiseRequestDevice({ deviceId: { exact: audioId } });

@@ -237,7 +237,7 @@ add_task(async function test_ValidCert() {
 add_task(async function test_SiteData() {
   await SiteDataTestUtils.addToIndexedDB(TEST_ORIGIN);
 
-  await BrowserTestUtils.withNewTab(TEST_ORIGIN, async function (browser) {
+  await BrowserTestUtils.withNewTab(TEST_ORIGIN, async function () {
     let totalUsage = await SiteDataTestUtils.getQuotaUsage(TEST_ORIGIN);
     Assert.greater(totalUsage, 0, "The total usage should not be 0");
 
@@ -302,7 +302,7 @@ add_task(async function test_Cookies() {
     value: "1",
   });
 
-  await BrowserTestUtils.withNewTab(TEST_ORIGIN, async function (browser) {
+  await BrowserTestUtils.withNewTab(TEST_ORIGIN, async function () {
     let pageInfo = BrowserPageInfo(TEST_ORIGIN, "securityTab");
     await BrowserTestUtils.waitForEvent(pageInfo, "load");
 

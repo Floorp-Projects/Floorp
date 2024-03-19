@@ -147,7 +147,7 @@ function promiseWaitForFocus(aWindow) {
  * @return Promise
  */
 function waitForNotificationBar(notificationID, browser, callback) {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     let notification;
     let notificationBox = gBrowser.getNotificationBox(browser);
     waitForCondition(
@@ -189,7 +189,7 @@ function waitForNotificationShown(notification, callback) {
   }
   PopupNotifications.panel.addEventListener(
     "popupshown",
-    function (e) {
+    function () {
       callback();
     },
     { once: true }

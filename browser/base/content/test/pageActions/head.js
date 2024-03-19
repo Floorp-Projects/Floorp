@@ -124,7 +124,7 @@ async function promiseAnimationFrame(win = window) {
 
 async function promisePopupNotShown(id, win = window) {
   let deferred = Promise.withResolvers();
-  function listener(e) {
+  function listener() {
     deferred.reject("Unexpected popupshown");
   }
   let panel = win.document.getElementById(id);

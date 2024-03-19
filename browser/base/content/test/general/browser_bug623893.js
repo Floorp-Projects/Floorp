@@ -38,7 +38,7 @@ async function promiseGetIndex(browser) {
   return shistory.index;
 }
 
-let duplicate = async function (delta, msg, cb) {
+let duplicate = async function (delta, msg) {
   var startIndex = await promiseGetIndex(gBrowser.selectedBrowser);
 
   duplicateTabIn(gBrowser.selectedTab, "tab", delta);

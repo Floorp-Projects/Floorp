@@ -131,7 +131,7 @@ var gBrowser = {
     return document.getElementById("webext-panels-browser");
   },
 
-  getTabForBrowser(browser) {
+  getTabForBrowser() {
     return null;
   },
 

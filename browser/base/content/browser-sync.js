@@ -55,7 +55,7 @@ this.SyncedTabsPanelList = class SyncedTabsPanelList {
     this.createSyncedTabs();
   }
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     if (topic == SyncedTabs.TOPIC_TABS_CHANGED) {
       this._showSyncedTabs();
     }
@@ -648,7 +648,7 @@ var gSync = {
   // shows the device list will start with `recentDeviceList`, but should also
   // force a refresh, both of which should mean in the worst-case, the UI is up
   // to date after a very short delay.
-  async ensureFxaDevices(options) {
+  async ensureFxaDevices() {
     if (UIState.get().status != UIState.STATUS_SIGNED_IN) {
       console.info("Skipping device list refresh; not signed in");
       return;
@@ -768,7 +768,7 @@ var gSync = {
           }
         }
 
-        item.addEventListener("command", event => {
+        item.addEventListener("command", () => {
           if (panelNode) {
             PanelMultiView.hidePopup(panelNode);
           }
@@ -1364,7 +1364,7 @@ var gSync = {
       return;
     }
     if (!createDeviceNodeFn) {
-      createDeviceNodeFn = (targetId, name, targetType, lastModified) => {
+      createDeviceNodeFn = (targetId, name) => {
         let eltName = name ? "menuitem" : "menuseparator";
         return document.createXULElement(eltName);
       };
@@ -1462,7 +1462,7 @@ var gSync = {
         fxAccounts.flushLogFile();
       });
     };
-    const onSendAllCommand = event => {
+    const onSendAllCommand = () => {
       send(targets);
     };
     const onTargetDeviceCommand = event => {

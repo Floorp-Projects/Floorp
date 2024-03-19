@@ -103,7 +103,7 @@ var gBrowserThumbnails = {
     ChromeUtils.defineLazyGetter(this, "_topSiteURLs", getTopSiteURLs);
   },
 
-  notify: function Thumbnails_notify(timer) {
+  notify: function Thumbnails_notify() {
     gBrowserThumbnails._topSiteURLsRefreshTimer = null;
     gBrowserThumbnails.clearTopSiteURLCache();
   },
@@ -116,7 +116,7 @@ var gBrowserThumbnails = {
     aWebProgress,
     aRequest,
     aStateFlags,
-    aStatus
+    _aStatus
   ) {
     if (
       aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&

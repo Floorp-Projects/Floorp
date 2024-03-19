@@ -36,8 +36,8 @@ add_task(async function () {
   ));
   let domLinkAddedFired = 0;
   let domLinkChangedFired = 0;
-  const linkAddedHandler = event => domLinkAddedFired++;
-  const linkChangedhandler = event => domLinkChangedFired++;
+  const linkAddedHandler = () => domLinkAddedFired++;
+  const linkChangedhandler = () => domLinkChangedFired++;
   BrowserTestUtils.addContentEventListener(
     gBrowser.selectedBrowser,
     "DOMLinkAdded",
@@ -80,8 +80,8 @@ add_task(async function () {
 
   let domLinkAddedFired = 0;
   let domLinkChangedFired = 0;
-  const linkAddedHandler = event => domLinkAddedFired++;
-  const linkChangedhandler = event => domLinkChangedFired++;
+  const linkAddedHandler = () => domLinkAddedFired++;
+  const linkChangedhandler = () => domLinkChangedFired++;
   BrowserTestUtils.addContentEventListener(
     browser,
     "DOMLinkAdded",

@@ -19,7 +19,7 @@ add_task(async function () {
   await SimpleTest.promiseFocus(gBrowser.selectedBrowser);
 
   // Initial setup of the content area.
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function (arg) {
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function () {
     let doc = content.document;
     let range = doc.createRange();
     let selection = content.getSelection();

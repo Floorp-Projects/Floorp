@@ -68,7 +68,7 @@ add_task(async function () {
       let selection = content.document.getSelection();
       selection.modify("move", "right", "line");
 
-      return new Promise((resolve, reject) => {
+      return new Promise(resolve => {
         content.addEventListener(
           "paste",
           event => {
@@ -130,7 +130,7 @@ add_task(async function () {
     selection.modify("extend", "left", "word");
     selection.modify("extend", "left", "character");
 
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       content.addEventListener(
         "cut",
         event => {
@@ -157,7 +157,7 @@ add_task(async function () {
       let selection = content.document.getSelection();
       selection.modify("move", "left", "line");
 
-      return new Promise((resolve, reject) => {
+      return new Promise(resolve => {
         content.addEventListener(
           "paste",
           event => {

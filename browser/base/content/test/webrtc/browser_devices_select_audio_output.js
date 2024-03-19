@@ -220,7 +220,7 @@ var gTests = [
         gBrowser.selectedBrowser.browsingContext,
         "getUserMedia:response:allow",
         1,
-        (aSubject, aTopic, aData) => {
+        aSubject => {
           const device = aSubject
             .QueryInterface(Ci.nsIArrayExtensions)
             .GetElementAt(0).wrappedJSObject;

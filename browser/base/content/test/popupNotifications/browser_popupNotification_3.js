@@ -27,7 +27,7 @@ var tests = [
       checkPopup(popup, this.notifyObj);
       dismissNotification(popup);
     },
-    onHidden(popup) {
+    onHidden() {
       ok(
         !this.notifyObj.dismissalCallbackTriggered,
         "dismissal callback wasn't triggered"
@@ -70,7 +70,7 @@ var tests = [
 
       dismissNotification(popup);
     },
-    onHidden(popup) {
+    onHidden() {
       this.notification1.remove();
       ok(
         this.notifyObj1.removedCallbackTriggered,
@@ -127,7 +127,7 @@ var tests = [
 
       dismissNotification(popup);
     },
-    onHidden(popup) {
+    onHidden() {
       this.notificationNew.remove();
       gBrowser.removeTab(gBrowser.selectedTab);
 
@@ -156,7 +156,7 @@ var tests = [
         dismissNotification(popup);
       });
     },
-    onHidden(popup) {
+    onHidden() {
       ok(
         !this.notifyObj.mainActionClicked,
         "mainAction was not clicked because it was too soon"
@@ -188,7 +188,7 @@ var tests = [
         triggerMainCommand(popup);
       }, 500);
     },
-    onHidden(popup) {
+    onHidden() {
       ok(
         this.notifyObj.mainActionClicked,
         "mainAction was clicked after the delay"
@@ -308,7 +308,7 @@ var tests = [
       };
       showNotification(this.notifyObj);
     },
-    async onShown(popup) {
+    async onShown() {
       info("Adding observer and performing navigation");
 
       await Promise.all([

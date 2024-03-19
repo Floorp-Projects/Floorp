@@ -33,7 +33,7 @@ add_task(async function checkBackFromInvalidURI() {
       false,
       // Be paranoid we *are* actually seeing this other page load, not some kind of race
       // for if/when we do start firing pageshow for the error page...
-      function (e) {
+      function () {
         return gBrowser.currentURI.spec == "about:robots";
       }
     );

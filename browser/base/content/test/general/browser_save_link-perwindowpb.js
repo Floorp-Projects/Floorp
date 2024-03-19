@@ -68,7 +68,7 @@ function triggerSave(aWindow, aCallback) {
     info("popup hidden");
   }
 
-  function onTransferComplete(aWindow2, downloadSuccess, destDir) {
+  function onTransferComplete(aWindow2, downloadSuccess) {
     ok(downloadSuccess, "Link should have been downloaded successfully");
     aWindow2.close();
 
@@ -118,7 +118,7 @@ function test() {
     info("Finished running the cleanup code");
   });
 
-  function observer(subject, topic, state) {
+  function observer(subject, topic) {
     info("observer called with " + topic);
     if (topic == "http-on-modify-request") {
       onModifyRequest(subject);

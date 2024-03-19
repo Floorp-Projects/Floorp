@@ -34,7 +34,7 @@ var FullZoomHelper = {
         parsedZoomValue,
         nonPrivateLoadContext,
         {
-          handleCompletion(reason) {
+          handleCompletion() {
             resolve();
           },
         }
@@ -72,7 +72,7 @@ var FullZoomHelper = {
             value = parseFloat(pref.value);
           }
         },
-        handleCompletion(reason) {
+        handleCompletion() {
           resolve(value);
         },
         handleError(error) {
@@ -84,7 +84,7 @@ var FullZoomHelper = {
 
   waitForLocationChange: function waitForLocationChange() {
     return new Promise(resolve => {
-      Services.obs.addObserver(function obs(subj, topic, data) {
+      Services.obs.addObserver(function obs(subj, topic) {
         Services.obs.removeObserver(obs, topic);
         resolve();
       }, "browser-fullZoom:location-change");
@@ -124,7 +124,7 @@ var FullZoomHelper = {
       let didLoad = false;
       let didZoom = false;
 
-      promiseTabLoadEvent(tab, url).then(event => {
+      promiseTabLoadEvent(tab, url).then(() => {
         didLoad = true;
         if (didZoom) {
           resolve();

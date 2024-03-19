@@ -85,10 +85,10 @@ function startServer(cert) {
       output = transport.openOutputStream(0, 0, 0);
     },
 
-    onHandshakeDone(socket, status) {
+    onHandshakeDone() {
       input.asyncWait(
         {
-          onInputStreamReady(readyInput) {
+          onInputStreamReady() {
             try {
               input.close();
               output.close();

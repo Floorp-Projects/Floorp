@@ -26,7 +26,7 @@ var tests = [
       checkPopup(popup, this.notifyObj);
       triggerMainCommand(popup);
     },
-    onHidden(popup) {
+    onHidden() {
       ok(this.notifyObj.mainActionClicked, "mainAction was clicked");
       ok(
         !this.notifyObj.dismissalCallbackTriggered,
@@ -55,7 +55,7 @@ var tests = [
       checkPopup(popup, this.notifyObj);
       triggerSecondaryCommand(popup, 0);
     },
-    onHidden(popup) {
+    onHidden() {
       ok(this.notifyObj.secondaryActionClicked, "secondaryAction was clicked");
       ok(
         !this.notifyObj.dismissalCallbackTriggered,
@@ -89,7 +89,7 @@ var tests = [
       checkPopup(popup, this.notifyObj);
       triggerSecondaryCommand(popup, 1);
     },
-    onHidden(popup) {
+    onHidden() {
       ok(
         this.extraSecondaryActionClicked,
         "extra secondary action was clicked"
@@ -123,7 +123,7 @@ var tests = [
       checkPopup(popup, this.notifyObj);
       triggerSecondaryCommand(popup, 2);
     },
-    onHidden(popup) {
+    onHidden() {
       ok(
         this.extraSecondaryActionClicked,
         "extra secondary action was clicked"
@@ -145,7 +145,7 @@ var tests = [
       checkPopup(popup, this.notifyObj);
       dismissNotification(popup);
     },
-    onHidden(popup) {
+    onHidden() {
       ok(
         this.notifyObj.dismissalCallbackTriggered,
         "dismissal callback triggered"
@@ -205,7 +205,7 @@ var tests = [
       // switch back to the old browser
       gBrowser.selectedTab = this.oldSelectedTab;
     },
-    onHidden(popup) {
+    onHidden() {
       // actually remove the notification to prevent it from reappearing
       ok(
         wrongBrowserNotificationObject.dismissalCallbackTriggered,
@@ -247,7 +247,7 @@ var tests = [
       checkPopup(popup, this.notifyObj);
       this.notification2.remove();
     },
-    onHidden(popup) {
+    onHidden() {
       ok(
         !this.notifyObj.dismissalCallbackTriggered,
         "dismissal callback wasn't triggered"
@@ -276,7 +276,7 @@ var tests = [
       is(popup.children.length, 1, "only one notification left");
       triggerSecondaryCommand(popup, 0);
     },
-    onHidden(popup) {
+    onHidden() {
       ok(this.testNotif1.mainActionClicked, "main action #1 was clicked");
       ok(
         !this.testNotif1.secondaryActionClicked,
@@ -316,7 +316,7 @@ var tests = [
       );
       triggerMainCommand(popup);
     },
-    onHidden(popup) {
+    onHidden() {
       ok(!this.notifyObj.mainActionClicked, "mainAction was not clicked");
       ok(
         !this.notifyObj.dismissalCallbackTriggered,
@@ -348,7 +348,7 @@ var tests = [
       );
       triggerMainCommand(popup);
     },
-    onHidden(popup) {
+    onHidden() {
       ok(!this.notifyObj.mainActionClicked, "mainAction was not clicked");
       ok(
         !this.notifyObj.dismissalCallbackTriggered,
@@ -380,7 +380,7 @@ var tests = [
       );
       dismissNotification(popup);
     },
-    onHidden(popup) {
+    onHidden() {
       // Remove the notifications
       this.firstNotification.remove();
       this.secondNotification.remove();

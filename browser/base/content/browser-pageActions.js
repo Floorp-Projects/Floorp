@@ -1008,7 +1008,7 @@ BrowserPageActions.bookmark = {
     }
   },
 
-  onCommand(event, buttonNode) {
+  onCommand(event) {
     PanelMultiView.hidePopup(BrowserPageActions.panelNode);
     BookmarkingUI.onStarCommand(event);
   },

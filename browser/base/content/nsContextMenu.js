@@ -1982,7 +1982,7 @@ class nsContextMenu {
     // we give up waiting for the filename.
     function timerCallback() {}
     timerCallback.prototype = {
-      notify: function sLA_timer_notify(aTimer) {
+      notify: function sLA_timer_notify() {
         channel.cancel(NS_ERROR_SAVE_LINK_AS_TIMEOUT);
       },
     };

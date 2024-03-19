@@ -165,7 +165,7 @@ function delayedStartupFinished(aWindow) {
  * @return {Promise}
  * @resolves With the tab once it's loaded.
  */
-function someTabLoaded(aWindow) {
+function someTabLoaded() {
   return BrowserTestUtils.waitForNewTab(gTestWindow.gBrowser, null, true);
 }
 

@@ -19,7 +19,7 @@ add_task(async function () {
       gBrowser,
       url,
     },
-    async function (browser) {
+    async function () {
       let popup = await openSelectPopup("click");
       let arrowSB = popup.shadowRoot.querySelector(".menupopup-arrowscrollbox");
       is(

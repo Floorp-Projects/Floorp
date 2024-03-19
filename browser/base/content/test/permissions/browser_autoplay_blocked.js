@@ -102,7 +102,7 @@ add_task(async function testMainViewVisible() {
 
   Services.prefs.setIntPref(AUTOPLAY_PREF, Ci.nsIAutoplay.BLOCKED);
 
-  await BrowserTestUtils.withNewTab(AUTOPLAY_PAGE, async function (browser) {
+  await BrowserTestUtils.withNewTab(AUTOPLAY_PAGE, async function () {
     let permissionsList = document.getElementById(
       "permission-popup-permission-list"
     );

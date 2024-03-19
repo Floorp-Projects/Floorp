@@ -87,7 +87,7 @@ function startServer(cert) {
       output = transport.openOutputStream(0, 0, 0);
     },
 
-    onHandshakeDone(socket, status) {
+    onHandshakeDone() {
       input.asyncWait(
         {
           onInputStreamReady(readyInput) {
@@ -152,7 +152,7 @@ add_task(async function () {
     QueryInterface: ChromeUtils.generateQI(["nsISystemProxySettings"]),
     mainThreadOnly: true,
     PACURI: null,
-    getProxyForURI: (aSpec, aScheme, aHost, aPort) => {
+    getProxyForURI: () => {
       return `HTTPS localhost:${server.port}`;
     },
   };
@@ -181,7 +181,7 @@ add_task(async function () {
   // secure, in a real situation the connection from the proxy to
   // http://example.com won't be secure, so we treat it as not secure.
   // eslint-disable-next-line @microsoft/sdl/no-insecure-url
-  await BrowserTestUtils.withNewTab("http://example.com/", async browser => {
+  await BrowserTestUtils.withNewTab("http://example.com/", async () => {
     let identityMode = window.document.getElementById("identity-box").className;
     is(
       identityMode,

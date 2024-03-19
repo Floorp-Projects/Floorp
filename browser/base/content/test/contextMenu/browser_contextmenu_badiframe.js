@@ -30,7 +30,7 @@ async function openTestPage() {
   let pageAndIframesLoaded = BrowserTestUtils.browserLoaded(
     browser,
     true /* includeSubFrames */,
-    url => {
+    () => {
       expectedLoads--;
       return !expectedLoads;
     },

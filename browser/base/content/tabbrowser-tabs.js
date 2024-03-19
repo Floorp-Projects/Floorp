@@ -143,7 +143,7 @@
       this.configureTooltip();
     }
 
-    on_TabSelect(event) {
+    on_TabSelect() {
       this._handleTabSelect();
     }
 
@@ -1206,7 +1206,7 @@
       };
     }
 
-    observe(aSubject, aTopic, aData) {
+    observe(aSubject, aTopic) {
       switch (aTopic) {
         case "nsPref:changed":
           // This is has to deal with changes in

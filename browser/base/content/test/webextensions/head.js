@@ -302,7 +302,7 @@ function checkNotification(panel, checkIcon, permissions, sideloaded) {
  *
  * @returns {Promise}
  */
-async function testInstallMethod(installFn, telemetryBase) {
+async function testInstallMethod(installFn) {
   const PERMS_XPI = "browser_webext_permissions.xpi";
   const NO_PERMS_XPI = "browser_webext_nopermissions.xpi";
   const ID = "permissions@test.mozilla.org";

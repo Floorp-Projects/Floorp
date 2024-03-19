@@ -31,8 +31,6 @@ class ProtectionCategory {
    * @param {Object} options - Category options.
    * @param {string} options.prefEnabled - ID of pref which controls the
    * category enabled state.
-   * @param {string} [options.l10nId] - Identifier l10n strings are keyed under
-   * for this category. Defaults to protection ID.
    * @param {Object} flags - Flags for this category to look for in the content
    * blocking event and content blocking log.
    * @param {Number} [flags.load] - Load flag for this protection category. If
@@ -49,7 +47,7 @@ class ProtectionCategory {
    */
   constructor(
     id,
-    { prefEnabled, l10nId },
+    { prefEnabled },
     {
       load,
       block,
@@ -416,7 +414,6 @@ let TrackingProtection =
       super(
         "trackers",
         {
-          l10nId: "trackingContent",
           prefEnabled: "privacy.trackingprotection.enabled",
         },
         {
@@ -1065,7 +1062,6 @@ let SocialTracking =
       super(
         "socialblock",
         {
-          l10nId: "socialMediaTrackers",
           prefEnabled: "privacy.socialtracking.block_cookies.enabled",
         },
         {
@@ -1641,42 +1637,42 @@ var gProtectionsHandler = {
     );
   },
 
-  async showTrackersSubview(event) {
+  async showTrackersSubview() {
     await TrackingProtection.updateSubView();
     this._protectionsPopupMultiView.showSubView(
       "protections-popup-trackersView"
     );
   },
 
-  async showSocialblockerSubview(event) {
+  async showSocialblockerSubview() {
     await SocialTracking.updateSubView();
     this._protectionsPopupMultiView.showSubView(
       "protections-popup-socialblockView"
     );
   },
 
-  async showCookiesSubview(event) {
+  async showCookiesSubview() {
     await ThirdPartyCookies.updateSubView();
     this._protectionsPopupMultiView.showSubView(
       "protections-popup-cookiesView"
     );
   },
 
-  async showFingerprintersSubview(event) {
+  async showFingerprintersSubview() {
     await Fingerprinting.updateSubView();
     this._protectionsPopupMultiView.showSubView(
       "protections-popup-fingerprintersView"
     );
   },
 
-  async showCryptominersSubview(event) {
+  async showCryptominersSubview() {
     await Cryptomining.updateSubView();
     this._protectionsPopupMultiView.showSubView(
       "protections-popup-cryptominersView"
     );
   },
 
-  async onCookieBannerClick(event) {
+  async onCookieBannerClick() {
     if (!cookieBannerHandling.isSiteSupported) {
       return;
     }
@@ -2055,7 +2051,7 @@ var gProtectionsHandler = {
     }
   },
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     switch (topic) {
       case "browser:purge-session-history":
         // We need to update the earliest recorded date if history has been
@@ -2206,7 +2202,7 @@ var gProtectionsHandler = {
     }
   },
 
-  async onTPSwitchCommand(event) {
+  async onTPSwitchCommand() {
     // When the switch is clicked, we wait 500ms and then disable/enable
     // protections, causing the page to refresh, and close the popup.
     // We need to ensure we don't handle more clicks during the 500ms delay,

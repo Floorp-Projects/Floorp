@@ -397,7 +397,7 @@ add_task(async function testCookiesSubViewAllowedHeuristic() {
   let popup;
   let windowCreated = TestUtils.topicObserved(
     "chrome-document-global-created",
-    (subject, data) => {
+    subject => {
       popup = subject;
       return true;
     }

@@ -255,7 +255,7 @@ function rgbaToString(parsedColor) {
   return `rgba(${r}, ${g}, ${b}, ${a})`;
 }
 
-function testOptionColors(test, index, item, menulist) {
+function testOptionColors(test, index, item) {
   // The label contains a JSON string of the expected colors for
   // `color` and `background-color`.
   let expected = JSON.parse(item.label);

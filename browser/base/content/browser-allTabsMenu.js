@@ -58,7 +58,7 @@ var gTabsPanel = {
       dropIndicator: this.dropIndicator,
     });
 
-    this.allTabsView.addEventListener("ViewShowing", e => {
+    this.allTabsView.addEventListener("ViewShowing", () => {
       PanelUI._ensureShortcutsShown(this.allTabsView);
 
       let containersEnabled =
@@ -74,7 +74,7 @@ var gTabsPanel = {
         !hasHiddenTabs;
     });
 
-    this.allTabsView.addEventListener("ViewShown", e =>
+    this.allTabsView.addEventListener("ViewShown", () =>
       this.allTabsView
         .querySelector(".all-tabs-item[selected]")
         ?.scrollIntoView({ block: "center" })
@@ -170,7 +170,7 @@ var gTabsPanel = {
     }
     this.allTabsView.addEventListener(
       "ViewShown",
-      e => {
+      () => {
         PanelUI.showSubView(
           this.kElements.hiddenTabsView,
           this.hiddenTabsButton

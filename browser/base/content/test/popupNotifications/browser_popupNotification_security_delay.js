@@ -227,7 +227,7 @@ add_task(async function test_notificationReshowTabSwitch() {
   let panelShownPromise;
 
   info("Open a new tab which hides the notification panel.");
-  await BrowserTestUtils.withNewTab("https://example.com", async browser => {
+  await BrowserTestUtils.withNewTab("https://example.com", async () => {
     info("Wait for panel to be hidden by tab switch.");
     await panelHiddenPromise;
     info(

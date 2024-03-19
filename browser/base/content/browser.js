@@ -546,7 +546,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "gFxaToolbarAccessed",
   "identity.fxaccounts.toolbar.accessed",
   false,
-  (aPref, aOldVal, aNewVal) => {
+  () => {
     updateFxaToolbarMenu(gFxaToolbarEnabled);
   }
 );
@@ -1019,7 +1019,7 @@ const gClickAndHoldListenersOnElement = {
 };
 
 const gSessionHistoryObserver = {
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     if (topic != "browser:purge-session-history") {
       return;
     }
@@ -1037,7 +1037,7 @@ const gSessionHistoryObserver = {
 const gStoragePressureObserver = {
   _lastNotificationTime: -1,
 
-  async observe(subject, topic, data) {
+  async observe(subject, topic) {
     if (topic != "QuotaManager::StoragePressure") {
       return;
     }
@@ -1088,7 +1088,7 @@ const gStoragePressureObserver = {
       document.l10n.setAttributes(message, "space-alert-over-5gb-message2");
       buttons.push({
         "l10n-id": "space-alert-over-5gb-settings-button",
-        callback(notificationBar, button) {
+        callback() {
           // The advanced subpanes are only supported in the old organization, which will
           // be removed by bug 1349689.
           openPreferences("privacy-sitedata");
@@ -1475,7 +1475,7 @@ var gKeywordURIFixup = {
     );
   },
 
-  observe(fixupInfo, topic, data) {
+  observe(fixupInfo) {
     fixupInfo.QueryInterface(Ci.nsIURIFixupInfo);
 
     let browser = fixupInfo.consumer?.top?.embedderElement;
@@ -4053,7 +4053,7 @@ const BrowserSearch = {
         win.BrowserSearch.webSearch();
       } else {
         // If there are no open browser windows, open a new one
-        var observer = function (subject, topic, data) {
+        var observer = function (subject) {
           if (subject == win) {
             BrowserSearch.webSearch();
             Services.obs.removeObserver(
@@ -5037,7 +5037,7 @@ var XULBrowserWindow = {
     this.setOverLink("", { hideStatusPanelImmediately: true });
   },
 
-  showTooltip(xDevPix, yDevPix, tooltip, direction, browser) {
+  showTooltip(xDevPix, yDevPix, tooltip, direction, _browser) {
     if (
       Cc["@mozilla.org/widget/dragservice;1"]
         .getService(Ci.nsIDragService)
@@ -5070,14 +5070,7 @@ var XULBrowserWindow = {
     return gBrowser.tabs.length;
   },
 
-  onProgressChange(
-    aWebProgress,
-    aRequest,
-    aCurSelfProgress,
-    aMaxSelfProgress,
-    aCurTotalProgress,
-    aMaxTotalProgress
-  ) {
+  onProgressChange() {
     // Do nothing.
   },
 
@@ -5576,7 +5569,7 @@ var XULBrowserWindow = {
   //  2. Called by tabbrowser.xml when updating the current browser.
   //  3. Called directly during this object's initializations.
   // aRequest will be null always in case 2 and 3, and sometimes in case 1.
-  onSecurityChange(aWebProgress, aRequest, aState, aIsSimulated) {
+  onSecurityChange(aWebProgress, aRequest, aState, _aIsSimulated) {
     // Don't need to do anything if the data we use to update the UI hasn't
     // changed
     let uri = gBrowser.currentURI;
@@ -5619,7 +5612,7 @@ var XULBrowserWindow = {
     aStateFlags,
     aStatus,
     aMessage,
-    aTotalProgress
+    _aTotalProgress
   ) {
     if (FullZoom.updateBackgroundTabs) {
       FullZoom.onLocationChange(gBrowser.currentURI, true);
@@ -7467,7 +7460,7 @@ var BrowserOffline = {
   },
 
   // nsIObserver
-  observe(aSubject, aTopic, aState) {
+  observe(aSubject, aTopic) {
     if (aTopic != "network:offline-status-changed") {
       return;
     }
@@ -7815,7 +7808,7 @@ var WebAuthnPromptHelper = {
       secondaryActions.push({
         label,
         accessKey: i.toString(),
-        callback(aState) {
+        callback() {
           mgr.selectionCallback(tid, i);
         },
       });
@@ -8220,7 +8213,7 @@ function BrowserOpenAddonsMgr(aView, { selectTabByViewId = false } = {}) {
     let emWindow;
     let browserWindow;
 
-    var receivePong = function (aSubject, aTopic, aData) {
+    var receivePong = function (aSubject) {
       let browserWin = aSubject.browsingContext.topChromeWindow;
       if (!emWindow || browserWin == window /* favor the current window */) {
         if (
@@ -8262,7 +8255,7 @@ function BrowserOpenAddonsMgr(aView, { selectTabByViewId = false } = {}) {
       switchToTabHavingURI("about:addons", true);
     }
 
-    Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
+    Services.obs.addObserver(function observer(aSubject, aTopic) {
       Services.obs.removeObserver(observer, aTopic);
       if (aView) {
         aSubject.loadView(aView);
@@ -8449,7 +8442,7 @@ function ReportSiteIssue() {
  * and when the "remote-listening" system notification fires.
  */
 const gRemoteControl = {
-  observe(subject, topic, data) {
+  observe() {
     gRemoteControl.updateVisualCue();
   },
 

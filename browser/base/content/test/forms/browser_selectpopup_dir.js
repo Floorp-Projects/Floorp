@@ -13,7 +13,7 @@ add_task(async function () {
       gBrowser,
       url,
     },
-    async function (browser) {
+    async function () {
       let popup = await openSelectPopup("click");
       is(popup.style.direction, "rtl", "Should be the right dir");
     }

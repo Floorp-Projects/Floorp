@@ -12,7 +12,7 @@ const kDevPanelID = "PanelUI-developer-tools";
 function waitForLocationChange() {
   let promise = new Promise(resolve => {
     let wpl = {
-      onLocationChange(aWebProgress, aRequest, aLocation) {
+      onLocationChange() {
         gBrowser.removeProgressListener(wpl);
         resolve();
       },
@@ -213,31 +213,23 @@ add_task(async function testSidebarsButtonPress() {
 // This is an image with a click handler on its parent and no command handler,
 // but the toolbar keyboard navigation code should handle keyboard activation.
 add_task(async function testBookmarkButtonPress() {
-  await BrowserTestUtils.withNewTab(
-    "https://example.com",
-    async function (aBrowser) {
-      let button = document.getElementById("star-button-box");
-      StarUI._createPanelIfNeeded();
-      let panel = document.getElementById("editBookmarkPanel");
-      let focused = BrowserTestUtils.waitForEvent(panel, "focus", true);
-      // The button ignores activation while the bookmarked status is being
-      // updated. So, wait for it to finish updating.
-      await TestUtils.waitForCondition(
-        () => BookmarkingUI.status != BookmarkingUI.STATUS_UPDATING
-      );
-      await focusAndActivateElement(button, () =>
-        EventUtils.synthesizeKey(" ")
-      );
-      await focused;
-      ok(
-        true,
-        "Focus inside edit bookmark panel after Bookmark button pressed"
-      );
-      let hidden = BrowserTestUtils.waitForEvent(panel, "popuphidden");
-      EventUtils.synthesizeKey("KEY_Escape");
-      await hidden;
-    }
-  );
+  await BrowserTestUtils.withNewTab("https://example.com", async function () {
+    let button = document.getElementById("star-button-box");
+    StarUI._createPanelIfNeeded();
+    let panel = document.getElementById("editBookmarkPanel");
+    let focused = BrowserTestUtils.waitForEvent(panel, "focus", true);
+    // The button ignores activation while the bookmarked status is being
+    // updated. So, wait for it to finish updating.
+    await TestUtils.waitForCondition(
+      () => BookmarkingUI.status != BookmarkingUI.STATUS_UPDATING
+    );
+    await focusAndActivateElement(button, () => EventUtils.synthesizeKey(" "));
+    await focused;
+    ok(true, "Focus inside edit bookmark panel after Bookmark button pressed");
+    let hidden = BrowserTestUtils.waitForEvent(panel, "popuphidden");
+    EventUtils.synthesizeKey("KEY_Escape");
+    await hidden;
+  });
 });
 
 // Test activation of the Bookmarks Menu button from the keyboard.
@@ -302,33 +294,24 @@ add_task(async function testDownloadsButtonPress() {
 // with a browser element to embed the pocket UI into it.
 // The Pocket panel should appear and focus should move inside it.
 add_task(async function testPocketButtonPress() {
-  await BrowserTestUtils.withNewTab(
-    "https://example.com",
-    async function (aBrowser) {
-      let button = document.getElementById("save-to-pocket-button");
-      // The panel is created on the fly, so we can't simply wait for focus
-      // inside it.
-      let showing = BrowserTestUtils.waitForEvent(
-        document,
-        "popupshowing",
-        true
-      );
-      await focusAndActivateElement(button, () =>
-        EventUtils.synthesizeKey(" ")
-      );
-      let event = await showing;
-      let panel = event.target;
-      is(panel.id, "customizationui-widget-panel");
-      let focused = BrowserTestUtils.waitForEvent(panel, "focus", true);
-      await focused;
-      is(
-        document.activeElement.tagName,
-        "browser",
-        "Focus inside Pocket panel after Bookmark button pressed"
-      );
-      let hidden = BrowserTestUtils.waitForEvent(panel, "popuphidden");
-      EventUtils.synthesizeKey("KEY_Escape");
-      await hidden;
-    }
-  );
+  await BrowserTestUtils.withNewTab("https://example.com", async function () {
+    let button = document.getElementById("save-to-pocket-button");
+    // The panel is created on the fly, so we can't simply wait for focus
+    // inside it.
+    let showing = BrowserTestUtils.waitForEvent(document, "popupshowing", true);
+    await focusAndActivateElement(button, () => EventUtils.synthesizeKey(" "));
+    let event = await showing;
+    let panel = event.target;
+    is(panel.id, "customizationui-widget-panel");
+    let focused = BrowserTestUtils.waitForEvent(panel, "focus", true);
+    await focused;
+    is(
+      document.activeElement.tagName,
+      "browser",
+      "Focus inside Pocket panel after Bookmark button pressed"
+    );
+    let hidden = BrowserTestUtils.waitForEvent(panel, "popuphidden");
+    EventUtils.synthesizeKey("KEY_Escape");
+    await hidden;
+  });
 });

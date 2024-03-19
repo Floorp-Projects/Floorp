@@ -1184,7 +1184,7 @@ PageActions._initBuiltInActions = function () {
         browserPageActions(buttonNode).bookmark.onShowingInPanel(buttonNode);
       },
       onCommand(event, buttonNode) {
-        browserPageActions(buttonNode).bookmark.onCommand(event, buttonNode);
+        browserPageActions(buttonNode).bookmark.onCommand(event);
       },
     },
   ];

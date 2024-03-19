@@ -20,7 +20,7 @@ add_task(async function () {
 
   gURLBar.addEventListener(
     "keydown",
-    function (event) {
+    function () {
       gBrowser.selectedBrowser.focus();
     },
     { capture: true, once: true }

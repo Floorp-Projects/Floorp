@@ -43,7 +43,7 @@ var tests = [
       );
       dismissNotification(popup);
     },
-    onHidden(popup) {
+    onHidden() {
       this.notification.remove();
       gBrowser.removeTab(gBrowser.selectedTab);
       gBrowser.selectedTab = this.oldSelectedTab;
@@ -85,7 +85,7 @@ var tests = [
       );
       dismissNotification(popup);
     },
-    onHidden(popup) {
+    onHidden() {
       this.notification.remove();
       gBrowser.removeTab(gBrowser.selectedTab);
       gBrowser.selectedTab = this.oldSelectedTab;
@@ -135,7 +135,7 @@ var tests = [
       checkPopup(popup, this.notifyObj);
       dismissNotification(popup);
     },
-    onHidden(popup) {
+    onHidden() {
       this.notification.remove();
       gBrowser.removeTab(gBrowser.selectedTab);
       gBrowser.selectedTab = this.oldSelectedTab;

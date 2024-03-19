@@ -37,7 +37,7 @@ const TEST_MODULES = [
 function AboutModule() {}
 
 AboutModule.prototype = {
-  newChannel(aURI, aLoadInfo) {
+  newChannel() {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
 
@@ -52,7 +52,7 @@ AboutModule.prototype = {
     return 0;
   },
 
-  getIndexedDBOriginPostfix(aURI) {
+  getIndexedDBOriginPostfix() {
     return null;
   },
 

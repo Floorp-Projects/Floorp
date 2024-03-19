@@ -53,7 +53,7 @@ add_task(async function () {
     {
       expectedReflows: EXPECTED_REFLOWS,
       frames: {
-        filter(rects, frame, previousFrame) {
+        filter(rects, frame) {
           // Ignore the focus-out animation.
           if (isLikelyFocusChange(rects, frame)) {
             return [];

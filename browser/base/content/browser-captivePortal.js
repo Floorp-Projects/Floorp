@@ -95,7 +95,7 @@ var CaptivePortalWatcher = {
     }
   },
 
-  observe(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic) {
     switch (aTopic) {
       case "captive-portal-login":
         this._captivePortalDetected();

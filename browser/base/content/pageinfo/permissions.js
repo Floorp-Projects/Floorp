@@ -28,7 +28,7 @@ let gPermissions = SitePermissions.listPermissions()
   });
 
 var permissionObserver = {
-  observe(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic) {
     if (aTopic == "perm-changed") {
       var permission = aSubject.QueryInterface(Ci.nsIPermission);
       if (

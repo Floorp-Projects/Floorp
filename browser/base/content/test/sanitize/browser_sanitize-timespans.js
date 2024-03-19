@@ -20,7 +20,7 @@ function promiseFormHistoryRemoved() {
 function promiseDownloadRemoved(list) {
   return new Promise(resolve => {
     let view = {
-      onDownloadRemoved(download) {
+      onDownloadRemoved() {
         list.removeView(view);
         resolve();
       },

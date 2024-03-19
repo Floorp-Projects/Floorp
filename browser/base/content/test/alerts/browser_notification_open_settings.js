@@ -14,7 +14,7 @@ add_task(async function test_settingsOpen_observer() {
       gBrowser,
       url: "about:robots",
     },
-    async function dummyTabTask(aBrowser) {
+    async function dummyTabTask() {
       // Ensure preferences is loaded before removing the tab.
       let syncPaneLoadedPromise = TestUtils.topicObserved(
         "sync-pane-loaded",

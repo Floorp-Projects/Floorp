@@ -457,7 +457,7 @@
       }
     }
 
-    on_mouseup(event) {
+    on_mouseup() {
       // Make sure that clear-selection is released.
       // Otherwise selection using Shift key may be broken.
       gBrowser.unlockClearMultiSelection();
@@ -706,11 +706,11 @@
       this.setAttribute("aria-describedby", "tabbrowser-tab-a11y-desc");
     }
 
-    on_focus(event) {
+    on_focus() {
       this.updateA11yDescription();
     }
 
-    on_AriaFocus(event) {
+    on_AriaFocus() {
       this.updateA11yDescription();
     }
   }

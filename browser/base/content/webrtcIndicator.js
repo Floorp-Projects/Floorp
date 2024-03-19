@@ -47,7 +47,7 @@ function closingInternally() {
  * Main control object for the WebRTC global indicator
  */
 const WebRTCIndicator = {
-  init(event) {
+  init() {
     addEventListener("load", this);
     addEventListener("unload", this);
 

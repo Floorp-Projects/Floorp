@@ -66,7 +66,7 @@ add_task(async function normal_page__foreground__abort() {
       tab: WAIT_A_BIT_LOADING_TITLE,
       urlbar: UrlbarTestUtils.trimURL(WAIT_A_BIT_URL),
     },
-    async actionWhileLoading(onTabLoaded) {
+    async actionWhileLoading() {
       info("Abort loading");
       document.getElementById("stop-button").click();
     },
@@ -160,7 +160,7 @@ add_task(async function normal_page__background__abort() {
       tab: WAIT_A_BIT_LOADING_TITLE,
       urlbar: UrlbarTestUtils.trimURL(HOME_URL),
     },
-    async actionWhileLoading(onTabLoaded) {
+    async actionWhileLoading() {
       info("Abort loading");
       document.getElementById("stop-button").click();
     },

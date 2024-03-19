@@ -33,7 +33,7 @@ add_task(async function test_ensure_truncation() {
 
   let fileReader = new FileReader();
   const DATA_URL = await new Promise(resolve => {
-    fileReader.addEventListener("load", e => resolve(fileReader.result));
+    fileReader.addEventListener("load", () => resolve(fileReader.result));
     fileReader.readAsDataURL(new Blob([MOBY], { type: "text/html" }));
   });
   // Substring the full URL to avoid log clutter because Assert will print

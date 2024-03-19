@@ -71,7 +71,7 @@ async function testHandlingUserInputOnChange(aTriggerFn) {
 
 // This test checks if the change/click event is considered as user input event.
 add_task(async function test_handling_user_input_key() {
-  return testHandlingUserInputOnChange(async function (popup) {
+  return testHandlingUserInputOnChange(async function () {
     EventUtils.synthesizeKey("KEY_ArrowDown");
     await hideSelectPopup();
   });

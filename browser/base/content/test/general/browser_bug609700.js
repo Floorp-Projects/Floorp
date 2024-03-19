@@ -1,11 +1,7 @@
 function test() {
   waitForExplicitFinish();
 
-  Services.ww.registerNotification(function notification(
-    aSubject,
-    aTopic,
-    aData
-  ) {
+  Services.ww.registerNotification(function notification(aSubject, aTopic) {
     if (aTopic == "domwindowopened") {
       Services.ww.unregisterNotification(notification);
 

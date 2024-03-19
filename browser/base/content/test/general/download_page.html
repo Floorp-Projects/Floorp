@@ -64,7 +64,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=676619
               "wrong-file-name", {type: "application/x-some-file"}));
         document.getElementById("link7").href = fileURL;
 
-        window.addEventListener("beforeunload", function(evt) {
+        window.addEventListener("beforeunload", function() {
             document.getElementById("unload-flag").textContent = "Fail";
         });
     </script>

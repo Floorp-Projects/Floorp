@@ -16,7 +16,7 @@ export class StartupContentSubframeParent extends JSWindowActorParent {
 }
 
 export class StartupContentSubframeChild extends JSWindowActorChild {
-  async handleEvent(event) {
+  async handleEvent() {
     // When the remote subframe is loaded, an event will be fired to this actor,
     // which will cause us to send the `LoadedScripts` message to the parent
     // process.

@@ -86,7 +86,7 @@ add_task(async function test_principal_ctrl_click() {
 
   await BrowserTestUtils.withNewTab(
     "about:test-about-principal-parent",
-    async function (browser) {
+    async function () {
       let loadPromise = BrowserTestUtils.waitForNewTab(
         gBrowser,
         "about:test-about-principal-child",
@@ -149,7 +149,7 @@ add_task(async function test_principal_right_click_open_link_in_new_tab() {
 
   await BrowserTestUtils.withNewTab(
     "about:test-about-principal-parent",
-    async function (browser) {
+    async function () {
       let loadPromise = BrowserTestUtils.waitForNewTab(
         gBrowser,
         "about:test-about-principal-child",

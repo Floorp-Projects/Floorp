@@ -50,7 +50,7 @@ add_task(async function () {
   );
   let browser = tab.linkedBrowser;
 
-  let resultPromise = SpecialPowers.spawn(browser, [], function (arg) {
+  let resultPromise = SpecialPowers.spawn(browser, [], function () {
     return new Promise(resolve => {
       content.document.addEventListener("testresult", event => {
         resolve(event.detail.result);
@@ -73,7 +73,7 @@ add_task(async function () {
   document.documentElement.appendChild(input);
   input.focus();
 
-  await new Promise((resolve, reject) => {
+  await new Promise(resolve => {
     input.addEventListener(
       "paste",
       function (event) {
