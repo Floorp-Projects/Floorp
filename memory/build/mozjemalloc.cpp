@@ -2590,29 +2590,27 @@ static inline void arena_run_reg_dalloc(arena_run_t* run, arena_bin_t* bin,
 
 bool arena_t::SplitRun(arena_run_t* aRun, size_t aSize, bool aLarge,
                        bool aZero) {
-  arena_chunk_t* chunk;
-  size_t old_ndirty, run_ind, total_pages, need_pages, rem_pages, i;
-
-  chunk = GetChunkForPtr(aRun);
-  old_ndirty = chunk->ndirty;
-  run_ind = (unsigned)((uintptr_t(aRun) - uintptr_t(chunk)) >> gPageSize2Pow);
-  total_pages = (chunk->map[run_ind].bits & ~gPageSizeMask) >> gPageSize2Pow;
-  need_pages = (aSize >> gPageSize2Pow);
+  arena_chunk_t* chunk = GetChunkForPtr(aRun);
+  size_t old_ndirty = chunk->ndirty;
+  size_t run_ind =
+      (unsigned)((uintptr_t(aRun) - uintptr_t(chunk)) >> gPageSize2Pow);
+  size_t total_pages =
+      (chunk->map[run_ind].bits & ~gPageSizeMask) >> gPageSize2Pow;
+  size_t need_pages = (aSize >> gPageSize2Pow);
   MOZ_ASSERT(need_pages > 0);
   MOZ_ASSERT(need_pages <= total_pages);
-  rem_pages = total_pages - need_pages;
+  size_t rem_pages = total_pages - need_pages;
 
-  for (i = 0; i < need_pages; i++) {
+  for (size_t i = 0; i < need_pages; i++) {
     // Commit decommitted pages if necessary.  If a decommitted
     // page is encountered, commit all needed adjacent decommitted
     // pages in one operation, in order to reduce system call
     // overhead.
     if (chunk->map[run_ind + i].bits & CHUNK_MAP_MADVISED_OR_DECOMMITTED) {
-      size_t j;
-
       // Advance i+j to just past the index of the last page
       // to commit.  Clear CHUNK_MAP_DECOMMITTED and
       // CHUNK_MAP_MADVISED along the way.
+      size_t j;
       for (j = 0; i + j < need_pages && (chunk->map[run_ind + i + j].bits &
                                          CHUNK_MAP_MADVISED_OR_DECOMMITTED);
            j++) {
@@ -2655,7 +2653,7 @@ bool arena_t::SplitRun(arena_run_t* aRun, size_t aSize, bool aLarge,
     mRunsAvail.Insert(&chunk->map[run_ind + need_pages]);
   }
 
-  for (i = 0; i < need_pages; i++) {
+  for (size_t i = 0; i < need_pages; i++) {
     // Zero if necessary.
     if (aZero) {
       if ((chunk->map[run_ind + i].bits & CHUNK_MAP_ZEROED) == 0) {
