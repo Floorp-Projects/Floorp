@@ -109,7 +109,7 @@ class PeerConnectionFactory : public PeerConnectionFactoryInterface {
   }
 
   const FieldTrialsView& field_trials() const {
-    return context_->field_trials();
+    return context_->env().field_trials();
   }
 
   cricket::MediaEngineInterface* media_engine() const;
@@ -147,7 +147,8 @@ class PeerConnectionFactory : public PeerConnectionFactoryInterface {
   std::unique_ptr<NetEqFactory> neteq_factory_;
   const std::unique_ptr<RtpTransportControllerSendFactoryInterface>
       transport_controller_send_factory_;
-  std::unique_ptr<Metronome> metronome_ RTC_GUARDED_BY(worker_thread());
+  std::unique_ptr<Metronome> decode_metronome_ RTC_GUARDED_BY(worker_thread());
+  std::unique_ptr<Metronome> encode_metronome_ RTC_GUARDED_BY(worker_thread());
 };
 
 }  // namespace webrtc

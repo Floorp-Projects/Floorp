@@ -27,8 +27,6 @@
 
 namespace cricket {
 
-using CodecParameterMap = std::map<std::string, std::string>;
-
 class FeedbackParam {
  public:
   FeedbackParam() = default;
@@ -98,9 +96,12 @@ struct RTC_EXPORT Codec {
   absl::InlinedVector<webrtc::ScalabilityMode, webrtc::kScalabilityModeCount>
       scalability_modes;
 
+  // H.265 only
+  absl::optional<std::string> tx_mode;
+
   // Non key-value parameters such as the telephone-event "0‐15" are
   // represented using an empty string as key, i.e. {"": "0-15"}.
-  CodecParameterMap params;
+  webrtc::CodecParameterMap params;
   FeedbackParams feedback_params;
 
   Codec(const Codec& c);
@@ -110,7 +111,9 @@ struct RTC_EXPORT Codec {
 
   // Indicates if this codec is compatible with the specified codec by
   // checking the assigned id and profile values for the relevant video codecs.
-  // H264 levels are not compared.
+  // For H.264, packetization modes will be compared; If H.265 is enabled,
+  // TxModes will be compared.
+  // H.264(and H.265, if enabled) levels are not compared.
   bool Matches(const Codec& codec) const;
   bool MatchesRtpCodec(const webrtc::RtpCodec& capability) const;
 

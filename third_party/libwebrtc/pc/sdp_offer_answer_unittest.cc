@@ -1005,6 +1005,53 @@ TEST_F(SdpOfferAnswerTest, SdpMungingWithInvalidPayloadTypeIsRejected) {
   }
 }
 
+TEST_F(SdpOfferAnswerTest, MsidSignalingInSubsequentOfferAnswer) {
+  auto pc = CreatePeerConnection();
+  pc->AddAudioTrack("audio_track", {});
+
+  std::string sdp =
+      "v=0\r\n"
+      "o=- 0 3 IN IP4 127.0.0.1\r\n"
+      "s=-\r\n"
+      "t=0 0\r\n"
+      "a=msid-semantic: WMS\r\n"
+      "a=fingerprint:sha-1 "
+      "4A:AD:B9:B1:3F:82:18:3B:54:02:12:DF:3E:5D:49:6B:19:E5:7C:AB\r\n"
+      "a=setup:actpass\r\n"
+      "a=ice-ufrag:ETEn\r\n"
+      "a=ice-pwd:OtSK0WpNtpUjkY4+86js7Z/l\r\n"
+      "m=audio 9 UDP/TLS/RTP/SAVPF 111\r\n"
+      "c=IN IP4 0.0.0.0\r\n"
+      "a=rtcp:9 IN IP4 0.0.0.0\r\n"
+      "a=recvonly\r\n"
+      "a=rtcp-mux\r\n"
+      "a=rtpmap:111 opus/48000/2\r\n";
+
+  auto offer = CreateSessionDescription(SdpType::kOffer, sdp);
+  EXPECT_TRUE(pc->SetRemoteDescription(std::move(offer)));
+
+  // Check the generated SDP.
+  auto answer = pc->CreateAnswer();
+  answer->ToString(&sdp);
+  EXPECT_NE(std::string::npos, sdp.find("a=msid:- audio_track\r\n"));
+
+  EXPECT_TRUE(pc->SetLocalDescription(std::move(answer)));
+
+  // Check the local description object.
+  auto local_description = pc->pc()->local_description();
+  ASSERT_EQ(local_description->description()->contents().size(), 1u);
+  auto streams = local_description->description()
+                     ->contents()[0]
+                     .media_description()
+                     ->streams();
+  ASSERT_EQ(streams.size(), 1u);
+  EXPECT_EQ(streams[0].id, "audio_track");
+
+  // Check the serialization of the local description.
+  local_description->ToString(&sdp);
+  EXPECT_NE(std::string::npos, sdp.find("a=msid:- audio_track\r\n"));
+}
+
 // Test variant with boolean order for audio-video and video-audio.
 class SdpOfferAnswerShuffleMediaTypes
     : public SdpOfferAnswerTest,
@@ -1095,5 +1142,77 @@ TEST_P(SdpOfferAnswerShuffleMediaTypes,
 INSTANTIATE_TEST_SUITE_P(SdpOfferAnswerShuffleMediaTypes,
                          SdpOfferAnswerShuffleMediaTypes,
                          ::testing::Values(true, false));
+
+TEST_F(SdpOfferAnswerTest, OfferWithNoCompatibleCodecsIsRejectedInAnswer) {
+  auto pc = CreatePeerConnection();
+  // An offer with no common codecs. This should reject both contents
+  // in the answer without throwing an error.
+  std::string sdp =
+      "v=0\r\n"
+      "o=- 0 3 IN IP4 127.0.0.1\r\n"
+      "s=-\r\n"
+      "t=0 0\r\n"
+      "a=fingerprint:sha-1 "
+      "4A:AD:B9:B1:3F:82:18:3B:54:02:12:DF:3E:5D:49:6B:19:E5:7C:AB\r\n"
+      "a=setup:actpass\r\n"
+      "a=ice-ufrag:ETEn\r\n"
+      "a=ice-pwd:OtSK0WpNtpUjkY4+86js7Z/l\r\n"
+      "m=audio 9 RTP/SAVPF 97\r\n"
+      "c=IN IP4 0.0.0.0\r\n"
+      "a=sendrecv\r\n"
+      "a=rtpmap:97 x-unknown/90000\r\n"
+      "a=rtcp-mux\r\n"
+      "m=video 9 RTP/SAVPF 98\r\n"
+      "c=IN IP4 0.0.0.0\r\n"
+      "a=sendrecv\r\n"
+      "a=rtpmap:98 H263-1998/90000\r\n"
+      "a=fmtp:98 CIF=1;QCIF=1\r\n"
+      "a=rtcp-mux\r\n";
+
+  auto desc = CreateSessionDescription(SdpType::kOffer, sdp);
+  ASSERT_NE(desc, nullptr);
+  RTCError error;
+  pc->SetRemoteDescription(std::move(desc), &error);
+  EXPECT_TRUE(error.ok());
+
+  auto answer = pc->CreateAnswer();
+  auto answer_contents = answer->description()->contents();
+  ASSERT_EQ(answer_contents.size(), 2u);
+  EXPECT_EQ(answer_contents[0].rejected, true);
+  EXPECT_EQ(answer_contents[1].rejected, true);
+}
+
+TEST_F(SdpOfferAnswerTest,
+       OfferWithNoMsidSemanticYieldsAnswerWithoutMsidSemantic) {
+  auto pc = CreatePeerConnection();
+  // An offer with no msid-semantic line. The answer should not add one.
+  std::string sdp =
+      "v=0\r\n"
+      "o=- 0 3 IN IP4 127.0.0.1\r\n"
+      "s=-\r\n"
+      "t=0 0\r\n"
+      "a=fingerprint:sha-1 "
+      "4A:AD:B9:B1:3F:82:18:3B:54:02:12:DF:3E:5D:49:6B:19:E5:7C:AB\r\n"
+      "a=setup:actpass\r\n"
+      "a=ice-ufrag:ETEn\r\n"
+      "a=ice-pwd:OtSK0WpNtpUjkY4+86js7Z/l\r\n"
+      "m=audio 9 RTP/SAVPF 111\r\n"
+      "c=IN IP4 0.0.0.0\r\n"
+      "a=sendrecv\r\n"
+      "a=rtpmap:111 opus/48000/2\r\n"
+      "a=rtcp-mux\r\n";
+
+  auto desc = CreateSessionDescription(SdpType::kOffer, sdp);
+  ASSERT_NE(desc, nullptr);
+  EXPECT_EQ(desc->description()->msid_signaling(),
+            cricket::kMsidSignalingNotUsed);
+  RTCError error;
+  pc->SetRemoteDescription(std::move(desc), &error);
+  EXPECT_TRUE(error.ok());
+
+  auto answer = pc->CreateAnswer();
+  EXPECT_EQ(answer->description()->msid_signaling(),
+            cricket::kMsidSignalingNotUsed);
+}
 
 }  // namespace webrtc

@@ -66,6 +66,7 @@ namespace {
 using ::testing::_;
 using ::testing::AllOf;
 using ::testing::ElementsAre;
+using ::testing::ElementsAreArray;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::IsEmpty;
@@ -1559,6 +1560,33 @@ TEST(DcSctpSocketTest, SetMaxMessageSize) {
 
   a.socket.SetMaxMessageSize(42u);
   EXPECT_EQ(a.socket.options().max_message_size, 42u);
+}
+
+TEST_P(DcSctpSocketParametrizedTest, SendManyMessages) {
+  SocketUnderTest a("A");
+  auto z = std::make_unique<SocketUnderTest>("Z");
+
+  ConnectSockets(a, *z);
+  z = MaybeHandoverSocket(std::move(z));
+
+  static constexpr int kIterations = 100;
+  std::vector<DcSctpMessage> messages;
+  std::vector<SendStatus> statuses;
+  for (int i = 0; i < kIterations; ++i) {
+    messages.push_back(DcSctpMessage(StreamID(1), PPID(53), {1, 2}));
+    statuses.push_back(SendStatus::kSuccess);
+  }
+  EXPECT_THAT(a.socket.SendMany(messages, {}), ElementsAreArray(statuses));
+
+  ExchangeMessages(a, *z);
+
+  for (int i = 0; i < kIterations; ++i) {
+    EXPECT_TRUE(z->cb.ConsumeReceivedMessage().has_value());
+  }
+
+  EXPECT_FALSE(z->cb.ConsumeReceivedMessage().has_value());
+
+  MaybeHandoverSocketAndSendMessage(a, std::move(z));
 }
 
 TEST_P(DcSctpSocketParametrizedTest, SendsMessagesWithLowLifetime) {
@@ -3059,6 +3087,150 @@ TEST(DcSctpSocketTest, HandlesForwardTsnOutOfOrderWithStreamResetting) {
               testing::Optional(Property(&DcSctpMessage::ppid, PPID(52))));
   ASSERT_THAT(z.cb.ConsumeReceivedMessage(),
               testing::Optional(Property(&DcSctpMessage::ppid, PPID(53))));
+}
+
+TEST(DcSctpSocketTest, ResentInitHasSameParameters) {
+  // If an INIT chunk has to be resent (due to INIT_ACK not received in time),
+  // the resent INIT must have the same properties as the original one.
+  SocketUnderTest a("A");
+  SocketUnderTest z("Z");
+
+  a.socket.Connect();
+  auto packet_1 = a.cb.ConsumeSentPacket();
+
+  // Times out, INIT is re-sent.
+  AdvanceTime(a, z, a.options.t1_init_timeout.ToTimeDelta());
+  auto packet_2 = a.cb.ConsumeSentPacket();
+
+  ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket init_packet_1,
+                              SctpPacket::Parse(packet_1, z.options));
+  ASSERT_HAS_VALUE_AND_ASSIGN(
+      InitChunk init_chunk_1,
+      InitChunk::Parse(init_packet_1.descriptors()[0].data));
+
+  ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket init_packet_2,
+                              SctpPacket::Parse(packet_2, z.options));
+  ASSERT_HAS_VALUE_AND_ASSIGN(
+      InitChunk init_chunk_2,
+      InitChunk::Parse(init_packet_2.descriptors()[0].data));
+
+  EXPECT_EQ(init_chunk_1.initial_tsn(), init_chunk_2.initial_tsn());
+  EXPECT_EQ(init_chunk_1.initiate_tag(), init_chunk_2.initiate_tag());
+}
+
+TEST(DcSctpSocketTest, ResentInitAckHasDifferentParameters) {
+  // For every INIT, an INIT_ACK is produced. Verify that the socket doesn't
+  // maintain any state by ensuring that two created INIT_ACKs for the same
+  // received INIT are different.
+  SocketUnderTest a("A");
+  SocketUnderTest z("Z");
+
+  a.socket.Connect();
+  auto packet_1 = a.cb.ConsumeSentPacket();
+  EXPECT_THAT(packet_1, HasChunks(ElementsAre(IsChunkType(InitChunk::kType))));
+
+  z.socket.ReceivePacket(packet_1);
+  auto packet_2 = z.cb.ConsumeSentPacket();
+  z.socket.ReceivePacket(packet_1);
+  auto packet_3 = z.cb.ConsumeSentPacket();
+
+  EXPECT_THAT(packet_2,
+              HasChunks(ElementsAre(IsChunkType(InitAckChunk::kType))));
+  EXPECT_THAT(packet_3,
+              HasChunks(ElementsAre(IsChunkType(InitAckChunk::kType))));
+
+  ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket init_ack_packet_1,
+                              SctpPacket::Parse(packet_2, z.options));
+  ASSERT_HAS_VALUE_AND_ASSIGN(
+      InitAckChunk init_ack_chunk_1,
+      InitAckChunk::Parse(init_ack_packet_1.descriptors()[0].data));
+
+  ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket init_ack_packet_2,
+                              SctpPacket::Parse(packet_3, z.options));
+  ASSERT_HAS_VALUE_AND_ASSIGN(
+      InitAckChunk init_ack_chunk_2,
+      InitAckChunk::Parse(init_ack_packet_2.descriptors()[0].data));
+
+  EXPECT_NE(init_ack_chunk_1.initiate_tag(), init_ack_chunk_2.initiate_tag());
+  EXPECT_NE(init_ack_chunk_1.initial_tsn(), init_ack_chunk_2.initial_tsn());
+}
+
+TEST(DcSctpSocketResendInitTest, ConnectionCanContinueFromFirstInitAck) {
+  // If an INIT chunk has to be resent (due to INIT_ACK not received in time),
+  // another INIT will be sent, and if both INITs were actually received, both
+  // will be responded to by an INIT_ACK. While these two INIT_ACKs may have
+  // different parameters, the connection must be able to finish with the cookie
+  // (as replied to using COOKIE_ECHO) from either INIT_ACK.
+  SocketUnderTest a("A");
+  SocketUnderTest z("Z");
+
+  a.socket.Send(DcSctpMessage(StreamID(1), PPID(53),
+                              std::vector<uint8_t>(kLargeMessageSize)),
+                kSendOptions);
+  a.socket.Connect();
+  auto init_1 = a.cb.ConsumeSentPacket();
+
+  // Times out, INIT is re-sent.
+  AdvanceTime(a, z, a.options.t1_init_timeout.ToTimeDelta());
+  auto init_2 = a.cb.ConsumeSentPacket();
+
+  EXPECT_THAT(init_1, HasChunks(ElementsAre(IsChunkType(InitChunk::kType))));
+  EXPECT_THAT(init_2, HasChunks(ElementsAre(IsChunkType(InitChunk::kType))));
+
+  z.socket.ReceivePacket(init_1);
+  z.socket.ReceivePacket(init_2);
+  auto init_ack_1 = z.cb.ConsumeSentPacket();
+  auto init_ack_2 = z.cb.ConsumeSentPacket();
+  EXPECT_THAT(init_ack_1,
+              HasChunks(ElementsAre(IsChunkType(InitAckChunk::kType))));
+  EXPECT_THAT(init_ack_2,
+              HasChunks(ElementsAre(IsChunkType(InitAckChunk::kType))));
+
+  a.socket.ReceivePacket(init_ack_1);
+  // Then let the rest continue.
+  ExchangeMessages(a, z);
+
+  absl::optional<DcSctpMessage> msg = z.cb.ConsumeReceivedMessage();
+  ASSERT_TRUE(msg.has_value());
+  EXPECT_EQ(msg->stream_id(), StreamID(1));
+  EXPECT_THAT(msg->payload(), SizeIs(kLargeMessageSize));
+}
+
+TEST(DcSctpSocketResendInitTest, ConnectionCanContinueFromSecondInitAck) {
+  // Just as above, but discarding the first INIT_ACK.
+  SocketUnderTest a("A");
+  SocketUnderTest z("Z");
+
+  a.socket.Send(DcSctpMessage(StreamID(1), PPID(53),
+                              std::vector<uint8_t>(kLargeMessageSize)),
+                kSendOptions);
+  a.socket.Connect();
+  auto init_1 = a.cb.ConsumeSentPacket();
+
+  // Times out, INIT is re-sent.
+  AdvanceTime(a, z, a.options.t1_init_timeout.ToTimeDelta());
+  auto init_2 = a.cb.ConsumeSentPacket();
+
+  EXPECT_THAT(init_1, HasChunks(ElementsAre(IsChunkType(InitChunk::kType))));
+  EXPECT_THAT(init_2, HasChunks(ElementsAre(IsChunkType(InitChunk::kType))));
+
+  z.socket.ReceivePacket(init_1);
+  z.socket.ReceivePacket(init_2);
+  auto init_ack_1 = z.cb.ConsumeSentPacket();
+  auto init_ack_2 = z.cb.ConsumeSentPacket();
+  EXPECT_THAT(init_ack_1,
+              HasChunks(ElementsAre(IsChunkType(InitAckChunk::kType))));
+  EXPECT_THAT(init_ack_2,
+              HasChunks(ElementsAre(IsChunkType(InitAckChunk::kType))));
+
+  a.socket.ReceivePacket(init_ack_2);
+  // Then let the rest continue.
+  ExchangeMessages(a, z);
+
+  absl::optional<DcSctpMessage> msg = z.cb.ConsumeReceivedMessage();
+  ASSERT_TRUE(msg.has_value());
+  EXPECT_EQ(msg->stream_id(), StreamID(1));
+  EXPECT_THAT(msg->payload(), SizeIs(kLargeMessageSize));
 }
 
 }  // namespace

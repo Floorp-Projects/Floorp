@@ -77,11 +77,6 @@ using cricket::SimulcastLayerList;
 using cricket::StreamParams;
 using cricket::TransportInfo;
 
-using cricket::LOCAL_PORT_TYPE;
-using cricket::PRFLX_PORT_TYPE;
-using cricket::RELAY_PORT_TYPE;
-using cricket::STUN_PORT_TYPE;
-
 namespace webrtc {
 
 namespace {
@@ -2081,24 +2076,16 @@ void SdpOfferAnswerHandler::ApplyRemoteDescription(
   if (operation->unified_plan()) {
     ApplyRemoteDescriptionUpdateTransceiverState(operation->type());
   }
-
-  const cricket::AudioContentDescription* audio_desc =
-      GetFirstAudioContentDescription(remote_description()->description());
-  const cricket::VideoContentDescription* video_desc =
-      GetFirstVideoContentDescription(remote_description()->description());
-
-  // Check if the descriptions include streams, just in case the peer supports
-  // MSID, but doesn't indicate so with "a=msid-semantic".
-  if (remote_description()->description()->msid_supported() ||
-      (audio_desc && !audio_desc->streams().empty()) ||
-      (video_desc && !video_desc->streams().empty())) {
-    remote_peer_supports_msid_ = true;
-  }
+  remote_peer_supports_msid_ =
+      remote_description()->description()->msid_signaling() !=
+      cricket::kMsidSignalingNotUsed;
 
   if (!operation->unified_plan()) {
     PlanBUpdateSendersAndReceivers(
-        GetFirstAudioContent(remote_description()->description()), audio_desc,
-        GetFirstVideoContent(remote_description()->description()), video_desc);
+        GetFirstAudioContent(remote_description()->description()),
+        GetFirstAudioContentDescription(remote_description()->description()),
+        GetFirstVideoContent(remote_description()->description()),
+        GetFirstVideoContentDescription(remote_description()->description()));
   }
 
   if (operation->type() == SdpType::kAnswer) {

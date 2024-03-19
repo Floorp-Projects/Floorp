@@ -368,7 +368,8 @@ NATSocketServer::Translator* NATSocketServer::AddTranslator(
   if (nats_.Get(ext_ip))
     return nullptr;
 
-  return nats_.Add(ext_ip, new Translator(this, type, int_ip, server_, ext_ip));
+  return nats_.Add(
+      ext_ip, new Translator(this, type, int_ip, *msg_queue_, server_, ext_ip));
 }
 
 void NATSocketServer::RemoveTranslator(const SocketAddress& ext_ip) {
@@ -413,6 +414,7 @@ Socket* NATSocketServer::CreateInternalSocket(int family,
 NATSocketServer::Translator::Translator(NATSocketServer* server,
                                         NATType type,
                                         const SocketAddress& int_ip,
+                                        Thread& external_socket_thread,
                                         SocketFactory* ext_factory,
                                         const SocketAddress& ext_ip)
     : server_(server) {
@@ -422,7 +424,8 @@ NATSocketServer::Translator::Translator(NATSocketServer* server,
   internal_server_ = std::make_unique<VirtualSocketServer>();
   internal_server_->SetMessageQueue(server_->queue());
   nat_server_ = std::make_unique<NATServer>(
-      type, internal_server_.get(), int_ip, int_ip, ext_factory, ext_ip);
+      type, *server->queue(), internal_server_.get(), int_ip, int_ip,
+      external_socket_thread, ext_factory, ext_ip);
 }
 
 NATSocketServer::Translator::~Translator() {
@@ -443,8 +446,8 @@ NATSocketServer::Translator* NATSocketServer::Translator::AddTranslator(
     return nullptr;
 
   AddClient(ext_ip);
-  return nats_.Add(ext_ip,
-                   new Translator(server_, type, int_ip, server_, ext_ip));
+  return nats_.Add(ext_ip, new Translator(server_, type, int_ip,
+                                          *server_->queue(), server_, ext_ip));
 }
 void NATSocketServer::Translator::RemoveTranslator(
     const SocketAddress& ext_ip) {

@@ -622,7 +622,7 @@ void AudioProcessingSimulator::ConfigureAudioProcessor() {
 
   if (settings_.aec_dump_output_filename) {
     ap_->AttachAecDump(AecDumpFactory::Create(
-        *settings_.aec_dump_output_filename, -1, &worker_queue_));
+        *settings_.aec_dump_output_filename, -1, worker_queue_.Get()));
   }
 }
 

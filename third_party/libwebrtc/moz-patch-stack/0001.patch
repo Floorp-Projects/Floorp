@@ -399,10 +399,10 @@ index 5d4d4190d5..9868365f24 100644
  struct RTC_EXPORT RTPHeader {
    RTPHeader();
 diff --git a/api/rtp_parameters.cc b/api/rtp_parameters.cc
-index 54132bcdbb..cf8b3ad3dc 100644
+index 3ff4b58a2e..ad0f3c9396 100644
 --- a/api/rtp_parameters.cc
 +++ b/api/rtp_parameters.cc
-@@ -151,7 +151,8 @@ bool RtpExtension::IsSupportedForAudio(absl::string_view uri) {
+@@ -160,7 +160,8 @@ bool RtpExtension::IsSupportedForAudio(absl::string_view uri) {
           uri == webrtc::RtpExtension::kTransportSequenceNumberV2Uri ||
           uri == webrtc::RtpExtension::kMidUri ||
           uri == webrtc::RtpExtension::kRidUri ||
@@ -413,7 +413,7 @@ index 54132bcdbb..cf8b3ad3dc 100644
  
  bool RtpExtension::IsSupportedForVideo(absl::string_view uri) {
 diff --git a/call/BUILD.gn b/call/BUILD.gn
-index 9a7be88892..66c8b2011a 100644
+index 32ebc2e9cf..41ed587950 100644
 --- a/call/BUILD.gn
 +++ b/call/BUILD.gn
 @@ -20,6 +20,7 @@ rtc_library("call_interfaces") {
@@ -878,7 +878,7 @@ index 2a95a3a816..b152cdbd9e 100644
    }
  }
 diff --git a/modules/rtp_rtcp/source/rtp_packet_unittest.cc b/modules/rtp_rtcp/source/rtp_packet_unittest.cc
-index a1d1c9d4df..b3a9452df9 100644
+index ac464493b8..44f1a9e742 100644
 --- a/modules/rtp_rtcp/source/rtp_packet_unittest.cc
 +++ b/modules/rtp_rtcp/source/rtp_packet_unittest.cc
 @@ -123,6 +123,18 @@ constexpr uint8_t kPacketWithMid[] = {
@@ -1560,7 +1560,7 @@ index 0474e7bc17..1953923f81 100644
    std::unique_ptr<ScalableVideoController> svc_controller_;
    absl::optional<ScalabilityMode> scalability_mode_;
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 3011d6a797..9f5f0aad56 100644
+index ac30d8708b..84dc1718b4 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -463,6 +463,12 @@ rtc_library("logging") {

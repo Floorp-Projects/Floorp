@@ -46,10 +46,8 @@ rtc_library("call_interfaces") {
     ":rtp_interfaces",
     ":video_stream_api",
     "../api:fec_controller_api",
-    "../api:field_trials_view",
     "../api:frame_transformer_interface",
     "../api:network_state_predictor_api",
-    "../api:rtc_error",
     "../api:rtp_headers",
     "../api:rtp_parameters",
     "../api:rtp_sender_setparameters_callback",
@@ -116,20 +114,20 @@ rtc_library("rtp_interfaces") {
   deps = [
     "../api:array_view",
     "../api:fec_controller_api",
-    "../api:field_trials_view",
     "../api:frame_transformer_interface",
     "../api:network_state_predictor_api",
     "../api:rtp_headers",
     "../api:rtp_parameters",
     "../api/crypto:options",
+    "../api/environment",
     "../api/rtc_event_log",
     "../api/transport:bitrate_settings",
     "../api/transport:network_control",
+    "../api/units:time_delta",
     "../api/units:timestamp",
     "../common_video:frame_counts",
     "../modules/rtp_rtcp:rtp_rtcp_format",
     "../rtc_base:checks",
-    "../rtc_base:rtc_task_queue",
     "../rtc_base:stringutils",
   ]
   absl_deps = [
@@ -191,6 +189,7 @@ rtc_library("rtp_sender") {
     "../api:rtp_parameters",
     "../api:sequence_checker",
     "../api:transport_api",
+    "../api/environment",
     "../api/rtc_event_log",
     "../api/task_queue:pending_task_safety_flag",
     "../api/task_queue:task_queue",
@@ -280,8 +279,8 @@ rtc_library("bitrate_allocator") {
 rtc_library("call") {
   sources = [
     "call.cc",
-    "call_factory.cc",
-    "call_factory.h",
+    "create_call.cc",
+    "create_call.h",
     "degraded_call.cc",
     "degraded_call.h",
     "flexfec_receive_stream_impl.cc",
@@ -301,7 +300,6 @@ rtc_library("call") {
     ":version",
     ":video_stream_api",
     "../api:array_view",
-    "../api:callfactory_api",
     "../api:fec_controller_api",
     "../api:field_trials_view",
     "../api:rtp_headers",
@@ -355,7 +353,7 @@ rtc_library("call") {
   ]
   if (build_with_mozilla) { # See Bug 1820869.
     sources -= [
-      "call_factory.cc",
+      "create_call.cc",
       "degraded_call.cc",
     ]
     deps -= [

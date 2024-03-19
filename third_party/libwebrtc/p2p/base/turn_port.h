@@ -302,9 +302,6 @@ class TurnPort : public Port {
   // pruned (a.k.a. write-timed-out). Returns true if a connection is found.
   bool FailAndPruneConnection(const rtc::SocketAddress& address);
 
-  // Reconstruct the URL of the server which the candidate is gathered from.
-  std::string ReconstructedServerUrl();
-
   void MaybeAddTurnLoggingId(StunMessage* message);
 
   void TurnCustomizerMaybeModifyOutgoingStunMessage(StunMessage* message);
@@ -313,6 +310,12 @@ class TurnPort : public Port {
                                       bool payload);
 
   ProtocolAddress server_address_;
+  // Reconstruct the URL of the server which the candidate is gathered from.
+  // A copy needs to be stored as server_address_ will resolve and clear its
+  // hostname field.
+  std::string ReconstructServerUrl();
+  std::string server_url_;
+
   TlsCertPolicy tls_cert_policy_ = TlsCertPolicy::TLS_CERT_POLICY_SECURE;
   std::vector<std::string> tls_alpn_protocols_;
   std::vector<std::string> tls_elliptic_curves_;

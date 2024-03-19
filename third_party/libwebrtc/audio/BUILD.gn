@@ -97,7 +97,6 @@ rtc_library("audio") {
     "../rtc_base:refcount",
     "../rtc_base:rtc_event",
     "../rtc_base:rtc_numerics",
-    "../rtc_base:rtc_task_queue",
     "../rtc_base:safe_conversions",
     "../rtc_base:safe_minmax",
     "../rtc_base:stringutils",
@@ -175,7 +174,8 @@ if (rtc_include_tests) {
       "../api/audio_codecs/opus:audio_decoder_opus",
       "../api/audio_codecs/opus:audio_encoder_opus",
       "../api/crypto:frame_decryptor_interface",
-      "../api/rtc_event_log",
+      "../api/environment",
+      "../api/environment:environment_factory",
       "../api/task_queue:default_task_queue_factory",
       "../api/task_queue/test:mock_task_queue_base",
       "../api/units:time_delta",
@@ -223,7 +223,10 @@ if (rtc_include_tests) {
       "utility:utility_tests",
       "//testing/gtest",
     ]
-    absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
+    absl_deps = [
+      "//third_party/abseil-cpp/absl/memory",
+      "//third_party/abseil-cpp/absl/types:optional",
+    ]
   }
 
   rtc_library("channel_receive_unittest") {
@@ -247,6 +250,9 @@ if (rtc_include_tests) {
       "../test:test_support",
       "../test/time_controller",
     ]
-    absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+    absl_deps = [
+      "//third_party/abseil-cpp/absl/strings",
+      "//third_party/abseil-cpp/absl/types:optional",
+    ]
   }
 }

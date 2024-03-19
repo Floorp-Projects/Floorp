@@ -76,15 +76,16 @@ void TestSend(SocketServer* internal,
   Thread th_int(internal);
   Thread th_ext(external);
 
-  SocketAddress server_addr = internal_addr;
-  server_addr.SetPort(0);  // Auto-select a port
-  NATServer* nat = new NATServer(nat_type, internal, server_addr, server_addr,
-                                 external, external_addrs[0]);
-  NATSocketFactory* natsf = new NATSocketFactory(
-      internal, nat->internal_udp_address(), nat->internal_tcp_address());
-
   th_int.Start();
   th_ext.Start();
+
+  SocketAddress server_addr = internal_addr;
+  server_addr.SetPort(0);  // Auto-select a port
+  NATServer* nat =
+      new NATServer(nat_type, th_int, internal, server_addr, server_addr,
+                    th_ext, external, external_addrs[0]);
+  NATSocketFactory* natsf = new NATSocketFactory(
+      internal, nat->internal_udp_address(), nat->internal_tcp_address());
 
   TestClient* in;
   th_int.BlockingCall([&] { in = CreateTestClient(natsf, internal_addr); });
@@ -139,13 +140,13 @@ void TestRecv(SocketServer* internal,
 
   SocketAddress server_addr = internal_addr;
   server_addr.SetPort(0);  // Auto-select a port
-  NATServer* nat = new NATServer(nat_type, internal, server_addr, server_addr,
-                                 external, external_addrs[0]);
-  NATSocketFactory* natsf = new NATSocketFactory(
-      internal, nat->internal_udp_address(), nat->internal_tcp_address());
-
   th_int.Start();
   th_ext.Start();
+  NATServer* nat =
+      new NATServer(nat_type, th_int, internal, server_addr, server_addr,
+                    th_ext, external, external_addrs[0]);
+  NATSocketFactory* natsf = new NATSocketFactory(
+      internal, nat->internal_udp_address(), nat->internal_tcp_address());
 
   TestClient* in = nullptr;
   th_int.BlockingCall([&] { in = CreateTestClient(natsf, internal_addr); });
@@ -355,9 +356,11 @@ class NatTcpTest : public ::testing::Test, public sigslot::has_slots<> {
         int_thread_(new Thread(int_vss_.get())),
         ext_thread_(new Thread(ext_vss_.get())),
         nat_(new NATServer(NAT_OPEN_CONE,
+                           *int_thread_,
                            int_vss_.get(),
                            int_addr_,
                            int_addr_,
+                           *ext_thread_,
                            ext_vss_.get(),
                            ext_addr_)),
         natsf_(new NATSocketFactory(int_vss_.get(),

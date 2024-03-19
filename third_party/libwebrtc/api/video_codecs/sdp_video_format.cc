@@ -28,8 +28,7 @@ namespace webrtc {
 
 namespace {
 
-std::string H264GetPacketizationModeOrDefault(
-    const SdpVideoFormat::Parameters& params) {
+std::string H264GetPacketizationModeOrDefault(const CodecParameterMap& params) {
   constexpr char kH264FmtpPacketizationMode[] = "packetization-mode";
   const auto it = params.find(kH264FmtpPacketizationMode);
   if (it != params.end()) {
@@ -40,8 +39,8 @@ std::string H264GetPacketizationModeOrDefault(
   return "0";
 }
 
-bool H264IsSamePacketizationMode(const SdpVideoFormat::Parameters& left,
-                                 const SdpVideoFormat::Parameters& right) {
+bool H264IsSamePacketizationMode(const CodecParameterMap& left,
+                                 const CodecParameterMap& right) {
   return H264GetPacketizationModeOrDefault(left) ==
          H264GetPacketizationModeOrDefault(right);
 }
@@ -77,12 +76,12 @@ bool IsSameCodecSpecific(const SdpVideoFormat& format1,
 SdpVideoFormat::SdpVideoFormat(const std::string& name) : name(name) {}
 
 SdpVideoFormat::SdpVideoFormat(const std::string& name,
-                               const Parameters& parameters)
+                               const CodecParameterMap& parameters)
     : name(name), parameters(parameters) {}
 
 SdpVideoFormat::SdpVideoFormat(
     const std::string& name,
-    const Parameters& parameters,
+    const CodecParameterMap& parameters,
     const absl::InlinedVector<ScalabilityMode, kScalabilityModeCount>&
         scalability_modes)
     : name(name),

@@ -9,10 +9,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/5b2a7894ef1cf096d
  1 file changed, 6 insertions(+)
 
 diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index a07dad5d4b..db0b87c736 100644
+index 5e563d001c..4df65659f9 100644
 --- a/video/rtp_video_stream_receiver2.cc
 +++ b/video/rtp_video_stream_receiver2.cc
-@@ -744,6 +744,12 @@ void RtpVideoStreamReceiver2::OnRtpPacket(const RtpPacketReceived& packet) {
+@@ -740,6 +740,12 @@ void RtpVideoStreamReceiver2::OnRtpPacket(const RtpPacketReceived& packet) {
  
  void RtpVideoStreamReceiver2::RequestKeyFrame() {
    RTC_DCHECK_RUN_ON(&worker_task_checker_);

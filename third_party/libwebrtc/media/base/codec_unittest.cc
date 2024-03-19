@@ -342,6 +342,67 @@ TEST(CodecTest, TestH264CodecMatches) {
   }
 }
 
+#ifdef RTC_ENABLE_H265
+// Matching H.265 codecs should have matching profile/tier/level and tx-mode.
+TEST(CodecTest, TestH265CodecMatches) {
+  constexpr char kProfile1[] = "1";
+  constexpr char kTier1[] = "1";
+  constexpr char kLevel3_1[] = "93";
+  constexpr char kLevel4[] = "120";
+  constexpr char kTxMrst[] = "MRST";
+
+  VideoCodec c_ptl_blank =
+      cricket::CreateVideoCodec(95, cricket::kH265CodecName);
+
+  {
+    VideoCodec c_profile_1 =
+        cricket::CreateVideoCodec(95, cricket::kH265CodecName);
+    c_profile_1.params[cricket::kH265FmtpProfileId] = kProfile1;
+
+    // Matches since profile-id unspecified defaults to "1".
+    EXPECT_TRUE(c_ptl_blank.Matches(c_profile_1));
+  }
+
+  {
+    VideoCodec c_tier_flag_1 =
+        cricket::CreateVideoCodec(95, cricket::kH265CodecName);
+    c_tier_flag_1.params[cricket::kH265FmtpTierFlag] = kTier1;
+
+    // Does not match since profile-space unspecified defaults to "0".
+    EXPECT_FALSE(c_ptl_blank.Matches(c_tier_flag_1));
+  }
+
+  {
+    VideoCodec c_level_id_3_1 =
+        cricket::CreateVideoCodec(95, cricket::kH265CodecName);
+    c_level_id_3_1.params[cricket::kH265FmtpLevelId] = kLevel3_1;
+
+    // Matches since level-id unspecified defautls to "93".
+    EXPECT_TRUE(c_ptl_blank.Matches(c_level_id_3_1));
+  }
+
+  {
+    VideoCodec c_level_id_4 =
+        cricket::CreateVideoCodec(95, cricket::kH265CodecName);
+    c_level_id_4.params[cricket::kH265FmtpLevelId] = kLevel4;
+
+    // Does not match since different level-ids are specified.
+    EXPECT_FALSE(c_ptl_blank.Matches(c_level_id_4));
+  }
+
+  {
+    VideoCodec c_tx_mode_mrst =
+        cricket::CreateVideoCodec(95, cricket::kH265CodecName);
+    c_tx_mode_mrst.params[cricket::kH265FmtpTxMode] = kTxMrst;
+
+    // Does not match since tx-mode implies to "SRST" and must be not specified
+    // when it is the only mode supported:
+    // https://datatracker.ietf.org/doc/html/draft-ietf-avtcore-hevc-webrtc
+    EXPECT_FALSE(c_ptl_blank.Matches(c_tx_mode_mrst));
+  }
+}
+#endif
+
 TEST(CodecTest, TestSetParamGetParamAndRemoveParam) {
   AudioCodec codec = cricket::CreateAudioCodec(0, "foo", 22222, 2);
   codec.SetParam("a", "1");

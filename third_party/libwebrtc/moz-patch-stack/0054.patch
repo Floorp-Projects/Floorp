@@ -4,18 +4,17 @@ Subject: Bug 1766646 - (fix) breakout Call::Stats and SharedModuleThread into
  seperate files
 
 ---
- call/BUILD.gn             |  6 ++++++
- call/call.cc              | 13 -------------
- call/call.h               | 12 ++----------
- call/call_basic_stats.cc  | 20 ++++++++++++++++++++
- call/call_basic_stats.h   | 21 +++++++++++++++++++++
- video/video_send_stream.h |  1 -
- 6 files changed, 49 insertions(+), 24 deletions(-)
+ call/BUILD.gn            |  6 ++++++
+ call/call.cc             | 13 -------------
+ call/call.h              | 12 ++----------
+ call/call_basic_stats.cc | 20 ++++++++++++++++++++
+ call/call_basic_stats.h  | 21 +++++++++++++++++++++
+ 5 files changed, 49 insertions(+), 23 deletions(-)
  create mode 100644 call/call_basic_stats.cc
  create mode 100644 call/call_basic_stats.h
 
 diff --git a/call/BUILD.gn b/call/BUILD.gn
-index fa733a67b9..626ed95066 100644
+index cca88ea7bb..50a8257631 100644
 --- a/call/BUILD.gn
 +++ b/call/BUILD.gn
 @@ -33,6 +33,12 @@ rtc_library("call_interfaces") {
@@ -32,10 +31,10 @@ index fa733a67b9..626ed95066 100644
    deps = [
      ":audio_sender_interface",
 diff --git a/call/call.cc b/call/call.cc
-index d2ac705274..63dc370f1a 100644
+index c97cb6d743..71511b2559 100644
 --- a/call/call.cc
 +++ b/call/call.cc
-@@ -460,19 +460,6 @@ class Call final : public webrtc::Call,
+@@ -454,19 +454,6 @@ class Call final : public webrtc::Call,
  };
  }  // namespace internal
  
@@ -52,11 +51,11 @@ index d2ac705274..63dc370f1a 100644
 -  return ss.str();
 -}
 -
- /* Mozilla: Avoid this since it could use GetRealTimeClock().
  std::unique_ptr<Call> Call::Create(const CallConfig& config) {
-   Clock* clock =
+   std::unique_ptr<RtpTransportControllerSendInterface> transport_send;
+   if (config.rtp_transport_controller_send_factory != nullptr) {
 diff --git a/call/call.h b/call/call.h
-index 6f8e4cd6d7..b36872f5b5 100644
+index a680335192..e7d37c0abd 100644
 --- a/call/call.h
 +++ b/call/call.h
 @@ -21,6 +21,7 @@
@@ -67,7 +66,7 @@ index 6f8e4cd6d7..b36872f5b5 100644
  #include "call/call_config.h"
  #include "call/flexfec_receive_stream.h"
  #include "call/packet_receiver.h"
-@@ -30,7 +31,6 @@
+@@ -29,7 +30,6 @@
  #include "rtc_base/copy_on_write_buffer.h"
  #include "rtc_base/network/sent_packet.h"
  #include "rtc_base/network_route.h"
@@ -75,7 +74,7 @@ index 6f8e4cd6d7..b36872f5b5 100644
  
  namespace webrtc {
  
-@@ -46,15 +46,7 @@ namespace webrtc {
+@@ -45,15 +45,7 @@ namespace webrtc {
  
  class Call {
   public:
@@ -91,7 +90,7 @@ index 6f8e4cd6d7..b36872f5b5 100644
 +  using Stats = CallBasicStats;
  
    static std::unique_ptr<Call> Create(const CallConfig& config);
-   static std::unique_ptr<Call> Create(
+ 
 diff --git a/call/call_basic_stats.cc b/call/call_basic_stats.cc
 new file mode 100644
 index 0000000000..74333a663b
@@ -145,15 +144,3 @@ index 0000000000..98febe9405
 +}  // namespace webrtc
 +
 +#endif  // CALL_CALL_BASIC_STATS_H_
-diff --git a/video/video_send_stream.h b/video/video_send_stream.h
-index 05970d619e..4afafcf8e4 100644
---- a/video/video_send_stream.h
-+++ b/video/video_send_stream.h
-@@ -36,7 +36,6 @@ namespace test {
- class VideoSendStreamPeer;
- }  // namespace test
- 
--class CallStats;
- class IvfFileWriter;
- class RateLimiter;
- class RtpRtcp;

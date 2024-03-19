@@ -27,9 +27,7 @@ namespace webrtc {
 class RTC_EXPORT RTCCertificateStats final : public RTCStats {
  public:
   WEBRTC_RTCSTATS_DECL();
-
   RTCCertificateStats(std::string id, Timestamp timestamp);
-  RTCCertificateStats(const RTCCertificateStats& other);
   ~RTCCertificateStats() override;
 
   RTCStatsMember<std::string> fingerprint;
@@ -42,9 +40,7 @@ class RTC_EXPORT RTCCertificateStats final : public RTCStats {
 class RTC_EXPORT RTCCodecStats final : public RTCStats {
  public:
   WEBRTC_RTCSTATS_DECL();
-
   RTCCodecStats(std::string id, Timestamp timestamp);
-  RTCCodecStats(const RTCCodecStats& other);
   ~RTCCodecStats() override;
 
   RTCStatsMember<std::string> transport_id;
@@ -59,9 +55,7 @@ class RTC_EXPORT RTCCodecStats final : public RTCStats {
 class RTC_EXPORT RTCDataChannelStats final : public RTCStats {
  public:
   WEBRTC_RTCSTATS_DECL();
-
   RTCDataChannelStats(std::string id, Timestamp timestamp);
-  RTCDataChannelStats(const RTCDataChannelStats& other);
   ~RTCDataChannelStats() override;
 
   RTCStatsMember<std::string> label;
@@ -78,9 +72,7 @@ class RTC_EXPORT RTCDataChannelStats final : public RTCStats {
 class RTC_EXPORT RTCIceCandidatePairStats final : public RTCStats {
  public:
   WEBRTC_RTCSTATS_DECL();
-
   RTCIceCandidatePairStats(std::string id, Timestamp timestamp);
-  RTCIceCandidatePairStats(const RTCIceCandidatePairStats& other);
   ~RTCIceCandidatePairStats() override;
 
   RTCStatsMember<std::string> transport_id;
@@ -118,8 +110,6 @@ class RTC_EXPORT RTCIceCandidatePairStats final : public RTCStats {
 class RTC_EXPORT RTCIceCandidateStats : public RTCStats {
  public:
   WEBRTC_RTCSTATS_DECL();
-
-  RTCIceCandidateStats(const RTCIceCandidateStats& other);
   ~RTCIceCandidateStats() override;
 
   RTCStatsMember<std::string> transport_id;
@@ -175,9 +165,7 @@ class RTC_EXPORT RTCRemoteIceCandidateStats final
 class RTC_EXPORT RTCPeerConnectionStats final : public RTCStats {
  public:
   WEBRTC_RTCSTATS_DECL();
-
   RTCPeerConnectionStats(std::string id, Timestamp timestamp);
-  RTCPeerConnectionStats(const RTCPeerConnectionStats& other);
   ~RTCPeerConnectionStats() override;
 
   RTCStatsMember<uint32_t> data_channels_opened;
@@ -188,8 +176,6 @@ class RTC_EXPORT RTCPeerConnectionStats final : public RTCStats {
 class RTC_EXPORT RTCRtpStreamStats : public RTCStats {
  public:
   WEBRTC_RTCSTATS_DECL();
-
-  RTCRtpStreamStats(const RTCRtpStreamStats& other);
   ~RTCRtpStreamStats() override;
 
   RTCStatsMember<uint32_t> ssrc;
@@ -205,8 +191,6 @@ class RTC_EXPORT RTCRtpStreamStats : public RTCStats {
 class RTC_EXPORT RTCReceivedRtpStreamStats : public RTCRtpStreamStats {
  public:
   WEBRTC_RTCSTATS_DECL();
-
-  RTCReceivedRtpStreamStats(const RTCReceivedRtpStreamStats& other);
   ~RTCReceivedRtpStreamStats() override;
 
   RTCStatsMember<double> jitter;
@@ -220,8 +204,6 @@ class RTC_EXPORT RTCReceivedRtpStreamStats : public RTCRtpStreamStats {
 class RTC_EXPORT RTCSentRtpStreamStats : public RTCRtpStreamStats {
  public:
   WEBRTC_RTCSTATS_DECL();
-
-  RTCSentRtpStreamStats(const RTCSentRtpStreamStats& other);
   ~RTCSentRtpStreamStats() override;
 
   RTCStatsMember<uint64_t> packets_sent;
@@ -236,9 +218,7 @@ class RTC_EXPORT RTCInboundRtpStreamStats final
     : public RTCReceivedRtpStreamStats {
  public:
   WEBRTC_RTCSTATS_DECL();
-
   RTCInboundRtpStreamStats(std::string id, Timestamp timestamp);
-  RTCInboundRtpStreamStats(const RTCInboundRtpStreamStats& other);
   ~RTCInboundRtpStreamStats() override;
 
   RTCStatsMember<std::string> playout_id;
@@ -341,9 +321,7 @@ class RTC_EXPORT RTCOutboundRtpStreamStats final
     : public RTCSentRtpStreamStats {
  public:
   WEBRTC_RTCSTATS_DECL();
-
   RTCOutboundRtpStreamStats(std::string id, Timestamp timestamp);
-  RTCOutboundRtpStreamStats(const RTCOutboundRtpStreamStats& other);
   ~RTCOutboundRtpStreamStats() override;
 
   RTCStatsMember<std::string> media_source_id;
@@ -393,9 +371,7 @@ class RTC_EXPORT RTCRemoteInboundRtpStreamStats final
     : public RTCReceivedRtpStreamStats {
  public:
   WEBRTC_RTCSTATS_DECL();
-
   RTCRemoteInboundRtpStreamStats(std::string id, Timestamp timestamp);
-  RTCRemoteInboundRtpStreamStats(const RTCRemoteInboundRtpStreamStats& other);
   ~RTCRemoteInboundRtpStreamStats() override;
 
   RTCStatsMember<std::string> local_id;
@@ -410,9 +386,7 @@ class RTC_EXPORT RTCRemoteOutboundRtpStreamStats final
     : public RTCSentRtpStreamStats {
  public:
   WEBRTC_RTCSTATS_DECL();
-
   RTCRemoteOutboundRtpStreamStats(std::string id, Timestamp timestamp);
-  RTCRemoteOutboundRtpStreamStats(const RTCRemoteOutboundRtpStreamStats& other);
   ~RTCRemoteOutboundRtpStreamStats() override;
 
   RTCStatsMember<std::string> local_id;
@@ -427,8 +401,6 @@ class RTC_EXPORT RTCRemoteOutboundRtpStreamStats final
 class RTC_EXPORT RTCMediaSourceStats : public RTCStats {
  public:
   WEBRTC_RTCSTATS_DECL();
-
-  RTCMediaSourceStats(const RTCMediaSourceStats& other);
   ~RTCMediaSourceStats() override;
 
   RTCStatsMember<std::string> track_identifier;
@@ -442,9 +414,7 @@ class RTC_EXPORT RTCMediaSourceStats : public RTCStats {
 class RTC_EXPORT RTCAudioSourceStats final : public RTCMediaSourceStats {
  public:
   WEBRTC_RTCSTATS_DECL();
-
   RTCAudioSourceStats(std::string id, Timestamp timestamp);
-  RTCAudioSourceStats(const RTCAudioSourceStats& other);
   ~RTCAudioSourceStats() override;
 
   RTCStatsMember<double> audio_level;
@@ -458,9 +428,7 @@ class RTC_EXPORT RTCAudioSourceStats final : public RTCMediaSourceStats {
 class RTC_EXPORT RTCVideoSourceStats final : public RTCMediaSourceStats {
  public:
   WEBRTC_RTCSTATS_DECL();
-
   RTCVideoSourceStats(std::string id, Timestamp timestamp);
-  RTCVideoSourceStats(const RTCVideoSourceStats& other);
   ~RTCVideoSourceStats() override;
 
   RTCStatsMember<uint32_t> width;
@@ -473,9 +441,7 @@ class RTC_EXPORT RTCVideoSourceStats final : public RTCMediaSourceStats {
 class RTC_EXPORT RTCTransportStats final : public RTCStats {
  public:
   WEBRTC_RTCSTATS_DECL();
-
   RTCTransportStats(std::string id, Timestamp timestamp);
-  RTCTransportStats(const RTCTransportStats& other);
   ~RTCTransportStats() override;
 
   RTCStatsMember<uint64_t> bytes_sent;
@@ -501,9 +467,7 @@ class RTC_EXPORT RTCTransportStats final : public RTCStats {
 class RTC_EXPORT RTCAudioPlayoutStats final : public RTCStats {
  public:
   WEBRTC_RTCSTATS_DECL();
-
   RTCAudioPlayoutStats(const std::string& id, Timestamp timestamp);
-  RTCAudioPlayoutStats(const RTCAudioPlayoutStats& other);
   ~RTCAudioPlayoutStats() override;
 
   RTCStatsMember<std::string> kind;

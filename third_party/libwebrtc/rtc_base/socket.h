@@ -13,6 +13,8 @@
 
 #include <errno.h>
 
+#include "absl/types/optional.h"
+
 #if defined(WEBRTC_POSIX)
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -25,7 +27,10 @@
 #include "rtc_base/win32.h"
 #endif
 
+#include "api/units/timestamp.h"
+#include "rtc_base/buffer.h"
 #include "rtc_base/socket_address.h"
+#include "rtc_base/system/rtc_export.h"
 #include "rtc_base/third_party/sigslot/sigslot.h"
 
 // Rather than converting errors into a private namespace,
@@ -78,8 +83,15 @@ inline bool IsBlockingError(int e) {
 
 // General interface for the socket implementations of various networks.  The
 // methods match those of normal UNIX sockets very closely.
-class Socket {
+class RTC_EXPORT Socket {
  public:
+  struct ReceiveBuffer {
+    ReceiveBuffer(rtc::Buffer& payload) : payload(payload) {}
+
+    absl::optional<webrtc::Timestamp> arrival_time;
+    SocketAddress source_address;
+    rtc::Buffer& payload;
+  };
   virtual ~Socket() {}
 
   Socket(const Socket&) = delete;
@@ -103,6 +115,10 @@ class Socket {
                        size_t cb,
                        SocketAddress* paddr,
                        int64_t* timestamp) = 0;
+  // Intended to replace RecvFrom(void* ...).
+  // Default implementation calls RecvFrom(void* ...) with 64Kbyte buffer.
+  // Returns number of bytes received or a negative value on error.
+  virtual int RecvFrom(ReceiveBuffer& buffer);
   virtual int Listen(int backlog) = 0;
   virtual Socket* Accept(SocketAddress* paddr) = 0;
   virtual int Close() = 0;

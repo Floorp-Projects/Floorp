@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "call/call_factory.h"
+#include "call/create_call.h"
 
 #include <stdio.h>
 
@@ -22,7 +22,6 @@
 #include "api/units/time_delta.h"
 #include "call/call.h"
 #include "call/degraded_call.h"
-#include "call/rtp_transport_config.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/experiments/field_trial_list.h"
 #include "rtc_base/experiments/field_trial_parser.h"
@@ -78,29 +77,14 @@ std::vector<TimeScopedNetworkConfig> GetNetworkConfigs(
 
 }  // namespace
 
-CallFactory::CallFactory() {
-  call_thread_.Detach();
-}
-
-std::unique_ptr<Call> CallFactory::CreateCall(const CallConfig& config) {
-  RTC_DCHECK_RUN_ON(&call_thread_);
-  RTC_DCHECK(config.trials);
-
+std::unique_ptr<Call> CreateCall(const CallConfig& config) {
   std::vector<DegradedCall::TimeScopedNetworkConfig> send_degradation_configs =
-      GetNetworkConfigs(*config.trials, /*send=*/true);
+      GetNetworkConfigs(config.env.field_trials(), /*send=*/true);
   std::vector<DegradedCall::TimeScopedNetworkConfig>
       receive_degradation_configs =
-          GetNetworkConfigs(*config.trials, /*send=*/false);
+          GetNetworkConfigs(config.env.field_trials(), /*send=*/false);
 
-  RtpTransportConfig transportConfig = config.ExtractTransportConfig();
-
-  RTC_CHECK(false);
-  return nullptr;
-  /* Mozilla: Avoid this since it could use GetRealTimeClock().
-  std::unique_ptr<Call> call =
-      Call::Create(config, Clock::GetRealTimeClock(),
-                   config.rtp_transport_controller_send_factory->Create(
-                       transportConfig, Clock::GetRealTimeClock()));
+  std::unique_ptr<Call> call = Call::Create(config);
 
   if (!send_degradation_configs.empty() ||
       !receive_degradation_configs.empty()) {
@@ -109,11 +93,6 @@ std::unique_ptr<Call> CallFactory::CreateCall(const CallConfig& config) {
   }
 
   return call;
-   */
-}
-
-std::unique_ptr<CallFactoryInterface> CreateCallFactory() {
-  return std::make_unique<CallFactory>();
 }
 
 }  // namespace webrtc

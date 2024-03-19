@@ -15,7 +15,6 @@
 #include <vector>
 
 #include "api/environment/environment.h"
-#include "api/transport/field_trial_based_config.h"
 #include "media/base/media_engine.h"
 #include "media/sctp/sctp_transport_factory.h"
 #include "pc/media_factory.h"
@@ -63,8 +62,7 @@ rtc::Thread* MaybeWrapThread(rtc::Thread* signaling_thread,
 
 std::unique_ptr<SctpTransportFactoryInterface> MaybeCreateSctpFactory(
     std::unique_ptr<SctpTransportFactoryInterface> factory,
-    rtc::Thread* network_thread,
-    const FieldTrialsView& field_trials) {
+    rtc::Thread* network_thread) {
   if (factory) {
     return factory;
   }
@@ -113,8 +111,7 @@ ConnectionContext::ConnectionContext(
       default_socket_factory_(std::move(dependencies->packet_socket_factory)),
       sctp_factory_(
           MaybeCreateSctpFactory(std::move(dependencies->sctp_factory),
-                                 network_thread(),
-                                 env_.field_trials())),
+                                 network_thread())),
       use_rtx_(true) {
   RTC_DCHECK_RUN_ON(signaling_thread_);
   RTC_DCHECK(!(default_network_manager_ && network_monitor_factory_))

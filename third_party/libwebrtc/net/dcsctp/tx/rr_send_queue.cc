@@ -373,8 +373,9 @@ void RRSendQueue::Add(Timestamp now,
                         : Timestamp::PlusInfinity(),
       .lifecycle_id = send_options.lifecycle_id,
   };
-  GetOrCreateStreamInfo(message.stream_id())
-      .Add(std::move(message), std::move(attributes));
+  StreamID stream_id = message.stream_id();
+  GetOrCreateStreamInfo(stream_id).Add(std::move(message),
+                                       std::move(attributes));
   RTC_DCHECK(IsConsistent());
 }
 

@@ -14,9 +14,7 @@
 #include <memory>
 #include <string>
 
-#include "api/call/call_factory_interface.h"
 #include "api/environment/environment.h"
-#include "api/field_trials_view.h"
 #include "api/media_stream_interface.h"
 #include "api/peer_connection_interface.h"
 #include "api/ref_counted_base.h"
@@ -80,12 +78,6 @@ class ConnectionContext final
   // Note: environments are different for different PeerConnections,
   // but they are not supposed to change after creating the PeerConnection.
   const Environment& env() const { return env_; }
-
-  // Field trials associated with the PeerConnectionFactory.
-  // Note: that there can be different field trials for different
-  // PeerConnections (but they are not supposed change after creating the
-  // PeerConnection).
-  const FieldTrialsView& field_trials() const { return env_.field_trials(); }
 
   // Accessors only used from the PeerConnectionFactory class
   rtc::NetworkManager* default_network_manager() {

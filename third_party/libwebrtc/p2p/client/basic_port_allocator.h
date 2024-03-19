@@ -85,9 +85,6 @@ class RTC_EXPORT BasicPortAllocator : public PortAllocator {
   }
 
  private:
-  void OnIceRegathering(PortAllocatorSession* session,
-                        IceRegatheringReason reason);
-
   bool MdnsObfuscationEnabled() const override;
 
   webrtc::AlwaysValidPointer<const webrtc::FieldTrialsView,

@@ -55,7 +55,7 @@ struct TrafficCounterFixture {
                                     EmulatedEndpointConfig(),
                                     EmulatedNetworkStatsGatheringMode::kDefault,
                                 },
-                                /*is_enabled=*/true, &task_queue_, &clock};
+                                /*is_enabled=*/true, task_queue_.Get(), &clock};
 };
 
 }  // namespace

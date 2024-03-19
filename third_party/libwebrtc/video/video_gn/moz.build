@@ -49,7 +49,6 @@ UNIFIED_SOURCES += [
     "/third_party/libwebrtc/video/transport_adapter.cc",
     "/third_party/libwebrtc/video/video_quality_observer2.cc",
     "/third_party/libwebrtc/video/video_receive_stream2.cc",
-    "/third_party/libwebrtc/video/video_send_stream.cc",
     "/third_party/libwebrtc/video/video_send_stream_impl.cc",
     "/third_party/libwebrtc/video/video_stream_decoder2.cc"
 ]

@@ -205,6 +205,11 @@ PeerConfigurer* PeerConfigurer::SetAecDumpPath(absl::string_view path) {
   params_->aec_dump_path = std::string(path);
   return this;
 }
+PeerConfigurer* PeerConfigurer::SetPCFOptions(
+    PeerConnectionFactoryInterface::Options options) {
+  params_->peer_connection_factory_options = std::move(options);
+  return this;
+}
 PeerConfigurer* PeerConfigurer::SetRTCConfiguration(
     PeerConnectionInterface::RTCConfiguration configuration) {
   params_->rtc_configuration = std::move(configuration);

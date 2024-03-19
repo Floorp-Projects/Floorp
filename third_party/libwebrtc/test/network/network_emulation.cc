@@ -15,9 +15,11 @@
 #include <memory>
 #include <utility>
 
+#include "absl/base/nullability.h"
 #include "absl/types/optional.h"
 #include "api/numerics/samples_stats_counter.h"
 #include "api/sequence_checker.h"
+#include "api/task_queue/task_queue_base.h"
 #include "api/test/network_emulation/network_emulation_interfaces.h"
 #include "api/test/network_emulation_manager.h"
 #include "api/units/data_size.h"
@@ -330,7 +332,7 @@ void LinkEmulation::OnPacketReceived(EmulatedIpPacket packet) {
       return;
     Timestamp current_time = clock_->CurrentTime();
     process_task_ = RepeatingTaskHandle::DelayedStart(
-        task_queue_->Get(),
+        task_queue_,
         std::max(TimeDelta::Zero(),
                  Timestamp::Micros(*next_time_us) - current_time),
         [this]() {
@@ -383,7 +385,7 @@ void LinkEmulation::Process(Timestamp at_time) {
   }
 }
 
-NetworkRouterNode::NetworkRouterNode(rtc::TaskQueue* task_queue)
+NetworkRouterNode::NetworkRouterNode(absl::Nonnull<TaskQueueBase*> task_queue)
     : task_queue_(task_queue) {}
 
 void NetworkRouterNode::OnPacketReceived(EmulatedIpPacket packet) {
@@ -459,7 +461,7 @@ void NetworkRouterNode::SetFilter(
 
 EmulatedNetworkNode::EmulatedNetworkNode(
     Clock* clock,
-    rtc::TaskQueue* task_queue,
+    absl::Nonnull<TaskQueueBase*> task_queue,
     std::unique_ptr<NetworkBehaviorInterface> network_behavior,
     EmulatedNetworkStatsGatheringMode stats_gathering_mode)
     : router_(task_queue),
@@ -510,10 +512,11 @@ EmulatedEndpointImpl::Options::Options(
           config.allow_receive_packets_with_different_dest_ip),
       log_name(ip.ToString() + " (" + config.name.value_or("") + ")") {}
 
-EmulatedEndpointImpl::EmulatedEndpointImpl(const Options& options,
-                                           bool is_enabled,
-                                           rtc::TaskQueue* task_queue,
-                                           Clock* clock)
+EmulatedEndpointImpl::EmulatedEndpointImpl(
+    const Options& options,
+    bool is_enabled,
+    absl::Nonnull<TaskQueueBase*> task_queue,
+    Clock* clock)
     : options_(options),
       is_enabled_(is_enabled),
       clock_(clock),

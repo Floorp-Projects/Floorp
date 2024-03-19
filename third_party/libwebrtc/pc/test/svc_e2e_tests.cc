@@ -210,7 +210,7 @@ class SvcVideoQualityAnalyzer : public DefaultVideoQualityAnalyzer {
     // Extract the scalability mode reported in the stats.
     auto outbound_stats = report->GetStatsOfType<RTCOutboundRtpStreamStats>();
     for (const auto& stat : outbound_stats) {
-      if (stat->scalability_mode.is_defined()) {
+      if (stat->scalability_mode.has_value()) {
         reported_scalability_mode_ = *stat->scalability_mode;
       }
     }
@@ -336,10 +336,9 @@ TEST_P(SvcTest, ScalabilityModeSupported) {
         RtpEncodingParameters parameters;
         parameters.scalability_mode = SvcTestParameters().scalability_mode;
         video.encoding_params.push_back(parameters);
-        alice->AddVideoConfig(
-            std::move(video),
-            CreateScreenShareFrameGenerator(
-                video, ScreenShareConfig(TimeDelta::Seconds(5))));
+        auto generator = CreateScreenShareFrameGenerator(
+            video, ScreenShareConfig(TimeDelta::Seconds(5)));
+        alice->AddVideoConfig(std::move(video), std::move(generator));
         alice->SetVideoCodecs({video_codec_config});
       },
       [](PeerConfigurer* bob) {}, std::move(analyzer));

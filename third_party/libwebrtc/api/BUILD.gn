@@ -26,15 +26,6 @@ rtc_source_set("call_api") {
   sources = [ "call/audio_sink.h" ]
 }
 
-rtc_source_set("callfactory_api") {
-  visibility = [ "*" ]
-  sources = [ "call/call_factory_interface.h" ]
-  deps = [
-    "../call:rtp_interfaces",
-    "../rtc_base/system:rtc_export",
-  ]
-}
-
 rtc_source_set("enable_media") {
   visibility = [ "*" ]
   sources = [
@@ -545,6 +536,7 @@ rtc_library("rtp_parameters") {
     ":array_view",
     ":priority",
     ":rtp_transceiver_direction",
+    "../media:media_constants",
     "../rtc_base:checks",
     "../rtc_base:stringutils",
     "../rtc_base/system:rtc_export",
@@ -604,7 +596,6 @@ if (!build_with_mozilla) {
   deps = [
     ":array_view",
     ":audio_quality_analyzer_api",
-    ":callfactory_api",
     ":fec_controller_api",
     ":frame_generator_api",
     ":function_view",
@@ -673,6 +664,7 @@ if (rtc_include_tests) {
       "test/create_network_emulation_manager.h",
     ]
     deps = [
+      ":field_trials_view",
       ":network_emulation_manager_api",
       "../test/network:emulated_network",
     ]
@@ -811,8 +803,10 @@ rtc_source_set("rtc_stats_api") {
   visibility = [ "*" ]
   cflags = []
   sources = [
+    "stats/attribute.h",
     "stats/rtc_stats.h",
     "stats/rtc_stats_collector_callback.h",
+    "stats/rtc_stats_member.h",
     "stats/rtc_stats_report.h",
     "stats/rtcstats_objects.h",
   ]
@@ -828,7 +822,10 @@ rtc_source_set("rtc_stats_api") {
     "units:timestamp",
   ]
 
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/types:optional",
+    "//third_party/abseil-cpp/absl/types:variant",
+  ]
 }
 
 rtc_library("audio_options_api") {
@@ -930,6 +927,7 @@ rtc_source_set("fec_controller_api") {
 
   deps = [
     "../modules:module_fec_api",
+    "environment",
     "video:video_frame_type",
   ]
 }
@@ -1434,12 +1432,12 @@ if (rtc_include_tests) {
       ":time_controller",
       "../call",
       "../call:call_interfaces",
-      "../call:rtp_interfaces",
       "../pc:media_factory",
       "../rtc_base:checks",
       "../system_wrappers",
       "../test/time_controller",
       "environment",
+      "environment:environment_factory",
     ]
     absl_deps = [ "//third_party/abseil-cpp/absl/base:nullability" ]
   }

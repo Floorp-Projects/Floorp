@@ -78,18 +78,9 @@ using cricket::SimulcastLayerList;
 using cricket::StreamParams;
 using cricket::TransportInfo;
 
-using cricket::LOCAL_PORT_TYPE;
-using cricket::PRFLX_PORT_TYPE;
-using cricket::RELAY_PORT_TYPE;
-using cricket::STUN_PORT_TYPE;
-
 namespace webrtc {
 
 namespace {
-
-// UMA metric names.
-const char kSimulcastNumberOfEncodings[] =
-    "WebRTC.PeerConnection.Simulcast.NumberOfSendEncodings";
 
 static const int REPORT_USAGE_PATTERN_DELAY_MS = 60000;
 
@@ -115,10 +106,10 @@ IceCandidatePairType GetIceCandidatePairCounter(
     const cricket::Candidate& remote) {
   const auto& l = local.type();
   const auto& r = remote.type();
-  const auto& host = LOCAL_PORT_TYPE;
-  const auto& srflx = STUN_PORT_TYPE;
-  const auto& relay = RELAY_PORT_TYPE;
-  const auto& prflx = PRFLX_PORT_TYPE;
+  const auto& host = cricket::LOCAL_PORT_TYPE;
+  const auto& srflx = cricket::STUN_PORT_TYPE;
+  const auto& relay = cricket::RELAY_PORT_TYPE;
+  const auto& prflx = cricket::PRFLX_PORT_TYPE;
   if (l == host && r == host) {
     bool local_hostname =
         !local.address().hostname().empty() && local.address().IsUnresolvedIP();
@@ -1031,18 +1022,6 @@ PeerConnection::AddTransceiver(
   return AddTransceiver(track, RtpTransceiverInit());
 }
 
-RtpTransportInternal* PeerConnection::GetRtpTransport(const std::string& mid) {
-  // TODO(bugs.webrtc.org/9987): Avoid the thread jump.
-  // This might be done by caching the value on the signaling thread.
-  RTC_DCHECK_RUN_ON(signaling_thread());
-  return network_thread()->BlockingCall([this, &mid] {
-    RTC_DCHECK_RUN_ON(network_thread());
-    auto rtp_transport = transport_controller_->GetRtpTransport(mid);
-    RTC_DCHECK(rtp_transport);
-    return rtp_transport;
-  });
-}
-
 RTCErrorOr<rtc::scoped_refptr<RtpTransceiverInterface>>
 PeerConnection::AddTransceiver(
     rtc::scoped_refptr<MediaStreamTrackInterface> track,
@@ -1111,9 +1090,6 @@ PeerConnection::AddTransceiver(
                        ? cricket::MEDIA_TYPE_AUDIO
                        : cricket::MEDIA_TYPE_VIDEO));
   }
-
-  RTC_HISTOGRAM_COUNTS_LINEAR(kSimulcastNumberOfEncodings,
-                              init.send_encodings.size(), 0, 7, 8);
 
   size_t num_rids = absl::c_count_if(init.send_encodings,
                                      [](const RtpEncodingParameters& encoding) {
@@ -2095,10 +2071,8 @@ void PeerConnection::OnSelectedCandidatePairChanged(
     return;
   }
 
-  if (event.selected_candidate_pair.local_candidate().type() ==
-          LOCAL_PORT_TYPE &&
-      event.selected_candidate_pair.remote_candidate().type() ==
-          LOCAL_PORT_TYPE) {
+  if (event.selected_candidate_pair.local_candidate().is_local() &&
+      event.selected_candidate_pair.remote_candidate().is_local()) {
     NoteUsageEvent(UsageEvent::DIRECT_CONNECTION_SELECTED);
   }
 
@@ -2806,7 +2780,7 @@ void PeerConnection::ReportBestConnectionState(
 
       // Increment the counter for IceCandidatePairType.
       if (local.protocol() == cricket::TCP_PROTOCOL_NAME ||
-          (local.type() == RELAY_PORT_TYPE &&
+          (local.is_relay() &&
            local.relay_protocol() == cricket::TCP_PROTOCOL_NAME)) {
         RTC_HISTOGRAM_ENUMERATION("WebRTC.PeerConnection.CandidatePairType_TCP",
                                   GetIceCandidatePairCounter(local, remote),

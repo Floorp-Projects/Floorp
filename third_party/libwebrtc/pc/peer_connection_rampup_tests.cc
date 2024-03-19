@@ -309,15 +309,17 @@ class PeerConnectionRampUpTest : public ::testing::Test {
     auto stats = caller_->GetStats();
     auto transport_stats = stats->GetStatsOfType<RTCTransportStats>();
     if (transport_stats.size() == 0u ||
-        !transport_stats[0]->selected_candidate_pair_id.is_defined()) {
+        !transport_stats[0]->selected_candidate_pair_id.has_value()) {
       return 0;
     }
     std::string selected_ice_id =
-        transport_stats[0]->selected_candidate_pair_id.ValueToString();
+        transport_stats[0]
+            ->GetAttribute(transport_stats[0]->selected_candidate_pair_id)
+            .ToString();
     // Use the selected ICE candidate pair ID to get the appropriate ICE stats.
     const RTCIceCandidatePairStats ice_candidate_pair_stats =
         stats->Get(selected_ice_id)->cast_to<const RTCIceCandidatePairStats>();
-    if (ice_candidate_pair_stats.available_outgoing_bitrate.is_defined()) {
+    if (ice_candidate_pair_stats.available_outgoing_bitrate.has_value()) {
       return *ice_candidate_pair_stats.available_outgoing_bitrate;
     }
     // We couldn't get the `available_outgoing_bitrate` for the active candidate

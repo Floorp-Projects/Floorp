@@ -104,7 +104,7 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
 
   void AddReceiveCodec(uint8_t payload_type,
                        VideoCodecType video_codec,
-                       const std::map<std::string, std::string>& codec_params,
+                       const webrtc::CodecParameterMap& codec_params,
                        bool raw_payload);
   void RemoveReceiveCodec(uint8_t payload_type);
 
@@ -135,9 +135,11 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
   void OnRtpPacket(const RtpPacketReceived& packet) override;
 
   // Public only for tests.
-  void OnReceivedPayloadData(rtc::CopyOnWriteBuffer codec_payload,
+  // Returns true if the packet should be stashed and retried at a later stage.
+  bool OnReceivedPayloadData(rtc::CopyOnWriteBuffer codec_payload,
                              const RtpPacketReceived& rtp_packet,
-                             const RTPVideoHeader& video);
+                             const RTPVideoHeader& video,
+                             int times_nacked);
 
   // Implements RecoveredPacketReceiver.
   void OnRecoveredPacket(const RtpPacketReceived& packet) override;
@@ -288,6 +290,7 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
         RTC_GUARDED_BY(packet_sequence_checker_);
   };
   enum ParseGenericDependenciesResult {
+    kStashPacket,
     kDropPacket,
     kHasGenericDescriptor,
     kNoGenericDescriptor
@@ -403,7 +406,7 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
   // TODO(johan): Remove pt_codec_params_ once
   // https://bugs.chromium.org/p/webrtc/issues/detail?id=6883 is resolved.
   // Maps a payload type to a map of out-of-band supplied codec parameters.
-  std::map<uint8_t, std::map<std::string, std::string>> pt_codec_params_
+  std::map<uint8_t, webrtc::CodecParameterMap> pt_codec_params_
       RTC_GUARDED_BY(packet_sequence_checker_);
   int16_t last_payload_type_ RTC_GUARDED_BY(packet_sequence_checker_) = -1;
 
@@ -439,6 +442,8 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
   SeqNumUnwrapper<uint16_t> rtp_seq_num_unwrapper_
       RTC_GUARDED_BY(packet_sequence_checker_);
   std::map<int64_t, RtpPacketInfo> packet_infos_
+      RTC_GUARDED_BY(packet_sequence_checker_);
+  std::vector<RtpPacketReceived> stashed_packets_
       RTC_GUARDED_BY(packet_sequence_checker_);
 
   Timestamp next_keyframe_request_for_missing_video_structure_ =

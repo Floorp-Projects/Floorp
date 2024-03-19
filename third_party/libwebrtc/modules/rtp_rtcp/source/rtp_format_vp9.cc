@@ -321,8 +321,9 @@ RtpPacketizerVp9::RtpPacketizerVp9(rtc::ArrayView<const uint8_t> payload,
   limits.max_payload_len -= header_size_;
   limits.first_packet_reduction_len += first_packet_extra_header_size_;
   limits.single_packet_reduction_len += first_packet_extra_header_size_;
-
-  payload_sizes_ = SplitAboutEqually(payload.size(), limits);
+  if (!payload.empty()) {
+    payload_sizes_ = SplitAboutEqually(payload.size(), limits);
+  }
   current_packet_ = payload_sizes_.begin();
 }
 

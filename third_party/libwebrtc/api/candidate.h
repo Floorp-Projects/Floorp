@@ -26,6 +26,13 @@
 
 namespace cricket {
 
+// TODO(tommi): These are temporarily here, moved from `port.h` and will
+// eventually be removed once we use enums instead of strings for these values.
+RTC_EXPORT extern const char LOCAL_PORT_TYPE[];
+RTC_EXPORT extern const char STUN_PORT_TYPE[];
+RTC_EXPORT extern const char PRFLX_PORT_TYPE[];
+RTC_EXPORT extern const char RELAY_PORT_TYPE[];
+
 // TURN servers are limited to 32 in accordance with
 // https://w3c.github.io/webrtc-pc/#dom-rtcconfiguration-iceservers
 static constexpr size_t kMaxTurnServers = 32;
@@ -73,27 +80,6 @@ class RTC_EXPORT Candidate {
   uint32_t priority() const { return priority_; }
   void set_priority(const uint32_t priority) { priority_ = priority; }
 
-  // TODO(pthatcher): Remove once Chromium's jingle/glue/utils.cc
-  // doesn't use it.
-  // Maps old preference (which was 0.0-1.0) to match priority (which
-  // is 0-2^32-1) to to match RFC 5245, section 4.1.2.1.  Also see
-  // https://docs.google.com/a/google.com/document/d/
-  // 1iNQDiwDKMh0NQOrCqbj3DKKRT0Dn5_5UJYhmZO-t7Uc/edit
-  float preference() const {
-    // The preference value is clamped to two decimal precision.
-    return static_cast<float>(((priority_ >> 24) * 100 / 127) / 100.0);
-  }
-
-  // TODO(pthatcher): Remove once Chromium's jingle/glue/utils.cc
-  // doesn't use it.
-  void set_preference(float preference) {
-    // Limiting priority to UINT_MAX when value exceeds uint32_t max.
-    // This can happen for e.g. when preference = 3.
-    uint64_t prio_val = static_cast<uint64_t>(preference * 127) << 24;
-    priority_ = static_cast<uint32_t>(
-        std::min(prio_val, static_cast<uint64_t>(UINT_MAX)));
-  }
-
   // TODO(honghaiz): Change to usernameFragment or ufrag.
   const std::string& username() const { return username_; }
   void set_username(absl::string_view username) { Assign(username_, username); }
@@ -109,6 +95,32 @@ class RTC_EXPORT Candidate {
   // things down. See also the `Port` class.
   void set_type(absl::string_view type ABSL_ATTRIBUTE_LIFETIME_BOUND) {
     Assign(type_, type);
+  }
+
+  // Provide these simple checkers to abstract away dependency on the port types
+  // that are currently defined outside of Candidate. This will ease the change
+  // from the string type to an enum.
+  bool is_local() const;
+  bool is_stun() const;
+  bool is_prflx() const;
+  bool is_relay() const;
+
+  // Returns the type preference, a value between 0-126 inclusive, with 0 being
+  // the lowest preference value, as described in RFC 5245.
+  // https://datatracker.ietf.org/doc/html/rfc5245#section-4.1.2.1
+  int type_preference() const {
+    // From https://datatracker.ietf.org/doc/html/rfc5245#section-4.1.4 :
+    // It is RECOMMENDED that default candidates be chosen based on the
+    // likelihood of those candidates to work with the peer that is being
+    // contacted.
+    // I.e. it is recommended that relayed > reflexive > host.
+    if (is_local())
+      return 1;  // Host.
+    if (is_stun())
+      return 2;  // Reflexive.
+    if (is_relay())
+      return 3;  // Relayed.
+    return 0;    // Unknown, lowest preference.
   }
 
   const std::string& network_name() const { return network_name_; }

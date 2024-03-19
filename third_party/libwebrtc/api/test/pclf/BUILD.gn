@@ -20,7 +20,6 @@ rtc_source_set("media_configuration") {
     "../..:array_view",
     "../..:audio_options_api",
     "../..:audio_quality_analyzer_api",
-    "../..:callfactory_api",
     "../..:fec_controller_api",
     "../..:frame_generator_api",
     "../..:function_view",

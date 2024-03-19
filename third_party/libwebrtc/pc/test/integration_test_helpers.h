@@ -649,8 +649,8 @@ class PeerConnectionIntegrationWrapper : public PeerConnectionObserver,
     auto received_stats = NewGetStats();
     auto rtp_stats =
         received_stats->GetStatsOfType<RTCInboundRtpStreamStats>()[0];
-    ASSERT_TRUE(rtp_stats->relative_packet_arrival_delay.is_defined());
-    ASSERT_TRUE(rtp_stats->packets_received.is_defined());
+    ASSERT_TRUE(rtp_stats->relative_packet_arrival_delay.has_value());
+    ASSERT_TRUE(rtp_stats->packets_received.has_value());
     rtp_stats_id_ = rtp_stats->id();
     audio_packets_stat_ = *rtp_stats->packets_received;
     audio_delay_stat_ = *rtp_stats->relative_packet_arrival_delay;
@@ -773,7 +773,7 @@ class PeerConnectionIntegrationWrapper : public PeerConnectionObserver,
     pc_factory_dependencies.task_queue_factory =
         CreateDefaultTaskQueueFactory();
     pc_factory_dependencies.trials = std::make_unique<FieldTrialBasedConfig>();
-    pc_factory_dependencies.metronome =
+    pc_factory_dependencies.decode_metronome =
         std::make_unique<TaskQueueMetronome>(TimeDelta::Millis(8));
 
     pc_factory_dependencies.adm = fake_audio_capture_module_;
@@ -800,8 +800,7 @@ class PeerConnectionIntegrationWrapper : public PeerConnectionObserver,
       pc_factory_dependencies.event_log_factory = std::move(event_log_factory);
     } else {
       pc_factory_dependencies.event_log_factory =
-          std::make_unique<RtcEventLogFactory>(
-              pc_factory_dependencies.task_queue_factory.get());
+          std::make_unique<RtcEventLogFactory>();
     }
     peer_connection_factory_ =
         CreateModularPeerConnectionFactory(std::move(pc_factory_dependencies));
@@ -1116,7 +1115,7 @@ class PeerConnectionIntegrationWrapper : public PeerConnectionObserver,
     if (remote_async_dns_resolver_) {
       const auto& local_candidate = candidate->candidate();
       if (local_candidate.address().IsUnresolvedIP()) {
-        RTC_DCHECK(local_candidate.type() == cricket::LOCAL_PORT_TYPE);
+        RTC_DCHECK(local_candidate.is_local());
         const auto resolved_ip = mdns_responder_->GetMappedAddressForName(
             local_candidate.address().hostname());
         RTC_DCHECK(!resolved_ip.IsNil());

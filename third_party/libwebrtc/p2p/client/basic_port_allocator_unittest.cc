@@ -496,8 +496,8 @@ class BasicPortAllocatorTestBase : public ::testing::Test,
                            bool with_nat) {
     if (with_nat) {
       nat_server_.reset(new rtc::NATServer(
-          rtc::NAT_OPEN_CONE, vss_.get(), kNatUdpAddr, kNatTcpAddr, vss_.get(),
-          rtc::SocketAddress(kNatUdpAddr.ipaddr(), 0)));
+          rtc::NAT_OPEN_CONE, thread_, vss_.get(), kNatUdpAddr, kNatTcpAddr,
+          thread_, vss_.get(), rtc::SocketAddress(kNatUdpAddr.ipaddr(), 0)));
     } else {
       nat_socket_factory_ =
           std::make_unique<rtc::BasicPacketSocketFactory>(fss_.get());
@@ -2390,24 +2390,6 @@ TEST_F(BasicPortAllocatorTest,
                                             expected_stun_keepalive_interval);
 }
 
-TEST_F(BasicPortAllocatorTest, IceRegatheringMetricsLoggedWhenNetworkChanges) {
-  // Only test local ports to simplify test.
-  ResetWithNoServersOrNat();
-  AddInterface(kClientAddr, "test_net0");
-  ASSERT_TRUE(CreateSession(ICE_CANDIDATE_COMPONENT_RTP));
-  session_->StartGettingPorts();
-  EXPECT_TRUE_SIMULATED_WAIT(candidate_allocation_done_,
-                             kDefaultAllocationTimeout, fake_clock);
-  candidate_allocation_done_ = false;
-  AddInterface(kClientAddr2, "test_net1");
-  EXPECT_TRUE_SIMULATED_WAIT(candidate_allocation_done_,
-                             kDefaultAllocationTimeout, fake_clock);
-  EXPECT_METRIC_EQ(1,
-                   webrtc::metrics::NumEvents(
-                       "WebRTC.PeerConnection.IceRegatheringReason",
-                       static_cast<int>(IceRegatheringReason::NETWORK_CHANGE)));
-}
-
 // Test that when an mDNS responder is present, the local address of a host
 // candidate is concealed by an mDNS hostname and the related address of a srflx
 // candidate is set to 0.0.0.0 or ::0.
@@ -2435,7 +2417,7 @@ TEST_F(BasicPortAllocatorTest, HostCandidateAddressIsReplacedByHostname) {
   for (const auto& candidate : candidates_) {
     const auto& raddr = candidate.related_address();
 
-    if (candidate.type() == LOCAL_PORT_TYPE) {
+    if (candidate.is_local()) {
       EXPECT_FALSE(candidate.address().hostname().empty());
       EXPECT_TRUE(raddr.IsNil());
       if (candidate.protocol() == UDP_PROTOCOL_NAME) {
@@ -2443,13 +2425,13 @@ TEST_F(BasicPortAllocatorTest, HostCandidateAddressIsReplacedByHostname) {
       } else {
         ++num_host_tcp_candidates;
       }
-    } else if (candidate.type() == STUN_PORT_TYPE) {
+    } else if (candidate.is_stun()) {
       // For a srflx candidate, the related address should be set to 0.0.0.0 or
       // ::0
       EXPECT_TRUE(IPIsAny(raddr.ipaddr()));
       EXPECT_EQ(raddr.port(), 0);
       ++num_srflx_candidates;
-    } else if (candidate.type() == RELAY_PORT_TYPE) {
+    } else if (candidate.is_relay()) {
       EXPECT_EQ(kNatUdpAddr.ipaddr(), raddr.ipaddr());
       EXPECT_EQ(kNatUdpAddr.family(), raddr.family());
       ++num_relay_candidates;

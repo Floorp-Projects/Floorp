@@ -43,16 +43,14 @@ constexpr int kDefaultSamplingFrequencyInHz = 48000;
 // and `pc_dependencies` if they are omitted. Also setup required
 // dependencies, that won't be specially provided by factory and will be just
 // transferred to peer connection creation code.
-void SetMandatoryEntities(InjectableComponents* components,
-                          TimeController& time_controller) {
+void SetMandatoryEntities(InjectableComponents* components) {
   RTC_DCHECK(components->pcf_dependencies);
   RTC_DCHECK(components->pc_dependencies);
 
   // Setup required peer connection factory dependencies.
   if (components->pcf_dependencies->event_log_factory == nullptr) {
     components->pcf_dependencies->event_log_factory =
-        std::make_unique<RtcEventLogFactory>(
-            time_controller.GetTaskQueueFactory());
+        std::make_unique<RtcEventLogFactory>();
   }
   if (!components->pcf_dependencies->trials) {
     components->pcf_dependencies->trials =
@@ -286,7 +284,7 @@ std::unique_ptr<TestPeer> TestPeerFactory::CreateTestPeer(
   RTC_DCHECK(configurable_params);
   RTC_DCHECK_EQ(configurable_params->video_configs.size(),
                 video_sources.size());
-  SetMandatoryEntities(components.get(), time_controller_);
+  SetMandatoryEntities(components.get());
   params->rtc_configuration.sdp_semantics = SdpSemantics::kUnifiedPlan;
 
   // Create peer connection factory.
@@ -329,6 +327,7 @@ std::unique_ptr<TestPeer> TestPeerFactory::CreateTestPeer(
       components->worker_thread, components->network_thread);
   rtc::scoped_refptr<PeerConnectionFactoryInterface> peer_connection_factory =
       CreateModularPeerConnectionFactory(std::move(pcf_deps));
+  peer_connection_factory->SetOptions(params->peer_connection_factory_options);
 
   // Create peer connection.
   PeerConnectionDependencies pc_deps =

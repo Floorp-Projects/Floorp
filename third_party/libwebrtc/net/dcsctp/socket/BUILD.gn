@@ -140,7 +140,6 @@ rtc_library("dcsctp_socket") {
     "../../../api:make_ref_counted",
     "../../../api:refcountedbase",
     "../../../api:scoped_refptr",
-    "../../../api:sequence_checker",
     "../../../api/task_queue:task_queue",
     "../../../rtc_base:checks",
     "../../../rtc_base:logging",
@@ -178,6 +177,7 @@ rtc_library("dcsctp_socket") {
     "//third_party/abseil-cpp/absl/memory",
     "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",
+    "//third_party/abseil-cpp/absl/types:variant",
   ]
 }
 
