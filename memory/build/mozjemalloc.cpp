@@ -1209,7 +1209,7 @@ struct arena_t {
   ~arena_t();
 
  private:
-  void InitChunk(arena_chunk_t* aChunk);
+  void InitChunk(arena_chunk_t* aChunk, size_t aMinCommittedPages);
 
   // This may return a chunk that should be destroyed with chunk_dealloc outside
   // of the arena lock.  It is not the same chunk as was passed in (since that
@@ -2724,10 +2724,7 @@ bool arena_t::SplitRun(arena_run_t* aRun, size_t aSize, bool aLarge,
   return true;
 }
 
-void arena_t::InitChunk(arena_chunk_t* aChunk) {
-  size_t i;
-  size_t flags = CHUNK_MAP_DECOMMITTED | CHUNK_MAP_ZEROED;
-
+void arena_t::InitChunk(arena_chunk_t* aChunk, size_t aMinCommittedPages) {
   mStats.mapped += kChunkSize;
 
   aChunk->arena = this;
@@ -2735,44 +2732,58 @@ void arena_t::InitChunk(arena_chunk_t* aChunk) {
   // Claim that no pages are in use, since the header is merely overhead.
   aChunk->ndirty = 0;
 
-  // Initialize the map to contain one maximal free untouched run.
-  arena_run_t* run = (arena_run_t*)(uintptr_t(aChunk) +
-                                    (gChunkHeaderNumPages << gPageSize2Pow));
+  // Setup the chunk's pages in two phases.  First we mark which pages are
+  // committed & decommitted and perform the decommit.  Then we update the map
+  // to create the runs.
 
   // Clear the bits for the real header pages.
+  size_t i;
   for (i = 0; i < gChunkHeaderNumPages - 1; i++) {
     aChunk->map[i].bits = 0;
   }
-  // Mark the leading guard page (last header page) as decommitted.
-  aChunk->map[i++].bits = CHUNK_MAP_DECOMMITTED;
-
-  // Mark the area usable for runs as available, note size at start and end
-  aChunk->map[i++].bits = gMaxLargeClass | flags;
-  for (; i < gChunkNumPages - 2; i++) {
-    aChunk->map[i].bits = flags;
-  }
-  aChunk->map[gChunkNumPages - 2].bits = gMaxLargeClass | flags;
-
-  // Mark the trailing guard page as decommitted.
-  aChunk->map[gChunkNumPages - 1].bits = CHUNK_MAP_DECOMMITTED;
-
-#ifdef MALLOC_DECOMMIT
-  // Start out decommitted, in order to force a closer correspondence
-  // between dirty pages and committed untouched pages. This includes
-  // leading and trailing guard pages.
-  pages_decommit((void*)(uintptr_t(run) - gPageSize),
-                 gMaxLargeClass + 2 * gPageSize);
-#else
-  // Decommit the last header page (=leading page) as a guard.
-  pages_decommit((void*)(uintptr_t(run) - gPageSize), gPageSize);
-  // Decommit the last page as a guard.
-  pages_decommit((void*)(uintptr_t(aChunk) + kChunkSize - gPageSize),
-                 gPageSize);
-#endif
-
   mStats.committed += gChunkHeaderNumPages - 1;
 
-  // Insert the run into the tree of available runs.
+  // Decommit the last header page (=leading page) as a guard.
+  pages_decommit((void*)(uintptr_t(aChunk) + (i << gPageSize2Pow)), gPageSize);
+  aChunk->map[i++].bits = CHUNK_MAP_DECOMMITTED;
+
+  // If MALLOC_DECOMMIT is enabled then commit only the pages we're about to
+  // use.  Otherwise commit all of them.
+#ifdef MALLOC_DECOMMIT
+  size_t n_fresh_pages = aMinCommittedPages;
+#else
+  size_t n_fresh_pages = gChunkNumPages - 1 - gChunkHeaderNumPages;
+#endif
+
+  // The committed pages are marked as Fresh.  Our caller, SplitRun will update
+  // this when it uses them.
+  for (size_t j = 0; j < n_fresh_pages; j++) {
+    aChunk->map[i + j].bits = CHUNK_MAP_ZEROED | CHUNK_MAP_FRESH;
+  }
+  i += n_fresh_pages;
+
+#ifndef MALLOC_DECOMMIT
+  // If MALLOC_DECOMMIT isn't defined then all the pages are fresh and setup in
+  // the loop above.
+  MOZ_ASSERT(i == gChunkNumPages - 1);
+#endif
+
+  // If MALLOC_DECOMMIT is defined, then this will decommit the remainder of the
+  // chunk plus the last page which is a guard page, if it is not defined it
+  // will only decommit the guard page.
+  pages_decommit((void*)(uintptr_t(aChunk) + (i << gPageSize2Pow)),
+                 (gChunkNumPages - i) << gPageSize2Pow);
+  for (; i < gChunkNumPages; i++) {
+    aChunk->map[i].bits = CHUNK_MAP_DECOMMITTED;
+  }
+
+  // aMinCommittedPages will create a valid run.
+  MOZ_ASSERT(aMinCommittedPages > 0);
+  MOZ_ASSERT(aMinCommittedPages <= gChunkNumPages - gChunkHeaderNumPages - 1);
+
+  // Create the run.
+  aChunk->map[gChunkHeaderNumPages].bits |= gMaxLargeClass;
+  aChunk->map[gChunkNumPages - 2].bits |= gMaxLargeClass;
   mRunsAvail.Insert(&aChunk->map[gChunkHeaderNumPages]);
 
 #ifdef MALLOC_DOUBLE_PURGE
@@ -2851,7 +2862,7 @@ arena_run_t* arena_t::AllocRun(size_t aSize, bool aLarge, bool aZero) {
       return nullptr;
     }
 
-    InitChunk(chunk);
+    InitChunk(chunk, aSize >> gPageSize2Pow);
     run = (arena_run_t*)(uintptr_t(chunk) +
                          (gChunkHeaderNumPages << gPageSize2Pow));
   }
