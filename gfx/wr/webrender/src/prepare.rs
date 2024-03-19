@@ -20,7 +20,7 @@ use crate::spatial_tree::{SpatialNodeIndex, SpatialTree};
 use crate::clip::{ClipDataStore, ClipNodeFlags, ClipChainInstance, ClipItemKind};
 use crate::frame_builder::{FrameBuildingContext, FrameBuildingState, PictureContext, PictureState};
 use crate::gpu_cache::{GpuCacheHandle, GpuDataRequest};
-use crate::gpu_types::{BrushFlags, QuadSegment};
+use crate::gpu_types::BrushFlags;
 use crate::internal_types::{FastHashMap, PlaneSplitAnchor, Filter};
 use crate::picture::{PicturePrimitive, SliceId, ClusterFlags, PictureCompositeMode};
 use crate::picture::{PrimitiveList, PrimitiveCluster, SurfaceIndex, TileCacheInstance, SubpixelMode, Picture3DContext};
@@ -34,7 +34,6 @@ use crate::render_task_graph::RenderTaskId;
 use crate::render_task_cache::RenderTaskCacheKeyKind;
 use crate::render_task_cache::{RenderTaskCacheKey, to_cache_size, RenderTaskParent};
 use crate::render_task::{RenderTaskKind, RenderTask, SubPass, MaskSubPass, EmptyTask};
-use crate::renderer::{GpuBufferBuilderF, GpuBufferAddress};
 use crate::segment::SegmentBuilder;
 use crate::util::{clamp_to_scale_factor, pack_as_float};
 use crate::visibility::{compute_conservative_visible_rect, PrimitiveVisibility, VisibilityState};
@@ -896,7 +895,7 @@ fn prepare_interned_prim_for_render(
                     .clipped_local_rect
                     .cast_unit();
 
-                let prim_address_f = write_prim_blocks(
+                let prim_address_f = quad::write_prim_blocks(
                     &mut frame_state.frame_gpu_data.f32,
                     prim_local_rect,
                     prim_instance.vis.clip_chain.local_clip_rect,
@@ -1719,34 +1718,6 @@ fn adjust_mask_scale_for_max_size(device_rect: DeviceIntRect, device_pixel_scale
     } else {
         (device_rect, device_pixel_scale)
     }
-}
-
-pub fn write_prim_blocks(
-    builder: &mut GpuBufferBuilderF,
-    prim_rect: LayoutRect,
-    clip_rect: LayoutRect,
-    color: PremultipliedColorF,
-    segments: &[QuadSegment],
-) -> GpuBufferAddress {
-    let mut writer = builder.write_blocks(3 + segments.len() * 2);
-
-    writer.push_one(prim_rect);
-    writer.push_one(clip_rect);
-    writer.push_one(color);
-
-    for segment in segments {
-        writer.push_one(segment.rect);
-        match segment.task_id {
-            RenderTaskId::INVALID => {
-                writer.push_one([0.0; 4]);
-            }
-            task_id => {
-                writer.push_render_task(task_id);
-            }
-        }
-    }
-
-    writer.finish()
 }
 
 impl CompositorSurfaceKind {
