@@ -48,6 +48,7 @@ StyleEditorPanel.prototype = {
       cssProperties
     );
     this.UI.on("error", this._showError);
+    this.UI.on("reloaded", () => this.emit("reloaded"));
     await this.UI.initialize(options);
 
     return this;

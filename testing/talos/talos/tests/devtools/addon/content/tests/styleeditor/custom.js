@@ -7,18 +7,21 @@
 const {
   openToolboxAndLog,
   closeToolboxAndLog,
-  reloadPageAndLog,
   testSetup,
   testTeardown,
   PAGES_BASE_URL,
 } = require("damp-test/tests/head");
+
+const {
+  reloadStyleEditorAndLog,
+} = require("damp-test/tests/styleeditor/styleeditor-helpers");
 
 const TEST_URL = PAGES_BASE_URL + "custom/styleeditor/index.html";
 
 module.exports = async function () {
   await testSetup(TEST_URL);
   const toolbox = await openToolboxAndLog("custom.styleeditor", "styleeditor");
-  await reloadPageAndLog("custom.styleeditor", toolbox);
+  await reloadStyleEditorAndLog("custom.styleeditor", toolbox);
 
   await closeToolboxAndLog("custom.styleeditor", toolbox);
   await testTeardown();

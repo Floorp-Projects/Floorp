@@ -7,11 +7,14 @@
 const {
   openToolboxAndLog,
   closeToolboxAndLog,
-  reloadPageAndLog,
   testSetup,
   testTeardown,
   COMPLICATED_URL,
 } = require("damp-test/tests/head");
+
+const {
+  reloadStyleEditorAndLog,
+} = require("damp-test/tests/styleeditor/styleeditor-helpers");
 
 module.exports = async function () {
   await testSetup(COMPLICATED_URL);
@@ -19,7 +22,7 @@ module.exports = async function () {
     "complicated.styleeditor",
     "styleeditor"
   );
-  await reloadPageAndLog("complicated.styleeditor", toolbox);
+  await reloadStyleEditorAndLog("complicated.styleeditor", toolbox);
   await closeToolboxAndLog("complicated.styleeditor", toolbox);
   await testTeardown();
 };
