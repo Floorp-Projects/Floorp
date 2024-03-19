@@ -772,6 +772,8 @@ enum vp8e_enc_control_id {
   /*!\brief Codec control to use external RC to control TPL.
    *
    * This will use external RC to control the QP and GOP structure for TPL.
+   * (rc_type & VPX_RC_QP) in vpx_rc_funcs_t must be non zero.
+   * get_encodeframe_decision callback in vpx_rc_funcs_t also needs to be set.
    *
    * Supported in codecs: VP9
    */

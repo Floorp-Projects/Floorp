@@ -428,6 +428,7 @@ int vp8_create_decoder_instances(struct frame_buffers *fb, VP8D_CONFIG *oxcf) {
 
 #if CONFIG_MULTITHREAD
   if (setjmp(fb->pbi[0]->common.error.jmp)) {
+    fb->pbi[0]->common.error.setjmp = 0;
     vp8_remove_decoder_instances(fb);
     vp8_zero(fb->pbi);
     vpx_clear_system_state();
@@ -452,6 +453,7 @@ int vp8_remove_decoder_instances(struct frame_buffers *fb) {
 
   /* decoder instance for single thread mode */
   remove_decompressor(pbi);
+  fb->pbi[0] = NULL;
   return VPX_CODEC_OK;
 }
 

@@ -193,7 +193,7 @@ TEST_F(VP9FrameSizeTestsLarge, ValidSizes) {
 // size or almost 1 gig of memory.
 // In total the allocations will exceed 2GiB which may cause a failure with
 // mingw + wine, use a smaller size in that case.
-#if defined(_WIN32) && !defined(_WIN64) || defined(__OS2__)
+#if defined(_WIN32) && !defined(_WIN64)
   video.SetSize(4096, 3072);
 #else
   video.SetSize(4096, 4096);

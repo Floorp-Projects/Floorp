@@ -488,7 +488,7 @@ static vpx_codec_err_t vp8_decode(vpx_codec_alg_priv_t *ctx,
       if (pc->fb_idx_ref_cnt[pc->new_fb_idx] > 0) {
         pc->fb_idx_ref_cnt[pc->new_fb_idx]--;
       }
-      pc->error.setjmp = 0;
+      pbi->common.error.setjmp = 0;
 #if CONFIG_MULTITHREAD
       if (pbi->restart_threads) {
         ctx->si.w = 0;

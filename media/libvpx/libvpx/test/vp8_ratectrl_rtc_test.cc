@@ -149,9 +149,16 @@ class Vp8RcInterfaceTest
       return;
     }
     int qp;
+    libvpx::UVDeltaQP uv_delta_qp;
     encoder->Control(VP8E_GET_LAST_QUANTIZER, &qp);
     if (rc_api_->ComputeQP(frame_params_) == libvpx::FrameDropDecision::kOk) {
       ASSERT_EQ(rc_api_->GetQP(), qp);
+      uv_delta_qp = rc_api_->GetUVDeltaQP();
+      // delta_qp for UV channel is only set for screen.
+      if (!rc_cfg_.is_screen) {
+        ASSERT_EQ(uv_delta_qp.uvdc_delta_q, 0);
+        ASSERT_EQ(uv_delta_qp.uvac_delta_q, 0);
+      }
     } else {
       num_drops_++;
     }

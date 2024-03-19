@@ -28,7 +28,6 @@ extern "C" {
 typedef int16_t InterpKernel[SUBPEL_TAPS];
 
 static INLINE int vpx_get_filter_taps(const int16_t *const filter) {
-  assert(filter[3] != 128);
   if (filter[0] | filter[7]) {
     return 8;
   }

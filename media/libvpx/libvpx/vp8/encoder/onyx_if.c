@@ -63,7 +63,7 @@
 extern int vp8_update_coef_context(VP8_COMP *cpi);
 #endif
 
-extern unsigned int vp8_get_processor_freq();
+extern unsigned int vp8_get_processor_freq(void);
 
 int vp8_calc_ss_err(YV12_BUFFER_CONFIG *source, YV12_BUFFER_CONFIG *dest);
 
@@ -267,7 +267,11 @@ static int rescale(int val, int num, int denom) {
   int64_t llden = denom;
   int64_t llval = val;
 
-  return (int)(llval * llnum / llden);
+  int64_t result = (llval * llnum / llden);
+  if (result <= INT_MAX)
+    return (int)result;
+  else
+    return INT_MAX;
 }
 
 void vp8_init_temporal_layer_context(VP8_COMP *cpi, const VP8_CONFIG *oxcf,
@@ -276,7 +280,10 @@ void vp8_init_temporal_layer_context(VP8_COMP *cpi, const VP8_CONFIG *oxcf,
   LAYER_CONTEXT *lc = &cpi->layer_context[layer];
 
   lc->framerate = cpi->output_framerate / cpi->oxcf.rate_decimator[layer];
-  lc->target_bandwidth = cpi->oxcf.target_bitrate[layer] * 1000;
+  if (cpi->oxcf.target_bitrate[layer] > INT_MAX / 1000)
+    lc->target_bandwidth = INT_MAX;
+  else
+    lc->target_bandwidth = cpi->oxcf.target_bitrate[layer] * 1000;
 
   lc->starting_buffer_level_in_ms = oxcf->starting_buffer_level;
   lc->optimal_buffer_level_in_ms = oxcf->optimal_buffer_level;
@@ -1381,7 +1388,10 @@ void vp8_update_layer_contexts(VP8_COMP *cpi) {
       LAYER_CONTEXT *lc = &cpi->layer_context[i];
 
       lc->framerate = cpi->ref_framerate / oxcf->rate_decimator[i];
-      lc->target_bandwidth = oxcf->target_bitrate[i] * 1000;
+      if (oxcf->target_bitrate[i] > INT_MAX / 1000)
+        lc->target_bandwidth = INT_MAX;
+      else
+        lc->target_bandwidth = oxcf->target_bitrate[i] * 1000;
 
       lc->starting_buffer_level = rescale(
           (int)oxcf->starting_buffer_level_in_ms, lc->target_bandwidth, 1000);
@@ -1995,6 +2005,7 @@ struct VP8_COMP *vp8_create_compressor(const VP8_CONFIG *oxcf) {
 
 #if CONFIG_MULTITHREAD
   if (vp8cx_create_encoder_threads(cpi)) {
+    cpi->common.error.setjmp = 0;
     vp8_remove_compressor(&cpi);
     return 0;
   }
@@ -2048,8 +2059,6 @@ struct VP8_COMP *vp8_create_compressor(const VP8_CONFIG *oxcf) {
 
   vp8_loop_filter_init(cm);
 
-  cpi->common.error.setjmp = 0;
-
 #if CONFIG_MULTI_RES_ENCODING
 
   /* Calculate # of MBs in a row in lower-resolution level image. */
@@ -2075,6 +2084,8 @@ struct VP8_COMP *vp8_create_compressor(const VP8_CONFIG *oxcf) {
   /* setup block ptrs & offsets */
   vp8_setup_block_ptrs(&cpi->mb);
   vp8_setup_block_dptrs(&cpi->mb.e_mbd);
+
+  cpi->common.error.setjmp = 0;
 
   return cpi;
 }
@@ -3172,7 +3183,8 @@ void vp8_loopfilter_frame(VP8_COMP *cpi, VP8_COMMON *cm) {
 
 #if CONFIG_MULTITHREAD
   if (vpx_atomic_load_acquire(&cpi->b_multi_threaded)) {
-    sem_post(&cpi->h_event_end_lpf); /* signal that we have set filter_level */
+    /* signal that we have set filter_level */
+    vp8_sem_post(&cpi->h_event_end_lpf);
   }
 #endif
 
@@ -4387,11 +4399,11 @@ static void encode_frame_to_data_rate(VP8_COMP *cpi, size_t *size,
 #if CONFIG_MULTITHREAD
   if (vpx_atomic_load_acquire(&cpi->b_multi_threaded)) {
     /* start loopfilter in separate thread */
-    sem_post(&cpi->h_event_start_lpf);
+    vp8_sem_post(&cpi->h_event_start_lpf);
     cpi->b_lpf_running = 1;
     /* wait for the filter_level to be picked so that we can continue with
      * stream packing */
-    sem_wait(&cpi->h_event_end_lpf);
+    vp8_sem_wait(&cpi->h_event_end_lpf);
   } else
 #endif
   {
@@ -5120,6 +5132,14 @@ int vp8_get_compressed_data(VP8_COMP *cpi, unsigned int *frame_flags,
   vpx_usec_timer_mark(&cmptimer);
   cpi->time_compress_data += vpx_usec_timer_elapsed(&cmptimer);
 
+#if CONFIG_MULTITHREAD
+  /* wait for the lpf thread done */
+  if (vpx_atomic_load_acquire(&cpi->b_multi_threaded) && cpi->b_lpf_running) {
+    vp8_sem_wait(&cpi->h_event_end_lpf);
+    cpi->b_lpf_running = 0;
+  }
+#endif
+
   if (cpi->b_calculate_psnr && cpi->pass != 1 && cm->show_frame) {
     generate_psnr_packet(cpi);
   }
@@ -5245,16 +5265,6 @@ int vp8_get_compressed_data(VP8_COMP *cpi, unsigned int *frame_flags,
     }
 
 #endif
-#endif
-
-  cpi->common.error.setjmp = 0;
-
-#if CONFIG_MULTITHREAD
-  /* wait for the lpf thread done */
-  if (vpx_atomic_load_acquire(&cpi->b_multi_threaded) && cpi->b_lpf_running) {
-    sem_wait(&cpi->h_event_end_lpf);
-    cpi->b_lpf_running = 0;
-  }
 #endif
 
   return 0;

@@ -35,6 +35,7 @@
 #include "vp9/encoder/vp9_ext_ratectrl.h"
 #include "vp9/encoder/vp9_firstpass.h"
 #include "vp9/encoder/vp9_ratectrl.h"
+#include "vp9/encoder/vp9_svc_layercontext.h"
 
 #include "vpx/vpx_codec.h"
 #include "vpx/vpx_ext_ratectrl.h"
@@ -1433,8 +1434,8 @@ static int rc_constant_q(const VP9_COMP *cpi, int *bottom_index, int *top_index,
   return q;
 }
 
-static int rc_pick_q_and_bounds_two_pass(const VP9_COMP *cpi, int *bottom_index,
-                                         int *top_index, int gf_group_index) {
+int vp9_rc_pick_q_and_bounds_two_pass(const VP9_COMP *cpi, int *bottom_index,
+                                      int *top_index, int gf_group_index) {
   const VP9_COMMON *const cm = &cpi->common;
   const RATE_CONTROL *const rc = &cpi->rc;
   const VP9EncoderConfig *const oxcf = &cpi->oxcf;
@@ -1581,7 +1582,6 @@ static int rc_pick_q_and_bounds_two_pass(const VP9_COMP *cpi, int *bottom_index,
         q = active_worst_quality;
     }
   }
-  clamp(q, active_best_quality, active_worst_quality);
 
   *top_index = active_worst_quality;
   *bottom_index = active_best_quality;
@@ -1603,8 +1603,8 @@ int vp9_rc_pick_q_and_bounds(const VP9_COMP *cpi, int *bottom_index,
     else
       q = rc_pick_q_and_bounds_one_pass_vbr(cpi, bottom_index, top_index);
   } else {
-    q = rc_pick_q_and_bounds_two_pass(cpi, bottom_index, top_index,
-                                      gf_group_index);
+    q = vp9_rc_pick_q_and_bounds_two_pass(cpi, bottom_index, top_index,
+                                          gf_group_index);
   }
   if (cpi->sf.use_nonrd_pick_mode) {
     if (cpi->sf.force_frame_boost == 1) q -= cpi->sf.max_delta_qindex;
@@ -1673,63 +1673,6 @@ void vp9_configure_buffer_updates(VP9_COMP *cpi, int gf_group_index) {
       cpi->refresh_alt_ref_frame = 1;
       break;
   }
-}
-
-void vp9_estimate_qp_gop(VP9_COMP *cpi) {
-  int gop_length = cpi->twopass.gf_group.gf_group_size;
-  int bottom_index, top_index;
-  int idx;
-  const int gf_index = cpi->twopass.gf_group.index;
-  const int is_src_frame_alt_ref = cpi->rc.is_src_frame_alt_ref;
-  const int refresh_frame_context = cpi->common.refresh_frame_context;
-
-  for (idx = 1; idx <= gop_length; ++idx) {
-    TplDepFrame *tpl_frame = &cpi->tpl_stats[idx];
-    int target_rate = cpi->twopass.gf_group.bit_allocation[idx];
-    cpi->twopass.gf_group.index = idx;
-    vp9_rc_set_frame_target(cpi, target_rate);
-    vp9_configure_buffer_updates(cpi, idx);
-    if (cpi->tpl_with_external_rc) {
-      if (cpi->ext_ratectrl.ready &&
-          (cpi->ext_ratectrl.funcs.rc_type & VPX_RC_QP) != 0 &&
-          cpi->ext_ratectrl.funcs.get_encodeframe_decision != NULL) {
-        VP9_COMMON *cm = &cpi->common;
-        vpx_codec_err_t codec_status;
-        const GF_GROUP *gf_group = &cpi->twopass.gf_group;
-        vpx_rc_encodeframe_decision_t encode_frame_decision;
-        FRAME_UPDATE_TYPE update_type = gf_group->update_type[gf_group->index];
-        RefCntBuffer *ref_frame_bufs[MAX_INTER_REF_FRAMES];
-        const RefCntBuffer *curr_frame_buf =
-            get_ref_cnt_buffer(cm, cm->new_fb_idx);
-        // index 0 of a gf group is always KEY/OVERLAY/GOLDEN.
-        // index 1 refers to the first encoding frame in a gf group.
-        // Therefore if it is ARF_UPDATE, it means this gf group uses alt ref.
-        // See function define_gf_group_structure().
-        const int use_alt_ref = gf_group->update_type[1] == ARF_UPDATE;
-        const int frame_coding_index = cm->current_frame_coding_index + idx - 1;
-        get_ref_frame_bufs(cpi, ref_frame_bufs);
-        codec_status = vp9_extrc_get_encodeframe_decision(
-            &cpi->ext_ratectrl, curr_frame_buf->frame_index, frame_coding_index,
-            gf_group->index, update_type, gf_group->gf_group_size, use_alt_ref,
-            ref_frame_bufs, 0 /*ref_frame_flags is not used*/,
-            &encode_frame_decision);
-        if (codec_status != VPX_CODEC_OK) {
-          vpx_internal_error(&cm->error, codec_status,
-                             "vp9_extrc_get_encodeframe_decision() failed");
-        }
-        tpl_frame->base_qindex = encode_frame_decision.q_index;
-      }
-    } else {
-      tpl_frame->base_qindex =
-          rc_pick_q_and_bounds_two_pass(cpi, &bottom_index, &top_index, idx);
-      tpl_frame->base_qindex = VPXMAX(tpl_frame->base_qindex, 1);
-    }
-  }
-  // Reset the actual index and frame update
-  cpi->twopass.gf_group.index = gf_index;
-  cpi->rc.is_src_frame_alt_ref = is_src_frame_alt_ref;
-  cpi->common.refresh_frame_context = refresh_frame_context;
-  vp9_configure_buffer_updates(cpi, gf_index);
 }
 
 void vp9_rc_compute_frame_size_bounds(const VP9_COMP *cpi, int frame_target,
@@ -3361,14 +3304,20 @@ int vp9_encodedframe_overshoot(VP9_COMP *cpi, int frame_size, int *q) {
       cpi->rc.rate_correction_factors[INTER_NORMAL] = rate_correction_factor;
     }
     // For temporal layers, reset the rate control parametes across all
-    // temporal layers. If the first_spatial_layer_to_encode > 0, then this
-    // superframe has skipped lower base layers. So in this case we should also
-    // reset and force max-q for spatial layers < first_spatial_layer_to_encode.
+    // temporal layers.
+    // If the first_spatial_layer_to_encode > 0, then this superframe has
+    // skipped lower base layers. So in this case we should also reset and
+    // force max-q for spatial layers < first_spatial_layer_to_encode.
+    // For the case of no inter-layer prediction on delta frames: reset and
+    // force max-q for all spatial layers, to avoid excessive frame drops.
     if (cpi->use_svc) {
       int tl = 0;
       int sl = 0;
       SVC *svc = &cpi->svc;
-      for (sl = 0; sl < VPXMAX(1, svc->first_spatial_layer_to_encode); ++sl) {
+      int num_spatial_layers = VPXMAX(1, svc->first_spatial_layer_to_encode);
+      if (svc->disable_inter_layer_pred != INTER_LAYER_PRED_ON)
+        num_spatial_layers = svc->number_spatial_layers;
+      for (sl = 0; sl < num_spatial_layers; ++sl) {
         for (tl = 0; tl < svc->number_temporal_layers; ++tl) {
           const int layer =
               LAYER_IDS_TO_IDX(sl, tl, svc->number_temporal_layers);

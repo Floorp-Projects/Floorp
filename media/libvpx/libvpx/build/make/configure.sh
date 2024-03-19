@@ -74,6 +74,8 @@ Build options:
   --cpu=CPU                   optimize for a specific cpu rather than a family
   --extra-cflags=ECFLAGS      add ECFLAGS to CFLAGS [$CFLAGS]
   --extra-cxxflags=ECXXFLAGS  add ECXXFLAGS to CXXFLAGS [$CXXFLAGS]
+  --use-profile=PROFILE_FILE
+                              Use PROFILE_FILE for PGO
   ${toggle_extra_warnings}    emit harmless warnings (always non-fatal)
   ${toggle_werror}            treat warnings as errors, if possible
                               (not available with all compilers)
@@ -81,6 +83,7 @@ Build options:
   ${toggle_pic}               turn on/off Position Independent Code
   ${toggle_ccache}            turn on/off compiler cache
   ${toggle_debug}             enable/disable debug mode
+  ${toggle_profile}           enable/disable profiling
   ${toggle_gprof}             enable/disable gprof profiling instrumentation
   ${toggle_gcov}              enable/disable gcov coverage instrumentation
   ${toggle_thumb}             enable/disable building arm assembly in thumb mode
@@ -429,6 +432,26 @@ check_gcc_machine_options() {
   fi
 }
 
+check_neon_sve_bridge_compiles() {
+  if enabled sve; then
+    check_cc -march=armv8.2-a+dotprod+i8mm+sve <<EOF
+#ifndef __ARM_NEON_SVE_BRIDGE
+#error 1
+#endif
+#include <arm_sve.h>
+#include <arm_neon_sve_bridge.h>
+EOF
+    compile_result=$?
+    if [ ${compile_result} -ne 0 ]; then
+      log_echo "  disabling sve: arm_neon_sve_bridge.h not supported by compiler"
+      log_echo "  disabling sve2: arm_neon_sve_bridge.h not supported by compiler"
+      disable_feature sve
+      disable_feature sve2
+      RTCD_OPTIONS="${RTCD_OPTIONS}--disable-sve --disable-sve2 "
+    fi
+  fi
+}
+
 check_gcc_avx512_compiles() {
   if disabled gcc; then
     return
@@ -610,6 +633,9 @@ process_common_cmdline() {
         ;;
       --extra-cxxflags=*)
         extra_cxxflags="${optval}"
+        ;;
+      --use-profile=*)
+        pgo_file=${optval}
         ;;
       --enable-?*|--disable-?*)
         eval `echo "$opt" | sed 's/--/action=/;s/-/ option=/;s/-/_/g'`
@@ -951,7 +977,7 @@ EOF
       add_cflags  "-mmacosx-version-min=10.15"
       add_ldflags "-mmacosx-version-min=10.15"
       ;;
-    *-darwin2[0-2]-*)
+    *-darwin2[0-3]-*)
       add_cflags  "-arch ${toolchain%%-*}"
       add_ldflags "-arch ${toolchain%%-*}"
       ;;
@@ -980,36 +1006,18 @@ EOF
   case ${toolchain} in
     arm*)
       soft_enable runtime_cpu_detect
-      # Arm ISA extensions are treated as supersets.
-      case ${tgt_isa} in
-        arm64|armv8)
-          for ext in ${ARCH_EXT_LIST_AARCH64}; do
-            # Disable higher order extensions to simplify dependencies.
-            if [ "$disable_exts" = "yes" ]; then
-              if ! disabled $ext; then
-                RTCD_OPTIONS="${RTCD_OPTIONS}--disable-${ext} "
-                disable_feature $ext
-              fi
-            elif disabled $ext; then
-              disable_exts="yes"
-            else
-              soft_enable $ext
-            fi
-          done
-          ;;
-        armv7|armv7s)
-          soft_enable neon
-          # Only enable neon_asm when neon is also enabled.
-          enabled neon && soft_enable neon_asm
-          # If someone tries to force it through, die.
-          if disabled neon && enabled neon_asm; then
-            die "Disabling neon while keeping neon-asm is not supported"
-          fi
-          ;;
-      esac
+
+      if [ ${tgt_isa} = "armv7" ] || [ ${tgt_isa} = "armv7s" ]; then
+        soft_enable neon
+        # Only enable neon_asm when neon is also enabled.
+        enabled neon && soft_enable neon_asm
+        # If someone tries to force it through, die.
+        if disabled neon && enabled neon_asm; then
+          die "Disabling neon while keeping neon-asm is not supported"
+        fi
+      fi
 
       asm_conversion_cmd="cat"
-
       case ${tgt_cc} in
         gcc)
           link_with_cc=gcc
@@ -1228,6 +1236,38 @@ EOF
           fi
           ;;
       esac
+
+      # AArch64 ISA extensions are treated as supersets.
+      if [ ${tgt_isa} = "arm64" ] || [ ${tgt_isa} = "armv8" ]; then
+        aarch64_arch_flag_neon="arch=armv8-a"
+        aarch64_arch_flag_neon_dotprod="arch=armv8.2-a+dotprod"
+        aarch64_arch_flag_neon_i8mm="arch=armv8.2-a+dotprod+i8mm"
+        aarch64_arch_flag_sve="arch=armv8.2-a+dotprod+i8mm+sve"
+        aarch64_arch_flag_sve2="arch=armv9-a+sve2"
+        for ext in ${ARCH_EXT_LIST_AARCH64}; do
+          if [ "$disable_exts" = "yes" ]; then
+            RTCD_OPTIONS="${RTCD_OPTIONS}--disable-${ext} "
+            soft_disable $ext
+          else
+            # Check the compiler supports the -march flag for the extension.
+            # This needs to happen after toolchain/OS inspection so we handle
+            # $CROSS etc correctly when checking for flags, else these will
+            # always fail.
+            flag="$(eval echo \$"aarch64_arch_flag_${ext}")"
+            check_gcc_machine_option "${flag}" "${ext}"
+            if ! enabled $ext; then
+              # Disable higher order extensions to simplify dependencies.
+              disable_exts="yes"
+              RTCD_OPTIONS="${RTCD_OPTIONS}--disable-${ext} "
+              soft_disable $ext
+            fi
+          fi
+        done
+        if enabled sve; then
+          check_neon_sve_bridge_compiles
+        fi
+      fi
+
       ;;
     mips*)
       link_with_cc=gcc
@@ -1484,6 +1524,14 @@ EOF
       ;;
   esac
 
+  # Enable PGO
+  if [ -n "${pgo_file}" ]; then
+   check_add_cflags -fprofile-use=${pgo_file} || \
+     die "-fprofile-use is not supported by compiler"
+   check_add_ldflags -fprofile-use=${pgo_file} || \
+     die "-fprofile-use is not supported by linker"
+  fi
+
   # Try to enable CPU specific tuning
   if [ -n "${tune_cpu}" ]; then
     if [ -n "${tune_cflags}" ]; then
@@ -1504,6 +1552,9 @@ EOF
   else
     check_add_cflags -DNDEBUG
   fi
+  enabled profile &&
+    check_add_cflags -fprofile-generate &&
+    check_add_ldflags -fprofile-generate
 
   enabled gprof && check_add_cflags -pg && check_add_ldflags -pg
   enabled gcov &&

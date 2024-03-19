@@ -31,7 +31,6 @@ extern "C" {
 
 #include "./vpx_codec.h"  // IWYU pragma: export
 #include "./vpx_ext_ratectrl.h"
-#include "./vpx_tpl.h"
 
 /*! Temporal Scalability: Maximum length of the sequence defining frame
  * layer membership
@@ -57,10 +56,15 @@ extern "C" {
  * must be bumped.  Examples include, but are not limited to, changing
  * types, removing or reassigning enums, adding/removing/rearranging
  * fields to structures
+ *
+ * \note
+ * VPX_ENCODER_ABI_VERSION has a VPX_EXT_RATECTRL_ABI_VERSION component
+ * because the VP9E_SET_EXTERNAL_RATE_CONTROL codec control uses
+ * vpx_rc_funcs_t.
  */
-#define VPX_ENCODER_ABI_VERSION                                \
-  (16 + VPX_CODEC_ABI_VERSION + VPX_EXT_RATECTRL_ABI_VERSION + \
-   VPX_TPL_ABI_VERSION) /**<\hideinitializer*/
+#define VPX_ENCODER_ABI_VERSION \
+  (18 + VPX_CODEC_ABI_VERSION + \
+   VPX_EXT_RATECTRL_ABI_VERSION) /**<\hideinitializer*/
 
 /*! \brief Encoder capabilities bitfield
  *
@@ -1074,6 +1078,12 @@ vpx_codec_err_t vpx_codec_encode(vpx_codec_ctx_t *ctx, const vpx_image_t *img,
  *     The buffer was set successfully.
  * \retval #VPX_CODEC_INVALID_PARAM
  *     A parameter was NULL, the image format is unsupported, etc.
+ *
+ * \note
+ * `duration` and `deadline` are of the unsigned long type, which can be 32
+ * or 64 bits. `duration` and `deadline` must be less than or equal to
+ * UINT32_MAX so that their ranges are independent of the size of unsigned
+ * long.
  */
 vpx_codec_err_t vpx_codec_set_cx_data_buf(vpx_codec_ctx_t *ctx,
                                           const vpx_fixed_buf_t *buf,

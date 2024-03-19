@@ -47,8 +47,8 @@ vpx_codec_err_t vpx_write_tpl_gop_stats(FILE *tpl_file,
                   "%" PRId64 " %" PRId64 " %" PRId16 " %" PRId16 " %" PRId64
                   " %" PRId64 " %d\n",
                   block_stats.inter_cost, block_stats.intra_cost,
-                  block_stats.mv_c, block_stats.mv_r, block_stats.recrf_dist,
-                  block_stats.recrf_rate, block_stats.ref_frame_index));
+                  block_stats.mv_c, block_stats.mv_r, block_stats.srcrf_dist,
+                  block_stats.srcrf_rate, block_stats.ref_frame_index));
     }
   }
 
@@ -88,7 +88,7 @@ vpx_codec_err_t vpx_read_tpl_gop_stats(FILE *tpl_file,
                  " %" SCNd64 " %d\n",
                  &block_stats->inter_cost, &block_stats->intra_cost,
                  &block_stats->mv_c, &block_stats->mv_r,
-                 &block_stats->recrf_dist, &block_stats->recrf_rate,
+                 &block_stats->srcrf_dist, &block_stats->srcrf_rate,
                  &block_stats->ref_frame_index),
           7);
     }

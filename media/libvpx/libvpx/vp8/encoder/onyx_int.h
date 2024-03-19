@@ -20,6 +20,7 @@
 #include "tokenize.h"
 #include "vp8/common/onyxc_int.h"
 #include "vpx_dsp/variance.h"
+#include "vpx_util/vpx_pthread.h"
 #include "encodemb.h"
 #include "vp8/encoder/quantize.h"
 #include "vp8/common/entropy.h"
@@ -540,10 +541,10 @@ typedef struct VP8_COMP {
   LPFTHREAD_DATA lpf_thread_data;
 
   /* events */
-  sem_t *h_event_start_encoding;
-  sem_t *h_event_end_encoding;
-  sem_t h_event_start_lpf;
-  sem_t h_event_end_lpf;
+  vp8_sem_t *h_event_start_encoding;
+  vp8_sem_t *h_event_end_encoding;
+  vp8_sem_t h_event_start_lpf;
+  vp8_sem_t h_event_end_lpf;
 #endif
 
   TOKENLIST *tplist;
