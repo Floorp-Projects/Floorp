@@ -10058,20 +10058,6 @@ JS_FOR_WASM_FEATURES(WASM_FEATURE)
 "wasmMetadataAnalysis(wasmObject)",
 "  Prints an analysis of the size of metadata on this wasm object.\n"),
 
-#if defined(DEBUG) || defined(JS_JITSPEW)
-    JS_FN_HELP("dumpObject", DumpObject, 1, 0,
-"dumpObject(obj)",
-"  Dump an internal representation of an object."),
-
-    JS_FN_HELP("dumpValue", DumpValue, 1, 0,
-"dumpValue(v)",
-"  Dump an internal representation of a value."),
-
-    JS_FN_HELP("dumpValueToString", DumpValueToString, 1, 0,
-"dumpValue(v)",
-"  Return a dump of an internal representation of a value."),
-#endif
-
     JS_FN_HELP("sharedMemoryEnabled", SharedMemoryEnabled, 0, 0,
 "sharedMemoryEnabled()",
 "  Return true if SharedArrayBuffer and Atomics are enabled"),
@@ -10128,17 +10114,6 @@ JS_FOR_WASM_FEATURES(WASM_FEATURE)
 "  immutable (or if it already was immutable), false otherwise.  Throws in case\n"
 "  of internal error, or if the operation doesn't even make sense (for example,\n"
 "  because the object is a revoked proxy)."),
-
-#ifdef DEBUG
-    JS_FN_HELP("dumpStringRepresentation", DumpStringRepresentation, 1, 0,
-"dumpStringRepresentation(str)",
-"  Print a human-readable description of how the string |str| is represented.\n"),
-
-    JS_FN_HELP("stringRepresentation", GetStringRepresentation, 1, 0,
-"stringRepresentation(str)",
-"  Return a human-readable description of how the string |str| is represented.\n"),
-
-#endif
 
     JS_FN_HELP("allocationMarker", AllocationMarker, 0, 0,
 "allocationMarker([options])",
@@ -10427,6 +10402,29 @@ JS_FN_HELP("getEnvironmentObjectType", GetEnvironmentObjectType, 1, 0,
       "getFuseState()",
       "  Return an object describing the calling realm's fuse state, "
       "as well as the state of any runtime fuses."),
+
+#if defined(DEBUG) || defined(JS_JITSPEW)
+    JS_FN_HELP("dumpObject", DumpObject, 1, 0,
+"dumpObject(obj)",
+"  Dump an internal representation of an object."),
+
+    JS_FN_HELP("dumpValue", DumpValue, 1, 0,
+"dumpValue(v)",
+"  Dump an internal representation of a value."),
+
+    JS_FN_HELP("dumpValueToString", DumpValueToString, 1, 0,
+"dumpValue(v)",
+"  Return a dump of an internal representation of a value."),
+
+    JS_FN_HELP("dumpStringRepresentation", DumpStringRepresentation, 1, 0,
+"dumpStringRepresentation(str)",
+"  Print a human-readable description of how the string |str| is represented.\n"),
+
+    JS_FN_HELP("stringRepresentation", GetStringRepresentation, 1, 0,
+"stringRepresentation(str)",
+"  Return a human-readable description of how the string |str| is represented.\n"),
+
+#endif
 
     JS_FS_HELP_END
 };
