@@ -42,7 +42,7 @@ async function recordReflows(testPromise, win = window) {
   let reflows = [];
 
   let observer = {
-    reflow(start, end) {
+    reflow() {
       // Gather information about the current code path.
       reflows.push(new Error().stack);
 
@@ -50,7 +50,7 @@ async function recordReflows(testPromise, win = window) {
       dirtyFrame(win);
     },
 
-    reflowInterruptible(start, end) {
+    reflowInterruptible() {
       // Interruptible reflows are the reflows caused by the refresh
       // driver ticking. These are fine.
     },
@@ -430,7 +430,7 @@ async function recordFrames(testPromise, win = window) {
 
   let frames = [];
 
-  let afterPaintListener = event => {
+  let afterPaintListener = () => {
     let width, height;
     canvas.width = width = win.innerWidth;
     canvas.height = height = win.innerHeight;

@@ -20,7 +20,7 @@ async function addNotificationPermission(originString) {
  */
 function promiseWindowClosed(window) {
   return new Promise(function (resolve) {
-    Services.ww.registerNotification(function observer(subject, topic, data) {
+    Services.ww.registerNotification(function observer(subject, topic) {
       if (topic == "domwindowclosed" && subject == window) {
         Services.ww.unregisterNotification(observer);
         resolve();

@@ -583,7 +583,7 @@ var SidebarUI = {
       if (this.browser.contentDocument.location.href != url) {
         this.browser.addEventListener(
           "load",
-          event => {
+          () => {
             // We're handling the 'load' event before it bubbles up to the usual
             // (non-capturing) event handlers. Let it bubble up before resolving.
             setTimeout(() => {

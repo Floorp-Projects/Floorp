@@ -1260,7 +1260,7 @@ var gIdentityHandler = {
     }
   },
 
-  handleEvent(event) {
+  handleEvent() {
     let elem = document.activeElement;
     let position = elem.compareDocumentPosition(this._identityPopup);
 
@@ -1278,7 +1278,7 @@ var gIdentityHandler = {
     }
   },
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     switch (topic) {
       case "perm-changed": {
         // Exclude permissions which do not appear in the UI in order to avoid

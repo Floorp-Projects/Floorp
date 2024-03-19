@@ -269,7 +269,7 @@ var gGestureSupport = {
       gHistorySwipeAnimation.updateAnimation(aEvent.delta);
     };
 
-    this._doEnd = function GS__doEnd(aEvent) {
+    this._doEnd = function GS__doEnd() {
       gHistorySwipeAnimation.swipeEndEventReceived();
 
       this._doUpdate = function () {};
@@ -393,7 +393,7 @@ var gGestureSupport = {
    * @param aEvent
    *        The continual motion update event to handle
    */
-  _doUpdate(aEvent) {},
+  _doUpdate() {},
 
   /**
    * Handle gesture end events.  This function will be set by _setupSwipe.
@@ -401,7 +401,7 @@ var gGestureSupport = {
    * @param aEvent
    *        The gesture end event to handle
    */
-  _doEnd(aEvent) {},
+  _doEnd() {},
 
   /**
    * Convert the swipe gesture into a browser action based on the direction.
@@ -874,7 +874,7 @@ var gHistorySwipeAnimation = {
     }
   },
 
-  _completeFadeOut: function HSA__completeFadeOut(aEvent) {
+  _completeFadeOut: function HSA__completeFadeOut() {
     if (!this._isStoppingAnimation) {
       // The animation was restarted in the middle of our stopping fade out
       // tranistion, so don't do anything.
@@ -943,7 +943,7 @@ var gHistorySwipeAnimation = {
     return element;
   },
 
-  observe(subj, topic, data) {
+  observe(subj, topic) {
     switch (topic) {
       case "nsPref:changed":
         this._initPrefValues();

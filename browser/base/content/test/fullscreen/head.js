@@ -5,7 +5,7 @@ function waitForFullScreenState(browser, state, actionAfterFSEvent) {
   return new Promise(resolve => {
     let eventReceived = false;
 
-    let observe = (subject, topic, data) => {
+    let observe = () => {
       if (!eventReceived) {
         return;
       }

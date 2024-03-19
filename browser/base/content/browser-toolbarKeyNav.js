@@ -137,7 +137,7 @@ ToolbarKeyboardNavigator = {
   },
 
   // CustomizableUI event handler
-  onWidgetAdded(aWidgetId, aArea, aPosition) {
+  onWidgetAdded(aWidgetId, aArea) {
     if (!this.kToolbars.includes(aArea)) {
       return;
     }

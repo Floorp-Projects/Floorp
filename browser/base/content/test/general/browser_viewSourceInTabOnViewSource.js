@@ -1,7 +1,7 @@
 function wait_while_tab_is_busy() {
   return new Promise(resolve => {
     let progressListener = {
-      onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
+      onStateChange(aWebProgress, aRequest, aStateFlags) {
         if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
           gBrowser.removeProgressListener(this);
           setTimeout(resolve, 0);
@@ -27,7 +27,7 @@ var with_new_tab_opened = async function (options, taskFn) {
 };
 
 add_task(async function test_regular_page() {
-  function test_expect_view_source_enabled(browser) {
+  function test_expect_view_source_enabled() {
     for (let element of [...XULBrowserWindow._elementsForViewSource]) {
       ok(!element.hasAttribute("disabled"), "View Source should be enabled");
     }
@@ -44,7 +44,7 @@ add_task(async function test_regular_page() {
 });
 
 add_task(async function test_view_source_page() {
-  function test_expect_view_source_disabled(browser) {
+  function test_expect_view_source_disabled() {
     for (let element of [...XULBrowserWindow._elementsForViewSource]) {
       ok(element.hasAttribute("disabled"), "View Source should be disabled");
     }

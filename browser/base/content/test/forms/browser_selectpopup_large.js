@@ -297,7 +297,7 @@ add_task(async function test_large_popup_in_small_window() {
     newWin,
     "resize",
     false,
-    e => {
+    () => {
       info(`Got resize event (innerHeight: ${newWin.innerHeight})`);
       return newWin.innerHeight <= 450;
     }

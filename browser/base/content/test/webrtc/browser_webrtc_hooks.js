@@ -122,7 +122,7 @@ var gTests = [
     run: async function testDeferredBlocker(browser) {
       Events.on();
 
-      let blocker = params => Promise.resolve("allow");
+      let blocker = () => Promise.resolve("allow");
       webrtcUI.addPeerConnectionBlocker(blocker);
 
       await tryPeerConnection(browser);
@@ -138,7 +138,7 @@ var gTests = [
     run: async function testBlockerDeny(browser) {
       Events.on();
 
-      let blocker = params => "deny";
+      let blocker = () => "deny";
       webrtcUI.addPeerConnectionBlocker(blocker);
 
       await tryPeerConnection(browser, "NotAllowedError");
@@ -156,14 +156,14 @@ var gTests = [
       Events.on();
 
       let blocker1Called = false,
-        blocker1 = params => {
+        blocker1 = () => {
           blocker1Called = true;
           return "allow";
         };
       webrtcUI.addPeerConnectionBlocker(blocker1);
 
       let blocker2Called = false,
-        blocker2 = params => {
+        blocker2 = () => {
           blocker2Called = true;
           return "allow";
         };
@@ -187,14 +187,14 @@ var gTests = [
       Events.on();
 
       let blocker1Called = false,
-        blocker1 = params => {
+        blocker1 = () => {
           blocker1Called = true;
           return "allow";
         };
       webrtcUI.addPeerConnectionBlocker(blocker1);
 
       let blocker2Called = false,
-        blocker2 = params => {
+        blocker2 = () => {
           blocker2Called = true;
           return "deny";
         };
@@ -218,14 +218,14 @@ var gTests = [
       Events.on();
 
       let blocker1Called = false,
-        blocker1 = params => {
+        blocker1 = () => {
           blocker1Called = true;
           return "deny";
         };
       webrtcUI.addPeerConnectionBlocker(blocker1);
 
       let blocker2Called = false,
-        blocker2 = params => {
+        blocker2 = () => {
           blocker2Called = true;
           return "allow";
         };
@@ -252,14 +252,14 @@ var gTests = [
       Events.on();
 
       let blocker1Called = false,
-        blocker1 = params => {
+        blocker1 = () => {
           blocker1Called = true;
           return "allow";
         };
       webrtcUI.addPeerConnectionBlocker(blocker1);
 
       let blocker2Called = false,
-        blocker2 = params => {
+        blocker2 = () => {
           blocker2Called = true;
           return "allow";
         };
@@ -283,14 +283,14 @@ var gTests = [
     run: async function testBlockerThrows(browser) {
       Events.on();
       let blocker1Called = false,
-        blocker1 = params => {
+        blocker1 = () => {
           blocker1Called = true;
           throw new Error("kaboom");
         };
       webrtcUI.addPeerConnectionBlocker(blocker1);
 
       let blocker2Called = false,
-        blocker2 = params => {
+        blocker2 = () => {
           blocker2Called = true;
           return "allow";
         };
@@ -313,10 +313,10 @@ var gTests = [
     run: async function testBlockerCancel(browser) {
       let blocker,
         blockerPromise = new Promise(resolve => {
-          blocker = params => {
+          blocker = () => {
             resolve();
             // defer indefinitely
-            return new Promise(innerResolve => {});
+            return new Promise(() => {});
           };
         });
       webrtcUI.addPeerConnectionBlocker(blocker);

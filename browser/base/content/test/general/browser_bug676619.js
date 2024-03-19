@@ -22,7 +22,7 @@ function waitForNewWindow() {
         var domwindow = aXULWindow.docShell.domWindow;
         domwindow.addEventListener("load", downloadOnLoad, true);
       },
-      onCloseWindow: aXULWindow => {},
+      onCloseWindow: () => {},
     };
 
     Services.wm.addListener(listener);
@@ -97,7 +97,7 @@ async function testLink(link, name) {
 }
 
 // Cross-origin URL does not trigger a download
-async function testLocation(link, url) {
+async function testLocation(link) {
   let tabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
 
   SpecialPowers.spawn(gBrowser.selectedBrowser, [link], contentLink => {

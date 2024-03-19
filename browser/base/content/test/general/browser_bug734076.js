@@ -36,7 +36,7 @@ add_task(async function () {
         );
       },
       verify(browser) {
-        return SpecialPowers.spawn(browser, [], async function (arg) {
+        return SpecialPowers.spawn(browser, [], async function () {
           Assert.equal(
             content.document.body.textContent,
             "",
@@ -67,7 +67,7 @@ add_task(async function () {
         );
       },
       verify(browser) {
-        return SpecialPowers.spawn(browser, [], async function (arg) {
+        return SpecialPowers.spawn(browser, [], async function () {
           Assert.equal(
             content.document.body.textContent,
             "",
@@ -105,7 +105,7 @@ add_task(async function () {
         );
       },
       verify(browser) {
-        return SpecialPowers.spawn(browser, [], async function (arg) {
+        return SpecialPowers.spawn(browser, [], async function () {
           Assert.equal(
             content.document.body.textContent,
             "",

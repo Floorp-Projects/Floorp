@@ -8,7 +8,7 @@ add_task(async function () {
   let tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, uri);
 
   let updates = [];
-  function countUpdates(event) {
+  function countUpdates() {
     updates.push(new Error().stack);
   }
   let updater = document.getElementById("editMenuCommandSetAll");

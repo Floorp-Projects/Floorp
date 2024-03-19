@@ -11,7 +11,7 @@ add_task(async function test_pip_label_changes_tab() {
 
   let pipLabel = pipTab.querySelector(".tab-icon-sound-pip-label");
 
-  await BrowserTestUtils.withNewTab("about:blank", async browser => {
+  await BrowserTestUtils.withNewTab("about:blank", async () => {
     let selectedTab = newWin.document.querySelector(
       ".tabbrowser-tab[selected]"
     );

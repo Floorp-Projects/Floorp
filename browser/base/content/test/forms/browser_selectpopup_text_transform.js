@@ -16,7 +16,7 @@ add_task(async function () {
       gBrowser,
       url,
     },
-    async function (browser) {
+    async function () {
       let popup = await openSelectPopup("click");
       let menuitems = popup.querySelectorAll("menuitem");
       is(menuitems[0].textContent, "abc", "Option text should be lowercase");

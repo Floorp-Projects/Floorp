@@ -18,7 +18,7 @@ function waitForDialog(callback) {
 
 function waitForDialogDestroyed(node, callback) {
   // Now listen for the dialog going away again...
-  let observer = new MutationObserver(function (muts) {
+  let observer = new MutationObserver(function () {
     if (!node.parentNode) {
       ok(true, "Dialog is gone");
       done();

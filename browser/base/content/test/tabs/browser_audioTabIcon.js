@@ -396,7 +396,7 @@ async function test_swapped_browser_while_not_playing(oldTab, newBrowser) {
   );
 
   let AudioPlaybackPromise = new Promise(resolve => {
-    let observer = (subject, topic, data) => {
+    let observer = () => {
       ok(false, "Should not see an audio-playback notification");
     };
     Services.obs.addObserver(observer, "audio-playback");
@@ -443,7 +443,7 @@ async function test_swapped_browser_while_not_playing(oldTab, newBrowser) {
   await test_tooltip(newTab.overlayIcon, "Unmute tab", true, newTab);
 }
 
-async function test_browser_swapping(tab, browser) {
+async function test_browser_swapping(tab) {
   // First, test swapping with a playing but muted tab.
   await play(tab);
 

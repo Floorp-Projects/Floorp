@@ -57,7 +57,7 @@ function testFindDisabled(url) {
 }
 
 async function testFindEnabled(url) {
-  return BrowserTestUtils.withNewTab(url, async function (browser) {
+  return BrowserTestUtils.withNewTab(url, async function () {
     ok(
       !document.getElementById("cmd_find").getAttribute("disabled"),
       "Find command should not be disabled"

@@ -50,7 +50,7 @@ function FaviconObserver(aPageURI, aFaviconURL, aTailingEnabled) {
 }
 
 FaviconObserver.prototype = {
-  observe(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic) {
     // Make sure that the topic is 'http-on-modify-request'.
     if (aTopic === "http-on-modify-request") {
       let httpChannel = aSubject.QueryInterface(Ci.nsIHttpChannel);

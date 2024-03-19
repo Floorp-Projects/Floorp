@@ -62,7 +62,7 @@ var tests = [
       this.notification1.remove();
       this.notification2.remove();
     },
-    onHidden(popup) {},
+    onHidden() {},
   },
   // The anchor icon should be shown for notifications in background windows.
   {
@@ -116,7 +116,7 @@ var tests = [
       this.complete = true;
       triggerSecondaryCommand(popup, 0);
     },
-    onHidden(popup) {
+    onHidden() {
       ok(
         !this.complete,
         "Should have hidden the notification after navigation"
@@ -155,7 +155,7 @@ var tests = [
       this.complete = true;
       triggerSecondaryCommand(popup, 0);
     },
-    onHidden(popup) {
+    onHidden() {
       ok(
         this.complete,
         "Should have hidden the notification after clicking Not Now"
@@ -174,7 +174,7 @@ var tests = [
       this.notifyObj.options.persistent = true;
       gNotification = showNotification(this.notifyObj);
     },
-    async onShown(popup) {
+    async onShown() {
       this.oldSelectedTab = gBrowser.selectedTab;
       await BrowserTestUtils.openNewForegroundTab(
         gBrowser,
@@ -182,7 +182,7 @@ var tests = [
         "http://example.com/"
       );
     },
-    onHidden(popup) {
+    onHidden() {
       ok(true, "Should have hidden the notification after tab switch");
       gBrowser.removeTab(gBrowser.selectedTab);
       gBrowser.selectedTab = this.oldSelectedTab;
@@ -318,7 +318,7 @@ var tests = [
       this.notification1.remove();
       this.notification2.remove();
     },
-    onHidden(popup) {},
+    onHidden() {},
   },
   // Test that persistent notifications are shown stacked by anchor on update
   {
@@ -363,7 +363,7 @@ var tests = [
       this.notification2.remove();
       this.notification3.remove();
     },
-    onHidden(popup) {},
+    onHidden() {},
   },
   // Test that on closebutton click, only the persistent notification
   // that contained the closebutton loses its persistent status.

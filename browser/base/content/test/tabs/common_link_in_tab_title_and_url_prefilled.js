@@ -244,7 +244,7 @@ async function synthesizeMouse(browser, link, event) {
 async function waitForNewTabWithLoadRequest() {
   return new Promise(resolve =>
     gBrowser.addTabsProgressListener({
-      onStateChange(aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
+      onStateChange(aBrowser, aWebProgress, aRequest, aStateFlags) {
         if (aStateFlags & Ci.nsIWebProgressListener.STATE_START) {
           gBrowser.removeTabsProgressListener(this);
           resolve(gBrowser.getTabForBrowser(aBrowser));

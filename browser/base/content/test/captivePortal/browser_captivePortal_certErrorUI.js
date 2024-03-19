@@ -117,7 +117,7 @@ add_task(async function testCaptivePortalAdvancedPanel() {
     await BrowserTestUtils.waitForLocationChange(gBrowser, BAD_CERT_PAGE);
     info("(waitForLocationChange resolved)");
   })();
-  await SpecialPowers.spawn(browser, [BAD_CERT_PAGE], async expectedURL => {
+  await SpecialPowers.spawn(browser, [BAD_CERT_PAGE], async () => {
     const doc = content.document;
     let advancedButton = doc.getElementById("advancedButton");
     await ContentTaskUtils.waitForCondition(

@@ -16,7 +16,7 @@ add_task(async function () {
   // Add a beforeunload event listener in one of the tabs; it should be called
   // before closing any of the tabs.
   await ContentTask.spawn(tab2.linkedBrowser, null, async function () {
-    content.window.addEventListener("beforeunload", function (event) {}, true);
+    content.window.addEventListener("beforeunload", function () {}, true);
   });
 
   let permitUnloadSpy = sinon.spy(tab2.linkedBrowser, "asyncPermitUnload");

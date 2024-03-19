@@ -140,20 +140,17 @@ add_task(async function root_icon_stored() {
     response.write("<html>A page without icon</html>");
   });
 
-  let noStorePromise = TestUtils.topicObserved(
-    "http-on-stop-request",
-    (s, t, d) => {
-      let chan = s.QueryInterface(Ci.nsIHttpChannel);
-      return chan?.URI.spec == "http://www.nostore.com/favicon.ico";
-    }
-  ).then(([chan]) => chan.isNoStoreResponse());
+  let noStorePromise = TestUtils.topicObserved("http-on-stop-request", s => {
+    let chan = s.QueryInterface(Ci.nsIHttpChannel);
+    return chan?.URI.spec == "http://www.nostore.com/favicon.ico";
+  }).then(([chan]) => chan.isNoStoreResponse());
 
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
       url: "http://www.nostore.com/page",
     },
-    async function (browser) {
+    async function () {
       await TestUtils.waitForCondition(async () => {
         let uri = await new Promise(resolve =>
           PlacesUtils.favicons.getFaviconURLForPage(

@@ -19,9 +19,9 @@ const TEST_URI_GOOD_OBJECT = Services.io.newURI(
 
 // Creates a one-shot web-channel for the test data to be sent back from the test page.
 function promiseChannelResponse(channelID, originOrPermission) {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     let channel = new WebChannel(channelID, originOrPermission);
-    channel.listen((id, data, target) => {
+    channel.listen((id, data) => {
       channel.stopListening();
       resolve(data);
     });

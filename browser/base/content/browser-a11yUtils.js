@@ -21,6 +21,7 @@ var A11yUtils = {
    * can thus hinder rather than help users if used incorrectly.
    * Please only use this after consultation with the Mozilla accessibility
    * team.
+   * @param {object} [options]
    * @param {string} [options.id] The Fluent id of the message to announce. The
    *        ftl file must already be included in browser.xhtml. This must be
    *        specified unless a raw message is specified instead.
@@ -28,13 +29,8 @@ var A11yUtils = {
    * @param {string} [options.raw] The raw, already localized message to
    *        announce. You should generally prefer a Fluent id instead, but in
    *        rare cases, this might not be feasible.
-   * @param {Element} [options.source] The element with which the announcement
-   *        is associated. This should generally be something the user can
-   *        interact with to respond to the announcement. For example, for an
-   *        announcement indicating that Reader View is available, this should
-   *        be the Reader View button on the toolbar.
    */
-  async announce({ id = null, args = {}, raw = null, source = document } = {}) {
+  async announce({ id = null, args = {}, raw = null } = {}) {
     if ((!id && !raw) || (id && raw)) {
       throw new Error("One of raw or id must be specified.");
     }

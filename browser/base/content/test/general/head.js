@@ -165,7 +165,7 @@ function promiseOpenAndLoadWindow(aOptions, aWaitForDelayedStartup = false) {
   return new Promise(resolve => {
     let win = OpenBrowserWindow(aOptions);
     if (aWaitForDelayedStartup) {
-      Services.obs.addObserver(function onDS(aSubject, aTopic, aData) {
+      Services.obs.addObserver(function onDS(aSubject) {
         if (aSubject != win) {
           return;
         }

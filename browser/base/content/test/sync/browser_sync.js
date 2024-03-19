@@ -894,7 +894,7 @@ function checkItemsVisibilities(itemsIds, expectedShownItemId) {
 
 function promiseObserver(topic) {
   return new Promise(resolve => {
-    let obs = (aSubject, aTopic, aData) => {
+    let obs = (aSubject, aTopic) => {
       Services.obs.removeObserver(obs, aTopic);
       resolve(aSubject);
     };

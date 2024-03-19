@@ -39,7 +39,7 @@ function closeContextMenu() {
   contextMenu.hidePopup();
 }
 
-function getVisibleMenuItems(aMenu, aData) {
+function getVisibleMenuItems(aMenu) {
   var items = [];
   var accessKeys = {};
   for (var i = 0; i < aMenu.children.length; i++) {

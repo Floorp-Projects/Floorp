@@ -70,7 +70,7 @@ function triggerSave(aWindow, aCallback) {
     info("done mockTransferCallback");
   };
 
-  function onUCTDialog(dialog) {
+  function onUCTDialog() {
     SpecialPowers.spawn(testBrowser, [], async () => {
       content.document.querySelector("iframe").remove();
     }).then(() => executeSoon(continueDownloading));
@@ -104,7 +104,7 @@ var windowObserver = {
     }
     this._callback = aCallback;
   },
-  observe(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic) {
     if (aTopic != "domwindowopened") {
       return;
     }
@@ -113,7 +113,7 @@ var windowObserver = {
 
     win.addEventListener(
       "load",
-      function (event) {
+      function () {
         if (win.location == UCT_URI) {
           SimpleTest.executeSoon(function () {
             if (windowObserver._callback) {

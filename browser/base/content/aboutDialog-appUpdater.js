@@ -28,7 +28,7 @@ var UPDATING_MIN_DISPLAY_TIME_MS = 1500;
 
 var gAppUpdater;
 
-function onUnload(aEvent) {
+function onUnload(_aEvent) {
   if (gAppUpdater) {
     gAppUpdater.destroy();
     gAppUpdater = null;

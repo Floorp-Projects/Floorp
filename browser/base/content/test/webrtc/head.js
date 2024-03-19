@@ -146,7 +146,7 @@ async function assertWebRTCIndicatorStatus(expected) {
   if (!expected) {
     let win = Services.wm.getMostRecentWindow("Browser:WebRTCGlobalIndicator");
     if (win) {
-      await new Promise((resolve, reject) => {
+      await new Promise(resolve => {
         win.addEventListener("unload", function listener(e) {
           if (e.target == win.document) {
             win.removeEventListener("unload", listener);
@@ -308,7 +308,7 @@ function expectObserverCalledOnClose(
       {
         topic: aTopic,
         count: 1,
-        filterFunctionSource: ((subject, topic, data) => {
+        filterFunctionSource: ((subject, topic) => {
           Services.cpmm.sendAsyncMessage("WebRTCTest:ObserverCalled", {
             topic,
           });
@@ -1061,7 +1061,7 @@ async function promiseReloadFrame(aFrameId, aBrowsingContext) {
   let loadedPromise = BrowserTestUtils.browserLoaded(
     gBrowser.selectedBrowser,
     true,
-    arg => {
+    () => {
       return true;
     }
   );

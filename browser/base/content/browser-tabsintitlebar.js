@@ -43,7 +43,7 @@ var TabsInTitlebar = {
     return document.documentElement.getAttribute("tabsintitlebar") == "true";
   },
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     if (topic == "nsPref:changed") {
       this._readPref();
     }

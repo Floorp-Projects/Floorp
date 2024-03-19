@@ -171,7 +171,7 @@ var gTests = [
 
   {
     desc: "getUserMedia camera+mic survives page reload but not past grace",
-    run: async function checkAudioVideoGracePastReload(browser) {
+    run: async function checkAudioVideoGracePastReload() {
       await prompt(true, true);
       await allow(true, true);
       await closeStream();
@@ -240,7 +240,7 @@ var gTests = [
 
       info("Open same page in a new tab");
       await disableObserverVerification();
-      await BrowserTestUtils.withNewTab(SAME_ORIGIN + PATH, async browser => {
+      await BrowserTestUtils.withNewTab(SAME_ORIGIN + PATH, async () => {
         info("In new tab, gUM(camera+mic) causes a prompt.");
         await prompt(true, true);
       });
@@ -329,7 +329,7 @@ var gTests = [
 
   {
     desc: "getUserMedia camera+mic grace period cleared on permission block",
-    run: async function checkAudioVideoGraceEndsNewTab(browser) {
+    run: async function checkAudioVideoGraceEndsNewTab() {
       await SpecialPowers.pushPrefEnv({
         set: [["privacy.webrtc.deviceGracePeriodTimeoutMs", 10000]],
       });

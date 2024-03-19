@@ -65,7 +65,7 @@ function assertTextZoomCommandCheckedState(isChecked) {
  * zoom levels and/or preferences on an individual browser.
  */
 add_task(async function test_update_browser_zoom() {
-  await BrowserTestUtils.withNewTab(TEST_PAGE_URL, async browser => {
+  await BrowserTestUtils.withNewTab(TEST_PAGE_URL, async () => {
     let currentZoom = await FullZoomHelper.getGlobalValue();
     Assert.equal(
       currentZoom,
@@ -136,7 +136,7 @@ add_task(async function test_update_browser_zoom() {
  * zoom levels when the default zoom is not at 1.0.
  */
 add_task(async function test_update_browser_zoom() {
-  await BrowserTestUtils.withNewTab(TEST_PAGE_URL, async browser => {
+  await BrowserTestUtils.withNewTab(TEST_PAGE_URL, async () => {
     let currentZoom = await FullZoomHelper.getGlobalValue();
     Assert.equal(
       currentZoom,

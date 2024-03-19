@@ -47,7 +47,7 @@ add_task(async function normal_page__no_target__abort() {
       tab: HOME_TITLE,
       urlbar: UrlbarTestUtils.trimURL(HOME_URL),
     },
-    async actionWhileLoading(onTabLoaded) {
+    async actionWhileLoading() {
       info("Abort loading");
       document.getElementById("stop-button").click();
     },

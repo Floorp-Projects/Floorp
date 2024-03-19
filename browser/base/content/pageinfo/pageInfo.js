@@ -47,7 +47,7 @@ pageInfoTreeView.prototype = {
     return this.data[row][column.index] || "";
   },
 
-  setCellValue(row, column, value) {},
+  setCellValue() {},
 
   setCellText(row, column, value) {
     this.data[row][column.index] = value;
@@ -112,52 +112,52 @@ pageInfoTreeView.prototype = {
     this.sortcol = treecol.index;
   },
 
-  getRowProperties(row) {
+  getRowProperties() {
     return "";
   },
-  getCellProperties(row, column) {
+  getCellProperties() {
     return "";
   },
-  getColumnProperties(column) {
+  getColumnProperties() {
     return "";
   },
-  isContainer(index) {
+  isContainer() {
     return false;
   },
-  isContainerOpen(index) {
+  isContainerOpen() {
     return false;
   },
-  isSeparator(index) {
+  isSeparator() {
     return false;
   },
   isSorted() {
     return this.sortcol > -1;
   },
-  canDrop(index, orientation) {
+  canDrop() {
     return false;
   },
-  drop(row, orientation) {
+  drop() {
     return false;
   },
-  getParentIndex(index) {
+  getParentIndex() {
     return 0;
   },
-  hasNextSibling(index, after) {
+  hasNextSibling() {
     return false;
   },
-  getLevel(index) {
+  getLevel() {
     return 0;
   },
-  getImageSrc(row, column) {},
+  getImageSrc() {},
   getCellValue(row, column) {
     let col = column != null ? column : this.copycol;
     return row < 0 || col < 0 ? "" : this.data[row][col] || "";
   },
-  toggleOpenState(index) {},
-  cycleHeader(col) {},
+  toggleOpenState() {},
+  cycleHeader() {},
   selectionChanged() {},
-  cycleCell(row, column) {},
-  isEditable(row, column) {
+  cycleCell() {},
+  isEditable() {
     return false;
   },
 };
@@ -475,10 +475,10 @@ async function loadTab(args) {
 
 function openCacheEntry(key, cb) {
   var checkCacheListener = {
-    onCacheEntryCheck(entry) {
+    onCacheEntryCheck() {
       return Ci.nsICacheEntryOpenCallback.ENTRY_WANTED;
     },
-    onCacheEntryAvailable(entry, isNew, status) {
+    onCacheEntryAvailable(entry) {
       cb(entry);
     },
   };
@@ -1085,7 +1085,7 @@ let treeController = {
     return command == "cmd_copy" || command == "cmd_selectAll";
   },
 
-  isCommandEnabled(command) {
+  isCommandEnabled() {
     return true; // not worth checking for this
   },
 

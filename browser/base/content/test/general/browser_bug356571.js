@@ -45,7 +45,7 @@ const kURIs = ["bad://www.mozilla.org/", kDummyPage, kDummyPage];
 
 var gProgressListener = {
   _runCount: 0,
-  onStateChange(aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
+  onStateChange(aBrowser, aWebProgress, aRequest, aStateFlags) {
     if ((aStateFlags & kCompleteState) == kCompleteState) {
       if (++this._runCount != kURIs.length) {
         return;

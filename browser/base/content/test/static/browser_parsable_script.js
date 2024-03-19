@@ -69,7 +69,7 @@ function uriIsESModule(uri) {
 }
 
 function parsePromise(uri, parseTarget) {
-  let promise = new Promise((resolve, reject) => {
+  let promise = new Promise(resolve => {
     let xhr = new XMLHttpRequest();
     xhr.open("GET", uri, true);
     xhr.onreadystatechange = function () {

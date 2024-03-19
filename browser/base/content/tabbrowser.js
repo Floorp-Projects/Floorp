@@ -2682,8 +2682,6 @@
           animate,
           userContextId,
           openerTab,
-          createLazyBrowser,
-          skipAnimation,
           pinned,
           noInitialLabel,
           skipBackgroundNotify,
@@ -2849,8 +2847,6 @@
       uriString,
       userContextId,
       openerTab,
-      createLazyBrowser,
-      skipAnimation,
       pinned,
       noInitialLabel,
       skipBackgroundNotify,
@@ -3367,7 +3363,7 @@
       Services.telemetry.setEventRecordingEnabled("close_tab_warning", true);
       let closeTabEnumKey =
         Object.entries(this.closingTabsEnum)
-          .find(([k, v]) => v == aCloseTabs)?.[0]
+          .find(([, v]) => v == aCloseTabs)?.[0]
           ?.toLowerCase() || "some";
 
       let warnCheckbox = warnOnClose.value ? "checked" : "unchecked";
@@ -3674,6 +3670,8 @@
       tabs,
       {
         animate,
+        // See bug 1883051
+        // eslint-disable-next-line no-unused-vars
         suppressWarnAboutClosingWindow,
         skipPermitUnload,
         skipRemoves,
@@ -5849,7 +5847,7 @@
       }
     },
 
-    observe(aSubject, aTopic, aData) {
+    observe(aSubject, aTopic) {
       switch (aTopic) {
         case "contextual-identity-updated": {
           let identity = aSubject.wrappedJSObject;
@@ -6352,7 +6350,7 @@
         let oldUserTypedValue = browser.userTypedValue;
         let hadStartedLoad = browser.didStartLoadSinceLastUserTyping();
 
-        let didChange = didChangeEvent => {
+        let didChange = () => {
           browser.userTypedValue = oldUserTypedValue;
           if (hadStartedLoad) {
             browser.urlbarChangeTracker.startedLoad();
@@ -7785,7 +7783,7 @@ var TabContextMenu = {
     }
   },
 
-  closeContextTabs(event) {
+  closeContextTabs() {
     if (this.contextTab.multiselected) {
       gBrowser.removeMultiSelectedTabs();
     } else {

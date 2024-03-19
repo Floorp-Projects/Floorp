@@ -71,7 +71,7 @@ add_task(async function closeWindoWithSingleTabTwice() {
   let windowClosedPromise = BrowserTestUtils.domWindowClosed(newWin);
   expectingDialog = true;
   wantToClose = false;
-  let firstDialogShownPromise = new Promise((resolve, reject) => {
+  let firstDialogShownPromise = new Promise(resolve => {
     resolveDialogPromise = resolve;
   });
   firstTab.closeButton.click();

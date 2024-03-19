@@ -27,7 +27,7 @@ var gTests = [
         content_uri: TEST_HTTP_PATH,
         channel_id: TEST_CHANNEL_ID,
       });
-      let promiseObserver = new Promise((resolve, reject) => {
+      let promiseObserver = new Promise(resolve => {
         makeObserver(
           ON_PROFILE_CHANGE_NOTIFICATION,
           function (subject, topic, data) {
@@ -52,7 +52,7 @@ var gTests = [
   {
     desc: "fxa web channel - login messages should notify the fxAccounts object",
     async run() {
-      let promiseLogin = new Promise((resolve, reject) => {
+      let promiseLogin = new Promise(resolve => {
         let login = accountData => {
           Assert.equal(typeof accountData.authAt, "number");
           Assert.equal(accountData.email, "testuser@testuser.com");
@@ -91,7 +91,7 @@ var gTests = [
     async run() {
       let properUrl = TEST_BASE_URL + "?can_link_account";
 
-      let promiseEcho = new Promise((resolve, reject) => {
+      let promiseEcho = new Promise(resolve => {
         let webChannelOrigin = Services.io.newURI(properUrl);
         // responses sent to content are echoed back over the
         // `fxaccounts_webchannel_response_echo` channel. Ensure the
@@ -100,7 +100,7 @@ var gTests = [
           "fxaccounts_webchannel_response_echo",
           webChannelOrigin
         );
-        echoWebChannel.listen((webChannelId, message, target) => {
+        echoWebChannel.listen((webChannelId, message) => {
           Assert.equal(message.command, "fxaccounts:can_link_account");
           Assert.equal(message.messageId, 2);
           Assert.equal(message.data.ok, true);
@@ -136,7 +136,7 @@ var gTests = [
   {
     desc: "fxa web channel - logout messages should notify the fxAccounts object",
     async run() {
-      let promiseLogout = new Promise((resolve, reject) => {
+      let promiseLogout = new Promise(resolve => {
         let logout = uid => {
           Assert.equal(uid, "uid");
 
@@ -167,7 +167,7 @@ var gTests = [
   {
     desc: "fxa web channel - delete messages should notify the fxAccounts object",
     async run() {
-      let promiseDelete = new Promise((resolve, reject) => {
+      let promiseDelete = new Promise(resolve => {
         let logout = uid => {
           Assert.equal(uid, "uid");
 
@@ -199,8 +199,8 @@ var gTests = [
     desc: "fxa web channel - firefox_view messages should call the openFirefoxView helper",
     async run() {
       let wasCalled = false;
-      let promiseMessageHandled = new Promise((resolve, reject) => {
-        let openFirefoxView = (browser, entryPoint) => {
+      let promiseMessageHandled = new Promise(resolve => {
+        let openFirefoxView = browser => {
           wasCalled = true;
           Assert.ok(
             !!browser.ownerGlobal,

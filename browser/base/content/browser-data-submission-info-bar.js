@@ -92,7 +92,7 @@ var gDataNotificationInfoBar = {
     }
   },
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     switch (topic) {
       case "datareporting:notify-data-policy:request":
         let request = subject.wrappedJSObject.object;

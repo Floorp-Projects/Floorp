@@ -121,7 +121,7 @@ add_task(async function checkReturnToPreviousPage() {
       "pageshow",
       true
     );
-    await SpecialPowers.spawn(bc, [useFrame], async function (subFrame) {
+    await SpecialPowers.spawn(bc, [useFrame], async function () {
       let returnButton = content.document.getElementById("returnButton");
       returnButton.click();
     });

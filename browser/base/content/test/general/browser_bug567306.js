@@ -10,7 +10,7 @@ add_task(async function () {
   let newwindow = await BrowserTestUtils.openNewBrowserWindow();
 
   let selectedBrowser = newwindow.gBrowser.selectedBrowser;
-  await new Promise((resolve, reject) => {
+  await new Promise(resolve => {
     BrowserTestUtils.waitForContentEvent(
       selectedBrowser,
       "pageshow",

@@ -64,7 +64,7 @@ add_task(async function test_save_link_blocked_by_extension() {
           setTimeout(resolve, 0);
         };
 
-        MockFilePicker.showCallback = function (fp) {
+        MockFilePicker.showCallback = function () {
           ok(false, "filepicker should never been shown");
           setTimeout(resolve, 0);
           return Ci.nsIFilePicker.returnCancel;

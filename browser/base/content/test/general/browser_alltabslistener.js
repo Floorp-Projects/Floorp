@@ -7,16 +7,9 @@ function getOriginalURL(request) {
 }
 
 var gFrontProgressListener = {
-  onProgressChange(
-    aWebProgress,
-    aRequest,
-    aCurSelfProgress,
-    aMaxSelfProgress,
-    aCurTotalProgress,
-    aMaxTotalProgress
-  ) {},
+  onProgressChange() {},
 
-  onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
+  onStateChange(aWebProgress, aRequest, aStateFlags) {
     var url = getOriginalURL(aRequest);
     if (url == "about:blank") {
       return;
@@ -28,7 +21,7 @@ var gFrontProgressListener = {
     assertCorrectBrowserAndEventOrderForFront(state);
   },
 
-  onLocationChange(aWebProgress, aRequest, aLocationURI, aFlags) {
+  onLocationChange(aWebProgress, aRequest, aLocationURI) {
     var url = getOriginalURL(aRequest);
     if (url == "about:blank") {
       return;
@@ -64,7 +57,7 @@ function assertCorrectBrowserAndEventOrderForFront(aEventName) {
 }
 
 var gAllProgressListener = {
-  onStateChange(aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
+  onStateChange(aBrowser, aWebProgress, aRequest, aStateFlags) {
     var url = getOriginalURL(aRequest);
     if (url == "about:blank") {
       // ignore initial about blank

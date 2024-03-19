@@ -184,7 +184,7 @@ function dropText(text, expectedURLs, ignoreFirstWindow = false) {
   );
 }
 
-async function drop(dragData, expectedURLs, ignoreFirstWindow = false) {
+async function drop(dragData, expectedURLs) {
   let dragDataString = JSON.stringify(dragData);
   info(
     `Starting test for dragData:${dragDataString}; expectedURLs.length:${expectedURLs.length}`

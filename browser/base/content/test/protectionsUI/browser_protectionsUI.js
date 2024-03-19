@@ -500,7 +500,7 @@ add_task(async function testNumberOfBlockedTrackers() {
   // attribute will only be set if the previous counter is zero. Instead, we
   // wait for the change of the text content of the counter.
   let updateCounterPromise = new Promise(resolve => {
-    let mut = new MutationObserver(mutations => {
+    let mut = new MutationObserver(() => {
       resolve();
       mut.disconnect();
     });

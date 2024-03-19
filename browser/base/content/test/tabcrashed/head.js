@@ -135,7 +135,7 @@ async function setupLocalCrashReportServer() {
  */
 function prepareNoDump() {
   let originalGetDumpID = TabCrashHandler.getDumpID;
-  TabCrashHandler.getDumpID = function (browser) {
+  TabCrashHandler.getDumpID = function () {
     return null;
   };
   registerCleanupFunction(() => {
@@ -156,11 +156,11 @@ function unsetBuildidMatchDontSendEnv() {
 }
 
 function getEventPromise(eventName, eventKind) {
-  return new Promise(function (resolve, reject) {
+  return new Promise(function (resolve) {
     info("Installing event listener (" + eventKind + ")");
     window.addEventListener(
       eventName,
-      event => {
+      () => {
         ok(true, "Received " + eventName + " (" + eventKind + ") event");
         info("Call resolve() for " + eventKind + " event");
         resolve();

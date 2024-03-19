@@ -12,7 +12,7 @@ async function expectHeightChanges(tab, expectedNewHeightChanges, msg) {
   let contentObservedHeightChanges = await ContentTask.spawn(
     tab.linkedBrowser,
     null,
-    async args => {
+    async () => {
       await new Promise(resolve => content.requestAnimationFrame(resolve));
       return content.document.body.innerText;
     }

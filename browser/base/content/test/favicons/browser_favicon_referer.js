@@ -14,7 +14,7 @@ add_task(async function test_check_referrer_for_discovered_favicon() {
     async browser => {
       let referrerPromise = TestUtils.topicObserved(
         "http-on-modify-request",
-        (s, t, d) => {
+        s => {
           let chan = s.QueryInterface(Ci.nsIHttpChannel);
           return chan.URI.spec == "http://mochi.test:8888/favicon.ico";
         }
@@ -42,7 +42,7 @@ add_task(
       async browser => {
         let referrerPromise = TestUtils.topicObserved(
           "http-on-modify-request",
-          (s, t, d) => {
+          s => {
             let chan = s.QueryInterface(Ci.nsIHttpChannel);
             return chan.URI.spec == `${FOLDER}file_favicon.png`;
           }

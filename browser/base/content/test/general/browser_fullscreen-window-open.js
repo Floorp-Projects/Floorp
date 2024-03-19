@@ -336,7 +336,7 @@ WindowListener.prototype = {
     Services.wm.removeListener(this);
 
     let domwindow = aXULWindow.docShell.domWindow;
-    let onLoad = aEvent => {
+    let onLoad = () => {
       is(
         domwindow.document.location.href,
         this.test_url,
@@ -361,6 +361,6 @@ WindowListener.prototype = {
     };
     domwindow.addEventListener("load", onLoad, true);
   },
-  onCloseWindow(aXULWindow) {},
+  onCloseWindow() {},
   QueryInterface: ChromeUtils.generateQI(["nsIWindowMediatorListener"]),
 };

@@ -21,7 +21,7 @@ add_task(async function () {
       gBrowser,
       url,
     },
-    async function (browser) {
+    async function () {
       let popup = await openSelectPopup("click");
       let menuitems = popup.querySelectorAll("menuitem");
       is(menuitems.length, 2, "Should've properly detected two menu items");

@@ -46,7 +46,7 @@ var tests = [
       checkPopup(popup, this.notifyObj);
       EventUtils.synthesizeKey("KEY_Escape");
     },
-    onHidden(popup) {
+    onHidden() {
       ok(!this.notifyObj.mainActionClicked, "mainAction was not clicked");
       ok(this.notifyObj.secondaryActionClicked, "secondaryAction was clicked");
       ok(
@@ -77,7 +77,7 @@ var tests = [
       checkPopup(popup, this.notifyObj);
       EventUtils.synthesizeKey("KEY_Escape");
     },
-    onHidden(popup) {
+    onHidden() {
       ok(!this.notifyObj.mainActionClicked, "mainAction was not clicked");
       ok(
         !this.notifyObj.secondaryActionClicked,
@@ -123,7 +123,7 @@ var tests = [
       is(document.activeElement, popup.children[0].closebutton);
       this.notification.remove();
     },
-    onHidden(popup) {},
+    onHidden() {},
   },
   // Test that you can switch between active notifications with the space key
   // and that the notification is focused on selection.

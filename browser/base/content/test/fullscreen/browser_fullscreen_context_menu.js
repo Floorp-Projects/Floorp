@@ -51,7 +51,7 @@ async function testContextMenu() {
         window,
         "sizemodechange",
         false,
-        e => window.fullScreen
+        () => window.fullScreen
       ),
       BrowserTestUtils.waitForPopupEvent(contextMenu, "hidden"),
     ]);
@@ -96,7 +96,7 @@ async function testContextMenu() {
         window,
         "sizemodechange",
         false,
-        e => !window.fullScreen
+        () => !window.fullScreen
       ),
       BrowserTestUtils.waitForPopupEvent(contextMenu2, "hidden"),
     ]);

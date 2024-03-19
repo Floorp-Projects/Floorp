@@ -23,7 +23,7 @@ var tests = [
       checkPopup(popup, this.testNotif);
       triggerMainCommand(popup);
     },
-    onHidden(popup) {
+    onHidden() {
       ok(this.testNotif.mainActionClicked, "main action has been triggered");
     },
   },
@@ -38,7 +38,7 @@ var tests = [
       checkPopup(popup, this.testNotif);
       triggerSecondaryCommand(popup, 0);
     },
-    onHidden(popup) {
+    onHidden() {
       ok(
         this.testNotif.secondaryActionClicked,
         "secondary action has been triggered"
@@ -83,7 +83,7 @@ var tests = [
 
       dismissNotification(popup);
     },
-    onHidden(popup) {
+    onHidden() {
       this.notification1.remove();
       this.notification2.remove();
     },
@@ -213,7 +213,7 @@ var tests = [
       checkPopup(popup, this.notifyObj);
       triggerMainCommand(popup);
     },
-    onHidden(popup) {
+    onHidden() {
       ok(
         this.notifyObj.dismissalCallbackTriggered,
         "dismissal callback was triggered"
@@ -237,7 +237,7 @@ var tests = [
       checkPopup(popup, this.notifyObj);
       triggerSecondaryCommand(popup, 0);
     },
-    onHidden(popup) {
+    onHidden() {
       ok(
         this.notifyObj.dismissalCallbackTriggered,
         "dismissal callback was triggered"
