@@ -40,14 +40,14 @@ mozilla::ipc::IPCResult CompositorWidgetParent::RecvNotifyClientSizeChanged(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult CompositorWidgetParent::RecvDisableRendering() {
-  DisableRendering();
+mozilla::ipc::IPCResult CompositorWidgetParent::RecvCleanupResources() {
+  CleanupResources();
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult CompositorWidgetParent::RecvEnableRendering(
+mozilla::ipc::IPCResult CompositorWidgetParent::RecvSetRenderingSurface(
     const uintptr_t& aXWindow, const bool& aShaped) {
-  EnableRendering(aXWindow, aShaped);
+  SetRenderingSurface(aXWindow, aShaped);
   return IPC_OK();
 }
 
