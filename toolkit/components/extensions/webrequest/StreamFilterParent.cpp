@@ -230,7 +230,7 @@ StreamFilterParent::CheckListenerChain() {
   if (trsl) {
     return trsl->CheckListenerChain();
   }
-  return NS_ERROR_NO_INTERFACE;
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP

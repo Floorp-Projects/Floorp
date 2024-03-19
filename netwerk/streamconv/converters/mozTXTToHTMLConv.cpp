@@ -1263,11 +1263,6 @@ NS_IMETHODIMP
 mozTXTToHTMLConv::CheckListenerChain() { return NS_ERROR_NOT_IMPLEMENTED; }
 
 NS_IMETHODIMP
-mozTXTToHTMLConv::MaybeRetarget(nsIRequest* request) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 mozTXTToHTMLConv::OnStartRequest(nsIRequest* request) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

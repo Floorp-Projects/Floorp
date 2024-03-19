@@ -223,11 +223,6 @@ nsUnknownDecoder::OnDataAvailable(nsIRequest* request, nsIInputStream* aStream,
   return rv;
 }
 
-NS_IMETHODIMP
-nsUnknownDecoder::MaybeRetarget(nsIRequest* request) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 // ----
 //
 // nsIRequestObserver methods...
