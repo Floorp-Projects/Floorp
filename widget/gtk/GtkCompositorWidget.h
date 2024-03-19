@@ -91,11 +91,6 @@ class GtkCompositorWidget : public CompositorWidget,
   RefPtr<mozilla::layers::NativeLayerRoot> GetNativeLayerRoot() override;
 #endif
 
-  bool PreRender(WidgetRenderingContext* aContext) override {
-    return !mIsRenderingSuspended;
-  }
-  bool IsHidden() const override { return mIsRenderingSuspended; }
-
   // PlatformCompositorWidgetDelegate Overrides
 
   void NotifyClientSizeChanged(const LayoutDeviceIntSize& aClientSize) override;
@@ -103,10 +98,10 @@ class GtkCompositorWidget : public CompositorWidget,
 
  private:
 #if defined(MOZ_WAYLAND)
-  bool ConfigureWaylandBackend();
+  void ConfigureWaylandBackend();
 #endif
 #if defined(MOZ_X11)
-  bool ConfigureX11Backend(Window aXWindow, bool aShaped);
+  void ConfigureX11Backend(Window aXWindow, bool aShaped);
 #endif
 #ifdef MOZ_LOGGING
   bool IsPopup();
@@ -130,7 +125,6 @@ class GtkCompositorWidget : public CompositorWidget,
 #ifdef MOZ_WAYLAND
   RefPtr<mozilla::layers::NativeLayerRootWayland> mNativeLayerRoot;
 #endif
-  Atomic<bool> mIsRenderingSuspended{true};
 };
 
 }  // namespace widget
