@@ -189,8 +189,9 @@ template <typename T>
   MOZ_ASSERT(!cx->realm()->hasObjectPendingMetadata());
 
   // The metadata builder is invoked for each object created on the main thread,
-  // except when it's suppressed.
-  if (!cx->zone()->suppressAllocationMetadataBuilder) {
+  // except when it's suppressed or we're throwing over-recursion error.
+  if (!cx->zone()->suppressAllocationMetadataBuilder &&
+      !cx->isThrowingOverRecursed()) {
     // Don't collect metadata on objects that represent metadata, to avoid
     // recursion.
     AutoSuppressAllocationMetadataBuilder suppressMetadata(cx);
