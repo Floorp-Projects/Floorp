@@ -5,7 +5,7 @@
 
 use api::{units::*, PremultipliedColorF, ClipMode};
 use api::{ColorF, ImageFormat, LineOrientation, BorderStyle};
-use crate::batch::{AlphaBatchBuilder, AlphaBatchContainer, BatchTextures, add_quad_to_batch};
+use crate::batch::{AlphaBatchBuilder, AlphaBatchContainer, BatchTextures};
 use crate::batch::{ClipBatcher, BatchBuilder, INVALID_SEGMENT_INDEX, ClipMaskInstanceList};
 use crate::command_buffer::{CommandBufferList, QuadFlags};
 use crate::pattern::{PatternKind, PatternShaderInput};
@@ -377,7 +377,7 @@ impl RenderTarget for ColorRenderTarget {
                 let render_task_address = task_id.into();
                 let target_rect = task.get_target_rect();
 
-                add_quad_to_batch(
+                quad::add_to_batch(
                     info.pattern,
                     info.pattern_input,
                     render_task_address,
@@ -1065,7 +1065,7 @@ fn build_mask_tasks(
                         .resolve_texture(tile.task_id)
                         .expect("bug: texture not found for tile");
 
-                    add_quad_to_batch(
+                    quad::add_to_batch(
                         PatternKind::ColorOrTexture,
                         PatternShaderInput(0),
                         render_task_address,
@@ -1163,7 +1163,7 @@ fn build_mask_tasks(
             QuadFlags::empty()
         };
 
-        add_quad_to_batch(
+        quad::add_to_batch(
             PatternKind::Mask,
             PatternShaderInput(0),
             render_task_address,
