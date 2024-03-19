@@ -6851,6 +6851,11 @@
   value: false
   mirror: always
 
+- name: gfx.remote-texture.recycle.disabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "gl." (OpenGL)
 #---------------------------------------------------------------------------

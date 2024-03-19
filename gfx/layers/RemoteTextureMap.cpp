@@ -19,6 +19,7 @@
 #include "mozilla/layers/RemoteTextureHostWrapper.h"
 #include "mozilla/layers/TextureClientSharedSurface.h"
 #include "mozilla/layers/WebRenderTextureHost.h"
+#include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_webgl.h"
 #include "mozilla/webgpu/ExternalTexture.h"
 #include "mozilla/webrender/RenderThread.h"
@@ -334,7 +335,9 @@ bool RemoteTextureMap::RecycleTexture(
     // Recycle texture data
     recycled.mTextureData = std::move(aHolder.mTextureData);
   }
-  aRecycleBin->mRecycledTextures.push_back(std::move(recycled));
+  if (!StaticPrefs::gfx_remote_texture_recycle_disabled()) {
+    aRecycleBin->mRecycledTextures.push_back(std::move(recycled));
+  }
 
   return true;
 }
