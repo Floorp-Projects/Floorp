@@ -433,6 +433,7 @@ static uint32_t CollectAtRules(ServoCSSRuleList& aRuleList,
       case StyleCssRuleType::CounterStyle:
       case StyleCssRuleType::FontFeatureValues:
       case StyleCssRuleType::FontPaletteValues:
+      case StyleCssRuleType::Scope:
         break;
     }
 
