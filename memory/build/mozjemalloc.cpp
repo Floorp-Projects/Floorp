@@ -2628,49 +2628,40 @@ bool arena_t::SplitRun(arena_run_t* aRun, size_t aSize, bool aLarge,
   MOZ_ASSERT(need_pages <= total_pages);
   size_t rem_pages = total_pages - need_pages;
 
+#ifdef MALLOC_DECOMMIT
   for (size_t i = 0; i < need_pages; i++) {
     // Commit decommitted pages if necessary.  If a decommitted
     // page is encountered, commit all needed adjacent decommitted
     // pages in one operation, in order to reduce system call
     // overhead.
-    if (chunk->map[run_ind + i].bits &
-        CHUNK_MAP_FRESH_MADVISED_OR_DECOMMITTED) {
+    if (chunk->map[run_ind + i].bits & CHUNK_MAP_DECOMMITTED) {
       // Advance i+j to just past the index of the last page
-      // to commit.  Clear CHUNK_MAP_FRESH, CHUNK_MAP_DECOMMITTED and
-      // CHUNK_MAP_MADVISED along the way.
+      // to commit.  Clear CHUNK_MAP_DECOMMITTED along the way.
       size_t j;
-      for (j = 0;
-           i + j < need_pages && (chunk->map[run_ind + i + j].bits &
-                                  CHUNK_MAP_FRESH_MADVISED_OR_DECOMMITTED);
+      for (j = 0; i + j < need_pages &&
+                  (chunk->map[run_ind + i + j].bits & CHUNK_MAP_DECOMMITTED);
            j++) {
         // DECOMMITTED, MADVISED and FRESH are mutually exclusive.
-        size_t bits = chunk->map[run_ind + i + j].bits;
-        MOZ_ASSERT(((bits & CHUNK_MAP_DECOMMITTED ? 1 : 0) +
-                    (bits & CHUNK_MAP_MADVISED ? 1 : 0) +
-                    (bits & CHUNK_MAP_FRESH ? 1 : 0)) == 1);
-
-        chunk->map[run_ind + i + j].bits &=
-            ~CHUNK_MAP_FRESH_MADVISED_OR_DECOMMITTED;
+        MOZ_ASSERT((chunk->map[run_ind + i + j].bits &
+                    (CHUNK_MAP_FRESH | CHUNK_MAP_MADVISED)) == 0);
       }
 
-#ifdef MALLOC_DECOMMIT
-      bool committed = pages_commit(
-          (void*)(uintptr_t(chunk) + ((run_ind + i) << gPageSize2Pow)),
-          j << gPageSize2Pow);
+      if (!pages_commit(
+              (void*)(uintptr_t(chunk) + ((run_ind + i) << gPageSize2Pow)),
+              j << gPageSize2Pow)) {
+        return false;
+      }
+
       // pages_commit zeroes pages, so mark them as such if it succeeded.
       // That's checked further below to avoid manually zeroing the pages.
       for (size_t k = 0; k < j; k++) {
-        chunk->map[run_ind + i + k].bits |=
-            committed ? CHUNK_MAP_ZEROED : CHUNK_MAP_DECOMMITTED;
+        chunk->map[run_ind + i + k].bits =
+            (chunk->map[run_ind + i + k].bits & ~CHUNK_MAP_DECOMMITTED) |
+            CHUNK_MAP_ZEROED | CHUNK_MAP_FRESH;
       }
-      if (!committed) {
-        return false;
-      }
-#endif
-
-      mStats.committed += j;
     }
   }
+#endif
 
   mRunsAvail.Remove(&chunk->map[run_ind]);
 
@@ -2700,9 +2691,23 @@ bool arena_t::SplitRun(arena_run_t* aRun, size_t aSize, bool aLarge,
       chunk->ndirty--;
       mNumDirty--;
       // CHUNK_MAP_DIRTY is cleared below.
+    } else if (chunk->map[run_ind + i].bits &
+               (CHUNK_MAP_MADVISED | CHUNK_MAP_FRESH)) {
+      mStats.committed++;
     }
+#ifdef MALLOC_DOUBLE_PURGE
+    // If we're using double purge then this page will be committed when it is
+    // touched, similar to madvise.
+    else if (chunk->map[run_ind + i].bits & CHUNK_MAP_DECOMMITTED) {
+      mStats.committed++;
+    }
+#else
+    // Otherwise this bit has already been cleared
+    MOZ_ASSERT(!(chunk->map[run_ind + i].bits & CHUNK_MAP_DECOMMITTED));
+#endif
 
-    // Initialize the chunk map.
+    // Initialize the chunk map.  This clears the dirty, zeroed and madvised
+    // bits, decommitted is cleared above.
     if (aLarge) {
       chunk->map[run_ind + i].bits = CHUNK_MAP_LARGE | CHUNK_MAP_ALLOCATED;
     } else {
