@@ -5,7 +5,7 @@ import {
 } from "content-src/components/DiscoveryStreamComponents/DSContextFooter/DSContextFooter";
 import React from "react";
 import { mount } from "enzyme";
-import { cardContextTypes } from "content-src/components/Card/types.js";
+import { cardContextTypes } from "content-src/components/Card/types.mjs";
 import { FluentOrText } from "content-src/components/FluentOrText/FluentOrText.jsx";
 
 describe("<DSContextFooter>", () => {

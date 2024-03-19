@@ -442,9 +442,9 @@ export class CollapseToggle extends React.PureComponent {
 
   setBodyClass() {
     if (this.renderAdmin && !this.state.collapsed) {
-      global.document.body.classList.add("no-scroll");
+      globalThis.document.body.classList.add("no-scroll");
     } else {
-      global.document.body.classList.remove("no-scroll");
+      globalThis.document.body.classList.remove("no-scroll");
     }
   }
 
@@ -457,7 +457,7 @@ export class CollapseToggle extends React.PureComponent {
   }
 
   componentWillUnmount() {
-    global.document.body.classList.remove("no-scroll");
+    globalThis.document.body.classList.remove("no-scroll");
   }
 
   render() {

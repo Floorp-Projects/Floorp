@@ -8,7 +8,10 @@ import {
   actionCreators as ac,
   actionTypes as at,
   actionUtils as au,
-} from "common/Actions.mjs";
+} from "../../common/Actions.mjs";
+// We disable import checking here as redux is installed via the npm packages
+// at the newtab level, rather than in the top-level package.json.
+// eslint-disable-next-line import/no-unresolved
 import { applyMiddleware, combineReducers, createStore } from "redux";
 
 export const MERGE_STORE_ACTION = "NEW_TAB_INITIAL_STATE";
@@ -117,12 +120,12 @@ export function initStore(reducers, initialState) {
   const store = createStore(
     mergeStateReducer(combineReducers(reducers)),
     initialState,
-    global.RPMAddMessageListener &&
+    globalThis.RPMAddMessageListener &&
       applyMiddleware(rehydrationMiddleware, messageMiddleware)
   );
 
-  if (global.RPMAddMessageListener) {
-    global.RPMAddMessageListener(INCOMING_MESSAGE_NAME, msg => {
+  if (globalThis.RPMAddMessageListener) {
+    globalThis.RPMAddMessageListener(INCOMING_MESSAGE_NAME, msg => {
       try {
         store.dispatch(msg.data);
       } catch (ex) {

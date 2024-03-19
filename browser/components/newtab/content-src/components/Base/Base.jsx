@@ -73,7 +73,7 @@ export class _Base extends React.PureComponent {
     ]
       .filter(v => v)
       .join(" ");
-    global.document.body.className = bodyClassName;
+    globalThis.document.body.className = bodyClassName;
   }
 
   render() {

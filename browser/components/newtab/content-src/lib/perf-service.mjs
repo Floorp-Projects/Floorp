@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 let usablePerfObj = window.performance;
 
 export function _PerfService(options) {
@@ -37,8 +35,8 @@ _PerfService.prototype = {
    * @param  {String} type eg "mark"
    * @return {Array}       Performance* objects
    */
-  getEntriesByName: function getEntriesByName(name, type) {
-    return this._perf.getEntriesByName(name, type);
+  getEntriesByName: function getEntriesByName(entryName, type) {
+    return this._perf.getEntriesByName(entryName, type);
   },
 
   /**
@@ -89,11 +87,11 @@ _PerfService.prototype = {
    * See [bug 1369303](https://bugzilla.mozilla.org/show_bug.cgi?id=1369303)
    * for more info.
    */
-  getMostRecentAbsMarkStartByName(name) {
-    let entries = this.getEntriesByName(name, "mark");
+  getMostRecentAbsMarkStartByName(entryName) {
+    let entries = this.getEntriesByName(entryName, "mark");
 
     if (!entries.length) {
-      throw new Error(`No marks with the name ${name}`);
+      throw new Error(`No marks with the name ${entryName}`);
     }
 
     let mostRecentEntry = entries[entries.length - 1];

@@ -26,12 +26,12 @@ export class ContextMenu extends React.PureComponent {
   componentDidMount() {
     this.onShow();
     setTimeout(() => {
-      global.addEventListener("click", this.hideContext);
+      globalThis.addEventListener("click", this.hideContext);
     }, 0);
   }
 
   componentWillUnmount() {
-    global.removeEventListener("click", this.hideContext);
+    globalThis.removeEventListener("click", this.hideContext);
   }
 
   onClick(event) {

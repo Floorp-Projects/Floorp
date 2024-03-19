@@ -2,8 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { actionCreators as ac, actionTypes as at } from "common/Actions.mjs";
-import { perfService as perfSvc } from "content-src/lib/perf-service";
+import {
+  actionCreators as ac,
+  actionTypes as at,
+} from "../../common/Actions.mjs";
+import { perfService as perfSvc } from "./perf-service.mjs";
 
 const VISIBLE = "visible";
 const VISIBILITY_CHANGE_EVENT = "visibilitychange";
@@ -12,7 +15,7 @@ export class DetectUserSessionStart {
   constructor(store, options = {}) {
     this._store = store;
     // Overrides for testing
-    this.document = options.document || global.document;
+    this.document = options.document || globalThis.document;
     this._perfService = options.perfService || perfSvc;
     this._onVisibilityChange = this._onVisibilityChange.bind(this);
   }

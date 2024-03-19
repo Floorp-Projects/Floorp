@@ -384,6 +384,6 @@ export const DiscoveryStreamBase = connect(state => ({
   DiscoveryStream: state.DiscoveryStream,
   Prefs: state.Prefs,
   Sections: state.Sections,
-  document: global.document,
+  document: globalThis.document,
   App: state.App,
 }))(_DiscoveryStreamBase);

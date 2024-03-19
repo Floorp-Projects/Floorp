@@ -15,11 +15,7 @@ module.exports = {
     {
       // TODO: Bug 1773467 - Move these to .mjs or figure out a generic way
       // to identify these as modules.
-      files: [
-        "content-src/**/*.js",
-        "test/schemas/**/*.js",
-        "test/unit/**/*.js",
-      ],
+      files: ["test/schemas/**/*.js", "test/unit/**/*.js"],
       parserOptions: {
         sourceType: "module",
       },

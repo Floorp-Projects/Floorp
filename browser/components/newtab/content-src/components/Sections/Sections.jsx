@@ -30,7 +30,7 @@ export class Section extends React.PureComponent {
     let cardsPerRow = CARDS_PER_ROW_DEFAULT;
     if (
       props.compactCards &&
-      global.matchMedia(`(min-width: 1072px)`).matches
+      globalThis.matchMedia(`(min-width: 1072px)`).matches
     ) {
       // If the section has compact cards and the viewport is wide enough, we show
       // 4 columns instead of 3.
@@ -323,7 +323,7 @@ export class Section extends React.PureComponent {
 }
 
 Section.defaultProps = {
-  document: global.document,
+  document: globalThis.document,
   rows: [],
   emptyState: {},
   pref: {},

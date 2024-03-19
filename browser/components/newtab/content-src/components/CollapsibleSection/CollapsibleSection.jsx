@@ -119,7 +119,7 @@ export class _CollapsibleSection extends React.PureComponent {
 }
 
 _CollapsibleSection.defaultProps = {
-  document: global.document || {
+  document: globalThis.document || {
     addEventListener: () => {},
     removeEventListener: () => {},
     visibilityState: "hidden",

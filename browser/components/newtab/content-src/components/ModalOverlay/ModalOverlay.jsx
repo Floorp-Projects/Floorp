@@ -53,4 +53,4 @@ export class ModalOverlayWrapper extends React.PureComponent {
   }
 }
 
-ModalOverlayWrapper.defaultProps = { document: global.document };
+ModalOverlayWrapper.defaultProps = { document: globalThis.document };

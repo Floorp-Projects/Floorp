@@ -8,19 +8,19 @@ export class SimpleHashRouter extends React.PureComponent {
   constructor(props) {
     super(props);
     this.onHashChange = this.onHashChange.bind(this);
-    this.state = { hash: global.location.hash };
+    this.state = { hash: globalThis.location.hash };
   }
 
   onHashChange() {
-    this.setState({ hash: global.location.hash });
+    this.setState({ hash: globalThis.location.hash });
   }
 
   componentWillMount() {
-    global.addEventListener("hashchange", this.onHashChange);
+    globalThis.addEventListener("hashchange", this.onHashChange);
   }
 
   componentWillUnmount() {
-    global.removeEventListener("hashchange", this.onHashChange);
+    globalThis.removeEventListener("hashchange", this.onHashChange);
   }
 
   render() {

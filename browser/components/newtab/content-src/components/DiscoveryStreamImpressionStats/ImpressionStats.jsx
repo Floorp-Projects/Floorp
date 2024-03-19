@@ -241,8 +241,8 @@ export class ImpressionStats extends React.PureComponent {
 }
 
 ImpressionStats.defaultProps = {
-  IntersectionObserver: global.IntersectionObserver,
-  document: global.document,
+  IntersectionObserver: globalThis.IntersectionObserver,
+  document: globalThis.document,
   rows: [],
   source: "",
 };
