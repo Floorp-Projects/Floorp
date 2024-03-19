@@ -114,6 +114,7 @@ struct ScreenDetails {
   ScreenOrientation orientation;
   uint16_t orientationAngle;
   bool isPseudoDisplay;
+  bool isHDR;
 };
 
 struct DimensionInfo
