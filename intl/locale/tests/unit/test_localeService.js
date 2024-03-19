@@ -69,7 +69,7 @@ add_test(function test_requestedLocales_matchOS() {
   Services.prefs.setCharPref(PREF_REQUESTED_LOCALES, "ar-IR");
 
   const observer = {
-    observe(aSubject, aTopic, aData) {
+    observe(aSubject, aTopic) {
       switch (aTopic) {
         case REQ_LOC_CHANGE_EVENT:
           const reqLocs = localeService.requestedLocales;
@@ -97,7 +97,7 @@ add_test(function test_requestedLocales_onChange() {
   Services.prefs.setCharPref(PREF_REQUESTED_LOCALES, "ar-IR");
 
   const observer = {
-    observe(aSubject, aTopic, aData) {
+    observe(aSubject, aTopic) {
       switch (aTopic) {
         case REQ_LOC_CHANGE_EVENT:
           const reqLocs = localeService.requestedLocales;

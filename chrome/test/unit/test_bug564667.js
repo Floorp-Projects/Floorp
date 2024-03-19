@@ -27,7 +27,7 @@ function test_mapping(chromeURL, target) {
 /*
  * Checks that a mapping was removed
  */
-function test_removed_mapping(chromeURL, target) {
+function test_removed_mapping(chromeURL) {
   var uri = Services.io.newURI(chromeURL);
   try {
     gCR.convertChromeURL(uri);

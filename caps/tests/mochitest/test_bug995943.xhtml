@@ -33,7 +33,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=995943
 
   function checkLoadFileURI(domain, shouldLoad) {
     debug("Invoking checkLoadFileURI with domain: " + domain + ", shouldLoad: " + shouldLoad);
-    return new Promise(function(resolve, reject) {
+    return new Promise(function(resolve) {
       $('ifr').addEventListener('load', function l1() {
         debug("Invoked l1 for " + domain);
         $('ifr').removeEventListener('load', l1);

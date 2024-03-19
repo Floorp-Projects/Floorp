@@ -172,7 +172,7 @@ function test_childkey_functions(testKey) {
   strictEqual(testKey.hasChild(TESTDATA_CHILD_KEY), false);
 }
 
-function cleanup_test_run(testKey, keyName) {
+function cleanup_test_run(testKey) {
   info("Cleaning up test.");
 
   for (var i = 0; i < testKey.childCount; i++) {

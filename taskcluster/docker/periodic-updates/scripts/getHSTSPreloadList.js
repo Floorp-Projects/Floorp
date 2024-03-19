@@ -160,16 +160,16 @@ function RedirectAndAuthStopper() {}
 
 RedirectAndAuthStopper.prototype = {
   // nsIChannelEventSink
-  asyncOnChannelRedirect(oldChannel, newChannel, flags, callback) {
+  asyncOnChannelRedirect() {
     throw Components.Exception("", Cr.NS_ERROR_ENTITY_CHANGED);
   },
 
   // nsIAuthPrompt2
-  promptAuth(channel, level, authInfo) {
+  promptAuth() {
     return false;
   },
 
-  asyncPromptAuth(channel, callback, context, level, authInfo) {
+  asyncPromptAuth() {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
 
@@ -184,7 +184,7 @@ RedirectAndAuthStopper.prototype = {
 };
 
 function fetchstatus(host) {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     let xhr = new XMLHttpRequest();
     let uri = "https://" + host.name + "/";
 
