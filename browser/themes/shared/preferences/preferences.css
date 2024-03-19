@@ -518,7 +518,7 @@ a[is="moz-support-link"]:not(.sidebar-footer-link) {
   stroke: var(--in-content-item-selected);
 }
 
-@media (prefers-contrast) {
+@media (forced-colors) {
   #engineList > treechildren::-moz-tree-image(hover),
   #blocklistsTree > treechildren::-moz-tree-image(hover) {
     fill: var(--in-content-item-hover-text);
@@ -624,7 +624,7 @@ html|dialog,
 }
 
 @media (prefers-color-scheme: dark) {
-  @media not (prefers-contrast) {
+  @media not (forced-colors) {
     html|dialog,
     .dialogBox {
       --in-content-page-background: #42414d;
@@ -1323,7 +1323,7 @@ richlistitem .text-link:hover {
   border-radius: 4px;
 }
 
-@media (prefers-contrast) {
+@media (forced-colors) {
   .qr-code-box:not([hidden="true"]) {
     border: 1px solid currentColor;
   }
