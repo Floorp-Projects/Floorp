@@ -281,24 +281,6 @@ interface nsILocalHandlerApp : nsIHandlerApp {
     readonly attribute unsigned long parameterCount;
 
     /**
-     * Asynchronously returns the pretty (user friendly) name of the
-     * executable.
-     *
-     * On Linux and Mac, this is the same as the name
-     * property. On Mac, that happens to be a nicer name than
-     * the executable's name without the file extension.
-     *
-     * On Windows, this name will be nicer, looked up from the
-     * registry when it exists and falling back to the FileDescription
-     * getVersionFieldInfo when the registry data doesn't exist.
-     * This has the side effect that the prettyName returned
-     * generally will match the text returned by defaultDescription in
-     * nsIHandlerInfo.
-     */
-    [implicit_jscontext]
-    Promise prettyNameAsync();
-
-    /**
      * Clears the current list of command line parameters.
      */
     void clearParameters();
