@@ -1,36 +1,46 @@
-<!DOCTYPE html>
-<meta charset="utf-8" />
+<!DOCTYPE HTML>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 
 <title>Canvas2D test: CaptureStream() with throttled rAF</title>
 
 <script src="/tests/SimpleTest/SimpleTest.js"></script>
 <script src="captureStream_common.js"></script>
-<link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<body>
 <script>
 SimpleTest.waitForExplicitFinish();
-SimpleTest.requestFlakyTimeout(
-  "Ensuring nothing happens until timing out with good margin"
-);
+SimpleTest.requestFlakyTimeout("Ensuring nothing happens until timing out with good margin");
 
 // CaptureStreamTestHelper holding utility test functions.
 const h = new CaptureStreamTestHelper2D();
 
 async function measureRequestAnimationFrameRate() {
-  const start = await new Promise(r => requestAnimationFrame(r));
-  for (let count = 1; ; count++) {
-    const time = await new Promise(r => requestAnimationFrame(r));
-    if (time - start > 1000) {
-      // One second has passed, break.
-      return count / ((time - start) / 1000);
-    }
-  }
+  const frameRate = await new Promise(resolve => {
+    let start;
+    let count;
+    const tick = time => {
+      if (!start) {
+        start = time;
+        count = 0;
+      } else {
+        count += 1;
+      }
+      if (time - start > 1000) {
+        // One second has passed, break.
+        resolve(count / ((time - start) / 1000));
+        return;
+      }
+      window.requestAnimationFrame(tick);
+    };
+    window.requestAnimationFrame(tick);
+  });
+  return frameRate;
 }
 
 async function measureSetTimeoutRate() {
-  // The average isn't accurate at low counts.
-  const COUNT = 25;
   const start = performance.now();
-  for (let i = 0; i < COUNT; ++i) {
+  const COUNT = 5;
+  for(let i = 0; i < COUNT; ++i) {
     await new Promise(resolve => setTimeout(resolve, 0));
   }
   return COUNT / ((performance.now() - start) / 1000);
@@ -38,7 +48,7 @@ async function measureSetTimeoutRate() {
 
 async function measureCanvasCaptureFrameRate(captureRate) {
   // Canvas element captured by streams.
-  const c = h.createAndAppendElement("canvas", "c");
+  const c = h.createAndAppendElement('canvas', 'c');
 
   // Since we are in a background tab, the video element won't get composited,
   // so we cannot look for a frame count there. Instead we use RTCPeerConnection
@@ -47,42 +57,59 @@ async function measureCanvasCaptureFrameRate(captureRate) {
   const pc2 = new RTCPeerConnection();
 
   // Add the canvas.captureStream track.
-  const ctx = c.getContext("2d");
+  const ctx = c.getContext('2d');
   const [track] = c.captureStream(captureRate).getTracks();
   const sender = pc1.addTrack(track);
 
   // Ice candidates signaling
-  pc1.onicecandidate = e => pc2.addIceCandidate(e.candidate);
-  pc2.onicecandidate = e => pc1.addIceCandidate(e.candidate);
+  for (const [local, remote] of [[pc1, pc2], [pc2, pc1]]) {
+    local.addEventListener("icecandidate", ({candidate}) => {
+      if (!candidate || remote.signalingState == "closed") {
+        return;
+      }
+      remote.addIceCandidate(candidate);
+    });
+  }
 
   // Offer/Answer exchange
-  await pc1.setLocalDescription();
+  await pc1.setLocalDescription(await pc1.createOffer());
   await pc2.setRemoteDescription(pc1.localDescription);
-  await pc2.setLocalDescription();
+  await pc2.setLocalDescription(await pc2.createAnswer());
   await pc1.setRemoteDescription(pc2.localDescription);
 
-  // Wait for RTP packets to arrive.
-  const event = await new Promise(r => pc2.ontrack = r);
-  await new Promise(r => event.track.onunmute = r);
+  // Wait for connection
+  while ([pc1, pc2].some(pc => pc.iceConnectionState == "new" ||
+                               pc.iceConnectionState == "checking")) {
+    await Promise.any(
+      [pc1, pc2].map(p => new Promise(r => p.oniceconnectionstatechange = r)));
+  }
+  for (const [pc, name] of [[pc1, "pc1"], [pc2, "pc2"]]) {
+    ok(["connected", "completed"].includes(pc.iceConnectionState),
+      `${name} connection established (${pc.iceConnectionState})`);
+  }
 
   // Draw to the canvas
   const intervalMillis = 1000 / 60;
   const getFrameCount = async () => {
     const stats = await sender.getStats();
-    const outbound = [...stats.values()].find(
-      ({ type }) => type == "outbound-rtp"
-    );
-    return outbound?.framesEncoded ?? 0; // See bug 1789768.
+    const outbound =
+      [...stats.values()].find(({type}) => type == "outbound-rtp");
+    return outbound?.framesEncoded ?? 0;
   };
-  is(await getFrameCount(), 0, "frame count starts at 0");
+  // Wait for frame count change to ensure sender is working.
+  while (await getFrameCount() == 0) {
+    h.drawColor(c, h.green);
+    await new Promise(resolve => setTimeout(resolve, intervalMillis));
+  }
+  const startFrameCount = await getFrameCount();
   const start = performance.now();
-  let end;
-  do {
+  let end = start;
+  while(end - start <= 1000) {
     h.drawColor(c, h.green);
     await new Promise(resolve => setTimeout(resolve, intervalMillis));
     end = performance.now();
-  } while (end - start <= 1000);
-  const framerate = (await getFrameCount()) / ((end - start) / 1000);
+  }
+  const framerate = (await getFrameCount() - startFrameCount) / ((end - start) / 1000);
   pc1.close();
   pc2.close();
   return framerate;
@@ -121,3 +148,4 @@ async function measureCanvasCaptureFrameRate(captureRate) {
   SimpleTest.finish();
 })();
 </script>
+
