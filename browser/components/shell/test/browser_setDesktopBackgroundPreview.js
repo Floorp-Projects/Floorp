@@ -12,7 +12,7 @@ add_task(async function () {
       gBrowser,
       url: "about:logo",
     },
-    async browser => {
+    async () => {
       const dialogLoad = BrowserTestUtils.domWindowOpened(null, async win => {
         await BrowserTestUtils.waitForEvent(win, "load");
         Assert.equal(

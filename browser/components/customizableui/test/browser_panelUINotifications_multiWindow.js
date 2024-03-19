@@ -15,7 +15,7 @@ add_task(async function testDoesNotShowDoorhangerForBackgroundWindow() {
     url: "about:blank",
   };
 
-  await BrowserTestUtils.withNewTab(options, async function (browser) {
+  await BrowserTestUtils.withNewTab(options, async function () {
     let win = await BrowserTestUtils.openNewBrowserWindow();
     await SimpleTest.promiseFocus(win);
     let mainActionCalled = false;
@@ -95,7 +95,7 @@ add_task(
       url: "about:blank",
     };
 
-    await BrowserTestUtils.withNewTab(options, async function (browser) {
+    await BrowserTestUtils.withNewTab(options, async function () {
       let win = await BrowserTestUtils.openNewBrowserWindow();
       await SimpleTest.promiseFocus(win);
       AppMenuNotifications.showNotification("update-manual", { callback() {} });
@@ -140,7 +140,7 @@ add_task(
       url: "about:blank",
     };
 
-    await BrowserTestUtils.withNewTab(options, async function (browser) {
+    await BrowserTestUtils.withNewTab(options, async function () {
       let win = await BrowserTestUtils.openNewBrowserWindow();
       await SimpleTest.promiseFocus(win);
       AppMenuNotifications.showNotification("update-manual", { callback() {} });

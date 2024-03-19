@@ -52,7 +52,7 @@ const SUBJECT_PREFIX_MATCH_THRESHOLD: usize = 2;
 
 impl<'a> SuggestDao<'a> {
     /// Inserts the suggestions for Yelp attachment into the database.
-    pub fn insert_yelp_suggestions(
+    pub(crate) fn insert_yelp_suggestions(
         &mut self,
         record_id: &SuggestRecordId,
         suggestion: &DownloadedYelpSuggestion,
@@ -130,7 +130,10 @@ impl<'a> SuggestDao<'a> {
     }
 
     /// Fetch Yelp suggestion from given user's query.
-    pub fn fetch_yelp_suggestions(&self, query: &SuggestionQuery) -> Result<Vec<Suggestion>> {
+    pub(crate) fn fetch_yelp_suggestions(
+        &self,
+        query: &SuggestionQuery,
+    ) -> Result<Vec<Suggestion>> {
         if !query.providers.contains(&SuggestionProvider::Yelp) {
             return Ok(vec![]);
         }
@@ -144,7 +147,7 @@ impl<'a> SuggestDao<'a> {
             let Some((subject, subject_exact_match)) = self.find_subject(query_string)? else {
                 return Ok(vec![]);
             };
-            let (icon, score) = self.fetch_custom_details()?;
+            let (icon, icon_mimetype, score) = self.fetch_custom_details()?;
             let builder = SuggestionBuilder {
                 subject: &subject,
                 subject_exact_match,
@@ -154,6 +157,7 @@ impl<'a> SuggestDao<'a> {
                 location: None,
                 need_location: false,
                 icon,
+                icon_mimetype,
                 score,
             };
             return Ok(vec![builder.into()]);
@@ -185,7 +189,7 @@ impl<'a> SuggestDao<'a> {
             return Ok(vec![]);
         };
 
-        let (icon, score) = self.fetch_custom_details()?;
+        let (icon, icon_mimetype, score) = self.fetch_custom_details()?;
         let builder = SuggestionBuilder {
             subject: &subject,
             subject_exact_match,
@@ -195,6 +199,7 @@ impl<'a> SuggestDao<'a> {
             location,
             need_location,
             icon,
+            icon_mimetype,
             score,
         };
         Ok(vec![builder.into()])
@@ -204,6 +209,7 @@ impl<'a> SuggestDao<'a> {
     /// It returns the location tuple as follows:
     /// (
     ///   Option<Vec<u8>>: Icon data. If not found, returns None.
+    ///   Option<String>: Mimetype of the icon data. If not found, returns None.
     ///   f64: Reflects score field in the yelp_custom_details table.
     /// )
     ///
@@ -212,11 +218,11 @@ impl<'a> SuggestDao<'a> {
     /// on Remote Settings. The following query will perform a table scan against
     /// `yelp_custom_details` followed by an index search against `icons`,
     /// which should be fine since there is only one record in the first table.
-    fn fetch_custom_details(&self) -> Result<(Option<Vec<u8>>, f64)> {
+    fn fetch_custom_details(&self) -> Result<(Option<Vec<u8>>, Option<String>, f64)> {
         let result = self.conn.query_row_and_then_cachable(
             r#"
             SELECT
-              i.data, y.score
+              i.data, i.mimetype, y.score
             FROM
               yelp_custom_details y
             LEFT JOIN
@@ -226,7 +232,13 @@ impl<'a> SuggestDao<'a> {
               1
             "#,
             (),
-            |row| -> Result<_> { Ok((row.get::<_, Option<Vec<u8>>>(0)?, row.get::<_, f64>(1)?)) },
+            |row| -> Result<_> {
+                Ok((
+                    row.get::<_, Option<Vec<u8>>>(0)?,
+                    row.get::<_, Option<String>>(1)?,
+                    row.get::<_, f64>(2)?,
+                ))
+            },
             true,
         )?;
 
@@ -439,6 +451,7 @@ struct SuggestionBuilder<'a> {
     location: Option<String>,
     need_location: bool,
     icon: Option<Vec<u8>>,
+    icon_mimetype: Option<String>,
     score: f64,
 }
 
@@ -488,6 +501,7 @@ impl<'a> From<SuggestionBuilder<'a>> for Suggestion {
             url,
             title,
             icon: builder.icon,
+            icon_mimetype: builder.icon_mimetype,
             score: builder.score,
             has_location_sign: location_modifier.is_none() && builder.location_sign.is_some(),
             subject_exact_match: builder.subject_exact_match,

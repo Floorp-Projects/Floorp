@@ -86,11 +86,11 @@ function OpenCacheEntry(key, where, flags, lci) {
     CacheListener.prototype = {
       QueryInterface: ChromeUtils.generateQI(["nsICacheEntryOpenCallback"]),
 
-      onCacheEntryCheck(entry) {
+      onCacheEntryCheck() {
         return Ci.nsICacheEntryOpenCallback.ENTRY_WANTED;
       },
 
-      onCacheEntryAvailable(entry, isnew, status) {
+      onCacheEntryAvailable() {
         resolve();
       },
 
@@ -311,7 +311,7 @@ async function test_storage_cleared() {
         let storeRequest = store.get(1);
 
         await new Promise(done => {
-          storeRequest.onsuccess = event => {
+          storeRequest.onsuccess = () => {
             let res = storeRequest.result;
             Assert.equal(
               res.userContext,

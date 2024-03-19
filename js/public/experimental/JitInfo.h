@@ -8,6 +8,7 @@
 #define js_experimental_JitInfo_h
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
+#include "mozilla/Attributes.h"  // MOZ_NON_PARAM
 
 #include <stddef.h>  // size_t
 #include <stdint.h>  // uint16_t, uint32_t
@@ -72,7 +73,7 @@ struct JSJitMethodCallArgsTraits;
  * A class, expected to be passed by reference, which represents the CallArgs
  * for a JSJitMethodOp.
  */
-class JSJitMethodCallArgs
+class MOZ_NON_PARAM JSJitMethodCallArgs
     : protected JS::detail::CallArgsBase<JS::detail::NoUsedRval> {
  private:
   using Base = JS::detail::CallArgsBase<JS::detail::NoUsedRval>;

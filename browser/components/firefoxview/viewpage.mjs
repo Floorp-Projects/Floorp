@@ -148,7 +148,7 @@ export class ViewPage extends ViewPageContent {
     this.windowResizeTask?.arm();
   }
 
-  onVisibilityChange(event) {
+  onVisibilityChange() {
     if (this.isVisible) {
       this.paused = false;
       this.viewVisibleCallback();

@@ -534,7 +534,7 @@ add_task(async function test_async_onItemTagged() {
     await startTracking();
 
     // This will change once tags are moved into a separate table (bug 424160).
-    // We specifically test this case because Bookmarks.jsm updates tagged
+    // We specifically test this case because Bookmarks.sys.mjs updates tagged
     // bookmarks and notifies observers.
     _("Insert a tag using the async bookmarks API");
     let tag = await PlacesUtils.bookmarks.insert({

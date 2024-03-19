@@ -846,7 +846,7 @@ export class AsyncTabSwitcher {
 
   // Called when a tab has been removed, and the browser node is
   // about to be removed from the DOM.
-  onTabRemovedImpl(tab) {
+  onTabRemovedImpl() {
     this.lastVisibleTab = null;
   }
 

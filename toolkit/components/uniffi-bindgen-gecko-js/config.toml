@@ -29,6 +29,14 @@ main = [
   "SuggestStore.interrupt",
 ]
 
+[relevancy]
+crate_name = "relevancy"
+udl_file = "third_party/rust/relevancy/src/relevancy.udl"
+
+[relevancy.receiver_thread]
+default = "worker"
+main = []
+
 [remote_settings]
 crate_name = "remote_settings"
 udl_file = "third_party/rust/remote_settings/src/remote_settings.udl"

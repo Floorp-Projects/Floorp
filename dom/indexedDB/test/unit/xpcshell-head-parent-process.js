@@ -644,7 +644,7 @@ var SpecialPowers = {
   clearUserPref(prefName) {
     Services.prefs.clearUserPref(prefName);
   },
-  // Copied (and slightly adjusted) from testing/specialpowers/content/SpecialPowersAPI.jsm
+  // Copied (and slightly adjusted) from testing/specialpowers/api.js
   exactGC(callback) {
     let count = 0;
 

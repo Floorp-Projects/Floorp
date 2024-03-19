@@ -1005,8 +1005,9 @@ static bool IsModuleObject(JSObject* obj, const Module** module) {
   return true;
 }
 
-static bool GetModuleArg(JSContext* cx, CallArgs args, uint32_t numRequired,
-                         const char* name, const Module** module) {
+static bool GetModuleArg(JSContext* cx, const CallArgs& args,
+                         uint32_t numRequired, const char* name,
+                         const Module** module) {
   if (!args.requireAtLeast(cx, name, numRequired)) {
     return false;
   }
@@ -4499,8 +4500,8 @@ static bool EnsurePromiseSupport(JSContext* cx) {
   return true;
 }
 
-static bool GetBufferSource(JSContext* cx, CallArgs callArgs, const char* name,
-                            MutableBytes* bytecode) {
+static bool GetBufferSource(JSContext* cx, const CallArgs& callArgs,
+                            const char* name, MutableBytes* bytecode) {
   if (!callArgs.requireAtLeast(cx, name, 1)) {
     return false;
   }
@@ -4561,7 +4562,7 @@ static bool WebAssembly_compile(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool GetInstantiateArgs(JSContext* cx, CallArgs callArgs,
+static bool GetInstantiateArgs(JSContext* cx, const CallArgs& callArgs,
                                MutableHandleObject firstArg,
                                MutableHandleObject importObj,
                                MutableHandleValue featureOptions) {
@@ -5074,7 +5075,7 @@ const JSClass ResolveResponseClosure::class_ = {
     &ResolveResponseClosure::classOps_,
 };
 
-static ResolveResponseClosure* ToResolveResponseClosure(CallArgs args) {
+static ResolveResponseClosure* ToResolveResponseClosure(const CallArgs& args) {
   return &args.callee()
               .as<JSFunction>()
               .getExtendedSlot(0)

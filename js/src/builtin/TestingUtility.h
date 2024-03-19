@@ -72,6 +72,8 @@ JSObject* CreateScriptPrivate(JSContext* cx,
 bool ValidateLazinessOfStencilAndGlobal(
     JSContext* cx, const frontend::CompilationStencil& stencil);
 
+bool ValidateModuleCompileOptions(JSContext* cx, JS::CompileOptions& options);
+
 } /* namespace js */
 
 #endif /* builtin_TestingUtility_h */

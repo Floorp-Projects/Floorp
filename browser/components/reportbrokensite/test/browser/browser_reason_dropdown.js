@@ -29,45 +29,42 @@ async function clickSendAndCheckPing(rbs, expectedReason = null) {
 add_task(async function testReasonDropdown() {
   ensureReportBrokenSitePreffedOn();
 
-  await BrowserTestUtils.withNewTab(
-    REPORTABLE_PAGE_URL,
-    async function (browser) {
-      ensureReasonDisabled();
+  await BrowserTestUtils.withNewTab(REPORTABLE_PAGE_URL, async function () {
+    ensureReasonDisabled();
 
-      let rbs = await AppMenu().openReportBrokenSite();
-      await rbs.isReasonHidden();
-      await rbs.isSendButtonEnabled();
-      await clickSendAndCheckPing(rbs);
-      await rbs.clickOkay();
+    let rbs = await AppMenu().openReportBrokenSite();
+    await rbs.isReasonHidden();
+    await rbs.isSendButtonEnabled();
+    await clickSendAndCheckPing(rbs);
+    await rbs.clickOkay();
 
-      ensureReasonOptional();
-      rbs = await AppMenu().openReportBrokenSite();
-      await rbs.isReasonOptional();
-      await rbs.isSendButtonEnabled();
-      await clickSendAndCheckPing(rbs);
-      await rbs.clickOkay();
+    ensureReasonOptional();
+    rbs = await AppMenu().openReportBrokenSite();
+    await rbs.isReasonOptional();
+    await rbs.isSendButtonEnabled();
+    await clickSendAndCheckPing(rbs);
+    await rbs.clickOkay();
 
-      rbs = await AppMenu().openReportBrokenSite();
-      await rbs.isReasonOptional();
-      rbs.chooseReason("slow");
-      await rbs.isSendButtonEnabled();
-      await clickSendAndCheckPing(rbs, "slow");
-      await rbs.clickOkay();
+    rbs = await AppMenu().openReportBrokenSite();
+    await rbs.isReasonOptional();
+    rbs.chooseReason("slow");
+    await rbs.isSendButtonEnabled();
+    await clickSendAndCheckPing(rbs, "slow");
+    await rbs.clickOkay();
 
-      ensureReasonRequired();
-      rbs = await AppMenu().openReportBrokenSite();
-      await rbs.isReasonRequired();
-      await rbs.isSendButtonEnabled();
-      const selectPromise = BrowserTestUtils.waitForSelectPopupShown(window);
-      EventUtils.synthesizeMouseAtCenter(rbs.sendButton, {}, window);
-      await selectPromise;
-      rbs.chooseReason("media");
-      await rbs.dismissDropdownPopup();
-      await rbs.isSendButtonEnabled();
-      await clickSendAndCheckPing(rbs, "media");
-      await rbs.clickOkay();
-    }
-  );
+    ensureReasonRequired();
+    rbs = await AppMenu().openReportBrokenSite();
+    await rbs.isReasonRequired();
+    await rbs.isSendButtonEnabled();
+    const selectPromise = BrowserTestUtils.waitForSelectPopupShown(window);
+    EventUtils.synthesizeMouseAtCenter(rbs.sendButton, {}, window);
+    await selectPromise;
+    rbs.chooseReason("media");
+    await rbs.dismissDropdownPopup();
+    await rbs.isSendButtonEnabled();
+    await clickSendAndCheckPing(rbs, "media");
+    await rbs.clickOkay();
+  });
 });
 
 async function getListItems(rbs) {
@@ -90,72 +87,69 @@ add_task(async function testReasonDropdownRandomized() {
     undefined
   );
 
-  await BrowserTestUtils.withNewTab(
-    REPORTABLE_PAGE_URL,
-    async function (browser) {
-      // confirm that the default order is initially used
-      Services.prefs.setBoolPref(RANDOMIZE_PREF, false);
-      const rbs = await AppMenu().openReportBrokenSite();
-      const defaultOrder = [
-        "choose",
-        "slow",
-        "media",
-        "content",
-        "account",
-        "adblockers",
-        "other",
-      ];
-      Assert.deepEqual(
-        await getListItems(rbs),
-        defaultOrder,
-        "non-random order is correct"
-      );
+  await BrowserTestUtils.withNewTab(REPORTABLE_PAGE_URL, async function () {
+    // confirm that the default order is initially used
+    Services.prefs.setBoolPref(RANDOMIZE_PREF, false);
+    const rbs = await AppMenu().openReportBrokenSite();
+    const defaultOrder = [
+      "choose",
+      "slow",
+      "media",
+      "content",
+      "account",
+      "adblockers",
+      "other",
+    ];
+    Assert.deepEqual(
+      await getListItems(rbs),
+      defaultOrder,
+      "non-random order is correct"
+    );
 
-      // confirm that a random order happens per user
-      let randomOrder;
-      let isRandomized = false;
-      Services.prefs.setBoolPref(RANDOMIZE_PREF, true);
+    // confirm that a random order happens per user
+    let randomOrder;
+    let isRandomized = false;
+    Services.prefs.setBoolPref(RANDOMIZE_PREF, true);
 
-      // This becomes ClientEnvironment.randomizationId, which we can set to
-      // any value which results in a different order from the default ordering.
-      Services.prefs.setCharPref("app.normandy.user_id", "dummy");
+    // This becomes ClientEnvironment.randomizationId, which we can set to
+    // any value which results in a different order from the default ordering.
+    Services.prefs.setCharPref("app.normandy.user_id", "dummy");
 
-      // clicking cancel triggers a reset, which is when the randomization
-      // logic is called. so we must click cancel after pref-changes here.
+    // clicking cancel triggers a reset, which is when the randomization
+    // logic is called. so we must click cancel after pref-changes here.
+    rbs.clickCancel();
+    await AppMenu().openReportBrokenSite();
+    randomOrder = await getListItems(rbs);
+    Assert.ok(
+      randomOrder != defaultOrder,
+      "options are randomized with pref on"
+    );
+
+    // confirm that the order doesn't change per user
+    isRandomized = false;
+    for (let attempt = 0; attempt < 5; ++attempt) {
       rbs.clickCancel();
       await AppMenu().openReportBrokenSite();
-      randomOrder = await getListItems(rbs);
-      Assert.ok(
-        randomOrder != defaultOrder,
-        "options are randomized with pref on"
-      );
+      const order = await getListItems(rbs);
 
-      // confirm that the order doesn't change per user
-      isRandomized = false;
-      for (let attempt = 0; attempt < 5; ++attempt) {
-        rbs.clickCancel();
-        await AppMenu().openReportBrokenSite();
-        const order = await getListItems(rbs);
-
-        if (order != randomOrder) {
-          isRandomized = true;
-          break;
-        }
+      if (order != randomOrder) {
+        isRandomized = true;
+        break;
       }
-      Assert.ok(!isRandomized, "options keep the same order per user");
-
-      // confirm that the order reverts to the default if pref flipped to false
-      Services.prefs.setBoolPref(RANDOMIZE_PREF, false);
-      rbs.clickCancel();
-      await AppMenu().openReportBrokenSite();
-      Assert.deepEqual(
-        defaultOrder,
-        await getListItems(rbs),
-        "reverts to non-random order correctly"
-      );
-      rbs.clickCancel();
     }
-  );
+    Assert.ok(!isRandomized, "options keep the same order per user");
+
+    // confirm that the order reverts to the default if pref flipped to false
+    Services.prefs.setBoolPref(RANDOMIZE_PREF, false);
+    rbs.clickCancel();
+    await AppMenu().openReportBrokenSite();
+    Assert.deepEqual(
+      defaultOrder,
+      await getListItems(rbs),
+      "reverts to non-random order correctly"
+    );
+    rbs.clickCancel();
+  });
 
   Services.prefs.setCharPref(USER_ID_PREF, origNormandyUserID);
 });

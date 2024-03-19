@@ -82,7 +82,7 @@ function promiseTabCrashedReady(browser) {
   return new Promise(resolve => {
     browser.addEventListener(
       "AboutTabCrashedReady",
-      function ready(e) {
+      function ready() {
         browser.removeEventListener("AboutTabCrashedReady", ready, false, true);
         resolve();
       },

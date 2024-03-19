@@ -4,7 +4,7 @@
 include protocol compressCtorManagee;
 
 [ChildProc=any]
-intr protocol compressCtor {
+sync protocol compressCtor {
     manages compressCtorManagee;
 
 parent:

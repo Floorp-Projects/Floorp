@@ -22,7 +22,12 @@ const {
   OptionneurDictionnaire,
 } = Rondpoint;
 add_task(async function () {
-  const dico = new Dictionnaire(Enumeration.DEUX, true, 0, 1235);
+  const dico = new Dictionnaire({
+    un: Enumeration.DEUX,
+    deux: true,
+    petitNombre: 0,
+    grosNombre: 1235,
+  });
   const copyDico = await copieDictionnaire(dico);
   Assert.deepEqual(dico, copyDico);
 
@@ -127,13 +132,29 @@ add_task(async function () {
   );
 
   await affirmAllerRetour(
-    [-1, 0, 1].map(n => new DictionnaireNombresSignes(n, n, n, n)),
+    [-1, 0, 1].map(
+      n =>
+        new DictionnaireNombresSignes({
+          petitNombre: n,
+          courtNombre: n,
+          nombreSimple: n,
+          grosNombre: n,
+        })
+    ),
     rt.identiqueNombresSignes.bind(rt),
     (a, b) => Assert.deepEqual(a, b)
   );
 
   await affirmAllerRetour(
-    [0, 1].map(n => new DictionnaireNombres(n, n, n, n)),
+    [0, 1].map(
+      n =>
+        new DictionnaireNombres({
+          petitNombre: n,
+          courtNombre: n,
+          nombreSimple: n,
+          grosNombre: n,
+        })
+    ),
     rt.identiqueNombres.bind(rt),
     (a, b) => Assert.deepEqual(a, b)
   );

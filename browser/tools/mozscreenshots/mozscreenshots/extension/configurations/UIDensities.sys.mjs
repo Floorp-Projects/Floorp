@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 export var UIDensities = {
-  init(libDir) {},
+  init() {},
 
   configurations: {
     compactDensity: {

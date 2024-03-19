@@ -372,9 +372,7 @@ async function testWindowOpen(
   aTargetWidth,
   aTargetHeight,
   aMaxAvailWidth,
-  aMaxAvailHeight,
-  aPopupChromeUIWidth,
-  aPopupChromeUIHeight
+  aMaxAvailHeight
 ) {
   // If the target size is greater than the maximum available content size,
   // we set the target size to it.
@@ -687,7 +685,7 @@ async function runActualTest(uri, testFunction, expectedResults, extraData) {
   let filterExtraData = function (x) {
     let banned_keys = ["private_window", "etp_reload", "noopener", "await_uri"];
     return Object.fromEntries(
-      Object.entries(x).filter(([k, v]) => !banned_keys.includes(k))
+      Object.entries(x).filter(([k]) => !banned_keys.includes(k))
     );
   };
 

@@ -473,7 +473,7 @@ export class SpecialPowersChild extends JSWindowActorChild {
   }
 
   async registeredServiceWorkers() {
-    // Please see the comment in SpecialPowersObserver.jsm above
+    // Please see the comment in SpecialPowersParent.sys.mjs above
     // this._serviceWorkerListener's assignment for what this returns.
     if (this._serviceWorkerRegistered) {
       // This test registered at least one service worker. Send a synchronous
@@ -825,14 +825,14 @@ export class SpecialPowersChild extends JSWindowActorChild {
    * This function should be used when specialpowers is in content process but
    * it want to get the notification from chrome space.
    *
-   * This function will call Services.obs.addObserver in SpecialPowersObserver
+   * This function will call Services.obs.addObserver in SpecialPowersParent
    * (that is in chrome process) and forward the data received to SpecialPowers
    * via messageManager.
    * You can use this._addMessageListener("specialpowers-YOUR_TOPIC") to fire
    * the callback.
    *
    * To get the expected data, you should modify
-   * SpecialPowersObserver.prototype._registerObservers.observe. Or the message
+   * SpecialPowersParent.prototype._registerObservers.observe. Or the message
    * you received from messageManager will only contain 'aData' from Service.obs.
    */
   registerObservers(topic) {

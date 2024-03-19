@@ -765,7 +765,7 @@ video > .caption-box {
  * The pseudo element won't inherit CSS styles from its direct parent, `::cue`
  * would actually inherit styles from video because it's video's pseudo element.
  * Therefore, we have to explicitly set some styles which are already defined
- * in its parent element in vtt.jsm.
+ * in its parent element in vtt.sys.mjs.
  */
 ::cue {
   color: rgba(255, 255, 255, 1);

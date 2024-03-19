@@ -5,9 +5,10 @@
 
 use api::{units::*, PremultipliedColorF, ClipMode};
 use api::{ColorF, ImageFormat, LineOrientation, BorderStyle};
-use crate::batch::{AlphaBatchBuilder, AlphaBatchContainer, BatchTextures, add_quad_to_batch};
+use crate::batch::{AlphaBatchBuilder, AlphaBatchContainer, BatchTextures};
 use crate::batch::{ClipBatcher, BatchBuilder, INVALID_SEGMENT_INDEX, ClipMaskInstanceList};
 use crate::command_buffer::{CommandBufferList, QuadFlags};
+use crate::pattern::{PatternKind, PatternShaderInput};
 use crate::segment::EdgeAaSegmentMask;
 use crate::spatial_tree::SpatialTree;
 use crate::clip::{ClipStore, ClipItemKind};
@@ -18,7 +19,7 @@ use crate::gpu_types::{TransformPalette, ZBufferIdGenerator, MaskInstance, ClipS
 use crate::gpu_types::{ZBufferId, QuadSegment, PrimitiveInstanceData, TransformPaletteId};
 use crate::internal_types::{FastHashMap, TextureSource, CacheTextureId};
 use crate::picture::{SliceId, SurfaceInfo, ResolvedSurfaceTexture, TileCacheInstance};
-use crate::prepare::write_prim_blocks;
+use crate::quad;
 use crate::prim_store::{PrimitiveInstance, PrimitiveStore, PrimitiveScratchBuffer};
 use crate::prim_store::gradient::{
     FastLinearGradientInstance, LinearGradientInstance, RadialGradientInstance,
@@ -376,7 +377,9 @@ impl RenderTarget for ColorRenderTarget {
                 let render_task_address = task_id.into();
                 let target_rect = task.get_target_rect();
 
-                add_quad_to_batch(
+                quad::add_to_batch(
+                    info.pattern,
+                    info.pattern_input,
                     render_task_address,
                     info.transform_id,
                     info.prim_address_f,
@@ -1047,7 +1050,7 @@ fn build_mask_tasks(
                 }
 
                 for tile in clip_store.visible_mask_tiles(&clip_instance) {
-                    let clip_prim_address = write_prim_blocks(
+                    let clip_prim_address = quad::write_prim_blocks(
                         &mut gpu_buffer_builder.f32,
                         rect,
                         rect,
@@ -1062,7 +1065,9 @@ fn build_mask_tasks(
                         .resolve_texture(tile.task_id)
                         .expect("bug: texture not found for tile");
 
-                    add_quad_to_batch(
+                    quad::add_to_batch(
+                        PatternKind::ColorOrTexture,
+                        PatternShaderInput::default(),
                         render_task_address,
                         clip_transform_id,
                         clip_prim_address,
@@ -1112,7 +1117,7 @@ fn build_mask_tasks(
                 spatial_tree,
             );
 
-            let main_prim_address = write_prim_blocks(
+            let main_prim_address = quad::write_prim_blocks(
                 &mut gpu_buffer_builder.f32,
                 task_world_rect.cast_unit(),
                 task_world_rect.cast_unit(),
@@ -1158,7 +1163,9 @@ fn build_mask_tasks(
             QuadFlags::empty()
         };
 
-        add_quad_to_batch(
+        quad::add_to_batch(
+            PatternKind::Mask,
+            PatternShaderInput::default(),
             render_task_address,
             prim_transform_id,
             main_prim_address,

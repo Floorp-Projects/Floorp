@@ -84,7 +84,11 @@
     <string name="share_dialog_title">แบ่งปันผ่าน</string>
 
     <string name="notification_erase_title_android_14">ล้างประวัติการท่องเว็บ?</string>
-    <string name="notification_erase_text_android_14">แตะหรือล้างการแจ้งเตือนนี้เพื่อลบประวัติการท่องเว็บของคุณอย่างปลอดภัย</string>
+    <string name="notification_erase_text_android_14" moz:RemovedIn="124" tools:ignore="UnusedResources">แตะหรือล้างการแจ้งเตือนนี้เพื่อลบประวัติการท่องเว็บของคุณอย่างปลอดภัย</string>
+
+    <!-- Text shown in the notification description that pops up to remind the user that a browsing session is active
+    for Android 14+. -->
+    <string name="notification_erase_text_android_14_1">แตะหรือปัดการแจ้งเตือนนี้เพื่อลบประวัติการเรียกดูของคุณอย่างปลอดภัย</string>
 
     <string name="notification_erase_text">ล้างประวัติการท่องเว็บ</string>
 

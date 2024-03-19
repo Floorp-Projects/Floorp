@@ -646,6 +646,11 @@ impl StylesheetInvalidationSet {
                 debug!(" > Found unsupported rule, marking the whole subtree invalid.");
                 self.invalidate_fully();
             },
+            Scope(..) => {
+                // Addition/removal of @scope requires re-evaluation of scope proximity to properly
+                // figure out the styling order.
+                self.invalidate_fully();
+            },
         }
     }
 }

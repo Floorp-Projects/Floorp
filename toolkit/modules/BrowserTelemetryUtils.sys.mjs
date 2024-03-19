@@ -64,7 +64,7 @@ export var BrowserTelemetryUtils = {
     } else if (currentTime >= this._lastRecordSiteOrigin + this.min_interval) {
       this._lastRecordSiteOrigin = currentTime;
 
-      Glean.geckoview.documentSiteOrigins.accumulateSamples([originCount]);
+      Glean.geckoview.documentSiteOrigins.accumulateSingleSample(originCount);
     }
   },
 };

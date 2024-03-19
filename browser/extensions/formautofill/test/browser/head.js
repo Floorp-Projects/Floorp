@@ -595,7 +595,7 @@ function waitPopupStateInChild(bc, messageName) {
 async function openPopupOn(browser, selector) {
   let childNotifiedPromise = waitPopupStateInChild(
     browser,
-    "FormAutoComplete:PopupOpened"
+    "AutoComplete:PopupOpened"
   );
   await SimpleTest.promiseFocus(browser);
 
@@ -613,7 +613,7 @@ async function openPopupOn(browser, selector) {
 async function openPopupOnSubframe(browser, frameBrowsingContext, selector) {
   let childNotifiedPromise = waitPopupStateInChild(
     frameBrowsingContext,
-    "FormAutoComplete:PopupOpened"
+    "AutoComplete:PopupOpened"
   );
 
   await SimpleTest.promiseFocus(browser);
@@ -637,7 +637,7 @@ async function closePopup(browser) {
 
   let childNotifiedPromise = waitPopupStateInChild(
     browser,
-    "FormAutoComplete:PopupClosed"
+    "AutoComplete:PopupClosed"
   );
   let popupClosePromise = BrowserTestUtils.waitForPopupEvent(
     browser.autoCompletePopup,
@@ -655,7 +655,7 @@ async function closePopup(browser) {
 async function closePopupForSubframe(browser, frameBrowsingContext) {
   let childNotifiedPromise = waitPopupStateInChild(
     browser,
-    "FormAutoComplete:PopupClosed"
+    "AutoComplete:PopupClosed"
   );
 
   let popupClosePromise = BrowserTestUtils.waitForPopupEvent(

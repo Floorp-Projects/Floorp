@@ -78,9 +78,7 @@ test_runner(async function test_AboutPocketParent_sendResponseMessageToPanel({
 });
 
 test_runner(
-  async function test_AboutPocketParent_receiveMessage_PKT_show_signup({
-    sandbox,
-  }) {
+  async function test_AboutPocketParent_receiveMessage_PKT_show_signup() {
     await aboutPocketParent.receiveMessage({
       name: "PKT_show_signup",
     });
@@ -96,9 +94,7 @@ test_runner(
 );
 
 test_runner(
-  async function test_AboutPocketParent_receiveMessage_PKT_show_saved({
-    sandbox,
-  }) {
+  async function test_AboutPocketParent_receiveMessage_PKT_show_saved() {
     await aboutPocketParent.receiveMessage({
       name: "PKT_show_saved",
     });
@@ -113,9 +109,7 @@ test_runner(
   }
 );
 
-test_runner(async function test_AboutPocketParent_receiveMessage_PKT_close({
-  sandbox,
-}) {
+test_runner(async function test_AboutPocketParent_receiveMessage_PKT_close() {
   await aboutPocketParent.receiveMessage({
     name: "PKT_close",
   });
@@ -130,9 +124,7 @@ test_runner(async function test_AboutPocketParent_receiveMessage_PKT_close({
 });
 
 test_runner(
-  async function test_AboutPocketParent_receiveMessage_PKT_openTabWithUrl({
-    sandbox,
-  }) {
+  async function test_AboutPocketParent_receiveMessage_PKT_openTabWithUrl() {
     await aboutPocketParent.receiveMessage({
       name: "PKT_openTabWithUrl",
       data: { foo: 1 },
@@ -155,9 +147,7 @@ test_runner(
 );
 
 test_runner(
-  async function test_AboutPocketParent_receiveMessage_PKT_openTabWithPocketUrl({
-    sandbox,
-  }) {
+  async function test_AboutPocketParent_receiveMessage_PKT_openTabWithPocketUrl() {
     await aboutPocketParent.receiveMessage({
       name: "PKT_openTabWithPocketUrl",
       data: { foo: 1 },

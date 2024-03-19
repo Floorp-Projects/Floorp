@@ -3,7 +3,7 @@
 <body>
 <output id="result"></output>
 <script type="text/javascript">
-    window.addEventListener("load", function listener(event) {
+    window.addEventListener("load", function listener() {
       parent.postMessage(["frame_ready"], "*");
     });
     window.addEventListener("message", function listener(event) {

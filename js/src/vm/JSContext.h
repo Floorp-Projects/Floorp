@@ -89,11 +89,14 @@ class InternalJobQueue : public JS::JobQueue {
                          JS::HandleObject incumbentGlobal) override;
   void runJobs(JSContext* cx) override;
   bool empty() const override;
+  bool isDrainingStopped() const override { return interrupted_; }
 
   // If we are currently in a call to runJobs(), make that call stop processing
   // jobs once the current one finishes, and return. If we are not currently in
   // a call to runJobs, make all future calls return immediately.
   void interrupt() { interrupted_ = true; }
+
+  void uninterrupt() { interrupted_ = false; }
 
   // Return the front element of the queue, or nullptr if the queue is empty.
   // This is only used by shell testing functions.

@@ -125,7 +125,7 @@ var pktUI = (function () {
    * Show the sign-up panel
    */
   function showSignUp() {
-    getFirefoxAccountSignedInUser(function (userdata) {
+    getFirefoxAccountSignedInUser(function () {
       showPanel(
         "about:pocket-signup?" +
           "emailButton=" +
@@ -284,7 +284,7 @@ var pktUI = (function () {
 
     // Add url
     var options = {
-      success(data, request) {
+      success(data) {
         var item = data.item;
         var ho2 = data.ho2;
         var accountState = data.account_state;
@@ -493,7 +493,7 @@ var pktUI = (function () {
       .then(userData => {
         callback(userData);
       })
-      .then(null, error => {
+      .then(null, () => {
         callback();
       });
   }

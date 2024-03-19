@@ -275,7 +275,7 @@ function Home(props) {
     status: ""
   });
   const utmParams = `utm_source=${utmSource}${utmCampaign && utmContent ? `&utm_campaign=${utmCampaign}&utm_content=${utmContent}` : ``}`;
-  const loadingRecentSaves = (0,react.useCallback)(resp => {
+  const loadingRecentSaves = (0,react.useCallback)(() => {
     setArticlesState(prevState => ({
       ...prevState,
       status: "loading"
@@ -381,7 +381,7 @@ It does not contain any logic for saving or communication with the extension or 
 
 
 
-var HomeOverlay = function (options) {
+var HomeOverlay = function () {
   this.inited = false;
   this.active = false;
 };
@@ -487,7 +487,7 @@ It does not contain any logic for saving or communication with the extension or 
 
 
 
-var SignupOverlay = function (options) {
+var SignupOverlay = function () {
   this.inited = false;
   this.active = false;
   this.create = function ({
@@ -772,7 +772,7 @@ function Saved(props) {
     messages.addMessageListener("PKT_articleInfoFetched", function (resp) {
       setSavedStoryState(resp?.data?.item_preview);
     });
-    messages.addMessageListener("PKT_getArticleInfoAttempted", function (resp) {
+    messages.addMessageListener("PKT_getArticleInfoAttempted", function () {
       setArticleInfoAttempted(true);
     });
 
@@ -843,7 +843,7 @@ It does not contain any logic for saving or communication with the extension or 
 
 
 
-var SavedOverlay = function (options) {
+var SavedOverlay = function () {
   this.inited = false;
   this.active = false;
 };
@@ -883,7 +883,7 @@ SavedOverlay.prototype = {
 
 
 
-var StyleGuideOverlay = function (options) {};
+var StyleGuideOverlay = function () {};
 StyleGuideOverlay.prototype = {
   create() {
     // TODO: Wrap popular topics component in JSX to work without needing an explicit container hierarchy for styling
@@ -1072,7 +1072,7 @@ PKT_PANEL.prototype = {
     const config = { attributes: false, childList: true, subtree: true };
 
     // Callback function to execute when mutations are observed
-    const callback = (mutationList, observer) => {
+    const callback = mutationList => {
       mutationList.forEach(mutation => {
         switch (mutation.type) {
           case "childList": {

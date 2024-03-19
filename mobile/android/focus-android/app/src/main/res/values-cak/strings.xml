@@ -84,10 +84,8 @@
          sharing an URL. -->
     <string name="share_dialog_title">Tikomonïx b\'ey</string>
 
-    <!-- While a browsing session is active (in the foreground or background) we will show a notification
-         so that the user doesn't forget about the website still being open. This text is shown in
-         the notification. Clicking the notification will have the same effect as clicking the "erase"
-         button in the application. -->
+    <string name="notification_erase_title_android_14">La niyuj runatab\'al okem pa k\'amaya\'l?</string>
+
     <string name="notification_erase_text">Tiyuj runatab\'al okem pa k\'amaya\'l</string>
 
     <!-- Notification action to open Focus and resume the current browsing session. -->

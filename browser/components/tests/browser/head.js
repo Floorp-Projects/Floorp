@@ -42,7 +42,7 @@ function mockShell(overrides = {}) {
     isDefault: false,
     isPinned: false,
 
-    async checkPinCurrentAppToTaskbarAsync(privateBrowsing = false) {
+    async checkPinCurrentAppToTaskbarAsync() {
       if (!this.canPin) {
         throw Error;
       }
@@ -50,7 +50,7 @@ function mockShell(overrides = {}) {
     get isAppInDock() {
       return this.isPinned;
     },
-    isCurrentAppPinnedToTaskbarAsync(privateBrowsing = false) {
+    isCurrentAppPinnedToTaskbarAsync() {
       return Promise.resolve(this.isPinned);
     },
     isDefaultBrowser() {

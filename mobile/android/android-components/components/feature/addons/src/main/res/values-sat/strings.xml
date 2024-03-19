@@ -93,7 +93,7 @@
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_settings_on">ᱪᱚᱞᱩ</string>
     <!-- Indicates the add-on is disabled. -->
-    <string name="mozac_feature_addons_settings_off">ᱵᱚᱸᱫᱚ</string>
+    <string name="mozac_feature_addons_settings_off" moz:removedIn="125" tools:ignore="UnusedResources">ᱵᱚᱸᱫᱚ</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
     <string name="mozac_feature_addons_settings_allow_in_private_browsing">ᱱᱤᱡᱚᱨᱟᱜ ᱵᱽᱨᱟᱣᱩᱡᱤᱝ ᱨᱮ ᱪᱟᱹᱞᱩ ᱪᱷᱚᱭ ᱮᱢ</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
@@ -103,7 +103,7 @@
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">ᱮᱢ ᱪᱷᱚ</string>
     <!-- Indicates the add-on is disabled. -->
-    <string name="mozac_feature_addons_disabled">ᱵᱚᱸᱫᱚᱭ</string>
+    <string name="mozac_feature_addons_disabled" moz:removedIn="125" tools:ignore="UnusedResources">ᱵᱚᱸᱫᱚᱭ</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the installed section. -->
     <string name="mozac_feature_addons_installed_section">ᱵᱚᱦᱟᱞᱮᱱᱟ</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the recommended section. -->
@@ -181,7 +181,7 @@
     <!-- The tile of the notification, this will be shown to the user when more than one newly supported add-ons are available.-->
     <string name="mozac_feature_addons_supported_checker_notification_title_plural">ᱱᱟᱶᱟ ᱮᱰ-ᱚᱱᱥ ᱠᱚ ᱢᱮᱱᱟᱜ-ᱟ</string>
     <!-- The content of the notification, this will be shown to the user when one newly supported add-on is available. %1$s is the add-on name and %2$s is the app name (in most cases Firefox). -->
-    <string name="mozac_feature_addons_supported_checker_notification_content_one">%2$s ᱨᱮ %1$s ᱥᱮᱞᱮᱫᱽ ᱢᱮ </string>
+    <string name="mozac_feature_addons_supported_checker_notification_content_one">%2$s ᱨᱮ %1$s ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
     <!-- The content of the notification, this will be shown to the user when two newly supported add-ons are available. %1$s is the first add-on name. %2$s is the second add-on name. %3$s is the app name (in most cases Firefox). -->
     <string name="mozac_feature_addons_supported_checker_notification_content_two">%1$s ᱟᱨ %2$s %3$s ᱨᱮ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
     <!-- The content of the notification, this will be shown to the user when more than two newly supported add-ons are available. %1$s is the app name (in most cases Firefox). -->
@@ -252,6 +252,8 @@
     <string name="mozac_feature_addons_installed_dialog_title">%1$s %2$s ᱨᱮ ᱥᱮᱞᱮᱫᱽ ᱦᱚᱭ ᱱᱟ</string>
     <!-- Text shown in the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_description" moz:removedIn="124" tools:ignore="UnusedResources">ᱢᱮᱱᱩ ᱨᱮ ᱡᱷᱤᱡᱽ ᱢᱮ</string>
+    <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
+    <string name="mozac_feature_addons_installed_dialog_description_2">%2$s ᱢᱮᱱᱩ ᱠᱷᱚᱱ %1$s ᱟᱫᱮᱨ ᱢᱮ ᱾</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_okay_button" moz:removedIn="124" tools:ignore="UnusedResources">ᱴᱷᱤᱠ, ᱵᱟᱰᱟᱭ ᱠᱮᱜᱼᱟᱹᱧ</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->

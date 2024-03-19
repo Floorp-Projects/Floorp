@@ -10,14 +10,18 @@ license = "MPL-2.0"
 [dependencies]
 goblin = { version = "0.7", features = ["elf32", "elf64", "pe32", "pe64"] }
 memoffset = "0.9"
-mozilla-central-workspace-hack = { version = "0.1", optional = true }
 thiserror = "1.0"
 
+[target."cfg(any(target_os = \"linux\", target_os = \"android\"))".dependencies]
+libc = "0.2"
+
 [target."cfg(target_os = \"windows\")".dependencies]
-[dependencies.windows-sys]
-version = "0.52"
-features = [
+windows-sys = { version = "0.52", features = [
     "Win32_Foundation",
     "Win32_System_Diagnostics_Debug",
     "Win32_System_ProcessStatus",
-]
+] }
+mozilla-central-workspace-hack = { version = "0.1", optional = true }
+
+[target."cfg(target_os = \"macos\")".dependencies]
+mach2 = { version = "0.4" }

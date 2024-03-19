@@ -24,7 +24,7 @@ add_task(async function () {
   });
 
   info("Synthesize a mouse click and wait for a new tab...");
-  let newTab = await new Promise((resolve, reject) => {
+  let newTab = await new Promise(resolve => {
     gBrowser.tabContainer.addEventListener(
       "TabOpen",
       function (openEvent) {

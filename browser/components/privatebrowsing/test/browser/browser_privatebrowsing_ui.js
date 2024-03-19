@@ -55,7 +55,7 @@ function test() {
   }
 
   function openPrivateBrowsingModeByUI(aWindow, aCallback) {
-    Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
+    Services.obs.addObserver(function observer(aSubject) {
       aSubject.addEventListener(
         "load",
         function () {

@@ -88,7 +88,7 @@ function _imageFromURI(uri, privateMode, callback) {
     }
 
     const decodeCallback = {
-      onImageReady(image, status) {
+      onImageReady(image) {
         if (!image) {
           // We failed, so use the default favicon (only if this wasn't the
           // default favicon).
@@ -589,13 +589,13 @@ TabWindow.prototype = {
 
   // Browser progress listener
 
-  onLocationChange(aBrowser) {
+  onLocationChange() {
     // I'm not sure we need this, onStateChange does a really good job
     // of picking up page changes.
     // this.invalidateTabPreview(aBrowser);
   },
 
-  onStateChange(aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
+  onStateChange(aBrowser, aWebProgress, aRequest, aStateFlags) {
     if (
       aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
       aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK

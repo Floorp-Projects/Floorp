@@ -2428,6 +2428,20 @@ static bool ConvertTranscodeResultToJSException(JSContext* cx,
   }
 }
 
+static void SetQuitting(JSContext* cx, int32_t code) {
+  ShellContext* sc = GetShellContext(cx);
+  js::StopDrainingJobQueue(cx);
+  sc->exitCode = code;
+  sc->quitting = true;
+}
+
+static void UnsetQuitting(JSContext* cx) {
+  ShellContext* sc = GetShellContext(cx);
+  js::RestartDrainingJobQueue(cx);
+  sc->exitCode = 0;
+  sc->quitting = false;
+}
+
 static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -2716,6 +2730,11 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
                 ? JS_ExecuteScript(cx, script, args.rval())
                 : JS_ExecuteScript(cx, envChain, script, args.rval()))) {
         if (catchTermination && !JS_IsExceptionPending(cx)) {
+          ShellContext* sc = GetShellContext(cx);
+          if (sc->quitting) {
+            UnsetQuitting(cx);
+          }
+
           JSAutoRealm ar1(cx, callerGlobal);
           JSString* str = JS_NewStringCopyZ(cx, "terminated");
           if (!str) {
@@ -3165,8 +3184,6 @@ static bool PrintErr(JSContext* cx, unsigned argc, Value* vp) {
 static bool Help(JSContext* cx, unsigned argc, Value* vp);
 
 static bool Quit(JSContext* cx, unsigned argc, Value* vp) {
-  ShellContext* sc = GetShellContext(cx);
-
   // Print a message to stderr in differential testing to help jsfunfuzz
   // find uncatchable-exception bugs.
   if (js::SupportDifferentialTesting()) {
@@ -3189,9 +3206,7 @@ static bool Quit(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  js::StopDrainingJobQueue(cx);
-  sc->exitCode = code;
-  sc->quitting = true;
+  SetQuitting(cx, code);
   return false;
 }
 
@@ -5726,6 +5741,11 @@ static bool FrontendTest(JSContext* cx, unsigned argc, Value* vp,
       return false;
     }
 
+    if (goal == frontend::ParseGoal::Module && options.lineno == 0) {
+      JS_ReportErrorASCII(cx, "Module cannot be compiled with lineNumber == 0");
+      return false;
+    }
+
 #ifdef JS_ENABLE_SMOOSH
     bool found = false;
     if (!JS_HasProperty(cx, objOptions, "rustFrontend", &found)) {
@@ -6143,8 +6163,7 @@ static bool OffThreadCompileModuleToStencil(JSContext* cx, unsigned argc,
       return false;
     }
 
-    if (options.lineno == 0) {
-      JS_ReportErrorASCII(cx, "Module cannot be compiled with lineNumber == 0");
+    if (!ValidateModuleCompileOptions(cx, options)) {
       return false;
     }
   }
@@ -12019,6 +12038,8 @@ bool InitOptionParser(OptionParser& op) {
       !op.addBoolOption(
           '\0', "enable-arraybuffer-resizable",
           "Enable resizable ArrayBuffers and growable SharedArrayBuffers") ||
+      !op.addBoolOption('\0', "enable-uint8array-base64",
+                        "Enable Uint8Array base64/hex methods") ||
       !op.addBoolOption('\0', "enable-top-level-await",
                         "Enable top-level await") ||
       !op.addBoolOption('\0', "enable-class-static-blocks",
@@ -12406,6 +12427,9 @@ bool SetGlobalOptionsPreJSInit(const OptionParser& op) {
   }
   if (op.getBoolOption("enable-symbols-as-weakmap-keys")) {
     JS::Prefs::setAtStartup_experimental_symbols_as_weakmap_keys(true);
+  }
+  if (op.getBoolOption("enable-uint8array-base64")) {
+    JS::Prefs::setAtStartup_experimental_uint8array_base64(true);
   }
 #endif
 

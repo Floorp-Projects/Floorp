@@ -108,7 +108,7 @@ async function setupEMEKey(browser) {
 
       // Insert the EME key.
       await new Promise(resolve => {
-        session.addEventListener("message", function (event) {
+        session.addEventListener("message", function () {
           session
             .update(aKeyInfo.keyObj)
             .then(() => {

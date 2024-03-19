@@ -30,7 +30,7 @@ async function setup(pref) {
   Services.fog.testResetFOG();
 }
 
-async function teardown(pref) {
+async function teardown() {
   await SpecialPowers.popPrefEnv();
   await Services.fog.testFlushAllChildren();
   Services.fog.testResetFOG();

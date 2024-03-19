@@ -30,7 +30,7 @@ job-defaults:
                     default: ""
             DO_MOBILE_EXPERIMENTS:
                 by-project:
-                    mozilla-central: ""  # TODO: enable after firefox-android merge
+                    mozilla-central: "1"
                     default: ""
             USE_MOZILLA_CENTRAL:
                 by-project:

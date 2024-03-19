@@ -27,7 +27,7 @@ add_task(async function test_session_data_broadcast() {
 
   const root = createRootMessageHandler("session-id-event");
 
-  // When the windowglobal command.jsm module applies the session data
+  // When the windowglobal command.sys.mjs module applies the session data
   // browser_session_data_browser_element, it will emit an event.
   // Collect the events to detect which MessageHandlers have been started.
   info("Watch events emitted when session data is applied");

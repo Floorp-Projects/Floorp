@@ -39,7 +39,7 @@ var observer = SpecialPowers.wrapCallbackObject({
     return this;
   },
 
-  observe(subject, topic, data) {
+  observe() {
     var doc = getDialogDoc();
     if (doc) {
       handleDialog(doc);

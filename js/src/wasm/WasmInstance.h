@@ -364,7 +364,7 @@ class alignas(16) Instance {
   // value in args.rval.
 
   [[nodiscard]] bool callExport(JSContext* cx, uint32_t funcIndex,
-                                CallArgs args,
+                                const CallArgs& args,
                                 CoercionLevel level = CoercionLevel::Spec);
 
   // Exception handling support

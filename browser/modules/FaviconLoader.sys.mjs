@@ -188,7 +188,7 @@ class FaviconLoad {
     this.channel.cancel(Cr.NS_BINDING_ABORTED);
   }
 
-  onStartRequest(request) {}
+  onStartRequest() {}
 
   onDataAvailable(request, inputStream, offset, count) {
     this.stream.writeFrom(inputStream, count);

@@ -12,8 +12,8 @@ PromiseTestUtils.allowMatchingRejectionsGlobally(
 );
 
 // The tests in this file assert the retry behavior for MessageHandler commands.
-// We call "blocked" commands from resources/modules/windowglobal/retry.jsm and
-// then trigger reload and navigations to simulate AbortErrors and force the
+// We call "blocked" commands from resources/modules/windowglobal/retry.sys.mjs
+// and then trigger reload and navigations to simulate AbortErrors and force the
 // MessageHandler to retry the commands, when possible.
 
 // Test that without retry behavior, a pending command rejects when the

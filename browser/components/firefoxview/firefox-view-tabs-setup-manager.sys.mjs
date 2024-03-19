@@ -616,7 +616,7 @@ export const TabsSetupFlowManager = new (class {
     );
   }
 
-  syncOpenTabs(containerElem) {
+  syncOpenTabs() {
     // Flip the pref on.
     // The observer should trigger re-evaluating state and advance to next step
     Services.prefs.setBoolPref(SYNC_TABS_PREF, true);

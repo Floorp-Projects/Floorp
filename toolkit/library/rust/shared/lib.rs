@@ -57,17 +57,14 @@ extern crate webext_storage_bridge;
 extern crate tabs;
 
 #[cfg(not(target_os = "android"))]
-mod reexport_tabs {
+mod reexport_appservices_uniffi_scaffolding {
     tabs::uniffi_reexport_scaffolding!();
+    relevancy::uniffi_reexport_scaffolding!();
+    suggest::uniffi_reexport_scaffolding!();
 }
 
 #[cfg(not(target_os = "android"))]
 extern crate suggest;
-
-#[cfg(not(target_os = "android"))]
-mod reexport_suggest {
-    suggest::uniffi_reexport_scaffolding!();
-}
 
 #[cfg(feature = "webrtc")]
 extern crate mdns_service;

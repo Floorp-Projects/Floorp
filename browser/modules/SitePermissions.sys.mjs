@@ -630,7 +630,7 @@ export var SitePermissions = {
    * @param {string} latest
    *        The latest value of the preference
    */
-  invalidatePermissionList(data, previous, latest) {
+  invalidatePermissionList() {
     // Ensure that listPermissions() will reconstruct its return value the next
     // time it's called.
     this._permissionsArray = null;

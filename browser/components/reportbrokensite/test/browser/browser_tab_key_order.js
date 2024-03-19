@@ -124,12 +124,9 @@ add_task(async function testTabOrdering() {
   ensureReportBrokenSitePreffedOn();
   ensureSendMoreInfoEnabled();
 
-  await BrowserTestUtils.withNewTab(
-    REPORTABLE_PAGE_URL,
-    async function (browser) {
-      await testTabOrder(AppMenu());
-      await testTabOrder(ProtectionsPanel());
-      await testTabOrder(HelpMenu());
-    }
-  );
+  await BrowserTestUtils.withNewTab(REPORTABLE_PAGE_URL, async function () {
+    await testTabOrder(AppMenu());
+    await testTabOrder(ProtectionsPanel());
+    await testTabOrder(HelpMenu());
+  });
 });

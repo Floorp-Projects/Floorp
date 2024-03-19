@@ -82,12 +82,7 @@ add_task(async function test() {
 
   let loadCount = 0;
   let promiseRestoringTabs = new Promise(resolve => {
-    gProgressListener.setCallback(function (
-      aBrowser,
-      aNeedRestore,
-      aRestoring,
-      aRestored
-    ) {
+    gProgressListener.setCallback(function (aBrowser, aNeedRestore) {
       // When loadCount == 2, we'll also restore state2 into the window
       if (++loadCount == 2) {
         ss.setWindowState(window, JSON.stringify(state2), false);

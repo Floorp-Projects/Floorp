@@ -133,7 +133,7 @@ let setupTest = async function (options, testFunction) {
    * Helper: Will observe and handle the notifications for us
    */
   let hitCount = 0;
-  function observer(aCancel, aTopic, aData) {
+  function observer(aCancel, aTopic) {
     // count so that we later may compare
     observing[aTopic]++;
 
@@ -415,7 +415,7 @@ add_task(async function test_open_close_restore_from_popup() {
     return;
   }
 
-  await setupTest({}, async function (newWin, obs) {
+  await setupTest({}, async function (newWin) {
     let newWin2 = await promiseNewWindowLoaded();
     await injectTestTabs(newWin2);
 

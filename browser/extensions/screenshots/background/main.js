@@ -64,7 +64,7 @@ this.main = (function () {
     _startShotFlow(tab, "keyboard-shortcut");
   });
 
-  const _startShotFlow = (tab, inputType) => {
+  const _startShotFlow = tab => {
     if (!tab) {
       // Not in a page/tab context, ignore
       return;
@@ -137,7 +137,7 @@ this.main = (function () {
     catcher.watchPromise(incrementCount(...args));
   });
 
-  communication.register("openShot", async (sender, { url, copied }) => {
+  communication.register("openShot", async (sender, { copied }) => {
     if (copied) {
       const id = crypto.randomUUID();
       const [title, message] = await getStrings([

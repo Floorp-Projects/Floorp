@@ -3,9 +3,9 @@
 
 "use strict";
 
-// Tests DER.jsm functionality.
+// Tests DER.sys.mjs functionality.
 
-// Until DER.jsm is actually used in production code, this is where we have to
+// Until DER.sys.mjs is actually used in production code, this is where we have to
 // import it from.
 var { DER } = ChromeUtils.importESModule(
   "resource://gre/modules/psm/DER.sys.mjs"

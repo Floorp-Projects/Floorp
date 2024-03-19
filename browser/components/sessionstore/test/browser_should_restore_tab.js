@@ -13,7 +13,7 @@ async function check_tab_close_notification(openedTab, expectNotification) {
 
   let tabClosed = BrowserTestUtils.waitForTabClosing(openedTab);
   let notified = false;
-  function topicObserver(_, topic) {
+  function topicObserver() {
     notified = true;
   }
   Services.obs.addObserver(topicObserver, NOTIFY_CLOSED_OBJECTS_CHANGED);

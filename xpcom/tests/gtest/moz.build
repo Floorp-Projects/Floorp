@@ -61,6 +61,7 @@ UNIFIED_SOURCES += [
     "TestSynchronization.cpp",
     "TestTArray.cpp",
     "TestTArray2.cpp",
+    "TestTaskController.cpp",
     "TestTaskQueue.cpp",
     "TestTextFormatter.cpp",
     "TestThreadManager.cpp",

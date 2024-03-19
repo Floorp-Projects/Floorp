@@ -448,7 +448,7 @@ this.IsolationTestTools = {
         // is finished before the next round of testing.
         if (SpecialPowers.useRemoteSubframes) {
           await new Promise(resolve => {
-            let observer = (subject, topic, data) => {
+            let observer = (subject, topic) => {
               if (topic === "ipc:content-shutdown") {
                 Services.obs.removeObserver(observer, "ipc:content-shutdown");
                 resolve();

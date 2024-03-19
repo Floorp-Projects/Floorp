@@ -33,7 +33,7 @@ function createPopup() {
 window.addEventListener("load", createPopup);
 console.log("TKTK: Adding initial load");
 
-async function runTheTest(iframe_domain, cross_origin_domain, mode) {
+async function runTheTest(iframe_domain, cross_origin_domain) {
   await new Promise(r => setTimeout(r, 2000));
   console.log("TKTK: runTheTest() popup =", (popup === undefined ? "undefined" : "something"));
    if (document.readyState !== 'complete') {

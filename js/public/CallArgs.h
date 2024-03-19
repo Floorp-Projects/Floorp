@@ -112,7 +112,7 @@ class MOZ_STACK_CLASS NoUsedRval {
 };
 
 template <class WantUsedRval>
-class MOZ_STACK_CLASS CallArgsBase {
+class MOZ_STACK_CLASS MOZ_NON_PARAM CallArgsBase {
   static_assert(std::is_same_v<WantUsedRval, IncludeUsedRval> ||
                     std::is_same_v<WantUsedRval, NoUsedRval>,
                 "WantUsedRval can only be IncludeUsedRval or NoUsedRval");
@@ -294,7 +294,7 @@ class MOZ_STACK_CLASS CallArgsBase {
 
 }  // namespace detail
 
-class MOZ_STACK_CLASS CallArgs
+class MOZ_STACK_CLASS MOZ_NON_PARAM CallArgs
     : public detail::CallArgsBase<detail::IncludeUsedRval> {
  private:
   friend CallArgs CallArgsFromVp(unsigned argc, Value* vp);

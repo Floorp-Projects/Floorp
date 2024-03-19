@@ -23,8 +23,8 @@
  * ## Overview of files supporting "AppTestDelegate":
  *
  * MOZ_BUILD_APP-specific AppUiTestDelegate.sys.mjs implementations:
- * - browser/components/extensions/test/AppUiTestDelegate.jsm
- * - mobile/android/modules/test/AppUiTestDelegate.jsm
+ * - browser/components/extensions/test/AppUiTestDelegate.sys.mjs
+ * - mobile/android/modules/test/AppUiTestDelegate.sys.mjs
  * - mail/components/extensions/test/AppUiTestDelegate.sys.mjs (in comm-central)
  *
  * Glue between AppUiTestDelegate.sys.mjs in parent and test code in child:

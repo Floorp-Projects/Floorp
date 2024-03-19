@@ -19,7 +19,7 @@ add_task(async () => {
   await BrowserTestUtils.browserLoaded(privateTab);
 
   let observerExited = {
-    observe(aSubject, aTopic, aData) {
+    observe() {
       ok(false, "Notification received!");
     },
   };

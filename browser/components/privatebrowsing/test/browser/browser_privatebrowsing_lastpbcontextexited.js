@@ -11,7 +11,7 @@ function test() {
       let expectedExiting = true;
       let expectedExited = false;
       let observerExiting = {
-        observe(aSubject, aTopic, aData) {
+        observe(aSubject, aTopic) {
           is(
             aTopic,
             "last-pb-context-exiting",
@@ -26,7 +26,7 @@ function test() {
         },
       };
       let observerExited = {
-        observe(aSubject, aTopic, aData) {
+        observe(aSubject, aTopic) {
           is(
             aTopic,
             "last-pb-context-exited",

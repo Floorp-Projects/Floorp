@@ -578,7 +578,7 @@ add_task(async function withIframe() {
       pinnedToUrlbar: true,
       title: "Test iframe",
       wantsIframe: true,
-      onCommand(event, buttonNode) {
+      onCommand() {
         onCommandCallCount++;
       },
       onIframeShowing(iframeNode, panelNode) {
@@ -1171,10 +1171,10 @@ add_task(async function transient() {
       id: "test-transient",
       title: "Test transient",
       _transient: true,
-      onPlacedInPanel(buttonNode) {
+      onPlacedInPanel() {
         onPlacedInPanelCount++;
       },
-      onBeforePlacedInWindow(win) {
+      onBeforePlacedInWindow() {
         onBeforePlacedInWindowCount++;
       },
     })

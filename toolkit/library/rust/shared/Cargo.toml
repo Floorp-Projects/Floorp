@@ -113,6 +113,7 @@ viaduct = "0.1"
 webext_storage_bridge = { path = "../../../components/extensions/storage/webext_storage_bridge" }
 tabs = { version = "0.1" }
 suggest = { version = "0.1" }
+relevancy = { version = "0.1" }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 detect_win32k_conflicts = { path = "../../../xre/detect_win32k_conflicts" }

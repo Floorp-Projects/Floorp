@@ -100,7 +100,7 @@ class TabsListBase {
   /*
    * Populate the popup with menuitems and setup the listeners.
    */
-  _populate(event) {
+  _populate() {
     let fragment = this.doc.createDocumentFragment();
 
     for (let tab of this.gBrowser.tabs) {

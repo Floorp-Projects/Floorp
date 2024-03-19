@@ -230,8 +230,8 @@ void WindowGlobalParent::OriginCounter::UpdateSiteOriginsFrom(
 }
 
 void WindowGlobalParent::OriginCounter::Accumulate() {
-  mozilla::glean::geckoview::per_document_site_origins.AccumulateSamples(
-      {mMaxOrigins});
+  mozilla::glean::geckoview::per_document_site_origins.AccumulateSingleSample(
+      mMaxOrigins);
 
   mMaxOrigins = 0;
   mOriginMap.Clear();

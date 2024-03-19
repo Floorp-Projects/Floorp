@@ -143,8 +143,19 @@ void IDTracker::ResetWithLocalRef(Element& aFrom, const nsAString& aLocalRef,
     Unlink();
     return;
   }
-  NS_UnescapeURL(utf8Ref);
-  RefPtr<nsAtom> idAtom = NS_Atomize(utf8Ref);
+
+  // Only unescape ASCII characters; if we were to unescape arbitrary bytes,
+  // we'd potentially end up with invalid UTF-8.
+  nsAutoCString unescaped;
+  bool appended;
+  if (NS_FAILED(NS_UnescapeURL(utf8Ref.BeginReading(), utf8Ref.Length(),
+                               esc_OnlyASCII | esc_AlwaysCopy, unescaped,
+                               appended, mozilla::fallible))) {
+    Unlink();
+    return;
+  }
+
+  RefPtr<nsAtom> idAtom = NS_Atomize(unescaped);
   ResetWithID(aFrom, idAtom, aWatch);
 }
 

@@ -5,7 +5,7 @@
 import { setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 
 export var CustomizeMode = {
-  init(libDir) {},
+  init() {},
 
   configurations: {
     notCustomizing: {

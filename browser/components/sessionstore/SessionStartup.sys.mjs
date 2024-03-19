@@ -268,7 +268,7 @@ export var SessionStartup = {
   /**
    * Handle notifications
    */
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     switch (topic) {
       case "sessionstore-windows-restored":
         Services.obs.removeObserver(this, "sessionstore-windows-restored");

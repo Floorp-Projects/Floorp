@@ -261,6 +261,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 ModuleScript::ModuleScript(mozilla::dom::ReferrerPolicy aReferrerPolicy,
                            ScriptFetchOptions* aFetchOptions, nsIURI* aURI)
     : LoadedScript(ScriptKind::eModule, aReferrerPolicy, aFetchOptions, aURI),
+      mHadImportMap(false),
       mDebuggerDataInitialized(false) {
   MOZ_ASSERT(!ModuleRecord());
   MOZ_ASSERT(!HasParseError());
@@ -332,6 +333,9 @@ void ModuleScript::SetErrorToRethrow(const JS::Value& aError) {
 
   mErrorToRethrow = aError;
 }
+
+void ModuleScript::SetForPreload(bool aValue) { mForPreload = aValue; }
+void ModuleScript::SetHadImportMap(bool aValue) { mHadImportMap = aValue; }
 
 void ModuleScript::SetDebuggerDataInitialized() {
   MOZ_ASSERT(ModuleRecord());

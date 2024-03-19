@@ -833,7 +833,7 @@ async function tabTo(match, win = window) {
   return undefined;
 }
 
-async function setupStrictETP(fn) {
+async function setupStrictETP() {
   await UrlClassifierTestUtils.addTestTrackers();
   registerCleanupFunction(() => {
     UrlClassifierTestUtils.cleanupTestTrackers();

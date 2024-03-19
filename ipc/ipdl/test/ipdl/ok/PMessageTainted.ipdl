@@ -1,5 +1,5 @@
 [ChildProc=any]
-intr protocol PMessageTainted {
+sync protocol PMessageTainted {
 child:
     [Tainted] async foo();
 };

@@ -98,7 +98,7 @@ function setupBrowser() {
           "nsIWebProgressListener",
           "nsISupportsWeakReference",
         ]),
-        onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {
+        onLocationChange() {
           // When URL changes, update the URL in the URL bar and update
           // whether the back/forward buttons are enabled.
           urlInput.value = browser.currentURI.spec;
@@ -106,7 +106,7 @@ function setupBrowser() {
           backButton.disabled = !browser.canGoBack;
           forwardButton.disabled = !browser.canGoForward;
         },
-        onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
+        onStateChange(aWebProgress, aRequest, aStateFlags) {
           if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
             // Network requests are complete. Disable (hide) the stop button
             // and enable (show) the refresh button
@@ -153,7 +153,7 @@ function setupNavButtons() {
     "ePrefs",
   ];
 
-  function navButtonHandler(e) {
+  function navButtonHandler() {
     if (!this.disabled) {
       switch (this.id) {
         case "eBack":

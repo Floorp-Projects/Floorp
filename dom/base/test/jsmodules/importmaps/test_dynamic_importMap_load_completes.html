@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<head>
+<title>Test script loading complets when there's a dynamicly inserted import map</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+
+<!--
+    This test case used to fail intermittently with some modules never
+    being loaded.
+-->
+
+<script>
+  let loaded = false;  // Set by module_chain_2.mjs.
+</script>
+
+<script src="classic_script.js"></script>
+
+<script>
+  const script = document.createElement('script');
+  script.type = 'importmap';
+  script.textContent = `{}`;
+  document.head.appendChild(script);
+</script>
+
+<script src="module_chain_1.mjs" type="module"></script>
+
+<script type="module">
+  ok(loaded, "Expected all modules loaded");
+</script>
+
+<body></body>

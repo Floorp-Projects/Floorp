@@ -148,7 +148,9 @@ endif # MOZ_CODE_COVERAGE
 endif # WINNT
 
 ifeq (WINNT,$(HOST_OS_ARCH))
-normalize_sep = $(subst \,/,$(1))
+# //?/ is the long path prefix which seems to confuse make, so we remove it
+# (things should work without it).
+normalize_sep = $(patsubst //?/%,%,$(subst \,/,$(1)))
 else
 normalize_sep = $(1)
 endif
@@ -467,12 +469,12 @@ endef
 # spaces with some unlikely string for the foreach, and replace them back in the
 # loop itself.
 define make_cargo_rule
-$(notdir $(1))_deps := $$(wordlist 2, 10000000, $$(if $$(wildcard $(basename $(1)).d),$$(shell cat $(basename $(1)).d)))
+$(notdir $(1))_deps := $$(call normalize_sep,$$(wordlist 2, 10000000, $$(if $$(wildcard $(basename $(1)).d),$$(shell cat $(basename $(1)).d))))
 $(1): $(CARGO_FILE) $(3) $(topsrcdir)/Cargo.lock $$(if $$($(notdir $(1))_deps),$$($(notdir $(1))_deps),$(2))
 	$$(REPORT_BUILD)
 	$$(if $$($(notdir $(1))_deps),+$(MAKE) $(2),:)
 
-$$(foreach dep, $$(call normalize_sep,$$(subst \ ,_^_^_^_,$$($(notdir $(1))_deps))),$$(eval $$(call make_default_rule,$$(subst _^_^_^_,\ ,$$(dep)))))
+$$(foreach dep, $$(subst \ ,_^_^_^_,$$($(notdir $(1))_deps)),$$(eval $$(call make_default_rule,$$(subst _^_^_^_,\ ,$$(dep)))))
 endef
 
 ifdef RUST_LIBRARY_FILE

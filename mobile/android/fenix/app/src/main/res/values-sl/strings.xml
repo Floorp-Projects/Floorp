@@ -1731,6 +1731,8 @@
     <string name="preferences_passwords_saved_logins_2">Shranjena gesla</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
     <string name="preferences_passwords_saved_logins_description_empty_text" moz:RemovedIn="125" tools:ignore="UnusedResources">Tu se prikažejo prijave, ki jih shranite ali sinhronizirate v %s.</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text_2">Gesla, ki jih boste shranili ali sinhronizirali v %su, bodo našteta tukaj. Vsa gesla so shranjena v šifrirani obliki.</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link" moz:RemovedIn="125" tools:ignore="UnusedResources">Več o Sync.</string>
     <!-- Clickable text for opening an external link for more information about Sync. -->
@@ -1749,6 +1751,8 @@
     <string name="preferences_passwords_exceptions_remove_all">Izbriši vse izjeme</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search" moz:RemovedIn="125" tools:ignore="UnusedResources">Iskanje prijav</string>
+    <!-- Hint for search box in passwords list -->
+    <string name="preferences_passwords_saved_logins_search_2">Iskanje gesel</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Stran</string>
     <!-- The header for the username for a login -->
@@ -1807,6 +1811,9 @@
 
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Meni razvrščanja prijav</string>
+
+    <!-- Content description (not visible, for screen readers etc.) -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2">Meni za razvrščanje gesel</string>
 
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->

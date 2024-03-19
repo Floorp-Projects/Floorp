@@ -158,7 +158,7 @@ class ArrayBufferDataStream {
     // UniFFI Pointers are **always** 8 bytes long. That is enforced
     // by the C++ and Rust Scaffolding code.
     readPointerSprite() {
-        const pointerId = 8; // sprites:Sprite
+        const pointerId = 9; // sprites:Sprite
         const res = UniFFIScaffolding.readPointer(pointerId, this.dataView.buffer, this.pos);
         this.pos += 8;
         return res;
@@ -168,7 +168,7 @@ class ArrayBufferDataStream {
     // UniFFI Pointers are **always** 8 bytes long. That is enforced
     // by the C++ and Rust Scaffolding code.
     writePointerSprite(value) {
-        const pointerId = 8; // sprites:Sprite
+        const pointerId = 9; // sprites:Sprite
         UniFFIScaffolding.writePointer(pointerId, value, this.dataView.buffer, this.pos);
         this.pos += 8;
     }
@@ -325,7 +325,7 @@ export class Sprite {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                106, // sprites:uniffi_uniffi_sprites_fn_constructor_sprite_new
+                110, // sprites:uniffi_uniffi_sprites_fn_constructor_sprite_new
                 FfiConverterOptionalTypePoint.lower(initialPosition),
             )
         }
@@ -361,7 +361,7 @@ export class Sprite {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                107, // sprites:uniffi_uniffi_sprites_fn_constructor_sprite_new_relative_to
+                111, // sprites:uniffi_uniffi_sprites_fn_constructor_sprite_new_relative_to
                 FfiConverterTypePoint.lower(reference),
                 FfiConverterTypeVector.lower(direction),
             )
@@ -377,7 +377,7 @@ export class Sprite {
         const liftError = null;
         const functionCall = () => {
             return UniFFIScaffolding.callAsync(
-                108, // sprites:uniffi_uniffi_sprites_fn_method_sprite_get_position
+                112, // sprites:uniffi_uniffi_sprites_fn_method_sprite_get_position
                 FfiConverterTypeSprite.lower(this),
             )
         }
@@ -401,7 +401,7 @@ export class Sprite {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                109, // sprites:uniffi_uniffi_sprites_fn_method_sprite_move_by
+                113, // sprites:uniffi_uniffi_sprites_fn_method_sprite_move_by
                 FfiConverterTypeSprite.lower(this),
                 FfiConverterTypeVector.lower(direction),
             )
@@ -426,7 +426,7 @@ export class Sprite {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                110, // sprites:uniffi_uniffi_sprites_fn_method_sprite_move_to
+                114, // sprites:uniffi_uniffi_sprites_fn_method_sprite_move_to
                 FfiConverterTypeSprite.lower(this),
                 FfiConverterTypePoint.lower(position),
             )
@@ -517,7 +517,7 @@ export class FfiConverterTypePoint extends FfiConverterArrayBuffer {
     static checkType(value) {
         super.checkType(value);
         if (!(value instanceof Point)) {
-            throw new TypeError(`Expected 'Point', found '${typeof value}'`);
+            throw new UniFFITypeError(`Expected 'Point', found '${typeof value}'`);
         }
         try {
             FfiConverterF64.checkType(value.x);
@@ -590,7 +590,7 @@ export class FfiConverterTypeVector extends FfiConverterArrayBuffer {
     static checkType(value) {
         super.checkType(value);
         if (!(value instanceof Vector)) {
-            throw new TypeError(`Expected 'Vector', found '${typeof value}'`);
+            throw new UniFFITypeError(`Expected 'Vector', found '${typeof value}'`);
         }
         try {
             FfiConverterF64.checkType(value.dx);
@@ -674,7 +674,7 @@ export function translate(position,direction) {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                111, // sprites:uniffi_uniffi_sprites_fn_func_translate
+                115, // sprites:uniffi_uniffi_sprites_fn_func_translate
                 FfiConverterTypePoint.lower(position),
                 FfiConverterTypeVector.lower(direction),
             )

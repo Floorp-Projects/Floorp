@@ -7,7 +7,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import Home from "../components/Home/Home.jsx";
 
-var HomeOverlay = function (options) {
+var HomeOverlay = function () {
   this.inited = false;
   this.active = false;
 };
