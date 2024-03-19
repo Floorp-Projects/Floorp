@@ -29,6 +29,7 @@
   MACRO_(allowContentIter, "allowContentIter")                                 \
   MACRO_(allowContentIterWith, "allowContentIterWith")                         \
   MACRO_(allowContentIterWithNext, "allowContentIterWithNext")                 \
+  MACRO_(alphabet, "alphabet")                                                 \
   MACRO_(ambiguous, "ambiguous")                                               \
   MACRO_(anonymous, "anonymous")                                               \
   MACRO_(Any, "Any")                                                           \
@@ -340,6 +341,7 @@
   MACRO_(label, "label")                                                       \
   MACRO_(language, "language")                                                 \
   MACRO_(largestUnit, "largestUnit")                                           \
+  MACRO_(lastChunkHandling, "lastChunkHandling")                               \
   MACRO_(lastIndex, "lastIndex")                                               \
   MACRO_(length, "length")                                                     \
   MACRO_(let, "let")                                                           \
