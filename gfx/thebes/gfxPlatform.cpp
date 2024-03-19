@@ -445,7 +445,8 @@ gfxPlatform::gfxPlatform()
       mDisplayInfoCollector(this, &gfxPlatform::GetDisplayInfo),
       mOverlayInfoCollector(this, &gfxPlatform::GetOverlayInfo),
       mSwapChainInfoCollector(this, &gfxPlatform::GetSwapChainInfo),
-      mCompositorBackend(layers::LayersBackend::LAYERS_NONE) {
+      mCompositorBackend(layers::LayersBackend::LAYERS_NONE),
+      mScreenDepth(0) {
   mAllowDownloadableFonts = UNINITIALIZED_VALUE;
 
   InitBackendPrefs(GetBackendPrefs());
@@ -911,6 +912,7 @@ void gfxPlatform::Init() {
 #else
 #  error "No gfxPlatform implementation available"
 #endif
+  gPlatform->PopulateScreenInfo();
   gPlatform->InitAcceleration();
   gPlatform->InitWebRenderConfig();
 
@@ -1062,13 +1064,6 @@ void gfxPlatform::ReportTelemetry() {
     mozilla::glean::gfx_display::count.Set(screenCount);
     mozilla::glean::gfx_display::primary_height.Set(rect.Height());
     mozilla::glean::gfx_display::primary_width.Set(rect.Width());
-
-    // Check if any screen known by screenManager supports HDR.
-    bool supportsHDR = false;
-    for (const auto& screen : screenManager.CurrentScreenList()) {
-      supportsHDR |= screen->GetIsHDR();
-    }
-    Telemetry::ScalarSet(Telemetry::ScalarID::GFX_SUPPORTS_HDR, supportsHDR);
   }
 
   nsString adapterDesc;
@@ -1125,6 +1120,10 @@ void gfxPlatform::ReportTelemetry() {
       NS_ConvertUTF16toUTF8(adapterDriverDate));
 
   mozilla::glean::gfx_status::headless.Set(IsHeadless());
+
+  MOZ_ASSERT(gPlatform, "Need gPlatform to generate some telemetry.");
+  Telemetry::ScalarSet(Telemetry::ScalarID::GFX_SUPPORTS_HDR,
+                       gPlatform->SupportsHDR());
 }
 
 static bool IsFeatureSupported(long aFeature, bool aDefault) {
@@ -1605,6 +1604,27 @@ already_AddRefed<DataSourceSurface> gfxPlatform::GetWrappedDataSourceSurface(
   result->AddUserData(&kThebesSurface, srcSurfUD, SourceSurfaceDestroyed);
 
   return result.forget();
+}
+
+void gfxPlatform::PopulateScreenInfo() {
+  nsCOMPtr<nsIScreenManager> manager =
+      do_GetService("@mozilla.org/gfx/screenmanager;1");
+  MOZ_ASSERT(manager, "failed to get nsIScreenManager");
+
+  nsCOMPtr<nsIScreen> screen;
+  manager->GetPrimaryScreen(getter_AddRefs(screen));
+  if (!screen) {
+    // This can happen in xpcshell, for instance
+    return;
+  }
+
+  screen->GetColorDepth(&mScreenDepth);
+  if (XRE_IsParentProcess()) {
+    gfxVars::SetScreenDepth(mScreenDepth);
+  }
+
+  int left, top;
+  screen->GetRect(&left, &top, &mScreenSize.width, &mScreenSize.height);
 }
 
 bool gfxPlatform::SupportsAzureContentForDrawTarget(DrawTarget* aTarget) {

@@ -208,16 +208,6 @@ uint16_t nsDeviceContext::GetScreenOrientationAngle() {
   return screen->GetOrientationAngle();
 }
 
-bool nsDeviceContext::GetScreenIsHDR() {
-  RefPtr<widget::Screen> screen = FindScreen();
-  if (!screen) {
-    auto& screenManager = ScreenManager::GetSingleton();
-    screen = screenManager.GetPrimaryScreen();
-    MOZ_ASSERT(screen);
-  }
-  return screen->GetIsHDR();
-}
-
 nsresult nsDeviceContext::GetDeviceSurfaceDimensions(nscoord& aWidth,
                                                      nscoord& aHeight) {
   if (IsPrinterContext()) {
