@@ -14,4 +14,10 @@ def main(argv):
 
 
 if __name__ == "__main__":
+    # When run from the CLI, we know we have a rather short duration so it's
+    # fine to disable gc in order to shave a few milliseconds.
+    import gc
+
+    gc.disable()
+
     sys.exit(main(sys.argv[1:]))
