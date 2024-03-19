@@ -127,19 +127,6 @@ class PerfParser(CompareParser):
             },
         ],
         [
-            # Bug 1866047 - Remove once monorepo changes are complete
-            ["--fenix"],
-            {
-                "action": "store_true",
-                "default": False,
-                "help": "Include Fenix in tasks to run (disabled by default). Must "
-                "be used in conjunction with --android. Fenix isn't built on mozilla-central "
-                "so we pull the APK being tested from the firefox-android project. This "
-                "means that the fenix APK being tested in the two pushes is the same, and "
-                "any local changes made won't impact it.",
-            },
-        ],
-        [
             ["--chrome"],
             {
                 "action": "store_true",

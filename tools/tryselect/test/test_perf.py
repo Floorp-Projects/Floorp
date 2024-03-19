@@ -193,7 +193,6 @@ TEST_CATEGORIES = {
                         "!live",
                         "!profil",
                         "!chrom",
-                        "!fenix",
                         "!safari",
                         "!m-car",
                     ]
@@ -206,7 +205,6 @@ TEST_CATEGORIES = {
                         "!live",
                         "!profil",
                         "!chrom",
-                        "!fenix",
                         "!safari",
                         "!m-car",
                     ]
@@ -220,7 +218,6 @@ TEST_CATEGORIES = {
                         "!live",
                         "!profil",
                         "!chrom",
-                        "!fenix",
                         "!safari",
                         "!m-car",
                     ],
@@ -248,7 +245,6 @@ TEST_CATEGORIES = {
                         "!bytecode",
                         "!profil",
                         "!chrom",
-                        "!fenix",
                         "!safari",
                         "!m-car",
                     ]
@@ -260,7 +256,6 @@ TEST_CATEGORIES = {
                         "!bytecode",
                         "!profil",
                         "!chrom",
-                        "!fenix",
                         "!safari",
                         "!m-car",
                     ]
@@ -273,7 +268,6 @@ TEST_CATEGORIES = {
                         "!bytecode",
                         "!profil",
                         "!chrom",
-                        "!fenix",
                         "!safari",
                         "!m-car",
                     ],
@@ -300,7 +294,6 @@ TEST_CATEGORIES = {
                         "!bytecode",
                         "!profil",
                         "!chrom",
-                        "!fenix",
                         "!m-car",
                     ]
                 },
@@ -339,7 +332,6 @@ TEST_CATEGORIES = {
                         "!android 'shippable !-32 !clang",
                         "!bytecode",
                         "!profil",
-                        "!fenix",
                         "!safari",
                         "!m-car",
                     ]
@@ -351,7 +343,6 @@ TEST_CATEGORIES = {
                         "'live",
                         "!bytecode",
                         "!profil",
-                        "!fenix",
                         "!safari",
                         "!m-car",
                     ],
@@ -374,7 +365,7 @@ TEST_CATEGORIES = {
         ),
         (
             {"android": True},
-            78,
+            88,
             {
                 "Benchmarks desktop": {
                     "raptor": [
@@ -384,7 +375,6 @@ TEST_CATEGORIES = {
                         "!live",
                         "!profil",
                         "!chrom",
-                        "!fenix",
                         "!safari",
                         "!m-car",
                     ],
@@ -403,12 +393,11 @@ TEST_CATEGORIES = {
             [
                 "Responsiveness android-a51 chrome-m",
                 "Firefox Pageload android",
-                "Pageload android-a51 fenix",
             ],
         ),
         (
             {"android": True, "chrome": True},
-            128,
+            138,
             {
                 "Benchmarks desktop": {
                     "raptor": [
@@ -417,7 +406,6 @@ TEST_CATEGORIES = {
                         "!bytecode",
                         "!live",
                         "!profil",
-                        "!fenix",
                         "!safari",
                         "!m-car",
                     ],
@@ -437,7 +425,7 @@ TEST_CATEGORIES = {
         ),
         (
             {"android": True, "chrome": True, "profile": True},
-            164,
+            176,
             {
                 "Benchmarks desktop": {
                     "raptor": [
@@ -445,7 +433,6 @@ TEST_CATEGORIES = {
                         "!android 'shippable !-32 !clang",
                         "!bytecode",
                         "!live",
-                        "!fenix",
                         "!safari",
                         "!m-car",
                     ]
@@ -755,7 +742,6 @@ TEST_CATEGORIES = {
                         "!bytecode",
                         "!profil",
                         "!chrom",
-                        "!fenix",
                         "!safari",
                         "!m-car",
                     ],
@@ -767,7 +753,6 @@ TEST_CATEGORIES = {
                         "!bytecode",
                         "!profil",
                         "!chrom",
-                        "!fenix",
                         "!safari",
                         "!m-car",
                     ],
@@ -847,7 +832,7 @@ def test_category_expansion_with_non_pgo_flag(category_options, call_counts):
     [
         (
             {},
-            [10, 2, 2, 10, 2, 1],
+            [9, 2, 2, 10, 2, 1],
             2,
             (
                 "\n!!!NOTE!!!\n You'll be able to find a performance comparison "
@@ -858,7 +843,7 @@ def test_category_expansion_with_non_pgo_flag(category_options, call_counts):
         ),
         (
             {"query": "'Pageload 'linux 'firefox"},
-            [10, 2, 2, 10, 2, 1],
+            [9, 2, 2, 10, 2, 1],
             2,
             (
                 "\n!!!NOTE!!!\n You'll be able to find a performance comparison "
@@ -869,7 +854,7 @@ def test_category_expansion_with_non_pgo_flag(category_options, call_counts):
         ),
         (
             {"cached_revision": "cached_base_revision"},
-            [10, 1, 1, 10, 2, 0],
+            [9, 1, 1, 10, 2, 0],
             2,
             (
                 "\n!!!NOTE!!!\n You'll be able to find a performance comparison "
@@ -880,7 +865,7 @@ def test_category_expansion_with_non_pgo_flag(category_options, call_counts):
         ),
         (
             {"dry_run": True},
-            [10, 1, 1, 10, 2, 0],
+            [9, 1, 1, 10, 2, 0],
             2,
             (
                 "\n!!!NOTE!!!\n You'll be able to find a performance comparison "
@@ -913,7 +898,7 @@ def test_category_expansion_with_non_pgo_flag(category_options, call_counts):
         ),
         (
             {"single_run": True},
-            [10, 1, 1, 4, 2, 0],
+            [9, 1, 1, 4, 2, 0],
             2,
             (
                 "If you need any help, you can find us in the #perf-help Matrix channel:\n"
@@ -922,7 +907,7 @@ def test_category_expansion_with_non_pgo_flag(category_options, call_counts):
         ),
         (
             {"detect_changes": True},
-            [11, 2, 2, 10, 2, 1],
+            [10, 2, 2, 10, 2, 1],
             2,
             (
                 "\n!!!NOTE!!!\n You'll be able to find a performance comparison "
@@ -933,7 +918,7 @@ def test_category_expansion_with_non_pgo_flag(category_options, call_counts):
         ),
         (
             {"perfcompare_beta": True},
-            [10, 2, 2, 10, 2, 1],
+            [9, 2, 2, 10, 2, 1],
             2,
             (
                 "\n!!!NOTE!!!\n You'll be able to find a performance comparison "
@@ -971,7 +956,6 @@ def test_full_run(options, call_counts, log_ind, expected_log_message):
             ["", TASKS],
             ["", TASKS],
             ["", TASKS],
-            ["", TASKS],
             ["", ["Perftest Change Detector"]],
         ]
         # Number of side effects for fzf should always be greater than
@@ -997,11 +981,11 @@ def test_full_run(options, call_counts, log_ind, expected_log_message):
     [
         (
             {"detect_changes": True},
-            [11, 0, 0, 2, 1],
+            [10, 0, 0, 2, 1],
             1,
             (
                 "Executing raptor queries: 'browsertime 'benchmark, !clang 'linux "
-                "'shippable, !bytecode, !live, !profil, !chrom, !fenix, !safari, !m-car"
+                "'shippable, !bytecode, !live, !profil, !chrom, !safari, !m-car"
             ),
             InvalidRegressionDetectorQuery,
         ),

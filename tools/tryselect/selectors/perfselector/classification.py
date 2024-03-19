@@ -66,10 +66,6 @@ def check_for_android(android=False, **kwargs):
     return android
 
 
-def check_for_fenix(fenix=False, **kwargs):
-    return fenix or ("fenix" in kwargs.get("requested_apps", []))
-
-
 def check_for_chrome(chrome=False, **kwargs):
     return chrome
 
@@ -151,7 +147,6 @@ class ClassificationProvider:
             Apps.FENIX.value: {
                 "query": "'fenix",
                 "negation": "!fenix",
-                "restriction": check_for_fenix,
                 "platforms": [Platforms.ANDROID.value],
             },
             Apps.CHROME_M.value: {
