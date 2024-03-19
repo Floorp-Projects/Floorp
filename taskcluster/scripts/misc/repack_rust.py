@@ -439,6 +439,7 @@ def build_src(install_dir, host, targets, patches):
 
         [llvm]
         download-ci-llvm = false
+        profile = true
         """.format(
             prefix=install_dir,
             omit_git_hash=omit_git_hash,
