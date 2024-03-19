@@ -40,7 +40,7 @@ function updateTabsPanel() {
   return promiseTabsUpdated;
 }
 
-// This is the mock we use for SyncedTabs.jsm - tests may override various
+// This is the mock we use for SyncedTabs.sys.mjs - tests may override various
 // functions.
 let mockedInternal = {
   get isConfiguredToSyncTabs() {

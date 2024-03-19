@@ -32,7 +32,7 @@ add_task(async function test_policies_sorted() {
   );
   checkArrayIsSorted(
     Object.keys(Policies),
-    "Policies.jsm is alphabetically sorted."
+    "Policies.sys.mjs is alphabetically sorted."
   );
 });
 

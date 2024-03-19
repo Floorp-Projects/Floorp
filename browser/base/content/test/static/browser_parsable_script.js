@@ -22,9 +22,9 @@ const kESModuleList = new Set([
   /chrome\/pdfjs\/content\/web\/.*\.js$/,
 ]);
 
-// Normally we would use reflect.jsm to get Reflect.parse. However, if
-// we do that, then all the AST data is allocated in reflect.jsm's
-// zone. That exposes a bug in our GC. The GC collects reflect.jsm's
+// Normally we would use reflect.sys.mjs to get Reflect.parse. However, if
+// we do that, then all the AST data is allocated in reflect.sys.mjs's
+// zone. That exposes a bug in our GC. The GC collects reflect.sys.mjs's
 // zone but not the zone in which our test code lives (since no new
 // data is being allocated in it). The cross-compartment wrappers in
 // our zone that point to the AST data never get collected, and so the

@@ -1,5 +1,5 @@
 /**
- * Tests PhoneNumber.jsm and PhoneNumberNormalizer.jsm.
+ * Tests PhoneNumber.sys.mjs and PhoneNumberNormalizer.sys.mjs.
  */
 
 "use strict";

@@ -131,7 +131,7 @@ add_setup(async function setup_head() {
       return;
     }
     if (msg.errorMessage.includes("Can't find profile directory.")) {
-      // Ignore error messages for no profile found in old XULStore.jsm
+      // Ignore error messages for no profile found in old XULStore.sys.mjs
       return;
     }
     if (msg.errorMessage.includes("Error reading typed URL history")) {

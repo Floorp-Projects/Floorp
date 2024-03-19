@@ -80,8 +80,9 @@ function clickOnElement(selector) {
   SimpleTest.executeSoon(() => element.click());
 }
 
-// The equivalent helper function to getAdaptedProfiles in FormAutofillHandler.jsm that
-// transforms the given profile to expected filled profile.
+// The equivalent helper function to getAdaptedProfiles in
+// FormAutofillSection.sys.mjs that transforms the given profile to expected
+// filled profile.
 function _getAdaptedProfile(profile) {
   const adaptedProfile = Object.assign({}, profile);
 

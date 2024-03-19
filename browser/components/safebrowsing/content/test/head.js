@@ -1,4 +1,4 @@
-// This url must sync with the table, url in SafeBrowsing.jsm addMozEntries
+// This url must sync with the table, url in SafeBrowsing.sys.mjs addMozEntries
 const PHISH_TABLE = "moztest-phish-simple";
 const PHISH_URL = "https://www.itisatrap.org/firefox/its-a-trap.html";
 

@@ -119,7 +119,8 @@ add_task(async function () {
   let mm = gBrowser.selectedBrowser.messageManager;
   let promise = BrowserTestUtils.waitForMessage(mm, "Test:LoadedScripts");
 
-  // Load a custom frame script to avoid using ContentTask which loads Task.jsm
+  // Load a custom frame script to avoid using SpecialPowers.spawn which may
+  // load other modules.
   mm.loadFrameScript(
     "data:text/javascript,(" +
       function () {

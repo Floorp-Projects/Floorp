@@ -160,7 +160,7 @@ async function test_dynamical_window_rounding(aWindow, aCheckFunc) {
            *    check() functions use ok() while on Linux, we do not all ok() and instead
            *    rely on waitForCondition to fail).
            *
-           * The logging statements in this test, and RFPHelper.jsm, help narrow down and
+           * The logging statements in this test, and RFPHelper.sys.mjs, help narrow down and
            * illustrate the issue.
            */
           info(caseString + "We hit the weird resize bug. Resize it again.");
