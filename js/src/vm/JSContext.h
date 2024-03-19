@@ -95,6 +95,8 @@ class InternalJobQueue : public JS::JobQueue {
   // a call to runJobs, make all future calls return immediately.
   void interrupt() { interrupted_ = true; }
 
+  void uninterrupt() { interrupted_ = false; }
+
   // Return the front element of the queue, or nullptr if the queue is empty.
   // This is only used by shell testing functions.
   JSObject* maybeFront() const;

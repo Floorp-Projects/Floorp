@@ -799,6 +799,11 @@ JS_PUBLIC_API void js::StopDrainingJobQueue(JSContext* cx) {
   cx->internalJobQueue->interrupt();
 }
 
+JS_PUBLIC_API void js::RestartDrainingJobQueue(JSContext* cx) {
+  MOZ_ASSERT(cx->internalJobQueue.ref());
+  cx->internalJobQueue->uninterrupt();
+}
+
 JS_PUBLIC_API void js::RunJobs(JSContext* cx) {
   MOZ_ASSERT(cx->jobQueue);
   cx->jobQueue->runJobs(cx);

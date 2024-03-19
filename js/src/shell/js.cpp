@@ -2428,6 +2428,20 @@ static bool ConvertTranscodeResultToJSException(JSContext* cx,
   }
 }
 
+static void SetQuitting(JSContext* cx, int32_t code) {
+  ShellContext* sc = GetShellContext(cx);
+  js::StopDrainingJobQueue(cx);
+  sc->exitCode = code;
+  sc->quitting = true;
+}
+
+static void UnsetQuitting(JSContext* cx) {
+  ShellContext* sc = GetShellContext(cx);
+  js::RestartDrainingJobQueue(cx);
+  sc->exitCode = 0;
+  sc->quitting = false;
+}
+
 static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -2716,6 +2730,11 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
                 ? JS_ExecuteScript(cx, script, args.rval())
                 : JS_ExecuteScript(cx, envChain, script, args.rval()))) {
         if (catchTermination && !JS_IsExceptionPending(cx)) {
+          ShellContext* sc = GetShellContext(cx);
+          if (sc->quitting) {
+            UnsetQuitting(cx);
+          }
+
           JSAutoRealm ar1(cx, callerGlobal);
           JSString* str = JS_NewStringCopyZ(cx, "terminated");
           if (!str) {
@@ -3165,8 +3184,6 @@ static bool PrintErr(JSContext* cx, unsigned argc, Value* vp) {
 static bool Help(JSContext* cx, unsigned argc, Value* vp);
 
 static bool Quit(JSContext* cx, unsigned argc, Value* vp) {
-  ShellContext* sc = GetShellContext(cx);
-
   // Print a message to stderr in differential testing to help jsfunfuzz
   // find uncatchable-exception bugs.
   if (js::SupportDifferentialTesting()) {
@@ -3189,9 +3206,7 @@ static bool Quit(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  js::StopDrainingJobQueue(cx);
-  sc->exitCode = code;
-  sc->quitting = true;
+  SetQuitting(cx, code);
   return false;
 }
 
