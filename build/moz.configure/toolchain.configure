@@ -782,9 +782,7 @@ def msvs_version(vc_compiler_version):
     # be set for GYP on Windows.
     if vc_compiler_version >= Version("19.30"):
         return "2022"
-    if vc_compiler_version >= Version("19.20"):
-        return "2019"
-    configure_error("Only Visual Studio 2019 or newer are supported")
+    configure_error("Only Visual Studio 2022 or newer are supported")
 
     return ""
 
