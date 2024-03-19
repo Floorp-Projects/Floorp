@@ -436,9 +436,9 @@
     <!-- Preference Category for settings related to Search address bar -->
     <string name="preferences_settings_address_bar">Inställningar för adressfältet</string>
     <!-- Preference Category for settings to Firefox Suggest -->
-    <string name="preference_search_address_bar_fx_suggest">Adressfält - Firefox förslag</string>
+    <string name="preference_search_address_bar_fx_suggest">Adressfält - Firefox Suggest</string>
     <!-- Preference link to Learn more about Firefox Suggest -->
-    <string name="preference_search_learn_about_fx_suggest">Läs mer om Firefox förslag</string>
+    <string name="preference_search_learn_about_fx_suggest">Läs mer om Firefox Suggest</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">Betygsätt på Google Play</string>
     <!-- Preference linking to about page for Fenix
