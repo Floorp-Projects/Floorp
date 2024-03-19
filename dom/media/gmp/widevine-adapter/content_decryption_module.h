@@ -411,7 +411,6 @@ CHECK_TYPE(InitDataType, 4, 4);
 enum SessionType : uint32_t {
   kTemporary = 0,
   kPersistentLicense = 1,
-  kPersistentUsageRecord = 2
 };
 CHECK_TYPE(SessionType, 4, 4);
 
