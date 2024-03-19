@@ -528,15 +528,30 @@ void ModuleLoaderBase::SetModuleFetchFinishedAndResumeWaitingRequests(
        "%u)",
        aRequest, aRequest->mModuleScript.get(), unsigned(aResult)));
 
-  RefPtr<LoadingRequest> loadingRequest;
-  if (!mFetchingModules.Remove(aRequest->mURI,
-                               getter_AddRefs(loadingRequest))) {
+  auto entry = mFetchingModules.Lookup(aRequest->mURI);
+  if (!entry) {
     LOG(
         ("ScriptLoadRequest (%p): Key not found in mFetchingModules, "
          "assuming we have an inline module or have finished fetching already",
          aRequest));
     return;
   }
+
+  // It's possible for a request to be cancelled and removed from the fetching
+  // modules map and a new request started for the same URI and added to the
+  // map. In this case we don't want the first cancelled request to complete the
+  // later request (which will cause it to fail) so we ignore it.
+  RefPtr<LoadingRequest> loadingRequest = entry.Data();
+  if (loadingRequest->mRequest != aRequest) {
+    MOZ_ASSERT(aRequest->IsCanceled());
+    LOG(
+        ("ScriptLoadRequest (%p): Ignoring completion of cancelled request "
+         "that was removed from the map",
+         aRequest));
+    return;
+  }
+
+  MOZ_ALWAYS_TRUE(mFetchingModules.Remove(aRequest->mURI));
 
   RefPtr<ModuleScript> moduleScript(aRequest->mModuleScript);
   MOZ_ASSERT(NS_FAILED(aResult) == !moduleScript);
@@ -1397,9 +1412,25 @@ void ModuleLoaderBase::RegisterImportMap(UniquePtr<ImportMap> aImportMap) {
   // Step 3. Set global's import map to result's import map.
   mImportMap = std::move(aImportMap);
 
+  // Any import resolution has been invalidated by the addition of the import
+  // map. If speculative preloading is currently fetching any modules then
+  // cancel their requests and remove them from the map.
+  //
+  // The cancelled requests will still complete later so we have to check this
+  // in SetModuleFetchFinishedAndResumeWaitingRequests.
+  for (const auto& entry : mFetchingModules) {
+    LoadingRequest* loadingRequest = entry.GetData();
+    MOZ_DIAGNOSTIC_ASSERT(loadingRequest->mRequest->mLoadContext->IsPreload());
+    loadingRequest->mRequest->Cancel();
+    for (const auto& request : loadingRequest->mWaiting) {
+      MOZ_DIAGNOSTIC_ASSERT(request->mLoadContext->IsPreload());
+      request->Cancel();
+    }
+  }
+  mFetchingModules.Clear();
+
   // If speculative preloading has added modules to the module map, remove
-  // them. Any import resolution has been invalidated by the addition of the
-  // import map.
+  // them.
   for (const auto& entry : mFetchedModules) {
     ModuleScript* script = entry.GetData();
     if (script) {
