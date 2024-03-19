@@ -8,10 +8,17 @@ license = "MPL-2.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+goblin = { version = "0.7", features = ["elf32", "elf64", "pe32", "pe64"] }
+memoffset = "0.8"
 mozannotation_client = { path = "../mozannotation_client/" }
-process_reader = { path = "../process_reader/" }
 thin-vec = { version = "0.2.7", features = ["gecko-ffi"] }
 thiserror = "1.0.38"
 
 [target."cfg(any(target_os = \"linux\", target_os = \"android\"))".dependencies]
-memoffset = "0.8"
+libc = "0.2"
+
+[target."cfg(target_os = \"windows\")".dependencies]
+winapi = { version = "0.3", features = ["minwindef", "memoryapi", "psapi"] }
+
+[target."cfg(target_os = \"macos\")".dependencies]
+mach2 = { version = "0.4" }

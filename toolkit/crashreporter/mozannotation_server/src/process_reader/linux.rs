@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+use mozannotation_client::MozAnnotationNote;
 use std::{
     cmp::min,
     fs::File,
@@ -12,9 +13,11 @@ use std::{
 };
 
 use crate::{
-    error::{ProcessReaderError, PtraceError, ReadError},
-    ProcessHandle, ProcessReader,
+    errors::{FindAnnotationsAddressError, PtraceError, ReadError, RetrievalError},
+    ProcessHandle,
 };
+
+use super::ProcessReader;
 
 use goblin::elf::{
     self,
@@ -25,9 +28,11 @@ use libc::{
     c_int, c_long, c_void, pid_t, ptrace, waitpid, EINTR, PTRACE_ATTACH, PTRACE_DETACH,
     PTRACE_PEEKDATA, __WALL,
 };
+use memoffset::offset_of;
+use mozannotation_client::ANNOTATION_TYPE;
 
 impl ProcessReader {
-    pub fn new(process: ProcessHandle) -> Result<ProcessReader, ProcessReaderError> {
+    pub fn new(process: ProcessHandle) -> Result<ProcessReader, RetrievalError> {
         let pid: pid_t = process;
 
         ptrace_attach(pid)?;
@@ -41,7 +46,7 @@ impl ProcessReader {
                     EINTR => continue,
                     _ => {
                         ptrace_detach(pid)?;
-                        return Err(ProcessReaderError::WaitPidError);
+                        return Err(RetrievalError::WaitPidError);
                     }
                 }
             } else {
@@ -52,78 +57,73 @@ impl ProcessReader {
         Ok(ProcessReader { process: pid })
     }
 
-    pub fn find_module(&self, module_name: &str) -> Result<usize, ProcessReaderError> {
+    pub fn find_annotations(&self) -> Result<usize, FindAnnotationsAddressError> {
         let maps_file = File::open(format!("/proc/{}/maps", self.process))?;
 
         BufReader::new(maps_file)
             .lines()
             .flatten()
-            .map(|line| parse_proc_maps_line(&line))
-            .filter_map(Result::ok)
-            .find_map(|(name, address)| {
-                if name.is_some_and(|name| name.eq(module_name)) {
-                    Some(address)
-                } else {
-                    None
-                }
-            })
-            .ok_or(ProcessReaderError::ModuleNotFound)
+            .find_map(|line| self.find_annotations_in_module(&line).ok())
+            .ok_or(FindAnnotationsAddressError::NotFound)
     }
 
-    pub fn find_program_note(
-        &self,
-        module_address: usize,
-        note_type: u32,
-        note_size: usize,
-    ) -> Result<usize, ProcessReaderError> {
-        let header_bytes = self.copy_array(module_address, size_of::<elf::Header>())?;
-        let elf_header = Elf::parse_header(&header_bytes)?;
+    fn find_annotations_in_module(&self, line: &str) -> Result<usize, FindAnnotationsAddressError> {
+        parse_proc_maps_line(line).and_then(|module_address| {
+            let header_bytes = self.copy_array(module_address, size_of::<elf::Header>())?;
+            let elf_header = Elf::parse_header(&header_bytes)?;
 
-        let program_header_bytes = self.copy_array(
-            module_address + (elf_header.e_phoff as usize),
-            (elf_header.e_phnum as usize) * (elf_header.e_phentsize as usize),
-        )?;
+            let program_header_bytes = self.copy_array(
+                module_address + (elf_header.e_phoff as usize),
+                (elf_header.e_phnum as usize) * (elf_header.e_phentsize as usize),
+            )?;
 
-        let mut elf = Elf::lazy_parse(elf_header)?;
-        let context = goblin::container::Ctx {
-            container: elf.header.container()?,
-            le: elf.header.endianness()?,
-        };
+            let mut elf = Elf::lazy_parse(elf_header)?;
+            let context = goblin::container::Ctx {
+                container: elf.header.container()?,
+                le: elf.header.endianness()?,
+            };
 
-        elf.program_headers = ProgramHeader::parse(
-            &program_header_bytes,
-            0,
-            elf_header.e_phnum as usize,
-            context,
-        )?;
+            elf.program_headers = ProgramHeader::parse(
+                &program_header_bytes,
+                0,
+                elf_header.e_phnum as usize,
+                context,
+            )?;
 
-        self.find_note_in_headers(&elf, module_address, note_type, note_size)
+            self.find_mozannotation_note(module_address, &elf)
+                .ok_or(FindAnnotationsAddressError::ProgramHeaderNotFound)
+        })
     }
 
-    fn find_note_in_headers(
-        &self,
-        elf: &Elf,
-        address: usize,
-        note_type: u32,
-        note_size: usize,
-    ) -> Result<usize, ProcessReaderError> {
+    // Looks through the program headers for the note contained in the
+    // mozannotation_client crate. If the note is found return the address of the
+    // note's desc field as well as its contents.
+    fn find_mozannotation_note(&self, module_address: usize, elf: &Elf) -> Option<usize> {
         for program_header in elf.program_headers.iter() {
             // We're looking for a note in the program headers, it needs to be
             // readable and it needs to be at least as large as the
-            // requested size.
+            // MozAnnotationNote structure.
             if (program_header.p_type == PT_NOTE)
                 && ((program_header.p_flags & PF_R) != 0
-                    && (program_header.p_memsz as usize >= note_size))
+                    && (program_header.p_memsz as usize >= size_of::<MozAnnotationNote>()))
             {
                 // Iterate over the notes
-                let notes_address = address + program_header.p_offset as usize;
+                let notes_address = module_address + program_header.p_offset as usize;
                 let mut notes_offset = 0;
                 let notes_size = program_header.p_memsz as usize;
                 while notes_offset < notes_size {
                     let note_address = notes_address + notes_offset;
                     if let Ok(note) = self.copy_object::<goblin::elf::note::Nhdr32>(note_address) {
-                        if note.n_type == note_type {
-                            return Ok(note_address);
+                        if note.n_type == ANNOTATION_TYPE {
+                            if let Ok(note) = self.copy_object::<MozAnnotationNote>(note_address) {
+                                let desc = note.desc;
+                                let ehdr = (-note.ehdr) as usize;
+                                let offset = desc + ehdr
+                                    - (offset_of!(MozAnnotationNote, ehdr)
+                                        - offset_of!(MozAnnotationNote, desc));
+
+                                return usize::checked_add(module_address, offset);
+                            }
                         }
 
                         notes_offset += size_of::<goblin::elf::note::Nhdr32>()
@@ -136,7 +136,7 @@ impl ProcessReader {
             }
         }
 
-        Err(ProcessReaderError::NoteNotFound)
+        None
     }
 
     pub fn copy_object_shallow<T>(&self, src: usize) -> Result<MaybeUninit<T>, ReadError> {
@@ -189,46 +189,38 @@ impl Drop for ProcessReader {
     }
 }
 
-fn parse_proc_maps_line(line: &str) -> Result<(Option<String>, usize), ProcessReaderError> {
+fn parse_proc_maps_line(line: &str) -> Result<usize, FindAnnotationsAddressError> {
     let mut splits = line.trim().splitn(6, ' ');
     let address_str = splits
         .next()
-        .ok_or(ProcessReaderError::ProcMapsParseError)?;
+        .ok_or(FindAnnotationsAddressError::ProcMapsParseError)?;
     let _perms_str = splits
         .next()
-        .ok_or(ProcessReaderError::ProcMapsParseError)?;
+        .ok_or(FindAnnotationsAddressError::ProcMapsParseError)?;
     let _offset_str = splits
         .next()
-        .ok_or(ProcessReaderError::ProcMapsParseError)?;
+        .ok_or(FindAnnotationsAddressError::ProcMapsParseError)?;
     let _dev_str = splits
         .next()
-        .ok_or(ProcessReaderError::ProcMapsParseError)?;
+        .ok_or(FindAnnotationsAddressError::ProcMapsParseError)?;
     let _inode_str = splits
         .next()
-        .ok_or(ProcessReaderError::ProcMapsParseError)?;
-    let path_str = splits
+        .ok_or(FindAnnotationsAddressError::ProcMapsParseError)?;
+    let _path_str = splits
         .next()
-        .ok_or(ProcessReaderError::ProcMapsParseError)?;
+        .ok_or(FindAnnotationsAddressError::ProcMapsParseError)?;
 
     let address = get_proc_maps_address(address_str)?;
 
-    // Note that we don't care if the mapped file has been deleted because
-    // we're reading everything from memory.
-    let name = path_str
-        .trim_end_matches(" (deleted)")
-        .rsplit('/')
-        .next()
-        .map(String::from);
-
-    Ok((name, address))
+    Ok(address)
 }
 
-fn get_proc_maps_address(addresses: &str) -> Result<usize, ProcessReaderError> {
+fn get_proc_maps_address(addresses: &str) -> Result<usize, FindAnnotationsAddressError> {
     let begin = addresses
         .split('-')
         .next()
-        .ok_or(ProcessReaderError::ProcMapsParseError)?;
-    usize::from_str_radix(begin, 16).map_err(ProcessReaderError::from)
+        .ok_or(FindAnnotationsAddressError::ProcMapsParseError)?;
+    usize::from_str_radix(begin, 16).map_err(FindAnnotationsAddressError::from)
 }
 
 fn uninit_as_bytes_mut<T>(elem: &mut MaybeUninit<T>) -> &mut [MaybeUninit<u8>] {
