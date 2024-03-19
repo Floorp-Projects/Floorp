@@ -24,7 +24,7 @@
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/GeneratePlaceholderCanvasData.h"
 #include "mozilla/dom/VideoFrame.h"
-#include "mozilla/gfx/CanvasManagerChild.h"
+#include "mozilla/gfx/CanvasShutdownManager.h"
 #include "nsPresContext.h"
 
 #include "nsIInterfaceRequestorUtils.h"
@@ -872,41 +872,6 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(CanvasGradient, mContext)
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(CanvasPattern, mContext)
 
-class CanvasShutdownObserver final : public nsIObserver {
- public:
-  explicit CanvasShutdownObserver(CanvasRenderingContext2D* aCanvas)
-      : mCanvas(aCanvas) {}
-
-  void OnShutdown() {
-    if (!mCanvas) {
-      return;
-    }
-
-    mCanvas = nullptr;
-    nsContentUtils::UnregisterShutdownObserver(this);
-  }
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
- private:
-  ~CanvasShutdownObserver() = default;
-
-  CanvasRenderingContext2D* mCanvas;
-};
-
-NS_IMPL_ISUPPORTS(CanvasShutdownObserver, nsIObserver)
-
-NS_IMETHODIMP
-CanvasShutdownObserver::Observe(nsISupports* aSubject, const char* aTopic,
-                                const char16_t* aData) {
-  if (mCanvas && strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
-    mCanvas->OnShutdown();
-    OnShutdown();
-  }
-
-  return NS_OK;
-}
-
 NS_IMPL_CYCLE_COLLECTING_ADDREF(CanvasRenderingContext2D)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(CanvasRenderingContext2D)
 
@@ -1243,14 +1208,8 @@ void CanvasRenderingContext2D::OnShutdown() {
 }
 
 bool CanvasRenderingContext2D::AddShutdownObserver() {
-  auto* const canvasManager = CanvasManagerChild::Get();
+  auto* const canvasManager = CanvasShutdownManager::Get();
   if (NS_WARN_IF(!canvasManager)) {
-    if (NS_IsMainThread()) {
-      mShutdownObserver = new CanvasShutdownObserver(this);
-      nsContentUtils::RegisterShutdownObserver(mShutdownObserver);
-      return true;
-    }
-
     mHasShutdown = true;
     return false;
   }
@@ -1260,13 +1219,7 @@ bool CanvasRenderingContext2D::AddShutdownObserver() {
 }
 
 void CanvasRenderingContext2D::RemoveShutdownObserver() {
-  if (mShutdownObserver) {
-    mShutdownObserver->OnShutdown();
-    mShutdownObserver = nullptr;
-    return;
-  }
-
-  auto* const canvasManager = CanvasManagerChild::MaybeGet();
+  auto* const canvasManager = CanvasShutdownManager::MaybeGet();
   if (!canvasManager) {
     return;
   }
