@@ -469,14 +469,6 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       aResult = NSWorkspace.sharedWorkspace
                     .accessibilityDisplayShouldIncreaseContrast;
       break;
-    case IntID::VideoDynamicRange: {
-      // If the platform says it supports HDR, then we claim to support
-      // video-dynamic-range.
-      gfxPlatform* platform = gfxPlatform::GetPlatform();
-      MOZ_ASSERT(platform);
-      aResult = platform->SupportsHDR();
-      break;
-    }
     case IntID::PanelAnimations:
       aResult = 1;
       break;
