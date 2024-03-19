@@ -373,6 +373,9 @@ class SnapTests(SnapTestsBase):
         return rv
 
     def test_youtube_film(self, exp):
+        # Bug 1885473: require sign-in?
+        return True
+
         self.open_tab("https://www.youtube.com/watch?v=i4FSx9LXVSE")
         if not self.wait_for_enable_drm():
             self._logger.info("Skipped on ESR because cannot enable DRM")
