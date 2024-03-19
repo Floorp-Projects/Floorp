@@ -186,7 +186,6 @@ static const char sIntPrefs[][45] = {
     "ui.titlebarRadius",
     "ui.titlebarButtonSpacing",
     "ui.dynamicRange",
-    "ui.videoDynamicRange",
     "ui.panelAnimations",
     "ui.hideCursorWhileTyping",
     "ui.gtkThemeFamily",

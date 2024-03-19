@@ -811,8 +811,6 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
 
   static bool UseDesktopZoomingScrollbars();
 
-  virtual bool SupportsHDR() { return false; }
-
  protected:
   gfxPlatform();
   virtual ~gfxPlatform();

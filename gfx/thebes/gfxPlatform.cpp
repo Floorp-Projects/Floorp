@@ -1064,6 +1064,13 @@ void gfxPlatform::ReportTelemetry() {
     mozilla::glean::gfx_display::count.Set(screenCount);
     mozilla::glean::gfx_display::primary_height.Set(rect.Height());
     mozilla::glean::gfx_display::primary_width.Set(rect.Width());
+
+    // Check if any screen known by screenManager supports HDR.
+    bool supportsHDR = false;
+    for (const auto& screen : screenManager.CurrentScreenList()) {
+      supportsHDR |= screen->GetIsHDR();
+    }
+    Telemetry::ScalarSet(Telemetry::ScalarID::GFX_SUPPORTS_HDR, supportsHDR);
   }
 
   nsString adapterDesc;
@@ -1120,10 +1127,6 @@ void gfxPlatform::ReportTelemetry() {
       NS_ConvertUTF16toUTF8(adapterDriverDate));
 
   mozilla::glean::gfx_status::headless.Set(IsHeadless());
-
-  MOZ_ASSERT(gPlatform, "Need gPlatform to generate some telemetry.");
-  Telemetry::ScalarSet(Telemetry::ScalarID::GFX_SUPPORTS_HDR,
-                       gPlatform->SupportsHDR());
 }
 
 static bool IsFeatureSupported(long aFeature, bool aDefault) {
