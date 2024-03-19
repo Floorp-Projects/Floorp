@@ -54,6 +54,13 @@ def register(graph_config):
     import android_taskgraph
     from taskgraph import generator
 
+    # TODO: Remove along with
+    # `gecko_taskgraph.optimize.strategies.SkipUnlessChanged`
+    # (see comment over there)
+    from taskgraph.optimize.base import registry
+
+    del registry["skip-unless-changed"]
+
     from gecko_taskgraph import (  # noqa: trigger target task method registration
         morph,  # noqa: trigger morph registration
         target_tasks,

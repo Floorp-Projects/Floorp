@@ -9166,6 +9166,9 @@ existing_tasks:
   webrender-windows: PpURn6eZSva3CBmnodtk4w
   webrender-wrench-android-release: ED0p_p6tQvGNeALYZfANZw
   webrender-wrench-macos-build: CaLXXimMTreVx9mPugxfOw
+files_changed:
+  - dom/html/HTMLDetailsElement.cpp
+  - gfx/thebes/gfxUserFontSet.cpp
 filters:
   - target_tasks_method
 head_ref: d6c8c84a26388612d432fd27aadcc8cdc1bc4e07

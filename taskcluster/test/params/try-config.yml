@@ -8,8 +8,11 @@ next_version: null
 do_not_optimize: []
 enable_always_target: true
 existing_tasks: {}
+files_changed:
+  - dom/html/HTMLDetailsElement.cpp
+  - gfx/thebes/gfxUserFontSet.cpp
 filters:
-    - target_tasks_method
+  - target_tasks_method
 head_ref: 482ccd66d49e0e4a0d260ca872f770df4983ccea
 head_repository: https://hg.mozilla.org/try
 head_rev: 482ccd66d49e0e4a0d260ca872f770df4983ccea
@@ -32,17 +35,17 @@ release_enable_emefree: false
 target_tasks_method: try_tasks
 try_mode: try_task_config
 try_task_config:
-    disable-pgo: true
-    env:
-        TRY_SELECTOR: "fuzzy"
-    tasks:
-        - test-linux1804-64-qr/opt-mochitest-plain-*
-        - test-linux1804-64-shippable-qr/opt-mochitest-plain-headless-1
-        - test-linux1804-64-tsan-qr/opt-mochitest-plain-1
-        - missing-task-label-1
-        - missing-task-label-2
-        - missing-task-label-*
-    use-artifact-builds: true
+  disable-pgo: true
+  env:
+    TRY_SELECTOR: "fuzzy"
+  tasks:
+    - test-linux1804-64-qr/opt-mochitest-plain-*
+    - test-linux1804-64-shippable-qr/opt-mochitest-plain-headless-1
+    - test-linux1804-64-tsan-qr/opt-mochitest-plain-1
+    - missing-task-label-1
+    - missing-task-label-2
+    - missing-task-label-*
+  use-artifact-builds: true
 release_type: "nightly"
 release_product: null
 required_signoffs: []
