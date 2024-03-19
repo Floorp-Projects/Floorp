@@ -594,7 +594,7 @@ export class FfiConverterTypeTodoEntry extends FfiConverterArrayBuffer {
     static checkType(value) {
         super.checkType(value);
         if (!(value instanceof TodoEntry)) {
-            throw new TypeError(`Expected 'TodoEntry', found '${typeof value}'`);
+            throw new UniFFITypeError(`Expected 'TodoEntry', found '${typeof value}'`);
         }
         try {
             FfiConverterString.checkType(value.text);

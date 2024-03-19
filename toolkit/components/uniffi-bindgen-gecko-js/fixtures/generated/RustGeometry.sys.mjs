@@ -325,7 +325,7 @@ export class FfiConverterTypeLine extends FfiConverterArrayBuffer {
     static checkType(value) {
         super.checkType(value);
         if (!(value instanceof Line)) {
-            throw new TypeError(`Expected 'Line', found '${typeof value}'`);
+            throw new UniFFITypeError(`Expected 'Line', found '${typeof value}'`);
         }
         try {
             FfiConverterTypePoint.checkType(value.start);
@@ -398,7 +398,7 @@ export class FfiConverterTypePoint extends FfiConverterArrayBuffer {
     static checkType(value) {
         super.checkType(value);
         if (!(value instanceof Point)) {
-            throw new TypeError(`Expected 'Point', found '${typeof value}'`);
+            throw new UniFFITypeError(`Expected 'Point', found '${typeof value}'`);
         }
         try {
             FfiConverterF64.checkType(value.coordX);

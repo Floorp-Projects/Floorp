@@ -51,7 +51,7 @@ export class {{ ffi_converter }} extends FfiConverterArrayBuffer {
     static checkType(value) {
         super.checkType(value);
         if (!(value instanceof {{ record.nm() }})) {
-            throw new TypeError(`Expected '{{ record.nm() }}', found '${typeof value}'`);
+            throw new UniFFITypeError(`Expected '{{ record.nm() }}', found '${typeof value}'`);
         }
         {%- for field in record.fields() %}
         try {

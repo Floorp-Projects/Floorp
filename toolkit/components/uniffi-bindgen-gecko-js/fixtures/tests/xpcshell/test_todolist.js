@@ -6,7 +6,9 @@ const { TodoList, TodoEntry, getDefaultList, setDefaultList } =
 
 add_task(async function () {
   const todo = await TodoList.init();
-  const entry = new TodoEntry("Write bindings for strings in records");
+  const entry = new TodoEntry({
+    text: "Write bindings for strings in records",
+  });
 
   await todo.addItem("Write JS bindings");
   Assert.equal(await todo.getLast(), "Write JS bindings");
@@ -30,9 +32,9 @@ add_task(async function () {
     "Test Ünicode hàndling without an entry can't believe I didn't test this at first 🤣"
   );
 
-  const entry2 = new TodoEntry(
-    "Test Ünicode hàndling in an entry can't believe I didn't test this at first 🤣"
-  );
+  const entry2 = new TodoEntry({
+    text: "Test Ünicode hàndling in an entry can't believe I didn't test this at first 🤣",
+  });
   await todo.addEntry(entry2);
   Assert.equal(
     (await todo.getLastEntry()).text,

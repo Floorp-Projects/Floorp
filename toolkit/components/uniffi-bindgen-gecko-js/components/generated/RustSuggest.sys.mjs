@@ -827,7 +827,7 @@ export class FfiConverterTypeSuggestGlobalConfig extends FfiConverterArrayBuffer
     static checkType(value) {
         super.checkType(value);
         if (!(value instanceof SuggestGlobalConfig)) {
-            throw new TypeError(`Expected 'SuggestGlobalConfig', found '${typeof value}'`);
+            throw new UniFFITypeError(`Expected 'SuggestGlobalConfig', found '${typeof value}'`);
         }
         try {
             FfiConverterI32.checkType(value.showLessFrequentlyCap);
@@ -879,7 +879,7 @@ export class FfiConverterTypeSuggestIngestionConstraints extends FfiConverterArr
     static checkType(value) {
         super.checkType(value);
         if (!(value instanceof SuggestIngestionConstraints)) {
-            throw new TypeError(`Expected 'SuggestIngestionConstraints', found '${typeof value}'`);
+            throw new UniFFITypeError(`Expected 'SuggestIngestionConstraints', found '${typeof value}'`);
         }
         try {
             FfiConverterOptionalu64.checkType(value.maxSuggestions);
@@ -957,7 +957,7 @@ export class FfiConverterTypeSuggestionQuery extends FfiConverterArrayBuffer {
     static checkType(value) {
         super.checkType(value);
         if (!(value instanceof SuggestionQuery)) {
-            throw new TypeError(`Expected 'SuggestionQuery', found '${typeof value}'`);
+            throw new UniFFITypeError(`Expected 'SuggestionQuery', found '${typeof value}'`);
         }
         try {
             FfiConverterString.checkType(value.keyword);

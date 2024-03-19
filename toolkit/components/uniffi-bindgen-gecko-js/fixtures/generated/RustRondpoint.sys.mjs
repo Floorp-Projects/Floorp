@@ -2154,7 +2154,7 @@ export class FfiConverterTypeDictionnaire extends FfiConverterArrayBuffer {
     static checkType(value) {
         super.checkType(value);
         if (!(value instanceof Dictionnaire)) {
-            throw new TypeError(`Expected 'Dictionnaire', found '${typeof value}'`);
+            throw new UniFFITypeError(`Expected 'Dictionnaire', found '${typeof value}'`);
         }
         try {
             FfiConverterTypeEnumeration.checkType(value.un);
@@ -2269,7 +2269,7 @@ export class FfiConverterTypeDictionnaireNombres extends FfiConverterArrayBuffer
     static checkType(value) {
         super.checkType(value);
         if (!(value instanceof DictionnaireNombres)) {
-            throw new TypeError(`Expected 'DictionnaireNombres', found '${typeof value}'`);
+            throw new UniFFITypeError(`Expected 'DictionnaireNombres', found '${typeof value}'`);
         }
         try {
             FfiConverterU8.checkType(value.petitNombre);
@@ -2384,7 +2384,7 @@ export class FfiConverterTypeDictionnaireNombresSignes extends FfiConverterArray
     static checkType(value) {
         super.checkType(value);
         if (!(value instanceof DictionnaireNombresSignes)) {
-            throw new TypeError(`Expected 'DictionnaireNombresSignes', found '${typeof value}'`);
+            throw new UniFFITypeError(`Expected 'DictionnaireNombresSignes', found '${typeof value}'`);
         }
         try {
             FfiConverterI8.checkType(value.petitNombre);
@@ -2642,7 +2642,7 @@ export class FfiConverterTypeOptionneurDictionnaire extends FfiConverterArrayBuf
     static checkType(value) {
         super.checkType(value);
         if (!(value instanceof OptionneurDictionnaire)) {
-            throw new TypeError(`Expected 'OptionneurDictionnaire', found '${typeof value}'`);
+            throw new UniFFITypeError(`Expected 'OptionneurDictionnaire', found '${typeof value}'`);
         }
         try {
             FfiConverterI8.checkType(value.i8Var);
@@ -2806,7 +2806,7 @@ export class FfiConverterTypeminusculeMajusculeDict extends FfiConverterArrayBuf
     static checkType(value) {
         super.checkType(value);
         if (!(value instanceof MinusculeMajusculeDict)) {
-            throw new TypeError(`Expected 'MinusculeMajusculeDict', found '${typeof value}'`);
+            throw new UniFFITypeError(`Expected 'MinusculeMajusculeDict', found '${typeof value}'`);
         }
         try {
             FfiConverterBool.checkType(value.minusculeMajusculeField);
