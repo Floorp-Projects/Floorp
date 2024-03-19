@@ -214,6 +214,8 @@
   MACRO_(frame, "frame")                                                       \
   MACRO_(from, "from")                                                         \
   MACRO_(fromAsync, "fromAsync")                                               \
+  MACRO_(fromBase64, "fromBase64")                                             \
+  MACRO_(fromHex, "fromHex")                                                   \
   MACRO_(fulfilled, "fulfilled")                                               \
   MACRO_(GatherAsyncParentCompletions, "GatherAsyncParentCompletions")         \
   MACRO_(gcCycleNumber, "gcCycleNumber")                                       \
@@ -467,6 +469,7 @@
   MACRO_(pull, "pull")                                                         \
   MACRO_(quarter, "quarter")                                                   \
   MACRO_(raw, "raw")                                                           \
+  MACRO_(read, "read")                                                         \
   MACRO_(reason, "reason")                                                     \
   MACRO_(RegExp_String_Iterator_, "RegExp String Iterator")                    \
   MACRO_(RegExp_prototype_Exec, "RegExp_prototype_Exec")                       \
@@ -503,6 +506,8 @@
   MACRO_(SetConstructorInit, "SetConstructorInit")                             \
   MACRO_(SetIsInlinableLargeFunction, "SetIsInlinableLargeFunction")           \
   MACRO_(Set_Iterator_, "Set Iterator")                                        \
+  MACRO_(setFromBase64, "setFromBase64")                                       \
+  MACRO_(setFromHex, "setFromHex")                                             \
   MACRO_(setPrototypeOf, "setPrototypeOf")                                     \
   MACRO_(shape, "shape")                                                       \
   MACRO_(shared, "shared")                                                     \
@@ -540,7 +545,9 @@
   MACRO_(timeStyle, "timeStyle")                                               \
   MACRO_(timeZone, "timeZone")                                                 \
   MACRO_(timeZoneName, "timeZoneName")                                         \
+  MACRO_(toBase64, "toBase64")                                                 \
   MACRO_(toGMTString, "toGMTString")                                           \
+  MACRO_(toHex, "toHex")                                                       \
   MACRO_(toISOString, "toISOString")                                           \
   MACRO_(toJSON, "toJSON")                                                     \
   MACRO_(toLocaleString, "toLocaleString")                                     \
@@ -612,6 +619,7 @@
   MACRO_(weeks, "weeks")                                                       \
   MACRO_(while_, "while")                                                      \
   MACRO_(with, "with")                                                         \
+  MACRO_(written, "written")                                                   \
   MACRO_(toReversed, "toReversed")                                             \
   MACRO_(toSorted, "toSorted")                                                 \
   MACRO_(toSpliced, "toSpliced")                                               \

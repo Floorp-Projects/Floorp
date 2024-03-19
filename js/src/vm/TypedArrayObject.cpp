@@ -9,6 +9,7 @@
 
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/IntegerTypeTraits.h"
+#include "mozilla/Likely.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/TextUtils.h"
 
@@ -39,6 +40,7 @@
 #include "js/UniquePtr.h"
 #include "js/Wrapper.h"
 #include "util/DifferentialTesting.h"
+#include "util/StringBuffer.h"
 #include "util/Text.h"
 #include "util/WindowsWrapper.h"
 #include "vm/ArrayBufferObject.h"
@@ -112,6 +114,11 @@ bool TypedArrayObject::convertValue(JSContext* cx, HandleValue v,
 
 static bool IsTypedArrayObject(HandleValue v) {
   return v.isObject() && v.toObject().is<TypedArrayObject>();
+}
+
+static bool IsUint8ArrayObject(HandleValue v) {
+  return IsTypedArrayObject(v) &&
+         v.toObject().as<TypedArrayObject>().type() == Scalar::Uint8;
 }
 
 /* static */
@@ -2045,6 +2052,300 @@ bool TypedArrayObject::copyWithin(JSContext* cx, unsigned argc, Value* vp) {
                               TypedArrayObject::copyWithin_impl>(cx, args);
 }
 
+// Byte vector with large enough inline storage to allow constructing small
+// typed arrays without extra heap allocations.
+using ByteVector =
+    js::Vector<uint8_t, FixedLengthTypedArrayObject::INLINE_BUFFER_LIMIT>;
+
+static UniqueChars QuoteString(JSContext* cx, char16_t ch) {
+  Sprinter sprinter(cx);
+  if (!sprinter.init()) {
+    return nullptr;
+  }
+
+  StringEscape esc{};
+  js::EscapePrinter ep(sprinter, esc);
+  ep.putChar(ch);
+
+  return sprinter.release();
+}
+
+/**
+ * FromHex ( string [ , maxLength ] )
+ *
+ * https://tc39.es/proposal-arraybuffer-base64/spec/#sec-fromhex
+ */
+static bool FromHex(JSContext* cx, Handle<JSString*> string, size_t maxLength,
+                    ByteVector& bytes, size_t* readLength) {
+  // Step 1. (Not applicable in our implementation.)
+
+  // Step 2.
+  size_t length = string->length();
+
+  // Step 3.
+  if (length % 2 != 0) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TYPED_ARRAY_BAD_HEX_STRING_LENGTH);
+    return false;
+  }
+
+  JSLinearString* linear = string->ensureLinear(cx);
+  if (!linear) {
+    return false;
+  }
+
+  // Step 4. (Not applicable in our implementation.)
+  MOZ_ASSERT(bytes.empty());
+
+  // Step 5.
+  size_t index = 0;
+
+  // Step 6.
+  while (index < length && bytes.length() < maxLength) {
+    // Step 6.a.
+    char16_t c0 = linear->latin1OrTwoByteChar(index);
+    char16_t c1 = linear->latin1OrTwoByteChar(index + 1);
+
+    // Step 6.b.
+    if (MOZ_UNLIKELY(!mozilla::IsAsciiHexDigit(c0) ||
+                     !mozilla::IsAsciiHexDigit(c1))) {
+      char16_t ch = !mozilla::IsAsciiHexDigit(c0) ? c0 : c1;
+      if (auto str = QuoteString(cx, ch)) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                  JSMSG_TYPED_ARRAY_BAD_HEX_DIGIT, str.get());
+      }
+      return false;
+    }
+
+    // Step 6.c.
+    index += 2;
+
+    // Step 6.d.
+    uint8_t byte = (mozilla::AsciiAlphanumericToNumber(c0) << 4) +
+                   mozilla::AsciiAlphanumericToNumber(c1);
+
+    // Step 6.e.
+    if (!bytes.append(byte)) {
+      return false;
+    }
+  }
+
+  // Step 7.
+  *readLength = index;
+  return true;
+}
+
+/**
+ * Uint8Array.fromHex ( string )
+ *
+ * https://tc39.es/proposal-arraybuffer-base64/spec/#sec-uint8array.fromhex
+ */
+static bool uint8array_fromHex(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // Step 1.
+  if (!args.get(0).isString()) {
+    return ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_SEARCH_STACK,
+                            args.get(0), nullptr, "not a string");
+  }
+  Rooted<JSString*> string(cx, args[0].toString());
+
+  // Step 2.
+  constexpr size_t maxLength = std::numeric_limits<size_t>::max();
+  ByteVector bytes(cx);
+  size_t unusedReadLength;
+  if (!FromHex(cx, string, maxLength, bytes, &unusedReadLength)) {
+    return false;
+  }
+
+  // Step 3.
+  size_t resultLength = bytes.length();
+
+  // Step 4.
+  auto* tarray =
+      TypedArrayObjectTemplate<uint8_t>::fromLength(cx, resultLength);
+  if (!tarray) {
+    return false;
+  }
+
+  // Step 5.
+  auto target = SharedMem<uint8_t*>::unshared(tarray->dataPointerUnshared());
+  auto source = SharedMem<uint8_t*>::unshared(bytes.begin());
+  UnsharedOps::podCopy(target, source, resultLength);
+
+  // Step 6.
+  args.rval().setObject(*tarray);
+  return true;
+}
+
+/**
+ * Uint8Array.prototype.setFromHex ( string )
+ *
+ * https://tc39.es/proposal-arraybuffer-base64/spec/#sec-uint8array.prototype.setfromhex
+ */
+static bool uint8array_setFromHex(JSContext* cx, const CallArgs& args) {
+  Rooted<TypedArrayObject*> tarray(
+      cx, &args.thisv().toObject().as<TypedArrayObject>());
+
+  // Step 3.
+  if (!args.get(0).isString()) {
+    return ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_SEARCH_STACK,
+                            args.get(0), nullptr, "not a string");
+  }
+  Rooted<JSString*> string(cx, args[0].toString());
+
+  // Steps 4-6.
+  auto length = tarray->length();
+  if (!length) {
+    ReportOutOfBounds(cx, tarray);
+    return false;
+  }
+
+  // Step 7.
+  size_t maxLength = *length;
+
+  // Steps 8-9.
+  ByteVector bytes(cx);
+  size_t readLength;
+  if (!FromHex(cx, string, maxLength, bytes, &readLength)) {
+    return false;
+  }
+
+  // Step 10.
+  size_t written = bytes.length();
+
+  // Step 11.
+  //
+  // The underlying buffer has neither been detached nor shrunk. (It may have
+  // been grown when it's a growable shared buffer and a concurrent thread
+  // resized the buffer.)
+  MOZ_ASSERT(!tarray->hasDetachedBuffer());
+  MOZ_ASSERT(tarray->length().valueOr(0) >= *length);
+
+  // Step 12.
+  MOZ_ASSERT(written <= *length);
+
+  // Step 13. (Inlined SetUint8ArrayBytes)
+  auto target = tarray->dataPointerEither().cast<uint8_t*>();
+  auto source = SharedMem<uint8_t*>::unshared(bytes.begin());
+  if (tarray->isSharedMemory()) {
+    SharedOps::podCopy(target, source, written);
+  } else {
+    UnsharedOps::podCopy(target, source, written);
+  }
+
+  // Step 14.
+  Rooted<PlainObject*> result(cx, NewPlainObject(cx));
+  if (!result) {
+    return false;
+  }
+
+  // Step 15.
+  Rooted<Value> readValue(cx, NumberValue(readLength));
+  if (!DefineDataProperty(cx, result, cx->names().read, readValue)) {
+    return false;
+  }
+
+  // Step 16.
+  Rooted<Value> writtenValue(cx, NumberValue(written));
+  if (!DefineDataProperty(cx, result, cx->names().written, writtenValue)) {
+    return false;
+  }
+
+  // Step 17.
+  args.rval().setObject(*result);
+  return true;
+}
+
+/**
+ * Uint8Array.prototype.setFromHex ( string )
+ *
+ * https://tc39.es/proposal-arraybuffer-base64/spec/#sec-uint8array.prototype.setfromhex
+ */
+static bool uint8array_setFromHex(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // Steps 1-2.
+  return CallNonGenericMethod<IsUint8ArrayObject, uint8array_setFromHex>(cx,
+                                                                         args);
+}
+
+/**
+ * Uint8Array.prototype.toHex ( )
+ *
+ * https://tc39.es/proposal-arraybuffer-base64/spec/#sec-uint8array.prototype.tohex
+ */
+static bool uint8array_toHex(JSContext* cx, const CallArgs& args) {
+  Rooted<TypedArrayObject*> tarray(
+      cx, &args.thisv().toObject().as<TypedArrayObject>());
+
+  // Step 3. (Partial)
+  auto length = tarray->length();
+  if (!length) {
+    ReportOutOfBounds(cx, tarray);
+    return false;
+  }
+
+  // |length| is limited by |ByteLengthLimit|, which ensures that multiplying it
+  // by two won't overflow.
+  static_assert(TypedArrayObject::ByteLengthLimit <=
+                std::numeric_limits<size_t>::max() / 2);
+  MOZ_ASSERT(*length <= TypedArrayObject::ByteLengthLimit);
+
+  // Compute the output string length. Each byte is encoded as two characters,
+  // so the output length is exactly twice as large as |length|.
+  size_t outLength = *length * 2;
+  if (outLength > JSString::MAX_LENGTH) {
+    ReportAllocationOverflow(cx);
+    return false;
+  }
+
+  // Step 4.
+  JSStringBuilder sb(cx);
+  if (!sb.reserve(outLength)) {
+    return false;
+  }
+
+  // NB: Lower case hex digits.
+  static constexpr char HexDigits[] = "0123456789abcdef";
+  static_assert(std::char_traits<char>::length(HexDigits) == 16);
+
+  // Steps 3 and 5.
+  //
+  // Our implementation directly converts the bytes to their string
+  // representation instead of first collecting them into an intermediate list.
+  auto data = tarray->dataPointerEither().cast<uint8_t*>();
+  for (size_t index = 0; index < *length; index++) {
+    auto byte = jit::AtomicOperations::loadSafeWhenRacy(data + index);
+
+    sb.infallibleAppend(HexDigits[byte >> 4]);
+    sb.infallibleAppend(HexDigits[byte & 0xf]);
+  }
+
+  MOZ_ASSERT(sb.length() == outLength, "all characters were written");
+
+  // Step 6.
+  auto* str = sb.finishString();
+  if (!str) {
+    return false;
+  }
+
+  args.rval().setString(str);
+  return true;
+}
+
+/**
+ * Uint8Array.prototype.toHex ( )
+ *
+ * https://tc39.es/proposal-arraybuffer-base64/spec/#sec-uint8array.prototype.tohex
+ */
+static bool uint8array_toHex(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // Steps 1-2.
+  return CallNonGenericMethod<IsUint8ArrayObject, uint8array_toHex>(cx, args);
+}
+
 /* static */ const JSFunctionSpec TypedArrayObject::protoFunctions[] = {
     JS_SELF_HOSTED_FN("subarray", "TypedArraySubarray", 2, 0),
     JS_FN("set", TypedArrayObject::set, 1, 0),
@@ -2363,15 +2664,41 @@ static const JSPropertySpec
 #undef IMPL_TYPED_ARRAY_PROPERTIES
 };
 
+static const JSFunctionSpec uint8array_static_methods[] = {
+    JS_FN("fromHex", uint8array_fromHex, 1, 0),
+    JS_FS_END,
+};
+
+static const JSFunctionSpec uint8array_methods[] = {
+    JS_FN("setFromHex", uint8array_setFromHex, 1, 0),
+    JS_FN("toHex", uint8array_toHex, 0, 0),
+    JS_FS_END,
+};
+
+static constexpr const JSFunctionSpec* TypedArrayStaticMethods(
+    Scalar::Type type) {
+  if (type == Scalar::Uint8) {
+    return uint8array_static_methods;
+  }
+  return nullptr;
+}
+
+static constexpr const JSFunctionSpec* TypedArrayMethods(Scalar::Type type) {
+  if (type == Scalar::Uint8) {
+    return uint8array_methods;
+  }
+  return nullptr;
+}
+
 static const ClassSpec
     TypedArrayObjectClassSpecs[Scalar::MaxTypedArrayViewType] = {
 #define IMPL_TYPED_ARRAY_CLASS_SPEC(ExternalType, NativeType, Name) \
   {                                                                 \
       TypedArrayObjectTemplate<NativeType>::createConstructor,      \
       TypedArrayObjectTemplate<NativeType>::createPrototype,        \
-      nullptr,                                                      \
+      TypedArrayStaticMethods(Scalar::Type::Name),                  \
       static_prototype_properties[Scalar::Type::Name],              \
-      nullptr,                                                      \
+      TypedArrayMethods(Scalar::Type::Name),                        \
       static_prototype_properties[Scalar::Type::Name],              \
       nullptr,                                                      \
       JSProto_TypedArray,                                           \
