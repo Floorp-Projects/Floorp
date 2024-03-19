@@ -605,7 +605,8 @@ add_task(async function test_cumulative_searches_syncedtabs_telemetry() {
     );
     await TestUtils.waitForCondition(
       () =>
-        syncedTabs.tabLists[0].rowEls.length === 1 && syncedTabs?.searchQuery,
+        syncedTabs.tabLists[0].rowEls.length === 1 &&
+        syncedTabs.controller.searchQuery,
       "Expected search results are not shown yet."
     );
 
