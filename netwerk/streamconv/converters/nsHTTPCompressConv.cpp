@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsHTTPCompressConv.h"
+#include "ErrorList.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "nsError.h"
@@ -19,6 +20,7 @@
 #include "nsIForcePendingChannel.h"
 #include "nsIRequest.h"
 #include "mozilla/UniquePtrExtensions.h"
+#include "nsIThreadRetargetableRequest.h"
 
 // brotli headers
 #undef assert
@@ -128,6 +130,34 @@ nsHTTPCompressConv::GetConvertedType(const nsACString& aFromType,
 }
 
 NS_IMETHODIMP
+nsHTTPCompressConv::MaybeRetarget(nsIRequest* request) {
+  MOZ_ASSERT(NS_IsMainThread());
+  nsresult rv;
+  nsCOMPtr<nsIThreadRetargetableRequest> req = do_QueryInterface(request);
+  if (!req) {
+    return NS_ERROR_NO_INTERFACE;
+  }
+
+  nsCOMPtr<nsISerialEventTarget> target;
+  rv = req->GetDeliveryTarget(getter_AddRefs(target));
+  if (NS_FAILED(rv) || !target || target->IsOnCurrentThread()) {
+    // No retargetting was performed.  Decompress off MainThread,
+    // and dispatch results back to MainThread
+    nsCOMPtr<nsISerialEventTarget> backgroundThread;
+    rv = NS_CreateBackgroundTaskQueue("nsHTTPCompressConv",
+                                      getter_AddRefs(backgroundThread));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = req->RetargetDeliveryTo(backgroundThread);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_SUCCEEDED(rv)) {
+      mDispatchToMainThread = true;
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsHTTPCompressConv::OnStartRequest(nsIRequest* request) {
   LOG(("nsHttpCompresssConv %p onstart\n", this));
   nsCOMPtr<nsIStreamListener> listener;
@@ -135,14 +165,33 @@ nsHTTPCompressConv::OnStartRequest(nsIRequest* request) {
     MutexAutoLock lock(mMutex);
     listener = mListener;
   }
-  return listener->OnStartRequest(request);
+  nsresult rv = listener->OnStartRequest(request);
+  if (NS_SUCCEEDED(rv)) {
+    if (XRE_IsContentProcess()) {
+      nsCOMPtr<nsIThreadRetargetableStreamListener> retargetlistener =
+          do_QueryInterface(listener);
+      // |nsHTTPCompressConv| should *always* be dispatched off of the main
+      // thread from a content process, even if its listeners don't support it.
+      //
+      // If its listener chain does not support being retargeted off of the
+      // main thread, it will be dispatched back to the main thread in
+      // |do_OnDataAvailable| and |OnStopRequest|.
+      if (!retargetlistener ||
+          NS_FAILED(retargetlistener->CheckListenerChain())) {
+        mDispatchToMainThread = true;
+      }
+    }
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
 nsHTTPCompressConv::OnStopRequest(nsIRequest* request, nsresult aStatus) {
   nsresult status = aStatus;
-  LOG(("nsHttpCompresssConv %p onstop %" PRIx32 "\n", this,
-       static_cast<uint32_t>(aStatus)));
+  // Bug 1886237 : TRRServiceChannel calls OnStopRequest OMT
+  // MOZ_ASSERT(NS_IsMainThread());
+  LOG(("nsHttpCompresssConv %p onstop %" PRIx32 " mDispatchToMainThread %d\n",
+       this, static_cast<uint32_t>(aStatus), mDispatchToMainThread));
 
   // Framing integrity is enforced for content-encoding: gzip, but not for
   // content-encoding: deflate. Note that gzip vs deflate is NOT determined
@@ -181,6 +230,7 @@ nsHTTPCompressConv::OnStopRequest(nsIRequest* request, nsresult aStatus) {
     MutexAutoLock lock(mMutex);
     listener = mListener;
   }
+
   return listener->OnStopRequest(request, status);
 }
 
@@ -553,6 +603,35 @@ nsresult nsHTTPCompressConv::do_OnDataAvailable(nsIRequest* request,
                                                 uint64_t offset,
                                                 const char* buffer,
                                                 uint32_t count) {
+  LOG(("nsHttpCompressConv %p do_OnDataAvailable mDispatchToMainThread %d",
+       this, mDispatchToMainThread));
+  if (mDispatchToMainThread && !NS_IsMainThread()) {
+    nsCOMPtr<nsIInputStream> stream;
+    MOZ_TRY(NS_NewByteInputStream(getter_AddRefs(stream), Span(buffer, count),
+                                  nsAssignmentType::NS_ASSIGNMENT_COPY));
+
+    nsCOMPtr<nsIStreamListener> listener;
+    {
+      MutexAutoLock lock(mMutex);
+      listener = mListener;
+    }
+
+    // This is safe and will always run before OnStopRequest, because
+    // ChanneleventQueue means that we can't enqueue OnStopRequest until after
+    // the OMT OnDataAvailable call has completed.  So Dispatching here will
+    // ensure it's in the MainThread event queue before OnStopRequest
+    nsCOMPtr<nsIRunnable> handler = NS_NewRunnableFunction(
+        "nsHTTPCompressConv::do_OnDataAvailable",
+        [request{RefPtr<nsIRequest>(request)}, stream{std::move(stream)},
+         listener{std::move(listener)}, offset, count]() {
+          LOG(("nsHttpCompressConv Calling OnDataAvailable on Mainthread"));
+          Unused << listener->OnDataAvailable(request, stream, offset, count);
+        });
+
+    mDecodedDataLength += count;
+    return NS_DispatchToMainThread(handler);
+  }
+
   if (!mStream) {
     mStream = do_CreateInstance(NS_STRINGINPUTSTREAM_CONTRACTID);
     NS_ENSURE_STATE(mStream);
@@ -725,12 +804,16 @@ uint32_t nsHTTPCompressConv::check_header(nsIInputStream* iStr,
 
 NS_IMETHODIMP
 nsHTTPCompressConv::CheckListenerChain() {
+  if (XRE_IsContentProcess()) {
+    // handle decompression OMT always.  If the chain needs to be MT,
+    // we'll determine that in OnStartRequest and dispatch to MT
+    return NS_OK;
+  }
   nsCOMPtr<nsIThreadRetargetableStreamListener> listener;
   {
     MutexAutoLock lock(mMutex);
     listener = do_QueryInterface(mListener);
   }
-
   if (!listener) {
     return NS_ERROR_NO_INTERFACE;
   }
@@ -748,6 +831,15 @@ nsHTTPCompressConv::OnDataFinished(nsresult aStatus) {
   }
 
   if (listener) {
+    if (mDispatchToMainThread && !NS_IsMainThread()) {
+      nsCOMPtr<nsIRunnable> handler = NS_NewRunnableFunction(
+          "dispatch", [listener{std::move(listener)}, aStatus]() {
+            Unused << listener->OnDataFinished(aStatus);
+          });
+
+      return NS_DispatchToMainThread(handler);
+    }
+
     return listener->OnDataFinished(aStatus);
   }
 

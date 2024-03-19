@@ -15,11 +15,13 @@
 #include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/StoragePrincipalHelper.h"
 
+#include "nsCOMPtr.h"
 #include "nsContentSecurityUtils.h"
 #include "nsHttp.h"
 #include "nsHttpChannel.h"
 #include "nsHttpChannelAuthProvider.h"
 #include "nsHttpHandler.h"
+#include "nsIStreamConverter.h"
 #include "nsString.h"
 #include "nsICacheStorageService.h"
 #include "nsICacheStorage.h"
@@ -1810,6 +1812,7 @@ nsresult nsHttpChannel::CallOnStartRequest() {
                  "converter in this case.");
       mListener = listener;
       mCompressListener = listener;
+
       StoreHasAppliedConversion(true);
     }
   }
