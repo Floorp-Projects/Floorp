@@ -1084,6 +1084,10 @@ int XRE_XPCShellMain(int argc, char** argv, char** envp,
   // stability, we should instantiate COM ASAP so that we can ensure that these
   // global settings are configured before anything can interfere.
   mscom::ProcessRuntime mscom;
+
+#  ifdef MOZ_SANDBOX
+  nsAutoString binDirPath;
+#  endif
 #endif
 
   // The provider needs to outlive the call to shutting down XPCOM.
@@ -1102,6 +1106,11 @@ int XRE_XPCShellMain(int argc, char** argv, char** envp,
       printf("Couldn't get application directory.\n");
       return 1;
     }
+
+#if defined(XP_WIN) && defined(MOZ_SANDBOX)
+    // We need the binary directory to initialize the windows sandbox.
+    MOZ_ALWAYS_SUCCEEDS(appDir->GetPath(binDirPath));
+#endif
 
     dirprovider.SetAppFile(appFile);
 
@@ -1301,7 +1310,7 @@ int XRE_XPCShellMain(int argc, char** argv, char** envp,
 #  if defined(MOZ_SANDBOX)
     // Required for sandboxed child processes.
     if (aShellData->sandboxBrokerServices) {
-      SandboxBroker::Initialize(aShellData->sandboxBrokerServices);
+      SandboxBroker::Initialize(aShellData->sandboxBrokerServices, binDirPath);
       SandboxBroker::GeckoDependentInitialize();
     } else {
       NS_WARNING(
