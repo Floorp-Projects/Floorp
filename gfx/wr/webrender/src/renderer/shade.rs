@@ -6,6 +6,7 @@ use api::{ImageBufferKind, units::DeviceSize};
 use crate::batch::{BatchKey, BatchKind, BrushBatchKind, BatchFeatures};
 use crate::composite::{CompositeFeatures, CompositeSurfaceFormat};
 use crate::device::{Device, Program, ShaderError};
+use crate::pattern::PatternKind;
 use euclid::default::Transform3D;
 use glyph_rasterizer::GlyphFormat;
 use crate::renderer::{
@@ -1161,8 +1162,11 @@ impl Shaders {
         device: &Device,
     ) -> &mut LazilyCompiledShader {
         match key.kind {
-            BatchKind::Primitive => {
+            BatchKind::Quad(PatternKind::ColorOrTexture) => {
                 &mut self.ps_quad_textured
+            }
+            BatchKind::Quad(PatternKind::Mask) => {
+                unreachable!();
             }
             BatchKind::SplitComposite => {
                 &mut self.ps_split_composite
