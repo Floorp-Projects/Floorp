@@ -6,4 +6,6 @@ toolkit.jar:
     content/global/ml/EngineProcess.sys.mjs    (content/EngineProcess.sys.mjs)
     content/global/ml/MLEngine.worker.mjs      (content/MLEngine.worker.mjs)
     content/global/ml/MLEngine.html            (content/MLEngine.html)
+    content/global/ml/ModelHub.sys.mjs         (content/ModelHub.sys.mjs)
     content/global/ml/SummarizerModel.sys.mjs  (content/SummarizerModel.sys.mjs)
+    content/global/ml/tests                    (tests/data/**/*)
