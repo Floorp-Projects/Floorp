@@ -11,6 +11,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
 #include "mozilla/ResultVariant.h"
+#include "mozilla/TimeStamp.h"
 
 #include "nsTArray.h"
 
@@ -20,6 +21,7 @@
 #include "prtime.h"
 
 using mozilla::Preferences;
+using mozilla::TimeDuration;
 using namespace mozilla::glean;
 using namespace mozilla::glean::impl;
 
@@ -275,6 +277,18 @@ TEST_F(FOGFixture, TestCppTimingDistWorks) {
     sampleCount += value;
   }
   ASSERT_EQ(sampleCount, (uint64_t)2);
+}
+
+TEST_F(FOGFixture, TestCppTimingDistNegativeDuration) {
+  // Intentionally a negative duration to test the error case.
+  auto negDuration = TimeDuration::FromSeconds(-1);
+  test_only::what_time_is_it.AccumulateRawDuration(negDuration);
+
+  // FIXME(bug 1886198):
+  // Can't use `ASSERT_EQ(mozilla::Nothing(), val)` unfortunately,
+  // `ASSERT_EQ` will generate code that tries to print the contained value
+  // using `std::ostream <<`, but `DistributionData` doesn't support that.
+  ASSERT_TRUE(test_only::what_time_is_it.TestGetValue().unwrap().isNothing());
 }
 
 TEST_F(FOGFixture, TestLabeledBooleanWorks) {
