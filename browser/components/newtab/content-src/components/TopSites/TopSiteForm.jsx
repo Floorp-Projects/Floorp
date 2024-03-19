@@ -2,10 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import {
-  actionCreators as ac,
-  actionTypes as at,
-} from "common/Actions.sys.mjs";
+import { actionCreators as ac, actionTypes as at } from "common/Actions.mjs";
 import { A11yLinkButton } from "content-src/components/A11yLinkButton/A11yLinkButton";
 import React from "react";
 import { TOP_SITES_SOURCE } from "./TopSitesConstants";

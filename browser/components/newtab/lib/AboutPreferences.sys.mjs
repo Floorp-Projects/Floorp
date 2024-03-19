@@ -5,7 +5,7 @@
 import {
   actionTypes as at,
   actionCreators as ac,
-} from "resource://activity-stream/common/Actions.sys.mjs";
+} from "resource://activity-stream/common/Actions.mjs";
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 export const PREFERENCES_LOADED_EVENT = "home-pane-loaded";

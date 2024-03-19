@@ -13,7 +13,7 @@ import {
   actionCreators as ac,
   actionTypes as at,
   actionUtils as au,
-} from "resource://activity-stream/common/Actions.sys.mjs";
+} from "resource://activity-stream/common/Actions.mjs";
 
 const ABOUT_NEW_TAB_URL = "about:newtab";
 

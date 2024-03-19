@@ -2,7 +2,7 @@ import {
   ImpressionStats,
   INTERSECTION_RATIO,
 } from "content-src/components/DiscoveryStreamImpressionStats/ImpressionStats";
-import { actionTypes as at } from "common/Actions.sys.mjs";
+import { actionTypes as at } from "common/Actions.mjs";
 import React from "react";
 import { shallow } from "enzyme";
 

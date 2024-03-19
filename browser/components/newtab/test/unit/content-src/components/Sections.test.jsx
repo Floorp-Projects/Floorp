@@ -5,7 +5,7 @@ import {
   SectionIntl,
   _Sections as Sections,
 } from "content-src/components/Sections/Sections";
-import { actionTypes as at } from "common/Actions.sys.mjs";
+import { actionTypes as at } from "common/Actions.mjs";
 import { mount, shallow } from "enzyme";
 import { PlaceholderCard } from "content-src/components/Card/Card";
 import { PocketLoggedInCta } from "content-src/components/PocketLoggedInCta/PocketLoggedInCta";

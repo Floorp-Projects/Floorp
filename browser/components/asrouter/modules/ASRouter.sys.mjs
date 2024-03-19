@@ -67,7 +67,7 @@ ChromeUtils.defineLazyGetter(lazy, "log", () => {
   );
   return new Logger("ASRouter");
 });
-import { actionCreators as ac } from "resource://activity-stream/common/Actions.sys.mjs";
+import { actionCreators as ac } from "resource://activity-stream/common/Actions.mjs";
 import { MESSAGING_EXPERIMENTS_DEFAULT_FEATURES } from "resource:///modules/asrouter/MessagingExperimentConstants.sys.mjs";
 import { CFRMessageProvider } from "resource:///modules/asrouter/CFRMessageProvider.sys.mjs";
 import { OnboardingMessageProvider } from "resource:///modules/asrouter/OnboardingMessageProvider.sys.mjs";

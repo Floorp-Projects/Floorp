@@ -1,4 +1,4 @@
-import { actionCreators as ac } from "common/Actions.sys.mjs";
+import { actionCreators as ac } from "common/Actions.mjs";
 import { ContentSection } from "content-src/components/CustomizeMenu/ContentSection/ContentSection";
 import { mount } from "enzyme";
 import React from "react";

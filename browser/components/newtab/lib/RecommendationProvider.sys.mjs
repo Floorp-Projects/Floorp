@@ -12,7 +12,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 import {
   actionTypes as at,
   actionCreators as ac,
-} from "resource://activity-stream/common/Actions.sys.mjs";
+} from "resource://activity-stream/common/Actions.mjs";
 
 const CACHE_KEY = "personalization";
 const PREF_PERSONALIZATION_MODEL_KEYS =

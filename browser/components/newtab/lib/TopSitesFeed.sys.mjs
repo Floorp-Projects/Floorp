@@ -5,7 +5,7 @@
 import {
   actionCreators as ac,
   actionTypes as at,
-} from "resource://activity-stream/common/Actions.sys.mjs";
+} from "resource://activity-stream/common/Actions.mjs";
 import { TippyTopProvider } from "resource://activity-stream/lib/TippyTopProvider.sys.mjs";
 import {
   insertPinned,

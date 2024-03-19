@@ -4,8 +4,7 @@
 
 // eslint-disable-next-line mozilla/reject-import-system-module-from-non-system
 import { MESSAGE_TYPE_HASH as msg } from "../modules/ActorConstants.sys.mjs";
-// eslint-disable-next-line mozilla/reject-import-system-module-from-non-system
-import { actionCreators as ac } from "../../newtab/common/Actions.sys.mjs";
+import { actionCreators as ac } from "../../newtab/common/Actions.mjs";
 
 export const ASRouterUtils = {
   addListener(listener) {

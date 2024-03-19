@@ -8,7 +8,7 @@ import { ErrorBoundary } from "content-src/components/ErrorBoundary/ErrorBoundar
 import React from "react";
 import { Search } from "content-src/components/Search/Search";
 import { shallow } from "enzyme";
-import { actionCreators as ac } from "common/Actions.sys.mjs";
+import { actionCreators as ac } from "common/Actions.mjs";
 
 describe("<Base>", () => {
   let DEFAULT_PROPS = {

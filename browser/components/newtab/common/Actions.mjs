@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// This file is accessed from both content and system scopes.
+
 export const MAIN_MESSAGE_TYPE = "ActivityStream:Main";
 export const CONTENT_MESSAGE_TYPE = "ActivityStream:Content";
 export const PRELOAD_MESSAGE_TYPE = "ActivityStream:PreloadedBrowser";
@@ -371,8 +373,11 @@ function DiscoveryStreamLoadedContent(
   return importContext === UI_CODE ? AlsoToMain(action) : action;
 }
 
-function SetPref(name, value, importContext = globalImportContext) {
-  const action = { type: actionTypes.SET_PREF, data: { name, value } };
+function SetPref(prefName, value, importContext = globalImportContext) {
+  const action = {
+    type: actionTypes.SET_PREF,
+    data: { name: prefName, value },
+  };
   return importContext === UI_CODE ? AlsoToMain(action) : action;
 }
 

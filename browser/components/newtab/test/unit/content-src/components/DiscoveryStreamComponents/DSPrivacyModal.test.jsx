@@ -1,6 +1,6 @@
 import { DSPrivacyModal } from "content-src/components/DiscoveryStreamComponents/DSPrivacyModal/DSPrivacyModal";
 import { shallow, mount } from "enzyme";
-import { actionCreators as ac } from "common/Actions.sys.mjs";
+import { actionCreators as ac } from "common/Actions.mjs";
 import React from "react";
 
 describe("Discovery Stream <DSPrivacyModal>", () => {

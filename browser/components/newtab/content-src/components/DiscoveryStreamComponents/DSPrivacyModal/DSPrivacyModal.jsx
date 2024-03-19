@@ -3,10 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import React from "react";
-import {
-  actionCreators as ac,
-  actionTypes as at,
-} from "common/Actions.sys.mjs";
+import { actionCreators as ac, actionTypes as at } from "common/Actions.mjs";
 import { ModalOverlayWrapper } from "content-src/components/ModalOverlay/ModalOverlay";
 
 export class DSPrivacyModal extends React.PureComponent {

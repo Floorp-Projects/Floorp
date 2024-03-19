@@ -6,7 +6,7 @@ import {
   actionCreators as ac,
   actionTypes as at,
   actionUtils as au,
-} from "resource://activity-stream/common/Actions.sys.mjs";
+} from "resource://activity-stream/common/Actions.mjs";
 
 import { shortURL } from "resource://activity-stream/lib/ShortURL.sys.mjs";
 

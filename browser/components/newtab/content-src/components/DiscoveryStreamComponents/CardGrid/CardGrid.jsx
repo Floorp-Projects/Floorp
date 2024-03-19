@@ -8,10 +8,7 @@ import { DSDismiss } from "content-src/components/DiscoveryStreamComponents/DSDi
 import { TopicsWidget } from "../TopicsWidget/TopicsWidget.jsx";
 import { SafeAnchor } from "../SafeAnchor/SafeAnchor";
 import { FluentOrText } from "../../FluentOrText/FluentOrText.jsx";
-import {
-  actionCreators as ac,
-  actionTypes as at,
-} from "common/Actions.sys.mjs";
+import { actionCreators as ac, actionTypes as at } from "common/Actions.mjs";
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { connect, useSelector } from "react-redux";
 const PREF_ONBOARDING_EXPERIENCE_DISMISSED =
