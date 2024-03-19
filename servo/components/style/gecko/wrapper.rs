@@ -1794,17 +1794,17 @@ impl<'le> TElement for GeckoElement<'le> {
         self.as_node().selector_flags() & node_flags == node_flags
     }
 
-    fn relative_selector_search_direction(&self) -> Option<ElementSelectorFlags> {
+    fn relative_selector_search_direction(&self) -> ElementSelectorFlags {
         use crate::gecko_bindings::structs::NodeSelectorFlags;
         let flags = self.as_node().selector_flags();
         if (flags & NodeSelectorFlags::RelativeSelectorSearchDirectionAncestorSibling.0) != 0 {
-            Some(ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_ANCESTOR_SIBLING)
+            ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_ANCESTOR_SIBLING
         } else if (flags & NodeSelectorFlags::RelativeSelectorSearchDirectionAncestor.0) != 0 {
-            Some(ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_ANCESTOR)
+            ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_ANCESTOR
         } else if (flags & NodeSelectorFlags::RelativeSelectorSearchDirectionSibling.0) != 0 {
-            Some(ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_SIBLING)
+            ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_SIBLING
         } else {
-            None
+            ElementSelectorFlags::empty()
         }
     }
 }
