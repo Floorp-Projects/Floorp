@@ -19,6 +19,8 @@
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_webgl.h"
 #include "mozilla/widget/AndroidVsync.h"
+#include "mozilla/widget/Screen.h"
+#include "mozilla/widget/ScreenManager.h"
 
 #include "gfx2DGlue.h"
 #include "gfxFT2FontList.h"
@@ -89,8 +91,16 @@ gfxAndroidPlatform::gfxAndroidPlatform() {
 
   RegisterStrongMemoryReporter(new FreetypeReporter());
 
-  mOffscreenFormat = GetScreenDepth() == 16 ? SurfaceFormat::R5G6B5_UINT16
-                                            : SurfaceFormat::X8R8G8B8_UINT32;
+  // Get the screen depth of the primary screen to determine our offscreen
+  // format.
+  int32_t screenDepth = 0;
+  if (RefPtr<widget::Screen> screen =
+          widget::ScreenManager::GetSingleton().GetPrimaryScreen()) {
+    screen->GetColorDepth(&screenDepth);
+  }
+
+  mOffscreenFormat = screenDepth == 16 ? SurfaceFormat::R5G6B5_UINT16
+                                       : SurfaceFormat::X8R8G8B8_UINT32;
 
   if (StaticPrefs::gfx_android_rgb16_force_AtStartup()) {
     mOffscreenFormat = SurfaceFormat::R5G6B5_UINT16;
