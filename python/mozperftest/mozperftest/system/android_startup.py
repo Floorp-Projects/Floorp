@@ -38,16 +38,28 @@ TEST_URI = "https://example.com"
 BASE_URL_DICT = {
     PROD_FENIX: (
         "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/"
+        "gecko.v2.mozilla-central.pushdate.{date}.latest.mobile.fenix-nightly"
+        "/artifacts/public%2Fbuild%2Ftarget.{architecture}.apk"
+    ),
+    PROD_FENIX
+    + "-pre-mono-repo": (
+        "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/"
         "mobile.v3.firefox-android.apks.fenix-nightly.{date}.latest.{architecture}/artifacts/"
         "public%2Fbuild%2Ftarget.{architecture}.apk"
     ),
     PROD_FENIX
     + "-latest": (
         "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/"
-        "mobile.v3.firefox-android.apks.fenix-nightly.latest.{architecture}/artifacts/"
+        "gecko.v2.mozilla-central.latest.mobile.fenix-nightly/artifacts/"
         "public%2Fbuild%2Ftarget.{architecture}.apk"
     ),
     PROD_FOCUS: (
+        "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/"
+        "gecko.v2.mozilla-central.pushdate.{date}.latest.mobile.focus-nightly"
+        "/artifacts/public%2Fbuild%2Ftarget.{architecture}.apk"
+    ),
+    PROD_FOCUS
+    + "-pre-mono-repo": (
         "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/"
         "mobile.v3.firefox-android.apks.focus-nightly.{date}.latest.{architecture}"
         "/artifacts/public%2Fbuild%2Ftarget.{architecture}.apk"
@@ -55,8 +67,8 @@ BASE_URL_DICT = {
     PROD_FOCUS
     + "-latest": (
         "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/"
-        "mobile.v3.firefox-android.apks.focus-nightly.latest.{architecture}"
-        "/artifacts/public%2Fbuild%2Ftarget.{architecture}.apk"
+        "gecko.v2.mozilla-central.latest.mobile.focus-nightly/artifacts/"
+        "public%2Fbuild%2Ftarget.{architecture}.apk"
     ),
     PROC_GVEX: (
         "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/"

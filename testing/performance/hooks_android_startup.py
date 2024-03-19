@@ -19,6 +19,7 @@ from mozperftest.system.android_startup import (
 from mozversioncontrol import get_repository_object
 
 HTTP_200_OKAY = 200
+MONO_REPO_MIGRATION_DAY = datetime(2024, 3, 18)
 
 
 def before_iterations(kw):
@@ -31,11 +32,14 @@ def before_iterations(kw):
     else:
         commit_info = subprocess.getoutput("hg log -l 1")
     commit_date = re.search(r"[Dd]ate:\s+([:\s\w]+)\s+", str(commit_info)).group(1)
-    download_date = (
-        datetime.strptime(commit_date, "%a %b %d %H:%M:%S %Y") - timedelta(days=1)
-    ).strftime(DATETIME_FORMAT)
-
-    nightly_url = BASE_URL_DICT[product].format(
+    download_date = datetime.strptime(commit_date, "%a %b %d %H:%M:%S %Y") - timedelta(
+        days=1
+    )
+    pre_mono_repo = ""
+    if download_date < MONO_REPO_MIGRATION_DAY and product != "geckoview_example":
+        pre_mono_repo = "-pre-mono-repo"
+    download_date = download_date.strftime(DATETIME_FORMAT)
+    nightly_url = BASE_URL_DICT[product + pre_mono_repo].format(
         date=download_date, architecture=architecture
     )
     filename = f"{product}_nightly_{architecture}.apk"
