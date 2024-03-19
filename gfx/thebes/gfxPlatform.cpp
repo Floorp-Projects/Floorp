@@ -21,8 +21,8 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/gfx/GraphicsMessages.h"
-#include "mozilla/gfx/CanvasManagerChild.h"
 #include "mozilla/gfx/CanvasRenderThread.h"
+#include "mozilla/gfx/CanvasShutdownManager.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/EnumTypeTraits.h"
@@ -1343,7 +1343,7 @@ void gfxPlatform::ShutdownLayersIPC() {
 
   if (XRE_IsContentProcess()) {
     gfx::VRManagerChild::ShutDown();
-    gfx::CanvasManagerChild::Shutdown();
+    gfx::CanvasShutdownManager::Shutdown();
     // cf bug 1215265.
     if (StaticPrefs::layers_child_process_shutdown()) {
       layers::CompositorManagerChild::Shutdown();
@@ -1354,7 +1354,7 @@ void gfxPlatform::ShutdownLayersIPC() {
     VideoBridgeParent::Shutdown();
     RDDProcessManager::RDDProcessShutdown();
     gfx::VRManagerChild::ShutDown();
-    gfx::CanvasManagerChild::Shutdown();
+    gfx::CanvasShutdownManager::Shutdown();
     layers::CompositorManagerChild::Shutdown();
     layers::ImageBridgeChild::ShutDown();
     // This could be running on either the Compositor thread, the Renderer
