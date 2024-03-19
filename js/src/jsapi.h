@@ -303,7 +303,7 @@ extern JS_PUBLIC_API bool ToPrimitive(JSContext* cx, JS::HandleObject obj,
  * This can be useful in implementing a @@toPrimitive method.
  */
 extern JS_PUBLIC_API bool GetFirstArgumentAsTypeHint(JSContext* cx,
-                                                     CallArgs args,
+                                                     const CallArgs& args,
                                                      JSType* result);
 
 } /* namespace JS */
