@@ -1273,6 +1273,13 @@ struct arena_t {
 
   size_t EffectiveMaxDirty();
 
+#ifdef MALLOC_DECOMMIT
+  // During a commit operation (for aReqPages) we have the opportunity of
+  // commiting at most aRemPages additional pages.  How many should we commit to
+  // amortise system calls?
+  size_t ExtraCommitPages(size_t aReqPages, size_t aRemainingPages);
+#endif
+
   // Passing one means purging all.
   void Purge(size_t aMaxDirty);
 
@@ -2755,7 +2762,11 @@ void arena_t::InitChunk(arena_chunk_t* aChunk, size_t aMinCommittedPages) {
   // If MALLOC_DECOMMIT is enabled then commit only the pages we're about to
   // use.  Otherwise commit all of them.
 #ifdef MALLOC_DECOMMIT
-  size_t n_fresh_pages = aMinCommittedPages;
+  size_t n_fresh_pages =
+      aMinCommittedPages +
+      ExtraCommitPages(
+          aMinCommittedPages,
+          gChunkNumPages - gChunkHeaderNumPages - aMinCommittedPages - 1);
 #else
   size_t n_fresh_pages = gChunkNumPages - 1 - gChunkHeaderNumPages;
 #endif
@@ -2887,6 +2898,89 @@ size_t arena_t::EffectiveMaxDirty() {
 
   return modifier >= 0 ? mMaxDirty << modifier : mMaxDirty >> -modifier;
 }
+
+#ifdef MALLOC_DECOMMIT
+
+size_t arena_t::ExtraCommitPages(size_t aReqPages, size_t aRemainingPages) {
+  const int32_t modifier = gArenas.DefaultMaxDirtyPageModifier();
+  if (modifier < 0) {
+    return 0;
+  }
+
+  // The maximum size of the page cache
+  const size_t max_page_cache = EffectiveMaxDirty();
+
+  // The current size of the page cache (Patch 7 will add clean pages here).
+  const size_t page_cache = mNumDirty;
+
+  if (page_cache > max_page_cache) {
+    // We're already exceeding our dirty page count even though we're trying
+    // to allocate.  This can happen due to fragmentation.  Don't commit
+    // excess memory since we're probably here due to a larger allocation and
+    // small amounts of memory are certainly available in the page cache.
+    return 0;
+  }
+  if (modifier > 0) {
+    // If modifier is > 0 then we want to keep all the pages we can, but don't
+    // exceed the size of the page cache.  The subtraction cannot underflow
+    // because of the condition above.
+    return std::min(aRemainingPages, max_page_cache - page_cache);
+  }
+
+  // The rest is arbitrary and involves a some assumptions.  I've broken it down
+  // into simple expressions to document them more clearly.
+
+  // Assumption 1: a quarter of EffectiveMaxDirty() is a sensible "minimum
+  // target" for the dirty page cache.  Likewise 3 quarters is a sensible
+  // "maximum target".  Note that for the maximum we avoid using the whole page
+  // cache now so that a free that follows this allocation doesn't immeidatly
+  // call Purge (churning memory).
+  const size_t min = max_page_cache / 4;
+  const size_t max = 3 * max_page_cache / 4;
+
+  // Assumption 2: Committing 32 pages at a time is sufficient to amortise
+  // VirtualAlloc costs.
+  size_t amortisation_threshold = 32;
+
+  // extra_pages is the number of additional pages needed to meet
+  // amortisation_threshold.
+  size_t extra_pages = aReqPages < amortisation_threshold
+                           ? amortisation_threshold - aReqPages
+                           : 0;
+
+  // If committing extra_pages isn't enough to hit the minimum target then
+  // increase it.
+  if (page_cache + extra_pages < min) {
+    extra_pages = min - page_cache;
+  } else if (page_cache + extra_pages > max) {
+    // If committing extra_pages would exceed our maximum target then it may
+    // still be useful to allocate extra pages.  One of the reasons this can
+    // happen could be fragmentation of the cache,
+
+    // Therefore reduce the amortisation threshold so that we might allocate
+    // some extra pages but avoid exceeding the dirty page cache.
+    amortisation_threshold /= 2;
+    extra_pages = std::min(aReqPages < amortisation_threshold
+                               ? amortisation_threshold - aReqPages
+                               : 0,
+                           max_page_cache - page_cache);
+  }
+
+  // Cap extra_pages to aRemainingPages and adjust aRemainingPages.  We will
+  // commit at least this many extra pages.
+  extra_pages = std::min(extra_pages, aRemainingPages);
+
+  // Finally if commiting a small number of additional pages now can prevent
+  // a small commit later then try to commit a little more now, provided we
+  // don't exceed max_page_cache.
+  if ((aRemainingPages - extra_pages) < amortisation_threshold / 2 &&
+      (page_cache + aRemainingPages) < max_page_cache) {
+    return aRemainingPages;
+  }
+
+  return extra_pages;
+}
+#endif
 
 void arena_t::Purge(size_t aMaxDirty) {
   arena_chunk_t* chunk;
