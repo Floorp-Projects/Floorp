@@ -49,6 +49,9 @@ dnl ========================================================
 
 if test "$COMPILE_ENVIRONMENT"; then
 
+# Run some logic to figure out exe extensions (mostly for mingw's sake)
+AC_EXEEXT
+
 if test "$target" != "$host"; then
     MOZ_CROSS_COMPILER
 else
