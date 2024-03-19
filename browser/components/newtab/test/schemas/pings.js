@@ -1,7 +1,4 @@
-import {
-  CONTENT_MESSAGE_TYPE,
-  MAIN_MESSAGE_TYPE,
-} from "common/Actions.sys.mjs";
+import { CONTENT_MESSAGE_TYPE, MAIN_MESSAGE_TYPE } from "common/Actions.mjs";
 import Joi from "joi-browser";
 
 export const baseKeys = {

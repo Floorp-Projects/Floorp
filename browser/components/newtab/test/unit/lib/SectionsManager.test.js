@@ -5,7 +5,7 @@ import {
   CONTENT_MESSAGE_TYPE,
   MAIN_MESSAGE_TYPE,
   PRELOAD_MESSAGE_TYPE,
-} from "common/Actions.sys.mjs";
+} from "common/Actions.mjs";
 import { EventEmitter, GlobalOverrider } from "test/unit/utils";
 import { SectionsFeed, SectionsManager } from "lib/SectionsManager.sys.mjs";
 

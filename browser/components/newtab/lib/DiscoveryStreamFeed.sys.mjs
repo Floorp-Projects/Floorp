@@ -26,7 +26,7 @@ const { setTimeout, clearTimeout } = ChromeUtils.importESModule(
 import {
   actionTypes as at,
   actionCreators as ac,
-} from "resource://activity-stream/common/Actions.sys.mjs";
+} from "resource://activity-stream/common/Actions.mjs";
 
 const CACHE_KEY = "discovery_stream";
 const STARTUP_CACHE_EXPIRE_TIME = 7 * 24 * 60 * 60 * 1000; // 1 week

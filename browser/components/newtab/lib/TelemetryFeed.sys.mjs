@@ -24,7 +24,7 @@ const { MESSAGE_TYPE_HASH: msg } = ChromeUtils.importESModule(
 import {
   actionTypes as at,
   actionUtils as au,
-} from "resource://activity-stream/common/Actions.sys.mjs";
+} from "resource://activity-stream/common/Actions.mjs";
 import { Prefs } from "resource://activity-stream/lib/ActivityStreamPrefs.sys.mjs";
 import { classifySite } from "resource://activity-stream/lib/SiteClassifier.sys.mjs";
 

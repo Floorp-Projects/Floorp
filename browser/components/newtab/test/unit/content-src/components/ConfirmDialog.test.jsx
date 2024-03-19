@@ -1,7 +1,4 @@
-import {
-  actionCreators as ac,
-  actionTypes as at,
-} from "common/Actions.sys.mjs";
+import { actionCreators as ac, actionTypes as at } from "common/Actions.mjs";
 import { _ConfirmDialog as ConfirmDialog } from "content-src/components/ConfirmDialog/ConfirmDialog";
 import React from "react";
 import { shallow } from "enzyme";

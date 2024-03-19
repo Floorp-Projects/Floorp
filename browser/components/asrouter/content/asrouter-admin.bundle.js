@@ -17,14 +17,13 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   ASRouterUtils: () => (/* binding */ ASRouterUtils)
 /* harmony export */ });
 /* harmony import */ var _modules_ActorConstants_sys_mjs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2);
-/* harmony import */ var _newtab_common_Actions_sys_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3);
+/* harmony import */ var _newtab_common_Actions_mjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // eslint-disable-next-line mozilla/reject-import-system-module-from-non-system
 
-// eslint-disable-next-line mozilla/reject-import-system-module-from-non-system
 
 
 const ASRouterUtils = {
@@ -93,7 +92,7 @@ const ASRouterUtils = {
     });
   },
   sendTelemetry(ping) {
-    return ASRouterUtils.sendMessage(_newtab_common_Actions_sys_mjs__WEBPACK_IMPORTED_MODULE_1__.actionCreators.ASRouterUserEvent(ping));
+    return ASRouterUtils.sendMessage(_newtab_common_Actions_mjs__WEBPACK_IMPORTED_MODULE_1__.actionCreators.ASRouterUserEvent(ping));
   },
   getPreviewEndpoint() {
     return null;
@@ -180,6 +179,8 @@ __webpack_require__.r(__webpack_exports__);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+// This file is accessed from both content and system scopes.
 
 const MAIN_MESSAGE_TYPE = "ActivityStream:Main";
 const CONTENT_MESSAGE_TYPE = "ActivityStream:Content";
@@ -550,8 +551,11 @@ function DiscoveryStreamLoadedContent(
   return importContext === UI_CODE ? AlsoToMain(action) : action;
 }
 
-function SetPref(name, value, importContext = globalImportContext) {
-  const action = { type: actionTypes.SET_PREF, data: { name, value } };
+function SetPref(prefName, value, importContext = globalImportContext) {
+  const action = {
+    type: actionTypes.SET_PREF,
+    data: { name: prefName, value },
+  };
   return importContext === UI_CODE ? AlsoToMain(action) : action;
 }
 

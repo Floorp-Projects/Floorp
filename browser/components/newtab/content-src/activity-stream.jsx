@@ -2,10 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import {
-  actionCreators as ac,
-  actionTypes as at,
-} from "common/Actions.sys.mjs";
+import { actionCreators as ac, actionTypes as at } from "common/Actions.mjs";
 import { Base } from "content-src/components/Base/Base";
 import { DetectUserSessionStart } from "content-src/lib/detect-user-session-start";
 import { initStore } from "content-src/lib/init-store";

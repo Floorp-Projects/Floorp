@@ -8,7 +8,7 @@ import {
   MAIN_MESSAGE_TYPE,
   PRELOAD_MESSAGE_TYPE,
   UI_CODE,
-} from "common/Actions.sys.mjs";
+} from "common/Actions.mjs";
 
 describe("Actions", () => {
   it("should set globalImportContext to UI_CODE", () => {

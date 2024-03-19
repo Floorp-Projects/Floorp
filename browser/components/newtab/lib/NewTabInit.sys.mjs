@@ -5,7 +5,7 @@
 import {
   actionCreators as ac,
   actionTypes as at,
-} from "resource://activity-stream/common/Actions.sys.mjs";
+} from "resource://activity-stream/common/Actions.mjs";
 
 /**
  * NewTabInit - A placeholder for now. This will send a copy of the state to all

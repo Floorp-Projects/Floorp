@@ -4,7 +4,7 @@
 
 import { LinkMenu } from "content-src/components/LinkMenu/LinkMenu";
 import { ContextMenuButton } from "content-src/components/ContextMenu/ContextMenuButton";
-import { actionCreators as ac } from "common/Actions.sys.mjs";
+import { actionCreators as ac } from "common/Actions.mjs";
 import React from "react";
 
 export class DSLinkMenu extends React.PureComponent {

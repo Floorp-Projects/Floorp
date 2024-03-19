@@ -1,7 +1,4 @@
-import {
-  actionCreators as ac,
-  actionTypes as at,
-} from "common/Actions.sys.mjs";
+import { actionCreators as ac, actionTypes as at } from "common/Actions.mjs";
 import { addNumberReducer, GlobalOverrider } from "test/unit/utils";
 import {
   INCOMING_MESSAGE_NAME,

@@ -8,7 +8,7 @@ const { TopSitesFeed, DEFAULT_TOP_SITES } = ChromeUtils.importESModule(
 );
 
 const { actionCreators: ac, actionTypes: at } = ChromeUtils.importESModule(
-  "resource://activity-stream/common/Actions.sys.mjs"
+  "resource://activity-stream/common/Actions.mjs"
 );
 
 ChromeUtils.defineESModuleGetters(this, {

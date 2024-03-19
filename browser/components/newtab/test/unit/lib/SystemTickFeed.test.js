@@ -2,7 +2,7 @@ import {
   SYSTEM_TICK_INTERVAL,
   SystemTickFeed,
 } from "lib/SystemTickFeed.sys.mjs";
-import { actionTypes as at } from "common/Actions.sys.mjs";
+import { actionTypes as at } from "common/Actions.mjs";
 import { GlobalOverrider } from "test/unit/utils";
 
 describe("System Tick Feed", () => {
