@@ -21,6 +21,9 @@ from typing import Any, List
 import appdirs
 import yaml
 
+from gecko_taskgraph import GECKO
+from gecko_taskgraph.files_changed import get_locally_changed_files
+
 Command = namedtuple("Command", ["func", "args", "kwargs", "defaults"])
 commands = {}
 
@@ -130,7 +133,7 @@ def get_taskgraph_generator(root, parameters):
     return TaskGraphGenerator(root_dir=root, parameters=parameters)
 
 
-def format_taskgraph(options, parameters, logfile=None):
+def format_taskgraph(options, parameters, overrides, logfile=None):
     import taskgraph
     from taskgraph.parameters import parameters_loader
 
@@ -148,7 +151,7 @@ def format_taskgraph(options, parameters, logfile=None):
     if isinstance(parameters, str):
         parameters = parameters_loader(
             parameters,
-            overrides={"target-kinds": options.get("target_kinds")},
+            overrides=overrides,
             strict=False,
         )
 
@@ -182,7 +185,7 @@ def dump_output(out, path=None, params_spec=None):
     print(out + "\n", file=fh)
 
 
-def generate_taskgraph(options, parameters, logdir):
+def generate_taskgraph(options, parameters, overrides, logdir):
     from taskgraph.parameters import Parameters
 
     def logfile(spec):
@@ -198,14 +201,16 @@ def generate_taskgraph(options, parameters, logdir):
     # tracebacks a little more readable and avoids additional process overhead.
     if len(parameters) == 1:
         spec = parameters[0]
-        out = format_taskgraph(options, spec, logfile(spec))
+        out = format_taskgraph(options, spec, overrides, logfile(spec))
         dump_output(out, options["output_file"])
         return
 
     futures = {}
     with ProcessPoolExecutor(max_workers=options["max_workers"]) as executor:
         for spec in parameters:
-            f = executor.submit(format_taskgraph, options, spec, logfile(spec))
+            f = executor.submit(
+                format_taskgraph, options, spec, overrides, logfile(spec)
+            )
             futures[f] = spec
 
     for future in as_completed(futures):
@@ -297,6 +302,15 @@ def generate_taskgraph(options, parameters, logdir):
     "decision task. Can be specified multiple times, in which case multiple "
     "generations will happen from the same invocation (one per parameters "
     "specified).",
+)
+@argument(
+    "--force-local-files-changed",
+    default=False,
+    action="store_true",
+    help="Compute the 'files-changed' parameter from local version control, "
+    "even when explicitly using a parameter set that already has it defined. "
+    "Note that this is already the default behaviour when no parameters are "
+    "specified.",
 )
 @argument(
     "--no-optimize",
@@ -400,14 +414,20 @@ def show_taskgraph(options):
         )
         print(f"Generating {options['graph_attr']} @ {cur_ref}", file=sys.stderr)
 
+    overrides = {
+        "target-kinds": options.get("target_kinds"),
+    }
     parameters: List[Any[str, Parameters]] = options.pop("parameters")
     if not parameters:
-        overrides = {
-            "target-kinds": options.get("target_kinds"),
-        }
         parameters = [
             parameters_loader(None, strict=False, overrides=overrides)
         ]  # will use default values
+
+        # This is the default behaviour anyway, so no need to re-compute.
+        options["force_local_files_changed"] = False
+
+    elif options["force_local_files_changed"]:
+        overrides["files-changed"] = sorted(get_locally_changed_files(GECKO))
 
     for param in parameters[:]:
         if isinstance(param, str) and os.path.isdir(param):
@@ -434,7 +454,7 @@ def show_taskgraph(options):
         # to setup its `mach` based logging.
         setup_logging()
 
-    generate_taskgraph(options, parameters, logdir)
+    generate_taskgraph(options, parameters, overrides, logdir)
 
     if options["diff"]:
         assert diffdir is not None
@@ -464,7 +484,7 @@ def show_taskgraph(options):
                 diffdir, f"{options['graph_attr']}_{base_ref}"
             )
             print(f"Generating {options['graph_attr']} @ {base_ref}", file=sys.stderr)
-            generate_taskgraph(options, parameters, logdir)
+            generate_taskgraph(options, parameters, overrides, logdir)
         finally:
             repo.update(cur_ref)
 
