@@ -1402,7 +1402,7 @@ nsresult HttpBaseChannel::DoApplyContentConversions(
 // channels cannot effectively be used in two contexts (specifically this one
 // and a peek context for sniffing)
 //
-class InterceptFailedOnStop : public nsIStreamListener {
+class InterceptFailedOnStop : public nsIThreadRetargetableStreamListener {
   virtual ~InterceptFailedOnStop() = default;
   nsCOMPtr<nsIStreamListener> mNext;
   HttpBaseChannel* mChannel;
@@ -1411,6 +1411,7 @@ class InterceptFailedOnStop : public nsIStreamListener {
   InterceptFailedOnStop(nsIStreamListener* arg, HttpBaseChannel* chan)
       : mNext(arg), mChannel(chan) {}
   NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
 
   NS_IMETHOD OnStartRequest(nsIRequest* aRequest) override {
     return mNext->OnStartRequest(aRequest);
@@ -1432,7 +1433,37 @@ class InterceptFailedOnStop : public nsIStreamListener {
   }
 };
 
-NS_IMPL_ISUPPORTS(InterceptFailedOnStop, nsIStreamListener, nsIRequestObserver)
+NS_IMPL_ADDREF(InterceptFailedOnStop)
+NS_IMPL_RELEASE(InterceptFailedOnStop)
+
+NS_INTERFACE_MAP_BEGIN(InterceptFailedOnStop)
+  NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
+  NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIThreadRetargetableStreamListener)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIRequestObserver)
+NS_INTERFACE_MAP_END
+
+NS_IMETHODIMP
+InterceptFailedOnStop::CheckListenerChain() {
+  nsCOMPtr<nsIThreadRetargetableStreamListener> listener =
+      do_QueryInterface(mNext);
+  if (!listener) {
+    return NS_ERROR_NO_INTERFACE;
+  }
+
+  return listener->CheckListenerChain();
+}
+
+NS_IMETHODIMP
+InterceptFailedOnStop::OnDataFinished(nsresult aStatus) {
+  nsCOMPtr<nsIThreadRetargetableStreamListener> listener =
+      do_QueryInterface(mNext);
+  if (listener) {
+    return listener->OnDataFinished(aStatus);
+  }
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
