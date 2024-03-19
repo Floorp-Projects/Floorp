@@ -12,8 +12,8 @@ XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.toml"]
 BROWSER_CHROME_MANIFESTS += ["test/browser/browser.toml"]
 
 XPIDL_SOURCES += [
-    "nsIFormAutoComplete.idl",
     "nsIFormFillController.idl",
+    "nsIFormHistoryAutoComplete.idl",
 ]
 
 XPIDL_MODULE = "satchel"
@@ -28,8 +28,8 @@ LOCAL_INCLUDES += [
 
 EXTRA_JS_MODULES += [
     "FillHelpers.sys.mjs",
-    "FormAutoComplete.sys.mjs",
     "FormHistory.sys.mjs",
+    "FormHistoryAutoComplete.sys.mjs",
     "FormHistoryStartup.sys.mjs",
     "FormScenarios.sys.mjs",
     "integrations/FirefoxRelay.sys.mjs",
