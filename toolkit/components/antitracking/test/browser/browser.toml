@@ -1,5 +1,9 @@
 [DEFAULT]
-skip-if = ["os == 'linux' && (asan || tsan)"] # bug 1662229 - task exception
+skip-if = [
+  "os == 'linux' && os_version == '18.04' && asan", # bug 1662229 - task exception
+  "os == 'linux' && os_version == '18.04' && tsan", # bug 1662229 - task exception
+  "debug", # bug 1884982 - takes 20+ minutes to run on debug
+]
 prefs = [
   "dom.storage_access.prompt.testing=true", # Disable the Storage Access API prompts for all of the tests in this directory
   "dom.storage_access.prompt.testing.allow=true",
