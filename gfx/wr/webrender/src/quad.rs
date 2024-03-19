@@ -577,6 +577,7 @@ pub fn add_to_batch<F>(
     mut f: F,
 ) where F: FnMut(BatchKey, PrimitiveInstanceData) {
 
+    // See the corresponfing #defines in ps_quad.glsl
     #[repr(u8)]
     enum PartIndex {
         Center = 0,
@@ -587,6 +588,7 @@ pub fn add_to_batch<F>(
         All = 5,
     }
 
+    // See QuadHeader in ps_quad.glsl
     let mut writer = gpu_buffer_builder.i32.write_blocks(1);
     writer.push_one([
         transform_id.0 as i32,
@@ -628,86 +630,68 @@ pub fn add_to_batch<F>(
         textures,
     };
 
-    let edge_batch_key = BatchKey {
+    let aa_batch_key = BatchKey {
         blend_mode: BlendMode::PremultipliedAlpha,
         kind: BatchKind::Quad(kind),
         textures,
     };
 
-    if edge_flags.is_empty() {
-        let instance = QuadInstance {
-            render_task_address,
-            prim_address_i,
-            prim_address_f,
-            z_id,
-            transform_id,
-            edge_flags: edge_flags_bits,
-            quad_flags: quad_flags.bits(),
-            part_index: PartIndex::All as u8,
-            segment_index,
-        };
+    let mut instance = QuadInstance {
+        render_task_address,
+        prim_address_i,
+        prim_address_f,
+        z_id,
+        transform_id,
+        edge_flags: edge_flags_bits,
+        quad_flags: quad_flags.bits(),
+        part_index: PartIndex::All as u8,
+        segment_index,
+    };
 
+    if edge_flags.is_empty() {
+        // No antialisaing.
         f(prim_batch_key, instance.into());
     } else if quad_flags.contains(QuadFlags::USE_AA_SEGMENTS) {
-        let main_instance = QuadInstance {
-            render_task_address,
-            prim_address_i,
-            prim_address_f,
-            z_id,
-            transform_id,
-            edge_flags: edge_flags_bits,
-            quad_flags: quad_flags.bits(),
-            part_index: PartIndex::Center as u8,
-            segment_index,
-        };
-
+        // Add instances for the antialisaing. This gives the center part
+        // an opportunity to stay in the opaque pass.
         if edge_flags.contains(EdgeAaSegmentMask::LEFT) {
             let instance = QuadInstance {
                 part_index: PartIndex::Left as u8,
-                ..main_instance
+                ..instance
             };
-            f(edge_batch_key, instance.into());
+            f(aa_batch_key, instance.into());
         }
         if edge_flags.contains(EdgeAaSegmentMask::RIGHT) {
             let instance = QuadInstance {
                 part_index: PartIndex::Top as u8,
-                ..main_instance
+                ..instance
             };
-            f(edge_batch_key, instance.into());
+            f(aa_batch_key, instance.into());
         }
         if edge_flags.contains(EdgeAaSegmentMask::TOP) {
             let instance = QuadInstance {
                 part_index: PartIndex::Right as u8,
-                ..main_instance
+                ..instance
             };
-            f(edge_batch_key, instance.into());
+            f(aa_batch_key, instance.into());
         }
         if edge_flags.contains(EdgeAaSegmentMask::BOTTOM) {
             let instance = QuadInstance {
                 part_index: PartIndex::Bottom as u8,
-                ..main_instance
+                ..instance
             };
-            f(edge_batch_key, instance.into());
+            f(aa_batch_key, instance.into());
         }
 
-        let instance = QuadInstance {
-            ..main_instance
-        };
-        f(prim_batch_key, instance.into());
-    } else {
-        let instance = QuadInstance {
-            render_task_address,
-            prim_address_i,
-            prim_address_f,
-            z_id,
-            transform_id,
-            edge_flags: edge_flags_bits,
-            quad_flags: quad_flags.bits(),
-            part_index: PartIndex::All as u8,
-            segment_index,
+        instance = QuadInstance {
+            part_index: PartIndex::Center as u8,
+            ..instance
         };
 
-        f(edge_batch_key, instance.into());
+        f(prim_batch_key, instance.into());
+    } else {
+        // Render the anti-aliased quad with a single primitive.
+        f(aa_batch_key, instance.into());
     }
 }
 
