@@ -15,10 +15,10 @@ flat varying highp vec4 vClipCenter_Radius_TL;
 flat varying highp vec4 vClipCenter_Radius_TR;
 flat varying highp vec4 vClipCenter_Radius_BR;
 flat varying highp vec4 vClipCenter_Radius_BL;
-flat varying highp vec3 vClipPlane_TL;
-flat varying highp vec3 vClipPlane_TR;
-flat varying highp vec3 vClipPlane_BL;
-flat varying highp vec3 vClipPlane_BR;
+// We pack 4 vec3 clip planes into 3 vec4 to save a varying slot.
+flat varying highp vec4 vClipPlane_A;
+flat varying highp vec4 vClipPlane_B;
+flat varying highp vec4 vClipPlane_C;
 #endif
 flat varying highp vec2 vClipMode;
 
@@ -120,14 +120,18 @@ void pattern_vertex(PrimitiveInfo prim_info) {
     vec2 n_tr = vec2(r_tr.y, -r_tr.x);
     vec2 n_br = r_br.yx;
     vec2 n_bl = vec2(-r_bl.y, r_bl.x);
-    vClipPlane_TL = vec3(n_tl,
-                         dot(n_tl, vec2(clip.rect.p0.x, clip.rect.p0.y + r_tl.y)));
-    vClipPlane_TR = vec3(n_tr,
-                         dot(n_tr, vec2(clip.rect.p1.x - r_tr.x, clip.rect.p0.y)));
-    vClipPlane_BR = vec3(n_br,
-                         dot(n_br, vec2(clip.rect.p1.x, clip.rect.p1.y - r_br.y)));
-    vClipPlane_BL = vec3(n_bl,
-                         dot(n_bl, vec2(clip.rect.p0.x + r_bl.x, clip.rect.p1.y)));
+    vec3 tl = vec3(n_tl,
+                   dot(n_tl, vec2(clip.rect.p0.x, clip.rect.p0.y + r_tl.y)));
+    vec3 tr = vec3(n_tr,
+                   dot(n_tr, vec2(clip.rect.p1.x - r_tr.x, clip.rect.p0.y)));
+    vec3 br = vec3(n_br,
+                   dot(n_br, vec2(clip.rect.p1.x, clip.rect.p1.y - r_br.y)));
+    vec3 bl = vec3(n_bl,
+                   dot(n_bl, vec2(clip.rect.p0.x + r_bl.x, clip.rect.p1.y)));
+
+    vClipPlane_A = vec4(tl.x, tl.y, tl.z, tr.x);
+    vClipPlane_B = vec4(tr.y, tr.z, br.x, br.y);
+    vClipPlane_C = vec4(br.z, bl.x, bl.y, bl.z);
 #endif
 
 }
@@ -154,15 +158,20 @@ vec4 pattern_fragment(vec4 _base_color) {
 #ifdef WR_FEATURE_FAST_PATH
     float dist = sd_rounded_box(clip_local_pos, v_clip_params.xy, v_clip_params.z);
 #else
+    vec3 plane_tl = vec3(vClipPlane_A.x, vClipPlane_A.y, vClipPlane_A.z);
+    vec3 plane_tr = vec3(vClipPlane_A.w, vClipPlane_B.x, vClipPlane_B.y);
+    vec3 plane_br = vec3(vClipPlane_B.z, vClipPlane_B.w, vClipPlane_C.x);
+    vec3 plane_bl = vec3(vClipPlane_C.y, vClipPlane_C.z, vClipPlane_C.w);
+
     float dist = distance_to_rounded_rect(
         clip_local_pos,
-        vClipPlane_TL,
+        plane_tl,
         vClipCenter_Radius_TL,
-        vClipPlane_TR,
+        plane_tr,
         vClipCenter_Radius_TR,
-        vClipPlane_BR,
+        plane_br,
         vClipCenter_Radius_BR,
-        vClipPlane_BL,
+        plane_bl,
         vClipCenter_Radius_BL,
         vTransformBounds
     );
