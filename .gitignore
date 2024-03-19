@@ -221,10 +221,10 @@ mobile/android/**/bin
 mobile/android/**/generated
 
 # Android local.properties
-mobile/android/**\/local.properties
+mobile/android/**/local.properties
 
 # Android - Web extensions: manifest.json files are generated
-mobile/android/**\/manifest.json
+mobile/android/**/manifest.json
 
 # XCode project cruft
 /*.xcodeproj/
