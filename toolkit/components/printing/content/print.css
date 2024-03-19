@@ -51,8 +51,7 @@ body[loading] #print {
 }
 
 hr {
-  margin-inline: 8px;
-  margin-block: 0;
+  margin: 0 8px;
 }
 
 .header-container {
@@ -91,6 +90,7 @@ form#print {
 
 select {
   margin: 0;
+  width: 100%;
 }
 
 select:not([size], [multiple])[iconic] {
@@ -105,7 +105,6 @@ select:not([size], [multiple])[iconic]:dir(rtl) {
 
 #printer-picker {
   background-image: url("chrome://global/skin/icons/arrow-down-12.svg"), url("chrome://global/skin/icons/print.svg");
-  width: 100%;
 }
 
 #printer-picker[output="pdf"] {
@@ -156,6 +155,7 @@ input[type="text"] {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: var(--space-xsmall);
 }
 
 #open-dialog-link::after {
@@ -194,8 +194,9 @@ input[type="text"] {
 }
 
 #custom-range {
-  margin-top: 4px;
-  margin-inline: 0;
+  margin: 0;
+  margin-top: var(--space-xsmall);
+  width: 100%;
 }
 
 .vertical-margins,
@@ -213,7 +214,7 @@ input[type="text"] {
   /* FIXME: Important is needed to override the photon-number styles below,
    * probably should be refactored */
   width: 100% !important;
-  box-sizing: border-box;
+  box-sizing: border-box !important;
 }
 
 .margin-descriptor {
@@ -245,6 +246,8 @@ input[type="text"] {
 }
 
 input[type="number"].photon-number {
+  box-sizing: content-box;
+  min-height: unset;
   padding: 0;
   padding-inline-start: 8px;
   margin: 0;
