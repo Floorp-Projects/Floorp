@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * http://dev.w3.org/2011/webrtc/editor/webrtc.html#idl-def-RTCIceCandidate
+ * https://w3c.github.io/webrtc-pc/#rtcicecandidate-interface
  */
 
 dictionary RTCIceCandidateInit {
@@ -14,16 +14,51 @@ dictionary RTCIceCandidateInit {
   DOMString? usernameFragment = null;
 };
 
+enum RTCIceComponent {
+  "rtp",
+  "rtcp"
+};
+
+enum RTCIceProtocol {
+  "udp",
+  "tcp"
+};
+
+enum RTCIceCandidateType {
+  "host",
+  "srflx",
+  "prflx",
+  "relay"
+};
+
+enum RTCIceTcpCandidateType {
+  "active",
+  "passive",
+  "so"
+};
+
 [Pref="media.peerconnection.enabled",
  JSImplementation="@mozilla.org/dom/rtcicecandidate;1",
  Exposed=Window]
 interface RTCIceCandidate {
   [Throws]
   constructor(optional RTCIceCandidateInit candidateInitDict = {});
-
-  attribute DOMString       candidate;
-  attribute DOMString?      sdpMid;
-  attribute unsigned short? sdpMLineIndex;
-  attribute DOMString? usernameFragment;
-  [Default] object toJSON();
+  readonly attribute DOMString candidate;
+  readonly attribute DOMString? sdpMid;
+  readonly attribute unsigned short? sdpMLineIndex;
+  readonly attribute DOMString? foundation;
+  readonly attribute RTCIceComponent? component;
+  readonly attribute unsigned long? priority;
+  readonly attribute DOMString? address;
+  readonly attribute RTCIceProtocol? protocol;
+  readonly attribute unsigned short? port;
+  readonly attribute RTCIceCandidateType? type;
+  readonly attribute RTCIceTcpCandidateType? tcpType;
+  readonly attribute DOMString? relatedAddress;
+  readonly attribute unsigned short? relatedPort;
+  readonly attribute DOMString? usernameFragment;
+  // TODO: add remaining members relayProtocol and url (bug 1886013)
+  // readonly attribute RTCIceServerTransportProtocol? relayProtocol;
+  // readonly attribute DOMString? url;
+  RTCIceCandidateInit toJSON();
 };

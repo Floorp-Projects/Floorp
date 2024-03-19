@@ -200,13 +200,6 @@ dictionary RTCIceCandidatePairStats : RTCStats {
   unsigned long componentId; // moz
 };
 
-enum RTCIceCandidateType {
-  "host",
-  "srflx",
-  "prflx",
-  "relay"
-};
-
 dictionary RTCIceCandidateStats : RTCStats {
   DOMString address;
   long port;
