@@ -133,11 +133,6 @@ NS_IMETHODIMP nsDeflateConverter::OnDataAvailable(nsIRequest* aRequest,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDeflateConverter::MaybeRetarget(nsIRequest* request) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_IMETHODIMP nsDeflateConverter::OnStartRequest(nsIRequest* aRequest) {
   if (!mListener) return NS_ERROR_NOT_INITIALIZED;
 

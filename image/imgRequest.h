@@ -283,8 +283,6 @@ class imgRequest final : public nsIThreadRetargetableStreamListener,
   bool mIsCrossSiteNoCORSRequest;
 
   bool mShouldReportRenderTimeForLCP;
-  // SVGs can't be OffMainThread for example
-  bool mOffMainThreadData = false;
 
   mutable mozilla::Mutex mMutex;
 

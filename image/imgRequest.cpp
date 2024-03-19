@@ -711,17 +711,16 @@ imgRequest::OnStartRequest(nsIRequest* aRequest) {
     nsAutoCString mimeType;
     nsresult rv = channel->GetContentType(mimeType);
     if (NS_SUCCEEDED(rv) && !mimeType.EqualsLiteral(IMAGE_SVG_XML)) {
-      mOffMainThreadData = true;
       // Retarget OnDataAvailable to the DecodePool's IO thread.
       nsCOMPtr<nsISerialEventTarget> target =
           DecodePool::Singleton()->GetIOEventTarget();
       rv = retargetable->RetargetDeliveryTo(target);
-      MOZ_LOG(gImgLog, LogLevel::Warning,
-              ("[this=%p] imgRequest::OnStartRequest -- "
-               "RetargetDeliveryTo rv %" PRIu32 "=%s\n",
-               this, static_cast<uint32_t>(rv),
-               NS_SUCCEEDED(rv) ? "succeeded" : "failed"));
     }
+    MOZ_LOG(gImgLog, LogLevel::Warning,
+            ("[this=%p] imgRequest::OnStartRequest -- "
+             "RetargetDeliveryTo rv %" PRIu32 "=%s\n",
+             this, static_cast<uint32_t>(rv),
+             NS_SUCCEEDED(rv) ? "succeeded" : "failed"));
   }
 
   return NS_OK;
@@ -835,7 +834,9 @@ static nsresult sniff_mimetype_callback(nsIInputStream* in, void* closure,
 /** nsThreadRetargetableStreamListener methods **/
 NS_IMETHODIMP
 imgRequest::CheckListenerChain() {
-  return mOffMainThreadData ? NS_OK : NS_ERROR_NO_INTERFACE;
+  // TODO Might need more checking here.
+  NS_ASSERTION(NS_IsMainThread(), "Should be on the main thread!");
+  return NS_OK;
 }
 
 NS_IMETHODIMP

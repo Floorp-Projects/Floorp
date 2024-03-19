@@ -3643,7 +3643,7 @@
     "releaseChannelCollection": "opt-out",
     "description": "Recorded once for each HTTP 401 response. The value records the type of authentication and the TLS-enabled status. (0=basic/clear, 1=basic/tls, 2=digest/clear, 3=digest/tls, 4=ntlm/clear, 5=ntlm/tls, 6=negotiate/clear, 7=negotiate/tls)"
   },
-  "HTTP_CHILD_OMT_STATS_2": {
+  "HTTP_CHILD_OMT_STATS": {
     "record_in_processes": ["content"],
     "products": ["firefox", "fennec"],
     "alert_emails": ["necko@mozilla.com"],
@@ -3657,8 +3657,7 @@
       "successMainThread",
       "failListener",
       "failListenerChain",
-      "notRequested",
-      "successOnlyDecomp"
+      "notRequested"
     ]
   },
   "TLS_EARLY_DATA_NEGOTIATED": {
