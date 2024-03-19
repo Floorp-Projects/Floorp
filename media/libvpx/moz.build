@@ -125,6 +125,10 @@ for f in SOURCES:
             SOURCES[f].flags += ['-march=armv8.2-a+dotprod']
         if 'neon_i8mm.c' in f:
             SOURCES[f].flags += ['-march=armv8.2-a+dotprod+i8mm']
+        if 'sve.c' in f:
+            SOURCES[f].flags += ['-march=armv8.2-a+dotprod+i8mm+sve']
+        if 'sve2.c' in f:
+            SOURCES[f].flags += ['-march=armv9-a+sve2']
 
 # Suppress warnings in third-party code.
 CFLAGS += [
