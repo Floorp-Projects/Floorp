@@ -52,7 +52,7 @@ window.addEventListener("message", async function listener(event) {
       result.framee_crossOrigin_userAgentHTTPHeader = content;
     });
 
-    Promise.all([one, two]).then((values) => {
+    Promise.all([one, two]).then(() => {
       parent.postMessage(result, "*")
     });
   }

@@ -24,7 +24,7 @@ this.blobConverters = (function () {
   };
 
   exports.blobToArray = function (blob) {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       const reader = new FileReader();
       reader.addEventListener("loadend", function () {
         resolve(reader.result);
@@ -34,7 +34,7 @@ this.blobConverters = (function () {
   };
 
   exports.blobToDataUrl = function (blob) {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       const reader = new FileReader();
       reader.addEventListener("loadend", function () {
         resolve(reader.result);

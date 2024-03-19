@@ -12,10 +12,10 @@ Services.scriptloader.loadSubScript(
 function MockShellService() {}
 MockShellService.prototype = {
   QueryInterface: ChromeUtils.generateQI(["nsIShellService"]),
-  isDefaultBrowser(aStartupCheck, aForAllTypes) {
+  isDefaultBrowser() {
     return false;
   },
-  setDefaultBrowser(aForAllUsers) {
+  setDefaultBrowser() {
     setDefaultBrowserCalled = true;
   },
   shouldCheckDefaultBrowser: false,
@@ -26,7 +26,7 @@ MockShellService.prototype = {
   BACKGROUND_FILL: 4,
   BACKGROUND_FIT: 5,
   BACKGROUND_SPAN: 6,
-  setDesktopBackground(aElement, aPosition) {},
+  setDesktopBackground() {},
   desktopBackgroundColor: 0,
 };
 

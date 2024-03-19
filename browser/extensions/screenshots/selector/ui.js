@@ -85,7 +85,7 @@ this.ui = (function () {
     document: null,
     window: null,
     display(installHandlerOnDocument) {
-      return new Promise((resolve, reject) => {
+      return new Promise(resolve => {
         if (!this.element) {
           this.element = initializeIframe();
           this.element.id = "firefox-screenshots-selection-iframe";
@@ -240,7 +240,7 @@ this.ui = (function () {
     document: null,
     window: null,
     display(installHandlerOnDocument, standardOverlayCallbacks) {
-      return new Promise((resolve, reject) => {
+      return new Promise(resolve => {
         if (!this.element) {
           this.element = initializeIframe();
           this.element.id = "firefox-screenshots-preselection-iframe";
@@ -381,7 +381,7 @@ this.ui = (function () {
     document: null,
     window: null,
     display(installHandlerOnDocument, standardOverlayCallbacks) {
-      return new Promise((resolve, reject) => {
+      return new Promise(resolve => {
         if (!this.element) {
           this.element = initializeIframe();
           this.element.id = "firefox-screenshots-preview-iframe";

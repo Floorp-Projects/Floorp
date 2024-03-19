@@ -244,7 +244,7 @@ add_task(async function test_framework_detection() {
   );
   let tab2 = await clickToReportAndAwaitReportTabLoad();
 
-  await SpecialPowers.spawn(tab2.linkedBrowser, [], async function (args) {
+  await SpecialPowers.spawn(tab2.linkedBrowser, [], async function () {
     let doc = content.document;
     let detailsParam = doc.getElementById("details").innerText;
     const details = JSON.parse(detailsParam);
@@ -269,7 +269,7 @@ add_task(async function test_fastclick_detection() {
   );
   let tab2 = await clickToReportAndAwaitReportTabLoad();
 
-  await SpecialPowers.spawn(tab2.linkedBrowser, [], async function (args) {
+  await SpecialPowers.spawn(tab2.linkedBrowser, [], async function () {
     let doc = content.document;
     let detailsParam = doc.getElementById("details").innerText;
     const details = JSON.parse(detailsParam);
@@ -292,7 +292,7 @@ add_task(async function test_framework_label() {
   );
   let tab2 = await clickToReportAndAwaitReportTabLoad();
 
-  await SpecialPowers.spawn(tab2.linkedBrowser, [], async function (args) {
+  await SpecialPowers.spawn(tab2.linkedBrowser, [], async function () {
     let doc = content.document;
     let labelParam = doc.getElementById("label").innerText;
     const label = JSON.parse(labelParam);

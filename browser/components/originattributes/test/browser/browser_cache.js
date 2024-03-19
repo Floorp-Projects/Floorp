@@ -56,7 +56,7 @@ function cacheDataForContext(loadContextInfo) {
   return new Promise(resolve => {
     let cacheEntries = [];
     let cacheVisitor = {
-      onCacheStorageInfo(num, consumption) {},
+      onCacheStorageInfo() {},
       onCacheEntryInfo(uri, idEnhance) {
         cacheEntries.push({ uri, idEnhance });
       },
@@ -257,7 +257,7 @@ async function doTest(aBrowser) {
 }
 
 // The check function, which checks the number of cache entries.
-async function doCheck(aShouldIsolate, aInputA, aInputB) {
+async function doCheck(aShouldIsolate) {
   let expectedEntryCount = 1;
   let data = [];
   data = data.concat(

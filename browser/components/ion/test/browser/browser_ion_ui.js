@@ -321,7 +321,7 @@ add_task(async function testBadDefaultAddon() {
       url: "about:ion",
       gBrowser,
     },
-    async function taskFn(browser) {
+    async function taskFn() {
       const beforePref = Services.prefs.getStringPref(PREF_ION_ID, null);
       Assert.strictEqual(
         beforePref,
@@ -402,7 +402,7 @@ add_task(async function testAboutPage() {
       url: "about:ion",
       gBrowser,
     },
-    async function taskFn(browser) {
+    async function taskFn() {
       const beforePref = Services.prefs.getStringPref(PREF_ION_ID, null);
       Assert.strictEqual(
         beforePref,
@@ -694,19 +694,16 @@ add_task(async function testAboutPage() {
 
       // Wait for deletion ping, uninstalls, and UI updates...
       const ionUnenrolled = await new Promise((resolve, reject) => {
-        Services.prefs.addObserver(
-          PREF_ION_ID,
-          function observer(subject, topic, data) {
-            try {
-              const prefValue = Services.prefs.getStringPref(PREF_ION_ID, null);
-              Services.prefs.removeObserver(PREF_ION_ID, observer);
-              resolve(prefValue);
-            } catch (ex) {
-              Services.prefs.removeObserver(PREF_ION_ID, observer);
-              reject(ex);
-            }
+        Services.prefs.addObserver(PREF_ION_ID, function observer() {
+          try {
+            const prefValue = Services.prefs.getStringPref(PREF_ION_ID, null);
+            Services.prefs.removeObserver(PREF_ION_ID, observer);
+            resolve(prefValue);
+          } catch (ex) {
+            Services.prefs.removeObserver(PREF_ION_ID, observer);
+            reject(ex);
           }
-        );
+        });
       });
 
       ok(!ionUnenrolled, "after accepting unenrollment, Ion pref is null.");
@@ -795,7 +792,7 @@ add_task(async function testEnrollmentPings() {
       url: "about:ion",
       gBrowser,
     },
-    async function taskFn(browser) {
+    async function taskFn() {
       const beforePref = Services.prefs.getStringPref(PREF_ION_ID, null);
       Assert.strictEqual(
         beforePref,
@@ -984,7 +981,7 @@ add_task(async function testContentReplacement() {
       url: "about:ion",
       gBrowser,
     },
-    async function taskFn(browser) {
+    async function taskFn() {
       // Check that text was updated from Remote Settings.
       console.log("debug:", content.document.getElementById("title").innerHTML);
       Assert.equal(
@@ -1042,7 +1039,7 @@ add_task(async function testBadContentReplacement() {
       url: "about:ion",
       gBrowser,
     },
-    async function taskFn(browser) {
+    async function taskFn() {
       // Check that text was updated from Remote Settings.
       Assert.equal(
         content.document.getElementById("join-ion-consent").innerHTML,
@@ -1081,7 +1078,7 @@ add_task(async function testLocaleGating() {
       url: "about:ion",
       gBrowser,
     },
-    async function taskFn(browser) {
+    async function taskFn() {
       const localeNotificationBar = content.document.getElementById(
         "locale-notification"
       );
@@ -1107,7 +1104,7 @@ add_task(async function testLocaleGating() {
       url: "about:ion",
       gBrowser,
     },
-    async function taskFn(browser) {
+    async function taskFn() {
       const localeNotificationBar = content.document.getElementById(
         "locale-notification"
       );

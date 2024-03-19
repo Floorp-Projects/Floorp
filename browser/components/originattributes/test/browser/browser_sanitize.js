@@ -20,8 +20,8 @@ function cacheDataForContext(loadContextInfo) {
   return new Promise(resolve => {
     let cachedURIs = [];
     let cacheVisitor = {
-      onCacheStorageInfo(num, consumption) {},
-      onCacheEntryInfo(uri, idEnhance) {
+      onCacheStorageInfo() {},
+      onCacheEntryInfo(uri) {
         cachedURIs.push(uri.asciiSpec);
       },
       onCacheEntryVisitCompleted() {

@@ -131,7 +131,7 @@ async function moreMenuSetup() {
 }
 
 add_task(async function test_close_open_tab() {
-  await withFirefoxView({}, async browser => {
+  await withFirefoxView({}, async () => {
     const [cards, rows] = await moreMenuSetup();
     const firstTab = rows[0];
     const tertiaryButtonEl = firstTab.tertiaryButtonEl;
@@ -321,7 +321,7 @@ add_task(async function test_send_device_submenu() {
     .stub(gSync, "getSendTabTargets")
     .callsFake(() => fxaDevicesWithCommands);
 
-  await withFirefoxView({}, async browser => {
+  await withFirefoxView({}, async () => {
     // TEST_URL1 is our only tab, left over from previous test
     Assert.deepEqual(
       getVisibleTabURLs(),

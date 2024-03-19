@@ -35,7 +35,7 @@ function loadContentWindow(browser, url) {
   }
 
   const principal = Services.scriptSecurityManager.getSystemPrincipal();
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     let oa = E10SUtils.predictOriginAttributes({
       browser,
     });

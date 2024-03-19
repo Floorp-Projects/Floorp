@@ -6,7 +6,7 @@
 add_task(async function test_no_notification_when_pb_autostart() {
   let observedLastPBContext = false;
   let observerExited = {
-    observe(aSubject, aTopic, aData) {
+    observe() {
       observedLastPBContext = true;
     },
   };
@@ -31,7 +31,7 @@ add_task(async function test_no_notification_when_pb_autostart() {
 add_task(async function test_notification_when_about_preferences() {
   let observedLastPBContext = false;
   let observerExited = {
-    observe(aSubject, aTopic, aData) {
+    observe() {
       observedLastPBContext = true;
     },
   };

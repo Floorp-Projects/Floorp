@@ -19,7 +19,7 @@ registerCleanupFunction(() => {
 
 function promiseBrowserStateRestored() {
   return new Promise(resolve => {
-    Services.obs.addObserver(function observer(aSubject, aTopic) {
+    Services.obs.addObserver(function observer() {
       Services.obs.removeObserver(
         observer,
         "sessionstore-browser-state-restored"

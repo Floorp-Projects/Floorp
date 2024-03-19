@@ -12,34 +12,31 @@ add_common_setup();
 requestLongerTimeout(2);
 
 async function testPressingKey(key, tabToMatch, makePromise, followUp) {
-  await BrowserTestUtils.withNewTab(
-    REPORTABLE_PAGE_URL,
-    async function (browser) {
-      for (const menu of [AppMenu(), ProtectionsPanel(), HelpMenu()]) {
-        info(
-          `Opening RBS to test pressing ${key} for ${tabToMatch} on ${menu.menuDescription}`
-        );
-        const rbs = await menu.openReportBrokenSite();
-        const promise = makePromise(rbs);
-        if (tabToMatch) {
-          if (await tabTo(tabToMatch)) {
-            await pressKeyAndAwait(promise, key);
-            followUp && (await followUp(rbs));
-            await rbs.close();
-            ok(true, `was able to activate ${tabToMatch} with keyboard`);
-          } else {
-            await rbs.close();
-            ok(false, `could not tab to ${tabToMatch}`);
-          }
-        } else {
+  await BrowserTestUtils.withNewTab(REPORTABLE_PAGE_URL, async function () {
+    for (const menu of [AppMenu(), ProtectionsPanel(), HelpMenu()]) {
+      info(
+        `Opening RBS to test pressing ${key} for ${tabToMatch} on ${menu.menuDescription}`
+      );
+      const rbs = await menu.openReportBrokenSite();
+      const promise = makePromise(rbs);
+      if (tabToMatch) {
+        if (await tabTo(tabToMatch)) {
           await pressKeyAndAwait(promise, key);
           followUp && (await followUp(rbs));
           await rbs.close();
-          ok(true, `was able to use keyboard`);
+          ok(true, `was able to activate ${tabToMatch} with keyboard`);
+        } else {
+          await rbs.close();
+          ok(false, `could not tab to ${tabToMatch}`);
         }
+      } else {
+        await pressKeyAndAwait(promise, key);
+        followUp && (await followUp(rbs));
+        await rbs.close();
+        ok(true, `was able to use keyboard`);
       }
     }
-  );
+  });
 }
 
 add_task(async function testSendMoreInfo() {
@@ -98,16 +95,13 @@ add_task(async function testESCOnSent() {
 
 add_task(async function testBackButtons() {
   ensureReportBrokenSitePreffedOn();
-  await BrowserTestUtils.withNewTab(
-    REPORTABLE_PAGE_URL,
-    async function (browser) {
-      for (const menu of [AppMenu(), ProtectionsPanel()]) {
-        await menu.openReportBrokenSite();
-        await tabTo("#report-broken-site-popup-mainView .subviewbutton-back");
-        const promise = BrowserTestUtils.waitForEvent(menu.popup, "ViewShown");
-        await pressKeyAndAwait(promise, "KEY_Enter");
-        menu.close();
-      }
+  await BrowserTestUtils.withNewTab(REPORTABLE_PAGE_URL, async function () {
+    for (const menu of [AppMenu(), ProtectionsPanel()]) {
+      await menu.openReportBrokenSite();
+      await tabTo("#report-broken-site-popup-mainView .subviewbutton-back");
+      const promise = BrowserTestUtils.waitForEvent(menu.popup, "ViewShown");
+      await pressKeyAndAwait(promise, "KEY_Enter");
+      menu.close();
     }
-  );
+  });
 });

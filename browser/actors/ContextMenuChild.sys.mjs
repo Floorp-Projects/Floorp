@@ -371,7 +371,7 @@ export class ContextMenuChild extends JSWindowActorChild {
   }
 
   // Returns true if clicked-on link targets a resource that can be saved.
-  _isLinkSaveable(aLink) {
+  _isLinkSaveable() {
     // We don't do the Right Thing for news/snews yet, so turn them off
     // until we do.
     return (
@@ -696,7 +696,7 @@ export class ContextMenuChild extends JSWindowActorChild {
    * - link
    * - linkURI
    */
-  _cleanContext(aEvent) {
+  _cleanContext() {
     const context = this.context;
     const cleanTarget = Object.create(null);
 

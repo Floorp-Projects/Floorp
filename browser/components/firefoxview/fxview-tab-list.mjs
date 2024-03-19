@@ -148,7 +148,7 @@ export default class FxviewTabList extends MozLitElement {
         "timeMsPref",
         "browser.tabs.firefox-view.updateTimeMs",
         NOW_THRESHOLD_MS,
-        (prefName, oldVal, newVal) => {
+        () => {
           this.clearIntervalTimer();
           if (!this.isConnected) {
             return;

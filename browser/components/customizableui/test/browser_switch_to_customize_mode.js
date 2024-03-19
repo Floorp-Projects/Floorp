@@ -18,7 +18,7 @@ add_task(async function () {
   await finishedCustomizing;
 
   let startedCount = 0;
-  let handler = e => startedCount++;
+  let handler = () => startedCount++;
   gNavToolbox.addEventListener("customizationstarting", handler);
   await startCustomizing();
   CustomizableUI.removeWidgetFromArea("stop-reload-button");

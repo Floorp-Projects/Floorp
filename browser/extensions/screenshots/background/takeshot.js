@@ -17,7 +17,7 @@ this.takeshot = (function () {
     }
   );
 
-  communication.register("getZoomFactor", sender => {
+  communication.register("getZoomFactor", () => {
     return getZoomFactor();
   });
 
@@ -54,7 +54,7 @@ this.takeshot = (function () {
       browser.tabs.captureTab(null, options).then(dataUrl => {
         const image = new Image();
         image.src = dataUrl;
-        return new Promise((resolve, reject) => {
+        return new Promise(resolve => {
           image.onload = catcher.watchFunction(() => {
             const xScale = devicePixelRatio;
             const yScale = devicePixelRatio;

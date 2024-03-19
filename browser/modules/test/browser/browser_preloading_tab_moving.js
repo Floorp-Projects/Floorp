@@ -27,7 +27,7 @@ async function promiseNewTabLoadedInBrowser(browser) {
     info(`Waiting for ${url} to be the location for the browser.`);
     await new Promise(resolve => {
       let progressListener = {
-        onLocationChange(aWebProgress, aRequest, aLocationURI, aFlags) {
+        onLocationChange(aWebProgress, aRequest, aLocationURI) {
           if (!url || aLocationURI.spec == url) {
             browser.removeProgressListener(progressListener);
             resolve();

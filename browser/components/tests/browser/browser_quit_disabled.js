@@ -27,7 +27,7 @@ add_task(async function test_quit_shortcut_disabled() {
 
     let quitRequested = false;
     let observer = {
-      observe(subject, topic, data) {
+      observe(subject, topic) {
         is(topic, "quit-application-requested", "Right observer topic");
         ok(shouldQuit, "Quit shortcut should NOT have worked");
 

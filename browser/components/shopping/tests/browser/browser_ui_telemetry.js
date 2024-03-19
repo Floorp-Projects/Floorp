@@ -259,7 +259,7 @@ add_task(async function test_close_telemetry_recorded() {
     set: [["browser.shopping.experience2023.active", true]],
   });
 
-  await BrowserTestUtils.withNewTab(PRODUCT_PAGE, async function (browser) {
+  await BrowserTestUtils.withNewTab(PRODUCT_PAGE, async function () {
     let shoppingButton = document.getElementById("shopping-sidebar-button");
     shoppingButton.click();
   });

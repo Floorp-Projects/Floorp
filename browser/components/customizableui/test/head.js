@@ -267,7 +267,7 @@ function openAndLoadWindow(aOptions, aWaitForDelayedStartup = false) {
   return new Promise(resolve => {
     let win = OpenBrowserWindow(aOptions);
     if (aWaitForDelayedStartup) {
-      Services.obs.addObserver(function onDS(aSubject, aTopic, aData) {
+      Services.obs.addObserver(function onDS(aSubject) {
         if (aSubject != win) {
           return;
         }
@@ -309,7 +309,7 @@ function promisePanelElementShown(win, aPanel) {
     let timeoutId = win.setTimeout(() => {
       reject("Panel did not show within 20 seconds.");
     }, 20000);
-    function onPanelOpen(e) {
+    function onPanelOpen() {
       aPanel.removeEventListener("popupshown", onPanelOpen);
       win.clearTimeout(timeoutId);
       resolve();
@@ -328,7 +328,7 @@ function promisePanelElementHidden(win, aPanel) {
     let timeoutId = win.setTimeout(() => {
       reject("Panel did not hide within 20 seconds.");
     }, 20000);
-    function onPanelClose(e) {
+    function onPanelClose() {
       aPanel.removeEventListener("popuphidden", onPanelClose);
       win.clearTimeout(timeoutId);
       executeSoon(resolve);
@@ -352,7 +352,7 @@ function subviewShown(aSubview) {
     let timeoutId = win.setTimeout(() => {
       reject("Subview (" + aSubview.id + ") did not show within 20 seconds.");
     }, 20000);
-    function onViewShown(e) {
+    function onViewShown() {
       aSubview.removeEventListener("ViewShown", onViewShown);
       win.clearTimeout(timeoutId);
       resolve();
@@ -367,7 +367,7 @@ function subviewHidden(aSubview) {
     let timeoutId = win.setTimeout(() => {
       reject("Subview (" + aSubview.id + ") did not hide within 20 seconds.");
     }, 20000);
-    function onViewHiding(e) {
+    function onViewHiding() {
       aSubview.removeEventListener("ViewHiding", onViewHiding);
       win.clearTimeout(timeoutId);
       resolve();
@@ -406,7 +406,7 @@ function promiseTabLoadEvent(aTab, aURL) {
  * @return {Promise} resolved when the requisite mutation shows up.
  */
 function promiseAttributeMutation(aNode, aAttribute, aFilterFn) {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     info("waiting for mutation of attribute '" + aAttribute + "'.");
     let obs = new MutationObserver(mutations => {
       for (let mut of mutations) {

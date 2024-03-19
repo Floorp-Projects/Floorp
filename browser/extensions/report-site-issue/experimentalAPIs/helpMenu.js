@@ -19,7 +19,7 @@ this.helpMenu = class extends ExtensionAPI {
           context,
           name: "helpMenu",
           register: fire => {
-            let observer = (subject, topic, data) => {
+            let observer = subject => {
               let nativeTab = subject.wrappedJSObject;
               let tab = tabManager.convert(nativeTab);
               fire.async(tab);

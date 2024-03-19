@@ -237,7 +237,7 @@ async function testPageBlockedByPolicy(page, policyJSON) {
     async browser => {
       BrowserTestUtils.startLoadingURIString(browser, page);
       await BrowserTestUtils.browserLoaded(browser, false, page, true);
-      await SpecialPowers.spawn(browser, [page], async function (innerPage) {
+      await SpecialPowers.spawn(browser, [page], async function () {
         ok(
           content.document.documentURI.startsWith(
             "about:neterror?e=blockedByPolicy"

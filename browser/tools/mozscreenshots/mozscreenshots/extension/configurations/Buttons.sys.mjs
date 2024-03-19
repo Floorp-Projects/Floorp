@@ -5,7 +5,7 @@
 import { CustomizableUI } from "resource:///modules/CustomizableUI.sys.mjs";
 
 export var Buttons = {
-  init(libDir) {
+  init() {
     createWidget();
   },
 

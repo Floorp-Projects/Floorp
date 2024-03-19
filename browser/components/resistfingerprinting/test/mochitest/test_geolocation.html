@@ -30,7 +30,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1372069
 
   function doTest_getCurrentPosition() {
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      () => {
         ok(true, "Success callback is expected to be called");
         doTest_watchPosition();
       },
@@ -43,7 +43,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1372069
 
   function doTest_watchPosition() {
     let wid = navigator.geolocation.watchPosition(
-      (position) => {
+      () => {
         ok(true, "Success callback is expected to be called");
         navigator.geolocation.clearWatch(wid);
         SimpleTest.finish();

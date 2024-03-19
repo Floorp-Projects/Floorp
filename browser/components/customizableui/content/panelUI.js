@@ -568,7 +568,7 @@ const PanelUI = {
     }
   },
 
-  onWidgetAfterDOMChange(aNode, aNextNode, aContainer, aWasRemoval) {
+  onWidgetAfterDOMChange(aNode, aNextNode, aContainer) {
     if (aContainer == this.overflowFixedList) {
       this.updateOverflowStatus();
     }
@@ -601,7 +601,7 @@ const PanelUI = {
     }
   },
 
-  _onHelpViewShow(aEvent) {
+  _onHelpViewShow() {
     // Call global menu setup function
     buildHelpMenu();
 

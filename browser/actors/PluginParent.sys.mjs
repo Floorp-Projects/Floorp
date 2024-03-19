@@ -19,7 +19,7 @@ ChromeUtils.defineLazyGetter(lazy, "gNavigatorBundle", function () {
 export const PluginManager = {
   gmpCrashes: new Map(),
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     switch (topic) {
       case "gmp-plugin-crash":
         this._registerGMPCrash(subject);

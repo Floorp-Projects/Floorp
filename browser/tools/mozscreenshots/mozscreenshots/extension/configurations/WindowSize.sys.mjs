@@ -6,7 +6,7 @@ import { setTimeout } from "resource://gre/modules/Timer.sys.mjs";
 import { BrowserTestUtils } from "resource://testing-common/BrowserTestUtils.sys.mjs";
 
 export var WindowSize = {
-  init(libDir) {
+  init() {
     Services.prefs.setBoolPref("browser.fullscreen.autohide", false);
   },
 
@@ -20,7 +20,7 @@ export var WindowSize = {
 
         // Wait for the Lion fullscreen transition to end as there doesn't seem to be an event
         // and trying to maximize while still leaving fullscreen doesn't work.
-        await new Promise((resolve, reject) => {
+        await new Promise(resolve => {
           setTimeout(function waitToLeaveFS() {
             browserWindow.maximize();
             resolve();
@@ -36,7 +36,7 @@ export var WindowSize = {
           Services.wm.getMostRecentWindow("navigator:browser");
         await toggleFullScreen(browserWindow, false);
         browserWindow.restore();
-        await new Promise((resolve, reject) => {
+        await new Promise(resolve => {
           setTimeout(resolve, 5000);
         });
       },
@@ -49,7 +49,7 @@ export var WindowSize = {
           Services.wm.getMostRecentWindow("navigator:browser");
         await toggleFullScreen(browserWindow, true);
         // OS X Lion fullscreen transition takes a while
-        await new Promise((resolve, reject) => {
+        await new Promise(resolve => {
           setTimeout(resolve, 5000);
         });
       },

@@ -2341,7 +2341,7 @@ BrowserGlue.prototype = {
       _badgeIcon();
     }
 
-    lazy.RemoteSettings(STUDY_ADDON_COLLECTION_KEY).on("sync", async event => {
+    lazy.RemoteSettings(STUDY_ADDON_COLLECTION_KEY).on("sync", async () => {
       Services.prefs.setBoolPref(PREF_ION_NEW_STUDIES_AVAILABLE, true);
     });
 
@@ -2436,7 +2436,7 @@ BrowserGlue.prototype = {
     lazy.Sanitizer.onStartup();
     this._maybeShowRestoreSessionInfoBar();
     this._scheduleStartupIdleTasks();
-    this._lateTasksIdleObserver = (idleService, topic, data) => {
+    this._lateTasksIdleObserver = (idleService, topic) => {
       if (topic == "idle") {
         idleService.removeIdleObserver(
           this._lateTasksIdleObserver,
@@ -3699,7 +3699,7 @@ BrowserGlue.prototype = {
       "account-connection-connected",
     ]);
 
-    let clickCallback = (subject, topic, data) => {
+    let clickCallback = (subject, topic) => {
       if (topic != "alertclickcallback") {
         return;
       }
@@ -4712,7 +4712,7 @@ BrowserGlue.prototype = {
       }
       const title = await lazy.accountsL10n.formatValue(titleL10nId);
 
-      const clickCallback = (obsSubject, obsTopic, obsData) => {
+      const clickCallback = (obsSubject, obsTopic) => {
         if (obsTopic == "alertclickcallback") {
           win.gBrowser.selectedTab = firstTab;
         }
@@ -4751,7 +4751,7 @@ BrowserGlue.prototype = {
       tab = win.gBrowser.addWebTab(url);
     }
     tab.attention = true;
-    let clickCallback = (subject, topic, data) => {
+    let clickCallback = (subject, topic) => {
       if (topic != "alertclickcallback") {
         return;
       }
@@ -4780,7 +4780,7 @@ BrowserGlue.prototype = {
         : { id: "account-connection-connected-with-noname" },
     ]);
 
-    let clickCallback = async (subject, topic, data) => {
+    let clickCallback = async (subject, topic) => {
       if (topic != "alertclickcallback") {
         return;
       }
@@ -4815,7 +4815,7 @@ BrowserGlue.prototype = {
       "account-connection-disconnected",
     ]);
 
-    let clickCallback = (subject, topic, data) => {
+    let clickCallback = (subject, topic) => {
       if (topic != "alertclickcallback") {
         return;
       }
@@ -4870,7 +4870,7 @@ BrowserGlue.prototype = {
     const TOGGLE_ENABLED_PREF =
       "media.videocontrols.picture-in-picture.video-toggle.enabled";
 
-    const observe = (subject, topic, data) => {
+    const observe = (subject, topic) => {
       const enabled = Services.prefs.getBoolPref(TOGGLE_ENABLED_PREF, false);
       Services.telemetry.scalarSet("pictureinpicture.toggle_enabled", enabled);
 
@@ -6475,11 +6475,11 @@ export var AboutHomeStartupCache = {
 
   /** nsICacheEntryOpenCallback **/
 
-  onCacheEntryCheck(aEntry) {
+  onCacheEntryCheck() {
     return Ci.nsICacheEntryOpenCallback.ENTRY_WANTED;
   },
 
-  onCacheEntryAvailable(aEntry, aNew, aResult) {
+  onCacheEntryAvailable(aEntry) {
     this.log.trace("Cache entry is available.");
 
     this._cacheEntry = aEntry;

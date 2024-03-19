@@ -40,14 +40,11 @@ async function testEnabledForValidURLs(menu) {
   ensureReportBrokenSitePreffedOff();
   ensureReportSiteIssuePreffedOn();
 
-  await BrowserTestUtils.withNewTab(
-    REPORTABLE_PAGE_URL,
-    async function (browser) {
-      await menu.open();
-      menu.isReportSiteIssueEnabled();
-      await menu.close();
-    }
-  );
+  await BrowserTestUtils.withNewTab(REPORTABLE_PAGE_URL, async function () {
+    await menu.open();
+    menu.isReportSiteIssueEnabled();
+    await menu.close();
+  });
 }
 
 // AppMenu help sub-menu

@@ -576,7 +576,7 @@ export const PageDataService = new (class PageDataService extends EventEmitter {
    * @param {string} data
    *   The data associated with the notification.
    */
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     switch (topic) {
       case "idle":
         lazy.logConsole.debug("User went idle");

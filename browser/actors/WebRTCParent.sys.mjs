@@ -609,7 +609,7 @@ function prompt(aActor, aBrowser, aRequest) {
     actionL10nIds.push({ id }, { id: "webrtc-action-always-block" });
     secondaryActions = [
       {
-        callback(aState) {
+        callback() {
           aActor.denyRequest(aRequest);
           if (!isNotNowLabelEnabled) {
             lazy.SitePermissions.setForPrincipal(
@@ -623,7 +623,7 @@ function prompt(aActor, aBrowser, aRequest) {
         },
       },
       {
-        callback(aState) {
+        callback() {
           aActor.denyRequest(aRequest);
           lazy.SitePermissions.setForPrincipal(
             principal,
@@ -1029,7 +1029,7 @@ function prompt(aActor, aBrowser, aRequest) {
                 video.srcObject = stream;
                 video.stream = stream;
                 doc.getElementById("webRTC-preview").hidden = false;
-                video.onloadedmetadata = function (e) {
+                video.onloadedmetadata = function () {
                   video.play();
                 };
               },

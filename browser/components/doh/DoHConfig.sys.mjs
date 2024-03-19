@@ -196,7 +196,7 @@ export const DoHConfigController = {
         return;
       }
 
-      Services.obs.addObserver(function obs(sub, top, data) {
+      Services.obs.addObserver(function obs() {
         Services.obs.removeObserver(obs, lazy.Region.REGION_TOPIC);
         updateRegionAndResolve();
       }, lazy.Region.REGION_TOPIC);

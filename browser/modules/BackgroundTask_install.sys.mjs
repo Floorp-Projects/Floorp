@@ -15,7 +15,7 @@
 // it.
 export const backgroundTaskTimeoutSec = 30;
 
-export async function runBackgroundTask(commandLine) {
+export async function runBackgroundTask() {
   console.log("Running BackgroundTask_install.");
 
   console.log("Cleaning up update files.");

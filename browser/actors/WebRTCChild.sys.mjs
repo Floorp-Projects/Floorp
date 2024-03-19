@@ -213,7 +213,7 @@ function getActorForWindow(window) {
   return null;
 }
 
-function handlePCRequest(aSubject, aTopic, aData) {
+function handlePCRequest(aSubject) {
   let { windowID, innerWindowID, callID, isSecure } = aSubject;
   let contentWindow = Services.wm.getOuterWindowWithId(windowID);
   if (!contentWindow.pendingPeerConnectionRequests) {
@@ -235,7 +235,7 @@ function handlePCRequest(aSubject, aTopic, aData) {
   }
 }
 
-function handleGUMStop(aSubject, aTopic, aData) {
+function handleGUMStop(aSubject) {
   let contentWindow = Services.wm.getOuterWindowWithId(aSubject.windowID);
 
   let request = {
@@ -250,7 +250,7 @@ function handleGUMStop(aSubject, aTopic, aData) {
   }
 }
 
-function handleGUMRequest(aSubject, aTopic, aData) {
+function handleGUMRequest(aSubject) {
   // Now that a getUserMedia request has been created, we should check
   // to see if we're supposed to have any devices muted. This needs
   // to occur after the getUserMedia request is made, since the global
@@ -472,7 +472,7 @@ function forgetPendingListsEventually(aContentWindow) {
   aContentWindow.removeEventListener("unload", WebRTCChild.handleEvent);
 }
 
-function updateIndicators(aSubject, aTopic, aData) {
+function updateIndicators(aSubject) {
   if (
     aSubject instanceof Ci.nsIPropertyBag &&
     aSubject.getProperty("requestURL") == kBrowserURL

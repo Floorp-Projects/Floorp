@@ -155,7 +155,7 @@ export const CustomizableWidgets = [
       panelview.panelMultiView.addEventListener("PanelMultiViewHidden", this);
       window.addEventListener("unload", this);
     },
-    onViewHiding(event) {
+    onViewHiding() {
       lazy.log.debug("History view is being hidden!");
     },
     onPanelMultiViewHidden(event) {
@@ -175,7 +175,7 @@ export const CustomizableWidgets = [
       }
       panelMultiView.removeEventListener("PanelMultiViewHidden", this);
     },
-    onWindowUnload(event) {
+    onWindowUnload() {
       if (this._panelMenuView) {
         delete this._panelMenuView;
       }

@@ -5,7 +5,7 @@
 import { AddonManager } from "resource://gre/modules/AddonManager.sys.mjs";
 
 export var LightweightThemes = {
-  init(libDir) {},
+  init() {},
 
   configurations: {
     noLWT: {

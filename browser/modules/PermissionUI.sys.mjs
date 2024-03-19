@@ -530,7 +530,7 @@ class PermissionPrompt {
       let action = {
         label: promptAction.label,
         accessKey: promptAction.accessKey,
-        callback: state => {
+        callback: () => {
           if (promptAction.callback) {
             promptAction.callback();
           }
@@ -725,7 +725,7 @@ class SitePermsAddonInstallRequest extends PermissionPromptForRequest {
    * @param {Components.Exception} err
    * @returns {String} The error message
    */
-  getInstallErrorMessage(err) {
+  getInstallErrorMessage() {
     return null;
   }
 }
@@ -1397,7 +1397,7 @@ class StorageAccessPermissionPrompt extends PermissionPromptForRequest {
           "storageAccess1.Allow.accesskey"
         ),
         action: Ci.nsIPermissionManager.ALLOW_ACTION,
-        callback(state) {
+        callback() {
           self.allow({ "storage-access": "allow" });
         },
       },
@@ -1409,7 +1409,7 @@ class StorageAccessPermissionPrompt extends PermissionPromptForRequest {
           "storageAccess1.DontAllow.accesskey"
         ),
         action: Ci.nsIPermissionManager.DENY_ACTION,
-        callback(state) {
+        callback() {
           self.cancel();
         },
       },

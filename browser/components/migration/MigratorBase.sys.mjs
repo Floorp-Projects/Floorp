@@ -141,7 +141,7 @@ export class MigratorBase {
    * bookmarks file exists.
    *
    * @abstract
-   * @param {object|string} aProfile
+   * @param {object|string} _aProfile
    *  The profile from which data may be imported, or an empty string
    *  in the case of a single-profile migrator.
    *  In the case of multiple-profiles migrator, it is guaranteed that
@@ -149,8 +149,7 @@ export class MigratorBase {
    *  above).
    * @returns {Promise<MigratorResource[]>|MigratorResource[]}
    */
-  // eslint-disable-next-line no-unused-vars
-  getResources(aProfile) {
+  getResources(_aProfile) {
     throw new Error("getResources must be overridden");
   }
 
@@ -223,14 +222,13 @@ export class MigratorBase {
    * to getPermissions resolves to true, that the MigratorBase will be able to
    * get read access to all of the resources it needs to do a migration.
    *
-   * @param {DOMWindow} win
+   * @param {DOMWindow} _win
    *   The top-level DOM window hosting the UI that is requesting the permission.
    *   This can be used to, for example, anchor a file picker window to the
    *   same window that is hosting the migration UI.
    * @returns {Promise<boolean>}
    */
-  // eslint-disable-next-line no-unused-vars
-  async getPermissions(win) {
+  async getPermissions(_win) {
     return Promise.resolve(true);
   }
 

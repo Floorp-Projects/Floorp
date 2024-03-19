@@ -244,7 +244,7 @@ export const BrowserWindowTracker = {
     // Prevent leaks in case the window closes before we track it as an open
     // window.
     const topic = "browsing-context-discarded";
-    const observer = (aSubject, aTopic, aData) => {
+    const observer = aSubject => {
       if (window.browsingContext == aSubject) {
         let pending = this.pendingWindows.get(window);
         if (pending) {

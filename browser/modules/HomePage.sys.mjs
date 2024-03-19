@@ -308,7 +308,7 @@ export let HomePage = {
     }
   },
 
-  onWidgetRemoved(widgetId, area) {
+  onWidgetRemoved(widgetId) {
     if (widgetId == kWidgetId) {
       Services.prefs.setBoolPref(kWidgetRemovedPref, true);
       lazy.CustomizableUI.removeListener(this);

@@ -90,7 +90,7 @@ this.thumbnailGenerator = (function () {
 
     const thumbnailDimensions = getThumbnailDimensions(imageWidth, imageHeight);
 
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       const thumbnailImage = new Image();
       let srcWidth = imageWidth;
       let srcHeight = imageHeight;

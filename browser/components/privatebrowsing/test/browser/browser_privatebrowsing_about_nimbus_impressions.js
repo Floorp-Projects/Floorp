@@ -47,7 +47,7 @@ add_task(async function test_experiment_messaging_system_impressions() {
 
   let { win: win1, tab: tab1 } = await openTabAndWaitForRender();
 
-  await SpecialPowers.spawn(tab1, [LOCALE], async function (locale) {
+  await SpecialPowers.spawn(tab1, [LOCALE], async function () {
     is(
       content.document
         .querySelector(".promo button")
@@ -72,7 +72,7 @@ add_task(async function test_experiment_messaging_system_impressions() {
 
   let { win: win2, tab: tab2 } = await openTabAndWaitForRender();
 
-  await SpecialPowers.spawn(tab2, [LOCALE], async function (locale) {
+  await SpecialPowers.spawn(tab2, [LOCALE], async function () {
     is(
       content.document
         .querySelector(".promo button")
