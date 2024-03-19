@@ -374,8 +374,16 @@ impl TimingDistribution for TimingDistributionMetric {
         }
     }
 
-    pub fn accumulate_single_sample(&self, _sample: i64) {
-        unimplemented!("bug 1884183: expose this to FOG")
+    pub fn accumulate_single_sample(&self, sample: i64) {
+        match self {
+            TimingDistributionMetric::Parent { id: _id, inner } => {
+                inner.accumulate_single_sample(sample)
+            }
+            TimingDistributionMetric::Child(_c) => {
+                // TODO: Instrument this error
+                log::error!("Can't record samples for a timing distribution from a child metric");
+            }
+        }
     }
 
     /// **Exported for test purposes.**

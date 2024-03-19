@@ -35,6 +35,13 @@ class CustomDistributionMetric {
   void AccumulateSamples(const nsTArray<uint64_t>& aSamples) const;
 
   /**
+   * Accumulates the provided sample in the metric.
+   *
+   * @param aSamples The sample to be recorded by the metric.
+   */
+  void AccumulateSingleSample(uint64_t aSample) const;
+
+  /**
    * Accumulates the provided samples in the metric.
    *
    * @param aSamples The vector holding the samples to be recorded by the
@@ -44,6 +51,14 @@ class CustomDistributionMetric {
    * and reports an `InvalidValue` error for each of them.
    */
   void AccumulateSamplesSigned(const nsTArray<int64_t>& aSamples) const;
+
+  /**
+   * Accumulates the provided sample in the metric.
+   *
+   * @param aSamples The signed integer sample to be recorded by the
+   *                 metric.
+   */
+  void AccumulateSingleSampleSigned(int64_t aSample) const;
 
   /**
    * **Test-only API**

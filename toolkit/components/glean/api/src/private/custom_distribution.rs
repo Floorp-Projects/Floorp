@@ -92,8 +92,21 @@ impl CustomDistribution for CustomDistributionMetric {
         }
     }
 
-    pub fn accumulate_single_sample_signed(&self, _sample: i64) {
-        unimplemented!("bug 1884183: expose this to FOG")
+    pub fn accumulate_single_sample_signed(&self, sample: i64) {
+        match self {
+            CustomDistributionMetric::Parent { inner, .. } => {
+                inner.accumulate_single_sample(sample)
+            }
+            CustomDistributionMetric::Child(c) => {
+                with_ipc_payload(move |payload| {
+                    if let Some(v) = payload.custom_samples.get_mut(&c.0) {
+                        v.push(sample);
+                    } else {
+                        payload.custom_samples.insert(c.0, vec![sample]);
+                    }
+                });
+            }
+        }
     }
 
     pub fn test_get_value<'a, S: Into<Option<&'a str>>>(

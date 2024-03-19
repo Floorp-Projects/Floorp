@@ -5304,10 +5304,10 @@ void AsyncPanZoomController::UpdateCheckerboardEvent(
     const MutexAutoLock& aProofOfLock, uint32_t aMagnitude) {
   if (mCheckerboardEvent && mCheckerboardEvent->RecordFrameInfo(aMagnitude)) {
     // This checkerboard event is done. Report some metrics to telemetry.
-    mozilla::glean::gfx_checkerboard::severity.AccumulateSamples(
-        {mCheckerboardEvent->GetSeverity()});
-    mozilla::glean::gfx_checkerboard::peak_pixel_count.AccumulateSamples(
-        {mCheckerboardEvent->GetPeak()});
+    mozilla::glean::gfx_checkerboard::severity.AccumulateSingleSample(
+        mCheckerboardEvent->GetSeverity());
+    mozilla::glean::gfx_checkerboard::peak_pixel_count.AccumulateSingleSample(
+        mCheckerboardEvent->GetPeak());
     mozilla::glean::gfx_checkerboard::duration.AccumulateRawDuration(
         mCheckerboardEvent->GetDuration());
 
