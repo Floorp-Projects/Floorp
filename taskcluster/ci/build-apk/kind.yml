@@ -467,6 +467,7 @@ jobs:
             shipping-product: fenix
         include-nightly-version: true
         include-shippable-secrets: true
+        run-on-projects: []
         run:
             gradle-build-type: nightly
             gradle-build-name: fenixNightly
