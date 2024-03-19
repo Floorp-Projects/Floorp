@@ -846,6 +846,8 @@ class Replay {
     FdPrintf(mStdErr, "allocated:        %9zu\n", stats.allocated);
     FdPrintf(mStdErr, "waste:            %9zu\n", stats.waste);
     FdPrintf(mStdErr, "dirty:            %9zu\n", stats.page_cache);
+    FdPrintf(mStdErr, "fresh:            %9zu\n", stats.pages_fresh);
+    FdPrintf(mStdErr, "madvised:         %9zu\n", stats.pages_madvised);
     FdPrintf(mStdErr, "bookkeep:         %9zu\n", stats.bookkeeping);
     FdPrintf(mStdErr, "bin-unused:       %9zu\n", stats.bin_unused);
     FdPrintf(mStdErr, "quantum-max:      %9zu\n", stats.quantum_max);
