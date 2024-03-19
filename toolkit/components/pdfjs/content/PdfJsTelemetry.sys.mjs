@@ -47,7 +47,7 @@ export class PdfJsTelemetry {
   }
 
   static onTimeToView(ms) {
-    Glean.pdfjs.timeToView.accumulateSamples([ms]);
+    Glean.pdfjs.timeToView.accumulateSingleSample(ms);
   }
 
   static onEditing({ type, data }) {
@@ -99,9 +99,9 @@ export class PdfJsTelemetry {
             Glean.pdfjsEditingHighlight.method[data.methodOfCreation].add(1);
             Glean.pdfjsEditingHighlight.color[data.color].add(1);
             if (data.type === "free_highlight") {
-              Glean.pdfjsEditingHighlight.thickness.accumulateSamples([
-                data.thickness,
-              ]);
+              Glean.pdfjsEditingHighlight.thickness.accumulateSingleSample(
+                data.thickness
+              );
             }
             break;
           case "color_changed":
@@ -109,9 +109,9 @@ export class PdfJsTelemetry {
             Glean.pdfjsEditingHighlight.colorChanged.add(1);
             break;
           case "thickness_changed":
-            Glean.pdfjsEditingHighlight.thickness.accumulateSamples([
-              data.thickness,
-            ]);
+            Glean.pdfjsEditingHighlight.thickness.accumulateSingleSample(
+              data.thickness
+            );
             Glean.pdfjsEditingHighlight.thicknessChanged.add(1);
             break;
           case "deleted":

@@ -95,6 +95,8 @@ class GleanCustomDistribution final : public GleanMetric {
 
   void AccumulateSamples(const dom::Sequence<int64_t>& aSamples);
 
+  void AccumulateSingleSample(const int64_t aSample);
+
   void TestGetValue(const nsACString& aPingName,
                     dom::Nullable<dom::GleanDistributionData>& aRetval,
                     ErrorResult& aRv);

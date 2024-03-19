@@ -488,18 +488,18 @@ export class CookieBannerChild extends JSWindowActorChild {
     let querySelectorTimeUS = Math.round(querySelectorTimeMS * 1000);
 
     if (this.#isTopLevel) {
-      Glean.cookieBannersClick.querySelectorRunCountPerWindowTopLevel.accumulateSamples(
-        [querySelectorCount]
+      Glean.cookieBannersClick.querySelectorRunCountPerWindowTopLevel.accumulateSingleSample(
+        querySelectorCount
       );
-      Glean.cookieBannersClick.querySelectorRunDurationPerWindowTopLevel.accumulateSamples(
-        [querySelectorTimeUS]
+      Glean.cookieBannersClick.querySelectorRunDurationPerWindowTopLevel.accumulateSingleSample(
+        querySelectorTimeUS
       );
     } else {
-      Glean.cookieBannersClick.querySelectorRunCountPerWindowFrame.accumulateSamples(
-        [querySelectorCount]
+      Glean.cookieBannersClick.querySelectorRunCountPerWindowFrame.accumulateSingleSample(
+        querySelectorCount
       );
-      Glean.cookieBannersClick.querySelectorRunDurationPerWindowFrame.accumulateSamples(
-        [querySelectorTimeUS]
+      Glean.cookieBannersClick.querySelectorRunDurationPerWindowFrame.accumulateSingleSample(
+        querySelectorTimeUS
       );
     }
 

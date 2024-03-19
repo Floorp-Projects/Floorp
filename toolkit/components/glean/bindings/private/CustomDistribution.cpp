@@ -97,6 +97,10 @@ void GleanCustomDistribution::AccumulateSamples(
   mCustomDist.AccumulateSamplesSigned(aSamples);
 }
 
+void GleanCustomDistribution::AccumulateSingleSample(const int64_t aSample) {
+  mCustomDist.AccumulateSingleSampleSigned(aSample);
+}
+
 void GleanCustomDistribution::TestGetValue(
     const nsACString& aPingName,
     dom::Nullable<dom::GleanDistributionData>& aRetval, ErrorResult& aRv) {
