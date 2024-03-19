@@ -175,6 +175,7 @@ class nsWindow final : public nsBaseWidget {
   void MoveToWorkspace(const nsAString& workspaceID) override;
   void Enable(bool aState) override;
   void SetFocus(Raise, mozilla::dom::CallerType aCallerType) override;
+  void ResetScreenBounds();
   LayoutDeviceIntRect GetScreenBounds() override;
   LayoutDeviceIntRect GetClientBounds() override;
   LayoutDeviceIntSize GetClientSize() override;
@@ -552,6 +553,8 @@ class nsWindow final : public nsBaseWidget {
   GtkWidget* mShell = nullptr;
   MozContainer* mContainer = nullptr;
   GdkWindow* mGdkWindow = nullptr;
+  mozilla::Maybe<GdkPoint> mGdkWindowRootOrigin;
+
   PlatformCompositorWidgetDelegate* mCompositorWidgetDelegate = nullptr;
   mozilla::Atomic<WindowCompositorState, mozilla::Relaxed> mCompositorState{
       COMPOSITOR_ENABLED};
