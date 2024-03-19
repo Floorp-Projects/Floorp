@@ -51,7 +51,6 @@ skip-if = ["true"] # Bug 1851453
 ["browser_opentabs_firefoxview.js"]
 
 ["browser_opentabs_more.js"]
-fail-if = ["a11y_checks"] # Bugs 1858041, 1854625, and 1872174 clicked Show all link is not accessible because it is "hidden" when clicked
 skip-if = ["verify"] # Bug 1886017
 
 ["browser_opentabs_pinned_tabs.js"]
