@@ -234,7 +234,7 @@ if (AppConstants.platform != "macosx") {
     );
   };
 } else {
-  gSetBackground.observe = function (aSubject, aTopic, aData) {
+  gSetBackground.observe = function (aSubject, aTopic) {
     if (aTopic == "shell:desktop-background-changed") {
       document.getElementById("setDesktopBackground").hidden = true;
       document.getElementById("showDesktopPreferences").hidden = false;

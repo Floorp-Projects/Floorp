@@ -32,7 +32,7 @@ function Home(props) {
       : ``
   }`;
 
-  const loadingRecentSaves = useCallback(resp => {
+  const loadingRecentSaves = useCallback(() => {
     setArticlesState(prevState => ({
       ...prevState,
       status: "loading",

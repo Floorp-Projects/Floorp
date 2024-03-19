@@ -5,7 +5,7 @@
 
 // Tests for FxAccounts, storage and the master password.
 
-// See verbose logging from FxAccounts.jsm
+// See verbose logging from FxAccounts.sys.mjs
 Services.prefs.setStringPref("identity.fxaccounts.loglevel", "Trace");
 
 const { FxAccounts } = ChromeUtils.importESModule(

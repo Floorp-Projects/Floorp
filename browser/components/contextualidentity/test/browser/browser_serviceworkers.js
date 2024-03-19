@@ -111,7 +111,7 @@ function promiseUnregister(info) {
           ok(aState, "ServiceWorkerRegistration exists");
           resolve();
         },
-        unregisterFailed(aState) {
+        unregisterFailed() {
           ok(false, "unregister should succeed");
         },
       },

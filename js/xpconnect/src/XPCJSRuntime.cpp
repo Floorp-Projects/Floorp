@@ -2589,7 +2589,8 @@ static void AccumulateTelemetryCallback(JSMetric id, uint32_t sample) {
       glean::performance_clone_deserialize::size.Accumulate(sample);
       break;
     case JSMetric::DESERIALIZE_ITEMS:
-      glean::performance_clone_deserialize::items.AccumulateSamples({sample});
+      glean::performance_clone_deserialize::items.AccumulateSingleSample(
+          sample);
       break;
     case JSMetric::DESERIALIZE_US:
       glean::performance_clone_deserialize::time.AccumulateRawDuration(

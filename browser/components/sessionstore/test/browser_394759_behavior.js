@@ -34,7 +34,7 @@ function testWindows(windowsToOpen, expectedResults) {
     }
 
     let closedWindowData = ss.getClosedWindowData();
-    let numPopups = closedWindowData.filter(function (el, i, arr) {
+    let numPopups = closedWindowData.filter(function (el) {
       return el.isPopup;
     }).length;
     let numNormal = ss.getClosedWindowCount() - numPopups;

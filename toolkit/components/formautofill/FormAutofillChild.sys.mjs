@@ -140,7 +140,7 @@ export class FormAutofillChild extends JSWindowActorChild {
     const { chromeEventHandler } = docShell;
 
     switch (messageName) {
-      case "FormAutoComplete:PopupClosed": {
+      case "AutoComplete:PopupClosed": {
         this.onPopupClosed(data.selectedRowStyle);
         Services.tm.dispatchToMainThread(() => {
           chromeEventHandler.removeEventListener("keydown", this, true);
@@ -148,7 +148,7 @@ export class FormAutofillChild extends JSWindowActorChild {
 
         break;
       }
-      case "FormAutoComplete:PopupOpened": {
+      case "AutoComplete:PopupOpened": {
         this.onPopupOpened();
         chromeEventHandler.addEventListener("keydown", this, true);
         break;

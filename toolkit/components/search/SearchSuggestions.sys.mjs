@@ -4,8 +4,9 @@
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
-  FormAutoCompleteResult: "resource://gre/modules/FormAutoComplete.sys.mjs",
-  FormHistoryClient: "resource://gre/modules/FormAutoComplete.sys.mjs",
+  FormHistoryAutoCompleteResult:
+    "resource://gre/modules/FormHistoryAutoComplete.sys.mjs",
+  FormHistoryClient: "resource://gre/modules/FormHistoryAutoComplete.sys.mjs",
 
   SearchSuggestionController:
     "resource://gre/modules/SearchSuggestionController.sys.mjs",
@@ -29,7 +30,7 @@ class SuggestAutoComplete {
   /**
    * Notifies the front end of new results.
    *
-   * @param {FormAutoCompleteResult} result
+   * @param {FormHistoryAutoCompleteResult} result
    *   Any previous form history result.
    * @private
    */
@@ -168,7 +169,7 @@ class SuggestAutoComplete {
         ...historyEntry,
       })
     );
-    let autoCompleteResult = new lazy.FormAutoCompleteResult(
+    let autoCompleteResult = new lazy.FormHistoryAutoCompleteResult(
       client,
       formHistoryEntries,
       this.#suggestionController.formHistoryParam,

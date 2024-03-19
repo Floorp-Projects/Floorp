@@ -40,6 +40,7 @@ interface Suggestion {
         string url,
         string raw_url,
         sequence<u8>? icon,
+        string? icon_mimetype,
         string full_keyword,
         i64 block_id,
         string advertiser,
@@ -59,6 +60,7 @@ interface Suggestion {
         string title,
         string url,
         sequence<u8>? icon,
+        string? icon_mimetype,
         string full_keyword
     );
     Amo(
@@ -75,6 +77,7 @@ interface Suggestion {
         string url,
         string title,
         sequence<u8>? icon,
+        string? icon_mimetype,
         f64 score,
         boolean has_location_sign,
         boolean subject_exact_match,
@@ -99,6 +102,7 @@ dictionary SuggestionQuery {
 
 dictionary SuggestIngestionConstraints {
     u64? max_suggestions = null;
+    sequence<SuggestionProvider>? providers = null;
 };
 
 dictionary SuggestGlobalConfig {
@@ -140,6 +144,7 @@ interface SuggestStoreBuilder {
     [Self=ByArc]
     SuggestStoreBuilder data_path(string path);
 
+    // Deprecated: this is no longer used by the suggest component.
     [Self=ByArc]
     SuggestStoreBuilder cache_path(string path);
 

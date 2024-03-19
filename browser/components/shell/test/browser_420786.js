@@ -14,7 +14,7 @@ add_task(async function () {
       gBrowser,
       url: "about:logo",
     },
-    browser => {
+    () => {
       var brandName = Services.strings
         .createBundle("chrome://branding/locale/brand.properties")
         .GetStringFromName("brandShortName");

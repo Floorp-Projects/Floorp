@@ -12,7 +12,7 @@ add_task(async function test() {
 
   function promiseLocationChange() {
     return new Promise(resolve => {
-      Services.obs.addObserver(function onLocationChange(subj, topic, data) {
+      Services.obs.addObserver(function onLocationChange(subj, topic) {
         Services.obs.removeObserver(onLocationChange, topic);
         resolve();
       }, "browser-fullZoom:location-change");
@@ -59,7 +59,7 @@ add_task(async function test() {
     );
   }
 
-  function testOnWindow(options, callback) {
+  function testOnWindow(options) {
     return BrowserTestUtils.openNewBrowserWindow(options).then(win => {
       windowsToClose.push(win);
       windowsToReset.push(win);

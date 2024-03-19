@@ -29,17 +29,17 @@ function test_setTabState() {
   let busyEventCount = 0;
   let readyEventCount = 0;
 
-  function onSSWindowStateBusy(aEvent) {
+  function onSSWindowStateBusy() {
     busyEventCount++;
   }
 
-  function onSSWindowStateReady(aEvent) {
+  function onSSWindowStateReady() {
     readyEventCount++;
     is(ss.getCustomTabValue(tab, "foo"), "bar");
     ss.setCustomTabValue(tab, "baz", "qux");
   }
 
-  function onSSTabRestoring(aEvent) {
+  function onSSTabRestoring() {
     is(busyEventCount, 1);
     is(readyEventCount, 1);
     is(ss.getCustomTabValue(tab, "baz"), "qux");

@@ -4,11 +4,9 @@ union Foo {
 };
 
 [ChildProc=any]
-intr protocol Pbytebuf {
+sync protocol Pbytebuf {
 parent:
     async Msg(ByteBuf s, Foo f);
     sync SyncMsg(ByteBuf s, Foo f)
-        returns (ByteBuf t, Foo g);
-    [LegacyIntr] intr InterruptMsg(ByteBuf s, Foo f)
         returns (ByteBuf t, Foo g);
 };

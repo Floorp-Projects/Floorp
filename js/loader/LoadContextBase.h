@@ -52,6 +52,9 @@ class LoadContextBase : public nsISupports {
   // Used to output a string for the Gecko Profiler.
   virtual void GetProfilerLabel(nsACString& aOutString);
 
+  // Whether this is a preload, for contexts that support them.
+  virtual bool IsPreload() const { return false; }
+
   // Casting to the different contexts
   bool IsWindowContext() const { return mKind == ContextKind::Window; }
   mozilla::dom::ScriptLoadContext* AsWindowContext();

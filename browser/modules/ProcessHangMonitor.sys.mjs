@@ -210,7 +210,7 @@ export var ProcessHangMonitor = {
     return func(report);
   },
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     switch (topic) {
       case "xpcom-shutdown": {
         Services.obs.removeObserver(this, "xpcom-shutdown");
@@ -240,7 +240,7 @@ export var ProcessHangMonitor = {
         // Install event listeners on the new window in case one of
         // its tabs is already hung.
         let win = subject;
-        let listener = ev => {
+        let listener = () => {
           win.removeEventListener("load", listener, true);
           this.updateWindows();
         };

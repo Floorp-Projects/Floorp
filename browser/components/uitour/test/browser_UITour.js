@@ -323,7 +323,7 @@ var tests = [
         () => {
           highlight.addEventListener(
             "animationstart",
-            function (aEvent) {
+            function () {
               ok(
                 true,
                 "Animation occurred again even though the effect was the same"

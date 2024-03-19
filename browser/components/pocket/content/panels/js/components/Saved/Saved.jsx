@@ -85,7 +85,7 @@ function Saved(props) {
 
     panelMessaging.addMessageListener(
       "PKT_getArticleInfoAttempted",
-      function (resp) {
+      function () {
         setArticleInfoAttempted(true);
       }
     );

@@ -194,14 +194,7 @@ function hideInfoPromise(...args) {
  * function name to call to generate the buttons/options instead of the
  * buttons/options themselves. This makes the signature differ from the content one.
  */
-function showInfoPromise(
-  target,
-  title,
-  text,
-  icon,
-  buttonsFunctionName,
-  optionsFunctionName
-) {
+function showInfoPromise() {
   let popup = document.getElementById("UITourTooltip");
   let shownPromise = promisePanelElementShown(window, popup);
   return SpecialPowers.spawn(gTestTab.linkedBrowser, [[...arguments]], args => {
@@ -271,7 +264,7 @@ function promisePanelElementEvent(win, aPanel, aEvent) {
       reject(aEvent + " event did not happen within 5 seconds.");
     }, 5000);
 
-    function onPanelEvent(e) {
+    function onPanelEvent() {
       aPanel.removeEventListener(aEvent, onPanelEvent);
       win.clearTimeout(timeoutId);
       // Wait one tick to let UITour.sys.mjs process the event as well.
@@ -321,7 +314,7 @@ async function loadUITourTestPage(callback, host = "https://example.org/") {
   // return a function which calls the method of the same name on
   // contentWin.Mozilla.UITour in a ContentTask.
   let UITourHandler = {
-    get(target, prop, receiver) {
+    get(target, prop) {
       return (...args) => {
         let browser = gTestTab.linkedBrowser;
         // We need to proxy any callback functions using messages:

@@ -121,7 +121,7 @@ add_task(async function test() {
 
       // Insert the media key.
       await new Promise(resolve => {
-        session.addEventListener("message", function (event) {
+        session.addEventListener("message", function () {
           session
             .update(aKeyInfo.keyObj)
             .then(() => {

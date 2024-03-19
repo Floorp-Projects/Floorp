@@ -12,7 +12,7 @@ use rusqlite::{Result as RusqliteResult, ToSql};
 /// substring for the suffix.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 #[repr(u8)]
-pub enum KeywordConfidence {
+pub(crate) enum KeywordConfidence {
     Low = 0,
     High = 1,
 }

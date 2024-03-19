@@ -72,12 +72,7 @@ add_task(async function test() {
 
   let loadCount = 0;
   let promiseRestoringTabs = new Promise(resolve => {
-    gProgressListener.setCallback(function (
-      aBrowser,
-      aNeedRestore,
-      aRestoring,
-      aRestored
-    ) {
+    gProgressListener.setCallback(function (aBrowser, aNeedRestore) {
       if (++loadCount == numTabs) {
         // We don't actually care about load order in this test, just that they all
         // do load.
@@ -91,7 +86,7 @@ add_task(async function test() {
   });
 
   // We also want to catch the 2nd window, so we need to observe domwindowopened
-  Services.ww.registerNotification(function observer(aSubject, aTopic, aData) {
+  Services.ww.registerNotification(function observer(aSubject, aTopic) {
     if (aTopic == "domwindowopened") {
       let win = aSubject;
       win.addEventListener(

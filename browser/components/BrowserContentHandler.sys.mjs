@@ -438,7 +438,7 @@ function openBrowserWindow(
   });
 }
 
-function openPreferences(cmdLine, extraArgs) {
+function openPreferences(cmdLine) {
   openBrowserWindow(cmdLine, lazy.gSystemPrincipal, "about:preferences");
 }
 

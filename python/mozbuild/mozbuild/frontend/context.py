@@ -1223,8 +1223,8 @@ class Files(SubContext):
 
     ``foo.html``
        Will match only the ``foo.html`` file in the current directory.
-    ``*.jsm``
-       Will match all ``.jsm`` files in the current directory.
+    ``*.mjs``
+       Will match all ``.mjs`` files in the current directory.
     ``**/*.cpp``
        Will match all ``.cpp`` files in this and all child directories.
     ``foo/*.css``
@@ -2943,13 +2943,13 @@ SPECIAL_VARIABLES = {
         list,
         """JavaScript modules to install in the test-only destination.
 
-        Some JavaScript modules (JSMs) are test-only and not distributed
+        Some JavaScript modules are test-only and not distributed
         with Firefox. This variable defines them.
 
         To install modules in a subdirectory, use properties of this
         variable to control the final destination. e.g.
 
-        ``TESTING_JS_MODULES.foo += ['module.jsm']``.
+        ``TESTING_JS_MODULES.foo += ['module.sys.mjs']``.
         """,
     ),
     "TEST_DIRS": (

@@ -112,7 +112,7 @@ export var webrtcUI = {
     }
   },
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     if (topic == "browser-delayed-startup-finished") {
       if (webrtcUI.showGlobalIndicator) {
         showOrCreateMenuForWindow(subject);
@@ -1106,7 +1106,7 @@ function onTabSharingMenuPopupShowing(e) {
   }
 }
 
-function onTabSharingMenuPopupHiding(e) {
+function onTabSharingMenuPopupHiding() {
   while (this.lastChild) {
     this.lastChild.remove();
   }

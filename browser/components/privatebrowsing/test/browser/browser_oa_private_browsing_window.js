@@ -9,7 +9,7 @@ const DUMMY_PAGE = PATH + "empty_file.html";
 
 add_task(
   async function test_principal_right_click_open_link_in_new_private_win() {
-    await BrowserTestUtils.withNewTab(TEST_PAGE, async function (browser) {
+    await BrowserTestUtils.withNewTab(TEST_PAGE, async function () {
       let promiseNewWindow = BrowserTestUtils.waitForNewWindow({
         url: DUMMY_PAGE,
       });

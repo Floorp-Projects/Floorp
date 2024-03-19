@@ -560,7 +560,7 @@ var Builder = class {
           aError.message
         );
       },
-      handleCompletion(aReason) {
+      handleCompletion() {
         aCallback.call(aScope, null);
       },
     });
@@ -815,7 +815,7 @@ export var WinTaskbarJumpList = {
 
   name: "WinTaskbarJumpList",
 
-  notify: function WTBJL_notify(aTimer) {
+  notify: function WTBJL_notify() {
     // Add idle observer on the first notification so it doesn't hit startup.
     this._updateIdleObserver();
     Services.tm.idleDispatchToMainThread(() => {
@@ -823,7 +823,7 @@ export var WinTaskbarJumpList = {
     });
   },
 
-  observe: function WTBJL_observe(aSubject, aTopic, aData) {
+  observe: function WTBJL_observe(aSubject, aTopic) {
     switch (aTopic) {
       case "nsPref:changed":
         if (this._enabled && !lazy._prefs.getBoolPref(PREF_TASKBAR_ENABLED)) {

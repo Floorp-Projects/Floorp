@@ -10,7 +10,7 @@ this.clipboard = (function () {
   const exports = {};
 
   exports.copy = function (text) {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       const element = document.createElement("iframe");
       element.src = browser.runtime.getURL("blank.html");
       // We can't actually hide the iframe while copying, but we can make

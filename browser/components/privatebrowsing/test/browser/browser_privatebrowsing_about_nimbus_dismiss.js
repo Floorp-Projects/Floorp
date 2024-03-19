@@ -41,7 +41,7 @@ add_task(async function test_experiment_messaging_system_dismiss() {
 
   let { win: win1, tab: tab1 } = await openTabAndWaitForRender();
 
-  await SpecialPowers.spawn(tab1, [LOCALE], async function (locale) {
+  await SpecialPowers.spawn(tab1, [LOCALE], async function () {
     content.document.querySelector("#dismiss-btn").click();
     info("button clicked");
   });

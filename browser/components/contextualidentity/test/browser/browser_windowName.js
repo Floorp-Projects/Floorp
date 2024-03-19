@@ -24,7 +24,7 @@ add_task(async function test() {
   });
   let browser1 = gBrowser.getBrowserForTab(tab1);
   await BrowserTestUtils.browserLoaded(browser1);
-  await SpecialPowers.spawn(browser1, [], function (opts) {
+  await SpecialPowers.spawn(browser1, [], function () {
     content.window.name = "tab-1";
   });
 
@@ -34,7 +34,7 @@ add_task(async function test() {
   });
   let browser2 = gBrowser.getBrowserForTab(tab2);
   await BrowserTestUtils.browserLoaded(browser2);
-  await SpecialPowers.spawn(browser2, [], function (opts) {
+  await SpecialPowers.spawn(browser2, [], function () {
     content.window.name = "tab-2";
   });
 

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import * as BackupResources from "resource:///modules/backup/BackupResources.sys.mjs";
+import * as DefaultBackupResources from "resource:///modules/backup/BackupResources.sys.mjs";
 
 const lazy = {};
 
@@ -48,7 +48,7 @@ export class BackupService {
     if (this.#instance) {
       return this.#instance;
     }
-    this.#instance = new BackupService(BackupResources);
+    this.#instance = new BackupService(DefaultBackupResources);
     this.#instance.takeMeasurements();
 
     return this.#instance;
@@ -57,13 +57,13 @@ export class BackupService {
   /**
    * Create a BackupService instance.
    *
-   * @param {object} [backupResources=BackupResources] - Object containing BackupResource classes to associate with this service.
+   * @param {object} [backupResources=DefaultBackupResources] - Object containing BackupResource classes to associate with this service.
    */
-  constructor(backupResources = BackupResources) {
+  constructor(backupResources = DefaultBackupResources) {
     lazy.logConsole.debug("Instantiated");
 
     for (const resourceName in backupResources) {
-      let resource = BackupResources[resourceName];
+      let resource = backupResources[resourceName];
       this.#resources.set(resource.key, resource);
     }
   }
@@ -97,7 +97,14 @@ export class BackupService {
 
     // Measure the size of each file we are going to backup.
     for (let resourceClass of this.#resources.values()) {
-      await new resourceClass().measure(PathUtils.profileDir);
+      try {
+        await new resourceClass().measure(PathUtils.profileDir);
+      } catch (e) {
+        lazy.logConsole.error(
+          `Failed to measure for resource: ${resourceClass.key}`,
+          e
+        );
+      }
     }
   }
 }

@@ -3,7 +3,7 @@
 
 include protocol compressCtor;
 
-intr protocol compressCtorManagee {
+sync protocol compressCtorManagee {
     manager compressCtor;
 
 child:

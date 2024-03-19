@@ -12,7 +12,7 @@ add_task(async function () {
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "http://example.com", waitForLoad: true },
-    async function (browser) {
+    async function () {
       CustomizableUI.addWidgetToArea(
         "zoom-controls",
         CustomizableUI.AREA_FIXED_OVERFLOW_PANEL

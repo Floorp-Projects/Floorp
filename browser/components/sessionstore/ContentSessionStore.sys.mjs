@@ -195,7 +195,7 @@ class SessionHistoryListener extends Handler {
     });
   }
 
-  handleEvent(event) {
+  handleEvent() {
     this.collect();
   }
 
@@ -226,7 +226,7 @@ class SessionHistoryListener extends Handler {
   /**
    * @see nsIWebProgressListener.onStateChange
    */
-  onStateChange(webProgress, request, stateFlags, status) {
+  onStateChange(webProgress, request, stateFlags, _status) {
     // Ignore state changes for subframes because we're only interested in the
     // top-document starting or stopping its load.
     if (!webProgress.isTopLevel || webProgress.DOMWindow != this.mm.content) {

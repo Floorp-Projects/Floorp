@@ -50,7 +50,7 @@ var progressListener = {
    * the STATE_IS_WINDOW case, which will clear any mappings from
    * blockedWindows.
    */
-  onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
+  onStateChange(aWebProgress, aRequest, aStateFlags) {
     if (
       aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW &&
       aStateFlags & Ci.nsIWebProgressListener.STATE_STOP
@@ -64,7 +64,7 @@ var progressListener = {
    * onRefreshAttempted has already fired for this DOM Window, will
    * send the appropriate refresh blocked data to the parent.
    */
-  onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {
+  onLocationChange(aWebProgress) {
     let win = aWebProgress.DOMWindow;
     if (this.blockedWindows.has(win)) {
       let data = this.blockedWindows.get(win);
@@ -180,7 +180,7 @@ export class RefreshBlockerObserverChild extends JSProcessActorChild {
     this.filtersMap = new Map();
   }
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     switch (topic) {
       case "webnavigation-create":
       case "chrome-webnavigation-create":

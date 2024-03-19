@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<head>
+<title>Test speculative preload of external script doesn't conflict with import map</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+
+<!--
+    These tests check that speculative preloading, which could happen before
+    the import map is installed, doesn't load the wrong modules. This version
+    dynamically inserts the import map script element after speculative
+    preloading has started.
+-->
+
+<script>
+  const script = document.createElement('script');
+  script.type = 'importmap';
+  script.textContent =
+  `{
+    "imports": {
+      "bare": "./good/module_0.mjs",
+      "./bad/module_1.mjs": "./good/module_1.mjs",
+      "./bad/module_2.mjs": "./good/module_2.mjs",
+      "./bad/module_3.mjs": "./good/module_3.mjs",
+      "./bad/module_4.mjs": "./good/module_4.mjs",
+      "./bad/module_7.mjs": "./good/module_7.mjs"
+    }
+  }`;
+  document.head.appendChild(script);
+</script>
+
+<!--
+Test bareword import (not supported before import map installed).
+-->
+<script type="module" src="module_importMap_with_external_script_0.mjs"></script>
+
+<!--
+Test mapping from missing resource to existing resource (not found before
+import map installed).
+-->
+<script type="module" src="module_importMap_with_external_script_1.mjs"></script>
+
+<!--
+Test mapping from one existing resource to another (would load wrong resource before
+import map installed).
+-->
+<script type="module" src="module_importMap_with_external_script_2.mjs"></script>
+
+<!--
+Test mapping from one existing resource to another with circular dependency.
+-->
+<script type="module" src="module_importMap_with_external_script_3.mjs"></script>
+
+<!--
+Test with redirect, script_6.mjs -> script_5.mjs -> script_4.mjs.
+We redirect twice here, as sometimes one redirect can't reproduce the crash
+from bug 1835468.
+-->
+<script type="module" src="module_importMap_with_external_script_6.mjs"></script>
+
+<!--
+Test with async attribute
+-->
+<script type="module" async src="module_importMap_with_external_script_7.mjs"></script>
+
+<script>
+  SimpleTest.waitForExplicitFinish();
+
+  let passCount = 0;
+  const expectedCount = 6;
+
+  function success(name) {
+    ok(true, "Test passed, loaded " + name);
+    passCount++;
+    if (passCount == expectedCount) {
+      SimpleTest.finish();
+    }
+  }
+</script>
+<body></body>

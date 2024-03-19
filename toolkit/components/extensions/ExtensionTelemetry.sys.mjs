@@ -290,7 +290,7 @@ class ExtensionTelemetryMetric {
         // NOTE: extensionsTiming may become a property of the GLEAN_METRICS_TYPES
         // map once we may introduce new histograms that are not part of the
         // extensionsTiming Glean metrics category.
-        Glean.extensionsTiming[metric].accumulateSamples([value]);
+        Glean.extensionsTiming[metric].accumulateSingleSample(value);
         break;
       }
       case "labeled_counter": {

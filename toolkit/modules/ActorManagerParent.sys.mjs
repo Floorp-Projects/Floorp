@@ -127,8 +127,8 @@ let JSWINDOWACTORS = {
       esModuleURI: "resource://gre/actors/AutoCompleteParent.sys.mjs",
       // These two messages are also used, but are currently synchronous calls
       // through the per-process message manager.
-      // "FormAutoComplete:GetSelectedIndex",
-      // "FormAutoComplete:SelectBy"
+      // "AutoComplete:GetSelectedIndex",
+      // "AutoComplete:SelectBy"
     },
 
     child: {

@@ -1777,20 +1777,20 @@ int32_t RecordContentFrameTime(
                         ContentFrameMarker{});
   }
 
-  mozilla::glean::gfx_content_frame_time::from_paint.AccumulateSamples(
-      {static_cast<unsigned long long>(fracLatencyNorm)});
+  mozilla::glean::gfx_content_frame_time::from_paint.AccumulateSingleSample(
+      static_cast<unsigned long long>(fracLatencyNorm));
 
   if (!(aTxnId == VsyncId()) && aVsyncStart) {
     latencyMs = (aCompositeEnd - aVsyncStart).ToMilliseconds();
     latencyNorm = latencyMs / aVsyncRate.ToMilliseconds();
     fracLatencyNorm = lround(latencyNorm * 100.0);
     int32_t result = fracLatencyNorm;
-    mozilla::glean::gfx_content_frame_time::from_vsync.AccumulateSamples(
-        {static_cast<unsigned long long>(fracLatencyNorm)});
+    mozilla::glean::gfx_content_frame_time::from_vsync.AccumulateSingleSample(
+        static_cast<unsigned long long>(fracLatencyNorm));
 
     if (aContainsSVGGroup) {
-      mozilla::glean::gfx_content_frame_time::with_svg.AccumulateSamples(
-          {static_cast<unsigned long long>(fracLatencyNorm)});
+      mozilla::glean::gfx_content_frame_time::with_svg.AccumulateSingleSample(
+          static_cast<unsigned long long>(fracLatencyNorm));
     }
 
     // Record CONTENT_FRAME_TIME_REASON.
@@ -1889,8 +1889,8 @@ int32_t RecordContentFrameTime(
         fracLatencyNorm = lround(latencyNorm * 100.0);
       }
       mozilla::glean::gfx_content_frame_time::without_resource_upload
-          .AccumulateSamples(
-              {static_cast<unsigned long long>(fracLatencyNorm)});
+          .AccumulateSingleSample(
+              static_cast<unsigned long long>(fracLatencyNorm));
 
       if (aStats) {
         latencyMs -= (double(aStats->gpu_cache_upload_time) / 1000000.0);
@@ -1898,8 +1898,8 @@ int32_t RecordContentFrameTime(
         fracLatencyNorm = lround(latencyNorm * 100.0);
       }
       mozilla::glean::gfx_content_frame_time::without_resource_upload
-          .AccumulateSamples(
-              {static_cast<unsigned long long>(fracLatencyNorm)});
+          .AccumulateSingleSample(
+              static_cast<unsigned long long>(fracLatencyNorm));
     }
     return result;
   }

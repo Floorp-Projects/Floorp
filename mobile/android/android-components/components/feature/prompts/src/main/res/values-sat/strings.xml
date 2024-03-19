@@ -38,10 +38,16 @@
     <string name="mozac_feature_prompt_error_empty_password_2">ᱢᱤᱫᱴᱟᱹᱝ ᱥᱟᱵᱟᱫ ᱟᱫᱮᱨ ᱢᱮ</string>
     <!-- Error text displayed underneath the login field when it is in an error case -->
     <string name="mozac_feature_prompt_error_unknown_cause" moz:removedIn="125" tools:ignore="UnusedResources">ᱞᱚᱜᱤᱱ ᱵᱟᱭ ᱥᱟᱺᱪᱟᱣ ᱫᱟᱲᱮᱭᱟᱜ ᱠᱟᱱᱟ</string>
+    <!-- Error text displayed underneath the password field when it is in an error case -->
+    <string name="mozac_feature_prompt_error_unknown_cause_2">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫ ᱥᱟᱧᱪᱟᱣ ᱵᱟᱭ ᱜᱟᱱ ᱞᱮᱱᱟ</string>
     <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new login. -->
     <string name="mozac_feature_prompt_login_save_headline" moz:removedIn="125" tools:ignore="UnusedResources">ᱱᱚᱶᱟ ᱞᱚᱜᱤᱱ ᱥᱟᱺᱪᱟᱣ ᱢᱮ?</string>
+    <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new password. -->
+    <string name="mozac_feature_prompt_login_save_headline_2">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱠᱚ ᱥᱟᱺᱪᱟᱣᱟ ?</string>
     <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the login. -->
     <string name="mozac_feature_prompt_login_update_headline" moz:removedIn="125" tools:ignore="UnusedResources">ᱱᱚᱶᱟ ᱞᱚᱜᱤᱱ ᱦᱟᱹᱞᱤᱭᱟᱜ ᱢᱮ?</string>
+    <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the password. -->
+    <string name="mozac_feature_prompt_login_update_headline_2">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱦᱟᱹᱞᱤᱭᱟᱹᱠ ᱟ ?</string>
     <!-- Prompt message displayed when app detects a user has entered a username for an existing login without a username and user decides if app should update the login. -->
     <string name="mozac_feature_prompt_login_add_username_headline">ᱥᱟᱺᱪᱟᱣᱠᱟᱱ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱨᱮ ᱵᱮᱵᱷᱟᱨᱤᱡ ᱧᱩᱛᱩᱢ ᱥᱮᱞᱮᱫᱽ ᱟᱢ?</string>
     <!-- Text for a label for the field when prompt requesting a text is shown. -->
@@ -91,12 +97,21 @@
     <string name="mozac_feature_prompts_set_time">ᱚᱠᱛᱚ ᱥᱮᱴ ᱢᱮ</string>
     <!-- Option in expanded select login prompt that links to login settings -->
     <string name="mozac_feature_prompts_manage_logins" moz:removedIn="125" tools:ignore="UnusedResources">ᱞᱚᱜᱤᱱ ᱵᱮᱵᱚᱥᱛᱷᱟ ᱠᱚ</string>
+    <!-- Option in expanded select password prompt that links to password settings -->
+    <string name="mozac_feature_prompts_manage_logins_2">ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫ ᱢᱮᱱᱮᱡᱽ ᱢᱮ</string>
     <!-- Content description for expanding the saved logins options in the select login prompt -->
     <string name="mozac_feature_prompts_expand_logins_content_description" moz:removedIn="125" tools:ignore="UnusedResources">ᱵᱟᱛᱟᱣᱟᱠᱟᱱ ᱞᱚᱜᱤᱱ ᱠᱚ ᱴᱟᱨᱟᱝ ᱪᱷᱚᱭ ᱢᱮ</string>
+    <!-- Content description for expanding the saved passwords options in the select password prompt -->
+    <string name="mozac_feature_prompts_expand_logins_content_description_2">ᱥᱟᱺᱪᱟᱣ ᱟᱠᱟᱱ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱠᱚ ᱯᱟᱥᱱᱟᱣ ᱢᱮ</string>
     <!-- Content description for collapsing the saved logins options in the select login prompt -->
     <string name="mozac_feature_prompts_collapse_logins_content_description" moz:removedIn="125" tools:ignore="UnusedResources">ᱵᱟᱛᱟᱣᱟᱠᱟᱱ ᱞᱚᱜᱤᱱ ᱠᱚ ᱠᱟᱹᱴᱤᱡ ᱪᱷᱚᱭ ᱢᱮ</string>
+    <!-- Content description for collapsing the saved passwords options in the select password prompt -->
+    <string name="mozac_feature_prompts_collapse_logins_content_description_2">ᱥᱟᱺᱪᱟᱣᱟᱜ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱠᱚ ᱫᱟᱥᱟᱣ ᱢᱮ</string>
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
     <string name="mozac_feature_prompts_saved_logins" moz:removedIn="125" tools:ignore="UnusedResources">ᱵᱟᱛᱟᱣᱟᱠᱟᱱ ᱞᱚᱜᱤᱱ ᱠᱚ</string>
+
+    <!-- Header for the select password prompt to allow users to fill a form with a saved password -->
+    <string name="mozac_feature_prompts_saved_logins_2">ᱥᱟᱧᱪᱟᱣ ᱠᱟᱱ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱠᱚ</string>
 
     <!-- Content description for the suggest strong password prompt to allow users to fill a form with a suggested strong password -->
     <string name="mozac_feature_prompts_suggest_strong_password_content_description">ᱟᱸᱴ ᱫᱟᱫᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱵᱟᱛᱟᱣ ᱢᱮ …</string>
@@ -116,12 +131,20 @@
     <!-- Credit Card Autofill -->
     <!-- Header for the select credit card prompt to allow users to fill a form with a saved credit card. -->
     <string name="mozac_feature_prompts_select_credit_card" moz:removedIn="125" tools:ignore="UnusedResources">ᱠᱨᱮᱰᱤᱴ ᱠᱟᱰ ᱵᱟᱪᱷᱟᱣ ᱢᱮ</string>
+    <!-- Header for the select card prompt to allow users to fill a form with a saved card. -->
+    <string name="mozac_feature_prompts_select_credit_card_2">ᱥᱟᱧᱪᱟᱣ ᱠᱟᱱ ᱠᱟᱰ ᱵᱮᱵᱷᱟᱨ ᱢᱮ</string>
     <!-- Content description for expanding the select credit card options in the select credit card prompt. -->
     <string name="mozac_feature_prompts_expand_credit_cards_content_description" moz:removedIn="125" tools:ignore="UnusedResources">ᱵᱟᱛᱟᱣ ᱟᱠᱟᱱ ᱠᱨᱮᱰᱤᱴ ᱠᱟᱰ ᱡᱷᱟᱹᱞ ᱪᱷᱚᱭ ᱢᱮ</string>
+    <!-- Content description for expanding the saved card options in the select card prompt. -->
+    <string name="mozac_feature_prompts_expand_credit_cards_content_description_2">ᱥᱟᱺᱪᱟᱣ ᱟᱠᱟᱱ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽ ᱠᱚ ᱯᱟᱥᱱᱟᱣ ᱢᱮ</string>
     <!-- Content description for collapsing the select credit card options in the select credit prompt. -->
     <string name="mozac_feature_prompts_collapse_credit_cards_content_description" moz:removedIn="125" tools:ignore="UnusedResources">ᱵᱟᱛᱟᱣ ᱟᱠᱟᱱ ᱠᱨᱮᱰᱤᱴ ᱠᱟᱰ ᱦᱚᱯᱚᱱ ᱪᱷᱚᱭ ᱢᱮ</string>
+    <!-- Content description for collapsing the saved card options in the select prompt. -->
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description_2">ᱥᱟᱧᱪᱟᱣ ᱠᱟᱱ ᱫᱟᱱᱟᱝ ᱥᱟᱵᱟᱫᱽᱠᱚ ᱫᱟᱥᱟᱣ ᱢᱮ</string>
     <!-- Option in the expanded select credit card prompt that links to credit cards settings. -->
     <string name="mozac_feature_prompts_manage_credit_cards" moz:removedIn="125" tools:ignore="UnusedResources">ᱠᱨᱮᱰᱤᱴ ᱠᱟᱰ ᱠᱚ ᱢᱮᱱᱮᱡᱽ ᱢᱮ</string>
+    <!-- Option in the expanded select card prompt that links to cards settings. -->
+    <string name="mozac_feature_prompts_manage_credit_cards_2">ᱠᱟᱰ ᱢᱮᱱᱮᱡᱽ ᱢᱮ</string>
     <!-- Text for the title of a save credit card dialog. -->
     <string name="mozac_feature_prompts_save_credit_card_prompt_title">ᱱᱚᱶᱟ ᱠᱟᱰ ᱫᱚ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱥᱟᱹᱦᱤᱡ ᱫᱚᱦᱚᱭ ᱟᱢ ᱥᱮ ?</string>
     <!-- Text for the title of an update credit card dialog. -->

@@ -901,7 +901,7 @@ class BaseFinder(object):
         if path.endswith((".ftl", ".properties")):
             return MinifiedCommentStripped(file)
 
-        if self._minify_js and path.endswith((".js", ".jsm")):
+        if self._minify_js and path.endswith((".js", ".jsm", ".mjs")):
             return MinifiedJavaScript(file, self._minify_js_verify_command)
 
         return file

@@ -6934,7 +6934,8 @@ JS::AutoDebuggerJobQueueInterruption::AutoDebuggerJobQueueInterruption()
     : cx(nullptr) {}
 
 JS::AutoDebuggerJobQueueInterruption::~AutoDebuggerJobQueueInterruption() {
-  MOZ_ASSERT_IF(initialized(), cx->jobQueue->empty());
+  MOZ_ASSERT_IF(initialized() && !cx->jobQueue->isDrainingStopped(),
+                cx->jobQueue->empty());
 }
 
 bool JS::AutoDebuggerJobQueueInterruption::init(JSContext* cx) {

@@ -316,7 +316,7 @@ add_task(async function contextMenu_entrypoints() {
 });
 
 add_task(async function appMenu() {
-  await BrowserTestUtils.withNewTab("https://example.com", async browser => {
+  await BrowserTestUtils.withNewTab("https://example.com", async () => {
     Services.telemetry.getSnapshotForKeyedScalars("main", true);
 
     let shown = BrowserTestUtils.waitForEvent(
@@ -348,7 +348,7 @@ add_task(async function appMenu() {
 });
 
 add_task(async function devtools() {
-  await BrowserTestUtils.withNewTab("https://example.com", async browser => {
+  await BrowserTestUtils.withNewTab("https://example.com", async () => {
     Services.telemetry.getSnapshotForKeyedScalars("main", true);
 
     let shown = BrowserTestUtils.waitForEvent(
@@ -667,7 +667,7 @@ add_task(async function mainMenu() {
 
   BrowserUsageTelemetry._resetAddonIds();
 
-  await BrowserTestUtils.withNewTab("https://example.com", async browser => {
+  await BrowserTestUtils.withNewTab("https://example.com", async () => {
     Services.telemetry.getSnapshotForKeyedScalars("main", true);
 
     CustomizableUI.setToolbarVisibility("toolbar-menubar", true);
@@ -702,7 +702,7 @@ add_task(async function preferences() {
     ? "sync-pane-loaded"
     : "privacy-pane-loaded";
   let finalPrefPaneLoaded = TestUtils.topicObserved(finalPaneEvent, () => true);
-  await BrowserTestUtils.withNewTab("about:preferences", async browser => {
+  await BrowserTestUtils.withNewTab("about:preferences", async () => {
     await finalPrefPaneLoaded;
 
     Services.telemetry.getSnapshotForKeyedScalars("main", true);
@@ -778,7 +778,7 @@ async function openLinkUsingContextMenu(link) {
 }
 
 async function history_appMenu(useContextClick) {
-  await BrowserTestUtils.withNewTab("https://example.com", async browser => {
+  await BrowserTestUtils.withNewTab("https://example.com", async () => {
     let shown = BrowserTestUtils.waitForEvent(
       elem("appMenu-popup"),
       "popupshown"
@@ -819,7 +819,7 @@ add_task(async function history_appMenu_context_click() {
 });
 
 async function bookmarks_appMenu(useContextClick) {
-  await BrowserTestUtils.withNewTab("https://example.com", async browser => {
+  await BrowserTestUtils.withNewTab("https://example.com", async () => {
     let shown = BrowserTestUtils.waitForEvent(
       elem("appMenu-popup"),
       "popupshown"
@@ -865,7 +865,7 @@ add_task(async function bookmarks_appMenu_context_click() {
 });
 
 async function bookmarks_library_navbar(useContextClick) {
-  await BrowserTestUtils.withNewTab("https://example.com", async browser => {
+  await BrowserTestUtils.withNewTab("https://example.com", async () => {
     CustomizableUI.addWidgetToArea("library-button", "nav-bar");
     let button = document.getElementById("library-button");
     button.click();
@@ -908,7 +908,7 @@ add_task(async function bookmarks_library_navbar_context_click() {
 });
 
 async function history_library_navbar(useContextClick) {
-  await BrowserTestUtils.withNewTab("https://example.com", async browser => {
+  await BrowserTestUtils.withNewTab("https://example.com", async () => {
     CustomizableUI.addWidgetToArea("library-button", "nav-bar");
     let button = document.getElementById("library-button");
     button.click();

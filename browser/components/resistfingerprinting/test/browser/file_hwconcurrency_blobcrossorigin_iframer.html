@@ -5,7 +5,7 @@
 <title></title>
 <script src="shared_test_funcs.js"></script>
 <script>
-async function runTheTest(iframe_domain, cross_origin_domain) {
+async function runTheTest(iframe_domain) {
   // Set up the frame
   const iframes = document.querySelectorAll("iframe");
   iframes[0].src = `https://${iframe_domain}/browser/browser/components/resistfingerprinting/test/browser/file_hwconcurrency_blobcrossorigin_iframee.html`;

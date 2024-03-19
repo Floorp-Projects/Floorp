@@ -31,7 +31,7 @@ if (searchParams.has("entrypoint")) {
   searchParamsChanged = true;
 }
 
-document.addEventListener("DOMContentLoaded", e => {
+document.addEventListener("DOMContentLoaded", () => {
   if (searchParamsChanged) {
     let newURL = protocol + pathname;
     let params = searchParams.toString();

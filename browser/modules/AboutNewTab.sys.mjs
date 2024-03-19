@@ -227,7 +227,7 @@ export const AboutNewTab = {
 
   // nsIObserver implementation
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     switch (topic) {
       case TOPIC_APP_QUIT: {
         // We defer to this to the next tick of the event loop since the

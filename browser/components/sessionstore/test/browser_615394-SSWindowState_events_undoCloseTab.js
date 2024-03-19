@@ -24,11 +24,11 @@ add_task(async function test_undoCloseTab() {
 
   ss.setCustomTabValue(tab, "foo", "bar");
 
-  function onSSWindowStateBusy(aEvent) {
+  function onSSWindowStateBusy() {
     busyEventCount++;
   }
 
-  function onSSWindowStateReady(aEvent) {
+  function onSSWindowStateReady() {
     Assert.equal(gBrowser.tabs.length, 2, "Should only have 2 tabs");
     lastTab = gBrowser.tabs[1];
     readyEventCount++;

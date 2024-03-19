@@ -52,7 +52,7 @@ function test() {
     }
   }
 
-  function onSSTabRestored(aEvent) {
+  function onSSTabRestored() {
     if (++restoredTabsCount < NUM_TABS) {
       return;
     }

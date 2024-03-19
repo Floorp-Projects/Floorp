@@ -63,7 +63,7 @@ let DefaultTabUnloaderMethods = {
     return tab.pinned ? weight : 0;
   },
 
-  isLoading(tab, weight) {
+  isLoading() {
     return 0;
   },
 

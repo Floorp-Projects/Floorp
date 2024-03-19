@@ -339,7 +339,7 @@ export var UITour = {
                   let callback = buttonData.callbackID;
                   let button = {
                     label: buttonData.label,
-                    callback: event => {
+                    callback: () => {
                       this.sendPageCallback(browser, callback);
                     },
                   };
@@ -694,7 +694,7 @@ export var UITour = {
     }
   },
 
-  observe(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic) {
     lazy.log.debug("observe: aTopic =", aTopic);
     switch (aTopic) {
       // The browser message manager is disconnected when the <browser> is
@@ -918,7 +918,7 @@ export var UITour = {
     );
   },
 
-  getTarget(aWindow, aTargetName, aSticky = false) {
+  getTarget(aWindow, aTargetName) {
     lazy.log.debug("getTarget:", aTargetName);
     if (typeof aTargetName != "string" || !aTargetName) {
       lazy.log.warn("getTarget: Invalid target name specified");
@@ -1280,7 +1280,7 @@ export var UITour = {
       tooltipButtons.hidden = !aButtons.length;
 
       let tooltipClose = document.getElementById("UITourTooltipClose");
-      let closeButtonCallback = event => {
+      let closeButtonCallback = () => {
         this.hideInfo(document.defaultView);
         if (aOptions && aOptions.closeButtonCallback) {
           aOptions.closeButtonCallback();
@@ -1301,7 +1301,7 @@ export var UITour = {
 
       tooltip.addEventListener(
         "popuphiding",
-        function (event) {
+        function () {
           tooltipClose.removeEventListener("command", closeButtonCallback);
           if (aOptions.targetCallback && aAnchor.removeTargetListener) {
             aAnchor.removeTargetListener(document, targetCallback);

@@ -139,7 +139,7 @@ use style::stylesheets::{
     FontPaletteValuesRule, ImportRule, KeyframesRule, LayerBlockRule, LayerStatementRule,
     MediaRule, NamespaceRule, Origin, OriginSet, PagePseudoClassFlags, PageRule, PropertyRule,
     SanitizationData, SanitizationKind, StyleRule, StylesheetContents,
-    StylesheetLoader as StyleStylesheetLoader, SupportsRule, UrlExtraData,
+    StylesheetLoader as StyleStylesheetLoader, SupportsRule, UrlExtraData, ScopeRule,
 };
 use style::stylist::{add_size_of_ua_cache, AuthorStylesEnabled, RuleInclusion, Stylist};
 use style::thread_state;
@@ -2481,6 +2481,14 @@ impl_basic_rule_funcs! { (CounterStyle, CounterStyleRule, Locked<CounterStyleRul
     debug: Servo_CounterStyleRule_Debug,
     to_css: Servo_CounterStyleRule_GetCssText,
     changed: Servo_StyleSet_CounterStyleRuleChanged,
+}
+
+impl_group_rule_funcs! { (Scope, ScopeRule, ScopeRule),
+    get_rules: Servo_ScopeRule_GetRules,
+    getter: Servo_CssRules_GetScopeRuleAt,
+    debug: Servo_ScopeRule_Debug,
+    to_css: Servo_ScopeRule_GetCssText,
+    changed: Servo_StyleSet_ScopeRuleChanged,
 }
 
 #[no_mangle]
@@ -6968,18 +6976,15 @@ fn inherit_relative_selector_search_direction(
 ) -> ElementSelectorFlags {
     let mut inherited = ElementSelectorFlags::empty();
     if let Some(parent) = parent {
-        if let Some(direction) = parent.relative_selector_search_direction() {
-            inherited |= direction
-                .intersection(ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_ANCESTOR);
-        }
+        inherited |= parent
+            .relative_selector_search_direction()
+            .intersection(ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_ANCESTOR);
     }
     if let Some(sibling) = prev_sibling {
-        if let Some(direction) = sibling.relative_selector_search_direction() {
-            // Inherit both, for e.g. a sibling with `:has(~.sibling .descendant)`
-            inherited |= direction.intersection(
-                ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_ANCESTOR_SIBLING,
-            );
-        }
+        // Inherit both, for e.g. a sibling with `:has(~.sibling .descendant)`
+        inherited |= sibling.relative_selector_search_direction().intersection(
+            ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_ANCESTOR_SIBLING,
+        );
     }
     inherited
 }
@@ -7309,13 +7314,9 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorForInsertion(
     ) {
         (Some(prev_sibling), Some(next_sibling)) => 'sibling: {
             // If the prev sibling is not on the sibling search path, skip.
-            if prev_sibling
+            if !prev_sibling
                 .relative_selector_search_direction()
-                .map_or(true, |direction| {
-                    !direction.intersects(
-                        ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_SIBLING,
-                    )
-                })
+                .intersects(ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_SIBLING)
             {
                 break 'sibling;
             }
@@ -7434,7 +7435,7 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorForRemoval(
     // This element was in-tree, so we can safely say that if it was not on
     // the relative selector search path, its removal will not invalidate any
     // relative selector.
-    if element.relative_selector_search_direction().is_none() {
+    if element.relative_selector_search_direction().is_empty() {
         return;
     }
     let following_node = following_node.map(GeckoNode);
@@ -8648,6 +8649,24 @@ pub extern "C" fn Servo_ColorScheme_Parse(input: &nsACString, out: &mut u8) -> b
 pub extern "C" fn Servo_LayerBlockRule_GetName(rule: &LayerBlockRule, result: &mut nsACString) {
     if let Some(ref name) = rule.name {
         name.to_css(&mut CssWriter::new(result)).unwrap()
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_ScopeRule_GetStart(rule: &ScopeRule, result: &mut nsACString) {
+    if let Some(v) = rule.bounds.start.as_ref() {
+        v.to_css(&mut CssWriter::new(result)).unwrap();
+    } else {
+        result.set_is_void(true);
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_ScopeRule_GetEnd(rule: &ScopeRule, result: &mut nsACString) {
+    if let Some(v) = rule.bounds.end.as_ref() {
+        v.to_css(&mut CssWriter::new(result)).unwrap();
+    } else {
+        result.set_is_void(true);
     }
 }
 

@@ -1,7 +1,0 @@
-//error: intr protocol `PIntrNestedProtocol' cannot specify [NestedUpTo]
-
-[NestedUpTo=inside_sync, ChildProc=any]
-intr protocol PIntrNestedProtocol {
-child:
-  [LegacyIntr] intr Msg();
-};

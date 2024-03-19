@@ -1602,7 +1602,8 @@ JS_PUBLIC_API bool JS::ToPrimitive(JSContext* cx, HandleObject obj, JSType hint,
   return ToPrimitiveSlow(cx, hint, vp);
 }
 
-JS_PUBLIC_API bool JS::GetFirstArgumentAsTypeHint(JSContext* cx, CallArgs args,
+JS_PUBLIC_API bool JS::GetFirstArgumentAsTypeHint(JSContext* cx,
+                                                  const CallArgs& args,
                                                   JSType* result) {
   if (!args.get(0).isString()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,

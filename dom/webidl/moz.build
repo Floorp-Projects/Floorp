@@ -492,6 +492,7 @@ WEBIDL_FILES = [
     "CSSPseudoElement.webidl",
     "CSSRule.webidl",
     "CSSRuleList.webidl",
+    "CSSScopeRule.webidl",
     "CSSStyleDeclaration.webidl",
     "CSSStyleRule.webidl",
     "CSSStyleSheet.webidl",

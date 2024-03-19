@@ -134,7 +134,7 @@ add_task(async function () {
   await BrowserTestUtils.removeTab(tab);
 });
 
-async function checkNoLoginsContentIsDisplayed(tab, expectedLinkContent) {
+async function checkNoLoginsContentIsDisplayed(tab) {
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     await ContentTaskUtils.waitForCondition(() => {
       const noLogins = content.document.querySelector(

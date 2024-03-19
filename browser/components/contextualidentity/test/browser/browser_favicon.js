@@ -20,7 +20,7 @@ function getIconFile() {
         loadUsingSystemPrincipal: true,
         contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE_FAVICON,
       },
-      function (inputStream, status) {
+      function (inputStream) {
         let size = inputStream.available();
         gFaviconData = NetUtil.readInputStreamToString(inputStream, size);
         resolve();

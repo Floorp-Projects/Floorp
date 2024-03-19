@@ -12,7 +12,7 @@ registerCleanupFunction(function () {
   }
 });
 
-function testBlockedPage(window) {
+function testBlockedPage() {
   info("Non-whitelisted pages must be blocked");
   ok(true, "about:blocked was shown");
 }

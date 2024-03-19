@@ -2,7 +2,7 @@
 <head>
 <meta charset="utf8">
 <script>
-function waitForCondition(aCond, aCallback, aErrorMsg) {
+function waitForCondition(aCond, aCallback) {
     var tries = 0;
     var interval = setInterval(() => {
       if (tries >= 30) {

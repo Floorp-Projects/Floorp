@@ -906,7 +906,7 @@ pub trait TElement:
     fn has_selector_flags(&self, flags: ElementSelectorFlags) -> bool;
 
     /// Returns the search direction for relative selector invalidation, if it is on the search path.
-    fn relative_selector_search_direction(&self) -> Option<ElementSelectorFlags>;
+    fn relative_selector_search_direction(&self) -> ElementSelectorFlags;
 }
 
 /// TNode and TElement aren't Send because we want to be careful and explicit

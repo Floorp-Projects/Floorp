@@ -7627,6 +7627,13 @@
     value: false
     mirror: always
     set_spidermonkey_pref: startup
+
+  # Experimental support for Uint8Array base64/hex in JavaScript.
+-   name: javascript.options.experimental.uint8array_base64
+    type: bool
+    value: false
+    mirror: always
+    set_spidermonkey_pref: startup
 #endif  // NIGHTLY_BUILD
 
 # Experimental support for ArrayBuffer.prototype.transfer{,ToFixedLength}() in JavaScript.
@@ -8749,6 +8756,13 @@
 - name: layout.css.properties-and-values.enabled
   type: RelaxedAtomicBool
   value: @IS_NIGHTLY_BUILD@
+  mirror: always
+  rust: true
+
+# Whether @scope rule is enabled
+- name: layout.css.at-scope.enabled
+  type: RelaxedAtomicBool
+  value: false
   mirror: always
   rust: true
 

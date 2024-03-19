@@ -31,7 +31,7 @@ function test() {
     };
     function testCheckbox() {
       win.removeEventListener("load", testCheckbox);
-      Services.obs.addObserver(function onCertUI(aSubject, aTopic, aData) {
+      Services.obs.addObserver(function onCertUI() {
         Services.obs.removeObserver(onCertUI, "cert-exception-ui-ready");
         ok(win.gCert, "The certificate information should be available now");
 

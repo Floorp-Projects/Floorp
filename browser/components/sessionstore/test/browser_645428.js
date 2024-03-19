@@ -6,7 +6,7 @@ const NOTIFICATION = "sessionstore-browser-state-restored";
 function test() {
   waitForExplicitFinish();
 
-  function observe(subject, topic, data) {
+  function observe(subject, topic) {
     if (NOTIFICATION == topic) {
       finish();
       ok(true, "TOPIC received");

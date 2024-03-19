@@ -8,7 +8,7 @@ import ReactDOM from "react-dom";
 import pktPanelMessaging from "../messages.mjs";
 import Signup from "../components/Signup/Signup.jsx";
 
-var SignupOverlay = function (options) {
+var SignupOverlay = function () {
   this.inited = false;
   this.active = false;
 

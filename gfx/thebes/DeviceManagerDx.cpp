@@ -250,15 +250,19 @@ void DeviceManagerDx::UpdateMonitorInfo() {
 }
 
 std::vector<DXGI_OUTPUT_DESC1> DeviceManagerDx::GetOutputDescs() {
-  HRESULT hr;
   std::vector<DXGI_OUTPUT_DESC1> outputDescs;
 
-#ifdef __MINGW32__
-  return outputDescs;
-#else
+  nsModuleHandle dxgiModule(LoadLibrarySystem32(L"dxgi.dll"));
+  decltype(CreateDXGIFactory1)* createDXGIFactory1 =
+      (decltype(CreateDXGIFactory1)*)GetProcAddress(dxgiModule,
+                                                    "CreateDXGIFactory1");
+  if (!createDXGIFactory1) {
+    return outputDescs;
+  }
+
   RefPtr<IDXGIFactory1> dxgiFactory;
-  hr = ::CreateDXGIFactory1(__uuidof(IDXGIFactory1),
-                            getter_AddRefs(dxgiFactory));
+  HRESULT hr =
+      createDXGIFactory1(__uuidof(IDXGIFactory1), getter_AddRefs(dxgiFactory));
   if (FAILED(hr)) {
     gfxCriticalNoteOnce << "Failed to create DXGI factory: " << gfx::hexa(hr);
     return outputDescs;
@@ -309,7 +313,6 @@ std::vector<DXGI_OUTPUT_DESC1> DeviceManagerDx::GetOutputDescs() {
   }
 
   return outputDescs;
-#endif  // __MINGW32__
 }
 
 bool DeviceManagerDx::SystemHDREnabled() {

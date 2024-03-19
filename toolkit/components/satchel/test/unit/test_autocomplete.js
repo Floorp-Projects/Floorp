@@ -39,8 +39,8 @@ function run_test() {
 
   testfile.copyTo(profileDir, "formhistory.sqlite");
 
-  fac = Cc["@mozilla.org/satchel/form-autocomplete;1"].getService(
-    Ci.nsIFormAutoComplete
+  fac = Cc["@mozilla.org/satchel/form-history-autocomplete;1"].getService(
+    Ci.nsIFormHistoryAutoComplete
   );
 
   timeGroupingSize =

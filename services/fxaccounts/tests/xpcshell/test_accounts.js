@@ -44,7 +44,7 @@ initTestLogging("Trace");
 var log = Log.repository.getLogger("Services.FxAccounts.test");
 log.level = Log.Level.Debug;
 
-// See verbose logging from FxAccounts.jsm and jwcrypto.jsm.
+// See verbose logging from FxAccounts.sys.mjs and jwcrypto.sys.mjs.
 Services.prefs.setStringPref("identity.fxaccounts.loglevel", "Trace");
 Log.repository.getLogger("FirefoxAccounts").level = Log.Level.Trace;
 Services.prefs.setStringPref("services.crypto.jwcrypto.log.level", "Debug");
@@ -217,7 +217,7 @@ function MockFxAccounts() {
     },
   });
   // and for convenience so we don't have to touch as many lines in this test
-  // when we refactored FxAccounts.jsm :)
+  // when we refactored FxAccounts.sys.mjs :)
   result.setSignedInUser = function (creds) {
     return result._internal.setSignedInUser(creds);
   };

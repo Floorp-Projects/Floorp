@@ -127,7 +127,7 @@ TabListView.prototype = {
   },
 
   // Client rows are hidden when the list is filtered
-  _renderFilteredClient(client, filter) {
+  _renderFilteredClient(client) {
     client.tabs.forEach((tab, index) => {
       let node = this._renderTab(client, tab, index);
       this.list.appendChild(node);

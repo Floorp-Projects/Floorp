@@ -185,7 +185,7 @@ export var ExtensionsUI = {
     );
   },
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     if (topic == "webextension-permission-prompt") {
       let { target, info } = subject.wrappedJSObject;
 

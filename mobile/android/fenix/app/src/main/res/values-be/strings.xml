@@ -1786,6 +1786,8 @@
     <string name="logins_warning_dialog_title_2">Абараніце захаваныя паролі</string>
     <!-- Message of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Наладзьце графічны ключ, пін ці пароль для блакавання прылады, каб абараніць захаваныя лагіны і паролі ад крадзяжу, калі Вашай прыладай завалодае хтосьці іншы.</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message_2">Наладзьце графічны ключ, пін або пароль для блакавання прылады, каб абараніць захаваныя паролі, калі хтосьці іншы атрымае доступ да вашай прылады.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Пазней</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1803,6 +1805,9 @@
 
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description" moz:RemovedIn="125" tools:ignore="UnusedResources">Меню сартавання лагінаў</string>
+
+    <!-- Content description (not visible, for screen readers etc.) -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description_2">Меню сартавання пароляў</string>
 
     <!-- Autofill -->
     <!-- Preference and title for managing the autofill settings -->
@@ -1844,6 +1849,9 @@
     <string name="preferences_addresses_save_and_autofill_addresses_2">Захоўваць і запаўняць адрасы</string>
     <!-- Preference summary for saving and autofilling address data -->
     <string name="preferences_addresses_save_and_autofill_addresses_summary" moz:RemovedIn="125" tools:ignore="UnusedResources">Уключаць звесткі, такія як нумары, адрасы электроннай пошты і дастаўкі</string>
+
+    <!-- Preference summary for saving and filling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary_2">Уключае нумары тэлефонаў і адрасы электроннай пошты</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Дадаць карту</string>
@@ -1906,6 +1914,8 @@
     <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
     <string name="credit_cards_biometric_prompt_unlock_message" moz:RemovedIn="125" tools:ignore="UnusedResources">Разблакуйце, каб выкарыстаць захаваную інфармацыю крэдытнай карты</string>
 
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
+    <string name="credit_cards_biometric_prompt_unlock_message_2">Разблакуйце, каб выкарыстаць захаваныя спосабы аплаты</string>
     <!-- Title of the "Add address" screen -->
     <string name="addresses_add_address">Дадаць адрас</string>
     <!-- Title of the "Edit address" screen -->
@@ -2582,6 +2592,11 @@
     <!-- Button text on the dialog used by the translations feature to cancel deleting a language. -->
     <string name="delete_language_file_dialog_negative_button_text">Скасаваць</string>
 
+    <!-- Title for the data saving mode warning dialog used by the translations feature.
+    This dialog will be presented when the user attempts to download a language or perform
+    a translation without the necessary language files downloaded first when Android's data saver mode is enabled and the user is not using WiFi.
+    The first parameter is the size in kilobytes or megabytes of the language file.-->
+    <string name="download_language_file_dialog_title">Сцягнуць у рэжыме эканоміі трафіку (%1$s)?</string>
     <!-- Checkbox label text on the data saving mode warning dialog used by the translations feature. This checkbox allows users to ignore the data usage warnings. -->
     <string name="download_language_file_dialog_checkbox_text">Заўсёды сцягваць у рэжыме эканоміі трафіку</string>
     <!-- Button text on the data saving mode warning dialog used by the translations feature to allow users to confirm they wish to continue and download the language file. -->

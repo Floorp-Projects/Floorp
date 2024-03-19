@@ -487,7 +487,7 @@ export class LoginAutoComplete {
    * @param {string} aSearchString The value typed in the field.
    * @param {nsIAutoCompleteResult} aPreviousResult
    * @param {HTMLInputElement} aElement
-   * @param {nsIFormAutoCompleteObserver} aCallback
+   * @param {nsIFormFillCompleteObserver} aCallback
    */
   startSearch(aSearchString, aPreviousResult, aElement, aCallback) {
     let { isNullPrincipal } = aElement.nodePrincipal;

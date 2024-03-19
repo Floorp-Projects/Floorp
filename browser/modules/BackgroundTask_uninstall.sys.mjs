@@ -12,7 +12,7 @@
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
-export async function runBackgroundTask(commandLine) {
+export async function runBackgroundTask() {
   console.log("Running BackgroundTask_uninstall.");
 
   if (AppConstants.platform === "win") {

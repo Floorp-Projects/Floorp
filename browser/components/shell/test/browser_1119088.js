@@ -101,7 +101,7 @@ add_task(async function () {
       gBrowser,
       url: "about:logo",
     },
-    async browser => {
+    async () => {
       let dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(
         Ci.nsIDirectoryServiceProvider
       );

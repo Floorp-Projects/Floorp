@@ -5,7 +5,7 @@
 import { LangPackMatcher } from "resource://gre/modules/LangPackMatcher.sys.mjs";
 
 /**
- * LangPackMatcher.jsm calls out to to the addons store, which involves network requests.
+ * LangPackMatcher.sys.mjs calls out to to the addons store, which involves network requests.
  * Other tests create a fake addons server, and install mock XPIs. At the time of this
  * writing that infrastructure is not available for mochitests.
  *
@@ -26,7 +26,7 @@ import { LangPackMatcher } from "resource://gre/modules/LangPackMatcher.sys.mjs"
 export function getAddonAndLocalAPIsMocker(testScope, sandbox) {
   const { info } = testScope;
   return function mockAddonAndLocaleAPIs({ systemLocale, appLocale }) {
-    info("Mocking LangPackMatcher.jsm APIs");
+    info("Mocking LangPackMatcher.sys.mjs APIs");
 
     let resolveLangPacks;
     const langPackPromise = new Promise(resolve => {

@@ -47,9 +47,13 @@ already_AddRefed<InvokeEvent> InvokeEvent::Constructor(
 Element* InvokeEvent::GetInvoker() {
   EventTarget* currentTarget = GetCurrentTarget();
   if (currentTarget) {
+    nsINode* currentTargetNode = currentTarget->GetAsNode();
+    if (!currentTargetNode) {
+      return nullptr;
+    }
     nsINode* retargeted = nsContentUtils::Retarget(
-        static_cast<nsINode*>(mInvoker), currentTarget->GetAsNode());
-    return retargeted->AsElement();
+        static_cast<nsINode*>(mInvoker), currentTargetNode);
+    return retargeted ? retargeted->AsElement() : nullptr;
   }
   MOZ_ASSERT(!mEvent->mFlags.mIsBeingDispatched);
   return mInvoker;

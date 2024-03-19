@@ -927,7 +927,9 @@ bool TaskController::DoExecuteNextTaskOnlyMainThreadInternal(
             mMainThreadTasks.insert(std::move(mCurrentTasksMT.top()));
         MOZ_ASSERT(insertion.second);
         task->mIterator = insertion.first;
-        manager->WillRunTask();
+        if (manager) {
+          manager->WillRunTask();
+        }
       } else {
         task->mCompleted = true;
 #ifdef DEBUG

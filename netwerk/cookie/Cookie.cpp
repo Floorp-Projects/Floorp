@@ -100,8 +100,8 @@ already_AddRefed<Cookie> Cookie::CreateValidated(
   if (cookie->mData.creationTime() > currentTimeInUsec) {
     uint64_t diffInSeconds =
         (cookie->mData.creationTime() - currentTimeInUsec) / PR_USEC_PER_SEC;
-    mozilla::glean::networking::cookie_creation_fixup_diff.AccumulateSamples(
-        {diffInSeconds});
+    mozilla::glean::networking::cookie_creation_fixup_diff
+        .AccumulateSingleSample(diffInSeconds);
     glean::networking::cookie_timestamp_fixed_count.Get("creationTime"_ns)
         .Add(1);
 
@@ -112,8 +112,8 @@ already_AddRefed<Cookie> Cookie::CreateValidated(
   if (cookie->mData.lastAccessed() > currentTimeInUsec) {
     uint64_t diffInSeconds =
         (cookie->mData.lastAccessed() - currentTimeInUsec) / PR_USEC_PER_SEC;
-    mozilla::glean::networking::cookie_access_fixup_diff.AccumulateSamples(
-        {diffInSeconds});
+    mozilla::glean::networking::cookie_access_fixup_diff.AccumulateSingleSample(
+        diffInSeconds);
     glean::networking::cookie_timestamp_fixed_count.Get("lastAccessed"_ns)
         .Add(1);
 

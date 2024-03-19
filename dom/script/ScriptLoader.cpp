@@ -1097,19 +1097,6 @@ bool ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
     return false;
   }
 
-  if (request && request->IsModuleRequest() &&
-      mModuleLoader->HasImportMapRegistered() &&
-      request->mState > ScriptLoadRequest::State::Compiling) {
-    // We don't preload module scripts after seeing an import map but a script
-    // can dynamically insert an import map after preloading has happened.
-    //
-    // In the case of an import map is inserted after preloading has happened,
-    // We also check if the request has started loading imports, if not then we
-    // can reuse the preloaded request.
-    request->Cancel();
-    request = nullptr;
-  }
-
   if (request) {
     // Use the preload request.
 
@@ -1398,6 +1385,16 @@ bool ScriptLoader::ProcessInlineScript(nsIScriptElement* aElement,
       // map will bail out early.
       return false;
     }
+
+    // Remove any module preloads. Module specifier resolution is invalidated by
+    // adding an import map, and incorrect dependencies may have been loaded.
+    mPreloads.RemoveElementsBy([](const PreloadInfo& info) {
+      if (info.mRequest->IsModuleRequest()) {
+        info.mRequest->Cancel();
+        return true;
+      }
+      return false;
+    });
 
     // TODO: Bug 1781758: Move RegisterImportMap into EvaluateScriptElement.
     //

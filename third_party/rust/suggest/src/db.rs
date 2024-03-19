@@ -25,15 +25,15 @@ use crate::{
         DownloadedMdnSuggestion, DownloadedPocketSuggestion, DownloadedWeatherData,
         SuggestRecordId,
     },
-    schema::{SuggestConnectionInitializer, VERSION},
+    schema::{clear_database, SuggestConnectionInitializer, VERSION},
     store::{UnparsableRecord, UnparsableRecords},
     suggestion::{cook_raw_suggestion_url, AmpSuggestionType, Suggestion},
     Result, SuggestionQuery,
 };
 
-/// The metadata key whose value is the timestamp of the last record ingested
-/// from the Suggest Remote Settings collection.
-pub const LAST_INGEST_META_KEY: &str = "last_quicksuggest_ingest";
+/// The metadata key prefix for the last ingested unparsable record. These are
+/// records that were not parsed properly, or were not of the "approved" types.
+pub const LAST_INGEST_META_UNPARSABLE: &str = "last_quicksuggest_ingest_unparsable";
 /// The metadata key whose value keeps track of records of suggestions
 /// that aren't parsable and which schema version it was first seen in.
 pub const UNPARSABLE_RECORDS_META_KEY: &str = "unparsable_records";
@@ -148,20 +148,28 @@ impl<'a> SuggestDao<'a> {
         self.put_unparsable_record_id(&record_id)?;
         // Advance the last fetch time, so that we can resume
         // fetching after this record if we're interrupted.
-        self.put_last_ingest_if_newer(record.last_modified)
+        self.put_last_ingest_if_newer(LAST_INGEST_META_UNPARSABLE, record.last_modified)
     }
 
-    pub fn handle_ingested_record(&mut self, record: &RemoteSettingsRecord) -> Result<()> {
+    pub fn handle_ingested_record(
+        &mut self,
+        last_ingest_key: &str,
+        record: &RemoteSettingsRecord,
+    ) -> Result<()> {
         let record_id = SuggestRecordId::from(&record.id);
         // Remove this record's ID from the list of unparsable
         // records, since we understand it now.
         self.drop_unparsable_record_id(&record_id)?;
         // Advance the last fetch time, so that we can resume
         // fetching after this record if we're interrupted.
-        self.put_last_ingest_if_newer(record.last_modified)
+        self.put_last_ingest_if_newer(last_ingest_key, record.last_modified)
     }
 
-    pub fn handle_deleted_record(&mut self, record: &RemoteSettingsRecord) -> Result<()> {
+    pub fn handle_deleted_record(
+        &mut self,
+        last_ingest_key: &str,
+        record: &RemoteSettingsRecord,
+    ) -> Result<()> {
         let record_id = SuggestRecordId::from(&record.id);
         // Drop either the icon or suggestions, records only contain one or the other
         match record_id.as_icon_id() {
@@ -173,7 +181,7 @@ impl<'a> SuggestDao<'a> {
         self.drop_unparsable_record_id(&record_id)?;
         // Advance the last fetch time, so that we can resume
         // fetching after this record if we're interrupted.
-        self.put_last_ingest_if_newer(record.last_modified)
+        self.put_last_ingest_if_newer(last_ingest_key, record.last_modified)
     }
 
     // =============== Low level API ===============
@@ -231,12 +239,16 @@ impl<'a> SuggestDao<'a> {
               s.title,
               s.url,
               s.provider,
-              s.score
+              s.score,
+              fk.full_keyword
             FROM
               suggestions s
             JOIN
               keywords k
               ON k.suggestion_id = s.id
+            LEFT JOIN
+              full_keywords fk
+              ON k.full_keyword_id = fk.id
             WHERE
               s.provider = :provider
               AND k.keyword = :keyword
@@ -248,8 +260,9 @@ impl<'a> SuggestDao<'a> {
             |row| -> Result<Suggestion> {
                 let suggestion_id: i64 = row.get("id")?;
                 let title = row.get("title")?;
-                let raw_url = row.get::<_, String>("url")?;
-                let score = row.get::<_, f64>("score")?;
+                let raw_url: String = row.get("url")?;
+                let score: f64 = row.get("score")?;
+                let full_keyword_from_db: Option<String> = row.get("full_keyword")?;
 
                 let keywords: Vec<String> = self.conn.query_rows_and_then_cached(
                     r#"
@@ -277,9 +290,12 @@ impl<'a> SuggestDao<'a> {
                       amp.iab_category,
                       amp.impression_url,
                       amp.click_url,
-                      (SELECT i.data FROM icons i WHERE i.id = amp.icon_id) AS icon
+                      i.data AS icon,
+                      i.mimetype AS icon_mimetype
                     FROM
                       amp_custom_details amp
+                    LEFT JOIN
+                      icons i ON amp.icon_id = i.id
                     WHERE
                       amp.suggestion_id = :suggestion_id
                     "#,
@@ -298,8 +314,10 @@ impl<'a> SuggestDao<'a> {
                             title,
                             url: cooked_url,
                             raw_url,
-                            full_keyword: full_keyword(keyword_lowercased, &keywords),
+                            full_keyword: full_keyword_from_db
+                                .unwrap_or_else(|| full_keyword(keyword_lowercased, &keywords)),
                             icon: row.get("icon")?,
+                            icon_mimetype: row.get("icon_mimetype")?,
                             impression_url: row.get("impression_url")?,
                             click_url: cooked_click_url,
                             raw_click_url,
@@ -350,36 +368,51 @@ impl<'a> SuggestDao<'a> {
                     },
                     |row| row.get(0),
                 )?;
-                let icon = self.conn.try_query_one(
-                    "SELECT i.data
+                let (icon, icon_mimetype) = self
+                    .conn
+                    .try_query_row(
+                        "SELECT i.data, i.mimetype
                      FROM icons i
                      JOIN wikipedia_custom_details s ON s.icon_id = i.id
-                     WHERE s.suggestion_id = :suggestion_id",
-                    named_params! {
-                        ":suggestion_id": suggestion_id
-                    },
-                    true,
-                )?;
+                     WHERE s.suggestion_id = :suggestion_id
+                     LIMIT 1",
+                        named_params! {
+                            ":suggestion_id": suggestion_id
+                        },
+                        |row| -> Result<_> {
+                            Ok((
+                                row.get::<_, Option<Vec<u8>>>(0)?,
+                                row.get::<_, Option<String>>(1)?,
+                            ))
+                        },
+                        true,
+                    )?
+                    .unwrap_or((None, None));
+
                 Ok(Suggestion::Wikipedia {
                     title,
                     url: raw_url,
                     full_keyword: full_keyword(keyword_lowercased, &keywords),
                     icon,
+                    icon_mimetype,
                 })
             },
         )?;
         Ok(suggestions)
     }
 
-    /// Fetches Suggestions of type Amo provider that match the given query
-    pub fn fetch_amo_suggestions(&self, query: &SuggestionQuery) -> Result<Vec<Suggestion>> {
+    /// Query for suggestions using the keyword prefix and provider
+    fn map_prefix_keywords<T>(
+        &self,
+        query: &SuggestionQuery,
+        provider: &SuggestionProvider,
+        mut mapper: impl FnMut(&rusqlite::Row, &str) -> Result<T>,
+    ) -> Result<Vec<T>> {
         let keyword_lowercased = &query.keyword.to_lowercase();
         let (keyword_prefix, keyword_suffix) = split_keyword(keyword_lowercased);
-        let suggestions_limit = &query.limit.unwrap_or(-1);
-        let suggestions = self
-            .conn
-            .query_rows_and_then_cached(
-                r#"
+        let suggestions_limit = query.limit.unwrap_or(-1);
+        self.conn.query_rows_and_then_cached(
+            r#"
                 SELECT
                   s.id,
                   MAX(k.rank) AS rank,
@@ -405,13 +438,23 @@ impl<'a> SuggestDao<'a> {
                 LIMIT
                   :suggestions_limit
                 "#,
-                named_params! {
-                    ":keyword_prefix": keyword_prefix,
-                    ":keyword_suffix": keyword_suffix,
-                    ":provider": SuggestionProvider::Amo,
-                    ":suggestions_limit": suggestions_limit,
-                },
-                |row| -> Result<Option<Suggestion>> {
+            &[
+                (":keyword_prefix", &keyword_prefix as &dyn ToSql),
+                (":keyword_suffix", &keyword_suffix as &dyn ToSql),
+                (":provider", provider as &dyn ToSql),
+                (":suggestions_limit", &suggestions_limit as &dyn ToSql),
+            ],
+            |row| mapper(row, keyword_suffix),
+        )
+    }
+
+    /// Fetches Suggestions of type Amo provider that match the given query
+    pub fn fetch_amo_suggestions(&self, query: &SuggestionQuery) -> Result<Vec<Suggestion>> {
+        let suggestions = self
+            .map_prefix_keywords(
+                query,
+                &SuggestionProvider::Amo,
+                |row, keyword_suffix| -> Result<Option<Suggestion>> {
                     let suggestion_id: i64 = row.get("id")?;
                     let title = row.get("title")?;
                     let raw_url = row.get::<_, String>("url")?;
@@ -534,45 +577,11 @@ impl<'a> SuggestDao<'a> {
 
     /// Fetches suggestions for MDN
     pub fn fetch_mdn_suggestions(&self, query: &SuggestionQuery) -> Result<Vec<Suggestion>> {
-        let keyword_lowercased = &query.keyword.to_lowercase();
-        let (keyword_prefix, keyword_suffix) = split_keyword(keyword_lowercased);
-        let suggestions_limit = &query.limit.unwrap_or(-1);
         let suggestions = self
-            .conn
-            .query_rows_and_then_cached(
-                r#"
-                SELECT
-                  s.id,
-                  MAX(k.rank) AS rank,
-                  s.title,
-                  s.url,
-                  s.provider,
-                  s.score,
-                  k.keyword_suffix
-                FROM
-                  suggestions s
-                JOIN
-                  prefix_keywords k
-                  ON k.suggestion_id = s.id
-                WHERE
-                  k.keyword_prefix = :keyword_prefix
-                  AND (k.keyword_suffix BETWEEN :keyword_suffix AND :keyword_suffix || x'FFFF')
-                  AND s.provider = :provider
-                GROUP BY
-                  s.id
-                ORDER BY
-                  s.score DESC,
-                  rank DESC
-                LIMIT
-                  :suggestions_limit
-                "#,
-                named_params! {
-                    ":keyword_prefix": keyword_prefix,
-                    ":keyword_suffix": keyword_suffix,
-                    ":provider": SuggestionProvider::Mdn,
-                    ":suggestions_limit": suggestions_limit,
-                },
-                |row| -> Result<Option<Suggestion>> {
+            .map_prefix_keywords(
+                query,
+                &SuggestionProvider::Mdn,
+                |row, keyword_suffix| -> Result<Option<Suggestion>> {
                     let suggestion_id: i64 = row.get("id")?;
                     let title = row.get("title")?;
                     let raw_url = row.get::<_, String>("url")?;
@@ -829,22 +838,35 @@ impl<'a> SuggestDao<'a> {
                     )?;
                 }
             }
-            for (index, keyword) in common_details.keywords.iter().enumerate() {
+            let mut full_keyword_inserter = FullKeywordInserter::new(self.conn, suggestion_id);
+            for keyword in common_details.keywords() {
+                let full_keyword_id = match (suggestion, keyword.full_keyword) {
+                    // Try to associate full keyword data.  Only do this for AMP, we decided to
+                    // skip it for Wikipedia in https://bugzilla.mozilla.org/show_bug.cgi?id=1876217
+                    (DownloadedAmpWikipediaSuggestion::Amp(_), Some(full_keyword)) => {
+                        Some(full_keyword_inserter.maybe_insert(full_keyword)?)
+                    }
+                    _ => None,
+                };
+
                 self.conn.execute(
                     "INSERT INTO keywords(
                          keyword,
                          suggestion_id,
+                         full_keyword_id,
                          rank
                      )
                      VALUES(
                          :keyword,
                          :suggestion_id,
+                         :full_keyword_id,
                          :rank
                      )",
                     named_params! {
-                        ":keyword": keyword,
-                        ":rank": index,
+                        ":keyword": keyword.keyword,
+                        ":rank": keyword.rank,
                         ":suggestion_id": suggestion_id,
+                        ":full_keyword_id": full_keyword_id,
                     },
                 )?;
             }
@@ -920,21 +942,29 @@ impl<'a> SuggestDao<'a> {
                 },
             )?;
 
-            for (index, keyword) in common_details.keywords.iter().enumerate() {
+            let mut full_keyword_inserter = FullKeywordInserter::new(self.conn, suggestion_id);
+            for keyword in common_details.keywords() {
+                let full_keyword_id = keyword
+                    .full_keyword
+                    .map(|full_keyword| full_keyword_inserter.maybe_insert(full_keyword))
+                    .transpose()?;
                 self.conn.execute(
                     "INSERT INTO keywords(
                          keyword,
                          suggestion_id,
+                         full_keyword_id,
                          rank
                      )
                      VALUES(
                          :keyword,
                          :suggestion_id,
+                         :full_keyword_id,
                          :rank
                      )",
                     named_params! {
-                        ":keyword": keyword,
-                        ":rank": index,
+                        ":keyword": keyword.keyword,
+                        ":rank": keyword.rank,
+                        ":full_keyword_id": full_keyword_id,
                         ":suggestion_id": suggestion_id,
                     },
                 )?;
@@ -1141,19 +1171,22 @@ impl<'a> SuggestDao<'a> {
     }
 
     /// Inserts or replaces an icon for a suggestion into the database.
-    pub fn put_icon(&mut self, icon_id: &str, data: &[u8]) -> Result<()> {
+    pub fn put_icon(&mut self, icon_id: &str, data: &[u8], mimetype: &str) -> Result<()> {
         self.conn.execute(
             "INSERT OR REPLACE INTO icons(
                  id,
-                 data
+                 data,
+                 mimetype
              )
              VALUES(
                  :id,
-                 :data
+                 :data,
+                 :mimetype
              )",
             named_params! {
                 ":id": icon_id,
                 ":data": data,
+                ":mimetype": mimetype,
             },
         )?;
         Ok(())
@@ -1196,12 +1229,7 @@ impl<'a> SuggestDao<'a> {
 
     /// Clears the database, removing all suggestions, icons, and metadata.
     pub fn clear(&mut self) -> Result<()> {
-        self.conn.execute_batch(
-            "DELETE FROM suggestions;
-             DELETE FROM icons;
-             DELETE FROM meta;",
-        )?;
-        Ok(())
+        Ok(clear_database(self.conn)?)
     }
 
     /// Returns the value associated with a metadata key.
@@ -1224,12 +1252,14 @@ impl<'a> SuggestDao<'a> {
 
     /// Updates the last ingest timestamp if the given last modified time is
     /// newer than the existing one recorded.
-    pub fn put_last_ingest_if_newer(&mut self, record_last_modified: u64) -> Result<()> {
-        let last_ingest = self
-            .get_meta::<u64>(LAST_INGEST_META_KEY)?
-            .unwrap_or_default();
+    pub fn put_last_ingest_if_newer(
+        &mut self,
+        last_ingest_key: &str,
+        record_last_modified: u64,
+    ) -> Result<()> {
+        let last_ingest = self.get_meta::<u64>(last_ingest_key)?.unwrap_or_default();
         if record_last_modified > last_ingest {
-            self.put_meta(LAST_INGEST_META_KEY, record_last_modified)?;
+            self.put_meta(last_ingest_key, record_last_modified)?;
         }
 
         Ok(())
@@ -1307,6 +1337,53 @@ impl<'a> SuggestDao<'a> {
     ) -> Result<Option<SuggestProviderConfig>> {
         self.get_meta::<String>(&provider_config_meta_key(provider))?
             .map_or_else(|| Ok(None), |json| Ok(serde_json::from_str(&json)?))
+    }
+}
+
+/// Helper struct to get full_keyword_ids for a suggestion
+///
+/// `FullKeywordInserter` handles repeated full keywords efficiently.  The first instance will
+/// cause a row to be inserted into the database.  Subsequent instances will return the same
+/// full_keyword_id.
+struct FullKeywordInserter<'a> {
+    conn: &'a Connection,
+    suggestion_id: i64,
+    last_inserted: Option<(&'a str, i64)>,
+}
+
+impl<'a> FullKeywordInserter<'a> {
+    fn new(conn: &'a Connection, suggestion_id: i64) -> Self {
+        Self {
+            conn,
+            suggestion_id,
+            last_inserted: None,
+        }
+    }
+
+    fn maybe_insert(&mut self, full_keyword: &'a str) -> rusqlite::Result<i64> {
+        match self.last_inserted {
+            Some((s, id)) if s == full_keyword => Ok(id),
+            _ => {
+                let full_keyword_id = self.conn.query_row_and_then(
+                    "INSERT INTO full_keywords(
+                        suggestion_id,
+                        full_keyword
+                     )
+                     VALUES(
+                        :suggestion_id,
+                        :keyword
+                     )
+                     RETURNING id",
+                    named_params! {
+                        ":keyword": full_keyword,
+                        ":suggestion_id": self.suggestion_id,
+                    },
+                    |row| row.get(0),
+                )?;
+                self.last_inserted = Some((full_keyword, full_keyword_id));
+                Ok(full_keyword_id)
+            }
+        }
     }
 }
 

@@ -31,7 +31,7 @@ add_task(async function test_toggling_screenshots_pref() {
     .callsFake(observerSpy);
   let notifierStub = sinon
     .stub(ScreenshotsUtils, "notify")
-    .callsFake(function (window, type) {
+    .callsFake(function () {
       notifierSpy();
       ScreenshotsUtils.notify.wrappedMethod.apply(this, arguments);
     });

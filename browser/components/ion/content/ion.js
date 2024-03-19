@@ -444,7 +444,7 @@ async function setup(cachedAddons) {
 
   document
     .getElementById("join-ion-accept-dialog-button")
-    .addEventListener("click", async event => {
+    .addEventListener("click", async () => {
       const ionId = Services.prefs.getStringPref(PREF_ION_ID, null);
 
       if (!ionId) {
@@ -501,7 +501,7 @@ async function setup(cachedAddons) {
 
   document
     .getElementById("leave-ion-accept-dialog-button")
-    .addEventListener("click", async event => {
+    .addEventListener("click", async () => {
       const completedStudies = Services.prefs.getStringPref(
         PREF_ION_COMPLETED_STUDIES,
         "{}"
@@ -567,7 +567,7 @@ async function setup(cachedAddons) {
 
   document
     .getElementById("join-study-accept-dialog-button")
-    .addEventListener("click", async event => {
+    .addEventListener("click", async () => {
       const dialog = document.getElementById("join-study-consent-dialog");
       const studyAddonId = dialog.getAttribute("addon-id");
       toggleEnrolled(studyAddonId, cachedAddons).then(dialog.close());
@@ -575,7 +575,7 @@ async function setup(cachedAddons) {
 
   document
     .getElementById("leave-study-accept-dialog-button")
-    .addEventListener("click", async event => {
+    .addEventListener("click", async () => {
       const dialog = document.getElementById("leave-study-consent-dialog");
       const studyAddonId = dialog.getAttribute("addon-id");
       await toggleEnrolled(studyAddonId, cachedAddons).then(dialog.close());
@@ -597,7 +597,7 @@ async function setup(cachedAddons) {
   };
   AddonManager.addAddonListener(addonsListener);
 
-  window.addEventListener("unload", event => {
+  window.addEventListener("unload", () => {
     AddonManager.removeAddonListener(addonsListener);
   });
 }
@@ -639,7 +639,7 @@ function updateContents(contents) {
   }
 }
 
-document.addEventListener("DOMContentLoaded", async domEvent => {
+document.addEventListener("DOMContentLoaded", async () => {
   toggleContentBasedOnLocale();
 
   showEnrollmentStatus();

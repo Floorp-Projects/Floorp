@@ -2,7 +2,7 @@
 
 const { WebExtensionPolicy } = Cu.getGlobalForObject(Services);
 
-function promiseNotificationShown(aWindow, aName) {
+function promiseNotificationShown(aWindow) {
   return new Promise(resolve => {
     let notificationBox = aWindow.gNotificationBox;
     notificationBox.stack.addEventListener(
@@ -52,7 +52,7 @@ let TestHangReport = function (
   hangType = SLOW_SCRIPT,
   browser = gBrowser.selectedBrowser
 ) {
-  this.promise = new Promise((resolve, reject) => {
+  this.promise = new Promise(resolve => {
     this._resolver = resolve;
   });
 

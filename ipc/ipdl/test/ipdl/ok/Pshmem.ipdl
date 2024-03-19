@@ -4,11 +4,9 @@ union Foo {
 };
 
 [ChildProc=any]
-intr protocol Pshmem {
+sync protocol Pshmem {
 parent:
     async Msg(Shmem s, Foo f);
     sync SyncMsg(Shmem s, Foo f)
-        returns (Shmem t, Foo g);
-    [LegacyIntr] intr InterruptMsg(Shmem s, Foo f)
         returns (Shmem t, Foo g);
 };

@@ -339,7 +339,7 @@ class OpenTabsInView extends ViewPage {
     ></view-opentabs-card>`;
   }
 
-  handleEvent({ detail, target, type }) {
+  handleEvent({ detail, type }) {
     if (this.recentBrowsing && type === "fxview-search-textbox-query") {
       this.onSearchQuery({ detail });
       return;

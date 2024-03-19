@@ -12,7 +12,7 @@ const URL =
 let lastTab = null;
 
 export var PermissionPrompts = {
-  init(libDir) {
+  init() {
     Services.prefs.setBoolPref("media.navigator.permission.fake", true);
     Services.prefs.setBoolPref("extensions.install.requireBuiltInCerts", false);
     Services.prefs.setBoolPref("signon.rememberSignons", true);

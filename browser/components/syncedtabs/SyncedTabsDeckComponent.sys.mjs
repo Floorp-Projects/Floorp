@@ -96,7 +96,7 @@ SyncedTabsDeckComponent.prototype = {
     this._deckView.destroy();
   },
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     switch (topic) {
       case this._SyncedTabs.TOPIC_TABS_CHANGED:
         this._syncedTabsListStore.getData();

@@ -759,7 +759,7 @@ export var Sanitizer = {
           // closes) and/or run too late (and not have a fully-formed window yet
           // in existence). See bug 1088137.
           let newWindowOpened = false;
-          let onWindowOpened = function (subject, topic, data) {
+          let onWindowOpened = function (subject) {
             if (subject != newWindow) {
               return;
             }
@@ -811,7 +811,7 @@ export var Sanitizer = {
     },
 
     pluginData: {
-      async clear(range) {},
+      async clear() {},
     },
 
     // Combine History and Form Data clearing for the

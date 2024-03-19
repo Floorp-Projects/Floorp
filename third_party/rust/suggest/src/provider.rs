@@ -8,6 +8,8 @@ use rusqlite::{
     Result as RusqliteResult,
 };
 
+use crate::rs::SuggestRecordType;
+
 /// A provider is a source of search suggestions.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 #[repr(u8)]
@@ -44,6 +46,52 @@ impl SuggestionProvider {
             6 => Some(SuggestionProvider::Mdn),
             7 => Some(SuggestionProvider::Weather),
             _ => None,
+        }
+    }
+
+    pub(crate) fn records_for_provider(&self) -> Vec<SuggestRecordType> {
+        match self {
+            SuggestionProvider::Amp => {
+                vec![
+                    SuggestRecordType::AmpWikipedia,
+                    SuggestRecordType::Icon,
+                    SuggestRecordType::GlobalConfig,
+                ]
+            }
+            SuggestionProvider::Wikipedia => {
+                vec![
+                    SuggestRecordType::AmpWikipedia,
+                    SuggestRecordType::Icon,
+                    SuggestRecordType::GlobalConfig,
+                ]
+            }
+            SuggestionProvider::Amo => {
+                vec![SuggestRecordType::Amo, SuggestRecordType::GlobalConfig]
+            }
+            SuggestionProvider::Pocket => {
+                vec![SuggestRecordType::Pocket, SuggestRecordType::GlobalConfig]
+            }
+            SuggestionProvider::Yelp => {
+                vec![
+                    SuggestRecordType::Yelp,
+                    SuggestRecordType::Icon,
+                    SuggestRecordType::GlobalConfig,
+                ]
+            }
+            SuggestionProvider::Mdn => {
+                vec![SuggestRecordType::Mdn, SuggestRecordType::GlobalConfig]
+            }
+            SuggestionProvider::Weather => {
+                vec![SuggestRecordType::Weather, SuggestRecordType::GlobalConfig]
+            }
+            SuggestionProvider::AmpMobile => {
+                vec![
+                    SuggestRecordType::AmpMobile,
+                    SuggestRecordType::AmpWikipedia,
+                    SuggestRecordType::Icon,
+                    SuggestRecordType::GlobalConfig,
+                ]
+            }
         }
     }
 }

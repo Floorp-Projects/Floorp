@@ -19,12 +19,15 @@ async function doTest()
 {
   await SpecialPowers.setBoolPref("network.http.debug-observations", true);
 
+  SimpleTest.registerCleanupFunction(async () => {
+    await SpecialPowers.setBoolPref("network.http.debug-observations", false);
+  });
+
   observer = SpecialPowers.wrapCallback(function() {
     remainder--;
     ok(true, "observed remainder = " + remainder);
     if (!remainder) {
       SpecialPowers.removeObserver(observer, "speculative-connect-request");
-      SpecialPowers.setBoolPref("network.http.debug-observations", false);
       SimpleTest.finish();
     }
   });

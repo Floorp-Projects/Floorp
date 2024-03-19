@@ -208,7 +208,7 @@ add_task(async function test_reopen_last_tab_if_no_closed_actions() {
       gBrowser,
       url: "about:blank",
     },
-    async browser => {
+    async () => {
       const TEST_URL = "https://example.com/";
       let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
       let update = BrowserTestUtils.waitForSessionStoreUpdate(tab);

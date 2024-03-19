@@ -7,7 +7,7 @@ const { error } = ChromeUtils.importESModule(
 );
 
 // Note: this test file is similar to remote/shared/webdriver/test/xpcshell/test_Errors.js
-// because shared/webdriver/Errors.jsm and shared/messagehandler/Errors.jsm share
+// because shared/webdriver/Errors.sys.mjs and shared/messagehandler/Errors.sys.mjs share
 // similar helpers.
 
 add_task(function test_toJSON() {

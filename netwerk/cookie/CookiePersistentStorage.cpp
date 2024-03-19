@@ -2105,22 +2105,22 @@ void CookiePersistentStorage::CollectCookieJarSizeData() {
     if (cookieEntry.IsPartitioned()) {
       uint16_t cePartitioned = cookieEntry.GetCookies().Length();
       sumPartitioned += cePartitioned;
-      mozilla::glean::networking::cookie_count_part_by_key.AccumulateSamples(
-          {cePartitioned});
+      mozilla::glean::networking::cookie_count_part_by_key
+          .AccumulateSingleSample(cePartitioned);
     } else {
       uint16_t ceUnpartitioned = cookieEntry.GetCookies().Length();
       sumUnpartitioned += ceUnpartitioned;
-      mozilla::glean::networking::cookie_count_unpart_by_key.AccumulateSamples(
-          {ceUnpartitioned});
+      mozilla::glean::networking::cookie_count_unpart_by_key
+          .AccumulateSingleSample(ceUnpartitioned);
     }
   }
 
-  mozilla::glean::networking::cookie_count_total.AccumulateSamples(
-      {mCookieCount});
-  mozilla::glean::networking::cookie_count_partitioned.AccumulateSamples(
-      {sumPartitioned});
-  mozilla::glean::networking::cookie_count_unpartitioned.AccumulateSamples(
-      {sumUnpartitioned});
+  mozilla::glean::networking::cookie_count_total.AccumulateSingleSample(
+      mCookieCount);
+  mozilla::glean::networking::cookie_count_partitioned.AccumulateSingleSample(
+      sumPartitioned);
+  mozilla::glean::networking::cookie_count_unpartitioned.AccumulateSingleSample(
+      sumUnpartitioned);
 }
 
 }  // namespace net

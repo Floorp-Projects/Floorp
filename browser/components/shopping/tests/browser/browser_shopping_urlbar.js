@@ -7,7 +7,7 @@ const CONTENT_PAGE = "https://example.com";
 const PRODUCT_PAGE = "https://example.com/product/B09TJGHL5F";
 
 add_task(async function test_button_hidden() {
-  await BrowserTestUtils.withNewTab(CONTENT_PAGE, async function (browser) {
+  await BrowserTestUtils.withNewTab(CONTENT_PAGE, async function () {
     let shoppingButton = document.getElementById("shopping-sidebar-button");
     ok(
       BrowserTestUtils.isHidden(shoppingButton),
@@ -17,7 +17,7 @@ add_task(async function test_button_hidden() {
 });
 
 add_task(async function test_button_shown() {
-  await BrowserTestUtils.withNewTab(PRODUCT_PAGE, async function (browser) {
+  await BrowserTestUtils.withNewTab(PRODUCT_PAGE, async function () {
     let shoppingButton = document.getElementById("shopping-sidebar-button");
     ok(
       BrowserTestUtils.isVisible(shoppingButton),
@@ -52,7 +52,7 @@ add_task(async function test_button_changes_with_location() {
 add_task(async function test_button_active() {
   Services.prefs.setBoolPref("browser.shopping.experience2023.active", true);
 
-  await BrowserTestUtils.withNewTab(PRODUCT_PAGE, async function (browser) {
+  await BrowserTestUtils.withNewTab(PRODUCT_PAGE, async function () {
     let shoppingButton = document.getElementById("shopping-sidebar-button");
     Assert.equal(
       shoppingButton.getAttribute("shoppingsidebaropen"),
@@ -65,7 +65,7 @@ add_task(async function test_button_active() {
 add_task(async function test_button_inactive() {
   Services.prefs.setBoolPref("browser.shopping.experience2023.active", false);
 
-  await BrowserTestUtils.withNewTab(PRODUCT_PAGE, async function (browser) {
+  await BrowserTestUtils.withNewTab(PRODUCT_PAGE, async function () {
     let shoppingButton = document.getElementById("shopping-sidebar-button");
     Assert.equal(
       shoppingButton.getAttribute("shoppingsidebaropen"),
@@ -245,7 +245,7 @@ add_task(async function test_button_right_click_doesnt_affect_sidebars() {
 add_task(async function test_button_deals_with_tabswitches() {
   Services.prefs.setBoolPref("browser.shopping.experience2023.active", true);
 
-  await BrowserTestUtils.withNewTab(CONTENT_PAGE, async function (browser) {
+  await BrowserTestUtils.withNewTab(CONTENT_PAGE, async function () {
     let shoppingButton = document.getElementById("shopping-sidebar-button");
 
     ok(

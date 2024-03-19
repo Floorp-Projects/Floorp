@@ -5,7 +5,7 @@
 const PREF_TABS_IN_TITLEBAR = "browser.tabs.inTitlebar";
 
 export var TabsInTitlebar = {
-  init(libDir) {},
+  init() {},
 
   configurations: {
     tabsInTitlebar: {

@@ -9,7 +9,7 @@ let { ForgetAboutSite } = ChromeUtils.importESModule(
 function promiseClearHistory() {
   return new Promise(resolve => {
     let observer = {
-      observe(aSubject, aTopic, aData) {
+      observe() {
         Services.obs.removeObserver(
           this,
           "browser:purge-session-history-for-domain"

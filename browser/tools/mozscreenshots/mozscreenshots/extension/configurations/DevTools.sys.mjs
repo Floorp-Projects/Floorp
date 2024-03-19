@@ -19,7 +19,7 @@ function selectToolbox(toolbox) {
 }
 
 export var DevTools = {
-  init(libDir) {
+  init() {
     let panels = [
       "options",
       "webconsole",

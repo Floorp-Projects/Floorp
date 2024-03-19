@@ -1069,7 +1069,7 @@ export let BrowserUsageTelemetry = {
     this._recordTabCounts({ tabCount, loadedTabCount });
   },
 
-  _onTabPinned(target) {
+  _onTabPinned() {
     const pinnedTabs = getPinnedTabsCount();
 
     // Update the "tab pinned" count and its maximum.

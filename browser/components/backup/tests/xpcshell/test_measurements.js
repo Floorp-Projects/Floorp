@@ -6,11 +6,21 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 const { BackupService } = ChromeUtils.importESModule(
   "resource:///modules/backup/BackupService.sys.mjs"
 );
+
 const { PlacesBackupResource } = ChromeUtils.importESModule(
   "resource:///modules/backup/PlacesBackupResource.sys.mjs"
 );
+
+const { BackupResource } = ChromeUtils.importESModule(
+  "resource:///modules/backup/BackupResource.sys.mjs"
+);
+
 const { TelemetryTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TelemetryTestUtils.sys.mjs"
+);
+
+const { sinon } = ChromeUtils.importESModule(
+  "resource://testing-common/Sinon.sys.mjs"
 );
 
 const EXPECTED_PLACES_DB_SIZE = 5240;
@@ -21,6 +31,54 @@ add_setup(() => {
   // FOG needs to be initialized in order for data to flow.
   Services.fog.initializeFOG();
   Services.telemetry.clearScalars();
+});
+
+/**
+ * Tests that calling `BackupService.takeMeasurements` will call the measure
+ * method of all registered BackupResource classes.
+ */
+add_task(async function test_takeMeasurements() {
+  /**
+   * Some fake backup resource classes to test with.
+   */
+  class FakeBackupResource1 extends BackupResource {
+    static get key() {
+      return "fake1";
+    }
+    measure() {}
+  }
+
+  /**
+   * Another fake backup resource class to test with.
+   */
+  class FakeBackupResource2 extends BackupResource {
+    static get key() {
+      return "fake2";
+    }
+    measure() {}
+  }
+
+  let sandbox = sinon.createSandbox();
+  sandbox.stub(FakeBackupResource1.prototype, "measure").resolves();
+  sandbox
+    .stub(FakeBackupResource2.prototype, "measure")
+    .rejects(new Error("Some failure to measure"));
+
+  let bs = new BackupService({ FakeBackupResource1, FakeBackupResource2 });
+  await bs.takeMeasurements();
+
+  for (let backupResourceClass of [FakeBackupResource1, FakeBackupResource2]) {
+    Assert.ok(
+      backupResourceClass.prototype.measure.calledOnce,
+      "Measure was called"
+    );
+    Assert.ok(
+      backupResourceClass.prototype.measure.calledWith(PathUtils.profileDir),
+      "Measure was called with the profile directory argument"
+    );
+  }
+
+  sandbox.restore();
 });
 
 /**

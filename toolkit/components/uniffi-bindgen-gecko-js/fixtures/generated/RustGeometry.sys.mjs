@@ -325,7 +325,7 @@ export class FfiConverterTypeLine extends FfiConverterArrayBuffer {
     static checkType(value) {
         super.checkType(value);
         if (!(value instanceof Line)) {
-            throw new TypeError(`Expected 'Line', found '${typeof value}'`);
+            throw new UniFFITypeError(`Expected 'Line', found '${typeof value}'`);
         }
         try {
             FfiConverterTypePoint.checkType(value.start);
@@ -398,7 +398,7 @@ export class FfiConverterTypePoint extends FfiConverterArrayBuffer {
     static checkType(value) {
         super.checkType(value);
         if (!(value instanceof Point)) {
-            throw new TypeError(`Expected 'Point', found '${typeof value}'`);
+            throw new UniFFITypeError(`Expected 'Point', found '${typeof value}'`);
         }
         try {
             FfiConverterF64.checkType(value.coordX);
@@ -474,7 +474,7 @@ export function gradient(ln) {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                44, // geometry:uniffi_uniffi_geometry_fn_func_gradient
+                48, // geometry:uniffi_uniffi_geometry_fn_func_gradient
                 FfiConverterTypeLine.lower(ln),
             )
         }
@@ -507,7 +507,7 @@ export function intersection(ln1,ln2) {
                 throw e;
             }
             return UniFFIScaffolding.callAsync(
-                45, // geometry:uniffi_uniffi_geometry_fn_func_intersection
+                49, // geometry:uniffi_uniffi_geometry_fn_func_intersection
                 FfiConverterTypeLine.lower(ln1),
                 FfiConverterTypeLine.lower(ln2),
             )

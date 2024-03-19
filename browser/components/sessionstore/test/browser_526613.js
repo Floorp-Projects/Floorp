@@ -45,7 +45,7 @@ function test() {
   };
 
   let pass = 1;
-  function observer(aSubject, aTopic, aData) {
+  function observer(aSubject, aTopic) {
     is(
       aTopic,
       "sessionstore-browser-state-restored",
