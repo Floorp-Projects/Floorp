@@ -1421,16 +1421,10 @@ nsresult nsHtml5StreamParser::OnStopRequest(
   }
   if (!mOnStopRequestTime.IsNull() && !mOnDataFinishedTime.IsNull()) {
     TimeDuration delta = (mOnStopRequestTime - mOnDataFinishedTime);
-    if (delta.ToMilliseconds() < 0) {
-      // Because Telemetry can't handle negatives
-      delta = -delta;
-      glean::networking::
-          http_content_html5parser_ondatafinished_to_onstop_delay_negative
-              .AccumulateRawDuration(delta);
-    } else {
-      glean::networking::http_content_html5parser_ondatafinished_to_onstop_delay
-          .AccumulateRawDuration(delta);
-    }
+    MOZ_ASSERT((delta.ToMilliseconds() >= 0),
+               "OnDataFinished after OnStopRequest");
+    glean::networking::http_content_html5parser_ondatafinished_to_onstop_delay
+        .AccumulateRawDuration(delta);
   }
   return NS_OK;
 }
