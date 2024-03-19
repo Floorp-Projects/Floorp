@@ -1269,46 +1269,46 @@ bool DebuggerObject::CallData::createSource() {
 
   bool isScriptElement = ToBoolean(v);
 
-  JS::CompileOptions compileOptions(cx);
-  compileOptions.lineno = startLine;
-  compileOptions.column = JS::ColumnNumberOneOrigin(startColumn);
-
-  if (!JS::StringHasLatin1Chars(url)) {
-    JS_ReportErrorASCII(cx, "URL must be a narrow string");
-    return false;
-  }
-
-  Vector<Latin1Char> urlChars(cx);
-  if (!CopyStringToVector(cx, url, urlChars)) {
-    return false;
-  }
-  compileOptions.setFile((const char*)urlChars.begin());
-
-  Vector<char16_t> sourceMapURLChars(cx);
-  if (sourceMapURL) {
-    if (!CopyStringToVector(cx, sourceMapURL, sourceMapURLChars)) {
-      return false;
-    }
-    compileOptions.setSourceMapURL(sourceMapURLChars.begin());
-  }
-
-  if (isScriptElement) {
-    // The introduction type must be a statically allocated string.
-    compileOptions.setIntroductionType("inlineScript");
-  }
-
-  AutoStableStringChars linearChars(cx);
-  if (!linearChars.initTwoByte(cx, text)) {
-    return false;
-  }
-  JS::SourceText<char16_t> srcBuf;
-  if (!srcBuf.initMaybeBorrowed(cx, linearChars)) {
-    return false;
-  }
-
   RootedScript script(cx);
   {
     AutoRealm ar(cx, referent);
+    JS::CompileOptions compileOptions(cx);
+    compileOptions.lineno = startLine;
+    compileOptions.column = JS::ColumnNumberOneOrigin(startColumn);
+
+    if (!JS::StringHasLatin1Chars(url)) {
+      JS_ReportErrorASCII(cx, "URL must be a narrow string");
+      return false;
+    }
+
+    Vector<Latin1Char> urlChars(cx);
+    if (!CopyStringToVector(cx, url, urlChars)) {
+      return false;
+    }
+    compileOptions.setFile((const char*)urlChars.begin());
+
+    Vector<char16_t> sourceMapURLChars(cx);
+    if (sourceMapURL) {
+      if (!CopyStringToVector(cx, sourceMapURL, sourceMapURLChars)) {
+        return false;
+      }
+      compileOptions.setSourceMapURL(sourceMapURLChars.begin());
+    }
+
+    if (isScriptElement) {
+      // The introduction type must be a statically allocated string.
+      compileOptions.setIntroductionType("inlineScript");
+    }
+
+    AutoStableStringChars linearChars(cx);
+    if (!linearChars.initTwoByte(cx, text)) {
+      return false;
+    }
+    JS::SourceText<char16_t> srcBuf;
+    if (!srcBuf.initMaybeBorrowed(cx, linearChars)) {
+      return false;
+    }
+
     script = JS::Compile(cx, compileOptions, srcBuf);
     if (!script) {
       return false;
