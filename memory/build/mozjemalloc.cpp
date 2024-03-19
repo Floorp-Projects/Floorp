@@ -2653,6 +2653,20 @@ bool arena_t::SplitRun(arena_run_t* aRun, size_t aSize, bool aLarge,
                     (CHUNK_MAP_FRESH | CHUNK_MAP_MADVISED)) == 0);
       }
 
+      // Consider committing more pages to amortise calls to VirtualAlloc.
+      // This only makes sense at the edge of our run hence the if condition
+      // here.
+      if (i + j == need_pages) {
+        size_t extra_commit = ExtraCommitPages(j, rem_pages);
+        for (; i + j < need_pages + extra_commit &&
+               (chunk->map[run_ind + i + j].bits &
+                CHUNK_MAP_MADVISED_OR_DECOMMITTED);
+             j++) {
+          MOZ_ASSERT((chunk->map[run_ind + i + j].bits &
+                      (CHUNK_MAP_FRESH | CHUNK_MAP_MADVISED)) == 0);
+        }
+      }
+
       if (!pages_commit(
               (void*)(uintptr_t(chunk) + ((run_ind + i) << gPageSize2Pow)),
               j << gPageSize2Pow)) {
