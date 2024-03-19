@@ -8,14 +8,10 @@
 #include "nsIURI.h"
 #include "nsIProcess.h"
 #include "nsComponentManagerUtils.h"
-#include "mozilla/dom/Promise.h"
-#include "nsProxyRelease.h"
 
 // XXX why does nsMIMEInfoImpl have a threadsafe nsISupports?  do we need one
 // here too?
 NS_IMPL_ISUPPORTS(nsLocalHandlerApp, nsILocalHandlerApp, nsIHandlerApp)
-
-using namespace mozilla;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// nsIHandlerApp
@@ -27,100 +23,6 @@ NS_IMETHODIMP nsLocalHandlerApp::GetName(nsAString& aName) {
     mExecutable->GetLeafName(aName);
   } else {
     aName.Assign(mName);
-  }
-
-  return NS_OK;
-}
-
-/**
- * This method returns a std::function that will be executed on a thread other
- * than the main thread. To facilitate things, it should effectively be a global
- * function that does not maintain a reference to the this pointer. There should
- * be no reference to any objects that will be shared across threads. Sub-class
- * implementations should make local copies of everything they need and capture
- * those in the callback.
- */
-std::function<nsresult(nsString&)>
-nsLocalHandlerApp::GetPrettyNameOnNonMainThreadCallback() {
-  nsString name;
-
-  // Calculate the name now, on the main thread, so as to avoid
-  // doing anything with the this pointer on the other thread
-  auto result = GetName(name);
-
-  return [name, result](nsString& aName) {
-    aName = name;
-    return result;
-  };
-}
-
-NS_IMETHODIMP
-nsLocalHandlerApp::PrettyNameAsync(JSContext* aCx, dom::Promise** aPromise) {
-  NS_ENSURE_ARG_POINTER(aPromise);
-
-  *aPromise = nullptr;
-
-  if (!mExecutable) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsIGlobalObject* global = xpc::CurrentNativeGlobal(aCx);
-  if (NS_WARN_IF(!global)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  ErrorResult err;
-  RefPtr<dom::Promise> outer = dom::Promise::Create(global, err);
-  if (NS_WARN_IF(err.Failed())) {
-    return err.StealNSResult();
-  }
-
-  outer.forget(aPromise);
-
-  nsAutoString executablePath;
-  nsresult result = mExecutable->GetPath(executablePath);
-
-  if (NS_FAILED(result) || executablePath.IsEmpty()) {
-    (*aPromise)->MaybeReject(result);
-    return NS_OK;
-  }
-
-  nsMainThreadPtrHandle<dom::Promise> promiseHolder(
-      new nsMainThreadPtrHolder<dom::Promise>(
-          "nsLocalHandlerApp::prettyExecutableName Promise", *aPromise));
-
-  auto prettyNameGetter = GetPrettyNameOnNonMainThreadCallback();
-
-  result = NS_DispatchBackgroundTask(
-      NS_NewRunnableFunction(
-          __func__,
-          [promiseHolder /* can't move this because if the dispatch fails, we
-                            call reject on the promiseHolder */
-           ,
-           prettyNameGetter = std::move(prettyNameGetter)]() mutable -> void {
-            nsAutoString prettyExecutableName;
-
-            nsresult result = prettyNameGetter(prettyExecutableName);
-
-            DebugOnly<nsresult> rv =
-                NS_DispatchToMainThread(NS_NewRunnableFunction(
-                    __func__,
-                    [promiseHolder = std::move(promiseHolder),
-                     prettyExecutableName = std::move(prettyExecutableName),
-                     result]() {
-                      if (NS_FAILED(result)) {
-                        promiseHolder.get()->MaybeReject(result);
-                      } else {
-                        promiseHolder.get()->MaybeResolve(prettyExecutableName);
-                      }
-                    }));
-            NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                                 "NS_DispatchToMainThread failed");
-          }),
-      NS_DISPATCH_EVENT_MAY_BLOCK);
-
-  if (NS_FAILED(result)) {
-    promiseHolder.get()->MaybeReject(result);
   }
 
   return NS_OK;
