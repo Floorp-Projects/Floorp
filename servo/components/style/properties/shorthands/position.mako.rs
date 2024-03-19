@@ -5,8 +5,8 @@
 <%namespace name="helpers" file="/helpers.mako.rs" />
 
 <%helpers:shorthand name="flex-flow"
-                    engines="gecko servo-2013 servo-2020",
-                    servo_2020_pref="layout.flexbox.enabled",
+                    engines="gecko servo",
+                    servo_pref="layout.flexbox.enabled",
                     sub_properties="flex-direction flex-wrap"
                     extra_prefixes="webkit"
                     spec="https://drafts.csswg.org/css-flexbox/#flex-flow-property">
@@ -60,8 +60,8 @@
 </%helpers:shorthand>
 
 <%helpers:shorthand name="flex"
-                    engines="gecko servo-2013 servo-2020",
-                    servo_2020_pref="layout.flexbox.enabled",
+                    engines="gecko servo",
+                    servo_pref="layout.flexbox.enabled",
                     sub_properties="flex-grow flex-shrink flex-basis"
                     extra_prefixes="webkit"
                     derive_serialize="True"
@@ -858,7 +858,7 @@ ${helpers.four_sides_shorthand(
     "inset",
     "%s",
     "specified::LengthPercentageOrAuto::parse",
-    engines="gecko servo-2013",
+    engines="gecko servo",
     spec="https://drafts.csswg.org/css-logical/#propdef-inset",
     allow_quirks="No",
 )}
@@ -868,7 +868,7 @@ ${helpers.two_properties_shorthand(
     "inset-block-start",
     "inset-block-end",
     "specified::LengthPercentageOrAuto::parse",
-    engines="gecko servo-2013",
+    engines="gecko servo",
     spec="https://drafts.csswg.org/css-logical/#propdef-inset-block"
 )}
 
@@ -877,7 +877,7 @@ ${helpers.two_properties_shorthand(
     "inset-inline-start",
     "inset-inline-end",
     "specified::LengthPercentageOrAuto::parse",
-    engines="gecko servo-2013",
+    engines="gecko servo",
     spec="https://drafts.csswg.org/css-logical/#propdef-inset-inline"
 )}
 

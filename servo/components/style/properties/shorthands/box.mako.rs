@@ -8,7 +8,7 @@ ${helpers.two_properties_shorthand(
     "overflow",
     "overflow-x",
     "overflow-y",
-    engines="gecko servo-2013 servo-2020",
+    engines="gecko servo",
     flags="SHORTHAND_IN_GETCS",
     spec="https://drafts.csswg.org/css-overflow/#propdef-overflow",
 )}

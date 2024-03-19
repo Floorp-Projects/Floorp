@@ -5,7 +5,7 @@
 <%namespace name="helpers" file="/helpers.mako.rs" />
 
 <%helpers:shorthand name="list-style"
-                    engines="gecko servo-2013 servo-2020"
+                    engines="gecko servo"
                     sub_properties="list-style-position list-style-image list-style-type"
                     spec="https://drafts.csswg.org/css-lists/#propdef-list-style">
     use crate::properties::longhands::{list_style_image, list_style_position, list_style_type};
@@ -110,7 +110,11 @@
             use longhands::list_style_type::SpecifiedValue as ListStyleType;
             use longhands::list_style_image::SpecifiedValue as ListStyleImage;
             let mut have_one_non_initial_value = false;
-            if self.list_style_position != &ListStylePosition::Outside {
+            #[cfg(feature = "gecko")]
+            let position_is_initial = self.list_style_position == &ListStylePosition::Outside;
+            #[cfg(feature = "servo")]
+            let position_is_initial = matches!(self.list_style_position, None | Some(&ListStylePosition::Outside));
+            if !position_is_initial {
                 self.list_style_position.to_css(dest)?;
                 have_one_non_initial_value = true;
             }
@@ -121,7 +125,11 @@
                 self.list_style_image.to_css(dest)?;
                 have_one_non_initial_value = true;
             }
-            if self.list_style_type != &ListStyleType::disc() {
+            #[cfg(feature = "gecko")]
+            let type_is_initial = self.list_style_type == &ListStyleType::disc();
+            #[cfg(feature = "servo")]
+            let type_is_initial = self.list_style_type == &ListStyleType::Disc;
+            if !type_is_initial {
                 if have_one_non_initial_value {
                     dest.write_char(' ')?;
                 }
@@ -129,7 +137,14 @@
                 have_one_non_initial_value = true;
             }
             if !have_one_non_initial_value {
+                #[cfg(feature = "gecko")]
                 self.list_style_position.to_css(dest)?;
+                #[cfg(feature = "servo")]
+                if let Some(position) = self.list_style_position {
+                    position.to_css(dest)?;
+                } else {
+                    self.list_style_type.to_css(dest)?;
+                }
             }
             Ok(())
         }

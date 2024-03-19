@@ -4,7 +4,7 @@
 
 //! Specified types for counter properties.
 
-#[cfg(feature = "servo-layout-2013")]
+#[cfg(feature = "servo")]
 use crate::computed_values::list_style_type::T as ListStyleType;
 use crate::parser::{Parse, ParserContext};
 use crate::values::generics::counters as generics;
@@ -12,12 +12,10 @@ use crate::values::generics::counters::CounterPair;
 #[cfg(feature = "gecko")]
 use crate::values::generics::CounterStyle;
 use crate::values::specified::image::Image;
-#[cfg(any(feature = "gecko", feature = "servo-layout-2020"))]
 use crate::values::specified::Attr;
 use crate::values::specified::Integer;
 use crate::values::CustomIdent;
 use cssparser::{Parser, Token};
-#[cfg(any(feature = "gecko", feature = "servo-layout-2013"))]
 use selectors::parser::SelectorParseErrorKind;
 use style_traits::{ParseError, StyleParseErrorKind};
 
@@ -151,7 +149,7 @@ pub type Content = generics::GenericContent<Image>;
 pub type ContentItem = generics::GenericContentItem<Image>;
 
 impl Content {
-    #[cfg(feature = "servo-layout-2013")]
+    #[cfg(feature = "servo")]
     fn parse_counter_style(_: &ParserContext, input: &mut Parser) -> ListStyleType {
         input
             .try_parse(|input| {
@@ -197,7 +195,6 @@ impl Parse for Content {
         let mut content = vec![];
         let mut has_alt_content = false;
         loop {
-            #[cfg(any(feature = "gecko", feature = "servo-layout-2020"))]
             {
                 if let Ok(image) = input.try_parse(|i| Image::parse_forbid_none(context, i)) {
                     content.push(generics::ContentItem::Image(image));
@@ -212,13 +209,11 @@ impl Parse for Content {
                 },
                 Ok(&Token::Function(ref name)) => {
                     let result = match_ignore_ascii_case! { &name,
-                        #[cfg(any(feature = "gecko", feature = "servo-layout-2013"))]
                         "counter" => input.parse_nested_block(|input| {
                             let name = CustomIdent::parse(input, &[])?;
                             let style = Content::parse_counter_style(context, input);
                             Ok(generics::ContentItem::Counter(name, style))
                         }),
-                        #[cfg(any(feature = "gecko", feature = "servo-layout-2013"))]
                         "counters" => input.parse_nested_block(|input| {
                             let name = CustomIdent::parse(input, &[])?;
                             input.expect_comma()?;
@@ -226,7 +221,6 @@ impl Parse for Content {
                             let style = Content::parse_counter_style(context, input);
                             Ok(generics::ContentItem::Counters(name, separator, style))
                         }),
-                        #[cfg(any(feature = "gecko", feature = "servo-layout-2020"))]
                         "attr" => input.parse_nested_block(|input| {
                             Ok(generics::ContentItem::Attr(Attr::parse_function(context, input)?))
                         }),
@@ -240,7 +234,6 @@ impl Parse for Content {
                     }?;
                     content.push(result);
                 },
-                #[cfg(any(feature = "gecko", feature = "servo-layout-2013"))]
                 Ok(&Token::Ident(ref ident)) => {
                     content.push(match_ignore_ascii_case! { &ident,
                         "open-quote" => generics::ContentItem::OpenQuote,

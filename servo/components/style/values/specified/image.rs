@@ -241,7 +241,7 @@ impl Image {
         let function = input.expect_function()?.clone();
         input.parse_nested_block(|input| {
             Ok(match_ignore_ascii_case! { &function,
-                #[cfg(feature = "servo-layout-2013")]
+                #[cfg(feature = "servo")]
                 "paint" => Self::PaintWorklet(PaintWorklet::parse_args(context, input)?),
                 "cross-fade" if cross_fade_enabled() => Self::CrossFade(Box::new(CrossFade::parse_args(context, input, cors_mode, flags)?)),
                 #[cfg(feature = "gecko")]

@@ -4,11 +4,10 @@
 
 //! Generic types for counters-related CSS values.
 
-#[cfg(feature = "servo-layout-2013")]
+#[cfg(feature = "servo")]
 use crate::computed_values::list_style_type::T as ListStyleType;
 #[cfg(feature = "gecko")]
 use crate::values::generics::CounterStyle;
-#[cfg(any(feature = "gecko", feature = "servo-layout-2020"))]
 use crate::values::specified::Attr;
 use crate::values::CustomIdent;
 use std::fmt::{self, Write};
@@ -186,13 +185,13 @@ pub struct GenericCounters<I>(
 );
 pub use self::GenericCounters as Counters;
 
-#[cfg(feature = "servo-layout-2013")]
+#[cfg(feature = "servo")]
 type CounterStyleType = ListStyleType;
 
 #[cfg(feature = "gecko")]
 type CounterStyleType = CounterStyle;
 
-#[cfg(feature = "servo-layout-2013")]
+#[cfg(feature = "servo")]
 #[inline]
 fn is_decimal(counter_type: &CounterStyleType) -> bool {
     *counter_type == ListStyleType::Decimal
@@ -254,11 +253,9 @@ pub enum GenericContentItem<I> {
     /// Literal string content.
     String(crate::OwnedStr),
     /// `counter(name, style)`.
-    #[cfg(any(feature = "gecko", feature = "servo-layout-2013"))]
     #[css(comma, function)]
     Counter(CustomIdent, #[css(skip_if = "is_decimal")] CounterStyleType),
     /// `counters(name, separator, style)`.
-    #[cfg(any(feature = "gecko", feature = "servo-layout-2013"))]
     #[css(comma, function)]
     Counters(
         CustomIdent,
@@ -266,16 +263,12 @@ pub enum GenericContentItem<I> {
         #[css(skip_if = "is_decimal")] CounterStyleType,
     ),
     /// `open-quote`.
-    #[cfg(any(feature = "gecko", feature = "servo-layout-2013"))]
     OpenQuote,
     /// `close-quote`.
-    #[cfg(any(feature = "gecko", feature = "servo-layout-2013"))]
     CloseQuote,
     /// `no-open-quote`.
-    #[cfg(any(feature = "gecko", feature = "servo-layout-2013"))]
     NoOpenQuote,
     /// `no-close-quote`.
-    #[cfg(any(feature = "gecko", feature = "servo-layout-2013"))]
     NoCloseQuote,
     /// `-moz-alt-content`.
     #[cfg(feature = "gecko")]
@@ -286,7 +279,6 @@ pub enum GenericContentItem<I> {
     #[cfg(feature = "gecko")]
     MozLabelContent,
     /// `attr([namespace? `|`]? ident)`
-    #[cfg(any(feature = "gecko", feature = "servo-layout-2020"))]
     Attr(Attr),
     /// image-set(url) | url(url)
     Image(I),

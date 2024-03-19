@@ -10,7 +10,7 @@ ${helpers.predefined_type(
     "background-color",
     "Color",
     "computed::Color::TRANSPARENT_BLACK",
-    engines="gecko servo-2013 servo-2020",
+    engines="gecko servo",
     initial_specified_value="SpecifiedValue::transparent()",
     spec="https://drafts.csswg.org/css-backgrounds/#background-color",
     animation_value_type="AnimatedColor",
@@ -23,7 +23,7 @@ ${helpers.predefined_type(
 ${helpers.predefined_type(
     "background-image",
     "Image",
-    engines="gecko servo-2013 servo-2020",
+    engines="gecko servo",
     initial_value="computed::Image::None",
     initial_specified_value="specified::Image::None",
     spec="https://drafts.csswg.org/css-backgrounds/#the-background-image",
@@ -38,7 +38,7 @@ ${helpers.predefined_type(
         "background-position-" + axis,
         "position::" + direction + "Position",
         "computed::LengthPercentage::zero_percent()",
-        engines="gecko servo-2013 servo-2020",
+        engines="gecko servo",
         initial_specified_value="SpecifiedValue::initial_specified_value()",
         spec="https://drafts.csswg.org/css-backgrounds-4/#propdef-background-position-" + axis,
         animation_value_type="ComputedValue",
@@ -52,7 +52,7 @@ ${helpers.predefined_type(
     "background-repeat",
     "BackgroundRepeat",
     "computed::BackgroundRepeat::repeat()",
-    engines="gecko servo-2013 servo-2020",
+    engines="gecko servo",
     initial_specified_value="specified::BackgroundRepeat::repeat()",
     animation_value_type="discrete",
     vector=True,
@@ -62,8 +62,8 @@ ${helpers.predefined_type(
 
 ${helpers.single_keyword(
     "background-attachment",
-    "scroll" + (" fixed" if engine in ["gecko", "servo-2013"] else "") + (" local" if engine == "gecko" else ""),
-    engines="gecko servo-2013 servo-2020",
+    "scroll fixed" + (" local" if engine == "gecko" else ""),
+    engines="gecko servo",
     vector=True,
     gecko_enum_prefix="StyleImageLayerAttachment",
     spec="https://drafts.csswg.org/css-backgrounds/#the-background-attachment",
@@ -74,7 +74,7 @@ ${helpers.single_keyword(
 ${helpers.single_keyword(
     "background-clip",
     "border-box padding-box content-box",
-    engines="gecko servo-2013 servo-2020",
+    engines="gecko servo",
     extra_gecko_values="text",
     vector=True, extra_prefixes="webkit",
     gecko_enum_prefix="StyleGeometryBox",
@@ -87,7 +87,7 @@ ${helpers.single_keyword(
 ${helpers.single_keyword(
     "background-origin",
     "padding-box border-box content-box",
-    engines="gecko servo-2013 servo-2020",
+    engines="gecko servo",
     vector=True, extra_prefixes="webkit",
     gecko_enum_prefix="StyleGeometryBox",
     gecko_inexhaustive=True,
@@ -99,7 +99,7 @@ ${helpers.single_keyword(
 ${helpers.predefined_type(
     "background-size",
     "BackgroundSize",
-    engines="gecko servo-2013 servo-2020",
+    engines="gecko servo",
     initial_value="computed::BackgroundSize::auto()",
     initial_specified_value="specified::BackgroundSize::auto()",
     spec="https://drafts.csswg.org/css-backgrounds/#the-background-size",

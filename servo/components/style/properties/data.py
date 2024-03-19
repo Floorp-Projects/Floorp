@@ -176,11 +176,9 @@ class Keyword(object):
         gecko_enum_prefix=None,
         custom_consts=None,
         extra_gecko_values=None,
-        extra_servo_2013_values=None,
-        extra_servo_2020_values=None,
+        extra_servo_values=None,
         gecko_aliases=None,
-        servo_2013_aliases=None,
-        servo_2020_aliases=None,
+        servo_aliases=None,
         gecko_strip_moz_prefix=None,
         gecko_inexhaustive=None,
     ):
@@ -196,11 +194,9 @@ class Keyword(object):
         )
         self.gecko_enum_prefix = gecko_enum_prefix
         self.extra_gecko_values = (extra_gecko_values or "").split()
-        self.extra_servo_2013_values = (extra_servo_2013_values or "").split()
-        self.extra_servo_2020_values = (extra_servo_2020_values or "").split()
+        self.extra_servo_values = (extra_servo_values or "").split()
         self.gecko_aliases = parse_aliases(gecko_aliases or "")
-        self.servo_2013_aliases = parse_aliases(servo_2013_aliases or "")
-        self.servo_2020_aliases = parse_aliases(servo_2020_aliases or "")
+        self.servo_aliases = parse_aliases(servo_aliases or "")
         self.consts_map = {} if custom_consts is None else custom_consts
         self.gecko_strip_moz_prefix = (
             True if gecko_strip_moz_prefix is None else gecko_strip_moz_prefix
@@ -210,20 +206,16 @@ class Keyword(object):
     def values_for(self, engine):
         if engine == "gecko":
             return self.values + self.extra_gecko_values
-        elif engine == "servo-2013":
-            return self.values + self.extra_servo_2013_values
-        elif engine == "servo-2020":
-            return self.values + self.extra_servo_2020_values
+        elif engine == "servo":
+            return self.values + self.extra_servo_values
         else:
             raise Exception("Bad engine: " + engine)
 
     def aliases_for(self, engine):
         if engine == "gecko":
             return self.gecko_aliases
-        elif engine == "servo-2013":
-            return self.servo_2013_aliases
-        elif engine == "servo-2020":
-            return self.servo_2020_aliases
+        elif engine == "servo":
+            return self.servo_aliases
         else:
             raise Exception("Bad engine: " + engine)
 
@@ -289,8 +281,7 @@ class Property(object):
         self,
         name,
         spec,
-        servo_2013_pref,
-        servo_2020_pref,
+        servo_pref,
         gecko_pref,
         enabled_in,
         rule_types_allowed,
@@ -304,8 +295,7 @@ class Property(object):
         self.spec = spec
         self.ident = to_rust_ident(name)
         self.camel_case = to_camel_case(self.ident)
-        self.servo_2013_pref = servo_2013_pref
-        self.servo_2020_pref = servo_2020_pref
+        self.servo_pref = servo_pref
         self.gecko_pref = gecko_pref
         self.rule_types_allowed = rule_values_from_arg(rule_types_allowed)
         # For enabled_in, the setup is as follows:
@@ -329,10 +319,8 @@ class Property(object):
     def experimental(self, engine):
         if engine == "gecko":
             return bool(self.gecko_pref)
-        elif engine == "servo-2013":
-            return bool(self.servo_2013_pref)
-        elif engine == "servo-2020":
-            return bool(self.servo_2020_pref)
+        elif engine == "servo":
+            return bool(self.servo_pref)
         else:
             raise Exception("Bad engine: " + engine)
 
@@ -364,8 +352,7 @@ class Longhand(Property):
         animation_value_type=None,
         keyword=None,
         predefined_type=None,
-        servo_2013_pref=None,
-        servo_2020_pref=None,
+        servo_pref=None,
         gecko_pref=None,
         enabled_in="content",
         need_index=False,
@@ -390,8 +377,7 @@ class Longhand(Property):
             self,
             name=name,
             spec=spec,
-            servo_2013_pref=servo_2013_pref,
-            servo_2020_pref=servo_2020_pref,
+            servo_pref=servo_pref,
             gecko_pref=gecko_pref,
             enabled_in=enabled_in,
             rule_types_allowed=rule_types_allowed,
@@ -518,16 +504,8 @@ class Longhand(Property):
     def may_be_disabled_in(self, shorthand, engine):
         if engine == "gecko":
             return self.gecko_pref and self.gecko_pref != shorthand.gecko_pref
-        elif engine == "servo-2013":
-            return (
-                self.servo_2013_pref
-                and self.servo_2013_pref != shorthand.servo_2013_pref
-            )
-        elif engine == "servo-2020":
-            return (
-                self.servo_2020_pref
-                and self.servo_2020_pref != shorthand.servo_2020_pref
-            )
+        elif engine == "servo":
+            return self.servo_pref and self.servo_pref != shorthand.servo_pref
         else:
             raise Exception("Bad engine: " + engine)
 
@@ -659,8 +637,7 @@ class Shorthand(Property):
         name,
         sub_properties,
         spec=None,
-        servo_2013_pref=None,
-        servo_2020_pref=None,
+        servo_pref=None,
         gecko_pref=None,
         enabled_in="content",
         rule_types_allowed=DEFAULT_RULES,
@@ -672,8 +649,7 @@ class Shorthand(Property):
             self,
             name=name,
             spec=spec,
-            servo_2013_pref=servo_2013_pref,
-            servo_2020_pref=servo_2020_pref,
+            servo_pref=servo_pref,
             gecko_pref=gecko_pref,
             enabled_in=enabled_in,
             rule_types_allowed=rule_types_allowed,
@@ -704,8 +680,7 @@ class Alias(object):
         self.original = original
         self.enabled_in = original.enabled_in
         self.animatable = original.animatable
-        self.servo_2013_pref = original.servo_2013_pref
-        self.servo_2020_pref = original.servo_2020_pref
+        self.servo_pref = original.servo_pref
         self.gecko_pref = gecko_pref
         self.rule_types_allowed = original.rule_types_allowed
         self.flags = original.flags
@@ -722,10 +697,8 @@ class Alias(object):
     def experimental(self, engine):
         if engine == "gecko":
             return bool(self.gecko_pref)
-        elif engine == "servo-2013":
-            return bool(self.servo_2013_pref)
-        elif engine == "servo-2020":
-            return bool(self.servo_2020_pref)
+        elif engine == "servo":
+            return bool(self.servo_pref)
         else:
             raise Exception("Bad engine: " + engine)
 
@@ -856,7 +829,7 @@ def _add_logical_props(data, props):
     groups = set()
     for prop in props:
         if prop not in data.longhands_by_name:
-            assert data.engine in ["servo-2013", "servo-2020"]
+            assert data.engine == "servo"
             continue
         prop = data.longhands_by_name[prop]
         if prop.logical_group:

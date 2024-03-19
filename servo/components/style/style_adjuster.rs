@@ -294,11 +294,9 @@ impl<'a, 'b: 'a> StyleAdjuster<'a, 'b> {
                 .add_flags(ComputedValueFlags::SELF_OR_ANCESTOR_HAS_SIZE_CONTAINER_TYPE);
         }
 
-        #[cfg(feature = "servo-layout-2013")]
-        {
-            if self.style.get_parent_column().is_multicol() {
-                self.style.add_flags(ComputedValueFlags::CAN_BE_FRAGMENTED);
-            }
+        #[cfg(feature = "servo")]
+        if self.style.get_parent_column().is_multicol() {
+            self.style.add_flags(ComputedValueFlags::CAN_BE_FRAGMENTED);
         }
     }
 
