@@ -33,6 +33,15 @@ void CustomDistributionMetric::AccumulateSamples(
   fog_custom_distribution_accumulate_samples(mId, &aSamples);
 }
 
+void CustomDistributionMetric::AccumulateSingleSample(uint64_t aSample) const {
+  auto hgramId = HistogramIdForMetric(mId);
+  if (hgramId) {
+    auto id = hgramId.extract();
+    Telemetry::Accumulate(id, aSample);
+  }
+  fog_custom_distribution_accumulate_single_sample(mId, aSample);
+}
+
 void CustomDistributionMetric::AccumulateSamplesSigned(
     const nsTArray<int64_t>& aSamples) const {
   auto hgramId = HistogramIdForMetric(mId);
@@ -45,6 +54,16 @@ void CustomDistributionMetric::AccumulateSamplesSigned(
     }
   }
   fog_custom_distribution_accumulate_samples_signed(mId, &aSamples);
+}
+
+void CustomDistributionMetric::AccumulateSingleSampleSigned(
+    int64_t aSample) const {
+  auto hgramId = HistogramIdForMetric(mId);
+  if (hgramId) {
+    auto id = hgramId.extract();
+    Telemetry::Accumulate(id, aSample);
+  }
+  fog_custom_distribution_accumulate_single_sample_signed(mId, aSample);
 }
 
 Result<Maybe<DistributionData>, nsCString>

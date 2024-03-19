@@ -1684,16 +1684,16 @@ void nsHttpTransaction::Close(nsresult reason) {
       switch (mHttpVersion) {
         case HttpVersion::v1_0:
         case HttpVersion::v1_1:
-          glean::networking::http_1_download_throughput.AccumulateSamples(
-              {mpbs});
+          glean::networking::http_1_download_throughput.AccumulateSingleSample(
+              mpbs);
           break;
         case HttpVersion::v2_0:
-          glean::networking::http_2_download_throughput.AccumulateSamples(
-              {mpbs});
+          glean::networking::http_2_download_throughput.AccumulateSingleSample(
+              mpbs);
           break;
         case HttpVersion::v3_0:
-          glean::networking::http_3_download_throughput.AccumulateSamples(
-              {mpbs});
+          glean::networking::http_3_download_throughput.AccumulateSingleSample(
+              mpbs);
           break;
         default:
           break;
@@ -3574,42 +3574,42 @@ void nsHttpTransaction::CollectTelemetryForUploads() {
   switch (mHttpVersion) {
     case HttpVersion::v1_0:
     case HttpVersion::v1_1:
-      glean::networking::http_1_upload_throughput.AccumulateSamples({mpbs});
+      glean::networking::http_1_upload_throughput.AccumulateSingleSample(mpbs);
       if (mRequestSize <= TELEMETRY_REQUEST_SIZE_50M) {
-        glean::networking::http_1_upload_throughput_10_50.AccumulateSamples(
-            {mpbs});
+        glean::networking::http_1_upload_throughput_10_50
+            .AccumulateSingleSample(mpbs);
       } else if (mRequestSize <= TELEMETRY_REQUEST_SIZE_100M) {
-        glean::networking::http_1_upload_throughput_50_100.AccumulateSamples(
-            {mpbs});
+        glean::networking::http_1_upload_throughput_50_100
+            .AccumulateSingleSample(mpbs);
       } else {
-        glean::networking::http_1_upload_throughput_100.AccumulateSamples(
-            {mpbs});
+        glean::networking::http_1_upload_throughput_100.AccumulateSingleSample(
+            mpbs);
       }
       break;
     case HttpVersion::v2_0:
-      glean::networking::http_2_upload_throughput.AccumulateSamples({mpbs});
+      glean::networking::http_2_upload_throughput.AccumulateSingleSample(mpbs);
       if (mRequestSize <= TELEMETRY_REQUEST_SIZE_50M) {
-        glean::networking::http_2_upload_throughput_10_50.AccumulateSamples(
-            {mpbs});
+        glean::networking::http_2_upload_throughput_10_50
+            .AccumulateSingleSample(mpbs);
       } else if (mRequestSize <= TELEMETRY_REQUEST_SIZE_100M) {
-        glean::networking::http_2_upload_throughput_50_100.AccumulateSamples(
-            {mpbs});
+        glean::networking::http_2_upload_throughput_50_100
+            .AccumulateSingleSample(mpbs);
       } else {
-        glean::networking::http_2_upload_throughput_100.AccumulateSamples(
-            {mpbs});
+        glean::networking::http_2_upload_throughput_100.AccumulateSingleSample(
+            mpbs);
       }
       break;
     case HttpVersion::v3_0:
-      glean::networking::http_3_upload_throughput.AccumulateSamples({mpbs});
+      glean::networking::http_3_upload_throughput.AccumulateSingleSample(mpbs);
       if (mRequestSize <= TELEMETRY_REQUEST_SIZE_50M) {
-        glean::networking::http_3_upload_throughput_10_50.AccumulateSamples(
-            {mpbs});
+        glean::networking::http_3_upload_throughput_10_50
+            .AccumulateSingleSample(mpbs);
       } else if (mRequestSize <= TELEMETRY_REQUEST_SIZE_100M) {
-        glean::networking::http_3_upload_throughput_50_100.AccumulateSamples(
-            {mpbs});
+        glean::networking::http_3_upload_throughput_50_100
+            .AccumulateSingleSample(mpbs);
       } else {
-        glean::networking::http_3_upload_throughput_100.AccumulateSamples(
-            {mpbs});
+        glean::networking::http_3_upload_throughput_100.AccumulateSingleSample(
+            mpbs);
       }
       break;
     default:

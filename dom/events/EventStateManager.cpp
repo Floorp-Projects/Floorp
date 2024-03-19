@@ -264,8 +264,8 @@ UITimerCallback::Notify(nsITimer* aTimer) {
     if (XRE_IsParentProcess()) {
       hal::BatteryInformation batteryInfo;
       hal::GetCurrentBatteryInformation(&batteryInfo);
-      glean::power_battery::percentage_when_user_active.AccumulateSamples(
-          {uint64_t(batteryInfo.level() * 100)});
+      glean::power_battery::percentage_when_user_active.AccumulateSingleSample(
+          uint64_t(batteryInfo.level() * 100));
     }
   }
   mPreviousCount = gMouseOrKeyboardEventCounter;

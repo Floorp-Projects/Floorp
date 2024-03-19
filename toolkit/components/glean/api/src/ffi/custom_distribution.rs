@@ -69,6 +69,26 @@ pub extern "C" fn fog_custom_distribution_accumulate_samples_signed(
 }
 
 #[no_mangle]
+pub extern "C" fn fog_custom_distribution_accumulate_single_sample(id: u32, sample: u64) {
+    with_metric!(
+        CUSTOM_DISTRIBUTION_MAP,
+        id,
+        metric,
+        metric.accumulate_single_sample_signed(sample as i64)
+    );
+}
+
+#[no_mangle]
+pub extern "C" fn fog_custom_distribution_accumulate_single_sample_signed(id: u32, sample: i64) {
+    with_metric!(
+        CUSTOM_DISTRIBUTION_MAP,
+        id,
+        metric,
+        metric.accumulate_single_sample_signed(sample)
+    );
+}
+
+#[no_mangle]
 pub extern "C" fn fog_custom_distribution_test_get_error(
     id: u32,
 
