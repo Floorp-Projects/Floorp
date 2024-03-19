@@ -8,7 +8,7 @@ use api::{ColorF, ImageFormat, LineOrientation, BorderStyle};
 use crate::batch::{AlphaBatchBuilder, AlphaBatchContainer, BatchTextures, add_quad_to_batch};
 use crate::batch::{ClipBatcher, BatchBuilder, INVALID_SEGMENT_INDEX, ClipMaskInstanceList};
 use crate::command_buffer::{CommandBufferList, QuadFlags};
-use crate::pattern::PatternKind;
+use crate::pattern::{PatternKind, PatternShaderInput};
 use crate::segment::EdgeAaSegmentMask;
 use crate::spatial_tree::SpatialTree;
 use crate::clip::{ClipStore, ClipItemKind};
@@ -379,6 +379,7 @@ impl RenderTarget for ColorRenderTarget {
 
                 add_quad_to_batch(
                     info.pattern,
+                    info.pattern_input,
                     render_task_address,
                     info.transform_id,
                     info.prim_address_f,
@@ -1066,6 +1067,7 @@ fn build_mask_tasks(
 
                     add_quad_to_batch(
                         PatternKind::ColorOrTexture,
+                        PatternShaderInput(0),
                         render_task_address,
                         clip_transform_id,
                         clip_prim_address,
@@ -1163,6 +1165,7 @@ fn build_mask_tasks(
 
         add_quad_to_batch(
             PatternKind::Mask,
+            PatternShaderInput(0),
             render_task_address,
             prim_transform_id,
             main_prim_address,

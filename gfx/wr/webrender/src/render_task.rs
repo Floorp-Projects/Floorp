@@ -8,7 +8,7 @@ use api::MAX_RENDER_TASK_SIZE;
 use api::units::*;
 use crate::clip::{ClipDataStore, ClipItemKind, ClipStore, ClipNodeRange};
 use crate::command_buffer::{CommandBufferIndex, QuadFlags};
-use crate::pattern::PatternKind;
+use crate::pattern::{PatternKind, PatternShaderInput};
 use crate::spatial_tree::SpatialNodeIndex;
 use crate::filterdata::SFilterData;
 use crate::frame_builder::FrameBuilderConfig;
@@ -186,6 +186,7 @@ pub struct EmptyTask {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct PrimTask {
     pub pattern: PatternKind,
+    pub pattern_input: PatternShaderInput,
     pub device_pixel_scale: DevicePixelScale,
     pub content_origin: DevicePoint,
     pub prim_address_f: GpuBufferAddress,
@@ -519,6 +520,7 @@ impl RenderTaskKind {
 
     pub fn new_prim(
         pattern: PatternKind,
+        pattern_input: PatternShaderInput,
         prim_spatial_node_index: SpatialNodeIndex,
         raster_spatial_node_index: SpatialNodeIndex,
         device_pixel_scale: DevicePixelScale,
@@ -532,6 +534,7 @@ impl RenderTaskKind {
     ) -> Self {
         RenderTaskKind::Prim(PrimTask {
             pattern,
+            pattern_input,
             prim_spatial_node_index,
             raster_spatial_node_index,
             device_pixel_scale,

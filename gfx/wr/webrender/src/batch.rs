@@ -8,7 +8,7 @@ use api::units::*;
 use crate::clip::{ClipNodeFlags, ClipNodeRange, ClipItemKind, ClipStore};
 use crate::command_buffer::{PrimitiveCommand, QuadFlags};
 use crate::composite::CompositorSurfaceKind;
-use crate::pattern::PatternKind;
+use crate::pattern::{PatternKind, PatternShaderInput};
 use crate::spatial_tree::{SpatialTree, SpatialNodeIndex, CoordinateSystemId};
 use glyph_rasterizer::{GlyphFormat, SubpixelDirection};
 use crate::gpu_cache::{GpuBlockData, GpuCache, GpuCacheAddress};
@@ -800,6 +800,7 @@ impl BatchBuilder {
     fn add_quad_to_batch(
         &mut self,
         kind: PatternKind,
+        pattern_input: PatternShaderInput,
         prim_instance_index: PrimitiveInstanceIndex,
         transform_id: TransformPaletteId,
         prim_address_f: GpuBufferAddress,
@@ -819,6 +820,7 @@ impl BatchBuilder {
 
         add_quad_to_batch(
             kind,
+            pattern_input,
             self.batcher.render_task_address,
             transform_id,
             prim_address_f,
@@ -872,10 +874,11 @@ impl BatchBuilder {
             PrimitiveCommand::Instance { prim_instance_index, gpu_buffer_address } => {
                 (prim_instance_index, Some(gpu_buffer_address.as_int()))
             }
-            PrimitiveCommand::Quad { pattern, prim_instance_index, gpu_buffer_address, quad_flags, edge_flags, transform_id } => {
+            PrimitiveCommand::Quad { pattern, pattern_input, prim_instance_index, gpu_buffer_address, quad_flags, edge_flags, transform_id } => {
                 if segments.is_empty() {
                     self.add_quad_to_batch(
                         *pattern,
+                        *pattern_input,
                         *prim_instance_index,
                         *transform_id,
                         *gpu_buffer_address,
@@ -895,6 +898,7 @@ impl BatchBuilder {
 
                         self.add_quad_to_batch(
                             *pattern,
+                            *pattern_input,
                             *prim_instance_index,
                             *transform_id,
                             *gpu_buffer_address,
@@ -3899,6 +3903,7 @@ impl<'a, 'rc> RenderTargetContext<'a, 'rc> {
 
 pub fn add_quad_to_batch<F>(
     kind: PatternKind,
+    pattern_input: PatternShaderInput,
     render_task_address: RenderTaskAddress,
     transform_id: TransformPaletteId,
     prim_address_f: GpuBufferAddress,
@@ -3926,7 +3931,7 @@ pub fn add_quad_to_batch<F>(
     writer.push_one([
         transform_id.0 as i32,
         z_id.0,
-        0,
+        pattern_input.0,
         0,
     ]);
     let prim_address_i = writer.finish();

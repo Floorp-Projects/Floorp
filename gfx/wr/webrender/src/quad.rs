@@ -5,7 +5,7 @@
 use api::{units::*, PremultipliedColorF, ClipMode};
 
 use crate::{
-    clip::{ClipChainInstance, ClipIntern, ClipItemKind, ClipStore}, command_buffer::{CommandBufferIndex, PrimitiveCommand, QuadFlags}, frame_builder::{FrameBuildingContext, FrameBuildingState, PictureContext, PictureState}, gpu_types::{QuadSegment, TransformPaletteId}, intern::DataStore, pattern::{Pattern, PatternKind}, prepare::write_prim_blocks, prim_store::{PrimitiveInstanceIndex, PrimitiveScratchBuffer}, render_task::{MaskSubPass, RenderTask, RenderTaskKind, SubPass}, render_task_graph::RenderTaskId, renderer::GpuBufferAddress, segment::EdgeAaSegmentMask, space::SpaceMapper, spatial_tree::{SpatialNodeIndex, SpatialTree}, util::MaxRect
+    clip::{ClipChainInstance, ClipIntern, ClipItemKind, ClipStore}, command_buffer::{CommandBufferIndex, PrimitiveCommand, QuadFlags}, frame_builder::{FrameBuildingContext, FrameBuildingState, PictureContext, PictureState}, gpu_types::{QuadSegment, TransformPaletteId}, intern::DataStore, pattern::{Pattern, PatternKind, PatternShaderInput}, prepare::write_prim_blocks, prim_store::{PrimitiveInstanceIndex, PrimitiveScratchBuffer}, render_task::{MaskSubPass, RenderTask, RenderTaskKind, SubPass}, render_task_graph::RenderTaskId, renderer::GpuBufferAddress, segment::EdgeAaSegmentMask, space::SpaceMapper, spatial_tree::{SpatialNodeIndex, SpatialTree}, util::MaxRect
 };
 
 const MIN_AA_SEGMENTS_SIZE: f32 = 4.0;
@@ -125,6 +125,7 @@ pub fn push_quad(
             frame_state.push_prim(
                 &PrimitiveCommand::quad(
                     pattern.kind,
+                    pattern.shader_input,
                     prim_instance_index,
                     main_prim_address,
                     transform_id,
@@ -148,6 +149,7 @@ pub fn push_quad(
 
             let segment = add_segment(
                 pattern.kind,
+                pattern.shader_input,
                 p0.x,
                 p0.y,
                 p1.x,
@@ -167,6 +169,7 @@ pub fn push_quad(
 
             add_composite_prim(
                 pattern.kind,
+                pattern.shader_input,
                 prim_instance_index,
                 LayoutRect::new(p0.cast_unit(), p1.cast_unit()),
                 pattern.base_color,
@@ -225,6 +228,7 @@ pub fn push_quad(
 
                     let segment = add_segment(
                         pattern.kind,
+                        pattern.shader_input,
                         x0 as f32,
                         y0 as f32,
                         x1 as f32,
@@ -247,6 +251,7 @@ pub fn push_quad(
 
             add_composite_prim(
                 pattern.kind,
+                pattern.shader_input,
                 prim_instance_index,
                 unclipped_surface_rect.cast_unit(),
                 pattern.base_color,
@@ -339,6 +344,7 @@ pub fn push_quad(
 
                     let segment = add_segment(
                         pattern.kind,
+                        pattern.shader_input,
                         r.min.x as f32,
                         r.min.y as f32,
                         r.max.x as f32,
@@ -361,6 +367,7 @@ pub fn push_quad(
 
             add_composite_prim(
                 pattern.kind,
+                pattern.shader_input,
                 prim_instance_index,
                 unclipped_surface_rect.cast_unit(),
                 pattern.base_color,
@@ -447,6 +454,7 @@ fn get_prim_render_strategy(
 
 fn add_segment(
     kind: PatternKind,
+    pattern_input: PatternShaderInput,
     x0: f32,
     y0: f32,
     x1: f32,
@@ -473,6 +481,7 @@ fn add_segment(
             task_size,
             RenderTaskKind::new_prim(
                 kind,
+                pattern_input,
                 prim_spatial_node_index,
                 raster_spatial_node_index,
                 device_pixel_scale,
@@ -509,6 +518,7 @@ fn add_segment(
 
 fn add_composite_prim(
     pattern_kind: PatternKind,
+    pattern_input: PatternShaderInput,
     prim_instance_index: PrimitiveInstanceIndex,
     rect: LayoutRect,
     color: PremultipliedColorF,
@@ -536,6 +546,7 @@ fn add_composite_prim(
     frame_state.push_cmd(
         &PrimitiveCommand::quad(
             pattern_kind,
+            pattern_input,
             prim_instance_index,
             composite_prim_address,
             TransformPaletteId::IDENTITY,

@@ -82,6 +82,7 @@ struct PrimitiveInfo {
 
     int edge_flags;
     int quad_flags;
+    int pattern_input;
 };
 
 struct QuadSegment {
@@ -121,6 +122,7 @@ QuadPrimitive fetch_primitive(int index) {
 struct QuadHeader {
     int transform_id;
     int z_id;
+    int pattern_input;
 };
 
 QuadHeader fetch_header(int address) {
@@ -128,7 +130,8 @@ QuadHeader fetch_header(int address) {
 
     QuadHeader qh = QuadHeader(
         header.x,
-        header.y
+        header.y,
+        header.z
     );
 
     return qh;
@@ -352,7 +355,8 @@ PrimitiveInfo quad_primive_info(void) {
         prim.bounds,
         prim.clip,
         qi.edge_flags,
-        qi.quad_flags
+        qi.quad_flags,
+        qh.pattern_input
     );
 }
 
