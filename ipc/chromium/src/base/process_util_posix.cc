@@ -10,6 +10,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/resource.h>
 #include <sys/time.h>
 #include <sys/types.h>
@@ -37,6 +38,7 @@
 
 #ifdef MOZ_ENABLE_FORKSERVER
 #  include "mozilla/ipc/ForkServiceChild.h"
+#  include "mozilla/Printf.h"
 #endif
 
 // We could configure-test for `waitid`, but it's been in POSIX for a
@@ -195,6 +197,63 @@ void CloseSuperfluousFds(void* aCtx, bool (*aShouldPreserve)(void*, int)) {
   }
 }
 
+#ifdef MOZ_ENABLE_FORKSERVER
+// Returns whether a process (assumed to still exist) is in the zombie
+// state.  Any failures (if the process doesn't exist, if /proc isn't
+// mounted, etc.) will return true, so that we don't try again.
+static bool IsZombieProcess(pid_t pid) {
+#  ifdef XP_LINUX
+  auto path = mozilla::Smprintf("/proc/%d/stat", pid);
+  int fd = open(path.get(), O_RDONLY | O_CLOEXEC);
+  if (fd < 0) {
+    int e = errno;
+    CHROMIUM_LOG(ERROR) << "failed to open " << path.get() << ": "
+                        << strerror(e);
+    return true;
+  }
+
+  // /proc/%d/stat format is approximately:
+  //
+  // %d (%s) %c %d %d %d %d %d ...
+  //
+  // The state is the third field; the second field is the thread
+  // name, in parentheses, but it can contain arbitrary characters.
+  // So, we read the whole line, check for the last ')' because all of
+  // the following fields are numeric, and move forward from there.
+  //
+  // And because (unlike other uses of this info the codebase) we
+  // don't care about those other fields, we can read a smaller amount
+  // of the file.
+
+  char buffer[64];
+  ssize_t len = HANDLE_EINTR(read(fd, buffer, sizeof(buffer) - 1));
+  int e = errno;
+  close(fd);
+  if (len < 1) {
+    CHROMIUM_LOG(ERROR) << "failed to read " << buffer << ": " << strerror(e);
+    return true;
+  }
+
+  buffer[len] = '\0';
+  char* rparen = strrchr(buffer, ')');
+  if (!rparen || rparen[1] != ' ' || rparen[2] == '\0') {
+    DCHECK(false) << "/proc/{pid}/stat parse error";
+    CHROMIUM_LOG(ERROR) << "bad data in /proc/" << pid << "/stat";
+    return true;
+  }
+  if (rparen[2] == 'Z') {
+    CHROMIUM_LOG(ERROR) << "process " << pid << " is a zombie";
+    return true;
+  }
+  return false;
+#  else  // not XP_LINUX
+  // The situation where this matters is Linux-specific (pid
+  // namespaces), so we don't need to bother on other Unixes.
+  return false;
+#  endif
+}
+#endif  // MOZ_ENABLE_FORKSERVER
+
 bool IsProcessDead(ProcessHandle handle, bool blocking) {
   auto handleForkServer = [handle]() -> mozilla::Maybe<bool> {
 #ifdef MOZ_ENABLE_FORKSERVER
@@ -205,10 +264,21 @@ bool IsProcessDead(ProcessHandle handle, bool blocking) {
       // process any more, it is impossible to use |waitpid()| to wait for
       // them.
       const int r = kill(handle, 0);
-      // FIXME: for unexpected errors we should probably log a warning
-      // and return true, so that the caller doesn't loop / hang /
-      // try to kill the process.  (Bug 1658072 will rewrite this code.)
-      return mozilla::Some(r < 0 && errno == ESRCH);
+      if (r < 0) {
+        const int e = errno;
+        if (e != ESRCH) {
+          CHROMIUM_LOG(WARNING) << "unexpected error checking for process "
+                                << handle << ": " << strerror(e);
+          // Return true for unknown errors, to avoid the possibility
+          // of getting stuck in loop of failures.
+        }
+        return mozilla::Some(true);
+      }
+      // Annoying edge case (bug NNNNNNN): if pid 1 isn't a real
+      // `init`, like in some container environments, and if the child
+      // exited after the fork server, it could become a permanent
+      // zombie.  We treat it as dead in that case.
+      return mozilla::Some(IsZombieProcess(handle));
     }
 #else
     mozilla::Unused << handle;
