@@ -79,7 +79,7 @@ function checkPanelClosed() {
   );
 }
 
-test_runner(async function test_pocketButtonState_changeTabs({ sandbox }) {
+test_runner(async function test_pocketButtonState_changeTabs() {
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "https://example.com/browser/browser/components/pocket/test/test.html"
@@ -105,7 +105,7 @@ test_runner(async function test_pocketButtonState_changeTabs({ sandbox }) {
   BrowserTestUtils.removeTab(tab);
 });
 
-test_runner(async function test_pocketButtonState_changeLocation({ sandbox }) {
+test_runner(async function test_pocketButtonState_changeLocation() {
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "https://example.com/browser/browser/components/pocket/test/test.html"

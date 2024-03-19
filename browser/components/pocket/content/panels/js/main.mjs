@@ -86,7 +86,7 @@ PKT_PANEL.prototype = {
     const config = { attributes: false, childList: true, subtree: true };
 
     // Callback function to execute when mutations are observed
-    const callback = (mutationList, observer) => {
+    const callback = mutationList => {
       mutationList.forEach(mutation => {
         switch (mutation.type) {
           case "childList": {
