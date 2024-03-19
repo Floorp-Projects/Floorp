@@ -5,6 +5,7 @@
 loader: gecko_taskgraph.loader.transform:loader
 
 transforms:
+    - gecko_taskgraph.transforms.test_apk
     - gecko_taskgraph.transforms.job:transforms
     - gecko_taskgraph.transforms.task:transforms
 
@@ -31,12 +32,18 @@ job-defaults:
               json: true
     run-on-projects: [mozilla-beta, mozilla-release]
     routes:
-        - notify.slack-channel.G016BC5FUHJ.on-failed
+        by-level:
+            '3':
+                - notify.slack-channel.G016BC5FUHJ.on-failed
+            default: []
     scopes:
-        - queue:route:notify.slack-channel.G016BC5FUHJ  # notify mobile-alerts-sandbox on failure
-        - notify:slack-channel:G016BC5FUHJ
-        - queue:route:notify.slack-channel.C02KDDS9QM9  # notify mobile-testeng on success
-        - notify:slack-channel:C02KDDS9QM9
+        by-level:
+            '3':
+                - queue:route:notify.slack-channel.G016BC5FUHJ  # notify mobile-alerts-sandbox on failure
+                - notify:slack-channel:G016BC5FUHJ
+                - queue:route:notify.slack-channel.C02KDDS9QM9  # notify mobile-testeng on success
+                - notify:slack-channel:C02KDDS9QM9
+            default: []
 
 jobs:
     create-milestone-focus:
