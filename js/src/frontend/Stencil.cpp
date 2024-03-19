@@ -759,6 +759,29 @@ void ScopeContext::cacheEnclosingScope(const InputScope& enclosingScope) {
   MOZ_CRASH("Malformed scope chain");
 }
 
+// Given an input scope, possibly refine this to a more precise scope.
+// This is used during eval in the debugger to provide the appropriate scope and
+// ThisBinding kind and environment, which is key to making private field eval
+// work correctly.
+//
+// The trick here is that an eval may have a non-syntatic scope but nevertheless
+// have an 'interesting' environment which can be traversed to find the
+// appropriate scope the the eval to function as desired. See the diagram below.
+//
+// Eval Scope    Eval Env         Frame Env    Frame Scope
+// ============  =============    =========    =============
+//
+// NonSyntactic
+//    |
+//    v
+//   null        DebugEnvProxy                 LexicalScope
+//                     |                            |
+//                     v                            v
+//               DebugEnvProxy --> CallObj --> FunctionScope
+//                     |              |             |
+//                     v              v             v
+//                    ...            ...           ...
+//
 InputScope ScopeContext::determineEffectiveScope(InputScope& scope,
                                                  JSObject* environment) {
   MOZ_ASSERT(effectiveScopeHops == 0);
