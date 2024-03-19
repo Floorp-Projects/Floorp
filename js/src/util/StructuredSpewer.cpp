@@ -158,7 +158,7 @@ void StructuredSpewer::spew(JSContext* cx, SpewChannel channel, const char* fmt,
 
   json.beginObject();
   json.property("channel", getName(channel));
-  json.formatProperty("message", fmt, ap);
+  json.formatPropertyVA("message", fmt, ap);
   json.endObject();
 
   va_end(ap);
