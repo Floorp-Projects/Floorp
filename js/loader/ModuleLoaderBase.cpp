@@ -678,6 +678,8 @@ nsresult ModuleLoaderBase::CreateModuleScript(ModuleLoadRequest* aRequest) {
         aRequest->mLoadedScript->AsModuleScript();
     aRequest->mModuleScript = moduleScript;
 
+    moduleScript->SetForPreload(aRequest->mLoadContext->IsPreload());
+
     if (!module) {
       LOG(("ScriptLoadRequest (%p):   compilation failed (%d)", aRequest,
            unsigned(rv)));
@@ -769,6 +771,7 @@ ResolveResult ModuleLoaderBase::ResolveModuleSpecifier(
   // Import Maps are not supported on workers/worklets.
   // See https://github.com/WICG/import-maps/issues/2
   MOZ_ASSERT_IF(!NS_IsMainThread(), mImportMap == nullptr);
+
   // Forward to the updated 'Resolve a module specifier' algorithm defined in
   // the Import Maps spec.
   return ImportMap::ResolveModuleSpecifier(mImportMap.get(), mLoader, aScript,
@@ -843,6 +846,7 @@ void ModuleLoaderBase::StartFetchingModuleDependencies(
   MOZ_ASSERT(visitedSet->Contains(aRequest->mURI));
 
   aRequest->mState = ModuleLoadRequest::State::LoadingImports;
+  aRequest->mModuleScript->SetHadImportMap(HasImportMapRegistered());
 
   nsCOMArray<nsIURI> urls;
   nsresult rv = ResolveRequestedModules(aRequest, &urls);
@@ -1100,6 +1104,9 @@ JS::Value ModuleLoaderBase::FindFirstParseError(ModuleLoadRequest* aRequest) {
   }
 
   for (ModuleLoadRequest* childRequest : aRequest->mImports) {
+    MOZ_DIAGNOSTIC_ASSERT(moduleScript->HadImportMap() ==
+                          childRequest->mModuleScript->HadImportMap());
+
     JS::Value error = FindFirstParseError(childRequest);
     if (!error.isUndefined()) {
       return error;
@@ -1393,6 +1400,25 @@ void ModuleLoaderBase::RegisterImportMap(UniquePtr<ImportMap> aImportMap) {
 
   // Step 3. Set global's import map to result's import map.
   mImportMap = std::move(aImportMap);
+
+  // If speculative preloading has added modules to the module map, remove
+  // them. Any import resolution has been invalidated by the addition of the
+  // import map.
+  for (const auto& entry : mFetchedModules) {
+    ModuleScript* script = entry.GetData();
+    if (script) {
+      MOZ_DIAGNOSTIC_ASSERT(
+          script->ForPreload(),
+          "Non-preload module loads should block import maps");
+      MOZ_DIAGNOSTIC_ASSERT(!script->HadImportMap(),
+                            "Only one import map can be registered");
+      if (JSObject* module = script->ModuleRecord()) {
+        MOZ_DIAGNOSTIC_ASSERT(!JS::ModuleIsLinked(module));
+      }
+      script->Shutdown();
+    }
+  }
+  mFetchedModules.Clear();
 }
 
 void ModuleLoaderBase::CopyModulesTo(ModuleLoaderBase* aDest) {
