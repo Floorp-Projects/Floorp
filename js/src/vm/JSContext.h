@@ -89,6 +89,7 @@ class InternalJobQueue : public JS::JobQueue {
                          JS::HandleObject incumbentGlobal) override;
   void runJobs(JSContext* cx) override;
   bool empty() const override;
+  bool isDrainingStopped() const override { return interrupted_; }
 
   // If we are currently in a call to runJobs(), make that call stop processing
   // jobs once the current one finishes, and return. If we are not currently in
