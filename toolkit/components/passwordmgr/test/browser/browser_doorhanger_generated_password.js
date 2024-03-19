@@ -1818,7 +1818,7 @@ add_task(async function form_edit_username_and_password_of_generated_login() {
         info("Verifying the doorhanger");
         notif = await openAndVerifyDoorhanger(browser, "password-change", {
           dismissed: true,
-          anchorExtraAttr: expectedConfirmation ? "attention" : "",
+          anchorExtraAttr: expectedConfirmation ? "attention" : null,
           usernameValue: expectedDoorhangerUsername,
           passwordLength: expectedDoorhangerPassword.length,
         });
