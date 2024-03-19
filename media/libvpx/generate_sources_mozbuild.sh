@@ -169,7 +169,8 @@ function gen_rtcd_header {
 # $1 - Header file directory.
 # $2 - Config command line.
 function gen_config_files {
-  ./configure $2 > /dev/null
+  ./configure $2 --log=$BASE_DIR/$LIBVPX_CONFIG_DIR/$1/config.log > /dev/null
+  echo "Log file: $BASE_DIR/$LIBVPX_CONFIG_DIR/$1/config.log"
 
   # Disable HAVE_UNISTD_H.
   ( echo '/HAVE_UNISTD_H'; echo 'd' ; echo 'w' ; echo 'q' ) | ed -s vpx_config.h

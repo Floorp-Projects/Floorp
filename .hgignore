@@ -352,3 +352,6 @@ tps_result\.json$
 
 # Ignore generated directory with .class files for GeckoView annotation processor
 ^mobile/android/annotations/bin/
+
+# Ignore generated log files under media/libvpx
+^media/libvpx/config/.*/config.log
