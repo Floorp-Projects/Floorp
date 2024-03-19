@@ -26,7 +26,7 @@ if (!window.WebTrends) {
       return this;
     }
     DCSext = {};
-    init(obj) {
+    init(_obj) {
       return this;
     }
     track() {

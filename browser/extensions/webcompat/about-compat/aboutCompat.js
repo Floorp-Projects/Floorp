@@ -14,7 +14,7 @@ const portToAddon = (function () {
   function connect() {
     port = browser.runtime.connect({ name: "AboutCompatTab" });
     port.onMessage.addListener(onMessageFromAddon);
-    port.onDisconnect.addListener(e => {
+    port.onDisconnect.addListener(() => {
       port = undefined;
     });
   }

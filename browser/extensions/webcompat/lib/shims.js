@@ -765,7 +765,7 @@ class Shims {
     });
   }
 
-  async _onMessageFromShim(payload, sender, sendResponse) {
+  async _onMessageFromShim(payload, sender) {
     const { tab, frameId } = sender;
     const { id, url } = tab;
     const { shimId, message } = payload;

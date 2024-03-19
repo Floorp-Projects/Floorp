@@ -27,7 +27,7 @@ const replaceStringInRequest = (
     carryover = replaced.slice(-carryoverLength);
   };
 
-  filter.onstop = event => {
+  filter.onstop = () => {
     if (carryover.length) {
       filter.write(encoder.encode(carryover));
     }
