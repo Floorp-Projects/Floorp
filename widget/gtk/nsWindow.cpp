@@ -3165,23 +3165,31 @@ void nsWindow::SetFocus(Raise aRaise, mozilla::dom::CallerType aCallerType) {
   LOG("  widget now has focus in SetFocus()");
 }
 
+void nsWindow::ResetScreenBounds() { mGdkWindowRootOrigin.reset(); }
+
 LayoutDeviceIntRect nsWindow::GetScreenBounds() {
   if (!mGdkWindow) {
     return mBounds;
   }
 
   const LayoutDeviceIntPoint origin = [&] {
-    gint x, y;
-    gdk_window_get_root_origin(mGdkWindow, &x, &y);
+    GdkPoint origin;
+
+    if (mGdkWindowRootOrigin.isSome()) {
+      origin = mGdkWindowRootOrigin.value();
+    } else {
+      gdk_window_get_root_origin(mGdkWindow, &origin.x, &origin.y);
+      mGdkWindowRootOrigin = Some(origin);
+    }
 
     // Workaround for https://gitlab.gnome.org/GNOME/gtk/-/merge_requests/4820
     // Bug 1775017 Gtk < 3.24.35 returns scaled values for
     // override redirected window on X11.
     if (gtk_check_version(3, 24, 35) != nullptr && GdkIsX11Display() &&
         gdk_window_get_window_type(mGdkWindow) == GDK_WINDOW_TEMP) {
-      return LayoutDeviceIntPoint(x, y);
+      return LayoutDeviceIntPoint(origin.x, origin.y);
     }
-    return GdkPointToDevicePixels({x, y});
+    return GdkPointToDevicePixels(origin);
   }();
 
   // mBounds.Size() is the window bounds, not the window-manager frame
@@ -4047,6 +4055,8 @@ gboolean nsWindow::OnConfigureEvent(GtkWidget* aWidget,
   if (mPendingConfigures > 0) {
     mPendingConfigures--;
   }
+
+  ResetScreenBounds();
 
   // Don't fire configure event for scale changes, we handle that
   // OnScaleChanged event. Skip that for toplevel windows only.
