@@ -19,11 +19,9 @@ import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.GleanMetrics.BookmarksManagement
 import org.mozilla.fenix.GleanMetrics.History
-import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.theme.ThemeManager
 
 /**
  * This wrapper wraps the `AwesomeBar()` composable and exposes it as a `View` and `concept-awesomebar`
@@ -59,10 +57,10 @@ class AwesomeBarWrapper @JvmOverloads constructor(
                 orientation = orientation,
                 colors = AwesomeBarDefaults.colors(
                     background = Color.Transparent,
-                    title = ThemeManager.resolveAttributeColor(R.attr.textPrimary),
-                    description = ThemeManager.resolveAttributeColor(R.attr.textSecondary),
-                    autocompleteIcon = ThemeManager.resolveAttributeColor(R.attr.textSecondary),
-                    groupTitle = ThemeManager.resolveAttributeColor(R.attr.textSecondary),
+                    title = FirefoxTheme.colors.textPrimary,
+                    description = FirefoxTheme.colors.textSecondary,
+                    autocompleteIcon = FirefoxTheme.colors.textSecondary,
+                    groupTitle = FirefoxTheme.colors.textSecondary,
                 ),
                 onSuggestionClicked = { suggestion ->
                     context.components.core.store.dispatch(AwesomeBarAction.SuggestionClicked(suggestion))
