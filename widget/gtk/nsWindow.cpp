@@ -10066,16 +10066,6 @@ void nsWindow::OnUnmap() {
     }
   }
 
-  // We don't have valid XWindow any more,
-  // so clear stored ones at GtkCompositorWidget() for OMTC rendering
-  // and mSurfaceProvider for legacy rendering.
-  if (GdkIsX11Display()) {
-    mSurfaceProvider.CleanupResources();
-    if (mCompositorWidgetDelegate) {
-      mCompositorWidgetDelegate->DisableRendering();
-    }
-  }
-
   if (mGdkWindow) {
     if (mIMContext) {
       mIMContext->SetGdkWindow(nullptr);
@@ -10084,37 +10074,42 @@ void nsWindow::OnUnmap() {
     mGdkWindow = nullptr;
   }
 
+  // Clear resources (mainly XWindow) stored at GtkCompositorWidget.
+  // It makes sure we don't paint to it when nsWindow becomes hiden/deleted
+  // and XWindow is released.
+  if (mCompositorWidgetDelegate) {
+    mCompositorWidgetDelegate->DisableRendering();
+  }
+
+  // Clear nsWindow resources used for old (in-thread) rendering.
+  mSurfaceProvider.CleanupResources();
+
   // Until Bug 1654938 is fixed we delete layer manager for hidden popups,
   // otherwise it can easily hold 1GB+ memory for long time.
   if (mWindowType == WindowType::Popup) {
     DestroyLayerManager();
-    mSurfaceProvider.CleanupResources();
   } else {
-#ifdef MOZ_WAYLAND
-    // Widget is backed by OpenGL EGLSurface created over wl_surface
-    // owned by mContainer.
-    // RenderCompositorEGL::Resume() deletes recent EGLSurface based on
-    // wl_surface owned by mContainer and creates a new fallback EGLSurface.
-    // Then we can delete wl_surface in moz_container_wayland_unmap().
+    // Widget is backed by OpenGL EGLSurface created over wl_surface/XWindow.
+    //
+    // RenderCompositorEGL::Resume() deletes recent EGLSurface,
+    // calls nsWindow::GetNativeData(NS_NATIVE_EGL_WINDOW) from compositor
+    // thread to get new native rendering surface.
+    //
+    // For hidden/unmapped windows we return nullptr NS_NATIVE_EGL_WINDOW at
+    // nsWindow::GetNativeData() so RenderCompositorEGL::Resume() creates
+    // offscreen fallback EGLSurface to avoid compositor pause.
+    //
     // We don't want to pause compositor as it may lead to whole
     // browser freeze (Bug 1777664).
-    ///
-    // We don't need to do such operation for SW backend as
-    // WindowSurfaceWaylandMB::Commit() gets wl_surface from
-    // MozContainer every commit.
-    if (moz_container_wayland_has_egl_window(mContainer) &&
-        mCompositorWidgetDelegate) {
-      if (CompositorBridgeChild* remoteRenderer = GetRemoteRenderer()) {
-        // Call DisableRendering() to make GtkCompositorWidget hidden.
-        // Then SendResume() will create fallback EGLSurface, see
-        // GLContextEGL::CreateEGLSurfaceForCompositorWidget().
-        mCompositorWidgetDelegate->DisableRendering();
-        remoteRenderer->SendResume();
-        mCompositorWidgetDelegate->EnableRendering(GetX11Window(),
-                                                   GetShapedState());
-      }
+    //
+    // If RenderCompositorSWGL compositor is used (SW fallback)
+    // RenderCompositorSWGL::Resume() only requests full render for next paint
+    // as wl_surface/XWindow is managed by WindowSurfaceProvider owned
+    // directly by GtkCompositorWidget and that's covered by
+    // mCompositorWidgetDelegate->CleanupResources() call above.
+    if (CompositorBridgeChild* remoteRenderer = GetRemoteRenderer()) {
+      remoteRenderer->SendResume();
     }
-#endif
   }
 }
 
