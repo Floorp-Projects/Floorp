@@ -13285,6 +13285,11 @@
   value: "file,moz-gio"
   mirror: never
 
+# Enable off-main-thread decompression of network streams
+- name: network.decompression_off_mainthread
+  type: bool
+  value: true
+  mirror: always
 
 #---------------------------------------------------------------------------
 # Prefs starting with "nglayout."

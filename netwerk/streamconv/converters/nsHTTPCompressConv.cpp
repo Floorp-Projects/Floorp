@@ -137,7 +137,9 @@ nsHTTPCompressConv::MaybeRetarget(nsIRequest* request) {
   if (!req) {
     return NS_ERROR_NO_INTERFACE;
   }
-
+  if (!StaticPrefs::network_decompression_off_mainthread()) {
+    return NS_OK;
+  }
   nsCOMPtr<nsISerialEventTarget> target;
   rv = req->GetDeliveryTarget(getter_AddRefs(target));
   if (NS_FAILED(rv) || !target || target->IsOnCurrentThread()) {
