@@ -39,6 +39,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/Variant.h"
 #include "mozilla/ipc/ProtocolUtils.h"
+#include "MMPrinter.h"
 #include "nsContentUtils.h"
 #include "nsDocShell.h"
 #include "nsDocShellLoadState.h"
@@ -570,6 +571,8 @@ IPCResult WindowGlobalParent::RecvRawMessage(
     stack.emplace();
     stack->BorrowFromClonedMessageData(*aStack);
   }
+  MMPrinter::Print("WindowGlobalParent::RecvRawMessage", aMeta.actorName(),
+                   aMeta.messageName(), *aData);
   ReceiveRawMessage(aMeta, std::move(data), std::move(stack));
   return IPC_OK();
 }
