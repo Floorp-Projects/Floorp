@@ -31,16 +31,6 @@ const autocompleteController = Cc[
 
 ChromeUtils.defineLazyGetter(
   lazy,
-  "ADDRESSES_COLLECTION_NAME",
-  () => lazy.FormAutofillUtils.ADDRESSES_COLLECTION_NAME
-);
-ChromeUtils.defineLazyGetter(
-  lazy,
-  "CREDITCARDS_COLLECTION_NAME",
-  () => lazy.FormAutofillUtils.CREDITCARDS_COLLECTION_NAME
-);
-ChromeUtils.defineLazyGetter(
-  lazy,
   "FIELD_STATES",
   () => lazy.FormAutofillUtils.FIELD_STATES
 );
@@ -191,14 +181,8 @@ AutofillProfileAutoCompleteSearch.prototype = {
         isInputAutofilled,
       });
     } else {
-      let infoWithoutElement = { ...activeFieldDetail };
-      delete infoWithoutElement.elementWeakRef;
-
-      let data = {
-        collectionName: isAddressField
-          ? lazy.ADDRESSES_COLLECTION_NAME
-          : lazy.CREDITCARDS_COLLECTION_NAME,
-        info: infoWithoutElement,
+      const data = {
+        fieldName: activeFieldDetail.fieldName,
         searchString,
       };
 
@@ -284,12 +268,10 @@ AutofillProfileAutoCompleteSearch.prototype = {
    *         Input element for autocomplete.
    * @param  {object} data
    *         Parameters for querying the corresponding result.
-   * @param  {string} data.collectionName
-   *         The name used to specify which collection to retrieve records.
    * @param  {string} data.searchString
    *         The typed string for filtering out the matched records.
-   * @param  {string} data.info
-   *         The input autocomplete property's information.
+   * @param  {string} data.fieldName
+   *         The identified field name for the input
    * @returns {Promise}
    *          Promise that resolves when addresses returned from parent process.
    */
