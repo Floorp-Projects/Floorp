@@ -54,7 +54,9 @@ def add_common_config(config, tasks):
         if build_fat_aar.attributes.get("shippable", False):
             worker["env"].setdefault(
                 "MOZ_UPDATE_CHANNEL",
-                build_fat_aar.attributes.get("update-channel", "default"),
+                build_fat_aar.attributes.get(
+                    "update-channel", "nightly-{}".format(config.params["project"])
+                ),
             )
 
         yield task
