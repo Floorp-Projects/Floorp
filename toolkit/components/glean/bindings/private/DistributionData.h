@@ -27,6 +27,28 @@ struct DistributionData final {
       this->values.InsertOrUpdate(aBuckets[i], aCounts[i]);
     }
   }
+
+  friend std::ostream& operator<<(std::ostream& aStream,
+                                  const DistributionData& aDist) {
+    aStream << "DistributionData(";
+    aStream << "sum=" << aDist.sum << ", ";
+    aStream << "count=" << aDist.count << ", ";
+    aStream << "values={";
+    bool first = true;
+    for (const auto& entry : aDist.values) {
+      if (!first) {
+        aStream << ", ";
+      }
+      first = false;
+
+      const uint64_t bucket = entry.GetKey();
+      const uint64_t count = entry.GetData();
+      aStream << bucket << "=" << count;
+    }
+    aStream << "}";
+    aStream << ")";
+    return aStream;
+  }
 };
 
 }  // namespace mozilla::glean

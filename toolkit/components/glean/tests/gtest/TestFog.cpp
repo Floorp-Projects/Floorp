@@ -284,11 +284,7 @@ TEST_F(FOGFixture, TestCppTimingDistNegativeDuration) {
   auto negDuration = TimeDuration::FromSeconds(-1);
   test_only::what_time_is_it.AccumulateRawDuration(negDuration);
 
-  // FIXME(bug 1886198):
-  // Can't use `ASSERT_EQ(mozilla::Nothing(), val)` unfortunately,
-  // `ASSERT_EQ` will generate code that tries to print the contained value
-  // using `std::ostream <<`, but `DistributionData` doesn't support that.
-  ASSERT_TRUE(test_only::what_time_is_it.TestGetValue().unwrap().isNothing());
+  ASSERT_EQ(mozilla::Nothing(), test_only::what_time_is_it.TestGetValue().unwrap());
 }
 
 TEST_F(FOGFixture, TestLabeledBooleanWorks) {
