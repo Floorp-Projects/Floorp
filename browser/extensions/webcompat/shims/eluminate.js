@@ -32,7 +32,7 @@ if (!window.CM_DDX) {
     invokeFunctionWhenAvailable: a => {
       a();
     },
-    gup: d => "",
+    gup: _d => "",
     privacy: {
       isDoNotTrackEnabled: () => false,
       setDoNotTrack: () => {},

@@ -23,5 +23,5 @@ Object.defineProperty(window.wrappedJSObject, "loggingEnabled", {
     return false;
   }, window),
 
-  set: exportFunction(function (value = {}) {}, window),
+  set: exportFunction(function () {}, window),
 });

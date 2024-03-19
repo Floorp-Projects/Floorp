@@ -63,7 +63,7 @@ class Manager {
       "@mozilla.org/url-classifier/channel-classifier-service;1"
     ].getService(Ci.nsIChannelClassifierService);
     this._classifierObserver = {};
-    this._classifierObserver.observe = (subject, topic, data) => {
+    this._classifierObserver.observe = (subject, topic) => {
       switch (topic) {
         case "http-on-stop-request": {
           const { channelId } = subject.QueryInterface(Ci.nsIIdentChannel);
@@ -163,7 +163,7 @@ function updateDFPIStatus() {
 }
 
 this.trackingProtection = class extends ExtensionAPI {
-  onShutdown(isAppShutdown) {
+  onShutdown() {
     if (manager) {
       manager.stop();
     }
