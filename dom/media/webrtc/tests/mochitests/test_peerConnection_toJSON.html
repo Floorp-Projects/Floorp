@@ -28,10 +28,11 @@
                                                    sdpMid: "test",
                                                    sdpMLineIndex: 3 });
     jsonCopy = JSON.parse(JSON.stringify(rtcIceCandidate));
-    for (key in rtcIceCandidate) {
-      if (typeof(rtcIceCandidate[key]) == "function") continue;
-      is(rtcIceCandidate[key], jsonCopy[key], "key " + key + " should match.");
-    }
+    is(jsonCopy.candidate, "dummy");
+    is(jsonCopy.sdpMid, "test");
+    is(jsonCopy.sdpMLineIndex, 3);
+    is(jsonCopy.usernameFragment, rtcIceCandidate.usernameFragment);
+    is(Object.keys(jsonCopy).length, 4, "JSON limited to those four members.");
   });
 </script>
 </pre>
