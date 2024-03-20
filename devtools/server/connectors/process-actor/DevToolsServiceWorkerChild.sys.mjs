@@ -41,6 +41,10 @@ export class DevToolsServiceWorkerChild extends JSProcessActorChild {
     //     - serviceWorkerTargetForm: The associated worker target instance form
     //     - workerThreadServerForwardingPrefix: The prefix used to forward events to the
     //       worker target on the worker thread ().
+    // - pendingWorkers: A Set of arrays which will be populated with concurrent Session Data updates
+    //     being done while a worker target is being instantiated.
+    //     Each pending worker being initialized register a new dedicated array which will be removed
+    //     from the Set once its initialization is over.
     // - forwardingPrefix: Prefix used by the JSWindowActorTransport pair to communicate
     //   between content and parent processes.
     // - sessionData: Data (targets, resources, …) the watcher wants to be notified about.
@@ -286,6 +290,7 @@ export class DevToolsServiceWorkerChild extends JSProcessActorChild {
       connection,
       watchPromise,
       workers: [],
+      pendingWorkers: new Set(),
       forwardingPrefix,
       sessionData,
     });
@@ -421,6 +426,12 @@ export class DevToolsServiceWorkerChild extends JSProcessActorChild {
       }
     );
 
+    // The onConnectToWorker is async and we may receive new Session Data (e.g breakpoints)
+    // while we are instantiating the worker targets.
+    // Let cache the pending session data and flush it after the targets are being instantiated.
+    const concurrentSessionUpdates = [];
+    watcherConnectionData.pendingWorkers.add(concurrentSessionUpdates);
+
     try {
       await onConnectToWorker;
     } catch (e) {
@@ -433,10 +444,26 @@ export class DevToolsServiceWorkerChild extends JSProcessActorChild {
       if (!dbg.isClosed) {
         dbg.setDebuggerReady(true);
       }
+      watcherConnectionData.pendingWorkers.delete(concurrentSessionUpdates);
       return;
     }
+    watcherConnectionData.pendingWorkers.delete(concurrentSessionUpdates);
 
     const { workerTargetForm, transport } = await onConnectToWorker;
+
+    const promises = [];
+    for (const { type, entries, updateType } of concurrentSessionUpdates) {
+      promises.push(
+        addOrSetSessionDataEntryInWorkerTarget({
+          dbg,
+          workerThreadServerForwardingPrefix,
+          type,
+          entries,
+          updateType,
+        })
+      );
+    }
+    await Promise.all(promises);
 
     try {
       this.sendAsyncMessage(
@@ -564,6 +591,14 @@ export class DevToolsServiceWorkerChild extends JSProcessActorChild {
     if (type == "browser-element-host") {
       this.updateBrowserElementHost(watcherActorID, watcherConnectionData);
       return;
+    }
+
+    for (const concurrentSessionUpdates of watcherConnectionData.pendingWorkers) {
+      concurrentSessionUpdates.push({
+        type,
+        entries,
+        updateType,
+      });
     }
 
     const promises = [];
