@@ -133,7 +133,7 @@ class ProfileAutoCompleteResult {
     }
 
     let type = this.getTypeOfIndex(index);
-    if (type == "clear") {
+    if (type == "clear" || type == "manage") {
       return label.primary;
     }
 
@@ -150,6 +150,9 @@ class ProfileAutoCompleteResult {
     let type = this.getTypeOfIndex(index);
     if (type == "clear") {
       return '{"fillMessageName": "FormAutofill:ClearForm"}';
+    }
+    if (type == "manage") {
+      return '{"fillMessageName": "FormAutofill:OpenPreferences"}';
     }
 
     const item = this.getAt(index);
@@ -170,7 +173,7 @@ class ProfileAutoCompleteResult {
 
     switch (this.getTypeOfIndex(index)) {
       case "manage":
-        return "autofill-footer";
+        return "action";
       case "clear":
         return "action";
       case "insecure":
@@ -312,18 +315,25 @@ export class AddressResult extends ProfileAutoCompleteResult {
       "autofill-manage-addresses-label"
     );
 
+    let footerItem = {
+      primary: manageLabel,
+      secondary: "",
+      categories:
+        lazy.FormAutofillUtils.getCategoriesFromFieldNames(allFieldNames),
+      focusedCategory:
+        lazy.FormAutofillUtils.getCategoryFromFieldName(focusedFieldName),
+    };
+
     if (this._isInputAutofilled) {
       const clearLabel = lazy.l10n.formatValueSync("autofill-clear-form-label");
 
-      return [
-        { primary: clearLabel, secondary: "" }, // Clear button
-        // Footer
+      let labels = [
         {
-          primary: "",
-          secondary: "",
-          manageLabel,
+          primary: clearLabel,
         },
       ];
+      labels.push(footerItem);
+      return labels;
     }
 
     // Skip results without a primary label.
@@ -349,22 +359,7 @@ export class AddressResult extends ProfileAutoCompleteResult {
         };
       });
 
-    const focusedCategory =
-      lazy.FormAutofillUtils.getCategoryFromFieldName(focusedFieldName);
-
-    // Add an empty result entry for footer. Its content will come from
-    // the footer binding, so don't assign any value to it.
-    // The additional properties: categories and focusedCategory are required of
-    // the popup to generate autofill hint on the footer.
-    labels.push({
-      primary: "",
-      secondary: "",
-      manageLabel,
-      categories: lazy.FormAutofillUtils.getCategoriesFromFieldNames(
-        this._allFieldNames
-      ),
-      focusedCategory,
-    });
+    labels.push(footerItem);
 
     return labels;
   }
@@ -434,18 +429,20 @@ export class CreditCardResult extends ProfileAutoCompleteResult {
       "autofill-manage-payment-methods-label"
     );
 
+    let footerItem = {
+      primary: manageLabel,
+    };
+
     if (this._isInputAutofilled) {
       const clearLabel = lazy.l10n.formatValueSync("autofill-clear-form-label");
 
-      return [
-        { primary: clearLabel, secondary: "" }, // Clear button
-        // Footer
+      let labels = [
         {
-          primary: "",
-          secondary: "",
-          manageLabel,
+          primary: clearLabel,
         },
       ];
+      labels.push(footerItem);
+      return labels;
     }
 
     // Skip results without a primary label.
@@ -488,16 +485,7 @@ export class CreditCardResult extends ProfileAutoCompleteResult {
         };
       });
 
-    const focusedCategory =
-      lazy.FormAutofillUtils.getCategoryFromFieldName(focusedFieldName);
-
-    // Add an empty result entry for footer.
-    labels.push({
-      primary: "",
-      secondary: "",
-      manageLabel,
-      focusedCategory,
-    });
+    labels.push(footerItem);
 
     return labels;
   }

@@ -14,6 +14,15 @@ add_setup(async function setup_storage() {
   );
 });
 
+function getFooterLabel(itemsBox) {
+  let footer = itemsBox.getItemAtIndex(itemsBox.itemCount - 1);
+  while (footer.collapsed) {
+    footer = footer.previousSibling;
+  }
+
+  return footer.querySelector(".line1-label");
+}
+
 add_task(async function test_footer_has_correct_button_text_on_address() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: URL },
@@ -23,9 +32,7 @@ add_task(async function test_footer_has_correct_button_text_on_address() {
       } = browser;
 
       await openPopupOn(browser, "#organization");
-      const footer = itemsBox.querySelector(
-        ".autofill-footer-row.autofill-button"
-      );
+      let footer = getFooterLabel(itemsBox);
       Assert.equal(
         footer.innerText,
         l10n.formatValueSync("autofill-manage-addresses-label")
@@ -44,9 +51,7 @@ add_task(async function test_footer_has_correct_button_text_on_credit_card() {
       } = browser;
 
       await openPopupOn(browser, "#cc-number");
-      const footer = itemsBox.querySelector(
-        ".autofill-footer-row.autofill-button"
-      );
+      let footer = getFooterLabel(itemsBox);
       Assert.equal(
         footer.innerText,
         l10n.formatValueSync("autofill-manage-payment-methods-label")
