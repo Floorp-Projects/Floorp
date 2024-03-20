@@ -690,6 +690,7 @@ nsresult ModuleLoaderBase::CreateModuleScript(ModuleLoadRequest* aRequest) {
     aRequest->mModuleScript = moduleScript;
 
     moduleScript->SetForPreload(aRequest->mLoadContext->IsPreload());
+    moduleScript->SetHadImportMap(HasImportMapRegistered());
 
     if (!module) {
       LOG(("ScriptLoadRequest (%p):   compilation failed (%d)", aRequest,
@@ -857,7 +858,6 @@ void ModuleLoaderBase::StartFetchingModuleDependencies(
   MOZ_ASSERT(visitedSet->Contains(aRequest->mURI));
 
   aRequest->mState = ModuleLoadRequest::State::LoadingImports;
-  aRequest->mModuleScript->SetHadImportMap(HasImportMapRegistered());
 
   nsCOMArray<nsIURI> urls;
   nsresult rv = ResolveRequestedModules(aRequest, &urls);
