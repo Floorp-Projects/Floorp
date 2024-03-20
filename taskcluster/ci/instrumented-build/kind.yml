@@ -427,6 +427,7 @@ jobs:
                 mozconfig_platform: win64
                 extra_mozconfig_content:
                     - ac_add_options --as-milestone=release
+        run-on-projects: [trunk-only]
         fetches:
             toolchain:
                 - linux64-clang
