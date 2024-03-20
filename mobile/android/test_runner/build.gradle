@@ -49,13 +49,13 @@ android {
 }
 
 dependencies {
-    implementation "androidx.annotation:annotation:1.6.0"
-    implementation "androidx.appcompat:appcompat:1.6.1"
-    implementation "androidx.preference:preference:1.1.1"
+    implementation ComponentsDependencies.androidx_annotation
+    implementation ComponentsDependencies.androidx_appcompat
+    implementation ComponentsDependencies.androidx_preferences
 
     implementation project(path: ':geckoview')
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation 'com.google.android.material:material:1.9.0'
+    implementation ComponentsDependencies.androidx_constraintlayout
+    implementation ComponentsDependencies.google_material
 
     implementation 'androidx.multidex:multidex:2.0.1'
 }

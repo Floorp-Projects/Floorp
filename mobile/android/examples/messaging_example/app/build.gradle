@@ -45,11 +45,11 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation "androidx.annotation:annotation:1.6.0"
-    implementation "androidx.appcompat:appcompat:1.6.1"
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation ComponentsDependencies.androidx_annotation
+    implementation ComponentsDependencies.androidx_appcompat
+    implementation ComponentsDependencies.androidx_constraintlayout
     implementation 'androidx.multidex:multidex:2.0.1'
-    testImplementation 'junit:junit:4.13.2'
+    testImplementation ComponentsDependencies.testing_junit
     // Replace this with implementation "org.mozilla.geckoview:geckoview-${geckoviewChannel}:${geckoviewVersion}"
     implementation project(path: ':geckoview')
 }

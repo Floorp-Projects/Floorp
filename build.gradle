@@ -15,7 +15,6 @@ buildscript {
     }
 
     ext {
-        kotlin_version = Versions.kotlin
         detekt_plugin = Versions.detekt
         python_envs_plugin = Versions.python_envs_plugin
         ksp_plugin = Versions.ksp_plugin
@@ -26,14 +25,14 @@ buildscript {
 
     dependencies {
         classpath 'org.mozilla.apilint:apilint:0.5.2'
-        classpath 'com.android.tools.build:gradle:8.0.2'
+        classpath 'com.android.tools.build:gradle:8.0.2'  // Bug 1881001 for using AC version
         classpath 'org.apache.commons:commons-exec:1.3'
         classpath 'com.diffplug.spotless:spotless-plugin-gradle:6.25.0'
         classpath 'org.tomlj:tomlj:1.1.0'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath ComponentsDependencies.tools_kotlingradle
 
         // Used in mobile/android/fenix/app/build.gradle
-        classpath FenixDependencies.androidx_safeargs
+        classpath ComponentsDependencies.androidx_safeargs
         classpath FenixDependencies.osslicenses_plugin
         classpath FenixDependencies.tools_benchmarkgradle
         classpath "org.mozilla.telemetry:glean-gradle-plugin:${Versions.mozilla_glean}"
@@ -80,7 +79,7 @@ allprojects {
         topsrcdir = gradle.mozconfig.topsrcdir
         topobjdir = gradle.mozconfig.topobjdir
 
-        gleanVersion = "58.1.0"
+        gleanVersion = Versions.mozilla_glean
         if (gleanVersion != getRustVersionFor("glean")) {
           throw new StopExecutionException("Mismatched Glean version, expected: ${gleanVersion}," +
               " found ${getRustVersionFor("glean")}")
