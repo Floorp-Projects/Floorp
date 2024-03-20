@@ -229,7 +229,7 @@ void ContentMediaAgent::EnableAction(uint64_t aBrowsingContextId,
   }
 
   LOG("Notify to enable action '%s' in BC %" PRId64,
-      ToMediaSessionActionStr(aAction), bc->Id());
+      GetEnumString(aAction).get(), bc->Id());
   if (XRE_IsContentProcess()) {
     ContentChild* contentChild = ContentChild::GetSingleton();
     Unused << contentChild->SendNotifyMediaSessionSupportedActionChanged(
@@ -251,7 +251,7 @@ void ContentMediaAgent::DisableAction(uint64_t aBrowsingContextId,
   }
 
   LOG("Notify to disable action '%s' in BC %" PRId64,
-      ToMediaSessionActionStr(aAction), bc->Id());
+      GetEnumString(aAction).get(), bc->Id());
   if (XRE_IsContentProcess()) {
     ContentChild* contentChild = ContentChild::GetSingleton();
     Unused << contentChild->SendNotifyMediaSessionSupportedActionChanged(
