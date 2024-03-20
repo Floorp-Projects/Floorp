@@ -14,11 +14,12 @@ GPU_IMPL_JS_WRAP(CompilationMessage)
 
 CompilationMessage::CompilationMessage(Device* const aParent, uint64_t aLineNum,
                                        uint64_t aLinePos, uint64_t aOffset,
-                                       nsString&& aMessage)
+                                       uint64_t aLength, nsString&& aMessage)
     : ChildOf(aParent),
       mLineNum(aLineNum),
       mLinePos(aLinePos),
       mOffset(aOffset),
+      mLength(aLength),
       mMessage(std::move(aMessage)) {}
 
 }  // namespace mozilla::webgpu

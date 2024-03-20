@@ -19,7 +19,8 @@ void CompilationInfo::SetMessages(
     nsTArray<mozilla::webgpu::WebGPUCompilationMessage>& aMessages) {
   for (auto& msg : aMessages) {
     mMessages.AppendElement(MakeAndAddRef<mozilla::webgpu::CompilationMessage>(
-        mParent, msg.lineNum, msg.linePos, msg.offset, std::move(msg.message)));
+        mParent, msg.lineNum, msg.linePos, msg.offset, msg.length,
+        std::move(msg.message)));
   }
 }
 
