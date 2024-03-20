@@ -229,30 +229,26 @@ configurations {
 }
 
 dependencies {
-    implementation "androidx.annotation:annotation:1.6.0"
-    implementation "androidx.legacy:legacy-support-v4:1.0.0"
+    implementation ComponentsDependencies.androidx_annotation
 
     implementation "com.google.android.gms:play-services-fido:20.0.1"
     implementation "org.yaml:snakeyaml:2.2"
 
-    implementation "androidx.lifecycle:lifecycle-common:2.6.1"
-    implementation "androidx.lifecycle:lifecycle-process:2.6.1"
+    implementation ComponentsDependencies.androidx_lifecycle_common
+    implementation ComponentsDependencies.androidx_lifecycle_process
 
     if (mozconfig.substs.MOZ_ANDROID_HLS_SUPPORT) {
         implementation project(":exoplayer2")
     }
 
-    testImplementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    testImplementation 'junit:junit:4.13.2'
-    testImplementation 'org.robolectric:robolectric:4.10.1'
-    testImplementation 'org.mockito:mockito-core:5.3.1'
+    testImplementation ComponentsDependencies.testing_junit
+    testImplementation ComponentsDependencies.testing_robolectric
 
-    androidTestImplementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    androidTestImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.1"
-    androidTestImplementation 'androidx.test:runner:1.5.2'
-    androidTestImplementation 'androidx.test:rules:1.5.0'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.0'
+    androidTestImplementation ComponentsDependencies.testing_coroutines
+    androidTestImplementation ComponentsDependencies.androidx_test_runner
+    androidTestImplementation ComponentsDependencies.androidx_test_rules
+    androidTestImplementation ComponentsDependencies.androidx_test_junit
+    androidTestImplementation ComponentsDependencies.androidx_espresso_core
 
     androidTestImplementation 'com.koushikdutta.async:androidasync:3.1.0'
 

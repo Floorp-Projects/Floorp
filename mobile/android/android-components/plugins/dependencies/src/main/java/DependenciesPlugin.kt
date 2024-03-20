@@ -19,6 +19,8 @@ object Versions {
     const val serialization = "1.6.3"
     const val python_envs_plugin = "0.0.31"
 
+    const val mozilla_glean = "58.1.0"
+
     const val junit = "4.13.2"
     const val robolectric = "4.11.1"
     const val mockito = "5.11.0"
@@ -42,9 +44,6 @@ object Versions {
 
     const val disklrucache = "2.0.2"
     const val leakcanary = "2.13"
-
-    // DO NOT MODIFY MANUALLY. This is auto-updated along with GeckoView.
-    const val mozilla_glean = "58.1.0"
 
     const val material = "1.9.0"
     const val ksp = "1.0.17"
@@ -150,7 +149,7 @@ object ComponentsDependencies {
     const val androidx_media = "androidx.media:media:${Versions.AndroidX.media}"
     const val androidx_paging = "androidx.paging:paging-runtime:${Versions.AndroidX.paging}"
     const val androidx_palette = "androidx.palette:palette-ktx:${Versions.AndroidX.palette}"
-    const val androidx_preferences = "androidx.preference:preference-ktx:${Versions.AndroidX.preferences}"
+    const val androidx_preferences = "androidx.preference:preference:${Versions.AndroidX.preferences}"
     const val androidx_recyclerview = "androidx.recyclerview:recyclerview:${Versions.AndroidX.recyclerview}"
     const val androidx_room_runtime = "androidx.room:room-ktx:${Versions.AndroidX.room}"
     const val androidx_room_compiler = "androidx.room:room-compiler:${Versions.AndroidX.room}"

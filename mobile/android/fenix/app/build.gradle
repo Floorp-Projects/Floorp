@@ -670,7 +670,6 @@ dependencies {
     implementation ComponentsDependencies.androidx_compose_animation
     implementation ComponentsDependencies.androidx_compose_foundation
     implementation ComponentsDependencies.androidx_compose_material
-    implementation FenixDependencies.androidx_legacy
     implementation ComponentsDependencies.androidx_biometric
     implementation ComponentsDependencies.androidx_paging
     implementation ComponentsDependencies.androidx_preferences
@@ -679,6 +678,7 @@ dependencies {
     implementation ComponentsDependencies.androidx_navigation_ui
     implementation ComponentsDependencies.androidx_compose_navigation
     implementation ComponentsDependencies.androidx_recyclerview
+    implementation ComponentsDependencies.androidx_swiperefreshlayout
 
     implementation ComponentsDependencies.androidx_lifecycle_common
     implementation ComponentsDependencies.androidx_lifecycle_livedata
