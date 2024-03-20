@@ -321,12 +321,7 @@
     _collapseUnusedItems() {
       let existingItemsCount = this.richlistbox.children.length;
       for (let i = this.matchCount; i < existingItemsCount; ++i) {
-        let item = this.richlistbox.children[i];
-
-        item.collapsed = true;
-        if (typeof item._onCollapse == "function") {
-          item._onCollapse();
-        }
+        this.richlistbox.children[i].collapsed = true;
       }
     }
 
@@ -417,9 +412,9 @@
           // _adjustAcItem() are unreusable.
           const UNREUSEABLE_STYLES = [
             "autofill-profile",
-            "autofill-footer",
             "autofill-insecureWarning",
             "action",
+            "status",
             "generatedPassword",
             "generic",
             "importableLearnMore",
@@ -445,14 +440,14 @@
             case "autofill-profile":
               options = { is: "autocomplete-profile-listitem" };
               break;
-            case "autofill-footer":
-              options = { is: "autocomplete-profile-listitem-footer" };
-              break;
             case "autofill-insecureWarning":
               options = { is: "autocomplete-creditcard-insecure-field" };
               break;
             case "action":
               options = { is: "autocomplete-action-richlistitem" };
+              break;
+            case "status":
+              options = { is: "autocomplete-status-richlistitem" };
               break;
             case "generic":
               options = { is: "autocomplete-two-line-richlistitem" };
