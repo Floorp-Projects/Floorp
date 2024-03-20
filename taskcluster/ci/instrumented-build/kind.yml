@@ -407,6 +407,45 @@ jobs:
             fetch:
                 - upx-3.95-win
 
+    win64-nightlyasrelease/opt:
+        description: "Win64 Shippable PGO Instrumented"
+        index:
+            product: firefox
+            job-name: instrumented-nightlyasrelease-win64
+        shipping-product: firefox
+        treeherder:
+            platform: win64-nightlyasrelease/opt
+        worker-type: b-linux-gcp
+        run:
+            options: [append-env-variables-from-configs]
+            mozconfig-variant: profile-generate
+            config:
+                - builds/releng_base_firefox.py
+                - builds/releng_base_linux_64_builds.py
+            extra-config:
+                stage_platform: win64
+                mozconfig_platform: win64
+                extra_mozconfig_content:
+                    - ac_add_options --as-milestone=release
+        fetches:
+            toolchain:
+                - linux64-clang
+                - linux64-rust-cross
+                - linux64-rust-size
+                - linux64-nasm
+                - linux64-node
+                - linux64-cbindgen
+                - linux64-dump_syms
+                - linux64-wine
+                - linux64-winchecksec
+                - nsis
+                - sysroot-x86_64-linux-gnu
+                - sysroot-wasm32-wasi
+                - vs
+                - windows-rs
+            fetch:
+                - upx-3.95-win
+
     win64-shippable/opt:
         description: "Win64 Shippable PGO Instrumented"
         index:
