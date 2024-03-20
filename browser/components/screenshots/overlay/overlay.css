@@ -6,6 +6,12 @@
 
 :host {
   display: contents;
+
+  /* These z-indexes are used to correctly layer elements in the screenshots overlay */
+  --screenshots-lowest-layer: 1;
+  --screenshots-low-layer: 2;
+  --screenshots-high-layer: 3;
+  --screenshots-highest-layer: 4;
 }
 
 [hidden] {
@@ -57,6 +63,7 @@
   position: absolute;
   margin: 10px 0;
   cursor: auto;
+  z-index: var(--screenshots-highest-layer);
 }
 
 #selection-size,
@@ -81,7 +88,7 @@
   text-align: center;
   user-select: none;
   white-space: nowrap;
-  z-index: 6;
+  z-index: var(--screenshots-highest-layer);
   min-width: 32px;
   margin-inline: 4px;
 }
@@ -90,6 +97,7 @@
   width: 100%;
   height: 100%;
   pointer-events: none;
+  z-index: var(--screenshots-lowest-layer);
 }
 
 #screenshots-cancel-button {
@@ -172,7 +180,7 @@
   border-radius: 50%;
   inset-inline-start: 2px;
   top: 4px;
-  z-index: 10;
+  z-index: var(--screenshots-high-layer);
 }
 
 .left {
@@ -209,7 +217,7 @@
   box-sizing: border-box;
   pointer-events: none;
   position: absolute;
-  z-index: 11;
+  z-index: var(--screenshots-high-layer);
 }
 
 #top-background {
@@ -242,7 +250,7 @@
   cursor: move;
   position: absolute;
   pointer-events: auto;
-  z-index: 2;
+  z-index: var(--screenshots-lowest-layer);
   outline-offset: 8px;
 }
 
@@ -251,7 +259,7 @@
   align-items: center;
   justify-content: center;
   position: absolute;
-  z-index: 5;
+  z-index: var(--screenshots-high-layer);
   pointer-events: auto;
   outline-offset: -15px;
 }
@@ -270,7 +278,7 @@
   inset-inline-start: 0;
   top: -30px;
   width: 100%;
-  z-index: 4;
+  z-index: var(--screenshots-low-layer);
 }
 
 .mover-target.direction-topRight {
@@ -287,7 +295,7 @@
   left: -30px;
   top: 0;
   width: 60px;
-  z-index: 4;
+  z-index: var(--screenshots-low-layer);
 }
 
 .mover-target.direction-right {
@@ -296,7 +304,7 @@
   right: -30px;
   top: 0;
   width: 60px;
-  z-index: 4;
+  z-index: var(--screenshots-low-layer);
 }
 
 .mover-target.direction-bottomLeft {
@@ -313,7 +321,7 @@
   height: 60px;
   inset-inline-start: 0;
   width: 100%;
-  z-index: 4;
+  z-index: var(--screenshots-low-layer);
 }
 
 .mover-target.direction-bottomRight {
