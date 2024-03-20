@@ -161,7 +161,7 @@ void MediaControlKeyManager::SetSupportedMediaKeys(
     const MediaKeysArray& aSupportedKeys) {
   mSupportedKeys.Clear();
   for (const auto& key : aSupportedKeys) {
-    LOG_INFO("Supported keys=%s", GetEnumString(key).get());
+    LOG_INFO("Supported keys=%s", ToMediaControlKeyStr(key));
     mSupportedKeys.AppendElement(key);
   }
   if (mEventSource && mEventSource->IsOpened()) {

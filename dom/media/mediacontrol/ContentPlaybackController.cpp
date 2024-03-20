@@ -46,7 +46,7 @@ void ContentPlaybackController::NotifyContentMediaControlKeyReceiver(
   if (RefPtr<ContentMediaControlKeyReceiver> receiver =
           ContentMediaControlKeyReceiver::Get(mBC)) {
     LOG("Handle '%s' in default behavior for BC %" PRIu64,
-        GetEnumString(aKey).get(), mBC->Id());
+        ToMediaControlKeyStr(aKey), mBC->Id());
     receiver->HandleMediaKey(aKey);
   }
 }
@@ -61,7 +61,7 @@ void ContentPlaybackController::NotifyMediaSession(
     const MediaSessionActionDetails& aDetails) {
   if (RefPtr<MediaSession> session = GetMediaSession()) {
     LOG("Handle '%s' in media session behavior for BC %" PRIu64,
-        GetEnumString(aDetails.mAction).get(), mBC->Id());
+        ToMediaSessionActionStr(aDetails.mAction), mBC->Id());
     MOZ_ASSERT(session->IsActive(), "Notify inactive media session!");
     session->NotifyHandler(aDetails);
   }

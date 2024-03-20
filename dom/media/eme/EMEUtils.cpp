@@ -117,6 +117,26 @@ nsString KeySystemToProxyName(const nsAString& aKeySystem) {
   return u""_ns;
 }
 
+#define ENUM_TO_STR(enumVal) \
+  case enumVal:              \
+    return #enumVal
+
+const char* ToMediaKeyStatusStr(dom::MediaKeyStatus aStatus) {
+  switch (aStatus) {
+    ENUM_TO_STR(dom::MediaKeyStatus::Usable);
+    ENUM_TO_STR(dom::MediaKeyStatus::Expired);
+    ENUM_TO_STR(dom::MediaKeyStatus::Released);
+    ENUM_TO_STR(dom::MediaKeyStatus::Output_restricted);
+    ENUM_TO_STR(dom::MediaKeyStatus::Output_downscaled);
+    ENUM_TO_STR(dom::MediaKeyStatus::Status_pending);
+    ENUM_TO_STR(dom::MediaKeyStatus::Internal_error);
+    default:
+      return "Undefined MediaKeyStatus!";
+  }
+}
+
+#undef ENUM_TO_STR
+
 bool IsHardwareDecryptionSupported(
     const dom::MediaKeySystemConfiguration& aConfig) {
   for (const auto& capabilities : aConfig.mAudioCapabilities) {
