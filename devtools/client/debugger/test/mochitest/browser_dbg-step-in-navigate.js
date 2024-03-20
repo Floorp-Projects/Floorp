@@ -24,11 +24,10 @@ add_task(async function () {
   await addBreakpoint(dbg, "long.js", 1);
 
   // Navigation should clear the stepping state
-  const reloaded = reload(dbg);
+  const reloaded = reload(dbg, "simple2.js");
   await waitForPaused(dbg);
   assertPausedAtSourceAndLine(dbg, findSource(dbg, "long.js").id, 1);
 
   await resume(dbg);
   await reloaded;
-  await waitForSource(dbg, "simple3.js");
 });

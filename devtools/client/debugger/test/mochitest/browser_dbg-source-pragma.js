@@ -13,8 +13,7 @@ add_task(async function () {
   const dbg = await initDebugger("doc-source-pragma.html");
 
   // The sourceURL pragma didn't rename the source
-  await waitForSource(dbg, "source-pragma.js");
-  const source = findSource(dbg, "source-pragma.js");
+  const source = await waitForSource(dbg, "source-pragma.js");
   const actors = dbg.selectors.getSourceActorsForSource(source.id);
 
   is(actors.length, 1, "have a single actor");
