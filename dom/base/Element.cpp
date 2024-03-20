@@ -1055,6 +1055,14 @@ already_AddRefed<nsIScreen> Element::GetScreen() {
   return nullptr;
 }
 
+double Element::CurrentCSSZoom() {
+  nsIFrame* f = GetPrimaryFrame(FlushType::Frames);
+  if (!f) {
+    return 1.0;
+  }
+  return f->Style()->EffectiveZoom().ToFloat();
+}
+
 already_AddRefed<DOMRect> Element::GetBoundingClientRect() {
   RefPtr<DOMRect> rect = new DOMRect(ToSupports(OwnerDoc()));
 

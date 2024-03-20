@@ -1496,6 +1496,8 @@ class Element : public FragmentOrElement {
     return CSSPixel::FromAppUnits(GetClientAreaRect().Width());
   }
 
+  MOZ_CAN_RUN_SCRIPT double CurrentCSSZoom();
+
   // This function will return the block size of first line box, no matter if
   // the box is 'block' or 'inline'. The return unit is pixel. If the element
   // can't get a primary frame, we will return be zero.

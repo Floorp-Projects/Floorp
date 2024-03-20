@@ -255,6 +255,8 @@ partial interface Element {
                readonly attribute long scrollTopMax;
   [ChromeOnly] readonly attribute long scrollLeftMin;
                readonly attribute long scrollLeftMax;
+
+  [Pref="layout.css.zoom.enabled"] readonly attribute double currentCSSZoom;
 };
 
 // http://domparsing.spec.whatwg.org/#extensions-to-the-element-interface
