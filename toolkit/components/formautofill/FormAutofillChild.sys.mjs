@@ -125,32 +125,17 @@ export class FormAutofillChild extends JSWindowActorChild {
   }
 
   popupStateChanged(messageName, data, _target) {
-    let docShell;
-    try {
-      docShell = this.docShell;
-    } catch (ex) {
-      lazy.AutoCompleteChild.removePopupStateListener(this);
-      return;
-    }
-
     if (!lazy.FormAutofill.isAutofillEnabled) {
       return;
     }
 
-    const { chromeEventHandler } = docShell;
-
     switch (messageName) {
       case "AutoComplete:PopupClosed": {
         this.onPopupClosed(data.selectedRowStyle);
-        Services.tm.dispatchToMainThread(() => {
-          chromeEventHandler.removeEventListener("keydown", this, true);
-        });
-
         break;
       }
       case "AutoComplete:PopupOpened": {
         this.onPopupOpened();
-        chromeEventHandler.addEventListener("keydown", this, true);
         break;
       }
     }
@@ -385,10 +370,6 @@ export class FormAutofillChild extends JSWindowActorChild {
     }
 
     switch (evt.type) {
-      case "keydown": {
-        this._onKeyDown(evt);
-        break;
-      }
       case "focusin": {
         if (lazy.FormAutofill.isAutofillEnabled) {
           this.onFocusIn(evt);
@@ -720,21 +701,6 @@ export class FormAutofillChild extends JSWindowActorChild {
   onPopupClosed(selectedRowStyle) {
     this.debug("Popup has closed.");
     lazy.ProfileAutocomplete._clearProfilePreview();
-
-    let lastAutoCompleteResult =
-      lazy.ProfileAutocomplete.lastProfileAutoCompleteResult;
-    let focusedInput = this.activeInput;
-    if (
-      lastAutoCompleteResult &&
-      this._keyDownEnterForInput &&
-      focusedInput === this._keyDownEnterForInput &&
-      focusedInput ===
-        lazy.ProfileAutocomplete.lastProfileAutoCompleteFocusedInput
-    ) {
-      if (selectedRowStyle == "autofill-footer") {
-        this.sendAsyncMessage("FormAutofill:OpenPreferences");
-      }
-    }
   }
 
   onPopupOpened() {
@@ -761,22 +727,5 @@ export class FormAutofillChild extends JSWindowActorChild {
     }
 
     formFillController.markAsAutofillField(field);
-  }
-
-  _onKeyDown(e) {
-    delete this._keyDownEnterForInput;
-    let lastAutoCompleteResult =
-      lazy.ProfileAutocomplete.lastProfileAutoCompleteResult;
-    let focusedInput = this.activeInput;
-    if (
-      e.keyCode != e.DOM_VK_RETURN ||
-      !lastAutoCompleteResult ||
-      !focusedInput ||
-      focusedInput !=
-        lazy.ProfileAutocomplete.lastProfileAutoCompleteFocusedInput
-    ) {
-      return;
-    }
-    this._keyDownEnterForInput = focusedInput;
   }
 }
