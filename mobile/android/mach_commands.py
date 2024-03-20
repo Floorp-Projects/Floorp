@@ -761,6 +761,8 @@ def _get_default_revset_if_needed(command_context, revset):
         return revset
     if conditions.is_hg(command_context):
         return "."
+    if conditions.is_git(command_context):
+        return "HEAD"
     raise NotImplementedError()
 
 
@@ -784,9 +786,17 @@ def _get_milestone_txt(command_context, revset):
             f"first({revset})",
             "config/milestone.txt",
         ]
-        return subprocess.check_output(args, text=True)
+    elif conditions.is_git(command_context):
+        revision = revset.split("..")[-1]
+        args = [
+            str(which("git")),
+            "show",
+            f"{revision}:config/milestone.txt",
+        ]
     else:
         raise NotImplementedError()
+
+    return subprocess.check_output(args, text=True)
 
 
 def _extract_version_from_milestone_txt(milestone_txt):
@@ -807,9 +817,19 @@ def _extract_revision_message(command_context, revision):
             "--template",
             "{desc}",
         ]
-        return subprocess.check_output(args, text=True)
+    elif conditions.is_git(command_context):
+        args = [
+            str(which("git")),
+            "log",
+            "--format=%s",
+            "-n",
+            "1",
+            revision,
+        ]
     else:
         raise NotImplementedError()
+
+    return subprocess.check_output(args, text=True)
 
 
 # Source: https://hg.mozilla.org/hgcustom/version-control-tools/file/cef43d3d676e9f9e9668a50a5d90c012e4025e5b/pylib/mozautomation/mozautomation/commitparser.py#l12
@@ -921,6 +941,16 @@ def _get_export_import_commands(command_context, revset):
             "mobile/android",
         ]
         import_command = [str(which("git")), "am", "-p3"]
+    elif conditions.is_git(command_context):
+        export_command = [
+            str(which("git")),
+            "format-patch",
+            "--relative=mobile/android",
+            "--stdout",
+            revset,
+            "--",
+        ]
+        import_command = [str(which("git")), "am"]
     else:
         raise NotImplementedError()
 
