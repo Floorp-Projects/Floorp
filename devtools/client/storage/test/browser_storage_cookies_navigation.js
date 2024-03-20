@@ -115,6 +115,12 @@ add_task(async function () {
     "host of iframe in previous document (example.org) is not in the tree anymore"
   );
 
+  // indexedDB is slightly more asynchronously fetched than the others
+  // and is emitted as a Resource to the frontend late. navigateTo isn't waiting for
+  // the full initialization of the storage panel on reload.
+  // To avoid exception when navigating back wait for indexed DB to be updated.
+  await waitUntil(() => isInTree(doc, ["indexedDB", "https://example.com"]));
+
   info("Navigate backward to test bfcache navigation");
   gBrowser.goBack();
   await waitUntil(
