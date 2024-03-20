@@ -205,37 +205,13 @@ Result<Ok, nsCString> IsValidAudioDataInit(const AudioDataInit& aInit) {
   return Ok();
 }
 
-const char* FormatToString(AudioSampleFormat aFormat) {
-  switch (aFormat) {
-    case AudioSampleFormat::U8:
-      return "u8";
-    case AudioSampleFormat::S16:
-      return "s16";
-    case AudioSampleFormat::S32:
-      return "s32";
-    case AudioSampleFormat::F32:
-      return "f32";
-    case AudioSampleFormat::U8_planar:
-      return "u8-planar";
-    case AudioSampleFormat::S16_planar:
-      return "s16-planar";
-    case AudioSampleFormat::S32_planar:
-      return "s32-planar";
-    case AudioSampleFormat::F32_planar:
-      return "f32-planar";
-    default:
-      MOZ_ASSERT_UNREACHABLE("wrong enum value");
-  }
-  return "unsupported";
-}
-
 /* static */
 already_AddRefed<AudioData> AudioData::Constructor(const GlobalObject& aGlobal,
                                                    const AudioDataInit& aInit,
                                                    ErrorResult& aRv) {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
   LOGD("[%p] AudioData(fmt: %s, rate: %f, ch: %" PRIu32 ", ts: %" PRId64 ")",
-       global.get(), FormatToString(aInit.mFormat), aInit.mSampleRate,
+       global.get(), GetEnumString(aInit.mFormat).get(), aInit.mSampleRate,
        aInit.mNumberOfChannels, aInit.mTimestamp);
   if (!global) {
     LOGE("Global unavailable");
@@ -505,7 +481,7 @@ nsCString AudioData::ToString() const {
   return nsPrintfCString("AudioData[%zu bytes %s %fHz %" PRIu32 "x%" PRIu32
                          "ch]",
                          mResource->Data().LengthBytes(),
-                         FormatToString(mAudioSampleFormat.value()),
+                         GetEnumString(mAudioSampleFormat.value()).get(),
                          mSampleRate, mNumberOfFrames, mNumberOfChannels);
 }
 
@@ -515,8 +491,9 @@ nsCString CopyToToString(size_t aDestBufSize,
       "AudioDataCopyToOptions[data: %zu bytes %s frame count:%" PRIu32
       " frame offset: %" PRIu32 "  plane: %" PRIu32 "]",
       aDestBufSize,
-      aOptions.mFormat.WasPassed() ? FormatToString(aOptions.mFormat.Value())
-                                   : "null",
+      aOptions.mFormat.WasPassed()
+          ? GetEnumString(aOptions.mFormat.Value()).get()
+          : "null",
       aOptions.mFrameCount.WasPassed() ? aOptions.mFrameCount.Value() : 0,
       aOptions.mFrameOffset, aOptions.mPlaneIndex);
 }
