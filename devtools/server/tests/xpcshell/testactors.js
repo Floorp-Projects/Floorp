@@ -30,6 +30,10 @@ const Targets = require("resource://devtools/server/actors/targets/index.js");
 const {
   createContentProcessSessionContext,
 } = require("resource://devtools/server/actors/watcher/session-context.js");
+const { TargetActorRegistry } = ChromeUtils.importESModule(
+  "resource://devtools/server/actors/targets/target-actor-registry.sys.mjs",
+  { global: "shared" }
+);
 
 var gTestGlobals = new Set();
 DevToolsServer.addTestGlobal = function (global) {
@@ -77,6 +81,9 @@ function TestTabList(connection) {
   for (const global of gTestGlobals) {
     const actor = new TestTargetActor(connection, global);
     this._descriptorActorPool.manage(actor);
+
+    // Register the target actor, so that the Watcher actor can have access to it.
+    TargetActorRegistry.registerXpcShellTargetActor(actor);
 
     const descriptorActor = new TestDescriptorActor(connection, actor);
     this._descriptorActorPool.manage(descriptorActor);
