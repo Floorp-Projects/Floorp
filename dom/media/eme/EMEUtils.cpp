@@ -49,37 +49,33 @@ bool IsWidevineKeySystem(const nsAString& aKeySystem) {
 }
 
 #ifdef MOZ_WMF_CDM
-bool IsPlayReadyKeySystemAndSupported(const nsAString& aKeySystem) {
-  if (!StaticPrefs::media_eme_playready_enabled()) {
-    return false;
-  }
+bool IsPlayReadyEnabled() {
   // 1=enabled encrypted and clear, 2=enabled encrytped.
-  if (StaticPrefs::media_wmf_media_engine_enabled() != 1 &&
-      StaticPrefs::media_wmf_media_engine_enabled() != 2) {
-    return false;
-  }
-  return IsPlayReadyKeySystem(aKeySystem);
+  return StaticPrefs::media_eme_playready_enabled() &&
+         (StaticPrefs::media_wmf_media_engine_enabled() == 1 ||
+          StaticPrefs::media_wmf_media_engine_enabled() == 2);
 }
 
-bool IsPlayReadyKeySystem(const nsAString& aKeySystem) {
+bool IsPlayReadyKeySystemAndSupported(const nsAString& aKeySystem) {
+  if (!IsPlayReadyEnabled()) {
+    return false;
+  }
   return aKeySystem.EqualsLiteral(kPlayReadyKeySystemName) ||
          aKeySystem.EqualsLiteral(kPlayReadyKeySystemHardware) ||
          aKeySystem.EqualsLiteral(kPlayReadyHardwareClearLeadKeySystemName);
 }
 
-bool IsWidevineExperimentKeySystemAndSupported(const nsAString& aKeySystem) {
-  if (!StaticPrefs::media_eme_widevine_experiment_enabled()) {
-    return false;
-  }
+bool IsWidevineHardwareDecryptionEnabled() {
   // 1=enabled encrypted and clear, 2=enabled encrytped.
-  if (StaticPrefs::media_wmf_media_engine_enabled() != 1 &&
-      StaticPrefs::media_wmf_media_engine_enabled() != 2) {
-    return false;
-  }
-  return IsWidevineExperimentKeySystem(aKeySystem);
+  return StaticPrefs::media_eme_widevine_experiment_enabled() &&
+         (StaticPrefs::media_wmf_media_engine_enabled() == 1 ||
+          StaticPrefs::media_wmf_media_engine_enabled() == 2);
 }
 
-bool IsWidevineExperimentKeySystem(const nsAString& aKeySystem) {
+bool IsWidevineExperimentKeySystemAndSupported(const nsAString& aKeySystem) {
+  if (!IsWidevineHardwareDecryptionEnabled()) {
+    return false;
+  }
   return aKeySystem.EqualsLiteral(kWidevineExperimentKeySystemName) ||
          aKeySystem.EqualsLiteral(kWidevineExperiment2KeySystemName);
 }
