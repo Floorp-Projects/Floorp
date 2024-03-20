@@ -689,7 +689,62 @@ MDefinition* MTest::foldsNeedlessControlFlow(TempAllocator& alloc) {
   return MGoto::New(alloc, ifTrue());
 }
 
+// If a test is dominated by either the true or false path of a previous test of
+// the same condition, then the test is redundant and can be converted into a
+// goto true or goto false, respectively.
+MDefinition* MTest::foldsRedundantTest(TempAllocator& alloc) {
+  MBasicBlock* myBlock = this->block();
+  MDefinition* originalInput = getOperand(0);
+
+  // Handle single and double negatives. This ensures that we do not miss a
+  // folding opportunity due to a condition being inverted.
+  MDefinition* newInput = input();
+  bool inverted = false;
+  if (originalInput->isNot()) {
+    newInput = originalInput->toNot()->input();
+    inverted = true;
+    if (originalInput->toNot()->input()->isNot()) {
+      newInput = originalInput->toNot()->input()->toNot()->input();
+      inverted = false;
+    }
+  }
+
+  // The specific order of traversal does not matter. If there are multiple
+  // dominating redundant tests, they will either agree on direction (in which
+  // case we will prune the same way regardless of order), or they will
+  // disagree, in which case we will eventually be marked entirely dead by the
+  // folding of the redundant parent.
+  for (MUseIterator i(newInput->usesBegin()), e(newInput->usesEnd()); i != e;
+       ++i) {
+    if (!i->consumer()->isDefinition()) {
+      continue;
+    }
+    if (!i->consumer()->toDefinition()->isTest()) {
+      continue;
+    }
+    MTest* otherTest = i->consumer()->toDefinition()->toTest();
+    if (otherTest == this) {
+      continue;
+    }
+
+    if (otherTest->ifFalse()->dominates(myBlock)) {
+      // This test cannot be true, so fold to a goto false.
+      return MGoto::New(alloc, inverted ? ifTrue() : ifFalse());
+    }
+    if (otherTest->ifTrue()->dominates(myBlock)) {
+      // This test cannot be false, so fold to a goto true.
+      return MGoto::New(alloc, inverted ? ifFalse() : ifTrue());
+    }
+  }
+
+  return nullptr;
+}
+
 MDefinition* MTest::foldsTo(TempAllocator& alloc) {
+  if (MDefinition* def = foldsRedundantTest(alloc)) {
+    return def;
+  }
+
   if (MDefinition* def = foldsDoubleNegation(alloc)) {
     return def;
   }

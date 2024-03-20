@@ -1890,6 +1890,7 @@ class MTest : public MAryControlInstruction<1, 2>, public TestPolicy::Data {
   MDefinition* foldsConstant(TempAllocator& alloc);
   MDefinition* foldsTypes(TempAllocator& alloc);
   MDefinition* foldsNeedlessControlFlow(TempAllocator& alloc);
+  MDefinition* foldsRedundantTest(TempAllocator& alloc);
   MDefinition* foldsTo(TempAllocator& alloc) override;
 
 #ifdef DEBUG
@@ -11828,6 +11829,8 @@ class MWasmRefIsSubtypeOfAbstract : public MUnaryInstruction,
     return hn;
   }
 
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+
   MDefinition* foldsTo(TempAllocator& alloc) override;
 };
 
@@ -11869,6 +11872,8 @@ class MWasmRefIsSubtypeOfConcrete : public MBinaryInstruction,
     hn = addU64ToHash(hn, destType().packed().bits());
     return hn;
   }
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
 
   MDefinition* foldsTo(TempAllocator& alloc) override;
 };
