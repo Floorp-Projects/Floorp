@@ -119,14 +119,6 @@ ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 ifneq (en,$(LPROJ_ROOT))
 	mv '$(STAGEDIST)'/en.lproj '$(STAGEDIST)'/$(LPROJ_ROOT).lproj
 endif
-ifdef MOZ_CRASHREPORTER
-# On Mac OS X, the crashreporter.ini file needs to be moved from under the
-# application bundle's Resources directory where all other l10n files are
-# located to the crash reporter bundle's Resources directory.
-	mv '$(STAGEDIST)'/crashreporter.app/Contents/Resources/crashreporter.ini \
-	  '$(STAGEDIST)'/../MacOS/crashreporter.app/Contents/Resources/crashreporter.ini
-	$(RM) -rf '$(STAGEDIST)'/crashreporter.app
-endif
 endif
 ifeq (WINNT,$(OS_ARCH))
 	$(MAKE) -C ../installer/windows CONFIG_DIR=l10ngen l10ngen/helper.exe
