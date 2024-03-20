@@ -1439,6 +1439,32 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
 
 
+   .. list-table:: **test-windows10-64-ref-hw-2017-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
    .. list-table:: **test-windows10-64-shippable-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
@@ -3081,6 +3107,32 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
 
 
+   .. list-table:: **test-windows10-64-ref-hw-2017-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
    .. list-table:: **test-windows10-64-shippable-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
@@ -3377,6 +3429,32 @@ For the sample commands found below, note that the capitalization used is import
 
 
    .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-ref-hw-2017-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
 
@@ -4049,6 +4127,32 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
 
 
+   .. list-table:: **test-windows10-64-ref-hw-2017-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
    .. list-table:: **test-windows10-64-shippable-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
@@ -4346,6 +4450,32 @@ For the sample commands found below, note that the capitalization used is import
 
 
    .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-ref-hw-2017-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
 
@@ -4693,6 +4823,32 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
 
 
+   .. list-table:: **test-windows10-64-ref-hw-2017-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
    .. list-table:: **test-windows10-64-shippable-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
@@ -4990,6 +5146,32 @@ For the sample commands found below, note that the capitalization used is import
 
 
    .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-ref-hw-2017-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
 
@@ -5337,6 +5519,32 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
 
 
+   .. list-table:: **test-windows10-64-ref-hw-2017-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
    .. list-table:: **test-windows10-64-shippable-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
@@ -5634,6 +5842,32 @@ For the sample commands found below, note that the capitalization used is import
 
 
    .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-ref-hw-2017-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
 
@@ -5981,6 +6215,32 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
 
 
+   .. list-table:: **test-windows10-64-ref-hw-2017-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
    .. list-table:: **test-windows10-64-shippable-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
@@ -6278,6 +6538,32 @@ For the sample commands found below, note that the capitalization used is import
 
 
    .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-ref-hw-2017-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
 
@@ -6625,6 +6911,32 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
 
 
+   .. list-table:: **test-windows10-64-ref-hw-2017-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
    .. list-table:: **test-windows10-64-shippable-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
@@ -6922,6 +7234,32 @@ For the sample commands found below, note that the capitalization used is import
 
 
    .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-ref-hw-2017-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
 
@@ -7269,6 +7607,32 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
 
 
+   .. list-table:: **test-windows10-64-ref-hw-2017-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
    .. list-table:: **test-windows10-64-shippable-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
@@ -7591,6 +7955,32 @@ For the sample commands found below, note that the capitalization used is import
         - ❌
 
 
+   .. list-table:: **test-windows10-64-ref-hw-2017-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
    .. list-table:: **test-windows10-64-shippable-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
@@ -7888,6 +8278,32 @@ For the sample commands found below, note that the capitalization used is import
 
 
    .. list-table:: **test-windows10-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **talos-webgl**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **talos-webgl-gli**
+        - ✅
+        - ✅
+        - ❌
+        - ❌
+      * - **talos-webgl-swr**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows10-64-ref-hw-2017-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
 

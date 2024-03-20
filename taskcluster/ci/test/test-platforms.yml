@@ -191,6 +191,11 @@ windows10-64-qr/opt:
         - windows-talos
         - browsertime
 
+windows10-64-ref-hw-2017-qr/opt:
+    build-platform: win64-shippable/opt
+    test-sets:
+        - talos-ref-hw
+
 windows11-64-2009-hw-ref-shippable/opt:
     build-platform: win64-shippable/opt
     build-signing-label:
