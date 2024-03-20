@@ -929,7 +929,6 @@
   "resource://reftest/globals.jsm": "layout/tools/reftest/globals.jsm",
   "resource://reftest/manifest.jsm": "layout/tools/reftest/manifest.jsm",
   "resource://reftest/reftest.jsm": "layout/tools/reftest/reftest.jsm",
-  "resource://report-site-issue/tabExtrasActor.jsm": "browser/extensions/report-site-issue/experimentalAPIs/actors/tabExtrasActor.jsm",
   "resource://services-automation/ServicesAutomation.jsm": "services/automation/ServicesAutomation.jsm",
   "resource://services-common/async.js": "services/common/async.js",
   "resource://services-common/hawkclient.js": "services/common/hawkclient.js",
