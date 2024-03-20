@@ -882,6 +882,9 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
                     return False
                 if "speedometer" in try_name:
                     return True
+                if "motionmark" in try_name and "1-3" in try_name:
+                    if "chrome-m" in try_name:
+                        return True
         return False
 
     return [l for l, t in full_task_graph.tasks.items() if filter(t)]
