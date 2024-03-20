@@ -11,6 +11,10 @@ pytestmark = pytest.mark.slow
 PARAMS = TRY_AUTO_PARAMETERS.copy()
 PARAMS.update(
     {
+        "files_changed": [
+            "dom/html/HTMLDetailsElement.cpp",
+            "gfx/thebes/gfxUserFontSet.cpp",
+        ],
         "head_repository": "https://hg.mozilla.org/try",
         "project": "try",
         "target_kind": "test",
