@@ -214,8 +214,9 @@ void ExternalEngineStateMachine::InitEngine() {
   mEngine.reset(new MFMediaEngineWrapper(this, mFrameStats));
 #endif
   if (mEngine) {
+    MOZ_ASSERT(mInfo);
     auto* state = mState.AsInitEngine();
-    state->mInitPromise = mEngine->Init(!mMinimizePreroll);
+    state->mInitPromise = mEngine->Init(*mInfo, !mMinimizePreroll);
     state->mInitPromise
         ->Then(OwnerThread(), __func__, this,
                &ExternalEngineStateMachine::OnEngineInitSuccess,
@@ -235,16 +236,10 @@ void ExternalEngineStateMachine::OnEngineInitSuccess() {
   mReader->UpdateMediaEngineId(mEngine->Id());
   state->mInitPromise = nullptr;
   if (mState.IsInitEngine()) {
-    // TODO : we can send media info along with the initialzation
-    MOZ_ASSERT(mInfo);
-    mEngine->SetMediaInfo(*mInfo);
     StartRunningEngine();
     return;
   }
-  // We just recovered from CDM process crash, so we need to update the media
-  // info to the new CDM process.
-  MOZ_ASSERT(mInfo);
-  mEngine->SetMediaInfo(*mInfo);
+  // We just recovered from CDM process crash, seek to previous position.
   SeekTarget target(mCurrentPosition.Ref(), SeekTarget::Type::Accurate);
   Seek(target);
 }
