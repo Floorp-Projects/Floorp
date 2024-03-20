@@ -343,9 +343,6 @@ impl ShaderModuleCompilationMessage {
         self.utf16_length = 0;
 
         if let Some(location) = error.location(source) {
-            self.line_number = location.line_number as u64;
-            self.line_pos = location.line_position as u64;
-
             let start = location.offset as usize;
             let end = start + location.length as usize;
             self.utf16_offset = source[0..start].chars().map(|c| c.len_utf16() as u64).sum();
@@ -353,6 +350,15 @@ impl ShaderModuleCompilationMessage {
                 .chars()
                 .map(|c| c.len_utf16() as u64)
                 .sum();
+
+            self.line_number = location.line_number as u64;
+            // Naga reports a `line_pos` using UTF-8 bytes, so we cannot use it.
+            let line_start = source[0..start].rfind('\n').map(|pos| pos + 1).unwrap_or(0);
+            self.line_pos = source[line_start..start]
+                .chars()
+                .map(|c| c.len_utf16() as u64)
+                .sum::<u64>()
+                + 1;
         }
 
         let error_string = error.to_string();

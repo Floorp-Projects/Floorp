@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+  </head>
+  <body>
+    <script>
+      ok(
+        SpecialPowers.getBoolPref("dom.webgpu.enabled"),
+        "Pref should be enabled."
+      );
+
+      async function testBody() {
+        const adapter = await navigator.gpu.requestAdapter();
+        const device = await adapter.requestDevice();
+
+        device.pushErrorScope("validation");
+        const shaderModule = device.createShaderModule({
+          // `?` is invalid, and we want to see if the offset will be right with the kitten emoji
+          // before it.
+          code: "/*🐈🐈🐈🐈🐈🐈🐈*/?"
+        });
+
+        const error = await device.popErrorScope();
+        ok(error, "expected error from invalid shader");
+        is(error.message, "Shader module creation failed: Parsing error");
+
+        const compilationInfo = await shaderModule.getCompilationInfo();
+        is(compilationInfo.messages.length, 1);
+
+        const { length, lineNum, linePos, message, offset } = compilationInfo.messages[0];
+        is(length, 1);
+        is(lineNum, 1);
+        is(linePos, 19);
+        is(message, `
+Shader '' parsing error: expected global item ('struct', 'const', 'var', 'alias', ';', 'fn') or the end of the file, found '?'
+  ┌─ wgsl:1:12
+  │
+1 │ /*🐈🐈🐈🐈🐈🐈🐈*/?
+  │                   ^ expected global item ('struct', 'const', 'var', 'alias', ';', 'fn') or the end of the file
+
+`);
+        is(offset, 18);
+      }
+
+      SimpleTest.waitForExplicitFinish();
+      testBody()
+        .catch(e => ok(false, "Unhandled exception " + e))
+        .finally(() => SimpleTest.finish());
+    </script>
+  </body>
+</html>
