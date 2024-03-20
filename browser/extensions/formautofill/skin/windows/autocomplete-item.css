@@ -9,8 +9,7 @@
   --default-font-size: 12;
 }
 
-xul|richlistitem[originaltype="autofill-footer"][selected="true"] > .autofill-item-box > .autofill-button,
-xul|richlistitem[originaltype="autofill-clear-button"][selected="true"] > .autofill-item-box > .autofill-button {
+xul|richlistitem[originaltype="autofill-footer"][selected="true"] > .autofill-item-box > .autofill-button {
   background-color: color-mix(in srgb, Field 90%, FieldText);
 }
 

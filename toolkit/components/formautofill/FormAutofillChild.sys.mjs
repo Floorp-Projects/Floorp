@@ -733,8 +733,6 @@ export class FormAutofillChild extends JSWindowActorChild {
     ) {
       if (selectedRowStyle == "autofill-footer") {
         this.sendAsyncMessage("FormAutofill:OpenPreferences");
-      } else if (selectedRowStyle == "autofill-clear-button") {
-        this.clearForm();
       }
     }
   }
