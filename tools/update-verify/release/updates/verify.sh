@@ -111,22 +111,10 @@ do
   channel=""
   from=""
   patch_types="complete"
-  use_old_updater=0
   mar_channel_IDs=""
   updater_package=""
   mac_update_settings_dir_override=""
   eval "$entry"
-
-  # the arguments for updater changed in Gecko 34/SeaMonkey 2.31
-  major_version=$(echo "$release" | cut -f1 -d.)
-  if [[ "$product" == "seamonkey" ]]; then
-    minor_version=$(echo "$release" | cut -f2 -d.)
-    if [[ $major_version -le 2 && $minor_version -lt 31 ]]; then
-      use_old_updater=1
-    fi
-  elif [[ $major_version -lt 34 ]]; then
-      use_old_updater=1
-  fi
 
   # Note: cross platform tests seem to work for everything except Mac-on-Windows.
   # We probably don't care about this use case.
@@ -278,7 +266,7 @@ do
         if [ -e ${diff_file} ]; then
           rm ${diff_file}
         fi
-        check_updates "${platform}" "downloads/${source_file}" "downloads/${target_file}" "${locale}" "${use_old_updater}" "${updater}" ${diff_file} "${channel}" "${mar_channel_IDs}" ${update_to_dep} "${mac_update_settings_dir_override}" "${product}"
+        check_updates "${platform}" "downloads/${source_file}" "downloads/${target_file}" "${locale}" "${updater}" ${diff_file} "${channel}" "${mar_channel_IDs}" ${update_to_dep} "${mac_update_settings_dir_override}" "${product}"
         err=$?
         if [ "$err" == "0" ]; then
           continue

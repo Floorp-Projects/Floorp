@@ -39,7 +39,8 @@ download_mars () {
     command=$(echo "$update_line" | sed -e 's/^.*<update //' -e 's:>.*$::' -e 's:\&amp;:\&:g')
     eval "export $command"
 
-    # TODO: fix all these undefined vars
+    # TODO: fix all these undefined vars, or maybe we should just ignore them and accept
+    # the magic?
     if [ -n "$to_build_id" ] && [ "$buildID" != "$to_build_id" ]; then
         echo "TEST-UNEXPECTED-FAIL: expected buildID $to_build_id does not match actual $buildID"
         return 1
