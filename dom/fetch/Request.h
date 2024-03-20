@@ -59,7 +59,7 @@ class Request final : public FetchBody<Request>, public nsWrapperCache {
     aIntegrity = mRequest->GetIntegrity();
   }
 
-  bool Keepalive() const { return false; }
+  bool Keepalive() const { return mRequest->GetKeepalive(); }
 
   bool MozErrors() const { return mRequest->MozErrors(); }
 

@@ -263,6 +263,10 @@ class InternalRequest final : public AtomicSafeRefCounted<InternalRequest> {
     mIntegrity.Assign(aIntegrity);
   }
 
+  bool GetKeepalive() const { return mKeepalive; }
+
+  void SetKeepalive(const bool aKeepalive) { mKeepalive = aKeepalive; }
+
   bool MozErrors() const { return mMozErrors; }
 
   void SetMozErrors() { mMozErrors = true; }
@@ -454,6 +458,7 @@ class InternalRequest final : public AtomicSafeRefCounted<InternalRequest> {
   RequestRedirect mRedirectMode;
   RequestPriority mPriorityMode = RequestPriority::Auto;
   nsString mIntegrity;
+  bool mKeepalive = false;
   bool mMozErrors = false;
   nsCString mFragment;
   bool mSkipServiceWorker = false;
