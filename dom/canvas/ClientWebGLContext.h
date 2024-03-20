@@ -180,8 +180,6 @@ class ContextGenerationInfo final {
 
   webgl::ProvokingVertex mProvokingVertex = webgl::ProvokingVertex::LastVertex;
 
-  mutable std::unordered_map<GLenum, bool> mIsEnabledCache;
-
   ObjectId NextId() { return mLastId += 1; }
 };
 
@@ -1143,7 +1141,6 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   void Disable(GLenum cap) const { SetEnabledI(cap, {}, false); }
   void Enable(GLenum cap) const { SetEnabledI(cap, {}, true); }
   void SetEnabledI(GLenum cap, Maybe<GLuint> i, bool val) const;
-
   bool IsEnabled(GLenum cap) const;
 
  private:
