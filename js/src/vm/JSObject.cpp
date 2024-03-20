@@ -2260,7 +2260,7 @@ JS_PUBLIC_API bool js::ShouldIgnorePropertyDefinition(JSContext* cx,
 
 #ifdef ENABLE_JSON_PARSE_WITH_SOURCE
   if (key == JSProto_JSON &&
-      !cx->realm()->creationOptions().getJSONParseWithSource() &&
+      !JS::Prefs::experimental_json_parse_with_source() &&
       (id == NameToId(cx->names().isRawJSON) ||
        id == NameToId(cx->names().rawJSON))) {
     return true;
