@@ -393,6 +393,15 @@ class MOZ_STACK_CLASS JSONReviveHandler : public JSONFullParseHandler<CharT> {
                            JS::MutableHandle<JS::Value> vp,
                            PropertyVector* properties);
 
+  inline bool arrayOpen(Vector<StackEntry, 10>& stack,
+                        ElementVector** elements);
+  inline bool arrayElement(Vector<StackEntry, 10>& stack,
+                           JS::Handle<JS::Value> value,
+                           ElementVector** elements);
+  inline bool finishArray(Vector<StackEntry, 10>& stack,
+                          JS::MutableHandle<JS::Value> vp,
+                          ElementVector* elements);
+
   void trace(JSTracer* trc);
 
  private:
