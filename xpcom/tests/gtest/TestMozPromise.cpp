@@ -753,4 +753,54 @@ TEST(MozPromise, ChainToDirectTaskDispatch)
   NS_ProcessPendingEvents(nullptr);
 }
 
+TEST(MozPromise, Map)
+{
+  int value = 0;
+  bool ran_err = false;
+
+  InvokeAsync(GetCurrentSerialEventTarget(), "test",
+              [&]() { return TestPromise::CreateAndResolve(18, "test"); })
+      ->Map(GetCurrentSerialEventTarget(), "test",
+            [](int val) { return val + 0x18; })
+      ->MapErr(GetCurrentSerialEventTarget(), "test",
+               [&](double val) {
+                 ran_err = true;
+                 return Ok{};
+               })
+      ->Map(GetCurrentSerialEventTarget(), "test", [&](int val) {
+        value = val;
+        return Ok{};
+      });
+
+  NS_ProcessPendingEvents(nullptr);
+
+  EXPECT_EQ(value, 42);
+  EXPECT_EQ(ran_err, false);
+}
+
+TEST(MozPromise, MapErr)
+{
+  bool ran_ok = false;
+  double result = 0.0;
+
+  InvokeAsync(GetCurrentSerialEventTarget(), "test",
+              [&]() { return TestPromise::CreateAndReject(1.0, "test"); })
+      ->Map(GetCurrentSerialEventTarget(), "test",
+            [&](int val) {
+              ran_ok = true;
+              return 1;
+            })
+      ->MapErr(GetCurrentSerialEventTarget(), "test",
+               [](double val) { return val * 2; })
+      ->MapErr(GetCurrentSerialEventTarget(), "test", [&](double val) {
+        result = val;
+        return Ok{};
+      });
+
+  NS_ProcessPendingEvents(nullptr);
+
+  EXPECT_EQ(result, 2.0);
+  EXPECT_EQ(ran_ok, false);
+}
+
 #undef DO_FAIL
