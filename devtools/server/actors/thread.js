@@ -418,12 +418,6 @@ class ThreadActor extends Actor {
     this.alreadyAttached = true;
     this.dbg.enable();
 
-    // Notify the target actor that we've finished attaching. If this is a worker
-    // thread which was paused until attaching, this will allow content to
-    // begin executing.
-    if (this.targetActor.onThreadAttached) {
-      this.targetActor.onThreadAttached();
-    }
     if (Services.obs) {
       // Set a wrappedJSObject property so |this| can be sent via the observer service
       // for the xpcshell harness.

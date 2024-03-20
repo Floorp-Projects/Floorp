@@ -46,9 +46,9 @@ function connectToWorker(connection, dbg, forwardingPrefix, options) {
         onMessage: message => {
           message = JSON.parse(message);
           if (message.type !== "rpc") {
-            if (message.type == "worker-thread-attached") {
-              // The thread actor has finished attaching and can hit installed
-              // breakpoints. Allow content to begin executing in the worker.
+            if (message.type == "session-data-processed") {
+              // The thread actor has finished processing session data, including breakpoints.
+              // Allow content to begin executing in the worker and possibly hit early breakpoints.
               dbg.setDebuggerReady(true);
             }
             return;
