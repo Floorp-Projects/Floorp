@@ -36,10 +36,13 @@ bool WMFCDMImpl::GetCapabilities(bool aIsHardwareDecryption,
 
   // Retrieve result from our cached key system
   auto keySystem = std::string{NS_ConvertUTF16toUTF8(mKeySystem).get()};
+  const bool isKeySystemSupportedHarewareDecryption =
+      DoesKeySystemSupportHardwareDecryption(mKeySystem);
   if (auto rv = sKeySystemConfigs.find(keySystem);
       rv != sKeySystemConfigs.end()) {
     for (const auto& config : rv->second) {
-      if (IsHardwareDecryptionSupported(config) == aIsHardwareDecryption) {
+      if ((IsHardwareDecryptionSupported(config) ||
+           isKeySystemSupportedHarewareDecryption) == aIsHardwareDecryption) {
         EME_LOG("Return cached capabilities for %s (%s)", keySystem.c_str(),
                 NS_ConvertUTF16toUTF8(config.GetDebugInfo()).get());
         aOutConfigs.AppendElement(config);
