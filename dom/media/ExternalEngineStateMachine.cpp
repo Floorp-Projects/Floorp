@@ -164,11 +164,11 @@ void ExternalEngineStateMachine::ChangeStateTo(State aNextState) {
   LOG("Change state : '%s' -> '%s' (play-state=%d)", StateToStr(mState.mName),
       StateToStr(aNextState), mPlayState.Ref());
   // Assert the possible state transitions.
-  MOZ_ASSERT_IF(mState.IsInitEngine(), aNextState == State::ReadingMetadata ||
+  MOZ_ASSERT_IF(
+      mState.IsReadingMetadata(),
+      aNextState == State::InitEngine || aNextState == State::ShutdownEngine);
+  MOZ_ASSERT_IF(mState.IsInitEngine(), aNextState == State::RunningEngine ||
                                            aNextState == State::ShutdownEngine);
-  MOZ_ASSERT_IF(mState.IsReadingMetadata(),
-                aNextState == State::RunningEngine ||
-                    aNextState == State::ShutdownEngine);
   MOZ_ASSERT_IF(mState.IsRunningEngine(),
                 aNextState == State::SeekingData ||
                     aNextState == State::ShutdownEngine ||
@@ -183,8 +183,8 @@ void ExternalEngineStateMachine::ChangeStateTo(State aNextState) {
       aNextState == State::SeekingData || aNextState == State::ShutdownEngine);
   if (aNextState == State::SeekingData) {
     mState = StateObject({StateObject::SeekingData()});
-  } else if (aNextState == State::ReadingMetadata) {
-    mState = StateObject({StateObject::ReadingMetadata()});
+  } else if (aNextState == State::InitEngine) {
+    mState = StateObject({StateObject::InitEngine()});
   } else if (aNextState == State::RunningEngine) {
     mState = StateObject({StateObject::RunningEngine()});
   } else if (aNextState == State::ShutdownEngine) {
@@ -200,8 +200,8 @@ ExternalEngineStateMachine::ExternalEngineStateMachine(
     MediaDecoder* aDecoder, MediaFormatReader* aReader)
     : MediaDecoderStateMachineBase(aDecoder, aReader) {
   LOG("Created ExternalEngineStateMachine");
-  MOZ_ASSERT(mState.IsInitEngine());
-  InitEngine();
+  MOZ_ASSERT(mState.IsReadingMetadata());
+  ReadMetadata();
 }
 
 ExternalEngineStateMachine::~ExternalEngineStateMachine() {
@@ -235,8 +235,10 @@ void ExternalEngineStateMachine::OnEngineInitSuccess() {
   mReader->UpdateMediaEngineId(mEngine->Id());
   state->mInitPromise = nullptr;
   if (mState.IsInitEngine()) {
-    ChangeStateTo(State::ReadingMetadata);
-    ReadMetadata();
+    // TODO : we can send media info along with the initialzation
+    MOZ_ASSERT(mInfo);
+    mEngine->SetMediaInfo(*mInfo);
+    StartRunningEngine();
     return;
   }
   // We just recovered from CDM process crash, so we need to update the media
@@ -260,13 +262,17 @@ void ExternalEngineStateMachine::OnEngineInitFailure() {
 }
 
 void ExternalEngineStateMachine::ReadMetadata() {
-  AssertOnTaskQueue();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mState.IsReadingMetadata());
-  mReader->ReadMetadata()
-      ->Then(OwnerThread(), __func__, this,
-             &ExternalEngineStateMachine::OnMetadataRead,
-             &ExternalEngineStateMachine::OnMetadataNotRead)
-      ->Track(mState.AsReadingMetadata()->mMetadataRequest);
+  Unused << OwnerThread()->Dispatch(NS_NewRunnableFunction(
+      "ExternalEngineStateMachine::ReadMetadata",
+      [self = RefPtr<ExternalEngineStateMachine>{this}, this] {
+        mReader->ReadMetadata()
+            ->Then(OwnerThread(), __func__, this,
+                   &ExternalEngineStateMachine::OnMetadataRead,
+                   &ExternalEngineStateMachine::OnMetadataNotRead)
+            ->Track(mState.AsReadingMetadata()->mMetadataRequest);
+      }));
 }
 
 void ExternalEngineStateMachine::OnMetadataRead(MetadataHolder&& aMetadata) {
@@ -303,8 +309,6 @@ void ExternalEngineStateMachine::OnMetadataRead(MetadataHolder&& aMetadata) {
   }
 #endif
 
-  mEngine->SetMediaInfo(*mInfo);
-
   if (Info().mMetadataDuration.isSome()) {
     mDuration = Info().mMetadataDuration;
   } else if (Info().mUnadjustedMetadataEndTime.isSome()) {
@@ -333,7 +337,8 @@ void ExternalEngineStateMachine::OnMetadataRead(MetadataHolder&& aMetadata) {
   mMetadataLoadedEvent.Notify(std::move(aMetadata.mInfo),
                               std::move(aMetadata.mTags),
                               MediaDecoderEventVisibility::Observable);
-  StartRunningEngine();
+  ChangeStateTo(State::InitEngine);
+  InitEngine();
 }
 
 void ExternalEngineStateMachine::OnMetadataNotRead(const MediaResult& aError) {
@@ -570,11 +575,12 @@ RefPtr<ShutdownPromise> ExternalEngineStateMachine::Shutdown() {
 
   mSetCDMProxyPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_ABORT_ERR, __func__);
   mSetCDMProxyRequest.DisconnectIfExists();
-  mInitEngineForCDMRequest.DisconnectIfExists();
 
   mPendingTasks.Clear();
 
-  mEngine->Shutdown();
+  if (mEngine) {
+    mEngine->Shutdown();
+  }
 
   auto* state = mState.AsShutdownEngine();
   state->mShutdown = mReader->Shutdown()->Then(
@@ -622,8 +628,7 @@ void ExternalEngineStateMachine::BufferedRangeUpdated() {
       return;                                                             \
     }                                                                     \
     /* Initialzation is not done yet, postpone the operation */           \
-    if ((mState.IsInitEngine() || mState.IsRecoverEngine()) &&            \
-        mState.AsInitEngine()->mInitPromise) {                            \
+    if (!mEngine || !mEngine->IsInited()) {                               \
       LOG("%s is called before init", __func__);                          \
       mPendingTasks.AppendElement(NewRunnableMethod(                      \
           __func__, this, &ExternalEngineStateMachine::Func));            \
@@ -1213,30 +1218,25 @@ RefPtr<SetCDMPromise> ExternalEngineStateMachine::SetCDMProxy(
     return SetCDMPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
-  if (mState.IsInitEngine() && mState.AsInitEngine()->mInitPromise) {
+  if (!mEngine || !mEngine->IsInited()) {
     LOG("SetCDMProxy is called before init");
-    mState.AsInitEngine()
-        ->mInitPromise
-        ->Then(
-            OwnerThread(), __func__,
-            [self = RefPtr{this}, proxy = RefPtr{aProxy}, this](
-                const GenericNonExclusivePromise::ResolveOrRejectValue& aVal) {
-              mInitEngineForCDMRequest.Complete();
-              SetCDMProxy(proxy)
-                  ->Then(OwnerThread(), __func__,
-                         [self = RefPtr{this}, this](
-                             const SetCDMPromise::ResolveOrRejectValue& aVal) {
-                           mSetCDMProxyRequest.Complete();
-                           if (aVal.IsResolve()) {
-                             mSetCDMProxyPromise.Resolve(true, __func__);
-                           } else {
-                             mSetCDMProxyPromise.Reject(
-                                 NS_ERROR_DOM_MEDIA_CDM_ERR, __func__);
-                           }
-                         })
-                  ->Track(mSetCDMProxyRequest);
-            })
-        ->Track(mInitEngineForCDMRequest);
+    mPendingTasks.AppendElement(NS_NewRunnableFunction(
+        "ExternalEngineStateMachine::SetCDMProxy",
+        [self = RefPtr{this}, proxy = RefPtr{aProxy}, this] {
+          SetCDMProxy(proxy)
+              ->Then(OwnerThread(), __func__,
+                     [self = RefPtr{this},
+                      this](const SetCDMPromise::ResolveOrRejectValue& aVal) {
+                       mSetCDMProxyRequest.Complete();
+                       if (aVal.IsResolve()) {
+                         mSetCDMProxyPromise.Resolve(true, __func__);
+                       } else {
+                         mSetCDMProxyPromise.Reject(NS_ERROR_DOM_MEDIA_CDM_ERR,
+                                                    __func__);
+                       }
+                     })
+              ->Track(mSetCDMProxyRequest);
+        }));
     return mSetCDMProxyPromise.Ensure(__func__);
   }
 
@@ -1244,6 +1244,7 @@ RefPtr<SetCDMPromise> ExternalEngineStateMachine::SetCDMProxy(
   mKeySystem = NS_ConvertUTF16toUTF8(aProxy->KeySystem());
   LOG("SetCDMProxy=%p (key-system=%s)", aProxy, mKeySystem.get());
   MOZ_DIAGNOSTIC_ASSERT(mEngine);
+  // TODO : we should check the result of setting CDM proxy in the MFCDM process
   if (!mEngine->SetCDMProxy(aProxy)) {
     LOG("Failed to set CDM proxy on the engine");
     return SetCDMPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_CDM_ERR, __func__);
