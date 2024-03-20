@@ -330,7 +330,7 @@ async function findTagFolder(tag) {
   return results.length ? results[0].getResultByName("guid") : null;
 }
 
-// Exercises the new, async calls implemented in `Bookmarks.jsm`.
+// Exercises the new, async calls implemented in `Bookmarks.sys.mjs`.
 class AsyncTestCases extends TestCases {
   async createFolder(parentGuid, title, index) {
     let item = await PlacesUtils.bookmarks.insert({

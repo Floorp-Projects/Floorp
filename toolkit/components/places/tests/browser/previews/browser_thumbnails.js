@@ -2,7 +2,7 @@
  * https://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Tests PlacesPreviews.jsm
+ * Tests PlacesPreviews.sys.mjs
  */
 const { PlacesPreviews } = ChromeUtils.importESModule(
   "resource://gre/modules/PlacesPreviews.sys.mjs"

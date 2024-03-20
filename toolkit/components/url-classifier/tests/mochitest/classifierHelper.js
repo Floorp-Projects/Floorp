@@ -24,7 +24,7 @@ classifierHelper._updatesToCleanup = [];
 
 classifierHelper._initsCB = [];
 
-// This function return a Promise, promise is resolved when SafeBrowsing.jsm
+// This function return a Promise, promise is resolved when SafeBrowsing.sys.mjs
 // is initialized.
 classifierHelper.waitForInit = function () {
   return new Promise(function (resolve) {

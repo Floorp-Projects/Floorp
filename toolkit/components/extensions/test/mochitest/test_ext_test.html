@@ -126,7 +126,7 @@ function testScript() {
 
   // The WebIDL version of assertDeepEq structurally clones before sending the
   // params to the main thread. This check verifies that the behavior is
-  // consistent between the WebIDL and Schemas.jsm-generated API bindings.
+  // consistent between the WebIDL and Schemas.sys.mjs-generated API bindings.
   browser.test.assertThrows(
     () => browser.test.assertDeepEq(obj, obj, "obj with func"),
     /An unexpected error occurred/,

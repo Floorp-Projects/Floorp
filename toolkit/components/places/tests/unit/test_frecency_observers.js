@@ -37,7 +37,7 @@ add_task(async function test_nsNavHistory_UpdateFrecency() {
   await promise;
 });
 
-// History.jsm invalidateFrecencies()
+// History.sys.mjs invalidateFrecencies()
 add_task(async function test_invalidateFrecencies() {
   let url = Services.io.newURI("http://test-invalidateFrecencies.com/");
   // Bookmarking the URI is enough to add it to moz_places, and importantly, it
@@ -54,7 +54,7 @@ add_task(async function test_invalidateFrecencies() {
   await promise;
 });
 
-// History.jsm clear() should not cause a frecency recalculation since pages
+// History.sys.mjs clear() should not cause a frecency recalculation since pages
 // are removed.
 add_task(async function test_clear() {
   let received = [];

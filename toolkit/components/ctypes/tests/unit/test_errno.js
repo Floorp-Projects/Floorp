@@ -2,11 +2,10 @@
 var ctypes = ctypes;
 
 function run_test() {
-  // Launch the test with regular loading of ctypes.jsm
+  // Launch the test with regular loading of ctypes.sys.mjs
   main_test();
 
-  // Relaunch the test with exotic loading of ctypes.jsm
-  Cu.unload("resource://gre/modules/ctypes.jsm");
+  // Relaunch the test with exotic loading of ctypes.sys.mjs
   let scope = ChromeUtils.importESModule(
     "resource://gre/modules/ctypes.sys.mjs"
   );

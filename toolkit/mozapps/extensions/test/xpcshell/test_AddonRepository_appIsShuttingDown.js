@@ -2,8 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-// Tests AddonRepository.jsm when backgroundUpdateChecks are hit while the application
-// shutdown has been already initiated (See Bug 1841444).
+// Tests AddonRepository.sys.mjs when backgroundUpdateChecks are hit while the
+// application shutdown has been already initiated (See Bug 1841444).
 
 const { sinon } = ChromeUtils.importESModule(
   "resource://testing-common/Sinon.sys.mjs"

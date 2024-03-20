@@ -202,8 +202,8 @@ add_task(async function test_csp_validator_extension_pages() {
   let checkPolicy = (policy, expectedResult) => {
     info(`Checking policy: ${policy}`);
 
-    // While Schemas.jsm uses Ci.nsIAddonContentPolicy.CSP_ALLOW_WASM, we don't
-    // pass that here because we are only verifying that remote scripts are
+    // While Schemas.sys.mjs uses Ci.nsIAddonContentPolicy.CSP_ALLOW_WASM, we
+    // don't pass that here because we are only verifying that remote scripts are
     // blocked here.
     let result = cps.validateAddonCSP(policy, 0);
     equal(result, expectedResult);

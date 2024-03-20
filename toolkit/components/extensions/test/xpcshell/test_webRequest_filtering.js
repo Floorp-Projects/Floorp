@@ -89,7 +89,7 @@ add_task(async function setup() {
   // Disable rcwn to make cache behavior deterministic.
   Services.prefs.setBoolPref("network.http.rcwn.enabled", false);
 
-  // When WebRequest.jsm is used directly instead of through ext-webRequest.js,
+  // When WebRequest.sys.mjs is used directly instead of through ext-webRequest.js,
   // ExtensionParent.apiManager is not automatically initialized. Do it here.
   await ExtensionParent.apiManager.lazyInit();
 });

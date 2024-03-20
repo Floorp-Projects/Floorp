@@ -251,7 +251,7 @@ add_task(async function test_webRequest_auth_proxy_system() {
       () => {
         browser.test.sendMessage("onAuthRequired");
         // cancel is silently ignored, if it were not (e.g someone messes up in
-        // WebRequest.jsm and allows cancel) this test would fail.
+        // WebRequest.sys.mjs and allows cancel) this test would fail.
         return {
           cancel: true,
           authCredentials: { username: "puser", password: "ppass" },

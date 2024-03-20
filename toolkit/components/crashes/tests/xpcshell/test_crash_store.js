@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /*
- * This file tests the CrashStore type in CrashManager.jsm.
+ * This file tests the CrashStore type in CrashManager.sys.mjs.
  */
 
 "use strict";

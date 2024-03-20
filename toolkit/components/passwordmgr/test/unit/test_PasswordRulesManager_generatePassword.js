@@ -238,7 +238,7 @@ add_task(
     const TEST_BASE_ORIGIN = "example.com";
     const REQUIRED_ARBITRARY_CHARACTERS = "!#$@*()_+=";
     // We use an extremely long password to ensure there are no invalid characters generated in the password.
-    // This ensures we exhaust all of "allRequiredCharacters" in PasswordGenerator.jsm.
+    // This ensures we exhaust all of "allRequiredCharacters" in PasswordGenerator.sys.mjs.
     // Otherwise, there's a small chance a "," may have been added to "allRequiredCharacters"
     // which will generate an invalid password in this case.
     const TEST_RULES = `required: [${REQUIRED_ARBITRARY_CHARACTERS}], upper, lower; maxlength: 255; minlength: 255;`;

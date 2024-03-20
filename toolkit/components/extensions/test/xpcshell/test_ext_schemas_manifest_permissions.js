@@ -86,7 +86,7 @@ add_task(async function () {
         a_manifest_property: {},
       },
       background() {
-        // Test hasPermission method implemented in ExtensionChild.jsm.
+        // Test hasPermission method implemented in ExtensionChild.sys.mjs.
         browser.test.assertTrue(
           "testManifestPermission" in browser,
           "The API namespace is defined as expected"
@@ -105,7 +105,7 @@ add_task(async function () {
         "test-extension-manifest-without-nested-prop"
       );
 
-      // Test hasPermission method implemented in Extension.jsm.
+      // Test hasPermission method implemented in Extension.sys.mjs.
       equal(
         extension.extension.hasPermission("manifest:a_manifest_property"),
         true,
@@ -129,7 +129,7 @@ add_task(async function () {
         },
       },
       background() {
-        // Test hasPermission method implemented in ExtensionChild.jsm.
+        // Test hasPermission method implemented in ExtensionChild.sys.mjs.
         browser.test.assertTrue(
           "testManifestPermission" in browser,
           "The API namespace is defined as expected"
@@ -146,7 +146,7 @@ add_task(async function () {
     async extension => {
       await extension.awaitFinish("test-extension-manifest-with-nested-prop");
 
-      // Test hasPermission method implemented in Extension.jsm.
+      // Test hasPermission method implemented in Extension.sys.mjs.
       equal(
         extension.extension.hasPermission("manifest:a_manifest_property"),
         true,

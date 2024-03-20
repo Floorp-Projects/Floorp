@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * Test that CrashMonitor.jsm is correctly loaded from XPCOM component
+ * Test that CrashMonitor.sys.mjs is correctly loaded from XPCOM component
  */
 add_task(function test_register() {
   let cm = Cc["@mozilla.org/toolkit/crashmonitor;1"].createInstance(

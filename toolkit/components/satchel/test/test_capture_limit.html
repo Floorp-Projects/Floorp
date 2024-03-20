@@ -21,7 +21,7 @@ add_setup(async () => {
 });
 
 add_task(async function captureLimit() {
-  // Capture no more than 100 fields per submit. See FormHistoryChild.jsm.
+  // Capture no more than 100 fields per submit. See FormHistoryChild.sys.mjs.
   const inputsCount = 100 + 2;
   const form = document.getElementById("form1");
   for (let i = 1; i <= inputsCount; i++) {

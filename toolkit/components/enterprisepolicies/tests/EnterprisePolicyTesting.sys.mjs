@@ -83,7 +83,7 @@ export var EnterprisePolicyTesting = {
 /**
  * This helper will track prefs that have been changed
  * by the policy engine through the setAndLockPref and
- * setDefaultPref APIs (from Policies.jsm) and make sure
+ * setDefaultPref APIs (from Policies.sys.mjs) and make sure
  * that they are restored to their original values when
  * the test ends or another test case restarts the engine.
  */

@@ -12,8 +12,8 @@ const { ExtensionPermissions } = ChromeUtils.importESModule(
 
 Services.prefs.setBoolPref("extensions.manifestV3.enabled", true);
 
-// ExtensionParent.jsm is being imported lazily because when it is imported Services.appinfo will be
-// retrieved and cached (as a side-effect of Schemas.jsm being imported), and so Services.appinfo
+// ExtensionParent.sys.mjs is being imported lazily because when it is imported Services.appinfo will be
+// retrieved and cached (as a side-effect of Schemas.sys.mjs being imported), and so Services.appinfo
 // will not be returning the version set by AddonTestUtils.createAppInfo and this test will
 // fail on non-nightly builds (because the cached appinfo.version will be undefined and
 // AddonManager startup will fail).
