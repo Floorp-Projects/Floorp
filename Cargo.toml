@@ -14,7 +14,7 @@ members = [
   "security/manager/ssl/osclientcerts",
   "testing/geckodriver",
   "toolkit/components/uniffi-bindgen-gecko-js",
-  "toolkit/crashreporter/client-rust/app",
+  "toolkit/crashreporter/client/app",
   "toolkit/crashreporter/mozwer-rust",
   "toolkit/crashreporter/rust_minidump_writer_linux",
   "toolkit/library/gtest/rust",
