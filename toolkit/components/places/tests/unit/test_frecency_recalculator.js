@@ -176,3 +176,19 @@ add_task(async function test_chunk_time_telemetry() {
     "Should still not have set shouldStartFrecencyRecalculation"
   );
 });
+
+add_task(async function test_acceleration() {
+  await PlacesTestUtils.addVisits(
+    new Array(300).fill("https://www.mozilla.org/")
+  );
+
+  Assert.ok(
+    PlacesFrecencyRecalculator.maybeUpdateRecalculationSpeed(),
+    "Recalculation accelerated"
+  );
+  await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
+  Assert.ok(
+    !PlacesFrecencyRecalculator.maybeUpdateRecalculationSpeed(),
+    "Recalculation back to normal rate"
+  );
+});
