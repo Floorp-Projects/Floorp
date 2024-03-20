@@ -75,7 +75,7 @@ class CustomTabsToolbarFeatureTest {
 
         feature.start()
 
-        verify(feature, never()).init(any(), any())
+        verify(feature, never()).init(any())
     }
 
     @Test
@@ -1161,71 +1161,6 @@ class CustomTabsToolbarFeatureTest {
         verify(feature).addCloseButton(privateColor, tab.config.closeButtonIcon)
         verify(feature).addActionButton(privateColor, tab.config.actionButtonConfig)
         verify(feature).addShareButton(privateColor)
-    }
-
-    @Test
-    fun `WHEN theme should not be updated THEN the app night mode is not set`() {
-        val colorScheme = CustomTabsIntent.COLOR_SCHEME_DARK
-        val customTabConfig = CustomTabConfig(colorScheme = colorScheme)
-
-        val toolbar = spy(BrowserToolbar(testContext))
-
-        val feature = spy(
-            CustomTabsToolbarFeature(
-                store = mock(),
-                toolbar = toolbar,
-                useCases = mock(),
-                updateTheme = false,
-            ) {},
-        )
-
-        val setDefaultNightMode = mock<(Int) -> Unit>()
-        feature.init(customTabConfig, setDefaultNightMode)
-
-        verify(setDefaultNightMode, never()).invoke(colorScheme)
-    }
-
-    @Test
-    fun `WHEN theme should be updated & intent has color scheme THEN the app night mode is set with it`() {
-        val colorScheme = CustomTabsIntent.COLOR_SCHEME_DARK
-        val customTabConfig = CustomTabConfig(colorScheme = colorScheme)
-
-        val toolbar = spy(BrowserToolbar(testContext))
-
-        val feature = spy(
-            CustomTabsToolbarFeature(
-                store = mock(),
-                toolbar = toolbar,
-                useCases = mock(),
-                updateTheme = true,
-            ) {},
-        )
-
-        val setDefaultNightMode = mock<(Int) -> Unit>()
-        feature.init(customTabConfig, setDefaultNightMode)
-
-        verify(setDefaultNightMode).invoke(colorScheme)
-    }
-
-    @Test
-    fun `WHEN theme should be updated & intent has no color scheme THEN the app night mode is set with the fallback`() {
-        val customTabConfig = CustomTabConfig()
-
-        val toolbar = spy(BrowserToolbar(testContext))
-
-        val feature = spy(
-            CustomTabsToolbarFeature(
-                store = mock(),
-                toolbar = toolbar,
-                useCases = mock(),
-                updateTheme = true,
-            ) {},
-        )
-
-        val setDefaultNightMode = mock<(Int) -> Unit>()
-        feature.init(customTabConfig, setDefaultNightMode)
-
-        verify(setDefaultNightMode).invoke(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
     }
 
     @Test
