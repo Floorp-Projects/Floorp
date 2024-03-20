@@ -4,19 +4,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#if !defined(StateWatching_h_)
-#  define StateWatching_h_
+#ifndef XPCOM_THREADS_STATEWATCHING_H_
+#define XPCOM_THREADS_STATEWATCHING_H_
 
-#  include <cstddef>
-#  include <new>
-#  include <utility>
-#  include "mozilla/AbstractThread.h"
-#  include "mozilla/Assertions.h"
-#  include "mozilla/Logging.h"
-#  include "mozilla/RefPtr.h"
-#  include "nsISupports.h"
-#  include "nsTArray.h"
-#  include "nsThreadUtils.h"
+#include <cstddef>
+#include <new>
+#include <utility>
+#include "mozilla/AbstractThread.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Logging.h"
+#include "mozilla/RefPtr.h"
+#include "nsISupports.h"
+#include "nsTArray.h"
+#include "nsThreadUtils.h"
 
 /*
  * The state-watching machinery automates the process of responding to changes
@@ -62,8 +62,8 @@ namespace mozilla {
 
 extern LazyLogModule gStateWatchingLog;
 
-#  define WATCH_LOG(x, ...) \
-    MOZ_LOG(gStateWatchingLog, LogLevel::Debug, (x, ##__VA_ARGS__))
+#define WATCH_LOG(x, ...) \
+  MOZ_LOG(gStateWatchingLog, LogLevel::Debug, (x, ##__VA_ARGS__))
 
 /*
  * AbstractWatcher is a superclass from which all watchers must inherit.
@@ -295,7 +295,7 @@ class WatchManager {
   RefPtr<AbstractThread> mOwnerThread;
 };
 
-#  undef WATCH_LOG
+#undef WATCH_LOG
 
 }  // namespace mozilla
 

@@ -4,22 +4,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#if !defined(StateMirroring_h_)
-#  define StateMirroring_h_
+#ifndef XPCOM_THREADS_STATEMIRRORING_H_
+#define XPCOM_THREADS_STATEMIRRORING_H_
 
-#  include <cstddef>
-#  include "mozilla/AbstractThread.h"
-#  include "mozilla/AlreadyAddRefed.h"
-#  include "mozilla/Assertions.h"
-#  include "mozilla/Logging.h"
-#  include "mozilla/Maybe.h"
-#  include "mozilla/RefPtr.h"
-#  include "mozilla/StateWatching.h"
-#  include "nsCOMPtr.h"
-#  include "nsIRunnable.h"
-#  include "nsISupports.h"
-#  include "nsTArray.h"
-#  include "nsThreadUtils.h"
+#include <cstddef>
+#include "mozilla/AbstractThread.h"
+#include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Logging.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/StateWatching.h"
+#include "nsCOMPtr.h"
+#include "nsIRunnable.h"
+#include "nsISupports.h"
+#include "nsTArray.h"
+#include "nsThreadUtils.h"
 
 /*
  * The state-mirroring machinery allows pieces of interesting state to be
@@ -51,9 +51,9 @@ namespace mozilla {
 // Mirror<T> and Canonical<T> inherit WatchTarget, so we piggy-back on the
 // logging that WatchTarget already does. Given that, it makes sense to share
 // the same log module.
-#  define MIRROR_LOG(x, ...)       \
-    MOZ_ASSERT(gStateWatchingLog); \
-    MOZ_LOG(gStateWatchingLog, LogLevel::Debug, (x, ##__VA_ARGS__))
+#define MIRROR_LOG(x, ...)       \
+  MOZ_ASSERT(gStateWatchingLog); \
+  MOZ_LOG(gStateWatchingLog, LogLevel::Debug, (x, ##__VA_ARGS__))
 
 template <typename T>
 class AbstractMirror;
@@ -335,9 +335,9 @@ class Mirror {
 
     void ConnectedOnCanonicalThread(AbstractCanonical<T>* aCanonical) override {
       MOZ_ASSERT(aCanonical->OwnerThread()->IsCurrentThreadIn());
-#  ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
       ++mIncomingConnects;
-#  endif
+#endif
       OwnerThread()->DispatchStateChange(
           NewRunnableMethod<StoreRefPtrPassByPtr<AbstractCanonical<T>>>(
               "Mirror::Impl::SetCanonical", this, &Impl::SetCanonical,
@@ -349,9 +349,9 @@ class Mirror {
                  aCanonical);
       MOZ_ASSERT(OwnerThread()->IsCurrentThreadIn());
       MOZ_ASSERT(!IsConnected());
-#  ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
       --mIncomingConnects;
-#  endif
+#endif
       mCanonical = aCanonical;
     }
 
@@ -413,9 +413,9 @@ class Mirror {
    private:
     T mValue;
     RefPtr<AbstractCanonical<T>> mCanonical;
-#  ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
     std::atomic<size_t> mIncomingConnects = 0;
-#  endif
+#endif
   };
 
  public:
@@ -446,7 +446,7 @@ class Mirror {
   RefPtr<Impl> mImpl;
 };
 
-#  undef MIRROR_LOG
+#undef MIRROR_LOG
 
 }  // namespace mozilla
 
