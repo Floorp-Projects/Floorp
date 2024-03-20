@@ -80,5 +80,24 @@ function replace_c_with_same_val(key, value, context) {
 }
 JSON.parse('{ "a": "b", "c": "ABCDEABCDE" }', replace_c_with_same_val);
 
+// rawJSON
+function assertIsRawJson(rawJson, expectedRawJsonValue) {
+    assertEq(null, Object.getPrototypeOf(rawJson));
+    assertEq(true, Object.hasOwn(rawJson, 'rawJSON'));
+    assertDeepEq(['rawJSON'], Object.getOwnPropertyNames(rawJson));
+    assertDeepEq([], Object.getOwnPropertySymbols(rawJson));
+    assertEq(expectedRawJsonValue, rawJson.rawJSON);
+}
+
+assertEq(true, Object.isFrozen(JSON.rawJSON('"shouldBeFrozen"')));
+assertThrowsInstanceOf(() => JSON.rawJSON(), SyntaxError);
+assertIsRawJson(JSON.rawJSON(1, 2), '1');
+
+// isRawJSON
+assertEq(false, JSON.isRawJSON());
+assertEq(false, JSON.isRawJSON({}, {}));
+assertEq(false, JSON.isRawJSON({}, JSON.rawJSON(2)));
+assertEq(true, JSON.isRawJSON(JSON.rawJSON(1), JSON.rawJSON(2)));
+
 if (typeof reportCompare == 'function')
     reportCompare(0, 0);
