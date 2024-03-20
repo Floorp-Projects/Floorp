@@ -3054,6 +3054,10 @@ def oxidized_breakpad(target):
 set_config("MOZ_OXIDIZED_BREAKPAD", True, when=oxidized_breakpad)
 set_define("MOZ_OXIDIZED_BREAKPAD", True, when=oxidized_breakpad)
 
+# Environment variable to mock the crashreporter for testing
+option(env="MOZ_CRASHREPORTER_MOCK", help="Mock the crashreporter to test native GUIs")
+set_config("MOZ_CRASHREPORTER_MOCK", True, when="MOZ_CRASHREPORTER_MOCK")
+
 
 # Wine
 # ==============================================================

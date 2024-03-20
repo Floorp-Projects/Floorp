@@ -21,6 +21,7 @@ for feature in gkrust_features:
 # Target directory doesn't matter a lot here, since we can't share panic=abort
 # compilation artifacts with gkrust.
 RUST_TESTS = [
+    "crashreporter",
     "firefox-on-glean",
     "l10nregistry",
     "selectors",
@@ -33,6 +34,8 @@ RUST_TESTS = [
 
 if CONFIG["TARGET_OS"] in ("WINNT", "OSX"):
     RUST_TESTS += ["nmhproxy"]
+
+RUST_TEST_FEATURES.append("crashreporter/mock")
 
 # Code coverage builds link a bunch of Gecko bindings code from the style
 # crate, which is not used by our tests but would cause link errors.
