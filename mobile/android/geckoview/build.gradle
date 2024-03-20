@@ -24,7 +24,6 @@ android {
         targetSdkVersion project.ext.targetSdkVersion
         minSdkVersion project.ext.minSdkVersion
         manifestPlaceholders = project.ext.manifestPlaceholders
-        multiDexEnabled true
 
         versionCode project.ext.versionCode
         versionName project.ext.versionName
@@ -251,8 +250,6 @@ dependencies {
     androidTestImplementation ComponentsDependencies.androidx_espresso_core
 
     androidTestImplementation 'com.koushikdutta.async:androidasync:3.1.0'
-
-    androidTestImplementation 'androidx.multidex:multidex:2.0.1'
 }
 
 apply from: "${topsrcdir}/mobile/android/gradle/with_gecko_binaries.gradle"

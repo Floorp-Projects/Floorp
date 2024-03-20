@@ -18,7 +18,6 @@ android {
         minSdkVersion project.ext.minSdkVersion
         versionCode 1
         versionName "1.0"
-        multiDexEnabled true
     }
     buildTypes {
         release {
@@ -48,7 +47,6 @@ dependencies {
     implementation ComponentsDependencies.androidx_annotation
     implementation ComponentsDependencies.androidx_appcompat
     implementation ComponentsDependencies.androidx_constraintlayout
-    implementation 'androidx.multidex:multidex:2.0.1'
     testImplementation ComponentsDependencies.testing_junit
     // Replace this with implementation "org.mozilla.geckoview:geckoview-${geckoviewChannel}:${geckoviewVersion}"
     implementation project(path: ':geckoview')

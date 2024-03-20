@@ -16,8 +16,6 @@ android {
         applicationId "org.mozilla.geckoview.test_runner"
         versionCode project.ext.versionCode
         versionName project.ext.versionName
-
-        multiDexEnabled true
     }
 
     compileOptions {
@@ -56,6 +54,4 @@ dependencies {
     implementation project(path: ':geckoview')
     implementation ComponentsDependencies.androidx_constraintlayout
     implementation ComponentsDependencies.google_material
-
-    implementation 'androidx.multidex:multidex:2.0.1'
 }
