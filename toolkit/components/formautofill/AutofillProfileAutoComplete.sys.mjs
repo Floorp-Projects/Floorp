@@ -384,9 +384,15 @@ export const ProfileAutocomplete = {
       return false;
     }
 
+    const actor = getActorFromWindow(input.ownerGlobal, "FormAutofill");
+    if (fillMessageName == "FormAutofill:ClearForm") {
+      // The child can do this directly.
+      actor.clearForm();
+      return true;
+    }
+
     this.fillRequestId++;
     const fillRequestId = this.fillRequestId;
-    const actor = getActorFromWindow(input.ownerGlobal, "FormAutofill");
     const value = await actor.sendQuery(fillMessageName, fillMessageData ?? {});
 
     // skip fill if another fill operation started during await
