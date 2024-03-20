@@ -333,7 +333,9 @@ GUID VideoMimeTypeToMediaFoundationSubtype(const nsACString& aMimeType) {
   if (MP4Decoder::IsHEVC(aMimeType)) {
     return MFVideoFormat_HEVC;
   }
-  NS_WARNING("Unsupport video mimetype");
+  NS_WARNING(nsAutoCString(nsDependentCString("Unsupported video mimetype ") +
+                           aMimeType)
+                 .get());
   return GUID_NULL;
 }
 
