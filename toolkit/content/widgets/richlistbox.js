@@ -109,7 +109,7 @@
         for (var i = 0; i < rowCount; i++) {
           var k = (start + i) % rowCount;
           var listitem = this.getItemAtIndex(k);
-          if (!this._canUserSelect(listitem)) {
+          if (!this.canUserSelect(listitem)) {
             continue;
           }
           // allow richlistitems to specify the string being searched for
@@ -337,7 +337,7 @@
         if (
           aStartItem &&
           aStartItem.localName == "richlistitem" &&
-          (!this._userSelecting || this._canUserSelect(aStartItem))
+          (!this._userSelecting || this.canUserSelect(aStartItem))
         ) {
           --aDelta;
           if (aDelta == 0) {
@@ -354,7 +354,7 @@
         if (
           aStartItem &&
           aStartItem.localName == "richlistitem" &&
-          (!this._userSelecting || this._canUserSelect(aStartItem))
+          (!this._userSelecting || this.canUserSelect(aStartItem))
         ) {
           --aDelta;
           if (aDelta == 0) {
@@ -771,7 +771,7 @@
 
       var newItem = this.getItemAtIndex(newIndex);
       // make sure that the item is actually visible/selectable
-      if (this._userSelecting && newItem && !this._canUserSelect(newItem)) {
+      if (this._userSelecting && newItem && !this.canUserSelect(newItem)) {
         newItem =
           aOffset > 0
             ? this.getNextItem(newItem, 1) || this.getPreviousItem(newItem, 1)
@@ -811,7 +811,11 @@
       }
     }
 
-    _canUserSelect(aItem) {
+    canUserSelect(aItem) {
+      if (aItem.disabled) {
+        return false;
+      }
+
       var style = document.defaultView.getComputedStyle(aItem);
       return (
         style.display != "none" &&
@@ -886,7 +890,7 @@
        */
       this.addEventListener("mousedown", event => {
         var control = this.control;
-        if (!control || control.disabled) {
+        if (!control || this.disabled || control.disabled) {
           return;
         }
         if (
@@ -912,7 +916,7 @@
         }
 
         var control = this.control;
-        if (!control || control.disabled) {
+        if (!control || this.disabled || control.disabled) {
           return;
         }
         control._userSelecting = true;
