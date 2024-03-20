@@ -42,6 +42,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "A DLP agent"
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "showBlockedResult",
+  "browser.contentanalysis.show_blocked_result",
+  true
+);
+
 /**
  * A class that groups browsing contexts by their top-level one.
  * This is necessary because if there may be a subframe that
@@ -705,6 +712,10 @@ export const ContentAnalysis = {
         lazy.gContentAnalysis.respondToWarnDialog(aRequestToken, allow);
         return null;
       case Ci.nsIContentAnalysisResponse.eBlock:
+        if (!lazy.showBlockedResult) {
+          // Don't show anything
+          return null;
+        }
         message = await this.l10n.formatValue("contentanalysis-block-message", {
           content: this._getResourceNameFromNameOrOperationType(
             aResourceNameOrOperationType
