@@ -8,17 +8,15 @@ check_updates () {
   source_package=$2
   target_package=$3
   locale=$4
-  # TODO: remove this unused var
-  use_old_updater=$5
-  updater=$6
-  diff_file=$7
-  channel=$8
-  mar_channel_IDs=$9
-  update_to_dep=${10}
+  updater=$5
+  diff_file=$6
+  channel=$7
+  mar_channel_IDs=$8
+  update_to_dep=$9
   local mac_update_settings_dir_override
-  mac_update_settings_dir_override=${11}
+  mac_update_settings_dir_override=${10}
   local product
-  product=${12}
+  product=${11}
 
   # cleanup
   rm -rf source/*
