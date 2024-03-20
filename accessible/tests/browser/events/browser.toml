@@ -9,6 +9,8 @@ prefs = ["javascript.options.asyncstack_capture_debuggee_only=false"]
 
 ["browser_alert.js"]
 
+["browser_content_prompt.js"]
+
 ["browser_test_A11yUtils_announce.js"]
 
 ["browser_test_caret_move_granularity.js"]
