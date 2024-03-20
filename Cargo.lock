@@ -799,6 +799,16 @@ name = "cmake"
 version = "0.1.999"
 
 [[package]]
+name = "cocoabind"
+version = "0.1.0"
+dependencies = [
+ "bindgen 0.69.4",
+ "block",
+ "mozbuild",
+ "objc",
+]
+
+[[package]]
 name = "codespan-reporting"
 version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -960,6 +970,41 @@ dependencies = [
  "cfg-if 1.0.0",
  "libc",
  "mach2",
+]
+
+[[package]]
+name = "crashreporter"
+version = "1.0.0"
+dependencies = [
+ "anyhow",
+ "block",
+ "bytes",
+ "cfg-if 1.0.0",
+ "cocoabind",
+ "embed-manifest",
+ "env_logger",
+ "fluent",
+ "gtkbind",
+ "intl-memoizer",
+ "lazy_static",
+ "libloading",
+ "log",
+ "mozbuild",
+ "mozilla-central-workspace-hack",
+ "objc",
+ "phf",
+ "phf_codegen",
+ "serde",
+ "serde_json",
+ "sha2",
+ "time 0.3.23",
+ "tokio",
+ "unic-langid",
+ "uuid",
+ "warp",
+ "windows-sys 0.52.0",
+ "yaml-rust",
+ "zip",
 ]
 
 [[package]]
@@ -1483,6 +1528,12 @@ name = "either"
 version = "1.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7fcaabb2fef8c910e7f4c7ce9f67a1283a1715879a7c230ca9d6d1ae31f16d91"
+
+[[package]]
+name = "embed-manifest"
+version = "1.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "41cd446c890d6bed1d8b53acef5f240069ebef91d6fae7c5f52efe61fe8b5eae"
 
 [[package]]
 name = "encoding_c"
@@ -2470,6 +2521,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "363e3677e55ad168fef68cf9de3a4a310b53124c5e784c53a1d70e92d23f2126"
 dependencies = [
  "bitflags 1.999.999",
+]
+
+[[package]]
+name = "gtkbind"
+version = "0.1.0"
+dependencies = [
+ "bindgen 0.69.4",
+ "mozbuild",
 ]
 
 [[package]]

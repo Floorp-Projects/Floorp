@@ -805,7 +805,3 @@ criteria = "safe-to-deploy"
 [[exemptions.xml-rs]]
 version = "0.8.4"
 criteria = "safe-to-deploy"
-
-[[exemptions.zip]]
-version = "0.6.2"
-criteria = "safe-to-run"

@@ -1,0 +1,66 @@
+[package]
+name = "crashreporter"
+version = "1.0.0"
+edition = "2021"
+
+[[bin]]
+name = "crashreporter"
+
+[dependencies]
+anyhow = "1.0"
+cfg-if = "1.0"
+env_logger = { version = "0.10", default-features = false }
+fluent = "0.16.0"
+intl-memoizer = "0.5"
+lazy_static = "1.4"
+libloading = "0.7"
+log = "0.4.17"
+mozbuild = "0.1"
+mozilla-central-workspace-hack = { version = "0.1", features = ["crashreporter"], optional = true }
+phf = "0.11"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+time = { version = "0.3", features = ["formatting", "serde"] }
+unic-langid = { version = "0.9.1" }
+uuid = { version = "1", features = ["v4", "serde"] }
+zip = { version = "0.6", default-features = false }
+
+[target."cfg(target_os = \"macos\")".dependencies]
+block = "0.1"
+cocoa = { package = "cocoabind", path = "../cocoabind" }
+objc = "0.2"
+
+[target."cfg(target_os = \"linux\")".dependencies]
+gtk = { package = "gtkbind", path = "../gtkbind" }
+
+[target."cfg(target_os = \"windows\")".dependencies.windows-sys]
+version = "0.52"
+features = [
+    "Win32_Foundation",
+    "Win32_Globalization",
+    "Win32_Graphics_Gdi",
+    "Win32_System_Com",
+    "Win32_System_LibraryLoader",
+    "Win32_System_SystemServices",
+    "Win32_System_Threading",
+    "Win32_UI_Controls",
+    "Win32_UI_Input_KeyboardAndMouse",
+    "Win32_UI_Shell",
+    "Win32_UI_WindowsAndMessaging"
+]
+
+[features]
+# Required for tests
+mock = []
+
+[build-dependencies]
+embed-manifest = "1.4"
+mozbuild = "0.1"
+phf_codegen = "0.11"
+yaml-rust = "0.4"
+
+[dev-dependencies]
+bytes = "1.4"
+tokio = { version = "1.29", features = ["rt", "net", "time", "sync"] }
+warp = { version = "0.3", default-features = false }

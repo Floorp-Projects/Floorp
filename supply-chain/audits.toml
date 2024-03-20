@@ -1533,6 +1533,12 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "1.8.0 -> 1.8.1"
 
+[[audits.embed-manifest]]
+who = "Alex Franchuk <afranchuk@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "1.4.0"
+notes = "Necessary dependencies, all environment variable access is for build script vars set by cargo."
+
 [[audits.encoding_c]]
 who = "Henri Sivonen <hsivonen@hsivonen.fi>"
 criteria = "safe-to-deploy"
@@ -2385,6 +2391,12 @@ who = "Aria Beingessner <a.beingessner@gmail.com>"
 criteria = "safe-to-deploy"
 version = "0.5.4"
 notes = "I own this crate (I am contain-rs) and 0.5.4 passes miri. This code is very old and used by lots of people, so I'm pretty confident in it, even though it's in maintenance-mode and missing some nice-to-have APIs."
+
+[[audits.linked-hash-map]]
+who = "Alex Franchuk <afranchuk@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.5.4 -> 0.5.6"
+notes = "New unsafe code has debug assertions and meets invariants. All other changes are formatting-related."
 
 [[audits.linked-hash-map]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
@@ -4707,6 +4719,15 @@ notes = "This is custom derives for `ZeroVec` that is from zerovec crate. Althou
 who = "Makoto Kato <m_kato@ga2.so-net.ne.jp>"
 criteria = "safe-to-deploy"
 version = "0.10.1"
+
+[[audits.zip]]
+who = "Alex Franchuk <afranchuk@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "0.6.4"
+notes = """
+No unsafe code nor unwarranted dependencies. Side-effectful std usage is only
+present where expected (zip archive reading/writing and unpacking)
+"""
 
 [[audits.zip]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
