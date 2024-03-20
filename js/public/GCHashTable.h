@@ -62,7 +62,8 @@ class GCHashMap : public js::HashMap<Key, Value, HashPolicy, AllocPolicy> {
  public:
   using EntryGCPolicy = MapEntryGCPolicy;
 
-  explicit GCHashMap(AllocPolicy a = AllocPolicy()) : Base(std::move(a)) {}
+  explicit GCHashMap() : Base(AllocPolicy()) {}
+  explicit GCHashMap(AllocPolicy a) : Base(std::move(a)) {}
   explicit GCHashMap(size_t length) : Base(length) {}
   GCHashMap(AllocPolicy a, size_t length) : Base(std::move(a), length) {}
 
