@@ -28,7 +28,8 @@
 #include "js/TypeDecls.h"
 #include "js/Value.h"
 #include "util/StringBuffer.h"
-#include "vm/BooleanObject.h"  // js::BooleanObject
+#include "vm/BooleanObject.h"       // js::BooleanObject
+#include "vm/EqualityOperations.h"  // js::SameValue
 #include "vm/Interpreter.h"
 #include "vm/Iteration.h"
 #include "vm/JSAtomUtils.h"  // ToAtom
@@ -1738,22 +1739,33 @@ static bool InternalizeJSONProperty(
   Rooted<UniquePtr<ParseRecordObject::EntryMap>> entries(cx);
   if (cx->realm()->creationOptions().getJSONParseWithSource()) {
     // https://tc39.es/proposal-json-parse-with-source/#sec-internalizejsonproperty
-    if (parseRecord.get().parseNode) {
-      MOZ_ASSERT(!val.isObject());
-      Rooted<IdValueVector> props(cx, cx);
-      if (!props.emplaceBack(
-              IdValuePair(NameToId(cx->names().source),
-                          StringValue(parseRecord.get().parseNode)))) {
-        return false;
-      }
-      context = NewPlainObjectWithUniqueNames(cx, props);
-    } else {
-      context = NewPlainObject(cx);
-    }
-    if (!context) {
+    bool sameVal = false;
+    Rooted<Value> parsedValue(cx, parseRecord.get().value);
+    if (!SameValue(cx, parsedValue, val, &sameVal)) {
       return false;
     }
-    entries = std::move(parseRecord.get().entries);
+    if (!parseRecord.get().isEmpty() && sameVal) {
+      if (parseRecord.get().parseNode) {
+        MOZ_ASSERT(!val.isObject());
+        Rooted<IdValueVector> props(cx, cx);
+        if (!props.emplaceBack(
+                IdValuePair(NameToId(cx->names().source),
+                            StringValue(parseRecord.get().parseNode)))) {
+          return false;
+        }
+        context = NewPlainObjectWithUniqueNames(cx, props);
+        if (!context) {
+          return false;
+        }
+      }
+      entries = std::move(parseRecord.get().entries);
+    }
+    if (!context) {
+      context = NewPlainObject(cx);
+      if (!context) {
+        return false;
+      }
+    }
   }
 #endif
 

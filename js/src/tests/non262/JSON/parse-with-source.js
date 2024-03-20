@@ -58,5 +58,18 @@ for (const test of tests) {
     assertDeepEq(actual, test.expected);
 }
 
+// If the constructed object is modified but the result of the modification is
+// the same as the original, we should still provide the source
+function replace_c_with_same_val(key, value, context) {
+    if (key === "a") {
+        this["c"] = "ABCDEABCDE";
+    }
+    if (key) {
+       assertEq("source" in context, true);
+    }
+    return value;
+}
+JSON.parse('{ "a": "b", "c": "ABCDEABCDE" }', replace_c_with_same_val);
+
 if (typeof reportCompare == 'function')
     reportCompare(0, 0);
