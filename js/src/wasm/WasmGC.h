@@ -91,7 +91,7 @@ struct StackMapHeader {
   // Add 16 words to account for the size of FrameWithInstances including any
   // shadow stack (at worst 8 words total), and then a little headroom in case
   // the argument area had to be aligned.
-  static_assert(FrameWithInstances::sizeOf() / sizeof(void*) <= 8);
+  static_assert(sizeof(FrameWithInstances) / sizeof(void*) <= 8);
   static_assert(maxFrameOffsetFromTop >=
                     (MaxParams * MaxParamSize / sizeof(void*)) + 16,
                 "limited size of the offset field");
