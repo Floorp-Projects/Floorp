@@ -3,18 +3,18 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
-const { BackupService } = ChromeUtils.importESModule(
-  "resource:///modules/backup/BackupService.sys.mjs"
-);
-
-const { PlacesBackupResource } = ChromeUtils.importESModule(
-  "resource:///modules/backup/PlacesBackupResource.sys.mjs"
-);
-
 const { BackupResource } = ChromeUtils.importESModule(
   "resource:///modules/backup/BackupResource.sys.mjs"
 );
-
+const { BackupService } = ChromeUtils.importESModule(
+  "resource:///modules/backup/BackupService.sys.mjs"
+);
+const { CredentialsAndSecurityBackupResource } = ChromeUtils.importESModule(
+  "resource:///modules/backup/CredentialsAndSecurityBackupResource.sys.mjs"
+);
+const { PlacesBackupResource } = ChromeUtils.importESModule(
+  "resource:///modules/backup/PlacesBackupResource.sys.mjs"
+);
 const { TelemetryTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
@@ -22,9 +22,6 @@ const { TelemetryTestUtils } = ChromeUtils.importESModule(
 const { sinon } = ChromeUtils.importESModule(
   "resource://testing-common/Sinon.sys.mjs"
 );
-
-const EXPECTED_PLACES_DB_SIZE = 5240;
-const EXPECTED_FAVICONS_DB_SIZE = 5240;
 
 add_setup(() => {
   do_get_profile();
@@ -108,8 +105,11 @@ add_task(async function test_profDDiskSpace() {
 add_task(async function test_placesBackupResource() {
   Services.fog.testResetFOG();
 
+  const EXPECTED_PLACES_DB_SIZE = 5240;
+  const EXPECTED_FAVICONS_DB_SIZE = 5240;
+
   // Create resource files in temporary directory
-  let tempDir = PathUtils.tempDir;
+  const tempDir = PathUtils.tempDir;
   let tempPlacesDBPath = PathUtils.join(tempDir, "places.sqlite");
   let tempFaviconsDBPath = PathUtils.join(tempDir, "favicons.sqlite");
   await createKilobyteSizedFile(tempPlacesDBPath, EXPECTED_PLACES_DB_SIZE);
@@ -150,4 +150,88 @@ add_task(async function test_placesBackupResource() {
 
   await IOUtils.remove(tempPlacesDBPath);
   await IOUtils.remove(tempFaviconsDBPath);
+});
+
+/**
+ * Tests that we can measure credentials related files in the profile directory.
+ */
+add_task(async function test_credentialsAndSecurityBackupResource() {
+  Services.fog.testResetFOG();
+
+  const EXPECTED_CREDENTIALS_KILOBYTES_SIZE = 403;
+  const EXPECTED_SECURITY_KILOBYTES_SIZE = 231;
+
+  // Create resource files in temporary directory
+  const tempDir = PathUtils.tempDir;
+
+  // Set up credentials files
+  const mockCredentialsFiles = new Map([
+    ["key4.db", 300],
+    ["logins.json", 1],
+    ["logins-backup.json", 1],
+    ["autofill-profiles.json", 1],
+    ["credentialstate.sqlite", 100],
+  ]);
+
+  for (let [mockFileName, mockFileSize] of mockCredentialsFiles) {
+    let tempPath = PathUtils.join(tempDir, mockFileName);
+    await createKilobyteSizedFile(tempPath, mockFileSize);
+  }
+
+  // Set up security files
+  const mockSecurityFiles = new Map([
+    ["cert9.db", 230],
+    ["pkcs11.txt", 1],
+  ]);
+
+  for (let [mockFileName, mockFileSize] of mockSecurityFiles) {
+    let tempPath = PathUtils.join(tempDir, mockFileName);
+    await createKilobyteSizedFile(tempPath, mockFileSize);
+  }
+
+  let credentialsAndSecurityBackupResource =
+    new CredentialsAndSecurityBackupResource();
+  await credentialsAndSecurityBackupResource.measure(tempDir);
+
+  let credentialsMeasurement =
+    Glean.browserBackup.credentialsDataSize.testGetValue();
+  let securityMeasurement = Glean.browserBackup.securityDataSize.testGetValue();
+  let scalars = TelemetryTestUtils.getProcessScalars("parent", false, false);
+
+  // Credentials measurements
+  TelemetryTestUtils.assertScalar(
+    scalars,
+    "browser.backup.credentials_data_size",
+    credentialsMeasurement,
+    "Glean and telemetry measurements for credentials data should be equal"
+  );
+
+  Assert.equal(
+    credentialsMeasurement,
+    EXPECTED_CREDENTIALS_KILOBYTES_SIZE,
+    "Should have collected the correct glean measurement for credentials files"
+  );
+
+  // Security measurements
+  TelemetryTestUtils.assertScalar(
+    scalars,
+    "browser.backup.security_data_size",
+    securityMeasurement,
+    "Glean and telemetry measurements for security data should be equal"
+  );
+  Assert.equal(
+    securityMeasurement,
+    EXPECTED_SECURITY_KILOBYTES_SIZE,
+    "Should have collected the correct glean measurement for security files"
+  );
+
+  // Cleanup
+  for (let mockFileName of mockCredentialsFiles.keys()) {
+    let tempPath = PathUtils.join(tempDir, mockFileName);
+    await IOUtils.remove(tempPath);
+  }
+  for (let mockFileName of mockSecurityFiles.keys()) {
+    let tempPath = PathUtils.join(tempDir, mockFileName);
+    await IOUtils.remove(tempPath);
+  }
 });

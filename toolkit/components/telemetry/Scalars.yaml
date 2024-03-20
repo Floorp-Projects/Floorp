@@ -202,6 +202,36 @@ browser.backup:
       - 'firefox'
     record_in_processes:
       - 'main'
+  credentials_data_size:
+    bug_numbers:
+      - 1883736
+    description: >
+      The total size of logins, payment method, and form autofill related files
+      in the current profile directory, in kilobytes.
+    expires: never
+    kind: uint
+    notification_emails:
+      - mconley@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+  security_data_size:
+    bug_numbers:
+      - 1883736
+    description: >
+      The total size of files needed for NSS initialization parameters and security
+      certificate settings in the current profile directory, in kilobytes.
+    expires: never
+    kind: uint
+    notification_emails:
+      - mconley@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
 
 # The following section contains the browser engagement scalars.
 browser.engagement:

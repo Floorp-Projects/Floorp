@@ -56,9 +56,41 @@ browser.backup:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1883642
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1883642
+    notification_emails:
+      - mconley@mozilla.com
+    expires: never
+    telemetry_mirror: BROWSER_BACKUP_FAVICONS_SIZE
+
+  credentials_data_size:
+    type: quantity
+    unit: kilobyte
+    description: >
+      The total size of logins, payment method, and form autofill related files
+      in the current profile directory, in kilobytes.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1883736
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1883736
     data_sensitivity:
       - technical
     notification_emails:
       - mconley@mozilla.com
     expires: never
-    telemetry_mirror: BROWSER_BACKUP_FAVICONS_SIZE
+    telemetry_mirror: BROWSER_BACKUP_CREDENTIALS_DATA_SIZE
+
+  security_data_size:
+    type: quantity
+    unit: kilobyte
+    description: >
+      The total size of files needed for NSS initialization parameters and security
+      certificate settings in the current profile directory, in kilobytes.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1883736
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1883736
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - mconley@mozilla.com
+    expires: never
+    telemetry_mirror: BROWSER_BACKUP_SECURITY_DATA_SIZE
