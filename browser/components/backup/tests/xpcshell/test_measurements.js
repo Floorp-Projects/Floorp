@@ -15,10 +15,6 @@ const { CredentialsAndSecurityBackupResource } = ChromeUtils.importESModule(
 const { PlacesBackupResource } = ChromeUtils.importESModule(
   "resource:///modules/backup/PlacesBackupResource.sys.mjs"
 );
-const { PreferencesBackupResource } = ChromeUtils.importESModule(
-  "resource:///modules/backup/PreferencesBackupResource.sys.mjs"
-);
-
 const { TelemetryTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
@@ -236,53 +232,6 @@ add_task(async function test_credentialsAndSecurityBackupResource() {
   }
   for (let mockFileName of mockSecurityFiles.keys()) {
     let tempPath = PathUtils.join(tempDir, mockFileName);
-    await IOUtils.remove(tempPath);
-  }
-});
-
-add_task(async function test_preferencesBackupResource() {
-  Services.fog.testResetFOG();
-
-  const EXPECTED_SETTINGS_KILOBYTES_SIZE = 405;
-  const tempDir = PathUtils.tempDir;
-  const mockFiles = new Map([
-    ["prefs.js", 20],
-    ["xulstore.json", 1],
-    ["permissions.sqlite", 100],
-    ["content-prefs.sqlite", 260],
-    ["containers.json", 1],
-    ["handlers.json", 1],
-    ["search.json.mozlz4", 1],
-    ["user.js", 2],
-    ["chrome/userChrome.css", 5],
-    ["chrome/userContent.css", 5],
-  ]);
-
-  for (let [mockFileName, mockFileSize] of mockFiles) {
-    let tempPath = PathUtils.joinRelative(tempDir, mockFileName);
-    await createKilobyteSizedFile(tempPath, mockFileSize);
-  }
-
-  let preferencesBackupResource = new PreferencesBackupResource();
-  await preferencesBackupResource.measure(tempDir);
-
-  let measurement = Glean.browserBackup.preferencesSize.testGetValue();
-  let scalars = TelemetryTestUtils.getProcessScalars("parent", false, false);
-
-  TelemetryTestUtils.assertScalar(
-    scalars,
-    "browser.backup.preferences_size",
-    measurement,
-    "Glean and telemetry measurements for settings data should be equal"
-  );
-  Assert.equal(
-    measurement,
-    EXPECTED_SETTINGS_KILOBYTES_SIZE,
-    "Should have collected the correct glean measurement for settings files"
-  );
-
-  for (let mockFileName of mockFiles.keys()) {
-    let tempPath = PathUtils.joinRelative(tempDir, mockFileName);
     await IOUtils.remove(tempPath);
   }
 });
