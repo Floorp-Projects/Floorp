@@ -100,6 +100,15 @@ def _filter_release_promotion(
         if task.label in filtered_for_candidates:
             return True
 
+        # Ship geckoview in firefox-android ship graph
+        if (
+            shipping_phase == "ship"
+            and task.attributes.get("shipping_product") == "fennec"
+            and task.kind in ("beetmover-geckoview", "upload-symbols")
+            and parameters["release_product"] == "firefox-android"
+        ):
+            return True
+
         # TODO: get rid of this release_type match
         if (
             task.attributes.get("shipping_phase") == shipping_phase

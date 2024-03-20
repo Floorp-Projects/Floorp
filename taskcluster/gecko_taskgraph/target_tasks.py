@@ -623,12 +623,6 @@ def target_tasks_promote_desktop(full_task_graph, parameters, graph_config):
     mozilla_{beta,release} tasks, plus l10n, beetmover, balrog, etc."""
 
     def filter(task):
-        # Bug 1758507 - geckoview ships in the promote phase
-        if not parameters["release_type"].startswith("esr") and is_geckoview(
-            task, parameters
-        ):
-            return True
-
         if task.attributes.get("shipping_product") != parameters["release_product"]:
             return False
 
@@ -644,14 +638,6 @@ def target_tasks_promote_desktop(full_task_graph, parameters, graph_config):
             return True
 
     return [l for l, t in full_task_graph.tasks.items() if filter(t)]
-
-
-def is_geckoview(task, parameters):
-    return (
-        task.attributes.get("shipping_product") == "fennec"
-        and task.kind in ("beetmover-geckoview", "upload-symbols")
-        and parameters["release_product"] == "firefox"
-    )
 
 
 @_target_task("push_desktop")
