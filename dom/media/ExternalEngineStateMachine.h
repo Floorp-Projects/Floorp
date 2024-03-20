@@ -56,6 +56,9 @@ class ExternalEngineStateMachine final
   ExternalEngineStateMachine(MediaDecoder* aDecoder,
                              MediaFormatReader* aReader);
 
+  RefPtr<MediaDecoder::SeekPromise> InvokeSeek(
+      const SeekTarget& aTarget) override;
+
   RefPtr<GenericPromise> InvokeSetSink(
       const RefPtr<AudioDeviceInfo>& aSink) override;
 
@@ -308,6 +311,11 @@ class ExternalEngineStateMachine final
   // Only used if setting CDM happens before the engine finishes initialization.
   MozPromiseHolder<SetCDMPromise> mSetCDMProxyPromise;
   MozPromiseRequestHolder<SetCDMPromise> mSetCDMProxyRequest;
+
+  // If seek happens while the engine is still initializing, then we would
+  // postpone the seek until the engine is ready.
+  SeekJob mPendingSeek;
+  MozPromiseRequestHolder<MediaDecoder::SeekPromise> mPendingSeekRequest;
 
   // It would be zero for audio-only playback.
   gfx::IntSize mVideoDisplay;
