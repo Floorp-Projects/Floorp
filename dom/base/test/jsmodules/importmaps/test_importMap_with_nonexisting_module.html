@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test an import map with an nonexisting module specifier</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+<script type="importmap">
+{
+  "imports": {
+   "bare": "./good/module_0.mjs"
+  }
+}
+</script>
+
+
+<script>
+  SimpleTest.waitForExplicitFinish();
+
+  window.onerror = (event, src, lineno, colno, error) => {
+    ok(error instanceof TypeError, "Should be a TypeError");
+    SimpleTest.finish();
+  };
+
+</script>
+<script type="module" src="module_importMap_with_nonexisting_module.mjs"></script>

@@ -16,6 +16,7 @@ support-files = [
   "module_importMap_with_external_script_6.mjs",
   "module_importMap_with_external_script_6.mjs^headers^",
   "module_importMap_with_external_script_7.mjs",
+  "module_importMap_with_nonexisting_module.mjs",
   "bad/module_2.mjs",
   "bad/module_3.mjs",
   "bad/module_4.mjs",
@@ -34,5 +35,6 @@ support-files = [
 ["test_bug_1873417.html"]
 
 ["test_importMap_with_external_script.html"]
+["test_importMap_with_nonexisting_module.html"]
 ["test_dynamic_importMap_with_external_script.html"]
 ["test_dynamic_importMap_load_completes.html"]
