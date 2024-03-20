@@ -331,7 +331,8 @@ class ExternalPlaybackEngine {
   virtual ~ExternalPlaybackEngine() = default;
 
   // Init the engine and specify the preload request.
-  virtual RefPtr<GenericNonExclusivePromise> Init(bool aShouldPreload) = 0;
+  virtual RefPtr<GenericNonExclusivePromise> Init(const MediaInfo& aInfo,
+                                                  bool aShouldPreload) = 0;
   virtual void Shutdown() = 0;
   virtual uint64_t Id() const = 0;
   virtual bool IsInited() const = 0;
@@ -347,7 +348,6 @@ class ExternalPlaybackEngine {
   virtual void SetPreservesPitch(bool aPreservesPitch) = 0;
   virtual media::TimeUnit GetCurrentPosition() = 0;
   virtual void NotifyEndOfStream(TrackInfo::TrackType aType) = 0;
-  virtual void SetMediaInfo(const MediaInfo& aInfo) = 0;
   virtual bool SetCDMProxy(CDMProxy* aProxy) = 0;
   virtual void NotifyResizing(uint32_t aWidth, uint32_t aHeight) = 0;
 

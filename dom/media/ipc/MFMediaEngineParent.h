@@ -52,7 +52,6 @@ class MFMediaEngineParent final : public PMFMediaEngineParent {
   // Methods for PMFMediaEngineParent
   mozilla::ipc::IPCResult RecvInitMediaEngine(
       const MediaEngineInfoIPDL& aInfo, InitMediaEngineResolver&& aResolver);
-  mozilla::ipc::IPCResult RecvNotifyMediaInfo(const MediaInfoIPDL& aInfo);
   mozilla::ipc::IPCResult RecvPlay();
   mozilla::ipc::IPCResult RecvPause();
   mozilla::ipc::IPCResult RecvSeek(double aTargetTimeInSecond);
@@ -69,6 +68,7 @@ class MFMediaEngineParent final : public PMFMediaEngineParent {
   ~MFMediaEngineParent();
 
   void CreateMediaEngine();
+  HRESULT SetMediaInfo(const MediaInfoIPDL& aInfo);
 
   void InitializeDXGIDeviceManager();
 

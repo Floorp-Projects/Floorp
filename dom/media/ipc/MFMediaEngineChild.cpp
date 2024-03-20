@@ -47,20 +47,22 @@ MFMediaEngineChild::MFMediaEngineChild(MFMediaEngineWrapper* aOwner,
 }
 
 RefPtr<GenericNonExclusivePromise> MFMediaEngineChild::Init(
-    bool aShouldPreload) {
+    const MediaInfo& aInfo, bool aShouldPreload) {
   if (!mManagerThread) {
     return GenericNonExclusivePromise::CreateAndReject(NS_ERROR_FAILURE,
                                                        __func__);
   }
 
-  CLOG("Init");
+  CLOG("Init, hasAudio=%d, hasVideo=%d, encrypted=%d", aInfo.HasAudio(),
+       aInfo.HasVideo(), aInfo.IsEncrypted());
+
   MOZ_ASSERT(mMediaEngineId == 0);
   RefPtr<MFMediaEngineChild> self = this;
   RemoteDecoderManagerChild::LaunchUtilityProcessIfNeeded(
       RemoteDecodeIn::UtilityProcess_MFMediaEngineCDM)
       ->Then(
           mManagerThread, __func__,
-          [self, this, aShouldPreload](bool) {
+          [self, this, aShouldPreload, info = aInfo](bool) {
             RefPtr<RemoteDecoderManagerChild> manager =
                 RemoteDecoderManagerChild::GetSingleton(
                     RemoteDecodeIn::UtilityProcess_MFMediaEngineCDM);
@@ -72,8 +74,13 @@ RefPtr<GenericNonExclusivePromise> MFMediaEngineChild::Init(
 
             mIPDLSelfRef = this;
             Unused << manager->SendPMFMediaEngineConstructor(this);
-            MediaEngineInfoIPDL info(aShouldPreload);
-            SendInitMediaEngine(info)
+
+            MediaInfoIPDL mediaInfo(
+                info.HasAudio() ? Some(info.mAudio) : Nothing(),
+                info.HasVideo() ? Some(info.mVideo) : Nothing());
+
+            MediaEngineInfoIPDL initInfo(mediaInfo, aShouldPreload);
+            SendInitMediaEngine(initInfo)
                 ->Then(
                     mManagerThread, __func__,
                     [self, this](uint64_t aId) {
@@ -256,9 +263,9 @@ MFMediaEngineWrapper::MFMediaEngineWrapper(ExternalEngineStateMachine* aOwner,
       mCurrentTimeInSecond(0.0) {}
 
 RefPtr<GenericNonExclusivePromise> MFMediaEngineWrapper::Init(
-    bool aShouldPreload) {
+    const MediaInfo& aInfo, bool aShouldPreload) {
   WLOG("Init");
-  return mEngine->Init(aShouldPreload);
+  return mEngine->Init(aInfo, aShouldPreload);
 }
 
 MFMediaEngineWrapper::~MFMediaEngineWrapper() { mEngine->OwnerDestroyed(); }
@@ -333,18 +340,6 @@ void MFMediaEngineWrapper::NotifyEndOfStream(TrackInfo::TrackType aType) {
   Unused << ManagerThread()->Dispatch(NS_NewRunnableFunction(
       "MFMediaEngineWrapper::NotifyEndOfStream",
       [engine = mEngine, aType] { engine->SendNotifyEndOfStream(aType); }));
-}
-
-void MFMediaEngineWrapper::SetMediaInfo(const MediaInfo& aInfo) {
-  WLOG("SetMediaInfo, hasAudio=%d, hasVideo=%d, encrypted=%d", aInfo.HasAudio(),
-       aInfo.HasVideo(), aInfo.IsEncrypted());
-  MOZ_ASSERT(IsInited());
-  Unused << ManagerThread()->Dispatch(NS_NewRunnableFunction(
-      "MFMediaEngineWrapper::SetMediaInfo", [engine = mEngine, aInfo] {
-        MediaInfoIPDL info(aInfo.HasAudio() ? Some(aInfo.mAudio) : Nothing(),
-                           aInfo.HasVideo() ? Some(aInfo.mVideo) : Nothing());
-        engine->SendNotifyMediaInfo(info);
-      }));
 }
 
 bool MFMediaEngineWrapper::SetCDMProxy(CDMProxy* aProxy) {

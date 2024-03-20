@@ -338,17 +338,17 @@ mozilla::ipc::IPCResult MFMediaEngineParent::RecvInitMediaEngine(
     // TODO : really need this?
     Unused << mMediaEngine->SetPreload(MF_MEDIA_ENGINE_PRELOAD_AUTOMATIC);
   }
+  RETURN_PARAM_IF_FAILED(SetMediaInfo(aInfo.mediaInfo()), IPC_OK());
   aResolver(mMediaEngineId);
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult MFMediaEngineParent::RecvNotifyMediaInfo(
-    const MediaInfoIPDL& aInfo) {
+HRESULT MFMediaEngineParent::SetMediaInfo(const MediaInfoIPDL& aInfo) {
   AssertOnManagerThread();
   MOZ_ASSERT(mIsCreatedMediaEngine, "Hasn't created media engine?");
   MOZ_ASSERT(!mMediaSource);
 
-  LOG("RecvNotifyMediaInfo");
+  LOG("SetMediaInfo");
 
   auto errorExit = MakeScopeExit([&] {
     MediaResult error(NS_ERROR_DOM_MEDIA_FATAL_ERR,
@@ -378,9 +378,8 @@ mozilla::ipc::IPCResult MFMediaEngineParent::RecvNotifyMediaInfo(
 
   if (aInfo.videoInfo()) {
     ComPtr<IMFMediaEngineEx> mediaEngineEx;
-    RETURN_PARAM_IF_FAILED(mMediaEngine.As(&mediaEngineEx), IPC_OK());
-    RETURN_PARAM_IF_FAILED(mediaEngineEx->EnableWindowlessSwapchainMode(true),
-                           IPC_OK());
+    RETURN_IF_FAILED(mMediaEngine.As(&mediaEngineEx));
+    RETURN_IF_FAILED(mediaEngineEx->EnableWindowlessSwapchainMode(true));
     LOG("Enabled dcomp swap chain mode");
     ENGINE_MARKER("MFMediaEngineParent,EnabledSwapChain");
   }
@@ -392,7 +391,7 @@ mozilla::ipc::IPCResult MFMediaEngineParent::RecvNotifyMediaInfo(
 #ifdef MOZ_WMF_CDM
   if (isEncryted && !mContentProtectionManager) {
     // We will set the source later when the CDM proxy is ready.
-    return IPC_OK();
+    return S_OK;
   }
 
   if (isEncryted && mContentProtectionManager) {
@@ -403,7 +402,7 @@ mozilla::ipc::IPCResult MFMediaEngineParent::RecvNotifyMediaInfo(
 #endif
 
   SetMediaSourceOnEngine();
-  return IPC_OK();
+  return S_OK;
 }
 
 void MFMediaEngineParent::SetMediaSourceOnEngine() {
