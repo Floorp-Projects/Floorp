@@ -12019,10 +12019,8 @@ bool InitOptionParser(OptionParser& op) {
                         "property of null or undefined") ||
       !op.addBoolOption('\0', "enable-iterator-helpers",
                         "Enable iterator helpers") ||
-#ifdef ENABLE_JSON_PARSE_WITH_SOURCE
       !op.addBoolOption('\0', "enable-json-parse-with-source",
                         "Enable JSON.parse with source") ||
-#endif
       !op.addBoolOption('\0', "enable-shadow-realms", "Enable ShadowRealms") ||
       !op.addBoolOption('\0', "disable-array-grouping",
                         "Disable Object.groupBy and Map.groupBy") ||
@@ -12653,6 +12651,10 @@ bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableToSource = !op.getBoolOption("disable-tosource");
 #ifdef ENABLE_JSON_PARSE_WITH_SOURCE
   enableJSONParseWithSource = op.getBoolOption("enable-json-parse-with-source");
+#else
+  if (op.getBoolOption("enable-json-parse-with-source")) {
+    fprintf(stderr, "JSON.parse with source is not enabled on this build.\n");
+  }
 #endif
   enableImportAttributesAssertSyntax =
       op.getBoolOption("enable-import-assertions");

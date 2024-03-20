@@ -1,4 +1,4 @@
-// |reftest| skip-if(!(this.hasOwnProperty('getBuildConfiguration')&&getBuildConfiguration('json-parse-with-source'))) shell-option(--enable-json-parse-with-source)
+// |reftest| shell-option(--enable-json-parse-with-source) skip-if(!JSON.hasOwnProperty('isRawJSON')||!xulRuntime.shell)
 
 var actual;
 

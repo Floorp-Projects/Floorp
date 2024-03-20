@@ -416,7 +416,7 @@ class MOZ_STACK_CLASS JSONReviveHandler : public JSONFullParseHandler<CharT> {
  public:
   ParseRecordObject parseRecord;
 };
-#endif
+#endif  // ENABLE_JSON_PARSE_WITH_SOURCE
 
 template <typename CharT>
 class MOZ_STACK_CLASS JSONSyntaxParseHandler {
