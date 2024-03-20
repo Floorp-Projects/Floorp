@@ -235,16 +235,16 @@ def test_split_variants(monkeypatch, run_full_config_transform, make_test_task):
         pytest.param(
             {
                 "attributes": {},
-                "test-platform": "windows10-64-2004-ref-hw-2017-ccov/debug",
+                "test-platform": "windows11-64-2009-hw-ref-ccov/debug",
             },
             {
                 "platform": {
                     "arch": "64",
-                    "machine": "ref-hw-2017",
+                    "machine": "hw-ref",
                     "os": {
-                        "build": "2004",
+                        "build": "2009",
                         "name": "windows",
-                        "version": "10",
+                        "version": "11",
                     },
                 },
                 "build": {
