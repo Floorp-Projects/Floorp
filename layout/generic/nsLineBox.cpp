@@ -217,7 +217,7 @@ void nsLineBox::List(FILE* out, const char* aPrefix,
       IsPreviousMarginDirty() ? "prevmargindirty" : "prevmarginclean",
       IsImpactedByFloat() ? "impacted" : "not-impacted",
       IsLineWrapped() ? "wrapped" : "not-wrapped",
-      HasForcedLineBreak() ? "forced-break" : "no-break",
+      HasForcedLineBreakAfter() ? "forced-break-after" : "no-break",
       StyleClearToString(FloatClearTypeBefore()),
       StyleClearToString(FloatClearTypeAfter()));
 
