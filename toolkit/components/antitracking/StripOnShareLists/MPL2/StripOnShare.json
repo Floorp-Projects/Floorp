@@ -55,7 +55,7 @@
   },
   "twitter": {
     "queryParams": ["ref_src", "ref_url"],
-    "topLevelSites": ["www.twitter.com", "twitter.com"]
+    "topLevelSites": ["www.twitter.com", "twitter.com", "x.com"]
   },
   "instagram": {
     "queryParams": ["igshid", "ig_rid"],
