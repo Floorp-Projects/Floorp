@@ -155,6 +155,148 @@
     { extends: "richlistitem" }
   );
 
+  class MozAutocompleteProfileListitemFooter extends MozAutocompleteProfileListitemBase {
+    static get markup() {
+      return `
+        <div xmlns="http://www.w3.org/1999/xhtml" class="autofill-item-box autofill-footer">
+          <div class="autofill-footer-row autofill-warning"></div>
+          <div class="autofill-footer-row autofill-button"></div>
+        </div>
+      `;
+    }
+
+    constructor() {
+      super();
+
+      this.addEventListener("click", event => {
+        if (event.button != 0) {
+          return;
+        }
+
+        if (this._warningTextBox.contains(event.originalTarget)) {
+          return;
+        }
+
+        window.openPreferences("privacy-form-autofill");
+      });
+    }
+
+    connectedCallback() {
+      if (this.delayConnectedCallback()) {
+        return;
+      }
+
+      this.textContent = "";
+      this.appendChild(this.constructor.fragment);
+
+      this._itemBox = this.querySelector(".autofill-footer");
+      this._optionButton = this.querySelector(".autofill-button");
+      this._warningTextBox = this.querySelector(".autofill-warning");
+
+      /**
+       * A handler for updating warning message once selectedIndex has been changed.
+       *
+       * There're three different states of warning message:
+       * 1. None of addresses were selected: We show all the categories intersection of fields in the
+       *    form and fields in the results.
+       * 2. An address was selested: Show the additional categories that will also be filled.
+       * 3. An address was selected, but the focused category is the same as the only one category: Only show
+       * the exact category that we're going to fill in.
+       *
+       * @private
+       * @param {object} data
+       *        Message data
+       * @param {string[]} data.categories
+       *        The categories of all the fields contained in the selected address.
+       */
+      this.updateWarningNote = data => {
+        let categories =
+          data && data.categories ? data.categories : this._allFieldCategories;
+        // If the length of categories is 1, that means all the fillable fields are in the same
+        // category. We will change the way to inform user according to this flag. When the value
+        // is true, we show "Also autofills ...", otherwise, show "Autofills ..." only.
+        let hasExtraCategories = categories.length > 1;
+        // Show the categories in certain order to conform with the spec.
+        let orderedCategoryList = [
+          { id: "address", l10nId: "category.address" },
+          { id: "name", l10nId: "category.name" },
+          { id: "organization", l10nId: "category.organization2" },
+          { id: "tel", l10nId: "category.tel" },
+          { id: "email", l10nId: "category.email" },
+        ];
+        let showCategories = hasExtraCategories
+          ? orderedCategoryList.filter(
+              category =>
+                categories.includes(category.id) &&
+                category.id != this._focusedCategory
+            )
+          : [
+              orderedCategoryList.find(
+                category => category.id == this._focusedCategory
+              ),
+            ];
+
+        let separator =
+          this._stringBundle.GetStringFromName("fieldNameSeparator");
+        let warningTextTmplKey = hasExtraCategories
+          ? "phishingWarningMessage"
+          : "phishingWarningMessage2";
+        let categoriesText = showCategories
+          .map(category =>
+            this._stringBundle.GetStringFromName(category.l10nId)
+          )
+          .join(separator);
+
+        this._warningTextBox.textContent =
+          this._stringBundle.formatStringFromName(warningTextTmplKey, [
+            categoriesText,
+          ]);
+        this.parentNode.parentNode.adjustHeight();
+      };
+
+      this._adjustAcItem();
+    }
+
+    _onCollapse() {
+      if (this.showWarningText) {
+        let { FormAutofillParent } = ChromeUtils.importESModule(
+          "resource://autofill/FormAutofillParent.sys.mjs"
+        );
+        FormAutofillParent.removeMessageObserver(this);
+      }
+      this._itemBox.removeAttribute("no-warning");
+    }
+
+    _adjustAcItem() {
+      this._adjustAutofillItemLayout();
+      this.setAttribute("formautofillattached", "true");
+
+      let value = JSON.parse(this.getAttribute("ac-value"));
+
+      this._allFieldCategories = value.categories;
+      this._focusedCategory = value.focusedCategory;
+      this.showWarningText = this._allFieldCategories && this._focusedCategory;
+
+      if (this.showWarningText) {
+        let { FormAutofillParent } = ChromeUtils.importESModule(
+          "resource://autofill/FormAutofillParent.sys.mjs"
+        );
+        FormAutofillParent.addMessageObserver(this);
+        this.updateWarningNote();
+      } else {
+        this._itemBox.setAttribute("no-warning", "true");
+      }
+
+      this._optionButton.textContent = value.manageLabel;
+    }
+  }
+
+  customElements.define(
+    "autocomplete-profile-listitem-footer",
+    MozAutocompleteProfileListitemFooter,
+    { extends: "richlistitem" }
+  );
+
   class MozAutocompleteCreditcardInsecureField extends MozAutocompleteProfileListitemBase {
     static get markup() {
       return `
@@ -194,6 +336,57 @@
   customElements.define(
     "autocomplete-creditcard-insecure-field",
     MozAutocompleteCreditcardInsecureField,
+    { extends: "richlistitem" }
+  );
+
+  class MozAutocompleteProfileListitemClearButton extends MozAutocompleteProfileListitemBase {
+    static get markup() {
+      return `
+        <div xmlns="http://www.w3.org/1999/xhtml" class="autofill-item-box autofill-footer">
+          <div class="autofill-footer-row autofill-button"></div>
+        </div>
+      `;
+    }
+
+    constructor() {
+      super();
+
+      this.addEventListener("click", event => {
+        if (event.button != 0) {
+          return;
+        }
+
+        sendMessageToBrowser("FormAutofill:ClearForm");
+      });
+    }
+
+    connectedCallback() {
+      if (this.delayConnectedCallback()) {
+        return;
+      }
+
+      this.textContent = "";
+      this.appendChild(this.constructor.fragment);
+
+      this._itemBox = this.querySelector(".autofill-item-box");
+      this._clearBtn = this.querySelector(".autofill-button");
+
+      this._adjustAcItem();
+    }
+
+    _adjustAcItem() {
+      this._adjustAutofillItemLayout();
+      this.setAttribute("formautofillattached", "true");
+
+      let clearFormBtnLabel =
+        this._stringBundle.GetStringFromName("clearFormBtnLabel2");
+      this._clearBtn.textContent = clearFormBtnLabel;
+    }
+  }
+
+  customElements.define(
+    "autocomplete-profile-listitem-clear-button",
+    MozAutocompleteProfileListitemClearButton,
     { extends: "richlistitem" }
   );
 })();

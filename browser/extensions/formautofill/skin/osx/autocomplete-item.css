@@ -1,0 +1,18 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@namespace url("http://www.w3.org/1999/xhtml");
+
+/* On Mac, the autocomplete panel changes color in system dark mode. We need
+   to change the contrast on warning-background-color accordingly. */
+@media (prefers-color-scheme: dark) {
+    .autofill-item-box {
+      --warning-background-color: rgba(248,232,28,.6);
+    }
+  }
+
+
+.autofill-item-box {
+  --default-font-size: 11;
+}

@@ -39,12 +39,8 @@ add_task(async function check_autocomplete_on_autofocus_field() {
   synthesizeKey("KEY_ArrowDown");
   await expectPopup();
   checkMenuEntries(MOCK_STORAGE.map(address =>
-    JSON.stringify({
-      primary: address.organization,
-      secondary: address["street-address"],
-      status: "Also autofills address, phone"
-    })
-  ), 2);
+    JSON.stringify({primary: address.organization, secondary: address["street-address"]})
+  ));
 });
 
 </script>

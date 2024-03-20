@@ -23,6 +23,7 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
     ]
 elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     FINAL_TARGET_FILES.features["formautofill@mozilla.org"].chrome.content.skin += [
+        "skin/osx/autocomplete-item.css",
         "skin/osx/editDialog.css",
     ]
 elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
