@@ -42,9 +42,8 @@ async function checkBreakpointBeforeWatchResources() {
 
   const tab = await addTab(BREAKPOINT_TEST_URL);
 
-  const { client, resourceCommand, targetCommand } = await initResourceCommand(
-    tab
-  );
+  const { commands, resourceCommand, targetCommand } =
+    await initResourceCommand(tab);
 
   // Ensure that the target front is initialized early from TargetCommand.onTargetAvailable
   // By the time `initResourceCommand` resolves, it should already be initialized.
@@ -52,6 +51,11 @@ async function checkBreakpointBeforeWatchResources() {
     "Verify that TargetFront's initialized is resolved after having calling attachAndInitThread"
   );
   await targetCommand.targetFront.initialized;
+
+  // We have to ensure passing any thread configuration in order to have breakpoints being handled.
+  await commands.threadConfigurationCommand.updateConfiguration({
+    skipBreakpoints: false,
+  });
 
   info("Run the 'debugger' statement");
   // Note that we do not wait for the resolution of spawn as it will be paused
@@ -104,7 +108,7 @@ async function checkBreakpointBeforeWatchResources() {
   assertResumedResource(resumed);
 
   targetCommand.destroy();
-  await client.close();
+  await commands.destroy();
 }
 
 async function checkBreakpointAfterWatchResources() {
@@ -114,9 +118,8 @@ async function checkBreakpointAfterWatchResources() {
 
   const tab = await addTab(BREAKPOINT_TEST_URL);
 
-  const { client, resourceCommand, targetCommand } = await initResourceCommand(
-    tab
-  );
+  const { commands, resourceCommand, targetCommand } =
+    await initResourceCommand(tab);
 
   info("Call watchResources");
   const availableResources = [];
@@ -176,7 +179,7 @@ async function checkBreakpointAfterWatchResources() {
   assertResumedResource(resumed);
 
   targetCommand.destroy();
-  await client.close();
+  await commands.destroy();
 }
 
 async function checkRealBreakpoint() {
@@ -186,9 +189,8 @@ async function checkRealBreakpoint() {
 
   const tab = await addTab(BREAKPOINT_TEST_URL);
 
-  const { client, resourceCommand, targetCommand } = await initResourceCommand(
-    tab
-  );
+  const { commands, resourceCommand, targetCommand } =
+    await initResourceCommand(tab);
 
   info("Call watchResources");
   const availableResources = [];
@@ -258,7 +260,7 @@ async function checkRealBreakpoint() {
   assertResumedResource(resumed);
 
   targetCommand.destroy();
-  await client.close();
+  await commands.destroy();
 }
 
 async function checkPauseOnException() {
@@ -342,9 +344,8 @@ async function checkSetBeforeWatch() {
 
   const tab = await addTab(BREAKPOINT_TEST_URL);
 
-  const { client, resourceCommand, targetCommand } = await initResourceCommand(
-    tab
-  );
+  const { commands, resourceCommand, targetCommand } =
+    await initResourceCommand(tab);
 
   // Instantiate the thread front in order to be able to set a breakpoint before watching for thread state
   info("Attach the top level thread actor");
@@ -381,10 +382,9 @@ async function checkSetBeforeWatch() {
     onAvailable: resources => availableResources.push(...resources),
   });
 
-  await waitFor(
-    () => availableResources.length == 1,
-    "Got the THREAD_STATE related to the debugger statement"
-  );
+  await waitFor(() => {
+    return availableResources.length == 1;
+  }, "Got the THREAD_STATE related to the debugger statement");
   const threadState = availableResources.pop();
 
   assertPausedResource(threadState, {
@@ -418,7 +418,7 @@ async function checkSetBeforeWatch() {
   assertResumedResource(resumed);
 
   targetCommand.destroy();
-  await client.close();
+  await commands.destroy();
 }
 
 async function checkDebuggerStatementInIframes() {
@@ -426,9 +426,8 @@ async function checkDebuggerStatementInIframes() {
 
   const tab = await addTab(BREAKPOINT_TEST_URL);
 
-  const { client, resourceCommand, targetCommand } = await initResourceCommand(
-    tab
-  );
+  const { commands, resourceCommand, targetCommand } =
+    await initResourceCommand(tab);
 
   info("Call watchResources");
   const availableResources = [];
@@ -507,14 +506,14 @@ async function checkDebuggerStatementInIframes() {
   assertResumedResource(resumed);
 
   targetCommand.destroy();
-  await client.close();
+  await commands.destroy();
 }
 
 async function testMultiprocessThreadState() {
   // Ensure debugging the content processes and the tab
   await pushPref("devtools.browsertoolbox.scope", "everything");
 
-  const { client, resourceCommand, targetCommand } =
+  const { commands, resourceCommand, targetCommand } =
     await initMultiProcessResourceCommand();
 
   info("Call watchResources");
@@ -586,7 +585,7 @@ async function testMultiprocessThreadState() {
   is(availableResources.length, 0, "There should be no other pause");
 
   targetCommand.destroy();
-  await client.close();
+  await commands.destroy();
 }
 
 async function assertPausedResource(resource, expected) {

@@ -162,6 +162,12 @@ class WebExtensionTargetActor extends ParentProcessTargetActor {
     // URL shown in the window tittle when the addon debugger is opened).
     const extensionWindow = this._searchForExtensionWindow();
     this.setDocShell(extensionWindow.docShell);
+
+    // `setDocShell` will force the instantiation of the thread actor.
+    // We now have to initialize it in order to listen for new global
+    // which allows to properly detect addon reload via _shouldAddNewGlobalAsDebuggee
+    // which may call _onNewExtensionWindow.
+    this.threadActor.attach({});
   }
 
   // Override the ParentProcessTargetActor's override in order to only iterate

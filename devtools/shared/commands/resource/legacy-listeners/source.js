@@ -37,6 +37,7 @@ module.exports = async function ({ targetCommand, targetFront, onAvailable }) {
   }
 
   const threadFront = await targetFront.getFront("thread");
+  await threadFront.attach({});
 
   // Use a list of all notified SourceFront as we don't have a newSource event for all sources
   // but we sometime get sources notified both via newSource event *and* sources() method...
