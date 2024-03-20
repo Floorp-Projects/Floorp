@@ -101,6 +101,8 @@ def add_command(config, tasks):
             get_branch_rev(config),
             "--output-file",
             "update-verify.cfg",
+            "--local-repo",
+            ".",
         ]
 
         repo_path = urlsplit(get_branch_repo(config)).path.lstrip("/")

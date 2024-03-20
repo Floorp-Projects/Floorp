@@ -7,6 +7,7 @@ import math
 import os
 import pprint
 import re
+import subprocess
 import sys
 
 from looseversion import LooseVersion
@@ -277,6 +278,13 @@ class UpdateVerifyConfigCreator(BaseScript):
                 "help": "A list of locales to generate full update verify checks for",
             },
         ],
+        [
+            ["--local-repo"],
+            {
+                "dest": "local_repo",
+                "help": "Path to local clone of the repository",
+            },
+        ],
     ]
 
     def __init__(self):
@@ -353,7 +361,6 @@ class UpdateVerifyConfigCreator(BaseScript):
             # we need to use releases_name instead of release_info since esr
             # string is included in the name. later we rely on this.
             product, version = release_name.split("-", 1)
-            tag = "{}_{}_RELEASE".format(product.upper(), version.replace(".", "_"))
 
             # Exclude any releases that don't match one of our include version
             # regexes. This is generally to avoid including versions from other
@@ -419,32 +426,11 @@ class UpdateVerifyConfigCreator(BaseScript):
             ret = self._retry_download(info_file_url, "WARNING")
             buildID = ret.read().split(b"=")[1].strip().decode("utf-8")
 
-            branch = self._get_branch_url(self.config["branch_prefix"], version)
-
-            shipped_locales_url = urljoin(
-                self.config["hg_server"],
-                "{}/raw-file/{}/{}/locales/shipped-locales".format(
-                    branch,
-                    tag,
-                    self.config["app_name"],
-                ),
+            shipped_locales = self._get_file_from_repo_tag(
+                product, version, f"{self.config['app_name']}/locales/shipped-locales"
             )
-            ret = self._retry_download(shipped_locales_url, "WARNING")
-            shipped_locales = ret.read().strip().decode("utf-8")
-
-            app_version_url = urljoin(
-                self.config["hg_server"],
-                "{}/raw-file/{}/{}/config/version.txt".format(
-                    branch,
-                    tag,
-                    self.config["app_name"],
-                ),
-            )
-            app_version = (
-                self._retry_download(app_version_url, "WARNING")
-                .read()
-                .strip()
-                .decode("utf-8")
+            app_version = self._get_file_from_repo_tag(
+                product, version, f"{self.config['app_name']}/config/version.txt"
             )
 
             self.log("Adding {} to update paths".format(version), level=INFO)
@@ -458,6 +444,36 @@ class UpdateVerifyConfigCreator(BaseScript):
             ].items():
                 if re.match(pattern, version):
                     self.update_paths[version]["marChannelIds"] = mar_channel_ids
+
+    def _get_file_from_repo_tag(self, product, version, path):
+        tag = "{}_{}_RELEASE".format(product.upper(), version.replace(".", "_"))
+        branch = self._get_branch_url(self.config["branch_prefix"], version)
+        return self._get_file_from_repo(tag, branch, path)
+
+    def _get_file_from_repo(self, rev, branch, path):
+        if self.config["local_repo"]:
+            try:
+                return (
+                    subprocess.check_output(
+                        ["hg", "-R", self.config["local_repo"], "cat", "-r", rev, path]
+                    )
+                    .strip()
+                    .decode("utf-8")
+                )
+            except subprocess.CalledProcessError:
+                # the tag may not exist locally
+                pass
+
+        url = urljoin(
+            self.config["hg_server"],
+            "{}/raw-file/{}/{}".format(
+                branch,
+                rev,
+                path,
+            ),
+        )
+        ret = self._retry_download(url, "WARNING")
+        return ret.read().strip().decode("utf-8")
 
     def gather_info(self):
         from mozilla_version.gecko import GeckoVersion
@@ -520,19 +536,10 @@ class UpdateVerifyConfigCreator(BaseScript):
             override_certs=self.config.get("override_certs"),
         )
 
-        to_shipped_locales_url = urljoin(
-            self.config["hg_server"],
-            "{}/raw-file/{}/{}/locales/shipped-locales".format(
-                self.config["repo_path"],
-                self.config["to_revision"],
-                self.config["app_name"],
-            ),
-        )
-        to_shipped_locales = (
-            self._retry_download(to_shipped_locales_url, "WARNING")
-            .read()
-            .strip()
-            .decode("utf-8")
+        to_shipped_locales = self._get_file_from_repo(
+            self.config["to_revision"],
+            self.config["repo_path"],
+            "{}/locales/shipped-locales".format(self.config["app_name"]),
         )
         to_locales = set(
             getPlatformLocales(to_shipped_locales, self.config["platform"])
