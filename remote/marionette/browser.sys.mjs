@@ -145,23 +145,6 @@ browser.Context = class {
   }
 
   /**
-   * Retrieves the current tabmodal UI object.  According to the browser
-   * associated with the currently selected tab.
-   */
-  getTabModal() {
-    let br = this.contentBrowser;
-    if (!br.hasAttribute("tabmodalPromptShowing")) {
-      return null;
-    }
-
-    // The modal is a direct sibling of the browser element.
-    // See tabbrowser.xml's getTabModalPromptBox.
-    let modalElements = br.parentNode.getElementsByTagName("tabmodalprompt");
-
-    return br.tabModalPromptBox.getPrompt(modalElements[0]);
-  }
-
-  /**
    * Close the current window.
    *
    * @returns {Promise}

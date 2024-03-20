@@ -11,7 +11,6 @@
 #include desktop-jar.inc.mn
 
   skin/classic/global/dialog.css                           (../../windows/global/dialog.css)
-  skin/classic/global/tabprompts.css                       (../../windows/global/tabprompts.css)
   skin/classic/global/wizard.css                           (../../windows/global/wizard.css)
 
   skin/classic/global/arrow/panelarrow-vertical.svg        (../../windows/global/arrow/panelarrow-vertical.svg)

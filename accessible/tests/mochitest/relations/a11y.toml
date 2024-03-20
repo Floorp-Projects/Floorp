@@ -18,6 +18,4 @@ skip-if = [
 
 ["test_tree.xhtml"]
 
-["test_ui_modalprompt.html"]
-
 ["test_update.html"]
