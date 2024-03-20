@@ -72,8 +72,11 @@ interface nsICycleCollectorHandler : nsISupports
 [scriptable, builtinclass, uuid(3ad9875f-d0e4-4ac2-87e3-f127f6c02ce1)]
 interface nsICycleCollectorLogSink : nsISupports
 {
+  // aGCLog can be null, if the sink was not configured to create a GC log.
   [noscript] void open(out FILE aGCLog, out FILE aCCLog);
+
   void closeGCLog();
+
   void closeCCLog();
 
   // This string will appear somewhere in the log's filename.

@@ -159,6 +159,7 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/HashTable.h"
 #include "mozilla/HoldDropJSObjects.h"
+#include "mozilla/Maybe.h"
 /* This must occur *after* base/process_util.h to avoid typedefs conflicts. */
 #include <stdint.h>
 #include <stdio.h>
@@ -269,6 +270,11 @@ static void SuspectUsingNurseryPurpleBuffer(
 // MOZ_CC_LOG_DIRECTORY: The directory in which logs are placed (such as
 // logs from MOZ_CC_LOG_ALL and MOZ_CC_LOG_SHUTDOWN, or other uses
 // of nsICycleCollectorListener)
+//
+// MOZ_CC_DISABLE_GC_LOG: If defined, don't make a GC log whenever we make a
+// cycle collector log. This can be useful for leaks that go away when shutdown
+// gets slower, when the JS heap is not involved in the leak. The default is to
+// make the GC log.
 
 // Various parameters of this collector can be tuned using environment
 // variables.
@@ -279,13 +285,15 @@ struct nsCycleCollectorParams {
   bool mAllTracesAll;
   bool mAllTracesShutdown;
   bool mLogThisThread;
+  bool mLogGC;
   int32_t mLogShutdownSkip = 0;
 
   nsCycleCollectorParams()
       : mLogAll(PR_GetEnv("MOZ_CC_LOG_ALL") != nullptr),
         mLogShutdown(PR_GetEnv("MOZ_CC_LOG_SHUTDOWN") != nullptr),
         mAllTracesAll(false),
-        mAllTracesShutdown(false) {
+        mAllTracesShutdown(false),
+        mLogGC(!PR_GetEnv("MOZ_CC_DISABLE_GC_LOG")) {
     if (const char* lssEnv = PR_GetEnv("MOZ_CC_LOG_SHUTDOWN_SKIP")) {
       mLogShutdown = true;
       nsDependentCString lssString(lssEnv);
@@ -352,6 +360,8 @@ struct nsCycleCollectorParams {
   bool AllTracesThisCC(bool aIsShutdown) {
     return mAllTracesAll || (aIsShutdown && mAllTracesShutdown);
   }
+
+  bool LogThisGC() const { return mLogGC; }
 };
 
 #ifdef COLLECT_TIME_DEBUG
@@ -1376,10 +1386,12 @@ class nsCycleCollectorLogSinkToFile final : public nsICycleCollectorLogSink {
  public:
   NS_DECL_ISUPPORTS
 
-  nsCycleCollectorLogSinkToFile()
-      : mProcessIdentifier(base::GetCurrentProcId()),
-        mGCLog("gc-edges"),
-        mCCLog("cc-edges") {}
+  explicit nsCycleCollectorLogSinkToFile(bool aLogGC)
+      : mProcessIdentifier(base::GetCurrentProcId()), mCCLog("cc-edges") {
+    if (aLogGC) {
+      mGCLog.emplace("gc-edges");
+    }
+  }
 
   NS_IMETHOD GetFilenameIdentifier(nsAString& aIdentifier) override {
     aIdentifier = mFilenameIdentifier;
@@ -1402,7 +1414,10 @@ class nsCycleCollectorLogSinkToFile final : public nsICycleCollectorLogSink {
   }
 
   NS_IMETHOD GetGcLog(nsIFile** aPath) override {
-    NS_IF_ADDREF(*aPath = mGCLog.mFile);
+    if (mGCLog.isNothing()) {
+      return NS_ERROR_UNEXPECTED;
+    }
+    NS_IF_ADDREF(*aPath = mGCLog.ref().mFile);
     return NS_OK;
   }
 
@@ -1414,13 +1429,21 @@ class nsCycleCollectorLogSinkToFile final : public nsICycleCollectorLogSink {
   NS_IMETHOD Open(FILE** aGCLog, FILE** aCCLog) override {
     nsresult rv;
 
-    if (mGCLog.mStream || mCCLog.mStream) {
+    if (mCCLog.mStream) {
       return NS_ERROR_UNEXPECTED;
     }
 
-    rv = OpenLog(&mGCLog);
-    NS_ENSURE_SUCCESS(rv, rv);
-    *aGCLog = mGCLog.mStream;
+    if (mGCLog.isSome()) {
+      if (mGCLog.ref().mStream) {
+        return NS_ERROR_UNEXPECTED;
+      }
+
+      rv = OpenLog(&mGCLog.ref());
+      NS_ENSURE_SUCCESS(rv, rv);
+      *aGCLog = mGCLog.ref().mStream;
+    } else {
+      *aGCLog = nullptr;
+    }
 
     rv = OpenLog(&mCCLog);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1430,10 +1453,13 @@ class nsCycleCollectorLogSinkToFile final : public nsICycleCollectorLogSink {
   }
 
   NS_IMETHOD CloseGCLog() override {
-    if (!mGCLog.mStream) {
+    if (mGCLog.isNothing()) {
+      return NS_OK;
+    }
+    if (!mGCLog.ref().mStream) {
       return NS_ERROR_UNEXPECTED;
     }
-    CloseLog(&mGCLog, u"Garbage"_ns);
+    CloseLog(&mGCLog.ref(), u"Garbage"_ns);
     return NS_OK;
   }
 
@@ -1447,9 +1473,9 @@ class nsCycleCollectorLogSinkToFile final : public nsICycleCollectorLogSink {
 
  private:
   ~nsCycleCollectorLogSinkToFile() {
-    if (mGCLog.mStream) {
-      MozillaUnRegisterDebugFILE(mGCLog.mStream);
-      fclose(mGCLog.mStream);
+    if (mGCLog.isSome() && mGCLog.ref().mStream) {
+      MozillaUnRegisterDebugFILE(mGCLog.ref().mStream);
+      fclose(mGCLog.ref().mStream);
     }
     if (mCCLog.mStream) {
       MozillaUnRegisterDebugFILE(mCCLog.mStream);
@@ -1566,7 +1592,7 @@ class nsCycleCollectorLogSinkToFile final : public nsICycleCollectorLogSink {
 
   int32_t mProcessIdentifier;
   nsString mFilenameIdentifier;
-  FileInfo mGCLog;
+  Maybe<FileInfo> mGCLog;
   FileInfo mCCLog;
 };
 
@@ -1576,8 +1602,8 @@ class nsCycleCollectorLogger final : public nsICycleCollectorListener {
   ~nsCycleCollectorLogger() { ClearDescribers(); }
 
  public:
-  nsCycleCollectorLogger()
-      : mLogSink(nsCycleCollector_createLogSink()),
+  explicit nsCycleCollectorLogger(bool aLogGC)
+      : mLogSink(nsCycleCollector_createLogSink(aLogGC)),
         mWantAllTraces(false),
         mDisableLog(false),
         mWantAfterProcessing(false),
@@ -1646,13 +1672,14 @@ class nsCycleCollectorLogger final : public nsICycleCollectorListener {
     rv = mLogSink->Open(&gcLog, &mCCLog);
     NS_ENSURE_SUCCESS(rv, rv);
     // Dump the JS heap.
-    CollectorData* data = sCollectorData.get();
-    if (data && data->mContext) {
-      data->mContext->Runtime()->DumpJSHeap(gcLog);
+    if (gcLog) {
+      CollectorData* data = sCollectorData.get();
+      if (data && data->mContext) {
+        data->mContext->Runtime()->DumpJSHeap(gcLog);
+      }
+      rv = mLogSink->CloseGCLog();
+      NS_ENSURE_SUCCESS(rv, rv);
     }
-    rv = mLogSink->CloseGCLog();
-    NS_ENSURE_SUCCESS(rv, rv);
-
     fprintf(mCCLog, "# WantAllTraces=%s\n", mWantAllTraces ? "true" : "false");
     return NS_OK;
   }
@@ -1822,7 +1849,8 @@ class nsCycleCollectorLogger final : public nsICycleCollectorListener {
 NS_IMPL_ISUPPORTS(nsCycleCollectorLogger, nsICycleCollectorListener)
 
 already_AddRefed<nsICycleCollectorListener> nsCycleCollector_createLogger() {
-  nsCOMPtr<nsICycleCollectorListener> logger = new nsCycleCollectorLogger();
+  nsCOMPtr<nsICycleCollectorListener> logger =
+      new nsCycleCollectorLogger(/* aLogGC = */ true);
   return logger.forget();
 }
 
@@ -3628,7 +3656,7 @@ void nsCycleCollector::BeginCollection(
 
   aManualListener = nullptr;
   if (!mLogger && mParams.LogThisCC(mShutdownCount)) {
-    mLogger = new nsCycleCollectorLogger();
+    mLogger = new nsCycleCollectorLogger(mParams.LogThisGC());
     if (mParams.AllTracesThisCC(isShutdown)) {
       mLogger->SetAllTraces();
     }
@@ -3963,8 +3991,10 @@ bool nsCycleCollector_doDeferredDeletionWithBudget(js::SliceBudget& aBudget) {
   return data->mCollector->FreeSnowWhiteWithBudget(aBudget);
 }
 
-already_AddRefed<nsICycleCollectorLogSink> nsCycleCollector_createLogSink() {
-  nsCOMPtr<nsICycleCollectorLogSink> sink = new nsCycleCollectorLogSinkToFile();
+already_AddRefed<nsICycleCollectorLogSink> nsCycleCollector_createLogSink(
+    bool aLogGC) {
+  nsCOMPtr<nsICycleCollectorLogSink> sink =
+      new nsCycleCollectorLogSinkToFile(aLogGC);
   return sink.forget();
 }
 

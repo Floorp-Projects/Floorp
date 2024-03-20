@@ -49,7 +49,8 @@ void nsCycleCollector_dispatchDeferredDeletion(bool aContinuation = false,
 bool nsCycleCollector_doDeferredDeletion();
 bool nsCycleCollector_doDeferredDeletionWithBudget(js::SliceBudget& aBudget);
 
-already_AddRefed<nsICycleCollectorLogSink> nsCycleCollector_createLogSink();
+already_AddRefed<nsICycleCollectorLogSink> nsCycleCollector_createLogSink(
+    bool aLogGC);
 already_AddRefed<nsICycleCollectorListener> nsCycleCollector_createLogger();
 
 // Run a cycle collection and return whether anything was collected.
