@@ -2210,6 +2210,10 @@ static bool json_isRawJSON(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static inline bool IsJSONWhitespace(char16_t ch) {
+  return ch == '\t' || ch == '\n' || ch == '\r' || ch == ' ';
+}
+
 /* https://tc39.es/proposal-json-parse-with-source/#sec-json.rawjson */
 static bool json_rawJSON(JSContext* cx, unsigned argc, Value* vp) {
   AutoJSMethodProfilerEntry pseudoFrame(cx, "JSON", "rawJSON");
@@ -2231,7 +2235,36 @@ static bool json_rawJSON(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  /* Step 2-3. TODO */
+  /* Step 2. */
+  if (linear->empty()) {
+    JS_ReportErrorNumberASCII(cx, js::GetErrorMessage, nullptr,
+                              JSMSG_JSON_RAW_EMPTY);
+    return false;
+  }
+  if (IsJSONWhitespace(linear->latin1OrTwoByteChar(0)) ||
+      IsJSONWhitespace(linear->latin1OrTwoByteChar(linear->length() - 1))) {
+    JS_ReportErrorNumberASCII(cx, js::GetErrorMessage, nullptr,
+                              JSMSG_JSON_RAW_WHITESPACE);
+    return false;
+  }
+
+  /* Step 3. */
+  RootedValue parsedValue(cx);
+  if (linearChars.isLatin1()) {
+    if (!ParseJSON(cx, linearChars.latin1Range(), &parsedValue)) {
+      return false;
+    }
+  } else {
+    if (!ParseJSON(cx, linearChars.twoByteRange(), &parsedValue)) {
+      return false;
+    }
+  }
+
+  if (parsedValue.isObject()) {
+    JS_ReportErrorNumberASCII(cx, js::GetErrorMessage, nullptr,
+                              JSMSG_JSON_RAW_ARRAY_OR_OBJECT);
+    return false;
+  }
 
   /* Steps 4-6. */
   Rooted<RawJSONObject*> obj(cx, RawJSONObject::create(cx, linear));
