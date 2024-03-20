@@ -103,7 +103,7 @@ class WebGLParent : public PWebGLParent, public SupportsWeakPtr {
   IPCResult RecvGetUniform(ObjectId id, uint32_t loc,
                            webgl::GetUniformData* ret);
   IPCResult RecvGetVertexAttrib(GLuint index, GLenum pname, Maybe<double>* ret);
-  IPCResult RecvIsEnabled(GLenum cap, Maybe<bool>* ret);
+  IPCResult RecvIsEnabled(GLenum cap, bool* ret);
   IPCResult RecvOnMemoryPressure();
   IPCResult RecvValidateProgram(ObjectId id, bool* ret);
 
