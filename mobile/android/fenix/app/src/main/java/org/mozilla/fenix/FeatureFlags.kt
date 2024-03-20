@@ -86,5 +86,5 @@ object FeatureFlags {
     /**
      * Enable Toolbar Redesign partial components and behaviors.
      */
-    val incompleteToolbarRedesignEnabled = Config.channel.isDebug
+    val incompleteToolbarRedesignEnabled = Config.channel.isNightlyOrDebug
 }
