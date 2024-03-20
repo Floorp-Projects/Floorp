@@ -90,7 +90,7 @@ already_AddRefed<dom::Promise> Instance::RequestAdapter(
   auto* const canvasManager = gfx::CanvasManagerChild::Get();
   if (!canvasManager) {
     promise->MaybeRejectWithInvalidStateError(
-        "Failed to create CanavasManagerChild");
+        "Failed to create CanvasManagerChild");
     return promise.forget();
   }
 
