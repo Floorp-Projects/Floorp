@@ -218,15 +218,11 @@ def _putInNamespaces(cxxthing, namespaces):
 
 def _sendPrefix(msgtype):
     """Prefix of the name of the C++ method that sends |msgtype|."""
-    if msgtype.isInterrupt():
-        return "Call"
     return "Send"
 
 
 def _recvPrefix(msgtype):
     """Prefix of the name of the C++ method that handles |msgtype|."""
-    if msgtype.isInterrupt():
-        return "Answer"
     return "Recv"
 
 
@@ -1855,16 +1851,6 @@ def _generateMessageConstructor(md, segmentSize, protocol, forReply=False):
         syncEnum = "SYNC"
     else:
         syncEnum = "ASYNC"
-
-    # FIXME(bug ???) - remove support for interrupt messages from the IPDL compiler.
-    if md.decl.type.isInterrupt():
-        func.addcode(
-            """
-            static_assert(
-                false,
-                "runtime support for intr messages has been removed from IPDL");
-            """
-        )
 
     if md.decl.type.isCtor():
         ctorEnum = "CONSTRUCTOR"
@@ -4033,7 +4019,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         for managed in ptype.manages:
             self.genManagedEndpoint(managed)
 
-        # OnMessageReceived()/OnCallReceived()
+        # OnMessageReceived()
 
         # save these away for use in message handler case stmts
         msgvar = ExprVar("msg__")
@@ -4051,11 +4037,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         msgtype = ExprCode("msg__.type()")
         self.asyncSwitch = StmtSwitch(msgtype)
         self.syncSwitch = None
-        self.interruptSwitch = None
-        if toplevel.isSync() or toplevel.isInterrupt():
+        if toplevel.isSync():
             self.syncSwitch = StmtSwitch(msgtype)
-            if toplevel.isInterrupt():
-                self.interruptSwitch = StmtSwitch(msgtype)
 
         # Add a handler for the MANAGED_ENDPOINT_BOUND and
         # MANAGED_ENDPOINT_DROPPED message types for managed actors.
@@ -4103,10 +4086,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             """
         )
         self.asyncSwitch.addcase(DefaultLabel(), default)
-        if toplevel.isSync() or toplevel.isInterrupt():
+        if toplevel.isSync():
             self.syncSwitch.addcase(DefaultLabel(), default)
-            if toplevel.isInterrupt():
-                self.interruptSwitch.addcase(DefaultLabel(), default)
 
         self.cls.addstmts(self.implementManagerIface())
 
@@ -4197,17 +4178,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 Whitespace.NL,
             ]
         )
-        self.cls.addstmts(
-            [
-                makeHandlerMethod(
-                    "OnCallReceived",
-                    self.interruptSwitch,
-                    hasReply=True,
-                    dispatches=dispatches,
-                ),
-                Whitespace.NL,
-            ]
-        )
 
         clearsubtreevar = ExprVar("ClearSubtree")
 
@@ -4243,22 +4213,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 """
             )
             self.cls.addstmts([onerror, Whitespace.NL])
-
-        if ptype.isToplevel() and ptype.isInterrupt():
-            processnative = MethodDefn(
-                MethodDecl("ProcessNativeEventsInInterruptCall", ret=Type.VOID)
-            )
-            processnative.addcode(
-                """
-                #ifdef XP_WIN
-                GetIPCChannel()->ProcessNativeEventsInInterruptCall();
-                #else
-                FatalError("This method is Windows-only");
-                #endif
-                """
-            )
-
-            self.cls.addstmts([processnative, Whitespace.NL])
 
         # private methods
         self.cls.addstmt(Label.PRIVATE)
@@ -4566,8 +4520,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 self.asyncSwitch.addcase(lbl, case)
             elif decltype.isSync():
                 self.syncSwitch.addcase(lbl, case)
-            elif decltype.isInterrupt():
-                self.interruptSwitch.addcase(lbl, case)
             else:
                 assert 0
 
@@ -5417,8 +5369,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
     def sendBlocking(self, md, msgexpr, replyexpr, actor=None):
         send = ExprVar("ChannelSend")
-        if md.decl.type.isInterrupt():
-            send = ExprVar("ChannelCall")
         if actor is not None:
             send = ExprSelect(actor, "->", send.name)
 
