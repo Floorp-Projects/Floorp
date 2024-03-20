@@ -221,6 +221,8 @@ policy-StartDownloadsInTempDirectory = Force downloads to start off in a local, 
 
 policy-SupportMenu = Add a custom support menu item to the help menu.
 
+policy-TranslateEnabled = Enable or disable webpage translation.
+
 policy-UserMessaging = Don’t show certain messages to the user.
 
 policy-UseSystemPrintDialog = Print using the system print dialog.

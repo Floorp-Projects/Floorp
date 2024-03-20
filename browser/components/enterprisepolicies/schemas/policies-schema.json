@@ -1422,6 +1422,10 @@
       "required": ["Title", "URL"]
     },
 
+    "TranslateEnabled": {
+      "type": "boolean"
+    },
+
     "UserMessaging": {
       "type": "object",
       "properties": {
