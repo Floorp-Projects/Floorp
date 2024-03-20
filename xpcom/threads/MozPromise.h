@@ -935,6 +935,98 @@ class MozPromise : public MozPromiseBase {
     RefPtr<typename PromiseType::Private> mCompletionPromise;
   };
 
+  template <typename ResolveFunction>
+  class MapValue final : public ThenValueBase {
+    friend class ThenCommand<MapValue>;
+    constexpr static const bool SupportChaining = true;
+    using ResolveValueT_ = std::invoke_result_t<ResolveFunction, ResolveValueT>;
+    using PromiseType = MozPromise<ResolveValueT_, RejectValueT, IsExclusive>;
+
+   public:
+    explicit MapValue(nsISerialEventTarget* aResponseTarget,
+                      ResolveFunction&& f, const char* aCallSite)
+        : ThenValueBase(aResponseTarget, aCallSite),
+          mResolveFunction(Some(std::forward<ResolveFunction>(f))) {}
+
+   protected:
+    void Disconnect() override {
+      ThenValueBase::Disconnect();
+      mResolveFunction.reset();
+    }
+
+    MozPromiseBase* CompletionPromise() const override {
+      return mCompletionPromise;
+    }
+
+    void DoResolveOrRejectInternal(ResolveOrRejectValue& aValue) override {
+      // Note that promise-chaining is always supported here; this function can
+      // only transform from MozPromise<A, B, k> to MozPromise<A2, B, k>.
+      auto value = MaybeMove(aValue);
+      typename PromiseType::ResolveOrRejectValue output;
+
+      if (value.IsResolve()) {
+        output.SetResolve((*mResolveFunction)(std::move(value.ResolveValue())));
+      } else {
+        output.SetReject(std::move(value.RejectValue()));
+      }
+
+      if (mCompletionPromise) {
+        mCompletionPromise->ResolveOrReject(std::move(output),
+                                            ThenValueBase::mCallSite);
+      }
+    }
+
+   private:
+    Maybe<ResolveFunction> mResolveFunction;
+    RefPtr<typename PromiseType::Private> mCompletionPromise;
+  };
+
+  template <typename RejectFunction>
+  class MapErrValue final : public ThenValueBase {
+    friend class ThenCommand<MapErrValue>;
+    constexpr static const bool SupportChaining = true;
+    using RejectValueT_ = std::invoke_result_t<RejectFunction, RejectValueT>;
+    using PromiseType = MozPromise<ResolveValueT, RejectValueT_, IsExclusive>;
+
+   public:
+    explicit MapErrValue(nsISerialEventTarget* aResponseTarget,
+                         RejectFunction&& f, const char* aCallSite)
+        : ThenValueBase(aResponseTarget, aCallSite),
+          mRejectFunction(Some(std::forward<RejectFunction>(f))) {}
+
+   protected:
+    void Disconnect() override {
+      ThenValueBase::Disconnect();
+      mRejectFunction.reset();
+    }
+
+    MozPromiseBase* CompletionPromise() const override {
+      return mCompletionPromise;
+    }
+
+    void DoResolveOrRejectInternal(ResolveOrRejectValue& aValue) override {
+      // Note that promise-chaining is always supported here; this function can
+      // only transform from MozPromise<A, B, k> to MozPromise<A, B2, k>.
+      auto value = MaybeMove(aValue);
+      typename PromiseType::ResolveOrRejectValue output;
+
+      if (value.IsResolve()) {
+        output.SetResolve(std::move(value.ResolveValue()));
+      } else {
+        output.SetReject((*mRejectFunction)(std::move(value.RejectValue())));
+      }
+
+      if (mCompletionPromise) {
+        mCompletionPromise->ResolveOrReject(std::move(output),
+                                            ThenValueBase::mCallSite);
+      }
+    }
+
+   private:
+    Maybe<RejectFunction> mRejectFunction;
+    RefPtr<typename PromiseType::Private> mCompletionPromise;
+  };
+
  public:
   void ThenInternal(already_AddRefed<ThenValueBase> aThenValue,
                     const char* aCallSite) {
@@ -1016,6 +1108,20 @@ class MozPromise : public MozPromiseBase {
           std::forward<Ts>(aArgs)...);
     }
 
+    template <typename... Ts>
+    auto Map(Ts&&... aArgs) -> decltype(std::declval<PromiseType>().Map(
+        std::forward<Ts>(aArgs)...)) {
+      return static_cast<RefPtr<PromiseType>>(*this)->Map(
+          std::forward<Ts>(aArgs)...);
+    }
+
+    template <typename... Ts>
+    auto MapErr(Ts&&... aArgs) -> decltype(std::declval<PromiseType>().MapErr(
+        std::forward<Ts>(aArgs)...)) {
+      return static_cast<RefPtr<PromiseType>>(*this)->MapErr(
+          std::forward<Ts>(aArgs)...);
+    }
+
     void Track(MozPromiseRequestHolder<MozPromise>& aRequestHolder) {
       aRequestHolder.Track(do_AddRef(mThenValue));
       mReceiver->ThenInternal(mThenValue.forget(), mCallSite);
@@ -1050,6 +1156,27 @@ class MozPromise : public MozPromiseBase {
     RefPtr<ThenValueType> thenValue =
         new ThenValueType(aResponseTarget, std::move(aFunctions)..., aCallSite);
     return ReturnType(aCallSite, thenValue.forget(), this);
+  }
+
+  // Shorthand for a `Then` which simply forwards the reject-value, but performs
+  // some additional work with the resolve-value.
+  template <typename Function>
+  auto Map(nsISerialEventTarget* aResponseTarget, const char* aCallSite,
+           Function&& function) {
+    RefPtr<MapValue<Function>> thenValue = new MapValue<Function>(
+        aResponseTarget, std::forward<Function>(function), aCallSite);
+    return ThenCommand<MapValue<Function>>(aCallSite, thenValue.forget(), this);
+  }
+
+  // Shorthand for a `Then` which simply forwards the resolve-value, but
+  // performs some additional work with the reject-value.
+  template <typename Function>
+  auto MapErr(nsISerialEventTarget* aResponseTarget, const char* aCallSite,
+              Function&& function) {
+    RefPtr<MapErrValue<Function>> thenValue = new MapErrValue<Function>(
+        aResponseTarget, std::forward<Function>(function), aCallSite);
+    return ThenCommand<MapErrValue<Function>>(aCallSite, thenValue.forget(),
+                                              this);
   }
 
   void ChainTo(already_AddRefed<Private> aChainedPromise,
