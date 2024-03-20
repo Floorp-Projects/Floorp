@@ -1911,10 +1911,10 @@ static bool Revive(JSContext* cx, HandleValue reviver,
 
 template <typename CharT>
 bool ParseJSON(JSContext* cx, const mozilla::Range<const CharT> chars,
-               MutableHandleValue vp, MutableHandle<ParseRecordObject> pro) {
+               MutableHandleValue vp) {
   Rooted<JSONParser<CharT>> parser(cx, cx, chars,
                                    JSONParser<CharT>::ParseType::JSONParse);
-  return parser.parse(vp, pro);
+  return parser.parse(vp);
 }
 
 template <typename CharT>
@@ -1923,7 +1923,16 @@ bool js::ParseJSONWithReviver(JSContext* cx,
                               HandleValue reviver, MutableHandleValue vp) {
   /* https://262.ecma-international.org/14.0/#sec-json.parse steps 2-10. */
   Rooted<ParseRecordObject> pro(cx);
-  if (!ParseJSON(cx, chars, vp, &pro)) {
+#ifdef ENABLE_JSON_PARSE_WITH_SOURCE
+  if (cx->realm()->creationOptions().getJSONParseWithSource() &&
+      IsCallable(reviver)) {
+    Rooted<JSONReviveParser<CharT>> parser(cx, cx, chars);
+    if (!parser.get().parse(vp, &pro)) {
+      return false;
+    }
+  } else
+#endif
+      if (!ParseJSON(cx, chars, vp)) {
     return false;
   }
 
@@ -2121,14 +2130,13 @@ static bool json_parseImmutable(JSContext* cx, unsigned argc, Value* vp) {
 
   HandleValue reviver = args.get(1);
   RootedValue unfiltered(cx);
-  Rooted<ParseRecordObject> pro(cx);
 
   if (linearChars.isLatin1()) {
-    if (!ParseJSON(cx, linearChars.latin1Range(), &unfiltered, &pro)) {
+    if (!ParseJSON(cx, linearChars.latin1Range(), &unfiltered)) {
       return false;
     }
   } else {
-    if (!ParseJSON(cx, linearChars.twoByteRange(), &unfiltered, &pro)) {
+    if (!ParseJSON(cx, linearChars.twoByteRange(), &unfiltered)) {
       return false;
     }
   }
