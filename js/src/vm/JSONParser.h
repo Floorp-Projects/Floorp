@@ -337,8 +337,8 @@ class MOZ_STACK_CLASS JSONFullParseHandler
   void reportError(const char* msg, uint32_t line, uint32_t column);
 
  protected:
-  inline bool createJSONParseRecord(const Value& value,
-                                    mozilla::Span<const CharT> source);
+  inline bool finishPrimitiveParseRecord(const Value& value,
+                                         mozilla::Span<const CharT> source);
 };
 
 template <typename CharT>
