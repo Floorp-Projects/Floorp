@@ -28,30 +28,6 @@ inline const char* ToMediaControlKeyStr(const Maybe<MediaControlKey>& aKey) {
   return GetEnumString(aKey.value()).get();
 }
 
-inline const char* ToMediaSessionActionStr(MediaSessionAction aAction) {
-  switch (aAction) {
-    case MediaSessionAction::Play:
-      return "play";
-    case MediaSessionAction::Pause:
-      return "pause";
-    case MediaSessionAction::Seekbackward:
-      return "seek backward";
-    case MediaSessionAction::Seekforward:
-      return "seek forward";
-    case MediaSessionAction::Previoustrack:
-      return "previous track";
-    case MediaSessionAction::Nexttrack:
-      return "next track";
-    case MediaSessionAction::Skipad:
-      return "skip ad";
-    case MediaSessionAction::Seekto:
-      return "Seek to";
-    default:
-      MOZ_ASSERT(aAction == MediaSessionAction::Stop);
-      return "stop";
-  }
-}
-
 inline MediaControlKey ConvertMediaSessionActionToControlKey(
     MediaSessionAction aAction) {
   switch (aAction) {

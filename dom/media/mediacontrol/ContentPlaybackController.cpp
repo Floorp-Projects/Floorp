@@ -61,7 +61,7 @@ void ContentPlaybackController::NotifyMediaSession(
     const MediaSessionActionDetails& aDetails) {
   if (RefPtr<MediaSession> session = GetMediaSession()) {
     LOG("Handle '%s' in media session behavior for BC %" PRIu64,
-        ToMediaSessionActionStr(aDetails.mAction), mBC->Id());
+        GetEnumString(aDetails.mAction).get(), mBC->Id());
     MOZ_ASSERT(session->IsActive(), "Notify inactive media session!");
     session->NotifyHandler(aDetails);
   }
