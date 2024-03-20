@@ -325,7 +325,7 @@ void ContentMediaController::HandleMediaKey(MediaControlKey aKey) {
   if (mReceivers.IsEmpty()) {
     return;
   }
-  LOG("Handle '%s' event, receiver num=%zu", ToMediaControlKeyStr(aKey),
+  LOG("Handle '%s' event, receiver num=%zu", GetEnumString(aKey).get(),
       mReceivers.Length());
   // We have default handlers for play, pause and stop.
   // https://w3c.github.io/mediasession/#ref-for-dom-mediasessionaction-play%E2%91%A3
