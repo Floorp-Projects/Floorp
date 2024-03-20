@@ -17,5 +17,4 @@ EXTRA_JS_MODULES.backup += [
     "resources/BackupResource.sys.mjs",
     "resources/CredentialsAndSecurityBackupResource.sys.mjs",
     "resources/PlacesBackupResource.sys.mjs",
-    "resources/PreferencesBackupResource.sys.mjs",
 ]
