@@ -436,6 +436,11 @@ pub extern "C" fn mozurl_set_hostname(url: &mut MozURL, host: &nsACString) -> ns
 #[no_mangle]
 pub extern "C" fn mozurl_set_port_no(url: &mut MozURL, new_port: i32) -> nsresult {
     debug_assert_mut!(url);
+
+    if new_port > u16::MAX as i32 {
+        return NS_ERROR_UNEXPECTED;
+    }
+
     if url.cannot_be_a_base() {
         return NS_ERROR_MALFORMED_URI;
     }
