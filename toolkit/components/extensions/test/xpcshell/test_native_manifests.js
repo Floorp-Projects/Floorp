@@ -248,7 +248,7 @@ add_task(
       "lookupApplication returns the correct path with platform-native slash"
     );
     // Side note: manifest.path does not contain a platform-native path,
-    // but it is normalized when used in NativeMessaging.jsm.
+    // but it is normalized when used in NativeMessaging.sys.mjs.
     deepEqual(
       result.manifest,
       manifest,

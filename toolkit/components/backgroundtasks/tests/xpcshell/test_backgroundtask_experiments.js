@@ -136,8 +136,8 @@ async function doMessage({ extraArgs = [], extraEnv = {} } = {}) {
 // i.e., persisted.  Verify that messages are shown until we hit the lifetime
 // frequency caps.
 //
-// It's awkward to inspect the `ASRouter.jsm` internal state directly in this
-// manner, but this is the pattern for testing such things at the time of
+// It's awkward to inspect the `ASRouter.sys.mjs` internal state directly in
+// this manner, but this is the pattern for testing such things at the time of
 // writing.
 add_task(async function test_backgroundtask_caps() {
   let experimentFile = do_get_file("experiment.json");

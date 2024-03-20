@@ -184,7 +184,7 @@ function assertStack(stack, expected) {
 
 // Performs a crash, runs minidump-analyzer, and checks expected stack analysis.
 //
-// how: The crash to perform. Constants defined in both CrashTestUtils.jsm
+// how: The crash to perform. Constants defined in both CrashTestUtils.sys.mjs
 //   and nsTestCrasher.cpp (i.e. CRASH_X64CFI_PUSH_NONVOL)
 // expectedStack: An array of {"symbol", "trust"} where trust is "cfi",
 //   "context", "scan", et al. May be null if you don't need to check the stack.

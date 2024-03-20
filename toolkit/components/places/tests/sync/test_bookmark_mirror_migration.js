@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Keep in sync with `SyncedBookmarksMirror.jsm`.
+// Keep in sync with `SyncedBookmarksMirror.sys.mjs`.
 const CURRENT_MIRROR_SCHEMA_VERSION = 9;
 
 // The oldest schema version that we support. Any databases with schemas older

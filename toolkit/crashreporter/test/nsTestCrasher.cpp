@@ -80,7 +80,7 @@ uint64_t x64CrashCFITest_EOF(uint64_t returnpfn, void*);
 #endif  // XP_WIN && HAVE_64BIT_BUILD && !defined(__MINGW32__)
 }
 
-// Keep these in sync with CrashTestUtils.jsm!
+// Keep these in sync with CrashTestUtils.sys.mjs!
 const int16_t CRASH_INVALID_POINTER_DEREF = 0;
 const int16_t CRASH_PURE_VIRTUAL_CALL = 1;
 const int16_t CRASH_OOM = 3;

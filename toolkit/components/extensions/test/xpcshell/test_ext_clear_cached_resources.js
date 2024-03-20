@@ -297,7 +297,7 @@ add_task(
     // This temporary directory is going to be removed from the
     // cleanup function, but also make it unique as we do for the
     // other temporary files (e.g. like getTemporaryFile as defined
-    // in XPInstall.jsm).
+    // in XPIInstall.sys.mjs).
     const random = Math.round(Math.random() * 36 ** 3).toString(36);
     const tmpDirName = `xpcshelltest_unpacked_addons_${random}`;
     let tmpExtPath = FileUtils.getDir("TmpD", [tmpDirName]);

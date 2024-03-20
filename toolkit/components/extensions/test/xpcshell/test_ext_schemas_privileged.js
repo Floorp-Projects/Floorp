@@ -144,7 +144,7 @@ add_task(
   }
 );
 
-// Test that Extension.jsm and schema correctly match.
+// Test that Extension.sys.mjs and schema correctly match.
 add_task(function test_privileged_permissions_match() {
   const { PRIVILEGED_PERMS } = ChromeUtils.importESModule(
     "resource://gre/modules/Extension.sys.mjs"

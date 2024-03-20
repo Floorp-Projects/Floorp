@@ -4,7 +4,7 @@ const { Preferences } = ChromeUtils.importESModule(
   "resource://gre/modules/Preferences.sys.mjs"
 );
 
-// ExtensionContent.jsm needs to know when it's running from xpcshell,
+// ExtensionContent.sys.mjs needs to know when it's running from xpcshell,
 // to use the right timeout for content scripts executed at document_idle.
 ExtensionTestUtils.mockAppInfo();
 

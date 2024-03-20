@@ -2,7 +2,7 @@
 /* vim:set ts=2 sw=2 sts=2 et: */
 
 // Tests for `History.remove` with removing many urls, as implemented in
-// History.jsm.
+// History.sys.mjs.
 
 "use strict";
 

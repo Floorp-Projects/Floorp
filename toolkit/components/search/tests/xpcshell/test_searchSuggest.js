@@ -3,7 +3,7 @@
 /* eslint-disable mozilla/no-arbitrary-setTimeout */
 
 /**
- * Testing search suggestions from SearchSuggestionController.jsm.
+ * Testing search suggestions from SearchSuggestionController.sys.mjs.
  */
 
 "use strict";

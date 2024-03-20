@@ -3,7 +3,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Tests for `History.update` as implemented in History.jsm
+// Tests for `History.update` as implemented in History.sys.mjs
 
 "use strict";
 

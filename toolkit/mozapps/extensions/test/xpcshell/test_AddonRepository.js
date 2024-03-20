@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-// Tests AddonRepository.jsm
+// Tests AddonRepository.sys.mjs
 
 var gServer = createHttpServer({ hosts: ["example.com"] });
 

@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 export async function runBackgroundTask(commandLine) {
-  // This task depends on `CrashTestUtils.jsm` and requires the
+  // This task depends on `CrashTestUtils.sys.mjs` and requires the
   // sibling `testcrasher` library to be in the current working
   // directory.  Fail right away if we can't find the module or the
   // native library.

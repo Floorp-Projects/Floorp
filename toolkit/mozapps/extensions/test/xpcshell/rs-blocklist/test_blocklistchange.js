@@ -280,7 +280,7 @@ if (useMLBF) {
 }
 
 // XXXgijs: according to https://bugzilla.mozilla.org/show_bug.cgi?id=1257565#c111
-// this code and the related code in Blocklist.jsm (specific to XML blocklist) is
+// this code and the related code in Blocklist.sys.mjs (specific to XML blocklist) is
 // dead code and can be removed. See https://bugzilla.mozilla.org/show_bug.cgi?id=1549550 .
 //
 // Don't need the full interface, attempts to call other methods will just

@@ -18,7 +18,7 @@ let schemaURLs = new Set();
 schemaURLs.add("chrome://extensions/content/schemas/experiments.json");
 
 // Helper class used to load the API modules similarly to the apiManager
-// defined in ExtensionParent.jsm.
+// defined in ExtensionParent.sys.mjs.
 class FakeAPIManager extends ExtensionCommon.SchemaAPIManager {
   constructor(processType = "main") {
     super(processType, Schemas);
@@ -102,7 +102,8 @@ class FakeAPIManager extends ExtensionCommon.SchemaAPIManager {
 }
 
 // Specialized helper class used to test loading "child process" modules (similarly to the
-// SchemaAPIManagers sub-classes defined in ExtensionPageChild.jsm and ExtensionContent.jsm).
+// SchemaAPIManagers sub-classes defined in ExtensionPageChild.sys.mjs and
+// ExtensionContent.sys.mjs).
 class FakeChildProcessAPIManager extends FakeAPIManager {
   constructor({ processType, categoryScripts }) {
     super(processType, Schemas);

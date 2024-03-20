@@ -63,7 +63,7 @@ function doReload() {
   }
 }
 
-// SafeBrowsing.jsm is initialized after mozEntries are added. Add observer
+// SafeBrowsing.sys.mjs is initialized after mozEntries are added. Add observer
 // to receive "finished" event. For the case when this function is called
 // after the event had already been notified, we lookup entries to see if
 // they are already added to database.

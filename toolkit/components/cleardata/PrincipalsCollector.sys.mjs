@@ -66,8 +66,8 @@ export class PrincipalsCollector {
 
   /**
    * Fetches and collects all principals with cookies and/or site data (see module
-   * description). Originally for usage in Sanitizer.jsm to compute principals to be
-   * cleared on shutdown based on user settings.
+   * description). Originally for usage in Sanitizer.sys.mjs to compute principals
+   * to be cleared on shutdown based on user settings.
    *
    * This operation might take a while to complete on big profiles.
    * DO NOT call or await this in a way that makes it block user interaction, or you
@@ -76,8 +76,8 @@ export class PrincipalsCollector {
    * This function will cache its result and return the same list on second call,
    * even if the actual number of principals with cookies and site data changed.
    *
-   * @param {Object} [optional] progress A Sanitizer.jsm progress object that will be
-   *   updated to reflect the current step of fetching principals.
+   * @param {Object} [optional] progress A Sanitizer.sys.mjs progress object that
+   *   will be updated to reflect the current step of fetching principals.
    * @returns {Array<nsIPrincipal>} the list of principals
    */
   async getAllPrincipals(progress = {}) {

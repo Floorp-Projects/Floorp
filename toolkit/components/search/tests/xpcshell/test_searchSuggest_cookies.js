@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Test that search suggestions from SearchSuggestionController.jsm don't store
+ * Test that search suggestions from SearchSuggestionController.sys.mjs don't store
  * cookies.
  */
 

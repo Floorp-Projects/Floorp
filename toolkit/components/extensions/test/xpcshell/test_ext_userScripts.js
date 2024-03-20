@@ -200,7 +200,7 @@ add_task(async function test_userScripts_no_webext_apis() {
     let script = await browser.userScripts.register(userScriptOptions);
 
     // Unregister and then register the same js code again, to verify that the last registered
-    // userScript doesn't get assigned a revoked blob url (otherwise Extensioncontent.jsm
+    // userScript doesn't get assigned a revoked blob url (otherwise Extensioncontent.sys.mjs
     // ScriptCache raises an error because it fails to compile the revoked blob url and the user
     // script will never be loaded).
     script.unregister();

@@ -533,7 +533,7 @@ skip-if = ["os == 'android'"] # Bug 1564871
 ["test_ext_storage_sanitizer.js"]
 skip-if = [
   "appname == 'thunderbird'",
-  "os == 'android'", # Sanitizer.jsm is not in toolkit.
+  "os == 'android'", # Sanitizer.sys.mjs is not in toolkit.
 ]
 
 ["test_ext_storage_session.js"]

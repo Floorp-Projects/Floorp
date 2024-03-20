@@ -11,8 +11,8 @@ import { Assert } from "resource://testing-common/Assert.sys.mjs";
 export var PromiseTestUtils = {
   /**
    * Array of objects containing the details of the Promise rejections that are
-   * currently left uncaught. This includes DOM Promise and Promise.jsm. When
-   * rejections in DOM Promises are consumed, they are removed from this list.
+   * currently left uncaught. When rejections in DOM Promises are consumed, they
+   * are removed from this list.
    *
    * The objects contain at least the following properties:
    * {
