@@ -755,6 +755,7 @@ WEBIDL_FILES = [
     "NodeFilter.webidl",
     "NodeIterator.webidl",
     "NodeList.webidl",
+    "NonElementParentNode.webidl",
     "Notification.webidl",
     "NotificationEvent.webidl",
     "NotifyPaintEvent.webidl",

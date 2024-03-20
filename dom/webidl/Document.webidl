@@ -98,8 +98,6 @@ interface Document : Node {
   HTMLCollection getElementsByTagNameNS(DOMString? namespace, DOMString localName);
   [Pure]
   HTMLCollection getElementsByClassName(DOMString classNames);
-  [Pure]
-  Element? getElementById(DOMString elementId);
 
   // These DOM methods cannot be accessed by UA Widget scripts
   // because the DOM element reflectors will be in the content scope,
@@ -385,17 +383,6 @@ partial interface Document {
     CaretPosition? caretPositionFromPoint (float x, float y);
 
     readonly attribute Element? scrollingElement;
-};
-
-// http://dev.w3.org/2006/webapi/selectors-api2/#interface-definitions
-partial interface Document {
-  [Throws, Pure]
-  Element?  querySelector(UTF8String selectors);
-  [Throws, Pure]
-  NodeList  querySelectorAll(UTF8String selectors);
-
-  //(Not implemented)Element?  find(DOMString selectors, optional (Element or sequence<Node>)? refNodes);
-  //(Not implemented)NodeList  findAll(DOMString selectors, optional (Element or sequence<Node>)? refNodes);
 };
 
 // https://drafts.csswg.org/web-animations/#extensions-to-the-document-interface
@@ -758,3 +745,5 @@ partial interface Document {
   [ChromeOnly]
   boolean isActive();
 };
+
+Document includes NonElementParentNode;
