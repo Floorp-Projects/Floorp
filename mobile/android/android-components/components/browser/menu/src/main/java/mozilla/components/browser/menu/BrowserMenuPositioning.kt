@@ -74,8 +74,8 @@ internal fun inferMenuPositioningData(
     val (availableHeightToTop, availableHeightToBottom) = getMaxAvailableHeightToTopAndBottom(anchor)
     val containerHeight = containerView.measuredHeight
 
-    val fitsUp = availableHeightToTop >= containerHeight
-    val fitsDown = availableHeightToBottom >= containerHeight
+    val fitsUp = availableHeightToTop >= containerHeight || availableHeightToTop > availableHeightToBottom
+    val fitsDown = availableHeightToBottom >= containerHeight || availableHeightToBottom > availableHeightToTop
 
     return inferMenuPosition(
         anchor,
