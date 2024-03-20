@@ -3580,14 +3580,12 @@ impl Renderer {
             stats,
         );
 
-        for clip_masks in &target.clip_masks {
-            self.handle_clips(
-                &draw_target,
-                clip_masks,
-                projection,
-                stats,
-            );
-        }
+        self.handle_clips(
+            &draw_target,
+            &target.clip_masks,
+            projection,
+            stats,
+        );
 
         if clear_depth.is_some() {
             self.device.invalidate_depth_target();
@@ -3842,14 +3840,12 @@ impl Renderer {
                 stats,
             );
 
-            for clip_masks in &target.clip_masks {
-                self.handle_clips(
-                    &draw_target,
-                    clip_masks,
-                    projection,
-                    stats,
-                );
-            }
+            self.handle_clips(
+                &draw_target,
+                &target.clip_masks,
+                projection,
+                stats,
+            );
         }
 
         self.gpu_profiler.finish_sampler(alpha_sampler);

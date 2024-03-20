@@ -239,7 +239,7 @@ pub struct ColorRenderTarget {
     pub prim_instances: Vec<PrimitiveInstanceData>,
     pub prim_instances_with_scissor: FastHashMap<DeviceIntRect, Vec<PrimitiveInstanceData>>,
 
-    pub clip_masks: Vec<ClipMaskInstanceList>,
+    pub clip_masks: ClipMaskInstanceList,
 }
 
 impl RenderTarget for ColorRenderTarget {
@@ -264,7 +264,7 @@ impl RenderTarget for ColorRenderTarget {
             clear_color: Some(ColorF::TRANSPARENT),
             prim_instances: Vec::new(),
             prim_instances_with_scissor: FastHashMap::default(),
-            clip_masks: Vec::new(),
+            clip_masks: ClipMaskInstanceList::new(),
         }
     }
 
@@ -504,7 +504,7 @@ pub struct AlphaRenderTarget {
     pub zero_clears: Vec<RenderTaskId>,
     pub one_clears: Vec<RenderTaskId>,
     pub texture_id: CacheTextureId,
-    pub clip_masks: Vec<ClipMaskInstanceList>,
+    pub clip_masks: ClipMaskInstanceList,
 }
 
 impl RenderTarget for AlphaRenderTarget {
@@ -522,7 +522,7 @@ impl RenderTarget for AlphaRenderTarget {
             zero_clears: Vec::new(),
             one_clears: Vec::new(),
             texture_id,
-            clip_masks: Vec::new(),
+            clip_masks: ClipMaskInstanceList::new(),
         }
     }
 
@@ -1216,7 +1216,7 @@ fn build_sub_pass(
     render_tasks: &RenderTaskGraph,
     transforms: &mut TransformPalette,
     ctx: &RenderTargetContext,
-    output: &mut Vec<ClipMaskInstanceList>,
+    output: &mut ClipMaskInstanceList,
 ) {
     if let Some(ref sub_pass) = task.sub_pass {
         match sub_pass {
@@ -1242,8 +1242,6 @@ fn build_sub_pass(
                     content_origin + target_rect.size().to_f32(),
                 );
 
-                let mut clip_masks = ClipMaskInstanceList::new();
-
                 build_mask_tasks(
                     masks,
                     render_task_address,
@@ -1258,10 +1256,8 @@ fn build_sub_pass(
                     gpu_buffer_builder,
                     transforms,
                     render_tasks,
-                    &mut clip_masks,
+                    output,
                 );
-
-                output.push(clip_masks);
             }
         }
     }
