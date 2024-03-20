@@ -3,10 +3,6 @@
 
 "use strict";
 
-const { AddonTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/AddonTestUtils.sys.mjs"
-);
-
 // The test tasks in this test file tends to trigger an intermittent
 // exception raised from JSActor::AfterDestroy, because of a race between
 // when the WebExtensions API event is being emitted from the parent process
@@ -17,23 +13,6 @@ const { PromiseTestUtils } = ChromeUtils.importESModule(
 PromiseTestUtils.allowMatchingRejectionsGlobally(
   /Actor 'Conduits' destroyed before query 'RunListener' was resolved/
 );
-
-AddonTestUtils.initMochitest(this);
-
-const server = AddonTestUtils.createHttpServer({
-  hosts: ["example.com", "anotherwebpage.org"],
-});
-
-server.registerPathHandler("/", (request, response) => {
-  response.write(`<!DOCTYPE html>
-    <html>
-      <head>
-       <meta charset="utf-8">
-       <title>test webpage</title>
-      </head>
-    </html>
-  `);
-});
 
 function createTestExtPage({ script }) {
   return `<!DOCTYPE html>
@@ -55,7 +34,7 @@ function createTestExtPageScript(name) {
         );
         browser.test.sendMessage(`event-received:${pageName}`);
       },
-      { types: ["main_frame"], urls: ["http://example.com/*"] }
+      { types: ["main_frame"], urls: ["https://example.com/*"] }
     );
     /* eslint-disable mozilla/balanced-listeners */
     window.addEventListener("pageshow", () => {
@@ -93,7 +72,7 @@ async function triggerWebRequestListener(webPageURL) {
 add_task(async function test_extension_page_sameprocess_navigation() {
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      permissions: ["webRequest", "http://example.com/*"],
+      permissions: ["webRequest", "https://example.com/*"],
     },
     files: {
       "extpage1.html": createTestExtPage({ script: "extpage1.js" }),
@@ -116,7 +95,7 @@ add_task(async function test_extension_page_sameprocess_navigation() {
   info("Wait for the extension page to be loaded");
   await extension.awaitMessage("pageshow:extpage1");
 
-  await triggerWebRequestListener("http://example.com");
+  await triggerWebRequestListener("https://example.com");
   await extension.awaitMessage("event-received:extpage1");
   ok(true, "extpage1 got a webRequest event as expected");
 
@@ -131,7 +110,7 @@ add_task(async function test_extension_page_sameprocess_navigation() {
   info(
     "Trigger a web request event and expect extpage2 to be the only one receiving it"
   );
-  await triggerWebRequestListener("http://example.com");
+  await triggerWebRequestListener("https://example.com");
   await extension.awaitMessage("event-received:extpage2");
   ok(true, "extpage2 got a webRequest event as expected");
 
@@ -146,7 +125,7 @@ add_task(async function test_extension_page_sameprocess_navigation() {
   await extension.awaitMessage("pagehide:extpage2");
 
   // We only expect extpage1 to be able to receive API events.
-  await triggerWebRequestListener("http://example.com");
+  await triggerWebRequestListener("https://example.com");
   await extension.awaitMessage("event-received:extpage1");
   ok(true, "extpage1 got a webRequest event as expected");
 
@@ -159,7 +138,7 @@ add_task(async function test_extension_page_sameprocess_navigation() {
 add_task(async function test_extension_page_context_navigated_to_web_page() {
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      permissions: ["webRequest", "http://example.com/*"],
+      permissions: ["webRequest", "https://example.com/*"],
     },
     files: {
       "extpage.html": createTestExtPage({ script: "extpage.js" }),
@@ -178,8 +157,8 @@ add_task(async function test_extension_page_context_navigated_to_web_page() {
   // navigated will be intermittently able to receive an event before it
   // is navigated to the webpage url (and moved into the BFCache or destroyed)
   // and trigger an intermittent failure of this test.
-  const webPageURL = "http://anotherwebpage.org/";
-  const triggerWebRequestURL = "http://example.com/";
+  const webPageURL = "https://example.net/";
+  const triggerWebRequestURL = "https://example.com/";
 
   info("Opening extension page in a new tab");
   const extPageTab1 = await BrowserTestUtils.addTab(gBrowser, extPageURL);
