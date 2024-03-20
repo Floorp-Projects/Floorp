@@ -4,7 +4,6 @@
 ChromeUtils.defineESModuleGetters(this, {
   ADLINK_CHECK_TIMEOUT_MS:
     "resource:///actors/SearchSERPTelemetryChild.sys.mjs",
-  CATEGORIZATION_SETTINGS: "resource:///modules/SearchSERPTelemetry.sys.mjs",
   CustomizableUITestUtils:
     "resource://testing-common/CustomizableUITestUtils.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
@@ -194,6 +193,8 @@ async function assertSearchSourcesTelemetry(
 }
 
 function resetTelemetry() {
+  // TODO Bug 1868476: Replace when we're using Glean telemetry.
+  fakeTelemetryStorage = [];
   searchCounts.clear();
   Services.telemetry.clearScalars();
   Services.fog.testResetFOG();
@@ -376,6 +377,23 @@ function assertSERPTelemetry(expectedEvents) {
   );
 }
 
+// TODO Bug 1868476: Replace when we're using Glean telemetry.
+let categorizationSandbox;
+let fakeTelemetryStorage = [];
+add_setup(function () {
+  categorizationSandbox = sinon.createSandbox();
+  categorizationSandbox
+    .stub(SERPCategorizationRecorder, "recordCategorizationTelemetry")
+    .callsFake(input => {
+      fakeTelemetryStorage.push(input);
+    });
+
+  registerCleanupFunction(() => {
+    categorizationSandbox.restore();
+    fakeTelemetryStorage = [];
+  });
+});
+
 async function openSerpInNewTab(url, expectedAds = true) {
   let promise;
   if (expectedAds) {
@@ -417,11 +435,12 @@ async function synthesizePageAction({
 }
 
 function assertCategorizationValues(expectedResults) {
-  let actualResults = Glean.serp.categorization.testGetValue() ?? [];
+  // TODO Bug 1868476: Replace with calls to Glean telemetry.
+  let actualResults = [...fakeTelemetryStorage];
 
   Assert.equal(
-    actualResults.length,
     expectedResults.length,
+    actualResults.length,
     "Should have the correct number of categorization impressions."
   );
 
@@ -439,7 +458,7 @@ function assertCategorizationValues(expectedResults) {
     }
   }
   for (let actual of actualResults) {
-    for (let key in actual.extra) {
+    for (let key in actual) {
       keys.add(key);
     }
   }
@@ -448,21 +467,14 @@ function assertCategorizationValues(expectedResults) {
   for (let index = 0; index < expectedResults.length; ++index) {
     info(`Checking categorization at index: ${index}`);
     let expected = expectedResults[index];
-    let actual = actualResults[index].extra;
-
-    Assert.ok(
-      Number(actual?.organic_num_domains) <=
-        CATEGORIZATION_SETTINGS.MAX_DOMAINS_TO_CATEGORIZE,
-      "Number of organic domains categorized should not exceed threshold."
-    );
-
-    Assert.ok(
-      Number(actual?.sponsored_num_domains) <=
-        CATEGORIZATION_SETTINGS.MAX_DOMAINS_TO_CATEGORIZE,
-      "Number of sponsored domains categorized should not exceed threshold."
-    );
-
+    let actual = actualResults[index];
     for (let key of keys) {
+      // TODO Bug 1868476: This conversion to strings is to mimic Glean
+      // converting all values into strings. Once we receive real values from
+      // Glean, it can be removed.
+      if (actual[key] != null && typeof actual[key] !== "string") {
+        actual[key] = actual[key].toString();
+      }
       Assert.equal(
         actual[key],
         expected[key],
