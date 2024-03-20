@@ -39,18 +39,23 @@ download_mars () {
     command=$(echo "$update_line" | sed -e 's/^.*<update //' -e 's:>.*$::' -e 's:\&amp;:\&:g')
     eval "export $command"
 
-    # TODO: fix all these undefined vars, or maybe we should just ignore them and accept
-    # the magic?
+    # buildID and some other variables further down are gathered by eval'ing
+    # the massaged `update.xml` file a bit further up. Because of this, shellcheck
+    # cannot verify their existence, and gets grumpy. Ideally we would do this
+    # differently, but it's not worth the trouble at the time of writing.
+    # shellcheck disable=SC2154
     if [ -n "$to_build_id" ] && [ "$buildID" != "$to_build_id" ]; then
         echo "TEST-UNEXPECTED-FAIL: expected buildID $to_build_id does not match actual $buildID"
         return 1
     fi
 
+    # shellcheck disable=SC2154
     if [ -n "$to_display_version" ] && [ "$displayVersion" != "$to_display_version" ]; then
         echo "TEST-UNEXPECTED-FAIL: expected displayVersion $to_display_version does not match actual $displayVersion"
         return 1
     fi
 
+    # shellcheck disable=SC2154
     if [ -n "$to_app_version" ] && [ "$appVersion" != "$to_app_version" ]; then
         echo "TEST-UNEXPECTED-FAIL: expected appVersion $to_app_version does not match actual $appVersion"
         return 1
@@ -85,17 +90,22 @@ download_mars () {
         fi
       fi
       actual_size=$(perl -e "printf \"%d\n\", (stat(\"update/$patch_type.mar\"))[7]")
+      # shellcheck disable=SC2154
       actual_hash=$(openssl dgst -"$hashFunction" update/"$patch_type".mar | sed -e 's/^.*= //')
 
+      # shellcheck disable=SC2154
       if [ "$actual_size" != "$size" ]; then
           echo "TEST-UNEXPECTED-FAIL: $patch_type from $update_url wrong size"
+          # shellcheck disable=SC2154
           echo "TEST-UNEXPECTED-FAIL: update.xml size: $size"
           echo "TEST-UNEXPECTED-FAIL: actual size: $actual_size"
           return 1
       fi
 
+      # shellcheck disable=SC2154
       if [ "$actual_hash" != "$hashValue" ]; then
           echo "TEST-UNEXPECTED-FAIL: $patch_type from $update_url wrong hash"
+          # shellcheck disable=SC2154
           echo "TEST-UNEXPECTED-FAIL: update.xml hash: $hashValue"
           echo "TEST-UNEXPECTED-FAIL: actual hash: $actual_hash"
           return 1
