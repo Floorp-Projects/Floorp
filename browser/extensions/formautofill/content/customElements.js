@@ -286,8 +286,6 @@
       } else {
         this._itemBox.setAttribute("no-warning", "true");
       }
-
-      this._optionButton.textContent = value.manageLabel;
     }
   }
 
