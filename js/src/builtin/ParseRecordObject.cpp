@@ -19,24 +19,8 @@ ParseRecordObject::ParseRecordObject(Handle<js::JSONParseNode*> parseNode,
                                      const Value& val)
     : parseNode(parseNode), key(JS::PropertyKey::Void()), value(val) {}
 
-bool ParseRecordObject::addEntries(JSContext* cx, EntryMap&& appendEntries) {
-  if (!entries) {
-    entries = js::MakeUnique<EntryMap>(std::move(appendEntries));
-    return !!entries;
-  }
-  for (auto iter = appendEntries.iter(); !iter.done(); iter.next()) {
-    if (!entries->put(iter.get().key(), std::move(iter.get().value()))) {
-      return false;
-    }
-  }
-  return true;
-}
-
 void ParseRecordObject::trace(JSTracer* trc) {
   JS::TraceRoot(trc, &parseNode, "ParseRecordObject parse node");
   JS::TraceRoot(trc, &key, "ParseRecordObject key");
   JS::TraceRoot(trc, &value, "ParseRecordObject value");
-  if (entries) {
-    entries->trace(trc);
-  }
 }
