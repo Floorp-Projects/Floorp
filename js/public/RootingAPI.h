@@ -232,7 +232,7 @@ struct SafelyInitialized {
     // |T| per C++11 [expr.type.conv]p2 -- will produce a safely-initialized,
     // safely-usable T that it can return.
 
-#if defined(XP_WIN) || defined(XP_MACOSX) || \
+#if defined(XP_WIN) || defined(XP_DARWIN) || \
     (defined(XP_UNIX) && !defined(__clang__))
 
     // That presumption holds for pointers, where value initialization produces

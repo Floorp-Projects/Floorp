@@ -45,7 +45,7 @@ const size_t ArenaShift = 12;
 const size_t ArenaSize = size_t(1) << ArenaShift;
 const size_t ArenaMask = ArenaSize - 1;
 
-#if defined(XP_MACOSX) && defined(__aarch64__)
+#if defined(XP_DARWIN) && defined(__aarch64__)
 const size_t PageShift = 14;
 #else
 const size_t PageShift = 12;
