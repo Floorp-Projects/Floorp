@@ -291,5 +291,8 @@
 
   <key>NSMicrophoneUsageDescription</key>
   <string>Only sites you allow within @MAC_APP_NAME@ will be able to use the microphone.</string>
+
+  <key>NSCameraReactionEffectGesturesEnabledDefault</key>
+  <false/>
 </dict>
 </plist>
