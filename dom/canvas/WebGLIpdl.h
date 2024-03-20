@@ -245,6 +245,35 @@ struct ParamTraits<mozilla::dom::PredefinedColorSpace> final
           mozilla::dom::PredefinedColorSpace> {};
 
 // -
+// ParamTraits_IsEnumCase
+
+/*
+`IsEnumCase(T) -> bool` guarantees that we never have false negatives or false
+positives due to adding or removing enum cases to enums, and forgetting to
+update their serializations. Also, it allows enums to be non-continguous, unlike
+ContiguousEnumSerializer.
+*/
+
+template <class T>
+struct ParamTraits_IsEnumCase {
+  static bool Write(MessageWriter* const writer, const T& in) {
+    MOZ_ASSERT(IsEnumCase(in));
+    const auto shadow = static_cast<std::underlying_type_t<T>>(in);
+    WriteParam(writer, shadow);
+    return true;
+  }
+
+  static bool Read(MessageReader* const reader, T* const out) {
+    auto shadow = std::underlying_type_t<T>{};
+    if (!ReadParam(reader, &shadow)) return false;
+    const auto e = mozilla::AsValidEnum<T>(shadow);
+    if (!e) return false;
+    *out = *e;
+    return true;
+  }
+};
+
+// -
 // ParamTraits_TiedFields
 
 template <class T>
@@ -271,6 +300,10 @@ struct ParamTraits_TiedFields {
     return ok;
   }
 };
+
+template <class U, size_t N>
+struct ParamTraits<mozilla::PaddingField<U, N>> final
+    : public ParamTraits_TiedFields<mozilla::PaddingField<U, N>> {};
 
 // -
 
