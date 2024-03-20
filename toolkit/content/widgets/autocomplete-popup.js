@@ -211,24 +211,32 @@
         return -1;
       }
 
-      var newIdx = aIndex + (aReverse ? -1 : 1) * aAmount;
-      if (
-        (aReverse && aIndex == -1) ||
-        (newIdx > aMaxRow && aIndex != aMaxRow)
-      ) {
-        newIdx = aMaxRow;
-      } else if ((!aReverse && aIndex == -1) || (newIdx < 0 && aIndex != 0)) {
-        newIdx = 0;
-      }
+      do {
+        var newIdx = aIndex + (aReverse ? -1 : 1) * aAmount;
+        if (
+          (aReverse && aIndex == -1) ||
+          (newIdx > aMaxRow && aIndex != aMaxRow)
+        ) {
+          newIdx = aMaxRow;
+        } else if ((!aReverse && aIndex == -1) || (newIdx < 0 && aIndex != 0)) {
+          newIdx = 0;
+        }
 
-      if (
-        (newIdx < 0 && aIndex == 0) ||
-        (newIdx > aMaxRow && aIndex == aMaxRow)
-      ) {
-        aIndex = -1;
-      } else {
-        aIndex = newIdx;
-      }
+        if (
+          (newIdx < 0 && aIndex == 0) ||
+          (newIdx > aMaxRow && aIndex == aMaxRow)
+        ) {
+          aIndex = -1;
+        } else {
+          aIndex = newIdx;
+        }
+
+        if (aIndex == -1) {
+          return -1;
+        }
+      } while (
+        !this.richlistbox.canUserSelect(this.richlistbox.getItemAtIndex(aIndex))
+      );
 
       return aIndex;
     }
