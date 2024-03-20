@@ -331,6 +331,105 @@ serp:
       - fx-search-telemetry@mozilla.com
     expires: never
 
+  categorization:
+    type: event
+    description: >
+      A high-level categorization of a SERP (a best guess as to its topic),
+      using buckets such as "sports" or "travel".
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1868476
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1869064
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1868476
+    data_sensitivity:
+      - stored_content
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+      - rev-data@mozilla.com
+    expires: never
+    extra_keys:
+      sponsored_category:
+        description: >
+          An index corresponding to a broad category for the SERP, derived from
+          sponsored domains.
+        type: quantity
+      sponsored_num_domains:
+        description: >
+          The total number of sponsored domains used in the categorization
+          process for the SERP.
+        type: quantity
+      sponsored_num_unknown:
+        description: >
+          The count of sponsored domains extracted from the SERP that are not
+          found in the domain-to-categories mapping.
+        type: quantity
+      sponsored_num_inconclusive:
+        description: >
+          The count of sponsored domains extracted from the SERP that are found
+          in the domain-to-categories mapping but are deemed inconclusive.
+        type: quantity
+      organic_category:
+        description: >
+          An index corresponding to a broad category for the SERP, derived from
+          organic domains.
+        type: quantity
+      organic_num_domains:
+        description: >
+          The total number of organic domains used in the categorization
+          process for the SERP.
+        type: quantity
+      organic_num_unknown:
+        description: >
+          The count of organic domains extracted from the SERP that are not
+          found in the domain-to-categories mapping.
+        type: quantity
+      organic_num_inconclusive:
+        description: >
+          The count of organic domains extracted from the SERP that are found
+          in the domain-to-categories mapping but are deemed inconclusive.
+        type: quantity
+      region:
+        description: >
+          A two-letter country code indicating where the SERP was loaded.
+        type: string
+      channel:
+        description: >
+          The type of update channel, for example: “nightly”, “beta”, “release”.
+        type: string
+      provider:
+        description: >
+          The name of the provider.
+        type: string
+      tagged:
+        description: >
+          Whether the search is tagged (true) or organic (false).
+        type: boolean
+      partner_code:
+        description: >
+          Any partner_code parsing in the URL or an empty string if not
+          available.
+        type: string
+      app_version:
+        description: >
+          The Firefox major version used, for example: 126.
+        type: quantity
+      mappings_version:
+        description: >
+          Version number for the Remote Settings attachments used to generate
+          the domain-to-categories map used in the SERP categorization process.
+        type: quantity
+      num_ads_visible:
+        description: >
+          Number of ads visible on the page at the time of categorizing the
+          page.
+        type: quantity
+      num_ads_clicked:
+        description: >
+          Number of ads clicked on the page.
+        type: quantity
+    send_in_pings:
+      - serp-categorization
+
 search_with:
   reporting_url:
     type: url
