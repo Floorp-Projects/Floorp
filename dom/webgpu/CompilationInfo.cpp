@@ -18,8 +18,20 @@ CompilationInfo::CompilationInfo(Device* const aParent) : ChildOf(aParent) {}
 void CompilationInfo::SetMessages(
     nsTArray<mozilla::webgpu::WebGPUCompilationMessage>& aMessages) {
   for (auto& msg : aMessages) {
+    auto messageType = dom::GPUCompilationMessageType::Error;
+    switch (msg.messageType) {
+      case WebGPUCompilationMessageType::Error:
+        messageType = dom::GPUCompilationMessageType::Error;
+        break;
+      case WebGPUCompilationMessageType::Warning:
+        messageType = dom::GPUCompilationMessageType::Warning;
+        break;
+      case WebGPUCompilationMessageType::Info:
+        messageType = dom::GPUCompilationMessageType::Info;
+        break;
+    }
     mMessages.AppendElement(MakeAndAddRef<mozilla::webgpu::CompilationMessage>(
-        mParent, msg.lineNum, msg.linePos, msg.offset, msg.length,
+        mParent, messageType, msg.lineNum, msg.linePos, msg.offset, msg.length,
         std::move(msg.message)));
   }
 }
