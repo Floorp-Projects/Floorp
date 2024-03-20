@@ -308,6 +308,12 @@ bool ModuleLoaderBase::HostImportModuleDynamically(
     return false;
   }
 
+  if (!loader->IsDynamicImportSupported()) {
+    JS_ReportErrorNumberASCII(aCx, js::GetErrorMessage, nullptr,
+                              JSMSG_DYNAMIC_IMPORT_NOT_SUPPORTED);
+    return false;
+  }
+
   auto result = loader->ResolveModuleSpecifier(script, specifier);
   if (result.isErr()) {
     JS::Rooted<JS::Value> error(aCx);

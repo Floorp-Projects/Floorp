@@ -63,6 +63,8 @@ class WorkerModuleLoader : public JS::loader::ModuleLoaderBase {
       JS::Handle<JSString*> aSpecifier,
       JS::Handle<JSObject*> aPromise) override;
 
+  bool IsDynamicImportSupported() override;
+
   bool CanStartLoad(ModuleLoadRequest* aRequest, nsresult* aRvOut) override;
 
   // StartFetch is special for worker modules, as we need to move back to the
