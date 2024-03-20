@@ -604,6 +604,15 @@ static bool GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+#ifdef ENABLE_JSON_PARSE_WITH_SOURCE
+  value = BooleanValue(true);
+#else
+  value = BooleanValue(false);
+#endif
+  if (!JS_SetProperty(cx, info, "json-parse-with-source", value)) {
+    return false;
+  }
+
 #ifdef FUZZING
   value = BooleanValue(true);
 #else

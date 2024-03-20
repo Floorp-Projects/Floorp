@@ -322,7 +322,6 @@
   MACRO_(isoMinute, "isoMinute")                                               \
   MACRO_(isoMonth, "isoMonth")                                                 \
   MACRO_(isoNanosecond, "isoNanosecond")                                       \
-  MACRO_(isRawJSON, "isRawJSON")                                               \
   MACRO_(isoSecond, "isoSecond")                                               \
   MACRO_(isoYear, "isoYear")                                                   \
   MACRO_(isStepStart, "isStepStart")                                           \
@@ -472,7 +471,6 @@
   MACRO_(pull, "pull")                                                         \
   MACRO_(quarter, "quarter")                                                   \
   MACRO_(raw, "raw")                                                           \
-  MACRO_(rawJSON, "rawJSON")                                                   \
   MACRO_(read, "read")                                                         \
   MACRO_(reason, "reason")                                                     \
   MACRO_(RegExp_String_Iterator_, "RegExp String Iterator")                    \

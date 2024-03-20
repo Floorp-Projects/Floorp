@@ -137,9 +137,6 @@ MSG_DEF(JSMSG_CONSTRUCTOR_DISABLED,    1, JSEXN_TYPEERR, "{0} is disabled")
 // JSON
 MSG_DEF(JSMSG_JSON_BAD_PARSE,          3, JSEXN_SYNTAXERR, "JSON.parse: {0} at line {1} column {2} of the JSON data")
 MSG_DEF(JSMSG_JSON_CYCLIC_VALUE,       0, JSEXN_TYPEERR, "cyclic object value")
-MSG_DEF(JSMSG_JSON_RAW_EMPTY,       0, JSEXN_SYNTAXERR, "JSON.rawJSON: argument cannot be empty when converted to string")
-MSG_DEF(JSMSG_JSON_RAW_ARRAY_OR_OBJECT,       0, JSEXN_SYNTAXERR, "JSON.rawJSON: outermost value must not be an array or object")
-MSG_DEF(JSMSG_JSON_RAW_WHITESPACE,       0, JSEXN_SYNTAXERR, "JSON.rawJSON: first or last character cannot be any of tab, line feed, carriage return, or space")
 
 // Runtime errors
 MSG_DEF(JSMSG_ASSIGN_TO_CALL,          0, JSEXN_REFERENCEERR, "cannot assign to function call")
