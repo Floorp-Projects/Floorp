@@ -59,7 +59,7 @@ class Breakpoint extends PureComponent {
       selectedSource,
     } = this.props;
 
-    // ignore ctrl + click and right clicks when clicking on the breakpoint
+    // ignore right clicks
     if ((event.ctrlKey && event.button === 0) || event.button === 2) {
       return;
     }

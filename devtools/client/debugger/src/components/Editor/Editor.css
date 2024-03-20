@@ -80,6 +80,19 @@ html[dir="rtl"] .editor-mount {
   line-height: var(--theme-code-line-height);
 }
 
+/* set the linenumber white when there is a breakpoint */
+.editor-wrapper:not(.skip-pausing)
+  .new-breakpoint
+  .CodeMirror-gutter-wrapper
+  .CodeMirror-linenumber {
+  color: white;
+}
+
+/* move the breakpoint below the other gutter elements */
+.new-breakpoint .CodeMirror-gutter-elt:nth-child(2) {
+  z-index: 0;
+}
+
 .theme-dark .editor-wrapper .CodeMirror-line .cm-comment {
   color: var(--theme-comment);
 }
