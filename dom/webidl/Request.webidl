@@ -29,6 +29,9 @@ interface Request {
   readonly attribute RequestRedirect redirect;
   readonly attribute DOMString integrity;
 
+  [Pref="dom.fetchKeepalive.enabled"]
+  readonly attribute boolean keepalive;
+
   // If a main-thread fetch() promise rejects, the error passed will be a
   // nsresult code.
   [ChromeOnly]
@@ -58,6 +61,9 @@ dictionary RequestInit {
   RequestCache cache;
   RequestRedirect redirect;
   DOMString integrity;
+
+  [Pref="dom.fetchKeepalive.enabled"]
+  boolean keepalive;
 
   [ChromeOnly]
   boolean mozErrors;
