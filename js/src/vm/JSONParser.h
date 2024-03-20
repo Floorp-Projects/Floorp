@@ -190,13 +190,18 @@ class MOZ_STACK_CLASS JSONFullParseHandlerAnyChar {
       return *static_cast<PropertyVector*>(vector);
     }
 
-    explicit StackEntry(ElementVector* elements)
-        : state(JSONParserState::FinishArrayElement), vector(elements) {}
+    explicit StackEntry(JSContext* cx, ElementVector* elements)
+        : state(JSONParserState::FinishArrayElement),
+          parseRecords(cx),
+          vector(elements) {}
 
-    explicit StackEntry(PropertyVector* properties)
-        : state(JSONParserState::FinishObjectMember), vector(properties) {}
+    explicit StackEntry(JSContext* cx, PropertyVector* properties)
+        : state(JSONParserState::FinishObjectMember),
+          parseRecords(cx),
+          vector(properties) {}
 
     JSONParserState state;
+    ParseRecordObject::EntryMap parseRecords;
 
    private:
     void* vector;
@@ -212,6 +217,8 @@ class MOZ_STACK_CLASS JSONFullParseHandlerAnyChar {
   ParseType parseType = ParseType::JSONParse;
 
   AutoSelectGCHeap gcHeap;
+
+  ParseRecordObject parseRecord;
 
  private:
   // Unused element and property vectors for previous in progress arrays and
@@ -255,7 +262,7 @@ class MOZ_STACK_CLASS JSONFullParseHandlerAnyChar {
                          PropertyVector** properties);
   inline bool objectPropertyName(Vector<StackEntry, 10>& stack,
                                  bool* isProtoInEval);
-  inline void finishObjectMember(Vector<StackEntry, 10>& stack,
+  inline bool finishObjectMember(Vector<StackEntry, 10>& stack,
                                  JS::Handle<JS::Value> value,
                                  PropertyVector** properties);
   inline bool finishObject(Vector<StackEntry, 10>& stack,
@@ -282,6 +289,12 @@ class MOZ_STACK_CLASS JSONFullParseHandlerAnyChar {
   inline void freeStackEntry(StackEntry& entry);
 
   void trace(JSTracer* trc);
+
+ private:
+  inline bool finishMemberParseRecord(JS::PropertyKey& key,
+                                      StackEntry& objectEntry);
+  inline bool finishCompoundParseRecord(const Value& value,
+                                        StackEntry& objectEntry);
 };
 
 template <typename CharT>
@@ -303,8 +316,6 @@ class MOZ_STACK_CLASS JSONFullParseHandler
     bool append(const CharT* begin, const CharT* end);
   };
 
-  ParseRecordObject parseRecord;
-
   explicit JSONFullParseHandler(JSContext* cx) : Base(cx) {}
 
   JSONFullParseHandler(JSONFullParseHandler&& other) noexcept
@@ -325,11 +336,9 @@ class MOZ_STACK_CLASS JSONFullParseHandler
 
   void reportError(const char* msg, uint32_t line, uint32_t column);
 
-  void trace(JSTracer* trc);
-
  protected:
   inline bool createJSONParseRecord(const Value& value,
-                                    mozilla::Span<const CharT>& source);
+                                    mozilla::Span<const CharT> source);
 };
 
 template <typename CharT>
@@ -409,9 +418,11 @@ class MOZ_STACK_CLASS JSONSyntaxParseHandler {
     *isProtoInEval = false;
     return true;
   }
-  inline void finishObjectMember(Vector<StackEntry, 10>& stack,
+  inline bool finishObjectMember(Vector<StackEntry, 10>& stack,
                                  DummyValue& value,
-                                 PropertyVector** properties) {}
+                                 PropertyVector** properties) {
+    return true;
+  }
   inline bool finishObject(Vector<StackEntry, 10>& stack, DummyValue* vp,
                            PropertyVector* properties);
 

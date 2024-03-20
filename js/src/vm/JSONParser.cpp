@@ -612,7 +612,10 @@ void JSONTokenizer<CharT, ParserT, StringBuilderT>::error(const char* msg) {
 // collections then at least half of it will end up tenured.
 
 JSONFullParseHandlerAnyChar::JSONFullParseHandlerAnyChar(JSContext* cx)
-    : cx(cx), gcHeap(cx, 1), freeElements(cx), freeProperties(cx) {}
+    : cx(cx),
+      gcHeap(cx, 1),
+      freeElements(cx),
+      freeProperties(cx) {}
 
 JSONFullParseHandlerAnyChar::JSONFullParseHandlerAnyChar(
     JSONFullParseHandlerAnyChar&& other) noexcept
@@ -620,6 +623,7 @@ JSONFullParseHandlerAnyChar::JSONFullParseHandlerAnyChar(
       v(other.v),
       parseType(other.parseType),
       gcHeap(cx, 1),
+      parseRecord(std::move(other.parseRecord)),
       freeElements(std::move(other.freeElements)),
       freeProperties(std::move(other.freeProperties)) {}
 
@@ -644,7 +648,7 @@ inline bool JSONFullParseHandlerAnyChar::objectOpen(
       return false;
     }
   }
-  if (!stack.append(*properties)) {
+  if (!stack.append(StackEntry(cx, *properties))) {
     js_delete(*properties);
     return false;
   }
@@ -676,11 +680,12 @@ inline bool JSONFullParseHandlerAnyChar::objectPropertyName(
   return true;
 }
 
-inline void JSONFullParseHandlerAnyChar::finishObjectMember(
+inline bool JSONFullParseHandlerAnyChar::finishObjectMember(
     Vector<StackEntry, 10>& stack, JS::Handle<JS::Value> value,
     PropertyVector** properties) {
   *properties = &stack.back().properties();
   (*properties)->back().value = value;
+  return finishMemberParseRecord((*properties)->back().id, stack.back());
 }
 
 inline bool JSONFullParseHandlerAnyChar::finishObject(
@@ -700,6 +705,9 @@ inline bool JSONFullParseHandlerAnyChar::finishObject(
   }
 
   vp.setObject(*obj);
+  if (!finishCompoundParseRecord(vp, stack.back())) {
+    return false;
+  }
   if (!freeProperties.append(properties)) {
     return false;
   }
@@ -718,7 +726,7 @@ inline bool JSONFullParseHandlerAnyChar::arrayOpen(
       return false;
     }
   }
-  if (!stack.append(*elements)) {
+  if (!stack.append(StackEntry(cx, *elements))) {
     js_delete(*elements);
     return false;
   }
@@ -766,6 +774,32 @@ inline void JSONFullParseHandlerAnyChar::freeStackEntry(StackEntry& entry) {
 
 void JSONFullParseHandlerAnyChar::trace(JSTracer* trc) {
   JS::TraceRoot(trc, &v, "JSONFullParseHandlerAnyChar current value");
+  parseRecord.trace(trc);
+}
+
+inline bool JSONFullParseHandlerAnyChar::finishMemberParseRecord(
+    JS::PropertyKey& key, StackEntry& objectEntry) {
+#ifdef ENABLE_JSON_PARSE_WITH_SOURCE
+  if (cx->realm()->creationOptions().getJSONParseWithSource()) {
+    parseRecord.key = key;
+    return objectEntry.parseRecords.put(key, std::move(parseRecord));
+  }
+#endif
+  return true;
+}
+
+inline bool JSONFullParseHandlerAnyChar::finishCompoundParseRecord(
+    const Value& value, StackEntry& objectEntry) {
+#ifdef ENABLE_JSON_PARSE_WITH_SOURCE
+  if (cx->realm()->creationOptions().getJSONParseWithSource()) {
+    Rooted<JSONParseNode*> parseNode(cx);
+    parseRecord = ParseRecordObject(parseNode, value);
+    if (!parseRecord.addEntries(cx, std::move(objectEntry.parseRecords))) {
+      return false;
+    }
+  }
+#endif
+  return true;
 }
 
 template <typename CharT>
@@ -848,21 +882,16 @@ void JSONFullParseHandler<CharT>::reportError(const char* msg, uint32_t line,
 }
 
 template <typename CharT>
-void JSONFullParseHandler<CharT>::trace(JSTracer* trc) {
-  Base::trace(trc);
-  parseRecord.trace(trc);
-}
-
-template <typename CharT>
 inline bool JSONFullParseHandler<CharT>::createJSONParseRecord(
-    const Value& value, mozilla::Span<const CharT>& source) {
+    const Value& value, mozilla::Span<const CharT> source) {
 #ifdef ENABLE_JSON_PARSE_WITH_SOURCE
   if (cx->realm()->creationOptions().getJSONParseWithSource()) {
-    MOZ_ASSERT(!source.IsEmpty());
-    Rooted<JSONParseNode*> parseNode(cx,
-                                     NewStringCopy<CanGC, CharT>(cx, source));
-    if (!parseNode) {
-      return false;
+    Rooted<JSONParseNode*> parseNode(cx);
+    if (!source.IsEmpty()) {  // Empty source is for objects and arrays
+      parseNode.set(NewStringCopy<CanGC, CharT>(cx, source));
+      if (!parseNode) {
+        return false;
+      }
     }
     parseRecord = ParseRecordObject(parseNode, value);
   }
@@ -889,7 +918,9 @@ bool JSONPerHandlerParser<CharT, HandlerT>::parseImpl(TempValueT& value,
     switch (state) {
       case JSONParserState::FinishObjectMember: {
         typename HandlerT::PropertyVector* properties;
-        handler.finishObjectMember(stack, value, &properties);
+        if (!handler.finishObjectMember(stack, value, &properties)) {
+          return false;
+        }
 
         token = tokenizer.advanceAfterProperty();
         if (token == JSONToken::ObjectClose) {
@@ -1107,6 +1138,7 @@ void JSONParser<CharT>::trace(JSTracer* trc) {
     } else {
       elem.properties().trace(trc);
     }
+    elem.parseRecords.trace(trc);
   }
 }
 
@@ -1359,9 +1391,11 @@ class MOZ_STACK_CLASS DelegateHandler {
     *isProtoInEval = false;
     return true;
   }
-  inline void finishObjectMember(Vector<StackEntry, 10>& stack,
+  inline bool finishObjectMember(Vector<StackEntry, 10>& stack,
                                  DummyValue& value,
-                                 PropertyVector** properties) {}
+                                 PropertyVector** properties) {
+    return true;
+  }
   inline bool finishObject(Vector<StackEntry, 10>& stack, DummyValue* vp,
                            PropertyVector* properties) {
     if (hadHandlerError_) {
