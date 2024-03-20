@@ -31,10 +31,9 @@ XPCOMUtils.defineLazyPreferenceGetter(
   PREF_STRIP_IS_TEST
 );
 
-// Lazy getter for the strip-on-share strip list.
-ChromeUtils.defineLazyGetter(lazy, "StripOnShareList", async () => {
+async function fetchAndParseList(fileName) {
   let response = await fetch(
-    "chrome://global/content/antitracking/StripOnShare.json"
+    "chrome://global/content/antitracking/" + fileName
   );
   if (!response.ok) {
     lazy.logger.error(
@@ -44,7 +43,48 @@ ChromeUtils.defineLazyGetter(lazy, "StripOnShareList", async () => {
       "Error fetching strip-on-share strip list" + response.status
     );
   }
-  return response.json();
+  return await response.json();
+}
+
+// Lazy getter for the strip-on-share strip list.
+ChromeUtils.defineLazyGetter(lazy, "StripOnShareList", async () => {
+  let [stripOnShareList, stripOnShareLGPLParams] = await Promise.all([
+    fetchAndParseList("StripOnShare.json"),
+    fetchAndParseList("StripOnShareLGPL.json"),
+  ]);
+
+  if (!stripOnShareList || !stripOnShareLGPLParams) {
+    lazy.logger.error("Error strip-on-share strip list were not loaded");
+    throw new Error("Error fetching strip-on-share strip list were not loaded");
+  }
+
+  // Combines the mozilla licensed strip on share param
+  // list and the LGPL licensed strip on share param list
+  for (const key in stripOnShareLGPLParams) {
+    if (Object.hasOwn(stripOnShareList, key)) {
+      stripOnShareList[key].queryParams.push(
+        ...stripOnShareLGPLParams[key].queryParams
+      );
+
+      stripOnShareList[key].topLevelSites.push(
+        ...stripOnShareLGPLParams[key].topLevelSites
+      );
+
+      // Removes duplicates topLevelSitres
+      stripOnShareList[key].topLevelSites = [
+        ...new Set(stripOnShareList[key].topLevelSites),
+      ];
+
+      // Removes duplicates queryParams
+      stripOnShareList[key].queryParams = [
+        ...new Set(stripOnShareList[key].queryParams),
+      ];
+    } else {
+      stripOnShareList[key] = stripOnShareLGPLParams[key];
+    }
+  }
+
+  return stripOnShareList;
 });
 
 export class URLQueryStrippingListService {

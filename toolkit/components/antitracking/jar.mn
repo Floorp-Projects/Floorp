@@ -9,4 +9,7 @@ toolkit.jar:
   # domain1: {queryParams: [param1, param2, ..], topLevelSites: [www.site.de, www.site.com,...]}, domain2: {...}
   # This list will be consumed from the nsIQueryStrippingListService and
   # later be dispatched to the nsIURLQueryStringStripper in a further processed form.
-  content/global/antitracking/StripOnShare.json           (data/StripOnShare.json)
+  content/global/antitracking/StripOnShare.json           (StripOnShareLists/MPL2/StripOnShare.json)
+
+  # Separate StripOnShare list for parameters that are covered in the LGPL License
+  content/global/antitracking/StripOnShareLGPL.json           (StripOnShareLists/LGPL/StripOnShareLGPL.json)

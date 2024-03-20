@@ -81,6 +81,9 @@ var gExceptionPaths = [
 
   // CSS files are referenced inside JS in an html template
   "chrome://browser/content/aboutlogins/components/",
+
+  // Strip on Share parameter lists
+  "chrome://global/content/antitracking/",
 ];
 
 // These are not part of the omni.ja file, so we find them only when running
