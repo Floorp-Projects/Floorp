@@ -828,7 +828,7 @@ inline bool JSONFullParseHandler<CharT>::setStringValue(
     return false;
   }
   v = JS::StringValue(str);
-  return createJSONParseRecord(v, source);
+  return finishPrimitiveParseRecord(v, source);
 }
 
 template <typename CharT>
@@ -846,26 +846,26 @@ inline bool JSONFullParseHandler<CharT>::setStringValue(
     return false;
   }
   v = JS::StringValue(str);
-  return createJSONParseRecord(v, source);
+  return finishPrimitiveParseRecord(v, source);
 }
 
 template <typename CharT>
 inline bool JSONFullParseHandler<CharT>::setNumberValue(
     double d, mozilla::Span<const CharT>&& source) {
   v = JS::NumberValue(d);
-  return createJSONParseRecord(v, source);
+  return finishPrimitiveParseRecord(v, source);
 }
 
 template <typename CharT>
 inline bool JSONFullParseHandler<CharT>::setBooleanValue(
     bool value, mozilla::Span<const CharT>&& source) {
-  return createJSONParseRecord(JS::BooleanValue(value), source);
+  return finishPrimitiveParseRecord(JS::BooleanValue(value), source);
 }
 
 template <typename CharT>
 inline bool JSONFullParseHandler<CharT>::setNullValue(
     mozilla::Span<const CharT>&& source) {
-  return createJSONParseRecord(JS::NullValue(), source);
+  return finishPrimitiveParseRecord(JS::NullValue(), source);
 }
 
 template <typename CharT>
@@ -882,7 +882,7 @@ void JSONFullParseHandler<CharT>::reportError(const char* msg, uint32_t line,
 }
 
 template <typename CharT>
-inline bool JSONFullParseHandler<CharT>::createJSONParseRecord(
+inline bool JSONFullParseHandler<CharT>::finishPrimitiveParseRecord(
     const Value& value, mozilla::Span<const CharT> source) {
 #ifdef ENABLE_JSON_PARSE_WITH_SOURCE
   if (cx->realm()->creationOptions().getJSONParseWithSource()) {
