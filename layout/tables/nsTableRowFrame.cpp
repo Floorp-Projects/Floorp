@@ -581,11 +581,8 @@ nscoord nsTableRowFrame::CalcCellActualBSize(nsTableCellFrame* aCellFrame,
 
   const auto& bsizeStyleCoord = position->BSize(aWM);
   if (bsizeStyleCoord.ConvertsToLength()) {
-    // In quirks mode, table cell isize should be content-box, but bsize
-    // should be border-box.
-    // Because of this historic anomaly, we do not use quirk.css
-    // (since we can't specify one value of box-sizing for isize and another
-    // for bsize)
+    // In quirks mode, table cell bsize should always be border-box.
+    // https://quirks.spec.whatwg.org/#the-table-cell-height-box-sizing-quirk
     specifiedBSize = bsizeStyleCoord.ToLength();
     if (PresContext()->CompatibilityMode() != eCompatibility_NavQuirks &&
         position->mBoxSizing == StyleBoxSizing::Content) {
