@@ -279,32 +279,70 @@ class Editor extends PureComponent {
   };
 
   componentDidUpdate(prevProps) {
-    const { selectedSource, breakableLines } = this.props;
+    const {
+      selectedSource,
+      blackboxedRanges,
+      isSourceOnIgnoreList,
+      breakableLines,
+    } = this.props;
     const { editor } = this.state;
 
     if (!selectedSource) {
       return;
     }
 
-    const shouldUpdateBreakableLines =
-      prevProps.breakableLines.size !== this.props.breakableLines.size ||
-      prevProps.selectedSource?.id !== selectedSource.id;
     // Sets the breakables lines for codemirror 6
-    if (features.codemirrorNext && editor && shouldUpdateBreakableLines) {
+    if (features.codemirrorNext && editor) {
+      const shouldUpdateBreakableLines =
+        prevProps.breakableLines.size !== this.props.breakableLines.size ||
+        prevProps.selectedSource?.id !== selectedSource.id;
+
       const isSourceWasm = isWasm(selectedSource.id);
-      editor.setLineGutterMarkers([
-        {
-          gutterLineClassName: "empty-line",
-          condition: line => {
-            const lineNumber = fromEditorLine(
-              selectedSource.id,
-              line,
-              isSourceWasm
-            );
-            return !breakableLines.has(lineNumber);
+
+      if (shouldUpdateBreakableLines) {
+        editor.setLineGutterMarkers([
+          {
+            gutterLineClassName: "empty-line",
+            condition: line => {
+              const lineNumber = fromEditorLine(
+                selectedSource.id,
+                line,
+                isSourceWasm
+              );
+              return !breakableLines.has(lineNumber);
+            },
           },
-        },
-      ]);
+        ]);
+      }
+
+      const blackboxedRangesForSelectedSource =
+        blackboxedRanges[selectedSource.url];
+      const shouldUpdateBlackboxedLines =
+        prevProps.blackboxedRanges[selectedSource.url]?.length !==
+          blackboxedRangesForSelectedSource?.length ||
+        prevProps.selectedSource?.id !== selectedSource?.id ||
+        prevProps.isSourceOnIgnoreList !== isSourceOnIgnoreList;
+
+      if (shouldUpdateBlackboxedLines) {
+        editor.setLineGutterMarkers([
+          {
+            gutterLineClassName: "blackboxed-line",
+            condition: line => {
+              const lineNumber = fromEditorLine(
+                selectedSource.id,
+                line,
+                isSourceWasm
+              );
+
+              return isLineBlackboxed(
+                blackboxedRangesForSelectedSource,
+                lineNumber,
+                isSourceOnIgnoreList
+              );
+            },
+          },
+        ]);
+      }
     }
   }
 
