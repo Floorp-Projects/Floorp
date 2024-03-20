@@ -153,6 +153,15 @@ export MOZ_BOOKMARK=$MOZ_BOOKMARK
 " > $STATE_DIR/rebase_resume_state
 fi # if [ -f $STATE_DIR/rebase_resume_state ]; then ; else
 
+if [ "x$STOP_FOR_REORDER" = "x1" ]; then
+  echo ""
+  echo "Stopping after generating commit list ($COMMIT_LIST_FILE) to"
+  echo "allow tweaking commit ordering.  Re-running $0 will resume the"
+  echo "rebase processing.  To stop processing during the rebase,"
+  echo "insert a line with only 'STOP'."
+  exit
+fi
+
 # grab all commits
 COMMITS=`cat $COMMIT_LIST_FILE | awk '{print $1;}'`
 
@@ -170,6 +179,12 @@ for commit in $COMMITS; do
     echo "Removing from list '$FULL_COMMIT_LINE'"
     ed -s $COMMIT_LIST_FILE <<< $'1d\nw\nq'
   }
+
+  if [ "$FULL_COMMIT_LINE" == "STOP" ]; then
+    echo "Stopping for history editing.  Re-run $0 to resume."
+    remove_commit
+    exit
+  fi
 
   IS_BUILD_COMMIT=`hg log -T '{desc|firstline}' -r $commit \
                    | grep "file updates" | wc -l | tr -d " " || true`
