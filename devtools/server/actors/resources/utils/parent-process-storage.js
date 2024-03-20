@@ -79,11 +79,12 @@ class ParentProcessStorage {
         watcherActor.sessionContext;
       await this._spawnActor(addonBrowsingContextID, addonInnerWindowId);
     } else if (watcherActor.sessionContext.type == "all") {
-      const parentProcessTargetActor =
-        this.watcherActor.getTargetActorInParentProcess();
-      const { browsingContextID, innerWindowId } =
-        parentProcessTargetActor.form();
-      await this._spawnActor(browsingContextID, innerWindowId);
+      // Note that there should be only one such target in the browser toolbox.
+      // The Parent Process Target Actor.
+      for (const targetActor of this.watcherActor.getTargetActorsInParentProcess()) {
+        const { browsingContextID, innerWindowId } = targetActor.form();
+        await this._spawnActor(browsingContextID, innerWindowId);
+      }
     } else {
       throw new Error(
         "Unsupported session context type=" + watcherActor.sessionContext.type
