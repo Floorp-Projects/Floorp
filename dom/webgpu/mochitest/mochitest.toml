@@ -41,6 +41,12 @@ fail-if = [
   "os == 'mac'",
 ]
 
+["test_compilation_message_pos.html"]
+fail-if = [
+  "os == 'linux' && os_version == '18.04'",
+  "os == 'mac'",
+]
+
 ["test_context_configure.html"]
 fail-if = [
   "os == 'linux' && os_version == '18.04'",
