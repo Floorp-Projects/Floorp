@@ -1733,6 +1733,24 @@ static bool InternalizeJSONProperty(
     return false;
   }
 
+#ifdef ENABLE_JSON_PARSE_WITH_SOURCE
+  RootedObject context(cx);
+  if (cx->realm()->creationOptions().getJSONParseWithSource()) {
+    // https://tc39.es/proposal-json-parse-with-source/#sec-internalizejsonproperty
+    context = NewPlainObject(cx);
+    if (!context) {
+      return false;
+    }
+    if (parseRecord.get().parseNode) {
+      MOZ_ASSERT(!val.isObject());
+      Rooted<Value> parseNode(cx, StringValue(parseRecord.get().parseNode));
+      if (!DefineDataProperty(cx, context, cx->names().source, parseNode)) {
+        return false;
+      }
+    }
+  }
+#endif
+
   /* Step 2. */
   if (val.isObject()) {
     RootedObject obj(cx, &val.toObject());
@@ -1839,14 +1857,6 @@ static bool InternalizeJSONProperty(
   RootedValue keyVal(cx, StringValue(key));
 #ifdef ENABLE_JSON_PARSE_WITH_SOURCE
   if (cx->realm()->creationOptions().getJSONParseWithSource()) {
-    RootedObject context(cx, NewPlainObject(cx));
-    if (!context) {
-      return false;
-    }
-    Rooted<Value> parseNode(cx, StringValue(parseRecord.get().parseNode));
-    if (!DefineDataProperty(cx, context, cx->names().source, parseNode)) {
-      return false;
-    }
     RootedValue contextVal(cx, ObjectValue(*context));
     return js::Call(cx, reviver, holder, keyVal, val, contextVal, vp);
   }
