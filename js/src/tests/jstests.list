@@ -1368,6 +1368,16 @@ skip script test262/built-ins/Temporal/ZonedDateTime/prototype/since/normalized-
 skip script test262/built-ins/Temporal/ZonedDateTime/prototype/hoursInDay/precision-exact-mathematical-values-2.js
 
 ##############################################
+# Iterator helper tests                      #
+##############################################
+
+# Failures with --enable-iterator-helpers, see bug 1877831.
+shell-option(--enable-iterator-helpers) skip script test262/built-ins/Iterator/prototype/constructor/prop-desc.js
+shell-option(--enable-iterator-helpers) skip script test262/built-ins/Iterator/prototype/constructor/weird-setter.js
+shell-option(--enable-iterator-helpers) skip script test262/built-ins/Iterator/prototype/Symbol.toStringTag/prop-desc.js
+shell-option(--enable-iterator-helpers) skip script test262/built-ins/Iterator/prototype/Symbol.toStringTag/weird-setter.js
+
+##############################################
 # AsyncFromSyncIteratorPrototype tests       #
 ##############################################
 
