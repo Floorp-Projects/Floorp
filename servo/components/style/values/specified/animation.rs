@@ -165,12 +165,6 @@ impl AnimationIterationCount {
     pub fn one() -> Self {
         Self::Number(NonNegativeNumber::new(1.0))
     }
-
-    /// Returns true if it's `1.0`.
-    #[inline]
-    pub fn is_one(&self) -> bool {
-        *self == Self::one()
-    }
 }
 
 /// A value for the `animation-name` property.
@@ -236,17 +230,6 @@ pub enum AnimationDirection {
     AlternateReverse,
 }
 
-impl AnimationDirection {
-    /// Returns true if the name matches any animation-direction keyword.
-    #[inline]
-    pub fn match_keywords(name: &AnimationName) -> bool {
-        if let Some(name) = name.as_atom() {
-            return name.with_str(|n| Self::from_ident(n).is_ok());
-        }
-        false
-    }
-}
-
 /// https://drafts.csswg.org/css-animations/#animation-play-state
 #[derive(Copy, Clone, Debug, MallocSizeOf, Parse, PartialEq, SpecifiedValueInfo, ToComputedValue, ToCss, ToResolvedValue, ToShmem)]
 #[repr(u8)]
@@ -254,17 +237,6 @@ impl AnimationDirection {
 pub enum AnimationPlayState {
     Running,
     Paused,
-}
-
-impl AnimationPlayState {
-    /// Returns true if the name matches any animation-play-state keyword.
-    #[inline]
-    pub fn match_keywords(name: &AnimationName) -> bool {
-        if let Some(name) = name.as_atom() {
-            return name.with_str(|n| Self::from_ident(n).is_ok());
-        }
-        false
-    }
 }
 
 /// https://drafts.csswg.org/css-animations/#propdef-animation-fill-mode
@@ -276,18 +248,6 @@ pub enum AnimationFillMode {
     Forwards,
     Backwards,
     Both,
-}
-
-impl AnimationFillMode {
-    /// Returns true if the name matches any animation-fill-mode keyword.
-    /// Note: animation-name:none is its initial value, so we don't have to match none here.
-    #[inline]
-    pub fn match_keywords(name: &AnimationName) -> bool {
-        if let Some(atom) = name.as_atom() {
-            return !name.is_none() && atom.with_str(|n| Self::from_ident(n).is_ok());
-        }
-        false
-    }
 }
 
 /// https://drafts.csswg.org/css-animations-2/#animation-composition
