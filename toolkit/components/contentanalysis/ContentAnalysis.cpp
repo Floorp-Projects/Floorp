@@ -825,8 +825,6 @@ NS_IMPL_ISUPPORTS(ContentAnalysisAcknowledgement,
                   nsIContentAnalysisAcknowledgement);
 NS_IMPL_ISUPPORTS(ContentAnalysisCallback, nsIContentAnalysisCallback);
 NS_IMPL_ISUPPORTS(ContentAnalysisResult, nsIContentAnalysisResult);
-NS_IMPL_ISUPPORTS(ContentAnalysisDiagnosticInfo,
-                  nsIContentAnalysisDiagnosticInfo);
 NS_IMPL_ISUPPORTS(ContentAnalysis, nsIContentAnalysis, ContentAnalysis);
 
 ContentAnalysis::ContentAnalysis()
@@ -1427,40 +1425,6 @@ nsresult ContentAnalysis::RunAcknowledgeTask(
   return rv;
 }
 
-NS_IMETHODIMP
-ContentAnalysis::GetDiagnosticInfo(JSContext* aCx,
-                                   mozilla::dom::Promise** aPromise) {
-  RefPtr<mozilla::dom::Promise> promise;
-  nsresult rv = MakePromise(aCx, &promise);
-  NS_ENSURE_SUCCESS(rv, rv);
-  mCaClientPromise->Then(
-      GetCurrentSerialEventTarget(), __func__,
-      [promise](std::shared_ptr<content_analysis::sdk::Client> client) mutable {
-        if (!client) {
-          auto info = MakeRefPtr<ContentAnalysisDiagnosticInfo>(
-              false, EmptyString(), false, 0);
-          promise->MaybeResolve(info);
-          return;
-        }
-        RefPtr<ContentAnalysis> self = GetContentAnalysisFromService();
-        std::string agentPath = client->GetAgentInfo().binary_path;
-        nsString agentWidePath = NS_ConvertUTF8toUTF16(agentPath);
-        auto info = MakeRefPtr<ContentAnalysisDiagnosticInfo>(
-            true, std::move(agentWidePath), false,
-            self ? self->mRequestCount : 0);
-        promise->MaybeResolve(info);
-      },
-      [promise](nsresult rv) {
-        RefPtr<ContentAnalysis> self = GetContentAnalysisFromService();
-        auto info = MakeRefPtr<ContentAnalysisDiagnosticInfo>(
-            false, EmptyString(), rv == NS_ERROR_INVALID_SIGNATURE,
-            self ? self->mRequestCount : 0);
-        promise->MaybeResolve(info);
-      });
-  promise.forget(aPromise);
-  return NS_OK;
-}
-
 NS_IMETHODIMP ContentAnalysisCallback::ContentResult(
     nsIContentAnalysisResponse* aResponse) {
   if (mPromise.isSome()) {
@@ -1483,28 +1447,6 @@ NS_IMETHODIMP ContentAnalysisCallback::Error(nsresult aError) {
 ContentAnalysisCallback::ContentAnalysisCallback(RefPtr<dom::Promise> aPromise)
     : mPromise(Some(new nsMainThreadPtrHolder<dom::Promise>(
           "content analysis promise", aPromise))) {}
-
-NS_IMETHODIMP ContentAnalysisDiagnosticInfo::GetConnectedToAgent(
-    bool* aConnectedToAgent) {
-  *aConnectedToAgent = mConnectedToAgent;
-  return NS_OK;
-}
-NS_IMETHODIMP ContentAnalysisDiagnosticInfo::GetAgentPath(
-    nsAString& aAgentPath) {
-  aAgentPath = mAgentPath;
-  return NS_OK;
-}
-NS_IMETHODIMP ContentAnalysisDiagnosticInfo::GetFailedSignatureVerification(
-    bool* aFailedSignatureVerification) {
-  *aFailedSignatureVerification = mFailedSignatureVerification;
-  return NS_OK;
-}
-
-NS_IMETHODIMP ContentAnalysisDiagnosticInfo::GetRequestCount(
-    int64_t* aRequestCount) {
-  *aRequestCount = mRequestCount;
-  return NS_OK;
-}
 
 #undef LOGD
 #undef LOGE

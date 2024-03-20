@@ -34,27 +34,6 @@ class ContentAnalysisResponse;
 
 namespace mozilla::contentanalysis {
 
-class ContentAnalysisDiagnosticInfo final
-    : public nsIContentAnalysisDiagnosticInfo {
- public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSICONTENTANALYSISDIAGNOSTICINFO
-  ContentAnalysisDiagnosticInfo(bool aConnectedToAgent, nsString aAgentPath,
-                                bool aFailedSignatureVerification,
-                                int64_t aRequestCount)
-      : mConnectedToAgent(aConnectedToAgent),
-        mAgentPath(std::move(aAgentPath)),
-        mFailedSignatureVerification(aFailedSignatureVerification),
-        mRequestCount(aRequestCount) {}
-
- private:
-  ~ContentAnalysisDiagnosticInfo() = default;
-  bool mConnectedToAgent;
-  nsString mAgentPath;
-  bool mFailedSignatureVerification;
-  int64_t mRequestCount;
-};
-
 class ContentAnalysisRequest final : public nsIContentAnalysisRequest {
  public:
   NS_DECL_ISUPPORTS

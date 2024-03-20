@@ -166,15 +166,6 @@ interface nsIContentAnalysisCallback : nsISupports
   void error(in nsresult aResult);
 };
 
-[scriptable, builtinclass, uuid(a430f6ef-a526-4055-8a82-7741ea757367)]
-interface nsIContentAnalysisDiagnosticInfo : nsISupports
-{
-  [infallible] readonly attribute boolean connectedToAgent;
-  readonly attribute AString agentPath;
-  [infallible] readonly attribute boolean failedSignatureVerification;
-  [infallible] readonly attribute long long requestCount;
-};
-
 [scriptable, builtinclass, uuid(61497587-2bba-4a88-acd3-3fbb2cedf163)]
 interface nsIContentAnalysis : nsISupports
 {
@@ -263,11 +254,4 @@ interface nsIContentAnalysis : nsISupports
    * given to Gecko on the command line.
    */
   void testOnlySetCACmdLineArg(in boolean aVal);
-
-  /**
-   * Gets diagnostic information about content analysis. Returns a
-   * nsIContentAnalysisDiagnosticInfo via the returned promise.
-   */
-  [implicit_jscontext]
-  Promise getDiagnosticInfo();
 };
