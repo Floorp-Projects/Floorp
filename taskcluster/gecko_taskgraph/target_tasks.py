@@ -772,35 +772,6 @@ def target_tasks_kaios(full_task_graph, parameters, graph_config):
     return [l for l, t in full_task_graph.tasks.items() if filter(t)]
 
 
-@_target_task("ship_geckoview")
-def target_tasks_ship_geckoview(full_task_graph, parameters, graph_config):
-    """Select the set of tasks required to ship geckoview nightly. The
-    nightly build process involves a pipeline of builds and an upload to
-    maven.mozilla.org."""
-    index_path = (
-        f"{graph_config['trust-domain']}.v2.{parameters['project']}.revision."
-        f"{parameters['head_rev']}.taskgraph.decision-ship-geckoview"
-    )
-    if os.environ.get("MOZ_AUTOMATION") and retry(
-        index_exists,
-        args=(index_path,),
-        kwargs={
-            "reason": "to avoid triggering multiple nightlies off the same revision",
-        },
-    ):
-        return []
-
-    def filter(task):
-        # XXX Starting 69, we don't ship Fennec Nightly anymore. We just want geckoview to be
-        # uploaded
-        return task.attributes.get("shipping_product") == "fennec" and task.kind in (
-            "beetmover-geckoview",
-            "upload-symbols",
-        )
-
-    return [l for l, t in full_task_graph.tasks.items() if filter(t)]
-
-
 @_target_task("custom-car_perf_testing")
 def target_tasks_custom_car_perf_testing(full_task_graph, parameters, graph_config):
     """Select tasks required for running daily performance tests for custom chromium-as-release."""
@@ -1651,6 +1622,14 @@ def target_tasks_snap_upstream_tests(full_task_graph, parameters, graph_config):
 @_target_task("nightly-android")
 def target_tasks_nightly_android(full_task_graph, parameters, graph_config):
     def filter(task, parameters):
+        # geckoview
+        if task.attributes.get("shipping_product") == "fennec" and task.kind in (
+            "beetmover-geckoview",
+            "upload-symbols",
+        ):
+            return True
+
+        # fenix/focus/a-c
         build_type = task.attributes.get("build-type", "")
         return build_type in (
             "nightly",

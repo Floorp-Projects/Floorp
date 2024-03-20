@@ -103,18 +103,6 @@ jobs:
           - oak
       when: []  # hook only
 
-    - name: ship-geckoview
-      job:
-          type: decision-task
-          treeherder-symbol: ship_geckoview
-          target-tasks-method: ship_geckoview
-          include-push-tasks: true
-      run-on-projects:
-          - mozilla-central
-      when:
-          by-project:
-              mozilla-central: [{hour: 10, minute: 0}, {hour: 22, minute: 0}]
-
     - name: general-perf-testing
       job:
           type: decision-task
