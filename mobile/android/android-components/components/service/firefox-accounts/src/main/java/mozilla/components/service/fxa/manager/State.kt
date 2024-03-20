@@ -102,11 +102,60 @@ internal sealed class Event {
         data class StartedOAuthFlow(val oAuthUrl: String) : Progress()
         data class CompletedAuthentication(val authType: AuthType) : Progress()
     }
+
+    /**
+     * Get a string to display in the breadcrumbs
+     *
+     * The main point of this function is to avoid using the string "auth", which gets filtered by
+     * Sentry.  Use "ath" as a hacky replacement.
+     */
+    fun breadcrumbDisplay(): String = when (this) {
+        is Account.Start -> "Account.Start"
+        is Account.BeginEmailFlow -> "Account.BeginEmailFlow"
+        is Account.BeginPairingFlow -> "Account.BeginPairingFlow"
+        is Account.AuthenticationError -> "Account.AthenticationError($operation)"
+        is Account.AccessTokenKeyError -> "Account.AccessTknKeyError"
+        is Account.Logout -> "Account.Logout"
+        is Progress.AccountNotFound -> "Progress.AccountNotFound"
+        is Progress.AccountRestored -> "Progress.AccountRestored"
+        is Progress.AuthData -> "Progress.LoggedOut"
+        is Progress.FailedToBeginAuth -> "Progress.FailedToBeginAth"
+        is Progress.FailedToCompleteAuthRestore -> "Progress.FailedToCompleteAthRestore"
+        is Progress.FailedToCompleteAuth -> "Progress.FailedToCompleteAth"
+        is Progress.CancelAuth -> "Progress.CancelAth"
+        is Progress.FailedToRecoverFromAuthenticationProblem -> "Progress.FailedToRecoverFromAthenticationProblem"
+        is Progress.RecoveredFromAuthenticationProblem -> "Progress.RecoveredFromAthenticationProblem"
+        is Progress.LoggedOut -> "Progress.LoggedOut"
+        is Progress.StartedOAuthFlow -> "Progress.StartedOAthFlow"
+        is Progress.CompletedAuthentication -> "Progress.CompletedAthentication"
+    }
 }
 
 internal sealed class State {
     data class Idle(val accountState: AccountState) : State()
     data class Active(val progressState: ProgressState) : State()
+
+    /**
+     * Get a string to display in the breadcrumbs
+     *
+     * The main point of this function is to avoid using the string "auth", which gets filtered by
+     * Sentry.  Use "ath" as a hacky replacement.
+     */
+    fun breadcrumbDisplay(): String = when (this) {
+        is Idle -> when (accountState) {
+            is AccountState.Authenticated -> "AccountState.Athenticated"
+            is AccountState.Authenticating -> "AccountState.Athenticating"
+            is AccountState.AuthenticationProblem -> "AccountState.AthenticationProblem"
+            is AccountState.NotAuthenticated -> "AccountState.NotAthenticated"
+        }
+        is Active -> when (progressState) {
+            ProgressState.Initializing -> "ProgressState.Initializing"
+            ProgressState.BeginningAuthentication -> "ProgressState.BeginningAthentication"
+            ProgressState.CompletingAuthentication -> "ProgressState.CompletingAthentication"
+            ProgressState.RecoveringFromAuthProblem -> "ProgressState.RecoveringFromAthProblem"
+            ProgressState.LoggingOut -> "ProgressState.LoggingOut"
+        }
+    }
 }
 
 internal fun State.next(event: Event): State? = when (this) {

@@ -454,7 +454,7 @@ open class FxaAccountManager(
      */
     private suspend fun processQueue(event: Event) {
         crashReporter?.recordCrashBreadcrumb(
-            Breadcrumb("fxa-state-machine-checker: a-c transition started (event: $event)"),
+            Breadcrumb("fxa-state-machine-checker: a-c transition started (event: ${event.breadcrumbDisplay()})"),
         )
         eventQueue.add(event)
         do {
@@ -462,7 +462,10 @@ open class FxaAccountManager(
             val transitionInto = state.next(toProcess)
 
             crashReporter?.recordCrashBreadcrumb(
-                Breadcrumb("fxa-state-machine-checker: a-c transition (event: $toProcess, into: $transitionInto)"),
+                Breadcrumb(
+                    "fxa-state-machine-checker: a-c transition " +
+                        "(event: ${toProcess.breadcrumbDisplay()}, into: ${transitionInto?.breadcrumbDisplay()})",
+                ),
             )
 
             if (transitionInto == null) {
