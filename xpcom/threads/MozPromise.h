@@ -10,6 +10,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "mozilla/Attributes.h"
 #include "mozilla/ErrorNames.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Maybe.h"
@@ -1049,17 +1050,21 @@ class MozPromise : public MozPromiseBase {
 
  protected:
   /*
-   * A command object to store all information needed to make a request to
-   * the promise. This allows us to delay the request until further use is
-   * known (whether it is ->Then() again for more promise chaining or ->Track()
-   * to terminate chaining and issue the request).
+   * A command object to store all information needed to make a request to the
+   * promise. This allows us to delay the request until further use is known
+   * (whether it is ->Then() again for more promise chaining or ->Track() to
+   * terminate chaining and issue the request).
    *
-   * This allows a unified syntax for promise chaining and disconnection
-   * and feels more like its JS counterpart.
+   * This allows a unified syntax for promise chaining and disconnection, and
+   * feels more like its JS counterpart.
+   *
+   * Note that a ThenCommand is always exclusive, even if its source or result
+   * promises are not. To attach multiple continuations, explicitly convert it
+   * to a promise first.
    */
   template <typename ThenValueType>
-  class ThenCommand {
-    // Allow Promise1::ThenCommand to access the private constructor,
+  class MOZ_TEMPORARY_CLASS ThenCommand {
+    // Allow Promise1::ThenCommand to access the private constructor
     // Promise2::ThenCommand(ThenCommand&&).
     template <typename, typename, bool>
     friend class MozPromise;

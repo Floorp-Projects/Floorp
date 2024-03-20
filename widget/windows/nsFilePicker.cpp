@@ -840,7 +840,7 @@ nsresult nsFilePicker::Open(nsIFilePickerShownCallback* aCallback) {
   auto promise = mMode == modeGetFolder ? ShowFolderPicker(initialDir)
                                         : ShowFilePicker(initialDir);
 
-  auto p2 = promise->Then(
+  promise->Then(
       mozilla::GetMainThreadSerialEventTarget(), __PRETTY_FUNCTION__,
       [self = RefPtr(this),
        callback = RefPtr(aCallback)](bool selectionMade) -> void {
