@@ -529,6 +529,13 @@ class ThreadActor extends Actor {
   }
 
   async setBreakpoint(location, options) {
+    // Automatically initialize the thread actor if it wasn't yet done.
+    // Note that ideally, it should rather be done via reconfigure/thread configuration.
+    if (this._state === STATES.DETACHED) {
+      this.attach({});
+      this.addAllSources();
+    }
+
     let actor = this.breakpointActorMap.get(location);
     // Avoid resetting the exact same breakpoint twice
     if (actor && JSON.stringify(actor.options) == JSON.stringify(options)) {
