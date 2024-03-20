@@ -16,15 +16,18 @@ SimpleTest.waitForExplicitFinish();
   const INACTIVE_CSS_PREF = "devtools.inspector.inactive.css.enabled";
   const CUSTOM_HIGHLIGHT_API = "dom.customHighlightAPI.enabled";
   const TEXT_WRAP_BALANCE = "layout.css.text-wrap-balance.enabled";
+  const ALIGN_CONTENT_BLOCKS = "layout.css.align-content.blocks.enabled";
 
   Services.prefs.setBoolPref(INACTIVE_CSS_PREF, true);
   Services.prefs.setBoolPref(CUSTOM_HIGHLIGHT_API, true);
   Services.prefs.setBoolPref(TEXT_WRAP_BALANCE, true);
+  Services.prefs.setBoolPref(ALIGN_CONTENT_BLOCKS, true);
 
   SimpleTest.registerCleanupFunction(() => {
     Services.prefs.clearUserPref(INACTIVE_CSS_PREF);
     Services.prefs.clearUserPref(CUSTOM_HIGHLIGHT_API);
     Services.prefs.clearUserPref(TEXT_WRAP_BALANCE);
+    Services.prefs.clearUserPref(ALIGN_CONTENT_BLOCKS);
   });
 
   const FOLDER = "./inactive-property-helper";
