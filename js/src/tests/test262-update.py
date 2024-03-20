@@ -24,7 +24,6 @@ UNSUPPORTED_FEATURES = set(
         "Atomics.waitAsync",  # Bug 1467846
         "legacy-regexp",  # Bug 1306461
         "regexp-duplicate-named-groups",  # Bug 1773135
-        "json-parse-with-source",  # Bug 1658310
         "set-methods",  # Bug 1805038
     ]
 )
@@ -39,6 +38,7 @@ FEATURE_CHECK_NEEDED = {
     "Intl.Segmenter": "!Intl.Segmenter",  # Bug 1423593
     "resizable-arraybuffer": "!ArrayBuffer.prototype.resize",  # Bug 1670026
     "uint8array-base64": "!Uint8Array.fromBase64",  # Bug 1862220
+    "json-parse-with-source": "!JSON.hasOwnProperty('isRawJSON')",  # Bug 1658310
 }
 RELEASE_OR_BETA = set(
     [
@@ -53,6 +53,7 @@ SHELL_OPTIONS = {
     "symbols-as-weakmap-keys": "--enable-symbols-as-weakmap-keys",
     "resizable-arraybuffer": "--enable-arraybuffer-resizable",
     "uint8array-base64": "--enable-uint8array-base64",
+    "json-parse-with-source": "--enable-json-parse-with-source",
 }
 
 
