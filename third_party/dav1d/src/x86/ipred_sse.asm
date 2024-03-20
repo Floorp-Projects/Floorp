@@ -670,7 +670,10 @@ ALIGN function_align
     RET
 ALIGN function_align
 .w32:
-    WIN64_PUSH_XMM        8, 7
+%if WIN64
+    movaps         [rsp+24], xmm7
+    %define xmm_regs_used 8
+%endif
     mova                 m7, m5
 .w32_loop_init:
     mov                 r3d, 2
@@ -702,7 +705,10 @@ ALIGN function_align
     RET
 ALIGN function_align
 .w64:
-    WIN64_PUSH_XMM        8, 7
+%if WIN64
+    movaps         [rsp+24], xmm7
+    %define xmm_regs_used 8
+%endif
     mova                 m7, m5
 .w64_loop_init:
     mov                 r3d, 4

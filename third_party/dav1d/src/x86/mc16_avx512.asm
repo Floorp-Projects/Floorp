@@ -2377,6 +2377,7 @@ cglobal put_8tap_16bpc, 4, 9, 16, dst, ds, src, ss, w, h, mx, my
     jg .hv_w16_loop
     RET
 .hv_w32:
+    %assign stack_offset stack_offset - stack_size_padded
     WIN64_SPILL_XMM 32
     vbroadcasti32x4     m20, [spel_h_shufA]
     vbroadcasti32x4     m21, [spel_h_shufB]
@@ -3174,6 +3175,7 @@ cglobal prep_8tap_16bpc, 3, 8, 16, tmp, src, stride, w, h, mx, my, stride3
     jg .hv_w8_loop
     RET
 .hv_w16:
+    %assign stack_offset stack_offset - stack_size_padded
     WIN64_SPILL_XMM 27
     vbroadcasti32x8      m5, [srcq+strideq*0+ 8]
     vinserti32x8         m4, m5, [srcq+strideq*0+ 0], 0
@@ -3311,6 +3313,7 @@ cglobal prep_8tap_16bpc, 3, 8, 16, tmp, src, stride, w, h, mx, my, stride3
     RET
 .hv_w32:
 %if WIN64
+    %assign stack_offset stack_offset - stack_size_padded
     PUSH                 r8
     %assign regs_used regs_used + 1
     WIN64_SPILL_XMM 32

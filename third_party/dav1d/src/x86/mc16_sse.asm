@@ -1302,7 +1302,10 @@ cglobal put_8tap_16bpc, 4, 9, 0, dst, ds, src, ss, w, h, mx, my
     jg .h_w4_loop
     RET
 .h_w8:
+%if WIN64
+    %assign stack_offset stack_offset - stack_size_padded
     WIN64_SPILL_XMM      12
+%endif
     shr                 mxd, 16
     movq                 m3, [base+subpel_filters+mxq*8]
     movifnidn          dstq, dstmp
@@ -1380,7 +1383,14 @@ cglobal put_8tap_16bpc, 4, 9, 0, dst, ds, src, ss, w, h, mx, my
     cmp                  hd, 6
     cmovb               myd, mxd
     movq                 m3, [base+subpel_filters+myq*8]
+%if STACK_ALIGNMENT < 16
+    %xdefine           rstk  rsp
+%else
+    %assign stack_offset stack_offset - stack_size_padded
+%endif
+%if WIN64
     WIN64_SPILL_XMM      15
+%endif
     movd                 m7, r8m
     movifnidn          dstq, dstmp
     movifnidn           dsq, dsmp
@@ -1594,7 +1604,11 @@ cglobal put_8tap_16bpc, 4, 9, 0, dst, ds, src, ss, w, h, mx, my
     jg .v_w4_loop0
     RET
 .hv:
-    RESET_STACK_STATE
+%if STACK_ALIGNMENT < 16
+    %xdefine           rstk  rsp
+%else
+    %assign stack_offset stack_offset - stack_size_padded
+%endif
 %if ARCH_X86_32
     movd                 m4, r8m
     mova                 m6, [base+pd_512]
@@ -1736,7 +1750,11 @@ cglobal put_8tap_16bpc, 4, 9, 0, dst, ds, src, ss, w, h, mx, my
     cmovb               myd, mxd
     movq                 m3, [base+subpel_filters+myq*8]
 %if ARCH_X86_32
-    RESET_STACK_STATE
+%if STACK_ALIGNMENT < 16
+    %xdefine           rstk  rsp
+%else
+    %assign stack_offset stack_offset - stack_size_padded
+%endif
     mov                dstq, dstmp
     mov                 dsq, dsmp
     mova                 m0, [base+spel_h_shufA]
@@ -2164,6 +2182,11 @@ cglobal prep_8tap_16bpc, 4, 8, 0, tmp, src, ss, w, h, mx, my
     cmp                  hd, 4
     cmove               myd, mxd
     movq                 m3, [base+subpel_filters+myq*8]
+%if STACK_ALIGNMENT < 16
+    %xdefine           rstk  rsp
+%else
+    %assign stack_offset stack_offset - stack_size_padded
+%endif
     WIN64_SPILL_XMM      15
     movddup              m7, [base+prep_8tap_1d_rnd]
     movifnidn           ssq, r2mp
@@ -2316,7 +2339,11 @@ cglobal prep_8tap_16bpc, 4, 8, 0, tmp, src, ss, w, h, mx, my
     jg .v_loop0
     RET
 .hv:
-    RESET_STACK_STATE
+%if STACK_ALIGNMENT < 16
+    %xdefine           rstk  rsp
+%else
+    %assign stack_offset stack_offset - stack_size_padded
+%endif
     movzx               t3d, mxb
     shr                 mxd, 16
     cmp                  wd, 4

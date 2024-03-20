@@ -123,6 +123,4 @@ EXTERN\name:
         end_thread_local
 .endm
 
-#define L(x) .L ## x
-
 #endif /* DAV1D_SRC_RISCV_ASM_S */
