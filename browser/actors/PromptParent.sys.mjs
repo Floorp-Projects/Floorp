@@ -30,21 +30,16 @@ ChromeUtils.defineLazyGetter(lazy, "gTabBrowserLocalization", function () {
 });
 
 /**
- * @typedef {Object} Prompt
- * @property {Function} resolver
- *           The resolve function to be called with the data from the Prompt
- *           after the user closes it.
- * @property {Object} tabModalPrompt
- *           The TabModalPrompt being shown to the user.
+ * @typedef {Object} Dialog
  */
 
 /**
- * gBrowserPrompts weakly maps BrowsingContexts to a Map of their currently
- * active Prompts.
+ * gBrowserDialogs weakly maps BrowsingContexts to a Map of their currently
+ * active Dialogs.
  *
- * @type {WeakMap<BrowsingContext, Prompt>}
+ * @type {WeakMap<BrowsingContext, Dialog>}
  */
-let gBrowserPrompts = new WeakMap();
+let gBrowserDialogs = new WeakMap();
 
 export class PromptParent extends JSWindowActorParent {
   didDestroy() {
@@ -54,35 +49,24 @@ export class PromptParent extends JSWindowActorParent {
   }
 
   /**
-   * Registers a new Prompt to be tracked for a particular BrowsingContext.
-   * We need to track a Prompt so that we can, for example, force-close the
-   * TabModalPrompt if the originating subframe or tab unloads or crashes.
+   * Registers a new dialog to be tracked for a particular BrowsingContext.
+   * We need to track a dialog so that we can, for example, force-close the
+   * dialog if the originating subframe or tab unloads or crashes.
    *
-   * @param {Object} tabModalPrompt
-   *        The TabModalPrompt that will be shown to the user.
+   * @param {Dialog} dialog
+   *        The dialog that will be shown to the user.
    * @param {string} id
-   *        A unique ID to differentiate multiple Prompts coming from the same
+   *        A unique ID to differentiate multiple dialogs coming from the same
    *        BrowsingContext.
-   * @return {Promise}
-   * @resolves {Object}
-   *           Resolves with the arguments returned from the TabModalPrompt when it
-   *           is dismissed.
    */
-  registerPrompt(tabModalPrompt, id) {
-    let prompts = gBrowserPrompts.get(this.browsingContext);
-    if (!prompts) {
-      prompts = new Map();
-      gBrowserPrompts.set(this.browsingContext, prompts);
+  registerDialog(dialog, id) {
+    let dialogs = gBrowserDialogs.get(this.browsingContext);
+    if (!dialogs) {
+      dialogs = new Map();
+      gBrowserDialogs.set(this.browsingContext, dialogs);
     }
 
-    let promise = new Promise(resolve => {
-      prompts.set(id, {
-        tabModalPrompt,
-        resolver: resolve,
-      });
-    });
-
-    return promise;
+    dialogs.set(id, dialog);
   }
 
   /**
@@ -94,20 +78,18 @@ export class PromptParent extends JSWindowActorParent {
    *        BrowsingContext.
    */
   unregisterPrompt(id) {
-    let prompts = gBrowserPrompts.get(this.browsingContext);
-    if (prompts) {
-      prompts.delete(id);
-    }
+    let dialogs = gBrowserDialogs.get(this.browsingContext);
+    dialogs?.delete(id);
   }
 
   /**
    * Programmatically closes all Prompts for the current BrowsingContext.
    */
   forceClosePrompts() {
-    let prompts = gBrowserPrompts.get(this.browsingContext) || [];
+    let dialogs = gBrowserDialogs.get(this.browsingContext) || [];
 
-    for (let [, prompt] of prompts) {
-      prompt.tabModalPrompt && prompt.tabModalPrompt.abortPrompt();
+    for (let [, dialog] of dialogs) {
+      dialog?.abort();
     }
   }
 
@@ -183,7 +165,10 @@ export class PromptParent extends JSWindowActorParent {
       !browser.contentPrincipal.equals(args.promptPrincipal);
 
     let onPromptClose = () => {
-      let promptData = gBrowserPrompts.get(this.browsingContext);
+      // NOTE: this code is totally bust now, as `gBrowserDialogs` won't produce
+      // the right objects for it. It's also unused though, and removed in the
+      // next commit.
+      let promptData = gBrowserDialogs.get(this.browsingContext);
       if (!promptData || !promptData.has(id)) {
         throw new Error(
           "Failed to close a prompt since it wasn't registered for some reason."
@@ -200,8 +185,6 @@ export class PromptParent extends JSWindowActorParent {
       } else {
         needRemove = true;
       }
-
-      this.unregisterPrompt(id);
 
       lazy.PromptUtils.fireDialogEvent(
         window,
@@ -225,13 +208,9 @@ export class PromptParent extends JSWindowActorParent {
       args.promptActive = true;
 
       newPrompt = tabPrompt.appendPrompt(args, onPromptClose);
-      let promise = this.registerPrompt(newPrompt, id);
-
       if (needRemove) {
         tabPrompt.removePrompt(newPrompt);
       }
-
-      return promise;
     } catch (ex) {
       console.error(ex);
       onPromptClose(true);
@@ -349,8 +328,9 @@ export class PromptParent extends JSWindowActorParent {
           );
         }
         bag = lazy.PromptUtils.objectToPropBag(args);
+        let promptID = args._remoteId;
         try {
-          await dialogBox.open(
+          let { dialog, closedPromise } = dialogBox.open(
             uri,
             {
               features: "resizable=no",
@@ -359,7 +339,9 @@ export class PromptParent extends JSWindowActorParent {
               hideContent: args.isTopLevelCrossDomainAuth,
             },
             bag
-          ).closedPromise;
+          );
+          this.registerDialog(dialog, promptID);
+          await closedPromise;
         } finally {
           if (args.isTopLevelCrossDomainAuth) {
             browser.currentAuthPromptURI = null;
@@ -373,6 +355,7 @@ export class PromptParent extends JSWindowActorParent {
               currentLocationsTabLabel
             );
           }
+          this.unregisterPrompt(promptID);
         }
       } else {
         // Ensure we set the correct modal type at this point.
