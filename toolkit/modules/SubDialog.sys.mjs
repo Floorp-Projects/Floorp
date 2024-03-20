@@ -229,7 +229,7 @@ SubDialog.prototype = {
       bubbles: true,
       detail: { dialog: this, abort: true },
     });
-    this._frame.contentWindow?.close();
+    this._frame.contentWindow.close();
     // It's possible that we're aborting this dialog before we've had a
     // chance to set up the contentWindow.close function override in
     // _onContentLoaded. If so, call this.close() directly to clean things

@@ -77,6 +77,18 @@ modal.findPrompt = function (context) {
       return new modal.Dialog(() => context, dialogs[0].frameContentWindow);
     }
   }
+
+  // If no modal dialog has been found yet, check for old non SubDialog based
+  // content modal dialogs. Even with those deprecated in Firefox 89 we should
+  // keep supporting applications that don't have them implemented yet.
+  if (contentBrowser?.tabModalPromptBox) {
+    const prompts = contentBrowser.tabModalPromptBox.listPrompts();
+    if (prompts.length) {
+      lazy.logger.trace("Found open old-style content prompt");
+      return new modal.Dialog(() => context, null);
+    }
+  }
+
   return null;
 };
 
@@ -124,7 +136,11 @@ modal.Dialog = class {
   }
 
   get tabModal() {
-    return this.window?.Dialog;
+    let win = this.window;
+    if (win) {
+      return win.Dialog;
+    }
+    return this.curBrowser_.getTabModal();
   }
 
   get promptType() {

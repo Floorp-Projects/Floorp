@@ -893,6 +893,14 @@
         : "";
     },
 
+    getTabModalPromptBox(aBrowser) {
+      let browser = aBrowser || this.selectedBrowser;
+      if (!browser.tabModalPromptBox) {
+        browser.tabModalPromptBox = new TabModalPromptBox(browser);
+      }
+      return browser.tabModalPromptBox;
+    },
+
     getTabDialogBox(aBrowser) {
       if (!aBrowser) {
         throw new Error("aBrowser is required");
@@ -1312,6 +1320,31 @@
           this.addToMultiSelectedTabs(oldTab);
         }
 
+        if (oldBrowser != newBrowser && oldBrowser.getInPermitUnload) {
+          oldBrowser.getInPermitUnload(inPermitUnload => {
+            if (!inPermitUnload) {
+              return;
+            }
+            // Since the user is switching away from a tab that has
+            // a beforeunload prompt active, we remove the prompt.
+            // This prevents confusing user flows like the following:
+            //   1. User attempts to close Firefox
+            //   2. User switches tabs (ingoring a beforeunload prompt)
+            //   3. User returns to tab, presses "Leave page"
+            let promptBox = this.getTabModalPromptBox(oldBrowser);
+            let prompts = promptBox.listPrompts();
+            // There might not be any prompts here if the tab was closed
+            // while in an onbeforeunload prompt, which will have
+            // destroyed aforementioned prompt already, so check there's
+            // something to remove, first:
+            if (prompts.length) {
+              // NB: This code assumes that the beforeunload prompt
+              //     is the top-most prompt on the tab.
+              prompts[prompts.length - 1].abortPrompt();
+            }
+          });
+        }
+
         if (!gMultiProcessBrowser) {
           this._adjustFocusBeforeTabSwitch(oldTab, newTab);
           this._adjustFocusAfterTabSwitch(newTab);
@@ -1406,6 +1439,19 @@
         newBrowser.tabDialogBox.focus();
         return;
       }
+      if (newBrowser.hasAttribute("tabmodalPromptShowing")) {
+        // If there's a tabmodal prompt showing, focus it.
+        let prompts = newBrowser.tabModalPromptBox.listPrompts();
+        let prompt = prompts[prompts.length - 1];
+        // @tabmodalPromptShowing is also set for other tab modal prompts
+        // (e.g. the Payment Request dialog) so there may not be a <tabmodalprompt>.
+        // Bug 1492814 will implement this for the Payment Request dialog.
+        if (prompt) {
+          prompt.Dialog.setDefaultFocus();
+          return;
+        }
+      }
+
       // Focus the location bar if it was previously focused for that tab.
       // In full screen mode, only bother making the location bar visible
       // if the tab is a blank one.
@@ -6057,7 +6103,12 @@
               );
               if (permission != Services.perms.ALLOW_ACTION) {
                 // Tell the prompt box we want to show the user a checkbox:
-                let tabPrompt = this.getTabDialogBox(tabForEvent.linkedBrowser);
+                let tabPrompt = Services.prefs.getBoolPref(
+                  "prompts.contentPromptSubDialog"
+                )
+                  ? this.getTabDialogBox(tabForEvent.linkedBrowser)
+                  : this.getTabModalPromptBox(tabForEvent.linkedBrowser);
+
                 tabPrompt.onNextPromptShowAllowFocusCheckboxFor(
                   promptPrincipal
                 );
