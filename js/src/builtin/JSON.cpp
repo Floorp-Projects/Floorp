@@ -1799,6 +1799,13 @@ static bool InternalizeJSONProperty(
 
         /* Step 2a(iii)(1). */
         Rooted<ParseRecordObject> elementRecord(cx);
+#ifdef ENABLE_JSON_PARSE_WITH_SOURCE
+        if (entries) {
+          if (auto entry = entries->lookup(id)) {
+            elementRecord = std::move(entry->value());
+          }
+        }
+#endif
         if (!InternalizeJSONProperty(cx, obj, id, reviver, &elementRecord,
                                      &newElement)) {
           return false;

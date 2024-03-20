@@ -47,9 +47,18 @@ let tests = [
     {input: '{ "a": 1 }', expected: ['1', null]},
     {input: '{ "b": 2, "a": 1 }', expected: ['2', '1', null]},
     {input: '{ "b": 2, "1": 1 }', expected: ['1', '2', null]},
+    {input: '{ "b": 2, "c": null }', expected: ['2', 'null', null]},
     {input: '{ "b": 2, "b": 1, "b": 4 }', expected: ['4', null]},
     {input: '{ "b": 2, "a": "1" }', expected: ['2', '"1"', null]},
     {input: '{ "b": { "c": 3 }, "a": 1 }', expected: ['3', null, '1', null]},
+    // ARRAYS
+    {input: '[]', expected: [null]},
+    {input: '[1, 5, 2]', expected: ['1', '5', '2', null]},
+    {input: '[1, null, 2]', expected: ['1', 'null', '2', null]},
+    {input: '[1, {"a":2}, "7"]', expected: ['1', '2', null, '"7"', null]},
+    {input: '[1, [2, [3, [4, 5], [6, 7], 8], 9], 10]', expected: ['1', '2', '3', '4', '5', null, '6', '7', null, '8', null, '9', null, '10', null]},
+    {input: '[1, [2, [3, [4, 5, 6, 7, 8, 9, 10], []]]]', expected: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', null, null, null, null, null]},
+    {input: '{"a": [1, {"b":2}, "7"], "c": 8}', expected: ['1', '2', null, '"7"', null, '8', null]},
 ];
 for (const test of tests) {
     print("Testing " + JSON.stringify(test));
