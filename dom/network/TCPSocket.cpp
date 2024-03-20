@@ -49,7 +49,8 @@
 #include "secerr.h"
 #include "sslerr.h"
 
-static constexpr uint64_t BUFFER_SIZE = 65536;
+#define BUFFER_SIZE 65536
+#define NETWORK_STATS_THRESHOLD 65536
 
 using namespace mozilla::dom;
 
