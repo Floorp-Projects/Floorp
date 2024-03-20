@@ -365,6 +365,58 @@ bool ExternalEngineStateMachine::IsFormatSupportedByExternalEngine(
 #endif
 }
 
+RefPtr<MediaDecoder::SeekPromise> ExternalEngineStateMachine::InvokeSeek(
+    const SeekTarget& aTarget) {
+  return InvokeAsync(
+      OwnerThread(), __func__,
+      [self = RefPtr<ExternalEngineStateMachine>(this), this,
+       target = aTarget]() -> RefPtr<MediaDecoder::SeekPromise> {
+        AssertOnTaskQueue();
+        if (!mEngine || !mEngine->IsInited()) {
+          LOG("Can't perform seek (%" PRId64 ") now, add a pending seek task",
+              target.GetTime().ToMicroseconds());
+          // We haven't added any pending seek before
+          if (mPendingSeek.mPromise.IsEmpty()) {
+            mPendingTasks.AppendElement(NS_NewRunnableFunction(
+                "ExternalEngineStateMachine::InvokeSeek",
+                [self = RefPtr{this}, this] {
+                  if (!mPendingSeek.Exists()) {
+                    return;
+                  }
+                  Seek(*mPendingSeek.mTarget)
+                      ->Then(OwnerThread(), __func__,
+                             [self = RefPtr{this},
+                              this](const MediaDecoder::SeekPromise::
+                                        ResolveOrRejectValue& aVal) {
+                               mPendingSeekRequest.Complete();
+                               if (aVal.IsResolve()) {
+                                 mPendingSeek.Resolve(__func__);
+                               } else {
+                                 mPendingSeek.RejectIfExists(__func__);
+                               }
+                               mPendingSeek = SeekJob();
+                             })
+                      ->Track(mPendingSeekRequest);
+                }));
+          } else {
+            // Reject previous pending promise, as we will create a new one
+            LOG("Replace previous pending seek with a new one");
+            mPendingSeek.RejectIfExists(__func__);
+            mPendingSeekRequest.DisconnectIfExists();
+          }
+          mPendingSeek.mTarget = Some(target);
+          return mPendingSeek.mPromise.Ensure(__func__);
+        }
+        if (mPendingSeek.Exists()) {
+          LOG("Discard pending seek because another new seek happens");
+          mPendingSeek.RejectIfExists(__func__);
+          mPendingSeek = SeekJob();
+          mPendingSeekRequest.DisconnectIfExists();
+        }
+        return self->Seek(target);
+      });
+}
+
 RefPtr<MediaDecoder::SeekPromise> ExternalEngineStateMachine::Seek(
     const SeekTarget& aTarget) {
   AssertOnTaskQueue();
@@ -570,6 +622,9 @@ RefPtr<ShutdownPromise> ExternalEngineStateMachine::Shutdown() {
 
   mSetCDMProxyPromise.RejectIfExists(NS_ERROR_DOM_MEDIA_ABORT_ERR, __func__);
   mSetCDMProxyRequest.DisconnectIfExists();
+
+  mPendingSeek.RejectIfExists(__func__);
+  mPendingSeekRequest.DisconnectIfExists();
 
   mPendingTasks.Clear();
 

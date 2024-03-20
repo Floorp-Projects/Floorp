@@ -85,7 +85,8 @@ class MediaDecoderStateMachineBase {
   RefPtr<ShutdownPromise> BeginShutdown();
 
   // Seeks to the decoder to aTarget asynchronously.
-  RefPtr<MediaDecoder::SeekPromise> InvokeSeek(const SeekTarget& aTarget);
+  virtual RefPtr<MediaDecoder::SeekPromise> InvokeSeek(
+      const SeekTarget& aTarget);
 
   virtual size_t SizeOfVideoQueue() const = 0;
   virtual size_t SizeOfAudioQueue() const = 0;
