@@ -37,6 +37,12 @@ Test multiple redirects using https-first and ensure the entire redirect chain i
     {name: "test last redirect HSTS", result: "scheme-https", query: "test3"},
     // reset: reset hsts header for example.com
     {name: "reset HSTS header", result: "scheme-https", query: "reset"},
+    // test 4: http://example.com/...test4 -upgrade-> httpS://example.com/...test4
+    //         https://example.com/...test4 -redir-> https://example.com/.../REDIRECT
+    //         https://example.com/.../redirect -redir-> http://example.ORG/.../verify
+    //         http://example.org/.../verify -upgrade-> httpS://example.ORG/.../verify
+    //         Everything should be upgraded and accessed only via HTTPS!
+    {name: "test last redirect other HTTP origin gets upgraded", result: "scheme-https", query: "test4" },
   ]
   let currentTest = 0;
   let testWin;
@@ -48,7 +54,7 @@ Test multiple redirects using https-first and ensure the entire redirect chain i
     let test = testCase[currentTest];
       is(event.data.result,
        test.result,
-       "same-origin redirect results in " + test.name
+       "redirect results in " + test.name
     );
     testWin.close();
     if (++currentTest < testCase.length) {
