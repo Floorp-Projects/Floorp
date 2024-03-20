@@ -7,11 +7,6 @@
 
 "use strict";
 
-ChromeUtils.defineESModuleGetters(this, {
-  CONTEXTUAL_SERVICES_PING_TYPES:
-    "resource:///modules/PartnerLinkAttribution.sys.mjs",
-});
-
 const { TELEMETRY_SCALARS } = UrlbarProviderQuickSuggest;
 
 const MERINO_RESULT = {
