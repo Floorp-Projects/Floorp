@@ -11,6 +11,12 @@ interface PlacesWeakCallbackWrapper {
   constructor(PlacesEventCallback callback);
 };
 
+// Counters for number of events sent in the current session.
+[ChromeOnly, Exposed=Window]
+interface PlacesEventCounts {
+  readonly maplike<DOMString, unsigned long long>;
+};
+
 // Global singleton which should handle all events for places.
 [ChromeOnly, Exposed=Window]
 namespace PlacesObservers {
@@ -28,4 +34,6 @@ namespace PlacesObservers {
                            PlacesWeakCallbackWrapper listener);
   [Throws]
   undefined notifyListeners(sequence<PlacesEvent> events);
+
+  readonly attribute PlacesEventCounts counts;
 };

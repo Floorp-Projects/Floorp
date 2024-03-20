@@ -237,6 +237,7 @@ EXPORTS.mozilla.dom += [
     "PlacesBookmarkTitle.h",
     "PlacesBookmarkUrl.h",
     "PlacesEvent.h",
+    "PlacesEventCounts.h",
     "PlacesFavicon.h",
     "PlacesHistoryCleared.h",
     "PlacesObservers.h",
@@ -489,6 +490,7 @@ if CONFIG["FUZZING"]:
 if CONFIG["MOZ_PLACES"]:
     UNIFIED_SOURCES += [
         "PlacesEvent.cpp",
+        "PlacesEventCounts.cpp",
         "PlacesObservers.cpp",
         "PlacesWeakCallbackWrapper.cpp",
     ]
