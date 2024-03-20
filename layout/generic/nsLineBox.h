@@ -246,10 +246,10 @@ class nsLineBox final : public nsLineLink {
     mFlags.mFloatClearType = mozilla::StyleClear::None;
   }
 
-  bool HasForcedLineBreakBefore() const {
+  bool HasFloatClearTypeBefore() const {
     return IsBlock() && HasForcedLineBreak();
   }
-  void SetForcedLineBreakBefore(mozilla::StyleClear aClearType) {
+  void SetFloatClearTypeBefore(mozilla::StyleClear aClearType) {
     MOZ_ASSERT(IsBlock(), "Only blocks have break-before");
     MOZ_ASSERT(aClearType != mozilla::StyleClear::None,
                "Only StyleClear:Left/Right/Both are allowed before a line");
