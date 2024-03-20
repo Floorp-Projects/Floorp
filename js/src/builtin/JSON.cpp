@@ -1737,16 +1737,20 @@ static bool InternalizeJSONProperty(
   RootedObject context(cx);
   if (cx->realm()->creationOptions().getJSONParseWithSource()) {
     // https://tc39.es/proposal-json-parse-with-source/#sec-internalizejsonproperty
-    context = NewPlainObject(cx);
-    if (!context) {
-      return false;
-    }
     if (parseRecord.get().parseNode) {
       MOZ_ASSERT(!val.isObject());
-      Rooted<Value> parseNode(cx, StringValue(parseRecord.get().parseNode));
-      if (!DefineDataProperty(cx, context, cx->names().source, parseNode)) {
+      Rooted<IdValueVector> props(cx, cx);
+      if (!props.emplaceBack(
+              IdValuePair(NameToId(cx->names().source),
+                          StringValue(parseRecord.get().parseNode)))) {
         return false;
       }
+      context = NewPlainObjectWithUniqueNames(cx, props);
+    } else {
+      context = NewPlainObject(cx);
+    }
+    if (!context) {
+      return false;
     }
   }
 #endif
