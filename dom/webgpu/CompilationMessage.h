@@ -29,8 +29,9 @@ class CompilationMessage final : public nsWrapperCache, public ChildOf<Device> {
   GPU_DECL_CYCLE_COLLECTION(CompilationMessage)
   GPU_DECL_JS_WRAP(CompilationMessage)
 
-  explicit CompilationMessage(Device* const aParent, uint64_t aLineNum,
-                              uint64_t aLinePos, uint64_t aOffset,
+  explicit CompilationMessage(Device* const aParent,
+                              uint64_t aLineNum, uint64_t aLinePos,
+                              uint64_t aOffset, uint64_t aLength,
                               nsString&& aMessage);
 
   void GetMessage(dom::DOMString& aMessage) {
