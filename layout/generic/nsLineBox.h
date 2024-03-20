@@ -241,7 +241,6 @@ class nsLineBox final : public nsLineLink {
   // mHasForcedLineBreak bit & mFloatClearType value
   // Break information is applied *before* the line if the line is a block,
   // or *after* the line if the line is an inline.
-  bool HasForcedLineBreak() const { return mFlags.mHasForcedLineBreak; }
   void ClearForcedLineBreak() {
     mFlags.mHasForcedLineBreak = false;
     mFlags.mFloatClearType = mozilla::StyleClear::None;
@@ -316,7 +315,7 @@ class nsLineBox final : public nsLineLink {
   nsRect InkOverflowRect() const {
     return GetOverflowArea(mozilla::OverflowType::Ink);
   }
-  nsRect ScrollableOverflowRect() {
+  nsRect ScrollableOverflowRect() const {
     return GetOverflowArea(mozilla::OverflowType::Scrollable);
   }
 
@@ -570,6 +569,7 @@ class nsLineBox final : public nsLineLink {
     FlagBits mFlags;
   };
 
+  bool HasForcedLineBreak() const { return mFlags.mHasForcedLineBreak; }
   mozilla::StyleClear FloatClearType() const { return mFlags.mFloatClearType; };
 
   union {
