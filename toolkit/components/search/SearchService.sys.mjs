@@ -173,7 +173,7 @@ class ParseSubmissionResult {
 
   /**
    * String containing the sought terms. This can be an empty string in case no
-   * terms were specified or the URL does not represent a search submission.*
+   * terms were specified or the URL does not represent a search submission.
    *
    * @type {string}
    */
@@ -991,9 +991,10 @@ export class SearchService {
   /**
    * A deferred promise that is resolved when initialization has finished.
    *
+   * Resolved when initalization has successfully finished, and rejected if it
+   * has failed.
+   *
    * @type {Promise}
-   *   Resolved when initalization has successfully finished, and rejected if it
-   *   has failed.
    */
   #initDeferredPromise = Promise.withResolvers();
 
@@ -1078,10 +1079,10 @@ export class SearchService {
    * engine, as suggested by the configuration.
    * For the legacy configuration, this is the user visible name.
    *
-   * @type {object}
-   *
    * This is prefixed with _ rather than # because it is
    * called in a test.
+   *
+   * @type {object}
    */
   _searchDefault = null;
 
@@ -1113,6 +1114,16 @@ export class SearchService {
   #startupRemovedExtensions = new Set();
 
   /**
+   * Used in #parseSubmissionMap
+   *
+   * @typedef {object} submissionMapEntry
+   * @property {nsISearchEngine} engine
+   *   The search engine.
+   * @property {string} termsParameterName
+   *   The search term parameter name.
+   */
+
+  /**
    * This map is built lazily after the available search engines change.  It
    * allows quick parsing of an URL representing a search submission into the
    * search engine name and original terms.
@@ -1120,12 +1131,7 @@ export class SearchService {
    * The keys are strings containing the domain name and lowercase path of the
    * engine submission, for example "www.google.com/search".
    *
-   * The values are objects with these properties:
-   * {
-   *   engine: The associated nsISearchEngine.
-   *   termsParameterName: Name of the URL parameter containing the search
-   *                       terms, for example "q".
-   * }
+   * @type {Map<string, submissionMapEntry>|null}
    */
   #parseSubmissionMap = null;
 
