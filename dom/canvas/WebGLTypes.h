@@ -1224,15 +1224,6 @@ inline bool StartsWith(const std::string_view str,
 
 // -
 
-template <class T>
-Maybe<T> AsValidEnum(const std::underlying_type_t<T> raw_val) {
-  const auto raw_enum = T{raw_val};  // This is the risk we prevent!
-  if (!IsEnumCase(raw_enum)) return {};
-  return Some(raw_enum);
-}
-
-// -
-
 namespace webgl {
 
 // In theory, this number can be unbounded based on the driver. However, no

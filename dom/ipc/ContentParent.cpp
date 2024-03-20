@@ -644,10 +644,6 @@ static const char* sObserverTopics[] = {
     DEFAULT_TIMEZONE_CHANGED_OBSERVER_TOPIC,
 };
 
-void ContentParent_NotifyUpdatedDictionaries() {
-  ContentParent::NotifyUpdatedDictionaries();
-}
-
 // PreallocateProcess is called by the PreallocatedProcessManager.
 // ContentParent then takes this process back within GetNewOrUsedBrowserProcess.
 /*static*/ already_AddRefed<ContentParent>
