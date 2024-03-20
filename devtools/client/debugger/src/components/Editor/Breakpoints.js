@@ -11,19 +11,9 @@ import {
   getSelectedSource,
   getFirstVisibleBreakpoints,
 } from "../../selectors/index";
-import { getSelectedLocation } from "../../utils/selected-location";
 import { makeBreakpointId } from "../../utils/breakpoint/index";
 import { connect } from "devtools/client/shared/vendor/react-redux";
-import { fromEditorLine } from "../../utils/editor/index";
 import actions from "../../actions/index";
-import { features } from "../../utils/prefs";
-const classnames = require("resource://devtools/client/shared/classnames.js");
-
-const isMacOS = Services.appinfo.OS === "Darwin";
-
-const breakpointSvg = document.createElement("div");
-breakpointSvg.innerHTML = `<svg viewBox="0 0 60 15" width="60" height="15"><path d="M53.07.5H1.5c-.54 0-1 .46-1 1v12c0 .54.46 1 1 1h51.57c.58 0 1.15-.26 1.53-.7l4.7-6.3-4.7-6.3c-.38-.44-.95-.7-1.53-.7z"/>
-  </svg >`;
 
 class Breakpoints extends Component {
   static get propTypes() {
@@ -37,92 +27,6 @@ class Breakpoints extends Component {
       showEditorEditBreakpointContextMenu: PropTypes.func,
     };
   }
-
-  constructor(props) {
-    super(props);
-  }
-
-  componentDidUpdate(prevProps) {
-    const { selectedSource, breakpoints, editor } = this.props;
-
-    // Only for codemirror 6
-    if (!features.codemirrorNext) {
-      return;
-    }
-
-    if (!selectedSource || !breakpoints || !editor) {
-      return;
-    }
-
-    const markers = [
-      {
-        gutterLineClassName: "cm6-gutter-breakpoint",
-        condition: line => {
-          const lineNumber = fromEditorLine(selectedSource.id, line);
-          return breakpoints.some(bp => bp.location.line === lineNumber);
-        },
-        createGutterLineElementNode: line => {
-          const lineNumber = fromEditorLine(selectedSource.id, line);
-          const breakpoint = breakpoints.find(
-            bp => bp.location.line === lineNumber
-          );
-
-          const breakpointNode = breakpointSvg.cloneNode(true);
-          breakpointNode.appendChild(document.createTextNode(lineNumber));
-          breakpointNode.className = classnames("breakpoint-marker", {
-            "breakpoint-disabled": breakpoint.disabled,
-            "has-condition": breakpoint?.options.condition,
-            "has-log": breakpoint?.options.logValue,
-          });
-          breakpointNode.onclick = event => this.onClick(event, breakpoint);
-          breakpointNode.oncontextmenu = event =>
-            this.onContextMenu(event, breakpoint);
-          return breakpointNode;
-        },
-      },
-    ];
-    editor.setLineGutterMarkers(markers);
-  }
-
-  onClick = (event, breakpoint) => {
-    const {
-      continueToHere,
-      toggleBreakpointsAtLine,
-      removeBreakpointsAtLine,
-      selectedSource,
-    } = this.props;
-
-    event.stopPropagation();
-    event.preventDefault();
-
-    // ignore right clicks when clicking on the breakpoint
-    if (event.button === 2) {
-      return;
-    }
-
-    const selectedLocation = getSelectedLocation(breakpoint, selectedSource);
-    const ctrlOrCmd = isMacOS ? event.metaKey : event.ctrlKey;
-
-    if (ctrlOrCmd) {
-      continueToHere(selectedLocation);
-      return;
-    }
-
-    if (event.shiftKey) {
-      toggleBreakpointsAtLine(!breakpoint.disabled, selectedLocation.line);
-      return;
-    }
-
-    removeBreakpointsAtLine(selectedLocation.source, selectedLocation.line);
-  };
-
-  onContextMenu = (event, breakpoint) => {
-    event.stopPropagation();
-    event.preventDefault();
-
-    this.props.showEditorEditBreakpointContextMenu(event, breakpoint);
-  };
-
   render() {
     const {
       breakpoints,
@@ -137,11 +41,6 @@ class Breakpoints extends Component {
     if (!selectedSource || !breakpoints) {
       return null;
     }
-
-    if (features.codemirrorNext) {
-      return null;
-    }
-
     return div(
       null,
       breakpoints.map(breakpoint => {
