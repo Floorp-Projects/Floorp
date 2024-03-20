@@ -36,14 +36,17 @@ fn report_statistics(_stats: &PerThreadTraversalStatistics) {
 fn report_statistics(stats: &PerThreadTraversalStatistics) {
     // This should only be called in the main thread, or it may be racy
     // to update the statistics in a global variable.
-    debug_assert!(unsafe { crate::gecko_bindings::bindings::Gecko_IsMainThread() });
-    let gecko_stats =
-        unsafe { &mut crate::gecko_bindings::structs::ServoTraversalStatistics_sSingleton };
-    gecko_stats.mElementsTraversed += stats.elements_traversed;
-    gecko_stats.mElementsStyled += stats.elements_styled;
-    gecko_stats.mElementsMatched += stats.elements_matched;
-    gecko_stats.mStylesShared += stats.styles_shared;
-    gecko_stats.mStylesReused += stats.styles_reused;
+    unsafe {
+        debug_assert!(crate::gecko_bindings::bindings::Gecko_IsMainThread());
+        let gecko_stats = std::ptr::addr_of_mut!(
+            crate::gecko_bindings::structs::ServoTraversalStatistics_sSingleton
+        );
+        (*gecko_stats).mElementsTraversed += stats.elements_traversed;
+        (*gecko_stats).mElementsStyled += stats.elements_styled;
+        (*gecko_stats).mElementsMatched += stats.elements_matched;
+        (*gecko_stats).mStylesShared += stats.styles_shared;
+        (*gecko_stats).mStylesReused += stats.styles_reused;
+    }
 }
 
 fn with_pool_in_place_scope<'scope>(

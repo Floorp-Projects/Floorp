@@ -227,7 +227,12 @@ pub unsafe extern "C" fn Servo_Shutdown() {
 
 #[inline(always)]
 unsafe fn dummy_url_data() -> &'static UrlExtraData {
-    UrlExtraData::from_ptr_ref(&DUMMY_URL_DATA)
+    UrlExtraData::from_ptr_ref(std::ptr::addr_of!(DUMMY_URL_DATA).as_ref().unwrap())
+}
+
+#[inline(always)]
+unsafe fn dummy_chrome_url_data() -> &'static UrlExtraData {
+    UrlExtraData::from_ptr_ref(std::ptr::addr_of!(DUMMY_CHROME_URL_DATA).as_ref().unwrap())
 }
 
 #[allow(dead_code)]
@@ -5838,11 +5843,11 @@ pub extern "C" fn Servo_CSSSupports(
         Origin::Author
     };
     let url_data = unsafe {
-        UrlExtraData::from_ptr_ref(if chrome_sheet {
-            &DUMMY_CHROME_URL_DATA
+        if chrome_sheet {
+            dummy_chrome_url_data()
         } else {
-            &DUMMY_URL_DATA
-        })
+            dummy_url_data()
+        }
     };
     let quirks_mode = if quirks {
         QuirksMode::Quirks
@@ -7886,11 +7891,11 @@ pub unsafe extern "C" fn Servo_SelectorList_Parse(
 ) -> *mut SelectorList {
     use style::selector_parser::SelectorParser;
 
-    let url_data = UrlExtraData::from_ptr_ref(if is_chrome {
-        &DUMMY_CHROME_URL_DATA
+    let url_data = if is_chrome {
+        dummy_chrome_url_data()
     } else {
-        &DUMMY_URL_DATA
-    });
+        dummy_url_data()
+    };
 
     let input = selector_list.as_str_unchecked();
     let selector_list = match SelectorParser::parse_author_origin_no_namespace(&input, url_data) {
