@@ -558,7 +558,7 @@ win64-shippable/opt:
 
 win64-nightlyasrelease/opt:
     description: "Win64 Opt Nightly-As-Release"
-    use-pgo: win64-shippable/opt
+    use-pgo: win64-nightlyasrelease/opt
     attributes:
         enable-full-crashsymbols: true
     index:

@@ -265,6 +265,35 @@ jobs:
                 - win64-clang-toolchain
                 - win32-minidump-stackwalk
 
+    win64-nightlyasrelease/opt:
+        description: "Win64 Nightly-as-release Profile Generation"
+        shipping-phase: build
+        shipping-product: firefox
+        index:
+            product: firefox
+            job-name: win64-nightlyasrelease-profile
+        treeherder:
+            platform: win64-nightlyasrelease/opt
+        worker-type: b-win2022
+        worker:
+            chain-of-trust: true
+            max-run-time: 2400
+            env:
+                UPLOAD_PATH: "artifacts"
+            artifacts:
+                - type: directory
+                  name: public/build
+                  path: build/src/artifacts/
+        run:
+            using: run-task
+            sparse-profile: profile-generate
+            cwd: '{checkout}'
+            command: ./taskcluster/scripts/misc/run-profileserver.sh
+        fetches:
+            toolchain:
+                - win64-clang-toolchain
+                - win32-minidump-stackwalk
+
     macosx64-shippable/opt:
         description: "macosx64 Profile Generation"
         shipping-phase: build
