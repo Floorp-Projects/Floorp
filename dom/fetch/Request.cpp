@@ -516,6 +516,10 @@ SafeRefPtr<Request> Request::Constructor(nsIGlobalObject* aGlobal,
     request->SetIntegrity(aInit.mIntegrity.Value());
   }
 
+  if (aInit.mKeepalive.WasPassed()) {
+    // place holder to set keepalive
+  }
+
   if (aInit.mMozErrors.WasPassed() && aInit.mMozErrors.Value()) {
     request->SetMozErrors();
   }

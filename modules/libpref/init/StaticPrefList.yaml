@@ -2643,6 +2643,11 @@
   value: false
   mirror: always
 
+- name: dom.fetchKeepalive.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 - name: dom.fetchObserver.enabled
   type: RelaxedAtomicBool
   value: false
