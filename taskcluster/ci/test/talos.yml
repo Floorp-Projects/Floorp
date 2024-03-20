@@ -694,7 +694,7 @@ talos-webgl:
     mozharness:
         extra-options:
             by-test-platform:
-                windows(10-64-ref-hw|11-64-2009-hw-ref).*:
+                windows11-64-2009-hw-ref.*:
                     - --suite=webgl
                     - --skip-preflight
                 default:
