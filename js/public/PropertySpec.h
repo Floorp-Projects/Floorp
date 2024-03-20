@@ -373,6 +373,10 @@ constexpr uint8_t CheckAccessorAttrs() {
   JSPropertySpec::nativeAccessors(::JS::SymbolCode::symbol,                 \
                                   CheckAccessorAttrs<attributes>(), getter, \
                                   nullptr)
+#define JS_SYM_GETSET(symbol, getter, setter, attributes)                   \
+  JSPropertySpec::nativeAccessors(::JS::SymbolCode::symbol,                 \
+                                  CheckAccessorAttrs<attributes>(), getter, \
+                                  nullptr, setter, nullptr)
 #define JS_SELF_HOSTED_GET(name, getterName, attributes)                      \
   JSPropertySpec::selfHostedAccessors(name, CheckAccessorAttrs<attributes>(), \
                                       getterName)
