@@ -1,0 +1,62 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Tab Modal Prompt boxes */
+.tabModalBackground,
+tabmodalprompt {
+  background-color: hsla(0,0%,10%,.5);
+}
+
+tabmodalprompt {
+  font-family: sans-serif; /* use content font not system UI font */
+  font-size: 110%;
+}
+
+.tabmodalprompt-mainContainer {
+  color: black;
+  background-color: hsla(0,0%,100%,.95);
+  background-clip: padding-box;
+  border-radius: 2px;
+  border: 1px solid hsla(0,0%,0%,.5);
+}
+
+.tabmodalprompt-buttonContainer {
+  background-color: hsla(0,0%,0%,.05);
+  border-top: 1px solid hsla(0,0%,0%,.05);
+}
+
+.tabmodalprompt-buttonContainer > button {
+  appearance: none;
+  padding: 2px 0;
+  margin: 0;
+  margin-inline-start: 8px;
+  border-radius: 2px;
+  color: black !important;
+  background-color: hsl(0,0%,90%);
+  background-image: linear-gradient(hsla(0,0%,100%,.7), transparent);
+  background-clip: padding-box;
+  border: 1px solid;
+  border-color: hsl(0,0%,65%) hsl(0,0%,60%) hsl(0,0%,50%);
+  box-shadow: 0 1px 0 hsla(0,0%,100%,.9) inset,
+              0 1px 2px hsla(0,0%,0%,.1);
+}
+
+.tabmodalprompt-buttonContainer > button[default=true] {
+  background-color: hsl(0,0%,79%);
+}
+
+.tabmodalprompt-buttonContainer > button:hover {
+  background-color: hsl(0,0%,96%);
+}
+
+.tabmodalprompt-buttonContainer > button:hover:active {
+  background-image: linear-gradient(hsla(0,0%,100%,.2), transparent);
+  background-color: hsl(0,0%,70%);
+  box-shadow: 0 1px 0 hsla(0,0%,100%,.2) inset,
+              0 1px 3px hsla(0,0%,0%,.2);
+}
+
+.tabmodalprompt-buttonContainer > button:focus-visible {
+  outline: var(--focus-outline);
+}

@@ -30,10 +30,11 @@ CommonDialog.prototype = {
   initialFocusResolver: null,
 
   /**
-   * @param [commonDialogEl] - Dialog element from commonDialog.xhtml.
+   * @param [commonDialogEl] - Dialog element from commonDialog.xhtml,
+   * null for TabModalPrompts.
    */
-  async onLoad(commonDialogEl) {
-    let isEmbedded = !!commonDialogEl.ownerGlobal.docShell.chromeEventHandler;
+  async onLoad(commonDialogEl = null) {
+    let isEmbedded = !!commonDialogEl?.ownerGlobal.docShell.chromeEventHandler;
 
     switch (this.args.promptType) {
       case "alert":
@@ -105,19 +106,36 @@ CommonDialog.prototype = {
         throw new Error("unknown dialog type");
     }
 
-    commonDialogEl.setAttribute("windowtype", "prompt:" + this.args.promptType);
+    if (commonDialogEl) {
+      commonDialogEl.setAttribute(
+        "windowtype",
+        "prompt:" + this.args.promptType
+      );
+    }
 
     // set the document title
     let title = this.args.title;
     let infoTitle = this.ui.infoTitle;
     infoTitle.appendChild(infoTitle.ownerDocument.createTextNode(title));
 
+    // Specific check to prevent showing the title on the old content prompts for macOS.
+    // This should be removed when the old content prompts are removed.
+    let contentSubDialogPromptEnabled = Services.prefs.getBoolPref(
+      "prompts.contentPromptSubDialog"
+    );
+    let isOldContentPrompt =
+      !contentSubDialogPromptEnabled &&
+      this.args.modalType == Ci.nsIPrompt.MODAL_TYPE_CONTENT;
+
     // After making these preventative checks, we can determine to show it if we're on
     // macOS (where there is no titlebar) or if the prompt is a common dialog document
     // and has been embedded (has a chromeEventHandler).
-    infoTitle.hidden = !(AppConstants.platform === "macosx" || isEmbedded);
+    infoTitle.hidden =
+      isOldContentPrompt || !(AppConstants.platform === "macosx" || isEmbedded);
 
-    commonDialogEl.ownerDocument.title = title;
+    if (commonDialogEl) {
+      commonDialogEl.ownerDocument.title = title;
+    }
 
     // Set button labels and visibility
     //
@@ -184,7 +202,15 @@ CommonDialog.prototype = {
 
     // Set the default button
     let b = this.args.defaultButtonNum || 0;
-    commonDialogEl.defaultButton = ["accept", "cancel", "extra1", "extra2"][b];
+    let button = this.ui["button" + b];
+
+    if (commonDialogEl) {
+      commonDialogEl.defaultButton = ["accept", "cancel", "extra1", "extra2"][
+        b
+      ];
+    } else {
+      button.setAttribute("default", "true");
+    }
 
     if (!isEmbedded && !this.ui.promptContainer?.hidden) {
       // Set default focus and select textbox contents if applicable. If we're
@@ -203,7 +229,7 @@ CommonDialog.prototype = {
     // Play a sound (unless we're showing a content prompt -- don't want those
     //               to feel like OS prompts).
     try {
-      if (this.soundID && !this.args.openedWithTabDialog) {
+      if (commonDialogEl && this.soundID && !this.args.openedWithTabDialog) {
         Cc["@mozilla.org/sound;1"]
           .getService(Ci.nsISound)
           .playEventSound(this.soundID);
@@ -212,12 +238,20 @@ CommonDialog.prototype = {
       console.error("Couldn't play common dialog event sound: ", e);
     }
 
-    if (isEmbedded) {
-      // If we delayed default focus above, wait for it to be ready before
-      // sending the notification.
-      await this.initialFocusPromise;
+    if (commonDialogEl) {
+      if (isEmbedded) {
+        // If we delayed default focus above, wait for it to be ready before
+        // sending the notification.
+        await this.initialFocusPromise;
+      }
+      Services.obs.notifyObservers(this.ui.prompt, "common-dialog-loaded");
+    } else {
+      // ui.promptContainer is the <tabmodalprompt> element.
+      Services.obs.notifyObservers(
+        this.ui.promptContainer,
+        "tabmodal-dialog-loaded"
+      );
     }
-    Services.obs.notifyObservers(this.ui.prompt, "common-dialog-loaded");
   },
 
   setLabelForNode(aNode, aLabel) {

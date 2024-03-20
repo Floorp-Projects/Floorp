@@ -17,6 +17,10 @@ function propBagToObject(bag) {
 }
 
 var modalType;
+var tabSubDialogsEnabled = SpecialPowers.Services.prefs.getBoolPref(
+  "prompts.tabChromePromptSubDialog",
+  false
+);
 var isSelectDialog = false;
 var isOSX = "nsILocalFileMac" in SpecialPowers.Ci;
 var isE10S = SpecialPowers.Services.appinfo.processType == 2;
@@ -223,7 +227,7 @@ function checkPromptState(promptState, expectedState) {
   is(promptState.checked, expectedState.checked, "Checking checkbox checked");
   if (
     modalType === Ci.nsIPrompt.MODAL_TYPE_WINDOW ||
-    modalType === Ci.nsIPrompt.MODAL_TYPE_TAB
+    (modalType === Ci.nsIPrompt.MODAL_TYPE_TAB && tabSubDialogsEnabled)
   ) {
     is(
       promptState.iconClass,

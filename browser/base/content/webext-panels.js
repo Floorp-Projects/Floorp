@@ -125,11 +125,21 @@ function getBrowser(panel) {
   return readyPromise.then(initBrowser);
 }
 
-// Stub tabbrowser implementation to make sure that links from inside
-// extension sidebar panels open in new tabs, see bug 1488055.
+// Stub tabbrowser implementation for use by the tab-modal alert code.
 var gBrowser = {
   get selectedBrowser() {
     return document.getElementById("webext-panels-browser");
+  },
+
+  getTabForBrowser() {
+    return null;
+  },
+
+  getTabModalPromptBox(browser) {
+    if (!browser.tabModalPromptBox) {
+      browser.tabModalPromptBox = new TabModalPromptBox(browser);
+    }
+    return browser.tabModalPromptBox;
   },
 };
 

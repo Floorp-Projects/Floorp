@@ -79,6 +79,7 @@ ChromeUtils.defineESModuleGetters(this, {
   SubDialog: "resource://gre/modules/SubDialog.sys.mjs",
   SubDialogManager: "resource://gre/modules/SubDialog.sys.mjs",
   TabCrashHandler: "resource:///modules/ContentCrashHandlers.sys.mjs",
+  TabModalPrompt: "chrome://global/content/tabprompts.sys.mjs",
   TabsSetupFlowManager:
     "resource:///modules/firefox-view-tabs-setup-manager.sys.mjs",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
@@ -690,6 +691,7 @@ function shouldSuppressPopupNotifications() {
   // don't cover up the prompt.
   return (
     window.windowState == window.STATE_MINIMIZED ||
+    gBrowser?.selectedBrowser.hasAttribute("tabmodalChromePromptShowing") ||
     gBrowser?.selectedBrowser.hasAttribute("tabDialogShowing") ||
     gDialogBox?.isOpen
   );
@@ -9437,6 +9439,221 @@ TabDialogBox.prototype.QueryInterface = ChromeUtils.generateQI([
   "nsIWebProgressListener",
   "nsISupportsWeakReference",
 ]);
+
+function TabModalPromptBox(browser) {
+  this._weakBrowserRef = Cu.getWeakReference(browser);
+  /*
+   * These WeakMaps holds the TabModalPrompt instances, key to the <tabmodalprompt> prompt
+   * in the DOM. We don't want to hold the instances directly to avoid leaking.
+   *
+   * WeakMap also prevents us from reading back its insertion order.
+   * Order of the elements in the DOM should be the only order to consider.
+   */
+  this._contentPrompts = new WeakMap();
+  this._tabPrompts = new WeakMap();
+}
+
+TabModalPromptBox.prototype = {
+  _promptCloseCallback(
+    onCloseCallback,
+    principalToAllowFocusFor,
+    allowFocusCheckbox,
+    ...args
+  ) {
+    if (
+      principalToAllowFocusFor &&
+      allowFocusCheckbox &&
+      allowFocusCheckbox.checked
+    ) {
+      Services.perms.addFromPrincipal(
+        principalToAllowFocusFor,
+        "focus-tab-by-prompt",
+        Services.perms.ALLOW_ACTION
+      );
+    }
+    onCloseCallback.apply(this, args);
+  },
+
+  getPrompt(promptEl) {
+    if (promptEl.classList.contains("tab-prompt")) {
+      return this._tabPrompts.get(promptEl);
+    }
+    return this._contentPrompts.get(promptEl);
+  },
+
+  appendPrompt(args, onCloseCallback) {
+    let browser = this.browser;
+    let newPrompt = new TabModalPrompt(browser.ownerGlobal);
+
+    if (args.modalType === Ci.nsIPrompt.MODAL_TYPE_TAB) {
+      newPrompt.element.classList.add("tab-prompt");
+      this._tabPrompts.set(newPrompt.element, newPrompt);
+    } else {
+      newPrompt.element.classList.add("content-prompt");
+      this._contentPrompts.set(newPrompt.element, newPrompt);
+    }
+
+    browser.parentNode.insertBefore(
+      newPrompt.element,
+      browser.nextElementSibling
+    );
+    browser.setAttribute("tabmodalPromptShowing", true);
+
+    // Indicate if a tab modal chrome prompt is being shown so that
+    // PopupNotifications are suppressed.
+    if (
+      args.modalType === Ci.nsIPrompt.MODAL_TYPE_TAB &&
+      !browser.hasAttribute("tabmodalChromePromptShowing")
+    ) {
+      browser.setAttribute("tabmodalChromePromptShowing", true);
+      // Notify popup notifications of the UI change so they hide their
+      // notification panels.
+      UpdatePopupNotificationsVisibility();
+    }
+
+    let prompts = this.listPrompts(args.modalType);
+    if (prompts.length > 1) {
+      // Let's hide ourself behind the current prompt.
+      newPrompt.element.hidden = true;
+    }
+
+    let principalToAllowFocusFor = this._allowTabFocusByPromptPrincipal;
+    delete this._allowTabFocusByPromptPrincipal;
+
+    let allowFocusCheckbox; // Define outside the if block so we can bind it into the callback.
+    let hostForAllowFocusCheckbox = "";
+    try {
+      hostForAllowFocusCheckbox = principalToAllowFocusFor.URI.host;
+    } catch (ex) {
+      /* Ignore exceptions for host-less URIs */
+    }
+    if (hostForAllowFocusCheckbox) {
+      let allowFocusRow = document.createElement("div");
+
+      let spacer = document.createElement("div");
+      allowFocusRow.appendChild(spacer);
+
+      allowFocusCheckbox = document.createXULElement("checkbox");
+      document.l10n.setAttributes(
+        allowFocusCheckbox,
+        "tabbrowser-allow-dialogs-to-get-focus",
+        { domain: hostForAllowFocusCheckbox }
+      );
+      allowFocusRow.appendChild(allowFocusCheckbox);
+
+      newPrompt.ui.rows.append(allowFocusRow);
+    }
+
+    let tab = gBrowser.getTabForBrowser(browser);
+    let closeCB = this._promptCloseCallback.bind(
+      null,
+      onCloseCallback,
+      principalToAllowFocusFor,
+      allowFocusCheckbox
+    );
+    newPrompt.init(args, tab, closeCB);
+    return newPrompt;
+  },
+
+  removePrompt(aPrompt) {
+    let { modalType } = aPrompt.args;
+    if (modalType === Ci.nsIPrompt.MODAL_TYPE_TAB) {
+      this._tabPrompts.delete(aPrompt.element);
+    } else {
+      this._contentPrompts.delete(aPrompt.element);
+    }
+
+    let browser = this.browser;
+    aPrompt.element.remove();
+
+    let prompts = this.listPrompts(modalType);
+    if (prompts.length) {
+      let prompt = prompts[prompts.length - 1];
+      prompt.element.hidden = false;
+      // Because we were hidden before, this won't have been possible, so do it now:
+      prompt.Dialog.setDefaultFocus();
+    } else if (modalType === Ci.nsIPrompt.MODAL_TYPE_TAB) {
+      // If we remove the last tab chrome prompt, also remove the browser
+      // attribute.
+      browser.removeAttribute("tabmodalChromePromptShowing");
+      // Notify popup notifications of the UI change so they show notification
+      // panels again.
+      UpdatePopupNotificationsVisibility();
+    }
+    // Check if all prompts are closed
+    if (!this._hasPrompts()) {
+      browser.removeAttribute("tabmodalPromptShowing");
+      browser.focus();
+    }
+  },
+
+  /**
+   * Checks if the prompt box has prompt elements.
+   * @returns {Boolean} - true if there are prompt elements.
+   */
+  _hasPrompts() {
+    return !!this._getPromptElements().length;
+  },
+
+  /**
+   * Get list of current prompt elements.
+   * @param {Number} [aModalType] - Optionally filter by
+   * Ci.nsIPrompt.MODAL_TYPE_.
+   * @returns {NodeList} - A list of tabmodalprompt elements.
+   */
+  _getPromptElements(aModalType = null) {
+    let selector = "tabmodalprompt";
+
+    if (aModalType != null) {
+      if (aModalType === Ci.nsIPrompt.MODAL_TYPE_TAB) {
+        selector += ".tab-prompt";
+      } else {
+        selector += ".content-prompt";
+      }
+    }
+    return this.browser.parentNode.querySelectorAll(selector);
+  },
+
+  /**
+   * Get a list of all TabModalPrompt objects associated with the prompt box.
+   * @param {Number} [aModalType] - Optionally filter by
+   * Ci.nsIPrompt.MODAL_TYPE_.
+   * @returns {TabModalPrompt[]} - An array of TabModalPrompt objects.
+   */
+  listPrompts(aModalType = null) {
+    // Get the nodelist, then return the TabModalPrompt instances as an array
+    let promptMap;
+
+    if (aModalType) {
+      if (aModalType === Ci.nsIPrompt.MODAL_TYPE_TAB) {
+        promptMap = this._tabPrompts;
+      } else {
+        promptMap = this._contentPrompts;
+      }
+    }
+
+    let elements = this._getPromptElements(aModalType);
+
+    if (promptMap) {
+      return [...elements].map(el => promptMap.get(el));
+    }
+    return [...elements].map(
+      el => this._contentPrompts.get(el) || this._tabPrompts.get(el)
+    );
+  },
+
+  onNextPromptShowAllowFocusCheckboxFor(principal) {
+    this._allowTabFocusByPromptPrincipal = principal;
+  },
+
+  get browser() {
+    let browser = this._weakBrowserRef.get();
+    if (!browser) {
+      throw new Error("Stale promptbox! The associated browser is gone.");
+    }
+    return browser;
+  },
+};
 
 // Handle window-modal prompts that we want to display with the same style as
 // tab-modal prompts.
