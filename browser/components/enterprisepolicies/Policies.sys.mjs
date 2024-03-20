@@ -2392,12 +2392,6 @@ export var Policies = {
     },
   },
 
-  TranslateEnabled: {
-    onBeforeAddons(manager, param) {
-      setAndLockPref("browser.translations.enable", param);
-    },
-  },
-
   UserMessaging: {
     onBeforeAddons(manager, param) {
       if ("WhatsNew" in param) {
