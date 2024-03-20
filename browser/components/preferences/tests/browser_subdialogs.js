@@ -407,17 +407,29 @@ add_task(async function background_click_should_close_dialog() {
   // Clicking on an inactive part of dialog itself should not close the dialog.
   // Click the dialog title bar here to make sure nothing happens.
   info("clicking the dialog title bar");
+  // We intentionally turn off this a11y check, because the following click
+  // is purposefully targeting a non-interactive element to confirm the opened
+  // dialog won't be dismissed. It is not meant to be interactive and is not
+  // expected to be accessible, therefore this rule check shall be ignored by
+  // a11y_checks suite.
+  AccessibilityUtils.setEnv({ mustHaveAccessibleRule: false });
   BrowserTestUtils.synthesizeMouseAtCenter(
     ".dialogTitle",
     {},
     tab.linkedBrowser
   );
+  AccessibilityUtils.resetEnv();
 
   // Close the dialog by clicking on the overlay background. Simulate a click
   // at point (2,2) instead of (0,0) so we are sure we're clicking on the
   // overlay background instead of some boundary condition that a real user
   // would never click.
   info("clicking the overlay background");
+  // We intentionally turn off this a11y check, because the following click
+  // is purposefully targeting a non-interactive element to dismiss the opened
+  // dialog with a mouse which can be done by assistive technology and keyboard
+  // by pressing `Esc` key, this rule check shall be ignored by a11y_checks.
+  AccessibilityUtils.setEnv({ mustHaveAccessibleRule: false });
   await close_subdialog_and_test_generic_end_state(
     tab.linkedBrowser,
     function () {
@@ -432,6 +444,7 @@ add_task(async function background_click_should_close_dialog() {
     0,
     { runClosingFnOutsideOfContentTask: true }
   );
+  AccessibilityUtils.resetEnv();
 });
 
 add_task(async function escape_should_close_dialog() {

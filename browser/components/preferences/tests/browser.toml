@@ -276,7 +276,6 @@ support-files = [
   "subdialog.xhtml",
   "subdialog2.xhtml",
 ]
-fail-if = ["a11y_checks"] # Bug 1854636 clicked label.dialogTitle, vbox#dialogTemplate.dialogOverlay may not be focusable
 
 ["browser_sync_chooseWhatToSync.js"]
 
