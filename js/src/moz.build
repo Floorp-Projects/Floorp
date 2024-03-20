@@ -311,6 +311,7 @@ UNIFIED_SOURCES += [
     "builtin/ParseRecordObject.cpp",
     "builtin/Profilers.cpp",
     "builtin/Promise.cpp",
+    "builtin/RawJSONObject.cpp",
     "builtin/Reflect.cpp",
     "builtin/ReflectParse.cpp",
     "builtin/ShadowRealm.cpp",
