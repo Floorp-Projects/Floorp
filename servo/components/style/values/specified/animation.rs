@@ -165,6 +165,12 @@ impl AnimationIterationCount {
     pub fn one() -> Self {
         Self::Number(NonNegativeNumber::new(1.0))
     }
+
+    /// Returns true if it's `1.0`.
+    #[inline]
+    pub fn is_one(&self) -> bool {
+        *self == Self::one()
+    }
 }
 
 /// A value for the `animation-name` property.
