@@ -104,6 +104,7 @@ JSObject* ContentProcessMessageManager::GetOrCreateWrapper() {
     jsapi.Init();
 
     if (!GetOrCreateDOMReflectorNoWrap(jsapi.cx(), this, &val)) {
+      JS_ClearPendingException(jsapi.cx());
       return nullptr;
     }
   }
@@ -111,11 +112,15 @@ JSObject* ContentProcessMessageManager::GetOrCreateWrapper() {
   return &val.toObject();
 }
 
-void ContentProcessMessageManager::LoadScript(const nsAString& aURL) {
+bool ContentProcessMessageManager::LoadScript(const nsAString& aURL) {
   Init();
-  JS::Rooted<JSObject*> messageManager(mozilla::dom::RootingCx(),
-                                       GetOrCreateWrapper());
-  LoadScriptInternal(messageManager, aURL, true);
+  JSObject* wrapper = GetOrCreateWrapper();
+  if (wrapper) {
+    JS::Rooted<JSObject*> messageManager(mozilla::dom::RootingCx(), wrapper);
+    LoadScriptInternal(messageManager, aURL, true);
+    return true;
+  }
+  return false;
 }
 
 void ContentProcessMessageManager::SetInitialProcessData(
