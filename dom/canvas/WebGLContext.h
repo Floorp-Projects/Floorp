@@ -756,7 +756,7 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   virtual Maybe<double> GetParameter(GLenum pname);
   Maybe<std::string> GetString(GLenum pname) const;
 
-  bool IsEnabled(GLenum cap);
+  Maybe<bool> IsEnabled(GLenum cap);
 
  private:
   static StaticMutex sLruMutex;

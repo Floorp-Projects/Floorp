@@ -431,16 +431,16 @@ Maybe<double> WebGLContext::GetParameter(const GLenum pname) {
   return Nothing();
 }
 
-bool WebGLContext::IsEnabled(GLenum cap) {
+Maybe<bool> WebGLContext::IsEnabled(GLenum cap) {
   const FuncScope funcScope(*this, "isEnabled");
-  if (IsContextLost()) return false;
+  if (IsContextLost()) return {};
 
-  if (!ValidateCapabilityEnum(cap)) return false;
+  if (!ValidateCapabilityEnum(cap)) return {};
 
   const auto& slot = GetStateTrackingSlot(cap, 0);
-  if (slot) return *slot;
+  if (slot) return Some(*slot);
 
-  return gl->fIsEnabled(cap);
+  return Some(gl->fIsEnabled(cap));
 }
 
 bool WebGLContext::ValidateCapabilityEnum(GLenum cap) {

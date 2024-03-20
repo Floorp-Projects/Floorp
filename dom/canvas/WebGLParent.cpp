@@ -462,7 +462,7 @@ IPCResult WebGLParent::RecvGetVertexAttrib(GLuint index, GLenum pname,
   return IPC_OK();
 }
 
-IPCResult WebGLParent::RecvIsEnabled(GLenum cap, bool* const ret) {
+IPCResult WebGLParent::RecvIsEnabled(GLenum cap, Maybe<bool>* const ret) {
   if (!mHost) {
     return IPC_FAIL(this, "HostWebGLContext is not initialized.");
   }
