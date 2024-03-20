@@ -163,48 +163,48 @@ endfunc
   vssub.vv \o3, v16, v20
 .endm
 
-.macro iadst_4 o0, o1, o2, o3
+.macro iadst_4 o0, o1, o2, o3, lm2, lm
   li t1, 1321
   li t2, 3803
   li t3, 2482
 
-  vwmul.vx v4, v0, t1
-  vwmul.vx v5, v0, t3
+  vwmul.vx v16, v0, t1
+  vwmul.vx v18, v0, t3
   neg t1, t1
-  vwmacc.vx v4, t2, v2
-  vwmacc.vx v5, t1, v2
+  vwmacc.vx v16, t2, v2
+  vwmacc.vx v18, t1, v2
   neg t2, t2
-  vwmacc.vx v4, t3, v3
-  vwmacc.vx v5, t2, v3
+  vwmacc.vx v16, t3, v3
+  vwmacc.vx v18, t2, v3
 
-  vwsub.vv v6, v0, v2
-  vwadd.wv v6, v6, v3
+  vwsub.vv v20,  v0, v2
+  vwadd.wv v20, v20, v3
 
   li t1, 3344
-  vwmul.vx v7, v1, t1
+  vwmul.vx v22, v1, t1
 
-  vsetvli zero, zero, e32, m1, ta, ma
+  vsetvli zero, zero, e32, \lm2, ta, ma
 
-  vmul.vx v6, v6, t1
+  vmul.vx v20, v20, t1
 
-  vadd.vv v8, v4, v5
-  vadd.vv v4, v4, v7
-  vadd.vv v5, v5, v7
-  vsub.vv v7, v8, v7
+  vadd.vv v24, v16, v18
+  vadd.vv v16, v16, v22
+  vadd.vv v18, v18, v22
+  vsub.vv v22, v24, v22
 
   li t1, 2048
 
-  vadd.vx v4, v4, t1
-  vadd.vx v5, v5, t1
-  vadd.vx v6, v6, t1
-  vadd.vx v7, v7, t1
+  vadd.vx v16, v16, t1
+  vadd.vx v18, v18, t1
+  vadd.vx v20, v20, t1
+  vadd.vx v22, v22, t1
 
-  vsetvli zero, zero, e16, mf2, ta, ma
+  vsetvli zero, zero, e16, \lm, ta, ma
 
-  vnsra.wi \o0, v4, 12
-  vnsra.wi \o1, v5, 12
-  vnsra.wi \o2, v6, 12
-  vnsra.wi \o3, v7, 12
+  vnsra.wi \o0, v16, 12
+  vnsra.wi \o1, v18, 12
+  vnsra.wi \o2, v20, 12
+  vnsra.wi \o3, v22, 12
 .endm
 
 function inv_dct_e16_x4_rvv, export=1, ext=v
@@ -213,12 +213,22 @@ function inv_dct_e16_x4_rvv, export=1, ext=v
 endfunc
 
 function inv_adst_e16_x4_rvv, export=1, ext=v
-  iadst_4 v0, v1, v2, v3
+  iadst_4 v0, v1, v2, v3, m1, mf2
   jr t0
 endfunc
 
 function inv_flipadst_e16_x4_rvv, export=1, ext=v
-  iadst_4 v3, v2, v1, v0
+  iadst_4 v3, v2, v1, v0, m1, mf2
+  jr t0
+endfunc
+
+function inv_adst_e16_x4w_rvv, export=1, ext=v
+  iadst_4 v0, v1, v2, v3, m2, m1
+  jr t0
+endfunc
+
+function inv_flipadst_e16_x4w_rvv, export=1, ext=v
+  iadst_4 v3, v2, v1, v0, m2, m1
   jr t0
 endfunc
 
@@ -328,6 +338,8 @@ function inv_txfm_\variant\()add_8x8_rvv, export=1, ext=v
 
 .ifc \variant, identity_
   // The identity vsadd.vv and downshift vssra.vi 1 cancel out
+
+  j L(itx_8x8_epilog)
 .else
   jalr t0, a4
 
@@ -339,8 +351,8 @@ function inv_txfm_\variant\()add_8x8_rvv, export=1, ext=v
   vssra.vi v5, v5, 1
   vssra.vi v6, v6, 1
   vssra.vi v7, v7, 1
-.endif
 
+L(itx_8x8_epilog):
   vsseg8e16.v v0, (a2)
   vle16.v v0, (a2)
   addi t0, a2, 16
@@ -374,9 +386,7 @@ function inv_txfm_\variant\()add_8x8_rvv, export=1, ext=v
   vmv.v.x v8, zero
   vse16.v v8, (a2)
 
-.ifc \variant, identity_
 itx_8x8_end:
-.endif
   vsetivli zero, 8, e8, mf2, ta, ma
   vle8.v v8, (a0)
   add t0, a0, a1
@@ -441,11 +451,12 @@ itx_8x8_end:
   vse8.v v15, (a0)
 
   ret
+.endif
 endfunc
 .endm
 
-def_fn_8x8_base
 def_fn_8x8_base identity_
+def_fn_8x8_base
 
 function inv_identity_e16_x8_rvv, export=1, ext=v
   vsadd.vv v0, v0, v0
@@ -530,23 +541,23 @@ endfunc
   li t5, 2598
   li t6, 3166
 
-  vwmul.vx v8, v7, t1
+  vwmul.vx v16, v7, t1
   neg t1, t1
-  vwmul.vx v10, v7, t2
-  vwmacc.vx v8, t2, v0
-  vwmacc.vx v10, t1, v0
+  vwmul.vx v18, v7, t2
+  vwmacc.vx v16, t2, v0
+  vwmacc.vx v18, t1, v0
 
-  vwmul.vx v12, v5, t3
+  vwmul.vx v20, v5, t3
   neg t3, t3
-  vwmul.vx v14, v5, t4
-  vwmacc.vx v12, t4, v2
-  vwmacc.vx v14, t3, v2
+  vwmul.vx v22, v5, t4
+  vwmacc.vx v20, t4, v2
+  vwmacc.vx v22, t3, v2
 
-  vwmul.vx v16, v3, t5
+  vwmul.vx v24, v3, t5
   neg t5, t5
-  vwmul.vx v18, v3, t6
-  vwmacc.vx v16, t6, v4
-  vwmacc.vx v18, t5, v4
+  vwmul.vx v26, v3, t6
+  vwmacc.vx v24, t6, v4
+  vwmacc.vx v26, t5, v4
 
   li t1, 2048
   li t2, 1189
@@ -555,95 +566,95 @@ endfunc
   li t5, 3784
   li t6, 2896
 
-  vwmul.vx v20, v1, t2
+  vwmul.vx v28, v1, t2
   neg t2, t2
-  vwmul.vx v22, v1, t3
-  vwmacc.vx v20, t3, v6
-  vwmacc.vx v22, t2, v6
+  vwmul.vx v30, v1, t3
+  vwmacc.vx v28, t3, v6
+  vwmacc.vx v30, t2, v6
 
-  vwadd.wx v8, v8, t1
-  vwadd.wx v10, v10, t1
-  vwadd.wx v12, v12, t1
-  vwadd.wx v14, v14, t1
+  vwadd.wx v16, v16, t1
+  vwadd.wx v18, v18, t1
+  vwadd.wx v20, v20, t1
+  vwadd.wx v22, v22, t1
+  vwadd.wx v24, v24, t1
+  vwadd.wx v26, v26, t1
+  vwadd.wx v28, v28, t1
+  vwadd.wx v30, v30, t1
+
+  vnsra.wi v16, v16, 12
+  vnsra.wi v18, v18, 12
+  vnsra.wi v20, v20, 12
+  vnsra.wi v22, v22, 12
+  vnsra.wi v24, v24, 12
+  vnsra.wi v26, v26, 12
+  vnsra.wi v28, v28, 12
+  vnsra.wi v30, v30, 12
+
+  vssub.vv  v4, v16, v24
+  vsadd.vv v16, v16, v24
+  vsadd.vv  v1, v18, v26
+  vsadd.vv  v2, v20, v28
+  vsadd.vv  v3, v22, v30
+  vssub.vv  v5, v18, v26
+  vssub.vv  v6, v20, v28
+  vssub.vv v30, v22, v30
+
+  vsadd.vv \o0, v16, v2
+  vsadd.vv \o7,  v1, v3
+  vssub.vv  v2, v16, v2
+  vssub.vv  v3,  v1, v3
+
+  vwmul.vx v16,  v4, t5
+  vwmul.vx v18,  v4, t4
+  vwmul.vx v20, v30, t5
+  vwmul.vx v22, v30, t4
+  vwmacc.vx v16, t4, v5
+  neg t4, t4
+  vwmacc.vx v22, t5, v6
+  neg t5, t5
+  vwmacc.vx v20, t4, v6
+  vwmacc.vx v18, t5, v5
+
   vwadd.wx v16, v16, t1
   vwadd.wx v18, v18, t1
   vwadd.wx v20, v20, t1
   vwadd.wx v22, v22, t1
 
-  vnsra.wi v8, v8, 12
-  vnsra.wi v10, v10, 12
-  vnsra.wi v12, v12, 12
-  vnsra.wi v14, v14, 12
   vnsra.wi v16, v16, 12
   vnsra.wi v18, v18, 12
   vnsra.wi v20, v20, 12
   vnsra.wi v22, v22, 12
 
-  vssub.vv v4, v8, v16
-  vsadd.vv v8, v8, v16
-  vsadd.vv v1, v10, v18
-  vsadd.vv v2, v12, v20
-  vsadd.vv v3, v14, v22
-  vssub.vv v5, v10, v18
-  vssub.vv v6, v12, v20
-  vssub.vv v22, v14, v22
+  vsadd.vv \o1, v16, v20
+  vsadd.vv \o6, v18, v22
+  vssub.vv v16, v16, v20
+  vssub.vv v17, v18, v22
 
-  vsadd.vv \o0, v8, v2
-  vsadd.vv \o7, v1, v3
-  vssub.vv v2, v8, v2
-  vssub.vv v3, v1, v3
-
-  vwmul.vx v8, v4, t5
-  vwmul.vx v10, v4, t4
-  vwmul.vx v12, v22, t5
-  vwmul.vx v14, v22, t4
-  vwmacc.vx v8, t4, v5
-  neg t4, t4
-  vwmacc.vx v14, t5, v6
-  neg t5, t5
-  vwmacc.vx v12, t4, v6
-  vwmacc.vx v10, t5, v5
-
-  vwadd.wx v8, v8, t1
-  vwadd.wx v10, v10, t1
-  vwadd.wx v12, v12, t1
-  vwadd.wx v14, v14, t1
-
-  vnsra.wi v8, v8, 12
-  vnsra.wi v10, v10, 12
-  vnsra.wi v12, v12, 12
-  vnsra.wi v14, v14, 12
-
-  vsadd.vv \o1, v8, v12
-  vsadd.vv \o6, v10, v14
-  vssub.vv v8, v8, v12
-  vssub.vv v9, v10, v14
-
-  vwmul.vx v10, v2, t6
-  vwmul.vx v12, v2, t6
-  vwmul.vx v14, v8, t6
-  vwmul.vx v16, v8, t6
-  vwmacc.vx v10, t6, v3
-  vwmacc.vx v14, t6, v9
+  vwmul.vx v18, v2, t6
+  vwmul.vx v20, v2, t6
+  vwmul.vx v22, v16, t6
+  vwmul.vx v24, v16, t6
+  vwmacc.vx v18, t6, v3
+  vwmacc.vx v22, t6, v17
   neg t6, t6
-  vwmacc.vx v12, t6, v3
-  vwmacc.vx v16, t6, v9
+  vwmacc.vx v20, t6, v3
+  vwmacc.vx v24, t6, v17
 
-  vwadd.wx v10, v10, t1
-  vwadd.wx v12, v12, t1
-  vwadd.wx v14, v14, t1
-  vwadd.wx v16, v16, t1
+  vwadd.wx v18, v18, t1
+  vwadd.wx v20, v20, t1
+  vwadd.wx v22, v22, t1
+  vwadd.wx v24, v24, t1
 
-  vnsra.wi \o3, v10, 12
-  vnsra.wi \o4, v12, 12
-  vnsra.wi \o2, v14, 12
-  vnsra.wi \o5, v16, 12
+  vnsra.wi \o3, v18, 12
+  vnsra.wi \o4, v20, 12
+  vnsra.wi \o2, v22, 12
+  vnsra.wi \o5, v24, 12
 
-  vmv.v.x v8, zero
-  vssub.vv \o1, v8, \o1
-  vssub.vv \o3, v8, \o3
-  vssub.vv \o5, v8, \o5
-  vssub.vv \o7, v8, \o7
+  vmv.v.x v16, zero
+  vssub.vv \o1, v16, \o1
+  vssub.vv \o3, v16, \o3
+  vssub.vv \o5, v16, \o5
+  vssub.vv \o7, v16, \o7
 .endm
 
 function inv_dct_e16_x8_rvv, export=1, ext=v
@@ -713,6 +724,206 @@ def_fn_8x8 adst, identity
 def_fn_8x8 flipadst, identity
 def_fn_8x8 identity, adst
 def_fn_8x8 identity, flipadst
+
+function inv_txfm_add_4x8_rvv, export=1, ext=v
+  csrw vxrm, zero
+
+  vsetivli zero, 8, e16, m1, ta, ma
+  vle16.v v0, (a2)
+  addi t0, a2, 16
+  vle16.v v1, (t0)
+  addi t0, t0, 16
+  vle16.v v2, (t0)
+  addi t0, t0, 16
+  vle16.v v3, (t0)
+
+  li t1, 2896*8
+.irp i, 0, 1, 2, 3
+  vsmul.vx v\i, v\i, t1
+.endr
+
+  jalr t0, a4
+
+  vsseg4e16.v v0, (a2)
+
+  vsetivli zero, 4, e16, mf2, ta, ma
+  vmv.v.x v8, zero
+  vle16.v v0, (a2)
+  vse16.v v8, (a2)
+.irp i, 1, 2, 3, 4, 5, 6, 7
+  addi a2, a2, 8
+  vle16.v v\i, (a2)
+  vse16.v v8, (a2)
+.endr
+
+  jalr t0, a5
+
+.irp i, 0, 1, 2, 3, 4, 5, 6, 7
+  vssra.vi v\i, v\i, 4
+.endr
+
+  vsetvli zero, zero, e8, mf4, ta, ma
+  vle8.v v8, (a0)
+  add t0, a0, a1
+  vle8.v v9, (t0)
+.irp i, 10, 11, 12, 13, 14, 15
+  add t0, t0, a1
+  vle8.v v\i, (t0)
+.endr
+
+  vwaddu.wv v0, v0,  v8
+  vwaddu.wv v1, v1,  v9
+  vwaddu.wv v2, v2, v10
+  vwaddu.wv v3, v3, v11
+  vwaddu.wv v4, v4, v12
+  vwaddu.wv v5, v5, v13
+  vwaddu.wv v6, v6, v14
+  vwaddu.wv v7, v7, v15
+
+  vsetvli zero, zero, e16, mf2, ta, ma
+.irp i, 0, 1, 2, 3, 4, 5, 6, 7
+  vmax.vx v\i, v\i, zero
+.endr
+
+  vsetvli zero, zero, e8, mf4, ta, ma
+
+  vnclipu.wi  v8, v0, 0
+  vnclipu.wi  v9, v1, 0
+  vnclipu.wi v10, v2, 0
+  vnclipu.wi v11, v3, 0
+  vnclipu.wi v12, v4, 0
+  vnclipu.wi v13, v5, 0
+  vnclipu.wi v14, v6, 0
+  vnclipu.wi v15, v7, 0
+
+  vse8.v v8, (a0)
+.irp i, 9, 10, 11, 12, 13, 14, 15
+  add a0, a0, a1
+  vse8.v v\i, (a0)
+.endr
+
+  ret
+endfunc
+
+function inv_txfm_add_8x4_rvv, export=1, ext=v
+  csrw vxrm, zero
+
+  vsetivli zero, 4, e16, mf2, ta, ma
+  vle16.v v0, (a2)
+  addi t0, a2, 8
+  vle16.v v1, (t0)
+.irp i, 2, 3, 4, 5, 6, 7
+  addi t0, t0, 8
+  vle16.v v\i, (t0)
+.endr
+
+  li t1, 2896*8
+.irp i, 0, 1, 2, 3, 4, 5, 6, 7
+  vsmul.vx v\i, v\i, t1
+.endr
+
+  jalr t0, a4
+
+  vsseg8e16.v v0, (a2)
+
+  vsetivli zero, 8, e16, m1, ta, ma
+  vmv.v.x v4, zero
+  vle16.v v0, (a2)
+  vse16.v v4, (a2)
+.irp i, 1, 2, 3
+  addi a2, a2, 16
+  vle16.v v\i, (a2)
+  vse16.v v4, (a2)
+.endr
+
+  jalr t0, a5
+
+  vssra.vi v0, v0, 4
+  vssra.vi v1, v1, 4
+  vssra.vi v2, v2, 4
+  vssra.vi v3, v3, 4
+
+  vsetvli zero, zero, e8, mf2, ta, ma
+  vle8.v v4, (a0)
+  add t0, a0, a1
+  vle8.v v5, (t0)
+  add t0, t0, a1
+  vle8.v v6, (t0)
+  add t0, t0, a1
+  vle8.v v7, (t0)
+
+  vwaddu.wv v0, v0, v4
+  vwaddu.wv v1, v1, v5
+  vwaddu.wv v2, v2, v6
+  vwaddu.wv v3, v3, v7
+
+  vsetvli zero, zero, e16, m1, ta, ma
+  vmax.vx v0, v0, zero
+  vmax.vx v1, v1, zero
+  vmax.vx v2, v2, zero
+  vmax.vx v3, v3, zero
+
+  vsetvli zero, zero, e8, mf2, ta, ma
+
+  vnclipu.wi v4, v0, 0
+  vnclipu.wi v5, v1, 0
+  vnclipu.wi v6, v2, 0
+  vnclipu.wi v7, v3, 0
+
+  vse8.v v4, (a0)
+  add a0, a0, a1
+  vse8.v v5, (a0)
+  add a0, a0, a1
+  vse8.v v6, (a0)
+  add a0, a0, a1
+  vse8.v v7, (a0)
+
+  ret
+endfunc
+
+/* Define symbols added in .if statement */
+.equ dct, 1
+.equ identity, 2
+.equ adst, 3
+.equ flipadst, 4
+
+.macro def_fn_48 w, h, txfm1, txfm2
+function inv_txfm_add_\txfm1\()_\txfm2\()_\w\()x\h\()_8bpc_rvv, export=1
+.if \w == 4 && (\txfm1 == adst || \txfm1 == flipadst)
+  la a4, inv_\txfm1\()_e16_x\w\()w_rvv
+.else
+  la a4, inv_\txfm1\()_e16_x\w\()_rvv
+.endif
+.if \h == 4 && (\txfm2 == adst || \txfm2 == flipadst)
+  la a5, inv_\txfm2\()_e16_x\h\()w_rvv
+.else
+  la a5, inv_\txfm2\()_e16_x\h\()_rvv
+.endif
+  j inv_txfm_add_\w\()x\h\()_rvv
+endfunc
+.endm
+
+.macro def_fns_48 w, h
+def_fn_48 \w, \h, dct, dct
+def_fn_48 \w, \h, identity, identity
+def_fn_48 \w, \h, dct, adst
+def_fn_48 \w, \h, dct, flipadst
+def_fn_48 \w, \h, dct, identity
+def_fn_48 \w, \h, adst, dct
+def_fn_48 \w, \h, adst, adst
+def_fn_48 \w, \h, adst, flipadst
+def_fn_48 \w, \h, flipadst, dct
+def_fn_48 \w, \h, flipadst, adst
+def_fn_48 \w, \h, flipadst, flipadst
+def_fn_48 \w, \h, identity, dct
+def_fn_48 \w, \h, adst, identity
+def_fn_48 \w, \h, flipadst, identity
+def_fn_48 \w, \h, identity, adst
+def_fn_48 \w, \h, identity, flipadst
+.endm
+
+def_fns_48 4, 8
+def_fns_48 8, 4
 
 function inv_identity_e16_x16_rvv, export=1, ext=v
   li t1, 2*(5793-4096)*8
@@ -1196,10 +1407,12 @@ endfunc
 .macro def_horz_16 variant
 function inv_txfm_horz\variant\()_16x8_rvv, export=1, ext=v
   vmv.v.x v16, zero
-.irp i, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
+  vle16.v v0, (t4)
+  vse16.v v16, (t4)
+.irp i, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
+  add t4, t4, t6
   vle16.v v\i, (t4)
   vse16.v v16, (t4)
-  add t4, t4, t6
 .endr
 .ifc \variant, _identity
   li t1, 2*(5793-4096)*8
@@ -1208,29 +1421,35 @@ function inv_txfm_horz\variant\()_16x8_rvv, export=1, ext=v
   vsra.vi v16, v16, 1
   vaadd.vv v\i, v\i, v16
 .endr
+  j L(horz_16x8_epilog)
 .else
   jalr t0, a4
 .irp i, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
   vssra.vi v\i, v\i, 2
 .endr
-.endif
-.irp i, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
-  vsse16.v v\i, (t5), t6
+L(horz_16x8_epilog):
+  vsse16.v v0, (t5), t6
+.irp i, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
   addi t5, t5, 2
+  vsse16.v v\i, (t5), t6
 .endr
   jr a7
+.endif
 endfunc
 .endm
 
-def_horz_16
 def_horz_16 _identity
+def_horz_16
 
 function inv_txfm_add_vert_8x16_rvv, export=1, ext=v
   vsetivli zero, 8, e16, m1, ta, ma
-.irp i, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
-  vle16.v v\i, (t4)
+
+  vle16.v v0, (t4)
+.irp i, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
   add t4, t4, t6
+  vle16.v v\i, (t4)
 .endr
+
   jalr t0, a5
 
 .irp i, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
@@ -1238,10 +1457,13 @@ function inv_txfm_add_vert_8x16_rvv, export=1, ext=v
 .endr
 
   vsetivli zero, 8, e8, mf2, ta, ma
-  mv t0, t5
-.irp i, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31
-  vle8.v v\i, (t0)
+
+  vle8.v v16, (t5)
+  add t0, t5, a1
+  vle8.v v17, (t0)
+.irp i, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31
   add t0, t0, a1
+  vle8.v v\i, (t0)
 .endr
 
   vwaddu.wv v0, v0, v16
@@ -1284,9 +1506,10 @@ function inv_txfm_add_vert_8x16_rvv, export=1, ext=v
   vnclipu.wi v30, v14, 0
   vnclipu.wi v31, v15, 0
 
-.irp i, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31
-  vse8.v v\i, (t5)
+  vse8.v v16, (t5)
+.irp i, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31
   add t5, t5, a1
+  vse8.v v\i, (t5)
 .endr
 
   jr a7
@@ -1296,11 +1519,26 @@ function inv_txfm_add_16x16_rvv, export=1, ext=v
   csrw vxrm, zero
   vsetivli zero, 8, e16, m1, ta, ma
   addi sp, sp, -16*32
-.irp i, 0, 8
+.irp i, 8, 0
   addi t4, a2, \i*2
   addi t5, sp, \i*16*2
+.if \i == 8
+  blt a3, a7, 1f
+.endif
   li t6, 16*2
   jalr a7, a6
+.if \i == 8
+  j 2f
+1:
+  li t1, 64
+  vsetvli zero, t1, e16, m8, ta, ma
+  vmv.v.x v0, zero
+  vse16.v v0, (t5)
+  addi t5, t5, 128
+  vse16.v v0, (t5)
+  vsetivli zero, 8, e16, m1, ta, ma
+2:
+.endif
 .endr
 .irp i, 0, 8
   addi t4, sp, \i*2
@@ -1312,7 +1550,7 @@ function inv_txfm_add_16x16_rvv, export=1, ext=v
   ret
 endfunc
 
-.macro def_fn_16x16 txfm1, txfm2
+.macro def_fn_16x16 txfm1, txfm2, eob_half
 function inv_txfm_add_\txfm1\()_\txfm2\()_16x16_8bpc_rvv, export=1, ext=v
 .ifc \txfm1, identity
   la a6, inv_txfm_horz_identity_16x8_rvv
@@ -1321,19 +1559,558 @@ function inv_txfm_add_\txfm1\()_\txfm2\()_16x16_8bpc_rvv, export=1, ext=v
   la a4, inv_\txfm1\()_e16_x16_rvv
 .endif
   la a5, inv_\txfm2\()_e16_x16_rvv
+  li a7, \eob_half
   j inv_txfm_add_16x16_rvv
 endfunc
 .endm
 
-def_fn_16x16 dct, dct
-def_fn_16x16 identity, identity
-def_fn_16x16 dct, adst
-def_fn_16x16 dct, flipadst
-def_fn_16x16 dct, identity
-def_fn_16x16 adst, dct
-def_fn_16x16 adst, adst
-def_fn_16x16 adst, flipadst
-def_fn_16x16 flipadst, dct
-def_fn_16x16 flipadst, adst
-def_fn_16x16 flipadst, flipadst
-def_fn_16x16 identity, dct
+def_fn_16x16 dct, dct, 36
+def_fn_16x16 identity, identity, 36
+def_fn_16x16 dct, adst, 36
+def_fn_16x16 dct, flipadst, 36
+def_fn_16x16 dct, identity, 8
+def_fn_16x16 adst, dct, 36
+def_fn_16x16 adst, adst, 36
+def_fn_16x16 adst, flipadst, 36
+def_fn_16x16 flipadst, dct, 36
+def_fn_16x16 flipadst, adst, 36
+def_fn_16x16 flipadst, flipadst, 36
+def_fn_16x16 identity, dct, 8
+
+.macro def_fn_416_base variant
+function inv_txfm_\variant\()add_4x16_rvv, export=1, ext=v
+  csrw vxrm, zero
+
+  vsetivli zero, 8, e16, m1, ta, ma
+
+  blt a3, a6, 1f
+
+  addi t0, a2, 16
+  vle16.v v0, (t0)
+  addi t0, t0, 32
+  vle16.v v1, (t0)
+  addi t0, t0, 32
+  vle16.v v2, (t0)
+  addi t0, t0, 32
+  vle16.v v3, (t0)
+
+.ifc \variant, identity_
+  li t1, (5793-4096)*8
+  vsmul.vx v8, v0, t1
+  vaadd.vv v4, v0, v8
+  vsmul.vx v8, v1, t1
+  vaadd.vv v5, v1, v8
+  vsmul.vx v8, v2, t1
+  vaadd.vv v6, v2, v8
+  vsmul.vx v8, v3, t1
+  vaadd.vv v7, v3, v8
+.else
+  jalr t0, a4
+
+  vssra.vi v4, v0, 1
+  vssra.vi v5, v1, 1
+  vssra.vi v6, v2, 1
+  vssra.vi v7, v3, 1
+.endif
+
+  j 2f
+
+1:
+.irp i, 4, 5, 6, 7
+  vmv.v.x v\i, zero
+.endr
+
+2:
+  vle16.v v0, (a2)
+  addi t0, a2, 32
+  vle16.v v1, (t0)
+  addi t0, t0, 32
+  vle16.v v2, (t0)
+  addi t0, t0, 32
+  vle16.v v3, (t0)
+
+.ifc \variant, identity_
+  li t1, (5793-4096)*8
+.irp i, 0, 1, 2, 3
+  vsmul.vx v8, v\i, t1
+  vaadd.vv v\i, v\i, v8
+.endr
+
+  j L(itx_4x16_epilog)
+.else
+  jalr t0, a4
+
+  vssra.vi v0, v0, 1
+  vssra.vi v1, v1, 1
+  vssra.vi v2, v2, 1
+  vssra.vi v3, v3, 1
+
+L(itx_4x16_epilog):
+  vsseg4e16.v v0, (a2)
+  addi t0, a2, 64
+  vsseg4e16.v v4, (t0)
+
+  vsetivli zero, 4, e16, mf2, ta, ma
+
+  vmv.v.x v16, zero
+  vle16.v v0, (a2)
+  vse16.v v16, (a2)
+  addi t0, a2, 8
+  vle16.v v1, (t0)
+  vse16.v v16, (t0)
+.irp i, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
+  addi t0, t0, 8
+  vle16.v v\i, (t0)
+  vse16.v v16, (t0)
+.endr
+
+  jalr t0, a5
+
+.irp i, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
+  vssra.vi v\i, v\i, 4
+.endr
+
+  vsetvli zero, zero, e8, mf4, ta, ma
+
+  vle8.v v16, (a0)
+  add t0, a0, a1
+  vle8.v v17, (t0)
+.irp i, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31
+  add t0, t0, a1
+  vle8.v v\i, (t0)
+.endr
+
+  vwaddu.wv  v0,  v0, v16
+  vwaddu.wv  v1,  v1, v17
+  vwaddu.wv  v2,  v2, v18
+  vwaddu.wv  v3,  v3, v19
+  vwaddu.wv  v4,  v4, v20
+  vwaddu.wv  v5,  v5, v21
+  vwaddu.wv  v6,  v6, v22
+  vwaddu.wv  v7,  v7, v23
+  vwaddu.wv  v8,  v8, v24
+  vwaddu.wv  v9,  v9, v25
+  vwaddu.wv v10, v10, v26
+  vwaddu.wv v11, v11, v27
+  vwaddu.wv v12, v12, v28
+  vwaddu.wv v13, v13, v29
+  vwaddu.wv v14, v14, v30
+  vwaddu.wv v15, v15, v31
+
+  vsetvli zero, zero, e16, mf2, ta, ma
+.irp i, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
+  vmax.vx v\i, v\i, zero
+.endr
+
+  vsetvli zero, zero, e8, mf4, ta, ma
+
+  vnclipu.wi v16,  v0, 0
+  vnclipu.wi v17,  v1, 0
+  vnclipu.wi v18,  v2, 0
+  vnclipu.wi v19,  v3, 0
+  vnclipu.wi v20,  v4, 0
+  vnclipu.wi v21,  v5, 0
+  vnclipu.wi v22,  v6, 0
+  vnclipu.wi v23,  v7, 0
+  vnclipu.wi v24,  v8, 0
+  vnclipu.wi v25,  v9, 0
+  vnclipu.wi v26, v10, 0
+  vnclipu.wi v27, v11, 0
+  vnclipu.wi v28, v12, 0
+  vnclipu.wi v29, v13, 0
+  vnclipu.wi v30, v14, 0
+  vnclipu.wi v31, v15, 0
+
+  vse8.v v16, (a0)
+.irp i, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31
+  add a0, a0, a1
+  vse8.v v\i, (a0)
+.endr
+
+  ret
+.endif
+endfunc
+
+function inv_txfm_\variant\()add_16x4_rvv, export=1, ext=v
+  csrw vxrm, zero
+
+  vsetivli zero, 4, e16, mf2, ta, ma
+  vle16.v v0, (a2)
+  addi t0, a2, 8
+  vle16.v v1, (t0)
+.irp i, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
+  addi t0, t0, 8
+  vle16.v v\i, (t0)
+.endr
+
+.ifc \variant, identity_
+  li t1, 2*(5793-4096)*8
+.irp i, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
+  vsmul.vx v16, v\i, t1
+  vssra.vi v16, v16, 1
+  vsadd.vv v\i, v\i, v16
+.endr
+
+  j L(itx_16x4_epilog)
+.else
+  jalr t0, a4
+
+.irp i, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
+  vssra.vi v\i, v\i, 1
+.endr
+
+L(itx_16x4_epilog):
+  li t0, 32
+  vssseg8e16.v v0, (a2), t0
+  addi t1, a2, 16
+  vssseg8e16.v v8, (t1), t0
+
+.irp j, 0, 8
+  vsetivli zero, 8, e16, m1, ta, ma
+
+  vmv.v.x v4, zero
+  addi t0, a2, \j*2
+  vle16.v v0, (t0)
+  vse16.v v4, (t0)
+.irp i, 1, 2, 3
+  addi t0, t0, 32
+  vle16.v v\i, (t0)
+  vse16.v v4, (t0)
+.endr
+
+  jalr t0, a5
+
+  vssra.vi v0, v0, 4
+  vssra.vi v1, v1, 4
+  vssra.vi v2, v2, 4
+  vssra.vi v3, v3, 4
+
+  vsetvli zero, zero, e8, mf2, ta, ma
+  addi t0, a0, \j
+  vle8.v v4, (t0)
+  add t0, t0, a1
+  vle8.v v5, (t0)
+  add t0, t0, a1
+  vle8.v v6, (t0)
+  add t0, t0, a1
+  vle8.v v7, (t0)
+
+  vwaddu.wv v0, v0, v4
+  vwaddu.wv v1, v1, v5
+  vwaddu.wv v2, v2, v6
+  vwaddu.wv v3, v3, v7
+
+  vsetvli zero, zero, e16, m1, ta, ma
+  vmax.vx v0, v0, zero
+  vmax.vx v1, v1, zero
+  vmax.vx v2, v2, zero
+  vmax.vx v3, v3, zero
+
+  vsetvli zero, zero, e8, mf2, ta, ma
+
+  vnclipu.wi v4, v0, 0
+  vnclipu.wi v5, v1, 0
+  vnclipu.wi v6, v2, 0
+  vnclipu.wi v7, v3, 0
+
+  addi t0, a0, \j
+  vse8.v v4, (t0)
+  add t0, t0, a1
+  vse8.v v5, (t0)
+  add t0, t0, a1
+  vse8.v v6, (t0)
+  add t0, t0, a1
+  vse8.v v7, (t0)
+.endr
+
+  ret
+.endif
+endfunc
+.endm
+
+def_fn_416_base identity_
+def_fn_416_base
+
+.macro def_fn_416 w, h, txfm1, txfm2, eob_half
+function inv_txfm_add_\txfm1\()_\txfm2\()_\w\()x\h\()_8bpc_rvv, export=1
+.if \w == 4 && (\txfm1 == adst || \txfm1 == flipadst)
+  la a4, inv_\txfm1\()_e16_x\w\()w_rvv
+.elseif \txfm1 != identity
+  la a4, inv_\txfm1\()_e16_x\w\()_rvv
+.endif
+.if \h == 4 && (\txfm2 == adst || \txfm2 == flipadst)
+  la a5, inv_\txfm2\()_e16_x\h\()w_rvv
+.else
+  la a5, inv_\txfm2\()_e16_x\h\()_rvv
+.endif
+.if \w == 4
+  li a6, \eob_half
+.endif
+.ifc \txfm1, identity
+  j inv_txfm_identity_add_\w\()x\h\()_rvv
+.else
+  j inv_txfm_add_\w\()x\h\()_rvv
+.endif
+endfunc
+.endm
+
+.macro def_fns_416 w, h
+def_fn_416 \w, \h, dct, dct, 29
+def_fn_416 \w, \h, identity, identity, 29
+def_fn_416 \w, \h, dct, adst, 29
+def_fn_416 \w, \h, dct, flipadst, 29
+def_fn_416 \w, \h, dct, identity, 8
+def_fn_416 \w, \h, adst, dct, 29
+def_fn_416 \w, \h, adst, adst, 29
+def_fn_416 \w, \h, adst, flipadst, 29
+def_fn_416 \w, \h, flipadst, dct, 29
+def_fn_416 \w, \h, flipadst, adst, 29
+def_fn_416 \w, \h, flipadst, flipadst, 29
+def_fn_416 \w, \h, identity, dct, 32
+def_fn_416 \w, \h, adst, identity, 8
+def_fn_416 \w, \h, flipadst, identity, 8
+def_fn_416 \w, \h, identity, adst, 32
+def_fn_416 \w, \h, identity, flipadst, 32
+.endm
+
+def_fns_416 4, 16
+def_fns_416 16, 4
+
+.macro def_fn_816_base variant
+function inv_txfm_\variant\()add_8x16_rvv, export=1, ext=v
+  csrw vxrm, zero
+
+  vsetivli zero, 8, e16, m1, ta, ma
+
+  blt a3, a6, 1f
+
+  vmv.v.x v16, zero
+  addi t0, a2, 16
+  vle16.v v0, (t0)
+  vse16.v v16, (t0)
+.irp i, 1, 2, 3, 4, 5, 6, 7
+  addi t0, t0, 32
+  vle16.v v\i, (t0)
+  vse16.v v16, (t0)
+.endr
+
+  li t1, 2896*8
+.ifc \variant, identity_
+  vsmul.vx  v8, v0, t1
+  vsmul.vx  v9, v1, t1
+  vsmul.vx v10, v2, t1
+  vsmul.vx v11, v3, t1
+  vsmul.vx v12, v4, t1
+  vsmul.vx v13, v5, t1
+  vsmul.vx v14, v6, t1
+  vsmul.vx v15, v7, t1
+.else
+.irp i, 0, 1, 2, 3, 4, 5, 6, 7
+  vsmul.vx v\i, v\i, t1
+.endr
+
+  jalr t0, a4
+
+  vssra.vi  v8, v0, 1
+  vssra.vi  v9, v1, 1
+  vssra.vi v10, v2, 1
+  vssra.vi v11, v3, 1
+  vssra.vi v12, v4, 1
+  vssra.vi v13, v5, 1
+  vssra.vi v14, v6, 1
+  vssra.vi v15, v7, 1
+.endif
+
+  j 2f
+
+1:
+.irp i, 8, 9, 10, 11, 12, 13, 14, 15
+  vmv.v.x v\i, zero
+.endr
+
+2:
+  vmv.v.x v16, zero
+  vle16.v v0, (a2)
+  vse16.v v16, (a2)
+  addi t0, a2, 32
+  vle16.v v1, (t0)
+  vse16.v v16, (t0)
+.irp i, 2, 3, 4, 5, 6, 7
+  addi t0, t0, 32
+  vle16.v v\i, (t0)
+  vse16.v v16, (t0)
+.endr
+
+  li t1, 2896*8
+.irp i, 0, 1, 2, 3, 4, 5, 6, 7
+  vsmul.vx v\i, v\i, t1
+.endr
+
+.ifc \variant, identity_
+  j L(itx_8x16_epilog)
+.else
+  jalr t0, a4
+
+.irp i, 0, 1, 2, 3, 4, 5, 6, 7
+  vssra.vi v\i, v\i, 1
+.endr
+
+L(itx_8x16_epilog):
+  addi t4, sp, -8*32
+  vsseg8e16.v v0, (t4)
+  addi t0, t4, 8*16
+  vsseg8e16.v v8, (t0)
+
+  mv t5, a0
+  li t6, 16
+  jal a7, inv_txfm_add_vert_8x16_rvv
+
+  ret
+.endif
+endfunc
+
+function inv_txfm_\variant\()add_16x8_rvv, export=1, ext=v
+  csrw vxrm, zero
+
+  vsetivli zero, 8, e16, m1, ta, ma
+  vle16.v v0, (a2)
+  addi t0, a2, 16
+  vle16.v v1, (t0)
+.irp i, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
+  addi t0, t0, 16
+  vle16.v v\i, (t0)
+.endr
+
+  li t1, 2896*8
+.irp i, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
+  vsmul.vx v\i, v\i, t1
+.endr
+
+.ifc \variant, identity_
+  li t1, 2*(5793-4096)*8
+.irp i, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
+  vsmul.vx v16, v\i, t1
+  vssra.vi v16, v16, 1
+  vsadd.vv v\i, v\i, v16
+.endr
+
+  j L(itx_16x8_epilog)
+.else
+  jalr t0, a4
+
+.irp i, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
+  vssra.vi v\i, v\i, 1
+.endr
+
+L(itx_16x8_epilog):
+  li t0, 32
+  vssseg8e16.v v0, (a2), t0
+  addi t1, a2, 16
+  vssseg8e16.v v8, (t1), t0
+
+.irp j, 0, 8
+  vsetivli zero, 8, e16, m1, ta, ma
+
+  vmv.v.x v8, zero
+  addi t0, a2, \j*2
+  vle16.v v0, (t0)
+  vse16.v v8, (t0)
+.irp i, 1, 2, 3, 4, 5, 6, 7
+  addi t0, t0, 32
+  vle16.v v\i, (t0)
+  vse16.v v8, (t0)
+.endr
+
+  jalr t0, a5
+
+.irp i, 0, 1, 2, 3, 4, 5, 6, 7
+  vssra.vi v\i, v\i, 4
+.endr
+
+  vsetvli zero, zero, e8, mf2, ta, ma
+  addi t0, a0, \j
+  vle8.v v8, (t0)
+.irp i, 9, 10, 11, 12, 13, 14, 15
+  add t0, t0, a1
+  vle8.v v\i, (t0)
+.endr
+
+  vwaddu.wv v0, v0, v8
+  vwaddu.wv v1, v1, v9
+  vwaddu.wv v2, v2, v10
+  vwaddu.wv v3, v3, v11
+  vwaddu.wv v4, v4, v12
+  vwaddu.wv v5, v5, v13
+  vwaddu.wv v6, v6, v14
+  vwaddu.wv v7, v7, v15
+
+  vsetvli zero, zero, e16, m1, ta, ma
+.irp i, 0, 1, 2, 3, 4, 5, 6, 7
+  vmax.vx v\i, v\i, zero
+.endr
+
+  vsetvli zero, zero, e8, mf2, ta, ma
+
+  vnclipu.wi  v8, v0, 0
+  vnclipu.wi  v9, v1, 0
+  vnclipu.wi v10, v2, 0
+  vnclipu.wi v11, v3, 0
+  vnclipu.wi v12, v4, 0
+  vnclipu.wi v13, v5, 0
+  vnclipu.wi v14, v6, 0
+  vnclipu.wi v15, v7, 0
+
+  addi t0, a0, \j
+  vse8.v v8, (t0)
+.irp i, 9, 10, 11, 12, 13, 14, 15
+  add t0, t0, a1
+  vse8.v v\i, (t0)
+.endr
+.endr
+
+  ret
+.endif
+endfunc
+.endm
+
+def_fn_816_base identity_
+def_fn_816_base
+
+.macro def_fn_816 w, h, txfm1, txfm2, eob_half
+function inv_txfm_add_\txfm1\()_\txfm2\()_\w\()x\h\()_8bpc_rvv, export=1
+.ifnc \txfm1, identity
+  la a4, inv_\txfm1\()_e16_x\w\()_rvv
+.endif
+  la a5, inv_\txfm2\()_e16_x\h\()_rvv
+.if \w == 8
+  li a6, \eob_half
+.endif
+.ifc \txfm1, identity
+  j inv_txfm_identity_add_\w\()x\h\()_rvv
+.else
+  j inv_txfm_add_\w\()x\h\()_rvv
+.endif
+endfunc
+.endm
+
+.macro def_fns_816 w, h
+def_fn_816 \w, \h, dct, dct, 43
+def_fn_816 \w, \h, identity, identity, 43
+def_fn_816 \w, \h, dct, adst, 43
+def_fn_816 \w, \h, dct, flipadst, 43
+def_fn_816 \w, \h, dct, identity, 8
+def_fn_816 \w, \h, adst, dct, 43
+def_fn_816 \w, \h, adst, adst, 43
+def_fn_816 \w, \h, adst, flipadst, 43
+def_fn_816 \w, \h, flipadst, dct, 43
+def_fn_816 \w, \h, flipadst, adst, 43
+def_fn_816 \w, \h, flipadst, flipadst, 43
+def_fn_816 \w, \h, identity, dct, 64
+def_fn_816 \w, \h, adst, identity, 8
+def_fn_816 \w, \h, flipadst, identity, 8
+def_fn_816 \w, \h, identity, adst, 64
+def_fn_816 \w, \h, identity, flipadst, 64
+.endm
+
+def_fns_816 8, 16
+def_fns_816 16, 8

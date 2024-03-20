@@ -34,6 +34,50 @@
 #define x18 do_not_use_x18
 #define w18 do_not_use_w18
 
+#if HAVE_AS_ARCH_DIRECTIVE
+        .arch AS_ARCH_LEVEL
+#endif
+
+#if HAVE_AS_ARCHEXT_DOTPROD_DIRECTIVE
+#define ENABLE_DOTPROD  .arch_extension dotprod
+#define DISABLE_DOTPROD .arch_extension nodotprod
+#else
+#define ENABLE_DOTPROD
+#define DISABLE_DOTPROD
+#endif
+#if HAVE_AS_ARCHEXT_I8MM_DIRECTIVE
+#define ENABLE_I8MM  .arch_extension i8mm
+#define DISABLE_I8MM .arch_extension noi8mm
+#else
+#define ENABLE_I8MM
+#define DISABLE_I8MM
+#endif
+#if HAVE_AS_ARCHEXT_SVE_DIRECTIVE
+#define ENABLE_SVE  .arch_extension sve
+#define DISABLE_SVE .arch_extension nosve
+#else
+#define ENABLE_SVE
+#define DISABLE_SVE
+#endif
+#if HAVE_AS_ARCHEXT_SVE2_DIRECTIVE
+#define ENABLE_SVE2  .arch_extension sve2
+#define DISABLE_SVE2 .arch_extension nosve2
+#else
+#define ENABLE_SVE2
+#define DISABLE_SVE2
+#endif
+
+/* If we do support the .arch_extension directives, disable support for all
+ * the extensions that we may use, in case they were implicitly enabled by
+ * the .arch level. This makes it clear if we try to assemble an instruction
+ * from an unintended extension set; we only allow assmbling such instructions
+ * within regions where we explicitly enable those extensions. */
+DISABLE_DOTPROD
+DISABLE_I8MM
+DISABLE_SVE
+DISABLE_SVE2
+
+
 /* Support macros for
  *   - Armv8.3-A Pointer Authentication and
  *   - Armv8.5-A Branch Target Identification

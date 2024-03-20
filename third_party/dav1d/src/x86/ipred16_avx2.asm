@@ -946,7 +946,6 @@ cglobal ipred_smooth_16bpc, 3, 7, 6, dst, stride, tl, w, h, v_weights
     jg .w4_loop
     RET
 .w8:
-%assign stack_offset stack_offset - stack_size_padded
     WIN64_SPILL_XMM     12
     vpbroadcastw        m0, [tlq] ; bottom
     vbroadcasti128      m7, [tlq+hq*2+2]
@@ -974,7 +973,6 @@ cglobal ipred_smooth_16bpc, 3, 7, 6, dst, stride, tl, w, h, v_weights
     jg .w8_loop
     RET
 .w16:
-%assign stack_offset stack_offset - stack_size_padded
     WIN64_SPILL_XMM     11
     vpbroadcastw        m0, [tlq] ; bottom
     movu                m7, [tlq+hq*2+2]
@@ -1005,7 +1003,6 @@ cglobal ipred_smooth_16bpc, 3, 7, 6, dst, stride, tl, w, h, v_weights
     jg .w16_loop
     RET
 .w32:
-%assign stack_offset stack_offset - stack_size_padded
     WIN64_SPILL_XMM     15
     vpbroadcastw        m0, [tlq] ; bottom
     movu                m7, [tlq+hq*2+ 2]
@@ -1047,7 +1044,6 @@ cglobal ipred_smooth_16bpc, 3, 7, 6, dst, stride, tl, w, h, v_weights
     jg .w32_loop
     RET
 .w64:
-%assign stack_offset stack_offset - stack_size_padded
     PROLOGUE 0, 11, 16, dst, stride, tl, tl_base, h, v_weights, dummy, v_weights_base, x, y, dst_base
     mov          dst_baseq, dstq
     mov           tl_baseq, tlq
@@ -1104,7 +1100,6 @@ cglobal ipred_smooth_16bpc, 3, 7, 6, dst, stride, tl, w, h, v_weights
     RET
 
 cglobal ipred_z1_16bpc, 3, 8, 0, dst, stride, tl, w, h, angle, dx, maxbase
-    %assign org_stack_offset stack_offset
     lea                  r6, [ipred_z1_16bpc_avx2_table]
     tzcnt                wd, wm
     movifnidn        angled, anglem
@@ -1312,7 +1307,6 @@ ALIGN function_align
 .w4_end:
     RET
 .w8:
-    %assign stack_offset org_stack_offset
     ALLOC_STACK         -64, 7
     lea                 r3d, [angleq+216]
     mov                 r3b, hb
@@ -1476,7 +1470,6 @@ ALIGN function_align
     or             maxbased, 16 ; imin(h+15, 31)
     jmp .w16_main
 .w16:
-    %assign stack_offset org_stack_offset
     ALLOC_STACK         -96, 7
     lea            maxbased, [hq+15]
     test             angled, 0x400
@@ -1622,7 +1615,6 @@ ALIGN function_align
 .w16_end:
     RET
 .w32:
-    %assign stack_offset org_stack_offset
     ALLOC_STACK        -160, 8
     lea            maxbased, [hq+31]
     mov                 r3d, 63
@@ -1737,7 +1729,6 @@ ALIGN function_align
 .w32_end:
     RET
 .w64:
-    %assign stack_offset org_stack_offset
     ALLOC_STACK        -256, 10
     lea            maxbased, [hq+63]
     test             angled, 0x400
@@ -2691,7 +2682,6 @@ ALIGN function_align
     jmp .w32_filter_above
 
 cglobal ipred_z3_16bpc, 4, 9, 0, dst, stride, tl, w, h, angle, dy, org_w, maxbase
-    %assign org_stack_offset stack_offset
     lea                  r6, [ipred_z3_16bpc_avx2_table]
     tzcnt                hd, hm
     movifnidn        angled, anglem
@@ -2907,7 +2897,6 @@ ALIGN function_align
     RET
 .h8:
     lea                 r4d, [angleq+216]
-    %assign stack_offset org_stack_offset
     ALLOC_STACK         -64, 8
     mov                 r4b, wb
     lea                  r7, [strideq*3]
@@ -3155,7 +3144,6 @@ ALIGN function_align
     jmp .h16_main
 ALIGN function_align
 .h16:
-    %assign stack_offset org_stack_offset
     ALLOC_STACK         -96, 10
     lea            maxbased, [wq+15]
     lea                  r7, [strideq*3]
@@ -3372,7 +3360,6 @@ ALIGN function_align
 .h16_end:
     RET
 .h32:
-    %assign stack_offset org_stack_offset
     ALLOC_STACK        -160, 9
     lea            maxbased, [wq+31]
     and            maxbased, 31
@@ -3557,7 +3544,6 @@ ALIGN function_align
 .h32_end:
     RET
 .h64:
-    %assign stack_offset org_stack_offset
     ALLOC_STACK        -256, 10
     lea            maxbased, [wq+63]
     test             angled, 0x400
@@ -3804,7 +3790,6 @@ ALIGN function_align
 ;           5       8           8       i
 
 cglobal ipred_filter_16bpc, 3, 9, 0, dst, stride, tl, w, h, filter
-%assign org_stack_offset stack_offset
 %define base r6-ipred_filter_16bpc_avx2_table
     lea                  r6, [filter_intra_taps]
     tzcnt                wd, wm
@@ -3846,7 +3831,6 @@ cglobal ipred_filter_16bpc, 3, 9, 0, dst, stride, tl, w, h, filter
     RET
 ALIGN function_align
 .w8:
-    %assign stack_offset stack_offset - stack_size_padded
     WIN64_SPILL_XMM      16
     vbroadcasti128      m14, [base+filter_shuf3]
     vpbroadcastw        m15, r8m ; bitdepth_max
@@ -3883,7 +3867,6 @@ ALIGN function_align
     RET
 ALIGN function_align
 .w16:
-    %assign stack_offset stack_offset - stack_size_padded
     ALLOC_STACK          32, 16
     vpbroadcastw        m15, r8m ; bitdepth_max
     sub                  hd, 2
@@ -3977,7 +3960,6 @@ ALIGN function_align
     ret
 ALIGN function_align
 .w32:
-    %assign stack_offset org_stack_offset
     ALLOC_STACK          64, 16
     vpbroadcastw        m15, r8m ; bitdepth_max
     sub                  hd, 2

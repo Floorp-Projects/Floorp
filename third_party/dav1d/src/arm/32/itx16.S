@@ -547,11 +547,11 @@ function inv_txfm_add_wht_wht_4x4_16bpc_neon, export=1
         vmov.i16        q15, #0
         vld1.32         {q8,  q9},  [r2, :128]
         vst1.32         {q14, q15}, [r2, :128]!
-        vshr.s16        q8,  q8,  #2
+        vshr.s32        q8,  q8,  #2
         vld1.32         {q10, q11}, [r2, :128]
-        vshr.s16        q9,  q9,  #2
-        vshr.s16        q10, q10, #2
-        vshr.s16        q11, q11, #2
+        vshr.s32        q9,  q9,  #2
+        vshr.s32        q10, q10, #2
+        vshr.s32        q11, q11, #2
 
         iwht4
 
@@ -598,7 +598,9 @@ function inv_txfm_add_4x4_neon
         vld1.16         {d3}, [r0, :64], r1
 
 L(itx_4x4_end):
-        vmvn.i16        q15, #0xfc00 // 0x3ff
+        // read bitdepth_max from the callers stack
+        ldr             r4,  [sp, #44]
+        vdup.i16        q15, r4
         sub             r0,  r0,  r1, lsl #2
         vqadd.s16       q8,  q8,  q0
         vqadd.s16       q9,  q9,  q1
@@ -1487,6 +1489,10 @@ function inv_txfm_horz\suffix\()_16x2_neon
         vqrshrn.s32     d21, q13, #\shift
         vqrshrn.s32     d22, q14, #\shift
         vqrshrn.s32     d23, q15, #\shift
+.if \scale
+        b               L(horz_16x2_epilog)
+.else
+L(horz_16x2_epilog):
         vuzp.16         q8,  q9
         vuzp.16         q10, q11
 
@@ -1495,11 +1501,12 @@ function inv_txfm_horz\suffix\()_16x2_neon
 .endr
 
         pop             {pc}
+.endif
 endfunc
 .endm
 
-def_horz_16 scale=0, shift=2
 def_horz_16 scale=1, shift=1, suffix=_scale
+def_horz_16 scale=0, shift=2
 
 function inv_txfm_add_vert_4x16_neon
         push            {lr}
