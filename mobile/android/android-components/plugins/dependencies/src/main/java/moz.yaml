@@ -35,7 +35,7 @@ origin:
 
   # Revision to pull in
   # Must be a long or short commit SHA (long preferred)
-  revision: 1
+  revision: ffacc528042f4ebb6a72999fc329a47c15d3800d
 
   # The package's license, where possible using the mnemonic from
   # https://spdx.org/licenses/
@@ -63,7 +63,6 @@ vendoring:
     - include
     - exclude
     - move-contents
-    - update-moz-yaml
     - update-moz-build
 
   update-actions:
