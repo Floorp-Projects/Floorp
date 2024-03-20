@@ -751,6 +751,8 @@ class IteratorObject : public NativeObject {
  public:
   static const JSClass class_;
   static const JSClass protoClass_;
+
+  static bool finishInit(JSContext* cx, HandleObject ctor, HandleObject proto);
 };
 
 /*
