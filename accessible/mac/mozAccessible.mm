@@ -646,6 +646,16 @@ struct RoleDescrComparator {
   return @"additions text";
 }
 
+- (NSString*)moxPlaceholderValue {
+  // First, check for plaecholder HTML attribute
+  if (NSString* placeholder = utils::GetAccAttr(self, nsGkAtoms::placeholder)) {
+    return placeholder;
+  }
+
+  // If no placeholder HTML attribute, check for the aria version.
+  return utils::GetAccAttr(self, nsGkAtoms::aria_placeholder);
+}
+
 - (id)moxTitleUIElement {
   MOZ_ASSERT(mGeckoAccessible);
 
