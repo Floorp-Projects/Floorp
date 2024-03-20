@@ -17,8 +17,7 @@
             android:allowBackup="true"
             android:label="@string/app_name"
             android:supportsRtl="true"
-            android:theme="@style/AppTheme"
-            android:name="androidx.multidex.MultiDexApplication">
+            android:theme="@style/AppTheme">
         <activity android:name=".GeckoViewTestActivity" android:exported="true"/>
         <!-- This is used for crash handling in GeckoSessionTestRule -->
         <service
