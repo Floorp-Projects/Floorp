@@ -152,6 +152,10 @@
   position: relative;
   width: 64px;
   height: 64px;
+
+  @media (prefers-contrast) {
+    display: none;
+  }
 }
 
 .face {
