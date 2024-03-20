@@ -4,19 +4,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#if !defined(TaskDispatcher_h_)
-#  define TaskDispatcher_h_
+#ifndef XPCOM_THREADS_TASKDISPATCHER_H_
+#define XPCOM_THREADS_TASKDISPATCHER_H_
 
-#  include <queue>
+#include <queue>
 
-#  include "mozilla/AbstractThread.h"
-#  include "mozilla/Maybe.h"
-#  include "mozilla/ProfilerRunnable.h"
-#  include "mozilla/UniquePtr.h"
-#  include "nsIDirectTaskDispatcher.h"
-#  include "nsISupportsImpl.h"
-#  include "nsTArray.h"
-#  include "nsThreadUtils.h"
+#include "mozilla/AbstractThread.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/ProfilerRunnable.h"
+#include "mozilla/UniquePtr.h"
+#include "nsIDirectTaskDispatcher.h"
+#include "nsISupportsImpl.h"
+#include "nsTArray.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 
