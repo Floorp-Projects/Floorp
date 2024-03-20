@@ -1126,6 +1126,43 @@ inline bool JSONReviveHandler<CharT>::finishObject(
 }
 
 template <typename CharT>
+inline bool JSONReviveHandler<CharT>::arrayOpen(Vector<StackEntry, 10>& stack,
+                                                ElementVector** elements) {
+  if (!parseRecordStack.append(ParseRecordEntry{context()})) {
+    return false;
+  }
+
+  return Base::arrayOpen(stack, elements);
+}
+
+template <typename CharT>
+inline bool JSONReviveHandler<CharT>::arrayElement(
+    Vector<StackEntry, 10>& stack, JS::Handle<JS::Value> value,
+    ElementVector** elements) {
+  if (!Base::arrayElement(stack, value, elements)) {
+    return false;
+  }
+  size_t index = (*elements)->length() - 1;
+  JS::PropertyKey key = js::PropertyKey::Int(index);
+  return finishMemberParseRecord(key, parseRecordStack.back());
+}
+
+template <typename CharT>
+inline bool JSONReviveHandler<CharT>::finishArray(
+    Vector<StackEntry, 10>& stack, JS::MutableHandle<JS::Value> vp,
+    ElementVector* elements) {
+  if (!Base::finishArray(stack, vp, elements)) {
+    return false;
+  }
+  if (!finishCompoundParseRecord(vp, parseRecordStack.back())) {
+    return false;
+  }
+  parseRecordStack.popBack();
+
+  return true;
+}
+
+template <typename CharT>
 inline bool JSONReviveHandler<CharT>::finishMemberParseRecord(
     JS::PropertyKey& key, ParseRecordEntry& objectEntry) {
   parseRecord.key = key;
