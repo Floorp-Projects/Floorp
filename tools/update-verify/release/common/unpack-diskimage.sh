@@ -53,43 +53,43 @@ TIMEOUT=90
 
 # If the mount point already exists, then the previous run may not have cleaned
 # up properly.  We should try to umount and remove the its directory.
-if [ -d $MOUNTPOINT ]; then
+if [ -d "$MOUNTPOINT" ]; then
     echo "$MOUNTPOINT already exists, trying to clean up"
-    hdiutil detach $MOUNTPOINT -force
-    rm -rdfv $MOUNTPOINT
+    hdiutil detach "$MOUNTPOINT" -force
+    rm -rdfv "$MOUNTPOINT"
 fi
 
 # Install an on-exit handler that will unmount and remove the '$MOUNTPOINT' directory
-trap "{ if [ -d $MOUNTPOINT ]; then hdiutil detach $MOUNTPOINT -force; rm -rdfv $MOUNTPOINT; fi; }" EXIT
+trap '{ if [ -d $MOUNTPOINT ]; then hdiutil detach $MOUNTPOINT -force; rm -rdfv $MOUNTPOINT; fi; }' EXIT
 
-mkdir -p $MOUNTPOINT
+mkdir -p "$MOUNTPOINT"
 
-hdiutil attach -verbose -noautoopen -mountpoint $MOUNTPOINT "$DMG_PATH" &> $LOGFILE
+hdiutil attach -verbose -noautoopen -mountpoint "$MOUNTPOINT" "$DMG_PATH" &> $LOGFILE
 # Wait for files to show up
 # hdiutil uses a helper process, diskimages-helper, which isn't always done its
 # work by the time hdiutil exits.  So we wait until something shows up in the
 # mount point directory.
 i=0
-while [ "$(echo $MOUNTPOINT/*)" == "$MOUNTPOINT/*" ]; do
-    if [ $i -gt $TIMEOUT ]; then
+while [ "$(echo "$MOUNTPOINT"/*)" == "$MOUNTPOINT/*" ]; do
+    if [ "$i" -gt $TIMEOUT ]; then
         echo "No files found, exiting"
         exit 1
     fi
     sleep 1
-    i=$(expr $i + 1)
+    i=$((i+1))
 done
 # Now we can copy everything out of the $MOUNTPOINT directory into the target directory
-rsync -av $MOUNTPOINT/* $MOUNTPOINT/.DS_Store $MOUNTPOINT/.background $MOUNTPOINT/.VolumeIcon.icns $TARGETPATH/ > $LOGFILE
+rsync -av "$MOUNTPOINT"/* "$MOUNTPOINT"/.DS_Store "$MOUNTPOINT"/.background "$MOUNTPOINT"/.VolumeIcon.icns "$TARGETPATH"/ > $LOGFILE
 # sometimes hdiutil fails with "Resource busy"
-hdiutil detach $MOUNTPOINT || { sleep  10; \
-    if [ -d $MOUNTPOINT ]; then hdiutil detach $MOUNTPOINT -force; fi; }
+hdiutil detach "$MOUNTPOINT" || { sleep  10; \
+    if [ -d "$MOUNTPOINT" ]; then hdiutil detach "$MOUNTPOINT" -force; fi; }
 i=0
-while [ "$(echo $MOUNTPOINT/*)" != "$MOUNTPOINT/*" ]; do
-    if [ $i -gt $TIMEOUT ]; then
+while [ "$(echo "$MOUNTPOINT"/*)" != "$MOUNTPOINT/*" ]; do
+    if [ "$i" -gt $TIMEOUT ]; then
         echo "Cannot umount, exiting"
         exit 1
     fi
     sleep 1
-    i=$(expr $i + 1)
+    i=$((i+1))
 done
-rm -rdf $MOUNTPOINT
+rm -rdf "$MOUNTPOINT"

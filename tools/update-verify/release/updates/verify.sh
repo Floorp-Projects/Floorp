@@ -20,14 +20,14 @@ to_app_version=""
 to_display_version=""
 override_certs=""
 diff_summary_log=${DIFF_SUMMARY_LOG:-"$PWD/diff-summary.log"}
-if [ -e ${diff_summary_log} ]; then
-  rm ${diff_summary_log}
+if [ -e "${diff_summary_log}" ]; then
+  rm "${diff_summary_log}"
 fi
-touch ${diff_summary_log}
+touch "${diff_summary_log}"
 
-pushd `dirname $0` &>/dev/null
+pushd "$(dirname "$0")" &>/dev/null || exit
 MY_DIR=$(pwd)
-popd &>/dev/null
+popd &>/dev/null || exit
 retry="$MY_DIR/../../../../mach python -m redo.cmd -s 1 -a 3"
 cert_replacer="$MY_DIR/../replace-updater-certs.py"
 
@@ -82,7 +82,7 @@ do
       arg="$1"
       shift
       set -- "$@" "$arg"
-      pass_arg_count=`expr $pass_arg_count + 1`
+      pass_arg_count=$((pass_arg_count + 1))
   esac
 done
 
@@ -100,7 +100,7 @@ then
   exit 0
 fi
 
-while read entry
+while read -r entry
 do
   # initialize all config variables
   release=""
@@ -115,12 +115,12 @@ do
   mar_channel_IDs=""
   updater_package=""
   mac_update_settings_dir_override=""
-  eval $entry
+  eval "$entry"
 
   # the arguments for updater changed in Gecko 34/SeaMonkey 2.31
-  major_version=`echo $release | cut -f1 -d.`
+  major_version=$(echo "$release" | cut -f1 -d.)
   if [[ "$product" == "seamonkey" ]]; then
-    minor_version=`echo $release | cut -f2 -d.`
+    minor_version=$(echo "$release" | cut -f2 -d.)
     if [[ $major_version -le 2 && $minor_version -lt 31 ]]; then
       use_old_updater=1
     fi
@@ -145,11 +145,11 @@ do
       then
         if [ "$runmode" == "$TEST_ONLY" ]
         then
-          download_mars "${aus_server}/update/3/${update_path}/default/update.xml?force=1" ${patch_type} 1 \
+          download_mars "${aus_server}/update/3/${update_path}/default/update.xml?force=1" "${patch_type}" 1 \
             "${to_build_id}" "${to_app_version}" "${to_display_version}"
           err=$?
         else
-          download_mars "${aus_server}/update/3/${update_path}/update.xml?force=1" ${patch_type} 0 \
+          download_mars "${aus_server}/update/3/${update_path}/update.xml?force=1" "${patch_type}" 0 \
             "${to_build_id}" "${to_app_version}" "${to_display_version}"
           err=$?
         fi
@@ -158,9 +158,9 @@ do
           continue
         fi
       else
-        mkdir -p updates/${update_path}/complete
-        mkdir -p updates/${update_path}/partial
-        $retry wget -q -O ${patch_type} updates/${update_path}/${patch_type}/update.xml "${aus_server}/update/3/${update_path}/update.xml?force=1"
+        mkdir -p updates/"${update_path}"/complete
+        mkdir -p updates/"${update_path}"/partial
+        $retry wget -q -O "${patch_type}" updates/"${update_path}"/"${patch_type}"/update.xml "${aus_server}/update/3/${update_path}/update.xml?force=1"
 
       fi
       if [ "$runmode" == "$COMPLETE" ]
@@ -171,8 +171,8 @@ do
         fi
 
         updater_platform=""
-        updater_package_url=`echo "${ftp_server_from}${updater_package}" | sed "s/%locale%/${locale}/"`
-        updater_package_filename=`basename "$updater_package_url"`
+        updater_package_url=$(echo "${ftp_server_from}${updater_package}" | sed "s/%locale%/${locale}/")
+        updater_package_filename=$(basename "$updater_package_url")
         case $updater_package_filename in
           *dmg)
             platform_dirname="*.app"
@@ -181,7 +181,7 @@ do
             mac_update_settings_dir_override=""
             ;;
           *exe)
-            updater_package_url=`echo "${updater_package_url}" | sed "s/ja-JP-mac/ja/"`
+            updater_package_url=${updater_package_url/ja-JP-mac/ja}
             platform_dirname="bin"
             updater_bins="updater.exe"
             updater_platform="win32"
@@ -195,8 +195,8 @@ do
             esac
             ;;
           *bz2)
-            updater_package_url=`echo "${updater_package_url}" | sed "s/ja-JP-mac/ja/"`
-            platform_dirname=`echo $product | tr '[A-Z]' '[a-z]'`
+            updater_package_url=${updater_package_url/ja-JP-mac/ja}
+            platform_dirname=$(echo "$product" | tr '[:upper:]' '[:lower:]')
             updater_bins="updater"
             updater_platform="linux"
             case $platform in
@@ -216,10 +216,10 @@ do
 
         rm -rf updater/*
         cached_download "${updater_package_filename}" "${updater_package_url}"
-        unpack_build "$updater_platform" updater "$updater_package_filename" "$locale"
+        unpack_build "$updater_platform" updater "$updater_package_filename" "$locale" "$product"
 
         # Even on Windows, we want Unix-style paths for the updater, because of MSYS.
-        cwd=$(\ls -d $PWD/updater/$platform_dirname)
+        cwd=$(\ls -d "$PWD"/updater/"$platform_dirname")
         # Bug 1209376. Linux updater linked against other libraries in the installation directory
         export LD_LIBRARY_PATH=$cwd
         updater="null"
@@ -232,7 +232,7 @@ do
         done
 
         update_to_dep=false
-        if [ ! -z "$override_certs" ]; then
+        if [ -n "$override_certs" ]; then
             echo "Replacing certs in updater binary"
             cp "${updater}" "${updater}.orig"
             case ${override_certs} in
@@ -250,6 +250,8 @@ do
                 echo "Unknown override cert - skipping"
                 ;;
             esac
+            # because we actually rely on $overrides being split up into separate args 🤦
+            # shellcheck disable=SC2086
             python3 "${cert_replacer}" "${MY_DIR}/../mar_certs" "${updater}.orig" "${updater}" ${overrides}
         else
             echo "override_certs is '${override_certs}', not replacing any certificates"
@@ -260,21 +262,23 @@ do
             continue
         fi
 
-        from_path=`echo $from | sed "s/%locale%/${locale}/"`
-        to_path=`echo $to | sed "s/%locale%/${locale}/"`
+        # Quotes around %locale% needed to prevent bash from interpreting the
+        # "%" characters as special characters.
+        from_path=${from/"%locale%"/${locale}}
+        to_path=${to/"%locale%"/${locale}}
         download_builds "${ftp_server_from}${from_path}" "${ftp_server_to}${to_path}"
         err=$?
         if [ "$err" != "0" ]; then
           echo "TEST-UNEXPECTED-FAIL: [$release $locale $patch_type] download_builds returned non-zero exit code: $err"
           continue
         fi
-        source_file=`basename "$from_path"`
-        target_file=`basename "$to_path"`
+        source_file=$(basename "$from_path")
+        target_file=$(basename "$to_path")
         diff_file="results.diff"
         if [ -e ${diff_file} ]; then
           rm ${diff_file}
         fi
-        check_updates "${platform}" "downloads/${source_file}" "downloads/${target_file}" ${locale} ${use_old_updater} ${updater} ${diff_file} ${channel} "${mar_channel_IDs}" ${update_to_dep} ${mac_update_settings_dir_override}
+        check_updates "${platform}" "downloads/${source_file}" "downloads/${target_file}" "${locale}" "${use_old_updater}" "${updater}" ${diff_file} "${channel}" "${mar_channel_IDs}" ${update_to_dep} "${mac_update_settings_dir_override}" "${product}"
         err=$?
         if [ "$err" == "0" ]; then
           continue
@@ -286,25 +290,27 @@ do
           echo "TEST-UNEXPECTED-FAIL: [$release $locale $patch_type] check_updates returned unknown error for $platform downloads/$source_file vs. downloads/$target_file: $err"
         fi
 
-        if [ -s ${diff_file} ]; then
-          echo "Found diffs for ${patch_type} update from ${aus_server}/update/3/${update_path}/update.xml?force=1" >> ${diff_summary_log}
-          cat ${diff_file} >> ${diff_summary_log}
-          echo "" >> ${diff_summary_log}
+        if [ -s "${diff_file}" ]; then
+          {
+            echo "Found diffs for ${patch_type} update from ${aus_server}/update/3/${update_path}/update.xml?force=1"
+            cat "${diff_file}"
+            echo ""
+          } >> "${diff_summary_log}"
         fi
       fi
     done
     if [ -f update/partial.size ] && [ -f update/complete.size ]; then
-        partial_size=`cat update/partial.size`
-        complete_size=`cat update/complete.size`
-        if [ $partial_size -gt $complete_size ]; then
+        partial_size=$(cat update/partial.size)
+        complete_size=$(cat update/complete.size)
+        if [ "$partial_size" -gt "$complete_size" ]; then
             echo "TEST-UNEXPECTED-FAIL: [$release $locale $patch_type] partial updates are larger than complete updates"
-        elif [ $partial_size -eq $complete_size ]; then
+        elif [ "$partial_size" -eq "$complete_size" ]; then
             echo "WARN: [$release $locale $patch_type] partial updates are the same size as complete updates, this should only happen for major updates"
         else
             echo "SUCCESS: [$release $locale $patch_type] partial updates are smaller than complete updates, all is well in the universe"
         fi
     fi
   done
-done < $config_file
+done < "$config_file"
 
 clear_cache
