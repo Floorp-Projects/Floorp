@@ -48,10 +48,6 @@ bool OpenTypeSTAT::Parse(const uint8_t* data, size_t length) {
     this->minorVersion = 2;
   }
 
-  if (this->designAxisSize < sizeof(AxisRecord)) {
-    return Drop("Invalid designAxisSize");
-  }
-
   size_t headerEnd = table.offset();
 
   if (this->designAxisCount == 0) {
@@ -60,6 +56,9 @@ bool OpenTypeSTAT::Parse(const uint8_t* data, size_t length) {
       this->designAxesOffset = 0;
     }
   } else {
+    if (this->designAxisSize < sizeof(AxisRecord)) {
+      return Drop("Invalid designAxisSize");
+    }
     if (this->designAxesOffset < headerEnd ||
         size_t(this->designAxesOffset) +
           size_t(this->designAxisCount) * size_t(this->designAxisSize) > length) {
