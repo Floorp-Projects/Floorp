@@ -494,7 +494,7 @@ FloatRegister::LiveAsIndexableSet<RegTypeName::Any>(SetType set) {
 inline bool hasUnaliasedDouble() { return false; }
 inline bool hasMultiAlias() { return false; }
 
-static const uint32_t ShadowStackSpace = 0;
+static constexpr uint32_t ShadowStackSpace = 0;
 static const uint32_t JumpImmediateRange = INT32_MAX;
 
 #ifdef JS_NUNBOX32
