@@ -72,10 +72,7 @@ export class ShowHeartbeatAction extends BaseAction {
       learnMoreUrl,
       postAnswerUrl: await this.generatePostAnswerURL(recipe),
       flowId: lazy.NormandyUtils.generateUuid(),
-      // Recipes coming from Nimbus won't have a revision_id.
-      ...(Object.hasOwn(recipe, "revision_id")
-        ? { surveyVersion: recipe.revision_id }
-        : {}),
+      surveyVersion: recipe.revision_id,
     });
 
     heartbeat.eventEmitter.once(
