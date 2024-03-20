@@ -94,11 +94,14 @@ export class SearchSettings {
   #settings = null;
 
   /**
-   * @type {object} A deep copy of #settings.
-   *   #cachedSettings is updated when we read the settings from disk and when
-   *   we write settings to disk. #cachedSettings is compared with #settings
-   *   before we do a write to disk. If there's no change to the settings
-   *   attributes, then we don't write the settings to disk.
+   * #cachedSettings is updated when we read the settings from disk and when
+   * we write settings to disk. #cachedSettings is compared with #settings
+   * before we do a write to disk. If there's no change to the settings
+   * attributes, then we don't write the settings to disk.
+   *
+   * This is a deep copy of #settings.
+   *
+   * @type {object}
    */
   #cachedSettings = {};
 

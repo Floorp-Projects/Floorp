@@ -20,7 +20,18 @@ ChromeUtils.defineESModuleGetters(lazy, {
  * Handles loading application provided search engine icons from remote settings.
  */
 class IconHandler {
+  /**
+   * The list of icon records from the remote settings collection.
+   *
+   * @type {?object[]}
+   */
   #iconList = null;
+
+  /**
+   * The remote settings client for the search engine icons.
+   *
+   * @type {?RemoteSettingsClient}
+   */
   #iconCollection = null;
 
   /**
@@ -113,15 +124,17 @@ export class AppProvidedSearchEngine extends SearchEngine {
   static iconHandler = new IconHandler();
 
   /**
-   * @typedef {?Promise<string>}
-   *   A promise for the blob URL of the icon. We save the promise to avoid
-   *   reentrancy issues.
+   * A promise for the blob URL of the icon. We save the promise to avoid
+   * reentrancy issues.
+   *
+   * @type {?Promise<string>}
    */
   #blobURLPromise = null;
 
   /**
-   * @typedef {?string}
-   *   The identifier from the configuration.
+   * The identifier from the configuration.
+   *
+   * @type {?string}
    */
   #configurationId = null;
 
