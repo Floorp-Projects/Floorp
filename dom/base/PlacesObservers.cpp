@@ -22,7 +22,7 @@ struct Flagged {
   Flagged(const Flagged& aOther) = default;
   ~Flagged() = default;
 
-  uint32_t flags;
+  uint32_t flags = 0;
   T value;
 };
 
@@ -120,6 +120,14 @@ MOZ_CAN_RUN_SCRIPT void CallListeners(
       }
       aCallListener(unwrapped, filtered);
     }
+  }
+}
+
+StaticRefPtr<PlacesEventCounts> PlacesObservers::sCounts;
+static void EnsureCountsInitialized() {
+  if (!PlacesObservers::sCounts) {
+    PlacesObservers::sCounts = new PlacesEventCounts();
+    ClearOnShutdown(&PlacesObservers::sCounts);
   }
 }
 
@@ -304,7 +312,11 @@ void PlacesObservers::NotifyListeners(
   if (aEvents.Length() == 0) {
     return;
   }
-
+  EnsureCountsInitialized();
+  for (const auto& event : aEvents) {
+    DebugOnly<nsresult> rv = sCounts->Increment(event->Type());
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+  }
 #ifdef DEBUG
   if (!gNotificationQueue.IsEmpty()) {
     NS_WARNING(
@@ -388,5 +400,11 @@ void PlacesObservers::NotifyNext() {
     NotifyNext();
   }
 }
+
+already_AddRefed<PlacesEventCounts> PlacesObservers::Counts(
+    const GlobalObject& global) {
+  EnsureCountsInitialized();
+  return do_AddRef(sCounts);
+};
 
 }  // namespace mozilla::dom

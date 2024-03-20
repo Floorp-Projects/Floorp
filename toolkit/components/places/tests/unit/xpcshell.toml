@@ -179,6 +179,8 @@ prefs = ["places.frecency.pages.alternative.featureGate=true"]
 
 ["test_pageGuid_bookmarkGuid.js"]
 
+["test_PlacesObservers_counts.js"]
+
 ["test_placeURIs.js"]
 
 ["test_promiseBookmarksTree.js"]
