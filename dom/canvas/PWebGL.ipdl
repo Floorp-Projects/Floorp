@@ -101,7 +101,7 @@ parent:
   sync GetTexParameter(uint64_t id, uint32_t pname) returns (double? ret);
   sync GetUniform(uint64_t id, uint32_t loc) returns (GetUniformData ret);
   sync GetVertexAttrib(uint32_t index, uint32_t pname) returns (double? ret);
-  sync IsEnabled(uint32_t cap) returns (bool ret);
+  sync IsEnabled(uint32_t cap) returns (bool? ret);
   sync OnMemoryPressure();
   sync ValidateProgram(uint64_t id) returns (bool ret);
 

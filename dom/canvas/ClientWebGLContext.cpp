@@ -1895,24 +1895,45 @@ bool ClientWebGLContext::IsVertexArray(
 
 // ------------------------- GL State -------------------------
 
-void ClientWebGLContext::SetEnabledI(GLenum cap, Maybe<GLuint> i,
+void ClientWebGLContext::SetEnabledI(const GLenum cap, Maybe<GLuint> i,
                                      bool val) const {
+  const auto notLost = mNotLost;
+
   Run<RPROC(SetEnabled)>(cap, i, val);
+
+  if (!i) {
+    // Non-indexed.
+    auto& cache = notLost->state.mIsEnabledCache;
+    const auto cached = MaybeFind(cache, cap);
+    if (cached) {
+      *cached = val;
+    }
+  }
 }
 
-bool ClientWebGLContext::IsEnabled(GLenum cap) const {
+bool ClientWebGLContext::IsEnabled(const GLenum cap) const {
   const FuncScope funcScope(*this, "isEnabled");
   if (IsContextLost()) return false;
 
+  auto& cache = State().mIsEnabledCache;
+  if (const auto cached = MaybeFind(cache, cap)) {
+    return *cached;
+  }
+
+  Maybe<bool> ret;
   const auto& inProcess = mNotLost->inProcess;
   if (inProcess) {
-    return inProcess->IsEnabled(cap);
+    ret = inProcess->IsEnabled(cap);
+  } else {
+    const auto& child = mNotLost->outOfProcess;
+    child->FlushPendingCmds();
+    if (!child->SendIsEnabled(cap, &ret)) return false;
   }
-  const auto& child = mNotLost->outOfProcess;
-  child->FlushPendingCmds();
-  bool ret = {};
-  if (!child->SendIsEnabled(cap, &ret)) return false;
-  return ret;
+
+  if (ret) {
+    cache[cap] = *ret;
+  }
+  return ret ? *ret : false;
 }
 
 template <typename T, typename S>
