@@ -117,10 +117,12 @@ static bool IsTypedArrayObject(HandleValue v) {
   return v.isObject() && v.toObject().is<TypedArrayObject>();
 }
 
+#ifdef NIGHTLY_BUILD
 static bool IsUint8ArrayObject(HandleValue v) {
   return IsTypedArrayObject(v) &&
          v.toObject().as<TypedArrayObject>().type() == Scalar::Uint8;
 }
+#endif
 
 /* static */
 bool TypedArrayObject::ensureHasBuffer(JSContext* cx,
@@ -2053,6 +2055,8 @@ bool TypedArrayObject::copyWithin(JSContext* cx, unsigned argc, Value* vp) {
                               TypedArrayObject::copyWithin_impl>(cx, args);
 }
 
+#ifdef NIGHTLY_BUILD
+
 // Byte vector with large enough inline storage to allow constructing small
 // typed arrays without extra heap allocations.
 using ByteVector =
@@ -3126,6 +3130,8 @@ static bool uint8array_toHex(JSContext* cx, unsigned argc, Value* vp) {
   return CallNonGenericMethod<IsUint8ArrayObject, uint8array_toHex>(cx, args);
 }
 
+#endif
+
 /* static */ const JSFunctionSpec TypedArrayObject::protoFunctions[] = {
     JS_SELF_HOSTED_FN("subarray", "TypedArraySubarray", 2, 0),
     JS_FN("set", TypedArrayObject::set, 1, 0),
@@ -3444,6 +3450,7 @@ static const JSPropertySpec
 #undef IMPL_TYPED_ARRAY_PROPERTIES
 };
 
+#ifdef NIGHTLY_BUILD
 static const JSFunctionSpec uint8array_static_methods[] = {
     JS_FN("fromBase64", uint8array_fromBase64, 1, 0),
     JS_FN("fromHex", uint8array_fromHex, 1, 0),
@@ -3457,19 +3464,24 @@ static const JSFunctionSpec uint8array_methods[] = {
     JS_FN("toHex", uint8array_toHex, 0, 0),
     JS_FS_END,
 };
+#endif
 
 static constexpr const JSFunctionSpec* TypedArrayStaticMethods(
     Scalar::Type type) {
+#ifdef NIGHTLY_BUILD
   if (type == Scalar::Uint8) {
     return uint8array_static_methods;
   }
+#endif
   return nullptr;
 }
 
 static constexpr const JSFunctionSpec* TypedArrayMethods(Scalar::Type type) {
+#ifdef NIGHTLY_BUILD
   if (type == Scalar::Uint8) {
     return uint8array_methods;
   }
+#endif
   return nullptr;
 }
 
