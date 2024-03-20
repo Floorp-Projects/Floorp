@@ -31,17 +31,9 @@ function runTest() {
     var os = Services.obs;
 
     os.addObserver(onPromptLoad, "common-dialog-loaded");
-    os.addObserver(onPromptLoad, "tabmodal-dialog-loaded");
 
     function onPromptLoad(subject) {
-      let ui = subject.Dialog ? subject.Dialog.ui : undefined;
-      if (!ui) {
-        // subject is an tab prompt, find the elements ourselves
-        ui = {
-          loginTextbox: subject.querySelector(".tabmodalprompt-loginTextbox"),
-          button0: subject.querySelector(".tabmodalprompt-button0"),
-        };
-      }
+      let ui = subject.Dialog.ui;
       sendAsyncMessage("ok", [true, "onPromptLoad is called"]);
       gPromptInput = ui.loginTextbox;
       gPromptInput.addEventListener("focus", onPromptFocus);
@@ -77,7 +69,6 @@ function runTest() {
     }
 
     addMessageListener("destroy", function() {
-      os.removeObserver(onPromptLoad, "tabmodal-dialog-loaded");
       os.removeObserver(onPromptLoad, "common-dialog-loaded");
     });
   });

@@ -8,12 +8,6 @@ const kTestPage = "https://example.org/browser/dom/html/test/bug436200.html";
 async function run_test(shouldShowPrompt, msg) {
   let promptShown = false;
 
-  function tabModalObserver(subject) {
-    promptShown = true;
-    subject.querySelector(".tabmodalprompt-button0").click();
-  }
-  Services.obs.addObserver(tabModalObserver, "tabmodal-dialog-loaded");
-
   function commonDialogObserver(subject) {
     let dialog = subject.Dialog;
     promptShown = true;
@@ -27,7 +21,6 @@ async function run_test(shouldShowPrompt, msg) {
     let form = content.document.getElementById("test_form");
     form.submit();
   });
-  Services.obs.removeObserver(tabModalObserver, "tabmodal-dialog-loaded");
   Services.obs.removeObserver(commonDialogObserver, "common-dialog-loaded");
 
   is(promptShown, shouldShowPrompt, msg);

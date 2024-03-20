@@ -916,7 +916,7 @@ menupopup[emptyplacesresult="true"] > .hide-if-empty-places-result {
   position: absolute;
 }
 
-browser[tabmodalPromptShowing], browser[tabDialogShowing] {
+browser[tabDialogShowing] {
   -moz-user-focus: none !important;
 }
 

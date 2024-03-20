@@ -9,21 +9,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PromptUtils: "resource://gre/modules/PromptUtils.sys.mjs",
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
 });
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "tabChromePromptSubDialog",
-  "prompts.tabChromePromptSubDialog",
-  false
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "contentPromptSubDialog",
-  "prompts.contentPromptSubDialog",
-  false
-);
 
 ChromeUtils.defineLazyGetter(lazy, "gTabBrowserLocalization", function () {
   return new Localization(["browser/tabbrowser.ftl"], true);
@@ -109,114 +94,16 @@ export class PromptParent extends JSWindowActorParent {
   }
 
   receiveMessage(message) {
-    let args = message.data;
-    let id = args._remoteId;
-
     switch (message.name) {
       case "Prompt:Open":
         if (!this.windowContext.isActiveInTab) {
           return undefined;
         }
 
-        if (
-          (args.modalType === Ci.nsIPrompt.MODAL_TYPE_CONTENT &&
-            !lazy.contentPromptSubDialog) ||
-          (args.modalType === Ci.nsIPrompt.MODAL_TYPE_TAB &&
-            !lazy.tabChromePromptSubDialog)
-        ) {
-          return this.openContentPrompt(args, id);
-        }
-        return this.openPromptWithTabDialogBox(args);
+        return this.openPromptWithTabDialogBox(message.data);
     }
 
     return undefined;
-  }
-
-  /**
-   * Opens a TabModalPrompt for a BrowsingContext, and puts the associated browser
-   * in the modal state until the TabModalPrompt is closed.
-   *
-   * @param {Object} args
-   *        The arguments passed up from the BrowsingContext to be passed directly
-   *        to the TabModalPrompt.
-   * @param {string} id
-   *        A unique ID to differentiate multiple Prompts coming from the same
-   *        BrowsingContext.
-   * @return {Promise}
-   *         Resolves when the TabModalPrompt is dismissed.
-   * @resolves {Object}
-   *           The arguments returned from the TabModalPrompt.
-   */
-  openContentPrompt(args, id) {
-    let browser = this.browsingContext.top.embedderElement;
-    if (!browser) {
-      throw new Error("Cannot tab-prompt without a browser!");
-    }
-    let window = browser.ownerGlobal;
-    let tabPrompt = window.gBrowser.getTabModalPromptBox(browser);
-    let newPrompt;
-    let needRemove = false;
-
-    // If the page which called the prompt is different from the the top context
-    // where we show the prompt, ask the prompt implementation to display the origin.
-    // For example, this can happen if a cross origin subframe shows a prompt.
-    args.showCallerOrigin =
-      args.promptPrincipal &&
-      !browser.contentPrincipal.equals(args.promptPrincipal);
-
-    let onPromptClose = () => {
-      // NOTE: this code is totally bust now, as `gBrowserDialogs` won't produce
-      // the right objects for it. It's also unused though, and removed in the
-      // next commit.
-      let promptData = gBrowserDialogs.get(this.browsingContext);
-      if (!promptData || !promptData.has(id)) {
-        throw new Error(
-          "Failed to close a prompt since it wasn't registered for some reason."
-        );
-      }
-
-      let { resolver, tabModalPrompt } = promptData.get(id);
-      // It's possible that we removed the prompt during the
-      // appendPrompt call below. In that case, newPrompt will be
-      // undefined. We set the needRemove flag to remember to remove
-      // it right after we've finished adding it.
-      if (tabModalPrompt) {
-        tabPrompt.removePrompt(tabModalPrompt);
-      } else {
-        needRemove = true;
-      }
-
-      lazy.PromptUtils.fireDialogEvent(
-        window,
-        "DOMModalDialogClosed",
-        browser,
-        this.getClosingEventDetail(args)
-      );
-      resolver(args);
-      browser.maybeLeaveModalState();
-    };
-
-    try {
-      browser.enterModalState();
-      lazy.PromptUtils.fireDialogEvent(
-        window,
-        "DOMWillOpenModalDialog",
-        browser,
-        this.getOpenEventDetail(args)
-      );
-
-      args.promptActive = true;
-
-      newPrompt = tabPrompt.appendPrompt(args, onPromptClose);
-      if (needRemove) {
-        tabPrompt.removePrompt(newPrompt);
-      }
-    } catch (ex) {
-      console.error(ex);
-      onPromptClose(true);
-    }
-
-    return null;
   }
 
   /**
