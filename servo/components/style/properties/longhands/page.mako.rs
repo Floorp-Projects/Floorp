@@ -5,8 +5,6 @@
 <%namespace name="helpers" file="/helpers.mako.rs" />
 <% from data import PAGE_RULE %>
 
-<% data.new_style_struct("Page", inherited=False) %>
-
 ${helpers.predefined_type(
     "size",
     "PageSize",

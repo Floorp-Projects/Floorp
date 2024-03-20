@@ -4,8 +4,6 @@
 
 <%namespace name="helpers" file="/helpers.mako.rs" />
 
-<% data.new_style_struct("Table", inherited=False) %>
-
 ${helpers.single_keyword(
     "table-layout",
     "auto fixed",

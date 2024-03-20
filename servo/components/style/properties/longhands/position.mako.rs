@@ -2,11 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-<%! from data import to_rust_ident %>
 <%namespace name="helpers" file="/helpers.mako.rs" />
 <% from data import ALL_SIZES, PHYSICAL_SIDES, LOGICAL_SIDES %>
-
-<% data.new_style_struct("Position", inherited=False) %>
 
 // "top" / "left" / "bottom" / "right"
 % for side in PHYSICAL_SIDES:

@@ -3,11 +3,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 <%namespace name="helpers" file="/helpers.mako.rs" />
-<% from data import Keyword, Method, ALL_CORNERS, PHYSICAL_SIDES, ALL_SIDES, maybe_moz_logical_alias %>
+<% from data import ALL_CORNERS, ALL_SIDES, maybe_moz_logical_alias %>
 
-<% data.new_style_struct("Border", inherited=False,
-                   additional_methods=[Method("border_" + side + "_has_nonzero_width",
-                                              "bool") for side in ["top", "right", "bottom", "left"]]) %>
 <%
     def maybe_logical_spec(side, kind):
         if side[1]: # if it is logical

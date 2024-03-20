@@ -4,7 +4,6 @@
 
 <%namespace name="helpers" file="/helpers.mako.rs" />
 <% from data import ALL_SIDES, DEFAULT_RULES_AND_PAGE, maybe_moz_logical_alias %>
-<% data.new_style_struct("Margin", inherited=False) %>
 
 % for side in ALL_SIDES:
     <%

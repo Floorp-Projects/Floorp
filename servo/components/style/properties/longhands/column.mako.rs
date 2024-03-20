@@ -4,8 +4,6 @@
 
 <%namespace name="helpers" file="/helpers.mako.rs" />
 
-<% data.new_style_struct("Column", inherited=False) %>
-
 ${helpers.predefined_type(
     "column-width",
     "length::NonNegativeLengthOrAuto",

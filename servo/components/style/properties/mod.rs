@@ -17,12 +17,6 @@ pub use self::generated::*;
 #[deny(missing_docs)]
 pub mod generated {
     include!(concat!(env!("OUT_DIR"), "/properties.rs"));
-
-    #[cfg(feature = "gecko")]
-    #[allow(unsafe_code, missing_docs)]
-    pub mod gecko {
-        include!(concat!(env!("OUT_DIR"), "/gecko_properties.rs"));
-    }
 }
 
 use crate::custom_properties::{self, ComputedCustomProperties};

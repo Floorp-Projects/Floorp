@@ -4,8 +4,6 @@
 
 <%namespace name="helpers" file="/helpers.mako.rs" />
 
-<% data.new_style_struct("InheritedTable", inherited=True, gecko_name="TableBorder") %>
-
 ${helpers.single_keyword(
     "border-collapse",
     "separate collapse",

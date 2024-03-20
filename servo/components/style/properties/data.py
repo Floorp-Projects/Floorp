@@ -741,7 +741,7 @@ class Method(object):
 
 
 class StyleStruct(object):
-    def __init__(self, name, inherited, gecko_name=None, additional_methods=None):
+    def __init__(self, name, inherited, gecko_name=None):
         self.gecko_struct_name = "Gecko" + name
         self.name = name
         self.name_lower = to_snake_case(name)
@@ -750,15 +750,12 @@ class StyleStruct(object):
         self.inherited = inherited
         self.gecko_name = gecko_name or name
         self.gecko_ffi_name = "nsStyle" + self.gecko_name
-        self.additional_methods = additional_methods or []
         self.document_dependent = self.gecko_name in ["Font", "Visibility", "Text"]
 
 
 class PropertiesData(object):
     def __init__(self, engine):
         self.engine = engine
-        self.style_structs = []
-        self.current_style_struct = None
         self.longhands = []
         self.longhands_by_name = {}
         self.longhands_by_logical_group = {}
@@ -770,13 +767,35 @@ class PropertiesData(object):
             CountedUnknownProperty(p) for p in COUNTED_UNKNOWN_PROPERTIES
         ]
 
-    def new_style_struct(self, *args, **kwargs):
-        style_struct = StyleStruct(*args, **kwargs)
-        self.style_structs.append(style_struct)
-        self.current_style_struct = style_struct
+        self.style_structs = [
+            StyleStruct("Background", inherited=False),
+            StyleStruct("Border", inherited=False),
+            StyleStruct("Box", inherited=False, gecko_name="Display"),
+            StyleStruct("Column", inherited=False),
+            StyleStruct("Counters", inherited=False, gecko_name="Content"),
+            StyleStruct("Effects", inherited=False),
+            StyleStruct("Font", inherited=True),
+            StyleStruct("InheritedBox", inherited=True, gecko_name="Visibility"),
+            StyleStruct("InheritedSVG", inherited=True, gecko_name="SVG"),
+            StyleStruct("InheritedTable", inherited=True, gecko_name="TableBorder"),
+            StyleStruct("InheritedText", inherited=True, gecko_name="Text"),
+            StyleStruct("InheritedUI", inherited=True, gecko_name="UI"),
+            StyleStruct("List", inherited=True),
+            StyleStruct("Margin", inherited=False),
+            StyleStruct("Outline", inherited=False),
+            StyleStruct("Padding", inherited=False),
+            StyleStruct("Page", inherited=False),
+            StyleStruct("Position", inherited=False),
+            StyleStruct("SVG", inherited=False, gecko_name="SVGReset"),
+            StyleStruct("Table", inherited=False),
+            StyleStruct("Text", inherited=False, gecko_name="TextReset"),
+            StyleStruct("UI", inherited=False, gecko_name="UIReset"),
+            StyleStruct("XUL", inherited=False),
+        ]
+        self.current_style_struct = None
 
     def active_style_structs(self):
-        return [s for s in self.style_structs if s.additional_methods or s.longhands]
+        return [s for s in self.style_structs if s.longhands]
 
     def add_prefixed_aliases(self, property):
         # FIXME Servo's DOM architecture doesn't support vendor-prefixed properties.

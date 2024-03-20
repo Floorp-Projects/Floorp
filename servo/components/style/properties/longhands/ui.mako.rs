@@ -3,11 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 <%namespace name="helpers" file="/helpers.mako.rs" />
-<% from data import DEFAULT_RULES_EXCEPT_KEYFRAME, Method %>
-
-// CSS Basic User Interface Module Level 1
-// https://drafts.csswg.org/css-ui-3/
-<% data.new_style_struct("UI", inherited=False, gecko_name="UIReset") %>
+<% from data import DEFAULT_RULES_EXCEPT_KEYFRAME %>
 
 // TODO spec says that UAs should not support this
 // we should probably remove from gecko (https://bugzilla.mozilla.org/show_bug.cgi?id=1328331)
