@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Tests L10nCache in UrlbarUtils.jsm.
+// Tests L10nCache in UrlbarUtils.sys.mjs.
 
 "use strict";
 

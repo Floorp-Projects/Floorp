@@ -18,7 +18,7 @@ ChromeUtils.defineESModuleGetters(this, {
     "resource:///modules/UrlbarProviderSearchTips.sys.mjs",
 });
 
-// These should match the same consts in UrlbarProviderSearchTips.jsm.
+// These should match the same consts in UrlbarProviderSearchTips.sys.mjs.
 const MAX_SHOWN_COUNT = 4;
 const LAST_UPDATE_THRESHOLD_MS = 24 * 60 * 60 * 1000;
 
