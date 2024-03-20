@@ -13,7 +13,6 @@ import android.util.Size
 import android.view.Window
 import androidx.annotation.ColorInt
 import androidx.annotation.VisibleForTesting
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
 import androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
 import androidx.appcompat.app.AppCompatDelegate.NightMode
@@ -129,20 +128,13 @@ class CustomTabsToolbarFeature(
     }
 
     @VisibleForTesting
-    internal fun init(
-        config: CustomTabConfig,
-        setAppNightMode: (Int) -> Unit = AppCompatDelegate::setDefaultNightMode,
-    ) {
+    internal fun init(config: CustomTabConfig) {
         // Don't allow clickable toolbar so a custom tab can't switch to edit mode.
         toolbar.display.onUrlClicked = { false }
         toolbar.display.hidePageActionSeparator()
 
         // Use the intent provided color scheme or fallback to the app night mode preference.
         val nightMode = config.colorScheme?.toNightMode() ?: appNightMode
-
-        if (updateTheme) {
-            setAppNightMode.invoke(nightMode)
-        }
 
         val colorSchemeParams = config.colorSchemes?.getConfiguredColorSchemeParams(
             nightMode = nightMode,
