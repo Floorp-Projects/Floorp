@@ -244,7 +244,7 @@ void MFCDMSession::OnSessionKeysChange() {
     nsAutoCString keyIdString(ToHexString(keyId));
     LOG("Append keyid-sz=%u, keyid=%s, status=%s", keyStatus.cbKeyId,
         keyIdString.get(),
-        dom::GetEnumString(ToMediaKeyStatus(keyStatus.eMediaKeyStatus)).get());
+        ToMediaKeyStatusStr(ToMediaKeyStatus(keyStatus.eMediaKeyStatus)));
     keyInfos.AppendElement(MFCDMKeyInformation{
         std::move(keyId), ToMediaKeyStatus(keyStatus.eMediaKeyStatus)});
   }

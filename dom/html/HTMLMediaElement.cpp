@@ -454,7 +454,7 @@ class HTMLMediaElement::MediaControlKeyListener final
   void HandleMediaKey(MediaControlKey aKey) override {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(IsStarted());
-    MEDIACONTROL_LOG("HandleEvent '%s'", GetEnumString(aKey).get());
+    MEDIACONTROL_LOG("HandleEvent '%s'", ToMediaControlKeyStr(aKey));
     if (aKey == MediaControlKey::Play) {
       Owner()->Play();
     } else if (aKey == MediaControlKey::Pause) {

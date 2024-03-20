@@ -439,10 +439,10 @@ const char* MPRISServiceHandler::DesktopEntry() const {
 bool MPRISServiceHandler::PressKey(dom::MediaControlKey aKey) const {
   MOZ_ASSERT(mInitialized);
   if (!IsMediaKeySupported(aKey)) {
-    LOGMPRIS("%s is not supported", dom::GetEnumString(aKey).get());
+    LOGMPRIS("%s is not supported", ToMediaControlKeyStr(aKey));
     return false;
   }
-  LOGMPRIS("Press %s", dom::GetEnumString(aKey).get());
+  LOGMPRIS("Press %s", ToMediaControlKeyStr(aKey));
   EmitEvent(aKey);
   return true;
 }
@@ -861,7 +861,7 @@ bool MPRISServiceHandler::EmitSupportedKeyChanged(dom::MediaControlKey aKey,
                                                   bool aSupported) const {
   auto it = gKeyProperty.find(aKey);
   if (it == gKeyProperty.end()) {
-    LOGMPRIS("No property for %s", dom::GetEnumString(aKey).get());
+    LOGMPRIS("No property for %s", ToMediaControlKeyStr(aKey));
     return false;
   }
 

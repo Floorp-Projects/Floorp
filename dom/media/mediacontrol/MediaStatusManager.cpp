@@ -338,10 +338,10 @@ void MediaStatusManager::EnableAction(uint64_t aBrowsingContextId,
   }
   if (info->IsActionSupported(aAction)) {
     LOG("Action '%s' has already been enabled for context %" PRIu64,
-        GetEnumString(aAction).get(), aBrowsingContextId);
+        ToMediaSessionActionStr(aAction), aBrowsingContextId);
     return;
   }
-  LOG("Enable action %s for context %" PRIu64, GetEnumString(aAction).get(),
+  LOG("Enable action %s for context %" PRIu64, ToMediaSessionActionStr(aAction),
       aBrowsingContextId);
   info->EnableAction(aAction);
   NotifySupportedKeysChangedIfNeeded(aBrowsingContextId);
@@ -355,11 +355,11 @@ void MediaStatusManager::DisableAction(uint64_t aBrowsingContextId,
   }
   if (!info->IsActionSupported(aAction)) {
     LOG("Action '%s' hasn't been enabled yet for context %" PRIu64,
-        GetEnumString(aAction).get(), aBrowsingContextId);
+        ToMediaSessionActionStr(aAction), aBrowsingContextId);
     return;
   }
-  LOG("Disable action %s for context %" PRIu64, GetEnumString(aAction).get(),
-      aBrowsingContextId);
+  LOG("Disable action %s for context %" PRIu64,
+      ToMediaSessionActionStr(aAction), aBrowsingContextId);
   info->DisableAction(aAction);
   NotifySupportedKeysChangedIfNeeded(aBrowsingContextId);
 }

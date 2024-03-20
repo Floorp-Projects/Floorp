@@ -356,7 +356,7 @@ bool WindowsSMTCProvider::RegisterEvents() {
 void WindowsSMTCProvider::OnButtonPressed(
     mozilla::dom::MediaControlKey aKey) const {
   if (!IsKeySupported(aKey)) {
-    LOG("key: %s is not supported", dom::GetEnumString(aKey).get());
+    LOG("key: %s is not supported", ToMediaControlKeyStr(aKey));
     return;
   }
 
@@ -383,7 +383,7 @@ bool WindowsSMTCProvider::UpdateButtons() {
   for (const mozilla::dom::MediaControlKey& key : kKeys) {
     if (!EnableKey(key, IsKeySupported(key))) {
       success = false;
-      LOG("Failed to set %s=%s", dom::GetEnumString(key).get(),
+      LOG("Failed to set %s=%s", ToMediaControlKeyStr(key),
           IsKeySupported(key) ? "true" : "false");
     }
   }
@@ -414,7 +414,7 @@ bool WindowsSMTCProvider::EnableKey(mozilla::dom::MediaControlKey aKey,
       // The callback for the event checks if the key is supported
       return mSeekRegistrationToken.value != 0;
     default:
-      LOG("No button for %s", dom::GetEnumString(aKey).get());
+      LOG("No button for %s", ToMediaControlKeyStr(aKey));
       return false;
   }
 }
