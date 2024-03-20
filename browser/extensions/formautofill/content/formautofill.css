@@ -13,7 +13,9 @@
 
   > richlistbox > richlistitem {
     &[originaltype="autofill-profile"],
-    &[originaltype="autofill-insecureWarning"] {
+    &[originaltype="autofill-footer"],
+    &[originaltype="autofill-insecureWarning"],
+    &[originaltype="autofill-clear-button"] {
       display: block;
       margin: 0;
       padding: 0;
