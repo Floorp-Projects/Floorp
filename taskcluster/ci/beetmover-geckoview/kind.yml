@@ -55,7 +55,7 @@ jobs:
                 # Beetmoving geckoview makes it available to the official maven repo.
                 # That happens:
                 # 1. as part of the nightly-android or nightly-all graph on mozilla-central
-                # 2. as part of Firefox promote graphs on both mozilla-beta and mozilla-release
+                # 2. as part of firefox-android ship graphs on both mozilla-beta and mozilla-release
                 # 3. at every patch uplifted on the GECKOVIEW_XX_RELBRANCH on mozilla-release
                 # Reminder: There is no Android/geckoview build on ESR.
                 #
