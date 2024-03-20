@@ -517,9 +517,7 @@ already_AddRefed<WorkerScriptLoader> WorkerScriptLoader::Create(
   }
 
   // Set up the module loader, if it has not been initialzied yet.
-  if (!aWorkerPrivate->IsServiceWorker()) {
-    self->InitModuleLoader();
-  }
+  self->InitModuleLoader();
 
   return self.forget();
 }

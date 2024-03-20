@@ -147,6 +147,15 @@ already_AddRefed<ModuleLoadRequest> WorkerModuleLoader::CreateDynamicImport(
   return request.forget();
 }
 
+bool WorkerModuleLoader::IsDynamicImportSupported() {
+  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+  if (workerPrivate->IsServiceWorker()) {
+    return false;
+  }
+
+  return true;
+}
+
 bool WorkerModuleLoader::CanStartLoad(ModuleLoadRequest* aRequest,
                                       nsresult* aRvOut) {
   return true;
