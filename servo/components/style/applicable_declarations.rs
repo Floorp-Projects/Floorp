@@ -142,8 +142,9 @@ pub struct ApplicableDeclarationBlock {
     /// The style source, either a style rule, or a property declaration block.
     #[ignore_malloc_size_of = "Arc"]
     pub source: StyleSource,
-    /// The bits containing the source order, cascade level, and shadow cascade
-    /// order.
+    /// Order of appearance in which this rule appears - Set to 0 if not relevant
+    /// (e.g. Declaration from `style="/*...*/"`, presentation hints, animations
+    /// - See `CascadePriority` instead).
     source_order: u32,
     /// The specificity of the selector.
     pub specificity: u32,
