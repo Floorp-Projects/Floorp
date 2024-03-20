@@ -5,7 +5,7 @@
 
 "use strict";
 
-/* exported attachUpdateHandler, detachUpdateHandler, gBrowser,
+/* exported attachUpdateHandler, detachUpdateHandler,
  *          getBrowserElement, installAddonsFromFilePicker,
  *          isCorrectlySigned, isDisabledUnsigned, isDiscoverEnabled,
  *          isPending, loadReleaseNotes, openOptionsInTab, promiseEvent,
@@ -195,21 +195,6 @@ function showPermissionsPrompt(addon) {
     Services.obs.notifyObservers(subject, "webextension-permission-prompt");
   });
 }
-
-// Stub tabbrowser implementation for use by the tab-modal alert code
-// when an alert/prompt/confirm method is called in a WebExtensions options_ui
-// page (See Bug 1385548 for rationale).
-var gBrowser = {
-  getTabModalPromptBox(browser) {
-    const parentWindow = window.docShell.chromeEventHandler.ownerGlobal;
-
-    if (parentWindow.gBrowser) {
-      return parentWindow.gBrowser.getTabModalPromptBox(browser);
-    }
-
-    return null;
-  },
-};
 
 function isCorrectlySigned(addon) {
   // Add-ons without an "isCorrectlySigned" property are correctly signed as
