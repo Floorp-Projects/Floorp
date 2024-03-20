@@ -651,9 +651,11 @@ already_AddRefed<IDXGIAdapter1> DeviceManagerDx::GetDXGIAdapter() {
 }
 
 IDXGIAdapter1* DeviceManagerDx::GetDXGIAdapterLocked() {
-  if (mAdapter) {
+  if (mAdapter && mFactory && mFactory->IsCurrent()) {
     return mAdapter;
   }
+  mAdapter = nullptr;
+  mFactory = nullptr;
 
   nsModuleHandle dxgiModule(LoadLibrarySystem32(L"dxgi.dll"));
   decltype(CreateDXGIFactory1)* createDXGIFactory1 =
@@ -668,50 +670,32 @@ IDXGIAdapter1* DeviceManagerDx::GetDXGIAdapterLocked() {
 
   // Try to use a DXGI 1.1 adapter in order to share resources
   // across processes.
-  RefPtr<IDXGIFactory1> factory1;
   if (StaticPrefs::gfx_direct3d11_enable_debug_layer_AtStartup()) {
-    RefPtr<IDXGIFactory2> factory2;
     if (fCreateDXGIFactory2) {
       auto hr = fCreateDXGIFactory2(DXGI_CREATE_FACTORY_DEBUG,
                                     __uuidof(IDXGIFactory2),
-                                    getter_AddRefs(factory2));
+                                    getter_AddRefs(mFactory));
       MOZ_ALWAYS_TRUE(!FAILED(hr));
     } else {
       NS_WARNING(
           "fCreateDXGIFactory2 not loaded, cannot create debug IDXGIFactory2.");
     }
-    factory1 = factory2;
   }
-  if (!factory1) {
+  if (!mFactory) {
     HRESULT hr =
-        createDXGIFactory1(__uuidof(IDXGIFactory1), getter_AddRefs(factory1));
-    if (FAILED(hr) || !factory1) {
+        createDXGIFactory1(__uuidof(IDXGIFactory1), getter_AddRefs(mFactory));
+    if (FAILED(hr) || !mFactory) {
       // This seems to happen with some people running the iZ3D driver.
       // They won't get acceleration.
       return nullptr;
     }
   }
 
-  if (!mDeviceStatus) {
-    // If we haven't created a device yet, and have no existing device status,
-    // then this must be the compositor device. Pick the first adapter we can.
-    if (FAILED(factory1->EnumAdapters1(0, getter_AddRefs(mAdapter)))) {
-      return nullptr;
-    }
-  } else {
-    // In the UI and GPU process, we clear mDeviceStatus on device reset, so we
-    // should never reach here. Furthermore, the UI process does not create
-    // devices when using a GPU process.
-    //
-    // So, this should only ever get called on the content process or RDD
-    // process
-    MOZ_ASSERT(XRE_IsContentProcess() || XRE_IsRDDProcess());
-
-    // In the child process, we search for the adapter that matches the parent
-    // process. The first adapter can be mismatched on dual-GPU systems.
+  if (mDeviceStatus) {
+    // Match the adapter to our mDeviceStatus, if possible.
     for (UINT index = 0;; index++) {
       RefPtr<IDXGIAdapter1> adapter;
-      if (FAILED(factory1->EnumAdapters1(index, getter_AddRefs(adapter)))) {
+      if (FAILED(mFactory->EnumAdapters1(index, getter_AddRefs(adapter)))) {
         break;
       }
 
@@ -730,7 +714,9 @@ IDXGIAdapter1* DeviceManagerDx::GetDXGIAdapterLocked() {
   }
 
   if (!mAdapter) {
-    return nullptr;
+    mDeviceStatus.reset();
+    // Pick the first adapter available.
+    mFactory->EnumAdapters1(0, getter_AddRefs(mAdapter));
   }
 
   // We leak this module everywhere, we might as well do so here as well.

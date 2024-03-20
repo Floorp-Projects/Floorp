@@ -193,6 +193,7 @@ class DeviceManagerDx final {
   mutable mozilla::Mutex mDeviceLock;
   nsTArray<D3D_FEATURE_LEVEL> mFeatureLevels MOZ_GUARDED_BY(mDeviceLock);
   RefPtr<IDXGIAdapter1> mAdapter MOZ_GUARDED_BY(mDeviceLock);
+  RefPtr<IDXGIFactory1> mFactory MOZ_GUARDED_BY(mDeviceLock);
   RefPtr<ID3D11Device> mCompositorDevice MOZ_GUARDED_BY(mDeviceLock);
   RefPtr<ID3D11Device> mContentDevice MOZ_GUARDED_BY(mDeviceLock);
   RefPtr<ID3D11Device> mCanvasDevice MOZ_GUARDED_BY(mDeviceLock);
