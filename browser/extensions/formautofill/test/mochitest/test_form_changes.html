@@ -61,8 +61,12 @@ async function checkFormChangeHappened(formId) {
   await expectPopup();
   synthesizeKey("KEY_ArrowDown");
   checkMenuEntries(MOCK_STORAGE.map(address =>
-    JSON.stringify({primary: address.tel, secondary: address.name})
-  ));
+    JSON.stringify({
+      primary: address.tel,
+      secondary: address.name,
+      status: "Also autofills name, organization"
+    })
+  ), 2);
 
   // Click the first entry of the autocomplete popup and make sure all fields are autofilled
   synthesizeKey("KEY_Enter");
@@ -76,8 +80,9 @@ async function checkFormChangeHappened(formId) {
 
   // Click on an autofilled field would show an autocomplete popup with "clear form" entry
   checkMenuEntries([
-    JSON.stringify({primary: "", secondary: ""}), // Clear Autofill Form
-  ], true);
+    "Clear Autofill Form", // Clear Autofill Form
+    "Manage addresses"  // FormAutofill Preferemce
+  ], 0);
 
   // This is for checking the changes of element removed and added then.
   document.querySelector(`#${formId} input[name=address-level2]`).remove();
@@ -87,8 +92,12 @@ async function checkFormChangeHappened(formId) {
   synthesizeKey("KEY_ArrowDown");
   await expectPopup();
   checkMenuEntries(MOCK_STORAGE.map(address =>
-    JSON.stringify({primary: address["address-level2"], secondary: address.name})
-  ));
+    JSON.stringify({
+      primary: address["address-level2"],
+      secondary: address.name,
+      status: "Also autofills name, organization, phone"
+    })
+  ), 2);
 
   // Make sure everything is autofilled in the end
   synthesizeKey("KEY_ArrowDown");
