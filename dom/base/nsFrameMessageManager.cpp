@@ -1428,8 +1428,7 @@ class SameParentProcessMessageManagerCallback : public MessageManagerCallback {
                                   bool aRunInGlobalScope) override {
     auto* global = ContentProcessMessageManager::Get();
     MOZ_ASSERT(!aRunInGlobalScope);
-    global->LoadScript(aURL);
-    return true;
+    return global && global->LoadScript(aURL);
   }
 
   nsresult DoSendAsyncMessage(const nsAString& aMessage,

@@ -2310,8 +2310,10 @@ mozilla::ipc::IPCResult ContentChild::RecvThemeChanged(
 mozilla::ipc::IPCResult ContentChild::RecvLoadProcessScript(
     const nsString& aURL) {
   auto* global = ContentProcessMessageManager::Get();
-  global->LoadScript(aURL);
-  return IPC_OK();
+  if (global && global->LoadScript(aURL)) {
+    return IPC_OK();
+  }
+  return IPC_FAIL(this, "ContentProcessMessageManager::LoadScript failed");
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvAsyncMessage(

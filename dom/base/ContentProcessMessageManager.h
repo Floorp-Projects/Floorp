@@ -58,7 +58,7 @@ class ContentProcessMessageManager : public nsIMessageSender,
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
-  JSObject* GetOrCreateWrapper();
+  [[nodiscard]] JSObject* GetOrCreateWrapper();
 
   using MessageManagerGlobal::AddMessageListener;
   using MessageManagerGlobal::AddWeakMessageListener;
@@ -84,7 +84,7 @@ class ContentProcessMessageManager : public nsIMessageSender,
     return xpc::NativeGlobal(xpc::PrivilegedJunkScope());
   }
 
-  virtual void LoadScript(const nsAString& aURL);
+  [[nodiscard]] virtual bool LoadScript(const nsAString& aURL);
 
   bool IsProcessScoped() const override { return true; }
 
