@@ -20,7 +20,7 @@
         const shaderModule = device.createShaderModule({
           // `?` is invalid, and we want to see if the offset will be right with the kitten emoji
           // before it.
-          code: "/*🐈🐈🐈🐈🐈🐈🐈*/?"
+          code: "/*🐈🐈🐈🐈🐈🐈🐈*/?",
         });
 
         const error = await device.popErrorScope();
@@ -30,18 +30,22 @@
         const compilationInfo = await shaderModule.getCompilationInfo();
         is(compilationInfo.messages.length, 1);
 
-        const { length, lineNum, linePos, message, offset } = compilationInfo.messages[0];
+        const { length, lineNum, linePos, message, offset } =
+          compilationInfo.messages[0];
         is(length, 1);
         is(lineNum, 1);
         is(linePos, 19);
-        is(message, `
+        is(
+          message,
+          `
 Shader '' parsing error: expected global item ('struct', 'const', 'var', 'alias', ';', 'fn') or the end of the file, found '?'
   ┌─ wgsl:1:12
   │
 1 │ /*🐈🐈🐈🐈🐈🐈🐈*/?
   │                   ^ expected global item ('struct', 'const', 'var', 'alias', ';', 'fn') or the end of the file
 
-`);
+`
+        );
         is(offset, 18);
       }
 
