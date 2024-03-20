@@ -3,13 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 <%namespace name="helpers" file="/helpers.mako.rs" />
-<% from data import Method %>
 
-<% data.new_style_struct("Outline",
-                         inherited=False,
-                         additional_methods=[Method("outline_has_nonzero_width", "bool")]) %>
-
-// TODO(pcwalton): `invert`
 ${helpers.predefined_type(
     "outline-color",
     "Color",

@@ -4,9 +4,6 @@
 
 <%namespace name="helpers" file="/helpers.mako.rs" />
 
-// Box-shadow, etc.
-<% data.new_style_struct("Effects", inherited=False) %>
-
 ${helpers.predefined_type(
     "opacity",
     "Opacity",

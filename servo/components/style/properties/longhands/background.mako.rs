@@ -4,8 +4,6 @@
 
 <%namespace name="helpers" file="/helpers.mako.rs" />
 
-<% data.new_style_struct("Background", inherited=False) %>
-
 ${helpers.predefined_type(
     "background-color",
     "Color",

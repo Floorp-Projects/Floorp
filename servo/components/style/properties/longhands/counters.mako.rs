@@ -4,8 +4,6 @@
 
 <%namespace name="helpers" file="/helpers.mako.rs" />
 
-<% data.new_style_struct("Counters", inherited=False, gecko_name="Content") %>
-
 ${helpers.predefined_type(
     "content",
     "Content",

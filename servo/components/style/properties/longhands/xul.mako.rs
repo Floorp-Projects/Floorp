@@ -3,10 +3,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 <%namespace name="helpers" file="/helpers.mako.rs" />
-<% from data import Method %>
-
-// Non-standard properties that Gecko uses for XUL elements.
-<% data.new_style_struct("XUL", inherited=False) %>
 
 ${helpers.single_keyword(
     "-moz-box-align",

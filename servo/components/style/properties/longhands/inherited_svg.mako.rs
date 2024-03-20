@@ -4,10 +4,6 @@
 
 <%namespace name="helpers" file="/helpers.mako.rs" />
 
-// SVG 2
-// https://svgwg.org/svg2-draft/
-<% data.new_style_struct("InheritedSVG", inherited=True, gecko_name="SVG") %>
-
 // Section 10 - Text
 
 ${helpers.single_keyword(

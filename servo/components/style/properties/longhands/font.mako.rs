@@ -3,9 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 <%namespace name="helpers" file="/helpers.mako.rs" />
-<% from data import Method, to_camel_case, to_rust_ident, to_camel_case_lower, SYSTEM_FONT_LONGHANDS %>
-
-<% data.new_style_struct("Font", inherited=True) %>
+<% from data import SYSTEM_FONT_LONGHANDS %>
 
 ${helpers.predefined_type(
     "font-family",

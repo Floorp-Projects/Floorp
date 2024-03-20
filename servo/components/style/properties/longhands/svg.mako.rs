@@ -4,8 +4,6 @@
 
 <%namespace name="helpers" file="/helpers.mako.rs" />
 
-<% data.new_style_struct("SVG", inherited=False, gecko_name="SVGReset") %>
-
 ${helpers.single_keyword(
     "vector-effect",
     "none non-scaling-stroke",
