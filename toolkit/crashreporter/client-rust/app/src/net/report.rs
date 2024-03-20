@@ -5,6 +5,14 @@
 use crate::std::{ffi::OsStr, path::Path, process::Child};
 use anyhow::Context;
 
+#[cfg(mock)]
+use crate::std::mock::{mock_key, MockKey};
+
+#[cfg(mock)]
+mock_key! {
+    pub struct MockLibCurl => Box<dyn Fn(&CrashReport) -> std::io::Result<std::io::Result<String>> + Send + Sync>
+}
+
 pub const USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));
 
 /// A crash report to upload.
@@ -88,6 +96,11 @@ impl CrashReport<'_> {
 
     /// Send the crash report using the `curl` library.
     fn send_with_libcurl(&self, extra_json_data: String) -> std::io::Result<CrashReportSender> {
+        #[cfg(mock)]
+        if !crate::std::mock::try_hook(false, "use_system_libcurl") {
+            return self.send_with_mock_libcurl(extra_json_data);
+        }
+
         let curl = super::libcurl::load()?;
         let mut easy = curl.easy()?;
 
@@ -119,6 +132,16 @@ impl CrashReport<'_> {
 
         Ok(CrashReportSender::LibCurl { easy })
     }
+
+    #[cfg(mock)]
+    fn send_with_mock_libcurl(
+        &self,
+        _extra_json_data: String,
+    ) -> std::io::Result<CrashReportSender> {
+        MockLibCurl
+            .get(|f| f(&self))
+            .map(|response| CrashReportSender::MockLibCurl { response })
+    }
 }
 
 pub enum CrashReportSender {
@@ -128,6 +151,10 @@ pub enum CrashReportSender {
     },
     LibCurl {
         easy: super::libcurl::Easy<'static>,
+    },
+    #[cfg(mock)]
+    MockLibCurl {
+        response: std::io::Result<String>,
     },
 }
 
@@ -173,6 +200,8 @@ impl CrashReportSender {
 
                 response
             }
+            #[cfg(mock)]
+            Self::MockLibCurl { response } => response?.into(),
         };
 
         log::debug!("received response from sending report: {:?}", &*response);

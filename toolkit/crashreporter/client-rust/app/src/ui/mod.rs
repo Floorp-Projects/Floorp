@@ -27,17 +27,24 @@ pub mod test {
     }
 }
 
-mod ui_impl {
-    #[derive(Default)]
-    pub struct UI;
+cfg_if::cfg_if! {
+    if #[cfg(test)] {
+        #[path = "test.rs"]
+        pub mod ui_impl;
+    } else {
+        mod ui_impl {
+            #[derive(Default)]
+            pub struct UI;
 
-    impl UI {
-        pub fn run_loop(&self, _app: super::model::Application) {
-            unimplemented!();
-        }
+            impl UI {
+                pub fn run_loop(&self, _app: super::model::Application) {
+                    unimplemented!();
+                }
 
-        pub fn invoke(&self, _f: super::model::InvokeFn) {
-            unimplemented!();
+                pub fn invoke(&self, _f: super::model::InvokeFn) {
+                    unimplemented!();
+                }
+            }
         }
     }
 }

@@ -113,7 +113,7 @@ impl<'a> Ping<'a> {
             .map(ToOwned::to_owned);
 
         Ok(Ping::Crash {
-            id: Uuid::new_v4(),
+            id: crate::std::mock::hook(Uuid::new_v4(), "ping_uuid"),
             version: TELEMETRY_VERSION,
             creation_date: now,
             client_id: extra["TelemetryClientId"]
