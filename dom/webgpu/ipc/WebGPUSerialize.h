@@ -46,7 +46,7 @@ DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::webgpu::PopErrorScopeResult,
                                   resultType, message);
 
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::webgpu::WebGPUCompilationMessage,
-                                  message, lineNum, linePos);
+                                  message, lineNum, linePos, offset, length);
 
 #undef DEFINE_IPC_SERIALIZER_FFI_ENUM
 #undef DEFINE_IPC_SERIALIZER_DOM_ENUM
