@@ -729,9 +729,6 @@ bool shell::enableSourcePragmas = true;
 bool shell::enableAsyncStacks = false;
 bool shell::enableAsyncStackCaptureDebuggeeOnly = false;
 bool shell::enableToSource = false;
-#ifdef ENABLE_JSON_PARSE_WITH_SOURCE
-bool shell::enableJSONParseWithSource = false;
-#endif
 bool shell::enableImportAttributes = false;
 bool shell::enableImportAttributesAssertSyntax = false;
 #ifdef JS_GC_ZEAL
@@ -4123,11 +4120,7 @@ static void SetStandardRealmOptions(JS::RealmOptions& options) {
   options.creationOptions()
       .setSharedMemoryAndAtomicsEnabled(enableSharedMemory)
       .setCoopAndCoepEnabled(false)
-      .setToSourceEnabled(enableToSource)
-#ifdef ENABLE_JSON_PARSE_WITH_SOURCE
-      .setJSONParseWithSource(enableJSONParseWithSource)
-#endif
-      ;
+      .setToSourceEnabled(enableToSource);
 }
 
 [[nodiscard]] static bool CheckRealmOptions(JSContext* cx,
@@ -12430,6 +12423,14 @@ bool SetGlobalOptionsPreJSInit(const OptionParser& op) {
     JS::Prefs::setAtStartup_experimental_uint8array_base64(true);
   }
 #endif
+#ifdef ENABLE_JSON_PARSE_WITH_SOURCE
+  JS::Prefs::setAtStartup_experimental_json_parse_with_source(
+      op.getBoolOption("enable-json-parse-with-source"));
+#else
+  if (op.getBoolOption("enable-json-parse-with-source")) {
+    fprintf(stderr, "JSON.parse with source is not enabled on this build.\n");
+  }
+#endif
 
   if (op.getBoolOption("disable-weak-refs")) {
     JS::Prefs::setAtStartup_weakrefs(false);
@@ -12649,13 +12650,6 @@ bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableAsyncStackCaptureDebuggeeOnly =
       op.getBoolOption("async-stacks-capture-debuggee-only");
   enableToSource = !op.getBoolOption("disable-tosource");
-#ifdef ENABLE_JSON_PARSE_WITH_SOURCE
-  enableJSONParseWithSource = op.getBoolOption("enable-json-parse-with-source");
-#else
-  if (op.getBoolOption("enable-json-parse-with-source")) {
-    fprintf(stderr, "JSON.parse with source is not enabled on this build.\n");
-  }
-#endif
   enableImportAttributesAssertSyntax =
       op.getBoolOption("enable-import-assertions");
   enableImportAttributes = op.getBoolOption("enable-import-attributes") ||

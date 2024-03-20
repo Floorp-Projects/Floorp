@@ -7663,6 +7663,14 @@
     mirror: always
 #endif  // NIGHTLY_BUILD
 
+#ifdef ENABLE_JSON_PARSE_WITH_SOURCE
+-   name: javascript.options.experimental.json_parse_with_source
+    type: bool
+    value: false
+    mirror: always
+    set_spidermonkey_pref: startup
+#endif  // ENABLE_JSON_PARSE_WITH_SOURCE
+
 - name: javascript.options.wasm_caching
   type: bool
   value: true
