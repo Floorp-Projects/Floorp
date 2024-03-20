@@ -2,6 +2,32 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+//! The crash reporter application.
+//!
+//! # Architecture
+//! The application uses a simple declarative [UI model](ui::model) to define the UI. This model
+//! contains [data bindings](data) which provide the dynamic behaviors of the UI. Separate UI
+//! implementations for linux (gtk), macos (cocoa), and windows (win32) exist, as well as a test UI
+//! which is virtual (no actual interface is presented) but allows runtime introspection.
+//!
+//! # Mocking
+//! This application contains mock interfaces for all the `std` functions it uses which interact
+//! with the host system. You can see their implementation in [`crate::std`]. To enable mocking,
+//! use the `mock` feature or build with `MOZ_CRASHREPORTER_MOCK` set (which, in `build.rs`, is
+//! translated to a `cfg` option). *Note* that this cfg _must_ be enabled when running tests.
+//! Unfortunately it is not possible to detect whether tests are being built in `build.rs, which
+//! is why a feature needed to be made in the first place (it is enabled automatically when running
+//! `mach rusttests`).
+//!
+//! Currently the input program configuration which is mocked when running the application is fixed
+//! (see the [`main`] implementation in this file). If needed in the future, it would be nice to
+//! extend this to allow runtime tweaking.
+//!
+//! # Development
+//! Because of the mocking support previously mentioned, in generally any `std` imports should
+//! actually use `crate::std`. If mocked functions/types are missing, they should be added with
+//! appropriate mocking hooks.
+
 // Use the WINDOWS windows subsystem. This prevents a console window from opening with the
 // application.
 #![cfg_attr(windows, windows_subsystem = "windows")]

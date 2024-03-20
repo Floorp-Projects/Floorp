@@ -2,6 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+//! Tests here mostly interact with the [test UI](crate::ui::test). As such, most tests read a bit
+//! more like integration tests than unit tests, testing the behavior of the application as a
+//! whole.
+
 use super::*;
 use crate::config::{test::MINIDUMP_PRUNE_SAVE_COUNT, Config};
 use crate::settings::Settings;
@@ -18,22 +22,28 @@ use crate::std::{
 };
 use crate::ui::{self, test::model, ui_impl::Interact};
 
+/// A simple thread-safe counter which can be used in tests to mark that certain code paths were
+/// hit.
 #[derive(Clone, Default)]
 struct Counter(Arc<AtomicUsize>);
 
 impl Counter {
+    /// Create a new zero counter.
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Increment the counter.
     pub fn inc(&self) {
         self.0.fetch_add(1, Relaxed);
     }
 
+    /// Get the current count.
     pub fn count(&self) -> usize {
         self.0.load(Relaxed)
     }
 
+    /// Assert that the current count is 1.
     pub fn assert_one(&self) {
         assert_eq!(self.count(), 1);
     }
@@ -119,6 +129,7 @@ fn current_system_time() -> ::std::time::SystemTime {
     current_datetime().into()
 }
 
+/// A basic configuration which populates some necessary/useful fields.
 fn test_config() -> Config {
     let mut cfg = Config::default();
     cfg.data_dir = Some("data_dir".into());
@@ -129,13 +140,19 @@ fn test_config() -> Config {
     cfg
 }
 
+/// A test fixture to make configuration, mocking, and assertions easier.
 struct GuiTest {
+    /// The configuration used in the test. Initialized to [`test_config`].
     pub config: Config,
+    /// The mock builder used in the test, initialized with a basic set of mocked values to ensure
+    /// most things will work out of the box.
     pub mock: mock::Builder,
+    /// The mocked filesystem, which can be used for mock setup and assertions after completion.
     pub files: MockFiles,
 }
 
 impl GuiTest {
+    /// Create a new GuiTest with enough configured for the application to run
     pub fn new() -> Self {
         // Create a default set of files which allow successful operation.
         let mock_files = MockFiles::new();
@@ -184,6 +201,9 @@ impl GuiTest {
         }
     }
 
+    /// Run the test as configured, using the given function to interact with the GUI.
+    ///
+    /// Returns the final result of the application logic.
     pub fn try_run<F: FnOnce(Interact) + Send + 'static>(
         &mut self,
         interact: F,
@@ -199,6 +219,10 @@ impl GuiTest {
         mock.run(move || gui_interact(move || try_run(&mut config), interact))
     }
 
+    /// Run the test as configured, using the given function to interact with the GUI.
+    ///
+    /// Panics if the application logic returns an error (which would normally be displayed to the
+    /// user).
     pub fn run<F: FnOnce(Interact) + Send + 'static>(&mut self, interact: F) {
         if let Err(e) = self.try_run(interact) {
             panic!(
@@ -208,6 +232,7 @@ impl GuiTest {
         }
     }
 
+    /// Get the file assertion helper.
     pub fn assert_files(&self) -> AssertFiles {
         AssertFiles {
             data_dir: "data_dir".into(),
@@ -217,6 +242,11 @@ impl GuiTest {
     }
 }
 
+/// A wrapper around the mock [`AssertFiles`](crate::std::fs::AssertFiles).
+///
+/// This implements higher-level assertions common across tests, but also supports the lower-level
+/// assertions (though those return the [`AssertFiles`](crate::std::fs::AssertFiles) reference so
+/// higher-level assertions must be chained first).
 struct AssertFiles {
     data_dir: String,
     events_dir: String,
@@ -232,6 +262,7 @@ impl AssertFiles {
         format!("{}/{rest}", &self.events_dir)
     }
 
+    /// Set the data dir if not the default.
     pub fn set_data_dir<S: ToString>(&mut self, data_dir: S) -> &mut Self {
         let data_dir = data_dir.to_string();
         // Data dir should be relative to root.
@@ -239,11 +270,13 @@ impl AssertFiles {
         self
     }
 
+    /// Ignore the generated log file.
     pub fn ignore_log(&mut self) -> &mut Self {
         self.inner.ignore(self.data("submit.log"));
         self
     }
 
+    /// Assert that the crash report was submitted according to the filesystem.
     pub fn submitted(&mut self) -> &mut Self {
         self.inner.check(
             self.data(&format!("submitted/{MOCK_REMOTE_CRASH_ID}.txt")),
@@ -252,6 +285,7 @@ impl AssertFiles {
         self
     }
 
+    /// Assert that the given settings where saved.
     pub fn saved_settings(&mut self, settings: Settings) -> &mut Self {
         self.inner.check(
             self.data("crashreporter_settings.json"),
@@ -260,6 +294,7 @@ impl AssertFiles {
         self
     }
 
+    /// Assert that a crash is pending according to the filesystem.
     pub fn pending(&mut self) -> &mut Self {
         let dmp = self.data("pending/minidump.dmp");
         self.inner
@@ -268,6 +303,7 @@ impl AssertFiles {
         self
     }
 
+    /// Assert that a crash ping was sent according to the filesystem.
     pub fn ping(&mut self) -> &mut Self {
         self.inner.check(
             format!("ping_dir/{MOCK_PING_UUID}.json"),
@@ -310,6 +346,7 @@ impl AssertFiles {
         self
     }
 
+    /// Assert that a crash submission event was written with the given submission status.
     pub fn submission_event(&mut self, success: bool) -> &mut Self {
         self.inner.check(
             self.events("minidump-submission"),
@@ -1039,11 +1076,20 @@ fn response_stop_sending_reports() {
         .check_exists("data_dir/EndOfLife100.0");
 }
 
+/// A real temporary directory in the host filesystem.
+///
+/// The directory is guaranteed to be unique to the test suite process (in case of crash, it can be
+/// inspected).
+///
+/// When dropped, the directory is deleted.
 struct TempDir {
     path: ::std::path::PathBuf,
 }
 
 impl TempDir {
+    /// Create a new directory with the given identifying name.
+    ///
+    /// The name should be unique to deconflict amongst concurrent tests.
     pub fn new(name: &str) -> Self {
         let path = ::std::env::temp_dir().join(format!(
             "{}-test-{}-{name}",
@@ -1054,6 +1100,7 @@ impl TempDir {
         TempDir { path }
     }
 
+    /// Get the temporary directory path.
     pub fn path(&self) -> &::std::path::Path {
         &self.path
     }
@@ -1066,6 +1113,9 @@ impl Drop for TempDir {
     }
 }
 
+/// A mock crash report server.
+///
+/// When dropped, the server is shutdown.
 struct TestCrashReportServer {
     addr: ::std::net::SocketAddr,
     shutdown_and_thread: Option<(
@@ -1075,6 +1125,8 @@ struct TestCrashReportServer {
 }
 
 impl TestCrashReportServer {
+    /// Create and start a mock crash report server on an ephemeral port, returning a handle to the
+    /// server.
     pub fn run() -> Self {
         let (shutdown, rx) = tokio::sync::oneshot::channel();
 
@@ -1130,6 +1182,7 @@ impl TestCrashReportServer {
         }
     }
 
+    /// Get the url to which to submit crash reports for this mocked server.
     pub fn submit_url(&self) -> String {
         format!("http://{}/submit", self.addr)
     }

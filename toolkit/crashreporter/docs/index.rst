@@ -258,6 +258,15 @@ Environment variables used internally
 - ``MOZ_CRASHREPORTER_STRINGS_OVERRIDE`` - Overrides the path used to load the
   .ini file holding the strings used in the crash reporter client UI.
 
+Environment variables used for development
+------------------------------------------
+
+Set these at build time (e.g. ``ac_add_options`` in ``.mozconfig``).
+
+- ``MOZ_CRASHREPORTER_MOCK`` - When set, causes the crash reporter client to
+  mock its interfaces to the system so that you can test the GUI behavior. The
+  GUI will not interact with the host system at all when this is set.
+
 Other topics
 ============
 
