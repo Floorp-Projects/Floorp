@@ -1735,6 +1735,7 @@ static bool InternalizeJSONProperty(
 
 #ifdef ENABLE_JSON_PARSE_WITH_SOURCE
   RootedObject context(cx);
+  Rooted<UniquePtr<ParseRecordObject::EntryMap>> entries(cx);
   if (cx->realm()->creationOptions().getJSONParseWithSource()) {
     // https://tc39.es/proposal-json-parse-with-source/#sec-internalizejsonproperty
     if (parseRecord.get().parseNode) {
@@ -1752,6 +1753,7 @@ static bool InternalizeJSONProperty(
     if (!context) {
       return false;
     }
+    entries = std::move(parseRecord.get().entries);
   }
 #endif
 
@@ -1826,6 +1828,13 @@ static bool InternalizeJSONProperty(
         /* Step 2c(ii)(1). */
         id = keys[i];
         Rooted<ParseRecordObject> entryRecord(cx);
+#ifdef ENABLE_JSON_PARSE_WITH_SOURCE
+        if (entries) {
+          if (auto entry = entries->lookup(id)) {
+            entryRecord = std::move(entry->value());
+          }
+        }
+#endif
         if (!InternalizeJSONProperty(cx, obj, id, reviver, &entryRecord,
                                      &newElement)) {
           return false;
