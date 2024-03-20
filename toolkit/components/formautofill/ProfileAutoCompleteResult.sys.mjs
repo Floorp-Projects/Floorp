@@ -318,10 +318,6 @@ export class AddressResult extends ProfileAutoCompleteResult {
     let footerItem = {
       primary: manageLabel,
       secondary: "",
-      categories:
-        lazy.FormAutofillUtils.getCategoriesFromFieldNames(allFieldNames),
-      focusedCategory:
-        lazy.FormAutofillUtils.getCategoryFromFieldName(focusedFieldName),
     };
 
     if (this._isInputAutofilled) {
@@ -336,6 +332,9 @@ export class AddressResult extends ProfileAutoCompleteResult {
       return labels;
     }
 
+    let focusedCategory =
+      lazy.FormAutofillUtils.getCategoryFromFieldName(focusedFieldName);
+
     // Skip results without a primary label.
     let labels = profiles
       .filter(profile => {
@@ -349,6 +348,13 @@ export class AddressResult extends ProfileAutoCompleteResult {
         ) {
           primaryLabel = profile["-moz-street-address-one-line"];
         }
+
+        let profileFields = allFieldNames.filter(
+          fieldName => !!profile[fieldName]
+        );
+
+        let categories =
+          lazy.FormAutofillUtils.getCategoriesFromFieldNames(profileFields);
         return {
           primary: primaryLabel,
           secondary: this._getSecondaryLabel(
@@ -356,12 +362,67 @@ export class AddressResult extends ProfileAutoCompleteResult {
             allFieldNames,
             profile
           ),
+          status: this.getStatusNote(categories, focusedCategory),
         };
       });
+
+    let allCategories =
+      lazy.FormAutofillUtils.getCategoriesFromFieldNames(allFieldNames);
+
+    if (allCategories && allCategories.length) {
+      let statusItem = {
+        primary: "",
+        secondary: "",
+        status: this.getStatusNote(allCategories, focusedCategory),
+        style: "status",
+      };
+      labels.push(statusItem);
+    }
 
     labels.push(footerItem);
 
     return labels;
+  }
+
+  getStatusNote(categories, focusedCategory) {
+    if (!categories || !categories.length) {
+      return "";
+    }
+
+    // If the length of categories is 1, that means all the fillable fields are in the same
+    // category. We will change the way to inform user according to this flag. When the value
+    // is true, we show "Also autofills ...", otherwise, show "Autofills ..." only.
+    let hasExtraCategories = categories.length > 1;
+    // Show the categories in certain order to conform with the spec.
+    let orderedCategoryList = [
+      "address",
+      "name",
+      "organization",
+      "tel",
+      "email",
+    ];
+    let showCategories = hasExtraCategories
+      ? orderedCategoryList.filter(
+          category =>
+            categories.includes(category) && category != focusedCategory
+        )
+      : [orderedCategoryList.find(category => category == focusedCategory)];
+
+    let formatter = new Intl.ListFormat(undefined, {
+      style: "narrow",
+    });
+
+    let categoriesText = showCategories.map(category =>
+      lazy.l10n.formatValueSync("autofill-category-" + category)
+    );
+    categoriesText = formatter.format(categoriesText);
+
+    let statusTextTmplKey = hasExtraCategories
+      ? "autofill-phishing-warningmessage-extracategory"
+      : "autofill-phishing-warningmessage";
+    return lazy.l10n.formatValueSync(statusTextTmplKey, {
+      categories: categoriesText,
+    });
   }
 }
 

@@ -164,6 +164,20 @@
     text-align: center;
   }
 
+  /* status items */
+  > .ac-status {
+    padding: var(--space-xsmall) var(--space-small);
+    text-align: center;
+    background-color: var(--color-background-information);
+    width: 100%;
+    border-bottom: 1px solid rgba(38,38,38,.15);
+    font-size: calc(10 / 12 * 1em);
+  }
+
+  &:has(> .ac-status) {
+    opacity: 1;
+  }
+
   /* Insecure field warning */
   &[originaltype="insecureWarning"] {
     background-color: var(--arrowpanel-dimmed);

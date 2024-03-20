@@ -671,29 +671,8 @@ export class FormAutofillChild extends JSWindowActorChild {
       !lastAutoCompleteResult ||
       lastAutoCompleteResult.getStyleAt(selectedIndex) != "autofill-profile"
     ) {
-      this.sendAsyncMessage("FormAutofill:UpdateWarningMessage", {});
-
       lazy.ProfileAutocomplete._clearProfilePreview();
     } else {
-      let focusedInputDetails = this.activeFieldDetail;
-      let profile = JSON.parse(
-        lastAutoCompleteResult.getCommentAt(selectedIndex)
-      );
-      let allFieldNames = this.activeSection.allFieldNames;
-      let profileFields = allFieldNames.filter(
-        fieldName => !!profile[fieldName]
-      );
-
-      let focusedCategory = lazy.FormAutofillUtils.getCategoryFromFieldName(
-        focusedInputDetails.fieldName
-      );
-      let categories =
-        lazy.FormAutofillUtils.getCategoriesFromFieldNames(profileFields);
-      this.sendAsyncMessage("FormAutofill:UpdateWarningMessage", {
-        focusedCategory,
-        categories,
-      });
-
       lazy.ProfileAutocomplete._previewSelectedProfile(selectedIndex);
     }
   }
