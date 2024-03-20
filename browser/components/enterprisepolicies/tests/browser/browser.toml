@@ -117,6 +117,8 @@ https_first_disabled = true
 
 ["browser_policy_support_menu.js"]
 
+["browser_policy_translateenabled.js"]
+
 ["browser_policy_usermessaging.js"]
 
 ["browser_policy_websitefilter.js"]
