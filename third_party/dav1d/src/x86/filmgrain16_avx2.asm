@@ -646,18 +646,9 @@ INIT_XMM avx2
 INIT_YMM avx2
 .ar2:
 %if WIN64
-    ; xmm6 and xmm7 already saved
-    %assign xmm_regs_used 13 + %2
     %assign stack_size_padded 136
     SUB             rsp, stack_size_padded
-    movaps   [rsp+16*2], xmm8
-    movaps   [rsp+16*3], xmm9
-    movaps   [rsp+16*4], xmm10
-    movaps   [rsp+16*5], xmm11
-    movaps   [rsp+16*6], xmm12
-%if %2
-    movaps   [rsp+16*7], xmm13
-%endif
+    WIN64_PUSH_XMM 13 + %2, 8
 %endif
     DEFINE_ARGS buf, bufy, fg_data, uv, bdmax, shift
     mov          shiftd, [fg_dataq+FGData.ar_coeff_shift]
@@ -747,20 +738,10 @@ INIT_YMM avx2
 
 .ar3:
 %if WIN64
-    ; xmm6 and xmm7 already saved
     %assign stack_offset 32
-    %assign xmm_regs_used 14 + %2
     %assign stack_size_padded 152
     SUB             rsp, stack_size_padded
-    movaps   [rsp+16*2], xmm8
-    movaps   [rsp+16*3], xmm9
-    movaps   [rsp+16*4], xmm10
-    movaps   [rsp+16*5], xmm11
-    movaps   [rsp+16*6], xmm12
-    movaps   [rsp+16*7], xmm13
-%if %2
-    movaps   [rsp+16*8], xmm14
-%endif
+    WIN64_PUSH_XMM 14 + %2, 8
 %endif
     DEFINE_ARGS buf, bufy, fg_data, uv, bdmax, shift
     mov          shiftd, [fg_dataq+FGData.ar_coeff_shift]

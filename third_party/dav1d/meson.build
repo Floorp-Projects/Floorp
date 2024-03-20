@@ -23,7 +23,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 project('dav1d', ['c'],
-    version: '1.4.0',
+    version: '1.4.1',
     default_options: ['c_std=c99',
                       'warning_level=2',
                       'buildtype=release',
@@ -309,6 +309,10 @@ if (host_machine.system() in ['darwin', 'ios', 'tvos'] and cc.get_id() == 'clang
     optional_arguments += '-fno-stack-check'
 endif
 
+if (host_machine.cpu_family() == 'aarch64' or host_machine.cpu_family().startswith('arm'))
+    optional_arguments += '-fno-align-functions'
+endif
+
 add_project_arguments(cc.get_supported_arguments(optional_arguments), language : 'c')
 add_project_link_arguments(cc.get_supported_link_arguments(optional_link_arguments), language : 'c')
 
@@ -364,6 +368,66 @@ if (is_asm_enabled and
 '''
     if cc.compiles(check_pic_code)
         cdata.set('PIC', '3')
+    endif
+
+    if host_machine.cpu_family() == 'aarch64'
+        have_as_arch = cc.compiles('''__asm__ (".arch armv8-a");''')
+        cdata.set10('HAVE_AS_ARCH_DIRECTIVE', have_as_arch)
+        as_arch_str = ''
+        if have_as_arch
+            as_arch_level = 'armv8-a'
+            # Check what .arch levels are supported. In principle, we only
+            # want to detect up to armv8.2-a here (binutils requires that
+            # in order to enable i8mm). However, older Clang versions
+            # (before Clang 17, and Xcode versions up to and including 15.0)
+            # didn't support controlling dotprod/i8mm extensions via
+            # .arch_extension, therefore try to enable a high enough .arch
+            # level as well, to implicitly make them available via that.
+            foreach arch : ['armv8.2-a', 'armv8.4-a', 'armv8.6-a']
+                if cc.compiles('__asm__ (".arch ' + arch + '\\n");')
+                    as_arch_level = arch
+                endif
+            endforeach
+            # Clang versions before 17 also had a bug
+            # (https://github.com/llvm/llvm-project/issues/32220)
+            # causing a plain ".arch <level>" to not have any effect unless it
+            # had an extra "+<feature>" included - but it was activated on the
+            # next ".arch_extension" directive instead. Check if we can include
+            # "+crc" as dummy feature to make the .arch directive behave as
+            # expected and take effect right away.
+            if cc.compiles('__asm__ (".arch ' + as_arch_level + '+crc\\n");')
+                as_arch_level = as_arch_level + '+crc'
+            endif
+            cdata.set('AS_ARCH_LEVEL', as_arch_level)
+            as_arch_str = '".arch ' + as_arch_level + '\\n"'
+        endif
+        extensions = {
+            'dotprod': 'udot v0.4s, v0.16b, v0.16b',
+            'i8mm':    'usdot v0.4s, v0.16b, v0.16b',
+            'sve':     'whilelt p0.s, x0, x1',
+            'sve2':    'sqrdmulh z0.s, z0.s, z0.s',
+        }
+        foreach name, instr : extensions
+            # Test for support for the various extensions. First test if
+            # the assembler supports the .arch_extension directive for
+            # enabling/disabling the extension, then separately check whether
+            # the instructions themselves are supported. Even if .arch_extension
+            # isn't supported, we may be able to assemble the instructions
+            # if the .arch level includes support for them.
+            code = '__asm__ (' + as_arch_str
+            code += '".arch_extension ' + name + '\\n"'
+            code += ');'
+            supports_archext = cc.compiles(code)
+            cdata.set10('HAVE_AS_ARCHEXT_' + name.to_upper() + '_DIRECTIVE', supports_archext)
+            code = '__asm__ (' + as_arch_str
+            if supports_archext
+                code += '".arch_extension ' + name + '\\n"'
+            endif
+            code += '"' + instr + '\\n"'
+            code += ');'
+            supports_instr = cc.compiles(code, name: name.to_upper())
+            cdata.set10('HAVE_' + name.to_upper(), supports_instr)
+        endforeach
     endif
 endif
 
@@ -475,6 +539,17 @@ if (is_asm_enabled and
             '-c',
             '-o', '@OUTPUT@'
         ])
+endif
+
+if is_asm_enabled and host_machine.cpu_family().startswith('riscv')
+    as_option_code = '''__asm__ (
+".option arch, +v\n"
+"vsetivli zero, 0, e8, m1, ta, ma"
+);
+'''
+    if not cc.compiles(as_option_code, name : 'RISC-V Vector')
+        error('Compiler doesn\'t support \'.option arch\' asm directive. Update to binutils>=2.38 or clang>=17 or use \'-Denable_asm=false\'.')
+    endif
 endif
 
 # Generate config.h

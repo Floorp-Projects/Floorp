@@ -1259,7 +1259,6 @@ cglobal prep_bilin_8bpc, 3, 7, 0, tmp, src, stride, w, h, mxy, stride3
 .hv:
     ; (16 * src[x] + (my * (src[x + src_stride] - src[x])) + 8) >> 4
     ; = src[x] + (((my * (src[x + src_stride] - src[x])) + 8) >> 4)
-    %assign stack_offset stack_offset - stack_size_padded
     WIN64_SPILL_XMM       7
     movzx                wd, word [r6+wq*2+table_offset(prep, _bilin_hv)]
     shl                mxyd, 11
@@ -1620,7 +1619,6 @@ cglobal put_8tap_8bpc, 4, 9, 0, dst, ds, src, ss, w, h, mx, my, ss3
     jg .h_loop
     RET
 .v:
-    %assign stack_offset stack_offset - stack_size_padded
     WIN64_SPILL_XMM      16
     movzx               mxd, myb
     shr                 myd, 16
@@ -1834,7 +1832,6 @@ cglobal put_8tap_8bpc, 4, 9, 0, dst, ds, src, ss, w, h, mx, my, ss3
     jg .v_w16_loop0
     RET
 .hv:
-    %assign stack_offset stack_offset - stack_size_padded
     WIN64_SPILL_XMM      16
     cmp                  wd, 4
     jg .hv_w8
@@ -2247,7 +2244,6 @@ cglobal prep_8tap_8bpc, 3, 8, 0, tmp, src, stride, w, h, mx, my, stride3
     jg .h_loop
     RET
 .v:
-    %assign stack_offset stack_offset - stack_size_padded
     WIN64_SPILL_XMM      16
     movzx               mxd, myb ; Select 4-tap/8-tap filter multipliers.
     shr                 myd, 16  ; Note that the code is 8-tap only, having
@@ -2430,8 +2426,6 @@ cglobal prep_8tap_8bpc, 3, 8, 0, tmp, src, stride, w, h, mx, my, stride3
     jg .v_w16_loop0
     RET
 .hv:
-    %assign stack_offset stack_offset - stack_size_padded
-    %assign stack_size_padded 0
     WIN64_SPILL_XMM      16
     cmp                  wd, 4
     je .hv_w4
@@ -4108,10 +4102,9 @@ cglobal warp_affine_8x8t_8bpc, 0, 14, 0, tmp, ts
 cglobal warp_affine_8x8_8bpc, 0, 14, 0, dst, ds, src, ss, abcd, mx, tmp2, alpha, \
                                         beta, filter, tmp1, delta, my, gamma
 %if WIN64
-    sub                 rsp, 0xa0
     %assign xmm_regs_used 16
     %assign stack_size_padded 0xa0
-    %assign stack_offset stack_offset+stack_size_padded
+    SUB                 rsp, stack_size_padded
 %endif
     call .main
     jmp .start
@@ -4134,21 +4127,13 @@ cglobal warp_affine_8x8_8bpc, 0, 14, 0, dst, ds, src, ss, abcd, mx, tmp2, alpha,
     RET
 ALIGN function_align
 .main:
-    ; Stack args offset by one (r4m -> r5m etc.) due to call
-%if WIN64
-    mov               abcdq, r5m
-    mov                 mxd, r6m
-    movaps [rsp+stack_offset+0x10], xmm6
-    movaps [rsp+stack_offset+0x20], xmm7
-    movaps       [rsp+0x28], xmm8
-    movaps       [rsp+0x38], xmm9
-    movaps       [rsp+0x48], xmm10
-    movaps       [rsp+0x58], xmm11
-    movaps       [rsp+0x68], xmm12
-    movaps       [rsp+0x78], xmm13
-    movaps       [rsp+0x88], xmm14
-    movaps       [rsp+0x98], xmm15
-%endif
+    ; Stack is offset due to call
+    %assign stack_offset stack_offset + gprsize
+    %assign stack_size stack_size + gprsize
+    %assign stack_size_padded stack_size_padded + gprsize
+    movifnidn         abcdq, abcdmp
+    movifnidn           mxd, mxm
+    WIN64_PUSH_XMM
     movsx            alphad, word [abcdq+2*0]
     movsx             betad, word [abcdq+2*1]
     mova                m12, [warp_8x8_shufA]
@@ -4162,7 +4147,7 @@ ALIGN function_align
     lea               tmp2d, [alphaq*3]
     sub                srcq, tmp1q    ; src -= src_stride*3 + 3
     sub               betad, tmp2d    ; beta -= alpha*3
-    mov                 myd, r7m
+    mov                 myd, r6m
     call .h
     psrld                m1, m0, 16
     call .h

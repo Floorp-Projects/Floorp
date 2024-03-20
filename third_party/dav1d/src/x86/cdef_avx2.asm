@@ -398,7 +398,6 @@ SECTION .text
 INIT_YMM avx2
 cglobal cdef_filter_%1x%2_8bpc, 5, 11, 0, dst, stride, left, top, bot, \
                                           pri, sec, dir, damping, edge
-%assign stack_offset_entry stack_offset
     mov          edged, edgem
     cmp          edged, 0xf
     jne .border_block
@@ -1195,9 +1194,9 @@ cglobal cdef_filter_%1x%2_8bpc, 5, 11, 0, dst, stride, left, top, bot, \
 
 .border_block:
  DEFINE_ARGS dst, stride, left, top, bot, pri, sec, stride3, dst4, edge
-%define rstk rsp
-%assign stack_offset stack_offset_entry
-%assign regs_used 11
+    RESET_STACK_STATE
+    %assign stack_offset stack_offset - (regs_used - 11) * gprsize
+    %assign regs_used 11
     ALLOC_STACK 2*16+(%2+4)*32, 16
 %define px rsp+2*16+2*32
 

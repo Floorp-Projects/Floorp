@@ -133,55 +133,58 @@ endconst
     slli.d          t4,      t4,      48
     vpickve2gr.d    t6,      vr2,     0
     sub.d           t6,      t6,      t4   // dif
-    addi.d          t6,      t6,      1
     clz.w           t4,      t5            // d
     xori            t4,      t4,      16   // d
     sll.d           t6,      t6,      t4
-    addi.d          t6,      t6,      -1   // dif
     addi.d          a5,      a0,      28   // cnt
-    ld.w            t7,      a5,      0
-    sub.w           t7,      t7,      t4   // cnt-d
+    ld.w            t0,      a5,      0
     sll.w           t5,      t5,      t4
+    sub.w           t7,      t0,      t4   // cnt-d
     st.w            t5,      a4,      0    // store rng
-    bge             t7,      zero,    9f
+    bgeu            t0,      t4,      9f
 
     // refill
     ld.d            t0,      a0,      0    // buf_pos
-    addi.d          t1,      a0,      8
-    ld.d            t1,      t1,      0    // buf_end
+    ld.d            t1,      a0,      8    // buf_end
     addi.d          t2,      t0,      8
-    blt             t1,      t2,      1f
+    bltu            t1,      t2,      2f
 
-    ld.d            t0,      t0,      0    // next_bits
-    addi.w          t3,      t7,      23   // shift_bits = cnt + 23
-    addi.w          t7,      t7,      16   // cnt += 16
-    revb.d          t0,      t0            // next_bits = bswap(next_bits)
-    srli.w          t4,      t3,      3
-    sub.d           t2,      t2,      t4   // buf_pos -= shift_bits >> 3
-    st.d            t2,      a0,      0
-    andi            t3,      t3,      24   // shift_bits &= 24
-    srl.d           t0,      t0,      t3   // next_bits >>= shift_bits
-    sub.w           t3,      t3,      t7   // shift_bits -= 16 + cnt
-    sll.d           t0,      t0,      t3   // next_bits <<= shift_bits
-    li.w            t5,      48
-    sub.w           t7,      t5,      t3   // cnt = cnt + 64 - shift_bits
-    xor             t6,      t6,      t0   // dif ^= next_bits
-    b               9f
+    ld.d            t3,      t0,      0    // next_bits
+    addi.w          t1,      t7,      -48  // shift_bits = cnt + 16 (- 64)
+    nor             t3,      t3,      t3
+    sub.w           t2,      zero,    t1
+    revb.d          t3,      t3            // next_bits = bswap(next_bits)
+    srli.w          t2,      t2,      3    // num_bytes_read
+    srl.d           t3,      t3,      t1   // next_bits >>= (shift_bits & 63)
+    b               3f
 1:
-    li.w            t4,      40
-    sub.w           t5,      t4,      t7   // c = 40 - cnt
+    addi.w          t3,      t7,      -48
+    srl.d           t3,      t3,      t3   // pad with ones
+    b               4f
 2:
-    bge             t0,      t1,      3f
-    ld.bu           t2,      t0,      0
-    addi.d          t0,      t0,      1
-    sll.d           t2,      t2,      t5
-    xor             t6,      t6,      t2
-    addi.w          t5,      t5,      -8
-    bge             t5,      zero,    2b
-    // refill_eob_end
+    bgeu            t0,      t1,      1b
+    ld.d            t3,      t1,      -8   // next_bits
+    sub.w           t2,      t2,      t1
+    sub.w           t1,      t1,      t0   // num_bytes_left
+    slli.w          t2,      t2,      3
+    srl.d           t3,      t3,      t2
+    addi.w          t2,      t7,      -48
+    nor             t3,      t3,      t3
+    sub.w           t4,      zero,    t2
+    revb.d          t3,      t3
+    srli.w          t4,      t4,      3
+    srl.d           t3,      t3,      t2
+    sltu            t2,      t1,      t4
+    maskeqz         t1,      t1,      t2
+    masknez         t2,      t4,      t2
+    or              t2,      t2,      t1   // num_bytes_read
 3:
-    st.d            t0,      a0,      0    // s->buf_pos = buf_pos
-    sub.w           t7,      t4,      t5   // cnt = 40 - c
+    slli.w          t1,      t2,      3
+    add.d           t0,      t0,      t2
+    add.w           t7,      t7,      t1   // cnt += num_bits_read
+    st.d            t0,      a0,      0
+4:
+    or              t6,      t6,      t3   // dif |= next_bits
 9:
     st.w            t7,      a5,      0    // store cnt
     st.d            t6,      a6,      0    // store dif
@@ -208,7 +211,6 @@ function msac_decode_bool_lsx
     srli.w          t2,      t0,      8    // r >> 8
     mul.w           t2,      t2,      a1
     ld.w            a5,      a0,      28   // cnt
-    addi.d          t1,      t1,      1    // dif + 1
     srli.w          t2,      t2,      1
     addi.w          t2,      t2,      4    // v
     slli.d          t3,      t2,      48   // vw
@@ -226,49 +228,53 @@ function msac_decode_bool_lsx
     clz.w           t4,      t5            // d
     xori            t4,      t4,      16   // d
     sll.d           t6,      t6,      t4
-    addi.d          t6,      t6,      -1   // dif
-    sub.w           t7,      a5,      t4   // cnt-d
     sll.w           t5,      t5,      t4
+    sub.w           t7,      a5,      t4   // cnt-d
     st.w            t5,      a0,      24   // store rng
-    bge             t7,      zero,    9f
+    bgeu            a5,      t4,      9f
 
     // refill
     ld.d            t0,      a0,      0    // buf_pos
-    addi.d          t1,      a0,      8
-    ld.d            t1,      t1,      0    // buf_end
+    ld.d            t1,      a0,      8    // buf_end
     addi.d          t2,      t0,      8
-    blt             t1,      t2,      1f
+    bltu            t1,      t2,      2f
 
-    ld.d            t0,      t0,      0    // next_bits
-    addi.w          t3,      t7,      23   // shift_bits = cnt + 23
-    addi.w          t7,      t7,      16   // cnt += 16
-    revb.d          t0,      t0            // next_bits = bswap(next_bits)
-    srli.w          t4,      t3,      3
-    sub.d           t2,      t2,      t4   // buf_pos -= shift_bits >> 3
-    st.d            t2,      a0,      0
-    andi            t3,      t3,      24   // shift_bits &= 24
-    srl.d           t0,      t0,      t3   // next_bits >>= shift_bits
-    sub.w           t3,      t3,      t7   // shift_bits -= 16 + cnt
-    sll.d           t0,      t0,      t3   // next_bits <<= shift_bits
-    li.w            t5,      48
-    sub.w           t7,      t5,      t3   // cnt = cnt + 64 - shift_bits
-    xor             t6,      t6,      t0   // dif ^= next_bits
-    b               9f
+    ld.d            t3,      t0,      0    // next_bits
+    addi.w          t1,      t7,      -48  // shift_bits = cnt + 16 (- 64)
+    nor             t3,      t3,      t3
+    sub.w           t2,      zero,    t1
+    revb.d          t3,      t3            // next_bits = bswap(next_bits)
+    srli.w          t2,      t2,      3    // num_bytes_read
+    srl.d           t3,      t3,      t1   // next_bits >>= (shift_bits & 63)
+    b               3f
 1:
-    li.w            t4,      40
-    sub.w           t5,      t4,      t7   // c = 40 - cnt
+    addi.w          t3,      t7,      -48
+    srl.d           t3,      t3,      t3   // pad with ones
+    b               4f
 2:
-    bge             t0,      t1,      3f
-    ld.bu           t2,      t0,      0
-    addi.d          t0,      t0,      1
-    sll.d           t2,      t2,      t5
-    xor             t6,      t6,      t2
-    addi.w          t5,      t5,      -8
-    bge             t5,      zero,    2b
-    // refill_eob_end
+    bgeu            t0,      t1,      1b
+    ld.d            t3,      t1,      -8   // next_bits
+    sub.w           t2,      t2,      t1
+    sub.w           t1,      t1,      t0   // num_bytes_left
+    slli.w          t2,      t2,      3
+    srl.d           t3,      t3,      t2
+    addi.w          t2,      t7,      -48
+    nor             t3,      t3,      t3
+    sub.w           t4,      zero,    t2
+    revb.d          t3,      t3
+    srli.w          t4,      t4,      3
+    srl.d           t3,      t3,      t2
+    sltu            t2,      t1,      t4
+    maskeqz         t1,      t1,      t2
+    masknez         t2,      t4,      t2
+    or              t2,      t2,      t1   // num_bytes_read
 3:
-    st.d            t0,      a0,      0    // s->buf_pos = buf_pos
-    sub.w           t7,      t4,      t5   // cnt = 40 - c
+    slli.w          t1,      t2,      3
+    add.d           t0,      t0,      t2
+    add.w           t7,      t7,      t1   // cnt += num_bits_read
+    st.d            t0,      a0,      0
+4:
+    or              t6,      t6,      t3   // dif |= next_bits
 9:
     st.w            t7,      a0,      28   // store cnt
     st.d            t6,      a0,      16   // store dif
@@ -313,54 +319,56 @@ function msac_decode_bool_adapt_lsx
     st.h            t0,      a1,      2
 
 .renorm:
-    // renorm
-    addi.d          t6,      t6,      1
     clz.w           t4,      t5            // d
     xori            t4,      t4,      16   // d
     sll.d           t6,      t6,      t4
-    addi.d          t6,      t6,      -1   // dif
-    sub.w           t7,      a5,      t4   // cnt-d
     sll.w           t5,      t5,      t4
+    sub.w           t7,      a5,      t4   // cnt-d
     st.w            t5,      a0,      24   // store rng
-    bge             t7,      zero,    9f
+    bgeu            a5,      t4,      9f
 
     // refill
     ld.d            t0,      a0,      0    // buf_pos
-    addi.d          t1,      a0,      8
-    ld.d            t1,      t1,      0    // buf_end
+    ld.d            t1,      a0,      8    // buf_end
     addi.d          t2,      t0,      8
-    blt             t1,      t2,      1f
+    bltu            t1,      t2,      2f
 
-    ld.d            t0,      t0,      0    // next_bits
-    addi.w          t3,      t7,      23   // shift_bits = cnt + 23
-    addi.w          t7,      t7,      16   // cnt += 16
-    revb.d          t0,      t0            // next_bits = bswap(next_bits)
-    srli.w          t4,      t3,      3
-    sub.d           t2,      t2,      t4   // buf_pos -= shift_bits >> 3
-    st.d            t2,      a0,      0
-    andi            t3,      t3,      24   // shift_bits &= 24
-    srl.d           t0,      t0,      t3   // next_bits >>= shift_bits
-    sub.w           t3,      t3,      t7   // shift_bits -= 16 + cnt
-    sll.d           t0,      t0,      t3   // next_bits <<= shift_bits
-    li.w            t5,      48
-    sub.w           t7,      t5,      t3   // cnt = cnt + 64 - shift_bits
-    xor             t6,      t6,      t0   // dif ^= next_bits
-    b               9f
+    ld.d            t3,      t0,      0    // next_bits
+    addi.w          t1,      t7,      -48  // shift_bits = cnt + 16 (- 64)
+    nor             t3,      t3,      t3
+    sub.w           t2,      zero,    t1
+    revb.d          t3,      t3            // next_bits = bswap(next_bits)
+    srli.w          t2,      t2,      3    // num_bytes_read
+    srl.d           t3,      t3,      t1   // next_bits >>= (shift_bits & 63)
+    b               3f
 1:
-    li.w            t4,      40
-    sub.w           t5,      t4,      t7   // c = 40 - cnt
+    addi.w          t3,      t7,      -48
+    srl.d           t3,      t3,      t3   // pad with ones
+    b               4f
 2:
-    bge             t0,      t1,      3f
-    ld.bu           t2,      t0,      0
-    addi.d          t0,      t0,      1
-    sll.d           t2,      t2,      t5
-    xor             t6,      t6,      t2
-    addi.w          t5,      t5,      -8
-    bge             t5,      zero,    2b
-    // refill_eob_end
+    bgeu            t0,      t1,      1b
+    ld.d            t3,      t1,      -8   // next_bits
+    sub.w           t2,      t2,      t1
+    sub.w           t1,      t1,      t0   // num_bytes_left
+    slli.w          t2,      t2,      3
+    srl.d           t3,      t3,      t2
+    addi.w          t2,      t7,      -48
+    nor             t3,      t3,      t3
+    sub.w           t4,      zero,    t2
+    revb.d          t3,      t3
+    srli.w          t4,      t4,      3
+    srl.d           t3,      t3,      t2
+    sltu            t2,      t1,      t4
+    maskeqz         t1,      t1,      t2
+    masknez         t2,      t4,      t2
+    or              t2,      t2,      t1   // num_bytes_read
 3:
-    st.d            t0,      a0,      0    // s->buf_pos = buf_pos
-    sub.w           t7,      t4,      t5   // cnt = 40 - c
+    slli.w          t1,      t2,      3
+    add.d           t0,      t0,      t2
+    add.w           t7,      t7,      t1   // cnt += num_bits_read
+    st.d            t0,      a0,      0
+4:
+    or              t6,      t6,      t3   // dif |= next_bits
 9:
     st.w            t7,      a0,      28   // store cnt
     st.d            t6,      a0,      16   // store dif

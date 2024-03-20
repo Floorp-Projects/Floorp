@@ -1276,7 +1276,6 @@ cglobal prep_bilin_8bpc, 3, 7, 0, tmp, src, stride, w, h, mxy, stride3
 .hv:
     ; (16 * src[x] + (my * (src[x + src_stride] - src[x])) + 8) >> 4
     ; = src[x] + (((my * (src[x + src_stride] - src[x])) + 8) >> 4)
-    %assign stack_offset stack_offset - stack_size_padded
     WIN64_SPILL_XMM       7
     movzx                wd, word [t2+wq*2+table_offset(prep, _bilin_hv)]
     shl                mxyd, 11
@@ -2853,8 +2852,6 @@ cglobal prep_8tap_8bpc, 3, 8, 0, tmp, src, stride, w, h, mx, my, stride3
     jg .v_loop0
     RET
 .hv:
-    %assign stack_offset stack_offset - stack_size_padded
-    %assign stack_size_padded 0
     WIN64_SPILL_XMM      16
     cmp                  wd, 4
     je .hv_w4

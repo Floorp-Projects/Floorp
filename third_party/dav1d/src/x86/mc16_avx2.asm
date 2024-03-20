@@ -1337,7 +1337,6 @@ cglobal put_8tap_16bpc, 4, 9, 0, dst, ds, src, ss, w, h, mx, my
     cmp                  wd, 4
     je .h_w4
     jl .h_w2
-    %assign stack_offset stack_offset - stack_size_padded
     WIN64_SPILL_XMM      13
     shr                 mxd, 16
     sub                srcq, 6
@@ -1415,7 +1414,6 @@ cglobal put_8tap_16bpc, 4, 9, 0, dst, ds, src, ss, w, h, mx, my
     cmp                  hd, 4
     cmovle              myd, mxd
     vpbroadcastq         m0, [base+subpel_filters+myq*8]
-    %assign stack_offset stack_offset - stack_size_padded
     WIN64_SPILL_XMM      15
     vpbroadcastd         m6, [pd_32]
     vpbroadcastw         m7, r8m
@@ -1590,7 +1588,6 @@ cglobal put_8tap_16bpc, 4, 9, 0, dst, ds, src, ss, w, h, mx, my
     jg .v_w8_loop0
     RET
 .hv:
-    %assign stack_offset stack_offset - stack_size_padded
     WIN64_SPILL_XMM      16
     vpbroadcastw        m15, r8m
     cmp                  wd, 4
@@ -2046,7 +2043,6 @@ cglobal prep_8tap_16bpc, 4, 8, 0, tmp, src, stride, w, h, mx, my
     shr                 mxd, 16
     sub                srcq, 6
     vpbroadcastq         m0, [base+subpel_filters+mxq*8]
-    %assign stack_offset stack_offset - stack_size_padded
     WIN64_SPILL_XMM      12
     vbroadcasti128       m6, [subpel_h_shufA]
     vbroadcasti128       m7, [subpel_h_shufB]
@@ -2125,7 +2121,6 @@ cglobal prep_8tap_16bpc, 4, 8, 0, tmp, src, stride, w, h, mx, my
     cmp                  hd, 4
     cmovle              myd, mxd
     vpbroadcastq         m0, [base+subpel_filters+myq*8]
-    %assign stack_offset stack_offset - stack_size_padded
     WIN64_SPILL_XMM      15
     vpbroadcastd         m7, [prep_8tap_1d_rnd]
     lea                  r6, [strideq*3]
@@ -2264,7 +2259,6 @@ cglobal prep_8tap_16bpc, 4, 8, 0, tmp, src, stride, w, h, mx, my
 %endif
     RET
 .hv:
-    %assign stack_offset stack_offset - stack_size_padded
     WIN64_SPILL_XMM      16
     vpbroadcastd        m15, [prep_8tap_2d_rnd]
     cmp                  wd, 4
