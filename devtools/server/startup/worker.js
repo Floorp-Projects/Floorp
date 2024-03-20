@@ -86,13 +86,6 @@ this.addEventListener("message", async function (event) {
       // Make the worker manage itself so it is put in a Pool and assigned an actorID.
       workerTargetActor.manage(workerTargetActor);
 
-      workerTargetActor.on(
-        "worker-thread-attached",
-        function onThreadAttached() {
-          postMessage(JSON.stringify({ type: "worker-thread-attached" }));
-        }
-      );
-
       // Step 5: Send a response packet to the parent to notify
       // it that a connection has been established.
       connections.set(forwardingPrefix, {
@@ -100,6 +93,11 @@ this.addEventListener("message", async function (event) {
         workerTargetActor,
       });
 
+      // Immediately notify about the target actor form,
+      // so that we can emit RDP events from the target actor
+      // and have them correctly routed up to the frontend.
+      // The target front has to be first created by receiving its form
+      // before being able to receive RDP events.
       postMessage(
         JSON.stringify({
           type: "connected",
@@ -125,6 +123,11 @@ this.addEventListener("message", async function (event) {
         }
         await Promise.all(promises);
       }
+
+      // Finally, notify when we are done processing session data
+      // We are processing breakpoints, which means we can release the execution of the worker
+      // from the main thread via `WorkerDebugger.setDebuggerReady(true)`
+      postMessage(JSON.stringify({ type: "session-data-processed" }));
 
       break;
 

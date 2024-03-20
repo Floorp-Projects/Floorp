@@ -32,11 +32,9 @@ module.exports = {
       threadActor.removeAllBreakpoints();
     }
     const isTargetCreation = threadActor.state == THREAD_STATES.DETACHED;
-    if (isTargetCreation && !targetActor.targetType.endsWith("worker")) {
+    if (isTargetCreation) {
       // If addOrSetSessionDataEntry is called during target creation, attach the
       // thread actor automatically and pass the initial breakpoints.
-      // However, do not attach the thread actor for Workers. They use a codepath
-      // which releases the worker on `attach`. For them, the client will call `attach`. (bug 1691986)
       await threadActor.attach({ breakpoints: entries });
     } else {
       // If addOrSetSessionDataEntry is called for an existing target, set the new
