@@ -111,6 +111,7 @@ class MFMediaEngineWrapper final : public ExternalPlaybackEngine {
   media::TimeUnit GetCurrentPosition() override;
   void NotifyEndOfStream(TrackInfo::TrackType aType) override;
   uint64_t Id() const override { return mEngine->Id(); }
+  bool IsInited() const { return mEngine->Id() != 0; }
   void SetMediaInfo(const MediaInfo& aInfo) override;
   bool SetCDMProxy(CDMProxy* aProxy) override;
   void NotifyResizing(uint32_t aWidth, uint32_t aHeight) override;
@@ -121,7 +122,6 @@ class MFMediaEngineWrapper final : public ExternalPlaybackEngine {
  private:
   friend class MFMediaEngineChild;
 
-  bool IsInited() const { return mEngine->Id() != 0; }
   void UpdateCurrentTime(double aCurrentTimeInSecond);
   void NotifyEvent(ExternalEngineEvent aEvent);
   void NotifyError(const MediaResult& aError);

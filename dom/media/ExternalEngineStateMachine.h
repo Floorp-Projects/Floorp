@@ -178,9 +178,9 @@ class ExternalEngineStateMachine final
     // crashes.
     struct RecoverEngine : public InitEngine {};
 
-    StateObject() : mData(InitEngine()), mName(State::InitEngine){};
-    explicit StateObject(ReadingMetadata&& aArg)
-        : mData(std::move(aArg)), mName(State::ReadingMetadata){};
+    StateObject() : mData(ReadingMetadata()), mName(State::ReadingMetadata){};
+    explicit StateObject(InitEngine&& aArg)
+        : mData(std::move(aArg)), mName(State::InitEngine){};
     explicit StateObject(RunningEngine&& aArg)
         : mData(std::move(aArg)), mName(State::RunningEngine){};
     explicit StateObject(SeekingData&& aArg)
@@ -308,7 +308,6 @@ class ExternalEngineStateMachine final
   // Only used if setting CDM happens before the engine finishes initialization.
   MozPromiseHolder<SetCDMPromise> mSetCDMProxyPromise;
   MozPromiseRequestHolder<SetCDMPromise> mSetCDMProxyRequest;
-  MozPromiseRequestHolder<GenericNonExclusivePromise> mInitEngineForCDMRequest;
 
   // It would be zero for audio-only playback.
   gfx::IntSize mVideoDisplay;
@@ -335,6 +334,7 @@ class ExternalPlaybackEngine {
   virtual RefPtr<GenericNonExclusivePromise> Init(bool aShouldPreload) = 0;
   virtual void Shutdown() = 0;
   virtual uint64_t Id() const = 0;
+  virtual bool IsInited() const = 0;
 
   // Following methods should only be called after successfully initialize the
   // external engine.
