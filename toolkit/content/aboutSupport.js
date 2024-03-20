@@ -1369,6 +1369,17 @@ var snapshotFormatters = {
     $("remote-debugging-url").textContent = data.url;
   },
 
+  contentAnalysis(data) {
+    $("content-analysis-active").textContent = data.active;
+    if (data.active) {
+      $("content-analysis-connected-to-agent").textContent = data.connected;
+      $("content-analysis-agent-path").textContent = data.agentPath;
+      $("content-analysis-agent-failed-signature-verification").textContent =
+        data.failedSignatureVerification;
+      $("content-analysis-request-count").textContent = data.requestCount;
+    }
+  },
+
   accessibility(data) {
     $("a11y-activated").textContent = data.isActive;
     $("a11y-force-disabled").textContent = data.forceDisabled || 0;
