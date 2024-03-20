@@ -65,7 +65,7 @@ xpcshell:
                     default: []
             socketprocess_networking:
                 by-test-platform:
-                    (linux1804-64|macosx).*: ['trunk']  # All Linux & Mac variants
+                    macosx1015.*: ['trunk']  # All Mac variants
                     ^(?!.*asan).*windows11.*: ['trunk']   # All Windows11 except ASAN
                     default: []
             no-fission:
