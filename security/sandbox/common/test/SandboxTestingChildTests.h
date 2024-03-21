@@ -680,10 +680,10 @@ void RunTestsRDD(SandboxTestingChild* child) {
 
   RunTestsSched(child);
 
-  child->ErrnoTest("socket_inet"_ns, false,
+  child->ErrnoValueTest("socket_inet"_ns, EACCES,
                    [] { return socket(AF_INET, SOCK_STREAM, 0); });
 
-  child->ErrnoTest("socket_unix"_ns, false,
+  child->ErrnoValueTest("socket_unix"_ns, EACCES,
                    [] { return socket(AF_UNIX, SOCK_STREAM, 0); });
 
   child->ErrnoTest("uname"_ns, true, [] {
