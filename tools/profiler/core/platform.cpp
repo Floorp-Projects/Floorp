@@ -4840,10 +4840,10 @@ void SamplerThread::SpyOnUnregisteredThreads() {
       /* aWindowInfo = */ nsTArray<WindowInfo>{},
       /* aUtilityInfo = */ nsTArray<UtilityInfo>{},
       /* aChild = */ 0
-#ifdef XP_MACOSX
+#ifdef XP_DARWIN
       ,
       /* aChildTask = */ MACH_PORT_NULL
-#endif  // XP_MACOSX
+#endif  // XP_DARWIN
   );
 
   const ProcInfoPromise::ResolveOrRejectValue procInfoOrError =
