@@ -222,7 +222,7 @@
         cp &&
         ((this._accessMethod == "sequential" &&
           cp.pageIndex == this.pageCount - 1) ||
-          (this._accessMethod == "random" && cp.next == ""))
+          (this._accessMethod == "random" && !cp.next))
       );
     }
 
@@ -381,7 +381,7 @@
       aPage.pageIndex = this.pageCount;
       this.pageCount += 1;
       if (!this._accessMethod) {
-        this._accessMethod = aPage.next == "" ? "sequential" : "random";
+        this._accessMethod = aPage.next ? "random" : "sequential";
       }
       if (!this._maybeStartWizard() && this._hasStarted) {
         // If the wizard has already started, adding a page might require
