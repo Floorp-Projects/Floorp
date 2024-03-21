@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
     <!-- Name of the "notification channel" used for displaying media notification. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_media_notification_channel">Medya</string>
 
@@ -9,6 +9,25 @@
     <string name="mozac_feature_media_sharing_microphone">Mîkrofon vekirî ye</string>
     <!-- Title of notification shown when the device's camera and microphone is shared with a website (WebRTC) -->
     <string name="mozac_feature_media_sharing_camera_and_microphone">Kamera û mîkrofon vekirî ne</string>
+
+    <!-- Text of notification shown when the device's camera is shared with a website (WebRTC) -->
+    <string name="mozac_feature_media_sharing_camera_text">Ji bo vekirina hilpekîna ku kameraya te bi kar tîne, bitikîne.</string>
+    <!-- Text of notification shown when the device's microphone is shared with a website (WebRTC) -->
+    <string name="mozac_feature_media_sharing_microphone_text">Ji bo vekirina hilpekîna ku mîkrofona te bi kar tîne, bitikîne.</string>
+    <!-- Text of notification shown when the device's camera and microphone is shared with a website (WebRTC) -->
+    <string name="mozac_feature_media_sharing_camera_and_microphone_text">Ji bo vekirina hilpekîna ku mîkrofon û kameraya te bi kar tîne, bitikîne.</string>
+
+
+    <!-- Text of reminder notification shown when the device's camera is shared with a website (WebRTC). %1$s is a placeholder that will be replaced by the app name-->
+    <string name="mozac_feature_media_sharing_camera_reminder_text">Bibîrxistin: %1$s hê jî kameraya te bi kar tîne. Ji bo vekirina hilpekînê bitikîne.</string>
+    <!-- Text of reminder notification shown when the device's microphone is shared with a website (WebRTC) %1$s is a placeholder that will be replaced by the app name-->
+    <string name="mozac_feature_media_sharing_microphone_reminder_text" moz:RemovedIn="124" tools:ignore="UnusedResources">Bibîrxistin: %1$s hê jî mîkrofona te bi kar tîne. Ji bo vekirina hilpekînê bitikîne</string>
+    <!-- Text of reminder notification shown when the device's microphone is shared with a website (WebRTC) %1$s is a placeholder that will be replaced by the app name-->
+    <string name="mozac_feature_media_sharing_microphone_reminder_text_2">Bibîrxistin: %1$s hê jî mîkrofona te bi kar tîne. Ji bo vekirina hilpekînê bitikîne.</string>
+    <!-- Text of reminder notification shown when the device's camera and microphone is shared with a website (WebRTC) %1$s is a placeholder that will be replaced by the app name-->
+    <string name="mozac_feature_media_sharing_camera_and_microphone_reminder_text" moz:RemovedIn="124" tools:ignore="UnusedResources">Bibîrxistin: %1$s hê jî mîkrofon û kameraya te bi kar tîne. Ji bo vekirina hilpekînê bitikîne</string>
+    <!-- Text of reminder notification shown when the device's camera and microphone is shared with a website (WebRTC) %1$s is a placeholder that will be replaced by the app name-->
+    <string name="mozac_feature_media_sharing_camera_and_microphone_reminder_text_2">Bibîrxistin: %1$s hê jî mîkrofon kameraya te bi kar tîne. Ji bo vekirina hilpekînê bitikîne.</string>
 
     <!--This is the title of the "play" action media shown in the media notification while web content is playing media. Clicking it will resume playing paused media. On most modern Android system only an icon is visible. But screen readers may read this title. -->
     <string name="mozac_feature_media_notification_action_play">Lêde</string>

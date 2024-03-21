@@ -365,7 +365,7 @@
     <string name="juno_onboarding_sign_in_title_2">Krypter dataene dine når du arbeider på tvers av enheter</string>
     <!-- Description for sign in to sync screen. Nimbus experiments do not support string placeholders.
      Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_sign_in_description_2">Når du er inlogget og synkronisert, er du tryggere. Firefox krypterer passordene, bokmerkene og mer.</string>
+    <string name="juno_onboarding_sign_in_description_2">Når du er innlogget og synkronisert, er du tryggere. Firefox krypterer passordene, bokmerkene og mer.</string>
     <!-- Text for the button to sign in to sync on the device -->
     <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Logg inn</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -2352,24 +2352,14 @@
     <string name="review_quality_check_contextual_onboarding_learn_more">Ved hjelp av %1$s fra Mozilla gjør vi det lettere for deg å unngå partiske og uekte anmeldelser. AI-modellen vår blir alltid bedre for å beskytte deg mens du handler. %2$s</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Les mer</string>
-    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_contextual_onboarding_caption" moz:RemovedIn="123" tools:ignore="UnusedResources">Ved å velge «Ja, prøv det» godtar du %1$s fra Mozilla sine %2$s og %3$s.</string>
-    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
-    <string name="review_quality_check_contextual_onboarding_caption_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Ved å velge «Ja, prøv det» godtar du følgende fra %1$s:</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
     <string name="review_quality_check_contextual_onboarding_caption_3" moz:RemovedIn="124" tools:ignore="UnusedResources">Ved å velge «Ja, prøv det» godtar du %1$s sine %2$s og %3$s sine %4$s.</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
     <string name="review_quality_check_contextual_onboarding_caption_4">Ved å velge «Ja, prøv det» godtar du %1$s sine %2$s og %3$s sine %4$s.</string>
-    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="123" tools:ignore="UnusedResources">personvernbestemmelser</string>
-    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Personvernbestemmelser</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy notice. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy_3">personvernerklæring</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
     <string name="review_quality_check_contextual_onboarding_terms_use">vilkår for bruk</string>
-    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
-    <string name="review_quality_check_contextual_onboarding_terms_use_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Vilkår for bruk</string>
     <!-- Text for opt-in button from the review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_primary_button_text">Ja, prøv det</string>
     <!-- Text for opt-out button from the review quality check contextual onboarding card. -->

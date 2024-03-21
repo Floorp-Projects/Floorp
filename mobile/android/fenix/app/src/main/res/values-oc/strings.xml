@@ -343,8 +343,12 @@
     <!-- Title for set firefox as default browser screen used by Nimbus experiments.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="UnusedResources">Descobrissètz perque de milions de personas aiman Firefox</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources">La navegacion segura amb mai d’opcions</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_3">Nòstre navegador es sostengut per una organizacion sens tòca lucrativa empacha automaticament las entrepresas de vos pistar secrètament pel web.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources">Mai de 100 milions de personas protegisson lor vida privada en causissent un navegador sostengut per una organizacion sens tòca lucrativa.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">Nòstre navegador sostengut per una organizacion sens but lucratiu empacha las entrepresas de vos seguir secrètament sul Web.\n\nPer ne saber mai consultatz nòstra politica de confidencialitat.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
@@ -2373,24 +2377,14 @@ Exemple :\nhttps://suggestqueries.google.com/complete/search?client=firefox&amp
     <string name="review_quality_check_contextual_onboarding_learn_more">Amb lo poder de %1$s per Mozilla, vos ajudam a evitar los avises biaissats e non autentics. Nòstre modèl d’IA es a se melhorar en permanéncia per vos protegir quand crompatz. %2$s</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Ne saber mai</string>
-    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_contextual_onboarding_caption" moz:RemovedIn="123" tools:ignore="UnusedResources">En seleccionant « Òc-ben, ensajar », acceptatz la %1$s de %2$s e las %3$s de Mozilla.</string>
-    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
-    <string name="review_quality_check_contextual_onboarding_caption_2" moz:RemovedIn="123" tools:ignore="UnusedResources">En seleccionant « òc-ben, ensajar » acceptatz los elements seguent de %1$s :</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
     <string name="review_quality_check_contextual_onboarding_caption_3" moz:RemovedIn="124" tools:ignore="UnusedResources">En seleccionant « Òc-ben, ensajar », acceptatz la %2$s de %1$s e la %4$s de %3$s.</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is Firefox app name, third parameter is the Fakespot product name. Second & fourth are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy_3 and review_quality_check_contextual_onboarding_terms_use. -->
     <string name="review_quality_check_contextual_onboarding_caption_4">En seleccionant « Òc-ben, ensajar », acceptatz la %2$s de %1$s e la %4$s de %3$s.</string>
-    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="123" tools:ignore="UnusedResources">politica de confidencialitat</string>
-    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Politica de confidencialitat</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy notice. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy_3">politica de confidencialitat</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
     <string name="review_quality_check_contextual_onboarding_terms_use">condicions d’utilizacion</string>
-    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
-    <string name="review_quality_check_contextual_onboarding_terms_use_2" moz:RemovedIn="123" tools:ignore="UnusedResources">Condicions d’utilizacion</string>
     <!-- Text for opt-in button from the review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_primary_button_text">Òc-ben, ensajar</string>
     <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
@@ -2458,6 +2452,10 @@ Exemple :\nhttps://suggestqueries.google.com/complete/search?client=firefox&amp
     <!-- Translation request dialog -->
     <!-- Title for the translation dialog that allows a user to translate the webpage. -->
     <string name="translations_bottom_sheet_title">Traduire aquesta pagina ?</string>
+    <!-- Title for the translation dialog after a translation was completed successfully.
+    The first parameter is the name of the language that the page was translated from, for example, "French".
+    The second parameter is the name of the language that the page was translated to, for example, "English". -->
+    <string name="translations_bottom_sheet_title_translation_completed">Pagina traducha en %1$s, originala en %2$s</string>
     <!-- Title for the translation dialog that allows a user to translate the webpage when a user uses the translation feature the first time. The first parameter is the name of the application, for example, "Fenix". -->
     <string name="translations_bottom_sheet_title_first_time">Ensajar las traduccions privadas dins %1$s</string>
     <!-- Additional information on the translation dialog that appears when a user uses the translation feature the first time. The first parameter is clickable text with a link, for example, "Learn more". -->
@@ -2496,6 +2494,13 @@ Exemple :\nhttps://suggestqueries.google.com/complete/search?client=firefox&amp
 
     <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
     <string name="translation_in_progress_snackbar">Traduccions…</string>
+
+
+    <!-- Title for the data saving mode warning dialog used in the translation request dialog.
+    This dialog will be presented when the user attempts to perform
+    a translation without the necessary language files downloaded first when Android's data saver mode is enabled and the user is not using WiFi.
+    The first parameter is the size in kilobytes or megabytes of the language file. -->
+    <string name="translations_download_language_file_dialog_title">Telecargar la lenga en mòde estalvi de donadas (%1$s) ?</string>
 
 
     <!-- Translations options dialog -->

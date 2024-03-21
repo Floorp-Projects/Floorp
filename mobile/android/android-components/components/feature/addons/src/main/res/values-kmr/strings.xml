@@ -22,6 +22,8 @@
      then we will show another collapsed entry saying "Access your data on 2 other domains". This entry it's for the plural case, when the add-on is accessing more than one extra domain.
      %1$d will be replaced by an integer indicating the number of additional domains for which this web extension is requesting permission. -->
     <string name="mozac_feature_addons_permissions_extra_domains_description_plural" tools:ignore="PluralsCandidate">Li ser %1$d domaînên din xwe bigihîne daneyên xwe</string>
+    <!-- Content description for a permission item, for an installed add-on details page. %1$s will be replaced with the permission text name, %2$d will be replaced with the permission position in the list and %3$d will be replaced with the total number of permissions in the list.Taking as an example "Read and modify privacy settings" the whole text will read Read and modify privacy settings, 2 of 6. -->
+    <string name="mozac_feature_addons_permissions_content_description_item">%1$s, %2$d ji %3$d</string>
     <!-- Description for tabs add-on permission. -->
     <string name="mozac_feature_addons_permissions_tabs_description">Xwe bigihîne hilpekînên gerokê</string>
     <!-- Description for unlimited_storage permission. -->
@@ -91,15 +93,17 @@
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_settings_on">Vekirî</string>
     <!-- Indicates the add-on is disabled. -->
-    <string name="mozac_feature_addons_settings_off">Girtî</string>
+    <string name="mozac_feature_addons_settings_off" moz:removedIn="125" tools:ignore="UnusedResources">Girtî</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
     <string name="mozac_feature_addons_settings_allow_in_private_browsing">Di gerîna veşartî de destûrê bide</string>
     <!-- Indicates the add-on is allowed in private browsing mode. -->
     <string name="mozac_feature_addons_settings_run_in_private_browsing">Di gerîna veşartî de bixebitîne</string>
+    <!-- This is displayed when the add-on is not allowed to run in private browsing. -->
+    <string name="mozac_feature_addons_not_allowed_in_private_browsing">Di pencereyên nepen de destûr nayê dayîn</string>
     <!-- Indicates the add-on is enabled. -->
     <string name="mozac_feature_addons_enabled">Çalak</string>
     <!-- Indicates the add-on is disabled. -->
-    <string name="mozac_feature_addons_disabled">Neçalak</string>
+    <string name="mozac_feature_addons_disabled" moz:removedIn="125" tools:ignore="UnusedResources">Neçalak</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the installed section. -->
     <string name="mozac_feature_addons_installed_section">Sazkirî</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the recommended section. -->
@@ -135,13 +139,17 @@
     <!-- This is a button to cancel the add-on installation . -->
     <string name="mozac_feature_addons_permissions_dialog_cancel">Betal bike</string>
     <!-- Accessibility content description to install add-on button. -->
-    <string name="mozac_feature_addons_install_addon_content_description">Pêvekê saz bike</string>
+    <string name="mozac_feature_addons_install_addon_content_description" tools:ignore="UnusedResources" moz:removedIn="124">Pêvekê saz bike</string>
+    <!-- Accessibility content description to install add-on button. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_install_addon_content_description_2"> %1$s saz bike</string>
     <!-- This is the label of a button to cancel an ongoing add-on installation. -->
     <string name="mozac_feature_addons_install_addon_dialog_cancel">Betal bike</string>
     <!-- Indicates how many users have rated an add-on. %1$s will be replaced with number of reviews -->
     <string name="mozac_feature_addons_user_rating_count_2">Nirxandin: %1$s</string>
     <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars and / separator and 5 the maximum number of stars e.g (2/5, 4.5/5 or 5/5)  . -->
-    <string name="mozac_feature_addons_rating_content_description">%1$.02f/5</string>
+    <string name="mozac_feature_addons_rating_content_description" moz:removedIn="124" tools:ignore="UnusedResources">%1$.02f/5</string>
+    <!-- Accessibility content description for the amount of stars that add-on has, where %1$.02f will be the amount of stars. -->
+    <string name="mozac_feature_addons_rating_content_description_2">Nirxandin: jin 5an %1$.02f</string>
     <!-- This is the title of page where all the add-ons are listed-->
     <string name="mozac_feature_addons_addons">Pêvek</string>
     <!-- Label for add-ons sub menu item for add-ons manager-->
@@ -242,10 +250,14 @@
     <string name="mozac_feature_addons_updater_dialog_status">Rewş:</string>
     <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
     <string name="mozac_feature_addons_installed_dialog_title">%1$s li %2$s’ê hate tevlîkirin</string>
-    <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. -->
-    <string name="mozac_feature_addons_installed_dialog_description">Di menûyê de veke</string>
+    <!-- Text shown in the dialog when add-on installation is completed. -->
+    <string name="mozac_feature_addons_installed_dialog_description" moz:removedIn="124" tools:ignore="UnusedResources">Di menûyê de veke</string>
+    <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
+    <string name="mozac_feature_addons_installed_dialog_description_2">Ji menuya %2$s xwe bigihînin %1$s</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
-    <string name="mozac_feature_addons_installed_dialog_okay_button">Baş e</string>
+    <string name="mozac_feature_addons_installed_dialog_okay_button" moz:removedIn="124" tools:ignore="UnusedResources">Baş e</string>
+    <!-- Confirmation button text for the dialog when add-on installation is completed. -->
+    <string name="mozac_feature_addons_installed_dialog_okay_button_2">Baş e</string>
     <!-- "Learn more" link displayed below an add-on status message. -->
     <string name="mozac_feature_addons_status_learn_more">Zêdetir bizane</string>
     <!-- Status message below an add-on in the add-ons manager when this add-on has been blocklisted. %1$s is the add-on name. -->
