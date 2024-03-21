@@ -23,6 +23,7 @@
 
 import ctypes
 import errno
+import io
 import os
 import platform
 import re
@@ -551,7 +552,58 @@ class Dumper:
         Get the commandline used to invoke dump_syms.
         """
         # The Mac dumper overrides this.
-        return [self.dump_syms, "--inlines", file]
+        cmdline = [
+            self.dump_syms,
+            "--inlines",
+        ]
+
+        cmdline.extend(self.dump_syms_extra_info())
+        cmdline.append(file)
+
+        return cmdline
+
+    def dump_syms_extra_info(self):
+        """
+        Returns an array with the additional parameters to add information
+        about the build to the dump_syms command-line
+        """
+        cmdline = [
+            "--extra-info",
+            "RELEASECHANNEL " + buildconfig.substs["MOZ_UPDATE_CHANNEL"],
+            "--extra-info",
+            "VERSION " + buildconfig.substs["MOZ_APP_VERSION"],
+        ]
+
+        if buildconfig.substs.get("MOZ_APP_VENDOR") is not None:
+            cmdline.extend(
+                [
+                    "--extra-info",
+                    "VENDOR " + buildconfig.substs["MOZ_APP_VENDOR"],
+                ]
+            )
+
+        if buildconfig.substs.get("MOZ_APP_BASENAME") is not None:
+            cmdline.extend(
+                [
+                    "--extra-info",
+                    "PRODUCTNAME " + buildconfig.substs["MOZ_APP_BASENAME"],
+                ]
+            )
+
+        # Add the build ID if it's present
+        path = os.path.join(buildconfig.topobjdir, "buildid.h")
+        try:
+            buildid = io.open(path, "r", encoding="utf-8").read().split()[2]
+            cmdline.extend(
+                [
+                    "--extra-info",
+                    "BUILDID " + buildid,
+                ]
+            )
+        except Exception:
+            pass
+
+        return cmdline
 
     def ProcessFileWork(
         self, file, arch_num, arch, vcs_root, dsymbundle=None, count_ctors=False
@@ -902,11 +954,22 @@ class Dumper_Mac(Dumper):
         # in order to dump all the symbols.
         if dsymbundle:
             # This is the .dSYM bundle.
-            return (
-                [self.dump_syms]
-                + arch.split()
-                + ["--inlines", "-j", "2", dsymbundle, file]
+            cmdline = [self.dump_syms]
+
+            cmdline.extend(arch.split())
+            cmdline.extend(
+                [
+                    "--inlines",
+                    "-j",
+                    "2",
+                ]
             )
+
+            cmdline.extend(self.dump_syms_extra_info())
+            cmdline.extend([dsymbundle, file])
+
+            return cmdline
+
         return Dumper.dump_syms_cmdline(self, file, arch)
 
     def GenerateDSYM(self, file):
