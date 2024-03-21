@@ -12,6 +12,7 @@ import { connect } from "devtools/client/shared/vendor/react-redux";
 import { getLineText, isLineBlackboxed } from "./../../utils/source";
 import { createLocation } from "./../../utils/location";
 import { getIndentation } from "../../utils/indentation";
+import { isWasm } from "../../utils/wasm";
 import { features } from "../../utils/prefs";
 
 import {
@@ -50,6 +51,7 @@ import Exceptions from "./Exceptions";
 import BlackboxLines from "./BlackboxLines";
 
 import {
+  fromEditorLine,
   showSourceText,
   setDocument,
   resetLineNumberFormat,
@@ -275,6 +277,36 @@ class Editor extends PureComponent {
       this.props.closeTab(selectedSource, "shortcut");
     }
   };
+
+  componentDidUpdate(prevProps) {
+    const { selectedSource, breakableLines } = this.props;
+    const { editor } = this.state;
+
+    if (!selectedSource) {
+      return;
+    }
+
+    const shouldUpdateBreakableLines =
+      prevProps.breakableLines.size !== this.props.breakableLines.size ||
+      prevProps.selectedSource?.id !== selectedSource.id;
+    // Sets the breakables lines for codemirror 6
+    if (features.codemirrorNext && editor && shouldUpdateBreakableLines) {
+      const isSourceWasm = isWasm(selectedSource.id);
+      editor.setLineGutterMarkers([
+        {
+          gutterLineClassName: "empty-line",
+          condition: line => {
+            const lineNumber = fromEditorLine(
+              selectedSource.id,
+              line,
+              isSourceWasm
+            );
+            return !breakableLines.has(lineNumber);
+          },
+        },
+      ]);
+    }
+  }
 
   componentWillUnmount() {
     if (!features.codemirrorNext) {
@@ -722,6 +754,10 @@ class Editor extends PureComponent {
       mapScopesEnabled,
     } = this.props;
     const { editor } = this.state;
+
+    if (features.codemirrorNext) {
+      return null;
+    }
 
     if (!selectedSource || !editor || !getDocument(selectedSource.id)) {
       return null;
