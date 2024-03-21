@@ -2173,8 +2173,8 @@ impl Renderer {
     fn handle_prims(
         &mut self,
         draw_target: &DrawTarget,
-        prim_instances: &[PrimitiveInstanceData],
-        prim_instances_with_scissor: &FastHashMap<DeviceIntRect, Vec<PrimitiveInstanceData>>,
+        prim_instances: &[Vec<PrimitiveInstanceData>],
+        prim_instances_with_scissor: &FastHashMap<(DeviceIntRect, PatternKind), Vec<PrimitiveInstanceData>>,
         projection: &default::Transform3D<f32>,
         stats: &mut RendererStats,
     ) {
@@ -2183,10 +2183,17 @@ impl Renderer {
         {
             let _timer = self.gpu_profiler.start_timer(GPU_TAG_INDIRECT_PRIM);
 
-            if !prim_instances.is_empty() {
+            if prim_instances.iter().any(|instances| !instances.is_empty()) {
                 self.set_blend(false, FramebufferKind::Other);
+            }
 
-                self.shaders.borrow_mut().ps_quad_textured.bind(
+            for (pattern_idx, prim_instances) in prim_instances.iter().enumerate() {
+                if prim_instances.is_empty() {
+                    continue;
+                }
+                let pattern = PatternKind::from_u32(pattern_idx as u32);
+
+                self.shaders.borrow_mut().get_quad_shader(pattern).bind(
                     &mut self.device,
                     projection,
                     None,
@@ -2194,10 +2201,13 @@ impl Renderer {
                     &mut self.profile,
                 );
 
+                // TODO: Some patterns will need to be able to sample textures.
+                let texture_bindings = BatchTextures::empty();
+
                 self.draw_instanced_batch(
                     prim_instances,
                     VertexArrayKind::Primitive,
-                    &BatchTextures::empty(),
+                    &texture_bindings,
                     stats,
                 );
             }
@@ -2207,17 +2217,22 @@ impl Renderer {
                 self.device.set_blend_mode_premultiplied_alpha();
                 self.device.enable_scissor();
 
-                self.shaders.borrow_mut().ps_quad_textured.bind(
-                    &mut self.device,
-                    projection,
-                    None,
-                    &mut self.renderer_errors,
-                    &mut self.profile,
-                );
+                let mut prev_pattern = None;
 
-                for (scissor_rect, prim_instances) in prim_instances_with_scissor {
+                for ((scissor_rect, pattern), prim_instances) in prim_instances_with_scissor {
+                    if prev_pattern != Some(*pattern) {
+                        prev_pattern = Some(*pattern);
+                        self.shaders.borrow_mut().get_quad_shader(*pattern).bind(
+                            &mut self.device,
+                            projection,
+                            None,
+                            &mut self.renderer_errors,
+                            &mut self.profile,
+                        );
+                    }
+
                     self.device.set_scissor_rect(draw_target.to_framebuffer_rect(*scissor_rect));
-
+                    // TODO: hook up the right pattern.
                     self.draw_instanced_batch(
                         prim_instances,
                         VertexArrayKind::Primitive,
