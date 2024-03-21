@@ -16,7 +16,6 @@ kind-dependencies:
 job-defaults:
     attributes:
         build-type: debug
-        code-review: true
         retrigger: true
     fetches:
         toolchain:
@@ -303,7 +302,6 @@ jobs:
             build-type: fenix-legacy
             legacy: true
             shipping-product: fenix
-            code-review: false
         description: Run select UI tests on legacy Android devices and API levels
         dependencies:
             signed-apk-debug-apk: signing-apk-fenix-debug
@@ -331,7 +329,6 @@ jobs:
         attributes:
             build-type: fenix-robo
             shipping-product: fenix
-            code-review: false
         description: Run Robo test on ARM devices
         dependencies:
             signed-apk-debug-apk: signing-apk-fenix-debug

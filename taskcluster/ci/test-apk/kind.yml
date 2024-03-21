@@ -41,7 +41,6 @@ jobs:
         description: Focus unit tests
         attributes:
             build-type: focus-debug
-            code-review: true
             shipping-product: focus
         run:
             pre-gradlew:
@@ -67,7 +66,6 @@ jobs:
         description: Fenix unit tests
         attributes:
             build-type: fenix-debug
-            code-review: true
             shipping-product: fenix
         run:
             pre-gradlew:

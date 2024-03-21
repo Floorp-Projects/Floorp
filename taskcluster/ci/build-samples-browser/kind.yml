@@ -17,7 +17,6 @@ kind-dependencies:
 job-defaults:
     attributes:
         build-type: regular
-        code-review: true
         component: samples-browser
     dependencies:
         build-fat-aar: build-fat-aar-android-geckoview-fat-aar/opt
