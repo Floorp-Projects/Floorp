@@ -17,7 +17,6 @@ from taskgraph.parameters import Parameters
 from gecko_taskgraph import GECKO
 from gecko_taskgraph.actions import render_actions_json
 from gecko_taskgraph.util.templates import merge
-from taskgraph.transforms.base import TransformConfig
 
 
 @pytest.fixture
