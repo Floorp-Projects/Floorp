@@ -295,6 +295,12 @@ macro_rules! try_parse_one {
 
     impl<'a> ToCss for LonghandsToSerialize<'a>  {
         fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result where W: fmt::Write {
+            use crate::values::specified::{
+                AnimationDirection, AnimationFillMode, AnimationPlayState,
+            };
+            use crate::Zero;
+            use style_traits::values::SequenceWriter;
+
             let len = self.animation_name.0.len();
             // There should be at least one declared value
             if len == 0 {
@@ -320,28 +326,67 @@ macro_rules! try_parse_one {
                     dest.write_str(", ")?;
                 }
 
-                % for name in props[2:]:
-                    self.animation_${name}.0[i].to_css(dest)?;
-                    dest.write_char(' ')?;
+                // We follow the order of this syntax:
+                // <single-animation> =
+                //   <animation-duration> ||
+                //   <easing-function> ||
+                //   <animation-delay> ||
+                //   <single-animation-iteration-count> ||
+                //   <single-animation-direction> ||
+                //   <single-animation-fill-mode> ||
+                //   <single-animation-play-state> ||
+                //   [ none | <keyframes-name> ] ||
+                //   <single-animation-timeline>
+                //
+                // https://drafts.csswg.org/css-animations-2/#animation-shorthand
+                //
+                // FIXME: Bug 1804574. The initial value of duration should be auto, per
+                // css-animations-2.
+                let has_duration = !self.animation_duration.0[i].is_zero();
+                let has_timing_function = !self.animation_timing_function.0[i].is_ease();
+                let has_delay = !self.animation_delay.0[i].is_zero();
+                let has_iteration_count = !self.animation_iteration_count.0[i].is_one();
+                let has_direction =
+                    !matches!(self.animation_direction.0[i], AnimationDirection::Normal);
+                let has_fill_mode =
+                    !matches!(self.animation_fill_mode.0[i], AnimationFillMode::None);
+                let has_play_state =
+                    !matches!(self.animation_play_state.0[i], AnimationPlayState::Running);
+                let has_name = !self.animation_name.0[i].is_none();
+                let has_timeline = match self.animation_timeline {
+                    Some(timeline) => !timeline.0[i].is_auto(),
+                    _ => false,
+                };
+
+                let mut writer = SequenceWriter::new(dest, " ");
+
+                // To avoid ambiguity, we have to serialize duration if both duration is initial
+                // but delay is not. (In other words, it's ambiguous if we serialize delay only.)
+                if has_duration || has_delay {
+                    writer.item(&self.animation_duration.0[i])?;
+                }
+
+                // For easing function, delay, iteration-count, direction, fill-mode, and
+                // play-state.
+                % for name in props[3:]:
+                if has_${name} {
+                    writer.item(&self.animation_${name}.0[i])?;
+                }
                 % endfor
 
-                self.animation_name.0[i].to_css(dest)?;
+                // If all values are initial, we must serialize animation-name.
+                let has_any = {
+                    has_timeline
+                % for name in props[2:]:
+                        || has_${name}
+                % endfor
+                };
+                if has_name || !has_any {
+                    writer.item(&self.animation_name.0[i])?;
+                }
 
-                // Based on the spec, the default values of other properties must be output in at
-                // least the cases necessary to distinguish an animation-name. The serialization
-                // order of animation-timeline is always later than animation-name, so it's fine
-                // to not serialize it if it is the default value. It's still possible to
-                // distinguish them (because we always serialize animation-name).
-                // https://drafts.csswg.org/css-animations-1/#animation
-                // https://drafts.csswg.org/css-animations-2/#typedef-single-animation
-                //
-                // Note: it's also fine to always serialize this. However, it seems Blink
-                // doesn't serialize default animation-timeline now, so we follow the same rule.
-                if let Some(ref timeline) = self.animation_timeline {
-                    if !timeline.0[i].is_auto() {
-                        dest.write_char(' ')?;
-                        timeline.0[i].to_css(dest)?;
-                    }
+                if has_timeline {
+                    writer.item(&self.animation_timeline.unwrap().0[i])?;
                 }
             }
             Ok(())
