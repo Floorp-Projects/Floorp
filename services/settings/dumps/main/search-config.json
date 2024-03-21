@@ -1,6 +1,63 @@
 {
   "data": [
     {
+      "schema": 1710460807412,
+      "appliesTo": [
+        {
+          "included": {
+            "locales": {
+              "matches": [
+                "fr"
+              ]
+            }
+          }
+        },
+        {
+          "included": {
+            "regions": [
+              "be",
+              "ch",
+              "es",
+              "fr",
+              "it",
+              "nl"
+            ]
+          },
+          "application": {
+            "minVersion": "124.0"
+          }
+        },
+        {
+          "params": {
+            "searchUrlGetParams": [
+              {
+                "name": "client",
+                "value": "firefoxqwant"
+              },
+              {
+                "name": "q",
+                "value": "{searchTerms}"
+              }
+            ]
+          },
+          "default": "yes",
+          "override": true,
+          "orderHint": 2000,
+          "application": {
+            "distributions": [
+              "qwant-001",
+              "qwant-002"
+            ]
+          }
+        }
+      ],
+      "webExtension": {
+        "id": "qwant@search.mozilla.org"
+      },
+      "id": "f59fddbc-580b-4672-9cda-32941ceec729",
+      "last_modified": 1710766850143
+    },
+    {
       "schema": 1707831978005,
       "appliesTo": [
         {
@@ -1702,48 +1759,6 @@
       "last_modified": 1589299342073
     },
     {
-      "schema": 1588177653636,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "fr"
-              ]
-            }
-          }
-        },
-        {
-          "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "client",
-                "value": "firefoxqwant"
-              },
-              {
-                "name": "q",
-                "value": "{searchTerms}"
-              }
-            ]
-          },
-          "default": "yes",
-          "override": true,
-          "orderHint": 2000,
-          "application": {
-            "distributions": [
-              "qwant-001",
-              "qwant-002"
-            ]
-          }
-        }
-      ],
-      "webExtension": {
-        "id": "qwant@search.mozilla.org"
-      },
-      "id": "f59fddbc-580b-4672-9cda-32941ceec729",
-      "last_modified": 1589299342030
-    },
-    {
       "schema": 1588177648193,
       "appliesTo": [
         {
@@ -2381,5 +2396,5 @@
       "last_modified": 1583937832210
     }
   ],
-  "timestamp": 1707833207286
+  "timestamp": 1710766850143
 }

@@ -1,6 +1,114 @@
 {
   "data": [
     {
+      "schema": 1710946446035,
+      "derHash": "8DZVz+hbOj8q8v03yrnqKDs6KKm2FX/pvrdcF8BhGzo=",
+      "subject": "CN=Keysec GR3 DV TLS CA 2024,O=KEYSEC LTDA,C=BR",
+      "subjectDN": "MEcxCzAJBgNVBAYTAkJSMRQwEgYDVQQKEwtLRVlTRUMgTFREQTEiMCAGA1UEAxMZS2V5c2VjIEdSMyBEViBUTFMgQ0EgMjAyNA==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "fe495e9179292f67d50ca37e6347b3171d4a7cc6716d0ce1b782e000cedf5097",
+        "size": 1618,
+        "filename": "re4iHDQVFeEgZFfakl2IhF85P-DgLTbzfOV36u4F3FU=.pem",
+        "location": "security-state-staging/intermediates/3df9d148-6d1d-494e-8f77-d641a7d78124.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "re4iHDQVFeEgZFfakl2IhF85P+DgLTbzfOV36u4F3FU=",
+      "crlite_enrolled": false,
+      "id": "244051c7-07f4-4e57-9854-ab624aa55021",
+      "last_modified": 1710946623378
+    },
+    {
+      "schema": 1710946445643,
+      "derHash": "kXPvrqTmGFXrhY0QfbqUoc0YyuAOr5x+21cgGtmam/0=",
+      "subject": "CN=Keysec GR3 EV TLS CA 2024,O=KEYSEC LTDA,C=BR",
+      "subjectDN": "MEcxCzAJBgNVBAYTAkJSMRQwEgYDVQQKEwtLRVlTRUMgTFREQTEiMCAGA1UEAxMZS2V5c2VjIEdSMyBFViBUTFMgQ0EgMjAyNA==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "9c2fd810de290c9602eaf84292356ccc60b5b9a86a64a6735918a60ce80152ad",
+        "size": 1634,
+        "filename": "5zd2ZxybEEZSlXlhcynmpWBuSSlSNb-L2hyf1iH-WVU=.pem",
+        "location": "security-state-staging/intermediates/09a3003d-6573-4bc0-8ed5-501a2960b9bb.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "5zd2ZxybEEZSlXlhcynmpWBuSSlSNb+L2hyf1iH+WVU=",
+      "crlite_enrolled": false,
+      "id": "361e1616-6414-4ae8-afca-b6e6a3ab544b",
+      "last_modified": 1710946623375
+    },
+    {
+      "schema": 1710946446503,
+      "derHash": "iv2h7XO/N13G4Jfbhxu/5M62jmE4HDm99qRXbcFxv7I=",
+      "subject": "CN=Keysec GR3 OV TLS CA 2024,O=KEYSEC LTDA,C=BR",
+      "subjectDN": "MEcxCzAJBgNVBAYTAkJSMRQwEgYDVQQKEwtLRVlTRUMgTFREQTEiMCAGA1UEAxMZS2V5c2VjIEdSMyBPViBUTFMgQ0EgMjAyNA==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "5f922fcec6e5bdeeb7c72bf6cb4d7cb9712affcd3ca7b2edf439390a7bdceee1",
+        "size": 1618,
+        "filename": "ffyswDTRpdykWIYlQPDpRA5VFTJ6omaHxk5W69jO8JA=.pem",
+        "location": "security-state-staging/intermediates/59adb38b-7ec7-4ac1-afd9-e42cd392cf81.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "ffyswDTRpdykWIYlQPDpRA5VFTJ6omaHxk5W69jO8JA=",
+      "crlite_enrolled": false,
+      "id": "662042eb-44f1-427f-b3a4-46109e55908c",
+      "last_modified": 1710946623372
+    },
+    {
+      "schema": 1710795242451,
+      "derHash": "la3INQ6EjZEg93vn1fpYdQhVO2Ua2jpCo/DIrck2PdI=",
+      "subject": "CN=MarketWare RSA Extended Validation Secure Server CA 3,O=MarketWare - Soluções para Mercados Digitais\\, Lda.,C=PT",
+      "subjectDN": "MIGMMQswCQYDVQQGEwJQVDE9MDsGA1UECgw0TWFya2V0V2FyZSAtIFNvbHXDp8O1ZXMgcGFyYSBNZXJjYWRvcyBEaWdpdGFpcywgTGRhLjE+MDwGA1UEAxM1TWFya2V0V2FyZSBSU0EgRXh0ZW5kZWQgVmFsaWRhdGlvbiBTZWN1cmUgU2VydmVyIENBIDM=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "2d24d3da735acff32c0c688d7156d6772dc4cddd374c7ed9401fc73faba750de",
+        "size": 2292,
+        "filename": "Es9zrpvheH6jWlnnG5GZKf4OGJttFUqxTOsCFLZlhko=.pem",
+        "location": "security-state-staging/intermediates/b9bcb2bc-23b6-4d66-afda-8f70b1181a4c.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "Es9zrpvheH6jWlnnG5GZKf4OGJttFUqxTOsCFLZlhko=",
+      "crlite_enrolled": false,
+      "id": "314cdc34-8ab8-4717-ad45-fa803357b3c6",
+      "last_modified": 1710795423423
+    },
+    {
+      "schema": 1710795242856,
+      "derHash": "yJWZUIAJLkaFrm1OHvp8QZExroD9yuH8qD2i+PmVEjY=",
+      "subject": "CN=K Software RSA Domain Validation Secure Server CA 3,O=K Software LLC,C=US",
+      "subjectDN": "MGQxCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5LIFNvZnR3YXJlIExMQzE8MDoGA1UEAxMzSyBTb2Z0d2FyZSBSU0EgRG9tYWluIFZhbGlkYXRpb24gU2VjdXJlIFNlcnZlciBDQSAz",
+      "whitelist": false,
+      "attachment": {
+        "hash": "0069cb355fa82da3d0bbdf596110250a0d5e89b460a37831381349ecb5dcbc79",
+        "size": 2239,
+        "filename": "d7RXpz4TO5w7He2jqcJhDOe93JbF318mPnR2dLjAU3Q=.pem",
+        "location": "security-state-staging/intermediates/57b04cf4-27ff-42a9-8b4f-839f2b0f2eae.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "d7RXpz4TO5w7He2jqcJhDOe93JbF318mPnR2dLjAU3Q=",
+      "crlite_enrolled": false,
+      "id": "7800aa03-e9e9-4949-a479-ca6be3172496",
+      "last_modified": 1710795423420
+    },
+    {
+      "schema": 1710795243216,
+      "derHash": "N53ZNUfsvhz2f32UrS/D3GLPFuZ31xITVl0KyZJ+5V4=",
+      "subject": "CN=MarketWare RSA Domain Validation Secure Server CA 3,O=MarketWare - Soluções para Mercados Digitais\\, Lda.,C=PT",
+      "subjectDN": "MIGKMQswCQYDVQQGEwJQVDE9MDsGA1UECgw0TWFya2V0V2FyZSAtIFNvbHXDp8O1ZXMgcGFyYSBNZXJjYWRvcyBEaWdpdGFpcywgTGRhLjE8MDoGA1UEAxMzTWFya2V0V2FyZSBSU0EgRG9tYWluIFZhbGlkYXRpb24gU2VjdXJlIFNlcnZlciBDQSAz",
+      "whitelist": false,
+      "attachment": {
+        "hash": "20ff6348a25369a532d720e964d6d0705902f3aba8e88dc10132304da34f25ba",
+        "size": 2292,
+        "filename": "cPk3iWChPK4OBkAMXZkVl0nHVot2WEoaEc4JShoOgXk=.pem",
+        "location": "security-state-staging/intermediates/fd4cdd62-8c22-4f42-b396-b7eb3ca60553.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "cPk3iWChPK4OBkAMXZkVl0nHVot2WEoaEc4JShoOgXk=",
+      "crlite_enrolled": false,
+      "id": "1ff8e545-a74d-4ec5-b7a2-f3fbaf355c06",
+      "last_modified": 1710795423416
+    },
+    {
       "schema": 1710557651981,
       "derHash": "54jRSwQ2tRILvuPxXBW63wjBQH/nJWik8W+RUcOA4eM=",
       "subject": "CN=E5,O=Let's Encrypt,C=US",
@@ -20899,24 +21007,6 @@
       "last_modified": 1663786626392
     },
     {
-      "schema": 1663786369285,
-      "derHash": "ysEs67zNJAJpr4hsPF7GRiKIHWdsYl/LfRRNyzVS68c=",
-      "subject": "CN=GlobalSign GCC R3 AlphaSSL CA 2022,O=Globalsign nv-sa,C=BE",
-      "subjectDN": "MFUxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxzaWduIG52LXNhMSswKQYDVQQDEyJHbG9iYWxTaWduIEdDQyBSMyBBbHBoYVNTTCBDQSAyMDIy",
-      "whitelist": false,
-      "attachment": {
-        "hash": "d72e9d5d07679986f854079226533b17f9db1a768648573767b6d35f17297777",
-        "size": 1634,
-        "filename": "7Ge-CB4gM_GQW4c8QeQgayw60TuN7PhmMpmoFX8YQv0=.pem",
-        "location": "security-state-staging/intermediates/dd8c26df-1f99-4f77-a0b8-28a35d06adc1.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "7Ge+CB4gM/GQW4c8QeQgayw60TuN7PhmMpmoFX8YQv0=",
-      "crlite_enrolled": false,
-      "id": "72b9a255-5f16-422b-93d4-75f7687cc0b3",
-      "last_modified": 1663786626385
-    },
-    {
       "schema": 1663786374768,
       "derHash": "JEobcwyh11pppS9eX0IbtUfHl+JK++nPuZyZNIjNwnE=",
       "subject": "CN=SSLs.com RSA OV Secure Server CA,O=SSLs.com,L=Phoenix,ST=Arizona,C=US",
@@ -26083,24 +26173,6 @@
       "last_modified": 1645578267671
     },
     {
-      "schema": 1645577474282,
-      "derHash": "ozAX2d9JTAnVhwkQdAOu5GG5Rh6BujlcKMNmk8J9GYY=",
-      "subject": "CN=GlobalSign GCC R3 UK EV QWAC CA 2020,O=GMO GlobalSign Ltd,C=GB",
-      "subjectDN": "MFkxCzAJBgNVBAYTAkdCMRswGQYDVQQKExJHTU8gR2xvYmFsU2lnbiBMdGQxLTArBgNVBAMTJEdsb2JhbFNpZ24gR0NDIFIzIFVLIEVWIFFXQUMgQ0EgMjAyMA==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "ef3f87aa1971aaebb3accc4f6b43e518068a070c3df5324fafc49bd6faea510d",
-        "size": 2040,
-        "filename": "_cLNIs90Pu4zrpnBuJdA-wTl2BrxEVUjup-MFOMyr1g=.pem",
-        "location": "security-state-staging/intermediates/8ec8c2d1-26c1-4c8e-b2d2-8f9031409923.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "/cLNIs90Pu4zrpnBuJdA+wTl2BrxEVUjup+MFOMyr1g=",
-      "crlite_enrolled": false,
-      "id": "f0ff68db-90fa-4d8a-b3a1-d54555a22294",
-      "last_modified": 1645578267661
-    },
-    {
       "schema": 1645577475604,
       "derHash": "PuAnjfcfo8ElxM1IfwHXdGlOb8V+DNlMJO/XaRM5GOU=",
       "subject": "CN=GTS Root R1,O=Google Trust Services LLC,C=US",
@@ -27359,42 +27431,6 @@
       "crlite_enrolled": false,
       "id": "5cb35bb9-7702-4174-8419-37382a502bc9",
       "last_modified": 1618102648566
-    },
-    {
-      "schema": 1616744984591,
-      "derHash": "CWaohynJOPnc1luzxjtghhjq5Rg+0f7XUrMjCJaHog4=",
-      "subject": "CN=GlobalSign GCC E5 UK EV QWAC CA 2021,O=GMO GlobalSign Ltd,C=GB",
-      "subjectDN": "MFkxCzAJBgNVBAYTAkdCMRswGQYDVQQKExJHTU8gR2xvYmFsU2lnbiBMdGQxLTArBgNVBAMTJEdsb2JhbFNpZ24gR0NDIEU1IFVLIEVWIFFXQUMgQ0EgMjAyMQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "4005a355e57cd2a8bd4a424b5f4e7e4ee933a872f1efda2e36c1166230ca170f",
-        "size": 1248,
-        "filename": "HO9pYHxroEYeUAkryxMtHI3o_SH6tMvwv-u0CDggQEc=.pem",
-        "location": "security-state-staging/intermediates/5b9ce9ed-6717-41a3-bda1-2c4d234f9bdb.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "HO9pYHxroEYeUAkryxMtHI3o/SH6tMvwv+u0CDggQEc=",
-      "crlite_enrolled": false,
-      "id": "0ec48e75-7ccc-48c5-9165-e48c23c1e45b",
-      "last_modified": 1616745549980
-    },
-    {
-      "schema": 1616744986241,
-      "derHash": "DdLH4K+CAPSfQZKomuY01M5BuAxjsGKcxo5TjDFvAg4=",
-      "subject": "CN=GlobalSign GCC E5 EV QWAC CA 2021,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFQxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMSowKAYDVQQDEyFHbG9iYWxTaWduIEdDQyBFNSBFViBRV0FDIENBIDIwMjE=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "43f1f0accb925b694a412440868b1029f41df0c3f1fde4a3ac788b5cd3ad14b2",
-        "size": 1240,
-        "filename": "e3FAFA6PHmIXryngxPMDIkcW8S7q79f5gqJUVApp3pY=.pem",
-        "location": "security-state-staging/intermediates/9bda82e3-aac5-4a12-a32c-f86a4fc1ca14.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "e3FAFA6PHmIXryngxPMDIkcW8S7q79f5gqJUVApp3pY=",
-      "crlite_enrolled": false,
-      "id": "e49837e3-b031-45e3-8712-12d4dbabdbc4",
-      "last_modified": 1616745549968
     },
     {
       "schema": 1616744987712,
@@ -30529,5 +30565,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1710557823264
+  "timestamp": 1710946623378
 }
