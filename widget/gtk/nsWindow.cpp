@@ -187,8 +187,6 @@ static GdkCursor* get_gtk_cursor(nsCursor aCursor);
 /* callbacks from widgets */
 static gboolean expose_event_cb(GtkWidget* widget, cairo_t* cr);
 static gboolean configure_event_cb(GtkWidget* widget, GdkEventConfigure* event);
-static void widget_map_cb(GtkWidget* widget);
-static void widget_unmap_cb(GtkWidget* widget);
 static void size_allocate_cb(GtkWidget* widget, GtkAllocation* allocation);
 static void toplevel_window_size_allocate_cb(GtkWidget* widget,
                                              GtkAllocation* allocation);
@@ -611,6 +609,9 @@ void nsWindow::Destroy() {
   }
 
   NativeShow(false);
+
+  MOZ_ASSERT(!gtk_widget_get_mapped(mShell));
+  MOZ_ASSERT(!gtk_widget_get_mapped(GTK_WIDGET(mContainer)));
 
   ClearTransparencyBitmap();
 
@@ -4103,41 +4104,6 @@ gboolean nsWindow::OnConfigureEvent(GtkWidget* aWidget,
   return FALSE;
 }
 
-void nsWindow::OnMap() {
-  LOG("nsWindow::OnMap");
-  // Gtk mapped widget to screen. Configure underlying GdkWindow properly
-  // as our rendering target.
-  // This call means we have X11 (or Wayland) window we can render to by GL
-  // so we need to notify compositor about it.
-  mIsMapped = true;
-  ConfigureGdkWindow();
-}
-
-void nsWindow::OnUnmap() {
-  LOG("nsWindow::OnUnmap");
-
-  mIsMapped = false;
-
-  if (mSourceDragContext) {
-    static auto sGtkDragCancel =
-        (void (*)(GdkDragContext*))dlsym(RTLD_DEFAULT, "gtk_drag_cancel");
-    if (sGtkDragCancel) {
-      sGtkDragCancel(mSourceDragContext);
-      mSourceDragContext = nullptr;
-    }
-  }
-
-  // We don't have valid XWindow any more,
-  // so clear stored ones at GtkCompositorWidget() for OMTC rendering
-  // and mSurfaceProvider for legacy rendering.
-  if (GdkIsX11Display()) {
-    mSurfaceProvider.CleanupResources();
-    if (mCompositorWidgetDelegate) {
-      mCompositorWidgetDelegate->DisableRendering();
-    }
-  }
-}
-
 void nsWindow::OnSizeAllocate(GtkAllocation* aAllocation) {
   LOG("nsWindow::OnSizeAllocate %d,%d -> %d x %d\n", aAllocation->x,
       aAllocation->y, aAllocation->width, aAllocation->height);
@@ -6358,8 +6324,6 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
                          G_CALLBACK(settings_xft_dpi_changed_cb), this);
 
   // Widget signals
-  g_signal_connect(mContainer, "map", G_CALLBACK(widget_map_cb), nullptr);
-  g_signal_connect(mContainer, "unmap", G_CALLBACK(widget_unmap_cb), nullptr);
   g_signal_connect_after(mContainer, "size_allocate",
                          G_CALLBACK(size_allocate_cb), nullptr);
   g_signal_connect(mContainer, "hierarchy-changed",
@@ -8290,25 +8254,6 @@ static gboolean configure_event_cb(GtkWidget* widget,
   return window->OnConfigureEvent(widget, event);
 }
 
-// Some Gtk widget code may call gtk_widget_unrealize() which destroys
-// mGdkWindow. We need to listen on this signal and re-create
-// mGdkWindow when we're already mapped.
-static void widget_map_cb(GtkWidget* widget) {
-  RefPtr<nsWindow> window = get_window_for_gtk_widget(widget);
-  if (!window) {
-    return;
-  }
-  window->OnMap();
-}
-
-static void widget_unmap_cb(GtkWidget* widget) {
-  RefPtr<nsWindow> window = get_window_for_gtk_widget(widget);
-  if (!window) {
-    return;
-  }
-  window->OnUnmap();
-}
-
 static void size_allocate_cb(GtkWidget* widget, GtkAllocation* allocation) {
   RefPtr<nsWindow> window = get_window_for_gtk_widget(widget);
   if (!window) {
@@ -10095,8 +10040,41 @@ void nsWindow::ClearRenderingQueue() {
   DestroyLayerManager();
 }
 
-void nsWindow::DisableRendering() {
-  LOG("nsWindow::DisableRendering()");
+// nsWindow::OnMap() / nsWindow::OnUnmap() is called from map/unmap mContainer
+// handlers directly as we paint to mContainer.
+void nsWindow::OnMap() {
+  LOG("nsWindow::OnMap");
+  // Gtk mapped widget to screen. Configure underlying GdkWindow properly
+  // as our rendering target.
+  // This call means we have X11 (or Wayland) window we can render to by GL
+  // so we need to notify compositor about it.
+  mIsMapped = true;
+  ConfigureGdkWindow();
+}
+
+void nsWindow::OnUnmap() {
+  LOG("nsWindow::OnUnmap");
+
+  mIsMapped = false;
+
+  if (mSourceDragContext) {
+    static auto sGtkDragCancel =
+        (void (*)(GdkDragContext*))dlsym(RTLD_DEFAULT, "gtk_drag_cancel");
+    if (sGtkDragCancel) {
+      sGtkDragCancel(mSourceDragContext);
+      mSourceDragContext = nullptr;
+    }
+  }
+
+  // We don't have valid XWindow any more,
+  // so clear stored ones at GtkCompositorWidget() for OMTC rendering
+  // and mSurfaceProvider for legacy rendering.
+  if (GdkIsX11Display()) {
+    mSurfaceProvider.CleanupResources();
+    if (mCompositorWidgetDelegate) {
+      mCompositorWidgetDelegate->DisableRendering();
+    }
+  }
 
   if (mGdkWindow) {
     if (mIMContext) {
