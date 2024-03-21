@@ -304,7 +304,10 @@ function testShadowDOM() {
   isnot(rect.height, 0, "Div element inside shadow shouldn't have zero size.");
 }
 
-function test(){
+async function test(){
+  // We use getBoxQuads to get some text nodes bounding rects.
+  await SpecialPowers.pushPrefEnv({"set": [["layout.css.getBoxQuads.enabled", true]]});
+
   //test ltr
   doTest();
 
