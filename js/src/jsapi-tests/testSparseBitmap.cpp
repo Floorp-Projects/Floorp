@@ -111,5 +111,50 @@ BEGIN_TEST(testSparseBitmapExternalOR) {
 
   return true;
 }
-
 END_TEST(testSparseBitmapExternalOR)
+
+BEGIN_TEST(testSparseBitmapExternalAND) {
+  // Testing ANDing data from an external array.
+
+  const size_t wordCount = 4;
+
+  // Create a bitmap with two bits set per word based on the word index.
+  SparseBitmap bitmap;
+  for (size_t i = 0; i < wordCount; i++) {
+    bitmap.setBit(i * JS_BITS_PER_WORD + i);
+    bitmap.setBit(i * JS_BITS_PER_WORD + i + 1);
+  }
+
+  // Update a single word, clearing one of the bits.
+  uintptr_t source[wordCount];
+  CHECK(bitmap.getBit(0));
+  CHECK(bitmap.getBit(1));
+  source[0] = ~(1 << 1);
+  bitmap.bitwiseAndRangeWith(0, 1, source);
+  CHECK(bitmap.getBit(0));
+  CHECK(!bitmap.getBit(1));
+
+  // Update a word at an offset.
+  CHECK(bitmap.getBit(JS_BITS_PER_WORD + 1));
+  CHECK(bitmap.getBit(JS_BITS_PER_WORD + 2));
+  source[0] = ~(1 << 2);
+  bitmap.bitwiseAndRangeWith(1, 1, source);
+  CHECK(bitmap.getBit(JS_BITS_PER_WORD + 1));
+  CHECK(!bitmap.getBit(JS_BITS_PER_WORD + 2));
+
+  // Update multiple words at an offset.
+  CHECK(bitmap.getBit(JS_BITS_PER_WORD * 2 + 2));
+  CHECK(bitmap.getBit(JS_BITS_PER_WORD * 2 + 3));
+  CHECK(bitmap.getBit(JS_BITS_PER_WORD * 3 + 3));
+  CHECK(bitmap.getBit(JS_BITS_PER_WORD * 3 + 4));
+  source[0] = ~(1 << 3);
+  source[1] = ~(1 << 4);
+  bitmap.bitwiseAndRangeWith(2, 2, source);
+  CHECK(bitmap.getBit(JS_BITS_PER_WORD * 2 + 2));
+  CHECK(!bitmap.getBit(JS_BITS_PER_WORD * 2 + 3));
+  CHECK(bitmap.getBit(JS_BITS_PER_WORD * 3 + 3));
+  CHECK(!bitmap.getBit(JS_BITS_PER_WORD * 3 + 4));
+
+  return true;
+}
+END_TEST(testSparseBitmapExternalAND)
