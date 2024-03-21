@@ -22,6 +22,7 @@ const PREFS_FOR_DISPLAY = [
   "apz.",
   "browser.cache.",
   "browser.contentblocking.category",
+  "browser.contentanalysis.",
   "browser.display.",
   "browser.download.always_ask_before_handling_new_types",
   "browser.download.enable_spam_prevention",
@@ -996,6 +997,24 @@ var dataProviders = {
         systemLocales: osPrefs.systemLocales,
         regionalPrefsLocales: osPrefs.regionalPrefsLocales,
       },
+    });
+  },
+
+  contentAnalysis: async function contentAnalysis(done) {
+    const contentAnalysis = Cc["@mozilla.org/contentanalysis;1"].getService(
+      Ci.nsIContentAnalysis
+    );
+    if (!contentAnalysis.isActive) {
+      done({ active: false });
+      return;
+    }
+    let info = await contentAnalysis.getDiagnosticInfo();
+    done({
+      active: true,
+      connected: info.connectedToAgent,
+      agentPath: info.agentPath,
+      failedSignatureVerification: info.failedSignatureVerification,
+      requestCount: info.requestCount,
     });
   },
 
