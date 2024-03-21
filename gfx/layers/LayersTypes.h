@@ -46,8 +46,10 @@ class TextureHost;
 #undef NONE
 #undef OPAQUE
 
-struct LayersId {
+struct LayersId final {
   uint64_t mId = 0;
+
+  auto MutTiedFields() { return std::tie(mId); }
 
   bool IsValid() const { return mId != 0; }
 
@@ -75,8 +77,10 @@ struct LayersId {
 };
 
 template <typename T>
-struct BaseTransactionId {
+struct BaseTransactionId final {
   uint64_t mId = 0;
+
+  auto MutTiedFields() { return std::tie(mId); }
 
   bool IsValid() const { return mId != 0; }
 

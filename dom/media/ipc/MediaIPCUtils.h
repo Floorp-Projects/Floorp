@@ -15,6 +15,7 @@
 #include "ipc/EnumSerializer.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/GfxMessageUtils.h"
+#include "mozilla/dom/WebGLIpdl.h"
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/dom/MFCDMSerializers.h"
 
@@ -139,7 +140,7 @@ struct ParamTraits<mozilla::FlacCodecSpecificData> {
 
 template <>
 struct ParamTraits<mozilla::Mp3CodecSpecificData>
-    : public PlainOldDataSerializer<mozilla::Mp3CodecSpecificData> {};
+    : public ParamTraits_TiedFields<mozilla::Mp3CodecSpecificData> {};
 
 template <>
 struct ParamTraits<mozilla::OpusCodecSpecificData> {

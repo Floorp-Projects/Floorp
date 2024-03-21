@@ -131,42 +131,34 @@ constexpr bool AssertTiedFieldsAreExhaustive() {
 // -
 
 /**
- * Padding<T> can be used to pad out a struct so that it's not implicitly
- * padded by struct rules.
- * You can also just add your padding to TiedFields, but by explicitly typing
- * padding like this, serialization can make a choice whether to copy Padding,
- * or instead to omit the copy.
- *
- * Omitting the copy isn't always faster.
- * struct Entry {
- *   uint16_t key;
- *   Padding<uint16_t> padding;
- *   uint32_t val;
- *   auto MutTiedFields() { return std::tie(key, padding, val); }
- * };
- * If you serialize Padding, the serialized size is 8, and the compiler will
- * optimize serialization to a single 8-byte memcpy.
- * If your serialization omits Padding, the serialized size of Entry shrinks
- * by 25%. If you have a big list of Entrys, maybe this is a big savings!
- * However, by optimizing for size here you sacrifice speed, because this splits
- * the single memcpy into two: a 2-byte memcpy and a 4-byte memcpy.
- *
- * Explicitly marking padding gives callers the option of choosing.
+ * PaddingField<T,N=1> can be used to pad out a struct so that it's not
+ * implicitly padded by struct rules, but also can't be accidentally initialized
+ * via Aggregate Initialization. (TiedFields serialization checks rely on object
+ * fields leaving no implicit padding bytes, but explicit padding fields are
+ * fine) While you can use e.g. `uint8_t _padding[3];`, consider instead
+ * `PaddingField<uint8_t,3> _padding;` for clarity and to move the `3` nearer
+ * to the `uint8_t`.
  */
-template <class T>
-struct Padding {
-  T ignored;
+template <class T, size_t N = 1>
+struct PaddingField {
+  static_assert(!std::is_array_v<T>, "Use PaddingField<T,N> not <T[N]>.");
 
-  friend constexpr bool operator==(const Padding&, const Padding&) {
+  std::array<T, N> ignored = {};
+
+  PaddingField() {}
+
+  friend constexpr bool operator==(const PaddingField&, const PaddingField&) {
     return true;
   }
-  friend constexpr bool operator<(const Padding&, const Padding&) {
+  friend constexpr bool operator<(const PaddingField&, const PaddingField&) {
     return false;
   }
+
+  auto MutTiedFields() { return std::tie(ignored); }
 };
-static_assert(sizeof(Padding<bool>) == 1);
-static_assert(sizeof(Padding<bool[2]>) == 2);
-static_assert(sizeof(Padding<int>) == 4);
+static_assert(sizeof(PaddingField<bool>) == 1);
+static_assert(sizeof(PaddingField<bool, 2>) == 2);
+static_assert(sizeof(PaddingField<int>) == 4);
 
 // -
 
@@ -202,7 +194,7 @@ static_assert(AreAllBytesTiedFields<Fish>());
 
 struct Eel {  // Like a Fish, but you can skip serializing the padding.
   bool b;
-  Padding<bool> padding[3];
+  PaddingField<bool, 3> padding;
   int i;
 
   constexpr auto MutTiedFields() { return std::tie(i, b, padding); }
