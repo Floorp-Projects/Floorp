@@ -4,15 +4,17 @@ registerCleanupFunction(() => {
 });
 
 const EXPECTED_START_ORDINALS = [
-  ["sidebar-box", 1],
-  ["sidebar-splitter", 2],
-  ["appcontent", 3],
+  ["sidebar-launcher", 1],
+  ["sidebar-box", 2],
+  ["sidebar-splitter", 3],
+  ["appcontent", 4],
 ];
 
 const EXPECTED_END_ORDINALS = [
-  ["sidebar-box", 3],
-  ["sidebar-splitter", 2],
-  ["appcontent", 1],
+  ["sidebar-launcher", 5],
+  ["sidebar-box", 4],
+  ["sidebar-splitter", 3],
+  ["appcontent", 2],
 ];
 
 function getBrowserChildrenWithOrdinals() {
