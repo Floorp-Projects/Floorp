@@ -11,7 +11,7 @@
 
 [package]
 edition = "2021"
-rust-version = "1.70"
+rust-version = "1.74"
 name = "wgpu-hal"
 version = "0.19.0"
 authors = ["gfx-rs developers"]
@@ -78,7 +78,7 @@ package = "wgpu-types"
 
 [dev-dependencies]
 cfg-if = "1"
-env_logger = "0.10"
+env_logger = "0.11"
 glam = "0.25.0"
 
 [dev-dependencies.naga]
@@ -87,7 +87,7 @@ path = "../naga"
 features = ["wgsl-in"]
 
 [dev-dependencies.winit]
-version = "0.29.10"
+version = "0.29.14"
 features = ["android-native-activity"]
 
 [build-dependencies]
@@ -142,11 +142,11 @@ vulkan = [
 windows_rs = ["gpu-allocator"]
 
 [target."cfg(all(target_arch = \"wasm32\", not(target_os = \"emscripten\")))".dependencies]
-js-sys = "0.3.67"
+js-sys = "0.3.69"
 wasm-bindgen = "0.2.87"
 
 [target."cfg(all(target_arch = \"wasm32\", not(target_os = \"emscripten\")))".dependencies.web-sys]
-version = "0.3.67"
+version = "0.3.69"
 features = [
     "Window",
     "HtmlCanvasElement",
@@ -185,7 +185,7 @@ version = ">=0.7, <0.9"
 optional = true
 
 [target."cfg(not(target_arch = \"wasm32\"))".dependencies.renderdoc-sys]
-version = "1.0.0"
+version = "1.1.0"
 optional = true
 
 [target."cfg(not(target_arch = \"wasm32\"))".dependencies.smallvec]

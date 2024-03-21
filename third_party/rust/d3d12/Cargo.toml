@@ -40,7 +40,7 @@ implicit-link = []
 bitflags = "2"
 
 [target."cfg(windows)".dependencies.libloading]
-version = ">=0.7,<0.9"
+version = ">=0.7, <0.9"
 optional = true
 
 [target."cfg(windows)".dependencies.winapi]
