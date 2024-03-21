@@ -74,12 +74,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
-  "isWhatsNewPanelEnabled",
-  "browser.messaging-system.whatsNewPanel.enabled",
-  false
-);
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
   "hasAccessedFxAPanel",
   "identity.fxaccounts.toolbar.accessed",
   false
@@ -703,9 +697,6 @@ const TargetingGetters = {
   },
   get hasAccessedFxAPanel() {
     return lazy.hasAccessedFxAPanel;
-  },
-  get isWhatsNewPanelEnabled() {
-    return lazy.isWhatsNewPanelEnabled;
   },
   get userPrefs() {
     return {

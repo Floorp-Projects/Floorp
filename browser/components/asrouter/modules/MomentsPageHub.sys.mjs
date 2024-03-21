@@ -165,7 +165,7 @@ export class _MomentsPageHub {
 }
 
 /**
- * ToolbarBadgeHub - singleton instance of _ToolbarBadgeHub that can initiate
+ * MomentsPageHub - singleton instance of _MomentsPageHub that can initiate
  * message requests and render messages.
  */
 export const MomentsPageHub = new _MomentsPageHub();

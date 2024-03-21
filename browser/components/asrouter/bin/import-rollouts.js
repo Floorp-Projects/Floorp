@@ -126,10 +126,6 @@ async function getMessageValidators(skipValidation) {
       "./content-src/templates/OnboardingMessage/UpdateAction.schema.json",
       { common: true }
     ),
-    whatsnew_panel_message: await getValidator(
-      "./content-src/templates/OnboardingMessage/WhatsNewMessage.schema.json",
-      { common: true }
-    ),
     feature_callout: await getValidator(
       // For now, Feature Callout and Spotlight share a common schema
       "./content-src/templates/OnboardingMessage/Spotlight.schema.json",

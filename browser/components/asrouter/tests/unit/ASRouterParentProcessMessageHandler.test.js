@@ -14,8 +14,6 @@ describe("ASRouterParentProcessMessageHandler", () => {
       "addImpression",
       "evaluateExpression",
       "forceAttribution",
-      "forceWNPanel",
-      "closeWNPanel",
       "forcePBWindow",
       "resetGroupsState",
       "resetMessageState",
@@ -122,7 +120,6 @@ describe("ASRouterParentProcessMessageHandler", () => {
     [
       msg.AS_ROUTER_TELEMETRY_USER_EVENT,
       msg.TOOLBAR_BADGE_TELEMETRY,
-      msg.TOOLBAR_PANEL_TELEMETRY,
       msg.MOMENTS_PAGE_TELEMETRY,
       msg.DOORHANGER_TELEMETRY,
     ].forEach(type => {
@@ -307,28 +304,6 @@ describe("ASRouterParentProcessMessageHandler", () => {
       it("default calls forceAttribution", () => {
         handler.handleMessage(msg.FORCE_ATTRIBUTION, {});
         assert.calledOnce(config.router.forceAttribution);
-      });
-    });
-    describe("FORCE_WHATSNEW_PANEL action", () => {
-      it("default calls forceWNPanel", () => {
-        handler.handleMessage(
-          msg.FORCE_WHATSNEW_PANEL,
-          {},
-          { browser: { ownerGlobal: {} } }
-        );
-        assert.calledOnce(config.router.forceWNPanel);
-        assert.calledWith(config.router.forceWNPanel, { ownerGlobal: {} });
-      });
-    });
-    describe("CLOSE_WHATSNEW_PANEL action", () => {
-      it("default calls closeWNPanel", () => {
-        handler.handleMessage(
-          msg.CLOSE_WHATSNEW_PANEL,
-          {},
-          { browser: { ownerGlobal: {} } }
-        );
-        assert.calledOnce(config.router.closeWNPanel);
-        assert.calledWith(config.router.closeWNPanel, { ownerGlobal: {} });
       });
     });
     describe("FORCE_PRIVATE_BROWSING_WINDOW action", () => {

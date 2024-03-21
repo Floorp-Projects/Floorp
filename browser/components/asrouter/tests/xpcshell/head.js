@@ -81,10 +81,6 @@ async function makeValidators() {
       "resource://testing-common/UpdateAction.schema.json",
       { common: true }
     ),
-    whatsnew_panel_message: await schemaValidatorFor(
-      "resource://testing-common/WhatsNewMessage.schema.json",
-      { common: true }
-    ),
     feature_callout: await schemaValidatorFor(
       // For now, Feature Callout and Spotlight share a common schema
       "resource://testing-common/Spotlight.schema.json",

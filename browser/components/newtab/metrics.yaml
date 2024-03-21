@@ -1010,7 +1010,7 @@ messaging_system:
     type: string
     description: >
       Type of event the ping is capturing.
-      e.g. "cfr", "whats-new-panel", "onboarding"
+      e.g. "cfr", "onboarding"
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1825863
     data_reviews:

@@ -14,11 +14,11 @@ const { ASRouter } = ChromeUtils.importESModule(
 const HOMEPAGE_OVERRIDE_PREF = "browser.startup.homepage_override.once";
 
 add_task(async function test_with_rs_messages() {
-  // Force the WNPanel provider cache to 0 by modifying updateCycleInMs
+  // Force the cfr provider cache to 0 by modifying updateCycleInMs
   await SpecialPowers.pushPrefEnv({
     set: [
       [
-        "browser.newtabpage.activity-stream.asrouter.providers.whats-new-panel",
+        "browser.newtabpage.activity-stream.asrouter.providers.cfr",
         `{"id":"cfr","enabled":true,"type":"remote-settings","collection":"cfr","updateCycleInMs":0}`,
       ],
     ],

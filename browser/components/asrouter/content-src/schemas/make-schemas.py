@@ -83,9 +83,6 @@ SCHEMAS = [
             "UpdateAction": (
                 SCHEMA_DIR / "OnboardingMessage" / "UpdateAction.schema.json"
             ),
-            "WhatsNewMessage": (
-                SCHEMA_DIR / "OnboardingMessage" / "WhatsNewMessage.schema.json"
-            ),
         },
         bundle_common=True,
         test_corpus={

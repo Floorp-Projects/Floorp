@@ -27,7 +27,6 @@ export class ASRouterParentProcessMessageHandler {
     switch (type) {
       case msg.INFOBAR_TELEMETRY:
       case msg.TOOLBAR_BADGE_TELEMETRY:
-      case msg.TOOLBAR_PANEL_TELEMETRY:
       case msg.MOMENTS_PAGE_TELEMETRY:
       case msg.DOORHANGER_TELEMETRY:
       case msg.SPOTLIGHT_TELEMETRY:
@@ -127,12 +126,6 @@ export class ASRouterParentProcessMessageHandler {
       }
       case msg.FORCE_PRIVATE_BROWSING_WINDOW: {
         return this._router.forcePBWindow(browser, data.message);
-      }
-      case msg.FORCE_WHATSNEW_PANEL: {
-        return this._router.forceWNPanel(browser);
-      }
-      case msg.CLOSE_WHATSNEW_PANEL: {
-        return this._router.closeWNPanel(browser);
       }
       case msg.MODIFY_MESSAGE_JSON: {
         return this._router.routeCFRMessage(data.content, browser, data, true);

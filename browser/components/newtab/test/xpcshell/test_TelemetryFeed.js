@@ -947,18 +947,18 @@ add_task(
   }
 );
 
-add_task(async function test_applyWhatsNewPolicy() {
+add_task(async function test_applyToolbarBadgePolicy() {
   info(
-    "TelemetryFeed.applyWhatsNewPolicy should set client_id and set pingType"
+    "TelemetryFeed.applyToolbarBadgePolicy should set client_id and set pingType"
   );
   let instance = new TelemetryFeed();
-  let { ping, pingType } = await instance.applyWhatsNewPolicy({});
+  let { ping, pingType } = await instance.applyToolbarBadgePolicy({});
 
   Assert.equal(
     ping.client_id,
     Services.prefs.getCharPref("toolkit.telemetry.cachedClientID")
   );
-  Assert.equal(pingType, "whats-new-panel");
+  Assert.equal(pingType, "toolbar-badge");
 });
 
 add_task(async function test_applyInfoBarPolicy() {
@@ -1288,10 +1288,10 @@ add_task(async function test_createASRouterEvent_call_correctPolicy() {
     message_id: "onboarding_message_01",
   });
 
-  testCallCorrectPolicy("applyWhatsNewPolicy", {
-    action: "whats-new-panel_user_event",
-    event: "CLICK_BUTTON",
-    message_id: "whats-new-panel_message_01",
+  testCallCorrectPolicy("applyToolbarBadgePolicy", {
+    action: "badge_user_event",
+    event: "IMPRESSION",
+    message_id: "badge_message_01",
   });
 
   testCallCorrectPolicy("applyMomentsPolicy", {

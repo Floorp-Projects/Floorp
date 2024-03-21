@@ -250,8 +250,7 @@ toolbar[customizing] > .overflow-button {
   display: none;
 }
 
-toolbar[customizing] #ion-button,
-toolbar[customizing] #whats-new-menu-button {
+toolbar[customizing] #ion-button {
   display: none;
 }
 

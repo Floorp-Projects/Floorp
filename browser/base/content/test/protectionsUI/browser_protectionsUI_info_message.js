@@ -51,10 +51,10 @@ add_task(async function testPanelInfoMessage() {
   });
 
   // Test that the info message is displayed when the panel opens
-  let container = document.getElementById("messaging-system-message-container");
+  let container = document.getElementById("info-message-container");
   let message = document.getElementById("protections-popup-message");
   let learnMoreLink = document.querySelector(
-    "#messaging-system-message-container .text-link"
+    "#info-message-container .text-link"
   );
 
   // Check the visibility of the info message.

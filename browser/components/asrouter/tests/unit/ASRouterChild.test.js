@@ -24,7 +24,6 @@ describe("ASRouterChild", () => {
         msg.DISABLE_PROVIDER,
         msg.ENABLE_PROVIDER,
         msg.EXPIRE_QUERY_CACHE,
-        msg.FORCE_WHATSNEW_PANEL,
         msg.IMPRESSION,
         msg.RESET_PROVIDER_PREF,
         msg.SET_PROVIDER_USER_PREF,
