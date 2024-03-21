@@ -58,7 +58,7 @@ GtkCompositorWidget::GtkCompositorWidget(
 
 GtkCompositorWidget::~GtkCompositorWidget() {
   LOG("GtkCompositorWidget::~GtkCompositorWidget [%p]\n", (void*)mWidget.get());
-  DisableRendering();
+  CleanupResources();
   RefPtr<nsIWidget> widget = mWidget.forget();
   NS_ReleaseOnMainThread("GtkCompositorWidget::mWidget", widget.forget());
 }
@@ -169,8 +169,8 @@ GtkCompositorWidget::GetNativeLayerRoot() {
 }
 #endif
 
-void GtkCompositorWidget::DisableRendering() {
-  LOG("GtkCompositorWidget::DisableRendering [%p]\n", (void*)mWidget.get());
+void GtkCompositorWidget::CleanupResources() {
+  LOG("GtkCompositorWidget::CleanupResources [%p]\n", (void*)mWidget.get());
   mIsRenderingSuspended = true;
   mProvider.CleanupResources();
 }
@@ -194,9 +194,9 @@ bool GtkCompositorWidget::ConfigureX11Backend(Window aXWindow, bool aShaped) {
 }
 #endif
 
-void GtkCompositorWidget::EnableRendering(const uintptr_t aXWindow,
-                                          const bool aShaped) {
-  LOG("GtkCompositorWidget::EnableRendering() [%p]\n", mWidget.get());
+void GtkCompositorWidget::SetRenderingSurface(const uintptr_t aXWindow,
+                                              const bool aShaped) {
+  LOG("GtkCompositorWidget::SetRenderingSurface() [%p]\n", mWidget.get());
 
   if (!mIsRenderingSuspended) {
     LOG("  quit, mIsRenderingSuspended = false\n");

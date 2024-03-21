@@ -6666,7 +6666,8 @@ void nsWindow::ResumeCompositorImpl() {
   LOG("nsWindow::ResumeCompositorImpl()\n");
 
   MOZ_DIAGNOSTIC_ASSERT(mCompositorWidgetDelegate);
-  mCompositorWidgetDelegate->EnableRendering(GetX11Window(), GetShapedState());
+  mCompositorWidgetDelegate->SetRenderingSurface(GetX11Window(),
+                                                 GetShapedState());
 
   // As WaylandStartVsync needs mCompositorWidgetDelegate this is the right
   // time to start it.
@@ -10058,7 +10059,7 @@ void nsWindow::OnUnmap() {
   // It makes sure we don't paint to it when nsWindow becomes hiden/deleted
   // and XWindow is released.
   if (mCompositorWidgetDelegate) {
-    mCompositorWidgetDelegate->DisableRendering();
+    mCompositorWidgetDelegate->CleanupResources();
   }
 
   // Clear nsWindow resources used for old (in-thread) rendering.
