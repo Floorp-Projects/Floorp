@@ -5,7 +5,7 @@
 
 const TEST_PATH = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
-  "https://example.com"
+  "http://example.com"
 );
 
 const TEST_URL = TEST_PATH + "readerModeArticle.html";
