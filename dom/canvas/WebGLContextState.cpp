@@ -27,27 +27,25 @@ void WebGLContext::SetEnabled(const GLenum cap, const Maybe<GLuint> i,
   const FuncScope funcScope(*this, "enable(i)/disable(i)");
   if (IsContextLost()) return;
 
-  if (!ValidateCapabilityEnum(cap)) return;
-
-  if (i) {
-    if (cap != LOCAL_GL_BLEND) {
-      ErrorInvalidEnumArg("cap", cap);
-      return;
-    }
-
-    const auto limit = MaxValidDrawBuffers();
-    if (*i >= limit) {
-      ErrorInvalidValue("`index` (%u) must be < %s (%u)", *i,
-                        "MAX_DRAW_BUFFERS", limit);
-      return;
-    }
+  static const auto webgl1Map = webgl::MakeIsEnabledMap(false);
+  static const auto webgl2Map = webgl::MakeIsEnabledMap(true);
+  const auto* map = &webgl2Map;
+  if (!IsWebGL2()) {
+    map = &webgl1Map;
+  }
+  if (!MaybeFind(*map, cap)) {
+    MOZ_ASSERT(false, "Bad cap.");
+    return;
   }
 
-  const auto slot = GetStateTrackingSlot(cap, i ? *i : 0);
-  if (slot) {
-    *slot = enabled;
-  } else if (cap == LOCAL_GL_BLEND) {
+  if (cap == LOCAL_GL_BLEND) {
     if (i) {
+      const auto limit = MaxValidDrawBuffers();
+      if (*i >= limit) {
+        ErrorInvalidValue("`index` (%u) must be < %s (%u)", *i,
+                          "MAX_DRAW_BUFFERS", limit);
+        return;
+      }
       mBlendEnabled[*i] = enabled;
     } else {
       if (enabled) {
@@ -55,6 +53,15 @@ void WebGLContext::SetEnabled(const GLenum cap, const Maybe<GLuint> i,
       } else {
         mBlendEnabled.reset();
       }
+    }
+  } else {
+    if (i) {
+      MOZ_ASSERT(false, "i");
+      return;
+    }
+    const auto slot = GetStateTrackingSlot(cap);
+    if (slot) {
+      *slot = enabled;
     }
   }
 
@@ -431,39 +438,7 @@ Maybe<double> WebGLContext::GetParameter(const GLenum pname) {
   return Nothing();
 }
 
-bool WebGLContext::IsEnabled(GLenum cap) {
-  const FuncScope funcScope(*this, "isEnabled");
-  if (IsContextLost()) return false;
-
-  if (!ValidateCapabilityEnum(cap)) return false;
-
-  const auto& slot = GetStateTrackingSlot(cap, 0);
-  if (slot) return *slot;
-
-  return gl->fIsEnabled(cap);
-}
-
-bool WebGLContext::ValidateCapabilityEnum(GLenum cap) {
-  switch (cap) {
-    case LOCAL_GL_BLEND:
-    case LOCAL_GL_CULL_FACE:
-    case LOCAL_GL_DEPTH_TEST:
-    case LOCAL_GL_DITHER:
-    case LOCAL_GL_POLYGON_OFFSET_FILL:
-    case LOCAL_GL_SAMPLE_ALPHA_TO_COVERAGE:
-    case LOCAL_GL_SAMPLE_COVERAGE:
-    case LOCAL_GL_SCISSOR_TEST:
-    case LOCAL_GL_STENCIL_TEST:
-      return true;
-    case LOCAL_GL_RASTERIZER_DISCARD:
-      return IsWebGL2();
-    default:
-      ErrorInvalidEnumInfo("cap", cap);
-      return false;
-  }
-}
-
-bool* WebGLContext::GetStateTrackingSlot(GLenum cap, GLuint i) {
+bool* WebGLContext::GetStateTrackingSlot(GLenum cap) {
   switch (cap) {
     case LOCAL_GL_DEPTH_TEST:
       return &mDepthTestEnabled;

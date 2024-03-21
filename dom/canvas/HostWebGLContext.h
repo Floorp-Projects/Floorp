@@ -260,8 +260,6 @@ class HostWebGLContext final : public SupportsWeakPtr {
     mContext->SetEnabled(cap, i, val);
   }
 
-  bool IsEnabled(GLenum cap) const { return mContext->IsEnabled(cap); }
-
   Maybe<double> GetNumber(GLenum pname) const {
     return mContext->GetParameter(pname);
   }
