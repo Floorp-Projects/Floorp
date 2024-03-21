@@ -500,6 +500,7 @@ export class ProtonScreen extends React.PureComponent {
       <main
         className={`screen ${this.props.id || ""}
           ${screenClassName} ${textColorClass}`}
+        reverse-split={content.reverse_split ? "" : null}
         role={ariaRole ?? "alertdialog"}
         layout={content.layout}
         pos={content.position || "center"}

@@ -1178,6 +1178,7 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("main", {
       className: `screen ${this.props.id || ""}
           ${screenClassName} ${textColorClass}`,
+      "reverse-split": content.reverse_split ? "" : null,
       role: ariaRole ?? "alertdialog",
       layout: content.layout,
       pos: content.position || "center",
