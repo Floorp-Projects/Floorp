@@ -46,7 +46,7 @@ void ContentPlaybackController::NotifyContentMediaControlKeyReceiver(
   if (RefPtr<ContentMediaControlKeyReceiver> receiver =
           ContentMediaControlKeyReceiver::Get(mBC)) {
     LOG("Handle '%s' in default behavior for BC %" PRIu64,
-        ToMediaControlKeyStr(aKey), mBC->Id());
+        GetEnumString(aKey).get(), mBC->Id());
     receiver->HandleMediaKey(aKey);
   }
 }
