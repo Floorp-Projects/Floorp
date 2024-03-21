@@ -1176,6 +1176,10 @@ export class UrlbarView {
     // future we should make it support any type of result. Or, even better,
     // results should be grouped, thus we can directly update groups.
 
+    // Discard tentative exposures. This is analogous to marking the
+    // hypothetical hidden rows of hidden-exposure results as stale.
+    this.controller.engagementEvent.discardTentativeExposures();
+
     // Walk rows and find an insertion index for results. To avoid flicker, we
     // skip rows until we find one compatible with the result we want to apply.
     // If we couldn't find a compatible range, we'll just update.
@@ -1212,7 +1216,7 @@ export class UrlbarView {
         ) {
           // We can replace the row's current result with the new one.
           if (result.exposureResultHidden) {
-            this.#addExposure(result);
+            this.controller.engagementEvent.addExposure(result);
           } else {
             this.#updateRow(row, result);
           }
@@ -1282,7 +1286,13 @@ export class UrlbarView {
         newSpanCount <= this.#queryContext.maxResults && !seenMisplacedResult;
       if (result.exposureResultHidden) {
         if (canBeVisible) {
-          this.#addExposure(result);
+          this.controller.engagementEvent.addExposure(result);
+        } else {
+          // Add a tentative exposure: The hypothetical row for this
+          // hidden-exposure result can't be visible now, but as long as it were
+          // not marked stale in a later update, it would be shown when stale
+          // rows are removed.
+          this.controller.engagementEvent.addTentativeExposure(result);
         }
         continue;
       }
@@ -2093,7 +2103,7 @@ export class UrlbarView {
       let visible = this.#isElementVisible(item);
       if (visible) {
         if (item.result.exposureResultType) {
-          this.#addExposure(item.result);
+          this.controller.engagementEvent.addExposure(item.result);
         }
         this.visibleResults.push(item.result);
       }
@@ -2326,6 +2336,10 @@ export class UrlbarView {
       row = next;
     }
     this.#updateIndices();
+
+    // Accept tentative exposures. This is analogous to unhiding the
+    // hypothetical non-stale hidden rows of hidden-exposure results.
+    this.controller.engagementEvent.acceptTentativeExposures();
   }
 
   #startRemoveStaleRowsTimer() {
@@ -3415,15 +3429,6 @@ export class UrlbarView {
     if (event.target == this.resultMenu) {
       this.#populateResultMenu();
     }
-  }
-
-  /**
-   * Add result to exposure set on the controller.
-   *
-   * @param {UrlbarResult} result UrlbarResult for which to record an exposure.
-   */
-  #addExposure(result) {
-    this.controller.engagementEvent.addExposure(result);
   }
 }
 
