@@ -578,6 +578,7 @@ add_task(async function test_get_no_headers() {
     "sec-fetch-mode",
     "sec-fetch-site",
     "sec-fetch-user",
+    "priority",
   ];
   let request = new RESTRequest(server.baseURI + "/resource");
   await request.get();

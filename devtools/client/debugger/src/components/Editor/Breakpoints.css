@@ -36,7 +36,7 @@
   pointer-events: none;
 }
 
-.editor-wrapper :not(.empty-line, .new-breakpoint)
+.editor-wrapper :not(.empty-line, .new-breakpoint .cm6-gutter-breakpoint)
   > .CodeMirror-gutter-wrapper
   > .CodeMirror-linenumber:hover::after {
   content: "";
@@ -53,6 +53,27 @@
     no-repeat;
   mask-size: auto 15px;
   mask-position: right;
+}
+
+/* Codemirror 6*/
+.cm6-gutter-breakpoint .breakpoint-marker svg {
+  fill: var(--breakpoint-fill);
+  stroke: var(--breakpoint-stroke);
+  height: 14px;
+  position: absolute;
+  right: -8px;
+  z-index: -99;
+}
+
+/* set the linenumber white when there is a breakpoint */
+.editor-wrapper:not(.skip-pausing) .new-breakpoint .CodeMirror-gutter-wrapper .CodeMirror-linenumber,
+ .editor-wrapper:not(.skip-pausing) .cm6-gutter-breakpoint {
+  color: white;
+}
+
+/* move the breakpoint below the other gutter elements */
+.new-breakpoint .CodeMirror-gutter-elt:nth-child(2) {
+  z-index: 0;
 }
 
 .editor.new-breakpoint svg {
@@ -85,7 +106,9 @@
 }
 
 .editor.new-breakpoint.breakpoint-disabled svg,
-.blackboxed-line .editor.new-breakpoint svg {
+.blackboxed-line .editor.new-breakpoint svg,
+.cm6-gutter-breakpoint .breakpoint-marker.breakpoint-disabled svg,
+.cm6-gutter-breakpoint.blackboxed-line .breakpoint-marker svg {
   fill-opacity: var(--breakpoint-disabled-opacity);
   stroke-opacity: var(--breakpoint-disabled-opacity);
 }

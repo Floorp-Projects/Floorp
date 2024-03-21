@@ -518,7 +518,7 @@ fn add_composite_prim(
 
     frame_state.push_cmd(
         &PrimitiveCommand::quad(
-            pattern.kind,
+            PatternKind::ColorOrTexture,
             pattern.shader_input,
             prim_instance_index,
             composite_prim_address,

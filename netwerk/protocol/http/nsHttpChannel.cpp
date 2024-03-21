@@ -485,6 +485,25 @@ void nsHttpChannel::HandleContinueCancellingByURLClassifier(
   ContinueCancellingByURLClassifier(aErrorCode);
 }
 
+void nsHttpChannel::SetPriorityHeader() {
+  uint8_t urgency = nsHttpHandler::UrgencyFromCoSFlags(mClassOfService.Flags());
+  bool incremental = mClassOfService.Incremental();
+
+  nsPrintfCString value(
+      "%s", urgency != 3 ? nsPrintfCString("u=%d", urgency).get() : "");
+
+  if (incremental) {
+    if (!value.IsEmpty()) {
+      value.Append(", ");
+    }
+    value.Append("i");
+  }
+
+  if (!value.IsEmpty()) {
+    SetRequestHeader("Priority"_ns, value, false);
+  }
+}
+
 nsresult nsHttpChannel::OnBeforeConnect() {
   nsresult rv = NS_OK;
 
@@ -1203,6 +1222,10 @@ nsresult nsHttpChannel::SetupTransaction() {
   nsresult rv;
 
   mozilla::MutexAutoLock lock(mRCWNLock);
+
+  if (StaticPrefs::network_http_priority_header_enabled()) {
+    SetPriorityHeader();
+  }
 
   // If we're racing cache with network, conditional or byte range header
   // could be added in OnCacheEntryCheck. We cannot send conditional request

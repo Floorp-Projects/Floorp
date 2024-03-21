@@ -63,7 +63,7 @@ FINAL_TARGET_FILES.defaults += ["app/permissions"]
 
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "General")
-    SCHEDULES.exclusive = ["linux", "macosx", "windows"]
+    SCHEDULES.exclusive = ["linux", "macosx", "windows", "firefox"]
 
 with Files("docs/**"):
     SCHEDULES.exclusive = ["docs"]

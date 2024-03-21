@@ -41,23 +41,23 @@ class CompareVersion(LooseVersion):
         LooseVersion(versionMap)
 
 
-def is_triangualar(x):
+def is_triangular(x):
     """Check if a number is triangular (0, 1, 3, 6, 10, 15, ...)
     see: https://en.wikipedia.org/wiki/Triangular_number#Triangular_roots_and_tests_for_triangular_numbers # noqa
 
-    >>> is_triangualar(0)
+    >>> is_triangular(0)
     True
-    >>> is_triangualar(1)
+    >>> is_triangular(1)
     True
-    >>> is_triangualar(2)
+    >>> is_triangular(2)
     False
-    >>> is_triangualar(3)
+    >>> is_triangular(3)
     True
-    >>> is_triangualar(4)
+    >>> is_triangular(4)
     False
-    >>> all(is_triangualar(x) for x in [0, 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78, 91, 105])
+    >>> all(is_triangular(x) for x in [0, 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 66, 78, 91, 105])
     True
-    >>> all(not is_triangualar(x) for x in [4, 5, 8, 9, 11, 17, 25, 29, 39, 44, 59, 61, 72, 98, 112])
+    >>> all(not is_triangular(x) for x in [4, 5, 8, 9, 11, 17, 25, 29, 39, 44, 59, 61, 72, 98, 112])
     True
     """
     # pylint --py3k W1619
@@ -609,7 +609,7 @@ class UpdateVerifyConfigCreator(BaseScript):
                     updater_package=updater_package,
                 )
             else:
-                if this_full_check_locales and is_triangualar(completes_only_index):
+                if this_full_check_locales and is_triangular(completes_only_index):
                     self.info("Generating full check configs for %s" % fromVersion)
                     self.update_verify_config.addRelease(
                         release=appVersion,
@@ -625,7 +625,7 @@ class UpdateVerifyConfigCreator(BaseScript):
                 # Quick test for other locales, no download
                 if len(quick_check_locales) > 0:
                     self.info("Generating quick check configs for %s" % fromVersion)
-                    if not is_triangualar(completes_only_index):
+                    if not is_triangular(completes_only_index):
                         # Assuming we skipped full check locales, using all locales
                         _locales = locales
                     else:

@@ -25,7 +25,9 @@ async function painted() {
 
   let startupInfo = await TalosPowersContent.getStartupInfo();
 
-  let startupTime = startupInfo.firstPaint - startupInfo.process;
+  // firstPaint2 is a more accurate measurement that checks that pixels are actually visible,
+  // not merely that the calls to paint them have been completed.
+  let startupTime = startupInfo.firstPaint2 - startupInfo.process;
 
   document.body.textContent = "Startup time = " + startupTime + " ms";
   if (window.dump) {

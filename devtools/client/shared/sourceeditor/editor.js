@@ -166,6 +166,7 @@ class Editor extends EventEmitter {
   #ownerDoc;
   #prefObserver;
   #win;
+  #lineGutterMarkers = new Map();
 
   #updateListener = null;
 
@@ -623,12 +624,14 @@ class Editor extends EventEmitter {
     const indentCompartment = new Compartment();
     const lineWrapCompartment = new Compartment();
     const lineNumberCompartment = new Compartment();
+    const lineNumberMarkersCompartment = new Compartment();
 
     this.#compartments = {
       tabSizeCompartment,
       indentCompartment,
       lineWrapCompartment,
       lineNumberCompartment,
+      lineNumberMarkersCompartment,
     };
 
     const indentStr = (this.config.indentWithTabs ? "\t" : " ").repeat(
@@ -657,10 +660,19 @@ class Editor extends EventEmitter {
       }),
       codemirrorLanguage.syntaxHighlighting(lezerHighlight.classHighlighter),
       EditorView.updateListener.of(v => {
+        if (v.viewportChanged || v.docChanged) {
+          // reset line gutter markers for the new visible ranges
+          // when the viewport changes(e.g when the page is scrolled).
+          if (this.#lineGutterMarkers.size > 0) {
+            this.setLineGutterMarkers();
+          }
+        }
+        // Any custom defined update listener should be called
         if (typeof this.#updateListener == "function") {
           this.#updateListener(v);
         }
       }),
+      lineNumberMarkersCompartment.of([]),
       // keep last so other extension take precedence
       codemirror.minimalSetup,
     ];
@@ -701,6 +713,95 @@ class Editor extends EventEmitter {
     cm.dispatch({
       effects: this.#compartments.lineWrapCompartment.reconfigure(
         lineNumbers({ domEventHandlers })
+      ),
+    });
+  }
+
+  /**
+   * This supports adding/removing of line classes or markers on the
+   * line number gutter based on the defined conditions. This only supports codemirror 6.
+   *
+   *   @param {Array<Marker>} markers         - The list of marker objects which defines the rules
+   *                                            for rendering each marker.
+   *   @property {object}     marker - The rule rendering a marker or class. This is required.
+   *   @property {string}     marker.gutterLineClassName - The css class to add to the line. This is required.
+   *   @property {function}   marker.condition - The condition that decides if the marker/class  gets added or removed.
+   *   @property {function=}  marker.createGutterLineElementNode - This gets the line as an argument and should return the DOM element which
+   *                                            is used for the marker. This is optional.
+   */
+  setLineGutterMarkers(markers) {
+    const cm = editors.get(this);
+
+    if (markers) {
+      // Cache the markers for use later. See next comment
+      for (const marker of markers) {
+        this.#lineGutterMarkers.set(marker.gutterLineClassName, marker);
+      }
+    }
+    // When no markers are passed, the cached markers are used to update the line gutters.
+    // This is useful for re-rendering the line gutters when the viewport changes
+    // (note: the visible ranges will be different) in this case, mainly when the editor is scrolled.
+    else if (!this.#lineGutterMarkers.size) {
+      return;
+    }
+    markers = Array.from(this.#lineGutterMarkers.values());
+
+    const {
+      codemirrorView: { lineNumberMarkers, GutterMarker },
+      codemirrorState: { RangeSetBuilder },
+    } = this.#CodeMirror6;
+
+    // This creates a new GutterMarker https://codemirror.net/docs/ref/#view.GutterMarker
+    // to represents how each line gutter is rendered in the view.
+    // This is set as the value for the Range https://codemirror.net/docs/ref/#state.Range
+    // which represents the line.
+    class LineGutterMarker extends GutterMarker {
+      constructor(className, lineNumber, createElementNode) {
+        super();
+        this.elementClass = className || null;
+        this.toDOM = createElementNode
+          ? () => createElementNode(lineNumber)
+          : null;
+      }
+    }
+
+    // Loop through the visible ranges https://codemirror.net/docs/ref/#view.EditorView.visibleRanges
+    // (representing the lines in the current viewport) and generate a new rangeset for updating the line gutter
+    // based on the conditions defined in the markers(for each line) provided.
+    const builder = new RangeSetBuilder();
+    for (const { from, to } of cm.visibleRanges) {
+      for (let pos = from; pos <= to; ) {
+        const line = cm.state.doc.lineAt(pos);
+        for (const {
+          gutterLineClassName,
+          condition,
+          createGutterLineElementNode,
+        } of markers) {
+          if (typeof condition !== "function") {
+            throw new Error("The `condition` is not a valid function");
+          }
+          if (condition(line.number)) {
+            builder.add(
+              line.from,
+              line.to,
+              new LineGutterMarker(
+                gutterLineClassName,
+                line.number,
+                createGutterLineElementNode
+              )
+            );
+          }
+        }
+        pos = line.to + 1;
+      }
+    }
+
+    // To update the state with the newly generated marker range set, a dispatch is called on the view
+    // with an transaction effect created by the lineNumberMarkersCompartment, which is used to update the
+    // lineNumberMarkers extension configuration.
+    cm.dispatch({
+      effects: this.#compartments.lineNumberMarkersCompartment.reconfigure(
+        lineNumberMarkers.of(builder.finish())
       ),
     });
   }
@@ -1699,6 +1800,7 @@ class Editor extends EventEmitter {
     this.version = null;
     this.#ownerDoc = null;
     this.#updateListener = null;
+    this.#lineGutterMarkers.clear();
 
     if (this.#prefObserver) {
       this.#prefObserver.off(KEYMAP_PREF, this.setKeyMap);

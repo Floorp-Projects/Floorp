@@ -12,6 +12,7 @@ import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.display.DisplayToolbar
+import mozilla.components.concept.toolbar.ScrollableToolbar
 import mozilla.components.feature.tabs.toolbar.TabCounterToolbarButton
 import mozilla.components.feature.toolbar.ToolbarBehaviorController
 import mozilla.components.feature.toolbar.ToolbarFeature
@@ -27,9 +28,11 @@ import org.mozilla.fenix.theme.ThemeManager
 /**
  * Feature configuring the toolbar when in display mode.
  */
+@SuppressWarnings("LongParameterList")
 abstract class ToolbarIntegration(
     context: Context,
     toolbar: BrowserToolbar,
+    scrollableToolbar: ScrollableToolbar,
     toolbarMenu: ToolbarMenu,
     sessionId: String?,
     isPrivate: Boolean,
@@ -52,7 +55,7 @@ abstract class ToolbarIntegration(
     private val menuPresenter =
         MenuPresenter(toolbar, context.components.core.store, sessionId)
 
-    private val toolbarController = ToolbarBehaviorController(toolbar, store, sessionId)
+    private val toolbarController = ToolbarBehaviorController(scrollableToolbar, store, sessionId)
 
     init {
         toolbar.display.menuBuilder = toolbarMenu.menuBuilder
@@ -76,9 +79,11 @@ abstract class ToolbarIntegration(
     }
 }
 
+@SuppressWarnings("LongParameterList")
 class DefaultToolbarIntegration(
     context: Context,
     toolbar: BrowserToolbar,
+    scrollableToolbar: ScrollableToolbar,
     toolbarMenu: ToolbarMenu,
     lifecycleOwner: LifecycleOwner,
     sessionId: String? = null,
@@ -88,6 +93,7 @@ class DefaultToolbarIntegration(
 ) : ToolbarIntegration(
     context = context,
     toolbar = toolbar,
+    scrollableToolbar = scrollableToolbar,
     toolbarMenu = toolbarMenu,
     sessionId = sessionId,
     isPrivate = isPrivate,

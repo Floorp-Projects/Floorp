@@ -76,6 +76,12 @@ add_task(async function eventsForTopFrameNavigation({ client }) {
     "The same loaderId is used for dependent responses (Bug 1637838)"
   );
   is(scriptResponse.response.url, FRAMESET_JS_URL, "Got the Script response");
+
+  // The priority header only appears when the urgency and incremental values
+  // are not both default values (u=3 and i=false). In this case the scriptRequest.request.headers
+  // has no priority header and scriptResponse.response.requestHeaders does, hence we delete.
+  delete scriptResponse.response.requestHeaders.priority;
+
   Assert.deepEqual(
     scriptResponse.response.requestHeaders,
     scriptRequest.request.headers,
@@ -125,6 +131,10 @@ add_task(async function eventsForTopFrameNavigation({ client }) {
     subscriptResponse.loaderId === subdocRequest.loaderId,
     "The same loaderId is used for dependent responses (Bug 1637838)"
   );
+
+  // see comment above
+  delete subscriptResponse.response.requestHeaders.priority;
+
   Assert.deepEqual(
     subscriptResponse.response.requestHeaders,
     subscriptRequest.request.headers,

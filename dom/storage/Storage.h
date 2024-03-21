@@ -52,7 +52,7 @@ class Storage : public nsISupports, public nsWrapperCache {
 
   bool IsPrivateBrowsing() const { return mPrivateBrowsing; }
 
-  bool IsSessionScopedOrLess() const { return mSessionScopedOrLess; }
+  bool IsPrivateBrowsingOrLess() const { return mPrivateBrowsingOrLess; }
 
   // WebIDL
   JSObject* WrapObject(JSContext* aCx,
@@ -97,11 +97,6 @@ class Storage : public nsISupports, public nsWrapperCache {
   }
 
   virtual void Clear(nsIPrincipal& aSubjectPrincipal, ErrorResult& aRv) = 0;
-
-  // The attribute in the WebIDL interface has rather confusing name. So we
-  // shouldn't use this method internally. IsSessionScopedOrLess should be used
-  // directly.
-  bool IsSessionOnly() const { return IsSessionScopedOrLess(); }
 
   //////////////////////////////////////////////////////////////////////////////
   // Testing Methods:
@@ -172,7 +167,7 @@ class Storage : public nsISupports, public nsWrapperCache {
   // Whether storage is set to persist data only per session, may change
   // dynamically and is set by CanUseStorage function that is called
   // before any operation on the storage.
-  bool mSessionScopedOrLess : 1;
+  bool mPrivateBrowsingOrLess : 1;
 };
 
 }  // namespace mozilla::dom

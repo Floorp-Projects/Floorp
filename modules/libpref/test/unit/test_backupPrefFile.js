@@ -25,7 +25,7 @@ add_task(async function test_backupPrefFile() {
   let observer = {
     onStringPref() {},
     onIntPref() {},
-    onBoolPref(kind, name, value, isSticky, isLocked) {
+    onBoolPref(kind, name, value, _isSticky, _isLocked) {
       if (name == "test.backup" && value) {
         sawTestValue = true;
       }

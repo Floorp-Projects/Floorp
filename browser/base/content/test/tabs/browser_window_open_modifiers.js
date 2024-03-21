@@ -97,7 +97,7 @@ add_task(async function () {
           BrowserTestUtils.synthesizeMouseAtCenter(id, { ...event }, browser);
         } else {
           // Make sure the keyboard activates a simple button on the page.
-          await ContentTask.spawn(browser, id, elementId => {
+          await ContentTask.spawn(browser, id, () => {
             content.document.querySelector("#focus-result").value = "";
             content.document.querySelector("#focus-check").focus();
           });

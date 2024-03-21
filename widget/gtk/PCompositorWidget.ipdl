@@ -22,8 +22,8 @@ parent:
   async __delete__();
 
   async NotifyClientSizeChanged(LayoutDeviceIntSize aClientSize);
-  async DisableRendering();
-  async EnableRendering(uintptr_t aXWindow, bool aShaped);
+  async CleanupResources();
+  async SetRenderingSurface(uintptr_t aXWindow, bool aShaped);
 
 child:
 

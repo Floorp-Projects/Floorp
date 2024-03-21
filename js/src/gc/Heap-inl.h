@@ -44,6 +44,10 @@ inline void js::gc::Arena::init(JS::Zone* zoneArg, AllocKind kind,
   }
 
   setAsFullyUnused();
+
+#ifdef DEBUG
+  checkNoMarkedCells();
+#endif
 }
 
 inline void js::gc::Arena::release(const AutoLockGC& lock) {

@@ -11,6 +11,7 @@
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "nsWindow.h"
+#include "mozilla/ScopeExit.h"
 
 #ifdef MOZ_WAYLAND
 #  include "mozilla/StaticPrefs_widget.h"
@@ -129,19 +130,24 @@ RefPtr<WindowSurface> WindowSurfaceProvider::CreateWindowSurface() {
     // 2. XPutImage
 #  ifdef MOZ_HAVE_SHMIMAGE
     if (!mIsShaped && nsShmImage::UseShm()) {
-      LOG(("Drawing to Window 0x%lx will use MIT-SHM\n", mXWindow));
+      LOG(("Drawing to Window 0x%lx will use MIT-SHM\n", (Window)mXWindow));
       return MakeRefPtr<WindowSurfaceX11SHM>(DefaultXDisplay(), mXWindow,
                                              mXVisual, mXDepth);
     }
 #  endif  // MOZ_HAVE_SHMIMAGE
 
-    LOG(("Drawing to Window 0x%lx will use XPutImage\n", mXWindow));
+    LOG(("Drawing to Window 0x%lx will use XPutImage\n", (Window)mXWindow));
     return MakeRefPtr<WindowSurfaceX11Image>(DefaultXDisplay(), mXWindow,
                                              mXVisual, mXDepth, mIsShaped);
   }
 #endif
   MOZ_RELEASE_ASSERT(false);
 }
+
+// We need to ignore thread safety checks here. We need to hold mMutex
+// between StartRemoteDrawingInRegion()/EndRemoteDrawingInRegion() calls
+// which confuses it.
+MOZ_PUSH_IGNORE_THREAD_SAFETY
 
 already_AddRefed<gfx::DrawTarget>
 WindowSurfaceProvider::StartRemoteDrawingInRegion(
@@ -151,7 +157,13 @@ WindowSurfaceProvider::StartRemoteDrawingInRegion(
     return nullptr;
   }
 
-  MutexAutoLock lock(mMutex);
+  // We return a reference to mWindowSurface inside draw target so we need to
+  // hold the mutex untill EndRemoteDrawingInRegion() call where draw target
+  // is returned.
+  // If we return null dt, EndRemoteDrawingInRegion() won't be called to
+  // release mutex.
+  mMutex.Lock();
+  auto unlockMutex = MakeScopeExit([&] { mMutex.Unlock(); });
 
   if (!mWindowSurfaceValid) {
     mWindowSurface = nullptr;
@@ -178,12 +190,20 @@ WindowSurfaceProvider::StartRemoteDrawingInRegion(
     dt = mWindowSurface->Lock(aInvalidRegion);
   }
 #endif
+  if (dt) {
+    // We have valid dt, mutex will be released in EndRemoteDrawingInRegion().
+    unlockMutex.release();
+  }
+
   return dt.forget();
 }
 
 void WindowSurfaceProvider::EndRemoteDrawingInRegion(
     gfx::DrawTarget* aDrawTarget, const LayoutDeviceIntRegion& aInvalidRegion) {
-  MutexAutoLock lock(mMutex);
+  // Unlock mutex from StartRemoteDrawingInRegion().
+  mMutex.AssertCurrentThreadOwns();
+  auto unlockMutex = MakeScopeExit([&] { mMutex.Unlock(); });
+
   // Commit to mWindowSurface only if we have a valid one.
   if (!mWindowSurface || !mWindowSurfaceValid) {
     return;
@@ -217,6 +237,8 @@ void WindowSurfaceProvider::EndRemoteDrawingInRegion(
 #endif
   mWindowSurface->Commit(aInvalidRegion);
 }
+
+MOZ_POP_THREAD_SAFETY
 
 }  // namespace widget
 }  // namespace mozilla

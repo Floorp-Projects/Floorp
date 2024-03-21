@@ -22,7 +22,7 @@ builds:
     description: >-
         Run builds without any of the extras.
     query:
-        - "^build- !fuzzing !notarization !reproduced !rusttests !signing !upload-symbols"
+        - "^build- !fuzzing !notarization !reproduced !rusttests !signing !upload-symbols !components !apk !bundle"
 
 builds-debug:
     selector: fuzzy
@@ -30,7 +30,7 @@ builds-debug:
         Run the bare minimum of debug build jobs to ensure builds work on
         all tier-1 platforms.
     query:
-        - "^build- 'debug !fuzzing !rusttests !signing !plain !asan !tsan !noopt !toolchain !upload-symbols"
+        - "^build- 'debug !fuzzing !rusttests !signing !plain !asan !tsan !noopt !toolchain !upload-symbols !apk !bundle"
 
 builds-debugopt:
     selector: fuzzy
@@ -38,7 +38,7 @@ builds-debugopt:
         Run the bare minimum of debug and opt build jobs to ensure builds work on
         all tier-1 platforms.
     query:
-        - "^build- !fuzzing !rusttests !signing !plain !asan !tsan !noopt !toolchain !upload-symbols"
+        - "^build- !fuzzing !rusttests !signing !plain !asan !tsan !noopt !toolchain !upload-symbols !components !apk !bundle"
 
 desktop-frontend:
     description: >-
@@ -150,7 +150,7 @@ fpush-linux-android:
     query:
         - "'test-linux1804 'debug- !-shippable !-asan"
         - "'test-android-em 'debug"
-        - "^build !-shippable !-signing !-asan !-fuzzing !-rusttests !-base-toolchain !-aar-"
+        - "^build !-shippable !-signing !-asan !-fuzzing !-rusttests !-base-toolchain !-aar- !components !apk !bundle"
 
 geckodriver:
     selector: fuzzy
@@ -254,7 +254,7 @@ sample-suites:
     query:
         - ^test- -1$
         # Only run a single talos + raptor suite per platform
-        - ^test- !1$ !2$ !3$ !4$ !5$ !6$ !7$ !8$ !9$ !0$ !raptor !talos
+        - ^test- !1$ !2$ !3$ !4$ !5$ !6$ !7$ !8$ !9$ !0$ !raptor !talos !components !apk
         - ^test- 'raptor-speedometer | 'talos-g1
 
 sm-shell-all:
@@ -320,7 +320,7 @@ webrender:
     description: >-
         Runs the conformance tests relevant to WebRender.
     query:
-        - "!talos !raptor !shippable !asan '-qr"
+        - "!talos !raptor !shippable !asan '-qr !components"
         - "^webrender-"
 
 webrender-reftests:

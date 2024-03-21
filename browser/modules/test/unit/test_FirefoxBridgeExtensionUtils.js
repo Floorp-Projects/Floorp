@@ -39,7 +39,7 @@ class StubbedRegistryKey {
     this.#children = new Map(this.#originalChildren);
   }
 
-  open(accessLevel) {
+  open(_accessLevel) {
     this.#openedForRead = true;
   }
 

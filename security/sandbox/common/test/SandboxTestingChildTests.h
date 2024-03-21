@@ -680,11 +680,11 @@ void RunTestsRDD(SandboxTestingChild* child) {
 
   RunTestsSched(child);
 
-  child->ErrnoTest("socket_inet"_ns, false,
-                   [] { return socket(AF_INET, SOCK_STREAM, 0); });
+  child->ErrnoValueTest("socket_inet"_ns, EACCES,
+                        [] { return socket(AF_INET, SOCK_STREAM, 0); });
 
-  child->ErrnoTest("socket_unix"_ns, false,
-                   [] { return socket(AF_UNIX, SOCK_STREAM, 0); });
+  child->ErrnoValueTest("socket_unix"_ns, EACCES,
+                        [] { return socket(AF_UNIX, SOCK_STREAM, 0); });
 
   child->ErrnoTest("uname"_ns, true, [] {
     struct utsname uts;
@@ -719,6 +719,16 @@ void RunTestsRDD(SandboxTestingChild* child) {
   child->ErrnoTest("statfs"_ns, true, [] {
     struct statfs sf;
     return statfs("/usr/share", &sf);
+  });
+
+  child->ErrnoValueTest("fork"_ns, EPERM, [] {
+    pid_t pid = fork();
+    if (pid == 0) {
+      // Success: shouldn't happen, and parent will report a test
+      // failure.
+      _exit(0);
+    }
+    return pid;
   });
 
 #  elif XP_MACOSX

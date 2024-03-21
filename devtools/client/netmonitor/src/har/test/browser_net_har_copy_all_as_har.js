@@ -7,7 +7,7 @@
  * Basic tests for exporting Network panel content into HAR format.
  */
 
-const EXPECTED_REQUEST_HEADER_COUNT = 9;
+const EXPECTED_REQUEST_HEADER_COUNT = 10;
 const EXPECTED_RESPONSE_HEADER_COUNT = 6;
 
 add_task(async function () {

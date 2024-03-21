@@ -53,7 +53,11 @@ let TESTS = [
     icons: [
       {
         filename: "remoteIcon.ico",
-        engineIdentifiers: ["engine_non_default_sized_icon"],
+        engineIdentifiers: [
+          // This also tests multiple engine idenifiers works.
+          "enterprise_shuttle",
+          "engine_non_default_sized_icon",
+        ],
         imageSize: 32,
       },
     ],
@@ -76,64 +80,6 @@ let TESTS = [
     expectedIcon: "bigIcon.ico",
   },
 ];
-
-async function getFileDataBuffer(filename) {
-  let data = await IOUtils.read(
-    PathUtils.join(do_get_cwd().path, "data", filename)
-  );
-  return new TextEncoder().encode(data).buffer;
-}
-
-async function mockRecordWithAttachment({
-  filename,
-  engineIdentifiers,
-  imageSize,
-}) {
-  let buffer = await getFileDataBuffer(filename);
-
-  let stream = Cc["@mozilla.org/io/arraybuffer-input-stream;1"].createInstance(
-    Ci.nsIArrayBufferInputStream
-  );
-  stream.setData(buffer, 0, buffer.byteLength);
-
-  // Generate a hash.
-  let hasher = Cc["@mozilla.org/security/hash;1"].createInstance(
-    Ci.nsICryptoHash
-  );
-  hasher.init(Ci.nsICryptoHash.SHA256);
-  hasher.updateFromStream(stream, -1);
-  let hash = hasher.finish(false);
-  hash = Array.from(hash, (_, i) =>
-    ("0" + hash.charCodeAt(i).toString(16)).slice(-2)
-  ).join("");
-
-  let record = {
-    id: Services.uuid.generateUUID().toString(),
-    engineIdentifiers,
-    imageSize,
-    attachment: {
-      hash,
-      location: `main-workspace/search-config-icons/${filename}`,
-      filename,
-      size: buffer.byteLength,
-      mimetype: "application/json",
-    },
-  };
-
-  let attachment = {
-    record,
-    blob: new Blob([buffer]),
-  };
-
-  return { record, attachment };
-}
-
-async function insertRecordIntoCollection(client, db, item) {
-  let { record, attachment } = await mockRecordWithAttachment(item);
-  await db.create(record);
-  await client.attachments.cacheImpl.set(record.id, attachment);
-  await db.importChanges({}, Date.now());
-}
 
 add_setup(async function () {
   let client = RemoteSettings("search-config-icons");
@@ -159,10 +105,7 @@ add_setup(async function () {
 
     if ("icons" in test) {
       for (let icon of test.icons) {
-        await insertRecordIntoCollection(client, db, {
-          ...icon,
-          id: test.engineId,
-        });
+        await insertRecordIntoCollection(client, { ...icon });
       }
     }
   }

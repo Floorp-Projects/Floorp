@@ -1110,6 +1110,7 @@ def set_schedules_components(config, tasks):
 
         schedules.add(category)
         schedules.add(platform_family(task["build-platform"]))
+        schedules.add("firefox")
 
         task["schedules-component"] = sorted(schedules)
         yield task

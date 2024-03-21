@@ -19,7 +19,7 @@ function checkUrlbarFocus(win, focusState) {
 // URL bar records the correct abandonment telemetry with abandonment type
 // "tab_swtich".
 add_task(async function tabSwitchFocusedToFocused() {
-  await doTest(async browser => {
+  await doTest(async () => {
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
       value: "test search",
@@ -45,7 +45,7 @@ add_task(async function tabSwitchFocusedToFocused() {
 // URL bar loses focus logs abandonment telemetry with abandonment type
 // "blur".
 add_task(async function tabSwitchFocusedToUnfocused() {
-  await doTest(async browser => {
+  await doTest(async () => {
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
       value: "test search",
@@ -65,7 +65,7 @@ add_task(async function tabSwitchFocusedToUnfocused() {
 // the URL bar gains focus does not record any abandonment telemetry, reflecting
 // no change in focus state relevant to abandonment.
 add_task(async function tabSwitchUnFocusedToFocused() {
-  await doTest(async browser => {
+  await doTest(async () => {
     checkUrlbarFocus(window, false);
 
     let promiseTabOpened = BrowserTestUtils.waitForEvent(
@@ -91,7 +91,7 @@ add_task(async function tabSwitchUnFocusedToFocused() {
 // Checks that switching between two tabs, both with unfocused URL bars, does
 // not trigger any abandonment telmetry.
 add_task(async function tabSwitchUnFocusedToUnFocused() {
-  await doTest(async browser => {
+  await doTest(async () => {
     checkUrlbarFocus(window, false);
 
     let tab2 = await BrowserTestUtils.openNewForegroundTab(window.gBrowser);

@@ -27,8 +27,9 @@ class CompositorWidgetChild final : public PCompositorWidgetChild,
   mozilla::ipc::IPCResult RecvUnobserveVsync() override;
 
   void NotifyClientSizeChanged(const LayoutDeviceIntSize& aClientSize) override;
-  void DisableRendering() override;
-  void EnableRendering(const uintptr_t aXWindow, const bool aShaped) override;
+  void CleanupResources() override;
+  void SetRenderingSurface(const uintptr_t aXWindow,
+                           const bool aShaped) override;
 
  private:
   RefPtr<CompositorVsyncDispatcher> mVsyncDispatcher;

@@ -2526,7 +2526,7 @@ nsresult nsHttpTransaction::ProcessData(char* buf, uint32_t count,
 
     mCurrentHttpResponseHeaderSize += bytesConsumed;
     if (mCurrentHttpResponseHeaderSize >
-        gHttpHandler->MaxHttpResponseHeaderSize()) {
+        StaticPrefs::network_http_max_response_header_size()) {
       LOG(("nsHttpTransaction %p The response header exceeds the limit.\n",
            this));
       return NS_ERROR_FILE_TOO_BIG;

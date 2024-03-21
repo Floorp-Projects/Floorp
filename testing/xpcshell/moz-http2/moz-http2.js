@@ -834,6 +834,16 @@ function handleRequest(req, res) {
     });
     push.writeHead(200, pushResponseHeaders);
     push.end("ok");
+  } else if (u.pathname === "/hugecontinuedheaders") {
+    for (let i = 0; i < u.query.size; i++) {
+      res.setHeader(
+        "X-Test-Header-" + i,
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".repeat(1024)
+      );
+    }
+    res.writeHead(200);
+    res.end(content);
+    return;
   } else if (u.pathname === "/altsvc1") {
     if (
       req.httpVersionMajor != 2 ||

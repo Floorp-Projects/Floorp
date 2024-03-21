@@ -756,8 +756,6 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   virtual Maybe<double> GetParameter(GLenum pname);
   Maybe<std::string> GetString(GLenum pname) const;
 
-  bool IsEnabled(GLenum cap);
-
  private:
   static StaticMutex sLruMutex;
   static std::list<WebGLContext*> sLru MOZ_GUARDED_BY(sLruMutex);
@@ -780,8 +778,7 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   };
   ScissorRect mScissorRect = {};
 
-  bool ValidateCapabilityEnum(GLenum cap);
-  bool* GetStateTrackingSlot(GLenum cap, GLuint i);
+  bool* GetStateTrackingSlot(GLenum cap);
 
   // Allocation debugging variables
   mutable uint64_t mDataAllocGLCallCount = 0;

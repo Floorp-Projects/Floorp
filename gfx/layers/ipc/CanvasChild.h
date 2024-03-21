@@ -154,6 +154,9 @@ class CanvasChild final : public PCanvasChild, public SupportsWeakPtr {
 
   void CleanupTexture(int64_t aTextureId);
 
+  void ReturnDataSurfaceShmem(
+      already_AddRefed<ipc::SharedMemoryBasic> aDataSurfaceShmem);
+
  protected:
   void ActorDestroy(ActorDestroyReason aWhy) final;
 
@@ -163,14 +166,6 @@ class CanvasChild final : public PCanvasChild, public SupportsWeakPtr {
   ~CanvasChild() final;
 
   bool EnsureDataSurfaceShmem(gfx::IntSize aSize, gfx::SurfaceFormat aFormat);
-
-  void ReturnDataSurfaceShmem(
-      already_AddRefed<ipc::SharedMemoryBasic> aDataSurfaceShmem);
-
-  struct DataShmemHolder {
-    RefPtr<ipc::SharedMemoryBasic> shmem;
-    RefPtr<CanvasChild> canvasChild;
-  };
 
   static void ReleaseDataShmemHolder(void* aClosure);
 
