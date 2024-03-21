@@ -1400,6 +1400,10 @@ export class StyleEditorUI extends EventEmitter {
         type.append(this.#panelDoc.createTextNode(`@${rule.type}\u00A0`));
         if (rule.type == "layer" && rule.layerName) {
           type.append(this.#panelDoc.createTextNode(`${rule.layerName}\u00A0`));
+        } else if (rule.type === "property") {
+          type.append(
+            this.#panelDoc.createTextNode(`${rule.propertyName}\u00A0`)
+          );
         }
 
         const cond = this.#panelDoc.createElementNS(HTML_NS, "span");

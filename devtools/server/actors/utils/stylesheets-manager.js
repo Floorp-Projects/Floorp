@@ -705,6 +705,13 @@ class StyleSheetsManager extends EventEmitter {
           line: InspectorUtils.getRelativeRuleLine(rule),
           column: InspectorUtils.getRuleColumn(rule),
         });
+      } else if (className === "CSSPropertyRule") {
+        atRules.push({
+          type: "property",
+          propertyName: rule.name,
+          line: InspectorUtils.getRelativeRuleLine(rule),
+          column: InspectorUtils.getRuleColumn(rule),
+        });
       }
     }
     return {

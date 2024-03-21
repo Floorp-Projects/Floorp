@@ -415,6 +415,7 @@ static uint32_t CollectAtRules(ServoCSSRuleList& aRuleList,
       case StyleCssRuleType::Media:
       case StyleCssRuleType::Supports:
       case StyleCssRuleType::LayerBlock:
+      case StyleCssRuleType::Property:
       case StyleCssRuleType::Container: {
         Unused << aResult.AppendElement(OwningNonNull(*rule), fallible);
         break;
@@ -425,7 +426,6 @@ static uint32_t CollectAtRules(ServoCSSRuleList& aRuleList,
       case StyleCssRuleType::LayerStatement:
       case StyleCssRuleType::FontFace:
       case StyleCssRuleType::Page:
-      case StyleCssRuleType::Property:
       case StyleCssRuleType::Keyframes:
       case StyleCssRuleType::Keyframe:
       case StyleCssRuleType::Margin:
