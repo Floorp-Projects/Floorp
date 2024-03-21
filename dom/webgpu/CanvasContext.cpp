@@ -10,6 +10,7 @@
 #include "nsDisplayList.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/gfx/CanvasManagerChild.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/CanvasRenderer.h"
 #include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/layers/ImageDataSerializer.h"
@@ -125,6 +126,14 @@ void CanvasContext::Configure(const dom::GPUCanvasConfiguration& aConfig) {
   mUseExternalTextureInSwapChain =
       wgpu_client_use_external_texture_in_swapChain(
           aConfig.mDevice->mId, ConvertTextureFormat(aConfig.mFormat));
+#ifdef XP_WIN
+  // When WebRender does not use hardware acceleration, disable external texture
+  // in swap chain. Since compositor device might not exist.
+  if (gfx::gfxVars::UseSoftwareWebRender() &&
+      !gfx::gfxVars::AllowSoftwareWebRenderD3D11()) {
+    mUseExternalTextureInSwapChain = false;
+  }
+#endif
   mTexture = aConfig.mDevice->InitSwapChain(
       mConfig.get(), mRemoteTextureOwnerId.ref(),
       mUseExternalTextureInSwapChain, mGfxFormat, mCanvasSize);
