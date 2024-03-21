@@ -25,8 +25,7 @@ enum class HangMode : uint32_t {
   /// The synchronous call should time out.
   Hang,
   /// The synchronous call should time out but the response should still be
-  /// received
-  /// (racing with the reply timeout logic).
+  /// received (racing with the reply timeout logic).
   HangButReceive,
   /// The synchronous call should time out but the response should still be
   /// received because the child indicates that processing should continue after
@@ -50,8 +49,10 @@ class TestHangsChild : public PTestHangsChild {
     this->hangMode = (HangMode)hangMode;
 
     auto result = SendHang(hangMode, timeout->CloneHandle());
+    // Only the `Hang` mode should actually fail.
     if (this->hangMode == HangMode::Hang) {
-      // Only the `Hang` mode should actually fail.
+      // See description in parent.
+      timeout->Signal();
       EXPECT_FALSE(result);
     } else {
       EXPECT_TRUE(result);
@@ -102,6 +103,13 @@ class TestHangsParent : public PTestHangsParent {
       // Wait to ensure the child process has called
       // ShouldContinueFromReplyTimeout().
       timeout->Wait();
+
+      if (hangMode == (uint32_t)HangMode::Hang) {
+        // Wait to ensure the child process has returned from `SendHang()`,
+        // otherwise the reply message can race with the processing after
+        // ShouldContinueFromReplyTimeout().
+        timeout->Wait();
+      }
     }
     return IPC_OK();
   }
