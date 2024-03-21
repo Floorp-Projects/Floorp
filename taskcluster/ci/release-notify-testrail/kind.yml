@@ -21,7 +21,7 @@ job-defaults:
     worker-type: b-linux-gcp
     worker:
         docker-image: {in-tree: android-ui-tests}
-        max-run-time: 120
+        max-run-time: 1800
     run:
         use-caches: false
         using: run-commands
