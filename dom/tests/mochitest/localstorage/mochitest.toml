@@ -15,7 +15,6 @@ support-files = [
   "interOriginTest.js",
   "interOriginTest2.js",
   "localStorageCommon.js",
-  "frameLocalStorageSessionOnly.html",
   "file_tryAccessSessionStorage.html",
   "windowProxy.html",
 ]

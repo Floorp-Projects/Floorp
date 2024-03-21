@@ -30,9 +30,6 @@ interface Storage {
 
   [Throws, NeedsSubjectPrincipal]
   undefined clear();
-
-  [ChromeOnly]
-  readonly attribute boolean isSessionOnly;
 };
 
 /**
