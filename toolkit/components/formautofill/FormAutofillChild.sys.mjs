@@ -124,14 +124,14 @@ export class FormAutofillChild extends JSWindowActorChild {
     lazy.AutoCompleteChild.removePopupStateListener(this);
   }
 
-  popupStateChanged(messageName, data, _target) {
+  popupStateChanged(messageName, _data, _target) {
     if (!lazy.FormAutofill.isAutofillEnabled) {
       return;
     }
 
     switch (messageName) {
       case "AutoComplete:PopupClosed": {
-        this.onPopupClosed(data.selectedRowStyle);
+        this.onPopupClosed();
         break;
       }
       case "AutoComplete:PopupOpened": {
@@ -677,7 +677,7 @@ export class FormAutofillChild extends JSWindowActorChild {
     }
   }
 
-  onPopupClosed(selectedRowStyle) {
+  onPopupClosed() {
     this.debug("Popup has closed.");
     lazy.ProfileAutocomplete._clearProfilePreview();
   }
