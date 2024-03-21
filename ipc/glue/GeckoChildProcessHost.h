@@ -151,7 +151,7 @@ class GeckoChildProcessHost : public SupportsWeakPtr,
 
   GeckoProcessType GetProcessType() { return mProcessType; }
 
-#ifdef XP_DARWIN
+#ifdef XP_MACOSX
   task_t GetChildTask();
 #endif
 
