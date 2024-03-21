@@ -667,6 +667,14 @@ nsresult GfxInfo::GetFeatureStatusImpl(
     return NS_OK;
   }
 
+  if (aFeature == FEATURE_WEBGPU) {
+    // Ensure WebGPU is disabled by default on Android until it is better
+    // tested.
+    *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
+    aFailureId = "FEATURE_FAILURE_WEBGPU_ANDROID";
+    return NS_OK;
+  }
+
   return GfxInfoBase::GetFeatureStatusImpl(
       aFeature, aStatus, aSuggestedDriverVersion, aDriverInfo, aFailureId, &os);
 }
