@@ -6,9 +6,16 @@
 
 export default [
   {
-    info: "align-content is inactive on block elements (until bug 1105571 is fixed)",
+    info: "align-content is active on block elements when layout.css.align-content.blocks.enabled is true",
     property: "align-content",
     tagName: "div",
+    rules: ["div { align-content: center; }"],
+    isActive: true,
+  },
+  {
+    info: "align-content is inactive on inline elements",
+    property: "align-content",
+    tagName: "span",
     rules: ["div { align-content: center; }"],
     isActive: false,
   },
@@ -27,7 +34,7 @@ export default [
     isActive: true,
   },
   {
-    info: "align-content is inactive on flex items",
+    info: "align-content is active on flex items (as they have a computed display of block)",
     property: "align-content",
     createTestElement: rootNode => {
       const container = document.createElement("div");
@@ -38,10 +45,10 @@ export default [
     },
     rules: ["div { display: flex; }", "span { align-content: center; }"],
     ruleIndex: 1,
-    isActive: false,
+    isActive: true,
   },
   {
-    info: "align-content is inactive on grid items",
+    info: "align-content is active on grid items (as they have a computed display of block)",
     property: "align-content",
     createTestElement: rootNode => {
       const container = document.createElement("div");
@@ -52,7 +59,7 @@ export default [
     },
     rules: ["div { display: grid; }", "span { align-content: center; }"],
     ruleIndex: 1,
-    isActive: false,
+    isActive: true,
   },
   {
     info: "align-content:baseline is active on flex items",
@@ -88,5 +95,12 @@ export default [
     tagName: "div",
     rules: ["div { display: table-cell; align-content: baseline; }"],
     isActive: true,
+  },
+  {
+    info: "align-content:end is inactive on table cells until Bug 1883357 is fixed",
+    property: "align-content",
+    tagName: "div",
+    rules: ["div { display: table-cell; align-content: end; }"],
+    isActive: false,
   },
 ];
