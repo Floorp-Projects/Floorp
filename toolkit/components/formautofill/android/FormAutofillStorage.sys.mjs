@@ -68,7 +68,7 @@ class Addresses extends AddressesBase {
     this._initializePromise = Promise.resolve();
   }
 
-  async _saveRecord(record, { sourceSync = false } = {}) {
+  async _saveRecord(record) {
     lazy.GeckoViewAutocomplete.onAddressSave(lazy.Address.fromGecko(record));
   }
 
@@ -136,7 +136,7 @@ class CreditCards extends CreditCardsBase {
     this._initializePromise = Promise.resolve();
   }
 
-  async _saveRecord(record, { sourceSync = false } = {}) {
+  async _saveRecord(record) {
     lazy.GeckoViewAutocomplete.onCreditCardSave(
       lazy.CreditCard.fromGecko(record)
     );
