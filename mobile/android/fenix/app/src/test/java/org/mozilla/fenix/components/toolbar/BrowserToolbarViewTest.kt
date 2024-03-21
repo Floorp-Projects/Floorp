@@ -36,14 +36,12 @@ class BrowserToolbarViewTest {
     fun setup() {
         toolbar = BrowserToolbar(testContext)
         toolbar.layoutParams = CoordinatorLayout.LayoutParams(100, 100)
-        behavior = spyk(EngineViewScrollingBehavior(testContext, null, MozacToolbarPosition.BOTTOM))
-        (toolbar.layoutParams as CoordinatorLayout.LayoutParams).behavior = behavior
+
         settings = mockk(relaxed = true)
         every { testContext.components.useCases } returns mockk(relaxed = true)
         every { testContext.components.core } returns mockk(relaxed = true)
         every { testContext.components.publicSuffixList } returns PublicSuffixList(testContext)
         every { testContext.settings() } returns settings
-
         toolbarView = BrowserToolbarView(
             context = testContext,
             settings = settings,
@@ -51,9 +49,12 @@ class BrowserToolbarViewTest {
             interactor = mockk(),
             customTabSession = mockk(relaxed = true),
             lifecycleOwner = mockk(),
+            tabStripContent = {},
         )
 
         toolbarView.view = toolbar
+        behavior = spyk(EngineViewScrollingBehavior(testContext, null, MozacToolbarPosition.BOTTOM))
+        (toolbarView.layout.layoutParams as CoordinatorLayout.LayoutParams).behavior = behavior
     }
 
     @Test
@@ -210,12 +211,12 @@ class BrowserToolbarViewTest {
     fun `expandToolbarAndMakeItFixed should expand the toolbar and and disable the dynamic behavior`() {
         val toolbarViewSpy = spyk(toolbarView)
 
-        assertNotNull((toolbar.layoutParams as CoordinatorLayout.LayoutParams).behavior)
+        assertNotNull((toolbarView.layout.layoutParams as CoordinatorLayout.LayoutParams).behavior)
 
         toolbarViewSpy.expandToolbarAndMakeItFixed()
 
         verify { toolbarViewSpy.expand() }
-        assertNull((toolbar.layoutParams as CoordinatorLayout.LayoutParams).behavior)
+        assertNull((toolbarView.layout.layoutParams as CoordinatorLayout.LayoutParams).behavior)
     }
 
     @Test
@@ -225,7 +226,7 @@ class BrowserToolbarViewTest {
 
         toolbarViewSpy.setDynamicToolbarBehavior(MozacToolbarPosition.BOTTOM)
 
-        assertNotNull((toolbar.layoutParams as CoordinatorLayout.LayoutParams).behavior)
+        assertNotNull((toolbarView.layout.layoutParams as CoordinatorLayout.LayoutParams).behavior)
     }
 
     @Test
@@ -235,7 +236,7 @@ class BrowserToolbarViewTest {
 
         toolbarViewSpy.setDynamicToolbarBehavior(MozacToolbarPosition.TOP)
 
-        assertNotNull((toolbar.layoutParams as CoordinatorLayout.LayoutParams).behavior)
+        assertNotNull((toolbarView.layout.layoutParams as CoordinatorLayout.LayoutParams).behavior)
     }
 
     @Test
@@ -258,7 +259,7 @@ class BrowserToolbarViewTest {
 
         toolbarViewSpy.expand()
 
-        verify { behavior.forceExpand(toolbar) }
+        verify { behavior.forceExpand(toolbarView.layout) }
     }
 
     @Test
@@ -281,6 +282,6 @@ class BrowserToolbarViewTest {
 
         toolbarViewSpy.collapse()
 
-        verify { behavior.forceCollapse(toolbar) }
+        verify { behavior.forceCollapse(toolbarView.layout) }
     }
 }

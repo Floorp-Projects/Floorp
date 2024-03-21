@@ -11,6 +11,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.concept.toolbar.ScrollableToolbar
 import mozilla.components.support.test.fakes.engine.FakeEngineView
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -212,4 +213,9 @@ class EngineViewClippingBehaviorTest {
     }
 }
 
-class BrowserToolbar(context: Context) : TextView(context)
+private class BrowserToolbar(context: Context) : TextView(context), ScrollableToolbar {
+    override fun enableScrolling() {}
+    override fun disableScrolling() {}
+    override fun expand() {}
+    override fun collapse() {}
+}

@@ -27,7 +27,6 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
-import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
@@ -129,9 +128,11 @@ import org.mozilla.fenix.OnBackLongPressedListener
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.readermode.DefaultReaderModeController
+import org.mozilla.fenix.browser.tabstrip.TabStrip
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.FindInPageIntegration
 import org.mozilla.fenix.components.StoreProvider
+import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.components.toolbar.BrowserFragmentState
 import org.mozilla.fenix.components.toolbar.BrowserFragmentStore
@@ -451,6 +452,31 @@ abstract class BaseBrowserFragment :
             interactor = browserToolbarInteractor,
             customTabSession = customTabSessionId?.let { store.state.findCustomTab(it) },
             lifecycleOwner = viewLifecycleOwner,
+            tabStripContent = {
+                FirefoxTheme {
+                    TabStrip(
+                        onAddTabClick = {
+                            findNavController().navigate(
+                                NavGraphDirections.actionGlobalHome(
+                                    focusOnAddressBar = true,
+                                ),
+                            )
+                        },
+                        onLastTabClose = { isPrivate ->
+                            requireComponents.appStore.dispatch(
+                                AppAction.TabStripAction.UpdateLastTabClosed(isPrivate),
+                            )
+                            findNavController().navigate(
+                                BrowserFragmentDirections.actionGlobalHome(),
+                            )
+                        },
+                        onSelectedTabClick = {},
+                        onCloseTabClick = { isPrivate ->
+                            showUndoSnackbar(requireContext().tabClosedUndoMessage(isPrivate))
+                        },
+                    )
+                }
+            },
         )
 
         val browserToolbar = browserToolbarView.view
@@ -1066,12 +1092,12 @@ abstract class BaseBrowserFragment :
         )
 
         initializeEngineView(
-            topToolbarHeight = context.settings().getTopToolbarHeight(),
+            topToolbarHeight = context.settings().getTopToolbarHeight(includeTabStrip = customTabSessionId == null),
             bottomToolbarHeight = bottomToolbarHeight,
         )
     }
 
-    protected fun showUndoSnackbar(message: String) {
+    private fun showUndoSnackbar(message: String) {
         viewLifecycleOwner.lifecycleScope.allowUndo(
             binding.dynamicSnackbarContainer,
             message,
@@ -1282,7 +1308,13 @@ abstract class BaseBrowserFragment :
                         topToolbarHeight = topToolbarHeight,
                     )
             } else {
-                val toolbarHeight = resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
+                val toolbarHeight = if (customTabSessionId == null && context.settings().isTabletAndTabStripEnabled) {
+                    resources.getDimensionPixelSize(R.dimen.browser_toolbar_height) +
+                        resources.getDimensionPixelSize(R.dimen.tab_strip_height)
+                } else {
+                    resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
+                }
+
                 val toolbarPosition = when (context.settings().toolbarPosition) {
                     ToolbarPosition.BOTTOM -> OldToolbarPosition.BOTTOM
                     ToolbarPosition.TOP -> OldToolbarPosition.TOP
@@ -1683,8 +1715,7 @@ abstract class BaseBrowserFragment :
             activity?.enterImmersiveMode()
             (view as? SwipeGestureLayout)?.isSwipeEnabled = false
             browserToolbarView.collapse()
-            browserToolbarView.view.isVisible = false
-            binding.tabStripView.isVisible = false
+            browserToolbarView.gone()
             val browserEngine = binding.swipeRefresh.layoutParams as CoordinatorLayout.LayoutParams
             browserEngine.bottomMargin = 0
             browserEngine.topMargin = 0
@@ -1705,15 +1736,14 @@ abstract class BaseBrowserFragment :
                 }
             }
             if (webAppToolbarShouldBeVisible) {
-                browserToolbarView.view.isVisible = true
+                browserToolbarView.visible()
                 initializeEngineView(
-                    topToolbarHeight = requireContext().settings().getTopToolbarHeight(),
+                    topToolbarHeight = requireContext().settings().getTopToolbarHeight(
+                        includeTabStrip = customTabSessionId == null,
+                    ),
                     bottomToolbarHeight = requireContext().settings().getBottomToolbarHeight(),
                 )
                 browserToolbarView.expand()
-            }
-            if (customTabSessionId == null && requireContext().settings().isTabletAndTabStripEnabled) {
-                binding.tabStripView.isVisible = true
             }
         }
 

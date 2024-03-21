@@ -4,28 +4,28 @@
 
 package mozilla.components.ui.widgets.behavior
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
 import android.view.View
 import androidx.annotation.VisibleForTesting
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.concept.toolbar.ScrollableToolbar
 import mozilla.components.support.ktx.android.view.findViewInHierarchy
 import kotlin.math.roundToInt
 
 /**
  * A [CoordinatorLayout.Behavior] implementation that allows the [EngineView] to automatically
- * size itself in relation to the Y translation of the [BrowserToolbar].
+ * size itself in relation to the Y translation of the [ScrollableToolbar].
  *
- * This is useful for dynamic [BrowserToolbar]s ensuring the web content is displayed immediately
+ * This is useful for dynamic [ScrollableToolbar]s ensuring the web content is displayed immediately
  * below / above the toolbar even when that is animated.
  *
  * @param context [Context] used for various Android interactions
  * @param attrs XML set attributes configuring this
- * @param engineViewParent [NestedScrollingChild] parent of the [EngineView]
- * @param toolbarHeight size of [BrowserToolbar] when it is placed above the [EngineView]
- * @param whether the [BrowserToolbar] is placed above or below the [EngineView]
+ * @param engineViewParent NestedScrollingChild parent of the [EngineView]
+ * @param toolbarHeight size of [ScrollableToolbar] when it is placed above the [EngineView]
+ * @param toolbarPosition whether the [ScrollableToolbar] is placed above or below the [EngineView]
  */
 class EngineViewClippingBehavior(
     context: Context?,
@@ -62,13 +62,8 @@ class EngineViewClippingBehavior(
         }
     }
 
-    @SuppressLint("LogUsage")
     override fun layoutDependsOn(parent: CoordinatorLayout, child: View, dependency: View): Boolean {
-        // This package does not have access to "BrowserToolbar" ... so we are just checking the class name here since
-        // we actually do not need anything from that class - we only need to identify the instance.
-        // Right now we do not have a component that has access to (concept/browser-toolbar and concept-engine).
-        // Creating one just for this behavior is too excessive.
-        if (dependency::class.java.simpleName == "BrowserToolbar") {
+        if (dependency is ScrollableToolbar) {
             return true
         }
 
