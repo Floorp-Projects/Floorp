@@ -22,7 +22,7 @@ class ThreadSafeWorkerRef;
 namespace gfx {
 class DrawTargetRecording;
 class SourceSurface;
-}
+}  // namespace gfx
 
 namespace layers {
 class CanvasDrawEventRecorder;
@@ -132,7 +132,8 @@ class CanvasChild final : public PCanvasChild, public SupportsWeakPtr {
   /**
    * The DrawTargetRecording is about to change, so detach the old snapshot.
    */
-  void DetachSurface(const RefPtr<gfx::SourceSurface>& aSurface);
+  void DetachSurface(const RefPtr<gfx::SourceSurface>& aSurface,
+                     bool aInvalidate = false);
 
   /**
    * Get DataSourceSurface from the translated equivalent version of aSurface in
@@ -141,11 +142,13 @@ class CanvasChild final : public PCanvasChild, public SupportsWeakPtr {
    * @param aSurface the SourceSurface in this process for which we need a
    *                 DataSourceSurface
    * @param aDetached whether the surface is old
+   * @param aMayInvalidate whether the data may be invalidated by future changes
    * @returns a DataSourceSurface created from data for aSurface retrieve from
    *          GPU process
    */
   already_AddRefed<gfx::DataSourceSurface> GetDataSurface(
-      int64_t aTextureId, const gfx::SourceSurface* aSurface, bool aDetached);
+      int64_t aTextureId, const gfx::SourceSurface* aSurface, bool aDetached,
+      bool& aMayInvalidate);
 
   bool RequiresRefresh(int64_t aTextureId) const;
 
