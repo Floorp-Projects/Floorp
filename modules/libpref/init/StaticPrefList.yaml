@@ -6811,7 +6811,7 @@
 # for devices with weak GPUs, or when running SWGL.
 - name: gfx.webrender.low-quality-pinch-zoom
   type: bool
-#if defined(MOZ_WIDGET_ANDROID) && defined(NIGHTLY_BUILD)
+#if defined(MOZ_WIDGET_ANDROID)
   value: true
 #else
   value: false
