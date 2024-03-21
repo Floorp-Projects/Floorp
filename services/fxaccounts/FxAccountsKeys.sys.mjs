@@ -132,6 +132,67 @@ export class FxAccountsKeys {
   }
 
   /**
+   * Validates if the given scoped keys are valid keys
+   *
+   * @param { Object } scopedKeys: The scopedKeys bundle
+   *
+   * @return { Boolean }: true if the scopedKeys bundle is valid, false otherwise
+   */
+  validScopedKeys(scopedKeys) {
+    for (const expectedScope of Object.keys(scopedKeys)) {
+      const key = scopedKeys[expectedScope];
+      if (
+        !key.hasOwnProperty("scope") ||
+        !key.hasOwnProperty("kid") ||
+        !key.hasOwnProperty("kty") ||
+        !key.hasOwnProperty("k")
+      ) {
+        return false;
+      }
+      const { scope, kid, kty, k } = key;
+      if (scope != expectedScope || kty != "oct") {
+        return false;
+      }
+      // We verify the format of the key id is `timestamp-fingerprint`
+      if (!kid.includes("-")) {
+        return false;
+      }
+      const [keyRotationTimestamp, fingerprint] = kid.split("-");
+      // We then verify that the timestamp is a valid timestamp
+      const keyRotationTimestampNum = Number(keyRotationTimestamp);
+      // If the value we got back is falsy it's not a valid timestamp
+      // note that we treat a 0 timestamp as invalid
+      if (!keyRotationTimestampNum) {
+        return false;
+      }
+      // For extra safety, we validate that the timestamp can be converted into a valid
+      // Date object
+      const date = new Date(keyRotationTimestampNum);
+      if (isNaN(date.getTime()) || date.getTime() <= 0) {
+        return false;
+      }
+
+      // Finally, we validate that the fingerprint and the key itself are valid base64 values
+      // Note that we can't verify the fingerprint is correct here because we don't have kb
+      const validB64String = b64String => {
+        let decoded;
+        try {
+          decoded = ChromeUtils.base64URLDecode(b64String, {
+            padding: "reject",
+          });
+        } catch (e) {
+          return false;
+        }
+        return !!decoded;
+      };
+      if (!validB64String(fingerprint) || !validB64String(k)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
    * Format a JWK kid as hex rather than base64.
    *
    * This is a backwards-compatibility helper for code that needs a raw key fingerprint

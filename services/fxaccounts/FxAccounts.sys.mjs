@@ -865,7 +865,7 @@ FxAccountsInternal.prototype = {
   _oauth: null,
   get oauth() {
     if (!this._oauth) {
-      this._oauth = new lazy.FxAccountsOAuth(this.fxAccountsClient);
+      this._oauth = new lazy.FxAccountsOAuth(this.fxAccountsClient, this.keys);
     }
     return this._oauth;
   },

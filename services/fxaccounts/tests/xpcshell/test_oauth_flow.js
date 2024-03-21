@@ -8,6 +8,7 @@
 const {
   FxAccountsOAuth,
   ERROR_INVALID_SCOPES,
+  ERROR_INVALID_SCOPED_KEYS,
   ERROR_INVALID_STATE,
   ERROR_SYNC_SCOPE_NOT_GRANTED,
   ERROR_NO_KEYS_JWE,
@@ -22,6 +23,7 @@ const { SCOPE_PROFILE, FX_OAUTH_CLIENT_ID } = ChromeUtils.importESModule(
 
 ChromeUtils.defineESModuleGetters(this, {
   jwcrypto: "resource://services-crypto/jwcrypto.sys.mjs",
+  FxAccountsKeys: "resource://gre/modules/FxAccountsKeys.sys.mjs",
 });
 
 initTestLogging("Trace");
@@ -159,17 +161,21 @@ add_task(function test_complete_oauth_flow() {
     const oauthCode = "fake oauth code";
     const sessionToken = "01abcef12";
     const plainTextScopedKeys = {
-      kid: "fake key id",
-      k: "fake key",
-      kty: "oct",
+      "https://identity.mozilla.com/apps/oldsync": {
+        kty: "oct",
+        kid: "1510726318123-IqQv4onc7VcVE1kTQkyyOw",
+        k: "DW_ll5GwX6SJ5GPqJVAuMUP2t6kDqhUulc2cbt26xbTcaKGQl-9l29FHAQ7kUiJETma4s9fIpEHrt909zgFang",
+        scope: "https://identity.mozilla.com/apps/oldsync",
+      },
     };
     const fakeAccessToken = "fake access token";
     const fakeRefreshToken = "fake refresh token";
     // Then, we initialize a fake http client, we'll add our fake oauthToken call
     // once we have started the oauth flow (so we have the public keys!)
     const fxaClient = {};
+    const fxaKeys = new FxAccountsKeys(null);
     // Then, we initialize our oauth object with the given client and begin a new flow
-    const oauth = new FxAccountsOAuth(fxaClient);
+    const oauth = new FxAccountsOAuth(fxaClient, fxaKeys);
     const queryParams = await oauth.beginOAuthFlow(scopes);
     // Now that we have the public keys in `keys_jwk`, we use it to generate a JWE
     // representing our scoped keys
@@ -270,5 +276,73 @@ add_task(function test_complete_oauth_flow() {
 
     // Finally, we verify that all stored flows were cleared
     Assert.equal(oauth.numOfFlows(), 0);
+  });
+  add_task(async function test_complete_oauth_invalid_scoped_keys() {
+    // First, we initialize some fake values we would typically get
+    // from outside our system
+    const scopes = [SCOPE_PROFILE, SCOPE_OLD_SYNC];
+    const oauthCode = "fake oauth code";
+    const sessionToken = "01abcef12";
+    const invalidScopedKeys = {
+      "https://identity.mozilla.com/apps/oldsync": {
+        // ====== This is an invalid key type! Should be "oct", so we will raise an error once we realize
+        kty: "EC",
+        kid: "1510726318123-IqQv4onc7VcVE1kTQkyyOw",
+        k: "DW_ll5GwX6SJ5GPqJVAuMUP2t6kDqhUulc2cbt26xbTcaKGQl-9l29FHAQ7kUiJETma4s9fIpEHrt909zgFang",
+        scope: "https://identity.mozilla.com/apps/oldsync",
+      },
+    };
+    const fakeAccessToken = "fake access token";
+    const fakeRefreshToken = "fake refresh token";
+    // Then, we initialize a fake http client, we'll add our fake oauthToken call
+    // once we have started the oauth flow (so we have the public keys!)
+    const fxaClient = {};
+    const fxaKeys = new FxAccountsKeys(null);
+    // Then, we initialize our oauth object with the given client and begin a new flow
+    const oauth = new FxAccountsOAuth(fxaClient, fxaKeys);
+    const queryParams = await oauth.beginOAuthFlow(scopes);
+    // Now that we have the public keys in `keys_jwk`, we use it to generate a JWE
+    // representing our scoped keys
+    const keysJwk = queryParams.keys_jwk;
+    const decodedKeysJwk = JSON.parse(
+      new TextDecoder().decode(
+        ChromeUtils.base64URLDecode(keysJwk, { padding: "reject" })
+      )
+    );
+    delete decodedKeysJwk.key_ops;
+    const jwe = await jwcrypto.generateJWE(
+      decodedKeysJwk,
+      new TextEncoder().encode(JSON.stringify(invalidScopedKeys))
+    );
+    // We also grab the stored PKCE verifier that the oauth object stored internally
+    // to verify that we correctly send it as a part of our HTTP request
+    const storedVerifier = oauth.getFlow(queryParams.state).verifier;
+
+    // Now we initialize our mock of the HTTP request, it verifies we passed in all the correct
+    // parameters and returns what we'd expect a healthy HTTP Response would look like
+    fxaClient.oauthToken = (sessionTokenHex, code, verifier, clientId) => {
+      Assert.equal(sessionTokenHex, sessionToken);
+      Assert.equal(code, oauthCode);
+      Assert.equal(verifier, storedVerifier);
+      Assert.equal(clientId, queryParams.client_id);
+      const response = {
+        access_token: fakeAccessToken,
+        refresh_token: fakeRefreshToken,
+        scope: scopes.join(" "),
+        keys_jwe: jwe,
+      };
+      return Promise.resolve(response);
+    };
+
+    // Then, we call the completeOAuthFlow function, and get back our access token,
+    // refresh token and scopedKeys
+    try {
+      await oauth.completeOAuthFlow(sessionToken, oauthCode, queryParams.state);
+      Assert.fail(
+        "Should have thrown an error because the scoped keys are not valid"
+      );
+    } catch (err) {
+      Assert.equal(err.message, ERROR_INVALID_SCOPED_KEYS);
+    }
   });
 });

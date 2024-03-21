@@ -22,6 +22,7 @@ export const ERROR_INVALID_STATE = "INVALID_STATE";
 export const ERROR_SYNC_SCOPE_NOT_GRANTED = "ERROR_SYNC_SCOPE_NOT_GRANTED";
 export const ERROR_NO_KEYS_JWE = "ERROR_NO_KEYS_JWE";
 export const ERROR_OAUTH_FLOW_ABANDONED = "ERROR_OAUTH_FLOW_ABANDONED";
+export const ERROR_INVALID_SCOPED_KEYS = "ERROR_INVALID_SCOPED_KEYS";
 
 /**
  * Handles all logic and state related to initializing, and completing OAuth flows
@@ -32,14 +33,16 @@ export const ERROR_OAUTH_FLOW_ABANDONED = "ERROR_OAUTH_FLOW_ABANDONED";
 export class FxAccountsOAuth {
   #flow;
   #fxaClient;
+  #fxaKeys;
   /**
    * Creates a new FxAccountsOAuth
    *
    * @param { Object } fxaClient: The fxa client used to send http request to the oauth server
    */
-  constructor(fxaClient) {
+  constructor(fxaClient, fxaKeys) {
     this.#flow = {};
     this.#fxaClient = fxaClient;
+    this.#fxaKeys = fxaKeys;
   }
 
   /**
@@ -131,8 +134,10 @@ export class FxAccountsOAuth {
     // Generate a 43 byte code verifier for PKCE, in accordance with
     // https://datatracker.ietf.org/doc/html/rfc7636#section-7.1 which recommends a
     // 43-octet URL safe string
-    const codeVerifier = new Uint8Array(43);
+    // The byte array is 32 bytes
+    const codeVerifier = new Uint8Array(32);
     crypto.getRandomValues(codeVerifier);
+    // When base64 encoded, it is 43 bytes
     const codeVerifierB64 = ChromeUtils.base64URLEncode(codeVerifier, {
       pad: false,
     });
@@ -147,7 +152,7 @@ export class FxAccountsOAuth {
     // Generate a public, private key pair to be used during the oauth flow
     // to encrypt scoped-keys as they roundtrip through the auth server
     const ECDH_KEY = { name: "ECDH", namedCurve: "P-256" };
-    const key = await crypto.subtle.generateKey(ECDH_KEY, true, ["deriveKey"]);
+    const key = await crypto.subtle.generateKey(ECDH_KEY, false, ["deriveKey"]);
     const publicKey = await crypto.subtle.exportKey("jwk", key.publicKey);
     const privateKey = key.privateKey;
 
@@ -205,6 +210,9 @@ export class FxAccountsOAuth {
       scopedKeys = JSON.parse(
         new TextDecoder().decode(await lazy.jwcrypto.decryptJWE(keys_jwe, key))
       );
+      if (!this.#fxaKeys.validScopedKeys(scopedKeys)) {
+        throw new Error(ERROR_INVALID_SCOPED_KEYS);
+      }
     }
 
     // We make sure no other flow snuck in, and completed before we did
