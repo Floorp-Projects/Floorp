@@ -681,10 +681,10 @@ void RunTestsRDD(SandboxTestingChild* child) {
   RunTestsSched(child);
 
   child->ErrnoValueTest("socket_inet"_ns, EACCES,
-                   [] { return socket(AF_INET, SOCK_STREAM, 0); });
+                        [] { return socket(AF_INET, SOCK_STREAM, 0); });
 
   child->ErrnoValueTest("socket_unix"_ns, EACCES,
-                   [] { return socket(AF_UNIX, SOCK_STREAM, 0); });
+                        [] { return socket(AF_UNIX, SOCK_STREAM, 0); });
 
   child->ErrnoTest("uname"_ns, true, [] {
     struct utsname uts;
