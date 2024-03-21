@@ -261,7 +261,9 @@ div.CodeMirror span.marked-text {
 }
 
 
-.cm-s-mozilla .empty-line .CodeMirror-linenumber {
+.cm-s-mozilla .empty-line .CodeMirror-linenumber,
+/* Codemirror 6 */
+.cm-editor .cm-gutterElement.empty-line {
   color: var(--grey-50);
 }
 
