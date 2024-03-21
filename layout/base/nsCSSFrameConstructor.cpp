@@ -6012,7 +6012,7 @@ nsIFrame* nsCSSFrameConstructor::GetInsertionPrevSibling(
 
   // Find the frame that precedes the insertion point.
   FlattenedChildIterator iter(aInsertion->mContainer);
-  if (iter.ShadowDOMInvolved() || !aChild->IsRootOfNativeAnonymousSubtree()) {
+  if (!aChild->IsRootOfNativeAnonymousSubtree()) {
     // The check for IsRootOfNativeAnonymousSubtree() is because editor is
     // severely broken and calls us directly for native anonymous
     // nodes that it creates.
@@ -8390,7 +8390,7 @@ void nsCSSFrameConstructor::RecreateFramesForContent(
   }
 
   // TODO(emilio): We technically can find the right insertion point nowadays
-  // using StyleChildrenIterator rather than FlattenedTreeIterator. But we'd
+  // using StyleChildrenIterator rather than FlattenedChildIterator. But we'd
   // need to tweak the setup to insert into replaced elements to filter which
   // anonymous roots can be allowed, and which can't.
   //
