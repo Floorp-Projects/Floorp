@@ -426,6 +426,26 @@ describe("MultiStageAboutWelcomeProton module", () => {
 
       sandbox.restore();
     });
+
+    it("should correctly set reverse-split prop", () => {
+      const SCREEN_PROPS = {
+        content: {
+          position: "split",
+          reverse_split: true,
+          title: "test title",
+          primary_button: {
+            label: "test primary button",
+          },
+          additional_button: {
+            label: "test additional button",
+            style: "link",
+          },
+        },
+      };
+      const wrapper = mount(<MultiStageProtonScreen {...SCREEN_PROPS} />);
+      assert.ok(wrapper.exists());
+      assert.equal(wrapper.find("main").prop("reverse-split"), "");
+    });
   });
 
   describe("AboutWelcomeDefaults for proton", () => {
