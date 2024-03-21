@@ -52,7 +52,6 @@ EXPORTS.mozilla.dom += [
     "CoalescedWheelData.h",
     "ContentChild.h",
     "ContentParent.h",
-    "ContentParent_NotifyUpdatedDictionaries.h",
     "ContentProcess.h",
     "ContentProcessManager.h",
     "CSPMessageUtils.h",

@@ -12,7 +12,6 @@
 #include "mozilla/TelemetryProcessEnums.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Variant.h"
-#include "mozilla/dom/WebGLIpdl.h"
 #include "nsITelemetry.h"
 
 namespace mozilla {
@@ -97,13 +96,6 @@ struct DiscardedData {
   uint32_t mDiscardedScalarActions;
   uint32_t mDiscardedKeyedScalarActions;
   uint32_t mDiscardedChildEvents;
-
-  auto MutTiedFields() {
-    return std::tie(mDiscardedHistogramAccumulations,
-                    mDiscardedKeyedHistogramAccumulations,
-                    mDiscardedScalarActions, mDiscardedKeyedScalarActions,
-                    mDiscardedChildEvents);
-  }
 };
 
 }  // namespace Telemetry
@@ -401,7 +393,7 @@ struct ParamTraits<mozilla::Telemetry::EventExtraEntry> {
 
 template <>
 struct ParamTraits<mozilla::Telemetry::DiscardedData>
-    : public ParamTraits_TiedFields<mozilla::Telemetry::DiscardedData> {};
+    : public PlainOldDataSerializer<mozilla::Telemetry::DiscardedData> {};
 
 }  // namespace IPC
 
