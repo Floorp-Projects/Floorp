@@ -8,10 +8,10 @@
 <script>
 document.addEventListener("DOMContentLoaded", () => {
   document.execCommand("enableObjectResizing", false)
-  document.onselectionchange = () => {
+  document.addEventListener("selectionchange", () => {
     document.execCommand("insertImage", false, "x")
     document.execCommand("selectAll", false)
-  }
+  }, { once: true });
   document.getSelection().collapse(a)
 })
 </script>
