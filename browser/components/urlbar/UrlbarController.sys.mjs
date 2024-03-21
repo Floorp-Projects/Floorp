@@ -708,7 +708,6 @@ class TelemetryEvent {
   constructor(controller, category) {
     this._controller = controller;
     this._category = category;
-    this.#exposureResultTypes = new Set();
     this.#beginObservingPingPrefs();
   }
 
@@ -1093,18 +1092,20 @@ class TelemetryEvent {
     }
 
     // First check to see if we can record an exposure event
-    if (
-      (method === "abandonment" || method === "engagement") &&
-      this.#exposureResultTypes.size
-    ) {
-      const exposureResults = Array.from(this.#exposureResultTypes).join(",");
-      this._controller.logger.debug(
-        `exposure event: ${JSON.stringify({ results: exposureResults })}`
-      );
-      Glean.urlbar.exposure.record({ results: exposureResults });
+    if (method === "abandonment" || method === "engagement") {
+      if (this.#exposureResultTypes.size) {
+        let exposure = {
+          results: [...this.#exposureResultTypes].sort().join(","),
+        };
+        this._controller.logger.debug(
+          `exposure event: ${JSON.stringify(exposure)}`
+        );
+        Glean.urlbar.exposure.record(exposure);
+      }
 
       // reset the provider list on the controller
       this.#exposureResultTypes.clear();
+      this.#tentativeExposureResultTypes.clear();
     }
 
     this._controller.logger.info(
@@ -1115,14 +1116,52 @@ class TelemetryEvent {
   }
 
   /**
-   * Add result type to engagementEvent instance exposureResultTypes Set.
+   * Registers an exposure for a result in the current urlbar session. All
+   * exposures that are added during a session are recorded in an exposure event
+   * at the end of the session. Exposures are cleared at the end of each session
+   * and do not carry over to the next session.
    *
-   * @param {UrlbarResult} result UrlbarResult to have exposure recorded.
+   * @param {UrlbarResult} result An exposure will be added for this result if
+   *        exposures are enabled for its result type.
    */
   addExposure(result) {
     if (result.exposureResultType) {
       this.#exposureResultTypes.add(result.exposureResultType);
     }
+  }
+
+  /**
+   * Registers a tentative exposure for a result in the current urlbar session.
+   * Exposures that remain tentative at the end of the session are discarded and
+   * are not recorded in the exposure event.
+   *
+   * @param {UrlbarResult} result A tentative exposure will be added for this
+   *        result if exposures are enabled for its result type.
+   */
+  addTentativeExposure(result) {
+    if (result.exposureResultType) {
+      this.#tentativeExposureResultTypes.add(result.exposureResultType);
+    }
+  }
+
+  /**
+   * Converts all tentative exposures that were added and not yet discarded
+   * during the current urlbar session into actual exposures that will be
+   * recorded at the end of the session.
+   */
+  acceptTentativeExposures() {
+    for (let type of this.#tentativeExposureResultTypes) {
+      this.#exposureResultTypes.add(type);
+    }
+    this.#tentativeExposureResultTypes.clear();
+  }
+
+  /**
+   * Discards all tentative exposures that were added and not yet accepted
+   * during the current urlbar session.
+   */
+  discardTentativeExposures() {
+    this.#tentativeExposureResultTypes.clear();
   }
 
   #getInteractionType(
@@ -1313,5 +1352,6 @@ class TelemetryEvent {
 
   #previousSearchWordsSet = null;
 
-  #exposureResultTypes;
+  #exposureResultTypes = new Set();
+  #tentativeExposureResultTypes = new Set();
 }
