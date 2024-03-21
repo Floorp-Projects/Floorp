@@ -87,7 +87,7 @@
 }
 
 .notificationbox .messageImage[data-type="new"] {
-  background-image: url("chrome://global/skin/icons/whatsnew.svg");
+  background-image: url("chrome://devtools/skin/images/whatsnew.svg");
   fill: var(--theme-highlight-blue);
 }
 

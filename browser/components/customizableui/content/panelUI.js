@@ -6,7 +6,6 @@ ChromeUtils.defineESModuleGetters(this, {
   AppMenuNotifications: "resource://gre/modules/AppMenuNotifications.sys.mjs",
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
   PanelMultiView: "resource:///modules/PanelMultiView.sys.mjs",
-  ToolbarPanelHub: "resource:///modules/asrouter/ToolbarPanelHub.jsm",
 });
 
 /**
@@ -167,9 +166,6 @@ const PanelUI = {
     this.menuButton.removeEventListener("mousedown", this);
     this.menuButton.removeEventListener("keypress", this);
     CustomizableUI.removeListener(this);
-    if (this.whatsNewPanel) {
-      this.whatsNewPanel.removeEventListener("ViewShowing", this);
-    }
   },
 
   /**
@@ -303,11 +299,6 @@ const PanelUI = {
       case "activate":
         this.updateNotifications();
         break;
-      case "ViewShowing":
-        if (aEvent.target == this.whatsNewPanel) {
-          this.onWhatsNewPanelShowing();
-        }
-        break;
     }
   },
 
@@ -412,7 +403,6 @@ const PanelUI = {
       return;
     }
 
-    this.ensureWhatsNewInitialized(viewNode);
     this.ensurePanicViewInitialized(viewNode);
 
     let container = aAnchor.closest("panelmultiview");
@@ -497,24 +487,6 @@ const PanelUI = {
   },
 
   /**
-   * Sets up the event listener for when the What's New panel is shown.
-   *
-   * @param {panelview} panelView The What's New panelview.
-   */
-  ensureWhatsNewInitialized(panelView) {
-    if (panelView.id != "PanelUI-whatsNew" || panelView._initialized) {
-      return;
-    }
-
-    if (!this.whatsNewPanel) {
-      this.whatsNewPanel = panelView;
-    }
-
-    panelView._initialized = true;
-    panelView.addEventListener("ViewShowing", this);
-  },
-
-  /**
    * Adds FTL before appending the panic view markup to the main DOM.
    *
    * @param {panelview} panelView The Panic View panelview.
@@ -530,17 +502,6 @@ const PanelUI = {
 
     MozXULElement.insertFTLIfNeeded("browser/panicButton.ftl");
     panelView._initialized = true;
-  },
-
-  /**
-   * When the What's New panel is showing, we fetch the messages to show.
-   */
-  onWhatsNewPanelShowing() {
-    ToolbarPanelHub.renderMessages(
-      window,
-      document,
-      "PanelUI-whatsNew-message-container"
-    );
   },
 
   /**

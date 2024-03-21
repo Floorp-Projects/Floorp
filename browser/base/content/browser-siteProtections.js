@@ -2529,12 +2529,12 @@ var gProtectionsHandler = {
     };
 
     const doc = event.target.ownerDocument;
-    const container = doc.getElementById("messaging-system-message-container");
+    const container = doc.getElementById("info-message-container");
     const infoButton = doc.getElementById("protections-popup-info-button");
     const panelContainer = doc.getElementById("protections-popup");
     const toggleMessage = () => {
       const learnMoreLink = doc.querySelector(
-        "#messaging-system-message-container .text-link"
+        "#info-message-container .text-link"
       );
       if (learnMoreLink) {
         container.toggleAttribute("disabled");

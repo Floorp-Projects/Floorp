@@ -8,10 +8,6 @@
   scrollbar-color: color-mix(in srgb, currentColor 26%, transparent) transparent;
 }
 
-#appMenu-mainView > .panel-subview-body > .panel-banner-item {
-  padding-inline-start: 18px;
-}
-
 .subviewbutton:not([image],[targetURI],.bookmark-item) > .menu-iconic-left {
   display: none;
 }

@@ -1,10 +1,6 @@
 import { _ToolbarBadgeHub } from "modules/ToolbarBadgeHub.sys.mjs";
 import { GlobalOverrider } from "test/unit/utils";
 import { OnboardingMessageProvider } from "modules/OnboardingMessageProvider.sys.mjs";
-import {
-  _ToolbarPanelHub,
-  ToolbarPanelHub,
-} from "modules/ToolbarPanelHub.sys.mjs";
 
 describe("ToolbarBadgeHub", () => {
   let sandbox;
@@ -13,7 +9,6 @@ describe("ToolbarBadgeHub", () => {
   let fakeSendTelemetry;
   let isBrowserPrivateStub;
   let fxaMessage;
-  let whatsnewMessage;
   let fakeElement;
   let globals;
   let everyWindowStub;
@@ -36,28 +31,6 @@ describe("ToolbarBadgeHub", () => {
     const onboardingMsgs =
       await OnboardingMessageProvider.getUntranslatedMessages();
     fxaMessage = onboardingMsgs.find(({ id }) => id === "FXA_ACCOUNTS_BADGE");
-    whatsnewMessage = {
-      id: `WHATS_NEW_BADGE_71`,
-      template: "toolbar_badge",
-      content: {
-        delay: 1000,
-        target: "whats-new-menu-button",
-        action: { id: "show-whatsnew-button" },
-        badgeDescription: { string_id: "cfr-badge-reader-label-newfeature" },
-      },
-      priority: 1,
-      trigger: { id: "toolbarBadgeUpdate" },
-      frequency: {
-        // Makes it so that we track impressions for this message while at the
-        // same time it can have unlimited impressions
-        lifetime: Infinity,
-      },
-      // Never saw this message or saw it in the past 4 days or more recent
-      targeting: `isWhatsNewPanelEnabled &&
-      (!messageImpressions['WHATS_NEW_BADGE_71'] ||
-        (messageImpressions['WHATS_NEW_BADGE_71']|length >= 1 &&
-          currentDate|date - messageImpressions['WHATS_NEW_BADGE_71'][0] <= 4 * 24 * 3600 * 1000))`,
-    };
     fakeElement = {
       classList: {
         add: sandbox.stub(),
@@ -93,7 +66,6 @@ describe("ToolbarBadgeHub", () => {
     setStringPrefStub = sandbox.stub();
     requestIdleCallbackStub = sandbox.stub().callsFake(fn => fn());
     globals.set({
-      ToolbarPanelHub,
       requestIdleCallback: requestIdleCallbackStub,
       EveryWindow: everyWindowStub,
       PrivateBrowsingUtils: { isBrowserPrivate: isBrowserPrivateStub },
@@ -139,16 +111,6 @@ describe("ToolbarBadgeHub", () => {
 
       assert.calledTwice(instance.messageRequest);
     });
-    it("should add a pref observer", async () => {
-      await instance.init(sandbox.stub().resolves(), {});
-
-      assert.calledOnce(addObserverStub);
-      assert.calledWithExactly(
-        addObserverStub,
-        instance.prefs.WHATSNEW_TOOLBAR_PANEL,
-        instance
-      );
-    });
   });
   describe("#uninit", () => {
     beforeEach(async () => {
@@ -163,16 +125,6 @@ describe("ToolbarBadgeHub", () => {
 
       assert.calledOnce(clearTimeoutStub);
       assert.calledWithExactly(clearTimeoutStub, 2);
-    });
-    it("should remove the pref observer", () => {
-      instance.uninit();
-
-      assert.calledOnce(removeObserverStub);
-      assert.calledWithExactly(
-        removeObserverStub,
-        instance.prefs.WHATSNEW_TOOLBAR_PANEL,
-        instance
-      );
     });
   });
   describe("messageRequest", () => {
@@ -293,66 +245,6 @@ describe("ToolbarBadgeHub", () => {
         instance.removeAllNotifications
       );
     });
-    it("should execute actions if they exist", () => {
-      sandbox.stub(instance, "executeAction");
-      instance.addToolbarNotification(target, whatsnewMessage);
-
-      assert.calledOnce(instance.executeAction);
-      assert.calledWithExactly(instance.executeAction, {
-        ...whatsnewMessage.content.action,
-        message_id: whatsnewMessage.id,
-      });
-    });
-    it("should create a description element", () => {
-      sandbox.stub(instance, "executeAction");
-      instance.addToolbarNotification(target, whatsnewMessage);
-
-      assert.calledOnce(fakeDocument.createElement);
-      assert.calledWithExactly(fakeDocument.createElement, "span");
-    });
-    it("should set description id to element and to button", () => {
-      sandbox.stub(instance, "executeAction");
-      instance.addToolbarNotification(target, whatsnewMessage);
-
-      assert.calledWithExactly(
-        fakeElement.setAttribute,
-        "id",
-        "toolbarbutton-notification-description"
-      );
-      assert.calledWithExactly(
-        fakeElement.setAttribute,
-        "aria-labelledby",
-        `toolbarbutton-notification-description ${whatsnewMessage.content.target}`
-      );
-    });
-    it("should attach fluent id to description", () => {
-      sandbox.stub(instance, "executeAction");
-      instance.addToolbarNotification(target, whatsnewMessage);
-
-      assert.calledOnce(fakeDocument.l10n.setAttributes);
-      assert.calledWithExactly(
-        fakeDocument.l10n.setAttributes,
-        fakeElement,
-        whatsnewMessage.content.badgeDescription.string_id
-      );
-    });
-    it("should add an impression for the message", () => {
-      instance.addToolbarNotification(target, whatsnewMessage);
-
-      assert.calledOnce(instance._addImpression);
-      assert.calledWithExactly(instance._addImpression, whatsnewMessage);
-    });
-    it("should send an impression ping", async () => {
-      sandbox.stub(instance, "sendUserEventTelemetry");
-      instance.addToolbarNotification(target, whatsnewMessage);
-
-      assert.calledOnce(instance.sendUserEventTelemetry);
-      assert.calledWithExactly(
-        instance.sendUserEventTelemetry,
-        "IMPRESSION",
-        whatsnewMessage
-      );
-    });
   });
   describe("registerBadgeNotificationListener", () => {
     let msg_no_delay;
@@ -409,44 +301,6 @@ describe("ToolbarBadgeHub", () => {
 
       assert.calledOnce(everyWindowStub.unregisterCallback);
       assert.calledWithExactly(everyWindowStub.unregisterCallback, instance.id);
-    });
-    it("should only call executeAction for 'update_action' messages", () => {
-      const stub = sandbox.stub(instance, "executeAction");
-      const updateActionMsg = { ...msg_no_delay, template: "update_action" };
-
-      instance.registerBadgeNotificationListener(updateActionMsg);
-
-      assert.notCalled(everyWindowStub.registerCallback);
-      assert.calledOnce(stub);
-    });
-  });
-  describe("executeAction", () => {
-    let blockMessageByIdStub;
-    beforeEach(async () => {
-      blockMessageByIdStub = sandbox.stub();
-      await instance.init(sandbox.stub().resolves(), {
-        blockMessageById: blockMessageByIdStub,
-      });
-    });
-    it("should call ToolbarPanelHub.enableToolbarButton", () => {
-      const stub = sandbox.stub(
-        _ToolbarPanelHub.prototype,
-        "enableToolbarButton"
-      );
-
-      instance.executeAction({ id: "show-whatsnew-button" });
-
-      assert.calledOnce(stub);
-    });
-    it("should call ToolbarPanelHub.enableAppmenuButton", () => {
-      const stub = sandbox.stub(
-        _ToolbarPanelHub.prototype,
-        "enableAppmenuButton"
-      );
-
-      instance.executeAction({ id: "show-whatsnew-button" });
-
-      assert.calledOnce(stub);
     });
   });
   describe("removeToolbarNotification", () => {
@@ -627,26 +481,6 @@ describe("ToolbarBadgeHub", () => {
       const [ping] = instance._sendTelemetry.firstCall.args;
       assert.propertyVal(ping, "type", "TOOLBAR_BADGE_TELEMETRY");
       assert.propertyVal(ping.data, "event", "CLICK");
-    });
-  });
-  describe("#observe", () => {
-    it("should make a message request when the whats new pref is changed", () => {
-      sandbox.stub(instance, "messageRequest");
-
-      instance.observe("", "", instance.prefs.WHATSNEW_TOOLBAR_PANEL);
-
-      assert.calledOnce(instance.messageRequest);
-      assert.calledWithExactly(instance.messageRequest, {
-        template: "toolbar_badge",
-        triggerId: "toolbarBadgeUpdate",
-      });
-    });
-    it("should not react to other pref changes", () => {
-      sandbox.stub(instance, "messageRequest");
-
-      instance.observe("", "", "foo");
-
-      assert.notCalled(instance.messageRequest);
     });
   });
 });

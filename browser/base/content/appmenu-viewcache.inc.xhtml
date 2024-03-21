@@ -3,16 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 <html:template id="appMenu-viewCache">
-  <panelview id="appMenu-mainView" class="PanelUI-subView">
-    <vbox class="panel-subview-body">
-      <toolbarbutton id="appMenu-whatsnew-button"
-                     class="subviewbutton subviewbutton-iconic subviewbutton-nav"
-                     hidden="true"
-                     closemenu="none"
-                     oncommand="PanelUI.showSubView('PanelUI-whatsNew', this)"/>
-    </vbox>
-  </panelview>
-
   <!-- This is a placeholder app menu which should be replaced with the "real"
        Proton app menu before the Proton pref starts getting enabled. -->
   <panelview id="appMenu-protonMainView" class="PanelUI-subView"
@@ -757,29 +747,6 @@
                      data-l10n-id="appmenuitem-downloads"
                      oncommand="DownloadsPanel.showDownloadsHistory();"/>
     </vbox>
-  </panelview>
-
-  <panelview id="PanelUI-whatsNew" class="PanelUI-subView" mainview-with-header="true">
-    <hbox id="PanelUI-whatsNew-title" class="panel-header">
-      <html:h1>
-        <html:span data-l10n-id="whatsnew-panel-header"></html:span>
-      </html:h1>
-    </hbox>
-    <toolbarseparator/>
-    <vbox class="panel-subview-body">
-      <toolbaritem id="PanelUI-whatsNew-content"
-                   orient="vertical"
-                   smoothscroll="false">
-        <html:div id="PanelUI-whatsNew-message-container" role="document">
-          <!-- What's New messages will be rendered here -->
-        </html:div>
-      </toolbaritem>
-    </vbox>
-    <toolbarseparator/>
-    <checkbox id="panelMenu-toggleWhatsNew"
-              class="panelMenu-toggleWhatsNew-checkbox"
-              onclick="ToolbarPanelHub.toggleWhatsNewPref(event)"
-              data-l10n-id="whatsnew-panel-footer-checkbox"/>
   </panelview>
 
   <panelview id="reset-pbm-panel" class="PanelUI-subView" role="document">

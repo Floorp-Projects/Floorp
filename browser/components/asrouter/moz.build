@@ -38,7 +38,6 @@ EXTRA_JS_MODULES.asrouter += [
     "modules/Spotlight.sys.mjs",
     "modules/ToastNotification.sys.mjs",
     "modules/ToolbarBadgeHub.sys.mjs",
-    "modules/ToolbarPanelHub.sys.mjs",
 ]
 
 BROWSER_CHROME_MANIFESTS += [
@@ -57,7 +56,6 @@ TESTING_JS_MODULES += [
     "content-src/templates/OnboardingMessage/Spotlight.schema.json",
     "content-src/templates/OnboardingMessage/ToolbarBadgeMessage.schema.json",
     "content-src/templates/OnboardingMessage/UpdateAction.schema.json",
-    "content-src/templates/OnboardingMessage/WhatsNewMessage.schema.json",
     "content-src/templates/PBNewtab/NewtabPromoMessage.schema.json",
     "content-src/templates/ToastNotification/ToastNotification.schema.json",
     "tests/InflightAssetsMessageProvider.sys.mjs",

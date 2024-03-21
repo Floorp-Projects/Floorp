@@ -4462,14 +4462,6 @@ BrowserGlue.prototype = {
 
       // Check the default branch as enterprise policies can set prefs there.
       const defaultPrefs = Services.prefs.getDefaultBranch("");
-      if (
-        !defaultPrefs.getBoolPref(
-          "browser.messaging-system.whatsNewPanel.enabled",
-          true
-        )
-      ) {
-        return "no-whatsNew";
-      }
       if (!defaultPrefs.getBoolPref("browser.aboutwelcome.enabled", true)) {
         return "no-welcome";
       }

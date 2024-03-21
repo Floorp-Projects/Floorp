@@ -1655,13 +1655,13 @@ radiogroup:focus-visible > .subviewradio[focused="true"] {
 }
 
 #protections-popup {
-  #messaging-system-message-container {
+  #info-message-container {
     height: 260px;
     overflow: hidden;
     transition: margin-bottom .25s;
   }
 
-  #messaging-system-message-container[disabled] {
+  #info-message-container[disabled] {
     /* Offset the height when hidden. This makes the panel content
     * cover the info message and reveal it as it slides down, rather
     * than the info message growing in height. */
@@ -1669,7 +1669,7 @@ radiogroup:focus-visible > .subviewradio[focused="true"] {
    pointer-events: none;
  }
 
-  #messaging-system-message-container[disabled] #protections-popup-message {
+  #info-message-container[disabled] #protections-popup-message {
     opacity: 0;
   }
 }

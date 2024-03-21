@@ -454,8 +454,7 @@ export class TelemetryFeed {
         event = await this.applyCFRPolicy(event);
         break;
       case "badge_user_event":
-      case "whats-new-panel_user_event":
-        event = await this.applyWhatsNewPolicy(event);
+        event = await this.applyToolbarBadgePolicy(event);
         break;
       case "infobar_user_event":
         event = await this.applyInfoBarPolicy(event);
@@ -509,12 +508,12 @@ export class TelemetryFeed {
    * Per Bug 1482134, all the metrics for What's New panel use client_id in
    * all the release channels
    */
-  async applyWhatsNewPolicy(ping) {
+  async applyToolbarBadgePolicy(ping) {
     ping.client_id = await this.telemetryClientId;
     ping.browser_session_id = lazy.browserSessionId;
     // Attach page info to `event_context` if there is a session associated with this ping
     delete ping.action;
-    return { ping, pingType: "whats-new-panel" };
+    return { ping, pingType: "toolbar-badge" };
   }
 
   async applyInfoBarPolicy(ping) {
