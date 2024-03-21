@@ -98,7 +98,7 @@ var SidebarUI = {
     return this._inited;
   },
 
-  init() {
+  async init() {
     this._box = document.getElementById("sidebar-box");
     this._splitter = document.getElementById("sidebar-splitter");
     this._reversePositionButton = document.getElementById(
@@ -108,12 +108,17 @@ var SidebarUI = {
     this._switcherTarget = document.getElementById("sidebar-switcher-target");
     this._switcherArrow = document.getElementById("sidebar-switcher-arrow");
 
-    this._switcherTarget.addEventListener("command", () => {
-      this.toggleSwitcherPanel();
-    });
-    this._switcherTarget.addEventListener("keydown", event => {
-      this.handleKeydown(event);
-    });
+    if (this.sidebarRevampEnabled) {
+      await import("chrome://browser/content/sidebar/sidebar-launcher.mjs");
+      document.getElementById("sidebar-header").hidden = true;
+    } else {
+      this._switcherTarget.addEventListener("command", () => {
+        this.toggleSwitcherPanel();
+      });
+      this._switcherTarget.addEventListener("keydown", event => {
+        this.handleKeydown(event);
+      });
+    }
 
     this._inited = true;
 
@@ -292,19 +297,25 @@ var SidebarUI = {
     [...browser.children].forEach((node, i) => {
       node.style.order = i + 1;
     });
+    let sidebarLauncher = document.querySelector("sidebar-launcher");
 
     if (!this._positionStart) {
-      // DOM ordering is:     |  sidebar-box  | splitter |   appcontent  |
-      // Want to display as:  |   appcontent  | splitter |  sidebar-box  |
-      // So we just swap box and appcontent ordering
+      // DOM ordering is:     sidebar-launcher |  sidebar-box  | splitter |   appcontent  |
+      // Want to display as:  |   appcontent  | splitter |  sidebar-box  | sidebar-launcher
+      // So we just swap box and appcontent ordering and move sidebar-launcher to the end
       let appcontent = document.getElementById("appcontent");
       let boxOrdinal = this._box.style.order;
       this._box.style.order = appcontent.style.order;
+
       appcontent.style.order = boxOrdinal;
+      // the launcher should be on the right of the sidebar-box
+      sidebarLauncher.style.order = parseInt(this._box.style.order) + 1;
       // Indicate we've switched ordering to the box
       this._box.setAttribute("positionend", true);
+      sidebarLauncher.setAttribute("positionend", true);
     } else {
       this._box.removeAttribute("positionend");
+      sidebarLauncher.removeAttribute("positionend");
     }
 
     this.hideSwitcherPanel();
@@ -563,21 +574,30 @@ var SidebarUI = {
    */
   _show(commandID) {
     return new Promise(resolve => {
+      if (this.sidebarRevampEnabled) {
+        this._box.dispatchEvent(
+          new CustomEvent("sidebar-show", { detail: { viewId: commandID } })
+        );
+      } else {
+        this.hideSwitcherPanel();
+      }
+
       this.selectMenuItem(commandID);
-
       this._box.hidden = this._splitter.hidden = false;
+      // sets the sidebar to the left or right, based on a pref
       this.setPosition();
-
-      this.hideSwitcherPanel();
 
       this._box.setAttribute("checked", "true");
       this._box.setAttribute("sidebarcommand", commandID);
-      this.lastOpenedId = commandID;
 
       let { url, title, sourceL10nEl } = this.sidebars.get(commandID);
+
+      // use to live update <tree> elements if the locale changes
+      this.lastOpenedId = commandID;
       this.title = title;
-      // Keep the title element in sync with any l10n changes.
+      // Keep the title element in the switcher in sync with any l10n changes.
       this.observeTitleChanges(sourceL10nEl);
+
       this.browser.setAttribute("src", url); // kick off async load
 
       if (this.browser.contentDocument.location.href != url) {
@@ -616,7 +636,9 @@ var SidebarUI = {
     }
 
     this.hideSwitcherPanel();
-
+    if (this.sidebarRevampEnabled) {
+      this._box.dispatchEvent(new CustomEvent("sidebar-hide"));
+    }
     this.selectMenuItem("");
 
     // Replace the document currently displayed in the sidebar with about:blank
@@ -671,4 +693,10 @@ XPCOMUtils.defineLazyPreferenceGetter(
   SidebarUI.POSITION_START_PREF,
   true,
   SidebarUI.setPosition.bind(SidebarUI)
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  SidebarUI,
+  "sidebarRevampEnabled",
+  "sidebar.revamp",
+  false
 );

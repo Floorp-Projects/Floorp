@@ -1851,10 +1851,9 @@ pref("pdfjs.previousHandler.alwaysAskBeforeHandling", false);
 // Try to convert PDFs sent as octet-stream
 pref("pdfjs.handleOctetStream", true);
 
-pref("sidebar.companion", false);
-
 // Is the sidebar positioned ahead of the content browser
 pref("sidebar.position_start", true);
+pref("sidebar.revamp", false);
 
 pref("security.protectionspopup.recordEventTelemetry", true);
 pref("security.app_menu.recordEventTelemetry", true);

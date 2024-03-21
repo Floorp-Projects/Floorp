@@ -13,6 +13,7 @@
   preview/interventions.ftl                        (../components/urlbar/content/interventions.ftl)
   preview/enUS-searchFeatures.ftl                  (../components/urlbar/content/enUS-searchFeatures.ftl)
   preview/shopping.ftl                             (../components/shopping/content/shopping.ftl)
+  preview/sidebar.ftl                              (../components/sidebar/sidebar.ftl)
   preview/onboarding.ftl                           (../components/aboutwelcome/content/onboarding.ftl)
   preview/select-translations.ftl                  (../locales-preview/select-translations.ftl)
   preview/translations.ftl                         (../locales-preview/translations.ftl)
