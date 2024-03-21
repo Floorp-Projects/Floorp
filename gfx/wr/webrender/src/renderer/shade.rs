@@ -1154,6 +1154,16 @@ impl Shaders {
             .expect("bug: unsupported scale shader requested")
     }
 
+    pub fn get_quad_shader(
+        &mut self,
+        pattern: PatternKind
+    ) -> &mut LazilyCompiledShader {
+        match pattern {
+            PatternKind::ColorOrTexture => &mut self.ps_quad_textured,
+            PatternKind::Mask => unreachable!(),
+        }
+    }
+
     pub fn get(&
         mut self,
         key: &BatchKey,

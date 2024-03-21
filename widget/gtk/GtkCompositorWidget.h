@@ -28,9 +28,9 @@ class PlatformCompositorWidgetDelegate : public CompositorWidgetDelegate {
       const LayoutDeviceIntSize& aClientSize) = 0;
   virtual GtkCompositorWidget* AsGtkCompositorWidget() { return nullptr; };
 
-  virtual void DisableRendering() = 0;
-  virtual void EnableRendering(const uintptr_t aXWindow,
-                               const bool aShaped) = 0;
+  virtual void CleanupResources() = 0;
+  virtual void SetRenderingSurface(const uintptr_t aXWindow,
+                                   const bool aShaped) = 0;
 
   // CompositorWidgetDelegate Overrides
 
@@ -74,10 +74,11 @@ class GtkCompositorWidget : public CompositorWidget,
 
   // Suspend rendering of this remote widget and clear all resources.
   // Can be used when underlying window is hidden/unmapped.
-  void DisableRendering() override;
+  void CleanupResources() override;
 
   // Resume rendering with to given aXWindow (X11) or nsWindow (Wayland).
-  void EnableRendering(const uintptr_t aXWindow, const bool aShaped) override;
+  void SetRenderingSurface(const uintptr_t aXWindow,
+                           const bool aShaped) override;
 
   // If we fail to set window size (due to different screen scale or so)
   // we can't paint the frame by compositor.
@@ -90,11 +91,6 @@ class GtkCompositorWidget : public CompositorWidget,
   RefPtr<mozilla::layers::NativeLayerRoot> GetNativeLayerRoot() override;
 #endif
 
-  bool PreRender(WidgetRenderingContext* aContext) override {
-    return !mIsRenderingSuspended;
-  }
-  bool IsHidden() const override { return mIsRenderingSuspended; }
-
   // PlatformCompositorWidgetDelegate Overrides
 
   void NotifyClientSizeChanged(const LayoutDeviceIntSize& aClientSize) override;
@@ -102,10 +98,10 @@ class GtkCompositorWidget : public CompositorWidget,
 
  private:
 #if defined(MOZ_WAYLAND)
-  bool ConfigureWaylandBackend();
+  void ConfigureWaylandBackend();
 #endif
 #if defined(MOZ_X11)
-  bool ConfigureX11Backend(Window aXWindow, bool aShaped);
+  void ConfigureX11Backend(Window aXWindow, bool aShaped);
 #endif
 #ifdef MOZ_LOGGING
   bool IsPopup();
@@ -129,7 +125,6 @@ class GtkCompositorWidget : public CompositorWidget,
 #ifdef MOZ_WAYLAND
   RefPtr<mozilla::layers::NativeLayerRootWayland> mNativeLayerRoot;
 #endif
-  Atomic<bool> mIsRenderingSuspended{true};
 };
 
 }  // namespace widget

@@ -263,8 +263,6 @@ def download_to_path(url, path, sha256=None, size=None):
                     fh.write(chunk)
 
             return
-        except IntegrityError:
-            raise
         except Exception as e:
             log("Download failed: {}".format(e))
             continue
@@ -275,17 +273,15 @@ def download_to_path(url, path, sha256=None, size=None):
 def download_to_memory(url, sha256=None, size=None):
     """Download a URL to memory, possibly with verification."""
 
-    data = b""
     for _ in retrier(attempts=5, sleeptime=60):
-        try:
-            log("Downloading %s" % (url))
+        data = b""
+        log("Downloading %s" % (url))
 
+        try:
             for chunk in stream_download(url, sha256=sha256, size=size):
                 data += chunk
 
             return data
-        except IntegrityError:
-            raise
         except Exception as e:
             log("Download failed: {}".format(e))
             continue

@@ -40,8 +40,6 @@ enum class StorageAccess {
   // Allow access to the storage, but only if it is secure to do so in a
   // private browsing context.
   ePrivateBrowsing = 1,
-  // Allow access to the storage, but only persist it for the current session
-  eSessionScoped = 2,
   // Allow access to the storage
   eAllow = 3,
   // Keep this at the end.  Used for serialization, but not a valid value.

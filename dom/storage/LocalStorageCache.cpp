@@ -37,8 +37,11 @@ inline uint32_t GetDataSetIndex(bool aPrivateBrowsing,
 }
 
 inline uint32_t GetDataSetIndex(const LocalStorage* aStorage) {
+  // A session only mode doesn't exist anymore, so having a separate data set
+  // for it here is basically useless. This code is only kept until we remove
+  // the old / legacy LocalStorage implementation.
   return GetDataSetIndex(aStorage->IsPrivateBrowsing(),
-                         aStorage->IsSessionScopedOrLess());
+                         aStorage->IsPrivateBrowsingOrLess());
 }
 
 }  // namespace
@@ -167,8 +170,8 @@ void LocalStorageCache::NotifyObservers(const LocalStorage* aStorage,
 }
 
 inline bool LocalStorageCache::Persist(const LocalStorage* aStorage) const {
-  return mPersistent &&
-         (aStorage->IsPrivateBrowsing() || !aStorage->IsSessionScopedOrLess());
+  return mPersistent && (aStorage->IsPrivateBrowsing() ||
+                         !aStorage->IsPrivateBrowsingOrLess());
 }
 
 const nsCString LocalStorageCache::Origin() const {

@@ -21,7 +21,6 @@ job-defaults:
         symbol: Bpgo(run)
         kind: build
         tier: 1
-    run-on-projects: ['release']
     use-system-python: false
 
 jobs:
@@ -81,6 +80,7 @@ jobs:
             cwd: '{checkout}'
             command: >
                 ./taskcluster/scripts/misc/run-profileserver.sh
+        run-on-projects: ['release']
         fetches:
             toolchain:
                 - linux64-clang
@@ -118,6 +118,7 @@ jobs:
                 - android/android_common.py
                 - android/android-x86_64-profile-generation.py
                 - android/android_pgo.py
+        run-on-projects: ['release']
         fetches:
             toolchain:
                 - linux64-clang
@@ -158,6 +159,7 @@ jobs:
                 - android/android_common.py
                 - android/android-x86_64-profile-generation.py
                 - android/android_pgo.py
+        run-on-projects: ['release']
         fetches:
             toolchain:
                 - linux64-clang
@@ -199,6 +201,7 @@ jobs:
                 - android/android_common.py
                 - android/android-aarch64-profile-generation.py
                 - android/android_pgo.py
+        run-on-projects: ['release']
         fetches:
             toolchain:
                 - linux64-clang
@@ -231,6 +234,7 @@ jobs:
             sparse-profile: profile-generate
             cwd: '{checkout}'
             command: ./taskcluster/scripts/misc/run-profileserver.sh
+        run-on-projects: ['release']
         fetches:
             toolchain:
                 - win64-clang-toolchain
@@ -260,6 +264,7 @@ jobs:
             sparse-profile: profile-generate
             cwd: '{checkout}'
             command: ./taskcluster/scripts/misc/run-profileserver.sh
+        run-on-projects: ['release']
         fetches:
             toolchain:
                 - win64-clang-toolchain
@@ -319,6 +324,7 @@ jobs:
             sparse-profile: profile-generate
             cwd: '{checkout}'
             command: ./taskcluster/scripts/misc/run-profileserver-macos.sh
+        run-on-projects: ['release']
         fetches:
             toolchain:
                 - macosx64-clang
@@ -348,6 +354,7 @@ jobs:
             sparse-profile: profile-generate
             cwd: '{checkout}'
             command: ./taskcluster/scripts/misc/run-profileserver-macos.sh
+        run-on-projects: ['release']
         fetches:
             toolchain:
                 - macosx64-clang

@@ -487,8 +487,15 @@ JS_PUBLIC_API bool JS::WasIncrementalGC(JSRuntime* rt) {
 bool js::gc::CreateUniqueIdForNativeObject(NativeObject* nobj, uint64_t* uidp) {
   JSRuntime* runtime = nobj->runtimeFromMainThread();
   *uidp = NextCellUniqueId(runtime);
+
   JSContext* cx = runtime->mainContextFromOwnThread();
-  return nobj->setUniqueId(cx, *uidp);
+  MOZ_ASSERT(!cx->isExceptionPending());
+  if (!nobj->setUniqueId(cx, *uidp)) {
+    cx->clearPendingException();
+    return false;
+  }
+
+  return true;
 }
 
 bool js::gc::CreateUniqueIdForNonNativeObject(Cell* cell,

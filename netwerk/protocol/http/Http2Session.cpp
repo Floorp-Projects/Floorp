@@ -1419,6 +1419,13 @@ nsresult Http2Session::RecvHeaders(Http2Session* self) {
     return self->SessionError(PROTOCOL_ERROR);
   }
 
+  uint32_t frameSize = self->mInputFrameDataSize - paddingControlBytes -
+                       priorityLen - paddingLength;
+  if (self->mAggregatedHeaderSize + frameSize >
+      StaticPrefs::network_http_max_response_header_size()) {
+    LOG(("Http2Session %p header exceeds the limit\n", self));
+    return self->SessionError(PROTOCOL_ERROR);
+  }
   if (!self->mInputFrameDataStream) {
     // Cannot find stream. We can continue the session, but we need to
     // uncompress the header block to maintain the correct compression context
@@ -1435,8 +1442,7 @@ nsresult Http2Session::RecvHeaders(Http2Session* self) {
     self->mDecompressBuffer.Append(
         &self->mInputFrameBuffer[kFrameHeaderBytes + paddingControlBytes +
                                  priorityLen],
-        self->mInputFrameDataSize - paddingControlBytes - priorityLen -
-            paddingLength);
+        frameSize);
 
     if (self->mInputFrameFlags & kFlag_END_HEADERS) {
       rv = self->UncompressAndDiscard(false);
@@ -1466,21 +1472,16 @@ nsresult Http2Session::RecvHeaders(Http2Session* self) {
   self->mDecompressBuffer.Append(
       &self->mInputFrameBuffer[kFrameHeaderBytes + paddingControlBytes +
                                priorityLen],
-      self->mInputFrameDataSize - paddingControlBytes - priorityLen -
-          paddingLength);
+      frameSize);
 
   self->mInputFrameDataStream->UpdateTransportReadEvents(
       self->mInputFrameDataSize);
   self->mLastDataReadEpoch = self->mLastReadEpoch;
 
   if (!isContinuation) {
-    self->mAggregatedHeaderSize = self->mInputFrameDataSize -
-                                  paddingControlBytes - priorityLen -
-                                  paddingLength;
+    self->mAggregatedHeaderSize = frameSize;
   } else {
-    self->mAggregatedHeaderSize += self->mInputFrameDataSize -
-                                   paddingControlBytes - priorityLen -
-                                   paddingLength;
+    self->mAggregatedHeaderSize += frameSize;
   }
 
   if (!endHeadersFlag) {  // more are coming - don't process yet

@@ -12,6 +12,7 @@ import { connect } from "devtools/client/shared/vendor/react-redux";
 import { getLineText, isLineBlackboxed } from "./../../utils/source";
 import { createLocation } from "./../../utils/location";
 import { getIndentation } from "../../utils/indentation";
+import { isWasm } from "../../utils/wasm";
 import { features } from "../../utils/prefs";
 
 import {
@@ -50,6 +51,7 @@ import Exceptions from "./Exceptions";
 import BlackboxLines from "./BlackboxLines";
 
 import {
+  fromEditorLine,
   showSourceText,
   setDocument,
   resetLineNumberFormat,
@@ -275,6 +277,74 @@ class Editor extends PureComponent {
       this.props.closeTab(selectedSource, "shortcut");
     }
   };
+
+  componentDidUpdate(prevProps) {
+    const {
+      selectedSource,
+      blackboxedRanges,
+      isSourceOnIgnoreList,
+      breakableLines,
+    } = this.props;
+    const { editor } = this.state;
+
+    if (!selectedSource) {
+      return;
+    }
+
+    // Sets the breakables lines for codemirror 6
+    if (features.codemirrorNext && editor) {
+      const shouldUpdateBreakableLines =
+        prevProps.breakableLines.size !== this.props.breakableLines.size ||
+        prevProps.selectedSource?.id !== selectedSource.id;
+
+      const isSourceWasm = isWasm(selectedSource.id);
+
+      if (shouldUpdateBreakableLines) {
+        editor.setLineGutterMarkers([
+          {
+            gutterLineClassName: "empty-line",
+            condition: line => {
+              const lineNumber = fromEditorLine(
+                selectedSource.id,
+                line,
+                isSourceWasm
+              );
+              return !breakableLines.has(lineNumber);
+            },
+          },
+        ]);
+      }
+
+      const blackboxedRangesForSelectedSource =
+        blackboxedRanges[selectedSource.url];
+      const shouldUpdateBlackboxedLines =
+        prevProps.blackboxedRanges[selectedSource.url]?.length !==
+          blackboxedRangesForSelectedSource?.length ||
+        prevProps.selectedSource?.id !== selectedSource?.id ||
+        prevProps.isSourceOnIgnoreList !== isSourceOnIgnoreList;
+
+      if (shouldUpdateBlackboxedLines) {
+        editor.setLineGutterMarkers([
+          {
+            gutterLineClassName: "blackboxed-line",
+            condition: line => {
+              const lineNumber = fromEditorLine(
+                selectedSource.id,
+                line,
+                isSourceWasm
+              );
+
+              return isLineBlackboxed(
+                blackboxedRangesForSelectedSource,
+                lineNumber,
+                isSourceOnIgnoreList
+              );
+            },
+          },
+        ]);
+      }
+    }
+  }
 
   componentWillUnmount() {
     if (!features.codemirrorNext) {
@@ -722,6 +792,12 @@ class Editor extends PureComponent {
       mapScopesEnabled,
     } = this.props;
     const { editor } = this.state;
+
+    if (features.codemirrorNext) {
+      return React.createElement(Breakpoints, {
+        editor,
+      });
+    }
 
     if (!selectedSource || !editor || !getDocument(selectedSource.id)) {
       return null;

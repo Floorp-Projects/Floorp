@@ -10,7 +10,7 @@ import { PseudoLocalizationButton } from "../PseudoLocalizationButton.jsx";
 import { FluentPanel } from "../FluentPanel.jsx";
 
 // Register the addon.
-addons.register(ADDON_ID, api => {
+addons.register(ADDON_ID, () => {
   // Register the tool.
   addons.add(TOOL_ID, {
     type: types.TOOL,

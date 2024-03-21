@@ -66,12 +66,20 @@ export function toEditorLine(sourceId, lineOrOffset) {
     return wasmOffsetToLine(sourceId, lineOrOffset) || 0;
   }
 
+  if (features.codemirrorNext) {
+    return lineOrOffset;
+  }
+
   return lineOrOffset ? lineOrOffset - 1 : 1;
 }
 
 export function fromEditorLine(sourceId, line, sourceIsWasm) {
   if (sourceIsWasm) {
     return lineToWasmOffset(sourceId, line) || 0;
+  }
+
+  if (features.codemirrorNext) {
+    return line;
   }
 
   return line + 1;

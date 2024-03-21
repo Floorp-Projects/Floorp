@@ -4,7 +4,7 @@ module.exports = {
   rules: {
     "no-unused-vars": [
       "error",
-      { args: "none", varsIgnorePattern: "^end_test$" },
+      { argsIgnorePattern: "^_", varsIgnorePattern: "^end_test$" },
     ],
   },
   overrides: [
@@ -14,7 +14,7 @@ module.exports = {
         "no-unused-vars": [
           "error",
           {
-            args: "none",
+            argsIgnorePattern: "^_",
             vars: "local",
           },
         ],

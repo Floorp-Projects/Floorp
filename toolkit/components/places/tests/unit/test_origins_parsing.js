@@ -71,7 +71,7 @@ add_task(async function parsing() {
             // The history cannot be deleted at a URL with a user path.
           } else {
             expectedOrigins = expectedOrigins.filter(
-              ([prefix, hostPort]) => !prefix.startsWith(uri.scheme + ":")
+              ([prefix]) => !prefix.startsWith(uri.scheme + ":")
             );
           }
           await checkDB(expectedOrigins);

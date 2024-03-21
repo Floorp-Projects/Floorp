@@ -211,6 +211,7 @@ impl<T: RenderTarget> RenderTargetList<T> {
     }
 }
 
+const NUM_PATTERNS: usize = crate::pattern::NUM_PATTERNS as usize;
 
 /// Contains the work (in the form of instance arrays) needed to fill a color
 /// color output surface (RGBA8).
@@ -236,9 +237,9 @@ pub struct ColorRenderTarget {
     pub resolve_ops: Vec<ResolveOp>,
     pub clear_color: Option<ColorF>,
 
-    pub prim_instances: Vec<PrimitiveInstanceData>,
-    pub prim_instances_with_scissor: FastHashMap<DeviceIntRect, Vec<PrimitiveInstanceData>>,
-
+    pub prim_instances: [Vec<PrimitiveInstanceData>; NUM_PATTERNS],
+    pub prim_instances_with_scissor: FastHashMap<(DeviceIntRect, PatternKind), Vec<PrimitiveInstanceData>>,
+    
     pub clip_masks: ClipMaskInstanceList,
 }
 
@@ -262,7 +263,7 @@ impl RenderTarget for ColorRenderTarget {
             used_rect,
             resolve_ops: Vec::new(),
             clear_color: Some(ColorF::TRANSPARENT),
-            prim_instances: Vec::new(),
+            prim_instances: [Vec::new(), Vec::new()],
             prim_instances_with_scissor: FastHashMap::default(),
             clip_masks: ClipMaskInstanceList::new(),
         }
@@ -393,11 +394,11 @@ impl RenderTarget for ColorRenderTarget {
                     |_, instance| {
                         if info.prim_needs_scissor_rect {
                             self.prim_instances_with_scissor
-                                .entry(target_rect)
+                                .entry((target_rect, info.pattern))
                                 .or_insert(Vec::new())
                                 .push(instance);
                         } else {
-                            self.prim_instances.push(instance);
+                            self.prim_instances[info.pattern as usize].push(instance);
                         }
                     }
                 );

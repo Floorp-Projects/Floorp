@@ -957,7 +957,29 @@ bool ClientWebGLContext::CreateHostContext(const uvec2& requestedSize) {
         .mCurrentQueryByTarget[LOCAL_GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN];
   }
 
+  state.mIsEnabledMap = Some(webgl::MakeIsEnabledMap(mIsWebGL2));
+
   return true;
+}
+
+std::unordered_map<GLenum, bool> webgl::MakeIsEnabledMap(const bool webgl2) {
+  auto ret = std::unordered_map<GLenum, bool>{};
+
+  ret[LOCAL_GL_BLEND] = false;
+  ret[LOCAL_GL_CULL_FACE] = false;
+  ret[LOCAL_GL_DEPTH_TEST] = false;
+  ret[LOCAL_GL_DITHER] = true;
+  ret[LOCAL_GL_POLYGON_OFFSET_FILL] = false;
+  ret[LOCAL_GL_SAMPLE_ALPHA_TO_COVERAGE] = false;
+  ret[LOCAL_GL_SAMPLE_COVERAGE] = false;
+  ret[LOCAL_GL_SCISSOR_TEST] = false;
+  ret[LOCAL_GL_STENCIL_TEST] = false;
+
+  if (webgl2) {
+    ret[LOCAL_GL_RASTERIZER_DISCARD] = false;
+  }
+
+  return ret;
 }
 
 // -------
@@ -1895,24 +1917,40 @@ bool ClientWebGLContext::IsVertexArray(
 
 // ------------------------- GL State -------------------------
 
-void ClientWebGLContext::SetEnabledI(GLenum cap, Maybe<GLuint> i,
-                                     bool val) const {
+void ClientWebGLContext::SetEnabledI(const GLenum cap, const Maybe<GLuint> i,
+                                     const bool val) const {
+  const FuncScope funcScope(*this, "enable/disable");
+  if (IsContextLost()) return;
+
+  auto& map = *mNotLost->state.mIsEnabledMap;
+  auto slot = MaybeFind(map, cap);
+  if (i && cap != LOCAL_GL_BLEND) {
+    slot = nullptr;
+  }
+  if (!slot) {
+    EnqueueError_ArgEnum("cap", cap);
+    return;
+  }
+
   Run<RPROC(SetEnabled)>(cap, i, val);
+
+  if (!i || *i == 0) {
+    *slot = val;
+  }
 }
 
-bool ClientWebGLContext::IsEnabled(GLenum cap) const {
+bool ClientWebGLContext::IsEnabled(const GLenum cap) const {
   const FuncScope funcScope(*this, "isEnabled");
   if (IsContextLost()) return false;
 
-  const auto& inProcess = mNotLost->inProcess;
-  if (inProcess) {
-    return inProcess->IsEnabled(cap);
+  const auto& map = *mNotLost->state.mIsEnabledMap;
+  const auto slot = MaybeFind(map, cap);
+  if (!slot) {
+    EnqueueError_ArgEnum("cap", cap);
+    return false;
   }
-  const auto& child = mNotLost->outOfProcess;
-  child->FlushPendingCmds();
-  bool ret = {};
-  if (!child->SendIsEnabled(cap, &ret)) return false;
-  return ret;
+
+  return *slot;
 }
 
 template <typename T, typename S>

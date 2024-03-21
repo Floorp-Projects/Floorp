@@ -248,12 +248,16 @@ div.CodeMirror span.marked-text {
   margin-inline-end: -1px;
 }
 
-.cm-s-mozilla .empty-line .CodeMirror-linenumber {
+.cm-s-mozilla .empty-line .CodeMirror-linenumber,
+/* Codemirror 6 */
+.cm-editor .cm-gutterElement.empty-line {
   color: var(--grey-40);
 }
 
 /* Blackboxing lines */
-.CodeMirror-lines .blackboxed-line :is(span, .cm-comment, .CodeMirror-gutter-elt) {
+.CodeMirror-lines .blackboxed-line :is(span, .cm-comment, .CodeMirror-gutter-elt),
+/* Codemirror 6 */
+.cm-editor .cm-gutterElement.blackboxed-line {
   color: #806414cc;
 }
 

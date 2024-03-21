@@ -100,7 +100,7 @@ void FileSystemManager::BeginRequest(
   MOZ_ASSERT(mGlobal);
 
   // Check if we're allowed to use storage
-  if (mGlobal->GetStorageAccess() < StorageAccess::eSessionScoped) {
+  if (mGlobal->GetStorageAccess() <= StorageAccess::ePrivateBrowsing) {
     aFailure(NS_ERROR_DOM_SECURITY_ERR);
     return;
   }

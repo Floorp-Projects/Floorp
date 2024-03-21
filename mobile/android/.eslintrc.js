@@ -36,7 +36,7 @@ module.exports = {
         "no-unused-vars": [
           "error",
           {
-            args: "none",
+            argsIgnorePattern: "^_",
             vars: "local",
             varsIgnorePattern: "(debug|warn)",
           },

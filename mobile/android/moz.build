@@ -6,16 +6,18 @@
 
 with Files("**"):
     BUG_COMPONENT = ("GeckoView", "General")
-    SCHEDULES.exclusive = ["android"]
+    SCHEDULES.exclusive = ["android", "fenix", "focus-android"]
 
 with Files("geckoview_example/**"):
     BUG_COMPONENT = ("GeckoView", "GeckoViewExample")
 
 with Files("fenix/**"):
     BUG_COMPONENT = ("Fenix", "General")
+    SCHEDULES.exclusive = ["android", "fenix"]
 
 with Files("focus-android/**"):
     BUG_COMPONENT = ("Focus", "General")
+    SCHEDULES.exclusive = ["android", "focus-android"]
 
 with Files("android-components/**"):
     BUG_COMPONENT = ("Fenix", "General")

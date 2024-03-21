@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?><!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<org.mozilla.fenix.components.toolbar.navbar.ToolbarContainerView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/toolbar_tab_strip_container"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <androidx.compose.ui.platform.ComposeView
+        android:id="@+id/tabStripView"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/tab_strip_height" />
+
+    <mozilla.components.browser.toolbar.BrowserToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/browser_toolbar_height"
+        android:background="@drawable/toolbar_background_top"
+        android:clickable="true"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        app:browserToolbarClearColor="?attr/textPrimary"
+        app:browserToolbarInsecureColor="?attr/textPrimary"
+        app:browserToolbarMenuColor="?attr/textPrimary"
+        app:browserToolbarProgressBarGravity="bottom"
+        app:browserToolbarSecureColor="?attr/textPrimary"
+        app:browserToolbarTrackingProtectionAndSecurityIndicatorSeparatorColor="?borderPrimary" />
+</org.mozilla.fenix.components.toolbar.navbar.ToolbarContainerView>

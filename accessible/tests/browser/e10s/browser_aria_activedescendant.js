@@ -277,7 +277,7 @@ async function basicListboxTest(browser, elementReflection) {
 
 addAccessibleTask(
   LISTBOX_MARKUP,
-  async function (browser, docAcc) {
+  async function (browser) {
     info("Test aria-activedescendant content attribute");
     await basicListboxTest(browser, false);
 
@@ -303,7 +303,7 @@ addAccessibleTask(
 
 addAccessibleTask(
   LISTBOX_MARKUP,
-  async function (browser, docAcc) {
+  async function (browser) {
     info("Test ariaActiveDescendantElement element reflection");
     await basicListboxTest(browser, true);
   },
@@ -316,7 +316,7 @@ addAccessibleTask(
 <div role="listbox">
   <div role="option" id="activedesc_nondesc_option">option</div>
 </div>`,
-  async function (browser, docAcc) {
+  async function (browser) {
     info("Test aria-activedescendant non-descendant");
     await synthFocus(
       browser,
@@ -348,7 +348,7 @@ addAccessibleTask(
   item.setAttribute("role", "option");
   listbox.appendChild(item);
 </script>`,
-  async function (browser, docAcc) {
+  async function (browser) {
     info("Test aria-activedescendant in shadow root");
     // We want to retrieve elements using their IDs inside the shadow root, so
     // we define a custom get element by ID method that our utility functions
@@ -448,7 +448,7 @@ customElements.define("custom-listbox",
   }
 );
 </script>`,
-  async function (browser, docAcc) {
+  async function (browser) {
     await synthFocus(browser, "custom-listbox1", "l1_3");
 
     let evtProm = Promise.all([

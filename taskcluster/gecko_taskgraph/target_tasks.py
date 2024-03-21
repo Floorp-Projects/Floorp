@@ -1043,10 +1043,7 @@ def target_tasks_nightly_desktop(full_task_graph, parameters, graph_config):
 
 @_target_task("nightly_all")
 def target_tasks_nightly_all(full_task_graph, parameters, graph_config):
-    from android_taskgraph.target_tasks import (
-        target_tasks_nightly as target_tasks_nightly_android,
-    )
-
+    """Select the set of tasks required for a nightly build of firefox desktop and android"""
     return list(
         set(target_tasks_nightly_desktop(full_task_graph, parameters, graph_config))
         | set(target_tasks_nightly_android(full_task_graph, parameters, graph_config))

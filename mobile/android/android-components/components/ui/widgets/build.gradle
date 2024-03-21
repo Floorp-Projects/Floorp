@@ -31,6 +31,7 @@ dependencies {
     implementation project(':ui-colors')
     implementation project(':ui-icons')
     implementation project(':support-ktx')
+    implementation project(':concept-toolbar')
 
     implementation ComponentsDependencies.androidx_appcompat
     implementation ComponentsDependencies.androidx_constraintlayout

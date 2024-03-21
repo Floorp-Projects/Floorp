@@ -1145,6 +1145,22 @@ async function test_http2_continuations(loadGroup, serverPort) {
   });
 }
 
+async function test_http2_continuations_over_max_response_limit(
+  loadGroup,
+  serverPort
+) {
+  var chan = makeHTTPChannel(
+    `https://localhost:${serverPort}/hugecontinuedheaders?size=385`
+  );
+  chan.loadGroup = loadGroup;
+  return new Promise(resolve => {
+    var listener = new Http2CheckListener();
+    listener.finish = resolve;
+    listener.shouldSucceed = false;
+    chan.asyncOpen(listener);
+  });
+}
+
 function Http2IllegalHpackValidationListener() {}
 
 Http2IllegalHpackValidationListener.prototype = new Http2CheckListener();

@@ -1991,7 +1991,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      */
     fun getBottomToolbarHeight(): Int {
         val isNavBarEnabled = enableIncompleteToolbarRedesign
-        val isToolbarAtBottom = shouldUseBottomToolbar
+        val isToolbarAtBottom = toolbarPosition == ToolbarPosition.BOTTOM
         val toolbarHeight = appContext.resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
         val navbarHeight = appContext.resources.getDimensionPixelSize(R.dimen.browser_navbar_height)
 
@@ -2005,12 +2005,16 @@ class Settings(private val appContext: Context) : PreferencesHolder {
 
     /**
      * Returns the height of the top toolbar.
+     *
+     * @param includeTabStrip If true, the height of the tab strip is included in the calculation.
      */
-    fun getTopToolbarHeight(): Int {
-        val isToolbarAtTop = !shouldUseBottomToolbar
+    fun getTopToolbarHeight(includeTabStrip: Boolean): Int {
+        val isToolbarAtTop = toolbarPosition == ToolbarPosition.TOP
         val toolbarHeight = appContext.resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
 
-        return if (isToolbarAtTop) {
+        return if (isToolbarAtTop && includeTabStrip && isTabletAndTabStripEnabled) {
+            toolbarHeight + appContext.resources.getDimensionPixelSize(R.dimen.tab_strip_height)
+        } else if (isToolbarAtTop) {
             toolbarHeight
         } else {
             0
