@@ -487,7 +487,7 @@ base::ProcessId GeckoChildProcessHost::GetChildProcessId() {
   return base::GetProcId(mChildProcessHandle);
 }
 
-#ifdef XP_MACOSX
+#ifdef XP_DARWIN
 task_t GeckoChildProcessHost::GetChildTask() {
   mozilla::AutoReadLock handleLock(mHandleLock);
   return mChildTask;
