@@ -332,9 +332,9 @@ TalosPowersService.prototype = {
     let mm = message.target.messageManager;
     let startupInfo = Services.startup.getStartupInfo();
 
-    if (!startupInfo.firstPaint) {
+    if (!startupInfo.firstPaint2) {
       // It's possible that we were called early enough that
-      // the firstPaint measurement hasn't been set yet. In
+      // the firstPaint2 measurement hasn't been set yet. In
       // that case, we set up an observer for the next time
       // a window is painted and re-retrieve the startup info.
       let obs = function (subject, topic) {
