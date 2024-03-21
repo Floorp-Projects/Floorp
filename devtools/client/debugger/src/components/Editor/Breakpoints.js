@@ -54,7 +54,7 @@ class Breakpoints extends Component {
     super(props);
   }
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate() {
     const { selectedSource, breakpoints, editor } = this.props;
 
     // Only for codemirror 6
