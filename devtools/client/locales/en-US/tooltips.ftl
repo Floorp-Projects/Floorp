@@ -82,6 +82,8 @@ inactive-css-text-wrap-balance-fragmented = <strong>{ $property }</strong> has n
 
 inactive-css-not-grid-or-flex-container-fix = Try adding <strong>display:grid</strong> or <strong>display:flex</strong>. { learn-more }
 
+inactive-css-not-grid-or-flex-or-block-container-fix = Try adding <strong>display:grid</strong>, <strong>display:flex</strong> or <strong>display:block</strong>. { learn-more }
+
 inactive-css-not-grid-or-flex-container-or-multicol-container-fix = Try adding either <strong>display:grid</strong>, <strong>display:flex</strong>, or <strong>columns:2</strong>. { learn-more }
 
 inactive-css-not-multicol-container-fix = Try adding either <strong>column-count</strong> or <strong>column-width</strong>. { learn-more }
