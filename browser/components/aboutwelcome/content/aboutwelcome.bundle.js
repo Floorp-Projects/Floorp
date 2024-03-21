@@ -1032,7 +1032,8 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       activeMultiSelect: this.props.activeMultiSelect,
       setActiveMultiSelect: this.props.setActiveMultiSelect
     }) : null, content.tiles && content.tiles.type === "migration-wizard" ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_EmbeddedMigrationWizard__WEBPACK_IMPORTED_MODULE_12__.EmbeddedMigrationWizard, {
-      handleAction: this.props.handleAction
+      handleAction: this.props.handleAction,
+      content: content
     }) : null);
   }
   renderNoodles() {
@@ -1199,7 +1200,9 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       className: `main-content ${hideStepsIndicator ? "no-steps" : ""}`,
       style: {
         background: content.background && isCenterPosition ? content.background : null,
-        width: content.width && content.position !== "split" ? content.width : null
+        width: content.width && content.position !== "split" ? content.width : null,
+        paddingBlock: content.split_content_padding_block ? content.split_content_padding_block : null,
+        paddingInline: content.split_content_padding_inline ? content.split_content_padding_inline : null
       }
     }, content.logo ? this.renderPicture(content.logo) : null, isRtamo ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
       className: "rtamo-icon"
@@ -2082,9 +2085,11 @@ __webpack_require__.r(__webpack_exports__);
 
 
 const EmbeddedMigrationWizard = ({
-  handleAction
+  handleAction,
+  content
 }) => {
   const ref = (0,react__WEBPACK_IMPORTED_MODULE_0__.useRef)();
+  const options = content.migration_wizard_options;
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     const handleBeginMigration = () => {
       handleAction({
@@ -2112,9 +2117,25 @@ const EmbeddedMigrationWizard = ({
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("migration-wizard", {
-    "force-show-import-all": "false",
+    "force-show-import-all": options?.force_show_import_all || "false",
     "auto-request-state": "",
-    ref: ref
+    ref: ref,
+    "option-expander-title-string": options?.option_expander_title_string || "",
+    "hide-option-expander-subtitle": options?.hide_option_expander_subtitle || false,
+    "data-import-complete-success-string": options?.data_import_complete_success_string || "",
+    "selection-header-string": options?.selection_header_string || "",
+    "selection-subheader-string": options?.selection_subheader_string || "",
+    "hide-select-all": options?.hide_select_all || false,
+    "checkbox-margin-inline": options?.checkbox_margin_inline || "",
+    "checkbox-margin-block": options?.checkbox_margin_block || "",
+    "import-button-string": options?.import_button_string || "",
+    "import-button-class": options?.import_button_class || "",
+    "header-font-size": options?.header_font_size || "",
+    "header-font-weight": options?.header_font_weight || "",
+    "header-margin-block": options?.header_margin_block || "",
+    "subheader-font-size": options?.subheader_font_size || "",
+    "subheader-font-weight": options?.subheader_font_weight || "",
+    "subheader-margin-block": options?.subheader_margin_block || ""
   });
 };
 

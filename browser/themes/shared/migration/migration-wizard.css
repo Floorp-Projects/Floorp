@@ -13,9 +13,9 @@
 }
 
 h1 {
-  font-size: 1.30em;
-  font-weight: normal;
-  margin-block: 0 16px;
+  font-size: var(--embedded-wizard-header-font-size, 1.30em);
+  font-weight: var(--embedded-wizard-header-font-weight, normal);
+  margin-block: var(--embedded-wizard-header-margin-block, 0 16px);
   min-height: 1em;
 }
 
@@ -157,11 +157,15 @@ div[name="page-selection"]:not([show-import-all]) summary {
 }
 
 div[name="page-selection"][show-import-all]:not([single-item]) label:not(#select-all)  {
-  margin-inline-start: 24px;
+  margin-inline: var(--resource-type-label-margin-inline, 24px 0);
 }
 
 div[name="page-selection"][show-import-all] #select-all  {
   display: flex;
+}
+
+div[name="page-selection"][show-import-all][hide-select-all] #select-all  {
+  display: none;
 }
 
 div[name="page-selection"][migrator-type="browser"] > .buttons > #import-from-file,
@@ -217,7 +221,8 @@ summary {
 }
 
 #resource-type-list > label {
-  margin-block-start: 16px;
+  margin-block: var(--resource-type-label-margin-block, 16px 0);
+  margin-inline: var(--resource-type-label-margin-inline, 0);
 }
 
 :host(:not([dialog-mode])) .cancel-close,
@@ -381,4 +386,19 @@ div[name="page-selection"][show-import-all] .resource-selection-details {
   grid-template-areas: "a b"
                        "c b";
   margin-block: 16px 0;
+}
+
+:host([hide-option-expander-subtitle]) .selected-data {
+  display: none;
+}
+
+p.migration-wizard-subheader {
+  font-size: var(--embedded-wizard-subheader-font-size, .85em);
+  font-weight: var(--embedded-wizard-subheader-font-weight, 400);
+  margin-block: var(--embedded-wizard-subheader-margin-block, 0 28px);
+  line-height: 1.2em;
+
+  &[hidden] {
+    display: none;
+  }
 }
