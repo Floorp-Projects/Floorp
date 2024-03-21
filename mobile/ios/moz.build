@@ -8,3 +8,4 @@ CONFIGURE_SUBST_FILES += ["installer/Makefile"]
 
 with Files("**"):
     BUG_COMPONENT = ("Core", "General")
+    SCHEDULES.exclusive = ["ios"]
