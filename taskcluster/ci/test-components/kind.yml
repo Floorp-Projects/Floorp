@@ -17,7 +17,6 @@ kind-dependencies:
 job-defaults:
     attributes:
         build-type: debug
-        code-review: true
         retrigger: true
     dependencies:
         build-fat-aar: build-fat-aar-android-geckoview-fat-aar/opt
