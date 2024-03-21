@@ -1370,10 +1370,12 @@ html {
 .onboardingContainer .screen[pos=split] .section-main {
   flex-direction: row;
   display: block;
-  margin: auto auto auto 0;
+  margin: auto;
+  margin-inline-start: 0;
 }
 .onboardingContainer .screen[pos=split] .section-main:dir(rtl) {
-  margin: auto 0 auto auto;
+  margin: auto;
+  margin-inline-start: 0;
 }
 .onboardingContainer .screen[pos=split] .section-main.embedded-migration .main-content {
   padding-block: 100px 0;
@@ -1580,7 +1582,8 @@ html {
 }
 .onboardingContainer .screen[pos=split] .section-secondary:dir(rtl) {
   border-radius: 0 8px 8px 0;
-  margin: auto auto auto 0;
+  margin: auto;
+  margin-inline-end: 0;
 }
 .onboardingContainer .screen[pos=split] .section-secondary h1 {
   color: var(--mr-screen-heading-color);
@@ -1648,6 +1651,32 @@ html {
   .onboardingContainer .screen[pos=split] .tiles-theme-section {
     margin-inline-start: -10px;
   }
+  .onboardingContainer .screen[pos=split][reverse-split] {
+    flex-direction: row-reverse;
+  }
+  .onboardingContainer .screen[pos=split][reverse-split] .section-main {
+    margin: auto;
+    margin-inline-end: 0;
+    border-radius: 8px 0 0 8px;
+  }
+  .onboardingContainer .screen[pos=split][reverse-split] .section-main .main-content {
+    border-radius: inherit;
+  }
+  .onboardingContainer .screen[pos=split][reverse-split] .section-main:dir(rtl) {
+    border-radius: 0 8px 8px 0;
+    margin: auto;
+    margin-inline-end: 0;
+  }
+  .onboardingContainer .screen[pos=split][reverse-split] .section-secondary {
+    margin: auto;
+    margin-inline-start: 0;
+    border-radius: 0 8px 8px 0;
+  }
+  .onboardingContainer .screen[pos=split][reverse-split] .section-secondary:dir(rtl) {
+    border-radius: 8px 0 0 8px;
+    margin: auto;
+    margin-inline-start: 0;
+  }
 }
 @media only screen and (width <= 800px) {
   .onboardingContainer .screen[pos=split] {
@@ -1657,6 +1686,29 @@ html {
   .onboardingContainer .screen[pos=split]::before {
     width: 400px;
   }
+  .onboardingContainer .screen[pos=split][reverse-split] {
+    flex-direction: column;
+  }
+  .onboardingContainer .screen[pos=split][reverse-split] .section-secondary {
+    border-radius: 8px 8px 0 0;
+    margin: auto;
+    margin-bottom: 0;
+  }
+  .onboardingContainer .screen[pos=split][reverse-split] .section-secondary:dir(rtl) {
+    margin: auto;
+    margin-bottom: 0;
+    border-radius: 8px 8px 0 0;
+  }
+  .onboardingContainer .screen[pos=split][reverse-split] .section-main {
+    margin: auto;
+    margin-top: 0;
+    border-radius: 0 0 8px 8px;
+  }
+  .onboardingContainer .screen[pos=split][reverse-split] .section-main:dir(rtl) {
+    margin: auto;
+    margin-top: 0;
+    border-radius: 0 0 8px 8px;
+  }
   .onboardingContainer .screen[pos=split] .section-secondary,
   .onboardingContainer .screen[pos=split] .section-main {
     width: 400px;
@@ -1665,7 +1717,8 @@ html {
     --mr-secondary-background-position-y: top;
     --mr-secondary-position: center var(--mr-secondary-background-position-y) / 75%;
     border-radius: 8px 8px 0 0;
-    margin: auto auto 0;
+    margin: auto;
+    margin-bottom: 0;
     height: 100px;
   }
   .onboardingContainer .screen[pos=split] .section-secondary .hero-image img {
@@ -1682,7 +1735,8 @@ html {
     margin-block: 14px 6px;
   }
   .onboardingContainer .screen[pos=split] .section-secondary:dir(rtl) {
-    margin: auto auto 0;
+    margin: auto;
+    margin-bottom: 0;
     border-radius: 8px 8px 0 0;
   }
   .onboardingContainer .screen[pos=split] .section-secondary.with-secondary-section-hidden {
@@ -1693,7 +1747,8 @@ html {
     margin-inline: 36px;
   }
   .onboardingContainer .screen[pos=split] .section-main {
-    margin: 0 auto auto;
+    margin: auto;
+    margin-top: 0;
     height: 450px;
   }
   .onboardingContainer .screen[pos=split] .section-main migration-wizard::part(buttons) {
@@ -1774,7 +1829,8 @@ html {
     top: -100px;
   }
   .onboardingContainer .screen[pos=split] .section-main:dir(rtl) {
-    margin: 0 auto auto;
+    margin: auto;
+    margin-top: 0;
   }
   .onboardingContainer .screen[pos=split] .section-main:dir(rtl) .main-content {
     border-radius: 0 0 8px 8px;

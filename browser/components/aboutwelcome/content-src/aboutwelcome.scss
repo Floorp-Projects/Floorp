@@ -570,10 +570,12 @@ html {
       .section-main {
         flex-direction: row;
         display: block;
-        margin: auto auto auto 0;
+        margin: auto;
+        margin-inline-start: 0;
 
         &:dir(rtl) {
-          margin: auto 0 auto auto;
+          margin: auto;
+          margin-inline-start: 0;
         }
 
         &.embedded-migration {
@@ -779,7 +781,8 @@ html {
 
         &:dir(rtl) {
           border-radius: 0 8px 8px 0;
-          margin: auto auto auto 0;
+          margin: auto;
+          margin-inline-end: 0;
         }
 
         h1 {
@@ -858,6 +861,38 @@ html {
         .tiles-theme-section {
           margin-inline-start: -10px;
         }
+
+        &[reverse-split] {
+          flex-direction: row-reverse;
+
+          .section-main {
+            .main-content {
+              border-radius: inherit;
+            }
+
+            margin: auto;
+            margin-inline-end: 0;
+            border-radius: 8px 0 0 8px;
+
+            &:dir(rtl) {
+              border-radius: 0 8px 8px 0;
+              margin: auto;
+              margin-inline-end: 0;
+            }
+          }
+
+          .section-secondary {
+            margin: auto;
+            margin-inline-start: 0;
+            border-radius: 0 8px 8px 0;
+
+            &:dir(rtl) {
+              border-radius: 8px 0 0 8px;
+              margin: auto;
+              margin-inline-start: 0;
+            }
+          }
+        }
       }
 
       @media only screen and (width <= 800px) {
@@ -866,6 +901,34 @@ html {
 
         &::before {
           width: $split-section-width;
+        }
+
+        &[reverse-split] {
+          flex-direction: column;
+
+          .section-secondary {
+            border-radius: 8px 8px 0 0;
+            margin: auto;
+            margin-bottom: 0;
+
+            &:dir(rtl) {
+              margin: auto;
+              margin-bottom: 0;
+              border-radius: 8px 8px 0 0;
+            }
+          }
+
+          .section-main {
+            margin: auto;
+            margin-top: 0;
+            border-radius: 0 0 8px 8px;
+
+            &:dir(rtl) {
+              margin: auto;
+              margin-top: 0;
+              border-radius: 0 0 8px 8px;
+            }
+          }
         }
 
         .section-secondary,
@@ -878,7 +941,8 @@ html {
           --mr-secondary-position: center var(--mr-secondary-background-position-y) / 75%;
 
           border-radius: 8px 8px 0 0;
-          margin: auto auto 0;
+          margin: auto;
+          margin-bottom: 0;
           height: $small-secondary-section-height;
 
           .hero-image img {
@@ -898,7 +962,8 @@ html {
           }
 
           &:dir(rtl) {
-            margin: auto auto 0;
+            margin: auto;
+            margin-bottom: 0;
             border-radius: 8px 8px 0 0;
           }
 
@@ -915,7 +980,8 @@ html {
         }
 
         .section-main {
-          margin: 0 auto auto;
+          margin: auto;
+          margin-top: 0;
           height: $small-main-section-height;
 
           migration-wizard::part(buttons) {
@@ -1020,7 +1086,8 @@ html {
           }
 
           &:dir(rtl) {
-            margin: 0 auto auto;
+            margin: auto;
+            margin-top: 0;
 
             .main-content {
               border-radius: 0 0 8px 8px;
