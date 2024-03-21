@@ -700,7 +700,7 @@ MOZ_DEFINE_ENUM_CLASS_WITH_BASE(
 std::ostream& operator<<(std::ostream& aStream,
                          const OverscrollBehavior& aBehavior);
 
-struct OverscrollBehaviorInfo final {
+struct OverscrollBehaviorInfo {
   OverscrollBehaviorInfo();
 
   // Construct from StyleOverscrollBehavior values.
@@ -710,8 +710,6 @@ struct OverscrollBehaviorInfo final {
   bool operator==(const OverscrollBehaviorInfo& aOther) const;
   friend std::ostream& operator<<(std::ostream& aStream,
                                   const OverscrollBehaviorInfo& aInfo);
-
-  auto MutTiedFields() { return std::tie(mBehaviorX, mBehaviorY); }
 
   OverscrollBehavior mBehaviorX;
   OverscrollBehavior mBehaviorY;
