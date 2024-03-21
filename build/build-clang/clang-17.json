@@ -13,7 +13,6 @@
         "revert-llvmorg-15-init-11205-gcead4eceb01b_clang_16.patch",
         "llvmorg-18-init-8471-g160e8eb44961.patch",
         "D146664.patch",
-        "llvmorg-19-init-5399-gddcbab37ac0e.patch",
         "win64-ret-null-on-commitment-limit_clang_14.patch",
         "compiler-rt-rss-limit-heap-profile.patch"
     ]

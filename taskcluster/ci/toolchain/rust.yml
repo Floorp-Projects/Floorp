@@ -56,7 +56,6 @@ linux64-rust-dev:
         arguments: [
             '--patch', 'rust-vendor-std.patch',
             '--patch', 'src/tools/cargo:cargo-vendor-std.patch',
-            '--patch', 'src/llvm-project:../build-clang/llvmorg-19-init-5399-gddcbab37ac0e.patch',
             '--channel', 'dev',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
