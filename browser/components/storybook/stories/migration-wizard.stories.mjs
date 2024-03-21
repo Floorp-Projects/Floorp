@@ -172,27 +172,7 @@ const FAKE_MIGRATOR_LIST = [
   },
 ];
 
-const Template = ({
-  state,
-  dialogMode,
-  forceShowImportAll,
-  hideOptionExpanderSubtitle,
-  optionExpanderTitleString,
-  hideSelectAll,
-  importButtonString,
-  checkboxMarginInline,
-  checkboxMarginBlock,
-  importButtonClass,
-  selectionHeaderString,
-  selectionSubheaderString,
-  dataImportCompleteSuccessString,
-  headerFontSize,
-  headerMarginBlock,
-  headerFontWeight,
-  subheaderFontSize,
-  subheaderMarginBlock,
-  subheaderFontWeight,
-}) => html`
+const Template = ({ state, dialogMode }) => html`
   <style>
     @media (prefers-reduced-motion: no-preference) {
       migration-wizard::part(progress-spinner) {
@@ -204,23 +184,6 @@ const Template = ({
   <div class="card card-no-hover" style="width: fit-content">
     <migration-wizard
       ?dialog-mode=${dialogMode}
-      ?force-show-import-all=${forceShowImportAll}
-      ?hide-option-expander-subtitle=${hideOptionExpanderSubtitle}
-      option-expander-title-string=${optionExpanderTitleString}
-      ?hide-select-all=${hideSelectAll}
-      import-button-string=${importButtonString}
-      import-button-class=${importButtonClass}
-      checkbox-margin-inline=${checkboxMarginInline}
-      checkbox-margin-block=${checkboxMarginBlock}
-      selection-header-string=${selectionHeaderString}
-      selection-subheader-string=${selectionSubheaderString}
-      data-import-complete-success-string=${dataImportCompleteSuccessString}
-      header-font-size=${headerFontSize}
-      header-margin-block=${headerMarginBlock}
-      header-font-weight=${headerFontWeight}
-      subheader-font-size=${subheaderFontSize}
-      subheader-margin-block=${subheaderMarginBlock}
-      subheader-font-weight=${subheaderFontWeight}
       .state=${state}
     ></migration-wizard>
   </div>
@@ -252,33 +215,6 @@ MainSelectorVariant2.args = {
     migrators: FAKE_MIGRATOR_LIST,
     showImportAll: true,
   },
-};
-
-export const CustomizedSelectionPage = Template.bind({});
-CustomizedSelectionPage.args = {
-  dialogMode: true,
-  state: {
-    page: MigrationWizardConstants.PAGES.SELECTION,
-    migrators: FAKE_MIGRATOR_LIST,
-    showImportAll: true,
-  },
-  forceShowImportAll: false,
-  hideOptionExpanderSubtitle: false,
-  hideSelectAll: false,
-  importButtonString: "Custom Button String",
-  checkboxMarginInline: "5px",
-  checkboxMarginBlock: "10px",
-  importButtonClass: "test-class",
-  optionExpanderTitleString: "Options",
-  selectionHeaderString: "Custom Header",
-  selectionSubheaderString: "Custom Subheader",
-  dataImportCompleteSuccessString: "Custom Data Import Success",
-  headerFontSize: "24px",
-  headerMarginBlock: "0 4px",
-  headerFontWeight: "590",
-  subheaderFontSize: "13px",
-  subheaderMarginBlock: "0 28px",
-  subheaderFontWeight: "400",
 };
 
 export const NoPermissionMessage = Template.bind({});

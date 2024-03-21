@@ -38,7 +38,7 @@ export class MigrationWizard extends HTMLElement {
         <link rel="stylesheet" href="chrome://browser/skin/migration/migration-wizard.css">
         <named-deck id="wizard-deck" selected-view="page-loading" aria-busy="true" part="deck">
           <div name="page-loading">
-            <h1 class="migration-wizard-header" data-l10n-id="migration-wizard-selection-header" part="header"></h1>
+            <h1 data-l10n-id="migration-wizard-selection-header" part="header"></h1>
             <div class="loading-block large"></div>
             <div class="loading-block small"></div>
             <div class="loading-block small"></div>
@@ -46,13 +46,12 @@ export class MigrationWizard extends HTMLElement {
               <!-- If possible, use the same button labels as the SELECTION page with the same strings.
                    That'll prevent flicker when the load state exits if we then enter the SELECTION page. -->
               <button class="cancel-close" data-l10n-id="migration-cancel-button-label" disabled></button>
-              <button class="migration-import-button" data-l10n-id="migration-import-button-label" disabled></button>
+              <button data-l10n-id="migration-import-button-label" disabled></button>
             </moz-button-group>
           </div>
 
           <div name="page-selection">
-            <h1 class="migration-wizard-header" data-l10n-id="migration-wizard-selection-header" part="header"></h1>
-            <p class="migration-wizard-subheader" part="subheader" hidden=""></p>
+            <h1 data-l10n-id="migration-wizard-selection-header" part="header"></h1>
             <button id="browser-profile-selector" aria-haspopup="menu" aria-labelledby="migrator-name profile-name">
               <span class="migrator-icon" role="img"></span>
               <div class="migrator-description" role="presentation">
@@ -90,22 +89,22 @@ export class MigrationWizard extends HTMLElement {
                 <label id="select-all">
                   <input type="checkbox" class="select-all-checkbox"/><span data-l10n-id="migration-select-all-option-label"></span>
                 </label>
-                <label id="bookmarks" class="resource-type-label" data-resource-type="BOOKMARKS"/>
+                <label id="bookmarks" data-resource-type="BOOKMARKS"/>
                   <input type="checkbox"/><span default-data-l10n-id="migration-bookmarks-option-label" ie-edge-data-l10n-id="migration-favorites-option-label"></span>
                 </label>
-                <label id="logins-and-passwords" class="resource-type-label" data-resource-type="PASSWORDS">
+                <label id="logins-and-passwords" data-resource-type="PASSWORDS">
                   <input type="checkbox"/><span data-l10n-id="migration-passwords-option-label"></span>
                 </label>
-                <label id="history" class="resource-type-label" data-resource-type="HISTORY">
+                <label id="history" data-resource-type="HISTORY">
                   <input type="checkbox"/><span data-l10n-id="migration-history-option-label"></span>
                 </label>
-                <label id="extensions" class="resource-type-label" data-resource-type="EXTENSIONS">
+                <label id="extensions" data-resource-type="EXTENSIONS">
                   <input type="checkbox"/><span data-l10n-id="migration-extensions-option-label"></span>
                 </label>
-                <label id="form-autofill" class="resource-type-label" data-resource-type="FORMDATA">
+                <label id="form-autofill" data-resource-type="FORMDATA">
                   <input type="checkbox"/><span data-l10n-id="migration-form-autofill-option-label"></span>
                 </label>
-                <label id="payment-methods" class="resource-type-label" data-resource-type="PAYMENT_METHODS">
+                <label id="payment-methods" data-resource-type="PAYMENT_METHODS">
                   <input type="checkbox"/><span data-l10n-id="migration-payment-methods-option-label"></span>
                 </label>
               </fieldset>
@@ -119,7 +118,7 @@ export class MigrationWizard extends HTMLElement {
             <moz-button-group class="buttons" part="buttons">
               <button class="cancel-close" data-l10n-id="migration-cancel-button-label"></button>
               <button id="import-from-file" class="primary" data-l10n-id="migration-import-from-file-button-label"></button>
-              <button id="import" class="primary migration-import-button" data-l10n-id="migration-import-button-label"></button>
+              <button id="import" class="primary" data-l10n-id="migration-import-button-label"></button>
               <button id="get-permissions" class="primary" data-l10n-id="migration-continue-button-label"></button>
             </moz-button-group>
           </div>
@@ -583,18 +582,6 @@ export class MigrationWizard extends HTMLElement {
       "div[name='page-selection']"
     );
 
-    if (this.hasAttribute("selection-header-string")) {
-      selectionPage.querySelector(".migration-wizard-header").textContent =
-        this.getAttribute("selection-header-string");
-    }
-
-    let selectionSubheaderString = this.getAttribute(
-      "selection-subheader-string"
-    );
-    let subheader = selectionPage.querySelector(".migration-wizard-subheader");
-    subheader.textContent = selectionSubheaderString;
-    subheader.toggleAttribute("hidden", !selectionSubheaderString);
-
     let details = this.#shadowRoot.querySelector("details");
 
     if (this.hasAttribute("force-show-import-all")) {
@@ -608,8 +595,6 @@ export class MigrationWizard extends HTMLElement {
     }
 
     this.#expandedDetails = false;
-
-    this.#applyContentCustomizations();
 
     for (let migrator of state.migrators) {
       let opt = document.createElement("panel-item");
@@ -835,20 +820,16 @@ export class MigrationWizard extends HTMLElement {
 
     let migrationDone = remainingProgressGroups == 0;
     let headerL10nID = "migration-wizard-progress-header";
-    let header = this.#shadowRoot.getElementById("progress-header");
 
     if (migrationDone) {
       if (totalWarnings) {
         headerL10nID = "migration-wizard-progress-done-with-warnings-header";
-      } else if (this.getAttribute("data-import-complete-success-string")) {
-        header.textContent = this.getAttribute(
-          "data-import-complete-success-string"
-        );
       } else {
         headerL10nID = "migration-wizard-progress-done-header";
       }
     }
 
+    let header = this.#shadowRoot.getElementById("progress-header");
     document.l10n.setAttributes(header, headerL10nID);
 
     let finishButtons = progressPage.querySelectorAll(".finish-button");
@@ -1256,10 +1237,7 @@ export class MigrationWizard extends HTMLElement {
     let importButton = this.#shadowRoot.querySelector("#import");
     importButton.disabled = checkedResources == 0;
 
-    if (this.hasAttribute("option-expander-title-string")) {
-      let optionString = this.getAttribute("option-expander-title-string");
-      selectedDataHeader.textContent = optionString;
-    } else if (checkedResources == 0) {
+    if (checkedResources == 0) {
       document.l10n.setAttributes(
         selectedDataHeader,
         "migration-no-selected-data-label"
@@ -1284,111 +1262,6 @@ export class MigrationWizard extends HTMLElement {
     this.dispatchEvent(
       new CustomEvent("MigrationWizard:ResourcesUpdated", { bubbles: true })
     );
-  }
-
-  /**
-   * Updates content and layout to apply changes that are
-   * informed through element attributes
-   */
-  #applyContentCustomizations() {
-    let selectionPage = this.#shadowRoot.querySelector(
-      "div[name='page-selection']"
-    );
-    if (this.hasAttribute("hide-select-all")) {
-      let hideSelectAll = this.getAttribute("hide-select-all");
-
-      selectionPage.toggleAttribute("hide-select-all", hideSelectAll);
-    } else {
-      selectionPage.removeAttribute("hide-select-all");
-    }
-
-    if (this.hasAttribute("import-button-string")) {
-      if (this.getAttribute("import-button-string")) {
-        this.#importButton.textContent = this.getAttribute(
-          "import-button-string"
-        );
-      }
-    }
-
-    if (this.hasAttribute("checkbox-margin-inline")) {
-      let inlineMargin = this.getAttribute("checkbox-margin-inline");
-      this.style.setProperty(
-        "--resource-type-label-margin-inline",
-        inlineMargin
-      );
-    }
-
-    if (this.hasAttribute("checkbox-margin-block")) {
-      let blockMargin = this.getAttribute("checkbox-margin-block");
-      this.style.setProperty("--resource-type-label-margin-block", blockMargin);
-    }
-
-    if (this.hasAttribute("import-button-class")) {
-      let importButtonClass = this.getAttribute("import-button-class");
-      if (importButtonClass) {
-        this.#importButton.classList.add(importButtonClass);
-      }
-    }
-
-    if (this.hasAttribute("header-font-size")) {
-      let headerFontSize = this.getAttribute("header-font-size");
-      if (headerFontSize) {
-        this.style.setProperty(
-          "--embedded-wizard-header-font-size",
-          headerFontSize
-        );
-      }
-    }
-
-    if (this.hasAttribute("header-font-weight")) {
-      let headerFontWeight = this.getAttribute("header-font-weight");
-      if (headerFontWeight) {
-        this.style.setProperty(
-          "--embedded-wizard-header-font-weight",
-          headerFontWeight
-        );
-      }
-    }
-
-    if (this.hasAttribute("header-margin-block")) {
-      let headerMarginBlock = this.getAttribute("header-margin-block");
-      if (headerMarginBlock) {
-        this.style.setProperty(
-          "--embedded-wizard-header-margin-block",
-          headerMarginBlock
-        );
-      }
-    }
-
-    if (this.hasAttribute("subheader-font-size")) {
-      let subheaderFontSize = this.getAttribute("subheader-font-size");
-      if (subheaderFontSize) {
-        this.style.setProperty(
-          "--embedded-wizard-subheader-font-size",
-          subheaderFontSize
-        );
-      }
-    }
-
-    if (this.hasAttribute("subheader-font-weight")) {
-      let subheaderFontWeight = this.getAttribute("subheader-font-weight");
-      if (subheaderFontWeight) {
-        this.style.setProperty(
-          "--embedded-wizard-subheader-font-weight",
-          subheaderFontWeight
-        );
-      }
-    }
-
-    if (this.hasAttribute("subheader-margin-block")) {
-      let subheaderMarginBlock = this.getAttribute("subheader-margin-block");
-      if (subheaderMarginBlock) {
-        this.style.setProperty(
-          "--embedded-wizard-subheader-margin-block",
-          subheaderMarginBlock
-        );
-      }
-    }
   }
 
   handleEvent(event) {

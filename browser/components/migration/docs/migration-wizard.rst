@@ -28,23 +28,6 @@ After binding to the document, if the ``MigrationWizard`` has the ``auto-request
 
 If the ``auto-request-state`` attribute is not set, calling ``requestState()`` on the ``MigrationWizard`` will perform the above step. This is useful in situations where the ``MigrationWizard`` element is being constructed dynamically and the callers wants finer-grain control over when the state will be requested.
 
-There are also a handful of attributes that can be set to customize the experience that the ``MigrationWizard`` provides.
-* ``option-expander-title-string``: The string of the label that is displayed next to the button that expands or hides the resource list on the selection page will be overwritten with the value of this attribute, if it is set.
-* ``hide-option-expander-subtitle``: When set to true, this attribute hides the subtitle that is displayed underneath the resource list expander.
-* ``import-button-string``: The string on the primary action button on the selection page is overridden with the value of this attribute when set.
-* ``import-button-class``: When set, the value of this attribute will be added to the class list on the primary action button on the selection page.
-* ``checkbox-margin-inline``: When set, the value of this attribute will be used to override the ``margin-inline`` of the labels in the resource list on the selection page.
-* ``checkbox-margin-block``: When set, the value of this attribute will be used to override the ``margin-block`` of the labels in the resource list on the selection page.
-* ``selection-header-string``: When set, overrides the text content of the header on the selection page with the set string.
-* ``selection-subheader-string``: When set, presents a subheader on the selection page with the set string.
-* ``data-import-complete-success-string``: When set, this attribute will be used to override the text content of the header of the import complete screen when the import was successful.
-* ``header-font-size``: Overrides the default ``font-size`` of all headers with the value of this string.
-* ``header-font-weight``: Overrides the default ``font-weight`` of all headers with the value of this string.
-* ``header-margin-block``: Overrides the default ``margin-block`` of all headers with the value of this string.
-* ``subheader-font-size``: When used with ``selection-subheader-string``, overrides the default ``font-size`` of the selection page subheader with the value in this string. This has no effect when used alone.
-* ``subheader-font-weight``: When used with ``selection-subheader-string``, overrides the default ``font-weight`` of the selection page subheader with the value in this string. This has no effect when used alone.
-* ``subheader-margin-block``: When used with ``selection-subheader-string``, overrides the default ``margin-block`` of the selection page subheader with the value in this string. This has no effect when used alone.
-
 Notably, the ``MigrationWizard`` does not contain any internal logic or privileged code to perform any migrations or to directly interact with the migration mechanisms. Its sole function is to accept input from the user and emit that input as events. The associated ``MigrationWizardChild`` will listen for those events, and take care of calling into the ``MigrationWizard`` to update the state of the reusable component. This means that the reusable component can be embedded in unprivileged contexts and have its states presented in a tool like Storybook.
 
 If the ``MigrationWizard`` is embedded in a dialog, it should have the ``dialog-mode`` attribute set on it so that dialog-appropriate buttons and styles are applied.
