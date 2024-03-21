@@ -113,6 +113,7 @@ module.exports = {
           "layout",
           "pos",
           "hide-secondary-section",
+          "reverse-split",
         ],
       },
     ],
