@@ -1302,6 +1302,11 @@ struct ReinterpretToSpan {
   }
 };
 
+namespace webgl {
+
+std::unordered_map<GLenum, bool> MakeIsEnabledMap(bool webgl2);
+
+}  // namespace webgl
 }  // namespace mozilla
 
 #endif
