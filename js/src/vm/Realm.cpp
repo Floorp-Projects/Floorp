@@ -237,10 +237,16 @@ void Realm::traceRoots(JSTracer* trc,
     // The global is never nursery allocated, so we don't need to
     // trace it when doing a minor collection.
     //
-    // If a realm is on-stack, we mark its global so that
-    // JSContext::global() remains valid.
+    // If a realm is on-stack, we mark its global so that JSContext::global()
+    // remains valid.
     if (shouldTraceGlobal() && global_) {
       TraceRoot(trc, global_.unbarrieredAddress(), "on-stack realm global");
+    }
+
+    // If the realm is still being initialized we set a flag so that it doesn't
+    // get deleted, since there may be GC things that contain pointers to it.
+    if (shouldTraceGlobal() && initializingGlobal_) {
+      allocatedDuringIncrementalGC_ = true;
     }
   }
 
