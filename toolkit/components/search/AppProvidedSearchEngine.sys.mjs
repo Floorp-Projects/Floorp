@@ -105,19 +105,28 @@ class IconHandler {
       }
     }
 
-    let iconURL;
+    let iconData;
     try {
-      iconURL = await this.#iconCollection.attachments.get(iconRecord);
+      iconData = await this.#iconCollection.attachments.get(iconRecord);
     } catch (ex) {
       console.error(ex);
+    }
+    if (!iconData) {
+      console.warn("Unable to find the icon for", engineIdentifier);
+      // Queue an update in case we haven't downloaded it yet.
+      this.#pendingUpdatesMap.set(iconRecord.id, iconRecord);
+      this.#maybeQueueIdle();
       return null;
     }
-    if (!iconURL) {
-      console.warn("Unable to find the icon for", engineIdentifier);
-      return null;
+
+    if (iconData.record.last_modified != iconRecord.last_modified) {
+      // The icon we have stored is out of date, queue an update so that we'll
+      // download the new icon.
+      this.#pendingUpdatesMap.set(iconRecord.id, iconRecord);
+      this.#maybeQueueIdle();
     }
     return URL.createObjectURL(
-      new Blob([iconURL.buffer]),
+      new Blob([iconData.buffer]),
       iconRecord.attachment.mimetype
     );
   }

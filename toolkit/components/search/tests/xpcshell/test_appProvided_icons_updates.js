@@ -39,6 +39,34 @@ let CONFIG = [
     variants: [{ environment: { allRegionsAndLocales: true } }],
   },
   {
+    identifier: "engine_icon_not_local",
+    recordType: "engine",
+    base: {
+      name: "engine_icon_not_local name",
+      urls: {
+        search: {
+          base: "https://example.com/3",
+          searchTermParamName: "q",
+        },
+      },
+    },
+    variants: [{ environment: { allRegionsAndLocales: true } }],
+  },
+  {
+    identifier: "engine_icon_out_of_date",
+    recordType: "engine",
+    base: {
+      name: "engine_icon_out_of_date name",
+      urls: {
+        search: {
+          base: "https://example.com/4",
+          searchTermParamName: "q",
+        },
+      },
+    },
+    variants: [{ environment: { allRegionsAndLocales: true } }],
+  },
+  {
     recordType: "defaultEngines",
     globalDefault: "engine_no_initial_icon",
     specificDefaults: [],
@@ -66,16 +94,25 @@ async function assertIconMatches(actualIconData, expectedIcon) {
 async function assertEngineIcon(engineName, expectedIcon) {
   let engine = Services.search.getEngineByName(engineName);
   let engineIconURL = await engine.getIconURL(16);
-  Assert.notEqual(
-    engineIconURL,
-    null,
-    "Should have an icon URL for the engine."
-  );
 
-  let response = await fetch(engineIconURL);
-  let buffer = new Uint8Array(await response.arrayBuffer());
+  if (expectedIcon) {
+    Assert.notEqual(
+      engineIconURL,
+      null,
+      "Should have an icon URL for the engine."
+    );
 
-  await assertIconMatches(buffer, expectedIcon);
+    let response = await fetch(engineIconURL);
+    let buffer = new Uint8Array(await response.arrayBuffer());
+
+    await assertIconMatches(buffer, expectedIcon);
+  } else {
+    Assert.equal(
+      engineIconURL,
+      null,
+      "Should not have an icon URL for the engine."
+    );
+  }
 }
 
 let originalIconId = Services.uuid.generateUUID().toString();
@@ -90,6 +127,7 @@ add_setup(async function setup() {
 
   sinon.stub(client.attachments, "_baseAttachmentsURL").returns(gDataUrl);
 
+  // Add some initial records and attachments into the remote settings collection.
   await insertRecordIntoCollection(client, {
     id: originalIconId,
     filename: "remoteIcon.ico",
@@ -97,9 +135,53 @@ add_setup(async function setup() {
     engineIdentifiers: ["engine_icon_upd*"],
     imageSize: 16,
   });
+  // This attachment is not cached, so we don't have it locally.
+  await insertRecordIntoCollection(
+    client,
+    {
+      id: Services.uuid.generateUUID().toString(),
+      filename: "bigIcon.ico",
+      engineIdentifiers: [
+        // This also tests multiple engine idenifiers works.
+        "enterprise",
+        "next_generation",
+        "engine_icon_not_local",
+      ],
+      imageSize: 16,
+    },
+    false
+  );
+
+  // Add a record that is out of date, and update it with a newer one, but don't
+  // cache the attachment for the new one.
+  let outOfDateRecordId = Services.uuid.generateUUID().toString();
+  await insertRecordIntoCollection(
+    client,
+    {
+      id: outOfDateRecordId,
+      filename: "remoteIcon.ico",
+      engineIdentifiers: ["engine_icon_out_of_date"],
+      imageSize: 16,
+      // 10 minutes ago.
+      lastModified: Date.now() - 600000,
+    },
+    true
+  );
+  let { record } = await mockRecordWithAttachment({
+    id: outOfDateRecordId,
+    filename: "bigIcon.ico",
+    engineIdentifiers: ["engine_icon_out_of_date"],
+    imageSize: 16,
+  });
+  await client.db.update(record);
+  await client.db.importChanges({}, record.lastModified);
 
   await SearchTestUtils.useTestEngines("simple-engines", null, CONFIG);
   await Services.search.init();
+
+  // Testing that an icon is not local generates a `Could not find {id}...`
+  // message.
+  consoleAllowList.push("Could not find");
 });
 
 add_task(async function test_icon_added_unknown_engine() {
@@ -205,4 +287,38 @@ add_task(async function test_icon_updated() {
 
   await promiseEngineUpdated;
   await assertEngineIcon("engine_icon_updates name", "bigIcon.ico");
+});
+
+add_task(async function test_icon_not_local() {
+  // Tests that a download is queued and triggered when the icon for an engine
+  // is not in either the local dump nor the cache.
+
+  await assertEngineIcon("engine_icon_not_local name", null);
+
+  // A download should have been queued, so fire idle to trigger it.
+  let promiseEngineUpdated = SearchTestUtils.promiseSearchNotification(
+    SearchUtils.MODIFIED_TYPE.CHANGED,
+    SearchUtils.TOPIC_ENGINE_MODIFIED
+  );
+  SearchTestUtils.idleService._fireObservers("idle");
+  await promiseEngineUpdated;
+
+  await assertEngineIcon("engine_icon_not_local name", "bigIcon.ico");
+});
+
+add_task(async function test_icon_out_of_date() {
+  // Tests that a download is queued and triggered when the icon for an engine
+  // is not in either the local dump nor the cache.
+
+  await assertEngineIcon("engine_icon_out_of_date name", "remoteIcon.ico");
+
+  // A download should have been queued, so fire idle to trigger it.
+  let promiseEngineUpdated = SearchTestUtils.promiseSearchNotification(
+    SearchUtils.MODIFIED_TYPE.CHANGED,
+    SearchUtils.TOPIC_ENGINE_MODIFIED
+  );
+  SearchTestUtils.idleService._fireObservers("idle");
+  await promiseEngineUpdated;
+
+  await assertEngineIcon("engine_icon_out_of_date name", "bigIcon.ico");
 });
