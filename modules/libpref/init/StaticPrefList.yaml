@@ -11771,6 +11771,12 @@
   value: 10
   mirror: always
 
+# Max size, in bytes, for received HTTP response header.
+- name: network.http.max_response_header_size
+  type: RelaxedAtomicUint32
+  value: 393216
+  mirror: always
+
 # This preference, if true, causes all UTF-8 domain names to be normalized to
 # punycode.  The intention is to allow UTF-8 domain names as input, but never
 # generate them from punycode.
