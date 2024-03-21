@@ -23,7 +23,6 @@
   text-size-adjust:none;
   forced-color-adjust:none;
   transform-origin:0 0;
-  z-index:2;
   caret-color:CanvasText;
 
   &.highlighting{
@@ -162,7 +161,6 @@
   left:0;
   pointer-events:none;
   transform-origin:0 0;
-  z-index:3;
 
   &[data-main-rotation="90"] .norotate{
     transform:rotate(270deg) translateX(-100%);
@@ -1089,6 +1087,7 @@
   height:0;
   overflow:hidden;
   white-space:nowrap;
+  font-size:0;
 }
 
 .textLayer.highlighting{
@@ -1138,7 +1137,6 @@
   font-size:calc(100px * var(--scale-factor));
   transform-origin:0 0;
   cursor:auto;
-  z-index:4;
 }
 
 .annotationEditorLayer.waiting{
@@ -2323,7 +2321,6 @@
   overflow:hidden;
   width:100%;
   height:100%;
-  z-index:1;
 }
 
 .pdfViewer .page{

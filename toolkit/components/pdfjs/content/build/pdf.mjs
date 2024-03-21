@@ -2812,6 +2812,9 @@ class AnnotationEditorUIManager {
       for (const layer of this.#allLayers.values()) {
         layer.enable();
       }
+      for (const editor of this.#allEditors.values()) {
+        editor.enable();
+      }
     }
   }
   #disableAll() {
@@ -2820,6 +2823,9 @@ class AnnotationEditorUIManager {
       this.#isEnabled = false;
       for (const layer of this.#allLayers.values()) {
         layer.disable();
+      }
+      for (const editor of this.#allEditors.values()) {
+        editor.disable();
       }
     }
   }
@@ -3411,6 +3417,7 @@ class AltText {
 class AnnotationEditor {
   #allResizerDivs = null;
   #altText = null;
+  #disabled = false;
   #keepAspectRatio = false;
   #resizersDiv = null;
   #savedDimensions = null;
@@ -4046,7 +4053,7 @@ class AnnotationEditor {
     this.div.setAttribute("data-editor-rotation", (360 - this.rotation) % 360);
     this.div.className = this.name;
     this.div.setAttribute("id", this.id);
-    this.div.setAttribute("tabIndex", 0);
+    this.div.tabIndex = this.#disabled ? -1 : 0;
     if (!this._isVisible) {
       this.div.classList.add("hidden");
     }
@@ -4470,6 +4477,18 @@ class AnnotationEditor {
   show(visible) {
     this.div.classList.toggle("hidden", !visible);
     this._isVisible = visible;
+  }
+  enable() {
+    if (this.div) {
+      this.div.tabIndex = 0;
+    }
+    this.#disabled = false;
+  }
+  disable() {
+    if (this.div) {
+      this.div.tabIndex = -1;
+    }
+    this.#disabled = true;
   }
 }
 class FakeEditor extends AnnotationEditor {
@@ -9181,7 +9200,7 @@ function getDocument(src) {
   }
   const fetchDocParams = {
     docId,
-    apiVersion: "4.1.287",
+    apiVersion: "4.1.315",
     data,
     password,
     disableAutoFetch,
@@ -10825,8 +10844,8 @@ class InternalRenderTask {
     }
   }
 }
-const version = "4.1.287";
-const build = "30e69956d";
+const version = "4.1.315";
+const build = "067c49dc4";
 
 ;// CONCATENATED MODULE: ./src/shared/scripting_utils.js
 function makeColorComp(n) {
@@ -16654,9 +16673,9 @@ class AnnotationEditorLayer {
   #accessibilityManager;
   #allowClick = false;
   #annotationLayer = null;
-  #boundPointerup = this.pointerup.bind(this);
-  #boundPointerdown = this.pointerdown.bind(this);
-  #boundTextLayerPointerDown = this.#textLayerPointerDown.bind(this);
+  #boundPointerup = null;
+  #boundPointerdown = null;
+  #boundTextLayerPointerDown = null;
   #editorFocusTimeoutId = null;
   #editors = new Map();
   #hadPointerDown = false;
@@ -16697,6 +16716,9 @@ class AnnotationEditorLayer {
   }
   get isEmpty() {
     return this.#editors.size === 0;
+  }
+  get isInvisible() {
+    return this.isEmpty && this.#uiManager.getMode() === AnnotationEditorType.NONE;
   }
   updateToolbar(mode) {
     this.#uiManager.updateToolbar(mode);
@@ -16769,6 +16791,7 @@ class AnnotationEditorLayer {
     this.#annotationLayer?.div.classList.toggle("disabled", !enabled);
   }
   enable() {
+    this.div.tabIndex = 0;
     this.togglePointerEvents(true);
     const annotationElementIds = new Set();
     for (const editor of this.#editors.values()) {
@@ -16799,6 +16822,7 @@ class AnnotationEditorLayer {
   }
   disable() {
     this.#isDisabling = true;
+    this.div.tabIndex = -1;
     this.togglePointerEvents(false);
     const hiddenAnnotationIds = new Set();
     for (const editor of this.#editors.values()) {
@@ -16847,14 +16871,18 @@ class AnnotationEditorLayer {
     this.#uiManager.setActiveEditor(editor);
   }
   enableTextSelection() {
-    if (this.#textLayer?.div) {
+    this.div.tabIndex = -1;
+    if (this.#textLayer?.div && !this.#boundTextLayerPointerDown) {
+      this.#boundTextLayerPointerDown = this.#textLayerPointerDown.bind(this);
       this.#textLayer.div.addEventListener("pointerdown", this.#boundTextLayerPointerDown);
       this.#textLayer.div.classList.add("highlighting");
     }
   }
   disableTextSelection() {
-    if (this.#textLayer?.div) {
+    this.div.tabIndex = 0;
+    if (this.#textLayer?.div && this.#boundTextLayerPointerDown) {
       this.#textLayer.div.removeEventListener("pointerdown", this.#boundTextLayerPointerDown);
+      this.#boundTextLayerPointerDown = null;
       this.#textLayer.div.classList.remove("highlighting");
     }
   }
@@ -16879,12 +16907,22 @@ class AnnotationEditorLayer {
     }
   }
   enableClick() {
+    if (this.#boundPointerdown) {
+      return;
+    }
+    this.#boundPointerdown = this.pointerdown.bind(this);
+    this.#boundPointerup = this.pointerup.bind(this);
     this.div.addEventListener("pointerdown", this.#boundPointerdown);
     this.div.addEventListener("pointerup", this.#boundPointerup);
   }
   disableClick() {
+    if (!this.#boundPointerdown) {
+      return;
+    }
     this.div.removeEventListener("pointerdown", this.#boundPointerdown);
     this.div.removeEventListener("pointerup", this.#boundPointerup);
+    this.#boundPointerdown = null;
+    this.#boundPointerup = null;
   }
   attach(editor) {
     this.#editors.set(editor.id, editor);
@@ -17168,6 +17206,7 @@ class AnnotationEditorLayer {
     viewport
   }) {
     this.#uiManager.commitOrRemove();
+    this.#cleanup();
     const oldRotation = this.viewport.rotation;
     const rotation = viewport.rotation;
     this.viewport = viewport;
@@ -17179,7 +17218,7 @@ class AnnotationEditorLayer {
         editor.rotate(rotation);
       }
     }
-    this.updateMode();
+    this.addInkEditorIfNeeded(false);
   }
   get pageDimensions() {
     const {
@@ -17401,8 +17440,8 @@ class DrawLayer {
 
 
 
-const pdfjsVersion = "4.1.287";
-const pdfjsBuild = "30e69956d";
+const pdfjsVersion = "4.1.315";
+const pdfjsBuild = "067c49dc4";
 
 var __webpack_exports__AbortException = __webpack_exports__.AbortException;
 var __webpack_exports__AnnotationEditorLayer = __webpack_exports__.AnnotationEditorLayer;

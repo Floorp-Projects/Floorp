@@ -1413,6 +1413,16 @@ class BaseExternalServices {
 ;// CONCATENATED MODULE: ./web/preferences.js
 
 class BasePreferences {
+  #browserDefaults = Object.freeze({
+    canvasMaxAreaInBytes: -1,
+    isInAutomation: false,
+    supportsCaretBrowsingMode: false,
+    supportsDocumentFonts: true,
+    supportsIntegratedFind: false,
+    supportsMouseWheelZoomCtrlKey: true,
+    supportsMouseWheelZoomMetaKey: true,
+    supportsPinchToZoom: true
+  });
   #defaults = Object.freeze({
     annotationEditorMode: 0,
     annotationMode: 2,
@@ -1456,18 +1466,8 @@ class BasePreferences {
       browserPrefs,
       prefs
     }) => {
-      const BROWSER_PREFS = {
-        canvasMaxAreaInBytes: -1,
-        isInAutomation: false,
-        supportsCaretBrowsingMode: false,
-        supportsDocumentFonts: true,
-        supportsIntegratedFind: false,
-        supportsMouseWheelZoomCtrlKey: true,
-        supportsMouseWheelZoomMetaKey: true,
-        supportsPinchToZoom: true
-      };
       const options = Object.create(null);
-      for (const [name, defaultVal] of Object.entries(BROWSER_PREFS)) {
+      for (const [name, defaultVal] of Object.entries(this.#browserDefaults)) {
         const prefVal = browserPrefs?.[name];
         options[name] = typeof prefVal === typeof defaultVal ? prefVal : defaultVal;
       }
@@ -1476,6 +1476,9 @@ class BasePreferences {
         options[name] = this.#prefs[name] = typeof prefVal === typeof defaultVal ? prefVal : defaultVal;
       }
       AppOptions.setAll(options, true);
+      window.addEventListener("updatedPreference", evt => {
+        this.#updatePref(evt.detail);
+      });
     });
   }
   async _writeToStorage(prefObj) {
@@ -1483,6 +1486,24 @@ class BasePreferences {
   }
   async _readFromStorage(prefObj) {
     throw new Error("Not implemented: _readFromStorage");
+  }
+  #updatePref({
+    name,
+    value
+  }) {
+    if (name in this.#browserDefaults) {
+      if (typeof value !== typeof this.#browserDefaults[name]) {
+        return;
+      }
+    } else if (name in this.#defaults) {
+      if (typeof value !== typeof this.#defaults[name]) {
+        return;
+      }
+      this.#prefs[name] = value;
+    } else {
+      return;
+    }
+    AppOptions.set(name, value);
   }
   async reset() {
     throw new Error("Please use `about:config` to change preferences.");
@@ -4180,10 +4201,10 @@ class PDFScriptingManager {
 class AnnotationEditorLayerBuilder {
   #annotationLayer = null;
   #drawLayer = null;
+  #onAppend = null;
   #textLayer = null;
   #uiManager;
   constructor(options) {
-    this.pageDiv = options.pageDiv;
     this.pdfPage = options.pdfPage;
     this.accessibilityManager = options.accessibilityManager;
     this.l10n = options.l10n;
@@ -4194,6 +4215,7 @@ class AnnotationEditorLayerBuilder {
     this.#annotationLayer = options.annotationLayer || null;
     this.#textLayer = options.textLayer || null;
     this.#drawLayer = options.drawLayer || null;
+    this.#onAppend = options.onAppend || null;
   }
   async render(viewport, intent = "display") {
     if (intent !== "display") {
@@ -4214,10 +4236,9 @@ class AnnotationEditorLayerBuilder {
     }
     const div = this.div = document.createElement("div");
     div.className = "annotationEditorLayer";
-    div.tabIndex = 0;
     div.hidden = true;
     div.dir = this.#uiManager.direction;
-    this.pageDiv.append(div);
+    this.#onAppend?.(div);
     this.annotationEditorLayer = new AnnotationEditorLayer({
       uiManager: this.#uiManager,
       div,
@@ -4243,9 +4264,7 @@ class AnnotationEditorLayerBuilder {
     if (!this.div) {
       return;
     }
-    this.pageDiv = null;
     this.annotationEditorLayer.destroy();
-    this.div.remove();
   }
   hide() {
     if (!this.div) {
@@ -4254,7 +4273,7 @@ class AnnotationEditorLayerBuilder {
     this.div.hidden = true;
   }
   show() {
-    if (!this.div || this.annotationEditorLayer.isEmpty) {
+    if (!this.div || this.annotationEditorLayer.isInvisible) {
       return;
     }
     this.div.hidden = false;
@@ -4265,9 +4284,9 @@ class AnnotationEditorLayerBuilder {
 
 
 class AnnotationLayerBuilder {
+  #onAppend = null;
   #onPresentationModeChanged = null;
   constructor({
-    pageDiv,
     pdfPage,
     linkService,
     downloadManager,
@@ -4278,9 +4297,9 @@ class AnnotationLayerBuilder {
     hasJSActionsPromise = null,
     fieldObjectsPromise = null,
     annotationCanvasMap = null,
-    accessibilityManager = null
+    accessibilityManager = null,
+    onAppend = null
   }) {
-    this.pageDiv = pageDiv;
     this.pdfPage = pdfPage;
     this.linkService = linkService;
     this.downloadManager = downloadManager;
@@ -4292,6 +4311,7 @@ class AnnotationLayerBuilder {
     this._fieldObjectsPromise = fieldObjectsPromise || Promise.resolve(null);
     this._annotationCanvasMap = annotationCanvasMap;
     this._accessibilityManager = accessibilityManager;
+    this.#onAppend = onAppend;
     this.annotationLayer = null;
     this.div = null;
     this._cancelled = false;
@@ -4317,7 +4337,7 @@ class AnnotationLayerBuilder {
     }
     const div = this.div = document.createElement("div");
     div.className = "annotationLayer";
-    this.pageDiv.append(div);
+    this.#onAppend?.(div);
     if (annotations.length === 0) {
       this.hide();
       return;
@@ -4911,13 +4931,15 @@ class TextHighlighter {
 
 class TextLayerBuilder {
   #enablePermissions = false;
+  #onAppend = null;
   #rotation = 0;
   #scale = 0;
   #textContentSource = null;
   constructor({
     highlighter = null,
     accessibilityManager = null,
-    enablePermissions = false
+    enablePermissions = false,
+    onAppend = null
   }) {
     this.textContentItemsStr = [];
     this.renderingDone = false;
@@ -4927,8 +4949,9 @@ class TextLayerBuilder {
     this.highlighter = highlighter;
     this.accessibilityManager = accessibilityManager;
     this.#enablePermissions = enablePermissions === true;
-    this.onAppend = null;
+    this.#onAppend = onAppend;
     this.div = document.createElement("div");
+    this.div.tabIndex = 0;
     this.div.className = "textLayer";
   }
   #finishRendering() {
@@ -4983,7 +5006,7 @@ class TextLayerBuilder {
     this.#finishRendering();
     this.#scale = scale;
     this.#rotation = rotation;
-    this.onAppend(this.div);
+    this.#onAppend?.(this.div);
     this.highlighter?.enable();
     this.accessibilityManager?.enable();
   }
@@ -5058,6 +5081,7 @@ class TextLayerBuilder {
 
 
 const DEFAULT_LAYER_PROPERTIES = null;
+const LAYERS_ORDER = new Map([["canvasWrapper", 0], ["textLayer", 1], ["annotationLayer", 2], ["annotationEditorLayer", 3], ["xfaLayer", 3]]);
 class PDFPageView {
   #annotationMode = AnnotationMode.ENABLE_FORMS;
   #hasRestrictedScaling = false;
@@ -5073,6 +5097,7 @@ class PDFPageView {
     regularAnnotations: true
   };
   #viewportMap = new WeakMap();
+  #layers = [null, null, null, null];
   constructor(options) {
     const container = options.container;
     const defaultViewport = options.defaultViewport;
@@ -5115,6 +5140,23 @@ class PDFPageView {
     this.div = div;
     this.#setDimensions();
     container?.append(div);
+  }
+  #addLayer(div, name) {
+    const pos = LAYERS_ORDER.get(name);
+    const oldDiv = this.#layers[pos];
+    this.#layers[pos] = div;
+    if (oldDiv) {
+      oldDiv.replaceWith(div);
+      return;
+    }
+    for (let i = pos - 1; i >= 0; i--) {
+      const layer = this.#layers[i];
+      if (layer) {
+        layer.after(div);
+        return;
+      }
+    }
+    this.div.prepend(div);
   }
   get renderingState() {
     return this.#renderingState;
@@ -5229,7 +5271,7 @@ class PDFPageView {
     } finally {
       if (this.xfaLayer?.div) {
         this.l10n.pause();
-        this.div.append(this.xfaLayer.div);
+        this.#addLayer(this.xfaLayer.div, "xfaLayer");
         this.l10n.resume();
       }
       this.eventBus.dispatch("xfalayerrendered", {
@@ -5341,6 +5383,10 @@ class PDFPageView {
           continue;
       }
       node.remove();
+      const layerIndex = this.#layers.indexOf(node);
+      if (layerIndex >= 0) {
+        this.#layers[layerIndex] = null;
+      }
     }
     div.removeAttribute("data-loaded");
     if (annotationLayerNode) {
@@ -5600,19 +5646,20 @@ class PDFPageView {
     this.renderingState = RenderingStates.RUNNING;
     const canvasWrapper = document.createElement("div");
     canvasWrapper.classList.add("canvasWrapper");
-    div.append(canvasWrapper);
+    canvasWrapper.setAttribute("aria-hidden", true);
+    this.#addLayer(canvasWrapper, "canvasWrapper");
     if (!this.textLayer && this.#textLayerMode !== TextLayerMode.DISABLE && !pdfPage.isPureXfa) {
       this._accessibilityManager ||= new TextAccessibilityManager();
       this.textLayer = new TextLayerBuilder({
         highlighter: this._textHighlighter,
         accessibilityManager: this._accessibilityManager,
-        enablePermissions: this.#textLayerMode === TextLayerMode.ENABLE_PERMISSIONS
+        enablePermissions: this.#textLayerMode === TextLayerMode.ENABLE_PERMISSIONS,
+        onAppend: textLayerDiv => {
+          this.l10n.pause();
+          this.#addLayer(textLayerDiv, "textLayer");
+          this.l10n.resume();
+        }
       });
-      this.textLayer.onAppend = textLayerDiv => {
-        this.l10n.pause();
-        this.div.append(textLayerDiv);
-        this.l10n.resume();
-      };
     }
     if (!this.annotationLayer && this.#annotationMode !== AnnotationMode.DISABLE) {
       const {
@@ -5625,7 +5672,6 @@ class PDFPageView {
       } = this.#layerProperties;
       this._annotationCanvasMap ||= new Map();
       this.annotationLayer = new AnnotationLayerBuilder({
-        pageDiv: div,
         pdfPage,
         annotationStorage,
         imageResourcesPath: this.imageResourcesPath,
@@ -5636,7 +5682,10 @@ class PDFPageView {
         hasJSActionsPromise,
         fieldObjectsPromise,
         annotationCanvasMap: this._annotationCanvasMap,
-        accessibilityManager: this._accessibilityManager
+        accessibilityManager: this._accessibilityManager,
+        onAppend: annotationLayerDiv => {
+          this.#addLayer(annotationLayerDiv, "annotationLayer");
+        }
       });
     }
     const renderContinueCallback = cont => {
@@ -5725,13 +5774,15 @@ class PDFPageView {
       if (!this.annotationEditorLayer) {
         this.annotationEditorLayer = new AnnotationEditorLayerBuilder({
           uiManager: annotationEditorUIManager,
-          pageDiv: div,
           pdfPage,
           l10n,
           accessibilityManager: this._accessibilityManager,
           annotationLayer: this.annotationLayer?.annotationLayer,
           textLayer: this.textLayer,
-          drawLayer: this.drawLayer.getDrawLayer()
+          drawLayer: this.drawLayer.getDrawLayer(),
+          onAppend: annotationEditorLayerDiv => {
+            this.#addLayer(annotationEditorLayerDiv, "annotationEditorLayer");
+          }
         });
       }
       this.#renderAnnotationEditorLayer();
@@ -5869,7 +5920,7 @@ class PDFViewer {
   #scaleTimeoutId = null;
   #textLayerMode = TextLayerMode.ENABLE;
   constructor(options) {
-    const viewerVersion = "4.1.287";
+    const viewerVersion = "4.1.315";
     if (version !== viewerVersion) {
       throw new Error(`The API version "${version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -7833,7 +7884,7 @@ const PDFViewerApplication = {
     return shadow(this, "supportsMouseWheelZoomMetaKey", AppOptions.get("supportsMouseWheelZoomMetaKey"));
   },
   get supportsCaretBrowsingMode() {
-    return shadow(this, "supportsCaretBrowsingMode", AppOptions.get("supportsCaretBrowsingMode"));
+    return AppOptions.get("supportsCaretBrowsingMode");
   },
   moveCaret(isUp, select) {
     this._caretBrowsing ||= new CaretBrowsingMode(this.appConfig.mainContainer, this.appConfig.viewerContainer, this.appConfig.toolbar?.container);
@@ -8654,7 +8705,7 @@ const PDFViewerApplication = {
       mainContainer.removeEventListener("blur", scrollend);
     };
     const scroll = _boundEvents.mainContainerScroll = () => {
-      if (this._lastScrollTop === mainContainer.scrollTop && this._lastScrollLeft === mainContainer.scrollLeft) {
+      if (this._isCtrlKeyDown || this._lastScrollTop === mainContainer.scrollTop && this._lastScrollLeft === mainContainer.scrollLeft) {
         return;
       }
       mainContainer.removeEventListener("scroll", scroll, {
@@ -9512,8 +9563,8 @@ function webViewerReportTelemetry({
 
 
 
-const pdfjsVersion = "4.1.287";
-const pdfjsBuild = "30e69956d";
+const pdfjsVersion = "4.1.315";
+const pdfjsBuild = "067c49dc4";
 const AppConstants = null;
 window.PDFViewerApplication = PDFViewerApplication;
 window.PDFViewerApplicationConstants = AppConstants;

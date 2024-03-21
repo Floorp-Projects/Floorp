@@ -31443,17 +31443,25 @@ class PartialEvaluator {
     }
     const SMALL_IMAGE_DIMENSIONS = 200;
     if (isInline && !dict.has("SMask") && !dict.has("Mask") && w + h < SMALL_IMAGE_DIMENSIONS) {
-      const imageObj = new PDFImage({
-        xref: this.xref,
-        res: resources,
-        image,
-        isInline,
-        pdfFunctionFactory: this._pdfFunctionFactory,
-        localColorSpaceCache
-      });
-      imgData = await imageObj.createImageData(true, false);
-      operatorList.isOffscreenCanvasSupported = this.options.isOffscreenCanvasSupported;
-      operatorList.addImageOps(OPS.paintInlineImageXObject, [imgData], optionalContent);
+      try {
+        const imageObj = new PDFImage({
+          xref: this.xref,
+          res: resources,
+          image,
+          isInline,
+          pdfFunctionFactory: this._pdfFunctionFactory,
+          localColorSpaceCache
+        });
+        imgData = await imageObj.createImageData(true, false);
+        operatorList.isOffscreenCanvasSupported = this.options.isOffscreenCanvasSupported;
+        operatorList.addImageOps(OPS.paintInlineImageXObject, [imgData], optionalContent);
+      } catch (reason) {
+        const msg = `Unable to decode inline image: "${reason}".`;
+        if (!this.options.ignoreErrors) {
+          throw new Error(msg);
+        }
+        warn(msg);
+      }
       return;
     }
     let objId = `img_${this.idFactory.createObjId()}`,
@@ -56717,7 +56725,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = "4.1.287";
+    const workerVersion = "4.1.315";
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -57279,8 +57287,8 @@ if (typeof window === "undefined" && !isNodeJS && typeof self !== "undefined" &&
 
 ;// CONCATENATED MODULE: ./src/pdf.worker.js
 
-const pdfjsVersion = "4.1.287";
-const pdfjsBuild = "30e69956d";
+const pdfjsVersion = "4.1.315";
+const pdfjsBuild = "067c49dc4";
 
 var __webpack_exports__WorkerMessageHandler = __webpack_exports__.WorkerMessageHandler;
 export { __webpack_exports__WorkerMessageHandler as WorkerMessageHandler };
