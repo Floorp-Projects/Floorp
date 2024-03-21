@@ -64,7 +64,7 @@ module.exports = {
       // For all head*.js files, turn off no-unused-vars at a global level
       files: ["**/head*.js"],
       rules: {
-        "no-unused-vars": ["error", { args: "none", vars: "local" }],
+        "no-unused-vars": ["error", { argsIgnorePattern: "^_", vars: "local" }],
       },
     },
     {
@@ -233,9 +233,9 @@ module.exports = {
     // random name.
     // Still, making this a warning can help people avoid being confused.
     "no-shadow": "error",
-    // Disallow global and local variables that aren't used, but allow unused
-    // function arguments.
-    "no-unused-vars": ["error", { args: "none", vars: "all" }],
+    // Disallow global and local variables that aren't used. Allow unused
+    // function arguments prefixed with `_`.
+    "no-unused-vars": ["error", { argsIgnorePattern: "^_", vars: "all" }],
     // Enforce using `let` only when variables are reassigned.
     "prefer-const": ["error", { destructuring: "all" }],
     // Require use of the second argument for parseInt().

@@ -8,7 +8,7 @@ module.exports = {
   rules: {
     "no-unused-vars": [
       "error",
-      { args: "none", varsIgnorePattern: "^end_test$" },
+      { argsIgnorePattern: "^_", varsIgnorePattern: "^end_test$" },
     ],
   },
 };
