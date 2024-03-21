@@ -17,6 +17,8 @@ subsuite = "taskgraph"
 
 ["test_taskcluster_yml.py"]
 
+["test_transforms_build_schedules.py"]
+
 ["test_transforms_job.py"]
 
 ["test_transforms_test.py"]

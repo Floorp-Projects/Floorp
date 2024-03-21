@@ -6,6 +6,8 @@ loader: gecko_taskgraph.loader.transform:loader
 
 transforms:
     - gecko_taskgraph.transforms.test_apk:transforms
+    # While not a build, the build optimization works well for these tasks.
+    - gecko_taskgraph.transforms.build_schedules:transforms
     - gecko_taskgraph.transforms.job:transforms
     - gecko_taskgraph.transforms.task:transforms
 
