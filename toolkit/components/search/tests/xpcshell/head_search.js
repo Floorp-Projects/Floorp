@@ -332,12 +332,15 @@ async function getFileDataBuffer(filename) {
  *  The size of the image.
  * @param {string} [item.id]
  *   The ID to use for the record. If not provided, a new UUID will be generated.
+ * @param {number} [item.lastModified]
+ *   The last modified time for the record. Defaults to the current time.
  */
 async function mockRecordWithAttachment({
   filename,
   engineIdentifiers,
   imageSize,
   id = Services.uuid.generateUUID().toString(),
+  lastModified = Date.now(),
 }) {
   let buffer = await getFileDataBuffer(filename);
 
@@ -364,6 +367,7 @@ async function mockRecordWithAttachment({
       size: buffer.byteLength,
       mimetype: "application/json",
     },
+    last_modified: lastModified,
   };
 
   let attachment = {
@@ -380,13 +384,21 @@ async function mockRecordWithAttachment({
  * @param {RemoteSettingsClient} client
  *   The remote settings client to use.
  * @param {object} item
- *    An object containing the details of the attachment - see mockRecordWithAttachment.
+ *   An object containing the details of the attachment - see mockRecordWithAttachment.
+ * @param {boolean} [addAttachmentToCache]
+ *   Whether to add the attachment file to the cache. Defaults to true.
  */
-async function insertRecordIntoCollection(client, item) {
+async function insertRecordIntoCollection(
+  client,
+  item,
+  addAttachmentToCache = true
+) {
   let { record, attachment } = await mockRecordWithAttachment(item);
   await client.db.create(record);
-  await client.attachments.cacheImpl.set(record.id, attachment);
-  await client.db.importChanges({}, Date.now());
+  if (addAttachmentToCache) {
+    await client.attachments.cacheImpl.set(record.id, attachment);
+  }
+  await client.db.importChanges({}, record.last_modified);
 }
 
 /**

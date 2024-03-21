@@ -53,7 +53,11 @@ let TESTS = [
     icons: [
       {
         filename: "remoteIcon.ico",
-        engineIdentifiers: ["engine_non_default_sized_icon"],
+        engineIdentifiers: [
+          // This also tests multiple engine idenifiers works.
+          "enterprise_shuttle",
+          "engine_non_default_sized_icon",
+        ],
         imageSize: 32,
       },
     ],
