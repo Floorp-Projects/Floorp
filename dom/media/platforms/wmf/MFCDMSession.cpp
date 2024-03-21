@@ -11,6 +11,7 @@
 #include "MFMediaEngineUtils.h"
 #include "GMPUtils.h"  // ToHexString
 #include "mozilla/EMEUtils.h"
+#include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/MediaKeyMessageEventBinding.h"
 #include "mozilla/dom/MediaKeyStatusMapBinding.h"
 #include "nsThreadUtils.h"
@@ -244,7 +245,7 @@ void MFCDMSession::OnSessionKeysChange() {
     nsAutoCString keyIdString(ToHexString(keyId));
     LOG("Append keyid-sz=%u, keyid=%s, status=%s", keyStatus.cbKeyId,
         keyIdString.get(),
-        ToMediaKeyStatusStr(ToMediaKeyStatus(keyStatus.eMediaKeyStatus)));
+        dom::GetEnumString(ToMediaKeyStatus(keyStatus.eMediaKeyStatus)).get());
     keyInfos.AppendElement(MFCDMKeyInformation{
         std::move(keyId), ToMediaKeyStatus(keyStatus.eMediaKeyStatus)});
   }

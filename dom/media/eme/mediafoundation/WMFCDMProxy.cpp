@@ -158,7 +158,7 @@ void WMFCDMProxy::ResolvePromiseWithKeyStatus(
     RETURN_IF_SHUTDOWN();
     EME_LOG("WMFCDMProxy::ResolvePromiseWithKeyStatus(this=%p, pid=%" PRIu32
             ", status=%s)",
-            this, aId, ToMediaKeyStatusStr(aStatus));
+            this, aId, dom::GetEnumString(aStatus).get());
     if (!mKeys.IsNull()) {
       mKeys->ResolvePromiseWithKeyStatus(aId, aStatus);
     } else {
