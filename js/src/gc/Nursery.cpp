@@ -1909,8 +1909,9 @@ void js::Nursery::Space::clear(Nursery* nursery) {
   // Clear only the used part of the chunk because that's the part we touched,
   // but only if it's not going to be re-used immediately (>= firstClearChunk).
   if (currentChunk_ >= firstClearChunk) {
-    size_t used = position_ - chunks_[currentChunk_]->start();
-    chunks_[currentChunk_]->poisonAfterEvict(used);
+    size_t usedBytes = position_ - chunks_[currentChunk_]->start();
+    chunks_[currentChunk_]->poisonAfterEvict(NurseryChunkHeaderSize +
+                                             usedBytes);
   }
 
   // Reset the start chunk & position if we're not in this zeal mode, or we're
