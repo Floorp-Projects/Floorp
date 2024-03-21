@@ -70,6 +70,10 @@ for f in $files; do
             task=gecko.v2.${repo}.latest.taskgraph.decision-${task}
             service=index
             ;;
+        nightly-all)
+            task=gecko.v2.${repo}.latest.taskgraph.decision-nightly-all
+            service=index
+            ;;
         android-nightly)
             task=gecko.v2.${repo}.latest.taskgraph.decision-nightly-android
             service=index
