@@ -391,13 +391,13 @@ def validate_install_manifests(install_manifest_args):
 def make_file_mapping(install_manifests):
     file_mapping = {}
     for manifest, destination in install_manifests:
-        destination = os.path.abspath(destination)
+        absolute_destination = os.path.abspath(destination)
         reg = FileRegistry()
         manifest.populate_registry(reg)
         for dst, src in reg:
             if hasattr(src, "path"):
                 # Any paths that get compared to source file names need to go through realpath.
-                abs_dest = realpath(os.path.join(destination, dst))
+                abs_dest = realpath(os.path.join(absolute_destination, dst))
                 file_mapping[abs_dest] = realpath(src.path)
     return file_mapping
 
@@ -911,9 +911,8 @@ class Dumper_Linux(Dumper):
             full_path = os.path.normpath(os.path.join(self.symbol_path, rel_path))
             shutil.move(file_dbg, full_path)
             print(rel_path)
-        else:
-            if os.path.isfile(file_dbg):
-                os.unlink(file_dbg)
+        elif os.path.isfile(file_dbg):
+            os.unlink(file_dbg)
 
 
 class Dumper_Solaris(Dumper):
@@ -1129,13 +1128,13 @@ to canonical locations in the source repository. Specify
 
     if len(args) < 3:
         parser.error("not enough arguments")
-        exit(1)
+        sys.exit(1)
 
     try:
         manifests = validate_install_manifests(options.install_manifests)
     except (IOError, ValueError) as e:
         parser.error(str(e))
-        exit(1)
+        sys.exit(1)
     file_mapping = make_file_mapping(manifests)
     _, bucket = get_s3_region_and_bucket()
     dumper = GetPlatformSpecificDumper(
