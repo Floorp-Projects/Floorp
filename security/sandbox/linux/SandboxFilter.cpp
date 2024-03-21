@@ -1595,9 +1595,6 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
       case __NR_clone:
         return ClonePolicy(Error(EPERM));
 
-      case __NR_clone3:
-        return Error(ENOSYS);
-
 #  ifdef __NR_fadvise64
       case __NR_fadvise64:
         return Allow();
@@ -1948,6 +1945,10 @@ class RDDSandboxPolicy final : public SandboxPolicyCommon {
         // process.)
       CASES_FOR_fstatfs:
         return Allow();
+
+        // nvidia drivers may attempt to spawn nvidia-modprobe
+      case __NR_clone:
+        return ClonePolicy(Error(EPERM));
 
         // Pass through the common policy.
       default:

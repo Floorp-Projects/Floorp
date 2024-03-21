@@ -721,6 +721,16 @@ void RunTestsRDD(SandboxTestingChild* child) {
     return statfs("/usr/share", &sf);
   });
 
+  child->ErrnoValueTest("fork"_ns, EPERM, [] {
+    pid_t pid = fork();
+    if (pid == 0) {
+      // Success: shouldn't happen, and parent will report a test
+      // failure.
+      _exit(0);
+    }
+    return pid;
+  });
+
 #  elif XP_MACOSX
   RunMacTestLaunchProcess(child);
   RunMacTestWindowServer(child);
