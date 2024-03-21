@@ -1288,6 +1288,27 @@ const SNAPSHOT_SCHEMA = {
         },
       },
     },
+    contentAnalysis: {
+      type: "object",
+      properties: {
+        active: {
+          required: true,
+          type: "boolean",
+        },
+        connected: {
+          type: "boolean",
+        },
+        agentPath: {
+          type: "string",
+        },
+        failedSignatureVerification: {
+          type: "boolean",
+        },
+        requestCount: {
+          type: "number",
+        },
+      },
+    },
   },
 };
 
