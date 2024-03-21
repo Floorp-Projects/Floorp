@@ -275,7 +275,7 @@ add_task(async function testClearingBeforeDataSizesLoad() {
       info("stub called");
 
       info("This promise should never resolve");
-      await new Promise(resolve => {});
+      await new Promise(() => {});
     });
   dh.onload = async function () {
     // we don't need to initiate a event listener to wait for the resolver to be assigned for this
