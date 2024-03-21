@@ -58,6 +58,8 @@ class RecordedTextureData final : public TextureData {
 
   ~RecordedTextureData() override;
 
+  void DetachSnapshotWrapper(bool aInvalidate = false, bool aRelease = true);
+
   int64_t mTextureId;
   RefPtr<CanvasChild> mCanvasChild;
   gfx::IntSize mSize;
