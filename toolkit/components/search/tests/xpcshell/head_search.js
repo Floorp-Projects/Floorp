@@ -307,6 +307,89 @@ async function setupRemoteSettings() {
 }
 
 /**
+ * Reads the specified file from the data directory and returns its contents as
+ * an Uint8Array.
+ *
+ * @param {string} filename
+ *   The name of the file to read.
+ * @returns {Promise<Uint8Array>}
+ *   The contents of the file in an Uint8Array.
+ */
+async function getFileDataBuffer(filename) {
+  return IOUtils.read(PathUtils.join(do_get_cwd().path, "data", filename));
+}
+
+/**
+ * Creates a mock attachment record for use in remote settings related tests.
+ *
+ * @param {object} item
+ *   An object containing the details of the attachment.
+ * @param {string} item.filename
+ *   The name of the attachmnet file in the data directory.
+ * @param {string[]} item.engineIdentifiers
+ *  The engine identifiers for the attachment.
+ * @param {number} item.imageSize
+ *  The size of the image.
+ * @param {string} [item.id]
+ *   The ID to use for the record. If not provided, a new UUID will be generated.
+ */
+async function mockRecordWithAttachment({
+  filename,
+  engineIdentifiers,
+  imageSize,
+  id = Services.uuid.generateUUID().toString(),
+}) {
+  let buffer = await getFileDataBuffer(filename);
+
+  // Generate a hash.
+  let hasher = Cc["@mozilla.org/security/hash;1"].createInstance(
+    Ci.nsICryptoHash
+  );
+  hasher.init(Ci.nsICryptoHash.SHA256);
+  hasher.update(buffer, buffer.length);
+
+  let hash = hasher.finish(false);
+  hash = Array.from(hash, (_, i) =>
+    ("0" + hash.charCodeAt(i).toString(16)).slice(-2)
+  ).join("");
+
+  let record = {
+    id,
+    engineIdentifiers,
+    imageSize,
+    attachment: {
+      hash,
+      location: `${filename}`,
+      filename,
+      size: buffer.byteLength,
+      mimetype: "application/json",
+    },
+  };
+
+  let attachment = {
+    record,
+    blob: new Blob([buffer]),
+  };
+
+  return { record, attachment };
+}
+
+/**
+ * Inserts an attachment record into the remote settings collection.
+ *
+ * @param {RemoteSettingsClient} client
+ *   The remote settings client to use.
+ * @param {object} item
+ *    An object containing the details of the attachment - see mockRecordWithAttachment.
+ */
+async function insertRecordIntoCollection(client, item) {
+  let { record, attachment } = await mockRecordWithAttachment(item);
+  await client.db.create(record);
+  await client.attachments.cacheImpl.set(record.id, attachment);
+  await client.db.importChanges({}, Date.now());
+}
+
+/**
  * Helper function that sets up a server and respnds to region
  * fetch requests.
  *

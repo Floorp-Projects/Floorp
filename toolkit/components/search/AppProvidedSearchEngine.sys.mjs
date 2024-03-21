@@ -9,6 +9,8 @@ import {
   EngineURL,
 } from "resource://gre/modules/SearchEngine.sys.mjs";
 
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -16,10 +18,27 @@ ChromeUtils.defineESModuleGetters(lazy, {
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
 });
 
+XPCOMUtils.defineLazyServiceGetter(
+  lazy,
+  "idleService",
+  "@mozilla.org/widget/useridleservice;1",
+  "nsIUserIdleService"
+);
+
+// After the user has been idle for 30s, we'll update icons if we need to.
+const ICON_UPDATE_ON_IDLE_DELAY = 30;
+
 /**
  * Handles loading application provided search engine icons from remote settings.
  */
 class IconHandler {
+  /**
+   * The remote settings client for the search engine icons.
+   *
+   * @type {?RemoteSettingsClient}
+   */
+  #iconCollection = null;
+
   /**
    * The list of icon records from the remote settings collection.
    *
@@ -28,11 +47,25 @@ class IconHandler {
   #iconList = null;
 
   /**
-   * The remote settings client for the search engine icons.
+   * A flag that indicates if we have queued an idle observer to update icons.
    *
-   * @type {?RemoteSettingsClient}
+   * @type {boolean}
    */
-  #iconCollection = null;
+  #queuedIdle = false;
+
+  /**
+   * A map of pending updates that need to be applied to the engines. This is
+   * keyed via record id, so that if multiple updates are queued for the same
+   * record, then we will only update the engine once.
+   *
+   * @type {Map<string, object>}
+   */
+  #pendingUpdatesMap = new Map();
+
+  constructor() {
+    this.#iconCollection = lazy.RemoteSettings("search-config-icons");
+    this.#iconCollection.on("sync", this._onIconListUpdated.bind(this));
+  }
 
   /**
    * Returns the icon for the record that matches the engine identifier
@@ -51,14 +84,9 @@ class IconHandler {
       await this.#getIconList();
     }
 
-    let iconRecords = this.#iconList.filter(r => {
-      return r.engineIdentifiers.some(i => {
-        if (i.endsWith("*")) {
-          return engineIdentifier.startsWith(i.slice(0, -1));
-        }
-        return engineIdentifier == i;
-      });
-    });
+    let iconRecords = this.#iconList.filter(r =>
+      this._identifierMatches(engineIdentifier, r.engineIdentifiers)
+    );
 
     if (!iconRecords.length) {
       console.warn("No icon found for", engineIdentifier);
@@ -94,11 +122,84 @@ class IconHandler {
     );
   }
 
+  QueryInterface = ChromeUtils.generateQI(["nsIObserver"]);
+
+  /**
+   * Called when there is an update queued and the user has been observed to be
+   * idle for ICON_UPDATE_ON_IDLE_DELAY seconds.
+   *
+   * This will always download new icons (added or updated), even if there is
+   * no current engine that matches the identifiers. This is to ensure that we
+   * have pre-populated the cache if the engine is added later for this user.
+   *
+   * We do not handle deletes, as remote settings will handle the cleanup of
+   * removed records. We also do not expect the case where an icon is removed
+   * for an active engine.
+   *
+   * @param {nsISupports} subject
+   *   The subject of the observer.
+   * @param {string} topic
+   *   The topic of the observer.
+   */
+  async observe(subject, topic) {
+    if (topic != "idle") {
+      return;
+    }
+
+    this.#queuedIdle = false;
+    lazy.idleService.removeIdleObserver(this, ICON_UPDATE_ON_IDLE_DELAY);
+
+    // Update the icon list, in case engines will call getIcon() again.
+    await this.#getIconList();
+
+    let appProvidedEngines = await Services.search.getAppProvidedEngines();
+    for (let record of this.#pendingUpdatesMap.values()) {
+      let iconData;
+      try {
+        iconData = await this.#iconCollection.attachments.download(record);
+      } catch (ex) {
+        console.error("Could not download new icon", ex);
+        continue;
+      }
+
+      for (let engine of appProvidedEngines) {
+        await engine.maybeUpdateIconURL(
+          record.engineIdentifiers,
+          URL.createObjectURL(
+            new Blob([iconData.buffer]),
+            record.attachment.mimetype
+          )
+        );
+      }
+    }
+
+    this.#pendingUpdatesMap.clear();
+  }
+
+  /**
+   * Checks if the identifier matches any of the engine identifiers.
+   *
+   * @param {string} identifier
+   *   The identifier of the engine.
+   * @param {string[]} engineIdentifiers
+   *   The list of engine identifiers to match against. This can include
+   *   wildcards at the end of strings.
+   * @returns {boolean}
+   *   Returns true if the identifier matches any of the engine identifiers.
+   */
+  _identifierMatches(identifier, engineIdentifiers) {
+    return engineIdentifiers.some(i => {
+      if (i.endsWith("*")) {
+        return identifier.startsWith(i.slice(0, -1));
+      }
+      return identifier == i;
+    });
+  }
+
   /**
    * Obtains the icon list from the remote settings collection.
    */
   async #getIconList() {
-    this.#iconCollection = lazy.RemoteSettings("search-config-icons");
     try {
       this.#iconList = await this.#iconCollection.get();
     } catch (ex) {
@@ -107,6 +208,41 @@ class IconHandler {
     }
     if (!this.#iconList.length) {
       console.error("Failed to obtain search engine icon list records");
+    }
+  }
+
+  /**
+   * Called via a callback when remote settings updates the icon list. This
+   * stores potential updates and queues an idle observer to apply them.
+   *
+   * @param {object} payload
+   *   The payload from the remote settings collection.
+   * @param {object} payload.data
+   *   The payload data from the remote settings collection.
+   * @param {object[]} payload.data.created
+   *    The list of created records.
+   * @param {object[]} payload.data.updated
+   *    The list of updated records.
+   */
+  async _onIconListUpdated({ data: { created, updated } }) {
+    created.forEach(record => {
+      this.#pendingUpdatesMap.set(record.id, record);
+    });
+    for (let record of updated) {
+      if (record.new) {
+        this.#pendingUpdatesMap.set(record.new.id, record.new);
+      }
+    }
+    this.#maybeQueueIdle();
+  }
+
+  /**
+   * Queues an idle observer if there are pending updates.
+   */
+  #maybeQueueIdle() {
+    if (this.#pendingUpdatesMap && !this.#queuedIdle) {
+      this.#queuedIdle = true;
+      lazy.idleService.addIdleObserver(this, ICON_UPDATE_ON_IDLE_DELAY);
     }
   }
 }
@@ -268,6 +404,36 @@ export class AppProvidedSearchEngine extends SearchEngine {
       preferredWidth
     );
     return this.#blobURLPromise;
+  }
+
+  /**
+   * This will update the icon URL for the search engine if the engine
+   * identifier matches the given engine identifiers.
+   *
+   * @param {string[]} engineIdentifiers
+   *   The engine identifiers to check against.
+   * @param {string} blobURL
+   *   The new icon URL for the search engine.
+   */
+  async maybeUpdateIconURL(engineIdentifiers, blobURL) {
+    // TODO: Bug 1875912. Once newSearchConfigEnabled has been enabled, we will
+    // be able to use `this.id` instead of `this.#configurationId`. At that
+    // point, `IconHandler._identifierMatches` can be made into a private
+    // function, as this if statement can be handled within `IconHandler.observe`.
+    if (
+      !AppProvidedSearchEngine.iconHandler._identifierMatches(
+        this.#configurationId,
+        engineIdentifiers
+      )
+    ) {
+      return;
+    }
+    if (this.#blobURLPromise) {
+      URL.revokeObjectURL(await this.#blobURLPromise);
+      this.#blobURLPromise = null;
+    }
+    this.#blobURLPromise = Promise.resolve(blobURL);
+    lazy.SearchUtils.notifyAction(this, lazy.SearchUtils.MODIFIED_TYPE.CHANGED);
   }
 
   /**
