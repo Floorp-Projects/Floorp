@@ -81,6 +81,9 @@ support-files = [
 ["test_appProvided_icons.js"]
 prefs = ["browser.search.newSearchConfig.enabled=true"]
 
+["test_appProvided_icons_updates.js"]
+prefs = ["browser.search.newSearchConfig.enabled=true"]
+
 ["test_async.js"]
 
 ["test_config_engine_params.js"]
