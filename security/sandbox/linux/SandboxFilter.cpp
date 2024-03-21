@@ -1842,20 +1842,24 @@ class RDDSandboxPolicy final : public SandboxPolicyCommon {
                                        bool aHasArgs) const override {
     switch (aCall) {
       // These are for X11.
+      //
+      // FIXME (bug 1884449): X11 is blocked now so we probably don't
+      // need these, but they're relatively harmless.
       case SYS_GETSOCKNAME:
       case SYS_GETPEERNAME:
       case SYS_SHUTDOWN:
         return Some(Allow());
 
-#ifdef MOZ_ENABLE_V4L2
       case SYS_SOCKET:
         // Hardware-accelerated decode uses EGL to manage hardware surfaces.
         // When initialised it tries to connect to the Wayland server over a
         // UNIX socket. It still works fine if it can't connect to Wayland, so
         // don't let it create the socket (but don't kill the process for
         // trying).
+        //
+        // We also see attempts to connect to an X server on desktop
+        // Linux sometimes (bug 1882598).
         return Some(Error(EACCES));
-#endif
 
       default:
         return SandboxPolicyCommon::EvaluateSocketCall(aCall, aHasArgs);
