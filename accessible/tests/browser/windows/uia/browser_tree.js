@@ -46,7 +46,7 @@ addUiaTask(
 <div id="editable" contenteditable>editable</div>
 <table id="table"><tr><th>th</th></tr></table>
   `,
-  async function (browser, docAcc) {
+  async function () {
     await definePyVar("doc", `getDocUia()`);
     await assignPyVarToUiaWithId("p");
     await testIsControl("p", false);
