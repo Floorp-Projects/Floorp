@@ -34,6 +34,10 @@ extern MOZ_EXPORT void uprofiler_unregister_thread();
 extern MOZ_EXPORT void uprofiler_simple_event_marker(
     const char* name, char phase, int num_args, const char** arg_names,
     const unsigned char* arg_types, const unsigned long long* arg_values);
+
+extern MOZ_EXPORT void uprofiler_simple_event_marker_with_stack(
+    const char* name, char phase, int num_args, const char** arg_names,
+    const unsigned char* arg_types, const unsigned long long* arg_values);
 #ifdef __cplusplus
 }
 
@@ -60,6 +64,10 @@ struct UprofilerFuncPtrs {
                               const char** arg_names,
                               const unsigned char* arg_types,
                               const unsigned long long* arg_values);
+  void (*simple_event_marker_with_stack)(const char* name, char phase,
+                                         int num_args, const char** arg_names,
+                                         const unsigned char* arg_types,
+                                         const unsigned long long* arg_values);
 };
 
 #pragma GCC diagnostic push
@@ -77,6 +85,12 @@ static void simple_event_marker_noop(const char* name, char phase, int num_args,
   /* no-op */
 }
 
+static void simple_event_marker_with_stack_noop(
+    const char* name, char phase, int num_args, const char** arg_names,
+    const unsigned char* arg_types, const unsigned long long* arg_values) {
+  /* no-op */
+}
+
 #pragma GCC diagnostic pop
 
 #if defined(_WIN32)
@@ -88,7 +102,7 @@ static void simple_event_marker_noop(const char* name, char phase, int num_args,
 #if defined(_WIN32)
 #  define UPROFILER_GET_SYM(handle, sym) GetProcAddress(handle, sym)
 #else
-#  define UPROFILER_GET_SYM(handle, sym) dlsym(handle, sym)
+#  define UPROFILER_GET_SYM(handle, sym) (typeof(sym)*)(dlsym(handle, #sym))
 #endif
 
 #if defined(_WIN32)
@@ -98,33 +112,30 @@ static void simple_event_marker_noop(const char* name, char phase, int num_args,
     fprintf(stderr, "%s error: %s\n", #func, dlerror());
 #endif
 
+#define FETCH(func)                                             \
+  uprofiler.func = UPROFILER_GET_SYM(handle, uprofiler_##func); \
+  if (!uprofiler.func) {                                        \
+    UPROFILER_PRINT_ERROR(uprofiler_##func);                    \
+    uprofiler.func = func##_noop;                               \
+  }
+
+#define UPROFILER_VISIT()    \
+  FETCH(register_thread)     \
+  FETCH(unregister_thread)   \
+  FETCH(simple_event_marker) \
+  FETCH(simple_event_marker_with_stack)
+
 // Assumes that a variable of type UprofilerFuncPtrs, named uprofiler
 // is accessible in the scope
-#define UPROFILER_GET_FUNCTIONS()                                 \
-  void* handle = UPROFILER_OPENLIB();                             \
-  if (!handle) {                                                  \
-    UPROFILER_PRINT_ERROR(UPROFILER_OPENLIB);                     \
-    uprofiler.register_thread = register_thread_noop;             \
-    uprofiler.unregister_thread = unregister_thread_noop;         \
-    uprofiler.simple_event_marker = simple_event_marker_noop;     \
-  }                                                               \
-  uprofiler.register_thread =                                     \
-      UPROFILER_GET_SYM(handle, "uprofiler_register_thread");     \
-  if (!uprofiler.register_thread) {                               \
-    UPROFILER_PRINT_ERROR(uprofiler_unregister_thread);           \
-    uprofiler.register_thread = register_thread_noop;             \
-  }                                                               \
-  uprofiler.unregister_thread =                                   \
-      UPROFILER_GET_SYM(handle, "uprofiler_unregister_thread");   \
-  if (!uprofiler.unregister_thread) {                             \
-    UPROFILER_PRINT_ERROR(uprofiler_unregister_thread);           \
-    uprofiler.unregister_thread = unregister_thread_noop;         \
-  }                                                               \
-  uprofiler.simple_event_marker =                                 \
-      UPROFILER_GET_SYM(handle, "uprofiler_simple_event_marker"); \
-  if (!uprofiler.simple_event_marker) {                           \
-    UPROFILER_PRINT_ERROR(uprofiler_simple_event_marker);         \
-    uprofiler.simple_event_marker = simple_event_marker_noop;     \
-  }
+#define UPROFILER_GET_FUNCTIONS()                                            \
+  void* handle = UPROFILER_OPENLIB();                                        \
+  if (!handle) {                                                             \
+    UPROFILER_PRINT_ERROR(UPROFILER_OPENLIB);                                \
+    uprofiler.register_thread = register_thread_noop;                        \
+    uprofiler.unregister_thread = unregister_thread_noop;                    \
+    uprofiler.simple_event_marker = simple_event_marker_noop;                \
+    uprofiler.simple_event_marker_with_stack = simple_event_with_stack_noop; \
+  }                                                                          \
+  UPROFILER_VISIT()
 
 #endif  // MICRO_GECKO_PROFILER
