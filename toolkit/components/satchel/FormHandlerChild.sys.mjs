@@ -44,13 +44,13 @@ export class FormHandlerChild extends JSWindowActorChild {
   }
 
   // handle form-removal-after-fetch
-  processFormRemovalAfterFetch(params) {}
+  processFormRemovalAfterFetch(_params) {}
 
   // handle iframe-pagehide
-  processIframePagehide(params) {}
+  processIframePagehide(_params) {}
 
   // handle page-navigation
-  processPageNavigation(params) {}
+  processPageNavigation(_params) {}
 
   /**
    * Dispatch the CustomEvent form-submission-detected also transfer
