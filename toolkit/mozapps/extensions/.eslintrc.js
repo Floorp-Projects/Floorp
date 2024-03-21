@@ -14,7 +14,7 @@ module.exports = {
     "no-unused-vars": [
       "error",
       {
-        args: "none",
+        argsIgnorePattern: "^_",
         vars: "all",
       },
     ],
@@ -26,7 +26,7 @@ module.exports = {
         "no-unused-vars": [
           "error",
           {
-            args: "none",
+            argsIgnorePattern: "^_",
             vars: "local",
           },
         ],

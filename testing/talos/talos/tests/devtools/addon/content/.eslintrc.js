@@ -12,7 +12,7 @@ module.exports = {
     dampWindow: true,
   },
   rules: {
-    "no-unused-vars": ["error", { args: "none", vars: "all" }],
+    "no-unused-vars": ["error", { argsIgnorePattern: "^_", vars: "all" }],
     // These are the rules that have been configured so far to match the
     // devtools coding style.
 
