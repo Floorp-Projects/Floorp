@@ -27,7 +27,7 @@ object Versions {
     const val maven_ant_tasks = "2.1.3"
     const val jacoco = "0.8.11"
     const val okhttp = "4.12.0"
-    const val okio = "3.8.0"
+    const val okio = "3.9.0"
     const val androidsvg = "1.4"
 
     const val android_gradle_plugin = "8.3.0"
