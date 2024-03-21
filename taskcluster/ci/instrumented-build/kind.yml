@@ -39,7 +39,6 @@ job-defaults:
     fetches:
         toolchain:
             - linux64-sccache
-    run-on-projects: ['release']
 
 jobs:
     linux-shippable/opt:
@@ -87,6 +86,7 @@ jobs:
                 - builds/releng_base_linux_64_builds.py
             mozconfig-variant: profile-generate
             tooltool-downloads: public
+        run-on-projects: ['release']
         fetches:
             toolchain:
                 - linux64-clang
@@ -119,6 +119,7 @@ jobs:
                     - ac_add_options --target=aarch64
                     - unset MOZ_STDCXX_COMPAT
             tooltool-downloads: public
+        run-on-projects: ['release']
         fetches:
             toolchain:
                 - linux64-clang
@@ -153,6 +154,7 @@ jobs:
             script: "mozharness/scripts/fx_desktop_build.py"
             secrets: true
             mozconfig-variant: profile-generate
+        run-on-projects: ['release']
         fetches:
             toolchain:
                 - linux64-clang
@@ -190,6 +192,7 @@ jobs:
             mozconfig-variant: profile-generate
             extra-config:
                 mozconfig_platform: macosx64-aarch64
+        run-on-projects: ['release']
         fetches:
             toolchain:
                 - linux64-clang
@@ -243,6 +246,7 @@ jobs:
                 - builds/releng_base_android_64_builds.py
             custom-build-variant-cfg: x86-profile-generate
             tooltool-downloads: internal
+        run-on-projects: ['release']
         fetches:
             toolchain:
                 - android-gradle-dependencies
@@ -298,6 +302,7 @@ jobs:
                 - builds/releng_base_android_64_builds.py
             custom-build-variant-cfg: x86_64-profile-generate
             tooltool-downloads: internal
+        run-on-projects: ['release']
         fetches:
             toolchain:
                 - android-gradle-dependencies
@@ -353,6 +358,7 @@ jobs:
                 - builds/releng_base_android_64_builds.py
             custom-build-variant-cfg: aarch64-profile-generate
             tooltool-downloads: internal
+        run-on-projects: ['release']
         fetches:
             toolchain:
                 - android-gradle-dependencies
@@ -388,6 +394,7 @@ jobs:
             extra-config:
                 stage_platform: win32
                 mozconfig_platform: win32
+        run-on-projects: ['release']
         fetches:
             toolchain:
                 - linux64-clang
@@ -465,6 +472,7 @@ jobs:
             extra-config:
                 stage_platform: win64
                 mozconfig_platform: win64
+        run-on-projects: ['release']
         fetches:
             toolchain:
                 - linux64-clang
