@@ -214,7 +214,10 @@ pub extern "C" fn mozurl_real_port(url: &MozURL) -> i32 {
 
 #[no_mangle]
 pub extern "C" fn mozurl_host_port(url: &MozURL) -> SpecSlice {
-    (&url[Position::BeforeHost..Position::BeforePath]).into()
+    if url.port().is_some() {
+        return (&url[Position::BeforeHost..Position::BeforePath]).into();
+    }
+    url.host_str().unwrap_or("").into()
 }
 
 #[no_mangle]
