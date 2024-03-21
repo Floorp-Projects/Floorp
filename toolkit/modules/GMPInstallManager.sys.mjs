@@ -49,6 +49,16 @@ const LOCAL_GMP_SOURCES = [
   },
 ];
 
+function getLocalSources() {
+  if (GMPPrefs.getBool(GMPPrefs.KEY_ALLOW_LOCAL_SOURCES, true)) {
+    return LOCAL_GMP_SOURCES;
+  }
+
+  let log = getScopedLogger("GMPInstallManager.checkForAddons");
+  log.info("ignoring local sources");
+  return [];
+}
+
 function downloadJSON(uri) {
   let log = getScopedLogger("GMPInstallManager.checkForAddons");
   log.info("fetching config from: " + uri);
@@ -354,10 +364,12 @@ GMPInstallManager.prototype = {
       }
     }
 
+    let localSources = getLocalSources();
+
     try {
       if (!success) {
         log.info("Falling back to local config");
-        let fallbackSources = LOCAL_GMP_SOURCES.filter(function (gmpSource) {
+        let fallbackSources = localSources.filter(function (gmpSource) {
           return gmpSource.installByDefault;
         });
         res = await downloadLocalConfig(fallbackSources);
@@ -379,7 +391,7 @@ GMPInstallManager.prototype = {
     // the user has requested be forced installed regardless of our update
     // server configuration.
     try {
-      let forcedSources = LOCAL_GMP_SOURCES.filter(function (gmpSource) {
+      let forcedSources = localSources.filter(function (gmpSource) {
         return GMPPrefs.getBool(
           GMPPrefs.KEY_PLUGIN_FORCE_INSTALL,
           false,
