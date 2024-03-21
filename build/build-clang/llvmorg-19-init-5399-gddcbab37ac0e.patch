@@ -1,0 +1,135 @@
+commit ddcbab37ac0e5743a8d39be3dd48d967f4c85504
+Author: serge-sans-paille <sguelton@mozilla.com>
+Date:   Thu Mar 14 07:41:46 2024 +0100
+
+    [compiler-rt] Also consider SIGPROF as a synchronous signal
+    
+    Blocking that signal causes inter-blocking for profilers that monitor
+    threads through that signal.
+    
+    Update tests accordingly to use an uncaught signal.
+    
+    This is a recommit of 6f3f659ce9ab91002b4a490b0ce4b085981383cd with the
+    tests fixed.
+    
+    Fix #83844 and #83561
+
+diff --git a/compiler-rt/lib/tsan/rtl/tsan_interceptors_posix.cpp b/compiler-rt/lib/tsan/rtl/tsan_interceptors_posix.cpp
+index 8ffc703b05ea..2bebe651b994 100644
+--- a/compiler-rt/lib/tsan/rtl/tsan_interceptors_posix.cpp
++++ b/compiler-rt/lib/tsan/rtl/tsan_interceptors_posix.cpp
+@@ -126,6 +126,7 @@ const int SIGFPE = 8;
+ const int SIGSEGV = 11;
+ const int SIGPIPE = 13;
+ const int SIGTERM = 15;
++const int SIGPROF = 27;
+ #if defined(__mips__) || SANITIZER_FREEBSD || SANITIZER_APPLE || SANITIZER_NETBSD
+ const int SIGBUS = 10;
+ const int SIGSYS = 12;
+@@ -2168,7 +2169,8 @@ static bool is_sync_signal(ThreadSignalContext *sctx, int sig,
+     return false;
+ #endif
+   return sig == SIGSEGV || sig == SIGBUS || sig == SIGILL || sig == SIGTRAP ||
+-         sig == SIGABRT || sig == SIGFPE || sig == SIGPIPE || sig == SIGSYS;
++         sig == SIGABRT || sig == SIGFPE || sig == SIGPIPE || sig == SIGSYS ||
++         sig == SIGPROF;
+ }
+ 
+ void sighandler(int sig, __sanitizer_siginfo *info, void *ctx) {
+diff --git a/compiler-rt/test/tsan/signal_errno.cpp b/compiler-rt/test/tsan/signal_errno.cpp
+index 7e1fd4b0c5a5..99d4b6d84ca4 100644
+--- a/compiler-rt/test/tsan/signal_errno.cpp
++++ b/compiler-rt/test/tsan/signal_errno.cpp
+@@ -18,7 +18,7 @@ static void MyHandler(int, siginfo_t *s, void *c) {
+ 
+ static void* sendsignal(void *p) {
+   barrier_wait(&barrier);
+-  pthread_kill(mainth, SIGPROF);
++  pthread_kill(mainth, SIGALRM);
+   return 0;
+ }
+ 
+@@ -37,7 +37,7 @@ int main() {
+   mainth = pthread_self();
+   struct sigaction act = {};
+   act.sa_sigaction = &MyHandler;
+-  sigaction(SIGPROF, &act, 0);
++  sigaction(SIGALRM, &act, 0);
+   pthread_t th;
+   pthread_create(&th, 0, sendsignal, 0);
+   loop();
+@@ -46,7 +46,7 @@ int main() {
+ }
+ 
+ // CHECK: WARNING: ThreadSanitizer: signal handler spoils errno
+-// CHECK:   Signal 27 handler invoked at:
++// CHECK:   Signal 14 handler invoked at:
+ // CHECK:     #0 MyHandler(int, {{(__)?}}siginfo{{(_t)?}}*, void*) {{.*}}signal_errno.cpp
+ // CHECK:     main
+ // CHECK: SUMMARY: ThreadSanitizer: signal handler spoils errno{{.*}}MyHandler
+diff --git a/compiler-rt/test/tsan/signal_sync.cpp b/compiler-rt/test/tsan/signal_sync.cpp
+index b529a1859f52..b283c9341636 100644
+--- a/compiler-rt/test/tsan/signal_sync.cpp
++++ b/compiler-rt/test/tsan/signal_sync.cpp
+@@ -30,7 +30,7 @@ int main() {
+ 
+   struct sigaction act = {};
+   act.sa_handler = &handler;
+-  if (sigaction(SIGPROF, &act, 0)) {
++  if (sigaction(SIGALRM, &act, 0)) {
+     perror("sigaction");
+     exit(1);
+   }
+@@ -39,7 +39,7 @@ int main() {
+   t.it_value.tv_sec = 0;
+   t.it_value.tv_usec = 10;
+   t.it_interval = t.it_value;
+-  if (setitimer(ITIMER_PROF, &t, 0)) {
++  if (setitimer(ITIMER_REAL, &t, 0)) {
+     perror("setitimer");
+     exit(1);
+   }
+diff --git a/compiler-rt/test/tsan/signal_thread.cpp b/compiler-rt/test/tsan/signal_thread.cpp
+index aa91d1ddeb10..e5ea44187e32 100644
+--- a/compiler-rt/test/tsan/signal_thread.cpp
++++ b/compiler-rt/test/tsan/signal_thread.cpp
+@@ -24,7 +24,7 @@ static void* thr(void *p) {
+ int main() {
+   struct sigaction act = {};
+   act.sa_handler = &handler;
+-  if (sigaction(SIGPROF, &act, 0)) {
++  if (sigaction(SIGALRM, &act, 0)) {
+     perror("sigaction");
+     exit(1);
+   }
+@@ -33,7 +33,7 @@ int main() {
+   t.it_value.tv_sec = 0;
+   t.it_value.tv_usec = 10;
+   t.it_interval = t.it_value;
+-  if (setitimer(ITIMER_PROF, &t, 0)) {
++  if (setitimer(ITIMER_REAL, &t, 0)) {
+     perror("setitimer");
+     exit(1);
+   }
+diff --git a/compiler-rt/test/tsan/signal_thread2.cpp b/compiler-rt/test/tsan/signal_thread2.cpp
+index 9bde4f70b39d..5236628e13b6 100644
+--- a/compiler-rt/test/tsan/signal_thread2.cpp
++++ b/compiler-rt/test/tsan/signal_thread2.cpp
+@@ -40,7 +40,7 @@ static void *thr(void *p) {
+ int main() {
+   struct sigaction act = {};
+   act.sa_handler = &handler;
+-  if (sigaction(SIGPROF, &act, 0)) {
++  if (sigaction(SIGALRM, &act, 0)) {
+     perror("sigaction");
+     exit(1);
+   }
+@@ -49,7 +49,7 @@ int main() {
+   t.it_value.tv_sec = 0;
+   t.it_value.tv_usec = 10;
+   t.it_interval = t.it_value;
+-  if (setitimer(ITIMER_PROF, &t, 0)) {
++  if (setitimer(ITIMER_REAL, &t, 0)) {
+     perror("setitimer");
+     exit(1);
+   }
