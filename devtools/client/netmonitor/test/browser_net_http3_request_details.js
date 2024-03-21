@@ -74,8 +74,8 @@ add_task(async function () {
     // The Text-Encoding header is not consistently displayed, exclude it from
     // the assertion. See Bug 1830053.
     headers.filter(cell => cell.textContent != "TE").length,
-    25,
-    "There should be 25 header values displayed in this tabpanel."
+    26,
+    "There should be 26 header values displayed in this tabpanel."
   );
 
   const headersTable = tabpanel.querySelector(".accordion");
