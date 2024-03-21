@@ -632,12 +632,12 @@ private fun TranslationsDropdown(
                     offset = if (isInLandscapeMode) {
                         DpOffset(
                             -contextMenuWidthDp + ICON_SIZE,
-                            -ICON_SIZE,
+                            ICON_SIZE,
                         )
                     } else {
                         DpOffset(
                             0.dp,
-                            -ICON_SIZE,
+                            ICON_SIZE,
                         )
                     },
                 )
