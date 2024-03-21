@@ -5,7 +5,7 @@ pypi:fluent.pygments==1.0
 pypi:livereload==2.6.3
 pypi:mots==0.10.0
 pypi:myst-parser==2.0
-pypi:sphinx-copybutton==0.5.1
+pypi:sphinx-copybutton==0.5.2
 pypi:sphinx-design==0.5.0
 pypi:sphinx-js==3.2.2
 pypi:sphinx-markdown-tables==0.0.17
