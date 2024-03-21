@@ -714,6 +714,34 @@ nsresult nsHttpHandler::GenerateHostPort(const nsCString& host, int32_t port,
   return NS_GenerateHostPort(host, port, hostLine);
 }
 
+// static
+uint8_t nsHttpHandler::UrgencyFromCoSFlags(uint32_t cos) {
+  uint8_t urgency;
+  if (cos & nsIClassOfService::UrgentStart) {
+    // coming from an user interaction => response should be the highest
+    // priority
+    urgency = 1;
+  } else if (cos & nsIClassOfService::Leader) {
+    // main html document normal priority
+    urgency = 2;
+  } else if (cos & nsIClassOfService::Unblocked) {
+    urgency = 3;
+  } else if (cos & nsIClassOfService::Follower) {
+    urgency = 4;
+  } else if (cos & nsIClassOfService::Speculative) {
+    urgency = 6;
+  } else if (cos & nsIClassOfService::Background) {
+    // background tasks can be deprioritzed to the lowest priority
+    urgency = 6;
+  } else if (cos & nsIClassOfService::Tail) {
+    urgency = 6;
+  } else {
+    // all others get a lower priority than the main html document
+    urgency = 4;
+  }
+  return urgency;
+}
+
 //-----------------------------------------------------------------------------
 // nsHttpHandler <private>
 //-----------------------------------------------------------------------------

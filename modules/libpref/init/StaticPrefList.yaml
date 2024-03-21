@@ -11623,6 +11623,12 @@
   mirror: always
   do_not_use_directly: true
 
+# Whether to add urgency and incremental to request headers
+- name: network.http.priority_header.enabled
+  type: bool
+  value: true
+  mirror: always
+
 # The maximum allowed length for a referrer header - 4096 default.
 # 0 means no limit.
 - name: network.http.referer.referrerLengthLimit
