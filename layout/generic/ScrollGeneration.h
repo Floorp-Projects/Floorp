@@ -7,6 +7,7 @@
 
 #include <cstdint>
 #include <iosfwd>
+#include <tuple>
 
 namespace mozilla {
 
@@ -23,7 +24,7 @@ std::ostream& operator<<(std::ostream& aStream,
                          const ScrollGeneration<Tag>& aGen);
 
 template <typename Tag>
-struct ScrollGeneration {
+struct ScrollGeneration final {
   friend struct ScrollGenerationCounter;
 
  private:
@@ -42,6 +43,8 @@ struct ScrollGeneration {
 
   friend std::ostream& operator<< <>(std::ostream& aStream,
                                      const ScrollGeneration<Tag>& aGen);
+
+  auto MutTiedFields() { return std::tie(mValue); }
 
  private:
   uint64_t mValue;
