@@ -133,10 +133,10 @@ struct ProfileBufferEntryReader::Deserializer<TraceOption> {
 }  // namespace mozilla
 #endif  // MOZ_GECKO_PROFILER
 
-void uprofiler_simple_event_marker(const char* name, char phase, int num_args,
-                                   const char** arg_names,
-                                   const unsigned char* arg_types,
-                                   const unsigned long long* arg_values) {
+void uprofiler_simple_event_marker_internal(
+    const char* name, char phase, int num_args, const char** arg_names,
+    const unsigned char* arg_types, const unsigned long long* arg_values,
+    bool full_stack) {
 #ifdef MOZ_GECKO_PROFILER
   if (!profiler_thread_is_being_profiled_for_markers()) {
     return;
@@ -196,8 +196,27 @@ void uprofiler_simple_event_marker(const char* name, char phase, int num_args,
         break;
     }
   }
-  profiler_add_marker(ProfilerString8View::WrapNullTerminatedString(name),
-                      geckoprofiler::category::MEDIA_RT, {timing.extract()},
-                      TraceMarker{}, tuple);
+  profiler_add_marker(
+      ProfilerString8View::WrapNullTerminatedString(name),
+      geckoprofiler::category::MEDIA_RT,
+      {timing.extract(),
+       full_stack ? MarkerStack::Capture(StackCaptureOptions::Full)
+                  : MarkerStack::Capture(StackCaptureOptions::NoStack)},
+      TraceMarker{}, tuple);
 #endif  // MOZ_GECKO_PROFILER
+}
+
+void uprofiler_simple_event_marker_with_stack(
+    const char* name, char phase, int num_args, const char** arg_names,
+    const unsigned char* arg_types, const unsigned long long* arg_values) {
+  uprofiler_simple_event_marker_internal(name, phase, num_args, arg_names,
+                                         arg_types, arg_values, true);
+}
+
+void uprofiler_simple_event_marker(const char* name, char phase, int num_args,
+                                   const char** arg_names,
+                                   const unsigned char* arg_types,
+                                   const unsigned long long* arg_values) {
+  uprofiler_simple_event_marker_internal(name, phase, num_args, arg_names,
+                                         arg_types, arg_values, false);
 }
