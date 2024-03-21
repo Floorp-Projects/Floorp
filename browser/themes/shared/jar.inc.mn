@@ -179,7 +179,6 @@
   skin/classic/browser/history.svg                    (../shared/icons/history.svg)
   skin/classic/browser/home.svg                       (../shared/icons/home.svg)
   skin/classic/browser/import.svg                     (../shared/icons/import.svg)
-  skin/classic/browser/insights.svg                   (../shared/icons/insights.svg)
 #ifndef MOZ_WIDGET_GTK
   skin/classic/browser/import-export.svg              (../shared/icons/import-export.svg)
 #endif
