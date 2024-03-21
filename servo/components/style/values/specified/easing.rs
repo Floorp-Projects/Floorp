@@ -9,7 +9,7 @@ use crate::values::computed::easing::TimingFunction as ComputedTimingFunction;
 use crate::values::computed::{Context, ToComputedValue};
 use crate::values::generics::easing::TimingFunction as GenericTimingFunction;
 use crate::values::generics::easing::{StepPosition, TimingKeyword};
-use crate::values::specified::{Integer, Number, Percentage};
+use crate::values::specified::{AnimationName, Integer, Number, Percentage};
 use cssparser::{Delimiter, Parser, Token};
 use selectors::parser::SelectorParseErrorKind;
 use style_traits::{ParseError, StyleParseErrorKind};
@@ -139,6 +139,15 @@ impl TimingFunction {
         }
 
         Ok(GenericTimingFunction::LinearFunction(builder.build()))
+    }
+
+    /// Returns true if the name matches any keyword.
+    #[inline]
+    pub fn match_keywords(name: &AnimationName) -> bool {
+        if let Some(name) = name.as_atom() {
+            return name.with_str(|n| TimingKeyword::from_ident(n).is_ok());
+        }
+        false
     }
 }
 
