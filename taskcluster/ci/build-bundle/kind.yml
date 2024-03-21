@@ -27,7 +27,6 @@ job-defaults:
 jobs:
     focus-debug:
         attributes:
-            code-review: true
             shipping-product: focus
         dependencies:
             build-fat-aar: build-fat-aar-android-geckoview-fat-aar/opt
@@ -43,7 +42,6 @@ jobs:
 
     klar-debug:
         attributes:
-            code-review: true
             shipping-product: focus
         dependencies:
             build-fat-aar: build-fat-aar-android-geckoview-fat-aar/opt
@@ -59,7 +57,6 @@ jobs:
 
     fenix-debug:
         attributes:
-            code-review: true
             shipping-product: fenix
         dependencies:
             build-fat-aar: build-fat-aar-android-geckoview-fat-aar/opt

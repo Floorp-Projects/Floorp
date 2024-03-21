@@ -33,13 +33,6 @@ job-defaults:
         type: directory
         name: public/reports/jacoco
         path: '/builds/worker/checkouts/gecko/mobile/android/android-components/{component_path}/build/reports/jacoco'
-    attributes:
-        code-review:
-            by-build-type:
-                release: false
-                beta: false
-                nightly: false
-                default: true
     description: Execute Gradle tasks for component "{component}"
     fetches:
         toolchain:

@@ -18,7 +18,6 @@ transforms = TransformSequence()
 def resolve_keys(config, tasks):
     for task in tasks:
         for field in (
-            "attributes.code-review",
             "include-coverage",
             "run-on-projects",
             "shipping-phase",
