@@ -71,9 +71,6 @@ class RemoteSettingsClient(
         } catch (e: RemoteSettingsException) {
             Logger.error(e.message.toString())
             RemoteSettingsResult.NetworkFailure(e)
-        } catch (e: NullPointerException) {
-            Logger.error(e.message.toString())
-            RemoteSettingsResult.NetworkFailure(e)
         }
     }
 
