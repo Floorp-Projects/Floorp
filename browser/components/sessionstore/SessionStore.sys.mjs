@@ -1422,6 +1422,13 @@ var SessionStoreInternal = {
    * and thus enables communication with OOP tabs.
    */
   receiveMessage(aMessage) {
+    if (Services.appinfo.sessionHistoryInParent) {
+      throw new Error(
+        `received unexpected message '${aMessage.name}' with ` +
+          `sessionHistoryInParent enabled`
+      );
+    }
+
     // If we got here, that means we're dealing with a frame message
     // manager message, so the target will be a <xul:browser>.
     var browser = aMessage.target;
@@ -1600,14 +1607,14 @@ var SessionStoreInternal = {
     // internal data about the window.
     aWindow.__SSi = this._generateWindowID();
 
-    let mm = aWindow.getGroupMessageManager("browsers");
-    MESSAGES.forEach(msg => {
-      let listenWhenClosed = CLOSED_MESSAGES.has(msg);
-      mm.addMessageListener(msg, this, listenWhenClosed);
-    });
-
-    // Load the frame script after registering listeners.
     if (!Services.appinfo.sessionHistoryInParent) {
+      let mm = aWindow.getGroupMessageManager("browsers");
+      MESSAGES.forEach(msg => {
+        let listenWhenClosed = CLOSED_MESSAGES.has(msg);
+        mm.addMessageListener(msg, this, listenWhenClosed);
+      });
+
+      // Load the frame script after registering listeners.
       mm.loadFrameScript(
         "chrome://browser/content/content-sessionStore.js",
         true,
@@ -2083,8 +2090,10 @@ var SessionStoreInternal = {
     // Cache the window state until it is completely gone.
     DyingWindowCache.set(aWindow, winData);
 
-    let mm = aWindow.getGroupMessageManager("browsers");
-    MESSAGES.forEach(msg => mm.removeMessageListener(msg, this));
+    if (!Services.appinfo.sessionHistoryInParent) {
+      let mm = aWindow.getGroupMessageManager("browsers");
+      MESSAGES.forEach(msg => mm.removeMessageListener(msg, this));
+    }
 
     this._saveableClosedWindowData.delete(winData);
     delete aWindow.__SSi;
