@@ -12,6 +12,7 @@
 
 #include "gc/GC-inl.h"
 #include "gc/Heap-inl.h"
+#include "gc/PrivateIterators-inl.h"
 
 namespace js {
 namespace gc {
@@ -71,7 +72,38 @@ void AtomMarkingRuntime::unregisterArena(Arena* arena, const AutoLockGC& lock) {
   (void)freeArenaIndexes.ref().emplaceBack(arena->atomBitmapStart());
 }
 
-bool AtomMarkingRuntime::computeBitmapFromChunkMarkBits(JSRuntime* runtime,
+void AtomMarkingRuntime::refineZoneBitmapsForCollectedZones(
+    GCRuntime* gc, size_t collectedZones) {
+  // If there is more than one zone to update, copy the chunk mark bits into a
+  // bitmap and AND that into the atom marking bitmap for each zone.
+  DenseBitmap marked;
+  if (collectedZones > 1 && computeBitmapFromChunkMarkBits(gc, marked)) {
+    for (GCZonesIter zone(gc); !zone.done(); zone.next()) {
+      refineZoneBitmapForCollectedZone(zone, marked);
+    }
+    return;
+  }
+
+  // If there's only one zone (or on OOM), AND the mark bits for each arena into
+  // the zones' atom marking bitmaps directly.
+  for (GCZonesIter zone(gc); !zone.done(); zone.next()) {
+    if (zone->isAtomsZone()) {
+      continue;
+    }
+
+    for (auto thingKind : AllAllocKinds()) {
+      for (ArenaIterInGC aiter(gc->atomsZone(), thingKind); !aiter.done();
+           aiter.next()) {
+        Arena* arena = aiter.get();
+        MarkBitmapWord* chunkWords = arena->chunk()->markBits.arenaBits(arena);
+        zone->markedAtoms().bitwiseAndRangeWith(arena->atomBitmapStart(),
+                                                ArenaBitmapWords, chunkWords);
+      }
+    }
+  }
+}
+
+bool AtomMarkingRuntime::computeBitmapFromChunkMarkBits(GCRuntime* gc,
                                                         DenseBitmap& bitmap) {
   MOZ_ASSERT(CurrentThreadIsPerformingGC());
 
@@ -79,7 +111,7 @@ bool AtomMarkingRuntime::computeBitmapFromChunkMarkBits(JSRuntime* runtime,
     return false;
   }
 
-  Zone* atomsZone = runtime->unsafeAtomsZone();
+  Zone* atomsZone = gc->atomsZone();
   for (auto thingKind : AllAllocKinds()) {
     for (ArenaIterInGC aiter(atomsZone, thingKind); !aiter.done();
          aiter.next()) {
@@ -109,13 +141,12 @@ void AtomMarkingRuntime::refineZoneBitmapForCollectedZone(
 
 // Set any bits in the chunk mark bitmaps for atoms which are marked in bitmap.
 template <typename Bitmap>
-static void BitwiseOrIntoChunkMarkBits(JSRuntime* runtime, Bitmap& bitmap) {
+static void BitwiseOrIntoChunkMarkBits(Zone* atomsZone, Bitmap& bitmap) {
   // Make sure that by copying the mark bits for one arena in word sizes we
   // do not affect the mark bits for other arenas.
   static_assert(ArenaBitmapBits == ArenaBitmapWords * JS_BITS_PER_WORD,
                 "ArenaBitmapWords must evenly divide ArenaBitmapBits");
 
-  Zone* atomsZone = runtime->unsafeAtomsZone();
   for (auto thingKind : AllAllocKinds()) {
     for (ArenaIterInGC aiter(atomsZone, thingKind); !aiter.done();
          aiter.next()) {
@@ -127,15 +158,9 @@ static void BitwiseOrIntoChunkMarkBits(JSRuntime* runtime, Bitmap& bitmap) {
   }
 }
 
-void AtomMarkingRuntime::markAtomsUsedByUncollectedZones(JSRuntime* runtime) {
+void AtomMarkingRuntime::markAtomsUsedByUncollectedZones(
+    GCRuntime* gc, size_t uncollectedZones) {
   MOZ_ASSERT(CurrentThreadIsPerformingGC());
-
-  size_t uncollectedZones = 0;
-  for (ZonesIter zone(runtime, SkipAtoms); !zone.done(); zone.next()) {
-    if (!zone->isCollecting()) {
-      uncollectedZones++;
-    }
-  }
 
   // If there are no uncollected non-atom zones then there's no work to do.
   if (uncollectedZones == 0) {
@@ -149,15 +174,15 @@ void AtomMarkingRuntime::markAtomsUsedByUncollectedZones(JSRuntime* runtime) {
 
   DenseBitmap markedUnion;
   if (uncollectedZones == 1 || !markedUnion.ensureSpace(allocatedWords)) {
-    for (ZonesIter zone(runtime, SkipAtoms); !zone.done(); zone.next()) {
+    for (ZonesIter zone(gc, SkipAtoms); !zone.done(); zone.next()) {
       if (!zone->isCollecting()) {
-        BitwiseOrIntoChunkMarkBits(runtime, zone->markedAtoms());
+        BitwiseOrIntoChunkMarkBits(gc->atomsZone(), zone->markedAtoms());
       }
     }
     return;
   }
 
-  for (ZonesIter zone(runtime, SkipAtoms); !zone.done(); zone.next()) {
+  for (ZonesIter zone(gc, SkipAtoms); !zone.done(); zone.next()) {
     // We only need to update the chunk mark bits for zones which were
     // not collected in the current GC. Atoms which are referenced by
     // collected zones have already been marked.
@@ -166,7 +191,7 @@ void AtomMarkingRuntime::markAtomsUsedByUncollectedZones(JSRuntime* runtime) {
     }
   }
 
-  BitwiseOrIntoChunkMarkBits(runtime, markedUnion);
+  BitwiseOrIntoChunkMarkBits(gc->atomsZone(), markedUnion);
 }
 
 template <typename T>
