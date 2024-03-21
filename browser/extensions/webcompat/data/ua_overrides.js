@@ -1288,7 +1288,7 @@ const AVAILABLE_UA_OVERRIDES = [
     bug: "1884779",
     config: {
       matches: ["*://*.memurlar.net/*"],
-      uaTransformer: originalUA => {
+      uaTransformer: _originalUA => {
         return UAHelpers.getDeviceAppropriateChromeUA();
       },
     },
