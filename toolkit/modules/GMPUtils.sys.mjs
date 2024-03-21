@@ -134,6 +134,7 @@ export var GMPPrefs = {
   KEY_PLUGIN_FORCE_SUPPORTED: "media.{0}.forceSupported",
   KEY_PLUGIN_FORCE_INSTALL: "media.{0}.forceInstall",
   KEY_PLUGIN_ALLOW_X64_ON_ARM64: "media.{0}.allow-x64-plugin-on-arm64",
+  KEY_ALLOW_LOCAL_SOURCES: "media.gmp-manager.allowLocalSources",
   KEY_URL: "media.gmp-manager.url",
   KEY_URL_OVERRIDE: "media.gmp-manager.url.override",
   KEY_CERT_CHECKATTRS: "media.gmp-manager.cert.checkAttributes",

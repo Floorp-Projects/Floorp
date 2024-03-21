@@ -3490,6 +3490,12 @@ pref("browser.search.newSearchConfig.enabled", false);
 // User-settable override to media.gmp-manager.url for testing purposes.
 //pref("media.gmp-manager.url.override", "");
 
+// When |media.gmp-manager.allowLocalSources| is true, we will allow falling
+// back to using the plugin configurations distributed with Firefox to update
+// or install plugins. This fallback is only used when we fail to get an
+// acceptable configuration via |media.gmp-manager.url|.
+pref("media.gmp-manager.allowLocalSources", true);
+
 // Update service URL for GMP install/updates:
 pref("media.gmp-manager.url", "https://aus5.mozilla.org/update/3/GMP/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml");
 
