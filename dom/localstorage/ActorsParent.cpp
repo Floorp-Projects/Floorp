@@ -1530,9 +1530,7 @@ class Datastore final
   uint32_t PrivateBrowsingId() const { return mPrivateBrowsingId; }
 
   bool IsPersistent() const {
-    // Private-browsing is forbidden from touching disk, but
-    // StorageAccess::eSessionScoped is allowed to touch disk because
-    // QuotaManager's storage for such origins is wiped at shutdown.
+    // Private-browsing is forbidden from touching disk.
     return mPrivateBrowsingId == 0;
   }
 
