@@ -4,9 +4,8 @@
 
 import React, { useEffect, useRef } from "react";
 
-export const EmbeddedMigrationWizard = ({ handleAction, content }) => {
+export const EmbeddedMigrationWizard = ({ handleAction }) => {
   const ref = useRef();
-  const options = content.migration_wizard_options;
   useEffect(() => {
     const handleBeginMigration = () => {
       handleAction({
@@ -33,29 +32,9 @@ export const EmbeddedMigrationWizard = ({ handleAction, content }) => {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <migration-wizard
-      force-show-import-all={options?.force_show_import_all || "false"}
+      force-show-import-all="false"
       auto-request-state=""
       ref={ref}
-      option-expander-title-string={options?.option_expander_title_string || ""}
-      hide-option-expander-subtitle={
-        options?.hide_option_expander_subtitle || false
-      }
-      data-import-complete-success-string={
-        options?.data_import_complete_success_string || ""
-      }
-      selection-header-string={options?.selection_header_string || ""}
-      selection-subheader-string={options?.selection_subheader_string || ""}
-      hide-select-all={options?.hide_select_all || false}
-      checkbox-margin-inline={options?.checkbox_margin_inline || ""}
-      checkbox-margin-block={options?.checkbox_margin_block || ""}
-      import-button-string={options?.import_button_string || ""}
-      import-button-class={options?.import_button_class || ""}
-      header-font-size={options?.header_font_size || ""}
-      header-font-weight={options?.header_font_weight || ""}
-      header-margin-block={options?.header_margin_block || ""}
-      subheader-font-size={options?.subheader_font_size || ""}
-      subheader-font-weight={options?.subheader_font_weight || ""}
-      subheader-margin-block={options?.subheader_margin_block || ""}
     ></migration-wizard>
   );
 };
