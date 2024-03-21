@@ -125,7 +125,7 @@ class _SphinxManager(object):
             args.append(full)
             args.extend(excludes)
 
-            sphinx.ext.apidoc.main(argv=args)
+            sphinx.ext.apidoc.main(args)
 
     def _synchronize_docs(self, app):
         m = InstallManifest()
