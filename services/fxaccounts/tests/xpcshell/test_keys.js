@@ -99,6 +99,128 @@ add_task(async function test_derive_multiple_keys_at_once() {
   });
 });
 
+add_task(function test_check_valid_scoped_keys() {
+  const keys = new FxAccountsKeys(null);
+  add_task(function test_missing_key_data() {
+    const scopedKeys = {
+      "https://identity.mozilla.com/apps/oldsync": {
+        kty: "oct",
+        kid: "1510726318123-IqQv4onc7VcVE1kTQkyyOw",
+        scope: "https://identity.mozilla.com/apps/oldsync",
+      },
+    };
+    Assert.equal(keys.validScopedKeys(scopedKeys), false);
+  });
+  add_task(function test_unexpected_scope() {
+    const scopedKeys = {
+      "https://identity.mozilla.com/apps/oldsync": {
+        kty: "oct",
+        kid: "1510726318123-IqQv4onc7VcVE1kTQkyyOw",
+        k: "DW_ll5GwX6SJ5GPqJVAuMUP2t6kDqhUulc2cbt26xbTcaKGQl-9l29FHAQ7kUiJETma4s9fIpEHrt909zgFang",
+        scope: "UnexpectedScope",
+      },
+    };
+    Assert.equal(keys.validScopedKeys(scopedKeys), false);
+  });
+  add_task(function test_not_oct_key() {
+    const scopedKeys = {
+      "https://identity.mozilla.com/apps/oldsync": {
+        // Should be "oct"!
+        kty: "EC",
+        kid: "1510726318123-IqQv4onc7VcVE1kTQkyyOw",
+        k: "DW_ll5GwX6SJ5GPqJVAuMUP2t6kDqhUulc2cbt26xbTcaKGQl-9l29FHAQ7kUiJETma4s9fIpEHrt909zgFang",
+        scope: "https://identity.mozilla.com/apps/oldsync",
+      },
+    };
+    Assert.equal(keys.validScopedKeys(scopedKeys), false);
+  });
+  add_task(function test_invalid_kid_not_timestamp() {
+    const scopedKeys = {
+      "https://identity.mozilla.com/apps/oldsync": {
+        kty: "oct",
+        // Does not have the timestamp!
+        kid: "IqQv4onc7VcVE1kTQkyyOw",
+        k: "DW_ll5GwX6SJ5GPqJVAuMUP2t6kDqhUulc2cbt26xbTcaKGQl-9l29FHAQ7kUiJETma4s9fIpEHrt909zgFang",
+        scope: "https://identity.mozilla.com/apps/oldsync",
+      },
+    };
+    Assert.equal(keys.validScopedKeys(scopedKeys), false);
+  });
+  add_task(function test_invalid_kid_not_valid_timestamp() {
+    const scopedKeys = {
+      "https://identity.mozilla.com/apps/oldsync": {
+        kty: "oct",
+        // foo is not a valid timestamp!
+        kid: "foo-IqQv4onc7VcVE1kTQkyyOw",
+        k: "DW_ll5GwX6SJ5GPqJVAuMUP2t6kDqhUulc2cbt26xbTcaKGQl-9l29FHAQ7kUiJETma4s9fIpEHrt909zgFang",
+        scope: "https://identity.mozilla.com/apps/oldsync",
+      },
+    };
+    Assert.equal(keys.validScopedKeys(scopedKeys), false);
+  });
+  add_task(function test_invalid_kid_not_b64_fingerprint() {
+    const scopedKeys = {
+      "https://identity.mozilla.com/apps/oldsync": {
+        kty: "oct",
+        // fingerprint not a valid base64 encoded string.
+        kid: "1510726318123-notvalidb64][",
+        k: "DW_ll5GwX6SJ5GPqJVAuMUP2t6kDqhUulc2cbt26xbTcaKGQl-9l29FHAQ7kUiJETma4s9fIpEHrt909zgFang",
+        scope: "https://identity.mozilla.com/apps/oldsync",
+      },
+    };
+    Assert.equal(keys.validScopedKeys(scopedKeys), false);
+  });
+  add_task(function test_invalid_k_not_base64() {
+    const scopedKeys = {
+      "https://identity.mozilla.com/apps/oldsync": {
+        kty: "oct",
+        kid: "1510726318123-IqQv4onc7VcVE1kTQkyyOw",
+        k: "notavalidb64[]",
+        scope: "https://identity.mozilla.com/apps/oldsync",
+      },
+    };
+    Assert.equal(keys.validScopedKeys(scopedKeys), false);
+  });
+
+  add_task(function test_multiple_scoped_keys_one_invalid() {
+    const scopedKeys = {
+      // Valid
+      "https://identity.mozilla.com/apps/otherscope": {
+        kty: "oct",
+        kid: "1510726318123-IqQv4onc7VcVE1kTQkyyOw",
+        k: "DW_ll5GwX6SJ5GPqJVAuMUP2t6kDqhUulc2cbt26xbTcaKGQl-9l29FHAQ7kUiJETma4s9fIpEHrt909zgFang",
+        scope: "https://identity.mozilla.com/apps/otherscope",
+      },
+      // Invalid
+      "https://identity.mozilla.com/apps/oldsync": {
+        kty: "oct",
+        kid: "1510726318123-IqQv4onc7VcVE1kTQkyyOw",
+        k: "notavalidb64[]",
+        scope: "https://identity.mozilla.com/apps/oldsync",
+      },
+    };
+    Assert.equal(keys.validScopedKeys(scopedKeys), false);
+  });
+
+  add_task(function test_valid_scopedkeys() {
+    const scopedKeys = {
+      "https://identity.mozilla.com/apps/oldsync": {
+        kty: "oct",
+        kid: "1510726318123-IqQv4onc7VcVE1kTQkyyOw",
+        k: "DW_ll5GwX6SJ5GPqJVAuMUP2t6kDqhUulc2cbt26xbTcaKGQl-9l29FHAQ7kUiJETma4s9fIpEHrt909zgFang",
+        scope: "https://identity.mozilla.com/apps/oldsync",
+      },
+      "https://identity.mozilla.com/apps/otherscope": {
+        kty: "oct",
+        kid: "1510726318123-IqQv4onc7VcVE1kTQkyyOw",
+        k: "DW_ll5GwX6SJ5GPqJVAuMUP2t6kDqhUulc2cbt26xbTcaKGQl-9l29FHAQ7kUiJETma4s9fIpEHrt909zgFang",
+        scope: "https://identity.mozilla.com/apps/otherscope",
+      },
+    };
+    Assert.equal(keys.validScopedKeys(scopedKeys), true);
+  });
+});
+
 add_task(async function test_rejects_bad_scoped_key_data() {
   const keys = new FxAccountsKeys(null);
   const uid = "aeaa1725c7a24ff983c6295725d5fc9b";
