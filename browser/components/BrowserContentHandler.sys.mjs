@@ -959,8 +959,7 @@ function handURIToExistingBrowser(
   // Floorp Injections
   if (location == 3 || location == 0) {
     if (Services.prefs.getBoolPref("floorp.browser.sidebar2.addons.enabled")) {
-      var { FloorpServices } = ChromeUtils.importESModule("resource:///modules/FloorpServices.sys.mjs");
-      let win = FloorpServices.wm.getRecentWindowExcludeFloorpSpecialWindows();
+      let win = Services.wm.getMostRecentWindow("navigator:browser"); 
       if (win) {
         let browser = win.gBrowser;
         let tab = browser.addTab(uri.spec, {
