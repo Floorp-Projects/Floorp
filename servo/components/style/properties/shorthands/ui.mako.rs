@@ -295,6 +295,7 @@ macro_rules! try_parse_one {
 
     impl<'a> ToCss for LonghandsToSerialize<'a>  {
         fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result where W: fmt::Write {
+            use crate::values::specified::easing::TimingFunction;
             use crate::values::specified::{
                 AnimationDirection, AnimationFillMode, AnimationPlayState,
             };
@@ -352,7 +353,8 @@ macro_rules! try_parse_one {
                     !matches!(self.animation_fill_mode.0[i], AnimationFillMode::None);
                 let has_play_state =
                     !matches!(self.animation_play_state.0[i], AnimationPlayState::Running);
-                let has_name = !self.animation_name.0[i].is_none();
+                let animation_name = &self.animation_name.0[i];
+                let has_name = !animation_name.is_none();
                 let has_timeline = match self.animation_timeline {
                     Some(timeline) => !timeline.0[i].is_auto(),
                     _ => false,
@@ -366,13 +368,28 @@ macro_rules! try_parse_one {
                     writer.item(&self.animation_duration.0[i])?;
                 }
 
-                // For easing function, delay, iteration-count, direction, fill-mode, and
-                // play-state.
-                % for name in props[3:]:
+                if has_timing_function || TimingFunction::match_keywords(animation_name) {
+                    writer.item(&self.animation_timing_function.0[i])?;
+                }
+
+                // For animation-delay and animation-iteration-count.
+                % for name in props[4:6]:
                 if has_${name} {
                     writer.item(&self.animation_${name}.0[i])?;
                 }
                 % endfor
+
+                if has_direction || AnimationDirection::match_keywords(animation_name) {
+                    writer.item(&self.animation_direction.0[i])?;
+                }
+
+                if has_fill_mode || AnimationFillMode::match_keywords(animation_name) {
+                    writer.item(&self.animation_fill_mode.0[i])?;
+                }
+
+                if has_play_state || AnimationPlayState::match_keywords(animation_name) {
+                    writer.item(&self.animation_play_state.0[i])?;
+                }
 
                 // If all values are initial, we must serialize animation-name.
                 let has_any = {
@@ -382,7 +399,7 @@ macro_rules! try_parse_one {
                 % endfor
                 };
                 if has_name || !has_any {
-                    writer.item(&self.animation_name.0[i])?;
+                    writer.item(animation_name)?;
                 }
 
                 if has_timeline {
