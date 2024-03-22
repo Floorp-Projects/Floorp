@@ -43,8 +43,8 @@
           let browserStyle =
             element.ownerGlobal?.docShell?.chromeEventHandler.style;
 
+          element.toggleAttribute("lwt-newtab", !!rgbaChannels);
           if (!rgbaChannels) {
-            element.removeAttribute("lwt-newtab");
             element.toggleAttribute(
               "lwt-newtab-brighttext",
               prefersDarkQuery.matches
@@ -55,7 +55,6 @@
             return null;
           }
 
-          element.setAttribute("lwt-newtab", "true");
           const { r, g, b, a } = rgbaChannels;
           let darkMode = !_isTextColorDark(r, g, b);
           element.toggleAttribute("lwt-newtab-brighttext", darkMode);
@@ -159,15 +158,10 @@
      * @param {Object} event object containing the theme or query update.
      */
     handleEvent(event) {
-      const root = document.documentElement;
-
       if (event.type == "LightweightTheme:Set") {
-        let { data } = event.detail;
-        if (!data) {
-          data = {};
-        }
-        this._setProperties(root, data);
+        this._setProperties(event.detail.data || {});
       } else if (event.type == "change") {
+        const root = document.documentElement;
         // If a lightweight theme doesn't apply, update lwt-newtab-brighttext to
         // reflect prefers-color-scheme.
         if (!root.hasAttribute("lwt-newtab")) {
@@ -192,22 +186,23 @@
 
     /**
      * Apply theme data to an element
-     * @param {Element} root The element where the properties should be applied.
      * @param {Object} themeData The theme data.
      */
-    _setProperties(elem, themeData) {
+    _setProperties(themeData) {
+      const root = document.documentElement;
+      root.toggleAttribute("lwtheme", themeData.hasTheme);
       for (let [cssVarName, definition] of inContentVariableMap) {
         const { lwtProperty, processColor } = definition;
         let value = themeData[lwtProperty];
 
         if (processColor) {
-          value = processColor(value, elem);
+          value = processColor(value, root);
         } else if (value) {
           const { r, g, b, a } = value;
           value = `rgba(${r}, ${g}, ${b}, ${a})`;
         }
 
-        this._setProperty(elem, cssVarName, value);
+        this._setProperty(root, cssVarName, value);
       }
     },
   };
