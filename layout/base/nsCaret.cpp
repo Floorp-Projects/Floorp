@@ -392,6 +392,10 @@ nsIFrame* nsCaret::GetGeometry(const Selection* aSelection, nsRect* aRect) {
 }
 
 void nsCaret::SchedulePaint() {
+  if (mLastPaintedFrame) {
+    mLastPaintedFrame->SchedulePaint();
+    mLastPaintedFrame = nullptr;
+  }
   auto data = GetFrameAndOffset(mCaretPosition);
   if (!data.mFrame) {
     return;
@@ -416,9 +420,6 @@ void nsCaret::UpdateCaretPositionFromSelectionIfNeeded() {
   if (newPos == mCaretPosition) {
     return;
   }
-  // First SchedulePaint call invalidates the old position. Second one the new
-  // one.
-  SchedulePaint();
   mCaretPosition = newPos;
   SchedulePaint();
 }
@@ -427,7 +428,6 @@ void nsCaret::SetCaretPosition(nsINode* aNode, int32_t aOffset) {
   // Schedule a paint with the old position to invalidate.
   mFixedCaretPosition = !!aNode;
   if (mFixedCaretPosition) {
-    SchedulePaint();
     mCaretPosition = {aNode, aOffset};
     SchedulePaint();
   } else {

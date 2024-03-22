@@ -1104,28 +1104,36 @@ void nsDisplayListBuilder::EnterPresShell(const nsIFrame* aReferenceFrame,
     return;
   }
 
-  RefPtr<nsCaret> caret = state->mPresShell->GetCaret();
-  // This code run for each pres shell and caret->GetPaintGeometry
-  // will return nullptr for invisible caret. So only one caret
-  // can be painted at a time.
-  state->mCaretFrame = caret->GetPaintGeometry(&mCaretRect);
+  state->mCaretFrame = [&]() -> nsIFrame* {
+    RefPtr<nsCaret> caret = state->mPresShell->GetCaret();
+    nsIFrame* currentCaret = caret->GetPaintGeometry(&mCaretRect);
 
-  // Check if the display root for the caret matches the display
-  // root that we're painting, and only use it if it matches. Likely
-  // we only need this for popup.
-  if (state->mCaretFrame &&
-      nsLayoutUtils::GetDisplayRootFrame(state->mCaretFrame) !=
-          nsLayoutUtils::GetDisplayRootFrame(aReferenceFrame)) {
-    state->mCaretFrame = nullptr;
-  }
+    if (auto* oldCaret = caret->GetLastPaintedFrame();
+        oldCaret && oldCaret != currentCaret) {
+      // Make sure to rebuild the old caret if it has changed.
+      MarkFrameForDisplay(oldCaret, aReferenceFrame);
+    }
 
-  // Caret frames add visual area to their frame, but we don't update the
-  // overflow area. Use flags to make sure we build display items for that frame
-  // instead.
-  if (state->mCaretFrame) {
-    MOZ_ASSERT(state->mCaretFrame->PresShell() == state->mPresShell);
-    MarkFrameForDisplay(state->mCaretFrame, aReferenceFrame);
-  }
+    if (!currentCaret) {
+      return nullptr;
+    }
+
+    // Check if the display root for the caret matches the display root that
+    // we're painting, and only use it if it matches. Likely we only need this
+    // for popup.
+    if (nsLayoutUtils::GetDisplayRootFrame(currentCaret) !=
+        nsLayoutUtils::GetDisplayRootFrame(aReferenceFrame)) {
+      return nullptr;
+    }
+
+    // Caret frames add visual area to their frame, but we don't update the
+    // overflow area. Use flags to make sure we build display items for that
+    // frame instead.
+    MOZ_ASSERT(currentCaret->PresShell() == state->mPresShell);
+    MarkFrameForDisplay(currentCaret, aReferenceFrame);
+    caret->SetLastPaintedFrame(currentCaret);
+    return currentCaret;
+  }();
 }
 
 // A non-blank paint is a paint that does not just contain the canvas
