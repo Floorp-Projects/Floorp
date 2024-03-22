@@ -172,7 +172,7 @@ export class PromptListener {
         }
         this.emit("opened", {
           contentBrowser: curBrowser.contentBrowser,
-          prompt: new lazy.modal.Dialog(() => curBrowser, subject),
+          prompt: new lazy.modal.Dialog(subject),
         });
 
         break;
@@ -190,7 +190,6 @@ export class PromptListener {
             // the selected tab.
             const tab = tabBrowser.selectedTab;
             const contentBrowser = lazy.TabManager.getBrowserForTab(tab);
-            const window = lazy.TabManager.getWindowForTab(tab);
 
             // Do not send the event if the curBrowser is specified,
             // and it's different from prompt browser.
@@ -200,13 +199,7 @@ export class PromptListener {
 
             this.emit("opened", {
               contentBrowser,
-              prompt: new lazy.modal.Dialog(
-                () => ({
-                  contentBrowser,
-                  window,
-                }),
-                prompt
-              ),
+              prompt: new lazy.modal.Dialog(prompt),
             });
             return;
           }
