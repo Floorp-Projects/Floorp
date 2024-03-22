@@ -726,6 +726,58 @@ class MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS Maybe
     return std::remove_cv_t<std::remove_reference_t<U>>{};
   }
 
+  /*
+   * If |isNothing()|, runs the provided function or functor and returns its
+   * result. If |isSome()|, returns the contained value wrapped in a Maybe.
+   */
+  template <typename Func>
+  constexpr Maybe orElse(Func&& aFunc) & {
+    static_assert(std::is_invocable_v<Func>);
+    using U = std::invoke_result_t<Func>;
+    static_assert(
+        std::is_same_v<Maybe, std::remove_cv_t<std::remove_reference_t<U>>>);
+    if (isSome()) {
+      return *this;
+    }
+    return std::invoke(std::forward<Func>(aFunc));
+  }
+
+  template <typename Func>
+  constexpr Maybe orElse(Func&& aFunc) const& {
+    static_assert(std::is_invocable_v<Func>);
+    using U = std::invoke_result_t<Func>;
+    static_assert(
+        std::is_same_v<Maybe, std::remove_cv_t<std::remove_reference_t<U>>>);
+    if (isSome()) {
+      return *this;
+    }
+    return std::invoke(std::forward<Func>(aFunc));
+  }
+
+  template <typename Func>
+  constexpr Maybe orElse(Func&& aFunc) && {
+    static_assert(std::is_invocable_v<Func>);
+    using U = std::invoke_result_t<Func>;
+    static_assert(
+        std::is_same_v<Maybe, std::remove_cv_t<std::remove_reference_t<U>>>);
+    if (isSome()) {
+      return std::move(*this);
+    }
+    return std::invoke(std::forward<Func>(aFunc));
+  }
+
+  template <typename Func>
+  constexpr Maybe orElse(Func&& aFunc) const&& {
+    static_assert(std::is_invocable_v<Func>);
+    using U = std::invoke_result_t<Func>;
+    static_assert(
+        std::is_same_v<Maybe, std::remove_cv_t<std::remove_reference_t<U>>>);
+    if (isSome()) {
+      return std::move(*this);
+    }
+    return std::invoke(std::forward<Func>(aFunc));
+  }
+
   /* If |isSome()|, empties this Maybe and destroys its contents. */
   constexpr void reset() {
     if (isSome()) {
@@ -823,6 +875,18 @@ class Maybe<T&> {
       return std::invoke(std::forward<Func>(aFunc), ref());
     }
     return std::remove_cv_t<std::remove_reference_t<U>>{};
+  }
+
+  template <typename Func>
+  constexpr Maybe orElse(Func&& aFunc) const {
+    static_assert(std::is_invocable_v<Func>);
+    using U = std::invoke_result_t<Func>;
+    static_assert(
+        std::is_same_v<Maybe, std::remove_cv_t<std::remove_reference_t<U>>>);
+    if (isSome()) {
+      return *this;
+    }
+    return std::invoke(std::forward<Func>(aFunc));
   }
 
   bool refEquals(const Maybe<T&>& aOther) const {
