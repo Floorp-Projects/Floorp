@@ -6836,7 +6836,7 @@
 # Enable VideoProcessor Super Resolution for video overlay
 - name: gfx.webrender.overlay-vp-super-resolution
   type: bool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: once
 
 # Enable VideoProcessor-HDR on SDR content for video overlay
