@@ -11230,8 +11230,7 @@ Maybe<MobileViewportManager::ManagerType> UseMobileViewportManager(
   if (nsLayoutUtils::ShouldHandleMetaViewport(aDocument)) {
     return Some(MobileViewportManager::ManagerType::VisualAndMetaViewport);
   }
-  if (StaticPrefs::apz_mvm_force_enabled() ||
-      nsLayoutUtils::AllowZoomingForDocument(aDocument)) {
+  if (nsLayoutUtils::AllowZoomingForDocument(aDocument)) {
     return Some(MobileViewportManager::ManagerType::VisualViewportOnly);
   }
   return Nothing();

@@ -680,11 +680,6 @@
   value: false
   mirror: always
 
-- name: apz.mvm.force-enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 - name: apz.one_touch_pinch.enabled
   type: RelaxedAtomicBool
   value: @IS_ANDROID@
