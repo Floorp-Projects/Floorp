@@ -240,6 +240,38 @@ add_task(async () => {
 });
 
 /**
+ * Tests attributed text in nav bar has no invisible AXAttachments
+ */
+add_task(async () => {
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+      url: "http://example.com",
+    },
+    async () => {
+      let root = await getMacAccessible(document);
+      let navBar = await getMacAccessible("nav-bar");
+      let elemRange = root.getParameterizedAttributeValue(
+        "AXTextMarkerRangeForUIElement",
+        navBar
+      );
+      let attributedString = root.getParameterizedAttributeValue(
+        "AXAttributedStringForTextMarkerRange",
+        elemRange
+      );
+      let attachmentRoles = attributedString.map(s =>
+        s.AXAttachment ? s.AXAttachment.getAttributeValue("AXRole") : null
+      );
+      ok(
+        !attachmentRoles.includes("AXMenu"),
+        "Collapsed menu should be embedded in attributed text"
+      );
+    }
+  );
+});
+
+/**
  * Test context menu
  */
 add_task(async () => {
