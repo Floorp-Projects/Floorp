@@ -124,7 +124,6 @@ void ConnectionEntry::DisallowHttp2() {
 
   // Can't coalesce if we're not using spdy
   mCoalescingKeys.Clear();
-  mAddresses.Clear();
 }
 
 void ConnectionEntry::DontReuseHttp3Conn() {
@@ -138,7 +137,6 @@ void ConnectionEntry::DontReuseHttp3Conn() {
 
   // Can't coalesce if we're not using http3
   mCoalescingKeys.Clear();
-  mAddresses.Clear();
 }
 
 void ConnectionEntry::RecordIPFamilyPreference(uint16_t family) {
@@ -449,7 +447,6 @@ void ConnectionEntry::ClosePersistentConnections() {
   }
 
   mCoalescingKeys.Clear();
-  mAddresses.Clear();
 }
 
 uint32_t ConnectionEntry::PruneDeadConnections() {
@@ -972,16 +969,18 @@ bool ConnectionEntry::MaybeProcessCoalescingKeys(nsIDNSAddrRecord* dnsRecord,
     return false;
   }
 
-  nsresult rv = dnsRecord->GetAddresses(mAddresses);
-  if (NS_FAILED(rv) || mAddresses.IsEmpty()) {
+  nsTArray<NetAddr> addressSet;
+  nsresult rv = dnsRecord->GetAddresses(addressSet);
+
+  if (NS_FAILED(rv) || addressSet.IsEmpty()) {
     return false;
   }
 
-  for (uint32_t i = 0; i < mAddresses.Length(); ++i) {
-    if ((mAddresses[i].raw.family == AF_INET && mAddresses[i].inet.ip == 0) ||
-        (mAddresses[i].raw.family == AF_INET6 &&
-         mAddresses[i].inet6.ip.u64[0] == 0 &&
-         mAddresses[i].inet6.ip.u64[1] == 0)) {
+  for (uint32_t i = 0; i < addressSet.Length(); ++i) {
+    if ((addressSet[i].raw.family == AF_INET && addressSet[i].inet.ip == 0) ||
+        (addressSet[i].raw.family == AF_INET6 &&
+         addressSet[i].inet6.ip.u64[0] == 0 &&
+         addressSet[i].inet6.ip.u64[1] == 0)) {
       // Bug 1680249 - Don't create the coalescing key if the ip address is
       // `0.0.0.0` or `::`.
       LOG(
@@ -992,7 +991,7 @@ bool ConnectionEntry::MaybeProcessCoalescingKeys(nsIDNSAddrRecord* dnsRecord,
     }
     nsCString* newKey = mCoalescingKeys.AppendElement(nsCString());
     newKey->SetLength(kIPv6CStrBufSize + 26);
-    mAddresses[i].ToStringBuffer(newKey->BeginWriting(), kIPv6CStrBufSize);
+    addressSet[i].ToStringBuffer(newKey->BeginWriting(), kIPv6CStrBufSize);
     newKey->SetLength(strlen(newKey->BeginReading()));
     if (mConnInfo->GetAnonymous()) {
       newKey->AppendLiteral("~A:");
