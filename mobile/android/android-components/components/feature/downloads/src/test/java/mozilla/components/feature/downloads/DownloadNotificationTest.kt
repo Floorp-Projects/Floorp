@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.downloads
 
+import android.app.PendingIntent
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.EXTRA_PROGRESS
@@ -18,6 +19,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.mock
 import org.robolectric.annotation.Config
 
 @RunWith(AndroidJUnit4::class)
@@ -327,6 +329,7 @@ class DownloadNotificationTest {
             testContext,
             download,
             notificationAccentColor = style.notificationAccentColor,
+            mock(PendingIntent::class.java)
         )
 
         val accentColor = ContextCompat.getColor(testContext, style.notificationAccentColor)
