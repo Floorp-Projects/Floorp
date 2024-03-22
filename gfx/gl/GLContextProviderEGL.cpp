@@ -970,7 +970,7 @@ bool CreateConfig(EglDisplay& aEgl, EGLConfig* aConfig, int32_t aDepth,
 static bool CreateConfigScreen(EglDisplay& egl, EGLConfig* const aConfig,
                                const bool aEnableDepthBuffer,
                                const bool aUseGles) {
-  int32_t depth = gfxVars::ScreenDepth();
+  int32_t depth = gfxVars::PrimaryScreenDepth();
   if (CreateConfig(egl, aConfig, depth, aEnableDepthBuffer, aUseGles)) {
     return true;
   }
