@@ -511,6 +511,10 @@ already_AddRefed<gfx::DataSourceSurface> CanvasChild::GetDataSurface(
     return nullptr;
   }
 
+  gfx::IntSize ssSize = aSurface->GetSize();
+  gfx::SurfaceFormat ssFormat = aSurface->GetFormat();
+  auto stride = ImageDataSerializer::ComputeRGBStride(ssFormat, ssSize.width);
+
   // Shmem is only valid if the surface is the latest snapshot (not detached).
   if (!aDetached) {
     // If there is a shmem associated with this snapshot id, then we want to try
@@ -525,12 +529,16 @@ already_AddRefed<gfx::DataSourceSurface> CanvasChild::GetDataSurface(
       if (NS_WARN_IF(!mRecorder->WaitForCheckpoint(checkpoint))) {
         return nullptr;
       }
-      gfx::IntSize size = aSurface->GetSize();
-      gfx::SurfaceFormat format = aSurface->GetFormat();
-      auto stride = ImageDataSerializer::ComputeRGBStride(format, size.width);
+      auto* closure =
+          new CanvasDataShmemHolder(it->second.mSnapshotShmem, this);
+      if (NS_WARN_IF(!closure->Init(mWorkerRef))) {
+        delete closure;
+        return nullptr;
+      }
       RefPtr<gfx::DataSourceSurface> dataSurface =
-          gfx::Factory::CreateWrappingDataSourceSurface(shmemPtr, stride, size,
-                                                        format);
+          gfx::Factory::CreateWrappingDataSourceSurface(
+              shmemPtr, stride, ssSize, ssFormat, ReleaseDataShmemHolder,
+              closure);
       aMayInvalidate = true;
       return dataSurface.forget();
     }
@@ -538,8 +546,6 @@ already_AddRefed<gfx::DataSourceSurface> CanvasChild::GetDataSurface(
 
   RecordEvent(RecordedPrepareDataForSurface(aSurface));
 
-  gfx::IntSize ssSize = aSurface->GetSize();
-  gfx::SurfaceFormat ssFormat = aSurface->GetFormat();
   if (!EnsureDataSurfaceShmem(ssSize, ssFormat)) {
     return nullptr;
   }
@@ -559,7 +565,6 @@ already_AddRefed<gfx::DataSourceSurface> CanvasChild::GetDataSurface(
   mDataSurfaceShmemAvailable = false;
 
   auto* data = static_cast<uint8_t*>(mDataSurfaceShmem->memory());
-  auto stride = ImageDataSerializer::ComputeRGBStride(ssFormat, ssSize.width);
 
   RefPtr<gfx::DataSourceSurface> dataSurface =
       gfx::Factory::CreateWrappingDataSourceSurface(
