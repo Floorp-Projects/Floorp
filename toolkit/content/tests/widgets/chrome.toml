@@ -5,7 +5,7 @@ support-files = [
   "popup_shared.js",
   "window_label_checkbox.xhtml",
   "window_menubar.xhtml",
-  "seek_with_sound.ogg",
+  "seek_with_sound.webm",
 ]
 prefs = ["app.support.baseURL='https://support.mozilla.org/'"]
 
@@ -63,7 +63,7 @@ skip-if = [
 ["test_videocontrols_focus.html"]
 support-files = [
   "head.js",
-  "video.ogg",
+  "video.webm",
 ]
 skip-if = [
   "os == 'android'",

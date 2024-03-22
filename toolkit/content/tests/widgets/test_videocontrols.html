@@ -184,7 +184,7 @@ add_task(async function setup() {
       ]});
   await new Promise(resolve => {
     video.addEventListener("canplaythrough", resolve, {once: true});
-    video.src = "seek_with_sound.ogg";
+    video.src = "seek_with_sound.webm";
   });
 
   video.addEventListener("play", captureEventThenCheck);

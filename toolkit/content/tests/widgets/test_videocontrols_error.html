@@ -27,7 +27,7 @@
 
   add_task(async function check_normal_status() {
     await new Promise(resolve => {
-      video.src = "seek_with_sound.ogg";
+      video.src = "seek_with_sound.webm";
       video.addEventListener("loadedmetadata", () => SimpleTest.executeSoon(resolve));
     });
 
@@ -44,7 +44,7 @@
     const errorType = "errorNoSource";
 
     await new Promise(resolve => {
-      video.src = "invalid_source.ogg";
+      video.src = "invalid_source.webm";
       video.addEventListener("error", () => SimpleTest.executeSoon(resolve));
     });
 
