@@ -10,6 +10,7 @@ use crate::selector_map::{
 };
 use crate::selector_parser::{NonTSPseudoClass, SelectorImpl};
 use crate::AllocErr;
+use crate::values::AtomIdent;
 use crate::{Atom, LocalName, Namespace, ShrinkIfNeeded};
 use dom::{DocumentState, ElementState};
 use selectors::attr::NamespaceConstraint;
@@ -259,6 +260,8 @@ pub type IdOrClassDependencyMap = MaybeCaseInsensitiveHashMap<Atom, SmallVec<[De
 pub type StateDependencyMap = SelectorMap<StateDependency>;
 /// Dependency mapping for local names.
 pub type LocalNameDependencyMap = PrecomputedHashMap<LocalName, SmallVec<[Dependency; 1]>>;
+/// Dependency mapping for customstates
+pub type CustomStateDependencyMap = PrecomputedHashMap<AtomIdent, SmallVec<[Dependency; 1]>>;
 
 /// A map where we store invalidations.
 ///
@@ -282,6 +285,8 @@ pub struct InvalidationMap {
     pub document_state_selectors: Vec<DocumentStateDependency>,
     /// A map of other attribute affecting selectors.
     pub other_attribute_affecting_selectors: LocalNameDependencyMap,
+    /// A map of CSS custom states
+    pub custom_state_affecting_selectors: CustomStateDependencyMap,
 }
 
 /// Tree-structural pseudoclasses that we care about for (Relative selector) invalidation.
@@ -383,6 +388,7 @@ impl InvalidationMap {
             state_affecting_selectors: StateDependencyMap::new(),
             document_state_selectors: Vec::new(),
             other_attribute_affecting_selectors: LocalNameDependencyMap::default(),
+            custom_state_affecting_selectors: CustomStateDependencyMap::default(),
         }
     }
 
@@ -398,6 +404,9 @@ impl InvalidationMap {
                 .fold(0, |accum, (_, ref v)| accum + v.len()) +
             self.class_to_selector
                 .iter()
+                .fold(0, |accum, (_, ref v)| accum + v.len()) +
+            self.custom_state_affecting_selectors
+                .iter()
                 .fold(0, |accum, (_, ref v)| accum + v.len())
     }
 
@@ -408,6 +417,7 @@ impl InvalidationMap {
         self.state_affecting_selectors.clear();
         self.document_state_selectors.clear();
         self.other_attribute_affecting_selectors.clear();
+        self.custom_state_affecting_selectors.clear();
     }
 
     /// Shrink the capacity of hash maps if needed.
@@ -416,6 +426,7 @@ impl InvalidationMap {
         self.id_to_selector.shrink_if_needed();
         self.state_affecting_selectors.shrink_if_needed();
         self.other_attribute_affecting_selectors.shrink_if_needed();
+        self.custom_state_affecting_selectors.shrink_if_needed();
     }
 }
 
@@ -489,6 +500,7 @@ trait Collector {
     fn class_map(&mut self) -> &mut IdOrClassDependencyMap;
     fn state_map(&mut self) -> &mut StateDependencyMap;
     fn attribute_map(&mut self) -> &mut LocalNameDependencyMap;
+    fn custom_state_map(&mut self) -> &mut LocalNameDependencyMap;
     fn update_states(&mut self, element_state: ElementState, document_state: DocumentState);
 
     // In normal invalidations, type-based dependencies don't need to be explicitly tracked;
@@ -551,6 +563,16 @@ fn add_attr_dependency<C: Collector>(name: LocalName, collector: &mut C) -> Resu
     add_local_name(name, dependency, map)
 }
 
+fn add_custom_state_dependency<C: Collector>(name: AtomIdent, collector: &mut C) -> Result<(), AllocErr> {
+    let dependency = collector.dependency();
+    let map = collector.custom_state_map();
+    map.try_reserve(1)?;
+    let vec = map.entry(name).or_default();
+    vec.try_reserve(1)?;
+    vec.push(dependency);
+    Ok(())
+}
+
 fn add_local_name(
     name: LocalName,
     dependency: Dependency,
@@ -576,6 +598,9 @@ fn on_pseudo_class<C: Collector>(pc: &NonTSPseudoClass, collector: &mut C) -> Re
             return add_attr_dependency(local_name!("size"), collector);
         },
         NonTSPseudoClass::Lang(..) => local_name!("lang"),
+        NonTSPseudoClass::CustomState(ref name) => {
+            return add_custom_state_dependency(name.0.clone(), collector);
+        },
         _ => return Ok(()),
     };
 
@@ -701,6 +726,10 @@ impl<'a> Collector for SelectorDependencyCollector<'a> {
     fn update_states(&mut self, element_state: ElementState, document_state: DocumentState) {
         self.compound_state.element_state |= element_state;
         *self.document_state |= document_state;
+    }
+
+    fn custom_state_map(&mut self) -> &mut CustomStateDependencyMap {
+        &mut self.map.custom_state_affecting_selectors
     }
 }
 
@@ -1074,6 +1103,10 @@ impl<'a> Collector for RelativeSelectorDependencyCollector<'a> {
         &mut self.map.map.other_attribute_affecting_selectors
     }
 
+    fn custom_state_map(&mut self) -> &mut CustomStateDependencyMap {
+        &mut self.map.map.custom_state_affecting_selectors
+    }
+
     fn update_states(&mut self, element_state: ElementState, document_state: DocumentState) {
         self.compound_state.state.element_state |= element_state;
         *self.document_state |= document_state;
@@ -1253,6 +1286,10 @@ impl<'a, 'b> Collector for RelativeSelectorInnerDependencyCollector<'a, 'b> {
 
     fn attribute_map(&mut self) -> &mut LocalNameDependencyMap {
         &mut self.map.map.other_attribute_affecting_selectors
+    }
+
+    fn custom_state_map(&mut self) -> &mut CustomStateDependencyMap {
+        &mut self.map.map.custom_state_affecting_selectors
     }
 
     fn update_states(&mut self, element_state: ElementState, document_state: DocumentState) {

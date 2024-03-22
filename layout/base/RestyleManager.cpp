@@ -3435,6 +3435,35 @@ void RestyleManager::ElementStateChanged(Element* aElement,
   MaybeRestyleForRelativeSelectorState(styleSet, aElement, aChangedBits);
 }
 
+void RestyleManager::CustomStatesWillChange(Element& aElement) {
+  MOZ_DIAGNOSTIC_ASSERT(!mInStyleRefresh);
+
+  IncrementUndisplayedRestyleGeneration();
+
+  // Relative selector invalidation travels ancestor and earlier sibling
+  // direction, so it's very possible that it invalidates a styled element.
+  if (!aElement.HasServoData() &&
+      !(aElement.GetSelectorFlags() &
+        NodeSelectorFlags::RelativeSelectorSearchDirectionAncestorSibling)) {
+    return;
+  }
+
+  ServoElementSnapshot& snapshot = SnapshotFor(aElement);
+  snapshot.AddCustomStates(aElement);
+}
+
+void RestyleManager::CustomStateChanged(Element& aElement, nsAtom* aState) {
+  const auto* parentNode = aElement.GetParentNode();
+  const auto parentFlags = parentNode->GetSelectorFlags();
+  if (parentFlags & NodeSelectorFlags::HasSlowSelectorNthOf) {
+    RestyleSiblingsForNthOf(&aElement, parentFlags);
+  }
+
+  ServoStyleSet& styleSet = *StyleSet();
+  styleSet.MaybeInvalidateRelativeSelectorCustomStateDependency(
+      aElement, aState, Snapshots());
+}
+
 void RestyleManager::MaybeRestyleForNthOfState(ServoStyleSet& aStyleSet,
                                                Element* aChild,
                                                ElementState aChangedBits) {

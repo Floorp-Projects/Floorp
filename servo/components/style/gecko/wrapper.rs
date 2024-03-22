@@ -19,7 +19,7 @@ use crate::bloom::each_relevant_element_hash;
 use crate::context::{PostAnimationTasks, QuirksMode, SharedStyleContext, UpdateAnimationsTasks};
 use crate::data::ElementData;
 use crate::dom::{LayoutIterator, NodeInfo, OpaqueNode, TDocument, TElement, TNode, TShadowRoot};
-use crate::gecko::selector_parser::{CustomState, NonTSPseudoClass, PseudoElement, SelectorImpl};
+use crate::gecko::selector_parser::{NonTSPseudoClass, PseudoElement, SelectorImpl};
 use crate::gecko::snapshot_helpers;
 use crate::gecko_bindings::bindings;
 use crate::gecko_bindings::bindings::Gecko_ElementHasAnimations;
@@ -1241,20 +1241,6 @@ impl<'le> TElement for GeckoElement<'le> {
     }
 
     #[inline]
-    fn has_custom_state(&self, state: &CustomState) -> bool {
-        if !self.is_html_element() {
-            return false;
-        }
-        let check_state_ptr: *const nsAtom = state.0.as_ptr();
-        self.extended_slots().map_or(false, |slot| {
-            (&slot.mCustomStates).iter().any(|setstate| {
-                let setstate_ptr: *const nsAtom = setstate.mRawPtr;
-                setstate_ptr == check_state_ptr
-            })
-        })
-    }
-
-    #[inline]
     fn has_part_attr(&self) -> bool {
         self.as_node()
             .get_bool_flag(nsINode_BooleanFlag::ElementHasPart)
@@ -1293,6 +1279,20 @@ impl<'le> TElement for GeckoElement<'le> {
         };
 
         snapshot_helpers::each_class_or_part(attr, callback)
+    }
+
+    #[inline]
+    fn each_custom_state<F>(&self, mut callback: F)
+    where
+        F: FnMut(&AtomIdent),
+    {
+        if let Some(slots) = self.extended_slots() {
+            unsafe {
+                for atom in slots.mCustomStates.iter() {
+                    AtomIdent::with(atom.mRawPtr, &mut callback)
+                }
+            }
+        }
     }
 
     #[inline]
@@ -2053,7 +2053,7 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
             NonTSPseudoClass::Link => {
                 self.is_link() && context.visited_handling().matches_unvisited()
             },
-            NonTSPseudoClass::CustomState(ref state) => self.has_custom_state(state),
+            NonTSPseudoClass::CustomState(ref state) => self.has_custom_state(&state.0),
             NonTSPseudoClass::Visited => {
                 self.is_link() && context.visited_handling().matches_visited()
             },
@@ -2185,6 +2185,20 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
         };
 
         snapshot_helpers::has_class_or_part(name, case_sensitivity, attr)
+    }
+
+    #[inline]
+    fn has_custom_state(&self, state: &AtomIdent) -> bool {
+        if !self.is_html_element() {
+            return false;
+        }
+        let check_state_ptr: *const nsAtom = state.as_ptr();
+        self.extended_slots().map_or(false, |slot| {
+            (&slot.mCustomStates).iter().any(|setstate| {
+                let setstate_ptr: *const nsAtom = setstate.mRawPtr;
+                setstate_ptr == check_state_ptr
+            })
+        })
     }
 
     #[inline]

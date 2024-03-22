@@ -38,32 +38,39 @@ void CustomStateSet::Clear(ErrorResult& aRv) {
     return;
   }
 
-  mTarget->EnsureCustomStates().Clear();
-  InvalidateStyleFromCustomStateSetChange();
-}
-
-void CustomStateSet::InvalidateStyleFromCustomStateSetChange() const {
-  Document* doc = mTarget->OwnerDoc();
-
-  PresShell* presShell = doc->GetPresShell();
-  if (!presShell) {
+  nsTArray<RefPtr<nsAtom>>& states = mTarget->EnsureCustomStates();
+  Document* doc = mTarget->GetComposedDoc();
+  PresShell* presShell = doc ? doc->GetPresShell() : nullptr;
+  if (presShell) {
+    presShell->CustomStatesWillChange(*mTarget);
+    // Iterate over each state to ensure each one is invalidated.
+    while (!states.IsEmpty()) {
+      RefPtr<nsAtom> atom = states.PopLastElement();
+      presShell->CustomStateChanged(*mTarget, atom);
+    }
     return;
   }
 
-  // TODO: make this more efficient?
-  presShell->DestroyFramesForAndRestyle(mTarget);
+  states.Clear();
 }
 
 bool CustomStateSet::Delete(const nsAString& aState, ErrorResult& aRv) {
-  if (!CustomStateSet_Binding::SetlikeHelpers::Delete(this, aState, aRv) ||
-      aRv.Failed()) {
+  CustomStateSet_Binding::SetlikeHelpers::Delete(this, aState, aRv);
+  if (aRv.Failed()) {
     return false;
   }
 
   RefPtr<nsAtom> atom = NS_AtomizeMainThread(aState);
+  Document* doc = mTarget->GetComposedDoc();
+  PresShell* presShell = doc ? doc->GetPresShell() : nullptr;
+  if (presShell) {
+    presShell->CustomStatesWillChange(*mTarget);
+  }
+
   bool deleted = mTarget->EnsureCustomStates().RemoveElement(atom);
-  if (deleted) {
-    InvalidateStyleFromCustomStateSetChange();
+
+  if (presShell) {
+    presShell->CustomStateChanged(*mTarget, atom);
   }
   return deleted;
 }
@@ -75,8 +82,17 @@ void CustomStateSet::Add(const nsAString& aState, ErrorResult& aRv) {
   }
 
   RefPtr<nsAtom> atom = NS_AtomizeMainThread(aState);
+  Document* doc = mTarget->GetComposedDoc();
+  PresShell* presShell = doc ? doc->GetPresShell() : nullptr;
+  if (presShell) {
+    presShell->CustomStatesWillChange(*mTarget);
+  }
+
   mTarget->EnsureCustomStates().AppendElement(atom);
-  InvalidateStyleFromCustomStateSetChange();
+
+  if (presShell) {
+    presShell->CustomStateChanged(*mTarget, atom);
+  }
 }
 
 }  // namespace mozilla::dom

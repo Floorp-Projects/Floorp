@@ -477,6 +477,14 @@ class ServoStyleSet {
       const dom::Element&, const ServoElementSnapshotTable& aSnapshots);
 
   /**
+   * Maybe invalidate if a modification to a Custom State might require us to
+   * restyle the relative selector it refers to.
+   */
+  void MaybeInvalidateRelativeSelectorCustomStateDependency(
+      const dom::Element&, nsAtom* state,
+      const ServoElementSnapshotTable& aSnapshots);
+
+  /**
    * Maybe invalidate if a modification to an ID might require us to restyle
    * the relative selector it refers to.
    */

@@ -73,6 +73,18 @@ pub trait ElementSnapshot: Sized {
     where
         F: FnMut(&AtomIdent);
 
+
+    /// If this snapshot contains CustomStateSet information.
+    fn has_custom_states(&self) -> bool;
+
+    /// A callback that should be called for each CustomState of the snapshot.
+    fn has_custom_state(&self, state: &AtomIdent) -> bool;
+
+    /// A callback that should be called for each CustomState of the snapshot.
+    fn each_custom_state<F>(&self, callback: F)
+    where
+        F: FnMut(&AtomIdent);
+
     /// The `xml:lang=""` or `lang=""` attribute value per this snapshot.
     fn lang_attr(&self) -> Option<AttrValue>;
 }
@@ -211,6 +223,11 @@ where
                 return self
                     .element
                     .match_element_lang(Some(self.get_lang()), lang_arg);
+            },
+
+            // CustomStateSet should match against the snapshot before element
+            NonTSPseudoClass::CustomState(ref state) => {
+                return self.has_custom_state(&state.0)
             },
 
             _ => {},
@@ -354,6 +371,13 @@ where
         match self.snapshot() {
             Some(snapshot) if snapshot.has_attrs() => snapshot.has_class(name, case_sensitivity),
             _ => self.element.has_class(name, case_sensitivity),
+        }
+    }
+
+    fn has_custom_state(&self, state: &AtomIdent) -> bool {
+        match self.snapshot() {
+            Some(snapshot) if snapshot.has_custom_states() => snapshot.has_custom_state(state),
+            _ => self.element.has_custom_state(state),
         }
     }
 

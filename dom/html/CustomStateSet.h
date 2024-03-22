@@ -35,8 +35,6 @@ class CustomStateSet final : public nsISupports, public nsWrapperCache {
   static MOZ_CAN_RUN_SCRIPT_BOUNDARY already_AddRefed<CustomStateSet>
   Constructor(const GlobalObject& aGlobal, ErrorResult& aRv);
 
-  void InvalidateStyleFromCustomStateSetChange() const;
-
   MOZ_CAN_RUN_SCRIPT void Clear(ErrorResult& aRv);
 
   /**

@@ -361,6 +361,9 @@ class RestyleManager {
 
   void ElementStateChanged(Element*, dom::ElementState);
 
+  void CustomStatesWillChange(Element&);
+  void CustomStateChanged(Element&, nsAtom* aState);
+
   /**
    * Posts restyle hints for siblings of an element and their descendants if the
    * element's parent has NODE_HAS_SLOW_SELECTOR_NTH_OF and the element has a
