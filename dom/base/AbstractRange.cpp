@@ -237,9 +237,19 @@ nsresult AbstractRange::SetStartAndEndInternal(
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
-  // If they have different root, this should be collapsed at the end point.
+  // Different root
   if (newStartRoot != newEndRoot) {
-    aRange->DoSetRange(aEndBoundary, aEndBoundary, newEndRoot);
+    if (aRange->IsStaticRange()) {
+      // StaticRange allows nodes in different trees, so set start and end
+      // accordingly
+      aRange->DoSetRange(aStartBoundary, aEndBoundary, newEndRoot);
+    } else {
+      MOZ_ASSERT(aRange->IsDynamicRange());
+      // In contrast, nsRange keeps both. It has a pair of start and end
+      // which they have been collapsed to one end, and it also may have a pair
+      // of start and end which are the original value.
+      aRange->DoSetRange(aEndBoundary, aEndBoundary, newEndRoot);
+    }
     return NS_OK;
   }
 
@@ -377,6 +387,54 @@ void AbstractRange::UpdateCommonAncestorIfNecessary() {
                             "mRegisteredClosestCommonInclusiveAncestor");
     }
   }
+}
+
+const RangeBoundary& AbstractRange::MayCrossShadowBoundaryStartRef() const {
+  return IsDynamicRange() ? AsDynamicRange()->MayCrossShadowBoundaryStartRef()
+                          : mStart;
+}
+
+const RangeBoundary& AbstractRange::MayCrossShadowBoundaryEndRef() const {
+  return IsDynamicRange() ? AsDynamicRange()->MayCrossShadowBoundaryEndRef()
+                          : mEnd;
+}
+
+nsIContent* AbstractRange::GetMayCrossShadowBoundaryChildAtStartOffset() const {
+  return IsDynamicRange()
+             ? AsDynamicRange()->GetMayCrossShadowBoundaryChildAtStartOffset()
+             : mStart.GetChildAtOffset();
+}
+
+nsIContent* AbstractRange::GetMayCrossShadowBoundaryChildAtEndOffset() const {
+  return IsDynamicRange()
+             ? AsDynamicRange()->GetMayCrossShadowBoundaryChildAtEndOffset()
+             : mEnd.GetChildAtOffset();
+}
+
+nsINode* AbstractRange::GetMayCrossShadowBoundaryStartContainer() const {
+  return IsDynamicRange()
+             ? AsDynamicRange()->GetMayCrossShadowBoundaryStartContainer()
+             : mStart.Container();
+}
+
+nsINode* AbstractRange::GetMayCrossShadowBoundaryEndContainer() const {
+  return IsDynamicRange()
+             ? AsDynamicRange()->GetMayCrossShadowBoundaryEndContainer()
+             : mEnd.Container();
+}
+
+uint32_t AbstractRange::MayCrossShadowBoundaryStartOffset() const {
+  return IsDynamicRange()
+             ? AsDynamicRange()->MayCrossShadowBoundaryStartOffset()
+             : static_cast<uint32_t>(*mStart.Offset(
+                   RangeBoundary::OffsetFilter::kValidOrInvalidOffsets));
+}
+
+uint32_t AbstractRange::MayCrossShadowBoundaryEndOffset() const {
+  return IsDynamicRange()
+             ? AsDynamicRange()->MayCrossShadowBoundaryEndOffset()
+             : static_cast<uint32_t>(*mEnd.Offset(
+                   RangeBoundary::OffsetFilter::kValidOrInvalidOffsets));
 }
 
 nsINode* AbstractRange::GetParentObject() const { return mOwner; }

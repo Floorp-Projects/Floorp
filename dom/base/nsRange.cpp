@@ -171,7 +171,7 @@ nsRange::nsRange(nsINode* aNode)
       mNextEndRef(nullptr) {
   // printf("Size of nsRange: %zu\n", sizeof(nsRange));
 
-  static_assert(sizeof(nsRange) <= 240,
+  static_assert(sizeof(nsRange) <= 248,
                 "nsRange size shouldn't be increased as far as possible");
 }
 
@@ -219,11 +219,13 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsRange)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsRange, AbstractRange)
   // `Reset()` unlinks `mStart`, `mEnd` and `mRoot`.
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCrossShadowBoundaryRange);
   tmp->Reset();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsRange, AbstractRange)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRoot)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCrossShadowBoundaryRange);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(nsRange, AbstractRange)

@@ -51,13 +51,26 @@ class AbstractRange : public nsISupports,
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(AbstractRange)
 
+  /**
+   * All of the MayCrossShadowBoundary* methods are used to get the boundary
+   * endpoints that cross shadow boundaries. They would return
+   * the same value as the non-MayCrossShadowBoundary* methods if the range
+   * boundaries don't cross shadow boundaries.
+   */
   const RangeBoundary& StartRef() const { return mStart; }
+  const RangeBoundary& MayCrossShadowBoundaryStartRef() const;
+
   const RangeBoundary& EndRef() const { return mEnd; }
+  const RangeBoundary& MayCrossShadowBoundaryEndRef() const;
 
   nsIContent* GetChildAtStartOffset() const {
     return mStart.GetChildAtOffset();
   }
+  nsIContent* GetMayCrossShadowBoundaryChildAtStartOffset() const;
+
   nsIContent* GetChildAtEndOffset() const { return mEnd.GetChildAtOffset(); }
+  nsIContent* GetMayCrossShadowBoundaryChildAtEndOffset() const;
+
   bool IsPositioned() const { return mIsPositioned; }
   /**
    * https://dom.spec.whatwg.org/#concept-tree-inclusive-ancestor
@@ -75,7 +88,10 @@ class AbstractRange : public nsISupports,
   // `IsPositioned()` directly.
 
   nsINode* GetStartContainer() const { return mStart.Container(); }
+  nsINode* GetMayCrossShadowBoundaryStartContainer() const;
+
   nsINode* GetEndContainer() const { return mEnd.Container(); }
+  nsINode* GetMayCrossShadowBoundaryEndContainer() const;
 
   Document* GetComposedDocOfContainers() const {
     return mStart.Container() ? mStart.Container()->GetComposedDoc() : nullptr;
@@ -86,12 +102,15 @@ class AbstractRange : public nsISupports,
     return static_cast<uint32_t>(
         *mStart.Offset(RangeBoundary::OffsetFilter::kValidOrInvalidOffsets));
   }
+  uint32_t MayCrossShadowBoundaryStartOffset() const;
 
   // FYI: Returns 0 if it's not positioned.
   uint32_t EndOffset() const {
     return static_cast<uint32_t>(
         *mEnd.Offset(RangeBoundary::OffsetFilter::kValidOrInvalidOffsets));
   }
+  uint32_t MayCrossShadowBoundaryEndOffset() const;
+
   bool Collapsed() const {
     return !mIsPositioned || (mStart.Container() == mEnd.Container() &&
                               StartOffset() == EndOffset());
