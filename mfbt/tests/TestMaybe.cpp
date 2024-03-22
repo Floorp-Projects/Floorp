@@ -530,7 +530,8 @@ static bool TestCopyAndMove() {
 
     static_assert(std::is_copy_constructible_v<Maybe<UnmovableValue>>);
     static_assert(std::is_copy_assignable_v<Maybe<UnmovableValue>>);
-    // XXX Why do these static_asserts not hold?
+    // TODO(Bug 1601251): Maybe<T> should delete move operations if T does not
+    //                    support moves
     // static_assert(!std::is_move_constructible_v<Maybe<UnmovableValue>>);
     // static_assert(!std::is_move_assignable_v<Maybe<UnmovableValue>>);
   }
