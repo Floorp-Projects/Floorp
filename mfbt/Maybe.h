@@ -455,7 +455,7 @@ class MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS Maybe
    * without calling the destructor. The internal storage is also reset to
    * avoid multiple calls. Unsafe unless |isSome()|.
    */
-  T extract() {
+  constexpr T extract() {
     MOZ_RELEASE_ASSERT(isSome());
     T v = std::move(mStorage.val);
     reset();
@@ -597,7 +597,7 @@ class MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS Maybe
   /* If |isSome()|, runs the provided function or functor on the contents of
    * this Maybe. */
   template <typename Func>
-  constexpr Maybe& apply(Func&& aFunc) {
+  constexpr Maybe& apply(Func&& aFunc) & {
     if (isSome()) {
       std::forward<Func>(aFunc)(ref());
     }
@@ -605,9 +605,25 @@ class MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS Maybe
   }
 
   template <typename Func>
-  constexpr const Maybe& apply(Func&& aFunc) const {
+  constexpr const Maybe& apply(Func&& aFunc) const& {
     if (isSome()) {
       std::forward<Func>(aFunc)(ref());
+    }
+    return *this;
+  }
+
+  template <typename Func>
+  constexpr Maybe& apply(Func&& aFunc) && {
+    if (isSome()) {
+      std::forward<Func>(aFunc)(extract());
+    }
+    return *this;
+  }
+
+  template <typename Func>
+  constexpr Maybe& apply(Func&& aFunc) const&& {
+    if (isSome()) {
+      std::forward<Func>(aFunc)(extract());
     }
     return *this;
   }
@@ -618,7 +634,7 @@ class MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS Maybe
    * value type as what the provided function would have returned.
    */
   template <typename Func>
-  constexpr auto map(Func&& aFunc) {
+  constexpr auto map(Func&& aFunc) & {
     if (isSome()) {
       return Some(std::forward<Func>(aFunc)(ref()));
     }
@@ -626,11 +642,27 @@ class MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS Maybe
   }
 
   template <typename Func>
-  constexpr auto map(Func&& aFunc) const {
+  constexpr auto map(Func&& aFunc) const& {
     if (isSome()) {
       return Some(std::forward<Func>(aFunc)(ref()));
     }
     return Maybe<decltype(std::forward<Func>(aFunc)(ref()))>{};
+  }
+
+  template <typename Func>
+  constexpr auto map(Func&& aFunc) && {
+    if (isSome()) {
+      return Some(std::forward<Func>(aFunc)(extract()));
+    }
+    return Maybe<decltype(std::forward<Func>(aFunc)(extract()))>{};
+  }
+
+  template <typename Func>
+  constexpr auto map(Func&& aFunc) const&& {
+    if (isSome()) {
+      return Some(std::forward<Func>(aFunc)(extract()));
+    }
+    return Maybe<decltype(std::forward<Func>(aFunc)(extract()))>{};
   }
 
   /* If |isSome()|, empties this Maybe and destroys its contents. */
