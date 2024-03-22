@@ -30,6 +30,7 @@ DIRS += [
     "commandlines",
     "contentanalysis",
     "contentprefs",
+    "contentrelevancy",
     "contextualidentity",
     "crashes",
     "crashmonitor",
