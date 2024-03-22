@@ -304,12 +304,13 @@ public:
 
 private:
   mutable typename RLBOX_WASM_MODULE_TYPE_CURR::instance_t wasm2c_instance{ 0 };
-  struct w2c_env sandbox_memory_env;
-  struct w2c_wasi__snapshot__preview1 wasi_env;
+  struct w2c_env sandbox_memory_env{ 0 };
+  struct w2c_wasi__snapshot__preview1 wasi_env{ 0 };
   bool instance_initialized = false;
-  wasm_rt_memory_t sandbox_memory_info;
-  mutable wasm_rt_funcref_table_t sandbox_callback_table;
-  uintptr_t heap_base;
+  bool minwasi_init_inst_succeeded = false;
+  wasm_rt_memory_t sandbox_memory_info{ 0 };
+  mutable wasm_rt_funcref_table_t sandbox_callback_table{ 0 };
+  uintptr_t heap_base = 0;
   size_t return_slot_size = 0;
   T_PointerType return_slot = 0;
   mutable std::vector<T_PointerType> callback_free_list;
@@ -505,7 +506,7 @@ public:
     FALLIBLE_DYNAMIC_CHECK(
       infallible, minwasi_init_succeeded, "Could not initialize min wasi");
 
-    const bool minwasi_init_inst_succeeded = minwasi_init_instance(&wasi_env);
+    minwasi_init_inst_succeeded = minwasi_init_instance(&wasi_env);
     FALLIBLE_DYNAMIC_CHECK(
       infallible, minwasi_init_inst_succeeded, "Could not initialize min wasi instance");
 
@@ -567,9 +568,20 @@ public:
       RLBOX_WASM_MODULE_TYPE_CURR::free_instance(&wasm2c_instance);
     }
 
-    destroy_wasm2c_memory(&sandbox_memory_info);
-    wasm_rt_free_funcref_table(&sandbox_callback_table);
-    minwasi_cleanup_instance(&wasi_env);
+    if (sandbox_memory_info.data) {
+      destroy_wasm2c_memory(&sandbox_memory_info);
+      sandbox_memory_info.data = nullptr;
+    }
+
+    if (sandbox_callback_table.data) {
+      wasm_rt_free_funcref_table(&sandbox_callback_table);
+      sandbox_callback_table.data = nullptr;
+    }
+
+    if (minwasi_init_inst_succeeded) {
+      minwasi_init_inst_succeeded = false;
+      minwasi_cleanup_instance(&wasi_env);
+    }
   }
 
   template<typename T>
