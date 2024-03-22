@@ -29,7 +29,7 @@ jobs:
           - mozilla-central
       when:
           by-project:
-              mozilla-central: [{hour: 10, minute: 0}, {hour: 22, minute: 0}]
+              mozilla-central: [{hour: 22, minute: 0}]
               # No default
 
     - name: nightly-desktop
@@ -40,7 +40,8 @@ jobs:
           include-push-tasks: true
       run-on-projects:
           - mozilla-central
-      when: []  # never (hook only)
+      when:
+          - [{hour: 10, minute: 0}]
 
     - name: nightly-desktop-linux
       job:
