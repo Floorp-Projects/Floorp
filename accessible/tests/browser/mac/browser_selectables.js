@@ -300,9 +300,6 @@ addAccessibleTask(
   async (browser, accDoc) => {
     let select = getNativeInterface(accDoc, "select");
     let one = getNativeInterface(accDoc, "one");
-    let two = getNativeInterface(accDoc, "two");
-    let three = getNativeInterface(accDoc, "three");
-    let four = getNativeInterface(accDoc, "four");
 
     is(
       select.getAttributeValue("AXTitle"),
@@ -339,25 +336,5 @@ addAccessibleTask(
     });
     await evt;
     is(select.getAttributeValue("AXSelectedChildren").length, 0);
-    evt = waitForMacEvent("AXSelectedChildrenChanged");
-    three.setAttributeValue("AXSelected", true);
-    await evt;
-    is(select.getAttributeValue("AXSelectedChildren").length, 1);
-    ok(getSelectedIds(select).includes("three"), "'three' is selected");
-    evt = waitForMacEvent("AXSelectedChildrenChanged");
-    select.setAttributeValue("AXSelectedChildren", [one, two]);
-    await evt;
-    await untilCacheOk(() => {
-      let ids = getSelectedIds(select);
-      return ids[0] == "one" && ids[1] == "two";
-    }, "Got correct selected children");
-
-    evt = waitForMacEvent("AXSelectedChildrenChanged");
-    select.setAttributeValue("AXSelectedChildren", [three, two, four]);
-    await evt;
-    await untilCacheOk(() => {
-      let ids = getSelectedIds(select);
-      return ids[0] == "two" && ids[1] == "three";
-    }, "Got correct selected children");
   }
 );

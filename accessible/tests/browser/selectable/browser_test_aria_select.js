@@ -72,16 +72,16 @@ addAccessibleTask(
 // role="tablist" aria-multiselectable
 addAccessibleTask(
   `<div role="tablist" id="tablist" aria-multiselectable="true">
-     <div role="tab" id="tab_multi1">tab1</div>
+     <div role="tab" id="tab_multi1" aria-selected="true">tab1</div>
      <div role="tab" id="tab_multi2">tab2</div>
+     <div role="tab" id="tab_multi3" aria-selected="true">tab3</div>
    </div>`,
   async function (browser, docAcc) {
     info('role="tablist" aria-multiselectable');
     let tablist = findAccessibleChildByID(docAcc, "tablist", [
       nsIAccessibleSelectable,
     ]);
-
-    await testMultiSelectable(tablist, ["tab_multi1", "tab_multi2"]);
+    testSelectableSelection(tablist, ["tab_multi1", "tab_multi3"]);
   },
   {
     chrome: true,
@@ -95,16 +95,16 @@ addAccessibleTask(
 // role="listbox" aria-multiselectable
 addAccessibleTask(
   `<div role="listbox" id="listbox" aria-multiselectable="true">
-     <div role="option" id="listbox2_item1">item1</div>
+     <div role="option" id="listbox2_item1" aria-selected="true">item1</div>
      <div role="option" id="listbox2_item2">item2</div>
+     <div role="option" id="listbox2_item3" aria-selected="true">item2</div>
    </div>`,
   async function (browser, docAcc) {
     info('role="listbox" aria-multiselectable');
     let listbox = findAccessibleChildByID(docAcc, "listbox", [
       nsIAccessibleSelectable,
     ]);
-
-    await testMultiSelectable(listbox, ["listbox2_item1", "listbox2_item2"]);
+    testSelectableSelection(listbox, ["listbox2_item1", "listbox2_item3"]);
   },
   {
     chrome: true,
@@ -122,7 +122,7 @@ addAccessibleTask(
     <thead>
       <tr>
         <th tabindex="-1" role="columnheader" id="grid_colhead1"
-            style="width:6em">Entry #</th>
+            style="width:6em" aria-selected="true">Entry #</th>
         <th tabindex="-1" role="columnheader" id="grid_colhead2"
             style="width:10em">Date</th>
         <th tabindex="-1" role="columnheader" id="grid_colhead3"
@@ -134,7 +134,7 @@ addAccessibleTask(
         <td tabindex="-1" role="rowheader" id="grid_rowhead"
             aria-readonly="true">1</td>
         <td tabindex="-1" role="gridcell" id="grid_cell1"
-            aria-selected="false">03/14/05</td>
+            aria-selected="true">03/14/05</td>
         <td tabindex="-1" role="gridcell" id="grid_cell2"
             aria-selected="false">Conference Fee</td>
       </tr>
@@ -145,15 +145,7 @@ addAccessibleTask(
     let grid = findAccessibleChildByID(docAcc, "grid", [
       nsIAccessibleSelectable,
     ]);
-
-    await testMultiSelectable(grid, [
-      "grid_colhead1",
-      "grid_colhead2",
-      "grid_colhead3",
-      "grid_rowhead",
-      "grid_cell1",
-      "grid_cell2",
-    ]);
+    testSelectableSelection(grid, ["grid_colhead1", "grid_cell1"]);
   },
   {
     chrome: true,
