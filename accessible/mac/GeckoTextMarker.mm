@@ -88,6 +88,13 @@ GeckoTextMarker GeckoTextMarker::MarkerFromIndex(Accessible* aRoot,
   // Iterate through all segments until we exhausted the index sum
   // so we can find the segment the index lives in.
   for (TextLeafRange segment : range) {
+    if (segment.Start().mAcc->IsMenuPopup() &&
+        (segment.Start().mAcc->State() & states::COLLAPSED)) {
+      // XXX: Menu collapsed XUL menu popups are in our tree and we need to skip
+      // them.
+      continue;
+    }
+
     if (segment.End().mAcc->Role() == roles::LISTITEM_MARKER) {
       // XXX: MacOS expects bullets to be in the range's text, but not in
       // the calculated length!
@@ -392,6 +399,12 @@ NSString* GeckoTextMarkerRange::Text() const {
 
   for (TextLeafRange segment : range) {
     TextLeafPoint start = segment.Start();
+    if (start.mAcc->IsMenuPopup() &&
+        (start.mAcc->State() & states::COLLAPSED)) {
+      // XXX: Menu collapsed XUL menu popups are in our tree and we need to skip
+      // them.
+      continue;
+    }
     if (start.mAcc->IsTextField() && start.mAcc->ChildCount() == 0) {
       continue;
     }
@@ -441,6 +454,12 @@ NSAttributedString* GeckoTextMarkerRange::AttributedText() const {
   for (TextLeafRange segment : range) {
     TextLeafPoint start = segment.Start();
     TextLeafPoint attributesNext;
+    if (start.mAcc->IsMenuPopup() &&
+        (start.mAcc->State() & states::COLLAPSED)) {
+      // XXX: Menu collapsed XUL menu popups are in our tree and we need to skip
+      // them.
+      continue;
+    }
     do {
       if (start.mAcc->IsText()) {
         attributesNext = start.FindTextAttrsStart(eDirNext, false);
