@@ -96,8 +96,6 @@ license:
         - python/mozlint/test/files/
         # By design
         - python/mozrelease/mozrelease
-        - security/mac/hardenedruntime/v1/production/browser.xml
-        - security/mac/hardenedruntime/v1/developer/browser.xml
         - security/mac/hardenedruntime/v2/developer/browser.xml
         - security/mac/hardenedruntime/v2/developer/media-plugin-helper.xml
         - security/mac/hardenedruntime/v2/developer/plugin-container.xml

@@ -12,10 +12,7 @@ from taskgraph.util.schema import Schema, taskref_or_string
 from voluptuous import Optional, Required
 
 from gecko_taskgraph.transforms.task import task_description_schema
-from gecko_taskgraph.util.attributes import (
-    copy_attributes_from_dependent_job,
-    release_level,
-)
+from gecko_taskgraph.util.attributes import copy_attributes_from_dependent_job
 from gecko_taskgraph.util.scriptworker import (
     add_scope_prefix,
     get_signing_cert_scope_per_platform,
@@ -77,30 +74,11 @@ transforms.add_validate(signing_description_schema)
 
 
 @transforms.add
-def add_entitlements_link(config, jobs):
-    for job in jobs:
-        dep_job = get_primary_dependency(config, job)
-        entitlements_path = evaluate_keyed_by(
-            config.graph_config["mac-notarization"]["mac-entitlements"],
-            "mac entitlements",
-            {
-                "platform": dep_job.attributes.get("build_platform"),
-                "release-level": release_level(config.params["project"]),
-            },
-        )
-        if entitlements_path:
-            job["entitlements-url"] = config.params.file_url(
-                entitlements_path,
-            )
-        yield job
-
-
-@transforms.add
 def add_requirements_link(config, jobs):
     for job in jobs:
         dep_job = get_primary_dependency(config, job)
         requirements_path = evaluate_keyed_by(
-            config.graph_config["mac-notarization"]["mac-requirements"],
+            config.graph_config["mac-signing"]["mac-requirements"],
             "mac requirements",
             {
                 "platform": dep_job.attributes.get("build_platform"),
