@@ -10890,7 +10890,7 @@
   # acceleration for decoding.
 -   name: media.navigator.mediadatadecoder_vpx_enabled
     type: RelaxedAtomicBool
-#if defined(NIGHTLY_BUILD) || defined(MOZ_WIDGET_GTK)
+#if defined(MOZ_WIDGET_GTK)
     value: true
 #else
     value: false
