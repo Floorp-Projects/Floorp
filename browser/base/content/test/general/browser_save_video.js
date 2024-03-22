@@ -52,7 +52,7 @@ add_task(async function () {
 
       is(
         fileName,
-        "web-video1-expectedName.ogv",
+        "web-video1-expectedName.webm",
         "Video file name is correctly retrieved from Content-Disposition http header"
       );
       resolve();

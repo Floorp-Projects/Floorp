@@ -198,7 +198,7 @@ support-files = [
   "!/browser/components/originattributes/test/browser/file_thirdPartyChild.request.html",
   "!/browser/components/originattributes/test/browser/file_thirdPartyChild.script.js",
   "!/browser/components/originattributes/test/browser/file_thirdPartyChild.sharedworker.js",
-  "!/browser/components/originattributes/test/browser/file_thirdPartyChild.video.ogv",
+  "!/browser/components/originattributes/test/browser/file_thirdPartyChild.video.webm",
   "!/browser/components/originattributes/test/browser/file_thirdPartyChild.worker.fetch.html",
   "!/browser/components/originattributes/test/browser/file_thirdPartyChild.worker.js",
   "!/browser/components/originattributes/test/browser/file_thirdPartyChild.worker.request.html",
@@ -214,7 +214,7 @@ support-files = [
   "file_saveAsImage.sjs",
   "file_saveAsVideo.sjs",
   "file_saveAsPageInfo.html",
-  "file_video.ogv",
+  "file_video.webm",
 ]
 
 ["browser_staticPartition_tls_session.js"]
