@@ -58,7 +58,7 @@ class gfxVarReceiver;
   _(WebRenderBatchedUploadThreshold, int32_t, 512 * 512)           \
   _(UseSoftwareWebRender, bool, false)                             \
   _(AllowSoftwareWebRenderD3D11, bool, false)                      \
-  _(ScreenDepth, int32_t, 0)                                       \
+  _(PrimaryScreenDepth, int32_t, 0)                                \
   _(GREDirectory, nsString, nsString())                            \
   _(ProfDirectory, nsString, nsString())                           \
   _(AllowD3D11KeyedMutex, bool, false)                             \

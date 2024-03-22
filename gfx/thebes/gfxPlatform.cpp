@@ -445,8 +445,7 @@ gfxPlatform::gfxPlatform()
       mDisplayInfoCollector(this, &gfxPlatform::GetDisplayInfo),
       mOverlayInfoCollector(this, &gfxPlatform::GetOverlayInfo),
       mSwapChainInfoCollector(this, &gfxPlatform::GetSwapChainInfo),
-      mCompositorBackend(layers::LayersBackend::LAYERS_NONE),
-      mScreenDepth(0) {
+      mCompositorBackend(layers::LayersBackend::LAYERS_NONE) {
   mAllowDownloadableFonts = UNINITIALIZED_VALUE;
 
   InitBackendPrefs(GetBackendPrefs());
@@ -1610,6 +1609,12 @@ already_AddRefed<DataSourceSurface> gfxPlatform::GetWrappedDataSourceSurface(
 }
 
 void gfxPlatform::PopulateScreenInfo() {
+  // We're only going to set some gfxVars here, which is only possible from
+  // the parent process.
+  if (!XRE_IsParentProcess()) {
+    return;
+  }
+
   nsCOMPtr<nsIScreenManager> manager =
       do_GetService("@mozilla.org/gfx/screenmanager;1");
   MOZ_ASSERT(manager, "failed to get nsIScreenManager");
@@ -1621,13 +1626,9 @@ void gfxPlatform::PopulateScreenInfo() {
     return;
   }
 
-  screen->GetColorDepth(&mScreenDepth);
-  if (XRE_IsParentProcess()) {
-    gfxVars::SetScreenDepth(mScreenDepth);
-  }
-
-  int left, top;
-  screen->GetRect(&left, &top, &mScreenSize.width, &mScreenSize.height);
+  int32_t screenDepth;
+  screen->GetColorDepth(&screenDepth);
+  gfxVars::SetPrimaryScreenDepth(screenDepth);
 }
 
 bool gfxPlatform::SupportsAzureContentForDrawTarget(DrawTarget* aTarget) {
