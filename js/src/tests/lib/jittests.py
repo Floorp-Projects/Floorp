@@ -343,6 +343,13 @@ class JitTest:
                     elif name.startswith("--"):
                         # // |jit-test| --ion-gvn=off; --no-sse4
                         test.jitflags.append(name)
+                    elif name.startswith("-P"):
+                        prefAndValue = name.split()
+                        assert (
+                            len(prefAndValue) == 2
+                        ), f"{name}: failed to parse preference"
+                        # // |jit-test| -P pref(=value)?
+                        test.jitflags.append("--setpref=" + prefAndValue[1])
                     else:
                         print(
                             "{}: warning: unrecognized |jit-test| attribute"
