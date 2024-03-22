@@ -136,6 +136,14 @@ search:
         branch: default
         pref: browser.urlbar.trending.maxResultsNoSearchMode
       description: The maximum number of trending results mode outside search mode.
+    newSearchConfigEnabled:
+      type: boolean
+      setPref:
+        branch: user
+        pref: browser.search.newSearchConfig.enabled
+      description: >-
+        Whether search-config-v2 is enabled for the user. This will only take
+        effect when the user restarts.
 
 # `searchConfiguration` is for search experiment features for items that require
 # isEarlyStartup to be true. These items may require a reload of the search

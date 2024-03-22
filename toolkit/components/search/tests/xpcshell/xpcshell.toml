@@ -257,6 +257,9 @@ support-files = [
 
 ["test_searchUrlDomain.js"]
 
+["test_search_config_v2_nimbus.js"]
+prefs = ["browser.search.newSearchConfig.enabled=false"]
+
 ["test_selectedEngine.js"]
 
 ["test_sendSubmissionURL.js"]

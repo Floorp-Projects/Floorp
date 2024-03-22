@@ -434,12 +434,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  SearchUtils,
-  "newSearchConfigEnabled",
-  "browser.search.newSearchConfig.enabled",
-  false
-);
+ChromeUtils.defineLazyGetter(SearchUtils, "newSearchConfigEnabled", () => {
+  return Services.prefs.getBoolPref(
+    "browser.search.newSearchConfig.enabled",
+    false
+  );
+});
 
 // Can't use defineLazyPreferenceGetter because we want the value
 // from the default branch
