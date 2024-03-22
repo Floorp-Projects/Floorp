@@ -4,6 +4,7 @@
 
 use serde::{Deserialize, Serialize};
 use std::io::{self, Read, Write};
+use std::path::PathBuf;
 use std::process::Command;
 use url::Url;
 
@@ -23,6 +24,7 @@ pub enum FirefoxCommand {
     LaunchFirefox { url: String },
     LaunchFirefoxPrivate { url: String },
     GetVersion {},
+    GetInstallId {},
 }
 #[derive(Serialize, Deserialize)]
 // {
@@ -32,6 +34,14 @@ pub enum FirefoxCommand {
 pub struct Response {
     pub message: String,
     pub result_code: u32,
+}
+
+#[derive(Serialize, Deserialize)]
+// {
+//     "installation_id": "123ABC456",
+// }
+pub struct InstallationId {
+    pub installation_id: String,
 }
 
 #[repr(u32)]
@@ -152,6 +162,28 @@ pub fn process_command(command: &FirefoxCommand) -> std::io::Result<bool> {
             Ok(true)
         }
         FirefoxCommand::GetVersion {} => generate_response("1", ResultCode::Success.into()),
+        FirefoxCommand::GetInstallId {} => {
+            // config_dir() evaluates to ~/Library/Application Support on macOS
+            // and %RoamingAppData% on Windows.
+            let mut json_path = match dirs::config_dir() {
+                Some(path) => path,
+                None => {
+                    return generate_response(
+                        "Config dir could not be found",
+                        ResultCode::Error.into(),
+                    )
+                }
+            };
+            #[cfg(target_os = "windows")]
+            json_path.push("Mozilla\\Firefox");
+            #[cfg(target_os = "macos")]
+            json_path.push("Firefox");
+
+            json_path.push("install_id");
+            json_path.set_extension("json");
+            let mut install_id = String::new();
+            get_install_id(&mut json_path, &mut install_id)
+        }
     }
 }
 
@@ -228,10 +260,54 @@ fn launch_firefox<C: CommandRunner>(
     command.to_string()
 }
 
+fn get_install_id(json_path: &mut PathBuf, install_id: &mut String) -> std::io::Result<bool> {
+    if !json_path.exists() {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::NotFound,
+            "Install ID file does not exist",
+        ));
+    }
+    let json_size = std::fs::metadata(&json_path)
+        .map_err(|e| std::io::Error::new(std::io::ErrorKind::NotFound, e))?
+        .len();
+    // Set a 1 KB limit for the file size.
+    if json_size <= 0 || json_size > 1024 {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            "Install ID file has invalid size",
+        ));
+    }
+    let mut file =
+        std::fs::File::open(json_path).or_else(|_| -> std::io::Result<std::fs::File> {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                "Failed to open file",
+            ));
+        })?;
+    let mut contents = String::new();
+    match file.read_to_string(&mut contents) {
+        Ok(_) => match serde_json::from_str::<InstallationId>(&contents) {
+            Ok(id) => {
+                *install_id = id.installation_id.clone();
+                generate_response(&id.installation_id, ResultCode::Success.into())
+            }
+            Err(_) => {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    "Failed to read installation ID",
+                ))
+            }
+        },
+        Err(_) => generate_response("Failed to read file", ResultCode::Error.into()),
+    }?;
+    Ok(true)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use std::io::Cursor;
+    use tempfile::NamedTempFile;
     #[test]
     fn test_validate_url() {
         let valid_test_cases = vec![
@@ -346,5 +422,91 @@ mod tests {
         let command_line = result.unwrap();
         let correct_url_format = format!("-osint -private-window {}", url);
         assert!(command_line.contains(correct_url_format.as_str()));
+    }
+
+    #[test]
+    fn test_get_install_id_valid() -> std::io::Result<()> {
+        let mut tempfile = NamedTempFile::new().unwrap();
+        let installation_id = InstallationId {
+            installation_id: "123ABC456".to_string(),
+        };
+        let json_string = serde_json::to_string(&installation_id);
+        let _ = tempfile.write_all(json_string?.as_bytes());
+        let mut install_id = String::new();
+        let result = get_install_id(&mut tempfile.path().to_path_buf(), &mut install_id);
+        assert!(result.is_ok());
+        assert_eq!(install_id, "123ABC456");
+        Ok(())
+    }
+
+    #[test]
+    fn test_get_install_id_incorrect_var() -> std::io::Result<()> {
+        #[derive(Serialize, Deserialize)]
+        pub struct IncorrectJSON {
+            pub incorrect_var: String,
+        }
+        let mut tempfile = NamedTempFile::new().unwrap();
+        let incorrect_json = IncorrectJSON {
+            incorrect_var: "incorrect_val".to_string(),
+        };
+        let json_string = serde_json::to_string(&incorrect_json);
+        let _ = tempfile.write_all(json_string?.as_bytes());
+        let mut install_id = String::new();
+        let result = get_install_id(&mut tempfile.path().to_path_buf(), &mut install_id);
+        assert!(result.is_err());
+        let error = result.err().unwrap();
+        assert_eq!(error.kind(), std::io::ErrorKind::InvalidData);
+        Ok(())
+    }
+
+    #[test]
+    fn test_get_install_id_partially_correct_vars() -> std::io::Result<()> {
+        #[derive(Serialize, Deserialize)]
+        pub struct IncorrectJSON {
+            pub installation_id: String,
+            pub incorrect_var: String,
+        }
+        let mut tempfile = NamedTempFile::new().unwrap();
+        let incorrect_json = IncorrectJSON {
+            installation_id: "123ABC456".to_string(),
+            incorrect_var: "incorrect_val".to_string(),
+        };
+        let json_string = serde_json::to_string(&incorrect_json);
+        let _ = tempfile.write_all(json_string?.as_bytes());
+        let mut install_id = String::new();
+        let result = get_install_id(&mut tempfile.path().to_path_buf(), &mut install_id);
+        // This still succeeds as the installation_id field is present
+        assert!(result.is_ok());
+        Ok(())
+    }
+
+    #[test]
+    fn test_get_install_id_file_does_not_exist() -> std::io::Result<()> {
+        let tempfile = NamedTempFile::new().unwrap();
+        let mut path = tempfile.path().to_path_buf();
+        tempfile.close()?;
+        let mut install_id = String::new();
+        let result = get_install_id(&mut path, &mut install_id);
+        assert!(result.is_err());
+        let error = result.err().unwrap();
+        assert_eq!(error.kind(), std::io::ErrorKind::NotFound);
+        Ok(())
+    }
+
+    #[test]
+    fn test_get_install_id_file_too_large() -> std::io::Result<()> {
+        let mut tempfile = NamedTempFile::new().unwrap();
+        let installation_id = InstallationId {
+            // Create a ~10 KB file
+            installation_id: String::from_utf8(vec![b'X'; 10000]).unwrap(),
+        };
+        let json_string = serde_json::to_string(&installation_id);
+        let _ = tempfile.write_all(json_string?.as_bytes());
+        let mut install_id = String::new();
+        let result = get_install_id(&mut tempfile.path().to_path_buf(), &mut install_id);
+        assert!(result.is_err());
+        let error = result.err().unwrap();
+        assert_eq!(error.kind(), std::io::ErrorKind::InvalidData);
+        Ok(())
     }
 }
