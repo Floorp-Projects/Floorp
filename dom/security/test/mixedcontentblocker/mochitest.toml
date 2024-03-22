@@ -16,7 +16,7 @@ support-files = [
   "file_main_bug803225.html",
   "file_main_bug803225_websocket_wsh.py",
   "file_server.sjs",
-  "!/dom/media/test/320x240.ogv",
+  "!/dom/media/test/vp9.webm",
   "!/image/test/mochitest/blue.png",
   "file_redirect.html",
   "file_redirect_handler.sjs",
