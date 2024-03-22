@@ -9,6 +9,9 @@ const { BaseAction } = ChromeUtils.importESModule(
 const { ClientEnvironment } = ChromeUtils.importESModule(
   "resource://normandy/lib/ClientEnvironment.sys.mjs"
 );
+const { EventEmitter } = ChromeUtils.importESModule(
+  "resource://normandy/lib/EventEmitter.sys.mjs"
+);
 const { Heartbeat } = ChromeUtils.importESModule(
   "resource://normandy/lib/Heartbeat.sys.mjs"
 );
@@ -27,6 +30,9 @@ const { RecipeRunner } = ChromeUtils.importESModule(
 const { RemoteSettings } = ChromeUtils.importESModule(
   "resource://services-settings/remote-settings.sys.mjs"
 );
+const { JsonSchema } = ChromeUtils.importESModule(
+  "resource://gre/modules/JsonSchema.sys.mjs"
+);
 
 const SURVEY = {
   surveyId: "a survey",
@@ -39,9 +45,80 @@ const SURVEY = {
   repeatOption: "once",
 };
 
+// See properties.payload in
+// https://github.com/mozilla-services/mozilla-pipeline-schemas/blob/main/schemas/telemetry/heartbeat/heartbeat.4.schema.json
+
+const PAYLOAD_SCHEMA = {
+  additionalProperties: false,
+  anyOf: [
+    {
+      required: ["closedTS"],
+    },
+    {
+      required: ["windowClosedTS"],
+    },
+  ],
+  properties: {
+    closedTS: {
+      minimum: 0,
+      type: "integer",
+    },
+    engagedTS: {
+      minimum: 0,
+      type: "integer",
+    },
+    expiredTS: {
+      minimum: 0,
+      type: "integer",
+    },
+    flowId: {
+      pattern:
+        "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
+      type: "string",
+    },
+    learnMoreTS: {
+      minimum: 0,
+      type: "integer",
+    },
+    offeredTS: {
+      minimum: 0,
+      type: "integer",
+    },
+    score: {
+      minimum: 1,
+      type: "integer",
+    },
+    surveyId: {
+      type: "string",
+    },
+    surveyVersion: {
+      pattern: "^([0-9]+|[a-fA-F0-9]{64})$",
+      type: "string",
+    },
+    testing: {
+      type: "boolean",
+    },
+    version: {
+      maximum: 1,
+      minimum: 1,
+      type: "number",
+    },
+    votedTS: {
+      minimum: 0,
+      type: "integer",
+    },
+    windowClosedTS: {
+      minimum: 0,
+      type: "integer",
+    },
+  },
+  required: ["version", "flowId", "offeredTS", "surveyId", "surveyVersion"],
+  type: "object",
+};
+
 function assertSurvey(actual, expected) {
   for (const key of Object.keys(actual)) {
-    if (["postAnswerUrl", "flowId"].includes(key)) {
+    if (["flowId", "postAnswerUrl", "surveyVersion"].includes(key)) {
       continue;
     }
 
@@ -52,6 +129,7 @@ function assertSurvey(actual, expected) {
     );
   }
 
+  Assert.equal(actual.surveyVersion, "1");
   Assert.ok(actual.postAnswerUrl.startsWith(expected.postAnswerUrl));
 }
 
@@ -82,6 +160,64 @@ decorate_task(
 
       await cleanupEnrollment();
     } finally {
+      sandbox.restore();
+    }
+  }
+);
+
+decorate_task(
+  withClearStorage(),
+  async function testLegacyHeartbeatPingPayload() {
+    const sandbox = sinon.createSandbox();
+
+    const cleanupEnrollment = await ExperimentFakes.enrollWithFeatureConfig({
+      featureId: "legacyHeartbeat",
+      value: {
+        survey: SURVEY,
+      },
+    });
+
+    const client = RemoteSettings("normandy-recipes-capabilities");
+    sandbox.stub(client, "get").resolves([]);
+
+    // Override Heartbeat so we can get the instance and manipulate it directly.
+    const heartbeatDeferred = Promise.withResolvers();
+    class TestHeartbeat extends Heartbeat {
+      constructor(...args) {
+        super(...args);
+        heartbeatDeferred.resolve(this);
+      }
+    }
+    ShowHeartbeatAction.overrideHeartbeatForTests(TestHeartbeat);
+
+    try {
+      await RecipeRunner.run();
+      const heartbeat = await heartbeatDeferred.promise;
+      // We are going to simulate the timer timing out, so we do not want it to
+      // *actually* time out.
+      heartbeat.endTimerIfPresent("surveyEndTimer");
+      const notice = await heartbeat.noticePromise;
+      await notice.updateComplete;
+
+      const telemetrySentPromise = new Promise(resolve => {
+        heartbeat.eventEmitter.once("TelemetrySent", payload =>
+          resolve(payload)
+        );
+      });
+
+      // This method would be triggered when the timer timed out. This will
+      // trigger telemetry to be submitted.
+      heartbeat.close();
+
+      const payload = await telemetrySentPromise;
+
+      const result = JsonSchema.validate(payload, PAYLOAD_SCHEMA);
+      Assert.ok(result.valid);
+      Assert.equal(payload.surveyVersion, "1");
+
+      await cleanupEnrollment();
+    } finally {
+      ShowHeartbeatAction.overrideHeartbeatForTests();
       sandbox.restore();
     }
   }
