@@ -729,7 +729,13 @@ MFCDMParent::GetAllKeySystemsCapabilities() {
         if (IsPlayReadyKeySystemAndSupported(keySystem.first) ||
             IsWidevineExperimentKeySystemAndSupported(keySystem.first)) {
           MFCDMCapabilitiesIPDL* c = sCapabilities.AppendElement();
-          GetCapabilities(keySystem.first, keySystem.second, nullptr, *c);
+
+          CapabilitesFlagSet flags;
+          if (keySystem.second == SecureLevel::Hardware) {
+            flags += CapabilitesFlag::HarewareDecryption;
+          }
+          flags += CapabilitesFlag::NeedHDCPCheck;
+          GetCapabilities(keySystem.first, flags, nullptr, *c);
         }
       }
     }
@@ -740,7 +746,7 @@ MFCDMParent::GetAllKeySystemsCapabilities() {
 
 /* static */
 void MFCDMParent::GetCapabilities(const nsString& aKeySystem,
-                                  const bool aIsHWSecure,
+                                  const CapabilitesFlagSet& aFlags,
                                   IMFContentDecryptionModuleFactory* aFactory,
                                   MFCDMCapabilitiesIPDL& aCapabilitiesOut) {
   aCapabilitiesOut.keySystem() = aKeySystem;
@@ -751,7 +757,9 @@ void MFCDMParent::GetCapabilities(const nsString& aKeySystem,
 
   // Return empty capabilites for SWDRM on Windows 10 because it has the process
   // leaking problem.
-  if (!IsWin11OrLater() && !aIsHWSecure) {
+  const bool isHardwareDecryption =
+      aFlags.contains(CapabilitesFlag::HarewareDecryption);
+  if (!IsWin11OrLater() && !isHardwareDecryption) {
     return;
   }
 
@@ -811,12 +819,12 @@ void MFCDMParent::GetCapabilities(const nsString& aKeySystem,
     }
     if (FactorySupports(factory, aKeySystem, convertCodecToFourCC(codec),
                         KeySystemConfig::EMECodecString(""), nsString(u""),
-                        aIsHWSecure)) {
+                        isHardwareDecryption)) {
       MFCDMMediaCapability* c =
           aCapabilitiesOut.videoCapabilities().AppendElement();
       c->contentType() = NS_ConvertUTF8toUTF16(codec);
       c->robustness() =
-          GetRobustnessStringForKeySystem(aKeySystem, aIsHWSecure);
+          GetRobustnessStringForKeySystem(aKeySystem, isHardwareDecryption);
       MFCDM_PARENT_SLOG("%s: +video:%s", __func__, codec.get());
       supportedVideoCodecs.AppendElement(codec);
     }
@@ -835,12 +843,12 @@ void MFCDMParent::GetCapabilities(const nsString& aKeySystem,
   for (const auto& codec : kAudioCodecs) {
     if (FactorySupports(
             factory, aKeySystem, convertCodecToFourCC(supportedVideoCodecs[0]),
-            convertCodecToFourCC(codec), nsString(u""), aIsHWSecure)) {
+            convertCodecToFourCC(codec), nsString(u""), isHardwareDecrytion)) {
       MFCDMMediaCapability* c =
           aCapabilitiesOut.audioCapabilities().AppendElement();
       c->contentType() = NS_ConvertUTF8toUTF16(codec);
-      c->robustness() = GetRobustnessStringForKeySystem(aKeySystem, aIsHWSecure,
-                                                        false /* isVideo */);
+      c->robustness() = GetRobustnessStringForKeySystem(
+          aKeySystem, isHardwareDecrytion, false /* isVideo */);
       MFCDM_PARENT_SLOG("%s: +audio:%s", __func__, codec.get());
     }
   }
@@ -856,7 +864,7 @@ void MFCDMParent::GetCapabilities(const nsString& aKeySystem,
     for (auto& codec : supportedVideoCodecs) {
       ok &= FactorySupports(
           factory, aKeySystem, convertCodecToFourCC(codec), nsCString(""),
-          scheme.second /* additional feature */, aIsHWSecure);
+          scheme.second /* additional feature */, isHardwareDecrytion);
       if (!ok) {
         break;
       }
@@ -896,9 +904,9 @@ void MFCDMParent::GetCapabilities(const nsString& aKeySystem,
         } else {
           additionalFeature.AppendLiteral(u"cbcs-clearlead,");
         }
-        bool rv =
-            FactorySupports(factory, aKeySystem, convertCodecToFourCC(codec),
-                            nsCString(""), additionalFeature, aIsHWSecure);
+        bool rv = FactorySupports(factory, aKeySystem,
+                                  convertCodecToFourCC(codec), nsCString(""),
+                                  additionalFeature, isHardwareDecryption);
         MFCDM_PARENT_SLOG("clearlead %s IV 8 bytes %s %s",
                           CryptoSchemeToString(scheme), codec.get(),
                           rv ? "supported" : "not supported");
@@ -908,7 +916,8 @@ void MFCDMParent::GetCapabilities(const nsString& aKeySystem,
         // Try 16 bytes IV.
         additionalFeature.AppendLiteral(u"encryption-iv-size=16,");
         rv = FactorySupports(factory, aKeySystem, convertCodecToFourCC(codec),
-                             nsCString(""), additionalFeature, aIsHWSecure);
+                             nsCString(""), additionalFeature,
+                             isHardwareDecryption);
         MFCDM_PARENT_SLOG("clearlead %s IV 16 bytes %s %s",
                           CryptoSchemeToString(scheme), codec.get(),
                           rv ? "supported" : "not supported");
@@ -928,8 +937,12 @@ void MFCDMParent::GetCapabilities(const nsString& aKeySystem,
     }
   }
 
-  if (IsHDCPVersionSupported(factory, aKeySystem, dom::HDCPVersion::_2_2) ==
-      NS_OK) {
+  // Only perform HDCP if necessary, "The hdcp query (item 4) has a
+  // computationally expensive first invocation cost". See
+  // https://learn.microsoft.com/en-us/windows/win32/api/mfmediaengine/nf-mfmediaengine-imfextendeddrmtypesupport-istypesupportedex
+  if (aFlags.contains(CapabilitesFlag::NeedHDCPCheck) &&
+      IsHDCPVersionSupported(factory, aKeySystem, dom::HDCPVersion::_2_2) ==
+          NS_OK) {
     aCapabilitiesOut.isHDCP22Compatible() = true;
   }
 
@@ -946,7 +959,11 @@ mozilla::ipc::IPCResult MFCDMParent::RecvGetCapabilities(
     const bool aIsHWSecure, GetCapabilitiesResolver&& aResolver) {
   MFCDM_REJECT_IF(!mFactory, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
   MFCDMCapabilitiesIPDL capabilities;
-  GetCapabilities(mKeySystem, aIsHWSecure, mFactory.Get(), capabilities);
+  CapabilitesFlagSet flags;
+  if (aIsHWSecure) {
+    flags += CapabilitesFlag::HarewareDecryption;
+  }
+  GetCapabilities(mKeySystem, flags, mFactory.Get(), capabilities);
   aResolver(std::move(capabilities));
   return IPC_OK();
 }
