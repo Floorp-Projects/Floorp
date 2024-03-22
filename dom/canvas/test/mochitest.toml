@@ -36,7 +36,7 @@ support-files = [
   "offscreencanvas_serviceworker_inner.html",
   "crossorigin/image.png",
   "crossorigin/video.sjs",
-  "../../media/test/320x240.ogv",
+  "../../media/test/320x240.webm",
 ]
 
 ["test_2d.clearRect.image.offscreen.html"]
