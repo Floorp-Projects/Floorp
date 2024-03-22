@@ -383,6 +383,15 @@ impl Zoom {
         if self == Self::ONE {
             return value;
         }
-        self.value() * value
+        value * self.value()
+    }
+
+    /// Returns the un-zoomed value.
+    #[inline]
+    pub fn unzoom(self, value: f32) -> f32 {
+        if self == Self::ONE {
+            return value;
+        }
+        value / self.value()
     }
 }

@@ -148,6 +148,10 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   NS_DECL_NSIMUTATIONOBSERVER_PARENTCHAINCHANGED
 
  private:
+  already_AddRefed<nsROCSSPrimitiveValue> AppUnitsToCSSValue(nscoord);
+  already_AddRefed<nsROCSSPrimitiveValue> PixelsToCSSValue(float);
+  void SetValueToPixels(nsROCSSPrimitiveValue*, float);
+
   void GetPropertyValue(const nsCSSPropertyID aPropID,
                         const nsACString& aMaybeCustomPropertyNme,
                         nsACString& aValue);

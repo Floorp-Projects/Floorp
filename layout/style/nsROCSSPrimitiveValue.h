@@ -48,8 +48,6 @@ class nsROCSSPrimitiveValue final : public mozilla::dom::CSSValue {
   void SetPercent(float aValue);
   void SetDegree(float aValue);
   void SetPixels(float aValue);
-  void SetAppUnits(nscoord aValue);
-  void SetAppUnits(float aValue);
   void SetString(const nsACString& aString);
   void SetString(const nsAString& aString);
 
