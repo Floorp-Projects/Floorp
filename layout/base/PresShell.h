@@ -531,6 +531,12 @@ class PresShell final : public nsStubDocumentObserver,
                                 dom::HTMLSlotElement* aOldSlot,
                                 dom::HTMLSlotElement* aNewSlot);
 
+  /**
+   * Handles when a CustomStateSet state is about to be removed or added.
+   */
+  void CustomStatesWillChange(Element& aElement);
+  void CustomStateChanged(Element& aElement, nsAtom* aState);
+
   void PostRecreateFramesFor(Element*);
   void RestyleForAnimation(Element*, RestyleHint);
 

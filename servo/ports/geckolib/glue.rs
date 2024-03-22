@@ -7162,6 +7162,41 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorStateDependency(
     );
 }
 
+#[no_mangle]
+pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorCustomStateDependency(
+    raw_data: &PerDocumentStyleData,
+    element: &RawGeckoElement,
+    state: *mut nsAtom,
+    snapshots: &ServoElementSnapshotTable,
+) {
+    let data = raw_data.borrow();
+    let element = GeckoElement(element);
+
+    let quirks_mode: QuirksMode = data.stylist.quirks_mode();
+    let invalidator = RelativeSelectorInvalidator {
+        element,
+        quirks_mode,
+        snapshot_table: Some(snapshots),
+        invalidated: relative_selector_invalidated_at,
+        sibling_traversal_map: SiblingTraversalMap::default(),
+        _marker: std::marker::PhantomData,
+    };
+
+    invalidator.invalidate_relative_selectors_for_this(
+        &data.stylist,
+        |element, scope, data, _quirks_mode, collector| {
+            let invalidation_map = data.relative_selector_invalidation_map();
+            relative_selector_dependencies_for_custom_state(
+                state,
+                *element,
+                scope,
+                &invalidation_map,
+                collector,
+            );
+        },
+    );
+}
+
 fn invalidate_relative_selector_prev_sibling_side_effect(
     prev_sibling: GeckoElement,
     quirks_mode: QuirksMode,
@@ -7691,6 +7726,31 @@ fn relative_selector_dependencies_for_class<'a>(
             None => (),
         };
     });
+}
+
+fn relative_selector_dependencies_for_custom_state<'a>(
+    state: *const nsAtom,
+    element: GeckoElement<'a>,
+    scope: Option<OpaqueElement>,
+    invalidation_map: &'a RelativeSelectorInvalidationMap,
+    collector: &mut RelativeSelectorDependencyCollector<'a, GeckoElement<'a>>,
+) {
+    unsafe {
+        AtomIdent::with(state, |atom| {
+            match invalidation_map
+                .map
+                .custom_state_affecting_selectors
+                .get(atom)
+            {
+                Some(v) => {
+                    for dependency in v {
+                        collector.add_dependency(dependency, element, scope);
+                    }
+                },
+                None => (),
+            };
+        })
+    }
 }
 
 fn process_relative_selector_invalidations(

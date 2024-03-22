@@ -1396,6 +1396,13 @@ void ServoStyleSet::MaybeInvalidateRelativeSelectorClassDependency(
       mRawData.get(), &aElement, &aSnapshots);
 }
 
+void ServoStyleSet::MaybeInvalidateRelativeSelectorCustomStateDependency(
+    const Element& aElement, nsAtom* state,
+    const ServoElementSnapshotTable& aSnapshots) {
+  Servo_StyleSet_MaybeInvalidateRelativeSelectorCustomStateDependency(
+      mRawData.get(), &aElement, state, &aSnapshots);
+}
+
 void ServoStyleSet::MaybeInvalidateRelativeSelectorAttributeDependency(
     const Element& aElement, nsAtom* aAttribute,
     const ServoElementSnapshotTable& aSnapshots) {

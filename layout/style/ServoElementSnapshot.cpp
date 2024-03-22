@@ -82,4 +82,11 @@ void ServoElementSnapshot::AddAttrs(const Element& aElement,
   }
 }
 
+void ServoElementSnapshot::AddCustomStates(Element& aElement) {
+  if (mContains & Flags::CustomState) {
+    return;
+  }
+  mCustomStates = aElement.EnsureCustomStates().Clone();
+  mContains |= Flags::CustomState;
+}
 }  // namespace mozilla

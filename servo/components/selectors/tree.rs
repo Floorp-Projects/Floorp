@@ -134,6 +134,11 @@ pub trait Element: Sized + Clone + Debug {
         case_sensitivity: CaseSensitivity,
     ) -> bool;
 
+    fn has_custom_state(
+        &self,
+        name: &<Self::Impl as SelectorImpl>::Identifier,
+    ) -> bool;
+
     /// Returns the mapping from the `exportparts` attribute in the reverse
     /// direction, that is, in an outer-tree -> inner-tree direction.
     fn imported_part(

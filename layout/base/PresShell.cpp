@@ -4480,6 +4480,26 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY void PresShell::ElementStateChanged(
   }
 }
 
+MOZ_CAN_RUN_SCRIPT_BOUNDARY void PresShell::CustomStatesWillChange(
+    Element& aElement) {
+  if (MOZ_UNLIKELY(!mDidInitialize)) {
+    return;
+  }
+
+  mPresContext->RestyleManager()->CustomStatesWillChange(aElement);
+}
+
+MOZ_CAN_RUN_SCRIPT_BOUNDARY void PresShell::CustomStateChanged(
+    Element& aElement, nsAtom* aState) {
+  MOZ_ASSERT(!mIsDocumentGone, "Unexpected CustomStateChanged");
+  MOZ_ASSERT(aState, "Unexpected empty state");
+
+  if (mDidInitialize) {
+    nsAutoCauseReflowNotifier crNotifier(this);
+    mPresContext->RestyleManager()->CustomStateChanged(aElement, aState);
+  }
+}
+
 void PresShell::DocumentStatesChanged(DocumentState aStateMask) {
   MOZ_ASSERT(!mIsDocumentGone, "Unexpected DocumentStatesChanged");
   MOZ_ASSERT(mDocument);

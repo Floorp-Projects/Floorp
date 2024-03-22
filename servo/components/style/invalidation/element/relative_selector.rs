@@ -499,6 +499,19 @@ where
             },
             None => (),
         });
+        element.each_custom_state(|v| {
+            match map.map.custom_state_affecting_selectors.get(v) {
+                Some(v) => {
+                    for dependency in v {
+                        if !operation.accept(dependency, element) {
+                            continue;
+                        }
+                        self.add_dependency(dependency, element, scope);
+                    }
+                },
+                None => (),
+            }
+        });
         element.each_attr_name(
             |v| match map.map.other_attribute_affecting_selectors.get(v) {
                 Some(v) => {
