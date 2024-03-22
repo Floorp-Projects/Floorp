@@ -188,6 +188,9 @@
   @media (prefers-contrast) {
     :root,
     :host(.anonymous-content-host) {
+      /** Attention Dot **/
+      --attention-dot-color: AccentColor;
+
       /* Border */
       --border-color: var(--text-color);
       --border-interactive-color: AccentColor;
