@@ -435,26 +435,26 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest* request) {
   NS_ASSERTION(!m_targetStreamListener,
                "If we found a listener, why are we not using it?");
 
-  if (mFlags & nsIURILoader::DONT_RETARGET) {
-    LOG(
-        ("  External handling forced or (listener not interested and no "
-         "stream converter exists), and retargeting disallowed -> aborting"));
-    return NS_ERROR_WONT_HANDLE_CONTENT;
-  }
-
   // Before dispatching to the external helper app service, check for an HTTP
   // error page.  If we got one, we don't want to handle it with a helper app,
   // really.
-  // The WPT a-download-click-404.html requires us to silently handle this
-  // without displaying an error page, so we just return early here.
-  // See bug 1604308 for discussion around what the ideal behaviour is.
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(request));
   if (httpChannel) {
     bool requestSucceeded;
     rv = httpChannel->GetRequestSucceeded(&requestSucceeded);
     if (NS_FAILED(rv) || !requestSucceeded) {
-      return NS_OK;
+      LOG(
+          ("  Returning NS_ERROR_FILE_NOT_FOUND from "
+           "nsDocumentOpenInfo::DispatchContent due to failed HTTP response"));
+      return NS_ERROR_FILE_NOT_FOUND;
     }
+  }
+
+  if (mFlags & nsIURILoader::DONT_RETARGET) {
+    LOG(
+        ("  External handling forced or (listener not interested and no "
+         "stream converter exists), and retargeting disallowed -> aborting"));
+    return NS_ERROR_WONT_HANDLE_CONTENT;
   }
 
   // Fifth step:
