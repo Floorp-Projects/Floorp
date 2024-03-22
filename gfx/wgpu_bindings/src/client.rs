@@ -1346,10 +1346,6 @@ pub extern "C" fn wgpu_client_use_external_texture_in_swapChain(
         return false;
     }
 
-    if !static_prefs::pref!("dom.webgpu.swap-chain.external-texture-dx12") {
-        return false;
-    }
-
     let supported = match format {
         wgt::TextureFormat::Bgra8Unorm => true,
         _ => false,
