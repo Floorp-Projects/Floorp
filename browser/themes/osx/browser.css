@@ -3,12 +3,48 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 @import url("chrome://browser/skin/browser-shared.css");
-@import url("chrome://browser/skin/browser-custom-colors.css");
-
-@namespace html url("http://www.w3.org/1999/xhtml");
+/* stylelint-disable-next-line media-query-no-invalid */
+@import url("chrome://browser/skin/browser-custom-colors.css") not (-moz-bool-pref: "browser.theme.macos.native-theme");
 
 :root {
   --arrowpanel-field-background: light-dark(rgba(249, 249, 250, .3), rgba(12, 12, 13, .3));
+}
+
+/* stylelint-disable-next-line media-query-no-invalid */
+@media (-moz-bool-pref: "browser.theme.macos.native-theme") {
+  /* TODO: Share this with Linux, which effectively does ~the same */
+  @media not (prefers-contrast) {
+    :root:not([lwtheme]) {
+      --toolbar-field-border-color: transparent;
+      --toolbar-field-background-color: light-dark(rgba(0, 0, 0, .05), rgba(0, 0, 0, .3));
+      --toolbar-field-color: inherit;
+      --tabs-navbar-shadow-color: transparent;
+      @media (prefers-color-scheme: light) {
+        --urlbar-box-bgcolor: #fafafa;
+      }
+    }
+  }
+
+  :root[tabsintitlebar]:not([lwtheme]) {
+    -moz-default-appearance: -moz-mac-unified-toolbar-window;
+    appearance: auto;
+
+    #navigator-toolbox {
+      background: transparent;
+
+      /* This is conceptually a background, but putting this on a
+       * pseudo-element avoids it from suppressing the chrome-content separator
+       * border, etc */
+      &::after {
+        -moz-default-appearance: -moz-window-titlebar;
+        appearance: auto;
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+      }
+    }
+  }
 }
 
 #browser,
