@@ -3162,6 +3162,13 @@ void gfxPlatform::InitWebGPUConfig() {
 #endif
 
   gfxVars::SetAllowWebGPU(feature.IsEnabled());
+
+#if XP_WIN
+  if (IsWin10CreatorsUpdateOrLater() &&
+      StaticPrefs::dom_webgpu_allow_present_without_readback()) {
+    gfxVars::SetAllowWebGPUPresentWithoutReadback(true);
+  }
+#endif
 }
 
 #ifdef XP_WIN

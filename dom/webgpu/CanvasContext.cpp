@@ -126,6 +126,9 @@ void CanvasContext::Configure(const dom::GPUCanvasConfiguration& aConfig) {
   mUseExternalTextureInSwapChain =
       wgpu_client_use_external_texture_in_swapChain(
           aConfig.mDevice->mId, ConvertTextureFormat(aConfig.mFormat));
+  if (!gfx::gfxVars::AllowWebGPUPresentWithoutReadback()) {
+    mUseExternalTextureInSwapChain = false;
+  }
 #ifdef XP_WIN
   // When WebRender does not use hardware acceleration, disable external texture
   // in swap chain. Since compositor device might not exist.

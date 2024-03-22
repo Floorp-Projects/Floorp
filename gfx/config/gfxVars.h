@@ -101,7 +101,8 @@ class gfxVarReceiver;
   _(AllowSoftwareWebRenderOGL, bool, false)                        \
   _(WebglUseHardware, bool, true)                                  \
   _(WebRenderOverlayVpAutoHDR, bool, false)                        \
-  _(WebRenderOverlayVpSuperResolution, bool, false)
+  _(WebRenderOverlayVpSuperResolution, bool, false)                \
+  _(AllowWebGPUPresentWithoutReadback, bool, false)
 
 /* Add new entries above this line. */
 

@@ -4637,11 +4637,14 @@
   mirror: always
   rust: true
 
-- name: dom.webgpu.swap-chain.external-texture-dx12
+- name: dom.webgpu.allow-present-without-readback
   type: RelaxedAtomicBool
+#if defined(XP_WIN)
+  value: true
+#else
   value: false
+#endif
   mirror: always
-  rust: true
 
 # For testing purposes, crash if we don't get a hardware adapter.
 - name: dom.webgpu.testing.assert-hardware-adapter
