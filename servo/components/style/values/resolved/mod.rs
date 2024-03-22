@@ -95,7 +95,6 @@ trivial_to_resolved_value!(computed::url::ComputedImageUrl);
 trivial_to_resolved_value!(crate::Namespace);
 #[cfg(feature = "servo")]
 trivial_to_resolved_value!(crate::Prefix);
-trivial_to_resolved_value!(computed::LengthPercentage);
 trivial_to_resolved_value!(style_traits::values::specified::AllowedNumericType);
 trivial_to_resolved_value!(computed::TimingFunction);
 

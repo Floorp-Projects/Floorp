@@ -1359,7 +1359,7 @@ impl ToResolvedValue for LineHeight {
             context.style.get_font(),
             wm,
             Some(context.element_info.element),
-        ))
+        ).to_resolved_value(context))
     }
 
     #[inline]

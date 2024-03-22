@@ -102,18 +102,10 @@ void nsROCSSPrimitiveValue::SetDegree(float aValue) {
   mType = CSS_DEG;
 }
 
-void nsROCSSPrimitiveValue::SetAppUnits(nscoord aValue) {
-  SetPixels(nsPresContext::AppUnitsToFloatCSSPixels(aValue));
-}
-
 void nsROCSSPrimitiveValue::SetPixels(float aValue) {
   Reset();
   mValue.mFloat = aValue;
   mType = CSS_PX;
-}
-
-void nsROCSSPrimitiveValue::SetAppUnits(float aValue) {
-  SetAppUnits(NSToCoordRound(aValue));
 }
 
 void nsROCSSPrimitiveValue::SetString(const nsACString& aString) {

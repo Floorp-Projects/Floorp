@@ -30,6 +30,7 @@ use crate::values::animated::{Animate, Procedure, ToAnimatedValue, ToAnimatedZer
 use crate::values::distance::{ComputeSquaredDistance, SquaredDistance};
 use crate::values::generics::calc::{CalcUnits, PositivePercentageBasis};
 use crate::values::generics::{calc, NonNegative};
+use crate::values::resolved::{Context as ResolvedContext, ToResolvedValue};
 use crate::values::specified::length::{FontBaseSize, LineHeightBase};
 use crate::values::{specified, CSSFloat};
 use crate::{Zero, ZeroNoPercent};
@@ -161,6 +162,25 @@ impl MallocSizeOf for LengthPercentage {
             Unpacked::Length(..) | Unpacked::Percentage(..) => 0,
             Unpacked::Calc(c) => unsafe { ops.malloc_size_of(c) },
         }
+    }
+}
+
+impl ToResolvedValue for LengthPercentage {
+    type ResolvedValue = Self;
+
+    fn to_resolved_value(self, context: &ResolvedContext) -> Self::ResolvedValue {
+        if context.style.effective_zoom.is_one() {
+            return self;
+        }
+        match self.unpack() {
+            Unpacked::Length(l) => Self::new_length(l.to_resolved_value(context)),
+            Unpacked::Percentage(..) | Unpacked::Calc(..) => self,
+        }
+    }
+
+    #[inline]
+    fn from_resolved_value(value: Self::ResolvedValue) -> Self {
+        value
     }
 }
 
