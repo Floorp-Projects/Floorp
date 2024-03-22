@@ -14,9 +14,9 @@
   }
 }
 
-@media (prefers-contrast) {
+@media (forced-colors) or (prefers-contrast) {
   .card-container {
-    border: 1px solid CanvasText;
+    border: 1px solid var(--fxview-border);
   }
 }
 
@@ -83,7 +83,7 @@
   background-color: var(--fxview-element-background-hover);
 }
 
-@media (prefers-contrast) {
+@media (forced-colors) {
   .chevron-icon {
     border: 1px solid ButtonText;
     color: ButtonText;
