@@ -7,14 +7,26 @@ const VALID_TESTS = [
   ["CA", true],
   ["CA.", true],
   ["CC", false],
+
+  // change region to CA
+  { region: "CA" },
+  ["BC", true],
+  ["British Columbia", true],
+  ["CA-BC", true],
 ];
 
 const COMPARE_TESTS = [
   ["California", "california", SAME], // case insensitive
   ["CA", "california", SAME],
   ["CA", "ca", SAME],
+  ["CA", "CA.", SAME],
   ["California", "New Jersey", DIFFERENT],
   ["New York", "New Jersey", DIFFERENT],
+
+  // change region to CA
+  { region: "CA" },
+  ["British Columbia", "BC", SAME],
+  ["CA-BC", "BC", SAME],
 ];
 
 const TEST_FIELD_NAME = "address-level1";

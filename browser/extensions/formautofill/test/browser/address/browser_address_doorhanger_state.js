@@ -95,6 +95,10 @@ add_task(async function test_save_doorhanger_state_valid() {
       expected: { "address-level1": "CA" },
     },
     {
+      filled: { "address-level1": "CA-BC" },
+      expected: { "address-level1": "CA-BC" },
+    },
+    {
       filled: { "address-level1": "california" },
       expected: { "address-level1": "california" },
     },

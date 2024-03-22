@@ -789,16 +789,15 @@ export class AddressEditDoorhanger extends AutofillDoorhanger {
 
     input.setAttribute("id", inputId);
 
-    const value = this.newRecord[fieldName] ?? "";
     if (popup) {
-      const menuitem = Array.from(popup.childNodes).find(
-        item =>
-          item.label.toLowerCase() === value?.toLowerCase() ||
-          item.value.toLowerCase() === value?.toLowerCase()
-      );
-      input.selectedItem = menuitem;
+      input.selectedItem =
+        FormAutofillUtils.findAddressSelectOptionWithMenuPopup(
+          popup,
+          this.newRecord,
+          fieldName
+        );
     } else {
-      input.value = value;
+      input.value = this.newRecord[fieldName] ?? "";
     }
 
     div.appendChild(input);
