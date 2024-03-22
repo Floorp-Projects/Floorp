@@ -57,6 +57,7 @@ export const CATEGORIZATION_SETTINGS = {
   STARTING_RANK: 2,
   IDLE_TIMEOUT_SECONDS: 60 * 60,
   WAKE_TIMEOUT_MS: 60 * 60 * 1000,
+  PING_SUBMISSION_THRESHOLD: 10,
 };
 
 ChromeUtils.defineLazyGetter(lazy, "logConsole", () => {
@@ -83,13 +84,18 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false,
   (aPreference, previousValue, newValue) => {
     if (newValue) {
-      SearchSERPDomainToCategoriesMap.init();
-      SearchSERPCategorizationEventScheduler.init();
+      SearchSERPCategorization.init();
     } else {
-      SearchSERPDomainToCategoriesMap.uninit();
-      SearchSERPCategorizationEventScheduler.uninit();
+      SearchSERPCategorization.uninit();
     }
   }
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "activityLimit",
+  "telemetry.fog.test.activity_limit",
+  120
 );
 
 export const SearchSERPTelemetryUtils = {
@@ -1843,6 +1849,22 @@ class ContentHandler {
  * Categorizes SERPs.
  */
 class SERPCategorizer {
+  init() {
+    if (lazy.serpEventTelemetryCategorization) {
+      lazy.logConsole.debug("Initialize SERP categorizer.");
+      SearchSERPDomainToCategoriesMap.init();
+      SearchSERPCategorizationEventScheduler.init();
+      SERPCategorizationRecorder.init();
+    }
+  }
+
+  uninit() {
+    lazy.logConsole.debug("Uninit SERP categorizer.");
+    SearchSERPDomainToCategoriesMap.uninit();
+    SearchSERPCategorizationEventScheduler.uninit();
+    SERPCategorizationRecorder.uninit();
+  }
+
   /**
    * Categorizes domains extracted from SERPs. Note that we don't process
    * domains if the domain-to-categories map is empty (if the client couldn't
@@ -1999,12 +2021,8 @@ class CategorizationEventScheduler {
    */
   #mostRecentMs = null;
 
-  constructor() {
-    this.init();
-  }
-
   init() {
-    if (!lazy.serpEventTelemetryCategorization || this.#init) {
+    if (this.#init) {
       return;
     }
 
@@ -2114,6 +2132,60 @@ class CategorizationEventScheduler {
  * Handles reporting SERP categorization telemetry to Glean.
  */
 class CategorizationRecorder {
+  #init = false;
+
+  // The number of SERP categorizations that have been recorded but not yet
+  // reported in a Glean ping.
+  #serpCategorizationsCount = 0;
+
+  // When the user started interacting with the SERP.
+  #userInteractionStartTime = null;
+
+  async init() {
+    if (this.#init) {
+      return;
+    }
+
+    Services.obs.addObserver(this, "user-interaction-active");
+    Services.obs.addObserver(this, "user-interaction-inactive");
+    this.#init = true;
+    this.submitPing("startup");
+  }
+
+  uninit() {
+    if (this.#init) {
+      Services.obs.removeObserver(this, "user-interaction-active");
+      Services.obs.removeObserver(this, "user-interaction-inactive");
+      this.#resetCategorizationRecorderData();
+      this.#init = false;
+    }
+  }
+
+  observe(subject, topic, _data) {
+    switch (topic) {
+      case "user-interaction-active": {
+        // If the user is already active, we don't want to overwrite the start
+        // time.
+        if (this.#userInteractionStartTime == null) {
+          this.#userInteractionStartTime = Date.now();
+        }
+        break;
+      }
+      case "user-interaction-inactive": {
+        let currentTime = Date.now();
+        let activityLimitInMs = lazy.activityLimit * 1000;
+        if (
+          this.#userInteractionStartTime &&
+          currentTime - this.#userInteractionStartTime >= activityLimitInMs
+        ) {
+          this.submitPing("inactivity");
+        }
+        this.#userInteractionStartTime = null;
+        break;
+      }
+    }
+  }
+
   /**
    * Helper function for recording the SERP categorization event.
    *
@@ -2125,7 +2197,25 @@ class CategorizationRecorder {
       "Reporting the following categorization result:",
       resultToReport
     );
-    // TODO: Bug 1868476 - Report result to Glean.
+    Glean.serp.categorization.record(resultToReport);
+
+    this.#serpCategorizationsCount++;
+    if (
+      this.#serpCategorizationsCount >=
+      CATEGORIZATION_SETTINGS.PING_SUBMISSION_THRESHOLD
+    ) {
+      this.submitPing("threshold_reached");
+      this.#serpCategorizationsCount = 0;
+    }
+  }
+
+  submitPing(reason) {
+    GleanPings.serpCategorization.submit(reason);
+  }
+
+  #resetCategorizationRecorderData() {
+    this.#serpCategorizationsCount = 0;
+    this.#userInteractionStartTime = null;
   }
 }
 
@@ -2211,7 +2301,7 @@ class DomainToCategoriesMap {
    * client to listen to updates, and populates the map.
    */
   async init() {
-    if (!lazy.serpEventTelemetryCategorization || this.#init) {
+    if (this.#init) {
       return;
     }
     lazy.logConsole.debug("Initializing domain-to-categories map.");

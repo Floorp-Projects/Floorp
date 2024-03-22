@@ -50,6 +50,12 @@ support-files = ["searchTelemetryDomainCategorizationReporting.html"]
 ["browser_search_telemetry_domain_categorization_extraction.js"]
 support-files = ["searchTelemetryDomainExtraction.html"]
 
+["browser_search_telemetry_domain_categorization_ping_submission.js"]
+support-files = [
+  "searchTelemetryDomainCategorizationReporting.html",
+  "searchTelemetryDomainExtraction.html",
+]
+
 ["browser_search_telemetry_domain_categorization_region.js"]
 support-files = ["searchTelemetryDomainCategorizationReporting.html"]
 
@@ -103,18 +109,18 @@ support-files = [
   "searchTelemetryAd_searchbox_with_content.html^headers^",
 ]
 
-["browser_search_telemetry_engagement_non_ad.js"]
-support-files = [
-  "searchTelemetryAd_searchbox_with_content.html",
-  "searchTelemetryAd_searchbox_with_content.html^headers^",
-  "serp.css",
-]
-
 ["browser_search_telemetry_engagement_nonAdsLinkQueryParamNames.js"]
 support-files = [
   "searchTelemetryAd_searchbox_with_redirecting_links.html",
   "searchTelemetryAd_shopping.html",
   "searchTelemetry_redirect_with_js.html",
+  "serp.css",
+]
+
+["browser_search_telemetry_engagement_non_ad.js"]
+support-files = [
+  "searchTelemetryAd_searchbox_with_content.html",
+  "searchTelemetryAd_searchbox_with_content.html^headers^",
   "serp.css",
 ]
 
