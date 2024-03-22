@@ -106,7 +106,7 @@ extern "C" NS_EXPORT void GIFFT_TimingDistributionStart(
     uint32_t aMetricId, mozilla::glean::TimerId aTimerId) {
   auto mirrorId = mozilla::glean::HistogramIdForMetric(aMetricId);
   if (mirrorId) {
-    mozilla::glean::GetTimerIdToStartsLock().apply([&](auto& lock) {
+    mozilla::glean::GetTimerIdToStartsLock().apply([&](const auto& lock) {
       auto tuple = mozilla::glean::MetricTimerTuple{aMetricId, aTimerId};
       // It should be all but impossible for anyone to have already inserted
       // this timer for this metric given the monotonicity of timer ids.
@@ -121,7 +121,7 @@ extern "C" NS_EXPORT void GIFFT_TimingDistributionStopAndAccumulate(
     uint32_t aMetricId, mozilla::glean::TimerId aTimerId) {
   auto mirrorId = mozilla::glean::HistogramIdForMetric(aMetricId);
   if (mirrorId) {
-    mozilla::glean::GetTimerIdToStartsLock().apply([&](auto& lock) {
+    mozilla::glean::GetTimerIdToStartsLock().apply([&](const auto& lock) {
       auto tuple = mozilla::glean::MetricTimerTuple{aMetricId, aTimerId};
       auto optStart = lock.ref()->Extract(tuple);
       // The timer might not be in the map to be removed if it's already been
@@ -147,7 +147,7 @@ extern "C" NS_EXPORT void GIFFT_TimingDistributionCancel(
     uint32_t aMetricId, mozilla::glean::TimerId aTimerId) {
   auto mirrorId = mozilla::glean::HistogramIdForMetric(aMetricId);
   if (mirrorId) {
-    mozilla::glean::GetTimerIdToStartsLock().apply([&](auto& lock) {
+    mozilla::glean::GetTimerIdToStartsLock().apply([&](const auto& lock) {
       // The timer might not be in the map to be removed if it's already been
       // cancelled or stop_and_accumulate'd.
       auto tuple = mozilla::glean::MetricTimerTuple{aMetricId, aTimerId};
