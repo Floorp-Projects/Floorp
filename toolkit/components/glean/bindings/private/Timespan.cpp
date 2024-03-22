@@ -36,6 +36,7 @@ class ScalarIDHashKey : public PLDHashEntryHdr {
     return static_cast<std::underlying_type<ScalarID>::type>(*aKey);
   }
   enum { ALLOW_MEMMOVE = true };
+  static_assert(std::is_trivially_copyable_v<ScalarID>);
 
  private:
   const ScalarID mValue;
