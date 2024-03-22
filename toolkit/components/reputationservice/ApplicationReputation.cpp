@@ -519,20 +519,20 @@ const char* const ApplicationReputationService::kBinaryFileExtensions[] = {
     ".xlam",  // MS Excel
     ".xldm",  // MS Excel
     //".xll", exec  // MS Excel
-    ".xlm",     // MS Excel
-    ".xls",     // MS Excel
-    ".xlsb",    // MS Excel
-    ".xlsm",    // MS Excel
-    ".xlsx",    // MS Excel
-    ".xlt",     // MS Excel
-    ".xltm",    // MS Excel
-    ".xltx",    // MS Excel
-    ".xlw",     // MS Excel
-    ".xml",     // MS Excel
-    ".xnk",     // MS Exchange
-    ".xrm-ms",  // Windows
-    ".xsd",     // XML schema definition
-    ".xsl",     // XML Stylesheet
+    ".xlm",   // MS Excel
+    ".xls",   // MS Excel
+    ".xlsb",  // MS Excel
+    ".xlsm",  // MS Excel
+    ".xlsx",  // MS Excel
+    ".xlt",   // MS Excel
+    ".xltm",  // MS Excel
+    ".xltx",  // MS Excel
+    ".xlw",   // MS Excel
+    ".xml",   // MS Excel
+    ".xnk",   // MS Exchange
+    //".xrm-ms", exec // Windows
+    ".xsd",  // XML schema definition
+    ".xsl",  // XML Stylesheet
     //".xxe",
     ".xz",     // Linux archive (xz)
     ".z",      // InstallShield
