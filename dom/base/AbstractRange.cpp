@@ -341,6 +341,8 @@ nsresult AbstractRange::SetStartAndEndInternal(
       // which they have been collapsed to one end, and it also may have a pair
       // of start and end which are the original value.
       aRange->DoSetRange(aEndBoundary, aEndBoundary, newEndRoot);
+      aRange->AsDynamicRange()->CreateOrUpdateCrossShadowBoundaryRangeIfNeeded(
+          aStartBoundary, aEndBoundary);
     }
     return NS_OK;
   }
