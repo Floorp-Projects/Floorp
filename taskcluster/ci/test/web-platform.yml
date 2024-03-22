@@ -415,6 +415,7 @@ web-platform-tests-wdspec:
                     - linux64-geckodriver
                     - linux64-minidump-stackwalk
                     - linux64-fix-stacks
+                    - linux64-hostutils
                 linux.*64.*:
                     - linux64-geckodriver
                     - linux64-minidump-stackwalk

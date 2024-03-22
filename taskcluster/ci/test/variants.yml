@@ -77,6 +77,7 @@ aab:
                 - linux64-minidump-stackwalk
                 - linux64-fix-stacks
                 - linux64-jdk
+                - linux64-hostutils
     replace:
         target: "geckoview-test_runner.aab"
 

@@ -84,6 +84,11 @@ job-defaults:
                     - android-emulator-linux
                     - linux64-minidump-stackwalk
                     - linux64-fix-stacks
+                    - linux64-hostutils
+                android-hw.*:
+                    - linux64-minidump-stackwalk
+                    - linux64-fix-stacks
+                    - linux64-hostutils
                 default:
                     - linux64-minidump-stackwalk
                     - linux64-fix-stacks

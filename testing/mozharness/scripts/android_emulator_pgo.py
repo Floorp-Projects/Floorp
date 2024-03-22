@@ -100,9 +100,9 @@ class AndroidProfileRun(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
         dirs = {}
 
         dirs["abs_test_install_dir"] = os.path.join(abs_dirs["abs_src_dir"], "testing")
-        dirs["abs_xre_dir"] = os.path.join(abs_dirs["abs_work_dir"], "hostutils")
         dirs["abs_blob_upload_dir"] = "/builds/worker/artifacts/blobber_upload_dir"
         work_dir = os.environ.get("MOZ_FETCHES_DIR") or abs_dirs["abs_work_dir"]
+        dirs["abs_xre_dir"] = os.path.join(work_dir, "hostutils")
         dirs["abs_sdk_dir"] = os.path.join(work_dir, "android-sdk-linux")
         dirs["abs_avds_dir"] = os.path.join(work_dir, "android-device")
         dirs["abs_bundletool_path"] = os.path.join(work_dir, "bundletool.jar")
@@ -134,7 +134,7 @@ class AndroidProfileRun(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
         Download host utilities
         """
         dirs = self.query_abs_dirs()
-        self.xre_path = self.download_hostutils(dirs["abs_xre_dir"])
+        self.xre_path = dirs["abs_xre_dir"]
 
     def install(self):
         """

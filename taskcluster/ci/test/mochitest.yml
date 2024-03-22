@@ -177,6 +177,7 @@ mochitest-plain:
                     - android-emulator-linux
                     - linux64-node
                     - linux64-minidump-stackwalk
+                    - linux64-hostutils
 
 mochitest-a11y:
     description: "Mochitest a11y run"
@@ -545,6 +546,7 @@ mochitest-devtools-chrome:
                     - android-emulator-linux
                     - linux64-node
                     - linux64-minidump-stackwalk
+                    - linux64-hostutils
 
 
 mochitest-devtools-chrome-failures:
