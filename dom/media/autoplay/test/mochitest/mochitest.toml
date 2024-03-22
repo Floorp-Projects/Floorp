@@ -3,6 +3,7 @@ subsuite = "media"
 tags = "autoplay"
 support-files = [
   "../../../test/manifest.js",
+  "../../../test/320x240.ogv",
   "../../../test/bogus.duh",
   "../../../test/detodos-short.opus",
   "../../../test/flac-s24.flac",
@@ -22,7 +23,6 @@ support-files = [
   "../../../test/small-shot-mp3.mp4",
   "../../../test/small-shot.ogg",
   "../../../test/vp9-short.webm",
-  "../../../test/vp9.webm",
   "AutoplayTestUtils.js",
   "file_autoplay_gv_play_request_frame.html",
   "file_autoplay_gv_play_request_window.html",

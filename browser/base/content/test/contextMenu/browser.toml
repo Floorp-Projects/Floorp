@@ -8,6 +8,7 @@ support-files = [
   "subtst_contextmenu_xul.xhtml",
   "ctxmenu-image.png",
   "../general/head.js",
+  "../general/video.ogg",
   "../general/audio.ogg",
   "../../../../../toolkit/components/pdfjs/test/file_pdfjs_test.pdf",
   "contextmenu_common.js",
@@ -18,7 +19,6 @@ support-files = [
 ["browser_bug1798178.js"]
 
 ["browser_contextmenu.js"]
-support-file = [ "../general/video.webm"  ]
 tags = "fullscreen"
 skip-if = [
   "os == 'linux'",

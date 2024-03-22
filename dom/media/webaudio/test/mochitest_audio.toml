@@ -6,6 +6,7 @@ support-files = [
   "audio-mono-expected-2.wav",
   "audio-mono-expected.wav",
   "audio-quad.wav",
+  "audio.ogv",
   "audiovideo.mp4",
   "audioBufferSourceNodeDetached_worker.js",
   "corsServer.sjs",

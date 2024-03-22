@@ -66,10 +66,10 @@ function videoError(event, id) {
 </div>
 <script>
 function makeVideos() {
-  document.getElementById('content').innerHTML = '<video id="video1" preload="metadata"><source type="video/webm" src="vp9.webm?decoder_disabled=1" onerror="videoError(event, \'video1\');"/><source type="audio/wave" src="r11025_u8_c1.wav?decoder_disabled=1" id=\'s2\' onerror="videoError(event, \'video1\');"/></video><video id="video2" preload="metadata" src="vp9.webm?decoder_disabled=2" onerror="videoError(event, \'video2\');"></video><video id="video3" preload="metadata" src="r11025_u8_c1.wav?decoder_disabled=2" onerror="videoError(event, \'video3\');"></video>';
+  document.getElementById('content').innerHTML = '<video id="video1" preload="metadata"><source type="video/ogg" src="320x240.ogv?decoder_disabled=1" onerror="videoError(event, \'video1\');"/><source type="audio/wave" src="r11025_u8_c1.wav?decoder_disabled=1" id=\'s2\' onerror="videoError(event, \'video1\');"/></video><video id="video2" preload="metadata" src="320x240.ogv?decoder_disabled=2" onerror="videoError(event, \'video2\');"></video><video id="video3" preload="metadata" src="r11025_u8_c1.wav?decoder_disabled=2" onerror="videoError(event, \'video3\');"></video>';
 }
 
-SpecialPowers.pushPrefEnv({"set": [["media.webm.enabled", false], ["media.wave.enabled", false]]}, makeVideos);
+SpecialPowers.pushPrefEnv({"set": [["media.ogg.enabled", false], ["media.wave.enabled", false]]}, makeVideos);
 </script>
 
 </pre>

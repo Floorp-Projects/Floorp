@@ -37,6 +37,10 @@ support-files = [
   "title_test.svg",
   "unknownContentType_file.pif",
   "unknownContentType_file.pif^headers^",
+  "video.ogg",
+  "web_video.html",
+  "web_video1.ogv",
+  "web_video1.ogv^headers^",
   "!/image/test/mochitest/blue.png",
   "!/toolkit/content/tests/browser/common/mockTransfer.js",
 ]
@@ -207,7 +211,6 @@ support-files = [
   "dummy.ics",
   "dummy.ics^headers^",
   "redirect_download.sjs",
-  "video.webm",
 ]
 # DO NOT ADD MORE TESTS HERE. USE A TOPICAL DIRECTORY INSTEAD.
 
@@ -432,19 +435,9 @@ skip-if = [
  "os == 'win' && debug",
  "os =='linux'", #Bug 1212419
 ]
-support-files = [
-  "web_video.html",
-  "web_video1.webm",
-  "web_video1.webm^headers^",
-]
 # DO NOT ADD MORE TESTS HERE. USE A TOPICAL DIRECTORY INSTEAD.
 
 ["browser_save_video_frame.js"]
-support-files = [
-  "web_video.html",
-  "web_video1.webm",
-  "web_video1.webm^headers^",
-]
 # DO NOT ADD MORE TESTS HERE. USE A TOPICAL DIRECTORY INSTEAD.
 
 ["browser_selectTabAtIndex.js"]
