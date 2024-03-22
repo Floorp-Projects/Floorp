@@ -1,54 +1,47 @@
 {
+  "hashFunction": "sha512",
+  "name": "OpenH264-2.3.2",
+  "schema_version": 1000,
   "vendors": {
     "gmp-gmpopenh264": {
       "platforms": {
-        "Android_aarch64-gcc3": {
-          "fileUrl": "http://ciscobinary.openh264.org/openh264-android-aarch64-42954cf0fe8a2bdc97fdc180462a3eaefceb035f.zip",
-          "filesize": 557884,
-          "hashValue": "307d188876f3612a9168c0b4ed191db2132f2e3193bdd3024ce50adcb9c1e085ab43008531a25e93d570a377283336cda9bcd7609ee6b702c5292f12d20b616b"
-        },
-        "Android_arm-eabi-gcc3": {
-          "fileUrl": "http://ciscobinary.openh264.org/openh264-android-arm-42954cf0fe8a2bdc97fdc180462a3eaefceb035f.zip",
-          "filesize": 539311,
-          "hashValue": "f4f0bfe333b7e0cd0453e787dc3c15bebe9cc771cb3e57540d53f0ac9a37eee4ea8559a45a51824ee4d706ee0b3d80b2d331468a0aa533cd958081f23ee0aaae"
-        },
-        "Android_x86-gcc3": {
-          "fileUrl": "http://ciscobinary.openh264.org/openh264-android-x86-42954cf0fe8a2bdc97fdc180462a3eaefceb035f.zip",
-          "filesize": 589947,
-          "hashValue": "eb7a1c9c2d29a2fd12dfe82d0f575f1d855478640816a7fb9402ce82c65878ffc5aa3d5f8bb46cd01231005c37d86984d7a631cfe45c7d56a6d4dabc427b15a0"
-        },
         "Darwin_aarch64-gcc3": {
-          "fileUrl": "http://ciscobinary.openh264.org/openh264-macosx64-aarch64-2e1774ab6dc6c43debb0b5b628bdf122a391d521-2.zip",
-          "filesize": 395414,
-          "hashValue": "d0905cd3c23541f67f9ff29ce392afdb7a5dd111906e1b5fa8fad4743b227acd7bd83d50e13ed029118a764983cf9e0a24c5321ecb9e5b88740dfbefcf34864c"
+          "fileUrl": "http://ciscobinary.openh264.org/openh264-macosx64-aarch64-31c4d2e4a037526fd30d4e5c39f60885986cf865.zip",
+          "filesize": 477938,
+          "hashValue": "391efb184373d533713a9e99a9e63c3bbaf614e8d8bdfdd84d4d5e53b9a737e75032187309dd00e58b58bb1033ab68d199f994744f6add57dd08f5fbb654d2f3"
         },
         "Darwin_x86_64-gcc3": {
-          "fileUrl": "http://ciscobinary.openh264.org/openh264-macosx64-2e1774ab6dc6c43debb0b5b628bdf122a391d521-2.zip",
-          "filesize": 488639,
-          "hashValue": "d847b153f8ef2b4b095fbaf9f64b6d08658720ca1e4dc7288622c56d00858d038fe0fd07bc1efb0afc8f02dbd07818416ecc2555db8ed1199872b0d165f4eb62"
+          "fileUrl": "http://ciscobinary.openh264.org/openh264-macosx64-31c4d2e4a037526fd30d4e5c39f60885986cf865.zip",
+          "filesize": 552074,
+          "hashValue": "c649bfa20c48406ccbae1917d7478773cd5250ef995828b58cc56cc4db0a3c7ce3f89eb187bd1b3d26cda0e5e65322b710cfd66a2953adeea0e4361c51488add"
+        },
+        "Linux_aarch64-gcc3": {
+          "fileUrl": "http://ciscobinary.openh264.org/openh264-linux64-aarch64-31c4d2e4a037526fd30d4e5c39f60885986cf865.zip",
+          "filesize": 537296,
+          "hashValue": "eab3fca253c10739c4930bdaf83ca7a9a0a3580937e0e945dde3a45bcdb39b6240ae0d7133ebfb10029442322f4ce6e8647917d15afea601351dc8a5f0dbf3ec"
         },
         "Linux_x86-gcc3": {
-          "fileUrl": "http://ciscobinary.openh264.org/openh264-linux32-2e1774ab6dc6c43debb0b5b628bdf122a391d521.zip",
-          "filesize": 527704,
-          "hashValue": "903aecd631624db3047fc477363ac076794517bbc72b33a88a73627066b5997d9c1194975729ef2acbabba19e93574333b54e32763a5a834b8d9431b99181fd1"
+          "fileUrl": "http://ciscobinary.openh264.org/openh264-linux32-31c4d2e4a037526fd30d4e5c39f60885986cf865.zip",
+          "filesize": 623151,
+          "hashValue": "d80508260c6419acc09c9fde539b18e9231899786df549bc8c86e564d1fb8c500327adb96bba204a386326dd5213ae907108c9ca4fc64ae385fbb2291e0e8cc5"
         },
         "Linux_x86_64-gcc3": {
-          "fileUrl": "http://ciscobinary.openh264.org/openh264-linux64-2e1774ab6dc6c43debb0b5b628bdf122a391d521.zip",
-          "filesize": 511815,
-          "hashValue": "94531e267314de661b2205c606283fb066d781e5c11027578f2a3c3aa353437c2289544074a28101b6b6f0179f0fe6bd890a0ae2bb6e1cf9053650472576366c"
+          "fileUrl": "http://ciscobinary.openh264.org/openh264-linux64-31c4d2e4a037526fd30d4e5c39f60885986cf865.zip",
+          "filesize": 583674,
+          "hashValue": "53a58bfb4c8124ad4f7655b99bfdea290033a085e0796b19245b33b91c0948fdac9f0c3e817130b352493a65d9a7a0fc8a7c1eedc618cdaa2b4580734a11cd9c"
         },
         "Linux_x86_64-gcc3-asan": {
           "alias": "Linux_x86_64-gcc3"
         },
         "WINNT_aarch64-msvc-aarch64": {
-          "fileUrl": "http://ciscobinary.openh264.org/openh264-win64-aarch64-2e1774ab6dc6c43debb0b5b628bdf122a391d521.zip",
-          "filesize": 558607,
-          "hashValue": "8d936bca08dcf3538c5c118c0f468d672c556ac2ac828a4b9d1fcbb4339885d17ebcc748a918457abbea87d21c5cab2c007ca5b4ef87f04a52d44f42ee5fdbb9"
+          "fileUrl": "http://ciscobinary.openh264.org/openh264-win64-aarch64-31c4d2e4a037526fd30d4e5c39f60885986cf865.zip",
+          "filesize": 412806,
+          "hashValue": "cc3306873d6ad8ea6a27096c8ce75831463633a530d8f1794ae3eba3efd4a572459b6b0f3ac73f46552a7d6c7a29b152e299d862a2f76420eee07d1d39979182"
         },
         "WINNT_x86-msvc": {
-          "fileUrl": "http://ciscobinary.openh264.org/openh264-win32-2e1774ab6dc6c43debb0b5b628bdf122a391d521.zip",
-          "filesize": 491261,
-          "hashValue": "9ed5b4c27c2c159b83a1b887a1215d0472171cff422d2bc1962312f90e62d1b212955fe68bc88f826d613c9fb58b86f6fa16ebc1533e863f6a5648dcb1319bcb"
+          "fileUrl": "http://ciscobinary.openh264.org/openh264-win32-31c4d2e4a037526fd30d4e5c39f60885986cf865.zip",
+          "filesize": 472465,
+          "hashValue": "b5c8290bbee9503b6f9d2fcc3cbcf94f9b2d4e8ee143e37cfc8c68de593c8189aecfe447b811accecdb564c8788bd05e116f4eda62ac29b3c6b8a6fa5f564ee0"
         },
         "WINNT_x86-msvc-x64": {
           "alias": "WINNT_x86-msvc"
@@ -57,26 +50,18 @@
           "alias": "WINNT_x86-msvc"
         },
         "WINNT_x86_64-msvc": {
-          "fileUrl": "http://ciscobinary.openh264.org/openh264-win64-2e1774ab6dc6c43debb0b5b628bdf122a391d521.zip",
-          "filesize": 453023,
-          "hashValue": "06511f1f6c6d44d076b3c593528c26a602348d9c41689dbf5ff716b671c3ca5756b12cb2e5869f836dedce27b1a5cfe79b93c707fd01f8e84b620923bb61b5f1"
+          "fileUrl": "http://ciscobinary.openh264.org/openh264-win64-31c4d2e4a037526fd30d4e5c39f60885986cf865.zip",
+          "filesize": 491284,
+          "hashValue": "b667086ed49579592d435df2b486fe30ba1b62ddd169f19e700cd079239747dd3e20058c285fa9c10a533e34f22b5198ed9b1f92ae560a3067f3e3feacc724f1"
         },
         "WINNT_x86_64-msvc-x64": {
           "alias": "WINNT_x86_64-msvc"
         },
         "WINNT_x86_64-msvc-x64-asan": {
           "alias": "WINNT_x86_64-msvc"
-        },
-        "android-x86_64": {
-          "fileUrl": "http://ciscobinary.openh264.org/openh264-android-x86_64-42954cf0fe8a2bdc97fdc180462a3eaefceb035f.zip",
-          "filesize": 539311,
-          "hashValue": "2c80df83c84841477cf5489e4109a0913cf3ca801063d788e100a511c9226d46059e4d28ea76496c3208c046cc44c5ce0b5263b1bfda5b731f8461ce8ce7d1b7"
         }
       },
-      "version": "1.8.1.2"
+      "version": "2.3.2"
     }
-  },
-  "hashFunction": "sha512",
-  "name": "OpenH264-1.8.1.2",
-  "schema_version": 1000
+  }
 }
