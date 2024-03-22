@@ -22,7 +22,7 @@ void CounterMetric::Add(int32_t aAmount) const {
     if (scalarId) {
       Telemetry::ScalarAdd(scalarId.extract(), aAmount);
     } else if (IsSubmetricId(mId)) {
-      GetLabeledMirrorLock().apply([&](auto& lock) {
+      GetLabeledMirrorLock().apply([&](const auto& lock) {
         auto tuple = lock.ref()->MaybeGet(mId);
         if (tuple && aAmount > 0) {
           Telemetry::ScalarAdd(std::get<0>(tuple.ref()),

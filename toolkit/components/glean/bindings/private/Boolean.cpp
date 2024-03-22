@@ -21,7 +21,7 @@ void BooleanMetric::Set(bool aValue) const {
   if (scalarId) {
     Telemetry::ScalarSet(scalarId.extract(), aValue);
   } else if (IsSubmetricId(mId)) {
-    GetLabeledMirrorLock().apply([&](auto& lock) {
+    GetLabeledMirrorLock().apply([&](const auto& lock) {
       auto tuple = lock.ref()->MaybeGet(mId);
       if (tuple) {
         Telemetry::ScalarSet(std::get<0>(tuple.ref()), std::get<1>(tuple.ref()),

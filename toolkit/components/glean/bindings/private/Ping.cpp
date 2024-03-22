@@ -42,7 +42,7 @@ void Ping::Submit(const nsACString& aReason) const {
   {
     auto callback = Maybe<PingTestCallback>();
     GetCallbackMapLock().apply(
-        [&](auto& lock) { callback = lock.ref()->Extract(mId); });
+        [&](const auto& lock) { callback = lock.ref()->Extract(mId); });
     // Calling the callback outside of the lock allows it to register a new
     // callback itself.
     if (callback) {
@@ -55,7 +55,7 @@ void Ping::Submit(const nsACString& aReason) const {
 void Ping::TestBeforeNextSubmit(PingTestCallback&& aCallback) const {
   {
     GetCallbackMapLock().apply(
-        [&](auto& lock) { lock.ref()->InsertOrUpdate(mId, aCallback); });
+        [&](const auto& lock) { lock.ref()->InsertOrUpdate(mId, aCallback); });
   }
 }
 

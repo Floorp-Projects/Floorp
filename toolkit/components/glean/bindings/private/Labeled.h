@@ -60,7 +60,7 @@ class Labeled {
 static inline void UpdateLabeledMirror(Telemetry::ScalarID aMirrorId,
                                        uint32_t aSubmetricId,
                                        const nsACString& aLabel) {
-  GetLabeledMirrorLock().apply([&](auto& lock) {
+  GetLabeledMirrorLock().apply([&](const auto& lock) {
     auto tuple = std::make_tuple<Telemetry::ScalarID, nsString>(
         std::move(aMirrorId), NS_ConvertUTF8toUTF16(aLabel));
     lock.ref()->InsertOrUpdate(aSubmetricId, std::move(tuple));
