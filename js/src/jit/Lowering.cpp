@@ -3241,7 +3241,9 @@ void LIRGenerator::visitWasmAnyRefFromJSString(MWasmAnyRefFromJSString* ins) {
 }
 
 void LIRGenerator::visitWasmNewI31Ref(MWasmNewI31Ref* ins) {
-  LWasmNewI31Ref* lir = new (alloc()) LWasmNewI31Ref(useRegister(ins->input()));
+  // If it's a constant, it will be put directly into the register.
+  LWasmNewI31Ref* lir =
+      new (alloc()) LWasmNewI31Ref(useRegisterOrConstant(ins->input()));
   define(lir, ins);
 }
 
