@@ -100,6 +100,7 @@ class MFCDMParent final : public PMFCDMParent {
   enum class CapabilitesFlag {
     HarewareDecryption,
     NeedHDCPCheck,
+    NeedClearLeadCheck,
   };
   using CapabilitesFlagSet = EnumSet<CapabilitesFlag, uint8_t>;
 
