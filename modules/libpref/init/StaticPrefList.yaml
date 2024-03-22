@@ -4588,6 +4588,14 @@
   value: @IS_NOT_ANDROID@
   mirror: always
 
+# Whether allowing selection across the boundary
+# between shadow DOM and light DOM.
+# This is based on https://github.com/mfreed7/shadow-dom-selection
+- name: dom.shadowdom.selection_across_boundary.enabled
+  type: bool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 # NOTE: This preference is used in unit tests. If it is removed or its default
 # value changes, please update test_sharedMap_static_prefs.js accordingly.
 - name: dom.webcomponents.shadowdom.report_usage
