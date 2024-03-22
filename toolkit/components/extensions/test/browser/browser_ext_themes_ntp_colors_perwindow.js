@@ -39,6 +39,10 @@ function test_ntp_theme(browser, theme, isBrightText) {
         doc.documentElement.hasAttribute("lwt-newtab"),
         "New tab page should have lwt-newtab attribute"
       );
+      ok(
+        doc.documentElement.hasAttribute("lwtheme"),
+        "New tab page should have lwtheme attribute"
+      );
       is(
         doc.documentElement.hasAttribute("lwt-newtab-brighttext"),
         isBrightText,
@@ -88,6 +92,10 @@ function test_ntp_default_theme(browser) {
       ok(
         !doc.documentElement.hasAttribute("lwt-newtab"),
         "New tab page should not have lwt-newtab attribute"
+      );
+      ok(
+        !doc.documentElement.hasAttribute("lwtheme"),
+        "New tab page should not have lwtheme attribute"
       );
       ok(
         !doc.documentElement.hasAttribute("lwt-newtab-brighttext"),
