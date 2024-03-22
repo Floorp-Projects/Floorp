@@ -58,6 +58,7 @@ struct MFCDMCapabilitiesIPDL {
   Requirement distinctiveID;
   Requirement persistentState;
   bool isHDCP22Compatible;
+  bool isHardwareDecryption;
 };
 
 union MFCDMCapabilitiesResult {
