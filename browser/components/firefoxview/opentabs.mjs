@@ -348,11 +348,6 @@ class OpenTabsInView extends ViewPage {
     switch (type) {
       case "TabRecencyChange":
       case "TabChange":
-        // if we're switching away from our tab, we can halt any updates immediately
-        if (!this.isSelectedBrowserTab) {
-          this.stop();
-          return;
-        }
         windowIds = detail.windowIds;
         this._updateWindowList();
         this.bookmarkList.setTrackedUrls(this.#getAllTabUrls());
