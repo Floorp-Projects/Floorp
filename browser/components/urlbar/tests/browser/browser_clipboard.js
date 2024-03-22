@@ -19,8 +19,10 @@ add_setup(async function () {
       ["browser.urlbar.suggest.clipboard", true],
     ],
   });
-  registerCleanupFunction(() => {
+
+  registerCleanupFunction(async () => {
     SpecialPowers.clipboardCopyString("");
+    await PlacesUtils.history.clear();
   });
 });
 
@@ -73,6 +75,7 @@ add_task(async function testFormattingOfClipboardSuggestion() {
     }
   );
 });
+
 // Verifies that a valid URL copied to the clipboard results in the
 // display of a corresponding suggestion in the URL bar as the first
 // suggestion with accurate URL and icon. Also ensures that engaging
@@ -121,6 +124,7 @@ add_task(async function testUserEngagementWithClipboardSuggestion() {
       await checkClipboardSuggestionAbsent(0);
     }
   );
+  await PlacesUtils.history.clear();
 });
 
 // This test confirms that dismissing the result from the result menu
@@ -346,4 +350,39 @@ add_task(async function testScalarAndStopWatchTelemetry() {
       );
     }
   );
+});
+
+add_task(async function emptySearch_withClipboardEntry() {
+  SpecialPowers.clipboardCopyString("https://example.com/1");
+  const MAX_RESULTS = 3;
+  let expectedHistoryResults = [];
+
+  for (let i = 0; i < MAX_RESULTS; i++) {
+    await PlacesTestUtils.addVisits([`http://mochi.test/${i}`]);
+    expectedHistoryResults.push(`http://mochi.test/${i}`);
+  }
+
+  await BrowserTestUtils.withNewTab("about:robots", async function () {
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: "",
+    });
+    await UrlbarTestUtils.enterSearchMode(window, {
+      source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+    });
+
+    let urls = [];
+
+    for (let i = 0; i < UrlbarTestUtils.getResultCount(window); i++) {
+      let url = (await UrlbarTestUtils.getDetailsOfResultAt(window, i)).url;
+      urls.push(url);
+    }
+
+    urls.reverse();
+    Assert.deepEqual(expectedHistoryResults, urls);
+
+    await UrlbarTestUtils.exitSearchMode(window, { clickClose: true });
+    await UrlbarTestUtils.promisePopupClose(window);
+  });
+  await PlacesUtils.history.clear();
 });
