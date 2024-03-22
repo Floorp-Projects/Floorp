@@ -737,28 +737,11 @@ class Maybe<T&> {
   void reset() { mValue = nullptr; }
 
   template <typename Func>
-  Maybe& apply(Func&& aFunc) {
-    if (isSome()) {
-      std::forward<Func>(aFunc)(ref());
-    }
-    return *this;
-  }
-
-  template <typename Func>
   const Maybe& apply(Func&& aFunc) const {
     if (isSome()) {
       std::forward<Func>(aFunc)(ref());
     }
     return *this;
-  }
-
-  template <typename Func>
-  auto map(Func&& aFunc) {
-    Maybe<decltype(std::forward<Func>(aFunc)(ref()))> val;
-    if (isSome()) {
-      val.emplace(std::forward<Func>(aFunc)(ref()));
-    }
-    return val;
   }
 
   template <typename Func>
