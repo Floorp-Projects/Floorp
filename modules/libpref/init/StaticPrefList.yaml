@@ -12862,6 +12862,16 @@
   value: true
   mirror: always
 
+# When true, origin A and origin B will be coalesced if they have an overlap
+# in IP addresses as advertized by DNS, regardless if the existing connection
+# to origin A is not to an IP present in B's DNS response.
+# When false, an existing connection will only be reused if the
+# connection's remote IP is also present in B's DNS response.
+- name: network.http.http2.aggressive_coalescing
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 - name: network.http.http2.ping-threshold
   type: RelaxedAtomicInt32
   value: 58
