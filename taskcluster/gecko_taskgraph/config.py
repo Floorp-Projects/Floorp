@@ -105,13 +105,8 @@ graph_config_schema = Schema(
                 }
             },
         },
-        Required("mac-notarization"): {
-            Required("mac-entitlements"): optionally_keyed_by(
-                "platform", "release-level", str
-            ),
-            Required("mac-requirements"): optionally_keyed_by("platform", str),
-        },
         Required("mac-signing"): {
+            Required("mac-requirements"): optionally_keyed_by("platform", str),
             Required("hardened-sign-config"): optionally_keyed_by(
                 "hardened-signing-type",
                 [
@@ -128,7 +123,7 @@ graph_config_schema = Schema(
                         Required("globs"): [str],
                     }
                 ],
-            )
+            ),
         },
         Required("taskgraph"): {
             Optional(

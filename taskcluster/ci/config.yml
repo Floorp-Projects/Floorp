@@ -946,20 +946,11 @@ workers:
             worker-type: misc-gcp
 
 
-mac-notarization:
-    mac-entitlements:
-        by-platform:
-            macosx64.*:
-                by-release-level:
-                    production: security/mac/hardenedruntime/v1/production/browser.xml
-                    default: security/mac/hardenedruntime/v1/developer/browser.xml
-            default: ''
+mac-signing:
     mac-requirements:
         by-platform:
             macosx64.*: build/package/mac_osx/requirements.plist
             default: ''
-
-mac-signing:
     hardened-sign-config:
         by-hardened-signing-type:
             production:
