@@ -2074,6 +2074,14 @@ class nsINode : public mozilla::dom::EventTarget {
     ClearBoolFlag(ElementCreatedFromPrototypeAndHasUnmodifiedL10n);
   }
 
+  mozilla::dom::ShadowRoot* GetShadowRoot() const;
+
+  // Return the shadow root of the node if it is a shadow host and
+  // it meets the requirements for being a shadow host of a selection.
+  // For example, <details>, <video> and <use> elements are not valid
+  // shadow host for selection.
+  mozilla::dom::ShadowRoot* GetShadowRootForSelection() const;
+
  protected:
   void SetParentIsContent(bool aValue) { SetBoolFlag(ParentIsContent, aValue); }
   void SetIsInDocument() { SetBoolFlag(IsInDocument); }
