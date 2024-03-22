@@ -7,13 +7,18 @@
 }
 </style>
 <script>
+let stop = false;
 function func_01() {
   document.execCommand("justifyCenter", false)
   document.getSelection().collapse(a)
-  setTimeout(func_01, 0)
-  // Ensure that we've painted at least once.
   requestAnimationFrame(() => requestAnimationFrame(() => {
-    document.documentElement.classList = "";
+    if (stop) {
+      document.documentElement.classList = "";
+      return;
+    }
+    // Ensure that we've painted at least twice.
+    stop = true;
+    func_01();
   }));
 }
 document.addEventListener("DOMContentLoaded", func_01)
