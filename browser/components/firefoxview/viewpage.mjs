@@ -131,7 +131,7 @@ export class ViewPage extends ViewPageContent {
     super();
     this.selectedTab = false;
     this.recentBrowsing = Boolean(this.recentBrowsingElement);
-    this.onTabSelect = this.onTabSelect.bind(this);
+    this.onVisibilityChange = this.onVisibilityChange.bind(this);
     this.onResize = this.onResize.bind(this);
   }
 
@@ -148,17 +148,14 @@ export class ViewPage extends ViewPageContent {
     this.windowResizeTask?.arm();
   }
 
-  onTabSelect({ target }) {
-    const win = target.ownerGlobal;
-
-    let selfBrowser = window.docShell?.chromeEventHandler;
-    const { gBrowser } = this.getWindow();
-    let isForegroundTab = gBrowser.selectedBrowser == selfBrowser;
-
-    if (win.FirefoxViewHandler.tab.selected && isForegroundTab) {
+  onVisibilityChange() {
+    if (this.isVisible) {
       this.paused = false;
       this.viewVisibleCallback();
-    } else {
+    } else if (
+      this.ownerViewPage.selectedTab &&
+      this.ownerDocument.visibilityState == "hidden"
+    ) {
       this.paused = true;
       this.viewHiddenCallback();
     }
@@ -166,12 +163,19 @@ export class ViewPage extends ViewPageContent {
 
   connectedCallback() {
     super.connectedCallback();
+    this.ownerDocument.addEventListener(
+      "visibilitychange",
+      this.onVisibilityChange
+    );
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
+    this.ownerDocument.removeEventListener(
+      "visibilitychange",
+      this.onVisibilityChange
+    );
     this.getWindow().removeEventListener("resize", this.onResize);
-    this.getWindow().removeEventListener("TabSelect", this.onTabSelect);
   }
 
   updateAllVirtualLists() {
@@ -242,7 +246,6 @@ export class ViewPage extends ViewPageContent {
       this.paused = false;
       this.viewVisibleCallback();
       this.getWindow().addEventListener("resize", this.onResize);
-      this.getWindow().addEventListener("TabSelect", this.onTabSelect);
     }
   }
 
@@ -254,6 +257,5 @@ export class ViewPage extends ViewPageContent {
       this.windowResizeTask?.finalize();
     }
     this.getWindow().removeEventListener("resize", this.onResize);
-    this.getWindow().removeEventListener("TabSelect", this.onTabSelect);
   }
 }
