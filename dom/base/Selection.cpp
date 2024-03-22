@@ -2676,6 +2676,19 @@ AbstractRange* Selection::GetAbstractRangeAt(uint32_t aIndex) const {
   return mStyledRanges.mRanges.SafeElementAt(aIndex, empty).mRange;
 }
 
+void Selection::GetDirection(nsAString& aDirection) const {
+  if (mStyledRanges.mRanges.IsEmpty() ||
+      (mFrameSelection && (mFrameSelection->IsDoubleClickSelection() ||
+                           mFrameSelection->IsTripleClickSelection()))) {
+    // Empty range and double/triple clicks result a directionless selection.
+    aDirection.AssignLiteral("none");
+  } else if (mDirection == nsDirection::eDirPrevious) {
+    aDirection.AssignLiteral("backward");
+  } else {
+    aDirection.AssignLiteral("forward");
+  }
+}
+
 nsRange* Selection::GetRangeAt(uint32_t aIndex) const {
   // This method per IDL spec returns a dynamic range.
   // Therefore, it must be ensured that it is only called
@@ -3608,9 +3621,10 @@ void Selection::NotifySelectionListeners() {
 
   RefPtr<nsFrameSelection> frameSelection = mFrameSelection;
 
-  // This flag will be set to true if a selection by double click is detected.
-  // As soon as the selection is modified, it needs to be set to false.
-  frameSelection->SetIsDoubleClickSelection(false);
+  // This flag will be set to Double or Triple if a selection by double click or
+  // triple click is detected. As soon as the selection is modified, it needs to
+  // be reset to NotApplicable.
+  frameSelection->SetClickSelectionType(ClickSelectionType::NotApplicable);
 
   if (frameSelection->IsBatching()) {
     frameSelection->SetChangesDuringBatchingFlag();
