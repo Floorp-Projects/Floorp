@@ -14,7 +14,6 @@
 #include "nsCoord.h"
 #include "nsIFrame.h"
 #include "nsISelectionListener.h"
-#include "nsIWeakReferenceUtils.h"
 #include "nsPoint.h"
 #include "nsRect.h"
 
@@ -114,6 +113,9 @@ class nsCaret final : public nsISelectionListener {
    */
   void SchedulePaint();
 
+  nsIFrame* GetLastPaintedFrame() { return mLastPaintedFrame; }
+  void SetLastPaintedFrame(nsIFrame* aFrame) { mLastPaintedFrame = aFrame; }
+
   /**
    * Returns a frame to paint in, and the bounds of the painted caret
    * relative to that frame.
@@ -122,6 +124,7 @@ class nsCaret final : public nsISelectionListener {
    * off).
    */
   nsIFrame* GetPaintGeometry(nsRect* aRect);
+
   /**
    * Same as the overload above, but returns the caret and hook rects
    * separately, and also computes the color if requested.
@@ -220,6 +223,9 @@ class nsCaret final : public nsISelectionListener {
   nsCOMPtr<nsITimer> mBlinkTimer;
 
   CaretPosition mCaretPosition;
+
+  // The last frame we painted the caret in.
+  WeakFrame mLastPaintedFrame;
 
   /**
    * mBlinkCount is used to control the number of times to blink the caret
