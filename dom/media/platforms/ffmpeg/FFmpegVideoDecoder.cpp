@@ -46,6 +46,7 @@
 #  define AV_PIX_FMT_YUV444P10LE PIX_FMT_YUV444P10LE
 #  define AV_PIX_FMT_GBRP PIX_FMT_GBRP
 #  define AV_PIX_FMT_NONE PIX_FMT_NONE
+#  define AV_PIX_FMT_VAAPI_VLD PIX_FMT_VAAPI_VLD
 #endif
 #if LIBAVCODEC_VERSION_MAJOR > 58
 #  define AV_PIX_FMT_VAAPI_VLD AV_PIX_FMT_VAAPI
@@ -618,6 +619,9 @@ static gfx::ColorDepth GetColorDepth(const AVPixelFormat& aFormat) {
     case AV_PIX_FMT_YUV444P12LE:
       return gfx::ColorDepth::COLOR_12;
 #endif
+    case AV_PIX_FMT_VAAPI_VLD:
+      // Placeholder, it could be deeper colors
+      return gfx::ColorDepth::COLOR_8;
     default:
       MOZ_ASSERT_UNREACHABLE("Not supported format?");
       return gfx::ColorDepth::COLOR_8;
@@ -1199,6 +1203,8 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::DoDecode(
             return Some(DecodeStage::YUV444P);
           case AV_PIX_FMT_GBRP:
             return Some(DecodeStage::GBRP);
+          case AV_PIX_FMT_VAAPI_VLD:
+            return Some(DecodeStage::VAAPI_SURFACE);
           default:
             return Nothing();
         }
