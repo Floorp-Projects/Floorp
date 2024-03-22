@@ -26,6 +26,7 @@ interface Selection {
    */
   readonly attribute unsigned long rangeCount;
   readonly attribute DOMString     type;
+  readonly attribute DOMString direction;
   /**
    * Returns the range at the specified index.  Throws if the index is
    * out of range.

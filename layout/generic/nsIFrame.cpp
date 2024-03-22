@@ -5120,7 +5120,9 @@ nsresult nsIFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
     return rv;
   }
   if (aAmountBack == eSelectWord) {
-    frameSelection->SetIsDoubleClickSelection(true);
+    frameSelection->SetClickSelectionType(ClickSelectionType::Double);
+  } else if (aAmountBack == eSelectParagraph) {
+    frameSelection->SetClickSelectionType(ClickSelectionType::Triple);
   }
 
   // maintain selection

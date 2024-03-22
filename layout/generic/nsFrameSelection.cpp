@@ -1493,11 +1493,11 @@ void nsFrameSelection::SetDragState(bool aState) {
     // Notify that reason is mouse up.
     SetChangeReasons(nsISelectionListener::MOUSEUP_REASON);
 
-    // flag is set to false in `NotifySelectionListeners`.
+    // flag is set to NotApplicable in `Selection::NotifySelectionListeners`.
     // since this function call is part of click event, this would immediately
     // reset the flag, rendering it useless.
-    AutoRestore<bool> restoreIsDoubleClickSelectionFlag(
-        mIsDoubleClickSelection);
+    AutoRestore<ClickSelectionType> restoreClickSelectionType(
+        mClickSelectionType);
     // Be aware, the Selection instance may be destroyed after this call.
     NotifySelectionListeners(SelectionType::eNormal);
   }
