@@ -717,12 +717,14 @@ struct wl_egl_window* moz_container_wayland_get_egl_window(
                (void*)wl_container->eglwindow, (int)scale);
 
   MutexAutoLock lock(wl_container->container_lock);
-  if (!wl_container->surface || !wl_container->ready_to_draw) {
-    LOGCONTAINER(
-        "  quit, wl_container->surface %p wl_container->ready_to_draw %d\n",
-        wl_container->surface, wl_container->ready_to_draw);
-    return nullptr;
-  }
+
+  // moz_container_wayland_get_egl_window() is called from frame callback
+  // (via startCompositing at nsWindow::ConfigureCompositor())
+  // so we must be ready to draw.
+  MOZ_DIAGNOSTIC_ASSERT(wl_container->surface,
+                        "We're missing wayland surface!");
+  MOZ_DIAGNOSTIC_ASSERT(wl_container->ready_to_draw,
+                        "We can't draw to surface!");
 
   GdkWindow* window = gtk_widget_get_window(GTK_WIDGET(container));
   nsIntSize requestedSize((int)round(gdk_window_get_width(window) * scale),
@@ -765,7 +767,7 @@ void moz_container_wayland_update_opaque_region(MozContainer* container,
 
   // When GL compositor / WebRender is used,
   // moz_container_wayland_get_egl_window() is called only once when window
-  // is created or resized so update opaque region now.
+  // is created so update opaque region now.
   if (moz_container_wayland_has_egl_window(container)) {
     moz_container_wayland_set_opaque_region(container);
   }
