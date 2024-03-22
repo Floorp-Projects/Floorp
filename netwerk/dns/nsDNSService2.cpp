@@ -996,10 +996,7 @@ nsresult nsDNSService::AsyncResolveInternal(
 
     res = mResolver;
     idn = mIDN;
-    localDomain = StringEndsWith(aHostname, "."_ns)
-                      ? mLocalDomains.Contains(
-                            Substring(aHostname, 0, aHostname.Length() - 1))
-                      : mLocalDomains.Contains(aHostname);
+    localDomain = mLocalDomains.Contains(aHostname);
   }
 
   if (mNotifyResolution) {
