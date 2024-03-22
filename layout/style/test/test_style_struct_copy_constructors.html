@@ -64,6 +64,12 @@ for (var prop in gCSSProperties) {
 }
 
 /** Test using inheritance **/
+
+// TODO(bug 1887221): Zoom right now doesn't apply to explicitly inherited
+// values, so remove it to get consistent results.
+gRule1.style.removeProperty("zoom");
+gRule2.style.removeProperty("zoom");
+
 for (var prop in gCSSProperties) {
   var info = gCSSProperties[prop];
   if (info.inherited && !("subproperties" in info)) {
@@ -76,14 +82,6 @@ for (var prop in gCSSProperties) {
        "property '" + prop + "' was copy-constructed correctly (inheritance)");
 
     gRule2.style.setProperty(prop, info.other_values[0], "");
-  }
-}
-
-for (var prop in gCSSProperties) {
-  var info = gCSSProperties[prop];
-  if (!("subproperties" in info)) {
-    gRule1.style.removeProperty(prop);
-    gRule2.style.removeProperty(prop);
   }
 }
 
