@@ -1616,11 +1616,16 @@ var gBrowserInit = {
   },
 
   onDOMContentLoaded() {
-    // This needs setting up before we create the first remote browser.
-    window.docShell.treeOwner
-      .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIAppWindow).XULBrowserWindow = window.XULBrowserWindow;
-    window.browserDOMWindow = new nsBrowserAccess();
+    // Floorp Injections
+    let loadURL = window.location.toString().split("?")[1];
+    if (!loadURL) {
+      // This needs setting up before we create the first remote browser.
+      window.docShell.treeOwner
+        .QueryInterface(Ci.nsIInterfaceRequestor)
+        .getInterface(Ci.nsIAppWindow).XULBrowserWindow = window.XULBrowserWindow;
+      window.browserDOMWindow = new nsBrowserAccess();
+    }
+    // End Floorp Injections
 
     gBrowser = window._gBrowser;
     delete window._gBrowser;
