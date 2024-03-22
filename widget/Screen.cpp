@@ -30,7 +30,7 @@ Screen::Screen(LayoutDeviceIntRect aRect, LayoutDeviceIntRect aAvailRect,
                uint32_t aPixelDepth, uint32_t aColorDepth,
                uint32_t aRefreshRate, DesktopToLayoutDeviceScale aContentsScale,
                CSSToLayoutDeviceScale aDefaultCssScale, float aDPI,
-               IsPseudoDisplay aIsPseudoDisplay,
+               IsPseudoDisplay aIsPseudoDisplay, IsHDR aIsHDR,
                hal::ScreenOrientation aOrientation,
                OrientationAngle aOrientationAngle)
     : mRect(aRect),
@@ -45,7 +45,8 @@ Screen::Screen(LayoutDeviceIntRect aRect, LayoutDeviceIntRect aAvailRect,
       mDPI(aDPI),
       mScreenOrientation(EffectiveOrientation(aOrientation, aRect)),
       mOrientationAngle(aOrientationAngle),
-      mIsPseudoDisplay(aIsPseudoDisplay == IsPseudoDisplay::Yes) {}
+      mIsPseudoDisplay(aIsPseudoDisplay == IsPseudoDisplay::Yes),
+      mIsHDR(aIsHDR == IsHDR::Yes) {}
 
 Screen::Screen(const dom::ScreenDetails& aScreen)
     : mRect(aScreen.rect()),
@@ -60,7 +61,8 @@ Screen::Screen(const dom::ScreenDetails& aScreen)
       mDPI(aScreen.dpi()),
       mScreenOrientation(aScreen.orientation()),
       mOrientationAngle(aScreen.orientationAngle()),
-      mIsPseudoDisplay(aScreen.isPseudoDisplay()) {}
+      mIsPseudoDisplay(aScreen.isPseudoDisplay()),
+      mIsHDR(aScreen.isHDR()) {}
 
 Screen::Screen(const Screen& aOther)
     : mRect(aOther.mRect),
@@ -75,13 +77,14 @@ Screen::Screen(const Screen& aOther)
       mDPI(aOther.mDPI),
       mScreenOrientation(aOther.mScreenOrientation),
       mOrientationAngle(aOther.mOrientationAngle),
-      mIsPseudoDisplay(aOther.mIsPseudoDisplay) {}
+      mIsPseudoDisplay(aOther.mIsPseudoDisplay),
+      mIsHDR(aOther.mIsHDR) {}
 
 dom::ScreenDetails Screen::ToScreenDetails() const {
   return dom::ScreenDetails(
       mRect, mRectDisplayPix, mAvailRect, mAvailRectDisplayPix, mPixelDepth,
       mColorDepth, mRefreshRate, mContentsScale, mDefaultCssScale, mDPI,
-      mScreenOrientation, mOrientationAngle, mIsPseudoDisplay);
+      mScreenOrientation, mOrientationAngle, mIsPseudoDisplay, mIsHDR);
 }
 
 NS_IMETHODIMP
