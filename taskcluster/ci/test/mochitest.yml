@@ -98,8 +98,8 @@ mochitest-plain:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug-isolated-process: []
                     android.*: built-projects
-                    linux1804-64-qr/debug: ['trunk']
-                    linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
+                    linux1804-64-qr/debug: ['mozilla-central']
+                    linux1804-64(-shippable|-asan)?-qr/opt: ['mozilla-central']
                     default: []
             http3:
                 by-test-platform:
@@ -128,6 +128,13 @@ mochitest-plain:
             linux.*/opt: 8
             windows.*/debug: 8
             default: 5
+    tier:
+        by-variant:
+            no-fission:
+                by-test-platform:
+                    linux.*64.*: 2
+                    default: default
+            default: default
     instance-size:
         by-test-platform:
             linux.*64-tsan-qr/opt: xlarge  # runs out of memory using 8GB
@@ -590,8 +597,8 @@ mochitest-plain-gpu:
             webrender-sw+no-fission:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug: built-projects
-                    linux.*asan.*: ['trunk']
-                    linux.*64(-shippable)?-qr/(opt|debug): ['trunk']
+                    linux.*asan.*: ['mozilla-central']
+                    linux.*64(-shippable)?-qr/(opt|debug): ['mozilla-central']
                     default: []
             webrender-sw:
                 by-test-platform:
@@ -604,7 +611,7 @@ mochitest-plain-gpu:
                     linux1804-32.*: []
                     .*-tsan-qr/opt: []
                     .*wayland.*: []
-                    linux.*: ['trunk']  # linux opt/debug/asan
+                    linux.*: ['mozilla-central']  # linux opt/debug/asan
                     android.*: built-projects
                     default: []
             default:
@@ -613,9 +620,15 @@ mochitest-plain-gpu:
                     default: built-projects
     virtualization: virtual-with-gpu
     tier:
-        by-test-platform:
-            android-em-7.0-x86_64-qr/debug-isolated-process: 3
-            default: default
+        by-variant:
+            no-fission:
+                by-test-platform:
+                    linux.*64.*: 2
+                    default: default
+            default:
+                by-test-platform:
+                    android-em-7.0-x86_64-qr/debug-isolated-process: 3
+                    default: default
     mozharness:
         mochitest-flavor: plain
         extra-options:
@@ -706,8 +719,8 @@ mochitest-media:
                     .*hw-ref.*: []
                     android-em-7.0-x86_64-qr/debug: ['autoland', 'mozilla-central']
                     android-hw-.*-aarch64-qr/debug: built-projects
-                    linux1804-64-qr/debug: ['trunk']
-                    linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
+                    linux1804-64-qr/debug: ['mozilla-central']
+                    linux1804-64(-shippable|-asan)?-qr/opt: ['mozilla-central']
                     default: []
             socketprocess:
                 by-test-platform:
@@ -724,8 +737,8 @@ mochitest-media:
                 by-test-platform:
                     .*hw-ref.*: []
                     android-em-7.0-x86_64-qr/debug: ['autoland', 'mozilla-central']
-                    linux1804-64-qr/debug: ['trunk']
-                    linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
+                    linux1804-64-qr/debug: ['mozilla-central']
+                    linux1804-64(-shippable|-asan)?-qr/opt: ['mozilla-central']
                     default: []
             webrender-sw:
                 by-test-platform:
@@ -740,8 +753,8 @@ mochitest-media:
                     android-hw-.*-arm7.*/(?:debug)?: ['trunk', 'mozilla-beta', 'mozilla-release']
                     android-em-7.0-x86_64-qr/debug-isolated-process: []
                     android.*: built-projects
-                    linux1804-64-qr/debug: ['trunk']
-                    linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
+                    linux1804-64-qr/debug: ['mozilla-central']
+                    linux1804-64(-shippable|-asan)?-qr/opt: ['mozilla-central']
                     default: []
             wmf-media-engine:
                 by-test-platform:
@@ -803,12 +816,26 @@ mochitest-media:
                     - --setpref=webgl.out-of-process=false
                     - --setpref=security.sandbox.content.headless=false
     tier:
-        by-test-platform:
-            .*ccov.*: 2
-            android-em.*: 1
-            android-em-7.0-x86_64-qr/debug-isolated-process: 3
-            android-hw.*: 1
-            default: default
+        by-variant:
+            no-fission:
+                by-test-platform:
+                    linux.*64.*: 2
+                    default: default
+            webrender-sw+no-fission:
+                by-test-platform:
+                    linux.*64.*: 2
+                    default: default
+            socketprocess+no-fission:
+                by-test-platform:
+                    linux.*64.*: 2
+                    default: default
+            default:
+                by-test-platform:
+                    .*ccov.*: 2
+                    android-em.*: 1
+                    android-em-7.0-x86_64-qr/debug-isolated-process: 3
+                    android-hw.*: 1
+                    default: default
 
 mochitest-valgrind:
     description: "Mochitest plain Valgrind run"
