@@ -82,6 +82,7 @@
 #include "mozilla/layers/DeviceAttachmentsD3D11.h"
 #include "mozilla/WindowsProcessMitigations.h"
 #include "D3D11Checks.h"
+#include "mozilla/ScreenHelperWin.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -401,6 +402,11 @@ void gfxWindowsPlatform::InitAcceleration() {
   // so update the cached value now.
   UpdateCanUseHardwareVideoDecoding();
   UpdateSupportsHDR();
+
+  // Our ScreenHelperWin also depends on DeviceManagerDx state.
+  if (XRE_IsParentProcess() && !gfxPlatform::IsHeadless()) {
+    ScreenHelperWin::RefreshScreens();
+  }
 
   RecordStartupTelemetry();
 }

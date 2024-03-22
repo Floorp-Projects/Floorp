@@ -39,6 +39,7 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla += [
+    "ScreenHelperWin.h",
     "ShellHeaderOnlyUtils.h",
     "ToastNotificationHeaderOnlyUtils.h",
     "UrlmonHeaderOnlyUtils.h",
