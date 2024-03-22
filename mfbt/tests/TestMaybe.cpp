@@ -1561,6 +1561,141 @@ static bool TestAndThen() {
   return true;
 }
 
+static bool TestOrElse() {
+  const auto createValue = [&](int aTag) {
+    return [&, aTag]() -> Maybe<BasicValue> {
+      gFunctionWasApplied = true;
+      return Some(BasicValue(aTag));
+    };
+  };
+  // Check that orElse handles the 'Some' case.
+  gFunctionWasApplied = false;
+  Maybe<BasicValue> mayValue = Some(BasicValue(1));
+  Maybe<BasicValue> otherValue = mayValue.orElse(createValue(2));
+  MOZ_RELEASE_ASSERT(!gFunctionWasApplied);
+  MOZ_RELEASE_ASSERT(otherValue->GetTag() == 1);
+
+  // Check that orElse handles the 'Nothing' case.
+  mayValue = Nothing();
+  otherValue = mayValue.orElse(createValue(1));
+  MOZ_RELEASE_ASSERT(gFunctionWasApplied);
+  MOZ_RELEASE_ASSERT(otherValue->GetTag() == 1);
+  gFunctionWasApplied = false;
+  otherValue = otherValue.orElse(createValue(2));
+  MOZ_RELEASE_ASSERT(!gFunctionWasApplied);
+  MOZ_RELEASE_ASSERT(otherValue->GetTag() == 1);
+
+  // Check that orElse works with a const reference.
+  mayValue = Nothing();
+  const Maybe<BasicValue>& mayValueCRef = mayValue;
+  gFunctionWasApplied = false;
+  otherValue = mayValueCRef.orElse(createValue(1));
+  MOZ_RELEASE_ASSERT(gFunctionWasApplied);
+  MOZ_RELEASE_ASSERT(otherValue->GetTag() == 1);
+
+  // Check that orElse works with functors.
+  gFunctionWasApplied = false;
+  AccessValueAndReturnOtherFunctor accesser(42);
+  mayValue = Some(BasicValue(1));
+  otherValue = mayValue.orElse(accesser);
+  MOZ_RELEASE_ASSERT(!gFunctionWasApplied);
+  MOZ_RELEASE_ASSERT(mayValue->GetTag() == 1);
+  MOZ_RELEASE_ASSERT(otherValue->GetTag() == 1);
+  mayValue = Nothing();
+  otherValue = mayValue.orElse(accesser);
+  MOZ_RELEASE_ASSERT(gFunctionWasApplied);
+  MOZ_RELEASE_ASSERT(mayValue.isNothing());
+  MOZ_RELEASE_ASSERT(otherValue->GetTag() == 42);
+
+  // Check that orElse works with lambda expressions.
+  gFunctionWasApplied = false;
+  mayValue = Nothing();
+  otherValue = mayValue.orElse([] { return Some(BasicValue(1)); });
+  MOZ_RELEASE_ASSERT(otherValue->GetTag() == 1);
+  mayValue = otherValue.orElse([] { return Some(BasicValue(2)); });
+  MOZ_RELEASE_ASSERT(mayValue->GetTag() == 1);
+  otherValue = mayValueCRef.orElse([&] {
+    gFunctionWasApplied = true;
+    return Some(BasicValue(42));
+  });
+  MOZ_RELEASE_ASSERT(!gFunctionWasApplied);
+  MOZ_RELEASE_ASSERT(otherValue->GetTag() == 1);
+
+  // Check that orElse can move the contained value.
+  mayValue = Some(BasicValue(1));
+  otherValue = std::move(mayValue).orElse([] { return Some(BasicValue(2)); });
+  MOZ_RELEASE_ASSERT(mayValue.isNothing());
+  MOZ_RELEASE_ASSERT(otherValue->GetTag() == 1);
+
+  return true;
+}
+
+static bool TestComposedMoves() {
+  const auto moveAlong = [](UncopyableValue&& aValue) {
+    return Some(std::move(aValue));
+  };
+  const auto justNothing = []() -> Maybe<UncopyableValue> { return Nothing(); };
+  const auto createValue = [] { return Some(UncopyableValue()); };
+
+  // Check that andThen and orElse can propagate a non-copyable value created
+  // mid-chain.
+  Maybe<UncopyableValue> mayValue;
+  Maybe<UncopyableValue> movedValue = std::move(mayValue)
+                                          .andThen(moveAlong)
+                                          .orElse(createValue)
+                                          .andThen(moveAlong);
+  MOZ_RELEASE_ASSERT(mayValue.isNothing());
+  MOZ_RELEASE_ASSERT(movedValue->GetStatus() == eWasMoveConstructed);
+
+  // Check that andThen and orElse can propagate a non-copyable value created
+  // pre-chain.
+  mayValue = Some(UncopyableValue{});
+  movedValue = std::move(mayValue)
+                   .andThen(moveAlong)
+                   .orElse(justNothing)
+                   .andThen(moveAlong);
+  MOZ_RELEASE_ASSERT(mayValue.isNothing());
+  MOZ_RELEASE_ASSERT(movedValue->GetStatus() == eWasMoveAssigned);
+
+  // Check that andThen and orElse can propagate a reference.
+  {
+    UncopyableValue val{};
+    UncopyableValue otherVal{};
+    const auto passAlong = [](UncopyableValue& aValue) {
+      return SomeRef(aValue);
+    };
+    const auto fallbackToOther = [&]() { return SomeRef(otherVal); };
+
+    Maybe<UncopyableValue&> mayRef = SomeRef(val);
+    Maybe<UncopyableValue&> chainedRef =
+        mayRef.andThen(passAlong).orElse(fallbackToOther).andThen(passAlong);
+    MOZ_RELEASE_ASSERT(&val != &otherVal,
+                       "Distinct values should not compare equal");
+    MOZ_RELEASE_ASSERT(&*mayRef == &*chainedRef,
+                       "Chain should pass along the same reference");
+  }
+
+  // Check that andThen and orElse can propagate a const reference.
+  {
+    const UncopyableValue val{};
+    const UncopyableValue otherVal{};
+    const auto passAlong = [](const UncopyableValue& aValue) {
+      return SomeRef(aValue);
+    };
+    const auto fallbackToOther = [&]() { return SomeRef(otherVal); };
+
+    Maybe<const UncopyableValue&> mayRef = SomeRef(val);
+    Maybe<const UncopyableValue&> chainedRef =
+        mayRef.andThen(passAlong).orElse(fallbackToOther).andThen(passAlong);
+    MOZ_RELEASE_ASSERT(&val != &otherVal,
+                       "Distinct values should not compare equal");
+    MOZ_RELEASE_ASSERT(&*mayRef == &*chainedRef,
+                       "Chain should pass along the same reference");
+  }
+
+  return true;
+}
+
 // These are quasi-implementation details, but we assert them here to prevent
 // backsliding to earlier times when Maybe<T> for smaller T took up more space
 // than T's alignment required.
@@ -1591,6 +1726,8 @@ int main() {
   RUN_TEST(TestTypeConversion);
   RUN_TEST(TestReference);
   RUN_TEST(TestAndThen);
+  RUN_TEST(TestOrElse);
+  RUN_TEST(TestComposedMoves);
 
   return 0;
 }
