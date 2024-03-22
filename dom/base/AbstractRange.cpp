@@ -378,7 +378,10 @@ void AbstractRange::RegisterSelection(Selection& aSelection) {
   bool isFirstSelection = mSelections.IsEmpty();
   mSelections.AppendElement(&aSelection);
   if (isFirstSelection && !mRegisteredClosestCommonInclusiveAncestor) {
-    nsINode* commonAncestor = GetClosestCommonInclusiveAncestor();
+    nsINode* commonAncestor = GetClosestCommonInclusiveAncestor(
+        StaticPrefs::dom_shadowdom_selection_across_boundary_enabled()
+            ? AllowRangeCrossShadowBoundary::Yes
+            : AllowRangeCrossShadowBoundary::No);
     MOZ_ASSERT(commonAncestor, "unexpected disconnected nodes");
     RegisterClosestCommonInclusiveAncestor(commonAncestor);
   }

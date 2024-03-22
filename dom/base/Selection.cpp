@@ -22,6 +22,7 @@
 #include "mozilla/CaretAssociationHint.h"
 #include "mozilla/ContentIterator.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/ChildIterator.h"
 #include "mozilla/dom/SelectionBinding.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/StaticRange.h"
@@ -778,30 +779,39 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Selection)
 NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(Selection, Disconnect())
 
-const RangeBoundary& Selection::AnchorRef() const {
+const RangeBoundary& Selection::AnchorRef(
+    AllowRangeCrossShadowBoundary aAllowCrossShadowBoundary) const {
   if (!mAnchorFocusRange) {
     static RangeBoundary sEmpty;
     return sEmpty;
   }
 
   if (GetDirection() == eDirNext) {
-    return mAnchorFocusRange->StartRef();
+    return aAllowCrossShadowBoundary == AllowRangeCrossShadowBoundary::Yes
+               ? mAnchorFocusRange->MayCrossShadowBoundaryStartRef()
+               : mAnchorFocusRange->StartRef();
   }
 
-  return mAnchorFocusRange->EndRef();
+  return aAllowCrossShadowBoundary == AllowRangeCrossShadowBoundary::Yes
+             ? mAnchorFocusRange->MayCrossShadowBoundaryEndRef()
+             : mAnchorFocusRange->EndRef();
 }
 
-const RangeBoundary& Selection::FocusRef() const {
+const RangeBoundary& Selection::FocusRef(
+    AllowRangeCrossShadowBoundary aAllowCrossShadowBoundary) const {
   if (!mAnchorFocusRange) {
     static RangeBoundary sEmpty;
     return sEmpty;
   }
 
   if (GetDirection() == eDirNext) {
-    return mAnchorFocusRange->EndRef();
+    return aAllowCrossShadowBoundary == AllowRangeCrossShadowBoundary::Yes
+               ? mAnchorFocusRange->MayCrossShadowBoundaryEndRef()
+               : mAnchorFocusRange->EndRef();
   }
-
-  return mAnchorFocusRange->StartRef();
+  return aAllowCrossShadowBoundary == AllowRangeCrossShadowBoundary::Yes
+             ? mAnchorFocusRange->MayCrossShadowBoundaryStartRef()
+             : mAnchorFocusRange->StartRef();
 }
 
 void Selection::SetAnchorFocusRange(size_t aIndex) {
@@ -818,8 +828,8 @@ static int32_t CompareToRangeStart(const nsINode& aCompareNode,
                                    uint32_t aCompareOffset,
                                    const AbstractRange& aRange,
                                    nsContentUtils::NodeIndexCache* aCache) {
-  MOZ_ASSERT(aRange.GetStartContainer());
-  nsINode* start = aRange.GetStartContainer();
+  MOZ_ASSERT(aRange.GetMayCrossShadowBoundaryStartContainer());
+  nsINode* start = aRange.GetMayCrossShadowBoundaryStartContainer();
   // If the nodes that we're comparing are not in the same document, assume that
   // aCompareNode will fall at the end of the ranges.
   if (aCompareNode.GetComposedDoc() != start->GetComposedDoc() ||
@@ -830,8 +840,9 @@ static int32_t CompareToRangeStart(const nsINode& aCompareNode,
   }
 
   // The points are in the same subtree, hence there has to be an order.
-  return *nsContentUtils::ComparePoints(&aCompareNode, aCompareOffset, start,
-                                        aRange.StartOffset(), aCache);
+  return *nsContentUtils::ComparePoints(
+      &aCompareNode, aCompareOffset, start,
+      aRange.MayCrossShadowBoundaryStartOffset(), aCache);
 }
 
 static int32_t CompareToRangeStart(const nsINode& aCompareNode,
@@ -844,7 +855,7 @@ static int32_t CompareToRangeEnd(const nsINode& aCompareNode,
                                  uint32_t aCompareOffset,
                                  const AbstractRange& aRange) {
   MOZ_ASSERT(aRange.IsPositioned());
-  nsINode* end = aRange.GetEndContainer();
+  nsINode* end = aRange.GetMayCrossShadowBoundaryEndContainer();
   // If the nodes that we're comparing are not in the same document or in the
   // same subtree, assume that aCompareNode will fall at the end of the ranges.
   if (aCompareNode.GetComposedDoc() != end->GetComposedDoc() ||
@@ -855,8 +866,9 @@ static int32_t CompareToRangeEnd(const nsINode& aCompareNode,
   }
 
   // The points are in the same subtree, hence there has to be an order.
-  return *nsContentUtils::ComparePoints(&aCompareNode, aCompareOffset, end,
-                                        aRange.EndOffset());
+  return *nsContentUtils::ComparePoints(
+      &aCompareNode, aCompareOffset, end,
+      aRange.MayCrossShadowBoundaryEndOffset());
 }
 
 // static
@@ -1616,7 +1628,8 @@ nsresult Selection::StyledRanges::GetIndicesForInterval(
     // the given interval's start point, but that range isn't collapsed (a
     // collapsed range should be included in the returned results).
     const AbstractRange* beginRange = mRanges[beginsAfterIndex].mRange;
-    if (beginRange->EndRef().Equals(aBeginNode, aBeginOffset) &&
+    if (beginRange->MayCrossShadowBoundaryEndRef().Equals(aBeginNode,
+                                                          aBeginOffset) &&
         !beginRange->Collapsed()) {
       beginsAfterIndex++;
     }
@@ -1627,7 +1640,8 @@ nsresult Selection::StyledRanges::GetIndicesForInterval(
     // included
     if (endsBeforeIndex < mRanges.Length()) {
       const AbstractRange* endRange = mRanges[endsBeforeIndex].mRange;
-      if (endRange->StartRef().Equals(aEndNode, aEndOffset) &&
+      if (endRange->MayCrossShadowBoundaryStartRef().Equals(aEndNode,
+                                                            aEndOffset) &&
           endRange->Collapsed()) {
         endsBeforeIndex++;
       }
@@ -1748,16 +1762,22 @@ nsresult Selection::SelectFrames(nsPresContext* aPresContext,
 
   if (mFrameSelection->IsInTableSelectionMode()) {
     const nsIContent* const commonAncestorContent =
-        nsIContent::FromNodeOrNull(aRange.GetClosestCommonInclusiveAncestor());
+        nsIContent::FromNodeOrNull(aRange.GetClosestCommonInclusiveAncestor(
+            StaticPrefs::dom_select_events_textcontrols_selectstart_enabled()
+                ? AllowRangeCrossShadowBoundary::Yes
+                : AllowRangeCrossShadowBoundary::No));
     nsIFrame* const frame = commonAncestorContent
                                 ? commonAncestorContent->GetPrimaryFrame()
                                 : aPresContext->PresShell()->GetRootFrame();
     if (frame) {
       if (frame->IsTextFrame()) {
-        MOZ_ASSERT(commonAncestorContent == aRange.GetStartContainer());
-        MOZ_ASSERT(commonAncestorContent == aRange.GetEndContainer());
+        MOZ_ASSERT(commonAncestorContent ==
+                   aRange.GetMayCrossShadowBoundaryStartContainer());
+        MOZ_ASSERT(commonAncestorContent ==
+                   aRange.GetMayCrossShadowBoundaryEndContainer());
         static_cast<nsTextFrame*>(frame)->SelectionStateChanged(
-            aRange.StartOffset(), aRange.EndOffset(), aSelect, mSelectionType);
+            aRange.MayCrossShadowBoundaryStartOffset(),
+            aRange.MayCrossShadowBoundaryEndOffset(), aSelect, mSelectionType);
       } else {
         frame->SelectionStateChanged();
       }
@@ -1768,8 +1788,8 @@ nsresult Selection::SelectFrames(nsPresContext* aPresContext,
 
   // Loop through the content iterator for each content node; for each text
   // node, call SetSelected on it:
-  nsIContent* const startContent =
-      nsIContent::FromNodeOrNull(aRange.GetStartContainer());
+  nsIContent* const startContent = nsIContent::FromNodeOrNull(
+      aRange.GetMayCrossShadowBoundaryStartContainer());
   if (MOZ_UNLIKELY(!startContent)) {
     // Don't warn, bug 1055722
     // XXX The range can start from a document node and such range can be
@@ -1780,7 +1800,7 @@ nsresult Selection::SelectFrames(nsPresContext* aPresContext,
   MOZ_DIAGNOSTIC_ASSERT(startContent->IsInComposedDoc());
 
   // We must call first one explicitly
-  nsINode* const endNode = aRange.GetEndContainer();
+  nsINode* const endNode = aRange.GetMayCrossShadowBoundaryEndContainer();
   if (NS_WARN_IF(!endNode)) {
     // We null-checked start node above, therefore, end node should also be
     // non-null here.
@@ -1792,10 +1812,10 @@ nsresult Selection::SelectFrames(nsPresContext* aPresContext,
       // The frame could be an SVG text frame, in which case we don't treat it
       // as a text frame.
       if (frame->IsTextFrame()) {
-        const uint32_t startOffset = aRange.StartOffset();
-        const uint32_t endOffset = endNode == startContent
-                                       ? aRange.EndOffset()
-                                       : startContent->Length();
+        const uint32_t startOffset = aRange.MayCrossShadowBoundaryStartOffset();
+        const uint32_t endOffset =
+            endNode == startContent ? aRange.MayCrossShadowBoundaryEndOffset()
+                                    : startContent->Length();
         static_cast<nsTextFrame*>(frame)->SelectionStateChanged(
             startOffset, endOffset, aSelect, mSelectionType);
       } else {
@@ -1806,7 +1826,7 @@ nsresult Selection::SelectFrames(nsPresContext* aPresContext,
 
   // If the range is in a node and the node is a leaf node, we don't need to
   // walk the subtree.
-  if (aRange.Collapsed() ||
+  if ((aRange.Collapsed() && !aRange.MayCrossShadowBoundary()) ||
       (startContent == endNode && !startContent->HasChildren())) {
     if (!isFirstContentTextNode) {
       SelectFramesOf(startContent, aSelect);
@@ -1815,7 +1835,7 @@ nsresult Selection::SelectFrames(nsPresContext* aPresContext,
   }
 
   ContentSubtreeIterator subtreeIter;
-  subtreeIter.Init(&aRange);
+  subtreeIter.InitWithAllowCrossShadowBoundary(&aRange);
   if (isFirstContentTextNode && !subtreeIter.IsDone() &&
       subtreeIter.GetCurrentNode() == startContent) {
     subtreeIter.Next();  // first content has already been handled.
@@ -1839,7 +1859,7 @@ nsresult Selection::SelectFrames(nsPresContext* aPresContext,
     // The frame could be an SVG text frame, in which case we'll ignore it.
     if (frame->IsTextFrame()) {
       static_cast<nsTextFrame*>(frame)->SelectionStateChanged(
-          0, aRange.EndOffset(), aSelect, mSelectionType);
+          0, aRange.MayCrossShadowBoundaryEndOffset(), aSelect, mSelectionType);
     }
   }
   return NS_OK;
@@ -1901,10 +1921,11 @@ UniquePtr<SelectionDetails> Selection::LookUpSelection(
     if (range->IsStaticRange() && !range->AsStaticRange()->IsValid()) {
       continue;
     }
-    nsINode* startNode = range->GetStartContainer();
-    nsINode* endNode = range->GetEndContainer();
-    uint32_t startOffset = range->StartOffset();
-    uint32_t endOffset = range->EndOffset();
+
+    nsINode* startNode = range->GetMayCrossShadowBoundaryStartContainer();
+    nsINode* endNode = range->GetMayCrossShadowBoundaryEndContainer();
+    uint32_t startOffset = range->MayCrossShadowBoundaryStartOffset();
+    uint32_t endOffset = range->MayCrossShadowBoundaryEndOffset();
 
     Maybe<uint32_t> start, end;
     if (startNode == aContent && endNode == aContent) {
@@ -2914,17 +2935,17 @@ void Selection::Extend(nsINode& aContainer, uint32_t aOffset,
 #ifdef DEBUG_SELECTION
   nsDirection oldDirection = GetDirection();
 #endif
-  nsINode* anchorNode = GetAnchorNode();
-  nsINode* focusNode = GetFocusNode();
-  const uint32_t anchorOffset = AnchorOffset();
-  const uint32_t focusOffset = FocusOffset();
+  nsINode* anchorNode = GetMayCrossShadowBoundaryAnchorNode();
+  nsINode* focusNode = GetMayCrossShadowBoundaryFocusNode();
+  const uint32_t anchorOffset = MayCrossShadowBoundaryAnchorOffset();
+  const uint32_t focusOffset = MayCrossShadowBoundaryFocusOffset();
 
   RefPtr<nsRange> range = mAnchorFocusRange->CloneRange();
 
-  nsINode* startNode = range->GetStartContainer();
-  nsINode* endNode = range->GetEndContainer();
-  const uint32_t startOffset = range->StartOffset();
-  const uint32_t endOffset = range->EndOffset();
+  nsINode* startNode = range->GetMayCrossShadowBoundaryStartContainer();
+  nsINode* endNode = range->GetMayCrossShadowBoundaryEndContainer();
+  const uint32_t startOffset = range->MayCrossShadowBoundaryStartOffset();
+  const uint32_t endOffset = range->MayCrossShadowBoundaryEndOffset();
 
   bool shouldClearRange = false;
   const Maybe<int32_t> anchorOldFocusOrder = nsContentUtils::ComparePoints(
@@ -2960,7 +2981,8 @@ void Selection::Extend(nsINode& aContainer, uint32_t aOffset,
         (*anchorOldFocusOrder <= 0 &&
          *oldFocusNewFocusOrder < 0)) {  // a1,2  a,1,2
       // select from 1 to 2 unless they are collapsed
-      range->SetEnd(aContainer, aOffset, aRv);
+      range->SetEnd(aContainer, aOffset, aRv,
+                    AllowRangeCrossShadowBoundary::Yes);
       if (aRv.Failed()) {
         return;
       }
@@ -2981,7 +3003,8 @@ void Selection::Extend(nsINode& aContainer, uint32_t aOffset,
                *anchorNewFocusOrder > 0) {  // 2, a1
       // select from 2 to 1a
       SetDirection(eDirPrevious);
-      range->SetStart(aContainer, aOffset, aRv);
+      range->SetStart(aContainer, aOffset, aRv,
+                      AllowRangeCrossShadowBoundary::Yes);
       if (aRv.Failed()) {
         return;
       }
@@ -3001,7 +3024,8 @@ void Selection::Extend(nsINode& aContainer, uint32_t aOffset,
         return;
       }
 
-      range->SetEnd(aContainer, aOffset, aRv);
+      range->SetEnd(aContainer, aOffset, aRv,
+                    AllowRangeCrossShadowBoundary::Yes);
       if (aRv.Failed()) {
         return;
       }
@@ -3011,27 +3035,33 @@ void Selection::Extend(nsINode& aContainer, uint32_t aOffset,
         return;
       }
       SelectFrames(presContext, *difRange, false);  // deselect now
-      difRange->SetEnd(range->GetEndContainer(), range->EndOffset());
+      difRange->SetEnd(range->GetMayCrossShadowBoundaryEndContainer(),
+                       range->MayCrossShadowBoundaryEndOffset(),
+                       AllowRangeCrossShadowBoundary::Yes);
       SelectFrames(presContext, *difRange, true);  // must reselect last node
                                                    // maybe more
     } else if (*anchorOldFocusOrder >= 0 &&
                *anchorNewFocusOrder <= 0) {  // 1,a,2 or 1a,2 or 1,a2 or 1a2
       if (GetDirection() == eDirPrevious) {
-        res = range->SetStart(endNode, endOffset);
+        res = range->SetStart(endNode, endOffset,
+                              AllowRangeCrossShadowBoundary::Yes);
         if (NS_FAILED(res)) {
           aRv.Throw(res);
           return;
         }
       }
       SetDirection(eDirNext);
-      range->SetEnd(aContainer, aOffset, aRv);
+      range->SetEnd(aContainer, aOffset, aRv,
+                    AllowRangeCrossShadowBoundary::Yes);
       if (aRv.Failed()) {
         return;
       }
       if (focusNode != anchorNode ||
           focusOffset != anchorOffset) {  // if collapsed diff dont do anything
-        res = difRange->SetStart(focusNode, focusOffset);
-        nsresult tmp = difRange->SetEnd(anchorNode, anchorOffset);
+        res = difRange->SetStart(focusNode, focusOffset,
+                                 AllowRangeCrossShadowBoundary::Yes);
+        nsresult tmp = difRange->SetEnd(anchorNode, anchorOffset,
+                                        AllowRangeCrossShadowBoundary::Yes);
         if (NS_FAILED(tmp)) {
           res = tmp;
         }
@@ -3065,7 +3095,8 @@ void Selection::Extend(nsINode& aContainer, uint32_t aOffset,
         return;
       }
       SetDirection(eDirPrevious);
-      range->SetStart(aContainer, aOffset, aRv);
+      range->SetStart(aContainer, aOffset, aRv,
+                      AllowRangeCrossShadowBoundary::Yes);
       if (aRv.Failed()) {
         return;
       }
@@ -3076,15 +3107,19 @@ void Selection::Extend(nsINode& aContainer, uint32_t aOffset,
         return;
       }
       SelectFrames(presContext, *difRange, false);
-      difRange->SetStart(range->GetStartContainer(), range->StartOffset());
+      difRange->SetStart(range->GetMayCrossShadowBoundaryStartContainer(),
+                         range->MayCrossShadowBoundaryStartOffset(),
+                         AllowRangeCrossShadowBoundary::Yes);
       SelectFrames(presContext, *difRange, true);  // must reselect last node
     } else if (*anchorNewFocusOrder >= 0 &&
                *anchorOldFocusOrder <= 0) {  // 2,a,1 or 2a,1 or 2,a1 or 2a1
       if (GetDirection() == eDirNext) {
-        range->SetEnd(startNode, startOffset);
+        range->SetEnd(startNode, startOffset,
+                      AllowRangeCrossShadowBoundary::Yes);
       }
       SetDirection(eDirPrevious);
-      range->SetStart(aContainer, aOffset, aRv);
+      range->SetStart(aContainer, aOffset, aRv,
+                      AllowRangeCrossShadowBoundary::Yes);
       if (aRv.Failed()) {
         return;
       }
@@ -3114,7 +3149,8 @@ void Selection::Extend(nsINode& aContainer, uint32_t aOffset,
     } else if (*oldFocusNewFocusOrder >= 0 &&
                *anchorOldFocusOrder >= 0) {  // 2,1,a or 21,a or 2,1a or 21a
       // select from 2 to 1
-      range->SetStart(aContainer, aOffset, aRv);
+      range->SetStart(aContainer, aOffset, aRv,
+                      AllowRangeCrossShadowBoundary::Yes);
       if (aRv.Failed()) {
         return;
       }
