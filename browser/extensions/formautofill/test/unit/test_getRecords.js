@@ -85,7 +85,7 @@ add_task(async function test_getRecords() {
       sinon.stub(collection, "getAll");
       collection.getAll.returns(Promise.resolve(expectedResult));
     }
-    await FormAutofillParent._getRecords({ collectionName });
+    await FormAutofillParent.getRecords({ collectionName });
     if (collection) {
       Assert.equal(collection.getAll.called, true);
       collection.getAll.restore();
@@ -105,7 +105,7 @@ add_task(async function test_getRecords_addresses() {
       description: "If the search string could match 1 address",
       filter: {
         collectionName: "addresses",
-        info: { fieldName: "street-address" },
+        fieldName: "street-address",
         searchString: "Some",
       },
       expectedResult: [TEST_ADDRESS_2],
@@ -114,7 +114,7 @@ add_task(async function test_getRecords_addresses() {
       description: "If the search string could match multiple addresses",
       filter: {
         collectionName: "addresses",
-        info: { fieldName: "country" },
+        fieldName: "country",
         searchString: "u",
       },
       expectedResult: [TEST_ADDRESS_1, TEST_ADDRESS_2],
@@ -123,7 +123,7 @@ add_task(async function test_getRecords_addresses() {
       description: "If the search string could not match any address",
       filter: {
         collectionName: "addresses",
-        info: { fieldName: "street-address" },
+        fieldName: "street-address",
         searchString: "test",
       },
       expectedResult: [],
@@ -132,7 +132,7 @@ add_task(async function test_getRecords_addresses() {
       description: "If the search string is empty",
       filter: {
         collectionName: "addresses",
-        info: { fieldName: "street-address" },
+        fieldName: "street-address",
         searchString: "",
       },
       expectedResult: [TEST_ADDRESS_1, TEST_ADDRESS_2],
@@ -142,7 +142,7 @@ add_task(async function test_getRecords_addresses() {
         "Check if the filtering logic is free from searching special chars",
       filter: {
         collectionName: "addresses",
-        info: { fieldName: "street-address" },
+        fieldName: "street-address",
         searchString: ".*",
       },
       expectedResult: [],
@@ -152,7 +152,7 @@ add_task(async function test_getRecords_addresses() {
         "Prevent broken while searching the property that does not exist",
       filter: {
         collectionName: "addresses",
-        info: { fieldName: "tel" },
+        fieldName: "tel",
         searchString: "1",
       },
       expectedResult: [],
@@ -161,7 +161,7 @@ add_task(async function test_getRecords_addresses() {
 
   for (let testCase of testCases) {
     info("Starting testcase: " + testCase.description);
-    let result = await FormAutofillParent._getRecords(testCase.filter);
+    let result = await FormAutofillParent.getRecords(testCase.filter);
     Assert.deepEqual(result, testCase.expectedResult);
   }
 });
@@ -195,7 +195,7 @@ add_task(async function test_getRecords_creditCards() {
       description: "If the search string could match multiple creditCards",
       filter: {
         collectionName: "creditCards",
-        info: { fieldName: "cc-name" },
+        fieldName: "cc-name",
         searchString: "John",
       },
       expectedResult: encryptedCCRecords,
@@ -204,7 +204,7 @@ add_task(async function test_getRecords_creditCards() {
       description: "If the search string could not match any creditCard",
       filter: {
         collectionName: "creditCards",
-        info: { fieldName: "cc-name" },
+        fieldName: "cc-name",
         searchString: "T",
       },
       expectedResult: [],
@@ -215,7 +215,7 @@ add_task(async function test_getRecords_creditCards() {
         "if the search string could match multiple creditCards",
       filter: {
         collectionName: "creditCards",
-        info: { fieldName: "cc-number" },
+        fieldName: "cc-number",
         searchString: "4",
       },
       expectedResult: encryptedCCRecords,
@@ -224,7 +224,7 @@ add_task(async function test_getRecords_creditCards() {
       description: "If the search string could match 1 creditCard",
       filter: {
         collectionName: "creditCards",
-        info: { fieldName: "cc-name" },
+        fieldName: "cc-name",
         searchString: "John Doe",
       },
       mpEnabled: true,
@@ -234,7 +234,7 @@ add_task(async function test_getRecords_creditCards() {
       description: "Return all creditCards if focused field is cc number",
       filter: {
         collectionName: "creditCards",
-        info: { fieldName: "cc-number" },
+        fieldName: "cc-number",
         searchString: "411",
       },
       mpEnabled: true,
@@ -252,7 +252,7 @@ add_task(async function test_getRecords_creditCards() {
       token.reset();
       token.initPassword("password");
     }
-    let result = await FormAutofillParent._getRecords(testCase.filter);
+    let result = await FormAutofillParent.getRecords(testCase.filter);
     Assert.deepEqual(result, testCase.expectedResult);
   }
 });
