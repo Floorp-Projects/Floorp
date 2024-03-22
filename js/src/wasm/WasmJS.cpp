@@ -123,6 +123,10 @@ static bool ThrowBadImportArg(JSContext* cx) {
 static bool ThrowBadImportType(JSContext* cx, const CacheableName& field,
                                const char* str) {
   UniqueChars fieldQuoted = field.toQuotedString(cx);
+  if (!fieldQuoted) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
   JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                            JSMSG_WASM_BAD_IMPORT_TYPE, fieldQuoted.get(), str);
   return false;
@@ -178,6 +182,10 @@ bool js::wasm::GetImports(JSContext* cx, const Module& module,
 
       if (!importModuleValue.isObject()) {
         UniqueChars moduleQuoted = import.module.toQuotedString(cx);
+        if (!moduleQuoted) {
+          ReportOutOfMemory(cx);
+          return false;
+        }
         JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                                  JSMSG_WASM_BAD_IMPORT_FIELD,
                                  moduleQuoted.get());
@@ -256,6 +264,10 @@ bool js::wasm::GetImports(JSContext* cx, const Module& module,
         if (obj->resultType() != tags[index].type->resultType()) {
           UniqueChars fieldQuoted = import.field.toQuotedString(cx);
           UniqueChars moduleQuoted = import.module.toQuotedString(cx);
+          if (!fieldQuoted || !moduleQuoted) {
+            ReportOutOfMemory(cx);
+            return false;
+          }
           JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                                    JSMSG_WASM_BAD_TAG_SIG, moduleQuoted.get(),
                                    fieldQuoted.get());
