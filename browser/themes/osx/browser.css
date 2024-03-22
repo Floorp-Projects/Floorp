@@ -20,6 +20,7 @@
       --toolbar-field-color: inherit;
       --tabs-navbar-shadow-color: transparent;
       @media (prefers-color-scheme: light) {
+        --toolbar-non-lwt-bgcolor: white;
         --urlbar-box-bgcolor: #fafafa;
       }
     }
