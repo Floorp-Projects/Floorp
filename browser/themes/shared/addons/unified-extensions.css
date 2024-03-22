@@ -10,7 +10,7 @@
   --uei-button-hover-color: inherit;
   --uei-button-active-bgcolor: var(--panel-item-active-bgcolor);
   --uei-button-active-color: inherit;
-  --uei-button-attention-dot-color: var(--tab-attention-icon-color);
+  --uei-button-attention-dot-color: var(--attention-dot-color);
 }
 
 :root[uidensity="compact"] {

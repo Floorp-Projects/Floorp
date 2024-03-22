@@ -17,12 +17,6 @@
   --tab-border-radius: 4px;
   --tab-shadow-max-size: 6px;
   --tab-block-margin: 4px;
-
-  --tab-attention-icon-color: AccentColor;
-  &[lwtheme] {
-    --tab-attention-icon-color: light-dark(rgb(42, 195, 162), rgb(84, 255, 189));
-  }
-
   --tab-selected-textcolor: var(--toolbar-color);
   --tab-selected-bgcolor: var(--toolbar-bgcolor);
   --tab-selected-color-scheme: var(--toolbar-color-scheme);
@@ -498,7 +492,7 @@
 .tabbrowser-tab:is([image], [pinned]) > .tab-stack > .tab-content[attention]:not([selected]),
 .tabbrowser-tab > .tab-stack > .tab-content[pinned][titlechanged]:not([selected]),
 #firefox-view-button[attention] {
-  background-image: radial-gradient(circle, var(--tab-attention-icon-color), var(--tab-attention-icon-color) 2px, transparent 2px);
+  background-image: radial-gradient(circle, var(--attention-dot-color), var(--attention-dot-color) 2px, transparent 2px);
   background-position: center bottom calc(6.5px + var(--tabs-navbar-shadow-size));
   background-size: 4px 4px;
   background-repeat: no-repeat;

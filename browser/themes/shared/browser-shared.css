@@ -110,6 +110,7 @@
     --link-color: light-dark(rgb(0, 97, 224), rgb(0, 221, 255));
     --chrome-content-separator-color: rgba(0,0,0,.3);
     --tabs-navbar-shadow-color: light-dark(rgba(0,0,0,.1), rgba(0,0,0,.3));
+    --attention-dot-color: light-dark(#2ac3a2, #54ffbd);
 
     @media not (prefers-contrast) {
       --focus-outline-color: light-dark(#0061E0, #00DDFF);

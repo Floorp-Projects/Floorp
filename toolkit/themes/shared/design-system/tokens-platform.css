@@ -7,6 +7,9 @@
 @layer tokens-foundation {
   :root,
   :host(.anonymous-content-host) {
+    /** Attention Dot **/
+    --attention-dot-color: AccentColor;
+
     /** Border **/
     --border-interactive-color: color-mix(in srgb, currentColor 15%, var(--color-gray-60));
 
