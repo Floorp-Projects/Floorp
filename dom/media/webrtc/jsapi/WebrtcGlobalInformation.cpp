@@ -234,7 +234,7 @@ void WebrtcGlobalInformation::GetStatsHistorySince(
   auto statsAfter = aAfter.WasPassed() ? Some(aAfter.Value()) : Nothing();
   auto sdpAfter = aSdpAfter.WasPassed() ? Some(aSdpAfter.Value()) : Nothing();
 
-  WebrtcGlobalStatsHistory::GetHistory(pcIdFilter).apply([&](auto& hist) {
+  WebrtcGlobalStatsHistory::GetHistory(pcIdFilter).apply([&](const auto& hist) {
     if (!history.mReports.AppendElements(hist->Since(statsAfter), fallible)) {
       mozalloc_handle_oom(0);
     }
