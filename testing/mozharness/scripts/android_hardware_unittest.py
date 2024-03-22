@@ -178,7 +178,6 @@ class AndroidHardwareTest(
         dirs["abs_test_bin_dir"] = os.path.join(
             abs_dirs["abs_work_dir"], "tests", "bin"
         )
-        dirs["abs_xre_dir"] = os.path.join(abs_dirs["abs_work_dir"], "hostutils")
         dirs["abs_modules_dir"] = os.path.join(dirs["abs_test_install_dir"], "modules")
         dirs["abs_blob_upload_dir"] = os.path.join(
             abs_dirs["abs_work_dir"], "blobber_upload_dir"
@@ -190,6 +189,8 @@ class AndroidHardwareTest(
         dirs["abs_xpcshell_dir"] = os.path.join(
             dirs["abs_test_install_dir"], "xpcshell"
         )
+        work_dir = os.environ.get("MOZ_FETCHES_DIR") or abs_dirs["abs_work_dir"]
+        dirs["abs_xre_dir"] = os.path.join(work_dir, "hostutils")
 
         for key in dirs.keys():
             if key not in abs_dirs:
@@ -390,7 +391,7 @@ class AndroidHardwareTest(
             suite_categories=self._query_suite_categories()
         )
         dirs = self.query_abs_dirs()
-        self.xre_path = self.download_hostutils(dirs["abs_xre_dir"])
+        self.xre_path = dirs["abs_xre_dir"]
 
     def install(self):
         """

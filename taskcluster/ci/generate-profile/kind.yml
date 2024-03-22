@@ -123,6 +123,7 @@ jobs:
             toolchain:
                 - linux64-clang
                 - linux64-minidump-stackwalk
+                - linux64-hostutils
                 - android-sdk-linux
                 - android-system-image-x86_64-linux
                 - android-avd-x86_64-linux
@@ -164,6 +165,7 @@ jobs:
             toolchain:
                 - linux64-clang
                 - linux64-minidump-stackwalk
+                - linux64-hostutils
                 - android-sdk-linux
                 - android-system-image-x86_64-linux
                 - android-avd-x86_64-linux
@@ -206,6 +208,7 @@ jobs:
             toolchain:
                 - linux64-clang
                 - linux64-minidump-stackwalk
+                - linux64-hostutils
                 - android-sdk-linux
                 - android31-system-image-x86_64-linux
                 - android31-avd-x86_64-linux

@@ -1,0 +1,23 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    description: "hostutils toolchain build"
+    worker-type: b-linux-gcp
+    worker:
+        max-run-time: 1800
+    run:
+        using: toolchain-script
+        script: get-hostutils.sh
+        toolchain-artifact: public/build/hostutils.tar.zst
+
+linux64-hostutils:
+    treeherder:
+        symbol: TL(hostutils)
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: testing/config/tooltool-manifests/linux64/hostutils.manifest
+    run:
+        resources:
+            - testing/config/tooltool-manifests/linux64/hostutils.manifest

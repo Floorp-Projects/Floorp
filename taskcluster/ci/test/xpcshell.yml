@@ -148,6 +148,7 @@ xpcshell:
                     - android-emulator-linux
                     - linux64-node
                     - linux64-minidump-stackwalk
+                    - linux64-hostutils
 
 xpcshell-failures:
     description: "xpcshell specific failures test run"

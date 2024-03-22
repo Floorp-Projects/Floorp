@@ -281,10 +281,10 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
         dirs["abs_test_extensions_dir"] = os.path.join(
             dirs["abs_test_install_dir"], "extensions"
         )
+        work_dir = os.environ.get("MOZ_FETCHES_DIR") or abs_dirs["abs_work_dir"]
         if self.is_android:
-            dirs["abs_xre_dir"] = os.path.join(abs_dirs["abs_work_dir"], "hostutils")
+            dirs["abs_xre_dir"] = os.path.join(work_dir, "hostutils")
         if self.is_emulator:
-            work_dir = os.environ.get("MOZ_FETCHES_DIR") or abs_dirs["abs_work_dir"]
             dirs["abs_sdk_dir"] = os.path.join(work_dir, "android-sdk-linux")
             dirs["abs_avds_dir"] = os.path.join(work_dir, "android-device")
             dirs["abs_bundletool_path"] = os.path.join(work_dir, "bundletool.jar")
@@ -543,7 +543,7 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
         )
         dirs = self.query_abs_dirs()
         if self.is_android:
-            self.xre_path = self.download_hostutils(dirs["abs_xre_dir"])
+            self.xre_path = dirs["abs_xre_dir"]
         # Make sure that the logging directory exists
         if self.mkdir_p(dirs["abs_blob_upload_dir"]) == -1:
             self.fatal("Could not create blobber upload directory")

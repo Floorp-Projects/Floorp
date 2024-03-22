@@ -116,21 +116,6 @@ class AndroidMixin(object):
         url = "%s/raw-file/%s/%s" % (repo, revision, path)
         return url
 
-    def _tooltool_fetch(self, url, dir):
-        c = self.config
-        manifest_path = self.download_file(
-            url, file_name="releng.manifest", parent_dir=dir
-        )
-        if not os.path.exists(manifest_path):
-            self.fatal(
-                "Could not retrieve manifest needed to retrieve "
-                "artifacts from %s" % manifest_path
-            )
-        # from TooltoolMixin, included in TestingMixin
-        self.tooltool_fetch(
-            manifest_path, output_dir=dir, cache=c.get("tooltool_cache", None)
-        )
-
     def _launch_emulator(self):
         env = self.query_env()
 
@@ -506,25 +491,6 @@ class AndroidMixin(object):
             dump_device_screen(self.device, self, prefix=prefix)
         if reset_dir:
             del os.environ["MOZ_UPLOAD_DIR"]
-
-    def download_hostutils(self, xre_dir):
-        """
-        Download and install hostutils from tooltool.
-        """
-        xre_path = None
-        self.rmtree(xre_dir)
-        self.mkdir_p(xre_dir)
-        if self.config["hostutils_manifest_path"]:
-            url = self._get_repo_url(self.config["hostutils_manifest_path"])
-            self._tooltool_fetch(url, xre_dir)
-            for p in glob.glob(os.path.join(xre_dir, "host-utils-*")):
-                if os.path.isdir(p) and os.path.isfile(os.path.join(p, "xpcshell")):
-                    xre_path = p
-            if not xre_path:
-                self.fatal("xre path not found in %s" % xre_dir)
-        else:
-            self.fatal("configure hostutils_manifest_path!")
-        return xre_path
 
     def query_package_name(self):
         if self.app_name is None:
