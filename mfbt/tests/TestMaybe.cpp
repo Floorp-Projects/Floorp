@@ -1457,6 +1457,110 @@ static bool TestReference() {
   return true;
 }
 
+static Maybe<int> IncrementAndReturnTag(BasicValue& aValue) {
+  gFunctionWasApplied = true;
+  aValue.SetTag(aValue.GetTag() + 1);
+  return Some(aValue.GetTag());
+}
+
+static Maybe<int> AccessValueAndReturnNothing(const BasicValue&) {
+  gFunctionWasApplied = true;
+  return Nothing();
+}
+
+static Maybe<int> AccessValueAndReturnOther(const BasicValue&) {
+  gFunctionWasApplied = true;
+  return Some(42);
+}
+
+struct IncrementAndReturnTagFunctor {
+  IncrementAndReturnTagFunctor() : mBy(1) {}
+
+  Maybe<int> operator()(BasicValue& aValue) {
+    aValue.SetTag(aValue.GetTag() + mBy.GetTag());
+    return Some(aValue.GetTag());
+  }
+
+  BasicValue mBy;
+};
+
+struct AccessValueAndReturnOtherFunctor {
+  explicit AccessValueAndReturnOtherFunctor(int aVal) : mBy(aVal) {}
+
+  Maybe<BasicValue> operator()() {
+    gFunctionWasApplied = true;
+    return Some(mBy);
+  }
+
+  BasicValue mBy;
+};
+
+static bool TestAndThen() {
+  // Check that andThen handles the 'Nothing' case.
+  gFunctionWasApplied = false;
+  Maybe<BasicValue> mayValue;
+  Maybe<int> otherValue = mayValue.andThen(&AccessValueAndReturnOther);
+  MOZ_RELEASE_ASSERT(!gFunctionWasApplied);
+  MOZ_RELEASE_ASSERT(otherValue.isNothing());
+
+  // Check that andThen handles the 'Some' case.
+  mayValue = Some(BasicValue(1));
+  otherValue = mayValue.andThen(&AccessValueAndReturnNothing);
+  MOZ_RELEASE_ASSERT(gFunctionWasApplied);
+  MOZ_RELEASE_ASSERT(otherValue.isNothing());
+  gFunctionWasApplied = false;
+  otherValue = mayValue.andThen(&IncrementAndReturnTag);
+  MOZ_RELEASE_ASSERT(gFunctionWasApplied);
+  MOZ_RELEASE_ASSERT(mayValue->GetTag() == 2);
+  MOZ_RELEASE_ASSERT(*otherValue == 2);
+  gFunctionWasApplied = false;
+  otherValue = mayValue.andThen(&AccessValueAndReturnOther);
+  MOZ_RELEASE_ASSERT(gFunctionWasApplied);
+  MOZ_RELEASE_ASSERT(*otherValue == 42);
+
+  // Check that andThen works with a const reference.
+  const Maybe<BasicValue>& mayValueCRef = mayValue;
+  gFunctionWasApplied = false;
+  otherValue = mayValueCRef.andThen(&AccessValueAndReturnOther);
+  MOZ_RELEASE_ASSERT(gFunctionWasApplied);
+  MOZ_RELEASE_ASSERT(*otherValue == 42);
+
+  // Check that andThen works with functors.
+  IncrementAndReturnTagFunctor tagIncrementer;
+  MOZ_RELEASE_ASSERT(tagIncrementer.mBy.GetStatus() == eWasConstructed);
+  mayValue = Some(BasicValue(1));
+  otherValue = mayValue.andThen(tagIncrementer);
+  MOZ_RELEASE_ASSERT(mayValue->GetTag() == 2);
+  MOZ_RELEASE_ASSERT(*otherValue == 2);
+  MOZ_RELEASE_ASSERT(tagIncrementer.mBy.GetStatus() == eWasConstructed);
+
+  // Check that andThen works with lambda expressions.
+  gFunctionWasApplied = false;
+  mayValue = Some(BasicValue(2));
+  otherValue = mayValue.andThen(
+      [](BasicValue& aVal) { return Some(aVal.GetTag() * 2); });
+  MOZ_RELEASE_ASSERT(*otherValue == 4);
+  otherValue = otherValue.andThen([](int aVal) { return Some(aVal * 2); });
+  MOZ_RELEASE_ASSERT(*otherValue == 8);
+  otherValue = mayValueCRef.andThen([&](const BasicValue& aVal) {
+    gFunctionWasApplied = true;
+    return Some(42);
+  });
+  MOZ_RELEASE_ASSERT(gFunctionWasApplied == true);
+  MOZ_RELEASE_ASSERT(*otherValue == 42);
+
+  // Check that andThen can move the contained value.
+  mayValue = Some(BasicValue(1));
+  otherValue = std::move(mayValue).andThen([&](BasicValue&& aVal) {
+    BasicValue tmp = std::move(aVal);
+    return Some(tmp.GetTag());
+  });
+  MOZ_RELEASE_ASSERT(mayValue.isNothing());
+  MOZ_RELEASE_ASSERT(*otherValue == 1);
+
+  return true;
+}
+
 // These are quasi-implementation details, but we assert them here to prevent
 // backsliding to earlier times when Maybe<T> for smaller T took up more space
 // than T's alignment required.
@@ -1486,6 +1590,7 @@ int main() {
   RUN_TEST(TestSomePointerConversion);
   RUN_TEST(TestTypeConversion);
   RUN_TEST(TestReference);
+  RUN_TEST(TestAndThen);
 
   return 0;
 }

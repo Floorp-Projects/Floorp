@@ -9,6 +9,7 @@
 #ifndef mozilla_Maybe_h
 #define mozilla_Maybe_h
 
+#include <functional>
 #include <new>  // for placement new
 #include <ostream>
 #include <type_traits>
@@ -287,6 +288,15 @@ struct MaybeStorage<T, true> : MaybeStorageBase<T> {
       : MaybeStorageBase<T>{std::in_place, std::forward<Args>(aArgs)...},
         mIsSome{true} {}
 };
+
+template <typename T>
+struct IsMaybeImpl : std::false_type {};
+
+template <typename T>
+struct IsMaybeImpl<Maybe<T>> : std::true_type {};
+
+template <typename T>
+using IsMaybe = IsMaybeImpl<std::decay_t<T>>;
 
 }  // namespace detail
 
@@ -665,6 +675,57 @@ class MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS Maybe
     return Maybe<decltype(std::forward<Func>(aFunc)(extract()))>{};
   }
 
+  /*
+   * If |isSome()|, runs the provided function or functor on the contents of
+   * this Maybe and returns the result. Note that the provided function or
+   * functor must return a Maybe<U> of any type U.
+   * If |isNothing()|, returns an empty Maybe value with the same type as what
+   * the provided function would have returned.
+   */
+  template <typename Func>
+  constexpr auto andThen(Func&& aFunc) & {
+    static_assert(std::is_invocable_v<Func, T&>);
+    using U = std::invoke_result_t<Func, T&>;
+    static_assert(detail::IsMaybe<U>::value);
+    if (isSome()) {
+      return std::invoke(std::forward<Func>(aFunc), ref());
+    }
+    return std::remove_cv_t<std::remove_reference_t<U>>{};
+  }
+
+  template <typename Func>
+  constexpr auto andThen(Func&& aFunc) const& {
+    static_assert(std::is_invocable_v<Func, const T&>);
+    using U = std::invoke_result_t<Func, const T&>;
+    static_assert(detail::IsMaybe<U>::value);
+    if (isSome()) {
+      return std::invoke(std::forward<Func>(aFunc), ref());
+    }
+    return std::remove_cv_t<std::remove_reference_t<U>>{};
+  }
+
+  template <typename Func>
+  constexpr auto andThen(Func&& aFunc) && {
+    static_assert(std::is_invocable_v<Func, T&&>);
+    using U = std::invoke_result_t<Func, T&&>;
+    static_assert(detail::IsMaybe<U>::value);
+    if (isSome()) {
+      return std::invoke(std::forward<Func>(aFunc), extract());
+    }
+    return std::remove_cv_t<std::remove_reference_t<U>>{};
+  }
+
+  template <typename Func>
+  constexpr auto andThen(Func&& aFunc) const&& {
+    static_assert(std::is_invocable_v<Func, const T&&>);
+    using U = std::invoke_result_t<Func, const T&&>;
+    static_assert(detail::IsMaybe<U>::value);
+    if (isSome()) {
+      return std::invoke(std::forward<Func>(aFunc), extract());
+    }
+    return std::remove_cv_t<std::remove_reference_t<U>>{};
+  }
+
   /* If |isSome()|, empties this Maybe and destroys its contents. */
   constexpr void reset() {
     if (isSome()) {
@@ -751,6 +812,17 @@ class Maybe<T&> {
       val.emplace(std::forward<Func>(aFunc)(ref()));
     }
     return val;
+  }
+
+  template <typename Func>
+  constexpr auto andThen(Func&& aFunc) const {
+    static_assert(std::is_invocable_v<Func, T&>);
+    using U = std::invoke_result_t<Func, T&>;
+    static_assert(detail::IsMaybe<U>::value);
+    if (isSome()) {
+      return std::invoke(std::forward<Func>(aFunc), ref());
+    }
+    return std::remove_cv_t<std::remove_reference_t<U>>{};
   }
 
   bool refEquals(const Maybe<T&>& aOther) const {
