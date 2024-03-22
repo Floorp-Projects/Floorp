@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-import getopt
-import sys
+import pathlib
 
-import telemetry
-import utils
+import click
+
+from qm_try_analysis import telemetry, utils
+from qm_try_analysis.logging import info
 
 """
 The analysis is based on the following query:
@@ -55,88 +56,82 @@ Thus we sort the rows accordingly before writing them.
 """
 
 
-def usage():
-    print(
-        "fetch_qm_faiures.py -k <apikey> -b <minimum build=20210329000000>"
-        "-d <days back=1> -l <last event time> -w <workdir=.>"
-    )
-    print("")
-    print("Invokes the query 78691 and stores the result in a JSON file.")
-    print("-k <apikey>:          Your personal telemetry API key (not the query key!).")
-    print("-d <daysback>:        Number of days to go back. Default is 1.")
-    print("-b <minimum build>:   The lowest build id we will fetch data for.")
-    print("-l <last event time>: Fetch only events after this. Default is 0.")
-    print("-w <workdir>:         Working directory, default is '.'")
-    sys.exit(2)
-
-
-days = 1
-lasteventtime = 0
-key = "undefined"
-workdir = "."
-minbuild = "20210329000000"
-
-try:
-    opts, args = getopt.getopt(
-        sys.argv[1:],
-        "k:b:d:l:w:",
-        ["key=", "build=", "days=", "lasteventtime=", "workdir="],
-    )
-    for opt, arg in opts:
-        if opt == "-k":
-            key = arg
-        elif opt == "-d":
-            days = int(arg)
-        elif opt == "-l":
-            lasteventtime = int(arg)
-        elif opt == "-b":
-            minbuild = arg
-        elif opt == "-w":
-            workdir = arg
-except getopt.GetoptError:
-    usage()
-
-if key == "undefined":
-    usage()
-
-start = utils.dateback(days)
-year = start.year
-month = start.month
-day = start.day
-
-run = {}
-lastrun = utils.getLastRunFromExecutionFile(workdir)
-if "lasteventtime" in lastrun:
-    lasteventtime = lastrun["lasteventtime"]
-run["workdir"] = workdir
-run["daysback"] = days
-run["minbuild"] = minbuild
-
-p_params = "p_year={:04d}&p_month={:02d}&p_day={:02d}&p_build={}" "&p_last={}".format(
-    year, month, day, minbuild, lasteventtime
+@click.command()
+@click.option(
+    "-k",
+    "--key",
+    required=True,
+    help="Your personal telemetry API key.",
 )
-print(p_params)
-result = telemetry.query(key, 78691, p_params)
-rows = result["query_result"]["data"]["rows"]
-run["numrows"] = len(rows)
-if run["numrows"] > 0:
-    lasteventtime = telemetry.getLastEventTimeAbs(rows)
-    run["lasteventtime"] = lasteventtime
-    rows.sort(
-        key=lambda row: "{}.{}.{}.{}.{:06d}".format(
-            row["client_id"],
-            row["session_id"],
-            row["seq"] >> 32,  # thread_id
-            row["submit_timeabs"],
-            row["seq"] & 0x00000000FFFFFFFF,  # seq,
-        ),
-        reverse=False,
-    )
-    outfile = "{}/qmrows_until_{}.json".format(workdir, lasteventtime)
-    utils.writeJSONFile(outfile, rows)
-    run["rawfile"] = outfile
-else:
-    print("No results found, maybe next time.")
-    run["lasteventtime"] = lasteventtime
+@click.option(
+    "-b",
+    "--minbuild",
+    default="20210329000000",
+    help="The lowest build id we will fetch data for. This should have the following format: `yyyymmddhhmmss`.",
+)
+@click.option("-d", "--days", type=int, default=7, help="Number of days to go back.")
+@click.option(
+    "-l",
+    "--lasteventtime",
+    type=int,
+    default=0,
+    help="Fetch only events after this number of Unix milliseconds.",
+)
+@click.option(
+    "-w",
+    "--workdir",
+    type=click.Path(file_okay=False, writable=True, path_type=pathlib.Path),
+    default="output",
+    help="Working directory",
+)
+def fetch_qm_failures(key, minbuild, days, lasteventtime, workdir):
+    """
+    Invokes the query 78691 and stores the result in a JSON file.
+    """
+    # Creeate output dir if it does not exist
+    workdir.mkdir(exist_ok=True)
 
-utils.addNewRunToExecutionFile(workdir, run)
+    start = utils.dateback(days)
+    year, month, day = start.year, start.month, start.day
+
+    run = {}
+    lastrun = utils.getLastRunFromExecutionFile(workdir)
+    if "lasteventtime" in lastrun:
+        lasteventtime = lastrun["lasteventtime"]
+
+    run["workdir"] = workdir.as_posix()
+    run["daysback"] = days
+    run["minbuild"] = minbuild
+
+    p_params = f"p_year={year:04d}&p_month={month:02d}&p_day={day:02d}&p_build={minbuild}&p_last={lasteventtime}"
+
+    # Read string at the start of the file for more information on query 78691
+    result = telemetry.query(key, 78691, p_params)
+    rows = result["query_result"]["data"]["rows"]
+    run["numrows"] = len(rows)
+
+    if run["numrows"] > 0:
+        lasteventtime = telemetry.getLastEventTimeAbs(rows)
+        run["lasteventtime"] = lasteventtime
+        rows.sort(
+            key=lambda row: "{}.{}.{}.{}.{:06d}".format(
+                row["client_id"],
+                row["session_id"],
+                row["seq"] >> 32,  # thread_id
+                row["submit_timeabs"],
+                row["seq"] & 0x00000000FFFFFFFF,  # seq,
+            ),
+            reverse=False,
+        )
+        outfile = f"{workdir}/qmrows_until_{lasteventtime}.json"
+        utils.writeJSONFile(outfile, rows)
+        run["rawfile"] = outfile
+    else:
+        info("No results found, maybe next time.")
+        run["lasteventtime"] = lasteventtime
+
+    utils.addNewRunToExecutionFile(workdir, run)
+
+
+if __name__ == "__main__":
+    fetch_qm_failures()
