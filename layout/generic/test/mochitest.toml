@@ -282,6 +282,14 @@ support-files = [
 
 ["test_selection_cross_shadow_boundary_2_forward_drag.html"]
 
+["test_selection_cross_shadow_boundary_multi_ranges_forward_drag.html"]
+
+["test_selection_cross_shadow_boundary_multi_ranges_forward_click.html"]
+
+["test_selection_cross_shadow_boundary_multi_ranges_backward_drag.html"]
+
+["test_selection_cross_shadow_boundary_multi_ranges_backward_click.html"]
+
 ["test_selection_doubleclick.html"]
 
 ["test_selection_expanding.html"]
