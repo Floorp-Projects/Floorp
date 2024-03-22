@@ -44,6 +44,20 @@ cd mozilla-unified/dom/quota/scripts/qm-try-analysis
 poetry install
 ```
 
+### Containerized setup
+
+To streamline the setup process, use [`Podman`](https://github.com/containers/podman?tab=readme-ov-file#podman-a-tool-for-managing-oci-containers-and-pods) with the provided `Containerfile`. Navigate to the relevant directory:
+
+```bash
+cd mozilla-unified/dom/quota/scripts/qm-try-analysis
+```
+
+Build the container image and run the container:
+
+```bash
+podman run -it $(podman build -q .) -v <path on your system>:/home/scripts/qm-try-analysis/output
+```
+
 ## Effort
 
 - Each run takes approximately 5–15 minutes, with scripts running in less than 5 minutes.

@@ -1,0 +1,5 @@
+.venv
+.gitignore
+.vscode
+output
+Containerfile

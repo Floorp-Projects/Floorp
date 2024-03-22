@@ -1,0 +1,24 @@
+FROM rust:1.74 as build
+
+RUN git clone https://github.com/mozilla/rust-code-analysis && \
+    cd rust-code-analysis && \
+    git checkout 56f182ac570 && \
+    cargo build -p rust-code-analysis-cli --release -v
+
+FROM python:3.9.18-slim
+
+COPY --from=build /rust-code-analysis/target/release/rust-code-analysis-cli /usr/local/bin/
+
+RUN pip install --no-cache-dir poetry==1.7
+
+RUN useradd -ms /bin/bash scripts
+USER scripts
+
+WORKDIR /home/scripts/qm-try-analysis
+
+COPY poetry.lock pyproject.toml ./
+RUN poetry install --no-dev
+
+COPY ./ .
+
+ENTRYPOINT /bin/bash -c "poetry shell && exec /bin/bash -i"
