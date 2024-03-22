@@ -570,7 +570,7 @@ struct DOMIfaceAndProtoJSClass {
   // initialization for aggregate/POD types.
   const JSClass mBase;
 
-  // Either eNamespace, eInterfacePrototype,
+  // Either eInterface, eNamespace, eInterfacePrototype,
   // eGlobalInterfacePrototype or eNamedPropertiesObject.
   DOMObjectType mType;  // uint8_t
 
@@ -587,6 +587,25 @@ struct DOMIfaceAndProtoJSClass {
   }
 
   const JSClass* ToJSClass() const { return &mBase; }
+};
+
+// Special JSClass for DOM interface objects.
+struct DOMIfaceJSClass : public DOMIfaceAndProtoJSClass {
+  // Boolean indicating whether this object wants an isInstance property
+  // pointing to InterfaceIsInstance defined on it.  Only ever true for the
+  // eInterface case.
+  bool wantsInterfaceIsInstance;
+
+  // The value to return for Function.prototype.toString on this interface
+  // object.
+  const char* mFunToString;
+
+  static const DOMIfaceJSClass* FromJSClass(const JSClass* base) {
+    const DOMIfaceAndProtoJSClass* clazz =
+        DOMIfaceAndProtoJSClass::FromJSClass(base);
+    MOZ_ASSERT(clazz->mType == eInterface || clazz->mType == eNamespace);
+    return static_cast<const DOMIfaceJSClass*>(clazz);
+  }
 };
 
 class ProtoAndIfaceCache;
