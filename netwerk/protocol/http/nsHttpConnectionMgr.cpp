@@ -817,10 +817,35 @@ HttpConnectionBase* nsHttpConnectionMgr::FindCoalescableConnection(
   for (uint32_t i = 0; i < keyLen; ++i) {
     conn = FindCoalescableConnectionByHashKey(ent, ent->mCoalescingKeys[i],
                                               justKidding, aNoHttp2, aNoHttp3);
+
+    auto usableEntry = [&](HttpConnectionBase* conn) {
+      // This is allowed by the spec, but other browsers don't coalesce
+      // so agressively, which surprises developers. See bug 1420777.
+      if (StaticPrefs::network_http_http2_aggressive_coalescing()) {
+        return true;
+      }
+
+      // Make sure that the connection's IP address is one that is in
+      // the set of IP addresses in the entry's DNS response.
+      NetAddr addr;
+      nsresult rv = conn->GetPeerAddr(&addr);
+      if (NS_FAILED(rv)) {
+        // Err on the side of not coalescing
+        return false;
+      }
+      // We don't care about remote port when matching entries.
+      addr.inet.port = 0;
+      return ent->mAddresses.Contains(addr);
+    };
+
     if (conn) {
-      LOG(("FindCoalescableConnection(%s) match conn %p on dns key %s\n",
-           ci->HashKey().get(), conn, ent->mCoalescingKeys[i].get()));
-      return conn;
+      LOG(("Found connection with matching hash"));
+      if (usableEntry(conn)) {
+        LOG(("> coalescing"));
+        return conn;
+      } else {
+        LOG(("> not coalescing as remote address not present in DNS records"));
+      }
     }
   }
 

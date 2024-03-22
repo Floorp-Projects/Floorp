@@ -121,7 +121,13 @@ class ConnectionEntry {
   // combined with the Anonymous flag and OA from the connection information
   // to build the hash key for hosts in the same ip pool.
   //
+
   nsTArray<nsCString> mCoalescingKeys;
+
+  // This is a list of addresses matching the coalescing keys.
+  // This is necessary to check if the origin's DNS entries
+  // contain the IP address of the active connection.
+  nsTArray<NetAddr> mAddresses;
 
   // To have the UsingSpdy flag means some host with the same connection
   // entry has done NPN=spdy/* at some point. It does not mean every
