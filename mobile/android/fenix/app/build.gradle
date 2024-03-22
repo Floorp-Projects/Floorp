@@ -289,17 +289,6 @@ android {
     namespace 'org.mozilla.fenix'
 }
 
-// Mimic Python: open(os.path.join(buildconfig.topobjdir, 'buildid.h')).readline().split()[2]
-def getBuildId() {
-    if (System.env.MOZ_BUILD_DATE) {
-        if (System.env.MOZ_BUILD_DATE.length() == 14) {
-            return System.env.MOZ_BUILD_DATE
-        }
-        logger.warn("Ignoring invalid MOZ_BUILD_DATE: ${System.env.MOZ_BUILD_DATE}")
-    }
-    return file("${gradle.mozconfig.topobjdir}/buildid.h").getText('utf-8').split()[2]
-}
-
 android.applicationVariants.configureEach { variant ->
 
 // -------------------------------------------------------------------------------------------------
@@ -322,8 +311,8 @@ android.applicationVariants.configureEach { variant ->
         // builds.
 
         def versionName = variant.buildType.name == 'nightly' ?
-                "${Config.nightlyVersionName(project)}-${getBuildId()}" :
-                "${Config.releaseVersionName(project)}-${getBuildId()}"
+                "${Config.nightlyVersionName(project)}" :
+                "${Config.releaseVersionName(project)}"
         println("versionName override: $versionName")
 
         variant.outputs.each { output ->
