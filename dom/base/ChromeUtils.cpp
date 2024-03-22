@@ -9,7 +9,6 @@
 #include "JSOracleParent.h"
 #include "js/CallAndConstruct.h"  // JS::Call
 #include "js/ColumnNumber.h"  // JS::TaggedColumnNumberOneOrigin, JS::ColumnNumberOneOrigin
-#include "js/friend/DumpFunctions.h"
 #include "js/CharacterEncoding.h"
 #include "js/Date.h"                // JS::IsISOStyleDate
 #include "js/Object.h"              // JS::GetClass
@@ -634,7 +633,6 @@ static mozJSModuleLoader* GetModuleLoaderForCurrentGlobal(
   RefPtr targetModuleLoader = global->GetModuleLoader(aCx);
   if (!targetModuleLoader) {
     // Sandbox without associated window returns nullptr for GetModuleLoader.
-    js::DumpBacktrace(aCx);
     JS_ReportErrorASCII(aCx, "No ModuleLoader found for the current context");
     return nullptr;
   }
