@@ -12,7 +12,7 @@ using namespace soundtouch;
 
 RLBoxSoundTouch::RLBoxSoundTouch() {
 #ifdef MOZ_WASM_SANDBOXING_SOUNDTOUCH
-  mSandbox.create_sandbox(false /* infallible */);
+  mSandbox.create_sandbox(true /* infallible */);
 #else
   mSandbox.create_sandbox();
 #endif
