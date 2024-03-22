@@ -26,8 +26,8 @@ LazyLogModule MMPrinter::sMMLog("MessageManager");
 // the output of the logs into logs more friendly to reading.
 
 /* static */
-void MMPrinter::PrintImpl(char const* aLocation, const nsAString& aMsg,
-                          ClonedMessageData const& aData) {
+Maybe<uint64_t> MMPrinter::PrintHeader(char const* aLocation,
+                                       const nsAString& aMsg) {
   NS_ConvertUTF16toUTF8 charMsg(aMsg);
 
   /*
@@ -43,15 +43,29 @@ void MMPrinter::PrintImpl(char const* aLocation, const nsAString& aMsg,
   char* mmSkipLog = PR_GetEnv("MOZ_LOG_MESSAGEMANAGER_SKIP");
 
   if (mmSkipLog && strstr(mmSkipLog, charMsg.get())) {
-    return;
+    return Nothing();
   }
 
-  uint64_t msg_id = RandomUint64OrDie();
+  uint64_t aMsgId = RandomUint64OrDie();
 
   MOZ_LOG(MMPrinter::sMMLog, LogLevel::Debug,
-          ("%" PRIu64 " %s Message: %s in process type: %s", msg_id, aLocation,
+          ("%" PRIu64 " %s Message: %s in process type: %s", aMsgId, aLocation,
            charMsg.get(), XRE_GetProcessTypeString()));
 
+  return Some(aMsgId);
+}
+
+/* static */
+void MMPrinter::PrintNoData(uint64_t aMsgId) {
+  if (!MOZ_LOG_TEST(sMMLog, LogLevel::Verbose)) {
+    return;
+  }
+  MOZ_LOG(MMPrinter::sMMLog, LogLevel::Verbose,
+          ("%" PRIu64 " (No Data)", aMsgId));
+}
+
+/* static */
+void MMPrinter::PrintData(uint64_t aMsgId, ClonedMessageData const& aData) {
   if (!MOZ_LOG_TEST(sMMLog, LogLevel::Verbose)) {
     return;
   }
@@ -75,8 +89,7 @@ void MMPrinter::PrintImpl(char const* aLocation, const nsAString& aMsg,
   if (rv.Failed()) {
     // In testing, the only reason this would fail was if there was no data in
     // the message; so it seems like this is safe-ish.
-    MOZ_LOG(MMPrinter::sMMLog, LogLevel::Verbose,
-            ("%" PRIu64 " (No Data)", msg_id));
+    MMPrinter::PrintNoData(aMsgId);
     rv.SuppressException();
     return;
   }
@@ -86,7 +99,7 @@ void MMPrinter::PrintImpl(char const* aLocation, const nsAString& aMsg,
   if (!srcString.init(cx, unevalObj)) return;
 
   MOZ_LOG(MMPrinter::sMMLog, LogLevel::Verbose,
-          ("%" PRIu64 " %s", msg_id, NS_ConvertUTF16toUTF8(srcString).get()));
+          ("%" PRIu64 " %s", aMsgId, NS_ConvertUTF16toUTF8(srcString).get()));
 }
 
 }  // namespace mozilla::dom
