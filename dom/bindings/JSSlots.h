@@ -22,9 +22,15 @@
 // Specific objects may have more for storing cached values.
 #define DOM_INSTANCE_RESERVED_SLOTS 1
 
-// Interface objects store a number of reserved slots equal to
-// DOM_INTERFACE_SLOTS_BASE + number of legacy factory functions.
-#define DOM_INTERFACE_SLOTS_BASE 0
+// Interface objects store a number of reserved slots equal to the number of
+// legacy factory functions.
+enum {
+  INTERFACE_OBJECT_FIRST_LEGACY_FACTORY_FUNCTION = 0,
+};
+
+// Legacy factory functions store a JSNativeHolder in the
+// LEGACY_FACTORY_FUNCTION_NATIVE_HOLDER_RESERVED_SLOT slot.
+enum { LEGACY_FACTORY_FUNCTION_NATIVE_HOLDER_RESERVED_SLOT = 0 };
 
 // Interface prototype objects store a number of reserved slots equal to
 // DOM_INTERFACE_PROTO_SLOTS_BASE or DOM_INTERFACE_PROTO_SLOTS_BASE + 1 if a
