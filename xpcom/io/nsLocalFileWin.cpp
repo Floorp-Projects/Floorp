@@ -326,6 +326,8 @@ static nsresult ConvertWinError(DWORD aWinErr) {
       [[fallthrough]];  // to NS_ERROR_FILE_DEVICE_FAILURE
     case ERROR_DEV_NOT_EXIST:
       [[fallthrough]];  // to NS_ERROR_FILE_DEVICE_FAILURE
+    case ERROR_INVALID_FUNCTION:
+      [[fallthrough]];  // to NS_ERROR_FILE_DEVICE_FAILURE
     case ERROR_IO_DEVICE:
       rv = NS_ERROR_FILE_DEVICE_FAILURE;
       break;
