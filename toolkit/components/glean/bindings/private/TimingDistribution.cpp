@@ -21,7 +21,10 @@
 namespace mozilla::glean {
 
 using MetricId = uint32_t;  // Same type as in api/src/private/mod.rs
-using MetricTimerTuple = std::tuple<MetricId, TimerId>;
+struct MetricTimerTuple {
+  MetricId mMetricId;
+  TimerId mTimerId;
+};
 class MetricTimerTupleHashKey : public PLDHashEntryHdr {
  public:
   using KeyType = const MetricTimerTuple&;
@@ -34,16 +37,17 @@ class MetricTimerTupleHashKey : public PLDHashEntryHdr {
 
   KeyType GetKey() const { return mValue; }
   bool KeyEquals(KeyTypePointer aKey) const {
-    return std::get<0>(*aKey) == std::get<0>(mValue) &&
-           std::get<1>(*aKey) == std::get<1>(mValue);
+    return aKey->mMetricId == mValue.mMetricId &&
+           aKey->mTimerId == mValue.mTimerId;
   }
 
   static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
   static PLDHashNumber HashKey(KeyTypePointer aKey) {
     // Chosen because this is how nsIntegralHashKey does it.
-    return HashGeneric(std::get<0>(*aKey), std::get<1>(*aKey));
+    return HashGeneric(aKey->mMetricId, aKey->mTimerId);
   }
   enum { ALLOW_MEMMOVE = true };
+  static_assert(std::is_trivially_copyable_v<MetricTimerTuple>);
 
  private:
   const MetricTimerTuple mValue;
@@ -103,7 +107,7 @@ extern "C" NS_EXPORT void GIFFT_TimingDistributionStart(
   auto mirrorId = mozilla::glean::HistogramIdForMetric(aMetricId);
   if (mirrorId) {
     mozilla::glean::GetTimerIdToStartsLock().apply([&](auto& lock) {
-      auto tuple = std::make_tuple(aMetricId, aTimerId);
+      auto tuple = mozilla::glean::MetricTimerTuple{aMetricId, aTimerId};
       // It should be all but impossible for anyone to have already inserted
       // this timer for this metric given the monotonicity of timer ids.
       (void)NS_WARN_IF(lock.ref()->Remove(tuple));
@@ -118,7 +122,8 @@ extern "C" NS_EXPORT void GIFFT_TimingDistributionStopAndAccumulate(
   auto mirrorId = mozilla::glean::HistogramIdForMetric(aMetricId);
   if (mirrorId) {
     mozilla::glean::GetTimerIdToStartsLock().apply([&](auto& lock) {
-      auto optStart = lock.ref()->Extract(std::make_tuple(aMetricId, aTimerId));
+      auto tuple = mozilla::glean::MetricTimerTuple{aMetricId, aTimerId};
+      auto optStart = lock.ref()->Extract(tuple);
       // The timer might not be in the map to be removed if it's already been
       // cancelled or stop_and_accumulate'd.
       if (!NS_WARN_IF(!optStart)) {
@@ -145,8 +150,8 @@ extern "C" NS_EXPORT void GIFFT_TimingDistributionCancel(
     mozilla::glean::GetTimerIdToStartsLock().apply([&](auto& lock) {
       // The timer might not be in the map to be removed if it's already been
       // cancelled or stop_and_accumulate'd.
-      (void)NS_WARN_IF(
-          !lock.ref()->Remove(std::make_tuple(aMetricId, aTimerId)));
+      auto tuple = mozilla::glean::MetricTimerTuple{aMetricId, aTimerId};
+      (void)NS_WARN_IF(!lock.ref()->Remove(tuple));
     });
   }
 }
