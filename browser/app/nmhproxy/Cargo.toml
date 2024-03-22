@@ -10,8 +10,10 @@ name = "nmhproxy"
 path = "src/main.rs"
 
 [dependencies]
+dirs = "4"
 mozbuild = "0.1"
 mozilla-central-workspace-hack = { version = "0.1", features = ["nmhproxy"], optional = true }
 serde = { version = "1", features = ["derive", "rc"] }
 serde_json = "1.0"
+tempfile = "3"
 url = "2.4"

@@ -43,9 +43,12 @@ fn main() -> Result<(), Error> {
                 "Failed to deserialize message JSON",
             ));
         })?;
-    commands::process_command(&native_messaging_json).or_else(|_| -> Result<bool, _> {
-        commands::generate_response("Failed to process command", ResultCode::Error.into())
-            .expect("JSON error");
+    commands::process_command(&native_messaging_json).or_else(|e| -> Result<bool, _> {
+        commands::generate_response(
+            format!("Failed to process command: {}", e).as_str(),
+            ResultCode::Error.into(),
+        )
+        .expect("JSON error");
         return Err(Error::new(
             ErrorKind::InvalidInput,
             "Failed to process command",
