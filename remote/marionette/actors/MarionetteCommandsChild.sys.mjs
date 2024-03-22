@@ -284,7 +284,7 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
 
     const accessible = await lazy.accessibility.getAccessible(elem);
     if (!accessible) {
-      return null;
+      return "";
     }
 
     // If name is null (absent), expose the empty string.
