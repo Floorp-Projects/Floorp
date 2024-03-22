@@ -6,20 +6,22 @@ import time
 
 import requests
 
+from qm_try_analysis.logging import info
+
+TELEMETRY_BASE_URL = "https://sql.telemetry.mozilla.org/api/"
+
 
 def query(key, query, p_params):
     headers = {"Authorization": "Key {}".format(key)}
-    start_url = "https://sql.telemetry.mozilla.org/api/" "queries/{}/refresh?{}".format(
-        query, p_params
-    )
-    print(start_url)
+    start_url = TELEMETRY_BASE_URL + f"queries/{query}/refresh?{p_params}"
+    info(f"Starting job using url {start_url}")
     resp = requests.post(url=start_url, headers=headers)
     job = resp.json()["job"]
-    jid = job["id"]
-    print("Started job {}".format(jid))
+    job_id = job["id"]
+    info(f"Started job {job_id}")
 
-    poll_url = "https://sql.telemetry.mozilla.org/api/" "jobs/{}".format(jid)
-    print(poll_url)
+    poll_url = TELEMETRY_BASE_URL + f"jobs/{job_id}"
+    info(f"Polling query status from {poll_url}")
     poll = True
     status = 0
     qresultid = 0
@@ -34,15 +36,13 @@ def query(key, query, p_params):
         else:
             time.sleep(0.2)
     print(".")
-    print("Finished with status {}".format(status))
+    info(f"Finished with status {status}")
 
     if status == 3:
-        fetch_url = (
-            "https://sql.telemetry.mozilla.org/api/"
-            "queries/78691/results/{}.json".format(qresultid)
-        )
-        print(fetch_url)
-        resp = requests.get(url=fetch_url, headers=headers)
+        results_url = TELEMETRY_BASE_URL + f"queries/78691/results/{qresultid}.json"
+
+        info(f"Querying result from {results_url}")
+        resp = requests.get(url=results_url, headers=headers)
         return resp.json()
 
     return {"query_result": {"data": {"rows": {}}}}

@@ -5,13 +5,13 @@
 
 # This script assumes to have rust-code-analysis-cli in the path.
 HG_URL=$1
-TEMPDIR=/tmp/fetch_fn_names_$BASHPID
+TEMPDIR=/tmp/fetch_fn_names_$$
 TEMPSRC=$TEMPDIR/src
 mkdir $TEMPDIR
 echo "" > $TEMPDIR/empty.json
 HG_URL=`echo $HG_URL | sed 's/annotate/raw-file/g'`
 wget -q -O "$TEMPSRC" $HG_URL
-rust-code-analysis-cli -m -O json -o "$TEMPDIR" -p "$TEMPSRC"
+rust-code-analysis-cli -m -O json -p "$TEMPSRC"
 CONTENT=`cat $TEMPDIR/*.json`
 rm -rf $TEMPDIR
 echo $CONTENT

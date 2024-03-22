@@ -7,6 +7,8 @@ import json
 
 import requests
 
+from qm_try_analysis.logging import error, info, warning
+
 
 def readJSONFile(FileName):
     f = open(FileName, "r")
@@ -37,7 +39,7 @@ def fetchBuildRevisions(buildids):
     buildhub_url = "https://buildhub.moz.tools/api/search"
     delids = {}
     for bid in buildids:
-        print("Fetching revision for build {}.".format(bid))
+        info(f"Fetching revision for build {bid}.")
         body = {"size": 1, "query": {"term": {"build.id": bid}}}
         resp = requests.post(url=buildhub_url, json=body)
         hits = resp.json()["hits"]["hits"]
@@ -48,7 +50,7 @@ def fetchBuildRevisions(buildids):
                 + hits[0]["_source"]["source"]["revision"]
             )
         else:
-            print("No revision for build.id {}".format(bid))
+            warning(f"No revision for build.id {bid}")
             delids[bid] = "x"
     for bid in delids:
         buildids.pop(bid)
@@ -67,7 +69,7 @@ def writeExecutionFile(workdir, executions):
     try:
         writeJSONFile(exefile, executions)
     except OSError:
-        print("Error writing execution record.")
+        error("Error writing execution record.")
 
 
 def getLastRunFromExecutionFile(workdir):

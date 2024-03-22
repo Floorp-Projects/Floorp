@@ -3,12 +3,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import getopt
 import sys
+from os import path
 
-import fn_anchors
-import stackanalysis
-import utils
+import click
+
+from qm_try_analysis import fn_anchors, stackanalysis, utils
+from qm_try_analysis.logging import error, info
 
 """
 The analysis is based on stack frames of the following form:
@@ -35,103 +36,115 @@ last item of the list inside qmexecutions.json.
 """
 
 
-def usage():
-    print("analyze_qm_faiures.py -w <workdir=.>")
-    print("")
-    print("Analyzes the results from fetch_qm_failures.py's JSON file.")
-    print(
-        "Writes out several JSON results as files and a bugzilla markup table on stdout."
-    )
-    print("-w <workdir>:       Working directory, default is '.'")
-    sys.exit(2)
-
-
-days = 1
-workdir = "."
-
-try:
-    opts, args = getopt.getopt(sys.argv[1:], "w:", ["workdir="])
-    for opt, arg in opts:
-        if opt == "-w":
-            workdir = arg
-except getopt.GetoptError:
-    usage()
-
-run = utils.getLastRunFromExecutionFile(workdir)
-if "numrows" not in run:
-    print("No previous execution from fetch_qm_failures.py found.")
-    usage()
-if run["numrows"] == 0:
-    print("The last execution yielded no result.")
-
-infile = run["rawfile"]
-
-
-def getFname(prefix):
-    return "{}/{}_until_{}.json".format(workdir, prefix, run["lasteventtime"])
-
-
-# read rows from JSON
-rows = utils.readJSONFile(getFname("qmrows"))
-print("Found {} rows of data.".format(len(rows)))
-rows = stackanalysis.sanitize(rows)
-
-# enrich rows with hg locations
-buildids = stackanalysis.extractBuildIDs(rows)
-utils.fetchBuildRevisions(buildids)
-stackanalysis.constructHGLinks(buildids, rows)
-
-# transform rows to unique stacks
-raw_stacks = stackanalysis.collectRawStacks(rows)
-all_stacks = stackanalysis.mergeEqualStacks(raw_stacks)
-
-# enrich with function anchors
-for stack in all_stacks:
-    for frame in stack["frames"]:
-        frame["anchor"] = "{}:{}".format(
-            frame["source_file"], fn_anchors.getFunctionName(frame["location"])
-        )
-
-# separate stacks for relevance
-error_stacks = []
-warn_stacks = []
-info_stacks = []
-abort_stacks = []
-stackanalysis.filterStacksForPropagation(
-    all_stacks, error_stacks, warn_stacks, info_stacks, abort_stacks
+@click.command()
+@click.option(
+    "--output-to",
+    type=click.Path(dir_okay=False, writable=True),
+    default="qmstacks_until_<lasteventtime>.txt",
+    help="Specify the output file for the analyzed data.",
 )
-run["errorfile"] = getFname("qmerrors")
-utils.writeJSONFile(run["errorfile"], error_stacks)
-run["warnfile"] = getFname("qmwarnings")
-utils.writeJSONFile(run["warnfile"], warn_stacks)
-run["infofile"] = getFname("qminfo")
-utils.writeJSONFile(run["infofile"], info_stacks)
-run["abortfile"] = getFname("qmabort")
-utils.writeJSONFile(run["abortfile"], abort_stacks)
-utils.updateLastRunToExecutionFile(workdir, run)
+@click.option(
+    "-w",
+    "--workdir",
+    type=click.Path(file_okay=False, exists=True, writable=True),
+    default="output",
+    help="Working directory",
+)
+def analyze_qm_failures(output_to, workdir):
+    """
+    Analyzes the results from fetch's JSON file.
+    Writes out several JSON results as files and a bugzilla markup table on stdout.
+    """
+    run = utils.getLastRunFromExecutionFile(workdir)
+    if "numrows" not in run or run["numrows"] == 0:
+        error(
+            "No previous execution from fetch_qm_failures.py found or the last execution yielded no result."
+        )
+        sys.exit(2)
+
+    if output_to == "qmstacks_until_<lasteventtime>.txt":
+        output_to = path.join(workdir, f'qmstacks_until_{run["lasteventtime"]}.txt')
+    elif output_to.exists():
+        error(
+            f'The output file "{output_to}" already exists. This script would override it.'
+        )
+        sys.exit(2)
+    run["stacksfile"] = output_to
+
+    def getFname(prefix):
+        return "{}/{}_until_{}.json".format(workdir, prefix, run["lasteventtime"])
+
+    # read rows from JSON
+    rows = utils.readJSONFile(getFname("qmrows"))
+    info(f"Found {len(rows)} rows of data")
+    rows = stackanalysis.sanitize(rows)
+
+    # enrich rows with hg locations
+    buildids = stackanalysis.extractBuildIDs(rows)
+    utils.fetchBuildRevisions(buildids)
+    stackanalysis.constructHGLinks(buildids, rows)
+
+    # transform rows to unique stacks
+    raw_stacks = stackanalysis.collectRawStacks(rows)
+    all_stacks = stackanalysis.mergeEqualStacks(raw_stacks)
+
+    # enrich with function anchors
+    for stack in all_stacks:
+        for frame in stack["frames"]:
+            frame["anchor"] = "{}:{}".format(
+                frame["source_file"], fn_anchors.getFunctionName(frame["location"])
+            )
+
+    # separate stacks for relevance
+    error_stacks = []
+    warn_stacks = []
+    info_stacks = []
+    abort_stacks = []
+    stackanalysis.filterStacksForPropagation(
+        all_stacks, error_stacks, warn_stacks, info_stacks, abort_stacks
+    )
+    run["errorfile"] = getFname("qmerrors")
+    utils.writeJSONFile(run["errorfile"], error_stacks)
+    run["warnfile"] = getFname("qmwarnings")
+    utils.writeJSONFile(run["warnfile"], warn_stacks)
+    run["infofile"] = getFname("qminfo")
+    utils.writeJSONFile(run["infofile"], info_stacks)
+    run["abortfile"] = getFname("qmabort")
+    utils.writeJSONFile(run["abortfile"], abort_stacks)
+    utils.updateLastRunToExecutionFile(workdir, run)
+
+    info(f"Found {len(error_stacks)} error stacks")
+    info(f"Found {len(warn_stacks)} warning stacks")
+    info(f"Found {len(info_stacks)} info stacks")
+    info(f"Found {len(abort_stacks)} aborted stacks")
+
+    # Write results to the specified output file
+    with open(output_to, "w") as output:
+
+        def print_to_output(message):
+            print(message, file=output)
+
+        print_to_output("Error stacks:")
+        print_to_output(stackanalysis.printStacks(error_stacks))
+        print_to_output("")
+        print_to_output("Error stacks grouped by anchors:")
+        anchors = stackanalysis.groupStacksForAnchors(error_stacks)
+        anchornames = list(anchors.keys())
+        for a in anchornames:
+            print_to_output(stackanalysis.printStacks(anchors[a]["stacks"]))
+            print_to_output("")
+        print_to_output("")
+        print_to_output("Warning stacks:")
+        print_to_output(stackanalysis.printStacks(warn_stacks))
+        print_to_output("")
+        print_to_output("Info stacks:")
+        print_to_output(stackanalysis.printStacks(info_stacks))
+        print_to_output("")
+        print_to_output("Aborted stacks:")
+        print_to_output(stackanalysis.printStacks(abort_stacks))
+
+    info(f"Wrote results to specified output file {output_to}")
 
 
-# print results to stdout
-print("Found {} error stacks.".format(len(error_stacks)))
-print("Found {} warning stacks.".format(len(warn_stacks)))
-print("Found {} info stacks.".format(len(info_stacks)))
-print("Found {} aborted stacks.".format(len(abort_stacks)))
-print("")
-print("Error stacks:")
-print(stackanalysis.printStacks(error_stacks))
-print("")
-print("Error stacks grouped by anchors:")
-anchors = stackanalysis.groupStacksForAnchors(error_stacks)
-anchornames = list(anchors.keys())
-for a in anchornames:
-    print(stackanalysis.printStacks(anchors[a]["stacks"]))
-    print("")
-print("")
-print("Warning stacks:")
-print(stackanalysis.printStacks(warn_stacks))
-print("")
-print("Info stacks:")
-print(stackanalysis.printStacks(info_stacks))
-print("")
-print("Aborted stacks:")
-print(stackanalysis.printStacks(abort_stacks))
+if __name__ == "__main__":
+    analyze_qm_failures()

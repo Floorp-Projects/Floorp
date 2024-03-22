@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "qm-try-analysis"
+version = "0.1.0"
+description = ""
+authors = [
+    "Jens Stutte <jstutte@mozilla.com>",
+    "Michael van Straten <mvanstraten@mozilla.com>",
+]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+click = "^8.1.7"
+requests = "^2.31.0"
+bugzilla = "^1.0.0"
+
+[tool.poetry.scripts]
+qm-try-analysis = "qm_try_analysis.cli:cli"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.3"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
