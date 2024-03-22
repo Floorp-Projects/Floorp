@@ -841,14 +841,19 @@ void MFCDMParent::GetCapabilities(const nsString& aKeySystem,
       KeySystemConfig::EME_CODEC_VORBIS,
   });
   for (const auto& codec : kAudioCodecs) {
-    if (FactorySupports(
-            factory, aKeySystem, convertCodecToFourCC(supportedVideoCodecs[0]),
-            convertCodecToFourCC(codec), nsString(u""), isHardwareDecrytion)) {
+    // Hardware decryption is usually only used for video, so we can just check
+    // the software capabilities for audio in order to save some time. As the
+    // media foundation would create a new D3D device everytime when we check
+    // hardware decryption, which takes way longer time.
+    if (FactorySupports(factory, aKeySystem,
+                        convertCodecToFourCC(supportedVideoCodecs[0]),
+                        convertCodecToFourCC(codec), nsString(u""),
+                        false /* aIsHWSecure */)) {
       MFCDMMediaCapability* c =
           aCapabilitiesOut.audioCapabilities().AppendElement();
       c->contentType() = NS_ConvertUTF8toUTF16(codec);
       c->robustness() = GetRobustnessStringForKeySystem(
-          aKeySystem, isHardwareDecrytion, false /* isVideo */);
+          aKeySystem, false /* aIsHWSecure */, false /* isVideo */);
       MFCDM_PARENT_SLOG("%s: +audio:%s", __func__, codec.get());
     }
   }
