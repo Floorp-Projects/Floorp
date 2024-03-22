@@ -391,6 +391,18 @@ class nsRange final : public mozilla::dom::AbstractRange,
 
   void ResetCrossShadowBoundaryRange() { mCrossShadowBoundaryRange = nullptr; }
 
+#ifdef DEBUG
+  bool CrossShadowBoundaryRangeCollapsed() const {
+    MOZ_ASSERT(mCrossShadowBoundaryRange);
+
+    return !mCrossShadowBoundaryRange->IsPositioned() ||
+           (mCrossShadowBoundaryRange->GetStartContainer() ==
+                mCrossShadowBoundaryRange->GetEndContainer() &&
+            mCrossShadowBoundaryRange->StartOffset() ==
+                mCrossShadowBoundaryRange->EndOffset());
+  }
+#endif
+
   /*
    * The methods marked with MayCrossShadowBoundary[..] additionally check for
    * the existence of mCrossShadowBoundaryRange, which indicates a range that
