@@ -144,7 +144,6 @@
 #include "nsIScriptChannel.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsScriptSecurityManager.h"
 #include "nsIScrollableFrame.h"
 #include "nsIScrollObserver.h"
 #include "nsISupportsPrimitives.h"
@@ -8690,18 +8689,24 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
       }
     }
 
-    if (nsScriptSecurityManager::IsHttpOrHttpsAndCrossOrigin(principalURI,
-                                                             newURI) ||
-        nsScriptSecurityManager::IsHttpOrHttpsAndCrossOrigin(principalURI,
-                                                             mCurrentURI) ||
-        nsScriptSecurityManager::IsHttpOrHttpsAndCrossOrigin(mCurrentURI,
-                                                             newURI)) {
-      aSameDocument = false;
-      MOZ_LOG(gSHLog, LogLevel::Debug,
-              ("nsDocShell[%p]: possible violation of the same origin policy "
-               "during same document navigation",
-               this));
-      return NS_OK;
+    auto isLoadableViaInternet = [](nsIURI* uri) {
+      return (uri && (net::SchemeIsHTTP(uri) || net::SchemeIsHTTPS(uri)));
+    };
+
+    if (isLoadableViaInternet(principalURI) &&
+        isLoadableViaInternet(mCurrentURI) && isLoadableViaInternet(newURI)) {
+      nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+      if (!NS_SUCCEEDED(
+              ssm->CheckSameOriginURI(newURI, principalURI, false, false)) ||
+          !NS_SUCCEEDED(ssm->CheckSameOriginURI(mCurrentURI, principalURI,
+                                                false, false))) {
+        MOZ_LOG(gSHLog, LogLevel::Debug,
+                ("nsDocShell[%p]: possible violation of the same origin policy "
+                 "during same document navigation",
+                 this));
+        aSameDocument = false;
+        return NS_OK;
+      }
     }
   }
 

@@ -399,20 +399,26 @@ IPCResult WindowGlobalParent::RecvUpdateDocumentURI(NotNull<nsIURI*> aURI) {
       return IPC_FAIL(this, "Setting DocumentURI with unknown protocol.");
     }
 
-    nsCOMPtr<nsIURI> principalURI = mDocumentPrincipal->GetURI();
-    if (mDocumentPrincipal->GetIsNullPrincipal()) {
-      nsCOMPtr<nsIPrincipal> precursor =
-          mDocumentPrincipal->GetPrecursorPrincipal();
-      if (precursor) {
-        principalURI = precursor->GetURI();
-      }
-    }
+    auto isLoadableViaInternet = [](nsIURI* uri) {
+      return (uri && (net::SchemeIsHTTP(uri) || net::SchemeIsHTTPS(uri)));
+    };
 
-    if (nsScriptSecurityManager::IsHttpOrHttpsAndCrossOrigin(principalURI,
-                                                             aURI)) {
-      return IPC_FAIL(this,
-                      "Setting DocumentURI with a different Origin than "
-                      "principal URI");
+    if (isLoadableViaInternet(aURI)) {
+      nsCOMPtr<nsIURI> principalURI = mDocumentPrincipal->GetURI();
+      if (mDocumentPrincipal->GetIsNullPrincipal()) {
+        nsCOMPtr<nsIPrincipal> precursor =
+            mDocumentPrincipal->GetPrecursorPrincipal();
+        if (precursor) {
+          principalURI = precursor->GetURI();
+        }
+      }
+
+      if (isLoadableViaInternet(principalURI) &&
+          !nsScriptSecurityManager::SecurityCompareURIs(principalURI, aURI)) {
+        return IPC_FAIL(this,
+                        "Setting DocumentURI with a different Origin than "
+                        "principal URI");
+      }
     }
   }
 
