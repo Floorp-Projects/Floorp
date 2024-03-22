@@ -1331,7 +1331,6 @@
   folds_to: custom
   congruent_to: if_operands_equal
   alias_set: none
-  movable: true
   can_recover: true
 
 - name: ModuleMetadata
