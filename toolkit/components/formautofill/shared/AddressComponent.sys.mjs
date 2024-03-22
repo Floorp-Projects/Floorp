@@ -412,7 +412,6 @@ class State extends AddressField {
 
     const options = {
       merge_whitespace: true,
-      remove_punctuation: true,
     };
     this.#state = lazy.FormAutofillUtils.getAbbreviatedSubregionName(
       this.normalizeUserValue(options),
@@ -991,7 +990,7 @@ export class AddressComparison {
  * country, postal code, etc. The class provides a compare methods
  * to compare another AddressComponent against the current instance.
  *
- * Note. This class assumes records that pass to it have already been normalized.
+ * Note: This class assumes records that pass to it have already been normalized.
  */
 export class AddressComponent {
   /**

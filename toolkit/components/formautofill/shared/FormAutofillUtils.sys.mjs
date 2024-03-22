@@ -805,6 +805,42 @@ FormAutofillUtils = {
     return null;
   },
 
+  /**
+   * Find the option element from xul menu popups, as used in address capture
+   * doorhanger.
+   *
+   * This is a proxy to `findAddressSelectOption`, which expects HTML select
+   * DOM nodes and operates on options instead of xul menuitems.
+   *
+   * NOTE: This is a temporary solution until Bug 1886949 is landed. This
+   * method will then be removed `findAddressSelectOption` will be used
+   * directly.
+   *
+   * @param   {XULPopupElement} menupopup
+   * @param   {object} address
+   * @param   {string} fieldName
+   * @returns {XULElement}
+   */
+  findAddressSelectOptionWithMenuPopup(menupopup, address, fieldName) {
+    class MenuitemProxy {
+      constructor(menuitem) {
+        this.menuitem = menuitem;
+      }
+      get text() {
+        return this.menuitem.label;
+      }
+      get value() {
+        return this.menuitem.value;
+      }
+    }
+    const selectEl = {
+      options: Array.from(menupopup.childNodes).map(
+        menuitem => new MenuitemProxy(menuitem)
+      ),
+    };
+    return this.findAddressSelectOption(selectEl, address, fieldName)?.menuitem;
+  },
+
   findCreditCardSelectOption(selectEl, creditCard, fieldName) {
     let oneDigitMonth = creditCard["cc-exp-month"]
       ? creditCard["cc-exp-month"].toString()

@@ -40,6 +40,10 @@ add_task(async function test_edit_doorhanger_display_state() {
       filled: { "address-level1": "Washington" },
       expected: { label: "WA" },
     },
+    {
+      filled: { "address-level1": "CA-BC", country: "CA" },
+      expected: { label: "BC" },
+    },
   ];
 
   for (const TEST of TEST_CASES) {
@@ -54,6 +58,7 @@ add_task(async function test_edit_doorhanger_display_state() {
             "#organization": DEFAULT.organization,
             "#street-address": DEFAULT["street-address"],
             "#address-level1": TEST.filled["address-level1"],
+            "#country": TEST.filled.country || DEFAULT.country,
           },
         });
         await onSavePopupShown;
