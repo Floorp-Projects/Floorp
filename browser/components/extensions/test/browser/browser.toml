@@ -700,7 +700,6 @@ tags = "fullscreen"
 ["browser_toolbar_prefers_color_scheme.js"]
 
 ["browser_unified_extensions.js"]
-fail-if = ["a11y_checks"] # Bug 1854460 clicked browser may not be accessible
 
 ["browser_unified_extensions_accessibility.js"]
 
