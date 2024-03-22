@@ -142,7 +142,9 @@ def preprocess(cxx, preprocessorOption, source, args=[]):
 
     with open(tmpIn, "wb") as input:
         input.write(source.encode("utf-8"))
-    print(" ".join(cxx + outputArg + args + [tmpIn]))
+
+    if os.environ.get("BUILD_VERBOSE_LOG"):
+        print("Executing:", " ".join(cxx + outputArg + args + [tmpIn]))
     result = subprocess.Popen(cxx + outputArg + args + [tmpIn]).wait()
     if result != 0:
         sys.exit(result)
