@@ -179,6 +179,7 @@ add_task(async function test_enable_experiment_when_pref_is_not_enabled() {
   await new Promise(resolve => setTimeout(resolve, 1500));
   BrowserTestUtils.removeTab(tab);
 
+  // We should not record telemetry if the experiment is un-enrolled.
   assertCategorizationValues([]);
 
   // Clean up.

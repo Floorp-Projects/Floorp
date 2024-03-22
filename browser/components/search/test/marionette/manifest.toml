@@ -1,4 +1,6 @@
 [DEFAULT]
 run-if = ["buildapp == 'browser'"]
 
+["include:telemetry/manifest.toml"]
+
 ["test_engines_on_restart.py"]
