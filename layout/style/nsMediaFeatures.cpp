@@ -336,18 +336,20 @@ StyleDynamicRange Gecko_MediaFeatures_DynamicRange(const Document* aDocument) {
 
 StyleDynamicRange Gecko_MediaFeatures_VideoDynamicRange(
     const Document* aDocument) {
-  if (aDocument->ShouldResistFingerprinting(RFPTarget::CSSVideoDynamicRange)) {
+  if (aDocument->ShouldResistFingerprinting(RFPTarget::CSSVideoDynamicRange) ||
+      !StaticPrefs::layout_css_video_dynamic_range_allows_high()) {
     return StyleDynamicRange::Standard;
   }
   // video-dynamic-range: high has 3 requirements:
   // 1) high peak brightness
   // 2) high contrast ratio
   // 3) color depth > 24
-  // We check the color depth requirement before asking the LookAndFeel
-  // if it is HDR capable.
+
+  // As a proxy for those requirements, return 'High' if the screen associated
+  // with the device context claims to be HDR capable.
   if (nsDeviceContext* dx = GetDeviceContextFor(aDocument)) {
-    if (dx->GetDepth() > 24 &&
-        LookAndFeel::GetInt(LookAndFeel::IntID::VideoDynamicRange)) {
+    if (dx->GetScreenIsHDR()) {
+      // bjw
       return StyleDynamicRange::High;
     }
   }

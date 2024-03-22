@@ -150,6 +150,11 @@ class nsDeviceContext final {
   uint16_t GetScreenOrientationAngle();
 
   /**
+   * Get the status of HDR support of the associated screen.
+   */
+  bool GetScreenIsHDR();
+
+  /**
    * Get the size of the displayable area of the output device
    * in app units.
    * @param aWidth out parameter for width
