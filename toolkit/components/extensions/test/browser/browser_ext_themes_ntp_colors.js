@@ -26,50 +26,43 @@ async function test_ntp_theme(theme, isBrightText) {
   });
 
   let browser = gBrowser.selectedBrowser;
-  let systemDarkMode = matchMedia("(prefers-color-scheme: dark)").matches;
-
   let { originalBackground, originalCardBackground, originalColor } =
-    await SpecialPowers.spawn(
-      browser,
-      [{ systemDarkMode }],
-      function ({ systemDarkMode }) {
-        let doc = content.document;
-        ok(
-          !doc.documentElement.hasAttribute("lwt-newtab"),
-          `New tab page should not have lwt-newtab attribute`
-        );
-        ok(
-          !doc.documentElement.hasAttribute("lwtheme"),
-          `New tab page should not have lwtheme attribute`
-        );
-        is(
-          doc.documentElement.hasAttribute("lwt-newtab-brighttext"),
-          systemDarkMode,
-          `New tab page should have lwt-newtab-brighttext attribute if in dark mode`
-        );
+    await SpecialPowers.spawn(browser, [], function () {
+      let doc = content.document;
+      ok(
+        !doc.documentElement.hasAttribute("lwt-newtab"),
+        `New tab page should not have lwt-newtab attribute`
+      );
+      ok(
+        !doc.documentElement.hasAttribute("lwtheme"),
+        `New tab page should not have lwtheme attribute`
+      );
+      ok(
+        !doc.documentElement.hasAttribute("lwt-newtab-brighttext"),
+        `New tab page not should have lwt-newtab-brighttext attribute`
+      );
 
-        return {
-          originalBackground: content.getComputedStyle(doc.body)
-            .backgroundColor,
-          originalCardBackground: content.getComputedStyle(
-            doc.querySelector(".top-site-outer .tile")
-          ).backgroundColor,
-          originalColor: content.getComputedStyle(
-            doc.querySelector(".outer-wrapper")
-          ).color,
-          // We check the value of --newtab-link-primary-color directly because the
-          // elements on which it is applied are hard to test. It is most visible in
-          // the "learn more" link in the Pocket section. We cannot show the Pocket
-          // section since it hits the network, and the usual workarounds to change
-          // its backend only work in browser/. This variable is also used in
-          // the Edit Top Site modal, but showing/hiding that is very verbose and
-          // would make this test almost unreadable.
-          originalLinks: content
-            .getComputedStyle(doc.documentElement)
-            .getPropertyValue("--newtab-link-primary-color"),
-        };
-      }
-    );
+      return {
+        originalBackground: content.getComputedStyle(doc.body)
+          .backgroundColor,
+        originalCardBackground: content.getComputedStyle(
+          doc.querySelector(".top-site-outer .tile")
+        ).backgroundColor,
+        originalColor: content.getComputedStyle(
+          doc.querySelector(".outer-wrapper")
+        ).color,
+        // We check the value of --newtab-link-primary-color directly because the
+        // elements on which it is applied are hard to test. It is most visible in
+        // the "learn more" link in the Pocket section. We cannot show the Pocket
+        // section since it hits the network, and the usual workarounds to change
+        // its backend only work in browser/. This variable is also used in
+        // the Edit Top Site modal, but showing/hiding that is very verbose and
+        // would make this test almost unreadable.
+        originalLinks: content
+          .getComputedStyle(doc.documentElement)
+          .getPropertyValue("--newtab-link-primary-color"),
+      };
+    });
 
   await extension.startup();
 
@@ -197,6 +190,7 @@ add_task(async function test_support_ntp_colors() {
       ["layout.css.prefers-color-scheme.content-override", 1],
       // Override the system color scheme to light so this test passes on
       // machines with dark system color scheme.
+      // FIXME(emilio): This doesn't seem working reliably, at least on macOS.
       ["ui.systemUsesDarkTheme", 0],
     ],
   });
