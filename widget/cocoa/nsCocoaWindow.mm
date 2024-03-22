@@ -779,7 +779,9 @@ void nsCocoaWindow::Show(bool aState) {
       // calls to ...orderFront: in TRY blocks.  See bmo bug 470864.
       NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
       [[mWindow contentView] setNeedsDisplay:YES];
-      [mWindow orderFront:nil];
+      if (!nativeParentWindow || mPopupLevel != PopupLevel::Parent) {
+        [mWindow orderFront:nil];
+      }
       NS_OBJC_END_TRY_IGNORE_BLOCK;
       SendSetZLevelEvent();
       // If our popup window is a non-native context menu, tell the OS (and
@@ -795,9 +797,7 @@ void nsCocoaWindow::Show(bool aState) {
 
       // If a parent window was supplied and this is a popup at the parent
       // level, set its child window. This will cause the child window to
-      // appear above the parent and move when the parent does. Setting this
-      // needs to happen after the _setWindowNumber calls above, otherwise the
-      // window doesn't focus properly.
+      // appear above the parent and move when the parent does.
       if (nativeParentWindow && mPopupLevel == PopupLevel::Parent) {
         [nativeParentWindow addChildWindow:mWindow ordered:NSWindowAbove];
       }
