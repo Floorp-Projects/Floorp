@@ -216,6 +216,7 @@ class DecodeStage {
     RGB24,
     GBRP,
     ANDROID_SURFACE,
+    VAAPI_SURFACE,
   };
 
   DecodeStage(nsCString aSource, TrackingId aTrackingId, MediaInfoFlag aFlag)
