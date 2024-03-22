@@ -838,6 +838,15 @@ static bool TestApply() {
       [&](const BasicValue& aVal) { gFunctionWasApplied = true; });
   MOZ_RELEASE_ASSERT(gFunctionWasApplied == true);
 
+  // Check that apply can move the contained value.
+  mayValue = Some(BasicValue(1));
+  Maybe<BasicValue> otherValue;
+  std::move(mayValue).apply(
+      [&](BasicValue&& aVal) { otherValue = Some(std::move(aVal)); });
+  MOZ_RELEASE_ASSERT(mayValue.isNothing());
+  MOZ_RELEASE_ASSERT(otherValue->GetTag() == 1);
+  MOZ_RELEASE_ASSERT(otherValue->GetStatus() == eWasMoveConstructed);
+
   return true;
 }
 
@@ -898,6 +907,14 @@ static bool TestMap() {
   mappedValue = mayValueCRef.map(
       [&](const BasicValue& aVal) { return aVal.GetTag() * two; });
   MOZ_RELEASE_ASSERT(mappedValue == Some(4));
+
+  // Check that map can move the contained value.
+  mayValue = Some(BasicValue(1));
+  Maybe<BasicValue> otherValue = std::move(mayValue).map(
+      [](BasicValue&& aValue) { return std::move(aValue); });
+  MOZ_RELEASE_ASSERT(mayValue.isNothing());
+  MOZ_RELEASE_ASSERT(otherValue->GetTag() == 1);
+  MOZ_RELEASE_ASSERT(otherValue->GetStatus() == eWasMoveConstructed);
 
   // Check that function object qualifiers are preserved when invoked.
   struct F {
