@@ -12,6 +12,7 @@ support-files = [
   "file_SlowTallImage.sjs",
   "bug1174521.html",
   "!/gfx/layers/apz/test/mochitest/apz_test_utils.js",
+  "selection_cross_shadow_boundary_helper.js",
 ]
 
 ["test_bug240933.html"]
@@ -264,6 +265,22 @@ support-files = [
 ["test_scrollframe_abspos_interrupt.html"]
 
 ["test_selection_changes_with_middle_mouse_button.html"]
+
+["test_selection_cross_shadow_boundary_1_backward_click.html"]
+
+["test_selection_cross_shadow_boundary_1_backward_drag.html"]
+
+["test_selection_cross_shadow_boundary_1_forward_click.html"]
+
+["test_selection_cross_shadow_boundary_1_forward_drag.html"]
+
+["test_selection_cross_shadow_boundary_2_backward_click.html"]
+
+["test_selection_cross_shadow_boundary_2_backward_drag.html"]
+
+["test_selection_cross_shadow_boundary_2_forward_click.html"]
+
+["test_selection_cross_shadow_boundary_2_forward_drag.html"]
 
 ["test_selection_doubleclick.html"]
 

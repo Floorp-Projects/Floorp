@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="application/javascript" src="/tests/layout/generic/test/selection_cross_shadow_boundary_helper.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<script>
+SimpleTest.waitForExplicitFinish();
+
+function run() {
+  document.getElementById("host").attachShadow({ mode: "open" }).innerHTML = "<span>InnerText</span>";
+
+  const inner = host.shadowRoot.firstChild;
+  const rect = inner.getBoundingClientRect();
+
+  // Drag from the bottom right of InnerText to the
+  // top left of OuterText.
+  drag(
+    inner,
+    rect.width,
+    rect.height,
+    document.getElementById("outer"),
+    0,
+    0);
+
+  // Above drag selects both "OuterText" and "InnerText"
+  const sel = document.getSelection().getComposedRanges(host.shadowRoot)[0];
+
+  // backward selection
+  is(sel.endContainer, inner.firstChild, "endContainer is the InnerText");
+  is(sel.endOffset, 9, "endOffset ends at the last character");
+  is(sel.startContainer, outer.firstChild, "startContainer is the OuterText");
+  is(sel.startOffset, 0, "startOffset starts at the first character");
+
+  SimpleTest.finish();
+}
+</script>
+<body onload="SimpleTest.waitForFocus(run);">
+  <span id="outer">OuterText</span>
+  <div id="host"></div>
+</body>
