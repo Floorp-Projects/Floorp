@@ -243,10 +243,14 @@ class nsTableCellFrame : public nsContainerFrame,
 
   friend class nsTableRowFrame;
 
-  uint32_t mColIndex;  // the starting column for this cell
+  // The starting column for this cell
+  uint32_t mColIndex = 0;
 
-  nscoord mPriorAvailISize;           // the avail isize during the last reflow
-  mozilla::LogicalSize mDesiredSize;  // the last desired inline and block size
+  // The avail isize during the last reflow
+  nscoord mPriorAvailISize = 0;
+
+  // The last desired inline and block size
+  mozilla::LogicalSize mDesiredSize;
 };
 
 inline nscoord nsTableCellFrame::GetPriorAvailISize() {
