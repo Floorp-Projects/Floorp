@@ -328,10 +328,17 @@ void InitPoisonIOInterposer() {
     if (!d->Function) {
       continue;
     }
+
+    // Disable the interposer on arm64 until there's
+    // a mach_override_ptr implementation.
 #ifndef __aarch64__
+    // Temporarily disable the interposer on macOS x64
+    // while dynamic code disablement rides the trains.
+#  ifdef MOZ_INTERPOSER_FORCE_MACOS_X64
     DebugOnly<mach_error_t> t =
         mach_override_ptr(d->Function, d->Wrapper, &d->Buffer);
     MOZ_ASSERT(t == err_none);
+#  endif  // MOZ_INTERPOSER_FORCE_MACOS_X64
 #endif
   }
 }

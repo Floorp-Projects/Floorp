@@ -6,10 +6,7 @@
 -->
 <plist version="1.0">
   <dict>
-    <!-- Firefox needs to create executable pages without MAP_JIT on x64 -->
-    <key>com.apple.security.cs.allow-unsigned-executable-memory</key><true/>
-
-    <!-- Firefox needs to create executable pages with MAP_JIT on aarch64 -->
+    <!-- Firefox needs to create executable pages with MAP_JIT -->
     <key>com.apple.security.cs.allow-jit</key><true/>
   </dict>
 </plist>
