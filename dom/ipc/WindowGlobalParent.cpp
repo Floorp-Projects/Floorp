@@ -566,7 +566,7 @@ IPCResult WindowGlobalParent::RecvRawMessage(
     stack->BorrowFromClonedMessageData(*aStack);
   }
   MMPrinter::Print("WindowGlobalParent::RecvRawMessage", aMeta.actorName(),
-                   aMeta.messageName(), *aData);
+                   aMeta.messageName(), aData);
   ReceiveRawMessage(aMeta, std::move(data), std::move(stack));
   return IPC_OK();
 }
