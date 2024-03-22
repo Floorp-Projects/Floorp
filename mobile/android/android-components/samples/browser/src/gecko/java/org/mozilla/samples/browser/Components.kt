@@ -2,15 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// Needed until bug 1884527 is fixed.
-@file:Suppress("DEPRECATION")
-
 package org.mozilla.samples.browser
 
 import android.content.Context
 import mozilla.components.browser.engine.gecko.GeckoEngine
 import mozilla.components.browser.engine.gecko.fetch.GeckoViewFetchClient
-import mozilla.components.browser.engine.gecko.glean.GeckoAdapter
 import mozilla.components.concept.engine.Engine
 import mozilla.components.experiment.NimbusExperimentDelegate
 import mozilla.components.feature.webcompat.WebCompatFeature
@@ -27,7 +23,6 @@ class Components(private val applicationContext: Context) : DefaultComponents(ap
     private val runtime by lazy {
         // Allow for exfiltrating Gecko metrics through the Glean SDK.
         val builder = GeckoRuntimeSettings.Builder().aboutConfigEnabled(true)
-        builder.telemetryDelegate(GeckoAdapter())
         builder.experimentDelegate(NimbusExperimentDelegate())
         builder.crashHandler(CrashHandlerService::class.java)
         GeckoRuntime.create(applicationContext, builder.build())
