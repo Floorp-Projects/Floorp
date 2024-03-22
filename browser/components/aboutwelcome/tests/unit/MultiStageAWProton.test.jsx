@@ -629,4 +629,21 @@ describe("MultiStageAboutWelcomeProton module", () => {
       );
     });
   });
+
+  describe("Embedded Migration Wizard", () => {
+    const SCREEN_PROPS = {
+      content: {
+        title: "test title",
+        tiles: {
+          type: "migration-wizard",
+        },
+      },
+    };
+
+    it("should render migration wizard", async () => {
+      const wrapper = mount(<MultiStageProtonScreen {...SCREEN_PROPS} />);
+      assert.ok(wrapper.exists());
+      assert.isTrue(wrapper.find("migration-wizard").exists());
+    });
+  });
 });
