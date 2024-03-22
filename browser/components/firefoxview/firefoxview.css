@@ -47,7 +47,7 @@
   }
 }
 
-@media (prefers-contrast) {
+@media (forced-colors) {
   :root {
     --fxview-element-background-hover: ButtonText;
     --fxview-element-background-active: ButtonText;
@@ -56,6 +56,12 @@
     --newtab-primary-action-background: LinkText;
     --newtab-background-color: Canvas;
     --newtab-background-color-secondary: Canvas;
+  }
+}
+
+@media (prefers-contrast) {
+  :root {
+    --fxview-border: var(--border-color);
   }
 }
 

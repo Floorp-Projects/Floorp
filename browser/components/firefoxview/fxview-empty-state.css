@@ -93,7 +93,7 @@
 
 img.greyscale {
   filter: grayscale(100%);
-  @media not (prefers-contrast) {
+  @media not (forced-colors) {
     opacity: 0.5;
   }
 }
