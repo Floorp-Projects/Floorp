@@ -926,51 +926,11 @@ def InterfaceObjectProtoGetter(descriptor, forXrays=False):
     return (protoGetter, protoHandleGetter)
 
 
-class CGNamespaceObjectJSClass(CGThing):
-    def __init__(self, descriptor):
+class CGInterfaceObjectJSClass(CGThing):
+    def __init__(self, descriptor, properties):
         CGThing.__init__(self)
         self.descriptor = descriptor
-
-    def declare(self):
-        # We're purely for internal consumption
-        return ""
-
-    def define(self):
-        (protoGetter, _) = InterfaceObjectProtoGetter(self.descriptor, forXrays=True)
-
-        classString = self.descriptor.interface.getExtendedAttribute("ClassString")
-        if classString is None:
-            classString = self.descriptor.interface.identifier.name
-        else:
-            classString = classString[0]
-        return fill(
-            """
-            static const DOMIfaceAndProtoJSClass sNamespaceObjectClass = {
-              {
-                "${classString}",
-                JSCLASS_IS_DOMIFACEANDPROTOJSCLASS,
-                JS_NULL_CLASS_OPS,
-                JS_NULL_CLASS_SPEC,
-                JS_NULL_CLASS_EXT,
-                JS_NULL_OBJECT_OPS
-              },
-              eNamespace,
-              prototypes::id::_ID_Count,
-              0,
-              ${hooks},
-              ${protoGetter}
-            };
-            """,
-            classString=classString,
-            hooks=NativePropertyHooks(self.descriptor),
-            protoGetter=protoGetter,
-        )
-
-
-class CGInterfaceObjectInfo(CGThing):
-    def __init__(self, descriptor):
-        CGThing.__init__(self)
-        self.descriptor = descriptor
+        self.properties = properties
 
     def declare(self):
         # We're purely for internal consumption
@@ -978,31 +938,104 @@ class CGInterfaceObjectInfo(CGThing):
 
     def define(self):
         if self.descriptor.interface.ctor():
+            assert not self.descriptor.interface.isNamespace()
             ctorname = CONSTRUCT_HOOK_NAME
+        elif self.descriptor.interface.isNamespace():
+            ctorname = "nullptr"
         else:
             ctorname = "ThrowingConstructor"
         wantsIsInstance = self.descriptor.interface.hasInterfacePrototypeObject()
 
         prototypeID, depth = PrototypeIDAndDepth(self.descriptor)
+        slotCount = "DOM_INTERFACE_SLOTS_BASE"
+        if len(self.descriptor.interface.legacyFactoryFunctions) > 0:
+            slotCount += " + %i /* slots for the legacy factory functions */" % len(
+                self.descriptor.interface.legacyFactoryFunctions
+            )
         (protoGetter, _) = InterfaceObjectProtoGetter(self.descriptor, forXrays=True)
 
-        return fill(
+        if ctorname == "ThrowingConstructor":
+            ret = ""
+            classOpsPtr = "&sBoringInterfaceObjectClassClassOps"
+        elif ctorname == "nullptr":
+            ret = ""
+            classOpsPtr = "JS_NULL_CLASS_OPS"
+        else:
+            ret = fill(
+                """
+                static const JSClassOps sInterfaceObjectClassOps = {
+                    nullptr,               /* addProperty */
+                    nullptr,               /* delProperty */
+                    nullptr,               /* enumerate */
+                    nullptr,               /* newEnumerate */
+                    nullptr,               /* resolve */
+                    nullptr,               /* mayResolve */
+                    nullptr,               /* finalize */
+                    ${ctorname}, /* call */
+                    ${ctorname}, /* construct */
+                    nullptr,               /* trace */
+                };
+
+                """,
+                ctorname=ctorname,
+            )
+            classOpsPtr = "&sInterfaceObjectClassOps"
+
+        if self.descriptor.interface.isNamespace():
+            classString = self.descriptor.interface.getExtendedAttribute("ClassString")
+            if classString is None:
+                classString = self.descriptor.interface.identifier.name
+            else:
+                classString = classString[0]
+            funToString = "nullptr"
+            objectOps = "JS_NULL_OBJECT_OPS"
+        else:
+            classString = "Function"
+            funToString = (
+                '"function %s() {\\n    [native code]\\n}"'
+                % self.descriptor.interface.identifier.name
+            )
+            # We need non-default ObjectOps so we can actually make
+            # use of our funToString.
+            objectOps = "&sInterfaceObjectClassObjectOps"
+
+        ret = ret + fill(
             """
-            static const DOMInterfaceInfo sInterfaceObjectInfo = {
-              { ${ctorname}, ${hooks} },
-              ${protoGetter},
-              ${prototypeID},
-              ${depth},
+            static const DOMIfaceJSClass sInterfaceObjectClass = {
+              {
+                {
+                  "${classString}",
+                  JSCLASS_IS_DOMIFACEANDPROTOJSCLASS | JSCLASS_HAS_RESERVED_SLOTS(${slotCount}),
+                  ${classOpsPtr},
+                  JS_NULL_CLASS_SPEC,
+                  JS_NULL_CLASS_EXT,
+                  ${objectOps}
+                },
+                ${type},
+                ${prototypeID},
+                ${depth},
+                ${hooks},
+                ${protoGetter}
+              },
               ${wantsIsInstance},
+              ${funToString}
             };
             """,
-            ctorname=ctorname,
+            classString=classString,
+            slotCount=slotCount,
+            classOpsPtr=classOpsPtr,
             hooks=NativePropertyHooks(self.descriptor),
-            protoGetter=protoGetter,
+            objectOps=objectOps,
+            type="eNamespace"
+            if self.descriptor.interface.isNamespace()
+            else "eInterface",
             prototypeID=prototypeID,
             depth=depth,
+            protoGetter=protoGetter,
             wantsIsInstance=toStringBool(wantsIsInstance),
+            funToString=funToString,
         )
+        return ret
 
 
 class CGList(CGThing):
@@ -2290,6 +2323,7 @@ class CGLegacyFactoryFunctions(CGThing):
 
             static const LegacyFactoryFunction legacyFactoryFunctions[] = {
               $*{legacyFactoryFunctions}
+              { nullptr, { nullptr, nullptr }, 0 }
             };
             """,
             name=self.descriptor.name,
@@ -3504,30 +3538,83 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
         self.haveLegacyWindowAliases = haveLegacyWindowAliases
 
     def definition_body(self):
+        (protoGetter, protoHandleGetter) = InterfacePrototypeObjectProtoGetter(
+            self.descriptor
+        )
+        if protoHandleGetter is None:
+            parentProtoType = "Rooted"
+            getParentProto = "aCx, " + protoGetter
+        else:
+            parentProtoType = "Handle"
+            getParentProto = protoHandleGetter
+        getParentProto = getParentProto + "(aCx)"
+
+        (protoGetter, protoHandleGetter) = InterfaceObjectProtoGetter(self.descriptor)
+        if protoHandleGetter is None:
+            getConstructorProto = "aCx, " + protoGetter
+            constructorProtoType = "Rooted"
+        else:
+            getConstructorProto = protoHandleGetter
+            constructorProtoType = "Handle"
+        getConstructorProto += "(aCx)"
+
         needInterfaceObject = self.descriptor.interface.hasInterfaceObject()
+        needInterfacePrototypeObject = (
+            self.descriptor.interface.hasInterfacePrototypeObject()
+        )
+
+        # if we don't need to create anything, why are we generating this?
+        assert needInterfaceObject or needInterfacePrototypeObject
+
+        getParentProto = fill(
+            """
+            JS::${type}<JSObject*> parentProto(${getParentProto});
+            if (!parentProto) {
+              return;
+            }
+            """,
+            type=parentProtoType,
+            getParentProto=getParentProto,
+        )
+
+        getConstructorProto = fill(
+            """
+            JS::${type}<JSObject*> constructorProto(${getConstructorProto});
+            if (!constructorProto) {
+              return;
+            }
+            """,
+            type=constructorProtoType,
+            getConstructorProto=getConstructorProto,
+        )
+
+        if self.descriptor.interface.ctor():
+            constructArgs = methodLength(self.descriptor.interface.ctor())
+            isConstructorChromeOnly = isChromeOnly(self.descriptor.interface.ctor())
+        else:
+            constructArgs = 0
+            isConstructorChromeOnly = False
+        if len(self.descriptor.interface.legacyFactoryFunctions) > 0:
+            legacyFactoryFunctions = "legacyFactoryFunctions"
+        else:
+            legacyFactoryFunctions = "nullptr"
+
+        if needInterfacePrototypeObject:
+            protoClass = "&sPrototypeClass"
+            protoCache = (
+                "&aProtoAndIfaceCache.EntrySlotOrCreate(prototypes::id::%s)"
+                % self.descriptor.name
+            )
+            parentProto = "parentProto"
+            getParentProto = CGGeneric(getParentProto)
+        else:
+            protoClass = "nullptr"
+            protoCache = "nullptr"
+            parentProto = "nullptr"
+            getParentProto = None
+
         if needInterfaceObject:
-            (protoGetter, protoHandleGetter) = InterfaceObjectProtoGetter(
-                self.descriptor
-            )
-            if protoHandleGetter is None:
-                getConstructorProto = "aCx, " + protoGetter
-                constructorProtoType = "Rooted"
-            else:
-                getConstructorProto = protoHandleGetter
-                constructorProtoType = "Handle"
-
-            getConstructorProto = fill(
-                """
-                JS::${type}<JSObject*> constructorProto(${getConstructorProto}(aCx));
-                if (!constructorProto) {
-                  return;
-                }
-                """,
-                type=constructorProtoType,
-                getConstructorProto=getConstructorProto,
-            )
-
-            interfaceInfo = "&sInterfaceObjectInfo"
+            interfaceClass = "&sInterfaceObjectClass"
             interfaceCache = (
                 "&aProtoAndIfaceCache.EntrySlotOrCreate(constructors::id::%s)"
                 % self.descriptor.name
@@ -3537,11 +3624,12 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
         else:
             # We don't have slots to store the legacy factory functions.
             assert len(self.descriptor.interface.legacyFactoryFunctions) == 0
-            interfaceInfo = "nullptr"
+            interfaceClass = "nullptr"
             interfaceCache = "nullptr"
             getConstructorProto = None
             constructorProto = "nullptr"
 
+        isGlobal = self.descriptor.isGlobal() is not None
         if self.properties.hasNonChromeOnly():
             properties = "sNativeProperties.Upcast()"
         else:
@@ -3560,109 +3648,27 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
         name = self.descriptor.interface.getClassName()
         assert not (needInterfaceObject and " " in name)
 
-        if self.descriptor.interface.isNamespace():
-            # If we don't need to create anything, why are we generating this?
-            assert needInterfaceObject
-
-            call = fill(
-                """
-                JS::Heap<JSObject*>* interfaceCache = ${interfaceCache};
-                dom::CreateNamespaceObject(aCx, aGlobal, ${constructorProto},
-                                           sNamespaceObjectClass,
-                                           interfaceCache,
-                                           ${properties},
-                                           ${chromeProperties},
-                                           "${name}", aDefineOnGlobal);
-                """,
-                interfaceCache=interfaceCache,
-                constructorProto=constructorProto,
-                properties=properties,
-                chromeProperties=chromeProperties,
-                name=name,
-            )
-            return CGList(
-                [
-                    getConstructorProto,
-                    CGGeneric(call),
-                ],
-                "\n",
-            ).define()
-
-        needInterfacePrototypeObject = (
-            self.descriptor.interface.hasInterfacePrototypeObject()
-        )
-
-        # If we don't need to create anything, why are we generating this?
-        assert needInterfaceObject or needInterfacePrototypeObject
-
-        if needInterfacePrototypeObject:
-            (protoGetter, protoHandleGetter) = InterfacePrototypeObjectProtoGetter(
-                self.descriptor
-            )
-            if protoHandleGetter is None:
-                parentProtoType = "Rooted"
-                getParentProto = "aCx, " + protoGetter
-            else:
-                parentProtoType = "Handle"
-                getParentProto = protoHandleGetter
-
-            getParentProto = fill(
-                """
-                JS::${type}<JSObject*> parentProto(${getParentProto}(aCx));
-                if (!parentProto) {
-                  return;
-                }
-                """,
-                type=parentProtoType,
-                getParentProto=getParentProto,
-            )
-
-            protoClass = "&sPrototypeClass"
-            protoCache = (
-                "&aProtoAndIfaceCache.EntrySlotOrCreate(prototypes::id::%s)"
-                % self.descriptor.name
-            )
-            parentProto = "parentProto"
-            getParentProto = CGGeneric(getParentProto)
-        else:
-            protoClass = "nullptr"
-            protoCache = "nullptr"
-            parentProto = "nullptr"
-            getParentProto = None
-
-        if self.descriptor.interface.ctor():
-            constructArgs = methodLength(self.descriptor.interface.ctor())
-            isConstructorChromeOnly = isChromeOnly(self.descriptor.interface.ctor())
-        else:
-            constructArgs = 0
-            isConstructorChromeOnly = False
-        if len(self.descriptor.interface.legacyFactoryFunctions) > 0:
-            legacyFactoryFunctions = "Span(legacyFactoryFunctions)"
-        else:
-            legacyFactoryFunctions = "Span<const LegacyFactoryFunction, 0>{}"
-
-        isGlobal = self.descriptor.isGlobal() is not None
-
         call = fill(
             """
             JS::Heap<JSObject*>* protoCache = ${protoCache};
             JS::Heap<JSObject*>* interfaceCache = ${interfaceCache};
             dom::CreateInterfaceObjects(aCx, aGlobal, ${parentProto},
                                         ${protoClass}, protoCache,
-                                        ${constructorProto}, ${interfaceInfo}, ${constructArgs}, ${isConstructorChromeOnly}, ${legacyFactoryFunctions},
+                                        ${constructorProto}, ${interfaceClass}, ${constructArgs}, ${isConstructorChromeOnly}, ${legacyFactoryFunctions},
                                         interfaceCache,
                                         ${properties},
                                         ${chromeProperties},
                                         "${name}", aDefineOnGlobal,
                                         ${unscopableNames},
                                         ${isGlobal},
-                                        ${legacyWindowAliases});
+                                        ${legacyWindowAliases},
+                                        ${isNamespace});
             """,
             protoClass=protoClass,
             parentProto=parentProto,
             protoCache=protoCache,
             constructorProto=constructorProto,
-            interfaceInfo=interfaceInfo,
+            interfaceClass=interfaceClass,
             constructArgs=constructArgs,
             isConstructorChromeOnly=toStringBool(isConstructorChromeOnly),
             legacyFactoryFunctions=legacyFactoryFunctions,
@@ -3675,6 +3681,7 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             legacyWindowAliases="legacyWindowAliases"
             if self.haveLegacyWindowAliases
             else "nullptr",
+            isNamespace=toStringBool(self.descriptor.interface.isNamespace()),
         )
 
         # If we fail after here, we must clear interface and prototype caches
@@ -16948,11 +16955,9 @@ class CGDescriptor(CGThing):
             # done, set up our NativePropertyHooks.
             cgThings.append(CGNativePropertyHooks(descriptor, properties))
 
-        if descriptor.interface.isNamespace():
-            cgThings.append(CGNamespaceObjectJSClass(descriptor))
-        elif descriptor.interface.hasInterfaceObject():
+        if descriptor.interface.hasInterfaceObject():
             cgThings.append(CGClassConstructor(descriptor, descriptor.interface.ctor()))
-            cgThings.append(CGInterfaceObjectInfo(descriptor))
+            cgThings.append(CGInterfaceObjectJSClass(descriptor, properties))
             cgThings.append(CGLegacyFactoryFunctions(descriptor))
 
         cgThings.append(CGLegacyCallHook(descriptor))

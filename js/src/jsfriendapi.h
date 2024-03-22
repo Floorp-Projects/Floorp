@@ -395,10 +395,6 @@ JS_PUBLIC_API JSFunction* NewFunctionByIdWithReserved(JSContext* cx,
                                                       unsigned nargs,
                                                       unsigned flags, jsid id);
 
-JS_PUBLIC_API JSFunction* NewFunctionByIdWithReservedAndProto(
-    JSContext* cx, JSNative native, JS::Handle<JSObject*> proto, unsigned nargs,
-    unsigned flags, jsid id);
-
 /**
  * Get or set function's reserved slot value.
  * `fun` should be a function created with `*WithReserved` API above.

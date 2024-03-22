@@ -23,21 +23,8 @@
 #define DOM_INSTANCE_RESERVED_SLOTS 1
 
 // Interface objects store a number of reserved slots equal to
-// INTERFACE_OBJECT_INFO_RESERVED_SLOT + number of legacy factory functions,
-// with a maximum of js::FunctionExtended::NUM_EXTENDED_SLOTS.
-// INTERFACE_OBJECT_INFO_RESERVED_SLOT contains the DOMInterfaceInfo.
-// INTERFACE_OBJECT_FIRST_LEGACY_FACTORY_FUNCTION and higher contain the
-// JSObjects for the legacy factory functions.
-enum {
-  INTERFACE_OBJECT_INFO_RESERVED_SLOT = 0,
-  INTERFACE_OBJECT_FIRST_LEGACY_FACTORY_FUNCTION,
-};
-// See js::FunctionExtended::NUM_EXTENDED_SLOTS.
-#define INTERFACE_OBJECT_MAX_SLOTS 3
-
-// Legacy factory functions store a JSNativeHolder in the
-// LEGACY_FACTORY_FUNCTION_NATIVE_HOLDER_RESERVED_SLOT slot.
-enum { LEGACY_FACTORY_FUNCTION_NATIVE_HOLDER_RESERVED_SLOT = 0 };
+// DOM_INTERFACE_SLOTS_BASE + number of legacy factory functions.
+#define DOM_INTERFACE_SLOTS_BASE 0
 
 // Interface prototype objects store a number of reserved slots equal to
 // DOM_INTERFACE_PROTO_SLOTS_BASE or DOM_INTERFACE_PROTO_SLOTS_BASE + 1 if a
