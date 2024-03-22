@@ -94,3 +94,20 @@ browser.backup:
       - mconley@mozilla.com
     expires: never
     telemetry_mirror: BROWSER_BACKUP_SECURITY_DATA_SIZE
+
+  preferences_size:
+    type: quantity
+    unit: kilobyte
+    description: >
+      The total size of files relating to user preferences and permissions in the current profile
+      directory, in kilobytes.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1883739
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1883739
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - mconley@mozilla.com
+    expires: never
+    telemetry_mirror: BROWSER_BACKUP_PREFERENCES_SIZE
