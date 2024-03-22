@@ -5,6 +5,7 @@
 #include "MFCDMParent.h"
 
 #include <mfmediaengine.h>
+#include <unknwnbase.h>
 #include <wtypes.h>
 #define INITGUID          // Enable DEFINE_PROPERTYKEY()
 #include <propkeydef.h>   // For DEFINE_PROPERTYKEY() definition
@@ -92,6 +93,7 @@ StaticMutex sFactoryMutex;
 static nsTHashMap<nsStringHashKey, ComPtr<IMFContentDecryptionModuleFactory>>
     sFactoryMap;
 static CopyableTArray<MFCDMCapabilitiesIPDL> sCapabilities;
+static ComPtr<IUnknown> sMediaEngineClassFactory;
 
 // RAIIized PROPVARIANT. See
 // third_party/libwebrtc/modules/audio_device/win/core_audio_utility_win.h
@@ -466,6 +468,7 @@ LPCWSTR MFCDMParent::GetCDMLibraryName(const nsString& aKeySystem) {
 void MFCDMParent::Shutdown() {
   sFactoryMap.Clear();
   sCapabilities.Clear();
+  sMediaEngineClassFactory.Reset();
 }
 
 /* static */
@@ -500,10 +503,13 @@ HRESULT MFCDMParent::LoadFactory(
                     NS_ConvertUTF16toUTF8(aKeySystem).get());
   ComPtr<IMFContentDecryptionModuleFactory> cdmFactory;
   if (loadFromPlatform) {
+    if (!sMediaEngineClassFactory) {
+      MFCDM_RETURN_IF_FAILED(CoCreateInstance(
+          CLSID_MFMediaEngineClassFactory, nullptr, CLSCTX_INPROC_SERVER,
+          IID_PPV_ARGS(&sMediaEngineClassFactory)));
+    }
     ComPtr<IMFMediaEngineClassFactory4> clsFactory;
-    MFCDM_RETURN_IF_FAILED(CoCreateInstance(CLSID_MFMediaEngineClassFactory,
-                                            nullptr, CLSCTX_INPROC_SERVER,
-                                            IID_PPV_ARGS(&clsFactory)));
+    MFCDM_RETURN_IF_FAILED(sMediaEngineClassFactory.As(&clsFactory));
     MFCDM_RETURN_IF_FAILED(clsFactory->CreateContentDecryptionModuleFactory(
         MapKeySystem(aKeySystem).get(), IID_PPV_ARGS(&cdmFactory)));
     aFactoryOut.Swap(cdmFactory);
@@ -617,12 +623,8 @@ static bool FactorySupports(ComPtr<IMFContentDecryptionModuleFactory>& aFactory,
   // use another way to check the capabilities.
   if (IsPlayReadyKeySystemAndSupported(aKeySystem) &&
       StaticPrefs::media_eme_playready_istypesupportedex()) {
-    ComPtr<IMFMediaEngineClassFactory> spFactory;
     ComPtr<IMFExtendedDRMTypeSupport> spDrmTypeSupport;
-    MFCDM_RETURN_BOOL_IF_FAILED(
-        CoCreateInstance(CLSID_MFMediaEngineClassFactory, NULL,
-                         CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&spFactory)));
-    MFCDM_RETURN_BOOL_IF_FAILED(spFactory.As(&spDrmTypeSupport));
+    MFCDM_RETURN_BOOL_IF_FAILED(sMediaEngineClassFactory.As(&spDrmTypeSupport));
     BSTR keySystem = aIsHWSecure
                          ? CreateBSTRFromConstChar(kPlayReadyKeySystemHardware)
                          : CreateBSTRFromConstChar(kPlayReadyKeySystemName);
