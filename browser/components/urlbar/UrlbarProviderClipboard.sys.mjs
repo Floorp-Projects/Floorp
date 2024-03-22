@@ -51,7 +51,8 @@ class ProviderClipboard extends UrlbarProvider {
     if (
       !lazy.UrlbarPrefs.get("clipboard.featureGate") ||
       !lazy.UrlbarPrefs.get("suggest.clipboard") ||
-      queryContext.searchString
+      queryContext.searchString ||
+      queryContext.searchMode
     ) {
       return false;
     }
