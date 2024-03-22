@@ -1222,7 +1222,11 @@ add_task(async function test_hover_message_when_button_updates_itself() {
 
   // Move cursor to the center of the entire browser UI to avoid issues with
   // other focus/hover checks. We do this to avoid intermittent test failures.
+  // We intentionally turn off this a11y check, because the following click
+  // is purposefully targeting a non-interactive content of the page.
+  AccessibilityUtils.setEnv({ mustHaveAccessibleRule: false });
   EventUtils.synthesizeMouseAtCenter(document.documentElement, {});
+  AccessibilityUtils.resetEnv();
 
   await extension.unload();
 });
