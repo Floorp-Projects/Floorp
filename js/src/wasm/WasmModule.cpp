@@ -867,7 +867,7 @@ static bool GetGlobalExport(JSContext* cx,
   MOZ_RELEASE_ASSERT(!global.isImport());
   RootedVal globalVal(cx);
   instanceObj->instance().constantGlobalGet(globalIndex, &globalVal);
-  globalObj->val() = globalVal;
+  globalObj->setVal(globalVal);
   return true;
 }
 
