@@ -52,8 +52,8 @@ crashtest:
             webrender-sw+no-fission:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug: built-projects
-                    linux1804-64-qr/debug: ['trunk']
-                    linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
+                    linux1804-64-qr/debug: ['mozilla-central']
+                    linux1804-64(-shippable|-asan)?-qr/opt: ['mozilla-central']
                     default: []
             webrender-sw:
                 by-test-platform:
@@ -66,8 +66,8 @@ crashtest:
             no-fission:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug-isolated-process: []
-                    linux1804-64-qr/debug: ['trunk']
-                    linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
+                    linux1804-64-qr/debug: ['mozilla-central']
+                    linux1804-64(-shippable|-asan)?-qr/opt: ['mozilla-central']
                     android.*: built-projects
                     default: []
             default:
@@ -77,10 +77,20 @@ crashtest:
                     default: built-projects
     max-run-time: 3600
     tier:
-        by-test-platform:
-            android-hw-.*-qr/.*: 2
-            android-em-7.0-x86_64-qr/debug-isolated-process: 3
-            default: default
+        by-variant:
+            no-fission:
+                by-test-platform:
+                    linux.*: 2
+                    default: default
+            webrender-sw+no-fission:
+                by-test-platform:
+                    linux.*: 2
+                    default: default
+            default:
+                by-test-platform:
+                    android-hw-.*-qr/.*: 2
+                    android-em-7.0-x86_64-qr/debug-isolated-process: 3
+                    default: default
 
 crashtest-qr:
     description: "Crashtest Webrender run"
@@ -127,8 +137,8 @@ jsreftest:
         by-variant:
             no-fission:
                 by-test-platform:
-                    linux1804-64-qr/debug: ['trunk']
-                    linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
+                    linux1804-64-qr/debug: ['mozilla-central']
+                    linux1804-64(-shippable|-asan)?-qr/opt: ['mozilla-central']
                     android-hw-.*-aarch64(?:-shippable)?-qr/.*: ['mozilla-central', 'release']
                     android-hw-.*-arm7(?:-shippable)?-qr/.*: ['mozilla-central', 'release']
                     android.*: built-projects
@@ -138,6 +148,13 @@ jsreftest:
                     android.*/.*: []
                     default: built-projects
     virtualization: virtual
+    tier:
+        by-variant:
+            no-fission:
+                by-test-platform:
+                    linux.*: 2
+                    default: default
+            default: default
 
 reftest:
     description: "Reftest run"
@@ -171,8 +188,8 @@ reftest:
             webrender-sw+no-fission:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug: built-projects
-                    linux1804-64-qr/debug: ['trunk']
-                    linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
+                    linux1804-64-qr/debug: ['mozilla-central']
+                    linux1804-64(-shippable|-asan)?-qr/opt: ['mozilla-central']
                     default: []
             webrender-sw:
                 by-test-platform:
@@ -184,8 +201,8 @@ reftest:
             no-fission:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug-isolated-process: []
-                    linux1804-64-qr/debug: ['trunk']
-                    linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
+                    linux1804-64-qr/debug: ['mozilla-central']
+                    linux1804-64(-shippable|-asan)?-qr/opt: ['mozilla-central']
                     android.*: built-projects
                     default: []
             default:
@@ -209,9 +226,19 @@ reftest:
                 windows.*/opt: false
                 default: true
     tier:
-        by-test-platform:
-            android-em-7.0-x86_64-qr/debug-isolated-process: 3
-            default: default
+        by-variant:
+            no-fission:
+                by-test-platform:
+                    linux.*: 2
+                    default: default
+            webrender-sw+no-fission:
+                by-test-platform:
+                    linux.*: 2
+                    default: default
+            default:
+                by-test-platform:
+                    android-em-7.0-x86_64-qr/debug-isolated-process: 3
+                    default: default
 
 reftest-qr:
     description: "Reftest webrender run"

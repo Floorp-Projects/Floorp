@@ -61,7 +61,7 @@ xpcshell:
                     default: []
             socketprocess_networking+no-fission:
                 by-test-platform:
-                    linux1804-64.*: ['trunk']
+                    linux1804-64.*: ['mozilla-central']
                     default: []
             socketprocess_networking:
                 by-test-platform:
@@ -72,7 +72,7 @@ xpcshell:
                 by-test-platform:
                     android-em-7.0-x86_64-qr/debug-isolated-process: []
                     android.*: built-projects
-                    linux1804-64.*: ['trunk']
+                    linux1804-64.*: ['mozilla-central']
                     default: []
             msix:
                 by-test-platform:
@@ -103,10 +103,20 @@ xpcshell:
                     default: 5400
     allow-software-gl-layers: false
     tier:
-        by-test-platform:
-            windows.*-asan.*: 3
-            android-em-7.0-x86_64-qr/debug-isolated-process: 3
-            default: default
+        by-variant:
+            no-fission:
+                by-test-platform:
+                    linux.*: 2
+                    default: default
+            socketprocess_networking+no-fission:
+                by-test-platform:
+                    linux.*: 2
+                    default: default
+            default:
+                by-test-platform:
+                    windows.*-asan.*: 3
+                    android-em-7.0-x86_64-qr/debug-isolated-process: 3
+                    default: default
     mozharness:
         extra-options:
             by-test-platform:
