@@ -197,6 +197,18 @@
     { url: "invalid.txt", valid: false, sampleRate: 44100 },
     // A webm file with no audio
     { url: "noaudio.webm", valid: false, sampleRate: 48000 },
+    // A video ogg file with audio
+    {
+      url: "audio.ogv",
+      valid: true,
+      expectedUrl: "audio-expected.wav",
+      numberOfChannels: 2,
+      sampleRate: 44100,
+      frames: 47680,
+      duration: 1.0807,
+      fuzzTolerance: 106,
+      fuzzToleranceMobile: 3482
+    },
     {
       url: "nil-packet.ogg",
       expectedUrl: null,

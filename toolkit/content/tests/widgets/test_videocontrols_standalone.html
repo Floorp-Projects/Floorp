@@ -22,7 +22,7 @@ function getMediaElement(aWindow) {
   return aWindow.document.getElementsByTagName("video")[0];
 }
 
-var popup = window.open("seek_with_sound.webm");
+var popup = window.open("seek_with_sound.ogg");
 popup.addEventListener("load", function() {
   var video = getMediaElement(popup);
 

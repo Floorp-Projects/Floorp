@@ -89,7 +89,7 @@ function startTest(test) {
   var v = document.createElement("video");
   v.name = test.name;
   var key = Math.random();
-  v.src = "vp9.webm?key=" + key + "&id=" + v.name;
+  v.src = "seek.ogv?key=" + key + "&id=" + v.name;
   v.preload = test.preload;
   v.suspendCount = 0;
   v.expectedSuspendCount = test.expectedSuspendCount;
