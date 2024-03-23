@@ -215,11 +215,9 @@ class AnyRef {
     defined(JS_CODEGEN_RISCV64)
     // Sign extend the value to the native pointer size.
     uintptr_t wideValue = uintptr_t(int64_t((uint64_t(value) << 33)) >> 33);
-#elif !defined(JS_64BIT)
+#else
     // Transfer 32-bit value as is.
     uintptr_t wideValue = (uintptr_t)value;
-#else
-#  error "unknown architecture"
 #endif
 
     // Left shift the value by 1, truncating the high bit.
