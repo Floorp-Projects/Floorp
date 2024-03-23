@@ -3228,7 +3228,7 @@ void WasmGlobalObject::finalize(JS::GCContext* gcx, JSObject* obj) {
     // Release the strong reference to the type definitions this global could
     // be referencing.
     global->type().Release();
-    gcx->delete_(obj, &global->val(), MemoryUse::WasmGlobalCell);
+    gcx->delete_(obj, &global->mutableVal(), MemoryUse::WasmGlobalCell);
   }
 }
 
@@ -3254,7 +3254,9 @@ WasmGlobalObject* WasmGlobalObject::create(JSContext* cx, HandleVal value,
 
   // It's simpler to initialize the cell after the object has been created,
   // to avoid needing to root the cell before the object creation.
-  obj->val() = value.get();
+  // We don't use `setVal` here because the assumes the cell has already
+  // been initialized.
+  obj->mutableVal() = value.get();
   // Acquire a strong reference to a type definition this global could
   // be referencing.
   obj->type().AddRef();
@@ -3385,7 +3387,7 @@ bool WasmGlobalObject::valueSetterImpl(JSContext* cx, const CallArgs& args) {
   if (!Val::fromJSValue(cx, global->type(), args.get(0), &val)) {
     return false;
   }
-  global->val() = val.get();
+  global->setVal(val);
 
   args.rval().setUndefined();
   return true;
@@ -3418,8 +3420,21 @@ bool WasmGlobalObject::isMutable() const {
 
 ValType WasmGlobalObject::type() const { return val().get().type(); }
 
-GCPtrVal& WasmGlobalObject::val() const {
+GCPtrVal& WasmGlobalObject::mutableVal() {
   return *reinterpret_cast<GCPtrVal*>(getReservedSlot(VAL_SLOT).toPrivate());
+}
+
+const GCPtrVal& WasmGlobalObject::val() const {
+  return *reinterpret_cast<GCPtrVal*>(getReservedSlot(VAL_SLOT).toPrivate());
+}
+
+void WasmGlobalObject::setVal(wasm::HandleVal value) {
+  MOZ_ASSERT(type() == value.get().type());
+  mutableVal() = value;
+}
+
+void* WasmGlobalObject::addressOfCell() const {
+  return (void*)&val().get().cell();
 }
 
 #ifdef ENABLE_WASM_TYPE_REFLECTIONS
