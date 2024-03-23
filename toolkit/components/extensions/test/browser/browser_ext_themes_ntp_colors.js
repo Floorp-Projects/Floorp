@@ -43,8 +43,7 @@ async function test_ntp_theme(theme, isBrightText) {
       );
 
       return {
-        originalBackground: content.getComputedStyle(doc.body)
-          .backgroundColor,
+        originalBackground: content.getComputedStyle(doc.body).backgroundColor,
         originalCardBackground: content.getComputedStyle(
           doc.querySelector(".top-site-outer .tile")
         ).backgroundColor,
