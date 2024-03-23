@@ -1429,7 +1429,7 @@ mozilla::ipc::IPCResult BackgroundTransactionChild::RecvComplete(
 
 PBackgroundIDBRequestChild*
 BackgroundTransactionChild::AllocPBackgroundIDBRequestChild(
-    const RequestParams& aParams) {
+    const int64_t& aRequestId, const RequestParams& aParams) {
   MOZ_CRASH(
       "PBackgroundIDBRequestChild actors should be manually "
       "constructed!");
@@ -1547,7 +1547,7 @@ mozilla::ipc::IPCResult BackgroundVersionChangeTransactionChild::RecvComplete(
 
 PBackgroundIDBRequestChild*
 BackgroundVersionChangeTransactionChild::AllocPBackgroundIDBRequestChild(
-    const RequestParams& aParams) {
+    const int64_t& aRequestId, const RequestParams& aParams) {
   MOZ_CRASH(
       "PBackgroundIDBRequestChild actors should be manually "
       "constructed!");

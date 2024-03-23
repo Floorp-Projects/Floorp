@@ -2039,8 +2039,8 @@ class TransactionDatabaseOperationBase : public DatabaseOperationBase {
   virtual void Cleanup();
 
  protected:
-  explicit TransactionDatabaseOperationBase(
-      SafeRefPtr<TransactionBase> aTransaction);
+  TransactionDatabaseOperationBase(SafeRefPtr<TransactionBase> aTransaction,
+                                   int64_t aRequestId);
 
   TransactionDatabaseOperationBase(SafeRefPtr<TransactionBase> aTransaction,
                                    const int64_t aRequestId,
@@ -2772,7 +2772,8 @@ class TransactionBase : public AtomicSafeRefCounted<TransactionBase> {
     CommitOrAbort();
   }
 
-  PBackgroundIDBRequestParent* AllocRequest(RequestParams&& aParams,
+  PBackgroundIDBRequestParent* AllocRequest(const int64_t aRequestId,
+                                            RequestParams&& aParams,
                                             bool aTrustParams);
 
   bool StartRequest(PBackgroundIDBRequestParent* aActor);
@@ -2865,10 +2866,10 @@ class NormalTransaction final : public TransactionBase,
   mozilla::ipc::IPCResult RecvAbort(const nsresult& aResultCode) override;
 
   PBackgroundIDBRequestParent* AllocPBackgroundIDBRequestParent(
-      const RequestParams& aParams) override;
+      const int64_t& aRequestId, const RequestParams& aParams) override;
 
   mozilla::ipc::IPCResult RecvPBackgroundIDBRequestConstructor(
-      PBackgroundIDBRequestParent* aActor,
+      PBackgroundIDBRequestParent* aActor, const int64_t& aRequestId,
       const RequestParams& aParams) override;
 
   bool DeallocPBackgroundIDBRequestParent(
@@ -2957,10 +2958,10 @@ class VersionChangeTransaction final
       const IndexOrObjectStoreId& aIndexId, const nsAString& aName) override;
 
   PBackgroundIDBRequestParent* AllocPBackgroundIDBRequestParent(
-      const RequestParams& aParams) override;
+      const int64_t& aRequestId, const RequestParams& aParams) override;
 
   mozilla::ipc::IPCResult RecvPBackgroundIDBRequestConstructor(
-      PBackgroundIDBRequestParent* aActor,
+      PBackgroundIDBRequestParent* aActor, const int64_t& aRequestId,
       const RequestParams& aParams) override;
 
   bool DeallocPBackgroundIDBRequestParent(
@@ -3341,7 +3342,8 @@ class VersionChangeTransactionOp : public TransactionDatabaseOperationBase {
  protected:
   explicit VersionChangeTransactionOp(
       SafeRefPtr<VersionChangeTransaction> aTransaction)
-      : TransactionDatabaseOperationBase(std::move(aTransaction)) {}
+      : TransactionDatabaseOperationBase(std::move(aTransaction),
+                                         /* aRequestId */ 0) {}
 
   ~VersionChangeTransactionOp() override = default;
 
@@ -3526,8 +3528,9 @@ class NormalTransactionOp : public TransactionDatabaseOperationBase,
   void Cleanup() override;
 
  protected:
-  explicit NormalTransactionOp(SafeRefPtr<TransactionBase> aTransaction)
-      : TransactionDatabaseOperationBase(std::move(aTransaction))
+  NormalTransactionOp(SafeRefPtr<TransactionBase> aTransaction,
+                      const int64_t aRequestId)
+      : TransactionDatabaseOperationBase(std::move(aTransaction), aRequestId)
 #ifdef DEBUG
         ,
         mResponseSent(false)
@@ -3654,6 +3657,7 @@ class ObjectStoreAddOrPutRequestOp final : public NormalTransactionOp {
  private:
   // Only created by TransactionBase.
   ObjectStoreAddOrPutRequestOp(SafeRefPtr<TransactionBase> aTransaction,
+                               const int64_t aRequestId,
                                RequestParams&& aParams);
 
   ~ObjectStoreAddOrPutRequestOp() override = default;
@@ -3890,6 +3894,7 @@ class ObjectStoreGetRequestOp final : public NormalTransactionOp {
  private:
   // Only created by TransactionBase.
   ObjectStoreGetRequestOp(SafeRefPtr<TransactionBase> aTransaction,
+                          const int64_t aRequestId,
                           const RequestParams& aParams, bool aGetAll);
 
   ~ObjectStoreGetRequestOp() override = default;
@@ -3919,6 +3924,7 @@ class ObjectStoreGetKeyRequestOp final : public NormalTransactionOp {
  private:
   // Only created by TransactionBase.
   ObjectStoreGetKeyRequestOp(SafeRefPtr<TransactionBase> aTransaction,
+                             const int64_t aRequestId,
                              const RequestParams& aParams, bool aGetAll);
 
   ~ObjectStoreGetKeyRequestOp() override = default;
@@ -3937,6 +3943,7 @@ class ObjectStoreDeleteRequestOp final : public NormalTransactionOp {
 
  private:
   ObjectStoreDeleteRequestOp(SafeRefPtr<TransactionBase> aTransaction,
+                             const int64_t aRequestId,
                              const ObjectStoreDeleteParams& aParams);
 
   ~ObjectStoreDeleteRequestOp() override = default;
@@ -3958,6 +3965,7 @@ class ObjectStoreClearRequestOp final : public NormalTransactionOp {
 
  private:
   ObjectStoreClearRequestOp(SafeRefPtr<TransactionBase> aTransaction,
+                            const int64_t aRequestId,
                             const ObjectStoreClearParams& aParams);
 
   ~ObjectStoreClearRequestOp() override = default;
@@ -3978,8 +3986,10 @@ class ObjectStoreCountRequestOp final : public NormalTransactionOp {
 
  private:
   ObjectStoreCountRequestOp(SafeRefPtr<TransactionBase> aTransaction,
+                            const int64_t aRequestId,
                             const ObjectStoreCountParams& aParams)
-      : NormalTransactionOp(std::move(aTransaction)), mParams(aParams) {}
+      : NormalTransactionOp(std::move(aTransaction), aRequestId),
+        mParams(aParams) {}
 
   ~ObjectStoreCountRequestOp() override = default;
 
@@ -3997,8 +4007,8 @@ class IndexRequestOpBase : public NormalTransactionOp {
 
  protected:
   IndexRequestOpBase(SafeRefPtr<TransactionBase> aTransaction,
-                     const RequestParams& aParams)
-      : NormalTransactionOp(std::move(aTransaction)),
+                     const int64_t aRequestId, const RequestParams& aParams)
+      : NormalTransactionOp(std::move(aTransaction), aRequestId),
         mMetadata(IndexMetadataForParams(Transaction(), aParams)) {}
 
   ~IndexRequestOpBase() override = default;
@@ -4021,7 +4031,8 @@ class IndexGetRequestOp final : public IndexRequestOpBase {
  private:
   // Only created by TransactionBase.
   IndexGetRequestOp(SafeRefPtr<TransactionBase> aTransaction,
-                    const RequestParams& aParams, bool aGetAll);
+                    const int64_t aRequestId, const RequestParams& aParams,
+                    bool aGetAll);
 
   ~IndexGetRequestOp() override = default;
 
@@ -4041,7 +4052,8 @@ class IndexGetKeyRequestOp final : public IndexRequestOpBase {
  private:
   // Only created by TransactionBase.
   IndexGetKeyRequestOp(SafeRefPtr<TransactionBase> aTransaction,
-                       const RequestParams& aParams, bool aGetAll);
+                       const int64_t aRequestId, const RequestParams& aParams,
+                       bool aGetAll);
 
   ~IndexGetKeyRequestOp() override = default;
 
@@ -4059,8 +4071,8 @@ class IndexCountRequestOp final : public IndexRequestOpBase {
  private:
   // Only created by TransactionBase.
   IndexCountRequestOp(SafeRefPtr<TransactionBase> aTransaction,
-                      const RequestParams& aParams)
-      : IndexRequestOpBase(std::move(aTransaction), aParams),
+                      const int64_t aRequestId, const RequestParams& aParams)
+      : IndexRequestOpBase(std::move(aTransaction), aRequestId, aParams),
         mParams(aParams.get_IndexCountParams()) {}
 
   ~IndexCountRequestOp() override = default;
@@ -4381,7 +4393,8 @@ class Cursor<CursorType>::CursorOpBase
 
  protected:
   explicit CursorOpBase(Cursor* aCursor)
-      : TransactionDatabaseOperationBase(aCursor->mTransaction.clonePtr()),
+      : TransactionDatabaseOperationBase(aCursor->mTransaction.clonePtr(),
+                                         /* aRequestId */ 0),
         mCursor(aCursor)
 #ifdef DEBUG
         ,
@@ -10376,7 +10389,7 @@ void TransactionBase::Invalidate() {
 }
 
 PBackgroundIDBRequestParent* TransactionBase::AllocRequest(
-    RequestParams&& aParams, bool aTrustParams) {
+    const int64_t aRequestId, RequestParams&& aParams, bool aTrustParams) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParams.type() != RequestParams::T__None);
 
@@ -10398,67 +10411,77 @@ PBackgroundIDBRequestParent* TransactionBase::AllocRequest(
   switch (aParams.type()) {
     case RequestParams::TObjectStoreAddParams:
     case RequestParams::TObjectStorePutParams:
-      actor = new ObjectStoreAddOrPutRequestOp(SafeRefPtrFromThis(),
+      actor = new ObjectStoreAddOrPutRequestOp(SafeRefPtrFromThis(), aRequestId,
                                                std::move(aParams));
       break;
 
     case RequestParams::TObjectStoreGetParams:
-      actor = new ObjectStoreGetRequestOp(SafeRefPtrFromThis(), aParams,
-                                          /* aGetAll */ false);
+      actor =
+          new ObjectStoreGetRequestOp(SafeRefPtrFromThis(), aRequestId, aParams,
+                                      /* aGetAll */ false);
       break;
 
     case RequestParams::TObjectStoreGetAllParams:
-      actor = new ObjectStoreGetRequestOp(SafeRefPtrFromThis(), aParams,
-                                          /* aGetAll */ true);
+      actor =
+          new ObjectStoreGetRequestOp(SafeRefPtrFromThis(), aRequestId, aParams,
+                                      /* aGetAll */ true);
       break;
 
     case RequestParams::TObjectStoreGetKeyParams:
-      actor = new ObjectStoreGetKeyRequestOp(SafeRefPtrFromThis(), aParams,
+      actor = new ObjectStoreGetKeyRequestOp(SafeRefPtrFromThis(), aRequestId,
+                                             aParams,
                                              /* aGetAll */ false);
       break;
 
     case RequestParams::TObjectStoreGetAllKeysParams:
-      actor = new ObjectStoreGetKeyRequestOp(SafeRefPtrFromThis(), aParams,
+      actor = new ObjectStoreGetKeyRequestOp(SafeRefPtrFromThis(), aRequestId,
+                                             aParams,
                                              /* aGetAll */ true);
       break;
 
     case RequestParams::TObjectStoreDeleteParams:
-      actor = new ObjectStoreDeleteRequestOp(
-          SafeRefPtrFromThis(), aParams.get_ObjectStoreDeleteParams());
+      actor =
+          new ObjectStoreDeleteRequestOp(SafeRefPtrFromThis(), aRequestId,
+                                         aParams.get_ObjectStoreDeleteParams());
       break;
 
     case RequestParams::TObjectStoreClearParams:
-      actor = new ObjectStoreClearRequestOp(
-          SafeRefPtrFromThis(), aParams.get_ObjectStoreClearParams());
+      actor =
+          new ObjectStoreClearRequestOp(SafeRefPtrFromThis(), aRequestId,
+                                        aParams.get_ObjectStoreClearParams());
       break;
 
     case RequestParams::TObjectStoreCountParams:
-      actor = new ObjectStoreCountRequestOp(
-          SafeRefPtrFromThis(), aParams.get_ObjectStoreCountParams());
+      actor =
+          new ObjectStoreCountRequestOp(SafeRefPtrFromThis(), aRequestId,
+                                        aParams.get_ObjectStoreCountParams());
       break;
 
     case RequestParams::TIndexGetParams:
-      actor = new IndexGetRequestOp(SafeRefPtrFromThis(), aParams,
+      actor = new IndexGetRequestOp(SafeRefPtrFromThis(), aRequestId, aParams,
                                     /* aGetAll */ false);
       break;
 
     case RequestParams::TIndexGetKeyParams:
-      actor = new IndexGetKeyRequestOp(SafeRefPtrFromThis(), aParams,
-                                       /* aGetAll */ false);
+      actor =
+          new IndexGetKeyRequestOp(SafeRefPtrFromThis(), aRequestId, aParams,
+                                   /* aGetAll */ false);
       break;
 
     case RequestParams::TIndexGetAllParams:
-      actor = new IndexGetRequestOp(SafeRefPtrFromThis(), aParams,
+      actor = new IndexGetRequestOp(SafeRefPtrFromThis(), aRequestId, aParams,
                                     /* aGetAll */ true);
       break;
 
     case RequestParams::TIndexGetAllKeysParams:
-      actor = new IndexGetKeyRequestOp(SafeRefPtrFromThis(), aParams,
-                                       /* aGetAll */ true);
+      actor =
+          new IndexGetKeyRequestOp(SafeRefPtrFromThis(), aRequestId, aParams,
+                                   /* aGetAll */ true);
       break;
 
     case RequestParams::TIndexCountParams:
-      actor = new IndexCountRequestOp(SafeRefPtrFromThis(), aParams);
+      actor =
+          new IndexCountRequestOp(SafeRefPtrFromThis(), aRequestId, aParams);
       break;
 
     default:
@@ -10654,16 +10677,18 @@ mozilla::ipc::IPCResult NormalTransaction::RecvAbort(
 
 PBackgroundIDBRequestParent*
 NormalTransaction::AllocPBackgroundIDBRequestParent(
-    const RequestParams& aParams) {
+    const int64_t& aRequestId, const RequestParams& aParams) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParams.type() != RequestParams::T__None);
 
-  return AllocRequest(std::move(const_cast<RequestParams&>(aParams)),
+  return AllocRequest(aRequestId,
+                      std::move(const_cast<RequestParams&>(aParams)),
                       IsSameProcessActor());
 }
 
 mozilla::ipc::IPCResult NormalTransaction::RecvPBackgroundIDBRequestConstructor(
-    PBackgroundIDBRequestParent* const aActor, const RequestParams& aParams) {
+    PBackgroundIDBRequestParent* const aActor, const int64_t& aRequestId,
+    const RequestParams& aParams) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(aParams.type() != RequestParams::T__None);
@@ -11240,17 +11265,19 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvRenameIndex(
 
 PBackgroundIDBRequestParent*
 VersionChangeTransaction::AllocPBackgroundIDBRequestParent(
-    const RequestParams& aParams) {
+    const int64_t& aRequestId, const RequestParams& aParams) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParams.type() != RequestParams::T__None);
 
-  return AllocRequest(std::move(const_cast<RequestParams&>(aParams)),
+  return AllocRequest(aRequestId,
+                      std::move(const_cast<RequestParams&>(aParams)),
                       IsSameProcessActor());
 }
 
 mozilla::ipc::IPCResult
 VersionChangeTransaction::RecvPBackgroundIDBRequestConstructor(
-    PBackgroundIDBRequestParent* aActor, const RequestParams& aParams) {
+    PBackgroundIDBRequestParent* aActor, const int64_t& aRequestId,
+    const RequestParams& aParams) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(aParams.type() != RequestParams::T__None);
@@ -16537,11 +16564,11 @@ nsresult DeleteDatabaseOp::VersionChangeOp::Run() {
 }
 
 TransactionDatabaseOperationBase::TransactionDatabaseOperationBase(
-    SafeRefPtr<TransactionBase> aTransaction)
+    SafeRefPtr<TransactionBase> aTransaction, const int64_t aRequestId)
     : DatabaseOperationBase(aTransaction->GetLoggingInfo()->Id(),
                             aTransaction->GetLoggingInfo()->NextRequestSN()),
       mTransaction(WrapNotNull(std::move(aTransaction))),
-      mRequestId(0),
+      mRequestId(aRequestId),
       mTransactionIsAborted((*mTransaction)->IsAborted()),
       mTransactionLoggingSerialNumber((*mTransaction)->LoggingSerialNumber()) {
   MOZ_ASSERT(LoggingSerialNumber());
@@ -18250,8 +18277,9 @@ mozilla::ipc::IPCResult NormalTransactionOp::RecvContinue(
 }
 
 ObjectStoreAddOrPutRequestOp::ObjectStoreAddOrPutRequestOp(
-    SafeRefPtr<TransactionBase> aTransaction, RequestParams&& aParams)
-    : NormalTransactionOp(std::move(aTransaction)),
+    SafeRefPtr<TransactionBase> aTransaction, const int64_t aRequestId,
+    RequestParams&& aParams)
+    : NormalTransactionOp(std::move(aTransaction), aRequestId),
       mParams(
           std::move(aParams.type() == RequestParams::TObjectStoreAddParams
                         ? aParams.get_ObjectStoreAddParams().commonParams()
@@ -18766,9 +18794,9 @@ ObjectStoreAddOrPutRequestOp::SCInputStream::IsNonBlocking(bool* _retval) {
 }
 
 ObjectStoreGetRequestOp::ObjectStoreGetRequestOp(
-    SafeRefPtr<TransactionBase> aTransaction, const RequestParams& aParams,
-    bool aGetAll)
-    : NormalTransactionOp(std::move(aTransaction)),
+    SafeRefPtr<TransactionBase> aTransaction, const int64_t aRequestId,
+    const RequestParams& aParams, bool aGetAll)
+    : NormalTransactionOp(std::move(aTransaction), aRequestId),
       mObjectStoreId(aGetAll
                          ? aParams.get_ObjectStoreGetAllParams().objectStoreId()
                          : aParams.get_ObjectStoreGetParams().objectStoreId()),
@@ -18938,9 +18966,9 @@ void ObjectStoreGetRequestOp::GetResponse(RequestResponse& aResponse,
 }
 
 ObjectStoreGetKeyRequestOp::ObjectStoreGetKeyRequestOp(
-    SafeRefPtr<TransactionBase> aTransaction, const RequestParams& aParams,
-    bool aGetAll)
-    : NormalTransactionOp(std::move(aTransaction)),
+    SafeRefPtr<TransactionBase> aTransaction, const int64_t aRequestId,
+    const RequestParams& aParams, bool aGetAll)
+    : NormalTransactionOp(std::move(aTransaction), aRequestId),
       mObjectStoreId(
           aGetAll ? aParams.get_ObjectStoreGetAllKeysParams().objectStoreId()
                   : aParams.get_ObjectStoreGetKeyParams().objectStoreId()),
@@ -19026,9 +19054,9 @@ void ObjectStoreGetKeyRequestOp::GetResponse(RequestResponse& aResponse,
 }
 
 ObjectStoreDeleteRequestOp::ObjectStoreDeleteRequestOp(
-    SafeRefPtr<TransactionBase> aTransaction,
+    SafeRefPtr<TransactionBase> aTransaction, const int64_t aRequestId,
     const ObjectStoreDeleteParams& aParams)
-    : NormalTransactionOp(std::move(aTransaction)),
+    : NormalTransactionOp(std::move(aTransaction), aRequestId),
       mParams(aParams),
       mObjectStoreMayHaveIndexes(false) {
   AssertIsOnBackgroundThread();
@@ -19087,9 +19115,9 @@ nsresult ObjectStoreDeleteRequestOp::DoDatabaseWork(
 }
 
 ObjectStoreClearRequestOp::ObjectStoreClearRequestOp(
-    SafeRefPtr<TransactionBase> aTransaction,
+    SafeRefPtr<TransactionBase> aTransaction, const int64_t aRequestId,
     const ObjectStoreClearParams& aParams)
-    : NormalTransactionOp(std::move(aTransaction)),
+    : NormalTransactionOp(std::move(aTransaction), aRequestId),
       mParams(aParams),
       mObjectStoreMayHaveIndexes(false) {
   AssertIsOnBackgroundThread();
@@ -19260,8 +19288,9 @@ SafeRefPtr<FullIndexMetadata> IndexRequestOpBase::IndexMetadataForParams(
 }
 
 IndexGetRequestOp::IndexGetRequestOp(SafeRefPtr<TransactionBase> aTransaction,
+                                     const int64_t aRequestId,
                                      const RequestParams& aParams, bool aGetAll)
-    : IndexRequestOpBase(std::move(aTransaction), aParams),
+    : IndexRequestOpBase(std::move(aTransaction), aRequestId, aParams),
       mDatabase(Transaction().GetDatabasePtr()),
       mOptionalKeyRange(aGetAll
                             ? aParams.get_IndexGetAllParams().optionalKeyRange()
@@ -19390,9 +19419,9 @@ void IndexGetRequestOp::GetResponse(RequestResponse& aResponse,
 }
 
 IndexGetKeyRequestOp::IndexGetKeyRequestOp(
-    SafeRefPtr<TransactionBase> aTransaction, const RequestParams& aParams,
-    bool aGetAll)
-    : IndexRequestOpBase(std::move(aTransaction), aParams),
+    SafeRefPtr<TransactionBase> aTransaction, const int64_t aRequestId,
+    const RequestParams& aParams, bool aGetAll)
+    : IndexRequestOpBase(std::move(aTransaction), aRequestId, aParams),
       mOptionalKeyRange(
           aGetAll ? aParams.get_IndexGetAllKeysParams().optionalKeyRange()
                   : Some(aParams.get_IndexGetKeyParams().keyRange())),
