@@ -609,6 +609,22 @@ class NPZCSupport final
     PostInputEvent([input = std::move(input), result](nsWindow* window) {
       WidgetMouseEvent mouseEvent = input.ToWidgetEvent(window);
       window->ProcessUntransformedAPZEvent(&mouseEvent, result);
+      if (MouseInput::SECONDARY_BUTTON == input.mButtonType) {
+        if ((StaticPrefs::ui_context_menus_after_mouseup() &&
+             MouseInput::MOUSE_UP == input.mType) ||
+            (!StaticPrefs::ui_context_menus_after_mouseup() &&
+             MouseInput::MOUSE_DOWN == input.mType)) {
+          MouseInput contextMenu = input;
+
+          // Actually we don't dispatch context menu event to APZ since we don't
+          // handle it on APZ yet. If handling it, we need to consider how to
+          // dispatch it on APZ thread. It may cause a race condition.
+          contextMenu.mType = MouseInput::MOUSE_CONTEXTMENU;
+
+          WidgetMouseEvent contextMenuEvent = contextMenu.ToWidgetEvent(window);
+          window->ProcessUntransformedAPZEvent(&contextMenuEvent, result);
+        }
+      }
     });
 
     switch (result.GetStatus()) {

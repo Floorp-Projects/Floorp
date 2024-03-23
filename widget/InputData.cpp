@@ -303,6 +303,9 @@ MouseInput::MouseInput(const WidgetMouseEventBase& aMouseEvent)
     case eMouseHitTest:
       mType = MOUSE_HITTEST;
       break;
+    case eContextMenu:
+      mType = MOUSE_CONTEXTMENU;
+      break;
     default:
       MOZ_ASSERT_UNREACHABLE("Mouse event type not supported");
       break;
@@ -363,6 +366,9 @@ WidgetMouseEvent MouseInput::ToWidgetEvent(nsIWidget* aWidget) const {
       break;
     case MOUSE_HITTEST:
       msg = eMouseHitTest;
+      break;
+    case MOUSE_CONTEXTMENU:
+      msg = eContextMenu;
       break;
     default:
       MOZ_ASSERT_UNREACHABLE(
