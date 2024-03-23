@@ -37,6 +37,88 @@ class ContentDelegateChildTest : BaseSessionTest() {
         mainSession.panZoomController.onTouchEvent(event)
     }
 
+    private fun sendRightClickDown(x: Float, y: Float) {
+        val downTime = SystemClock.uptimeMillis()
+        var eventTime = SystemClock.uptimeMillis()
+
+        var pp = arrayOf(MotionEvent.PointerProperties())
+        pp[0].id = 0
+        pp[0].toolType = MotionEvent.TOOL_TYPE_MOUSE
+
+        var pc = arrayOf(MotionEvent.PointerCoords())
+        pc[0].x = x
+        pc[0].y = y
+        pc[0].pressure = 1.0f
+        pc[0].size = 1.0f
+
+        var event = MotionEvent.obtain(
+            downTime,
+            eventTime,
+            MotionEvent.ACTION_DOWN,
+            /* pointerCount */
+            1,
+            pp,
+            pc,
+            /* metaState */
+            0,
+            MotionEvent.BUTTON_SECONDARY,
+            /* xPrecision */
+            1.0f,
+            /* yPrecision */
+            1.0f,
+            /* deviceId */
+            0,
+            /* edgeFlags */
+            0,
+            InputDevice.SOURCE_MOUSE,
+            /* flags */
+            0,
+        )
+        mainSession.panZoomController.onTouchEvent(event)
+    }
+
+    private fun sendRightClickUp(x: Float, y: Float) {
+        val downTime = SystemClock.uptimeMillis()
+        var eventTime = SystemClock.uptimeMillis()
+
+        var pp = arrayOf(MotionEvent.PointerProperties())
+        pp[0].id = 0
+        pp[0].toolType = MotionEvent.TOOL_TYPE_MOUSE
+
+        var pc = arrayOf(MotionEvent.PointerCoords())
+        pc[0].x = x
+        pc[0].y = y
+        pc[0].pressure = 1.0f
+        pc[0].size = 1.0f
+
+        var event = MotionEvent.obtain(
+            downTime,
+            eventTime,
+            MotionEvent.ACTION_UP,
+            /* pointerCount */
+            1,
+            pp,
+            pc,
+            /* metaState */
+            0,
+            // buttonState is unset in ACTION_UP
+            /* buttonState */
+            0,
+            /* xPrecision */
+            1.0f,
+            /* yPrecision */
+            1.0f,
+            /* deviceId */
+            0,
+            /* edgeFlags */
+            0,
+            InputDevice.SOURCE_MOUSE,
+            /* flags */
+            0,
+        )
+        mainSession.panZoomController.onTouchEvent(event)
+    }
+
     @WithDisplay(width = 100, height = 100)
     @Test
     fun requestContextMenuOnAudio() {
@@ -273,6 +355,120 @@ class ContentDelegateChildTest : BaseSessionTest() {
                     endsWith("short.mp4"),
                 )
             }
+        })
+    }
+
+    @WithDisplay(width = 100, height = 100)
+    @Test
+    fun requestContextMenuOnLinkRightClickMouseUp() {
+        sessionRule.setPrefsUntilTestEnd(
+            mapOf(
+                "ui.context_menus.after_mouseup" to true,
+            ),
+        )
+        mainSession.loadTestPath(CONTEXT_MENU_LINK_HTML_PATH)
+        mainSession.waitForPageStop()
+
+        sendRightClickDown(50f, 50f)
+
+        mainSession.delegateDuringNextWait(object : ContentDelegate {
+            @AssertCalled(false)
+            override fun onContextMenu(
+                session: GeckoSession,
+                screenX: Int,
+                screenY: Int,
+                element: ContextElement,
+            ) {}
+        })
+
+        sendRightClickUp(50f, 50f)
+
+        mainSession.delegateUntilTestEnd(object : ContentDelegate {
+            @AssertCalled(count = 1)
+            override fun onContextMenu(
+                session: GeckoSession,
+                screenX: Int,
+                screenY: Int,
+                element: ContextElement,
+            ) {
+                assertThat(
+                    "Type should be none.",
+                    element.type,
+                    equalTo(ContextElement.TYPE_NONE),
+                )
+                assertThat(
+                    "The element link title should be the title of the anchor.",
+                    element.title,
+                    equalTo("Hello Link Title"),
+                )
+                assertThat(
+                    "The element link URI should be the href of the anchor.",
+                    element.linkUri,
+                    endsWith("hello.html"),
+                )
+                assertThat(
+                    "The element link text content should be the text content of the anchor.",
+                    element.textContent,
+                    equalTo("Hello World"),
+                )
+            }
+        })
+    }
+
+    @WithDisplay(width = 100, height = 100)
+    @Test
+    fun requestContextMenuOnLinkRightClickMouseDown() {
+        sessionRule.setPrefsUntilTestEnd(
+            mapOf(
+                "ui.context_menus.after_mouseup" to false,
+            ),
+        )
+        mainSession.loadTestPath(CONTEXT_MENU_LINK_HTML_PATH)
+        mainSession.waitForPageStop()
+
+        sendRightClickDown(50f, 50f)
+
+        mainSession.delegateDuringNextWait(object : ContentDelegate {
+            @AssertCalled(count = 1)
+            override fun onContextMenu(
+                session: GeckoSession,
+                screenX: Int,
+                screenY: Int,
+                element: ContextElement,
+            ) {
+                assertThat(
+                    "Type should be none.",
+                    element.type,
+                    equalTo(ContextElement.TYPE_NONE),
+                )
+                assertThat(
+                    "The element link title should be the title of the anchor.",
+                    element.title,
+                    equalTo("Hello Link Title"),
+                )
+                assertThat(
+                    "The element link URI should be the href of the anchor.",
+                    element.linkUri,
+                    endsWith("hello.html"),
+                )
+                assertThat(
+                    "The element link text content should be the text content of the anchor.",
+                    element.textContent,
+                    equalTo("Hello World"),
+                )
+            }
+        })
+
+        sendRightClickUp(50f, 50f)
+
+        mainSession.delegateUntilTestEnd(object : ContentDelegate {
+            @AssertCalled(false)
+            override fun onContextMenu(
+                session: GeckoSession,
+                screenX: Int,
+                screenY: Int,
+                element: ContextElement,
+            ) {}
         })
     }
 
