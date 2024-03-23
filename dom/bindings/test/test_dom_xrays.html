@@ -176,6 +176,27 @@ function test() {
   // ECMAScript-defined properties live on the prototype, overriding any named properties.
   checkXrayProperty(coll, "toString", [ undefined, undefined, win.Object.prototype.toString ]);
 
+  // Constructors
+  img = new win.Image();
+  ok(win.HTMLImageElement.isInstance(img), "Constructor created the right type of object");
+
+  let threw;
+  try {
+    threw = false;
+    win.Image();
+  } catch (e) {
+    threw = true;
+  }
+  ok(threw, "Constructors should throw when called without new");
+
+  try {
+    threw = false;
+    new win.Node();
+  } catch (e) {
+    threw = true;
+  }
+  ok(threw, "Constructing an interface without a constructor should throw");
+
   // Frozen arrays should come from our compartment, not the target one.
   var languages1 = win.navigator.languages;
   isnot(languages1, undefined, "Must have .languages");
@@ -358,7 +379,7 @@ function test() {
   // legacyCaller should work.
   ok(win.HTMLAllCollection.isInstance(doc.all),
      "HTMLDocument.all should be an instance of HTMLAllCollection");
-  let element, threw;
+  let element;
   try {
     threw = false;
     element = doc.all(0);

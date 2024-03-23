@@ -1799,6 +1799,11 @@ bool DOMXrayTraits::call(JSContext* cx, HandleObject wrapper,
   // using "legacycaller". At this time for all the legacycaller users it makes
   // more sense to invoke on the xray compartment, so we just go ahead and do
   // that for everything.
+  if (IsDOMConstructor(obj)) {
+    const JSNativeHolder* holder = NativeHolderFromObject(obj);
+    return holder->mNative(cx, args.length(), args.base());
+  }
+
   if (js::IsProxy(obj)) {
     if (JS::IsCallable(obj)) {
       // Passing obj here, but it doesn't really matter because legacycaller
@@ -1822,20 +1827,21 @@ bool DOMXrayTraits::construct(JSContext* cx, HandleObject wrapper,
                               const JS::CallArgs& args,
                               const js::Wrapper& baseInstance) {
   RootedObject obj(cx, getTargetObject(wrapper));
-  MOZ_ASSERT(mozilla::dom::HasConstructor(obj));
-  const JSClass* clasp = JS::GetClass(obj);
   // See comments in DOMXrayTraits::call() explaining what's going on here.
-  if (clasp->flags & JSCLASS_IS_DOMIFACEANDPROTOJSCLASS) {
-    if (JSNative construct = clasp->getConstruct()) {
-      if (!construct(cx, args.length(), args.base())) {
-        return false;
-      }
-    } else {
+  if (IsDOMConstructor(obj)) {
+    const JSNativeHolder* holder = NativeHolderFromObject(obj);
+    if (!holder->mNative(cx, args.length(), args.base())) {
+      return false;
+    }
+  } else {
+    const JSClass* clasp = JS::GetClass(obj);
+    if (clasp->flags & JSCLASS_IS_DOMIFACEANDPROTOJSCLASS) {
+      MOZ_ASSERT(!clasp->getConstruct());
+
       RootedValue v(cx, ObjectValue(*wrapper));
       js::ReportIsNotFunction(cx, v);
       return false;
     }
-  } else {
     if (!baseInstance.construct(cx, wrapper, args)) {
       return false;
     }
