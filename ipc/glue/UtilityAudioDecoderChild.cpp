@@ -246,7 +246,7 @@ void UtilityAudioDecoderChild::GetKeySystemCapabilities(
           info->mClearlead =
               DoesKeySystemSupportClearLead(info->mKeySystemName);
           if (capabilities.isHDCP22Compatible()) {
-            info->mIsHDCP22Compatible = *capabilities.isHDCP22Compatible();
+            info->mIsHDCP22Compatible = true;
           }
         }
         promise->MaybeResolve(cdmInfo);
