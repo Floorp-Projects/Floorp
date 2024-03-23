@@ -2267,18 +2267,24 @@ inline bool AddStringToIDVector(JSContext* cx,
                                name);
 }
 
-// We use one constructor JSNative to represent all DOM interface objects (so
-// we can easily detect when we need to wrap them in an Xray wrapper). We store
-// the real JSNative in the mNative member of a JSNativeHolder in the
-// CONSTRUCTOR_NATIVE_HOLDER_RESERVED_SLOT slot of the JSFunction object for a
-// specific interface object. We also store the NativeProperties in the
-// JSNativeHolder.
-// Note that some interface objects are not yet a JSFunction but a normal
-// JSObject with a DOMJSClass, those do not use these slots.
+// We use one JSNative to represent all legacy factory functions (so we can
+// easily detect when we need to wrap them in an Xray wrapper). We store the
+// real JSNative in the mNative member of a JSNativeHolder in the
+// LEGACY_FACTORY_FUNCTION_NATIVE_HOLDER_RESERVED_SLOT slot of the JSFunction
+// object. We also store the NativeProperties in the JSNativeHolder.
+bool LegacyFactoryFunctionJSNative(JSContext* cx, unsigned argc, JS::Value* vp);
 
-enum { CONSTRUCTOR_NATIVE_HOLDER_RESERVED_SLOT = 0 };
+inline bool IsLegacyFactoryFunction(JSObject* obj) {
+  return JS_IsNativeFunction(obj, LegacyFactoryFunctionJSNative);
+}
 
-bool Constructor(JSContext* cx, unsigned argc, JS::Value* vp);
+inline const JSNativeHolder* NativeHolderFromLegacyFactoryFunction(
+    JSObject* obj) {
+  MOZ_ASSERT(IsLegacyFactoryFunction(obj));
+  const JS::Value& v = js::GetFunctionNativeReserved(
+      obj, LEGACY_FACTORY_FUNCTION_NATIVE_HOLDER_RESERVED_SLOT);
+  return static_cast<const JSNativeHolder*>(v.toPrivate());
+}
 
 // Implementation of the bits that XrayWrapper needs
 
@@ -2350,7 +2356,7 @@ inline bool XrayGetNativeProto(JSContext* cx, JS::Handle<JSObject*> obj,
         protop.set(JS::GetRealmObjectPrototype(cx));
       }
     } else if (JS_ObjectIsFunction(obj)) {
-      MOZ_ASSERT(JS_IsNativeFunction(obj, Constructor));
+      MOZ_ASSERT(IsLegacyFactoryFunction(obj));
       protop.set(JS::GetRealmFunctionPrototype(cx));
     } else {
       const JSClass* clasp = JS::GetClass(obj);
@@ -2432,12 +2438,12 @@ extern const js::ObjectOps sInterfaceObjectClassObjectOps;
 
 inline bool UseDOMXray(JSObject* obj) {
   const JSClass* clasp = JS::GetClass(obj);
-  return IsDOMClass(clasp) || JS_IsNativeFunction(obj, Constructor) ||
+  return IsDOMClass(clasp) || IsLegacyFactoryFunction(obj) ||
          IsDOMIfaceAndProtoClass(clasp);
 }
 
 inline bool IsDOMConstructor(JSObject* obj) {
-  if (JS_IsNativeFunction(obj, dom::Constructor)) {
+  if (IsLegacyFactoryFunction(obj)) {
     // LegacyFactoryFunction, like Image
     return true;
   }
@@ -2451,8 +2457,7 @@ inline bool IsDOMConstructor(JSObject* obj) {
 
 #ifdef DEBUG
 inline bool HasConstructor(JSObject* obj) {
-  return JS_IsNativeFunction(obj, Constructor) ||
-         JS::GetClass(obj)->getConstruct();
+  return IsLegacyFactoryFunction(obj) || JS::GetClass(obj)->getConstruct();
 }
 #endif
 
