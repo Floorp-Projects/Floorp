@@ -7,17 +7,15 @@
 #ifndef nsMeterFrame_h___
 #define nsMeterFrame_h___
 
-#include "mozilla/Attributes.h"
 #include "nsContainerFrame.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsCOMPtr.h"
-#include "nsCSSPseudoElements.h"
 
 class nsMeterFrame final : public nsContainerFrame,
                            public nsIAnonymousContentCreator
 
 {
-  typedef mozilla::dom::Element Element;
+  using Element = mozilla::dom::Element;
 
  public:
   NS_DECL_QUERYFRAME
@@ -27,36 +25,25 @@ class nsMeterFrame final : public nsContainerFrame,
   virtual ~nsMeterFrame();
 
   void Destroy(DestroyContext&) override;
-
-  virtual void Reflow(nsPresContext* aCX, ReflowOutput& aDesiredSize,
-                      const ReflowInput& aReflowInput,
-                      nsReflowStatus& aStatus) override;
+  void Reflow(nsPresContext*, ReflowOutput&, const ReflowInput&,
+              nsReflowStatus&) override;
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const override {
+  nsresult GetFrameName(nsAString& aResult) const override {
     return MakeFrameName(u"Meter"_ns, aResult);
   }
 #endif
 
   // nsIAnonymousContentCreator
-  virtual nsresult CreateAnonymousContent(
-      nsTArray<ContentInfo>& aElements) override;
-  virtual void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
-                                        uint32_t aFilter) override;
+  nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) override;
+  void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
+                                uint32_t aFilter) override;
 
-  virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
-                                    int32_t aModType) override;
+  nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
+                            int32_t aModType) override;
 
-  virtual mozilla::LogicalSize ComputeAutoSize(
-      gfxContext* aRenderingContext, mozilla::WritingMode aWM,
-      const mozilla::LogicalSize& aCBSize, nscoord aAvailableISize,
-      const mozilla::LogicalSize& aMargin,
-      const mozilla::LogicalSize& aBorderPadding,
-      const mozilla::StyleSizeOverrides& aSizeOverrides,
-      mozilla::ComputeSizeFlags aFlags) override;
-
-  virtual nscoord GetMinISize(gfxContext* aRenderingContext) override;
-  virtual nscoord GetPrefISize(gfxContext* aRenderingContext) override;
+  nscoord GetMinISize(gfxContext* aRenderingContext) override;
+  nscoord GetPrefISize(gfxContext* aRenderingContext) override;
 
   /**
    * Returns whether the frame and its child should use the native style.
@@ -66,7 +53,9 @@ class nsMeterFrame final : public nsContainerFrame,
  protected:
   // Helper function which reflow the anonymous div frame.
   void ReflowBarFrame(nsIFrame* aBarFrame, nsPresContext* aPresContext,
-                      const ReflowInput& aReflowInput, nsReflowStatus& aStatus);
+                      const ReflowInput& aReflowInput,
+                      const mozilla::LogicalSize& aParentContentBoxSize,
+                      nsReflowStatus& aStatus);
   /**
    * The div used to show the meter bar.
    * @see nsMeterFrame::CreateAnonymousContent

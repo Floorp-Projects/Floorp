@@ -63,14 +63,6 @@ class nsTextControlFrame : public nsContainerFrame,
   nscoord GetMinISize(gfxContext* aRenderingContext) override;
   nscoord GetPrefISize(gfxContext* aRenderingContext) override;
 
-  mozilla::LogicalSize ComputeAutoSize(
-      gfxContext* aRenderingContext, mozilla::WritingMode aWM,
-      const mozilla::LogicalSize& aCBSize, nscoord aAvailableISize,
-      const mozilla::LogicalSize& aMargin,
-      const mozilla::LogicalSize& aBorderPadding,
-      const mozilla::StyleSizeOverrides& aSizeOverrides,
-      mozilla::ComputeSizeFlags aFlags) override;
-
   void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
               const ReflowInput& aReflowInput,
               nsReflowStatus& aStatus) override;
@@ -180,10 +172,11 @@ class nsTextControlFrame : public nsContainerFrame,
   /**
    * Launch the reflow on the child frames - see nsTextControlFrame::Reflow()
    */
-  void ReflowTextControlChild(nsIFrame* aFrame, nsPresContext* aPresContext,
+  void ReflowTextControlChild(nsIFrame* aKid, nsPresContext* aPresContext,
                               const ReflowInput& aReflowInput,
                               nsReflowStatus& aStatus,
                               ReflowOutput& aParentDesiredSize,
+                              const mozilla::LogicalSize& aParentContentBoxSize,
                               nscoord& aButtonBoxISize);
 
  public:
@@ -278,8 +271,7 @@ class nsTextControlFrame : public nsContainerFrame,
   // etc.  Just the size of our actual area for the text (and the scrollbars,
   // for <textarea>).
   mozilla::LogicalSize CalcIntrinsicSize(gfxContext* aRenderingContext,
-                                         mozilla::WritingMode aWM,
-                                         float aFontSizeInflation) const;
+                                         mozilla::WritingMode aWM) const;
 
  private:
   // helper methods
