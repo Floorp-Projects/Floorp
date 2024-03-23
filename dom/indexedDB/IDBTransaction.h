@@ -90,6 +90,11 @@ class IDBTransaction final
   int64_t mNextObjectStoreId;
   int64_t mNextIndexId;
 
+  // Request ids are issued starting from 0 and incremented by one as we send
+  // actor creation messages to the parent process. Used to support the
+  // explicit commit() request.
+  int64_t mNextRequestId;
+
   nsresult mAbortCode;  ///< The result that caused the transaction to be
                         ///< aborted, or NS_OK if not aborted.
                         ///< NS_ERROR_DOM_INDEXEDDB_ABORT_ERR indicates that the
@@ -279,6 +284,9 @@ class IDBTransaction final
 
   // Only for Mode::VersionChange transactions.
   int64_t NextIndexId();
+
+  // See the comment for mNextRequestId.
+  int64_t NextRequestId();
 
   void InvalidateCursorCaches();
   void RegisterCursor(IDBCursor& aCursor);

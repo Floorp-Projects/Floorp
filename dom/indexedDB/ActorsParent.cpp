@@ -1974,6 +1974,10 @@ class TransactionDatabaseOperationBase : public DatabaseOperationBase {
   };
 
   InitializedOnce<const NotNull<SafeRefPtr<TransactionBase>>> mTransaction;
+  // Unique request id within the context of the transaction, allocated by the
+  // transaction in the content process starting from 0. Values less than 0 are
+  // impossible and forbidden. Used to support the explicit commit() request.
+  const int64_t mRequestId;
   InternalState mInternalState = InternalState::Initial;
   bool mWaitingForContinue = false;
   const bool mTransactionIsAborted;
@@ -2039,6 +2043,7 @@ class TransactionDatabaseOperationBase : public DatabaseOperationBase {
       SafeRefPtr<TransactionBase> aTransaction);
 
   TransactionDatabaseOperationBase(SafeRefPtr<TransactionBase> aTransaction,
+                                   const int64_t aRequestId,
                                    uint64_t aLoggingSerialNumber);
 
   ~TransactionDatabaseOperationBase() override;
@@ -2419,6 +2424,7 @@ class Database::StartTransactionOp final
  private:
   explicit StartTransactionOp(SafeRefPtr<TransactionBase> aTransaction)
       : TransactionDatabaseOperationBase(std::move(aTransaction),
+                                         /* aRequestId */ 0,
                                          /* aLoggingSerialNumber */ 0) {}
 
   ~StartTransactionOp() override = default;
@@ -3250,7 +3256,7 @@ class OpenDatabaseOp::VersionChangeOp final
   explicit VersionChangeOp(OpenDatabaseOp* aOpenDatabaseOp)
       : TransactionDatabaseOperationBase(
             aOpenDatabaseOp->mVersionChangeTransaction.clonePtr(),
-            aOpenDatabaseOp->LoggingSerialNumber()),
+            /* aRequestId */ 0, aOpenDatabaseOp->LoggingSerialNumber()),
         mOpenDatabaseOp(aOpenDatabaseOp),
         mRequestedVersion(aOpenDatabaseOp->mRequestedVersion),
         mPreviousVersion(
@@ -16535,16 +16541,19 @@ TransactionDatabaseOperationBase::TransactionDatabaseOperationBase(
     : DatabaseOperationBase(aTransaction->GetLoggingInfo()->Id(),
                             aTransaction->GetLoggingInfo()->NextRequestSN()),
       mTransaction(WrapNotNull(std::move(aTransaction))),
+      mRequestId(0),
       mTransactionIsAborted((*mTransaction)->IsAborted()),
       mTransactionLoggingSerialNumber((*mTransaction)->LoggingSerialNumber()) {
   MOZ_ASSERT(LoggingSerialNumber());
 }
 
 TransactionDatabaseOperationBase::TransactionDatabaseOperationBase(
-    SafeRefPtr<TransactionBase> aTransaction, uint64_t aLoggingSerialNumber)
+    SafeRefPtr<TransactionBase> aTransaction, const int64_t aRequestId,
+    uint64_t aLoggingSerialNumber)
     : DatabaseOperationBase(aTransaction->GetLoggingInfo()->Id(),
                             aLoggingSerialNumber),
       mTransaction(WrapNotNull(std::move(aTransaction))),
+      mRequestId(aRequestId),
       mTransactionIsAborted((*mTransaction)->IsAborted()),
       mTransactionLoggingSerialNumber((*mTransaction)->LoggingSerialNumber()) {}
 
@@ -16553,6 +16562,9 @@ TransactionDatabaseOperationBase::~TransactionDatabaseOperationBase() {
   MOZ_ASSERT(!mTransaction,
              "TransactionDatabaseOperationBase::Cleanup() was not called by a "
              "subclass!");
+
+  // XXX Remove once mRequestId gets used.
+  (void)mRequestId;
 }
 
 #ifdef DEBUG
