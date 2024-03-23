@@ -222,7 +222,8 @@ class nsMathMLmtdFrame final : public nsTableCellFrame {
                       mozilla::nsDisplayListBuilder* aBuilder,
                       const mozilla::nsDisplayListSet& aLists) override;
 
-  LogicalMargin GetBorderWidth(WritingMode aWM) const override;
+  mozilla::LogicalMargin GetBorderWidth(
+      mozilla::WritingMode aWM) const override;
 
   nsMargin GetBorderOverflow() override;
 
