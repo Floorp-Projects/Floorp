@@ -350,6 +350,8 @@
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources">Mai de 100 milions de personas protegisson lor vida privada en causissent un navegador sostengut per una organizacion sens tòca lucrativa.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources">De traçadors coneguts ? Automaticament blocats. D’extensions ? Ensajatz-una de las 700. De fichièrs PDF ? Nòstre lector integrat ne fa venir la gestion simpla.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_2" moz:RemovedIn="124" tools:ignore="UnusedResources">Nòstre navegador sostengut per una organizacion sens but lucratiu empacha las entrepresas de vos seguir secrètament sul Web.\n\nPer ne saber mai consultatz nòstra politica de confidencialitat.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
