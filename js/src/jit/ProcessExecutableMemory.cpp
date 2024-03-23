@@ -46,10 +46,6 @@
 #  include <valgrind/valgrind.h>
 #endif
 
-#if defined(XP_IOS)
-#  include <BrowserEngineCore/BEMemory.h>
-#endif
-
 using namespace js;
 using namespace js::jit;
 
@@ -994,19 +990,11 @@ bool js::jit::ReprotectRegion(void* start, size_t size,
 #ifdef JS_USE_APPLE_FAST_WX
 void js::jit::AutoMarkJitCodeWritableForThread::markExecutable(
     bool executable) {
-#  if defined(XP_IOS)
-  if (executable) {
-    be_memory_inline_jit_restrict_rwx_to_rx_with_witness();
-  } else {
-    be_memory_inline_jit_restrict_rwx_to_rw_with_witness();
-  }
-#  else
   if (__builtin_available(macOS 11.0, *)) {
     pthread_jit_write_protect_np(executable);
   } else {
     MOZ_CRASH("pthread_jit_write_protect_np must be available");
   }
-#  endif
 }
 #endif
 
