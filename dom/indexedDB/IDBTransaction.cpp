@@ -98,6 +98,7 @@ IDBTransaction::IDBTransaction(IDBDatabase* const aDatabase,
       mLoggingSerialNumber(GetIndexedDBThreadLocal()->NextTransactionSN(aMode)),
       mNextObjectStoreId(0),
       mNextIndexId(0),
+      mNextRequestId(0),
       mAbortCode(NS_OK),
       mPendingRequestCount(0),
       mFilename(std::move(aFilename)),
@@ -815,6 +816,12 @@ int64_t IDBTransaction::NextIndexId() {
   MOZ_ASSERT(Mode::VersionChange == mMode);
 
   return mNextIndexId++;
+}
+
+int64_t IDBTransaction::NextRequestId() {
+  AssertIsOnOwningThread();
+
+  return mNextRequestId++;
 }
 
 void IDBTransaction::InvalidateCursorCaches() {
