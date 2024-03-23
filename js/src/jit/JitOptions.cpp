@@ -447,8 +447,7 @@ void DefaultJitOptions::resetNormalIonWarmUpThreshold() {
 
 void DefaultJitOptions::maybeSetWriteProtectCode(bool val) {
 #ifdef JS_USE_APPLE_FAST_WX
-  // On Apple Silicon we always use pthread_jit_write_protect_np, or
-  // be_memory_inline_jit_restrict_*.
+  // On Apple Silicon we always use pthread_jit_write_protect_np.
   MOZ_ASSERT(!writeProtectCode);
 #else
   writeProtectCode = val;

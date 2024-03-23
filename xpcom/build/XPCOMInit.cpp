@@ -233,11 +233,6 @@ static void InitializeJS() {
   JS::SetAVXEnabled(mozilla::StaticPrefs::javascript_options_wasm_simd_avx());
 #endif
 
-  if (XRE_IsParentProcess() &&
-      mozilla::StaticPrefs::javascript_options_main_process_disable_jit()) {
-    JS::DisableJitBackend();
-  }
-
   // Set all JS::Prefs.
   SET_JS_PREFS_FROM_BROWSER_PREFS;
 
