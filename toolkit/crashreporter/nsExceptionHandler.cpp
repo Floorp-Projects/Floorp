@@ -110,6 +110,7 @@ using mozilla::InjectCrashRunnable;
 
 #include "mozilla/IOInterposer.h"
 #include "mozilla/mozalloc_oom.h"
+#include "nsAppRunner.h"
 
 #if defined(XP_MACOSX)
 CFStringRef reporterClientAppID = CFSTR("org.mozilla.crashreporter");
@@ -433,8 +434,8 @@ static inline void my_u64tostring(uint64_t aValue, char* aBuffer,
 #endif
 
 #ifdef XP_WIN
-static void CreateFileFromPath(const xpstring& path, nsIFile** file) {
-  NS_NewLocalFile(nsDependentString(path.c_str()), false, file);
+static nsresult CreateFileFromPath(const xpstring& path, nsIFile** file) {
+  return NS_NewLocalFile(nsDependentString(path.c_str()), false, file);
 }
 
 static std::optional<xpstring> CreatePathFromFile(nsIFile* file) {
@@ -445,9 +446,19 @@ static std::optional<xpstring> CreatePathFromFile(nsIFile* file) {
   }
   return xpstring(static_cast<wchar_t*>(path.get()), path.Length());
 }
+
+static xpstring* GetLeafNameFromFile(nsIFile* file) {
+  nsAutoString leafName;
+  nsresult rv = file->GetLeafName(leafName);
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
+  return new xpstring(static_cast<wchar_t*>(leafName.get()), leafName.Length());
+}
+
 #else
-static void CreateFileFromPath(const xpstring& path, nsIFile** file) {
-  NS_NewNativeLocalFile(nsDependentCString(path.c_str()), false, file);
+static nsresult CreateFileFromPath(const xpstring& path, nsIFile** file) {
+  return NS_NewNativeLocalFile(nsDependentCString(path.c_str()), false, file);
 }
 
 MAYBE_UNUSED static std::optional<xpstring> CreatePathFromFile(nsIFile* file) {
@@ -458,6 +469,16 @@ MAYBE_UNUSED static std::optional<xpstring> CreatePathFromFile(nsIFile* file) {
   }
   return xpstring(path.get(), path.Length());
 }
+
+MAYBE_UNUSED static xpstring* GetLeafNameFromFile(nsIFile* file) {
+  nsAutoString leafName;
+  nsresult rv = file->GetLeafName(leafName);
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
+  return new xpstring(NS_ConvertUTF16toUTF8(leafName).get(), leafName.Length());
+}
+
 #endif
 
 static time_t GetCurrentTimeForCrashTime() {
@@ -1522,6 +1543,19 @@ static void WriteCrashEventFile(time_t crashTime, const char* crashTimeString,
   }
 }
 
+static nsresult CreateMinidumpsDirectoryLazily(nsIFile* minidumpsDir) {
+  bool fileExists;
+  nsresult rv;
+
+  minidumpsDir->Exists(&fileExists);
+  if (!fileExists) {
+    rv = minidumpsDir->Create(nsIFile::DIRECTORY_TYPE, 0700);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
+}
+
 // Callback invoked from breakpad's exception handler, this writes out the
 // last annotations after a crash occurs and launches the crash reporter client.
 //
@@ -1539,6 +1573,9 @@ bool MinidumpCallback(
     EXCEPTION_POINTERS* exinfo, MDRawAssertionInfo* assertion,
 #endif
     const phc::AddrInfo* addrInfo, bool succeeded) {
+
+  nsCOMPtr<nsIFile> minidumpFile;
+  nsCOMPtr<nsIFile> minidumpExtraFile;
   bool returnValue = showOSCrashReporter ? false : succeeded;
 
   static XP_CHAR minidumpPath[XP_PATH_MAX];
@@ -1553,26 +1590,19 @@ bool MinidumpCallback(
   Concat(minidumpPath, descriptor.path(), &size);
 #endif
 
-  static XP_CHAR memoryReportLocalPath[XP_PATH_MAX];
+  static XP_CHAR minidumpExtraPath[XP_PATH_MAX];
   size = XP_PATH_MAX;
 #ifndef XP_LINUX
-  p = Concat(memoryReportLocalPath, dump_path, &size);
+  p = Concat(minidumpExtraPath, dump_path, &size);
   p = Concat(p, XP_PATH_SEPARATOR, &size);
   p = Concat(p, minidump_id, &size);
 #else
-  p = Concat(memoryReportLocalPath, descriptor.path(), &size);
+  p = Concat(minidumpExtraPath, descriptor.path(), &size);
   // Skip back past the .dmp extension
   p -= 4;
 #endif
-  Concat(p, memoryReportExtension, &size);
 
-  if (!memoryReportPath.empty()) {
-#ifdef XP_WIN
-    CopyFile(memoryReportPath.c_str(), memoryReportLocalPath, false);
-#else
-    copy_file(memoryReportPath.c_str(), memoryReportLocalPath);
-#endif
-  }
+  Concat(p, extraFileExtension, &size);
 
   time_t crashTime = GetCurrentTimeForCrashTime();
   char crashTimeString[32];
@@ -1602,15 +1632,59 @@ bool MinidumpCallback(
     WriteAnnotationsForMainProcessCrash(apiData, addrInfo, crashTime);
   }
 
+  CreateFileFromPath(minidumpPath, getter_AddRefs(minidumpFile));
+  CreateFileFromPath(minidumpExtraPath, getter_AddRefs(minidumpExtraFile));
+
+  if (gMinidumpsDir == nullptr) {
+    return returnValue;
+  }
+
+  nsresult rv = CreateMinidumpsDirectoryLazily(gMinidumpsDir);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  rv = minidumpFile->MoveTo(gMinidumpsDir, EmptyString());
+  NS_ENSURE_SUCCESS(rv, false);
+
+  rv = minidumpExtraFile->MoveTo(gMinidumpsDir, EmptyString());
+  NS_ENSURE_SUCCESS(rv, false);
+
+  xpstring path = xpstring(minidumpFile->NativePath().get());
+  static XP_CHAR minidumpPathInMinidumpsDir[XP_PATH_MAX];
+  size = XP_PATH_MAX;
+  Concat(minidumpPathInMinidumpsDir, path.c_str(), &size);
+
+  static XP_CHAR memoryReportLocalFile[XP_PATH_MAX];
+  size = XP_PATH_MAX;
+  nsCOMPtr<nsIFile> memoryReportFile;
+
+  if (!memoryReportPath.empty()) {
+    rv = CreateFileFromPath(memoryReportPath, getter_AddRefs(memoryReportFile));
+    NS_ENSURE_SUCCESS(rv, false);
+
+    xpstring* minidumpLeafName = GetLeafNameFromFile(minidumpFile);
+    NS_ENSURE_TRUE(minidumpLeafName, false);
+
+    p = Concat(memoryReportLocalFile, minidumpLeafName->c_str(), &size);
+    // Skip back past the .dmp extension
+    p -= 4;
+    Concat(p, memoryReportExtension, &size);
+
+    rv = memoryReportFile->CopyTo(
+        gMinidumpsDir,
+        static_cast<nsString>(CONVERT_XP_CHAR_TO_UTF16(memoryReportLocalFile)));
+    NS_ENSURE_SUCCESS(rv, false);
+  }
+
   if (doReport && isSafeToDump) {
     // We launch the crash reporter client/dialog only if we've been explicitly
     // asked to report crashes and if we weren't already trying to unset the
     // exception handler (which is indicated by isSafeToDump being false).
 #if defined(MOZ_WIDGET_ANDROID)  // Android
-    returnValue =
-        LaunchCrashHandlerService(crashReporterPath.c_str(), minidumpPath);
+    returnValue = LaunchCrashHandlerService(crashReporterPath.c_str(),
+                                            minidumpPathInMinidumpsDir);
 #else  // Windows, Mac, Linux, etc...
-    returnValue = LaunchProgram(crashReporterPath.c_str(), minidumpPath);
+    returnValue =
+        LaunchProgram(crashReporterPath.c_str(), minidumpPathInMinidumpsDir);
 #endif
   }
 
@@ -3014,12 +3088,7 @@ static bool GetMinidumpLimboDir(nsIFile** dir) {
   if (ShouldReport()) {
     return GetPendingDir(dir);
   } else {
-#ifndef XP_LINUX
-    CreateFileFromPath(gExceptionHandler->dump_path(), dir);
-#else
-    CreateFileFromPath(gExceptionHandler->minidump_descriptor().directory(),
-                       dir);
-#endif
+    gMinidumpsDir->Clone(dir);
     return nullptr != *dir;
   }
 }
@@ -3351,6 +3420,16 @@ static void OnChildProcessDumpRequested(
   if (!isSafeToDump) return;
 
   CreateFileFromPath(aFilePath, getter_AddRefs(minidump));
+
+  if (gMinidumpsDir == nullptr) {
+    return;
+  }
+
+  nsresult rv = CreateMinidumpsDirectoryLazily(gMinidumpsDir);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  rv = minidump->MoveTo(gMinidumpsDir, EmptyString());
+  NS_ENSURE_SUCCESS_VOID(rv);
 
   ProcessId pid = aClientInfo.pid();
   if (ShouldReport()) {
@@ -3817,6 +3896,14 @@ static bool PairedDumpCallback(
 #endif
     const phc::AddrInfo* addrInfo, bool succeeded) {
   XP_CHAR* path = static_cast<XP_CHAR*>(context);
+  nsCOMPtr<nsIFile> minidump;
+
+  if (gMinidumpsDir == nullptr) {
+    return false;
+  }
+  nsresult rv = CreateMinidumpsDirectoryLazily(gMinidumpsDir);
+  NS_ENSURE_SUCCESS(rv, false);
+
   size_t size = XP_PATH_MAX;
 
 #ifdef XP_LINUX
@@ -3827,6 +3914,10 @@ static bool PairedDumpCallback(
   path = Concat(path, minidump_id, &size);
   Concat(path, dumpFileExtension, &size);
 #endif
+
+  CreateFileFromPath(path, getter_AddRefs(minidump));
+  rv = minidump->MoveTo(gMinidumpsDir, EmptyString());
+  NS_ENSURE_SUCCESS(rv, false);
 
   return true;
 }
