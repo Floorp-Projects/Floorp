@@ -2323,7 +2323,6 @@ class CGLegacyFactoryFunctions(CGThing):
 
             static const LegacyFactoryFunction legacyFactoryFunctions[] = {
               $*{legacyFactoryFunctions}
-              { nullptr, { nullptr, nullptr }, 0 }
             };
             """,
             name=self.descriptor.name,
@@ -3595,9 +3594,9 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             constructArgs = 0
             isConstructorChromeOnly = False
         if len(self.descriptor.interface.legacyFactoryFunctions) > 0:
-            legacyFactoryFunctions = "legacyFactoryFunctions"
+            legacyFactoryFunctions = "Span(legacyFactoryFunctions)"
         else:
-            legacyFactoryFunctions = "nullptr"
+            legacyFactoryFunctions = "Span<const LegacyFactoryFunction, 0>{}"
 
         if needInterfacePrototypeObject:
             protoClass = "&sPrototypeClass"
