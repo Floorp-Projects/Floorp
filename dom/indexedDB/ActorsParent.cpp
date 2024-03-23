@@ -4345,8 +4345,8 @@ class Cursor final
   mozilla::ipc::IPCResult RecvDeleteMe() override;
 
   mozilla::ipc::IPCResult RecvContinue(
-      const CursorRequestParams& aParams, const Key& aCurrentKey,
-      const Key& aCurrentObjectStoreKey) override;
+      const int64_t& aRequestId, const CursorRequestParams& aParams,
+      const Key& aCurrentKey, const Key& aCurrentObjectStoreKey) override;
 
  public:
   Cursor(SafeRefPtr<TransactionBase> aTransaction,
@@ -4594,9 +4594,9 @@ class Cursor<CursorType>::ContinueOp final
   const CursorRequestParams mParams;
 
   // Only created by Cursor.
-  ContinueOp(Cursor* const aCursor, CursorRequestParams aParams,
-             CursorPosition<CursorType> aPosition)
-      : CursorOpBase(aCursor, 0),
+  ContinueOp(Cursor* const aCursor, int64_t aRequestId,
+             CursorRequestParams aParams, CursorPosition<CursorType> aPosition)
+      : CursorOpBase(aCursor, aRequestId),
         mParams(std::move(aParams)),
         mCurrentPosition{std::move(aPosition)} {
     MOZ_ASSERT(mParams.type() != CursorRequestParams::T__None);
@@ -11602,8 +11602,8 @@ mozilla::ipc::IPCResult Cursor<CursorType>::RecvDeleteMe() {
 
 template <IDBCursorType CursorType>
 mozilla::ipc::IPCResult Cursor<CursorType>::RecvContinue(
-    const CursorRequestParams& aParams, const Key& aCurrentKey,
-    const Key& aCurrentObjectStoreKey) {
+    const int64_t& aRequestId, const CursorRequestParams& aParams,
+    const Key& aCurrentKey, const Key& aCurrentObjectStoreKey) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParams.type() != CursorRequestParams::T__None);
   MOZ_ASSERT(this->mObjectStoreMetadata);
@@ -11653,7 +11653,7 @@ mozilla::ipc::IPCResult Cursor<CursorType>::RecvContinue(
   }
 
   const RefPtr<ContinueOp> continueOp =
-      new ContinueOp(this, aParams, std::move(position));
+      new ContinueOp(this, aRequestId, aParams, std::move(position));
   if (NS_WARN_IF(!continueOp->Init(*mTransaction))) {
     continueOp->Cleanup();
     return IPC_FAIL(this, "ContinueOp initialization failed!");

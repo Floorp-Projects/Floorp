@@ -417,7 +417,8 @@ void IDBTypedCursor<CursorType>::Continue(JSContext* const aCx,
         IDB_LOG_STRINGIFY(key));
   }
 
-  GetTypedBackgroundActorRef().SendContinueInternal(ContinueParams(key), mData);
+  GetTypedBackgroundActorRef().SendContinueInternal(
+      mTransaction->NextRequestId(), ContinueParams(key), mData);
 
   mContinueCalled = true;
 }
@@ -523,6 +524,7 @@ void IDBTypedCursor<CursorType>::ContinuePrimaryKey(
         IDB_LOG_STRINGIFY(key), IDB_LOG_STRINGIFY(primaryKey));
 
     GetTypedBackgroundActorRef().SendContinueInternal(
+        mTransaction->NextRequestId(),
         ContinuePrimaryKeyParams(key, primaryKey), mData);
 
     mContinueCalled = true;
@@ -573,8 +575,8 @@ void IDBTypedCursor<CursorType>::Advance(const uint32_t aCount,
         IDB_LOG_STRINGIFY(mSource), IDB_LOG_STRINGIFY(mDirection), aCount);
   }
 
-  GetTypedBackgroundActorRef().SendContinueInternal(AdvanceParams(aCount),
-                                                    mData);
+  GetTypedBackgroundActorRef().SendContinueInternal(
+      mTransaction->NextRequestId(), AdvanceParams(aCount), mData);
 
   mContinueCalled = true;
 }

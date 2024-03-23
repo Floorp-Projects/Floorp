@@ -548,7 +548,8 @@ class BackgroundCursorChild final : public BackgroundCursorChildBase {
   BackgroundCursorChild(NotNull<IDBRequest*> aRequest, SourceType* aSource,
                         Direction aDirection);
 
-  void SendContinueInternal(const CursorRequestParams& aParams,
+  void SendContinueInternal(const int64_t aRequestId,
+                            const CursorRequestParams& aParams,
                             const CursorData<CursorType>& aCurrentData);
 
   void InvalidateCachedResponses();
@@ -594,7 +595,8 @@ class BackgroundCursorChild final : public BackgroundCursorChildBase {
   mozilla::ipc::IPCResult RecvResponse(CursorResponse&& aResponse) override;
 
   // Force callers to use SendContinueInternal.
-  bool SendContinue(const CursorRequestParams& aParams, const Key& aCurrentKey,
+  bool SendContinue(const int64_t& aRequestId,
+                    const CursorRequestParams& aParams, const Key& aCurrentKey,
                     const Key& aCurrentObjectStoreKey) = delete;
 
   bool SendDeleteMe() = delete;

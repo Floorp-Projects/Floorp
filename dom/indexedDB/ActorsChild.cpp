@@ -2211,7 +2211,7 @@ BackgroundCursorChild<CursorType>::SafeRefPtrFromThis() {
 
 template <IDBCursorType CursorType>
 void BackgroundCursorChild<CursorType>::SendContinueInternal(
-    const CursorRequestParams& aParams,
+    const int64_t aRequestId, const CursorRequestParams& aParams,
     const CursorData<CursorType>& aCurrentData) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mRequest);
@@ -2394,7 +2394,7 @@ void BackgroundCursorChild<CursorType>::SendContinueInternal(
     // handling model disallow this?
   } else {
     MOZ_ALWAYS_TRUE(PBackgroundIDBCursorChild::SendContinue(
-        params, currentKey, currentObjectStoreKey));
+        aRequestId, params, currentKey, currentObjectStoreKey));
   }
 }
 
