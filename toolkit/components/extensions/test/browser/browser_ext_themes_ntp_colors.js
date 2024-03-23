@@ -177,6 +177,17 @@ async function test_ntp_theme(theme, isBrightText) {
   );
 }
 
+async function waitForDarkMode(value) {
+  info(`waiting for dark mode: ${value}`);
+  const mq = matchMedia("(prefers-color-scheme: dark)");
+  if (mq.matches == value) {
+    return;
+  }
+  await new Promise(r => {
+    mq.addEventListener("change", r, {once: true});
+  });
+}
+
 add_task(async function test_support_ntp_colors() {
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -195,6 +206,7 @@ add_task(async function test_support_ntp_colors() {
   });
   NewTabPagePreloading.removePreloadedBrowser(window);
   for (let url of ["about:newtab", "about:home"]) {
+    await waitForDarkMode(false);
     info("Opening url: " + url);
     await BrowserTestUtils.withNewTab({ gBrowser, url }, async browser => {
       await waitForAboutNewTabReady(browser, url);
@@ -212,6 +224,7 @@ add_task(async function test_support_ntp_colors() {
         url
       );
 
+      await waitForDarkMode(false);
       await test_ntp_theme(
         {
           colors: {
@@ -227,6 +240,7 @@ add_task(async function test_support_ntp_colors() {
       );
 
       // Test a theme without any new tab page colors
+      await waitForDarkMode(false);
       await test_ntp_theme(
         {
           colors: {
@@ -234,7 +248,7 @@ add_task(async function test_support_ntp_colors() {
             tab_background_text: TEXT_COLOR,
           },
         },
-        matchMedia("(prefers-color-scheme: dark)").matches,
+        false,
         url
       );
     });
