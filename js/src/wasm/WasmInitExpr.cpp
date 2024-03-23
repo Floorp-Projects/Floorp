@@ -645,6 +645,7 @@ bool InitExpr::decodeAndValidate(Decoder& d, ModuleEnvironment* env,
   expr->type_ = expected;
 
   if (literal) {
+    literal->unsafeSetType(expected);
     expr->kind_ = InitExprKind::Literal;
     expr->literal_ = *literal;
     return true;
