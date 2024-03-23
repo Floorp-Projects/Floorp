@@ -38,11 +38,6 @@ interface nsIScriptableContentIterator : nsISupports
   void initWithRange(in nsIScriptableContentIterator_IteratorType aType,
                      in Range aRange);
 
-  // See ContentSubtreeIterator::InitWithAllowCrossShadowBoundary(nsRange*)
-  void initWithRangeAllowCrossShadowBoundary(
-                     in nsIScriptableContentIterator_IteratorType aType,
-                     in Range aRange);
-
   // See ContentIteratorBase::Init(nsINode*, uint32_t, nsINode*, uint32_t)
   void initWithPositions(in nsIScriptableContentIterator_IteratorType aType,
                          in Node aStartContainer, in unsigned long aStartOffset,

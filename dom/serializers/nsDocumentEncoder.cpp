@@ -1270,14 +1270,8 @@ nsresult nsDocumentEncoder::RangeSerializer::SerializeRangeToString(
     const nsRange* aRange) {
   if (!aRange || aRange->Collapsed()) return NS_OK;
 
-  // Consider a case where the boundary of the selection is ShadowRoot (ie, the
-  // first child of ShadowRoot is selected, so ShadowRoot is the container hence
-  // the boundary), allowing GetClosestCommonInclusiveAncestor to cross the
-  // boundary can return the host element as the container.
-  // SerializeRangeContextStart doesn't support this case.
   mClosestCommonInclusiveAncestorOfRange =
-      aRange->GetClosestCommonInclusiveAncestor(
-          AllowRangeCrossShadowBoundary::No);
+      aRange->GetClosestCommonInclusiveAncestor();
 
   if (!mClosestCommonInclusiveAncestorOfRange) {
     return NS_OK;

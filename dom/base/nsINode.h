@@ -1629,7 +1629,7 @@ class nsINode : public mozilla::dom::EventTarget {
    * not in same subtree, this returns the root content of the closeset subtree.
    */
   MOZ_CAN_RUN_SCRIPT nsIContent* GetSelectionRootContent(
-      mozilla::PresShell* aPresShell, bool aAllowCrossShadowBoundary = false);
+      mozilla::PresShell* aPresShell);
 
   nsINodeList* ChildNodes();
 
@@ -2073,14 +2073,6 @@ class nsINode : public mozilla::dom::EventTarget {
   void ClearElementCreatedFromPrototypeAndHasUnmodifiedL10n() {
     ClearBoolFlag(ElementCreatedFromPrototypeAndHasUnmodifiedL10n);
   }
-
-  mozilla::dom::ShadowRoot* GetShadowRoot() const;
-
-  // Return the shadow root of the node if it is a shadow host and
-  // it meets the requirements for being a shadow host of a selection.
-  // For example, <details>, <video> and <use> elements are not valid
-  // shadow host for selection.
-  mozilla::dom::ShadowRoot* GetShadowRootForSelection() const;
 
  protected:
   void SetParentIsContent(bool aValue) { SetBoolFlag(ParentIsContent, aValue); }

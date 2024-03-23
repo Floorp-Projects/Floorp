@@ -8,7 +8,6 @@
 #define mozilla_dom_StaticRange_h
 
 #include "mozilla/RangeBoundary.h"
-#include "mozilla/RangeUtils.h"
 #include "mozilla/dom/AbstractRange.h"
 #include "mozilla/dom/StaticRangeBinding.h"
 #include "nsTArray.h"
@@ -70,21 +69,6 @@ class StaticRange final : public AbstractRange {
    * @see https://dom.spec.whatwg.org/#staticrange-valid
    */
   bool IsValid() const;
-
-  void NotifyNodeBecomesShadowHost(nsINode* aNode) {
-    if (aNode == mStart.Container()) {
-      mStart.NotifyParentBecomesShadowHost();
-    }
-
-    if (aNode == mEnd.Container()) {
-      mEnd.NotifyParentBecomesShadowHost();
-    }
-  }
-
- private:
-  // Whether the start and end points are in the same tree.
-  // They could be in different trees, i.e, cross shadow boundaries.
-  bool mAreStartAndEndInSameTree = false;
 
  protected:
   explicit StaticRange(nsINode* aNode)
