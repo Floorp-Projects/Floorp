@@ -716,7 +716,7 @@ void CreateInterfaceObjects(
     JS::Heap<JSObject*>* constructorCache, const NativeProperties* properties,
     const NativeProperties* chromeOnlyProperties, const char* name,
     bool defineOnGlobal, const char* const* unscopableNames, bool isGlobal,
-    const char* const* legacyWindowAliases, bool isNamespace);
+    const char* const* legacyWindowAliases);
 
 }  // namespace binding_detail
 
@@ -794,7 +794,7 @@ inline void CreateInterfaceObjects(
     JS::Heap<JSObject*>* constructorCache, const NativeProperties* properties,
     const NativeProperties* chromeOnlyProperties, const char* name,
     bool defineOnGlobal, const char* const* unscopableNames, bool isGlobal,
-    const char* const* legacyWindowAliases, bool isNamespace) {
+    const char* const* legacyWindowAliases) {
   static_assert(N < 3);
 
   return binding_detail::CreateInterfaceObjects(
@@ -802,8 +802,40 @@ inline void CreateInterfaceObjects(
       constructorClass, ctorNargs, isConstructorChromeOnly,
       legacyFactoryFunctions, constructorCache, properties,
       chromeOnlyProperties, name, defineOnGlobal, unscopableNames, isGlobal,
-      legacyWindowAliases, isNamespace);
+      legacyWindowAliases);
 }
+
+/*
+ * Create a namespace object.
+ *
+ * global the global on which to install a property named with name pointing to
+ *        the namespace object if defineOnGlobal is true.
+ * namespaceProto is the prototype to use for the namespace object.
+ * namespaceClass is the JSClass to use for the namespace object.
+ * namespaceCache a pointer to a JSObject pointer where we should cache the
+ *                namespace object.
+ * properties contains the methods, attributes and constants to be defined on
+ *            objects in any compartment.
+ * chromeProperties contains the methods, attributes and constants to be defined
+ *                  on objects in chrome compartments. This must be null if the
+ *                  namespace doesn't have any ChromeOnly properties or if the
+ *                  object is being created in non-chrome compartment.
+ * name the name to use for the WebIDL class string, which is the value
+ *      that's used for @@toStringTag, and the name of the property on the
+ *      global object that would be set to the namespace object.
+ * defineOnGlobal controls whether properties should be defined on the given
+ *                global for the namespace object. This can be false in
+ *                situations where we want the properties to only appear on
+ *                privileged Xrays but not on the unprivileged underlying
+ *                global.
+ */
+void CreateNamespaceObject(JSContext* cx, JS::Handle<JSObject*> global,
+                           JS::Handle<JSObject*> namespaceProto,
+                           const DOMIfaceAndProtoJSClass& namespaceClass,
+                           JS::Heap<JSObject*>* namespaceCache,
+                           const NativeProperties* properties,
+                           const NativeProperties* chromeOnlyProperties,
+                           const char* name, bool defineOnGlobal);
 
 /**
  * Define the properties (regular and chrome-only) on obj.
