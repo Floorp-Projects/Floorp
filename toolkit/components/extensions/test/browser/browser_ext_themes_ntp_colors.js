@@ -184,7 +184,7 @@ async function waitForDarkMode(value) {
     return;
   }
   await new Promise(r => {
-    mq.addEventListener("change", r, {once: true});
+    mq.addEventListener("change", r, { once: true });
   });
 }
 
