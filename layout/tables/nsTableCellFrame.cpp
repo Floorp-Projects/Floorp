@@ -48,6 +48,9 @@ nsTableCellFrame::nsTableCellFrame(ComputedStyle* aStyle,
                                    nsTableFrame* aTableFrame, ClassID aID)
     : nsContainerFrame(aStyle, aTableFrame->PresContext(), aID),
       mDesiredSize(aTableFrame->GetWritingMode()) {
+  mColIndex = 0;
+  mPriorAvailISize = 0;
+
   SetContentEmpty(false);
 }
 
