@@ -34,20 +34,12 @@ class PresShell;
 class nsTableCellFrame : public nsContainerFrame,
                          public nsITableCellLayout,
                          public nsIPercentBSizeObserver {
-  typedef mozilla::gfx::DrawTarget DrawTarget;
-  typedef mozilla::image::ImgDrawResult ImgDrawResult;
-
   friend nsTableCellFrame* NS_NewTableCellFrame(mozilla::PresShell* aPresShell,
                                                 ComputedStyle* aStyle,
                                                 nsTableFrame* aTableFrame);
 
   nsTableCellFrame(ComputedStyle* aStyle, nsTableFrame* aTableFrame)
       : nsTableCellFrame(aStyle, aTableFrame, kClassID) {}
-
- protected:
-  typedef mozilla::WritingMode WritingMode;
-  typedef mozilla::LogicalSide LogicalSide;
-  typedef mozilla::LogicalMargin LogicalMargin;
 
  public:
   NS_DECL_QUERYFRAME
@@ -216,7 +208,7 @@ class nsTableCellFrame : public nsContainerFrame,
     return static_cast<nsTableCellFrame*>(sibling);
   }
 
-  virtual LogicalMargin GetBorderWidth(WritingMode aWM) const;
+  virtual mozilla::LogicalMargin GetBorderWidth(mozilla::WritingMode aWM) const;
 
   void DecorateForSelection(DrawTarget* aDrawTarget, nsPoint aPt);
 
@@ -285,10 +277,7 @@ inline void nsTableCellFrame::SetContentEmpty(bool aContentEmpty) {
   }
 }
 
-// nsBCTableCellFrame
 class nsBCTableCellFrame final : public nsTableCellFrame {
-  typedef mozilla::image::ImgDrawResult ImgDrawResult;
-
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsBCTableCellFrame)
 
@@ -299,13 +288,14 @@ class nsBCTableCellFrame final : public nsTableCellFrame {
   nsMargin GetUsedBorder() const override;
 
   // Get the *inner half of the border only*, in twips.
-  LogicalMargin GetBorderWidth(WritingMode aWM) const override;
+  mozilla::LogicalMargin GetBorderWidth(
+      mozilla::WritingMode aWM) const override;
 
   // Get the *inner half of the border only*, in pixels.
-  BCPixelSize GetBorderWidth(LogicalSide aSide) const;
+  BCPixelSize GetBorderWidth(mozilla::LogicalSide aSide) const;
 
   // Set the full (both halves) width of the border
-  void SetBorderWidth(LogicalSide aSide, BCPixelSize aPixelValue);
+  void SetBorderWidth(mozilla::LogicalSide aSide, BCPixelSize aPixelValue);
 
   nsMargin GetBorderOverflow() override;
 
