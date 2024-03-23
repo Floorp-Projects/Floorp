@@ -76,13 +76,9 @@ LogicalSize nsCheckboxRadioFrame::ComputeAutoSize(
   if (!StyleDisplay()->HasAppearance()) {
     return size;
   }
-
-  // Note: this call always set the BSize to NS_UNCONSTRAINEDSIZE.
-  size = nsAtomicContainerFrame::ComputeAutoSize(
+  return nsAtomicContainerFrame::ComputeAutoSize(
       aRC, aWM, aCBSize, aAvailableISize, aMargin, aBorderPadding,
       aSizeOverrides, aFlags);
-  size.BSize(aWM) = DefaultSize();
-  return size;
 }
 
 Maybe<nscoord> nsCheckboxRadioFrame::GetNaturalBaselineBOffset(
@@ -133,10 +129,13 @@ void nsCheckboxRadioFrame::Reflow(nsPresContext* aPresContext,
        aReflowInput.AvailableWidth(), aReflowInput.AvailableHeight()));
 
   const auto wm = aReflowInput.GetWritingMode();
-  aDesiredSize.SetSize(wm, aReflowInput.ComputedSizeWithBorderPadding(wm));
-
+  const auto contentBoxSize =
+      aReflowInput.ComputedSizeWithBSizeFallback([&] { return DefaultSize(); });
+  aDesiredSize.SetSize(
+      wm,
+      contentBoxSize + aReflowInput.ComputedLogicalBorderPadding(wm).Size(wm));
   if (nsLayoutUtils::FontSizeInflationEnabled(aPresContext)) {
-    float inflation = nsLayoutUtils::FontSizeInflationFor(this);
+    const float inflation = nsLayoutUtils::FontSizeInflationFor(this);
     aDesiredSize.Width() *= inflation;
     aDesiredSize.Height() *= inflation;
   }

@@ -814,8 +814,7 @@ LogicalSize nsContainerFrame::ComputeAutoSize(
   LogicalSize result(aWM, 0xdeadbeef, NS_UNCONSTRAINEDSIZE);
   nscoord availBased =
       aAvailableISize - aMargin.ISize(aWM) - aBorderPadding.ISize(aWM);
-  // replaced elements always shrink-wrap
-  if (aFlags.contains(ComputeSizeFlag::ShrinkWrap) || IsReplaced()) {
+  if (aFlags.contains(ComputeSizeFlag::ShrinkWrap)) {
     // Only bother computing our 'auto' ISize if the result will be used.
     const auto& styleISize = aSizeOverrides.mStyleISize
                                  ? *aSizeOverrides.mStyleISize

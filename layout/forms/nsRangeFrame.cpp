@@ -166,35 +166,17 @@ void nsRangeFrame::Reflow(nsPresContext* aPresContext,
                "need to call RegUnregAccessKey only for the first.");
 
   WritingMode wm = aReflowInput.GetWritingMode();
-  nscoord computedBSize = aReflowInput.ComputedBSize();
-  if (computedBSize == NS_UNCONSTRAINEDSIZE) {
-    computedBSize = 0;
-  }
-  const auto borderPadding = aReflowInput.ComputedLogicalBorderPadding(wm);
-  LogicalSize finalSize(
-      wm, aReflowInput.ComputedISize() + borderPadding.IStartEnd(wm),
-      computedBSize + borderPadding.BStartEnd(wm));
-  aDesiredSize.SetSize(wm, finalSize);
-
-  ReflowAnonymousContent(aPresContext, aDesiredSize, aReflowInput);
-
+  const auto contentBoxSize = aReflowInput.ComputedSizeWithBSizeFallback([&] {
+    return IsInlineOriented() ? AutoCrossSize()
+                              : OneEmInAppUnits() * MAIN_AXIS_EM_SIZE;
+  });
+  aDesiredSize.SetSize(
+      wm,
+      contentBoxSize + aReflowInput.ComputedLogicalBorderPadding(wm).Size(wm));
   aDesiredSize.SetOverflowAreasToDesiredBounds();
 
-  nsIFrame* trackFrame = mTrackDiv->GetPrimaryFrame();
-  if (trackFrame) {
-    ConsiderChildOverflow(aDesiredSize.mOverflowAreas, trackFrame);
-  }
-
-  nsIFrame* rangeProgressFrame = mProgressDiv->GetPrimaryFrame();
-  if (rangeProgressFrame) {
-    ConsiderChildOverflow(aDesiredSize.mOverflowAreas, rangeProgressFrame);
-  }
-
-  nsIFrame* thumbFrame = mThumbDiv->GetPrimaryFrame();
-  if (thumbFrame) {
-    ConsiderChildOverflow(aDesiredSize.mOverflowAreas, thumbFrame);
-  }
-
+  ReflowAnonymousContent(aPresContext, aDesiredSize, contentBoxSize,
+                         aReflowInput);
   FinishAndStoreOverflow(&aDesiredSize);
 
   MOZ_ASSERT(aStatus.IsEmpty(), "This type of frame can't be split.");
@@ -202,111 +184,71 @@ void nsRangeFrame::Reflow(nsPresContext* aPresContext,
 
 void nsRangeFrame::ReflowAnonymousContent(nsPresContext* aPresContext,
                                           ReflowOutput& aDesiredSize,
+                                          const LogicalSize& aContentBoxSize,
                                           const ReflowInput& aReflowInput) {
+  const auto parentWM = aReflowInput.GetWritingMode();
   // The width/height of our content box, which is the available width/height
-  // for our anonymous content:
-  nscoord rangeFrameContentBoxWidth = aReflowInput.ComputedWidth();
-  nscoord rangeFrameContentBoxHeight = aReflowInput.ComputedHeight();
-  if (rangeFrameContentBoxHeight == NS_UNCONSTRAINEDSIZE) {
-    rangeFrameContentBoxHeight = 0;
-  }
-
-  nsIFrame* trackFrame = mTrackDiv->GetPrimaryFrame();
-
-  if (trackFrame) {  // display:none?
-
-    // Position the track:
-    // The idea here is that we allow content authors to style the width,
-    // height, border and padding of the track, but we ignore margin and
-    // positioning properties and do the positioning ourself to keep the center
-    // of the track's border box on the center of the nsRangeFrame's content
-    // box.
-
-    WritingMode wm = trackFrame->GetWritingMode();
-    LogicalSize availSize = aReflowInput.ComputedSize(wm);
+  // for our anonymous content.
+  const nsSize rangeFrameContentBoxSize =
+      aContentBoxSize.GetPhysicalSize(parentWM);
+  for (auto* div : {mTrackDiv.get(), mThumbDiv.get(), mProgressDiv.get()}) {
+    nsIFrame* child = div->GetPrimaryFrame();
+    if (!child) {
+      continue;
+    }
+    const WritingMode wm = child->GetWritingMode();
+    const LogicalSize parentSizeInChildWM =
+        aContentBoxSize.ConvertTo(wm, parentWM);
+    LogicalSize availSize = parentSizeInChildWM;
     availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
-    ReflowInput trackReflowInput(aPresContext, aReflowInput, trackFrame,
-                                 availSize);
+    ReflowInput childReflowInput(aPresContext, aReflowInput, child, availSize,
+                                 Some(parentSizeInChildWM));
 
-    // Find the x/y position of the track frame such that it will be positioned
-    // as described above. These coordinates are with respect to the
-    // nsRangeFrame's border-box.
-    nscoord trackX = rangeFrameContentBoxWidth / 2;
-    nscoord trackY = rangeFrameContentBoxHeight / 2;
+    const nsPoint pos = [&] {
+      if (div != mTrackDiv) {
+        // Where we position the thumb and range-progress depends on its size,
+        // so we first reflow them at {0,0} to obtain the size, then position
+        // them afterwards.
+        return nsPoint();
+      }
+      // Find the x/y position of the track. The idea here is that we allow
+      // content authors to style the width, height, border and padding of the
+      // track, but we ignore margin and positioning properties and do the
+      // positioning ourself to keep the center of the track's border box on the
+      // center of the nsRangeFrame's content. These coordinates are with
+      // respect to the nsRangeFrame's border-box.
+      nscoord trackX = rangeFrameContentBoxSize.Width() / 2;
+      nscoord trackY = rangeFrameContentBoxSize.Height() / 2;
 
-    // Account for the track's border and padding (we ignore its margin):
-    trackX -= trackReflowInput.ComputedPhysicalBorderPadding().left +
-              trackReflowInput.ComputedWidth() / 2;
-    trackY -= trackReflowInput.ComputedPhysicalBorderPadding().top +
-              trackReflowInput.ComputedHeight() / 2;
+      // Account for the track's border and padding (we ignore its margin):
+      // FIXME(emilio): Assumes the track height is constrained, which might not
+      // be true if authors override it.
+      trackX -= childReflowInput.ComputedPhysicalBorderPadding().left +
+                childReflowInput.ComputedWidth() / 2;
+      trackY -= childReflowInput.ComputedPhysicalBorderPadding().top +
+                childReflowInput.ComputedHeight() / 2;
 
-    // Make relative to our border box instead of our content box:
-    trackX += aReflowInput.ComputedPhysicalBorderPadding().left;
-    trackY += aReflowInput.ComputedPhysicalBorderPadding().top;
+      // Make relative to our border box instead of our content box:
+      trackX += aReflowInput.ComputedPhysicalBorderPadding().left;
+      trackY += aReflowInput.ComputedPhysicalBorderPadding().top;
+      return nsPoint(trackX, trackY);
+    }();
 
     nsReflowStatus frameStatus;
-    ReflowOutput trackDesiredSize(aReflowInput);
-    ReflowChild(trackFrame, aPresContext, trackDesiredSize, trackReflowInput,
-                trackX, trackY, ReflowChildFlags::Default, frameStatus);
+    ReflowOutput childDesiredSize(aReflowInput);
+    ReflowChild(child, aPresContext, childDesiredSize, childReflowInput, pos.x,
+                pos.y, ReflowChildFlags::Default, frameStatus);
     MOZ_ASSERT(
         frameStatus.IsFullyComplete(),
         "We gave our child unconstrained height, so it should be complete");
-    FinishReflowChild(trackFrame, aPresContext, trackDesiredSize,
-                      &trackReflowInput, trackX, trackY,
-                      ReflowChildFlags::Default);
-  }
-
-  nsIFrame* thumbFrame = mThumbDiv->GetPrimaryFrame();
-
-  if (thumbFrame) {  // display:none?
-    WritingMode wm = thumbFrame->GetWritingMode();
-    LogicalSize availSize = aReflowInput.ComputedSize(wm);
-    availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
-    ReflowInput thumbReflowInput(aPresContext, aReflowInput, thumbFrame,
-                                 availSize);
-
-    // Where we position the thumb depends on its size, so we first reflow
-    // the thumb at {0,0} to obtain its size, then position it afterwards.
-
-    nsReflowStatus frameStatus;
-    ReflowOutput thumbDesiredSize(aReflowInput);
-    ReflowChild(thumbFrame, aPresContext, thumbDesiredSize, thumbReflowInput, 0,
-                0, ReflowChildFlags::Default, frameStatus);
-    MOZ_ASSERT(
-        frameStatus.IsFullyComplete(),
-        "We gave our child unconstrained height, so it should be complete");
-    FinishReflowChild(thumbFrame, aPresContext, thumbDesiredSize,
-                      &thumbReflowInput, 0, 0, ReflowChildFlags::Default);
-    DoUpdateThumbPosition(thumbFrame,
-                          nsSize(aDesiredSize.Width(), aDesiredSize.Height()));
-  }
-
-  nsIFrame* rangeProgressFrame = mProgressDiv->GetPrimaryFrame();
-
-  if (rangeProgressFrame) {  // display:none?
-    WritingMode wm = rangeProgressFrame->GetWritingMode();
-    LogicalSize availSize = aReflowInput.ComputedSize(wm);
-    availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
-    ReflowInput progressReflowInput(aPresContext, aReflowInput,
-                                    rangeProgressFrame, availSize);
-
-    // We first reflow the range-progress frame at {0,0} to obtain its
-    // unadjusted dimensions, then we adjust it to so that the appropriate edge
-    // ends at the thumb.
-
-    nsReflowStatus frameStatus;
-    ReflowOutput progressDesiredSize(aReflowInput);
-    ReflowChild(rangeProgressFrame, aPresContext, progressDesiredSize,
-                progressReflowInput, 0, 0, ReflowChildFlags::Default,
-                frameStatus);
-    MOZ_ASSERT(
-        frameStatus.IsFullyComplete(),
-        "We gave our child unconstrained height, so it should be complete");
-    FinishReflowChild(rangeProgressFrame, aPresContext, progressDesiredSize,
-                      &progressReflowInput, 0, 0, ReflowChildFlags::Default);
-    DoUpdateRangeProgressFrame(
-        rangeProgressFrame,
-        nsSize(aDesiredSize.Width(), aDesiredSize.Height()));
+    FinishReflowChild(child, aPresContext, childDesiredSize, &childReflowInput,
+                      pos.x, pos.y, ReflowChildFlags::Default);
+    if (div == mThumbDiv) {
+      DoUpdateThumbPosition(child, rangeFrameContentBoxSize);
+    } else if (div == mProgressDiv) {
+      DoUpdateRangeProgressFrame(child, rangeFrameContentBoxSize);
+    }
+    ConsiderChildOverflow(aDesiredSize.mOverflowAreas, child);
   }
 }
 
@@ -539,7 +481,7 @@ mozilla::dom::HTMLInputElement& nsRangeFrame::InputElement() const {
 }
 
 void nsRangeFrame::DoUpdateThumbPosition(nsIFrame* aThumbFrame,
-                                         const nsSize& aRangeSize) {
+                                         const nsSize& aRangeContentBoxSize) {
   MOZ_ASSERT(aThumbFrame);
 
   // The idea here is that we want to position the thumb so that the center
@@ -553,29 +495,26 @@ void nsRangeFrame::DoUpdateThumbPosition(nsIFrame* aThumbFrame,
   nsMargin borderAndPadding = GetUsedBorderAndPadding();
   nsPoint newPosition(borderAndPadding.left, borderAndPadding.top);
 
-  nsSize rangeContentBoxSize(aRangeSize);
-  rangeContentBoxSize.width -= borderAndPadding.LeftRight();
-  rangeContentBoxSize.height -= borderAndPadding.TopBottom();
-
   nsSize thumbSize = aThumbFrame->GetSize();
   double fraction = GetValueAsFractionOfRange();
   MOZ_ASSERT(fraction >= 0.0 && fraction <= 1.0);
 
   if (IsHorizontal()) {
-    if (thumbSize.width < rangeContentBoxSize.width) {
-      nscoord traversableDistance = rangeContentBoxSize.width - thumbSize.width;
+    if (thumbSize.width < aRangeContentBoxSize.width) {
+      nscoord traversableDistance =
+          aRangeContentBoxSize.width - thumbSize.width;
       if (IsRightToLeft()) {
         newPosition.x += NSToCoordRound((1.0 - fraction) * traversableDistance);
       } else {
         newPosition.x += NSToCoordRound(fraction * traversableDistance);
       }
-      newPosition.y += (rangeContentBoxSize.height - thumbSize.height) / 2;
+      newPosition.y += (aRangeContentBoxSize.height - thumbSize.height) / 2;
     }
   } else {
-    if (thumbSize.height < rangeContentBoxSize.height) {
+    if (thumbSize.height < aRangeContentBoxSize.height) {
       nscoord traversableDistance =
-          rangeContentBoxSize.height - thumbSize.height;
-      newPosition.x += (rangeContentBoxSize.width - thumbSize.width) / 2;
+          aRangeContentBoxSize.height - thumbSize.height;
+      newPosition.x += (aRangeContentBoxSize.width - thumbSize.width) / 2;
       if (IsUpwards()) {
         newPosition.y += NSToCoordRound((1.0 - fraction) * traversableDistance);
       } else {
@@ -586,9 +525,9 @@ void nsRangeFrame::DoUpdateThumbPosition(nsIFrame* aThumbFrame,
   aThumbFrame->SetPosition(newPosition);
 }
 
-void nsRangeFrame::DoUpdateRangeProgressFrame(nsIFrame* aRangeProgressFrame,
-                                              const nsSize& aRangeSize) {
-  MOZ_ASSERT(aRangeProgressFrame);
+void nsRangeFrame::DoUpdateRangeProgressFrame(
+    nsIFrame* aProgressFrame, const nsSize& aRangeContentBoxSize) {
+  MOZ_ASSERT(aProgressFrame);
 
   // The idea here is that we want to position the ::-moz-range-progress
   // pseudo-element so that the center line running along its length is on the
@@ -598,35 +537,30 @@ void nsRangeFrame::DoUpdateRangeProgressFrame(nsIFrame* aRangeProgressFrame,
   // nsRangeFrame's content box, and we size the progress element's border-box
   // to have a length of GetValueAsFractionOfRange() times the nsRangeFrame's
   // content-box size.
-
   nsMargin borderAndPadding = GetUsedBorderAndPadding();
-  nsSize progSize = aRangeProgressFrame->GetSize();
+  nsSize progSize = aProgressFrame->GetSize();
   nsRect progRect(borderAndPadding.left, borderAndPadding.top, progSize.width,
                   progSize.height);
-
-  nsSize rangeContentBoxSize(aRangeSize);
-  rangeContentBoxSize.width -= borderAndPadding.LeftRight();
-  rangeContentBoxSize.height -= borderAndPadding.TopBottom();
 
   double fraction = GetValueAsFractionOfRange();
   MOZ_ASSERT(fraction >= 0.0 && fraction <= 1.0);
 
   if (IsHorizontal()) {
-    nscoord progLength = NSToCoordRound(fraction * rangeContentBoxSize.width);
+    nscoord progLength = NSToCoordRound(fraction * aRangeContentBoxSize.width);
     if (IsRightToLeft()) {
-      progRect.x += rangeContentBoxSize.width - progLength;
+      progRect.x += aRangeContentBoxSize.width - progLength;
     }
-    progRect.y += (rangeContentBoxSize.height - progSize.height) / 2;
+    progRect.y += (aRangeContentBoxSize.height - progSize.height) / 2;
     progRect.width = progLength;
   } else {
-    nscoord progLength = NSToCoordRound(fraction * rangeContentBoxSize.height);
-    progRect.x += (rangeContentBoxSize.width - progSize.width) / 2;
+    nscoord progLength = NSToCoordRound(fraction * aRangeContentBoxSize.height);
+    progRect.x += (aRangeContentBoxSize.width - progSize.width) / 2;
     if (IsUpwards()) {
-      progRect.y += rangeContentBoxSize.height - progLength;
+      progRect.y += aRangeContentBoxSize.height - progLength;
     }
     progRect.height = progLength;
   }
-  aRangeProgressFrame->SetRect(progRect);
+  aProgressFrame->SetRect(progRect);
 }
 
 nsresult nsRangeFrame::AttributeChanged(int32_t aNameSpaceID,
@@ -677,7 +611,7 @@ nsresult nsRangeFrame::AttributeChanged(int32_t aNameSpaceID,
   return nsContainerFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
 }
 
-nscoord nsRangeFrame::AutoCrossSize(Length aEm) {
+nscoord nsRangeFrame::AutoCrossSize() {
   nscoord minCrossSize(0);
   if (IsThemed()) {
     nsPresContext* pc = PresContext();
@@ -686,33 +620,8 @@ nscoord nsRangeFrame::AutoCrossSize(Length aEm) {
     minCrossSize =
         pc->DevPixelsToAppUnits(IsHorizontal() ? size.height : size.width);
   }
-  return std::max(minCrossSize, aEm.ScaledBy(CROSS_AXIS_EM_SIZE).ToAppUnits());
-}
-
-static mozilla::Length OneEm(nsRangeFrame* aFrame) {
-  return aFrame->StyleFont()->mFont.size.ScaledBy(
-      nsLayoutUtils::FontSizeInflationFor(aFrame));
-}
-
-LogicalSize nsRangeFrame::ComputeAutoSize(
-    gfxContext* aRenderingContext, WritingMode aWM, const LogicalSize& aCBSize,
-    nscoord aAvailableISize, const LogicalSize& aMargin,
-    const LogicalSize& aBorderPadding, const StyleSizeOverrides& aSizeOverrides,
-    ComputeSizeFlags aFlags) {
-  bool isInlineOriented = IsInlineOriented();
-  auto em = OneEm(this);
-
-  const WritingMode wm = GetWritingMode();
-  LogicalSize autoSize(wm);
-  if (isInlineOriented) {
-    autoSize.ISize(wm) = em.ScaledBy(MAIN_AXIS_EM_SIZE).ToAppUnits();
-    autoSize.BSize(wm) = AutoCrossSize(em);
-  } else {
-    autoSize.ISize(wm) = AutoCrossSize(em);
-    autoSize.BSize(wm) = em.ScaledBy(MAIN_AXIS_EM_SIZE).ToAppUnits();
-  }
-
-  return autoSize.ConvertTo(aWM, wm);
+  return std::max(minCrossSize,
+                  NSToCoordRound(OneEmInAppUnits() * CROSS_AXIS_EM_SIZE));
 }
 
 nscoord nsRangeFrame::GetMinISize(gfxContext* aRenderingContext) {
@@ -728,11 +637,10 @@ nscoord nsRangeFrame::GetMinISize(gfxContext* aRenderingContext) {
 }
 
 nscoord nsRangeFrame::GetPrefISize(gfxContext* aRenderingContext) {
-  auto em = OneEm(this);
   if (IsInlineOriented()) {
-    return em.ScaledBy(MAIN_AXIS_EM_SIZE).ToAppUnits();
+    return OneEmInAppUnits() * MAIN_AXIS_EM_SIZE;
   }
-  return AutoCrossSize(em);
+  return AutoCrossSize();
 }
 
 bool nsRangeFrame::IsHorizontal() const {

@@ -367,6 +367,16 @@ struct ReflowInput : public SizeComputationInput {
 
   mozilla::LogicalSize AvailableSize() const { return mAvailableSize; }
   mozilla::LogicalSize ComputedSize() const { return mComputedSize; }
+
+  template <typename F>
+  mozilla::LogicalSize ComputedSizeWithBSizeFallback(F&& aFallback) const {
+    auto size = mComputedSize;
+    if (size.BSize(mWritingMode) == NS_UNCONSTRAINEDSIZE) {
+      size.BSize(mWritingMode) = ApplyMinMaxBSize(aFallback());
+    }
+    return size;
+  }
+
   mozilla::LogicalSize ComputedMinSize() const { return mComputedMinSize; }
   mozilla::LogicalSize ComputedMaxSize() const { return mComputedMaxSize; }
 

@@ -7,12 +7,10 @@
 #ifndef nsRangeFrame_h___
 #define nsRangeFrame_h___
 
-#include "mozilla/Attributes.h"
 #include "mozilla/Decimal.h"
 #include "mozilla/EventForwards.h"
 #include "nsContainerFrame.h"
 #include "nsIAnonymousContentCreator.h"
-#include "nsIDOMEventListener.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 
@@ -40,8 +38,7 @@ class nsRangeFrame final : public nsContainerFrame,
   explicit nsRangeFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
   virtual ~nsRangeFrame();
 
-  typedef mozilla::PseudoStyleType PseudoStyleType;
-  typedef mozilla::dom::Element Element;
+  using Element = mozilla::dom::Element;
 
  public:
   NS_DECL_QUERYFRAME
@@ -53,39 +50,30 @@ class nsRangeFrame final : public nsContainerFrame,
   void BuildDisplayList(nsDisplayListBuilder* aBuilder,
                         const nsDisplayListSet& aLists) override;
 
-  virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
-                      const ReflowInput& aReflowInput,
-                      nsReflowStatus& aStatus) override;
+  void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
+              const ReflowInput& aReflowInput,
+              nsReflowStatus& aStatus) override;
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const override {
+  nsresult GetFrameName(nsAString& aResult) const override {
     return MakeFrameName(u"Range"_ns, aResult);
   }
 #endif
 
 #ifdef ACCESSIBILITY
-  virtual mozilla::a11y::AccType AccessibleType() override;
+  mozilla::a11y::AccType AccessibleType() override;
 #endif
 
   // nsIAnonymousContentCreator
-  virtual nsresult CreateAnonymousContent(
-      nsTArray<ContentInfo>& aElements) override;
-  virtual void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
-                                        uint32_t aFilter) override;
+  nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) override;
+  void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
+                                uint32_t aFilter) override;
 
-  virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
-                                    int32_t aModType) override;
+  nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
+                            int32_t aModType) override;
 
-  mozilla::LogicalSize ComputeAutoSize(
-      gfxContext* aRenderingContext, mozilla::WritingMode aWM,
-      const mozilla::LogicalSize& aCBSize, nscoord aAvailableISize,
-      const mozilla::LogicalSize& aMargin,
-      const mozilla::LogicalSize& aBorderPadding,
-      const mozilla::StyleSizeOverrides& aSizeOverrides,
-      mozilla::ComputeSizeFlags aFlags) override;
-
-  virtual nscoord GetMinISize(gfxContext* aRenderingContext) override;
-  virtual nscoord GetPrefISize(gfxContext* aRenderingContext) override;
+  nscoord GetMinISize(gfxContext* aRenderingContext) override;
+  nscoord GetPrefISize(gfxContext* aRenderingContext) override;
 
   /**
    * Returns true if the slider's thumb moves horizontally, or else false if it
@@ -171,17 +159,19 @@ class nsRangeFrame final : public nsContainerFrame,
  private:
   // Return our preferred size in the cross-axis (the axis perpendicular
   // to the direction of movement of the thumb).
-  nscoord AutoCrossSize(mozilla::Length aEm);
+  nscoord AutoCrossSize();
 
   // Helper function which reflows the anonymous div frames.
   void ReflowAnonymousContent(nsPresContext* aPresContext,
                               ReflowOutput& aDesiredSize,
+                              const mozilla::LogicalSize& aContentBoxSize,
                               const ReflowInput& aReflowInput);
 
-  void DoUpdateThumbPosition(nsIFrame* aThumbFrame, const nsSize& aRangeSize);
+  void DoUpdateThumbPosition(nsIFrame* aThumbFrame,
+                             const nsSize& aRangeContentBoxSize);
 
   void DoUpdateRangeProgressFrame(nsIFrame* aProgressFrame,
-                                  const nsSize& aRangeSize);
+                                  const nsSize& aRangeContentBoxSize);
 
   /**
    * The div used to show the ::-moz-range-track pseudo-element.

@@ -99,11 +99,18 @@ void nsProgressFrame::Reflow(nsPresContext* aPresContext,
                "need to call RegUnregAccessKey only for the first.");
 
   const auto wm = aReflowInput.GetWritingMode();
-  aDesiredSize.SetSize(wm, aReflowInput.ComputedSizeWithBorderPadding(wm));
+  const auto contentBoxSize = aReflowInput.ComputedSizeWithBSizeFallback([&] {
+    nscoord em = OneEmInAppUnits();
+    return ResolvedOrientationIsVertical() == wm.IsVertical() ? em : 10 * em;
+  });
+  aDesiredSize.SetSize(
+      wm,
+      contentBoxSize + aReflowInput.ComputedLogicalBorderPadding(wm).Size(wm));
   aDesiredSize.SetOverflowAreasToDesiredBounds();
 
-  for (auto childFrame : PrincipalChildList()) {
-    ReflowChildFrame(childFrame, aPresContext, aReflowInput, aStatus);
+  for (nsIFrame* childFrame : PrincipalChildList()) {
+    ReflowChildFrame(childFrame, aPresContext, aReflowInput, contentBoxSize,
+                     aStatus);
     ConsiderChildOverflow(aDesiredSize.mOverflowAreas, childFrame);
   }
 
@@ -115,14 +122,19 @@ void nsProgressFrame::Reflow(nsPresContext* aPresContext,
 void nsProgressFrame::ReflowChildFrame(nsIFrame* aChild,
                                        nsPresContext* aPresContext,
                                        const ReflowInput& aReflowInput,
+                                       const LogicalSize& aParentContentBoxSize,
                                        nsReflowStatus& aStatus) {
   bool vertical = ResolvedOrientationIsVertical();
-  WritingMode wm = aChild->GetWritingMode();
-  LogicalSize availSize = aReflowInput.ComputedSize(wm);
+  const WritingMode wm = aChild->GetWritingMode();
+  const LogicalSize parentSizeInChildWM =
+      aParentContentBoxSize.ConvertTo(wm, aReflowInput.GetWritingMode());
+  const nsSize parentPhysicalSize = parentSizeInChildWM.GetPhysicalSize(wm);
+  LogicalSize availSize = parentSizeInChildWM;
   availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
-  ReflowInput reflowInput(aPresContext, aReflowInput, aChild, availSize);
+  ReflowInput reflowInput(aPresContext, aReflowInput, aChild, availSize,
+                          Some(parentSizeInChildWM));
   nscoord size =
-      vertical ? aReflowInput.ComputedHeight() : aReflowInput.ComputedWidth();
+      vertical ? parentPhysicalSize.Height() : parentPhysicalSize.Width();
   nscoord xoffset = aReflowInput.ComputedPhysicalBorderPadding().left;
   nscoord yoffset = aReflowInput.ComputedPhysicalBorderPadding().top;
 
@@ -135,7 +147,7 @@ void nsProgressFrame::ReflowChildFrame(nsIFrame* aChild,
   }
 
   if (!vertical && wm.IsPhysicalRTL()) {
-    xoffset += aReflowInput.ComputedWidth() - size;
+    xoffset += parentPhysicalSize.Width() - size;
   }
 
   // The bar size is fixed in these cases:
@@ -148,8 +160,7 @@ void nsProgressFrame::ReflowChildFrame(nsIFrame* aChild,
   if (position != -1 || ShouldUseNativeStyle()) {
     if (vertical) {
       // We want the bar to begin at the bottom.
-      yoffset += aReflowInput.ComputedHeight() - size;
-
+      yoffset += parentPhysicalSize.Height() - size;
       size -= reflowInput.ComputedPhysicalMargin().TopBottom() +
               reflowInput.ComputedPhysicalBorderPadding().TopBottom();
       size = std::max(size, 0);
@@ -161,10 +172,12 @@ void nsProgressFrame::ReflowChildFrame(nsIFrame* aChild,
       reflowInput.SetComputedWidth(size);
     }
   } else if (vertical) {
-    // For vertical progress bars, we need to position the bar specificly when
+    // For vertical progress bars, we need to position the bar specifically when
     // the width isn't constrained (position == -1 and !ShouldUseNativeStyle())
-    // because aReflowInput.ComputedHeight() - size == 0.
-    yoffset += aReflowInput.ComputedHeight() - reflowInput.ComputedHeight();
+    // because parentPhysiscalSize.Height() - size == 0.
+    // FIXME(emilio): This assumes that the bar's height is constrained, which
+    // seems like a wrong assumption?
+    yoffset += parentPhysicalSize.Height() - reflowInput.ComputedHeight();
   }
 
   xoffset += reflowInput.ComputedPhysicalMargin().left;
@@ -195,38 +208,11 @@ nsresult nsProgressFrame::AttributeChanged(int32_t aNameSpaceID,
   return nsContainerFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
 }
 
-LogicalSize nsProgressFrame::ComputeAutoSize(
-    gfxContext* aRenderingContext, WritingMode aWM, const LogicalSize& aCBSize,
-    nscoord aAvailableISize, const LogicalSize& aMargin,
-    const LogicalSize& aBorderPadding, const StyleSizeOverrides& aSizeOverrides,
-    ComputeSizeFlags aFlags) {
-  const WritingMode wm = GetWritingMode();
-  LogicalSize autoSize(wm);
-  autoSize.BSize(wm) = autoSize.ISize(wm) =
-      StyleFont()
-          ->mFont.size.ScaledBy(nsLayoutUtils::FontSizeInflationFor(this))
-          .ToAppUnits();  // 1em
-
-  if (ResolvedOrientationIsVertical() == wm.IsVertical()) {
-    autoSize.ISize(wm) *= 10;  // 10em
-  } else {
-    autoSize.BSize(wm) *= 10;  // 10em
-  }
-
-  return autoSize.ConvertTo(aWM, wm);
-}
-
 nscoord nsProgressFrame::GetMinISize(gfxContext* aRenderingContext) {
-  RefPtr<nsFontMetrics> fontMet =
-      nsLayoutUtils::GetFontMetricsForFrame(this, 1.0f);
-
-  nscoord minISize = fontMet->Font().size.ToAppUnits();  // 1em
-
+  nscoord minISize = OneEmInAppUnits();
   if (ResolvedOrientationIsVertical() == GetWritingMode().IsVertical()) {
-    // The orientation is inline
-    minISize *= 10;  // 10em
+    minISize *= 10;
   }
-
   return minISize;
 }
 

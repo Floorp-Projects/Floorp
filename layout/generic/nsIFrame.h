@@ -1586,6 +1586,11 @@ class nsIFrame : public nsQueryFrame {
   bool GetShapeBoxBorderRadii(nscoord aRadii[8]) const;
 
   /**
+   * Returns one em unit, adjusted for font inflation if needed, in app units.
+   */
+  nscoord OneEmInAppUnits() const;
+
+  /**
    * `GetNaturalBaselineBOffset`, but determines the baseline sharing group
    * through `GetDefaultBaselineSharingGroup` (If not specified), assuming line
    * layout context, and never fails, returning a synthesized baseline through
