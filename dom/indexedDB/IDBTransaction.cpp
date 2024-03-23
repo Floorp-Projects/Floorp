@@ -288,8 +288,9 @@ BackgroundRequestChild* IDBTransaction::StartRequest(
   BackgroundRequestChild* const actor =
       new BackgroundRequestChild(std::move(aRequest));
 
-  DoWithTransactionChild([actor, &aParams](auto& transactionChild) {
-    transactionChild.SendPBackgroundIDBRequestConstructor(actor, aParams);
+  DoWithTransactionChild([this, actor, &aParams](auto& transactionChild) {
+    transactionChild.SendPBackgroundIDBRequestConstructor(
+        actor, NextRequestId(), aParams);
   });
 
   // Balanced in BackgroundRequestChild::Recv__delete__().

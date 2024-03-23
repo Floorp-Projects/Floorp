@@ -347,7 +347,7 @@ class BackgroundTransactionChild final : public BackgroundTransactionBase,
   mozilla::ipc::IPCResult RecvComplete(nsresult aResult);
 
   PBackgroundIDBRequestChild* AllocPBackgroundIDBRequestChild(
-      const RequestParams& aParams);
+      const int64_t& aRequestId, const RequestParams& aParams);
 
   bool DeallocPBackgroundIDBRequestChild(PBackgroundIDBRequestChild* aActor);
 
@@ -393,7 +393,7 @@ class BackgroundVersionChangeTransactionChild final
   mozilla::ipc::IPCResult RecvComplete(nsresult aResult);
 
   PBackgroundIDBRequestChild* AllocPBackgroundIDBRequestChild(
-      const RequestParams& aParams);
+      const int64_t& aRequestId, const RequestParams& aParams);
 
   bool DeallocPBackgroundIDBRequestChild(PBackgroundIDBRequestChild* aActor);
 
