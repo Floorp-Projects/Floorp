@@ -342,7 +342,7 @@ skip-if(useDrawSnapshot) == 306660-2.html 306660-2-ref.html
 == 306660-3.html 306660-3-ref.html
 == 307076-1.html 307076-1-ref.html
 == 307102-1.html 307102-1-ref.html
-== 307102-3.html 307102-3-ref.html
+random == 307102-3.html 307102-3-ref.html
 == 307102-4.html 307102-4-ref.html
 == 308406-1.html 308406-1-ref.html
 == 308406-2.html 308406-2-ref.html
