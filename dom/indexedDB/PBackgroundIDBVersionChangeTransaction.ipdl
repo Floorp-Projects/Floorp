@@ -36,7 +36,7 @@ parent:
   async DeleteIndex(int64_t objectStoreId, int64_t indexId);
   async RenameIndex(int64_t objectStoreId, int64_t indexId, nsString name);
 
-  async PBackgroundIDBCursor(OpenCursorParams params);
+  async PBackgroundIDBCursor(int64_t requestId, OpenCursorParams params);
 
   async PBackgroundIDBRequest(int64_t requestId, RequestParams params);
 

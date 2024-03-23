@@ -2783,7 +2783,7 @@ class TransactionBase : public AtomicSafeRefCounted<TransactionBase> {
   already_AddRefed<PBackgroundIDBCursorParent> AllocCursor(
       const OpenCursorParams& aParams, bool aTrustParams);
 
-  bool StartCursor(PBackgroundIDBCursorParent* aActor,
+  bool StartCursor(PBackgroundIDBCursorParent* aActor, const int64_t aRequestId,
                    const OpenCursorParams& aParams);
 
   virtual void UpdateMetadata(nsresult aResult) {}
@@ -2876,10 +2876,10 @@ class NormalTransaction final : public TransactionBase,
       PBackgroundIDBRequestParent* aActor) override;
 
   already_AddRefed<PBackgroundIDBCursorParent> AllocPBackgroundIDBCursorParent(
-      const OpenCursorParams& aParams) override;
+      const int64_t& aRequestId, const OpenCursorParams& aParams) override;
 
   mozilla::ipc::IPCResult RecvPBackgroundIDBCursorConstructor(
-      PBackgroundIDBCursorParent* aActor,
+      PBackgroundIDBCursorParent* aActor, const int64_t& aRequestId,
       const OpenCursorParams& aParams) override;
 
  public:
@@ -2968,10 +2968,10 @@ class VersionChangeTransaction final
       PBackgroundIDBRequestParent* aActor) override;
 
   already_AddRefed<PBackgroundIDBCursorParent> AllocPBackgroundIDBCursorParent(
-      const OpenCursorParams& aParams) override;
+      const int64_t& aRequestId, const OpenCursorParams& aParams) override;
 
   mozilla::ipc::IPCResult RecvPBackgroundIDBCursorConstructor(
-      PBackgroundIDBCursorParent* aActor,
+      PBackgroundIDBCursorParent* aActor, const int64_t& aRequestId,
       const OpenCursorParams& aParams) override;
 };
 
@@ -4172,7 +4172,8 @@ class CursorBase : public PBackgroundIDBCursorParent {
   ~CursorBase() override { MOZ_ASSERT(!mObjectStoreMetadata); }
 
  private:
-  virtual bool Start(const OpenCursorParams& aParams) = 0;
+  virtual bool Start(const int64_t aRequestId,
+                     const OpenCursorParams& aParams) = 0;
 };
 
 class IndexCursorBase : public CursorBase {
@@ -4330,7 +4331,7 @@ class Cursor final
   LazyInitializedOnce<const typename Base::ContinueQueries> mContinueQueries;
 
   // Only called by TransactionBase.
-  bool Start(const OpenCursorParams& aParams) final;
+  bool Start(const int64_t aRequestId, const OpenCursorParams& aParams) final;
 
   void SendResponseInternal(CursorResponse& aResponse,
                             const FilesArrayT<CursorType>& aFiles);
@@ -4392,9 +4393,9 @@ class Cursor<CursorType>::CursorOpBase
 #endif
 
  protected:
-  explicit CursorOpBase(Cursor* aCursor)
+  explicit CursorOpBase(Cursor* aCursor, const int64_t aRequestId)
       : TransactionDatabaseOperationBase(aCursor->mTransaction.clonePtr(),
-                                         /* aRequestId */ 0),
+                                         /* aRequestId */ aRequestId),
         mCursor(aCursor)
 #ifdef DEBUG
         ,
@@ -4572,9 +4573,10 @@ class Cursor<CursorType>::OpenOp final : public CursorOpBase {
   using CursorOpBase::mResponse;
 
   // Only created by Cursor.
-  OpenOp(Cursor* const aCursor,
+  OpenOp(Cursor* const aCursor, const int64_t aRequestId,
          const Maybe<SerializedKeyRange>& aOptionalKeyRange)
-      : CursorOpBase(aCursor), mOptionalKeyRange(aOptionalKeyRange) {}
+      : CursorOpBase(aCursor, aRequestId),
+        mOptionalKeyRange(aOptionalKeyRange) {}
 
   // Reference counted.
   ~OpenOp() override = default;
@@ -4594,7 +4596,7 @@ class Cursor<CursorType>::ContinueOp final
   // Only created by Cursor.
   ContinueOp(Cursor* const aCursor, CursorRequestParams aParams,
              CursorPosition<CursorType> aPosition)
-      : CursorOpBase(aCursor),
+      : CursorOpBase(aCursor, 0),
         mParams(std::move(aParams)),
         mCurrentPosition{std::move(aPosition)} {
     MOZ_ASSERT(mParams.type() != CursorRequestParams::T__None);
@@ -10591,6 +10593,7 @@ already_AddRefed<PBackgroundIDBCursorParent> TransactionBase::AllocCursor(
 }
 
 bool TransactionBase::StartCursor(PBackgroundIDBCursorParent* const aActor,
+                                  const int64_t aRequestId,
                                   const OpenCursorParams& aParams) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
@@ -10598,7 +10601,7 @@ bool TransactionBase::StartCursor(PBackgroundIDBCursorParent* const aActor,
 
   auto* const op = static_cast<CursorBase*>(aActor);
 
-  if (NS_WARN_IF(!op->Start(aParams))) {
+  if (NS_WARN_IF(!op->Start(aRequestId, aParams))) {
     return false;
   }
 
@@ -10709,19 +10712,20 @@ bool NormalTransaction::DeallocPBackgroundIDBRequestParent(
 
 already_AddRefed<PBackgroundIDBCursorParent>
 NormalTransaction::AllocPBackgroundIDBCursorParent(
-    const OpenCursorParams& aParams) {
+    const int64_t& aRequestId, const OpenCursorParams& aParams) {
   AssertIsOnBackgroundThread();
 
   return AllocCursor(aParams, IsSameProcessActor());
 }
 
 mozilla::ipc::IPCResult NormalTransaction::RecvPBackgroundIDBCursorConstructor(
-    PBackgroundIDBCursorParent* const aActor, const OpenCursorParams& aParams) {
+    PBackgroundIDBCursorParent* const aActor, const int64_t& aRequestId,
+    const OpenCursorParams& aParams) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(aParams.type() != OpenCursorParams::T__None);
 
-  if (!StartCursor(aActor, aParams)) {
+  if (!StartCursor(aActor, aRequestId, aParams)) {
     return IPC_FAIL(this, "StartCursor failed!");
   }
   return IPC_OK();
@@ -11298,7 +11302,7 @@ bool VersionChangeTransaction::DeallocPBackgroundIDBRequestParent(
 
 already_AddRefed<PBackgroundIDBCursorParent>
 VersionChangeTransaction::AllocPBackgroundIDBCursorParent(
-    const OpenCursorParams& aParams) {
+    const int64_t& aRequestId, const OpenCursorParams& aParams) {
   AssertIsOnBackgroundThread();
 
   return AllocCursor(aParams, IsSameProcessActor());
@@ -11306,12 +11310,13 @@ VersionChangeTransaction::AllocPBackgroundIDBCursorParent(
 
 mozilla::ipc::IPCResult
 VersionChangeTransaction::RecvPBackgroundIDBCursorConstructor(
-    PBackgroundIDBCursorParent* aActor, const OpenCursorParams& aParams) {
+    PBackgroundIDBCursorParent* aActor, const int64_t& aRequestId,
+    const OpenCursorParams& aParams) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(aParams.type() != OpenCursorParams::T__None);
 
-  if (!StartCursor(aActor, aParams)) {
+  if (!StartCursor(aActor, aRequestId, aParams)) {
     return IPC_FAIL(this, "StartCursor failed!");
   }
   return IPC_OK();
@@ -11460,7 +11465,8 @@ bool Cursor<CursorType>::VerifyRequestParams(
 }
 
 template <IDBCursorType CursorType>
-bool Cursor<CursorType>::Start(const OpenCursorParams& aParams) {
+bool Cursor<CursorType>::Start(const int64_t aRequestId,
+                               const OpenCursorParams& aParams) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParams.type() == ToOpenCursorParamsType(CursorType));
   MOZ_ASSERT(this->mObjectStoreMetadata);
@@ -11472,7 +11478,7 @@ bool Cursor<CursorType>::Start(const OpenCursorParams& aParams) {
   const Maybe<SerializedKeyRange>& optionalKeyRange =
       GetCommonOpenCursorParams(aParams).optionalKeyRange();
 
-  const RefPtr<OpenOp> openOp = new OpenOp(this, optionalKeyRange);
+  const RefPtr<OpenOp> openOp = new OpenOp(this, aRequestId, optionalKeyRange);
 
   if (NS_WARN_IF(!openOp->Init(*mTransaction))) {
     openOp->Cleanup();
