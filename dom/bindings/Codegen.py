@@ -947,7 +947,7 @@ class CGInterfaceObjectJSClass(CGThing):
         wantsIsInstance = self.descriptor.interface.hasInterfacePrototypeObject()
 
         prototypeID, depth = PrototypeIDAndDepth(self.descriptor)
-        slotCount = "DOM_INTERFACE_SLOTS_BASE"
+        slotCount = "INTERFACE_OBJECT_FIRST_LEGACY_FACTORY_FUNCTION"
         if len(self.descriptor.interface.legacyFactoryFunctions) > 0:
             slotCount += " + %i /* slots for the legacy factory functions */" % len(
                 self.descriptor.interface.legacyFactoryFunctions
