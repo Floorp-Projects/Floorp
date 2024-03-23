@@ -69,14 +69,14 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsNetUtil.h"
-#include "mozilla/dom/ContentParent.h"
+#include "prenv.h"
 #include "mozilla/Components.h"
 #include "mozilla/Services.h"
+#include "mozilla/dom/ContentParent_NotifyUpdatedDictionaries.h"
 
 #include <stdlib.h>
 #include <tuple>
 
-using mozilla::dom::ContentParent;
 using namespace mozilla;
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(mozHunspell)
@@ -294,7 +294,7 @@ void mozHunspell::DictionariesChanged(bool aNotifyChildProcesses) {
   mozInlineSpellChecker::UpdateCanEnableInlineSpellChecking();
 
   if (aNotifyChildProcesses) {
-    ContentParent::NotifyUpdatedDictionaries();
+    mozilla::dom::ContentParent_NotifyUpdatedDictionaries();
   }
 
   // Check if the current dictionaries are still available.
