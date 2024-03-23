@@ -49,6 +49,9 @@
 #include "secerr.h"
 #include "sslerr.h"
 
+#define BUFFER_SIZE 65536
+#define NETWORK_STATS_THRESHOLD 65536
+
 using namespace mozilla::dom;
 
 NS_IMPL_CYCLE_COLLECTION(LegacyMozTCPSocket, mGlobal)
