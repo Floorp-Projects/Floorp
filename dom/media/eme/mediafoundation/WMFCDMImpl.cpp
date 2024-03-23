@@ -22,7 +22,36 @@ bool WMFCDMImpl::GetCapabilities(bool aIsHardwareDecryption,
     return false;
   }
 
-  // TODO : remove media::await to make this async
+  static std::unordered_map<std::string, nsTArray<KeySystemConfig>>
+      sKeySystemConfigs{};
+  static bool sSetRunOnShutdown = false;
+  if (!sSetRunOnShutdown) {
+    GetMainThreadSerialEventTarget()->Dispatch(
+        NS_NewRunnableFunction("WMFCDMImpl::GetCapabilities", [&] {
+          RunOnShutdown([&] { sKeySystemConfigs.clear(); },
+                        ShutdownPhase::XPCOMShutdown);
+        }));
+    sSetRunOnShutdown = true;
+  }
+
+  // Retrieve result from our cached key system
+  auto keySystem = std::string{NS_ConvertUTF16toUTF8(mKeySystem).get()};
+  const bool isKeySystemSupportedHarewareDecryption =
+      DoesKeySystemSupportHardwareDecryption(mKeySystem);
+  if (auto rv = sKeySystemConfigs.find(keySystem);
+      rv != sKeySystemConfigs.end()) {
+    for (const auto& config : rv->second) {
+      if ((IsHardwareDecryptionSupported(config) ||
+           isKeySystemSupportedHarewareDecryption) == aIsHardwareDecryption) {
+        EME_LOG("Return cached capabilities for %s (%s)", keySystem.c_str(),
+                NS_ConvertUTF16toUTF8(config.GetDebugInfo()).get());
+        aOutConfigs.AppendElement(config);
+        return true;
+      }
+    }
+  }
+
+  // Not cached result, ask the remote process.
   nsCOMPtr<nsISerialEventTarget> backgroundTaskQueue;
   NS_CreateBackgroundTaskQueue(__func__, getter_AddRefs(backgroundTaskQueue));
   if (!mCDM) {
@@ -32,13 +61,10 @@ bool WMFCDMImpl::GetCapabilities(bool aIsHardwareDecryption,
   media::Await(
       do_AddRef(backgroundTaskQueue),
       mCDM->GetCapabilities(aIsHardwareDecryption),
-      [&ok, &aOutConfigs,
+      [&ok, &aOutConfigs, keySystem,
        aIsHardwareDecryption](const MFCDMCapabilitiesIPDL& capabilities) {
-        EME_LOG("capabilities: keySystem=%s (hw-secure=%d)",
-                NS_ConvertUTF16toUTF8(capabilities.keySystem()).get(),
+        EME_LOG("capabilities: keySystem=%s (hw-secure=%d)", keySystem.c_str(),
                 aIsHardwareDecryption);
-        MOZ_ASSERT(aIsHardwareDecryption ==
-                   capabilities.isHardwareDecryption());
         for (const auto& v : capabilities.videoCapabilities()) {
           EME_LOG("capabilities: video=%s",
                   NS_ConvertUTF16toUTF8(v.contentType()).get());
@@ -52,11 +78,13 @@ bool WMFCDMImpl::GetCapabilities(bool aIsHardwareDecryption,
         }
         KeySystemConfig* config = aOutConfigs.AppendElement();
         MFCDMCapabilitiesIPDLToKeySystemConfig(capabilities, *config);
+        sKeySystemConfigs[keySystem].AppendElement(*config);
         ok = true;
       },
       [](nsresult rv) {
         EME_LOG("Fail to get key system capabilities. rv=%x", uint32_t(rv));
       });
+
   return ok;
 }
 
