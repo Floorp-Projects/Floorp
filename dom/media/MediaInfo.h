@@ -109,14 +109,10 @@ struct FlacCodecSpecificData {
   RefPtr<MediaByteBuffer> mStreamInfoBinaryBlob{new MediaByteBuffer};
 };
 
-struct Mp3CodecSpecificData final {
+struct Mp3CodecSpecificData {
   bool operator==(const Mp3CodecSpecificData& rhs) const {
     return mEncoderDelayFrames == rhs.mEncoderDelayFrames &&
            mEncoderPaddingFrames == rhs.mEncoderPaddingFrames;
-  }
-
-  auto MutTiedFields() {
-    return std::tie(mEncoderDelayFrames, mEncoderPaddingFrames);
   }
 
   // The number of frames that should be skipped from the beginning of the
