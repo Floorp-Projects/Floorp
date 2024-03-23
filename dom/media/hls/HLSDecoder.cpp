@@ -18,9 +18,11 @@
 #include "mozilla/java/GeckoHLSResourceWrapperNatives.h"
 #include "nsContentUtils.h"
 #include "nsIChannel.h"
+#include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
 #include "mozilla/dom/HTMLMediaElement.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/StaticPrefs_media.h"
 
@@ -169,7 +171,8 @@ nsresult HLSDecoder::Load(nsIChannel* aChannel) {
   mChannel = aChannel;
   nsCString spec;
   Unused << mURI->GetSpec(spec);
-  ;
+  mUsageRecorded = false;
+
   HLSResourceCallbacksSupport::Init();
   mJavaCallbacks = java::GeckoHLSResourceWrapper::Callbacks::New();
   mCallbackSupport = new HLSResourceCallbacksSupport(this);
@@ -253,13 +256,36 @@ void HLSDecoder::NotifyDataArrived() {
 void HLSDecoder::NotifyLoad(nsCString aMediaUrl) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
-  UpdateCurrentPrincipal(aMediaUrl);
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aMediaUrl.Data());
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  RecordMediaUsage(uri);
+  UpdateCurrentPrincipal(uri);
+}
+
+void HLSDecoder::RecordMediaUsage(nsIURI* aMediaUri) {
+  if (mUsageRecorded) {
+    return;
+  }
+
+  nsresult rv;
+  nsCOMPtr<nsIURL> url = do_QueryInterface(aMediaUri, &rv);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  // TODO: get hostname. See bug 1887053.
+  nsAutoCString mediaExt;
+  Unused << url->GetFileExtension(mediaExt);
+  glean::hls::MediaLoadExtra extra = {.mediaExtension = Some(mediaExt.get())};
+  glean::hls::media_load.Record(Some(extra));
+  mUsageRecorded = true;
 }
 
 // Should be called when the decoder loads media from a URL to ensure the
 // principal of the media element is appropriately set for CORS.
-void HLSDecoder::UpdateCurrentPrincipal(nsCString aMediaUrl) {
-  nsCOMPtr<nsIPrincipal> principal = GetContentPrincipal(aMediaUrl);
+void HLSDecoder::UpdateCurrentPrincipal(nsIURI* aMediaUri) {
+  nsCOMPtr<nsIPrincipal> principal = GetContentPrincipal(aMediaUri);
   MOZ_DIAGNOSTIC_ASSERT(principal);
 
   // Check the subsumption of old and new principals. Should be either
@@ -280,12 +306,8 @@ void HLSDecoder::UpdateCurrentPrincipal(nsCString aMediaUrl) {
 }
 
 already_AddRefed<nsIPrincipal> HLSDecoder::GetContentPrincipal(
-    nsCString aMediaUrl) {
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), aMediaUrl.Data());
-  NS_ENSURE_SUCCESS(rv, nullptr);
+    nsIURI* aMediaUri) {
   RefPtr<dom::HTMLMediaElement> element = GetOwner()->GetMediaElement();
-  NS_ENSURE_SUCCESS(rv, nullptr);
   nsSecurityFlags securityFlags =
       element->ShouldCheckAllowOrigin()
           ? nsILoadInfo::SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT
@@ -294,9 +316,9 @@ already_AddRefed<nsIPrincipal> HLSDecoder::GetContentPrincipal(
     securityFlags |= nsILoadInfo::SEC_COOKIES_INCLUDE;
   }
   nsCOMPtr<nsIChannel> channel;
-  rv = NS_NewChannel(getter_AddRefs(channel), uri,
-                     static_cast<dom::Element*>(element), securityFlags,
-                     nsIContentPolicy::TYPE_INTERNAL_VIDEO);
+  nsresult rv = NS_NewChannel(
+      getter_AddRefs(channel), aMediaUri, static_cast<dom::Element*>(element),
+      securityFlags, nsIContentPolicy::TYPE_INTERNAL_VIDEO);
   NS_ENSURE_SUCCESS(rv, nullptr);
   nsCOMPtr<nsIPrincipal> principal;
   nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
