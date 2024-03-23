@@ -6,6 +6,7 @@
 
 #include "DecoderTraits.h"
 #include "MediaContainerType.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/Preferences.h"
 
 #include "OggDecoder.h"
@@ -127,11 +128,11 @@ static CanPlayStatus CanHandleCodecsType(
 static CanPlayStatus CanHandleMediaType(
     const MediaContainerType& aType, DecoderDoctorDiagnostics* aDiagnostics) {
   if (DecoderTraits::IsHttpLiveStreamingType(aType)) {
-    Telemetry::Accumulate(Telemetry::MEDIA_HLS_CANPLAY_REQUESTED, true);
+    glean::hls::canplay_requested.Add();
   }
 #ifdef MOZ_ANDROID_HLS_SUPPORT
   if (HLSDecoder::IsSupportedType(aType)) {
-    Telemetry::Accumulate(Telemetry::MEDIA_HLS_CANPLAY_SUPPORTED, true);
+    glean::hls::canplay_supported.Add();
     return CANPLAY_MAYBE;
   }
 #endif
