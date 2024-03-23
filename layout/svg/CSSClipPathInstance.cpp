@@ -187,8 +187,8 @@ already_AddRefed<Path> CSSClipPathInstance::CreateClipPathPath(
   const Point offset =
       LayoutDevicePoint::FromAppUnits(aRefBox.TopLeft(), appUnitsPerDevPixel)
           .ToUnknownPoint();
-  const float scale = float(AppUnitsPerCSSPixel()) / float(appUnitsPerDevPixel);
-
+  const float scale = mTargetFrame->Style()->EffectiveZoom().Zoom(
+      float(AppUnitsPerCSSPixel()) / float(appUnitsPerDevPixel));
   return SVGPathData::BuildPath(path.path._0.AsSpan(), builder,
                                 StyleStrokeLinecap::Butt, 0.0, {}, offset,
                                 scale);
@@ -207,8 +207,8 @@ already_AddRefed<Path> CSSClipPathInstance::CreateClipPathShape(
   const Point offset =
       LayoutDevicePoint::FromAppUnits(aRefBox.TopLeft(), appUnitsPerDevPixel)
           .ToUnknownPoint();
-  const float scale = float(AppUnitsPerCSSPixel()) / float(appUnitsPerDevPixel);
-
+  const float scale = mTargetFrame->Style()->EffectiveZoom().Zoom(
+      float(AppUnitsPerCSSPixel()) / float(appUnitsPerDevPixel));
   return SVGPathData::BuildPath(shape.commands.AsSpan(), builder,
                                 StyleStrokeLinecap::Butt, 0.0, basis, offset,
                                 scale);
