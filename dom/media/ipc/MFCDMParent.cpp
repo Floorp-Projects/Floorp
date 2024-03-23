@@ -168,6 +168,11 @@ static nsString GetHdcpPolicy(const dom::HDCPVersion& aMinHdcpVersion) {
   return nsString(u"hdcp=1");
 }
 
+static bool RequireClearLead(const nsString& aKeySystem) {
+  return aKeySystem.EqualsLiteral(kWidevineExperiment2KeySystemName) ||
+         aKeySystem.EqualsLiteral(kPlayReadyHardwareClearLeadKeySystemName);
+}
+
 static void BuildCapabilitiesArray(
     const nsTArray<MFCDMMediaCapability>& aCapabilities,
     AutoPropVar& capabilitiesPropOut) {
@@ -735,6 +740,9 @@ MFCDMParent::GetAllKeySystemsCapabilities() {
             flags += CapabilitesFlag::HarewareDecryption;
           }
           flags += CapabilitesFlag::NeedHDCPCheck;
+          if (RequireClearLead(keySystem.first)) {
+            flags += CapabilitesFlag::NeedClearLeadCheck;
+          }
           GetCapabilities(keySystem.first, flags, nullptr, *c);
         }
       }
@@ -883,17 +891,9 @@ void MFCDMParent::GetCapabilities(const nsString& aKeySystem,
     MFCDM_PARENT_SLOG("%s: +scheme:cbcs", __func__);
   }
 
-  static auto RequireClearLead = [](const nsString& aKeySystem) {
-    if (aKeySystem.EqualsLiteral(kWidevineExperiment2KeySystemName) ||
-        aKeySystem.EqualsLiteral(kPlayReadyHardwareClearLeadKeySystemName)) {
-      return true;
-    }
-    return false;
-  };
-
   // For key system requires clearlead, every codec needs to have clear support.
   // If not, then we will remove the codec from supported codec.
-  if (RequireClearLead(aKeySystem)) {
+  if (aFlags.contains(CapabilitesFlag::NeedClearLeadCheck)) {
     for (const auto& scheme : aCapabilitiesOut.encryptionSchemes()) {
       nsTArray<KeySystemConfig::EMECodecString> noClearLeadCodecs;
       for (const auto& codec : supportedVideoCodecs) {
@@ -969,6 +969,9 @@ mozilla::ipc::IPCResult MFCDMParent::RecvGetCapabilities(
   CapabilitesFlagSet flags;
   if (aIsHWSecure) {
     flags += CapabilitesFlag::HarewareDecryption;
+  }
+  if (RequireClearLead(mKeySystem)) {
+    flags += CapabilitesFlag::NeedClearLeadCheck;
   }
   GetCapabilities(mKeySystem, flags, mFactory.Get(), capabilities);
   aResolver(std::move(capabilities));
