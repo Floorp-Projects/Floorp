@@ -898,7 +898,7 @@ static JSObject* CreateInterfaceObject(
     JSContext* cx, JS::Handle<JSObject*> global,
     JS::Handle<JSObject*> constructorProto,
     const DOMIfaceJSClass* constructorClass, unsigned ctorNargs,
-    const LegacyFactoryFunction* legacyFactoryFunctions,
+    const Span<const LegacyFactoryFunction>& legacyFactoryFunctions,
     JS::Handle<JSObject*> proto, const NativeProperties* properties,
     const NativeProperties* chromeOnlyProperties, JS::Handle<JSString*> name,
     bool isChrome, bool defineOnGlobal, const char* const* legacyWindowAliases,
@@ -987,32 +987,28 @@ static JSObject* CreateInterfaceObject(
     }
   }
 
-  if (legacyFactoryFunctions) {
-    int legacyFactoryFunctionSlot =
-        INTERFACE_OBJECT_FIRST_LEGACY_FACTORY_FUNCTION;
-    while (legacyFactoryFunctions->mName) {
-      JSString* fname = JS_AtomizeString(cx, legacyFactoryFunctions->mName);
-      if (!fname) {
-        return nullptr;
-      }
-
-      nameId = JS::PropertyKey::NonIntAtom(fname);
-
-      JS::Rooted<JSObject*> legacyFactoryFunction(
-          cx, CreateLegacyFactoryFunction(cx, nameId,
-                                          &legacyFactoryFunctions->mHolder,
-                                          legacyFactoryFunctions->mNargs));
-      if (!legacyFactoryFunction ||
-          !JS_DefineProperty(cx, legacyFactoryFunction, "prototype", proto,
-                             JSPROP_PERMANENT | JSPROP_READONLY) ||
-          (defineOnGlobal &&
-           !DefineConstructor(cx, global, nameId, legacyFactoryFunction))) {
-        return nullptr;
-      }
-      JS::SetReservedSlot(constructor, legacyFactoryFunctionSlot++,
-                          JS::ObjectValue(*legacyFactoryFunction));
-      ++legacyFactoryFunctions;
+  int legacyFactoryFunctionSlot =
+      INTERFACE_OBJECT_FIRST_LEGACY_FACTORY_FUNCTION;
+  for (const LegacyFactoryFunction& lff : legacyFactoryFunctions) {
+    JSString* fname = JS_AtomizeString(cx, lff.mName);
+    if (!fname) {
+      return nullptr;
     }
+
+    nameId = JS::PropertyKey::NonIntAtom(fname);
+
+    JS::Rooted<JSObject*> legacyFactoryFunction(
+        cx, CreateLegacyFactoryFunction(cx, nameId, &lff.mHolder, lff.mNargs));
+    if (!legacyFactoryFunction ||
+        !JS_DefineProperty(cx, legacyFactoryFunction, "prototype", proto,
+                           JSPROP_PERMANENT | JSPROP_READONLY) ||
+        (defineOnGlobal &&
+         !DefineConstructor(cx, global, nameId, legacyFactoryFunction))) {
+      return nullptr;
+    }
+    JS::SetReservedSlot(constructor, legacyFactoryFunctionSlot,
+                        JS::ObjectValue(*legacyFactoryFunction));
+    ++legacyFactoryFunctionSlot;
   }
 
   return constructor;
@@ -1105,13 +1101,15 @@ bool DefineProperties(JSContext* cx, JS::Handle<JSObject*> obj,
   return true;
 }
 
+namespace binding_detail {
+
 void CreateInterfaceObjects(
     JSContext* cx, JS::Handle<JSObject*> global,
     JS::Handle<JSObject*> protoProto, const DOMIfaceAndProtoJSClass* protoClass,
     JS::Heap<JSObject*>* protoCache, JS::Handle<JSObject*> constructorProto,
     const DOMIfaceJSClass* constructorClass, unsigned ctorNargs,
     bool isConstructorChromeOnly,
-    const LegacyFactoryFunction* legacyFactoryFunctions,
+    const Span<const LegacyFactoryFunction>& legacyFactoryFunctions,
     JS::Heap<JSObject*>* constructorCache, const NativeProperties* properties,
     const NativeProperties* chromeOnlyProperties, const char* name,
     bool defineOnGlobal, const char* const* unscopableNames, bool isGlobal,
@@ -1181,6 +1179,8 @@ void CreateInterfaceObjects(
     *constructorCache = interface;
   }
 }
+
+}  // namespace binding_detail
 
 // Only set aAllowNativeWrapper to false if you really know you need it; if in
 // doubt use true. Setting it to false disables security wrappers.
