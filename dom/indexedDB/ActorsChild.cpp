@@ -1445,7 +1445,7 @@ bool BackgroundTransactionChild::DeallocPBackgroundIDBRequestChild(
 
 PBackgroundIDBCursorChild*
 BackgroundTransactionChild::AllocPBackgroundIDBCursorChild(
-    const OpenCursorParams& aParams) {
+    const int64_t& aRequestId, const OpenCursorParams& aParams) {
   AssertIsOnOwningThread();
 
   MOZ_CRASH("PBackgroundIDBCursorChild actors should be manually constructed!");
@@ -1563,7 +1563,7 @@ bool BackgroundVersionChangeTransactionChild::DeallocPBackgroundIDBRequestChild(
 
 PBackgroundIDBCursorChild*
 BackgroundVersionChangeTransactionChild::AllocPBackgroundIDBCursorChild(
-    const OpenCursorParams& aParams) {
+    const int64_t& aRequestId, const OpenCursorParams& aParams) {
   AssertIsOnOwningThread();
 
   MOZ_CRASH("PBackgroundIDBCursorChild actors should be manually constructed!");

@@ -352,7 +352,7 @@ class BackgroundTransactionChild final : public BackgroundTransactionBase,
   bool DeallocPBackgroundIDBRequestChild(PBackgroundIDBRequestChild* aActor);
 
   PBackgroundIDBCursorChild* AllocPBackgroundIDBCursorChild(
-      const OpenCursorParams& aParams);
+      const int64_t& aRequestId, const OpenCursorParams& aParams);
 
   bool DeallocPBackgroundIDBCursorChild(PBackgroundIDBCursorChild* aActor);
 };
@@ -398,7 +398,7 @@ class BackgroundVersionChangeTransactionChild final
   bool DeallocPBackgroundIDBRequestChild(PBackgroundIDBRequestChild* aActor);
 
   PBackgroundIDBCursorChild* AllocPBackgroundIDBCursorChild(
-      const OpenCursorParams& aParams);
+      const int64_t& aRequestId, const OpenCursorParams& aParams);
 
   bool DeallocPBackgroundIDBCursorChild(PBackgroundIDBCursorChild* aActor);
 };

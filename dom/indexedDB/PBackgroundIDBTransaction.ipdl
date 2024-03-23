@@ -34,7 +34,7 @@ parent:
   async Commit(int64_t? lastRequest);
   async Abort(nsresult resultCode);
 
-  async PBackgroundIDBCursor(OpenCursorParams params);
+  async PBackgroundIDBCursor(int64_t requestId, OpenCursorParams params);
 
   async PBackgroundIDBRequest(int64_t requestId, RequestParams params);
 

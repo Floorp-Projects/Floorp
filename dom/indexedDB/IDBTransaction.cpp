@@ -304,8 +304,9 @@ void IDBTransaction::OpenCursor(PBackgroundIDBCursorChild& aBackgroundActor,
   AssertIsOnOwningThread();
   MOZ_ASSERT(aParams.type() != OpenCursorParams::T__None);
 
-  DoWithTransactionChild([&aBackgroundActor, &aParams](auto& actor) {
-    actor.SendPBackgroundIDBCursorConstructor(&aBackgroundActor, aParams);
+  DoWithTransactionChild([this, &aBackgroundActor, &aParams](auto& actor) {
+    actor.SendPBackgroundIDBCursorConstructor(&aBackgroundActor,
+                                              NextRequestId(), aParams);
   });
 
   // Balanced in BackgroundCursorChild::RecvResponse().
