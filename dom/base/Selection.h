@@ -64,9 +64,6 @@ namespace dom {
 class Selection final : public nsSupportsWeakReference,
                         public nsWrapperCache,
                         public SupportsWeakPtr {
-  using AllowRangeCrossShadowBoundary =
-      mozilla::dom::AllowRangeCrossShadowBoundary;
-
  protected:
   virtual ~Selection();
 
@@ -208,10 +205,6 @@ class Selection final : public nsSupportsWeakReference,
       nsRange* aRange, Maybe<size_t>* aOutIndex,
       DispatchSelectstartEvent aDispatchSelectstartEvent);
 
-  already_AddRefed<StaticRange> GetComposedRange(
-      const AbstractRange* aRange,
-      const Sequence<OwningNonNull<ShadowRoot>>& aShadowRoots) const;
-
  public:
   nsresult RemoveCollapsedRanges();
   void Clear(nsPresContext* aPresContext);
@@ -252,8 +245,6 @@ class Selection final : public nsSupportsWeakReference,
   // Get the anchor-to-focus range if we don't care which end is
   // anchor and which end is focus.
   const nsRange* GetAnchorFocusRange() const { return mAnchorFocusRange; }
-
-  void GetDirection(nsAString& aDirection) const;
 
   nsDirection GetDirection() const { return mDirection; }
 
@@ -330,30 +321,6 @@ class Selection final : public nsSupportsWeakReference,
     return offset ? *offset : 0;
   }
 
-  nsINode* GetMayCrossShadowBoundaryAnchorNode() const {
-    const RangeBoundary& anchor = AnchorRef(AllowRangeCrossShadowBoundary::Yes);
-    return anchor.IsSet() ? anchor.Container() : nullptr;
-  }
-
-  uint32_t MayCrossShadowBoundaryAnchorOffset() const {
-    const RangeBoundary& anchor = AnchorRef(AllowRangeCrossShadowBoundary::Yes);
-    const Maybe<uint32_t> offset =
-        anchor.Offset(RangeBoundary::OffsetFilter::kValidOffsets);
-    return offset ? *offset : 0;
-  }
-
-  nsINode* GetMayCrossShadowBoundaryFocusNode() const {
-    const RangeBoundary& focus = FocusRef(AllowRangeCrossShadowBoundary::Yes);
-    return focus.IsSet() ? focus.Container() : nullptr;
-  }
-
-  uint32_t MayCrossShadowBoundaryFocusOffset() const {
-    const RangeBoundary& focus = FocusRef(AllowRangeCrossShadowBoundary::Yes);
-    const Maybe<uint32_t> offset =
-        focus.Offset(RangeBoundary::OffsetFilter::kValidOffsets);
-    return offset ? *offset : 0;
-  }
-
   nsIContent* GetChildAtAnchorOffset() {
     const RangeBoundary& anchor = AnchorRef();
     return anchor.IsSet() ? anchor.GetChildAtOffset() : nullptr;
@@ -363,12 +330,8 @@ class Selection final : public nsSupportsWeakReference,
     return focus.IsSet() ? focus.GetChildAtOffset() : nullptr;
   }
 
-  const RangeBoundary& AnchorRef(
-      AllowRangeCrossShadowBoundary aAllowCrossShadowBoundary =
-          AllowRangeCrossShadowBoundary::No) const;
-  const RangeBoundary& FocusRef(
-      AllowRangeCrossShadowBoundary aAllowCrossShadowBoundary =
-          AllowRangeCrossShadowBoundary::No) const;
+  const RangeBoundary& AnchorRef() const;
+  const RangeBoundary& FocusRef() const;
 
   /*
    * IsCollapsed -- is the whole selection just one point, or unset?
@@ -421,10 +384,6 @@ class Selection final : public nsSupportsWeakReference,
       AbstractRange& aRange, mozilla::ErrorResult& aRv);
 
   MOZ_CAN_RUN_SCRIPT void RemoveAllRanges(mozilla::ErrorResult& aRv);
-
-  void GetComposedRanges(
-      const Sequence<OwningNonNull<ShadowRoot>>& aShadowRoots,
-      nsTArray<RefPtr<StaticRange>>& aComposedRanges);
 
   /**
    * Whether Stringify should flush layout or not.
@@ -850,12 +809,6 @@ class Selection final : public nsSupportsWeakReference,
   nsresult SelectFramesOfInclusiveDescendantsOfContent(
       PostContentIterator& aPostOrderIter, nsIContent* aContent,
       bool aSelected) const;
-
-  /**
-   * https://dom.spec.whatwg.org/#concept-shadow-including-descendant
-   */
-  void SelectFramesOfShadowIncludingDescendantsOfContent(nsIContent* aContent,
-                                                         bool aSelected) const;
 
   nsresult SelectFrames(nsPresContext* aPresContext, AbstractRange& aRange,
                         bool aSelect) const;

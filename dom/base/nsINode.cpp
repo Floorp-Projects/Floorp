@@ -287,17 +287,11 @@ static const nsINode* GetClosestCommonInclusiveAncestorForRangeInSelection(
     const nsINode* aNode) {
   while (aNode &&
          !aNode->IsClosestCommonInclusiveAncestorForRangeInSelection()) {
-    const bool isNodeInShadowTree =
-        StaticPrefs::dom_shadowdom_selection_across_boundary_enabled() &&
-        aNode->IsInShadowTree();
     if (!aNode
-             ->IsDescendantOfClosestCommonInclusiveAncestorForRangeInSelection() &&
-        !isNodeInShadowTree) {
+             ->IsDescendantOfClosestCommonInclusiveAncestorForRangeInSelection()) {
       return nullptr;
     }
-    aNode = StaticPrefs::dom_shadowdom_selection_across_boundary_enabled()
-                ? aNode->GetParentOrShadowHostNode()
-                : aNode->GetParentNode();
+    aNode = aNode->GetParentNode();
   }
   return aNode;
 }
@@ -321,12 +315,12 @@ class IsItemInRangeComparator {
 
   int operator()(const AbstractRange* const aRange) const {
     int32_t cmp = nsContentUtils::ComparePoints_Deprecated(
-        &mNode, mEndOffset, aRange->GetMayCrossShadowBoundaryStartContainer(),
-        aRange->MayCrossShadowBoundaryStartOffset(), nullptr, mCache);
+        &mNode, mEndOffset, aRange->GetStartContainer(), aRange->StartOffset(),
+        nullptr, mCache);
     if (cmp == 1) {
       cmp = nsContentUtils::ComparePoints_Deprecated(
-          &mNode, mStartOffset, aRange->GetMayCrossShadowBoundaryEndContainer(),
-          aRange->MayCrossShadowBoundaryEndOffset(), nullptr, mCache);
+          &mNode, mStartOffset, aRange->GetEndContainer(), aRange->EndOffset(),
+          nullptr, mCache);
       if (cmp == -1) {
         return 0;
       }
@@ -390,18 +384,6 @@ bool nsINode::IsSelected(const uint32_t aStartOffset,
       if (result == 0) {
         if (!range->Collapsed()) {
           return true;
-        }
-
-        if (range->MayCrossShadowBoundary()) {
-          MOZ_ASSERT(range->IsDynamicRange(),
-                     "range->MayCrossShadowBoundary() can only return true for "
-                     "dynamic range");
-          StaticRange* crossBoundaryRange =
-              range->AsDynamicRange()->GetCrossShadowBoundaryRange();
-          MOZ_ASSERT(crossBoundaryRange);
-          if (!crossBoundaryRange->Collapsed()) {
-            return true;
-          }
         }
 
         const AbstractRange* middlePlus1;
@@ -570,8 +552,7 @@ static nsIContent* GetRootForContentSubtree(nsIContent* aContent) {
   return nsIContent::FromNode(aContent->SubtreeRoot());
 }
 
-nsIContent* nsINode::GetSelectionRootContent(PresShell* aPresShell,
-                                             bool aAllowCrossShadowBoundary) {
+nsIContent* nsINode::GetSelectionRootContent(PresShell* aPresShell) {
   NS_ENSURE_TRUE(aPresShell, nullptr);
 
   if (IsDocument()) return AsDocument()->GetRootElement();
@@ -615,7 +596,7 @@ nsIContent* nsINode::GetSelectionRootContent(PresShell* aPresShell,
   }
 
   RefPtr<nsFrameSelection> fs = aPresShell->FrameSelection();
-  nsCOMPtr<nsIContent> content = fs->GetLimiter();
+  nsIContent* content = fs->GetLimiter();
   if (!content) {
     content = fs->GetAncestorLimiter();
     if (!content) {
@@ -635,10 +616,6 @@ nsIContent* nsINode::GetSelectionRootContent(PresShell* aPresShell,
     // Use the host as the root.
     if (ShadowRoot* shadowRoot = ShadowRoot::FromNode(content)) {
       content = shadowRoot->GetHost();
-      if (content && aAllowCrossShadowBoundary) {
-        content = content->GetSelectionRootContent(aPresShell,
-                                                   aAllowCrossShadowBoundary);
-      }
     }
   }
 
@@ -3847,33 +3824,6 @@ void nsINode::FireNodeRemovedForChildren() {
        child = child->GetNextSibling()) {
     nsContentUtils::MaybeFireNodeRemoved(child, this);
   }
-}
-
-ShadowRoot* nsINode::GetShadowRoot() const {
-  return IsContent() ? AsContent()->GetShadowRoot() : nullptr;
-}
-
-ShadowRoot* nsINode::GetShadowRootForSelection() const {
-  if (!StaticPrefs::dom_shadowdom_selection_across_boundary_enabled()) {
-    return nullptr;
-  }
-
-  ShadowRoot* shadowRoot = GetShadowRoot();
-  if (!shadowRoot) {
-    return nullptr;
-  }
-
-  // ie. <details> and <video>
-  if (shadowRoot->IsUAWidget()) {
-    return nullptr;
-  }
-
-  // ie. <use> element
-  if (IsElement() && !AsElement()->CanAttachShadowDOM()) {
-    return nullptr;
-  }
-
-  return shadowRoot;
 }
 
 NS_IMPL_ISUPPORTS(nsNodeWeakReference, nsIWeakReference)

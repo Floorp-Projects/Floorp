@@ -1170,8 +1170,6 @@ skip-if = [
 
 ["test_content_iterator_subtree.html"]
 
-["test_content_iterator_subtree_shadow_tree.html"]
-
 ["test_copyimage.html"]
 skip-if = [
   "os == 'android'",

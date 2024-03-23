@@ -109,22 +109,6 @@ ScriptableContentIterator::InitWithRange(IteratorType aType, nsRange* aRange) {
 }
 
 NS_IMETHODIMP
-ScriptableContentIterator::InitWithRangeAllowCrossShadowBoundary(
-    IteratorType aType, nsRange* aRange) {
-  if (aType == NOT_INITIALIZED ||
-      (mIteratorType != NOT_INITIALIZED && aType != mIteratorType) ||
-      aType != SUBTREE_ITERATOR) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  mIteratorType = aType;
-  MOZ_ASSERT(mIteratorType == SUBTREE_ITERATOR);
-  EnsureContentIterator();
-  return static_cast<ContentSubtreeIterator*>(mContentIterator.get())
-      ->InitWithAllowCrossShadowBoundary(aRange);
-}
-
-NS_IMETHODIMP
 ScriptableContentIterator::InitWithPositions(IteratorType aType,
                                              nsINode* aStartContainer,
                                              uint32_t aStartOffset,
