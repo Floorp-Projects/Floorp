@@ -87,8 +87,8 @@ protocol PBackgroundIDBCursor
 parent:
   async DeleteMe();
 
-  async Continue(CursorRequestParams params, Key currentKey,
-                 Key currentObjectStoreKey);
+  async Continue(int64_t requestId, CursorRequestParams params,
+                 Key currentKey, Key currentObjectStoreKey);
 
 child:
   async __delete__();
