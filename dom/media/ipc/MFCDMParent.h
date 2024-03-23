@@ -97,13 +97,6 @@ class MFCDMParent final : public PMFCDMParent {
  private:
   ~MFCDMParent();
 
-  enum class CapabilitesFlag {
-    HarewareDecryption,
-    NeedHDCPCheck,
-    NeedClearLeadCheck,
-  };
-  using CapabilitesFlagSet = EnumSet<CapabilitesFlag, uint8_t>;
-
   static LPCWSTR GetCDMLibraryName(const nsString& aKeySystem);
 
   static HRESULT GetOrCreateFactory(
@@ -115,7 +108,7 @@ class MFCDMParent final : public PMFCDMParent {
       Microsoft::WRL::ComPtr<IMFContentDecryptionModuleFactory>& aFactoryOut);
 
   static void GetCapabilities(const nsString& aKeySystem,
-                              const CapabilitesFlagSet& aFlags,
+                              const bool aIsHWSecure,
                               IMFContentDecryptionModuleFactory* aFactory,
                               MFCDMCapabilitiesIPDL& aCapabilitiesOut);
 
