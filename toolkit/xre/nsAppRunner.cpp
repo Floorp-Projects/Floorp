@@ -307,7 +307,6 @@ constexpr nsLiteralCString kStartupTokenNames[] = {
 
 int gArgc;
 char** gArgv;
-nsCOMPtr<nsIFile> gMinidumpsDir;
 
 static const char gToolkitVersion[] = MOZ_STRINGIFY(GRE_MILESTONE);
 // The gToolkitBuildID global is defined to MOZ_BUILDID via gen_buildid.py
@@ -1779,9 +1778,6 @@ NS_IMETHODIMP
 nsXULAppInfo::SetMinidumpPath(nsIFile* aMinidumpPath) {
   nsAutoString path;
   nsresult rv = aMinidumpPath->GetPath(path);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = aMinidumpPath->Clone(getter_AddRefs(gMinidumpsDir));
   NS_ENSURE_SUCCESS(rv, rv);
   return CrashReporter::SetMinidumpPath(path);
 }
@@ -3579,15 +3575,22 @@ static bool RemoveComponentRegistries(nsIFile* aProfileDir,
 // we set it to $PROFILE/minidumps, creating the directory
 // if needed.
 static void MakeOrSetMinidumpPath(nsIFile* profD) {
-  profD->Clone(getter_AddRefs(gMinidumpsDir));
+  nsCOMPtr<nsIFile> dumpD;
+  profD->Clone(getter_AddRefs(dumpD));
 
-  if (gMinidumpsDir) {
-    gMinidumpsDir->Append(u"minidumps"_ns);
-  }
+  if (dumpD) {
+    bool fileExists;
+    // XXX: do some more error checking here
+    dumpD->Append(u"minidumps"_ns);
+    dumpD->Exists(&fileExists);
+    if (!fileExists) {
+      nsresult rv = dumpD->Create(nsIFile::DIRECTORY_TYPE, 0700);
+      NS_ENSURE_SUCCESS_VOID(rv);
+    }
 
-  nsAutoString pathStr;
-  if (NS_SUCCEEDED(profD->GetPath(pathStr))) {
-    CrashReporter::SetMinidumpPath(pathStr);
+    nsAutoString pathStr;
+    if (NS_SUCCEEDED(dumpD->GetPath(pathStr)))
+      CrashReporter::SetMinidumpPath(pathStr);
   }
 }
 
@@ -5970,7 +5973,6 @@ int XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) {
 #endif
 
   gAbsoluteArgv0Path.Truncate();
-  gMinidumpsDir = nullptr;
 
 #if defined(MOZ_HAS_REMOTE)
   // Shut down the remote service. We must do this before calling LaunchChild

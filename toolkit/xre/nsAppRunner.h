@@ -51,7 +51,6 @@ extern char** gRestartArgv;
 extern bool gRestartedByOS;
 extern bool gLogConsoleErrors;
 extern nsString gAbsoluteArgv0Path;
-extern nsCOMPtr<nsIFile> gMinidumpsDir;
 
 extern bool gIsGtest;
 
