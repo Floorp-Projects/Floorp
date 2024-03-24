@@ -1265,7 +1265,11 @@ export class FfiConverterTypeOptionneur extends FfiConverter {
     }
 
     static lower(value) {
-        return value[uniffiObjectPtr];
+        const ptr = value[uniffiObjectPtr];
+        if (!(ptr instanceof UniFFIPointer)) {
+            throw new UniFFITypeError("Object is not a 'Optionneur' instance");
+        }
+        return ptr;
     }
 
     static read(dataStream) {
@@ -1700,7 +1704,11 @@ export class FfiConverterTypeRetourneur extends FfiConverter {
     }
 
     static lower(value) {
-        return value[uniffiObjectPtr];
+        const ptr = value[uniffiObjectPtr];
+        if (!(ptr instanceof UniFFIPointer)) {
+            throw new UniFFITypeError("Object is not a 'Retourneur' instance");
+        }
+        return ptr;
     }
 
     static read(dataStream) {
@@ -2060,7 +2068,11 @@ export class FfiConverterTypeStringifier extends FfiConverter {
     }
 
     static lower(value) {
-        return value[uniffiObjectPtr];
+        const ptr = value[uniffiObjectPtr];
+        if (!(ptr instanceof UniFFIPointer)) {
+            throw new UniFFITypeError("Object is not a 'Stringifier' instance");
+        }
+        return ptr;
     }
 
     static read(dataStream) {
@@ -2838,7 +2850,7 @@ export class FfiConverterTypeEnumeration extends FfiConverterArrayBuffer {
             case 3:
                 return Enumeration.TROIS
             default:
-                return new Error("Unknown Enumeration variant");
+                throw new UniFFITypeError("Unknown Enumeration variant");
         }
     }
 
@@ -2855,7 +2867,7 @@ export class FfiConverterTypeEnumeration extends FfiConverterArrayBuffer {
             dataStream.writeInt32(3);
             return;
         }
-        return new Error("Unknown Enumeration variant");
+        throw new UniFFITypeError("Unknown Enumeration variant");
     }
 
     static computeSize(value) {
@@ -2914,7 +2926,7 @@ export class FfiConverterTypeEnumerationAvecDonnees extends FfiConverterArrayBuf
                     FfiConverterString.read(dataStream)
                     );
             default:
-                return new Error("Unknown EnumerationAvecDonnees variant");
+                throw new UniFFITypeError("Unknown EnumerationAvecDonnees variant");
         }
     }
 
@@ -2934,7 +2946,7 @@ export class FfiConverterTypeEnumerationAvecDonnees extends FfiConverterArrayBuf
             FfiConverterString.write(dataStream, value.second);
             return;
         }
-        return new Error("Unknown EnumerationAvecDonnees variant");
+        throw new UniFFITypeError("Unknown EnumerationAvecDonnees variant");
     }
 
     static computeSize(value) {
@@ -2952,7 +2964,7 @@ export class FfiConverterTypeEnumerationAvecDonnees extends FfiConverterArrayBuf
             totalSize += FfiConverterString.computeSize(value.second);
             return totalSize;
         }
-        return new Error("Unknown EnumerationAvecDonnees variant");
+        throw new UniFFITypeError("Unknown EnumerationAvecDonnees variant");
     }
 
     static checkType(value) {
@@ -2976,7 +2988,7 @@ export class FfiConverterTypeminusculeMajusculeEnum extends FfiConverterArrayBuf
             case 1:
                 return MinusculeMajusculeEnum.MINUSCULE_MAJUSCULE_VARIANT
             default:
-                return new Error("Unknown MinusculeMajusculeEnum variant");
+                throw new UniFFITypeError("Unknown MinusculeMajusculeEnum variant");
         }
     }
 
@@ -2985,7 +2997,7 @@ export class FfiConverterTypeminusculeMajusculeEnum extends FfiConverterArrayBuf
             dataStream.writeInt32(1);
             return;
         }
-        return new Error("Unknown MinusculeMajusculeEnum variant");
+        throw new UniFFITypeError("Unknown MinusculeMajusculeEnum variant");
     }
 
     static computeSize(value) {

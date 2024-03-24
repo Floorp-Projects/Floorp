@@ -539,7 +539,11 @@ export class FfiConverterTypeTodoList extends FfiConverter {
     }
 
     static lower(value) {
-        return value[uniffiObjectPtr];
+        const ptr = value[uniffiObjectPtr];
+        if (!(ptr instanceof UniFFIPointer)) {
+            throw new UniFFITypeError("Object is not a 'TodoList' instance");
+        }
+        return ptr;
     }
 
     static read(dataStream) {
@@ -683,7 +687,7 @@ export class FfiConverterTypeTodoError extends FfiConverterArrayBuffer {
             case 5:
                 return new DeligatedError(FfiConverterString.read(dataStream));
             default:
-                throw new Error("Unknown TodoError variant");
+                throw new UniFFITypeError("Unknown TodoError variant");
         }
     }
     static computeSize(value) {
@@ -704,7 +708,7 @@ export class FfiConverterTypeTodoError extends FfiConverterArrayBuffer {
         if (value instanceof DeligatedError) {
             return totalSize;
         }
-        throw new Error("Unknown TodoError variant");
+        throw new UniFFITypeError("Unknown TodoError variant");
     }
     static write(dataStream, value) {
         if (value instanceof TodoDoesNotExist) {
@@ -727,7 +731,7 @@ export class FfiConverterTypeTodoError extends FfiConverterArrayBuffer {
             dataStream.writeInt32(5);
             return;
         }
-        throw new Error("Unknown TodoError variant");
+        throw new UniFFITypeError("Unknown TodoError variant");
     }
 
     static errorClass = TodoError;

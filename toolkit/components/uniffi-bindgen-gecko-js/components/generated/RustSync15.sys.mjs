@@ -282,7 +282,7 @@ export class FfiConverterTypeDeviceType extends FfiConverterArrayBuffer {
             case 6:
                 return DeviceType.UNKNOWN
             default:
-                return new Error("Unknown DeviceType variant");
+                throw new UniFFITypeError("Unknown DeviceType variant");
         }
     }
 
@@ -311,7 +311,7 @@ export class FfiConverterTypeDeviceType extends FfiConverterArrayBuffer {
             dataStream.writeInt32(6);
             return;
         }
-        return new Error("Unknown DeviceType variant");
+        throw new UniFFITypeError("Unknown DeviceType variant");
     }
 
     static computeSize(value) {

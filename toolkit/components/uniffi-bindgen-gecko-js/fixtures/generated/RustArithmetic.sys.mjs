@@ -329,7 +329,7 @@ export class FfiConverterTypeArithmeticError extends FfiConverterArrayBuffer {
             case 1:
                 return new IntegerOverflow(FfiConverterString.read(dataStream));
             default:
-                throw new Error("Unknown ArithmeticError variant");
+                throw new UniFFITypeError("Unknown ArithmeticError variant");
         }
     }
     static computeSize(value) {
@@ -338,14 +338,14 @@ export class FfiConverterTypeArithmeticError extends FfiConverterArrayBuffer {
         if (value instanceof IntegerOverflow) {
             return totalSize;
         }
-        throw new Error("Unknown ArithmeticError variant");
+        throw new UniFFITypeError("Unknown ArithmeticError variant");
     }
     static write(dataStream, value) {
         if (value instanceof IntegerOverflow) {
             dataStream.writeInt32(1);
             return;
         }
-        throw new Error("Unknown ArithmeticError variant");
+        throw new UniFFITypeError("Unknown ArithmeticError variant");
     }
 
     static errorClass = ArithmeticError;

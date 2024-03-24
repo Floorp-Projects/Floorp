@@ -67,7 +67,7 @@ void DeregisterCallbackHandler(uint64_t aInterfaceId, ErrorResult& aError);
  * good use case for this is logging.
  */
 MOZ_CAN_RUN_SCRIPT
-void QueueCallback(size_t aInterfaceId, uint64_t aHandle, uint32_t aMethod,
+void QueueCallback(uint64_t aInterfaceId, uint64_t aHandle, uint32_t aMethod,
                    const uint8_t* aArgsData, int32_t aArgsLen);
 
 }  // namespace mozilla::uniffi

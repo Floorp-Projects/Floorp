@@ -51,7 +51,11 @@ export class {{ ffi_converter }} extends FfiConverter {
     }
 
     static lower(value) {
-        return value[uniffiObjectPtr];
+        const ptr = value[uniffiObjectPtr];
+        if (!(ptr instanceof UniFFIPointer)) {
+            throw new UniFFITypeError("Object is not a '{{ object.nm() }}' instance");
+        }
+        return ptr;
     }
 
     static read(dataStream) {

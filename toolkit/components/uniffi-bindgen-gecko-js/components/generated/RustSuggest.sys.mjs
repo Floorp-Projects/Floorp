@@ -621,7 +621,11 @@ export class FfiConverterTypeSuggestStore extends FfiConverter {
     }
 
     static lower(value) {
-        return value[uniffiObjectPtr];
+        const ptr = value[uniffiObjectPtr];
+        if (!(ptr instanceof UniFFIPointer)) {
+            throw new UniFFITypeError("Object is not a 'SuggestStore' instance");
+        }
+        return ptr;
     }
 
     static read(dataStream) {
@@ -772,7 +776,11 @@ export class FfiConverterTypeSuggestStoreBuilder extends FfiConverter {
     }
 
     static lower(value) {
-        return value[uniffiObjectPtr];
+        const ptr = value[uniffiObjectPtr];
+        if (!(ptr instanceof UniFFIPointer)) {
+            throw new UniFFITypeError("Object is not a 'SuggestStoreBuilder' instance");
+        }
+        return ptr;
     }
 
     static read(dataStream) {
@@ -1087,7 +1095,7 @@ export class FfiConverterTypeSuggestApiError extends FfiConverterArrayBuffer {
                     FfiConverterString.read(dataStream)
                     );
             default:
-                throw new Error("Unknown SuggestApiError variant");
+                throw new UniFFITypeError("Unknown SuggestApiError variant");
         }
     }
     static computeSize(value) {
@@ -1108,7 +1116,7 @@ export class FfiConverterTypeSuggestApiError extends FfiConverterArrayBuffer {
             totalSize += FfiConverterString.computeSize(value.reason);
             return totalSize;
         }
-        throw new Error("Unknown SuggestApiError variant");
+        throw new UniFFITypeError("Unknown SuggestApiError variant");
     }
     static write(dataStream, value) {
         if (value instanceof Interrupted) {
@@ -1130,7 +1138,7 @@ export class FfiConverterTypeSuggestApiError extends FfiConverterArrayBuffer {
             FfiConverterString.write(dataStream, value.reason);
             return;
         }
-        throw new Error("Unknown SuggestApiError variant");
+        throw new UniFFITypeError("Unknown SuggestApiError variant");
     }
 
     static errorClass = SuggestApiError;
@@ -1156,7 +1164,7 @@ export class FfiConverterTypeSuggestProviderConfig extends FfiConverterArrayBuff
                     FfiConverterI32.read(dataStream)
                     );
             default:
-                return new Error("Unknown SuggestProviderConfig variant");
+                throw new UniFFITypeError("Unknown SuggestProviderConfig variant");
         }
     }
 
@@ -1166,7 +1174,7 @@ export class FfiConverterTypeSuggestProviderConfig extends FfiConverterArrayBuff
             FfiConverterI32.write(dataStream, value.minKeywordLength);
             return;
         }
-        return new Error("Unknown SuggestProviderConfig variant");
+        throw new UniFFITypeError("Unknown SuggestProviderConfig variant");
     }
 
     static computeSize(value) {
@@ -1176,7 +1184,7 @@ export class FfiConverterTypeSuggestProviderConfig extends FfiConverterArrayBuff
             totalSize += FfiConverterI32.computeSize(value.minKeywordLength);
             return totalSize;
         }
-        return new Error("Unknown SuggestProviderConfig variant");
+        throw new UniFFITypeError("Unknown SuggestProviderConfig variant");
     }
 
     static checkType(value) {
@@ -1387,7 +1395,7 @@ export class FfiConverterTypeSuggestion extends FfiConverterArrayBuffer {
                     FfiConverterF64.read(dataStream)
                     );
             default:
-                return new Error("Unknown Suggestion variant");
+                throw new UniFFITypeError("Unknown Suggestion variant");
         }
     }
 
@@ -1463,7 +1471,7 @@ export class FfiConverterTypeSuggestion extends FfiConverterArrayBuffer {
             FfiConverterF64.write(dataStream, value.score);
             return;
         }
-        return new Error("Unknown Suggestion variant");
+        throw new UniFFITypeError("Unknown Suggestion variant");
     }
 
     static computeSize(value) {
@@ -1533,7 +1541,7 @@ export class FfiConverterTypeSuggestion extends FfiConverterArrayBuffer {
             totalSize += FfiConverterF64.computeSize(value.score);
             return totalSize;
         }
-        return new Error("Unknown Suggestion variant");
+        throw new UniFFITypeError("Unknown Suggestion variant");
     }
 
     static checkType(value) {
@@ -1578,7 +1586,7 @@ export class FfiConverterTypeSuggestionProvider extends FfiConverterArrayBuffer 
             case 8:
                 return SuggestionProvider.AMP_MOBILE
             default:
-                return new Error("Unknown SuggestionProvider variant");
+                throw new UniFFITypeError("Unknown SuggestionProvider variant");
         }
     }
 
@@ -1615,7 +1623,7 @@ export class FfiConverterTypeSuggestionProvider extends FfiConverterArrayBuffer 
             dataStream.writeInt32(8);
             return;
         }
-        return new Error("Unknown SuggestionProvider variant");
+        throw new UniFFITypeError("Unknown SuggestionProvider variant");
     }
 
     static computeSize(value) {

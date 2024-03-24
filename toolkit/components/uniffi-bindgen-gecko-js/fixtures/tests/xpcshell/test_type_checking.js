@@ -42,6 +42,12 @@ add_task(async function testObjectPointers() {
     /Bad pointer type/,
     "getEntries() with wrong pointer type"
   );
+
+  await Assert.rejects(
+    TodoList.setDefaultList(1), // expecting an object
+    /Object is not a 'TodoList' instance/,
+    "attempting to lift the wrong object type"
+  );
 });
 
 add_task(async function testEnumTypeCheck() {

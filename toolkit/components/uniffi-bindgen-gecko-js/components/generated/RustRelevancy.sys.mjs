@@ -412,7 +412,11 @@ export class FfiConverterTypeRelevancyStore extends FfiConverter {
     }
 
     static lower(value) {
-        return value[uniffiObjectPtr];
+        const ptr = value[uniffiObjectPtr];
+        if (!(ptr instanceof UniFFIPointer)) {
+            throw new UniFFITypeError("Object is not a 'RelevancyStore' instance");
+        }
+        return ptr;
     }
 
     static read(dataStream) {
@@ -1043,7 +1047,7 @@ export class FfiConverterTypeInterest extends FfiConverterArrayBuffer {
             case 20:
                 return Interest.INCONCLUSIVE
             default:
-                return new Error("Unknown Interest variant");
+                throw new UniFFITypeError("Unknown Interest variant");
         }
     }
 
@@ -1128,7 +1132,7 @@ export class FfiConverterTypeInterest extends FfiConverterArrayBuffer {
             dataStream.writeInt32(20);
             return;
         }
-        return new Error("Unknown Interest variant");
+        throw new UniFFITypeError("Unknown Interest variant");
     }
 
     static computeSize(value) {
@@ -1172,7 +1176,7 @@ export class FfiConverterTypeRelevancyApiError extends FfiConverterArrayBuffer {
                     FfiConverterString.read(dataStream)
                     );
             default:
-                throw new Error("Unknown RelevancyApiError variant");
+                throw new UniFFITypeError("Unknown RelevancyApiError variant");
         }
     }
     static computeSize(value) {
@@ -1182,7 +1186,7 @@ export class FfiConverterTypeRelevancyApiError extends FfiConverterArrayBuffer {
             totalSize += FfiConverterString.computeSize(value.reason);
             return totalSize;
         }
-        throw new Error("Unknown RelevancyApiError variant");
+        throw new UniFFITypeError("Unknown RelevancyApiError variant");
     }
     static write(dataStream, value) {
         if (value instanceof Unexpected) {
@@ -1190,7 +1194,7 @@ export class FfiConverterTypeRelevancyApiError extends FfiConverterArrayBuffer {
             FfiConverterString.write(dataStream, value.reason);
             return;
         }
-        throw new Error("Unknown RelevancyApiError variant");
+        throw new UniFFITypeError("Unknown RelevancyApiError variant");
     }
 
     static errorClass = RelevancyApiError;

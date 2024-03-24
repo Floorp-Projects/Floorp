@@ -449,7 +449,11 @@ export class FfiConverterTypeSprite extends FfiConverter {
     }
 
     static lower(value) {
-        return value[uniffiObjectPtr];
+        const ptr = value[uniffiObjectPtr];
+        if (!(ptr instanceof UniFFIPointer)) {
+            throw new UniFFITypeError("Object is not a 'Sprite' instance");
+        }
+        return ptr;
     }
 
     static read(dataStream) {
