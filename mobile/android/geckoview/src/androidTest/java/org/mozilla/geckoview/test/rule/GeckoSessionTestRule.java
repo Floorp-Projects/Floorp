@@ -1410,11 +1410,8 @@ public class GeckoSessionTestRule implements TestRule {
 
   protected void deleteCrashDumps() {
     final File dumpDir = new File(getProfilePath(), "minidumps");
-    File[] files = dumpDir.listFiles();
-    if (files != null) {
-      for (final File dump : files) {
-        dump.delete();
-      }
+    for (final File dump : dumpDir.listFiles()) {
+      dump.delete();
     }
   }
 
