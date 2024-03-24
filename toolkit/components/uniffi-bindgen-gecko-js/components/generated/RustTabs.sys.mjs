@@ -629,7 +629,11 @@ export class FfiConverterTypeTabsBridgedEngine extends FfiConverter {
     }
 
     static lower(value) {
-        return value[uniffiObjectPtr];
+        const ptr = value[uniffiObjectPtr];
+        if (!(ptr instanceof UniFFIPointer)) {
+            throw new UniFFITypeError("Object is not a 'TabsBridgedEngine' instance");
+        }
+        return ptr;
     }
 
     static read(dataStream) {
@@ -771,7 +775,11 @@ export class FfiConverterTypeTabsStore extends FfiConverter {
     }
 
     static lower(value) {
-        return value[uniffiObjectPtr];
+        const ptr = value[uniffiObjectPtr];
+        if (!(ptr instanceof UniFFIPointer)) {
+            throw new UniFFITypeError("Object is not a 'TabsStore' instance");
+        }
+        return ptr;
     }
 
     static read(dataStream) {
@@ -1124,7 +1132,7 @@ export class FfiConverterTypeTabsApiError extends FfiConverterArrayBuffer {
                     FfiConverterString.read(dataStream)
                     );
             default:
-                throw new Error("Unknown TabsApiError variant");
+                throw new UniFFITypeError("Unknown TabsApiError variant");
         }
     }
     static computeSize(value) {
@@ -1142,7 +1150,7 @@ export class FfiConverterTypeTabsApiError extends FfiConverterArrayBuffer {
             totalSize += FfiConverterString.computeSize(value.reason);
             return totalSize;
         }
-        throw new Error("Unknown TabsApiError variant");
+        throw new UniFFITypeError("Unknown TabsApiError variant");
     }
     static write(dataStream, value) {
         if (value instanceof SyncError) {
@@ -1160,7 +1168,7 @@ export class FfiConverterTypeTabsApiError extends FfiConverterArrayBuffer {
             FfiConverterString.write(dataStream, value.reason);
             return;
         }
-        throw new Error("Unknown TabsApiError variant");
+        throw new UniFFITypeError("Unknown TabsApiError variant");
     }
 
     static errorClass = TabsApiError;

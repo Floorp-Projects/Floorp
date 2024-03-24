@@ -448,7 +448,11 @@ export class FfiConverterTypeRemoteSettings extends FfiConverter {
     }
 
     static lower(value) {
-        return value[uniffiObjectPtr];
+        const ptr = value[uniffiObjectPtr];
+        if (!(ptr instanceof UniFFIPointer)) {
+            throw new UniFFITypeError("Object is not a 'RemoteSettings' instance");
+        }
+        return ptr;
     }
 
     static read(dataStream) {
@@ -1005,7 +1009,7 @@ export class FfiConverterTypeRemoteSettingsError extends FfiConverterArrayBuffer
             case 7:
                 return new AttachmentsUnsupportedError(FfiConverterString.read(dataStream));
             default:
-                throw new Error("Unknown RemoteSettingsError variant");
+                throw new UniFFITypeError("Unknown RemoteSettingsError variant");
         }
     }
     static computeSize(value) {
@@ -1032,7 +1036,7 @@ export class FfiConverterTypeRemoteSettingsError extends FfiConverterArrayBuffer
         if (value instanceof AttachmentsUnsupportedError) {
             return totalSize;
         }
-        throw new Error("Unknown RemoteSettingsError variant");
+        throw new UniFFITypeError("Unknown RemoteSettingsError variant");
     }
     static write(dataStream, value) {
         if (value instanceof JsonError) {
@@ -1063,7 +1067,7 @@ export class FfiConverterTypeRemoteSettingsError extends FfiConverterArrayBuffer
             dataStream.writeInt32(7);
             return;
         }
-        throw new Error("Unknown RemoteSettingsError variant");
+        throw new UniFFITypeError("Unknown RemoteSettingsError variant");
     }
 
     static errorClass = RemoteSettingsError;
