@@ -42,10 +42,7 @@ add_task(async function run_test() {
       crashReporter.saveMemoryReport();
     },
     function (mdump, extra, extrafile, memoryfile) {
-      Assert.ok(
-        memoryfile.exists(),
-        `Should be able to find memory file ${memoryfile.path}.`
-      );
+      Assert.ok(memoryfile.exists());
     },
     true
   );

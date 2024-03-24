@@ -151,6 +151,12 @@ const startupPhases = {
       stat: 1,
     },
     {
+      // bug 1541603
+      path: "ProfD:minidumps",
+      condition: WIN,
+      stat: 1,
+    },
+    {
       // bug 1543746
       path: "XCurProcD:defaults/preferences",
       condition: WIN,
