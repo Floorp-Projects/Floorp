@@ -81,14 +81,19 @@ void CustomStateSet::Add(const nsAString& aState, ErrorResult& aRv) {
     return;
   }
 
+  nsTArray<RefPtr<nsAtom>>& states = mTarget->EnsureCustomStates();
   RefPtr<nsAtom> atom = NS_AtomizeMainThread(aState);
+  if (states.Contains(atom)) {
+    return;
+  }
+
   Document* doc = mTarget->GetComposedDoc();
   PresShell* presShell = doc ? doc->GetPresShell() : nullptr;
   if (presShell) {
     presShell->CustomStatesWillChange(*mTarget);
   }
 
-  mTarget->EnsureCustomStates().AppendElement(atom);
+  states.AppendElement(atom);
 
   if (presShell) {
     presShell->CustomStateChanged(*mTarget, atom);
