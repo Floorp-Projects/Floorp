@@ -43,26 +43,3 @@ interface nsIAutoCompleteObserver : nsISupports
   [can_run_script] void onSearchResult(in nsIAutoCompleteSearch search,
                                        in nsIAutoCompleteResult result);
 };
-
-[scriptable, uuid(4c3e7462-fbfb-4310-8f4b-239238392b75)]
-interface nsIAutoCompleteSearchDescriptor : nsISupports
-{
-  // The search is started after the timeout specified by the corresponding
-  // nsIAutoCompleteInput implementation.
-  const unsigned short SEARCH_TYPE_DELAYED = 0;
-  // The search is started synchronously, before any delayed searches.
-  const unsigned short SEARCH_TYPE_IMMEDIATE = 1;
-
-  /**
-   * Identifies the search behavior.
-   * Should be one of the SEARCH_TYPE_* constants above.
-   * Defaults to SEARCH_TYPE_DELAYED.
-   */
-  readonly attribute unsigned short searchType;
-
-  /*
-   * Whether a new search should be triggered when the user deletes the
-   * autofilled part.
-   */
-  readonly attribute boolean clearingAutoFillSearchesAgain;
-};

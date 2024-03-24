@@ -33,12 +33,12 @@ head = "head_autocomplete.js"
 
 ["test_finalDefaultCompleteValue.js"]
 
-["test_immediate_search.js"]
-
 ["test_insertMatchAt.js"]
 
 ["test_previousResult.js"]
 
 ["test_removeMatchAt.js"]
+
+["test_search_zerotimeout.js"]
 
 ["test_stopSearch.js"]

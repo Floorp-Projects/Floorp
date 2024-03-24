@@ -54,8 +54,9 @@ class nsAutoCompleteController final : public nsIAutoCompleteController,
   MOZ_CAN_RUN_SCRIPT nsresult OpenPopup();
   MOZ_CAN_RUN_SCRIPT nsresult ClosePopup();
 
-  nsresult StartSearch(uint16_t aSearchType);
+  nsresult StartSearch();
 
+  MOZ_CAN_RUN_SCRIPT nsresult DoSearches();
   nsresult BeforeSearches();
   MOZ_CAN_RUN_SCRIPT nsresult StartSearches();
   MOZ_CAN_RUN_SCRIPT void AfterSearches();
@@ -182,16 +183,12 @@ class nsAutoCompleteController final : public nsIAutoCompleteController,
   bool mDefaultIndexCompleted;
   bool mPopupClosedByCompositionStart;
 
-  // Whether autofill is allowed for the next search. May be retrieved by the
-  // search through the "prohibit-autofill" searchParam.
+  // Whether autofill is allowed for the next search.
   bool mProhibitAutoFill;
 
   // Indicates whether the user cleared the autofilled part, returning to the
   // originally entered search string.
   bool mUserClearedAutoFill;
-
-  // Indicates whether clearing the autofilled string should issue a new search.
-  bool mClearingAutoFillSearchesAgain;
 
   enum CompositionState {
     eCompositionState_None,
@@ -203,7 +200,6 @@ class nsAutoCompleteController final : public nsIAutoCompleteController,
   uint32_t mMatchCount;
   uint32_t mSearchesOngoing;
   uint32_t mSearchesFailed;
-  uint32_t mImmediateSearchesCount;
   // The index of the match on the popup that was selected using the keyboard,
   // if the completeselectedindex attribute is set.
   // This is used to distinguish that selection (which would have been put in

@@ -49,13 +49,11 @@ nsAutoCompleteController::nsAutoCompleteController()
       mPopupClosedByCompositionStart(false),
       mProhibitAutoFill(false),
       mUserClearedAutoFill(false),
-      mClearingAutoFillSearchesAgain(false),
       mCompositionState(eCompositionState_None),
       mSearchStatus(nsAutoCompleteController::STATUS_NONE),
       mMatchCount(0),
       mSearchesOngoing(0),
       mSearchesFailed(0),
-      mImmediateSearchesCount(0),
       mCompletedSelectionIndex(-1) {}
 
 nsAutoCompleteController::~nsAutoCompleteController() { SetInput(nullptr); }
@@ -130,9 +128,6 @@ nsAutoCompleteController::SetInput(nsIAutoCompleteInput* aInput) {
   nsAutoString value;
   input->GetTextValue(value);
   SetSearchStringInternal(value);
-
-  // Since the controller can be used as a service it's important to reset this.
-  mClearingAutoFillSearchesAgain = false;
 
   return NS_OK;
 }
@@ -243,20 +238,16 @@ nsAutoCompleteController::HandleText(bool* _retval) {
       newValue.Length() < mPlaceholderCompletionString.Length() &&
       Substring(mPlaceholderCompletionString, 0, newValue.Length())
           .Equals(newValue);
-  bool searchAgainOnAutoFillClear =
-      mUserClearedAutoFill && mClearingAutoFillSearchesAgain;
 
-  if (!handlingCompositionCommit && !searchAgainOnAutoFillClear &&
-      newValue.Length() > 0 && repeatingPreviousSearch) {
+  if (!handlingCompositionCommit && newValue.Length() > 0 &&
+      repeatingPreviousSearch) {
     return NS_OK;
   }
 
-  if (userRemovedText || searchAgainOnAutoFillClear) {
-    if (userRemovedText) {
-      // We need to throw away previous results so we don't try to search
-      // through them again.
-      ClearResults();
-    }
+  if (userRemovedText) {
+    // We need to throw away previous results so we don't try to search
+    // through them again.
+    ClearResults();
     mProhibitAutoFill = true;
     mPlaceholderCompletionString.Truncate();
   } else {
@@ -848,16 +839,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY
 NS_IMETHODIMP
 nsAutoCompleteController::Notify(nsITimer* timer) {
   mTimer = nullptr;
-
-  if (mImmediateSearchesCount == 0) {
-    // If there were no immediate searches, BeforeSearches has not yet been
-    // called, so do it now.
-    nsresult rv = BeforeSearches();
-    if (NS_FAILED(rv)) return rv;
-  }
-  StartSearch(nsIAutoCompleteSearchDescriptor::SEARCH_TYPE_DELAYED);
-  AfterSearches();
-  return NS_OK;
+  return DoSearches();
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -928,7 +910,7 @@ nsresult nsAutoCompleteController::BeforeSearches() {
   return NS_OK;
 }
 
-nsresult nsAutoCompleteController::StartSearch(uint16_t aSearchType) {
+nsresult nsAutoCompleteController::StartSearch() {
   NS_ENSURE_STATE(mInput);
   nsCOMPtr<nsIAutoCompleteInput> input = mInput;
 
@@ -939,14 +921,6 @@ nsresult nsAutoCompleteController::StartSearch(uint16_t aSearchType) {
   nsCOMArray<nsIAutoCompleteSearch> searchesCopy(mSearches);
   for (uint32_t i = 0; i < searchesCopy.Length(); ++i) {
     nsCOMPtr<nsIAutoCompleteSearch> search = searchesCopy[i];
-
-    // Filter on search type.  Not all the searches implement this interface,
-    // in such a case just consider them delayed.
-    uint16_t searchType = nsIAutoCompleteSearchDescriptor::SEARCH_TYPE_DELAYED;
-    nsCOMPtr<nsIAutoCompleteSearchDescriptor> searchDesc =
-        do_QueryInterface(search);
-    if (searchDesc) searchDesc->GetSearchType(&searchType);
-    if (searchType != aSearchType) continue;
 
     nsIAutoCompleteResult* result = mResultCache.SafeObjectAt(i);
 
@@ -962,13 +936,6 @@ nsresult nsAutoCompleteController::StartSearch(uint16_t aSearchType) {
     nsAutoString searchParam;
     nsresult rv = input->GetSearchParam(searchParam);
     if (NS_FAILED(rv)) return rv;
-
-    // FormFill expects the searchParam to only contain the input element id,
-    // other consumers may have other expectations, so this modifies it only
-    // for new consumers handling autoFill by themselves.
-    if (mProhibitAutoFill && mClearingAutoFillSearchesAgain) {
-      searchParam.AppendLiteral(" prohibit-autofill");
-    }
 
     uint32_t userContextId;
     rv = input->GetUserContextId(&userContextId);
@@ -1078,7 +1045,6 @@ nsresult nsAutoCompleteController::StartSearches() {
     input->GetSearchCount(&searchCount);
     mResults.SetCapacity(searchCount);
     mSearches.SetCapacity(searchCount);
-    mImmediateSearchesCount = 0;
 
     const char* searchCID = kAutoCompleteSearchCID;
 
@@ -1095,24 +1061,6 @@ nsresult nsAutoCompleteController::StartSearches() {
       nsCOMPtr<nsIAutoCompleteSearch> search = do_GetService(cid.get());
       if (search) {
         mSearches.AppendObject(search);
-
-        // Count immediate searches.
-        nsCOMPtr<nsIAutoCompleteSearchDescriptor> searchDesc =
-            do_QueryInterface(search);
-        if (searchDesc) {
-          uint16_t searchType =
-              nsIAutoCompleteSearchDescriptor::SEARCH_TYPE_DELAYED;
-          if (NS_SUCCEEDED(searchDesc->GetSearchType(&searchType)) &&
-              searchType ==
-                  nsIAutoCompleteSearchDescriptor::SEARCH_TYPE_IMMEDIATE) {
-            mImmediateSearchesCount++;
-          }
-
-          if (!mClearingAutoFillSearchesAgain) {
-            searchDesc->GetClearingAutoFillSearchesAgain(
-                &mClearingAutoFillSearchesAgain);
-          }
-        }
       }
     }
   }
@@ -1125,34 +1073,26 @@ nsresult nsAutoCompleteController::StartSearches() {
   uint32_t timeout;
   input->GetTimeout(&timeout);
 
-  uint32_t immediateSearchesCount = mImmediateSearchesCount;
   if (timeout == 0) {
-    // All the searches should be executed immediately.
-    immediateSearchesCount = mSearches.Length();
+    // If the timeout is 0, we still have to execute the delayed searches,
+    // otherwise this will be a no-op.
+    return DoSearches();
   }
-
-  if (immediateSearchesCount > 0) {
-    nsresult rv = BeforeSearches();
-    if (NS_FAILED(rv)) return rv;
-    StartSearch(nsIAutoCompleteSearchDescriptor::SEARCH_TYPE_IMMEDIATE);
-
-    if (mSearches.Length() == immediateSearchesCount) {
-      // Either all searches are immediate, or the timeout is 0.  In the
-      // latter case we still have to execute the delayed searches, otherwise
-      // this will be a no-op.
-      StartSearch(nsIAutoCompleteSearchDescriptor::SEARCH_TYPE_DELAYED);
-
-      // All the searches have been started, just finish.
-      AfterSearches();
-      return NS_OK;
-    }
-  }
-
-  MOZ_ASSERT(timeout > 0, "Trying to delay searches with a 0 timeout!");
 
   // Now start the delayed searches.
   return NS_NewTimerWithCallback(getter_AddRefs(mTimer), this, timeout,
                                  nsITimer::TYPE_ONE_SHOT);
+}
+
+nsresult nsAutoCompleteController::DoSearches() {
+  nsresult rv = BeforeSearches();
+  if (NS_FAILED(rv)) return rv;
+
+  StartSearch();
+
+  // All the searches have been started, just finish.
+  AfterSearches();
+  return NS_OK;
 }
 
 nsresult nsAutoCompleteController::ClearSearchTimer() {
