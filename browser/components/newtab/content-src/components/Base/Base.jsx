@@ -7,16 +7,16 @@ import {
   actionTypes as at,
 } from "common/Actions.sys.mjs";
 import { ASRouterAdmin } from "content-src/components/ASRouterAdmin/ASRouterAdmin";
-import { ASRouterUISurface } from "../../asrouter/asrouter-content";
+import { Background } from "content-src/components/Background/Background";
 import { ConfirmDialog } from "content-src/components/ConfirmDialog/ConfirmDialog";
-import { connect } from "react-redux";
+import { CustomizeMenu } from "content-src/components/CustomizeMenu/CustomizeMenu";
 import { DiscoveryStreamBase } from "content-src/components/DiscoveryStreamBase/DiscoveryStreamBase";
 import { ErrorBoundary } from "content-src/components/ErrorBoundary/ErrorBoundary";
-import { CustomizeMenu } from "content-src/components/CustomizeMenu/CustomizeMenu";
-import React from "react";
 import { Search } from "content-src/components/Search/Search";
 import { Sections } from "content-src/components/Sections/Sections";
-import { Background } from "content-src/components/Background/Background"
+import React from "react";
+import { connect } from "react-redux";
+import { ASRouterUISurface } from "../../asrouter/asrouter-content";
 
 export const PrefsButton = ({ onClick, icon }) => (
   <div className="prefs-button">
@@ -287,8 +287,8 @@ export class BaseContent extends React.PureComponent {
         </div>
         <div id="floorp">
           {/* TODO: use css instead this br tag */}
-          <a className={prefs["floorp.newtab.releasenote.hide"] ? "floorp-releasenote-hidden" : "releasenote"} href="https://support.ablaze.one">Support</a><br /><br />
-          <a className={prefs["floorp.newtab.releasenote.hide"] ? "floorp-releasenote-hidden" : "releasenote"} href="https://blog.ablaze.one/category/ablaze/ablaze-project/floorp">Release Note</a>
+          <a className={prefs["floorp.newtab.releasenote.hide"] ? "floorp-releasenote-hidden" : "releasenote"} data-l10n-id="aboutdialog-help-user" href="https://support.ablaze.one"></a><br /><br />
+          <a className={prefs["floorp.newtab.releasenote.hide"] ? "floorp-releasenote-hidden" : "releasenote"} data-l10n-id="releaseNotes-link" href="https://blog.ablaze.one/category/ablaze/ablaze-project/floorp"></a>
         </div>
         <a className={prefs["floorp.newtab.imagecredit.hide"] ? "floorp-imagecred-hidden" : "imagecred" } href="https://unsplash.com/" id="unsplash">Unsplash</a>
       </div>
