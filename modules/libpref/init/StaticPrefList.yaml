@@ -2394,7 +2394,7 @@
 # Whether CustomStateSet is enabled
 - name: dom.element.customstateset.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: false
   mirror: always
   rust: true
 

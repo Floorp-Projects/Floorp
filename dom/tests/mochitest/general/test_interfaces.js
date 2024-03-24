@@ -340,8 +340,6 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "CustomEvent", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "CustomStateSet", insecureContext: true },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "DecompressionStream", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "DataTransfer", insecureContext: true },
