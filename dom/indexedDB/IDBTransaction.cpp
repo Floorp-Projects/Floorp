@@ -386,15 +386,16 @@ void IDBTransaction::SendCommit(const bool aAutoCommit) {
       LoggingSerialNumber(), requestSerialNumber,
       aAutoCommit ? "automatically" : "explicitly");
 
-  const auto lastRequestSerialNumber =
-      [this, aAutoCommit,
-       requestSerialNumber]() -> Maybe<decltype(requestSerialNumber)> {
+  const int64_t requestId = NextRequestId();
+
+  const auto lastRequestId = [this, aAutoCommit,
+                              requestId]() -> Maybe<decltype(requestId)> {
     if (aAutoCommit) {
       return Nothing();
     }
 
-    // In case of an explicit commit, we need to note the serial number of the
-    // last request to check if a request submitted before the commit request
+    // In case of an explicit commit, we need to note the id of the last
+    // request to check if a request submitted before the commit request
     // failed. If we are currently in an event handler for a request on this
     // transaction, ignore this request. This is used to synchronize the
     // transaction's committing state with the parent side, to abort the
@@ -408,15 +409,13 @@ void IDBTransaction::SendCommit(const bool aAutoCommit) {
     const bool dispatchingEventForThisTransaction =
         maybeCurrentTransaction && &maybeCurrentTransaction.ref() == this;
 
-    return Some(requestSerialNumber
-                    ? (requestSerialNumber -
-                       (dispatchingEventForThisTransaction ? 0 : 1))
+    return Some(requestId
+                    ? (requestId - (dispatchingEventForThisTransaction ? 0 : 1))
                     : 0);
   }();
 
-  DoWithTransactionChild([lastRequestSerialNumber](auto& actor) {
-    actor.SendCommit(lastRequestSerialNumber);
-  });
+  DoWithTransactionChild(
+      [lastRequestId](auto& actor) { actor.SendCommit(lastRequestId); });
 
   mSentCommitOrAbort.Flip();
 }

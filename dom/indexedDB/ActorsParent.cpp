@@ -9930,14 +9930,13 @@ void TransactionBase::CommitOrAbort() {
     return;
   }
 
-  // In case of a failed request that was started after committing was
-  // initiated, abort (cf.
-  // https://w3c.github.io/IndexedDB/#async-execute-request step 5.3 vs. 5.4).
-  // Note this can only happen here when we are committing explicitly, otherwise
-  // the decision is made by the child.
+  // In case of a failed request and explicitly committed transaction, abort
+  // (cf. https://w3c.github.io/IndexedDB/#async-execute-request step 5.3
+  // vs. 5.4). It's worth emphasizing this can only happen here when we are
+  // committing explicitly, otherwise the decision is made by the child.
   if (NS_SUCCEEDED(mResultCode) && mLastFailedRequest &&
       *mLastRequestBeforeCommit &&
-      *mLastFailedRequest >= **mLastRequestBeforeCommit) {
+      *mLastFailedRequest == **mLastRequestBeforeCommit) {
     mResultCode = NS_ERROR_DOM_INDEXEDDB_ABORT_ERR;
   }
 
@@ -16595,9 +16594,6 @@ TransactionDatabaseOperationBase::~TransactionDatabaseOperationBase() {
   MOZ_ASSERT(!mTransaction,
              "TransactionDatabaseOperationBase::Cleanup() was not called by a "
              "subclass!");
-
-  // XXX Remove once mRequestId gets used.
-  (void)mRequestId;
 }
 
 #ifdef DEBUG
@@ -16813,7 +16809,7 @@ void TransactionDatabaseOperationBase::SendPreprocessInfoOrResults(
     mWaitingForContinue = true;
   } else {
     if (mLoggingSerialNumber) {
-      (*mTransaction)->NoteFinishedRequest(mLoggingSerialNumber, ResultCode());
+      (*mTransaction)->NoteFinishedRequest(mRequestId, ResultCode());
     }
 
     Cleanup();
