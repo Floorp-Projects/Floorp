@@ -85,11 +85,23 @@ lints:
             - linux64-android-sdk-linux-repack
             - linux64-jdk-repack
             - linux64-node
-    optimization:
-        skip-unless-mozlint:
-            - android-api-lint.yml
-            - android-format.yml
-            - android-javadoc.yml
-            - android-checkstyle.yml
-            - android-lint.yml
-            - android-test.yml
+    when:
+        files-changed:
+            # Source files.
+            - 'mobile/android/**/*.java'
+            - 'mobile/android/**/*.kt'
+            # Resources.
+            - 'mobile/android/**/*.jpeg'
+            - 'mobile/android/**/*.jpg'
+            - 'mobile/android/**/*.png'
+            - 'mobile/android/**/*.svg'
+            - 'mobile/android/**/*.xml'
+            # Build stuff.
+            - 'mobile/android/**/Makefile.in'
+            - 'mobile/android/config/**'
+            - 'mobile/android/gradle.configure'
+            - 'mobile/android/**/moz.build'
+            - '**/*.gradle'
+            # Other misc lint related files.
+            - 'python/mozlint/**'
+            - 'tools/lint/**'

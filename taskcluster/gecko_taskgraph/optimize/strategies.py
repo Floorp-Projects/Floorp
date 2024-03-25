@@ -11,8 +11,6 @@ from mozbuild.util import memoize
 from taskgraph.optimize.base import OptimizationStrategy, register_strategy
 from taskgraph.util.path import match as match_path
 
-from gecko_taskgraph.optimize.mozlint import SkipUnlessMozlint
-
 logger = logging.getLogger(__name__)
 
 
@@ -102,6 +100,3 @@ class SkipUnlessChanged(OptimizationStrategy):
             )
             return True
         return False
-
-
-register_strategy("skip-unless-mozlint", args=("tools/lint",))(SkipUnlessMozlint)
