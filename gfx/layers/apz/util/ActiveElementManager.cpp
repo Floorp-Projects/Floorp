@@ -249,7 +249,7 @@ bool ActiveElementManager::MaybeChangeActiveState(bool aWasClick) {
     // Scrollbar thumbs use a different mechanism for their active
     // highlight (the "active" attribute), so don't set the active state
     // on them because nothing will clear it.
-    if (!(mTarget && mTarget->IsXULElement(nsGkAtoms::thumb))) {
+    if (mCanBePan && !(mTarget && mTarget->IsXULElement(nsGkAtoms::thumb))) {
       SetActive(mTarget);
     }
   } else {
