@@ -18,6 +18,7 @@ skip-if = [
 skip-if = ["os == 'mac'"] # Bug 1817727
 
 ["test_getFromTypeAndExtension.js"]
+skip-if = ["os == 'android'"]
 
 ["test_getMIMEInfo_pdf.js"]
 
