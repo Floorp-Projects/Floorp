@@ -14,6 +14,53 @@ from .. import (
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("domain", ["", "alt"], ids=["same_origin", "cross_origin"])
+@pytest.mark.parametrize("phase", ["beforeRequestSent", "responseStarted"])
+async def test_frame_context(
+    bidi_session,
+    url,
+    inline,
+    top_context,
+    add_intercept,
+    fetch,
+    setup_network_test,
+    domain,
+    phase,
+):
+    await setup_network_test(
+        events=[
+            BEFORE_REQUEST_SENT_EVENT,
+            RESPONSE_STARTED_EVENT,
+            RESPONSE_COMPLETED_EVENT,
+        ],
+        contexts=[top_context["context"]],
+    )
+
+    frame_url = inline("<div>foo</div>")
+    test_url = inline(f"<iframe src='{frame_url}'></iframe>", domain=domain)
+    await bidi_session.browsing_context.navigate(
+        url=test_url, context=top_context["context"], wait="complete"
+    )
+
+    # Retrieve the context for the iframe.
+    contexts = await bidi_session.browsing_context.get_tree(root=top_context["context"])
+    assert len(contexts[0]["children"]) == 1
+    frame = contexts[0]["children"][0]
+
+    # Add an intercept.
+    text_url = url(PAGE_EMPTY_TEXT)
+    await add_intercept(
+        phases=[phase],
+        url_patterns=[{"type": "string", "pattern": text_url}],
+        contexts=[top_context["context"]]
+    )
+
+    # Fetch the intercepted URL from the iframe should be blocked.
+    with pytest.raises(ScriptEvaluateResultException):
+        await fetch(text_url, context=frame)
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize("phase", ["beforeRequestSent", "responseStarted"])
 async def test_other_context(
     bidi_session,
