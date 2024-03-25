@@ -668,6 +668,11 @@ class JavaScriptTracer {
               currentDOMEvent: this.currentDOMEvent,
             });
           }
+          // Bail out early if any listener stopped tracing as the Frame object
+          // will be no longer usable by any other code.
+          if (!this.isTracing) {
+            return;
+          }
         }
       }
 

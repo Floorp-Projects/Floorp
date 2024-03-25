@@ -93,6 +93,30 @@ if (DEBUG_STEP) {
   });
 }
 
+const DEBUG_TRACE_LINE = Services.env.get("DEBUG_TRACE_LINE");
+if (DEBUG_TRACE_LINE) {
+  // Use a custom loader with `invisibleToDebugger` flag for the allocation tracker
+  // as it instantiates custom Debugger API instances and has to be running in a distinct
+  // compartments from DevTools and system scopes (ESMs, XPCOM,...)
+  const {
+    useDistinctSystemPrincipalLoader,
+    releaseDistinctSystemPrincipalLoader,
+  } = ChromeUtils.importESModule(
+    "resource://devtools/shared/loader/DistinctSystemPrincipalLoader.sys.mjs"
+  );
+  const requester = {};
+  const loader = useDistinctSystemPrincipalLoader(requester);
+
+  const lineTracer = loader.require(
+    "resource://devtools/shared/test-helpers/test-line-tracer.js"
+  );
+  lineTracer.start(globalThis, gTestPath, DEBUG_TRACE_LINE);
+  registerCleanupFunction(() => {
+    lineTracer.stop();
+    releaseDistinctSystemPrincipalLoader(requester);
+  });
+}
+
 const { loader, require } = ChromeUtils.importESModule(
   "resource://devtools/shared/loader/Loader.sys.mjs"
 );
