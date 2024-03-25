@@ -1288,17 +1288,21 @@ export class ScreenshotsOverlay {
     this.updateSelectionSizeText();
   }
 
+  /**
+   * Update the size of the selected region. Use the zoom to correctly display
+   * the region dimensions.
+   */
   updateSelectionSizeText() {
-    let dpr = this.windowDimensions.devicePixelRatio;
     let { width, height } = this.selectionRegion.dimensions;
+    let zoom = Math.round(this.window.browsingContext.fullZoom * 100) / 100;
 
     let [selectionSizeTranslation] =
       lazy.overlayLocalization.formatMessagesSync([
         {
           id: "screenshots-overlay-selection-region-size",
           args: {
-            width: Math.floor(width * dpr),
-            height: Math.floor(height * dpr),
+            width: Math.floor(width * zoom),
+            height: Math.floor(height * zoom),
           },
         },
       ]);
