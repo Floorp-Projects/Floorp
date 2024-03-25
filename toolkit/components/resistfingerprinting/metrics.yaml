@@ -439,7 +439,7 @@ characteristics:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1884693
     data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1884693#c5
     expires: never
     data_sensitivity:
       - interaction
@@ -456,7 +456,7 @@ characteristics:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1884693
     data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1884693#c5
     expires: never
     data_sensitivity:
       - interaction
@@ -473,7 +473,7 @@ characteristics:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1884693
     data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1884693#c5
     expires: never
     data_sensitivity:
       - interaction
@@ -490,7 +490,7 @@ characteristics:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1884693
     data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1884693#c5
     expires: never
     data_sensitivity:
       - interaction
@@ -507,7 +507,7 @@ characteristics:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1884693
     data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1884693#c5
     expires: never
     data_sensitivity:
       - interaction
@@ -524,7 +524,7 @@ characteristics:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1884693
     data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1884693#c5
     expires: never
     data_sensitivity:
       - interaction
