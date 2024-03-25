@@ -238,7 +238,7 @@ bool nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
         aAppearance == StyleAppearance::MozWindowButtonMinimize ||
         aAppearance == StyleAppearance::MozWindowButtonMaximize ||
         aAppearance == StyleAppearance::MozWindowButtonRestore) {
-      aState->backdrop = !aFrame->PresContext()->Document()->State().HasState(
+      aState->backdrop = aFrame->PresContext()->Document()->State().HasState(
           dom::DocumentState::WINDOW_INACTIVE);
     }
   }
