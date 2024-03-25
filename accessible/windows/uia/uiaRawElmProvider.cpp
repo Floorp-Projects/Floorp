@@ -24,8 +24,8 @@ using namespace mozilla::a11y;
 // uiaRawElmProvider
 ////////////////////////////////////////////////////////////////////////////////
 
-Accessible* uiaRawElmProvider::Acc() {
-  return static_cast<MsaaAccessible*>(this)->Acc();
+Accessible* uiaRawElmProvider::Acc() const {
+  return static_cast<const MsaaAccessible*>(this)->Acc();
 }
 
 // IUnknown
@@ -249,8 +249,13 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
       break;
     }
 
-    case UIA_IsControlElementPropertyId:
+    case UIA_ControlTypePropertyId:
+      aPropertyValue->vt = VT_I4;
+      aPropertyValue->lVal = GetControlType();
+      break;
+
     case UIA_IsContentElementPropertyId:
+    case UIA_IsControlElementPropertyId:
       aPropertyValue->vt = VT_BOOL;
       aPropertyValue->boolVal = IsControl() ? VARIANT_TRUE : VARIANT_FALSE;
       return S_OK;
@@ -450,4 +455,21 @@ bool uiaRawElmProvider::IsControl() {
   }
 
   return true;
+}
+
+long uiaRawElmProvider::GetControlType() const {
+  Accessible* acc = Acc();
+  MOZ_ASSERT(acc);
+#define ROLE(_geckoRole, stringRole, ariaRole, atkRole, macRole, macSubrole, \
+             msaaRole, ia2Role, androidClass, iosIsElement, uiaControlType,  \
+             nameRule)                                                       \
+  case roles::_geckoRole:                                                    \
+    return uiaControlType;                                                   \
+    break;
+  switch (acc->Role()) {
+#include "RoleMap.h"
+  }
+#undef ROLE
+  MOZ_CRASH("Unknown role.");
+  return 0;
 }

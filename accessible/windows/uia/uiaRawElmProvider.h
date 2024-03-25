@@ -78,8 +78,9 @@ class uiaRawElmProvider : public IAccessibleEx,
           aRetVal);
 
  private:
-  Accessible* Acc();
+  Accessible* Acc() const;
   bool IsControl();
+  long GetControlType() const;
 };
 
 }  // namespace a11y
