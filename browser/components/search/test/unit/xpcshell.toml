@@ -14,7 +14,13 @@ prefs = ["browser.search.serpEventTelemetryCategorization.enabled=true"]
 ["test_search_telemetry_compare_urls.js"]
 
 ["test_search_telemetry_config_validation.js"]
-support-files = ["../../schema/search-telemetry-schema.json"]
+support-files = ["../../schema/search-telemetry-v2-schema.json"]
+
+["test_ui_schemas_valid.js"]
+support-files = [
+  "../../schema/search-telemetry-v2-schema.json",
+  "../../schema/search-telemetry-v2-ui-schema.json",
+]
 
 ["test_urlTelemetry.js"]
 
