@@ -182,6 +182,7 @@
 #  endif
 #  include "mozilla/a11y/Compatibility.h"
 #  include "oleidl.h"
+#  include <uiautomation.h>
 #  include <winuser.h>
 #  include "nsAccessibilityService.h"
 #  include "mozilla/a11y/DocAccessible.h"
@@ -5885,6 +5886,19 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
           *aRetValue = LresultFromObject(IID_IAccessible, wParam, root);
           a11y::LazyInstantiator::EnableBlindAggregation(mWnd);
           result = true;
+        }
+      } else if (objId == UiaRootObjectId) {
+        if (a11y::LocalAccessible* acc = GetAccessible()) {
+          RefPtr<IAccessible> ia;
+          acc->GetNativeInterface(getter_AddRefs(ia));
+          MOZ_ASSERT(ia);
+          RefPtr<IRawElementProviderSimple> uia;
+          ia->QueryInterface(IID_IRawElementProviderSimple,
+                             getter_AddRefs(uia));
+          if (uia) {
+            *aRetValue = UiaReturnRawElementProvider(mWnd, wParam, lParam, uia);
+            result = true;
+          }
         }
       }
     } break;
