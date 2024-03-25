@@ -3188,7 +3188,7 @@ void nsRange::ExcludeNonSelectableNodes(nsTArray<RefPtr<nsRange>>* aOutRanges) {
           // This is the initial range and all its nodes until now are
           // non-selectable so just trim them from the start.
           IgnoredErrorResult err;
-          range->SetStartBefore(*node, err);
+          range->SetStartBefore(*node, err, AllowRangeCrossShadowBoundary::Yes);
           if (err.Failed()) {
             return;
           }
@@ -3202,7 +3202,8 @@ void nsRange::ExcludeNonSelectableNodes(nsTArray<RefPtr<nsRange>>* aOutRanges) {
 
         // Truncate the current range before the first non-selectable node.
         IgnoredErrorResult err;
-        range->SetEndBefore(*firstNonSelectableContent, err);
+        range->SetEndBefore(*firstNonSelectableContent, err,
+                            AllowRangeCrossShadowBoundary::Yes);
 
         // Store it in the result (strong ref) - do this before creating
         // a new range in |newRange| below so we don't drop the last ref

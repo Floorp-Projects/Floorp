@@ -64,6 +64,9 @@ namespace dom {
 class Selection final : public nsSupportsWeakReference,
                         public nsWrapperCache,
                         public SupportsWeakPtr {
+  using AllowRangeCrossShadowBoundary =
+      mozilla::dom::AllowRangeCrossShadowBoundary;
+
  protected:
   virtual ~Selection();
 
@@ -327,6 +330,30 @@ class Selection final : public nsSupportsWeakReference,
     return offset ? *offset : 0;
   }
 
+  nsINode* GetMayCrossShadowBoundaryAnchorNode() const {
+    const RangeBoundary& anchor = AnchorRef(AllowRangeCrossShadowBoundary::Yes);
+    return anchor.IsSet() ? anchor.Container() : nullptr;
+  }
+
+  uint32_t MayCrossShadowBoundaryAnchorOffset() const {
+    const RangeBoundary& anchor = AnchorRef(AllowRangeCrossShadowBoundary::Yes);
+    const Maybe<uint32_t> offset =
+        anchor.Offset(RangeBoundary::OffsetFilter::kValidOffsets);
+    return offset ? *offset : 0;
+  }
+
+  nsINode* GetMayCrossShadowBoundaryFocusNode() const {
+    const RangeBoundary& focus = FocusRef(AllowRangeCrossShadowBoundary::Yes);
+    return focus.IsSet() ? focus.Container() : nullptr;
+  }
+
+  uint32_t MayCrossShadowBoundaryFocusOffset() const {
+    const RangeBoundary& focus = FocusRef(AllowRangeCrossShadowBoundary::Yes);
+    const Maybe<uint32_t> offset =
+        focus.Offset(RangeBoundary::OffsetFilter::kValidOffsets);
+    return offset ? *offset : 0;
+  }
+
   nsIContent* GetChildAtAnchorOffset() {
     const RangeBoundary& anchor = AnchorRef();
     return anchor.IsSet() ? anchor.GetChildAtOffset() : nullptr;
@@ -336,8 +363,12 @@ class Selection final : public nsSupportsWeakReference,
     return focus.IsSet() ? focus.GetChildAtOffset() : nullptr;
   }
 
-  const RangeBoundary& AnchorRef() const;
-  const RangeBoundary& FocusRef() const;
+  const RangeBoundary& AnchorRef(
+      AllowRangeCrossShadowBoundary aAllowCrossShadowBoundary =
+          AllowRangeCrossShadowBoundary::No) const;
+  const RangeBoundary& FocusRef(
+      AllowRangeCrossShadowBoundary aAllowCrossShadowBoundary =
+          AllowRangeCrossShadowBoundary::No) const;
 
   /*
    * IsCollapsed -- is the whole selection just one point, or unset?

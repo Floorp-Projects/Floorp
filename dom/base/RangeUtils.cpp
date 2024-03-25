@@ -147,9 +147,10 @@ nsresult RangeUtils::CompareNodeToRange(nsINode* aNode,
       NS_WARN_IF(!aAbstractRange->IsPositioned())) {
     return NS_ERROR_INVALID_ARG;
   }
-  return CompareNodeToRangeBoundaries(aNode, aAbstractRange->StartRef(),
-                                      aAbstractRange->EndRef(),
-                                      aNodeIsBeforeRange, aNodeIsAfterRange);
+  return CompareNodeToRangeBoundaries(
+      aNode, aAbstractRange->MayCrossShadowBoundaryStartRef(),
+      aAbstractRange->MayCrossShadowBoundaryEndRef(), aNodeIsBeforeRange,
+      aNodeIsAfterRange);
 }
 template <typename SPT, typename SRT, typename EPT, typename ERT>
 nsresult RangeUtils::CompareNodeToRangeBoundaries(
