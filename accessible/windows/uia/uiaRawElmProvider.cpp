@@ -12,8 +12,10 @@
 #include "LocalAccessible-inl.h"
 #include "mozilla/a11y/RemoteAccessible.h"
 #include "MsaaAccessible.h"
+#include "MsaaRootAccessible.h"
 #include "nsAccUtils.h"
 #include "nsTextEquivUtils.h"
+#include "RootAccessible.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -250,9 +252,15 @@ STDMETHODIMP
 uiaRawElmProvider::get_HostRawElementProvider(
     __RPC__deref_out_opt IRawElementProviderSimple** aRawElmProvider) {
   if (!aRawElmProvider) return E_INVALIDARG;
-
-  // This method is not used with IAccessibleEx implementations.
   *aRawElmProvider = nullptr;
+  Accessible* acc = Acc();
+  if (!acc) {
+    return CO_E_OBJNOTCONNECTED;
+  }
+  if (acc->IsRoot()) {
+    HWND hwnd = MsaaAccessible::GetHWNDFor(acc);
+    return UiaHostProviderFromHwnd(hwnd, aRawElmProvider);
+  }
   return S_OK;
 }
 
@@ -346,7 +354,26 @@ uiaRawElmProvider::SetFocus() {
 STDMETHODIMP
 uiaRawElmProvider::get_FragmentRoot(
     __RPC__deref_out_opt IRawElementProviderFragmentRoot** aRetVal) {
-  return E_NOTIMPL;
+  if (!aRetVal) {
+    return E_INVALIDARG;
+  }
+  *aRetVal = nullptr;
+  Accessible* acc = Acc();
+  if (!acc) {
+    return CO_E_OBJNOTCONNECTED;
+  }
+  LocalAccessible* localAcc = acc->AsLocal();
+  if (!localAcc) {
+    localAcc = acc->AsRemote()->OuterDocOfRemoteBrowser();
+    if (!localAcc) {
+      return CO_E_OBJNOTCONNECTED;
+    }
+  }
+  MsaaAccessible* msaa = MsaaAccessible::GetFrom(localAcc->RootAccessible());
+  RefPtr<IRawElementProviderFragmentRoot> fragRoot =
+      static_cast<MsaaRootAccessible*>(msaa);
+  fragRoot.forget(aRetVal);
+  return S_OK;
 }
 
 // Private methods
