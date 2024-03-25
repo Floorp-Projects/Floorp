@@ -18,11 +18,18 @@ def test_release(run_mach, capfd):
     output = capfd.readouterr().out
     print(output)
 
-    expected = dedent(
+    expected_part1 = dedent(
         """
         Commit message:
         staging release: 97.0
+        """
+    ).lstrip()
 
+    # The output now features a display of the `mach try` command run here
+    # that will vary based on the user and invocation, so ignore that part.
+
+    expected_part2 = dedent(
+        """
         Pushed via `mach try release`
         Calculated try_task_config.json:
         {
@@ -36,7 +43,8 @@ def test_release(run_mach, capfd):
 
     """
     ).lstrip()
-    assert expected in output
+    assert expected_part1 in output
+    assert expected_part2 in output
 
 
 if __name__ == "__main__":

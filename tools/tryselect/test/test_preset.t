@@ -10,11 +10,15 @@ Test preset with no subcommand
   Commit message:
   try: -b do -p linux -u mochitests -t none --tag foo
   
+  mach try command: `./mach try --no-push --no-artifact --preset foo`
+  
   Pushed via `mach try syntax`
 
   $ ./mach try syntax $testargs --preset foo
   Commit message:
   try: -b do -p linux -u mochitests -t none --tag foo
+  
+  mach try command: `./mach try syntax --no-push --no-artifact --preset foo`
   
   Pushed via `mach try syntax`
 
@@ -59,11 +63,15 @@ Test preset with syntax subcommand
   Commit message:
   try: -b do -p win32 -u none -t all --tag bar
   
+  mach try command: `./mach try syntax --no-push --no-artifact --preset bar`
+  
   Pushed via `mach try syntax`
 
   $ ./mach try $testargs --preset bar
   Commit message:
   try: -b do -p win32 -u none -t all --tag bar
+  
+  mach try command: `./mach try --no-push --no-artifact --preset bar`
   
   Pushed via `mach try syntax`
 
@@ -128,6 +136,8 @@ Test preset with fuzzy subcommand
   Commit message:
   Fuzzy query='foo
   
+  mach try command: `./mach try fuzzy --no-push --no-artifact --preset baz`
+  
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
   {
@@ -151,6 +161,8 @@ Test preset with fuzzy subcommand
   $ ./mach try $testargs --preset baz
   Commit message:
   Fuzzy query='foo
+  
+  mach try command: `./mach try --no-push --no-artifact --preset baz`
   
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
@@ -178,6 +190,8 @@ Queries can be appended to presets
   Commit message:
   Fuzzy query='foo&query='build
   
+  mach try command: `./mach try fuzzy --no-push --no-artifact --preset baz -q "'build"`
+  
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
   {
@@ -202,6 +216,8 @@ Queries can be appended to presets
   $ ./mach try $testargs --preset baz -xq "'opt"
   Commit message:
   Fuzzy query='foo&query='opt
+  
+  mach try command: `./mach try --no-push --no-artifact --preset baz -xq "'opt"`
   
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
@@ -294,6 +310,8 @@ Test gecko-profile argument handling. Add in profiling to a preset.
   Commit message:
   Fuzzy query='foo
   
+  mach try command: `./mach try fuzzy --no-push --no-artifact --preset baz --gecko-profile-features=nostacksampling,cpu`
+  
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
   {
@@ -325,6 +343,8 @@ settings; everything else uses dashes.)
   $ ./mach try fuzzy $testargs --preset profile
   Commit message:
   Fuzzy query='foo
+  
+  mach try command: `./mach try fuzzy --no-push --no-artifact --preset profile`
   
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:

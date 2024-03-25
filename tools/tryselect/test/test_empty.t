@@ -7,6 +7,8 @@ Test empty selector
   Commit message:
   No try selector specified, use "Add New Jobs" to select tasks.
   
+  mach try command: `./mach try empty --no-push`
+  
   Pushed via `mach try empty`
   Calculated try_task_config.json:
   {
@@ -26,6 +28,8 @@ Test empty selector
   Commit message:
   No try selector specified, use "Add New Jobs" to select tasks. ON A CLOSED TREE
   
+  mach try command: `./mach try empty --no-push --closed-tree`
+  
   Pushed via `mach try empty`
   Calculated try_task_config.json:
   {
@@ -44,6 +48,8 @@ Test empty selector
   $ ./mach try empty --no-push --closed-tree -m "foo {msg} bar"
   Commit message:
   foo No try selector specified, use "Add New Jobs" to select tasks. bar ON A CLOSED TREE
+  
+  mach try command: `./mach try empty --no-push --closed-tree -m "foo {msg} bar"`
   
   Pushed via `mach try empty`
   Calculated try_task_config.json:
