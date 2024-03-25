@@ -10,31 +10,17 @@
     /** Attention Dot **/
     --attention-dot-color: light-dark(#2ac3a2, #54ffbd);
 
-    /** Background Color **/
-    --background-color-canvas: light-dark(var(--color-white), var(--color-gray-90));
-
     /** Border **/
-    --border-color-interactive: light-dark(var(--color-gray-60), var(--color-gray-50));
+    --border-interactive-color: light-dark(var(--color-gray-60), var(--color-gray-50));
 
     /** Button **/
     /* TODO Bug 1821203 - Gray use needs to be consolidated */
     --button-background-color: color-mix(in srgb, currentColor 7%, transparent);
     --button-background-color-hover: color-mix(in srgb, currentColor 14%, transparent);
     --button-background-color-active: color-mix(in srgb, currentColor 21%, transparent);
+    --button-border-color-primary: transparent;
     --button-text-color: light-dark(var(--color-gray-100), var(--color-gray-05));
     --button-text-color-primary: light-dark(var(--color-gray-05), var(--color-gray-100));
-
-    /** Color **/
-    --color-accent-primary: light-dark(var(--color-blue-50), var(--color-cyan-50));
-    --color-accent-primary-hover: light-dark(var(--color-blue-60), var(--color-cyan-30));
-    --color-accent-primary-active: light-dark(var(--color-blue-70), var(--color-cyan-20));
-
-    /** Font Size **/
-    --font-size-root: 15px;       /* Set at the `:root`. Do not use */
-    --font-size-small: 0.867rem;  /* 13px */
-    --font-size-large: 1.133rem;  /* 17px */
-    --font-size-xlarge: 1.467rem; /* 22px */
-    --font-size-xxlarge: 1.6rem;  /* 24px */
 
     /** Link **/
     --link-color: var(--color-accent-primary);
@@ -42,7 +28,33 @@
     --link-color-active: var(--color-accent-primary-active);
     --link-color-visited: var(--link-color);
 
+    /** Color **/
+    --color-accent-primary: light-dark(var(--color-blue-50), var(--color-cyan-50));
+    --color-accent-primary-hover: light-dark(var(--color-blue-60), var(--color-cyan-30));
+    --color-accent-primary-active: light-dark(var(--color-blue-70), var(--color-cyan-20));
+    --color-canvas: light-dark(var(--color-white), var(--color-gray-90));
+
+    /** Font size **/
+    --font-size-root: 15px;       /* Set at the `:root`. Do not use */
+    --font-size-small: 0.867rem;  /* 13px */
+    --font-size-large: 1.133rem;  /* 17px */
+    --font-size-xlarge: 1.467rem; /* 22px */
+    --font-size-xxlarge: 1.6rem;  /* 24px */
+
     /** Text **/
     --text-color: light-dark(var(--color-gray-100), var(--color-gray-05));
+  }
+}
+
+@layer tokens-prefers-contrast {
+  @media (prefers-contrast) {
+    :root,
+    :host(.anonymous-content-host) {
+      /* Border */
+      --border-interactive-color: var(--text-color);
+      --border-interactive-color-hover: var(--border-interactive-color);
+      --border-interactive-color-active: var(--border-interactive-color);
+      --border-interactive-color-disabled: var(--border-interactive-color);
+    }
   }
 }
