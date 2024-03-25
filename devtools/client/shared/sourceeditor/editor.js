@@ -167,6 +167,7 @@ class Editor extends EventEmitter {
   #prefObserver;
   #win;
   #lineGutterMarkers = new Map();
+  #lineContentMarkers = new Map();
 
   #updateListener = null;
 
@@ -625,6 +626,7 @@ class Editor extends EventEmitter {
     const lineWrapCompartment = new Compartment();
     const lineNumberCompartment = new Compartment();
     const lineNumberMarkersCompartment = new Compartment();
+    const lineContentMarkerCompartment = new Compartment();
 
     this.#compartments = {
       tabSizeCompartment,
@@ -632,6 +634,7 @@ class Editor extends EventEmitter {
       lineWrapCompartment,
       lineNumberCompartment,
       lineNumberMarkersCompartment,
+      lineContentMarkerCompartment,
     };
 
     const indentStr = (this.config.indentWithTabs ? "\t" : " ").repeat(
@@ -673,6 +676,7 @@ class Editor extends EventEmitter {
         }
       }),
       lineNumberMarkersCompartment.of([]),
+      lineContentMarkerCompartment.of(this.#lineContentMarkersExtension([])),
       // keep last so other extension take precedence
       codemirror.minimalSetup,
     ];
@@ -687,6 +691,98 @@ class Editor extends EventEmitter {
     });
 
     editors.set(this, cm);
+  }
+
+  /**
+   * This creates the extension used to manage the rendering of markers
+   * for in editor line content.
+   * @param   {Array}             markers                    - The current list of markers
+   * @returns {Array<ViewPlugin>} showLineContentDecorations - An extension which is an array containing the view
+   *                                                           which manages the rendering of the line content markers.
+   */
+  #lineContentMarkersExtension(markers) {
+    const {
+      codemirrorView: { Decoration, ViewPlugin },
+      codemirrorState: { RangeSetBuilder },
+    } = this.#CodeMirror6;
+
+    // Build and return the decoration set
+    function buildDecorations(view) {
+      const builder = new RangeSetBuilder();
+      for (const { from, to } of view.visibleRanges) {
+        for (let pos = from; pos <= to; ) {
+          const line = view.state.doc.lineAt(pos);
+          for (const { lineClassName, condition } of markers) {
+            if (condition(line.number)) {
+              builder.add(
+                line.from,
+                line.from,
+                Decoration.line({ class: lineClassName })
+              );
+            }
+          }
+          pos = line.to + 1;
+        }
+      }
+      return builder.finish();
+    }
+
+    // The view which handles rendering and updating the
+    // markers decorations
+    const showLineContentDecorations = ViewPlugin.fromClass(
+      class {
+        decorations;
+        constructor(view) {
+          this.decorations = buildDecorations(view);
+        }
+        update(update) {
+          if (update.docChanged || update.viewportChanged) {
+            this.decorations = buildDecorations(update.view);
+          }
+        }
+      },
+      { decorations: v => v.decorations }
+    );
+
+    return [showLineContentDecorations];
+  }
+
+  /**
+   * This adds a marker used to add classes to editor line based on a condition.
+   *   @property {object}     marker           - The rule rendering a marker or class.
+   *   @property {object}     marker.id       - The unique identifier for this marker
+   *   @property {string}     marker.lineClassName - The css class to add to the line
+   *   @property {function}   marker.condition - The condition that decides if the marker/class gets added or removed.
+   *                                             The line is passed as an argument.
+   */
+  setLineContentMarker(marker) {
+    const cm = editors.get(this);
+    this.#lineContentMarkers.set(marker.id, marker);
+
+    cm.dispatch({
+      effects: this.#compartments.lineContentMarkerCompartment.reconfigure(
+        this.#lineContentMarkersExtension(
+          Array.from(this.#lineContentMarkers.values())
+        )
+      ),
+    });
+  }
+
+  /**
+   * This removes the marker which has the specified className
+   * @param {string} markerId - The unique identifier for this marker
+   */
+  removeLineContentMarker(markerId) {
+    const cm = editors.get(this);
+    this.#lineContentMarkers.delete(markerId);
+
+    cm.dispatch({
+      effects: this.#compartments.lineContentMarkerCompartment.reconfigure(
+        this.#lineContentMarkersExtension(
+          Array.from(this.#lineContentMarkers.values())
+        )
+      ),
+    });
   }
 
   /**
