@@ -1135,7 +1135,7 @@ GetQueryParamFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
   RefPtr<nsVariant> result = new nsVariant();
   if (!queryString.IsEmpty() && !paramName.IsEmpty()) {
     URLParams::Parse(
-        queryString, true,
+        queryString,
         [&paramName, &result](const nsAString& aName, const nsAString& aValue) {
           NS_ConvertUTF16toUTF8 name(aName);
           if (!paramName.Equals(name)) {

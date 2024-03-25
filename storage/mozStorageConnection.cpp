@@ -1155,20 +1155,19 @@ nsresult Connection::initialize(nsIFileURL* aFileURL) {
   bool hasKey = false;
   bool hasDirectoryLockId = false;
 
-  MOZ_ALWAYS_TRUE(
-      URLParams::Parse(query, true,
-                       [&hasKey, &hasDirectoryLockId](const nsAString& aName,
-                                                      const nsAString& aValue) {
-                         if (aName.EqualsLiteral("key")) {
-                           hasKey = true;
-                           return true;
-                         }
-                         if (aName.EqualsLiteral("directoryLockId")) {
-                           hasDirectoryLockId = true;
-                           return true;
-                         }
-                         return true;
-                       }));
+  MOZ_ALWAYS_TRUE(URLParams::Parse(
+      query, [&hasKey, &hasDirectoryLockId](const nsAString& aName,
+                                            const nsAString& aValue) {
+        if (aName.EqualsLiteral("key")) {
+          hasKey = true;
+          return true;
+        }
+        if (aName.EqualsLiteral("directoryLockId")) {
+          hasDirectoryLockId = true;
+          return true;
+        }
+        return true;
+      }));
 
   bool exclusive = StaticPrefs::storage_sqlite_exclusiveLock_enabled();
 
