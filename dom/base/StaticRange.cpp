@@ -100,6 +100,13 @@ bool StaticRange::IsValid() const {
     return false;
   }
 
+  MOZ_ASSERT(mAreStartAndEndInSameTree ==
+             (RangeUtils::ComputeRootNode(mStart.Container()) ==
+              RangeUtils::ComputeRootNode(mEnd.Container())));
+  if (!mAreStartAndEndInSameTree) {
+    return false;
+  }
+
   const Maybe<int32_t> pointOrder = nsContentUtils::ComparePoints(mStart, mEnd);
   return pointOrder.isSome() && *pointOrder <= 0;
 }
@@ -119,6 +126,9 @@ void StaticRange::DoSetRange(const RangeBoundaryBase<SPT, SRT>& aStartBoundary,
   if (checkCommonAncestor) {
     UpdateCommonAncestorIfNecessary();
   }
+
+  mAreStartAndEndInSameTree = RangeUtils::ComputeRootNode(mStart.Container()) ==
+                              RangeUtils::ComputeRootNode(mEnd.Container());
 }
 
 /* static */

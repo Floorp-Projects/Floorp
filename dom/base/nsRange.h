@@ -13,6 +13,7 @@
 
 #include "nsCOMPtr.h"
 #include "mozilla/dom/AbstractRange.h"
+#include "mozilla/dom/StaticRange.h"
 #include "prmon.h"
 #include "nsStubMutationObserver.h"
 #include "nsWrapperCache.h"
@@ -351,6 +352,59 @@ class nsRange final : public mozilla::dom::AbstractRange,
    */
   nsINode* GetRegisteredClosestCommonInclusiveAncestor();
 
+  /*
+   * The methods marked with MayCrossShadowBoundary[..] additionally check for
+   * the existence of mCrossShadowBoundaryRange, which indicates a range that
+   * crosses a shadow DOM boundary (i.e. mStart and mEnd are in different
+   * trees). If the caller can guarantee that this does not happen, there are
+   * additional variants of these methods named without MayCrossShadowBoundary,
+   * which provide a slightly faster implementation.
+   * */
+
+  nsIContent* GetMayCrossBoundaryChildAtStartOffset() const {
+    return mCrossShadowBoundaryRange
+               ? mCrossShadowBoundaryRange->GetChildAtStartOffset()
+               : mStart.GetChildAtOffset();
+  }
+
+  nsIContent* GetMayCrossBoundaryChildAtEndOffset() const {
+    return mCrossShadowBoundaryRange
+               ? mCrossShadowBoundaryRange->GetChildAtEndOffset()
+               : mEnd.GetChildAtOffset();
+  }
+
+  nsINode* GetMayCrossBoundaryStartContainer() const {
+    return mCrossShadowBoundaryRange
+               ? mCrossShadowBoundaryRange->GetStartContainer()
+               : mStart.Container();
+  }
+
+  nsINode* GetMayCrossBoundaryEndContainer() const {
+    return mCrossShadowBoundaryRange
+               ? mCrossShadowBoundaryRange->GetEndContainer()
+               : mEnd.Container();
+  }
+
+  uint32_t MayCrossBoundaryStartOffset() const {
+    return mCrossShadowBoundaryRange ? mCrossShadowBoundaryRange->StartOffset()
+                                     : StartOffset();
+  }
+
+  uint32_t MayCrossBoundaryEndOffset() const {
+    return mCrossShadowBoundaryRange ? mCrossShadowBoundaryRange->EndOffset()
+                                     : EndOffset();
+  }
+
+  const RangeBoundary& MayCrossBoundaryStartRef() const {
+    return mCrossShadowBoundaryRange ? mCrossShadowBoundaryRange->StartRef()
+                                     : StartRef();
+  }
+
+  const RangeBoundary& MayCrossBoundaryEndRef() const {
+    return mCrossShadowBoundaryRange ? mCrossShadowBoundaryRange->EndRef()
+                                     : EndRef();
+  }
+
  protected:
   /**
    * DoSetRange() is called when `AbstractRange::SetStartAndEndInternal()` sets
@@ -423,6 +477,22 @@ class nsRange final : public mozilla::dom::AbstractRange,
   nsIContent* MOZ_NON_OWNING_REF mNextEndRef;
 
   static nsTArray<RefPtr<nsRange>>* sCachedRanges;
+
+  // Used to keep track of the real start and end for a
+  // selection where the start and the end are in different trees.
+  // It's NULL when the nodes are in the same tree.
+  //
+  // mCrossShadowBoundaryRange doesn't deal with DOM mutations, because
+  // it's still an open question about how it should be handled.
+  // Spec: https://github.com/w3c/selection-api/issues/168.
+  // As a result, it'll be set to NULL if that happens.
+  //
+  // Theoretically, mCrossShadowBoundaryRange isn't really needed because
+  // we should be able to always store the real start and end, and
+  // just return one point when a collapse is needed.
+  // Bug https://bugzilla.mozilla.org/show_bug.cgi?id=1886028 is going
+  // to be used to improve mCrossShadowBoundaryRange.
+  RefPtr<mozilla::dom::StaticRange> mCrossShadowBoundaryRange;
 
   friend class mozilla::dom::AbstractRange;
 };
