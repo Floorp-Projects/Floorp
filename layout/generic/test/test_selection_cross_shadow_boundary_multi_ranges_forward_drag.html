@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="application/javascript" src="/tests/layout/generic/test/selection_cross_shadow_boundary_helper.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<script>
+SimpleTest.waitForExplicitFinish();
+function run() {
+  const inner1 = host1.shadowRoot.querySelector("span");
+  const rect1 = inner1.getBoundingClientRect();
+
+  // drag from the top left of OuterText1
+  // to the bottom right of InnerText1
+  drag(
+    document.getElementById("outer1"),
+    1,
+    1,
+    inner1,
+    rect1.width - 1,
+    rect1.height - 1);
+
+  const inner2 = host2.shadowRoot.querySelector("span");
+  const rect2 = inner2.getBoundingClientRect();
+  // drag from the top left of OuterText2
+  // to the bottom right of InnerText2
+  drag(
+    document.getElementById("outer2"),
+    1,
+    1,
+    inner2,
+    rect2.width,
+    rect2.height,
+    true /* accelKey */);
+
+  const ranges = document.getSelection().getComposedRanges(host1.shadowRoot, host2.shadowRoot);
+  is(ranges.length, 2, "Above two drag selection should produce two ranges");
+
+  is(ranges[0].startContainer, outer1.firstChild, "startContainer is the OuterText1");
+  is(ranges[0].startOffset, 0, "startOffset starts at the first character");
+  is(ranges[0].endContainer, inner1.firstChild, "endContainer is the InnerText1");
+  is(ranges[0].endOffset, 10, "endOffset ends at the last character");
+
+  is(ranges[1].startContainer, outer2.firstChild, "startContainer is the OuterText2");
+  is(ranges[1].startOffset, 0, "startOffset starts at the first character");
+  is(ranges[1].endContainer, inner2.firstChild, "endContainer is the InnerText2");
+  is(ranges[1].endOffset, 10, "endOffset ends at the last character");
+
+  SimpleTest.finish();
+}
+</script>
+<body onload="SimpleTest.waitForFocus(run);">
+  <span id="outer1">OuterText1</span>
+  <div id="host1">
+    <template shadowrootmode="open">
+      <span>InnerText1</span>
+    </template>
+  </div>
+  <br>
+  <span id="outer2">OuterText2</span>
+  <div id="host2">
+    <template shadowrootmode="open">
+      <span>InnerText2</span>
+    </template>
+  </div>
+</body>
