@@ -61,9 +61,6 @@ uiaClient = comtypes.CoCreateInstance(
     interface=uiaMod.IUIAutomation,
     clsctx=comtypes.CLSCTX_INPROC_SERVER,
 )
-TreeScope_Descendants = uiaMod.TreeScope_Descendants
-UIA_AutomationIdPropertyId = uiaMod.UIA_AutomationIdPropertyId
-del uiaMod
 
 
 def AccessibleObjectFromWindow(hwnd, objectID=OBJID_CLIENT):
@@ -173,7 +170,7 @@ class WaitForWinEvent:
     """
 
     def __init__(self, eventId, match):
-        """event is the event id to wait for.
+        """eventId is the event id to wait for.
         match is either None to match any object, an str containing the DOM id
         of the desired object, or a function taking a WinEvent which should
         return True if this is the requested event.
@@ -235,6 +232,7 @@ class WaitForWinEvent:
             raise
         finally:
             user32.UnhookWinEvent(self._hook)
+            ctypes.windll.kernel32.CloseHandle(self._signal)
             self._proc = None
         if isinstance(self._matched, Exception):
             raise self._matched from self._matched
@@ -266,10 +264,84 @@ def getDocUia():
 
 
 def findUiaByDomId(root, id):
-    cond = uiaClient.CreatePropertyCondition(UIA_AutomationIdPropertyId, id)
+    cond = uiaClient.CreatePropertyCondition(uiaMod.UIA_AutomationIdPropertyId, id)
     # FindFirst ignores elements in the raw tree, so we have to use
     # FindFirstBuildCache to override that, even though we don't want to cache
     # anything.
     request = uiaClient.CreateCacheRequest()
     request.TreeFilter = uiaClient.RawViewCondition
-    return root.FindFirstBuildCache(TreeScope_Descendants, cond, request)
+    return root.FindFirstBuildCache(uiaMod.TreeScope_Descendants, cond, request)
+
+
+class WaitForUiaEvent(comtypes.COMObject):
+    """Wait for a UIA event.
+    This should be used as follows:
+    1. Create an instance to wait for the desired event.
+    2. Perform the action that should fire the event.
+    3. Call wait() on the instance you created in 1) to wait for the event.
+    """
+
+    # This tells comtypes which COM interfaces we implement. It will then call
+    # either `ISomeInterface_SomeMethod` or just `SomeMethod` on this instance
+    # when that method is called using COM. We use the shorter convention, since
+    # we don't anticipate method name conflicts with UIA interfaces.
+    _com_interfaces_ = [uiaMod.IUIAutomationFocusChangedEventHandler]
+
+    def __init__(self, *, eventId=None, match=None):
+        """eventId is the event id to wait for.
+        match is either None to match any object, an str containing the DOM id
+        of the desired object, or a function taking a IUIAutomationElement which
+        should return True if this is the requested event.
+        """
+        self._match = match
+        self._matched = None
+        # A kernel event used to signal when we get the desired event.
+        self._signal = ctypes.windll.kernel32.CreateEventW(None, True, False, None)
+        if eventId == uiaMod.UIA_AutomationFocusChangedEventId:
+            uiaClient.AddFocusChangedEventHandler(None, self)
+        else:
+            raise ValueError("No supported event specified")
+
+    def _checkMatch(self, sender):
+        if isinstance(self._match, str):
+            try:
+                if sender.CurrentAutomationId == self._match:
+                    self._matched = sender
+            except comtypes.COMError:
+                pass
+        elif callable(self._match):
+            try:
+                if self._match(sender):
+                    self._matched = sender
+            except Exception as e:
+                self._matched = e
+        else:
+            self._matched = sender
+        if self._matched:
+            ctypes.windll.kernel32.SetEvent(self._signal)
+
+    def HandleFocusChangedEvent(self, sender):
+        self._checkMatch(sender)
+
+    def wait(self):
+        """Wait for and return the IUIAutomationElement which sent the desired
+        event."""
+        # Pump Windows messages until we get the desired event, which will be
+        # signalled using a kernel event.
+        handles = (ctypes.c_void_p * 1)(self._signal)
+        index = ctypes.wintypes.DWORD()
+        TIMEOUT = 10000
+        try:
+            ctypes.oledll.ole32.CoWaitForMultipleHandles(
+                COWAIT_DEFAULT, TIMEOUT, 1, handles, ctypes.byref(index)
+            )
+        except WindowsError as e:
+            if e.winerror == RPC_S_CALLPENDING:
+                raise TimeoutError("Timeout before desired event received")
+            raise
+        finally:
+            uiaClient.RemoveAllEventHandlers()
+            ctypes.windll.kernel32.CloseHandle(self._signal)
+        if isinstance(self._matched, Exception):
+            raise self._matched from self._matched
+        return self._matched
