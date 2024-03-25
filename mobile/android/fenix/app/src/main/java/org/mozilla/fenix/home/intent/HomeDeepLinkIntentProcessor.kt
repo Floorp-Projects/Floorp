@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.home.intent
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -21,14 +20,12 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.ext.alreadyOnDestination
 import org.mozilla.fenix.ext.openSetDefaultBrowserOption
-import org.mozilla.fenix.utils.showAddSearchWidgetPrompt
 
 /**
  * Deep links in the form of `fenix://host` open different parts of the app.
  */
 class HomeDeepLinkIntentProcessor(
     private val activity: HomeActivity,
-    private val showAddSearchWidgetPrompt: (Activity) -> Unit = ::showAddSearchWidgetPrompt,
 ) : HomeIntentProcessor {
     private val logger = Logger("DeepLinkIntentProcessor")
 
@@ -104,10 +101,6 @@ class HomeDeepLinkIntentProcessor(
             "settings_notifications" -> {
                 val intent = notificationSettings(activity)
                 activity.startActivity(intent)
-            }
-            "install_search_widget" -> {
-                showAddSearchWidgetPrompt(activity)
-                return
             }
         }
     }
