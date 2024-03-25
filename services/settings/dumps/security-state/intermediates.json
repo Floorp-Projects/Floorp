@@ -1,6 +1,42 @@
 {
   "data": [
     {
+      "schema": 1711079327797,
+      "derHash": "GnD+GCdR5jfA5dPVU+db26HWVf/lQR2bOQtzyDePpyw=",
+      "subject": "CN=Leocert TLS Issuing RSA CA 1,O=Leocert LLC,C=US",
+      "subjectDN": "MEoxCzAJBgNVBAYTAlVTMRQwEgYDVQQKDAtMZW9jZXJ0IExMQzElMCMGA1UEAwwcTGVvY2VydCBUTFMgSXNzdWluZyBSU0EgQ0EgMQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "909b2e8999e89c9ba6a76900402d0f011877b2cac32792910aa1f10c33ab823b",
+        "size": 2064,
+        "filename": "TLG3k1viplwCa4FIN66yKHXwUwpjuk-zYaXHlJKI1mY=.pem",
+        "location": "security-state-staging/intermediates/eafb2b1c-e818-4c8e-914b-86ac8c5d7235.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "TLG3k1viplwCa4FIN66yKHXwUwpjuk+zYaXHlJKI1mY=",
+      "crlite_enrolled": false,
+      "id": "b1c85617-4d30-44d3-ab20-4d5ea7d6ac51",
+      "last_modified": 1711079823132
+    },
+    {
+      "schema": 1711079328231,
+      "derHash": "eQidoGeOCFCA5Y1UxGKzE+94QWqHJPrOfRqJN0OOAMc=",
+      "subject": "CN=Leocert TLS Issuing ECC CA 1,O=Leocert LLC,C=US",
+      "subjectDN": "MEoxCzAJBgNVBAYTAlVTMRQwEgYDVQQKDAtMZW9jZXJ0IExMQzElMCMGA1UEAwwcTGVvY2VydCBUTFMgSXNzdWluZyBFQ0MgQ0EgMQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "3c2391cb93c7441025a1e056e161c4d31acb51039c0f8720ee0598ebe26e35d6",
+        "size": 1089,
+        "filename": "VCKMSEPlE_Wm1yh1cVkPT9qFW95J646OM9DdihnTErc=.pem",
+        "location": "security-state-staging/intermediates/7d525c97-e82d-4f3a-be44-21c246617a24.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "VCKMSEPlE/Wm1yh1cVkPT9qFW95J646OM9DdihnTErc=",
+      "crlite_enrolled": false,
+      "id": "2945ac79-f854-4685-a0ec-f140cdf5e8c7",
+      "last_modified": 1711079823129
+    },
+    {
       "schema": 1710946446035,
       "derHash": "8DZVz+hbOj8q8v03yrnqKDs6KKm2FX/pvrdcF8BhGzo=",
       "subject": "CN=Keysec GR3 DV TLS CA 2024,O=KEYSEC LTDA,C=BR",
@@ -27433,24 +27469,6 @@
       "last_modified": 1618102648566
     },
     {
-      "schema": 1616744987712,
-      "derHash": "Grxa1bw5EaW0qR5Cu6MhLiqj3IAUfv4dSVcuS+BTJjM=",
-      "subject": "CN=GlobalSign Atlas R3 AlphaSSL CA H1 2021,O=Globalsign nv-sa,C=BE",
-      "subjectDN": "MFoxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxzaWduIG52LXNhMTAwLgYDVQQDEydHbG9iYWxTaWduIEF0bGFzIFIzIEFscGhhU1NMIENBIEgxIDIwMjE=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "0ac4293f335c1f7922726fccc78a0a749002116e0d6d354411046b3681c14fe0",
-        "size": 1715,
-        "filename": "HAdiOrIGPG14XkymnmeQ184Cm1Z8E9-jnOoBut3PORw=.pem",
-        "location": "security-state-staging/intermediates/a79140b4-b597-4021-b12a-e83c7b03a7e0.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "HAdiOrIGPG14XkymnmeQ184Cm1Z8E9+jnOoBut3PORw=",
-      "crlite_enrolled": false,
-      "id": "afbdb701-e59b-4398-967c-b0db2394d003",
-      "last_modified": 1616745549953
-    },
-    {
       "schema": 1615384231447,
       "derHash": "sQhhc3s+ybEfphVNI5cP+y2r/Ciuamv1bD8yBCZiOa0=",
       "subject": "CN=SECOM Passport for Member PUB CA4,OU=SECOM Passport for Member 2.0 PUB,O=SECOM Trust Systems CO.\\,LTD.,C=JP",
@@ -30565,5 +30583,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1710946623378
+  "timestamp": 1711292223155
 }

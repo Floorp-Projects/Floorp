@@ -1,80 +1,7 @@
 {
   "data": [
     {
-      "isSPA": true,
-      "schema": 1707523204491,
-      "components": [
-        {
-          "type": "ad_image_row",
-          "included": {
-            "parent": {
-              "selector": "[data-testid='pam.container']"
-            },
-            "children": [
-              {
-                "selector": "[data-slide-index]",
-                "countChildren": true
-              }
-            ]
-          }
-        },
-        {
-          "type": "ad_link",
-          "included": {
-            "parent": {
-              "selector": "[data-testid='adResult']"
-            }
-          }
-        },
-        {
-          "type": "incontent_searchbox",
-          "topDown": true,
-          "included": {
-            "parent": {
-              "selector": "._1zdrb._1cR1n"
-            },
-            "related": {
-              "selector": "#search-suggestions"
-            },
-            "children": [
-              {
-                "selector": "input[type='search']"
-              }
-            ]
-          }
-        },
-        {
-          "type": "ad_link",
-          "default": true
-        }
-      ],
-      "taggedCodes": [
-        "brz-moz",
-        "firefoxqwant"
-      ],
-      "telemetryId": "qwant",
-      "organicCodes": [],
-      "codeParamName": "client",
-      "queryParamName": "q",
-      "queryParamNames": [
-        "q"
-      ],
-      "searchPageRegexp": "^https://www\\.qwant\\.com/",
-      "filter_expression": "env.version|versionCompare(\"124.0a1\")>=0",
-      "followOnParamNames": [],
-      "defaultPageQueryParam": {
-        "key": "t",
-        "value": "web"
-      },
-      "extraAdServersRegexps": [
-        "^https://www\\.bing\\.com/acli?c?k",
-        "^https://api\\.qwant\\.com/v3/r/"
-      ],
-      "id": "19c434a3-d173-4871-9743-290ac92a3f6b",
-      "last_modified": 1707833261849
-    },
-    {
-      "schema": 1705948294201,
+      "schema": 1711039009912,
       "components": [
         {
           "type": "ad_carousel",
@@ -229,17 +156,37 @@
       "domainExtraction": {
         "ads": [
           {
-            "method": "data-attribute",
+            "method": "textContent",
+            "selectors": ".sh-np__seller-container"
+          },
+          {
+            "method": "dataAttribute",
             "options": {
               "dataAttributeKey": "dtld"
             },
             "selectors": "[data-dtld]"
+          },
+          {
+            "method": "href",
+            "selectors": "a.x0Sesd"
           }
         ],
         "nonAds": [
           {
             "method": "href",
-            "selectors": "#rso div.g[jscontroller] > div > div > div > div a[data-usg]"
+            "options": {
+              "queryParamKey": "url",
+              "queryParamValueIsHref": true
+            },
+            "selectors": ".mnIHsc > a:first-child"
+          },
+          {
+            "method": "href",
+            "selectors": "a[jsname='UWckNb']"
+          },
+          {
+            "method": "href",
+            "selectors": "a.iGVLpd"
           }
         ]
       },
@@ -259,7 +206,80 @@
         "^https?://www\\.google(?:adservices)?\\.com/(?:pagead/)?aclk"
       ],
       "id": "635a3325-1995-42d6-be09-dbe4b2a95453",
-      "last_modified": 1706198445460
+      "last_modified": 1711137332190
+    },
+    {
+      "isSPA": true,
+      "schema": 1707523204491,
+      "components": [
+        {
+          "type": "ad_image_row",
+          "included": {
+            "parent": {
+              "selector": "[data-testid='pam.container']"
+            },
+            "children": [
+              {
+                "selector": "[data-slide-index]",
+                "countChildren": true
+              }
+            ]
+          }
+        },
+        {
+          "type": "ad_link",
+          "included": {
+            "parent": {
+              "selector": "[data-testid='adResult']"
+            }
+          }
+        },
+        {
+          "type": "incontent_searchbox",
+          "topDown": true,
+          "included": {
+            "parent": {
+              "selector": "._1zdrb._1cR1n"
+            },
+            "related": {
+              "selector": "#search-suggestions"
+            },
+            "children": [
+              {
+                "selector": "input[type='search']"
+              }
+            ]
+          }
+        },
+        {
+          "type": "ad_link",
+          "default": true
+        }
+      ],
+      "taggedCodes": [
+        "brz-moz",
+        "firefoxqwant"
+      ],
+      "telemetryId": "qwant",
+      "organicCodes": [],
+      "codeParamName": "client",
+      "queryParamName": "q",
+      "queryParamNames": [
+        "q"
+      ],
+      "searchPageRegexp": "^https://www\\.qwant\\.com/",
+      "filter_expression": "env.version|versionCompare(\"124.0a1\")>=0",
+      "followOnParamNames": [],
+      "defaultPageQueryParam": {
+        "key": "t",
+        "value": "web"
+      },
+      "extraAdServersRegexps": [
+        "^https://www\\.bing\\.com/acli?c?k",
+        "^https://api\\.qwant\\.com/v3/r/"
+      ],
+      "id": "19c434a3-d173-4871-9743-290ac92a3f6b",
+      "last_modified": 1707833261849
     },
     {
       "schema": 1705363206938,
@@ -653,5 +673,5 @@
       "last_modified": 1698666532321
     }
   ],
-  "timestamp": 1707833261849
+  "timestamp": 1711137332190
 }
