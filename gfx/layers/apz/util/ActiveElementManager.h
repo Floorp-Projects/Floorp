@@ -58,12 +58,12 @@ class ActiveElementManager final {
    * Handle a touch-end or touch-cancel event.
    * @param aWasClick whether the touch was a click
    */
-  void HandleTouchEndEvent(bool aWasClick);
+  bool HandleTouchEndEvent(bool aWasClick);
   /**
    * Handle a touch-end state notification from APZ. This notification may be
    * delayed until after touch listeners have responded to the APZ.
    */
-  void HandleTouchEnd(bool aWasClick);
+  bool HandleTouchEnd(bool aWasClick);
   /**
    * Possibly clear active element sate in response to a single tap.
    */
@@ -117,7 +117,7 @@ class ActiveElementManager final {
   void ResetTouchBlockState();
   void SetActiveTask(const nsCOMPtr<dom::Element>& aTarget);
   void CancelTask();
-  void MaybeChangeActiveState(bool aWasClick);
+  bool MaybeChangeActiveState(bool aWasClick);
 };
 
 }  // namespace layers
