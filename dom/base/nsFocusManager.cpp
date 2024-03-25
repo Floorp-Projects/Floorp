@@ -846,23 +846,26 @@ nsresult nsFocusManager::ContentRemoved(Document* aDocument,
   NS_ENSURE_ARG(aDocument);
   NS_ENSURE_ARG(aContent);
 
-  RefPtr<nsPIDOMWindowOuter> window = aDocument->GetWindow();
-  if (!window) {
+  nsPIDOMWindowOuter* windowPtr = aDocument->GetWindow();
+  if (!windowPtr) {
     return NS_OK;
   }
 
   // if the content is currently focused in the window, or is an
   // shadow-including inclusive ancestor of the currently focused element,
   // reset the focus within that window.
-  RefPtr<Element> previousFocusedElement = window->GetFocusedElement();
-  if (!previousFocusedElement) {
+  Element* previousFocusedElementPtr = windowPtr->GetFocusedElement();
+  if (!previousFocusedElementPtr) {
     return NS_OK;
   }
 
   if (!nsContentUtils::ContentIsHostIncludingDescendantOf(
-          previousFocusedElement, aContent)) {
+          previousFocusedElementPtr, aContent)) {
     return NS_OK;
   }
+
+  RefPtr<nsPIDOMWindowOuter> window = windowPtr;
+  RefPtr<Element> previousFocusedElement = previousFocusedElementPtr;
 
   RefPtr<Element> newFocusedElement = [&]() -> Element* {
     if (auto* sr = ShadowRoot::FromNode(aContent)) {
