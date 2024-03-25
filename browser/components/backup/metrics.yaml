@@ -111,3 +111,69 @@ browser.backup:
       - mconley@mozilla.com
     expires: never
     telemetry_mirror: BROWSER_BACKUP_PREFERENCES_SIZE
+
+  cookies_size:
+    type: quantity
+    unit: kilobyte
+    description: >
+      The total file size of the cookies.sqlite db located in the current profile
+      directory, in kilobytes.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1883740
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1883740
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - mconley@mozilla.com
+    expires: never
+    telemetry_mirror: BROWSER_BACKUP_COOKIES_SIZE
+
+  form_history_size:
+    type: quantity
+    unit: kilobyte
+    description: >
+      The file size of the formhistory.sqlite db located in the current profile
+      directory, in kilobytes.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1883740
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1883740
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - mconley@mozilla.com
+    expires: never
+    telemetry_mirror: BROWSER_BACKUP_FORM_HISTORY_SIZE
+
+  session_store_backups_directory_size:
+    type: quantity
+    unit: kilobyte
+    description: >
+      The total size of the session store backups directory, in kilobytes.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1883740
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1883740
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - mconley@mozilla.com
+    expires: never
+    telemetry_mirror: BROWSER_BACKUP_SESSION_STORE_BACKUPS_DIRECTORY_SIZE
+
+  session_store_size:
+    type: quantity
+    unit: kilobyte
+    description: >
+      The size of uncompressed session store json, in kilobytes.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1883740
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1883740
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - mconley@mozilla.com
+    expires: never
+    telemetry_mirror: BROWSER_BACKUP_SESSION_STORE_SIZE
