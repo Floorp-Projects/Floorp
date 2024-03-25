@@ -618,6 +618,18 @@ nsHTTPSOnlyUtils::PotentiallyDowngradeHttpsFirstRequest(
               duration);
         }
       }
+
+      nsresult channelStatus;
+      channel->GetStatus(&channelStatus);
+      if (channelStatus == NS_ERROR_NET_TIMEOUT_EXTERNAL) {
+        if (loadInfo->GetWasSchemelessInput() &&
+            !nsHTTPSOnlyUtils::IsHttpsFirstModeEnabled(isPrivateWin)) {
+          mozilla::glean::httpsfirst::downgraded_on_timer_schemeless
+              .AddToNumerator();
+        } else {
+          mozilla::glean::httpsfirst::downgraded_on_timer.AddToNumerator();
+        }
+      }
     }
   }
 
@@ -991,19 +1003,6 @@ TestHTTPAnswerRunnable::OnStartRequest(nsIRequest* aRequest) {
       nsresult httpsOnlyChannelStatus;
       httpsOnlyChannel->GetStatus(&httpsOnlyChannelStatus);
       if (httpsOnlyChannelStatus == NS_OK) {
-        bool isPrivateWin =
-            loadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
-        if (!nsHTTPSOnlyUtils::IsHttpsOnlyModeEnabled(isPrivateWin)) {
-          // Record HTTPS-First Telemetry
-          if (loadInfo->GetWasSchemelessInput() &&
-              !nsHTTPSOnlyUtils::IsHttpsFirstModeEnabled(isPrivateWin)) {
-            mozilla::glean::httpsfirst::downgraded_on_timer_schemeless
-                .AddToNumerator();
-          } else {
-            mozilla::glean::httpsfirst::downgraded_on_timer.AddToNumerator();
-          }
-        }
-
         httpsOnlyChannel->Cancel(NS_ERROR_NET_TIMEOUT_EXTERNAL);
       }
     }
