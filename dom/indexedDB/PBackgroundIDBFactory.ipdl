@@ -40,6 +40,12 @@ union FactoryRequestParams
   DeleteDatabaseRequestParams;
 };
 
+union GetDatabasesResponse
+{
+  nsresult;
+  DatabaseMetadata[];
+};
+
 [ChildImpl="indexedDB::BackgroundFactoryChild", ParentImpl=virtual]
 sync protocol PBackgroundIDBFactory
 {
@@ -52,6 +58,10 @@ parent:
   async DeleteMe();
 
   async PBackgroundIDBFactoryRequest(FactoryRequestParams params);
+
+  async GetDatabases(PersistenceType persistenceType,
+                     PrincipalInfo principalInfo)
+      returns(GetDatabasesResponse response);
 
 child:
   async __delete__();

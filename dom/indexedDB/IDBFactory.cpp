@@ -16,8 +16,8 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/IDBFactoryBinding.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/dom/quota/PersistenceType.h"
 #include "mozilla/dom/quota/QuotaManager.h"
+#include "mozilla/dom/quota/ResultExtensions.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/ipc/BackgroundChild.h"
@@ -52,30 +52,6 @@ using namespace mozilla::dom::quota;
 using namespace mozilla::ipc;
 
 namespace {
-
-PersistenceType GetPersistenceType(const PrincipalInfo& aPrincipalInfo) {
-  if (aPrincipalInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
-    // Chrome privilege always gets persistent storage.
-    return PERSISTENCE_TYPE_PERSISTENT;
-  }
-
-  if (aPrincipalInfo.type() == PrincipalInfo::TContentPrincipalInfo) {
-    nsCString origin =
-        aPrincipalInfo.get_ContentPrincipalInfo().originNoSuffix();
-
-    if (QuotaManager::IsOriginInternal(origin)) {
-      // Internal origins always get persistent storage.
-      return PERSISTENCE_TYPE_PERSISTENT;
-    }
-
-    if (aPrincipalInfo.get_ContentPrincipalInfo().attrs().mPrivateBrowsingId >
-        0) {
-      return PERSISTENCE_TYPE_PRIVATE;
-    }
-  }
-
-  return PERSISTENCE_TYPE_DEFAULT;
-}
 
 Telemetry::LABELS_IDB_CUSTOM_OPEN_WITH_OPTIONS_COUNT IdentifyPrincipalType(
     const mozilla::ipc::PrincipalInfo& aPrincipalInfo) {
@@ -403,6 +379,32 @@ bool IDBFactory::AllowedForPrincipal(nsIPrincipal* aPrincipal,
   return !aPrincipal->GetIsNullPrincipal();
 }
 
+// static
+PersistenceType IDBFactory::GetPersistenceType(
+    const PrincipalInfo& aPrincipalInfo) {
+  if (aPrincipalInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
+    // Chrome privilege always gets persistent storage.
+    return PERSISTENCE_TYPE_PERSISTENT;
+  }
+
+  if (aPrincipalInfo.type() == PrincipalInfo::TContentPrincipalInfo) {
+    nsCString origin =
+        aPrincipalInfo.get_ContentPrincipalInfo().originNoSuffix();
+
+    if (QuotaManager::IsOriginInternal(origin)) {
+      // Internal origins always get persistent storage.
+      return PERSISTENCE_TYPE_PERSISTENT;
+    }
+
+    if (aPrincipalInfo.get_ContentPrincipalInfo().attrs().mPrivateBrowsingId >
+        0) {
+      return PERSISTENCE_TYPE_PRIVATE;
+    }
+  }
+
+  return PERSISTENCE_TYPE_DEFAULT;
+}
+
 void IDBFactory::UpdateActiveTransactionCount(int32_t aDelta) {
   AssertIsOnOwningThread();
   MOZ_DIAGNOSTIC_ASSERT(aDelta > 0 || (mActiveTransactionCount + aDelta) <
@@ -471,9 +473,64 @@ RefPtr<IDBOpenDBRequest> IDBFactory::DeleteDatabase(
 already_AddRefed<Promise> IDBFactory::Databases(JSContext* const aCx) {
   RefPtr<Promise> promise = Promise::CreateInfallible(GetOwnerGlobal());
 
-  Sequence<IDBDatabaseInfo> databaseInfos;
+  // Nothing can be done here if we have previously failed to create a
+  // background actor.
+  if (mBackgroundActorFailed) {
+    promise->MaybeReject(NS_ERROR_FAILURE);
+    return promise.forget();
+  }
 
-  promise->MaybeResolve(databaseInfos);
+  PersistenceType persistenceType = GetPersistenceType(*mPrincipalInfo);
+
+  QM_TRY(MOZ_TO_RESULT(EnsureBackgroundActor()), [&promise](const nsresult rv) {
+    promise->MaybeReject(rv);
+    return promise.forget();
+  });
+
+  mBackgroundActor->SendGetDatabases(persistenceType, *mPrincipalInfo)
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [promise](const PBackgroundIDBFactoryChild::GetDatabasesPromise::
+                        ResolveOrRejectValue& aValue) {
+            if (aValue.IsReject()) {
+              promise->MaybeReject(NS_ERROR_FAILURE);
+              return;
+            }
+
+            const GetDatabasesResponse& response = aValue.ResolveValue();
+
+            switch (response.type()) {
+              case GetDatabasesResponse::Tnsresult:
+                promise->MaybeReject(response.get_nsresult());
+
+                break;
+
+              case GetDatabasesResponse::TArrayOfDatabaseMetadata: {
+                const auto& array = response.get_ArrayOfDatabaseMetadata();
+
+                Sequence<IDBDatabaseInfo> databaseInfos;
+
+                for (const auto& databaseMetadata : array) {
+                  IDBDatabaseInfo databaseInfo;
+
+                  databaseInfo.mName.Construct(databaseMetadata.name());
+                  databaseInfo.mVersion.Construct(databaseMetadata.version());
+
+                  if (!databaseInfos.AppendElement(std::move(databaseInfo),
+                                                   fallible)) {
+                    promise->MaybeRejectWithTypeError("Out of memory");
+                    return;
+                  }
+                }
+
+                promise->MaybeResolve(databaseInfos);
+
+                break;
+              }
+              default:
+                MOZ_CRASH("Unknown response type!");
+            }
+          });
 
   return promise.forget();
 }

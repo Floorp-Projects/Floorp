@@ -94,6 +94,7 @@
 #include "mozilla/dom/FileBlobImpl.h"
 #include "mozilla/dom/FlippedOnce.h"
 #include "mozilla/dom/IDBCursorBinding.h"
+#include "mozilla/dom/IDBFactory.h"
 #include "mozilla/dom/IPCBlob.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/IndexedDatabase.h"
@@ -2147,6 +2148,14 @@ class Factory final : public PBackgroundIDBFactoryParent,
 
   bool DeallocPBackgroundIDBFactoryRequestParent(
       PBackgroundIDBFactoryRequestParent* aActor) override;
+
+  mozilla::ipc::IPCResult RecvGetDatabases(
+      const PersistenceType& aPersistenceType,
+      const PrincipalInfo& aPrincipalInfo,
+      GetDatabasesResolver&& aResolve) override;
+
+ private:
+  Maybe<ContentParentId> GetContentParentId() const;
 };
 
 class WaitForTransactionsHelper final : public Runnable {
@@ -3352,6 +3361,40 @@ class DeleteDatabaseOp::VersionChangeOp final : public DatabaseOperationBase {
   void RunOnOwningThread();
 
   NS_DECL_NSIRUNNABLE
+};
+
+class GetDatabasesOp final : public FactoryOp {
+  nsTArray<DatabaseMetadata> mDatabaseMetadataArray;
+  Factory::GetDatabasesResolver mResolver;
+
+ public:
+  GetDatabasesOp(SafeRefPtr<Factory> aFactory,
+                 const Maybe<ContentParentId>& aContentParentId,
+                 const PersistenceType aPersistenceType,
+                 const PrincipalInfo& aPrincipalInfo,
+                 Factory::GetDatabasesResolver&& aResolver)
+      : FactoryOp(std::move(aFactory), aContentParentId, aPersistenceType,
+                  aPrincipalInfo, Nothing(), /* aDeleting */ false),
+        mResolver(std::move(aResolver)) {}
+
+ private:
+  ~GetDatabasesOp() override = default;
+
+  nsresult DatabasesNotAvailable();
+
+  nsresult DatabaseOpen() override;
+
+  nsresult DoDatabaseWork() override;
+
+  nsresult BeginVersionChange() override;
+
+  bool AreActorsAlive() override;
+
+  void SendBlockedNotification() override;
+
+  nsresult DispatchToWorkThread() override;
+
+  void SendResults() override;
 };
 
 class VersionChangeTransactionOp : public TransactionDatabaseOperationBase {
@@ -4732,6 +4775,8 @@ class DatabaseLoggingInfo final {
 };
 
 class QuotaClient final : public mozilla::dom::quota::Client {
+  friend class GetDatabasesOp;
+
   static QuotaClient* sInstance;
 
   nsCOMPtr<nsIEventTarget> mBackgroundThread;
@@ -4865,8 +4910,9 @@ class QuotaClient final : public mozilla::dom::quota::Client {
   // checks those unfinished deletion and clean them up after that.
   template <ObsoleteFilenamesHandling ObsoleteFilenames =
                 ObsoleteFilenamesHandling::Omit>
-  Result<GetDatabaseFilenamesResult<ObsoleteFilenames>, nsresult>
-  GetDatabaseFilenames(nsIFile& aDirectory, const AtomicBool& aCanceled);
+  Result<GetDatabaseFilenamesResult<ObsoleteFilenames>,
+         nsresult> static GetDatabaseFilenames(nsIFile& aDirectory,
+                                               const AtomicBool& aCanceled);
 
   nsresult GetUsageForOriginInternal(PersistenceType aPersistenceType,
                                      const OriginMetadata& aOriginMetadata,
@@ -9172,18 +9218,7 @@ Factory::AllocPBackgroundIDBFactoryRequestParent(
     return nullptr;
   }
 
-  Maybe<ContentParentId> contentParentId;
-
-  uint64_t childID = BackgroundParent::GetChildID(Manager());
-  if (childID) {
-    // If childID is not zero we are dealing with an other-process actor. We
-    // want to initialize OpenDatabaseOp/DeleteDatabaseOp here with the ID
-    // (and later also Database) in that case, so Database::IsOwnedByProcess
-    // can find Databases belonging to a particular content process when
-    // QuotaClient::AbortOperationsForProcess is called which is currently used
-    // to abort operations for content processes only.
-    contentParentId = Some(ContentParentId(childID));
-  }
+  Maybe<ContentParentId> contentParentId = GetContentParentId();
 
   auto actor = [&]() -> RefPtr<FactoryRequestOp> {
     if (aParams.type() == FactoryRequestParams::TOpenDatabaseRequestParams) {
@@ -9227,6 +9262,64 @@ bool Factory::DeallocPBackgroundIDBFactoryRequestParent(
   RefPtr<FactoryRequestOp> op =
       dont_AddRef(static_cast<FactoryRequestOp*>(aActor));
   return true;
+}
+
+mozilla::ipc::IPCResult Factory::RecvGetDatabases(
+    const PersistenceType& aPersistenceType,
+    const PrincipalInfo& aPrincipalInfo, GetDatabasesResolver&& aResolve) {
+  AssertIsOnBackgroundThread();
+
+  auto ResolveGetDatabasesAndReturn = [&aResolve](const nsresult rv) {
+    aResolve(rv);
+    return IPC_OK();
+  };
+
+  QM_TRY(MOZ_TO_RESULT(!QuotaClient::IsShuttingDownOnBackgroundThread()),
+         ResolveGetDatabasesAndReturn);
+
+  QM_TRY(MOZ_TO_RESULT(IsValidPersistenceType(aPersistenceType)),
+         QM_IPC_FAIL(this));
+
+  QM_TRY(MOZ_TO_RESULT(QuotaManager::IsPrincipalInfoValid(aPrincipalInfo)),
+         QM_IPC_FAIL(this));
+
+  MOZ_ASSERT(aPrincipalInfo.type() == PrincipalInfo::TSystemPrincipalInfo ||
+             aPrincipalInfo.type() == PrincipalInfo::TContentPrincipalInfo);
+
+  PersistenceType persistenceType =
+      IDBFactory::GetPersistenceType(aPrincipalInfo);
+
+  QM_TRY(MOZ_TO_RESULT(aPersistenceType == persistenceType), QM_IPC_FAIL(this));
+
+  Maybe<ContentParentId> contentParentId = GetContentParentId();
+
+  auto op = MakeRefPtr<GetDatabasesOp>(SafeRefPtrFromThis(), contentParentId,
+                                       aPersistenceType, aPrincipalInfo,
+                                       std::move(aResolve));
+
+  gFactoryOps->AppendElement(op);
+
+  // Balanced in CleanupMetadata() which is/must always called by SendResults().
+  IncreaseBusyCount();
+
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(op));
+
+  return IPC_OK();
+}
+
+Maybe<ContentParentId> Factory::GetContentParentId() const {
+  uint64_t childID = BackgroundParent::GetChildID(Manager());
+  if (childID) {
+    // If childID is not zero we are dealing with an other-process actor. We
+    // want to initialize OpenDatabaseOp/DeleteDatabaseOp here with the ID
+    // (and later also Database) in that case, so Database::IsOwnedByProcess
+    // can find Databases belonging to a particular content process when
+    // QuotaClient::AbortOperationsForProcess is called which is currently used
+    // to abort operations for content processes only.
+    return Some(ContentParentId(childID));
+  }
+
+  return Nothing();
 }
 
 /*******************************************************************************
@@ -16624,6 +16717,202 @@ nsresult DeleteDatabaseOp::VersionChangeOp::Run() {
   }
 
   return NS_OK;
+}
+
+nsresult GetDatabasesOp::DatabasesNotAvailable() {
+  AssertIsOnIOThread();
+  MOZ_ASSERT(mState == State::DatabaseWorkOpen);
+
+  mState = State::SendingResults;
+
+  QM_TRY(MOZ_TO_RESULT(mOwningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL)));
+
+  return NS_OK;
+}
+
+nsresult GetDatabasesOp::DatabaseOpen() {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mState == State::DatabaseOpenPending);
+
+  nsresult rv = SendToIOThread();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult GetDatabasesOp::DoDatabaseWork() {
+  AssertIsOnIOThread();
+  MOZ_ASSERT(mState == State::DatabaseWorkOpen);
+
+  AUTO_PROFILER_LABEL("GetDatabasesOp::DoDatabaseWork", DOM);
+
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonBackgroundThread()) ||
+      !OperationMayProceed()) {
+    IDB_REPORT_INTERNAL_ERR();
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+  }
+
+  QuotaManager* const quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
+
+  if (mPersistenceType != PERSISTENCE_TYPE_PERSISTENT) {
+    QM_TRY(MOZ_TO_RESULT(
+        quotaManager->EnsureTemporaryStorageIsInitializedInternal()));
+  }
+
+  {
+    QM_TRY_INSPECT(const bool& exists,
+                   quotaManager->DoesOriginDirectoryExist(mOriginMetadata));
+    if (!exists) {
+      return DatabasesNotAvailable();
+    }
+  }
+
+  QM_TRY(([&quotaManager, this]()
+              -> mozilla::Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult> {
+    if (mPersistenceType == PERSISTENCE_TYPE_PERSISTENT) {
+      QM_TRY_RETURN(
+          quotaManager->EnsurePersistentOriginIsInitialized(mOriginMetadata));
+    }
+
+    QM_TRY_RETURN(quotaManager->EnsureTemporaryOriginIsInitialized(
+        mPersistenceType, mOriginMetadata));
+  }()
+                     .map([](const auto& res) { return Ok{}; })));
+
+  {
+    QM_TRY_INSPECT(const bool& exists,
+                   quotaManager->DoesClientDirectoryExist(
+                       ClientMetadata{mOriginMetadata, Client::IDB}));
+    if (!exists) {
+      return DatabasesNotAvailable();
+    }
+  }
+
+  QM_TRY_INSPECT(
+      const auto& clientDirectory,
+      ([&quotaManager, this]()
+           -> mozilla::Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult> {
+        if (mPersistenceType == PERSISTENCE_TYPE_PERSISTENT) {
+          QM_TRY_RETURN(quotaManager->EnsurePersistentClientIsInitialized(
+              ClientMetadata{mOriginMetadata, Client::IDB}));
+        }
+
+        QM_TRY_RETURN(quotaManager->EnsureTemporaryClientIsInitialized(
+            ClientMetadata{mOriginMetadata, Client::IDB}));
+      }()
+                  .map([](const auto& res) { return res.first; })));
+
+  QM_TRY_INSPECT(
+      (const auto& [subdirsToProcess, databaseFilenames]),
+      QuotaClient::GetDatabaseFilenames(*clientDirectory,
+                                        /* aCanceled */ Atomic<bool>{false}));
+
+  for (const auto& databaseFilename : databaseFilenames) {
+    QM_TRY_INSPECT(
+        const auto& databaseFile,
+        CloneFileAndAppend(*clientDirectory, databaseFilename + kSQLiteSuffix));
+
+    nsString path;
+    databaseFile->GetPath(path);
+
+    IndexedDatabaseManager* const idm = IndexedDatabaseManager::Get();
+    MOZ_ASSERT(idm);
+
+    // If the database is already open then there will be a DatabaseFileManager
+    // which can provide us with the database name and version without needing
+    // to open the SQLite database. (Also, we are not allowed to open the
+    // database on this thread if it's already open.)
+
+    SafeRefPtr<DatabaseFileManager> fileManager =
+        idm->GetFileManagerByDatabaseFilePath(mPersistenceType,
+                                              mOriginMetadata.mOrigin, path);
+
+    if (fileManager) {
+      mDatabaseMetadataArray.AppendElement(
+          DatabaseMetadata(nsString(fileManager->DatabaseName()),
+                           fileManager->DatabaseVersion(), mPersistenceType));
+      continue;
+    }
+
+    // Since the database is not already open, it is safe and necessary for us
+    // to open the database on this thread and retrieve its name and version.
+    // We do not need to worry about racing a database open because database
+    // opens can only be processed on this thread and we are performing the
+    // steps below synchronously.
+
+    QM_TRY_INSPECT(
+        const auto& fmDirectory,
+        CloneFileAndAppend(*clientDirectory,
+                           databaseFilename + kFileManagerDirectoryNameSuffix));
+
+    QM_TRY_UNWRAP(
+        const NotNull<nsCOMPtr<mozIStorageConnection>> connection,
+        CreateStorageConnection(*databaseFile, *fmDirectory, VoidString(),
+                                mOriginMetadata.mOrigin, mDirectoryLockId,
+                                TelemetryIdForFile(databaseFile), Nothing{}));
+
+    {
+      // Load version information.
+      QM_TRY_INSPECT(const auto& stmt,
+                     CreateAndExecuteSingleStepStatement<
+                         SingleStepResult::ReturnNullIfNoResult>(
+                         *connection, "SELECT name, version FROM database"_ns));
+
+      QM_TRY(OkIf(stmt), NS_ERROR_FILE_CORRUPTED);
+
+      QM_TRY_INSPECT(
+          const auto& databaseName,
+          MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(nsString, stmt, GetString, 0));
+
+      QM_TRY_INSPECT(const int64_t& version,
+                     MOZ_TO_RESULT_INVOKE_MEMBER(stmt, GetInt64, 1));
+
+      mDatabaseMetadataArray.AppendElement(
+          DatabaseMetadata(databaseName, version, mPersistenceType));
+    }
+  }
+
+  mState = State::SendingResults;
+
+  QM_TRY(MOZ_TO_RESULT(mOwningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL)));
+
+  return NS_OK;
+}
+
+nsresult GetDatabasesOp::BeginVersionChange() {
+  MOZ_CRASH("Not implemented because this should be unreachable.");
+}
+
+bool GetDatabasesOp::AreActorsAlive() {
+  MOZ_CRASH("Not implemented because this should be unreachable.");
+}
+
+void GetDatabasesOp::SendBlockedNotification() {
+  MOZ_CRASH("Not implemented because this should be unreachable.");
+}
+
+nsresult GetDatabasesOp::DispatchToWorkThread() {
+  MOZ_CRASH("Not implemented because this should be unreachable.");
+}
+
+void GetDatabasesOp::SendResults() {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mState == State::SendingResults);
+
+#ifdef DEBUG
+  NoteActorDestroyed();
+#endif
+
+  mResolver(mDatabaseMetadataArray);
+
+  mDirectoryLock = nullptr;
+
+  CleanupMetadata();
+
+  FinishSendResults();
 }
 
 TransactionDatabaseOperationBase::TransactionDatabaseOperationBase(
