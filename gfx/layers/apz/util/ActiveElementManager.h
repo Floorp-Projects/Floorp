@@ -24,6 +24,10 @@ namespace layers {
 
 class DelayedClearElementActivation;
 
+namespace apz {
+enum class SingleTapState : uint8_t;
+}  // namespace apz
+
 /**
  * Manages setting and clearing the ':active' CSS pseudostate in the presence
  * of touch input.
@@ -58,12 +62,12 @@ class ActiveElementManager final {
    * Handle a touch-end or touch-cancel event.
    * @param aWasClick whether the touch was a click
    */
-  bool HandleTouchEndEvent(bool aWasClick);
+  bool HandleTouchEndEvent(apz::SingleTapState aState);
   /**
    * Handle a touch-end state notification from APZ. This notification may be
    * delayed until after touch listeners have responded to the APZ.
    */
-  bool HandleTouchEnd(bool aWasClick);
+  bool HandleTouchEnd(apz::SingleTapState aState);
   /**
    * Possibly clear active element sate in response to a single tap.
    */
@@ -77,7 +81,7 @@ class ActiveElementManager final {
   /**
    * The target of the first touch point in the current touch block.
    */
-  nsCOMPtr<dom::Element> mTarget;
+  RefPtr<dom::Element> mTarget;
   /**
    * Whether the current touch block can be a pan. Set in HandleTouchStart().
    */
@@ -104,6 +108,12 @@ class ActiveElementManager final {
   TouchEndStates mTouchEndState;
 
   /**
+   * A tri-state variable to represent the single tap state when both of
+   * `APZStateChange::eEndTouch` notification and `eTouchEnd` event arrived.
+   */
+  apz::SingleTapState mSingleTapState;
+
+  /**
    * A task for calling SetActive() after a timeout.
    */
   RefPtr<CancelableRunnable> mSetActiveTask;
@@ -119,7 +129,8 @@ class ActiveElementManager final {
   void ResetTouchBlockState();
   void SetActiveTask(const nsCOMPtr<dom::Element>& aTarget);
   void CancelTask();
-  bool MaybeChangeActiveState(bool aWasClick);
+  // Returns true if the function changed the active element state.
+  bool MaybeChangeActiveState(apz::SingleTapState aState);
 };
 
 }  // namespace layers
