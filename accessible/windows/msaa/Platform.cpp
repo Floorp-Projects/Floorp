@@ -69,6 +69,7 @@ void a11y::ProxyDestroyed(RemoteAccessible* aProxy) {
 
 void a11y::PlatformEvent(Accessible* aTarget, uint32_t aEventType) {
   MsaaAccessible::FireWinEvent(aTarget, aEventType);
+  uiaRawElmProvider::RaiseUiaEventForGeckoEvent(aTarget, aEventType);
 }
 
 void a11y::PlatformStateChangeEvent(Accessible* aTarget, uint64_t, bool) {
