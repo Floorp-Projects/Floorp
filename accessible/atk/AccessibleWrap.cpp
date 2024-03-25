@@ -582,7 +582,8 @@ AtkRole getRoleCB(AtkObject* aAtkObj) {
 #endif
 
 #define ROLE(geckoRole, stringRole, ariaRole, atkRole, macRole, macSubrole, \
-             msaaRole, ia2Role, androidClass, iosIsElement, nameRule)       \
+             msaaRole, ia2Role, androidClass, iosIsElement, uiaControlType, \
+             nameRule)                                                      \
   case roles::geckoRole:                                                    \
     aAtkObj->role = atkRole;                                                \
     break;

@@ -12,7 +12,8 @@
 using namespace mozilla::a11y;
 
 #define ROLE(geckoRole, stringRole, ariaRole, atkRole, macRole, macSubrole, \
-             msaaRole, ia2Role, androidClass, iosIsElement, nameRule)       \
+             msaaRole, ia2Role, androidClass, iosIsElement, uiaControlType, \
+             nameRule)                                                      \
   static_assert(                                                            \
       static_cast<uint32_t>(roles::geckoRole) ==                            \
           static_cast<uint32_t>(nsIAccessibleRole::ROLE_##geckoRole),       \

@@ -156,7 +156,8 @@ ia2Accessible::role(long* aRole) {
   if (!acc) return CO_E_OBJNOTCONNECTED;
 
 #define ROLE(_geckoRole, stringRole, ariaRole, atkRole, macRole, macSubrole, \
-             msaaRole, ia2Role, androidClass, iosIsElement, nameRule)        \
+             msaaRole, ia2Role, androidClass, iosIsElement, uiaControlType,  \
+             nameRule)                                                       \
   case roles::_geckoRole:                                                    \
     *aRole = ia2Role;                                                        \
     break;
