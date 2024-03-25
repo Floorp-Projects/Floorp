@@ -511,3 +511,20 @@ characteristics:
     expires: never
     data_sensitivity:
       - interaction
+
+  prefs_block_popups: # dom.disable_open_during_load
+    type: boolean
+    description: >
+      Block pop-up windows (The dom.disable_open_during_load pref)
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1884693
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
+    expires: never
+    data_sensitivity:
+      - interaction
