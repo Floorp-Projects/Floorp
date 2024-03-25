@@ -975,6 +975,17 @@ abstract class AbstractFetchDownloadService : Service() {
          * Launches an intent to open the given file, returns whether or not the file could be opened
          */
         fun openFile(applicationContext: Context, download: DownloadState): Boolean {
+            val newIntent = createOpenFileIntent(applicationContext, download)
+
+            return try {
+                applicationContext.startActivity(newIntent)
+                true
+            } catch (error: ActivityNotFoundException) {
+                false
+            }
+        }
+
+        fun createOpenFileIntent(applicationContext: Context, download: DownloadState): Intent {
             val filePath = download.filePath
             val contentType = download.contentType
 
@@ -994,12 +1005,7 @@ abstract class AbstractFetchDownloadService : Service() {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
             }
 
-            return try {
-                applicationContext.startActivity(newIntent)
-                true
-            } catch (error: ActivityNotFoundException) {
-                false
-            }
+            return newIntent
         }
 
         @TargetApi(Build.VERSION_CODES.Q)
