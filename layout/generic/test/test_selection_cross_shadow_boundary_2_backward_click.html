@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="application/javascript" src="/tests/layout/generic/test/selection_cross_shadow_boundary_helper.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<script>
+SimpleTest.waitForExplicitFinish();
+
+function run() {
+  const root1 = document.getElementById("host1").attachShadow({ mode: "open" });
+  root1.innerHTML = "InnerText1";
+
+  const root2 = document.getElementById("host2").attachShadow({ mode: "open" });
+  root2.innerHTML = "<span>InnerText2</span>";
+
+
+
+  const inner2 = root2.firstChild;
+  const rect = inner2.getBoundingClientRect();
+
+  // Click the bottom right of "InnerText2"
+  synthesizeMouse(inner2, rect.width, rect.height, { type: "mousedown" });
+  synthesizeMouse(inner2, rect.width, rect.height, { type: "mouseup" });
+
+  // Click the top left of "OuterText1"
+  synthesizeMouse(document.getElementById("outer1"), 0, 0, { type: "mousedown", shiftKey: true});
+  synthesizeMouse(document.getElementById("outer1"), 0, 0, { type: "mouseup" , shiftKey: true});
+
+  // Above clicks selects should select
+  // "OuterText1", "OuterText2", "InnerText1" and "InnerText2".
+  const sel = document.getSelection().getComposedRanges(root2)[0];
+
+  // backward selection
+  is(sel.endContainer, inner2.firstChild, "endContainer is the InnerText2");
+  is(sel.endOffset, 10, "endOffset ends at the last character");
+  is(sel.startContainer, outer1.firstChild, "startContainer is the OuterText1");
+  is(sel.startOffset, 0, "startOffset starts at the first character");
+
+  SimpleTest.finish();
+}
+</script>
+<body onload="SimpleTest.waitForFocus(run);">
+  <span id="outer1">OuterText1</span>
+  <div id="host1"></div>
+  <span id="outer2">OuterText2</span>
+  <div id="host2"></div>
+</body>
