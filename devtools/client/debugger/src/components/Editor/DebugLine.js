@@ -6,6 +6,7 @@ import { PureComponent } from "devtools/client/shared/vendor/react";
 import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 import {
   toEditorPosition,
+  fromEditorLine,
   getDocument,
   hasDocument,
   startOperation,
@@ -21,12 +22,16 @@ import {
   getSourceTextContent,
   getCurrentThread,
 } from "../../selectors/index";
+import { isWasm } from "../../utils/wasm";
+import { features } from "../../utils/prefs";
 
 export class DebugLine extends PureComponent {
   debugExpression;
 
   static get propTypes() {
     return {
+      editor: PropTypes.object,
+      selectedSource: PropTypes.object,
       location: PropTypes.object,
       why: PropTypes.object,
     };
@@ -34,21 +39,62 @@ export class DebugLine extends PureComponent {
 
   componentDidMount() {
     const { why, location } = this.props;
+    if (features.codemirrorNext) {
+      return;
+    }
     this.setDebugLine(why, location);
   }
 
   componentWillUnmount() {
     const { why, location } = this.props;
+    if (features.codemirrorNext) {
+      return;
+    }
     this.clearDebugLine(why, location);
   }
 
   componentDidUpdate(prevProps) {
-    const { why, location } = this.props;
+    const { why, location, editor, selectedSource } = this.props;
 
-    startOperation();
-    this.clearDebugLine(prevProps.why, prevProps.location);
-    this.setDebugLine(why, location);
-    endOperation();
+    if (features.codemirrorNext) {
+      if (!selectedSource) {
+        return;
+      }
+
+      if (
+        prevProps.location == this.props.location &&
+        prevProps.selectedSource?.id == selectedSource?.id
+      ) {
+        return;
+      }
+
+      const { lineClass } = this.getTextClasses(why);
+      // Remove the debug line marker when no longer paused, or the selected source
+      // is no longer the source where the pause occured.
+      if (!location || location.source.id !== selectedSource.id) {
+        editor.removeLineContentMarker("debug-line-marker");
+      } else {
+        const isSourceWasm = isWasm(selectedSource.id);
+        editor.setLineContentMarker({
+          id: "debug-line-marker",
+          lineClassName: lineClass,
+          condition(line) {
+            const lineNumber = fromEditorLine(
+              selectedSource.id,
+              line,
+              isSourceWasm
+            );
+            const editorLocation = toEditorPosition(location);
+            return editorLocation.line == lineNumber;
+          },
+        });
+      }
+    } else {
+      startOperation();
+      this.clearDebugLine(prevProps.why, prevProps.location);
+      this.setDebugLine(why, location);
+      endOperation();
+    }
   }
 
   setDebugLine(why, location) {
@@ -125,7 +171,10 @@ const mapStateToProps = state => {
     return {};
   }
   const sourceTextContent = getSourceTextContent(state, location);
-  if (!isDocumentReady(location, sourceTextContent)) {
+  if (
+    !features.codemirrorNext &&
+    !isDocumentReady(location, sourceTextContent)
+  ) {
     return {};
   }
   return {
