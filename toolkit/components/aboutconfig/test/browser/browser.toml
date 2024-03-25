@@ -13,7 +13,6 @@ support-files = ["head.js"]
 ["browser_clipboard.js"]
 
 ["browser_edit.js"]
-fail-if = ["a11y_checks"] # Bugs 1854447 and 1882380 span may not be focusable
 skip-if = ["os == 'linux' && ccov"]  # Bug 1613515, the test consistently times out on Linux coverage builds.
 
 ["browser_locked.js"]
