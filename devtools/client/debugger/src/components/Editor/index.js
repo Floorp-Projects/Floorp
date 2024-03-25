@@ -793,7 +793,8 @@ class Editor extends PureComponent {
         React.createElement(Breakpoints, {
           editor,
         }),
-        React.createElement(DebugLine, { editor, selectedSource })
+        React.createElement(DebugLine, { editor, selectedSource }),
+        React.createElement(Exceptions, { editor })
       );
     }
 
