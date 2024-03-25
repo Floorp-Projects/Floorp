@@ -183,6 +183,21 @@ def display_push_estimates(try_task_config):
     )
 
 
+# improves on `" ".join(sys.argv[:])` by requoting argv items containing spaces or single quotes
+def get_sys_argv(injected_argv=None):
+    argv_to_use = injected_argv or sys.argv[:]
+
+    formatted_argv = []
+    for item in argv_to_use:
+        if " " in item or "'" in item:
+            formatted_item = f'"{item}"'
+        else:
+            formatted_item = item
+        formatted_argv.append(formatted_item)
+
+    return " ".join(formatted_argv)
+
+
 def push_to_try(
     method,
     msg,
@@ -206,9 +221,12 @@ def push_to_try(
 
     # Format the commit message
     closed_tree_string = " ON A CLOSED TREE" if closed_tree else ""
-    commit_message = "{}{}\n\nPushed via `mach try {}`".format(
+    the_cmdline = get_sys_argv()
+    full_commandline_entry = f"mach try command: `{the_cmdline}`"
+    commit_message = "{}{}\n\n{}\n\nPushed via `mach try {}`".format(
         msg,
         closed_tree_string,
+        full_commandline_entry,
         method,
     )
 

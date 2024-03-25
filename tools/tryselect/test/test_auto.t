@@ -8,6 +8,8 @@ Test auto selector
   Commit message:
   Tasks automatically selected.
   
+  mach try command: `./mach try auto --no-push --no-artifact`
+  
   Pushed via `mach try auto`
   Calculated try_task_config.json:
   {
@@ -27,6 +29,8 @@ Test auto selector
   Commit message:
   Tasks automatically selected. ON A CLOSED TREE
   
+  mach try command: `./mach try auto --no-push --no-artifact --closed-tree`
+  
   Pushed via `mach try auto`
   Calculated try_task_config.json:
   {
@@ -44,6 +48,8 @@ Test auto selector
   $ ./mach try auto $testargs --closed-tree -m "foo {msg} bar"
   Commit message:
   foo Tasks automatically selected. bar ON A CLOSED TREE
+  
+  mach try command: `./mach try auto --no-push --no-artifact --closed-tree -m "foo {msg} bar"`
   
   Pushed via `mach try auto`
   Calculated try_task_config.json:

@@ -9,6 +9,8 @@ Test custom commit messages with fuzzy selector
   
   Fuzzy query=foo
   
+  mach try command: `./mach try fuzzy --no-push --no-artifact -q foo --message Foobar`
+  
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
   {
@@ -30,6 +32,8 @@ Test custom commit messages with fuzzy selector
   $ ./mach try fuzzy $testargs -q foo -m "Foobar: {msg}"
   Commit message:
   Foobar: Fuzzy query=foo
+  
+  mach try command: `./mach try fuzzy --no-push --no-artifact -q foo -m "Foobar: {msg}"`
   
   Pushed via `mach try fuzzy`
   Calculated try_task_config.json:
@@ -62,10 +66,14 @@ Test custom commit messages with syntax selector
   
   try: -b do -p linux -u mochitests
   
+  mach try command: `./mach try syntax --no-push --no-artifact -p linux -u mochitests --message Foobar`
+  
   Pushed via `mach try syntax`
   $ ./mach try syntax $testargs -p linux -u mochitests -m "Foobar: {msg}"
   Commit message:
   Foobar: try: -b do -p linux -u mochitests
+  
+  mach try command: `./mach try syntax --no-push --no-artifact -p linux -u mochitests -m "Foobar: {msg}"`
   
   Pushed via `mach try syntax`
   $ unset EDITOR
