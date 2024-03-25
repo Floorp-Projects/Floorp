@@ -86,6 +86,8 @@ skip-if = ["os == 'linux' && socketprocess_networking"]
 
 ["browser_strip_on_share_link.js"]
 
+["browser_strip_on_share_nested_link.js"]
+
 ["browser_utilityOverlay.js"]
 https_first_disabled = true
 skip-if = ["os == 'linux' && socketprocess_networking"]
