@@ -257,7 +257,7 @@ div.CodeMirror span.marked-text {
 /* Blackboxing lines */
 .CodeMirror-lines .blackboxed-line :is(span, .cm-comment, .CodeMirror-gutter-elt),
 /* Codemirror 6 */
-.cm-editor .cm-gutterElement.blackboxed-line {
+.cm-gutterElement.blackboxed-line, .cm-line.blackboxed-line span[class^="tok-"] {
   color: #806414cc;
 }
 
