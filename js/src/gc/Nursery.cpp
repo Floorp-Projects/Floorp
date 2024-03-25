@@ -38,6 +38,7 @@
 #include "gc/Heap-inl.h"
 #include "gc/Marking-inl.h"
 #include "gc/StableCellHasher-inl.h"
+#include "gc/StoreBuffer-inl.h"
 #include "vm/GeckoProfiler-inl.h"
 
 using namespace js;
@@ -1610,6 +1611,8 @@ void js::Nursery::traceRoots(AutoGCSession& session, TenuringTracer& mover) {
     sb.traceWholeCells(mover);
     endProfile(ProfileKey::TraceWholeCells);
 
+    cellsToSweep = sb.releaseCellSweepSet();
+
     startProfile(ProfileKey::TraceValues);
     sb.traceValues(mover);
     endProfile(ProfileKey::TraceValues);
@@ -1880,8 +1883,21 @@ void js::Nursery::sweep() {
   }
 
   sweepMapAndSetObjects();
+  cellsToSweep.sweep();
+  CellSweepSet empty;
+  std::swap(cellsToSweep, empty);
 
   runtime()->caches().sweepAfterMinorGC(&trc);
+}
+
+void gc::CellSweepSet::sweep() {
+  if (head_) {
+    head_->sweepDependentStrings();
+    head_ = nullptr;
+  }
+  if (storage_) {
+    storage_->freeAll();
+  }
 }
 
 void js::Nursery::clear() {
