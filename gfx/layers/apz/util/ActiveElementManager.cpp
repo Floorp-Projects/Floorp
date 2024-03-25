@@ -218,7 +218,7 @@ void ActiveElementManager::ClearActivation() {
   ResetActive();
 }
 
-void ActiveElementManager::HandleTouchEndEvent(bool aWasClick) {
+bool ActiveElementManager::HandleTouchEndEvent(bool aWasClick) {
   AEM_LOG("Touch end event, aWasClick: %d\n", aWasClick);
 
   // If the touch was a click, make mTarget :active right away.
@@ -227,22 +227,22 @@ void ActiveElementManager::HandleTouchEndEvent(bool aWasClick) {
   CancelTask();
 
   mTouchEndState += TouchEndState::GotTouchEndEvent;
-  MaybeChangeActiveState(aWasClick);
+  return MaybeChangeActiveState(aWasClick);
 }
 
-void ActiveElementManager::HandleTouchEnd(bool aWasClick) {
+bool ActiveElementManager::HandleTouchEnd(bool aWasClick) {
   AEM_LOG("Touch end, clearing pan state\n");
   mCanBePanSet = false;
 
   mTouchEndState += TouchEndState::GotTouchEndNotification;
-  MaybeChangeActiveState(aWasClick);
+  return MaybeChangeActiveState(aWasClick);
 }
 
-void ActiveElementManager::MaybeChangeActiveState(bool aWasClick) {
+bool ActiveElementManager::MaybeChangeActiveState(bool aWasClick) {
   if (mTouchEndState !=
       TouchEndStates(TouchEndState::GotTouchEndEvent,
                      TouchEndState::GotTouchEndNotification)) {
-    return;
+    return false;
   }
 
   if (aWasClick) {
@@ -260,6 +260,7 @@ void ActiveElementManager::MaybeChangeActiveState(bool aWasClick) {
   }
 
   ResetTouchBlockState();
+  return true;
 }
 
 void ActiveElementManager::ProcessSingleTap() {
