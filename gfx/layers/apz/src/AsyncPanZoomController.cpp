@@ -1310,10 +1310,13 @@ nsEventStatus AsyncPanZoomController::OnTouchStart(
       if (RefPtr<GeckoContentController> controller =
               GetGeckoContentController()) {
         MOZ_ASSERT(GetCurrentTouchBlock());
-        controller->NotifyAPZStateChange(
-            GetGuid(), APZStateChange::eStartTouch,
+        const bool canBePanOrZoom =
             GetCurrentTouchBlock()->GetOverscrollHandoffChain()->CanBePanned(
-                this),
+                this) ||
+            (ZoomConstraintsAllowDoubleTapZoom() &&
+             GetCurrentTouchBlock()->TouchActionAllowsDoubleTapZoom());
+        controller->NotifyAPZStateChange(
+            GetGuid(), APZStateChange::eStartTouch, canBePanOrZoom,
             Some(GetCurrentTouchBlock()->GetBlockId()));
       }
       mLastTouch.mTimeStamp = mTouchStartTime = aEvent.mTimeStamp;

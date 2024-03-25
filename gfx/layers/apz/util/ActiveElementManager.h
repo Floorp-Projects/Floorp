@@ -51,9 +51,9 @@ class ActiveElementManager final {
   /**
    * Handle a touch-start state notification from APZ. This notification
    * may be delayed until after touch listeners have responded to the APZ.
-   * @param aCanBePan whether the touch can be a pan
+   * @param aCanBePanOrZoom whether the touch can be a pan or double-tap-to-zoom
    */
-  void HandleTouchStart(bool aCanBePan);
+  void HandleTouchStart(bool aCanBePanOrZoom);
   /**
    * Clear the active element.
    */
@@ -83,15 +83,16 @@ class ActiveElementManager final {
    */
   RefPtr<dom::Element> mTarget;
   /**
-   * Whether the current touch block can be a pan. Set in HandleTouchStart().
+   * Whether the current touch block can be a pan or double-tap-to-zoom. Set in
+   * HandleTouchStart().
    */
-  bool mCanBePan;
+  bool mCanBePanOrZoom;
   /**
-   * Whether mCanBePan has been set for the current touch block.
+   * Whether mCanBePanOrZoom has been set for the current touch block.
    * We need to keep track of this to allow HandleTouchStart() and
    * SetTargetElement() to be called in either order.
    */
-  bool mCanBePanSet;
+  bool mCanBePanOrZoomSet;
 
   bool mSingleTapBeforeActivation;
 
