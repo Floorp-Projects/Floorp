@@ -9,6 +9,7 @@
 #include "nsCOMArray.h"
 #include "nsLocalFile.h"
 #include "nsMIMEInfoWin.h"
+#include "nsLocalHandlerAppWin.h"
 #include "nsIMIMEService.h"
 #include "nsNetUtil.h"
 #include <windows.h>
@@ -554,6 +555,7 @@ bool nsMIMEInfoWin::GetProgIDVerbCommandHandler(const nsAString& appProgIDName,
 // entries to lower case and stores them in the trackList array.
 void nsMIMEInfoWin::ProcessPath(nsCOMPtr<nsIMutableArray>& appList,
                                 nsTArray<nsString>& trackList,
+                                const nsAutoString& appIdOrName,
                                 const nsAString& appFilesystemCommand) {
   nsAutoString lower(appFilesystemCommand);
   ToLowerCase(lower);
@@ -568,6 +570,9 @@ void nsMIMEInfoWin::ProcessPath(nsCOMPtr<nsIMutableArray>& appList,
 
   nsCOMPtr<nsILocalHandlerApp> aApp;
   if (!GetLocalHandlerApp(appFilesystemCommand, aApp)) return;
+
+  // Track the app id so that the pretty name can be determined later
+  (static_cast<nsLocalHandlerAppWin*>(aApp.get()))->SetAppIdOrName(appIdOrName);
 
   // Save in our main tracking arrays
   appList->AppendElement(aApp);
@@ -673,7 +678,7 @@ nsMIMEInfoWin::GetPossibleLocalHandlers(nsIArray** _retval) {
           if (GetProgIDVerbCommandHandler(appProgId, appFilesystemCommand,
                                           false) &&
               !IsPathInList(appFilesystemCommand, trackList)) {
-            ProcessPath(appList, trackList, appFilesystemCommand);
+            ProcessPath(appList, trackList, appProgId, appFilesystemCommand);
           }
         }
       }
@@ -701,7 +706,7 @@ nsMIMEInfoWin::GetPossibleLocalHandlers(nsIArray** _retval) {
                                          false) ||
               IsPathInList(appFilesystemCommand, trackList))
             continue;
-          ProcessPath(appList, trackList, appFilesystemCommand);
+          ProcessPath(appList, trackList, appName, appFilesystemCommand);
         }
       }
       regKey->Close();
@@ -729,7 +734,7 @@ nsMIMEInfoWin::GetPossibleLocalHandlers(nsIArray** _retval) {
                                            false) ||
               IsPathInList(appFilesystemCommand, trackList))
             continue;
-          ProcessPath(appList, trackList, appFilesystemCommand);
+          ProcessPath(appList, trackList, appProgId, appFilesystemCommand);
         }
       }
       regKey->Close();
@@ -762,7 +767,7 @@ nsMIMEInfoWin::GetPossibleLocalHandlers(nsIArray** _retval) {
                                          false) ||
               IsPathInList(appFilesystemCommand, trackList))
             continue;
-          ProcessPath(appList, trackList, appFilesystemCommand);
+          ProcessPath(appList, trackList, appValue, appFilesystemCommand);
         }
       }
     }
@@ -791,7 +796,7 @@ nsMIMEInfoWin::GetPossibleLocalHandlers(nsIArray** _retval) {
                                            false) ||
               IsPathInList(appFilesystemCommand, trackList))
             continue;
-          ProcessPath(appList, trackList, appFilesystemCommand);
+          ProcessPath(appList, trackList, appProgId, appFilesystemCommand);
         }
       }
       regKey->Close();
@@ -829,7 +834,7 @@ nsMIMEInfoWin::GetPossibleLocalHandlers(nsIArray** _retval) {
                                              false) ||
                   IsPathInList(appFilesystemCommand, trackList))
                 continue;
-              ProcessPath(appList, trackList, appFilesystemCommand);
+              ProcessPath(appList, trackList, appName, appFilesystemCommand);
             }
           }
         }
@@ -857,7 +862,7 @@ nsMIMEInfoWin::GetPossibleLocalHandlers(nsIArray** _retval) {
         if (!GetAppsVerbCommandHandler(appName, appFilesystemCommand, false) ||
             IsPathInList(appFilesystemCommand, trackList))
           continue;
-        ProcessPath(appList, trackList, appFilesystemCommand);
+        ProcessPath(appList, trackList, appName, appFilesystemCommand);
       }
     }
     regKey->Close();
@@ -882,7 +887,7 @@ nsMIMEInfoWin::GetPossibleLocalHandlers(nsIArray** _retval) {
         if (!GetAppsVerbCommandHandler(appName, appFilesystemCommand, false) ||
             IsPathInList(appFilesystemCommand, trackList))
           continue;
-        ProcessPath(appList, trackList, appFilesystemCommand);
+        ProcessPath(appList, trackList, appName, appFilesystemCommand);
       }
     }
   }

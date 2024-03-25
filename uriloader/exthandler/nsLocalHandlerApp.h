@@ -12,6 +12,8 @@
 #include "nsIFile.h"
 #include "nsTArray.h"
 
+#include <functional>
+
 class nsLocalHandlerApp : public nsILocalHandlerApp {
  public:
   NS_DECL_ISUPPORTS
@@ -28,6 +30,9 @@ class nsLocalHandlerApp : public nsILocalHandlerApp {
 
  protected:
   virtual ~nsLocalHandlerApp() {}
+
+  virtual std::function<nsresult(nsString&)>
+  GetPrettyNameOnNonMainThreadCallback();
 
   nsString mName;
   nsString mDetailedDescription;
@@ -51,6 +56,11 @@ class nsLocalHandlerApp : public nsILocalHandlerApp {
 #  ifndef NSLOCALHANDLERAPPMAC_H_
 #    include "mac/nsLocalHandlerAppMac.h"
 typedef nsLocalHandlerAppMac PlatformLocalHandlerApp_t;
+#  endif
+#elif XP_WIN
+#  ifndef NSLOCALHANDLERAPPWIN_H_
+#    include "win/nsLocalHandlerAppWin.h"
+typedef nsLocalHandlerAppWin PlatformLocalHandlerApp_t;
 #  endif
 #else
 typedef nsLocalHandlerApp PlatformLocalHandlerApp_t;
