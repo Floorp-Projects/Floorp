@@ -14,3 +14,6 @@ XPCSHELL_TESTS_MANIFESTS += [
 ]
 
 SPHINX_TREES["/toolkit/components/contentrelevancy"] = "docs"
+
+with Files("docs/**"):
+    SCHEDULES.exclusive = ["docs"]
