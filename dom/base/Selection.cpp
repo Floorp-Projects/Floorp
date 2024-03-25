@@ -26,6 +26,7 @@
 #include "mozilla/dom/SelectionBinding.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/StaticRange.h"
+#include "mozilla/dom/ShadowIncludingTreeIterator.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/IntegerRange.h"
@@ -1724,6 +1725,16 @@ nsresult Selection::SelectFramesOfInclusiveDescendantsOfContent(
   return NS_OK;
 }
 
+void Selection::SelectFramesOfShadowIncludingDescendantsOfContent(
+    nsIContent* aContent, bool aSelected) const {
+  MOZ_ASSERT(aContent);
+  MOZ_ASSERT(StaticPrefs::dom_shadowdom_selection_across_boundary_enabled());
+  for (nsINode* node : ShadowIncludingTreeIterator(*aContent)) {
+    nsIContent* innercontent = node->IsContent() ? node->AsContent() : nullptr;
+    SelectFramesOf(innercontent, aSelected);
+  }
+}
+
 void Selection::SelectFramesInAllRanges(nsPresContext* aPresContext) {
   // this method is currently only called in a user-initiated context.
   // therefore it is safe to assume that we are not in a Highlight selection
@@ -1845,8 +1856,12 @@ nsresult Selection::SelectFrames(nsPresContext* aPresContext,
     MOZ_DIAGNOSTIC_ASSERT(subtreeIter.GetCurrentNode());
     if (nsIContent* const content =
             nsIContent::FromNodeOrNull(subtreeIter.GetCurrentNode())) {
-      SelectFramesOfInclusiveDescendantsOfContent(postOrderIter, content,
-                                                  aSelect);
+      if (StaticPrefs::dom_shadowdom_selection_across_boundary_enabled()) {
+        SelectFramesOfShadowIncludingDescendantsOfContent(content, aSelect);
+      } else {
+        SelectFramesOfInclusiveDescendantsOfContent(postOrderIter, content,
+                                                    aSelect);
+      }
     }
   }
 
