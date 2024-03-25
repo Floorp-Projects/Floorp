@@ -340,9 +340,6 @@ class NetworkModule extends Module {
    * of any intercept, the request will be suspended.
    *
    * @param {object=} options
-   * @param {Array<string>=} options.contexts
-   *     The list of browsing context ids where this intercept should be used.
-   *     Optional, defaults to null.
    * @param {Array<InterceptPhase>} options.phases
    *     The phases where this intercept should be checked.
    * @param {Array<URLPattern>=} options.urlPatterns
@@ -356,34 +353,7 @@ class NetworkModule extends Module {
    *     Raised if an argument is of an invalid type or value.
    */
   addIntercept(options = {}) {
-    const { contexts = null, phases, urlPatterns = [] } = options;
-
-    if (contexts !== null) {
-      lazy.assert.array(
-        contexts,
-        `Expected "contexts" to be an array, got ${contexts}`
-      );
-
-      if (!options.contexts.length) {
-        throw new lazy.error.InvalidArgumentError(
-          `Expected "contexts" to contain at least one item, got an empty array`
-        );
-      }
-
-      for (const contextId of contexts) {
-        lazy.assert.string(
-          contextId,
-          `Expected elements of "contexts" to be a string, got ${contextId}`
-        );
-        const context = this.#getBrowsingContext(contextId);
-
-        if (context.parent) {
-          throw new lazy.error.InvalidArgumentError(
-            `Context with id ${contextId} is not a top-level browsing context`
-          );
-        }
-      }
-    }
+    const { phases, urlPatterns = [] } = options;
 
     lazy.assert.array(
       phases,
@@ -416,7 +386,6 @@ class NetworkModule extends Module {
 
     const interceptId = lazy.generateUUID();
     this.#interceptMap.set(interceptId, {
-      contexts,
       phases,
       urlPatterns: parsedPatterns,
     });
@@ -1153,23 +1122,6 @@ class NetworkModule extends Module {
     return challenges;
   }
 
-  #getBrowsingContext(contextId) {
-    const context = lazy.TabManager.getBrowsingContextById(contextId);
-    if (context === null) {
-      throw new lazy.error.NoSuchFrameError(
-        `Browsing Context with id ${contextId} not found`
-      );
-    }
-
-    if (!context.currentWindowGlobal) {
-      throw new lazy.error.NoSuchFrameError(
-        `No window found for BrowsingContext with id ${contextId}`
-      );
-    }
-
-    return context;
-  }
-
   #getContextInfo(browsingContext) {
     return {
       contextId: browsingContext.id,
@@ -1177,7 +1129,11 @@ class NetworkModule extends Module {
     };
   }
 
-  #getNetworkIntercepts(event, requestData, contextId) {
+  #getSuspendMarkerText(requestData, phase) {
+    return `Request (id: ${requestData.request}) suspended by WebDriver BiDi in ${phase} phase`;
+  }
+
+  #getNetworkIntercepts(event, requestData) {
     const intercepts = [];
 
     let phase;
@@ -1197,23 +1153,8 @@ class NetworkModule extends Module {
         return intercepts;
     }
 
-    // Retrieve the top browsing context id for this network event.
-    const browsingContext = lazy.TabManager.getBrowsingContextById(contextId);
-    const topLevelContextId = lazy.TabManager.getIdForBrowsingContext(
-      browsingContext.top
-    );
-
     const url = requestData.url;
     for (const [interceptId, intercept] of this.#interceptMap) {
-      if (
-        intercept.contexts !== null &&
-        !intercept.contexts.includes(topLevelContextId)
-      ) {
-        // Skip this intercept if the event's context does not match the list
-        // of contexts for this intercept.
-        continue;
-      }
-
       if (intercept.phases.includes(phase)) {
         const urlPatterns = intercept.urlPatterns;
         if (
@@ -1253,10 +1194,6 @@ class NetworkModule extends Module {
     }
 
     return navigation ? navigation.navigationId : null;
-  }
-
-  #getSuspendMarkerText(requestData, phase) {
-    return `Request (id: ${requestData.request}) suspended by WebDriver BiDi in ${phase} phase`;
   }
 
   #onAuthRequired = (name, data) => {
@@ -1643,11 +1580,7 @@ class NetworkModule extends Module {
   #processNetworkEvent(eventName, data) {
     const { contextId, navigation, redirectCount, requestData, timestamp } =
       data;
-    const intercepts = this.#getNetworkIntercepts(
-      eventName,
-      requestData,
-      contextId
-    );
+    const intercepts = this.#getNetworkIntercepts(eventName, requestData);
     const isBlocked = !!intercepts.length;
 
     const baseParameters = {
