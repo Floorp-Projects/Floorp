@@ -7,8 +7,9 @@
 #ifndef mozilla_a11y_uiaRawElmProvider_h__
 #define mozilla_a11y_uiaRawElmProvider_h__
 
-#include "objbase.h"
-#include "uiautomation.h"
+#include <objbase.h>
+#include <stdint.h>
+#include <uiautomation.h>
 
 namespace mozilla {
 namespace a11y {
@@ -22,6 +23,9 @@ class uiaRawElmProvider : public IAccessibleEx,
                           public IRawElementProviderSimple,
                           public IRawElementProviderFragment {
  public:
+  static void RaiseUiaEventForGeckoEvent(Accessible* aAcc,
+                                         uint32_t aGeckoEvent);
+
   // IUnknown
   STDMETHODIMP QueryInterface(REFIID aIid, void** aInterface);
 

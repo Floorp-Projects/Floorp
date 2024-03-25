@@ -91,6 +91,8 @@ void a11y::PlatformFocusEvent(Accessible* aTarget,
 
   AccessibleWrap::UpdateSystemCaretFor(aTarget, aCaretRect);
   MsaaAccessible::FireWinEvent(aTarget, nsIAccessibleEvent::EVENT_FOCUS);
+  uiaRawElmProvider::RaiseUiaEventForGeckoEvent(
+      aTarget, nsIAccessibleEvent::EVENT_FOCUS);
 }
 
 void a11y::PlatformCaretMoveEvent(Accessible* aTarget, int32_t aOffset,

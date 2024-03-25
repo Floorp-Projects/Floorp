@@ -10,4 +10,6 @@ support-files = ["head.js"]
 
 ["browser_elementFromPoint.js"]
 
+["browser_focus.js"]
+
 ["browser_tree.js"]

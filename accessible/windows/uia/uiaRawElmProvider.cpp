@@ -6,13 +6,17 @@
 
 #include "uiaRawElmProvider.h"
 
+#include <uiautomationcoreapi.h>
+
 #include "AccAttributes.h"
 #include "AccessibleWrap.h"
 #include "ARIAMap.h"
 #include "LocalAccessible-inl.h"
 #include "mozilla/a11y/RemoteAccessible.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 #include "MsaaAccessible.h"
 #include "MsaaRootAccessible.h"
+#include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
 #include "nsTextEquivUtils.h"
 #include "RootAccessible.h"
@@ -26,6 +30,22 @@ using namespace mozilla::a11y;
 
 Accessible* uiaRawElmProvider::Acc() const {
   return static_cast<const MsaaAccessible*>(this)->Acc();
+}
+
+/* static */
+void uiaRawElmProvider::RaiseUiaEventForGeckoEvent(Accessible* aAcc,
+                                                   uint32_t aGeckoEvent) {
+  if (!StaticPrefs::accessibility_uia_enable()) {
+    return;
+  }
+  auto* uia = MsaaAccessible::GetFrom(aAcc);
+  if (!uia) {
+    return;
+  }
+  if (aGeckoEvent == nsIAccessibleEvent::EVENT_FOCUS) {
+    ::UiaRaiseAutomationEvent(uia, UIA_AutomationFocusChangedEventId);
+    return;
+  }
 }
 
 // IUnknown
@@ -254,10 +274,26 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
       aPropertyValue->lVal = GetControlType();
       break;
 
+    case UIA_HasKeyboardFocusPropertyId:
+      aPropertyValue->vt = VT_BOOL;
+      aPropertyValue->boolVal = VARIANT_FALSE;
+      if (auto* focusMgr = FocusMgr()) {
+        if (focusMgr->IsFocused(acc)) {
+          aPropertyValue->boolVal = VARIANT_TRUE;
+        }
+      }
+      return S_OK;
+
     case UIA_IsContentElementPropertyId:
     case UIA_IsControlElementPropertyId:
       aPropertyValue->vt = VT_BOOL;
       aPropertyValue->boolVal = IsControl() ? VARIANT_TRUE : VARIANT_FALSE;
+      return S_OK;
+
+    case UIA_IsKeyboardFocusablePropertyId:
+      aPropertyValue->vt = VT_BOOL;
+      aPropertyValue->boolVal =
+          (acc->State() & states::FOCUSABLE) ? VARIANT_TRUE : VARIANT_FALSE;
       return S_OK;
   }
 
