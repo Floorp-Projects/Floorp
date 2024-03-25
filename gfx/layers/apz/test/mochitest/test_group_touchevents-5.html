@@ -9,6 +9,12 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
 
+// Increase the tap timeouts so the double-tap is still detected in case of
+// random delays during testing.
+var doubletap_prefs = [
+  ["ui.click_hold_context_menus.delay", 10000],
+  ["apz.max_tap_time", 10000],
+];
 
 var subtests = [
   // tests that scrolling doesn't cause extra SchedulePaint calls
@@ -30,6 +36,7 @@ var subtests = [
     ["ui.click_hold_context_menus.delay", 10000],
     ["ui.touch_activation.duration_ms", 1000]
   ]},
+  {"file": "helper_bug1806400-2.html", "prefs": doubletap_prefs},
   // Add new subtests here. If this starts timing out because it's taking too
   // long, create a test_group_touchevents-6.html file. Refer to 1423011#c57
   // for more details.
