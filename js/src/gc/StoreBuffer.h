@@ -221,6 +221,15 @@ class StoreBuffer {
 
     const Cell** lastBufferedPtr() { return &last_; }
 
+    CellSweepSet releaseCellSweepSet() {
+      CellSweepSet set;
+      std::swap(storage_, set.storage_);
+      std::swap(stringHead_, set.head_);
+      nonStringHead_ = nullptr;
+      last_ = nullptr;
+      return set;
+    }
+
    private:
     ArenaCellSet* allocateCellSet(Arena* arena);
   };
@@ -630,6 +639,10 @@ class StoreBuffer {
   }
   void traceGenericEntries(JSTracer* trc) { bufferGeneric.trace(trc, this); }
 
+  gc::CellSweepSet releaseCellSweepSet() {
+    return bufferWholeCell.releaseCellSweepSet();
+  }
+
   /* For use by our owned buffers and for testing. */
   void setAboutToOverflow(JS::GCReason);
 
@@ -640,6 +653,7 @@ class StoreBuffer {
 };
 
 // A set of cells in an arena used to implement the whole cell store buffer.
+// Also used to store a set of cells that need to be swept.
 class ArenaCellSet {
   friend class StoreBuffer;
 
@@ -694,7 +708,17 @@ class ArenaCellSet {
 
   WordT getWord(size_t wordIndex) const { return bits.getWord(wordIndex); }
 
-  void trace(TenuringTracer& mover);
+  void setWord(size_t wordIndex, WordT value) {
+    bits.setWord(wordIndex, value);
+  }
+
+  void traceStrings(TenuringTracer& mover);
+  void traceNonStrings(TenuringTracer& mover);
+
+  // At the end of a minor GC, sweep through all tenured dependent strings that
+  // may point to nursery-allocated chars to update their pointers in case the
+  // base string moved its chars.
+  void sweepDependentStrings();
 
   // Sentinel object used for all empty sets.
   //

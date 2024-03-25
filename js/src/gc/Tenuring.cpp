@@ -18,6 +18,7 @@
 #include "gc/Pretenuring.h"
 #include "gc/Zone.h"
 #include "jit/JitCode.h"
+#include "js/TypeDecls.h"
 #include "proxy/Proxy.h"
 #include "vm/BigIntType.h"
 #include "vm/JSScript.h"
@@ -407,7 +408,8 @@ static inline void TraceWholeCell(TenuringTracer& mover, JSObject* object) {
   mover.traceObject(object);
 }
 
-static inline void TraceWholeCell(TenuringTracer& mover, JSString* str) {
+// Return whether the string needs to be swept.
+static inline bool TraceWholeCell(TenuringTracer& mover, JSString* str) {
   MOZ_ASSERT_IF(str->storeBuffer(),
                 str->storeBuffer()->markingNondeduplicatable);
 
@@ -416,9 +418,20 @@ static inline void TraceWholeCell(TenuringTracer& mover, JSString* str) {
   // string.
   if (str->hasBase()) {
     PreventDeduplicationOfReachableStrings(str);
+
+    // For tenured dependent strings -> nursery string edges, sweep the
+    // (tenured) strings at the end of nursery marking to update chars pointers
+    // that were in the nursery.
+    JSLinearString* base = str->nurseryBaseOrRelocOverlay();
+    if (IsInsideNursery(base)) {
+      str->traceBasePreserveNurseryEdge(&mover);
+      return true;
+    }
   }
 
   str->traceChildren(&mover);
+
+  return false;
 }
 
 static inline void TraceWholeCell(TenuringTracer& mover, BaseScript* script) {
@@ -452,7 +465,33 @@ void TenuringTracer::traceBufferedCells(Arena* arena, ArenaCellSet* cells) {
   }
 }
 
-void ArenaCellSet::trace(TenuringTracer& mover) {
+template <>
+void TenuringTracer::traceBufferedCells<JSString>(Arena* arena,
+                                  ArenaCellSet* cells) {
+  for (size_t i = 0; i < MaxArenaCellIndex; i += cells->BitsPerWord) {
+    ArenaCellSet::WordT bitset = cells->getWord(i / cells->BitsPerWord);
+    ArenaCellSet::WordT tosweep = bitset;
+    while (bitset) {
+      size_t bit = i + js::detail::CountTrailingZeroes(bitset);
+      auto* cell = reinterpret_cast<JSString*>(uintptr_t(arena) +
+                                               ArenaCellIndexBytes * bit);
+      TenuringTracer::AutoPromotedAnyToNursery promotedToNursery(*this);
+      bool needsSweep = TraceWholeCell(*this, cell);
+      if (promotedToNursery) {
+        runtime()->gc.storeBuffer().putWholeCell(cell);
+      }
+      ArenaCellSet::WordT mask = bitset - 1;
+      bitset &= mask;
+      if (!needsSweep) {
+        tosweep &= mask;
+      }
+    }
+
+    cells->setWord(i / cells->BitsPerWord, tosweep);
+  }
+}
+
+void ArenaCellSet::traceNonStrings(TenuringTracer& mover) {
   for (ArenaCellSet* cells = this; cells; cells = cells->next) {
     cells->check();
 
@@ -464,9 +503,6 @@ void ArenaCellSet::trace(TenuringTracer& mover) {
       case JS::TraceKind::Object:
         mover.traceBufferedCells<JSObject>(arena, cells);
         break;
-      case JS::TraceKind::String:
-        mover.traceBufferedCells<JSString>(arena, cells);
-        break;
       case JS::TraceKind::Script:
         mover.traceBufferedCells<BaseScript>(arena, cells);
         break;
@@ -476,6 +512,17 @@ void ArenaCellSet::trace(TenuringTracer& mover) {
       default:
         MOZ_CRASH("Unexpected trace kind");
     }
+  }
+}
+
+void ArenaCellSet::traceStrings(TenuringTracer& mover) {
+  for (ArenaCellSet* cells = this; cells; cells = cells->next) {
+    cells->check();
+    Arena* arena = cells->arena;
+    MOZ_ASSERT(MapAllocToTraceKind(arena->getAllocKind()) ==
+               JS::TraceKind::String);
+    mover.traceBufferedCells<JSString>(arena, cells);
+    // The ArenaCellSet will be left holding the cells that require sweeping.
   }
 }
 
@@ -492,16 +539,78 @@ void js::gc::StoreBuffer::WholeCellBuffer::trace(TenuringTracer& mover,
   // Trace all of the strings to mark the non-deduplicatable bits, then trace
   // all other whole cells.
   if (stringHead_) {
-    stringHead_->trace(mover);
+    stringHead_->traceStrings(mover);
   }
 #ifdef DEBUG
   owner->markingNondeduplicatable = false;
 #endif
   if (nonStringHead_) {
-    nonStringHead_->trace(mover);
+    nonStringHead_->traceNonStrings(mover);
   }
 
-  stringHead_ = nonStringHead_ = nullptr;
+  nonStringHead_ = nullptr;
+}
+
+// Given a tenured dependent string, walk up its chain of nursery bases until
+// the root base is found. Update the base to the tenured version of the root
+// base, and update the chars to point within that base string.
+template <typename CharT>
+void JSDependentString::sweepTyped() {
+  MOZ_ASSERT(isTenured());
+  MOZ_ASSERT(IsInsideNursery(nurseryBaseOrRelocOverlay()));
+  JSLinearString* origBase = nurseryBaseOrRelocOverlay();
+  while (origBase->isForwarded() || origBase->hasBase()) {
+    if (!MaybeForwarded(origBase)->hasBase()) {
+      break;
+    }
+    if (origBase->isForwarded()) {
+      origBase = js::gc::StringRelocationOverlay::fromCell(origBase)
+                     ->savedNurseryBaseOrRelocOverlay();
+    } else {
+      origBase = origBase->nurseryBaseOrRelocOverlay();
+    }
+  }
+  JSLinearString* tenuredBase = Forwarded(origBase);
+  auto* baseOverlay = js::gc::StringRelocationOverlay::fromCell(origBase);
+  const CharT* oldBaseChars = baseOverlay->savedNurseryChars<CharT>();
+  const CharT* oldDepChars = JSString::nonInlineCharsRaw<CharT>();
+  const CharT* newBaseChars = tenuredBase->JSString::nonInlineCharsRaw<CharT>();
+  size_t offset = oldDepChars - oldBaseChars;
+  MOZ_ASSERT(offset < tenuredBase->length());
+  relocateNonInlineChars(newBaseChars, offset);
+  d.s.u3.base = tenuredBase;
+}
+
+inline void JSDependentString::sweep() {
+  if (hasTwoByteChars()) {
+    sweepTyped<char16_t>();
+  } else {
+    sweepTyped<JS::Latin1Char>();
+  }
+}
+
+static void SweepDependentStrings(Arena* arena, ArenaCellSet* cells) {
+  for (size_t i = 0; i < MaxArenaCellIndex; i += cells->BitsPerWord) {
+    ArenaCellSet::WordT bitset = cells->getWord(i / cells->BitsPerWord);
+    while (bitset) {
+      size_t bit = i + js::detail::CountTrailingZeroes(bitset);
+      auto* str = reinterpret_cast<JSString*>(uintptr_t(arena) +
+                                              ArenaCellIndexBytes * bit);
+      MOZ_ASSERT(str->isTenured());
+      str->asDependent().sweep();
+      bitset &= bitset - 1;  // Clear the low bit.
+    }
+  }
+}
+
+void ArenaCellSet::sweepDependentStrings() {
+  for (ArenaCellSet* cells = this; cells; cells = cells->next) {
+    Arena* arena = cells->arena;
+    arena->bufferedCells() = &ArenaCellSet::Empty;
+    MOZ_ASSERT(MapAllocToTraceKind(arena->getAllocKind()) ==
+               JS::TraceKind::String);
+    SweepDependentStrings(arena, cells);
+  }
 }
 
 template <typename T>
