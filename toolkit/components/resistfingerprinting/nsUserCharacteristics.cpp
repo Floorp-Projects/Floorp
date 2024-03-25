@@ -13,7 +13,9 @@
 #include "mozilla/glean/GleanPings.h"
 #include "mozilla/glean/GleanMetrics.h"
 
+#include "mozilla/StaticPrefs_general.h"
 #include "mozilla/StaticPrefs_media.h"
+#include "mozilla/StaticPrefs_widget.h"
 
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/PreferenceSheet.h"
@@ -134,6 +136,13 @@ void PopulatePrefs() {
       StaticPrefs::privacy_donottrackheader_enabled());
   glean::characteristics::prefs_privacy_globalprivacycontrol_enabled.Set(
       StaticPrefs::privacy_globalprivacycontrol_enabled());
+
+  glean::characteristics::prefs_general_autoscroll.Set(
+      Preferences::GetBool("general.autoScroll"));
+  glean::characteristics::prefs_general_smoothscroll.Set(
+      StaticPrefs::general_smoothScroll());
+  glean::characteristics::prefs_overlay_scrollbars.Set(
+      StaticPrefs::widget_gtk_overlay_scrollbars_enabled());
 }
 
 // ==================================================================
