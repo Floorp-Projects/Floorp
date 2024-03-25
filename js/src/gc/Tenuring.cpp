@@ -339,16 +339,11 @@ void js::gc::StoreBuffer::SlotsEdge::trace(TenuringTracer& mover) const {
 }
 
 static inline void TraceWholeCell(TenuringTracer& mover, JSObject* object) {
-  MOZ_ASSERT_IF(object->storeBuffer(),
-                !object->storeBuffer()->markingStringWholeCells);
   mover.traceObject(object);
 }
 
 // Return whether the string needs to be swept.
 static inline bool TraceWholeCell(TenuringTracer& mover, JSString* str) {
-  MOZ_ASSERT_IF(str->storeBuffer(),
-                str->storeBuffer()->markingStringWholeCells);
-
   if (str->hasBase()) {
     // For tenured dependent strings -> nursery string edges, sweep the
     // (tenured) strings at the end of nursery marking to update chars pointers
@@ -378,7 +373,7 @@ static inline void TraceWholeCell(TenuringTracer& mover,
 }
 
 template <typename T>
-void TenuringTracer::traceBufferedCells(Arena* arena, ArenaCellSet* cells) {
+bool TenuringTracer::traceBufferedCells(Arena* arena, ArenaCellSet* cells) {
   for (size_t i = 0; i < MaxArenaCellIndex; i += cells->BitsPerWord) {
     ArenaCellSet::WordT bitset = cells->getWord(i / cells->BitsPerWord);
     while (bitset) {
@@ -397,11 +392,14 @@ void TenuringTracer::traceBufferedCells(Arena* arena, ArenaCellSet* cells) {
       }
     }
   }
+
+  return false;
 }
 
 template <>
-void TenuringTracer::traceBufferedCells<JSString>(Arena* arena,
-                                  ArenaCellSet* cells) {
+bool TenuringTracer::traceBufferedCells<JSString>(Arena* arena,
+                                                  ArenaCellSet* cells) {
+  bool needsSweep = false;
   for (size_t i = 0; i < MaxArenaCellIndex; i += cells->BitsPerWord) {
     ArenaCellSet::WordT bitset = cells->getWord(i / cells->BitsPerWord);
     ArenaCellSet::WordT tosweep = bitset;
@@ -422,67 +420,62 @@ void TenuringTracer::traceBufferedCells<JSString>(Arena* arena,
     }
 
     cells->setWord(i / cells->BitsPerWord, tosweep);
+    if (tosweep) {
+      needsSweep = true;
+    }
   }
+
+  return needsSweep;
 }
 
-void ArenaCellSet::traceNonStrings(TenuringTracer& mover) {
-  for (ArenaCellSet* cells = this; cells; cells = cells->next) {
+ArenaCellSet* ArenaCellSet::trace(TenuringTracer& mover) {
+  ArenaCellSet* head = nullptr;
+
+  ArenaCellSet* cells = this;
+  while (cells) {
     cells->check();
 
     Arena* arena = cells->arena;
     arena->bufferedCells() = &ArenaCellSet::Empty;
 
     JS::TraceKind kind = MapAllocToTraceKind(arena->getAllocKind());
+    bool needsSweep;
     switch (kind) {
       case JS::TraceKind::Object:
-        mover.traceBufferedCells<JSObject>(arena, cells);
+        needsSweep = mover.traceBufferedCells<JSObject>(arena, cells);
+        break;
+      case JS::TraceKind::String:
+        needsSweep = mover.traceBufferedCells<JSString>(arena, cells);
         break;
       case JS::TraceKind::Script:
-        mover.traceBufferedCells<BaseScript>(arena, cells);
+        needsSweep = mover.traceBufferedCells<BaseScript>(arena, cells);
         break;
       case JS::TraceKind::JitCode:
-        mover.traceBufferedCells<jit::JitCode>(arena, cells);
+        needsSweep = mover.traceBufferedCells<jit::JitCode>(arena, cells);
         break;
       default:
         MOZ_CRASH("Unexpected trace kind");
     }
-  }
-}
 
-void ArenaCellSet::traceStrings(TenuringTracer& mover) {
-  for (ArenaCellSet* cells = this; cells; cells = cells->next) {
-    cells->check();
-    Arena* arena = cells->arena;
-    MOZ_ASSERT(MapAllocToTraceKind(arena->getAllocKind()) ==
-               JS::TraceKind::String);
-    mover.traceBufferedCells<JSString>(arena, cells);
-    // The ArenaCellSet will be left holding the cells that require sweeping.
+    ArenaCellSet* next = cells->next;
+    if (needsSweep) {
+      cells->next = head;
+      head = cells;
+    }
+
+    cells = next;
   }
+
+  return head;
 }
 
 void js::gc::StoreBuffer::WholeCellBuffer::trace(TenuringTracer& mover,
                                                  StoreBuffer* owner) {
   MOZ_ASSERT(owner->isEnabled());
 
-#ifdef DEBUG
-  // Verify that all string whole cells are traced first before any other
-  // strings are visited for any reason.
-  MOZ_ASSERT(!owner->markingStringWholeCells);
-  owner->markingStringWholeCells = true;
-#endif
-  // Trace all of the strings to mark the non-deduplicatable bits, then trace
-  // all other whole cells.
-  if (stringHead_) {
-    stringHead_->traceStrings(mover);
+  if (head_) {
+    head_ = head_->trace(mover);
   }
-#ifdef DEBUG
-  owner->markingStringWholeCells = false;
-#endif
-  if (nonStringHead_) {
-    nonStringHead_->traceNonStrings(mover);
-  }
-
-  nonStringHead_ = nullptr;
 }
 
 // Given a tenured dependent string, walk up its chain of nursery bases until
