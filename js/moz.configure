@@ -591,13 +591,14 @@ set_define("MOZ_AARCH64_JSCVT", aarch64_jscvt)
 
 
 @depends(target)
-def has_pthread_jit_write_protect_np(target):
-    return target.os == "OSX" and target.cpu == "aarch64"
+def has_apple_fast_wx(target):
+    return target.kernel == "Darwin" and target.cpu == "aarch64"
 
 
-# On Apple Silicon we use MAP_JIT with pthread_jit_write_protect_np to implement
-# JIT code write protection.
-set_define("JS_USE_APPLE_FAST_WX", True, when=has_pthread_jit_write_protect_np)
+# On Apple Silicon macOS we use MAP_JIT with pthread_jit_write_protect_np to
+# implement JIT code write protection, while on iOS we use MAP_JIT with
+# be_memory_inline_jit_restrict_*.
+set_define("JS_USE_APPLE_FAST_WX", True, when=has_apple_fast_wx)
 
 
 # CTypes
