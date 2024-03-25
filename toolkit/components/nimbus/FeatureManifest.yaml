@@ -2313,7 +2313,6 @@ updatePrompt:
   exposureDescription: >-
     Exposure is sent at most once per browsing session when an update
     notification prompt is displayed.
-  isEarlyStartup: true
   variables:
     showReleaseNotesLink:
       type: boolean

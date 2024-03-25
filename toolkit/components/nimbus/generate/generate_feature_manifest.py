@@ -34,7 +34,6 @@ ALLOWED_ISEARLYSTARTUP_FEATURE_IDS = {
     "searchConfiguration",
     "shellService",
     "testFeature",
-    "updatePrompt",
     "upgradeDialog",
 }
 
