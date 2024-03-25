@@ -693,6 +693,17 @@ int32_t NS_GetDefaultPort(const char* scheme,
   return NS_SUCCEEDED(rv) ? port : -1;
 }
 
+/**
+ * This function is a helper function to apply the ToAscii conversion
+ * to a string
+ */
+bool NS_StringToACE(const nsACString& idn, nsACString& result) {
+  nsCOMPtr<nsIIDNService> idnSrv = do_GetService(NS_IDNSERVICE_CONTRACTID);
+  if (!idnSrv) return false;
+  nsresult rv = idnSrv->ConvertUTF8toACE(idn, result);
+  return NS_SUCCEEDED(rv);
+}
+
 int32_t NS_GetRealPort(nsIURI* aURI) {
   int32_t port;
   nsresult rv = aURI->GetPort(&port);
@@ -708,20 +719,6 @@ int32_t NS_GetRealPort(nsIURI* aURI) {
   if (NS_FAILED(rv)) return -1;
 
   return NS_GetDefaultPort(scheme.get());
-}
-
-nsresult NS_DomainToASCII(const nsACString& aHost, nsACString& aASCII) {
-  return nsStandardURL::GetIDNService()->ConvertUTF8toACE(aHost, aASCII);
-}
-
-nsresult NS_DomainToDisplay(const nsACString& aHost, nsACString& aDisplay) {
-  bool ignored;
-  return nsStandardURL::GetIDNService()->ConvertToDisplayIDN(aHost, &ignored,
-                                                             aDisplay);
-}
-
-nsresult NS_DomainToUnicode(const nsACString& aHost, nsACString& aUnicode) {
-  return nsStandardURL::GetIDNService()->ConvertACEtoUTF8(aHost, aUnicode);
 }
 
 nsresult NS_NewInputStreamChannelInternal(

@@ -622,8 +622,6 @@ nsresult nsStandardURL::NormalizeIPv4(const nsACString& host,
   return NS_OK;
 }
 
-nsIIDNService* nsStandardURL::GetIDNService() { return gIDN.get(); }
-
 nsresult nsStandardURL::NormalizeIDN(const nsCString& host, nsCString& result) {
   result.Truncate();
   mDisplayHost.Truncate();
