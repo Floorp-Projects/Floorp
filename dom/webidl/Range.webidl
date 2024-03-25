@@ -94,3 +94,12 @@ partial interface Range {
   [ChromeOnly, Throws]
   ClientRectsAndTexts getClientRectsAndTexts();
 };
+
+// ChromeOnly methods that allow setting Range boundaries to cross
+// shadow boundary.
+partial interface Range {
+  [ChromeOnly, Throws]
+  undefined setStartAllowCrossShadowBoundary(Node refNode, unsigned long offset);
+  [ChromeOnly, Throws]
+  undefined setEndAllowCrossShadowBoundary(Node refNode, unsigned long offset);
+};
