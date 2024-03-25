@@ -259,7 +259,7 @@ export class URLQueryStrippingListService {
     this._notifyObservers();
   }
 
-  _onPrefUpdate(pref, value) {
+  async _onPrefUpdate(pref, value) {
     switch (pref) {
       case PREF_STRIP_LIST_NAME:
         this.prefStripList = new Set(value ? value.split(" ") : []);
@@ -275,7 +275,7 @@ export class URLQueryStrippingListService {
     }
 
     this._notifyObservers();
-    this._notifyStripOnShareObservers();
+    await this._notifyStripOnShareObservers();
   }
 
   _getListFromSharedData() {
