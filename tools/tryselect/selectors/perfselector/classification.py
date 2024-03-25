@@ -379,4 +379,25 @@ class ClassificationProvider:
                 "tasks": [],
                 "description": "A group of tests that monitor key graphics and media metrics to keep the browser fast",
             },
+            "Pageload Lite": {
+                "query": {
+                    Suites.RAPTOR.value: ["'browsertime 'tp6-bench"],
+                },
+                "suites": [Suites.RAPTOR.value],
+                "platform-restrictions": [
+                    Platforms.DESKTOP.value,
+                    Platforms.LINUX.value,
+                    Platforms.MACOSX.value,
+                    Platforms.WINDOWS.value,
+                ],
+                "variant-restrictions": {Suites.RAPTOR.value: [Variants.FISSION.value]},
+                "app-restrictions": {
+                    Suites.RAPTOR.value: [Apps.FIREFOX.value],
+                },
+                "tasks": [],
+                "description": (
+                    "Similar to the Pageload category, but it provides a minimum set "
+                    "of pageload tests to run for performance testing."
+                ),
+            },
         }
