@@ -343,6 +343,7 @@ static IsolationBehavior IsolationBehaviorForURI(nsIURI* aURI, bool aIsSubframe,
           browser_tabs_remote_separatePrivilegedMozillaWebContentProcess()) {
     nsAutoCString host;
     if (NS_SUCCEEDED(aURI->GetAsciiHost(host))) {
+      // This code is duplicated in E10SUtils.sys.mjs, please update both
       for (const auto& separatedDomain : sSeparatedMozillaDomains) {
         // If the domain exactly matches our host, or our host ends with "." +
         // separatedDomain, we consider it matching.
