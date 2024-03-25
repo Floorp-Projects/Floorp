@@ -901,6 +901,14 @@ void nsDocShellLoadState::SetFileName(const nsAString& aFileName) {
   mFileName = aFileName;
 }
 
+void nsDocShellLoadState::SetRemoteTypeOverride(
+    const nsCString& aRemoteTypeOverride) {
+  MOZ_DIAGNOSTIC_ASSERT(
+      NS_IsAboutBlank(mURI),
+      "Should only have aRemoteTypeOverride for about:blank URIs");
+  mRemoteTypeOverride = mozilla::Some(aRemoteTypeOverride);
+}
+
 const nsCString& nsDocShellLoadState::GetEffectiveTriggeringRemoteType() const {
   // Consider non-errorpage loads from session history as being triggred by the
   // parent process, as we'll validate them against the history entry.
