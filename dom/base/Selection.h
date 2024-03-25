@@ -205,6 +205,10 @@ class Selection final : public nsSupportsWeakReference,
       nsRange* aRange, Maybe<size_t>* aOutIndex,
       DispatchSelectstartEvent aDispatchSelectstartEvent);
 
+  already_AddRefed<StaticRange> GetComposedRange(
+      const AbstractRange* aRange,
+      const Sequence<OwningNonNull<ShadowRoot>>& aShadowRoots) const;
+
  public:
   nsresult RemoveCollapsedRanges();
   void Clear(nsPresContext* aPresContext);
@@ -386,6 +390,10 @@ class Selection final : public nsSupportsWeakReference,
       AbstractRange& aRange, mozilla::ErrorResult& aRv);
 
   MOZ_CAN_RUN_SCRIPT void RemoveAllRanges(mozilla::ErrorResult& aRv);
+
+  void GetComposedRanges(
+      const Sequence<OwningNonNull<ShadowRoot>>& aShadowRoots,
+      nsTArray<RefPtr<StaticRange>>& aComposedRanges);
 
   /**
    * Whether Stringify should flush layout or not.
