@@ -285,10 +285,14 @@ class WaitForUiaEvent(comtypes.COMObject):
     # either `ISomeInterface_SomeMethod` or just `SomeMethod` on this instance
     # when that method is called using COM. We use the shorter convention, since
     # we don't anticipate method name conflicts with UIA interfaces.
-    _com_interfaces_ = [uiaMod.IUIAutomationFocusChangedEventHandler]
+    _com_interfaces_ = [
+        uiaMod.IUIAutomationFocusChangedEventHandler,
+        uiaMod.IUIAutomationPropertyChangedEventHandler,
+    ]
 
-    def __init__(self, *, eventId=None, match=None):
-        """eventId is the event id to wait for.
+    def __init__(self, *, eventId=None, property=None, match=None):
+        """eventId is the event id to wait for. Alternatively, you can pass
+        property to wait for a particular property to change.
         match is either None to match any object, an str containing the DOM id
         of the desired object, or a function taking a IUIAutomationElement which
         should return True if this is the requested event.
@@ -299,6 +303,14 @@ class WaitForUiaEvent(comtypes.COMObject):
         self._signal = ctypes.windll.kernel32.CreateEventW(None, True, False, None)
         if eventId == uiaMod.UIA_AutomationFocusChangedEventId:
             uiaClient.AddFocusChangedEventHandler(None, self)
+        elif property:
+            uiaClient.AddPropertyChangedEventHandler(
+                uiaClient.GetRootElement(),
+                uiaMod.TreeScope_Subtree,
+                None,
+                self,
+                [property],
+            )
         else:
             raise ValueError("No supported event specified")
 
@@ -321,6 +333,9 @@ class WaitForUiaEvent(comtypes.COMObject):
             ctypes.windll.kernel32.SetEvent(self._signal)
 
     def HandleFocusChangedEvent(self, sender):
+        self._checkMatch(sender)
+
+    def HandlePropertyChangedEvent(self, sender, propertyId, newValue):
         self._checkMatch(sender)
 
     def wait(self):
