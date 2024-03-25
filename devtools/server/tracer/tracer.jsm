@@ -647,13 +647,26 @@ class JavaScriptTracer {
       }
 
       if (this.traceSteps) {
+        // Collect the location notified via onTracingFrame to also avoid redundancy between similar location
+        // between onEnterFrame and onStep notifications.
+        let { lineNumber: lastLine, columnNumber: lastColumn } =
+          frame.script.getOffsetMetadata(frame.offset);
+
         frame.onStep = () => {
           // Spidermonkey steps on many intermediate positions which don't make sense to the user.
           // `isStepStart` is close to each statement start, which is meaningful to the user.
-          const { isStepStart } = frame.script.getOffsetMetadata(frame.offset);
+          const { isStepStart, lineNumber, columnNumber } =
+            frame.script.getOffsetMetadata(frame.offset);
           if (!isStepStart) {
             return;
           }
+          // onStep may be called on many instructions related to the same line and colunm.
+          // Avoid notifying duplicated steps if we stepped on the exact same location.
+          if (lastLine == lineNumber && lastColumn == columnNumber) {
+            return;
+          }
+          lastLine = lineNumber;
+          lastColumn = columnNumber;
 
           shouldLogToStdout = true;
           if (listeners.size > 0) {

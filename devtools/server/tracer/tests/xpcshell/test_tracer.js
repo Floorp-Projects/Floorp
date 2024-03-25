@@ -246,22 +246,23 @@ add_task(async function testTracingStep() {
 function foo() {
   bar();            /* line 3 */
   second();         /* line 4 */
+  dump("foo\\n");
 }
 function bar() {
-  let res;          /* line 7 */
-  if (1 === 1) {    /* line 8 */
-    res = "string"; /* line 9 */
+  let res;          /* line 8 */
+  if (1 === 1) {    /* line 9 */
+    res = "string"; /* line 10 */
   } else {
     res = "nope"
   }
-  return res;       /* line 13 */
+  return res;       /* line 14 */
 };
 function second() {
-  let x = 0;        /* line 16 */
-  for (let i = 0; i < 2; i++) { /* line 17 */
-    x++;            /* line 18 */
+  let x = 0;        /* line 17 */
+  for (let i = 0; i < 2; i++) { /* line 18 */
+    x++;            /* line 19 */
   }
-  return null;      /* line 20 */
+  return null;      /* line 21 */
 };
 foo();`;
   Cu.evalInSandbox(source, sandbox, null, "file.js", 1);
@@ -287,45 +288,44 @@ foo();`;
   Assert.stringContains(logs[1], "λ foo");
   Assert.stringContains(logs[1], "file.js:3:3");
 
+  Assert.stringContains(logs[2], "λ bar");
+  Assert.stringContains(logs[2], "file.js:7:16");
+
   // Each "step" only prints the location and nothing more
-  Assert.stringContains(logs[2], "file.js:3:3");
+  Assert.stringContains(logs[3], "file.js:9:7");
 
-  Assert.stringContains(logs[3], "λ bar");
-  Assert.stringContains(logs[3], "file.js:6:16");
+  Assert.stringContains(logs[4], "file.js:10:5");
 
-  Assert.stringContains(logs[4], "file.js:8:7");
+  Assert.stringContains(logs[5], "file.js:14:3");
 
-  Assert.stringContains(logs[5], "file.js:9:5");
+  Assert.stringContains(logs[6], "file.js:4:3");
 
-  Assert.stringContains(logs[6], "file.js:13:3");
+  Assert.stringContains(logs[7], "λ second");
+  Assert.stringContains(logs[7], "file.js:16:19");
 
-  Assert.stringContains(logs[7], "file.js:4:3");
-
-  Assert.stringContains(logs[8], "λ second");
-  Assert.stringContains(logs[8], "file.js:15:19");
-
-  Assert.stringContains(logs[9], "file.js:16:11");
+  Assert.stringContains(logs[8], "file.js:17:11");
 
   // For loop
-  Assert.stringContains(logs[10], "file.js:17:16");
+  Assert.stringContains(logs[9], "file.js:18:16");
 
-  Assert.stringContains(logs[11], "file.js:17:19");
+  Assert.stringContains(logs[10], "file.js:18:19");
 
-  Assert.stringContains(logs[12], "file.js:18:5");
+  Assert.stringContains(logs[11], "file.js:19:5");
 
-  Assert.stringContains(logs[13], "file.js:17:26");
+  Assert.stringContains(logs[12], "file.js:18:26");
 
-  Assert.stringContains(logs[14], "file.js:17:19");
+  Assert.stringContains(logs[13], "file.js:18:19");
 
-  Assert.stringContains(logs[15], "file.js:18:5");
+  Assert.stringContains(logs[14], "file.js:19:5");
 
-  Assert.stringContains(logs[16], "file.js:17:26");
+  Assert.stringContains(logs[15], "file.js:18:26");
 
-  Assert.stringContains(logs[17], "file.js:17:19");
+  Assert.stringContains(logs[16], "file.js:18:19");
   // End of for loop
 
-  Assert.stringContains(logs[18], "file.js:20:3");
+  Assert.stringContains(logs[17], "file.js:21:3");
 
+  Assert.stringContains(logs[18], "file.js:5:3");
   info("Stop tracing");
   stopTracing();
 });
