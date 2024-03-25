@@ -20,6 +20,7 @@ class nsMIMEInfoUnix : public nsMIMEInfoImpl {
   static bool HandlerExists(const char* aProtocolScheme);
 
  protected:
+  NS_IMETHOD GetDefaultExecutable(nsIFile** aExecutable) override;
   NS_IMETHOD GetHasDefaultHandler(bool* _retval) override;
 
   virtual nsresult LoadUriInternal(nsIURI* aURI) override;

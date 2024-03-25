@@ -222,6 +222,16 @@ nsMIMEInfoWin::GetHasDefaultHandler(bool* _retval) {
   return NS_OK;
 }
 
+NS_IMETHODIMP nsMIMEInfoWin::GetDefaultExecutable(nsIFile** aExecutable) {
+  nsCOMPtr<nsIFile> defaultApp = GetDefaultApplication();
+  if (defaultApp) {
+    defaultApp.forget(aExecutable);
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
 NS_IMETHODIMP
 nsMIMEInfoWin::GetEnumerator(nsISimpleEnumerator** _retval) {
   nsCOMArray<nsIVariant> properties;
