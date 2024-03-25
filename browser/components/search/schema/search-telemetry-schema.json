@@ -375,7 +375,7 @@
               "description": "The query to inspect all elements on the SERP."
             },
             "method": {
-              "enum": ["data-attribute"],
+              "enum": ["dataAttribute"],
               "description": "The extraction method used for the query."
             },
             "options": {
@@ -408,9 +408,27 @@
                 "queryParamKey": {
                   "type": "string",
                   "description": "The query parameter key to inspect in the href."
+                },
+                "queryParamValueIsHref": {
+                  "type": "boolean",
+                  "description": "Whether the query param value is expected to contain an href."
                 }
               },
               "required": ["queryParamKey"]
+            }
+          },
+          "required": ["selectors", "method"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "selectors": {
+              "type": "string",
+              "description": "The query to use to inspect all elements on the SERP."
+            },
+            "method": {
+              "enum": ["textContent"],
+              "description": "The extraction method to use for the query."
             }
           },
           "required": ["selectors", "method"]
