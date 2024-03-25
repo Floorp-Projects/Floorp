@@ -380,9 +380,13 @@ void ForEachStringFlag(const JSString* str, uint32_t flags, KnownF known,
         static_assert(JSString::LINEAR_IS_EXTENSIBLE_BIT ==
                       JSString::INLINE_IS_FAT_BIT);
         if (str->isLinear()) {
-          known("EXTENSIBLE");
-        } else if (str->isInline()) {
-          known("FAT");
+          if (str->isInline()) {
+            known("FAT");
+          } else if (!str->isAtom()) {
+            known("EXTENSIBLE");
+          } else {
+            unknown(i);
+          }
         } else {
           unknown(i);
         }
@@ -817,15 +821,30 @@ static bool UpdateNurseryBuffersOnTransfer(js::Nursery& nursery, JSString* from,
   return true;
 }
 
-static bool CanReuseLeftmostBuffer(JSString* leftmostChild, size_t wholeLength,
+static bool CanReuseLeftmostBuffer(JSRope* root, JSString* leftmostChild,
                                    bool hasTwoByteChars) {
   if (!leftmostChild->isExtensible()) {
     return false;
   }
 
   JSExtensibleString& str = leftmostChild->asExtensible();
-  return str.capacity() >= wholeLength &&
-         str.hasTwoByteChars() == hasTwoByteChars;
+  if (str.capacity() < root->length() ||
+      str.hasTwoByteChars() != hasTwoByteChars) {
+    return false;
+  }
+
+  // Updating the leftmost leaf string to be a dependent string could violate
+  // the invariant that all base string edges are processed for updating, either
+  // via the store buffer or normal tenuring. This is only a problem if the
+  // leftmost string is tenured and the would-be base is in the nursery. Note
+  // that this could be further restricted in the future to only apply to
+  // leftmost strings that themselves have dependents (if we start tracking
+  // that.)
+  if (!root->isTenured() && leftmostChild->isTenured()) {
+    return false;
+  }
+
+  return true;
 }
 
 JSLinearString* JSRope::flatten(JSContext* maybecx) {
@@ -914,6 +933,19 @@ JSLinearString* JSRope::flattenInternal(JSRope* root) {
    * JSDependentStrings pointing to them already. Stealing the buffer doesn't
    * change its address, only its owning JSExtensibleString, so all chars()
    * pointers in the JSDependentStrings are still valid.
+   *
+   * This chain of dependent strings could be problematic if the base string
+   * moves, either because it was initially allocated in the nursery or it
+   * gets deduplicated, because you might have a dependent ->
+   * tenured dependent -> nursery base string, and the store buffer would
+   * only capture the latter edge. Prevent this case from happening by
+   * disallowing leftmost extensible string reuse if the reused string is
+   * tenured and the root string is in the nursery.
+   *
+   * This maintains the invariant that any dependent string using characters
+   * that can move will have a way of updating its chars pointer:
+   *  - tenured dependent: updated when sweeping the store buffer edges
+   *  - nursery dependent: updated during regular tenuring tracing
    */
   const size_t wholeLength = root->length();
   size_t wholeCapacity;
@@ -931,7 +963,7 @@ JSLinearString* JSRope::flattenInternal(JSRope* root) {
   JSString* leftmostChild = leftmostRope->leftChild();
 
   bool reuseLeftmostBuffer = CanReuseLeftmostBuffer(
-      leftmostChild, wholeLength, std::is_same_v<CharT, char16_t>);
+      root, leftmostChild, std::is_same_v<CharT, char16_t>);
 
   if (reuseLeftmostBuffer) {
     JSExtensibleString& left = leftmostChild->asExtensible();
@@ -1455,15 +1487,17 @@ uint32_t JSAtom::getIndexSlow() const {
                           : AtomCharsToIndex(twoByteChars(nogc), len);
 }
 
-static void MarkStringAndBasesNonDeduplicatable(JSLinearString* s) {
-  while (true) {
-    if (!s->isTenured()) {
-      s->setNonDeduplicatable();
-    }
-    if (!s->hasBase()) {
-      break;
-    }
+// Prevent the actual owner of the string's characters from being deduplicated
+// (and thus freeing its characters, which would invalidate the ASSC's chars
+// pointer). Intermediate dependent strings on the chain can be deduplicated,
+// since the base will be updated to the root base during tenuring anyway and
+// the intermediates won't matter.
+void PreventRootBaseDeduplication(JSLinearString* s) {
+  while (s->hasBase()) {
     s = s->base();
+  }
+  if (!s->isTenured()) {
+    s->setNonDeduplicatable();
   }
 }
 
@@ -1492,7 +1526,7 @@ bool AutoStableStringChars::init(JSContext* cx, JSString* s) {
     twoByteChars_ = linearString->rawTwoByteChars();
   }
 
-  MarkStringAndBasesNonDeduplicatable(linearString);
+  PreventRootBaseDeduplication(linearString);
 
   s_ = linearString;
   return true;
@@ -1518,7 +1552,7 @@ bool AutoStableStringChars::initTwoByte(JSContext* cx, JSString* s) {
   state_ = TwoByte;
   twoByteChars_ = linearString->rawTwoByteChars();
 
-  MarkStringAndBasesNonDeduplicatable(linearString);
+  PreventRootBaseDeduplication(linearString);
 
   s_ = linearString;
   return true;

@@ -1603,10 +1603,9 @@ void js::Nursery::traceRoots(AutoGCSession& session, TenuringTracer& mover) {
     MOZ_ASSERT(gc->storeBuffer().isEnabled());
     MOZ_ASSERT(gc->storeBuffer().isEmpty());
 
-    // Strings in the whole cell buffer must be traced first, in order to mark
-    // tenured dependent strings' bases as non-deduplicatable. The rest of
-    // nursery collection (whole non-string cells, edges, etc.) can happen
-    // later.
+    // Strings in the whole cell buffer must be traced first, in order to handle
+    // tenured dependent strings pointing to movable chars before the base
+    // string holding those chars is tenured.
     startProfile(ProfileKey::TraceWholeCells);
     sb.traceWholeCells(mover);
     endProfile(ProfileKey::TraceWholeCells);

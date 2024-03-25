@@ -338,90 +338,24 @@ void js::gc::StoreBuffer::SlotsEdge::trace(TenuringTracer& mover) const {
   }
 }
 
-// Non-deduplicatable marking is necessary because of the following 2 reasons:
-//
-// 1. Tenured string chars cannot be updated:
-//
-//    If any of the tenured string's bases were deduplicated during tenuring,
-//    the tenured string's chars pointer would need to be adjusted. This would
-//    then require updating any other tenured strings that are dependent on the
-//    first tenured string, and we have no way to find them without scanning
-//    the entire tenured heap.
-//
-// 2. Tenured string cannot store its nursery base or base's chars:
-//
-//    Tenured strings have no place to stash a pointer to their nursery base or
-//    its chars. You need to be able to traverse any dependent string's chain
-//    of bases up to a nursery "root base" that points to the malloced chars
-//    that the dependent strings started out pointing to, so that you can
-//    calculate the offset of any dependent string and update the ptr+offset if
-//    the root base gets deduplicated to a different allocation. Tenured
-//    strings in this base chain will stop you from reaching the nursery
-//    version of the root base; you can only get to the tenured version, and it
-//    has no place to store the original chars pointer.
-static inline void PreventDeduplicationOfReachableStrings(JSString* str) {
-  MOZ_ASSERT(str->isTenured());
-  MOZ_ASSERT(!str->isForwarded());
-
-  JSLinearString* baseOrRelocOverlay = str->nurseryBaseOrRelocOverlay();
-
-  // Walk along the chain of dependent strings' base string pointers
-  // to mark them all non-deduplicatable.
-  while (true) {
-    // baseOrRelocOverlay can be one of the three cases:
-    // 1. forwarded nursery string:
-    //    The forwarded string still retains the flag that can tell whether
-    //    this string is a dependent string with a base. Its
-    //    StringRelocationOverlay holds a saved pointer to its base in the
-    //    nursery.
-    // 2. not yet forwarded nursery string:
-    //    Retrieve the base field directly from the string.
-    // 3. tenured string:
-    //    The nursery base chain ends here, so stop traversing.
-    if (baseOrRelocOverlay->isForwarded()) {
-      JSLinearString* tenuredBase = Forwarded(baseOrRelocOverlay);
-      if (!tenuredBase->hasBase()) {
-        break;
-      }
-      baseOrRelocOverlay = StringRelocationOverlay::fromCell(baseOrRelocOverlay)
-                               ->savedNurseryBaseOrRelocOverlay();
-    } else {
-      JSLinearString* base = baseOrRelocOverlay;
-      if (base->isTenured()) {
-        break;
-      }
-      if (base->isDeduplicatable()) {
-        base->setNonDeduplicatable();
-      }
-      if (!base->hasBase()) {
-        break;
-      }
-      baseOrRelocOverlay = base->nurseryBaseOrRelocOverlay();
-    }
-  }
-}
-
 static inline void TraceWholeCell(TenuringTracer& mover, JSObject* object) {
   MOZ_ASSERT_IF(object->storeBuffer(),
-                !object->storeBuffer()->markingNondeduplicatable);
-
+                !object->storeBuffer()->markingStringWholeCells);
   mover.traceObject(object);
 }
 
 // Return whether the string needs to be swept.
 static inline bool TraceWholeCell(TenuringTracer& mover, JSString* str) {
   MOZ_ASSERT_IF(str->storeBuffer(),
-                str->storeBuffer()->markingNondeduplicatable);
+                str->storeBuffer()->markingStringWholeCells);
 
-  // Mark all strings reachable from the tenured string `str` as
-  // non-deduplicatable. These strings are the bases of the tenured dependent
-  // string.
   if (str->hasBase()) {
-    PreventDeduplicationOfReachableStrings(str);
-
     // For tenured dependent strings -> nursery string edges, sweep the
     // (tenured) strings at the end of nursery marking to update chars pointers
-    // that were in the nursery.
+    // that were in the nursery. Rather than updating the base pointer to point
+    // directly to the tenured version of itself, we will leave it pointing at
+    // the nursery Cell (which will become a StringRelocationOverlay during the
+    // minor GC.)
     JSLinearString* base = str->nurseryBaseOrRelocOverlay();
     if (IsInsideNursery(base)) {
       str->traceBasePreserveNurseryEdge(&mover);
@@ -533,8 +467,8 @@ void js::gc::StoreBuffer::WholeCellBuffer::trace(TenuringTracer& mover,
 #ifdef DEBUG
   // Verify that all string whole cells are traced first before any other
   // strings are visited for any reason.
-  MOZ_ASSERT(!owner->markingNondeduplicatable);
-  owner->markingNondeduplicatable = true;
+  MOZ_ASSERT(!owner->markingStringWholeCells);
+  owner->markingStringWholeCells = true;
 #endif
   // Trace all of the strings to mark the non-deduplicatable bits, then trace
   // all other whole cells.
@@ -542,7 +476,7 @@ void js::gc::StoreBuffer::WholeCellBuffer::trace(TenuringTracer& mover,
     stringHead_->traceStrings(mover);
   }
 #ifdef DEBUG
-  owner->markingNondeduplicatable = false;
+  owner->markingStringWholeCells = false;
 #endif
   if (nonStringHead_) {
     nonStringHead_->traceNonStrings(mover);

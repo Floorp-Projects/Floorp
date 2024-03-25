@@ -77,7 +77,7 @@ StoreBuffer::StoreBuffer(JSRuntime* rt)
 #ifdef DEBUG
       ,
       mEntered(false),
-      markingNondeduplicatable(false)
+      markingStringWholeCells(false)
 #endif
 {
 }
@@ -99,12 +99,12 @@ StoreBuffer::StoreBuffer(StoreBuffer&& other)
 #ifdef DEBUG
       ,
       mEntered(other.mEntered),
-      markingNondeduplicatable(other.markingNondeduplicatable)
+      markingStringWholeCells(other.markingStringWholeCells)
 #endif
 {
   MOZ_ASSERT(enabled_);
   MOZ_ASSERT(!mEntered);
-  MOZ_ASSERT(!markingNondeduplicatable);
+  MOZ_ASSERT(!markingStringWholeCells);
   other.disable();
 }
 
