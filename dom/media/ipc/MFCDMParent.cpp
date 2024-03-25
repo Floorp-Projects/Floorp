@@ -858,27 +858,29 @@ void MFCDMParent::GetCapabilities(const nsString& aKeySystem,
     }
   }
 
-  // Collect schemes supported by all video codecs.
-  static nsTArray<std::pair<CryptoScheme, nsDependentString>> kSchemes = {
+  // 'If value is unspecified, default value of "cenc" is used.' See
+  // https://learn.microsoft.com/en-us/windows/win32/api/mfmediaengine/nf-mfmediaengine-imfextendeddrmtypesupport-istypesupportedex
+  if (!supportedVideoCodecs.IsEmpty()) {
+    aCapabilitiesOut.encryptionSchemes().AppendElement(CryptoScheme::Cenc);
+    MFCDM_PARENT_SLOG("%s: +scheme:cenc", __func__);
+  }
+
+  // Check another scheme "cbcs"
+  static std::pair<CryptoScheme, nsDependentString> kCbcs =
       std::pair<CryptoScheme, nsDependentString>(
-          CryptoScheme::Cenc, u"encryption-type=cenc,encryption-iv-size=8,"),
-      std::pair<CryptoScheme, nsDependentString>(
-          CryptoScheme::Cbcs, u"encryption-type=cbcs,encryption-iv-size=16,")};
-  for (auto& scheme : kSchemes) {
-    bool ok = true;
-    for (auto& codec : supportedVideoCodecs) {
-      ok &= FactorySupports(
-          factory, aKeySystem, convertCodecToFourCC(codec), nsCString(""),
-          scheme.second /* additional feature */, isHardwareDecryption);
-      if (!ok) {
-        break;
-      }
+          CryptoScheme::Cbcs, u"encryption-type=cbcs,encryption-iv-size=16,");
+  bool ok = true;
+  for (const auto& codec : supportedVideoCodecs) {
+    ok &= FactorySupports(factory, aKeySystem, convertCodecToFourCC(codec),
+                          nsCString(""), kCbcs.second /* additional feature */,
+                          isHardwareDecryption);
+    if (!ok) {
+      break;
     }
-    if (ok) {
-      aCapabilitiesOut.encryptionSchemes().AppendElement(scheme.first);
-      MFCDM_PARENT_SLOG("%s: +scheme:%s", __func__,
-                        scheme.first == CryptoScheme::Cenc ? "cenc" : "cbcs");
-    }
+  }
+  if (ok) {
+    aCapabilitiesOut.encryptionSchemes().AppendElement(kCbcs.first);
+    MFCDM_PARENT_SLOG("%s: +scheme:cbcs", __func__);
   }
 
   static auto RequireClearLead = [](const nsString& aKeySystem) {
