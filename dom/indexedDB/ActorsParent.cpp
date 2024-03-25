@@ -2977,7 +2977,6 @@ class VersionChangeTransaction final
 
 class FactoryOp
     : public DatabaseOperationBase,
-      public PBackgroundIDBFactoryRequestParent,
       public SupportsCheckedUnsafePtr<CheckIf<DiagnosticAssertEnabled>> {
  public:
   struct MaybeBlockedDatabaseInfo final {
@@ -3071,11 +3070,13 @@ class FactoryOp
   RefPtr<FactoryOp> mDelayedOp;
   nsTArray<MaybeBlockedDatabaseInfo> mMaybeBlockedDatabases;
 
-  const CommonFactoryRequestParams mCommonParams;
+  const PrincipalInfo mPrincipalInfo;
   OriginMetadata mOriginMetadata;
+  nsString mDatabaseName;
   nsCString mDatabaseId;
   nsString mDatabaseFilePath;
   int64_t mDirectoryLockId;
+  const PersistenceType mPersistenceType;
   State mState;
   bool mWaitingForPermissionRetry;
   bool mEnforcingQuota;
@@ -3117,7 +3118,9 @@ class FactoryOp
  protected:
   FactoryOp(SafeRefPtr<Factory> aFactory,
             const Maybe<ContentParentId>& aContentParentId,
-            const CommonFactoryRequestParams& aCommonParams, bool aDeleting);
+            const PersistenceType aPersistenceType,
+            const PrincipalInfo& aPrincipalInfo, const nsString& aDatabaseName,
+            bool aDeleting);
 
   ~FactoryOp() override {
     // Normally this would be out-of-line since it is a virtual function but
@@ -3165,9 +3168,6 @@ class FactoryOp
 
   void DirectoryLockFailed();
 
-  // IPDL methods.
-  void ActorDestroy(ActorDestroyReason aWhy) override;
-
   virtual void SendBlockedNotification() = 0;
 
  private:
@@ -3175,7 +3175,26 @@ class FactoryOp
   bool MustWaitFor(const FactoryOp& aExistingOp);
 };
 
-class OpenDatabaseOp final : public FactoryOp {
+class FactoryRequestOp : public FactoryOp,
+                         public PBackgroundIDBFactoryRequestParent {
+ protected:
+  const CommonFactoryRequestParams mCommonParams;
+
+  FactoryRequestOp(SafeRefPtr<Factory> aFactory,
+                   const Maybe<ContentParentId>& aContentParentId,
+                   const CommonFactoryRequestParams& aCommonParams,
+                   bool aDeleting)
+      : FactoryOp(std::move(aFactory), aContentParentId,
+                  aCommonParams.metadata().persistenceType(),
+                  aCommonParams.principalInfo(),
+                  aCommonParams.metadata().name(), aDeleting),
+        mCommonParams(aCommonParams) {}
+
+  // IPDL methods.
+  void ActorDestroy(ActorDestroyReason aWhy) override;
+};
+
+class OpenDatabaseOp final : public FactoryRequestOp {
   friend class Database;
   friend class VersionChangeTransaction;
 
@@ -3277,7 +3296,7 @@ class OpenDatabaseOp::VersionChangeOp final
   void Cleanup() override;
 };
 
-class DeleteDatabaseOp final : public FactoryOp {
+class DeleteDatabaseOp final : public FactoryRequestOp {
   class VersionChangeOp;
 
   nsString mDatabaseDirectoryPath;
@@ -3288,8 +3307,8 @@ class DeleteDatabaseOp final : public FactoryOp {
   DeleteDatabaseOp(SafeRefPtr<Factory> aFactory,
                    const Maybe<ContentParentId>& aContentParentId,
                    const CommonFactoryRequestParams& aParams)
-      : FactoryOp(std::move(aFactory), aContentParentId, aParams,
-                  /* aDeleting */ true),
+      : FactoryRequestOp(std::move(aFactory), aContentParentId, aParams,
+                         /* aDeleting */ true),
         mPreviousVersion(0) {}
 
  private:
@@ -9155,7 +9174,7 @@ Factory::AllocPBackgroundIDBFactoryRequestParent(
     contentParentId = Some(ContentParentId(childID));
   }
 
-  auto actor = [&]() -> RefPtr<FactoryOp> {
+  auto actor = [&]() -> RefPtr<FactoryRequestOp> {
     if (aParams.type() == FactoryRequestParams::TOpenDatabaseRequestParams) {
       return MakeRefPtr<OpenDatabaseOp>(SafeRefPtrFromThis(), contentParentId,
                                         *commonParams);
@@ -9182,7 +9201,7 @@ mozilla::ipc::IPCResult Factory::RecvPBackgroundIDBFactoryRequestConstructor(
   MOZ_ASSERT(aParams.type() != FactoryRequestParams::T__None);
   MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
 
-  auto* op = static_cast<FactoryOp*>(aActor);
+  auto* op = static_cast<FactoryRequestOp*>(aActor);
 
   MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(op));
   return IPC_OK();
@@ -9194,7 +9213,8 @@ bool Factory::DeallocPBackgroundIDBFactoryRequestParent(
   MOZ_ASSERT(aActor);
 
   // Transfer ownership back from IPDL.
-  RefPtr<FactoryOp> op = dont_AddRef(static_cast<FactoryOp*>(aActor));
+  RefPtr<FactoryRequestOp> op =
+      dont_AddRef(static_cast<FactoryRequestOp*>(aActor));
   return true;
 }
 
@@ -14525,14 +14545,17 @@ void DatabaseOperationBase::AutoSetProgressHandler::Unregister() {
 
 FactoryOp::FactoryOp(SafeRefPtr<Factory> aFactory,
                      const Maybe<ContentParentId>& aContentParentId,
-                     const CommonFactoryRequestParams& aCommonParams,
-                     bool aDeleting)
+                     const PersistenceType aPersistenceType,
+                     const PrincipalInfo& aPrincipalInfo,
+                     const nsString& aDatabaseName, bool aDeleting)
     : DatabaseOperationBase(aFactory->GetLoggingInfo()->Id(),
                             aFactory->GetLoggingInfo()->NextRequestSN()),
       mFactory(std::move(aFactory)),
       mContentParentId(aContentParentId),
-      mCommonParams(aCommonParams),
+      mPrincipalInfo(aPrincipalInfo),
+      mDatabaseName(aDatabaseName),
       mDirectoryLockId(-1),
+      mPersistenceType(aPersistenceType),
       mState(State::Initial),
       mWaitingForPermissionRetry(false),
       mEnforcingQuota(true),
@@ -14665,8 +14688,7 @@ void FactoryOp::Stringify(nsACString& aResult) const {
   AssertIsOnOwningThread();
 
   aResult.AppendLiteral("PersistenceType:");
-  aResult.Append(
-      PersistenceTypeToString(mCommonParams.metadata().persistenceType()));
+  aResult.Append(PersistenceTypeToString(mPersistenceType));
   aResult.Append(kQuotaGenericDelimiter);
 
   aResult.AppendLiteral("Origin:");
@@ -14694,32 +14716,25 @@ nsresult FactoryOp::Open() {
   QuotaManager* const quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
-  const DatabaseMetadata& metadata = mCommonParams.metadata();
+  QM_TRY_UNWRAP(
+      auto principalMetadata,
+      quotaManager->GetInfoFromValidatedPrincipalInfo(mPrincipalInfo));
 
-  const PersistenceType persistenceType = metadata.persistenceType();
+  mOriginMetadata = {std::move(principalMetadata), mPersistenceType};
 
-  const PrincipalInfo& principalInfo = mCommonParams.principalInfo();
-
-  QM_TRY_UNWRAP(auto principalMetadata,
-                quotaManager->GetInfoFromValidatedPrincipalInfo(principalInfo));
-
-  mOriginMetadata = {std::move(principalMetadata), persistenceType};
-
-  if (principalInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
-    MOZ_ASSERT(mCommonParams.metadata().persistenceType() ==
-               PERSISTENCE_TYPE_PERSISTENT);
+  if (mPrincipalInfo.type() == PrincipalInfo::TSystemPrincipalInfo) {
+    MOZ_ASSERT(mPersistenceType == PERSISTENCE_TYPE_PERSISTENT);
 
     mEnforcingQuota = false;
-  } else if (principalInfo.type() == PrincipalInfo::TContentPrincipalInfo) {
+  } else if (mPrincipalInfo.type() == PrincipalInfo::TContentPrincipalInfo) {
     const ContentPrincipalInfo& contentPrincipalInfo =
-        principalInfo.get_ContentPrincipalInfo();
+        mPrincipalInfo.get_ContentPrincipalInfo();
 
     MOZ_ASSERT_IF(
         QuotaManager::IsOriginInternal(contentPrincipalInfo.originNoSuffix()),
-        mCommonParams.metadata().persistenceType() ==
-            PERSISTENCE_TYPE_PERSISTENT);
+        mPersistenceType == PERSISTENCE_TYPE_PERSISTENT);
 
-    mEnforcingQuota = persistenceType != PERSISTENCE_TYPE_PERSISTENT;
+    mEnforcingQuota = mPersistenceType != PERSISTENCE_TYPE_PERSISTENT;
 
     if (mOriginMetadata.mIsPrivate) {
       if (StaticPrefs::dom_indexedDB_privateBrowsing_enabled()) {
@@ -14740,27 +14755,26 @@ nsresult FactoryOp::Open() {
     MOZ_ASSERT(false);
   }
 
-  QuotaManager::GetStorageId(persistenceType, mOriginMetadata.mOrigin,
+  QuotaManager::GetStorageId(mPersistenceType, mOriginMetadata.mOrigin,
                              Client::IDB, mDatabaseId);
 
   mDatabaseId.Append('*');
-  mDatabaseId.Append(NS_ConvertUTF16toUTF8(metadata.name()));
+  mDatabaseId.Append(NS_ConvertUTF16toUTF8(mDatabaseName));
 
   // Need to get database file path before opening the directory.
   // XXX: For what reason?
   QM_TRY_UNWRAP(
       mDatabaseFilePath,
-      ([this, metadata, quotaManager]() -> mozilla::Result<nsString, nsresult> {
+      ([this, quotaManager]() -> mozilla::Result<nsString, nsresult> {
         QM_TRY_INSPECT(const auto& dbFile,
                        quotaManager->GetOriginDirectory(mOriginMetadata));
 
         QM_TRY(MOZ_TO_RESULT(dbFile->Append(
             NS_LITERAL_STRING_FROM_CSTRING(IDB_DIRECTORY_NAME))));
 
-        QM_TRY(MOZ_TO_RESULT(
-            dbFile->Append(GetDatabaseFilenameBase(metadata.name(),
-                                                   mOriginMetadata.mIsPrivate) +
-                           kSQLiteSuffix)));
+        QM_TRY(MOZ_TO_RESULT(dbFile->Append(
+            GetDatabaseFilenameBase(mDatabaseName, mOriginMetadata.mIsPrivate) +
+            kSQLiteSuffix)));
 
         QM_TRY_RETURN(
             MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(nsString, dbFile, GetPath));
@@ -14947,8 +14961,7 @@ bool FactoryOp::MustWaitFor(const FactoryOp& aExistingOp) {
 
   // Things for the same persistence type, the same origin and the same
   // database must wait.
-  return aExistingOp.mCommonParams.metadata().persistenceType() ==
-             mCommonParams.metadata().persistenceType() &&
+  return aExistingOp.mPersistenceType == mPersistenceType &&
          aExistingOp.mOriginMetadata.mOrigin == mOriginMetadata.mOrigin &&
          aExistingOp.mDatabaseId == mDatabaseId;
 }
@@ -15048,7 +15061,7 @@ void FactoryOp::DirectoryLockFailed() {
   MOZ_ALWAYS_SUCCEEDS(Run());
 }
 
-void FactoryOp::ActorDestroy(ActorDestroyReason aWhy) {
+void FactoryRequestOp::ActorDestroy(ActorDestroyReason aWhy) {
   AssertIsOnBackgroundThread();
 
   NoteActorDestroyed();
@@ -15057,8 +15070,8 @@ void FactoryOp::ActorDestroy(ActorDestroyReason aWhy) {
 OpenDatabaseOp::OpenDatabaseOp(SafeRefPtr<Factory> aFactory,
                                const Maybe<ContentParentId>& aContentParentId,
                                const CommonFactoryRequestParams& aParams)
-    : FactoryOp(std::move(aFactory), aContentParentId, aParams,
-                /* aDeleting */ false),
+    : FactoryRequestOp(std::move(aFactory), aContentParentId, aParams,
+                       /* aDeleting */ false),
       mMetadata(MakeSafeRefPtr<FullDatabaseMetadata>(aParams.metadata())),
       mRequestedVersion(aParams.metadata().version()),
       mVersionChangeOp(nullptr),
@@ -15067,7 +15080,7 @@ OpenDatabaseOp::OpenDatabaseOp(SafeRefPtr<Factory> aFactory,
 void OpenDatabaseOp::ActorDestroy(ActorDestroyReason aWhy) {
   AssertIsOnOwningThread();
 
-  FactoryOp::ActorDestroy(aWhy);
+  FactoryRequestOp::ActorDestroy(aWhy);
 
   if (mVersionChangeOp) {
     mVersionChangeOp->NoteActorDestroyed();
