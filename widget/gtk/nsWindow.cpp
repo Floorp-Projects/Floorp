@@ -3164,7 +3164,10 @@ void nsWindow::SetFocus(Raise aRaise, mozilla::dom::CallerType aCallerType) {
   LOG("  widget now has focus in SetFocus()");
 }
 
-void nsWindow::ResetScreenBounds() { mGdkWindowRootOrigin.reset(); }
+void nsWindow::ResetScreenBounds() {
+  mGdkWindowOrigin.reset();
+  mGdkWindowRootOrigin.reset();
+}
 
 LayoutDeviceIntRect nsWindow::GetScreenBounds() {
   if (!mGdkWindow) {
@@ -3562,11 +3565,16 @@ LayoutDeviceIntPoint nsWindow::WidgetToScreenOffset() {
   if (IsWaylandPopup() && !mPopupUseMoveToRect) {
     return mBounds.TopLeft();
   }
-  nsIntPoint origin(0, 0);
-  if (mGdkWindow) {
-    gdk_window_get_origin(mGdkWindow, &origin.x.value, &origin.y.value);
+
+  GdkPoint origin{};
+  if (mGdkWindowOrigin.isSome()) {
+    origin = mGdkWindowOrigin.value();
+  } else if (mGdkWindow) {
+    gdk_window_get_origin(mGdkWindow, &origin.x, &origin.y);
+    mGdkWindowOrigin = Some(origin);
   }
-  return GdkPointToDevicePixels({origin.x, origin.y});
+
+  return GdkPointToDevicePixels(origin);
 }
 
 void nsWindow::CaptureRollupEvents(bool aDoCapture) {
