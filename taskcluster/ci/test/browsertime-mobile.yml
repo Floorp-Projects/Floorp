@@ -419,6 +419,8 @@ browsertime-benchmark-speedometer3-mobile:
             geckoview:
                 by-test-platform:
                     android-hw-a51.*shippable-qr.*: [trunk-only]
+                    android-hw-p6.*shippable-qr.*: [mozilla-central]
+                    android-hw-s21.*shippable-qr.*: [mozilla-central]
                     default: []
             cstm-car-m: [mozilla-central]
             chrome-m:

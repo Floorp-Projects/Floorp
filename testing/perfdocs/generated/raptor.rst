@@ -5568,7 +5568,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ❌
         - ❌
       * - **browsertime-benchmark-speedometer3-mobile-geckoview-nofis**
-        - ❌
+        - ✅
         - ❌
         - ❌
         - ❌
@@ -5599,7 +5599,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ❌
         - ❌
       * - **browsertime-benchmark-speedometer3-mobile-geckoview-nofis**
-        - ❌
+        - ✅
         - ❌
         - ❌
         - ❌
@@ -5964,7 +5964,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ❌
         - ❌
       * - **browsertime-benchmark-speedometer3-mobile-geckoview-nofis**
-        - ❌
+        - ✅
         - ❌
         - ❌
         - ❌
@@ -5995,7 +5995,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ❌
         - ❌
       * - **browsertime-benchmark-speedometer3-mobile-geckoview-nofis**
-        - ❌
+        - ✅
         - ❌
         - ❌
         - ❌
