@@ -3444,16 +3444,12 @@ describe("DiscoveryStreamFeed", () => {
         },
       });
       sandbox.stub(global.Region, "home").get(() => "DE");
-      globals.set("NimbusFeatures", {
-        saveToPocket: {
-          getVariable: sandbox.stub(),
-        },
-      });
-      global.NimbusFeatures.saveToPocket.getVariable
-        .withArgs("bffApi")
+      sandbox.stub(global.Services.prefs, "getStringPref");
+      global.Services.prefs.getStringPref
+        .withArgs("extensions.pocket.bffApi")
         .returns("bffApi");
-      global.NimbusFeatures.saveToPocket.getVariable
-        .withArgs("oAuthConsumerKeyBff")
+      global.Services.prefs.getStringPref
+        .withArgs("extensions.pocket.oAuthConsumerKeyBff")
         .returns("oAuthConsumerKeyBff");
     });
     it("should return true with isBff", async () => {
