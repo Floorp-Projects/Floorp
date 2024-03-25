@@ -533,7 +533,7 @@ void APZEventState::ProcessAPZStateChange(ViewID aViewId,
     }
     case APZStateChange::eEndTouch: {
       mEndTouchIsClick = aArg;
-      mActiveElementManager->HandleTouchEnd();
+      mActiveElementManager->HandleTouchEnd(mEndTouchIsClick);
       break;
     }
   }
