@@ -538,13 +538,13 @@ export class ModelHub {
     modelVersion,
     file,
   }) {
-    const [arrayBuffer, headers] = await this.getModelFileAsArrayBuffer({
+    const [blob, headers] = await this.getModelFileAsBlob({
       organization,
       modelName,
       modelVersion,
       file,
     });
-    return new Response(arrayBuffer, { headers });
+    return new Response(blob, { headers });
   }
 
   /**
@@ -563,6 +563,26 @@ export class ModelHub {
     modelVersion,
     file,
   }) {
+    const [blob, headers] = await this.getModelFileAsBlob({
+      organization,
+      modelName,
+      modelVersion,
+      file,
+    });
+    return [await blob.arrayBuffer(), headers];
+  }
+
+  /**
+   * Given an organization, model, and version, fetch a model file in the hub as blob.
+   *
+   * @param {object} config
+   * @param {string} config.organization
+   * @param {string} config.modelName
+   * @param {string} config.modelVersion
+   * @param {string} config.file
+   * @returns {Promise<[Blob, object]>} The file content
+   */
+  async getModelFileAsBlob({ organization, modelName, modelVersion, file }) {
     // Make sure inputs are clean. We don't sanitize them but throw an exception
     let checkError = this.#checkInput(
       organization,
@@ -623,10 +643,10 @@ export class ModelHub {
           modelName,
           modelVersion,
           file,
-          await clone.arrayBuffer(),
+          await clone.blob(),
           headers
         );
-        return [await response.arrayBuffer(), headers];
+        return [await response.blob(), headers];
       }
     } catch (error) {
       lazy.console.error(`Failed to fetch ${url}:`, error);
