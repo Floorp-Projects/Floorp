@@ -10,9 +10,7 @@ scheme = "https"
 support-files = ["custom.svg"]
 
 ["browser_account_dialog.js"]
-fail-if = ["a11y_checks"] # Bug 1854509 clicked identity-credential-list-item may not be focusable
 
 ["browser_policy_dialog.js"]
 
 ["browser_provider_dialog.js"]
-fail-if = ["a11y_checks"] # Bug 1854509 clicked identity-credential-list-item may not be focusable
