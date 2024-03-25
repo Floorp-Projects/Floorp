@@ -18,6 +18,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.NotificationManagerCompat.IMPORTANCE_NONE
 import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
+import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.state.content.DownloadState.Status.CANCELLED
 import mozilla.components.browser.state.state.content.DownloadState.Status.COMPLETED
 import mozilla.components.browser.state.state.content.DownloadState.Status.DOWNLOADING
@@ -26,7 +27,6 @@ import mozilla.components.browser.state.state.content.DownloadState.Status.INITI
 import mozilla.components.browser.state.state.content.DownloadState.Status.PAUSED
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.ACTION_CANCEL
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.ACTION_DISMISS
-import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.ACTION_OPEN
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.ACTION_PAUSE
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.ACTION_RESUME
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.ACTION_TRY_AGAIN
@@ -141,6 +141,7 @@ internal object DownloadNotification {
         context: Context,
         downloadJobState: DownloadJobState,
         notificationAccentColor: Int,
+        contentIntent: PendingIntent = createOpenFilePendingIntent(context, downloadJobState.state),
     ): Notification {
         val channelId = ensureChannelExists(context)
         val downloadState = downloadJobState.state
@@ -154,7 +155,7 @@ internal object DownloadNotification {
                 context.applicationContext.getString(R.string.mozac_feature_downloads_completed_notification_text2),
             )
             .setColor(ContextCompat.getColor(context, notificationAccentColor))
-            .setContentIntent(createPendingIntent(context, ACTION_OPEN, downloadState.id))
+            .setContentIntent(contentIntent)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setDeleteIntent(createDismissPendingIntent(context, downloadState.id))
             .setCompatGroup(NOTIFICATION_GROUP_KEY)
@@ -238,6 +239,14 @@ internal object DownloadNotification {
 
         return NOTIFICATION_CHANNEL_ID
     }
+
+    private fun createOpenFilePendingIntent(context: Context, downloadState: DownloadState) =
+        PendingIntent.getActivity(
+            context,
+            0,
+            AbstractFetchDownloadService.createOpenFileIntent(context, downloadState),
+            PendingIntentUtils.defaultFlags,
+        )
 
     private fun getPauseAction(context: Context, downloadStateId: String): NotificationCompat.Action {
         val pauseIntent = createPendingIntent(context, ACTION_PAUSE, downloadStateId)
