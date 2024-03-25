@@ -12,6 +12,7 @@
 #include "LocalAccessible-inl.h"
 #include "mozilla/a11y/RemoteAccessible.h"
 #include "MsaaAccessible.h"
+#include "nsAccUtils.h"
 #include "nsTextEquivUtils.h"
 
 using namespace mozilla;
@@ -34,6 +35,8 @@ uiaRawElmProvider::QueryInterface(REFIID aIid, void** aInterface) {
     *aInterface = static_cast<IAccessibleEx*>(this);
   } else if (aIid == IID_IRawElementProviderSimple) {
     *aInterface = static_cast<IRawElementProviderSimple*>(this);
+  } else if (aIid == IID_IRawElementProviderFragment) {
+    *aInterface = static_cast<IRawElementProviderFragment*>(this);
   } else {
     return E_NOINTERFACE;
   }
@@ -251,6 +254,99 @@ uiaRawElmProvider::get_HostRawElementProvider(
   // This method is not used with IAccessibleEx implementations.
   *aRawElmProvider = nullptr;
   return S_OK;
+}
+
+// IRawElementProviderFragment
+
+STDMETHODIMP
+uiaRawElmProvider::Navigate(
+    enum NavigateDirection aDirection,
+    __RPC__deref_out_opt IRawElementProviderFragment** aRetVal) {
+  if (!aRetVal) {
+    return E_INVALIDARG;
+  }
+  *aRetVal = nullptr;
+  Accessible* acc = Acc();
+  if (!acc) {
+    return CO_E_OBJNOTCONNECTED;
+  }
+  Accessible* target = nullptr;
+  switch (aDirection) {
+    case NavigateDirection_Parent:
+      if (!acc->IsRoot()) {
+        target = acc->Parent();
+      }
+      break;
+    case NavigateDirection_NextSibling:
+      if (!acc->IsRoot()) {
+        target = acc->NextSibling();
+      }
+      break;
+    case NavigateDirection_PreviousSibling:
+      if (!acc->IsRoot()) {
+        target = acc->PrevSibling();
+      }
+      break;
+    case NavigateDirection_FirstChild:
+      if (!nsAccUtils::MustPrune(acc)) {
+        target = acc->FirstChild();
+      }
+      break;
+    case NavigateDirection_LastChild:
+      if (!nsAccUtils::MustPrune(acc)) {
+        target = acc->LastChild();
+      }
+      break;
+    default:
+      return E_INVALIDARG;
+  }
+  RefPtr<IRawElementProviderFragment> fragment =
+      MsaaAccessible::GetFrom(target);
+  fragment.forget(aRetVal);
+  return S_OK;
+}
+
+STDMETHODIMP
+uiaRawElmProvider::get_BoundingRectangle(__RPC__out struct UiaRect* aRetVal) {
+  if (!aRetVal) {
+    return E_INVALIDARG;
+  }
+  Accessible* acc = Acc();
+  if (!acc) {
+    return CO_E_OBJNOTCONNECTED;
+  }
+  LayoutDeviceIntRect rect = acc->Bounds();
+  aRetVal->left = rect.X();
+  aRetVal->top = rect.Y();
+  aRetVal->width = rect.Width();
+  aRetVal->height = rect.Height();
+  return S_OK;
+}
+
+STDMETHODIMP
+uiaRawElmProvider::GetEmbeddedFragmentRoots(
+    __RPC__deref_out_opt SAFEARRAY** aRetVal) {
+  if (!aRetVal) {
+    return E_INVALIDARG;
+  }
+  *aRetVal = nullptr;
+  return S_OK;
+}
+
+STDMETHODIMP
+uiaRawElmProvider::SetFocus() {
+  Accessible* acc = Acc();
+  if (!acc) {
+    return CO_E_OBJNOTCONNECTED;
+  }
+  acc->TakeFocus();
+  return S_OK;
+}
+
+STDMETHODIMP
+uiaRawElmProvider::get_FragmentRoot(
+    __RPC__deref_out_opt IRawElementProviderFragmentRoot** aRetVal) {
+  return E_NOTIMPL;
 }
 
 // Private methods

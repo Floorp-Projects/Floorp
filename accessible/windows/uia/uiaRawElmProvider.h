@@ -19,7 +19,8 @@ class Accessible;
  * IRawElementProviderSimple implementation (maintains IAccessibleEx approach).
  */
 class uiaRawElmProvider : public IAccessibleEx,
-                          public IRawElementProviderSimple {
+                          public IRawElementProviderSimple,
+                          public IRawElementProviderFragment {
  public:
   // IUnknown
   STDMETHODIMP QueryInterface(REFIID aIid, void** aInterface);
@@ -55,6 +56,26 @@ class uiaRawElmProvider : public IAccessibleEx,
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_HostRawElementProvider(
       /* [retval][out] */ __RPC__deref_out_opt IRawElementProviderSimple**
           aRawElmProvider);
+
+  // IRawElementProviderFragment
+  virtual HRESULT STDMETHODCALLTYPE Navigate(
+      /* [in] */ enum NavigateDirection aDirection,
+      /* [retval][out] */ __RPC__deref_out_opt IRawElementProviderFragment**
+          aRetVal);
+
+  // GetRuntimeId is shared with IAccessibleEx.
+
+  virtual HRESULT STDMETHODCALLTYPE get_BoundingRectangle(
+      /* [retval][out] */ __RPC__out struct UiaRect* aRetVal);
+
+  virtual HRESULT STDMETHODCALLTYPE GetEmbeddedFragmentRoots(
+      /* [retval][out] */ __RPC__deref_out_opt SAFEARRAY** aRetVal);
+
+  virtual HRESULT STDMETHODCALLTYPE SetFocus(void);
+
+  virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_FragmentRoot(
+      /* [retval][out] */ __RPC__deref_out_opt IRawElementProviderFragmentRoot**
+          aRetVal);
 
  private:
   Accessible* Acc();
