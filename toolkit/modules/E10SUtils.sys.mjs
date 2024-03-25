@@ -133,6 +133,7 @@ function validatedWebRemoteType(
 ) {
   // To load into the Privileged Mozilla Content Process you must be https,
   // and be an exact match or a subdomain of an allowlisted domain.
+  // This code is duplicated in ProcessIolation.cpp, please update both.
   if (
     lazy.separatePrivilegedMozillaWebContentProcess &&
     aTargetUri.asciiHost &&
