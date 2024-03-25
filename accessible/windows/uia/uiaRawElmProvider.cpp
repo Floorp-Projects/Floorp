@@ -6,6 +6,7 @@
 
 #include "uiaRawElmProvider.h"
 
+#include <comdef.h>
 #include <uiautomationcoreapi.h>
 
 #include "AccAttributes.h"
@@ -42,9 +43,22 @@ void uiaRawElmProvider::RaiseUiaEventForGeckoEvent(Accessible* aAcc,
   if (!uia) {
     return;
   }
-  if (aGeckoEvent == nsIAccessibleEvent::EVENT_FOCUS) {
-    ::UiaRaiseAutomationEvent(uia, UIA_AutomationFocusChangedEventId);
-    return;
+  PROPERTYID property = 0;
+  switch (aGeckoEvent) {
+    case nsIAccessibleEvent::EVENT_FOCUS:
+      ::UiaRaiseAutomationEvent(uia, UIA_AutomationFocusChangedEventId);
+      return;
+    case nsIAccessibleEvent::EVENT_NAME_CHANGE:
+      property = UIA_NamePropertyId;
+      break;
+  }
+  // Don't pointlessly query the property value if no UIA clients are listening.
+  if (property && ::UiaClientsAreListening()) {
+    // We can't get the old value. Thankfully, clients don't seem to need it.
+    _variant_t oldVal;
+    _variant_t newVal;
+    uia->GetPropertyValue(property, &newVal);
+    ::UiaRaiseAutomationPropertyChangedEvent(uia, property, oldVal, newVal);
   }
 }
 
@@ -295,6 +309,17 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
       aPropertyValue->boolVal =
           (acc->State() & states::FOCUSABLE) ? VARIANT_TRUE : VARIANT_FALSE;
       return S_OK;
+
+    case UIA_NamePropertyId: {
+      nsAutoString name;
+      acc->Name(name);
+      if (!name.IsEmpty()) {
+        aPropertyValue->vt = VT_BSTR;
+        aPropertyValue->bstrVal = ::SysAllocString(name.get());
+        return S_OK;
+      }
+      break;
+    }
   }
 
   return S_OK;
