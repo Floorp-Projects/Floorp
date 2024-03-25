@@ -373,6 +373,10 @@ class nsRange final : public mozilla::dom::AbstractRange,
                : mEnd.GetChildAtOffset();
   }
 
+  mozilla::dom::StaticRange* GetCrossShadowBoundaryRange() const {
+    return mCrossShadowBoundaryRange;
+  }
+
   nsINode* GetMayCrossBoundaryStartContainer() const {
     return mCrossShadowBoundaryRange
                ? mCrossShadowBoundaryRange->GetStartContainer()

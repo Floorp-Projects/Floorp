@@ -3826,6 +3826,33 @@ void nsINode::FireNodeRemovedForChildren() {
   }
 }
 
+ShadowRoot* nsINode::GetShadowRoot() const {
+  return IsContent() ? AsContent()->GetShadowRoot() : nullptr;
+}
+
+ShadowRoot* nsINode::GetShadowRootForSelection() const {
+  if (!StaticPrefs::dom_shadowdom_selection_across_boundary_enabled()) {
+    return nullptr;
+  }
+
+  ShadowRoot* shadowRoot = GetShadowRoot();
+  if (!shadowRoot) {
+    return nullptr;
+  }
+
+  // ie. <details> and <video>
+  if (shadowRoot->IsUAWidget()) {
+    return nullptr;
+  }
+
+  // ie. <use> element
+  if (IsElement() && !AsElement()->CanAttachShadowDOM()) {
+    return nullptr;
+  }
+
+  return shadowRoot;
+}
+
 NS_IMPL_ISUPPORTS(nsNodeWeakReference, nsIWeakReference)
 
 nsNodeWeakReference::nsNodeWeakReference(nsINode* aNode)
