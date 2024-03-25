@@ -426,3 +426,37 @@ characteristics:
     expires: never
     data_sensitivity:
       - interaction
+
+  prefs_privacy_donottrackheader_enabled:
+    type: boolean
+    description: >
+      Sending "do not track" HTTP header
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1884693
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
+    expires: never
+    data_sensitivity:
+      - interaction
+
+  prefs_privacy_globalprivacycontrol_enabled:
+    type: boolean
+    description: >
+      Sending "global privacy control" HTTP header
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1884693
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
+    expires: never
+    data_sensitivity:
+      - interaction

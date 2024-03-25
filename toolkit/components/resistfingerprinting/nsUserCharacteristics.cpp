@@ -129,6 +129,11 @@ void PopulatePrefs() {
 
   glean::characteristics::prefs_zoom_text_only.Set(
       !Preferences::GetBool("browser.zoom.full"));
+
+  glean::characteristics::prefs_privacy_donottrackheader_enabled.Set(
+      StaticPrefs::privacy_donottrackheader_enabled());
+  glean::characteristics::prefs_privacy_globalprivacycontrol_enabled.Set(
+      StaticPrefs::privacy_globalprivacycontrol_enabled());
 }
 
 // ==================================================================
