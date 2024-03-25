@@ -31,6 +31,17 @@
   --newtab-background-color: #F9F9FB;
 
   --fxview-card-header-font-weight: 500;
+
+  /* Make the attention dot color match the browser UI on Linux, and on HCM
+   * with a lightweight theme. */
+  &[lwtheme] {
+    --attention-dot-color: light-dark(#2ac3a2, #54ffbd);
+  }
+  @media (-moz-platform: linux) {
+    &:not([lwtheme]) {
+      --attention-dot-color: AccentColor;
+    }
+  }
 }
 
 @media (prefers-color-scheme: dark) {
