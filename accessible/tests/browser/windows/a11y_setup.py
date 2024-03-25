@@ -243,10 +243,26 @@ class WaitForWinEvent:
 
 def getDocUia():
     """Get the IUIAutomationElement for the document being tested."""
-    # We start with IAccessible2 because there's no efficient way to
-    # find the document we want with UIA.
-    ia2 = getDocIa2()
-    return uiaClient.ElementFromIAccessible(ia2, CHILDID_SELF)
+    # There's no efficient way to find the document we want with UIA. We can't
+    # get the IA2 and then get UIA from that because that will always use the
+    # IA2 -> UIA proxy, but we don't want that if we're trying to test our
+    # native implementation. For now, we just search the tree. In future, we
+    # could perhaps implement a custom property.
+    hwnd = getFirefoxHwnd()
+    root = uiaClient.ElementFromHandle(hwnd)
+    doc = findUiaByDomId(root, "body")
+    if not doc:
+        # Sometimes, when UIA is disabled, we can't find the document for some
+        # unknown reason. Since this only happens when UIA is disabled, we want
+        # the IA2 -> UIA proxy anyway, so we can start with IA2 in this case.
+        info("getUiaDoc: Falling back to IA2")  # noqa: F821
+        ia2 = getDocIa2()
+        return uiaClient.ElementFromIAccessible(ia2, CHILDID_SELF)
+    child = uiaClient.RawViewWalker.GetFirstChildElement(doc)
+    if child and child.CurrentAutomationId == "default-iframe-id":
+        # This is an iframe or remoteIframe test.
+        doc = uiaClient.RawViewWalker.GetFirstChildElement(child)
+    return doc
 
 
 def findUiaByDomId(root, id):
