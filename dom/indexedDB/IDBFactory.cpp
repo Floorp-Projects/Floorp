@@ -523,6 +523,63 @@ RefPtr<IDBOpenDBRequest> IDBFactory::DeleteForPrincipal(
                       /* aDeleting */ true, aGuarantee, aRv);
 }
 
+nsresult IDBFactory::EnsureBackgroundActor() {
+  if (mBackgroundActor) {
+    return NS_OK;
+  }
+
+  BackgroundChildImpl::ThreadLocal* threadLocal =
+      BackgroundChildImpl::GetThreadLocalForCurrentThread();
+
+  UniquePtr<ThreadLocal> newIDBThreadLocal;
+  ThreadLocal* idbThreadLocal;
+
+  if (threadLocal && threadLocal->mIndexedDBThreadLocal) {
+    idbThreadLocal = threadLocal->mIndexedDBThreadLocal.get();
+  } else {
+    nsCOMPtr<nsIUUIDGenerator> uuidGen =
+        do_GetService("@mozilla.org/uuid-generator;1");
+    MOZ_ASSERT(uuidGen);
+
+    nsID id{};
+    MOZ_ALWAYS_SUCCEEDS(uuidGen->GenerateUUIDInPlace(&id));
+
+    newIDBThreadLocal = WrapUnique(new ThreadLocal(id));
+    idbThreadLocal = newIDBThreadLocal.get();
+  }
+
+  PBackgroundChild* backgroundActor =
+      BackgroundChild::GetOrCreateForCurrentThread();
+  if (NS_WARN_IF(!backgroundActor)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  {
+    BackgroundFactoryChild* actor = new BackgroundFactoryChild(*this);
+
+    mBackgroundActor = static_cast<BackgroundFactoryChild*>(
+        backgroundActor->SendPBackgroundIDBFactoryConstructor(
+            actor, idbThreadLocal->GetLoggingInfo(),
+            IndexedDatabaseManager::GetLocale()));
+
+    if (NS_WARN_IF(!mBackgroundActor)) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  if (newIDBThreadLocal) {
+    if (!threadLocal) {
+      threadLocal = BackgroundChildImpl::GetThreadLocalForCurrentThread();
+    }
+    MOZ_ASSERT(threadLocal);
+    MOZ_ASSERT(!threadLocal->mIndexedDBThreadLocal);
+
+    threadLocal->mIndexedDBThreadLocal = std::move(newIDBThreadLocal);
+  }
+
+  return NS_OK;
+}
+
 RefPtr<IDBOpenDBRequest> IDBFactory::OpenInternal(
     JSContext* aCx, nsIPrincipal* aPrincipal, const nsAString& aName,
     const Optional<uint64_t>& aVersion, bool aDeleting, CallerType aCallerType,
@@ -638,60 +695,11 @@ RefPtr<IDBOpenDBRequest> IDBFactory::OpenInternal(
     params = OpenDatabaseRequestParams(commonParams);
   }
 
-  if (!mBackgroundActor) {
-    BackgroundChildImpl::ThreadLocal* threadLocal =
-        BackgroundChildImpl::GetThreadLocalForCurrentThread();
-
-    UniquePtr<ThreadLocal> newIDBThreadLocal;
-    ThreadLocal* idbThreadLocal;
-
-    if (threadLocal && threadLocal->mIndexedDBThreadLocal) {
-      idbThreadLocal = threadLocal->mIndexedDBThreadLocal.get();
-    } else {
-      nsCOMPtr<nsIUUIDGenerator> uuidGen =
-          do_GetService("@mozilla.org/uuid-generator;1");
-      MOZ_ASSERT(uuidGen);
-
-      nsID id;
-      MOZ_ALWAYS_SUCCEEDS(uuidGen->GenerateUUIDInPlace(&id));
-
-      newIDBThreadLocal = WrapUnique(new ThreadLocal(id));
-      idbThreadLocal = newIDBThreadLocal.get();
-    }
-
-    PBackgroundChild* backgroundActor =
-        BackgroundChild::GetOrCreateForCurrentThread();
-    if (NS_WARN_IF(!backgroundActor)) {
-      IDB_REPORT_INTERNAL_ERR();
-      aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-      return nullptr;
-    }
-
-    {
-      BackgroundFactoryChild* actor = new BackgroundFactoryChild(*this);
-
-      mBackgroundActor = static_cast<BackgroundFactoryChild*>(
-          backgroundActor->SendPBackgroundIDBFactoryConstructor(
-              actor, idbThreadLocal->GetLoggingInfo(),
-              IndexedDatabaseManager::GetLocale()));
-
-      if (NS_WARN_IF(!mBackgroundActor)) {
-        mBackgroundActorFailed = true;
-        IDB_REPORT_INTERNAL_ERR();
-        aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-        return nullptr;
-      }
-    }
-
-    if (newIDBThreadLocal) {
-      if (!threadLocal) {
-        threadLocal = BackgroundChildImpl::GetThreadLocalForCurrentThread();
-      }
-      MOZ_ASSERT(threadLocal);
-      MOZ_ASSERT(!threadLocal->mIndexedDBThreadLocal);
-
-      threadLocal->mIndexedDBThreadLocal = std::move(newIDBThreadLocal);
-    }
+  nsresult rv = EnsureBackgroundActor();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    IDB_REPORT_INTERNAL_ERR();
+    aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    return nullptr;
   }
 
   RefPtr<IDBOpenDBRequest> request = IDBOpenDBRequest::Create(
@@ -715,7 +723,7 @@ RefPtr<IDBOpenDBRequest> IDBFactory::OpenInternal(
         IDB_LOG_STRINGIFY(aVersion));
   }
 
-  nsresult rv = InitiateRequest(WrapNotNull(request), params);
+  rv = InitiateRequest(WrapNotNull(request), params);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     IDB_REPORT_INTERNAL_ERR();
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
