@@ -180,6 +180,25 @@ trigger explicit linter errors, :doc:`see condprof-addons linter docs </code-qua
 .. _webext.json: https://searchfox.org/mozilla-central/rev/bc6a50e6f08db0bb371ef7197c472555499e82c0/testing/condprofile/condprof/customization/webext.json
 .. _firefox-addons: https://searchfox.org/mozilla-central/rev/bc6a50e6f08db0bb371ef7197c472555499e82c0/taskcluster/ci/fetch/browsertime.yml#169-176
 
+TP6-Bench Test
+--------------
+
+The ``tp6-bench`` can either be run on desktop, or locally using the following command:
+
+::
+
+  ./mach raptor -t tp6-bench
+
+This test runs through a selection of our tp6 pageload tests as quickly as possible while only measuring loadtime, FCP (First Contentful Paint), and LCP (Largest Contentful Paint). It does not measure visual metrics like our standard tp6 pageload tests do. The test produces 3 overall metrics (fcp, lcp, and loadtime) across all the pages tested that are summarized in two ways: geomean, and mean. The subtests for each of those metrics are the individual metrics produced in each of the pages tested.
+
+To run this test on try and get a compare view link, run the following
+
+::
+
+  ./mach try perf -q "'Pageload 'Lite"
+
+
+
 More Examples
 -------------
 
