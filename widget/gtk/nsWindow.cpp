@@ -9740,8 +9740,19 @@ void nsWindow::GetCompositorWidgetInitData(
 
   LOG("nsWindow::GetCompositorWidgetInitData");
 
+  Window window = GetX11Window();
+#ifdef MOZ_X11
+  // We're bit hackish here. Old GLX backend needs XWindow when GLContext
+  // is created so get XWindow now before map signal.
+  // We may see crashes/errors when nsWindow is unmapped (XWindow is
+  // invalidated) but we can't do anything about it.
+  if (!window && !gfxVars::UseEGL()) {
+    window =
+        gdk_x11_window_get_xid(gtk_widget_get_window(GTK_WIDGET(mContainer)));
+  }
+#endif
   *aInitData = mozilla::widget::GtkCompositorWidgetInitData(
-      GetX11Window(), displayName, GetShapedState(), GdkIsX11Display(),
+      window, displayName, GetShapedState(), GdkIsX11Display(),
       GetClientSize());
 
 #ifdef MOZ_X11
