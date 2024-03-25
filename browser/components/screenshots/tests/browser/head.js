@@ -521,6 +521,15 @@ class ScreenshotsHelper {
     });
   }
 
+  getOverlaySelectionSizeText(elementId = "testPageElement") {
+    return ContentTask.spawn(this.browser, [elementId], async () => {
+      let screenshotsChild = content.windowGlobalChild.getActor(
+        "ScreenshotsComponent"
+      );
+      return screenshotsChild.overlay.selectionSize.textContent;
+    });
+  }
+
   async clickTestPageElement(elementId = "testPageElement") {
     let rect = await this.getTestPageElementRect(elementId);
     let dims = await this.getContentDimensions();
