@@ -50,8 +50,6 @@
 #include "DriverCrashGuard.h"
 #include "nsIReferrerInfo.h"
 
-#define CHILD_PROCESS_SHUTDOWN_MESSAGE u"child-process-shutdown"_ns
-
 class nsConsoleService;
 class nsIContentProcessInfo;
 class nsICycleCollectorLogSink;
