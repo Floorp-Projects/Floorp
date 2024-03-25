@@ -323,9 +323,7 @@ class nsDocShellLoadState final {
     return mRemoteTypeOverride;
   }
 
-  void SetRemoteTypeOverride(const nsCString& aRemoteTypeOverride) {
-    mRemoteTypeOverride = mozilla::Some(aRemoteTypeOverride);
-  }
+  void SetRemoteTypeOverride(const nsCString& aRemoteTypeOverride);
 
   void SetWasSchemelessInput(bool aWasSchemelessInput) {
     mWasSchemelessInput = aWasSchemelessInput;
