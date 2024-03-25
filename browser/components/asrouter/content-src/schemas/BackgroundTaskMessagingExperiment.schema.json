@@ -10,7 +10,9 @@
         "const": "multi"
       }
     },
-    "required": ["template"]
+    "required": [
+      "template"
+    ]
   },
   "then": {
     "$ref": "chrome://browser/content/asrouter/schemas/BackgroundTaskMessagingExperiment.schema.json#/$defs/MultiMessage"
@@ -68,7 +70,9 @@
                   "type": "object"
                 }
               },
-              "required": ["type"],
+              "required": [
+                "type"
+              ],
               "additionalProperties": true
             },
             "requireInteraction": {
@@ -116,24 +120,37 @@
                         "type": "object"
                       }
                     },
-                    "required": ["type"],
+                    "required": [
+                      "type"
+                    ],
                     "additionalProperties": true
                   }
                 },
-                "required": ["action", "title"],
+                "required": [
+                  "action",
+                  "title"
+                ],
                 "additionalProperties": true
               }
             }
           },
           "additionalProperties": true,
-          "required": ["title", "body"]
+          "required": [
+            "title",
+            "body"
+          ]
         },
         "template": {
           "type": "string",
           "const": "toast_notification"
         }
       },
-      "required": ["content", "targeting", "template", "trigger"],
+      "required": [
+        "content",
+        "targeting",
+        "template",
+        "trigger"
+      ],
       "additionalProperties": true
     },
     "Message": {
@@ -154,7 +171,9 @@
         "template": {
           "type": "string",
           "description": "Which messaging template this message is using.",
-          "enum": ["toast_notification"]
+          "enum": [
+            "toast_notification"
+          ]
         },
         "frequency": {
           "type": "object",
@@ -184,7 +203,10 @@
                     "maximum": 100
                   }
                 },
-                "required": ["period", "cap"]
+                "required": [
+                  "period",
+                  "cap"
+                ]
               }
             }
           }
@@ -224,7 +246,9 @@
               }
             }
           },
-          "required": ["id"]
+          "required": [
+            "id"
+          ]
         },
         "provider": {
           "description": "An identifier for the provider of this message, such as \"cfr\" or \"preview\".",
@@ -233,8 +257,14 @@
       },
       "additionalProperties": true,
       "dependentRequired": {
-        "content": ["id", "template"],
-        "template": ["id", "content"]
+        "content": [
+          "id",
+          "template"
+        ],
+        "template": [
+          "id",
+          "content"
+        ]
       }
     },
     "localizedText": {
@@ -245,7 +275,9 @@
           "type": "string"
         }
       },
-      "required": ["string_id"]
+      "required": [
+        "string_id"
+      ]
     },
     "localizableText": {
       "description": "Either a raw string or an object containing the string_id of the localized text",
@@ -272,10 +304,14 @@
             "properties": {
               "template": {
                 "type": "string",
-                "enum": ["toast_notification"]
+                "enum": [
+                  "toast_notification"
+                ]
               }
             },
-            "required": ["template"]
+            "required": [
+              "template"
+            ]
           },
           "then": {
             "$ref": "chrome://browser/content/asrouter/schemas/BackgroundTaskMessagingExperiment.schema.json#/$defs/ToastNotification"
@@ -299,7 +335,10 @@
           }
         }
       },
-      "required": ["template", "messages"]
+      "required": [
+        "template",
+        "messages"
+      ]
     }
   }
 }
