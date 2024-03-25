@@ -266,7 +266,8 @@ class MinidumpGenerator {
   // process has crashed.
   breakpad_mach_header* dyldImageLoadAddress_;
   ptrdiff_t dyldSlide_;
-  string dyldPath_;
+  // We don't own this pointer, this is owned by macOS internal structures.
+  const char* dyldPath_;
 
   // Context of the task to dump.
   breakpad_ucontext_t *task_context_;

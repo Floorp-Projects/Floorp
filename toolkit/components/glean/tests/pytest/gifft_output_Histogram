@@ -28,7 +28,10 @@ using Telemetry::HistogramID;
 
 using MetricId = uint32_t; // Same type as in api/src/private/mod.rs
 using TimerId = uint64_t; // Same as in TimingDistribution.h.
-using MetricTimerTuple = std::tuple<MetricId, TimerId>;
+struct MetricTimerTuple {
+  MetricId mMetricId;
+  TimerId mTimerId;
+};
 class MetricTimerTupleHashKey : public PLDHashEntryHdr {
  public:
   using KeyType = const MetricTimerTuple&;
@@ -42,15 +45,17 @@ class MetricTimerTupleHashKey : public PLDHashEntryHdr {
 
   KeyType GetKey() const { return mValue; }
   bool KeyEquals(KeyTypePointer aKey) const {
-    return std::get<0>(*aKey) == std::get<0>(mValue) && std::get<1>(*aKey) == std::get<1>(mValue);
+    return aKey->mMetricId == mValue.mMetricId &&
+           aKey->mTimerId == mValue.mTimerId;
   }
 
   static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
   static PLDHashNumber HashKey(KeyTypePointer aKey) {
     // Chosen because this is how nsIntegralHashKey does it.
-    return HashGeneric(std::get<0>(*aKey), std::get<1>(*aKey));
+    return HashGeneric(aKey->mMetricId, aKey->mTimerId);
   }
   enum { ALLOW_MEMMOVE = true };
+  static_assert(std::is_trivially_copyable_v<MetricTimerTuple>);
 
  private:
   const MetricTimerTuple mValue;

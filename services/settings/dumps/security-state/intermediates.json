@@ -1,6 +1,492 @@
 {
   "data": [
     {
+      "schema": 1710946446035,
+      "derHash": "8DZVz+hbOj8q8v03yrnqKDs6KKm2FX/pvrdcF8BhGzo=",
+      "subject": "CN=Keysec GR3 DV TLS CA 2024,O=KEYSEC LTDA,C=BR",
+      "subjectDN": "MEcxCzAJBgNVBAYTAkJSMRQwEgYDVQQKEwtLRVlTRUMgTFREQTEiMCAGA1UEAxMZS2V5c2VjIEdSMyBEViBUTFMgQ0EgMjAyNA==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "fe495e9179292f67d50ca37e6347b3171d4a7cc6716d0ce1b782e000cedf5097",
+        "size": 1618,
+        "filename": "re4iHDQVFeEgZFfakl2IhF85P-DgLTbzfOV36u4F3FU=.pem",
+        "location": "security-state-staging/intermediates/3df9d148-6d1d-494e-8f77-d641a7d78124.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "re4iHDQVFeEgZFfakl2IhF85P+DgLTbzfOV36u4F3FU=",
+      "crlite_enrolled": false,
+      "id": "244051c7-07f4-4e57-9854-ab624aa55021",
+      "last_modified": 1710946623378
+    },
+    {
+      "schema": 1710946445643,
+      "derHash": "kXPvrqTmGFXrhY0QfbqUoc0YyuAOr5x+21cgGtmam/0=",
+      "subject": "CN=Keysec GR3 EV TLS CA 2024,O=KEYSEC LTDA,C=BR",
+      "subjectDN": "MEcxCzAJBgNVBAYTAkJSMRQwEgYDVQQKEwtLRVlTRUMgTFREQTEiMCAGA1UEAxMZS2V5c2VjIEdSMyBFViBUTFMgQ0EgMjAyNA==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "9c2fd810de290c9602eaf84292356ccc60b5b9a86a64a6735918a60ce80152ad",
+        "size": 1634,
+        "filename": "5zd2ZxybEEZSlXlhcynmpWBuSSlSNb-L2hyf1iH-WVU=.pem",
+        "location": "security-state-staging/intermediates/09a3003d-6573-4bc0-8ed5-501a2960b9bb.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "5zd2ZxybEEZSlXlhcynmpWBuSSlSNb+L2hyf1iH+WVU=",
+      "crlite_enrolled": false,
+      "id": "361e1616-6414-4ae8-afca-b6e6a3ab544b",
+      "last_modified": 1710946623375
+    },
+    {
+      "schema": 1710946446503,
+      "derHash": "iv2h7XO/N13G4Jfbhxu/5M62jmE4HDm99qRXbcFxv7I=",
+      "subject": "CN=Keysec GR3 OV TLS CA 2024,O=KEYSEC LTDA,C=BR",
+      "subjectDN": "MEcxCzAJBgNVBAYTAkJSMRQwEgYDVQQKEwtLRVlTRUMgTFREQTEiMCAGA1UEAxMZS2V5c2VjIEdSMyBPViBUTFMgQ0EgMjAyNA==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "5f922fcec6e5bdeeb7c72bf6cb4d7cb9712affcd3ca7b2edf439390a7bdceee1",
+        "size": 1618,
+        "filename": "ffyswDTRpdykWIYlQPDpRA5VFTJ6omaHxk5W69jO8JA=.pem",
+        "location": "security-state-staging/intermediates/59adb38b-7ec7-4ac1-afd9-e42cd392cf81.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "ffyswDTRpdykWIYlQPDpRA5VFTJ6omaHxk5W69jO8JA=",
+      "crlite_enrolled": false,
+      "id": "662042eb-44f1-427f-b3a4-46109e55908c",
+      "last_modified": 1710946623372
+    },
+    {
+      "schema": 1710795242451,
+      "derHash": "la3INQ6EjZEg93vn1fpYdQhVO2Ua2jpCo/DIrck2PdI=",
+      "subject": "CN=MarketWare RSA Extended Validation Secure Server CA 3,O=MarketWare - Soluções para Mercados Digitais\\, Lda.,C=PT",
+      "subjectDN": "MIGMMQswCQYDVQQGEwJQVDE9MDsGA1UECgw0TWFya2V0V2FyZSAtIFNvbHXDp8O1ZXMgcGFyYSBNZXJjYWRvcyBEaWdpdGFpcywgTGRhLjE+MDwGA1UEAxM1TWFya2V0V2FyZSBSU0EgRXh0ZW5kZWQgVmFsaWRhdGlvbiBTZWN1cmUgU2VydmVyIENBIDM=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "2d24d3da735acff32c0c688d7156d6772dc4cddd374c7ed9401fc73faba750de",
+        "size": 2292,
+        "filename": "Es9zrpvheH6jWlnnG5GZKf4OGJttFUqxTOsCFLZlhko=.pem",
+        "location": "security-state-staging/intermediates/b9bcb2bc-23b6-4d66-afda-8f70b1181a4c.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "Es9zrpvheH6jWlnnG5GZKf4OGJttFUqxTOsCFLZlhko=",
+      "crlite_enrolled": false,
+      "id": "314cdc34-8ab8-4717-ad45-fa803357b3c6",
+      "last_modified": 1710795423423
+    },
+    {
+      "schema": 1710795242856,
+      "derHash": "yJWZUIAJLkaFrm1OHvp8QZExroD9yuH8qD2i+PmVEjY=",
+      "subject": "CN=K Software RSA Domain Validation Secure Server CA 3,O=K Software LLC,C=US",
+      "subjectDN": "MGQxCzAJBgNVBAYTAlVTMRcwFQYDVQQKEw5LIFNvZnR3YXJlIExMQzE8MDoGA1UEAxMzSyBTb2Z0d2FyZSBSU0EgRG9tYWluIFZhbGlkYXRpb24gU2VjdXJlIFNlcnZlciBDQSAz",
+      "whitelist": false,
+      "attachment": {
+        "hash": "0069cb355fa82da3d0bbdf596110250a0d5e89b460a37831381349ecb5dcbc79",
+        "size": 2239,
+        "filename": "d7RXpz4TO5w7He2jqcJhDOe93JbF318mPnR2dLjAU3Q=.pem",
+        "location": "security-state-staging/intermediates/57b04cf4-27ff-42a9-8b4f-839f2b0f2eae.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "d7RXpz4TO5w7He2jqcJhDOe93JbF318mPnR2dLjAU3Q=",
+      "crlite_enrolled": false,
+      "id": "7800aa03-e9e9-4949-a479-ca6be3172496",
+      "last_modified": 1710795423420
+    },
+    {
+      "schema": 1710795243216,
+      "derHash": "N53ZNUfsvhz2f32UrS/D3GLPFuZ31xITVl0KyZJ+5V4=",
+      "subject": "CN=MarketWare RSA Domain Validation Secure Server CA 3,O=MarketWare - Soluções para Mercados Digitais\\, Lda.,C=PT",
+      "subjectDN": "MIGKMQswCQYDVQQGEwJQVDE9MDsGA1UECgw0TWFya2V0V2FyZSAtIFNvbHXDp8O1ZXMgcGFyYSBNZXJjYWRvcyBEaWdpdGFpcywgTGRhLjE8MDoGA1UEAxMzTWFya2V0V2FyZSBSU0EgRG9tYWluIFZhbGlkYXRpb24gU2VjdXJlIFNlcnZlciBDQSAz",
+      "whitelist": false,
+      "attachment": {
+        "hash": "20ff6348a25369a532d720e964d6d0705902f3aba8e88dc10132304da34f25ba",
+        "size": 2292,
+        "filename": "cPk3iWChPK4OBkAMXZkVl0nHVot2WEoaEc4JShoOgXk=.pem",
+        "location": "security-state-staging/intermediates/fd4cdd62-8c22-4f42-b396-b7eb3ca60553.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "cPk3iWChPK4OBkAMXZkVl0nHVot2WEoaEc4JShoOgXk=",
+      "crlite_enrolled": false,
+      "id": "1ff8e545-a74d-4ec5-b7a2-f3fbaf355c06",
+      "last_modified": 1710795423416
+    },
+    {
+      "schema": 1710557651981,
+      "derHash": "54jRSwQ2tRILvuPxXBW63wjBQH/nJWik8W+RUcOA4eM=",
+      "subject": "CN=E5,O=Let's Encrypt,C=US",
+      "subjectDN": "MDIxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MQswCQYDVQQDEwJFNQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "badc62e1392ffc5e5df2409ec05a71b1334be3bb5a0a5d42b3c1cdb7d4834386",
+        "size": 996,
+        "filename": "NYbU7PBwV4y9J67c4guWTki8FJ-uudrXL0a4V4aRcrg=.pem",
+        "location": "security-state-staging/intermediates/f46b0b36-6ce3-41a8-8c05-6fe451f74273.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "NYbU7PBwV4y9J67c4guWTki8FJ+uudrXL0a4V4aRcrg=",
+      "crlite_enrolled": false,
+      "id": "57a05de3-2ab5-463d-b51a-a451c946031a",
+      "last_modified": 1710557823264
+    },
+    {
+      "schema": 1710557651622,
+      "derHash": "g2JP0zjI2bAjwYpny3qcBRnaQ9EXdbTGy9rUXD2ZfFI=",
+      "subject": "CN=E8,O=Let's Encrypt,C=US",
+      "subjectDN": "MDIxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MQswCQYDVQQDEwJFOA==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "55a1393645174b530ee0bc29e53a01df5802e864e568402988f0a4b03b25063a",
+        "size": 1565,
+        "filename": "iFvwVyJSxnQdyaUvUERIf-8qk7gRze3612JMwoO3zdU=.pem",
+        "location": "security-state-staging/intermediates/08e1a7b8-7f72-4887-bcff-e14095cb1921.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "iFvwVyJSxnQdyaUvUERIf+8qk7gRze3612JMwoO3zdU=",
+      "crlite_enrolled": false,
+      "id": "126f7654-6ee4-4022-bba6-595372f9e7e9",
+      "last_modified": 1710557823261
+    },
+    {
+      "schema": 1710557650551,
+      "derHash": "Xf2zzzGybyPYfAnzoM72QvZAaan7fP4pJwu13A8eFrs=",
+      "subject": "CN=E5,O=Let's Encrypt,C=US",
+      "subjectDN": "MDIxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MQswCQYDVQQDEwJFNQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "9b0bc663a1b51bce1c95a42b86e234cd0f9d724eff86544bc703307ca8192cab",
+        "size": 1565,
+        "filename": "NYbU7PBwV4y9J67c4guWTki8FJ-uudrXL0a4V4aRcrg=.pem",
+        "location": "security-state-staging/intermediates/abe14e76-5c32-4ec0-8b94-c1a2ab5451fe.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "NYbU7PBwV4y9J67c4guWTki8FJ+uudrXL0a4V4aRcrg=",
+      "crlite_enrolled": false,
+      "id": "28e14e4f-c8a2-45e2-afe1-1c62a1afe3c1",
+      "last_modified": 1710557823258
+    },
+    {
+      "schema": 1710557652358,
+      "derHash": "QYXfl4BsK6dvHXmCPxEv+mOaSczcmQkIECBnq2QSuIY=",
+      "subject": "CN=E9,O=Let's Encrypt,C=US",
+      "subjectDN": "MDIxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MQswCQYDVQQDEwJFOQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "dd0e77f937de5f95d9b2bc38a9508960d8ca86838ef36c489bc9a7c9e5c94492",
+        "size": 996,
+        "filename": "8UQKm3bh5B5TpMtGEym_Yze0GXJr5RPkLhnxxpHF1LI=.pem",
+        "location": "security-state-staging/intermediates/c9f44b8b-4670-440c-9987-bcee06fda84a.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "8UQKm3bh5B5TpMtGEym/Yze0GXJr5RPkLhnxxpHF1LI=",
+      "crlite_enrolled": false,
+      "id": "04914e40-9ad6-4efe-96f9-6858e21f0bc4",
+      "last_modified": 1710557823255
+    },
+    {
+      "schema": 1710557649379,
+      "derHash": "duniiKr8Djf0OQy/lGqtmX1cHJAbPOUT09j626viq4U=",
+      "subject": "CN=E6,O=Let's Encrypt,C=US",
+      "subjectDN": "MDIxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MQswCQYDVQQDEwJFNg==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "3ebd77749d7810d81e7b5330f2432d81311cb84798964a819ae7098326312cfb",
+        "size": 1565,
+        "filename": "0Bbh_jEZSKymTy3kTOhsmlHKBB32EDu1KojrP3YfV9c=.pem",
+        "location": "security-state-staging/intermediates/724bdee9-0f01-4959-858a-d38b832f352f.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "0Bbh/jEZSKymTy3kTOhsmlHKBB32EDu1KojrP3YfV9c=",
+      "crlite_enrolled": false,
+      "id": "3ee6f34f-6f4d-4fa3-a105-c1403c0d5d87",
+      "last_modified": 1710557823252
+    },
+    {
+      "schema": 1710557651259,
+      "derHash": "VHFUICJMW2W+7QGNw5QNczjFd+Mi1UiPYz2Mao/tYbI=",
+      "subject": "CN=E7,O=Let's Encrypt,C=US",
+      "subjectDN": "MDIxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MQswCQYDVQQDEwJFNw==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "454fbabf72a59356f1d08e89a1c7f7b2c839b88d77a5215be7f2f126d408586e",
+        "size": 1000,
+        "filename": "y7xVm0TVJNahMr2sZydE2jQH8SquXV9yLF9seROHHHU=.pem",
+        "location": "security-state-staging/intermediates/a90ebad7-4e4e-48af-ad7e-0f916a648c2f.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "y7xVm0TVJNahMr2sZydE2jQH8SquXV9yLF9seROHHHU=",
+      "crlite_enrolled": false,
+      "id": "9f201f58-e8b8-4590-8c7d-b355adddf50d",
+      "last_modified": 1710557823250
+    },
+    {
+      "schema": 1710557649005,
+      "derHash": "Blq30qBQ+UdYcSF2XY0HDA4TMNV5j6pCwgcnSe0pN2I=",
+      "subject": "CN=E6,O=Let's Encrypt,C=US",
+      "subjectDN": "MDIxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MQswCQYDVQQDEwJFNg==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "be5ca6ac557668f57ea85588340ee76ac3a237a359f221406e815dc5665bd3b7",
+        "size": 1000,
+        "filename": "0Bbh_jEZSKymTy3kTOhsmlHKBB32EDu1KojrP3YfV9c=.pem",
+        "location": "security-state-staging/intermediates/3c307724-fa1f-46be-b729-f131ae30d8cd.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "0Bbh/jEZSKymTy3kTOhsmlHKBB32EDu1KojrP3YfV9c=",
+      "crlite_enrolled": false,
+      "id": "c34d8f1d-8cbe-47a7-ba7e-7e317b07f27a",
+      "last_modified": 1710557823247
+    },
+    {
+      "schema": 1710557652725,
+      "derHash": "rBJ0VCJn8XtSVTW1Vjv3Mf67GCUztGqC3Iactk61KMA=",
+      "subject": "CN=E8,O=Let's Encrypt,C=US",
+      "subjectDN": "MDIxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MQswCQYDVQQDEwJFOA==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "8c5710eda1b3c27dd74d73141a1a8fe0323f4a45533aac37d07398d1fe1ba809",
+        "size": 1000,
+        "filename": "iFvwVyJSxnQdyaUvUERIf-8qk7gRze3612JMwoO3zdU=.pem",
+        "location": "security-state-staging/intermediates/3654e458-bec6-4580-8663-7d02c432873e.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "iFvwVyJSxnQdyaUvUERIf+8qk7gRze3612JMwoO3zdU=",
+      "crlite_enrolled": false,
+      "id": "6cbf3471-29d3-4c71-a08c-172017a3cbaf",
+      "last_modified": 1710557823244
+    },
+    {
+      "schema": 1710557648653,
+      "derHash": "nXw/GqatKy7A1c8eJG+NmubLyf0HVa03u5dLHy+2A/M=",
+      "subject": "CN=R10,O=Let's Encrypt,C=US",
+      "subjectDN": "MDMxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MQwwCgYDVQQDEwNSMTA=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "c81d1bd2445e83c128c7d552399b6488c0aa07373b79cf7e6ff4bcf9fbf6ada4",
+        "size": 1800,
+        "filename": "K7rZOrXHknnsEhUH8nLL4MZkejquUuIvOIr6tCa0rbo=.pem",
+        "location": "security-state-staging/intermediates/9f6c1f8c-f285-4901-982b-1b77f1fecfbf.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "K7rZOrXHknnsEhUH8nLL4MZkejquUuIvOIr6tCa0rbo=",
+      "crlite_enrolled": false,
+      "id": "3911db43-1240-493b-8579-eb57a02d958f",
+      "last_modified": 1710557823241
+    },
+    {
+      "schema": 1710557647945,
+      "derHash": "MpUgMLlH2AhYqHQleIUYvfbZSmMdVeIBF1hcieuykZc=",
+      "subject": "CN=Tesla Public RSA TLS Issuing CA 2024,O=Tesla\\, Inc.,C=US",
+      "subjectDN": "MFIxCzAJBgNVBAYTAlVTMRQwEgYDVQQKEwtUZXNsYSwgSW5jLjEtMCsGA1UEAxMkVGVzbGEgUHVibGljIFJTQSBUTFMgSXNzdWluZyBDQSAyMDI0",
+      "whitelist": false,
+      "attachment": {
+        "hash": "a9031e9af0574759f114729defe476ad7f5029c11c6848bef2cc5a21cac69f5d",
+        "size": 2324,
+        "filename": "9P49cufpvzdZXLi1rCWs-JDJ-OYFAqYkiOGdsQ8Y9EM=.pem",
+        "location": "security-state-staging/intermediates/d2e210e5-05e2-4c69-bfdf-ef3f59e3cd70.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "9P49cufpvzdZXLi1rCWs+JDJ+OYFAqYkiOGdsQ8Y9EM=",
+      "crlite_enrolled": false,
+      "id": "7805c87e-4397-4d4d-abea-8e4b832c2944",
+      "last_modified": 1710557823239
+    },
+    {
+      "schema": 1710557648300,
+      "derHash": "d1TKt8Ja0mBaaB46BBh8Hjs6RvGIqCR9yG4CoPwzb5E=",
+      "subject": "CN=Tesla China Public RSA TLS Issuing CA 2024,O=Tesla\\, Inc.,C=US",
+      "subjectDN": "MFgxCzAJBgNVBAYTAlVTMRQwEgYDVQQKEwtUZXNsYSwgSW5jLjEzMDEGA1UEAxMqVGVzbGEgQ2hpbmEgUHVibGljIFJTQSBUTFMgSXNzdWluZyBDQSAyMDI0",
+      "whitelist": false,
+      "attachment": {
+        "hash": "1ebc266e5393c8914867037b06e2f36582ae5ba4d30caac2627367872a217b92",
+        "size": 2328,
+        "filename": "OTunEZ8hph3f2IjPSz6uBOtO1dr9gSAT6QkdsRjLvIc=.pem",
+        "location": "security-state-staging/intermediates/fdf0eed3-116e-4072-84ba-a4db196264d2.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "OTunEZ8hph3f2IjPSz6uBOtO1dr9gSAT6QkdsRjLvIc=",
+      "crlite_enrolled": false,
+      "id": "38d93572-6ab8-45ba-885a-08ffb780251e",
+      "last_modified": 1710557823236
+    },
+    {
+      "schema": 1710557647597,
+      "derHash": "WR6c5shj06B56fq+FHjHM5omshJp3eeVIRNhAkrjGkQ=",
+      "subject": "CN=R11,O=Let's Encrypt,C=US",
+      "subjectDN": "MDMxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MQwwCgYDVQQDEwNSMTE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "4015249779032694e5dd8f5c9dd09836a0d664d07ad96267ab63effc1b4df6e1",
+        "size": 1800,
+        "filename": "bdrBhpj38ffhxpubzkINl0rG-UyossdhcBYj-Zx2fcc=.pem",
+        "location": "security-state-staging/intermediates/9b0f44f1-8d97-453b-812d-f86c94550ee8.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "bdrBhpj38ffhxpubzkINl0rG+UyossdhcBYj+Zx2fcc=",
+      "crlite_enrolled": false,
+      "id": "167f2ab2-d72b-467d-a4ae-5a77eb903142",
+      "last_modified": 1710557823233
+    },
+    {
+      "schema": 1710557646962,
+      "derHash": "rrH9dBDoO8lvXaPGp8LBu4NtH6XLhucIUViQ5Ciodws=",
+      "subject": "CN=E7,O=Let's Encrypt,C=US",
+      "subjectDN": "MDIxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MQswCQYDVQQDEwJFNw==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "a3e3761ac2290e44f21dd83a3dee7616beb0fae40a86b7614df5aff5cfe0fbe2",
+        "size": 1565,
+        "filename": "y7xVm0TVJNahMr2sZydE2jQH8SquXV9yLF9seROHHHU=.pem",
+        "location": "security-state-staging/intermediates/d709b849-5593-4c34-8c01-6c2667055f27.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "y7xVm0TVJNahMr2sZydE2jQH8SquXV9yLF9seROHHHU=",
+      "crlite_enrolled": false,
+      "id": "5ec48a39-b128-4c18-ac18-78717882cf7a",
+      "last_modified": 1710557823230
+    },
+    {
+      "schema": 1710557650889,
+      "derHash": "07EoIWqEP47xMhUB9d9Spd9Sk57iwZKXcSzT3k1Bk1Q=",
+      "subject": "CN=R13,O=Let's Encrypt,C=US",
+      "subjectDN": "MDMxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MQwwCgYDVQQDEwNSMTM=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "8efd63a1350e6eced60418673bc51aa42d82242a553e6bddee30765207732a84",
+        "size": 1800,
+        "filename": "AlSQhgtJirc8ahLyekmtX-Iw-v46yPYRLJt9Cq1GlB0=.pem",
+        "location": "security-state-staging/intermediates/00e94c9e-039c-4ac0-afb5-95fb4af9247a.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "AlSQhgtJirc8ahLyekmtX+Iw+v46yPYRLJt9Cq1GlB0=",
+      "crlite_enrolled": false,
+      "id": "740850ff-e7cb-484e-a7a5-fa7b77642099",
+      "last_modified": 1710557823228
+    },
+    {
+      "schema": 1710557653101,
+      "derHash": "Ex/Od4QBaJmloAIDqe/IDxjrvXVYBxftwVU1gJMINuw=",
+      "subject": "CN=R12,O=Let's Encrypt,C=US",
+      "subjectDN": "MDMxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MQwwCgYDVQQDEwNSMTI=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "f5c1e03c9d4d299af1ec42ade782748f4cab780f708979e1f6be00a18f420591",
+        "size": 1800,
+        "filename": "kZwN96eHtZftBWrOZUsd6cA4es80n3NzSk_XtYz2EqQ=.pem",
+        "location": "security-state-staging/intermediates/b27616f6-d705-4101-99c7-225fc36c5276.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "kZwN96eHtZftBWrOZUsd6cA4es80n3NzSk/XtYz2EqQ=",
+      "crlite_enrolled": false,
+      "id": "1224b785-8a96-4bdc-bd99-cf9cf1a91fe8",
+      "last_modified": 1710557823225
+    },
+    {
+      "schema": 1710557650106,
+      "derHash": "/eiPLU+JE9PcFmTV+N5R4H/iq/7ZO0WsrVopv+uqI/s=",
+      "subject": "CN=E9,O=Let's Encrypt,C=US",
+      "subjectDN": "MDIxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MQswCQYDVQQDEwJFOQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "e174bd7700981b8496d947ddfeaae0d4c5386d116f6c55cf4d678bc56e54f8a8",
+        "size": 1565,
+        "filename": "8UQKm3bh5B5TpMtGEym_Yze0GXJr5RPkLhnxxpHF1LI=.pem",
+        "location": "security-state-staging/intermediates/75c016fa-42c2-4278-9fd8-420ef53ceea1.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "8UQKm3bh5B5TpMtGEym/Yze0GXJr5RPkLhnxxpHF1LI=",
+      "crlite_enrolled": false,
+      "id": "6e708fe9-bef1-4e04-a62c-b5f2df61674a",
+      "last_modified": 1710557823222
+    },
+    {
+      "schema": 1710557649732,
+      "derHash": "JNRaqbjWBT0oHzhCyMwMbBr3zN/ULdXBL2p0+pMj96I=",
+      "subject": "CN=R14,O=Let's Encrypt,C=US",
+      "subjectDN": "MDMxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MQwwCgYDVQQDEwNSMTQ=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "4bf1193ec7761636410d2f274e618ad669f85b537c9c5b1a93f3e84bd76ad96b",
+        "size": 1800,
+        "filename": "8WR6XuPvrFTIkukwWE_keXm3rNHHbBJxvKHFB22GmIg=.pem",
+        "location": "security-state-staging/intermediates/7e6c46a5-df71-419d-ada0-694612e63c1d.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "8WR6XuPvrFTIkukwWE/keXm3rNHHbBJxvKHFB22GmIg=",
+      "crlite_enrolled": false,
+      "id": "69343a2a-10ab-428d-9412-9a7986910578",
+      "last_modified": 1710557823219
+    },
+    {
+      "schema": 1710539501295,
+      "derHash": "kPqg3vqxPQmsAJdRwMO2BqR81X3oAi5od0gZm0RHSyM=",
+      "subject": "CN=Certigna Server Authentication ACME CA,O=Certigna,C=FR",
+      "subjectDN": "MHAxCzAJBgNVBAYTAkZSMREwDwYDVQQKDAhDZXJ0aWduYTEdMBsGA1UEYQwUTlRSRlItNDgxNDYzMDgxMDAwMzYxLzAtBgNVBAMMJkNlcnRpZ25hIFNlcnZlciBBdXRoZW50aWNhdGlvbiBBQ01FIENB",
+      "whitelist": false,
+      "attachment": {
+        "hash": "49c8ef6d8a7b25da0bf8610a646bed6d9d0eac47d63eec405c40c5e71ce8208f",
+        "size": 2458,
+        "filename": "g96_QpC6c95hPe0mJuHADgpPz6RuVaqjHoRSjOyuL7E=.pem",
+        "location": "security-state-staging/intermediates/7b7f68ae-bfd3-4840-b207-9ab77f4232f8.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "g96/QpC6c95hPe0mJuHADgpPz6RuVaqjHoRSjOyuL7E=",
+      "crlite_enrolled": false,
+      "id": "38d23199-bfbc-46eb-bc42-70a370fbac24",
+      "last_modified": 1710539831556
+    },
+    {
+      "schema": 1710539500206,
+      "derHash": "WMKULEG5CPAJ6QD+YtETC76npaiDbyCJkImnqVHGQyc=",
+      "subject": "CN=Certigna Server Authentication ACME FR CA 2024,O=Certigna,C=FR",
+      "subjectDN": "MHgxCzAJBgNVBAYTAkZSMREwDwYDVQQKDAhDZXJ0aWduYTEdMBsGA1UEYQwUTlRSRlItNDgxNDYzMDgxMDAwMzYxNzA1BgNVBAMMLkNlcnRpZ25hIFNlcnZlciBBdXRoZW50aWNhdGlvbiBBQ01FIEZSIENBIDIwMjQ=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "b2210ca67012f7e0ba1fde2dc3546563fa2c16b17753d83a23cf28772fdc78d4",
+        "size": 2052,
+        "filename": "DoTA9i3cZ3sCoyIkBYv0KN9rxjve3-F1LOL0hMTEjp8=.pem",
+        "location": "security-state-staging/intermediates/bcda003c-3561-469c-97ec-e1268e4edb50.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "DoTA9i3cZ3sCoyIkBYv0KN9rxjve3+F1LOL0hMTEjp8=",
+      "crlite_enrolled": false,
+      "id": "506528ab-12d0-4986-8355-f72a795f5311",
+      "last_modified": 1710539831553
+    },
+    {
+      "schema": 1710539500937,
+      "derHash": "4FD1W1Vj5DXdNgI6OjtKy+q0TDlk8YBIecwxEeKH2Bs=",
+      "subject": "CN=Certigna Server Authentication ACME FR CA,O=Certigna,C=FR",
+      "subjectDN": "MHMxCzAJBgNVBAYTAkZSMREwDwYDVQQKDAhDZXJ0aWduYTEdMBsGA1UEYQwUTlRSRlItNDgxNDYzMDgxMDAwMzYxMjAwBgNVBAMMKUNlcnRpZ25hIFNlcnZlciBBdXRoZW50aWNhdGlvbiBBQ01FIEZSIENB",
+      "whitelist": false,
+      "attachment": {
+        "hash": "bbe52c415c1b8f00ea91967db06b87b829f88f35160ca7e8ff01d6b9acaa0e63",
+        "size": 2463,
+        "filename": "zkN9UXAo8i_VmU2mjpCUOtef-5jkt-KPl32fIqB0tNE=.pem",
+        "location": "security-state-staging/intermediates/4c8342ae-ea33-4964-bac7-4ef7d2d40537.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "zkN9UXAo8i/VmU2mjpCUOtef+5jkt+KPl32fIqB0tNE=",
+      "crlite_enrolled": false,
+      "id": "14b7e624-637a-4380-95e3-3b432fc6aac2",
+      "last_modified": 1710539831550
+    },
+    {
+      "schema": 1710539500588,
+      "derHash": "qaY+A/DUmOxyQwJqeo8r5wXQTyhF1J9j2InJ3QtKOUQ=",
+      "subject": "CN=Certigna Server Authentication ACME CA 2024,O=Certigna,C=FR",
+      "subjectDN": "MHUxCzAJBgNVBAYTAkZSMREwDwYDVQQKDAhDZXJ0aWduYTEdMBsGA1UEYQwUTlRSRlItNDgxNDYzMDgxMDAwMzYxNDAyBgNVBAMMK0NlcnRpZ25hIFNlcnZlciBBdXRoZW50aWNhdGlvbiBBQ01FIENBIDIwMjQ=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "161dc34976ab4cfc42bd69ec0b38ae28178722e6243ee46a916e76743d135d0e",
+        "size": 2048,
+        "filename": "5t6bUEJAtYeRqDL4wc0-BLSX3Cy-W80bNcuO4zpx08Q=.pem",
+        "location": "security-state-staging/intermediates/fce8c500-791e-481c-8225-5faf94b2f6e3.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "5t6bUEJAtYeRqDL4wc0+BLSX3Cy+W80bNcuO4zpx08Q=",
+      "crlite_enrolled": false,
+      "id": "08355b95-d61d-4aa6-8185-4c6a16379fae",
+      "last_modified": 1710539831545
+    },
+    {
       "schema": 1709780043992,
       "derHash": "6CGxESkRBWfxYH8LDzaOx42BFBjwxIzEJUUPY+uICV0=",
       "subject": "CN=Entrust 4K EV TLS Root CA - 2022,O=Entrust\\, Inc.,C=US",
@@ -20521,24 +21007,6 @@
       "last_modified": 1663786626392
     },
     {
-      "schema": 1663786369285,
-      "derHash": "ysEs67zNJAJpr4hsPF7GRiKIHWdsYl/LfRRNyzVS68c=",
-      "subject": "CN=GlobalSign GCC R3 AlphaSSL CA 2022,O=Globalsign nv-sa,C=BE",
-      "subjectDN": "MFUxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxzaWduIG52LXNhMSswKQYDVQQDEyJHbG9iYWxTaWduIEdDQyBSMyBBbHBoYVNTTCBDQSAyMDIy",
-      "whitelist": false,
-      "attachment": {
-        "hash": "d72e9d5d07679986f854079226533b17f9db1a768648573767b6d35f17297777",
-        "size": 1634,
-        "filename": "7Ge-CB4gM_GQW4c8QeQgayw60TuN7PhmMpmoFX8YQv0=.pem",
-        "location": "security-state-staging/intermediates/dd8c26df-1f99-4f77-a0b8-28a35d06adc1.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "7Ge+CB4gM/GQW4c8QeQgayw60TuN7PhmMpmoFX8YQv0=",
-      "crlite_enrolled": false,
-      "id": "72b9a255-5f16-422b-93d4-75f7687cc0b3",
-      "last_modified": 1663786626385
-    },
-    {
       "schema": 1663786374768,
       "derHash": "JEobcwyh11pppS9eX0IbtUfHl+JK++nPuZyZNIjNwnE=",
       "subject": "CN=SSLs.com RSA OV Secure Server CA,O=SSLs.com,L=Phoenix,ST=Arizona,C=US",
@@ -25705,24 +26173,6 @@
       "last_modified": 1645578267671
     },
     {
-      "schema": 1645577474282,
-      "derHash": "ozAX2d9JTAnVhwkQdAOu5GG5Rh6BujlcKMNmk8J9GYY=",
-      "subject": "CN=GlobalSign GCC R3 UK EV QWAC CA 2020,O=GMO GlobalSign Ltd,C=GB",
-      "subjectDN": "MFkxCzAJBgNVBAYTAkdCMRswGQYDVQQKExJHTU8gR2xvYmFsU2lnbiBMdGQxLTArBgNVBAMTJEdsb2JhbFNpZ24gR0NDIFIzIFVLIEVWIFFXQUMgQ0EgMjAyMA==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "ef3f87aa1971aaebb3accc4f6b43e518068a070c3df5324fafc49bd6faea510d",
-        "size": 2040,
-        "filename": "_cLNIs90Pu4zrpnBuJdA-wTl2BrxEVUjup-MFOMyr1g=.pem",
-        "location": "security-state-staging/intermediates/8ec8c2d1-26c1-4c8e-b2d2-8f9031409923.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "/cLNIs90Pu4zrpnBuJdA+wTl2BrxEVUjup+MFOMyr1g=",
-      "crlite_enrolled": false,
-      "id": "f0ff68db-90fa-4d8a-b3a1-d54555a22294",
-      "last_modified": 1645578267661
-    },
-    {
       "schema": 1645577475604,
       "derHash": "PuAnjfcfo8ElxM1IfwHXdGlOb8V+DNlMJO/XaRM5GOU=",
       "subject": "CN=GTS Root R1,O=Google Trust Services LLC,C=US",
@@ -26981,42 +27431,6 @@
       "crlite_enrolled": false,
       "id": "5cb35bb9-7702-4174-8419-37382a502bc9",
       "last_modified": 1618102648566
-    },
-    {
-      "schema": 1616744984591,
-      "derHash": "CWaohynJOPnc1luzxjtghhjq5Rg+0f7XUrMjCJaHog4=",
-      "subject": "CN=GlobalSign GCC E5 UK EV QWAC CA 2021,O=GMO GlobalSign Ltd,C=GB",
-      "subjectDN": "MFkxCzAJBgNVBAYTAkdCMRswGQYDVQQKExJHTU8gR2xvYmFsU2lnbiBMdGQxLTArBgNVBAMTJEdsb2JhbFNpZ24gR0NDIEU1IFVLIEVWIFFXQUMgQ0EgMjAyMQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "4005a355e57cd2a8bd4a424b5f4e7e4ee933a872f1efda2e36c1166230ca170f",
-        "size": 1248,
-        "filename": "HO9pYHxroEYeUAkryxMtHI3o_SH6tMvwv-u0CDggQEc=.pem",
-        "location": "security-state-staging/intermediates/5b9ce9ed-6717-41a3-bda1-2c4d234f9bdb.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "HO9pYHxroEYeUAkryxMtHI3o/SH6tMvwv+u0CDggQEc=",
-      "crlite_enrolled": false,
-      "id": "0ec48e75-7ccc-48c5-9165-e48c23c1e45b",
-      "last_modified": 1616745549980
-    },
-    {
-      "schema": 1616744986241,
-      "derHash": "DdLH4K+CAPSfQZKomuY01M5BuAxjsGKcxo5TjDFvAg4=",
-      "subject": "CN=GlobalSign GCC E5 EV QWAC CA 2021,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFQxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMSowKAYDVQQDEyFHbG9iYWxTaWduIEdDQyBFNSBFViBRV0FDIENBIDIwMjE=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "43f1f0accb925b694a412440868b1029f41df0c3f1fde4a3ac788b5cd3ad14b2",
-        "size": 1240,
-        "filename": "e3FAFA6PHmIXryngxPMDIkcW8S7q79f5gqJUVApp3pY=.pem",
-        "location": "security-state-staging/intermediates/9bda82e3-aac5-4a12-a32c-f86a4fc1ca14.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "e3FAFA6PHmIXryngxPMDIkcW8S7q79f5gqJUVApp3pY=",
-      "crlite_enrolled": false,
-      "id": "e49837e3-b031-45e3-8712-12d4dbabdbc4",
-      "last_modified": 1616745549968
     },
     {
       "schema": 1616744987712,
@@ -30151,5 +30565,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1709780223348
+  "timestamp": 1710946623378
 }

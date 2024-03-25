@@ -83,7 +83,7 @@ MinidumpGenerator::MinidumpGenerator()
       cpu_type_(DynamicImages::GetNativeCPUType()),
       dyldImageLoadAddress_(NULL),
       dyldSlide_(0),
-      dyldPath_(),
+      dyldPath_(nullptr),
       task_context_(NULL),
       dynamic_images_(NULL),
       memory_blocks_(&allocator_) {
@@ -105,7 +105,7 @@ MinidumpGenerator::MinidumpGenerator(mach_port_t crashing_task,
       cpu_type_(DynamicImages::GetNativeCPUType()),
       dyldImageLoadAddress_(NULL),
       dyldSlide_(0),
-      dyldPath_(),
+      dyldPath_(nullptr),
       task_context_(NULL),
       dynamic_images_(NULL),
       memory_blocks_(&allocator_) {
@@ -250,7 +250,7 @@ void MinidumpGenerator::GatherCurrentProcessDyldInformation() {
     return;
   }
   dyldImageLoadAddress_ = mh;
-  dyldPath_ = string(aii->dyldPath);
+  dyldPath_ = aii->dyldPath;
   dyldSlide_ = GetCurrentProcessModuleSlide(mh, aii->sharedCacheSlide);
 }
 
@@ -1464,7 +1464,7 @@ bool MinidumpGenerator::WriteModuleStream(unsigned int index,
     if (index == INT_MAX) {
       dyld_or_in_dyld_shared_cache = true;
       slide = dyldSlide_;
-      name = dyldPath_.c_str();
+      name = dyldPath_;
     } else {
       dyld_or_in_dyld_shared_cache =
         ((header->flags & MH_SHAREDCACHE) != 0);
@@ -1993,7 +1993,7 @@ bool MinidumpGenerator::WriteCrashInfoStream(
       bool dyld_or_in_dyld_shared_cache;
       if (i == image_count - 1) {
         slide = dyldSlide_;
-        module_path = dyldPath_.c_str();
+        module_path = dyldPath_;
         dyld_or_in_dyld_shared_cache = true;
       } else {
         slide = _dyld_get_image_vmaddr_slide(i);
@@ -2048,7 +2048,10 @@ bool MinidumpGenerator::WriteBootargsStream(
   int rv = sysctlbyname("kern.bootargs", NULL, &size, NULL, 0);
   if ((rv != 0) || (size == 0))
     size = 1;
-  vector<uint8_t> bootargs(size);
+
+  wasteful_vector<uint8_t> bootargs(&this->allocator_, size);
+  bootargs.resize(size, 0);
+
   bootargs[0] = 0;
   if (rv == 0)
     sysctlbyname("kern.bootargs", &bootargs[0], &size, NULL, 0);
