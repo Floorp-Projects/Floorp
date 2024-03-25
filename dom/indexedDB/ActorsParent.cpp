@@ -3024,8 +3024,19 @@ class FactoryOp
 
     // Waiting for directory open allowed on the PBackground thread. The next
     // step is either SendingResults if directory lock failed to acquire, or
-    // DatabaseOpenPending if directory lock is acquired.
+    // DirectoryWorkOpen if the factory operation is not tied up to a specific
+    // database, or DatabaseOpenPending otherwise.
     DirectoryOpenPending,
+
+    // Waiting to do/doing directory work on the QuotaManager IO thread. Its
+    // next step is DirectoryWorkDone if directory work was successful or
+    // SendingResults if directory work failed.
+    DirectoryWorkOpen,
+
+    // Checking if database work can be started. If the database is not blocked
+    // by other factory operations then the next step is DatabaseWorkOpen.
+    // Otherwise the next step is DatabaseOpenPending.
+    DirectoryWorkDone,
 
     // Waiting for database open allowed on the PBackground thread. The next
     // step is DatabaseWorkOpen.
@@ -3142,6 +3153,8 @@ class FactoryOp
 
   nsresult DirectoryOpen();
 
+  nsresult DirectoryWorkDone();
+
   nsresult SendToIOThread();
 
   void WaitForTransactions();
@@ -3156,6 +3169,8 @@ class FactoryOp
                                      const Maybe<uint64_t>& aNewVersion);
 
   // Methods that subclasses must implement.
+  virtual nsresult DoDirectoryWork() = 0;
+
   virtual nsresult DatabaseOpen() = 0;
 
   virtual nsresult DoDatabaseWork() = 0;
@@ -3198,6 +3213,8 @@ class FactoryRequestOp : public FactoryOp,
                   aCommonParams.principalInfo(),
                   Some(aCommonParams.metadata().name()), aDeleting),
         mCommonParams(aCommonParams) {}
+
+  nsresult DoDirectoryWork() override;
 
   // IPDL methods.
   void ActorDestroy(ActorDestroyReason aWhy) override;
@@ -3364,6 +3381,7 @@ class DeleteDatabaseOp::VersionChangeOp final : public DatabaseOperationBase {
 };
 
 class GetDatabasesOp final : public FactoryOp {
+  nsTHashMap<nsStringHashKey, DatabaseMetadata> mDatabaseMetadataTable;
   nsTArray<DatabaseMetadata> mDatabaseMetadataArray;
   Factory::GetDatabasesResolver mResolver;
 
@@ -3381,6 +3399,8 @@ class GetDatabasesOp final : public FactoryOp {
   ~GetDatabasesOp() override = default;
 
   nsresult DatabasesNotAvailable();
+
+  nsresult DoDirectoryWork() override;
 
   nsresult DatabaseOpen() override;
 
@@ -14758,6 +14778,14 @@ void FactoryOp::StringifyState(nsACString& aResult) const {
       aResult.AppendLiteral("DirectoryOpenPending");
       return;
 
+    case State::DirectoryWorkOpen:
+      aResult.AppendLiteral("DirectoryWorkOpen");
+      return;
+
+    case State::DirectoryWorkDone:
+      aResult.AppendLiteral("DirectoryWorkDone");
+      return;
+
     case State::DatabaseOpenPending:
       aResult.AppendLiteral("DatabaseOpenPending");
       return;
@@ -14921,6 +14949,32 @@ nsresult FactoryOp::Open() {
 nsresult FactoryOp::DirectoryOpen() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::DirectoryOpenPending);
+  MOZ_ASSERT(mDirectoryLock);
+
+  if (mDatabaseName.isNothing()) {
+    QuotaManager* const quotaManager = QuotaManager::Get();
+    MOZ_ASSERT(quotaManager);
+
+    // Must set this before dispatching otherwise we will race with the IO
+    // thread.
+    mState = State::DirectoryWorkOpen;
+
+    QM_TRY(MOZ_TO_RESULT(
+               quotaManager->IOThread()->Dispatch(this, NS_DISPATCH_NORMAL)),
+           NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR, IDB_REPORT_INTERNAL_ERR_LAMBDA);
+
+    return NS_OK;
+  }
+
+  mState = State::DirectoryWorkDone;
+  MOZ_ALWAYS_SUCCEEDS(Run());
+
+  return NS_OK;
+}
+
+nsresult FactoryOp::DirectoryWorkDone() {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mState == State::DirectoryWorkDone);
   MOZ_ASSERT(mDirectoryLock);
   MOZ_ASSERT(gFactoryOps);
 
@@ -15131,6 +15185,14 @@ FactoryOp::Run() {
       QM_WARNONLY_TRY(MOZ_TO_RESULT(Open()), handleError);
       break;
 
+    case State::DirectoryWorkOpen:
+      QM_WARNONLY_TRY(MOZ_TO_RESULT(DoDirectoryWork()), handleError);
+      break;
+
+    case State::DirectoryWorkDone:
+      QM_WARNONLY_TRY(MOZ_TO_RESULT(DirectoryWorkDone()), handleError);
+      break;
+
     case State::DatabaseOpenPending:
       QM_WARNONLY_TRY(MOZ_TO_RESULT(DatabaseOpen()), handleError);
       break;
@@ -15195,6 +15257,10 @@ void FactoryOp::DirectoryLockFailed() {
 
   mState = State::SendingResults;
   MOZ_ALWAYS_SUCCEEDS(Run());
+}
+
+nsresult FactoryRequestOp::DoDirectoryWork() {
+  MOZ_CRASH("Not implemented because this should be unreachable.");
 }
 
 void FactoryRequestOp::ActorDestroy(ActorDestroyReason aWhy) {
@@ -16730,6 +16796,39 @@ nsresult GetDatabasesOp::DatabasesNotAvailable() {
   return NS_OK;
 }
 
+nsresult GetDatabasesOp::DoDirectoryWork() {
+  AssertIsOnIOThread();
+  MOZ_ASSERT(mState == State::DirectoryWorkOpen);
+
+  // This state (DirectoryWorkOpen) runs immediately on the I/O thread, before
+  // waiting for existing factory operations to complete (at which point
+  // DoDatabaseWork will be invoked). To match the spec, we must snapshot the
+  // current state of any databases that are being created (version = 0) or
+  // upgraded (version >= 1) now. If we only sampled these values in
+  // DoDatabaseWork, we would only see their post-creation/post-upgrade
+  // versions, which would be incorrect.
+
+  IndexedDatabaseManager* const idm = IndexedDatabaseManager::Get();
+  MOZ_ASSERT(idm);
+
+  const auto& fileManagers =
+      idm->GetFileManagers(mPersistenceType, mOriginMetadata.mOrigin);
+
+  for (const auto& fileManager : fileManagers) {
+    auto& metadata =
+        mDatabaseMetadataTable.LookupOrInsert(fileManager->DatabaseFilePath());
+    metadata.name() = fileManager->DatabaseName();
+    metadata.version() = fileManager->DatabaseVersion();
+  }
+
+  // Must set this before dispatching otherwise we will race with the IO thread.
+  mState = State::DirectoryWorkDone;
+
+  QM_TRY(MOZ_TO_RESULT(mOwningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL)));
+
+  return NS_OK;
+}
+
 nsresult GetDatabasesOp::DatabaseOpen() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::DatabaseOpenPending);
@@ -16818,30 +16917,34 @@ nsresult GetDatabasesOp::DoDatabaseWork() {
     nsString path;
     databaseFile->GetPath(path);
 
-    IndexedDatabaseManager* const idm = IndexedDatabaseManager::Get();
-    MOZ_ASSERT(idm);
+    // Use the snapshotted values from DoDirectoryWork which correctly
+    // snapshotted the state of any pending creations/upgrades. This does mean
+    // that we need to skip reporting databases that had a version of 0 at that
+    // time because they were still being created. In the event that any other
+    // creation or upgrade requests are made after our operation is created,
+    // this operation will block those, so it's not possible for this set of
+    // data to get out of sync. The snapshotting (using cached database name
+    // and version in DatabaseFileManager) also guarantees that we are not
+    // touching the SQLite database here on the QuotaManager I/O thread which
+    // is already open on the connection thread.
 
-    // If the database is already open then there will be a DatabaseFileManager
-    // which can provide us with the database name and version without needing
-    // to open the SQLite database. (Also, we are not allowed to open the
-    // database on this thread if it's already open.)
+    auto metadata = mDatabaseMetadataTable.Lookup(path);
+    if (metadata) {
+      if (metadata->version() != 0) {
+        mDatabaseMetadataArray.AppendElement(DatabaseMetadata(
+            metadata->name(), metadata->version(), mPersistenceType));
+      }
 
-    SafeRefPtr<DatabaseFileManager> fileManager =
-        idm->GetFileManagerByDatabaseFilePath(mPersistenceType,
-                                              mOriginMetadata.mOrigin, path);
-
-    if (fileManager) {
-      mDatabaseMetadataArray.AppendElement(
-          DatabaseMetadata(nsString(fileManager->DatabaseName()),
-                           fileManager->DatabaseVersion(), mPersistenceType));
       continue;
     }
 
-    // Since the database is not already open, it is safe and necessary for us
-    // to open the database on this thread and retrieve its name and version.
-    // We do not need to worry about racing a database open because database
-    // opens can only be processed on this thread and we are performing the
-    // steps below synchronously.
+    // Since the database is not already open (there was no DatabaseFileManager
+    // for snapshotting in DoDirectoryWork which could provide us with the
+    // database name and version without needing to open the SQLite database),
+    // it is safe and necessary for us to open the database on this thread and
+    // retrieve its name and version. We do not need to worry about racing a
+    // database open because database opens can only be processed on this
+    // thread and we are performing the steps below synchronously.
 
     QM_TRY_INSPECT(
         const auto& fmDirectory,
