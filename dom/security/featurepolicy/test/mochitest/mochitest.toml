@@ -14,7 +14,3 @@ support-files = [
 
 ["test_parser.html"]
 fail-if = ["xorigin"]
-
-["test_nested.html"]
-scheme = "https"
-fail-if = ["xorigin"]
