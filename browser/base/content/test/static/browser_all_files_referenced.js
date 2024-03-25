@@ -287,9 +287,6 @@ var allowlist = [
   { file: "chrome://global/content/ml/SummarizerModel.sys.mjs" },
 
   // Bug 1886130
-  {
-    file: "chrome://global/content/ml/tests/acme/bert/resolve/main/config.json",
-  },
   { file: "chrome://global/content/ml/ModelHub.sys.mjs" },
 
   // toolkit/xre/MacRunFromDmgUtils.mm

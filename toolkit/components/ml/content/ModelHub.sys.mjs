@@ -491,13 +491,20 @@ export class ModelHub {
     //                     [A-Za-z0-9-.]+     Alphanum characters, hyphens, or periods, one or more times
     const versionRegex = /^[A-Za-z0-9-.]+$/;
 
-    // Matches filenames starting with alphanumeric or underscore, optionally ending with a dot followed by a 2-4 letter extension.
+    // Matches filenames with subdirectories, starting with alphanumeric or underscore,
+    // and optionally ending with a dot followed by a 2-4 letter extension.
     //
-    //                 ^                                          $   Start and end of string
-    //                  (?![.])                                       Negative lookahead for not starting with a period
-    //                         [A-Za-z0-9-_]+                         Alphanum characters, hyphens, or underscores, one or more times
-    //                                       (?:[.][A-Za-z]{2,4})?    Optional non-capturing group for file extension of 2 to 4 letters
-    const fileRegex = /^(?![.])[A-Za-z0-9-_]+(?:[.][A-Za-z]{2,4})?$/;
+    //                 ^                                    $   Start and end of string
+    //                  (?:\/)?                                  Optional leading slash (for absolute paths or root directory)
+    //                        (?!\/)                             Negative lookahead for not starting with a slash
+    //                              [A-Za-z0-9-_]+               First directory or filename
+    //                                           (?:            Begin non-capturing group for additional directories or file
+    //                                              \/              Directory separator
+    //                                                [A-Za-z0-9-_]+ Directory or file name
+    //                                                             )* Zero or more times
+    //                                                               (?:[.][A-Za-z]{2,4})?   Optional non-capturing group for file extension
+    const fileRegex =
+      /^(?:\/)?(?!\/)[A-Za-z0-9-_]+(?:\/[A-Za-z0-9-_]+)*(?:[.][A-Za-z]{2,4})?$/;
 
     if (!orgRegex.test(organization) || !isNaN(parseInt(organization))) {
       return new Error(`Invalid organization name ${organization}`);

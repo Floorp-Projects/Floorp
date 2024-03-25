@@ -7,13 +7,21 @@ const { sinon } = ChromeUtils.importESModule(
 );
 
 // Root URL of the fake hub, see the `data` dir in the tests.
-const FAKE_HUB = "chrome://global/content/ml/tests";
+const FAKE_HUB =
+  "chrome://mochitests/content/browser/toolkit/components/ml/tests/browser/data";
 
 const FAKE_MODEL_ARGS = {
   organization: "acme",
   modelName: "bert",
   modelVersion: "main",
   file: "config.json",
+};
+
+const FAKE_ONNX_MODEL_ARGS = {
+  organization: "acme",
+  modelName: "bert",
+  modelVersion: "main",
+  file: "onnx/config.json",
 };
 
 const badHubs = [
@@ -127,6 +135,23 @@ add_task(async function test_getting_file() {
   let [array, headers] = await hub.getModelFileAsArrayBuffer(FAKE_MODEL_ARGS);
 
   Assert.equal(headers["Content-Type"], "application/json");
+
+  // check the content of the file.
+  let jsonData = JSON.parse(
+    String.fromCharCode.apply(null, new Uint8Array(array))
+  );
+
+  Assert.equal(jsonData.hidden_size, 768);
+});
+
+add_task(async function test_getting_file_in_subdir() {
+  const hub = new ModelHub({ rootUrl: FAKE_HUB });
+
+  let [array, metadata] = await hub.getModelFileAsArrayBuffer(
+    FAKE_ONNX_MODEL_ARGS
+  );
+
+  Assert.equal(metadata["Content-Type"], "application/json");
 
   // check the content of the file.
   let jsonData = JSON.parse(
