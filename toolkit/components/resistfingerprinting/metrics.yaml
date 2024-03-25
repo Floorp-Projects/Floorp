@@ -460,3 +460,54 @@ characteristics:
     expires: never
     data_sensitivity:
       - interaction
+
+  prefs_general_autoscroll: # general.autoScroll
+    type: boolean
+    description: >
+      Use autoscrolling
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1884693
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
+    expires: never
+    data_sensitivity:
+      - interaction
+
+  prefs_general_smoothscroll: # general.smoothScroll
+    type: boolean
+    description: >
+      Use smooth scrolling
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1884693
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
+    expires: never
+    data_sensitivity:
+      - interaction
+
+  prefs_overlay_scrollbars: # widget.gtk.overlay-scrollbars.enabled
+    type: boolean
+    description: >
+      Use overlay scrollbars (or otherwise "Always show scrollbars")
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1884693
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=XXX
+    expires: never
+    data_sensitivity:
+      - interaction
