@@ -6,9 +6,6 @@ permalink: /changelog/
 
 # 126.0 (In Development)
 
-* **feature-downloads**
-  * Content intent of completed `DownloadNotification` now uses a `PendingIntent` which launches an `Activity` directly, see [Bug 1885167](https://bugzilla.mozilla.org/show_bug.cgi?id=1885167).
-
 # 125.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v124..releases_v125)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/releases_v125/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)

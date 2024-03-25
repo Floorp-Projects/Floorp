@@ -265,7 +265,7 @@ class AbstractFetchDownloadServiceTest {
             },
         )
 
-        doAnswer { }.`when`(service).removeDownloadJob(any())
+        doAnswer { Unit }.`when`(service).removeDownloadJob(any())
 
         service.downloadJobs[downloadState.id] = downloadJobState
 
@@ -289,7 +289,7 @@ class AbstractFetchDownloadServiceTest {
             },
         )
 
-        doAnswer { }.`when`(service).removeDownloadJob(any())
+        doAnswer { Unit }.`when`(service).removeDownloadJob(any())
 
         service.downloadJobs[downloadState.id] = downloadJobState
 
@@ -313,7 +313,7 @@ class AbstractFetchDownloadServiceTest {
             },
         )
 
-        doAnswer { }.`when`(service).removeDownloadJob(any())
+        doAnswer { Unit }.`when`(service).removeDownloadJob(any())
 
         service.downloadJobs[downloadState.id] = downloadJobState
 
@@ -1173,21 +1173,6 @@ class AbstractFetchDownloadServiceTest {
 
     @Test
     fun `notification is shown when download status is COMPLETED`() = runBlocking {
-        performSuccessfulCompleteDownload()
-
-        assertEquals(2, shadowNotificationService.size())
-    }
-
-    @Test
-    fun `completed download notification avoids notification trampoline restrictions by using an activity based PendingIntent to open the file`() = runBlocking {
-        val downloadJobState = performSuccessfulCompleteDownload()
-
-        val notification = shadowNotificationService.getNotification(downloadJobState.foregroundServiceId)
-        val shadowNotificationContentPendingIntent = shadowOf(notification.contentIntent)
-        assertTrue(shadowNotificationContentPendingIntent.isActivity)
-    }
-
-    private suspend fun performSuccessfulCompleteDownload(): DownloadJobState {
         val download = DownloadState("https://example.com/file.txt", "file.txt")
         val response = Response(
             "https://example.com/file.txt",
@@ -1209,12 +1194,13 @@ class AbstractFetchDownloadServiceTest {
 
         service.downloadJobs[providedDownload.value.state.id]?.job?.join()
         val downloadJobState = service.downloadJobs[providedDownload.value.state.id]!!
-        service.setDownloadJobStatus(downloadJobState, COMPLETED)
-        assertEquals(COMPLETED, service.getDownloadJobStatus(downloadJobState))
+        service.setDownloadJobStatus(downloadJobState, DownloadState.Status.COMPLETED)
+        assertEquals(DownloadState.Status.COMPLETED, service.getDownloadJobStatus(downloadJobState))
 
         mainDispatcher.scheduler.advanceTimeBy(PROGRESS_UPDATE_INTERVAL)
         mainDispatcher.scheduler.runCurrent()
-        return downloadJobState
+
+        assertEquals(2, shadowNotificationService.size())
     }
 
     @Test
@@ -1499,10 +1485,7 @@ class AbstractFetchDownloadServiceTest {
             state = download,
             foregroundServiceId = Random.nextInt(),
             status = DOWNLOADING,
-            job = CoroutineScope(IO).launch {
-                @Suppress("ControlFlowWithEmptyBody")
-                while (true) { }
-            },
+            job = CoroutineScope(IO).launch { while (true) { } },
         )
 
         service.registerNotificationActionsReceiver()
