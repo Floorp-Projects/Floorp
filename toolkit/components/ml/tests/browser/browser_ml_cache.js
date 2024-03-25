@@ -30,7 +30,7 @@ const badHubs = [
 add_task(async function test_bad_hubs() {
   for (const badHub of badHubs) {
     Assert.throws(
-      () => new ModelHub(badHub),
+      () => new ModelHub({ rootUrl: badHub }),
       new RegExp(`Error: Invalid model hub root url: ${badHub}`),
       `Should throw with ${badHub}`
     );
@@ -46,7 +46,7 @@ let goodHubs = [
 ];
 
 add_task(async function test_allowed_hub() {
-  goodHubs.forEach(url => new ModelHub(url));
+  goodHubs.forEach(url => new ModelHub({ rootUrl: url }));
 });
 
 const badInputs = [
@@ -107,7 +107,7 @@ const badInputs = [
 ];
 
 add_task(async function test_bad_inputs() {
-  const hub = new ModelHub(FAKE_HUB);
+  const hub = new ModelHub({ rootUrl: FAKE_HUB });
 
   for (const badInput of badInputs) {
     const params = badInput[0];
@@ -122,7 +122,7 @@ add_task(async function test_bad_inputs() {
 });
 
 add_task(async function test_getting_file() {
-  const hub = new ModelHub(FAKE_HUB);
+  const hub = new ModelHub({ rootUrl: FAKE_HUB });
 
   let [array, headers] = await hub.getModelFileAsArrayBuffer(FAKE_MODEL_ARGS);
 
@@ -136,8 +136,29 @@ add_task(async function test_getting_file() {
   Assert.equal(jsonData.hidden_size, 768);
 });
 
+add_task(async function test_getting_file_custom_path() {
+  const hub = new ModelHub({
+    rootUrl: FAKE_HUB,
+    urlTemplate: "${organization}/${modelName}/resolve/${modelVersion}/${file}",
+  });
+
+  let res = await hub.getModelFileAsArrayBuffer(FAKE_MODEL_ARGS);
+
+  Assert.equal(res[1]["Content-Type"], "application/json");
+});
+
+add_task(async function test_getting_file_custom_path_rogue() {
+  const urlTemplate =
+    "${organization}/${modelName}/resolve/${modelVersion}/${file}?some_id=bedqwdw";
+  Assert.throws(
+    () => new ModelHub({ rootUrl: FAKE_HUB, urlTemplate }),
+    /Invalid URL template/,
+    `Should throw with ${urlTemplate}`
+  );
+});
+
 add_task(async function test_getting_file_as_response() {
-  const hub = new ModelHub(FAKE_HUB);
+  const hub = new ModelHub({ rootUrl: FAKE_HUB });
 
   let response = await hub.getModelFileAsResponse(FAKE_MODEL_ARGS);
 
@@ -147,7 +168,7 @@ add_task(async function test_getting_file_as_response() {
 });
 
 add_task(async function test_getting_file_from_cache() {
-  const hub = new ModelHub(FAKE_HUB);
+  const hub = new ModelHub({ rootUrl: FAKE_HUB });
   let array = await hub.getModelFileAsArrayBuffer(FAKE_MODEL_ARGS);
 
   // stub to verify that the data was retrieved from IndexDB

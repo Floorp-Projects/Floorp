@@ -24,6 +24,8 @@ const ALLOWED_HUBS = [
 ];
 
 const ALLOWED_HEADERS_KEYS = ["Content-Type", "ETag", "status"];
+const DEFAULT_URL_TEMPLATE =
+  "${organization}/${modelName}/resolve/${modelVersion}/${file}";
 
 /**
  * Checks if a given URL string corresponds to an allowed hub.
@@ -399,12 +401,22 @@ export class IndexedDBCache {
 }
 
 export class ModelHub {
-  constructor(rootUrl) {
+  constructor({ rootUrl, urlTemplate = DEFAULT_URL_TEMPLATE }) {
     if (!allowedHub(rootUrl)) {
       throw new Error(`Invalid model hub root url: ${rootUrl}`);
     }
     this.rootUrl = rootUrl;
     this.cache = null;
+
+    // Ensures the URL template is well-formed and does not contain any invalid characters.
+    const pattern = /^(?:\$\{\w+\}|\w+)(?:\/(?:\$\{\w+\}|\w+))*$/;
+    //               ^                                         $   Start and end of string
+    //                (?:\$\{\w+\}|\w+)                            Match a ${placeholder} or alphanumeric characters
+    //                                 (?:\/(?:\$\{\w+\}|\w+))*    Zero or more groups of a forward slash followed by a ${placeholder} or alphanumeric characters
+    if (!pattern.test(urlTemplate)) {
+      throw new Error(`Invalid URL template: ${urlTemplate}`);
+    }
+    this.urlTemplate = urlTemplate;
   }
 
   async #initCache() {
@@ -427,10 +439,24 @@ export class ModelHub {
     if (!baseUrl.pathname.endsWith("/")) {
       baseUrl.pathname += "/";
     }
-    const additionalPath = `${organization}/${modelName}/resolve/${modelVersion}/${file}`;
+
+    // Replace placeholders in the URL template with the provided data.
+    // If some keys are missing in the data object, the placeholder is left as is.
+    // If the placeholder is not found in the data object, it is left as is.
+    const data = {
+      organization,
+      modelName,
+      modelVersion,
+      file,
+    };
+    const path = this.urlTemplate.replace(
+      /\$\{(\w+)\}/g,
+      (match, key) => data[key] || match
+    );
     const fullPath = `${baseUrl.pathname}${
-      additionalPath.startsWith("/") ? additionalPath.slice(1) : additionalPath
+      path.startsWith("/") ? path.slice(1) : path
     }`;
+
     const urlObject = new URL(fullPath, baseUrl.origin);
     urlObject.searchParams.append("download", "true");
     return urlObject.toString();
