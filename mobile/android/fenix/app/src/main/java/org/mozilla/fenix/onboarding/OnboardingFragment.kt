@@ -5,6 +5,8 @@
 package org.mozilla.fenix.onboarding
 
 import android.annotation.SuppressLint
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.IntentFilter
 import android.content.pm.ActivityInfo
@@ -41,8 +43,7 @@ import org.mozilla.fenix.onboarding.view.telemetrySequenceId
 import org.mozilla.fenix.onboarding.view.toPageUiData
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.utils.canShowAddSearchWidgetPrompt
-import org.mozilla.fenix.utils.showAddSearchWidgetPrompt
+import org.mozilla.gecko.search.SearchWidgetProvider
 
 /**
  * Fragment displaying the onboarding flow.
@@ -53,7 +54,7 @@ class OnboardingFragment : Fragment() {
         pagesToDisplay(
             isNotDefaultBrowser(requireContext()),
             canShowNotificationPage(requireContext()),
-            canShowAddSearchWidgetPrompt(),
+            canShowAddWidgetCard(),
         )
     }
     private val telemetryRecorder by lazy { OnboardingTelemetryRecorder() }
@@ -161,7 +162,7 @@ class OnboardingFragment : Fragment() {
                     pagesToDisplay.telemetrySequenceId(),
                     pagesToDisplay.sequencePosition(OnboardingPageUiData.Type.ADD_SEARCH_WIDGET),
                 )
-                showAddSearchWidgetPrompt(requireActivity())
+                showAddSearchWidgetDialog()
             },
             onSkipFirefoxWidgetClick = {
                 telemetryRecorder.onSkipAddWidgetClick(
@@ -180,6 +181,19 @@ class OnboardingFragment : Fragment() {
                 )
             },
         )
+    }
+
+    private fun showAddSearchWidgetDialog() {
+        // Requesting to pin app widget is only available for Android 8.0 and above
+        if (canShowAddWidgetCard()) {
+            val appWidgetManager = AppWidgetManager.getInstance(activity)
+            val searchWidgetProvider =
+                ComponentName(requireActivity(), SearchWidgetProvider::class.java)
+            if (appWidgetManager.isRequestPinAppWidgetSupported) {
+                val successCallback = WidgetPinnedReceiver.getPendingIntent(requireContext())
+                appWidgetManager.requestPinAppWidget(searchWidgetProvider, null, successCallback)
+            }
+        }
     }
 
     private fun onFinish(onboardingPageUiData: OnboardingPageUiData?) {
@@ -207,6 +221,8 @@ class OnboardingFragment : Fragment() {
     private fun canShowNotificationPage(context: Context) =
         !NotificationManagerCompat.from(context.applicationContext)
             .areNotificationsEnabledSafe() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+
+    private fun canShowAddWidgetCard() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
 
     private fun isNotATablet() = !resources.getBoolean(R.bool.tablet)
 

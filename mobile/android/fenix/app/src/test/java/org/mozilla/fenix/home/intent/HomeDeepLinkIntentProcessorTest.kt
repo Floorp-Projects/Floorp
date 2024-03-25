@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.home.intent
 
-import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
@@ -38,15 +37,13 @@ class HomeDeepLinkIntentProcessorTest {
     private lateinit var navController: NavController
     private lateinit var out: Intent
     private lateinit var processorHome: HomeDeepLinkIntentProcessor
-    private lateinit var showAddSearchWidgetPrompt: (Activity) -> Unit
 
     @Before
     fun setup() {
         activity = mockk(relaxed = true)
         navController = mockk(relaxed = true)
         out = mockk()
-        showAddSearchWidgetPrompt = mockk(relaxed = true)
-        processorHome = HomeDeepLinkIntentProcessor(activity, showAddSearchWidgetPrompt)
+        processorHome = HomeDeepLinkIntentProcessor(activity)
     }
 
     @Test
@@ -260,10 +257,9 @@ class HomeDeepLinkIntentProcessorTest {
 
         assertTrue(processorHome.process(testIntent("make_default_browser"), navController, out))
 
-        val searchTermOrURL =
-            SupportUtils.getGenericSumoURLForTopic(
-                topic = SupportUtils.SumoTopic.SET_AS_DEFAULT_BROWSER,
-            )
+        val searchTermOrURL = SupportUtils.getGenericSumoURLForTopic(
+            topic = SupportUtils.SumoTopic.SET_AS_DEFAULT_BROWSER,
+        )
 
         verify {
             activity.openToBrowserAndLoad(
@@ -292,15 +288,6 @@ class HomeDeepLinkIntentProcessorTest {
         assertTrue(processorHome.process(testIntent("settings_wallpapers"), navController, out))
 
         verify { navController.navigate(NavGraphDirections.actionGlobalWallpaperSettingsFragment()) }
-        verify { out wasNot Called }
-    }
-
-    @Test
-    fun `process install_search_widget deep link`() {
-        assertTrue(processorHome.process(testIntent("install_search_widget"), navController, out))
-
-        verify { showAddSearchWidgetPrompt(activity) }
-        verify { navController wasNot Called }
         verify { out wasNot Called }
     }
 
