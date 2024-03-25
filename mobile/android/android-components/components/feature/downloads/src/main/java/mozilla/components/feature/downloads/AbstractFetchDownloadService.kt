@@ -974,25 +974,11 @@ abstract class AbstractFetchDownloadService : Service() {
         /**
          * Launches an intent to open the given file, returns whether or not the file could be opened
          */
-        fun openFile(applicationContext: Context, download: DownloadState): Boolean {
-            val filePath = download.filePath
-            val contentType = download.contentType
-
-            // For devices that support the scoped storage we can query the directly the download
-            // media store otherwise we have to construct the uri based on the file path.
-            val fileUri: Uri = if (SDK_INT >= Build.VERSION_CODES.Q) {
-                queryDownloadMediaStore(applicationContext, download)
-                    ?: getFilePathUri(applicationContext, filePath)
-            } else {
-                // Create a new file with the location of the saved file to extract the correct path
-                // `file` has the wrong path, so we must construct it based on the `fileName` and `dir.path`s
-                getFilePathUri(applicationContext, filePath)
-            }
-
-            val newIntent = Intent(ACTION_VIEW).apply {
-                setDataAndType(fileUri, getSafeContentType(applicationContext, fileUri, contentType))
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
-            }
+        fun openFile(
+            applicationContext: Context,
+            download: DownloadState,
+        ): Boolean {
+            val newIntent = createOpenFileIntent(applicationContext, download)
 
             return try {
                 applicationContext.startActivity(newIntent)
@@ -1000,6 +986,39 @@ abstract class AbstractFetchDownloadService : Service() {
             } catch (error: ActivityNotFoundException) {
                 false
             }
+        }
+
+        /**
+         * Creates an Intent which can then be used to open the file specified.
+         * @param context the current Android *Context*
+         * @param download contains the details of the downloaded file to be opened.
+         */
+        fun createOpenFileIntent(
+            context: Context,
+            download: DownloadState,
+        ): Intent {
+            val filePath = download.filePath
+            val contentType = download.contentType
+
+            // For devices that support the scoped storage we can query the directly the download
+            // media store otherwise we have to construct the uri based on the file path.
+            val fileUri: Uri =
+                if (SDK_INT >= Build.VERSION_CODES.Q) {
+                    queryDownloadMediaStore(context, download)
+                        ?: getFilePathUri(context, filePath)
+                } else {
+                    // Create a new file with the location of the saved file to extract the correct path
+                    // `file` has the wrong path, so we must construct it based on the `fileName` and `dir.path`s
+                    getFilePathUri(context, filePath)
+                }
+
+            val newIntent =
+                Intent(ACTION_VIEW).apply {
+                    setDataAndType(fileUri, getSafeContentType(context, fileUri, contentType))
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
+                }
+
+            return newIntent
         }
 
         @TargetApi(Build.VERSION_CODES.Q)
