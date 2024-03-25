@@ -49,6 +49,12 @@ class URLQueryStringStripper final : public nsIObserver,
   void PopulateStripList(const nsAString& aList);
   void PopulateAllowList(const nsACString& aList);
 
+  // Recursive helper function that helps strip URIs of tracking parameters
+  // and enables the stripping of tracking paramerters that are in a URI which
+  // is nested in a query parameter
+  nsresult StripForCopyOrShareInternal(nsIURI* aURI, nsIURI** strippedURI,
+                                       int& aStripCount, bool aStripNestedURIs);
+
   nsTHashSet<nsString> mList;
   nsTHashSet<nsCString> mAllowList;
   nsCOMPtr<nsIURLQueryStrippingListService> mListService;
