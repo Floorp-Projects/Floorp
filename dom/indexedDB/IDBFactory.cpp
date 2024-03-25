@@ -15,6 +15,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/IDBFactoryBinding.h"
+#include "mozilla/dom/Promise.h"
 #include "mozilla/dom/quota/PersistenceType.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/BrowserChild.h"
@@ -441,6 +442,16 @@ RefPtr<IDBOpenDBRequest> IDBFactory::DeleteDatabase(
   return OpenInternal(aCx,
                       /* aPrincipal */ nullptr, aName, Optional<uint64_t>(),
                       /* aDeleting */ true, aCallerType, aRv);
+}
+
+already_AddRefed<Promise> IDBFactory::Databases(JSContext* const aCx) {
+  RefPtr<Promise> promise = Promise::CreateInfallible(GetOwnerGlobal());
+
+  Sequence<IDBDatabaseInfo> databaseInfos;
+
+  promise->MaybeResolve(databaseInfos);
+
+  return promise.forget();
 }
 
 int16_t IDBFactory::Cmp(JSContext* aCx, JS::Handle<JS::Value> aFirst,
