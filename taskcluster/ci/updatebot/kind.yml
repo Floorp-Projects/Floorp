@@ -44,7 +44,7 @@ jobs:
             status-types:
                 - on-failed
                 - on-exception
-            emails: ["tom@mozilla.com", "jewilde@mozilla.com"]
+            emails: ["tom@mozilla.com", "fbraun@mozilla.com"]
         fetches:
             toolchain:
                 - linux64-rust
