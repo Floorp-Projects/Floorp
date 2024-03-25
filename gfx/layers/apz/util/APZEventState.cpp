@@ -27,6 +27,7 @@
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
+#include "mozilla/layers/APZUtils.h"
 #include "mozilla/layers/IAPZCTreeManager.h"
 #include "mozilla/widget/nsAutoRollup.h"
 #include "nsCOMPtr.h"
@@ -101,7 +102,7 @@ APZEventState::APZEventState(nsIWidget* aWidget,
       mContentReceivedInputBlockCallback(std::move(aCallback)),
       mPendingTouchPreventedResponse(false),
       mPendingTouchPreventedBlockId(0),
-      mEndTouchIsClick(false),
+      mEndTouchState(apz::SingleTapState::NotClick),
       mFirstTouchCancelled(false),
       mTouchEndCancelled(false),
       mReceivedNonTouchStart(false),
@@ -349,12 +350,12 @@ void APZEventState::ProcessTouchEvent(
     case eTouchEnd:
       if (isTouchPrevented) {
         mTouchEndCancelled = true;
-        mEndTouchIsClick = false;
+        mEndTouchState = apz::SingleTapState::NotClick;
       }
       [[fallthrough]];
     case eTouchCancel:
-      if (mActiveElementManager->HandleTouchEndEvent(mEndTouchIsClick)) {
-        mEndTouchIsClick = false;
+      if (mActiveElementManager->HandleTouchEndEvent(mEndTouchState)) {
+        mEndTouchState = apz::SingleTapState::NotClick;
       }
       [[fallthrough]];
     case eTouchMove: {
@@ -534,9 +535,9 @@ void APZEventState::ProcessAPZStateChange(ViewID aViewId,
       break;
     }
     case APZStateChange::eEndTouch: {
-      mEndTouchIsClick = aArg;
-      if (mActiveElementManager->HandleTouchEnd(mEndTouchIsClick)) {
-        mEndTouchIsClick = false;
+      mEndTouchState = static_cast<apz::SingleTapState>(aArg);
+      if (mActiveElementManager->HandleTouchEnd(mEndTouchState)) {
+        mEndTouchState = apz::SingleTapState::NotClick;
       }
       break;
     }

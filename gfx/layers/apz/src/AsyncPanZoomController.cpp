@@ -3112,7 +3112,7 @@ nsEventStatus AsyncPanZoomController::GenerateSingleTap(
         // touch block caused a `click` event or not, thus for long-tap events,
         // it's not necessary.
         if (aType != TapType::eLongTapUp) {
-          touch->SetSingleTapOccurred();
+          touch->SetSingleTapState(apz::SingleTapState::WasClick);
         }
       }
       // Because this may be being running as part of
@@ -3143,7 +3143,7 @@ void AsyncPanZoomController::OnTouchEndOrCancel() {
     MOZ_ASSERT(GetCurrentTouchBlock());
     controller->NotifyAPZStateChange(
         GetGuid(), APZStateChange::eEndTouch,
-        GetCurrentTouchBlock()->SingleTapOccurred(),
+        static_cast<int>(GetCurrentTouchBlock()->SingleTapState()),
         Some(GetCurrentTouchBlock()->GetBlockId()));
   }
 }
@@ -3159,6 +3159,21 @@ nsEventStatus AsyncPanZoomController::OnSingleTapUp(
         GetCurrentTouchBlock()->TouchActionAllowsDoubleTapZoom())) {
     return GenerateSingleTap(TapType::eSingleTap, aEvent.mPoint,
                              aEvent.modifiers);
+  }
+
+  // Ignore the event if it does not have valid local coordinates.
+  // GenerateSingleTap will not send a tap in this case.
+  if (!ConvertToGecko(aEvent.mPoint)) {
+    return nsEventStatus_eIgnore;
+  }
+
+  // Here we need to wait for the call to OnSingleTapConfirmed, we need to tell
+  // it to ActiveElementManager so that we can do element activation once
+  // ActiveElementManager got a single tap event later.
+  if (TouchBlockState* touch = GetCurrentTouchBlock()) {
+    if (!touch->IsDuringFastFling()) {
+      touch->SetSingleTapState(apz::SingleTapState::NotYetDetermined);
+    }
   }
   return nsEventStatus_eIgnore;
 }

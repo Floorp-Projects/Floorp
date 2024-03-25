@@ -16,6 +16,7 @@
 #include "mozilla/StaticPrefs_test.h"
 #include "mozilla/Telemetry.h"  // for Telemetry
 #include "mozilla/ToString.h"
+#include "mozilla/layers/APZEventState.h"
 #include "mozilla/layers/IAPZCTreeManager.h"  // for AllowedTouchBehavior
 #include "OverscrollHandoffState.h"
 #include "QueuedInput.h"
@@ -636,12 +637,12 @@ TouchBlockState::TouchBlockState(
     : CancelableBlockState(aTargetApzc, aFlags),
       mAllowedTouchBehaviorSet(false),
       mDuringFastFling(false),
-      mSingleTapOccurred(false),
       mInSlop(false),
       mForLongTap(false),
       mLongTapWasProcessed(false),
       mIsWaitingLongTapResult(false),
       mNeedsWaitTouchMove(false),
+      mSingleTapState(apz::SingleTapState::NotClick),
       mTouchCounter(aCounter),
       mStartTime(GetTargetApzc()->GetFrameTime().Time()) {
   mOriginalTargetConfirmedState = mTargetConfirmed;
@@ -700,12 +701,11 @@ void TouchBlockState::SetDuringFastFling() {
 
 bool TouchBlockState::IsDuringFastFling() const { return mDuringFastFling; }
 
-void TouchBlockState::SetSingleTapOccurred() {
-  TBS_LOG("%p setting single-tap-occurred flag\n", this);
-  mSingleTapOccurred = true;
+void TouchBlockState::SetSingleTapState(apz::SingleTapState aState) {
+  TBS_LOG("%p setting single-tap-state: %d\n", this,
+          static_cast<uint8_t>(aState));
+  mSingleTapState = aState;
 }
-
-bool TouchBlockState::SingleTapOccurred() const { return mSingleTapOccurred; }
 
 bool TouchBlockState::MustStayActive() {
   // If this touch block is for long-tap, it doesn't need to be active after the

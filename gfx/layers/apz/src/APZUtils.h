@@ -233,6 +233,14 @@ bool AboutToCheckerboard(const FrameMetrics& aPaintedMetrics,
  */
 SideBits GetOverscrollSideBits(const ParentLayerPoint& aOverscrollAmount);
 
+// Represents tri-state when a touch-end event received.
+enum class SingleTapState : uint8_t {
+  NotClick,          // The touch-block doesn't trigger a click event
+  WasClick,          // The touch-block did trigger a click event
+  NotYetDetermined,  // It's not yet determined whether the touch-block trigger
+                     // a click event or not since double-tapping might happen
+};
+
 }  // namespace apz
 
 }  // namespace layers
