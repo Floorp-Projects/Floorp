@@ -159,7 +159,8 @@ static bool isAccessibilityElementInternal(Accessible* aAccessible) {
   IsAccessibilityElementRule rule = IsAccessibilityElementRule::No;
 
 #define ROLE(_geckoRole, stringRole, ariaRole, atkRole, macRole, macSubrole, \
-             msaaRole, ia2Role, androidClass, iosIsElement, nameRule)        \
+             msaaRole, ia2Role, androidClass, iosIsElement, uiaControlType,  \
+             nameRule)                                                       \
   case roles::_geckoRole:                                                    \
     rule = iosIsElement;                                                     \
     break;
