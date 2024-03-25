@@ -71,6 +71,9 @@ class FileManagerInfo {
   GetFileManagerByDatabaseFilePath(PersistenceType aPersistenceType,
                                    const nsAString& aDatabaseFilePath) const;
 
+  const nsTArray<SafeRefPtr<DatabaseFileManager>>& GetFileManagers(
+      PersistenceType aPersistenceType) const;
+
   void AddFileManager(SafeRefPtr<DatabaseFileManager> aFileManager);
 
   bool HasFileManagers() const {
@@ -502,6 +505,20 @@ IndexedDatabaseManager::GetFileManagerByDatabaseFilePath(
                                                 aDatabaseFilePath);
 }
 
+const nsTArray<SafeRefPtr<DatabaseFileManager>>&
+IndexedDatabaseManager::GetFileManagers(PersistenceType aPersistenceType,
+                                        const nsACString& aOrigin) {
+  AssertIsOnIOThread();
+
+  FileManagerInfo* info;
+  if (!mFileManagerInfos.Get(aOrigin, &info)) {
+    static nsTArray<SafeRefPtr<DatabaseFileManager>> emptyArray;
+    return emptyArray;
+  }
+
+  return info->GetFileManagers(aPersistenceType);
+}
+
 void IndexedDatabaseManager::AddFileManager(
     SafeRefPtr<DatabaseFileManager> aFileManager) {
   AssertIsOnIOThread();
@@ -720,6 +737,13 @@ FileManagerInfo::GetFileManagerByDatabaseFilePath(
                    DatabaseFilePathMatchPredicate(&aDatabaseFilePath));
 
   return foundIt != end ? foundIt->clonePtr() : nullptr;
+}
+
+const nsTArray<SafeRefPtr<DatabaseFileManager>>&
+FileManagerInfo::GetFileManagers(PersistenceType aPersistenceType) const {
+  AssertIsOnIOThread();
+
+  return GetImmutableArray(aPersistenceType);
 }
 
 void FileManagerInfo::AddFileManager(
