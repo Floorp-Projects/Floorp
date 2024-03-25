@@ -203,6 +203,18 @@ class BaseTargetActor extends Actor {
       ) {
         return;
       }
+      // In the browser toolbox, when debugging the parent process, we should only toggle the tracer in the Parent Process Target Actor.
+      // We have to ignore any frame target which may run in the parent process.
+      // For example DevTools documents or a tab running in the parent process.
+      // (PROCESS_TYPE_DEFAULT refers to the parent process)
+      if (
+        this.sessionContext.type == "all" &&
+        this.targetType === Targets.TYPES.FRAME &&
+        this.typeName != "parentProcessTarget" &&
+        Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT
+      ) {
+        return;
+      }
       const tracerActor = this.getTargetScopedActor("tracer");
       tracerActor.startTracing(options.tracerOptions);
     } else if (this.hasTargetScopedActor("tracer")) {
