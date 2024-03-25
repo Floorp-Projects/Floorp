@@ -1187,7 +1187,8 @@ class ProtonScreen extends (react__WEBPACK_IMPORTED_MODULE_0___default().PureCom
       "aria-labelledby": "mainContentHeader",
       ref: input => {
         this.mainContentHeader = input;
-      }
+      },
+      "no-rdm": content.no_rdm ? "" : null
     }, isCenterPosition ? null : this.renderSecondarySection(content), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
       className: `section-main ${isEmbeddedMigration ? "embedded-migration" : ""}`,
       "hide-secondary-section": content.hide_secondary_section ? String(content.hide_secondary_section) : null,

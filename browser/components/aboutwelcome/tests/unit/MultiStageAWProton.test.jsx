@@ -427,6 +427,31 @@ describe("MultiStageAboutWelcomeProton module", () => {
       sandbox.restore();
     });
 
+    it("should not have no-rdm property when property is not in message content", () => {
+      const SCREEN_PROPS = {
+        content: {
+          title: "test title",
+          layout: "inline",
+        },
+      };
+      const wrapper = mount(<MultiStageProtonScreen {...SCREEN_PROPS} />);
+      assert.ok(wrapper.exists());
+      assert.notExists(wrapper.find("main").prop("no-rdm"));
+    });
+
+    it("should have no-rdm property when property is set in message content", () => {
+      const SCREEN_PROPS = {
+        content: {
+          title: "test title",
+          layout: "inline",
+          no_rdm: true,
+        },
+      };
+      const wrapper = mount(<MultiStageProtonScreen {...SCREEN_PROPS} />);
+      assert.ok(wrapper.exists());
+      assert.exists(wrapper.find("main").prop("no-rdm"));
+    });
+
     it("should correctly set reverse-split prop", () => {
       const SCREEN_PROPS = {
         content: {
