@@ -442,7 +442,7 @@ add_task(async function resizeAllCorners() {
 /**
  * This function tests clicking the overlay with the different mouse buttons
  */
-add_task(async function test_otherMouseButtons() {
+add_task(async function test_clickingOtherMouseButtons() {
   await BrowserTestUtils.withNewTab(
     {
       gBrowser,
@@ -478,10 +478,74 @@ add_task(async function test_otherMouseButtons() {
 
       mouse.down(10, 10, { button: 2 });
       mouse.move(100, 100, { button: 2 });
+
       mouse.up(100, 100, { button: 2 });
 
       await TestUtils.waitForTick();
 
+      await helper.assertStateChange("crosshairs");
+    }
+  );
+});
+
+/**
+ * This function tests dragging the overlay with the different mouse buttons
+ */
+add_task(async function test_draggingOtherMouseButtons() {
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: TEST_PAGE,
+    },
+    async browser => {
+      let helper = new ScreenshotsHelper(browser);
+      helper.triggerUIFromToolbar();
+      await helper.waitForOverlay();
+
+      // Click with button 1 in dragging state
+      mouse.down(100, 100);
+      await helper.assertStateChange("draggingReady");
+      mouse.move(200, 200);
+      await helper.assertStateChange("dragging");
+      mouse.click(200, 200, { button: 1 });
+      await helper.assertStateChange("selected");
+
+      // Reset
+      mouse.click(10, 10);
+      await helper.assertStateChange("crosshairs");
+
+      // Mouse down with button 2 in draggingReady state
+      mouse.down(100, 100);
+      await helper.assertStateChange("draggingReady");
+      mouse.down(200, 200, { button: 2 });
+      await helper.assertStateChange("crosshairs");
+
+      await helper.dragOverlay(100, 100, 200, 200);
+
+      // Click with button 1 in resizing state
+      mouse.down(200, 200);
+      await helper.assertStateChange("resizing");
+      mouse.click(200, 200, { button: 1 });
+
+      // Reset
+      mouse.click(10, 10);
+      await helper.assertStateChange("crosshairs");
+
+      await helper.dragOverlay(100, 100, 200, 200);
+
+      // Mouse down with button 2 in dragging state
+      mouse.down(200, 200);
+      await helper.assertStateChange("resizing");
+      mouse.down(200, 200, { button: 2 });
+
+      // Reset
+      mouse.click(10, 10);
+      await helper.assertStateChange("crosshairs");
+
+      // Mouse move with button 2 in draggingReady state
+      mouse.down(100, 100);
+      await helper.assertStateChange("draggingReady");
+      mouse.move(100, 100, { button: 2 });
       await helper.assertStateChange("crosshairs");
     }
   );
