@@ -31,6 +31,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
   ExtensionData: "resource://gre/modules/Extension.sys.mjs",
   ExtensionUtils: "resource://gre/modules/ExtensionUtils.sys.mjs",
+  ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
   PermissionsUtils: "resource://gre/modules/PermissionsUtils.sys.mjs",
   QuarantinedDomains: "resource://gre/modules/ExtensionPermissions.sys.mjs",
 });
@@ -192,6 +193,7 @@ const PROP_JSON_FIELDS = [
   "targetApplications",
   "targetPlatforms",
   "signedState",
+  "signedTypes",
   "signedDate",
   "seen",
   "dependencies",
@@ -1556,6 +1558,7 @@ function defineAddonWrapperProperty(name, getter) {
   "validInstallOrigins",
   "dependencies",
   "signedState",
+  "signedTypes",
   "sitePermissions",
   "siteOrigin",
   "isCorrectlySigned",
@@ -2188,17 +2191,31 @@ export const XPIDatabase = {
           continue;
         }
 
-        let signedState = await XPIExports.verifyBundleSignedState(
-          addon._sourceBundle,
-          addon
-        );
+        let { signedState, signedTypes } =
+          await XPIExports.verifyBundleSignedState(addon._sourceBundle, addon);
+
+        const changedProperties = [];
 
         if (signedState != addon.signedState) {
           addon.signedState = signedState;
+          changedProperties.push("signedState");
+        }
+
+        if (
+          !lazy.ObjectUtils.deepEqual(
+            signedTypes?.toSorted(),
+            addon.signedTypes?.toSorted()
+          )
+        ) {
+          addon.signedTypes = signedTypes;
+          changedProperties.push("signedTypes");
+        }
+
+        if (changedProperties.length) {
           lazy.AddonManagerPrivate.callAddonListeners(
             "onPropertyChanged",
             addon.wrapper,
-            ["signedState"]
+            changedProperties
           );
         }
 
@@ -3335,6 +3352,10 @@ export const XPIDatabaseReconcile = {
     let signedDateMissing =
       aOldAddon.signedDate === undefined &&
       (aOldAddon.signedState || checkSigning);
+    // signedTypes must be set if signedState is set.
+    let signedTypesMissing =
+      aOldAddon.signedTypes === undefined &&
+      (aOldAddon.signedState || checkSigning);
 
     // If maxVersion was inadvertently updated for a locale, force a reload
     // from the manifest.  See Bug 1646016 for details.
@@ -3347,7 +3368,12 @@ export const XPIDatabaseReconcile = {
     }
 
     let manifest = null;
-    if (checkSigning || aReloadMetadata || signedDateMissing) {
+    if (
+      checkSigning ||
+      aReloadMetadata ||
+      signedDateMissing ||
+      signedTypesMissing
+    ) {
       try {
         manifest = XPIExports.XPIInstall.syncLoadManifest(
           aAddonState,
@@ -3369,6 +3395,10 @@ export const XPIDatabaseReconcile = {
 
     if (signedDateMissing) {
       aOldAddon.signedDate = manifest.signedDate;
+    }
+
+    if (signedTypesMissing) {
+      aOldAddon.signedTypes = manifest.signedTypes;
     }
 
     // May be updating from a version of the app that didn't support all the

@@ -424,6 +424,35 @@ export var AddonTestUtils = {
     });
   },
 
+  getXPIExports() {
+    return ChromeUtils.importESModule(
+      "resource://gre/modules/addons/XPIExports.sys.mjs"
+    ).XPIExports;
+  },
+
+  getWeakSignatureInstallPrefName() {
+    return this.getXPIExports().XPIInstall.getWeakSignatureInstallPrefName();
+  },
+
+  setWeakSignatureInstallAllowed(allowed) {
+    const prefName = this.getWeakSignatureInstallPrefName();
+    let cleanupCalled = false;
+    const cleanup = () => {
+      if (cleanupCalled) {
+        return;
+      }
+      this.testScope.info(
+        `=== clear ${prefName} pref value set by this test file ===`
+      );
+      Services.prefs.clearUserPref(prefName);
+      cleanupCalled = true;
+    };
+    this.testScope.registerCleanupFunction(cleanup);
+    this.testScope.info(`=== set ${prefName} pref value to ${allowed} ===`);
+    Services.prefs.setBoolPref(prefName, allowed);
+    return cleanup;
+  },
+
   /**
    * Iterates over the entries in a given directory.
    *

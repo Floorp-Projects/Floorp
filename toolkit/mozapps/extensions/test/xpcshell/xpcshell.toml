@@ -4,7 +4,11 @@ tags = "addons"
 head = "head_addons.js"
 firefox-appdir = "browser"
 dupe-manifest = true
-support-files = ["data/**"]
+support-files = [
+  "data/**",
+  "../xpinstall/amosigned-mv3-cose.xpi",
+  "../xpinstall/amosigned-sha1only.xpi",
+]
 
 ["test_AMBrowserExtensionsImport.js"]
 
