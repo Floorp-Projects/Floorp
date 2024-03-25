@@ -246,6 +246,8 @@ class Selection final : public nsSupportsWeakReference,
   // anchor and which end is focus.
   const nsRange* GetAnchorFocusRange() const { return mAnchorFocusRange; }
 
+  void GetDirection(nsAString& aDirection) const;
+
   nsDirection GetDirection() const { return mDirection; }
 
   void SetDirection(nsDirection aDir) { mDirection = aDir; }
