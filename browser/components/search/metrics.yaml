@@ -339,6 +339,7 @@ serp:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1868476
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1869064
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1887686
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1868476
     data_sensitivity:
@@ -418,6 +419,10 @@ serp:
           Version number for the Remote Settings attachments used to generate
           the domain-to-categories map used in the SERP categorization process.
         type: quantity
+      is_shopping_page:
+        description: >
+          Indicates if the page is a shopping page.
+        type: boolean
       num_ads_visible:
         description: >
           Number of ads visible on the page at the time of categorizing the

@@ -159,6 +159,7 @@ add_task(async function test_download_after_failure() {
       partner_code: "ff",
       provider: "example",
       tagged: "true",
+      is_shopping_page: "false",
       num_ads_visible: "2",
       num_ads_clicked: "0",
     },

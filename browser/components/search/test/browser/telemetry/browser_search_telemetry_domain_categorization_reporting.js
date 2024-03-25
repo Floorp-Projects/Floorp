@@ -19,6 +19,7 @@ const TEST_PROVIDER_INFO = [
     queryParamNames: ["s"],
     codeParamName: "abc",
     taggedCodes: ["ff"],
+    organicCodes: [],
     adServerAttributes: ["mozAttr"],
     nonAdsLinkRegexps: [],
     extraAdServersRegexps: [
@@ -56,6 +57,9 @@ const TEST_PROVIDER_INFO = [
         default: true,
       },
     ],
+    shoppingTab: {
+      regexp: "&page=shop",
+    },
   },
 ];
 
@@ -120,6 +124,7 @@ add_task(async function test_categorization_reporting() {
       partner_code: "ff",
       provider: "example",
       tagged: "true",
+      is_shopping_page: "false",
       num_ads_clicked: "0",
       num_ads_visible: "2",
     },
@@ -225,8 +230,46 @@ add_task(async function test_reporting_limited_to_10_domains_of_each_kind() {
       partner_code: "ff",
       provider: "example",
       tagged: "true",
+      is_shopping_page: "false",
       num_ads_clicked: "0",
       num_ads_visible: "12",
+    },
+  ]);
+});
+
+add_task(async function test_categorization_reporting_for_shopping_page() {
+  resetTelemetry();
+
+  let url = getSERPUrl("searchTelemetryDomainCategorizationReporting.html");
+  let shoppingUrl = new URL(url);
+  shoppingUrl.searchParams.set("page", "shop");
+  shoppingUrl = shoppingUrl.toString();
+  info("Load a sample shopping page SERP with organic and sponsored results.");
+  let promise = waitForPageWithCategorizedDomains();
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, shoppingUrl);
+  await promise;
+
+  await BrowserTestUtils.removeTab(tab);
+  assertCategorizationValues([
+    {
+      organic_category: "3",
+      organic_num_domains: "1",
+      organic_num_inconclusive: "0",
+      organic_num_unknown: "0",
+      sponsored_category: "4",
+      sponsored_num_domains: "2",
+      sponsored_num_inconclusive: "0",
+      sponsored_num_unknown: "0",
+      mappings_version: "1",
+      app_version: APP_MAJOR_VERSION,
+      channel: CHANNEL,
+      region: REGION,
+      partner_code: "ff",
+      provider: "example",
+      tagged: "true",
+      is_shopping_page: "true",
+      num_ads_clicked: "0",
+      num_ads_visible: "2",
     },
   ]);
 });
