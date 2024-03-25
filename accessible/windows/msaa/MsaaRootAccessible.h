@@ -8,12 +8,14 @@
 
 #include "mozilla/mscom/Aggregation.h"
 #include "MsaaDocAccessible.h"
+#include "UiaRoot.h"
 
 namespace mozilla {
 
 namespace a11y {
+class RootAccessible;
 
-class MsaaRootAccessible : public MsaaDocAccessible {
+class MsaaRootAccessible : public MsaaDocAccessible, public UiaRoot {
  public:
   explicit MsaaRootAccessible(Accessible* aAcc)
       : MsaaDocAccessible(aAcc), mOuter(&mInternalUnknown) {}

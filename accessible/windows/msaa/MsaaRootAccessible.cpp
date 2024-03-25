@@ -5,6 +5,7 @@
 
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/dom/BrowserParent.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 #include "mozilla/WindowsVersion.h"
 #include "MsaaRootAccessible.h"
 #include "Relation.h"
@@ -33,6 +34,13 @@ MsaaRootAccessible::InternalQueryInterface(REFIID aIid, void** aOutInterface) {
   if (aIid == IID_IUnknown) {
     RefPtr<IUnknown> punk(&mInternalUnknown);
     punk.forget(aOutInterface);
+    return S_OK;
+  }
+
+  if (StaticPrefs::accessibility_uia_enable() &&
+      aIid == IID_IRawElementProviderFragmentRoot) {
+    RefPtr<IRawElementProviderFragmentRoot> root = this;
+    root.forget(aOutInterface);
     return S_OK;
   }
 
