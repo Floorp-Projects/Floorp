@@ -3206,6 +3206,15 @@ Result<nsCOMPtr<nsIFile>, nsresult> QuotaManager::GetOriginDirectory(
   return directory;
 }
 
+Result<bool, nsresult> QuotaManager::DoesOriginDirectoryExist(
+    const OriginMetadata& aOriginMetadata) const {
+  AssertIsOnIOThread();
+
+  QM_TRY_INSPECT(const auto& directory, GetOriginDirectory(aOriginMetadata));
+
+  QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE_MEMBER(directory, Exists));
+}
+
 // static
 nsresult QuotaManager::CreateDirectoryMetadata(
     nsIFile& aDirectory, int64_t aTimestamp,
@@ -3514,6 +3523,18 @@ Result<Ok, nsresult> QuotaManager::RemoveOriginDirectory(nsIFile& aDirectory) {
 
   QM_TRY_RETURN(MOZ_TO_RESULT(aDirectory.MoveTo(
       toBeRemovedStorageDir, NSID_TrimBracketsUTF16(nsID::GenerateUUID()))));
+}
+
+Result<bool, nsresult> QuotaManager::DoesClientDirectoryExist(
+    const ClientMetadata& aClientMetadata) const {
+  AssertIsOnIOThread();
+
+  QM_TRY_INSPECT(const auto& directory, GetOriginDirectory(aClientMetadata));
+
+  QM_TRY(MOZ_TO_RESULT(
+      directory->Append(Client::TypeToString(aClientMetadata.mClientType))));
+
+  QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE_MEMBER(directory, Exists));
 }
 
 template <typename OriginFunc>
