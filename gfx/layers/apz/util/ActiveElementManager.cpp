@@ -140,8 +140,8 @@ void DelayedClearElementActivation::ClearGlobalActiveContent() {
 NS_IMPL_ISUPPORTS(DelayedClearElementActivation, nsITimerCallback, nsINamed)
 
 ActiveElementManager::ActiveElementManager()
-    : mCanBePan(false),
-      mCanBePanSet(false),
+    : mCanBePanOrZoom(false),
+      mCanBePanOrZoomSet(false),
       mSingleTapBeforeActivation(false),
       mSingleTapState(apz::SingleTapState::NotClick),
       mSetActiveTask(nullptr) {}
@@ -163,9 +163,9 @@ void ActiveElementManager::SetTargetElement(dom::EventTarget* aTarget) {
   TriggerElementActivation();
 }
 
-void ActiveElementManager::HandleTouchStart(bool aCanBePan) {
-  AEM_LOG("Touch start, aCanBePan: %d\n", aCanBePan);
-  if (mCanBePanSet) {
+void ActiveElementManager::HandleTouchStart(bool aCanBePanOrZoom) {
+  AEM_LOG("Touch start, aCanBePanOrZoom: %d\n", aCanBePanOrZoom);
+  if (mCanBePanOrZoomSet) {
     // Multiple fingers on screen (since HandleTouchEnd clears mCanBePanSet).
     AEM_LOG("Multiple fingers on-screen, clearing touch block state\n");
     CancelTask();
@@ -174,8 +174,8 @@ void ActiveElementManager::HandleTouchStart(bool aCanBePan) {
     return;
   }
 
-  mCanBePan = aCanBePan;
-  mCanBePanSet = true;
+  mCanBePanOrZoom = aCanBePanOrZoom;
+  mCanBePanOrZoomSet = true;
   TriggerElementActivation();
 }
 
@@ -194,9 +194,9 @@ void ActiveElementManager::TriggerElementActivation() {
   mSingleTapState = apz::SingleTapState::NotClick;
 
   // Both HandleTouchStart() and SetTargetElement() call this. They can be
-  // called in either order. One will set mCanBePanSet, and the other, mTarget.
-  // We want to actually trigger the activation once both are set.
-  if (!(mTarget && mCanBePanSet)) {
+  // called in either order. One will set mCanBePanOrZoomSet, and the other,
+  // mTarget. We want to actually trigger the activation once both are set.
+  if (!(mTarget && mCanBePanOrZoomSet)) {
     return;
   }
 
@@ -210,7 +210,7 @@ void ActiveElementManager::TriggerElementActivation() {
 
   // If the touch cannot be a pan, make mTarget :active right away.
   // Otherwise, wait a bit to see if the user will pan or not.
-  if (!mCanBePan) {
+  if (!mCanBePanOrZoom) {
     SetActive(mTarget);
 
     if (mDelayedClearElementActivation) {
@@ -236,7 +236,7 @@ void ActiveElementManager::TriggerElementActivation() {
   AEM_LOG(
       "Got both touch-end event and end touch notiication, clearing pan "
       "state\n");
-  mCanBePanSet = false;
+  mCanBePanOrZoomSet = false;
 }
 
 void ActiveElementManager::ClearActivation() {
@@ -274,11 +274,12 @@ bool ActiveElementManager::MaybeChangeActiveState(apz::SingleTapState aState) {
     // Scrollbar thumbs use a different mechanism for their active
     // highlight (the "active" attribute), so don't set the active state
     // on them because nothing will clear it.
-    if (mCanBePan && !(mTarget && mTarget->IsXULElement(nsGkAtoms::thumb))) {
+    if (mCanBePanOrZoom &&
+        !(mTarget && mTarget->IsXULElement(nsGkAtoms::thumb))) {
       SetActive(mTarget);
     }
   } else {
-    // We might reach here if mCanBePan was false on touch-start and
+    // We might reach here if mCanBePanOrZoom was false on touch-start and
     // so we set the element active right away. Now it turns out the
     // action was not a click so we need to reset the active element.
     ResetActive();
@@ -307,7 +308,7 @@ void ActiveElementManager::ProcessSingleTap() {
   }
   mDelayedClearElementActivation->MarkSingleTapProcessed();
 
-  if (mCanBePan) {
+  if (mCanBePanOrZoom) {
     // In the case that we have not started the delayed reset of the element
     // activation state, start the timer now.
     mDelayedClearElementActivation->StartTimer();
@@ -350,7 +351,7 @@ void ActiveElementManager::ResetActive() {
 
 void ActiveElementManager::ResetTouchBlockState() {
   mTarget = nullptr;
-  mCanBePanSet = false;
+  mCanBePanOrZoomSet = false;
   mTouchEndState.clear();
   mSingleTapBeforeActivation = false;
   // NOTE: Do not reset mSingleTapState here since it will be necessary in

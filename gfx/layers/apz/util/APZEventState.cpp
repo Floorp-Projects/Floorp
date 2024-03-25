@@ -518,13 +518,13 @@ void APZEventState::ProcessAPZStateChange(ViewID aViewId,
       break;
     }
     case APZStateChange::eStartTouch: {
-      bool canBePan = aArg;
-      mActiveElementManager->HandleTouchStart(canBePan);
+      bool canBePanOrZoom = aArg;
+      mActiveElementManager->HandleTouchStart(canBePanOrZoom);
       // If this is a non-scrollable content, set a timer for the amount of
       // time specified by ui.touch_activation.duration_ms to clear the
       // active element state.
-      APZES_LOG("%s: can-be-pan=%d", __FUNCTION__, aArg);
-      if (!canBePan) {
+      APZES_LOG("%s: can-be-pan-or-zoom=%d", __FUNCTION__, aArg);
+      if (!canBePanOrZoom) {
         MOZ_ASSERT(aInputBlockId.isSome());
       }
       break;

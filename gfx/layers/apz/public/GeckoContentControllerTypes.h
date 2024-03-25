@@ -24,7 +24,7 @@ MOZ_DEFINE_ENUM_CLASS(GeckoContentController_APZStateChange, (
   eTransformEnd,
   /**
    * APZ started a touch.
-   * |aArg| is 1 if touch can be a pan, 0 otherwise.
+   * |aArg| is 1 if touch can be a pan or zoom, 0 otherwise.
    */
   eStartTouch,
   /**

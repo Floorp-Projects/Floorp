@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<meta name="viewport" content="width=device-width; initial-scale=0.4">
+<title>Tests that double-tap-to-zoom never activates elements inside non scrollable container</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+ <script src="/tests/SimpleTest/paint_listener.js"></script>
+<script src="apz_test_utils.js"></script>
+<script src="apz_test_native_event_utils.js"></script>
+<style>
+#nonscrollabletarget {
+  height: 300px;
+  width: 300px;
+  background: green;
+}
+
+#nonscrollabletarget:active {
+  background: red;
+}
+
+</style>
+<div id="nonscrollabletarget">
+</div>
+<script>
+async function test() {
+  ok(!nonscrollabletarget.matches(":active"), "should not be active initially");
+
+  let rAFID = requestAnimationFrame(function ensureInactive() {
+    let isActive = nonscrollabletarget.matches(":active");
+    ok(!isActive, "Element activation should never happen!");
+    if (!isActive) {
+      rAFID = requestAnimationFrame(ensureInactive);
+    }
+  });
+
+  await doubleTapOn(nonscrollabletarget, 50, 50, false /* useTouchpad */);
+
+  cancelAnimationFrame(rAFID);
+}
+
+if (getPlatform() != "mac" && getPlatform() != "android") {
+  ok(true, "Skipping test because double-tap-zoom isn't allowed on " + getPlatform());
+  subtestDone();
+} else {
+  waitUntilApzStable()
+  .then(test)
+  .then(subtestDone, subtestFailed);
+}
+</script>
+</html>
