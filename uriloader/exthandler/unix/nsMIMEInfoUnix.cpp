@@ -9,12 +9,25 @@
 #include "nsIGIOService.h"
 #include "nsNetCID.h"
 #include "nsIIOService.h"
+#include "nsLocalFile.h"
+
 #ifdef MOZ_ENABLE_DBUS
 #  include "nsDBusHandlerApp.h"
 #endif
 
 nsresult nsMIMEInfoUnix::LoadUriInternal(nsIURI* aURI) {
   return nsGNOMERegistry::LoadURL(aURI);
+}
+
+NS_IMETHODIMP nsMIMEInfoUnix::GetDefaultExecutable(nsIFile** aExecutable) {
+  // This needs to be implemented before FirefoxBridge will work on Linux.
+  // To implement this and be consistent, GetHasDefaultHandler and
+  // LaunchDefaultWithFile should probably be made to be consistent.
+  // Right now, they aren't. GetHasDefaultHandler reports true in cases
+  // where calling LaunchDefaultWithFile will fail due to not finding the
+  // right executable.
+
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

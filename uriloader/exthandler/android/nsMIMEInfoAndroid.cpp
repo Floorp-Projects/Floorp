@@ -125,6 +125,11 @@ nsMIMEInfoAndroid::GetDefaultDescription(nsAString& aDesc) {
 }
 
 NS_IMETHODIMP
+nsMIMEInfoAndroid::GetDefaultExecutable(nsIFile** aExecutable) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsMIMEInfoAndroid::LaunchWithURI(
     nsIURI* aURI, mozilla::dom::BrowsingContext* aBrowsingContext) {
   return mPrefApp->LaunchWithURI(aURI, aBrowsingContext);

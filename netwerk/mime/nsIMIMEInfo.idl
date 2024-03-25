@@ -53,17 +53,22 @@ interface nsIHandlerInfo : nsISupports {
     readonly attribute nsIMutableArray possibleApplicationHandlers;
 
     /**
-     * Indicates whether a default application handler exists,
+     * Indicates whether a default OS application handler exists,
      * i.e. whether launchWithFile with action = useSystemDefault is possible
      * and defaultDescription will contain usable information.
      */
     readonly attribute boolean hasDefaultHandler;
 
     /**
-     * A pretty name description of the associated default application. Only
+     * A pretty name description of the associated default OS application. Only
      * usable if hasDefaultHandler is true.
      */
     readonly attribute AString defaultDescription;
+
+    /**
+     * The default OS application. Only usable if hasDefaultHandler is true.
+     */
+    readonly attribute nsIFile defaultExecutable;
 
     /**
      * Launches the application with the specified URI, in a way that
