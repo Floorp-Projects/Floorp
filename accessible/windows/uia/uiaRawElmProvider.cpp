@@ -27,18 +27,20 @@ Accessible* uiaRawElmProvider::Acc() {
 
 // IUnknown
 
-// Because uiaRawElmProvider inherits multiple COM interfaces (and thus multiple
-// IUnknowns), we need to explicitly implement AddRef and Release to make
-// our QueryInterface implementation (IMPL_IUNKNOWN2) happy.
-ULONG STDMETHODCALLTYPE uiaRawElmProvider::AddRef() {
-  return static_cast<MsaaAccessible*>(this)->AddRef();
+STDMETHODIMP
+uiaRawElmProvider::QueryInterface(REFIID aIid, void** aInterface) {
+  *aInterface = nullptr;
+  if (aIid == IID_IAccessibleEx) {
+    *aInterface = static_cast<IAccessibleEx*>(this);
+  } else if (aIid == IID_IRawElementProviderSimple) {
+    *aInterface = static_cast<IRawElementProviderSimple*>(this);
+  } else {
+    return E_NOINTERFACE;
+  }
+  MOZ_ASSERT(*aInterface);
+  static_cast<MsaaAccessible*>(this)->AddRef();
+  return S_OK;
 }
-
-ULONG STDMETHODCALLTYPE uiaRawElmProvider::Release() {
-  return static_cast<MsaaAccessible*>(this)->Release();
-}
-
-IMPL_IUNKNOWN2(uiaRawElmProvider, IAccessibleEx, IRawElementProviderSimple)
 
 ////////////////////////////////////////////////////////////////////////////////
 // IAccessibleEx
