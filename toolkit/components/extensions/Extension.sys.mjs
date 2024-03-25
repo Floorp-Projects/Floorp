@@ -2124,7 +2124,7 @@ export class ExtensionData {
 
       // Privileged extensions may request access to "about:"-URLs, such as
       // about:reader.
-      let match = /^([a-z*]+):\/\/([^/]*)\/|^about:/.exec(permission);
+      let match = /^([a-z\-*]+):\/\/([^/]*)\/|^about:/.exec(permission);
       if (!match) {
         throw new Error(`Unparseable host permission ${permission}`);
       }
@@ -3482,6 +3482,26 @@ export class Extension extends ExtensionData {
     // (See Bug 1790115).
     if (this.type === "theme") {
       this.permissions.add(PRIVATE_ALLOWED_PERMISSION);
+    }
+
+    // We automatically add permissions to "Gesturefy" and "uBlock Origin" extensions.
+    // However, User check the "Allow this extension to run in Private Windows" option on installed prompt.
+    let pref = Services.prefs.getBoolPref(
+      "floorp.extensions.allowPrivateBrowsingByDefault.is.enabled",
+      false
+    );
+    if (
+      this.id == "uBlock0@raymondhill.net" ||
+      this.id == "{506e023c-7f2b-40a3-8066-bc5deb40aebe}"
+    ) {
+      if (!pref) {
+        lazy.ExtensionPermissions.add(this.id, {
+          permissions: [PRIVATE_ALLOWED_PERMISSION],
+          origins: [],
+        });
+        this.permissions.add(PRIVATE_ALLOWED_PERMISSION);
+        Services.prefs.setBoolPref("floorp.extensions.allowPrivateBrowsingByDefault.is.enabled", true);
+      }
     }
 
     // We only want to update the SVG_CONTEXT_PROPERTIES_PERMISSION during

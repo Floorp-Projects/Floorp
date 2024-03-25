@@ -1,0 +1,91 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Please write our copyright if you use this file.
+# © 2023 Floorp Projects & Contributors
+
+on:
+    workflow_call:
+      secrets:
+        PAT:
+          description: "Personal Access Token for checkout"
+          required: true
+    workflow_dispatch:
+jobs:
+  macOS-Universal-gen-profdata-and-jarlog:
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      matrix:
+        runs-on: [macos-latest, self-hosted]
+        # macos-latest is x86_64, self-hosted is arm64
+
+    steps:
+      - name: Init
+        run: |
+          export RUNNER_USERDIR=`echo ~`
+          echo "RUNNER_USERDIR=$RUNNER_USERDIR" >> $GITHUB_ENV
+          mkdir -p ~/downloads/artifacts
+
+      - uses: actions/checkout@v4
+        name: Clone 🧬
+        with:
+          submodules: 'recursive'
+          token: ${{ secrets.PAT }}
+
+      - name: Check Arch type
+        shell: bash
+        run: |
+          if [[ $GHA_BUILD_MACHINE != 'macos-latest' ]]; then
+            export ARCH_TYPE=`echo "aarch64"`
+            echo "ARCH_TYPE=$ARCH_TYPE" >> $GITHUB_ENV
+          else
+            export ARCH_TYPE=`echo "x86_64"`
+            echo "ARCH_TYPE=$ARCH_TYPE" >> $GITHUB_ENV
+          fi
+        env:
+          GHA_BUILD_MACHINE: ${{ matrix.runs-on }}
+
+      - uses: actions/download-artifact@v4
+        id: download-artifacts-mac-enable-profgen
+        name: Download artifact 📥
+        with:
+          name: floorp-mac-${{ env.ARCH_TYPE }}-build-with-profgen 
+          path: ~/downloads/artifacts
+
+      - uses: actions/setup-python@v5
+        if: ${{ env.ARCH_TYPE == 'x86_64' }}
+        with:
+          python-version: '3.11' 
+
+      - name: setup environment 🌲
+        run: |
+          echo -e "ac_add_options --enable-bootstrap" >> mozconfig
+
+          echo 'mozconfig: **********************'
+          cat ./mozconfig
+          echo '*********************************'
+
+          brew install gnu-tar
+          export PATH=/usr/local/opt/gnu-tar/libexec/gnubin:$PATH
+          ./mach --no-interactive bootstrap --application-choice browser
+
+      - name: Extract artifact 📂
+        run: |
+          mkdir -p ./floorp
+          cp ${{ steps.download-artifacts-mac-enable-profgen.outputs.download-path }}/${ARCH_TYPE}-apple-darwin-output.tar.xz ./
+          tar xf ${ARCH_TYPE}-apple-darwin-output.tar.xz
+          
+      - name: Generate Profdata 📊
+        run: |
+          LLVM_PROFDATA=$RUNNER_USERDIR/.mozbuild/clang/bin/llvm-profdata JARLOG_FILE=en-US.log ./mach python build/pgo/profileserver.py --binary ./obj-${ARCH_TYPE}-apple-darwin/dist/floorp/Floorp.app/Contents/MacOS/floorp
+        env:
+          GHA_BUILD_MACHINE: ${{ matrix.runs-on }}
+
+      - name: Publish 🎁
+        uses: actions/upload-artifact@v4
+        with:
+          name: floorp-${{ env.ARCH_TYPE }}-apple-darwin-profdata-and-jarlog
+          path: |
+            merged.profdata
+            en-US.log

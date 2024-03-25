@@ -488,9 +488,7 @@ class PlacesFeed {
         this.removeObservers();
         break;
       case at.ABOUT_SPONSORED_TOP_SITES: {
-        const url = `${Services.urlFormatter.formatURLPref(
-          "app.support.baseURL"
-        )}sponsor-privacy`;
+        const url = "https://github.com/sponsors/Ablaze-MIRAI"
         const win = action._target.browser.ownerGlobal;
         win.openTrustedLinkIn(url, "tab");
         break;

@@ -91,6 +91,7 @@
   <link rel="localization" href="preview/identityCredentialNotification.ftl" />
   <link rel="localization" href="preview/interventions.ftl" />
   <link rel="localization" href="preview/stripOnShare.ftl" />
+  <link rel="localization" href="browser/floorp.ftl"/>
 
   <title data-l10n-id="browser-main-window-title"></title>
 
@@ -98,6 +99,7 @@
 # support MacOS specific features *must* go into the global-scripts.inc file so
 # that they can be shared with macWindow.inc.xhtml.
 #include global-scripts.inc
+#include ../../../floorp/browser/base/content/floorp-scripts.inc
 
 <script>
   /* eslint-env mozilla/browser-window */
@@ -145,6 +147,14 @@
 
 #include appmenu-viewcache.inc.xhtml
 #include unified-extensions-viewcache.inc.xhtml
+
+#include ../../../floorp/browser/base/content/browser-manager-sidebar-context.inc.xhtml
+#include ../../../floorp/browser/base/content/browser-ssb-context.inc.xhtml
+
+#ifdef FLOORP_OFFICIAL_COMPONENTS_ENABLED
+#include ../../../floorp/Floorp-private-components/browser/base/content/browser-workspaces-context-menu.xhtml
+#endif
+
 
   <html:dialog id="window-modal-dialog" style="visibility: hidden; height: 0; width: 0"/>
   <html:template id="window-modal-dialog-template">

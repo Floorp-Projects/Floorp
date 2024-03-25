@@ -1088,8 +1088,7 @@ const FORMATS = {
 
   url(string, context) {
     let url = new URL(string).href;
-
-    if (!context.checkLoadURL(url)) {
+    if (!context.checkLoadURL(url) && url !== "about:search") {
       throw new Error(`Access denied for URL ${url}`);
     }
     return url;

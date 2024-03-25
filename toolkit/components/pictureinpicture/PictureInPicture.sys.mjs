@@ -186,6 +186,12 @@ export class PictureInPictureParent extends JSWindowActorParent {
         player.setScrubberPosition(scrubberPosition);
         break;
       }
+      case "PictureInPicture:VolumeChange": {
+        let { volume } = aMessage.data;
+        let player = PictureInPicture.getWeakPipPlayer(this);
+        player.setVolume(volume);
+        break;
+      }
     }
   }
 }
@@ -815,6 +821,7 @@ export var PictureInPicture = {
 
     win.setScrubberPosition(videoData.scrubberPosition);
     win.setTimestamp(videoData.timestamp);
+    win.setVolume(videoData.volume);
 
     Services.prefs.setBoolPref(TOGGLE_HAS_USED_PREF, true);
 

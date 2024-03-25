@@ -16,6 +16,7 @@ import { CustomizeMenu } from "content-src/components/CustomizeMenu/CustomizeMen
 import React from "react";
 import { Search } from "content-src/components/Search/Search";
 import { Sections } from "content-src/components/Sections/Sections";
+import { Background } from "content-src/components/Background/Background"
 
 export const PrefsButton = ({ onClick, icon }) => (
   <div className="prefs-button">
@@ -111,6 +112,7 @@ export class BaseContent extends React.PureComponent {
     this.handleOnKeyDown = this.handleOnKeyDown.bind(this);
     this.onWindowScroll = debounce(this.onWindowScroll.bind(this), 5);
     this.setPref = this.setPref.bind(this);
+    this.setPref = this.setPref.bind(this);
     this.state = { fixedSearch: false };
   }
 
@@ -159,6 +161,10 @@ export class BaseContent extends React.PureComponent {
 
   setPref(pref, value) {
     this.props.dispatch(ac.SetPref(pref, value));
+  }
+
+  getImageSend(path){
+    this.props.dispatch(ac.GetImageSend(path));
   }
 
   render() {
@@ -213,8 +219,28 @@ export class BaseContent extends React.PureComponent {
       this.props.adminContent.message &&
       this.props.adminContent.message.id;
 
+      let Background_ClassName = ""
+      switch (prefs["floorp.background.type"]) {
+        case 1:
+          Background_ClassName = "random_image"
+          break;
+        case 2:
+          Background_ClassName = "gradation"
+          break;
+          case 3:
+            Background_ClassName = "selected_folder"
+            break;
+            case 4:
+              Background_ClassName = "selected_image"
+              break;
+        default:
+          Background_ClassName = "not_background"
+          break;
+      }
+
     return (
-      <div>
+      <div className={prefs["floorp.newtab.backdrop.blur.disable"] ? "" : "floorp-backdrop-blur-enable"}>
+        <Background className={Background_ClassName}  getImg={this.getImageSend.bind(this)} pref={prefs} />
         <CustomizeMenu
           onClose={this.closeCustomizationMenu}
           onOpen={this.openCustomizationMenu}
@@ -259,6 +285,12 @@ export class BaseContent extends React.PureComponent {
             <ConfirmDialog />
           </main>
         </div>
+        <div id="floorp">
+          {/* TODO: use css instead this br tag */}
+          <a className={prefs["floorp.newtab.releasenote.hide"] ? "floorp-releasenote-hidden" : "releasenote"} href="https://support.ablaze.one">Support</a><br /><br />
+          <a className={prefs["floorp.newtab.releasenote.hide"] ? "floorp-releasenote-hidden" : "releasenote"} href="https://blog.ablaze.one/category/ablaze/ablaze-project/floorp">Release Note</a>
+        </div>
+        <a className={prefs["floorp.newtab.imagecredit.hide"] ? "floorp-imagecred-hidden" : "imagecred" } href="https://unsplash.com/" id="unsplash">Unsplash</a>
       </div>
     );
   }

@@ -328,46 +328,6 @@ const AVAILABLE_UA_OVERRIDES = [
   },
   {
     /*
-     * Bug 1697324 - Update the override for mobile2.bmo.com
-     * Previously Bug 1622081 - UA override for mobile2.bmo.com
-     * Webcompat issue #45019 - https://webcompat.com/issues/45019
-     *
-     * Unless the UA string contains "Chrome", mobile2.bmo.com will
-     * display a modal saying the browser is out-of-date.
-     */
-    id: "bug1697324",
-    platform: "android",
-    domain: "mobile2.bmo.com",
-    bug: "1697324",
-    config: {
-      matches: ["*://mobile2.bmo.com/*"],
-      uaTransformer: originalUA => {
-        return originalUA + " Chrome";
-      },
-    },
-  },
-  {
-    /*
-     * Bug 1628455 - UA override for autotrader.ca
-     * Webcompat issue #50961 - https://webcompat.com/issues/50961
-     *
-     * autotrader.ca is showing desktop site for Firefox on Android
-     * based on server side UA detection. Spoofing as Chrome allows to
-     * get mobile experience
-     */
-    id: "bug1628455",
-    platform: "android",
-    domain: "autotrader.ca",
-    bug: "1628455",
-    config: {
-      matches: ["https://*.autotrader.ca/*"],
-      uaTransformer: () => {
-        return UAHelpers.getDeviceAppropriateChromeUA();
-      },
-    },
-  },
-  {
-    /*
      * Bug 1646791 - bancosantander.es - Re-add UA override.
      * Bug 1665129 - *.gruposantander.es - Add wildcard domains.
      * WebCompat issue #33462 - https://webcompat.com/issues/33462
@@ -483,32 +443,13 @@ const AVAILABLE_UA_OVERRIDES = [
      * Chrome version segment to the UA makes it work.
      */
     id: "bug1719859",
-    platform: "all",
+    platform: "android",
     domain: "saxoinvestor.fr",
     bug: "1719859",
     config: {
       matches: ["*://*.saxoinvestor.fr/*"],
       uaTransformer: originalUA => {
-        return originalUA + " Chrome/91.0.4472.114";
-      },
-    },
-  },
-  {
-    /*
-     * Bug 1722954 - Add UA override for game.granbluefantasy.jp
-     * Webcompat issue #34310 - https://github.com/webcompat/web-bugs/issues/34310
-     *
-     * The website is sending a version of the site which is too small. Adding a partial
-     * safari iOS version of the UA sends us the right layout.
-     */
-    id: "bug1722954",
-    platform: "android",
-    domain: "granbluefantasy.jp",
-    bug: "1722954",
-    config: {
-      matches: ["*://*.granbluefantasy.jp/*"],
-      uaTransformer: originalUA => {
-        return originalUA + " iPhone OS 12_0 like Mac OS X";
+        return UAHelpers.getDeviceAppropriateChromeUA();
       },
     },
   },
@@ -601,7 +542,6 @@ const AVAILABLE_UA_OVERRIDES = [
     config: {
       matches: [
         "*://411.ca/", // #121332
-        "*://*.commerzbank.de/*", // Bug 1767630
         "*://*.mms.telekom.de/*", // #1800241
         "*://ubank.com.au/*", // #104099
         "*://wifi.sncf/*", // #100194
@@ -627,25 +567,6 @@ const AVAILABLE_UA_OVERRIDES = [
       matches: ["*://serieson.naver.com/*"],
       uaTransformer: originalUA => {
         return "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36";
-      },
-    },
-  },
-  {
-    /*
-     * Bug 1756872 - UA override for www.dolcegabbana.com
-     * Webcompat issue #99993 - https://webcompat.com/issues/99993
-     *
-     * The site's layout is broken on Firefox for Android
-     * without a full Chrome user-agent string.
-     */
-    id: "bug1756872",
-    platform: "android",
-    domain: "www.dolcegabbana.com",
-    bug: "1756872",
-    config: {
-      matches: ["*://www.dolcegabbana.com/*"],
-      uaTransformer: originalUA => {
-        return UAHelpers.getDeviceAppropriateChromeUA();
       },
     },
   },
@@ -800,25 +721,6 @@ const AVAILABLE_UA_OVERRIDES = [
   },
   {
     /*
-     * Bug 1803131 - UA override for argaam.com
-     * Webcompat issue #113638 - https://webcompat.com/issues/113638
-     *
-     * To receive the proper mobile version instead of the desktop version
-     * the UA is spoofed.
-     */
-    id: "bug1803131",
-    platform: "android",
-    domain: "argaam.com",
-    bug: "1803131",
-    config: {
-      matches: ["*://*.argaam.com/*"],
-      uaTransformer: originalUA => {
-        return UAHelpers.getDeviceAppropriateChromeUA();
-      },
-    },
-  },
-  {
-    /*
      * Bug 1819702 - UA override for feelgoodcontacts.com
      * Webcompat issue #118030 - https://webcompat.com/issues/118030
      *
@@ -870,22 +772,6 @@ const AVAILABLE_UA_OVERRIDES = [
   },
   {
     /*
-     * Bug 1827678 - UA override for www.hepsiburada.com
-     * Webcompat issue #66888 - https://webcompat.com/issues/66888
-     */
-    id: "bug1827678-webc66888",
-    platform: "android",
-    domain: "www.hepsiburada.com",
-    bug: "1827678",
-    config: {
-      matches: ["*://www.hepsiburada.com/*"],
-      uaTransformer: originalUA => {
-        return UAHelpers.getDeviceAppropriateChromeUA();
-      },
-    },
-  },
-  {
-    /*
      * Bug 1827678 - UA override for bankmandiri.co.id
      * Webcompat issue #67924 - https://webcompat.com/issues/67924
      */
@@ -911,22 +797,6 @@ const AVAILABLE_UA_OVERRIDES = [
     bug: "1827678",
     config: {
       matches: ["*://*.frankfred.com/*"],
-      uaTransformer: originalUA => {
-        return UAHelpers.getDeviceAppropriateChromeUA();
-      },
-    },
-  },
-  {
-    /*
-     * Bug 1827678 - UA override for static.slots.lv
-     * Webcompat issue #68379 - https://webcompat.com/issues/68379
-     */
-    id: "bug1827678-webc68379",
-    platform: "android",
-    domain: "static.slots.lv",
-    bug: "1827678",
-    config: {
-      matches: ["*://static.slots.lv/*"],
       uaTransformer: originalUA => {
         return UAHelpers.getDeviceAppropriateChromeUA();
       },
@@ -1139,26 +1009,11 @@ const AVAILABLE_UA_OVERRIDES = [
         "*://*.captainjackcasino.com/*", // 79490
         "*://*.casinoextreme.eu/*", // 118175
         "*://*.cryptoloko.com/*", // 117911
-        "*://*.heapsowins.com/*", // 120027
+        "*://*.123lobbygames.com/*", // 120027
         "*://*.planet7casino.com/*", // 120609
         "*://*.yebocasino.co.za/*", // 88409
+        "*://*.yabbycasino.com/*", // 108025
       ],
-      uaTransformer: originalUA => {
-        return UAHelpers.getDeviceAppropriateChromeUA();
-      },
-    },
-  },
-  {
-    /*
-     * Bug 1830821 - UA override for m.tworld.co.kr
-     * Webcompat issue #118998 - https://webcompat.com/issues/118998
-     */
-    id: "bug1830821-webc118998",
-    platform: "android",
-    domain: "m.tworld.co.kr",
-    bug: "1830821",
-    config: {
-      matches: ["*://m.tworld.co.kr/*"],
       uaTransformer: originalUA => {
         return UAHelpers.getDeviceAppropriateChromeUA();
       },
@@ -1208,23 +1063,6 @@ const AVAILABLE_UA_OVERRIDES = [
     bug: "1829126",
     config: {
       matches: ["*://www.otsuka.co.jp/fib/*"],
-      uaTransformer: originalUA => {
-        return UAHelpers.getDeviceAppropriateChromeUA();
-      },
-    },
-  },
-  {
-    /*
-     * Bug 1831441 - UA override for luna.amazon.com
-     *
-     * Games are unplayable unless a Chrome UA is used.
-     */
-    id: "bug1831441",
-    platform: "all",
-    domain: "luna.amazon.com",
-    bug: "1831441",
-    config: {
-      matches: ["*://luna.amazon.com/*"],
       uaTransformer: originalUA => {
         return UAHelpers.getDeviceAppropriateChromeUA();
       },
@@ -1334,16 +1172,16 @@ const AVAILABLE_UA_OVERRIDES = [
   },
   {
     /*
-     * Bug 1836181 - UA override for conference.amwell.com
+     * Bug 1836182 - UA override for www.flatsatshadowglen.com
      *
      * The site's content is not loaded unless a Chrome UA is used.
      */
-    id: "bug1836181",
+    id: "bug1836182",
     platform: "all",
-    domain: "conference.amwell.com",
-    bug: "1836181",
+    domain: "www.flatsatshadowglen.com",
+    bug: "1836182",
     config: {
-      matches: ["*://conference.amwell.com/*"],
+      matches: ["*://*.flatsatshadowglen.com/*"],
       uaTransformer: originalUA => {
         return UAHelpers.getDeviceAppropriateChromeUA();
       },
@@ -1351,18 +1189,191 @@ const AVAILABLE_UA_OVERRIDES = [
   },
   {
     /*
-     * Bug 1836182 - UA override for www.flatsatshadowglen.com
+     * Bug 1849018 - UA override for carefirst.com
+     * Webcompat issue #125341 - https://webcompat.com/issues/125341
      *
-     * The site's content is not loaded without a Chrome UA spoof.
+     * The site is showing "Application Blocked" message
+     * for Firefox UA.
      */
-    id: "bug1836182",
+    id: "bug1849018",
     platform: "all",
-    domain: "www.flatsatshadowglen.com",
-    bug: "1836182",
+    domain: "carefirst.com",
+    bug: "1849018",
     config: {
-      matches: ["*://www.flatsatshadowglen.com/*"],
+      matches: ["*://*.carefirst.com/myaccount*"],
       uaTransformer: originalUA => {
-        return originalUA + " Chrome/113.0.0.0";
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1850455 - UA override for frontgate.com
+     * Webcompat issue #36277 - https://webcompat.com/issues/36277
+     *
+     * The site is showing a desktop view to Firefox mobile user-agents
+     */
+    id: "bug1850455",
+    platform: "android",
+    domain: "frontgate.com",
+    bug: "1850455",
+    config: {
+      matches: ["*://*.frontgate.com/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1855088 - UA override for hrmis2.eghrmis.gov.my
+     * Webcompat issue #125039 - https://webcompat.com/issues/125039
+     *
+     * hrmis2.eghrmis.gov.my showing unsupported message for Firefox users
+     * Spoofing as Chrome allows to access the page
+     */
+    id: "bug1855088",
+    platform: "all",
+    domain: "hrmis2.eghrmis.gov.my",
+    bug: "1855088",
+    config: {
+      matches: ["*://hrmis2.eghrmis.gov.my/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1855102 - UA override for my.southerncross.co.nz
+     * Webcompat issue #121877 - https://webcompat.com/issues/121877
+     *
+     * Spoofing as Chrome for Android allows to access the page
+     */
+    id: "bug1855102",
+    platform: "android",
+    domain: "my.southerncross.co.nz",
+    bug: "1855102",
+    config: {
+      matches: ["*://my.southerncross.co.nz/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1864903 - UA override for Publitas catalogs
+     * Webcompat issue #128814 - https://webcompat.com/issues/128814
+     *
+     * Catalogs break without -moz-transform, since
+     * https://bugzilla.mozilla.org/show_bug.cgi?id=1855763 was
+     * shipped, spoofing as Chrome makes them work.
+     */
+    id: "bug1864903",
+    platform: "all",
+    domain: "Publitas catalogs",
+    bug: "1864903",
+    config: {
+      matches: [
+        "*://aktionen.metro.at/*",
+        "*://cataloagele.metro.ro/*",
+        "*://catalogs.metro-cc.ru/*",
+        "*://catalogues.metro.bg/*",
+        "*://catalogues.metro-cc.hr/*",
+        "*://catalogues.metro.ua/*",
+        "*://folders.makro.nl/*",
+        "*://katalog.metro.rs/*",
+        "*://katalogi.metro-kz.com/*",
+        "*://kataloglar.metro-tr.com/*",
+        "*://katalogus.metro.hu/*",
+        "*://letaky.makro.cz/*",
+        "*://letaky.metro.sk/*",
+        "*://ofertas.makro.es/*",
+        "*://oferte.metro.md/*",
+        "*://promotions-deals.metro.pk/*",
+        "*://promocoes.makro.pt/*",
+        "*://prospekt.aldi-sued.de/*",
+        "*://prospekte.metro.de/*",
+        "*://thematiques.metro.fr/*",
+        "*://volantino.metro.it/*",
+        "*://view.publitas.com/*",
+      ],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1864999 - UA override for autotrader.ca
+     * Webcompat issue #126822 - https://webcompat.com/issues/126822
+     *
+     * Spoofing as Chrome for Android makes filters work on the site
+     */
+    id: "bug1864999",
+    platform: "android",
+    domain: "autotrader.ca",
+    bug: "1864999",
+    config: {
+      matches: ["*://*.autotrader.ca/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1865000 - UA override for bmo.com
+     * Webcompat issue #127620 - https://webcompat.com/issues/127620
+     *
+     * Spoofing as Chrome removes the unsupported message and allows
+     * to proceed with application
+     */
+    id: "bug1865000",
+    platform: "all",
+    domain: "bmo.com",
+    bug: "1865000",
+    config: {
+      matches: ["*://*.bmo.com/main/personal/*/getting-started/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1865004 - UA override for digimart.net
+     * Webcompat issue #126647 - https://webcompat.com/issues/126647
+     *
+     * The site returns desktop layout on Firefox for Android
+     */
+    id: "bug1865004",
+    platform: "android",
+    domain: "digimart.net",
+    bug: "1865004",
+    config: {
+      matches: ["*://*.digimart.net/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1865007 - UA override for portal.circle.ms
+     * Webcompat issue #127739 - https://webcompat.com/issues/127739
+     *
+     * The site returns desktop layout on Firefox for Android
+     */
+    id: "bug1865007",
+    platform: "android",
+    domain: "portal.circle.ms",
+    bug: "1865007",
+    config: {
+      matches: ["*://*.circle.ms/*"],
+      uaTransformer: originalUA => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
       },
     },
   },
