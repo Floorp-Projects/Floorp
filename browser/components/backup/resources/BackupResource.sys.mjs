@@ -3,19 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 // Convert from bytes to kilobytes (not kibibytes).
-export const BYTES_IN_KB = 1000;
-
-/**
- * Convert bytes to the nearest 10th kilobyte to make the measurements fuzzier.
- *
- * @param {number} bytes - size in bytes.
- * @returns {number} - size in kilobytes rounded to the nearest 10th kilobyte.
- */
-export function bytesToFuzzyKilobytes(bytes) {
-  let sizeInKb = Math.ceil(bytes / BYTES_IN_KB);
-  let nearestTenthKb = Math.round(sizeInKb / 10) * 10;
-  return Math.max(nearestTenthKb, 1);
-}
+const BYTES_IN_KB = 1000;
 
 /**
  * An abstract class representing a set of data within a user profile
@@ -52,9 +40,11 @@ export class BackupResource {
       return null;
     }
 
-    let nearestTenthKb = bytesToFuzzyKilobytes(size);
+    let sizeInKb = Math.ceil(size / BYTES_IN_KB);
+    // Make the measurement fuzzier by rounding to the nearest 10kb.
+    let nearestTenthKb = Math.round(sizeInKb / 10) * 10;
 
-    return nearestTenthKb;
+    return Math.max(nearestTenthKb, 1);
   }
 
   /**
@@ -86,9 +76,10 @@ export class BackupResource {
       );
 
       if (childSize >= 0) {
-        let nearestTenthKb = bytesToFuzzyKilobytes(childSize);
-
-        size += nearestTenthKb;
+        let sizeInKb = Math.ceil(childSize / BYTES_IN_KB);
+        // Make the measurement fuzzier by rounding to the nearest 10kb.
+        let nearestTenthKb = Math.round(sizeInKb / 10) * 10;
+        size += Math.max(nearestTenthKb, 1);
       }
 
       if (childType == "directory") {
