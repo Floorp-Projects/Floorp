@@ -76,6 +76,13 @@ async function test() {
     promiseOneEvent(targetElem, "click"),
   ];
 
+  // Create a promise for :active state change since in the case where the
+  // target element is inside a scrollable container, APZ delays :active state
+  // change, it sometimes happens after all the relavant events above.
+  const activePromise = SimpleTest.promiseWaitForCondition(
+    () => targetElem.matches(":active"),
+    "Waiting for :active state change");
+
   // Perform a tap gesture
   await synthesizeNativeTap(targetElem, 50, 50);
 
@@ -88,7 +95,7 @@ async function test() {
   // The value of ui.touch_activation.duration_ms should be set to
   // a large value. If we did not delay sending the synthesized
   // mouse events, this test will not timeout.
-  await Promise.all(mouseEventPromises);
+  await Promise.all([...mouseEventPromises, activePromise]);
 
   clearTimeout(failTimeout);
 
