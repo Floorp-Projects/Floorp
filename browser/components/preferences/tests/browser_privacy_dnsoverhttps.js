@@ -16,6 +16,10 @@ ChromeUtils.defineESModuleGetters(this, {
   DoHTestUtils: "resource://testing-common/DoHTestUtils.sys.mjs",
 });
 
+const { MockRegistrar } = ChromeUtils.importESModule(
+  "resource://testing-common/MockRegistrar.sys.mjs"
+);
+
 const TRR_MODE_PREF = "network.trr.mode";
 const TRR_URI_PREF = "network.trr.uri";
 const TRR_CUSTOM_URI_PREF = "network.trr.custom_uri";
@@ -105,6 +109,164 @@ function waitForPrefObserver(name) {
     Services.prefs.addObserver(name, observer);
   });
 }
+
+// Mock parental controls service in order to enable it
+let parentalControlsService = {
+  parentalControlsEnabled: true,
+  QueryInterface: ChromeUtils.generateQI(["nsIParentalControlsService"]),
+};
+let mockParentalControlsServiceCid = undefined;
+
+async function setMockParentalControlEnabled(aEnabled) {
+  if (mockParentalControlsServiceCid != undefined) {
+    MockRegistrar.unregister(mockParentalControlsServiceCid);
+    mockParentalControlsServiceCid = undefined;
+  }
+  if (aEnabled) {
+    mockParentalControlsServiceCid = MockRegistrar.register(
+      "@mozilla.org/parental-controls-service;1",
+      parentalControlsService
+    );
+  }
+  Services.dns.reloadParentalControlEnabled();
+}
+
+add_task(async function testParentalControls() {
+  async function withConfiguration(configuration, fn) {
+    info("testParentalControls");
+
+    await resetPrefs();
+    Services.prefs.setIntPref(TRR_MODE_PREF, configuration.trr_mode);
+    await setMockParentalControlEnabled(configuration.parentalControlsState);
+
+    await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
+    let doc = gBrowser.selectedBrowser.contentDocument;
+    let statusElement = doc.getElementById("dohStatus");
+
+    await TestUtils.waitForCondition(() => {
+      return (
+        document.l10n.getAttributes(statusElement).args.status ==
+        configuration.wait_for_doh_status
+      );
+    });
+
+    await fn({
+      statusElement,
+    });
+
+    gBrowser.removeCurrentTab();
+    await setMockParentalControlEnabled(false);
+  }
+
+  info("Check parental controls disabled, TRR off");
+  await withConfiguration(
+    {
+      parentalControlsState: false,
+      trr_mode: 0,
+      wait_for_doh_status: "Off",
+    },
+    async res => {
+      is(
+        document.l10n.getAttributes(res.statusElement).args.status,
+        "Off",
+        "expecting status off"
+      );
+    }
+  );
+
+  info("Check parental controls enabled, TRR off");
+  await withConfiguration(
+    {
+      parentalControlsState: true,
+      trr_mode: 0,
+      wait_for_doh_status: "Off",
+    },
+    async res => {
+      is(
+        document.l10n.getAttributes(res.statusElement).args.status,
+        "Off",
+        "expecting status off"
+      );
+    }
+  );
+
+  // Enable the rollout.
+  await DoHTestUtils.loadRemoteSettingsConfig({
+    providers: "example",
+    rolloutEnabled: true,
+    steeringEnabled: false,
+    steeringProviders: "",
+    autoDefaultEnabled: false,
+    autoDefaultProviders: "",
+    id: "global",
+  });
+
+  info("Check parental controls disabled, TRR first");
+  await withConfiguration(
+    {
+      parentalControlsState: false,
+      trr_mode: 2,
+      wait_for_doh_status: "Active",
+    },
+    async res => {
+      is(
+        document.l10n.getAttributes(res.statusElement).args.status,
+        "Active",
+        "expecting status active"
+      );
+    }
+  );
+
+  info("Check parental controls enabled, TRR first");
+  await withConfiguration(
+    {
+      parentalControlsState: true,
+      trr_mode: 2,
+      wait_for_doh_status: "Not active (TRR_PARENTAL_CONTROL)",
+    },
+    async res => {
+      is(
+        document.l10n.getAttributes(res.statusElement).args.status,
+        "Not active (TRR_PARENTAL_CONTROL)",
+        "expecting status not active"
+      );
+    }
+  );
+
+  info("Check parental controls disabled, TRR only");
+  await withConfiguration(
+    {
+      parentalControlsState: false,
+      trr_mode: 3,
+      wait_for_doh_status: "Active",
+    },
+    async res => {
+      is(
+        document.l10n.getAttributes(res.statusElement).args.status,
+        "Active",
+        "expecting status active"
+      );
+    }
+  );
+
+  info("Check parental controls enabled, TRR only");
+  await withConfiguration(
+    {
+      parentalControlsState: true,
+      trr_mode: 3,
+      wait_for_doh_status: "Not active (TRR_PARENTAL_CONTROL)",
+    },
+    async res => {
+      is(
+        document.l10n.getAttributes(res.statusElement).args.status,
+        "Not active (TRR_PARENTAL_CONTROL)",
+        "expecting status not active"
+      );
+    }
+  );
+
+  await resetPrefs();
+});
 
 async function testWithProperties(props, startTime) {
   info(
