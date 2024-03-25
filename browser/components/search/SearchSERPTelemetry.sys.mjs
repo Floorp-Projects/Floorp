@@ -1795,6 +1795,7 @@ class ContentHandler {
             partner_code: impressionInfo.partnerCode,
             provider: impressionInfo.provider,
             tagged: impressionInfo.tagged,
+            is_shopping_page: impressionInfo.isShoppingPage,
             num_ads_clicked: telemetryState.adsClicked,
             num_ads_visible: telemetryState.adsVisible,
           });

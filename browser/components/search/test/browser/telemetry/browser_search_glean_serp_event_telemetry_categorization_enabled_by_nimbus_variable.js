@@ -152,6 +152,7 @@ add_task(async function test_enable_experiment_when_pref_is_not_enabled() {
       partner_code: "ff",
       provider: "example",
       tagged: "true",
+      is_shopping_page: "false",
       num_ads_clicked: "0",
       num_ads_visible: "2",
     },
