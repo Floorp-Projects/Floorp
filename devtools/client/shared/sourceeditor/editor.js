@@ -820,9 +820,10 @@ class Editor extends EventEmitter {
    *   @param {Array<Marker>} markers         - The list of marker objects which defines the rules
    *                                            for rendering each marker.
    *   @property {object}     marker - The rule rendering a marker or class. This is required.
-   *   @property {string}     marker.gutterLineClassName - The css class to add to the line. This is required.
+   *   @property {string}     marker.id - The unique identifier for this marker.
+   *   @property {string}     marker.lineClassName - The css class to add to the line. This is required.
    *   @property {function}   marker.condition - The condition that decides if the marker/class  gets added or removed.
-   *   @property {function=}  marker.createGutterLineElementNode - This gets the line as an argument and should return the DOM element which
+   *   @property {function=}  marker.createLineElementNode - This gets the line as an argument and should return the DOM element which
    *                                            is used for the marker. This is optional.
    */
   setLineGutterMarkers(markers) {
@@ -831,7 +832,10 @@ class Editor extends EventEmitter {
     if (markers) {
       // Cache the markers for use later. See next comment
       for (const marker of markers) {
-        this.#lineGutterMarkers.set(marker.gutterLineClassName, marker);
+        if (!marker.id) {
+          throw new Error("Marker has no unique identifier");
+        }
+        this.#lineGutterMarkers.set(marker.id, marker);
       }
     }
     // When no markers are passed, the cached markers are used to update the line gutters.
@@ -869,9 +873,9 @@ class Editor extends EventEmitter {
       for (let pos = from; pos <= to; ) {
         const line = cm.state.doc.lineAt(pos);
         for (const {
-          gutterLineClassName,
+          lineClassName,
           condition,
-          createGutterLineElementNode,
+          createLineElementNode,
         } of markers) {
           if (typeof condition !== "function") {
             throw new Error("The `condition` is not a valid function");
@@ -881,9 +885,9 @@ class Editor extends EventEmitter {
               line.from,
               line.to,
               new LineGutterMarker(
-                gutterLineClassName,
+                lineClassName,
                 line.number,
-                createGutterLineElementNode
+                createLineElementNode
               )
             );
           }

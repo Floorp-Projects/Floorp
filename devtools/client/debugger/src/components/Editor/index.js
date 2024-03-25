@@ -302,7 +302,8 @@ class Editor extends PureComponent {
       if (shouldUpdateBreakableLines) {
         editor.setLineGutterMarkers([
           {
-            gutterLineClassName: "empty-line",
+            id: "empty-line-marker",
+            lineClassName: "empty-line",
             condition: line => {
               const lineNumber = fromEditorLine(
                 selectedSource.id,
@@ -327,7 +328,8 @@ class Editor extends PureComponent {
 
       editor.setLineGutterMarkers([
         {
-          gutterLineClassName: "blackboxed-line",
+          id: "blackboxed-line-gutter-marker",
+          lineClassName: "blackboxed-line",
           condition,
         },
       ]);
