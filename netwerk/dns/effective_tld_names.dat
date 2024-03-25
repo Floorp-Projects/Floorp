@@ -14141,7 +14141,7 @@ co.pl
 // Managed by Corporate Domains
 // Microsoft Azure : https://home.azure
 *.azurecontainer.io
-*.cloudapp.azure.com
+cloudapp.azure.com
 azure-api.net
 azureedge.net
 azurefd.net
