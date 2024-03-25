@@ -195,7 +195,7 @@ Design tokens' variable names follow a taxonomy with distinct classification lev
   <div class="box vertical">
     <div class="box">
       <div class="post-it orange disabled"></div>
-      <div class="post-it orange disbaled"></div>
+      <div class="post-it orange disabled"></div>
       <div class="post-it orange">Border Color</div>
     </div>
   </div>
@@ -315,11 +315,11 @@ To further illustrate this taxonomy level, here are detailed explanations and de
 We use the "accent" color concept for referring to our brand and the operating system (platform) accent colors. The brand and platform accent colors are used as the primary color for accentuating and characterizing several Firefox UI elements' (e.g. buttons, focus outlines, links, icons, and more).
 
 ##### Interactive
-We use the "interactive" concept to describe design tokens that pertain to interactive elements. For example, `--border-interactive-color` is used on [moz-toggle](https://searchfox.org/mozilla-central/rev/956e25260926097a4d54d5aeb0e06347841616bf/toolkit/content/widgets/moz-toggle/moz-toggle.css#40) since interactive elements such as toggles, radios, and checkboxes share the same border color pattern that is different from our default border color.
+We use the "interactive" concept to describe design tokens that pertain to interactive elements. For example, `--border-color-interactive` is used on [moz-toggle](https://searchfox.org/mozilla-central/rev/956e25260926097a4d54d5aeb0e06347841616bf/toolkit/content/widgets/moz-toggle/moz-toggle.css#40) since interactive elements such as toggles, radios, and checkboxes share the same border color pattern that is different from our default border color.
 
 ```css
 /* moz-toggle.css */
---toggle-border-color: var(--border-interactive-color);
+--toggle-border-color: var(--border-color-interactive);
 ```
 
 ##### Item
@@ -612,7 +612,7 @@ For example, both the chrome and in-content pages make use of the same border-ra
 
 ### Tiers
 #### Base
-Base design tokens act as the foundation for the design tokens collection. This tier defines our collection of raw styles that are used to form our semantic design token names. These tokens should not be used directly for styling UI as they don’t carry any meaning and just serve as a base for the design tokens structure.
+Base design tokens represent the most basic, or foundational, groups of design tokens that point to the actual hard-coded values of the design system. They can be referenced to create more meaningful tokens.
 
 ```css
 /* tokens-shared.css */
@@ -622,7 +622,7 @@ Base design tokens act as the foundation for the design tokens collection. This 
 ```
 
 #### Application
-Application design tokens represent the collection of semantic design tokens that actually give proper meaning to style choices. This tier relies on the agreement of the name and meaning behind these styles and their values.
+Application design tokens represent the more semantic groups of design tokens that give meaning to base values based on their purpose or how/where they are applied.
 
 ```css
 /* tokens-brand.css */
@@ -630,9 +630,9 @@ Application design tokens represent the collection of semantic design tokens tha
 ```
 
 #### Component
-Component is the final tier. This tier is used in order to give meaning to identified style choices made within user interface components. While the "Application" tier can handle most if not all styling use cases, tier 3 helps encapsulate style decisions at the component level.
+Component design tokens represent design tokens scoped to a specific component or element. While the "Application" tier can handle most if not all styling use cases, tier 3 helps encapsulate style decisions at the component level.
 
-Component-level tokens should live at the component-level file (e.g. [moz-toggle.css](https://searchfox.org/mozilla-central/rev/02841791400cf7cf5760c0cfaf31f5d772624253/toolkit/content/widgets/moz-toggle/moz-toggle.css#34-50)), so that they can't be used outside of that specific component's domain.
+Although some component-specific tokens for basic HTML elements (e.g. button) live in `tokens-shared.css` today, component-specific tokens should live at the component-level file (e.g. [moz-toggle.css](https://searchfox.org/mozilla-central/rev/02841791400cf7cf5760c0cfaf31f5d772624253/toolkit/content/widgets/moz-toggle/moz-toggle.css#34-50)) so that they can't be used outside of that specific component's domain.
 
 ```css
 /* moz-toggle.css */
@@ -676,29 +676,7 @@ Any semantic tokens within a scale, such as the `--font-size-root` example below
 --font-size-xxlarge: 2.2rem;  /* 33px */
 ```
 
-[Base](#base) tokens should be listed at the top of the file, with a heading indicating that they are Base:
-```css
-/* Base tokens */
-/* Do not use base tokens directly. Their names don't carry any specific meaning, and they are simply used to set foundations. Refer to Application tokens below. */
-/** Color **/
---color-white: #ffffff;
---color-blue-05: #deeafc;
---color-blue-30: #73a7f3;
-...
-```
-
-[Application](#application) tokens should be added after Base tokens, accompanied by its own heading as well:
-```css
-/* Application tokens */
-/** Border **/
---border-radius-circle: 9999px;
---border-radius-small: 4px;
---border-width: 1px;
-...
-```
-
 ## Theming
-
 For certain components, their high-contrast mode design will need styles that other modes do not (e.g. HCM relies on borders that do not exist in non-HCM). In those instances, we just add tokens under the high contrast mode media query rules. On the other hand, if something such as a color, does not apply to HCM contexts, then we add those design tokens under a "@media not (prefers-contrast)" query.
 
 ### Light and dark
