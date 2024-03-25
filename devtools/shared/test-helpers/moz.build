@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
+    "test-line-tracer.js",
     "test-stepper.js",
     "tracked-objects.sys.mjs",
 )
