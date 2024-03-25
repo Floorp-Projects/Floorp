@@ -9,6 +9,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
+#include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Maybe.h"
 
@@ -351,6 +352,34 @@ class RangeBoundaryBase {
   }
 
  public:
+  void NotifyParentBecomesShadowHost() {
+    MOZ_ASSERT(mParent);
+    MOZ_ASSERT(mParent->IsContainerNode(),
+               "Range is positioned on a text node!");
+    if (!StaticPrefs::dom_shadowdom_selection_across_boundary_enabled()) {
+      return;
+    }
+
+    if (!mIsMutationObserved) {
+      // RangeBoundaries that are not used in the context of a
+      // `MutationObserver` use the offset as main source of truth to compute
+      // `mRef`. Therefore, it must not be updated or invalidated.
+      return;
+    }
+
+    if (!mRef) {
+      MOZ_ASSERT(mOffset.isSome() && mOffset.value() == 0,
+                 "Invalidating offset of invalid RangeBoundary?");
+      return;
+    }
+
+    if (dom::ShadowRoot* shadowRoot = mParent->GetShadowRootForSelection()) {
+      mParent = shadowRoot;
+    }
+
+    mOffset = Some(0);
+  }
+
   bool IsSet() const { return mParent && (mRef || mOffset.isSome()); }
 
   bool IsSetAndValid() const {
