@@ -4,7 +4,7 @@
 
 "use strict";
 
-/* exported gIsUiaEnabled, addUiaTask, definePyVar, assignPyVarToUiaWithId, setUpWaitForUiaEvent, waitForUiaEvent */
+/* exported gIsUiaEnabled, addUiaTask, definePyVar, assignPyVarToUiaWithId, setUpWaitForUiaEvent, setUpWaitForUiaPropEvent, waitForUiaEvent */
 
 // Load the shared-head file first.
 Services.scriptloader.loadSubScript(
@@ -84,7 +84,18 @@ function setUpWaitForUiaEvent(eventName, id) {
 }
 
 /**
- * Wait for the event requested in setUpWaitForUiaEvent.
+ * Set up to wait for a UIA property change event. You must await this before
+ * performing the action which fires the event.
+ */
+function setUpWaitForUiaPropEvent(propName, id) {
+  return definePyVar(
+    "onEvent",
+    `WaitForUiaEvent(property=UIA_${propName}PropertyId, match="${id}")`
+  );
+}
+
+/**
+ * Wait for the event requested in setUpWaitForUia*Event.
  */
 function waitForUiaEvent() {
   return runPython(`
