@@ -204,6 +204,9 @@ export class ScreenshotsOverlay {
     this.#content.root.appendChild(this.fragment);
 
     this.initializeElements();
+    this.screenshotsContainer.dir = Services.locale.isAppLocaleRTL
+      ? "rtl"
+      : "ltr";
     await this.updateWindowDimensions();
 
     this.#setState(STATES.CROSSHAIRS);
