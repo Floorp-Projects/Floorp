@@ -264,13 +264,12 @@ async function assertQueryContainerTooltip({
   expectedHeaderText,
   expectedBodyText,
 }) {
-  const tooltipTriggerEl = getRuleViewAncestorRulesDataElementByIndex(
-    view,
-    ruleIndex
-  ).querySelector(".container-query-declaration");
+  const parent = getRuleViewAncestorRulesDataElementByIndex(view, ruleIndex);
+  const highlighterTriggerEl = parent.querySelector(".open-inspector");
+  const tooltipTriggerEl = parent.querySelector(".container-query-declaration");
 
   // Ensure that the element can be targetted from EventUtils.
-  tooltipTriggerEl.scrollIntoView();
+  parent.scrollIntoView();
 
   const { waitForHighlighterTypeShown, waitForHighlighterTypeHidden } =
     getHighlighterTestHelpers(inspector);
@@ -280,17 +279,35 @@ async function assertQueryContainerTooltip({
   );
 
   const tooltip = view.tooltips.getTooltip("interactiveTooltip");
+
+  info("synthesizing mousemove on open-inspector icon: " + tooltip.isVisible());
+  EventUtils.synthesizeMouseAtCenter(
+    highlighterTriggerEl,
+    { type: "mousemove" },
+    highlighterTriggerEl.ownerDocument.defaultView
+  );
+
+  await onNodeHighlight;
+  info("node was highlighted");
+
+  const onNodeUnhighlight = waitForHighlighterTypeHidden(
+    inspector.highlighters.TYPES.BOXMODEL
+  );
+
   const onTooltipReady = tooltip.once("shown");
-  info("synthesizing mousemove: " + tooltip.isVisible());
+
+  info("synthesizing mousemove on tooltip el: " + tooltip.isVisible());
   EventUtils.synthesizeMouseAtCenter(
     tooltipTriggerEl,
     { type: "mousemove" },
     tooltipTriggerEl.ownerDocument.defaultView
   );
+
   await onTooltipReady;
   info("tooltip was shown");
-  await onNodeHighlight;
-  info("node was highlighted");
+
+  await onNodeUnhighlight;
+  info("highlighter was hidden");
 
   is(
     tooltip.panel.querySelector("header").textContent,
@@ -305,9 +322,7 @@ async function assertQueryContainerTooltip({
 
   info("Hide the tooltip");
   const onHidden = tooltip.once("hidden");
-  const onNodeUnhighlight = waitForHighlighterTypeHidden(
-    inspector.highlighters.TYPES.BOXMODEL
-  );
+
   // Move the mouse elsewhere to hide the tooltip
   EventUtils.synthesizeMouse(
     tooltipTriggerEl.ownerDocument.body,
@@ -317,5 +332,4 @@ async function assertQueryContainerTooltip({
     tooltipTriggerEl.ownerDocument.defaultView
   );
   await onHidden;
-  await onNodeUnhighlight;
 }
