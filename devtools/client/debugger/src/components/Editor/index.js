@@ -794,9 +794,14 @@ class Editor extends PureComponent {
     const { editor } = this.state;
 
     if (features.codemirrorNext) {
-      return React.createElement(Breakpoints, {
-        editor,
-      });
+      return React.createElement(
+        React.Fragment,
+        null,
+        React.createElement(Breakpoints, {
+          editor,
+        }),
+        React.createElement(DebugLine, { editor, selectedSource })
+      );
     }
 
     if (!selectedSource || !editor || !getDocument(selectedSource.id)) {
