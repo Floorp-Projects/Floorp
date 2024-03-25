@@ -54,7 +54,7 @@ class WithCommonStyles extends MozLitElement {
       font: message-box;
       font-size: var(--font-size-root);
       appearance: none;
-      background-color: var(--background-color-canvas);
+      background-color: var(--color-canvas);
       color: var(--text-color);
       -moz-box-layout: flex;
     }

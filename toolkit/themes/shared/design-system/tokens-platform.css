@@ -10,11 +10,8 @@
     /** Attention Dot **/
     --attention-dot-color: AccentColor;
 
-    /** Background Color **/
-    --background-color-canvas: Canvas;
-
     /** Border **/
-    --border-color-interactive: color-mix(in srgb, currentColor 15%, var(--color-gray-60));
+    --border-interactive-color: color-mix(in srgb, currentColor 15%, var(--color-gray-60));
 
     /** Button **/
     --button-background-color: var(--button-bgcolor);
@@ -27,8 +24,9 @@
     --color-accent-primary: var(--button-primary-bgcolor, AccentColor);
     --color-accent-primary-hover: var(--button-primary-hover-bgcolor);
     --color-accent-primary-active: var(--button-primary-active-bgcolor);
+    --color-canvas: Canvas;
 
-    /** Font Size **/
+    /** Font size **/
     --font-size-root: unset;
     --font-size-small: unset;
     --font-size-large: unset;
