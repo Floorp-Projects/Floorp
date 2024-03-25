@@ -2184,6 +2184,67 @@ void Selection::RemoveAllRanges(ErrorResult& aRv) {
   RemoveAllRangesInternal(aRv);
 }
 
+already_AddRefed<StaticRange> Selection::GetComposedRange(
+    const AbstractRange* aRange,
+    const Sequence<OwningNonNull<ShadowRoot>>& aShadowRoots) const {
+  // If aIsEndNode is true, this method does the Step 5.1 and 5.2
+  // in https://www.w3.org/TR/selection-api/#dom-selection-getcomposedranges,
+  // otherwise it does the Step 3.1 and 3.2.
+  auto reScope = [&aShadowRoots](nsINode*& aNode, uint32_t& aOffset,
+                                 bool aIsEndNode) {
+    MOZ_ASSERT(aNode);
+    while (aNode) {
+      const ShadowRoot* shadowRootOfNode = aNode->GetContainingShadow();
+      if (!shadowRootOfNode) {
+        return;
+      }
+
+      for (const OwningNonNull<ShadowRoot>& shadowRoot : aShadowRoots) {
+        if (shadowRoot->IsShadowIncludingInclusiveDescendantOf(
+                shadowRootOfNode)) {
+          return;
+        }
+      }
+
+      const nsIContent* host = aNode->GetContainingShadowHost();
+      const Maybe<uint32_t> maybeIndex = host->ComputeIndexInParentContent();
+      MOZ_ASSERT(maybeIndex.isSome(), "not parent or anonymous child?");
+      if (MOZ_UNLIKELY(maybeIndex.isNothing())) {
+        // Unlikely to happen, but still set aNode to nullptr to avoid
+        // leaking information about the shadow tree.
+        aNode = nullptr;
+        return;
+      }
+      aOffset = maybeIndex.value();
+      if (aIsEndNode) {
+        aOffset += 1;
+      }
+      aNode = host->GetParentNode();
+    }
+  };
+
+  nsINode* startNode = aRange->GetMayCrossShadowBoundaryStartContainer();
+  uint32_t startOffset = aRange->MayCrossShadowBoundaryStartOffset();
+  nsINode* endNode = aRange->GetMayCrossShadowBoundaryEndContainer();
+  uint32_t endOffset = aRange->MayCrossShadowBoundaryEndOffset();
+
+  reScope(startNode, startOffset, false /* aIsEndNode */);
+  reScope(endNode, endOffset, true /* aIsEndNode */);
+
+  RefPtr<StaticRange> composedRange = StaticRange::Create(
+      startNode, startOffset, endNode, endOffset, IgnoreErrors());
+  return composedRange.forget();
+}
+
+void Selection::GetComposedRanges(
+    const Sequence<OwningNonNull<ShadowRoot>>& aShadowRoots,
+    nsTArray<RefPtr<StaticRange>>& aComposedRanges) {
+  aComposedRanges.SetCapacity(mStyledRanges.mRanges.Length());
+  for (const auto& range : mStyledRanges.mRanges) {
+    aComposedRanges.AppendElement(GetComposedRange(range.mRange, aShadowRoots));
+  }
+}
+
 void Selection::RemoveAllRangesInternal(ErrorResult& aRv) {
   if (!mFrameSelection) {
     aRv.Throw(NS_ERROR_NOT_INITIALIZED);
