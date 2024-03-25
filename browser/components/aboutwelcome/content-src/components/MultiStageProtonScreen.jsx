@@ -512,6 +512,7 @@ export class ProtonScreen extends React.PureComponent {
         ref={input => {
           this.mainContentHeader = input;
         }}
+        no-rdm={content.no_rdm ? "" : null}
       >
         {isCenterPosition ? null : this.renderSecondarySection(content)}
         <div
