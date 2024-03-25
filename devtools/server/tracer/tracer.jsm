@@ -117,12 +117,10 @@ const customLazy = {
  * @param {Object} options.global
  *        The tracer only log traces related to the code executed within this global.
  *        When omitted, it will default to the options object's global.
+ * @param {Boolean} options.traceAllGlobals
+ *        When set to true, this will trace all the globals running in the current thread.
  * @param {String} options.prefix
  *        Optional string logged as a prefix to all traces.
- * @param {Debugger} options.dbg
- *        Optional spidermonkey's Debugger instance.
- *        This allows devtools to pass a custom instance and ease worker support
- *        where we can't load jsdebugger.sys.mjs.
  * @param {Boolean} options.loggingMethod
  *        Optional setting to use something else than `dump()` to log traces to stdout.
  *        This is mostly used by tests.
@@ -167,10 +165,29 @@ class JavaScriptTracer {
       this.abortController = new AbortController();
     }
 
-    // By default, we would trace only JavaScript related to caller's global.
-    // As there is no way to compute the caller's global default to the global of the
-    // mandatory options argument.
-    this.tracedGlobal = options.global || Cu.getGlobalForObject(options);
+    if (options.traceAllGlobals) {
+      this.traceAllGlobals = true;
+      if (options.traceOnNextInteraction) {
+        throw new Error(
+          "Tracing all globals and waiting for next user interaction are not yet compatible"
+        );
+      }
+      if (this.traceDOMEvents) {
+        throw new Error(
+          "Tracing all globals and DOM Events are not yet compatible"
+        );
+      }
+      if (options.global) {
+        throw new Error(
+          "'global' option should be omitted when using 'traceAllGlobals'"
+        );
+      }
+    } else {
+      // By default, we would trace only JavaScript related to caller's global.
+      // As there is no way to compute the caller's global default to the global of the
+      // mandatory options argument.
+      this.tracedGlobal = options.global || Cu.getGlobalForObject(options);
+    }
 
     // Instantiate a brand new Debugger API so that we can trace independently
     // of all other DevTools operations. i.e. we can pause while tracing without any interference.
@@ -495,6 +512,20 @@ class JavaScriptTracer {
    * This allows to implement tracing independently of DevTools.
    */
   makeDebugger() {
+    if (this.traceAllGlobals) {
+      const dbg = new customLazy.DistinctCompartmentDebugger();
+      dbg.addAllGlobalsAsDebuggees();
+
+      // addAllGlobalAsAdebuggees will also add the global for this module...
+      // which we have to prevent tracing!
+      // eslint-disable-next-line mozilla/reject-globalThis-modification
+      dbg.removeDebuggee(globalThis);
+
+      // Add any future global being created later
+      dbg.onNewGlobalObject = g => dbg.addDebuggee(g);
+      return dbg;
+    }
+
     // When this code runs in the worker thread, Cu isn't available
     // and we don't have system principal anyway in this context.
     const { isSystemPrincipal } =

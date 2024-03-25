@@ -502,3 +502,58 @@ add_task(async function testTracingFilterSourceUrl() {
   info("Stop tracing");
   stopTracing();
 });
+
+add_task(async function testTracingAllGlobals() {
+  // Test the `traceAllGlobals` flag
+
+  // Create two distinct globals in order to verify that both are traced
+  const sandbox1 = Cu.Sandbox("https://example.com");
+  const sandbox2 = Cu.Sandbox("https://example.com");
+
+  const source1 = `function foo() { bar(); }`;
+  Cu.evalInSandbox(source1, sandbox1, null, "sandbox1.js", 1);
+
+  const source2 = `function bar() { }`;
+  Cu.evalInSandbox(source2, sandbox2, null, "sandbox2.js", 1);
+  // Expose `bar` from sandbox2 as global in sandbox1, so that `foo` from sandbox1 can call it.
+  sandbox1.bar = sandbox2.bar;
+
+  // Pass an override method to catch all strings tentatively logged to stdout
+  //
+  // But in this test, we have to evaluate it in a special sandbox which will be ignored by the tracer.
+  // Otherwise, the tracer would do an infinite loop on this loggingMethod.
+  const ignoredGlobal = new Cu.Sandbox(null, { invisibleToDebugger: true });
+  const loggingMethodString = `
+    var logs = [];
+    function loggingMethod(str) {
+      logs.push(str);
+    };
+  `;
+  Cu.evalInSandbox(
+    loggingMethodString,
+    ignoredGlobal,
+    null,
+    "loggin-method.js",
+    1
+  );
+  const { loggingMethod, logs } = ignoredGlobal;
+
+  info("Start tracing on all globals");
+  startTracing({
+    traceAllGlobals: true,
+    loggingMethod,
+  });
+
+  // Call some code while being careful to not call anything else which may be traced
+  sandbox1.foo();
+
+  stopTracing();
+
+  Assert.equal(logs.length, 4);
+  Assert.equal(logs[0], "Start tracing JavaScript\n");
+  Assert.stringContains(logs[1], "λ foo");
+  Assert.stringContains(logs[1], "sandbox1.js:1:18");
+  Assert.stringContains(logs[2], "λ bar");
+  Assert.stringContains(logs[2], "sandbox2.js:1:18");
+  Assert.equal(logs[3], "Stop tracing JavaScript\n");
+});
