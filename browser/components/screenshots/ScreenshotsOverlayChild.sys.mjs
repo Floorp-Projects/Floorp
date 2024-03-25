@@ -293,10 +293,6 @@ export class ScreenshotsOverlay {
   }
 
   handleEvent(event) {
-    if (event.button > 0) {
-      return;
-    }
-
     switch (event.type) {
       case "click":
         this.handleClick(event);
@@ -319,7 +315,36 @@ export class ScreenshotsOverlay {
     }
   }
 
+  /**
+   * If the event came from the primary button, return false as we should not
+   * early return in the event handler function.
+   * If the event had another button, set to the crosshairs or selected state
+   * and return true to early return from the event handler function.
+   * @param {PointerEvent} event
+   * @returns true if the event button(s) was the non primary button
+   *          false otherwise
+   */
+  preEventHandler(event) {
+    if (event.button > 0 || event.buttons > 1) {
+      switch (this.#state) {
+        case STATES.DRAGGING_READY:
+          this.#setState(STATES.CROSSHAIRS);
+          break;
+        case STATES.DRAGGING:
+        case STATES.RESIZING:
+          this.#setState(STATES.SELECTED);
+          break;
+      }
+      return true;
+    }
+    return false;
+  }
+
   handleClick(event) {
+    if (this.preEventHandler(event)) {
+      return;
+    }
+
     switch (event.originalTarget.id) {
       case "screenshots-cancel-button":
       case "cancel":
@@ -354,6 +379,10 @@ export class ScreenshotsOverlay {
    * @param {Event} event The pointerown event
    */
   handlePointerDown(event) {
+    if (this.preEventHandler(event)) {
+      return;
+    }
+
     if (
       event.originalTarget.id === "screenshots-cancel-button" ||
       event.originalTarget.closest("#buttons-container") ===
@@ -382,6 +411,10 @@ export class ScreenshotsOverlay {
    * @param {Event} event The pointermove event
    */
   handlePointerMove(event) {
+    if (this.preEventHandler(event)) {
+      return;
+    }
+
     const { pageX, pageY, clientX, clientY } =
       this.getCoordinatesFromEvent(event);
 
