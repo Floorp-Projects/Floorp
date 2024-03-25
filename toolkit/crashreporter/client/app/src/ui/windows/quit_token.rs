@@ -8,7 +8,7 @@ use windows_sys::Win32::UI::WindowsAndMessaging::PostQuitMessage;
 /// A Cloneable token which will post a quit message (with code 0) to the main loop when the last
 /// instance is dropped.
 #[derive(Clone, Default)]
-pub struct QuitToken(Rc<QuitTokenInternal>);
+pub struct QuitToken(#[allow(dead_code)] Rc<QuitTokenInternal>);
 
 impl QuitToken {
     pub fn new() -> Self {
