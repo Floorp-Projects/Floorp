@@ -60,6 +60,13 @@ ChromeUtils.defineLazyGetter(this, "AlertsServiceDND", function () {
   }
 });
 
+XPCOMUtils.defineLazyServiceGetter(
+  lazy,
+  "gParentalControlsService",
+  "@mozilla.org/parental-controls-service;1",
+  "nsIParentalControlsService"
+);
+
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "OS_AUTH_ENABLED",
@@ -682,11 +689,14 @@ var gPrivacyPane = {
 
     function computeStatus() {
       let mode = Services.dns.currentTrrMode;
-      let confirmationState = Services.dns.currentTrrConfirmationState;
       if (
         mode == Ci.nsIDNSService.MODE_TRRFIRST ||
         mode == Ci.nsIDNSService.MODE_TRRONLY
       ) {
+        if (lazy.gParentalControlsService.parentalControlsEnabled) {
+          return "preferences-doh-status-not-active";
+        }
+        let confirmationState = Services.dns.currentTrrConfirmationState;
         switch (confirmationState) {
           case Ci.nsIDNSService.CONFIRM_TRYING_OK:
           case Ci.nsIDNSService.CONFIRM_OK:
@@ -702,7 +712,16 @@ var gPrivacyPane = {
 
     let errReason = "";
     let confirmationStatus = Services.dns.lastConfirmationStatus;
-    if (confirmationStatus != Cr.NS_OK) {
+    let mode = Services.dns.currentTrrMode;
+    if (
+      (mode == Ci.nsIDNSService.MODE_TRRFIRST ||
+        mode == Ci.nsIDNSService.MODE_TRRONLY) &&
+      lazy.gParentalControlsService.parentalControlsEnabled
+    ) {
+      errReason = Services.dns.getTRRSkipReasonName(
+        Ci.nsITRRSkipReason.TRR_PARENTAL_CONTROL
+      );
+    } else if (confirmationStatus != Cr.NS_OK) {
       errReason = ChromeUtils.getXPCOMErrorName(confirmationStatus);
     } else {
       errReason = Services.dns.getTRRSkipReasonName(
