@@ -181,7 +181,10 @@ suites:
             throttled: "Pageload test using a throttled network environment"
             sample-python-support: "A sample test that uses a python support file to modify the test command."
             connect: "Verifies that connection time on a pageload is zero when a speculative connection has first been made"
-            tp6-bench: "A pageload benchmark test that quickly runs through all of the pages available to produce a single overall metric."
+            tp6-bench: >
+                A pageload benchmark test that quickly runs through a selection of the
+                pages available to produce a single overall metric for fcp, lcp, and
+                loadtime. The metrics from all pages get summarized with the geomean, and mean.
     interactive:
         description: "Browsertime tests that interact with the webpage. Includes responsiveness tests as they make use of this support for navigation. These form of tests allow the specification of browsertime commands through the test manifest."
         tests:

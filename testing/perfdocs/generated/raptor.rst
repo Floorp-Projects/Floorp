@@ -16192,7 +16192,8 @@ Browsertime tests that use a custom pageload test script. These use the pageload
 
    **Owner**: PerfTest Team
 
-   **Description**: A pageload benchmark test that quickly runs through all of the pages available to produce a single overall metric.
+   **Description**: A pageload benchmark test that quickly runs through a selection of the pages available to produce a single overall metric for fcp, lcp, and loadtime. The metrics from all pages get summarized with the geomean, and mean.
+
 
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium, safari
