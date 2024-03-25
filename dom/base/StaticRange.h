@@ -71,6 +71,16 @@ class StaticRange final : public AbstractRange {
    */
   bool IsValid() const;
 
+  void NotifyNodeBecomesShadowHost(nsINode* aNode) {
+    if (aNode == mStart.Container()) {
+      mStart.NotifyParentBecomesShadowHost();
+    }
+
+    if (aNode == mEnd.Container()) {
+      mEnd.NotifyParentBecomesShadowHost();
+    }
+  }
+
  private:
   // Whether the start and end points are in the same tree.
   // They could be in different trees, i.e, cross shadow boundaries.
