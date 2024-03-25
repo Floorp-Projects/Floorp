@@ -121,9 +121,7 @@ html[dir="rtl"] .editor-mount {
   background-color: var(--debug-expression-error-background);
 }
 
-.new-debug-line > .CodeMirror-line,
-/* For CM6 */
-.cm-editor .cm-line.new-debug-line {
+.new-debug-line > .CodeMirror-line {
   background-color: transparent !important;
   outline: var(--debug-line-border) solid 1px;
 }
@@ -134,9 +132,7 @@ html[dir="rtl"] .editor-mount {
   display: none;
 }
 
-.new-debug-line-error > .CodeMirror-line,
-/* For CM6 */
-.cm-editor .cm-line.new-debug-line-error {
+.new-debug-line-error > .CodeMirror-line {
   background-color: var(--debug-expression-error-background) !important;
   outline: var(--debug-line-error-border) solid 1px;
 }
