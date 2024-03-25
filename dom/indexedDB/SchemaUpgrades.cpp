@@ -2863,7 +2863,7 @@ nsresult UpgradeFileIdsFunction::Init(nsIFile* aFMDirectory,
   auto fileManager = MakeSafeRefPtr<DatabaseFileManager>(
       PERSISTENCE_TYPE_INVALID, quota::OriginMetadata{},
       /* aDatabaseName */ u""_ns, /* aDatabaseID */ ""_ns,
-      /* aEnforcingQuota */ false,
+      /* aDatabaseFilePath */ u""_ns, /* aEnforcingQuota */ false,
       /* aIsInPrivateBrowsingMode */ false);
 
   nsresult rv = fileManager->Init(aFMDirectory, aConnection);
