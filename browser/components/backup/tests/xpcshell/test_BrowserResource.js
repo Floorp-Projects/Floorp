@@ -3,7 +3,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
-const { BackupResource, bytesToFuzzyKilobytes } = ChromeUtils.importESModule(
+const { BackupResource } = ChromeUtils.importESModule(
   "resource:///modules/backup/BackupResource.sys.mjs"
 );
 
@@ -35,7 +35,7 @@ add_task(async function test_getFileSize() {
 });
 
 /**
- * Tests that BackupService.getDirectorySize will get the total size of all the files in a directory and it's children in kilobytes.
+ * Tests that BackupService.getFileSize will get the total size of all the files in a directory and it's children in kilobytes.
  */
 add_task(async function test_getDirectorySize() {
   let file = do_get_file("data/test_xulstore.json");
@@ -60,22 +60,4 @@ add_task(async function test_getDirectorySize() {
   );
 
   await IOUtils.remove(testDir, { recursive: true });
-});
-
-/**
- * Tests that bytesToFuzzyKilobytes will convert bytes to kilobytes
- * and round up to the nearest tenth kilobyte.
- */
-add_task(async function test_bytesToFuzzyKilobytes() {
-  let largeSize = bytesToFuzzyKilobytes(1234000);
-
-  Assert.equal(
-    largeSize,
-    1230,
-    "1234 bytes is rounded up to the nearest tenth kilobyte, 1230"
-  );
-
-  let smallSize = bytesToFuzzyKilobytes(3);
-
-  Assert.equal(smallSize, 1, "Sizes under 10 kilobytes return 1 kilobyte");
 });

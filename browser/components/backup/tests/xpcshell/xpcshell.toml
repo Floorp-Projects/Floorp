@@ -3,7 +3,7 @@ head = "head.js"
 firefox-appdir = "browser"
 skip-if = ["os == 'android'"]
 
-["test_BackupResource.js"]
+["test_BrowserResource.js"]
 support-files = ["data/test_xulstore.json"]
 
 ["test_measurements.js"]

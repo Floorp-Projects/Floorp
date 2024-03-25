@@ -15,10 +15,7 @@ EXTRA_JS_MODULES.backup += [
     "BackupResources.sys.mjs",
     "BackupService.sys.mjs",
     "resources/BackupResource.sys.mjs",
-    "resources/CookiesBackupResource.sys.mjs",
     "resources/CredentialsAndSecurityBackupResource.sys.mjs",
-    "resources/FormHistoryBackupResource.sys.mjs",
     "resources/PlacesBackupResource.sys.mjs",
     "resources/PreferencesBackupResource.sys.mjs",
-    "resources/SessionStoreBackupResource.sys.mjs",
 ]
