@@ -1899,10 +1899,6 @@ void ContentParent::ShutDownMessageManager() {
     return;
   }
 
-  mMessageManager->ReceiveMessage(mMessageManager, nullptr,
-                                  CHILD_PROCESS_SHUTDOWN_MESSAGE, false,
-                                  nullptr, nullptr, IgnoreErrors());
-
   mMessageManager->SetOsPid(-1);
   mMessageManager->Disconnect();
   mMessageManager = nullptr;
