@@ -57,7 +57,7 @@ function disallowAdditionalProperties(section) {
 
 add_task(async function test_search_telemetry_validates_to_schema() {
   let schema = await IOUtils.readJSON(
-    PathUtils.join(do_get_cwd().path, "search-telemetry-schema.json")
+    PathUtils.join(do_get_cwd().path, "search-telemetry-v2-schema.json")
   );
   disallowAdditionalProperties(schema);
 

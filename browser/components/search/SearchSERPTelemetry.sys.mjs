@@ -386,7 +386,7 @@ class TelemetryHandler {
    * unit tests can set it to easy to test values.
    *
    * @param {Array} providerInfo
-   *   See {@link https://searchfox.org/mozilla-central/search?q=search-telemetry-schema.json}
+   *   See {@link https://searchfox.org/mozilla-central/search?q=search-telemetry-v2-schema.json}
    *   for type information.
    */
   overrideSearchTelemetryForTests(providerInfo) {
