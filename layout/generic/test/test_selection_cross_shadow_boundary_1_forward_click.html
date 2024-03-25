@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<script>
+SimpleTest.waitForExplicitFinish();
+function run() {
+  document.getElementById("host").attachShadow({ mode: "open" }).innerHTML = "<span>InnerText</span>";
+
+  // Click the top left of "OuterText"
+  synthesizeMouse(document.getElementById("outer"), 0, 0, { type: "mousedown" });
+  synthesizeMouse(document.getElementById("outer"), 0, 0, { type: "mouseup" });
+
+  // Click the bottom right of "InnerText"
+  const inner = host.shadowRoot.firstChild;
+  const rect = inner.getBoundingClientRect();
+  synthesizeMouse(inner, rect.width, rect.height, { type: "mousedown", shiftKey: true});
+  synthesizeMouse(inner, rect.width, rect.height, { type: "mouseup" , shiftKey: true});
+
+  // Above two clicks should select both "OuterText" and "InnerText"
+  const sel = document.getSelection().getComposedRanges(host.shadowRoot)[0];
+
+  // forward selection
+  is(sel.startContainer, outer.firstChild, "startContainer is the OuterText");
+  is(sel.startOffset, 0, "startOffset starts at the first character");
+  is(sel.endContainer, inner.firstChild, "endContainer is the InnerText");
+  is(sel.endOffset, 9, "endOffset ends at the last character");
+
+  SimpleTest.finish();
+}
+</script>
+<body onload="SimpleTest.waitForFocus(run);">
+  <span id="outer">OuterText</span>
+  <div id="host"></div>
+</body>
