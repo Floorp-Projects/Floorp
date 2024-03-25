@@ -21,6 +21,7 @@ import { XPIExports } from "resource://gre/modules/addons/XPIExports.sys.mjs";
 import {
   computeSha256HashAsString,
   getHashStringForCrypto,
+  hasStrongSignature,
 } from "resource://gre/modules/addons/crypto-utils.sys.mjs";
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 import {
@@ -94,6 +95,9 @@ const PREF_XPI_ENABLED = "xpinstall.enabled";
 const PREF_XPI_DIRECT_WHITELISTED = "xpinstall.whitelist.directRequest";
 const PREF_XPI_FILE_WHITELISTED = "xpinstall.whitelist.fileRequest";
 const PREF_XPI_WHITELIST_REQUIRED = "xpinstall.whitelist.required";
+const PREF_XPI_WEAK_SIGNATURES_ALLOWED =
+  "xpinstall.signatures.weakSignaturesTemporarilyAllowed";
+const PREF_XPI_WEAK_SIGNATURES_ALLOWED_DEFAULT = true;
 
 const PREF_SELECTED_THEME = "extensions.activeThemeID";
 
@@ -341,8 +345,11 @@ XPIPackage = class XPIPackage extends Package {
             aZipReader.close();
           }
           resolve({
-            signedState: getSignedStatus(aRv, cert, addonId),
             cert,
+            signedState: getSignedStatus(aRv, cert, addonId),
+            signedTypes: aSignatureInfos?.map(
+              signatureInfo => signatureInfo.signatureAlgorithm
+            ),
           });
         },
       };
@@ -693,9 +700,13 @@ var loadManifest = async function (aPackage, aLocation, aOldAddon) {
   addon.rootURI = aPackage.rootURI.spec;
   addon.location = aLocation;
 
-  let { signedState, cert } = verifiedSignedState;
+  let { cert, signedState, signedTypes } = verifiedSignedState;
   addon.signedState = signedState;
   addon.signedDate = cert?.validity?.notBefore / 1000 || null;
+  // An array of the algorithms used by the signatures found in the signed XPI files,
+  // as an array of integers (see nsIAppSignatureInfo_SignatureAlgorithm enum defined
+  // in nsIX509CertDB.idl).
+  addon.signedTypes = signedTypes;
 
   if (!addon.id) {
     if (cert) {
@@ -909,18 +920,21 @@ function shouldVerifySignedState(aAddonType, aLocation) {
  *        The nsIFile for the bundle to check, either a directory or zip file.
  * @param {AddonInternal} aAddon
  *        The add-on object to verify.
- * @returns {Promise<number>}
- *        A Promise that resolves to an AddonManager.SIGNEDSTATE_* constant.
+ * @returns {Promise<{ signedState: number, signedTypes: Array<number>}>?}
+ *        A Promise that resolves to object including a signedState property set to
+ *        an AddonManager.SIGNEDSTATE_* constant and a signedTypes property set to
+ *        either an array of Ci.nsIAppSignatureInfo SignatureAlgorithm enum values
+ *        or undefined if the file wasn't signed.
  */
 export var verifyBundleSignedState = async function (aBundle, aAddon) {
   let pkg = Package.get(aBundle);
   try {
-    let { signedState } = await pkg.verifySignedState(
+    let { signedState, signedTypes } = await pkg.verifySignedState(
       aAddon.id,
       aAddon.type,
       aAddon.location
     );
-    return signedState;
+    return { signedState, signedTypes };
   } finally {
     pkg.close();
   }
@@ -1632,6 +1646,29 @@ class AddonInstall {
             AddonManager.ERROR_CORRUPT_FILE,
             "signature verification failed",
           ]);
+        }
+
+        // Restrict install for signed extension only signed with weak signature algorithms, unless the
+        // restriction is explicitly disabled through prefs or enterprise policies.
+        if (
+          !XPIInstall.isWeakSignatureInstallAllowed() &&
+          this.addon.signedDate &&
+          !hasStrongSignature(this.addon)
+        ) {
+          // Reject if it is a new install or installing over an existing addon including
+          // strong cryptographic signatures.
+          if (!this.existingAddon || hasStrongSignature(this.existingAddon)) {
+            return Promise.reject([
+              AddonManager.ERROR_CORRUPT_FILE,
+              "install rejected due to the package not including a strong cryptographic signature",
+            ]);
+          }
+
+          // Still allow installs using weak signatures to install if the existing addon also had a
+          // weak signature.
+          logger.warn(
+            `Allow weak signature install over existing "${this.existingAddon.id}" XPI`
+          );
         }
       }
     } finally {
@@ -4342,6 +4379,17 @@ export var XPIInstall = {
   isFileRequestWhitelisted() {
     // Default to whitelisted if the preference does not exist.
     return Services.prefs.getBoolPref(PREF_XPI_FILE_WHITELISTED, true);
+  },
+
+  isWeakSignatureInstallAllowed() {
+    return Services.prefs.getBoolPref(
+      PREF_XPI_WEAK_SIGNATURES_ALLOWED,
+      PREF_XPI_WEAK_SIGNATURES_ALLOWED_DEFAULT
+    );
+  },
+
+  getWeakSignatureInstallPrefName() {
+    return PREF_XPI_WEAK_SIGNATURES_ALLOWED;
   },
 
   /**
