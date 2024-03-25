@@ -216,6 +216,10 @@ void ActiveElementManager::TriggerElementActivation() {
         task.forget(), StaticPrefs::ui_touch_activation_delay_ms());
     AEM_LOG("Scheduling mSetActiveTask %p\n", mSetActiveTask.get());
   }
+  AEM_LOG(
+      "Got both touch-end event and end touch notiication, clearing pan "
+      "state\n");
+  mCanBePanSet = false;
 }
 
 void ActiveElementManager::ClearActivation() {
@@ -237,8 +241,7 @@ bool ActiveElementManager::HandleTouchEndEvent(bool aWasClick) {
 }
 
 bool ActiveElementManager::HandleTouchEnd(bool aWasClick) {
-  AEM_LOG("Touch end, clearing pan state\n");
-  mCanBePanSet = false;
+  AEM_LOG("Touch end\n");
 
   mTouchEndState += TouchEndState::GotTouchEndNotification;
   return MaybeChangeActiveState(aWasClick);
