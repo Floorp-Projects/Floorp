@@ -461,11 +461,13 @@ Element* PointerEventHandler::GetPointerCapturingElement(
 void PointerEventHandler::ReleaseIfCaptureByDescendant(nsIContent* aContent) {
   // We should check that aChild does not contain pointer capturing elements.
   // If it does we should release the pointer capture for the elements.
-  for (const auto& entry : *sPointerCaptureList) {
-    PointerCaptureInfo* data = entry.GetWeak();
-    if (data && data->mPendingElement &&
-        data->mPendingElement->IsInclusiveDescendantOf(aContent)) {
-      ReleasePointerCaptureById(entry.GetKey());
+  if (!sPointerCaptureList->IsEmpty()) {
+    for (const auto& entry : *sPointerCaptureList) {
+      PointerCaptureInfo* data = entry.GetWeak();
+      if (data && data->mPendingElement &&
+          data->mPendingElement->IsInclusiveDescendantOf(aContent)) {
+        ReleasePointerCaptureById(entry.GetKey());
+      }
     }
   }
 }
