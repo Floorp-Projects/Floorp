@@ -8,7 +8,6 @@
 #define mozilla_a11y_uiaRawElmProvider_h__
 
 #include "objbase.h"
-#include "IUnknownImpl.h"
 #include "uiautomation.h"
 
 namespace mozilla {
@@ -23,9 +22,7 @@ class uiaRawElmProvider : public IAccessibleEx,
                           public IRawElementProviderSimple {
  public:
   // IUnknown
-  DECL_IUNKNOWN_INHERITED
-  ULONG STDMETHODCALLTYPE AddRef() override;
-  ULONG STDMETHODCALLTYPE Release() override;
+  STDMETHODIMP QueryInterface(REFIID aIid, void** aInterface);
 
   // IAccessibleEx
   virtual HRESULT STDMETHODCALLTYPE GetObjectForChild(
