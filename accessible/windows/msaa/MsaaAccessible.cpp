@@ -14,6 +14,7 @@
 #include "mozilla/a11y/AccessibleWrap.h"
 #include "mozilla/a11y/Compatibility.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 #include "MsaaAccessible.h"
 #include "MsaaDocAccessible.h"
 #include "MsaaRootAccessible.h"
@@ -522,9 +523,11 @@ MsaaAccessible::QueryInterface(REFIID iid, void** ppv) {
     if (SUCCEEDED(hr)) {
       return hr;
     }
-    hr = uiaRawElmProvider::QueryInterface(iid, ppv);
-    if (SUCCEEDED(hr)) {
-      return hr;
+    if (StaticPrefs::accessibility_uia_enable()) {
+      hr = uiaRawElmProvider::QueryInterface(iid, ppv);
+      if (SUCCEEDED(hr)) {
+        return hr;
+      }
     }
   }
   if (*ppv) {

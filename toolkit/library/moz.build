@@ -59,7 +59,7 @@ def Libxul(name, output_category=None):
     ]
 
     if CONFIG["ACCESSIBILITY"]:
-        DELAYLOAD_DLLS += ["oleacc.dll"]
+        DELAYLOAD_DLLS += ["oleacc.dll", "UIAutomationCore.dll"]
 
     if CONFIG["MOZ_WEBRTC"]:
         DELAYLOAD_DLLS += ["msdmo.dll"]
@@ -381,6 +381,7 @@ if CONFIG["OS_ARCH"] == "WINNT":
     if CONFIG["ACCESSIBILITY"]:
         OS_LIBS += [
             "oleacc",
+            "uiautomationcore",
         ]
 
     # Prevent winapi-rs from statically linking
