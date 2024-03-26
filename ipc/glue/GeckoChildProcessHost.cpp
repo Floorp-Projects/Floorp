@@ -1247,16 +1247,13 @@ Result<Ok, LaunchError> PosixProcessLauncher::DoSetup() {
   // STDOUT_FILENO, for example
   // The fork server doesn't use IPC::Channel, so can skip this step.
   if (mProcessType != GeckoProcessType_ForkServer) {
-#  ifdef MOZ_WIDGET_ANDROID
-    // On Android mChannelDstFd is uninitialised and the launching code uses
-    // only the first of each pair.
-    mLaunchOptions->fds_to_remap.push_back(
-        std::pair<int, int>(mClientChannelHandle.get(), -1));
-#  else
+#  if !defined(MOZ_WIDGET_ANDROID) && !defined(MOZ_WIDGET_UIKIT)
+    // On Android/iOS, mChannelDstFd is initialised to -1 and the launching
+    // code uses only the first of each pair.
     MOZ_ASSERT(mChannelDstFd >= 0);
+#  endif
     mLaunchOptions->fds_to_remap.push_back(
         std::pair<int, int>(mClientChannelHandle.get(), mChannelDstFd));
-#  endif
   }
 
   // no need for kProcessChannelID, the child process inherits the
