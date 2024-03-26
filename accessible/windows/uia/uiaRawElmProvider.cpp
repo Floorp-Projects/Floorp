@@ -73,6 +73,8 @@ uiaRawElmProvider::QueryInterface(REFIID aIid, void** aInterface) {
     *aInterface = static_cast<IRawElementProviderSimple*>(this);
   } else if (aIid == IID_IRawElementProviderFragment) {
     *aInterface = static_cast<IRawElementProviderFragment*>(this);
+  } else if (aIid == IID_IInvokeProvider) {
+    *aInterface = static_cast<IInvokeProvider*>(this);
   } else {
     return E_NOINTERFACE;
   }
@@ -164,8 +166,19 @@ STDMETHODIMP
 uiaRawElmProvider::GetPatternProvider(
     PATTERNID aPatternId, __RPC__deref_out_opt IUnknown** aPatternProvider) {
   if (!aPatternProvider) return E_INVALIDARG;
-
   *aPatternProvider = nullptr;
+  Accessible* acc = Acc();
+  if (!acc) {
+    return CO_E_OBJNOTCONNECTED;
+  }
+  switch (aPatternId) {
+    case UIA_InvokePatternId:
+      if (acc->ActionCount() > 0) {
+        RefPtr<IInvokeProvider> invoke = this;
+        invoke.forget(aPatternProvider);
+      }
+      return S_OK;
+  }
   return S_OK;
 }
 
@@ -450,6 +463,23 @@ uiaRawElmProvider::get_FragmentRoot(
   RefPtr<IRawElementProviderFragmentRoot> fragRoot =
       static_cast<MsaaRootAccessible*>(msaa);
   fragRoot.forget(aRetVal);
+  return S_OK;
+}
+
+// IInvokeProvider methods
+
+STDMETHODIMP
+uiaRawElmProvider::Invoke() {
+  Accessible* acc = Acc();
+  if (!acc) {
+    return CO_E_OBJNOTCONNECTED;
+  }
+  if (acc->DoAction(0)) {
+    // We don't currently have a way to notify when the action was actually
+    // handled. The UIA documentation says it's okay to fire this immediately if
+    // it "is not possible or practical to wait until the action is complete".
+    ::UiaRaiseAutomationEvent(this, UIA_Invoke_InvokedEventId);
+  }
   return S_OK;
 }
 

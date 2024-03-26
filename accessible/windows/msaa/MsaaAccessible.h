@@ -146,6 +146,10 @@ class MsaaAccessible : public ia2Accessible,
                                            EXCEPINFO* pExcepInfo,
                                            UINT* puArgErr) override;
 
+  // UIA's IInvokeProvider has a method called Invoke too, but it's fine because
+  // it accepts very different parameters.
+  using uiaRawElmProvider::Invoke;
+
  protected:
   explicit MsaaAccessible(Accessible* aAcc);
   virtual ~MsaaAccessible();
