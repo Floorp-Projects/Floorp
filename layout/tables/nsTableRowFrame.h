@@ -15,6 +15,11 @@ class nsTableCellFrame;
 namespace mozilla {
 class PresShell;
 struct TableCellReflowInput;
+
+// Yes if table-cells should use 'vertical-align:top' in
+// nsTableCellFrame::BlockDirAlignChild(). This is a hack to workaround our
+// current table row group fragmentation to avoid data loss.
+enum class ForceAlignTopForTableCell : uint8_t { No, Yes };
 }  // namespace mozilla
 
 /**
@@ -104,7 +109,8 @@ class nsTableRowFrame : public nsContainerFrame {
               const ReflowInput& aReflowInput,
               nsReflowStatus& aStatus) override;
 
-  void DidResize();
+  void DidResize(mozilla::ForceAlignTopForTableCell aForceAlignTop =
+                     mozilla::ForceAlignTopForTableCell::No);
 
 #ifdef DEBUG_FRAME_DUMP
   nsresult GetFrameName(nsAString& aResult) const override;
@@ -145,7 +151,11 @@ class nsTableRowFrame : public nsContainerFrame {
   // See nsTableFrame.h
   void AddDeletedRowIndex();
 
-  /** used by row group frame code */
+  /**
+   * This function is called by the row group frame's SplitRowGroup() code when
+   * pushing a row frame that has cell frames that span into it. The cell frame
+   * should be reflowed with the specified available block-size.
+   */
   nscoord ReflowCellFrame(nsPresContext* aPresContext,
                           const ReflowInput& aReflowInput, bool aIsTopOfPage,
                           nsTableCellFrame* aCellFrame, nscoord aAvailableBSize,

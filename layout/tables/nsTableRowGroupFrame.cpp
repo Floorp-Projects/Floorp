@@ -1122,7 +1122,7 @@ void nsTableRowGroupFrame::SplitRowGroup(nsPresContext* aPresContext,
         FinishReflowChild(rowFrame, aPresContext, rowMetrics, &rowReflowInput,
                           wm, dummyPos, dummyContainerSize,
                           ReflowChildFlags::NoMoveFrame);
-        rowFrame->DidResize();
+        rowFrame->DidResize(ForceAlignTopForTableCell::Yes);
 
         if (!aRowForcedPageBreak && !aStatus.IsFullyComplete() &&
             ShouldAvoidBreakInside(aReflowInput)) {

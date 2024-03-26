@@ -305,7 +305,7 @@ static nscoord GetBSizeOfRowsSpannedBelowFirst(
 /**
  * Post-reflow hook. This is where the table row does its post-processing
  */
-void nsTableRowFrame::DidResize() {
+void nsTableRowFrame::DidResize(ForceAlignTopForTableCell aForceAlignTop) {
   // Resize and re-align the cell frames based on our row bsize
   nsTableFrame* tableFrame = GetTableFrame();
 
@@ -369,7 +369,7 @@ void nsTableRowFrame::DidResize() {
 
     // realign cell content based on the new bsize.  We might be able to
     // skip this if the bsize didn't change... maybe.  Hard to tell.
-    cellFrame->BlockDirAlignChild(wm, mMaxCellAscent);
+    cellFrame->BlockDirAlignChild(wm, mMaxCellAscent, aForceAlignTop);
 
     // Always store the overflow, even if the height didn't change, since
     // we'll lose part of our overflow area otherwise.
@@ -996,17 +996,14 @@ void nsTableRowFrame::Reflow(nsPresContext* aPresContext,
   PushDirtyBitToAbsoluteFrames();
 }
 
-/**
- * This function is called by the row group frame's SplitRowGroup() code when
- * pushing a row frame that has cell frames that span into it. The cell frame
- * should be reflowed with the specified height
- */
 nscoord nsTableRowFrame::ReflowCellFrame(nsPresContext* aPresContext,
                                          const ReflowInput& aReflowInput,
                                          bool aIsTopOfPage,
                                          nsTableCellFrame* aCellFrame,
                                          nscoord aAvailableBSize,
                                          nsReflowStatus& aStatus) {
+  MOZ_ASSERT(aPresContext->IsPaginated(),
+             "ReflowCellFrame currently supports only paged media!");
   MOZ_ASSERT(aAvailableBSize != NS_UNCONSTRAINEDSIZE,
              "Why split cell frame if available bsize is unconstrained?");
   WritingMode wm = aReflowInput.GetWritingMode();
@@ -1046,7 +1043,8 @@ nscoord nsTableRowFrame::ReflowCellFrame(nsPresContext* aPresContext,
   // XXX What happens if this cell has 'vertical-align: baseline' ?
   // XXX Why is it assumed that the cell's ascent hasn't changed ?
   if (isCompleteAndNotTruncated) {
-    aCellFrame->BlockDirAlignChild(wm, mMaxCellAscent);
+    aCellFrame->BlockDirAlignChild(wm, mMaxCellAscent,
+                                   ForceAlignTopForTableCell::Yes);
   }
 
   nsTableFrame::InvalidateTableFrame(

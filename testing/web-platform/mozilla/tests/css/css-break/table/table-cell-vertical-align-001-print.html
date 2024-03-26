@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<link rel="author" title="Ting-Yu Lin" href="mailto:tlin@mozilla.com">
+<link rel="author" title="Mozilla" href="https://www.mozilla.org/">
+<link rel="help" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1648947">
+<link rel="match" href="table-cell-vertical-align-001-print-ref.html">
+
+<style>
+@page { size: 5in 3in; margin: 0.5in; }
+body { margin: 0; }
+
+td {
+  border: 3px solid purple;
+}
+ol {
+  margin: 0;
+}
+</style>
+
+<table>
+  <!-- This table row is fragmented across page boundary, and that makes Firefox
+       force table-cells to behave as if they have vertical-align:top, to avoid
+       data loss from the complexity of fragmenting arbitrarily-aligned cells.
+  -->
+  <tr>
+    <td style="vertical-align: baseline">
+      <ol>
+        <li></li><li></li><li></li><li></li>
+        <li></li><li></li><li></li><li></li>
+        <li></li><li></li><li></li><li></li>
+      </ol>
+    </td>
+    <td style="vertical-align: top">top</td>
+    <td style="vertical-align: middle">middle</td>
+    <td style="vertical-align: bottom">bottom</td>
+    <td style="vertical-align: bottom" rowspan="2">bottom</td>
+  </tr>
+  <tr>
+    <td colspan="4">
+      <ol>
+        <li></li><li></li>
+        <li></li><li></li>
+      </ol>
+    </td>
+  </tr>
+</table>

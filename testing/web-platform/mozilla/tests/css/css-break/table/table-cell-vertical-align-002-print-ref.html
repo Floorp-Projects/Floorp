@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<link rel="author" title="Ting-Yu Lin" href="mailto:tlin@mozilla.com">
+<link rel="author" title="Mozilla" href="https://www.mozilla.org/">
+<link rel="help" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1648947">
+<link rel="match" href="table-cell-vertical-align-002-print-ref.html">
+
+<style>
+@page { size: 5in 3in; margin: 0.5in; }
+body { margin: 0; }
+
+.tbody {
+  display: flex;
+  inline-size: min-content;
+}
+.tbody:nth-child(1) {
+  background: cyan;
+}
+.tbody:nth-child(2) {
+  background: yellow;
+}
+ol {
+  margin: 0;
+}
+</style>
+
+<div class="tbody">
+  <ol class="td">
+    <li></li><li></li><li></li><li></li>
+  </ol>
+  <div class="td" style="align-self: end">bottom</div>
+</div>
+
+<div class="tbody">
+  <ol class="td">
+    <li></li><li></li><li></li><li></li>
+    <li></li><li></li><li></li><li></li>
+    <li></li><li></li><li></li><li></li>
+  </ol>
+  <div class="td">bottom</div>
+</div>
