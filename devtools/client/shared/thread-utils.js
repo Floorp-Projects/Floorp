@@ -4,8 +4,9 @@
 "use strict";
 
 const asyncStoreHelper = require("resource://devtools/client/shared/async-store-helper.js");
-const { validateBreakpointLocation } = ChromeUtils.import(
-  "resource://devtools/shared/validate-breakpoint.jsm"
+const { validateBreakpointLocation } = ChromeUtils.importESModule(
+  "resource://devtools/shared/validate-breakpoint.sys.mjs",
+  { global: "contextual" }
 );
 
 const asyncStore = asyncStoreHelper("debugger", {

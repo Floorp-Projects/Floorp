@@ -173,9 +173,7 @@ function WorkerDebuggerLoader(options) {
     }
 
     // If the url has no extension, use ".js" by default.
-    // Also allow loading JSMs, but they would need a shim in order to
-    // be loaded as a CommonJS module. (See SessionDataHelpers.jsm)
-    return url.endsWith(".js") || url.endsWith(".jsm") ? url : url + ".js";
+    return url.endsWith(".js") ? url : url + ".js";
   }
 
   /**
