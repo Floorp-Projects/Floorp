@@ -191,10 +191,8 @@ static bool ParticipatesInAutoDirection(const nsIContent* aContent) {
   if (aContent->IsShadowRoot()) {
     return true;
   }
-  dom::NodeInfo* ni = aContent->NodeInfo();
-  return ni->NamespaceID() == kNameSpaceID_XHTML &&
-         !ni->Equals(nsGkAtoms::script) && !ni->Equals(nsGkAtoms::style) &&
-         !ni->Equals(nsGkAtoms::input) && !ni->Equals(nsGkAtoms::textarea);
+  return !aContent->IsAnyOfHTMLElements(nsGkAtoms::script, nsGkAtoms::style,
+                                        nsGkAtoms::input, nsGkAtoms::textarea);
 }
 
 /**

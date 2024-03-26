@@ -2045,9 +2045,8 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
             NonTSPseudoClass::MozAutofillPreview |
             NonTSPseudoClass::MozRevealed |
             NonTSPseudoClass::MozValueEmpty => self.state().intersects(pseudo_class.state_flag()),
-            // TODO: This applying only to HTML elements is weird.
             NonTSPseudoClass::Dir(ref dir) => {
-                self.is_html_element() && self.state().intersects(dir.element_state())
+                self.state().intersects(dir.element_state())
             },
             NonTSPseudoClass::AnyLink => self.is_link(),
             NonTSPseudoClass::Link => {
