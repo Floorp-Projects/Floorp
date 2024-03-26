@@ -41,7 +41,7 @@ crashtest:
     chunks:
         by-test-platform:
             android-em-7.*: 1
-            linux.*64-tsan-qr/opt: 32
+            linux.*64-tsan-qr/opt: 4
             default: 1
     variants:
         - no-fission
@@ -164,7 +164,7 @@ reftest:
         by-test-platform:
             android-em-7.*: 6
             linux1804-64(-shippable|-devedition|-qr)?/opt: 5
-            linux.*64-tsan-qr/opt: 32
+            linux.*64-tsan-qr/opt: 16
             macosx101.*-64-shippable(-qr)?/opt: 3
             macosx101.*-64/debug: 4
             macosx101.*-64(-ccov.*|-qr)/debug: 6
