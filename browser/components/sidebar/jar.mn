@@ -5,3 +5,6 @@
 browser.jar:
     content/browser/sidebar/sidebar-launcher.css
     content/browser/sidebar/sidebar-launcher.mjs
+    content/browser/sidebar/sidebar-history.html
+    content/browser/sidebar/sidebar-history.mjs
+    content/browser/sidebar/sidebar.css
