@@ -53,6 +53,8 @@ UNCOMMON_TRY_TASK_LABELS = [
     # versions are faster to run. This is mostly perf tests.
     r"-shippable(?!.*(awsy|browsertime|marionette-headless|mochitest-devtools-chrome-fis|raptor|talos|web-platform-tests-wdspec-headless|mochitest-plain-headless))",  # noqa - too long
     r"nightly-simulation",
+    # Can't actually run on try
+    r"notarization",
 ]
 
 
