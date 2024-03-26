@@ -50,6 +50,9 @@ support-files = ["searchTelemetryDomainCategorizationReporting.html"]
 ["browser_search_telemetry_domain_categorization_extraction.js"]
 support-files = ["searchTelemetryDomainExtraction.html"]
 
+["browser_search_telemetry_domain_categorization_no_sponsored_values.js"]
+support-files = ["searchTelemetryDomainCategorizationReportingWithoutAds.html"]
+
 ["browser_search_telemetry_domain_categorization_ping_submission.js"]
 support-files = [
   "searchTelemetryDomainCategorizationReporting.html",
