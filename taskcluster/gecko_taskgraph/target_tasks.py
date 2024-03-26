@@ -1040,6 +1040,19 @@ def target_tasks_nightly_desktop(full_task_graph, parameters, graph_config):
 @_target_task("nightly_all")
 def target_tasks_nightly_all(full_task_graph, parameters, graph_config):
     """Select the set of tasks required for a nightly build of firefox desktop and android"""
+    index_path = (
+        f"{graph_config['trust-domain']}.v2.{parameters['project']}.revision."
+        f"{parameters['head_rev']}.taskgraph.decision-nightly-all"
+    )
+    if os.environ.get("MOZ_AUTOMATION") and retry(
+        index_exists,
+        args=(index_path,),
+        kwargs={
+            "reason": "to avoid triggering multiple nightlies off the same revision",
+        },
+    ):
+        return []
+
     return list(
         set(target_tasks_nightly_desktop(full_task_graph, parameters, graph_config))
         | set(target_tasks_nightly_android(full_task_graph, parameters, graph_config))
