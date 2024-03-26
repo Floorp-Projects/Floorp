@@ -92,9 +92,10 @@ class FontFaceSetImpl : public nsISupports, public gfxUserFontSet {
   virtual void DispatchToOwningThread(const char* aName,
                                       std::function<void()>&& aFunc) = 0;
 
-  // Called by nsFontFaceLoader when the loader has completed normally.
+  // Called by nsFontFaceLoader when the loader has completed normally,
+  // or by gfxUserFontSet if it cancels the loader.
   // It's removed from the mLoaders set.
-  virtual void RemoveLoader(nsFontFaceLoader* aLoader);
+  void RemoveLoader(nsFontFaceLoader* aLoader) override;
 
   virtual bool UpdateRules(const nsTArray<nsFontFaceRuleContainer>& aRules) {
     MOZ_ASSERT_UNREACHABLE("Not implemented!");
