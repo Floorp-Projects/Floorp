@@ -103,7 +103,9 @@ add_task(async function openingWithDevToolsButUnknownSource() {
  * the url will be opened in the debugger.
  */
 add_task(async function openingWithDevToolsAndKnownSource() {
-  const url = URL_ROOT + "command-line.js:5:2";
+  const line = 5;
+  const column = 2;
+  const url = URL_ROOT + `command-line.js:${line}:${column}`;
 
   const tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
@@ -117,22 +119,26 @@ add_task(async function openingWithDevToolsAndKnownSource() {
   sendUrlViaCommandLine(url);
 
   const dbg = toolbox.getPanel("jsdebugger");
+  // Wait for the expected location to be selected and ignore any other default ones.
   const selectedLocation = await BrowserTestUtils.waitForCondition(() => {
-    return dbg._selectors.getSelectedLocation(dbg._getState());
+    const location = dbg._selectors.getSelectedLocation(dbg._getState());
+    return location?.line == line ? location : false;
   });
+
   is(selectedLocation.source.url, URL_ROOT + "command-line.js");
-  is(selectedLocation.line, 5);
-  is(selectedLocation.column, 1);
+  is(selectedLocation.line, line);
+  is(selectedLocation.column, column - 1);
 
   info("Open another URL with only a line");
-  const url2 = URL_ROOT + "command-line.js:6";
+  const secondLine = 6;
+  const url2 = URL_ROOT + `command-line.js:${secondLine}`;
   sendUrlViaCommandLine(url2);
   const selectedLocation2 = await BrowserTestUtils.waitForCondition(() => {
     const location = dbg._selectors.getSelectedLocation(dbg._getState());
-    return location.line == 6 ? location : false;
+    return location.line == secondLine ? location : false;
   });
   is(selectedLocation2.source.url, URL_ROOT + "command-line.js");
-  is(selectedLocation2.line, 6);
+  is(selectedLocation2.line, secondLine);
   is(selectedLocation2.column, 0);
 
   await toolbox.destroy();
