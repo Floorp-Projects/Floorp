@@ -33,7 +33,7 @@
   "gBrowserInit",
   "HandleAppCommandEvent",
   "gotoHistoryIndex",
-  "BrowserForward",
+  "BrowserCommands",
   "BrowserBack",
   "BrowserHandleBackspace",
   "BrowserHandleShiftBackspace",
