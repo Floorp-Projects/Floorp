@@ -257,12 +257,6 @@ def modify_extra_options(config, tests):
                         extra_options.pop(i)
                     break
 
-        if "sina" in test_name:
-            extra_options = test.setdefault("mozharness", {}).setdefault(
-                "extra-options", []
-            )
-            extra_options.append("--post-startup-delay=90000")
-
         yield test
 
 
