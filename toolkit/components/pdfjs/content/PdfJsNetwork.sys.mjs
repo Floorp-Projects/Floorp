@@ -33,7 +33,7 @@ export class NetworkManager {
     this.getXhr =
       args.getXhr ||
       function NetworkManager_getXhr() {
-        return new XMLHttpRequest();
+        return new XMLHttpRequest({ mozAnon: false });
       };
 
     this.currXhrId = 0;

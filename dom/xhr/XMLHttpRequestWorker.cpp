@@ -1388,10 +1388,12 @@ already_AddRefed<XMLHttpRequest> XMLHttpRequestWorker::Construct(
       new XMLHttpRequestWorker(workerPrivate, global);
 
   if (workerPrivate->XHRParamsAllowed()) {
-    if (aParams.mMozSystem)
+    if (aParams.mMozSystem) {
       xhr->mMozAnon = true;
-    else
-      xhr->mMozAnon = aParams.mMozAnon;
+    } else {
+      xhr->mMozAnon =
+          aParams.mMozAnon.WasPassed() ? aParams.mMozAnon.Value() : false;
+    }
     xhr->mMozSystem = aParams.mMozSystem;
   }
 

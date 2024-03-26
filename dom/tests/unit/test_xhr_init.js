@@ -8,6 +8,14 @@ function run_test() {
   Assert.ok(x.mozSystem);
 
   x = new XMLHttpRequest();
+  Assert.ok(x.mozAnon);
+  Assert.ok(x.mozSystem);
+
+  Services.prefs.setBoolPref(
+    "network.fetch.systemDefaultsToOmittingCredentials",
+    false
+  );
+  x = new XMLHttpRequest();
   Assert.ok(!x.mozAnon);
   Assert.ok(x.mozSystem);
 }

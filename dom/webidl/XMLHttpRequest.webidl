@@ -32,9 +32,12 @@ dictionary MozXMLHttpRequestParameters
 {
   /**
    * If true, the request will be sent without cookie and authentication
-   * headers.
+   * headers. Defaults to true for system/privileged/chrome requests,
+   * and to false otherwise.
+   * Note that even if set to true, for system/privileged/chrome requests,
+   * manually-set 'Cookie' headers are not removed.
    */
-  boolean mozAnon = false;
+  boolean mozAnon;
 
   /**
    * If true, the same origin policy will not be enforced on the request.
