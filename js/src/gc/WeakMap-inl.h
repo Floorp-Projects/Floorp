@@ -18,6 +18,7 @@
 #include "gc/GCLock.h"
 #include "gc/Marking.h"
 #include "gc/Zone.h"
+#include "js/Prefs.h"
 #include "js/TraceKind.h"
 #include "vm/JSContext.h"
 
@@ -70,6 +71,16 @@ static inline JSObject* GetDelegate(const T& key) {
 
 template <>
 inline JSObject* GetDelegate(gc::Cell* const&) = delete;
+
+template <typename T>
+static inline bool IsSymbol(const T& key) {
+  return false;
+}
+
+template <>
+inline bool IsSymbol(const HeapPtr<JS::Value>& key) {
+  return key.isSymbol();
+}
 
 }  // namespace gc::detail
 
@@ -303,25 +314,42 @@ bool WeakMap<K, V>::findSweepGroupEdges() {
   for (Range r = all(); !r.empty(); r.popFront()) {
     const K& key = r.front().key();
 
-    // If the key type doesn't have delegates, then this will always return
-    // nullptr and the optimizer can remove the entire body of this function.
     JSObject* delegate = gc::detail::GetDelegate(key);
-    if (!delegate) {
+    if (delegate) {
+      // Marking a WeakMap key's delegate will mark the key, so process the
+      // delegate zone no later than the key zone.
+      Zone* delegateZone = delegate->zone();
+      gc::Cell* keyCell = gc::ToMarkable(key);
+      MOZ_ASSERT(keyCell);
+      Zone* keyZone = keyCell->zone();
+      if (delegateZone != keyZone && delegateZone->isGCMarking() &&
+          keyZone->isGCMarking()) {
+        if (!delegateZone->addSweepGroupEdgeTo(keyZone)) {
+          return false;
+        }
+      }
+    }
+
+#ifdef NIGHTLY_BUILD
+    bool symbolsAsWeakMapKeysEnabled =
+        JS::Prefs::experimental_symbols_as_weakmap_keys();
+    if (!symbolsAsWeakMapKeysEnabled) {
       continue;
     }
 
-    // Marking a WeakMap key's delegate will mark the key, so process the
-    // delegate zone no later than the key zone.
-    Zone* delegateZone = delegate->zone();
-    gc::Cell* keyCell = gc::ToMarkable(key);
-    MOZ_ASSERT(keyCell);
-    Zone* keyZone = keyCell->zone();
-    if (delegateZone != keyZone && delegateZone->isGCMarking() &&
-        keyZone->isGCMarking()) {
-      if (!delegateZone->addSweepGroupEdgeTo(keyZone)) {
-        return false;
+    bool isSym = gc::detail::IsSymbol(key);
+    if (isSym) {
+      gc::Cell* keyCell = gc::ToMarkable(key);
+      Zone* keyZone = keyCell->zone();
+      MOZ_ASSERT(keyZone->isAtomsZone());
+
+      if (zone()->isGCMarking() && keyZone->isGCMarking()) {
+        if (!keyZone->addSweepGroupEdgeTo(zone())) {
+          return false;
+        }
       }
     }
+#endif
   }
   return true;
 }
