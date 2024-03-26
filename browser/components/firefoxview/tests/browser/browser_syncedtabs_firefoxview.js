@@ -309,7 +309,7 @@ add_task(async function test_tabs() {
     );
     ok(tabRow1[1].shadowRoot.textContent.includes, "Sandboxes - Sinon.JS");
     is(tabRow1.length, 2, "Correct number of rows are displayed.");
-    let tabRow2 = tabLists[1].shadowRoot.querySelectorAll("fxview-tab-row");
+    let tabRow2 = tabLists[1].rowEls;
     is(tabRow2.length, 2, "Correct number of rows are dispayed.");
     ok(tabRow1[0].shadowRoot.textContent.includes, "The Guardian");
     ok(tabRow1[1].shadowRoot.textContent.includes, "The Times");

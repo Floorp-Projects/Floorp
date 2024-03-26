@@ -94,12 +94,16 @@ add_task(async function test_container_indicator() {
     await TestUtils.waitForCondition(
       () =>
         Array.from(openTabs.viewCards[0].tabList.rowEls).some(rowEl => {
-          containerTabElem = rowEl;
-          return rowEl.containerObj;
+          let hasContainerObj;
+          if (rowEl.containerObj?.icon) {
+            containerTabElem = rowEl;
+            hasContainerObj = rowEl.containerObj;
+          }
+
+          return hasContainerObj;
         }),
       "The container tab element isn't marked in Fx View."
     );
-
     ok(
       containerTabElem.shadowRoot
         .querySelector(".fxview-tab-row-container-indicator")
