@@ -1,0 +1,132 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.fxview-tab-row-favicon-wrapper {
+  height: 16px;
+  position: relative;
+
+  .fxview-tab-row-favicon::after,
+  .fxview-tab-row-button::after,
+  &.pinned .fxview-tab-row-pinned-media-button {
+    display: block;
+    content: "";
+    background-size: 12px;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: relative;
+    height: 12px;
+    width: 12px;
+    -moz-context-properties: fill, stroke;
+    fill: currentColor;
+    stroke: var(--fxview-background-color-secondary);
+  }
+
+  &:is(.pinnedOnNewTab, .bookmark):not(.attention) .fxview-tab-row-favicon::after {
+    inset-block-start: 9px;
+    inset-inline-end: -6px;
+  }
+
+  &.pinnedOnNewTab .fxview-tab-row-favicon::after,
+  &.pinnedOnNewTab .fxview-tab-row-button::after {
+    background-image: url("chrome://browser/skin/pin-12.svg");
+  }
+
+  &.bookmark .fxview-tab-row-favicon::after,
+  &.bookmark .fxview-tab-row-button::after {
+    background-image: url("chrome://browser/skin/bookmark-12.svg");
+    fill: var(--fxview-primary-action-background);
+  }
+
+  &.attention .fxview-tab-row-favicon::after,
+  &.attention .fxview-tab-row-button::after {
+    background-image: radial-gradient(circle, var(--attention-dot-color), var(--attention-dot-color) 2px, transparent 2px);
+    height: 4px;
+    width: 100%;
+    inset-block-start: 20px;
+  }
+
+  &.pinned .fxview-tab-row-pinned-media-button {
+    inset-block-start: -10px;
+    inset-inline-end: -10px;
+    border-radius: 100%;
+    background-color: var(--fxview-background-color-secondary);
+    padding: 6px;
+    min-width: 0;
+    min-height: 0;
+    position: absolute;
+
+    &[muted="true"] {
+    background-image: url("chrome://global/skin/media/audio-muted.svg");
+    }
+
+    &[soundplaying="true"] {
+    background-image: url("chrome://global/skin/media/audio.svg");
+    }
+  }
+}
+
+.fxview-tab-row-container-indicator {
+  height: 16px;
+  width: 16px;
+  background-image: var(--identity-icon);
+  background-size: cover;
+  -moz-context-properties: fill;
+  fill: var(--identity-icon-color);
+}
+
+.fxview-tab-row-main {
+  :host(.pinned) & {
+    padding: var(--space-small);
+    min-width: unset;
+    margin: 0;
+  }
+}
+
+.fxview-tab-row-button {
+  &[muted="true"],
+  &[soundplaying="true"] {
+    background-size: 16px;
+    background-repeat: no-repeat;
+    background-position: center;
+    -moz-context-properties: fill;
+    fill: currentColor;
+  }
+
+  &[muted="true"] {
+    background-image: url("chrome://global/skin/media/audio-muted.svg");
+  }
+
+  &[soundplaying="true"] {
+    background-image: url("chrome://global/skin/media/audio.svg");
+  }
+}
+
+button.fxview-tab-row-main:hover,
+.fxview-tab-row-button.ghost-button.icon-button:enabled:hover {
+  & .fxview-tab-row-favicon-wrapper .fxview-tab-row-favicon::after {
+    stroke: var(--fxview-indicator-stroke-color-hover);
+  }
+}
+
+@media (prefers-contrast) {
+  button.fxview-tab-row-main {
+    border: 1px solid ButtonText;
+    color: ButtonText;
+  }
+
+  button.fxview-tab-row-main:enabled:hover {
+    border: 1px solid SelectedItem;
+    color: SelectedItem;
+  }
+
+  button.fxview-tab-row-main:enabled:active {
+    color: SelectedItem;
+  }
+
+  button.fxview-tab-row-main:enabled,
+  button.fxview-tab-row-main:enabled:hover,
+  button.fxview-tab-row-main:enabled:active {
+    background-color: ButtonFace;
+  }
+}

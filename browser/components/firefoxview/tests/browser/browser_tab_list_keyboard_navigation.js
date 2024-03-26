@@ -93,7 +93,7 @@ add_task(async function test_focus_moves_after_unmute() {
     );
 
     // Unmute using keyboard
-    card.tabList.currentActiveElementId = mutedTab.focusMediaButton();
+    mutedTab.focusMediaButton();
     isActiveElement(mutedTab.mediaButtonEl);
     info("The media button has focus.");
 
@@ -124,7 +124,7 @@ add_task(async function test_focus_moves_after_unmute() {
     );
     mutedTab = card.tabList.rowEls[0];
 
-    card.tabList.currentActiveElementId = mutedTab.focusLink();
+    mutedTab.focusLink();
     isActiveElement(mutedTab.mainEl);
     info("The 'main' element has focus.");
 

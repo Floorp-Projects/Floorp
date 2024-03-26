@@ -45,13 +45,12 @@ if (!window.IS_STORYBOOK) {
  * @property {string} dateTimeFormat - Expected format for date and/or time
  * @property {string} hasPopup - The aria-haspopup attribute for the secondary action, if required
  * @property {number} maxTabsLength - The max number of tabs for the list
- * @property {boolean} pinnedTabsGridView - Whether to show pinned tabs in a grid view
  * @property {Array} tabItems - Items to show in the tab list
  * @property {string} searchQuery - The query string to highlight, if provided.
  * @property {string} secondaryActionClass - The class used to style the secondary action element
  * @property {string} tertiaryActionClass - The class used to style the tertiary action element
  */
-export default class FxviewTabList extends MozLitElement {
+export class FxviewTabListBase extends MozLitElement {
   constructor() {
     super();
     window.MozXULElement.insertFTLIfNeeded("toolkit/branding/brandings.ftl");
@@ -62,9 +61,6 @@ export default class FxviewTabList extends MozLitElement {
     this.dateTimeFormat = "relative";
     this.maxTabsLength = 25;
     this.tabItems = [];
-    this.pinnedTabs = [];
-    this.pinnedTabsGridView = false;
-    this.unpinnedTabs = [];
     this.compactRows = false;
     this.updatesPaused = true;
     this.#register();
@@ -77,7 +73,6 @@ export default class FxviewTabList extends MozLitElement {
     dateTimeFormat: { type: String },
     hasPopup: { type: String },
     maxTabsLength: { type: Number },
-    pinnedTabsGridView: { type: Boolean },
     tabItems: { type: Array },
     updatesPaused: { type: Boolean },
     searchQuery: { type: String },
@@ -86,7 +81,9 @@ export default class FxviewTabList extends MozLitElement {
   };
 
   static queries = {
-    rowEls: { all: "fxview-tab-row" },
+    rowEls: {
+      all: "fxview-tab-row",
+    },
     rootVirtualListEl: "virtual-list",
   };
 
@@ -108,20 +105,7 @@ export default class FxviewTabList extends MozLitElement {
       }
     }
 
-    // Move pinned tabs to the beginning of the list
-    if (this.pinnedTabsGridView) {
-      // Can set maxTabsLength to -1 to have no max
-      this.unpinnedTabs = this.tabItems.filter(
-        tab => !tab.indicators?.includes("pinned")
-      );
-      this.pinnedTabs = this.tabItems.filter(tab =>
-        tab.indicators?.includes("pinned")
-      );
-      if (this.maxTabsLength > 0) {
-        this.unpinnedTabs = this.unpinnedTabs.slice(0, this.maxTabsLength);
-      }
-      this.tabItems = [...this.pinnedTabs, ...this.unpinnedTabs];
-    } else if (this.maxTabsLength > 0) {
+    if (this.maxTabsLength > 0) {
       this.tabItems = this.tabItems.slice(0, this.maxTabsLength);
     }
   }
@@ -197,90 +181,29 @@ export default class FxviewTabList extends MozLitElement {
     if (e.code == "ArrowUp") {
       // Focus either the link or button of the previous row based on this.currentActiveElementId
       e.preventDefault();
-      if (
-        (this.pinnedTabsGridView &&
-          this.activeIndex >= this.pinnedTabs.length) ||
-        !this.pinnedTabsGridView
-      ) {
-        this.focusPrevRow();
-      }
+      this.focusPrevRow();
     } else if (e.code == "ArrowDown") {
       // Focus either the link or button of the next row based on this.currentActiveElementId
       e.preventDefault();
-      if (
-        this.pinnedTabsGridView &&
-        this.activeIndex < this.pinnedTabs.length
-      ) {
-        this.focusIndex(this.pinnedTabs.length);
-      } else {
-        this.focusNextRow();
-      }
+      this.focusNextRow();
     } else if (e.code == "ArrowRight") {
       // Focus either the link or the button in the current row and
       // set this.currentActiveElementId to that element's ID
       e.preventDefault();
       if (document.dir == "rtl") {
-        this.moveFocusLeft(fxviewTabRow);
+        fxviewTabRow.moveFocusLeft();
       } else {
-        this.moveFocusRight(fxviewTabRow);
+        fxviewTabRow.moveFocusRight();
       }
     } else if (e.code == "ArrowLeft") {
       // Focus either the link or the button in the current row and
       // set this.currentActiveElementId to that element's ID
       e.preventDefault();
       if (document.dir == "rtl") {
-        this.moveFocusRight(fxviewTabRow);
+        fxviewTabRow.moveFocusRight();
       } else {
-        this.moveFocusLeft(fxviewTabRow);
+        fxviewTabRow.moveFocusLeft();
       }
-    }
-  }
-
-  moveFocusRight(fxviewTabRow) {
-    if (
-      this.pinnedTabsGridView &&
-      fxviewTabRow.indicators?.includes("pinned")
-    ) {
-      this.focusNextRow();
-    } else if (
-      (fxviewTabRow.indicators?.includes("soundplaying") ||
-        fxviewTabRow.indicators?.includes("muted")) &&
-      this.currentActiveElementId === "fxview-tab-row-main"
-    ) {
-      this.currentActiveElementId = fxviewTabRow.focusMediaButton();
-    } else if (
-      this.currentActiveElementId === "fxview-tab-row-media-button" ||
-      this.currentActiveElementId === "fxview-tab-row-main"
-    ) {
-      this.currentActiveElementId = fxviewTabRow.focusSecondaryButton();
-    } else if (
-      fxviewTabRow.tertiaryButtonEl &&
-      this.currentActiveElementId === "fxview-tab-row-secondary-button"
-    ) {
-      this.currentActiveElementId = fxviewTabRow.focusTertiaryButton();
-    }
-  }
-
-  moveFocusLeft(fxviewTabRow) {
-    if (
-      this.pinnedTabsGridView &&
-      (fxviewTabRow.indicators?.includes("pinned") ||
-        (this.currentActiveElementId === "fxview-tab-row-main" &&
-          this.activeIndex === this.pinnedTabs.length))
-    ) {
-      this.focusPrevRow();
-    } else if (
-      this.currentActiveElementId === "fxview-tab-row-tertiary-button"
-    ) {
-      this.currentActiveElementId = fxviewTabRow.focusSecondaryButton();
-    } else if (
-      (fxviewTabRow.indicators?.includes("soundplaying") ||
-        fxviewTabRow.indicators?.includes("muted")) &&
-      this.currentActiveElementId === "fxview-tab-row-secondary-button"
-    ) {
-      this.currentActiveElementId = fxviewTabRow.focusMediaButton();
-    } else {
-      this.currentActiveElementId = fxviewTabRow.focusLink();
     }
   }
 
@@ -294,18 +217,12 @@ export default class FxviewTabList extends MozLitElement {
 
   async focusIndex(index) {
     // Focus link or button of item
-    if (
-      ((this.pinnedTabsGridView && index > this.pinnedTabs.length) ||
-        !this.pinnedTabsGridView) &&
-      lazy.virtualListEnabledPref
-    ) {
-      let row = this.rootVirtualListEl.getItem(index - this.pinnedTabs.length);
+    if (lazy.virtualListEnabledPref) {
+      let row = this.rootVirtualListEl.getItem(index);
       if (!row) {
         return;
       }
-      let subList = this.rootVirtualListEl.getSubListForItem(
-        index - this.pinnedTabs.length
-      );
+      let subList = this.rootVirtualListEl.getSubListForItem(index);
       if (!subList) {
         return;
       }
@@ -347,27 +264,15 @@ export default class FxviewTabList extends MozLitElement {
         time = tabItem.time || tabItem.closedAt;
       }
     }
+
     return html`
       <fxview-tab-row
-        exportparts="secondary-button"
-        class=${classMap({
-          pinned:
-            this.pinnedTabsGridView && tabItem.indicators?.includes("pinned"),
-        })}
         ?active=${i == this.activeIndex}
-        ?compact=${this.compactRows}
-        .hasPopup=${this.hasPopup}
-        .containerObj=${ifDefined(tabItem.containerObj)}
+        .compact=${this.compactRows}
         .currentActiveElementId=${this.currentActiveElementId}
-        .dateTimeFormat=${this.dateTimeFormat}
         .favicon=${tabItem.icon}
-        .indicators=${ifDefined(tabItem.indicators)}
-        .pinnedTabsGridView=${ifDefined(this.pinnedTabsGridView)}
         .primaryL10nId=${tabItem.primaryL10nId}
         .primaryL10nArgs=${ifDefined(tabItem.primaryL10nArgs)}
-        role=${this.pinnedTabsGridView && tabItem.indicators?.includes("pinned")
-          ? "none"
-          : "listitem"}
         .secondaryL10nId=${tabItem.secondaryL10nId}
         .secondaryL10nArgs=${ifDefined(tabItem.secondaryL10nArgs)}
         .tertiaryL10nId=${ifDefined(tabItem.tertiaryL10nId)}
@@ -377,41 +282,32 @@ export default class FxviewTabList extends MozLitElement {
         .sourceClosedId=${ifDefined(tabItem.sourceClosedId)}
         .sourceWindowId=${ifDefined(tabItem.sourceWindowId)}
         .closedId=${ifDefined(tabItem.closedId || tabItem.closedId)}
-        .searchQuery=${ifDefined(this.searchQuery)}
+        role="listitem"
         .tabElement=${ifDefined(tabItem.tabElement)}
         .time=${ifDefined(time)}
-        .timeMsPref=${ifDefined(this.timeMsPref)}
         .title=${tabItem.title}
         .url=${tabItem.url}
+        .searchQuery=${ifDefined(this.searchQuery)}
+        .timeMsPref=${ifDefined(this.timeMsPref)}
+        .hasPopup=${this.hasPopup}
+        .dateTimeFormat=${this.dateTimeFormat}
       ></fxview-tab-row>
     `;
   };
 
+  stylesheets() {
+    return html`<link
+      rel="stylesheet"
+      href="chrome://browser/content/firefoxview/fxview-tab-list.css"
+    />`;
+  }
+
   render() {
     if (this.searchQuery && this.tabItems.length === 0) {
-      return this.#emptySearchResultsTemplate();
+      return this.emptySearchResultsTemplate();
     }
     return html`
-      <link
-        rel="stylesheet"
-        href="chrome://browser/content/firefoxview/fxview-tab-list.css"
-      />
-      ${when(
-        this.pinnedTabsGridView && this.pinnedTabs.length,
-        () => html`
-          <div
-            id="fxview-tab-list"
-            class="fxview-tab-list pinned"
-            data-l10n-id="firefoxview-pinned-tabs"
-            role="tablist"
-            @keydown=${this.handleFocusElementInRow}
-          >
-            ${this.pinnedTabs.map((tabItem, i) =>
-              this.itemTemplate(tabItem, i)
-            )}
-          </div>
-        `
-      )}
+      ${this.stylesheets()}
       <div
         id="fxview-tab-list"
         class="fxview-tab-list"
@@ -424,28 +320,21 @@ export default class FxviewTabList extends MozLitElement {
           () => html`
             <virtual-list
               .activeIndex=${this.activeIndex}
-              .pinnedTabsIndexOffset=${this.pinnedTabsGridView
-                ? this.pinnedTabs.length
-                : 0}
-              .items=${this.pinnedTabsGridView
-                ? this.unpinnedTabs
-                : this.tabItems}
+              .items=${this.tabItems}
               .template=${this.itemTemplate}
             ></virtual-list>
-          `
-        )}
-        ${when(
-          !lazy.virtualListEnabledPref,
-          () => html`
-            ${this.tabItems.map((tabItem, i) => this.itemTemplate(tabItem, i))}
-          `
+          `,
+          () =>
+            html`${this.tabItems.map((tabItem, i) =>
+              this.itemTemplate(tabItem, i)
+            )}`
         )}
       </div>
       <slot name="menu"></slot>
     `;
   }
 
-  #emptySearchResultsTemplate() {
+  emptySearchResultsTemplate() {
     return html` <fxview-empty-state
       class="search-results"
       headerLabel="firefoxview-search-results-empty"
@@ -455,23 +344,19 @@ export default class FxviewTabList extends MozLitElement {
     </fxview-empty-state>`;
   }
 }
-customElements.define("fxview-tab-list", FxviewTabList);
+customElements.define("fxview-tab-list", FxviewTabListBase);
 
 /**
  * A tab item that displays favicon, title, url, and time of last access
  *
  * @property {boolean} active - Should current item have focus on keydown
- * @property {boolean} compact - Whether to hide the URL and date/time for this tab.
- * @property {object} containerObj - Info about an open tab's container if within one
  * @property {string} currentActiveElementId - ID of currently focused element within each tab item
  * @property {string} dateTimeFormat - Expected format for date and/or time
  * @property {string} hasPopup - The aria-haspopup attribute for the secondary action, if required
- * @property {string} indicators - An array of tab indicators if any are present
  * @property {number} closedId - The tab ID for when the tab item was closed.
  * @property {number} sourceClosedId - The closedId of the closed window its from if applicable
  * @property {number} sourceWindowId - The sessionstore id of the window its from if applicable
  * @property {string} favicon - The favicon for the tab item.
- * @property {boolean} pinnedTabsGridView - Whether the show pinned tabs in a grid view
  * @property {string} primaryL10nId - The l10n id used for the primary action element
  * @property {string} primaryL10nArgs - The l10n args used for the primary action element
  * @property {string} secondaryL10nId - The l10n id used for the secondary action button
@@ -487,23 +372,13 @@ customElements.define("fxview-tab-list", FxviewTabList);
  * @property {number} timeMsPref - The frequency in milliseconds of updates to relative time
  * @property {string} searchQuery - The query string to highlight, if provided.
  */
-export class FxviewTabRow extends MozLitElement {
-  constructor() {
-    super();
-    this.active = false;
-    this.currentActiveElementId = "fxview-tab-row-main";
-  }
-
+export class FxviewTabRowBase extends MozLitElement {
   static properties = {
     active: { type: Boolean },
-    compact: { type: Boolean },
-    containerObj: { type: Object },
     currentActiveElementId: { type: String },
     dateTimeFormat: { type: String },
     favicon: { type: String },
     hasPopup: { type: String },
-    indicators: { type: Array },
-    pinnedTabsGridView: { type: Boolean },
     primaryL10nId: { type: String },
     primaryL10nArgs: { type: String },
     secondaryL10nId: { type: String },
@@ -523,12 +398,16 @@ export class FxviewTabRow extends MozLitElement {
     searchQuery: { type: String },
   };
 
+  constructor() {
+    super();
+    this.active = false;
+    this.currentActiveElementId = "fxview-tab-row-main";
+  }
+
   static queries = {
     mainEl: "#fxview-tab-row-main",
     secondaryButtonEl: "#fxview-tab-row-secondary-button:not([hidden])",
     tertiaryButtonEl: "#fxview-tab-row-tertiary-button",
-    mediaButtonEl: "#fxview-tab-row-media-button",
-    pinnedTabButtonEl: "button#fxview-tab-row-main",
   };
 
   get currentFocusable() {
@@ -539,50 +418,45 @@ export class FxviewTabRow extends MozLitElement {
     return focusItem;
   }
 
-  connectedCallback() {
-    super.connectedCallback();
-    this.addEventListener("keydown", this.handleKeydown);
-  }
-
-  disconnectedCallback() {
-    super.disconnectedCallback();
-    this.removeEventListener("keydown", this.handleKeydown);
-  }
-
-  handleKeydown(e) {
-    if (
-      this.active &&
-      this.pinnedTabsGridView &&
-      this.indicators?.includes("pinned") &&
-      e.key === "m" &&
-      e.ctrlKey
-    ) {
-      this.muteOrUnmuteTab();
-    }
-  }
-
   focus() {
     this.currentFocusable.focus();
   }
 
   focusSecondaryButton() {
+    let tabList = this.getRootNode().host;
     this.secondaryButtonEl.focus();
-    return this.secondaryButtonEl.id;
+    tabList.currentActiveElementId = this.secondaryButtonEl.id;
   }
 
   focusTertiaryButton() {
+    let tabList = this.getRootNode().host;
     this.tertiaryButtonEl.focus();
-    return this.tertiaryButtonEl.id;
-  }
-
-  focusMediaButton() {
-    this.mediaButtonEl.focus();
-    return this.mediaButtonEl.id;
+    tabList.currentActiveElementId = this.tertiaryButtonEl.id;
   }
 
   focusLink() {
+    let tabList = this.getRootNode().host;
     this.mainEl.focus();
-    return this.mainEl.id;
+    tabList.currentActiveElementId = this.mainEl.id;
+  }
+
+  moveFocusRight() {
+    if (this.currentActiveElementId === "fxview-tab-row-main") {
+      this.focusSecondaryButton();
+    } else if (
+      this.tertiaryButtonEl &&
+      this.currentActiveElementId === "fxview-tab-row-secondary-button"
+    ) {
+      this.focusTertiaryButton();
+    }
+  }
+
+  moveFocusLeft() {
+    if (this.currentActiveElementId === "fxview-tab-row-tertiary-button") {
+      this.focusSecondaryButton();
+    } else {
+      this.focusLink();
+    }
   }
 
   dateFluentArgs(timestamp, dateTimeFormat) {
@@ -652,16 +526,6 @@ export class FxviewTabRow extends MozLitElement {
     return icon;
   }
 
-  getContainerClasses() {
-    let containerClasses = ["fxview-tab-row-container-indicator", "icon"];
-    if (this.containerObj) {
-      let { icon, color } = this.containerObj;
-      containerClasses.push(`identity-icon-${icon}`);
-      containerClasses.push(`identity-color-${color}`);
-    }
-    return containerClasses;
-  }
-
   primaryActionHandler(event) {
     if (
       (event.type == "click" && !event.altKey) ||
@@ -683,9 +547,6 @@ export class FxviewTabRow extends MozLitElement {
 
   secondaryActionHandler(event) {
     if (
-      (this.pinnedTabsGridView &&
-        this.indicators?.includes("pinned") &&
-        event.type == "contextmenu") ||
       (event.type == "click" && event.detail && !event.altKey) ||
       // detail=0 is from keyboard
       (event.type == "click" && !event.detail)
@@ -718,268 +579,6 @@ export class FxviewTabRow extends MozLitElement {
     }
   }
 
-  muteOrUnmuteTab(e) {
-    e?.preventDefault();
-    // If the tab has no sound playing, the mute/unmute button will be removed when toggled.
-    // We should move the focus to the right in that case. This does not apply to pinned tabs
-    // on the Open Tabs page.
-    let shouldMoveFocus =
-      (!this.pinnedTabsGridView ||
-        (!this.indicators.includes("pinned") && this.pinnedTabsGridView)) &&
-      this.mediaButtonEl &&
-      !this.indicators.includes("soundplaying") &&
-      this.currentActiveElementId === "fxview-tab-row-media-button";
-
-    // detail=0 is from keyboard
-    if (e?.type == "click" && !e?.detail && shouldMoveFocus) {
-      let tabList = this.getRootNode().host;
-      if (document.dir == "rtl") {
-        tabList.moveFocusLeft(this);
-      } else {
-        tabList.moveFocusRight(this);
-      }
-    }
-    this.tabElement.toggleMuteAudio();
-  }
-
-  #faviconTemplate() {
-    return html`<span
-      class="${classMap({
-        "fxview-tab-row-favicon-wrapper": true,
-        pinned: this.indicators?.includes("pinned"),
-        pinnedOnNewTab: this.indicators?.includes("pinnedOnNewTab"),
-        attention: this.indicators?.includes("attention"),
-        bookmark: this.indicators?.includes("bookmark"),
-      })}"
-    >
-      <span
-        class="fxview-tab-row-favicon icon"
-        id="fxview-tab-row-favicon"
-        style=${styleMap({
-          backgroundImage: `url(${this.getImageUrl(this.favicon, this.url)})`,
-        })}
-      ></span>
-      ${when(
-        this.pinnedTabsGridView &&
-          this.indicators?.includes("pinned") &&
-          (this.indicators?.includes("muted") ||
-            this.indicators?.includes("soundplaying")),
-        () => html`
-          <button
-            class="fxview-tab-row-pinned-media-button ghost-button icon-button"
-            id="fxview-tab-row-media-button"
-            tabindex="-1"
-            data-l10n-id=${this.indicators?.includes("muted")
-              ? "fxviewtabrow-unmute-tab-button-no-context"
-              : "fxviewtabrow-mute-tab-button-no-context"}
-            muted=${this.indicators?.includes("muted")}
-            soundplaying=${this.indicators?.includes("soundplaying") &&
-            !this.indicators?.includes("muted")}
-            @click=${this.muteOrUnmuteTab}
-          ></button>
-        `
-      )}
-    </span>`;
-  }
-
-  #pinnedTabItemTemplate() {
-    return html` <button
-      class="fxview-tab-row-main ghost-button semi-transparent"
-      id="fxview-tab-row-main"
-      aria-haspopup=${ifDefined(this.hasPopup)}
-      data-l10n-id=${ifDefined(this.primaryL10nId)}
-      data-l10n-args=${ifDefined(this.primaryL10nArgs)}
-      tabindex=${this.active &&
-      this.currentActiveElementId === "fxview-tab-row-main"
-        ? "0"
-        : "-1"}
-      role="tab"
-      @click=${this.primaryActionHandler}
-      @keydown=${this.primaryActionHandler}
-      @contextmenu=${this.secondaryActionHandler}
-    >
-      ${this.#faviconTemplate()}
-    </button>`;
-  }
-
-  #unpinnedTabItemTemplate() {
-    const title = this.title;
-    const relativeString = this.relativeTime(
-      this.time,
-      this.dateTimeFormat,
-      !window.IS_STORYBOOK ? this.timeMsPref : NOW_THRESHOLD_MS
-    );
-    const dateString = this.dateFluentId(
-      this.time,
-      this.dateTimeFormat,
-      !window.IS_STORYBOOK ? this.timeMsPref : NOW_THRESHOLD_MS
-    );
-    const dateArgs = this.dateFluentArgs(this.time, this.dateTimeFormat);
-    const timeString = this.timeFluentId(this.dateTimeFormat);
-    const time = this.time;
-    const timeArgs = JSON.stringify({ time });
-
-    return html`<a
-        href=${ifDefined(this.url)}
-        class="fxview-tab-row-main"
-        id="fxview-tab-row-main"
-        tabindex=${this.active &&
-        this.currentActiveElementId === "fxview-tab-row-main"
-          ? "0"
-          : "-1"}
-        data-l10n-id=${ifDefined(this.primaryL10nId)}
-        data-l10n-args=${ifDefined(this.primaryL10nArgs)}
-        @click=${this.primaryActionHandler}
-        @keydown=${this.primaryActionHandler}
-        title=${!this.primaryL10nId ? this.url : null}
-      >
-        ${this.#faviconTemplate()}
-        <span
-          class="fxview-tab-row-title text-truncated-ellipsis"
-          id="fxview-tab-row-title"
-          dir="auto"
-        >
-          ${when(
-            this.searchQuery,
-            () => this.#highlightSearchMatches(this.searchQuery, title),
-            () => title
-          )}
-        </span>
-        <span class=${this.getContainerClasses().join(" ")}></span>
-        <span
-          class="fxview-tab-row-url text-truncated-ellipsis"
-          id="fxview-tab-row-url"
-          ?hidden=${this.compact}
-        >
-          ${when(
-            this.searchQuery,
-            () =>
-              this.#highlightSearchMatches(
-                this.searchQuery,
-                this.formatURIForDisplay(this.url)
-              ),
-            () => this.formatURIForDisplay(this.url)
-          )}
-        </span>
-        <span
-          class="fxview-tab-row-date"
-          id="fxview-tab-row-date"
-          ?hidden=${this.compact}
-        >
-          <span
-            ?hidden=${relativeString || !dateString}
-            data-l10n-id=${ifDefined(dateString)}
-            data-l10n-args=${ifDefined(dateArgs)}
-          ></span>
-          <span ?hidden=${!relativeString}>${relativeString}</span>
-        </span>
-        <span
-          class="fxview-tab-row-time"
-          id="fxview-tab-row-time"
-          ?hidden=${this.compact || !timeString}
-          data-timestamp=${ifDefined(this.time)}
-          data-l10n-id=${ifDefined(timeString)}
-          data-l10n-args=${ifDefined(timeArgs)}
-        >
-        </span>
-      </a>
-      ${when(
-        this.indicators?.includes("soundplaying") ||
-          this.indicators?.includes("muted"),
-        () => html`<button
-        class=fxview-tab-row-button ghost-button icon-button semi-transparent"
-        id="fxview-tab-row-media-button"
-        data-l10n-id=${
-          this.indicators?.includes("muted")
-            ? "fxviewtabrow-unmute-tab-button-no-context"
-            : "fxviewtabrow-mute-tab-button-no-context"
-        }
-        muted=${this.indicators?.includes("muted")}
-        soundplaying=${
-          this.indicators?.includes("soundplaying") &&
-          !this.indicators?.includes("muted")
-        }
-        @click=${this.muteOrUnmuteTab}
-        tabindex="${
-          this.active &&
-          this.currentActiveElementId === "fxview-tab-row-media-button"
-            ? "0"
-            : "-1"
-        }"
-      ></button>`,
-        () => html`<span></span>`
-      )}
-      ${when(
-        this.secondaryL10nId && this.secondaryActionHandler,
-        () => html`<button
-          class=${classMap({
-            "fxview-tab-row-button": true,
-            "ghost-button": true,
-            "icon-button": true,
-            "semi-transparent": true,
-            [this.secondaryActionClass]: this.secondaryActionClass,
-          })}
-          id="fxview-tab-row-secondary-button"
-          data-l10n-id=${this.secondaryL10nId}
-          data-l10n-args=${ifDefined(this.secondaryL10nArgs)}
-          aria-haspopup=${ifDefined(this.hasPopup)}
-          @click=${this.secondaryActionHandler}
-          tabindex="${this.active &&
-          this.currentActiveElementId === "fxview-tab-row-secondary-button"
-            ? "0"
-            : "-1"}"
-        ></button>`
-      )}
-      ${when(
-        this.tertiaryL10nId && this.tertiaryActionHandler,
-        () => html`<button
-          class=${classMap({
-            "fxview-tab-row-button": true,
-            "ghost-button": true,
-            "icon-button": true,
-            "semi-transparent": true,
-            [this.tertiaryActionClass]: this.tertiaryActionClass,
-          })}
-          id="fxview-tab-row-tertiary-button"
-          data-l10n-id=${this.tertiaryL10nId}
-          data-l10n-args=${ifDefined(this.tertiaryL10nArgs)}
-          aria-haspopup=${ifDefined(this.hasPopup)}
-          @click=${this.tertiaryActionHandler}
-          tabindex="${this.active &&
-          this.currentActiveElementId === "fxview-tab-row-tertiary-button"
-            ? "0"
-            : "-1"}"
-        ></button>`
-      )}`;
-  }
-
-  render() {
-    return html`
-      ${when(
-        this.containerObj,
-        () => html`
-          <link
-            rel="stylesheet"
-            href="chrome://browser/content/usercontext/usercontext.css"
-          />
-        `
-      )}
-      <link
-        rel="stylesheet"
-        href="chrome://global/skin/in-content/common.css"
-      />
-      <link
-        rel="stylesheet"
-        href="chrome://browser/content/firefoxview/fxview-tab-row.css"
-      />
-      ${when(
-        this.pinnedTabsGridView && this.indicators?.includes("pinned"),
-        this.#pinnedTabItemTemplate.bind(this),
-        this.#unpinnedTabItemTemplate.bind(this)
-      )}
-    `;
-  }
-
   /**
    * Find all matches of query within the given string, and compute the result
    * to be rendered.
@@ -987,7 +586,7 @@ export class FxviewTabRow extends MozLitElement {
    * @param {string} query
    * @param {string} string
    */
-  #highlightSearchMatches(query, string) {
+  highlightSearchMatches(query, string) {
     const fragments = [];
     const regex = RegExp(escapeRegExp(query), "dgi");
     let prevIndexEnd = 0;
@@ -1002,6 +601,174 @@ export class FxviewTabRow extends MozLitElement {
     }
     fragments.push(string.substring(prevIndexEnd));
     return fragments;
+  }
+
+  stylesheets() {
+    return html`<link
+        rel="stylesheet"
+        href="chrome://global/skin/in-content/common.css"
+      />
+      <link
+        rel="stylesheet"
+        href="chrome://browser/content/firefoxview/fxview-tab-row.css"
+      />`;
+  }
+
+  faviconTemplate() {
+    return html`<span
+      class="fxview-tab-row-favicon icon"
+      id="fxview-tab-row-favicon"
+      style=${styleMap({
+        backgroundImage: `url(${this.getImageUrl(this.favicon, this.url)})`,
+      })}
+    ></span>`;
+  }
+
+  titleTemplate() {
+    const title = this.title;
+    return html`<span
+      class="fxview-tab-row-title text-truncated-ellipsis"
+      id="fxview-tab-row-title"
+      dir="auto"
+    >
+      ${when(
+        this.searchQuery,
+        () => this.highlightSearchMatches(this.searchQuery, title),
+        () => title
+      )}
+    </span>`;
+  }
+
+  urlTemplate() {
+    return html`<span
+      class="fxview-tab-row-url text-truncated-ellipsis"
+      id="fxview-tab-row-url"
+    >
+      ${when(
+        this.searchQuery,
+        () =>
+          this.highlightSearchMatches(
+            this.searchQuery,
+            this.formatURIForDisplay(this.url)
+          ),
+        () => this.formatURIForDisplay(this.url)
+      )}
+    </span>`;
+  }
+
+  dateTemplate() {
+    const relativeString = this.relativeTime(
+      this.time,
+      this.dateTimeFormat,
+      !window.IS_STORYBOOK ? this.timeMsPref : NOW_THRESHOLD_MS
+    );
+    const dateString = this.dateFluentId(
+      this.time,
+      this.dateTimeFormat,
+      !window.IS_STORYBOOK ? this.timeMsPref : NOW_THRESHOLD_MS
+    );
+    const dateArgs = this.dateFluentArgs(this.time, this.dateTimeFormat);
+    return html`<span class="fxview-tab-row-date" id="fxview-tab-row-date">
+      <span
+        ?hidden=${relativeString || !dateString}
+        data-l10n-id=${ifDefined(dateString)}
+        data-l10n-args=${ifDefined(dateArgs)}
+      ></span>
+      <span ?hidden=${!relativeString}>${relativeString}</span>
+    </span>`;
+  }
+
+  timeTemplate() {
+    const timeString = this.timeFluentId(this.dateTimeFormat);
+    const time = this.time;
+    const timeArgs = JSON.stringify({ time });
+    return html`<span
+      class="fxview-tab-row-time"
+      id="fxview-tab-row-time"
+      ?hidden=${!timeString}
+      data-timestamp=${ifDefined(this.time)}
+      data-l10n-id=${ifDefined(timeString)}
+      data-l10n-args=${ifDefined(timeArgs)}
+    >
+    </span>`;
+  }
+
+  secondaryButtonTemplate() {
+    return html`${when(
+      this.secondaryL10nId && this.secondaryActionHandler,
+      () => html`<button
+        class=${classMap({
+          "fxview-tab-row-button": true,
+          "ghost-button": true,
+          "icon-button": true,
+          "semi-transparent": true,
+          [this.secondaryActionClass]: this.secondaryActionClass,
+        })}
+        id="fxview-tab-row-secondary-button"
+        data-l10n-id=${this.secondaryL10nId}
+        data-l10n-args=${ifDefined(this.secondaryL10nArgs)}
+        aria-haspopup=${ifDefined(this.hasPopup)}
+        @click=${this.secondaryActionHandler}
+        tabindex="${this.active &&
+        this.currentActiveElementId === "fxview-tab-row-secondary-button"
+          ? "0"
+          : "-1"}"
+      ></button>`
+    )}`;
+  }
+
+  tertiaryButtonTemplate() {
+    return html`${when(
+      this.tertiaryL10nId && this.tertiaryActionHandler,
+      () => html`<button
+        class=${classMap({
+          "fxview-tab-row-button": true,
+          "ghost-button": true,
+          "icon-button": true,
+          "semi-transparent": true,
+          [this.tertiaryActionClass]: this.tertiaryActionClass,
+        })}
+        id="fxview-tab-row-tertiary-button"
+        data-l10n-id=${this.tertiaryL10nId}
+        data-l10n-args=${ifDefined(this.tertiaryL10nArgs)}
+        aria-haspopup=${ifDefined(this.hasPopup)}
+        @click=${this.tertiaryActionHandler}
+        tabindex="${this.active &&
+        this.currentActiveElementId === "fxview-tab-row-tertiary-button"
+          ? "0"
+          : "-1"}"
+      ></button>`
+    )}`;
+  }
+}
+
+export class FxviewTabRow extends FxviewTabRowBase {
+  render() {
+    return html`
+      ${this.stylesheets()}
+      <a
+        href=${ifDefined(this.url)}
+        class="fxview-tab-row-main"
+        id="fxview-tab-row-main"
+        tabindex=${this.active &&
+        this.currentActiveElementId === "fxview-tab-row-main"
+          ? "0"
+          : "-1"}
+        data-l10n-id=${ifDefined(this.primaryL10nId)}
+        data-l10n-args=${ifDefined(this.primaryL10nArgs)}
+        @click=${this.primaryActionHandler}
+        @keydown=${this.primaryActionHandler}
+        title=${!this.primaryL10nId ? this.url : null}
+      >
+        ${this.faviconTemplate()} ${this.titleTemplate()}
+        ${when(
+          !this.compact,
+          () => html`${this.urlTemplate()} ${this.dateTemplate()}
+          ${this.timeTemplate()}`
+        )}
+      </a>
+      ${this.secondaryButtonTemplate()} ${this.tertiaryButtonTemplate()}
+    `;
   }
 }
 
@@ -1157,5 +924,4 @@ export class VirtualList extends MozLitElement {
     return "";
   }
 }
-
 customElements.define("virtual-list", VirtualList);

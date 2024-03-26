@@ -203,13 +203,15 @@ add_task(async function open_tab_new_window() {
     const cards = getOpenTabsCards(openTabs);
     const originalWinRows = await getTabRowsForCard(cards[1]);
     const [row] = originalWinRows;
+
+    // We hide date/time and URL columns in tab rows when there are multiple window cards for spacial reasons
     ok(
-      row.shadowRoot.getElementById("fxview-tab-row-url").hidden,
-      "The URL is hidden, since we have two windows."
+      !row.shadowRoot.getElementById("fxview-tab-row-url"),
+      "The URL span element isn't found within the tab row as expected, since we have two open windows."
     );
     ok(
-      row.shadowRoot.getElementById("fxview-tab-row-date").hidden,
-      "The date is hidden, since we have two windows."
+      !row.shadowRoot.getElementById("fxview-tab-row-date"),
+      "The date span element isn't found within the tab row as expected, since we have two open windows."
     );
     info("Select a tab from the original window.");
     tabChangeRaised = BrowserTestUtils.waitForEvent(

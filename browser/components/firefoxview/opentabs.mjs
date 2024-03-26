@@ -17,6 +17,8 @@ import {
   MAX_TABS_FOR_RECENT_BROWSING,
 } from "./helpers.mjs";
 import { ViewPage, ViewPageContent } from "./viewpage.mjs";
+// eslint-disable-next-line import/no-unassigned-import
+import "chrome://browser/content/firefoxview/opentabs-tab-list.mjs";
 
 const lazy = {};
 
@@ -424,7 +426,7 @@ class OpenTabsInViewCard extends ViewPageContent {
   static queries = {
     cardEl: "card-container",
     tabContextMenu: "view-opentabs-contextmenu",
-    tabList: "fxview-tab-list",
+    tabList: "opentabs-tab-list",
   };
 
   openContextMenu(e) {
@@ -565,7 +567,7 @@ class OpenTabsInViewCard extends ViewPageContent {
           () => html`<h3 slot="header">${this.title}</h3>`
         )}
         <div class="fxview-tab-list-container" slot="main">
-          <fxview-tab-list
+          <opentabs-tab-list
             .hasPopup=${"menu"}
             ?compactRows=${this.classList.contains("width-limited")}
             @fxview-tab-list-primary-action=${this.onTabListRowClick}
@@ -579,7 +581,7 @@ class OpenTabsInViewCard extends ViewPageContent {
             .searchQuery=${this.searchQuery}
             .pinnedTabsGridView=${!this.recentBrowsing}
             ><view-opentabs-contextmenu slot="menu"></view-opentabs-contextmenu>
-          </fxview-tab-list>
+          </opentabs-tab-list>
         </div>
         ${when(
           this.recentBrowsing,
