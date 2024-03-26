@@ -600,3 +600,21 @@ win64-libxml2:
         toolchain:
             - linux64-clang-toolchain
             - vs-toolchain
+
+talos-pdfs:
+    description: "Gathers all the PDFs needed for the pdfpaint test"
+    attributes:
+        local-toolchain: true
+    treeherder:
+        symbol: TL(talos-pdfs)
+    worker:
+        max-run-time: 3600
+    run:
+        script: run-fetch-talos-pdfs.sh
+        sparse-profile: null
+        resources:
+            - 'taskcluster/scripts/misc/fetch-talos-pdfs.py'
+        toolchain-artifact: public/build/talos-pdfs.tar.zst
+    fetches:
+        fetch:
+            - mozilla-pdf.js
