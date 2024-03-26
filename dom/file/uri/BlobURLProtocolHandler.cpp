@@ -16,7 +16,6 @@
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/MediaSource.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
-#include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/AppShutdown.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/LoadInfo.h"
@@ -777,7 +776,6 @@ bool BlobURLProtocolHandler::GetDataEntry(
   if (StaticPrefs::privacy_partition_bloburl_per_partition_key() &&
       !aPartitionKey.IsEmpty() && !info->mPartitionKey.IsEmpty() &&
       !aPartitionKey.Equals(info->mPartitionKey)) {
-    mozilla::glean::bloburl::resolve_stopped.Add();
     nsAutoString localizedMsg;
     AutoTArray<nsString, 1> param;
     CopyUTF8toUTF16(aUri, *param.AppendElement());
