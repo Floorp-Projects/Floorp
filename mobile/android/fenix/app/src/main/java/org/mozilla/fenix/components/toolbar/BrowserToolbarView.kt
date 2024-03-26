@@ -109,10 +109,11 @@ class BrowserToolbarView(
                 R.drawable.search_old_url_background
             }
 
+            layout.elevation = resources.getDimension(R.dimen.browser_fragment_toolbar_elevation)
+
             view.apply {
                 setToolbarBehavior()
 
-                elevation = resources.getDimension(R.dimen.browser_fragment_toolbar_elevation)
                 if (!isCustomTabSession) {
                     display.setUrlBackground(
                         AppCompatResources.getDrawable(
