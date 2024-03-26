@@ -520,6 +520,9 @@ class gfxUserFontSet {
   // helper method for performing the actual userfont set rebuild
   virtual void DoRebuildUserFontSet() = 0;
 
+  // forget about a loader that has been cancelled
+  virtual void RemoveLoader(nsFontFaceLoader* aLoader) = 0;
+
   // helper method for FindOrCreateUserFontEntry
   gfxUserFontEntry* FindExistingUserFontEntry(
       gfxUserFontFamily* aFamily,

@@ -20,6 +20,7 @@
 #include "mozilla/PostTraversalTask.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "gfxOTSUtils.h"
+#include "nsFontFaceLoader.h"
 #include "nsIFontLoadCompleteCallback.h"
 #include "nsProxyRelease.h"
 #include "nsContentUtils.h"
@@ -1111,7 +1112,16 @@ void gfxUserFontSet::ForgetLocalFace(gfxUserFontFamily* aFontFamily) {
     // platform fontlist, whether or not the entry actually used a local()
     // source last time, as one might be newly available.
     if (ufe->mSeenLocalSource) {
-      ufe->LoadCanceled();
+      if (auto* loader = ufe->GetLoader()) {
+        // If there's a loader, we need to cancel it, because we'll trigger a
+        // fresh load if required when we re-resolve the font...
+        loader->Cancel();
+        RemoveLoader(loader);
+      } else {
+        // ...otherwise, just reset our state so that we'll re-evaluate the
+        // source list from the beginning.
+        ufe->LoadCanceled();
+      }
     }
   }
   aFontFamily->ReadUnlock();
