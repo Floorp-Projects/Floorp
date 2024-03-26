@@ -3934,9 +3934,9 @@ bool nsBlockFrame::IsSelfEmpty() {
   const nsStyleBorder* border = StyleBorder();
   const nsStylePadding* padding = StylePadding();
 
-  if (border->GetComputedBorderWidth(wm.PhysicalSide(eLogicalSideBStart)) !=
+  if (border->GetComputedBorderWidth(wm.PhysicalSide(LogicalSide::BStart)) !=
           0 ||
-      border->GetComputedBorderWidth(wm.PhysicalSide(eLogicalSideBEnd)) != 0 ||
+      border->GetComputedBorderWidth(wm.PhysicalSide(LogicalSide::BEnd)) != 0 ||
       !nsLayoutUtils::IsPaddingZero(padding->mPadding.GetBStart(wm)) ||
       !nsLayoutUtils::IsPaddingZero(padding->mPadding.GetBEnd(wm))) {
     return false;

@@ -982,11 +982,11 @@ LogicalMargin nsBCTableCellFrame::GetBorderWidth(WritingMode aWM) const {
 
 BCPixelSize nsBCTableCellFrame::GetBorderWidth(LogicalSide aSide) const {
   switch (aSide) {
-    case eLogicalSideBStart:
+    case LogicalSide::BStart:
       return BC_BORDER_END_HALF(mBStartBorder);
-    case eLogicalSideIEnd:
+    case LogicalSide::IEnd:
       return BC_BORDER_START_HALF(mIEndBorder);
-    case eLogicalSideBEnd:
+    case LogicalSide::BEnd:
       return BC_BORDER_START_HALF(mBEndBorder);
     default:
       return BC_BORDER_END_HALF(mIStartBorder);
@@ -995,13 +995,13 @@ BCPixelSize nsBCTableCellFrame::GetBorderWidth(LogicalSide aSide) const {
 
 void nsBCTableCellFrame::SetBorderWidth(LogicalSide aSide, BCPixelSize aValue) {
   switch (aSide) {
-    case eLogicalSideBStart:
+    case LogicalSide::BStart:
       mBStartBorder = aValue;
       break;
-    case eLogicalSideIEnd:
+    case LogicalSide::IEnd:
       mIEndBorder = aValue;
       break;
-    case eLogicalSideBEnd:
+    case LogicalSide::BEnd:
       mBEndBorder = aValue;
       break;
     default:

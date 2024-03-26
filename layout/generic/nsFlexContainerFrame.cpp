@@ -2234,7 +2234,7 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput, float aFlexGrow,
       // getting the physical side that corresponds to these axes' "logical
       // start" sides, and we compare those physical sides to find out if
       // they're the same vs. opposite.
-      mozilla::Side itemBlockStartSide = mWM.PhysicalSide(eLogicalSideBStart);
+      mozilla::Side itemBlockStartSide = mWM.PhysicalSide(LogicalSide::BStart);
 
       // (Note: this is *not* the "flex-start" side; rather, it's the *logical*
       // i.e. WM-relative block-start or inline-start side.)
@@ -2363,7 +2363,7 @@ nscoord FlexItem::BaselineOffsetFromOuterCrossEdge(
              "Only expecting to be doing baseline computations when the "
              "cross axis is the block axis");
 
-  mozilla::Side itemBlockStartSide = mWM.PhysicalSide(eLogicalSideBStart);
+  mozilla::Side itemBlockStartSide = mWM.PhysicalSide(LogicalSide::BStart);
 
   nscoord marginBStartToBaseline = ResolvedAscent(aUseFirstLineBaseline) +
                                    PhysicalMargin().Side(itemBlockStartSide);

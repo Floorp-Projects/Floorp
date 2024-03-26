@@ -347,7 +347,7 @@ inline BCData::BCData() {
   SetBStartStart(true);
   SetIStartStart(true);
   mIStartSize = mCornerSubSize = mBStartSize = 0;
-  mCornerSide = mozilla::eLogicalSideBStart;
+  mCornerSide = static_cast<uint8_t>(mozilla::LogicalSide::BStart);
   mCornerBevel = false;
 }
 
@@ -393,7 +393,7 @@ inline BCPixelSize BCData::GetCorner(mozilla::LogicalSide& aOwnerSide,
 inline void BCData::SetCorner(BCPixelSize aSubSize,
                               mozilla::LogicalSide aOwnerSide, bool aBevel) {
   mCornerSubSize = aSubSize;
-  mCornerSide = aOwnerSide;
+  mCornerSide = static_cast<uint8_t>(aOwnerSide);
   mCornerBevel = aBevel;
 }
 
