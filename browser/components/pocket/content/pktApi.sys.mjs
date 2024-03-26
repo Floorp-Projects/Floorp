@@ -308,7 +308,7 @@ export var pktApi = (function () {
     data.locale_lang = Services.locale.appLocaleAsBCP47;
     data.consumer_key = oAuthConsumerKey;
 
-    var request = new XMLHttpRequest();
+    var request = new XMLHttpRequest({ mozAnon: false });
 
     if (!useBFF) {
       request.open("POST", url, true);
