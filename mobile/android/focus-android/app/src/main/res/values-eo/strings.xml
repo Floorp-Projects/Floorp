@@ -293,7 +293,7 @@
     <string name="preference_privacy_block_ads">Bloki reklamajn spurilojn</string>
     <string name="preference_privacy_block_ads_summary">Kelkaj reklamoj spuras viajn vizitojn, eĉ se vi ne alklakas ilin</string>
     <string name="preference_privacy_block_analytics">Bloki analizajn spurilojn</string>
-    <string name="preference_privacy_block_analytics_summary">Ili estas uzataj por kolekti, analizi kaj mezuri agojn, kiel tuŝetojn kaj ŝovojn</string>
+    <string name="preference_privacy_block_analytics_summary">Ili estas uzataj por kolekti, analizi kaj mezuri agojn, kiel tuŝetojn kaj rulumojn</string>
     <string name="preference_privacy_block_social">Bloki sociajn spurilojn</string>
     <string name="preference_privacy_block_social_summary">Inkluzivitaj en retejoj por spuri viajn vizitojn kaj montri funkciojn, kiel dividajn butonojn</string>
     <string name="preference_privacy_block_content">Bloki spurilojn en aliaj enhavoj</string>
