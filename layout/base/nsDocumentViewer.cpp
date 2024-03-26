@@ -1143,6 +1143,8 @@ nsDocumentViewer::PermitUnload(PermitUnloadAction aAction,
 
   *aPermitUnload = true;
 
+  NS_ENSURE_STATE(mContainer);
+
   RefPtr<BrowsingContext> bc = mContainer->GetBrowsingContext();
   if (!bc) {
     return NS_OK;
@@ -1224,7 +1226,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY PermitUnloadResult
 nsDocumentViewer::DispatchBeforeUnload() {
   AutoDontWarnAboutSyncXHR disableSyncXHRWarning;
 
-  if (!mDocument || mInPermitUnload || mInPermitUnloadPrompt) {
+  if (!mDocument || mInPermitUnload || mInPermitUnloadPrompt || !mContainer) {
     return eAllowNavigation;
   }
 
@@ -2546,6 +2548,8 @@ nsDocumentViewer::ForgetReloadEncoding() {
 MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP nsDocumentViewer::GetContentSize(
     int32_t aMaxWidth, int32_t aMaxHeight, int32_t aPrefWidth, int32_t* aWidth,
     int32_t* aHeight) {
+  NS_ENSURE_STATE(mContainer);
+
   RefPtr<BrowsingContext> bc = mContainer->GetBrowsingContext();
   NS_ENSURE_TRUE(bc, NS_ERROR_NOT_AVAILABLE);
 
