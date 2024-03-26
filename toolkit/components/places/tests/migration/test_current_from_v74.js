@@ -4,7 +4,16 @@
 "use strict";
 
 add_task(async function setup() {
-  await setupPlacesDatabase("places_v74.sqlite");
+  let path = await setupPlacesDatabase("places_v74.sqlite");
+  let db = await Sqlite.openConnection({ path });
+  await db.execute(`
+  INSERT INTO moz_origins (id, prefix, host, frecency, recalc_frecency)
+  VALUES
+    (100, 'https://', 'test1.com', 0, 0),
+    (101, 'https://', 'test2.com', 0, 0),
+    (102, 'https://', 'test3.com', 0, 0)
+  `);
+  await db.close();
 });
 
 add_task(async function database_is_valid() {
@@ -19,4 +28,19 @@ add_task(async function database_is_valid() {
 
   await db.execute("SELECT * FROM moz_places_extra");
   await db.execute("SELECT * from moz_historyvisits_extra");
+});
+
+add_task(async function recalc_origins_frecency() {
+  const db = await PlacesUtils.promiseDBConnection();
+  Assert.equal(await db.getSchemaVersion(), CURRENT_SCHEMA_VERSION);
+
+  Assert.equal(
+    (
+      await db.execute(
+        "SELECT count(*) FROM moz_origins WHERE recalc_frecency = 0"
+      )
+    )[0].getResultByIndex(0),
+    0,
+    "All entries should be set for recalculation"
+  );
 });

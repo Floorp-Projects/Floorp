@@ -1260,6 +1260,15 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
 
       // Firefox 118 uses schema version 75
 
+      // Version 76 was not correctly invoked and thus removed.
+
+      if (currentSchemaVersion < 77) {
+        rv = MigrateV77Up();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // Firefox 125 uses schema version 77
+
       // Schema Upgrades must add migration code here.
       // >>> IMPORTANT! <<<
       // NEVER MIX UP SYNC AND ASYNC EXECUTION IN MIGRATORS, YOU MAY LOCK THE
@@ -2041,7 +2050,7 @@ nsresult Database::MigrateV75Up() {
   return NS_OK;
 }
 
-nsresult Database::MigrateV76Up() {
+nsresult Database::MigrateV77Up() {
   // Recalculate origins frecency.
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = mMainConn->ExecuteSimpleSQL(
