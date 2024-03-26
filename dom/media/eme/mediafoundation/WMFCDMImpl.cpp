@@ -65,6 +65,8 @@ bool WMFCDMImpl::GetCapabilities(bool aIsHardwareDecryption,
        aIsHardwareDecryption](const MFCDMCapabilitiesIPDL& capabilities) {
         EME_LOG("capabilities: keySystem=%s (hw-secure=%d)", keySystem.c_str(),
                 aIsHardwareDecryption);
+        MOZ_ASSERT(aIsHardwareDecryption ==
+                   capabilities.isHardwareDecryption());
         for (const auto& v : capabilities.videoCapabilities()) {
           EME_LOG("capabilities: video=%s",
                   NS_ConvertUTF16toUTF8(v.contentType()).get());
