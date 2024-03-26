@@ -2217,6 +2217,17 @@ class CategorizationRecorder {
     GleanPings.serpCategorization.submit(reason);
   }
 
+  /**
+   * Tests are able to clear telemetry on demand. When that happens, we need to
+   * ensure we're doing to the same here or else the internal count in tests
+   * will be inaccurate.
+   */
+  testReset() {
+    if (Cu.isInAutomation) {
+      this.#resetCategorizationRecorderData();
+    }
+  }
+
   #resetCategorizationRecorderData() {
     this.#serpCategorizationsCount = 0;
     this.#userInteractionStartTime = null;
