@@ -6,6 +6,10 @@
 // in non-window non-Worker context
 
 function run_test() {
+  Services.prefs.setBoolPref(
+    "network.fetch.systemDefaultsToOmittingCredentials",
+    false
+  );
   var xhr = new XMLHttpRequest();
   xhr.open("GET", "data:,", false);
   var exceptionThrown = false;
@@ -13,6 +17,7 @@ function run_test() {
     xhr.responseType = "";
     xhr.withCredentials = false;
   } catch (e) {
+    console.error(e);
     exceptionThrown = true;
   }
   Assert.equal(false, exceptionThrown);
