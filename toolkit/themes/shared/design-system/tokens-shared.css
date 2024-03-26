@@ -7,10 +7,88 @@
 @layer tokens-foundation {
   :root,
   :host(.anonymous-content-host) {
-    /* Base tokens */
-    /* Do not use base tokens directly as they don't carry any meaning and are used to set our base. Refer to Application tokens below. */
+    /** Background Color **/
+    --background-color-box: light-dark(var(--color-white), var(--color-gray-80));
+    --background-color-critical: light-dark(var(--color-red-05), var(--color-red-80));
+    --background-color-information: light-dark(var(--color-blue-05), var(--color-blue-80));
+    --background-color-success: light-dark(var(--color-green-05), var(--color-green-80));
+    --background-color-warning: light-dark(var(--color-yellow-05), var(--color-yellow-80));
+
+    /** Border **/
+    --border-color-interactive-hover: var(--border-color-interactive);
+    --border-color-interactive-active: var(--border-color-interactive);
+    --border-color-interactive-disabled: var(--border-color-interactive);
+    --border-radius-circle: 9999px;
+    --border-radius-small: 4px;
+    --border-radius-medium: 8px;
+    --border-width: 1px;
+
+    /** Box Shadow **/
+    --box-shadow-10: 0 1px 4px var(--color-black-a10);
+
+    /** Button **/
+    --button-background-color-disabled: var(--button-background-color);
+    --button-background-color-destructive: light-dark(var(--color-red-50), var(--color-red-30));
+    --button-background-color-destructive-hover: light-dark(var(--color-red-60), var(--color-red-10));
+    --button-background-color-destructive-active: light-dark(var(--color-red-70), var(--color-red-05));
+    --button-background-color-destructive-disabled: var(--button-background-color-destructive);
+    --button-background-color-ghost: transparent;
+    --button-background-color-ghost-hover: var(--button-background-color-hover);
+    --button-background-color-ghost-active: var(--button-background-color-active);
+    --button-background-color-ghost-disabled: var(--button-background-color-ghost);
+    --button-background-color-primary: var(--color-accent-primary);
+    --button-background-color-primary-hover: var(--color-accent-primary-hover);
+    --button-background-color-primary-active: var(--color-accent-primary-active);
+    --button-background-color-primary-disabled: var(--button-background-color-primary);
+    --button-border: var(--border-width) solid var(--button-border-color);
+    --button-border-color: transparent;
+    --button-border-color-hover: var(--button-border-color);
+    --button-border-color-active: var(--button-border-color);
+    --button-border-color-disabled: var(--button-border-color);
+    --button-border-color-destructive: transparent;
+    --button-border-color-destructive-hover: var(--button-border-color-destructive);
+    --button-border-color-destructive-active: var(--button-border-color-destructive);
+    --button-border-color-destructive-disabled: var(--button-border-color-destructive);
+    --button-border-color-ghost: var(--button-border-color);
+    --button-border-color-ghost-hover: var(--button-border-color-hover);
+    --button-border-color-ghost-active: var(--button-border-color-active);
+    --button-border-color-ghost-disabled: var(--button-border-color-disabled);
+    --button-border-color-primary: transparent;
+    --button-border-color-primary-hover: var(--button-border-color-primary);
+    --button-border-color-primary-active: var(--button-border-color-primary);
+    --button-border-color-primary-disabled: var(--button-border-color-primary);
+    --button-border-radius: var(--border-radius-small);
+    --button-font-size: var(--font-size-root);
+    --button-font-size-small: var(--font-size-small);
+    --button-font-weight: var(--font-weight-bold);
+    --button-min-height: var(--size-item-large);
+    --button-min-height-small: var(--size-item-medium);
+    --button-opacity-disabled: 0.5;
+    --button-padding: var(--space-xsmall) var(--space-large);
+    --button-padding-icon: 0;
+    --button-size-icon: var(--button-min-height);
+    --button-size-icon-small: var(--button-min-height-small);
+    --button-text-color-hover: var(--button-text-color);
+    --button-text-color-active: var(--button-text-color);
+    --button-text-color-disabled: var(--button-text-color);
+    --button-text-color-destructive: light-dark(var(--color-gray-05), var(--color-gray-100));
+    --button-text-color-destructive-hover: var(--button-text-color-destructive);
+    --button-text-color-destructive-active: var(--button-text-color-destructive);
+    --button-text-color-destructive-disabled: var(--button-text-color-destructive);
+    --button-text-color-ghost: var(--button-text-color);
+    --button-text-color-ghost-hover: var(--button-text-color-hover);
+    --button-text-color-ghost-active: var(--button-text-color-active);
+    --button-text-color-ghost-disabled: var(--button-text-color-disabled);
+    --button-text-color-primary-hover: var(--button-text-color-primary);
+    --button-text-color-primary-active: var(--button-text-color-primary-hover);
+    --button-text-color-primary-disabled: var(--button-text-color-primary);
+
+    /** Checkbox **/
+    --checkbox-margin-inline: var(--space-small);
+    /* TODO Bug 1876537: Make this em-based, probably? */
+    --checkbox-size: var(--size-item-small);
+
     /** Color **/
-    --color-white: #ffffff;
     --color-black-a10: rgba(0, 0, 0, 0.1);
     --color-blue-05: #deeafc;
     --color-blue-30: #73a7f3;
@@ -38,122 +116,34 @@
     --color-red-30: #f37f98;
     --color-red-50: #d7264c;
     --color-red-60: #ac1e3d;
-    --color-red-70: #8A1831;
+    --color-red-70: #8a1831;
     --color-red-80: #690f22;
+    --color-white: #ffffff;
     --color-yellow-05: #ffebcd;
     --color-yellow-30: #e49c49;
     --color-yellow-50: #cd411e;
     --color-yellow-80: #5a3100;
 
-    /* Application tokens */
-    /** Border **/
-    --border-radius-circle: 9999px;
-    --border-radius-small: 4px;
-    --border-radius-medium: 8px;
-    --border-width: 1px;
-    --border-interactive-color-hover: var(--border-interactive-color);
-    --border-interactive-color-active: var(--border-interactive-color);
-    --border-interactive-color-disabled: var(--border-interactive-color);
-
-    /** Box **/
-    --box-background-color: light-dark(var(--color-white), var(--color-gray-80));
-    --box-shadow-10: 0 1px 4px var(--color-black-a10);
-
-    /** Color **/
-    --color-background-information: light-dark(var(--color-blue-05), var(--color-blue-80));
-    --color-background-success: light-dark(var(--color-green-05), var(--color-green-80));
-    --color-background-warning: light-dark(var(--color-yellow-05), var(--color-yellow-80));
-    --color-background-critical: light-dark(var(--color-red-05), var(--color-red-80));
-    --color-error-outline: light-dark(var(--color-red-50), var(--color-red-20));
-
-    /** Font weight **/
-    --font-weight: normal;
-    --font-weight-bold: 600;
-
-    /** Focus outline **/
+    /** Focus Outline **/
     --focus-outline: var(--focus-outline-width) solid var(--focus-outline-color);
     --focus-outline-color: var(--color-accent-primary);
     --focus-outline-inset: calc(-1 * var(--focus-outline-width));
     --focus-outline-offset: 2px;
     --focus-outline-width: 2px;
 
+    /** Font Weight **/
+    --font-weight: normal;
+    --font-weight-bold: 600;
+
     /** Icon **/
     --icon-color: light-dark(var(--color-gray-70), var(--color-gray-05));
+    --icon-color-critical: light-dark(var(--color-red-50), var(--color-red-30));
     --icon-color-information: light-dark(var(--color-blue-50), var(--color-blue-30));
     --icon-color-success: light-dark(var(--color-green-50), var(--color-green-30));
     --icon-color-warning: light-dark(var(--color-yellow-50), var(--color-yellow-30));
-    --icon-color-critical: light-dark(var(--color-red-50), var(--color-red-30));
     --icon-size-default: var(--size-item-small);
 
-    /** Input **/
-    /*** Button ***/
-    --button-border: var(--border-width) solid var(--button-border-color);
-    --button-border-radius: var(--border-radius-small);
-    --button-font-weight: var(--font-weight-bold);
-    --button-font-size: var(--font-size-root);
-    --button-font-size-small: var(--font-size-small);
-    --button-min-height: var(--size-item-large);
-    --button-min-height-small: var(--size-item-medium);
-    --button-size-icon: var(--button-min-height);
-    --button-size-icon-small: var(--button-min-height-small);
-    --button-padding: var(--space-xsmall) var(--space-large);
-    --button-padding-icon: 0;
-
-    --button-text-color: var(--text-color);
-    --button-text-color-hover: var(--button-text-color);
-    --button-text-color-active: var(--button-text-color);
-    --button-text-color-disabled: var(--button-text-color);
-    --button-border-color: transparent;
-    --button-border-color-hover: var(--button-border-color);
-    --button-border-color-active: var(--button-border-color);
-    --button-border-color-disabled: var(--button-border-color);
-    --button-background-color-disabled: var(--button-background-color);
-    --button-opacity-disabled: 0.5;
-
-    --button-background-color-primary: var(--color-accent-primary);
-    --button-background-color-primary-hover: var(--color-accent-primary-hover);
-    --button-background-color-primary-active: var(--color-accent-primary-active);
-    --button-background-color-primary-disabled: var(--button-background-color-primary);
-    --button-text-color-primary-hover: var(--button-text-color-primary);
-    --button-text-color-primary-active: var(--button-text-color-primary-hover);
-    --button-text-color-primary-disabled: var(--button-text-color-primary);
-    --button-border-color-primary: transparent;
-    --button-border-color-primary-hover: var(--button-border-color-primary);
-    --button-border-color-primary-active: var(--button-border-color-primary);
-    --button-border-color-primary-disabled: var(--button-border-color-primary);
-
-    --button-background-color-destructive: light-dark(var(--color-red-50), var(--color-red-30));
-    --button-background-color-destructive-hover: light-dark(var(--color-red-60), var(--color-red-10));
-    --button-background-color-destructive-active: light-dark(var(--color-red-70), var(--color-red-05));
-    --button-background-color-destructive-disabled: var(--button-background-color-destructive);
-    --button-text-color-destructive: light-dark(var(--color-gray-05), var(--color-gray-100));
-    --button-text-color-destructive-hover: var(--button-text-color-destructive);
-    --button-text-color-destructive-active: var(--button-text-color-destructive);
-    --button-text-color-destructive-disabled: var(--button-text-color-destructive);
-    --button-border-color-destructive: transparent;
-    --button-border-color-destructive-hover: var(--button-border-color-destructive);
-    --button-border-color-destructive-active: var(--button-border-color-destructive);
-    --button-border-color-destructive-disabled: var(--button-border-color-destructive);
-
-    --button-background-color-ghost: transparent;
-    --button-background-color-ghost-hover: var(--button-background-color-hover);
-    --button-background-color-ghost-active: var(--button-background-color-active);
-    --button-background-color-ghost-disabled: var(--button-background-color-ghost);
-    --button-text-color-ghost: var(--button-text-color);
-    --button-text-color-ghost-hover: var(--button-text-color-hover);
-    --button-text-color-ghost-active: var(--button-text-color-ghost-active);
-    --button-text-color-ghost-disabled: var(--button-text-color);
-    --button-border-color-ghost: var(--button-border-color);
-    --button-border-color-ghost-hover: var(--button-border-color-hover);
-    --button-border-color-ghost-active: var(--button-border-color-active);
-    --button-border-color-ghost-disabled: var(--button-border-color);
-
-    /*** Checkbox ***/
-    --checkbox-margin-inline: var(--space-small);
-    /* TODO Bug 1876537: Make this em-based, probably? */
-    --checkbox-size: var(--size-item-small);
-
-    /*** Text ***/
+    /** Input - Text **/
     --input-text-min-height: var(--button-min-height);
 
     /** Link **/
@@ -162,9 +152,8 @@
       overlapping adjacent text. */
     --link-focus-outline-offset: 1px;
 
-    /** Text **/
-    --text-color-deemphasized: color-mix(in srgb, currentColor 69%, transparent);
-    --text-color-error: light-dark(var(--color-red-50), var(--color-red-20));
+    /** Outline Color **/
+    --outline-color-error: light-dark(var(--color-red-50), var(--color-red-20));
 
     /** Size **/
     --size-item-small: 16px;
@@ -179,6 +168,10 @@
     --space-large: calc(4 * var(--space-xsmall));
     --space-xlarge: calc(6 * var(--space-xsmall));
     --space-xxlarge: calc(8 * var(--space-xsmall));
+
+    /** Text **/
+    --text-color-deemphasized: color-mix(in srgb, currentColor 69%, transparent);
+    --text-color-error: light-dark(var(--color-red-50), var(--color-red-20));
   }
 }
 
@@ -191,19 +184,28 @@
       /** Attention Dot **/
       --attention-dot-color: AccentColor;
 
-      /* Border */
+      /** Background Color **/
+      --background-color-box: var(--background-color-canvas);
+      --background-color-canvas: Canvas;
+      --background-color-critical: var(--background-color-canvas);
+      --background-color-information: var(--background-color-canvas);
+      --background-color-success: var(--background-color-canvas);
+      --background-color-warning: var(--background-color-canvas);
+
+      /** Border **/
       --border-color: var(--text-color);
-      --border-interactive-color: AccentColor;
-      --border-interactive-color-hover: ButtonText;
-      --border-interactive-color-active: AccentColor;
-      --border-interactive-color-disabled: GrayText;
+      --border-color-interactive: var(--text-color);
 
-      /** Box **/
-      --box-background-color: var(--color-canvas);
-
-      /* Button */
-      --button-border-color: var(--button-text-color);
+      /** Button **/
       --button-background-color-ghost: var(--button-background-color);
+      --button-border-color: var(--button-text-color);
+
+      /** Icon **/
+      --icon-color: var(--text-color);
+      --icon-color-critical: var(--icon-color);
+      --icon-color-information: var(--icon-color);
+      --icon-color-success: var(--icon-color);
+      --icon-color-warning: var(--icon-color);
 
       /** Link **/
       --link-color: LinkText;
@@ -211,25 +213,13 @@
       --link-color-active: ActiveText;
       --link-color-visited: var(--link-color);
 
-      /** Color **/
-      --color-canvas: Canvas;
-      --color-background-information: var(--color-canvas);
-      --color-background-success: var(--color-canvas);
-      --color-background-warning: var(--color-canvas);
-      --color-background-critical: var(--color-canvas);
-      --color-error-outline: var(--border-color);
-
-      /** Icon **/
-      --icon-color: var(--text-color);
-      --icon-color-information: var(--icon-color);
-      --icon-color-success: var(--icon-color);
-      --icon-color-warning: var(--icon-color);
-      --icon-color-critical: var(--icon-color);
+      /** Outline Color **/
+      --outline-color-error: var(--border-color);
 
       /** Text **/
       --text-color: CanvasText;
-      --text-color-error: inherit;
       --text-color-deemphasized: inherit;
+      --text-color-error: inherit;
     }
   }
 }
@@ -242,62 +232,50 @@
     :root,
     :host(.anonymous-content-host) {
       /** Border **/
-      --border-interactive-color: ButtonText;
-      --border-interactive-color-hover: SelectedItem;
-      --border-interactive-color-active: ButtonText;
-      --border-interactive-color-disabled: GrayText;
+      --border-color-interactive: ButtonText;
+      --border-color-interactive-hover: SelectedItem;
+      --border-color-interactive-active: ButtonText;
+      --border-color-interactive-disabled: GrayText;
 
       /** Button **/
-      --button-border-color: var(--border-interactive-color);
-      --button-border-color-hover: var(--border-interactive-color-hover);
-      --button-border-color-active: var(--border-interactive-color-active);
-      --button-border-color-disabled: var(--border-interactive-color-disabled);
       --button-background-color: ButtonFace;
       --button-background-color-hover: SelectedItemText;
       --button-background-color-active: SelectedItemText;
       --button-background-color-disabled: ButtonFace;
-      --button-text-color: ButtonText;
-      --button-text-color-hover: SelectedItem;
-      --button-text-color-active: SelectedItem;
-      --button-text-color-disabled: GrayText;
-      --button-opacity-disabled: 1;
-
-      --button-background-color-primary-disabled: var(--button-text-color-disabled);
-      --button-border-color-primary: ButtonFace;
-      --button-border-color-primary-hover: SelectedItemText;
-      --button-border-color-primary-active: ButtonText;
-      --button-text-color-primary: ButtonFace;
-      --button-text-color-primary-hover: SelectedItemText;
-
-      --button-border-color-destructive: var(--button-border-color-primary);
-      --button-border-color-destructive-hover: var(--button-border-color-primary-hover);
-      --button-border-color-destructive-active: var(--button-border-color-primary-active);
-      --button-border-color-destructive-disabled: var(--button-border-color-primary-disabled);
       --button-background-color-destructive: var(--button-background-color-primary);
       --button-background-color-destructive-hover: var(--button-background-color-primary-hover);
       --button-background-color-destructive-active: var(--button-background-color-primary-active);
       --button-background-color-destructive-disabled: var(--button-background-color-primary-disabled);
+      --button-background-color-ghost: var(--button-background-color);
+      --button-background-color-ghost-disabled: var(--button-background-color-disabled);
+      --button-background-color-primary-disabled: var(--button-text-color-disabled);
+      --button-border-color: var(--border-color-interactive);
+      --button-border-color-hover: var(--border-color-interactive-hover);
+      --button-border-color-active: var(--border-color-interactive-active);
+      --button-border-color-disabled: var(--border-color-interactive-disabled);
+      --button-border-color-destructive: var(--button-border-color-primary);
+      --button-border-color-destructive-hover: var(--button-border-color-primary-hover);
+      --button-border-color-destructive-active: var(--button-border-color-primary-active);
+      --button-border-color-destructive-disabled: var(--button-border-color-primary-disabled);
+      --button-border-color-primary: ButtonFace;
+      --button-border-color-primary-hover: SelectedItemText;
+      --button-border-color-primary-active: ButtonText;
+      --button-opacity-disabled: 1;
+      --button-text-color: ButtonText;
+      --button-text-color-hover: SelectedItem;
+      --button-text-color-active: SelectedItem;
+      --button-text-color-disabled: GrayText;
       --button-text-color-destructive: var(--button-text-color-primary);
       --button-text-color-destructive-hover: var(--button-text-color-primary-hover);
       --button-text-color-destructive-active: var(--button-text-color-primary-active);
       --button-text-color-destructive-disabled: var(--button-text-color-primary-disabled);
-
-      --button-border-color-ghost: var(--button-border-color);
-      --button-border-color-ghost-hover: var(--button-border-color-hover);
-      --button-border-color-ghost-active: var(--button-border-color-active);
-      --button-border-color-ghost-disabled: var(--button-border-color-disabled);
-      --button-background-color-ghost: var(--button-background-color);
-      --button-background-color-ghost-disabled: var(--button-background-color-disabled);
-      --button-text-color-ghost: var(--button-text-color);
-      --button-text-color-ghost-hover: var(--button-text-color-hover);
-      --button-text-color-ghost-active: var(--button-text-color-active);
-      --button-text-color-ghost-disabled: var(--button-text-color-disabled);
+      --button-text-color-primary: ButtonFace;
+      --button-text-color-primary-hover: SelectedItemText;
 
       /** Color **/
       --color-accent-primary: ButtonText;
       --color-accent-primary-hover: SelectedItem;
       --color-accent-primary-active: var(--color-accent-primary-hover);
-      --color-error-outline: var(--border-color);
     }
   }
 }

@@ -2122,7 +2122,7 @@ panelview {
 
   &.sent-view {
     @media not (prefers-contrast) {
-      background-color: var(--color-background-success);
+      background-color: var(--background-color-success);
     }
 
     > .panel-header {
