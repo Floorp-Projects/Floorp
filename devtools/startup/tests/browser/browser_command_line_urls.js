@@ -70,8 +70,9 @@ add_task(async function openingWithDevToolsButUnknownSource() {
     gBrowser,
     "data:text/html;charset=utf-8,<title>foo</title>"
   );
+  gBrowser.selectedTab = tab;
 
-  const toolbox = await gDevTools.showToolboxForTab(gBrowser.selectedTab, {
+  const toolbox = await gDevTools.showToolboxForTab(tab, {
     toolId: "jsdebugger",
   });
 
