@@ -190,7 +190,6 @@ class Raptor(
                         "firefox",
                         "chrome",
                         "chrome-m",
-                        "chromium",
                         "fennec",
                         "geckoview",
                         "refbrow",
@@ -848,25 +847,18 @@ class Raptor(
     def install_chromium_distribution(self):
         """Install Google Chromium distribution in production"""
         linux, mac, win = "linux", "mac", "win"
-        chrome, chromium, chromium_release, chromium_release_android = (
+        chrome, chromium_release, chromium_release_android = (
             "chrome",
-            "chromium",
             "custom-car",
             "cstm-car-m",
         )
 
         available_chromium_dists = [
             chrome,
-            chromium,
             chromium_release,
             chromium_release_android,
         ]
         binary_location = {
-            chromium: {
-                linux: ["chrome-linux", "chrome"],
-                mac: ["chrome-mac", "Chromium.app", "Contents", "MacOS", "Chromium"],
-                win: ["chrome-win", "Chrome.exe"],
-            },
             chromium_release: {
                 linux: ["chromium", "Default", "chrome"],
                 win: ["chromium", "Default", "chrome.exe"],

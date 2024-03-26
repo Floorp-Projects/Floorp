@@ -16,8 +16,6 @@ job-defaults:
         by-app:
             chrome:
                 - .*shippable.*
-            chromium:
-                - .*shippable.*
             safari:
                 - .*macos.*shippable.*
             custom-car:
@@ -83,8 +81,6 @@ browsertime-tp6:
         limit-platforms:
             by-app:
                 chrome:
-                    - .*shippable.*
-                chromium:
                     - .*shippable.*
                 safari:
                     - .*macos.*shippable.*
@@ -922,13 +918,11 @@ browsertime-indexeddb:
         by-app:
             chrome:
                 - .*shippable.*
-            chromium:
-                - .*shippable.*
             custom-car:
                 - .*64.*shippable.*
             default: []
     raptor:
-        apps: [firefox, chrome, chromium]
+        apps: [firefox, chrome]
         run-visual-metrics: false
         subtests:
             - addMab1

@@ -7,10 +7,9 @@ import os
 import six
 from mozlog.commandline import add_logging_group
 
-(FIREFOX, CHROME, CHROMIUM, SAFARI, CHROMIUM_RELEASE) = DESKTOP_APPS = [
+(FIREFOX, CHROME, SAFARI, CHROMIUM_RELEASE) = DESKTOP_APPS = [
     "firefox",
     "chrome",
-    "chromium",
     "safari",
     "custom-car",
 ]
@@ -25,11 +24,10 @@ from mozlog.commandline import add_logging_group
 ]
 FIREFOX_APPS = FIREFOX_ANDROID_APPS + [FIREFOX]
 
-CHROMIUM_DISTROS = [CHROME, CHROMIUM]
+CHROMIUM_DISTROS = [CHROME, CHROMIUM_RELEASE]
 APPS = {
     FIREFOX: {"long_name": "Firefox Desktop"},
     CHROME: {"long_name": "Google Chrome Desktop"},
-    CHROMIUM: {"long_name": "Google Chromium Desktop"},
     SAFARI: {"long_name": "Safari Desktop"},
     CHROMIUM_RELEASE: {"long_name": "Custom Chromium-as-Release desktop"},
     GECKOVIEW: {
@@ -62,7 +60,7 @@ INTEGRATED_APPS = list(APPS.keys())
 
 GECKO_PROFILER_APPS = (FIREFOX, GECKOVIEW, REFBROW, FENIX)
 
-TRACE_APPS = (CHROME, CHROMIUM, CHROMIUM_RELEASE)
+TRACE_APPS = (CHROME, CHROMIUM_RELEASE)
 
 APP_BINARIES = {
     "fenix": "org.mozilla.fenix",

@@ -1,5 +1,5 @@
 [DEFAULT]
-apps = "firefox, chrome, chromium, safari, geckoview, fenix"
+apps = "firefox, chrome, safari, geckoview, fenix"
 alert_threshold = 2.0
 browser_cycles = 1
 fore_window = 1

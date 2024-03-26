@@ -45,7 +45,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    **Owner**: :jandem and SpiderMonkey Team
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari
+   * **apps**: firefox, chrome, safari
    * **expected**: pass
    * **expose browser profiler**: true
    * **gecko profile interval**: 1
@@ -283,7 +283,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    **Owner**: PerfTest Team
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari
+   * **apps**: firefox, chrome, safari
    * **expected**: pass
    * **expose browser profiler**: true
    * **gecko profile interval**: 1
@@ -523,7 +523,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    **Owner**: :jandem and SpiderMonkey Team
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari
+   * **apps**: firefox, chrome, safari
    * **expected**: pass
    * **expose browser profiler**: true
    * **gecko profile interval**: 1
@@ -764,7 +764,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    **Owner**: :jandem and SpiderMonkey Team
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome
    * **expected**: pass
    * **expose browser profiler**: true
    * **gecko profile interval**: 1
@@ -1000,7 +1000,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    **Owner**: Graphics Team
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **apps**: firefox, chrome, safari, custom-car
    * **browser cycles**: 1
    * **cold**: true
    * **expected**: pass
@@ -1685,7 +1685,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    **Owner**: :jgilbert and Graphics(gfx) Team
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari
+   * **apps**: firefox, chrome, safari
    * **expected**: pass
    * **expose browser profiler**: true
    * **gecko profile features**: stackwalk,js,cpu,java,processcpu
@@ -2251,7 +2251,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    **Owner**: :jgilbert and Graphics(gfx) Team
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **apps**: firefox, chrome, safari, custom-car
    * **expected**: pass
    * **expose browser profiler**: true
    * **gecko profile features**: stackwalk,js,cpu,java,processcpu
@@ -2837,7 +2837,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    **Owner**: :jgilbert and Graphics(gfx) Team
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari
+   * **apps**: firefox, chrome, safari
    * **expected**: pass
    * **expose chrome trace**: true
    * **expose gecko profiler**: true
@@ -3405,7 +3405,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    **Owner**: Graphics Team
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **apps**: firefox, chrome, safari, custom-car
    * **browser cycles**: 1
    * **cold**: true
    * **expected**: pass
@@ -4090,7 +4090,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    **Owner**: :jgilbert and Graphics(gfx) Team
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **apps**: firefox, chrome, safari, custom-car
    * **expected**: pass
    * **expose chrome trace**: true
    * **expose gecko profiler**: true
@@ -4678,7 +4678,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    **Owner**: SpiderMonkey Team
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **apps**: firefox, chrome, safari, custom-car
    * **expected**: pass
    * **expose browser profiler**: true
    * **gecko profile interval**: 1
@@ -5470,7 +5470,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    **Owner**: Performance Team
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **apps**: firefox, chrome, safari, custom-car
    * **browser cycles**: 5
    * **cold**: true
    * **expected**: pass
@@ -6266,7 +6266,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    **Owner**: :emelio and Layout Team
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari
+   * **apps**: firefox, chrome, safari
    * **expected**: pass
    * **expose browser profiler**: true
    * **gecko profile interval**: 1
@@ -6504,7 +6504,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    **Owner**: :jandem and SpiderMonkey Team
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari
+   * **apps**: firefox, chrome, safari
    * **expected**: pass
    * **expose browser profiler**: true
    * **gecko profile interval**: 1
@@ -6957,7 +6957,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    **Owner**: :jgilbert and Graphics(gfx) Team
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari
+   * **apps**: firefox, chrome, safari
    * **expected**: pass
    * **expose browser profiler**: true
    * **gecko profile interval**: 1
@@ -7525,7 +7525,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    **Owner**: :lth and SpiderMonkey Team
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari
+   * **apps**: firefox, chrome, safari
    * **expected**: pass
    * **expose browser profiler**: true
    * **gecko profile interval**: 1
@@ -8188,7 +8188,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    **Owner**: :lth and SpiderMonkey Team
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome
    * **expected**: pass
    * **expose browser profiler**: true
    * **gecko profile interval**: 1
@@ -8852,7 +8852,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
    **Owner**: :padenot and Media Team
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari
+   * **apps**: firefox, chrome, safari
    * **expected**: pass
    * **expose browser profiler**: true
    * **gecko profile interval**: 1
@@ -12202,7 +12202,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    **Description**: Use add API to send many small ArrayBuffers to IndexedDB in one transaction
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari
+   * **apps**: firefox, chrome, safari
    * **browser cycles**: 1
    * **browsertime args**: --browsertime.iterations=16384 --browsertime.chunk_size=1024 --browsertime.buffer_type=ArrayBuffer --browsertime.atomic=1
    * **custom data**: true
@@ -12272,11 +12272,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - ❌
         - ❌
         - ❌
-      * - **browsertime-indexeddb-chromium-addMab1**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-indexeddb-firefox-addMab1**
         - ✅
         - ✅
@@ -12330,11 +12325,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - ❌
         - ❌
         - ❌
-      * - **browsertime-indexeddb-chromium-addMab1**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-indexeddb-firefox-addMab1**
         - ✅
         - ✅
@@ -12368,11 +12358,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - mozilla-release
         - mozilla-beta
       * - **browsertime-indexeddb-chrome-addMab1**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-indexeddb-chromium-addMab1**
         - ❌
         - ❌
         - ❌
@@ -12430,11 +12415,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - ❌
         - ❌
         - ❌
-      * - **browsertime-indexeddb-chromium-addMab1**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-indexeddb-firefox-addMab1**
         - ✅
         - ✅
@@ -12451,7 +12431,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    **Description**: Use add API to send many small ArrayBuffers to IndexedDB independently
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari
+   * **apps**: firefox, chrome, safari
    * **browser cycles**: 1
    * **browsertime args**: --browsertime.iterations=16384 --browsertime.chunk_size=1024 --browsertime.buffer_type=ArrayBuffer --browsertime.atomic=0
    * **custom data**: true
@@ -12521,11 +12501,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - ❌
         - ❌
         - ❌
-      * - **browsertime-indexeddb-chromium-addMabN**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-indexeddb-firefox-addMabN**
         - ✅
         - ✅
@@ -12579,11 +12554,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - ❌
         - ❌
         - ❌
-      * - **browsertime-indexeddb-chromium-addMabN**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-indexeddb-firefox-addMabN**
         - ✅
         - ✅
@@ -12617,11 +12587,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - mozilla-release
         - mozilla-beta
       * - **browsertime-indexeddb-chrome-addMabN**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-indexeddb-chromium-addMabN**
         - ❌
         - ❌
         - ❌
@@ -12679,11 +12644,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - ❌
         - ❌
         - ❌
-      * - **browsertime-indexeddb-chromium-addMabN**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-indexeddb-firefox-addMabN**
         - ✅
         - ✅
@@ -12700,7 +12660,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    **Description**: Use add API to send many small Arrays to IndexedDB in one transaction
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari
+   * **apps**: firefox, chrome, safari
    * **browser cycles**: 1
    * **browsertime args**: --browsertime.iterations=16384 --browsertime.chunk_size=1024 --browsertime.buffer_type=Array --browsertime.atomic=1
    * **custom data**: true
@@ -12770,11 +12730,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - ❌
         - ❌
         - ❌
-      * - **browsertime-indexeddb-chromium-addMar1**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-indexeddb-firefox-addMar1**
         - ✅
         - ✅
@@ -12828,11 +12783,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - ❌
         - ❌
         - ❌
-      * - **browsertime-indexeddb-chromium-addMar1**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-indexeddb-firefox-addMar1**
         - ✅
         - ✅
@@ -12866,11 +12816,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - mozilla-release
         - mozilla-beta
       * - **browsertime-indexeddb-chrome-addMar1**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-indexeddb-chromium-addMar1**
         - ❌
         - ❌
         - ❌
@@ -12928,11 +12873,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - ❌
         - ❌
         - ❌
-      * - **browsertime-indexeddb-chromium-addMar1**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-indexeddb-firefox-addMar1**
         - ✅
         - ✅
@@ -12949,7 +12889,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    **Description**: Use add API to send many small Arrays to IndexedDB independently
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari
+   * **apps**: firefox, chrome, safari
    * **browser cycles**: 1
    * **browsertime args**: --browsertime.iterations=16384 --browsertime.chunk_size=1024 --browsertime.buffer_type=Array --browsertime.atomic=0
    * **custom data**: true
@@ -13019,11 +12959,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - ❌
         - ❌
         - ❌
-      * - **browsertime-indexeddb-chromium-addMarN**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-indexeddb-firefox-addMarN**
         - ✅
         - ✅
@@ -13077,11 +13012,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - ❌
         - ❌
         - ❌
-      * - **browsertime-indexeddb-chromium-addMarN**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-indexeddb-firefox-addMarN**
         - ✅
         - ✅
@@ -13115,11 +13045,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - mozilla-release
         - mozilla-beta
       * - **browsertime-indexeddb-chrome-addMarN**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-indexeddb-chromium-addMarN**
         - ❌
         - ❌
         - ❌
@@ -13177,11 +13102,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - ❌
         - ❌
         - ❌
-      * - **browsertime-indexeddb-chromium-addMarN**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-indexeddb-firefox-addMarN**
         - ✅
         - ✅
@@ -13198,7 +13118,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    **Description**: Use add API to send many small Blobs to IndexedDB in one transaction
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari
+   * **apps**: firefox, chrome, safari
    * **browser cycles**: 1
    * **browsertime args**: --browsertime.iterations=16384 --browsertime.chunk_size=1024 --browsertime.buffer_type=Blob --browsertime.atomic=1
    * **custom data**: true
@@ -13268,11 +13188,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - ❌
         - ❌
         - ❌
-      * - **browsertime-indexeddb-chromium-addMbl1**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-indexeddb-firefox-addMbl1**
         - ✅
         - ✅
@@ -13326,11 +13241,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - ❌
         - ❌
         - ❌
-      * - **browsertime-indexeddb-chromium-addMbl1**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-indexeddb-firefox-addMbl1**
         - ✅
         - ✅
@@ -13364,11 +13274,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - mozilla-release
         - mozilla-beta
       * - **browsertime-indexeddb-chrome-addMbl1**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-indexeddb-chromium-addMbl1**
         - ❌
         - ❌
         - ❌
@@ -13426,11 +13331,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - ❌
         - ❌
         - ❌
-      * - **browsertime-indexeddb-chromium-addMbl1**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-indexeddb-firefox-addMbl1**
         - ✅
         - ✅
@@ -13447,7 +13347,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    **Description**: Use add API to send many small Blobs to IndexedDB independently
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari
+   * **apps**: firefox, chrome, safari
    * **browser cycles**: 1
    * **browsertime args**: --browsertime.iterations=16384 --browsertime.chunk_size=1024 --browsertime.buffer_type=Blob --browsertime.atomic=0
    * **custom data**: true
@@ -13517,11 +13417,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - ❌
         - ❌
         - ❌
-      * - **browsertime-indexeddb-chromium-addMblN**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-indexeddb-firefox-addMblN**
         - ✅
         - ✅
@@ -13575,11 +13470,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - ❌
         - ❌
         - ❌
-      * - **browsertime-indexeddb-chromium-addMblN**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-indexeddb-firefox-addMblN**
         - ✅
         - ✅
@@ -13613,11 +13503,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - mozilla-release
         - mozilla-beta
       * - **browsertime-indexeddb-chrome-addMblN**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-indexeddb-chromium-addMblN**
         - ❌
         - ❌
         - ❌
@@ -13675,11 +13560,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - ❌
         - ❌
         - ❌
-      * - **browsertime-indexeddb-chromium-addMblN**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-indexeddb-firefox-addMblN**
         - ✅
         - ✅
@@ -13696,7 +13576,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    **Description**: Use add API to send a couple of large ArrayBuffers to IndexedDB in one transaction
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari
+   * **apps**: firefox, chrome, safari
    * **browser cycles**: 1
    * **browsertime args**: --browsertime.iterations=128 --browsertime.chunk_size=1048576 --browsertime.buffer_type=ArrayBuffer --browsertime.atomic=1
    * **custom data**: true
@@ -13766,11 +13646,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - ❌
         - ❌
         - ❌
-      * - **browsertime-indexeddb-chromium-addkAB1**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-indexeddb-firefox-addkAB1**
         - ✅
         - ✅
@@ -13824,11 +13699,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - ❌
         - ❌
         - ❌
-      * - **browsertime-indexeddb-chromium-addkAB1**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-indexeddb-firefox-addkAB1**
         - ✅
         - ✅
@@ -13862,11 +13732,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - mozilla-release
         - mozilla-beta
       * - **browsertime-indexeddb-chrome-addkAB1**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-indexeddb-chromium-addkAB1**
         - ❌
         - ❌
         - ❌
@@ -13924,11 +13789,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - ❌
         - ❌
         - ❌
-      * - **browsertime-indexeddb-chromium-addkAB1**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-indexeddb-firefox-addkAB1**
         - ✅
         - ✅
@@ -13945,7 +13805,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    **Description**: Use add API to send a couple of large ArrayBuffers to IndexedDB independently
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari
+   * **apps**: firefox, chrome, safari
    * **browser cycles**: 1
    * **browsertime args**: --browsertime.iterations=128 --browsertime.chunk_size=1048576 --browsertime.buffer_type=ArrayBuffer --browsertime.atomic=0
    * **custom data**: true
@@ -14015,11 +13875,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - ❌
         - ❌
         - ❌
-      * - **browsertime-indexeddb-chromium-addkABN**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-indexeddb-firefox-addkABN**
         - ✅
         - ✅
@@ -14073,11 +13928,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - ❌
         - ❌
         - ❌
-      * - **browsertime-indexeddb-chromium-addkABN**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-indexeddb-firefox-addkABN**
         - ✅
         - ✅
@@ -14111,11 +13961,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - mozilla-release
         - mozilla-beta
       * - **browsertime-indexeddb-chrome-addkABN**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-indexeddb-chromium-addkABN**
         - ❌
         - ❌
         - ❌
@@ -14173,11 +14018,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - ❌
         - ❌
         - ❌
-      * - **browsertime-indexeddb-chromium-addkABN**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-indexeddb-firefox-addkABN**
         - ✅
         - ✅
@@ -14194,7 +14034,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    **Description**: Use add API to send a couple of large JS Arrays to IndexedDB in one transaction
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari
+   * **apps**: firefox, chrome, safari
    * **browser cycles**: 1
    * **browsertime args**: --browsertime.iterations=128 --browsertime.chunk_size=1048576 --browsertime.buffer_type=Array --browsertime.atomic=1
    * **custom data**: true
@@ -14264,11 +14104,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - ❌
         - ❌
         - ❌
-      * - **browsertime-indexeddb-chromium-addkAR1**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-indexeddb-firefox-addkAR1**
         - ✅
         - ✅
@@ -14322,11 +14157,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - ❌
         - ❌
         - ❌
-      * - **browsertime-indexeddb-chromium-addkAR1**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-indexeddb-firefox-addkAR1**
         - ✅
         - ✅
@@ -14360,11 +14190,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - mozilla-release
         - mozilla-beta
       * - **browsertime-indexeddb-chrome-addkAR1**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-indexeddb-chromium-addkAR1**
         - ❌
         - ❌
         - ❌
@@ -14422,11 +14247,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - ❌
         - ❌
         - ❌
-      * - **browsertime-indexeddb-chromium-addkAR1**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-indexeddb-firefox-addkAR1**
         - ✅
         - ✅
@@ -14443,7 +14263,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    **Description**: Use add API to send a couple of large JS Arrays to IndexedDB independently
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari
+   * **apps**: firefox, chrome, safari
    * **browser cycles**: 1
    * **browsertime args**: --browsertime.iterations=128 --browsertime.chunk_size=1048576 --browsertime.buffer_type=Array --browsertime.atomic=0
    * **custom data**: true
@@ -14513,11 +14333,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - ❌
         - ❌
         - ❌
-      * - **browsertime-indexeddb-chromium-addkARN**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-indexeddb-firefox-addkARN**
         - ✅
         - ✅
@@ -14571,11 +14386,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - ❌
         - ❌
         - ❌
-      * - **browsertime-indexeddb-chromium-addkARN**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-indexeddb-firefox-addkARN**
         - ✅
         - ✅
@@ -14609,11 +14419,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - mozilla-release
         - mozilla-beta
       * - **browsertime-indexeddb-chrome-addkARN**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-indexeddb-chromium-addkARN**
         - ❌
         - ❌
         - ❌
@@ -14671,11 +14476,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - ❌
         - ❌
         - ❌
-      * - **browsertime-indexeddb-chromium-addkARN**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-indexeddb-firefox-addkARN**
         - ✅
         - ✅
@@ -14692,7 +14492,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    **Description**: Use add API to send a couple of large Blobs to IndexedDB in one transaction
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari
+   * **apps**: firefox, chrome, safari
    * **browser cycles**: 1
    * **browsertime args**: --browsertime.iterations=128 --browsertime.chunk_size=1048576 --browsertime.buffer_type=Blob --browsertime.atomic=1
    * **custom data**: true
@@ -14762,11 +14562,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - ❌
         - ❌
         - ❌
-      * - **browsertime-indexeddb-chromium-addkBL1**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-indexeddb-firefox-addkBL1**
         - ✅
         - ✅
@@ -14820,11 +14615,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - ❌
         - ❌
         - ❌
-      * - **browsertime-indexeddb-chromium-addkBL1**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-indexeddb-firefox-addkBL1**
         - ✅
         - ✅
@@ -14858,11 +14648,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - mozilla-release
         - mozilla-beta
       * - **browsertime-indexeddb-chrome-addkBL1**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-indexeddb-chromium-addkBL1**
         - ❌
         - ❌
         - ❌
@@ -14920,11 +14705,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - ❌
         - ❌
         - ❌
-      * - **browsertime-indexeddb-chromium-addkBL1**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-indexeddb-firefox-addkBL1**
         - ✅
         - ✅
@@ -14941,7 +14721,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    **Description**: Use add API to send a couple of large Blobs to IndexedDB independently
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari
+   * **apps**: firefox, chrome, safari
    * **browser cycles**: 1
    * **browsertime args**: --browsertime.iterations=128 --browsertime.chunk_size=1048576 --browsertime.buffer_type=Blob --browsertime.atomic=0
    * **custom data**: true
@@ -15011,11 +14791,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - ❌
         - ❌
         - ❌
-      * - **browsertime-indexeddb-chromium-addkBLN**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-indexeddb-firefox-addkBLN**
         - ✅
         - ✅
@@ -15069,11 +14844,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - ❌
         - ❌
         - ❌
-      * - **browsertime-indexeddb-chromium-addkBLN**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-indexeddb-firefox-addkBLN**
         - ✅
         - ✅
@@ -15107,11 +14877,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - mozilla-release
         - mozilla-beta
       * - **browsertime-indexeddb-chrome-addkBLN**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-indexeddb-chromium-addkBLN**
         - ❌
         - ❌
         - ❌
@@ -15165,11 +14930,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - mozilla-release
         - mozilla-beta
       * - **browsertime-indexeddb-chrome-addkBLN**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-indexeddb-chromium-addkBLN**
         - ❌
         - ❌
         - ❌
@@ -15419,7 +15179,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    **Description**: Generates a constant value that can be changed to induce a regression.
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari, geckoview, fenix
+   * **apps**: firefox, chrome, safari, geckoview, fenix
    * **browser cycles**: 1
    * **browsertime args**: --browsertime.constant_value=1500
    * **custom data**: true
@@ -15482,7 +15242,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    **Description**: Measures the speed of key-range based reads of IndexedDB
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari
+   * **apps**: firefox, chrome, safari
    * **browser cycles**: 1
    * **custom data**: true
    * **expected**: pass
@@ -15551,11 +15311,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - ❌
         - ❌
         - ❌
-      * - **browsertime-indexeddb-chromium-getkeyrng**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-indexeddb-firefox-getkeyrng**
         - ✅
         - ✅
@@ -15609,11 +15364,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - ❌
         - ❌
         - ❌
-      * - **browsertime-indexeddb-chromium-getkeyrng**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-indexeddb-firefox-getkeyrng**
         - ✅
         - ✅
@@ -15647,11 +15397,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - mozilla-release
         - mozilla-beta
       * - **browsertime-indexeddb-chrome-getkeyrng**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-indexeddb-chromium-getkeyrng**
         - ❌
         - ❌
         - ❌
@@ -15709,11 +15454,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - ❌
         - ❌
         - ❌
-      * - **browsertime-indexeddb-chromium-getkeyrng**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-indexeddb-firefox-getkeyrng**
         - ✅
         - ✅
@@ -15730,7 +15470,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    **Description**: Runs the Grandprix benchmark
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari
+   * **apps**: firefox, chrome, safari
    * **browser cycles**: 1
    * **browsertime args**: --browsertime.grandprix_iterations=25
    * **custom data**: true
@@ -15759,7 +15499,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **accept zero vismet**: true
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
+   * **apps**: firefox, chrome
    * **browser cycles**: 25
    * **browsertime args**: --pageCompleteWaitTime=1000 --pageCompleteCheckInactivity=true
    * **expected**: pass
@@ -16403,7 +16143,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    **Description**: Measures http/2 file upload throughput
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari
+   * **apps**: firefox, chrome, safari
    * **browser cycles**: 1
    * **browsertime args**: --browsertime.upload_iterations=10 --firefox.preference=network.http.http3.enable:false --chrome.args disable-quic
    * **custom data**: true
@@ -16633,7 +16373,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    **Description**: Measures http/3 file upload throughput
 
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari
+   * **apps**: firefox, chrome, safari
    * **browser cycles**: 1
    * **browsertime args**: --browsertime.upload_iterations=10 --firefox.preference=network.http.http3.enable:true
    * **custom data**: true
@@ -17071,7 +16811,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **apps**: firefox, chrome, safari, custom-car
    * **benchmark page**: false
    * **browser cycles**: 25
    * **expected**: pass
@@ -17646,7 +17386,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **apps**: firefox, chrome, safari, custom-car
    * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
@@ -18043,7 +17783,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **apps**: firefox, chrome, safari, custom-car
    * **benchmark page**: false
    * **browser cycles**: 25
    * **expected**: pass
@@ -18281,7 +18021,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **apps**: firefox, chrome, safari, custom-car
    * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
@@ -18761,7 +18501,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **apps**: firefox, chrome, safari, custom-car
    * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
@@ -19084,7 +18824,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **apps**: firefox, chrome, safari, custom-car
    * **benchmark page**: false
    * **browser cycles**: 25
    * **expected**: pass
@@ -19394,7 +19134,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **apps**: firefox, chrome, safari, custom-car
    * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
@@ -19679,7 +19419,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **apps**: firefox, chrome, safari, custom-car
    * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
@@ -20044,7 +19784,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **apps**: firefox, chrome, safari, custom-car
    * **benchmark page**: false
    * **browser cycles**: 25
    * **expected**: pass
@@ -20441,7 +20181,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **apps**: firefox, chrome, safari, custom-car
    * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
@@ -20765,7 +20505,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **apps**: firefox, chrome, safari, custom-car
    * **benchmark page**: false
    * **browser cycles**: 25
    * **expected**: pass
@@ -21087,7 +20827,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **apps**: firefox, chrome, safari, custom-car
    * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
@@ -21409,7 +21149,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **apps**: firefox, chrome, safari, custom-car
    * **benchmark page**: false
    * **browser cycles**: 25
    * **expected**: pass
@@ -21807,7 +21547,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **apps**: firefox, chrome, safari, custom-car
    * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
@@ -22237,7 +21977,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **apps**: firefox, chrome, safari, custom-car
    * **benchmark page**: false
    * **browser cycles**: 25
    * **expected**: pass
@@ -22541,7 +22281,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **apps**: firefox, chrome, safari, custom-car
    * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
@@ -23041,7 +22781,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **apps**: firefox, chrome, safari, custom-car
    * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
@@ -23364,7 +23104,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **apps**: firefox, chrome, safari, custom-car
    * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
@@ -23687,7 +23427,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **apps**: firefox, chrome, safari, custom-car
    * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
@@ -24005,7 +23745,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **apps**: firefox, chrome, safari, custom-car
    * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
@@ -24290,7 +24030,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **apps**: firefox, chrome, safari, custom-car
    * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
@@ -24528,7 +24268,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **apps**: firefox, chrome, safari, custom-car
    * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
@@ -24845,7 +24585,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **apps**: firefox, chrome, safari, custom-car
    * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
@@ -25167,7 +24907,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **apps**: firefox, chrome, safari, custom-car
    * **benchmark page**: false
    * **browser cycles**: 25
    * **expected**: pass
@@ -25490,7 +25230,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **apps**: firefox, chrome, safari, custom-car
    * **benchmark page**: false
    * **browser cycles**: 25
    * **expected**: pass
@@ -25920,7 +25660,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **apps**: firefox, chrome, safari, custom-car
    * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
@@ -26243,7 +25983,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **apps**: firefox, chrome, safari, custom-car
    * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
@@ -26568,7 +26308,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **apps**: firefox, chrome, safari, custom-car
    * **benchmark page**: false
    * **browser cycles**: 25
    * **expected**: pass
@@ -26960,7 +26700,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **apps**: firefox, chrome, safari, custom-car
    * **benchmark page**: false
    * **browser cycles**: 25
    * **expected**: pass
@@ -27198,7 +26938,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **apps**: firefox, chrome, safari, custom-car
    * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
@@ -27703,7 +27443,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **apps**: firefox, chrome, safari, custom-car
    * **benchmark page**: false
    * **browser cycles**: 25
    * **expected**: pass
@@ -28100,7 +27840,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange, largestContentfulPaint
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari, custom-car
+   * **apps**: firefox, chrome, safari, custom-car
    * **benchmark page**: true
    * **browser cycles**: 25
    * **expected**: pass
@@ -28538,7 +28278,7 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
    * **accept zero vismet**: true
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari
+   * **apps**: firefox, chrome, safari
    * **browser cycles**: 10
    * **expected**: pass
    * **gecko profile interval**: 1
@@ -28779,7 +28519,7 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
    * **accept zero vismet**: true
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari
+   * **apps**: firefox, chrome, safari
    * **browser cycles**: 10
    * **expected**: pass
    * **gecko profile interval**: 1
@@ -29020,7 +28760,7 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
    * **accept zero vismet**: true
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari
+   * **apps**: firefox, chrome, safari
    * **browser cycles**: 10
    * **expected**: pass
    * **gecko profile interval**: 1
@@ -29261,7 +29001,7 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
    * **accept zero vismet**: true
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari
+   * **apps**: firefox, chrome, safari
    * **browser cycles**: 10
    * **expected**: pass
    * **gecko profile interval**: 1
@@ -29502,7 +29242,7 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
    * **accept zero vismet**: true
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium, safari
+   * **apps**: firefox, chrome, safari
    * **browser cycles**: 10
    * **expected**: pass
    * **gecko profile interval**: 1
@@ -29745,7 +29485,7 @@ A set of test pages that are run as live sites instead of recorded versions. The
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
+   * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -29812,7 +29552,7 @@ A set of test pages that are run as live sites instead of recorded versions. The
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
+   * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -29879,7 +29619,7 @@ A set of test pages that are run as live sites instead of recorded versions. The
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
+   * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -29946,7 +29686,7 @@ A set of test pages that are run as live sites instead of recorded versions. The
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
+   * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -30013,7 +29753,7 @@ A set of test pages that are run as live sites instead of recorded versions. The
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
+   * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -30080,7 +29820,7 @@ A set of test pages that are run as live sites instead of recorded versions. The
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
+   * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -30147,7 +29887,7 @@ A set of test pages that are run as live sites instead of recorded versions. The
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
+   * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -30214,7 +29954,7 @@ A set of test pages that are run as live sites instead of recorded versions. The
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
+   * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -30281,7 +30021,7 @@ A set of test pages that are run as live sites instead of recorded versions. The
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
+   * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -30348,7 +30088,7 @@ A set of test pages that are run as live sites instead of recorded versions. The
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
+   * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -30415,7 +30155,7 @@ A set of test pages that are run as live sites instead of recorded versions. The
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
+   * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -30482,7 +30222,7 @@ A set of test pages that are run as live sites instead of recorded versions. The
 
    * **alert on**: fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange
    * **alert threshold**: 2.0
-   * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
+   * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true

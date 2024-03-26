@@ -374,7 +374,6 @@ def get_raptor_test_list(args, oskey):
 
     if args.collect_perfstats and args.app.lower() not in (
         "chrome",
-        "chromium",
         "custom-car",
     ):
         for next_test in tests_to_run:

@@ -169,7 +169,6 @@ class Browsertime(Perftest):
         if self.browsertime_chromedriver and self.config["app"] in (
             "chrome",
             "chrome-m",
-            "chromium",
             "custom-car",
             "cstm-car-m",
         ):
@@ -462,7 +461,6 @@ class Browsertime(Perftest):
         priority1_options = self.browsertime_args
         if self.config["app"] in (
             "chrome",
-            "chromium",
             "chrome-m",
             "custom-car",
             "cstm-car-m",
@@ -522,7 +520,6 @@ class Browsertime(Perftest):
             )
 
             if self.browsertime_no_ffwindowrecorder or self.config["app"] in (
-                "chromium",
                 "chrome-m",
                 "chrome",
                 "custom-car",

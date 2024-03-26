@@ -76,7 +76,6 @@ def split_apps(config, tests):
     app_symbols = {
         "chrome": "ChR",
         "chrome-m": "ChR",
-        "chromium": "Cr",
         "fenix": "fenix",
         "refbrow": "refbrow",
         "safari": "Saf",

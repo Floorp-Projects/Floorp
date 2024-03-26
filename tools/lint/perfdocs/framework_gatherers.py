@@ -226,7 +226,6 @@ class RaptorGatherer(FrameworkGatherer):
         browsers = [
             "firefox",
             "chrome",
-            "chromium",
             "refbrow",
             "fennec68",
             "geckoview",

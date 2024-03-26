@@ -431,11 +431,7 @@ def setup_browsertime(config, tasks):
             # Only add the chromedriver fetches when chrome is running
             for platform in cd_fetches:
                 fs["by-test-platform"][platform].extend(cd_fetches[platform])
-        if (
-            "--app=chromium" in extra_options
-            or "--app=custom-car" in extra_options
-            or "--app=cstm-car-m" in extra_options
-        ):
+        if "--app=custom-car" in extra_options or "--app=cstm-car-m" in extra_options:
             for platform in chromium_fetches:
                 fs["by-test-platform"][platform].extend(chromium_fetches[platform])
 

@@ -21,7 +21,7 @@ Warm Page-Load
 ==============
 For warm page-load tests, the browser is just started up once; so the browser is warm on each page-load.
 
-**Raptor warm page-load test process when running on Firefox/Chrome/Chromium desktop:**
+**Raptor warm page-load test process when running on Firefox/Chrome desktop:**
 
 * A new browser profile is created
 * The desktop browser is started up
@@ -45,7 +45,7 @@ Cold Page-Load
 ==============
 For cold page-load tests, the browser is shut down and restarted between page load cycles, so the browser is cold on each page-load. This is what happens for Raptor cold page-load tests:
 
-**Raptor cold page-load test process when running on Firefox/Chrome/Chromium desktop:**
+**Raptor cold page-load test process when running on Firefox/Chrome desktop:**
 
 * A new browser profile is created
 * The desktop browser is started up
