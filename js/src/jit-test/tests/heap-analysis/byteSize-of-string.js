@@ -76,20 +76,16 @@ function tByteSize(str) {
 // JSExternalString            - limited by MaxStringLength -         E
 // JSThinInlineString   8         4             16        8           T
 // JSFatInlineString    24        12            24        12          F
-// ThinInlineAtom       12        6             20        10          T
-// FatInlineAtom        20        10            20        10          F
 // JSExtensibleString          - limited by MaxStringLength -         X
 
 // Notes:
 //  - labels are suffixed with A for atoms and N for non-atoms
-//  - atoms store a 4 byte hash code, and some add to the size to adjust
+//  - atoms are 8 bytes larger than non-atoms, to store the atom's hash code.
 //  - Nursery-allocated strings require a header that stores the zone.
 
 // Expected sizes based on type of string
 const m32 = (getBuildConfiguration("pointer-byte-size") == 4);
-const TA = m32 ? 24 : 32; // ThinInlineAtom (includes a hash value)
-const FA = m32 ? 32 : 32; // FatInlineAtom (includes a hash value)
-const NA = m32 ? 24 : 32; // NormalAtom
+const TA = m32 ? 24 : 32; // ThinInlineString atom, includes a hash value
 const TN = m32 ? 16 : 24; // ThinInlineString
 const FN = m32 ? 32 : 32; // FatInlineString
 const XN = m32 ? 16 : 24; // ExtensibleString, has additional storage buffer
@@ -100,8 +96,8 @@ const EN = m32 ? 16 : 24; // ExternalString
 // A function that pads out a tenured size to the nursery size. We store a zone
 // pointer in the nursery just before the string (4 bytes on 32-bit, 8 bytes on
 // 64-bit), and the string struct itself must be 8-byte aligned (resulting in
-// +4 bytes on 32-bit, +0 bytes on 64-bit). The end result is that nursery
-// strings are 8 bytes larger.
+// +4 bytes on 32-bit, +0 bytes on 64-bit). The end result? Nursery strings are
+// 8 bytes larger.
 const Nursery = m32 ? s => s + 4 + 4 : s => s + 8 + 0;
 
 // Latin-1
@@ -134,23 +130,6 @@ assertEq(nByteSize("123456789.123456789.12345"),                      s(Nursery(
 assertEq(nByteSize("123456789.123456789.123456789.1"),                s(Nursery(XN)+32,Nursery(XN)+32));
 assertEq(nByteSize("123456789.123456789.123456789.12"),               s(Nursery(XN)+32,Nursery(XN)+32));
 assertEq(nByteSize("123456789.123456789.123456789.123"),              s(Nursery(XN)+64,Nursery(XN)+64));
-
-function Atom(s) { return Object.keys({ [s]: true })[0]; }
-assertEq(byteSize(Atom("1234567")),                                   s(TA, TA));
-assertEq(byteSize(Atom("12345678")),                                  s(TA, FA));
-assertEq(byteSize(Atom("123456789.12")),                              s(TA, FA));
-assertEq(byteSize(Atom("123456789.123")),                             s(FA, FA));
-assertEq(byteSize(Atom("123456789.12345")),                           s(FA, FA));
-assertEq(byteSize(Atom("123456789.123456")),                          s(FA, FA));
-assertEq(byteSize(Atom("123456789.1234567")),                         s(FA, FA));
-assertEq(byteSize(Atom("123456789.123456789.")),                      s(FA, FA));
-assertEq(byteSize(Atom("123456789.123456789.1")),                     s(NA+32, NA+32));
-assertEq(byteSize(Atom("123456789.123456789.123")),                   s(NA+32, NA+32));
-assertEq(byteSize(Atom("123456789.123456789.1234")),                  s(NA+32, NA+32));
-assertEq(byteSize(Atom("123456789.123456789.12345")),                 s(NA+32, NA+32));
-assertEq(byteSize(Atom("123456789.123456789.123456789.1")),           s(NA+32, NA+32));
-assertEq(byteSize(Atom("123456789.123456789.123456789.12")),          s(NA+32, NA+32));
-assertEq(byteSize(Atom("123456789.123456789.123456789.123")),         s(NA+48, NA+48));
 
 // Inline char16_t atoms.
 // "Impassionate gods have never seen the red that is the Tatsuta River."
@@ -205,43 +184,20 @@ assertEq(byteSize(rope8),                                               s(Nurser
 minorgc();
 assertEq(byteSize(rope8),                                               s(RN, RN));
 var matches8 = rope8.match(/(de cuyo nombre no quiero acordarme)/);
-assertEq(byteSize(rope8),                                               s(XN + 64 * 1024, XN + 64 * 1024));
+assertEq(byteSize(rope8),                                               s(XN + 65536, XN + 65536));
 
 // Test extensible strings.
 //
 // Appending another copy of the fragment should yield another rope.
 //
-// Flattening that should turn the original rope into a dependent string, and
+// Flatting that should turn the original rope into a dependent string, and
 // yield a new linear string, of the same size as the original.
-var rope8a = rope8 + fragment8;
+rope8a = rope8 + fragment8;
 assertEq(byteSize(rope8a),                                              s(Nursery(RN), Nursery(RN)));
 rope8a.match(/x/, function() { assertEq(true, false); });
 assertEq(byteSize(rope8a),                                              s(Nursery(XN) + 65536, Nursery(XN) + 65536));
-// Except it won't do it when the rope root is in the nursery and the leftmost leaf is tenured.
-assertEq(byteSize(rope8),                                               s(XN + 64 * 1024, XN + 64 * 1024));
-
-// Latin-1 dependent strings in the nursery.
-assertEq(byteSize(rope8.substr(1000, 2000)),                            s(Nursery(DN), Nursery(DN)));
-assertEq(byteSize(matches8[0]),                                         s(Nursery(DN), Nursery(DN)));
-assertEq(byteSize(matches8[1]),                                         s(Nursery(DN), Nursery(DN)));
-
-// Tenure everything and try again. This time it should steal the extensible
-// characters and convert the root into an extensible string using them.
-rope8a = rope8 + fragment8;
-minorgc();
-assertEq(byteSize(rope8a),                                              s(RN, RN));
-rope8a.match(/x/, function() { assertEq(true, false); });
-assertEq(byteSize(rope8a),                                              s(XN + 65536, XN + 65536));
 assertEq(byteSize(rope8),                                               s(RN, RN));
 
-// Latin-1 tenured dependent strings.
-function tenure(s) {
-  minorgc();
-  return s;
-}
-assertEq(byteSize(tenure(rope8.substr(1000, 2000))),                    s(DN, DN));
-assertEq(byteSize(matches8[0]),                                         s(DN, DN));
-assertEq(byteSize(matches8[1]),                                         s(DN, DN));
 
 // A char16_t rope. This changes size when flattened.
 // "From the Heliconian Muses let us begin to sing"
@@ -252,10 +208,13 @@ for (var i = 0; i < 10; i++) // 1024 repetitions
   rope16 = rope16 + rope16;
 assertEq(byteSize(rope16),                                              s(Nursery(RN), Nursery(RN)));
 let matches16 = rope16.match(/(Ἑλικωνιάδων ἀρχώμεθ᾽)/);
-assertEq(byteSize(rope16),                                              s(Nursery(RN) + 128 * 1024, Nursery(RN) + 128 * 1024));
+assertEq(byteSize(rope16),                                              s(Nursery(RN) + 131072, Nursery(RN) + 131072));
 
-// char16_t dependent strings in the nursery.
+// Latin-1 and char16_t dependent strings.
+assertEq(byteSize(rope8.substr(1000, 2000)),                            s(Nursery(DN), Nursery(DN)));
 assertEq(byteSize(rope16.substr(1000, 2000)),                           s(Nursery(DN), Nursery(DN)));
+assertEq(byteSize(matches8[0]),                                         s(Nursery(DN), Nursery(DN)));
+assertEq(byteSize(matches8[1]),                                         s(Nursery(DN), Nursery(DN)));
 assertEq(byteSize(matches16[0]),                                        s(Nursery(DN), Nursery(DN)));
 assertEq(byteSize(matches16[1]),                                        s(Nursery(DN), Nursery(DN)));
 
@@ -263,23 +222,13 @@ assertEq(byteSize(matches16[1]),                                        s(Nurser
 //
 // Appending another copy of the fragment should yield another rope.
 //
-// Flattening that should turn the original rope into a dependent string, and
-// yield a new linear string, of the some size as the original. But again,
-// not if a tenured dependent -> nursery base edge would be created.
+// Flatting that should turn the original rope into a dependent string, and
+// yield a new linear string, of the some size as the original.
 rope16a = rope16 + fragment16;
 assertEq(byteSize(rope16a),                                             s(Nursery(RN), Nursery(RN)));
 rope16a.match(/x/, function() { assertEq(true, false); });
-assertEq(byteSize(rope16a),                                             s(Nursery(XN) + 128 * 1024, Nursery(XN) + 128 * 1024));
+assertEq(byteSize(rope16a),                                             s(Nursery(XN) + 131072, Nursery(XN) + 131072));
 assertEq(byteSize(rope16),                                              s(Nursery(XN), Nursery(XN)));
-
-// Tenure everything and try again. This time it should steal the extensible
-// characters and convert the root into an extensible string using them.
-rope16a = rope16 + fragment16;
-minorgc();
-assertEq(byteSize(rope16a),                                             s(RN, RN));
-rope16a.match(/x/, function() { assertEq(true, false); });
-assertEq(byteSize(rope16a),                                             s(XN + 128 * 1024, XN + 128 * 1024));
-assertEq(byteSize(rope16),                                              s(RN, RN));
 
 // Test external strings.
 //

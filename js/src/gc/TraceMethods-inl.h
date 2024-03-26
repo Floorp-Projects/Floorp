@@ -76,14 +76,6 @@ inline void JSString::traceChildren(JSTracer* trc) {
     asRope().traceChildren(trc);
   }
 }
-inline void JSString::traceBasePreserveNurseryEdge(JSTracer* trc) {
-  MOZ_ASSERT(hasBase());
-  JSLinearString* base = d.s.u3.base;
-  js::TraceManuallyBarrieredEdge(trc, &base, "base");
-  // Do not update the actual base. If it was in the nursery, it will
-  // need to be swept in order to update any nursery chars ptr, and that
-  // update requires information from the StringRelocationOverlay.
-}
 template <uint32_t opts>
 void js::GCMarker::eagerlyMarkChildren(JSString* str) {
   if (str->isLinear()) {
