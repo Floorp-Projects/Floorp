@@ -62,7 +62,6 @@ class BrowserToolbarView(
         }
     }
 
-    @VisibleForTesting
     internal val layout = LayoutInflater.from(context)
         .inflate(toolbarLayout, container, false)
 

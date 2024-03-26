@@ -34,7 +34,7 @@ class FindInPageIntegrationTest {
             isToolbarDynamic = true,
             isToolbarPlacedAtTop = true,
         )
-        val feature = spyk(FindInPageIntegration(mockk(), null, mockk(), mockk(), toolbarInfo)) {
+        val feature = spyk(FindInPageIntegration(mockk(), null, mockk(), mockk(), toolbarInfo, 123)) {
             every { getEngineViewsParentLayoutParams() } returns engineViewParentParams
             every { getEngineViewParent() } returns engineViewParent
         }
@@ -60,7 +60,7 @@ class FindInPageIntegrationTest {
             isToolbarDynamic = false,
             isToolbarPlacedAtTop = true,
         )
-        val feature = spyk(FindInPageIntegration(mockk(), null, mockk(), mockk(), toolbarInfo)) {
+        val feature = spyk(FindInPageIntegration(mockk(), null, mockk(), mockk(), toolbarInfo, 100)) {
             every { getEngineViewsParentLayoutParams() } returns engineViewParentParams
             every { getEngineViewParent() } returns engineViewParent
         }
@@ -86,7 +86,7 @@ class FindInPageIntegrationTest {
             isToolbarDynamic = true,
             isToolbarPlacedAtTop = true,
         )
-        val feature = spyk(FindInPageIntegration(mockk(), null, mockk(), mockk(), toolbarInfo)) {
+        val feature = spyk(FindInPageIntegration(mockk(), null, mockk(), mockk(), toolbarInfo, 50)) {
             every { getEngineViewsParentLayoutParams() } returns engineViewParentParams
             every { getEngineViewParent() } returns engineViewParent
         }
@@ -112,7 +112,7 @@ class FindInPageIntegrationTest {
             isToolbarDynamic = false,
             isToolbarPlacedAtTop = true,
         )
-        val feature = spyk(FindInPageIntegration(mockk(), null, mockk(), mockk(), toolbarInfo)) {
+        val feature = spyk(FindInPageIntegration(mockk(), null, mockk(), mockk(), toolbarInfo, 50)) {
             every { getEngineViewsParentLayoutParams() } returns engineViewParentParams
             every { getEngineViewParent() } returns engineViewParent
         }
@@ -138,7 +138,7 @@ class FindInPageIntegrationTest {
             isToolbarDynamic = true,
             isToolbarPlacedAtTop = false,
         )
-        val feature = spyk(FindInPageIntegration(mockk(), null, mockk(), mockk(), toolbarInfo)) {
+        val feature = spyk(FindInPageIntegration(mockk(), null, mockk(), mockk(), toolbarInfo, 50)) {
             every { getEngineViewsParentLayoutParams() } returns engineViewParentParams
             every { getEngineViewParent() } returns engineViewParent
         }
@@ -164,7 +164,7 @@ class FindInPageIntegrationTest {
             isToolbarDynamic = false,
             isToolbarPlacedAtTop = false,
         )
-        val feature = spyk(FindInPageIntegration(mockk(), null, mockk(), mockk(), toolbarInfo)) {
+        val feature = spyk(FindInPageIntegration(mockk(), null, mockk(), mockk(), toolbarInfo, 50)) {
             every { getEngineViewsParentLayoutParams() } returns engineViewParentParams
             every { getEngineViewParent() } returns engineViewParent
         }
@@ -190,7 +190,7 @@ class FindInPageIntegrationTest {
             isToolbarDynamic = true,
             isToolbarPlacedAtTop = false,
         )
-        val feature = spyk(FindInPageIntegration(mockk(), null, mockk(), mockk(), toolbarInfo)) {
+        val feature = spyk(FindInPageIntegration(mockk(), null, mockk(), mockk(), toolbarInfo, 50)) {
             every { getEngineViewsParentLayoutParams() } returns engineViewParentParams
             every { getEngineViewParent() } returns engineViewParent
         }
@@ -216,7 +216,7 @@ class FindInPageIntegrationTest {
             isToolbarDynamic = true,
             isToolbarPlacedAtTop = false,
         )
-        val feature = spyk(FindInPageIntegration(mockk(), null, mockk(), mockk(), toolbarInfo)) {
+        val feature = spyk(FindInPageIntegration(mockk(), null, mockk(), mockk(), toolbarInfo, 50)) {
             every { getEngineViewsParentLayoutParams() } returns engineViewParentParams
             every { getEngineViewParent() } returns engineViewParent
         }
@@ -236,7 +236,7 @@ class FindInPageIntegrationTest {
         val engineView: GeckoEngineView = mockk(relaxed = true)
         every { (engineView as EngineView).asView().parent } returns parent
 
-        val feature = FindInPageIntegration(mockk(), null, mockk(), engineView, mockk())
+        val feature = FindInPageIntegration(mockk(), null, mockk(), engineView, mockk(), 50)
 
         assertSame(parent as View, feature.getEngineViewParent())
     }
@@ -247,7 +247,7 @@ class FindInPageIntegrationTest {
             every { layoutParams } returns mockk<ViewGroup.MarginLayoutParams>(relaxed = true)
         }
         val engineView: GeckoEngineView = mockk(relaxed = true)
-        val feature = spyk(FindInPageIntegration(mockk(), null, mockk(), engineView, mockk()))
+        val feature = spyk(FindInPageIntegration(mockk(), null, mockk(), engineView, mockk(), 60))
         every { feature.getEngineViewParent() } returns parent
 
         assertSame(parent.layoutParams, feature.getEngineViewsParentLayoutParams())
