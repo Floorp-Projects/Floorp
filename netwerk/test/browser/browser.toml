@@ -74,10 +74,6 @@ support-files = [
   "file_link_header.sjs",
 ]
 
-prefs = [
-  "network.fetch.systemDefaultsToOmittingCredentials=false"
-]
-
 ["browser_103_assets.js"]
 
 ["browser_103_assets_extension.js"]

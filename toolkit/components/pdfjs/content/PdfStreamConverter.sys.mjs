@@ -545,7 +545,7 @@ class RangedChromeActions extends ChromeActions {
       }
     };
     var getXhr = function getXhr() {
-      var xhr = new XMLHttpRequest({ mozAnon: false });
+      var xhr = new XMLHttpRequest();
       xhr.addEventListener("readystatechange", xhr_onreadystatechange);
       return xhr;
     };

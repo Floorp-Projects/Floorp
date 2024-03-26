@@ -11623,13 +11623,6 @@
   value: true
   mirror: always
 
-# If true, when browser code itself makes network requests, default to
-# omitting credentials.
-- name: network.fetch.systemDefaultsToOmittingCredentials
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # Whether to strip auth headers for redirected http channels
 # https://fetch.spec.whatwg.org/#http-redirect-fetch
 - name: network.http.redirect.stripAuthHeader

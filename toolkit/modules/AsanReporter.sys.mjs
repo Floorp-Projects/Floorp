@@ -135,7 +135,7 @@ function submitToServer(data) {
       tool: "asan-nightly-program",
     };
 
-    var xhr = new XMLHttpRequest({ mozAnon: !auth_token });
+    var xhr = new XMLHttpRequest();
     xhr.open("POST", api_url, true);
     xhr.setRequestHeader("Content-Type", "application/json");
 

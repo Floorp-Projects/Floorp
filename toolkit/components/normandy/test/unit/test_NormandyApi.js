@@ -195,7 +195,7 @@ decorate_task(
     // response that sets a cookie.
 
     // send a request, to store a cookie in the cookie store
-    await fetch(serverUrl, { credentials: "same-origin" });
+    await fetch(serverUrl);
 
     // A normal request should send that cookie
     const cookieExpectedDeferred = Promise.withResolvers();
@@ -218,7 +218,7 @@ decorate_task(
       cookieExpectedDeferred.resolve();
     }
     Services.obs.addObserver(cookieExpectedObserver, "http-on-modify-request");
-    await fetch(serverUrl, { credentials: "same-origin" });
+    await fetch(serverUrl);
     await cookieExpectedDeferred.promise;
 
     // A request through the NormandyApi method should not send that cookie
