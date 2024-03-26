@@ -638,11 +638,20 @@ static MOZ_ALWAYS_INLINE JSString::OwnedChars<CharT> AllocChars(JSContext* cx,
     MOZ_ASSERT(cx->nursery().isEnabled());
     auto [buffer, isMalloced] = cx->nursery().allocateBuffer(
         cx->zone(), length * sizeof(CharT), js::StringBufferArena);
+    if (!buffer) {
+      ReportOutOfMemory(cx);
+      return {nullptr, 0, false, false};
+    }
 
     return {static_cast<CharT*>(buffer), length, isMalloced, isMalloced};
   }
 
   auto buffer = cx->make_pod_arena_array<CharT>(js::StringBufferArena, length);
+  if (!buffer) {
+    ReportOutOfMemory(cx);
+    return {nullptr, 0, false, false};
+  }
+
   return {std::move(buffer), length, true};
 }
 
