@@ -112,7 +112,7 @@ void NodeChannel::SetOtherPid(base::ProcessId aNewPid) {
   mChannel->SetOtherPid(aNewPid);
 }
 
-#ifdef XP_MACOSX
+#ifdef XP_DARWIN
 void NodeChannel::SetMachTaskPort(task_t aTask) {
   AssertIOThread();
 

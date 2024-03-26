@@ -315,7 +315,7 @@ void NodeController::ForwardEvent(const NodeName& aNode,
     // On Windows and macOS, messages holding HANDLEs or mach ports must be
     // relayed via the broker process so it can transfer ownership.
     bool needsRelay = false;
-#if defined(XP_WIN) || defined(XP_MACOSX)
+#if defined(XP_WIN) || defined(XP_DARWIN)
     if (!IsBroker() && aNode != kBrokerNodeName &&
         aEvent->type() == Event::kUserMessage) {
       auto* userEvent = static_cast<UserMessageEvent*>(aEvent.get());
@@ -439,7 +439,7 @@ void NodeController::OnEventMessage(const NodeName& aFromNode,
   }
 
   NodeName fromNode = aFromNode;
-#if defined(XP_WIN) || defined(XP_MACOSX)
+#if defined(XP_WIN) || defined(XP_DARWIN)
   if (isRelay) {
     if (event->type() != Event::kUserMessage) {
       NODECONTROLLER_WARNING(
