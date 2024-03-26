@@ -2379,9 +2379,10 @@ class nsTArray_Impl
     static_assert(std::is_move_constructible_v<value_type>);
 
     ::detail::CompareWrapper<Comparator, value_type> comp(aComp);
-    std::sort(begin(), end(), [&comp](const auto& left, const auto& right) {
-      return comp.LessThan(left, right);
-    });
+    std::sort(Elements(), Elements() + Length(),
+              [&comp](const auto& left, const auto& right) {
+                return comp.LessThan(left, right);
+              });
   }
 
   // A variation on the Sort method defined above that assumes that
