@@ -960,6 +960,7 @@ void MFCDMParent::GetCapabilities(const nsString& aKeySystem,
       KeySystemConfig::SessionType::Temporary);
   aCapabilitiesOut.sessionTypes().AppendElement(
       KeySystemConfig::SessionType::PersistentLicense);
+  aCapabilitiesOut.isHardwareDecryption() = isHardwareDecryption;
 }
 
 mozilla::ipc::IPCResult MFCDMParent::RecvGetCapabilities(
