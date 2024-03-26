@@ -127,7 +127,8 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(WakeLockJS)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WakeLockJS)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMEventListener)
+  NS_INTERFACE_MAP_ENTRY(nsIDocumentActivity)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
@@ -147,12 +148,14 @@ JSObject* WakeLockJS::WrapObject(JSContext* aCx,
 
 // https://w3c.github.io/screen-wake-lock/#the-request-method Step 7.3
 Result<already_AddRefed<WakeLockSentinel>, WakeLockJS::RequestError>
-WakeLockJS::Obtain(WakeLockType aType, Document* aDoc) {
+WakeLockJS::Obtain(WakeLockType aType) {
   // Step 7.3.1. check visibility again
-  // Out of spec, but also check everything else
-  RequestError rv = WakeLockAllowedForDocument(aDoc);
-  if (rv != RequestError::Success) {
-    return Err(rv);
+  nsCOMPtr<Document> doc = mWindow->GetExtantDoc();
+  if (!doc) {
+    return Err(RequestError::InternalFailure);
+  }
+  if (doc->Hidden()) {
+    return Err(RequestError::DocHidden);
   }
   // Step 7.3.3. let lock be a new WakeLockSentinel
   RefPtr<WakeLockSentinel> lock =
@@ -163,7 +166,7 @@ WakeLockJS::Obtain(WakeLockType aType, Document* aDoc) {
   }
 
   // Steps 7.3.4. append lock to locks
-  aDoc->ActiveWakeLocks(aType).Insert(lock);
+  doc->ActiveWakeLocks(aType).Insert(lock);
 
   return lock.forget();
 }
@@ -188,9 +191,8 @@ already_AddRefed<Promise> WakeLockJS::Request(WakeLockType aType,
   // For now, we don't check the permission as we always grant the lock
   // Step 7.3. Queue a task
   NS_DispatchToMainThread(NS_NewRunnableFunction(
-      "ObtainWakeLock",
-      [aType, promise, doc, self = RefPtr<WakeLockJS>(this)]() {
-        auto lockOrErr = self->Obtain(aType, doc);
+      "ObtainWakeLock", [aType, promise, self = RefPtr<WakeLockJS>(this)]() {
+        auto lockOrErr = self->Obtain(aType);
         if (lockOrErr.isOk()) {
           RefPtr<WakeLockSentinel> lock = lockOrErr.unwrap();
           promise->MaybeResolve(lock);
@@ -206,16 +208,30 @@ already_AddRefed<Promise> WakeLockJS::Request(WakeLockType aType,
 }
 
 void WakeLockJS::AttachListeners() {
+  nsCOMPtr<Document> doc = mWindow->GetExtantDoc();
+  MOZ_ASSERT(doc);
+  DebugOnly<nsresult> rv =
+      doc->AddSystemEventListener(u"visibilitychange"_ns, this, true, false);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  doc->RegisterActivityObserver(ToSupports(this));
+
   hal::RegisterBatteryObserver(this);
 
   nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
   MOZ_ASSERT(prefBranch);
-  DebugOnly<nsresult> rv =
-      prefBranch->AddObserver("dom.screenwakelock.enabled", this, true);
+  rv = prefBranch->AddObserver("dom.screenwakelock.enabled", this, true);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
 void WakeLockJS::DetachListeners() {
+  if (mWindow) {
+    if (nsCOMPtr<Document> doc = mWindow->GetExtantDoc()) {
+      doc->RemoveSystemEventListener(u"visibilitychange"_ns, this, true);
+
+      doc->UnregisterActivityObserver(ToSupports(this));
+    }
+  }
+
   hal::UnregisterBatteryObserver(this);
 
   if (nsCOMPtr<nsIPrefBranch> prefBranch =
@@ -233,6 +249,30 @@ NS_IMETHODIMP WakeLockJS::Observe(nsISupports* aSubject, const char* aTopic,
       doc->UnlockAllWakeLocks(WakeLockType::Screen);
     }
   }
+  return NS_OK;
+}
+
+void WakeLockJS::NotifyOwnerDocumentActivityChanged() {
+  nsCOMPtr<Document> doc = mWindow->GetExtantDoc();
+  MOZ_ASSERT(doc);
+  if (!doc->IsActive()) {
+    doc->UnlockAllWakeLocks(WakeLockType::Screen);
+  }
+}
+
+NS_IMETHODIMP WakeLockJS::HandleEvent(Event* aEvent) {
+  nsAutoString type;
+  aEvent->GetType(type);
+
+  if (type.EqualsLiteral("visibilitychange")) {
+    nsCOMPtr<Document> doc = do_QueryInterface(aEvent->GetTarget());
+    NS_ENSURE_STATE(doc);
+
+    if (doc->Hidden()) {
+      doc->UnlockAllWakeLocks(WakeLockType::Screen);
+    }
+  }
+
   return NS_OK;
 }
 
