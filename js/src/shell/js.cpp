@@ -2191,7 +2191,6 @@ static bool LoadScript(JSContext* cx, unsigned argc, Value* vp,
   for (unsigned i = 0; i < args.length(); i++) {
     str = JS::ToString(cx, args[i]);
     if (!str) {
-      cx->clearPendingException();
       JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr,
                                 JSSMSG_INVALID_ARGS, "load");
       return false;

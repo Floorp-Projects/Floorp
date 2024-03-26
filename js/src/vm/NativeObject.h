@@ -987,7 +987,7 @@ class NativeObject : public JSObject {
   bool growSlotsForNewSlot(JSContext* cx, uint32_t numFixed, uint32_t slot);
   void shrinkSlots(JSContext* cx, uint32_t oldCapacity, uint32_t newCapacity);
 
-  bool allocateSlots(JSContext* cx, uint32_t newCapacity);
+  bool allocateSlots(Nursery& nursery, uint32_t newCapacity);
 
   /*
    * This method is static because it's called from JIT code. On OOM, returns
@@ -1257,7 +1257,7 @@ class NativeObject : public JSObject {
     return UndefinedValue();
   }
 
-  [[nodiscard]] bool setUniqueId(JSContext* cx, uint64_t uid);
+  [[nodiscard]] bool setUniqueId(JSRuntime* runtime, uint64_t uid);
   inline bool hasUniqueId() const { return getSlotsHeader()->hasUniqueId(); }
   inline uint64_t uniqueId() const { return getSlotsHeader()->uniqueId(); }
   inline uint64_t maybeUniqueId() const {

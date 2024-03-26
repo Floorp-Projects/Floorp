@@ -234,13 +234,20 @@ namespace js {
 // instead.
 
 template <typename T>
-static inline T* AllocateCellBuffer(JSContext* cx, gc::Cell* cell,
+static inline T* AllocateCellBuffer(Nursery& nursery, gc::Cell* cell,
                                     uint32_t count) {
   size_t nbytes = RoundUp(count * sizeof(T), sizeof(Value));
-  auto* buffer = static_cast<T*>(cx->nursery().allocateBuffer(
-      cell->zone(), cell, nbytes, js::MallocArena));
+  return static_cast<T*>(
+      nursery.allocateBuffer(cell->zone(), cell, nbytes, js::MallocArena));
+}
+
+template <typename T>
+static inline T* AllocateCellBuffer(JSContext* cx, gc::Cell* cell,
+                                    uint32_t count) {
+  T* buffer = AllocateCellBuffer<T>(cx->nursery(), cell, count);
   if (!buffer) {
     ReportOutOfMemory(cx);
+    return nullptr;
   }
 
   return buffer;

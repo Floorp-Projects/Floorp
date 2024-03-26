@@ -613,19 +613,10 @@ static WasmExceptionObject* GetOrWrapWasmException(JitActivation* activation,
         cx->setPendingException(exn, nullptr);
       }
     } else {
-      // Preserve the context's pending exception.
-      Rooted<SavedFrame*> stack(cx, cx->getPendingExceptionStack());
-      cx->clearPendingException();
-
       // Wrap all thrown JS values in a wasm exception. This is required so
       // that all exceptions have tags, and the 'null' JS value becomes a
       // non-null wasm exception.
       wasmExn = WasmExceptionObject::wrapJSValue(cx, exn);
-
-      if (wasmExn) {
-        cx->setPendingException(exn, stack);
-      }
-      MOZ_ASSERT(cx->isExceptionPending());
     }
 
     if (wasmExn) {
