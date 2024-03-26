@@ -32,9 +32,6 @@ nsresult HeadlessLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
     case IntID::CaretWidth:
       aResult = 1;
       break;
-    case IntID::ShowCaretDuringSelection:
-      aResult = 0;
-      break;
     case IntID::SelectTextfieldsOnKeyFocus:
       aResult = 1;
       break;

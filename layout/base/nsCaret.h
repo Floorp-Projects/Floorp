@@ -61,18 +61,17 @@ class nsCaret final : public nsISelectionListener {
    *                          those with user-modify: read-only
    */
   void SetIgnoreUserModify(bool aIgnoreUserModify);
-  /** SetVisible will set the visibility of the caret
-   *  @param inMakeVisible true to show the caret, false to hide it
+  /**
+   * SetVisible will set the visibility of the caret
+   *  @param aVisible true to show the caret, false to hide it
    */
   void SetVisible(bool aVisible);
-  /** IsVisible will get the visibility of the caret.
-   *  This returns false if the caret is hidden because it was set
-   *  to not be visible, or because the selection is not collapsed, or
-   *  because an open popup is hiding the caret.
-   *  It does not take account of blinking or the caret being hidden
-   *  because we're in non-editable/disabled content.
+  /**
+   * IsVisible will get the visibility of the caret.
+   * It does not take account of blinking or the caret being hidden because
+   * we're in non-editable/disabled content.
    */
-  bool IsVisible();
+  bool IsVisible() const;
 
   /**
    * AddForceHide() increases mHideCount and hide the caret even if
@@ -190,6 +189,7 @@ class nsCaret final : public nsISelectionListener {
   static void CaretBlinkCallback(nsITimer* aTimer, void* aClosure);
 
   void CheckSelectionLanguageChange();
+  void CaretVisibilityMaybeChanged();
 
   void ResetBlinking();
   void StopBlinking();
@@ -202,16 +202,6 @@ class nsCaret final : public nsISelectionListener {
                                 nscoord aCaretHeight);
   void ComputeCaretRects(nsIFrame* aFrame, int32_t aFrameOffset,
                          nsRect* aCaretRect, nsRect* aHookRect);
-
-  // Returns true if we should not draw the caret because of XUL menu popups.
-  // The caret should be hidden if:
-  // 1. An open popup contains the caret, but a menu popup exists before the
-  //    caret-owning popup in the popup list (i.e. a menu is in front of the
-  //    popup with the caret). If the menu itself contains the caret we don't
-  //    hide it.
-  // 2. A menu popup is open, but there is no caret present in any popup.
-  // 3. The caret selection is empty.
-  bool IsMenuPopupHidingCaret();
 
   // If we're tracking the selection, this updates the caret position and
   // invalidates paint as needed.
@@ -274,6 +264,12 @@ class nsCaret final : public nsISelectionListener {
    * will not track the selection.
    */
   bool mFixedCaretPosition = false;
+
+  /**
+   * If we're currently hiding the caret due to the selection not being
+   * collapsed. Can only be true if mShowDuringSelection is false.
+   */
+  bool mHiddenDuringSelection = false;
 };
 
 #endif  // nsCaret_h__

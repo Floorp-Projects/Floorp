@@ -128,7 +128,6 @@ static const char sIntPrefs[][45] = {
     "ui.caretBlinkTime",
     "ui.caretBlinkCount",
     "ui.caretWidth",
-    "ui.caretVisibleWithSelection",
     "ui.selectTextfieldsOnKeyFocus",
     "ui.submenuDelay",
     "ui.menusCanOverlapOSBar",
