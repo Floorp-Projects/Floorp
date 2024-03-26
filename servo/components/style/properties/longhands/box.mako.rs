@@ -281,7 +281,6 @@ ${helpers.predefined_type(
     "computed::OffsetPosition::normal()",
     engines="gecko",
     animation_value_type="ComputedValue",
-    gecko_pref="layout.css.motion-path-offset-position.enabled",
     flags="CAN_ANIMATE_ON_COMPOSITOR",
     spec="https://drafts.fxtf.org/motion-1/#offset-position-property",
     servo_restyle_damage="reflow_out_of_flow",

@@ -76,10 +76,6 @@ impl Parse for RayFunction {
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
     ) -> Result<Self, ParseError<'i>> {
-        if !static_prefs::pref!("layout.css.motion-path-ray.enabled") {
-            return Err(input.new_custom_error(StyleParseErrorKind::UnspecifiedError));
-        }
-
         input.expect_function_matching("ray")?;
         input.parse_nested_block(|i| Self::parse_function_arguments(context, i))
     }
@@ -154,11 +150,8 @@ impl Parse for OffsetPathFunction {
 
         // <offset-path> = <ray()> | <url> | <basic-shape>
         // https://drafts.fxtf.org/motion-1/#typedef-offset-path
-
-        if static_prefs::pref!("layout.css.motion-path-ray.enabled") {
-            if let Ok(ray) = input.try_parse(|i| RayFunction::parse(context, i)) {
-                return Ok(OffsetPathFunction::Ray(ray));
-            }
+        if let Ok(ray) = input.try_parse(|i| RayFunction::parse(context, i)) {
+            return Ok(OffsetPathFunction::Ray(ray));
         }
 
         if static_prefs::pref!("layout.css.motion-path-url.enabled") {
@@ -167,13 +160,7 @@ impl Parse for OffsetPathFunction {
             }
         }
 
-        let allowed_shapes = if static_prefs::pref!("layout.css.motion-path-basic-shapes.enabled") {
-            AllowedBasicShapes::ALL
-        } else {
-            AllowedBasicShapes::PATH
-        };
-
-        BasicShape::parse(context, input, allowed_shapes, ShapeType::Outline)
+        BasicShape::parse(context, input, AllowedBasicShapes::ALL, ShapeType::Outline)
             .map(OffsetPathFunction::Shape)
     }
 }
@@ -197,9 +184,7 @@ impl Parse for OffsetPath {
                     .ok();
             }
 
-            if static_prefs::pref!("layout.css.motion-path-coord-box.enabled") &&
-                coord_box.is_none()
-            {
+            if coord_box.is_none() {
                 coord_box = input.try_parse(CoordBox::parse).ok();
                 if coord_box.is_some() {
                     continue;
