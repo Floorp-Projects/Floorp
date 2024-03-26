@@ -2245,9 +2245,19 @@ bool CanonicalBrowsingContext::SupportsLoadingInParent(
         return false;
       }
     }
-    // If the current document has a beforeunload listener, then we need to
-    // start the load in that process after we fire the event.
-    if (global->HasBeforeUnload()) {
+
+    // If unloading the current document will cause a beforeunload listener to
+    // run, then we need to start the load in that process after we fire the
+    // event.
+    if (PreOrderWalkFlag([&](BrowsingContext* aBC) {
+          WindowContext* wc = aBC->GetCurrentWindowContext();
+          if (wc && wc->HasBeforeUnload()) {
+            // We can stop as soon as we know at least one beforeunload listener
+            // exists.
+            return WalkFlag::Stop;
+          }
+          return WalkFlag::Next;
+        }) == WalkFlag::Stop) {
       return false;
     }
 

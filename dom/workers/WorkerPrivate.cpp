@@ -1574,8 +1574,6 @@ nsresult WorkerPrivate::DispatchLockHeld(
   MOZ_ASSERT_IF(aSyncLoopTarget, mThread);
 
   if (mStatus == Dead || (!aSyncLoopTarget && ParentStatus() > Canceling)) {
-    LOGV(("WorkerPrivate::DispatchLockHeld [%p] runnable %p, parent status: %u",
-          this, runnable.get(), (uint8_t)(ParentStatus())));
     NS_WARNING(
         "A runnable was posted to a worker that is already shutting "
         "down!");
@@ -1624,6 +1622,7 @@ nsresult WorkerPrivate::DispatchLockHeld(
   }
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
+    LOGV(("WorkerPrivate::Dispatch Failed [%p]", this));
     return rv;
   }
 
@@ -3104,10 +3103,33 @@ void WorkerPrivate::OverrideLoadInfoLoadGroup(WorkerLoadInfo& aLoadInfo,
 
 void WorkerPrivate::RunLoopNeverRan() {
   LOG(WorkerLog(), ("WorkerPrivate::RunLoopNeverRan [%p]", this));
+  // RunLoopNeverRan is only called in WorkerThreadPrimaryRunnable::Run() to
+  // handle cases
+  //   1. Fail to get BackgroundChild for the worker thread or
+  //   2. Fail to initialize the worker's JS context
+  // However, mPreStartRunnables had already dispatched in
+  // WorkerThread::SetWorkerPrivateInWorkerThread() where beforing above jobs
+  // start. So we need to clean up these dispatched runnables for the worker
+  // thread.
+
+  auto data = mWorkerThreadAccessible.Access();
+  RefPtr<WorkerThread> thread;
   {
     MutexAutoLock lock(mMutex);
-
+    // WorkerPrivate::DoRunLoop() is never called, so CompileScriptRunnable
+    // should not execute yet. However, the Worker is going to "Dead", flip the
+    // mCancelBeforeWorkerScopeConstructed to true for the dispatched runnables
+    // to indicate runnables there is no valid WorkerGlobalScope for executing.
+    MOZ_ASSERT(!data->mCancelBeforeWorkerScopeConstructed);
+    data->mCancelBeforeWorkerScopeConstructed.Flip();
+    // Switch State to Dead
     mStatus = Dead;
+    thread = mThread;
+  }
+
+  // Clear the dispatched mPreStartRunnables.
+  if (thread && NS_HasPendingEvents(thread)) {
+    NS_ProcessPendingEvents(nullptr);
   }
 
   // After mStatus is set to Dead there can be no more
@@ -3230,11 +3252,6 @@ void WorkerPrivate::DoRunLoop(JSContext* aCx) {
 
     {
       MutexAutoLock lock(mMutex);
-
-      LOGV(
-          ("WorkerPrivate::DoRunLoop [%p] mStatus %u before getting events"
-           " to run",
-           this, (uint8_t)mStatus));
       if (checkFinalGCCC && currentStatus != mStatus) {
         // Something moved our status while we were supposed to check for a
         // potentially needed GC/CC. Just check again.
@@ -3268,6 +3285,25 @@ void WorkerPrivate::DoRunLoop(JSContext* aCx) {
       }
 
       currentStatus = mStatus;
+    }
+
+    // Status transitions to Closing/Canceling and there are no SyncLoops,
+    // set global start dying, disconnect EventTargetObjects and
+    // WebTaskScheduler.
+    // The Worker might switch to the "Killing" immediately then directly exits
+    // DoRunLoop(). Before exiting the DoRunLoop(), explicitly disconnecting the
+    // WorkerGlobalScope's EventTargetObject here would help to fail runnable
+    // dispatching when the Worker is in the status changing.
+    if (currentStatus >= Closing &&
+        !data->mPerformedShutdownAfterLastContentTaskExecuted) {
+      data->mPerformedShutdownAfterLastContentTaskExecuted.Flip();
+      if (data->mScope) {
+        data->mScope->NoteTerminating();
+        data->mScope->DisconnectGlobalTeardownObservers();
+        if (data->mScope->GetExistingScheduler()) {
+          data->mScope->GetExistingScheduler()->Disconnect();
+        }
+      }
     }
 
     // Transition from Canceling to Killing and exit this loop when:
@@ -3332,21 +3368,6 @@ void WorkerPrivate::DoRunLoop(JSContext* aCx) {
         UnlinkTimeouts();
 
         return;
-      }
-    }
-
-    // Status transitions to Closing/Canceling and there are no SyncLoops,
-    // set global start dying, disconnect EventTargetObjects and
-    // WebTaskScheduler.
-    if (currentStatus >= Closing &&
-        !data->mPerformedShutdownAfterLastContentTaskExecuted) {
-      data->mPerformedShutdownAfterLastContentTaskExecuted.Flip();
-      if (data->mScope) {
-        data->mScope->NoteTerminating();
-        data->mScope->DisconnectGlobalTeardownObservers();
-        if (data->mScope->GetExistingScheduler()) {
-          data->mScope->GetExistingScheduler()->Disconnect();
-        }
       }
     }
 
@@ -4324,7 +4345,6 @@ void WorkerPrivate::AdjustNonblockingCCBackgroundActorCount(int32_t aCount) {
 }
 
 void WorkerPrivate::UpdateCCFlag(const CCFlag aFlag) {
-  LOGV(("WorkerPrivate::UpdateCCFlag [%p]", this));
   AssertIsOnWorkerThread();
 
   auto data = mWorkerThreadAccessible.Access();
@@ -4984,17 +5004,6 @@ bool WorkerPrivate::NotifyInternal(WorkerStatus aStatus) {
     MOZ_ASSERT_IF(aStatus == Killing,
                   mStatus == Canceling && mParentStatus == Canceling);
 
-    if (aStatus >= Canceling) {
-      MutexAutoUnlock unlock(mMutex);
-      if (data->mScope) {
-        if (aStatus == Canceling) {
-          data->mScope->NoteTerminating();
-        } else {
-          data->mScope->NoteShuttingDown();
-        }
-      }
-    }
-
     mStatus = aStatus;
 
     // Mark parent status as closing immediately to avoid new events being
@@ -5005,8 +5014,20 @@ bool WorkerPrivate::NotifyInternal(WorkerStatus aStatus) {
 
     // Synchronize the mParentStatus with mStatus, such that event dispatching
     // will fail in proper after WorkerPrivate gets into Killing status.
-    if (aStatus == Killing) {
-      mParentStatus = Killing;
+    if (aStatus >= Killing) {
+      mParentStatus = aStatus;
+    }
+  }
+
+  // Status transistion to "Canceling"/"Killing", mark the scope as dying when
+  // "Canceling," or shutdown the StorageManager when "Killing."
+  if (aStatus >= Canceling) {
+    if (data->mScope) {
+      if (aStatus == Canceling) {
+        data->mScope->NoteTerminating();
+      } else {
+        data->mScope->NoteShuttingDown();
+      }
     }
   }
 

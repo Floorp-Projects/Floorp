@@ -286,6 +286,12 @@ support-files = ["head_browser_onbeforeunload.js"]
 ["browser_onbeforeunload_navigation.js"]
 skip-if = ["os == 'win' && !debug"] # bug 1300351
 
+["browser_onbeforeunload_nested_with_delay.js"]
+support-files = [
+  "file_onbeforeunload_nested_inner.html",
+  "file_onbeforeunload_nested_outer.html",
+]
+
 ["browser_onbeforeunload_parent.js"]
 support-files = ["head_browser_onbeforeunload.js"]
 

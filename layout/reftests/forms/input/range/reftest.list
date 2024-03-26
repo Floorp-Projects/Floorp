@@ -59,3 +59,5 @@ skip-if(Android) == range-border-background.html range-border-background-ref.htm
 fails-if(Android) fuzzy(0-2,0-80) == auto-size.html auto-size-ref.html # Snapping, bug 1621141
 == range-track-bg.html range-track-bg-ref.html
 != track-default-rendering.html track-default-rendering-ref.html
+
+== 1887539.html 1887539-ref.html

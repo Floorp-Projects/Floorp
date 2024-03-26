@@ -17,6 +17,18 @@
 #  define MOZ_BUFFER_STDERR
 #endif
 
+// It appears that this is sometimes compiled without XP_WIN
+#if defined(_WIN32)
+#  include <process.h>
+#  define MOZ_GET_PID() _getpid()
+#elif !defined(__wasi__)
+#  include <unistd.h>
+#  define MOZ_GET_PID() getpid()
+#else
+// Prevent compiler warning
+#  define MOZ_GET_PID() -1
+#endif
+
 #include "mozilla/Attributes.h"
 #include "mozilla/Compiler.h"
 #include "mozilla/Fuzzing.h"
@@ -95,14 +107,15 @@ MOZ_MAYBE_UNUSED static void MOZ_ReportAssertionFailurePrintFrame(
  * method is primarily for internal use in this header, and only secondarily
  * for use in implementing release-build assertions.
  */
+
 MOZ_MAYBE_UNUSED static MOZ_COLD MOZ_NEVER_INLINE void
 MOZ_ReportAssertionFailure(const char* aStr, const char* aFilename,
                            int aLine) MOZ_PRETEND_NORETURN_FOR_STATIC_ANALYSIS {
   MOZ_FUZZING_HANDLE_CRASH_EVENT4("MOZ_ASSERT", aFilename, aLine, aStr);
 #ifdef ANDROID
   __android_log_print(ANDROID_LOG_FATAL, "MOZ_Assert",
-                      "Assertion failure: %s, at %s:%d\n", aStr, aFilename,
-                      aLine);
+                      "[%d] Assertion failure: %s, at %s:%d\n", MOZ_GET_PID(),
+                      aStr, aFilename, aLine);
 #  if defined(MOZ_DUMP_ASSERTION_STACK)
   MozWalkTheStackWithWriter(MOZ_ReportAssertionFailurePrintFrame, CallerPC(),
                             /* aMaxFrames */ 0);
@@ -110,11 +123,12 @@ MOZ_ReportAssertionFailure(const char* aStr, const char* aFilename,
 #else
 #  if defined(MOZ_BUFFER_STDERR)
   char msg[1024] = "";
-  snprintf(msg, sizeof(msg) - 1, "Assertion failure: %s, at %s:%d\n", aStr,
-           aFilename, aLine);
+  snprintf(msg, sizeof(msg) - 1, "[%d] Assertion failure: %s, at %s:%d\n",
+           MOZ_GET_PID(), aStr, aFilename, aLine);
   fputs(msg, stderr);
 #  else
-  fprintf(stderr, "Assertion failure: %s, at %s:%d\n", aStr, aFilename, aLine);
+  fprintf(stderr, "[%d] Assertion failure: %s, at %s:%d\n", MOZ_GET_PID(), aStr,
+          aFilename, aLine);
 #  endif
 #  if defined(MOZ_DUMP_ASSERTION_STACK)
   MozWalkTheStack(stderr, CallerPC(), /* aMaxFrames */ 0);
@@ -128,15 +142,17 @@ MOZ_MAYBE_UNUSED static MOZ_COLD MOZ_NEVER_INLINE void MOZ_ReportCrash(
     int aLine) MOZ_PRETEND_NORETURN_FOR_STATIC_ANALYSIS {
 #ifdef ANDROID
   __android_log_print(ANDROID_LOG_FATAL, "MOZ_CRASH",
-                      "Hit MOZ_CRASH(%s) at %s:%d\n", aStr, aFilename, aLine);
+                      "[%d] Hit MOZ_CRASH(%s) at %s:%d\n", MOZ_GET_PID(), aStr,
+                      aFilename, aLine);
 #else
 #  if defined(MOZ_BUFFER_STDERR)
   char msg[1024] = "";
-  snprintf(msg, sizeof(msg) - 1, "Hit MOZ_CRASH(%s) at %s:%d\n", aStr,
-           aFilename, aLine);
+  snprintf(msg, sizeof(msg) - 1, "[%d] Hit MOZ_CRASH(%s) at %s:%d\n",
+           MOZ_GET_PID(), aStr, aFilename, aLine);
   fputs(msg, stderr);
 #  else
-  fprintf(stderr, "Hit MOZ_CRASH(%s) at %s:%d\n", aStr, aFilename, aLine);
+  fprintf(stderr, "[%d] Hit MOZ_CRASH(%s) at %s:%d\n", MOZ_GET_PID(), aStr,
+          aFilename, aLine);
 #  endif
 #  if defined(MOZ_DUMP_ASSERTION_STACK)
   MozWalkTheStack(stderr, CallerPC(), /* aMaxFrames */ 0);

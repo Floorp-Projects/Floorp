@@ -9,9 +9,10 @@ const {
   threadConfigurationSpec,
 } = require("resource://devtools/shared/specs/thread-configuration.js");
 
-const {
-  SessionDataHelpers,
-} = require("resource://devtools/server/actors/watcher/SessionDataHelpers.jsm");
+const { SessionDataHelpers } = ChromeUtils.importESModule(
+  "resource://devtools/server/actors/watcher/SessionDataHelpers.sys.mjs",
+  { global: "contextual" }
+);
 const {
   SUPPORTED_DATA: { THREAD_CONFIGURATION },
 } = SessionDataHelpers;

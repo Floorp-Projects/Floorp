@@ -53,8 +53,6 @@ class LookAndFeel {
     CaretBlinkCount,
     // pixel width of caret
     CaretWidth,
-    // show the caret when text is selected?
-    ShowCaretDuringSelection,
     // select textfields when focused via tab/accesskey?
     SelectTextfieldsOnKeyFocus,
     // delay before submenus open

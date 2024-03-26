@@ -15,6 +15,7 @@ from mozperftest.system.android_startup import (
     KEY_DATETIME,
     KEY_NAME,
     KEY_PRODUCT,
+    MOZILLA_PRODUCTS,
 )
 from mozversioncontrol import get_repository_object
 
@@ -39,14 +40,16 @@ def before_iterations(kw):
     if download_date < MONO_REPO_MIGRATION_DAY and product != "geckoview_example":
         pre_mono_repo = "-pre-mono-repo"
     download_date = download_date.strftime(DATETIME_FORMAT)
-    nightly_url = BASE_URL_DICT[product + pre_mono_repo].format(
-        date=download_date, architecture=architecture
-    )
-    filename = f"{product}_nightly_{architecture}.apk"
-    print("Fetching {}...".format(filename), end="", flush=True)
-    download_apk_as_date(nightly_url, download_date, filename)
-    print(f"Downloaded {product} for date: {download_date}")
-
+    if product in MOZILLA_PRODUCTS:
+        nightly_url = BASE_URL_DICT[product + pre_mono_repo].format(
+            date=download_date, architecture=architecture
+        )
+        filename = f"{product}_nightly_{architecture}.apk"
+        print("Fetching {}...".format(filename), end="", flush=True)
+        download_apk_as_date(nightly_url, download_date, filename)
+        print(f"Downloaded {product} for date: {download_date}")
+    else:
+        filename = product + ".apk"
     kw["apk_metadata"] = {
         KEY_NAME: filename,
         KEY_DATETIME: download_date,

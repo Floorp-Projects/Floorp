@@ -61,10 +61,6 @@ nsresult nsCaret::Init(PresShell* aPresShell) {
       do_GetWeakReference(aPresShell);  // the presshell owns us, so no addref
   NS_ASSERTION(mPresShell, "Hey, pres shell should support weak refs");
 
-  mShowDuringSelection =
-      LookAndFeel::GetInt(LookAndFeel::IntID::ShowCaretDuringSelection,
-                          mShowDuringSelection ? 1 : 0) != 0;
-
   RefPtr<Selection> selection =
       aPresShell->GetSelection(nsISelectionController::SELECTION_NORMAL);
   if (!selection) {
@@ -145,25 +141,24 @@ void nsCaret::SetSelection(Selection* aDOMSel) {
 }
 
 void nsCaret::SetVisible(bool aVisible) {
+  const bool wasVisible = mVisible;
   mVisible = aVisible;
   mIgnoreUserModify = aVisible;
-  ResetBlinking();
-  SchedulePaint();
+  if (mVisible != wasVisible) {
+    CaretVisibilityMaybeChanged();
+  }
 }
 
-bool nsCaret::IsVisible() {
-  if (!mVisible || mHideCount) {
-    return false;
-  }
+bool nsCaret::IsVisible() const { return mVisible && !mHideCount; }
 
-  if (!mShowDuringSelection) {
-    Selection* selection = GetSelection();
-    if (!selection || !selection->IsCollapsed()) {
-      return false;
-    }
+void nsCaret::CaretVisibilityMaybeChanged() {
+  ResetBlinking();
+  SchedulePaint();
+  if (IsVisible()) {
+    // We ignore caret position updates when the caret is not visible, so we
+    // update the caret position here if needed.
+    UpdateCaretPositionFromSelectionIfNeeded();
   }
-
-  return !IsMenuPopupHidingCaret();
 }
 
 void nsCaret::AddForceHide() {
@@ -171,16 +166,14 @@ void nsCaret::AddForceHide() {
   if (++mHideCount > 1) {
     return;
   }
-  ResetBlinking();
-  SchedulePaint();
+  CaretVisibilityMaybeChanged();
 }
 
 void nsCaret::RemoveForceHide() {
   if (!mHideCount || --mHideCount) {
     return;
   }
-  ResetBlinking();
-  SchedulePaint();
+  CaretVisibilityMaybeChanged();
 }
 
 void nsCaret::SetCaretReadOnly(bool aReadOnly) {
@@ -408,7 +401,14 @@ void nsCaret::SchedulePaint() {
 }
 
 void nsCaret::SetVisibilityDuringSelection(bool aVisibility) {
+  if (mShowDuringSelection == aVisibility) {
+    return;
+  }
   mShowDuringSelection = aVisibility;
+  if (mHiddenDuringSelection && aVisibility) {
+    RemoveForceHide();
+    mHiddenDuringSelection = false;
+  }
   SchedulePaint();
 }
 
@@ -558,15 +558,6 @@ void nsCaret::PaintCaret(DrawTarget& aDrawTarget, nsIFrame* aForFrame,
 NS_IMETHODIMP
 nsCaret::NotifySelectionChanged(Document*, Selection* aDomSel, int16_t aReason,
                                 int32_t aAmount) {
-  // Note that aDomSel, per the comment below may not be the same as our
-  // selection, but that's OK since if that is the case, it wouldn't have
-  // mattered what IsVisible() returns here, so we just opt for checking
-  // the selection later down below.
-  if ((aReason & nsISelectionListener::MOUSEUP_REASON) || !IsVisible()) {
-    // this wont do
-    return NS_OK;
-  }
-
   // The same caret is shared amongst the document and any text widgets it
   // may contain. This means that the caret could get notifications from
   // multiple selections.
@@ -574,12 +565,27 @@ nsCaret::NotifySelectionChanged(Document*, Selection* aDomSel, int16_t aReason,
   // If this notification is for a selection that is not the one the
   // the caret is currently interested in (mDomSelectionWeak), or the caret
   // position is fixed, then there is nothing to do!
-  if (mFixedCaretPosition || mDomSelectionWeak != aDomSel) {
+  if (mDomSelectionWeak != aDomSel) {
     return NS_OK;
   }
 
-  ResetBlinking();
-  UpdateCaretPositionFromSelectionIfNeeded();
+  // Check if we need to hide / un-hide the caret due to the selection being
+  // collapsed.
+  if (!mShowDuringSelection &&
+      !aDomSel->IsCollapsed() != mHiddenDuringSelection) {
+    if (mHiddenDuringSelection) {
+      RemoveForceHide();
+    } else {
+      AddForceHide();
+    }
+    mHiddenDuringSelection = !mHiddenDuringSelection;
+  }
+
+  // We don't bother computing the caret position when invisible. We'll do it if
+  // we become visible in CaretVisibilityMaybeChanged().
+  if (IsVisible()) {
+    UpdateCaretPositionFromSelectionIfNeeded();
+  }
 
   return NS_OK;
 }
@@ -594,7 +600,7 @@ void nsCaret::ResetBlinking() {
 
   mIsBlinkOn = true;
 
-  if (mReadOnly || !mVisible || mHideCount) {
+  if (mReadOnly || !IsVisible()) {
     StopBlinking();
     return;
   }
@@ -650,48 +656,6 @@ size_t nsCaret::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
     total += mBlinkTimer->SizeOfIncludingThis(aMallocSizeOf);
   }
   return total;
-}
-
-// FIXME(emilio): this code is broken in tons of ways: Doesn't account for
-// shadow dom, doesn't work in child processes... Do we need this at all?
-bool nsCaret::IsMenuPopupHidingCaret() {
-  // Check if there are open popups.
-  nsXULPopupManager* popMgr = nsXULPopupManager::GetInstance();
-  nsTArray<nsIFrame*> popups;
-  popMgr->GetVisiblePopups(popups);
-  if (popups.IsEmpty()) {
-    return false;  // No popups, so caret can't be hidden by them.
-  }
-
-  nsCOMPtr<nsIContent> caretContent =
-      nsIContent::FromNodeOrNull(mCaretPosition.mContent);
-  if (!caretContent) {
-    return true;  // No selection/caret to draw.
-  }
-
-  // If there's a menu popup open before the popup with
-  // the caret, don't show the caret.
-  for (uint32_t i = 0; i < popups.Length(); i++) {
-    auto* popupFrame = static_cast<nsMenuPopupFrame*>(popups[i]);
-    nsIContent* popupContent = popupFrame->GetContent();
-
-    if (caretContent->IsInclusiveDescendantOf(popupContent)) {
-      // The caret is in this popup. There were no menu popups before this
-      // popup, so don't hide the caret.
-      return false;
-    }
-
-    if (popupFrame->GetPopupType() == widget::PopupType::Menu &&
-        !popupFrame->IsContextMenu()) {
-      // This is an open menu popup. It does not contain the caret (else we'd
-      // have returned above). Even if the caret is in a subsequent popup,
-      // or another document/frame, it should be hidden.
-      return true;
-    }
-  }
-
-  // There are no open menu popups, no need to hide the caret.
-  return false;
 }
 
 void nsCaret::ComputeCaretRects(nsIFrame* aFrame, int32_t aFrameOffset,

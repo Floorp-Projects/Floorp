@@ -56,8 +56,11 @@
     "documentProperties": {
       "reference": "test_pdf_navigation_documentProperties.png"
     },
-    "select_text": {
-      "reference": "test_pdf_navigation_select_text.png"
+    "select_text_with_highlight": {
+      "reference": "test_pdf_navigation_select_text_with_highlight.png"
+    },
+    "select_text_without_highlight": {
+      "reference": "test_pdf_navigation_select_text_without_highlight.png"
     },
     "hand_tool": {
       "reference": "test_pdf_navigation_hand_tool.png"

@@ -203,6 +203,8 @@ class Maybe_CopyMove_Enabler<T, false, false, true> {
  public:
   Maybe_CopyMove_Enabler() = default;
 
+  Maybe_CopyMove_Enabler(const Maybe_CopyMove_Enabler&) = delete;
+  Maybe_CopyMove_Enabler& operator=(const Maybe_CopyMove_Enabler&) = delete;
   MOZ_MAYBE_MOVE_OPS()
 
  private:
@@ -215,6 +217,8 @@ class Maybe_CopyMove_Enabler<T, false, true, false> {
   Maybe_CopyMove_Enabler() = default;
 
   MOZ_MAYBE_COPY_OPS()
+  Maybe_CopyMove_Enabler(Maybe_CopyMove_Enabler&&) = delete;
+  Maybe_CopyMove_Enabler& operator=(Maybe_CopyMove_Enabler&&) = delete;
 
  private:
   MOZ_MAYBE_DOWNCAST()
@@ -392,28 +396,35 @@ class MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS Maybe
    * a const U&.
    */
   template <typename U,
-            typename = std::enable_if_t<std::is_constructible_v<T, const U&>>>
+            std::enable_if_t<std::is_constructible_v<T, const U&>, bool> = true>
   MOZ_IMPLICIT Maybe(const Maybe<U>& aOther) {
     if (aOther.isSome()) {
       emplace(*aOther);
     }
   }
 
+  template <typename U, std::enable_if_t<!std::is_constructible_v<T, const U&>,
+                                         bool> = true>
+  explicit Maybe(const Maybe<U>& aOther) = delete;
+
   /**
    * Maybe<T> can be move-constructed from a Maybe<U> if T is constructible from
    * a U&&.
    */
   template <typename U,
-            typename = std::enable_if_t<std::is_constructible_v<T, U&&>>>
+            std::enable_if_t<std::is_constructible_v<T, U&&>, bool> = true>
   MOZ_IMPLICIT Maybe(Maybe<U>&& aOther) {
     if (aOther.isSome()) {
       emplace(std::move(*aOther));
       aOther.reset();
     }
   }
+  template <typename U,
+            std::enable_if_t<!std::is_constructible_v<T, U&&>, bool> = true>
+  explicit Maybe(Maybe<U>&& aOther) = delete;
 
   template <typename U,
-            typename = std::enable_if_t<std::is_constructible_v<T, const U&>>>
+            std::enable_if_t<std::is_constructible_v<T, const U&>, bool> = true>
   Maybe& operator=(const Maybe<U>& aOther) {
     if (aOther.isSome()) {
       if (mIsSome) {
@@ -427,8 +438,12 @@ class MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS Maybe
     return *this;
   }
 
+  template <typename U, std::enable_if_t<!std::is_constructible_v<T, const U&>,
+                                         bool> = true>
+  Maybe& operator=(const Maybe<U>& aOther) = delete;
+
   template <typename U,
-            typename = std::enable_if_t<std::is_constructible_v<T, U&&>>>
+            std::enable_if_t<std::is_constructible_v<T, U&&>, bool> = true>
   Maybe& operator=(Maybe<U>&& aOther) {
     if (aOther.isSome()) {
       if (mIsSome) {
@@ -443,6 +458,10 @@ class MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS Maybe
 
     return *this;
   }
+
+  template <typename U,
+            std::enable_if_t<!std::is_constructible_v<T, U&&>, bool> = true>
+  Maybe& operator=(Maybe<U>&& aOther) = delete;
 
   constexpr Maybe& operator=(Nothing) {
     reset();

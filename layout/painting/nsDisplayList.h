@@ -3195,12 +3195,13 @@ class nsDisplayList {
     // array of 20 items should be able to avoid a lot of dynamic allocations
     // here.
     AutoTArray<Item, 20> items;
+    // Ensure we need just one alloc otherwise, no-op if enough.
+    items.SetCapacity(Length());
 
     for (nsDisplayItem* item : TakeItems()) {
       items.AppendElement(Item(item));
     }
-
-    std::stable_sort(items.begin(), items.end(), aComparator);
+    items.StableSort(aComparator);
 
     for (Item& item : items) {
       AppendToTop(item);
@@ -3208,6 +3209,7 @@ class nsDisplayList {
   }
 
   nsDisplayList TakeItems() {
+    // This std::move makes this a defined empty list, see assignment operator.
     nsDisplayList list = std::move(*this);
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
     list.mAllowNonEmptyDestruction = true;

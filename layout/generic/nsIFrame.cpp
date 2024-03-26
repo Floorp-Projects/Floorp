@@ -10928,7 +10928,7 @@ void nsIFrame::UpdateStyleOfChildAnonBox(nsIFrame* aChildFrame,
   // Now that we've updated the style on aChildFrame, check whether it itself
   // has anon boxes to deal with.
   ServoRestyleState childrenState(*aChildFrame, aRestyleState, childHint,
-                                  ServoRestyleState::Type::InFlow);
+                                  ServoRestyleState::CanUseHandledHints::Yes);
   aChildFrame->UpdateStyleOfOwnedAnonBoxes(childrenState);
 
   // Assuming anon boxes don't have ::backdrop associated with them... if that

@@ -17,6 +17,7 @@ import mozilla.components.feature.findinpage.FindInPageFeature
 import mozilla.components.feature.findinpage.view.FindInPageBar
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.feature.UserInteractionHandler
+import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FindInPageIntegration.ToolbarInfo
 
 /**
@@ -28,6 +29,7 @@ import org.mozilla.fenix.components.FindInPageIntegration.ToolbarInfo
  * @param engineView the browser in which the queries will be made and which needs to be better positioned
  * to suit the find in page bar.
  * @param toolbarInfo [ToolbarInfo] used to configure the [BrowserToolbar] while the find in page bar is shown.
+ * @param findInPageHeight The height of the find in page bar.
  */
 class FindInPageIntegration(
     private val store: BrowserStore,
@@ -35,6 +37,7 @@ class FindInPageIntegration(
     private val view: FindInPageBar,
     private val engineView: EngineView,
     private val toolbarInfo: ToolbarInfo,
+    private val findInPageHeight: Int = view.context.resources.getDimensionPixelSize(R.dimen.browser_toolbar_height),
 ) : LifecycleAwareFeature, UserInteractionHandler {
     private val feature by lazy { FindInPageFeature(store, view, engineView, ::onClose) }
 
@@ -69,7 +72,7 @@ class FindInPageIntegration(
 
             view.visibility = View.VISIBLE
             (feature as FindInPageFeature).bind(tab)
-            view.layoutParams.height = toolbarInfo.toolbar.height
+            view.layoutParams.height = findInPageHeight
         }
     }
 
@@ -104,7 +107,7 @@ class FindInPageIntegration(
                 // With a dynamic toolbar the EngineView extends to the entire (top and bottom) of the screen.
                 // And now with the toolbar expanded it is translated down immediately below the toolbar.
                 engineViewParent.translationY = 0f
-                engineViewParentParams.bottomMargin = toolbarInfo.toolbar.height
+                engineViewParentParams.bottomMargin = minOf(toolbarInfo.toolbar.height, findInPageHeight)
             } else {
                 // With a fixed toolbar the EngineView is anchored below the toolbar with 0 Y translation.
                 engineViewParent.translationY = -toolbarInfo.toolbar.height.toFloat()
@@ -127,7 +130,7 @@ class FindInPageIntegration(
      * Used to modify the layout of BrowserToolbar while the find in page bar is shown.
      */
     data class ToolbarInfo(
-        val toolbar: BrowserToolbar,
+        val toolbar: View,
         val isToolbarDynamic: Boolean,
         val isToolbarPlacedAtTop: Boolean,
     )

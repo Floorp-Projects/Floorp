@@ -3,8 +3,10 @@
 
 "use strict";
 
-const { addTracingListener, removeTracingListener, startTracing, stopTracing } =
-  ChromeUtils.import("resource://devtools/server/tracer/tracer.jsm");
+const { JSTracer } = ChromeUtils.importESModule(
+  "resource://devtools/server/tracer/tracer.sys.mjs",
+  { global: "shared" }
+);
 
 add_task(async function () {
   // Because this test uses evalInSandbox, we need to tweak the following prefs
@@ -30,13 +32,13 @@ add_task(async function testTracingContentGlobal() {
   };
 
   info("Register a tracing listener");
-  addTracingListener(listener);
+  JSTracer.addTracingListener(listener);
 
   const sandbox = Cu.Sandbox("https://example.com");
   Cu.evalInSandbox("function bar() {}; function foo() {bar()};", sandbox);
 
   info("Start tracing");
-  startTracing({ global: sandbox, prefix: "testContentPrefix" });
+  JSTracer.startTracing({ global: sandbox, prefix: "testContentPrefix" });
   Assert.equal(toggles.length, 1);
   Assert.equal(toggles[0], true);
 
@@ -56,7 +58,7 @@ add_task(async function testTracingContentGlobal() {
   Assert.ok(lastFrame.frame);
 
   info("Stop tracing");
-  stopTracing();
+  JSTracer.stopTracing();
   Assert.equal(toggles.length, 2);
   Assert.equal(toggles[1], false);
 
@@ -65,19 +67,19 @@ add_task(async function testTracingContentGlobal() {
   Assert.equal(frames.length, 0);
 
   info("Start tracing again, and recall code");
-  startTracing({ global: sandbox, prefix: "testContentPrefix" });
+  JSTracer.startTracing({ global: sandbox, prefix: "testContentPrefix" });
   sandbox.foo();
   info("New traces are logged");
   Assert.equal(frames.length, 2);
 
   info("Unregister the listener and recall code");
-  removeTracingListener(listener);
+  JSTracer.removeTracingListener(listener);
   sandbox.foo();
   info("No more traces are logged");
   Assert.equal(frames.length, 2);
 
   info("Stop tracing");
-  stopTracing();
+  JSTracer.stopTracing();
 });
 
 add_task(async function testTracingJSMGlobal() {
@@ -103,10 +105,10 @@ add_task(async function testTracingJSMGlobal() {
   );
 
   info("Register a tracing listener");
-  addTracingListener(listenerSandbox.listener);
+  JSTracer.addTracingListener(listenerSandbox.listener);
 
   info("Start tracing");
-  startTracing({ global: null, prefix: "testPrefix" });
+  JSTracer.startTracing({ global: null, prefix: "testPrefix" });
   Assert.equal(listenerSandbox.toggles.length, 1);
   Assert.equal(listenerSandbox.toggles[0], true);
 
@@ -131,11 +133,11 @@ add_task(async function testTracingJSMGlobal() {
   Assert.ok(lastFrame.frame);
 
   info("Stop tracing");
-  stopTracing();
+  JSTracer.stopTracing();
   Assert.equal(listenerSandbox.toggles.length, 2);
   Assert.equal(listenerSandbox.toggles[1], false);
 
-  removeTracingListener(listenerSandbox.listener);
+  JSTracer.removeTracingListener(listenerSandbox.listener);
 });
 
 add_task(async function testTracingValues() {
@@ -153,7 +155,7 @@ add_task(async function testTracingValues() {
   }
 
   info("Start tracing");
-  startTracing({ global: sandbox, traceValues: true, loggingMethod });
+  JSTracer.startTracing({ global: sandbox, traceValues: true, loggingMethod });
 
   info("Call some code");
   sandbox.foo();
@@ -167,7 +169,7 @@ add_task(async function testTracingValues() {
   );
 
   info("Stop tracing");
-  stopTracing();
+  JSTracer.stopTracing();
 });
 
 add_task(async function testTracingFunctionReturn() {
@@ -185,7 +187,11 @@ add_task(async function testTracingFunctionReturn() {
   }
 
   info("Start tracing");
-  startTracing({ global: sandbox, traceFunctionReturn: true, loggingMethod });
+  JSTracer.startTracing({
+    global: sandbox,
+    traceFunctionReturn: true,
+    loggingMethod,
+  });
 
   info("Call some code");
   sandbox.foo();
@@ -198,7 +204,7 @@ add_task(async function testTracingFunctionReturn() {
   Assert.stringContains(logs[4], "λ foo return");
 
   info("Stop tracing");
-  stopTracing();
+  JSTracer.stopTracing();
 });
 
 add_task(async function testTracingFunctionReturnAndValues() {
@@ -216,7 +222,7 @@ add_task(async function testTracingFunctionReturnAndValues() {
   }
 
   info("Start tracing");
-  startTracing({
+  JSTracer.startTracing({
     global: sandbox,
     traceFunctionReturn: true,
     traceValues: true,
@@ -236,7 +242,7 @@ add_task(async function testTracingFunctionReturnAndValues() {
   Assert.stringContains(logs[6], "λ foo return undefined");
 
   info("Stop tracing");
-  stopTracing();
+  JSTracer.stopTracing();
 });
 
 add_task(async function testTracingStep() {
@@ -274,7 +280,7 @@ foo();`;
   }
 
   info("Start tracing");
-  startTracing({
+  JSTracer.startTracing({
     global: sandbox,
     traceSteps: true,
     loggingMethod,
@@ -327,7 +333,7 @@ foo();`;
 
   Assert.stringContains(logs[18], "file.js:5:3");
   info("Stop tracing");
-  stopTracing();
+  JSTracer.stopTracing();
 });
 
 add_task(async function testTracingPauseOnStep() {
@@ -348,7 +354,7 @@ add_task(async function testTracingPauseOnStep() {
   }
 
   info("Start tracing without pause");
-  startTracing({
+  JSTracer.startTracing({
     global: sandbox,
     loggingMethod,
   });
@@ -366,13 +372,13 @@ add_task(async function testTracingPauseOnStep() {
   Assert.equal(sandbox.counter, 1);
 
   info("Stop tracing");
-  stopTracing();
+  JSTracer.stopTracing();
 
   logs.length = 0;
   sandbox.counter = 0;
 
   info("Start tracing with 0ms pause");
-  startTracing({
+  JSTracer.startTracing({
     global: sandbox,
     pauseOnStep: 0,
     loggingMethod,
@@ -415,13 +421,13 @@ add_task(async function testTracingPauseOnStep() {
   Assert.equal(sandbox.counter, 1);
 
   info("Stop tracing");
-  stopTracing();
+  JSTracer.stopTracing();
 
   logs.length = 0;
   sandbox.counter = 0;
 
   info("Start tracing with 250ms pause");
-  startTracing({
+  JSTracer.startTracing({
     global: sandbox,
     pauseOnStep: 250,
     loggingMethod,
@@ -463,7 +469,7 @@ add_task(async function testTracingPauseOnStep() {
   Assert.greater(Cu.now() - startTimestamp, 250);
 
   info("Stop tracing");
-  stopTracing();
+  JSTracer.stopTracing();
 });
 
 add_task(async function testTracingFilterSourceUrl() {
@@ -485,7 +491,7 @@ add_task(async function testTracingFilterSourceUrl() {
   }
 
   info("Start tracing");
-  startTracing({
+  JSTracer.startTracing({
     global: sandbox,
     filterFrameSourceUrl: "second",
     loggingMethod,
@@ -500,7 +506,7 @@ add_task(async function testTracingFilterSourceUrl() {
   Assert.stringContains(logs[1], "second.js:1:18");
 
   info("Stop tracing");
-  stopTracing();
+  JSTracer.stopTracing();
 });
 
 add_task(async function testTracingAllGlobals() {
@@ -539,7 +545,7 @@ add_task(async function testTracingAllGlobals() {
   const { loggingMethod, logs } = ignoredGlobal;
 
   info("Start tracing on all globals");
-  startTracing({
+  JSTracer.startTracing({
     traceAllGlobals: true,
     loggingMethod,
   });
@@ -547,7 +553,7 @@ add_task(async function testTracingAllGlobals() {
   // Call some code while being careful to not call anything else which may be traced
   sandbox1.foo();
 
-  stopTracing();
+  JSTracer.stopTracing();
 
   Assert.equal(logs.length, 4);
   Assert.equal(logs[0], "Start tracing JavaScript\n");

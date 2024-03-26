@@ -2521,9 +2521,7 @@ struct ZSortItem {
 };
 
 struct ZOrderComparator {
-  bool operator()(const ZSortItem& aLeft, const ZSortItem& aRight) const {
-    // Note that we can't just take the difference of the two
-    // z-indices here, because that might overflow a 32-bit int.
+  bool LessThan(const ZSortItem& aLeft, const ZSortItem& aRight) const {
     return aLeft.zIndex < aRight.zIndex;
   }
 };
@@ -2536,7 +2534,7 @@ struct ContentComparator {
   explicit ContentComparator(nsIContent* aCommonAncestor)
       : mCommonAncestor(aCommonAncestor) {}
 
-  bool operator()(nsDisplayItem* aLeft, nsDisplayItem* aRight) const {
+  bool LessThan(nsDisplayItem* aLeft, nsDisplayItem* aRight) const {
     // It's possible that the nsIContent for aItem1 or aItem2 is in a
     // subdocument of commonAncestor, because display items for subdocuments
     // have been mixed into the same list. Ensure that we're looking at content

@@ -60,7 +60,6 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
       : nsGenericHTMLElementBase(std::move(aNodeInfo)) {
     NS_ASSERTION(mNodeInfo->NamespaceID() == kNameSpaceID_XHTML,
                  "Unexpected namespace");
-    AddStatesSilently(mozilla::dom::ElementState::LTR);
   }
 
   NS_INLINE_DECL_REFCOUNTING_INHERITED(nsGenericHTMLElement,
