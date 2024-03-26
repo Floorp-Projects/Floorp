@@ -23,12 +23,12 @@ add_task(async function () {
   info("Select the main content node");
   await selectNode(".main-content", inspector);
 
-  let inContentPageBackgroundColor = await getComputedStyleProperty(
+  let pageBackgroundColor = await getComputedStyleProperty(
     ":root",
     null,
-    "--in-content-page-background"
+    "background-color"
   );
-  inContentPageBackgroundColor = inContentPageBackgroundColor.trim();
+  pageBackgroundColor = pageBackgroundColor.trim();
 
   info("Take a screenshot of the element and verify it looks as expected");
   const image = await takeNodeScreenshot(inspector);
@@ -38,7 +38,7 @@ add_task(async function () {
     image,
     x: 0,
     y: 0,
-    expectedColor: hexToCSS(inContentPageBackgroundColor),
+    expectedColor: hexToCSS(pageBackgroundColor),
     label: "The screenshot was taken",
   });
 

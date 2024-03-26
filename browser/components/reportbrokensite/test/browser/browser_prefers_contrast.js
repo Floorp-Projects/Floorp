@@ -33,7 +33,7 @@ add_task(async function testReportSentViewBGColor() {
       await SpecialPowers.pushPrefEnv({ set: HIGH_CONTRAST_MODE_OFF });
       const rbs = await menu.openReportBrokenSite();
       const { mainView, sentView } = rbs;
-      mainView.style.backgroundColor = "var(--color-background-success)";
+      mainView.style.backgroundColor = "var(--background-color-success)";
       const expectedReportSentBGColor =
         defaultView.getComputedStyle(mainView).backgroundColor;
       mainView.style.backgroundColor = "";

@@ -37,7 +37,7 @@
   --toggle-background-color-pressed: var(--color-accent-primary);
   --toggle-background-color-pressed-hover: var(--color-accent-primary-hover);
   --toggle-background-color-pressed-active: var(--color-accent-primary-active);
-  --toggle-border-color: var(--border-interactive-color);
+  --toggle-border-color: var(--border-color-interactive);
   --toggle-border-color-hover: var(--toggle-border-color);
   --toggle-border-color-active: var(--toggle-border-color);
   --toggle-border-radius: var(--border-radius-circle);
@@ -47,7 +47,7 @@
   --toggle-dot-background-color: var(--toggle-border-color);
   --toggle-dot-background-color-hover: var(--toggle-dot-background-color);
   --toggle-dot-background-color-active: var(--toggle-dot-background-color);
-  --toggle-dot-background-color-on-pressed: var(--color-canvas);
+  --toggle-dot-background-color-on-pressed: var(--background-color-canvas);
   --toggle-dot-margin: 1px;
   --toggle-dot-height: calc(var(--toggle-height) - 2 * var(--toggle-dot-margin) - 2 * var(--toggle-border-width));
   --toggle-dot-width: var(--toggle-dot-height);
@@ -181,9 +181,9 @@
     --toggle-dot-background-color-active: var(--color-accent-primary-active);
     --toggle-dot-background-color-on-pressed: var(--button-background-color);
     --toggle-background-color-disabled: var(--button-background-color-disabled);
-    --toggle-border-color-hover: var(--border-interactive-color-hover);
-    --toggle-border-color-active: var(--border-interactive-color-active);
-    --toggle-border-color-disabled: var(--border-interactive-color-disabled);
+    --toggle-border-color-hover: var(--border-color-interactive-hover);
+    --toggle-border-color-active: var(--border-color-interactive-active);
+    --toggle-border-color-disabled: var(--border-color-interactive-disabled);
   }
 
   .toggle-button[aria-pressed="true"]:enabled::after {
