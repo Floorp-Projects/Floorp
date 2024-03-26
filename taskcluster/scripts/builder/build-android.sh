@@ -22,6 +22,7 @@ unset NODEJS
 export GRADLE_MAVEN_REPOSITORIES="file://$MOZ_FETCHES_DIR/geckoview","file://$MOZ_FETCHES_DIR/android-gradle-dependencies/mozilla","file://$MOZ_FETCHES_DIR/android-gradle-dependencies/google","file://$MOZ_FETCHES_DIR/android-gradle-dependencies/central","file://$MOZ_FETCHES_DIR/android-gradle-dependencies/gradle-plugins","file:///$MOZ_FETCHES_DIR/plugins.gradle.org/m2"
 EOF
 export MOZCONFIG=$mozconfig
+GRADLE=$MOZ_FETCHES_DIR/android-gradle-dependencies/gradle-dist/bin/gradle
 
 ./mach configure
 
@@ -29,6 +30,6 @@ eval $PRE_GRADLEW
 
 eval $GET_SECRETS
 
-./gradlew listRepositories $GRADLEW_ARGS
+$GRADLE listRepositories $GRADLEW_ARGS
 
 eval $POST_GRADLEW
