@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 """
-Transform the repackage signing task into an actual task description.
+Transform the geckodriver notarization task into an actual task description.
 """
 
 from taskgraph.transforms.base import TransformSequence
@@ -14,7 +14,7 @@ from gecko_taskgraph.transforms.task import task_description_schema
 from gecko_taskgraph.util.attributes import copy_attributes_from_dependent_job
 from gecko_taskgraph.util.scriptworker import add_scope_prefix
 
-repackage_signing_description_schema = Schema(
+geckodriver_notarization_description_schema = Schema(
     {
         Optional("label"): str,
         Optional("treeherder"): task_description_schema["treeherder"],
@@ -38,7 +38,7 @@ def remove_name(config, jobs):
         yield job
 
 
-transforms.add_validate(repackage_signing_description_schema)
+transforms.add_validate(geckodriver_notarization_description_schema)
 
 
 @transforms.add
