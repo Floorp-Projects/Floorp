@@ -1308,7 +1308,7 @@ class JemallocHeapReporter final : public nsIMemoryReporter {
         stats.waste,
 "Committed bytes which do not correspond to an active allocation and which the "
 "allocator is not intentionally keeping alive (i.e., not "
-"'heap/{bookkeeping,page-cache,bin-unused}').");
+"'heap/{bookkeeping,unused-pages,bin-unused}').");
     }
 
     MOZ_COLLECT_REPORT(
@@ -1317,12 +1317,38 @@ class JemallocHeapReporter final : public nsIMemoryReporter {
 "Committed bytes which the heap allocator uses for internal data structures.");
 
     MOZ_COLLECT_REPORT(
-      "heap/committed/page-cache", KIND_NONHEAP, UNITS_BYTES,
+      "heap/committed/unused-pages/dirty", KIND_NONHEAP, UNITS_BYTES,
       stats.page_cache,
 "Memory which the allocator could return to the operating system, but hasn't. "
 "The allocator keeps this memory around as an optimization, so it doesn't "
 "have to ask the OS the next time it needs to fulfill a request. This value "
 "is typically not larger than a few megabytes.");
+
+    MOZ_COLLECT_REPORT(
+      "heap/decommitted/unused-pages/fresh", KIND_OTHER, UNITS_BYTES, stats.pages_fresh,
+"Amount of memory currently mapped but has never been used.");
+    // A duplicate entry in the decommitted part of the tree.
+    MOZ_COLLECT_REPORT(
+      "decommitted/heap/unused-pages/fresh", KIND_OTHER, UNITS_BYTES, stats.pages_fresh,
+"Amount of memory currently mapped but has never been used.");
+
+// On MacOS madvised memory is still counted in the resident set until the OS
+// actually decommits it.
+#ifdef XP_MACOSX
+#define MADVISED_GROUP "committed"
+#else
+#define MADVISED_GROUP "decommitted"
+#endif
+    MOZ_COLLECT_REPORT(
+      "heap/" MADVISED_GROUP "/unused-pages/madvised", KIND_OTHER, UNITS_BYTES,
+      stats.pages_madvised,
+"Amount of memory currently mapped, not used and that the OS should remove "
+"from the application's resident set.");
+    // A duplicate entry in the decommitted part of the tree.
+    MOZ_COLLECT_REPORT(
+      "decommitted/heap/unused-pages/madvised", KIND_OTHER, UNITS_BYTES, stats.pages_madvised,
+"Amount of memory currently mapped, not used and that the OS should remove "
+"from the application's resident set.");
 
     {
       size_t decommitted = stats.mapped - stats.allocated - stats.waste - stats.page_cache - stats.pages_fresh - stats.bookkeeping - stats.bin_unused;
