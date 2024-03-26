@@ -84,7 +84,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=420499
 
     function popupMenuShownHandler() {
       window.removeEventListener("popupshown", popupMenuShownHandler);
-      ok(!isCaretVisible(), "Caret shouldn't be visible when menu open");
+      ok(isCaretVisible(), "Caret shouldn't be visible when menu open");
       window.addEventListener("popuphidden", ensureParagraphFocused);
       $("menu").open = false;
     }
