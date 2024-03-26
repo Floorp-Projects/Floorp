@@ -151,7 +151,7 @@ html|textarea {
   color: var(--input-color, FieldText);
 
   &:where(:user-invalid) {
-    border-color: var(--outline-color-error);
+    border-color: var(--color-error-outline);
   }
 
   &:where(:focus-visible) {
