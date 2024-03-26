@@ -69,8 +69,12 @@ class URL final : public URLSearchParamsObserver, public nsWrapperCache {
   static bool IsValidObjectURL(const GlobalObject& aGlobal,
                                const nsAString& aURL, ErrorResult& aRv);
 
-  static bool CanParse(const GlobalObject& aGlobal, const nsAString& aURL,
-                       const Optional<nsAString>& aBase);
+  static already_AddRefed<URL> Parse(const GlobalObject& aGlobal,
+                                     const nsACString& aURL,
+                                     const Optional<nsACString>& aBase);
+
+  static bool CanParse(const GlobalObject& aGlobal, const nsACString& aURL,
+                       const Optional<nsACString>& aBase);
 
   void GetHref(nsAString& aHref) const;
 
@@ -126,6 +130,9 @@ class URL final : public URLSearchParamsObserver, public nsWrapperCache {
 
  private:
   ~URL() = default;
+
+  static already_AddRefed<nsIURI> ParseURI(const nsACString& aURL,
+                                           const Optional<nsACString>& aBase);
 
   void UpdateURLSearchParams();
 
