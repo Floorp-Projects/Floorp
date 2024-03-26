@@ -54,3 +54,20 @@ At the end, we're capable of transforming JSON notation into CSS:
 ```
 
 Neat!
+
+## Testing
+
+We have basic tests in place to ensure that our built CSS files stay up to date
+and that new tokens are properly categorized. These tests will fail if the JSON
+is modified but the command to build the tokens CSS files doesn't run, or if the
+tokens CSS files are modified directly without changing the JSON.
+
+Our tests are Node-based to allow us to install and work with the
+`style-dictionary` library, and follow a format that has been used previously
+for Devtools and New Tab tests.
+
+You can run the tests locally using the following command:
+
+```sh
+$ ./mach npm test --prefix=toolkit/themes/shared/design-system
+```
