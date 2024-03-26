@@ -360,6 +360,7 @@ void nsFontFaceLoader::Cancel() {
   if (doc) {
     doc->UnblockOnload(false);
   }
+  mFontFaceSet->RemoveLoader(this);
   mFontFaceSet = nullptr;
   if (mLoadTimer) {
     mLoadTimer->Cancel();
