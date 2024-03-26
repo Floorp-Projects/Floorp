@@ -114,7 +114,9 @@ class nsTableCellFrame : public nsContainerFrame,
   nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
-  void BlockDirAlignChild(mozilla::WritingMode aWM, nscoord aMaxAscent);
+  // Align the cell's child frame within the cell.
+  void BlockDirAlignChild(mozilla::WritingMode aWM, nscoord aMaxAscent,
+                          mozilla::ForceAlignTopForTableCell aForceAlignTop);
 
   /*
    * Get the value of vertical-align adjusted for CSS 2's rules for a

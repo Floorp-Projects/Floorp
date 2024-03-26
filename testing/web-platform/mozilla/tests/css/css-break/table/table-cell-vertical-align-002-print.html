@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<link rel="author" title="Ting-Yu Lin" href="mailto:tlin@mozilla.com">
+<link rel="author" title="Mozilla" href="https://www.mozilla.org/">
+<link rel="help" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1648947">
+<link rel="match" href="table-cell-vertical-align-002-print-ref.html">
+
+<style>
+@page { size: 5in 3in; margin: 0.5in; }
+body { margin: 0; }
+
+table {
+  border-spacing: 0;
+}
+tbody:nth-child(1) > tr {
+  background: cyan;
+}
+tbody:nth-child(2) > tr {
+  background: yellow;
+}
+td {
+  padding: 0;
+}
+ol {
+  margin: 0;
+}
+</style>
+
+<table>
+  <tbody>
+    <!-- This table row can be fit in the first page. The table-cells'
+         vertical-align should be respected.
+    -->
+    <tr>
+      <td style="vertical-align: baseline">
+        <ol>
+          <li></li><li></li><li></li><li></li>
+        </ol>
+      </td>
+      <td style="vertical-align: bottom">bottom</td>
+    </tr>
+  </tbody>
+  <tbody>
+    <!-- This table row is fragmented across page boundary, and that makes Firefox
+         force table-cells to behave as if they have vertical-align:top, to avoid
+         data loss from the complexity of fragmenting arbitrarily-aligned cells.
+    -->
+    <tr>
+      <td style="vertical-align: baseline">
+        <ol>
+          <li></li><li></li><li></li><li></li>
+          <li></li><li></li><li></li><li></li>
+          <li></li><li></li><li></li><li></li>
+        </ol>
+      </td>
+      <td style="vertical-align: bottom">bottom</td>
+    </tr>
+  </tbody>
+</table>

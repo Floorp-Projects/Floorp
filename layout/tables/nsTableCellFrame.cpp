@@ -389,9 +389,14 @@ LogicalSides nsTableCellFrame::GetLogicalSkipSides() const {
 /* virtual */
 nsMargin nsTableCellFrame::GetBorderOverflow() { return nsMargin(0, 0, 0, 0); }
 
-// Align the cell's child frame within the cell
+void nsTableCellFrame::BlockDirAlignChild(
+    WritingMode aWM, nscoord aMaxAscent,
+    ForceAlignTopForTableCell aForceAlignTop) {
+  MOZ_ASSERT(aForceAlignTop != ForceAlignTopForTableCell::Yes ||
+                 PresContext()->IsPaginated(),
+             "We shouldn't force table-cells to do 'vertical-align:top' if "
+             "we're not in printing!");
 
-void nsTableCellFrame::BlockDirAlignChild(WritingMode aWM, nscoord aMaxAscent) {
   /* It's the 'border-collapse' on the table that matters */
   const LogicalMargin border = GetLogicalUsedBorder(GetWritingMode())
                                    .ApplySkipSides(GetLogicalSkipSides())
@@ -410,8 +415,11 @@ void nsTableCellFrame::BlockDirAlignChild(WritingMode aWM, nscoord aMaxAscent) {
   nscoord childBSize = kidRect.BSize(aWM);
 
   // Vertically align the child
+  const auto verticalAlign = aForceAlignTop == ForceAlignTopForTableCell::Yes
+                                 ? StyleVerticalAlignKeyword::Top
+                                 : GetVerticalAlign();
   nscoord kidBStart = 0;
-  switch (GetVerticalAlign()) {
+  switch (verticalAlign) {
     case StyleVerticalAlignKeyword::Baseline:
       if (!GetContentEmpty()) {
         // Align the baselines of the child frame with the baselines of
