@@ -273,22 +273,6 @@ function init_all() {
   });
 }
 
-function telemetryBucketForCategory(category) {
-  category = category.toLowerCase();
-  switch (category) {
-    case "containers":
-    case "general":
-    case "home":
-    case "privacy":
-    case "search":
-    case "sync":
-    case "searchresults":
-      return category;
-    default:
-      return "unknown";
-  }
-}
-
 function onHashChange() {
   gotoPref(null, "hash");
 }
@@ -450,16 +434,6 @@ function search(aQuery, aAttribute) {
       element.hidden = true;
     }
     element.classList.remove("visually-hidden");
-  }
-
-  let keysets = mainPrefPane.getElementsByTagName("keyset");
-  for (let element of keysets) {
-    let attributeValue = element.getAttribute(aAttribute);
-    if (attributeValue == aQuery) {
-      element.removeAttribute("disabled");
-    } else {
-      element.setAttribute("disabled", true);
-    }
   }
 }
 
