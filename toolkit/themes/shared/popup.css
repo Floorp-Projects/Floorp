@@ -27,7 +27,7 @@ panel {
   margin: calc(-1 * var(--panel-shadow-margin));
 
   /* Panel design token theming */
-  --background-color-canvas: var(--panel-background);
+  --color-canvas: var(--panel-background);
 
   @media (-moz-platform: linux) {
     --panel-border-radius: 8px;

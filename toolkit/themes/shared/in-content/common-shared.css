@@ -14,9 +14,9 @@
 :host(:is(.anonymous-content-host, notification-message)),
 :root {
   --in-content-page-color: rgb(21, 20, 26);
-  --in-content-page-background: var(--background-color-canvas);
+  --in-content-page-background: #fff;
   --in-content-text-color: var(--in-content-page-color);
-  --in-content-box-background: var(--background-color-box);
+  --in-content-box-background: var(--box-background-color);
   --in-content-box-background-odd: rgba(12, 12, 13, 0.05); /* grey 90 a05 */
   --in-content-box-border-color: color-mix(in srgb, currentColor 41%, transparent);
   --in-content-box-info-background: #f0f0f4;
@@ -122,6 +122,7 @@
      * just replace most of these for system colors and remove all this
      * duplication (assuming we honor the preferred color scheme for
      * in-content privileged pages and plain-text documents). */
+    --in-content-page-background: rgb(28,27,34);
     --in-content-page-color: rgb(251,251,254);
 
     --in-content-box-background-odd: rgba(249,249,250,0.05);
@@ -168,6 +169,7 @@
   :host(:is(.anonymous-content-host, notification-message)),
   :root {
     --in-content-page-color: CanvasText;
+    --in-content-page-background: Canvas;
 
     --in-content-box-background-odd: var(--in-content-box-background);
     --in-content-box-border-color: -moz-DialogText;

@@ -28,7 +28,7 @@
   --message-bar-text-line-height: 1.5em;
 
   /* Background */
-  --message-bar-background-color: var(--background-color-information);
+  --message-bar-background-color: var(--color-background-information);
 
   background-color: var(--message-bar-background-color);
   border: var(--message-bar-border-width) solid var(--message-bar-border-color);
@@ -176,7 +176,7 @@
   /* Colors from: https://www.figma.com/file/zd3B9UyknB2XNZNdrYLm2W/Outreachy?type=design&node-id=59-1921&mode=design&t=ZYS4e6pAbAlXGvun-4 */
 
   :host([type=warning]) {
-    --message-bar-background-color: var(--background-color-warning);
+    --message-bar-background-color: var(--color-background-warning);
 
     .icon {
       --message-bar-icon-color: var(--icon-color-warning);
@@ -184,7 +184,7 @@
   }
 
   :host([type=success]) {
-    --message-bar-background-color: var(--background-color-success);
+    --message-bar-background-color: var(--color-background-success);
 
     .icon {
       --message-bar-icon-color: var(--icon-color-success);
@@ -193,7 +193,7 @@
 
   :host([type=error]),
   :host([type=critical]) {
-    --message-bar-background-color: var(--background-color-critical);
+    --message-bar-background-color: var(--color-background-critical);
 
     .icon {
       --message-bar-icon-color: var(--icon-color-critical);
