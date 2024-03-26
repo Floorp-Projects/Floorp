@@ -9,11 +9,13 @@
  * They must extend the BackupResource base class.
  */
 import { CredentialsAndSecurityBackupResource } from "resource:///modules/backup/CredentialsAndSecurityBackupResource.sys.mjs";
+import { MiscDataBackupResource } from "resource:///modules/backup/MiscDataBackupResource.sys.mjs";
 import { PlacesBackupResource } from "resource:///modules/backup/PlacesBackupResource.sys.mjs";
 import { PreferencesBackupResource } from "resource:///modules/backup/PreferencesBackupResource.sys.mjs";
 
 export {
   CredentialsAndSecurityBackupResource,
+  MiscDataBackupResource,
   PlacesBackupResource,
   PreferencesBackupResource,
 };
