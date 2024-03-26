@@ -368,7 +368,7 @@ fn collect_elements_with_id<E, Q, F>(
     }
 }
 
-fn has_attr<E>(element: E, local_name: &AtomIdent) -> bool
+fn has_attr<E>(element: E, local_name: &crate::LocalName) -> bool
 where
     E: TElement,
 {
@@ -396,7 +396,7 @@ where
     element.local_name() == &**chosen_name
 }
 
-fn get_attr_name(component: &Component<SelectorImpl>) -> Option<&AtomIdent> {
+fn get_attr_name(component: &Component<SelectorImpl>) -> Option<&crate::LocalName> {
     let (name, name_lower) = match component {
         Component::AttributeInNoNamespace { ref local_name, .. } => return Some(local_name),
         Component::AttributeInNoNamespaceExists {
@@ -512,7 +512,7 @@ where
 
 enum SimpleFilter<'a> {
     Class(&'a AtomIdent),
-    Attr(&'a AtomIdent),
+    Attr(&'a crate::LocalName),
     LocalName(&'a LocalName<SelectorImpl>),
 }
 
