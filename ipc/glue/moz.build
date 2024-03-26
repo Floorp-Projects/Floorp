@@ -153,6 +153,14 @@ if CONFIG["OS_ARCH"] != "WINNT":
         "FileDescriptorShuffle.cpp",
     ]
 
+if CONFIG["TARGET_OS"] == "iOS":
+    EXPORTS.mozilla.ipc += [
+        "ExtensionKitUtils.h",
+    ]
+    UNIFIED_SOURCES += [
+        "ExtensionKitUtils.mm",
+    ]
+
 EXPORTS.ipc += [
     "EnumSerializer.h",
     "IPCMessageUtils.h",
@@ -284,8 +292,10 @@ include("/ipc/chromium/chromium-config.mozbuild")
 
 FINAL_LIBRARY = "xul"
 
-if CONFIG["OS_ARCH"] == "Darwin":
+if CONFIG["TARGET_OS"] == "OSX":
     OS_LIBS += ["bsm"]  # for audit_token_to_pid
+elif CONFIG["TARGET_OS"] == "iOS":
+    OS_LIBS += ["-framework BrowserEngineKit"]
 
 for var in (
     "MOZ_CHILD_PROCESS_NAME",

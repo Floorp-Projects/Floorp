@@ -195,8 +195,8 @@ static const int kJSInitFileDescriptor = 11;
 
 void ExportSharedJSInit(mozilla::ipc::GeckoChildProcessHost& procHost,
                         std::vector<std::string>& aExtraOpts) {
-#ifdef ANDROID
-  // The code to support Android is added in a follow-up patch.
+#if defined(ANDROID) || defined(XP_IOS)
+  // The code to support Android/iOS is added in a follow-up patch.
   return;
 #else
   auto& shmem = xpc::SelfHostedShmem::GetSingleton();
