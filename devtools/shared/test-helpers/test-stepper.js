@@ -4,12 +4,10 @@
 
 "use strict";
 
-const {
-  startTracing,
-  addTracingListener,
-  stopTracing,
-  removeTracingListener,
-} = require("resource://devtools/server/tracer/tracer.jsm");
+const { JSTracer } = ChromeUtils.importESModule(
+  "resource://devtools/server/tracer/tracer.sys.mjs",
+  { global: "contextual" }
+);
 
 let testFileContent;
 
@@ -69,13 +67,13 @@ exports.start = function (testGlobal, testUrl, pause) {
   logStep(
     `'\u21A6 ' symbol highlights what precise instruction is being called`
   );
-  startTracing(tracerOptions);
-  addTracingListener(tracingListener);
+  JSTracer.startTracing(tracerOptions);
+  JSTracer.addTracingListener(tracingListener);
 };
 
 exports.stop = function () {
-  stopTracing();
-  removeTracingListener(tracingListener);
+  JSTracer.stopTracing();
+  JSTracer.removeTracingListener(tracingListener);
 };
 
 function readURI(uri) {

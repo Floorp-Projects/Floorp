@@ -17,12 +17,10 @@ add_task(async function testTracingWorker() {
   const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URL);
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
-    const {
-      addTracingListener,
-      removeTracingListener,
-      startTracing,
-      stopTracing,
-    } = ChromeUtils.import("resource://devtools/server/tracer/tracer.jsm");
+    const { JSTracer } = ChromeUtils.importESModule(
+      "resource://devtools/server/tracer/tracer.sys.mjs",
+      { global: "shared" }
+    );
 
     // We have to fake opening DevTools otherwise DebuggerNotificationObserver wouldn't work
     // and the tracer wouldn't be able to trace the DOM events.
@@ -35,10 +33,10 @@ add_task(async function testTracingWorker() {
       },
     };
     info("Register a tracing listener");
-    addTracingListener(listener);
+    JSTracer.addTracingListener(listener);
 
     info("Start tracing the iframe");
-    startTracing({ global: content, traceDOMEvents: true });
+    JSTracer.startTracing({ global: content, traceDOMEvents: true });
 
     info("Dispatch a click event on the iframe");
     EventUtils.synthesizeMouseAtCenter(
@@ -58,8 +56,8 @@ add_task(async function testTracingWorker() {
     is(lastFrame.formatedDisplayName, "λ bar");
     is(lastFrame.currentDOMEvent, "setTimeoutCallback");
 
-    stopTracing();
-    removeTracingListener(listener);
+    JSTracer.stopTracing();
+    JSTracer.removeTracingListener(listener);
 
     ChromeUtils.notifyDevToolsClosed();
   });
