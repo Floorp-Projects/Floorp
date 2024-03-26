@@ -75,7 +75,7 @@
     }
 
     &#address-capture-edit-address-button {
-      background-image: url("chrome://browser/skin/formautofill/icon-address-edit.svg");
+      background-image: url("chrome://global/skin/icons/edit-outline.svg");
     }
 
     &#address-capture-menu-button {
