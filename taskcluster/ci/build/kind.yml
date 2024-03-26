@@ -35,7 +35,7 @@ job-defaults:
     worker:
         env:
             MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE: system
-    use-system-python: false
+    use-python: default
     run:
         mozconfig-variant:
             by-release-type:

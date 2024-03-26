@@ -14,7 +14,7 @@ kind-dependencies:
     - toolchain
 
 job-defaults:
-    use-system-python: false
+    use-python: default
 
 jobs:
     issues:

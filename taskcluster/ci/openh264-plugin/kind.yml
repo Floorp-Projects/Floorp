@@ -21,7 +21,7 @@ job-defaults:
     run-on-projects: []
     repo: 'https://github.com/cisco/openh264.git'
     revision: '31c4d2e4a037526fd30d4e5c39f60885986cf865'
-    use-system-python: false
+    use-python: default
     worker:
         chain-of-trust: true
 

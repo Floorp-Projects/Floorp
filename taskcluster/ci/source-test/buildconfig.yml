@@ -30,7 +30,7 @@ job-defaults:
             - android-gradle-dependencies
             - android-gradle-python-envs
             - android-sdk-linux
-    use-system-python: true
+    use-python: system
 
 
 buildconfig-android-components:

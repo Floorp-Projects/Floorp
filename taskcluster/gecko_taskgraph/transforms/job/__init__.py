@@ -14,11 +14,12 @@ import json
 import logging
 
 import mozpack.path as mozpath
+from packaging.version import Version
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.python_path import import_sibling_modules
 from taskgraph.util.schema import Schema, validate_schema
 from taskgraph.util.taskcluster import get_artifact_prefix
-from voluptuous import Any, Exclusive, Extra, Optional, Required
+from voluptuous import Any, Coerce, Exclusive, Extra, Optional, Required
 
 from gecko_taskgraph.transforms.cached_tasks import order_tasks
 from gecko_taskgraph.transforms.task import task_description_schema
@@ -62,7 +63,7 @@ job_description_schema = Schema(
             "optimization"
         ],
         Optional("use-sccache"): task_description_schema["use-sccache"],
-        Optional("use-system-python"): bool,
+        Optional("use-python"): Any("system", "default", Coerce(Version)),
         Optional("priority"): task_description_schema["priority"],
         # The "when" section contains descriptions of the circumstances under which
         # this task should be included in the task graph.  This will be converted
@@ -245,9 +246,15 @@ def get_attribute(dict, key, attributes, attribute_name):
 @transforms.add
 def use_system_python(config, jobs):
     for job in jobs:
-        if job.pop("use-system-python", True):
+        taskcluster_python = job.pop("use-python", "system")
+        if taskcluster_python == "system":
             yield job
         else:
+            if taskcluster_python == "default":
+                python_version = "python"  # the taskcluster default alias
+            else:
+                python_version = f"python-{taskcluster_python}"
+
             fetches = job.setdefault("fetches", {})
             toolchain = fetches.setdefault("toolchain", [])
             if "win" in job["worker"]["os"]:
@@ -259,7 +266,7 @@ def use_system_python(config, jobs):
             else:
                 raise ValueError("unexpected worker.os value {}".format(platform))
 
-            toolchain.append("{}-python".format(platform))
+            toolchain.append(f"{platform}-{python_version}")
 
             worker = job.setdefault("worker", {})
             env = worker.setdefault("env", {})

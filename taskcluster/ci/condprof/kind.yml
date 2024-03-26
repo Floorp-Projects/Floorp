@@ -29,7 +29,7 @@ job-defaults:
     worker:
         taskcluster-proxy: true
         max-run-time: 10800
-    use-system-python: false
+    use-python: default
 jobs:
     windows2012-64-firefox:
         worker-type: b-win2022

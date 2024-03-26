@@ -207,7 +207,7 @@ macosx64-custom-car:
         symbol: TM(custom-car)
     worker:
         max-run-time: 35000
-    use-system-python: false
+    use-python: default
     run-on-projects: []
     run:
         script: build-custom-car.sh
@@ -243,7 +243,7 @@ macosx-arm64-custom-car:
         tier: 2
     worker:
         max-run-time: 50000
-    use-system-python: false
+    use-python: default
     run-on-projects: []
     run:
         script: build-custom-car.sh
@@ -278,7 +278,7 @@ android-custom-car:
     worker:
         docker-image: {in-tree: custom-car-android}
         max-run-time: 20000
-    use-system-python: false
+    use-python: default
     run-on-projects: []
     run:
         script: build-custom-car.sh
@@ -313,7 +313,7 @@ linux64-custom-car:
     worker:
         docker-image: {in-tree: custom-car-linux}
         max-run-time: 16200
-    use-system-python: false
+    use-python: default
     run-on-projects: []
     run:
         script: build-custom-car.sh
@@ -347,7 +347,7 @@ win64-custom-car:
         max-run-time: 16200
         env:
             MSYSTEM: "MINGW64"
-    use-system-python: false
+    use-python: default
     run-on-projects: []
     run:
         script: build-custom-car.sh

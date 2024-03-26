@@ -36,7 +36,7 @@ job-defaults:
         symbol: SUT
         kind: test
         tier: 1
-    use-system-python: false
+    use-python: default
 
 jobs:
     linux32:

@@ -24,7 +24,7 @@ job-defaults:
         tier: 2
     run-on-projects: ['mozilla-central']
     optimization: null
-    use-system-python: false
+    use-python: default
     # These builds don't use sccache because otherwise we wouldn't index
     # the files that sccache optimizes away compilation for.
     use-sccache: false
