@@ -270,7 +270,12 @@ def findUiaByDomId(root, id):
     # anything.
     request = uiaClient.CreateCacheRequest()
     request.TreeFilter = uiaClient.RawViewCondition
-    return root.FindFirstBuildCache(uiaMod.TreeScope_Descendants, cond, request)
+    el = root.FindFirstBuildCache(uiaMod.TreeScope_Descendants, cond, request)
+    if not el:
+        return None
+    # We need to test things that were introduced after UIA was initially
+    # introduced in Windows 7.
+    return el.QueryInterface(uiaMod.IUIAutomationElement9)
 
 
 class WaitForUiaEvent(comtypes.COMObject):
