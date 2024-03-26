@@ -409,6 +409,9 @@ fn render_element_type(element_type: &model::ElementType) -> Option<*mut gtk::Gt
             let button_ptr = unsafe { gtk::gtk_button_new() };
             if let Some(widget) = content.as_deref().and_then(render) {
                 unsafe {
+                    // Always center widgets in buttons.
+                    gtk::gtk_widget_set_valign(widget, alignment(&Alignment::Center));
+                    gtk::gtk_widget_set_halign(widget, alignment(&Alignment::Center));
                     gtk::gtk_container_add(button_ptr as *mut gtk::GtkContainer, widget);
                 }
             }
