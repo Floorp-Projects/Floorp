@@ -11,11 +11,13 @@ import mozdevice
 from .android import AndroidDevice
 
 DATETIME_FORMAT = "%Y.%m.%d"
-PAGE_START = re.compile("GeckoSession: handleMessage GeckoView:PageStart uri=")
+PAGE_START_MOZ = re.compile("GeckoSession: handleMessage GeckoView:PageStart uri=")
 
 PROD_FENIX = "fenix"
 PROD_FOCUS = "focus"
-PROC_GVEX = "geckoview_example"
+PROD_GVEX = "geckoview_example"
+PROD_CHRM = "chrome-m"
+MOZILLA_PRODUCTS = [PROD_FENIX, PROD_FOCUS, PROD_GVEX]
 
 KEY_NAME = "name"
 KEY_PRODUCT = "product"
@@ -70,12 +72,12 @@ BASE_URL_DICT = {
         "gecko.v2.mozilla-central.latest.mobile.focus-nightly/artifacts/"
         "public%2Fbuild%2Ftarget.{architecture}.apk"
     ),
-    PROC_GVEX: (
+    PROD_GVEX: (
         "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/"
         "gecko.v2.mozilla-central.pushdate.{date}.latest.mobile.android-"
         "{architecture}-debug/artifacts/public%2Fbuild%2Fgeckoview_example.apk"
     ),
-    PROC_GVEX
+    PROD_GVEX
     + "-latest": (
         "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task/"
         "gecko.v2.mozilla-central.shippable.latest.mobile.android-"
@@ -95,8 +97,11 @@ PROD_TO_CHANNEL_TO_PKGID = {
         "release": "org.mozilla.focus",
         "debug": "org.mozilla.focus.debug",
     },
-    PROC_GVEX: {
+    PROD_GVEX: {
         "nightly": "org.mozilla.geckoview_example",
+    },
+    PROD_CHRM: {
+        "release": "com.android.chrome",
     },
 }
 TEST_LIST = [
@@ -245,18 +250,18 @@ class AndroidStartUp(AndroidDevice):
     def run_performance_analysis(self, apk_metadata):
         # Installing the application on the device and getting ready to run the tests
         install_path = apk_metadata[KEY_NAME]
+        self.apk_name = apk_metadata[KEY_NAME].split(".")[0]
         if self.custom_apk_exists():
             install_path = self.custom_apk_path
 
-        self.device.uninstall_app(self.package_id)
-        self.info(f"Installing {install_path}...")
-        app_name = self.device.install_app(install_path)
-        if self.device.is_app_installed(app_name):
-            self.info(f"Successfully installed {app_name}")
-        else:
-            raise AndroidStartUpInstallError("The android app was not installed")
-        self.apk_name = apk_metadata[KEY_NAME].split(".")[0]
-
+        if self.product in MOZILLA_PRODUCTS:
+            self.device.uninstall_app(self.package_id)
+            self.info(f"Installing {install_path}...")
+            app_name = self.device.install_app(install_path)
+            if self.device.is_app_installed(app_name):
+                self.info(f"Successfully installed {app_name}")
+            else:
+                raise AndroidStartUpInstallError("The android app was not installed")
         return self.run_tests()
 
     def run_tests(self):
@@ -297,12 +302,21 @@ class AndroidStartUp(AndroidDevice):
     def get_measurement(self, test_name, stdout):
         if test_name in [TEST_COLD_MAIN_FF, TEST_COLD_VIEW_FF]:
             return self.get_measurement_from_am_start_log(stdout)
-        elif test_name in [TEST_COLD_VIEW_NAV_START, TEST_COLD_MAIN_RESTORE]:
+        elif (
+            test_name in [TEST_COLD_VIEW_NAV_START, TEST_COLD_MAIN_RESTORE]
+            and self.product in MOZILLA_PRODUCTS
+        ):
             # We must sleep until the Navigation::Start event occurs. If we don't
             # the script will fail. This can take up to 14s on the G5
             time.sleep(17)
             proc = self.device.shell_output("logcat -d")
             return self.get_measurement_from_nav_start_logcat(proc)
+        else:
+            raise Exception(
+                "invalid test settings selected, please double check that "
+                "the test name is valid and that the test is supported for "
+                "the browser you are testing"
+            )
 
     def get_measurement_from_am_start_log(self, stdout):
         total_time_prefix = "TotalTime: "
@@ -333,7 +347,7 @@ class AndroidStartUp(AndroidDevice):
             return __line_to_datetime(proc_start_lines[0])
 
         def __get_page_start_datetime():
-            page_start_lines = [line for line in lines if PAGE_START.search(line)]
+            page_start_lines = [line for line in lines if PAGE_START_MOZ.search(line)]
             page_start_line_count = len(page_start_lines)
             page_start_assert_msg = "found len=" + str(page_start_line_count)
 
@@ -417,10 +431,10 @@ class AndroidStartUp(AndroidDevice):
             TEST_COLD_MAIN_RESTORE,
         }:
             return
-
-        # This sets mutable state so we only need to pass this flag once, before we start the test
-        self.device.shell(
-            f"am start-activity -W -a android.intent.action.MAIN --ez "
-            f"performancetest true -n{self.package_id}/org.mozilla.fenix.App"
-        )
-        time.sleep(4)  # ensure skip onboarding call has time to propagate.
+        if self.product == MOZILLA_PRODUCTS:
+            # This sets mutable state so we only need to pass this flag once, before we start the test
+            self.device.shell(
+                f"am start-activity -W -a android.intent.action.MAIN --ez "
+                f"performancetest true -n{self.package_id}/org.mozilla.fenix.App"
+            )
+            time.sleep(4)  # ensure skip onboarding call has time to propagate.
