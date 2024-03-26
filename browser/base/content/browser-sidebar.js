@@ -11,6 +11,10 @@ var SidebarUI = {
       return this._sidebars;
     }
 
+    const historySidebarURL = Services.prefs.getBoolPref("sidebar.revamp")
+      ? "chrome://browser/content/sidebar/sidebar-history.html"
+      : "chrome://browser/content/places/historySidebar.xhtml";
+
     function makeSidebar({ elementId, ...rest }) {
       return {
         get sourceL10nEl() {
@@ -36,7 +40,7 @@ var SidebarUI = {
         "viewHistorySidebar",
         makeSidebar({
           elementId: "sidebar-switcher-history",
-          url: "chrome://browser/content/places/historySidebar.xhtml",
+          url: historySidebarURL,
           menuId: "menu_historySidebar",
           triggerButtonId: "appMenuViewHistorySidebar",
         }),

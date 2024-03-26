@@ -526,15 +526,12 @@ class HistoryInView extends ViewPage {
     `;
   }
 
-  willUpdate(changedProperties) {
+  willUpdate() {
     this.fullyUpdated = false;
-    if (
-      this.controller.allHistoryItems.size &&
-      !changedProperties.has("sortOption")
-    ) {
+    if (this.controller.allHistoryItems.size) {
       // onChangeSortOption() will update history data once it has been fetched
       // from the API.
-      this.controller.createHistoryMapsForView();
+      this.controller.createHistoryMaps();
     }
   }
 }

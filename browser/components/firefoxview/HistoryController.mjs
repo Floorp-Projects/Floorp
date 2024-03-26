@@ -21,6 +21,21 @@ XPCOMUtils.defineLazyPreferenceGetter(
   -1
 );
 
+const HISTORY_MAP_L10N_IDS = {
+  sidebar: {
+    "history-date-today": "sidebar-history-date-today",
+    "history-date-yesterday": "sidebar-history-date-yesterday",
+    "history-date-this-month": "sidebar-history-date-this-month",
+    "history-date-prev-month": "sidebar-history-date-prev-month",
+  },
+  firefoxview: {
+    "history-date-today": "firefoxview-history-date-today",
+    "history-date-yesterday": "firefoxview-history-date-yesterday",
+    "history-date-this-month": "firefoxview-history-date-this-month",
+    "history-date-prev-month": "firefoxview-history-date-prev-month",
+  },
+};
+
 export class HistoryController {
   host;
   allHistoryItems;
@@ -39,6 +54,9 @@ export class HistoryController {
     this.searchResults = null;
     this.sortOption = "date";
     this.searchResultsLimit = options?.searchResultsLimit || 300;
+    this.component = HISTORY_MAP_L10N_IDS?.[options?.component]
+      ? options?.component
+      : "firefoxview";
     this.host = host;
 
     host.addController(this);
@@ -47,7 +65,7 @@ export class HistoryController {
   async hostConnected() {
     this.placesQuery.observeHistory(data => this.updateAllHistoryItems(data));
     await this.updateHistoryData();
-    this.createHistoryMapsForView();
+    this.createHistoryMaps();
   }
 
   hostDisconnected() {
@@ -79,11 +97,6 @@ export class HistoryController {
     });
   }
 
-  resetHistoryMaps() {
-    this.historyMapByDate = [];
-    this.historyMapBySite = [];
-  }
-
   async updateAllHistoryItems(allHistoryItems) {
     if (allHistoryItems) {
       this.allHistoryItems = allHistoryItems;
@@ -110,8 +123,13 @@ export class HistoryController {
     }
   }
 
-  createHistoryMapsForView() {
-    if (this.sortOption === "date" && !this.historyMapByDate.length) {
+  resetHistoryMaps() {
+    this.historyMapByDate = [];
+    this.historyMapBySite = [];
+  }
+
+  createHistoryMaps() {
+    if (!this.historyMapByDate.length) {
       const {
         visitsFromToday,
         visitsFromYesterday,
@@ -122,13 +140,14 @@ export class HistoryController {
       // Add visits from today and yesterday.
       if (visitsFromToday.length) {
         this.historyMapByDate.push({
-          l10nId: "firefoxview-history-date-today",
+          l10nId: HISTORY_MAP_L10N_IDS[this.component]["history-date-today"],
           items: visitsFromToday,
         });
       }
       if (visitsFromYesterday.length) {
         this.historyMapByDate.push({
-          l10nId: "firefoxview-history-date-yesterday",
+          l10nId:
+            HISTORY_MAP_L10N_IDS[this.component]["history-date-yesterday"],
           items: visitsFromYesterday,
         });
       }
@@ -136,7 +155,8 @@ export class HistoryController {
       // Add visits from this month, grouped by day.
       visitsByDay.forEach(visits => {
         this.historyMapByDate.push({
-          l10nId: "firefoxview-history-date-this-month",
+          l10nId:
+            HISTORY_MAP_L10N_IDS[this.component]["history-date-this-month"],
           items: visits,
         });
       });
@@ -144,11 +164,16 @@ export class HistoryController {
       // Add visits from previous months, grouped by month.
       visitsByMonth.forEach(visits => {
         this.historyMapByDate.push({
-          l10nId: "firefoxview-history-date-prev-month",
+          l10nId:
+            HISTORY_MAP_L10N_IDS[this.component]["history-date-prev-month"],
           items: visits,
         });
       });
-    } else if (this.sortOption === "site" && !this.historyMapBySite.length) {
+    } else if (
+      this.sortOption === "site" &&
+      !this.historyMapBySite.length &&
+      this.component === "firefoxview"
+    ) {
       this.historyMapBySite = Array.from(
         this.allHistoryItems.entries(),
         ([domain, items]) => ({
@@ -158,5 +183,6 @@ export class HistoryController {
         })
       ).sort((a, b) => a.domain.localeCompare(b.domain));
     }
+    this.host.requestUpdate();
   }
 }
