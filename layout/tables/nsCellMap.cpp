@@ -678,7 +678,8 @@ void nsTableCellMap::Dump(char* aString) const {
           printf("l=%d%X%d ", int32_t(size), owner, segStart);
         } else {
           size = cd.GetCorner(side, bevel);
-          printf("c=%d%X%d ", int32_t(size), side, bevel);
+          printf("c=%d%hhX%d ", int32_t(size), static_cast<uint8_t>(side),
+                 bevel);
         }
       }
       BCData& cd = mBCInfo->mBEndIEndCorner;
@@ -690,7 +691,7 @@ void nsTableCellMap::Dump(char* aString) const {
         printf("l=%d%X%d ", int32_t(size), owner, segStart);
       } else {
         size = cd.GetCorner(side, bevel);
-        printf("c=%d%X%d ", int32_t(size), side, bevel);
+        printf("c=%d%hhX%d ", int32_t(size), static_cast<uint8_t>(side), bevel);
       }
     }
     printf("\n");
@@ -818,7 +819,7 @@ bool nsTableCellMap::RowHasSpanningCells(int32_t aRowIndex,
   return false;
 }
 
-// FIXME: The only value callers pass for aSide is eLogicalSideBEnd.
+// FIXME: The only value callers pass for aSide is LogicalSide::BEnd.
 // Consider removing support for the other three values.
 void nsTableCellMap::ResetBStartStart(LogicalSide aSide, nsCellMap& aCellMap,
                                       uint32_t aRowGroupStart,
@@ -829,16 +830,16 @@ void nsTableCellMap::ResetBStartStart(LogicalSide aSide, nsCellMap& aCellMap,
   BCData* bcData = nullptr;
 
   switch (aSide) {
-    case eLogicalSideBEnd:
+    case LogicalSide::BEnd:
       aRowIndex++;
       [[fallthrough]];
-    case eLogicalSideBStart:
+    case LogicalSide::BStart:
       cellData = (BCCellData*)aCellMap.GetDataAt(aRowIndex - aRowGroupStart,
                                                  aColIndex);
       if (cellData) {
         bcData = &cellData->mData;
       } else {
-        NS_ASSERTION(aSide == eLogicalSideBEnd, "program error");
+        NS_ASSERTION(aSide == LogicalSide::BEnd, "program error");
         // try the next row group
         nsCellMap* cellMap = aCellMap.GetNextSibling();
         if (cellMap) {
@@ -851,16 +852,16 @@ void nsTableCellMap::ResetBStartStart(LogicalSide aSide, nsCellMap& aCellMap,
         }
       }
       break;
-    case eLogicalSideIEnd:
+    case LogicalSide::IEnd:
       aColIndex++;
       [[fallthrough]];
-    case eLogicalSideIStart:
+    case LogicalSide::IStart:
       cellData = (BCCellData*)aCellMap.GetDataAt(aRowIndex - aRowGroupStart,
                                                  aColIndex);
       if (cellData) {
         bcData = &cellData->mData;
       } else {
-        NS_ASSERTION(aSide == eLogicalSideIEnd, "program error");
+        NS_ASSERTION(aSide == LogicalSide::IEnd, "program error");
         bcData = GetIEndMostBorder(aRowIndex);
       }
       break;
@@ -890,11 +891,11 @@ void nsTableCellMap::SetBCBorderEdge(LogicalSide aSide, nsCellMap& aCellMap,
   bool changed;
 
   switch (aSide) {
-    case eLogicalSideBEnd:
+    case LogicalSide::BEnd:
       rgYPos++;
       yPos++;
       [[fallthrough]];
-    case eLogicalSideBStart:
+    case LogicalSide::BStart:
       lastIndex = xPos + aLength - 1;
       for (xIndex = xPos; xIndex <= lastIndex; xIndex++) {
         changed = aChanged && (xIndex == xPos);
@@ -908,7 +909,7 @@ void nsTableCellMap::SetBCBorderEdge(LogicalSide aSide, nsCellMap& aCellMap,
                                                         false, 0, damageArea);
             if (!cellData) ABORT0();
           } else {
-            NS_ASSERTION(aSide == eLogicalSideBEnd, "program error");
+            NS_ASSERTION(aSide == LogicalSide::BEnd, "program error");
             // try the next non empty row group
             nsCellMap* cellMap = aCellMap.GetNextSibling();
             while (cellMap && (0 == cellMap->GetRowCount())) {
@@ -935,10 +936,10 @@ void nsTableCellMap::SetBCBorderEdge(LogicalSide aSide, nsCellMap& aCellMap,
           NS_ERROR("Cellmap: BStart edge not found");
       }
       break;
-    case eLogicalSideIEnd:
+    case LogicalSide::IEnd:
       xPos++;
       [[fallthrough]];
-    case eLogicalSideIStart:
+    case LogicalSide::IStart:
       // since bStart, bEnd borders were set, there should already be a cellData
       // entry
       lastIndex = rgYPos + aLength - 1;
@@ -948,7 +949,7 @@ void nsTableCellMap::SetBCBorderEdge(LogicalSide aSide, nsCellMap& aCellMap,
         if (cellData) {
           cellData->mData.SetIStartEdge(aOwner, aSize, changed);
         } else {
-          NS_ASSERTION(aSide == eLogicalSideIEnd, "program error");
+          NS_ASSERTION(aSide == LogicalSide::IEnd, "program error");
           BCData* bcData = GetIEndMostBorder(yIndex + aCellMapStart);
           if (bcData) {
             bcData->SetIStartEdge(aOwner, aSize, changed);
@@ -2225,7 +2226,8 @@ void nsCellMap::Dump(bool aIsBorderCollapse) const {
               printf("l=%d%d%d ", int32_t(size), owner, segStart);
             } else {
               size = cd->mData.GetCorner(side, bevel);
-              printf("c=%d%d%d ", int32_t(size), side, bevel);
+              printf("c=%d%hhu%d ", int32_t(size), static_cast<uint8_t>(side),
+                     bevel);
             }
           }
         }

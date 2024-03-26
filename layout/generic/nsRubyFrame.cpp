@@ -345,11 +345,11 @@ void nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
                 : 0);
         position = offsetRect.Origin(lineWM) + offset;
         aReflowInput.mLineLayout->AdvanceICoord(size.ISize(lineWM));
-      } else if (logicalSide == eLogicalSideBStart) {
+      } else if (logicalSide == LogicalSide::BStart) {
         offsetRect.BStart(lineWM) -= size.BSize(lineWM);
         offsetRect.BSize(lineWM) += size.BSize(lineWM);
         position = offsetRect.Origin(lineWM);
-      } else if (logicalSide == eLogicalSideBEnd) {
+      } else if (logicalSide == LogicalSide::BEnd) {
         position = offsetRect.Origin(lineWM) +
                    LogicalPoint(lineWM, 0, offsetRect.BSize(lineWM));
         offsetRect.BSize(lineWM) += size.BSize(lineWM);

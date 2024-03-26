@@ -58,7 +58,7 @@ nsRect nsFieldSetFrame::VisualBorderRectRelativeToSelf() const {
     auto legendMargin = legend->GetLogicalUsedMargin(wm);
     nscoord legendStartMargin = legendMargin.BStart(wm);
     nscoord legendEndMargin = legendMargin.BEnd(wm);
-    nscoord border = GetUsedBorder().Side(wm.PhysicalSide(eLogicalSideBStart));
+    nscoord border = GetUsedBorder().Side(wm.PhysicalSide(LogicalSide::BStart));
     // Calculate the offset from the border area block-axis start edge needed to
     // center-align our border with the legend's border-box (in the block-axis).
     nscoord off = (legendStartMargin + legendSize / 2) - border / 2;

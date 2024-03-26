@@ -3463,7 +3463,7 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::Grid {
    * @param aFromIndex the zero-based index to start counting from
    * @param aLineNameList the explicit named lines
    * @param aSide the axis+edge we're resolving names for (e.g. if we're
-                  resolving a grid-row-start line, pass eLogicalSideBStart)
+                  resolving a grid-row-start line, pass LogicalSide::BStart)
    * @param aExplicitGridEnd the last line in the explicit grid
    * @param aStyle the StylePosition() for the grid container
    * @return a definite line (1-based), clamped to

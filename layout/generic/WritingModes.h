@@ -51,15 +51,17 @@ enum LogicalAxis : uint8_t {
   eLogicalAxisInline = 0x1
 };
 enum LogicalEdge { eLogicalEdgeStart = 0x0, eLogicalEdgeEnd = 0x1 };
-enum LogicalSide : uint8_t {
-  eLogicalSideBStart = (eLogicalAxisBlock << 1) | eLogicalEdgeStart,   // 0x0
-  eLogicalSideBEnd = (eLogicalAxisBlock << 1) | eLogicalEdgeEnd,       // 0x1
-  eLogicalSideIStart = (eLogicalAxisInline << 1) | eLogicalEdgeStart,  // 0x2
-  eLogicalSideIEnd = (eLogicalAxisInline << 1) | eLogicalEdgeEnd       // 0x3
+
+enum class LogicalSide : uint8_t {
+  BStart,
+  BEnd,
+  IStart,
+  IEnd,
 };
+
 constexpr auto AllLogicalSides() {
-  return mozilla::MakeInclusiveEnumeratedRange(eLogicalSideBStart,
-                                               eLogicalSideIEnd);
+  return mozilla::MakeInclusiveEnumeratedRange(LogicalSide::BStart,
+                                               LogicalSide::IEnd);
 }
 
 enum class LogicalCorner : uint8_t {
@@ -85,9 +87,16 @@ inline LogicalAxis GetOrthogonalAxis(LogicalAxis aAxis) {
   return aAxis == eLogicalAxisBlock ? eLogicalAxisInline : eLogicalAxisBlock;
 }
 
-inline bool IsInline(LogicalSide aSide) { return aSide & 0x2; }
+inline bool IsInline(LogicalSide aSide) {
+  return (aSide == LogicalSide::IStart) || (aSide == LogicalSide::IEnd);
+}
+
 inline bool IsBlock(LogicalSide aSide) { return !IsInline(aSide); }
-inline bool IsEnd(LogicalSide aSide) { return aSide & 0x1; }
+
+inline bool IsEnd(LogicalSide aSide) {
+  return (aSide == LogicalSide::BEnd) || (aSide == LogicalSide::IEnd);
+}
+
 inline bool IsStart(LogicalSide aSide) { return !IsEnd(aSide); }
 
 inline LogicalAxis GetAxis(LogicalSide aSide) {
@@ -113,20 +122,20 @@ inline LogicalSide GetOppositeSide(LogicalSide aSide) {
 
 enum LogicalSideBits {
   eLogicalSideBitsNone = 0,
-  eLogicalSideBitsBStart = 1 << eLogicalSideBStart,
-  eLogicalSideBitsBEnd = 1 << eLogicalSideBEnd,
-  eLogicalSideBitsIEnd = 1 << eLogicalSideIEnd,
-  eLogicalSideBitsIStart = 1 << eLogicalSideIStart,
+  eLogicalSideBitsBStart = 1 << static_cast<uint8_t>(LogicalSide::BStart),
+  eLogicalSideBitsBEnd = 1 << static_cast<uint8_t>(LogicalSide::BEnd),
+  eLogicalSideBitsIEnd = 1 << static_cast<uint8_t>(LogicalSide::IEnd),
+  eLogicalSideBitsIStart = 1 << static_cast<uint8_t>(LogicalSide::IStart),
   eLogicalSideBitsBBoth = eLogicalSideBitsBStart | eLogicalSideBitsBEnd,
   eLogicalSideBitsIBoth = eLogicalSideBitsIStart | eLogicalSideBitsIEnd,
   eLogicalSideBitsAll = eLogicalSideBitsBBoth | eLogicalSideBitsIBoth
 };
 
 enum LineRelativeDir {
-  eLineRelativeDirOver = eLogicalSideBStart,
-  eLineRelativeDirUnder = eLogicalSideBEnd,
-  eLineRelativeDirLeft = eLogicalSideIStart,
-  eLineRelativeDirRight = eLogicalSideIEnd
+  eLineRelativeDirOver = static_cast<uint8_t>(LogicalSide::BStart),
+  eLineRelativeDirUnder = static_cast<uint8_t>(LogicalSide::BEnd),
+  eLineRelativeDirLeft = static_cast<uint8_t>(LogicalSide::IStart),
+  eLineRelativeDirRight = static_cast<uint8_t>(LogicalSide::IEnd)
 };
 
 /**
@@ -445,38 +454,38 @@ class WritingMode {
     static const LogicalSide kPhysicalToLogicalSides[][4] = {
       // top                right
       // bottom             left
-      { eLogicalSideBStart, eLogicalSideIEnd,
-        eLogicalSideBEnd,   eLogicalSideIStart },  // horizontal-tb         ltr
-      { eLogicalSideIStart, eLogicalSideBStart,
-        eLogicalSideIEnd,   eLogicalSideBEnd   },  // vertical-rl           ltr
-      { eLogicalSideBStart, eLogicalSideIStart,
-        eLogicalSideBEnd,   eLogicalSideIEnd   },  // horizontal-tb         rtl
-      { eLogicalSideIEnd,   eLogicalSideBStart,
-        eLogicalSideIStart, eLogicalSideBEnd   },  // vertical-rl           rtl
-      { eLogicalSideBEnd,   eLogicalSideIStart,
-        eLogicalSideBStart, eLogicalSideIEnd   },  // (horizontal-bt) (inv) ltr
-      { eLogicalSideIStart, eLogicalSideBEnd,
-        eLogicalSideIEnd,   eLogicalSideBStart },  // vertical-lr   sw-left rtl
-      { eLogicalSideBEnd,   eLogicalSideIEnd,
-        eLogicalSideBStart, eLogicalSideIStart },  // (horizontal-bt) (inv) rtl
-      { eLogicalSideIEnd,   eLogicalSideBEnd,
-        eLogicalSideIStart, eLogicalSideBStart },  // vertical-lr   sw-left ltr
-      { eLogicalSideBStart, eLogicalSideIEnd,
-        eLogicalSideBEnd,   eLogicalSideIStart },  // horizontal-tb   (inv) rtl
-      { eLogicalSideIStart, eLogicalSideBStart,
-        eLogicalSideIEnd,   eLogicalSideBEnd   },  // vertical-rl   sw-left rtl
-      { eLogicalSideBStart, eLogicalSideIStart,
-        eLogicalSideBEnd,   eLogicalSideIEnd   },  // horizontal-tb   (inv) ltr
-      { eLogicalSideIEnd,   eLogicalSideBStart,
-        eLogicalSideIStart, eLogicalSideBEnd   },  // vertical-rl   sw-left ltr
-      { eLogicalSideBEnd,   eLogicalSideIEnd,
-        eLogicalSideBStart, eLogicalSideIStart },  // (horizontal-bt)       ltr
-      { eLogicalSideIStart, eLogicalSideBEnd,
-        eLogicalSideIEnd,   eLogicalSideBStart },  // vertical-lr           ltr
-      { eLogicalSideBEnd,   eLogicalSideIStart,
-        eLogicalSideBStart, eLogicalSideIEnd   },  // (horizontal-bt)       rtl
-      { eLogicalSideIEnd,   eLogicalSideBEnd,
-        eLogicalSideIStart, eLogicalSideBStart },  // vertical-lr           rtl
+      { LogicalSide::BStart, LogicalSide::IEnd,
+        LogicalSide::BEnd,   LogicalSide::IStart },  // horizontal-tb         ltr
+      { LogicalSide::IStart, LogicalSide::BStart,
+        LogicalSide::IEnd,   LogicalSide::BEnd   },  // vertical-rl           ltr
+      { LogicalSide::BStart, LogicalSide::IStart,
+        LogicalSide::BEnd,   LogicalSide::IEnd   },  // horizontal-tb         rtl
+      { LogicalSide::IEnd,   LogicalSide::BStart,
+        LogicalSide::IStart, LogicalSide::BEnd   },  // vertical-rl           rtl
+      { LogicalSide::BEnd,   LogicalSide::IStart,
+        LogicalSide::BStart, LogicalSide::IEnd   },  // (horizontal-bt) (inv) ltr
+      { LogicalSide::IStart, LogicalSide::BEnd,
+        LogicalSide::IEnd,   LogicalSide::BStart },  // vertical-lr   sw-left rtl
+      { LogicalSide::BEnd,   LogicalSide::IEnd,
+        LogicalSide::BStart, LogicalSide::IStart },  // (horizontal-bt) (inv) rtl
+      { LogicalSide::IEnd,   LogicalSide::BEnd,
+        LogicalSide::IStart, LogicalSide::BStart },  // vertical-lr   sw-left ltr
+      { LogicalSide::BStart, LogicalSide::IEnd,
+        LogicalSide::BEnd,   LogicalSide::IStart },  // horizontal-tb   (inv) rtl
+      { LogicalSide::IStart, LogicalSide::BStart,
+        LogicalSide::IEnd,   LogicalSide::BEnd   },  // vertical-rl   sw-left rtl
+      { LogicalSide::BStart, LogicalSide::IStart,
+        LogicalSide::BEnd,   LogicalSide::IEnd   },  // horizontal-tb   (inv) ltr
+      { LogicalSide::IEnd,   LogicalSide::BStart,
+        LogicalSide::IStart, LogicalSide::BEnd   },  // vertical-rl   sw-left ltr
+      { LogicalSide::BEnd,   LogicalSide::IEnd,
+        LogicalSide::BStart, LogicalSide::IStart },  // (horizontal-bt)       ltr
+      { LogicalSide::IStart, LogicalSide::BEnd,
+        LogicalSide::IEnd,   LogicalSide::BStart },  // vertical-lr           ltr
+      { LogicalSide::BEnd,   LogicalSide::IStart,
+        LogicalSide::BStart, LogicalSide::IEnd   },  // (horizontal-bt)       rtl
+      { LogicalSide::IEnd,   LogicalSide::BEnd,
+        LogicalSide::IStart, LogicalSide::BStart },  // vertical-lr           rtl
     };
     // clang-format on
 
@@ -1283,13 +1292,13 @@ class LogicalMargin {
 
   nscoord Side(LogicalSide aSide, WritingMode aWM) const {
     switch (aSide) {
-      case eLogicalSideBStart:
+      case LogicalSide::BStart:
         return BStart(aWM);
-      case eLogicalSideBEnd:
+      case LogicalSide::BEnd:
         return BEnd(aWM);
-      case eLogicalSideIStart:
+      case LogicalSide::IStart:
         return IStart(aWM);
-      case eLogicalSideIEnd:
+      case LogicalSide::IEnd:
         return IEnd(aWM);
     }
 
@@ -1298,13 +1307,13 @@ class LogicalMargin {
   }
   nscoord& Side(LogicalSide aSide, WritingMode aWM) {
     switch (aSide) {
-      case eLogicalSideBStart:
+      case LogicalSide::BStart:
         return BStart(aWM);
-      case eLogicalSideBEnd:
+      case LogicalSide::BEnd:
         return BEnd(aWM);
-      case eLogicalSideIStart:
+      case LogicalSide::IStart:
         return IStart(aWM);
-      case eLogicalSideIEnd:
+      case LogicalSide::IEnd:
         return IEnd(aWM);
     }
 
@@ -2055,22 +2064,22 @@ const T& StyleRect<T>::Get(WritingMode aWM, LogicalSide aSide) const {
 
 template <typename T>
 const T& StyleRect<T>::GetIStart(WritingMode aWM) const {
-  return Get(aWM, eLogicalSideIStart);
+  return Get(aWM, LogicalSide::IStart);
 }
 
 template <typename T>
 const T& StyleRect<T>::GetBStart(WritingMode aWM) const {
-  return Get(aWM, eLogicalSideBStart);
+  return Get(aWM, LogicalSide::BStart);
 }
 
 template <typename T>
 const T& StyleRect<T>::GetIEnd(WritingMode aWM) const {
-  return Get(aWM, eLogicalSideIEnd);
+  return Get(aWM, LogicalSide::IEnd);
 }
 
 template <typename T>
 const T& StyleRect<T>::GetBEnd(WritingMode aWM) const {
-  return Get(aWM, eLogicalSideBEnd);
+  return Get(aWM, LogicalSide::BEnd);
 }
 
 template <typename T>
@@ -2080,38 +2089,38 @@ T& StyleRect<T>::Get(WritingMode aWM, LogicalSide aSide) {
 
 template <typename T>
 T& StyleRect<T>::GetIStart(WritingMode aWM) {
-  return Get(aWM, eLogicalSideIStart);
+  return Get(aWM, LogicalSide::IStart);
 }
 
 template <typename T>
 T& StyleRect<T>::GetBStart(WritingMode aWM) {
-  return Get(aWM, eLogicalSideBStart);
+  return Get(aWM, LogicalSide::BStart);
 }
 
 template <typename T>
 T& StyleRect<T>::GetIEnd(WritingMode aWM) {
-  return Get(aWM, eLogicalSideIEnd);
+  return Get(aWM, LogicalSide::IEnd);
 }
 
 template <typename T>
 T& StyleRect<T>::GetBEnd(WritingMode aWM) {
-  return Get(aWM, eLogicalSideBEnd);
+  return Get(aWM, LogicalSide::BEnd);
 }
 
 template <typename T>
 const T& StyleRect<T>::Start(mozilla::LogicalAxis aAxis,
                              mozilla::WritingMode aWM) const {
   return Get(aWM, aAxis == mozilla::eLogicalAxisInline
-                      ? mozilla::eLogicalSideIStart
-                      : mozilla::eLogicalSideBStart);
+                      ? mozilla::LogicalSide::IStart
+                      : mozilla::LogicalSide::BStart);
 }
 
 template <typename T>
 const T& StyleRect<T>::End(mozilla::LogicalAxis aAxis,
                            mozilla::WritingMode aWM) const {
   return Get(aWM, aAxis == mozilla::eLogicalAxisInline
-                      ? mozilla::eLogicalSideIEnd
-                      : mozilla::eLogicalSideBEnd);
+                      ? mozilla::LogicalSide::IEnd
+                      : mozilla::LogicalSide::BEnd);
 }
 
 inline AspectRatio AspectRatio::ConvertToWritingMode(
