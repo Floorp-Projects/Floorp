@@ -1742,7 +1742,11 @@ class HighlightToolbar {
     const button = document.createElement("button");
     button.className = "highlightButton";
     button.tabIndex = 0;
-    button.setAttribute("data-l10n-id", `pdfjs-highlight-floating-button`);
+    button.setAttribute("data-l10n-id", `pdfjs-highlight-floating-button1`);
+    const span = document.createElement("span");
+    button.append(span);
+    span.className = "visuallyHidden";
+    span.setAttribute("data-l10n-id", "pdfjs-highlight-floating-button-label");
     button.addEventListener("contextmenu", noContextMenu);
     button.addEventListener("click", () => {
       this.#uiManager.highlightSelection("floating_button");
@@ -2877,6 +2881,7 @@ class AnnotationEditorUIManager {
       layer.addOrRebuild(editor);
     } else {
       this.addEditor(editor);
+      this.addToAnnotationStorage(editor);
     }
   }
   setActiveEditor(editor) {
@@ -4211,7 +4216,6 @@ class AnnotationEditor {
   rebuild() {
     this.div?.addEventListener("focusin", this.#boundFocusin);
     this.div?.addEventListener("focusout", this.#boundFocusout);
-    this.show(this._isVisible);
   }
   rotate(_angle) {}
   serialize(isForCopying = false, context = null) {
@@ -4255,6 +4259,7 @@ class AnnotationEditor {
       }
       this.#telemetryTimeouts = null;
     }
+    this.parent = null;
   }
   get isResizable() {
     return false;
@@ -4474,7 +4479,7 @@ class AnnotationEditor {
       }
     });
   }
-  show(visible) {
+  show(visible = this._isVisible) {
     this.div.classList.toggle("hidden", !visible);
     this._isVisible = visible;
   }
@@ -9200,7 +9205,7 @@ function getDocument(src) {
   }
   const fetchDocParams = {
     docId,
-    apiVersion: "4.1.315",
+    apiVersion: "4.1.332",
     data,
     password,
     disableAutoFetch,
@@ -10844,8 +10849,8 @@ class InternalRenderTask {
     }
   }
 }
-const version = "4.1.315";
-const build = "067c49dc4";
+const version = "4.1.332";
+const build = "3d7ea6076";
 
 ;// CONCATENATED MODULE: ./src/shared/scripting_utils.js
 function makeColorComp(n) {
@@ -11244,8 +11249,11 @@ class AnnotationElement {
       container.tabIndex = DEFAULT_TAB_INDEX;
     }
     container.style.zIndex = this.parent.zIndex++;
-    if (this.data.popupRef) {
+    if (data.popupRef) {
       container.setAttribute("aria-haspopup", "dialog");
+    }
+    if (data.alternativeText) {
+      container.title = data.alternativeText;
     }
     if (data.noRotate) {
       container.classList.add("norotate");
@@ -11894,9 +11902,6 @@ class TextAnnotationElement extends AnnotationElement {
 }
 class WidgetAnnotationElement extends AnnotationElement {
   render() {
-    if (this.data.alternativeText) {
-      this.container.title = this.data.alternativeText;
-    }
     return this.container;
   }
   showElementAndHideCanvas(element) {
@@ -12497,9 +12502,6 @@ class PushButtonWidgetAnnotationElement extends LinkAnnotationElement {
   render() {
     const container = super.render();
     container.classList.add("buttonWidgetAnnotation", "pushButton");
-    if (this.data.alternativeText) {
-      container.title = this.data.alternativeText;
-    }
     const linkElement = container.lastChild;
     if (this.enableScripting && this.hasJSActions && linkElement) {
       this._setDefaultPropertiesFromJS(linkElement);
@@ -15108,11 +15110,11 @@ class HighlightEditor extends AnnotationEditor {
     this.div.focus();
   }
   remove() {
-    super.remove();
     this.#cleanDrawLayer();
     this._reportTelemetry({
       action: "deleted"
     });
+    super.remove();
   }
   rebuild() {
     if (!this.parent) {
@@ -15288,11 +15290,17 @@ class HighlightEditor extends AnnotationEditor {
   }
   select() {
     super.select();
+    if (!this.#outlineId) {
+      return;
+    }
     this.parent?.drawLayer.removeClass(this.#outlineId, "hovered");
     this.parent?.drawLayer.addClass(this.#outlineId, "selected");
   }
   unselect() {
     super.unselect();
+    if (!this.#outlineId) {
+      return;
+    }
     this.parent?.drawLayer.removeClass(this.#outlineId, "selected");
     if (!this.#isFreeHighlight) {
       this.#setCaret(false);
@@ -15301,7 +15309,7 @@ class HighlightEditor extends AnnotationEditor {
   get _mustFixPosition() {
     return !this.#isFreeHighlight;
   }
-  show(visible) {
+  show(visible = this._isVisible) {
     super.show(visible);
     if (this.parent) {
       this.parent.drawLayer.show(this.#id, visible);
@@ -15756,7 +15764,7 @@ class InkEditor extends AnnotationEditor {
       this.allRawPaths.push(currentPath);
       this.paths.push(bezier);
       this.bezierPath2D.push(path2D);
-      this.rebuild();
+      this._uiManager.rebuild(this);
     };
     const undo = () => {
       this.allRawPaths.pop();
@@ -16383,7 +16391,7 @@ class StampEditor extends AnnotationEditor {
     if (this.div === null) {
       return;
     }
-    if (this.#bitmapId) {
+    if (this.#bitmapId && this.#canvas === null) {
       this.#getBitmap();
     }
     if (!this.isAttachedToDOM) {
@@ -16395,7 +16403,7 @@ class StampEditor extends AnnotationEditor {
     this.div.focus();
   }
   isEmpty() {
-    return !(this.#bitmapPromise || this.#bitmap || this.#bitmapUrl || this.#bitmapFile);
+    return !(this.#bitmapPromise || this.#bitmap || this.#bitmapUrl || this.#bitmapFile || this.#bitmapId);
   }
   get isResizable() {
     return true;
@@ -17009,6 +17017,7 @@ class AnnotationEditorLayer {
     if (editor.needsToBeRebuilt()) {
       editor.parent ||= this;
       editor.rebuild();
+      editor.show();
     } else {
       this.add(editor);
     }
@@ -17199,6 +17208,7 @@ class AnnotationEditorLayer {
     setLayerDimensions(this.div, viewport);
     for (const editor of this.#uiManager.getEditors(this.pageIndex)) {
       this.add(editor);
+      editor.rebuild();
     }
     this.updateMode();
   }
@@ -17440,8 +17450,8 @@ class DrawLayer {
 
 
 
-const pdfjsVersion = "4.1.315";
-const pdfjsBuild = "067c49dc4";
+const pdfjsVersion = "4.1.332";
+const pdfjsBuild = "3d7ea6076";
 
 var __webpack_exports__AbortException = __webpack_exports__.AbortException;
 var __webpack_exports__AnnotationEditorLayer = __webpack_exports__.AnnotationEditorLayer;

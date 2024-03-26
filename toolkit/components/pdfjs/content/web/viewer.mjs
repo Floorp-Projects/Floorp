@@ -655,7 +655,7 @@ const defaultOptions = {
     kind: OptionKind.VIEWER
   },
   maxCanvasPixels: {
-    value: 16777216,
+    value: 2 ** 25,
     kind: OptionKind.VIEWER
   },
   forcePageColors: {
@@ -1396,7 +1396,7 @@ class BaseExternalServices {
   }
   updateFindControlState(data) {}
   updateFindMatchesCount(data) {}
-  initPassiveLoading(callbacks) {}
+  initPassiveLoading() {}
   reportTelemetry(data) {}
   async createL10n() {
     throw new Error("Not implemented: createL10n");
@@ -1819,7 +1819,7 @@ class ExternalServices extends BaseExternalServices {
   updateFindMatchesCount(data) {
     FirefoxCom.request("updateFindMatchesCount", data);
   }
-  initPassiveLoading(callbacks) {
+  initPassiveLoading() {
     let pdfDataRangeTransport;
     window.addEventListener("message", function windowMessage(e) {
       if (e.source !== null) {
@@ -1833,11 +1833,13 @@ class ExternalServices extends BaseExternalServices {
       switch (args.pdfjsLoadAction) {
         case "supportsRangedLoading":
           if (args.done && !args.data) {
-            callbacks.onError();
+            viewerApp._documentError(null);
             break;
           }
           pdfDataRangeTransport = new FirefoxComDataRangeTransport(args.length, args.data, args.done, args.filename);
-          callbacks.onOpenWithTransport(pdfDataRangeTransport);
+          viewerApp.open({
+            range: pdfDataRangeTransport
+          });
           break;
         case "range":
           pdfDataRangeTransport.onDataRange(args.begin, args.chunk);
@@ -1853,14 +1855,19 @@ class ExternalServices extends BaseExternalServices {
           pdfDataRangeTransport?.onDataProgressiveDone();
           break;
         case "progress":
-          callbacks.onProgress(args.loaded, args.total);
+          viewerApp.progress(args.loaded / args.total);
           break;
         case "complete":
           if (!args.data) {
-            callbacks.onError(args.errorCode);
+            viewerApp._documentError(null, {
+              message: args.errorCode
+            });
             break;
           }
-          callbacks.onOpenWithData(args.data, args.filename);
+          viewerApp.open({
+            data: args.data,
+            filename: args.filename
+          });
           break;
       }
     });
@@ -7692,7 +7699,7 @@ class PDFPageView {
     this.#textLayerMode = options.textLayerMode ?? TextLayerMode.ENABLE;
     this.#annotationMode = options.annotationMode ?? AnnotationMode.ENABLE_FORMS;
     this.imageResourcesPath = options.imageResourcesPath || "";
-    this.maxCanvasPixels = options.maxCanvasPixels ?? (AppOptions.getCompat("maxCanvasPixels") || 16777216);
+    this.maxCanvasPixels = options.maxCanvasPixels ?? (AppOptions.getCompat("maxCanvasPixels") || 2 ** 25);
     this.pageColors = options.pageColors || null;
     this.eventBus = options.eventBus;
     this.renderingQueue = options.renderingQueue;
@@ -8498,7 +8505,7 @@ class PDFViewer {
   #scaleTimeoutId = null;
   #textLayerMode = TextLayerMode.ENABLE;
   constructor(options) {
-    const viewerVersion = "4.1.315";
+    const viewerVersion = "4.1.332";
     if (version !== viewerVersion) {
       throw new Error(`The API version "${version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -10878,7 +10885,8 @@ const PDFViewerApplication = {
     if (this.supportsIntegratedFind) {
       appConfig.toolbar?.viewFind?.classList.add("hidden");
     }
-    this.initPassiveLoading(file);
+    this.setTitleUsingUrl(file, file);
+    this.externalServices.initPassiveLoading();
   },
   get externalServices() {
     return shadow(this, "externalServices", new ExternalServices());
@@ -10956,39 +10964,6 @@ const PDFViewerApplication = {
   moveCaret(isUp, select) {
     this._caretBrowsing ||= new CaretBrowsingMode(this.appConfig.mainContainer, this.appConfig.viewerContainer, this.appConfig.toolbar?.container);
     this._caretBrowsing.moveCaret(isUp, select);
-  },
-  initPassiveLoading(file) {
-    this.setTitleUsingUrl(file, file);
-    this.externalServices.initPassiveLoading({
-      onOpenWithTransport: range => {
-        this.open({
-          range
-        });
-      },
-      onOpenWithData: (data, contentDispositionFilename) => {
-        if (isPdfFile(contentDispositionFilename)) {
-          this._contentDispositionFilename = contentDispositionFilename;
-        }
-        this.open({
-          data
-        });
-      },
-      onOpenWithURL: (url, length, originalUrl) => {
-        this.open({
-          url,
-          length,
-          originalUrl
-        });
-      },
-      onError: err => {
-        this.l10n.get("pdfjs-loading-error").then(msg => {
-          this._documentError(msg, err);
-        });
-      },
-      onProgress: (loaded, total) => {
-        this.progress(loaded / total);
-      }
-    });
   },
   setTitleUsingUrl(url = "", downloadUrl = null) {
     this.url = url;
@@ -11077,6 +11052,9 @@ const PDFViewerApplication = {
     }
     const workerParams = AppOptions.getAll(OptionKind.WORKER);
     Object.assign(GlobalWorkerOptions, workerParams);
+    if (args.data && isPdfFile(args.filename)) {
+      this._contentDispositionFilename = args.filename;
+    }
     AppOptions.set("docBaseUrl", this.baseUrl);
     const apiParams = AppOptions.getAll(OptionKind.API);
     const loadingTask = getDocument({
@@ -11112,10 +11090,9 @@ const PDFViewerApplication = {
       } else if (reason instanceof UnexpectedResponseException) {
         key = "pdfjs-unexpected-response-error";
       }
-      return this.l10n.get(key).then(msg => {
-        this._documentError(msg, {
-          message: reason?.message
-        });
+      return this._documentError(key, {
+        message: reason.message
+      }).then(() => {
         throw reason;
       });
     });
@@ -11179,16 +11156,17 @@ const PDFViewerApplication = {
       this.download(options);
     }
   },
-  _documentError(message, moreInfo = null) {
+  async _documentError(key, moreInfo = null) {
     this._unblockDocumentLoadEvent();
-    this._otherError(message, moreInfo);
+    const message = await this._otherError(key || "pdfjs-loading-error", moreInfo);
     this.eventBus.dispatch("documenterror", {
       source: this,
       message,
       reason: moreInfo?.message ?? null
     });
   },
-  _otherError(message, moreInfo = null) {
+  async _otherError(key, moreInfo = null) {
+    const message = await this.l10n.get(key);
     const moreInfoText = [`PDF.js v${version || "?"} (build: ${build || "?"})`];
     if (moreInfo) {
       moreInfoText.push(`Message: ${moreInfo.message}`);
@@ -11204,6 +11182,7 @@ const PDFViewerApplication = {
       }
     }
     console.error(`${message}\n\n${moreInfoText.join("\n")}`);
+    return message;
   },
   progress(level) {
     if (!this.loadingBar || this.downloadComplete) {
@@ -11328,10 +11307,8 @@ const PDFViewerApplication = {
       this._unblockDocumentLoadEvent();
       this._initializeAutoPrint(pdfDocument, openActionPromise);
     }, reason => {
-      this.l10n.get("pdfjs-loading-error").then(msg => {
-        this._documentError(msg, {
-          message: reason?.message
-        });
+      this._documentError("pdfjs-loading-error", {
+        message: reason.message
       });
     });
     onePageRendered.then(data => {
@@ -11610,9 +11587,7 @@ const PDFViewerApplication = {
       return;
     }
     if (!this.supportsPrinting) {
-      this.l10n.get("pdfjs-printing-not-supported").then(msg => {
-        this._otherError(msg);
-      });
+      this._otherError("pdfjs-printing-not-supported");
       return;
     }
     if (!this.pdfViewer.pageViewsReady) {
@@ -11943,9 +11918,7 @@ function webViewerPageRendered({
     }
   }
   if (error) {
-    PDFViewerApplication.l10n.get("pdfjs-rendering-error").then(msg => {
-      PDFViewerApplication._otherError(msg, error);
-    });
+    PDFViewerApplication._otherError("pdfjs-rendering-error", error);
   }
 }
 function webViewerPageMode({
@@ -12663,8 +12636,8 @@ function webViewerReportTelemetry({
 
 
 
-const pdfjsVersion = "4.1.315";
-const pdfjsBuild = "067c49dc4";
+const pdfjsVersion = "4.1.332";
+const pdfjsBuild = "3d7ea6076";
 const AppConstants = null;
 window.PDFViewerApplication = PDFViewerApplication;
 window.PDFViewerApplicationConstants = AppConstants;
