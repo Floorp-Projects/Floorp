@@ -324,7 +324,7 @@ bool OriginAttributes::PopulateFromSuffix(const nsACString& aStr) {
   MOZ_RELEASE_ASSERT(mPartitionKey.IsEmpty());
 
   return URLParams::Parse(
-      Substring(aStr, 1, aStr.Length() - 1),
+      Substring(aStr, 1, aStr.Length() - 1), true,
       [this](const nsAString& aName, const nsAString& aValue) {
         if (aName.EqualsLiteral("inBrowser")) {
           if (!aValue.EqualsLiteral("1")) {
