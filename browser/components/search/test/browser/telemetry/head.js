@@ -197,6 +197,7 @@ function resetTelemetry() {
   searchCounts.clear();
   Services.telemetry.clearScalars();
   Services.fog.testResetFOG();
+  SERPCategorizationRecorder.testReset();
 }
 
 /**
