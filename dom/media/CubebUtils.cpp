@@ -300,12 +300,10 @@ RefPtr<CubebHandle> GetCubeb() {
 
 // This is only exported when running tests.
 void ForceSetCubebContext(cubeb* aCubebContext) {
+  RefPtr<CubebHandle> oldHandle;  // For release without sMutex
   StaticMutexAutoLock lock(sMutex);
-  if (aCubebContext) {
-    sCubebHandle = new CubebHandle(aCubebContext);
-  } else {
-    sCubebHandle = nullptr;
-  }
+  oldHandle = sCubebHandle.forget();
+  sCubebHandle = aCubebContext ? new CubebHandle(aCubebContext) : nullptr;
   sCubebState = CubebState::Initialized;
 }
 
