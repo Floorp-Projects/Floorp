@@ -7,13 +7,7 @@
   --message-bar-icon-color: var(--icon-color-information);
   --message-bar-icon-size: var(--size-item-small);
   --message-bar-icon-close-color: var(--icon-color);
-  --message-bar-icon-close-url: url("chrome://global/skin/icons/close-12.svg");
-
-  /* Button */
-  --message-bar-button-size-ghost: var(--button-min-height);
-  --message-bar-button-border-radius-ghost: var(--button-border-radius);
-  --message-bar-button-background-color-ghost-hover: var(--button-background-color-hover);
-  --message-bar-button-background-color-ghost-active: var(--button-background-color-active);
+  --message-bar-icon-close-url: url("chrome://global/skin/icons/close.svg");
 
   /* Container */
   --message-bar-container-min-height: var(--size-item-large);
@@ -144,31 +138,8 @@
 
 /* Close icon styles */
 
-.close {
+moz-button::part(button) {
   background-image: var(--message-bar-icon-close-url);
-  background-repeat: no-repeat;
-  background-position: center center;
-  -moz-context-properties: fill;
-  fill: currentColor;
-  min-width: auto;
-  min-height: auto;
-  width: var(--message-bar-button-size-ghost);
-  height: var(--message-bar-button-size-ghost);
-  margin: 0;
-  padding: 0;
-  flex-shrink: 0;
-}
-
-.ghost-button {
-  border-radius: var(--message-bar-button-border-radius-ghost);
-}
-
-.ghost-button:enabled:hover {
-  background-color: var(--message-bar-button-background-color-ghost-hover);
-}
-
-.ghost-button:enabled:hover:active {
-  background-color: var(--message-bar-button-background-color-ghost-active);
 }
 
 @media not (prefers-contrast) {
@@ -198,14 +169,5 @@
     .icon {
       --message-bar-icon-color: var(--icon-color-critical);
     }
-  }
-
-  .close {
-    fill: var(--message-bar-icon-close-color);
-  }
-
-  .ghost-button {
-    border: none;
-    background-color: transparent;
   }
 }
