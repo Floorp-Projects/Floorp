@@ -4,6 +4,8 @@
 
 :host {
   display: inline-block;
+  height: fit-content;
+  width: fit-content;
 }
 
 button {
@@ -133,6 +135,7 @@ button {
     width: var(--button-size-icon);
     height: var(--button-size-icon);
     padding: var(--button-padding-icon);
+    color: var(--icon-color);
 
     &[size=small] {
       width: var(--button-size-icon-small);
