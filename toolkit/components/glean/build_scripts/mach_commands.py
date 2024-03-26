@@ -167,9 +167,18 @@ def update_glean(command_context, version):
     topsrcdir = Path(command_context.topsrcdir)
 
     replace_in_file_or_die(
-        topsrcdir / "build.gradle",
-        r'gleanVersion = "[0-9.]+"',
-        f'gleanVersion = "{version}"',
+        topsrcdir
+        / "mobile"
+        / "android"
+        / "android-components"
+        / "plugins"
+        / "dependencies"
+        / "src"
+        / "main"
+        / "java"
+        / "DependenciesPlugin.kt",
+        r'mozilla_glean = "[0-9.]+"',
+        f'mozilla_glean = "{version}"',
     )
     replace_in_file_or_die(
         topsrcdir / "toolkit" / "components" / "glean" / "Cargo.toml",
