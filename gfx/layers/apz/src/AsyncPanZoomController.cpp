@@ -242,11 +242,6 @@ typedef PlatformSpecificStateBase
  * Setting this pref to true will cause APZ to handle mouse-dragging of
  * scrollbar thumbs.
  *
- * \li\b apz.drag.initial.enabled
- * Setting this pref to true will cause APZ to try to handle mouse-dragging
- * of scrollbar thumbs without an initial round-trip to content to start it
- * if possible. Only has an effect if apz.drag.enabled is also true.
- *
  * \li\b apz.drag.touch.enabled
  * Setting this pref to true will cause APZ to handle touch-dragging of
  * scrollbar thumbs. Only has an effect if apz.drag.enabled is also true.
