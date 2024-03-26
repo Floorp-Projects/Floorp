@@ -35,3 +35,41 @@ addUiaTask(
     );
   }
 );
+
+/**
+ * Test the FullDescription property.
+ */
+addUiaTask(
+  `
+<button id="button" aria-description="before">button</button>
+<div id="div">div</div>
+  `,
+  async function testFullDescription(browser) {
+    await definePyVar("doc", `getDocUia()`);
+    await assignPyVarToUiaWithId("button");
+    is(
+      await runPython(`button.CurrentFullDescription`),
+      "before",
+      "button has correct FullDescription"
+    );
+    await assignPyVarToUiaWithId("div");
+    is(
+      await runPython(`div.CurrentFullDescription`),
+      "",
+      "div has no FullDescription"
+    );
+
+    info("Setting aria-description on button");
+    await setUpWaitForUiaPropEvent("FullDescription", "button");
+    await invokeSetAttribute(browser, "button", "aria-description", "after");
+    await waitForUiaEvent();
+    ok(true, "Got FullDescription prop change event on button");
+    is(
+      await runPython(`button.CurrentFullDescription`),
+      "after",
+      "button has correct FullDescription"
+    );
+  },
+  // The IA2 -> UIA proxy doesn't support FullDescription.
+  { uiaEnabled: true, uiaDisabled: false }
+);
