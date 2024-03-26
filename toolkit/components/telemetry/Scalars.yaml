@@ -1757,23 +1757,6 @@ pwmgr:
     record_in_processes:
       - main
 
-bloburl:
-  resolve_stopped:
-    bug_numbers:
-      - 1843158
-    description: >
-      Counts how many times we do not resolve a blob URL
-      because of different partition keys
-    expires: "127"
-    kind: uint
-    notification_emails:
-      - amadan@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - content
-
 contentblocking:
   cryptomining_blocking_enabled:
     bug_numbers:

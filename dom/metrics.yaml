@@ -116,23 +116,6 @@ perf:
     send_in_pings:
       - pageload
 
-bloburl:
-  resolve_stopped:
-    type: counter
-    description: >
-      Counts how many times we do not resolve a blob URL
-      because of different partition keys
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1843158
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1843158
-    data_sensitivity:
-      - technical
-    notification_emails:
-      - amadan@mozilla.com
-    expires: 127
-    telemetry_mirror: BLOBURL_RESOLVE_STOPPED
-
 performance.pageload:
   load_time:
     type: timing_distribution
