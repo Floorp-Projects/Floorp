@@ -262,6 +262,64 @@ browser.backup:
       - 'firefox'
     record_in_processes:
       - 'main'
+  cookies_size:
+    bug_numbers:
+      - 1883740
+    description: >
+      The total file size of the cookies.sqlite db located in the current profile
+      directory, in kilobytes.
+    expires: never
+    kind: uint
+    notification_emails:
+      - mconley@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+  form_history_size:
+    bug_numbers:
+      - 1883740
+    description: >
+      The file size of the formhistory.sqlite db located in the current profile
+      directory, in kilobytes.
+    expires: never
+    kind: uint
+    notification_emails:
+      - mconley@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+  session_store_backups_directory_size:
+    bug_numbers:
+      - 1883740
+    description: >
+      The total size of the session store backups directory, in kilobytes.
+    expires: never
+    kind: uint
+    notification_emails:
+      - mconley@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+  session_store_size:
+    bug_numbers:
+      - 1883740
+    description: >
+      The size of uncompressed session store json, in kilobytes.
+    expires: never
+    kind: uint
+    notification_emails:
+      - mconley@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
 
 # The following section contains the browser engagement scalars.
 browser.engagement:

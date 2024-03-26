@@ -8,14 +8,20 @@
  *
  * They must extend the BackupResource base class.
  */
+import { CookiesBackupResource } from "resource:///modules/backup/CookiesBackupResource.sys.mjs";
 import { CredentialsAndSecurityBackupResource } from "resource:///modules/backup/CredentialsAndSecurityBackupResource.sys.mjs";
+import { FormHistoryBackupResource } from "resource:///modules/backup/FormHistoryBackupResource.sys.mjs";
 import { MiscDataBackupResource } from "resource:///modules/backup/MiscDataBackupResource.sys.mjs";
 import { PlacesBackupResource } from "resource:///modules/backup/PlacesBackupResource.sys.mjs";
 import { PreferencesBackupResource } from "resource:///modules/backup/PreferencesBackupResource.sys.mjs";
+import { SessionStoreBackupResource } from "resource:///modules/backup/SessionStoreBackupResource.sys.mjs";
 
 export {
+  CookiesBackupResource,
   CredentialsAndSecurityBackupResource,
+  FormHistoryBackupResource,
   MiscDataBackupResource,
   PlacesBackupResource,
   PreferencesBackupResource,
+  SessionStoreBackupResource,
 };
