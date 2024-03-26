@@ -38,7 +38,6 @@
 #include "gc/Heap-inl.h"
 #include "gc/Marking-inl.h"
 #include "gc/StableCellHasher-inl.h"
-#include "gc/StoreBuffer-inl.h"
 #include "vm/GeckoProfiler-inl.h"
 
 using namespace js;
@@ -1603,11 +1602,13 @@ void js::Nursery::traceRoots(AutoGCSession& session, TenuringTracer& mover) {
     MOZ_ASSERT(gc->storeBuffer().isEnabled());
     MOZ_ASSERT(gc->storeBuffer().isEmpty());
 
+    // Strings in the whole cell buffer must be traced first, in order to mark
+    // tenured dependent strings' bases as non-deduplicatable. The rest of
+    // nursery collection (whole non-string cells, edges, etc.) can happen
+    // later.
     startProfile(ProfileKey::TraceWholeCells);
     sb.traceWholeCells(mover);
     endProfile(ProfileKey::TraceWholeCells);
-
-    cellsToSweep = sb.releaseCellSweepSet();
 
     startProfile(ProfileKey::TraceValues);
     sb.traceValues(mover);
@@ -1879,21 +1880,8 @@ void js::Nursery::sweep() {
   }
 
   sweepMapAndSetObjects();
-  cellsToSweep.sweep();
-  CellSweepSet empty;
-  std::swap(cellsToSweep, empty);
 
   runtime()->caches().sweepAfterMinorGC(&trc);
-}
-
-void gc::CellSweepSet::sweep() {
-  if (head_) {
-    head_->sweepDependentStrings();
-    head_ = nullptr;
-  }
-  if (storage_) {
-    storage_->freeAll();
-  }
 }
 
 void js::Nursery::clear() {
