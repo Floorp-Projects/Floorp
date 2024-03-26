@@ -288,6 +288,7 @@ class WaitForUiaEvent(comtypes.COMObject):
     _com_interfaces_ = [
         uiaMod.IUIAutomationFocusChangedEventHandler,
         uiaMod.IUIAutomationPropertyChangedEventHandler,
+        uiaMod.IUIAutomationEventHandler,
     ]
 
     def __init__(self, *, eventId=None, property=None, match=None):
@@ -303,6 +304,15 @@ class WaitForUiaEvent(comtypes.COMObject):
         self._signal = ctypes.windll.kernel32.CreateEventW(None, True, False, None)
         if eventId == uiaMod.UIA_AutomationFocusChangedEventId:
             uiaClient.AddFocusChangedEventHandler(None, self)
+        elif eventId:
+            # Generic automation event.
+            uiaClient.AddAutomationEventHandler(
+                eventId,
+                uiaClient.GetRootElement(),
+                uiaMod.TreeScope_Subtree,
+                None,
+                self,
+            )
         elif property:
             uiaClient.AddPropertyChangedEventHandler(
                 uiaClient.GetRootElement(),
@@ -338,6 +348,9 @@ class WaitForUiaEvent(comtypes.COMObject):
     def HandlePropertyChangedEvent(self, sender, propertyId, newValue):
         self._checkMatch(sender)
 
+    def HandleAutomationEvent(self, sender, eventId):
+        self._checkMatch(sender)
+
     def wait(self):
         """Wait for and return the IUIAutomationElement which sent the desired
         event."""
@@ -360,3 +373,16 @@ class WaitForUiaEvent(comtypes.COMObject):
         if isinstance(self._matched, Exception):
             raise self._matched from self._matched
         return self._matched
+
+
+def getUiaPattern(element, patternName):
+    """Get a control pattern interface from an IUIAutomationElement."""
+    patternId = getattr(uiaMod, f"UIA_{patternName}PatternId")
+    unknown = element.GetCurrentPattern(patternId)
+    if not unknown:
+        return None
+    # GetCurrentPattern returns an IUnknown. We have to QI to the real
+    # interface.
+    # Get the comtypes interface object.
+    interface = getattr(uiaMod, f"IUIAutomation{patternName}Pattern")
+    return unknown.QueryInterface(interface)
