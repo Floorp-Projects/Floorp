@@ -275,6 +275,7 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
         "ISC",
         "MIT",
         "MPL-2.0",
+        "Unicode-3.0",
         "Unicode-DFS-2016",
         "Unlicense",
         "Zlib",
