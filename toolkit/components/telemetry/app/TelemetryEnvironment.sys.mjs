@@ -837,6 +837,7 @@ EnvironmentAddonBuilder.prototype = {
             hasBinaryComponents: false,
             installDay: Utils.millisecondsToDays(installDate.getTime()),
             signedState: addon.signedState,
+            signedTypes: JSON.stringify(addon.signedTypes),
             quarantineIgnoredByApp: enforceBoolean(
               addon.quarantineIgnoredByApp
             ),

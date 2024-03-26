@@ -715,6 +715,8 @@ add_task(async function test_addons() {
 add_task(async function test_signedAddon() {
   AddonTestUtils.useRealCertChecks = true;
 
+  const { PKCS7_WITH_SHA1 } = Ci.nsIAppSignatureInfo;
+
   const ADDON_INSTALL_URL = gDataRoot + "signed-webext.xpi";
   const ADDON_ID = "tel-signed-webext@tests.mozilla.org";
   const ADDON_INSTALL_DATE = truncateToDays(Date.now());
@@ -732,6 +734,7 @@ add_task(async function test_signedAddon() {
     installDay: ADDON_INSTALL_DATE,
     updateDay: ADDON_INSTALL_DATE,
     signedState: AddonManager.SIGNEDSTATE_SIGNED,
+    signedTypes: JSON.stringify([PKCS7_WITH_SHA1]),
     quarantineIgnoredByUser: false,
     // quarantineIgnoredByApp expected to be false because
     // the test addon is signed as a non-privileged (see signedState),
