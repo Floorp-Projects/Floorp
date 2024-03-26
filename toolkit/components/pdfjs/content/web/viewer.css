@@ -1080,6 +1080,8 @@
 }
 .visuallyHidden{
   position:absolute;
+  top:0;
+  left:0;
   border:0;
   margin:0;
   padding:0;
@@ -2260,9 +2262,34 @@
 
   #editorHighlightVisibility{
     display:flex;
-    justify-content:space-between;
-    align-items:center;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:8px;
     align-self:stretch;
+
+    .divider{
+      --divider-color:#d7d7db;
+
+      @media (prefers-color-scheme: dark){
+        --divider-color:#8f8f9d;
+      }
+
+      @media screen and (forced-colors: active){
+        --divider-color:CanvasText;
+      }
+
+      margin-block:4px;
+      width:100%;
+      height:1px;
+      background-color:var(--divider-color);
+    }
+
+    .toggler{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      align-self:stretch;
+    }
   }
 }
 
