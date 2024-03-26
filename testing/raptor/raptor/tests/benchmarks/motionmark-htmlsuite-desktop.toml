@@ -1,6 +1,6 @@
 [DEFAULT]
 alert_threshold = 2.0
-apps = "firefox, chrome, chromium, safari"
+apps = "firefox, chrome, safari"
 gecko_profile_interval = 1
 gecko_profile_features = "stackwalk,js,cpu,java,processcpu"
 gecko_profile_threads = "GeckoMain,Compositor,Renderer,SwComposite,RenderBackend,SceneBuilder,WrWorker,CanvasWorkers,TextureUpdate"
@@ -17,5 +17,5 @@ unit = "score"
 ["motionmark-htmlsuite"]
 
 ["motionmark-htmlsuite-ramp"]
-apps = "firefox, chrome, chromium, safari, custom-car"
+apps = "firefox, chrome, safari, custom-car"
 test_url = "http://<host>:<port>/MotionMark/developer.html?test-interval=30&display=minimal&tiles=big&controller=ramp&frame-rate=60&kalman-process-error=1&kalman-measurement-error=4&time-measurement=performance&suite-name=HTMLsuite&raptor=true&oskey={platform}"

@@ -1837,7 +1837,6 @@ class BrowsertimeOutput(PerftestOutput):
             if self.app in (
                 "chrome",
                 "chrome-m",
-                "chromium",
                 "custom-car",
                 "cstm-car-m",
             ):
@@ -1880,7 +1879,6 @@ class BrowsertimeOutput(PerftestOutput):
                         if self.app in (
                             "chrome",
                             "chrome-m",
-                            "chromium",
                             "custom-car",
                             "cstm-car-m",
                         ):

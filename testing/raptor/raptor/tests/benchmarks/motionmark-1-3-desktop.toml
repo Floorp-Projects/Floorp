@@ -1,6 +1,6 @@
 [DEFAULT]
 alert_threshold = 2.0
-apps = "firefox, chrome, chromium, safari, custom-car"
+apps = "firefox, chrome, safari, custom-car"
 gecko_profile_interval = 1
 gecko_profile_features = "stackwalk,js,cpu,java,processcpu"
 gecko_profile_threads = "GeckoMain,Compositor,Renderer,SwComposite,RenderBackend,SceneBuilder,WrWorker,CanvasWorkers,TextureUpdate"

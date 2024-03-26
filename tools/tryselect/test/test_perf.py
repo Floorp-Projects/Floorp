@@ -231,7 +231,6 @@ TEST_CATEGORIES = {
             },
             [
                 "Responsiveness android-p2 geckoview",
-                "Benchmarks desktop chromium",
             ],
         ),  # Default settings
         (
@@ -275,7 +274,6 @@ TEST_CATEGORIES = {
             },
             [
                 "Responsiveness android-p2 geckoview",
-                "Benchmarks desktop chromium",
                 "Benchmarks desktop firefox profiling",
                 "Talos desktop live-sites",
                 "Talos desktop profiling+swr",
@@ -324,7 +322,7 @@ TEST_CATEGORIES = {
         ),
         (
             {"live_sites": True, "chrome": True},
-            114,
+            90,
             {
                 "Benchmarks desktop": {
                     "raptor": [
@@ -345,15 +343,6 @@ TEST_CATEGORIES = {
                         "!profil",
                         "!safari",
                         "!m-car",
-                    ],
-                },
-                "Benchmarks desktop chromium": {
-                    "raptor": [
-                        "'browsertime 'benchmark",
-                        "!android 'shippable !-32 !clang",
-                        "'chromium",
-                        "!bytecode",
-                        "!profil",
                     ],
                 },
             },
@@ -397,7 +386,7 @@ TEST_CATEGORIES = {
         ),
         (
             {"android": True, "chrome": True},
-            138,
+            118,
             {
                 "Benchmarks desktop": {
                     "raptor": [
@@ -425,7 +414,7 @@ TEST_CATEGORIES = {
         ),
         (
             {"android": True, "chrome": True, "profile": True},
-            176,
+            156,
             {
                 "Benchmarks desktop": {
                     "raptor": [
@@ -450,7 +439,6 @@ TEST_CATEGORIES = {
                 "Resource Usage desktop profiling",
                 "DAMP (Devtools) desktop chrome",
                 "Resource Usage android",
-                "Resource Usage windows chromium",
             ],
         ),
         (
@@ -484,7 +472,6 @@ TEST_CATEGORIES = {
                 "Resource Usage desktop profiling",
                 "DAMP (Devtools) desktop chrome",
                 "Resource Usage android",
-                "Resource Usage windows chromium",
             ],
         ),
         # Show all available windows tests, no other platform should exist

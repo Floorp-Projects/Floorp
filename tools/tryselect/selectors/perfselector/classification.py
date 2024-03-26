@@ -31,13 +31,12 @@ class Platforms(ClassificationEnum):
 class Apps(ClassificationEnum):
     FIREFOX = {"value": "firefox", "index": 0}
     CHROME = {"value": "chrome", "index": 1}
-    CHROMIUM = {"value": "chromium", "index": 2}
-    GECKOVIEW = {"value": "geckoview", "index": 3}
-    FENIX = {"value": "fenix", "index": 4}
-    CHROME_M = {"value": "chrome-m", "index": 5}
-    SAFARI = {"value": "safari", "index": 6}
-    CHROMIUM_RELEASE = {"value": "custom-car", "index": 7}
-    CHROMIUM_RELEASE_M = {"value": "cstm-car-m", "index": 8}
+    GECKOVIEW = {"value": "geckoview", "index": 2}
+    FENIX = {"value": "fenix", "index": 3}
+    CHROME_M = {"value": "chrome-m", "index": 4}
+    SAFARI = {"value": "safari", "index": 5}
+    CHROMIUM_RELEASE = {"value": "custom-car", "index": 6}
+    CHROMIUM_RELEASE_M = {"value": "cstm-car-m", "index": 7}
 
 
 class Suites(ClassificationEnum):
@@ -133,12 +132,6 @@ class ClassificationProvider:
                 "restriction": check_for_chrome,
                 "platforms": [Platforms.DESKTOP.value],
             },
-            Apps.CHROMIUM.value: {
-                "query": "'chromium",
-                "negation": "!chrom",
-                "restriction": check_for_chrome,
-                "platforms": [Platforms.DESKTOP.value],
-            },
             Apps.GECKOVIEW.value: {
                 "query": "'geckoview",
                 "negation": "!geckoview",
@@ -202,7 +195,6 @@ class ClassificationProvider:
                 "apps": [  # XXX No live CaR tests
                     Apps.FIREFOX.value,
                     Apps.CHROME.value,
-                    Apps.CHROMIUM.value,
                     Apps.FENIX.value,
                     Apps.GECKOVIEW.value,
                     Apps.SAFARI.value,
@@ -299,7 +291,6 @@ class ClassificationProvider:
                     Suites.RAPTOR.value: [
                         Apps.FIREFOX.value,
                         Apps.CHROME.value,
-                        Apps.CHROMIUM.value,
                         Apps.FENIX.value,
                         Apps.GECKOVIEW.value,
                     ],
@@ -371,7 +362,6 @@ class ClassificationProvider:
                     Suites.RAPTOR.value: [
                         Apps.FIREFOX.value,
                         Apps.CHROME.value,
-                        Apps.CHROMIUM.value,
                         Apps.FENIX.value,
                         Apps.GECKOVIEW.value,
                     ],

@@ -1,5 +1,5 @@
 [DEFAULT]
-apps = "firefox, chrome, chromium, safari"
+apps = "firefox, chrome, safari"
 alert_threshold = 2.0
 browser_cycles = 1
 custom_data = true

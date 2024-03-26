@@ -76,18 +76,6 @@ VALID_MANIFESTS = [
         "type": "benchmark",
         "unit": "score",
     },
-    {
-        # benchmark test for chromium
-        "alert_threshold": 2.0,
-        "apps": "chromium",
-        "lower_is_better": False,
-        "manifest": "valid_details_1",
-        "measure": "fcp",
-        "page_cycles": 5,
-        "test_url": "http://www.test-url/goes/here",
-        "type": "benchmark",
-        "unit": "score",
-    },
 ]
 
 INVALID_MANIFESTS = [
@@ -116,18 +104,6 @@ INVALID_MANIFESTS = [
         "unit": "ms",
     },
     {
-        "alert_threshold": 2.0,
-        "apps": "chromium",
-        "lower_is_better": True,
-        "manifest": "invalid_details_1",
-        "measure": "fnbpaint, fcp",
-        "page_cycles": 25,
-        "playback": "mitmproxy",
-        "test_url": "http://www.test-url/goes/here",
-        "type": "pageload",
-        "unit": "ms",
-    },
-    {
         "alert_on": "nope",
         "alert_threshold": 2.0,
         "apps": "firefox",
@@ -144,9 +120,7 @@ INVALID_MANIFESTS = [
 ]
 
 
-@pytest.mark.parametrize(
-    "app", ["firefox", "chrome", "chromium", "geckoview", "refbrow", "fenix"]
-)
+@pytest.mark.parametrize("app", ["firefox", "chrome", "geckoview", "refbrow", "fenix"])
 def test_get_browser_test_list(app):
     test_list = get_browser_test_list(app, run_local=True)
     assert len(test_list) > 0

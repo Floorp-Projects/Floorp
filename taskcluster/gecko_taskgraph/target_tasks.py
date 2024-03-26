@@ -814,11 +814,7 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
                     if "tp6" in try_name and "essential" not in try_name:
                         return False
                     return True
-                if "chromium" in try_name:
-                    if "tp6" in try_name and "essential" not in try_name:
-                        return False
-                    return True
-                # chromium-as-release has it's own cron
+                # chromium-as-release has its own cron
                 if "custom-car" in try_name:
                     return False
                 if "-live" in try_name:

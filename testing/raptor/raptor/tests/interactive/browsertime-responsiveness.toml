@@ -2,7 +2,7 @@
 accept_zero_vismet = true
 alert_on = "fcp, loadtime, ContentfulSpeedIndex, PerceptualSpeedIndex, SpeedIndex, FirstVisualChange, LastVisualChange"
 alert_threshold = 2.0
-apps = "firefox, chrome, chromium, safari"
+apps = "firefox, chrome, safari"
 browser_cycles = 25
 gecko_profile_interval = 1
 interactive = true

@@ -181,7 +181,6 @@ class Perftest(object):
         if self.config["app"] in (
             "chrome",
             "chrome-m",
-            "chromium",
             "custom-car",
             "cstm-car-m",
         ):
@@ -811,8 +810,8 @@ class PerftestDesktop(Perftest):
 
     def desktop_chrome_args(self, test):
         """Returns cmd line options required to run pageload tests on Desktop Chrome
-        and Chromium. Also add the cmd line options to turn on the proxy and
-        ignore security certificate errors if using host localhost, 127.0.0.1.
+        and Chromium as Release (CaR). Also add the cmd line options to turn on the
+        proxy and ignore security certificate errors if using host localhost, 127.0.0.1.
         """
         chrome_args = ["--use-mock-keychain", "--no-default-browser-check"]
 
