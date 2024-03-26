@@ -2,49 +2,30 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 /**
  * Helper module alongside WatcherRegistry, which focus on updating the "sessionData" object.
  * This object is shared across processes and threads and have to be maintained in all these runtimes.
  */
 
-var EXPORTED_SYMBOLS = ["SessionDataHelpers"];
-
 const lazy = {};
+ChromeUtils.defineESModuleGetters(
+  lazy,
+  {
+    validateBreakpointLocation:
+      "resource://devtools/shared/validate-breakpoint.sys.mjs",
+  },
+  { global: "contextual" }
+);
 
-if (typeof module == "object") {
-  // Allow this JSM to also be loaded as a CommonJS module
-  // Because this module is used from the worker thread,
-  // (via target-actor-mixin), and workers can't load JSMs via ChromeUtils.import.
-  loader.lazyRequireGetter(
-    lazy,
-    "validateBreakpointLocation",
-    "resource://devtools/shared/validate-breakpoint.jsm",
-    true
+ChromeUtils.defineLazyGetter(lazy, "validateEventBreakpoint", () => {
+  const { loader } = ChromeUtils.importESModule(
+    "resource://devtools/shared/loader/Loader.sys.mjs",
+    { global: "contextual" }
   );
-
-  loader.lazyRequireGetter(
-    lazy,
-    "validateEventBreakpoint",
-    "resource://devtools/server/actors/utils/event-breakpoints.js",
-    true
-  );
-} else {
-  ChromeUtils.defineLazyGetter(lazy, "validateBreakpointLocation", () => {
-    return ChromeUtils.import(
-      "resource://devtools/shared/validate-breakpoint.jsm"
-    ).validateBreakpointLocation;
-  });
-  ChromeUtils.defineLazyGetter(lazy, "validateEventBreakpoint", () => {
-    const { loader } = ChromeUtils.importESModule(
-      "resource://devtools/shared/loader/Loader.sys.mjs"
-    );
-    return loader.require(
-      "resource://devtools/server/actors/utils/event-breakpoints.js"
-    ).validateEventBreakpoint;
-  });
-}
+  return loader.require(
+    "resource://devtools/server/actors/utils/event-breakpoints.js"
+  ).validateEventBreakpoint;
+});
 
 // List of all arrays stored in `sessionData`, which are replicated across processes and threads
 const SUPPORTED_DATA = {
@@ -151,7 +132,7 @@ function idFunction(v) {
   return v;
 }
 
-const SessionDataHelpers = {
+export const SessionDataHelpers = {
   SUPPORTED_DATA,
 
   /**
@@ -235,10 +216,3 @@ const SessionDataHelpers = {
     return true;
   },
 };
-
-// Allow this JSM to also be loaded as a CommonJS module
-// Because this module is used from the worker thread,
-// (via target-actor-mixin), and workers can't load JSMs.
-if (typeof module == "object") {
-  module.exports.SessionDataHelpers = SessionDataHelpers;
-}

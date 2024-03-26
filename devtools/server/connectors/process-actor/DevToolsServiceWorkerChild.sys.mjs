@@ -8,6 +8,8 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   loader: "resource://devtools/shared/loader/Loader.sys.mjs",
+  SessionDataHelpers:
+    "resource://devtools/server/actors/watcher/SessionDataHelpers.sys.mjs",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -16,11 +18,6 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/dom/workers/workerdebuggermanager;1",
   "nsIWorkerDebuggerManager"
 );
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  SessionDataHelpers:
-    "resource://devtools/server/actors/watcher/SessionDataHelpers.jsm",
-});
 
 ChromeUtils.defineLazyGetter(lazy, "DevToolsUtils", () =>
   lazy.loader.require("devtools/shared/DevToolsUtils")

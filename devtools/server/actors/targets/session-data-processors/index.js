@@ -4,9 +4,10 @@
 
 "use strict";
 
-const {
-  SessionDataHelpers,
-} = require("resource://devtools/server/actors/watcher/SessionDataHelpers.jsm");
+const { SessionDataHelpers } = ChromeUtils.importESModule(
+  "resource://devtools/server/actors/watcher/SessionDataHelpers.sys.mjs",
+  { global: "contextual" }
+);
 const { SUPPORTED_DATA } = SessionDataHelpers;
 
 const SessionDataProcessors = {};
