@@ -60,7 +60,7 @@ function JSTracerTrace(props) {
     // Attributes specific to function call returns
     returnedValue,
     relatedTraceId,
-    // See tracer.jsm FRAME_EXIT_REASONS
+    // See tracer.sys.mjs FRAME_EXIT_REASONS
     why,
 
     // Attributes specific to DOM Mutations

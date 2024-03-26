@@ -8,13 +8,10 @@ const {
   TYPES: { JSTRACER_STATE },
 } = require("resource://devtools/server/actors/resources/index.js");
 
-// Bug 1827382, as this module can be used from the worker thread,
-// the following JSM may be loaded by the worker loader until
-// we have proper support for ESM from workers.
-const {
-  addTracingListener,
-  removeTracingListener,
-} = require("resource://devtools/server/tracer/tracer.jsm");
+const { JSTracer } = ChromeUtils.importESModule(
+  "resource://devtools/server/tracer/tracer.sys.mjs",
+  { global: "contextual" }
+);
 
 const { LOG_METHODS } = require("resource://devtools/server/actors/tracer.js");
 const Targets = require("resource://devtools/server/actors/targets/index.js");
@@ -42,7 +39,7 @@ class TracingStateWatcher {
     this.tracingListener = {
       onTracingToggled: this.onTracingToggled.bind(this),
     };
-    addTracingListener(this.tracingListener);
+    JSTracer.addTracingListener(this.tracingListener);
   }
 
   /**
@@ -52,7 +49,7 @@ class TracingStateWatcher {
     if (!this.tracingListener) {
       return;
     }
-    removeTracingListener(this.tracingListener);
+    JSTracer.removeTracingListener(this.tracingListener);
   }
 
   /**

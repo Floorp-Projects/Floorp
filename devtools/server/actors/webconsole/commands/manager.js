@@ -11,13 +11,6 @@ loader.lazyRequireGetter(
   true
 );
 
-loader.lazyRequireGetter(
-  this,
-  ["DOM_MUTATIONS"],
-  "resource://devtools/server/tracer/tracer.jsm",
-  true
-);
-
 loader.lazyGetter(this, "l10n", () => {
   return new Localization(
     [
@@ -27,6 +20,16 @@ loader.lazyGetter(this, "l10n", () => {
     true
   );
 });
+
+const lazy = {};
+ChromeUtils.defineESModuleGetters(
+  lazy,
+  {
+    JSTracer: "resource://devtools/server/tracer/tracer.sys.mjs",
+  },
+  { global: "contextual" }
+);
+
 const USAGE_STRING_MAPPING = {
   block: "webconsole-commands-usage-block",
   trace: "webconsole-commands-usage-trace3",
@@ -888,7 +891,7 @@ WebConsoleCommandsManager.register({
       } else if (typeof args["dom-mutations"] == "string") {
         // Otherwise consider the value as coma seperated list and remove any white space.
         traceDOMMutations = args["dom-mutations"].split(",").map(e => e.trim());
-        const acceptedValues = Object.values(DOM_MUTATIONS);
+        const acceptedValues = Object.values(lazy.JSTracer.DOM_MUTATIONS);
         if (!traceDOMMutations.every(e => acceptedValues.includes(e))) {
           throw new Error(
             `:trace --dom-mutations only accept a list of strings whose values can be: ${acceptedValues}`

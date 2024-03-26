@@ -17,17 +17,6 @@
  * `JavaScriptTracer.onEnterFrame` method is hot codepath and should be reviewed accordingly.
  */
 
-"use strict";
-
-const EXPORTED_SYMBOLS = [
-  "startTracing",
-  "stopTracing",
-  "addTracingListener",
-  "removeTracingListener",
-  "NEXT_INTERACTION_MESSAGE",
-  "DOM_MUTATIONS",
-];
-
 const NEXT_INTERACTION_MESSAGE =
   "Waiting for next user interaction before tracing (next mousedown or keydown event)";
 
@@ -93,7 +82,8 @@ const customLazy = {
 
   get DistinctCompartmentDebugger() {
     const { addDebuggerToGlobal } = ChromeUtils.importESModule(
-      "resource://gre/modules/jsdebugger.sys.mjs"
+      "resource://gre/modules/jsdebugger.sys.mjs",
+      { global: "contextual" }
     );
     const systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
     const debuggerSandbox = Cu.Sandbox(systemPrincipal, {
@@ -1088,12 +1078,11 @@ function syncPause(duration) {
   });
 }
 
-// This JSM may be execute as CommonJS when loaded in the worker thread
-if (typeof module == "object") {
-  module.exports = {
-    startTracing,
-    stopTracing,
-    addTracingListener,
-    removeTracingListener,
-  };
-}
+export const JSTracer = {
+  startTracing,
+  stopTracing,
+  addTracingListener,
+  removeTracingListener,
+  NEXT_INTERACTION_MESSAGE,
+  DOM_MUTATIONS,
+};
