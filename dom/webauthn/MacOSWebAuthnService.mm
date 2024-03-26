@@ -338,6 +338,12 @@ nsTArray<uint8_t> NSDataToArray(NSData* data) {
       }
 #endif
     } else {
+      // The platform didn't tell us what transport was used, but we know it
+      // wasn't the internal transport. The transport response is not signed by
+      // the authenticator. It represents the "transports that the authenticator
+      // is believed to support, or an empty sequence if the information is
+      // unavailable". We believe macOS supports usb, so we return usb.
+      transports.AppendElement(u"usb"_ns);
       authenticatorAttachment.emplace(u"cross-platform"_ns);
     }
     mCallback->FinishMakeCredential(rawAttestationObject, credentialId,
