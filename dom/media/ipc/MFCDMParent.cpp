@@ -93,6 +93,7 @@ StaticMutex sFactoryMutex;
 static nsTHashMap<nsStringHashKey, ComPtr<IMFContentDecryptionModuleFactory>>
     sFactoryMap;
 static CopyableTArray<MFCDMCapabilitiesIPDL> sCapabilities;
+StaticMutex sCapabilitesMutex;
 static ComPtr<IUnknown> sMediaEngineClassFactory;
 
 // RAIIized PROPVARIANT. See
@@ -471,6 +472,7 @@ LPCWSTR MFCDMParent::GetCDMLibraryName(const nsString& aKeySystem) {
 
 /* static */
 void MFCDMParent::Shutdown() {
+  StaticMutexAutoLock lock(sCapabilitesMutex);
   sFactoryMap.Clear();
   sCapabilities.Clear();
   sMediaEngineClassFactory.Reset();
@@ -706,48 +708,48 @@ MFCDMParent::GetAllKeySystemsCapabilities() {
       new CapabilitiesPromise::Private(__func__);
   Unused << backgroundTaskQueue->Dispatch(NS_NewRunnableFunction(__func__, [p] {
     MFCDM_PARENT_SLOG("GetAllKeySystemsCapabilities");
-    if (sCapabilities.IsEmpty()) {
-      enum SecureLevel : bool {
-        Software = false,
-        Hardware = true,
-      };
-      const nsTArray<std::pair<nsString, SecureLevel>> kKeySystems{
-          std::pair<nsString, SecureLevel>(
-              NS_ConvertUTF8toUTF16(kPlayReadyKeySystemName),
-              SecureLevel::Software),
-          std::pair<nsString, SecureLevel>(
-              NS_ConvertUTF8toUTF16(kPlayReadyKeySystemHardware),
-              SecureLevel::Hardware),
-          std::pair<nsString, SecureLevel>(
-              NS_ConvertUTF8toUTF16(kPlayReadyHardwareClearLeadKeySystemName),
-              SecureLevel::Hardware),
-          std::pair<nsString, SecureLevel>(
-              NS_ConvertUTF8toUTF16(kWidevineExperimentKeySystemName),
-              SecureLevel::Hardware),
-          std::pair<nsString, SecureLevel>(
-              NS_ConvertUTF8toUTF16(kWidevineExperiment2KeySystemName),
-              SecureLevel::Hardware),
-      };
-      for (const auto& keySystem : kKeySystems) {
-        // Only check the capabilites if the relative prefs for the key system
-        // are ON.
-        if (IsPlayReadyKeySystemAndSupported(keySystem.first) ||
-            IsWidevineExperimentKeySystemAndSupported(keySystem.first)) {
-          MFCDMCapabilitiesIPDL* c = sCapabilities.AppendElement();
+    enum SecureLevel : bool {
+      Software = false,
+      Hardware = true,
+    };
+    const nsTArray<std::pair<nsString, SecureLevel>> kKeySystems{
+        std::pair<nsString, SecureLevel>(
+            NS_ConvertUTF8toUTF16(kPlayReadyKeySystemName),
+            SecureLevel::Software),
+        std::pair<nsString, SecureLevel>(
+            NS_ConvertUTF8toUTF16(kPlayReadyKeySystemHardware),
+            SecureLevel::Hardware),
+        std::pair<nsString, SecureLevel>(
+            NS_ConvertUTF8toUTF16(kPlayReadyHardwareClearLeadKeySystemName),
+            SecureLevel::Hardware),
+        std::pair<nsString, SecureLevel>(
+            NS_ConvertUTF8toUTF16(kWidevineExperimentKeySystemName),
+            SecureLevel::Hardware),
+        std::pair<nsString, SecureLevel>(
+            NS_ConvertUTF8toUTF16(kWidevineExperiment2KeySystemName),
+            SecureLevel::Hardware),
+    };
 
-          CapabilitesFlagSet flags;
-          if (keySystem.second == SecureLevel::Hardware) {
-            flags += CapabilitesFlag::HarewareDecryption;
-          }
-          flags += CapabilitesFlag::NeedHDCPCheck;
-          if (RequireClearLead(keySystem.first)) {
-            flags += CapabilitesFlag::NeedClearLeadCheck;
-          }
-          GetCapabilities(keySystem.first, flags, nullptr, *c);
+    CopyableTArray<MFCDMCapabilitiesIPDL> capabilitiesArr;
+    for (const auto& keySystem : kKeySystems) {
+      // Only check the capabilites if the relative prefs for the key system
+      // are ON.
+      if (IsPlayReadyKeySystemAndSupported(keySystem.first) ||
+          IsWidevineExperimentKeySystemAndSupported(keySystem.first)) {
+        MFCDMCapabilitiesIPDL* c = capabilitiesArr.AppendElement();
+        CapabilitesFlagSet flags;
+        if (keySystem.second == SecureLevel::Hardware) {
+          flags += CapabilitesFlag::HarewareDecryption;
         }
+        flags += CapabilitesFlag::NeedHDCPCheck;
+        if (RequireClearLead(keySystem.first)) {
+          flags += CapabilitesFlag::NeedClearLeadCheck;
+        }
+        GetCapabilities(keySystem.first, flags, nullptr, *c);
       }
     }
-    p->Resolve(sCapabilities, __func__);
+
+    p->Resolve(std::move(capabilitiesArr), __func__);
   }));
   return p;
 }
@@ -763,13 +765,31 @@ void MFCDMParent::GetCapabilities(const nsString& aKeySystem,
   aCapabilitiesOut.persistentState() = KeySystemConfig::Requirement::Required;
   aCapabilitiesOut.distinctiveID() = KeySystemConfig::Requirement::Required;
 
-  // Return empty capabilites for SWDRM on Windows 10 because it has the process
-  // leaking problem.
   const bool isHardwareDecryption =
       aFlags.contains(CapabilitesFlag::HarewareDecryption);
+  // Return empty capabilites for SWDRM on Windows 10 because it has the process
+  // leaking problem.
   if (!IsWin11OrLater() && !isHardwareDecryption) {
     return;
   }
+
+  StaticMutexAutoLock lock(sCapabilitesMutex);
+  // TODO : handle HDCP check properly, current implmentation won't be able to
+  // force calculating HDCP.
+  for (const auto& capabilities : sCapabilities) {
+    if (capabilities.keySystem().Equals(aKeySystem) &&
+        capabilities.isHardwareDecryption() == isHardwareDecryption) {
+      MFCDM_PARENT_SLOG(
+          "Return cached capabilities for %s (hardwareDecryption=%d)",
+          NS_ConvertUTF16toUTF8(aKeySystem).get(), isHardwareDecryption);
+      aCapabilitiesOut = capabilities;
+      return;
+    }
+  }
+
+  MFCDM_PARENT_SLOG(
+      "Query capabilities for %s from the factory (hardwareDecryption=%d)",
+      NS_ConvertUTF16toUTF8(aKeySystem).get(), isHardwareDecryption);
 
   ComPtr<IMFContentDecryptionModuleFactory> factory = aFactory;
   if (!factory) {
@@ -961,6 +981,9 @@ void MFCDMParent::GetCapabilities(const nsString& aKeySystem,
   aCapabilitiesOut.sessionTypes().AppendElement(
       KeySystemConfig::SessionType::PersistentLicense);
   aCapabilitiesOut.isHardwareDecryption() = isHardwareDecryption;
+
+  // Cache capabilities for reuse.
+  sCapabilities.AppendElement(aCapabilitiesOut);
 }
 
 mozilla::ipc::IPCResult MFCDMParent::RecvGetCapabilities(
