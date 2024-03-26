@@ -6867,6 +6867,129 @@ var gCSSProperties = {
       "left 10px top",
     ],
   },
+  offset: {
+    domProp: "offset",
+    inherited: false,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    subproperties: [
+      "offset-path",
+      "offset-distance",
+      "offset-rotate",
+      "offset-anchor",
+      "offset-position",
+    ],
+    initial_values: ["none"],
+    other_values: [
+      "none 30deg reverse",
+      "none 50px reverse 30deg",
+      "none calc(10px + 20%) auto",
+      "none reverse",
+      "none / left center",
+      "path('M 0 0 H 1') -200% auto",
+      "path('M 0 0 H 1') -200%",
+      "path('M 0 0 H 1') 50px",
+      "path('M 0 0 H 1') auto",
+      "path('M 0 0 H 1') reverse 30deg 50px",
+      "path('M 0 0 H 1')",
+      "path('m 20 0 h 100') -7rad 8px / auto",
+      "path('m 0 30 v 100') -7rad 8px / left top",
+      "path('m 0 0 h 100') -7rad 8px",
+      "path('M 0 0 H 100') 100px 0deg",
+      "top right / top left",
+      "top right ray(45deg closest-side)",
+      "50% 50% ray(0rad farthest-side)",
+    ],
+    invalid_values: [
+      "100px 0deg path('m 0 0 h 100')",
+      "30deg",
+      "auto 30deg 100px",
+      "auto / none",
+      "none /",
+      "none / 100px 20px 30deg",
+      "path('M 20 30 A 60 70 80') bottom",
+      "path('M 20 30 A 60 70 80') bottom top",
+      "path('M 20 30 A 60 70 80') 100px 200px",
+      "path('M 20 30 A 60 70 80') reverse auto",
+      "path('M 20 30 A 60 70 80') reverse 10px 30deg",
+      "path('M 20 30 A 60 70 80') /",
+    ],
+  },
+  "offset-anchor": {
+    domProp: "offsetAnchor",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: ["auto"],
+    other_values: [
+      "left bottom",
+      "center center",
+      "calc(20% + 10px) center",
+      "right 30em",
+      "10px 20%",
+      "left -10px top -20%",
+      "right 10% bottom 20em",
+    ],
+    invalid_values: ["none", "10deg", "left 10% top"],
+  },
+  "offset-distance": {
+    domProp: "offsetDistance",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: ["0"],
+    other_values: ["10px", "10%", "190%", "-280%", "calc(30px + 40%)"],
+    invalid_values: ["none", "45deg"],
+  },
+  "offset-path": {
+    domProp: "offsetPath",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: ["none"],
+    other_values: [
+      "ray(0deg)",
+      "ray(45deg closest-side)",
+      "ray(0rad farthest-side)",
+      "ray(0.5turn closest-corner contain)",
+      "ray(200grad farthest-corner)",
+      "ray(sides 180deg)",
+      "ray(contain farthest-side 180deg)",
+      "ray(calc(180deg - 45deg) farthest-side)",
+      "ray(0deg at center center)",
+      "ray(at 10% 10% 1rad)",
+    ]
+      .concat(pathValues.other_values)
+      .concat(basicShapeOtherValues)
+      .concat(basicShapeXywhRectValues),
+    invalid_values: [
+      "path('')",
+      "ray(closest-side)",
+      "ray(0deg, closest-side)",
+      "ray(contain 0deg closest-side contain)",
+    ].concat(pathValues.invalid_values),
+  },
+  "offset-position": {
+    domProp: "offsetPosition",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: ["normal"],
+    other_values: [
+      "auto",
+      "left bottom",
+      "center center",
+      "calc(20% + 10px) center",
+      "right 30em",
+      "10px 20%",
+      "left -10px top -20%",
+      "right 10% bottom 20em",
+    ],
+    invalid_values: ["none", "10deg", "left 10% top"],
+  },
+  "offset-rotate": {
+    domProp: "offsetRotate",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: ["auto"],
+    other_values: ["reverse", "0deg", "0rad reverse", "-45deg", "5turn auto"],
+    invalid_values: ["none", "10px", "reverse 0deg reverse", "reverse auto"],
+  },
   opacity: {
     domProp: "opacity",
     inherited: false,
@@ -13436,138 +13559,9 @@ gCSSProperties["scrollbar-width"] = {
   invalid_values: ["1px"],
 };
 
-gCSSProperties["offset"] = {
-  domProp: "offset",
-  inherited: false,
-  type: CSS_TYPE_TRUE_SHORTHAND,
-  subproperties: [
-    "offset-path",
-    "offset-distance",
-    "offset-rotate",
-    "offset-anchor",
-    "offset-position",
-  ],
-  initial_values: ["none"],
-  other_values: [
-    "none 30deg reverse",
-    "none 50px reverse 30deg",
-    "none calc(10px + 20%) auto",
-    "none reverse",
-    "none / left center",
-    "path('M 0 0 H 1') -200% auto",
-    "path('M 0 0 H 1') -200%",
-    "path('M 0 0 H 1') 50px",
-    "path('M 0 0 H 1') auto",
-    "path('M 0 0 H 1') reverse 30deg 50px",
-    "path('M 0 0 H 1')",
-    "path('m 20 0 h 100') -7rad 8px / auto",
-    "path('m 0 30 v 100') -7rad 8px / left top",
-    "path('m 0 0 h 100') -7rad 8px",
-    "path('M 0 0 H 100') 100px 0deg",
-    "top right / top left",
-    "top right ray(45deg closest-side)",
-    "50% 50% ray(0rad farthest-side)",
-  ],
-  invalid_values: [
-    "100px 0deg path('m 0 0 h 100')",
-    "30deg",
-    "auto 30deg 100px",
-    "auto / none",
-    "none /",
-    "none / 100px 20px 30deg",
-    "path('M 20 30 A 60 70 80') bottom",
-    "path('M 20 30 A 60 70 80') bottom top",
-    "path('M 20 30 A 60 70 80') 100px 200px",
-    "path('M 20 30 A 60 70 80') reverse auto",
-    "path('M 20 30 A 60 70 80') reverse 10px 30deg",
-    "path('M 20 30 A 60 70 80') /",
-  ],
-};
-
-gCSSProperties["offset-path"] = {
-  domProp: "offsetPath",
-  inherited: false,
-  type: CSS_TYPE_LONGHAND,
-  initial_values: ["none"],
-  other_values: [
-    "ray(0deg)",
-    "ray(45deg closest-side)",
-    "ray(0rad farthest-side)",
-    "ray(0.5turn closest-corner contain)",
-    "ray(200grad farthest-corner)",
-    "ray(sides 180deg)",
-    "ray(contain farthest-side 180deg)",
-    "ray(calc(180deg - 45deg) farthest-side)",
-    "ray(0deg at center center)",
-    "ray(at 10% 10% 1rad)",
-  ]
-    .concat(pathValues.other_values)
-    .concat(basicShapeOtherValues)
-    .concat(basicShapeXywhRectValues),
-  invalid_values: [
-    "path('')",
-    "ray(closest-side)",
-    "ray(0deg, closest-side)",
-    "ray(contain 0deg closest-side contain)",
-  ].concat(pathValues.invalid_values),
-};
-
 if (IsCSSPropertyPrefEnabled("layout.css.motion-path-url.enabled")) {
   gCSSProperties["offset-path"]["other_values"].push("url(#svgPath)");
 }
-
-gCSSProperties["offset-distance"] = {
-  domProp: "offsetDistance",
-  inherited: false,
-  type: CSS_TYPE_LONGHAND,
-  initial_values: ["0"],
-  other_values: ["10px", "10%", "190%", "-280%", "calc(30px + 40%)"],
-  invalid_values: ["none", "45deg"],
-};
-
-gCSSProperties["offset-rotate"] = {
-  domProp: "offsetRotate",
-  inherited: false,
-  type: CSS_TYPE_LONGHAND,
-  initial_values: ["auto"],
-  other_values: ["reverse", "0deg", "0rad reverse", "-45deg", "5turn auto"],
-  invalid_values: ["none", "10px", "reverse 0deg reverse", "reverse auto"],
-};
-
-gCSSProperties["offset-anchor"] = {
-  domProp: "offsetAnchor",
-  inherited: false,
-  type: CSS_TYPE_LONGHAND,
-  initial_values: ["auto"],
-  other_values: [
-    "left bottom",
-    "center center",
-    "calc(20% + 10px) center",
-    "right 30em",
-    "10px 20%",
-    "left -10px top -20%",
-    "right 10% bottom 20em",
-  ],
-  invalid_values: ["none", "10deg", "left 10% top"],
-};
-
-gCSSProperties["offset-position"] = {
-  domProp: "offsetPosition",
-  inherited: false,
-  type: CSS_TYPE_LONGHAND,
-  initial_values: ["normal"],
-  other_values: [
-    "auto",
-    "left bottom",
-    "center center",
-    "calc(20% + 10px) center",
-    "right 30em",
-    "10px 20%",
-    "left -10px top -20%",
-    "right 10% bottom 20em",
-  ],
-  invalid_values: ["none", "10deg", "left 10% top"],
-};
 
 {
   let linear_function_other_values = [
