@@ -735,8 +735,8 @@ ContentAnalysis::UrlFilterResult ContentAnalysis::FilterByUrlLists(
     nsIContentAnalysisRequest* aRequest) {
   EnsureParsedUrlFilters();
 
-  nsIURI* nsiUrl = nullptr;
-  MOZ_ALWAYS_SUCCEEDS(aRequest->GetUrl(&nsiUrl));
+  nsCOMPtr<nsIURI> nsiUrl;
+  MOZ_ALWAYS_SUCCEEDS(aRequest->GetUrl(getter_AddRefs(nsiUrl)));
   nsCString urlString;
   nsresult rv = nsiUrl->GetSpec(urlString);
   NS_ENSURE_SUCCESS(rv, UrlFilterResult::eDeny);
