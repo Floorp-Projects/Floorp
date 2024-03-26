@@ -773,15 +773,26 @@ void MFCDMParent::GetCapabilities(const nsString& aKeySystem,
     return;
   }
 
+  ComPtr<IMFContentDecryptionModuleFactory> factory = aFactory;
+  if (!factory) {
+    RETURN_VOID_IF_FAILED(GetOrCreateFactory(aKeySystem, factory));
+  }
+
   StaticMutexAutoLock lock(sCapabilitesMutex);
-  // TODO : handle HDCP check properly, current implmentation won't be able to
-  // force calculating HDCP.
-  for (const auto& capabilities : sCapabilities) {
+  for (auto& capabilities : sCapabilities) {
     if (capabilities.keySystem().Equals(aKeySystem) &&
         capabilities.isHardwareDecryption() == isHardwareDecryption) {
       MFCDM_PARENT_SLOG(
           "Return cached capabilities for %s (hardwareDecryption=%d)",
           NS_ConvertUTF16toUTF8(aKeySystem).get(), isHardwareDecryption);
+      if (capabilities.isHDCP22Compatible().isNothing() &&
+          aFlags.contains(CapabilitesFlag::NeedHDCPCheck)) {
+        const bool rv = IsHDCPVersionSupported(factory, aKeySystem,
+                                               dom::HDCPVersion::_2_2) == NS_OK;
+        MFCDM_PARENT_SLOG(
+            "Check HDCP 2.2 compatible (%d) for the cached capabilites", rv);
+        capabilities.isHDCP22Compatible() = Some(rv);
+      }
       aCapabilitiesOut = capabilities;
       return;
     }
@@ -790,11 +801,6 @@ void MFCDMParent::GetCapabilities(const nsString& aKeySystem,
   MFCDM_PARENT_SLOG(
       "Query capabilities for %s from the factory (hardwareDecryption=%d)",
       NS_ConvertUTF16toUTF8(aKeySystem).get(), isHardwareDecryption);
-
-  ComPtr<IMFContentDecryptionModuleFactory> factory = aFactory;
-  if (!factory) {
-    RETURN_VOID_IF_FAILED(GetOrCreateFactory(aKeySystem, factory));
-  }
 
   // Widevine requires codec type to be four CC, PlayReady is fine with both.
   static auto convertCodecToFourCC =
@@ -970,7 +976,8 @@ void MFCDMParent::GetCapabilities(const nsString& aKeySystem,
   if (aFlags.contains(CapabilitesFlag::NeedHDCPCheck) &&
       IsHDCPVersionSupported(factory, aKeySystem, dom::HDCPVersion::_2_2) ==
           NS_OK) {
-    aCapabilitiesOut.isHDCP22Compatible() = true;
+    MFCDM_PARENT_SLOG("Capabilites is compatible with HDCP 2.2");
+    aCapabilitiesOut.isHDCP22Compatible() = Some(true);
   }
 
   // TODO: don't hardcode
