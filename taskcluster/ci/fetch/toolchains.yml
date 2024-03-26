@@ -668,3 +668,10 @@ libxml2:
         artifact-name: libxml2.tar.zst
         strip-components: 1
         add-prefix: libxml2/
+
+mozilla-pdf.js:
+    description: Mozilla pdf.js Github repo
+    fetch:
+        type: git
+        repo: https://github.com/mozilla/pdf.js
+        revision: d64f334f98d4b7f1c2e09a731a63b68629c946f9
