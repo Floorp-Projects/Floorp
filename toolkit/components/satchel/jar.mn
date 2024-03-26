@@ -1,0 +1,10 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+toolkit.jar:
+  content/global/megalist/megalist.css        (megalist/content/megalist.css)
+  content/global/megalist/megalist.html       (megalist/content/megalist.html)
+  content/global/megalist/MegalistView.mjs    (megalist/content/MegalistView.mjs)
+  content/global/megalist/search-input.mjs    (megalist/content/search-input.mjs)
+  content/global/megalist/VirtualizedList.mjs (megalist/content/VirtualizedList.mjs)

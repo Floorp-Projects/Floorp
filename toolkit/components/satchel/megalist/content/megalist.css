@@ -1,0 +1,208 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Bug 1869845 - Styles in this file are still experimental!  */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  max-height: 100vh;
+
+  > search-input {
+    margin: 20px;
+  }
+}
+
+virtualized-list {
+  position: relative;
+  overflow: auto;
+  margin: 20px;
+
+  .lines-container {
+    padding-inline-start: unset;
+  }
+}
+
+.line {
+  display: flex;
+  align-items: stretch;
+  position: absolute;
+  width: 100%;
+  user-select: none;
+  box-sizing: border-box;
+  height: 64px;
+
+  background-color: var(--in-content-box-background-odd);
+  border-inline: 1px solid var(--in-content-border-color);
+
+  color: var(--in-content-text-color);
+
+  &.start {
+    border-block-start: 1px solid var(--in-content-border-color);
+    border-start-start-radius: 8px;
+    border-start-end-radius: 8px;
+  }
+
+  &.end {
+    border-block-end: 1px solid var(--in-content-border-color);
+    border-end-start-radius: 8px;
+    border-end-end-radius: 8px;
+    height: 54px;
+  }
+
+  > .menuButton {
+    position: relative;
+    visibility: hidden;
+
+    > button {
+      border: none;
+      margin-inline-start: 2px;
+      padding: 2px;
+      background-color: transparent;
+      /* Fix: too lazy to load the svg  */
+      width: 32px;
+      color: unset;
+    }
+
+    > .menuPopup {
+      position: absolute;
+      inset-inline-end: 0;
+      box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+      z-index: 1;
+      background-color: var(--in-content-table-background);
+      padding: 4px;
+
+      > .separator {
+        border-block-start: 1px solid var(--in-content-border-color);
+        margin: 4px 0;
+      }
+
+      > button {
+        text-align: start;
+        border-style: none;
+        padding: 12px;
+        margin-block-end: 2px;
+        width: 100%;
+        text-wrap: nowrap;
+      }
+    }
+  }
+
+  > .content {
+    flex-grow: 1;
+
+    > div {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding-inline-start: 10px;
+
+      &:last-child {
+        padding-block-end: 10px;
+      }
+    }
+
+    > .icon {
+      margin-inline-start: 4px;
+      width: 16px;
+      height: 16px;
+      -moz-context-properties: fill;
+      fill: currentColor;
+    }
+
+    > .label {
+      color: var(--text-color-deemphasized);
+      padding-block: 2px 4px;
+    }
+
+    > .value {
+      user-select: text;
+
+      > .icon {
+        -moz-context-properties: fill;
+        fill: currentColor;
+        width: auto;
+        height: 16px;
+        margin-inline: 4px;
+        vertical-align: text-bottom;
+      }
+
+      > .icon:not([src]) {
+        display: none;
+      }
+
+      &:is(a) {
+        color: currentColor;
+      }
+    }
+
+    > .stickers {
+      text-align: end;
+      margin-block-start: 2px;
+
+      > span {
+        padding: 2px;
+        margin-inline-end: 2px;
+      }
+
+      /* Hard-coded colors will be addressed in FXCM-1013 */
+      > span.risk {
+        background-color: slateblue;
+        border: 1px solid darkslateblue;
+        color: whitesmoke;
+      }
+
+      > span.warning {
+        background-color: firebrick;
+        border: 1px solid maroon;
+        color: whitesmoke;
+      }
+    }
+
+    &.section {
+      font-size: larger;
+
+      > .label {
+        display: inline-block;
+        margin: 0;
+        color: unset;
+      }
+
+      > .value {
+        margin-inline-end: 8px;
+        text-align: end;
+        font-size: smaller;
+        color: var(--text-color-deemphasized);
+        user-select: unset;
+      }
+    }
+  }
+
+  &.selected {
+    color: var(--in-content-item-selected-text);
+    background-color: var(--in-content-item-selected);
+
+    > .menuButton {
+      visibility: inherit;
+    }
+  }
+
+  &:hover {
+    color: var(--in-content-item-hover-text);
+    background-color: var(--in-content-item-hover);
+
+    > .menuButton {
+      visibility: visible;
+    }
+  }
+}
+
+.search {
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid var(--in-content-border-color);
+  box-sizing: border-box;
+  width: 100%;
+}

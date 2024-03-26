@@ -224,6 +224,22 @@ let JSPROCESSACTORS = {
  * available at https://firefox-source-docs.mozilla.org/dom/ipc/jsactors.html
  */
 let JSWINDOWACTORS = {
+  Megalist: {
+    parent: {
+      esModuleURI: "resource://gre/actors/MegalistParent.sys.mjs",
+    },
+    child: {
+      esModuleURI: "resource://gre/actors/MegalistChild.sys.mjs",
+      events: {
+        DOMContentLoaded: {},
+      },
+    },
+    includeChrome: true,
+    matches: ["chrome://global/content/megalist/megalist.html"],
+    allFrames: true,
+    enablePreference: "browser.megalist.enabled",
+  },
+
   AboutLogins: {
     parent: {
       esModuleURI: "resource:///actors/AboutLoginsParent.sys.mjs",

@@ -53,6 +53,14 @@ var SidebarUI = {
           menuId: "menu_tabsSidebar",
         }),
       ],
+      [
+        "viewMegalistSidebar",
+        makeSidebar({
+          elementId: "sidebar-switcher-megalist",
+          url: "chrome://global/content/megalist/megalist.html",
+          menuId: "menu_megalistSidebar",
+        }),
+      ],
     ]));
   },
 
@@ -130,6 +138,32 @@ var SidebarUI = {
     Services.obs.addObserver(this, "intl:app-locales-changed");
 
     this._initDeferred.resolve();
+  },
+
+  toggleMegalistItem() {
+    const sideMenuPopupItem = document.getElementById(
+      "sidebar-switcher-megalist"
+    );
+    sideMenuPopupItem.style.display = Services.prefs.getBoolPref(
+      "browser.megalist.enabled",
+      false
+    )
+      ? ""
+      : "none";
+  },
+
+  setMegalistMenubarVisibility(aEvent) {
+    const popup = aEvent.target;
+    if (popup != aEvent.currentTarget) {
+      return;
+    }
+
+    // Show the megalist item if enabled
+    const megalistItem = popup.querySelector("#menu_megalistSidebar");
+    megalistItem.hidden = !Services.prefs.getBoolPref(
+      "browser.megalist.enabled",
+      false
+    );
   },
 
   uninit() {
@@ -251,6 +285,7 @@ var SidebarUI = {
   },
 
   showSwitcherPanel() {
+    this.toggleMegalistItem();
     this._switcherPanel.addEventListener(
       "popuphiding",
       () => {

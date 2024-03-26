@@ -26,6 +26,12 @@ LOCAL_INCLUDES += [
     "../build",
 ]
 
+JAR_MANIFESTS += ["jar.mn"]
+
+DIRS += [
+    "megalist",
+]
+
 EXTRA_JS_MODULES += [
     "FillHelpers.sys.mjs",
     "FormHistory.sys.mjs",
