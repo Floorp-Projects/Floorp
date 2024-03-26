@@ -98,7 +98,7 @@ URLQueryStringStripper::StripForCopyOrShare(nsIURI* aURI,
 
   URLParams params;
 
-  URLParams::Parse(query, [&](nsString&& name, nsString&& value) {
+  URLParams::Parse(query, true, [&](nsString&& name, nsString&& value) {
     nsAutoString lowerCaseName;
     ToLowerCase(name, lowerCaseName);
     // Look through the global rules.
@@ -308,7 +308,7 @@ nsresult URLQueryStringStripper::StripQueryString(nsIURI* aURI,
 
   URLParams params;
 
-  URLParams::Parse(query, [&](nsString&& name, nsString&& value) {
+  URLParams::Parse(query, false, [&](nsString&& name, nsString&& value) {
     nsAutoString lowerCaseName;
 
     ToLowerCase(name, lowerCaseName);
