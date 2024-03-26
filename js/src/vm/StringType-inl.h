@@ -19,7 +19,6 @@
 #include "vm/StaticStrings.h"
 
 #include "gc/GCContext-inl.h"
-#include "gc/Marking-inl.h"
 #include "gc/StoreBuffer-inl.h"
 #include "vm/JSContext-inl.h"
 
@@ -531,19 +530,6 @@ inline js::PropertyName* JSLinearString::toPropertyName(JSContext* cx) {
   return atom->asPropertyName();
 }
 
-// String characters are movable in the following cases:
-//
-// 1. Inline nursery strings (moved during promotion)
-// 2. Nursery strings with nursery chars (moved during promotion)
-// 3. Nursery strings that are deduplicated (moved during promotion)
-// 4. Inline tenured strings (moved during compaction)
-//
-// This method does not consider #3, because if this method returns true and the
-// caller does not want the characters to move, it can fix them in place by
-// setting the nondeduplicatable bit. (If the bit were already taken into
-// consideration, then the caller wouldn't know whether the movability is
-// "fixable" or not. If it is *only* movable because of the lack of the bit
-// being set, then it is fixable by setting the bit.)
 bool JSLinearString::hasMovableChars() const {
   const JSLinearString* topBase = this;
   while (topBase->hasBase()) {
