@@ -669,6 +669,13 @@ class DisplayToolbar internal constructor(
     }
 
     /**
+     * Sets the horizontal padding.
+     */
+    fun setHorizontalPadding(horizontalPadding: Int) {
+        rootView.setPadding(horizontalPadding, 0, horizontalPadding, 0)
+    }
+
+    /**
      * Hides the page action separator in display mode.
      */
     fun hidePageActionSeparator() {

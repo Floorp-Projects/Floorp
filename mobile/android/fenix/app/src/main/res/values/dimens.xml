@@ -90,6 +90,8 @@
     <dimen name="browser_fragment_toolbar_elevation">16dp</dimen>
     <!-- The download dialogs are shown above the toolbar so they need a bigger elevation. -->
     <dimen name="browser_fragment_download_dialog_elevation">17dp</dimen>
+    <!-- The size of padding for the display toolbar. -->
+    <dimen name="browser_fragment_display_toolbar_padding">8dp</dimen>
 
     <!-- Search Fragment -->
     <dimen name="search_fragment_clipboard_item_height">56dp</dimen>

@@ -350,6 +350,13 @@ class BrowserToolbar @JvmOverloads constructor(
     }
 
     /**
+     * Sets the horizontal padding in display mode.
+     */
+    override fun setDisplayHorizontalPadding(horizontalPadding: Int) {
+        display.setHorizontalPadding(horizontalPadding)
+    }
+
+    /**
      * Hides the page action separator in display/edit mode.
      */
     override fun hidePageActionSeparator() {
