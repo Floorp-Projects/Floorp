@@ -4,7 +4,9 @@
 
 package org.mozilla.fenix.browser.tabstrip
 
+import android.graphics.Bitmap
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -37,6 +39,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -297,7 +300,10 @@ private fun TabItem(
 
                 Spacer(modifier = Modifier.size(8.dp))
 
-                TabStripIcon(state.url)
+                TabStripIcon(
+                    url = state.url,
+                    icon = state.icon,
+                )
 
                 Spacer(modifier = Modifier.size(8.dp))
 
@@ -332,17 +338,30 @@ private fun TabItem(
 }
 
 @Composable
-private fun TabStripIcon(url: String) {
+private fun TabStripIcon(
+    url: String,
+    icon: Bitmap?,
+) {
     Box(
         modifier = Modifier
             .size(tabStripIconSize)
             .clip(CircleShape),
         contentAlignment = Alignment.Center,
     ) {
-        Favicon(
-            url = url,
-            size = tabStripIconSize,
-        )
+        if (icon != null && !icon.isRecycled) {
+            Image(
+                bitmap = icon.asImageBitmap(),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(tabStripIconSize)
+                    .clip(CircleShape),
+            )
+        } else {
+            Favicon(
+                url = url,
+                size = tabStripIconSize,
+            )
+        }
     }
 }
 

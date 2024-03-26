@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.browser.tabstrip
 
+import android.graphics.Bitmap
 import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
@@ -27,6 +28,7 @@ data class TabStripState(
  * @property id The id of the tab.
  * @property title The title of the tab.
  * @property url The url of the tab.
+ * @property icon The icon of the tab.
  * @property isPrivate Whether or not the tab is private.
  * @property isSelected Whether or not the tab is selected.
  */
@@ -34,6 +36,7 @@ data class TabStripItem(
     val id: String,
     val title: String,
     val url: String,
+    val icon: Bitmap? = null,
     val isPrivate: Boolean,
     val isSelected: Boolean,
 )
@@ -56,6 +59,7 @@ internal fun BrowserState.toTabStripState(
             id = it.id,
             title = it.content.title.ifBlank { it.content.url },
             url = it.content.url,
+            icon = it.content.icon,
             isPrivate = it.content.private,
             isSelected = !isSelectDisabled && it.id == selectedTabId,
         )
