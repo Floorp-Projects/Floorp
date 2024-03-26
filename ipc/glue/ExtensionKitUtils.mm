@@ -93,7 +93,8 @@ void ExtensionKitProcess::Invalidate() {
                [&](auto* aProcessObject) { [aProcessObject invalidate]; });
 }
 
-UniqueBEProcessCapabilityGrant ExtensionKitProcess::GrantForegroundCapability() {
+UniqueBEProcessCapabilityGrant
+ExtensionKitProcess::GrantForegroundCapability() {
   NSError* error = nullptr;
   BEProcessCapability* cap = [BEProcessCapability foreground];
   id<BEProcessCapabilityGrant> grant = nil;
@@ -109,7 +110,8 @@ ExtensionKitProcess::ExtensionKitProcess(const ExtensionKitProcess& aOther)
                [&](auto* aProcessObject) { [aProcessObject retain]; });
 }
 
-ExtensionKitProcess& ExtensionKitProcess::operator=(const ExtensionKitProcess& aOther) {
+ExtensionKitProcess& ExtensionKitProcess::operator=(
+    const ExtensionKitProcess& aOther) {
   Kind oldKind = std::exchange(mKind, aOther.mKind);
   void* oldProcessObject = std::exchange(mProcessObject, aOther.mProcessObject);
   SwitchObject(mKind, mProcessObject,
