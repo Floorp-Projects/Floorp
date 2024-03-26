@@ -13445,6 +13445,7 @@ gCSSProperties["offset"] = {
     "offset-distance",
     "offset-rotate",
     "offset-anchor",
+    "offset-position",
   ],
   initial_values: ["none"],
   other_values: [
@@ -13463,6 +13464,9 @@ gCSSProperties["offset"] = {
     "path('m 0 30 v 100') -7rad 8px / left top",
     "path('m 0 0 h 100') -7rad 8px",
     "path('M 0 0 H 100') 100px 0deg",
+    "top right / top left",
+    "top right ray(45deg closest-side)",
+    "50% 50% ray(0rad farthest-side)",
   ],
   invalid_values: [
     "100px 0deg path('m 0 0 h 100')",
@@ -13485,12 +13489,7 @@ gCSSProperties["offset-path"] = {
   inherited: false,
   type: CSS_TYPE_LONGHAND,
   initial_values: ["none"],
-  other_values: [...pathValues.other_values],
-  invalid_values: ["path('')"].concat(pathValues.invalid_values),
-};
-
-if (IsCSSPropertyPrefEnabled("layout.css.motion-path-ray.enabled")) {
-  gCSSProperties["offset-path"]["other_values"].push(
+  other_values: [
     "ray(0deg)",
     "ray(45deg closest-side)",
     "ray(0rad farthest-side)",
@@ -13500,22 +13499,18 @@ if (IsCSSPropertyPrefEnabled("layout.css.motion-path-ray.enabled")) {
     "ray(contain farthest-side 180deg)",
     "ray(calc(180deg - 45deg) farthest-side)",
     "ray(0deg at center center)",
-    "ray(at 10% 10% 1rad)"
-  );
-
-  gCSSProperties["offset-path"]["invalid_values"].push(
+    "ray(at 10% 10% 1rad)",
+  ]
+    .concat(pathValues.other_values)
+    .concat(basicShapeOtherValues)
+    .concat(basicShapeXywhRectValues),
+  invalid_values: [
+    "path('')",
     "ray(closest-side)",
     "ray(0deg, closest-side)",
-    "ray(contain 0deg closest-side contain)"
-  );
-}
-
-if (IsCSSPropertyPrefEnabled("layout.css.motion-path-basic-shapes.enabled")) {
-  gCSSProperties["offset-path"]["other_values"].push(
-    ...basicShapeOtherValues,
-    ...basicShapeXywhRectValues
-  );
-}
+    "ray(contain 0deg closest-side contain)",
+  ].concat(pathValues.invalid_values),
+};
 
 if (IsCSSPropertyPrefEnabled("layout.css.motion-path-url.enabled")) {
   gCSSProperties["offset-path"]["other_values"].push("url(#svgPath)");
@@ -13556,37 +13551,23 @@ gCSSProperties["offset-anchor"] = {
   invalid_values: ["none", "10deg", "left 10% top"],
 };
 
-if (
-  IsCSSPropertyPrefEnabled("layout.css.motion-path-offset-position.enabled")
-) {
-  gCSSProperties["offset"]["subproperties"].push("offset-position");
-  gCSSProperties["offset"]["other_values"].push("top right / top left");
-
-  if (IsCSSPropertyPrefEnabled("layout.css.motion-path-ray.enabled")) {
-    gCSSProperties["offset"]["other_values"].push(
-      "top right ray(45deg closest-side)",
-      "50% 50% ray(0rad farthest-side)"
-    );
-  }
-
-  gCSSProperties["offset-position"] = {
-    domProp: "offsetPosition",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: ["normal"],
-    other_values: [
-      "auto",
-      "left bottom",
-      "center center",
-      "calc(20% + 10px) center",
-      "right 30em",
-      "10px 20%",
-      "left -10px top -20%",
-      "right 10% bottom 20em",
-    ],
-    invalid_values: ["none", "10deg", "left 10% top"],
-  };
-}
+gCSSProperties["offset-position"] = {
+  domProp: "offsetPosition",
+  inherited: false,
+  type: CSS_TYPE_LONGHAND,
+  initial_values: ["normal"],
+  other_values: [
+    "auto",
+    "left bottom",
+    "center center",
+    "calc(20% + 10px) center",
+    "right 30em",
+    "10px 20%",
+    "left -10px top -20%",
+    "right 10% bottom 20em",
+  ],
+  invalid_values: ["none", "10deg", "left 10% top"],
+};
 
 {
   let linear_function_other_values = [

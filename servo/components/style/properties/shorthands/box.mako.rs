@@ -159,13 +159,7 @@ ${helpers.two_properties_shorthand(
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
     ) -> Result<Longhands, ParseError<'i>> {
-        let offset_position =
-            if static_prefs::pref!("layout.css.motion-path-offset-position.enabled") {
-                input.try_parse(|i| OffsetPosition::parse(context, i)).ok()
-            } else {
-                None
-            };
-
+        let offset_position = input.try_parse(|i| OffsetPosition::parse(context, i)).ok();
         let offset_path = input.try_parse(|i| OffsetPath::parse(context, i)).ok();
 
         // Must have one of [offset-position, offset-path].
@@ -212,24 +206,19 @@ ${helpers.two_properties_shorthand(
 
     impl<'a> ToCss for LonghandsToSerialize<'a>  {
         fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result where W: fmt::Write {
-            if let Some(offset_position) = self.offset_position {
-                // The basic concept is: we must serialize offset-position or offset-path group.
-                // offset-path group means "offset-path offset-distance offset-rotate".
-                let must_serialize_path = *self.offset_path != OffsetPath::None
-                    || (!self.offset_distance.is_zero() || !self.offset_rotate.is_auto());
-                let position_is_default = matches!(offset_position, OffsetPosition::Normal);
-                if !position_is_default || !must_serialize_path {
-                    offset_position.to_css(dest)?;
-                }
+            // The basic concept is: we must serialize offset-position or offset-path group.
+            // offset-path group means "offset-path offset-distance offset-rotate".
+            let must_serialize_path = *self.offset_path != OffsetPath::None
+                || (!self.offset_distance.is_zero() || !self.offset_rotate.is_auto());
+            let position_is_default = matches!(self.offset_position, OffsetPosition::Normal);
+            if !position_is_default || !must_serialize_path {
+                self.offset_position.to_css(dest)?;
+            }
 
-                if must_serialize_path {
-                    if !position_is_default {
-                        dest.write_char(' ')?;
-                    }
-                    self.offset_path.to_css(dest)?;
+            if must_serialize_path {
+                if !position_is_default {
+                    dest.write_char(' ')?;
                 }
-            } else {
-                // If the pref is off, we always show offset-path.
                 self.offset_path.to_css(dest)?;
             }
 
