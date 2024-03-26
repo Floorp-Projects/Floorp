@@ -16,7 +16,6 @@ sidebar-history-date-this-month =
   .heading = { DATETIME($date, dateStyle: "full") }
 sidebar-history-date-prev-month =
   .heading = { DATETIME($date, month: "long", year: "numeric") }
-##
 
 # "Search" is a noun (as in "Results of the search for")
 # Variables:
