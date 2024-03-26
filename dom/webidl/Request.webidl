@@ -12,6 +12,11 @@ typedef unsigned long nsContentPolicyType;
 
 [Exposed=(Window,Worker)]
 interface Request {
+  /**
+   * Note that Requests created from system principal (ie "privileged"/chrome)
+   * code will default to omitting credentials. You can override this behaviour
+   * using the ``credentials`` member on the ``init`` dictionary.
+   */
   [Throws]
   constructor(RequestInfo input, optional RequestInit init = {});
 
@@ -57,6 +62,10 @@ dictionary RequestInit {
   USVString referrer;
   ReferrerPolicy referrerPolicy;
   RequestMode mode;
+  /**
+   * If not set, defaults to "same-origin", except for system principal (chrome)
+   * requests where the default is "omit".
+   */
   RequestCredentials credentials;
   RequestCache cache;
   RequestRedirect redirect;

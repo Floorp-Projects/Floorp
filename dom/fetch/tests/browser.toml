@@ -2,6 +2,11 @@
 
 ["browser_blobFromFile.js"]
 
+["browser_default_credentialless_fetch.js"]
+support-files = [
+  "store_header.sjs",
+]
+
 ["browser_origin_trial_coep_credentialless_cache.js"]
 support-files = [
   "open_credentialless_document.sjs",

@@ -113,6 +113,7 @@ class Request final : public FetchBody<Request>, public nsWrapperCache {
                                          JSContext* aCx,
                                          const RequestOrUSVString& aInput,
                                          const RequestInit& aInit,
+                                         const CallerType aCallerType,
                                          ErrorResult& rv);
 
   nsIGlobalObject* GetParentObject() const { return mOwner; }
