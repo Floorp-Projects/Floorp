@@ -921,32 +921,32 @@ static void TraceThisAndArguments(JSTracer* trc, const JSJitFrameIter& frame,
     return;
   }
 
-  size_t nargs = layout->numActualArgs();
-  size_t nformals = 0;
-
   JSFunction* fun = CalleeTokenToFunction(layout->calleeToken());
+
+  size_t numFormals = fun->nargs();
+  size_t numArgs = std::max(layout->numActualArgs(), numFormals);
+  size_t firstArg = 0;
+
   if (frame.type() != FrameType::JSJitToWasm &&
       !frame.isExitFrameLayout<CalledFromJitExitFrameLayout>() &&
       !fun->nonLazyScript()->mayReadFrameArgsDirectly()) {
-    nformals = fun->nargs();
+    firstArg = numFormals;
   }
-
-  size_t newTargetOffset = std::max(nargs, fun->nargs());
 
   Value* argv = layout->thisAndActualArgs();
 
   // Trace |this|.
   TraceRoot(trc, argv, "ion-thisv");
 
-  // Trace actual arguments beyond the formals. Note + 1 for thisv.
-  for (size_t i = nformals + 1; i < nargs + 1; i++) {
-    TraceRoot(trc, &argv[i], "ion-argv");
+  // Trace arguments. Note + 1 for thisv.
+  for (size_t i = firstArg; i < numArgs; i++) {
+    TraceRoot(trc, &argv[i + 1], "ion-argv");
   }
 
   // Always trace the new.target from the frame. It's not in the snapshots.
   // +1 to pass |this|
   if (CalleeTokenIsConstructing(layout->calleeToken())) {
-    TraceRoot(trc, &argv[1 + newTargetOffset], "ion-newTarget");
+    TraceRoot(trc, &argv[1 + numArgs], "ion-newTarget");
   }
 }
 
