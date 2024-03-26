@@ -31,7 +31,8 @@ void StoreBuffer::checkAccess() const {
 #endif
 
 bool StoreBuffer::WholeCellBuffer::init() {
-  MOZ_ASSERT(!head_);
+  MOZ_ASSERT(!stringHead_);
+  MOZ_ASSERT(!nonStringHead_);
   if (!storage_) {
     storage_ = MakeUnique<LifoAlloc>(LifoAllocBlockSize);
     // This prevents LifoAlloc::Enum from crashing with a release
@@ -75,7 +76,8 @@ StoreBuffer::StoreBuffer(JSRuntime* rt)
       mayHavePointersToDeadCells_(false)
 #ifdef DEBUG
       ,
-      mEntered(false)
+      mEntered(false),
+      markingNondeduplicatable(false)
 #endif
 {
 }
@@ -96,11 +98,13 @@ StoreBuffer::StoreBuffer(StoreBuffer&& other)
       mayHavePointersToDeadCells_(other.mayHavePointersToDeadCells_)
 #ifdef DEBUG
       ,
-      mEntered(other.mEntered)
+      mEntered(other.mEntered),
+      markingNondeduplicatable(other.markingNondeduplicatable)
 #endif
 {
   MOZ_ASSERT(enabled_);
   MOZ_ASSERT(!mEntered);
+  MOZ_ASSERT(!markingNondeduplicatable);
   other.disable();
 }
 
@@ -210,14 +214,21 @@ ArenaCellSet* StoreBuffer::WholeCellBuffer::allocateCellSet(Arena* arena) {
     return nullptr;
   }
 
+  // Maintain separate lists for strings and non-strings, so that all buffered
+  // string whole cells will be processed before anything else (to prevent them
+  // from being deduplicated when their chars are used by a tenured string.)
+  bool isString =
+      MapAllocToTraceKind(arena->getAllocKind()) == JS::TraceKind::String;
+
   AutoEnterOOMUnsafeRegion oomUnsafe;
-  auto* cells = storage_->new_<ArenaCellSet>(arena, head_);
+  ArenaCellSet*& head = isString ? stringHead_ : nonStringHead_;
+  auto* cells = storage_->new_<ArenaCellSet>(arena, head);
   if (!cells) {
     oomUnsafe.crash("Failed to allocate ArenaCellSet");
   }
 
   arena->bufferedCells() = cells;
-  head_ = cells;
+  head = cells;
 
   if (isAboutToOverflow()) {
     rt->gc.storeBuffer().setAboutToOverflow(
@@ -233,10 +244,12 @@ void gc::CellHeaderPostWriteBarrier(JSObject** ptr, JSObject* prev,
 }
 
 void StoreBuffer::WholeCellBuffer::clear() {
-  for (auto* set = head_; set; set = set->next) {
-    set->arena->bufferedCells() = &ArenaCellSet::Empty;
+  for (auto** headPtr : {&stringHead_, &nonStringHead_}) {
+    for (auto* set = *headPtr; set; set = set->next) {
+      set->arena->bufferedCells() = &ArenaCellSet::Empty;
+    }
+    *headPtr = nullptr;
   }
-  head_ = nullptr;
 
   if (storage_) {
     storage_->used() ? storage_->releaseAll() : storage_->freeAll();
