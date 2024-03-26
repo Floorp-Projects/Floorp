@@ -21,7 +21,8 @@ class Accessible;
  */
 class uiaRawElmProvider : public IAccessibleEx,
                           public IRawElementProviderSimple,
-                          public IRawElementProviderFragment {
+                          public IRawElementProviderFragment,
+                          public IInvokeProvider {
  public:
   static void RaiseUiaEventForGeckoEvent(Accessible* aAcc,
                                          uint32_t aGeckoEvent);
@@ -80,6 +81,9 @@ class uiaRawElmProvider : public IAccessibleEx,
   virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_FragmentRoot(
       /* [retval][out] */ __RPC__deref_out_opt IRawElementProviderFragmentRoot**
           aRetVal);
+
+  // IInvokeProvider
+  virtual HRESULT STDMETHODCALLTYPE Invoke(void);
 
  private:
   Accessible* Acc() const;
