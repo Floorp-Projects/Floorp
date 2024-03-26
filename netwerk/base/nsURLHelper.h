@@ -257,20 +257,19 @@ class URLParams final {
    * true otherwise
    */
   template <typename ParamHandler>
-  static bool Parse(const nsACString& aInput, bool aShouldDecode,
-                    ParamHandler aParamHandler) {
+  static bool Parse(const nsACString& aInput, ParamHandler aParamHandler) {
     const char* start = aInput.BeginReading();
     const char* const end = aInput.EndReading();
 
     while (start != end) {
-      nsAutoString name;
-      nsAutoString value;
+      nsAutoString decodedName;
+      nsAutoString decodedValue;
 
-      if (!ParseNextInternal(start, end, aShouldDecode, &name, &value)) {
+      if (!ParseNextInternal(start, end, &decodedName, &decodedValue)) {
         continue;
       }
 
-      if (!aParamHandler(std::move(name), std::move(value))) {
+      if (!aParamHandler(std::move(decodedName), std::move(decodedValue))) {
         return false;
       }
     }
@@ -308,8 +307,6 @@ class URLParams final {
    */
   void Serialize(nsAString& aValue, bool aEncode) const;
 
-  static void SerializeString(const nsCString& aInput, nsAString& aValue);
-
   void Get(const nsAString& aName, nsString& aRetval);
 
   void GetAll(const nsAString& aName, nsTArray<nsString>& aRetval);
@@ -340,8 +337,6 @@ class URLParams final {
 
   uint32_t Length() const { return mParams.Length(); }
 
-  static void DecodeString(const nsACString& aInput, nsAString& aOutput);
-
   const nsAString& GetKeyAtIndex(uint32_t aIndex) const {
     MOZ_ASSERT(aIndex < mParams.Length());
     return mParams[aIndex].mKey;
@@ -359,10 +354,11 @@ class URLParams final {
   void Sort();
 
  private:
+  static void DecodeString(const nsACString& aInput, nsAString& aOutput);
   static void ConvertString(const nsACString& aInput, nsAString& aOutput);
   static bool ParseNextInternal(const char*& aStart, const char* aEnd,
-                                bool aShouldDecode, nsAString* aOutputName,
-                                nsAString* aOutputValue);
+                                nsAString* aOutDecodedName,
+                                nsAString* aOutDecodedValue);
 
   struct Param {
     nsString mKey;
