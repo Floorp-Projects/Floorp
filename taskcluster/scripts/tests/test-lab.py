@@ -145,20 +145,27 @@ def process_results(flank_config: str, test_type: str = "instrumentation") -> No
     parse_ui_test_fromfile_script = os.path.join(
         ANDROID_TEST, "parse-ui-test-fromfile.py"
     )
+    copy_robo_crash_artifacts_script = os.path.join(
+        ANDROID_TEST, "copy-robo-crash-artifacts.py"
+    )
 
     os.chmod(parse_ui_test_script, 0o755)
     os.chmod(parse_ui_test_fromfile_script, 0o755)
+    os.chmod(copy_robo_crash_artifacts_script, 0o755)
 
     # Run parsing scripts and check for errors
 
     # Process the results differently based on the test type: robo or instrumentation
-    # Currently, robo test does not have a test file artifact to parse
     exit_code = 0
     if test_type == "instrumentation":
         exit_code = run_command(
             [parse_ui_test_fromfile_script, "--results", Worker.RESULTS_DIR.value],
             "flank.log",
         )
+
+    # If the test type is robo, run a script that copies the crash artifacts from Cloud Storage over (if there are any from failed devices)
+    if test_type == "robo":
+        exit_code = run_command([copy_robo_crash_artifacts_script])
 
     command = [
         parse_ui_test_script,
