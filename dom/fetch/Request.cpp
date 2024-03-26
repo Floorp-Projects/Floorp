@@ -12,6 +12,7 @@
 #include "nsPIDOMWindow.h"
 
 #include "mozilla/ErrorResult.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/dom/Headers.h"
 #include "mozilla/dom/Fetch.h"
 #include "mozilla/dom/FetchUtil.h"
@@ -263,15 +264,14 @@ SafeRefPtr<Request> Request::Constructor(const GlobalObject& aGlobal,
                                          const RequestInit& aInit,
                                          ErrorResult& aRv) {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
-  return Constructor(global, aGlobal.Context(), aInput, aInit, aRv);
+  return Constructor(global, aGlobal.Context(), aInput, aInit,
+                     aGlobal.CallerType(), aRv);
 }
 
 /*static*/
-SafeRefPtr<Request> Request::Constructor(nsIGlobalObject* aGlobal,
-                                         JSContext* aCx,
-                                         const RequestOrUSVString& aInput,
-                                         const RequestInit& aInit,
-                                         ErrorResult& aRv) {
+SafeRefPtr<Request> Request::Constructor(
+    nsIGlobalObject* aGlobal, JSContext* aCx, const RequestOrUSVString& aInput,
+    const RequestInit& aInit, CallerType aCallerType, ErrorResult& aRv) {
   bool hasCopiedBody = false;
   SafeRefPtr<InternalRequest> request;
 
@@ -351,7 +351,12 @@ SafeRefPtr<Request> Request::Constructor(nsIGlobalObject* aGlobal,
       mode.emplace(RequestMode::Cors);
     }
     if (credentials.isNothing()) {
-      credentials.emplace(RequestCredentials::Same_origin);
+      if (aCallerType == CallerType::System &&
+          StaticPrefs::network_fetch_systemDefaultsToOmittingCredentials()) {
+        credentials.emplace(RequestCredentials::Omit);
+      } else {
+        credentials.emplace(RequestCredentials::Same_origin);
+      }
     }
     if (cache.isNothing()) {
       cache.emplace(RequestCache::Default);
