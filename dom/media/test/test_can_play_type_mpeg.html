@@ -127,7 +127,8 @@ function IsMacOS() {
 }
 
 function IsLinux() {
-  return navigator.userAgent.includes("Linux");
+  return navigator.userAgent.includes("Linux") &&
+    !navigator.userAgent.includes("Android");
 }
 
 function getPref(name) {

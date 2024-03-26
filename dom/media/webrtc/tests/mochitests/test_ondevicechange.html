@@ -154,7 +154,9 @@ runTest(async () => {
 
   const audioLoopbackDev =
         SpecialPowers.getCharPref("media.audio_loopback_dev", "");
-  if (!navigator.userAgent.includes("Linux")) {
+  const desktopLinux = navigator.userAgent.includes("Linux") &&
+      !navigator.userAgent.includes("Android");
+  if (!desktopLinux) {
     todo_isnot(audioLoopbackDev, "", "audio_loopback_dev");
     return;
   }
