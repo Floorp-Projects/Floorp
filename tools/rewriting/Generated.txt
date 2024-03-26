@@ -1,5 +1,4 @@
 .gradle/
-build/vs/vs2019.yaml
 build/vs/vs2022.yaml
 browser/components/aboutwelcome/content/aboutwelcome.bundle.js
 browser/components/aboutwelcome/logs/
